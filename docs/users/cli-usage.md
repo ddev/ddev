@@ -11,8 +11,8 @@ Each of these commands has full help. For example, `ddev start -h` or `ddev help
 * `ddev describe` or `ddev describe <projectname>` gives you full details about the project, what ports it uses, how to access them, etc.
 * `ddev list` shows running projects
 * `ddev mysql` gives direct access to the mysql client
-* `ddev sequelpro` or `ddev sequelace` (macOS only, if installed) give access to the Sequel Pro or Sequel Ace database browser GUIs (if installed)
-* `ddev heidisql` (Windows/WSL2 only, if installed) give access to the HeidiSQL database browser GUIs (if installed)
+* `ddev sequelpro`, `ddev sequelace`, and `ddev tableplus` (macOS only, if the app is installed) give access to the Sequel Pro, Sequel Ace, or TablePlus database browser GUIs.
+* `ddev heidisql` (Windows/WSL2 only, if installed) gives access to the HeidiSQL database browser GUI.
 * `ddev import-db` and `ddev export-db` let you import or export a sql or compressed sql file.
 * `ddev composer` lets you run composer (inside the container), for example `ddev composer install` will do a full composer install for you without even needing composer on your computer. See [developer tools](developer-tools.md#ddev-and-composer).
 * `ddev snapshot` makes a very fast snapshot of your database that can be easily and quickly restored with `ddev restore-snapshot`.

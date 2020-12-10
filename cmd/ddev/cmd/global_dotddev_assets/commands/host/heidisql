@@ -13,8 +13,9 @@ case $OSTYPE in
   "win*"* | "msys"*)
     '/c/Program Files/HeidiSQL/heidisql.exe' "$arguments" &
     ;;
+  # linux-gnu in this case is only WSL2 as selected in OSTypes above
   "linux-gnu")
-    # HeidiSQL is Microsoft only, but we want to starting it from WSL2
+    # HeidiSQL is Microsoft only, but we want to start it from WSL2
     "/mnt/c/Program Files/HeidiSQL/heidisql.exe" "$arguments" &
     ;;
 esac
