@@ -1,5 +1,3 @@
-// +build !arm64
-
 package nodeps
 
 // PHP Versions

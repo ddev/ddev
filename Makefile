@@ -71,7 +71,7 @@ BUILD_ARCH = $(shell go env GOHOSTARCH)
 VERSION_LDFLAGS=$(foreach v,$(VERSION_VARIABLES),-X '$(PKG)/pkg/version.$(v)=$($(v))')
 LDFLAGS=-extldflags -static $(VERSION_LDFLAGS)
 BUILD_IMAGE ?= drud/golang-build-container:v1.15.6
-DOCKERBUILDCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
+DOCKERBUILDCMD=docker run -it --rm                     \
           	    -v "/$(PWD)://workdir$(DOCKERMOUNTFLAG)"                              \
           	    -e GOPATH="//workdir/$(GOTMP)" \
           	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
@@ -111,12 +111,12 @@ TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin
 $(TARGETS): pullbuildimage $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER)";
 	@#echo "LDFLAGS=$(LDFLAGS)";
-	@export TARGET=$(word 3, $(subst /, ,$@)) && \
+	export TARGET=$(word 3, $(subst /, ,$@)) && \
 	export GOOS="$${TARGET%_*}" && \
 	export GOARCH="$${TARGET#*_}" && \
 	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
 	$(DOCKERBUILDCMD) \
-        bash -c "GOOS=$$GOOS GOARCH=$$GOARCH go build -o $(GOTMP)/bin/$$TARGET -installsuffix static -ldflags \" $(LDFLAGS) \" $(SRC_AND_UNDER)"
+        bash -c "ln -s /root/sdk ~/sdk && GOOS=$$GOOS GOARCH=$$GOARCH gotip build -o $(GOTMP)/bin/$$TARGET -installsuffix static -ldflags \" $(LDFLAGS) \" $(SRC_AND_UNDER)"
 	$( shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi )
 	@echo $(VERSION) >VERSION.txt
 
@@ -194,17 +194,28 @@ mkdocs:
 		sleep 1 && $(DOCKERTESTCMD) bash -c "$$CMD"; \
 	fi
 
-darwin_signed: darwin_amd64
+darwin_amd64_signed: darwin_amd64
 	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; else echo "Signing macOS ddev..."; \
 		set -o errexit -o pipefail; \
 		curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: DRUD Technology, LLC (3BAN66AG5M)" --target-binary="$(GOTMP)/bin/darwin_amd64/ddev" ; \
 	fi
+darwin_arm64_signed: darwin_arm64
+	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; else echo "Signing macOS ddev..."; \
+		set -o errexit -o pipefail; \
+		curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: DRUD Technology, LLC (3BAN66AG5M)" --target-binary="$(GOTMP)/bin/$</ddev" ; \
+	fi
 
-darwin_notarized: darwin_signed
+darwin_amd64_notarized: darwin_amd64 darwin_amd64_signed
 	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
 		set -o errexit -o pipefail; \
 		echo "Notarizing macOS ddev..." ; \
-		curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=${DDEV_MACOS_APP_PASSWORD} --apple-id=accounts@drud.com --primary-bundle-id=com.ddev.ddev --target-binary="$(PWD)/$(GOTMP)/bin/darwin_amd64/ddev" ; \
+		curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=${DDEV_MACOS_APP_PASSWORD} --apple-id=accounts@drud.com --primary-bundle-id=com.ddev.ddev --target-binary="$(PWD)/$(GOTMP)/bin/$</ddev" ; \
+	fi
+darwin_arm64_notarized: darwin_arm64 darwin_arm64_signed
+	if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
+		set -o errexit -o pipefail; \
+		echo "Notarizing macOS ddev..." ; \
+		curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=${DDEV_MACOS_APP_PASSWORD} --apple-id=accounts@drud.com --primary-bundle-id=com.ddev.ddev --target-binary="$(PWD)/$(GOTMP)/bin/$</ddev" ; \
 	fi
 
 $(GOTMP)/bin/windows_amd64/ddev.exe: windows_amd64
