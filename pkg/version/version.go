@@ -46,7 +46,7 @@ var WebTag = "20201227_travis_router_http2_max_header" // Note that this can be 
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.16.0"
+var BaseDBTag = "20201210_gotip_arm64"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"

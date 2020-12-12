@@ -1,6 +1,8 @@
 package nodeps
 
-var ValidMySQLVersions = map[string]bool{}
+var ValidMySQLVersions = map[string]bool{
+	MySQL80: true,
+}
 
 // Oracle MySQL versions
 const (
