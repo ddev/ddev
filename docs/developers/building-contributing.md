@@ -25,6 +25,7 @@ Build/test/check static analysis with
  make linux_amd64
  make linux_arm64
  make darwin_amd64
+ make darwin_arm64
  make windows_amd64
  make test
  make clean
