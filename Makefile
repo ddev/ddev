@@ -208,13 +208,13 @@ darwin_arm64_signed: darwin_arm64
 darwin_amd64_notarized: darwin_amd64 darwin_amd64_signed
 	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
 		set -o errexit -o pipefail; \
-		echo "Notarizing macOS ddev..." ; \
+		echo "Notarizing darwin_amd64 ddev..." ; \
 		curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=${DDEV_MACOS_APP_PASSWORD} --apple-id=accounts@drud.com --primary-bundle-id=com.ddev.ddev --target-binary="$(PWD)/$(GOTMP)/bin/$</ddev" ; \
 	fi
 darwin_arm64_notarized: darwin_arm64 darwin_arm64_signed
 	if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
 		set -o errexit -o pipefail; \
-		echo "Notarizing macOS ddev..." ; \
+		echo "Notarizing darwin_arm64 ddev..." ; \
 		curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=${DDEV_MACOS_APP_PASSWORD} --apple-id=accounts@drud.com --primary-bundle-id=com.ddev.ddev --target-binary="$(PWD)/$(GOTMP)/bin/$</ddev" ; \
 	fi
 
