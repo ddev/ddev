@@ -42,7 +42,7 @@ $BUILTPATH/ddev_gen_autocomplete
 
 # The completion scripts get placed into the linux build dir (.gotmp/bin)
 # So now copy them into the real build directory
-for dir in .gotmp/bin/linux_amd64 .gotmp/bin/linux_arm64 .gotmp/bin/darwin_amd64 .gotmp/bin/windows_amd64; do
+for dir in .gotmp/bin/linux_amd64 .gotmp/bin/linux_arm64 .gotmp/bin/darwin_amd64 .gotmp/bin/darwin_arm64 .gotmp/bin/windows_amd64; do
   cp .gotmp/bin/ddev_*completion* $dir
 done
 
@@ -54,6 +54,12 @@ cp $BASE_DIR/.gotmp/bin/windows_amd64/ddev_windows_installer*.exe $ARTIFACTS
 pushd $BASE_DIR/.gotmp/bin/darwin_amd64
 curl -sSL -o mkcert https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-darwin-amd64 && chmod +x mkcert
 tar -czf $ARTIFACTS/ddev_macos-amd64.$VERSION.tar.gz ddev *completion*.sh mkcert
+popd
+
+# Generate macOS-arm64 tarball/zipball
+pushd $BASE_DIR/.gotmp/bin/darwin_arm64
+curl -sSL -o mkcert https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-darwin-amd64 && chmod +x mkcert
+tar -czf $ARTIFACTS/ddev_macos-arm64.$VERSION.tar.gz ddev *completion*.sh mkcert
 popd
 
 # Generate linux-amd64 tarball/zipball
