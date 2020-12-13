@@ -111,7 +111,7 @@ TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin
 $(TARGETS): pullbuildimage $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER)";
 	@#echo "LDFLAGS=$(LDFLAGS)";
-	export TARGET=$(word 3, $(subst /, ,$@)) && \
+	@export TARGET=$(word 3, $(subst /, ,$@)) && \
 	export GOOS="$${TARGET%_*}" && \
 	export GOARCH="$${TARGET#*_}" && \
 	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
@@ -212,7 +212,7 @@ darwin_amd64_notarized: darwin_amd64 darwin_amd64_signed
 		curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=${DDEV_MACOS_APP_PASSWORD} --apple-id=accounts@drud.com --primary-bundle-id=com.ddev.ddev --target-binary="$(PWD)/$(GOTMP)/bin/$</ddev" ; \
 	fi
 darwin_arm64_notarized: darwin_arm64 darwin_arm64_signed
-	if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
+	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
 		set -o errexit -o pipefail; \
 		echo "Notarizing darwin_arm64 ddev..." ; \
 		curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=${DDEV_MACOS_APP_PASSWORD} --apple-id=accounts@drud.com --primary-bundle-id=com.ddev.ddev --target-binary="$(PWD)/$(GOTMP)/bin/$</ddev" ; \
