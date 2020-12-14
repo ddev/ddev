@@ -55,7 +55,7 @@ push:
 	for item in $(subst $\",,$(MYSQL_VERSIONS_amd64)); do \
 		export baseversion=$$(echo $$item | awk -F ':' '{print $$1}'); \
 		export fullversion=$$(echo $$item | awk -F ':' '{print $$2}'); \
-		docker buildx build --push --platform linux/amd64 $(DOCKER_ARGS) --build-arg="DBVERSION=$$baseversion" --build-arg="PARENTIMAGEVERSION=$$fullversion" --build-arg="DBTYPE=mysql" -t "drud/ddev-dbserver-mysql-$${baseversion%%%.*}:$(VERSION)" .; \
+		docker buildx build --push --platform $${archs} $(DOCKER_ARGS) --build-arg="DBVERSION=$$baseversion" --build-arg="PARENTIMAGEVERSION=$$fullversion" --build-arg="DBTYPE=mysql" -t "drud/ddev-dbserver-mysql-$${baseversion%%%.*}:$(VERSION)" .; \
 	done
 
 test: container
