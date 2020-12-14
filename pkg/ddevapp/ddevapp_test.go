@@ -677,8 +677,15 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	err := app.Init(site.Dir)
 	assert.NoError(err)
-	//nolint: errcheck
-	defer app.Stop(true, false)
+
+	t.Cleanup(func() {
+		app.XdebugEnabled = false
+		app.PHPVersion = nodeps.PHPDefault
+		err = app.WriteConfig()
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
 
 	for _, v := range phpKeys {
 		app.PHPVersion = v
@@ -710,14 +717,14 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			t.Errorf("Aborting xdebug check for php%s: %v", v, err)
 			continue
 		}
-		if app.PHPVersion == nodeps.PHP80 {
+		// PHP 7.2 through 8.0 gets xdebug 3.0+
+		if app.PHPVersion == nodeps.PHP72 || app.PHPVersion == nodeps.PHP73 || app.PHPVersion == nodeps.PHP74 || app.PHPVersion == nodeps.PHP80 {
 			assert.Contains(stdout, "xdebug.mode => debug => debug", "xdebug is not enabled for %s", v)
-
 		} else {
 			assert.Contains(stdout, "xdebug support => enabled", "xdebug is not enabled for %s", v)
 		}
 
-		if app.PHPVersion == nodeps.PHP80 {
+		if app.PHPVersion == nodeps.PHP72 || app.PHPVersion == nodeps.PHP73 || app.PHPVersion == nodeps.PHP74 || app.PHPVersion == nodeps.PHP80 {
 			assert.Contains(stdout, "xdebug.client_host => host.docker.internal => host.docker.internal")
 		} else {
 			assert.Contains(stdout, "xdebug.remote_host => host.docker.internal => host.docker.internal")

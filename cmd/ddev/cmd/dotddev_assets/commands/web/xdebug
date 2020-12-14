@@ -10,6 +10,8 @@ if [ $# -eq 0 ] ; then
   exit
 fi
 
+xdebug_version=$(php --version | awk '/Xdebug v/ {print $3}')
+
 case $1 in
     on|true|enable)
 	enable_xdebug
@@ -18,13 +20,29 @@ case $1 in
 	disable_xdebug
 	;;
 	status)
+  case ${xdebug_version} in
+  v3*)
+    status=$(php -r 'echo ini_get("xdebug.mode");' 2>/dev/null)
+    if [ "${status}" = "debug" ]; then
+      result="xdebug enabled"
+    else
+      result"xdebug disabled"
+    fi
+    ;;
+  v2*)
+    status=$(php -r 'echo ini_get("xdebug.remote_enable");')
+    if [ "${status}" = "1" ]; then
+      result="xdebug enabled"
+    else
+      result"xdebug disabled"
+    fi
+    ;;
+  *)
+    result="xdebug disabled"
+    ;;
+  esac
 
-	status=$(php -r 'echo ini_get("xdebug.remote_enable");')
-	if [ "$status" = "1" ]; then
-	    echo "xdebug enabled"
-	else
-	    echo "xdebug disabled"
-	fi
+	echo $result
 	;;
     *)
     echo "Invalid argument: $1"
