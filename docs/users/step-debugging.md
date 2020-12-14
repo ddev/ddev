@@ -8,7 +8,7 @@ All IDEs basically work the same: They listen on a port and react when they're c
 
 **Key facts:**
 
-* Enable xdebug with `ddev xdebug` or `ddev xdebug on`. It will remain enabled until you start or restart the project.
+* Enable xdebug by running `ddev xdebug` or `ddev xdebug on` in your project directory. It will remain enabled until you start or restart the project.
 * Disable xdebug for better performance when not debugging with `ddev xdebug off`
 * `ddev xdebug status` will show current status.
 * The debug server port on the IDE must be set to port 9000, which is the default and is probably already set in most IDEs. (If you need to change the xdebug port due to a port conflict on your host computer, you can do it with a PHP override, explained below.)
