@@ -172,8 +172,8 @@ func (p *PantheonProvider) getBackup(archiveType string, environment string) (li
 	}
 
 	uid, _, _ := util.GetContainerUIDGid()
-	cmd := fmt.Sprintf("terminus backup:info --format=string --fields=Filename,URL --element=%s %s.%s", element, p.site.ID, environment)
-	_, result, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true, false)
+	cmd := fmt.Sprintf("disable_xdebug >/dev/null && terminus backup:info --format=string --fields=Filename,URL --element=%s %s.%s", element, p.site.ID, environment)
+	_, result, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp", "DDEV_XDEBUG_ENABLED=false"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true, false)
 
 	if err != nil {
 		return "", "", fmt.Errorf("unable to get terminus backup: %v (%v)", err, result)
@@ -271,9 +271,9 @@ func (p *PantheonProvider) GetEnvironments() ([]string, error) {
 	}
 
 	// Get a list of all active environments for the current site.
-	cmd := "terminus env:list --field=id " + p.site.ID
+	cmd := "disable_xdebug >/dev/null && terminus env:list --field=id " + p.site.ID
 	uid, _, _ := util.GetContainerUIDGid()
-	_, envs, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true, false)
+	_, envs, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", cmd}, nil, []string{"HOME=/tmp", "DDEV_XDEBUG_ENABLED=false"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true, false)
 
 	if err != nil {
 		return []string{}, fmt.Errorf("unable to get Pantheon environments for project %s - Have you authenticated with `ddev auth pantheon`? Does the ddev project name match the pantheon project name? ('%v' failed)", p.Sitename, cmd)
@@ -305,7 +305,7 @@ func (p *PantheonProvider) environmentExists(environment string) error {
 func (p *PantheonProvider) findPantheonSite(name string) (id string, e error) {
 
 	uid, _, _ := util.GetContainerUIDGid()
-	_, id, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", "terminus site:info --fields=id --format=json " + name + " | jq -r .id"}, nil, []string{"HOME=/tmp"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true, false)
+	_, id, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", "disable_xdebug >/dev/null && terminus site:info --fields=id --format=json " + name + " | jq -r .id"}, nil, []string{"HOME=/tmp", "DDEV_XDEBUG_ENABLED=false"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true, false)
 
 	if err != nil {
 		return "", fmt.Errorf("could not find a pantheon site named %s: %v (%v)", name, err, id)

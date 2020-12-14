@@ -677,8 +677,15 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	err := app.Init(site.Dir)
 	assert.NoError(err)
-	//nolint: errcheck
-	defer app.Stop(true, false)
+
+	t.Cleanup(func() {
+		app.XdebugEnabled = false
+		app.PHPVersion = nodeps.PHPDefault
+		err = app.WriteConfig()
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
 
 	for _, v := range phpKeys {
 		app.PHPVersion = v

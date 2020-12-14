@@ -22,6 +22,8 @@ func TestCmdXdebug(t *testing.T) {
 	t.Cleanup(func() {
 		_, err = exec.RunCommand(DdevBin, []string{"config", "--php-version", nodeps.PHPDefault})
 		assert.NoError(err)
+		_, err = exec.RunCommand(DdevBin, []string{"debug", "off"})
+		assert.NoError(err)
 		err := os.Chdir(pwd)
 		assert.NoError(err)
 	})
