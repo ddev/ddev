@@ -847,7 +847,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg:
 	// breaking testing.
 	if composerVersion != "" {
 		contents = contents + fmt.Sprintf(`
-RUN if command -v composer >/dev/null 2>&1 ; then ( disable_xdebug >/dev/null && composer self-update %s || composer self-update %s ) && chmod 777 /usr/local/bin/composer;  fi
+RUN if command -v composer >/dev/null 2>&1 ; then export XDEBUG_MODE=off && (composer self-update %s || composer self-update %s ) && chmod 777 /usr/local/bin/composer;  fi
 `, composerSelfUpdateArg, composerSelfUpdateArg)
 	}
 	return WriteImageDockerfile(fullpath, []byte(contents))
