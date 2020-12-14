@@ -20,13 +20,17 @@ func TestCmdXdebug(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		_, err = exec.RunCommand(DdevBin, []string{"config", "--php-version", nodeps.PHPDefault})
+		_, err = exec.RunCommand(DdevBin, []string{"config", "--php-version", nodeps.PHPDefault, "--composer-version=\"\""})
 		assert.NoError(err)
-		_, err = exec.RunCommand(DdevBin, []string{"debug", "off"})
+		_, err = exec.RunCommand(DdevBin, []string{"xdebug", "off"})
 		assert.NoError(err)
 		err := os.Chdir(pwd)
 		assert.NoError(err)
 	})
+
+	// An odd bug in v1.16.2 popped up only when composer version was set, might as well set it here
+	_, err = exec.RunCommand(DdevBin, []string{"config", "--composer-version=2"})
+	assert.NoError(err)
 
 	for phpVersion := range nodeps.ValidPHPVersions {
 		t.Logf("Testing xdebug command in php%s", phpVersion)
