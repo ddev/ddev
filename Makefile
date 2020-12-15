@@ -200,6 +200,8 @@ darwin_amd64_signed: $(GOTMP)/bin/darwin_amd64/ddev
 		set -o errexit -o pipefail; \
 		curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: DRUD Technology, LLC (3BAN66AG5M)" --target-binary="$<" ; \
 	fi
+darwin_arm64_signed: $(GOTMP)/bin/darwin_arm64/ddev
+	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; else echo "Signing $< ..."; \
 		set -o errexit -o pipefail; \
 		codesign --remove-signature "$(GOTMP)/bin/darwin_arm64/ddev" || true; \
 		curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: DRUD Technology, LLC (3BAN66AG5M)" --target-binary="$(GOTMP)/bin/darwin_arm64/ddev" ; \
