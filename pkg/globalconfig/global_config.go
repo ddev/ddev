@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -52,6 +53,7 @@ type GlobalConfig struct {
 	LetsEncryptEmail         string                  `yaml:"letsencrypt_email"`
 	AutoRestartContainers    bool                    `yaml:"auto_restart_containers"`
 	ProjectList              map[string]*ProjectInfo `yaml:"project_info"`
+	HostDockerInternal       string                  `yaml:"host_docker_internal"`
 }
 
 // GetGlobalConfigPath() gets the path to global config file
@@ -118,6 +120,10 @@ func ReadGlobalConfig() error {
 	// and ignore the setting.
 	if DdevGlobalConfig.InternetDetectionTimeout < nodeps.InternetDetectionTimeoutDefault {
 		DdevGlobalConfig.InternetDetectionTimeout = nodeps.InternetDetectionTimeoutDefault
+	}
+	// Temporary workaround until Docker on m1 mac has host.docker.internal
+	if DdevGlobalConfig.HostDockerInternal == "" && runtime.GOOS == "darwin" && runtime.GOARCH == "arm64" {
+		DdevGlobalConfig.HostDockerInternal = "192.168.64.1"
 	}
 
 	err = ValidateGlobalConfig()
