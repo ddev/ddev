@@ -24,7 +24,14 @@
 
 * **Can I use additional databases with DDEV?** Yes, you can create additional databases and manually do whatever you need on them. They are automatically created if you use `ddev import-db` with `--target-db`, for example `ddev import-db --target-db=extradb --src=.tarballs/extradb.sql.gz`. You can use `ddev mysql` for random queries, or also use the mysql client within `ddev ssh` or `ddev ssh -s db` as well.
 
-* **Can different projects communicate with each other?** Yes, this is commonly required for situations like Drupal migrations. For the web container to access the db container of another project, use `ddev-<projectname>-db` as the hostname of the other project. For example, in project1, use `mysql ddev-project2-db` to access the db server of project2. For HTTP/S communication you can 1) access the web container of project2 directly with the hostname `ddev-<project2>-web` and port 80 or 443: `curl https://ddev-project2-web` or 2) Access via the ddev router with the official hostname: `curl https://ddev-router -H Host:d7git.ddev.site`.
+* **Can different projects communicate with each other?** Yes, this is commonly required for situations like Drupal migrations. For the web container to access the db container of another project, use `ddev-<projectname>-db` as the hostname of the other project. For example, in project1, use `mysql ddev-project2-db` to access the db server of project2. For HTTP/S communication you can 1) access the web container of project2 directly with the hostname `ddev-<project2>-web` and port 80 or 443: `curl https://ddev-project2-web` or 2) Add a .ddev/docker-compose.communicate.yaml and access via the ddev router with the official hostname: `curl https://ddev-router -H Host:d7git.ddev.site`.
+  ```yaml
+  version: '3.6'
+  services:
+    web:
+        external_links:
+          - "ddev-router:project2.ddev.site"
+  ```
 
 * **How do I make DDEV match my production webserver environment?** You can change the PHP major version (currently 5.6 through 7.4) and choose between nginx+fpm (default and apache+fpm and choose the MariaDB version add [extra services like solr and memcached](extend/additional-services.md). You will not be able to make every detail match your production server, but with PHP version and webserver type you'll be close.
 
