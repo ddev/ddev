@@ -10,7 +10,6 @@
 ## HostBinaryExists: /Applications/TablePlus.app
 
 set -x
-query="mysql://root:root@127.0.0.1:${DDEV_HOST_DB_PORT}/db"
+query="mysql://root:root@127.0.0.1:${DDEV_HOST_DB_PORT}/db?statusColor=686B6F&enviroment=local&name=${DDEV_SITENAME}"
 
-open "$query" -a "/Applications/TablePlus.app/Contents/MacOS/TablePlus"
-
+open "$query" -a "TablePlus"
