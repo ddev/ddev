@@ -2,12 +2,12 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/nodeps"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
 
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 )
 
@@ -83,7 +83,7 @@ func init() {
 			settingsCreator: createWordpressSettingsFile, uploadDir: getWordpressUploadDir, hookDefaultComments: getWordpressHooks, apptypeSettingsPaths: setWordpressSiteSettingsPaths, appTypeDetect: isWordpressApp, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: wordpressPostStartAction, importFilesAction: wordpressImportFilesAction,
 		},
 		nodeps.AppTypeTYPO3: {
-			settingsCreator: createTypo3SettingsFile, uploadDir: getTypo3UploadDir, hookDefaultComments: getTypo3Hooks, apptypeSettingsPaths: setTypo3SiteSettingsPaths, appTypeDetect: isTypo3App, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: typo3PostStartAction, importFilesAction: typo3ImportFilesAction,
+			settingsCreator: createTypo3SettingsFile, uploadDir: getTypo3UploadDir, hookDefaultComments: getTypo3Hooks, apptypeSettingsPaths: setTypo3SiteSettingsPaths, appTypeDetect: isTypo3App, postImportDBAction: nil, configOverrideAction: typo3ConfigOverrideAction, postConfigAction: nil, postStartAction: typo3PostStartAction, importFilesAction: typo3ImportFilesAction,
 		},
 		nodeps.AppTypeBackdrop: {
 			settingsCreator: createBackdropSettingsFile, uploadDir: getBackdropUploadDir, hookDefaultComments: getBackdropHooks, apptypeSettingsPaths: setBackdropSiteSettingsPaths, appTypeDetect: isBackdropApp, postImportDBAction: backdropPostImportDBAction, configOverrideAction: nil, postConfigAction: nil, postStartAction: backdropPostStartAction, importFilesAction: backdropImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
