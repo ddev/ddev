@@ -165,12 +165,13 @@ func isTypo3App(app *DdevApp) bool {
 }
 
 // typo3ConfigOverrideAction overrides php_version since v11 is compatible with
-// PHP 7.4. This will conflict versions older than 8.7 but this should not be a
-// real issue because 8.7 and older are in ELTS mode and not longer supported
+// PHP 7.4 only. This will conflict versions older than 8.7 but this should not
+// be a real issue because 8.7 and older are in ELTS mode and not longer supported
 // by the community. Also users of such old versions can set the PHP version
-// explicit.
+// explicit. The composer_version is set to 2 by default.
 func typo3ConfigOverrideAction(app *DdevApp) error {
 	app.PHPVersion = nodeps.PHP74
+	app.ComposerVersion = "2"
 	return nil
 }
 
