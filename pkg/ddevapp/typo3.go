@@ -9,6 +9,7 @@ import (
 
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 )
@@ -161,6 +162,16 @@ func isTypo3App(app *DdevApp) bool {
 		return true
 	}
 	return false
+}
+
+// typo3ConfigOverrideAction overrides php_version since v11 is compatible with
+// PHP 7.4. This will conflict versions older than 8.7 but this should not be a
+// real issue because 8.7 and older are in ELTS mode and not longer supported
+// by the community. Also users of such old versions can set the PHP version
+// explicit.
+func typo3ConfigOverrideAction(app *DdevApp) error {
+	app.PHPVersion = nodeps.PHP74
+	return nil
 }
 
 // typo3ImportFilesAction defines the TYPO3 workflow for importing project files.
