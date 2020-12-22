@@ -21,14 +21,19 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-18.04]
+        os: [ubuntu-20.04, macos-11.0]
         containers: [mariadb, mysql, webserver, others]
 
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install Docker and deps
-        run: ./.github/workflows/linux-setup.sh   
+      - name: Install Docker and deps (Linux)
+        if: matrix.os == ubuntu-*
+        run: ./.github/workflows/linux-setup.sh
+      
+      - name: Install Docker and deps (macOS)
+        if: matrix.os == macos-*
+        run: ./.github/workflows/macos-setup.sh  
 
       - uses: actions/setup-go@v2
         with:

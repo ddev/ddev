@@ -33,7 +33,7 @@ jobs:
         for dir in containers/*/
           do pushd $dir
           echo "--- Test container $dir"
-          time make test DOCKER_ARGS=--no-cache
+          time make test
           popd
         done
         set +eu
