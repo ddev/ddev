@@ -65,7 +65,7 @@ jobs:
   tests:
     needs: build
     name: Linux ${{ matrix.webserver }} - make ${{ matrix.tests }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
 
     strategy:
       matrix:
@@ -90,7 +90,7 @@ jobs:
 
       - uses: actions/setup-go@v2
         with:
-          go-version: '^1.15.3'
+          go-version: 1.*
 
       - uses: actions/download-artifact@v2
         with:
