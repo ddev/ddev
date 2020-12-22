@@ -4,12 +4,8 @@ set -eu -o pipefail
 
 # Needed for the build jobs, e.g. for Windows makensis
 
-export HOMEBREW_NO_AUTO_UPDATE=1
-export HOMEBREW_NO_INSTALL_CLEANUP=1
-
-for item in osslsigncode makensis; do
-    brew install $item >/dev/null || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item >/dev/null
-done
+sudo apt-get update -qq
+sudo apt-get install -qq osslsigncode nsis
 
 # Get the Stubs and Plugins for makensis; the linux makensis build doesn't do this.
 wget https://sourceforge.net/projects/nsis/files/NSIS%203/3.06.1/nsis-3.06.1.zip/download && sudo unzip -o -d /usr/local/share download && sudo mv /usr/local/share/nsis-3.06.1 /usr/local/share/nsis
