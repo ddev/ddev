@@ -21,7 +21,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-latest]
+        os: [ubuntu-20.04]
         containers: [mariadb, mysql, webserver, others]
 
     steps:
@@ -30,10 +30,6 @@ jobs:
       - name: Install Docker and deps (Linux)
         if: matrix.os == 'ubuntu-20.04'
         run: ./.github/workflows/linux-setup.sh
-      
-      - name: Install Docker and deps (macOS)
-        if: matrix.os == 'macos-latest'
-        run: ./.github/workflows/macos-setup.sh
 
       - uses: actions/setup-go@v2
         with:
@@ -41,9 +37,6 @@ jobs:
 
       - name: Build and test container ${{ matrix.containers }}
         run: |
-          if [[ "${{ matrix.os }}" == macos* ]]; then
-            eval "$(docker-machine env default)"
-          fi
           docker version
           set -eu -o pipefail
 
