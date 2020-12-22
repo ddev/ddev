@@ -71,7 +71,7 @@ jobs:
       matrix:
         webserver: [apache-fpm, nginx-fpm]
         tests: [testcmd, testnotddevapp, testddevapp]
-        os: [ubuntu-20.04, macos-11.0]
+        os: [ubuntu-20.04, macos-latest]
       fail-fast: false
 
     env:
@@ -91,7 +91,7 @@ jobs:
         run: ./.github/workflows/linux-setup.sh
       
       - name: Install Docker and deps (macOS)
-        if: matrix.os == 'macos-20.04'
+        if: matrix.os == 'macos-latest'
         run: ./.github/workflows/macos-setup.sh  
 
       - uses: actions/setup-go@v2
