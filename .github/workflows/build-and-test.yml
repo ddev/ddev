@@ -64,13 +64,14 @@ jobs:
 
   tests:
     needs: build
-    name: Linux ${{ matrix.webserver }} - make ${{ matrix.tests }}
-    runs-on: ubuntu-20.04
+    name: ${{ matrix.os }} - ${{ matrix.webserver }} - make ${{ matrix.tests }}
+    runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
         webserver: [apache-fpm, nginx-fpm]
         tests: [testcmd, testnotddevapp, testddevapp]
+        os: [ubuntu-20.04, macos-11.0]
       fail-fast: false
 
     env:
@@ -85,8 +86,13 @@ jobs:
         if: matrix.webserver == 'apache-fpm'
         run: echo "GOTEST_SHORT=5" >> $GITHUB_ENV 
 
-      - name: Install Docker and deps
-        run: ./.github/workflows/linux-setup.sh   
+      - name: Install Docker and deps (Linux)
+        if: matrix.os == 'ubuntu-20.04'
+        run: ./.github/workflows/linux-setup.sh
+      
+      - name: Install Docker and deps (macOS)
+        if: matrix.os == 'macos-20.04'
+        run: ./.github/workflows/macos-setup.sh  
 
       - uses: actions/setup-go@v2
         with:
@@ -102,7 +108,11 @@ jobs:
         working-directory: .gotmp/bin
 
       - name: DDEV tests
-        run: make ${{ matrix.tests }}
+        run: |
+          if [[ "${{ matrix.os }}" == macos* ]]; then
+            eval "$(docker-machine env default)"
+          fi
+          make ${{ matrix.tests }}
         timeout-minutes: 120
 
       - name: Store test results
