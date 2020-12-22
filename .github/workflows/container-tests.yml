@@ -33,7 +33,7 @@ jobs:
       
       - name: Install Docker and deps (macOS)
         if: matrix.os == 'macos-latest'
-        run: ./.github/workflows/macos-setup.sh  
+        run: ./.github/workflows/macos-setup.sh
 
       - uses: actions/setup-go@v2
         with:
