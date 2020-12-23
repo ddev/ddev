@@ -1,0 +1,26 @@
+name: Build and test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  BUILDKIT_PROGRESS: plain
+  DOCKER_CLI_EXPERIMENTAL: enabled
+
+jobs:
+
+  test:
+    name: DDEV tests
+    runs-on: [self-hosted, Windows]
+    
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # We need to get all branches and tags for git describe to work properly
+          fetch-depth: 0
+
+      - name: Run tests
+        run: ./.github/workflows/test.cmd
