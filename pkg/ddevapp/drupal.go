@@ -123,7 +123,7 @@ if (version_compare(Drupal::VERSION, "8.8.0", '<') &&
   empty($config_directories[CONFIG_SYNC_DIRECTORY])) {
   $config_directories[CONFIG_SYNC_DIRECTORY] = 'sites/default/files/sync';
 }
-// For D8.8/D8.9, set $settings['config_sync_directory'] if neither 
+// For D8.8/D8.9, set $settings['config_sync_directory'] if neither
 // $config_directories nor $settings['config_sync_directory is set
 if (version_compare(DRUPAL::VERSION, "8.8.0", '>=') &&
   version_compare(DRUPAL::VERSION, "9.0.0", '<') &&
@@ -456,11 +456,6 @@ func writeDrupal6DdevSettingsFile(settings *DrupalSettings, filePath string) err
 // WriteDrushrc writes out drushrc.php based on passed-in values.
 // This works on Drupal 6 and Drupal 7 or with drush8 and older
 func WriteDrushrc(app *DdevApp, filePath string) error {
-	// Ignore because this is a settings file.
-	if app.DisableSettingsManagement {
-		return nil
-	}
-
 	if fileutil.FileExists(filePath) {
 		// Check if the file is managed by ddev.
 		signatureFound, err := fileutil.FgrepStringInFile(filePath, DdevFileSignature)
@@ -607,18 +602,20 @@ func drupal9ConfigOverrideAction(app *DdevApp) error {
 // drupal8PostStartAction handles default post-start actions for D8 apps, like ensuring
 // useful permissions settings on sites/default.
 func drupal8PostStartAction(app *DdevApp) error {
-	if !app.DisableSettingsManagement {
-		if err := createDrupal8SyncDir(app); err != nil {
-			return err
-		}
+	// Return early because we aren't expected to manage settings.
+	if app.DisableSettingsManagement {
+		return nil
+	}
+	if err := createDrupal8SyncDir(app); err != nil {
+		return err
+	}
 
-		if err := drupalEnsureWritePerms(app); err != nil {
-			return err
-		}
+	if err := drupalEnsureWritePerms(app); err != nil {
+		return err
+	}
 
-		if _, err := app.CreateSettingsFile(); err != nil {
-			return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
-		}
+	if _, err := app.CreateSettingsFile(); err != nil {
+		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 	return nil
 }
@@ -626,6 +623,10 @@ func drupal8PostStartAction(app *DdevApp) error {
 // drupal7PostStartAction handles default post-start actions for D7 apps, like ensuring
 // useful permissions settings on sites/default.
 func drupal7PostStartAction(app *DdevApp) error {
+	// Return early because we aren't expected to manage settings.
+	if app.DisableSettingsManagement {
+		return nil
+	}
 	if err := drupalEnsureWritePerms(app); err != nil {
 		return err
 	}
@@ -644,6 +645,11 @@ func drupal7PostStartAction(app *DdevApp) error {
 // drupal6PostStartAction handles default post-start actions for D6 apps, like ensuring
 // useful permissions settings on sites/default.
 func drupal6PostStartAction(app *DdevApp) error {
+	// Return early because we aren't expected to manage settings.
+	if app.DisableSettingsManagement {
+		return nil
+	}
+
 	if err := drupalEnsureWritePerms(app); err != nil {
 		return err
 	}
