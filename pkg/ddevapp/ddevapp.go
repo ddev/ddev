@@ -1550,7 +1550,7 @@ func (app *DdevApp) DeleteSnapshot(snapshotName string) (error) {
 	util.Success("Deleted database snapshot %s in %s", snapshotName, hostSnapshotDir)
 	err = app.ProcessHooks("post-delete-snapshot")
 	if err != nil {
-		return fmt.Errorf("Failed to process pre-stop hooks: %v", err)
+		return fmt.Errorf("Failed to process post-delete-snapshot hooks: %v", err)
 	}
 
 	return nil
