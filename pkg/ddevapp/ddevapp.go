@@ -1528,6 +1528,35 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	return snapshotName, nil
 }
 
+// DeleteSnapshot removes the snapshot directory inside a project
+func (app *DdevApp) DeleteSnapshot(snapshotName string) (error) {
+	var err error
+	err = app.ProcessHooks("pre-delete-snapshot")
+	if err != nil {
+		return fmt.Errorf("Failed to process pre-delete-snapshot hooks: %v", err)
+	}
+
+	snapshotDir := path.Join("db_snapshots", snapshotName)
+	hostSnapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), snapshotDir)
+
+	if err = fileutil.PurgeDirectory(hostSnapshotDir); err != nil {
+		return fmt.Errorf("Failed to purge contents of snapshot directory: %v", err)
+	}
+
+	if err = os.Remove(hostSnapshotDir); err != nil {
+		return fmt.Errorf("Failed to delete snapshot directory: %v", err)
+	}
+
+	util.Success("Deleted database snapshot %s in %s", snapshotName, hostSnapshotDir)
+	err = app.ProcessHooks("post-delete-snapshot")
+	if err != nil {
+		return fmt.Errorf("Failed to process pre-stop hooks: %v", err)
+	}
+
+	return nil
+
+}
+
 // ListSnapshots returns a list of the names of all project snapshots
 func (app *DdevApp) ListSnapshots() ([]string, error) {
 	var err error

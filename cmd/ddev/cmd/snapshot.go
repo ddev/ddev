@@ -8,6 +8,7 @@ import (
 )
 
 var snapshotAll bool
+var snapshotCleanup bool
 var snapshotList bool
 var snapshotName string
 
@@ -18,6 +19,7 @@ var DdevSnapshotCommand = &cobra.Command{
 	Long:  `Uses mariabackup or xtrabackup command to create a database snapshot in the .ddev/db_snapshots folder. These are compatible with server backups using the same tools and can be restored with "ddev restore-snapshot".`,
 	Example: `ddev snapshot
 ddev snapshot --name some_descriptive_name
+ddev snapshot --cleanup
 ddev snapshot --list
 ddev snapshot --all`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -30,13 +32,15 @@ ddev snapshot --all`,
 		}
 
 		for _, app := range apps {
-			if snapshotList {
+
+			switch {
+			case snapshotList:
 				listAppSnapshots(app)
-
-				continue // do not create snapshot
+			case snapshotCleanup:
+				deleteAppSnapshot(app)
+			default:
+				createAppSnapshot(app)
 			}
-
-			createAppSnapshot(app)
 		}
 	},
 }
@@ -57,9 +61,30 @@ func createAppSnapshot(app *ddevapp.DdevApp) {
 	}
 }
 
+func deleteAppSnapshot(app *ddevapp.DdevApp) {
+	var snapshotsToDelete []string
+	var err error
+
+	if snapshotName == "" {
+		snapshotsToDelete, err = app.ListSnapshots()
+		if err != nil {
+			util.Failed("Failed to detect snapshots %s: %v", app.GetName(), err)
+		}
+	} else {
+		snapshotsToDelete = append(snapshotsToDelete, snapshotName)
+	}
+
+	for _, snapshotToDelete := range snapshotsToDelete {
+		if err := app.DeleteSnapshot(snapshotToDelete); err != nil {
+			util.Failed("Failed to delete snapshot %s: %v", app.GetName(), err)
+		}
+	}
+}
+
 func init() {
 	DdevSnapshotCommand.Flags().BoolVarP(&snapshotAll, "all", "a", false, "Snapshot all running projects")
 	DdevSnapshotCommand.Flags().BoolVarP(&snapshotList, "list", "l", false, "List snapshots")
+	DdevSnapshotCommand.Flags().BoolVarP(&snapshotCleanup, "cleanup", "C", false, "Cleanup snapshots")
 	DdevSnapshotCommand.Flags().StringVarP(&snapshotName, "name", "n", "", "provide a name for the snapshot")
 	RootCmd.AddCommand(DdevSnapshotCommand)
 }
