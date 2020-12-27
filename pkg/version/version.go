@@ -40,7 +40,7 @@ var DockerComposeFileFormatVersion = "3.6"
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag for drud dev
-var WebTag = "v1.16.3" // Note that this can be overridden by make
+var WebTag = "20201227_travis_router_http2_max_header" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"
@@ -58,7 +58,7 @@ var DBATag = "5" // Note that this can be overridden by make
 var RouterImage = "drud/ddev-router"
 
 // RouterTag defines the tag used for the router.
-var RouterTag = "v1.16.2" // Note that this can be overridden by make
+var RouterTag = "20201227_travis_router_http2_max_header" // Note that this can be overridden by make
 
 var SSHAuthImage = "drud/ddev-ssh-agent"
 
