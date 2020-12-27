@@ -203,7 +203,7 @@ mkdir my-typo3-site
 cd my-typo3-site
 ddev config --project-type=typo3 --docroot=public --create-docroot
 ddev start
-ddev composer create "typo3/cms-base-distribution:^10" --prefer-dist
+ddev composer create "typo3/cms-base-distribution:^11"
 ddev exec touch public/FIRST_INSTALL
 ddev launch
 ```
