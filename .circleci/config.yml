@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202010-01
     working_directory: ~/ddev
     environment:
       DRUD_NONINTERACTIVE: "true"
@@ -11,7 +11,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v13
+        - linux-v14
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: NORMAL Circle VM setup - tools, docker, golang
@@ -34,14 +34,14 @@ jobs:
         root: ~/
         paths: ddev
     - save_cache:
-        key: linux-v13
+        key: linux-v14
         paths:
         - /home/linuxbrew
         - ~/.ddev/testcache
 
   lx_nginx_fpm_test:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202010-01
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
@@ -52,7 +52,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v13
+        - linux-v14
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
@@ -66,7 +66,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v13
+        key: linux-v14
         paths:
         - /home/linuxbrew
         - ~/.ddev/testcache
@@ -162,7 +162,7 @@ jobs:
 
   lx_apache_fpm_test:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202010-01
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: apache-fpm
@@ -173,7 +173,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v13
+        - linux-v14
     - attach_workspace:
         at: ~/
     - run:
@@ -188,14 +188,14 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v13
+        key: linux-v14
         paths:
         - /home/linuxbrew
         - ~/.ddev/testcache
 
   lx_nfsmount_test:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202010-01
     working_directory: ~/ddev
     environment:
       DDEV_TEST_USE_NFSMOUNT: true
@@ -206,7 +206,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v13
+        - linux-v14
     - attach_workspace:
         at: ~/
     - run:
@@ -216,7 +216,7 @@ jobs:
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     # Run the built-in ddev tests with the executables just built.
     - run:
-        # CircleCI image ubuntu-1604:202007-01 has umask 002, which results in
+        # CircleCI image ubuntu-2004:202010-01 has umask 002, which results in
         # default perms 700 for new directories, which doesn't seem to work with NFS
         command: umask u=rwx,g=rwx,o=rx && make -s test EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: ddev tests
@@ -224,14 +224,14 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v13
+        key: linux-v14
         paths:
         - /home/linuxbrew
         - ~/.ddev/testcache
 
   staticrequired:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202010-01
     working_directory: ~/ddev
     environment:
     steps:
@@ -239,7 +239,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v13
+        - linux-v14
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
@@ -249,7 +249,7 @@ jobs:
 
   lx_container_test:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202010-01
     working_directory: ~/ddev
     environment:
       GOTEST_SHORT: true
@@ -259,7 +259,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v13
+        - linux-v14
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
@@ -283,7 +283,7 @@ jobs:
         name: linux container test
 
     - save_cache:
-        key: linux-v13
+        key: linux-v14
         paths:
         - /home/linuxbrew
         - ~/.ddev/testcache
@@ -312,13 +312,13 @@ jobs:
 
   artifacts:
     machine:
-      image: ubuntu-1604:202007-01
+      image: ubuntu-2004:202010-01
     working_directory: ~/ddev
     steps:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v13
+        - linux-v14
     - attach_workspace:
         at: ~/
     - run:
@@ -326,7 +326,7 @@ jobs:
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
     - save_cache:
-        key: linux-v13
+        key: linux-v14
         paths:
         - /home/linuxbrew
         - ~/.ddev/testcache
