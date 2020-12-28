@@ -803,6 +803,14 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 			return fmt.Errorf("unable to create task from %v", c)
 		}
 
+		if hookName == "pre-start" {
+			for k := range c {
+				if k == "exec" || k == "composer" {
+					return fmt.Errorf("pre-start hooks cannot contain %v", k)
+				}
+			}
+		}
+
 		output.UserOut.Printf("=== Running task: %s, output below", a.GetDescription())
 
 		err := a.Execute()
