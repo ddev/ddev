@@ -51,6 +51,9 @@ var WebserverDefault = WebserverNginxFPM
 // NFSMountEnabledDefault is default value for app.NFSMountEnabled
 var NFSMountEnabledDefault = false
 
+// FailOnHookFailDefault is the default value for app.FailOnHookFail
+var FailOnHookFailDefault = false
+
 // ValidWebserverTypes should be updated whenever supported webserver types are added or
 // removed, and should be used to ensure user-supplied values are valid.
 var ValidWebserverTypes = map[string]bool{

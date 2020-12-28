@@ -51,6 +51,7 @@ type GlobalConfig struct {
 	UseLetsEncrypt           bool                    `yaml:"use_letsencrypt"`
 	LetsEncryptEmail         string                  `yaml:"letsencrypt_email"`
 	AutoRestartContainers    bool                    `yaml:"auto_restart_containers"`
+	FailOnHookFailGlobal     bool                    `yaml:"fail_on_hook_fail"`
 	ProjectList              map[string]*ProjectInfo `yaml:"project_info"`
 }
 
@@ -155,6 +156,9 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # ddev will ignore low values, as they're not useful
 # internet_detection_timeout_ms: 750
 
+# You can enable 'ddev start' to be interrupted by a failing hook with
+# fail_on_hook_fail: true
+
 # instrumentation_user: <your_username> # can be used to give ddev specific info about who you are
 # developer_mode: true # (defaults to false) is not used widely at this time.
 # router_bind_all_interfaces: false  # (defaults to false)
@@ -165,11 +169,11 @@ func WriteGlobalConfig(config GlobalConfig) error {
 #    exposing PHPMyAdmin.
 
 # use_hardened_images: false
-# With hardened images a container that is exposed to the internet is 
+# With hardened images a container that is exposed to the internet is
 # a harder target, although not as hard as a fully-secured host.
 # sudo is removed, mailhog is removed, and since the web container
 # is run only as the owning user, only project files might be changed
-# if a CMS or PHP bug allowed creating or altering files, and 
+# if a CMS or PHP bug allowed creating or altering files, and
 # permissions should not allow escalation.
 
 # Let's Encrypt:
@@ -181,8 +185,8 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # * You will need to add a startup script to start your sites after a host reboot.
 # * If using several sites at a single top-level domain, you'll probably want to set
 #   project_tld to that top-level domain. Otherwise, you can use additional-hostnames or
-#   additional_fqdns. 
-# 
+#   additional_fqdns.
+#
 # use_letsencrypt: false
 # (Experimental, only useful on an internet-based server)
 # Set to true if certificates are to be obtained via certbot on https://letsencrypt.org/
@@ -194,6 +198,8 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # Experimental
 # If true, attempt to automatically restart projects/containers after reboot or docker restart.
 
+# fail_on_hook_fail: false
+# Decide whether 'ddev start' should be interrupted by a failing hook
 
 `
 	cfgbytes = append(cfgbytes, instructions...)

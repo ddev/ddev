@@ -111,17 +111,27 @@ func (c ComposerTask) GetDescription() string {
 // Returns a task (of various types) or nil
 func NewTask(app *DdevApp, ytask YAMLTask) Task {
 	if e, ok := ytask["exec-host"]; ok {
-		t := ExecHostTask{app: app, exec: e.(string)}
-		return t
-	} else if e, ok = ytask["exec"]; ok {
-		t := ExecTask{app: app, exec: e.(string)}
-		if t.service, ok = ytask["service"].(string); !ok {
-			t.service = nodeps.WebContainer
+		if v, ok := e.(string); ok {
+			t := ExecHostTask{app: app, exec: v}
+			return t
 		}
-		return t
+		util.Warning("Invalid exec-host value, not executing it: %v", e)
+	} else if e, ok = ytask["exec"]; ok {
+		if v, ok := e.(string); ok {
+			t := ExecTask{app: app, exec: v}
+			if t.service, ok = ytask["service"].(string); !ok {
+				t.service = nodeps.WebContainer
+			}
+			return t
+		}
+		util.Warning("Invalid exec value, not executing it: %v", e)
+
 	} else if e, ok = ytask["composer"]; ok {
-		t := ComposerTask{app: app, exec: e.(string)}
-		return t
+		if v, ok := e.(string); ok {
+			t := ComposerTask{app: app, exec: v}
+			return t
+		}
+		util.Warning("Invalid composer value, not executing it: %v", e)
 	}
 	return nil
 }
