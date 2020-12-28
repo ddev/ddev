@@ -11,7 +11,8 @@ This recipe adds an Apache Solr container to a project. It will set up a solr co
 #### Installation
 
 1. Copy [docker-compose.solr.yaml](https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/TestServices/docker-compose.solr.yaml) to the .ddev folder for your project.
-    * The recommended Solr version is: `image: solr:8`, from [hub.docker.com](https://hub.docker.com/_/solr/).
+    * Solr version can be changed by updating this line `image: solr:8` in `docker-compose.solr.yaml` file.
+    * [List of all Solr versions supported](https://hub.docker.com/_/solr/).
 2. Create the folder path .ddev/solr/conf.
     * If needed, you may copy/extract the Solr configuration files for your project into `.ddev/solr/conf`. Ensure that the configuration files are present before running `ddev start`.
 3. Run `ddev start` or `ddev restart` if your project is already running.
