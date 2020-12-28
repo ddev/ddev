@@ -114,10 +114,8 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 		if v, ok := e.(string); ok {
 			t := ExecHostTask{app: app, exec: v}
 			return t
-		} else {
-			util.Warning("Invalid exec-host value, not executing it: %v", e)
-			return nil
 		}
+		util.Warning("Invalid exec-host value, not executing it: %v", e)
 	} else if e, ok = ytask["exec"]; ok {
 		if v, ok := e.(string); ok {
 			t := ExecTask{app: app, exec: v}
@@ -125,18 +123,15 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 				t.service = nodeps.WebContainer
 			}
 			return t
-		} else {
-			util.Warning("Invalid exec value, not executing it: %v", e)
-			return nil
 		}
+		util.Warning("Invalid exec value, not executing it: %v", e)
+
 	} else if e, ok = ytask["composer"]; ok {
 		if v, ok := e.(string); ok {
 			t := ComposerTask{app: app, exec: v}
 			return t
-		} else {
-			util.Warning("Invalid composer value, not executing it: %v", e)
-			return nil
 		}
+		util.Warning("Invalid composer value, not executing it: %v", e)
 	}
 	return nil
 }
