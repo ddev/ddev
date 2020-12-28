@@ -32,7 +32,7 @@ export HOMEBREW_NO_AUTO_UPDATE=1
 export HOMEBREW_NO_INSTALL_CLEANUP=1
 
 brew tap drud/ddev >/dev/null
-for item in osslsigncode golang golangci-lint mkcert mkdocs ddev bats-core; do
+for item in osslsigncode golang mkcert mkdocs ddev bats-core; do
     brew install $item >/dev/null || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item >/dev/null
 done
 brew install --build-from-source makensis
