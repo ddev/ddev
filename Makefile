@@ -253,7 +253,7 @@ golangci-lint:
 		$$CMD; \
 	else \
 		$(DOCKERTESTCMD) \
-		time bash -c "$$CMD"; \
+		bash -c "$$CMD"; \
 	fi
 
 version:
