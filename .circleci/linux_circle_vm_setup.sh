@@ -37,8 +37,6 @@ for item in osslsigncode golang golangci-lint mkcert mkdocs ddev bats-core; do
 done
 brew install --build-from-source makensis
 
-# nvm on CircleCI has a few things. 10 is compatible with markdownlint-cli
-nvm use 10
 npm install --global markdownlint-cli
 markdownlint --version
 # readthedocs has ancient version of mkdocs in it.
