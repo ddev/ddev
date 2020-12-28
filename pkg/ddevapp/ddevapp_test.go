@@ -1956,12 +1956,14 @@ func TestProcessHooks(t *testing.T) {
 	testcommon.ClearDockerEnv()
 	app, err := ddevapp.NewApp(site.Dir, true, nodeps.ProviderDefault)
 	assert.NoError(err)
-	defer func() {
-		_ = app.Stop(true, false)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
 		app.Hooks = nil
-		_ = app.WriteConfig()
+		err = app.WriteConfig()
+		assert.NoError(err)
 		switchDir()
-	}()
+	})
 	err = app.Start()
 	assert.NoError(err)
 
@@ -1998,8 +2000,26 @@ func TestProcessHooks(t *testing.T) {
 	assert.FileExists(filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooks%s.txt", app.RouterHTTPSPort)))
 	assert.FileExists(filepath.Join(app.AppRoot, "touch_works_after_and.txt"))
 
-	err = app.Stop(true, false)
+	// Attempt processing hooks with a guaranteed failure
+	app.Hooks = map[string][]ddevapp.YAMLTask{
+		"hook-test": {
+			{"exec": "ls /does-not-exist"},
+		},
+	}
+	// With default setting, ProcessHooks should succeeed
+	err = app.ProcessHooks("hook-test")
 	assert.NoError(err)
+	// With FailOnHookFail or FailOnHookFailGlobal or both, it should fail.
+	app.FailOnHookFail = true
+	err = app.ProcessHooks("hook-test")
+	assert.Error(err)
+	app.FailOnHookFail = false
+	app.FailOnHookFailGlobal = true
+	err = app.ProcessHooks("hook-test")
+	assert.Error(err)
+	app.FailOnHookFail = true
+	err = app.ProcessHooks("hook-test")
+	assert.Error(err)
 
 	runTime()
 }
