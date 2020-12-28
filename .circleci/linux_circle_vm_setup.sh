@@ -13,7 +13,7 @@ if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
 fi
 
 sudo apt-get update -qq
-sudo apt-get install -qq mysql-client realpath zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev
+sudo apt-get install -qq mysql-client coreutils zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev
 
 curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip && sudo unzip -o -d /usr/local/bin /tmp/ngrok.zip
 
@@ -32,16 +32,15 @@ export HOMEBREW_NO_AUTO_UPDATE=1
 export HOMEBREW_NO_INSTALL_CLEANUP=1
 
 brew tap drud/ddev >/dev/null
-for item in osslsigncode golang golangci-lint mkcert mkdocs ddev makensis bats-core; do
+for item in osslsigncode golang mkcert mkdocs ddev bats-core; do
     brew install $item >/dev/null || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item >/dev/null
 done
+brew install --build-from-source makensis
 
-# nvm on CircleCI has a few things. 10 is compatible with markdownlint-cli
-nvm use 10
 npm install --global markdownlint-cli
 markdownlint --version
 # readthedocs has ancient version of mkdocs in it.
-pyenv global 3.8.3 # added to make CircleCi give us pip3
+pyenv global 3.8.5 # added to make CircleCi give us pip3
 pip3 install -q yq mkdocs==0.17.5
 
 # Get the Stubs and Plugins for makensis; the linux makensis build doesn't do this.
