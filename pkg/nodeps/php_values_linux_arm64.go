@@ -17,7 +17,6 @@ const PHPDefault = PHP74
 // ValidPHPVersions should be updated whenever PHP versions are added or removed, and should
 // be used to ensure user-supplied values are valid.
 var ValidPHPVersions = map[string]bool{
-	PHP56: true,
 	PHP70: true,
 	PHP71: true,
 	PHP72: true,
