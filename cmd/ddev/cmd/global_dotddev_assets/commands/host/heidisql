@@ -1,0 +1,21 @@
+#!/bin/bash
+
+## #ddev-generated: If you want to edit and own this file, remove this line.
+## Description: Run HeidiSQL against current db
+## Usage: heidisql
+## Example: "ddev heidisql"
+## OSTypes: windows,wsl2
+## HostBinaryExists: "/mnt/c/Program Files/HeidiSQL/heidisql.exe,C:\Program Files\HeidiSQL\Heidisql.exe"
+
+arguments="--host=127.0.0.1 --port=${DDEV_HOST_DB_PORT} --user=root --password=root --description=${DDEV_SITENAME}"
+
+case $OSTYPE in
+  "win*"* | "msys"*)
+    '/c/Program Files/HeidiSQL/heidisql.exe' "$arguments" &
+    ;;
+  # linux-gnu in this case is only WSL2 as selected in OSTypes above
+  "linux-gnu")
+    # HeidiSQL is Microsoft only, but we want to start it from WSL2
+    "/mnt/c/Program Files/HeidiSQL/heidisql.exe" "$arguments" &
+    ;;
+esac

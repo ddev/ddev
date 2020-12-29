@@ -12,7 +12,6 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -218,7 +217,7 @@ func GetGlobalDdevDir() string {
 	if err != nil {
 		logrus.Fatal("could not get home directory for current user. is it set?")
 	}
-	ddevDir := path.Join(userHome, ".ddev")
+	ddevDir := filepath.Join(userHome, ".ddev")
 
 	// Create the directory if it is not already present.
 	if _, err := os.Stat(ddevDir); os.IsNotExist(err) {
