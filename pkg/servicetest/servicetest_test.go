@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"path/filepath"
 
@@ -105,6 +106,9 @@ func checkSolrService(t *testing.T, app *ddevapp.DdevApp) {
 	check, err := testcommon.ContainerCheck(dockerutil.ContainerName(*container), "running")
 	assert.NoError(err)
 	assert.True(check, "%s container is not running", service)
+
+	// solr service seems to take a couple of seconds to come up after container running.
+	time.Sleep(2 * time.Second)
 
 	// Ensure service is accessible from web container
 	checkCommand := fmt.Sprintf("curl -slL -w '%%{http_code}' %s -o /dev/null", path)
