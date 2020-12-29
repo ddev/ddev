@@ -1529,7 +1529,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 }
 
 // DeleteSnapshot removes the snapshot directory inside a project
-func (app *DdevApp) DeleteSnapshot(snapshotName string) (error) {
+func (app *DdevApp) DeleteSnapshot(snapshotName string) error {
 	var err error
 	err = app.ProcessHooks("pre-delete-snapshot")
 	if err != nil {
