@@ -78,6 +78,8 @@ Now, since [Bedrock](https://roots.io/bedrock/) uses a configuration technique w
     DB_PASSWORD=db
     DB_HOST=db
     WP_HOME=https://my-wp-bedrock-site.ddev.site
+    WP_SITEURL=${WP_HOME}/wp
+    WP_ENV=development
 ```
 
 You can then `ddev start` and `ddev launch`.
