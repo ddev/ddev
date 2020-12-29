@@ -585,20 +585,6 @@ func drupal6ConfigOverrideAction(app *DdevApp) error {
 	return nil
 }
 
-// drupal8ConfigOverrideAction overrides mariadb_version for Druapl 8 for future
-// compatibility with Drupal 9, since it requires at least 10.3.
-func drupal8ConfigOverrideAction(app *DdevApp) error {
-	app.MariaDBVersion = nodeps.MariaDB103
-	return nil
-}
-
-// drupal9ConfigOverrideAction overrides mariadb_version for D9,
-// since it requires at least 10.3
-func drupal9ConfigOverrideAction(app *DdevApp) error {
-	app.MariaDBVersion = nodeps.MariaDB103
-	return nil
-}
-
 // drupal8PostStartAction handles default post-start actions for D8 apps, like ensuring
 // useful permissions settings on sites/default.
 func drupal8PostStartAction(app *DdevApp) error {
