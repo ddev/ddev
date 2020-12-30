@@ -11,7 +11,7 @@ GOTMP=.gotmp
 SHELL = /bin/bash
 PWD = $(shell pwd)
 GOFILES = $(shell find $(SRC_DIRS) -name "*.go")
-.PHONY: darwin_amd64 darwin_arm64 darwin_amd64_notarized darwin_amd64_notarized darwin_arm64_signed darwin_arm64_notarized linux_amd64 linux_arm64 linux_arm windows_amd64 windows_arm64
+.PHONY: darwin_amd64 darwin_arm64 darwin_amd64_notarized darwin_arm64_notarized darwin_arm64_signed darwin_amd64_signed linux_amd64 linux_arm64 linux_arm windows_amd64 windows_arm64
 
 # Expands SRC_DIRS into the common golang ./dir/... format for "all below"
 SRC_AND_UNDER = $(patsubst %,./%/...,$(SRC_DIRS))

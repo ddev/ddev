@@ -22,7 +22,8 @@ SOURCE_URL="https://github.com/drud/ddev/archive/${VERSION_NUMBER}.tar.gz"
 SOURCE_SHA=$(curl -sSL ${SOURCE_URL} | shasum -a 256 | awk '{print $1}')
 
 LINUX_BOTTLE_SHA=$(awk '{print $1}' <"${ARTIFACTS_DIR}/${PROJECT_NAME}-${NO_V_VERSION}.x86_64_linux.bottle.tar.gz.sha256.txt")
-MACOS_BOTTLE_SHA=$(awk '{print $1}' <${ARTIFACTS_DIR}/${PROJECT_NAME}-${NO_V_VERSION}.high_sierra.bottle.tar.gz.sha256.txt)
+MACOS_AMD64_BOTTLE_SHA=$(awk '{print $1}' <${ARTIFACTS_DIR}/${PROJECT_NAME}-${NO_V_VERSION}.high_sierra.bottle.tar.gz.sha256.txt)
+MACOS_ARM64_BOTTLE_SHA=$(awk '{print $1}' <${ARTIFACTS_DIR}/${PROJECT_NAME}-${NO_V_VERSION}.arm64_big_sur.bottle.tar.gz.sha256.txt)
 
 
 TMPDIR=$(mktemp -d)
@@ -46,7 +47,8 @@ class Ddev < Formula
     root_url "https://github.com/drud/ddev/releases/download/${VERSION_NUMBER}/"
     cellar :any_skip_relocation
     sha256 "${LINUX_BOTTLE_SHA}" => :x86_64_linux
-    sha256 "${MACOS_BOTTLE_SHA}" => :high_sierra
+    sha256 "${MACOS_AMD64_BOTTLE_SHA}" => :high_sierra
+    sha256 "${MACOS_ARM64_BOTTLE_SHA}" => :arm64_big_sur
   end
   def install
     system "make", "VERSION=v#{version}", "COMMIT=v#{version}"
