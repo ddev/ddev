@@ -19,7 +19,7 @@ ARTIFACTS_DIR=$4
 GITHUB_USERNAME=${5:-drud}
 
 NO_V_VERSION=$(echo ${VERSION_NUMBER} | awk  -F"-" '{ OFS="-"; sub(/^./, "", $1); printf $0; }')
-SOURCE_URL="https://github.com/drud/ddev/archive/${VERSION_NUMBER}.tar.gz"
+SOURCE_URL="https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/archive/${VERSION_NUMBER}.tar.gz"
 SOURCE_SHA=$(curl -sSL ${SOURCE_URL} | shasum -a 256 | awk '{print $1}')
 
 LINUX_BOTTLE_SHA=$(awk '{print $1}' <"${ARTIFACTS_DIR}/${PROJECT_NAME}-${NO_V_VERSION}.x86_64_linux.bottle.tar.gz.sha256.txt")
