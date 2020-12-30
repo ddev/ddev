@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"os"
 	"path/filepath"
@@ -112,12 +111,5 @@ func shopware6PostStartAction(app *DdevApp) error {
 		util.Warning("the .env file has not yet been created (%s)", envFile)
 	}
 
-	return nil
-}
-
-// shopware6ConfigOverrideAction overrides mariadb_version for shopware6,
-// since it requires at least 10.3
-func shopware6ConfigOverrideAction(app *DdevApp) error {
-	app.MariaDBVersion = nodeps.MariaDB103
 	return nil
 }
