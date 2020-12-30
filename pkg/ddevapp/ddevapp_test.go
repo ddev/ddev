@@ -1367,7 +1367,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 	fmt.Print()
 }
 
-// TestDdevSnapshotDelete tests creating a snapshot and delete it. This runs with Mariadb 10.2
+// TestDdevSnapshotCleanup tests creating a snapshot and deleting it.
 func TestDdevSnapshotCleanup(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
