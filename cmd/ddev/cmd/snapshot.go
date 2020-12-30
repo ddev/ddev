@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
@@ -12,6 +13,9 @@ var snapshotCleanup bool
 var snapshotList bool
 var snapshotName string
 
+// noConfirm: If true, --yes, we won't stop and prompt before each deletion
+var snapshotCleanupNoConfirm bool
+
 // DdevSnapshotCommand provides the snapshot command
 var DdevSnapshotCommand = &cobra.Command{
 	Use:   "snapshot [projectname projectname...]",
@@ -20,6 +24,7 @@ var DdevSnapshotCommand = &cobra.Command{
 	Example: `ddev snapshot
 ddev snapshot --name some_descriptive_name
 ddev snapshot --cleanup
+ddev snapshot --cleanup -y
 ddev snapshot --list
 ddev snapshot --all`,
 	Run: func(cmd *cobra.Command, args []string) {
@@ -75,6 +80,14 @@ func deleteAppSnapshot(app *ddevapp.DdevApp) {
 	}
 
 	for _, snapshotToDelete := range snapshotsToDelete {
+
+		if !snapshotCleanupNoConfirm {
+			prompt := "OK to delete the snapshot %s of %s\n."
+			if !util.Confirm(fmt.Sprintf(prompt, snapshotToDelete, app.GetName())) {
+				continue
+			}
+		}
+
 		if err := app.DeleteSnapshot(snapshotToDelete); err != nil {
 			util.Failed("Failed to delete snapshot %s: %v", app.GetName(), err)
 		}
@@ -85,6 +98,7 @@ func init() {
 	DdevSnapshotCommand.Flags().BoolVarP(&snapshotAll, "all", "a", false, "Snapshot all running projects")
 	DdevSnapshotCommand.Flags().BoolVarP(&snapshotList, "list", "l", false, "List snapshots")
 	DdevSnapshotCommand.Flags().BoolVarP(&snapshotCleanup, "cleanup", "C", false, "Cleanup snapshots")
+	DdevSnapshotCommand.Flags().BoolVarP(&snapshotCleanupNoConfirm, "yes", "y", false, "Yes - skip confirmation prompt")
 	DdevSnapshotCommand.Flags().StringVarP(&snapshotName, "name", "n", "", "provide a name for the snapshot")
 	RootCmd.AddCommand(DdevSnapshotCommand)
 }

@@ -33,7 +33,7 @@ func TestCmdSnapshot(t *testing.T) {
 	assert.Contains(string(out), "Created snapshot test-snapshot")
 
 	// Try to delete a not existing snapshot
-	args = []string{"snapshot", "--name", "not-existing-snapshot", "--cleanup"}
+	args = []string{"snapshot", "--name", "not-existing-snapshot", "--cleanup", "--yes"}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.Error(err)
 	assert.Contains(string(out), "Failed to delete snapshot")
