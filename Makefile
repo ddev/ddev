@@ -70,7 +70,7 @@ BUILD_OS = $(shell go env GOHOSTOS)
 BUILD_ARCH = $(shell go env GOHOSTARCH)
 VERSION_LDFLAGS=$(foreach v,$(VERSION_VARIABLES),-X '$(PKG)/pkg/version.$(v)=$($(v))')
 LDFLAGS=-extldflags -static $(VERSION_LDFLAGS)
-BUILD_IMAGE ?= drud/golang-build-container:v1.15.6
+BUILD_IMAGE ?= drud/golang-build-container:v1.16-beta
 DOCKERBUILDCMD=docker run -t --rm                     \
           	    -v "/$(PWD)://workdir$(DOCKERMOUNTFLAG)"                              \
           	    -e GOPATH="//workdir/$(GOTMP)" \
@@ -153,22 +153,19 @@ setup:
 	@mkdir -p $(TESTTMP)
 	@mkdir -p $(DOWNLOADTMP)
 
-# packr2 target currently builds packr2 caches in cmd/ddev/cmd and pkg/ddevapp
-# using the golang-build-container's packr2 command
-PACKR2_BUILD_IMAGE ?= drud/golang-build-container:v1.15.2
 packr2:
 	docker run -t --rm -u $(shell id -u):$(shell id -g)    \
           	    -v "/$(PWD):/workdir$(DOCKERMOUNTFLAG)"  \
           	    -v "/$(PWD)/$(GOTMP)/bin:$(S)/go/bin" \
           	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
           	    -w //workdir/cmd/ddev/cmd       \
-          	    $(PACKR2_BUILD_IMAGE) packr2
+          	    $(BUILD_IMAGE) packr2
 	docker run -t --rm -u $(shell id -u):$(shell id -g)    \
           	    -v "/$(PWD):/workdir$(DOCKERMOUNTFLAG)"  \
           	    -v "/$(PWD)/$(GOTMP)/bin:$(S)/go/bin" \
           	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
           	    -w //workdir/pkg/ddevapp       \
-          	    $(PACKR2_BUILD_IMAGE) packr2
+          	    $(BUILD_IMAGE) packr2
 
 # Required static analysis targets used in circleci - these cause fail if they don't work
 staticrequired: setup golangci-lint markdownlint mkdocs
