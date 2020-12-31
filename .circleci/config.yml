@@ -21,7 +21,7 @@ jobs:
         name: staticrequired
     - run:
         command: |
-          make linux_amd64 linux_arm64 darwin_amd64 windows_amd64 windows_install EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
+          make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_install EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: Build the ddev executables
     - run:
         command: ./.circleci/generate_artifacts.sh ~/artifacts
@@ -349,9 +349,9 @@ jobs:
         name: RELEASE BUILD (macOS) Circle VM setup
     - run: echo "version=$(make version)  CIRCLE_TAG=${CIRCLE_TAG}"
     - run:
-        command: make -s linux_amd64 linux_arm64 darwin_amd64 windows_amd64 windows_install chocolatey
+        command: make -s linux_amd64 linux_arm64 windows_amd64 windows_install chocolatey
     - run:
-        command: make -s darwin_notarized
+        command: make -s darwin_amd64_notarized darwin_arm64_notarized
         no_output_timeout: 30m
 
     # We only build the xz version of the docker images on tag build.

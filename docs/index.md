@@ -14,7 +14,8 @@
     * (Non-WSL2) Windows 10 Home, Pro, or Enterprise with [Docker Desktop for Windows](https://docs.docker.com/docker-for-windows/install/)
 * Architecture Support
     * AMD64 is supported on Windows 10 (with either traditional Windows or WSL2), macOS, and Linux.
-    * ARM64 machines are currently supported on Linux and WSL2 in Windows ARM64 computers, but will soon be supported on Apple Silicon as well.
+    * ARM64 machines are currently supported on Linux and in WSL2 in Windows ARM64 computers.
+    * Apple Silicon M1 (ARM64) is supported in v1.17-alpha1+ (edge versions).
 
 ## Using DDEV alongside other development environments
 
@@ -97,7 +98,7 @@ Note that nfs-mount-enabled (and running NFS) are not required on WSL2 because i
 
 ### Installation/Upgrade Script - Linux and macOS (ARM/ARM64 and AMD64 architectures)
 
-Windows WSL2, Linux and macOS users can use this line of code to your terminal to download, verify, and install (or upgrade) ddev using our [install script](https://github.com/drud/ddev/blob/master/scripts/install_ddev.sh). Note that this works with both amd64 and arm64 architectures, including Surface Pro X with WSL2 and 64-bit Raspberry Pi OS. It will be updated to work with 64-bit arm64 macOS hardware when the hardware and software become available.
+Windows WSL2, Linux and macOS users can use this line of code to your terminal to download, verify, and install (or upgrade) ddev using our [install script](https://github.com/drud/ddev/blob/master/scripts/install_ddev.sh). Note that this works with both amd64 and arm64 architectures, including Surface Pro X with WSL2 and 64-bit Raspberry Pi OS. It also works with the new macOS Apple Silicon M1 machines.
 
 ```
 curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh
