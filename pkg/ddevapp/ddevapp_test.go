@@ -137,15 +137,15 @@ var (
 		// Note that testpkgmagento2 code is enormous and makes this really, really slow.
 		{
 			Name:                          "testpkgmagento2",
-			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/magento2_code_no_dev_with_media.tgz",
+			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/testpkgmagento2_code_no_media.magento2.4.tgz",
 			ArchiveInternalExtractionPath: "",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/magento2_db.tgz",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/magento2_files.tgz",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/testpkgmagento2.magento2.4.sql.gz",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/testpkgmagento2_files.magento2.4.tgz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "pub",
 			Type:                          nodeps.AppTypeMagento2,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/junk.txt", Expect: `This is a junk`},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/index.php/junk-product.html", Expect: "junk product"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/index.php/unicycles.html", Expect: "Testing123"},
 			FilesImageURI:                 "/media/catalog/product/r/a/randy_4th_of_july_unicycle.jpg",
 		},
 		{
