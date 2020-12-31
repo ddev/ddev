@@ -68,7 +68,19 @@ func createAppSnapshot(app *ddevapp.DdevApp) {
 
 func deleteAppSnapshot(app *ddevapp.DdevApp) {
 	var snapshotsToDelete []string
+	var prompt string
 	var err error
+
+	if !snapshotCleanupNoConfirm {
+		if snapshotName == "" {
+			prompt = fmt.Sprintf("OK to delete all snapshots of %s\n.", app.GetName())
+		} else {
+			prompt = fmt.Sprintf("OK to delete the snapshot %s of %s\n.", snapshotName, app.GetName())
+		}
+		if !util.Confirm(prompt) {
+			return
+		}
+	}
 
 	if snapshotName == "" {
 		snapshotsToDelete, err = app.ListSnapshots()
@@ -80,14 +92,6 @@ func deleteAppSnapshot(app *ddevapp.DdevApp) {
 	}
 
 	for _, snapshotToDelete := range snapshotsToDelete {
-
-		if !snapshotCleanupNoConfirm {
-			prompt := "OK to delete the snapshot %s of %s\n."
-			if !util.Confirm(fmt.Sprintf(prompt, snapshotToDelete, app.GetName())) {
-				continue
-			}
-		}
-
 		if err := app.DeleteSnapshot(snapshotToDelete); err != nil {
 			util.Failed("Failed to delete snapshot %s: %v", app.GetName(), err)
 		}
