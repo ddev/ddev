@@ -38,6 +38,10 @@ if [ "$DDEV_PROJECT_TYPE" = "backdrop" ] ; then
     mkdir -p ~/.drush/commands && ln -s /var/tmp/backdrop_drush_commands ~/.drush/commands/backdrop
 fi
 
+if [ "${DDEV_PROJECT_TYPE}" = "drupal6" ] || [ "${DDEV_PROJECT_TYPE}" = "drupal7" ] ; then
+  ln -sf /usr/local/bin/drush8 /usr/local/bin/drush
+fi
+
 # Change the apache run user to current user/group
 printf "\nexport APACHE_RUN_USER=$(id -un)\nexport APACHE_RUN_GROUP=$(id -gn)\n" >>/etc/apache2/envvars
 
