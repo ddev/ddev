@@ -73,9 +73,9 @@ func deleteAppSnapshot(app *ddevapp.DdevApp) {
 
 	if !snapshotCleanupNoConfirm {
 		if snapshotName == "" {
-			prompt = fmt.Sprintf("OK to delete all snapshots of %s\n.", app.GetName())
+			prompt = fmt.Sprintf("OK to delete all snapshots of %s.", app.GetName())
 		} else {
-			prompt = fmt.Sprintf("OK to delete the snapshot %s of %s\n.", snapshotName, app.GetName())
+			prompt = fmt.Sprintf("OK to delete the snapshot %s of %s.", snapshotName, app.GetName())
 		}
 		if !util.Confirm(prompt) {
 			return
