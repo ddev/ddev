@@ -1834,8 +1834,6 @@ func TestDdevExec(t *testing.T) {
 		case nodeps.AppTypeDrupal6:
 			fallthrough
 		case nodeps.AppTypeDrupal7:
-			fallthrough
-		case nodeps.AppTypeDrupal8:
 			out, _, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
 				Cmd:     "drush status",
