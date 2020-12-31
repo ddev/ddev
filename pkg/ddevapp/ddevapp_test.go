@@ -1334,6 +1334,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		if app.Type == "magento2" {
 			_, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: "php bin/magento indexer:reindex"})
+			assert.NoError(err)
 		}
 		// Test static content.
 		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
