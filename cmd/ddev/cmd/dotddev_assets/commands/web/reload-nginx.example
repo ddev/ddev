@@ -1,8 +1,0 @@
-#!/bin/bash
-
-## #ddev-generated
-## Description: Reload config for nginx and php-fpm inside web container
-## Usage: restart-nginx
-## Example: "ddev restart-nginx"
-
-killall -HUP nginx php-fpm
