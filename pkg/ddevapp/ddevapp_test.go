@@ -136,8 +136,9 @@ var (
 		},
 		// Note that testpkgmagento2 code is enormous and makes this really, really slow.
 		{
-			Name:                          "testpkgmagento2",
-			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/testpkgmagento2_code_no_media.magento2.4_try_2.tgz",
+			Name: "testpkgmagento2",
+			// tar -czf .tarballs/testpkgmagento2_code_no_media.magento2.4_try_3.tgz --exclude=.ddev --exclude=var --exclude=pub/media --exclude=.tarballs --exclude=app/etc/env.php .
+			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/testpkgmagento2_code_no_media.magento2.4_try_3.tgz",
 			ArchiveInternalExtractionPath: "",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/testpkgmagento2.magento2.4.db.tgz",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/testpkgmagento2_files.magento2.4.tgz",
