@@ -1333,15 +1333,6 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			t.Fatalf("app.StartAndWait() failure err=%v; logs:\n=====\n%s\n=====\n", startErr, appLogs)
 		}
 
-		if app.Type == "magento2" {
-			stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
-				Service: "web",
-				Cmd:     "php bin/magento indexer:reindex",
-			})
-			_ = stdout
-			assert.NoError(err, "could not run indexer, stderr=%v", stderr)
-			time.Sleep(5 * time.Second)
-		}
 		// Test static content.
 		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		// Test dynamic php + database content.
