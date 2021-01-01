@@ -15,7 +15,7 @@ jobs:
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: NORMAL Circle VM setup - tools, docker, golang
-
+        no_output_timeout: "40m"
     - run:
         command: source ~/.bashrc && make staticrequired EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: staticrequired
@@ -57,6 +57,7 @@ jobs:
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
+        no_output_timeout: "40m"
 
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - run:
@@ -179,6 +180,8 @@ jobs:
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
+        no_output_timeout: "40m"
+
     # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     # Run the built-in ddev tests with the executables just built.
     - run:
@@ -212,6 +215,7 @@ jobs:
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
+        no_output_timeout: "40m"
 
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     # Run the built-in ddev tests with the executables just built.
@@ -243,6 +247,7 @@ jobs:
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
+        no_output_timeout: "40m"
     - run:
         command: source ~/.bashrc && make staticrequired EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: staticrequired
@@ -263,6 +268,8 @@ jobs:
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
+        no_output_timeout: "40m"
+
     - run:
         command: ./.circleci/linux_docker_buildx_setup.sh
         name: Docker buildx setup for multi-arch builds
