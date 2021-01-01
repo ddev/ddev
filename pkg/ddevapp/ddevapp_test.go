@@ -1340,7 +1340,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			})
 			_ = stdout
 			assert.NoError(err, "could not run indexer, stderr=%v", stderr)
-			time.Sleep(2 * time.Second)
+			time.Sleep(5 * time.Second)
 		}
 		// Test static content.
 		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
