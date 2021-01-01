@@ -21,7 +21,7 @@ You can also add tools that are not provided by default using [`webimage_extra_p
 
 ### DDEV and Composer
 
-ddev provides a built-in command to simplify use of [Composer](https://getcomposer.org/), the dependency manager for PHP, that allows a user to create and manage projects without having Composer installed on the host machine. Generally, executing any Composer command through DDEV is as simple as prepending the command with `ddev`. DDEV will execute the command at the project root in the web container, passing all arguments and flags to Composer. To execute Composer in other directories within the container, use `ddev ssh` or `ddev exec -d <dir>`. For example:
+ddev provides a built-in command to simplify use of [Composer](https://getcomposer.org/), the dependency manager for PHP, that allows a user to create and manage projects without having Composer installed on the host machine. Generally, executing any Composer command through DDEV is as simple as prepending the command with `ddev`. DDEV will execute the command at the project root in the web container, passing (almost) all arguments and flags to Composer. To execute Composer in other directories within the container, use `ddev ssh` or `ddev exec -d <dir>`. For example:
 
 `ddev composer help`
 `ddev composer require <package>`
@@ -55,6 +55,16 @@ You generally don't have to worry about any of this, but it does keep things cle
 ![finding developer mode](images/developer_mode_1.png)
 
 ![setting developer mode](images/developer_mode_2.png)
+
+#### Limitations with `ddev composer`
+
+- Using `ddev composer --version` or `ddev composer -V` will not work, since `ddev` tries to utilize the command for itself. Use `ddev exec composer --version` instead.
+- Quotes, "@" signs and asterisks can cause troubles, since they get eaten up by the bash on the host. In such cases use double quotes, e.g.: 
+  - `ddev composer require "'drupal/core:9.0.0 as 8.9.0'" --no-update`
+  - `ddev composer config repositories.local path "'packages/*'"`
+  - `ddev composer require "my-company/my-sitepackage:@dev" --no-update`
+
+If you encounter any other scenario, consider using `ddev ssh` as outlined above.
 
 ### Email Capture and Review
 
