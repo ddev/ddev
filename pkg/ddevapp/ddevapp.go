@@ -1528,6 +1528,60 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	return snapshotName, nil
 }
 
+// DeleteSnapshot removes the snapshot directory inside a project
+func (app *DdevApp) DeleteSnapshot(snapshotName string) error {
+	var err error
+	err = app.ProcessHooks("pre-delete-snapshot")
+	if err != nil {
+		return fmt.Errorf("Failed to process pre-delete-snapshot hooks: %v", err)
+	}
+
+	snapshotDir := path.Join("db_snapshots", snapshotName)
+	hostSnapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), snapshotDir)
+
+	if err = fileutil.PurgeDirectory(hostSnapshotDir); err != nil {
+		return fmt.Errorf("Failed to purge contents of snapshot directory: %v", err)
+	}
+
+	if err = os.Remove(hostSnapshotDir); err != nil {
+		return fmt.Errorf("Failed to delete snapshot directory: %v", err)
+	}
+
+	util.Success("Deleted database snapshot %s in %s", snapshotName, hostSnapshotDir)
+	err = app.ProcessHooks("post-delete-snapshot")
+	if err != nil {
+		return fmt.Errorf("Failed to process post-delete-snapshot hooks: %v", err)
+	}
+
+	return nil
+
+}
+
+// ListSnapshots returns a list of the names of all project snapshots
+func (app *DdevApp) ListSnapshots() ([]string, error) {
+	var err error
+	var snapshots []string
+
+	snapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), "db_snapshots")
+
+	if !fileutil.FileExists(snapshotDir) {
+		return snapshots, nil
+	}
+
+	files, err := ioutil.ReadDir(snapshotDir)
+	if err != nil {
+		return snapshots, err
+	}
+
+	for _, f := range files {
+		if f.IsDir() {
+			snapshots = append(snapshots, f.Name())
+		}
+	}
+
+	return snapshots, nil
+}
+
 // RestoreSnapshot restores a mariadb snapshot of the db to be loaded
 // The project must be stopped and docker volume removed and recreated for this to work.
 func (app *DdevApp) RestoreSnapshot(snapshotName string) error {

@@ -1367,6 +1367,47 @@ func TestDdevFullSiteSetup(t *testing.T) {
 	fmt.Print()
 }
 
+// TestDdevSnapshotCleanup tests creating a snapshot and deleting it.
+func TestDdevSnapshotCleanup(t *testing.T) {
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	defer switchDir()
+
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("TestDdevSnapshotCleanup"))
+
+	testcommon.ClearDockerEnv()
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+
+	err = app.StartAndWait(0)
+	assert.NoError(err)
+
+	// Make a snapshot of d7 tester test 1
+	backupsDir := filepath.Join(app.GetConfigPath(""), "db_snapshots")
+	snapshotName, err := app.Snapshot("d7testerTest1")
+	assert.NoError(err)
+
+	assert.True(fileutil.FileExists(filepath.Join(backupsDir, snapshotName, "xtrabackup_info")), "Expected that file xtrabackup_info in snapshot exists")
+
+	err = app.Init(site.Dir)
+	require.NoError(t, err)
+
+	err = app.Start()
+	require.NoError(t, err)
+	//nolint: errcheck
+	defer app.Stop(true, false)
+
+	err = app.DeleteSnapshot("d7testerTest1")
+	assert.NoError(err)
+
+	// Snapshot data should be deleted
+	assert.False(fileutil.FileExists(filepath.Join(backupsDir, snapshotName, "xtrabackup_info")), "Expected that file of snapshot is deleted during cleanup")
+
+	runTime()
+}
+
 // TestDdevRestoreSnapshot tests creating a snapshot and reverting to it. This runs with Mariadb 10.2
 func TestDdevRestoreSnapshot(t *testing.T) {
 	assert := asrt.New(t)
