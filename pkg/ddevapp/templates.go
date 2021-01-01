@@ -222,7 +222,7 @@ const ConfigInstructions = `
 
 # docroot: <relative_path> # Relative path to the directory containing index.php.
 
-# php_version: "7.3"  # PHP version to use, "5.6", "7.0", "7.1", "7.2", "7.3", "7.4" "8.0"
+# php_version: "7.4"  # PHP version to use, "5.6", "7.0", "7.1", "7.2", "7.3", "7.4" "8.0"
 
 # You can explicitly specify the webimage, dbimage, dbaimage lines but this
 # is not recommended, as the images are often closely tied to ddev's' behavior,
@@ -320,7 +320,7 @@ const ConfigInstructions = `
 # mailhog_https_port: "8026"
 # The MailHog ports can be changed from the default 8025 and 8026
 
-# webimage_extra_packages: [php7.3-tidy, php-bcmath]
+# webimage_extra_packages: [php7.4-tidy, php-bcmath]
 # Extra Debian packages that are needed in the webimage can be added here
 
 # dbimage_extra_packages: [telnet,netcat]

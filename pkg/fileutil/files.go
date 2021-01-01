@@ -64,7 +64,7 @@ func CopyFile(src string, dst string) error {
 
 // CopyDir recursively copies a directory tree, attempting to preserve permissions.
 // Source directory must exist, destination directory must *not* exist.
-// Symlinks are ignored and skipped. Credit @m4ng0squ4sh https://gist.github.com/m4ng0squ4sh/92462b38df26839a3ca324697c8cba04
+// Symlinks are ignored and skipped. Credit @r0l1 https://gist.github.com/r0l1/92462b38df26839a3ca324697c8cba04
 func CopyDir(src string, dst string) error {
 	src = filepath.Clean(src)
 	dst = filepath.Clean(dst)

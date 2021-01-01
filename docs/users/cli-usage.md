@@ -493,8 +493,8 @@ d8composer  drupal8  ~/workspace/d8composer  https://d8composer.ddev.site  runni
 
 Project Information
 -------------------
-PHP version:    7.3
-MariaDB version 10.2
+PHP version:    7.4
+MariaDB version 10.3
 
 URLs
 ----
