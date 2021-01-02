@@ -7,8 +7,8 @@ import (
 	"testing"
 )
 
-// TestCmdSnapshot runs `ddev snapshot` on the test apps
-func TestCmdSnapshot(t *testing.T) {
+// TestCmdRestoreSnapshot runs `ddev restore-snapshot` on the test apps
+func TestCmdRestoreSnapshot(t *testing.T) {
 	assert := asrt.New(t)
 
 	site := TestSites[0]
@@ -22,21 +22,21 @@ func TestCmdSnapshot(t *testing.T) {
 		cleanup()
 	}()
 
-	// Ensure that a snapshot can be created
+	// Ensure that a snapshot is created
 	args := []string{"snapshot", "--name", "test-snapshot"}
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.Contains(string(out), "Created snapshot test-snapshot")
+	assert.Contains(out, "Created snapshot test-snapshot")
 
-	// Try to delete a not existing snapshot
-	args = []string{"snapshot", "--name", "not-existing-snapshot", "--cleanup", "--yes"}
-	out, err = exec.RunCommand(DdevBin, args)
-	assert.Error(err)
-	assert.Contains(string(out), "Failed to delete snapshot")
-
-	// Ensure that an existing snapshot can be deleted
-	args = []string{"snapshot", "--name", "test-snapshot", "--cleanup"}
+	// Ensure that a snapshot can be restored
+	args = []string{"restore-snapshot", "test-snapshot"}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.Contains(string(out), "Deleted database snapshot test-snapshot")
+	assert.Contains(out, "Restored database snapshot")
+
+	// Ensure that latest snapshot can be restored
+	args = []string{"restore-snapshot", "--latest"}
+	out, err = exec.RunCommand(DdevBin, args)
+	assert.NoError(err)
+	assert.Contains(out, "Restored database snapshot")
 }

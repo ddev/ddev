@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -1557,6 +1558,22 @@ func (app *DdevApp) DeleteSnapshot(snapshotName string) error {
 
 }
 
+// GetLatestSnapshot returns the latest created snapshot of a project
+func (app *DdevApp) GetLatestSnapshot() (string, error) {
+	var snapshots []string
+
+	snapshots, err := app.ListSnapshots()
+	if err != nil {
+		return "", err
+	}
+
+	if len(snapshots) == 0 {
+		return "", fmt.Errorf("no snapshots found")
+	}
+
+	return snapshots[0], nil
+}
+
 // ListSnapshots returns a list of the names of all project snapshots
 func (app *DdevApp) ListSnapshots() ([]string, error) {
 	var err error
@@ -1572,6 +1589,13 @@ func (app *DdevApp) ListSnapshots() ([]string, error) {
 	if err != nil {
 		return snapshots, err
 	}
+
+	// Sort snapshots by last modification time
+	// we need that to detect the latest snapshot
+	// first snapshot is the latest
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].ModTime().After(files[j].ModTime())
+	})
 
 	for _, f := range files {
 		if f.IsDir() {

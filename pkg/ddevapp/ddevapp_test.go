@@ -1411,6 +1411,60 @@ func TestDdevSnapshotCleanup(t *testing.T) {
 	runTime()
 }
 
+// TestGetLatestSnapshot tests if the latest snapshot of a project is returned correctly.
+func TestGetLatestSnapshot(t *testing.T) {
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	defer switchDir()
+
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("TestGetLatestSnapshot"))
+
+	testcommon.ClearDockerEnv()
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+
+	err = app.StartAndWait(0)
+	assert.NoError(err)
+	//nolint: errcheck
+	defer app.Stop(true, false)
+
+	// Make three snapshots and compare the last
+	_, err = app.Snapshot("d7testerTest1")
+	assert.NoError(err)
+	_, err = app.Snapshot("d7testerTest2")
+	assert.NoError(err)
+	_, err = app.Snapshot("d7testerTest3") // last = latest
+	assert.NoError(err)
+
+	latestSnapshot, err := app.GetLatestSnapshot()
+	assert.NoError(err)
+	assert.Equal("d7testerTest3", latestSnapshot)
+
+	// delete last latest
+	err = app.DeleteSnapshot("d7testerTest3")
+	assert.NoError(err)
+	latestSnapshot, err = app.GetLatestSnapshot()
+	assert.NoError(err)
+	assert.Equal("d7testerTest2", latestSnapshot, "d7testerTest2 should be latest snapshot")
+
+	// cleanup snapshots
+	err = app.DeleteSnapshot("d7testerTest2")
+	assert.NoError(err)
+	latestSnapshot, err = app.GetLatestSnapshot()
+	assert.NoError(err)
+	assert.Equal("d7testerTest1", latestSnapshot, "d7testerTest1 should be latest snapshot")
+
+	err = app.DeleteSnapshot("d7testerTest1")
+	assert.NoError(err)
+	latestSnapshot, err = app.GetLatestSnapshot()
+	assert.Equal("", latestSnapshot)
+	assert.Error(err, "There should be an error if no snapshot is available")
+
+	runTime()
+}
+
 // TestDdevRestoreSnapshot tests creating a snapshot and reverting to it. This runs with Mariadb 10.2
 func TestDdevRestoreSnapshot(t *testing.T) {
 	assert := asrt.New(t)
