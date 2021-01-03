@@ -13,8 +13,10 @@ func TestCmdRestoreSnapshot(t *testing.T) {
 
 	site := TestSites[0]
 	cleanup := site.Chdir()
+
 	app, err := ddevapp.NewApp(site.Dir, false, "")
 	assert.NoError(err)
+
 	defer func() {
 		// Make sure all databases are back to default empty
 		_ = app.Stop(true, false)
@@ -29,13 +31,13 @@ func TestCmdRestoreSnapshot(t *testing.T) {
 	assert.Contains(out, "Created snapshot test-snapshot")
 
 	// Ensure that a snapshot can be restored
-	args = []string{"restore-snapshot", "test-snapshot"}
+	args = []string{"snapshot", "restore", "test-snapshot"}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	assert.Contains(out, "Restored database snapshot")
 
 	// Ensure that latest snapshot can be restored
-	args = []string{"restore-snapshot", "--latest"}
+	args = []string{"snapshot", "restore", "--latest"}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	assert.Contains(out, "Restored database snapshot")
