@@ -20,6 +20,8 @@ github.com/aokoli/goutils
 # github.com/cheggaaa/pb v1.0.25
 ## explicit
 github.com/cheggaaa/pb
+# github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
+github.com/chzyer/readline
 # github.com/containerd/containerd v1.3.0
 github.com/containerd/containerd/errdefs
 # github.com/containerd/continuity v0.0.0-20200228182428-0f16d7a0959c
@@ -133,6 +135,9 @@ github.com/imdario/mergo
 github.com/inconshreveable/mousetrap
 # github.com/joho/godotenv v1.3.0
 github.com/joho/godotenv
+# github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a
+github.com/juju/ansiterm
+github.com/juju/ansiterm/tabwriter
 # github.com/karrick/godirwalk v1.10.12
 github.com/karrick/godirwalk
 # github.com/konsorten/go-windows-terminal-sequences v1.0.2
@@ -145,9 +150,14 @@ github.com/lextoumbourou/goodhosts
 github.com/lunixbochs/vtclean
 # github.com/magiconair/properties v1.8.1
 github.com/magiconair/properties
+# github.com/manifoldco/promptui v0.8.0
+## explicit
+github.com/manifoldco/promptui
+github.com/manifoldco/promptui/list
+github.com/manifoldco/promptui/screenbuf
 # github.com/mattn/go-colorable v0.0.9
 github.com/mattn/go-colorable
-# github.com/mattn/go-isatty v0.0.3
+# github.com/mattn/go-isatty v0.0.4
 ## explicit
 github.com/mattn/go-isatty
 # github.com/mattn/go-runewidth v0.0.2
