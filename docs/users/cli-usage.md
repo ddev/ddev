@@ -669,8 +669,8 @@ ddev restore-snapshot d8git_20180801132403
 Restored database snapshot: /Users/rfay/workspace/d8git/.ddev/db_snapshots/d8git_20180801132403
 ```
 
-Snapshots are stored in the project's .ddev/db_snapshots directory, and the directory can be renamed as necessary. For example, if you rename the above d8git_20180801132403 directory to "working_before_migration", then you can use `ddev restore-snapshot working_before_migration`.
-To restore the latest snapshot add the `--latest` flag (`ddev restore-snapshot --latest`).
+Snapshots are stored in the project's .ddev/db_snapshots directory, and the directory can be renamed as necessary. For example, if you rename the above d8git_20180801132403 directory to "working_before_migration", then you can use `ddev snapshot restore working_before_migration`.
+To restore the latest snapshot add the `--latest` flag (`ddev snapshot restore --latest`).
 
 To delete a snapshot, delete its folder from the .ddev/db_snapshots directory. Snapshots are not removed from the filesystem by `ddev delete`. It is safe to remove all the snapshots with `rm -r .ddev/db_snapshots` if you no longer need the snapshots.
 
