@@ -1459,7 +1459,7 @@ func TestGetLatestSnapshot(t *testing.T) {
 	err = app.DeleteSnapshot("d7testerTest1")
 	assert.NoError(err)
 	latestSnapshot, err = app.GetLatestSnapshot()
-	assert.Equal("", latestSnapshot)
+	assert.NotEqual("d7testerTest1", latestSnapshot)
 	assert.Error(err, "There should be an error if no snapshot is available")
 
 	runTime()

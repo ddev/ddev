@@ -7,8 +7,8 @@ import (
 	"testing"
 )
 
-// TestCmdRestoreSnapshot runs `ddev restore-snapshot` on the test apps
-func TestCmdRestoreSnapshot(t *testing.T) {
+// TestCmdSnapshotRestore runs `ddev snapshot restore` on the test apps
+func TestCmdSnapshotRestore(t *testing.T) {
 	assert := asrt.New(t)
 
 	site := TestSites[0]
