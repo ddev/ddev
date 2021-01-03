@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -27,14 +29,31 @@ Example: "ddev snapshot restore d8git_20180717203845"`,
 			}
 		} else {
 			if len(args) != 1 {
-				util.Warning("Please provide the name of the snapshot you want to restore." +
-					"\nThe available snapshots are in .ddev/db_snapshots directory. " +
-					"\nYou can list them with \"ddev snapshot --list\".")
-				_ = cmd.Usage()
-				os.Exit(1)
-			}
 
-			snapshotName = args[0]
+				snapshots, err := app.ListSnapshots()
+				if err != nil {
+					util.Failed("Cannot list snapshots of project %s: %v", snapshotName, app.GetName(), err)
+				}
+
+				if len(snapshots) == 0 {
+					util.Failed("No snapshots found for project %", app.GetName())
+					os.Exit(1)
+				}
+
+				prompt := promptui.Select{
+					Label: "Select snapshot",
+					Items: snapshots,
+				}
+
+				_, snapshotName, err = prompt.Run()
+
+				if err != nil {
+					util.Failed("Prompt failed %v", err)
+					os.Exit(1)
+				}
+			} else {
+				snapshotName = args[0]
+			}
 		}
 
 		if err := app.RestoreSnapshot(snapshotName); err != nil {
@@ -44,9 +63,9 @@ Example: "ddev snapshot restore d8git_20180717203845"`,
 }
 
 func init() {
-	//app, err := ddevapp.GetActiveApp("")
-	//if err == nil && app != nil && !nodeps.ArrayContainsString(app.OmitContainers, "db") {
-	DdevSnapshotRestoreCommand.Flags().BoolVarP(&snapshotRestoreLatest, "latest", "", false, "use latest snapshot")
-	DdevSnapshotCommand.AddCommand(DdevSnapshotRestoreCommand)
-	//}
+	app, err := ddevapp.GetActiveApp("")
+	if err == nil && app != nil && !nodeps.ArrayContainsString(app.OmitContainers, "db") {
+		DdevSnapshotRestoreCommand.Flags().BoolVarP(&snapshotRestoreLatest, "latest", "", false, "use latest snapshot")
+		DdevSnapshotCommand.AddCommand(DdevSnapshotRestoreCommand)
+	}
 }
