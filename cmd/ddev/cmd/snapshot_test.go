@@ -24,8 +24,13 @@ func TestCmdSnapshot(t *testing.T) {
 		cleanup()
 	}()
 
+	// Ensure that there are no snapshots available before we create one
+	args := []string{"snapshot", "--cleanup", "--yes"}
+	_, err = exec.RunCommand(DdevBin, args)
+	assert.NoError(err)
+
 	// Ensure that a snapshot can be created
-	args := []string{"snapshot", "--name", "test-snapshot"}
+	args = []string{"snapshot", "--name", "test-snapshot"}
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	assert.Contains(out, "Created snapshot test-snapshot")
@@ -37,7 +42,7 @@ func TestCmdSnapshot(t *testing.T) {
 	assert.Contains(out, "Failed to delete snapshot")
 
 	// Ensure that an existing snapshot can be deleted
-	args = []string{"snapshot", "--name", "test-snapshot", "--cleanup"}
+	args = []string{"snapshot", "--name", "test-snapshot", "--cleanup", "--yes"}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	assert.Contains(out, "Deleted database snapshot test-snapshot")

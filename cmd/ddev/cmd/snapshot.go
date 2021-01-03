@@ -21,7 +21,7 @@ var snapshotCleanupNoConfirm bool
 var DdevSnapshotCommand = &cobra.Command{
 	Use:   "snapshot [projectname projectname...]",
 	Short: "Create a database snapshot for one or more projects.",
-	Long:  `Uses mariabackup or xtrabackup command to create a database snapshot in the .ddev/db_snapshots folder. These are compatible with server backups using the same tools and can be restored with "ddev restore-snapshot".`,
+	Long:  `Uses mariabackup or xtrabackup command to create a database snapshot in the .ddev/db_snapshots folder. These are compatible with server backups using the same tools and can be restored with "ddev snapshot restore".`,
 	Example: `ddev snapshot
 ddev snapshot --name some_descriptive_name
 ddev snapshot --cleanup
