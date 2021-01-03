@@ -32,11 +32,11 @@ Example: "ddev snapshot restore d8git_20180717203845"`,
 
 				snapshots, err := app.ListSnapshots()
 				if err != nil {
-					util.Failed("Cannot list snapshots of project %s: %v", snapshotName, app.GetName(), err)
+					util.Failed("Cannot list snapshots of project %s: %v", app.GetName(), err)
 				}
 
 				if len(snapshots) == 0 {
-					util.Failed("No snapshots found for project %", app.GetName())
+					util.Failed("No snapshots found for project %s", app.GetName())
 					os.Exit(1)
 				}
 
