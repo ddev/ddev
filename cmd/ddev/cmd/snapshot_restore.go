@@ -6,7 +6,6 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var DdevSnapshotRestoreCommand = &cobra.Command{
@@ -25,7 +24,6 @@ Example: "ddev snapshot restore d8git_20180717203845"`,
 		if snapshotRestoreLatest {
 			if snapshotName, err = app.GetLatestSnapshot(); err != nil {
 				util.Failed("Failed to get latest snapshot of project %s: %v", app.GetName(), err)
-				os.Exit(1)
 			}
 		} else {
 			if len(args) != 1 {
@@ -37,19 +35,22 @@ Example: "ddev snapshot restore d8git_20180717203845"`,
 
 				if len(snapshots) == 0 {
 					util.Failed("No snapshots found for project %s", app.GetName())
-					os.Exit(1)
+				}
+
+				templates := &promptui.SelectTemplates{
+					Label: "{{ . | cyan }}:",
 				}
 
 				prompt := promptui.Select{
-					Label: "Select snapshot",
-					Items: snapshots,
+					Label:     "Snapshot",
+					Items:     snapshots,
+					Templates: templates,
 				}
 
 				_, snapshotName, err = prompt.Run()
 
 				if err != nil {
 					util.Failed("Prompt failed %v", err)
-					os.Exit(1)
 				}
 			} else {
 				snapshotName = args[0]
