@@ -665,7 +665,7 @@ Creating database snapshot d8git_20180801132403
 Created database snapshot d8git_20180801132403 in /Users/rfay/workspace/d8git/.ddev/db_snapshots/d8git_20180801132403
 Created snapshot d8git_20180801132403
 
-ddev restore-snapshot d8git_20180801132403
+ddev snapshot restore d8git_20180801132403
 Restored database snapshot: /Users/rfay/workspace/d8git/.ddev/db_snapshots/d8git_20180801132403
 ```
 
