@@ -67,8 +67,6 @@ jobs:
         shell: bash
 
     needs: build
-    name: ${{ matrix.os }} - ${{ matrix.webserver }} - make ${{ matrix.tests }}
-    runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
@@ -76,8 +74,11 @@ jobs:
         webserver: [nginx-fpm]
 #        tests: [testcmd, testnotddevapp, testddevapp]
         tests: [testcmd, testnotddevapp]
-        os: [ubuntu-20.04, [self-hosted,macos], [self-hosted,windows]]
+        os: [ ubuntu-20.04, [ macos, self-hosted ], [windows, self-hosted] ]
       fail-fast: false
+
+#    name: ${{ matrix.os }} - ${{ matrix.webserver }} - make ${{ matrix.tests }}
+    runs-on: ${{ matrix.os }}
 
     env:
       DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
