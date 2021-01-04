@@ -8,7 +8,7 @@ extra_javascript:
   - assets/fix-search.js
 markdown_extensions:
   - markdown.extensions.toc
-nav:
+pages:
   - 'Home': 'index.md'
   - 'ddev Basics':
     - 'Using the CLI': 'users/cli-usage.md'
