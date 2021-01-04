@@ -22,7 +22,6 @@ pages:
     - 'Frequently-Asked Questions (FAQ)': 'users/faq.md'
     - '.ddev/config.yaml Options': 'users/extend/config_yaml.md'
     - 'Database Server Types': 'users/extend/database_types.md'
-    - 'Bash and Zsh Completion': 'users/shell-completion.md'
     - 'Additional Project Hostnames': 'users/extend/additional-hostnames.md'
     - 'Shell Completion (bash, zsh, etc.)': 'users/shell-completion.md'
     - 'Alternate Uses of DDEV-Local': 'users/alternate-uses.md'
