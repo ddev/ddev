@@ -11,7 +11,6 @@ env:
   DOCKER_CLI_EXPERIMENTAL: enabled
 
 jobs:
-
   build:
     name: Build DDEV executables
     runs-on: ubuntu-20.04
@@ -63,6 +62,10 @@ jobs:
           retention-days: 7
 
   tests:
+    defaults:
+      run:
+        shell: bash
+
     needs: build
     name: ${{ matrix.os }} - ${{ matrix.webserver }} - make ${{ matrix.tests }}
     runs-on: ${{ matrix.os }}
@@ -73,7 +76,7 @@ jobs:
         webserver: [nginx-fpm]
 #        tests: [testcmd, testnotddevapp, testddevapp]
         tests: [testcmd, testnotddevapp]
-        os: [ubuntu-20.04, [self-hosted,macos]]
+        os: [ubuntu-20.04, [self-hosted,macos], [self-hosted,windows]]
       fail-fast: false
 
     env:
