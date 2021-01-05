@@ -4,6 +4,7 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
+	"runtime"
 	"testing"
 )
 
@@ -17,12 +18,11 @@ func TestCmdSnapshotRestore(t *testing.T) {
 	app, err := ddevapp.NewApp(site.Dir, false, "")
 	assert.NoError(err)
 
-	defer func() {
+	t.Cleanup(func() {
 		// Make sure all databases are back to default empty
 		_ = app.Stop(true, false)
-		_ = app.Start()
 		cleanup()
-	}()
+	})
 
 	// Ensure that a snapshot is created
 	args := []string{"snapshot", "--name", "test-snapshot"}
@@ -35,6 +35,13 @@ func TestCmdSnapshotRestore(t *testing.T) {
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 	assert.Contains(out, "Restored database snapshot")
+
+	// Try interactive command
+	if runtime.GOOS != "windows" {
+		out, err = exec.RunCommand("bash", []string{"-c", "echo -nq '\n' | " + DdevBin + " snapshot restore"})
+		assert.NoError(err)
+		assert.Contains(out, "Restored database snapshot")
+	}
 
 	// Ensure that latest snapshot can be restored
 	args = []string{"snapshot", "restore", "--latest"}
