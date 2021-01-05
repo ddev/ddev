@@ -17,12 +17,11 @@ func TestCmdSnapshot(t *testing.T) {
 	app, err := ddevapp.NewApp(site.Dir, false, "")
 	assert.NoError(err)
 
-	defer func() {
+	t.Cleanup(func() {
 		// Make sure all databases are back to default empty
 		_ = app.Stop(true, false)
-		_ = app.Start()
 		cleanup()
-	}()
+	})
 
 	// Ensure that there are no snapshots available before we create one
 	args := []string{"snapshot", "--cleanup", "--yes"}
