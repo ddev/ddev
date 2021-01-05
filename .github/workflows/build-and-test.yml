@@ -36,8 +36,8 @@ jobs:
         with:
           node-version: '10'
 
-      #- name: staticrequired
-      #  run: make staticrequired
+      - name: staticrequired
+        run: make staticrequired
 
       - name: Build DDEV executables
         run: make linux_amd64 linux_arm64 darwin_amd64 windows_amd64 windows_install
@@ -50,14 +50,6 @@ jobs:
         with:
           name: ddev-executables
           path: ${{ github.workspace }}/artifacts/*
-          # 90 retention days are overkill for this
-          retention-days: 7
-
-      - name: Upload .gotmp/bin folder
-        uses: actions/upload-artifact@v2
-        with:
-          name: ddev-gotmp-bin
-          path: ${{ github.workspace }}/.gotmp/bin/*
           # 90 retention days are overkill for this
           retention-days: 7
 
@@ -106,11 +98,6 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: 1.*
-
-      - uses: actions/download-artifact@v2
-        with:
-          name: ddev-gotmp-bin
-          path: .gotmp/bin
 
       - name: Display structure of downloaded files
         run: ls -R
