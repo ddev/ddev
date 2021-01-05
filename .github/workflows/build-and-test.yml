@@ -61,9 +61,7 @@ jobs:
     strategy:
       matrix:
         webserver: [apache-fpm, nginx-fpm]
-#        webserver: [nginx-fpm]
-        tests: [testcmd, testnotddevapp, testddevapp]
-#        tests: [testcmd, testnotddevapp]
+        tests: [testcmd, testpkg]
         os: [ ubuntu-20.04, [ macos, self-hosted ], [windows, self-hosted] ]
       fail-fast: false
 
