@@ -86,7 +86,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - run: printf "matrix.os=", matrix.os
-        
+
       - name: GOTEST_SHORT on Apache
         if: matrix.webserver == 'apache-fpm'
         run: echo "GOTEST_SHORT=5" >> $GITHUB_ENV 
@@ -100,7 +100,7 @@ jobs:
         run: ./.github/workflows/macos-setup.sh  
 
       - name: Clean up self-hosted builders if necessary
-        if: matrix.os == "macos, self-hosted" || matrix.os == "windows, self-hosted"
+        if: matrix.os == 'macos, self-hosted' || matrix.os == 'windows, self-hosted'
         run: ./.github/workflows/selfhosted-maintenance.sh
 
       - uses: actions/setup-go@v2
