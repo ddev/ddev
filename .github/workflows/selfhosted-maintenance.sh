@@ -37,7 +37,7 @@ rm -rf ~/.ddev/Test* ~/.ddev/global_config.yaml ~/.ddev/homeadditions ~/.ddev/co
 echo "running selfhosted-upgrades.sh"
 bash $(dirname $0)/selfhosted-upgrades.sh
 
-echo "--- cleaning up docker and Test directories"
+echo "cleaning up docker and Test directories"
 echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"
 ddev poweroff || true
 if [ "$(docker ps -aq | wc -l )" -gt 0 ] ; then
@@ -46,18 +46,10 @@ fi
 docker system prune --volumes --force >/dev/null || true
 
 # Our testbot should be sane, run the testbot checker to make sure.
-echo "--- running sanetestbot.sh"
 ./.github/workflows/sanetestbot.sh
 
-# Update all images that could have changed
+# Update any images that could have changed
 ( docker images | awk '/drud/ {print $1":"$2 }' | xargs -L1 docker pull ) || true
 
 # homebrew sometimes removes /usr/local/etc/my.cnf.d
 mkdir -p /usr/local/etc/my.cnf.d
-
-echo "Running tests..."
-time make test
-RV=$?
-echo "build.sh completed with status=$RV"
-ddev poweroff || true
-exit $RV

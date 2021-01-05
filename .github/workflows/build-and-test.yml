@@ -89,13 +89,13 @@ jobs:
 #        if: matrix.os == 'macos-latest'
 #        run: ./.github/workflows/macos-setup.sh
 
-      - name: Clean up self-hosted runners if necessary
-        if: matrix.os[1] == 'self-hosted'
-        run: ./.github/workflows/selfhosted-maintenance.sh
-
       - uses: actions/setup-go@v2
         with:
           go-version: 1.*
+
+      - name: Clean up self-hosted runners if necessary
+        if: matrix.os[1] == 'self-hosted'
+        run: .github/workflows/selfhosted-maintenance.sh
 
       - name: DDEV tests
         run: make ${{ matrix.tests }}
