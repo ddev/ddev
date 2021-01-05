@@ -67,7 +67,7 @@ jobs:
         os: [ ubuntu-20.04, [ macos, self-hosted ], [windows, self-hosted] ]
       fail-fast: false
 
-#    name: ${{ matrix.os }} - ${{ matrix.webserver }} - make ${{ matrix.tests }}
+#    name: ${{ matrix.os[0] }} - ${{ matrix.webserver }} - make ${{ matrix.tests }}
     runs-on: ${{ matrix.os }}
 
     env:
@@ -85,11 +85,11 @@ jobs:
         if: matrix.os == 'ubuntu-20.04'
         run: ./.github/workflows/linux-setup.sh
       
-      - name: Install Docker and deps (macOS)
-        if: matrix.os == 'macos-latest'
-        run: ./.github/workflows/macos-setup.sh  
+#      - name: Install Docker and deps (macOS)
+#        if: matrix.os == 'macos-latest'
+#        run: ./.github/workflows/macos-setup.sh
 
-      - name: Clean up self-hosted builders if necessary
+      - name: Clean up self-hosted runners if necessary
         if: matrix.os[1] == 'self-hosted'
         run: ./.github/workflows/selfhosted-maintenance.sh
 
@@ -98,15 +98,11 @@ jobs:
           go-version: 1.*
 
       - name: DDEV tests
-        run: |
-          if [[ "${{ matrix.os }}" == macos* ]]; then
-            eval "$(docker-machine env default)"
-          fi
-          make ${{ matrix.tests }}
+        run: make ${{ matrix.tests }}
         timeout-minutes: 120
 
       - name: Store test results
         uses: actions/upload-artifact@v2
         with:
-          name: ddev-test-results-apache-fpm
+          name: ddev-test-results-${{ matrix.webserver }}
           path: /tmp/testresults/
