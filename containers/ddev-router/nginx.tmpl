@@ -80,35 +80,9 @@ proxy_set_header Proxy "";
 {{ end }}
 
 server {
-    server_name _; # Catch-all for any server_name that is not matched in the config
-
-    # Listen on all configured http ports + 80 (HTTPS_EXPOSE)
+    # Listen on all configured https ports + 80 + 443 (HTTPS_EXPOSE)
     # So that we can redirect any server_name that is invalid
-
     include /tmp/http_ports.conf;
-    access_log /var/log/nginx/access.log vhost;
-
-    error_page 503 @noupstream;
-    location @noupstream {
-        rewrite ^(.*)$ /503.html break;
-        root /app;
-    }
-
-    location / {
-        return 503;
-    }
-
-    location = /healthcheck {
-        access_log off;
-        return 200;
-    }
-}
-
-server {
-    server_name _; # Catch-all for any server_name that is not matched in the config
-
-    # Listen on all configured https ports + 443 (HTTPS_EXPOSE)
-    # So that we can redirect any server_name that is invalid
     include /tmp/https_ports.conf;
 
     access_log /var/log/nginx/access.log vhost;
