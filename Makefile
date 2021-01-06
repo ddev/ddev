@@ -151,6 +151,9 @@ testddevapp: $(DEFAULT_BUILD) setup
 testnotddevapp: $(DEFAULT_BUILD) setup
 	DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " $(shell find ./pkg -maxdepth 1 -type d ! -name ddevapp ! -name pkg) $(TESTARGS)
 
+testfullsitesetup: $(DEFAULT_BUILD) setup
+	DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH) go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/ddevapp/ddevapp_test.go $(TESTARGS)
+
 setup:
 	@mkdir -p $(GOTMP)/{src,pkg/mod/cache,.cache}
 	@mkdir -p $(TESTTMP)

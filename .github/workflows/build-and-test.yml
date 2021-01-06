@@ -61,8 +61,8 @@ jobs:
     strategy:
       matrix:
         webserver: [apache-fpm, nginx-fpm]
-        tests: [testcmd, testpkg]
-        os: [ ubuntu-20.04, [ macos, self-hosted ], [windows, self-hosted] ]
+        tests: [test, testfullsitesetup]
+        os: [ ubuntu-20.04 ]
       fail-fast: false
 
 #    name: ${{ matrix.os[0] }} - ${{ matrix.webserver }} - make ${{ matrix.tests }}
@@ -75,9 +75,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: GOTEST_SHORT on Apache
-        if: matrix.webserver == 'apache-fpm'
-        run: echo "GOTEST_SHORT=5" >> $GITHUB_ENV 
+      - name: GOTEST_SHORT setup - use "true" except for testfullsitesetup
+        run: |
+          if [ ${{ matrix.test }} != "testfullsitesetup" ]; then
+            echo "GOTEST_SHORT=true" >> $GITHUB_ENV
+          fi
 
       - name: Install Docker and deps (Linux)
         if: matrix.os == 'ubuntu-20.04'
@@ -92,9 +94,9 @@ jobs:
         with:
           go-version: 1.*
 
-      - name: Clean up self-hosted runners if necessary
-        if: matrix.os[1] == 'self-hosted'
-        run: .github/workflows/selfhosted-maintenance.sh
+#      - name: Clean up self-hosted runners if necessary
+#        if: matrix.os[1] == 'self-hosted'
+#        run: .github/workflows/selfhosted-maintenance.sh
 
       - name: DDEV tests
         run: make ${{ matrix.tests }}
