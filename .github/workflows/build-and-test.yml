@@ -61,7 +61,7 @@ jobs:
     strategy:
       matrix:
         webserver: [apache-fpm, nginx-fpm]
-        tests: [test, testfullsitesetup]
+        tests: [testpkg, testcmd, testfullsitesetup]
         os: [ ubuntu-20.04 ]
       fail-fast: false
 
