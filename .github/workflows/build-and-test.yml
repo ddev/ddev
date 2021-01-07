@@ -100,7 +100,6 @@ jobs:
 
       - name: DDEV tests
         run: make ${{ matrix.tests }}
-        timeout-minutes: 120
 
       - name: Store test results
         uses: actions/upload-artifact@v2
