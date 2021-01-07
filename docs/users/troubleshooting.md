@@ -23,7 +23,7 @@ Failed to start yoursite: Unable to listen on required ports, localhost port 80 
 
 This means there is another webserver listening on the named port(s) and ddev cannot access the port.
 
-(In some cases the conflict could be over port 8036 (PHPMyAdmin) or port 8025 (mailhog)).
+(In some cases the conflict could be over port 8036 (phpMyAdmin) or port 8025 (MailHog)).
 
 To resolve this conflict, choose one of two methods:
 
@@ -43,13 +43,13 @@ router_http_port: 8000
 
 Then run `ddev start`. This changes the project's http URL to <http://yoursite.ddev.site:8000.>
 
-If the conflict is over port 8025, it's normally a conflict over the default port for mailhog. You can add to your .ddev/config.yaml
+If the conflict is over port 8025, it's normally a conflict over the default port for MailHog. You can add to your .ddev/config.yaml
 
 ```yaml
 mailhog_port: 8300
 ```
 
-If the conflict is over port 8036, it's normally about PHPMyAdmin, and you can add to your .ddev/config.yaml
+If the conflict is over port 8036, it's normally about phpMyAdmin, and you can add to your .ddev/config.yaml
 
 ```yaml
 phpmyadmin_port: 8302

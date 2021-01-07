@@ -18,7 +18,7 @@ Each of these commands has full help. For example, `ddev start -h` or `ddev help
 * `ddev snapshot` makes a very fast snapshot of your database that can be easily and quickly restored with `ddev restore-snapshot`.
 * `ddev share` works with [ngrok](https://ngrok.com/) (and requires ngrok) so you can let someone in the next office or on the other side of the planet see your project and what you're working on. `ddev share -h` gives more info about how to set up ngrok (it's easy).
 * `ddev ssh` opens a bash session in the web container (or other container).
-* `ddev launch` or `ddev launch some/uri` will launch a browser with the current project's URL (or a full URL to `/some/uri`). `ddev launch -p` will launch the PHPMyAdmin UI, and `ddev launch -m` will launch the MailHog UI.
+* `ddev launch` or `ddev launch some/uri` will launch a browser with the current project's URL (or a full URL to `/some/uri`). `ddev launch -p` will launch the phpMyAdmin UI, and `ddev launch -m` will launch the MailHog UI.
 * `ddev delete` is the same as `ddev stop --remove-data` and will delete a project's database and ddev's record of the project's existence. It doesn't touch your project or code. `ddev delete -O` will omit the snapshot creation step that would otherwise take place, and `ddev delete images` gets rid of spare Docker images you may have on your machine.
 * `ddev xdebug` enables xdebug, `ddev xdebug off` disables it, `ddev xdebug status` shows status
 * `ddev drush` (Drupal and Backdrop only) gives direct access to the drush CLI
@@ -29,8 +29,8 @@ Each of these commands has full help. For example, `ddev start -h` or `ddev help
 
 In addition to the *commands* listed above, there are loads and loads of tools included inside the containers:
 
-* `ddev describe` tells how to access **mailhog**, which captures email in your development environment.
-* `ddev describe` tells how to use the built-in **PHPMyAdmin** and `ddev launch -p` gives direct access to it.
+* `ddev describe` tells how to access **MailHog**, which captures email in your development environment.
+* `ddev describe` tells how to use the built-in **phpMyAdmin** and `ddev launch -p` gives direct access to it.
 * Composer, git, node, npm, and dozens of other tools are installed in the web container, and you can access them via `ddev ssh` or `ddev exec`.
 * `ddev logs` gets you webserver logs; `ddev logs -s db` gets dbserver logs.
 * sqlite3 and the mysql client are inside the web container (and mysql client is also in the db container).
@@ -393,7 +393,7 @@ Here's an example of a database import using ddev:
 ddev import-db --src=dumpfile.sql.gz
 ```
 
-It is also possible to use PHPMyAdmin for database imports, but that approach is much slower. Also, the web and db containers container the `mysql` client, which can be used for imports, and the `ddev mysql` command can be used in the same way you might use `mysql` on a server.
+It is also possible to use phpMyAdmin for database imports, but that approach is much slower. Also, the web and db containers container the `mysql` client, which can be used for imports, and the `ddev mysql` command can be used in the same way you might use `mysql` on a server.
 
 **Note for Backdrop users:** In addition to importing a Backdrop database, you will need to extract a copy of your Backdrop project's configuration into the local `active` directory. The location for this directory can vary depending on the contents of your Backdrop `settings.php` file, but the default location is `[docroot]/files/config_[random letters and numbers]/active`. Please refer to the Backdrop documentation for more information on [moving your Backdrop site](https://backdropcms.org/user-guide/moving-backdrop-site) into the `ddev` environment.
 

@@ -68,7 +68,7 @@ If you encounter any other scenario, consider using `ddev ssh` and run composer 
 
 ### Email Capture and Review
 
-[MailHog](https://github.com/mailhog/MailHog) is a mail catcher which is configured to capture and display emails sent by PHP in the development environment.
+[MailHog](https://github.com/MailHog/MailHog) is a mail catcher which is configured to capture and display emails sent by PHP in the development environment.
 
 After your project is started, access the MailHog web interface at its default port:
 
