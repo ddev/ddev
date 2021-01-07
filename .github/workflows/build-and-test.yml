@@ -43,7 +43,7 @@ jobs:
         run: make staticrequired
 
       - name: Build DDEV executables
-        run: make linux_amd64 linux_arm64 darwin_amd64 windows_amd64 windows_install
+        run: make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_install
 
       - name: Generate artifacts
         run: ./.github/workflows/generate_artifacts.sh ${{ github.workspace }}/artifacts
