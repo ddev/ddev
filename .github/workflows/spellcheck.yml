@@ -7,15 +7,9 @@ on:
 
 jobs:
   build:
-    name: Spellcheck docs
-    runs-on: ubuntu-20.04
+    name: Spellcheck
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2.0.0
-      with:
-        fetch-depth: 2
-    - uses: check-spelling/check-spelling@0.0.17-alpha
-      with:
-        bucket: .github/actions
-        project: spelling
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/checkout@master
+    - uses: rojopolis/spellcheck-github-actions@0.5.0
+      name: Spellcheck
