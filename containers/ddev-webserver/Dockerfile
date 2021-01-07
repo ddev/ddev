@@ -36,8 +36,11 @@ RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/apache2
 
 ADD ddev-webserver-base-files /
 ADD ddev-webserver-base-scripts /
-RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
 
+# /usr/local/bin may need to be updated by start.sh, etc
+RUN chmod -f ugo+rwx /usr/local/bin /usr/local/bin/composer
+
+RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
 
 # END ddev-webserver-base
 
@@ -135,7 +138,7 @@ ADD ddev-webserver-base-scripts /
 RUN chmod ugo+x /start.sh /healthcheck.sh
 
 # Composer, etc may need to be updated by composer self-update
-RUN chmod -f ugo+wx /usr/local/bin /usr/local/bin/composer /usr/local/bin/ddev-live
+RUN chmod -f ugo+rwx /usr/local/bin /usr/local/bin/composer /usr/local/bin/ddev-live
 
 #TODO: Security implications; must be revisited
 RUN chmod ugo+w /etc/ssl/certs
