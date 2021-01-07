@@ -9,6 +9,9 @@ on:
 env:
   BUILDKIT_PROGRESS: plain
   DOCKER_CLI_EXPERIMENTAL: enabled
+  DDEV_LIVE_NO_ANALYTICS: true
+  DDEV_DEBUG: true
+
 
 jobs:
   build:
@@ -77,7 +80,7 @@ jobs:
 
       - name: GOTEST_SHORT setup - use "true" except for testfullsitesetup
         run: |
-          if [ ${{ matrix.test }} != "testfullsitesetup" ]; then
+          if [ "${{ matrix.tests }}" != "testfullsitesetup" ]; then
             echo "GOTEST_SHORT=true" >> $GITHUB_ENV
           fi
 
