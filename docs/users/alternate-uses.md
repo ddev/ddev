@@ -10,13 +10,13 @@ Examples of this approach are shown in [Codeception tests in Travis CI with DDEV
 
 It is possible to use DDEV-Local Docker images outside the context of the DDEV-Local environment. People have used the ddev-webserver image for running tests in PhpStorm, for example.
 
-### Casual Project Webosting on the Internet (including Let's Encrypt)
+### Casual Project Webhosting on the Internet (including Let's Encrypt)
 
 An experimental feature of DDEV-local is simplified small-project hosting on the internet. One can run DDEV-Local on an internet server and point their DNS to it and use it as a regular (though limited) hosting environment.
 
 This may be completely appropriate for small or abandoned sites that have special requirements like old versions of PHP that aren't supported elsewhere.
 
-**Note that this is no replacement for a scaleable managed hosting offering like [DDEV-Live](https://www.ddev.com/ddev-live/) or other similar services. It's unknown how much traffic it can handle in a given environment. And it's EXPERIMENTAL. And it will never replace managed hosting.**
+**Note that this is no replacement for a scalable managed hosting offering like [DDEV-Live](https://www.ddev.com/ddev-live/) or other similar services. It's unknown how much traffic it can handle in a given environment. And it's EXPERIMENTAL. And it will never replace managed hosting.**
 
 1. Install DDEV-Local on a regular Linux server that is directly connected to the Internet. You're responsible for your firewall and maintenance of the server, of course.  
 2. On Debian/Ubuntu, you can set up a simple firewall with `ufw allow 80 && ufw allow 443 && ufw allow 22 && ufw enable`
@@ -28,7 +28,7 @@ This may be completely appropriate for small or abandoned sites that have specia
 8. Create your DDEV-Local project as you normally would, but `ddev config --additional-fqdns=<internet_fqdn`. If your website responds to multiple hostnames (for example, with "www" and without it) then you'll need to add each hostname.
 9. `ddev start` and visit your site. Clear your cache (on some CMSs).
 
-You may have to restart ddev with `ddev poweroff && ddev start --all` if LetsEncrypt has failed due to port 80 not being open or the DNS name not yet resolving. (Use `docker logs ddev-router` to see Let's Encrypt activity.)
+You may have to restart ddev with `ddev poweroff && ddev start --all` if Let's Encrypt has failed due to port 80 not being open or the DNS name not yet resolving. (Use `docker logs ddev-router` to see Let's Encrypt activity.)
 
 #### Additional Server Setup
 
