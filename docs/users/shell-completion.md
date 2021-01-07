@@ -8,7 +8,7 @@ Shells like bash and zsh need help to do this though, they have to know what the
 
 Although most people will use techniques like homebrew for installation, a tar archive of the shell completion scripts is available in each release, called "ddev_shell_completion_scripts.\<version\>.tar.gz". If you need to manually install, you can download and untar the scripts, then copy them as needed to where they have to go. For example, `sudo cp ddev_bash_completion.sh /etc/bash_completion.d/ddev`.
 
-Note that scripts for the fish shell and Windows Powershell are also provided, but no instructions are given here for deploying them.
+Note that scripts for the fish shell and Windows PowerShell are also provided, but no instructions are given here for deploying them.
 
 ## Bash Completion with Homebrew
 

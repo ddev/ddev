@@ -6,7 +6,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 
 1. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com (available in 1password)
 2. In admin PowerShell, `Set-ExecutionPolicy -Scope "CurrentUser" -ExecutionPolicy "RemoteSigned"`
-3. In admin Powershell, download and run [windows_buildkite_start.ps1](scripts/windows_buildkite_start.ps1) (Use `curl <url> -O windows_buildkite_start.ps1`)
+3. In admin PowerShell, download and run [windows_buildkite_start.ps1](scripts/windows_buildkite_start.ps1) (Use `curl <url> -O windows_buildkite_start.ps1`)
 4. After restart, in administrative git-bash window, `Rename-Computer <testbot-win10(home|pro)-<description>-1` and then `export BUILDKITE_AGENT_TOKEN=<token>`
 5. Now download and run [windows_buildkite-testmachine_setup.sh](scripts/windows_buildkite_setup.sh)
 6. Launch Docker. It may require you to take further actions.

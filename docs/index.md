@@ -124,7 +124,7 @@ You can also easily perform the installation or upgrade manually if preferred. D
 
 ### Installation via package managers - Linux
 
-The preferred Linux package manager is [Linuxbrew](http://linuxbrew.sh/) : `brew tap drud/ddev && brew install ddev`
+The preferred Linux package manager is [Homebrew](http://brew.sh/) : `brew tap drud/ddev && brew install ddev`
 
 We also currently maintain a package on [Arch Linux (AUR)](https://aur.archlinux.org/packages/ddev-bin/)
 
