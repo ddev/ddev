@@ -4,6 +4,7 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"runtime"
 	"testing"
 )
@@ -23,6 +24,9 @@ func TestCmdSnapshotRestore(t *testing.T) {
 		_ = app.Stop(true, false)
 		cleanup()
 	})
+
+	err = app.Start()
+	require.NoError(t, err)
 
 	// Ensure that a snapshot is created
 	args := []string{"snapshot", "--name", "test-snapshot"}

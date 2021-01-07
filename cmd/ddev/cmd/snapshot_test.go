@@ -4,6 +4,7 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -22,6 +23,9 @@ func TestCmdSnapshot(t *testing.T) {
 		_ = app.Stop(true, false)
 		cleanup()
 	})
+
+	err = app.Start()
+	require.NoError(t, err)
 
 	// Ensure that there are no snapshots available before we create one
 	args := []string{"snapshot", "--cleanup", "--yes"}
