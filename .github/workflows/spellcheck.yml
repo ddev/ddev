@@ -2,9 +2,8 @@ name: Spellcheck docs
 on:
   push:
     branches:
-    - "**"
-    tags-ignore:
-    - "**"
+    - master
+  pull_request:
 
 jobs:
   build:
