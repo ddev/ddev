@@ -75,8 +75,8 @@ Here are some of the other common processes that could be using port 80 and meth
 or `sudo launchctl stop homebrew.mxcl.nginx`
 * nginx (Ubuntu): `sudo service nginx stop`
 * apache (often named "httpd") (many environments): `sudo apachectl stop` or on Ubuntu `sudo service apache2 stop`
-* vpnkit (macOS): You likely have a docker container bound to port 80, do you have containers up for Kalabox or another docker-based development environment? If so, stop the other environment.
-* Kalabox: If you have previously used Kalabox try running `kbox poweroff`
+* vpnkit (macOS): You likely have a docker container bound to port 80, do you have containers up for Lando or another docker-based development environment? If so, stop the other environment.
+* Lando: If you have previously used Lando try running `lando poweroff`
 
 To dig deeper, you can use a number of tools to find out what process is listening.
 
@@ -189,7 +189,7 @@ While ddev can create a webserver and a docker network infrastructure for a proj
 
 ## Windows WSL2 Name resolution on non-ddev.site hostnames or when not internet-connected
 
-On Windows WSL2, there is a hosts file inside the WSL2 instance (`/etc/hosts`), and there is also one on the Windows side (`C:\Windows\systsem32\drivers\etc\hosts`). Most people use a browser on the Windows side, which has no idea about hostnames that may be set up in the WSL2 /etc/hosts file. So a WSL2 project which uses `*.ddev.site` works fine when accessed by a browser on the Windows side, as long as internet connectivity is available (DNS lookups of `*.ddev.site` succeed).
+On Windows WSL2, there is a hosts file inside the WSL2 instance (`/etc/hosts`), and there is also one on the Windows side (`C:\Windows\system32\drivers\etc\hosts`). Most people use a browser on the Windows side, which has no idea about hostnames that may be set up in the WSL2 /etc/hosts file. So a WSL2 project which uses `*.ddev.site` works fine when accessed by a browser on the Windows side, as long as internet connectivity is available (DNS lookups of `*.ddev.site` succeed).
 
 However, if the project uses non-ddev.site hostnames, or if not connected to the Internet, a Windows-side browser will be unable to look up project hostnames, and you'll get complaints from the browser like "<url> server IP address could not be found" or "We can’t connect to the server at <url>".  In this case, you can
 

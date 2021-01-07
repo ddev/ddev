@@ -4,11 +4,11 @@
 
 Although it has not a primary goal of DDEV-Local, a number of people have found it easy to use DDEV-Local on a CI system like Github Actions or TravisCI or CircleCI to test out their projects. Instead of setting up a hosting environment for testing, they just start the project using DDEV and run their tests.
 
-Examples of this approach are shown in [Codeception tests in Travis CI with DDEV and Selenium](https://dev.to/tomasnorre/codeception-tests-in-travis-ci-with-ddev-and-selenium-1607) and [Github Action Setup Ddev](https://github.com/jonaseberle/github-action-setup-ddev)
+Examples of this approach are shown in [Codeception tests in Travis CI with DDEV and Selenium](https://dev.to/tomasnorre/codeception-tests-in-travis-ci-with-ddev-and-selenium-1607) and [GitHub Action Setup Ddev](https://github.com/jonaseberle/github-action-setup-ddev)
 
 ### Integration of DDEV-Local Docker Images Into Other Projects
 
-It is possible to use DDEV-Local Docker images outside the context of the DDEV-Local environment. People have used the ddev-webserver image for running tests in PHPStorm, for example.
+It is possible to use DDEV-Local Docker images outside the context of the DDEV-Local environment. People have used the ddev-webserver image for running tests in PhpStorm, for example.
 
 ### Casual Project Webosting on the Internet (including Let's Encrypt)
 

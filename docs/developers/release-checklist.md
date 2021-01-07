@@ -8,7 +8,7 @@ The following environment variables must be added to the **org context** named [
 
 * CHOCOLATEY_API_KEY: API key for chocolatey.
 
-* DDEV_GITHUB_TOKEN: The github token that gives access to create releases and push to the homebrew repositories.
+* DDEV_GITHUB_TOKEN: The GitHub token that gives access to create releases and push to the homebrew repositories.
 
 * DDEV_MACOS_APP_PASSWORD: The password used for notarization, see [signing_tools](https://github.com/drud/signing_tools)
 
@@ -16,9 +16,9 @@ The following environment variables must be added to the **org context** named [
 
 * DDEV_WINDOWS_SIGNING_PASSWORD: The windows signing password.
 
-* HOMEBREW_EDGE_REPOSITORY: The name of the github repo used for the edge channel on homebrew, drud/homebrew-ddev-ege
+* HOMEBREW_EDGE_REPOSITORY: The name of the GitHub repo used for the edge channel on homebrew, drud/homebrew-ddev-ege
 
-* HOMEBREW_STABLE_REPOSITORY: The name of the github repo used for the stable channel on homebrew/ drud/homebrew-ddev
+* HOMEBREW_STABLE_REPOSITORY: The name of the GitHub repo used for the stable channel on homebrew/ drud/homebrew-ddev
 
 * SegmentKey: The key that enabled the Segment reporting
 
@@ -26,7 +26,7 @@ The following environment variables must be added to the **org context** named [
 
 1. Create provisional tagged images. `git fetch upstream && git checkout upstream/master && cd containers` and `for item in *; do pushd $item; make push VERSION=<release_version> DOCKER_ARGS=--no-cache ; popd; done`
 2. Update the default container versions in `pkg/version/version.go` and create a pull request
-3. Create a release for the new version using the github UI. It should be "prerelease" if it's only an edge release.
+3. Create a release for the new version using the GitHub UI. It should be "prerelease" if it's only an edge release.
 4. Add the commit list (`git log vXXX..vYYY --oneline --decorate=no`) to the release page.
 5. Update the release page with full details about the current release
 6. Verify that homebrew (linux and macOS) and Chocolatey and AUR are working correctly with the right versions

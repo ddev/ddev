@@ -19,7 +19,7 @@ Add the following line to your ~/.bash_profile:
      [[ -r "/usr/local/etc/profile.d/bash_completion.sh" ]] && . "/usr/local/etc/profile.d/bash_completion.sh"
 ```
 
-*You need to add the suggested line to your ~/.bash_profile or ~/.profile to get it to work*, and then in the current shell you need tou `source ~/.bash_profile` or `source ~/.profile` to make it take effect. (You can also just open a new shell window.)
+*You need to add the suggested line to your ~/.bash_profile or ~/.profile to get it to work*, and then in the current shell you need to `source ~/.bash_profile` or `source ~/.profile` to make it take effect. (You can also just open a new shell window.)
 
 Then, if you're installing ddev from homebrew, each new release will automatically get a refreshed completions script.
 

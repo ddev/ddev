@@ -69,7 +69,7 @@ If you need to debug command-line PHP processes, especially code that is outside
 
 * If you have used PhpStorm with xdebug you already have a PhpStorm "server" with the same name as your primary URL (see "Languages and Frameworks" -> "PHP" -> "Servers"). The key job of the "server" is to map filesystem locations on the workstation (your computer) to filesystem locations on the remote server (in this case the ddev-webserver container). Often, PhpStorm has automatically set up a mapping that doesn't include the entire project (so the vendor directory is not mapped, for example). So map the top-level directory of your project to /var/www/html in the container, as in this image:
 ![PhpStorm mapping](images/PHPStormServerMapping.png)
-* When debugging a command-line script inside the container, the environment variable PHP_IDE_CONFIG is automatically set for you, so it will be something like `PHP_IDE_CONFIG=serverName=d8composer.ddev.site`.  If debugging Drupal's drush command, you may find that launching the site-installed drush directly will avoid confusing PHPStorm with the execution of /usr/local/bin/drush (which is the drush launcher). Run it as `ddev exec /var/www/html/vendor/bin/drush` or wherever it was installed. It's often easiest to just `ddev ssh` into the web container and execute command-line scripts directly.
+* When debugging a command-line script inside the container, the environment variable PHP_IDE_CONFIG is automatically set for you, so it will be something like `PHP_IDE_CONFIG=serverName=d8composer.ddev.site`.  If debugging Drupal's drush command, you may find that launching the site-installed drush directly will avoid confusing PhpStorm with the execution of /usr/local/bin/drush (which is the drush launcher). Run it as `ddev exec /var/www/html/vendor/bin/drush` or wherever it was installed. It's often easiest to just `ddev ssh` into the web container and execute command-line scripts directly.
 
 <a name="atom"></a>
 
@@ -129,15 +129,15 @@ xdebug.remote_port=11011
 
 ### Troubleshooting Xdebug
 
-Debugging Xdebug in any setup can be a little trouble, but here are the steps to take. The steps here assume that you're using PHPStorm, but they can be adapted to any IDE.
+Debugging Xdebug in any setup can be a little trouble, but here are the steps to take. The steps here assume that you're using PhpStorm, but they can be adapted to any IDE.
 
-* Make sure you have a 2019+ version of PHPStorm. Many PHPStorm versions up to and (including?) 2018.3 were incompatible with current XDebug versions.
+* Make sure you have a 2019+ version of PhpStorm. Many PhpStorm versions up to and (including?) 2018.3 were incompatible with current XDebug versions.
 * Make sure xdebug has been enabled in ddev; it's disabled by default for performance reasons. Most people use `ddev xdebug on` to enable it when they want it, and `ddev xdebug off` when they're done with it, but it can also be enabled in `.ddev/config.yaml`.
 * Don't assume that some obscure piece of code is being executed and put a breakpoint there. Start by putting a breakpoint at the first executable line in your index.php. Oh-so-many times people think it should be stopping, but their code is not being executed.
 * `ddev ssh` into the web container. Can you `ping host.docker.internal` (and get responses)? If you can't, you might have an over-aggressive firewall. Try to disable it, or add a rule that would allow the connection to pass through. For example, on Debian/ Ubuntu that would be `sudo ufw allow 9000/tcp`.
-* In PHPStorm, disable the "listen for connections" button so it won't listen. Or just exit PHPStorm.
-* `ddev ssh`: Can `telnet host.docker.internal 9000` connect? If it does, you have something else running on port 9000, probably php-fpm. On the host, use `sudo lsof -i :9000 -sTCP:LISTEN` to find out what is there and stop it, or [change the xdebug port and configure PHPStorm to use the new one](#using-xdebug-on-a-port-other-than-the-default) . Don't continue debugging until your telnet command does not connect.
-* Now click the listen button on PHPStorm to start it listening for connections.
-* `ddev ssh` and try the `telnet host.docker.internal 9000` again. It should connect. If not, maybe PHPStorm is not listening, or not configured to listen on port 9000?
+* In PhpStorm, disable the "listen for connections" button so it won't listen. Or just exit PhpStorm.
+* `ddev ssh`: Can `telnet host.docker.internal 9000` connect? If it does, you have something else running on port 9000, probably php-fpm. On the host, use `sudo lsof -i :9000 -sTCP:LISTEN` to find out what is there and stop it, or [change the xdebug port and configure PhpStorm to use the new one](#using-xdebug-on-a-port-other-than-the-default) . Don't continue debugging until your telnet command does not connect.
+* Now click the listen button on PhpStorm to start it listening for connections.
+* `ddev ssh` and try the `telnet host.docker.internal 9000` again. It should connect. If not, maybe PhpStorm is not listening, or not configured to listen on port 9000?
 * Check to make sure that Xdebug is enabled. You can use `php -i | grep grep Xdebug` inside the container, or use any other technique you want that gives the output of `phpinfo()`, including Drupal's admin/reports/status/php. You should see `with Xdebug v2.9.6, Copyright (c) 2002-2020` and `php -i | grep "xdebug.remote_enable"` should give you `xdebug.remote_enable: On`.
 * Set a breakpoint in the first relevant line of the index.php of your project and then visit the site in a browser. It should stop at that first line.
