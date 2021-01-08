@@ -10,7 +10,7 @@ on:
     paths:
     - "pkg/**"
     - "cmd/**"
-    - ".github/workflows/staticcheck.yml"
+    - ".github/workflows/golangci-lint.yml"
 jobs:
   golangci:
     name: lint
