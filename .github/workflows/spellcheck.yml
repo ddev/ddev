@@ -11,5 +11,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
-    - uses: sbates130272/spellcheck-github-actions@v0.7.0
+    - uses: rojopolis/spellcheck-github-actions@0.5.0
       name: Spellcheck
