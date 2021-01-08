@@ -21,6 +21,10 @@ jobs:
     - name: Run markdownlint on docs
       uses: docker://avtodev/markdown-lint:v1
       with:
-        rules: '.markdownlintrc'
-        config: '/lint/config/changelog.yml'
+#        rules: '.markdownlintrc'
+        config: '.markdownlintrc'
         args: '*.md docs'
+    - name: Test mkdocs
+      run: |
+        sudo pip3 install -q mkdocs==0.17.5
+        mkdocs -q build -d /tmp/mkdocsbuild
