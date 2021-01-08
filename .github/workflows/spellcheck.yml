@@ -4,6 +4,11 @@ on:
     branches:
     - master
   pull_request:
+    paths:
+    - "docs/**"
+    - "index.md"
+    - ".spellcheckwordlist.txt"
+    - ".spellcheck.yml"
 
 jobs:
   build:
