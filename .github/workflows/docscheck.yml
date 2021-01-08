@@ -9,10 +9,12 @@ on:
     - "index.md"
     - ".spellcheckwordlist.txt"
     - ".spellcheck.yml"
+    - ".markdownlintrc"
+    - "mkdocs.yml"
 
 jobs:
   build:
-    name: Spellcheck
+    name: Docs check (spellcheck, markdownlint)
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
