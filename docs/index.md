@@ -29,7 +29,7 @@ _When upgrading, please run `ddev poweroff` and check the [release notes](https:
 
 Docker and docker-compose are required before anything will work with DDEV. This is pretty easy on most environments; see the [docker_installation](users/docker_installation.md) page to help sort out the details, especially on Windows and Linux.
 
-### Homebrew/Linuxbrew - macOS/Linux
+### Homebrew - macOS/Linux
 
 For macOS and Linux users, we recommend installing and upgrading via [Homebrew](https://brew.sh/) (macOS) or [Homebrew on Linux](https://docs.brew.sh/Homebrew-on-Linux) (Linux):
 
@@ -79,7 +79,7 @@ We'll walk through these in more detail. You may prefer other techniques of inst
 14. Check that docker is working inside Ubuntu (or your distro): `docker ps`
 15. Optional: If you prefer to use the *Windows* ddev instead of working inside WSL2, install it with `choco install -y ddev`. The Windows ddev works fine with the WSL2-based Docker engine.
 16. Open the WSL2 terminal, for example `Ubuntu` from the Windows start menu.
-17. Install Linuxbrew: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"` (See [brew.sh](brew.sh).)
+17. Install Homebrew: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"` (See [brew.sh](brew.sh).)
 18. Add brew to your path as prompted, for example, `echo 'eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)' >> ~/.profile && source ~/.profile`
 19. `brew install gcc && brew tap drud/ddev && brew install ddev`
 20. `sudo apt-get update && sudo apt-get install -y xdg-utils` to install the xdg-utils package that allows `ddev launch` to work.
@@ -107,7 +107,7 @@ curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev
 The installation script can also take a version argument in order to install a specific version or a prerelease version. For example,
 
 ```
-curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh v1.16.0-alpha5
+curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh v1.17.0-alpha2
 ```
 
 Later, to upgrade DDEV to the latest version, just run `ddev poweroff` and run the script again.
@@ -124,7 +124,7 @@ You can also easily perform the installation or upgrade manually if preferred. D
 
 ### Installation via package managers - Linux
 
-The preferred Linux package manager is [Linuxbrew](http://linuxbrew.sh/) : `brew tap drud/ddev && brew install ddev`
+The preferred Linux package manager is [Homebrew](http://brew.sh/) : `brew tap drud/ddev && brew install ddev`
 
 We also currently maintain a package on [Arch Linux (AUR)](https://aur.archlinux.org/packages/ddev-bin/)
 

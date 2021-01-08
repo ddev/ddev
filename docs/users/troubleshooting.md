@@ -9,7 +9,7 @@ Things might go wrong! Besides the suggestions on this page don't forget about [
 * If you have customizations (PHP overrides, nginx or Apache overrides, MySQL overrides, custom services, config.yaml changes) please back them out while troubleshooting. It's important to have the simplest possible environment while troubleshooting.
 * Check your Docker disk space and memory allocation if you're using Docker Desktop on Windows or macOS.
 * Restart Docker. Consider a Docker factory reset in serious cases (this will destroy any databases you've loaded). See [Docker Troubleshooting](docker_installation.md#troubleshooting) for more.
-* Try the simplest possible ddev project to try to get i to work: `ddev poweroff && mkdir ~/tmp/testddev && cd ~/tmp/testddev && ddev config --project-type=php && ddev start`. Does that start up OK? If so, maybe something is wrong with the more complicated project you're trying to start.
+* Try the simplest possible ddev project to try to get it to work: `ddev poweroff && mkdir ~/tmp/testddev && cd ~/tmp/testddev && ddev config --project-type=php && ddev start`. Does that start up OK? If so, maybe something is wrong with the more complicated project you're trying to start.
 
 <a name="unable-listen"></a>
 
@@ -23,7 +23,7 @@ Failed to start yoursite: Unable to listen on required ports, localhost port 80 
 
 This means there is another webserver listening on the named port(s) and ddev cannot access the port.
 
-(In some cases the conflict could be over port 8036 (PHPMyAdmin) or port 8025 (mailhog)).
+(In some cases the conflict could be over port 8036 (phpMyAdmin) or port 8025 (MailHog)).
 
 To resolve this conflict, choose one of two methods:
 
@@ -43,13 +43,13 @@ router_http_port: 8000
 
 Then run `ddev start`. This changes the project's http URL to <http://yoursite.ddev.site:8000.>
 
-If the conflict is over port 8025, it's normally a conflict over the default port for mailhog. You can add to your .ddev/config.yaml
+If the conflict is over port 8025, it's normally a conflict over the default port for MailHog. You can add to your .ddev/config.yaml
 
 ```yaml
 mailhog_port: 8300
 ```
 
-If the conflict is over port 8036, it's normally about PHPMyAdmin, and you can add to your .ddev/config.yaml
+If the conflict is over port 8036, it's normally about phpMyAdmin, and you can add to your .ddev/config.yaml
 
 ```yaml
 phpmyadmin_port: 8302
@@ -75,8 +75,8 @@ Here are some of the other common processes that could be using port 80 and meth
 or `sudo launchctl stop homebrew.mxcl.nginx`
 * nginx (Ubuntu): `sudo service nginx stop`
 * apache (often named "httpd") (many environments): `sudo apachectl stop` or on Ubuntu `sudo service apache2 stop`
-* vpnkit (macOS): You likely have a docker container bound to port 80, do you have containers up for Kalabox or another docker-based development environment? If so, stop the other environment.
-* Kalabox: If you have previously used Kalabox try running `kbox poweroff`
+* vpnkit (macOS): You likely have a docker container bound to port 80, do you have containers up for Lando or another docker-based development environment? If so, stop the other environment.
+* Lando: If you have previously used Lando try running `lando poweroff`
 
 To dig deeper, you can use a number of tools to find out what process is listening.
 
@@ -189,7 +189,7 @@ While ddev can create a webserver and a docker network infrastructure for a proj
 
 ## Windows WSL2 Name resolution on non-ddev.site hostnames or when not internet-connected
 
-On Windows WSL2, there is a hosts file inside the WSL2 instance (`/etc/hosts`), and there is also one on the Windows side (`C:\Windows\systsem32\drivers\etc\hosts`). Most people use a browser on the Windows side, which has no idea about hostnames that may be set up in the WSL2 /etc/hosts file. So a WSL2 project which uses `*.ddev.site` works fine when accessed by a browser on the Windows side, as long as internet connectivity is available (DNS lookups of `*.ddev.site` succeed).
+On Windows WSL2, there is a hosts file inside the WSL2 instance (`/etc/hosts`), and there is also one on the Windows side (`C:\Windows\system32\drivers\etc\hosts`). Most people use a browser on the Windows side, which has no idea about hostnames that may be set up in the WSL2 /etc/hosts file. So a WSL2 project which uses `*.ddev.site` works fine when accessed by a browser on the Windows side, as long as internet connectivity is available (DNS lookups of `*.ddev.site` succeed).
 
 However, if the project uses non-ddev.site hostnames, or if not connected to the Internet, a Windows-side browser will be unable to look up project hostnames, and you'll get complaints from the browser like "<url> server IP address could not be found" or "We can’t connect to the server at <url>".  In this case, you can
 

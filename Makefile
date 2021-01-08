@@ -170,7 +170,7 @@ packr2:
           	    $(BUILD_IMAGE) packr2
 
 # Required static analysis targets used in circleci - these cause fail if they don't work
-staticrequired: setup golangci-lint markdownlint mkdocs
+staticrequired: setup golangci-lint markdownlint mkdocs pyspelling
 
 # Best to install markdownlint-cli locally with "npm install -g markdownlint-cli"
 markdownlint:
@@ -192,6 +192,17 @@ mkdocs:
 		$$CMD ; \
 	else  \
 		sleep 1 && $(DOCKERTESTCMD) bash -c "$$CMD"; \
+	fi
+
+# Best to install pyspelling locally with "pip3 install pyspelling pymdown-extensions"
+pyspelling:
+	@echo "pyspelling: "
+	@CMD="pyspelling --config .spellcheck.yml"; \
+	set -eu -o pipefail; \
+	if command -v pyspelling >/dev/null 2>&1 ; then \
+	  	$$CMD;  \
+  	else \
+		echo "Not running pyspelling because it's not installed"; \
 	fi
 
 darwin_amd64_signed: $(GOTMP)/bin/darwin_amd64/ddev

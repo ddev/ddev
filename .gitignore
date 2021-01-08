@@ -1,10 +1,6 @@
 # Temporary build-tools artifacts to be ignored
-/.go/
 /.gotmp/
-/bin/
 /VERSION.txt
-/.docker_image
-/debug
-/debug.test
-
+.docker_image
+/dictionary.dic
 /.idea

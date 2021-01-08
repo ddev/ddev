@@ -18,7 +18,7 @@ Each of these commands has full help. For example, `ddev start -h` or `ddev help
 * `ddev snapshot` makes a very fast snapshot of your database that can be easily and quickly restored with `ddev restore-snapshot`.
 * `ddev share` works with [ngrok](https://ngrok.com/) (and requires ngrok) so you can let someone in the next office or on the other side of the planet see your project and what you're working on. `ddev share -h` gives more info about how to set up ngrok (it's easy).
 * `ddev ssh` opens a bash session in the web container (or other container).
-* `ddev launch` or `ddev launch some/uri` will launch a browser with the current project's URL (or a full URL to `/some/uri`). `ddev launch -p` will launch the PHPMyAdmin UI, and `ddev launch -m` will launch the MailHog UI.
+* `ddev launch` or `ddev launch some/uri` will launch a browser with the current project's URL (or a full URL to `/some/uri`). `ddev launch -p` will launch the phpMyAdmin UI, and `ddev launch -m` will launch the MailHog UI.
 * `ddev delete` is the same as `ddev stop --remove-data` and will delete a project's database and ddev's record of the project's existence. It doesn't touch your project or code. `ddev delete -O` will omit the snapshot creation step that would otherwise take place, and `ddev delete images` gets rid of spare Docker images you may have on your machine.
 * `ddev xdebug` enables xdebug, `ddev xdebug off` disables it, `ddev xdebug status` shows status
 * `ddev drush` (Drupal and Backdrop only) gives direct access to the drush CLI
@@ -29,8 +29,8 @@ Each of these commands has full help. For example, `ddev start -h` or `ddev help
 
 In addition to the *commands* listed above, there are loads and loads of tools included inside the containers:
 
-* `ddev describe` tells how to access **mailhog**, which captures email in your development environment.
-* `ddev describe` tells how to use the built-in **PHPMyAdmin** and `ddev launch -p` gives direct access to it.
+* `ddev describe` tells how to access **MailHog**, which captures email in your development environment.
+* `ddev describe` tells how to use the built-in **phpMyAdmin** and `ddev launch -p` gives direct access to it.
 * Composer, git, node, npm, and dozens of other tools are installed in the web container, and you can access them via `ddev ssh` or `ddev exec`.
 * `ddev logs` gets you webserver logs; `ddev logs -s db` gets dbserver logs.
 * sqlite3 and the mysql client are inside the web container (and mysql client is also in the db container).
@@ -193,7 +193,7 @@ ddev start
 ddev launch /install.php
 ```
 
-(Drupal 7 doesn't know how to redirect from the front page to the /install.php if the database is not set up but the settings files *are* set up, so launching with /install.php gets you started with an installation. You can aso `drush site-install`, `ddev exec drush site-install --yes`)
+(Drupal 7 doesn't know how to redirect from the front page to the /install.php if the database is not set up but the settings files *are* set up, so launching with /install.php gets you started with an installation. You can also `drush site-install`, `ddev exec drush site-install --yes`)
 
 Quickstart instructions for database imports can be found under [Database Imports](#database-imports).
 
@@ -393,7 +393,7 @@ Here's an example of a database import using ddev:
 ddev import-db --src=dumpfile.sql.gz
 ```
 
-It is also possible to use PHPMyAdmin for database imports, but that approach is much slower. Also, the web and db containers container the `mysql` client, which can be used for imports, and the `ddev mysql` command can be used in the same way you might use `mysql` on a server.
+It is also possible to use phpMyAdmin for database imports, but that approach is much slower. Also, the web and db containers container the `mysql` client, which can be used for imports, and the `ddev mysql` command can be used in the same way you might use `mysql` on a server.
 
 **Note for Backdrop users:** In addition to importing a Backdrop database, you will need to extract a copy of your Backdrop project's configuration into the local `active` directory. The location for this directory can vary depending on the contents of your Backdrop `settings.php` file, but the default location is `[docroot]/files/config_[random letters and numbers]/active`. Please refer to the Backdrop documentation for more information on [moving your Backdrop site](https://backdropcms.org/user-guide/moving-backdrop-site) into the `ddev` environment.
 
@@ -438,7 +438,7 @@ In **Magento 2**, DDEV settings go into `app/etc/env.php`
 
 For **TYPO3**, DDEV settings are written to AdditionalConfiguration.php.  If AdditionalConfiguration.php exists and is not managed by DDEV, it will not be modified.
 
-For **Wordpress**, DDEV settings are written to a DDEV-managed file, wp-config-ddev.php. The `ddev config` command will attempt to write settings through the following steps:
+For **WordPress**, DDEV settings are written to a DDEV-managed file, wp-config-ddev.php. The `ddev config` command will attempt to write settings through the following steps:
 
 * Write DDEV settings to wp-config-ddev.php
 * If no wp-config.php exists, create one that include wp-config-ddev.php
@@ -554,7 +554,7 @@ Importing database...
 Successfully imported database for drupal8
 ```
 
-<h4>Supported file types</h4>
+#### Supported file types
 
 Database import supports the following file types:
 
@@ -581,7 +581,7 @@ Successfully imported database for drupal8
 
 ```
 
-<h4>Non-interactive usage</h4>
+#### Non-interactive usage
 
 If you want to use import-db without answering prompts, you can use the `--src` flag to provide the path to the import asset. If you are importing an archive, and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag. Examples:
 
@@ -591,7 +591,7 @@ gzip -dc /tmp/mydb.sql.gz | ddev import-db
 ddev import-db <mydb.sql
 ```
 
-<h4>Database import notes</h4>
+#### Database import notes
 
 * Importing from a dumpfile via stdin will not show progress because there's no way the import can know how far along through the import it has progressed.
 * Use `ddev import-db --target-db <some_database>` to import to a non-default database (other than the default "db" database). This will create the database if it doesn't exist already.
@@ -627,7 +627,7 @@ Import path:
 Successfully imported files for drupal8
 ```
 
-<h4>Supported file types</h4>
+#### Supported archive types for file import
 
 Static asset import supports the following file types:
 
@@ -649,7 +649,8 @@ Successfully imported files for drupal8
 
 ```
 
-<h4>Non-interactive usage</h4>
+#### Non-interactive usage for ddev import-files
+
 If you want to use import-files without answering prompts, you can use the `--src` flag to provide the path to the import asset. If you are importing an archive, and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag. Example:
 
 `ddev import-files --src=/tmp/files.tgz`

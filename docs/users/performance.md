@@ -8,7 +8,7 @@ Every project you run uses system resources, and may compete for those resources
 
 ## Docker Desktop for Mac Settings
 
-Docker Desktop for Mac has a number of settings that you'll want to pay attention to. Under "Advanced" in the "Resources" section in "Preferences", you can adjust the amount of memory, disk, and CPUs allocated to Docker. While the defaults work well for a small project or two, you may want to adjust these upward based on your experience. The default memory allocation is 2GB, but many people raise it to 4-5GB or even higher. The disk allocation almost always needs to be raised to accomodate increased downloaded images. Your experience will determine what to do with CPUs.
+Docker Desktop for Mac has a number of settings that you'll want to pay attention to. Under "Advanced" in the "Resources" section in "Preferences", you can adjust the amount of memory, disk, and CPUs allocated to Docker. While the defaults work well for a small project or two, you may want to adjust these upward based on your experience. The default memory allocation is 2GB, but many people raise it to 4-5GB or even higher. The disk allocation almost always needs to be raised to accommodate increased downloaded images. Your experience will determine what to do with CPUs.
 
 ## Using NFS to Mount the Project into the Web Container
 
@@ -45,7 +45,7 @@ Also see the debugging section below, and the special Windows debugging section.
 
 ### Debian/Ubuntu Linux NFS Setup
 
-The nfsmount_enabled feature does not really add performance on Linux systems because Docker on Linux is already quite fast. The primary reason for using it on a Linux system would be just to keep consistent with other team members working on other host OSs. However, since one can now set up NFS globally with `ddev config global --nfs-mount-enabled` it no longer needs to be set up on a project-by-project basis, so most teams can get by with just leaving NFS mounting out of the project-level config.yaml.
+The nfs_mount_enabled feature does not really add performance on Linux systems because Docker on Linux is already quite fast. The primary reason for using it on a Linux system would be just to keep consistent with other team members working on other host OSs. However, since one can now set up NFS globally with `ddev config global --nfs-mount-enabled` it no longer needs to be set up on a project-by-project basis, so most teams can get by with just leaving NFS mounting out of the project-level config.yaml.
 
 Note that for all Linux systems, you can and should install and configure the NFS daemon and configure /etc/exports as you see fit and share the directories that you choose to share. The Debian/Ubuntu Linux script is just one way of accomplishing it.
 

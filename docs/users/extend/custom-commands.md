@@ -11,17 +11,17 @@ There are example commands provided in `ddev/commands/*/*.example` that can just
 
 ### Host commands
 
-To provide host commands, place a bash script in .ddev/commands/host. For example, a PHPStorm launcher to make the `ddev PHPStorm` command might go in .ddev/commands/host/phpstorm` with these contents:
+To provide host commands, place a bash script in .ddev/commands/host. For example, a PhpStorm launcher to make the `ddev PhpStorm` command might go in .ddev/commands/host/phpstorm` with these contents:
 
 ```bash
 #!/usr/bin/env bash
 
-## Description: Open PHPStorm with the current project
+## Description: Open PhpStorm with the current project
 ## Usage: phpstorm
 ## Example: "ddev phpstorm"
 
 # Example is macOS-specific, but easy to adapt to any OS
-open -a PHPStorm.app ${DDEV_APPROOT}
+open -a PhpStorm.app ${DDEV_APPROOT}
 ```
 
 ### Container commands

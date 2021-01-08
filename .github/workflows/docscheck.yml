@@ -1,0 +1,34 @@
+name: Check docs
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    paths:
+    - "docs/**"
+    - "index.md"
+    - ".spellcheckwordlist.txt"
+    - ".spellcheck.yml"
+    - ".markdownlintrc"
+    - "mkdocs.yml"
+
+jobs:
+  build:
+    name: Docs check (spellcheck, markdownlint)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - uses: rojopolis/spellcheck-github-actions@0.8.0
+      name: Spellcheck
+    - name: Run markdownlint on docs
+      uses: docker://avtodev/markdown-lint:v1
+      with:
+        config: '.markdownlintrc'
+        args: '*.md docs'
+#    - name: Debugging with tmate
+#      uses: mxschmitt/action-tmate@v3.1
+    - name: Test mkdocs
+      run: |
+        sudo pip3 install setuptools
+        sudo pip3 install mkdocs==0.17.5
+        mkdocs -q build -d /tmp/mkdocsbuild
