@@ -2,7 +2,7 @@
 
 ### Continuous Integration (CI) for a project
 
-Although it has not a primary goal of DDEV-Local, a number of people have found it easy to use DDEV-Local on a CI system like Github Actions or TravisCI or CircleCI to test out their projects. Instead of setting up a hosting environment for testing, they just start the project using DDEV and run their tests.
+Although it has not a primary goal of DDEV-Local, a number of people have found it easy to use DDEV-Local on a CI system like GitHub Actions or TravisCI or CircleCI to test out their projects. Instead of setting up a hosting environment for testing, they just start the project using DDEV and run their tests.
 
 Examples of this approach are shown in [Codeception tests in Travis CI with DDEV and Selenium](https://dev.to/tomasnorre/codeception-tests-in-travis-ci-with-ddev-and-selenium-1607) and [GitHub Action Setup Ddev](https://github.com/jonaseberle/github-action-setup-ddev)
 

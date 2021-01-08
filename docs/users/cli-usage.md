@@ -193,7 +193,7 @@ ddev start
 ddev launch /install.php
 ```
 
-(Drupal 7 doesn't know how to redirect from the front page to the /install.php if the database is not set up but the settings files *are* set up, so launching with /install.php gets you started with an installation. You can aso `drush site-install`, `ddev exec drush site-install --yes`)
+(Drupal 7 doesn't know how to redirect from the front page to the /install.php if the database is not set up but the settings files *are* set up, so launching with /install.php gets you started with an installation. You can also `drush site-install`, `ddev exec drush site-install --yes`)
 
 Quickstart instructions for database imports can be found under [Database Imports](#database-imports).
 
@@ -438,7 +438,7 @@ In **Magento 2**, DDEV settings go into `app/etc/env.php`
 
 For **TYPO3**, DDEV settings are written to AdditionalConfiguration.php.  If AdditionalConfiguration.php exists and is not managed by DDEV, it will not be modified.
 
-For **Wordpress**, DDEV settings are written to a DDEV-managed file, wp-config-ddev.php. The `ddev config` command will attempt to write settings through the following steps:
+For **WordPress**, DDEV settings are written to a DDEV-managed file, wp-config-ddev.php. The `ddev config` command will attempt to write settings through the following steps:
 
 * Write DDEV settings to wp-config-ddev.php
 * If no wp-config.php exists, create one that include wp-config-ddev.php

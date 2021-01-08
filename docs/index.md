@@ -107,7 +107,7 @@ curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev
 The installation script can also take a version argument in order to install a specific version or a prerelease version. For example,
 
 ```
-curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh v1.16.0-alpha5
+curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh v1.17.0-alpha2
 ```
 
 Later, to upgrade DDEV to the latest version, just run `ddev poweroff` and run the script again.
