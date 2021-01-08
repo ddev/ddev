@@ -21,12 +21,11 @@ jobs:
     - name: Run markdownlint on docs
       uses: docker://avtodev/markdown-lint:v1
       with:
-#        rules: '.markdownlintrc'
         config: '.markdownlintrc'
         args: '*.md docs'
-    - name: Debugging with tmate
-      uses: mxschmitt/action-tmate@v3.1
+#    - name: Debugging with tmate
+#      uses: mxschmitt/action-tmate@v3.1
     - name: Test mkdocs
       run: |
-        sudo pip3 install -q mkdocs==0.17.5
+        sudo pip3 install -q setuptools mkdocs==0.17.5
         mkdocs -q build -d /tmp/mkdocsbuild
