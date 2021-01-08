@@ -9,7 +9,7 @@ Things might go wrong! Besides the suggestions on this page don't forget about [
 * If you have customizations (PHP overrides, nginx or Apache overrides, MySQL overrides, custom services, config.yaml changes) please back them out while troubleshooting. It's important to have the simplest possible environment while troubleshooting.
 * Check your Docker disk space and memory allocation if you're using Docker Desktop on Windows or macOS.
 * Restart Docker. Consider a Docker factory reset in serious cases (this will destroy any databases you've loaded). See [Docker Troubleshooting](docker_installation.md#troubleshooting) for more.
-* Try the simplest possible ddev project to try to get i to work: `ddev poweroff && mkdir ~/tmp/testddev && cd ~/tmp/testddev && ddev config --project-type=php && ddev start`. Does that start up OK? If so, maybe something is wrong with the more complicated project you're trying to start.
+* Try the simplest possible ddev project to try to get it to work: `ddev poweroff && mkdir ~/tmp/testddev && cd ~/tmp/testddev && ddev config --project-type=php && ddev start`. Does that start up OK? If so, maybe something is wrong with the more complicated project you're trying to start.
 
 <a name="unable-listen"></a>
 

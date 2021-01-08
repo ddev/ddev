@@ -70,7 +70,7 @@ BUILD_OS = $(shell go env GOHOSTOS)
 BUILD_ARCH = $(shell go env GOHOSTARCH)
 VERSION_LDFLAGS=$(foreach v,$(VERSION_VARIABLES),-X '$(PKG)/pkg/version.$(v)=$($(v))')
 LDFLAGS=-extldflags -static $(VERSION_LDFLAGS)
-BUILD_IMAGE ?= drud/golang-build-container:v1.16-beta-1
+BUILD_IMAGE ?= drud/golang-build-container:v1.16-beta
 DOCKERBUILDCMD=docker run -t --rm                     \
           	    -v "/$(PWD)://workdir$(DOCKERMOUNTFLAG)"                              \
           	    -e GOPATH="//workdir/$(GOTMP)" \
@@ -170,7 +170,7 @@ packr2:
           	    $(BUILD_IMAGE) packr2
 
 # Required static analysis targets used in circleci - these cause fail if they don't work
-staticrequired: setup golangci-lint markdownlint mkdocs mdspell
+staticrequired: setup golangci-lint markdownlint mkdocs pyspelling
 
 # Best to install markdownlint-cli locally with "npm install -g markdownlint-cli"
 markdownlint:
@@ -194,16 +194,15 @@ mkdocs:
 		sleep 1 && $(DOCKERTESTCMD) bash -c "$$CMD"; \
 	fi
 
-# Best to install mdspell locally with "npm install -g markdown-spellcheck"
-mdspell:
-	@echo "mdspell: "
-	@CMD="mdspell *.md docs/**/*.md 2>&1"; \
+# Best to install pyspelling locally with "pip3 install pyspelling pymdown-extensions"
+pyspelling:
+	@echo "pyspelling: "
+	@CMD="pyspelling --config .spellcheck.yml"; \
 	set -eu -o pipefail; \
-	if command -v mdspell >/dev/null 2>&1 ; then \
+	if command -v pyspelling >/dev/null 2>&1 ; then \
 	  	$$CMD;  \
   	else \
-		sleep 1 && $(DOCKERTESTCMD) \
-		bash -c "$$CMD"; \
+		echo "Not running pyspelling because it's not installed"; \
 	fi
 
 darwin_amd64_signed: $(GOTMP)/bin/darwin_amd64/ddev
