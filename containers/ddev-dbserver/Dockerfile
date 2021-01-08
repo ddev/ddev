@@ -13,12 +13,7 @@ ENV MYSQL_ROOT_PASSWORD root
 
 SHELL ["/bin/bash", "-c"]
 
-# Install extra packages
-RUN if [[ "$DBTYPE" == "mariadb" ]]; then \
-    apt-get -qq update && apt-get -qq install -y sudo; \
-elif [[ "$DBTYPE" == "mysql" ]]; then \
-    apt-get -qq update && apt-get -qq install -y sudo lsb-release curl; \
-fi
+RUN apt-get -qq update && apt-get -qq install -y tzdata sudo gnupg2 pv less vim wget curl lsb-release >/dev/null
 
 RUN if ( ! command -v xtrabackup && ! command -v mariabackup ); then \
     curl -sSL https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb -o percona-release_latest.$(lsb_release -sc)_all.deb; \
