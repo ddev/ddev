@@ -10,6 +10,7 @@ on:
     paths:
     - "pkg/**"
     - "cmd/**"
+    - ".github/workflows/staticcheck.yml"
 jobs:
   golangci:
     name: lint
@@ -25,8 +26,7 @@ jobs:
         # Optional: working directory, useful for monorepos
         # working-directory: somedir
 
-        # Optional: golangci-lint command line arguments.
-        # args: --issues-exit-code=0
+        args: --out-format=line-number --disable-all --enable=gofmt --enable=govet --enable=golint --enable=errcheck --enable=staticcheck --enable=ineffassign --enable=varcheck --enable=deadcode
 
         # Optional: show only new issues if it's a pull request. The default value is `false`.
         # only-new-issues: true
