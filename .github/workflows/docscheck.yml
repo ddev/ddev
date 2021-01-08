@@ -1,4 +1,4 @@
-name: Spellcheck docs
+name: Check docs
 on:
   push:
     branches:
@@ -18,3 +18,9 @@ jobs:
     - uses: actions/checkout@master
     - uses: rojopolis/spellcheck-github-actions@0.8.0
       name: Spellcheck
+    - name: Run markdownlint on docs
+      uses: docker://avtodev/markdown-lint:v1
+      with:
+        rules: '.markdownlintrc'
+        config: '/lint/config/changelog.yml'
+        args: '*.md docs'
