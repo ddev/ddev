@@ -29,5 +29,6 @@ jobs:
 #      uses: mxschmitt/action-tmate@v3.1
     - name: Test mkdocs
       run: |
-        sudo pip3 install -q setuptools mkdocs==0.17.5
+        sudo pip3 install setuptools
+        sudo pip3 install mkdocs==0.17.5
         mkdocs -q build -d /tmp/mkdocsbuild
