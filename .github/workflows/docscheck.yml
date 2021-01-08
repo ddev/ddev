@@ -24,6 +24,8 @@ jobs:
 #        rules: '.markdownlintrc'
         config: '.markdownlintrc'
         args: '*.md docs'
+    - name: Debugging with tmate
+      uses: mxschmitt/action-tmate@v3.1
     - name: Test mkdocs
       run: |
         sudo pip3 install -q mkdocs==0.17.5
