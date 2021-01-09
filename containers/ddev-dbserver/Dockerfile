@@ -4,18 +4,19 @@ FROM ${DBTYPE}:${PARENTIMAGEVERSION}
 
 # This must be reiterated because everything is emptied on FROM
 ARG DBVERSION
-
+ARG DBTYPE
 
 ENV MYSQL_DATABASE db
 ENV MYSQL_USER db
 ENV MYSQL_PASSWORD db
 ENV MYSQL_ROOT_PASSWORD root
 
-# Install extra packages
+SHELL ["/bin/bash", "-c"]
+
 RUN apt-get -qq update && apt-get -qq install -y tzdata sudo gnupg2 pv less vim wget curl lsb-release >/dev/null
 
 RUN if ( ! command -v xtrabackup && ! command -v mariabackup ); then \
-    wget --quiet https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb ; \
+    curl -sSL https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb -o percona-release_latest.$(lsb_release -sc)_all.deb; \
     sudo dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb >/dev/null; \
     rm percona-release*.deb ; \
     xtrabackup_version=percona-xtrabackup-24 ; \
@@ -30,7 +31,7 @@ RUN mkdir -p /var/lib/mysql && chmod 777 /var/lib/mysql
 ADD files /
 
 # Build a starter base db
-RUN /create_base_db.sh;
+RUN /create_base_db.sh
 
 RUN chmod ugo+x /healthcheck.sh /backuptool.sh
 

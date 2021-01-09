@@ -118,7 +118,7 @@ func (site *TestSite) Prepare() error {
 	app.Docroot = site.Docroot
 	app.Type = app.DetectAppType()
 	if app.Type != site.Type {
-		return errors.Errorf("Detected apptype does not match provided apptype")
+		return errors.Errorf("Detected apptype (%s) does not match provided apptype (%s)", app.Type, site.Type)
 	}
 
 	err = app.ConfigFileOverrideAction()

@@ -1,0 +1,111 @@
+name: Build and test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  BUILDKIT_PROGRESS: plain
+  DOCKER_CLI_EXPERIMENTAL: enabled
+  DDEV_LIVE_NO_ANALYTICS: true
+  DDEV_DEBUG: true
+
+
+jobs:
+  build:
+    name: Build DDEV executables
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # We need to get all branches and tags for git describe to work properly
+          fetch-depth: 0
+
+      - name: Install Docker and deps
+        run: ./.github/workflows/linux-setup.sh
+
+      - name: Install build tools
+        run: ./.github/workflows/linux-build-setup.sh
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '^1.15.3'
+      
+      # Install Node v10 for the staticrequired step
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '10'
+
+      - name: staticrequired
+        run: make staticrequired
+
+      - name: Build DDEV executables
+        run: make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_install
+
+      - name: Generate artifacts
+        run: ./.github/workflows/generate_artifacts.sh ${{ github.workspace }}/artifacts
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ddev-executables
+          path: ${{ github.workspace }}/artifacts/*
+          # 90 retention days are overkill for this
+          retention-days: 7
+
+  tests:
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      matrix:
+        webserver: [apache-fpm, nginx-fpm]
+        tests: [testpkg, testcmd, testfullsitesetup]
+        os: [ ubuntu-20.04 ]
+      fail-fast: false
+
+#    name: ${{ matrix.os[0] }} - ${{ matrix.webserver }} - make ${{ matrix.tests }}
+    runs-on: ${{ matrix.os }}
+
+    env:
+      DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
+      DRUD_NONINTERACTIVE: "true"
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: GOTEST_SHORT setup - use "true" except for testfullsitesetup
+        run: |
+          if [ "${{ matrix.tests }}" != "testfullsitesetup" ]; then
+            echo "GOTEST_SHORT=true" >> $GITHUB_ENV
+          fi
+
+      - name: Install Docker and deps (Linux)
+        if: matrix.os == 'ubuntu-20.04'
+        run: ./.github/workflows/linux-setup.sh
+      
+#      - name: Install Docker and deps (macOS)
+#        if: matrix.os == 'macos-latest'
+#        run: ./.github/workflows/macos-setup.sh
+
+      - uses: actions/setup-go@v2
+        if: matrix.os == 'ubuntu-20.04'
+        with:
+          go-version: 1.*
+
+#      - name: Clean up self-hosted runners if necessary
+#        if: matrix.os[1] == 'self-hosted'
+#        run: .github/workflows/selfhosted-maintenance.sh
+
+      - name: DDEV tests
+        run: make ${{ matrix.tests }}
+
+      - name: Store test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: ddev-test-results-${{ matrix.webserver }}
+          path: /tmp/testresults/

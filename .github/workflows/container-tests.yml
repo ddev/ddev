@@ -1,0 +1,70 @@
+name: Container tests
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+    # Only run when something changes in the actual containers
+    paths:
+    - "containers/**"
+
+env:
+  BUILDKIT_PROGRESS: plain
+  DOCKER_CLI_EXPERIMENTAL: enabled
+
+jobs:
+
+  container-build-and-test:
+    name: ${{ matrix.os }} - Test container ${{ matrix.containers }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+        containers: [mariadb, mysql, webserver, others]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Docker and deps (Linux)
+        if: matrix.os == 'ubuntu-20.04'
+        run: ./.github/workflows/linux-setup.sh
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.*
+
+      - name: Build and test container ${{ matrix.containers }}
+        run: |
+          docker version
+          set -eu -o pipefail
+
+          if [[ "${{ matrix.containers }}" == "mariadb" ]]; then
+            pushd containers/ddev-dbserver
+            echo "--- Test container mariadb"
+            time make test_mariadb DOCKER_ARGS="--no-cache"
+            popd
+
+          elif [[ "${{ matrix.containers }}" == "mysql" ]]; then
+            pushd containers/ddev-dbserver
+            echo "--- Test container mysql"
+            time make test_mysql DOCKER_ARGS="--no-cache"
+            popd
+
+          elif [[ "${{ matrix.containers }}" == "webserver" ]]; then
+            pushd containers/ddev-webserver
+            echo "--- Test container ddev-webserver"
+            time make test DOCKER_ARGS="--no-cache"
+            popd
+
+          elif [[ "${{ matrix.containers }}" == "others" ]]; then
+            for dir in ddev-router ddev-ssh-agent test-ssh-server
+              do pushd containers/$dir
+              echo "--- Test container $dir"
+              time make test DOCKER_ARGS=--no-cache
+              popd
+            done
+
+          fi
+          set +eu
