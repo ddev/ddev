@@ -1493,6 +1493,15 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 		t := time.Now()
 		snapshotName = app.Name + "_" + t.Format("20060102150405")
 	}
+
+	existingSnapshots, err := app.ListSnapshots()
+	if err != nil {
+		return "", err
+	}
+	if nodeps.ArrayContainsString(existingSnapshots, snapshotName) {
+		return "", fmt.Errorf("snapshot %s already exists, please use another snapshot name or clean up snapshots with `ddev snapshot --cleanup`", snapshotName)
+	}
+
 	// Container side has to use path.Join instead of filepath.Join because they are
 	// targeted at the linux filesystem, so won't work with filepath on Windows
 	snapshotDir := path.Join("db_snapshots", snapshotName)
