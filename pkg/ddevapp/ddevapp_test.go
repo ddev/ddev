@@ -1464,7 +1464,7 @@ func TestGetLatestSnapshot(t *testing.T) {
 	runTime()
 }
 
-// TestDdevRestoreSnapshot tests creating a snapshot and reverting to it. This runs with Mariadb 10.2
+// TestDdevRestoreSnapshot tests creating a snapshot and reverting to it.
 func TestDdevRestoreSnapshot(t *testing.T) {
 	assert := asrt.New(t)
 	testDir, _ := os.Getwd()
@@ -1535,6 +1535,10 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.NoError(err)
 	err = os.Remove("hello-post-snapshot-" + app.Name)
 	assert.NoError(err)
+
+	// Make sure duplicate snapshot name gives an error
+	_, err = app.Snapshot(snapshotName)
+	assert.Error(err)
 
 	err = app.ImportDB(d7testerTest2Dump, "", false, false, "db")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest2Dump, err)
