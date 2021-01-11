@@ -175,6 +175,7 @@ func TestConfigSetValues(t *testing.T) {
 	projectTLD := "nowhere.example.com"
 	useDNSWhenPossible := false
 	timezone := "America/Chicago"
+	webEnv := "SOMEENV=someval"
 
 	args := []string{
 		"config",
@@ -206,6 +207,7 @@ func TestConfigSetValues(t *testing.T) {
 		"--phpmyadmin-port", phpMyAdminPort,
 		"--mailhog-port", mailhogPort,
 		"--project-tld", projectTLD,
+		"--web-environment", webEnv,
 		fmt.Sprintf("--use-dns-when-possible=%t", useDNSWhenPossible),
 		"--timezone", timezone,
 	}
@@ -252,6 +254,8 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(useDNSWhenPossible, app.UseDNSWhenPossible)
 	assert.Equal(projectTLD, app.ProjectTLD)
 	assert.Equal(timezone, app.Timezone)
+	require.NotEmpty(t, app.WebEnvironment)
+	assert.Equal(webEnv, app.WebEnvironment[0])
 
 	// Test that container images and working dirs can be unset with default flags
 	args = []string{
