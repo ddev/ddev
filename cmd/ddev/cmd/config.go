@@ -139,6 +139,8 @@ var (
 
 	// ngrokArgs provides additional args to the ngrok command in `ddev share`
 	ngrokArgs string
+
+	webEnvironmentLocal string
 )
 
 var providerName = nodeps.ProviderDefault
@@ -248,6 +250,7 @@ func init() {
 	ConfigCommand.Flags().StringVar(&additionalHostnamesArg, "additional-hostnames", "", "A comma-delimited list of hostnames for the project")
 	ConfigCommand.Flags().StringVar(&additionalFQDNsArg, "additional-fqdns", "", "A comma-delimited list of FQDNs for the project")
 	ConfigCommand.Flags().StringVar(&omitContainersArg, "omit-containers", "", "A comma-delimited list of container types that should not be started when the project is started")
+	ConfigCommand.Flags().StringVar(&webEnvironmentLocal, "web-environment", "", `Add environment variables to web container: --web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`)
 	ConfigCommand.Flags().BoolVar(&createDocroot, "create-docroot", false, "Prompts ddev to create the docroot if it doesn't exist")
 	ConfigCommand.Flags().BoolVar(&showConfigLocation, "show-config-location", false, "Output the location of the config.yaml file if it exists, or error that it doesn't exist.")
 	ConfigCommand.Flags().StringVar(&uploadDirArg, "upload-dir", "", "Sets the project's upload directory, the destination directory of the import-files command.")
@@ -521,6 +524,15 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	if omitContainersArg != "" {
 		app.OmitContainers = strings.Split(omitContainersArg, ",")
+	}
+
+	if cmd.Flag("web-environment").Changed {
+		env := strings.Replace(webEnvironmentLocal, " ", "", -1)
+		if env == "" {
+			app.WebEnvironment = []string{}
+		} else {
+			app.WebEnvironment = strings.Split(env, ",")
+		}
 	}
 
 	if cmd.Flag("webimage-extra-packages").Changed {

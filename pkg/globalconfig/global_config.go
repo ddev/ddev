@@ -54,6 +54,7 @@ type GlobalConfig struct {
 	FailOnHookFailGlobal     bool                    `yaml:"fail_on_hook_fail"`
 	ProjectList              map[string]*ProjectInfo `yaml:"project_info"`
 	HostDockerInternal       string                  `yaml:"host_docker_internal"`
+	WebEnvironment           []string                `yaml:"web_environment"`
 }
 
 // GetGlobalConfigPath() gets the path to global config file
@@ -155,6 +156,11 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # You can enable nfs mounting for all projects with
 # nfs_mount_enabled: true
 #
+# You can inject environment variables into the web container with:
+# web_environment: 
+# - SOMEENV=somevalue
+# - SOMEOTHERENV=someothervalue
+
 # In unusual cases the default value to wait to detect internet availability is too short.
 # You can adjust this value higher to make it less likely that ddev will declare internet
 # unavailable, but ddev may wait longer on some commands. This should not be set below the default 750
