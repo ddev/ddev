@@ -53,7 +53,6 @@ ENV CAROOT /mnt/ddev-global-cache/mkcert
 ENV PHP_DEFAULT_VERSION="7.4"
 ENV DDEV_LIVE_DOWNLOAD_URL https://downloads.ddev.com/ddev-live-cli/latest/linux/ddev-live.zip
 
-# Blackfire
 RUN wget -q -O - https://packages.blackfire.io/gpg.key | apt-key add -
 RUN echo "deb http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
 RUN apt-get update
@@ -69,12 +68,9 @@ RUN mkdir /tmp/ddev && \
         MAILHOG_ARCH="linux_amd64"' > /tmp/ddev/vars; \
     fi
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -o Dpkg::Options::="--force-confold" blackfire-php blackfire-agent -y --allow-unauthenticated
-
-
 # blackfire-php is not available for arm64 (yet)
 RUN if [[ $TARGETPLATFORM != "linux/arm64" ]]; then \
-    DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" blackfire-php -y --allow-unauthenticated; \
+    DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" blackfire-php blackfire-agent -y \
     fi
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
     fontconfig \
