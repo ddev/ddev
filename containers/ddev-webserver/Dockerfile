@@ -68,11 +68,9 @@ RUN mkdir /tmp/ddev && \
         MAILHOG_ARCH="linux_amd64"' > /tmp/ddev/vars; \
     fi
 
-# blackfire-php is not available for arm64 (yet)
-RUN if [[ $TARGETPLATFORM != "linux/arm64" ]]; then \
-    DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" blackfire-php blackfire-agent -y \
-    fi
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
+    blackfire-agent \
+    blackfire-php \
     fontconfig \
     gettext \
     git \
