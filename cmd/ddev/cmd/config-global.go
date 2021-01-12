@@ -13,6 +13,8 @@ var (
 	instrumentationOptIn bool
 	// omitContainers allows user to set value of omit_containers
 	omitContainers string
+	// webEnvironmentGlobal allows user to set value of environment in web container
+	webEnvironmentGlobal string
 )
 
 // configGlobalCommand is the the `ddev config global` command
@@ -46,6 +48,16 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 		}
 		dirty = true
 	}
+	if cmd.Flag("web-environment").Changed {
+		env := strings.Replace(webEnvironmentGlobal, " ", "", -1)
+		if env == "" {
+			globalconfig.DdevGlobalConfig.WebEnvironment = []string{}
+		} else {
+			globalconfig.DdevGlobalConfig.WebEnvironment = strings.Split(env, ",")
+		}
+		dirty = true
+	}
+
 	if cmd.Flag("nfs-mount-enabled").Changed {
 		globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal, _ = cmd.Flags().GetBool("nfs-mount-enabled")
 		dirty = true
@@ -105,6 +117,7 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 	util.Success("Global configuration:")
 	output.UserOut.Printf("instrumentation-opt-in=%v", globalconfig.DdevGlobalConfig.InstrumentationOptIn)
 	output.UserOut.Printf("omit-containers=[%s]", strings.Join(globalconfig.DdevGlobalConfig.OmitContainersGlobal, ","))
+	output.UserOut.Printf("web-environment=[%s]", strings.Join(globalconfig.DdevGlobalConfig.WebEnvironment, ","))
 	output.UserOut.Printf("nfs-mount-enabled=%v", globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal)
 
 	output.UserOut.Printf("router-bind-all-interfaces=%v", globalconfig.DdevGlobalConfig.RouterBindAllInterfaces)
@@ -119,6 +132,7 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 
 func init() {
 	configGlobalCommand.Flags().StringVarP(&omitContainers, "omit-containers", "", "", "For example, --omit-containers=dba,ddev-ssh-agent")
+	configGlobalCommand.Flags().StringVarP(&webEnvironmentGlobal, "web-environment", "", "", `Add environment variables to web container: --web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`)
 	configGlobalCommand.Flags().Bool("nfs-mount-enabled", false, "Enable NFS mounting on all projects globally")
 	configGlobalCommand.Flags().BoolVarP(&instrumentationOptIn, "instrumentation-opt-in", "", false, "instrmentation-opt-in=true")
 	configGlobalCommand.Flags().Bool("router-bind-all-interfaces", false, "router-bind-all-interfaces=true")

@@ -45,13 +45,13 @@ func TestCmdGlobalConfig(t *testing.T) {
 	args := []string{"config", "global"}
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[]\nnfs-mount-enabled=false\nrouter-bind-all-interfaces=false\ninternet-detection-timeout-ms=750\nuse-letsencrypt=false\nletsencrypt-email=\nauto-restart-containers=false\nuse-hardened-images=false\nfail-on-hook-fail=false")
+	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[]\nweb-environment=[]\nnfs-mount-enabled=false\nrouter-bind-all-interfaces=false\ninternet-detection-timeout-ms=750\nuse-letsencrypt=false\nletsencrypt-email=\nauto-restart-containers=false\nuse-hardened-images=false\nfail-on-hook-fail=false")
 
 	// Update a config
-	args = []string{"config", "global", "--instrumentation-opt-in=false", "--omit-containers=dba,ddev-ssh-agent", "--nfs-mount-enabled=true", "--router-bind-all-interfaces=true", "--internet-detection-timeout-ms=850", "--use-letsencrypt", "--letsencrypt-email=nobody@example.com", "--auto-restart-containers=true", "--use-hardened-images=true", "--fail-on-hook-fail=true"}
+	args = []string{"config", "global", "--instrumentation-opt-in=false", "--omit-containers=dba,ddev-ssh-agent", "--nfs-mount-enabled=true", "--router-bind-all-interfaces=true", "--internet-detection-timeout-ms=850", "--use-letsencrypt", "--letsencrypt-email=nobody@example.com", "--auto-restart-containers=true", "--use-hardened-images=true", "--fail-on-hook-fail=true", `--web-environment="SOMEENV=someval"`}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[dba,ddev-ssh-agent]\nnfs-mount-enabled=true\nrouter-bind-all-interfaces=true\ninternet-detection-timeout-ms=850\nuse-letsencrypt=true\nletsencrypt-email=nobody@example.com\nauto-restart-containers=true\nuse-hardened-images=true\nfail-on-hook-fail=true")
+	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[dba,ddev-ssh-agent]\nweb-environment=[\"SOMEENV=someval\"]\nnfs-mount-enabled=true\nrouter-bind-all-interfaces=true\ninternet-detection-timeout-ms=850\nuse-letsencrypt=true\nletsencrypt-email=nobody@example.com\nauto-restart-containers=true\nuse-hardened-images=true\nfail-on-hook-fail=true")
 
 	err = globalconfig.ReadGlobalConfig()
 	assert.NoError(err)

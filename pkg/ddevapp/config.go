@@ -687,6 +687,7 @@ type composeYAMLVars struct {
 	GID                       string
 	AutoRestartContainers     bool
 	FailOnHookFail            bool
+	WebEnvironment            []string
 }
 
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
@@ -706,9 +707,17 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if err != nil {
 		util.Warning("Could not determine host.docker.internal IP address: %v", err)
 	}
-
 	// The fallthrough default for hostDockerInternalIdentifier is the
 	// hostDockerInternalHostname == host.docker.internal
+
+	webEnvironment := globalconfig.DdevGlobalConfig.WebEnvironment
+	localWebEnvironment := app.WebEnvironment
+	for _, v := range localWebEnvironment {
+		// docker-compose won't accept a duplicate environment value
+		if !nodeps.ArrayContainsString(webEnvironment, v) {
+			webEnvironment = append(webEnvironment, v)
+		}
+	}
 
 	uid, gid, username := util.GetContainerUIDGid()
 
@@ -744,6 +753,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		DBBuildDockerfile:         app.GetConfigPath(".dbimageBuild/Dockerfile"),
 		AutoRestartContainers:     globalconfig.DdevGlobalConfig.AutoRestartContainers,
 		FailOnHookFail:            app.FailOnHookFail || app.FailOnHookFailGlobal,
+		WebEnvironment:            webEnvironment,
 	}
 	if app.NFSMountEnabled || app.NFSMountEnabledGlobal {
 		templateVars.MountType = "volume"

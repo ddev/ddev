@@ -18,15 +18,15 @@ The main docker-compose file is named `.ddev/.ddev-docker-compose-base.yaml` and
 
 ### docker-compose.\*.yaml examples
 
-* Set an environment variable in the web container, in a file perhaps called `docker-compose.env.yaml`:
+* Expose an additional port 9999 to host port 9999, in a file perhaps called `docker-compose.ports.yaml`:
 
 ```yaml
 version: '3.6'
 
 services:
   web:
-    environment:
-      - TYPO3_CONTEXT=Development
+    ports:
+      - "9999:9999"
 ```
 
 ### Confirming docker-compose configurations

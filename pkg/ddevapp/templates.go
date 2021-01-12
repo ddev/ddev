@@ -138,6 +138,8 @@ services:
       - SSH_AUTH_SOCK=/home/.ssh-agent/socket
       - TZ={{ .Timezone }}
       - VIRTUAL_HOST=${DDEV_HOSTNAME}
+      {{ range $env := .WebEnvironment }}- "{{ $env }}"
+      {{ end }}
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.platform: {{ .Plugin }}
@@ -346,6 +348,11 @@ const ConfigInstructions = `
 # If true, ddev will not create CMS-specific settings files like
 # Drupal's settings.php/settings.ddev.php or TYPO3's AdditionalSettings.php
 # In this case the user must provide all such settings.
+
+# You can inject environment variables into the web container with:
+# web_environment: 
+# - SOMEENV=somevalue
+# - SOMEOTHERENV=someothervalue
 
 # no_project_mount: false
 # (Experimental) If true, ddev will not mount the project into the web container;

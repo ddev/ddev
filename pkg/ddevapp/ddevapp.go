@@ -112,6 +112,7 @@ type DdevApp struct {
 	Timezone                  string                 `yaml:"timezone,omitempty"`
 	ComposerVersion           string                 `yaml:"composer_version"`
 	DisableSettingsManagement bool                   `yaml:"disable_settings_management,omitempty"`
+	WebEnvironment            []string               `yaml:"web_environment"`
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 

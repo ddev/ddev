@@ -24,21 +24,15 @@ If you need to create a service configuration for your project, see [Defining an
 
 ## Providing custom environment variables to a container
 
-Each project can have an unlimited number of .ddev/docker-compose.\*.yaml files as described in [Custom Compose Files](./custom-compose-files.md), so it's easy to maintain custom environment variables in a .ddev/docker-compose.environment.yaml file (the exact name doesn't matter, if it just matches docker-compose.\*.yaml).
-
-For example, a `.ddev/docker-compose.environment.yaml` with these contents would add a $TYPO3_CONTEXT environment variable to the web container, and a $SOMETHING environment variable to the db container:
+Custom environment variables may be set in the project config.yaml or the ~/.ddev/global_config.yaml with the `web_environment` key, for example
 
 ```yaml
-version: '3.6'
-
-services:
-  web:
-    environment:
-      - TYPO3_CONTEXT=Development
-  db:
-    environment:
-      - SOMETHING=something special
+web_environment:
+- SOMEENV=someval
+- SOMEOTHERENV=someotherval
 ```
+
+You can also use `ddev config global --web-environment="SOMEENV=someval"` or `ddev config --web-environment="SOMEENV=someval"` for the same purpose. The command just sets the values in the configuration files.
 
 ### Providing custom nginx configuration
 

@@ -38,22 +38,24 @@ type ProjectInfo struct {
 
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
-	OmitContainersGlobal     []string                `yaml:"omit_containers,flow"`
-	NFSMountEnabledGlobal    bool                    `yaml:"nfs_mount_enabled"`
-	InstrumentationOptIn     bool                    `yaml:"instrumentation_opt_in"`
-	RouterBindAllInterfaces  bool                    `yaml:"router_bind_all_interfaces"`
-	InternetDetectionTimeout int64                   `yaml:"internet_detection_timeout_ms"`
-	DeveloperMode            bool                    `yaml:"developer_mode,omitempty"`
-	InstrumentationUser      string                  `yaml:"instrumentation_user,omitempty"`
-	LastStartedVersion       string                  `yaml:"last_started_version"`
-	MkcertCARoot             string                  `yaml:"mkcert_caroot"`
-	UseHardenedImages        bool                    `yaml:"use_hardened_images"`
-	UseLetsEncrypt           bool                    `yaml:"use_letsencrypt"`
-	LetsEncryptEmail         string                  `yaml:"letsencrypt_email"`
-	AutoRestartContainers    bool                    `yaml:"auto_restart_containers"`
-	FailOnHookFailGlobal     bool                    `yaml:"fail_on_hook_fail"`
-	ProjectList              map[string]*ProjectInfo `yaml:"project_info"`
-	HostDockerInternal       string                  `yaml:"host_docker_internal"`
+	OmitContainersGlobal     []string `yaml:"omit_containers,flow"`
+	NFSMountEnabledGlobal    bool     `yaml:"nfs_mount_enabled"`
+	InstrumentationOptIn     bool     `yaml:"instrumentation_opt_in"`
+	RouterBindAllInterfaces  bool     `yaml:"router_bind_all_interfaces"`
+	InternetDetectionTimeout int64    `yaml:"internet_detection_timeout_ms"`
+	DeveloperMode            bool     `yaml:"developer_mode,omitempty"`
+	InstrumentationUser      string   `yaml:"instrumentation_user,omitempty"`
+	LastStartedVersion       string   `yaml:"last_started_version"`
+	MkcertCARoot             string   `yaml:"mkcert_caroot"`
+	UseHardenedImages        bool     `yaml:"use_hardened_images"`
+	UseLetsEncrypt           bool     `yaml:"use_letsencrypt"`
+	LetsEncryptEmail         string   `yaml:"letsencrypt_email"`
+	AutoRestartContainers    bool     `yaml:"auto_restart_containers"`
+	FailOnHookFailGlobal     bool     `yaml:"fail_on_hook_fail"`
+	WebEnvironment           []string `yaml:"web_environment"`
+	HostDockerInternal       string   `yaml:"host_docker_internal"`
+
+	ProjectList map[string]*ProjectInfo `yaml:"project_info"`
 }
 
 // GetGlobalConfigPath() gets the path to global config file
@@ -155,6 +157,11 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # You can enable nfs mounting for all projects with
 # nfs_mount_enabled: true
 #
+# You can inject environment variables into the web container with:
+# web_environment: 
+# - SOMEENV=somevalue
+# - SOMEOTHERENV=someothervalue
+
 # In unusual cases the default value to wait to detect internet availability is too short.
 # You can adjust this value higher to make it less likely that ddev will declare internet
 # unavailable, but ddev may wait longer on some commands. This should not be set below the default 750
