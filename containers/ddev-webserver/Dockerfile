@@ -131,6 +131,8 @@ RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.lo
 RUN a2dismod mpm_event
 RUN a2enmod ssl headers expires
 
+RUN phpdismod blackfire
+
 # scripts added last because they're most likely place to make changes, speeds up build
 ADD ddev-webserver-base-scripts /
 RUN chmod ugo+x /start.sh /healthcheck.sh
