@@ -1,0 +1,33 @@
+#!/bin/bash
+
+## #ddev-generated
+## Description: Enable or disable blackfire.io profiling
+## Usage: blackfire on|off|enable|disable|true|false|status
+## Example: "ddev blackfire" (default is "on"), "ddev blackfire off", "ddev blackfire on", "ddev blackfire status"
+
+if [ $# -eq 0 ] ; then
+  enable_blackfire
+  exit
+fi
+
+case $1 in
+    on|true|enable)
+	phpenmod blackfire
+	killall blackfire-agent 2>/dev/null && cd /tmp && nohup blackfire-agent &
+	;;
+	off|false|disable)
+	phpdismod blackfire
+  killall blackfire-agent 2>/dev/null &
+	;;
+	status)
+    phpstatus=$(php --version | grep "with blackfire" >/dev/null 2>&1)
+    agentstatus=$(killall -0 blackfire-agent 2>/dev/null)
+    if [ "${phpstatus}" != "" ]; then echo "blackfire PHP extension enabled"; fi
+    if ${agentstatus}; then echo "blackfire agent running"; fi
+    ;;
+
+
+  *)
+    echo "Invalid argument: $1"
+    ;;
+esac
