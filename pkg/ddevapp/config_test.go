@@ -582,13 +582,13 @@ func TestConfigValidate(t *testing.T) {
 	app.PHPVersion = "1.1"
 	err = app.ValidateConfig()
 	assert.Error(err)
-	assert.Contains(err.Error(), "invalid PHP")
+	assert.Contains(err.Error(), "unsupported PHP")
 
 	app.PHPVersion = nodeps.PHPDefault
 	app.WebserverType = "server"
 	err = app.ValidateConfig()
 	assert.Error(err)
-	assert.Contains(err.Error(), "invalid webserver type")
+	assert.Contains(err.Error(), "unsupported webserver type")
 
 	app.WebserverType = nodeps.WebserverDefault
 	app.AdditionalHostnames = []string{"good", "b@d"}
