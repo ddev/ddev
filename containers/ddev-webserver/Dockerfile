@@ -68,11 +68,9 @@ RUN mkdir /tmp/ddev && \
         MAILHOG_ARCH="linux_amd64"' > /tmp/ddev/vars; \
     fi
 
-# blackfire-php is not available for arm64 (yet)
-RUN if [[ $TARGETPLATFORM != "linux/arm64" ]]; then \
-    DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" blackfire-php -y --allow-unauthenticated; \
-    fi
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
+    blackfire-agent \
+    blackfire-php \
     fontconfig \
     gettext \
     git \
@@ -121,7 +119,7 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib
 RUN chmod -R 777 /var/log
 
 # we need to create the /var/cache/linux and /var/lib/nginx manually for the arm64 image and chmod them, please don't remove them!
-RUN mkdir -p /mnt/ddev-global-cache/mkcert /run/php /var/cache/nginx /var/lib/nginx && chmod -R ugo+rw /mnt/ddev-global-cache/
+RUN mkdir -p /mnt/ddev-global-cache/mkcert /run/{php,blackfire} /var/cache/nginx /var/lib/nginx && chmod -R ugo+rw /mnt/ddev-global-cache/
 
 RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /var/lib/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/lib/node_modules /etc/php /etc/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
 
@@ -132,6 +130,8 @@ RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.lo
 
 RUN a2dismod mpm_event
 RUN a2enmod ssl headers expires
+
+RUN phpdismod blackfire
 
 # scripts added last because they're most likely place to make changes, speeds up build
 ADD ddev-webserver-base-scripts /

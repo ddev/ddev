@@ -134,6 +134,7 @@ bashrc
 bcmath
 be
 belonging
+blackfire
 breakpoint
 browser
 busybox

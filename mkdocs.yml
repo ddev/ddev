@@ -15,6 +15,7 @@ pages:
     - 'ddev Hooks': 'users/extending-commands.md'
     - 'Using Developer Tools with ddev': 'users/developer-tools.md'
     - 'PHP Step Debugging': 'users/step-debugging.md'
+    - 'Profiling with Blackfire': 'users/blackfire-profiling.md'
     - 'Troubleshooting': 'users/troubleshooting.md'
     - 'Docker Installation': 'users/docker_installation.md'
     - 'Performance': 'users/performance.md'
