@@ -9,11 +9,11 @@ DDEV-Local has built-in [blackfire.io](https://blackfire.io) integration.
 3. Configure ddev with the credentials, `ddev config global --web-environment="BLACKFIRE_SERVER_ID=<id>,BLACKFIRE_SERVER_TOKEN=<token>"`. It's easiest to do this globally, but you can do the same thing with project-level `ddev config`.
 4. `ddev start`
 5. `ddev blackfire on` to enable, `ddev blackfire off` to disable, `ddev blackfire status` to see status.
-6. With blackfire enabled, you can use the [browser extension](https://blackfire.io/docs/profiling-cookbooks/profiling-http-via-browser) or [blackfire cli](https://blackfire.io/docs/profiling-cookbooks/profiling-http-via-cli) to profile.
+6. With Blackfire enabled, you can use the [browser extension](https://blackfire.io/docs/profiling-cookbooks/profiling-http-via-browser) or [blackfire cli](https://blackfire.io/docs/profiling-cookbooks/profiling-http-via-cli) to profile.
 
 ### Profiling with the Blackfire CLI
 
-The blackfire CLI is built into the web container, but you still have to provide the client id and token.
+The `blackfire` CLI is built into the web container.
 
 1. `ddev config global --web-environment="BLACKFIRE_SERVER_ID=<id>,BLACKFIRE_SERVER_TOKEN=<token>,BLACKFIRE_CLIENT_ID=<id>,BLACKFIRE_CLIENT_TOKEN=<token>"`
 2. `ddev start`
