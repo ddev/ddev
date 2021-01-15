@@ -46,7 +46,7 @@ var WebTag = "20210207_provider_cleanup" // Note that this can be overridden by 
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "switch-to-github-actions"
+var BaseDBTag = "20210115_huge_db_snapshot_restore"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"
