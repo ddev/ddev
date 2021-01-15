@@ -64,8 +64,8 @@ fi
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
 # Make sure the TERMINUS_CACHE_DIR (/mnt/ddev-global-cache/terminus/cache) exists
-# Along with ddev-live equivalent
-sudo mkdir -p ${TERMINUS_CACHE_DIR} /mnt/ddev-global-cache/ddev-live
+# Along with ddev-live, platform.sh equivalents
+sudo mkdir -p ${TERMINUS_CACHE_DIR} ${PLATFORMSH_CLI_HOME} /mnt/ddev-global-cache/ddev-live
 
 sudo mkdir -p /mnt/ddev-global-cache/bashhistory/${HOSTNAME}
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ ~/{.ssh*,.drush,.gitconfig,.my.cnf}
