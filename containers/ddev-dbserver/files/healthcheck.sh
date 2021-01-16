@@ -16,7 +16,7 @@ if [ -f /tmp/healthy ]; then
 fi
 
 
-if ! killall -HUP mariabackup && ! killall -HUP xtrabackup && mysql --host=127.0.0.1 -udb -pdb --database=db -e "SHOW DATABASES LIKE 'db';" >/dev/null;  then
+if [ ! -f /tmp/initializing ] && mysql --host=127.0.0.1 -udb -pdb --database=db -e "SHOW DATABASES LIKE 'db';" >/dev/null;  then
     printf "healthy"
     touch /tmp/healthy
     exit 0
