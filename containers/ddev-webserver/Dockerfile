@@ -158,7 +158,6 @@ ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
 ENV CAROOT /mnt/ddev-global-cache/mkcert
-ENV DRUSH_LAUNCHER_FALLBACK=/usr/local/bin/drush8
 
 ENV DDEV_LIVE_CONFIG_FILE_PATH /mnt/ddev-global-cache/ddev-live/cli-config.json
 ENV DDEV_LIVE_NO_VERSION_PROMPT true
@@ -279,7 +278,6 @@ ENV PHP_DEFAULT_VERSION="7.4"
 ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
 ENV CAROOT /mnt/ddev-global-cache/mkcert
-ENV DRUSH_LAUNCHER_FALLBACK=/usr/local/bin/drush8
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_CACHE_DIR=/mnt/ddev-global-cache/composer
 ENV COMPOSER_PROCESS_TIMEOUT=2000
