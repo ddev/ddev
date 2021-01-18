@@ -61,14 +61,14 @@ const SitePaused = "paused"
 const DdevFileSignature = "#ddev-generated"
 
 type ProviderCommand struct {
-	Command string `yaml:"command"`
-	RunOn   string `yaml:"run_on,omitempty"`
+	command string `yaml:"command"`
+	service string `yaml:"service,omitempty"`
 }
 type ProviderInfo struct {
-	EnvironmentName  string          `yaml:"environment_name,omitempty"`
-	AuthCommand      ProviderCommand `yaml:"auth_command"`
-	DBPullCommand    ProviderCommand `yaml:"db_pull_command"`
-	FilesPullCommand ProviderCommand `yaml:"files_pull_command"`
+	environmentName  string          `yaml:"environment_name,omitempty"`
+	authCommand      ProviderCommand `yaml:"auth_command"`
+	dbPullCommand    ProviderCommand `yaml:"db_pull_command"`
+	filesPullCommand ProviderCommand `yaml:"files_pull_command"`
 }
 
 // DdevApp is the struct that represents a ddev app, mostly its config
@@ -124,7 +124,7 @@ type DdevApp struct {
 	ComposerVersion           string                  `yaml:"composer_version"`
 	DisableSettingsManagement bool                    `yaml:"disable_settings_management,omitempty"`
 	WebEnvironment            []string                `yaml:"web_environment"`
-	ProviderInfo              map[string]ProviderInfo `yaml:"providers"`
+	Providers                 map[string]ProviderInfo `yaml:"providers"`
 	ComposeYaml               map[string]interface{}  `yaml:"-"`
 }
 
