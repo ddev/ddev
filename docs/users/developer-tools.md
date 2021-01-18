@@ -70,11 +70,8 @@ If you encounter any other scenario, consider using `ddev ssh` and run composer 
 
 [MailHog](https://github.com/MailHog/MailHog) is a mail catcher which is configured to capture and display emails sent by PHP in the development environment.
 
-After your project is started, access the MailHog web interface at its default port:
-
-```
-http://mysite.ddev.site:8025
-```
+After your project is started, access the MailHog web interface at its default port like this:
+`http://mysite.ddev.site:8025` or just use `ddev launch -m` to get to it.
 
 Please note this will not intercept emails if your application is configured to use SMTP or a 3rd-party ESP integration. If you are using SMTP for outgoing mail handling ([Swift Mailer](https://www.drupal.org/project/swiftmailer) or [SMTP](https://www.drupal.org/project/smtp) modules for example), update your application configuration to use `localhost` on port `1025` as the SMTP server locally in order to use MailHog.
 
