@@ -69,7 +69,7 @@ If you need to debug command-line PHP processes, especially code that is outside
 
 * If you have used PhpStorm with xdebug you already have a PhpStorm "server" with the same name as your primary URL (see "Languages and Frameworks" -> "PHP" -> "Servers"). The key job of the "server" is to map filesystem locations on the workstation (your computer) to filesystem locations on the remote server (in this case the ddev-webserver container). Often, PhpStorm has automatically set up a mapping that doesn't include the entire project (so the vendor directory is not mapped, for example). So map the top-level directory of your project to /var/www/html in the container, as in this image:
 ![PhpStorm mapping](images/PHPStormServerMapping.png)
-* When debugging a command-line script inside the container, the environment variable PHP_IDE_CONFIG is automatically set for you, so it will be something like `PHP_IDE_CONFIG=serverName=d8composer.ddev.site`.  If debugging Drupal's drush command, you may find that launching the site-installed drush directly will avoid confusing PhpStorm with the execution of /usr/local/bin/drush (which is the drush launcher). Run it as `ddev exec /var/www/html/vendor/bin/drush` or wherever it was installed. It's often easiest to just `ddev ssh` into the web container and execute command-line scripts directly.
+* When debugging a command-line script inside the container, the environment variable PHP_IDE_CONFIG is automatically set for you, so it will be something like `PHP_IDE_CONFIG=serverName=d8composer.ddev.site`.  
 
 <a name="atom"></a>
 
