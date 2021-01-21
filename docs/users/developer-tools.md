@@ -102,6 +102,8 @@ The port referenced is unique per running project, and randomly chosen from avai
 
 ### Using Drush 8 installed Installation on the Host Computer
 
+**Warning:** Using drush on the host is discouraged, and you'll have some trouble with it. It's also mostly irrelevant for Drupal8, as you should be using composer-installed project-level drush.
+
 If you have PHP and Drush installed on your host system and the environment variable IS_DDEV_PROJECT=true, you can use drush to interact with a ddev project. On the host system the extra include host-side configuration for the database and port are derived in the settings.ddev.php file to allow drush to access the database server. This may not work for all drush commands because of course the actual webserver environment is not available.
 
 Note that on Drupal 8+ if you want to use `drush uli` on the host (or other drush commands that require a default URI), you'll need to set DRUSH_OPTIONS_URI on the host. For example, `export DRUSH_OPTIONS_URI=https://mysite.ddev.site`.
