@@ -27,7 +27,7 @@ func init() {
 				Example: `ddev auth ` + k,
 				Run: func(cmd *cobra.Command, args []string) {
 					if app.SiteStatus() != ddevapp.SiteRunning {
-						util.Failed("Project %s is not running, please start it with ddev start %s", app.Name)
+						util.Failed("Project %s is not running, please start it with ddev start %s", app.Name, app.Name)
 					}
 
 					util.Success("Executing command ddev auth %s", k)
