@@ -20,10 +20,4 @@ ddev auth ddev-live`,
 
 func init() {
 	RootCmd.AddCommand(AuthCmd)
-
-	// Add additional auth. But they're currently in app. Should they be in global?
-	// Try creating an app. If we get one, add it and add any items we find.
-	// Or perhaps we should be loading completely different file.
-	// How about calling it something other than "provider"? I guess the idea was "hosting provider"
-	// maybe.
 }
