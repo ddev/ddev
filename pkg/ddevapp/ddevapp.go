@@ -68,10 +68,11 @@ type ProviderCommand struct {
 
 // ProviderInfo defines the provider
 type ProviderInfo struct {
-	EnvironmentName  string          `yaml:"environment_name,omitempty"`
-	AuthCommand      ProviderCommand `yaml:"auth_command,omitempty"`
-	DBPullCommand    ProviderCommand `yaml:"db_pull_command,omitempty"`
-	FilesPullCommand ProviderCommand `yaml:"files_pull_command,omitempty"`
+	EnvironmentName  string          `yaml:"environment_name"`
+	Verbosity        int             `yaml:"verbosity"`
+	AuthCommand      ProviderCommand `yaml:"auth_command"`
+	DBPullCommand    ProviderCommand `yaml:"db_pull_command"`
+	FilesPullCommand ProviderCommand `yaml:"files_pull_command"`
 	CodePullCommand  ProviderCommand `yaml:"code_pull_command,omitempty"`
 }
 
