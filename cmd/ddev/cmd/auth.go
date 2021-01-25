@@ -55,21 +55,11 @@ func addAuthProviders(app *ddevapp.DdevApp) {
 					if app.SiteStatus() != ddevapp.SiteRunning {
 						util.Failed("Project %s is not running, please start it with ddev start %s", app.Name, app.Name)
 					}
-					c := vl.AuthCommand.Command
-					util.Success("Executing command ddev auth %s using '%s'", kl, c)
-					stdout, stderr, err := app.Exec(
-						&ddevapp.ExecOpts{
-							Service: "web",
-							Cmd:     c,
-						})
+					err := app.ExecOnHostOrService(vl.AuthCommand.Service, vl.AuthCommand.Command)
 					if err == nil {
-						util.Success(stdout + "\n" + stderr)
-						util.Success("Authentication successful!\nYou may now use the 'ddev config %s' command when configuring this project.", kl)
-					} else {
-						util.Failed("Failed to authenticate: command=%s, err=%v, stdout=%s, stderr=%s", err, vl.AuthCommand, stdout, stderr)
+						util.Success("Executed auth command %s on service %s", vl.AuthCommand.Command, vl.AuthCommand.Service)
 					}
-				},
-			})
+				}})
 		}
 	}
 }

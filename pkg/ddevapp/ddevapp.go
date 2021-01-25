@@ -1252,6 +1252,37 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 	return dockerutil.ComposeWithStreams(files, os.Stdin, os.Stdout, os.Stderr, exec...)
 }
 
+func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
+	var err error
+	// Handle case on host
+	if service == "host" {
+		cwd, _ := os.Getwd()
+		err := os.Chdir(app.GetAppRoot())
+		if err != nil {
+			return fmt.Errorf("Unable to GetAppRoot: %v", err)
+		}
+		bashPath := "bash"
+		if runtime.GOOS == "windows" {
+			bashPath = util.FindWindowsBashPath()
+		}
+
+		args := []string{
+			"-c",
+			cmd,
+		}
+
+		err = exec.RunInteractiveCommand(bashPath, args)
+		_ = os.Chdir(cwd)
+	} else { // handle case in container
+		err = app.ExecWithTty(
+			&ExecOpts{
+				Service: service,
+				Cmd:     cmd,
+			})
+	}
+	return err
+}
+
 // Logs returns logs for a site's given container.
 // See docker.LogsOptions for more information about valid tailLines values.
 func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines string) error {
