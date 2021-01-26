@@ -47,6 +47,7 @@ jobs:
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
       DRUD_NONINTERACTIVE: "true"
     steps:
+    - checkout
     - attach_workspace:
         at: ~/
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
@@ -428,13 +429,13 @@ workflows:
   version: 2
   normal_build_and_test:
     jobs:
-    - build
+#    - build
 #    - mac_container_test
-    - lx_container_test
+#    - lx_container_test
 #    - staticrequired
-    - lx_nginx_fpm_test:
-        requires:
-        - build
+    - lx_nginx_fpm_test
+#        requires:
+#        - build
 #    - mac_nginx_fpm_test:
 #        requires:
 #        - build
@@ -444,15 +445,15 @@ workflows:
 #    - mac_nfsmount_test:
 #        requires:
 #        - build
-    - lx_apache_fpm_test:
-        requires:
-        - build
+#    - lx_apache_fpm_test:
+#        requires:
+#        - build
 #    - lx_apache_cgi_test:
 #        requires:
 #        - build
-    - lx_nfsmount_test:
-        requires:
-        - build
+#    - lx_nfsmount_test:
+#        requires:
+#        - build
 #    - artifacts:
 #        requires:
 #        - build
