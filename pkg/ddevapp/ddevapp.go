@@ -68,6 +68,7 @@ type ProviderCommand struct {
 
 // ProviderInfo defines the provider
 type ProviderInfo struct {
+	ProjectID        string          `yaml:"project_id"`
 	EnvironmentName  string          `yaml:"environment_name"`
 	Verbosity        int             `yaml:"verbosity"`
 	AuthCommand      ProviderCommand `yaml:"auth_command"`
@@ -2143,12 +2144,8 @@ func restoreApp(app *DdevApp, siteName string) error {
 
 // GetProvider returns a pointer to the provider instance interface.
 func (app *DdevApp) GetProvider() (Provider, error) {
-	if app.providerInstance != nil {
-		return app.providerInstance, nil
-	}
-
 	var provider Provider
-	err := fmt.Errorf("unknown provider type: %s, must be one of %v", app.Provider, nodeps.GetValidProviders())
+	var err error
 
 	switch app.Provider {
 	case nodeps.ProviderPantheon:
@@ -2157,12 +2154,22 @@ func (app *DdevApp) GetProvider() (Provider, error) {
 	case nodeps.ProviderDdevLive:
 		provider = &DdevLiveProvider{}
 		err = provider.Init(app)
-	case nodeps.ProviderDefault:
-		provider = &DefaultProvider{}
-		err = nil
+	//case nodeps.ProviderDefault:
+	//	provider = &DefaultProvider{}
+	//	err = nil
 	default:
-		provider = &DefaultProvider{}
-		// Use the default error from above.
+		for k := range app.Providers {
+			if app.Provider == k {
+				provider = &GenericProvider{
+					ProviderType: k,
+					app:          app,
+				}
+				break
+			}
+		}
+		if provider == nil {
+			provider = &DefaultProvider{}
+		}
 	}
 	app.providerInstance = provider
 	return app.providerInstance, err
