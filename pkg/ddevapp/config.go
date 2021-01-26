@@ -439,28 +439,31 @@ func (app *DdevApp) ValidateConfig() error {
 
 	// validate PHP version
 	if !nodeps.IsValidPHPVersion(app.PHPVersion) {
-		return fmt.Errorf("unsupported PHP version: %s, ddev (%s) only supports the following versions %v", app.PHPVersion, runtime.GOARCH, nodeps.GetValidPHPVersions()).(invalidPHPVersion)
+		return fmt.Errorf("unsupported PHP version: %s, ddev (%s) only supports the following versions: %v", app.PHPVersion, runtime.GOARCH, nodeps.GetValidPHPVersions()).(invalidPHPVersion)
 	}
 
 	// validate webserver type
 	if !nodeps.IsValidWebserverType(app.WebserverType) {
-		return fmt.Errorf("unsupported webserver type: %s, ddev (%s) only supports the following versions %s", app.WebserverType, runtime.GOARCH, nodeps.GetValidWebserverTypes()).(invalidWebserverType)
+		return fmt.Errorf("unsupported webserver type: %s, ddev (%s) only supports the following webserver types: %s", app.WebserverType, runtime.GOARCH, nodeps.GetValidWebserverTypes()).(invalidWebserverType)
 	}
 
 	if !nodeps.IsValidOmitContainers(app.OmitContainers) {
-		return fmt.Errorf("unsupported omit_containers: %s, ddev (%s) only supports the following versions %s", app.OmitContainers, runtime.GOARCH, nodeps.GetValidOmitContainers()).(InvalidOmitContainers)
+		return fmt.Errorf("unsupported omit_containers: %s, ddev (%s) only supports the following for omit_containers: %s", app.OmitContainers, runtime.GOARCH, nodeps.GetValidOmitContainers()).(InvalidOmitContainers)
 	}
 
 	if app.MariaDBVersion != "" {
 		// Validate mariadb version
 		if !nodeps.IsValidMariaDBVersion(app.MariaDBVersion) {
-			return fmt.Errorf("unsupported mariadb_version: %s, ddev (%s) only supports the following versions %s", app.MariaDBVersion, runtime.GOARCH, nodeps.GetValidMariaDBVersions()).(invalidMariaDBVersion)
+			return fmt.Errorf("unsupported mariadb_version: %s, ddev (%s) only supports the following versions: %s", app.MariaDBVersion, runtime.GOARCH, nodeps.GetValidMariaDBVersions()).(invalidMariaDBVersion)
 		}
 	}
 	if app.MySQLVersion != "" {
 		// Validate /mysql version
 		if !nodeps.IsValidMySQLVersion(app.MySQLVersion) {
-			return fmt.Errorf("unsupported mysql_version: %s, ddev (%s) only supports the following versions %s", app.MySQLVersion, runtime.GOARCH, nodeps.GetValidMySQLVersions()).(invalidMySQLVersion)
+			if len(nodeps.GetValidMySQLVersions()) == 0 {
+				return fmt.Errorf("MySQL is not yet supported on your architecture (%s) because mysql does not provide packages (or docker images)", runtime.GOARCH)
+			}
+			return fmt.Errorf("unsupported mysql_version: %s; ddev (%s) only supports the following versions %s", app.MySQLVersion, runtime.GOARCH, nodeps.GetValidMySQLVersions()).(invalidMySQLVersion)
 		}
 	}
 
