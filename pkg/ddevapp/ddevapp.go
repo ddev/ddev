@@ -1347,6 +1347,9 @@ func (app *DdevApp) DockerEnv() {
 	}
 
 	envVars := map[string]string{
+		// Without COMPOSE_DOCKER_CLI_BUILD=0, docker-cmpose makes all kinds of mess
+		// of output. BUILDKIT_PROGRESS doesn't help either.
+		"COMPOSE_DOCKER_CLI_BUILD":      "0",
 		"COMPOSE_PROJECT_NAME":          "ddev-" + app.Name,
 		"COMPOSE_CONVERT_WINDOWS_PATHS": "true",
 		"DDEV_SITENAME":                 app.Name,
