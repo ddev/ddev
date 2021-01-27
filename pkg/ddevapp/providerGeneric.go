@@ -113,6 +113,16 @@ func (p *GenericProvider) getFilesBackup() (filename string, error error) {
 		output.UserOut.Printf("backup files %s", p.app.Name)
 	}
 
+	s := p.app.Providers[p.app.Provider].FilesPullCommand.Service
+	if s == "" {
+		s = "web"
+	}
+
+	err := p.app.ExecOnHostOrService(s, p.app.Providers[p.app.Provider].FilesPullCommand.Command)
+	if err != nil {
+		util.Failed("Failed to exec %s on %s", p.app.Providers[p.app.Provider].DBPullCommand.Command, s)
+	}
+
 	return filepath.Join(p.getDownloadDir(), "files"), nil
 }
 

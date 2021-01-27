@@ -1258,7 +1258,7 @@ func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 	// Handle case on host
 	if service == "host" {
 		cwd, _ := os.Getwd()
-		err := os.Chdir(app.GetAppRoot())
+		err = os.Chdir(app.GetAppRoot())
 		if err != nil {
 			return fmt.Errorf("Unable to GetAppRoot: %v", err)
 		}
