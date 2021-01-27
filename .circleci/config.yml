@@ -429,7 +429,7 @@ workflows:
   version: 2
   normal_build_and_test:
     jobs:
-#    - build
+    - build
 #    - mac_container_test
 #    - lx_container_test
 #    - staticrequired
