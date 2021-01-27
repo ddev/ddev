@@ -17,9 +17,6 @@ jobs:
         name: NORMAL Circle VM setup - tools, docker, golang
         no_output_timeout: "40m"
     - run:
-        command: source ~/.bashrc && make staticrequired EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
-        name: staticrequired
-    - run:
         command: |
           make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_install EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: Build the ddev executables
