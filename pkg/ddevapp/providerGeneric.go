@@ -139,7 +139,7 @@ func (p *GenericProvider) getDatabaseBackup() (filename string, error error) {
 	if err != nil {
 		util.Failed("Failed to exec %s on %s", p.app.Providers[p.app.Provider].DBPullCommand.Command, s)
 	}
-	return "/var/www/html/.ddev/.generic-downloads/db.sql.gz", nil
+	return filepath.Join(p.getDownloadDir(), "db.sql.gz"), nil
 }
 
 // Write the generic provider configuration to a specified location on disk.
