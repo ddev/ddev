@@ -4,6 +4,7 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/stretchr/testify/require"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -24,6 +25,9 @@ import (
 // runs each service's check function to ensure it's accessible from
 // the web container.
 func TestServices(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("skipping because unreliable on Windows")
+	}
 	assert := asrt.New(t)
 	os.Setenv("DRUD_NONINTERACTIVE", "true")
 	err := globalconfig.ReadGlobalConfig()

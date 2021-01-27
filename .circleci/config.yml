@@ -62,7 +62,7 @@ jobs:
 
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - run:
-        command: make -s test EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
+        command: make -s testpkg TESTARGS='-run "(TestDdevLive.*|TestPantheon.*|TestDdevFullSite.*)"' EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: ddev tests
         no_output_timeout: "40m"
     - store_test_results:
