@@ -2,7 +2,6 @@ package ddevapp
 
 import (
 	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/version"
 	"io/ioutil"
@@ -152,14 +151,14 @@ func (p *PantheonProvider) GetBackup(backupType, environment string) (string, st
 // prepDownloadDir ensures the download cache directories are created and writeable.
 func (p *PantheonProvider) prepDownloadDir() {
 	destDir := p.getDownloadDir()
-	err := os.MkdirAll(destDir, 0755)
+	filesDir := filepath.Join(destDir, "files")
+	_ = os.RemoveAll(destDir)
+	err := os.MkdirAll(filesDir, 0755)
 	util.CheckErr(err)
 }
 
 func (p *PantheonProvider) getDownloadDir() string {
-	globalDir := globalconfig.GetGlobalDdevDir()
-	destDir := filepath.Join(globalDir, "pantheon", p.app.Name)
-
+	destDir := p.app.GetConfigPath(".downloads")
 	return destDir
 }
 

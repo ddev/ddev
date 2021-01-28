@@ -92,13 +92,13 @@ func (p *GenericProvider) GetBackup(backupType, environment string) (string, str
 func (p *GenericProvider) prepDownloadDir() {
 	destDir := p.getDownloadDir()
 	filesDir := filepath.Join(destDir, "files")
-	_ = os.RemoveAll(filesDir)
+	_ = os.RemoveAll(destDir)
 	err := os.MkdirAll(filesDir, 0755)
 	util.CheckErr(err)
 }
 
 func (p *GenericProvider) getDownloadDir() string {
-	destDir := p.app.GetConfigPath(".generic-downloads")
+	destDir := p.app.GetConfigPath(".downloads")
 	return destDir
 }
 
