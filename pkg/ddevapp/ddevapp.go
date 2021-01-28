@@ -2144,19 +2144,27 @@ func restoreApp(app *DdevApp, siteName string) error {
 
 // GetProvider returns a pointer to the provider instance interface.
 func (app *DdevApp) GetProvider() (Provider, error) {
+	if app.providerInstance != nil {
+		return app.providerInstance, nil
+	}
+
 	var provider Provider
 	var err error
 
 	switch app.Provider {
+
 	case nodeps.ProviderPantheon:
 		provider = &PantheonProvider{}
 		err = provider.Init(app)
+
 	case nodeps.ProviderDdevLive:
 		provider = &DdevLiveProvider{}
 		err = provider.Init(app)
+
 	//case nodeps.ProviderDefault:
 	//	provider = &DefaultProvider{}
 	//	err = nil
+
 	default:
 		for k := range app.Providers {
 			if app.Provider == k {
@@ -2171,6 +2179,7 @@ func (app *DdevApp) GetProvider() (Provider, error) {
 			provider = &DefaultProvider{}
 		}
 	}
+
 	app.providerInstance = provider
 	return app.providerInstance, err
 }
