@@ -6,6 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -74,11 +75,11 @@ func TestPlatformPull(t *testing.T) {
 	require.NoError(t, err)
 
 	// Build our platform.yaml from the example file
-	s, err := os.ReadFile(app.GetConfigPath("providers/platform.yaml.example"))
+	s, err := ioutil.ReadFile(app.GetConfigPath("providers/platform.yaml.example"))
 	require.NoError(t, err)
 	x := strings.Replace(string(s), "project_id:", "#project_id:", 1)
 	x = x + "\nproject_id: " + platformTestSiteID + "\n"
-	err = os.WriteFile(app.GetConfigPath("providers/platform.yaml"), []byte(x), 0666)
+	err = ioutil.WriteFile(app.GetConfigPath("providers/platform.yaml"), []byte(x), 0666)
 	assert.NoError(err)
 	app.Provider = "platform"
 	err = app.WriteConfig()
