@@ -131,8 +131,8 @@ xdebug.remote_port=11011
 
 Debugging Xdebug in any setup can be a little trouble, but here are the steps to take. The steps here assume that you're using PhpStorm, but they can be adapted to any IDE.
 
-* Make sure you have a 2019+ version of PhpStorm. Many PhpStorm versions up to and (including?) 2018.3 were incompatible with current XDebug versions.
-* Make sure xdebug has been enabled in ddev; it's disabled by default for performance reasons. Most people use `ddev xdebug on` to enable it when they want it, and `ddev xdebug off` when they're done with it, but it can also be enabled in `.ddev/config.yaml`.
+* Temporarily disable any firewall if you're having trouble. Xdebug is a network protocol, and the php process inside the web container must be able to establish a TCP connection to the listening IDE (PhpStorm, for example).
+* Use `ddev xdebug on` to enable xdebug when you want it, and `ddev xdebug off` when you're done with it.
 * Don't assume that some obscure piece of code is being executed and put a breakpoint there. Start by putting a breakpoint at the first executable line in your index.php. Oh-so-many times people think it should be stopping, but their code is not being executed.
 * `ddev ssh` into the web container. Can you `ping host.docker.internal` (and get responses)? If you can't, you might have an over-aggressive firewall. Try to disable it, or add a rule that would allow the connection to pass through. For example, on Debian/ Ubuntu that would be `sudo ufw allow 9000/tcp`.
 * In PhpStorm, disable the "listen for connections" button so it won't listen. Or just exit PhpStorm.
