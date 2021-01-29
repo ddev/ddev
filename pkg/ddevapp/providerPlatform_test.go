@@ -7,6 +7,7 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -24,7 +25,7 @@ import (
  * defined in the constants below.
  */
 
-var platformTestSiteID = "w5vxjqzsumvoq"
+var platformTestSiteID = "lago3j23xu2w6"
 var platformTestEnvName = "master"
 
 // TestPlatformPull ensures we can pull backups from platform.sh for a configured environment.
@@ -90,4 +91,10 @@ func TestPlatformPull(t *testing.T) {
 	require.NoError(t, err)
 	err = app.Pull(provider, &PullOptions{})
 	assert.NoError(err)
+
+	assert.FileExists(filepath.Join(app.GetUploadDir(), "victoria-sponge-umami.jpg"))
+	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="margaret.hopper@example.com";' | %s mysql -N`, DdevBin)})
+	assert.NoError(err)
+	assert.Equal("1\n", out)
+
 }
