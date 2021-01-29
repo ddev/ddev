@@ -1258,10 +1258,11 @@ func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 		err = exec.RunInteractiveCommand(bashPath, args)
 		_ = os.Chdir(cwd)
 	} else { // handle case in container
-		err = app.ExecWithTty(
+		_, _, err = app.Exec(
 			&ExecOpts{
 				Service: service,
 				Cmd:     cmd,
+				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 			})
 	}
 	return err
