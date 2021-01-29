@@ -1,0 +1,17 @@
+#ddev-generated
+# Example Platform.sh provider configuration.
+
+# To use this configuration, rename it to platform.yaml and update the configuration details
+# For authentication, the easiest technique is to add the Platform.sh token
+# in ~/.ddev/global_config.yaml,
+# web_environment:
+# - PLATFORMSH_CLI_TOKEN=xxxxxxxx
+
+project_id: w5vxexample
+environment_name: master
+
+db_pull_command:
+  command: platform db:dump --yes --gzip --file=/var/www/html/.ddev/.downloads/db.sql.gz --project="${DDEV_PROVIDER_PROJECT_ID}" --environment="${DDEV_PROVIDER_ENVIRONMENT_NAME}"
+
+files_pull_command:
+  command: platform mount:download --yes --quiet --project="${DDEV_PROVIDER_PROJECT_ID}" --environment="${DDEV_PROVIDER_ENVIRONMENT_NAME}" --mount=web/sites/default/files --target=/var/www/html/.ddev/.downloads/files
