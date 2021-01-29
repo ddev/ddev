@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
@@ -41,25 +40,31 @@ func init() {
 // addAuthProviders is simple helper function to add the shell commands
 // to authenticate each provider.
 func addAuthProviders(app *ddevapp.DdevApp) {
-	for k, v := range app.Providers {
-		if v.AuthCommand.Command != "" {
-			// since for-loop k,v are references, we need to get a copy of them for use in closure below.
-			kl := k
-			vl := v
-			AuthCmd.AddCommand(&cobra.Command{
-				Use:     fmt.Sprintf("%s [flags]", kl),
-				Short:   "Authenticate " + kl + " provider",
-				Long:    "Authenticate " + kl + " provider",
-				Example: `ddev auth ` + kl,
-				Run: func(cmd *cobra.Command, args []string) {
-					if app.SiteStatus() != ddevapp.SiteRunning {
-						util.Failed("Project %s is not running, please start it with ddev start %s", app.Name, app.Name)
-					}
-					err := app.ExecOnHostOrService(vl.AuthCommand.Service, vl.AuthCommand.Command)
-					if err == nil {
-						util.Success("Executed auth command %s on service %s", vl.AuthCommand.Command, vl.AuthCommand.Service)
-					}
-				}})
-		}
-	}
+	return
+	//TODO: Remove the entire auth function as it's no longer necessary
+
+	//p, err := app.GetProvider()
+	//if err != nil {
+	//	util.Failed("No provider is available: %v", err)
+	//}
+	//p, ok := app.Provider
+	//if p.AuthCommand.Command != "" {
+	//	// since for-loop k,v are references, we need to get a copy of them for use in closure below.
+	//	kl := k
+	//	vl := v
+	//	AuthCmd.AddCommand(&cobra.Command{
+	//		Use:     fmt.Sprintf("%s [flags]", kl),
+	//		Short:   "Authenticate " + kl + " provider",
+	//		Long:    "Authenticate " + kl + " provider",
+	//		Example: `ddev auth ` + kl,
+	//		Run: func(cmd *cobra.Command, args []string) {
+	//			if app.SiteStatus() != ddevapp.SiteRunning {
+	//				util.Failed("Project %s is not running, please start it with ddev start %s", app.Name, app.Name)
+	//			}
+	//			err := app.ExecOnHostOrService(vl.AuthCommand.Service, vl.AuthCommand.Command)
+	//			if err == nil {
+	//				util.Success("Executed auth command %s on service %s", vl.AuthCommand.Command, vl.AuthCommand.Service)
+	//			}
+	//		}})
+	//}
 }

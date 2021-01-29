@@ -60,78 +60,61 @@ const SitePaused = "paused"
 // If this string is found, we assume we can replace/update the file.
 const DdevFileSignature = "#ddev-generated"
 
-// ProviderCommand defines the shell command to be run for one of the commands (db pull, etc.)
-type ProviderCommand struct {
-	Command string `yaml:"command"`
-	Service string `yaml:"service,omitempty"`
-}
-
-// ProviderInfo defines the provider
-type ProviderInfo struct {
-	ProjectID        string          `yaml:"project_id"`
-	EnvironmentName  string          `yaml:"environment_name"`
-	Verbosity        int             `yaml:"verbosity"`
-	AuthCommand      ProviderCommand `yaml:"auth_command"`
-	DBPullCommand    ProviderCommand `yaml:"db_pull_command"`
-	FilesPullCommand ProviderCommand `yaml:"files_pull_command"`
-	CodePullCommand  ProviderCommand `yaml:"code_pull_command,omitempty"`
-}
-
 // DdevApp is the struct that represents a ddev app, mostly its config
 // from config.yaml.
 type DdevApp struct {
-	Name                      string                   `yaml:"name"`
-	Type                      string                   `yaml:"type"`
-	Docroot                   string                   `yaml:"docroot"`
-	PHPVersion                string                   `yaml:"php_version"`
-	WebserverType             string                   `yaml:"webserver_type"`
-	WebImage                  string                   `yaml:"webimage,omitempty"`
-	DBImage                   string                   `yaml:"dbimage,omitempty"`
-	DBAImage                  string                   `yaml:"dbaimage,omitempty"`
-	RouterHTTPPort            string                   `yaml:"router_http_port"`
-	RouterHTTPSPort           string                   `yaml:"router_https_port"`
-	XdebugEnabled             bool                     `yaml:"xdebug_enabled"`
-	NoProjectMount            bool                     `yaml:"no_project_mount,omitempty"`
-	AdditionalHostnames       []string                 `yaml:"additional_hostnames"`
-	AdditionalFQDNs           []string                 `yaml:"additional_fqdns"`
-	MariaDBVersion            string                   `yaml:"mariadb_version"`
-	MySQLVersion              string                   `yaml:"mysql_version"`
-	NFSMountEnabled           bool                     `yaml:"nfs_mount_enabled,omitempty"`
-	NFSMountEnabledGlobal     bool                     `yaml:"-"`
-	FailOnHookFail            bool                     `yaml:"fail_on_hook_fail,omitempty"`
-	FailOnHookFailGlobal      bool                     `yaml:"-"`
-	ConfigPath                string                   `yaml:"-"`
-	AppRoot                   string                   `yaml:"-"`
-	Platform                  string                   `yaml:"-"`
-	Provider                  string                   `yaml:"provider,omitempty"`
-	DataDir                   string                   `yaml:"-"`
-	SiteSettingsPath          string                   `yaml:"-"`
-	SiteDdevSettingsFile      string                   `yaml:"-"`
-	providerInstance          Provider                 `yaml:"-"`
-	Hooks                     map[string][]YAMLTask    `yaml:"hooks,omitempty"`
-	UploadDir                 string                   `yaml:"upload_dir,omitempty"`
-	WorkingDir                map[string]string        `yaml:"working_dir,omitempty"`
-	OmitContainers            []string                 `yaml:"omit_containers,omitempty,flow"`
-	OmitContainerGlobal       []string                 `yaml:"-"`
-	HostDBPort                string                   `yaml:"host_db_port,omitempty"`
-	HostWebserverPort         string                   `yaml:"host_webserver_port,omitempty"`
-	HostHTTPSPort             string                   `yaml:"host_https_port,omitempty"`
-	MailhogPort               string                   `yaml:"mailhog_port,omitempty"`
-	MailhogHTTPSPort          string                   `yaml:"mailhog_https_port,omitempty"`
-	PHPMyAdminPort            string                   `yaml:"phpmyadmin_port,omitempty"`
-	PHPMyAdminHTTPSPort       string                   `yaml:"phpmyadmin_https_port,omitempty"`
-	WebImageExtraPackages     []string                 `yaml:"webimage_extra_packages,omitempty,flow"`
-	DBImageExtraPackages      []string                 `yaml:"dbimage_extra_packages,omitempty,flow"`
-	ProjectTLD                string                   `yaml:"project_tld,omitempty"`
-	UseDNSWhenPossible        bool                     `yaml:"use_dns_when_possible"`
-	MkcertEnabled             bool                     `yaml:"-"`
-	NgrokArgs                 string                   `yaml:"ngrok_args,omitempty"`
-	Timezone                  string                   `yaml:"timezone,omitempty"`
-	ComposerVersion           string                   `yaml:"composer_version"`
-	DisableSettingsManagement bool                     `yaml:"disable_settings_management,omitempty"`
-	WebEnvironment            []string                 `yaml:"web_environment"`
-	Providers                 map[string]*ProviderInfo `yaml:"providers"`
-	ComposeYaml               map[string]interface{}   `yaml:"-"`
+	Name                      string                `yaml:"name"`
+	Type                      string                `yaml:"type"`
+	Docroot                   string                `yaml:"docroot"`
+	PHPVersion                string                `yaml:"php_version"`
+	WebserverType             string                `yaml:"webserver_type"`
+	WebImage                  string                `yaml:"webimage,omitempty"`
+	DBImage                   string                `yaml:"dbimage,omitempty"`
+	DBAImage                  string                `yaml:"dbaimage,omitempty"`
+	RouterHTTPPort            string                `yaml:"router_http_port"`
+	RouterHTTPSPort           string                `yaml:"router_https_port"`
+	XdebugEnabled             bool                  `yaml:"xdebug_enabled"`
+	NoProjectMount            bool                  `yaml:"no_project_mount,omitempty"`
+	AdditionalHostnames       []string              `yaml:"additional_hostnames"`
+	AdditionalFQDNs           []string              `yaml:"additional_fqdns"`
+	MariaDBVersion            string                `yaml:"mariadb_version"`
+	MySQLVersion              string                `yaml:"mysql_version"`
+	NFSMountEnabled           bool                  `yaml:"nfs_mount_enabled,omitempty"`
+	NFSMountEnabledGlobal     bool                  `yaml:"-"`
+	FailOnHookFail            bool                  `yaml:"fail_on_hook_fail,omitempty"`
+	FailOnHookFailGlobal      bool                  `yaml:"-"`
+	ConfigPath                string                `yaml:"-"`
+	AppRoot                   string                `yaml:"-"`
+	Platform                  string                `yaml:"-"`
+	Provider                  string                `yaml:"provider,omitempty"`
+	DataDir                   string                `yaml:"-"`
+	SiteSettingsPath          string                `yaml:"-"`
+	SiteDdevSettingsFile      string                `yaml:"-"`
+	ProviderInstance          Provider              `yaml:"-"`
+	Hooks                     map[string][]YAMLTask `yaml:"hooks,omitempty"`
+	UploadDir                 string                `yaml:"upload_dir,omitempty"`
+	WorkingDir                map[string]string     `yaml:"working_dir,omitempty"`
+	OmitContainers            []string              `yaml:"omit_containers,omitempty,flow"`
+	OmitContainerGlobal       []string              `yaml:"-"`
+	HostDBPort                string                `yaml:"host_db_port,omitempty"`
+	HostWebserverPort         string                `yaml:"host_webserver_port,omitempty"`
+	HostHTTPSPort             string                `yaml:"host_https_port,omitempty"`
+	MailhogPort               string                `yaml:"mailhog_port,omitempty"`
+	MailhogHTTPSPort          string                `yaml:"mailhog_https_port,omitempty"`
+	PHPMyAdminPort            string                `yaml:"phpmyadmin_port,omitempty"`
+	PHPMyAdminHTTPSPort       string                `yaml:"phpmyadmin_https_port,omitempty"`
+	WebImageExtraPackages     []string              `yaml:"webimage_extra_packages,omitempty,flow"`
+	DBImageExtraPackages      []string              `yaml:"dbimage_extra_packages,omitempty,flow"`
+	ProjectTLD                string                `yaml:"project_tld,omitempty"`
+	UseDNSWhenPossible        bool                  `yaml:"use_dns_when_possible"`
+	MkcertEnabled             bool                  `yaml:"-"`
+	NgrokArgs                 string                `yaml:"ngrok_args,omitempty"`
+	Timezone                  string                `yaml:"timezone,omitempty"`
+	ComposerVersion           string                `yaml:"composer_version"`
+	DisableSettingsManagement bool                  `yaml:"disable_settings_management,omitempty"`
+	WebEnvironment            []string              `yaml:"web_environment"`
+	//Providers                 map[string]*ProviderInfo `yaml:"providers"`
+	ComposeYaml map[string]interface{} `yaml:"-"`
 }
 
 // List() provides the functionality for `ddev list`
@@ -2144,8 +2127,8 @@ func restoreApp(app *DdevApp, siteName string) error {
 
 // GetProvider returns a pointer to the provider instance interface.
 func (app *DdevApp) GetProvider() (Provider, error) {
-	if app.providerInstance != nil {
-		return app.providerInstance, nil
+	if app.ProviderInstance != nil {
+		return app.ProviderInstance, nil
 	}
 
 	var provider Provider
@@ -2161,27 +2144,22 @@ func (app *DdevApp) GetProvider() (Provider, error) {
 		provider = &DdevLiveProvider{}
 		err = provider.Init(app)
 
-	//case nodeps.ProviderDefault:
-	//	provider = &DefaultProvider{}
-	//	err = nil
-
 	default:
-		for k := range app.Providers {
-			if app.Provider == k {
-				provider = &GenericProvider{
-					ProviderType: k,
-					app:          app,
-				}
-				break
+		if app.Provider != "" {
+			provider = &GenericProvider{
+				ProviderType: app.Provider,
+				app:          app,
 			}
+			err = provider.Init(app)
+			break
 		}
 		if provider == nil {
 			provider = &DefaultProvider{}
 		}
 	}
 
-	app.providerInstance = provider
-	return app.providerInstance, err
+	app.ProviderInstance = provider
+	return app.ProviderInstance, err
 }
 
 // GetWorkingDir will determine the appropriate working directory for an Exec/ExecWithTty command

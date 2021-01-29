@@ -14,25 +14,43 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// ProviderCommand defines the shell command to be run for one of the commands (db pull, etc.)
+type ProviderCommand struct {
+	Command string `yaml:"command"`
+	Service string `yaml:"service,omitempty"`
+}
+
+// ProviderInfo defines the provider
+type ProviderInfo struct {
+	ProjectID        string          `yaml:"project_id"`
+	EnvironmentName  string          `yaml:"environment_name"`
+	AuthCommand      ProviderCommand `yaml:"auth_command"`
+	DBPullCommand    ProviderCommand `yaml:"db_pull_command"`
+	FilesPullCommand ProviderCommand `yaml:"files_pull_command"`
+	CodePullCommand  ProviderCommand `yaml:"code_pull_command,omitempty"`
+}
+
 // GenericProvider provides generic-specific import functionality.
 type GenericProvider struct {
 	ProviderType string   `yaml:"provider"`
 	app          *DdevApp `yaml:"-"`
-	SiteID       string   `yaml:"site_id"`
+	ProviderInfo `yaml:"providers"`
 }
 
 // Init handles loading data from saved config.
 func (p *GenericProvider) Init(app *DdevApp) error {
 	p.app = app
-	configPath := app.GetConfigPath("import.yaml")
-	if fileutil.FileExists(configPath) {
-		err := p.Read(configPath)
-		if err != nil {
-			return err
-		}
+	configPath := app.GetConfigPath(filepath.Join("providers", app.Provider+".yaml"))
+	if !fileutil.FileExists(configPath) {
+		return fmt.Errorf("no configuration exists for %s provider - it should be at %s", app.Provider, configPath)
+	}
+	err := p.Read(configPath)
+	if err != nil {
+		return err
 	}
 
 	p.ProviderType = app.Provider
+	app.ProviderInstance = p
 	return nil
 }
 
@@ -66,6 +84,13 @@ func (p *GenericProvider) GetBackup(backupType, environment string) (string, str
 	var filePath string
 	if backupType != "database" && backupType != "files" {
 		return "", "", fmt.Errorf("could not get backup: %s is not a valid backup type", backupType)
+	}
+
+	if p.AuthCommand.Command != "" {
+		err := p.app.ExecOnHostOrService(p.AuthCommand.Service, p.AuthCommand.Command)
+		if err != nil {
+			return "", "", err
+		}
 	}
 
 	// Set the import path blank to use the root of the archive by default.
@@ -113,14 +138,14 @@ func (p *GenericProvider) getFilesBackup() (filename string, error error) {
 		output.UserOut.Printf("backup files %s", p.app.Name)
 	}
 
-	s := p.app.Providers[p.app.Provider].FilesPullCommand.Service
+	s := p.FilesPullCommand.Service
 	if s == "" {
 		s = "web"
 	}
 
-	err := p.app.ExecOnHostOrService(s, p.app.Providers[p.app.Provider].FilesPullCommand.Command)
+	err := p.app.ExecOnHostOrService(s, p.FilesPullCommand.Command)
 	if err != nil {
-		util.Failed("Failed to exec %s on %s", p.app.Providers[p.app.Provider].DBPullCommand.Command, s)
+		util.Failed("Failed to exec %s on %s", p.DBPullCommand.Command, s)
 	}
 
 	return filepath.Join(p.getDownloadDir(), "files"), nil
@@ -132,7 +157,7 @@ func (p *GenericProvider) getDatabaseBackup() (filename string, error error) {
 	_ = os.RemoveAll(p.getDownloadDir())
 	_ = os.Mkdir(p.getDownloadDir(), 0755)
 
-	if p.app.Providers[p.app.Provider].DBPullCommand.Command == "" {
+	if p.DBPullCommand.Command == "" {
 		util.Warning("No DBPullCommand is defined for provider %s", p.app.Provider)
 		return "", nil
 	}
@@ -141,34 +166,19 @@ func (p *GenericProvider) getDatabaseBackup() (filename string, error error) {
 		output.UserOut.Print("generic backup database")
 	}
 
-	s := p.app.Providers[p.app.Provider].DBPullCommand.Service
+	s := p.DBPullCommand.Service
 	if s == "" {
 		s = "web"
 	}
-	err := p.app.ExecOnHostOrService(s, p.app.Providers[p.app.Provider].DBPullCommand.Command)
+	err := p.app.ExecOnHostOrService(s, p.DBPullCommand.Command)
 	if err != nil {
-		util.Failed("Failed to exec %s on %s", p.app.Providers[p.app.Provider].DBPullCommand.Command, s)
+		util.Failed("Failed to exec %s on %s", p.DBPullCommand.Command, s)
 	}
 	return filepath.Join(p.getDownloadDir(), "db.sql.gz"), nil
 }
 
 // Write the generic provider configuration to a specified location on disk.
 func (p *GenericProvider) Write(configPath string) error {
-	err := PrepDdevDirectory(filepath.Dir(configPath))
-	if err != nil {
-		return err
-	}
-
-	cfgbytes, err := yaml.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(configPath, cfgbytes, 0644)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -180,7 +190,7 @@ func (p *GenericProvider) Read(configPath string) error {
 	}
 
 	// Read config values from file.
-	err = yaml.Unmarshal(source, p)
+	err = yaml.Unmarshal(source, &p.ProviderInfo)
 	if err != nil {
 		return err
 	}
