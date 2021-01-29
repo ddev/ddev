@@ -26,11 +26,10 @@ import (
  */
 
 var platformTestSiteID = "lago3j23xu2w6"
-var platformTestEnvName = "master"
 
 // TestPlatformPull ensures we can pull backups from platform.sh for a configured environment.
 func TestPlatformPull(t *testing.T) {
-	var token = ""
+	var token string
 	if token = os.Getenv("DDEV_PLATFORM_API_TOKEN"); token == "" {
 		t.Skipf("No DDEV_PLATFORM_API_TOKEN env var has been set. Skipping %v", t.Name())
 	}
