@@ -1,7 +1,6 @@
 package ddevapp
 
 import (
-	"github.com/drud/ddev/pkg/output"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -133,11 +132,6 @@ func (p *GenericProvider) getFilesBackup() (filename string, error error) {
 	_ = os.RemoveAll(destDir)
 	_ = os.MkdirAll(destDir, 0755)
 
-	// Create a files backup first so we can pull
-	if os.Getenv("DDEV_DEBUG") != "" {
-		output.UserOut.Printf("backup files %s", p.app.Name)
-	}
-
 	s := p.FilesPullCommand.Service
 	if s == "" {
 		s = "web"
@@ -160,10 +154,6 @@ func (p *GenericProvider) getDatabaseBackup() (filename string, error error) {
 	if p.DBPullCommand.Command == "" {
 		util.Warning("No DBPullCommand is defined for provider %s", p.app.Provider)
 		return "", nil
-	}
-	// First, kick off the database backup
-	if os.Getenv("DDEV_DEBUG") != "" {
-		output.UserOut.Print("generic backup database")
 	}
 
 	s := p.DBPullCommand.Service

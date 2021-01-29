@@ -1,9 +1,11 @@
 package ddevapp_test
 
 import (
-	"github.com/drud/ddev/pkg/fileutil"
+	"fmt"
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/stretchr/testify/require"
 	"os"
 	"strings"
 	"testing"
@@ -40,14 +42,16 @@ func TestPlatformPull(t *testing.T) {
 
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
-	app, err := NewApp(siteDir, true, "platform")
+	app, err := NewApp(siteDir, true, "")
 	assert.NoError(err)
 	app.Name = t.Name()
-	app.Type = nodeps.AppTypePHP
+	app.Type = nodeps.AppTypeDrupal9
+	err = app.Stop(true, false)
+	require.NoError(t, err)
 	err = app.WriteConfig()
-	assert.NoError(err)
+	require.NoError(t, err)
 
-	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"PLATFORM_CLI_TOKEN=" + token}
+	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"PLATFORMSH_CLI_TOKEN=" + token}
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	assert.NoError(err)
 
@@ -66,14 +70,24 @@ func TestPlatformPull(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	err = fileutil.CopyFile(app.GetConfigPath("providers/platform.yaml.example"), app.GetConfigPath("providers/platform.yaml"))
-	s, err := os.ReadFile(app.GetConfigPath("providers/platform.yaml"))
-	assert.NoError(err)
-	x := strings.Replace("project_id:", "project_id_backup:", string(s), 1)
+	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("%s >/dev/null", DdevBin)})
+	require.NoError(t, err)
+
+	// Build our platform.yaml from the example file
+	s, err := os.ReadFile(app.GetConfigPath("providers/platform.yaml.example"))
+	require.NoError(t, err)
+	x := strings.Replace(string(s), "project_id:", "#project_id:", 1)
 	x = x + "\nproject_id: " + platformTestSiteID + "\n"
 	err = os.WriteFile(app.GetConfigPath("providers/platform.yaml"), []byte(x), 0666)
 	assert.NoError(err)
+	app.Provider = "platform"
+	err = app.WriteConfig()
+	require.NoError(t, err)
 
-	err = app.Pull(app.ProviderInstance, &PullOptions{})
+	provider, err := app.GetProvider()
+	require.NoError(t, err)
+	err = app.Start()
+	require.NoError(t, err)
+	err = app.Pull(provider, &PullOptions{})
 	assert.NoError(err)
 }
