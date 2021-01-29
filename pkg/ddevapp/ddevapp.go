@@ -2145,7 +2145,7 @@ func (app *DdevApp) GetProvider() (Provider, error) {
 		err = provider.Init(app)
 
 	default:
-		if app.Provider != "" {
+		if app.Provider != "" && app.Provider != nodeps.ProviderDefault {
 			provider = &GenericProvider{
 				ProviderType: app.Provider,
 				app:          app,
