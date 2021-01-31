@@ -11,7 +11,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v20
+        - linux-v22
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: NORMAL Circle VM setup - tools, docker, golang
@@ -31,10 +31,10 @@ jobs:
         root: ~/
         paths: ddev
     - save_cache:
-        key: linux-v20
+        key: linux-v22
         paths:
         - /home/linuxbrew
-        - ~/.ddev/testcache
+        - /home/circleci/.ddev/testcache
 
   lx_nginx_fpm_test:
     machine:
@@ -50,7 +50,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v20
+        - linux-v22
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
@@ -65,10 +65,10 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v20
+        key: linux-v22
         paths:
         - /home/linuxbrew
-        - ~/.ddev/testcache
+        - /home/circleci/.ddev/testcache
 
   mac_nginx_fpm_test:
     macos:
@@ -83,7 +83,7 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - macos-v20
+        - macos-v22
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
@@ -94,9 +94,9 @@ jobs:
         name: ddev tests
         no_output_timeout: "40m"
     - save_cache:
-        key: macos-v20
+        key: macos-v22
         paths:
-        - ~/.ddev/testcache
+        - /home/circleci/.ddev/testcache
     - store_test_results:
         path: /tmp/testresults
 
@@ -113,7 +113,7 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - macos-v20
+        - macos-v22
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
@@ -126,9 +126,9 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: macos-v20
+        key: macos-v22
         paths:
-        - ~/.ddev/testcache
+        - /home/circleci/.ddev/testcache
 
   mac_nfsmount_test:
     macos:
@@ -143,7 +143,7 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - macos-v20
+        - macos-v22
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
@@ -155,9 +155,9 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: macos-v20
+        key: macos-v22
         paths:
-        - ~/.ddev/testcache
+        - /home/circleci/.ddev/testcache
 
   lx_apache_fpm_test:
     machine:
@@ -172,7 +172,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v20
+        - linux-v22
     - attach_workspace:
         at: ~/
     - run:
@@ -189,10 +189,10 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v20
+        key: linux-v22
         paths:
         - /home/linuxbrew
-        - ~/.ddev/testcache
+        - /home/circleci/.ddev/testcache
 
   lx_nfsmount_test:
     machine:
@@ -207,7 +207,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v20
+        - linux-v22
     - attach_workspace:
         at: ~/
     - run:
@@ -226,10 +226,10 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v20
+        key: linux-v22
         paths:
         - /home/linuxbrew
-        - ~/.ddev/testcache
+        - /home/circleci/.ddev/testcache
 
   staticrequired:
     machine:
@@ -241,7 +241,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v20
+        - linux-v22
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
@@ -262,7 +262,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v20
+        - linux-v22
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
@@ -288,10 +288,10 @@ jobs:
         name: linux container test
 
     - save_cache:
-        key: linux-v20
+        key: linux-v22
         paths:
         - /home/linuxbrew
-        - ~/.ddev/testcache
+        - /home/circleci/.ddev/testcache
 
   mac_container_test:
     macos:
@@ -323,7 +323,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v20
+        - linux-v22
     - attach_workspace:
         at: ~/
     - run:
@@ -331,10 +331,10 @@ jobs:
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
     - save_cache:
-        key: linux-v20
+        key: linux-v22
         paths:
         - /home/linuxbrew
-        - ~/.ddev/testcache
+        - /home/circleci/.ddev/testcache
 
     - store_artifacts:
         path: ~/artifacts
