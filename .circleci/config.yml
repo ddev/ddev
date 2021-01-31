@@ -51,7 +51,9 @@ jobs:
     - restore_cache:
         keys:
         - linux-v22
-    # Run the built-in ddev tests with the executables just built.
+    - run:
+        command: ls -lR ~/.ddev || true
+        name: Check cache contents
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
