@@ -50,7 +50,9 @@ jobs:
     - restore_cache:
         keys:
         - linux-homebrew-v23
-        - linux-testcache-v23
+    - restore_cache:
+        keys:
+          - linux-testcache-v23
     - run:
         command: ls -lR ~/.ddev || true
         name: Check cache contents
