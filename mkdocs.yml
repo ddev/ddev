@@ -37,5 +37,6 @@ pages:
   - 'Integration with Hosting Providers':
     - 'Pantheon': 'users/providers/pantheon.md'
     - 'DDEV-Live': 'users/providers/DDEV-Live.md'
+    - 'Platform.sh': 'users/providers/platformsh.md'
   - 'Developer Documentation':
     - 'Building, Testing, and Contributing': 'developers/building-contributing.md'
