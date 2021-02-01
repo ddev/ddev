@@ -72,7 +72,7 @@ func TestDdevLiveConfigCommand(t *testing.T) {
 	out := restoreOutput()
 
 	// Get the provider interface and ensure it validates.
-	provider, err := app.GetProvider()
+	provider, err := app.GetProvider("")
 	assert.NoError(err)
 	err = provider.Validate()
 	assert.NoError(err)

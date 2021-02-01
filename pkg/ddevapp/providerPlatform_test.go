@@ -85,7 +85,7 @@ func TestPlatformPull(t *testing.T) {
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
-	provider, err := app.GetProvider()
+	provider, err := app.GetProvider("")
 	require.NoError(t, err)
 	err = app.Start()
 	require.NoError(t, err)

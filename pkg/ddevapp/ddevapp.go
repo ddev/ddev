@@ -2127,39 +2127,43 @@ func restoreApp(app *DdevApp, siteName string) error {
 }
 
 // GetProvider returns a pointer to the provider instance interface.
-func (app *DdevApp) GetProvider() (Provider, error) {
-	if app.ProviderInstance != nil {
+func (app *DdevApp) GetProvider(providerName string) (Provider, error) {
+
+	// TODO: Temporary hack to get a good provider isntance... before
+	// we remove specialty providers
+	if app.ProviderInstance != nil && fmt.Sprintf("%T", app.ProviderInstance) != "*ddevapp.DefaultProvider" {
 		return app.ProviderInstance, nil
 	}
 
-	var provider Provider
+	var p Provider
 	var err error
 
-	switch app.Provider {
+	switch providerName {
 
 	case nodeps.ProviderPantheon:
-		provider = &PantheonProvider{}
-		err = provider.Init(app)
+		p = &PantheonProvider{}
+		err = p.Init(app)
 
 	case nodeps.ProviderDdevLive:
-		provider = &DdevLiveProvider{}
-		err = provider.Init(app)
+		p = &DdevLiveProvider{}
+		err = p.Init(app)
 
 	default:
-		if app.Provider != "" && app.Provider != nodeps.ProviderDefault {
-			provider = &GenericProvider{
-				ProviderType: app.Provider,
+		if providerName != "" && providerName != nodeps.ProviderDefault {
+			p = &GenericProvider{
+				ProviderType: providerName,
 				app:          app,
 			}
-			err = provider.Init(app)
+			app.Provider = providerName
+			err = p.Init(app)
 			break
 		}
-		if provider == nil {
-			provider = &DefaultProvider{}
+		if p == nil {
+			p = &DefaultProvider{}
 		}
 	}
 
-	app.ProviderInstance = provider
+	app.ProviderInstance = p
 	return app.ProviderInstance, err
 }
 

@@ -1,0 +1,17 @@
+#ddev-generated
+# Example flatfile provider configuration.
+
+# This will pull a database and files from an existing location, for example,
+# from a Dropbox location on disk
+
+# To use this configuration,
+# 1. You need a database dump and/or user-generated files tarball.
+# 3. Copy flatfile.yaml.example to flatfile.yaml.
+# 4. Use `ddev pull flatfile` to pull the project database and files.
+
+db_pull_command:
+  command: cp ~/Dropbox/db.sql.gz .ddev/.downloads
+  service: host
+files_pull_command:
+  command: cp ~/Dropbox/files.tar.gz .ddev/.downloads
+  service: host

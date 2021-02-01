@@ -45,7 +45,12 @@ ddev pull platform`,
 		if err != nil {
 			util.Failed("Pull failed: %v", err)
 		}
-		app.Provider = args[0]
+		providerName := args[0]
+		p, err := app.GetProvider(providerName)
+		if err != nil {
+			util.Failed("No provider %s is provisioned", app.Provider)
+		}
+		app.ProviderInstance = p
 		appPull(app, skipConfirmationArg)
 	},
 }
@@ -73,7 +78,7 @@ func appPull(app *ddevapp.DdevApp, skipConfirmation bool) {
 		}
 	}
 
-	provider, err := app.GetProvider()
+	provider, err := app.GetProvider("")
 	if err != nil {
 		util.Failed("Failed to get provider: %v", err)
 	}

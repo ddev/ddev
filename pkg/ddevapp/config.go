@@ -137,6 +137,8 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 
 	// Allow override with provider.
 	// Otherwise we accept whatever might have been in config file if there was anything.
+	// #todo: Remove config file provider element when normalizing
+	// pantheon and ddev-live
 	if provider == "" && app.Provider != "" {
 		// Do nothing. This is the case where the config has a provider and no override is provided. Config wins.
 	} else if provider != "" {
@@ -232,7 +234,7 @@ func (app *DdevApp) WriteConfig() error {
 		return err
 	}
 
-	provider, err := appcopy.GetProvider()
+	provider, err := appcopy.GetProvider("")
 	if err != nil {
 		return err
 	}
@@ -410,7 +412,7 @@ func (app *DdevApp) PromptForConfig() error {
 
 // ValidateConfig ensures the configuration meets ddev's requirements.
 func (app *DdevApp) ValidateConfig() error {
-	provider, err := app.GetProvider()
+	provider, err := app.GetProvider("")
 	if err != nil {
 		return err.(invalidProvider)
 	}
@@ -725,7 +727,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	}
 
 	uid, gid, username := util.GetContainerUIDGid()
-	p, err := app.GetProvider()
+	p, err := app.GetProvider("")
 	if err != nil {
 		return "", err
 	}
@@ -900,7 +902,7 @@ func WriteImageDockerfile(fullpath string, contents []byte) error {
 
 // prompt for a project name.
 func (app *DdevApp) promptForName() error {
-	provider, err := app.GetProvider()
+	provider, err := app.GetProvider("")
 	if err != nil {
 		return err
 	}
@@ -954,7 +956,7 @@ func DiscoverDefaultDocroot(app *DdevApp) string {
 
 // Determine the document root.
 func (app *DdevApp) docrootPrompt() error {
-	provider, err := app.GetProvider()
+	provider, err := app.GetProvider("")
 	if err != nil {
 		return err
 	}
@@ -1008,7 +1010,7 @@ func (app *DdevApp) ConfigExists() bool {
 
 // AppTypePrompt handles the Type workflow.
 func (app *DdevApp) AppTypePrompt() error {
-	provider, err := app.GetProvider()
+	provider, err := app.GetProvider("")
 	if err != nil {
 		return err
 	}

@@ -32,7 +32,7 @@ func init() {
 
 // handlePantheonFlags is the pantheon-specific flag handler
 func handlePantheonFlags(cmd *cobra.Command, args []string, app *ddevapp.DdevApp) error {
-	provider, err := app.GetProvider()
+	provider, err := app.GetProvider("")
 	if err != nil {
 		return fmt.Errorf("failed to GetProvider: %v", err)
 	}
