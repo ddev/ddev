@@ -11,11 +11,15 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v20
+        - linux-homebrew-v23
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: NORMAL Circle VM setup - tools, docker, golang
         no_output_timeout: "40m"
+    - save_cache:
+        key: linux-homebrew-v23
+        paths:
+          - /home/linuxbrew
     - run:
         command: |
           make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_install EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
@@ -30,11 +34,6 @@ jobs:
     - persist_to_workspace:
         root: ~/
         paths: ddev
-    - save_cache:
-        key: linux-v20
-        paths:
-        - /home/linuxbrew
-        - ~/.ddev/testcache
 
   lx_nginx_fpm_test:
     machine:
@@ -50,14 +49,21 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v20
-    # Run the built-in ddev tests with the executables just built.
+        - linux-homebrew-v23
+    - restore_cache:
+        keys:
+          - linux-testcache-v23
+    - run:
+        command: ls -lR ~/.ddev || true
+        name: Check cache contents
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
         no_output_timeout: "40m"
-
-        # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
+    - save_cache:
+        key: linux-homebrew-v23
+        paths:
+          - /home/linuxbrew
     - run:
         command: make -s testpkg TESTARGS='-run "(TestDdevLive.*|TestPantheon.*|TestDdevFullSite.*)"' EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: ddev tests
@@ -65,10 +71,9 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v20
+        key: linux-testcache-v23
         paths:
-        - /home/linuxbrew
-        - ~/.ddev/testcache
+        - /home/circleci/.ddev/testcache
 
   mac_nginx_fpm_test:
     macos:
@@ -83,7 +88,7 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - macos-v20
+        - macos-v23
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
@@ -94,9 +99,9 @@ jobs:
         name: ddev tests
         no_output_timeout: "40m"
     - save_cache:
-        key: macos-v20
+        key: macos-v23
         paths:
-        - ~/.ddev/testcache
+        - /home/circleci/.ddev/testcache
     - store_test_results:
         path: /tmp/testresults
 
@@ -113,7 +118,7 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - macos-v20
+        - macos-v23
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
@@ -126,9 +131,9 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: macos-v20
+        key: macos-v23
         paths:
-        - ~/.ddev/testcache
+        - /home/circleci/.ddev/testcache
 
   mac_nfsmount_test:
     macos:
@@ -143,7 +148,7 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - macos-v20
+        - macos-v23
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
@@ -155,9 +160,9 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: macos-v20
+        key: macos-v23
         paths:
-        - ~/.ddev/testcache
+        - /home/circleci/.ddev/testcache
 
   lx_apache_fpm_test:
     machine:
@@ -172,7 +177,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v20
+        - linux-v23
     - attach_workspace:
         at: ~/
     - run:
@@ -189,10 +194,10 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v20
+        key: linux-v23
         paths:
         - /home/linuxbrew
-        - ~/.ddev/testcache
+        - /home/circleci/.ddev/testcache
 
   lx_nfsmount_test:
     machine:
@@ -207,7 +212,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v20
+        - linux-v23
     - attach_workspace:
         at: ~/
     - run:
@@ -226,10 +231,10 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v20
+        key: linux-v23
         paths:
         - /home/linuxbrew
-        - ~/.ddev/testcache
+        - /home/circleci/.ddev/testcache
 
   staticrequired:
     machine:
@@ -241,7 +246,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v20
+        - linux-v23
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
@@ -262,7 +267,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v20
+        - linux-v23
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup - tools, docker, golang
@@ -288,10 +293,10 @@ jobs:
         name: linux container test
 
     - save_cache:
-        key: linux-v20
+        key: linux-v23
         paths:
         - /home/linuxbrew
-        - ~/.ddev/testcache
+        - /home/circleci/.ddev/testcache
 
   mac_container_test:
     macos:
@@ -323,7 +328,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v20
+        - linux-v23
     - attach_workspace:
         at: ~/
     - run:
@@ -331,10 +336,10 @@ jobs:
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
     - save_cache:
-        key: linux-v20
+        key: linux-v23
         paths:
         - /home/linuxbrew
-        - ~/.ddev/testcache
+        - /home/circleci/.ddev/testcache
 
     - store_artifacts:
         path: ~/artifacts
