@@ -97,12 +97,6 @@ RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/MailHog/releases/
 RUN curl -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod 777 /usr/local/bin/terminus
 RUN curl -sSL -O $DDEV_LIVE_DOWNLOAD_URL && unzip ddev-live.zip && mv ddev-live /usr/local/bin && chmod +x /usr/local/bin/ddev-live && rm ddev-live.zip
 
-# magerun and magerun2 for magento
-RUN curl -sSL https://files.magerun.net/n98-magerun-latest.phar -o /usr/local/bin/magerun
-RUN curl -sSL https://raw.githubusercontent.com/netz98/n98-magerun/${MAGERUN_VERSION}/res/autocompletion/bash/n98-magerun.phar.bash -o /etc/bash_completion.d/magerun
-RUN curl -sSL https://files.magerun.net/n98-magerun2-latest.phar -o /usr/local/bin/magerun2
-RUN curl -sSL https://raw.githubusercontent.com/netz98/n98-magerun2/${MAGERUN2_VERSION}/res/autocompletion/bash/n98-magerun2.phar.bash -o /etc/bash_completion.d/magerun2
-
 RUN curl -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/backdrop-drush-extension.zip -o /tmp/backdrop-drush-extension.zip && unzip -o /tmp/backdrop-drush-extension.zip -d /var/tmp/backdrop_drush_commands
 
 RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib/apache2/module/enabled_by_admin /var/lib/apache2/module/disabled_by_admin && \
@@ -221,12 +215,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     zip
 
 ADD ddev-webserver-prod-files /
-
-# magerun and magerun2 for magento
-RUN curl -sSL https://files.magerun.net/n98-magerun-latest.phar -o /usr/local/bin/magerun
-RUN curl -sSL https://raw.githubusercontent.com/netz98/n98-magerun/${MAGERUN_VERSION}/res/autocompletion/bash/n98-magerun.phar.bash -o /etc/bash_completion.d/magerun
-RUN curl -sSL https://files.magerun.net/n98-magerun2-latest.phar -o /usr/local/bin/magerun2
-RUN curl -sSL https://raw.githubusercontent.com/netz98/n98-magerun2/${MAGERUN2_VERSION}/res/autocompletion/bash/n98-magerun2.phar.bash -o /etc/bash_completion.d/magerun2
 
 RUN curl -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/backdrop-drush-extension.zip -o /tmp/backdrop-drush-extension.zip && unzip -o /tmp/backdrop-drush-extension.zip -d /var/tmp/backdrop_drush_commands
 

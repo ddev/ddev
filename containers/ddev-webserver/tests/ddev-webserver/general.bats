@@ -2,7 +2,7 @@
 
 @test "Verify required binaries are installed in normal image" {
     if [ "${IS_HARDENED}" == "true" ]; then skip "Skipping because IS_HARDENED==true"; fi
-    COMMANDS="composer ddev-live drush git magerun magerun2 mkcert sudo terminus wp"
+    COMMANDS="composer ddev-live drush git mkcert sudo terminus wp"
     for item in $COMMANDS; do
        docker exec $CONTAINER_NAME bash -c "command -v $item >/dev/null"
     done
