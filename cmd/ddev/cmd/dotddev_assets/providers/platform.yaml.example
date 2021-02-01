@@ -1,11 +1,14 @@
 #ddev-generated
 # Example Platform.sh provider configuration.
 
-# To use this configuration, rename it to platform.yaml and update the configuration details
-# For authentication, the easiest technique is to add the Platform.sh token
-# in ~/.ddev/global_config.yaml,
+# To use this configuration,
+# 1. Create a platform.sh token (Account->API Tokens).
+# 2. Add the add an entry to web_environment in ~/.ddev/global_config.yaml with the token:
 # web_environment:
 # - PLATFORMSH_CLI_TOKEN=xxxxxxxx
+# 3. Copy platform.yaml.example to platform.yaml.
+# 4. Update project_id and environment_name below.
+# 5. Use `ddev pull platform` to pull the project database and files.
 
 project_id: w5vxexample
 environment_name: master
