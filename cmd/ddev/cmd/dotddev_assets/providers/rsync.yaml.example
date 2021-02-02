@@ -1,0 +1,24 @@
+#ddev-generated
+# Example rsync provider configuration.
+
+# This will pull a database and files from a network location, for example,
+# server or other jumphost. It operates inside the web container and uses
+# ssh, so you need to `ddev auth ssh` first.
+
+# To use this configuration,
+#
+# 1. You need a database dump and/or user-generated files tarball that you
+#    have access to somewhere on the internet
+# 2. Copy rsync.yaml.example to rync.yaml (or name it as you see fit)
+# 3. `ddev auth ssh` (only needs to be done once per ddev session or reboot)
+# 4. Use `ddev pull rsync` to pull the project database and files.
+
+# Note that while this is done in the web container (because rsync will always be there)
+# it could also be done on the host.
+
+db_pull_command:
+  command: rsync -avz rfay@jumphost.thefays.us:tmp/db.sql.gz /var/www/html/.ddev/.downloads
+  service: web
+files_pull_command:
+  command: pushd /var/www/html/.ddev/.downloads >/dev/null && rm -f files.tar.gz && rsync -avz rfay@jumphost.thefays.us:tmp/files.tar.gz . && tar -xzf files.tar.gz -C files/
+  service: web
