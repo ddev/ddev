@@ -6,12 +6,13 @@
 
 # To use this configuration,
 # 1. You need a database dump and/or user-generated files tarball.
-# 3. Copy flatfile.yaml.example to flatfile.yaml.
+# 2. Copy flatfile.yaml.example to flatfile.yaml.
+# 3. Change the copy commands as needed.
 # 4. Use `ddev pull flatfile` to pull the project database and files.
 
 db_pull_command:
-  command: cp ~/Dropbox/db.sql.gz .ddev/.downloads
+  command: cp ~/Dropbox/db.sql.gz ${DDEV_APPROOT}/.ddev/.downloads
   service: host
 files_pull_command:
-  command: cp ~/Dropbox/files.tar.gz .ddev/.downloads
+  command: tar -zxf ~/Dropbox/files.tar.gz -C ${DDEV_APPROOT}/.ddev/.downloads/files
   service: host

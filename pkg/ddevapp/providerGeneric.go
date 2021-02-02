@@ -139,7 +139,7 @@ func (p *GenericProvider) getFilesBackup() (filename string, error error) {
 
 	err := p.app.ExecOnHostOrService(s, p.FilesPullCommand.Command)
 	if err != nil {
-		util.Failed("Failed to exec %s on %s", p.DBPullCommand.Command, s)
+		util.Failed("Failed to exec %s on %s: %v", p.DBPullCommand.Command, s, err)
 	}
 
 	return filepath.Join(p.getDownloadDir(), "files"), nil
@@ -162,7 +162,7 @@ func (p *GenericProvider) getDatabaseBackup() (filename string, error error) {
 	}
 	err := p.app.ExecOnHostOrService(s, p.DBPullCommand.Command)
 	if err != nil {
-		util.Failed("Failed to exec %s on %s", p.DBPullCommand.Command, s)
+		util.Failed("Failed to exec %s on %s: %v", p.DBPullCommand.Command, s, err)
 	}
 	return filepath.Join(p.getDownloadDir(), "db.sql.gz"), nil
 }
