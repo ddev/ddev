@@ -2672,7 +2672,7 @@ func TestHttpsRedirection(t *testing.T) {
 			// Do a start on the configured site.
 			app, err = ddevapp.GetActiveApp("")
 			assert.NoError(err)
-			startErr := app.Start()
+			startErr := app.StartAndWait(5)
 			assert.NoError(startErr, "app.Start() failed with projectType=%s, webserverType=%s", projectType, webserverType)
 			if startErr != nil {
 				appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
@@ -2684,6 +2684,7 @@ func TestHttpsRedirection(t *testing.T) {
 				reqURL := parts.scheme + "://" + strings.ToLower(app.GetHostname()) + parts.uri
 				//t.Logf("TestHttpsRedirection trying URL %s with webserver_type=%s", reqURL, webserverType)
 				out, resp, err := testcommon.GetLocalHTTPResponse(t, reqURL)
+				assert.NoError(err)
 				assert.NotNil(resp, "resp was nil for projectType=%s webserver_type=%s url=%s, err=%v, out='%s'", projectType, webserverType, reqURL, err, out)
 				if resp != nil {
 					locHeader := resp.Header.Get("Location")
