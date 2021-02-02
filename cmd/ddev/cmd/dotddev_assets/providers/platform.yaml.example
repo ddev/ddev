@@ -3,12 +3,16 @@
 
 # To use this configuration,
 # 1. Create a platform.sh token (Account->API Tokens).
-# 2. Add the add an entry to web_environment in ~/.ddev/global_config.yaml with the token:
+# 2. Add add an entry to web_environment in ~/.ddev/global_config.yaml with the token:
 # web_environment:
 # - PLATFORMSH_CLI_TOKEN=xxxxxxxx
 # 3. Copy platform.yaml.example to platform.yaml.
 # 4. Update project_id and environment_name below.
+# 5. `ddev restart`
 # 5. Use `ddev pull platform` to pull the project database and files.
+
+# Debugging: Use `ddev exec platform` to see what platform.sh knows about
+# your configuration and whether it's working correctly.
 
 project_id: w5vxexample
 environment_name: master
