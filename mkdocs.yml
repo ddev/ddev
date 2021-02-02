@@ -38,5 +38,6 @@ pages:
     - 'Pantheon': 'users/providers/pantheon.md'
     - 'DDEV-Live': 'users/providers/DDEV-Live.md'
     - 'Platform.sh': 'users/providers/platformsh.md'
+    - 'User-defined': 'users/providers/user-defined.md'
   - 'Developer Documentation':
     - 'Building, Testing, and Contributing': 'developers/building-contributing.md'
