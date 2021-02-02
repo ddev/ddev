@@ -77,8 +77,7 @@ func TestPlatformPull(t *testing.T) {
 	// Build our platform.yaml from the example file
 	s, err := ioutil.ReadFile(app.GetConfigPath("providers/platform.yaml.example"))
 	require.NoError(t, err)
-	x := strings.Replace(string(s), "project_id:", "#project_id:", 1)
-	x = x + "\nproject_id: " + platformTestSiteID + "\n"
+	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: "+platformTestSiteID+"\n#project_id:"), 1)
 	err = ioutil.WriteFile(app.GetConfigPath("providers/platform.yaml"), []byte(x), 0666)
 	assert.NoError(err)
 	app.Provider = "platform"
