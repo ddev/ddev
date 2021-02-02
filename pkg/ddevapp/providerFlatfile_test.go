@@ -51,7 +51,7 @@ func TestFlatfilePull(t *testing.T) {
 	require.NoError(t, err)
 
 	// Build our Flatfile.yaml from the example file
-	s, err := ioutil.ReadFile(app.GetConfigPath("providers/Flatfile.yaml.example"))
+	s, err := ioutil.ReadFile(app.GetConfigPath("providers/flatfile.yaml.example"))
 	require.NoError(t, err)
 	x := strings.Replace(string(s), "~/Dropbox", filepath.Join(testDir, "testdata", t.Name()), -1)
 	err = ioutil.WriteFile(app.GetConfigPath("providers/flatfile.yaml"), []byte(x), 0666)
