@@ -620,9 +620,9 @@ func TestConfigValidate(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 	staticURI := site.Safe200URIWithExpectation.URI
-	_, _, err = testcommon.GetLocalHTTPResponse(t, "http://x.ddev.site/"+staticURI, 1)
+	_, _, err = testcommon.GetLocalHTTPResponse(t, "http://x.ddev.site/"+staticURI)
 	assert.NoError(err)
-	_, _, err = testcommon.GetLocalHTTPResponse(t, "http://somethjingrandom.any.ddev.site/"+staticURI, 1)
+	_, _, err = testcommon.GetLocalHTTPResponse(t, "http://somethjingrandom.any.ddev.site/"+staticURI)
 	assert.NoError(err)
 
 	// Make sure that a bare "*" in the additional_hostnames does *not* work

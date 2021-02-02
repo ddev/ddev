@@ -741,7 +741,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		}
 
 		// Curl to the project's index.php or anything else
-		_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL(), 1)
+		_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL())
 
 		fmt.Printf("Attempting accept of port 9000 with xdebug enabled, XDebug version=%s\n", v)
 
