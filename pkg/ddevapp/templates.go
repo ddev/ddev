@@ -138,8 +138,6 @@ services:
       - SSH_AUTH_SOCK=/home/.ssh-agent/socket
       - TZ={{ .Timezone }}
       - VIRTUAL_HOST=${DDEV_HOSTNAME}
-      - "DDEV_PROVIDER_PROJECT_ID={{.ProviderProjectID}}"
-      - "DDEV_PROVIDER_ENVIRONMENT_NAME={{.ProviderEnvironmentName}}"
       {{ range $env := .WebEnvironment }}- "{{ $env }}"
       {{ end }}
     labels:

@@ -692,8 +692,6 @@ type composeYAMLVars struct {
 	GID                       string
 	AutoRestartContainers     bool
 	FailOnHookFail            bool
-	ProviderProjectID         string
-	ProviderEnvironmentName   string
 	WebEnvironment            []string
 }
 
@@ -727,12 +725,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	}
 
 	uid, gid, username := util.GetContainerUIDGid()
-	p, err := app.GetProvider("")
+	_, err = app.GetProvider("")
 	if err != nil {
 		return "", err
 	}
-
-	x, generic := p.(*GenericProvider)
 
 	templateVars := composeYAMLVars{
 		Name:                      app.Name,
@@ -766,8 +762,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		DBBuildDockerfile:         app.GetConfigPath(".dbimageBuild/Dockerfile"),
 		AutoRestartContainers:     globalconfig.DdevGlobalConfig.AutoRestartContainers,
 		FailOnHookFail:            app.FailOnHookFail || app.FailOnHookFailGlobal,
-		ProviderProjectID:         "", // p.ProviderInfo.ProjectID,
-		ProviderEnvironmentName:   "", // p.ProviderInfo.EnvironmentName,
 		WebEnvironment:            webEnvironment,
 	}
 	if app.NFSMountEnabled || app.NFSMountEnabledGlobal {
@@ -783,11 +777,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 			// and completely chokes in C:\Users\rfay...
 			templateVars.NFSSource = dockerutil.MassageWindowsNFSMount(app.AppRoot)
 		}
-	}
-
-	if generic {
-		templateVars.ProviderEnvironmentName = x.EnvironmentName
-		templateVars.ProviderProjectID = x.ProjectID
 	}
 
 	// Add web and db extra dockerfile info

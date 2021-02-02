@@ -21,12 +21,11 @@ type ProviderCommand struct {
 
 // ProviderInfo defines the provider
 type ProviderInfo struct {
-	ProjectID        string          `yaml:"project_id"`
-	EnvironmentName  string          `yaml:"environment_name"`
-	AuthCommand      ProviderCommand `yaml:"auth_command"`
-	DBPullCommand    ProviderCommand `yaml:"db_pull_command"`
-	FilesPullCommand ProviderCommand `yaml:"files_pull_command"`
-	CodePullCommand  ProviderCommand `yaml:"code_pull_command,omitempty"`
+	EnvironmentVariables map[string]string `yaml:"environment_variables"`
+	AuthCommand          ProviderCommand   `yaml:"auth_command"`
+	DBPullCommand        ProviderCommand   `yaml:"db_pull_command"`
+	FilesPullCommand     ProviderCommand   `yaml:"files_pull_command"`
+	CodePullCommand      ProviderCommand   `yaml:"code_pull_command,omitempty"`
 }
 
 // GenericProvider provides generic-specific import functionality.
@@ -86,7 +85,7 @@ func (p *GenericProvider) GetBackup(backupType, environment string) (string, str
 	}
 
 	if p.AuthCommand.Command != "" {
-		err := p.app.ExecOnHostOrService(p.AuthCommand.Service, p.AuthCommand.Command)
+		err := p.app.ExecOnHostOrService(p.AuthCommand.Service, p.injectedEnvironment()+"; "+p.AuthCommand.Command)
 		if err != nil {
 			return "", "", err
 		}
@@ -137,7 +136,7 @@ func (p *GenericProvider) getFilesBackup() (filename string, error error) {
 		s = "web"
 	}
 
-	err := p.app.ExecOnHostOrService(s, p.FilesPullCommand.Command)
+	err := p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.FilesPullCommand.Command)
 	if err != nil {
 		util.Failed("Failed to exec %s on %s: %v", p.DBPullCommand.Command, s, err)
 	}
@@ -160,7 +159,7 @@ func (p *GenericProvider) getDatabaseBackup() (filename string, error error) {
 	if s == "" {
 		s = "web"
 	}
-	err := p.app.ExecOnHostOrService(s, p.DBPullCommand.Command)
+	err := p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.DBPullCommand.Command)
 	if err != nil {
 		util.Failed("Failed to exec %s on %s: %v", p.DBPullCommand.Command, s, err)
 	}
@@ -191,4 +190,14 @@ func (p *GenericProvider) Read(configPath string) error {
 // Validate ensures that the current configuration is valid (i.e. the configured pantheon site/environment exists)
 func (p *GenericProvider) Validate() error {
 	return nil
+}
+
+// injectedEnvironment() returns a string with environment variables that should be injected
+// before a command.
+func (p *GenericProvider) injectedEnvironment() string {
+	s := "export "
+	for k, v := range p.EnvironmentVariables {
+		s = s + fmt.Sprintf(" %s=%s ", k, v)
+	}
+	return s
 }

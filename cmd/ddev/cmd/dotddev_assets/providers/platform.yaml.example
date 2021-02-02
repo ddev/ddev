@@ -14,11 +14,12 @@
 # Debugging: Use `ddev exec platform` to see what platform.sh knows about
 # your configuration and whether it's working correctly.
 
-project_id: w5vxexample
-environment_name: master
+environment_variables:
+  project_id: w5vxexample
+  environment_name: master
 
 db_pull_command:
-  command: platform db:dump --yes --gzip --file=/var/www/html/.ddev/.downloads/db.sql.gz --project="${DDEV_PROVIDER_PROJECT_ID}" --environment="${DDEV_PROVIDER_ENVIRONMENT_NAME}"
+  command: platform db:dump --yes --gzip --file=/var/www/html/.ddev/.downloads/db.sql.gz --project="${project_id}" --environment="${environment_name}"
 
 files_pull_command:
-  command: platform mount:download --yes --quiet --project="${DDEV_PROVIDER_PROJECT_ID}" --environment="${DDEV_PROVIDER_ENVIRONMENT_NAME}" --mount=web/sites/default/files --target=/var/www/html/.ddev/.downloads/files
+  command: platform mount:download --yes --quiet --project="${project_id}" --environment="${environment_name}" --mount=web/sites/default/files --target=/var/www/html/.ddev/.downloads/files

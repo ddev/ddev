@@ -48,7 +48,7 @@ ddev pull platform`,
 		providerName := args[0]
 		p, err := app.GetProvider(providerName)
 		if err != nil {
-			util.Failed("No provider %s is provisioned", app.Provider)
+			util.Failed("No provider `%s' is provisioned in %s: %v", providerName, app.GetConfigPath("providers"), err)
 		}
 		app.ProviderInstance = p
 		appPull(app, skipConfirmationArg)
