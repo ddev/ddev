@@ -2628,7 +2628,6 @@ func TestHttpsRedirection(t *testing.T) {
 	packageDir, _ := os.Getwd()
 
 	testDir := testcommon.CreateTmpDir(t.Name())
-	defer testcommon.CleanupDir(testDir)
 	appDir := filepath.Join(testDir, t.Name())
 	err := fileutil.CopyDir(filepath.Join(packageDir, "testdata", t.Name()), appDir)
 	assert.NoError(err)
@@ -2639,8 +2638,15 @@ func TestHttpsRedirection(t *testing.T) {
 	assert.NoError(err)
 
 	_ = app.Stop(true, false)
-	//nolint: errcheck
-	defer app.Stop(true, false)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(packageDir)
+		assert.NoError(err)
+		err = os.RemoveAll(testDir)
+		assert.NoError(err)
+	})
 
 	expectations := []URLRedirectExpectations{
 		{"https", "/subdir", "/subdir/"},
@@ -2684,8 +2690,7 @@ func TestHttpsRedirection(t *testing.T) {
 				reqURL := parts.scheme + "://" + strings.ToLower(app.GetHostname()) + parts.uri
 				//t.Logf("TestHttpsRedirection trying URL %s with webserver_type=%s", reqURL, webserverType)
 				out, resp, err := testcommon.GetLocalHTTPResponse(t, reqURL)
-				assert.NoError(err)
-				assert.NotNil(resp, "resp was nil for projectType=%s webserver_type=%s url=%s, err=%v, out='%s'", projectType, webserverType, reqURL, err, out)
+				require.NotNil(t, resp, "resp was nil for projectType=%s webserver_type=%s url=%s, err=%v, out='%s'", projectType, webserverType, reqURL, err, out)
 				if resp != nil {
 					locHeader := resp.Header.Get("Location")
 
