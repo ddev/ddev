@@ -16,9 +16,9 @@ jobs:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: NORMAL Circle VM setup - tools, docker, golang
 
-    - run:
-        command: source ~/.bashrc && nvm use 10 && make staticrequired EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
-        name: staticrequired
+#    - run:
+#        command: source ~/.bashrc && nvm use 10 && make staticrequired EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
+#        name: staticrequired
     - run:
         command: |
           make linux_amd64 linux_arm64 darwin_amd64 windows_amd64 windows_install EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
