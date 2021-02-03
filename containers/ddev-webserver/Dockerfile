@@ -19,6 +19,9 @@ ENV CAROOT /mnt/ddev-global-cache/mkcert
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 
+RUN rm -f /etc/apt/sources.list.d/yarn.list && ( apt-get -qq remove yarn || true ) # Temporary change to switch to npm install
+RUN npm config set unsafe-perm true && npm install --global yarn
+
 RUN wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key && \
     apt-key add /tmp/nginx_signing.key && \
     echo "deb http://nginx.org/packages/debian/ $(lsb_release -sc) nginx" > /etc/apt/sources.list.d/nginx.list
