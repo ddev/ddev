@@ -741,7 +741,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		}
 
 		// Curl to the project's index.php or anything else
-		_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL(), 1)
+		_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL())
 
 		fmt.Printf("Attempting accept of port 9000 with xdebug enabled, XDebug version=%s\n", v)
 
@@ -2628,7 +2628,6 @@ func TestHttpsRedirection(t *testing.T) {
 	packageDir, _ := os.Getwd()
 
 	testDir := testcommon.CreateTmpDir(t.Name())
-	defer testcommon.CleanupDir(testDir)
 	appDir := filepath.Join(testDir, t.Name())
 	err := fileutil.CopyDir(filepath.Join(packageDir, "testdata", t.Name()), appDir)
 	assert.NoError(err)
@@ -2639,8 +2638,15 @@ func TestHttpsRedirection(t *testing.T) {
 	assert.NoError(err)
 
 	_ = app.Stop(true, false)
-	//nolint: errcheck
-	defer app.Stop(true, false)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(packageDir)
+		assert.NoError(err)
+		err = os.RemoveAll(testDir)
+		assert.NoError(err)
+	})
 
 	expectations := []URLRedirectExpectations{
 		{"https", "/subdir", "/subdir/"},
@@ -2672,7 +2678,7 @@ func TestHttpsRedirection(t *testing.T) {
 			// Do a start on the configured site.
 			app, err = ddevapp.GetActiveApp("")
 			assert.NoError(err)
-			startErr := app.Start()
+			startErr := app.StartAndWait(5)
 			assert.NoError(startErr, "app.Start() failed with projectType=%s, webserverType=%s", projectType, webserverType)
 			if startErr != nil {
 				appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
@@ -2684,7 +2690,7 @@ func TestHttpsRedirection(t *testing.T) {
 				reqURL := parts.scheme + "://" + strings.ToLower(app.GetHostname()) + parts.uri
 				//t.Logf("TestHttpsRedirection trying URL %s with webserver_type=%s", reqURL, webserverType)
 				out, resp, err := testcommon.GetLocalHTTPResponse(t, reqURL)
-				assert.NotNil(resp, "resp was nil for projectType=%s webserver_type=%s url=%s, err=%v, out='%s'", projectType, webserverType, reqURL, err, out)
+				require.NotNil(t, resp, "resp was nil for projectType=%s webserver_type=%s url=%s, err=%v, out='%s'", projectType, webserverType, reqURL, err, out)
 				if resp != nil {
 					locHeader := resp.Header.Get("Location")
 
