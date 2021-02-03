@@ -10,9 +10,14 @@
 # 3. Change the copy commands as needed.
 # 4. Use `ddev pull flatfile` to pull the project database and files.
 
+environment_variables:
+  # On Windows, PROJECT_ROOT must be the git-bash path to the project root, like
+  # /c/Users/rfay/workspace/project1
+  PROJECT_ROOT: /full/path/to/project/root
+
 db_pull_command:
-  command: cp ~/Dropbox/db.sql.gz ${DDEV_APPROOT}/.ddev/.downloads
+  command: cp ~/Dropbox/db.sql.gz ${PROJECT_ROOT}/.ddev/.downloads
   service: host
 files_pull_command:
-  command: tar -zxf ~/Dropbox/files.tar.gz -C ${DDEV_APPROOT}/.ddev/.downloads/files
+  command: tar -zxf ~/Dropbox/files.tar.gz -C ${PROJECT_ROOT}/.ddev/.downloads/files
   service: host

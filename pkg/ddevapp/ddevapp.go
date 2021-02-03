@@ -1248,6 +1248,9 @@ func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 		bashPath := "bash"
 		if runtime.GOOS == "windows" {
 			bashPath = util.FindWindowsBashPath()
+			if bashPath == "" {
+				return fmt.Errorf("Unable to find bash.exe on Windows")
+			}
 		}
 
 		args := []string{

@@ -2,6 +2,7 @@ package ddevapp_test
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
@@ -54,6 +55,8 @@ func TestFlatfilePull(t *testing.T) {
 	s, err := ioutil.ReadFile(app.GetConfigPath("providers/flatfile.yaml.example"))
 	require.NoError(t, err)
 	x := strings.Replace(string(s), "~/Dropbox", filepath.Join(testDir, "testdata", t.Name()), -1)
+	appRoot := dockerutil.MassageWindowsHostMountpoint(app.AppRoot)
+	x = strings.Replace(x, "/full/path/to/project/root", appRoot, -1)
 	err = ioutil.WriteFile(app.GetConfigPath("providers/flatfile.yaml"), []byte(x), 0666)
 	assert.NoError(err)
 	app.Provider = "flatfile"
