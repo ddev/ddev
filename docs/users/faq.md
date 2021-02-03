@@ -24,15 +24,15 @@
 
 * **Can I use additional databases with DDEV?** Yes, you can create additional databases and manually do whatever you need on them. They are automatically created if you use `ddev import-db` with `--target-db`, for example `ddev import-db --target-db=extradb --src=.tarballs/extradb.sql.gz`. You can use `ddev mysql` for random queries, or also use the mysql client within `ddev ssh` or `ddev ssh -s db` as well.
 
-* **Can different projects communicate with each other?** Yes, this is commonly required for situations like Drupal migrations. For the web container to access the db container of another project, use `ddev-<projectname>-db` as the hostname of the other project. For example, in project1, use `mysql ddev-project2-db` to access the db server of project2. For HTTP/S communication you can 1) access the web container of project2 directly with the hostname `ddev-<project2>-web` and port 80 or 443: `curl https://ddev-project2-web` or 2) Add a .ddev/docker-compose.communicate.yaml and access via the ddev router with the official hostname: `curl https://ddev-router -H Host:d7git.ddev.site`.
+* **Can different projects communicate with each other?** Yes, this is commonly required for situations like Drupal migrations. For the web container to access the db container of another project, use `ddev-<projectname>-db` as the hostname of the other project. For example, in project1, use `mysql ddev-project2-db` to access the db server of project2. For HTTP/S communication you can 1) access the web container of project2 directly with the hostname `ddev-<project2>-web` and port 80 or 443: `curl https://ddev-project2-web` or 2) Add a .ddev/docker-compose.communicate.yaml which will allow you to access the other project via the official FQDN.
 
-  ```yaml
+```yaml
   version: '3.6'
   services:
     web:
         external_links:
           - "ddev-router:project2.ddev.site"
-  ```
+```
 
 * **How do I make DDEV match my production webserver environment?** You can change the PHP major version (currently 5.6 through 7.4) and choose between nginx+fpm (default and apache+fpm and choose the MariaDB version add [extra services like solr and memcached](extend/additional-services.md). You will not be able to make every detail match your production server, but with PHP version and webserver type you'll be close.
 
@@ -41,6 +41,18 @@
 * **I don't like the settings files or gitignores that DDEV creates. What can I do?**  You have a couple of options that work well for most people:
     * Use project type "php" instead of the type of your CMS. "php" just means "Don't try to create settings files and such for me.". The "php" type works great for experienced developers.
     * "Take over" the settings file or .gitignore by deleting the line "#ddev-generated" in it (and then check in the file). If that line is removed, ddev will not try to replace or change the file.
+  
+* **How can I move a project to a different directory?**
+  1. Stop and globally unlist the project `ddev stop --unlist`
+  2. Move the files of the project to the new directory.
+  3. `ddev start`
+  
+* **How can I change the name of a project?**
+  1. Export the database of the project: `ddev export-db --file=/path/to/db.sql.gz`
+  2. `ddev delete <project>`. By default this will make a snapshot, which is a nice safety valve
+  3. Rename the project, `ddev config --project-name=<new_name>`
+  4. `ddev start`
+  5. `ddev import-db --src=/path/to/db.sql.gz`
 
 * **DDEV-Local wants to add a hostname to /etc/hosts but I don't think it should need to**.  If you see "The hostname <hostname> is not currently resolvable" and you *can* `ping <hostname>`, it may be that DNS resolution is slow. DDEV doesn't have any control of your computer's name resolution, so doesn't have any way to influence how your browser gets an IP address from a hostname. It knows you have to be connected to the Internet to do that, and uses a test DNS lookup of <somethingrandom>.ddev.site as a way to guess whether you're connected to the internet. If it is unable to do a name lookup, or if the hostname associated with your project is *not* \*.ddev.site, it will try to create entries in /etc/hosts, since it's assuming you can't look up your project's hostname(s) via DNS. If your internet (and name resolution) is actually working, but DNS is slow, just `ddev config global --internet-detection-timeout-ms=3000` to set the timeout to 3 seconds (or higher). See[issue link](https://github.com/drud/ddev/issues/2409#issuecomment-662448025) for more details. (If DNS rebinding is disallowed on your network/router, this won't be solvable without network/router changes. Help [here](https://github.com/drud/ddev/issues/2409#issuecomment-675083658) and [here](https://github.com/drud/ddev/issues/2409#issuecomment-686718237).) For more detailed troubleshooting information please see the [troubleshooting section](troubleshooting.md#ddev-starts-fine-but-my-browser-cant-access-the-url-url-server-ip-address-could-not-be-found-or-we-cant-connect-to-the-server-at-url).
 * **How can I configure a project with the defaults without hitting <RETURN> a bunch of times?** Just use `ddev config --auto` and it will choose docroot and project type based on the discovered code.

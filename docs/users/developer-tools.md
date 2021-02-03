@@ -70,11 +70,8 @@ If you encounter any other scenario, consider using `ddev ssh` and run composer 
 
 [MailHog](https://github.com/MailHog/MailHog) is a mail catcher which is configured to capture and display emails sent by PHP in the development environment.
 
-After your project is started, access the MailHog web interface at its default port:
-
-```
-http://mysite.ddev.site:8025
-```
+After your project is started, access the MailHog web interface at its default port like this:
+`http://mysite.ddev.site:8025` or just use `ddev launch -m` to get to it.
 
 Please note this will not intercept emails if your application is configured to use SMTP or a 3rd-party ESP integration. If you are using SMTP for outgoing mail handling ([Swift Mailer](https://www.drupal.org/project/swiftmailer) or [SMTP](https://www.drupal.org/project/smtp) modules for example), update your application configuration to use `localhost` on port `1025` as the SMTP server locally in order to use MailHog.
 
@@ -104,6 +101,8 @@ The port referenced is unique per running project, and randomly chosen from avai
 **Note:** The host database port is likely to change any time a project is stopped/removed and then later started again.
 
 ### Using Drush 8 installed Installation on the Host Computer
+
+**Warning:** Using drush on the host is discouraged, and you'll have some trouble with it. It's also mostly irrelevant for Drupal8, as you should be using composer-installed project-level drush.
 
 If you have PHP and Drush installed on your host system and the environment variable IS_DDEV_PROJECT=true, you can use drush to interact with a ddev project. On the host system the extra include host-side configuration for the database and port are derived in the settings.ddev.php file to allow drush to access the database server. This may not work for all drush commands because of course the actual webserver environment is not available.
 
