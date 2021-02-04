@@ -1,10 +1,12 @@
 package ddevapp_test
 
 import (
-	"bufio"
 	"fmt"
+	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/output"
+	"github.com/stretchr/testify/require"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,7 +14,6 @@ import (
 
 	. "github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -25,124 +26,29 @@ import (
  * defined in the constants below.
  */
 const pantheonTestSiteName = "ddev-test-site-do-not-delete"
-const pantheonTestEnvName = "bbowman"
 
-// TestPantheonConfigCommand tests the interactive config options.
-func TestPantheonConfigCommand(t *testing.T) {
-	if os.Getenv("DDEV_PANTHEON_API_TOKEN") == "" {
-		t.Skipf("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping %v", t.Name())
-	}
-
-	// Set up tests and give ourselves a working directory.
-	assert := asrt.New(t)
-	testDir := testcommon.CreateTmpDir("TestPantheonConfigCommand")
-
-	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-	defer testcommon.CleanupDir(testDir)
-	defer testcommon.Chdir(testDir)()
-
-	// Create a docroot folder.
-	err := os.Mkdir(filepath.Join(testDir, "docroot"), 0644)
-	if err != nil {
-		t.Errorf("Could not create docroot directory under %s", testDir)
-	}
-
-	// Create the ddevapp we'll use for testing.
-	app, err := NewApp(testDir, true, nodeps.ProviderPantheon)
-	assert.NoError(err)
-
-	docroot := "docroot"
-
-	/**
-	 * Do a full interactive configuration for a pantheon environment.
-	 *
-	 * 1. Provide a valid site name. Ensure there is no error.
-	 * 2. Provide a valid docroot (already tested elsewhere)
-	 * 3. Provide a valid app type (drupal8)
-	 * 4. Provide a valid environment name.
-	 **/
-	input := fmt.Sprintf("%s\n%s\ndocroot\ndrupal8\n%s", pantheonTestSiteName, docroot, pantheonTestEnvName)
-	scanner := bufio.NewScanner(strings.NewReader(input))
-	util.SetInputScanner(scanner)
-
-	restoreOutput := util.CaptureUserOut()
-	err = app.PromptForConfig()
-	assert.NoError(err, t)
-	out := restoreOutput()
-
-	// Get the provider interface and ensure it validates.
-	provider, err := app.GetProvider("")
-	assert.NoError(err)
-	err = provider.Validate()
-	assert.NoError(err)
-
-	// Ensure we have expected string values in output.
-	assert.Contains(out, testDir)
-
-	// Ensure values were properly set on the app struct.
-	assert.Equal(pantheonTestSiteName, app.Name)
-	assert.Equal(nodeps.AppTypeDrupal8, app.Type)
-	assert.Equal("docroot", app.Docroot)
-	err = PrepDdevDirectory(testDir)
-	assert.NoError(err)
-	output.UserOut.Print("")
-}
-
-// TestPantheonBackupLinks ensures we can get backups from pantheon for a configured environment.
-func TestPantheonBackupLinks(t *testing.T) {
-	if os.Getenv("DDEV_PANTHEON_API_TOKEN") == "" {
-		t.Skipf("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping %v", t.Name())
-	}
-
-	// Set up tests and give ourselves a working directory.
-	assert := asrt.New(t)
-	testDir := testcommon.CreateTmpDir("TestPantheonBackupLinks")
-
-	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-	defer testcommon.CleanupDir(testDir)
-	defer testcommon.Chdir(testDir)()
-
-	app, err := NewApp(testDir, true, nodeps.ProviderPantheon)
-	assert.NoError(err)
-
-	app.Name = pantheonTestSiteName
-
-	provider := PantheonProvider_obsolete{}
-	err = provider.Init(app)
-	assert.NoError(err)
-
-	provider.Sitename = pantheonTestSiteName
-	provider.EnvironmentName = pantheonTestEnvName
-
-	// Ensure GetBackup triggers an error for unknown backup types.
-	_, _, err = provider.GetBackup(util.RandString(8), "")
-	assert.Error(err)
-
-	// Ensure we can get a backupLink
-	backupLink, importPath, err := provider.GetBackup("database", "")
-	assert.NoError(err)
-
-	assert.Equal(importPath, "")
-	assert.Contains(backupLink, "database.sql.gz")
-	output.UserOut.Print("")
-}
+// This ID corresponds to pantheonTestSiteName = "ddev-test-site-do-not-delete"
+const pantheonTestSiteID = "009a2cda-2c22-4eee-8f9d-96f017321627"
+const pantheonTestEnvName = "dev"
 
 // TestPantheonPull ensures we can pull backups from pantheon for a configured environment.
 func TestPantheonPull(t *testing.T) {
-	if os.Getenv("DDEV_PANTHEON_API_TOKEN") == "" {
+	token := ""
+	if token = os.Getenv("DDEV_PANTHEON_API_TOKEN"); token == "" {
 		t.Skipf("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping %v", t.Name())
 	}
 
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
-	testDir := testcommon.CreateTmpDir("TestPantheonPull")
+	testDir, _ := os.Getwd()
 
-	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-	defer testcommon.CleanupDir(testDir)
-	defer testcommon.Chdir(testDir)()
-	// Move into the properly named pantheon site (must match pantheon sitename)
-	siteDir := filepath.Join(testDir, pantheonTestSiteName)
-	err := os.MkdirAll(filepath.Join(siteDir, "sites/default"), 0777)
+	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
+	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"TERMINUS_MACHINE_TOKEN=" + token}
+	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	assert.NoError(err)
+
+	siteDir := testcommon.CreateTmpDir(t.Name())
+	err = os.MkdirAll(filepath.Join(siteDir, "sites/default"), 0777)
 	assert.NoError(err)
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
@@ -150,8 +56,18 @@ func TestPantheonPull(t *testing.T) {
 	app, err := NewApp(siteDir, true, nodeps.ProviderPantheon)
 	assert.NoError(err)
 
-	// nolint: errcheck
-	defer app.Stop(true, false)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+
+		globalconfig.DdevGlobalConfig.WebEnvironment = webEnvSave
+		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		assert.NoError(err)
+
+		_ = os.Chdir(testDir)
+		err = os.RemoveAll(siteDir)
+		assert.NoError(err)
+	})
 
 	app.Name = pantheonTestSiteName
 	app.Type = nodeps.AppTypeDrupal8
@@ -162,20 +78,32 @@ func TestPantheonPull(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	provider := PantheonProvider_obsolete{}
-	err = provider.Init(app)
+	// Run ddev once to create all the files in .ddev, including the example
+	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("%s >/dev/null", DdevBin)})
+	require.NoError(t, err)
+
+	// Build our pantheon.yaml from the example file
+	s, err := ioutil.ReadFile(app.GetConfigPath("providers/pantheon.yaml.example"))
+	require.NoError(t, err)
+	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: %s\n#project_id:", pantheonTestSiteID), 1)
+	x = strings.Replace(x, "environment_name:", fmt.Sprintf("environment_name: %s\n#environment_name: ", pantheonTestEnvName), 1)
+	err = ioutil.WriteFile(app.GetConfigPath("providers/pantheon.yaml"), []byte(x), 0666)
+	assert.NoError(err)
+	app.Provider = "pantheon"
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	provider, err := app.GetProvider("pantheon")
+	require.NoError(t, err)
+	err = app.Start()
+	require.NoError(t, err)
+	err = app.Pull(provider, &PullOptions{})
 	assert.NoError(err)
 
-	provider.Sitename = pantheonTestSiteName
-	provider.EnvironmentName = pantheonTestEnvName
-	err = provider.Write(app.GetConfigPath("import.yaml"))
+	assert.FileExists(filepath.Join(app.GetUploadDir(), "2017-07/22-24_tn.jpg"))
+	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="admin@example.com";' | %s mysql -N`, DdevBin)})
 	assert.NoError(err)
-
-	// Ensure we can do a pull on the configured site.
-	app, err = GetActiveApp("")
-	assert.NoError(err)
-	err = app.Pull(&provider, &PullOptions{})
-	assert.NoError(err)
+	assert.True(strings.HasPrefix(out, "1\n"))
 
 	assert.FileExists("hello-pre-pull-" + app.Name)
 	assert.FileExists("hello-post-pull-" + app.Name)
@@ -183,10 +111,4 @@ func TestPantheonPull(t *testing.T) {
 	assert.NoError(err)
 	err = os.Remove("hello-post-pull-" + app.Name)
 	assert.NoError(err)
-
-	app.Hooks = nil
-	_ = app.WriteConfig()
-	err = app.Stop(true, false)
-	assert.NoError(err)
-	output.UserOut.Print("")
 }

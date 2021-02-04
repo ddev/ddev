@@ -19,7 +19,10 @@ environment_variables:
   environment_name: master
 
 db_pull_command:
-  command: platform db:dump --yes --gzip --file=/var/www/html/.ddev/.downloads/db.sql.gz --project="${project_id}" --environment="${environment_name}"
+  command: |
+    platform db:dump --yes --gzip --file=/var/www/html/.ddev/.downloads/db.sql.gz --project="${project_id}" --environment="${environment_name}"
 
 files_pull_command:
-  command: platform mount:download --yes --quiet --project="${project_id}" --environment="${environment_name}" --mount=web/sites/default/files --target=/var/www/html/.ddev/.downloads/files
+  command: |
+    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
+    platform mount:download --yes --quiet --project="${project_id}" --environment="${environment_name}" --mount=web/sites/default/files --target=/var/www/html/.ddev/.downloads/files

@@ -1,6 +1,7 @@
 package ddevapp
 
 import (
+	"github.com/drud/ddev/pkg/output"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -85,6 +86,7 @@ func (p *GenericProvider) GetBackup(backupType, environment string) (string, str
 	}
 
 	if p.AuthCommand.Command != "" {
+		output.UserOut.Print("Authenticating...")
 		err := p.app.ExecOnHostOrService(p.AuthCommand.Service, p.injectedEnvironment()+"; "+p.AuthCommand.Command)
 		if err != nil {
 			return "", "", err
@@ -138,7 +140,7 @@ func (p *GenericProvider) getFilesBackup() (filename string, error error) {
 
 	err := p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.FilesPullCommand.Command)
 	if err != nil {
-		util.Failed("Failed to exec %s on %s: %v", p.DBPullCommand.Command, s, err)
+		util.Failed("Failed to exec %s on %s: %v", p.FilesPullCommand.Command, s, err)
 	}
 
 	return filepath.Join(p.getDownloadDir(), "files"), nil
