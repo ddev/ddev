@@ -140,7 +140,8 @@ ddev config --project-type=drupal8 --docroot=web --create-docroot
 ddev start
 ddev composer create "drupal/recommended-project:^8"
 ddev composer require drush/drush
-ddev launch
+ddev drush site:install
+ddev drush uli
 ```
 
 #### Drupal 8 Git Clone Example
@@ -167,7 +168,8 @@ ddev config --project-type=drupal9 --docroot=web --create-docroot
 ddev start
 ddev composer create "drupal/recommended-project"
 ddev composer require drush/drush
-ddev launch
+ddev drush site:install
+ddev drush uli
 ```
 
 #### Drupal 9 Git Clone Example
