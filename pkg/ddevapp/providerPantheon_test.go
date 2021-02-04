@@ -107,7 +107,7 @@ func TestPantheonBackupLinks(t *testing.T) {
 
 	app.Name = pantheonTestSiteName
 
-	provider := PantheonProvider{}
+	provider := PantheonProvider_obsolete{}
 	err = provider.Init(app)
 	assert.NoError(err)
 
@@ -162,7 +162,7 @@ func TestPantheonPull(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	provider := PantheonProvider{}
+	provider := PantheonProvider_obsolete{}
 	err = provider.Init(app)
 	assert.NoError(err)
 

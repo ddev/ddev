@@ -1,0 +1,28 @@
+#ddev-generated
+# Example Pantheon.io provider configuration.
+
+# To use this configuration,
+# 1. Create a Pantheon.io machine token (Account->Machine Tokens).
+# 2. Add add an entry to web_environment in ~/.ddev/global_config.yaml with the token:
+# web_environment:
+# - TERMINUS_MACHINE_TOKEN=xxxxxxxx
+# 3. Copy pantehon.yaml.example to pantheon.yaml.
+# 4. Update project_id and environment_name below.
+# 5. `ddev restart`
+# 5. Use `ddev pull pantheon` to pull the project database and files.
+
+# Debugging: Use `ddev exec terminus auth:whoami` to see what terminus knows about
+# `ddev exec terminus site:list` will show available sites
+
+environment_variables:
+  project_id: 39c06996-285d-4975-b2f7-daa1d3394aaa
+  environment_name: dev
+
+auth_command:
+  terminus auth:login --machine-token="${TERMINUS_MACHINE_TOKEN}" >/dev/null
+
+db_pull_command:
+  command: pushd /var/www/html/.ddev/.downloads >/dev/null && terminus backup:get --element=db --to=db.sql.gz "${project_id}.${environment_name}"
+
+files_pull_command:
+  command: pushd /var/www/html/.ddev/.downloads && terminus backup:get --element=files --to=files.tar.gz "${project_id}.${environment_name}" && tar -zxf files.tar.gz -C files/

@@ -39,8 +39,8 @@ type pantheonSite struct {
 	SiteID string
 }
 
-// PantheonProvider provides pantheon-specific import functionality.
-type PantheonProvider struct {
+// PantheonProvider_obsolete provides pantheon-specific import functionality.
+type PantheonProvider_obsolete struct {
 	ProviderType     string                  `yaml:"provider"`
 	app              *DdevApp                `yaml:"-"`
 	Sitename         string                  `yaml:"site"`
@@ -51,7 +51,7 @@ type PantheonProvider struct {
 }
 
 // Init handles loading data from saved config.
-func (p *PantheonProvider) Init(app *DdevApp) error {
+func (p *PantheonProvider_obsolete) Init(app *DdevApp) error {
 	p.app = app
 	configPath := app.GetConfigPath("import.yaml")
 	if fileutil.FileExists(configPath) {
@@ -69,12 +69,12 @@ func (p *PantheonProvider) Init(app *DdevApp) error {
 // used any time a field is set via `ddev config` on the primary app config, and
 // allows provider plugins to have additional validation for top level config
 // settings.
-func (p *PantheonProvider) ValidateField(field, value string) error {
+func (p *PantheonProvider_obsolete) ValidateField(field, value string) error {
 	return nil
 }
 
 // SetSiteNameAndEnv sets the environment of the provider (dev/test/live)
-func (p *PantheonProvider) SetSiteNameAndEnv(environment string) error {
+func (p *PantheonProvider_obsolete) SetSiteNameAndEnv(environment string) error {
 	_, err := p.findPantheonSite(p.app.Name)
 	if err != nil {
 		return fmt.Errorf("unable to find siteName %s on Pantheon: %v", p.app.Name, err)
@@ -85,7 +85,7 @@ func (p *PantheonProvider) SetSiteNameAndEnv(environment string) error {
 }
 
 // PromptForConfig provides interactive configuration prompts when running `ddev config pantheon`
-func (p *PantheonProvider) PromptForConfig() error {
+func (p *PantheonProvider_obsolete) PromptForConfig() error {
 	for {
 		err := p.SetSiteNameAndEnv("dev")
 		if err != nil {
@@ -105,7 +105,7 @@ func (p *PantheonProvider) PromptForConfig() error {
 // GetBackup will download the most recent backup specified by backupType in the given environment. If no environment
 // is supplied, the configured environment will be used. Valid values for backupType are "database" or "files".
 // returns fileURL, importPath, error
-func (p *PantheonProvider) GetBackup(backupType, environment string) (string, string, error) {
+func (p *PantheonProvider_obsolete) GetBackup(backupType, environment string) (string, string, error) {
 	var err error
 	if backupType != "database" && backupType != "files" {
 		return "", "", fmt.Errorf("could not get backup: %s is not a valid backup type", backupType)
@@ -149,7 +149,7 @@ func (p *PantheonProvider) GetBackup(backupType, environment string) (string, st
 }
 
 // prepDownloadDir ensures the download cache directories are created and writeable.
-func (p *PantheonProvider) prepDownloadDir() {
+func (p *PantheonProvider_obsolete) prepDownloadDir() {
 	destDir := p.getDownloadDir()
 	filesDir := filepath.Join(destDir, "files")
 	_ = os.RemoveAll(destDir)
@@ -157,13 +157,13 @@ func (p *PantheonProvider) prepDownloadDir() {
 	util.CheckErr(err)
 }
 
-func (p *PantheonProvider) getDownloadDir() string {
+func (p *PantheonProvider_obsolete) getDownloadDir() string {
 	destDir := p.app.GetConfigPath(".downloads")
 	return destDir
 }
 
 // getBackup will return a URL for the most recent backup of archiveType.
-func (p *PantheonProvider) getBackup(archiveType string, environment string) (link string, filename string, error error) {
+func (p *PantheonProvider_obsolete) getBackup(archiveType string, environment string) (link string, filename string, error error) {
 
 	element := "files"
 	if archiveType == "database" {
@@ -189,7 +189,7 @@ func (p *PantheonProvider) getBackup(archiveType string, environment string) (li
 }
 
 // environmentPrompt contains the user prompts for interactive configuration of the pantheon environment.
-func (p *PantheonProvider) environmentPrompt() error {
+func (p *PantheonProvider_obsolete) environmentPrompt() error {
 	envs, err := p.GetEnvironments()
 	if err != nil {
 		return err
@@ -223,7 +223,7 @@ func (p *PantheonProvider) environmentPrompt() error {
 }
 
 // Write the pantheon provider configuration to a specified location on disk.
-func (p *PantheonProvider) Write(configPath string) error {
+func (p *PantheonProvider_obsolete) Write(configPath string) error {
 	err := PrepDdevDirectory(filepath.Dir(configPath))
 	if err != nil {
 		return err
@@ -243,7 +243,7 @@ func (p *PantheonProvider) Write(configPath string) error {
 }
 
 // Read pantheon provider configuration from a specified location on disk.
-func (p *PantheonProvider) Read(configPath string) error {
+func (p *PantheonProvider_obsolete) Read(configPath string) error {
 	source, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		return err
@@ -259,7 +259,7 @@ func (p *PantheonProvider) Read(configPath string) error {
 }
 
 // GetEnvironments will return a list of environments for the currently configured pantheon site.
-func (p *PantheonProvider) GetEnvironments() ([]string, error) {
+func (p *PantheonProvider_obsolete) GetEnvironments() ([]string, error) {
 	if p.site.ID == "" {
 		id, err := p.findPantheonSite(p.Sitename)
 		if err != nil {
@@ -283,12 +283,12 @@ func (p *PantheonProvider) GetEnvironments() ([]string, error) {
 }
 
 // Validate ensures that the current configuration is valid (i.e. the configured pantheon site/environment exists)
-func (p *PantheonProvider) Validate() error {
+func (p *PantheonProvider_obsolete) Validate() error {
 	return p.environmentExists(p.EnvironmentName)
 }
 
 // environmentExists ensures the currently configured pantheon site & environment exists.
-func (p *PantheonProvider) environmentExists(environment string) error {
+func (p *PantheonProvider_obsolete) environmentExists(environment string) error {
 	el, err := p.GetEnvironments()
 	if err != nil {
 		return err
@@ -301,7 +301,7 @@ func (p *PantheonProvider) environmentExists(environment string) error {
 }
 
 // findPantheonSite ensures the pantheon site specified by name exists, and the current user has access to it.
-func (p *PantheonProvider) findPantheonSite(name string) (id string, e error) {
+func (p *PantheonProvider_obsolete) findPantheonSite(name string) (id string, e error) {
 
 	uid, _, _ := util.GetContainerUIDGid()
 	_, id, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"bash", "-c", "disable_xdebug >/dev/null && terminus site:info --fields=id --format=json " + name + " | jq -r .id"}, nil, []string{"HOME=/tmp", "DDEV_XDEBUG_ENABLED=false"}, []string{"ddev-global-cache:/mnt/ddev-global-cache"}, uid, true, false)
