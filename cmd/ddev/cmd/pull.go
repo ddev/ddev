@@ -33,22 +33,29 @@ var PullCmd = &cobra.Command{
 	Long: `Pull files and database using a configured provider plugin.
 	Running pull will connect to the configured provider and download + import the
 	latest backups.`,
-	Example: `ddev pull`,
-	Args:    cobra.ExactArgs(0),
+	Example: `ddev pull pantheon
+ddev pull ddev-live
+ddev pull platform`,
+	Args: cobra.ExactArgs(1),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		appPull(skipConfirmationArg)
+		app, err := ddevapp.GetActiveApp("")
+		if err != nil {
+			util.Failed("Pull failed: %v", err)
+		}
+		providerName := args[0]
+		p, err := app.GetProvider(providerName)
+		if err != nil {
+			util.Failed("No provider `%s' is provisioned in %s: %v", providerName, app.GetConfigPath("providers"), err)
+		}
+		app.ProviderInstance = p
+		appPull(app, skipConfirmationArg)
 	},
 }
 
-func appPull(skipConfirmation bool) {
-	app, err := ddevapp.GetActiveApp("")
-
-	if err != nil {
-		util.Failed("Pull failed: %v", err)
-	}
+func appPull(app *ddevapp.DdevApp, skipConfirmation bool) {
 
 	// If we're not performing the import step, we won't be deleting the existing db or files.
 	if !skipConfirmation && !skipImportArg && os.Getenv("DRUD_NONINTERACTIVE") == "" {
@@ -71,7 +78,7 @@ func appPull(skipConfirmation bool) {
 		}
 	}
 
-	provider, err := app.GetProvider()
+	provider, err := app.GetProvider("")
 	if err != nil {
 		util.Failed("Failed to get provider: %v", err)
 	}

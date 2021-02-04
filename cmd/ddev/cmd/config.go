@@ -202,7 +202,7 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	provider, err := app.GetProvider()
+	provider, err := app.GetProvider("")
 	if err != nil {
 		util.Failed("Failed to get provider: %v", err)
 	}

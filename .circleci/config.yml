@@ -65,7 +65,7 @@ jobs:
         paths:
           - /home/linuxbrew
     - run:
-        command: make -s testpkg TESTARGS='-run "(TestDdevLive.*|TestPantheon.*|TestDdevFullSite.*)"' EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
+        command: make -s testpkg TESTARGS='-run "(TestDdevLive.*|TestPantheon.*|TestPlatform.*|TestDdevFullSite.*)"' EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: ddev tests
         no_output_timeout: "40m"
     - store_test_results:

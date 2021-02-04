@@ -156,13 +156,13 @@ func (p *DdevLiveProvider) GetBackup(backupType, environment string) (string, st
 func (p *DdevLiveProvider) prepDownloadDir() {
 	destDir := p.getDownloadDir()
 	filesDir := filepath.Join(destDir, "files")
-	_ = os.RemoveAll(filesDir)
+	_ = os.RemoveAll(destDir)
 	err := os.MkdirAll(filesDir, 0755)
 	util.CheckErr(err)
 }
 
 func (p *DdevLiveProvider) getDownloadDir() string {
-	destDir := p.app.GetConfigPath(".ddevlive-downloads")
+	destDir := p.app.GetConfigPath(".downloads")
 	return destDir
 }
 

@@ -3,6 +3,7 @@ package nodeps
 import "sort"
 
 // Providers
+//TODO: This should be removed as many providers will now be valid
 const (
 	ProviderPantheon = "pantheon"
 	ProviderDdevLive = "ddev-live"
@@ -12,6 +13,7 @@ const (
 
 // ValidProviders should be updated whenever provider plugins are added or removed, and should
 // be used to ensure user-supplied values are valid.
+//TODO: This should be removed as many providers will now be valid
 var ValidProviders = map[string]bool{
 	ProviderDefault:  true,
 	ProviderPantheon: true,

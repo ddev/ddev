@@ -360,8 +360,8 @@ const ConfigInstructions = `
 # This is to enable experimentation with alternate file mounting strategies.
 # For advanced users only!
 
-# provider: default # Currently either "default" or "pantheon"
-#
+# provider: default # Currently "default", "pantheon", "ddev-live"
+# 
 # Many ddev commands can be extended to run tasks before or after the
 # ddev command is executed, for example "post-start", "post-import-db",
 # "pre-composer", "post-composer"

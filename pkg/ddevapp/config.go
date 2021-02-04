@@ -137,9 +137,11 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 
 	// Allow override with provider.
 	// Otherwise we accept whatever might have been in config file if there was anything.
+	// #todo: Remove config file provider element when normalizing
+	// pantheon and ddev-live
 	if provider == "" && app.Provider != "" {
 		// Do nothing. This is the case where the config has a provider and no override is provided. Config wins.
-	} else if provider == nodeps.ProviderPantheon || provider == nodeps.ProviderDdevLive || provider == nodeps.ProviderDefault {
+	} else if provider != "" {
 		app.Provider = provider // Use the provider passed-in. Function argument wins.
 	} else if provider == "" && app.Provider == "" {
 		app.Provider = nodeps.ProviderDefault // Nothing passed in, nothing configured. Set c.Provider to default
@@ -232,7 +234,7 @@ func (app *DdevApp) WriteConfig() error {
 		return err
 	}
 
-	provider, err := appcopy.GetProvider()
+	provider, err := appcopy.GetProvider("")
 	if err != nil {
 		return err
 	}
@@ -403,14 +405,14 @@ func (app *DdevApp) PromptForConfig() error {
 		return err
 	}
 
-	err = app.providerInstance.PromptForConfig()
+	err = app.ProviderInstance.PromptForConfig()
 
 	return err
 }
 
 // ValidateConfig ensures the configuration meets ddev's requirements.
 func (app *DdevApp) ValidateConfig() error {
-	provider, err := app.GetProvider()
+	provider, err := app.GetProvider("")
 	if err != nil {
 		return err.(invalidProvider)
 	}
@@ -723,6 +725,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	}
 
 	uid, gid, username := util.GetContainerUIDGid()
+	_, err = app.GetProvider("")
+	if err != nil {
+		return "", err
+	}
 
 	templateVars := composeYAMLVars{
 		Name:                      app.Name,
@@ -885,7 +891,7 @@ func WriteImageDockerfile(fullpath string, contents []byte) error {
 
 // prompt for a project name.
 func (app *DdevApp) promptForName() error {
-	provider, err := app.GetProvider()
+	provider, err := app.GetProvider("")
 	if err != nil {
 		return err
 	}
@@ -939,7 +945,7 @@ func DiscoverDefaultDocroot(app *DdevApp) string {
 
 // Determine the document root.
 func (app *DdevApp) docrootPrompt() error {
-	provider, err := app.GetProvider()
+	provider, err := app.GetProvider("")
 	if err != nil {
 		return err
 	}
@@ -993,7 +999,7 @@ func (app *DdevApp) ConfigExists() bool {
 
 // AppTypePrompt handles the Type workflow.
 func (app *DdevApp) AppTypePrompt() error {
-	provider, err := app.GetProvider()
+	provider, err := app.GetProvider("")
 	if err != nil {
 		return err
 	}
@@ -1036,7 +1042,7 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
-	err := CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-compose-base.yaml", ".ddev-docker-compose-full.yaml", ".ddevlive-downloads", ".global_commands", ".homeadditions", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/live", "commands/web/xdebug", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "nginx_full/nginx-site.conf", "sequelpro.spf", "**/README.*")
+	err := CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/live", "commands/web/xdebug", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "nginx_full/nginx-site.conf", "sequelpro.spf", "**/README.*")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}

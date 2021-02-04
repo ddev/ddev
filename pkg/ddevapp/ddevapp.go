@@ -63,57 +63,58 @@ const DdevFileSignature = "#ddev-generated"
 // DdevApp is the struct that represents a ddev app, mostly its config
 // from config.yaml.
 type DdevApp struct {
-	Name                      string                 `yaml:"name"`
-	Type                      string                 `yaml:"type"`
-	Docroot                   string                 `yaml:"docroot"`
-	PHPVersion                string                 `yaml:"php_version"`
-	WebserverType             string                 `yaml:"webserver_type"`
-	WebImage                  string                 `yaml:"webimage,omitempty"`
-	DBImage                   string                 `yaml:"dbimage,omitempty"`
-	DBAImage                  string                 `yaml:"dbaimage,omitempty"`
-	RouterHTTPPort            string                 `yaml:"router_http_port"`
-	RouterHTTPSPort           string                 `yaml:"router_https_port"`
-	XdebugEnabled             bool                   `yaml:"xdebug_enabled"`
-	NoProjectMount            bool                   `yaml:"no_project_mount,omitempty"`
-	AdditionalHostnames       []string               `yaml:"additional_hostnames"`
-	AdditionalFQDNs           []string               `yaml:"additional_fqdns"`
-	MariaDBVersion            string                 `yaml:"mariadb_version"`
-	MySQLVersion              string                 `yaml:"mysql_version"`
-	NFSMountEnabled           bool                   `yaml:"nfs_mount_enabled,omitempty"`
-	NFSMountEnabledGlobal     bool                   `yaml:"-"`
-	FailOnHookFail            bool                   `yaml:"fail_on_hook_fail,omitempty"`
-	FailOnHookFailGlobal      bool                   `yaml:"-"`
-	ConfigPath                string                 `yaml:"-"`
-	AppRoot                   string                 `yaml:"-"`
-	Platform                  string                 `yaml:"-"`
-	Provider                  string                 `yaml:"provider,omitempty"`
-	DataDir                   string                 `yaml:"-"`
-	SiteSettingsPath          string                 `yaml:"-"`
-	SiteDdevSettingsFile      string                 `yaml:"-"`
-	providerInstance          Provider               `yaml:"-"`
-	Hooks                     map[string][]YAMLTask  `yaml:"hooks,omitempty"`
-	UploadDir                 string                 `yaml:"upload_dir,omitempty"`
-	WorkingDir                map[string]string      `yaml:"working_dir,omitempty"`
-	OmitContainers            []string               `yaml:"omit_containers,omitempty,flow"`
-	OmitContainerGlobal       []string               `yaml:"-"`
-	HostDBPort                string                 `yaml:"host_db_port,omitempty"`
-	HostWebserverPort         string                 `yaml:"host_webserver_port,omitempty"`
-	HostHTTPSPort             string                 `yaml:"host_https_port,omitempty"`
-	MailhogPort               string                 `yaml:"mailhog_port,omitempty"`
-	MailhogHTTPSPort          string                 `yaml:"mailhog_https_port,omitempty"`
-	PHPMyAdminPort            string                 `yaml:"phpmyadmin_port,omitempty"`
-	PHPMyAdminHTTPSPort       string                 `yaml:"phpmyadmin_https_port,omitempty"`
-	WebImageExtraPackages     []string               `yaml:"webimage_extra_packages,omitempty,flow"`
-	DBImageExtraPackages      []string               `yaml:"dbimage_extra_packages,omitempty,flow"`
-	ProjectTLD                string                 `yaml:"project_tld,omitempty"`
-	UseDNSWhenPossible        bool                   `yaml:"use_dns_when_possible"`
-	MkcertEnabled             bool                   `yaml:"-"`
-	NgrokArgs                 string                 `yaml:"ngrok_args,omitempty"`
-	Timezone                  string                 `yaml:"timezone,omitempty"`
-	ComposerVersion           string                 `yaml:"composer_version"`
-	DisableSettingsManagement bool                   `yaml:"disable_settings_management,omitempty"`
-	WebEnvironment            []string               `yaml:"web_environment"`
-	ComposeYaml               map[string]interface{} `yaml:"-"`
+	Name                      string                `yaml:"name"`
+	Type                      string                `yaml:"type"`
+	Docroot                   string                `yaml:"docroot"`
+	PHPVersion                string                `yaml:"php_version"`
+	WebserverType             string                `yaml:"webserver_type"`
+	WebImage                  string                `yaml:"webimage,omitempty"`
+	DBImage                   string                `yaml:"dbimage,omitempty"`
+	DBAImage                  string                `yaml:"dbaimage,omitempty"`
+	RouterHTTPPort            string                `yaml:"router_http_port"`
+	RouterHTTPSPort           string                `yaml:"router_https_port"`
+	XdebugEnabled             bool                  `yaml:"xdebug_enabled"`
+	NoProjectMount            bool                  `yaml:"no_project_mount,omitempty"`
+	AdditionalHostnames       []string              `yaml:"additional_hostnames"`
+	AdditionalFQDNs           []string              `yaml:"additional_fqdns"`
+	MariaDBVersion            string                `yaml:"mariadb_version"`
+	MySQLVersion              string                `yaml:"mysql_version"`
+	NFSMountEnabled           bool                  `yaml:"nfs_mount_enabled,omitempty"`
+	NFSMountEnabledGlobal     bool                  `yaml:"-"`
+	FailOnHookFail            bool                  `yaml:"fail_on_hook_fail,omitempty"`
+	FailOnHookFailGlobal      bool                  `yaml:"-"`
+	ConfigPath                string                `yaml:"-"`
+	AppRoot                   string                `yaml:"-"`
+	Platform                  string                `yaml:"-"`
+	Provider                  string                `yaml:"provider,omitempty"`
+	DataDir                   string                `yaml:"-"`
+	SiteSettingsPath          string                `yaml:"-"`
+	SiteDdevSettingsFile      string                `yaml:"-"`
+	ProviderInstance          Provider              `yaml:"-"`
+	Hooks                     map[string][]YAMLTask `yaml:"hooks,omitempty"`
+	UploadDir                 string                `yaml:"upload_dir,omitempty"`
+	WorkingDir                map[string]string     `yaml:"working_dir,omitempty"`
+	OmitContainers            []string              `yaml:"omit_containers,omitempty,flow"`
+	OmitContainerGlobal       []string              `yaml:"-"`
+	HostDBPort                string                `yaml:"host_db_port,omitempty"`
+	HostWebserverPort         string                `yaml:"host_webserver_port,omitempty"`
+	HostHTTPSPort             string                `yaml:"host_https_port,omitempty"`
+	MailhogPort               string                `yaml:"mailhog_port,omitempty"`
+	MailhogHTTPSPort          string                `yaml:"mailhog_https_port,omitempty"`
+	PHPMyAdminPort            string                `yaml:"phpmyadmin_port,omitempty"`
+	PHPMyAdminHTTPSPort       string                `yaml:"phpmyadmin_https_port,omitempty"`
+	WebImageExtraPackages     []string              `yaml:"webimage_extra_packages,omitempty,flow"`
+	DBImageExtraPackages      []string              `yaml:"dbimage_extra_packages,omitempty,flow"`
+	ProjectTLD                string                `yaml:"project_tld,omitempty"`
+	UseDNSWhenPossible        bool                  `yaml:"use_dns_when_possible"`
+	MkcertEnabled             bool                  `yaml:"-"`
+	NgrokArgs                 string                `yaml:"ngrok_args,omitempty"`
+	Timezone                  string                `yaml:"timezone,omitempty"`
+	ComposerVersion           string                `yaml:"composer_version"`
+	DisableSettingsManagement bool                  `yaml:"disable_settings_management,omitempty"`
+	WebEnvironment            []string              `yaml:"web_environment"`
+	//Providers                 map[string]*ProviderInfo `yaml:"providers"`
+	ComposeYaml map[string]interface{} `yaml:"-"`
 }
 
 // List() provides the functionality for `ddev list`
@@ -1235,6 +1236,41 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 	return dockerutil.ComposeWithStreams(files, os.Stdin, os.Stdout, os.Stderr, exec...)
 }
 
+func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
+	var err error
+	// Handle case on host
+	if service == "host" {
+		cwd, _ := os.Getwd()
+		err = os.Chdir(app.GetAppRoot())
+		if err != nil {
+			return fmt.Errorf("Unable to GetAppRoot: %v", err)
+		}
+		bashPath := "bash"
+		if runtime.GOOS == "windows" {
+			bashPath = util.FindWindowsBashPath()
+			if bashPath == "" {
+				return fmt.Errorf("Unable to find bash.exe on Windows")
+			}
+		}
+
+		args := []string{
+			"-c",
+			cmd,
+		}
+
+		err = exec.RunInteractiveCommand(bashPath, args)
+		_ = os.Chdir(cwd)
+	} else { // handle case in container
+		_, _, err = app.Exec(
+			&ExecOpts{
+				Service: service,
+				Cmd:     cmd,
+				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
+			})
+	}
+	return err
+}
+
 // Logs returns logs for a site's given container.
 // See docker.LogsOptions for more information about valid tailLines values.
 func (app *DdevApp) Logs(service string, follow bool, timestamps bool, tailLines string) error {
@@ -2094,30 +2130,44 @@ func restoreApp(app *DdevApp, siteName string) error {
 }
 
 // GetProvider returns a pointer to the provider instance interface.
-func (app *DdevApp) GetProvider() (Provider, error) {
-	if app.providerInstance != nil {
-		return app.providerInstance, nil
+func (app *DdevApp) GetProvider(providerName string) (Provider, error) {
+
+	// TODO: Temporary hack to get a good provider isntance... before
+	// we remove specialty providers
+	if app.ProviderInstance != nil && fmt.Sprintf("%T", app.ProviderInstance) != "*ddevapp.DefaultProvider" {
+		return app.ProviderInstance, nil
 	}
 
-	var provider Provider
-	err := fmt.Errorf("unknown provider type: %s, must be one of %v", app.Provider, nodeps.GetValidProviders())
+	var p Provider
+	var err error
 
-	switch app.Provider {
+	switch providerName {
+
 	case nodeps.ProviderPantheon:
-		provider = &PantheonProvider{}
-		err = provider.Init(app)
+		p = &PantheonProvider{}
+		err = p.Init(app)
+
 	case nodeps.ProviderDdevLive:
-		provider = &DdevLiveProvider{}
-		err = provider.Init(app)
-	case nodeps.ProviderDefault:
-		provider = &DefaultProvider{}
-		err = nil
+		p = &DdevLiveProvider{}
+		err = p.Init(app)
+
 	default:
-		provider = &DefaultProvider{}
-		// Use the default error from above.
+		if providerName != "" && providerName != nodeps.ProviderDefault {
+			p = &GenericProvider{
+				ProviderType: providerName,
+				app:          app,
+			}
+			app.Provider = providerName
+			err = p.Init(app)
+			break
+		}
+		if p == nil {
+			p = &DefaultProvider{}
+		}
 	}
-	app.providerInstance = provider
-	return app.providerInstance, err
+
+	app.ProviderInstance = p
+	return app.ProviderInstance, err
 }
 
 // GetWorkingDir will determine the appropriate working directory for an Exec/ExecWithTty command

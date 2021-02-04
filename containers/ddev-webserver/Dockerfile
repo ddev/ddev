@@ -12,6 +12,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
+ENV PLATFORMSH_CLI_HOME=/mnt/ddev-global-cache/platformsh
 ENV CAROOT /mnt/ddev-global-cache/mkcert
 
 # TARGETPLATFORM is Docker buildx's target platform (e.g. linux/arm64), while 
@@ -95,6 +96,8 @@ ADD ddev-webserver-dev-base-files /
 RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_${MAILHOG_ARCH} -o /usr/local/bin/mailhog; 
 
 RUN curl -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod 777 /usr/local/bin/terminus
+RUN curl -sSL https://github.com/platformsh/platformsh-cli/releases/download/$(curl --silent "https://api.github.com/repos/platformsh/platformsh-cli/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/platform.phar --output /usr/local/bin/platform && chmod 777 /usr/local/bin/platform
+
 RUN curl -sSL -O $DDEV_LIVE_DOWNLOAD_URL && unzip ddev-live.zip && mv ddev-live /usr/local/bin && chmod +x /usr/local/bin/ddev-live && rm ddev-live.zip
 
 RUN curl -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/backdrop-drush-extension.zip -o /tmp/backdrop-drush-extension.zip && unzip -o /tmp/backdrop-drush-extension.zip -d /var/tmp/backdrop_drush_commands
@@ -151,6 +154,7 @@ ENV PHP_DEFAULT_VERSION="7.4"
 ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
+ENV PLATFORMSH_CLI_HOME=/mnt/ddev-global-cache/platformsh
 ENV CAROOT /mnt/ddev-global-cache/mkcert
 
 ENV DDEV_LIVE_CONFIG_FILE_PATH /mnt/ddev-global-cache/ddev-live/cli-config.json

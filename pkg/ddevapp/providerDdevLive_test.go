@@ -30,6 +30,7 @@ const ddevLiveOrgName = "ddltest"
 
 // TestDdevLiveConfigCommand tests the interactive config options.
 func TestDdevLiveConfigCommand(t *testing.T) {
+	t.Skip("This feature is about to be removed, so don't bother testing")
 	if os.Getenv("DDEV_DDEVLIVE_API_TOKEN") == "" {
 		t.Skipf("No DDEV_DDEVLIVE_API_TOKEN env var has been set. Skipping %v", t.Name())
 	}
@@ -72,7 +73,7 @@ func TestDdevLiveConfigCommand(t *testing.T) {
 	out := restoreOutput()
 
 	// Get the provider interface and ensure it validates.
-	provider, err := app.GetProvider()
+	provider, err := app.GetProvider("")
 	assert.NoError(err)
 	err = provider.Validate()
 	assert.NoError(err)

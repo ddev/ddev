@@ -963,7 +963,7 @@ func TestDdevImportDB(t *testing.T) {
 
 	if site.DBTarURL != "" {
 		_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
-		assert.NoError(err)
+		require.NoError(t, err)
 		err = app.ImportDB(cachedArchive, "", false, false, "db")
 		assert.NoError(err)
 		assert.FileExists("hello-pre-import-db-" + app.Name)
@@ -977,7 +977,7 @@ func TestDdevImportDB(t *testing.T) {
 	if site.DBZipURL != "" {
 		_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteZipArchive", "", site.DBZipURL)
 
-		assert.NoError(err)
+		require.NoError(t, err)
 		err = app.ImportDB(cachedArchive, "", false, false, "db")
 		assert.NoError(err)
 
@@ -989,7 +989,7 @@ func TestDdevImportDB(t *testing.T) {
 
 	if site.FullSiteTarballURL != "" {
 		_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_FullSiteTarballURL", "", site.FullSiteTarballURL)
-		assert.NoError(err)
+		require.NoError(t, err)
 
 		err = app.ImportDB(cachedArchive, "data.sql", false, false, "db")
 		assert.NoError(err, "Failed to find data.sql at root of tarball %s", cachedArchive)
@@ -1293,7 +1293,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		// Get files before start, as syncing can start immediately.
 		if site.FilesTarballURL != "" {
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
-			assert.NoError(err)
+			require.NoError(t, err)
 			err = app.ImportFiles(tarballPath, "")
 			assert.NoError(err)
 		}
@@ -1323,7 +1323,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		if site.DBTarURL != "" {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
-			assert.NoError(err)
+			require.NoError(t, err)
 			err = app.ImportDB(cachedArchive, "", false, false, "db")
 			assert.NoError(err, "failed to import-db with dbtarball %s, app.Type=%s, mariadb_version=%s, mysql_version=%s", site.DBTarURL, app.Type, app.MariaDBVersion, app.MySQLVersion)
 		}
@@ -1771,21 +1771,21 @@ func TestDdevImportFiles(t *testing.T) {
 
 		if site.FilesTarballURL != "" {
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
-			assert.NoError(err)
+			require.NoError(t, err)
 			err = app.ImportFiles(tarballPath, "")
 			assert.NoError(err)
 		}
 
 		if site.FilesZipballURL != "" {
 			_, zipballPath, err := testcommon.GetCachedArchive(site.Name, "local-zipballs-files", "", site.FilesZipballURL)
-			assert.NoError(err)
+			require.NoError(t, err)
 			err = app.ImportFiles(zipballPath, "")
 			assert.NoError(err)
 		}
 
 		if site.FullSiteTarballURL != "" && site.FullSiteArchiveExtPath != "" {
 			_, siteTarPath, err := testcommon.GetCachedArchive(site.Name, "local-site-tar", "", site.FullSiteTarballURL)
-			assert.NoError(err)
+			require.NoError(t, err)
 			err = app.ImportFiles(siteTarPath, site.FullSiteArchiveExtPath)
 			assert.NoError(err)
 		}
@@ -1823,7 +1823,7 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 
 		if site.FilesTarballURL != "" {
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
-			assert.NoError(err)
+			require.NoError(t, err)
 			err = app.ImportFiles(tarballPath, "")
 			assert.NoError(err)
 
@@ -1835,7 +1835,7 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 
 		if site.FilesZipballURL != "" {
 			_, zipballPath, err := testcommon.GetCachedArchive(site.Name, "local-zipballs-files", "", site.FilesZipballURL)
-			assert.NoError(err)
+			require.NoError(t, err)
 			err = app.ImportFiles(zipballPath, "")
 			assert.NoError(err)
 
@@ -1847,7 +1847,7 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 
 		if site.FullSiteTarballURL != "" && site.FullSiteArchiveExtPath != "" {
 			_, siteTarPath, err := testcommon.GetCachedArchive(site.Name, "local-site-tar", "", site.FullSiteTarballURL)
-			assert.NoError(err)
+			require.NoError(t, err)
 			err = app.ImportFiles(siteTarPath, site.FullSiteArchiveExtPath)
 			assert.NoError(err)
 
