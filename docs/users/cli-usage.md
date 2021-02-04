@@ -142,6 +142,7 @@ ddev composer create "drupal/recommended-project:^8"
 ddev composer require drush/drush
 ddev drush site:install -y
 ddev drush uli
+ddev launch
 ```
 
 #### Drupal 8 Git Clone Example
@@ -170,6 +171,7 @@ ddev composer create "drupal/recommended-project"
 ddev composer require drush/drush
 ddev drush site:install -y
 ddev drush uli
+ddev drush launch
 ```
 
 #### Drupal 9 Git Clone Example
