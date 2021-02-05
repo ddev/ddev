@@ -1,11 +1,12 @@
 package ddevapp_test
 
 import (
-	"bufio"
 	"fmt"
+	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/output"
 	"github.com/stretchr/testify/require"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,7 +14,6 @@ import (
 
 	. "github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -26,106 +26,49 @@ import (
  * defined in the constants below.
  */
 const ddevliveTestSite = "ddev-live-test-no-delete"
-const ddevLiveOrgName = "ddltest"
+const ddevLiveOrg = "ddltest"
+const ddevLiveDBBackupName = "ddev-live-test-no-delete-gg5pt"
 
-// TestDdevLiveConfigCommand tests the interactive config options.
-func TestDdevLiveConfigCommand(t *testing.T) {
-	t.Skip("This feature is about to be removed, so don't bother testing")
-	if os.Getenv("DDEV_DDEVLIVE_API_TOKEN") == "" {
-		t.Skipf("No DDEV_DDEVLIVE_API_TOKEN env var has been set. Skipping %v", t.Name())
-	}
-	_ = os.Setenv("DDEV_LIVE_NO_ANALYTICS", "true")
-
-	// Set up tests and give ourselves a working directory.
-	assert := asrt.New(t)
-	testDir := testcommon.CreateTmpDir(t.Name())
-
-	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-	defer testcommon.CleanupDir(testDir)
-	defer testcommon.Chdir(testDir)()
-
-	docroot := "web"
-
-	// Create the docroot.
-	err := os.Mkdir(filepath.Join(testDir, docroot), 0755)
-	if err != nil {
-		t.Errorf("Could not create %s directory under %s", docroot, testDir)
-	}
-
-	// Create the ddevapp we'll use for testing.
-	app, err := NewApp(testDir, true, nodeps.ProviderDdevLive)
-	assert.NoError(err)
-
-	/**
-	 * Do a full interactive configuration for a ddev-live environment.
-	 *
-	 * 1. Provide a valid site name. Ensure there is no error.
-	 * 2. Provide a valid docroot (already tested elsewhere)
-	 * 3. Provide a valid project type (drupal8)
-	 **/
-	input := fmt.Sprintf("%s\n%s\n%s\n%s\n%s\n", ddevliveTestSite, docroot, "drupal8", ddevLiveOrgName, ddevliveTestSite)
-	scanner := bufio.NewScanner(strings.NewReader(input))
-	util.SetInputScanner(scanner)
-
-	restoreOutput := util.CaptureUserOut()
-	err = app.PromptForConfig()
-	assert.NoError(err, t)
-	out := restoreOutput()
-
-	// Get the provider interface and ensure it validates.
-	provider, err := app.GetProvider("")
-	assert.NoError(err)
-	err = provider.Validate()
-	assert.NoError(err)
-
-	// Ensure we have expected string values in output.
-	assert.Contains(out, testDir)
-
-	// Ensure values were properly set on the app struct.
-	assert.Equal(ddevliveTestSite, app.Name)
-	assert.Equal(nodeps.AppTypeDrupal8, app.Type)
-	assert.Equal(docroot, app.Docroot)
-	require.Equal(t, "*ddevapp.DdevLiveProvider", fmt.Sprintf("%T", provider))
-	realProvider := provider.(*DdevLiveProvider)
-	assert.Equal(ddevliveTestSite, realProvider.SiteName)
-	assert.Equal(ddevLiveOrgName, realProvider.OrgName)
-	err = PrepDdevDirectory(testDir)
-	assert.NoError(err)
-	output.UserOut.Print("")
-}
-
-// TestDdevLivePull ensures we can pull backups from ddev-live .
+// TestDdevLivePull ensures we can pull backups from DDEV-Live
 func TestDdevLivePull(t *testing.T) {
-	if os.Getenv("DDEV_DDEVLIVE_API_TOKEN") == "" {
+	token := ""
+	if token = os.Getenv("DDEV_DDEVLIVE_API_TOKEN"); token == "" {
 		t.Skipf("No DDEV_DDEVLIVE_API_TOKEN env var has been set. Skipping %v", t.Name())
 	}
-	_ = os.Setenv("DDEV_LIVE_NO_ANALYTICS", "true")
 
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
-	testDir := testcommon.CreateTmpDir(t.Name())
+	testDir, _ := os.Getwd()
 
-	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-	defer testcommon.CleanupDir(testDir)
-	defer testcommon.Chdir(testDir)()
-	// Move into the properly named ddev-live site (must match ddev-live sitename)
-	siteDir := filepath.Join(testDir, ddevliveTestSite)
-	err := os.MkdirAll(filepath.Join(siteDir, "web", "sites/default"), 0777)
+	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
+	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"DDEV_LIVE_API_TOKEN=" + token}
+	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	assert.NoError(err)
+
+	siteDir := testcommon.CreateTmpDir(t.Name())
+	err = os.MkdirAll(filepath.Join(siteDir, "web/sites/default"), 0777)
 	assert.NoError(err)
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
 
-	app, err := NewApp(siteDir, true, nodeps.ProviderDdevLive)
+	app, err := NewApp(siteDir, true, "ddev-live")
 	assert.NoError(err)
 
-	// nolint: errcheck
-	defer app.Stop(true, false)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
 
-	app.Name = t.Name()
+		globalconfig.DdevGlobalConfig.WebEnvironment = webEnvSave
+		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		assert.NoError(err)
+
+		_ = os.Chdir(testDir)
+		err = os.RemoveAll(siteDir)
+		assert.NoError(err)
+	})
+
+	app.Name = ddevliveTestSite
 	app.Type = nodeps.AppTypeDrupal8
-	app.Docroot = "web"
-	_ = os.MkdirAll(filepath.Join(app.AppRoot, app.Docroot, "sites/default/files"), 0755)
-
 	app.Hooks = map[string][]YAMLTask{"post-pull": {{"exec-host": "touch hello-post-pull-" + app.Name}}, "pre-pull": {{"exec-host": "touch hello-pre-pull-" + app.Name}}}
 
 	err = app.WriteConfig()
@@ -133,32 +76,33 @@ func TestDdevLivePull(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	provider := DdevLiveProvider{}
-	err = provider.Init(app)
+	// Run ddev once to create all the files in .ddev, including the example
+	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("%s >/dev/null", DdevBin)})
 	require.NoError(t, err)
 
-	provider.SiteName = ddevliveTestSite
-	provider.OrgName = ddevLiveOrgName
-	err = provider.Write(app.GetConfigPath("import.yaml"))
+	err = app.Start()
 	require.NoError(t, err)
+
+	// Build our ddev-live.yaml from the example file
+	s, err := ioutil.ReadFile(app.GetConfigPath("providers/ddev-live.yaml.example"))
+	require.NoError(t, err)
+	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: %s/%s\n#project_id:", ddevLiveOrg, ddevliveTestSite), -1)
+	x = strings.Replace(x, "database_backup:", fmt.Sprintf("database_backup: %s/%s\n#database_backup: ", ddevLiveOrg, ddevLiveDBBackupName), -1)
+	err = ioutil.WriteFile(app.GetConfigPath("providers/ddev-live.yaml"), []byte(x), 0666)
+	assert.NoError(err)
+	app.Provider = "ddev-live"
 	err = app.WriteConfig()
 	require.NoError(t, err)
-	// Ensure we can do a pull on the configured site.
-	app, err = GetActiveApp("")
-	assert.NoError(err)
-	err = app.Pull(&provider, &PullOptions{})
+
+	provider, err := app.GetProvider("ddev-live")
 	require.NoError(t, err)
-
-	// Verify that we got the special file created in this site.
-	assert.FileExists(filepath.Join(app.AppRoot, "web/sites/default/files/i-exist-in-ddev-pull.txt"))
-
-	// Make sure that we have the actual database from the site
-	stdout, _, err := app.Exec(&ExecOpts{
-		Service: "db",
-		Cmd:     "mysql -N -e 'select name from users_field_data where uid=2;' | cat",
-	})
+	err = app.Pull(provider, &PullOptions{})
 	assert.NoError(err)
-	assert.Equal("test-account-for-ddev-tests", strings.Trim(stdout, "\n"))
+
+	assert.FileExists(filepath.Join(app.GetUploadDir(), "chocolate-brownie-umami.jpg"))
+	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="nobody@example.com";' | %s mysql -N`, DdevBin)})
+	assert.NoError(err)
+	assert.True(strings.HasPrefix(out, "1\n"))
 
 	assert.FileExists("hello-pre-pull-" + app.Name)
 	assert.FileExists("hello-post-pull-" + app.Name)
@@ -166,10 +110,4 @@ func TestDdevLivePull(t *testing.T) {
 	assert.NoError(err)
 	err = os.Remove("hello-post-pull-" + app.Name)
 	assert.NoError(err)
-
-	app.Hooks = nil
-	_ = app.WriteConfig()
-	err = app.Stop(true, false)
-	assert.NoError(err)
-	output.UserOut.Print("")
 }

@@ -1,0 +1,36 @@
+#ddev-generated
+# Example DDEV-Live provider configuration.
+
+# To use this configuration,
+# 1. Get your DDEV-Live API token on the [DDEV Dashboar](https://dash.ddev.com/settings/integration).
+# 2. Using either `ddev-live` on the host or in the web container, authenticate and create a database backup, `ddev-live create backup database <sitename>`
+# 3. Place the database backup name in the `database_backup:` below
+# 4. Create a files backup using `ddev-live create backup files <sitename>`
+# 5. Add add an entry to web_environment in ~/.ddev/global_config.yaml with the token:
+# web_environment:
+# - DDEV_LIVE_API_TOKEN=xxxxxxxx
+# 6. Copy ddev-live.yaml.example to ddev-live.yaml.
+# 7. Update project_id and database_backup.
+# 8. `ddev restart`
+# 9. Use `ddev pull ddev-live` to pull the project database and files.
+
+# Debugging: Use `ddev exec ddev-live list sites` and `ddev exec ddev-live list backups`
+
+environment_variables:
+  project_id: rfay/d9demo
+  database_backup: rfay/d9demo-7vrl2
+
+auth_command:
+  command: ddev-live auth --token="${DDEV_LIVE_API_TOKEN}"
+
+db_pull_command:
+  command: |
+    pushd /var/www/html/.ddev/.downloads >/dev/null
+    ddev-live pull database ${database_backup}
+    mv "${database_backup#*/}.sql.gz" db.sql.gz
+
+files_pull_command:
+  command: |
+    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
+    pushd /var/www/html/.ddev/.downloads >/dev/null;
+    ddev-live pull files ${project_id} --dest=files/ >/dev/null 2>&1

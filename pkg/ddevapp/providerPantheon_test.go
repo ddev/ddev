@@ -53,7 +53,7 @@ func TestPantheonPull(t *testing.T) {
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
 
-	app, err := NewApp(siteDir, true, nodeps.ProviderPantheon)
+	app, err := NewApp(siteDir, true, "pantheon")
 	assert.NoError(err)
 
 	t.Cleanup(func() {

@@ -35,7 +35,9 @@ var PullCmd = &cobra.Command{
 	latest backups.`,
 	Example: `ddev pull pantheon
 ddev pull ddev-live
-ddev pull platform`,
+ddev pull platform
+ddev-live pull pantheon -y
+ddev-live pull platform --skip-files -y`,
 	Args: cobra.ExactArgs(1),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		dockerutil.EnsureDdevNetwork()
