@@ -51,10 +51,12 @@ services:
       # to the host port 8984 vid ddev-router reverse proxy.
       - HTTPS_EXPOSE=8984:8983
     volumes:
-      # solr core *data* is stored on the 'solr' docker volume
+      # solr core *data* is stored on the 'solr_var' or `solr_opt` docker
+      # volumes depending on the version of solr.
       # This mount is optional; without it your search index disappears
       # each time the ddev project is stopped and started.
-      - solr:/var/solr
+      - solr_var:/var/solr
+      - solr_opt:/opt/solr
 
       # This mounts the conf in .ddev/solr into the container where
       # the solr-precreate command in the entrypoint uses it as a one-time
@@ -83,7 +85,6 @@ services:
     links:
       - solr:solr
 volumes:
-  # solr is a persistent Docker volume for solr data
-  # The persistent volume should have the same name as the service so it can be deleted
-  # when the project is deleted.
-  solr:
+  # solr_var and solr_opt are persistent Docker volumes for solr data
+  solr_var:
+  solr_opt:
