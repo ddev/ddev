@@ -25,8 +25,9 @@ import (
  * A valid site (with backups) must be present which matches the test site and environment name
  * defined in the constants below.
  */
-const ddevliveTestSite = "ddltest/ddev-live-test-no-delete"
-const ddevLiveDBBackupName = "ddltest/ddev-live-test-no-delete-gg5pt"
+const ddevliveTestSite = "ddev-live-test-no-delete"
+const ddevLiveOrg = "ddltest"
+const ddevLiveDBBackupName = "ddev-live-test-no-delete-gg5pt"
 
 // TestDdevLivePull ensures we can pull backups from DDEV-Live
 func TestDdevLivePull(t *testing.T) {
@@ -79,11 +80,14 @@ func TestDdevLivePull(t *testing.T) {
 	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("%s >/dev/null", DdevBin)})
 	require.NoError(t, err)
 
+	err = app.Start()
+	require.NoError(t, err)
+
 	// Build our ddev-live.yaml from the example file
 	s, err := ioutil.ReadFile(app.GetConfigPath("providers/ddev-live.yaml.example"))
 	require.NoError(t, err)
-	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: %s\n#project_id:", ddevliveTestSite), 1)
-	x = strings.Replace(x, "database_backup:", fmt.Sprintf("database_backup: %s\n#database_backup: ", ddevLiveDBBackupName), 1)
+	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: %s/%s\n#project_id:", ddevLiveOrg, ddevliveTestSite), -1)
+	x = strings.Replace(x, "database_backup:", fmt.Sprintf("database_backup: %s/%s\n#database_backup: ", ddevLiveOrg, ddevLiveDBBackupName), -1)
 	err = ioutil.WriteFile(app.GetConfigPath("providers/ddev-live.yaml"), []byte(x), 0666)
 	assert.NoError(err)
 	app.Provider = "ddev-live"
@@ -92,13 +96,11 @@ func TestDdevLivePull(t *testing.T) {
 
 	provider, err := app.GetProvider("ddev-live")
 	require.NoError(t, err)
-	err = app.Start()
-	require.NoError(t, err)
 	err = app.Pull(provider, &PullOptions{})
 	assert.NoError(err)
 
-	assert.FileExists(filepath.Join(app.GetUploadDir(), "2017-07/22-24_tn.jpg"))
-	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="admin@example.com";' | %s mysql -N`, DdevBin)})
+	assert.FileExists(filepath.Join(app.GetUploadDir(), "chocolate-brownie-umami.jpg"))
+	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="nobody@example.com";' | %s mysql -N`, DdevBin)})
 	assert.NoError(err)
 	assert.True(strings.HasPrefix(out, "1\n"))
 
