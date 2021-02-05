@@ -2141,25 +2141,15 @@ func (app *DdevApp) GetProvider(providerName string) (Provider, error) {
 	var p Provider
 	var err error
 
-	switch providerName {
-
-	case nodeps.ProviderDdevLive:
-		p = &DdevLiveProvider{}
+	if providerName != "" && providerName != nodeps.ProviderDefault {
+		p = &GenericProvider{
+			ProviderType: providerName,
+			app:          app,
+		}
+		app.Provider = providerName
 		err = p.Init(app)
-
-	default:
-		if providerName != "" && providerName != nodeps.ProviderDefault {
-			p = &GenericProvider{
-				ProviderType: providerName,
-				app:          app,
-			}
-			app.Provider = providerName
-			err = p.Init(app)
-			break
-		}
-		if p == nil {
-			p = &DefaultProvider{}
-		}
+	} else if p == nil {
+		p = &DefaultProvider{}
 	}
 
 	app.ProviderInstance = p

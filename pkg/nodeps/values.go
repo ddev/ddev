@@ -5,20 +5,9 @@ import "sort"
 // Providers
 //TODO: This should be removed as many providers will now be valid
 const (
-	ProviderPantheon = "pantheon"
-	ProviderDdevLive = "ddev-live"
 	// ProviderDefault contains the name of the default provider which will be used if one is not otherwise specified.
 	ProviderDefault = "default"
 )
-
-// ValidProviders should be updated whenever provider plugins are added or removed, and should
-// be used to ensure user-supplied values are valid.
-//TODO: This should be removed as many providers will now be valid
-var ValidProviders = map[string]bool{
-	ProviderDefault:  true,
-	ProviderPantheon: true,
-	ProviderDdevLive: true,
-}
 
 // Database Types
 const (
@@ -100,22 +89,23 @@ const (
 // IsValidProvider is a helper function to determine if a provider value is valid, returning
 // true if the supplied provider is valid and false otherwise.
 func IsValidProvider(provider string) bool {
-	if _, ok := ValidProviders[provider]; !ok {
-		return false
-	}
+	//if _, ok := ValidProviders[provider]; !ok {
+	//	return false
+	//}
 
 	return true
 }
 
 // GetValidProviders is a helper function that returns a list of valid providers.
 func GetValidProviders() []string {
-	s := make([]string, 0, len(ValidProviders))
-
-	for p := range ValidProviders {
-		s = append(s, p)
-	}
-
-	return s
+	//s := make([]string, 0, len(ValidProviders))
+	//
+	//for p := range ValidProviders {
+	//	s = append(s, p)
+	//}
+	//
+	//return s
+	return []string{}
 }
 
 // IsValidPHPVersion is a helper function to determine if a PHP version is valid, returning
