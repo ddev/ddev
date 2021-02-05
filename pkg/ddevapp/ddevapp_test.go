@@ -237,17 +237,7 @@ func TestMain(m *testing.M) {
 		log.Fatalf("could not read globalconfig: %v", err)
 	}
 
-	token := os.Getenv("DDEV_PANTHEON_API_TOKEN")
-	if token != "" {
-		out, err := exec.RunCommand(DdevBin, []string{"auth", "pantheon", token})
-		if err != nil {
-			log.Fatalf("Unable to ddev auth pantheon: %v (%v)", err, out)
-		}
-	} else {
-		log.Info("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping Pantheon specific tests.")
-	}
-
-	token = os.Getenv("DDEV_DDEVLIVE_API_TOKEN")
+	token := os.Getenv("DDEV_DDEVLIVE_API_TOKEN")
 	if token != "" {
 		// ddev auth ddev-live can create a .ddev folder, which we don't need right now,
 		// so drop it in /tmp

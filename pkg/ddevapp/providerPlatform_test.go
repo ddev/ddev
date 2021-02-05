@@ -37,6 +37,8 @@ func TestPlatformPull(t *testing.T) {
 	assert := asrt.New(t)
 	var err error
 
+	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
+
 	testDir, _ := os.Getwd()
 
 	siteDir := testcommon.CreateTmpDir(t.Name())
@@ -59,7 +61,7 @@ func TestPlatformPull(t *testing.T) {
 	testcommon.ClearDockerEnv()
 
 	t.Cleanup(func() {
-		globalconfig.DdevGlobalConfig.WebEnvironment = []string{}
+		globalconfig.DdevGlobalConfig.WebEnvironment = webEnvSave
 		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		assert.NoError(err)
 

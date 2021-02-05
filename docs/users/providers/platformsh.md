@@ -14,7 +14,7 @@ If you have ddev installed, and have an active Platform.sh account with an activ
    b. Add the API token to the `web_environment` section in your global ddev configuration at ~/.ddev/global_config.yaml, `- PLATFORMSH_CLI_TOKEN=abcdeyourtoken`
    c. `ddev restart`
 3. Obtain your project id with `ddev exec platform`. The platform tool should show you all the information about your account and project.
-4. In your project's .ddev/platforms directory, copy platform.sh.example to platform.sh and edit the `project_id` and `environment_name`.
+4. In your project's .ddev/providers directory, copy platform.yaml.example to platform.yaml and edit the `project_id` and `environment_name`.
 5. Run `ddev pull platform`. After you agree to the prompt, the current upstream database and files will be downloaded.
 
 ### Usage

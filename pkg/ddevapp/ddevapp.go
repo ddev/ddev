@@ -2143,10 +2143,6 @@ func (app *DdevApp) GetProvider(providerName string) (Provider, error) {
 
 	switch providerName {
 
-	case nodeps.ProviderPantheon:
-		p = &PantheonProvider{}
-		err = p.Init(app)
-
 	case nodeps.ProviderDdevLive:
 		p = &DdevLiveProvider{}
 		err = p.Init(app)
