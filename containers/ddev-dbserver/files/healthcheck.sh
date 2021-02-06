@@ -15,8 +15,13 @@ if [ -f /tmp/healthy ]; then
     sleep ${sleeptime}
 fi
 
+if killall -0 mariabackup || killall -0 xtrabackup ; then
+  printf "restoring snapshot"
+  touch /tmp/healthy
+  exit 0
+fi
 
-if [ ! -f /tmp/initializing ] && mysql --host=127.0.0.1 -udb -pdb --database=db -e "SHOW DATABASES LIKE 'db';" >/dev/null;  then
+if  mysql --host=127.0.0.1 -udb -pdb --database=db -e "SHOW DATABASES LIKE 'db';" >/dev/null;  then
     printf "healthy"
     touch /tmp/healthy
     exit 0
