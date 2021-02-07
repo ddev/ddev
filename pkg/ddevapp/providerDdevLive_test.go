@@ -41,7 +41,7 @@ func TestDdevLivePull(t *testing.T) {
 	testDir, _ := os.Getwd()
 
 	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
-	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"DDEV_LIVE_API_TOKEN=" + token}
+	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"DDEV_LIVE_NO_ANALYTICS", "true", "DDEV_LIVE_API_TOKEN=" + token}
 	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	assert.NoError(err)
 

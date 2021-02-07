@@ -8,11 +8,9 @@ import (
 
 // AuthCmd is the top-level "ddev auth" command
 var AuthCmd = &cobra.Command{
-	Use:   "auth [command]",
-	Short: "A collection of authentication commands",
-	Example: `ddev auth ssh
-ddev auth pantheon
-ddev auth ddev-live`,
+	Use:     "auth [command]",
+	Short:   "A collection of authentication commands",
+	Example: `ddev auth ssh`,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := cmd.Usage()
 		util.CheckErr(err)
