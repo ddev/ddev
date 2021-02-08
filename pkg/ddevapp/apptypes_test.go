@@ -37,7 +37,7 @@ func TestApptypeDetection(t *testing.T) {
 	err := fileutil.CopyDir(filepath.Join(testDir, "testdata", t.Name()), filepath.Join(tmpDir, "sampleapptypes"))
 	require.NoError(t, err)
 	for _, appType := range nonPHPAppTypes {
-		app, err := ddevapp.NewApp(filepath.Join(tmpDir, "sampleapptypes", appType), true, nodeps.ProviderDefault)
+		app, err := ddevapp.NewApp(filepath.Join(tmpDir, "sampleapptypes", appType), true)
 		assert.NoError(err)
 		//nolint: errcheck
 		defer app.Stop(true, false)
@@ -65,7 +65,7 @@ func TestPostConfigAction(t *testing.T) {
 	for appType, expectedPHPVersion := range appTypes {
 		testDir := testcommon.CreateTmpDir(t.Name())
 
-		app, err := ddevapp.NewApp(testDir, true, nodeps.ProviderDefault)
+		app, err := ddevapp.NewApp(testDir, true)
 		assert.NoError(err)
 
 		t.Cleanup(func() {

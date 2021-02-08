@@ -70,7 +70,7 @@ func TestComposerVersion(t *testing.T) {
 	err := os.Chdir(testDir)
 	assert.NoError(err)
 
-	app, err := ddevapp.NewApp(testDir, false, "")
+	app, err := ddevapp.NewApp(testDir, false)
 	assert.NoError(err)
 
 	t.Cleanup(func() {

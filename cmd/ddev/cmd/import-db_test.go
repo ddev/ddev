@@ -19,7 +19,7 @@ func TestCmdImportDB(t *testing.T) {
 	testDir, _ := os.Getwd()
 	site := TestSites[0]
 	cleanup := site.Chdir()
-	app, err := ddevapp.NewApp(site.Dir, false, "")
+	app, err := ddevapp.NewApp(site.Dir, false)
 	assert.NoError(err)
 	defer func() {
 		// Make sure all databases are back to default empty

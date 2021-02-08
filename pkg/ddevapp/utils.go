@@ -40,7 +40,7 @@ func GetActiveProjects() []*DdevApp {
 				break
 			}
 
-			app, err := NewApp(approot, true, "")
+			app, err := NewApp(approot, true)
 
 			// Artificially populate sitename and apptype based on labels
 			// if NewApp() failed.
@@ -349,7 +349,7 @@ func GetProjects(activeOnly bool) ([]*DdevApp, error) {
 			continue
 		}
 
-		app, err := NewApp(info.AppRoot, true, nodeps.ProviderDefault)
+		app, err := NewApp(info.AppRoot, true)
 		if err != nil {
 			util.Warning("unable to create project at project root '%s': %v", info.AppRoot, err)
 			continue

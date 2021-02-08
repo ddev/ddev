@@ -53,7 +53,7 @@ func TestPantheonPull(t *testing.T) {
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
 
-	app, err := NewApp(siteDir, true, "pantheon")
+	app, err := NewApp(siteDir, true)
 	assert.NoError(err)
 
 	t.Cleanup(func() {
@@ -89,7 +89,6 @@ func TestPantheonPull(t *testing.T) {
 	x = strings.Replace(x, "environment_name:", fmt.Sprintf("environment_name: %s\n#environment_name: ", pantheonTestEnvName), 1)
 	err = ioutil.WriteFile(app.GetConfigPath("providers/pantheon.yaml"), []byte(x), 0666)
 	assert.NoError(err)
-	app.Provider = "pantheon"
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
@@ -97,7 +96,7 @@ func TestPantheonPull(t *testing.T) {
 	require.NoError(t, err)
 	err = app.Start()
 	require.NoError(t, err)
-	err = app.Pull(provider, &PullOptions{})
+	err = app.Pull(provider, false, false, false)
 	assert.NoError(err)
 
 	assert.FileExists(filepath.Join(app.GetUploadDir(), "2017-07/22-24_tn.jpg"))

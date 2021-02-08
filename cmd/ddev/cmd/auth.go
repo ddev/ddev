@@ -27,7 +27,7 @@ func init() {
 	// maybe.
 
 	// TODO: NewApp() will probably be a slowdown, move it out of here
-	app, err := ddevapp.NewApp("", true, "")
+	app, err := ddevapp.NewApp("", true)
 	if err != nil {
 		util.Failed("Failed to create project: %v", err)
 	}

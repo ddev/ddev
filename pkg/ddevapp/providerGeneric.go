@@ -37,48 +37,26 @@ type GenericProvider struct {
 }
 
 // Init handles loading data from saved config.
-func (p *GenericProvider) Init(app *DdevApp) error {
+func (p *GenericProvider) Init(pType string, app *DdevApp) error {
 	p.app = app
-	configPath := app.GetConfigPath(filepath.Join("providers", app.Provider+".yaml"))
+	configPath := app.GetConfigPath(filepath.Join("providers", pType+".yaml"))
 	if !fileutil.FileExists(configPath) {
-		return fmt.Errorf("no configuration exists for %s provider - it should be at %s", app.Provider, configPath)
+		return fmt.Errorf("no configuration exists for %s provider - it should be at %s", pType, configPath)
 	}
 	err := p.Read(configPath)
 	if err != nil {
 		return err
 	}
 
-	p.ProviderType = app.Provider
+	p.ProviderType = pType
 	app.ProviderInstance = p
 	return nil
-}
-
-// ValidateField provides field level validation for config settings. This is
-// used any time a field is set via `ddev config` on the primary app config, and
-// allows provider plugins to have additional validation for top level config
-// settings.
-func (p *GenericProvider) ValidateField(field, value string) error {
-	return nil
-}
-
-// PromptForConfig provides interactive configuration prompts when running `ddev config generic`
-func (p *GenericProvider) PromptForConfig() error {
-	return nil
-}
-
-// SiteNamePrompt prompts for the generic site name.
-func (p *GenericProvider) SiteNamePrompt() error {
-	return nil
-}
-
-func (p *GenericProvider) GetSites() ([]string, error) {
-	return nil, nil
 }
 
 // GetBackup will create and download a backup
 // Valid values for backupType are "database" or "files".
 // returns fileURL, importPath, error
-func (p *GenericProvider) GetBackup(backupType, environment string) (string, string, error) {
+func (p *GenericProvider) GetBackup(backupType string) (string, string, error) {
 	var err error
 	var filePath string
 	if backupType != "database" && backupType != "files" {
@@ -153,7 +131,7 @@ func (p *GenericProvider) getDatabaseBackup() (filename string, error error) {
 	_ = os.Mkdir(p.getDownloadDir(), 0755)
 
 	if p.DBPullCommand.Command == "" {
-		util.Warning("No DBPullCommand is defined for provider %s", p.app.Provider)
+		util.Warning("No DBPullCommand is defined for provider")
 		return "", nil
 	}
 

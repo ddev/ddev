@@ -128,7 +128,7 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 			runTime := util.TimeTrack(time.Now(), "Instrumentation")
 			// Try to get default instrumentationApp from current directory if not already set
 			if instrumentationApp == nil {
-				app, err := ddevapp.NewApp("", false, "")
+				app, err := ddevapp.NewApp("", false)
 				if err == nil {
 					instrumentationApp = app
 				}

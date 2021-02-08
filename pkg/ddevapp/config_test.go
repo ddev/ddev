@@ -35,7 +35,7 @@ func TestNewConfig(t *testing.T) {
 	pwd, _ := os.Getwd()
 
 	// Load a new Config
-	app, err := NewApp(testDir, true, nodeps.ProviderDefault)
+	app, err := NewApp(testDir, true)
 	assert.NoError(err)
 
 	t.Cleanup(func() {
@@ -60,7 +60,7 @@ func TestNewConfig(t *testing.T) {
 	_, err = os.Stat(app.ConfigPath)
 	assert.NoError(err)
 
-	loadedConfig, err := NewApp(testDir, true, nodeps.ProviderDefault)
+	loadedConfig, err := NewApp(testDir, true)
 	assert.NoError(err)
 	assert.Equal(app.Name, loadedConfig.Name)
 	assert.Equal(app.Type, loadedConfig.Type)
@@ -74,7 +74,7 @@ func TestDisasterConfig(t *testing.T) {
 
 	// Make sure we're not allowed to config in home directory.
 	tmpDir, _ := homedir.Dir()
-	_, err := NewApp(tmpDir, false, nodeps.ProviderDefault)
+	_, err := NewApp(tmpDir, false)
 	assert.Error(err)
 	assert.Contains(err.Error(), "ddev config is not useful")
 	_ = os.Chdir(pwd)
@@ -83,7 +83,7 @@ func TestDisasterConfig(t *testing.T) {
 	tmpDir = testcommon.CreateTmpDir(t.Name())
 
 	// Load a new Config
-	app, err := NewApp(tmpDir, false, nodeps.ProviderDefault)
+	app, err := NewApp(tmpDir, false)
 	assert.NoError(err)
 
 	t.Cleanup(func() {
@@ -105,7 +105,7 @@ func TestDisasterConfig(t *testing.T) {
 	assert.NoError(err)
 	err = os.Chdir(subdir)
 	assert.NoError(err)
-	subdirApp, err := NewApp(subdir, false, nodeps.ProviderDefault)
+	subdirApp, err := NewApp(subdir, false)
 	assert.NoError(err)
 	_ = subdirApp
 
@@ -132,7 +132,7 @@ func TestPrepDirectory(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	app, err := NewApp(testDir, true, nodeps.ProviderDefault)
+	app, err := NewApp(testDir, true)
 	assert.NoError(err)
 
 	// Prep the directory.
@@ -150,7 +150,7 @@ func TestHostName(t *testing.T) {
 	testDir := testcommon.CreateTmpDir("TestHostName")
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
-	app, err := NewApp(testDir, true, nodeps.ProviderDefault)
+	app, err := NewApp(testDir, true)
 	assert.NoError(err)
 	app.Name = util.RandString(32)
 
@@ -166,7 +166,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	defer testcommon.CleanupDir(testDir)
 	defer testcommon.Chdir(testDir)()
 
-	app, err := NewApp(testDir, true, nodeps.ProviderDefault)
+	app, err := NewApp(testDir, true)
 	assert.NoError(err)
 
 	t.Cleanup(func() {
@@ -197,7 +197,6 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	composeBytes, err := ioutil.ReadFile(app.DockerComposeYAMLPath())
 	assert.NoError(err)
 	contentString := string(composeBytes)
-	assert.Contains(contentString, app.Platform)
 	assert.Contains(contentString, app.Type)
 }
 
@@ -226,7 +225,7 @@ func TestConfigCommand(t *testing.T) {
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
-		app, err := NewApp(testDir, true, nodeps.ProviderDefault)
+		app, err := NewApp(testDir, true)
 		assert.NoError(err)
 
 		t.Cleanup(func() {
@@ -308,7 +307,7 @@ func TestConfigCommandInteractiveCreateDocrootDenied(t *testing.T) {
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
-		app, err := NewApp(testDir, true, nodeps.ProviderDefault)
+		app, err := NewApp(testDir, true)
 		assert.NoError(err)
 
 		// Randomize some values to use for Stdin during testing.
@@ -354,7 +353,7 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
-		app, err := NewApp(testDir, true, nodeps.ProviderDefault)
+		app, err := NewApp(testDir, true)
 		assert.NoError(err)
 
 		// Randomize some values to use for Stdin during testing.
@@ -410,7 +409,7 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
-		app, err := NewApp(testDir, true, nodeps.ProviderDefault)
+		app, err := NewApp(testDir, true)
 		assert.NoError(err)
 
 		// Randomize some values to use for Stdin during testing.
@@ -465,7 +464,7 @@ func TestConfigCommandDocrootDetectionIndexVerification(t *testing.T) {
 
 	// Create the ddevapp we'll use for testing.
 	// This will not return an error, since there is no existing configuration.
-	app, err := NewApp(testDir, true, nodeps.ProviderDefault)
+	app, err := NewApp(testDir, true)
 	assert.NoError(err)
 
 	// Randomize some values to use for Stdin during testing.
@@ -501,7 +500,6 @@ func TestReadConfig(t *testing.T) {
 		ConfigPath: filepath.Join("testdata", "config.yaml"),
 		AppRoot:    "testdata",
 		Name:       "TestRead",
-		Provider:   nodeps.ProviderDefault,
 	}
 
 	_, err := app.ReadConfig(false)
@@ -528,7 +526,6 @@ func TestReadConfigCRLF(t *testing.T) {
 		ConfigPath: filepath.Join("testdata", t.Name(), ".ddev", "config.yaml"),
 		AppRoot:    filepath.Join("testdata", t.Name()),
 		Name:       t.Name(),
-		Provider:   nodeps.ProviderDefault,
 	}
 
 	_, err := app.ReadConfig(false)
@@ -551,7 +548,7 @@ func TestConfigValidate(t *testing.T) {
 	//assert.NoError(err)
 
 	site := TestSites[0]
-	app, err := NewApp(site.Dir, false, "")
+	app, err := NewApp(site.Dir, false)
 	assert.NoError(err)
 
 	t.Cleanup(func() {
@@ -643,7 +640,7 @@ func TestWriteConfig(t *testing.T) {
 	err = fileutil.CopyDir("./testdata/TestWriteConfig/.ddev", filepath.Join(projDir, ".ddev"))
 	require.NoError(t, err)
 
-	app, err := NewApp(projDir, true, "")
+	app, err := NewApp(projDir, true)
 	assert.NoError(err)
 	err = os.Chdir(projDir)
 	assert.NoError(err)
@@ -1042,7 +1039,7 @@ func TestConfigLoadingOrder(t *testing.T) {
 	err = fileutil.CopyDir("./testdata/TestConfigLoadingOrder/.ddev", filepath.Join(projDir, ".ddev"))
 	require.NoError(t, err)
 
-	app, err := NewApp(projDir, true, "")
+	app, err := NewApp(projDir, true)
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
@@ -1132,7 +1129,7 @@ func TestPkgConfigMariaDBVersion(t *testing.T) {
 				assert.Equal(v, app.MariaDBVersion)
 			}
 
-			app, err = NewApp(appRoot, false, "")
+			app, err = NewApp(appRoot, false)
 			assert.NoError(err)
 			if configType == "dbimage" {
 				assert.Equal("somedbimage:"+v, app.DBImage, "NewApp() failed to respect existing dbimage")

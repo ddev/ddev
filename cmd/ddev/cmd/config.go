@@ -202,15 +202,6 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	provider, err := app.GetProvider("")
-	if err != nil {
-		util.Failed("Failed to get provider: %v", err)
-	}
-	err = provider.Validate()
-	if err != nil {
-		util.Failed("Failed to validate project %v: %v", app.Name, err)
-	}
-
 	err = app.WriteConfig()
 	if err != nil {
 		util.Failed("Failed to write config: %v", err)
@@ -221,10 +212,6 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 		util.Warning("Could not write settings file: %v", err)
 	}
 
-	err = provider.Write(app.GetConfigPath("import.yaml"))
-	if err != nil {
-		util.Failed("Failed to write provider config: %v", err)
-	}
 	err = app.ProcessHooks("post-config")
 	if err != nil {
 		util.Failed("Failed to process hook 'post-config'")
@@ -338,7 +325,7 @@ func getConfigApp(providerName string) (*ddevapp.DdevApp, error) {
 	if otherRoot != "" && otherRoot != appRoot {
 		util.Error("Is it possible you wanted to `ddev config` in parent directory %s?", otherRoot)
 	}
-	app, err := ddevapp.NewApp(appRoot, false, providerName)
+	app, err := ddevapp.NewApp(appRoot, false)
 	if err != nil {
 		return nil, fmt.Errorf("could not create new config: %v", err)
 	}

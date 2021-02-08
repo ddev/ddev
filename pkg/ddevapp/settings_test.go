@@ -50,7 +50,7 @@ func TestWriteSettings(t *testing.T) {
 	}
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true, nodeps.ProviderDefault)
+	app, err := NewApp(dir, true)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
@@ -136,7 +136,7 @@ func TestDrupalBackdropIncludeSettingsDdevInNewSettingsFile(t *testing.T) {
 
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true, nodeps.ProviderDefault)
+	app, err := NewApp(dir, true)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
@@ -181,7 +181,7 @@ func TestDrupalBackdropIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true, nodeps.ProviderDefault)
+	app, err := NewApp(dir, true)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
@@ -236,7 +236,7 @@ func TestDrupalBackdropCreateGitIgnoreIfNoneExists(t *testing.T) {
 
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true, nodeps.ProviderDefault)
+	app, err := NewApp(dir, true)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
@@ -277,7 +277,7 @@ func TestDrupalBackdropGitIgnoreAlreadyExists(t *testing.T) {
 
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true, nodeps.ProviderDefault)
+	app, err := NewApp(dir, true)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
@@ -320,7 +320,7 @@ func TestDrupalBackdropOverwriteDdevSettings(t *testing.T) {
 
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true, nodeps.ProviderDefault)
+	app, err := NewApp(dir, true)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)

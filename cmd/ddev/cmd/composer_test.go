@@ -36,7 +36,7 @@ func TestComposerCmd(t *testing.T) {
 	assert.Contains(out, "Available commands:")
 
 	// Get an app just so we can do waits
-	app, err := ddevapp.NewApp(tmpDir, true, "")
+	app, err := ddevapp.NewApp(tmpDir, true)
 	assert.NoError(err)
 	//nolint: errcheck
 	defer app.Stop(true, false)

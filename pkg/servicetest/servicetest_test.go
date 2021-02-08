@@ -43,7 +43,7 @@ func TestServices(t *testing.T) {
 	err = os.Chdir(testDir)
 	assert.NoError(err)
 
-	app, err := ddevapp.NewApp(testDir, false, "")
+	app, err := ddevapp.NewApp(testDir, false)
 	assert.NoError(err)
 	err = fileutil.CopyDir(filepath.Join(pwd, "testdata", t.Name()), app.AppConfDir())
 	assert.NoError(err)
@@ -66,7 +66,7 @@ func TestServices(t *testing.T) {
 
 	// Unfortunately to get service description to work, we have to create a new app
 	// now that files are in place
-	app, err = ddevapp.NewApp(app.AppRoot, false, "")
+	app, err = ddevapp.NewApp(app.AppRoot, false)
 
 	checkSolrService(t, app)
 	checkMemcachedService(t, app)

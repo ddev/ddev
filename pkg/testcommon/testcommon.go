@@ -108,7 +108,7 @@ func (site *TestSite) Prepare() error {
 
 	// Create an app. Err is ignored as we may not have
 	// a config file to read in from a test site.
-	app, err := ddevapp.NewApp(site.Dir, true, "")
+	app, err := ddevapp.NewApp(site.Dir, true)
 	if err != nil {
 		return err
 	}

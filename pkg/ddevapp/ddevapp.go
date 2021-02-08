@@ -85,8 +85,6 @@ type DdevApp struct {
 	FailOnHookFailGlobal      bool                  `yaml:"-"`
 	ConfigPath                string                `yaml:"-"`
 	AppRoot                   string                `yaml:"-"`
-	Platform                  string                `yaml:"-"`
-	Provider                  string                `yaml:"provider,omitempty"`
 	DataDir                   string                `yaml:"-"`
 	SiteSettingsPath          string                `yaml:"-"`
 	SiteDdevSettingsFile      string                `yaml:"-"`
@@ -166,7 +164,7 @@ func (app *DdevApp) Init(basePath string) error {
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("app.Init(%s)", basePath))
 	defer runTime()
 
-	newApp, err := NewApp(basePath, true, "")
+	newApp, err := NewApp(basePath, true)
 	if err != nil {
 		return err
 	}
@@ -652,16 +650,8 @@ func (app *DdevApp) SiteStatus() string {
 	return siteStatus
 }
 
-// PullOptions allows for customization of the pull process.
-type PullOptions struct {
-	SkipDb      bool
-	SkipFiles   bool
-	SkipImport  bool
-	Environment string
-}
-
 // Pull performs an import from the a configured provider plugin, if one exists.
-func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
+func (app *DdevApp) Pull(provider Provider, skipDbArg bool, skipFilesArg bool, skipImportArg bool) error {
 	var err error
 	err = app.ProcessHooks("pre-pull")
 	if err != nil {
@@ -676,23 +666,18 @@ func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 		}
 	}
 
-	err = provider.Validate()
-	if err != nil {
-		return err
-	}
-
-	if opts.SkipDb {
+	if skipDbArg {
 		output.UserOut.Println("Skipping database pull.")
 	} else {
 		output.UserOut.Println("Downloading database...")
-		fileLocation, importPath, err := provider.GetBackup("database", opts.Environment)
+		fileLocation, importPath, err := provider.GetBackup("database")
 		if err != nil {
 			return err
 		}
 
 		output.UserOut.Printf("Database downloaded to: %s", fileLocation)
 
-		if opts.SkipImport {
+		if skipImportArg {
 			output.UserOut.Println("Skipping database import.")
 		} else {
 			output.UserOut.Println("Importing database...")
@@ -703,18 +688,18 @@ func (app *DdevApp) Pull(provider Provider, opts *PullOptions) error {
 		}
 	}
 
-	if opts.SkipFiles {
+	if skipFilesArg {
 		output.UserOut.Println("Skipping files pull.")
 	} else {
 		output.UserOut.Println("Downloading files...")
-		fileLocation, importPath, err := provider.GetBackup("files", opts.Environment)
+		fileLocation, importPath, err := provider.GetBackup("files")
 		if err != nil {
 			return err
 		}
 
 		output.UserOut.Printf("Files downloaded to: %s", fileLocation)
 
-		if opts.SkipImport {
+		if skipImportArg {
 			output.UserOut.Println("Skipping files import.")
 		} else {
 			output.UserOut.Println("Importing files...")
@@ -2132,12 +2117,6 @@ func restoreApp(app *DdevApp, siteName string) error {
 // GetProvider returns a pointer to the provider instance interface.
 func (app *DdevApp) GetProvider(providerName string) (Provider, error) {
 
-	// TODO: Temporary hack to get a good provider isntance... before
-	// we remove specialty providers
-	if app.ProviderInstance != nil && fmt.Sprintf("%T", app.ProviderInstance) != "*ddevapp.DefaultProvider" {
-		return app.ProviderInstance, nil
-	}
-
 	var p Provider
 	var err error
 
@@ -2146,10 +2125,7 @@ func (app *DdevApp) GetProvider(providerName string) (Provider, error) {
 			ProviderType: providerName,
 			app:          app,
 		}
-		app.Provider = providerName
-		err = p.Init(app)
-	} else if p == nil {
-		p = &DefaultProvider{}
+		err = p.Init(providerName, app)
 	}
 
 	app.ProviderInstance = p
