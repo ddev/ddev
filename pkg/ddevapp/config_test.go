@@ -256,15 +256,14 @@ func TestConfigCommand(t *testing.T) {
 		assert.Contains(out, fmt.Sprintf("'%s' is not a valid project type", invalidAppType))
 
 		// Create an example input buffer that writes an invalid projectname, then a valid-project-name,
-		// a valid document root,
-		// a valid app type
+		// a valid document root, a valid app type
 		input = fmt.Sprintf("invalid_project_name\n%s\ndocroot\n%s", name, testValues[apptypePos])
 		scanner = bufio.NewScanner(strings.NewReader(input))
 		util.SetInputScanner(scanner)
 
 		restoreOutput = util.CaptureUserOut()
 		err = app.PromptForConfig()
-		assert.NoError(err, t)
+		assert.NoError(err)
 		out = restoreOutput()
 
 		// Ensure we have expected vales in output.

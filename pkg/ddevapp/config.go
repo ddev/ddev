@@ -352,7 +352,15 @@ func (app *DdevApp) PromptForConfig() error {
 
 	app.WarnIfConfigReplace()
 
-	app.promptForName()
+	for {
+		err := app.promptForName()
+
+		if err == nil {
+			break
+		}
+
+		output.UserOut.Printf("%v", err)
+	}
 
 	if err := app.docrootPrompt(); err != nil {
 		return err
@@ -368,18 +376,37 @@ func (app *DdevApp) PromptForConfig() error {
 		return err
 	}
 
-	return err
+	err = app.ValidateConfig()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ValidateProjectName checks to see if the project name works for a proper hostname
+func ValidateProjectName(name string) error {
+	match := hostRegex.MatchString(name)
+	if !match {
+		return fmt.Errorf("%s is not a valid project name. Please enter a project name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", name)
+	}
+	return nil
 }
 
 // ValidateConfig ensures the configuration meets ddev's requirements.
 func (app *DdevApp) ValidateConfig() error {
+
+	// validate project name
+	if err := ValidateProjectName(app.Name); err != nil {
+		return err
+	}
 
 	// validate hostnames
 	for _, hn := range app.GetHostnames() {
 		// If they have provided "*.<hostname>" then ignore the *. part.
 		hn = strings.TrimPrefix(hn, "*.")
 		if hn == "ddev.site" {
-			return fmt.Errorf("wildcaring the full hostname or using 'ddev.site' as fqdn is not allowed because other projects would not work in that case")
+			return fmt.Errorf("wildcarding the full hostname or using 'ddev.site' as fqdn is not allowed because other projects would not work in that case")
 		}
 		if !hostRegex.MatchString(hn) {
 			return fmt.Errorf("invalid hostname: %s. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", hn).(invalidHostname)
@@ -842,18 +869,21 @@ func WriteImageDockerfile(fullpath string, contents []byte) error {
 }
 
 // prompt for a project name.
-func (app *DdevApp) promptForName() {
-
+func (app *DdevApp) promptForName() error {
 	if app.Name == "" {
 		dir, err := os.Getwd()
 		// if working directory name is invalid for hostnames, we shouldn't suggest it
 		if err == nil && hostRegex.MatchString(filepath.Base(dir)) {
-
 			app.Name = filepath.Base(dir)
 		}
 	}
 
-	app.Name = util.Prompt("Project name", app.Name)
+	name := util.Prompt("Project name", app.Name)
+	if err := ValidateProjectName(name); err != nil {
+		return err
+	}
+	app.Name = name
+	return nil
 }
 
 // AvailableDocrootLocations returns an of default docroot locations to look for.
