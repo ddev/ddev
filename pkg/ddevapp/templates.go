@@ -135,6 +135,7 @@ services:
       - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80,${DDEV_MAILHOG_HTTPS_PORT}:{{ .MailhogPort }}
       - IS_DDEV_PROJECT=true
       - LINES
+      - DDEV_LIVE_NO_ANALYTICS
       - SSH_AUTH_SOCK=/home/.ssh-agent/socket
       - TZ={{ .Timezone }}
       - VIRTUAL_HOST=${DDEV_HOSTNAME}

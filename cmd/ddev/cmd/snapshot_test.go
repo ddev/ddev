@@ -15,7 +15,7 @@ func TestCmdSnapshot(t *testing.T) {
 	site := TestSites[0]
 	cleanup := site.Chdir()
 
-	app, err := ddevapp.NewApp(site.Dir, false, "")
+	app, err := ddevapp.NewApp(site.Dir, false)
 	assert.NoError(err)
 
 	t.Cleanup(func() {

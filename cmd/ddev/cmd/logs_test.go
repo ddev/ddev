@@ -38,7 +38,7 @@ func TestLogs(t *testing.T) {
 	assert.NoError(err)
 	cleanup := v.Chdir()
 
-	app, err := ddevapp.NewApp(v.Dir, true, "")
+	app, err := ddevapp.NewApp(v.Dir, true)
 	assert.NoError(err)
 
 	url := "http://" + v.Name + "." + app.ProjectTLD + "/logtest.php"

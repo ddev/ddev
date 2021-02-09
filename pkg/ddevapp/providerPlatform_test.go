@@ -45,7 +45,7 @@ func TestPlatformPull(t *testing.T) {
 
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
-	app, err := NewApp(siteDir, true, "")
+	app, err := NewApp(siteDir, true)
 	assert.NoError(err)
 	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal9
@@ -82,7 +82,6 @@ func TestPlatformPull(t *testing.T) {
 	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: "+platformTestSiteID+"\n#project_id:"), 1)
 	err = ioutil.WriteFile(app.GetConfigPath("providers/platform.yaml"), []byte(x), 0666)
 	assert.NoError(err)
-	app.Provider = "platform"
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
@@ -90,7 +89,7 @@ func TestPlatformPull(t *testing.T) {
 	require.NoError(t, err)
 	err = app.Start()
 	require.NoError(t, err)
-	err = app.Pull(provider, &PullOptions{})
+	err = app.Pull(provider, false, false, false)
 	assert.NoError(err)
 
 	assert.FileExists(filepath.Join(app.GetUploadDir(), "victoria-sponge-umami.jpg"))

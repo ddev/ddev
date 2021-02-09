@@ -12,7 +12,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
-ENV PLATFORMSH_CLI_HOME=/mnt/ddev-global-cache/platformsh
 ENV CAROOT /mnt/ddev-global-cache/mkcert
 
 # TARGETPLATFORM is Docker buildx's target platform (e.g. linux/arm64), while 
@@ -154,7 +153,6 @@ ENV PHP_DEFAULT_VERSION="7.4"
 ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
-ENV PLATFORMSH_CLI_HOME=/mnt/ddev-global-cache/platformsh
 ENV CAROOT /mnt/ddev-global-cache/mkcert
 
 ENV DDEV_LIVE_CONFIG_FILE_PATH /mnt/ddev-global-cache/ddev-live/cli-config.json

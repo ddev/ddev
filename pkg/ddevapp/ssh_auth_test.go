@@ -6,7 +6,6 @@ import (
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
@@ -144,7 +143,7 @@ func TestSshAuthConfigOverride(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	app, err := ddevapp.NewApp(testDir, true, nodeps.ProviderDefault)
+	app, err := ddevapp.NewApp(testDir, true)
 	assert.NoError(err)
 	err = app.WriteConfig()
 	assert.NoError(err)

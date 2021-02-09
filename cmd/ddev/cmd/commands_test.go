@@ -37,7 +37,7 @@ func TestCustomCommands(t *testing.T) {
 
 	site := TestSites[0]
 	switchDir := TestSites[0].Chdir()
-	app, _ := ddevapp.NewApp(TestSites[0].Dir, false, "")
+	app, _ := ddevapp.NewApp(TestSites[0].Dir, false)
 	origType := app.Type
 	t.Cleanup(func() {
 		runTime()
@@ -207,7 +207,7 @@ func TestLaunchCommand(t *testing.T) {
 	assert.NoError(err)
 
 	_ = os.Setenv("DDEV_DEBUG", "true")
-	app, err := ddevapp.NewApp(tmpdir, false, "")
+	app, err := ddevapp.NewApp(tmpdir, false)
 	require.NoError(t, err)
 	err = app.WriteConfig()
 	require.NoError(t, err)
@@ -251,7 +251,7 @@ func TestMysqlCommand(t *testing.T) {
 	defer testcommon.CleanupDir(tmpdir)
 	defer testcommon.Chdir(tmpdir)()
 
-	app, err := ddevapp.NewApp(tmpdir, false, "")
+	app, err := ddevapp.NewApp(tmpdir, false)
 	require.NoError(t, err)
 	err = app.WriteConfig()
 	require.NoError(t, err)

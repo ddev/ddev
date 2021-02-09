@@ -86,28 +86,6 @@ const (
 	InternetDetectionTimeoutDefault = 750
 )
 
-// IsValidProvider is a helper function to determine if a provider value is valid, returning
-// true if the supplied provider is valid and false otherwise.
-func IsValidProvider(provider string) bool {
-	//if _, ok := ValidProviders[provider]; !ok {
-	//	return false
-	//}
-
-	return true
-}
-
-// GetValidProviders is a helper function that returns a list of valid providers.
-func GetValidProviders() []string {
-	//s := make([]string, 0, len(ValidProviders))
-	//
-	//for p := range ValidProviders {
-	//	s = append(s, p)
-	//}
-	//
-	//return s
-	return []string{}
-}
-
 // IsValidPHPVersion is a helper function to determine if a PHP version is valid, returning
 // true if the supplied PHP version is valid and false otherwise.
 func IsValidPHPVersion(phpVersion string) bool {

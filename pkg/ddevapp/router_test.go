@@ -37,7 +37,7 @@ func TestPortOverride(t *testing.T) {
 
 		testcommon.ClearDockerEnv()
 
-		app, err := ddevapp.NewApp(testDir, true, nodeps.ProviderDefault)
+		app, err := ddevapp.NewApp(testDir, true)
 		assert.NoError(err)
 		app.RouterHTTPPort = strconv.Itoa(80 + i)
 		// Note that we start with port 453 instead of 443 here because Windows
@@ -120,7 +120,7 @@ func TestLetsEncrypt(t *testing.T) {
 	err = dockerutil.RemoveVolume("ddev-router-letsencrypt")
 	assert.NoError(err)
 
-	app, err := ddevapp.NewApp(site.Dir, false, "")
+	app, err := ddevapp.NewApp(site.Dir, false)
 	assert.NoError(err)
 	err = app.Start()
 	assert.NoError(err)
@@ -162,7 +162,7 @@ func TestRouterConfigOverride(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	app, err := ddevapp.NewApp(testDir, true, nodeps.ProviderDefault)
+	app, err := ddevapp.NewApp(testDir, true)
 	assert.NoError(err)
 	err = app.WriteConfig()
 	assert.NoError(err)

@@ -31,7 +31,7 @@ func TestCmdConfigHooks(t *testing.T) {
 	defer site.Chdir()()
 	assert := asrt.New(t)
 
-	app, err := ddevapp.NewApp(site.Dir, true, "")
+	app, err := ddevapp.NewApp(site.Dir, true)
 	assert.NoError(err)
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-config": {{"exec-host": "touch hello-post-config-" + app.Name}}, "pre-config": {{"exec-host": "touch hello-pre-config-" + app.Name}}}
 	err = app.WriteConfig()
@@ -462,7 +462,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 	_ = os.MkdirAll(filepath.Join(tmpDir, ".ddev"), 0777)
 	err := fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "config.yaml.empty"), filepath.Join(tmpDir, ".ddev", "config.yaml"))
 	assert.NoError(err)
-	app, err := ddevapp.NewApp(tmpDir, false, "")
+	app, err := ddevapp.NewApp(tmpDir, false)
 	//nolint: errcheck
 	defer app.Stop(true, false)
 	assert.NoError(err)
@@ -496,7 +496,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 		assert.Empty(app.DBImage, "generated config.yaml dbimage should have been empty for command '%s'", ddevCmd)
 
 		// Now use NewApp() to load, so that we get the full logic of that function.
-		app, err = ddevapp.NewApp(tmpDir, false, "")
+		app, err = ddevapp.NewApp(tmpDir, false)
 		//nolint: errcheck
 		defer app.Stop(true, false)
 		assert.NoError(err)
@@ -529,7 +529,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			assert.Empty(app.DBImage)
 
 			// Now test with the logical additions made by NewApp()
-			app, err = ddevapp.NewApp(tmpDir, false, "")
+			app, err = ddevapp.NewApp(tmpDir, false)
 			//nolint: errcheck
 			defer app.Stop(true, false)
 			assert.NoError(err)
@@ -567,7 +567,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			assert.Equal("somerandomdbimg-"+nodeps.MariaDB+"-"+configMariaDBVersion, app.DBImage, "ddev %s did not result in respect for existing configured dbimg in file=%s", strings.Join(configArgs, " "))
 
 			// Now test with NewApp's additions, which should leave app.DBImage alone.
-			app, err = ddevapp.NewApp(tmpDir, false, "")
+			app, err = ddevapp.NewApp(tmpDir, false)
 			//nolint: errcheck
 			defer app.Stop(true, false)
 			assert.NoError(err)
@@ -611,7 +611,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			}
 
 			// Now test with NewApp()'s adjustments
-			app, err = ddevapp.NewApp(tmpDir, false, "")
+			app, err = ddevapp.NewApp(tmpDir, false)
 			//nolint: errcheck
 			defer app.Stop(true, false)
 			assert.NoError(err)
@@ -683,7 +683,7 @@ func TestConfigMySQLVersion(t *testing.T) {
 			assert.NoError(err, "failed to run ddevcmd=%s, out=%s", ddevCmd, out)
 			assert.Contains(out, "You may now run 'ddev start'")
 
-			app, err := ddevapp.NewApp(testDir, false, "")
+			app, err := ddevapp.NewApp(testDir, false)
 			assert.NoError(err)
 			// If the two versions are equal, we expect the app.DBImage to be empty
 			// because it's identical to the image we'd get with just app.MySQLVersion
@@ -720,7 +720,7 @@ func TestMariaMysqlConflicts(t *testing.T) {
 	// but does specify mysql_version
 	err := fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "config.yaml.mysql8only"), filepath.Join(testDir, ".ddev", "config.yaml"))
 	assert.NoError(err)
-	app, err := ddevapp.NewApp(testDir, false, "")
+	app, err := ddevapp.NewApp(testDir, false)
 	assert.NoError(err)
 	assert.Equal(nodeps.MySQL80, app.MySQLVersion)
 	assert.Empty(app.MariaDBVersion)
@@ -728,7 +728,7 @@ func TestMariaMysqlConflicts(t *testing.T) {
 	// Use a config file that specifies both but with empty mariadb_version
 	err = fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "config.yaml.mysqlwithemptymaria"), filepath.Join(testDir, ".ddev", "config.yaml"))
 	assert.NoError(err)
-	app, err = ddevapp.NewApp(testDir, false, "")
+	app, err = ddevapp.NewApp(testDir, false)
 	assert.NoError(err)
 	assert.Equal(nodeps.MySQL80, app.MySQLVersion)
 	assert.Empty(app.MariaDBVersion)
@@ -736,7 +736,7 @@ func TestMariaMysqlConflicts(t *testing.T) {
 	// Use a config file that specifies both but with empty mysql_version
 	err = fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "config.yaml.mariawithemptymysql"), filepath.Join(testDir, ".ddev", "config.yaml"))
 	assert.NoError(err)
-	app, err = ddevapp.NewApp(testDir, false, "")
+	app, err = ddevapp.NewApp(testDir, false)
 	assert.NoError(err)
 	assert.Equal(nodeps.MariaDBDefaultVersion, app.MariaDBVersion)
 	assert.Empty(app.MySQLVersion)
@@ -744,7 +744,7 @@ func TestMariaMysqlConflicts(t *testing.T) {
 	// Use a config file that specifies neither.
 	err = fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "config.yaml.nodbspecified"), filepath.Join(testDir, ".ddev", "config.yaml"))
 	assert.NoError(err)
-	app, err = ddevapp.NewApp(testDir, false, "")
+	app, err = ddevapp.NewApp(testDir, false)
 	assert.NoError(err)
 	assert.Equal(nodeps.MariaDBDefaultVersion, app.MariaDBVersion)
 	assert.Empty(app.MySQLVersion)

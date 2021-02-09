@@ -21,7 +21,7 @@ func TestCmdExportDB(t *testing.T) {
 	site := TestSites[0]
 	cleanup := site.Chdir()
 
-	app, err := ddevapp.NewApp(site.Dir, false, "")
+	app, err := ddevapp.NewApp(site.Dir, false)
 	assert.NoError(err)
 
 	defer func() {

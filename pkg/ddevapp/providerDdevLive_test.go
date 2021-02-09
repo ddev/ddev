@@ -41,6 +41,8 @@ func TestDdevLivePull(t *testing.T) {
 	testDir, _ := os.Getwd()
 
 	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
+	// DDEV_LIVE_NO_ANALYTICS will be picked up by the docker-compose and pushed into web
+	_ = os.Setenv("DDEV_LIVE_NO_ANALYTICS", "true")
 	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"DDEV_LIVE_API_TOKEN=" + token}
 	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	assert.NoError(err)
@@ -51,7 +53,7 @@ func TestDdevLivePull(t *testing.T) {
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
 
-	app, err := NewApp(siteDir, true, "ddev-live")
+	app, err := NewApp(siteDir, true)
 	assert.NoError(err)
 
 	t.Cleanup(func() {
@@ -90,13 +92,12 @@ func TestDdevLivePull(t *testing.T) {
 	x = strings.Replace(x, "database_backup:", fmt.Sprintf("database_backup: %s/%s\n#database_backup: ", ddevLiveOrg, ddevLiveDBBackupName), -1)
 	err = ioutil.WriteFile(app.GetConfigPath("providers/ddev-live.yaml"), []byte(x), 0666)
 	assert.NoError(err)
-	app.Provider = "ddev-live"
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
 	provider, err := app.GetProvider("ddev-live")
 	require.NoError(t, err)
-	err = app.Pull(provider, &PullOptions{})
+	err = app.Pull(provider, false, false, false)
 	assert.NoError(err)
 
 	assert.FileExists(filepath.Join(app.GetUploadDir(), "chocolate-brownie-umami.jpg"))

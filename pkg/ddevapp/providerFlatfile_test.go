@@ -28,7 +28,7 @@ func TestFlatfilePull(t *testing.T) {
 
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
-	app, err := NewApp(siteDir, true, "")
+	app, err := NewApp(siteDir, true)
 	assert.NoError(err)
 	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal9
@@ -59,15 +59,14 @@ func TestFlatfilePull(t *testing.T) {
 	x = strings.Replace(x, "/full/path/to/project/root", appRoot, -1)
 	err = ioutil.WriteFile(app.GetConfigPath("providers/flatfile.yaml"), []byte(x), 0666)
 	assert.NoError(err)
-	app.Provider = "flatfile"
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
-	provider, err := app.GetProvider(app.Provider)
+	provider, err := app.GetProvider("flatfile")
 	require.NoError(t, err)
 	err = app.Start()
 	require.NoError(t, err)
-	err = app.Pull(provider, &PullOptions{})
+	err = app.Pull(provider, false, false, false)
 	assert.NoError(err)
 
 	assert.FileExists(filepath.Join(app.AppRoot, app.Docroot, app.GetUploadDir(), "docs/developers/building-contributing.md"))

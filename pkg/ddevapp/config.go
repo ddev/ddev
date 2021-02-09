@@ -32,17 +32,6 @@ import (
 // Regexp pattern to determine if a hostname is valid per RFC 1123.
 var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 
-// Provider is the interface which all provider plugins must implement.
-type Provider interface {
-	Init(app *DdevApp) error
-	ValidateField(string, string) error
-	PromptForConfig() error
-	Write(string) error
-	Read(string) error
-	Validate() error
-	GetBackup(string, string) (fileLocation string, importPath string, err error)
-}
-
 // init() is for testing situations only, allowing us to override the default webserver type
 // or caching behavior
 
@@ -57,7 +46,7 @@ func init() {
 }
 
 // NewApp creates a new DdevApp struct with defaults set and overridden by any existing config.yml.
-func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, error) {
+func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("ddevapp.NewApp(%s)", appRoot))
 	defer runTime()
 
@@ -133,20 +122,6 @@ func NewApp(appRoot string, includeOverrides bool, provider string) (*DdevApp, e
 		if err != nil {
 			return app, fmt.Errorf("%v exists but cannot be read. It may be invalid due to a syntax error: %v", app.ConfigPath, err)
 		}
-	}
-
-	// Allow override with provider.
-	// Otherwise we accept whatever might have been in config file if there was anything.
-	// #todo: Remove config file provider element when normalizing
-	// pantheon and ddev-live
-	if provider == "" && app.Provider != "" {
-		// Do nothing. This is the case where the config has a provider and no override is provided. Config wins.
-	} else if provider != "" {
-		app.Provider = provider // Use the provider passed-in. Function argument wins.
-	} else if provider == "" && app.Provider == "" {
-		app.Provider = nodeps.ProviderDefault // Nothing passed in, nothing configured. Set c.Provider to default
-	} else {
-		return app, fmt.Errorf("provider '%s' is not implemented", provider)
 	}
 	return app, nil
 }
@@ -230,16 +205,6 @@ func (app *DdevApp) WriteConfig() error {
 	cfgbytes = append(cfgbytes, appcopy.GetHookDefaultComments()...)
 
 	err = ioutil.WriteFile(appcopy.ConfigPath, cfgbytes, 0644)
-	if err != nil {
-		return err
-	}
-
-	provider, err := appcopy.GetProvider("")
-	if err != nil {
-		return err
-	}
-
-	err = provider.Write(appcopy.GetConfigPath("import.yaml"))
 	if err != nil {
 		return err
 	}
@@ -405,21 +370,29 @@ func (app *DdevApp) PromptForConfig() error {
 		return err
 	}
 
-	err = app.ProviderInstance.PromptForConfig()
+	err = app.ValidateConfig()
+	if err != nil {
+		return err
+	}
 
-	return err
+	return nil
+}
+
+// ValidateProjectName checks to see if the project name works for a proper hostname
+func ValidateProjectName(name string) error {
+	match := hostRegex.MatchString(name)
+	if !match {
+		return fmt.Errorf("%s is not a valid project name. Please enter a project name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", name)
+	}
+	return nil
 }
 
 // ValidateConfig ensures the configuration meets ddev's requirements.
 func (app *DdevApp) ValidateConfig() error {
-	provider, err := app.GetProvider("")
-	if err != nil {
-		return err.(invalidProvider)
-	}
 
 	// validate project name
-	if err = provider.ValidateField("Name", app.Name); err != nil {
-		return err.(invalidAppName)
+	if err := ValidateProjectName(app.Name); err != nil {
+		return err
 	}
 
 	// validate hostnames
@@ -427,7 +400,7 @@ func (app *DdevApp) ValidateConfig() error {
 		// If they have provided "*.<hostname>" then ignore the *. part.
 		hn = strings.TrimPrefix(hn, "*.")
 		if hn == "ddev.site" {
-			return fmt.Errorf("wildcaring the full hostname or using 'ddev.site' as fqdn is not allowed because other projects would not work in that case")
+			return fmt.Errorf("wildcarding the full hostname or using 'ddev.site' as fqdn is not allowed because other projects would not work in that case")
 		}
 		if !hostRegex.MatchString(hn) {
 			return fmt.Errorf("invalid hostname: %s. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", hn).(invalidHostname)
@@ -477,7 +450,7 @@ func (app *DdevApp) ValidateConfig() error {
 	// golang on windows is not able to time.LoadLocation unless
 	// go is installed... so skip validation on Windows
 	if runtime.GOOS != "windows" {
-		_, err = time.LoadLocation(app.Timezone)
+		_, err := time.LoadLocation(app.Timezone)
 		if err != nil {
 			// golang on Windows is often not able to time.LoadLocation.
 			// It often works if go is installed and $GOROOT is set, but
@@ -891,22 +864,20 @@ func WriteImageDockerfile(fullpath string, contents []byte) error {
 
 // prompt for a project name.
 func (app *DdevApp) promptForName() error {
-	provider, err := app.GetProvider("")
-	if err != nil {
-		return err
-	}
-
 	if app.Name == "" {
 		dir, err := os.Getwd()
 		// if working directory name is invalid for hostnames, we shouldn't suggest it
 		if err == nil && hostRegex.MatchString(filepath.Base(dir)) {
-
 			app.Name = filepath.Base(dir)
 		}
 	}
 
-	app.Name = util.Prompt("Project name", app.Name)
-	return provider.ValidateField("Name", app.Name)
+	name := util.Prompt("Project name", app.Name)
+	if err := ValidateProjectName(name); err != nil {
+		return err
+	}
+	app.Name = name
+	return nil
 }
 
 // AvailableDocrootLocations returns an of default docroot locations to look for.
@@ -945,10 +916,6 @@ func DiscoverDefaultDocroot(app *DdevApp) string {
 
 // Determine the document root.
 func (app *DdevApp) docrootPrompt() error {
-	provider, err := app.GetProvider("")
-	if err != nil {
-		return err
-	}
 
 	// Determine the document root.
 	util.Warning("\nThe docroot is the directory from which your site is served.\nThis is a relative path from your project root at %s", app.AppRoot)
@@ -986,7 +953,7 @@ func (app *DdevApp) docrootPrompt() error {
 		util.Success("Created docroot at %s.", fullPath)
 	}
 
-	return provider.ValidateField("Docroot", app.Docroot)
+	return nil
 }
 
 // ConfigExists determines if a ddev config file exists for this application.
@@ -999,10 +966,6 @@ func (app *DdevApp) ConfigExists() bool {
 
 // AppTypePrompt handles the Type workflow.
 func (app *DdevApp) AppTypePrompt() error {
-	provider, err := app.GetProvider("")
-	if err != nil {
-		return err
-	}
 	validAppTypes := strings.Join(GetValidAppTypes(), ", ")
 	typePrompt := fmt.Sprintf("Project Type [%s]", validAppTypes)
 
@@ -1025,7 +988,7 @@ func (app *DdevApp) AppTypePrompt() error {
 		appType = strings.ToLower(util.GetInput(appType))
 	}
 	app.Type = appType
-	return provider.ValidateField("Type", app.Type)
+	return nil
 }
 
 // PrepDdevDirectory creates a .ddev directory in the current working directory

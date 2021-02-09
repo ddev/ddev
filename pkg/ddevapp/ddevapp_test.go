@@ -237,18 +237,6 @@ func TestMain(m *testing.M) {
 		log.Fatalf("could not read globalconfig: %v", err)
 	}
 
-	token := os.Getenv("DDEV_DDEVLIVE_API_TOKEN")
-	if token != "" {
-		// ddev auth ddev-live can create a .ddev folder, which we don't need right now,
-		// so drop it in /tmp
-		out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf("cd /tmp && %s auth ddev-live %s", DdevBin, token)})
-		if err != nil {
-			log.Fatalf("Unable to ddev auth ddev-live: %v (%v)", err, out)
-		}
-	} else {
-		log.Info("No DDEV_DDEVLIVE_API_TOKEN env var has been set. Skipping ddev-live specific tests.")
-	}
-
 	for i, site := range TestSites {
 		app := &ddevapp.DdevApp{Name: site.Name}
 		_ = app.Stop(true, false)
@@ -2043,7 +2031,7 @@ func TestProcessHooks(t *testing.T) {
 	runTime := util.TimeTrack(time.Now(), t.Name())
 
 	testcommon.ClearDockerEnv()
-	app, err := ddevapp.NewApp(site.Dir, true, nodeps.ProviderDefault)
+	app, err := ddevapp.NewApp(site.Dir, true)
 	assert.NoError(err)
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
@@ -2498,7 +2486,7 @@ func TestListWithoutDir(t *testing.T) {
 	err = os.Chdir(testDir)
 	assert.NoError(err)
 
-	app, err := ddevapp.NewApp(testDir, true, nodeps.ProviderDefault)
+	app, err := ddevapp.NewApp(testDir, true)
 	assert.NoError(err)
 	app.Name = "junk"
 	app.Type = nodeps.AppTypeDrupal7
@@ -2566,7 +2554,7 @@ func TestAppdirAlreadyInUse(t *testing.T) {
 	// Create a temporary directory and switch to it.
 	tmpdir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := ddevapp.NewApp(tmpdir, false, "")
+	app, err := ddevapp.NewApp(tmpdir, false)
 	require.NoError(t, err)
 	defer func() {
 		app.Name = originalProjectName
@@ -2624,7 +2612,7 @@ func TestHttpsRedirection(t *testing.T) {
 	err = os.Chdir(appDir)
 	assert.NoError(err)
 
-	app, err := ddevapp.NewApp(appDir, true, nodeps.ProviderDefault)
+	app, err := ddevapp.NewApp(appDir, true)
 	assert.NoError(err)
 
 	_ = app.Stop(true, false)
@@ -2721,7 +2709,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 	assert.NoError(err)
 
 	// Make sure that valid yaml files get properly loaded in the proper order
-	app, err := ddevapp.NewApp(testDir, true, "")
+	app, err := ddevapp.NewApp(testDir, true)
 	assert.NoError(err)
 	//nolint: errcheck
 	defer app.Stop(true, false)
@@ -2733,7 +2721,7 @@ func TestMultipleComposeFiles(t *testing.T) {
 	err = app.WriteDockerComposeYAML()
 	require.NoError(t, err)
 
-	app, err = ddevapp.NewApp(testDir, true, "")
+	app, err = ddevapp.NewApp(testDir, true)
 	assert.NoError(err)
 	//nolint: errcheck
 	defer app.Stop(true, false)
@@ -3048,7 +3036,7 @@ func TestNFSMount(t *testing.T) {
 	assert.NoError(err)
 
 	// Run NewApp so that it picks up the global config, as it would in real life
-	app, err = ddevapp.NewApp(site.Dir, false, "")
+	app, err = ddevapp.NewApp(site.Dir, false)
 	assert.NoError(err)
 	verifyNFSMount(t, app)
 
@@ -3058,7 +3046,7 @@ func TestNFSMount(t *testing.T) {
 	assert.NoError(err)
 
 	// Run NewApp so that it picks up the global config, as it would in real life
-	app, err = ddevapp.NewApp(site.Dir, false, "")
+	app, err = ddevapp.NewApp(site.Dir, false)
 	assert.NoError(err)
 
 	app.NFSMountEnabled = true
@@ -3159,7 +3147,7 @@ func TestHostDBPort(t *testing.T) {
 	switchDir := site.Chdir()
 	defer switchDir()
 
-	app, err := ddevapp.NewApp(site.Dir, false, "")
+	app, err := ddevapp.NewApp(site.Dir, false)
 	assert.NoError(err)
 
 	showportPath := app.GetConfigPath("commands/host/showport")
@@ -3250,7 +3238,7 @@ func TestPortSpecifications(t *testing.T) {
 	err = fileutil.CopyDir(ddevDir, filepath.Join(specAppPath, ".ddev"))
 	require.NoError(t, err, "could not copy to specAppPath %v", specAppPath)
 
-	specAPP, err := ddevapp.NewApp(specAppPath, false, "")
+	specAPP, err := ddevapp.NewApp(specAppPath, false)
 	assert.NoError(err)
 
 	t.Cleanup(func() {
@@ -3273,7 +3261,7 @@ func TestPortSpecifications(t *testing.T) {
 
 	// However, if we change change the name to make it appear to be a
 	// different project, we should not be able to config or start
-	conflictApp, err := ddevapp.NewApp(specAppPath, false, "")
+	conflictApp, err := ddevapp.NewApp(specAppPath, false)
 	assert.NoError(err)
 	conflictApp.Name = "conflictapp"
 
@@ -3325,7 +3313,7 @@ func TestCustomCerts(t *testing.T) {
 	switchDir := site.Chdir()
 	defer switchDir()
 
-	app, err := ddevapp.NewApp(site.Dir, false, "")
+	app, err := ddevapp.NewApp(site.Dir, false)
 	assert.NoError(err)
 
 	certDir := app.GetConfigPath("custom_certs")
@@ -3389,7 +3377,7 @@ func TestEnvironmentVariables(t *testing.T) {
 	switchDir := site.Chdir()
 	defer switchDir()
 
-	app, err := ddevapp.NewApp(site.Dir, false, "")
+	app, err := ddevapp.NewApp(site.Dir, false)
 	assert.NoError(err)
 	customCmdDest := app.GetConfigPath("commands/host/" + "showhostenvvar")
 
