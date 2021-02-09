@@ -32,12 +32,6 @@ import (
 // Regexp pattern to determine if a hostname is valid per RFC 1123.
 var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 
-// Provider is the interface which all provider plugins must implement.
-type Provider interface {
-	Init(pType string, app *DdevApp) error
-	GetBackup(string) (fileLocation string, importPath string, err error)
-}
-
 // init() is for testing situations only, allowing us to override the default webserver type
 // or caching behavior
 

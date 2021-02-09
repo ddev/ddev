@@ -88,7 +88,7 @@ type DdevApp struct {
 	DataDir                   string                `yaml:"-"`
 	SiteSettingsPath          string                `yaml:"-"`
 	SiteDdevSettingsFile      string                `yaml:"-"`
-	ProviderInstance          Provider              `yaml:"-"`
+	ProviderInstance          *Provider             `yaml:"-"`
 	Hooks                     map[string][]YAMLTask `yaml:"hooks,omitempty"`
 	UploadDir                 string                `yaml:"upload_dir,omitempty"`
 	WorkingDir                map[string]string     `yaml:"working_dir,omitempty"`
@@ -648,73 +648,6 @@ func (app *DdevApp) SiteStatus() string {
 		}
 	}
 	return siteStatus
-}
-
-// Pull performs an import from the a configured provider plugin, if one exists.
-func (app *DdevApp) Pull(provider Provider, skipDbArg bool, skipFilesArg bool, skipImportArg bool) error {
-	var err error
-	err = app.ProcessHooks("pre-pull")
-	if err != nil {
-		return fmt.Errorf("Failed to process pre-pull hooks: %v", err)
-	}
-
-	if app.SiteStatus() != SiteRunning {
-		util.Warning("Project is not currently running. Starting project before performing pull.")
-		err = app.Start()
-		if err != nil {
-			return err
-		}
-	}
-
-	if skipDbArg {
-		output.UserOut.Println("Skipping database pull.")
-	} else {
-		output.UserOut.Println("Downloading database...")
-		fileLocation, importPath, err := provider.GetBackup("database")
-		if err != nil {
-			return err
-		}
-
-		output.UserOut.Printf("Database downloaded to: %s", fileLocation)
-
-		if skipImportArg {
-			output.UserOut.Println("Skipping database import.")
-		} else {
-			output.UserOut.Println("Importing database...")
-			err = app.ImportDB(fileLocation, importPath, true, false, "db")
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	if skipFilesArg {
-		output.UserOut.Println("Skipping files pull.")
-	} else {
-		output.UserOut.Println("Downloading files...")
-		fileLocation, importPath, err := provider.GetBackup("files")
-		if err != nil {
-			return err
-		}
-
-		output.UserOut.Printf("Files downloaded to: %s", fileLocation)
-
-		if skipImportArg {
-			output.UserOut.Println("Skipping files import.")
-		} else {
-			output.UserOut.Println("Importing files...")
-			err = app.ImportFiles(fileLocation, importPath)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	err = app.ProcessHooks("post-pull")
-	if err != nil {
-		return fmt.Errorf("Failed to process post-pull hooks: %v", err)
-	}
-
-	return nil
 }
 
 // ImportFiles takes a source directory or archive and copies to the uploaded files directory of a given app.
@@ -2115,20 +2048,20 @@ func restoreApp(app *DdevApp, siteName string) error {
 }
 
 // GetProvider returns a pointer to the provider instance interface.
-func (app *DdevApp) GetProvider(providerName string) (Provider, error) {
+func (app *DdevApp) GetProvider(providerName string) (*Provider, error) {
 
 	var p Provider
 	var err error
 
 	if providerName != "" && providerName != nodeps.ProviderDefault {
-		p = &GenericProvider{
+		p = Provider{
 			ProviderType: providerName,
 			app:          app,
 		}
 		err = p.Init(providerName, app)
 	}
 
-	app.ProviderInstance = p
+	app.ProviderInstance = &p
 	return app.ProviderInstance, err
 }
 

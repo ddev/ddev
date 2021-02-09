@@ -29,15 +29,15 @@ type ProviderInfo struct {
 	CodePullCommand      ProviderCommand   `yaml:"code_pull_command,omitempty"`
 }
 
-// GenericProvider provides generic-specific import functionality.
-type GenericProvider struct {
+// Provider provides generic-specific import functionality.
+type Provider struct {
 	ProviderType string   `yaml:"provider"`
 	app          *DdevApp `yaml:"-"`
 	ProviderInfo `yaml:"providers"`
 }
 
 // Init handles loading data from saved config.
-func (p *GenericProvider) Init(pType string, app *DdevApp) error {
+func (p *Provider) Init(pType string, app *DdevApp) error {
 	p.app = app
 	configPath := app.GetConfigPath(filepath.Join("providers", pType+".yaml"))
 	if !fileutil.FileExists(configPath) {
@@ -53,10 +53,77 @@ func (p *GenericProvider) Init(pType string, app *DdevApp) error {
 	return nil
 }
 
+// Pull performs an import of db and files
+func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, skipImportArg bool) error {
+	var err error
+	err = app.ProcessHooks("pre-pull")
+	if err != nil {
+		return fmt.Errorf("Failed to process pre-pull hooks: %v", err)
+	}
+
+	if app.SiteStatus() != SiteRunning {
+		util.Warning("Project is not currently running. Starting project before performing pull.")
+		err = app.Start()
+		if err != nil {
+			return err
+		}
+	}
+
+	if skipDbArg {
+		output.UserOut.Println("Skipping database pull.")
+	} else {
+		output.UserOut.Println("Downloading database...")
+		fileLocation, importPath, err := provider.GetBackup("database")
+		if err != nil {
+			return err
+		}
+
+		output.UserOut.Printf("Database downloaded to: %s", fileLocation)
+
+		if skipImportArg {
+			output.UserOut.Println("Skipping database import.")
+		} else {
+			output.UserOut.Println("Importing database...")
+			err = app.ImportDB(fileLocation, importPath, true, false, "db")
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if skipFilesArg {
+		output.UserOut.Println("Skipping files pull.")
+	} else {
+		output.UserOut.Println("Downloading files...")
+		fileLocation, importPath, err := provider.GetBackup("files")
+		if err != nil {
+			return err
+		}
+
+		output.UserOut.Printf("Files downloaded to: %s", fileLocation)
+
+		if skipImportArg {
+			output.UserOut.Println("Skipping files import.")
+		} else {
+			output.UserOut.Println("Importing files...")
+			err = app.ImportFiles(fileLocation, importPath)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	err = app.ProcessHooks("post-pull")
+	if err != nil {
+		return fmt.Errorf("Failed to process post-pull hooks: %v", err)
+	}
+
+	return nil
+}
+
 // GetBackup will create and download a backup
 // Valid values for backupType are "database" or "files".
 // returns fileURL, importPath, error
-func (p *GenericProvider) GetBackup(backupType string) (string, string, error) {
+func (p *Provider) GetBackup(backupType string) (string, string, error) {
 	var err error
 	var filePath string
 	if backupType != "database" && backupType != "files" {
@@ -92,7 +159,7 @@ func (p *GenericProvider) GetBackup(backupType string) (string, string, error) {
 }
 
 // prepDownloadDir ensures the download cache directories are created and writeable.
-func (p *GenericProvider) prepDownloadDir() {
+func (p *Provider) prepDownloadDir() {
 	destDir := p.getDownloadDir()
 	filesDir := filepath.Join(destDir, "files")
 	_ = os.RemoveAll(destDir)
@@ -100,12 +167,12 @@ func (p *GenericProvider) prepDownloadDir() {
 	util.CheckErr(err)
 }
 
-func (p *GenericProvider) getDownloadDir() string {
+func (p *Provider) getDownloadDir() string {
 	destDir := p.app.GetConfigPath(".downloads")
 	return destDir
 }
 
-func (p *GenericProvider) getFilesBackup() (filename string, error error) {
+func (p *Provider) getFilesBackup() (filename string, error error) {
 
 	destDir := filepath.Join(p.getDownloadDir(), "files")
 	_ = os.RemoveAll(destDir)
@@ -126,7 +193,7 @@ func (p *GenericProvider) getFilesBackup() (filename string, error error) {
 
 // getDatabaseBackup retrieves database using `generic backup database`, then
 // describe until it appears, then download it.
-func (p *GenericProvider) getDatabaseBackup() (filename string, error error) {
+func (p *Provider) getDatabaseBackup() (filename string, error error) {
 	_ = os.RemoveAll(p.getDownloadDir())
 	_ = os.Mkdir(p.getDownloadDir(), 0755)
 
@@ -147,12 +214,12 @@ func (p *GenericProvider) getDatabaseBackup() (filename string, error error) {
 }
 
 // Write the generic provider configuration to a specified location on disk.
-func (p *GenericProvider) Write(configPath string) error {
+func (p *Provider) Write(configPath string) error {
 	return nil
 }
 
 // Read generic provider configuration from a specified location on disk.
-func (p *GenericProvider) Read(configPath string) error {
+func (p *Provider) Read(configPath string) error {
 	source, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		return err
@@ -168,13 +235,13 @@ func (p *GenericProvider) Read(configPath string) error {
 }
 
 // Validate ensures that the current configuration is valid (i.e. the configured pantheon site/environment exists)
-func (p *GenericProvider) Validate() error {
+func (p *Provider) Validate() error {
 	return nil
 }
 
 // injectedEnvironment() returns a string with environment variables that should be injected
 // before a command.
-func (p *GenericProvider) injectedEnvironment() string {
+func (p *Provider) injectedEnvironment() string {
 	s := "export "
 	for k, v := range p.EnvironmentVariables {
 		s = s + fmt.Sprintf(" %s=%s ", k, v)
