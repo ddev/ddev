@@ -26,14 +26,14 @@ Note that you can use the NFS setup described for each operating system below (a
 
 ### macOS NFS Setup
 
-__macOS Mojave (and above) warning:__ You'll need to temporarily give your terminal "Full disk access" before you (or the script provided) can edit /etc/exports. If you're using iterm2, here are [full instructions for iterm2](https://gitlab.com/gnachman/iterm2/wikis/fulldiskaccess). The basic idea is that in the System Preferences -> Security and Privacy -> Privacy you need to give "Full Disk Access" permissions to your terminal app. Note that the "Full Disk Access" privilege is only needed when the /etc/exports file is being edited by you, usually a one-time event.
-
-__macOS Catalina (and above) warning:__ If the projects are in a subdirectory of the ~/Documents directory or on an external drive, it is necessary to grant the "Full Disk Access" permission to the `/sbin/nfsd` binary. Full details are [below](#upgrading-catalina).
-
 Download, inspect, make executable, and run the [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh) script. Use `curl -O https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh && chmod +x macos_ddev_nfs_setup.sh && ./macos_ddev_nfs_setup.sh`. This stops running ddev projects, adds your home directory to the /etc/exports config file that nfsd uses, and enables nfsd to run on your computer. This is a one-time setup. Note that this shares your home directory via NFS to any NFS client on your computer, so it's critical to consider security issues; It's easy to make the shares in /etc/exports more limited as well, as long as they don't overlap (NFS doesn't allow overlapping exports).
 
 If your DDEV-Local projects are set up outside your home directory, you'll need to edit /etc/exports to add a line for that share as well.
 `sudo vi /etc/exports` and copy the line the script has just created (`/System/Volumes/Data/Users/username -alldirs -mapall=<your_user_id>:20 localhost`), editing it with the additional path, e.g: `/Volumes/SomeExternalDrive -alldirs -mapall=<your_uid>:20 localhost`.
+
+__macOS Mojave (and above) warning:__ You'll need to temporarily give your terminal "Full disk access" before you (or the script provided) can edit /etc/exports. If you're using iterm2, here are [full instructions for iterm2](https://gitlab.com/gnachman/iterm2/wikis/fulldiskaccess). The basic idea is that in the System Preferences -> Security and Privacy -> Privacy you need to give "Full Disk Access" permissions to your terminal app. Note that the "Full Disk Access" privilege is only needed when the /etc/exports file is being edited by you, usually a one-time event.
+
+__macOS Catalina (and above) warning:__ If the projects are in a subdirectory of the ~/Documents directory or on an external drive, it is necessary to grant the "Full Disk Access" permission to the `/sbin/nfsd` binary. Full details are [below](#upgrading-catalina).
 
 ### Windows NFS Setup
 
