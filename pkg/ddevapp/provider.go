@@ -69,6 +69,14 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 		}
 	}
 
+	if provider.AuthCommand.Command != "" {
+		output.UserOut.Print("Authenticating...")
+		err := provider.app.ExecOnHostOrService(provider.AuthCommand.Service, provider.injectedEnvironment()+"; "+provider.AuthCommand.Command)
+		if err != nil {
+			return err
+		}
+	}
+
 	if skipDbArg {
 		output.UserOut.Println("Skipping database pull.")
 	} else {
@@ -128,14 +136,6 @@ func (p *Provider) GetBackup(backupType string) (string, string, error) {
 	var filePath string
 	if backupType != "database" && backupType != "files" {
 		return "", "", fmt.Errorf("could not get backup: %s is not a valid backup type", backupType)
-	}
-
-	if p.AuthCommand.Command != "" {
-		output.UserOut.Print("Authenticating...")
-		err := p.app.ExecOnHostOrService(p.AuthCommand.Service, p.injectedEnvironment()+"; "+p.AuthCommand.Command)
-		if err != nil {
-			return "", "", err
-		}
 	}
 
 	// Set the import path blank to use the root of the archive by default.
