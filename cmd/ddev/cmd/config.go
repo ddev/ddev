@@ -311,6 +311,16 @@ func init() {
 	ConfigCommand.Flags().Bool("auto", true, `Automatically run config without prompting.`)
 
 	RootCmd.AddCommand(ConfigCommand)
+
+	// Add hidden pantheon subcommand for people who have it in their fingers
+	ConfigCommand.AddCommand(&cobra.Command{
+		Use:    "pantheon",
+		Short:  "ddev config pantheon is no longer needed, see docs",
+		Hidden: true,
+		Run: func(cmd *cobra.Command, args []string) {
+			output.UserOut.Print("`ddev config pantheon` is no longer needed, see docs")
+		},
+	})
 }
 
 // getConfigApp() does the basic setup of the app (with provider) and returns it.
