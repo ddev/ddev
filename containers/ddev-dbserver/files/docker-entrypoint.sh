@@ -18,7 +18,6 @@ function serverwait {
             echo "MariaDB initialization startup failed"
             return 2
         fi
-#        echo "MariaDB initialization startup process in progress... Try# $i"
         sleep 1
 	done
 	return 1

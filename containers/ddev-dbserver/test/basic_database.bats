@@ -19,13 +19,14 @@ function setup {
     fi
     docker rm -f ${CONTAINER_NAME} 2>/dev/null || true
 
-    echo "# Starting image with database image $IMAGE"
+    echo "# Starting container using: docker run -u "$MOUNTUID:$MOUNTGID" -v $VOLUME:/var/lib/mysql --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE"
     docker run -u "$MOUNTUID:$MOUNTGID" -v $VOLUME:/var/lib/mysql --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE
     containercheck
 }
 
 function teardown {
-    docker rm -f $CONTAINER_NAME
+    docker stop $CONTAINER_NAME
+    docker rm $CONTAINER_NAME
     docker volume rm $VOLUME || true
 }
 
