@@ -57,7 +57,7 @@ if command -v xtrabackup; then BACKUPTOOL="xtrabackup"; fi
 if [ ! -f "/var/lib/mysql/db_mariadb_version.txt" ]; then
     # If snapshot_dir is not set, this is a normal startup, so
     # tell healthcheck to wait by touching /tmp/initializing
-    if [ -z "${snapshot_dir}" ] ; then
+    if [ -z "${snapshot_dir:-}" ] ; then
       touch /tmp/initializing
     fi
     target=${snapshot_dir:-/mysqlbase/}
