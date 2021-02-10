@@ -20,8 +20,8 @@ var PullCmd = &cobra.Command{
 	Example: `ddev pull pantheon
 ddev pull ddev-live
 ddev pull platform
-ddev-live pull pantheon -y
-ddev-live pull platform --skip-files -y`,
+ddev pull pantheon -y
+ddev pull platform --skip-files -y`,
 	Args: cobra.ExactArgs(1),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		dockerutil.EnsureDdevNetwork()
@@ -81,8 +81,8 @@ func init() {
 			Use:   subCommandName,
 			Short: fmt.Sprintf("Pull with %s", subCommandName),
 			Example: fmt.Sprintf(`ddev pull %s
-ddev-live pull %s -y
-ddev-live pull %s --skip-files -y`, subCommandName, subCommandName, subCommandName),
+ddev pull %s -y
+ddev pull %s --skip-files -y`, subCommandName, subCommandName, subCommandName),
 			Args: cobra.ExactArgs(0),
 			Run: func(cmd *cobra.Command, args []string) {
 				app, err := ddevapp.GetActiveApp("")
