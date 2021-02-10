@@ -25,21 +25,21 @@ import (
  * A valid site (with backups) must be present which matches the test site and environment name
  * defined in the constants below.
  */
-const acquiaTestSite = "ddev-live-test-no-delete"
+const acquiaTestSite = "eeamoreno.dev"
 
 // TestAcquiaPull ensures we can pull backups from Acquia
 func TestAcquiaPull(t *testing.T) {
 	token := ""
 	secret := ""
 	sshkey := ""
-	if token = os.Getenv("DDEV_ACQUIA_KEY"); token == "" {
+	if token = os.Getenv("DDEV_ACQUIA_API_KEY"); token == "" {
 		t.Skipf("No DDEV_ACQUIA_KEY env var has been set. Skipping %v", t.Name())
 	}
-	if secret = os.Getenv("DDEV_ACQUIA_SECRET"); secret == "" {
+	if secret = os.Getenv("DDEV_ACQUIA_API_SECRET"); secret == "" {
 		t.Skipf("No DDEV_ACQUIA_SECRET env var has been set. Skipping %v", t.Name())
 	}
-	if sshkey = os.Getenv("DDEV_ACQUIA_SSHKEY"); sshkey == "" {
-		t.Skipf("No DDEV_ACQUIA_SSHKEY env var has been set. Skipping %v", t.Name())
+	if sshkey = os.Getenv("DDEV_ACQUIA_SSH_KEY"); sshkey == "" {
+		t.Skipf("No DDEV_ACQUIA_SSH_KEY env var has been set. Skipping %v", t.Name())
 	}
 	sshkey = strings.Replace(sshkey, "<SPLIT>", "\n", -1)
 
@@ -64,7 +64,9 @@ func TestAcquiaPull(t *testing.T) {
 	assert.NoError(err)
 	err = ioutil.WriteFile(filepath.Join("sshtest", "id_rsa_test"), []byte(sshkey), 0600)
 	assert.NoError(err)
-	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("%s auth ssh -d sshtest", DdevBin)})
+	out, err := exec.RunCommand("expect", []string{"-c", fmt.Sprintf("%s auth ssh -d sshtest", DdevBin)})
+	assert.NoError(err)
+	assert.Contains(string(out), "Identity added:")
 	assert.NoError(err)
 
 	app, err := NewApp(siteDir, true)
@@ -114,7 +116,7 @@ func TestAcquiaPull(t *testing.T) {
 	assert.NoError(err)
 
 	assert.FileExists(filepath.Join(app.GetUploadDir(), "chocolate-brownie-umami.jpg"))
-	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="randy@example.com";' | %s mysql -N`, DdevBin)})
+	out, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="randy@example.com";' | %s mysql -N`, DdevBin)})
 	assert.NoError(err)
 	assert.True(strings.HasPrefix(out, "1\n"))
 
