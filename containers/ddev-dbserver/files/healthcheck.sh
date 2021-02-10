@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## mysql health check for docker. original source: https://github.com/docker-library/healthcheck/blob/master/mysql/docker-healthcheck
+## mysql health check for docker
 
 set -eo pipefail
 sleeptime=59

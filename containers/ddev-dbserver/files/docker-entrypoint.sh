@@ -55,7 +55,11 @@ if command -v xtrabackup; then BACKUPTOOL="xtrabackup"; fi
 # If mariadb has not been initialized, copy in the base image from either the default starter image (/mysqlbase)
 # or from a provided $snapshot_dir.
 if [ ! -f "/var/lib/mysql/db_mariadb_version.txt" ]; then
-    touch /tmp/initializing
+    # If snapshot_dir is not set, this is a normal startup, so
+    # tell healthcheck to wait by touching /tmp/initializing
+    if [ -z "${snapshot_dir}" ] ; then
+      touch /tmp/initializing
+    fi
     target=${snapshot_dir:-/mysqlbase/}
     name=$(basename $target)
     sudo rm -rf /var/lib/mysql/* /var/lib/mysql/.[a-z]* && sudo chmod -R ugo+w /var/lib/mysql
@@ -63,7 +67,7 @@ if [ ! -f "/var/lib/mysql/db_mariadb_version.txt" ]; then
     ${BACKUPTOOL} --prepare --skip-innodb-use-native-aio --target-dir "$target" --user=root --password=root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_prepare_$name.log"
     ${BACKUPTOOL} --copy-back --skip-innodb-use-native-aio --force-non-empty-directories --target-dir "$target" --user=root --password=root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_copy_back_$name.log"
     echo "Database initialized from ${target}"
-    rm /tmp/initializing
+    rm -f /tmp/initializing
 fi
 
 database_db_version=$(cat /var/lib/mysql/db_mariadb_version.txt)
