@@ -1613,6 +1613,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("snapshot %s is a DB server %s snapshot and is not compatible with the configured ddev DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the ddev DB version", snapshotDir, snapshotDBVersion, currentDBVersion)
 	}
 
+	//dockerutil.GetAppContainers(app.Name)
 	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SitePaused {
 		err := app.Stop(false, false)
 		if err != nil {
@@ -1629,7 +1630,20 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	err = os.Unsetenv("DDEV_MARIADB_LOCAL_COMMAND")
 	util.CheckErr(err)
 
-	util.Success("Restored database snapshot %s\n(On huge databases restore may be ongoing, view with 'ddev logs -s db -f')", hostSnapshotDir)
+	output.UserOut.Printf("Waiting for snapshot restore to complete...\nYou can also follow the restore progress in another terminal window with `ddev logs -s db -f %s`", app.Name)
+	// Now it's up, but we need to find out when it finishes loading.
+	for {
+		_, _, err = app.Exec(&ExecOpts{
+			Cmd:     "killall -0 mysqld 2>/dev/null",
+			Service: "db",
+		})
+		if err == nil {
+			break
+		}
+		time.Sleep(1 * time.Second)
+		fmt.Print(".")
+	}
+	util.Success("\nRestored database snapshot %s", hostSnapshotDir)
 	err = app.ProcessHooks("post-restore-snapshot")
 	if err != nil {
 		return fmt.Errorf("Failed to process post-restore-snapshot hooks: %v", err)

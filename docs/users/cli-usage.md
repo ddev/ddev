@@ -15,7 +15,7 @@ Each of these commands has full help. For example, `ddev start -h` or `ddev help
 * `ddev heidisql` (Windows/WSL2 only, if installed) gives access to the HeidiSQL database browser GUI.
 * `ddev import-db` and `ddev export-db` let you import or export a sql or compressed sql file.
 * `ddev composer` lets you run composer (inside the container), for example `ddev composer install` will do a full composer install for you without even needing composer on your computer. See [developer tools](developer-tools.md#ddev-and-composer).
-* `ddev snapshot` makes a very fast snapshot of your database that can be easily and quickly restored with `ddev restore-snapshot`.
+* `ddev snapshot` makes a very fast snapshot of your database that can be easily and quickly restored with `ddev snapshot restore`.
 * `ddev share` works with [ngrok](https://ngrok.com/) (and requires ngrok) so you can let someone in the next office or on the other side of the planet see your project and what you're working on. `ddev share -h` gives more info about how to set up ngrok (it's easy).
 * `ddev ssh` opens a bash session in the web container (or other container).
 * `ddev launch` or `ddev launch some/uri` will launch a browser with the current project's URL (or a full URL to `/some/uri`). `ddev launch -p` will launch the phpMyAdmin UI, and `ddev launch -m` will launch the MailHog UI.
@@ -673,10 +673,8 @@ ddev snapshot restore d8git_20180801132403
 Restored database snapshot: /Users/rfay/workspace/d8git/.ddev/db_snapshots/d8git_20180801132403
 ```
 
-Snapshots are stored in the project's .ddev/db_snapshots directory, and the directory can be renamed as necessary. For example, if you rename the above d8git_20180801132403 directory to "working_before_migration", then you can use `ddev snapshot restore working_before_migration`.
+Snapshots are stored in the project's .ddev/db_snapshots directory, and the directory created for a snapshot can be renamed as necessary. For example, if you rename the above d8git_20180801132403 directory to "working_before_migration", then you can use `ddev snapshot restore working_before_migration`.
 To restore the latest snapshot add the `--latest` flag (`ddev snapshot restore --latest`).
-
-To delete a snapshot, delete its folder from the .ddev/db_snapshots directory. Snapshots are not removed from the filesystem by `ddev delete`. It is safe to remove all the snapshots with `rm -r .ddev/db_snapshots` if you no longer need the snapshots.
 
 All snapshots of a project can be removed with `ddev snapshot --cleanup`. A single snapshot can be removed by `ddev snapshot --cleanup --name <snapshot-name>`.
 

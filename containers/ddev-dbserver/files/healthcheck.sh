@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## mysql health check for docker. original source: https://github.com/docker-library/healthcheck/blob/master/mysql/docker-healthcheck
+## mysql health check for docker
 
 set -eo pipefail
 sleeptime=59
@@ -15,8 +15,22 @@ if [ -f /tmp/healthy ]; then
     sleep ${sleeptime}
 fi
 
+# If /tmp/initializing, it means we're loading the default starter database
+if [ -f /tmp/initializing ]; then
+  printf "initializing"
+  exit 1
+fi
 
-if mysql --host=127.0.0.1 -udb -pdb --database=db -e "SHOW DATABASES LIKE 'db';" >/dev/null;  then
+# If mariabackup or xtrabackup is running (and not initializing)
+# It means snapshot restore is in progress
+if killall -0 mariabackup || killall -0 xtrabackup ; then
+  printf "restoring snapshot"
+  touch /tmp/healthy
+  exit 0
+fi
+
+# If we can now access the server, we're healthy and ready
+if  mysql --host=127.0.0.1 -udb -pdb --database=db -e "SHOW DATABASES LIKE 'db';" >/dev/null;  then
     printf "healthy"
     touch /tmp/healthy
     exit 0
