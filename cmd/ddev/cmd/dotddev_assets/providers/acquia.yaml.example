@@ -3,17 +3,19 @@
 
 # To use this configuration,
 # 1. Get your Acquia API token from the Account Settings->API Tokens.
-# 5. Add add an entry to web_environment in ~/.ddev/global_config.yaml with the token:
+# 2. Make sure your ssh key is authorized on your Acquia account at Account Settings->SSH Keys
+# 3. `ddev auth ssh` (this typically needs only be done once per ddev session, not every pull.)
+# 4. Add add an entry to web_environment in ~/.ddev/global_config.yaml with the token:
 # web_environment:
 # - ACQUIA_API_TOKEN=xxxxxxxx
 # - ACQUIA_API_SECRET=xxxxx
-# 6. Copy acli.yaml.example to acli.yaml.
-# 7. Update project_id.
+# 5. Copy acli.yaml.example to acli.yaml.
+# 6. Update project_id.
+# 7. Your project must include drush; `ddev composer require drush/drush` if it doesn't already.
 # 8. `ddev restart`
 # 9. Use `ddev pull acquia` to pull the project database and files.
 
 #TODO: ddev exec acli link
-#TODO: `ddev auth ssh`
 
 # Debugging: Use `ddev exec acli command` and `ddev exec acli auth:info`
 

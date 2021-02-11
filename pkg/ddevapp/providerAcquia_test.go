@@ -29,13 +29,13 @@ const acquiaTestSite = "eeamoreno.dev"
 
 // TestAcquiaPull ensures we can pull backups from Acquia
 func TestAcquiaPull(t *testing.T) {
-	token := ""
-	secret := ""
+	acquiaKey := ""
+	acquiaSecret := ""
 	sshkey := ""
-	if token = os.Getenv("DDEV_ACQUIA_API_KEY"); token == "" {
+	if acquiaKey = os.Getenv("DDEV_ACQUIA_API_KEY"); acquiaKey == "" {
 		t.Skipf("No DDEV_ACQUIA_KEY env var has been set. Skipping %v", t.Name())
 	}
-	if secret = os.Getenv("DDEV_ACQUIA_API_SECRET"); secret == "" {
+	if acquiaSecret = os.Getenv("DDEV_ACQUIA_API_SECRET"); acquiaSecret == "" {
 		t.Skipf("No DDEV_ACQUIA_SECRET env var has been set. Skipping %v", t.Name())
 	}
 	if sshkey = os.Getenv("DDEV_ACQUIA_SSH_KEY"); sshkey == "" {
@@ -49,7 +49,7 @@ func TestAcquiaPull(t *testing.T) {
 
 	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
 
-	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"DDEV_ACQUIA_KEY=" + token, "DDEV_ACQUIA_SECRET=" + secret}
+	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"ACQUIA_API_KEY=" + acquiaKey, "ACQUIA_API_SECRET=" + acquiaSecret}
 	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	assert.NoError(err)
 
@@ -64,10 +64,9 @@ func TestAcquiaPull(t *testing.T) {
 	assert.NoError(err)
 	err = ioutil.WriteFile(filepath.Join("sshtest", "id_rsa_test"), []byte(sshkey), 0600)
 	assert.NoError(err)
-	out, err := exec.RunCommand("expect", []string{"-c", fmt.Sprintf("%s auth ssh -d sshtest", DdevBin)})
+	out, err := exec.RunCommand("expect", []string{filepath.Join(testDir, "testdata", t.Name(), "ddevauthssh.expect"), DdevBin, "./sshtest"})
 	assert.NoError(err)
 	assert.Contains(string(out), "Identity added:")
-	assert.NoError(err)
 
 	app, err := NewApp(siteDir, true)
 	assert.NoError(err)
@@ -85,7 +84,7 @@ func TestAcquiaPull(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	app.Name = acquiaTestSite
+	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal9
 
 	err = app.WriteConfig()
@@ -100,12 +99,11 @@ func TestAcquiaPull(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	// Build our ddev-live.yaml from the example file
-	s, err := ioutil.ReadFile(app.GetConfigPath("providers/ddev-live.yaml.example"))
+	// Build our acquia.yaml from the example file
+	s, err := ioutil.ReadFile(app.GetConfigPath("providers/acquia.yaml.example"))
 	require.NoError(t, err)
-	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: %s/%s\n#project_id:", ddevLiveOrg, acquiaTestSite), -1)
-	x = strings.Replace(x, "database_backup:", fmt.Sprintf("database_backup: %s/%s\n#database_backup: ", ddevLiveOrg, ddevLiveDBBackupName), -1)
-	err = ioutil.WriteFile(app.GetConfigPath("providers/ddev-live.yaml"), []byte(x), 0666)
+	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: %s\n#project_id:", acquiaTestSite), -1)
+	err = ioutil.WriteFile(app.GetConfigPath("providers/acquia.yaml"), []byte(x), 0666)
 	assert.NoError(err)
 	err = app.WriteConfig()
 	require.NoError(t, err)
