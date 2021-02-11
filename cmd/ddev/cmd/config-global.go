@@ -127,7 +127,6 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 	output.UserOut.Printf("auto-restart-containers=%v", globalconfig.DdevGlobalConfig.AutoRestartContainers)
 	output.UserOut.Printf("use-hardened-images=%v", globalconfig.DdevGlobalConfig.UseHardenedImages)
 	output.UserOut.Printf("fail-on-hook-fail=%v", globalconfig.DdevGlobalConfig.FailOnHookFailGlobal)
-	output.UserOut.Printf("host-docker-internal=%v", globalconfig.DdevGlobalConfig.HostDockerInternal)
 }
 
 func init() {

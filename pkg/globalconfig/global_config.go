@@ -13,7 +13,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -53,7 +52,6 @@ type GlobalConfig struct {
 	AutoRestartContainers    bool     `yaml:"auto_restart_containers"`
 	FailOnHookFailGlobal     bool     `yaml:"fail_on_hook_fail"`
 	WebEnvironment           []string `yaml:"web_environment"`
-	HostDockerInternal       string   `yaml:"host_docker_internal"`
 
 	ProjectList map[string]*ProjectInfo `yaml:"project_info"`
 }
@@ -122,10 +120,6 @@ func ReadGlobalConfig() error {
 	// and ignore the setting.
 	if DdevGlobalConfig.InternetDetectionTimeout < nodeps.InternetDetectionTimeoutDefault {
 		DdevGlobalConfig.InternetDetectionTimeout = nodeps.InternetDetectionTimeoutDefault
-	}
-	// Temporary workaround until Docker on m1 mac has host.docker.internal
-	if DdevGlobalConfig.HostDockerInternal == "" && runtime.GOOS == "darwin" && runtime.GOARCH == "arm64" {
-		DdevGlobalConfig.HostDockerInternal = "192.168.64.1"
 	}
 
 	err = ValidateGlobalConfig()
