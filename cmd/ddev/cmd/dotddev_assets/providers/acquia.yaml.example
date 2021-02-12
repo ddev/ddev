@@ -9,7 +9,7 @@
 # web_environment:
 # - ACQUIA_API_TOKEN=xxxxxxxx
 # - ACQUIA_API_SECRET=xxxxx
-# 5. Copy acli.yaml.example to acli.yaml.
+# 5. Copy acquia.yaml.example to acquia.yaml.
 # 6. Update project_id.
 # 7. Your project must include drush; `ddev composer require drush/drush` if it doesn't already.
 # 8. `ddev restart`
