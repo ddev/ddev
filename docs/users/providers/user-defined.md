@@ -2,7 +2,7 @@
 
 Users can define their own provider integration using a simple yaml file in the project .ddev/providers file.
 
-The .ddev/providers directory has a number of examples, including flatfile, platform, pantheon, rsync, and ddev-live examples.
+The .ddev/providers directory has a number of examples, including local file, Acquia, Platform.sh, Pantheon.io, rsync, and ddev-live examples.
 
 * If general authentication is required, it can be
     * Added via an global environment variable (as is done with the token in the platform.sh example)

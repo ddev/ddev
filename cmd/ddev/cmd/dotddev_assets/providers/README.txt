@@ -2,7 +2,7 @@ Providers README
 ================
 
 Providers are connections to external resources that can provide upstream database
-or user-uploaded files, for example DDEV-Live, Pantheon.io, and Platform.sh.
+or user-uploaded files, for example Acquia, DDEV-Live, Pantheon.io, and Platform.sh.
 
 The magic to use them goes in a yaml file in this directory.
 
