@@ -1,0 +1,41 @@
+#ddev-generated
+# Example Acquia provider configuration.
+
+# To use this configuration,
+# 1. Get your Acquia API token from the Account Settings->API Tokens.
+# 2. Make sure your ssh key is authorized on your Acquia account at Account Settings->SSH Keys
+# 3. `ddev auth ssh` (this typically needs only be done once per ddev session, not every pull.)
+# 4. Add add an entry to web_environment in ~/.ddev/global_config.yaml with the token:
+# web_environment:
+# - ACQUIA_API_TOKEN=xxxxxxxx
+# - ACQUIA_API_SECRET=xxxxx
+# 5. Copy acquia.yaml.example to acquia.yaml.
+# 6. Update project_id.
+# 7. Your project must include drush; `ddev composer require drush/drush` if it doesn't already.
+# 8. `ddev restart`
+# 9. Use `ddev pull acquia` to pull the project database and files.
+
+#TODO: ddev exec acli link
+
+# Debugging: Use `ddev exec acli command` and `ddev exec acli auth:info`
+
+environment_variables:
+  project_id: eeamoreno.dev
+
+auth_command:
+  command: acli auth:login -n --key="${ACQUIA_API_KEY}" --secret="${ACQUIA_API_SECRET}"
+
+
+db_pull_command:
+  command: |
+    pushd /var/www/html/.ddev/.downloads >/dev/null
+    acli remote:drush -n eeamoreno.dev -- sql-dump >db.sql
+    gzip db.sql
+
+files_pull_command:
+  command: |
+    acli remote:aliases:download -n
+    drush core:init -y
+    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
+    pushd /var/www/html/.ddev/.downloads >/dev/null;
+    drush rsync -q -y @${project_id}:%files ./files
