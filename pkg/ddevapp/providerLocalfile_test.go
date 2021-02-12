@@ -17,8 +17,8 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-// TestFlatfilePull ensures we can pull backups from a flat file for a configured environment.
-func TestFlatfilePull(t *testing.T) {
+// TestLocalfilePull ensures we can pull backups from a flat file for a configured environment.
+func TestLocalfilePull(t *testing.T) {
 	assert := asrt.New(t)
 	var err error
 
@@ -51,18 +51,18 @@ func TestFlatfilePull(t *testing.T) {
 	_, err = exec.Command(DdevBin).CombinedOutput()
 	require.NoError(t, err)
 
-	// Build our Flatfile.yaml from the example file
-	s, err := ioutil.ReadFile(app.GetConfigPath("providers/flatfile.yaml.example"))
+	// Build our localfile.yaml from the example file
+	s, err := ioutil.ReadFile(app.GetConfigPath("providers/localfile.yaml.example"))
 	require.NoError(t, err)
 	x := strings.Replace(string(s), "~/Dropbox", path.Join(dockerutil.MassageWindowsHostMountpoint(testDir), "testdata", t.Name()), -1)
 	appRoot := dockerutil.MassageWindowsHostMountpoint(app.AppRoot)
 	x = strings.Replace(x, "/full/path/to/project/root", appRoot, -1)
-	err = ioutil.WriteFile(app.GetConfigPath("providers/flatfile.yaml"), []byte(x), 0666)
+	err = ioutil.WriteFile(app.GetConfigPath("providers/localfile.yaml"), []byte(x), 0666)
 	assert.NoError(err)
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
-	provider, err := app.GetProvider("flatfile")
+	provider, err := app.GetProvider("localfile")
 	require.NoError(t, err)
 	err = app.Start()
 	require.NoError(t, err)
