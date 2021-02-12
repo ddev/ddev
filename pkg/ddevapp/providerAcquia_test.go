@@ -86,6 +86,7 @@ func TestAcquiaPull(t *testing.T) {
 
 	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal9
+	app.ComposerVersion = "2"
 
 	err = app.WriteConfig()
 	assert.NoError(err)
@@ -94,6 +95,9 @@ func TestAcquiaPull(t *testing.T) {
 
 	// Run ddev once to create all the files in .ddev, including the example
 	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("%s >/dev/null", DdevBin)})
+	require.NoError(t, err)
+
+	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("%s composer require drush/drush >/dev/null 2>&1", DdevBin)})
 	require.NoError(t, err)
 
 	err = app.Start()
