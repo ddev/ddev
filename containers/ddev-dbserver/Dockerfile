@@ -13,11 +13,11 @@ ENV MYSQL_ROOT_PASSWORD root
 
 SHELL ["/bin/bash", "-c"]
 
-RUN apt-get -qq update && apt-get -qq install -y tzdata sudo gnupg2 pv less vim wget curl lsb-release >/dev/null
+RUN apt-get -qq update && apt-get -qq install -y tzdata gnupg2 pv less vim wget curl lsb-release >/dev/null
 
 RUN set -x; if ( ! command -v xtrabackup && ! command -v mariabackup ); then \
     curl -sSL https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb -o percona-release_latest.$(lsb_release -sc)_all.deb; \
-    sudo dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb >/dev/null; \
+    dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb >/dev/null; \
     rm percona-release*.deb ; \
     xtrabackup_version=percona-xtrabackup-24 ; \
     if [ "$DB_VERSION" = "8.0" ]; then xtrabackup_version=percona-xtrabackup-80; fi ; \

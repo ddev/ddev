@@ -31,7 +31,7 @@ if [ $# = "2" -a "${1:-}" = "restore_snapshot" ] ; then
     echo "Restoring from snapshot directory $snapshot_dir"
     # Ugly macOS .DS_Store in this directory can break the restore
     find ${snapshot_dir} -name .DS_Store -print0 | xargs rm -f
-    sudo rm -rf /var/lib/mysql/*
+    rm -rf /var/lib/mysql/*
   else
     echo "$snapshot_dir does not exist, not attempting restore of snapshot"
     unset snapshot_dir
@@ -39,16 +39,14 @@ if [ $# = "2" -a "${1:-}" = "restore_snapshot" ] ; then
   fi
 fi
 
-sudo chown -R "$(id -u):$(id -g)" /mysqlbase /var/lib/mysql
+#sudo chown -R "$(id -u):$(id -g)" /mysqlbase /var/lib/mysql
 
 server_db_version=$(PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld -V 2>/dev/null | awk '{sub( /\.[0-9]+(-.*)?$/, "", $3); print $3 }')
 
-sudo chown -R "$UID:$(id -g)" /var/lib/mysql
-
 # If we have extra mariadb cnf files,, copy them to where they go.
 if [ -d /mnt/ddev_config/mysql -a "$(echo /mnt/ddev_config/mysql/*.cnf)" != "/mnt/ddev_config/mysql/*.cnf" ] ; then
-  sudo cp /mnt/ddev_config/mysql/*.cnf /etc/mysql/conf.d
-  sudo chmod -R ugo-w /etc/mysql/conf.d
+  cp /mnt/ddev_config/mysql/*.cnf /etc/mysql/conf.d
+  chmod -R ugo-w /etc/mysql/conf.d
 fi
 
 export BACKUPTOOL=mariabackup
@@ -64,8 +62,8 @@ if [ ! -f "/var/lib/mysql/db_mariadb_version.txt" ]; then
     fi
     target=${snapshot_dir:-/mysqlbase/}
     name=$(basename $target)
-    sudo rm -rf /var/lib/mysql/* /var/lib/mysql/.[a-z]* && sudo chmod -R ugo+w /var/lib/mysql
-    sudo chmod -R ugo+r $target
+    rm -rf /var/lib/mysql/* /var/lib/mysql/.[a-z]* && chmod -R ugo+w /var/lib/mysql
+    chmod -R ugo+r $target
     ${BACKUPTOOL} --prepare --skip-innodb-use-native-aio --target-dir "$target" --user=root --password=root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_prepare_$name.log"
     ${BACKUPTOOL} --copy-back --skip-innodb-use-native-aio --force-non-empty-directories --target-dir "$target" --user=root --password=root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_copy_back_$name.log"
     echo "Database initialized from ${target}"
@@ -95,7 +93,7 @@ fi
 echo $server_db_version >/var/lib/mysql/db_mariadb_version.txt
 
 cp -r /home/{.my.cnf,.bashrc} ~/
-sudo mkdir -p /mnt/ddev-global-cache/bashhistory/${HOSTNAME}
+mkdir -p /mnt/ddev-global-cache/bashhistory/${HOSTNAME} || true
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ ~/.my.cnf
 
 echo
