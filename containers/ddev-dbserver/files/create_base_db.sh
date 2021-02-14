@@ -10,7 +10,7 @@ mkdir -p ${OUTDIR}
 chown -R "$(id -u):$(id -g)" $OUTDIR
 
 chmod ugo+w /var/tmp
-mkdir -p /var/lib/mysql /mnt/ddev_config/mysql && sudo rm -f /var/lib/mysql/* && chmod -R ugo+w /var/lib/mysql
+mkdir -p /var/lib/mysql /mnt/ddev_config/mysql && rm -f /var/lib/mysql/* && chmod -R ugo+w /var/lib/mysql
 
 echo 'Initializing mysql'
 mysqld --version

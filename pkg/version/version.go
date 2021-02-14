@@ -46,7 +46,7 @@ var WebTag = "20210215_var_lock_apache" // Note that this can be overridden by m
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20210215_ds_store"
+var BaseDBTag = "20210213_db_image_no_sudo"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"

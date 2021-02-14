@@ -39,8 +39,6 @@ if [ $# = "2" -a "${1:-}" = "restore_snapshot" ] ; then
   fi
 fi
 
-#sudo chown -R "$(id -u):$(id -g)" /mysqlbase /var/lib/mysql
-
 server_db_version=$(PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld -V 2>/dev/null | awk '{sub( /\.[0-9]+(-.*)?$/, "", $3); print $3 }')
 
 # If we have extra mariadb cnf files,, copy them to where they go.
@@ -94,7 +92,7 @@ echo $server_db_version >/var/lib/mysql/db_mariadb_version.txt
 
 cp -r /home/{.my.cnf,.bashrc} ~/
 mkdir -p /mnt/ddev-global-cache/bashhistory/${HOSTNAME} || true
-sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ ~/.my.cnf
+chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ ~/.my.cnf
 
 echo
 echo 'MySQL init process done. Ready for start up.'
