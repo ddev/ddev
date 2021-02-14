@@ -32,6 +32,13 @@ mysql_containers:
 		docker buildx build -o type=docker $(DOCKER_ARGS) --build-arg="DBVERSION=$$baseversion" --build-arg="PARENTIMAGEVERSION=$$fullversion" --build-arg="DBTYPE=mysql" -t "drud/ddev-dbserver-mysql-$${baseversion%%%.*}:$(VERSION)" . ; \
 	done
 
+# Need to be able to
+# * Build each version of mariadb and mysql
+# * Build only if supported on architecture
+# * Build for each architecture (or both)
+# * Test built item
+mariadb_10.2:
+
 # Below has mariadb_containers and mysql_containers as a prerequisite because those build the amd64 images.
 # So, the multi-arch approach here is a bit different from the ones in the other Makefiles.
 multi-arch: mariadb_containers mysql_containers
