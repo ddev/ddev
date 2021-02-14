@@ -64,7 +64,6 @@ DDEV works happily with most any PHP or static HTML project, although it has spe
 mkdir my-wp-bedrock-site
 cd my-wp-bedrock-site
 ddev config --project-type=wordpress --docroot=web --create-docroot
-ddev start
 ddev composer create roots/bedrock
 ```
 
@@ -83,7 +82,7 @@ Now, since [Bedrock](https://roots.io/bedrock/) uses a configuration technique w
     WP_ENV=development
 ```
 
-You can then `ddev start` and `ddev launch`.
+You can then `ddev start` (or directly `ddev launch`).
 
 For more details see [Bedrock installation](https://roots.io/bedrock/docs/installing-bedrock/)
 
@@ -137,7 +136,6 @@ Get started with Drupal 8 projects on ddev either using a new or existing compos
 mkdir my-drupal8-site
 cd my-drupal8-site
 ddev config --project-type=drupal8 --docroot=web --create-docroot
-ddev start
 ddev composer create "drupal/recommended-project:^8"
 ddev composer require drush/drush
 ddev drush site:install -y
@@ -166,7 +164,6 @@ Get started with Drupal 9 projects on ddev either using a new or existing compos
 mkdir my-drupal9-site
 cd my-drupal9-site
 ddev config --project-type=drupal9 --docroot=web --create-docroot
-ddev start
 ddev composer create "drupal/recommended-project"
 ddev composer require drush/drush
 ddev drush site:install -y
@@ -193,7 +190,6 @@ Beginning to use ddev with a Drupal 6 or 7 project is as simple as cloning the p
 git clone https://github.com/user/my-drupal-site
 cd my-drupal-site
 ddev config
-ddev start
 ddev launch /install.php
 ```
 
@@ -209,7 +205,6 @@ Quickstart instructions for database imports can be found under [Database Import
 mkdir my-typo3-site
 cd my-typo3-site
 ddev config --project-type=typo3 --docroot=public --create-docroot
-ddev start
 ddev composer create "typo3/cms-base-distribution:^11"
 ddev exec touch public/FIRST_INSTALL
 ddev launch
@@ -237,7 +232,6 @@ To get started with Backdrop, clone the project repository and navigate to the p
 git clone https://github.com/example/example-site
 cd example-site
 ddev config
-ddev start
 ddev launch
 ```
 
@@ -270,7 +264,6 @@ ddev config --project-type=magento2 --docroot=pub --create-docroot
 Copy [docker-compose.elasticsearch.yaml](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/elasticsearch/docker-compose.elasticsearch.yaml) to local `.ddev` directory.
 
 ```bash
-ddev start
 ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition
 ddev ssh
 bin/magento setup:install --base-url=https://ddev-magento2.ddev.site/ --db-host=db --db-name=db --db-user=db --db-password=db --elasticsearch-host=elasticsearch --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com --admin-user=admin --admin-password=admin123 --language=en_US
@@ -296,7 +289,6 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) jus
 mkdir my-laravel-app
 cd my-laravel-app
 ddev config --project-type=laravel --docroot=public --create-docroot
-ddev start
 ddev composer create --prefer-dist laravel/laravel
 ddev exec "cat .env.example | sed  -E 's/DB_(HOST|DATABASE|USERNAME|PASSWORD)=(.*)/DB_\1=db/g' > .env"
 ddev exec "php artisan key:generate"
@@ -368,7 +360,6 @@ You can set up a Shopware 6 environment many ways, but this shows you one recomm
 git clone --branch=6.2 https://github.com/shopware/production my-shopware6
 cd my-shopware6
 ddev config --project-type=shopware6 --docroot=public
-ddev start
 ddev composer install
 ddev exec bin/console system:setup
 # In system:startup use
@@ -379,7 +370,6 @@ ddev exec bin/console system:setup
 # Database Port: (default)
 # Database Name: db
 ddev exec bin/console system:install --create-database --basic-setup
-ddev start
 ddev launch /admin
 ```
 
