@@ -46,7 +46,7 @@ var WebTag = "20210210_acquia" // Note that this can be overridden by make
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20210115_huge_db_snapshot_restore"
+var BaseDBTag = "20210214_db_build_refactor"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"

@@ -99,7 +99,7 @@ if [ -z ${DB_PINNED_VERSION:-} ]; then
   DB_PINNED_VERSION=${DB_MAJOR_VERSION}
 fi
 
-printf "\n\n========== Building drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG} with pinned version ${DB_PINNED_VERSION} ==========\n"
+printf "\n\n========== Building drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG} for ${ARCHS} with pinned version ${DB_PINNED_VERSION} ==========\n"
 
 if [ ! -z ${PUSH:-} ]; then
   echo "building/pushing drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}"
