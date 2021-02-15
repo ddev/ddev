@@ -12,6 +12,7 @@ on:
 env:
   BUILDKIT_PROGRESS: plain
   DOCKER_CLI_EXPERIMENTAL: enabled
+  NO_LOAD: true
 
 jobs:
 
