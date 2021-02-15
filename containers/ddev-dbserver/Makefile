@@ -42,7 +42,7 @@ $(BUILD_TARGETS):
 	export DB_MAJOR_VERSION=$(word 2, $(subst _, ,$@)) && \
 	export ARCH=$(word 3, $(subst _, ,$@)) && \
 	if [ $${ARCH} = "both" ]; then ARCHS="linux/amd64,linux/arm64"; else ARCHS="linux/amd64"; fi && \
-	cmd="./build_image.sh --db-major-version $${DB_MAJOR_VERSION} --archs=$${ARCHS} --tag=$(VERSION)" && \
+	cmd="./build_image.sh --db-type=$${DB_TYPE} --db-major-version $${DB_MAJOR_VERSION} --archs=$${ARCHS} --tag=$(VERSION)" && \
 	if [ ! -z $${PUSH} ]; then cmd="$$cmd --push"; fi && \
 	echo $${cmd} && \
 	$${cmd}
