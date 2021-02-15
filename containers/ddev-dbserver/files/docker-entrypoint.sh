@@ -29,6 +29,8 @@ if [ $# = "2" -a "${1:-}" = "restore_snapshot" ] ; then
   snapshot_dir="/mnt/ddev_config/db_snapshots/${2:-nothingthere}"
   if [ -d "$snapshot_dir" ] ; then
     echo "Restoring from snapshot directory $snapshot_dir"
+    # Ugly macOS .DS_Store in this directory can break the restore
+    find ${snapshot_dir} -name .DS_Store -print0 | xargs rm -f
     sudo rm -rf /var/lib/mysql/*
   else
     echo "$snapshot_dir does not exist, not attempting restore of snapshot"
