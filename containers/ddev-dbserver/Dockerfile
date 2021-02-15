@@ -1,10 +1,10 @@
-ARG DBTYPE
-ARG PARENTIMAGEVERSION
-FROM ${DBTYPE}:${PARENTIMAGEVERSION}
+ARG DB_TYPE
+ARG DB_PINNED_VERSION
+FROM ${DB_TYPE}:${DB_PINNED_VERSION}
 
 # This must be reiterated because everything is emptied on FROM
-ARG DBVERSION
-ARG DBTYPE
+ARG DB_TYPE
+ARG DB_VERSION
 
 ENV MYSQL_DATABASE db
 ENV MYSQL_USER db
@@ -15,12 +15,12 @@ SHELL ["/bin/bash", "-c"]
 
 RUN apt-get -qq update && apt-get -qq install -y tzdata sudo gnupg2 pv less vim wget curl lsb-release >/dev/null
 
-RUN if ( ! command -v xtrabackup && ! command -v mariabackup ); then \
+RUN set -x; if ( ! command -v xtrabackup && ! command -v mariabackup ); then \
     curl -sSL https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb -o percona-release_latest.$(lsb_release -sc)_all.deb; \
     sudo dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb >/dev/null; \
     rm percona-release*.deb ; \
     xtrabackup_version=percona-xtrabackup-24 ; \
-    if [ "$DBVERSION" = "8.0" ]; then xtrabackup_version=percona-xtrabackup-80; fi ; \
+    if [ "$DB_VERSION" = "8.0" ]; then xtrabackup_version=percona-xtrabackup-80; fi ; \
     apt-get -qq update && apt-get -qq install -y ${xtrabackup_version} >/dev/null ; \
 fi
 RUN apt-get -qq autoclean
