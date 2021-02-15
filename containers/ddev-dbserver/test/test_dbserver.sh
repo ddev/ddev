@@ -21,4 +21,4 @@ export CURRENT_ARCH=$(arch)
 # /usr/local/bin is added for git-bash, where it may not be in the $PATH.
 export PATH="/usr/local/bin:$PATH"
 bats test || (echo "bats tests failed for DB_TYPE ${DB_TYPE} DB_VERSION=${DB_VERSION} TAG=${TAG}" && exit 2)
-echo "Test successful for DB_TYPE ${DB_TYPE} DB_VERSION=${DB_VERSION} TAG=${TAG}"
+printf "Test successful for DB_TYPE ${DB_TYPE} DB_VERSION=${DB_VERSION} TAG=${TAG}\n\n"

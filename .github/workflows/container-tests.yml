@@ -22,7 +22,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-20.04]
-        containers: [mariadb, mysql, webserver, others]
+        containers: [dbserver, webserver, others]
 
     steps:
       - uses: actions/checkout@v2
@@ -40,16 +40,10 @@ jobs:
           docker version
           set -eu -o pipefail
 
-          if [[ "${{ matrix.containers }}" == "mariadb" ]]; then
+          if [[ "${{ matrix.containers }}" == "dbserver" ]]; then
             pushd containers/ddev-dbserver
-            echo "--- Test container mariadb"
-            time make test_mariadb DOCKER_ARGS="--no-cache"
-            popd
-
-          elif [[ "${{ matrix.containers }}" == "mysql" ]]; then
-            pushd containers/ddev-dbserver
-            echo "--- Test container mysql"
-            time make test_mysql DOCKER_ARGS="--no-cache"
+            echo "--- Test container dbserver"
+            time make test DOCKER_ARGS="--no-cache"
             popd
 
           elif [[ "${{ matrix.containers }}" == "webserver" ]]; then
