@@ -25,7 +25,7 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
 fi
 
 OPTS=-h,-v:,-d:
-LONGOPTS=db-type:,db-major-version:,db-pinned-version:,archs:,tag:,push,help
+LONGOPTS=archs:,db-type:,db-major-version:,db-pinned-version:,docker-args:,tag:,push,help
 
 ! PARSED=$(getopt --options=$OPTS --longoptions=$LONGOPTS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
@@ -103,14 +103,18 @@ printf "\n\n========== Building drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION
 
 if [ ! -z ${PUSH:-} ]; then
   echo "building/pushing drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}"
-  docker buildx build --push --platform ${ARCHS} ${DOCKER_ARGS} --build-arg="DB_TYPE=${DB_TYPE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" -t "drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}" .
+  set -x
+  docker buildx build --push --platform ${ARCHS} ${DOCKER_ARGS} --build-arg="DB_TYPE=${DB_TYPE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" --build-arg="DB_VERSION=${DB_MAJOR_VERSION}" -t "drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}" .
+  set +x
 fi
 
 # By default, load/import into local docker
 if [ -z ${NO_LOAD:-} ]; then
   if [[ ${ARCHS} =~ ${MYARCH} ]]; then
     echo "Loading to local docker drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}"
-    docker buildx build --load --platform ${MYARCH} ${DOCKER_ARGS} --build-arg="DB_TYPE=${DB_TYPE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" -t "drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}" .
+    set -x
+    docker buildx build --load --platform ${MYARCH} ${DOCKER_ARGS} --build-arg="DB_TYPE=${DB_TYPE}" --build-arg="DB_VERSION=${DB_MAJOR_VERSION}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" -t "drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}" .
+    set +x
   else
     echo "This architecture (${MYARCH}) was not built, so not loading"
     exit

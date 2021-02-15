@@ -4,7 +4,7 @@ FROM ${DB_TYPE}:${DB_PINNED_VERSION}
 
 # This must be reiterated because everything is emptied on FROM
 ARG DB_TYPE
-ARG DB_PINNED_VERSION
+ARG DB_VERSION
 
 ENV MYSQL_DATABASE db
 ENV MYSQL_USER db
@@ -15,7 +15,7 @@ SHELL ["/bin/bash", "-c"]
 
 RUN apt-get -qq update && apt-get -qq install -y tzdata sudo gnupg2 pv less vim wget curl lsb-release >/dev/null
 
-RUN if ( ! command -v xtrabackup && ! command -v mariabackup ); then \
+RUN set -x; if ( ! command -v xtrabackup && ! command -v mariabackup ); then \
     curl -sSL https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb -o percona-release_latest.$(lsb_release -sc)_all.deb; \
     sudo dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb >/dev/null; \
     rm percona-release*.deb ; \
