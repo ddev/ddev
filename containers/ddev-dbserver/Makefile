@@ -4,7 +4,7 @@ VERSION := $(shell git describe --tags --always --dirty)
 
 .PHONY: build clean test
 
-CURRENT_ARCH=$(shell arch)
+CURRENT_ARCH=$(shell ../get_arch.sh)
 
 # This Makefile explicitly does not include containers/containers_shared.mak,
 # So has to explicitly declare anything it might need from there (like SHELL)

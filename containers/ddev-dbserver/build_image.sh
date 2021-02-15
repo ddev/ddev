@@ -38,7 +38,7 @@ fi
 
 eval set -- "$PARSED"
 
-ARCHS=linux/$(arch)
+ARCHS=linux/$(../get_arch.sh)
 MYARCH=${ARCHS}
 PUSH=""
 NO_LOAD=""

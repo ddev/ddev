@@ -16,7 +16,7 @@ export DB_VERSION=$2
 export TAG=$3
 export IMAGE=drud/ddev-dbserver-${DB_TYPE}-${DB_VERSION}:${TAG}
 
-export CURRENT_ARCH=$(arch)
+export CURRENT_ARCH=$(../get_arch.sh)
 
 # /usr/local/bin is added for git-bash, where it may not be in the $PATH.
 export PATH="/usr/local/bin:$PATH"
