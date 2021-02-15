@@ -26,7 +26,7 @@ fi
 RUN apt-get -qq autoclean
 
 RUN rm -rf /var/lib/mysql/* /etc/mysql
-RUN mkdir -p /var/lib/mysql && chmod 777 /var/lib/mysql
+RUN mkdir -p /var/lib/mysql
 
 ADD files /
 
@@ -40,6 +40,9 @@ RUN chmod ugo+wx /mnt /var/tmp
 
 RUN mkdir -p /var/log /var/tmp/mysqlbase /etc/mysql/conf.d && chmod -R ugo+wx /var/log /var/tmp/mysqlbase /etc/mysql/conf.d
 RUN ln -s -f /dev/stderr /var/log/mysqld.err
+
+RUN rm -rf /var/lib/mysql/*
+RUN chmod -R ugo+rw /var/lib/mysql /etc/mysql/conf.d /mysqlbase && find /mysqlbase -type d -print0 | xargs chmod ugo+x
 
 RUN /sbin/mkhomedir_helper www-data
 

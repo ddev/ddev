@@ -823,6 +823,16 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
+	// Make sure that important volumes to mount already have correct ownership set
+	// Additional volumes can be added here. This allows us to run a single privileged
+	// container with a single focus of changing ownership, instead of having to use sudo
+	// inside the container
+	uid, _, _ := util.GetContainerUIDGid()
+	_, _, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.Name + "-mariadb:/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false)
+	if err != nil {
+		return err
+	}
+
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
 		err = app.EnsureSSHAgentContainer()
 		if err != nil {

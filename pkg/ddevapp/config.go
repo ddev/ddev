@@ -820,6 +820,7 @@ ARG username
 ARG uid
 ARG gid
 RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' --uid $uid "$username" || useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' "$username")
+RUN chown -R ${uid}:${gid} /mysqlbase /var/lib/mysql /mnt/ddev-global-cache || true
  `
 	if extraPackages != nil {
 		contents = contents + `

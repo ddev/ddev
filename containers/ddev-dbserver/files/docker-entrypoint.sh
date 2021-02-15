@@ -43,8 +43,7 @@ server_db_version=$(PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mys
 
 # If we have extra mariadb cnf files,, copy them to where they go.
 if [ -d /mnt/ddev_config/mysql -a "$(echo /mnt/ddev_config/mysql/*.cnf)" != "/mnt/ddev_config/mysql/*.cnf" ] ; then
-  cp /mnt/ddev_config/mysql/*.cnf /etc/mysql/conf.d
-  chmod -R ugo-w /etc/mysql/conf.d
+  echo "!includedir /mnt/ddev_config/mysql" >/etc/mysql/conf.d/ddev.cnf
 fi
 
 export BACKUPTOOL=mariabackup
@@ -61,7 +60,6 @@ if [ ! -f "/var/lib/mysql/db_mariadb_version.txt" ]; then
     target=${snapshot_dir:-/mysqlbase/}
     name=$(basename $target)
     rm -rf /var/lib/mysql/* /var/lib/mysql/.[a-z]* && chmod -R ugo+w /var/lib/mysql
-    chmod -R ugo+r $target
     ${BACKUPTOOL} --prepare --skip-innodb-use-native-aio --target-dir "$target" --user=root --password=root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_prepare_$name.log"
     ${BACKUPTOOL} --copy-back --skip-innodb-use-native-aio --force-non-empty-directories --target-dir "$target" --user=root --password=root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_copy_back_$name.log"
     echo "Database initialized from ${target}"
@@ -92,7 +90,6 @@ echo $server_db_version >/var/lib/mysql/db_mariadb_version.txt
 
 cp -r /home/{.my.cnf,.bashrc} ~/
 mkdir -p /mnt/ddev-global-cache/bashhistory/${HOSTNAME} || true
-chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ ~/.my.cnf
 
 echo
 echo 'MySQL init process done. Ready for start up.'
