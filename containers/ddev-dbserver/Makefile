@@ -54,6 +54,9 @@ $(BUILD_TARGETS):
 
 test: build $(TEST_TARGETS)
 
+push:
+	@echo "To push all images, use make PUSH=true VERSION=<tag>, to push a specific image, use something like make mariadb_10.3 PUSH=true VERSION=<tag>" && exit 1
+
 # make mariadb_10.2_test mysql_8.0_test
 # make test # for all
 $(TEST_TARGETS):
