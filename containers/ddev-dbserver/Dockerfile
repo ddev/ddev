@@ -42,7 +42,7 @@ RUN mkdir -p /var/log /var/tmp/mysqlbase /etc/mysql/conf.d && chmod -R ugo+wx /v
 RUN ln -s -f /dev/stderr /var/log/mysqld.err
 
 RUN rm -rf /var/lib/mysql/*
-RUN chmod -R ugo+rw /var/lib/mysql /etc/mysql/conf.d /mysqlbase && find /mysqlbase -type d -print0 | xargs chmod ugo+x
+RUN chmod -R ugo+rw /var/lib/mysql /etc/mysql/conf.d /mysqlbase && find /mysqlbase -type d | xargs chmod ugo+rwx
 
 RUN /sbin/mkhomedir_helper www-data
 

@@ -59,7 +59,7 @@ if [ ! -f "/var/lib/mysql/db_mariadb_version.txt" ]; then
     fi
     target=${snapshot_dir:-/mysqlbase/}
     name=$(basename $target)
-    rm -rf /var/lib/mysql/* /var/lib/mysql/.[a-z]* && chmod -R ugo+w /var/lib/mysql
+    rm -rf /var/lib/mysql/* /var/lib/mysql/.[a-z]*
     ${BACKUPTOOL} --prepare --skip-innodb-use-native-aio --target-dir "$target" --user=root --password=root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_prepare_$name.log"
     ${BACKUPTOOL} --copy-back --skip-innodb-use-native-aio --force-non-empty-directories --target-dir "$target" --user=root --password=root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_copy_back_$name.log"
     echo "Database initialized from ${target}"
