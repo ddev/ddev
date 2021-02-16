@@ -64,6 +64,7 @@ $(TEST_TARGETS):
 	@export DB_TYPE=$(word 1, $(subst _, ,$@)) && \
 	export DB_MAJOR_VERSION=$(word 2, $(subst _, ,$@)) && \
 	export ARCH=$(CURRENT_ARCH) && \
+	printf "\n\n\n==== Testing $${DB_TYPE} $${DB_MAJOR_VERSION} $(VERSION)" && \
 	./test/test_dbserver.sh $${DB_TYPE} $${DB_MAJOR_VERSION} $(VERSION)
 
 clean:

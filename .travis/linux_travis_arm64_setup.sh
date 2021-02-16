@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -o errexit
+set -eu -o pipefail
 
 # Basic tools
 
@@ -13,7 +13,7 @@ if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
 fi
 
 sudo apt-get update -qq
-sudo apt-get install -qq mysql-client zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev docker-compose
+sudo rm -f /usr/local/bin/jq && sudo apt-get install -y mysql-client zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev docker-compose
 
 # Copy docker-compose to /usr/local/bin because Travis' pre-installed version leads to exec format error
 sudo cp /usr/bin/docker-compose /usr/local/bin/docker-compose
