@@ -17,6 +17,7 @@ TEST_TARGETS=$(shell if [ "$(CURRENT_ARCH)" = "amd64" ] ; then \
 	  echo "mariadb_10.2_test mariadb_10.3_test mariadb_10.4_test mariadb_10.5_test"; \
   	fi )
 
+container: build
 build: $(BUILD_TARGETS)
 
 mariadb_5.5: mariadb_5.5_amd64
