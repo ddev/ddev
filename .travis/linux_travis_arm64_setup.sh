@@ -25,7 +25,7 @@ echo "capath=/etc/ssl/certs/" >>~/.curlrc
 
 . ~/.bashrc
 
-npm install -g bats
+git clone --branch v1.2.1 https://github.com/bats-core/bats-core.git /tmp/bats-core && pushd /tmp/bats-core >/dev/null && sudo ./install.sh /usr/local
 
 # Install mkcert
 sudo curl -sSL https://github.com/drud/mkcert/releases/download/v1.4.6/mkcert-v1.4.6-linux-arm64 -o /usr/local/bin/mkcert && sudo chmod +x /usr/local/bin/mkcert
