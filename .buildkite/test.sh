@@ -64,7 +64,7 @@ echo "--- running sanetestbot.sh"
 ( docker images | awk '/drud/ {print $1":"$2 }' | xargs -L1 docker pull ) || true
 
 # homebrew sometimes removes /usr/local/etc/my.cnf.d
-mkdir -p /usr/local/etc/my.cnf.d
+mkdir -p "$(brew --prefix)/etc/my.cnf.d"
 
 echo "Running tests..."
 time make test
