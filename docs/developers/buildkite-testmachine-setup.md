@@ -24,20 +24,27 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 1. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com.
 2. Change the name of the machine to something in keeping with current style. Maybe `testbot-macstadium-macos-3`.
 3. Install [Homebrew](https://brew.sh/) `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
-4. Install golang/git/docker with `brew cask install iterm2 google-chrome  docker nosleep && brew tap buildkite/buildkite && brew tap drud/ddev && brew install golang git buildkite-agent mariadb jq p7zip bats-core composer ddev netcat mkcert && brew cask install ngrok`
+4. Install golang/git/docker with `brew tap drud/ddev-edge && brew install buildkite/buildkite/buildkite-agent iterm2 google-chrome  docker nosleep golang git mariadb jq p7zip bats-core composer ddev netcat mkcert ngrok`
 5. `mkcert -install`
 6. Run Docker manually and go through its configuration routine.
 7. Run iTerm. On Mojave and higher it may prompt for requiring full disk access permissions, follow through with that.
 8. Set up nfsd by running `macos_ddev_nfs_setup.sh`
 9. Edit the buildkite-agent.cfg in /usr/local/etc/buildkite-agent.cfg to add
     * the agent token
-    * Tags, like `"os=macos,osvariant=catalina,dockertype=dockerformac"`
+    * Tags, like `"os=macos,architecture=amd64,osvariant=bigsur,dockertype=dockerformac"`
     * `build-path="~/tmp/buildkite-agent/builds"`
-10. `brew services start buildkite-agent`
-11. Enable nosleep using its shortcut in the Mac status bar.
-12. In nosleep Preferences, enable "Never sleep on AC Adapter", "Never sleep on Battery", and "Start nosleep utility on system startup".
-13. Set up Mac to [automatically log in on boot](https://support.apple.com/en-us/HT201476).
-14. Try checking out ddev and running .buildkite/sanetestbot.sh to check your work.
-15. Log into Chrome with the user testbot@drud.com and enable Chrome Remote Desktop.
-16. Set the timezone properly (US MT)
-17. Start the agent with `brew services start buildkite-agent`
+10. The buildkite/hooks/environment file must be updated to contain the docker pull credentials:
+ ```bash
+      #!/bin/bash
+      export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
+      export DOCKERHUB_PULL_PASSWORD=xxx
+      set -e
+```
+11. `brew services start buildkite-agent`
+12. Enable nosleep using its shortcut in the Mac status bar.
+13. In nosleep Preferences, enable "Never sleep on AC Adapter", "Never sleep on Battery", and "Start nosleep utility on system startup".
+14. Set up Mac to [automatically log in on boot](https://support.apple.com/en-us/HT201476).
+15. Try checking out ddev and running .buildkite/sanetestbot.sh to check your work.
+16. Log into Chrome with the user testbot@drud.com and enable Chrome Remote Desktop.
+17. Set the timezone properly (US MT)
+18. Start the agent with `brew services start buildkite-agent`
