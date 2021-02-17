@@ -32,7 +32,7 @@ debug_msg ()
   fi
 }
 
-mkdir -p $SSH_KEY_DIR && chown $UID $SSH_KEY_DIR && chmod 700 $SSH_KEY_DIR
+mkdir -p $SSH_KEY_DIR && ( chmod 700 $SSH_KEY_DIR || true )
 mkdir -p $SOCKET_DIR
 
 case "$1" in
