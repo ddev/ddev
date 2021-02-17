@@ -24,7 +24,7 @@ jobs:
       uses: docker://avtodev/markdown-lint:v1
       with:
         config: '.markdownlintrc'
-        args: '*.md docs'
+        args: '*.md docs/*.md docs/users'
 #    - name: Debugging with tmate
 #      uses: mxschmitt/action-tmate@v3.1
     - name: Test mkdocs

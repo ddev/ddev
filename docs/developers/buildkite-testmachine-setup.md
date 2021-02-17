@@ -34,11 +34,11 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
     * Tags, like `"os=macos,architecture=amd64,osvariant=bigsur,dockertype=dockerformac"`
     * `build-path="~/tmp/buildkite-agent/builds"`
 10. The buildkite/hooks/environment file must be updated to contain the docker pull credentials:
- ```bash
-      #!/bin/bash
-      export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
-      export DOCKERHUB_PULL_PASSWORD=xxx
-      set -e
+```bash
+   #!/bin/bash
+   export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
+   export DOCKERHUB_PULL_PASSWORD=xxx
+   set -e
 ```
 11. `brew services start buildkite-agent`
 12. Enable nosleep using its shortcut in the Mac status bar.
