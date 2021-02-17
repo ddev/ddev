@@ -153,8 +153,8 @@ var (
 		},
 		{
 			Name:                          "TestPkgDrupal9",
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-9.0.0-beta1.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-9.0.0-beta1/",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-9.1.4.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-9.1.4/",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d9_umami_files.tgz",
 			FilesZipballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d9_umami_files.zip",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d9_umami_sql.tar.gz",
