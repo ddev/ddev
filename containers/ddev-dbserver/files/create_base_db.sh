@@ -7,10 +7,10 @@ SOCKET=/var/tmp/mysql.sock
 OUTDIR=/mysqlbase
 
 mkdir -p ${OUTDIR}
-sudo chown -R "$(id -u):$(id -g)" $OUTDIR
+chown -R "$(id -u):$(id -g)" $OUTDIR
 
-sudo chmod ugo+w /var/tmp
-sudo mkdir -p /var/lib/mysql /mnt/ddev_config/mysql && sudo rm -f /var/lib/mysql/* && sudo chmod -R ugo+w /var/lib/mysql
+chmod ugo+w /var/tmp
+mkdir -p /var/lib/mysql /mnt/ddev_config/mysql && rm -f /var/lib/mysql/* && chmod -R ugo+w /var/lib/mysql
 
 echo 'Initializing mysql'
 mysqld --version
@@ -76,7 +76,7 @@ EOF
 fi
 
 
-sudo rm -rf $OUTDIR/*
+rm -rf $OUTDIR/*
 
 backuptool=mariabackup
 if command -v xtrabackup; then backuptool="xtrabackup --datadir=/var/lib/mysql"; fi

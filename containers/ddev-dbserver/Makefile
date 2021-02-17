@@ -17,6 +17,7 @@ TEST_TARGETS=$(shell if [ "$(CURRENT_ARCH)" = "amd64" ] ; then \
 	  echo "mariadb_10.2_test mariadb_10.3_test mariadb_10.4_test mariadb_10.5_test"; \
   	fi )
 
+container: build
 build: $(BUILD_TARGETS)
 
 mariadb_5.5: mariadb_5.5_amd64
@@ -57,12 +58,13 @@ test: build $(TEST_TARGETS)
 push:
 	@echo "To push all images, use make PUSH=true VERSION=<tag>, to push a specific image, use something like make mariadb_10.3 PUSH=true VERSION=<tag>" && exit 1
 
-# make mariadb_10.2_test mysql_8.0_test
-# make test # for all
+# make mariadb_10.2_test mysql_8.0_test VERSION=20210213_db_image_no_sudo
+# make test VERSION=20210213_db_image_no_sudo # for all
 $(TEST_TARGETS):
 	@export DB_TYPE=$(word 1, $(subst _, ,$@)) && \
 	export DB_MAJOR_VERSION=$(word 2, $(subst _, ,$@)) && \
 	export ARCH=$(CURRENT_ARCH) && \
+	printf "\n\n\n==== Testing $${DB_TYPE} $${DB_MAJOR_VERSION} $(VERSION)" && \
 	./test/test_dbserver.sh $${DB_TYPE} $${DB_MAJOR_VERSION} $(VERSION)
 
 clean:

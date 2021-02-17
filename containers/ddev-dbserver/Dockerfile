@@ -13,11 +13,11 @@ ENV MYSQL_ROOT_PASSWORD root
 
 SHELL ["/bin/bash", "-c"]
 
-RUN apt-get -qq update && apt-get -qq install -y tzdata sudo gnupg2 pv less vim wget curl lsb-release >/dev/null
+RUN apt-get -qq update && apt-get -qq install -y tzdata gnupg2 pv less vim wget curl lsb-release >/dev/null
 
 RUN set -x; if ( ! command -v xtrabackup && ! command -v mariabackup ); then \
     curl -sSL https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb -o percona-release_latest.$(lsb_release -sc)_all.deb; \
-    sudo dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb >/dev/null; \
+    dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb >/dev/null; \
     rm percona-release*.deb ; \
     xtrabackup_version=percona-xtrabackup-24 ; \
     if [ "$DB_VERSION" = "8.0" ]; then xtrabackup_version=percona-xtrabackup-80; fi ; \
@@ -26,7 +26,7 @@ fi
 RUN apt-get -qq autoclean
 
 RUN rm -rf /var/lib/mysql/* /etc/mysql
-RUN mkdir -p /var/lib/mysql && chmod 777 /var/lib/mysql
+RUN mkdir -p /var/lib/mysql
 
 ADD files /
 
@@ -40,6 +40,9 @@ RUN chmod ugo+wx /mnt /var/tmp
 
 RUN mkdir -p /var/log /var/tmp/mysqlbase /etc/mysql/conf.d && chmod -R ugo+wx /var/log /var/tmp/mysqlbase /etc/mysql/conf.d
 RUN ln -s -f /dev/stderr /var/log/mysqld.err
+
+RUN rm -rf /var/lib/mysql/*
+RUN chmod -R ugo+rw /var/lib/mysql /etc/mysql/conf.d /mysqlbase && find /mysqlbase -type d | xargs chmod ugo+rwx
 
 RUN /sbin/mkhomedir_helper www-data
 

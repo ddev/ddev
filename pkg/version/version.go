@@ -40,13 +40,13 @@ var DockerComposeFileFormatVersion = "3.6"
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag for drud dev
-var WebTag = "20210215_var_lock_apache" // Note that this can be overridden by make
+var WebTag = "20210213_db_image_no_sudo" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20210215_ds_store"
+var BaseDBTag = "20210213_db_image_no_sudo"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"
@@ -62,7 +62,7 @@ var RouterTag = "20210106_nginx_default_server" // Note that this can be overrid
 
 var SSHAuthImage = "drud/ddev-ssh-agent"
 
-var SSHAuthTag = "v1.16.0"
+var SSHAuthTag = "20210213_db_image_no_sudo"
 
 // BUILDINFO is information with date and context, supplied by make
 var BUILDINFO = "BUILDINFO should have new info"

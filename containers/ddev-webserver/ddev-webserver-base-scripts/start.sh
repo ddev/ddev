@@ -83,8 +83,7 @@ sudo mkdir -p ${CAROOT} && sudo chmod -R ugo+rw ${CAROOT}
 mkcert -install
 
 # VIRTUAL_HOST is a comma-delimited set of fqdns, convert it to space-separated and mkcert
-sudo CAROOT=$CAROOT mkcert -cert-file /etc/ssl/certs/master.crt -key-file /etc/ssl/certs/master.key ${VIRTUAL_HOST//,/ } localhost 127.0.0.1 ${DOCKER_IP} web ddev-${DDEV_PROJECT:-}-web ddev-${DDEV_PROJECT:-}-web.ddev_default && sudo chown $UID /etc/ssl/certs/master.*
-
+CAROOT=$CAROOT mkcert -cert-file /etc/ssl/certs/master.crt -key-file /etc/ssl/certs/master.key ${VIRTUAL_HOST//,/ } localhost 127.0.0.1 ${DOCKER_IP} web ddev-${DDEV_PROJECT:-}-web ddev-${DDEV_PROJECT:-}-web.ddev_default
 echo 'Server started'
 
 exec /usr/bin/supervisord -n -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"

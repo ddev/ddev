@@ -13,7 +13,7 @@ if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
 fi
 
 sudo apt-get update -qq
-sudo apt-get install -qq mysql-client zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev docker-compose
+sudo rm -f /usr/local/bin/jq && sudo apt-get install -y mysql-client zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev docker-compose
 
 # Copy docker-compose to /usr/local/bin because Travis' pre-installed version leads to exec format error
 sudo cp /usr/bin/docker-compose /usr/local/bin/docker-compose
@@ -25,7 +25,7 @@ echo "capath=/etc/ssl/certs/" >>~/.curlrc
 
 . ~/.bashrc
 
-npm install -g bats
+git clone --branch v1.2.1 https://github.com/bats-core/bats-core.git /tmp/bats-core && pushd /tmp/bats-core >/dev/null && sudo ./install.sh /usr/local
 
 # Install mkcert
 sudo curl -sSL https://github.com/drud/mkcert/releases/download/v1.4.6/mkcert-v1.4.6-linux-arm64 -o /usr/local/bin/mkcert && sudo chmod +x /usr/local/bin/mkcert

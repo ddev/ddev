@@ -1,6 +1,6 @@
 FROM debian:buster-slim
 
-RUN apt-get update && apt-get install -y bash expect file openssh-client socat sudo psmisc && sudo apt autoclean
+RUN apt-get update && apt-get install -y bash expect file openssh-client socat psmisc && apt autoclean
 
 # Copy container files
 COPY files /
