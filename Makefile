@@ -70,7 +70,7 @@ BUILD_OS = $(shell go env GOHOSTOS)
 BUILD_ARCH = $(shell go env GOHOSTARCH)
 VERSION_LDFLAGS=$(foreach v,$(VERSION_VARIABLES),-X '$(PKG)/pkg/version.$(v)=$($(v))')
 LDFLAGS=-extldflags -static $(VERSION_LDFLAGS)
-BUILD_IMAGE ?= drud/golang-build-container:v1.16-rc1
+BUILD_IMAGE ?= drud/golang-build-container:v1.16.0
 DOCKERBUILDCMD=docker run -t --rm                     \
           	    -v "/$(PWD)://workdir$(DOCKERMOUNTFLAG)"                              \
           	    -e GOPATH="//workdir/$(GOTMP)" \
@@ -116,7 +116,6 @@ $(TARGETS): pullbuildimage $(GOFILES)
 	export GOOS="$${TARGET%_*}" && \
 	export GOARCH="$${TARGET#*_}" && \
 	export GOBUILDER=go && \
-	if [ $$TARGET = "darwin_arm64" ]; then GOBUILDER=go1.16; fi && \
 	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
 	chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
 	$(DOCKERBUILDCMD) \
