@@ -3007,6 +3007,10 @@ func TestCaptureLogs(t *testing.T) {
 // This requires that the test machine must have NFS shares working
 // Tests using both app-specific nfs_mount_enabled and global nfs_mount_enabled
 func TestNFSMount(t *testing.T) {
+	if nodeps.IsWSL2() {
+		t.Skip("Skipping on WSL2")
+	}
+
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
