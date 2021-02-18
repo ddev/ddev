@@ -60,4 +60,4 @@ if [ ${OSTYPE%%-gnu} != "linux" ]; then
   $(dirname $0)/nfstest.sh
 fi
 
-echo "=== testbot $HOSTNAME seems to be set up OK ==="
+echo "--- testbot $HOSTNAME seems to be set up OK ---"
