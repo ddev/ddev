@@ -62,7 +62,7 @@ var RouterTag = "20210106_nginx_default_server" // Note that this can be overrid
 
 var SSHAuthImage = "drud/ddev-ssh-agent"
 
-var SSHAuthTag = "20210213_db_image_no_sudo"
+var SSHAuthTag = "20210217_ddev_ssh_agent_chown"
 
 // BUILDINFO is information with date and context, supplied by make
 var BUILDINFO = "BUILDINFO should have new info"
