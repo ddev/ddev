@@ -1,7 +1,8 @@
 #!/bin/bash
 # This script is used to build drud/ddev using buildkite
 
-echo "--- buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) for OS=$(go env GOOS) in $PWD with golang=$(go version) docker=$(docker version --format '{{.Server.Version}}') and docker-compose $(docker-compose version --short) ddev version=$(ddev --version)"
+export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
+echo "--- buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=$(USER) for OS=$(OSTYPE) in ${PATH} with golang=$(go version) docker=$(docker version --format '{{.Server.Version}}') and docker-compose $(docker-compose version --short) ddev version=$(ddev --version)"
 
 export GOTEST_SHORT=1
 export DRUD_NONINTERACTIVE=true
