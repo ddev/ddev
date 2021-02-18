@@ -22,7 +22,7 @@ fi
 # Upgrade various items on various operating systems
 case $os in
 darwin)
-    for item in mkcert mkdocs golang golangci-lint bats-core ddev; do
+    for item in mkcert mkdocs golang golangci-lint ddev; do
         brew upgrade $item || brew install $item || true
     done
     ;;
@@ -30,9 +30,6 @@ windows)
     choco upgrade -y golang nodejs markdownlint-cli mkcert mkdocs || true
     if ! command -v golangci-lint >/dev/null 2>&1 ; then
       (curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.31.0) || true
-    fi
-    if [ "$(bats --version)" != "Bats 1.2.0" ]; then
-        cd ~/workspace/bats-core/ && git fetch && git checkout v1.2.0 && ./install.sh /usr/local
     fi
     ;;
 esac

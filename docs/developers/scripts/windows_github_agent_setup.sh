@@ -19,9 +19,6 @@ perl -pi -e 's/autocrlf = true/autocrlf = false\n\teol = lf/' "/c/Program Files/
 # Install Ubuntu from Microsoft store
 # Then wsl --set-default Ubuntu
 
-# install bats
-cd /tmp && curl -L -O https://github.com/bats-core/bats-core/archive/v1.2.0.tar.gz && tar -zxf v1.2.0.tar.gz && cd bats-core-1.2.0 && ./install.sh /usr/local
-
 # Get firewall set up with a single run
 winpty docker run -it --rm -p 80 busybox ls
 
