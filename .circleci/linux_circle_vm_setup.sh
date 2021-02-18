@@ -32,10 +32,13 @@ export HOMEBREW_NO_AUTO_UPDATE=1
 export HOMEBREW_NO_INSTALL_CLEANUP=1
 
 brew tap drud/ddev >/dev/null
-for item in osslsigncode golang mingw-w64 mkcert mkdocs ddev bats-core; do
+brew unlink bats-core || true
+for item in osslsigncode golang mingw-w64 mkcert mkdocs ddev; do
     brew install $item >/dev/null || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item >/dev/null
 done
 brew install --build-from-source makensis
+
+git clone --branch v1.2.1 https://github.com/bats-core/bats-core.git /tmp/bats-core && pushd /tmp/bats-core >/dev/null && sudo ./install.sh /usr/local
 
 npm install --global markdownlint-cli
 markdownlint --version
