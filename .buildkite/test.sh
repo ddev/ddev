@@ -18,9 +18,13 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   sleep 10
 fi
 
+export TIMEOUT_CMD="timeout -v"
+if [ ${OSTYPE%%-*} = "linux" ]; then
+  TIMEOUT_CMD="timeout"
+fi
 # Make sure docker is working
 echo "Waiting for docker to come up: $(date)"
-date && timeout -v 10m bash -c 'while ! docker ps >/dev/null 2>&1 ; do
+date && ${TIMEOUT_CMD} 10m bash -c 'while ! docker ps >/dev/null 2>&1 ; do
   sleep 10
   echo "Waiting for docker to come up: $(date)"
 done'
