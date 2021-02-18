@@ -1,8 +1,6 @@
   - command: ".buildkite/test.sh"
     agents:
       - "os=wsl2"
-      - "dockertype=dockerforwindows"
-      - "architecture=arm64"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
