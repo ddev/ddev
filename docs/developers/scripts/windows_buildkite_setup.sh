@@ -24,9 +24,6 @@ perl -pi -e 's/autocrlf = true/autocrlf = false\n\teol = lf/' "/c/Program Files/
 # Install Ubuntu from Microsoft store
 # Then wsl --set-default Ubuntu
 
-# install bats
-cd /tmp && curl -L -O https://github.com/bats-core/bats-core/archive/v1.2.0.tar.gz && tar -zxf v1.2.0.tar.gz && cd bats-core-1.2.0 && ./install.sh /usr/local
-
 # Install buildkite-agent
 LATEST_RELEASE=$(curl -L -s -H 'Accept: application/json' https://github.com/buildkite/agent/releases/latest)
 LATEST_VERSION=$(echo $LATEST_RELEASE | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
