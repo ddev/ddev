@@ -39,13 +39,11 @@ func TestComposer(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
-	app.ComposerVersion = "2"
 	assert.NoError(err)
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-composer": {{"exec-host": "touch hello-post-composer-" + app.Name}}, "pre-composer": {{"exec-host": "touch hello-pre-composer-" + app.Name}}}
 	// Make sure we get rid of this for other uses
 	defer func() {
 		app.Hooks = nil
-		app.ComposerVersion = ""
 		_ = app.WriteConfig()
 		_ = app.Stop(true, false)
 	}()
