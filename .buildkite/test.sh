@@ -71,8 +71,8 @@ echo "--- running sanetestbot.sh"
 # homebrew sometimes removes /usr/local/etc/my.cnf.d
 mkdir -p "$(brew --prefix)/etc/my.cnf.d"
 
-echo "Running tests..."
-time make test
+echo "--- Running tests..."
+make test
 RV=$?
 echo "build.sh completed with status=$RV"
 ddev poweroff || true
