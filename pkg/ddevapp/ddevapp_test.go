@@ -3010,6 +3010,9 @@ func TestNFSMount(t *testing.T) {
 	if nodeps.IsWSL2() {
 		t.Skip("Skipping on WSL2")
 	}
+	if runtime.GOARCH == "arm64" && runtime.GOOS == "darwin" {
+		t.Skip("Temporarily skipping on mac M1 because NFS has some trouble")
+	}
 
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
