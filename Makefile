@@ -71,7 +71,7 @@ BUILD_ARCH = $(shell go env GOHOSTARCH)
 VERSION_LDFLAGS=$(foreach v,$(VERSION_VARIABLES),-X '$(PKG)/pkg/version.$(v)=$($(v))')
 LDFLAGS=-extldflags -static $(VERSION_LDFLAGS)
 BUILD_IMAGE ?= drud/golang-build-container:v1.16.0
-DOCKERBUILDCMD=docker run -t --rm                     \
+DOCKERBUILDCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)         \
           	    -v "/$(PWD)://workdir$(DOCKERMOUNTFLAG)"                              \
           	    -e GOPATH="//workdir/$(GOTMP)" \
           	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
@@ -119,7 +119,7 @@ $(TARGETS): pullbuildimage $(GOFILES)
 	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
 	chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
 	$(DOCKERBUILDCMD) \
-	bash -c "ln -s /root/sdk ~/sdk && GOOS=$$GOOS GOARCH=$$GOARCH $$GOBUILDER build -o $(GOTMP)/bin/$$TARGET -installsuffix static -ldflags \" $(LDFLAGS) \" $(SRC_AND_UNDER)"
+	bash -c "GOOS=$$GOOS GOARCH=$$GOARCH $$GOBUILDER build -o $(GOTMP)/bin/$$TARGET -installsuffix static -ldflags \" $(LDFLAGS) \" $(SRC_AND_UNDER)"
 	$( shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi )
 	@echo $(VERSION) >VERSION.txt
 
