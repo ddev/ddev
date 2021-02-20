@@ -29,7 +29,7 @@ curl -fsSL -o /tmp/EnVar-Plugin.zip https://github.com/GsNSIS/EnVar/releases/lat
 curl -fsSL -o /tmp/INetC.zip https://github.com/DigitalMediaServer/NSIS-INetC-plugin/releases/latest/download/INetC.zip && sudo unzip -o -d /usr/local/share/nsis/Plugins /tmp/INetC.zip
 
 # homebrew sometimes removes /usr/local/etc/my.cnf.d
-mkdir -p /usr/local/etc/my.cnf.d
+mkdir -p "$(brew --prefix)/etc/my.cnf.d"
 
 mkcert -install
 

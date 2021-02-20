@@ -52,4 +52,4 @@ docker system prune --volumes --force >/dev/null || true
 ( docker images | awk '/drud/ {print $1":"$2 }' | xargs -L1 docker pull ) || true
 
 # homebrew sometimes removes /usr/local/etc/my.cnf.d
-mkdir -p /usr/local/etc/my.cnf.d
+mkdir -p "$(brew --prefix)/etc/my.cnf.d"
