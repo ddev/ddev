@@ -281,14 +281,12 @@ jobs:
         command: |
           . ~/.bashrc
           for dir in containers/*/
-              do pushd $dir
+              do pushd $dir >/dev/null
               echo "--- Build container $dir"
               time make container DOCKER_ARGS=--no-cache EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
               echo "--- Test container $dir"
               time make test EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
-              echo "--- Cross-compile container $dir"
-              time make multi-arch EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
-              popd
+              popd >/dev/null
           done
         name: linux container test
 
