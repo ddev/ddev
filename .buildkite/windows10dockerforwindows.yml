@@ -4,4 +4,5 @@
       - "dockertype=dockerforwindows"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
+      DDEV_TEST_USE_NFSMOUNT: true
     parallelism: 1

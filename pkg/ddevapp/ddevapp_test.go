@@ -153,8 +153,8 @@ var (
 		},
 		{
 			Name:                          "TestPkgDrupal9",
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-9.0.0-beta1.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-9.0.0-beta1/",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-9.1.4.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-9.1.4/",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d9_umami_files.tgz",
 			FilesZipballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d9_umami_files.zip",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d9_umami_sql.tar.gz",
@@ -642,6 +642,14 @@ func TestDdevNoProjectMount(t *testing.T) {
 
 // TestDdevXdebugEnabled tests running with xdebug_enabled = true, etc.
 func TestDdevXdebugEnabled(t *testing.T) {
+	// 2021-02: I've been unable to make this test work on WSL2, even though it's easy to demonstrate
+	// that it works using PhpStorm, etc. The go listener here doesn't seem to listen on all interfaces.
+	// If you get golang listening, then enter the web container and try to connect to the port golang
+	// is listening on, it can't connect. However, if you use netcat to listen on the wsl2 side and then
+	// connect to it from inside the container, it connects fine.
+	if nodeps.IsWSL2() {
+		t.Skip("Skipping on WSL2 because this test doesn't work although manual testing works")
+	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 	testcommon.ClearDockerEnv()
@@ -672,8 +680,6 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		app.PHPVersion = v
 		t.Logf("Beginning XDebug checks with XDebug php%s\n", v)
 		fmt.Printf("Attempting XDebug checks with XDebug %s\n", v)
-		app.XdebugEnabled = false
-		assert.NoError(err)
 		err = app.Start()
 		require.NoError(t, err)
 
@@ -685,11 +691,11 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		assert.Error(err)
 		assert.Contains(stdout, "Extension 'xdebug' not present")
 
-		// Run with xdebug_enabled: true
-		testcommon.ClearDockerEnv()
-		app.XdebugEnabled = true
-		err = app.Start()
-		require.NoError(t, err)
+		// Run with xdebug enabled
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
+			Cmd: "enable_xdebug",
+		})
+		assert.NoError(err)
 
 		stdout, _, err = app.Exec(opts)
 		assert.NoError(err)
@@ -713,15 +719,12 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 		// Start a listener on port 9000 of localhost (where PHPStorm or whatever would listen)
 		listener, err := net.Listen("tcp", ":9000")
-		assert.NoError(err)
-		if err != nil || listener == nil {
-			continue
-		}
+		require.NoError(t, err)
 
 		// Curl to the project's index.php or anything else
 		_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL())
 
-		fmt.Printf("Attempting accept of port 9000 with xdebug enabled, XDebug version=%s\n", v)
+		fmt.Printf("Attempting accept of port 9000 with xdebug enabled, PHP version=%s\n", v)
 
 		// Accept is blocking, no way to timeout, so use
 		// goroutine instead.
@@ -731,8 +734,8 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		go func() {
 			conn, err := listener.Accept()
 			assert.NoError(err)
-			if err != nil {
-				t.Logf("Completed accept of port 9000 with xdebug enabled, XDebug version=%s, time=%v\n", v, time.Now())
+			if err == nil {
+				t.Logf("Completed accept of port 9000 with xdebug enabled, PHP version=%s, time=%v\n", v, time.Now())
 			}
 			// Grab the Xdebug connection start and look in it for "Xdebug"
 			b := make([]byte, 650)
@@ -747,8 +750,8 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		select {
 		case <-acceptListenDone:
 			fmt.Printf("Read from acceptListenDone at %v\n", time.Now())
-		case <-time.After(10 * time.Second):
-			fmt.Printf("Timed out waiting for accept/listen at %v\n", time.Now())
+		case <-time.After(3 * time.Second):
+			t.Fatalf("Timed out waiting for accept/listen at %v, PHP version %v\n", time.Now(), v)
 		}
 	}
 	runTime()
@@ -3007,6 +3010,13 @@ func TestCaptureLogs(t *testing.T) {
 // This requires that the test machine must have NFS shares working
 // Tests using both app-specific nfs_mount_enabled and global nfs_mount_enabled
 func TestNFSMount(t *testing.T) {
+	if nodeps.IsWSL2() {
+		t.Skip("Skipping on WSL2")
+	}
+	if runtime.GOARCH == "arm64" && runtime.GOOS == "darwin" {
+		t.Skip("Temporarily skipping on mac M1 because NFS has some trouble")
+	}
+
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 

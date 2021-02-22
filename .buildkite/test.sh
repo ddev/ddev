@@ -1,7 +1,8 @@
 #!/bin/bash
 # This script is used to build drud/ddev using buildkite
 
-echo "--- buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) for OS=$(go env GOOS) in $PWD with golang=$(go version) docker=$(docker version --format '{{.Server.Version}}') and docker-compose $(docker-compose version --short) ddev version=$(ddev --version)"
+export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
+echo "--- buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} in ${PWD} with golang=$(go version | awk '{print $3}') docker=$(docker --version | awk '{print $3}') and docker-compose $(docker-compose --version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}')"
 
 export GOTEST_SHORT=1
 export DRUD_NONINTERACTIVE=true
@@ -18,9 +19,13 @@ if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
   sleep 10
 fi
 
+export TIMEOUT_CMD="timeout -v"
+if [ ${OSTYPE%%-*} = "linux" ]; then
+  TIMEOUT_CMD="timeout"
+fi
 # Make sure docker is working
 echo "Waiting for docker to come up: $(date)"
-date && timeout -v 10m bash -c 'while ! docker ps >/dev/null 2>&1 ; do
+date && ${TIMEOUT_CMD} 10m bash -c 'while ! docker ps >/dev/null 2>&1 ; do
   sleep 10
   echo "Waiting for docker to come up: $(date)"
 done'
@@ -64,10 +69,10 @@ echo "--- running sanetestbot.sh"
 ( docker images | awk '/drud/ {print $1":"$2 }' | xargs -L1 docker pull ) || true
 
 # homebrew sometimes removes /usr/local/etc/my.cnf.d
-mkdir -p /usr/local/etc/my.cnf.d
+mkdir -p "$(brew --prefix)/etc/my.cnf.d"
 
-echo "Running tests..."
-time make test
+echo "--- Running tests..."
+make test
 RV=$?
 echo "build.sh completed with status=$RV"
 ddev poweroff || true

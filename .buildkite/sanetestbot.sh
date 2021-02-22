@@ -55,6 +55,9 @@ if ! command -v ngrok >/dev/null ; then
     echo "ngrok is not installed" && exit 5
 fi
 
-$(dirname $0)/nfstest.sh
+# Skip nfs check on linux, as we won't run nfs there
+if [ ${OSTYPE%%-gnu} != "linux" ]; then
+  $(dirname $0)/nfstest.sh
+fi
 
-echo "=== testbot $HOSTNAME seems to be set up OK ==="
+echo "-- testbot $HOSTNAME seems to be set up OK --"
