@@ -118,14 +118,16 @@ Note that if you're using vscode on Windows with WSL2, you'll want the "PHP Debu
 
 By default, ddev is set up to contact the default port, port 9000 on your IDE. However, if you have something else listening on that port, you'll need to change the port. (The most likely conflict is php-fpm, which also has 9000 as a default port.)
 
-* To override the port, add an override file in the project's .ddev/php directory. For example, a file .ddev/php/xdebug_remote_port.ini:
+* To override the port, add an override file in the project's .ddev/php directory. For example, a file .ddev/php/xdebug_client_port.ini:
 
 ```ini
 [PHP]
-xdebug.remote_port=11011
+xdebug.client_port=11011
 ```
 
 * Then change your IDE's configuration to listen on the new port.
+
+NOTE: If you are not using the latest version of DDEV, you might be using Xdebug version 2.x, instead of 3.x. In that case the port config should be `xdebug.remote_port` instead.
 
 ### Troubleshooting Xdebug
 
