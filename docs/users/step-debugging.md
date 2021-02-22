@@ -122,12 +122,12 @@ By default, ddev is set up to contact the default port, port 9000 on your IDE. H
 
 ```ini
 [PHP]
-xdebug.client_port=11011
+xdebug.client_port=9003
 ```
 
 * Then change your IDE's configuration to listen on the new port.
 
-NOTE: If you are not using the latest version of DDEV, you might be using Xdebug version 2.x, instead of 3.x. In that case the port config should be `xdebug.remote_port` instead.
+NOTE: If you are not using the latest version of DDEV or if you are using a PHP version below PHP7.2, you will be using Xdebug version 2.x, instead of 3.x. In that case the port config should be `xdebug.remote_port` instead.
 
 ### Troubleshooting Xdebug
 
