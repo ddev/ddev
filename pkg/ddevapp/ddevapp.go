@@ -1064,7 +1064,16 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	if opts.Service == "" {
 		opts.Service = "web"
 	}
-	err := app.ProcessHooks("pre-exec")
+
+	container, err := dockerutil.FindContainerByName(fmt.Sprintf("ddev-%s-%s", app.Name, opts.Service))
+	if err != nil || container == nil {
+		return "", "", fmt.Errorf("service %s does not exist in project %s", opts.Service, app.Name)
+	}
+	if container.State != "running" {
+		return "", "", fmt.Errorf("service %s is not current running in project %s", opts.Service, app.Name)
+	}
+
+	err = app.ProcessHooks("pre-exec")
 	if err != nil {
 		return "", "", fmt.Errorf("Failed to process pre-exec hooks: %v", err)
 	}
