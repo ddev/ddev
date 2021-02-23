@@ -388,6 +388,8 @@ func CheckDockerVersion(versionConstraint string) error {
 	if err != nil {
 		return fmt.Errorf("no docker")
 	}
+	// If docker version has "_ce", remove it. This happens on OpenSUSE Tumbleweed at least
+	currentVersion = strings.TrimSuffix(currentVersion, "_ce")
 	dockerVersion, err := semver.NewVersion(currentVersion)
 	if err != nil {
 		return err
