@@ -1,6 +1,6 @@
   - command: ".buildkite/test.sh"
     agents:
-      - "os=wsl2"
+      - "os=linux"
       - "architecture=amd64"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
