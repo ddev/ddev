@@ -2,6 +2,7 @@
     agents:
       - "os=windows"
       - "dockertype=dockerforwindows"
+      - "architecture=amd64"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       DDEV_TEST_USE_NFSMOUNT: true
