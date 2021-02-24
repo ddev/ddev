@@ -942,6 +942,41 @@ func TestDdevImportDB(t *testing.T) {
 		}
 	}
 
+	// Test database that has SQL DDL in the content to make sure nothing gets corrupted.
+	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: "mysql -N -e 'DROP TABLE IF EXISTS wp_posts;'"})
+	require.NoError(t, err)
+	file := "posts_with_ddl_content.sql"
+	path := filepath.Join(testDir, "testdata", t.Name(), file)
+	err = app.ImportDB(path, "", false, false, "db")
+	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
+	checkImportDbImports(t, app)
+
+	// Now test the same when importing from stdin, same file
+	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: "mysql -N -e 'DROP TABLE wp_posts;'"})
+	require.NoError(t, err)
+	f, err := os.Open(path)
+	require.NoError(t, err)
+	defer f.Close()
+	oldStdin := os.Stdin
+	t.Cleanup(func() {
+		os.Stdin = oldStdin
+	})
+	os.Stdin = f
+	err = app.ImportDB("", "", false, false, "db")
+	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
+	os.Stdin = oldStdin
+	checkImportDbImports(t, app)
+
+	// Verify that the count of tables is exactly what it should be, that nothing was lost in the
+	// import due to embedded DDL statements.
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     `mysql -N -e 'SELECT COUNT(*) FROM wp_posts;'`,
+	})
+	assert.NoError(err)
+	assert.Equal("180\n", out)
+
+	// Now check standard archive imports
 	if site.DBTarURL != "" {
 		_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
 		require.NoError(t, err)
@@ -1040,6 +1075,27 @@ func TestDdevImportDB(t *testing.T) {
 	}
 	runTime()
 	switchDir()
+}
+
+func checkImportDbImports(t *testing.T, app *ddevapp.DdevApp) {
+	assert := asrt.New(t)
+
+	// There should be exactly the one wp_posts table for this file
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     "mysql -N -e 'SHOW TABLES;' | cat",
+	})
+	assert.NoError(err)
+	assert.Equal("wp_posts\n", out)
+
+	// Verify that no extra database was created (this one has a CREATE DATABASE statement)
+	out, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     `mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql)$"`,
+	})
+	assert.NoError(err)
+	assert.Equal("db\n", out)
+
 }
 
 // TestDdevAllDatabases tests db import/export/start with all MariaDB versions
