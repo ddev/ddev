@@ -89,23 +89,23 @@ func TestComposerVersion(t *testing.T) {
 	require.NoError(t, err)
 	stdout, _, err := app.Exec(&ddevapp.ExecOpts{Cmd: "composer --version"})
 	assert.NoError(err)
-	assert.Contains(stdout, "Composer version 1")
-
-	// Make sure it does the right thing with latest 2.x
-	app.ComposerVersion = "2"
-	err = app.Start()
-	require.NoError(t, err)
-	stdout, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: "composer --version"})
-	assert.NoError(err)
 	assert.Contains(stdout, "Composer version 2")
 
-	// With version "1" we should be back to latest v1
+	// Make sure it does the right thing with latest 2.x
 	app.ComposerVersion = "1"
 	err = app.Start()
 	require.NoError(t, err)
 	stdout, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: "composer --version"})
 	assert.NoError(err)
 	assert.Contains(stdout, "Composer version 1")
+
+	// With version "2" we should be back to latest v2
+	app.ComposerVersion = "2"
+	err = app.Start()
+	require.NoError(t, err)
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: "composer --version"})
+	assert.NoError(err)
+	assert.Contains(stdout, "Composer version 2")
 
 	// With explicit version, we should get that version
 	app.ComposerVersion = "2.0.1"
