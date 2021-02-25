@@ -28,7 +28,7 @@
 
 @test "verify that composer v2 is installed by default" {
     v=$(docker exec $CONTAINER_NAME bash -c 'composer --version | awk "{ print $3;}"')
-    [ ${v} > "2." ]
+    [[ "${v}" > "2." ]]
 }
 
 @test "verify there aren't \"closed keepalive connection\" complaints" {
