@@ -1,0 +1,9 @@
+image: gitpod/workspace-full
+
+tasks:
+  - init: go get -v -t -d ./...
+  - make
+
+vscode:
+  extensions:
+    - premparihar.gotestexplorer@0.1.10:jvUM8akrQ67vQxfjaxCgCg==
