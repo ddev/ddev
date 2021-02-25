@@ -1,4 +1,6 @@
-image: gitpod/workspace-full
+
+image:
+  file: .gitpod.Dockerfile
 
 tasks:
   - name: docker_up
@@ -9,6 +11,7 @@ tasks:
       while ! docker ps; do
         sleep 1
       done
+      .githooks/linkallchecks.sh
       make
 
 vscode:
