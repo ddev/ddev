@@ -1,8 +1,15 @@
 image: gitpod/workspace-full
 
 tasks:
-  - init: go get -v -t -d ./...
-  - make
+  - name: docker_up
+    command: sudo docker-up
+  - name: make
+    command: |
+      # Wait for docker to come up before doing make (make requires docker)
+      while ! docker ps; do
+        sleep 1
+      done
+      make
 
 vscode:
   extensions:
