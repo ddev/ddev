@@ -1,5 +1,9 @@
 # Building, Testing, and Contributing
 
+## Open in Gitpod
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/drud/ddev)
+
 ## Pull Requests and PR Preparation
 
 When preparing your pull request, please use a branch name like "2020_<your_username>_short_description" so that it's easy to track to you.
