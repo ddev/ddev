@@ -4,7 +4,7 @@ The general workflow for contributing to this project is outlined in this docume
 
 ## Create an Issue
 
-If you find a bug in this project, have trouble following the documentation, or have a question about the project, create an issue! There’s nothing to it and whatever issue you’re having, you’re likely not the only one, so others will find your issue helpful, too. For more information on how issues work, check out GitHub's [Issues guide](http://guides.github.com/features/issues).
+If you find a bug in this project, have trouble following the documentation, or have a question about the project, create an issue! There’s nothing to it and whatever issue you’re having, you’re likely not the only one, so others will find your issue helpful, too. For more information on how issues work, check out GitHub's [Issues guide](http://guides.github.com/features/issues). Or there are lots of [other places for immediate support](https://ddev.readthedocs.io/en/stable/#support-and-user-contributed-documentation).
 
 ### Issues Pro Tips
 
@@ -60,3 +60,7 @@ The rules:
 9. Even though we call these "rules" above, they are actually just guidelines. Since you've read all the rules, you now know that.
 
 If you are having trouble getting into the mood of idiomatic Go, we recommend reading through [Effective Go](https://golang.org/doc/effective_go.html). The [Go Blog](https://blog.golang.org) is also a great resource. Drinking the kool-aid is a lot easier than going thirsty.
+
+## Using Gitpod.io to test PRs
+
+[Gitpod.io](https://www.gitpod.io/) is integrated with DDEV-Local so you don't have to set up a development environment to work on bugs or features. You can just spin up a gitpod instance and go. There's a link on every PR build in the checks to let you do it.
