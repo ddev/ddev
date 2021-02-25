@@ -30,6 +30,9 @@ db_pull_command:
   command: |
     pushd /var/www/html/.ddev/.downloads >/dev/null
     acli remote:drush -n eeamoreno.dev -- sql-dump >db.sql
+    # This perl line removes a mysqldump error being embeedded inappropriately by Acquia
+    # 
+    perl -pi -e 's/> mysqldump: Error: .Access denied; you need.*//g' db.sql
     gzip db.sql
 
 files_pull_command:

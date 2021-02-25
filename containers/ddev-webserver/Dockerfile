@@ -96,9 +96,9 @@ RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/MailHog/releases/
 
 RUN curl -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod 777 /usr/local/bin/terminus
 RUN curl -sSL https://github.com/platformsh/platformsh-cli/releases/download/$(curl --silent "https://api.github.com/repos/platformsh/platformsh-cli/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/platform.phar --output /usr/local/bin/platform && chmod 777 /usr/local/bin/platform
-RUN curl -sSL --output /usr/local/bin/acli https://github.com/acquia/cli/releases/latest/download/acli.phar && chmod +x /usr/local/bin/acli
+RUN curl -sSL --output /usr/local/bin/acli https://github.com/acquia/cli/releases/latest/download/acli.phar && chmod 777 /usr/local/bin/acli
 
-RUN curl -sSL -O $DDEV_LIVE_DOWNLOAD_URL && unzip ddev-live.zip && mv ddev-live /usr/local/bin && chmod +x /usr/local/bin/ddev-live && rm ddev-live.zip
+RUN curl -sSL -O $DDEV_LIVE_DOWNLOAD_URL && unzip ddev-live.zip && mv ddev-live /usr/local/bin && chmod 777 /usr/local/bin/ddev-live && rm ddev-live.zip
 
 RUN curl -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/backdrop-drush-extension.zip -o /tmp/backdrop-drush-extension.zip && unzip -o /tmp/backdrop-drush-extension.zip -d /var/tmp/backdrop_drush_commands
 
@@ -109,7 +109,7 @@ RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib
     touch /var/log/nginx/access.log && \
     touch /var/log/nginx/error.log && \
     chmod -R ugo+rw /var/log/nginx/ && \
-    chmod ugo+rx /usr/local/bin/* && \
+    chmod ugo+rwx /usr/local/bin/* && \
     update-alternatives --set php /usr/bin/php${PHP_DEFAULT_VERSION} && \
     ln -sf /usr/sbin/php-fpm${PHP_DEFAULT_VERSION} /usr/sbin/php-fpm
 
@@ -120,7 +120,7 @@ RUN mkdir -p /mnt/ddev-global-cache/mkcert /run/{php,blackfire} /var/cache/nginx
 
 RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /var/lib/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/lib/node_modules /etc/php /etc/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
 
-RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-${MKCERT_ARCH} -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert
+RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-${MKCERT_ARCH} -o /usr/local/bin/mkcert && chmod 777 /usr/local/bin/mkcert
 
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
   chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
@@ -135,7 +135,7 @@ ADD ddev-webserver-base-scripts /
 RUN chmod ugo+x /start.sh /healthcheck.sh
 
 # Composer, etc may need to be updated by composer self-update
-RUN chmod -f ugo+rwx /usr/local/bin /usr/local/bin/composer /usr/local/bin/ddev-live
+RUN chmod -f ugo+rwx /usr/local/bin /usr/local/bin/*
 
 RUN chmod ugo+w /etc/ssl/certs /usr/local/share/ca-certificates
 
