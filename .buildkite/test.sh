@@ -66,7 +66,7 @@ echo "--- running sanetestbot.sh"
 ./.buildkite/sanetestbot.sh
 
 # Update all images that could have changed
-( docker images | awk '/drud/ {print $1":"$2 }' | xargs -L1 docker pull ) || true
+( docker images | awk '/drud|phpmyadmin/ {print $1":"$2 }' | xargs -L1 docker pull ) || true
 
 # homebrew sometimes removes /usr/local/etc/my.cnf.d
 if command -v brew >/dev/null; then
