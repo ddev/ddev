@@ -96,6 +96,11 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
 ADD ddev-webserver-dev-base-files /
 RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_${MAILHOG_ARCH} -o /usr/local/bin/mailhog; 
 
+# 2021-02-24 the deb.sury.org key will expire 2021-03-17 so we need to get the new one
+RUN wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests
+
 RUN curl -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod 777 /usr/local/bin/terminus
 RUN curl -sSL -O $DDEV_LIVE_DOWNLOAD_URL && unzip ddev-live.zip && mv ddev-live /usr/local/bin && chmod +x /usr/local/bin/ddev-live && rm ddev-live.zip
 
