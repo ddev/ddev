@@ -507,12 +507,16 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 	}
 
 	// The perl manipulation removes statements like CREATE DATABASE and USE, which
-	// throw off imports.
-	inContainerCommand := fmt.Sprintf(`mysql -uroot -proot -e "%s" && pv %s/*.*sql | perl -p -e 's/^(CREATE DATABASE|USE|.*DROP DATABASE).*$//' | mysql %s`, preImportSQL, insideContainerImportPath, targetDB)
+	// throw off imports. This is a scary manipulation, as it must not match actual content
+	// as has actually happened with https://www.ddev.com/ddev-local/ddev-local-database-management/
+	// and in https://github.com/drud/ddev/issues/2787
+	// The backtick after USE is inserted via fmt.Sprintf argument because it seems there's
+	// no way to escape a backtick in a string literal.
+	inContainerCommand := fmt.Sprintf(`mysql -uroot -proot -e "%s" && pv %s/*.*sql | perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, insideContainerImportPath, "`", targetDB)
 
 	// Handle the case where we are reading from stdin
 	if imPath == "" && extPath == "" {
-		inContainerCommand = fmt.Sprintf(`mysql -uroot -proot -e "%s" && perl -p -e 's/^(CREATE DATABASE|USE|.*DROP DATABASE).*$//' | mysql %s`, preImportSQL, targetDB)
+		inContainerCommand = fmt.Sprintf(`mysql -uroot -proot -e "%s" && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, "`", targetDB)
 	}
 	_, _, err = app.Exec(&ExecOpts{
 		Service: "db",
