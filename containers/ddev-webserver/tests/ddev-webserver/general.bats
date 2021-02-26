@@ -26,6 +26,11 @@
     docker exec $CONTAINER_NAME bash -c 'php --version | grep -v "with Xdebug"'
 }
 
+@test "verify that composer v2 is installed by default" {
+    v=$(docker exec $CONTAINER_NAME bash -c 'composer --version | awk "{ print $3;}"')
+    [[ "${v}" > "2." ]]
+}
+
 @test "verify there aren't \"closed keepalive connection\" complaints" {
 	(docker logs $CONTAINER_NAME 2>&1 | grep -v "closed keepalive connection")  || (echo "Found unwanted closed keepalive connection messages" && exit 103)
 }
