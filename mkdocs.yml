@@ -3,12 +3,35 @@ repo_url: https://github.com/drud/ddev
 repo_name: GitHub
 edit_uri: blob/master/docs/
 copyright: DRUD Technology, LLC
-theme: readthedocs
+theme:
+  name: 'material'
+  palette:
+    primary: 'light-blue'
 extra_javascript:
-  - assets/fix-search.js
+  - 'assets/fix-search.js'
+  - 'assets/extra.js'
+  - 'assets/jquery-3.5.1.min.js'
 markdown_extensions:
-  - markdown.extensions.toc
-pages:
+    - toc:
+        permalink: true
+    - admonition
+    - def_list
+    - mdx_truly_sane_lists:
+        nested_indent: 2
+        truly_sane: true
+    - nl2br
+    - pymdownx.details
+    - pymdownx.superfences
+    - meta
+plugins:
+    - search
+    - git-revision-date-localized:
+        type: timeago
+        locale: en
+google_analytics:
+  - 'UA-105593079-2'
+  - 'auto'
+nav:
   - 'Home': 'index.md'
   - 'ddev Basics':
     - 'Using the CLI': 'users/cli-usage.md'
