@@ -37,6 +37,12 @@ RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/apache2
 ADD ddev-webserver-base-files /
 ADD ddev-webserver-base-scripts /
 
+# magerun and magerun2 for magento
+RUN curl -sSL https://files.magerun.net/n98-magerun-latest.phar -o /usr/local/bin/magerun && chmod 777 /usr/local/bin/magerun
+RUN curl -sSL https://raw.githubusercontent.com/netz98/n98-magerun/develop/res/autocompletion/bash/n98-magerun.phar.bash -o /etc/bash_completion.d/n98-magerun.phar
+RUN curl -sSL https://files.magerun.net/n98-magerun2-latest.phar -o /usr/local/bin/magerun2 && chmod 777 /usr/local/bin/magerun2
+RUN curl -sSL https://raw.githubusercontent.com/netz98/n98-magerun2/develop/res/autocompletion/bash/n98-magerun2.phar.bash -o /etc/bash_completion.d/n98-magerun2.phar && chmod +x /usr/local/bin/magerun
+
 # /usr/local/bin may need to be updated by start.sh, etc
 RUN chmod -f ugo+rwx /usr/local/bin /usr/local/bin/composer
 
