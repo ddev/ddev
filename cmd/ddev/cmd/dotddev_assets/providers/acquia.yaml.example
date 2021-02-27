@@ -7,7 +7,7 @@
 # 3. `ddev auth ssh` (this typically needs only be done once per ddev session, not every pull.)
 # 4. Add add an entry to web_environment in ~/.ddev/global_config.yaml with the token:
 # web_environment:
-# - ACQUIA_API_TOKEN=xxxxxxxx
+# - ACQUIA_API_KEY=xxxxxxxx
 # - ACQUIA_API_SECRET=xxxxx
 # 5. Copy acquia.yaml.example to acquia.yaml.
 # 6. Update project_id.
@@ -15,9 +15,8 @@
 # 8. `ddev restart`
 # 9. Use `ddev pull acquia` to pull the project database and files.
 
-#TODO: ddev exec acli link
-
 # Debugging: Use `ddev exec acli command` and `ddev exec acli auth:info`
+# Make sure you remembered to `ddev auth ssh`
 
 environment_variables:
   project_id: eeamoreno.dev
@@ -28,15 +27,15 @@ auth_command:
 
 db_pull_command:
   command: |
+    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null
     acli remote:drush -n eeamoreno.dev -- sql-dump >db.sql
-    # This perl line removes a mysqldump error being embeedded inappropriately by Acquia
-    # 
-    perl -pi -e 's/> mysqldump: Error: .Access denied; you need.*//g' db.sql
+    perl -pi -e 's/> mysqldump: Error: .Access denied; you need.*//g' db.sql # Remove drush sql-dump failure
     gzip db.sql
 
 files_pull_command:
   command: |
+    ssh-add -l >/dev/null || ( echo "You need to ddev auth ssh before running this command" && exit 1 )
     acli remote:aliases:download -n
     drush core:init -y
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
