@@ -38,7 +38,7 @@ db_pull_command:
 files_pull_command:
   command: |
     acli remote:aliases:download -n >/dev/null
-    drush core:init -y
+    drush core:init -y --quiet
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null;
     drush rsync -q -y @${project_id}:%files ./files
