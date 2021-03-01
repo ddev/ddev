@@ -3,7 +3,7 @@ image:
   file: .gitpod.Dockerfile
 
 tasks:
-  - name: make
+  - name: ready
     command: |
       # Wait for docker to come up before doing make (make requires docker)
       while ! docker ps; do
@@ -12,14 +12,14 @@ tasks:
       .githooks/linkallchecks.sh
   - name: docker_up
     command: sudo docker-up      
-  - init: |
+  - prebuild: |
       # Wait for docker to come up before doing make (make requires docker)
       while ! docker ps; do
         sleep 1
       done
       .githooks/linkallchecks.sh
       make
-  - init: sudo docker-up &
+  - prebuild: sudo docker-up &
 
 vscode:
   extensions:
