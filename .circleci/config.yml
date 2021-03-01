@@ -14,7 +14,7 @@ jobs:
         - linux-homebrew-v23
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
-        name: NORMAL Circle VM setup - tools, docker, golang
+        name: NORMAL Circle VM setup
         no_output_timeout: "40m"
     - save_cache:
         key: linux-homebrew-v23
@@ -58,7 +58,7 @@ jobs:
         name: Check cache contents
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
-        name: Circle VM setup - tools, docker, golang
+        name: Circle VM setup
         no_output_timeout: "40m"
     - save_cache:
         key: linux-homebrew-v23
@@ -85,10 +85,12 @@ jobs:
       DRUD_NONINTERACTIVE: "true"
     steps:
       - checkout
+      - run: docker ps && docker run hello-world
       - run:
           command: ./.travis/linux_travis_arm64_setup.sh
           name: ARM64 VM setup
           no_output_timeout: "40m"
+      - run: docker ps && docker run hello-world
       - run:
           command: make -s test
           name: ddev tests
@@ -111,7 +113,7 @@ jobs:
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
-        name: macOS Circle VM setup - tools, docker, golang
+        name: macOS Circle VM setup
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - run:
         command: make -s test
@@ -141,7 +143,7 @@ jobs:
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
-        name: macOS Circle VM setup - tools, docker, golang
+        name: macOS Circle VM setup
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - run:
         command: make -s test
@@ -171,7 +173,7 @@ jobs:
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
-        name: macOS Circle VM setup - tools, docker, golang
+        name: macOS Circle VM setup
     - run:
         command: make -s test
         name: ddev tests
@@ -201,7 +203,7 @@ jobs:
         at: ~/
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
-        name: Circle VM setup - tools, docker, golang
+        name: Circle VM setup
         no_output_timeout: "40m"
 
     # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
@@ -236,7 +238,7 @@ jobs:
         at: ~/
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
-        name: Circle VM setup - tools, docker, golang
+        name: Circle VM setup
         no_output_timeout: "40m"
 
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
@@ -268,7 +270,7 @@ jobs:
         - linux-v23
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
-        name: Circle VM setup - tools, docker, golang
+        name: Circle VM setup
         no_output_timeout: "40m"
     - run:
         command: source ~/.bashrc && make staticrequired EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
@@ -289,7 +291,7 @@ jobs:
         - linux-v23
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
-        name: Circle VM setup - tools, docker, golang
+        name: Circle VM setup
         no_output_timeout: "40m"
 
     - run:
@@ -323,7 +325,7 @@ jobs:
     - checkout
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
-        name: macOS Circle VM setup - tools, docker, golang
+        name: macOS Circle VM setup
 
     - run:
         command: |

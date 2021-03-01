@@ -12,7 +12,7 @@ if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
   set -x
 fi
 
-sudo apt-get update -qq
+sudo apt-get -qq update
 sudo rm -f /usr/local/bin/jq && sudo apt-get -qq install -y mysql-client zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev docker-compose
 
 # Copy docker-compose to /usr/local/bin because Travis' pre-installed version leads to exec format error
@@ -50,4 +50,5 @@ sudo service nfs-kernel-server restart
 #sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
 # Show info to simplify debugging and create a builder
 docker info
+docker version
 docker buildx create --name ddev-builder-multi --use  
