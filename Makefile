@@ -187,14 +187,14 @@ markdownlint:
 		bash -c "$$CMD"; \
 	fi
 
-# Best to install mkdocs locally with "sudo pip3 install mkdocs"
+# Best to install mkdocs locally with "sudo pip3 install -r requirements.txt"
 mkdocs:
 	@echo "mkdocs: "
 	@CMD="mkdocs -q build -d /tmp/mkdocsbuild"; \
 	if command -v mkdocs >/dev/null 2>&1; then \
 		$$CMD ; \
 	else  \
-		sleep 1 && $(DOCKERTESTCMD) bash -c "$$CMD"; \
+		echo "Not running mkdocs because it's not installed"; \
 	fi
 
 # Best to install pyspelling locally with "pip3 install pyspelling pymdown-extensions"
