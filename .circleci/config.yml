@@ -35,7 +35,7 @@ jobs:
         root: ~/
         paths: ddev
 
-  lx_nginx_fpm_test:
+  lx_amd64_fpm_test:
     machine:
       image: ubuntu-2004:202010-01
     working_directory: ~/ddev
@@ -74,6 +74,25 @@ jobs:
         key: linux-testcache-v23
         paths:
         - /home/circleci/.ddev/testcache
+
+  lx_arm64_fpm_test:
+    machine:
+      image: ubuntu-2004:202101-01
+    resource_class: arm.medium
+    working_directory: ~/ddev
+    environment:
+      DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
+      DRUD_NONINTERACTIVE: "true"
+    steps:
+      - checkout
+      - run:
+          command: ./.travis/linux_travis_arm64_setup.sh
+          name: ARM64 VM setup
+          no_output_timeout: "40m"
+      - run:
+          command: make -s test
+          name: ddev tests
+          no_output_timeout: "40m"
 
   mac_nginx_fpm_test:
     macos:
@@ -433,7 +452,8 @@ workflows:
 #    - mac_container_test
 #    - lx_container_test
 #    - staticrequired
-    - lx_nginx_fpm_test
+    - lx_amd64_fpm_test
+    - lx_arm64_fpm_test
 #        requires:
 #        - build
 #    - mac_nginx_fpm_test:
@@ -470,9 +490,8 @@ workflows:
     jobs:
     - build
     - lx_container_test
-    - lx_nginx_fpm_test:
-        requires:
-        - build
+    - lx_amd64_fpm_test
+    - lx_arm64_fpm_test
 
   release_build:
     jobs:
