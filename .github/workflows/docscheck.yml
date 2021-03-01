@@ -11,6 +11,8 @@ on:
     - ".spellcheck.yml"
     - ".markdownlintrc"
     - "mkdocs.yml"
+    - ".readthedocs.yml"
+    - "requirements.txt"
 
 jobs:
   build:
@@ -30,5 +32,5 @@ jobs:
     - name: Test mkdocs
       run: |
         sudo pip3 install setuptools
-        sudo pip3 install mkdocs==0.17.5
+        sudo pip3 install -r requirements.txt
         mkdocs -q build -d /tmp/mkdocsbuild
