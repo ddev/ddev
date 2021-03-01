@@ -21,6 +21,10 @@ environment_variables:
   dburl: you@yourhost.example.com:tmp/db.sql.gz
   filesurl: you@yourhost.example.com:tmp/files.tar.gz
 
+auth_command:
+  command: |
+    ssh-add -l >/dev/null || ( echo "Please 'ddev auth ssh' before running this command." && exit 1 )
+
 db_pull_command:
   command: rsync -az "${dburl}" /var/www/html/.ddev/.downloads
   service: web

@@ -18,6 +18,10 @@ environment_variables:
   project_id: w5vxexample
   environment_name: master
 
+auth_command:
+  command: |
+    if [ -z "${PLATFORMSH_CLI_TOKEN:-}" ]; then echo "Please make sure you have set PLATFORMSH_CLI_TOKEN in ~/.ddev/global_config.yaml" && exit 1; fi
+
 db_pull_command:
   command: |
     platform db:dump --yes --gzip --file=/var/www/html/.ddev/.downloads/db.sql.gz --project="${project_id}" --environment="${environment_name}"
