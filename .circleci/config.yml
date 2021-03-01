@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     machine:
-      image: ubuntu-2004:202010-01
+      image: ubuntu-2004:202101-01
     working_directory: ~/ddev
     environment:
       DRUD_NONINTERACTIVE: "true"
@@ -37,7 +37,7 @@ jobs:
 
   lx_amd64_fpm_test:
     machine:
-      image: ubuntu-2004:202010-01
+      image: ubuntu-2004:202101-01
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
@@ -185,7 +185,7 @@ jobs:
 
   lx_apache_fpm_test:
     machine:
-      image: ubuntu-2004:202010-01
+      image: ubuntu-2004:202101-01
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: apache-fpm
@@ -220,7 +220,7 @@ jobs:
 
   lx_nfsmount_test:
     machine:
-      image: ubuntu-2004:202010-01
+      image: ubuntu-2004:202101-01
     working_directory: ~/ddev
     environment:
       DDEV_TEST_USE_NFSMOUNT: true
@@ -242,7 +242,7 @@ jobs:
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     # Run the built-in ddev tests with the executables just built.
     - run:
-        # CircleCI image ubuntu-2004:202010-01 has umask 002, which results in
+        # CircleCI image ubuntu-2004:202101-01 has umask 002, which results in
         # default perms 700 for new directories, which doesn't seem to work with NFS
         command: umask u=rwx,g=rwx,o=rx && make -s test EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: ddev tests
@@ -257,7 +257,7 @@ jobs:
 
   staticrequired:
     machine:
-      image: ubuntu-2004:202010-01
+      image: ubuntu-2004:202101-01
     working_directory: ~/ddev
     environment:
     steps:
@@ -276,7 +276,7 @@ jobs:
 
   lx_container_test:
     machine:
-      image: ubuntu-2004:202010-01
+      image: ubuntu-2004:202101-01
     working_directory: ~/ddev
     environment:
       GOTEST_SHORT: true
@@ -339,7 +339,7 @@ jobs:
 
   artifacts:
     machine:
-      image: ubuntu-2004:202010-01
+      image: ubuntu-2004:202101-01
     working_directory: ~/ddev
     steps:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
