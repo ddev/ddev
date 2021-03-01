@@ -13,10 +13,13 @@ if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
 fi
 
 sudo apt-get -qq update
-sudo rm -f /usr/local/bin/jq && sudo apt-get install -y mysql-client zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev docker-compose
+sudo rm -f /usr/local/bin/jq && sudo apt-get install -y mysql-client zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev
 
-# Copy docker-compose to /usr/local/bin because Travis' pre-installed version leads to exec format error
-sudo cp /usr/bin/docker-compose /usr/local/bin/docker-compose
+# If on travis-ci copy docker-compose to /usr/local/bin because Travis' pre-installed version leads to exec format error
+if [ ! -z "${TRAVIS_BUILD_NUMBER:-}" ]; then
+  sudo apt-get install docker-compose
+  sudo cp /usr/bin/docker-compose /usr/local/bin/docker-compose
+fi
 
 curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-arm64.zip && sudo unzip -o -d /usr/local/bin /tmp/ngrok.zip
 
