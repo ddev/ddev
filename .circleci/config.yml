@@ -85,12 +85,10 @@ jobs:
       DRUD_NONINTERACTIVE: "true"
     steps:
       - checkout
-      - run: docker ps && docker run hello-world
       - run:
           command: ./.travis/linux_travis_arm64_setup.sh
           name: ARM64 VM setup
           no_output_timeout: "40m"
-      - run: docker ps && docker run hello-world
       - run:
           command: make -s test
           name: ddev tests
