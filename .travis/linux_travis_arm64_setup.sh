@@ -57,4 +57,5 @@ fi
 docker info
 docker version
 docker-compose version
+lsb_release -a
 docker buildx create --name ddev-builder-multi --use  
