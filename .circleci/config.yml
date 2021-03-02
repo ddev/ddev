@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     machine:
-      image: ubuntu-2004:202010-01
+      image: ubuntu-2004:202101-01
     working_directory: ~/ddev
     environment:
       DRUD_NONINTERACTIVE: "true"
@@ -14,7 +14,7 @@ jobs:
         - linux-homebrew-v23
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
-        name: NORMAL Circle VM setup - tools, docker, golang
+        name: NORMAL Circle VM setup
         no_output_timeout: "40m"
     - save_cache:
         key: linux-homebrew-v23
@@ -35,9 +35,9 @@ jobs:
         root: ~/
         paths: ddev
 
-  lx_nginx_fpm_test:
+  lx_amd64_fpm_test:
     machine:
-      image: ubuntu-2004:202010-01
+      image: ubuntu-2004:202101-01
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
@@ -58,7 +58,7 @@ jobs:
         name: Check cache contents
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
-        name: Circle VM setup - tools, docker, golang
+        name: Circle VM setup
         no_output_timeout: "40m"
     - save_cache:
         key: linux-homebrew-v23
@@ -74,6 +74,26 @@ jobs:
         key: linux-testcache-v23
         paths:
         - /home/circleci/.ddev/testcache
+
+  lx_arm64_fpm_test:
+    machine:
+      image: ubuntu-2004:202101-01
+    resource_class: arm.medium
+    working_directory: ~/ddev
+    environment:
+      DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
+      DRUD_NONINTERACTIVE: "true"
+      GOTEST_SHORT: "true"
+    steps:
+      - checkout
+      - run:
+          command: ./.travis/linux_travis_arm64_setup.sh
+          name: ARM64 VM setup
+          no_output_timeout: "40m"
+      - run:
+          command: make -s test
+          name: ddev tests
+          no_output_timeout: "40m"
 
   mac_nginx_fpm_test:
     macos:
@@ -92,7 +112,7 @@ jobs:
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
-        name: macOS Circle VM setup - tools, docker, golang
+        name: macOS Circle VM setup
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - run:
         command: make -s test
@@ -122,7 +142,7 @@ jobs:
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
-        name: macOS Circle VM setup - tools, docker, golang
+        name: macOS Circle VM setup
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     - run:
         command: make -s test
@@ -152,7 +172,7 @@ jobs:
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
-        name: macOS Circle VM setup - tools, docker, golang
+        name: macOS Circle VM setup
     - run:
         command: make -s test
         name: ddev tests
@@ -166,7 +186,7 @@ jobs:
 
   lx_apache_fpm_test:
     machine:
-      image: ubuntu-2004:202010-01
+      image: ubuntu-2004:202101-01
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: apache-fpm
@@ -182,7 +202,7 @@ jobs:
         at: ~/
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
-        name: Circle VM setup - tools, docker, golang
+        name: Circle VM setup
         no_output_timeout: "40m"
 
     # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
@@ -201,7 +221,7 @@ jobs:
 
   lx_nfsmount_test:
     machine:
-      image: ubuntu-2004:202010-01
+      image: ubuntu-2004:202101-01
     working_directory: ~/ddev
     environment:
       DDEV_TEST_USE_NFSMOUNT: true
@@ -217,13 +237,13 @@ jobs:
         at: ~/
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
-        name: Circle VM setup - tools, docker, golang
+        name: Circle VM setup
         no_output_timeout: "40m"
 
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     # Run the built-in ddev tests with the executables just built.
     - run:
-        # CircleCI image ubuntu-2004:202010-01 has umask 002, which results in
+        # CircleCI image ubuntu-2004:202101-01 has umask 002, which results in
         # default perms 700 for new directories, which doesn't seem to work with NFS
         command: umask u=rwx,g=rwx,o=rx && make -s test EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: ddev tests
@@ -238,7 +258,7 @@ jobs:
 
   staticrequired:
     machine:
-      image: ubuntu-2004:202010-01
+      image: ubuntu-2004:202101-01
     working_directory: ~/ddev
     environment:
     steps:
@@ -249,19 +269,20 @@ jobs:
         - linux-v23
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
-        name: Circle VM setup - tools, docker, golang
+        name: Circle VM setup
         no_output_timeout: "40m"
     - run:
         command: source ~/.bashrc && make staticrequired EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: staticrequired
 
-  lx_container_test:
+  lx_amd64_container_test:
     machine:
-      image: ubuntu-2004:202010-01
+      image: ubuntu-2004:202101-01
     working_directory: ~/ddev
     environment:
       GOTEST_SHORT: true
       BUILDKIT_PROGRESS: plain
+      DOCKER_CLI_EXPERIMENTAL: enabled
     steps:
     - checkout
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
@@ -270,7 +291,7 @@ jobs:
         - linux-v23
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
-        name: Circle VM setup - tools, docker, golang
+        name: Circle VM setup
         no_output_timeout: "40m"
 
     - run:
@@ -296,6 +317,38 @@ jobs:
         - /home/linuxbrew
         - /home/circleci/.ddev/testcache
 
+  lx_arm64_container_test:
+    machine:
+      image: ubuntu-2004:202101-01
+    resource_class: arm.medium
+    working_directory: ~/ddev
+    environment:
+      GOTEST_SHORT: true
+      BUILDKIT_PROGRESS: plain
+      DOCKER_CLI_EXPERIMENTAL: enabled
+    steps:
+      - checkout
+      - run:
+          command: ./.travis/linux_travis_arm64_setup.sh
+          name: Circle VM setup
+          no_output_timeout: "40m"
+
+#      - run:
+#          command: ./.circleci/linux_docker_buildx_setup.sh
+#          name: Docker buildx setup for multi-arch builds
+      - run:
+          command: |
+            . ~/.bashrc
+            for dir in containers/*/
+                do pushd $dir >/dev/null
+                echo "--- Build container $dir"
+                time make container DOCKER_ARGS=--no-cache EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
+                echo "--- Test container $dir"
+                time make test EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
+                popd >/dev/null
+            done
+          name: linux container test
+
   mac_container_test:
     macos:
       xcode: "11.3.1"
@@ -304,7 +357,7 @@ jobs:
     - checkout
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
-        name: macOS Circle VM setup - tools, docker, golang
+        name: macOS Circle VM setup
 
     - run:
         command: |
@@ -320,7 +373,7 @@ jobs:
 
   artifacts:
     machine:
-      image: ubuntu-2004:202010-01
+      image: ubuntu-2004:202101-01
     working_directory: ~/ddev
     steps:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
@@ -429,11 +482,13 @@ workflows:
   version: 2
   normal_build_and_test:
     jobs:
-    - build
+#    - build
 #    - mac_container_test
-#    - lx_container_test
+#    - lx_amd64_container_test
 #    - staticrequired
-    - lx_nginx_fpm_test
+    - lx_amd64_fpm_test
+    - lx_arm64_fpm_test
+    - lx_arm64_container_test
 #        requires:
 #        - build
 #    - mac_nginx_fpm_test:
@@ -468,11 +523,10 @@ workflows:
                 - master
                 - "pull/[0-9]+"
     jobs:
-    - build
-    - lx_container_test
-    - lx_nginx_fpm_test:
-        requires:
-        - build
+    - lx_amd64_container_test
+    - lx_arm64_container_test
+    - lx_amd64_fpm_test
+    - lx_arm64_fpm_test
 
   release_build:
     jobs:
