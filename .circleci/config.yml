@@ -275,7 +275,7 @@ jobs:
         command: source ~/.bashrc && make staticrequired EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: staticrequired
 
-  lx_container_test:
+  lx_amd64_container_test:
     machine:
       image: ubuntu-2004:202101-01
     working_directory: ~/ddev
@@ -315,6 +315,36 @@ jobs:
         paths:
         - /home/linuxbrew
         - /home/circleci/.ddev/testcache
+
+  lx_arm64_container_test:
+    machine:
+      image: ubuntu-2004:202101-01
+    working_directory: ~/ddev
+    environment:
+      GOTEST_SHORT: true
+      BUILDKIT_PROGRESS: plain
+    steps:
+      - checkout
+      - run:
+          command: ./.travis/linux_travis_arm64_setup.sh
+          name: Circle VM setup
+          no_output_timeout: "40m"
+
+      - run:
+          command: ./.circleci/linux_docker_buildx_setup.sh
+          name: Docker buildx setup for multi-arch builds
+      - run:
+          command: |
+            . ~/.bashrc
+            for dir in containers/*/
+                do pushd $dir >/dev/null
+                echo "--- Build container $dir"
+                time make container DOCKER_ARGS=--no-cache EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
+                echo "--- Test container $dir"
+                time make test EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
+                popd >/dev/null
+            done
+          name: linux container test
 
   mac_container_test:
     macos:
@@ -451,10 +481,11 @@ workflows:
     jobs:
     - build
 #    - mac_container_test
-#    - lx_container_test
+#    - lx_amd64_container_test
 #    - staticrequired
     - lx_amd64_fpm_test
     - lx_arm64_fpm_test
+    - lx_arm64_container_test
 #        requires:
 #        - build
 #    - mac_nginx_fpm_test:
@@ -490,7 +521,8 @@ workflows:
                 - "pull/[0-9]+"
     jobs:
     - build
-    - lx_container_test
+    - lx_amd64_container_test
+    - lx_arm64_container_test
     - lx_amd64_fpm_test
     - lx_arm64_fpm_test
 
