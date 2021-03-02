@@ -83,6 +83,7 @@ jobs:
     environment:
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
       DRUD_NONINTERACTIVE: "true"
+      GOTEST_SHORT: "true"
     steps:
       - checkout
       - run:
