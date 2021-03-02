@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -34,6 +35,9 @@ func TestDdevLivePull(t *testing.T) {
 	token := ""
 	if token = os.Getenv("DDEV_DDEVLIVE_API_TOKEN"); token == "" {
 		t.Skipf("No DDEV_DDEVLIVE_API_TOKEN env var has been set. Skipping %v", t.Name())
+	}
+	if runtime.GOARCH == "arm64" {
+		t.Skip("Skipping because ddev-live does not yet support arm64")
 	}
 
 	// Set up tests and give ourselves a working directory.
