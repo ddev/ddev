@@ -31,6 +31,11 @@
     [[ "${v}" > "2." ]]
 }
 
+@test "verify that PHP assertion are enabled by default" {
+    enabled=$(docker exec $CONTAINER_NAME sh -c "php -r 'echo ini_get("'"zend.assertions"'");'")
+    [[ "${enabled}" -eq 1 ]]
+}
+
 @test "verify there aren't \"closed keepalive connection\" complaints" {
 	(docker logs $CONTAINER_NAME 2>&1 | grep -v "closed keepalive connection")  || (echo "Found unwanted closed keepalive connection messages" && exit 103)
 }

@@ -61,6 +61,9 @@ else
   disable_xdebug
 fi
 
+# Enable assertions by default.
+phpenmod assert
+
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
 # Make sure the TERMINUS_CACHE_DIR (/mnt/ddev-global-cache/terminus/cache) exists
