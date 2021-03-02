@@ -333,9 +333,9 @@ jobs:
           name: Circle VM setup
           no_output_timeout: "40m"
 
-      - run:
-          command: ./.circleci/linux_docker_buildx_setup.sh
-          name: Docker buildx setup for multi-arch builds
+#      - run:
+#          command: ./.circleci/linux_docker_buildx_setup.sh
+#          name: Docker buildx setup for multi-arch builds
       - run:
           command: |
             . ~/.bashrc
