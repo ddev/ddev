@@ -282,6 +282,7 @@ jobs:
     environment:
       GOTEST_SHORT: true
       BUILDKIT_PROGRESS: plain
+      DOCKER_CLI_EXPERIMENTAL: enabled
     steps:
     - checkout
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
@@ -324,6 +325,7 @@ jobs:
     environment:
       GOTEST_SHORT: true
       BUILDKIT_PROGRESS: plain
+      DOCKER_CLI_EXPERIMENTAL: enabled
     steps:
       - checkout
       - run:
