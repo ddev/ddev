@@ -482,7 +482,7 @@ workflows:
   version: 2
   normal_build_and_test:
     jobs:
-    - build
+#    - build
 #    - mac_container_test
 #    - lx_amd64_container_test
 #    - staticrequired
@@ -523,7 +523,6 @@ workflows:
                 - master
                 - "pull/[0-9]+"
     jobs:
-    - build
     - lx_amd64_container_test
     - lx_arm64_container_test
     - lx_amd64_fpm_test
