@@ -319,6 +319,7 @@ jobs:
   lx_arm64_container_test:
     machine:
       image: ubuntu-2004:202101-01
+    resource_class: arm.medium
     working_directory: ~/ddev
     environment:
       GOTEST_SHORT: true
