@@ -96,7 +96,7 @@ func testMain(m *testing.M) int {
 			logOutput.Errorf("-- FAIL: dockerutils_test failed to remove test container: %v", err)
 		}
 	}()
-	_, err = ContainerWait(30, map[string]string{"com.ddev.site-name": testContainerName})
+	err = ContainerWait(30, map[string]string{"com.ddev.site-name": testContainerName})
 	if err != nil {
 		logout, _ := exec.RunCommand("docker", []string{"logs", container.Name})
 		inspectOut, _ := exec.RunCommandPipe("sh", []string{"-c", fmt.Sprintf("docker inspect %s|jq -r '.[0].State.Health.Log'", container.Name)})
@@ -128,12 +128,10 @@ func TestGetContainerHealth(t *testing.T) {
 
 	err = client.StartContainer(container.ID, nil)
 	assert.NoError(err)
-	healthDetail, err := ContainerWait(30, labels)
+	err = ContainerWait(30, labels)
 	assert.NoError(err)
 
-	assert.Equal("phpstatus: OK /var/www/html: OK mailhog: OK ", healthDetail)
-
-	status, healthDetail = GetContainerHealth(container)
+	status, healthDetail := GetContainerHealth(container)
 	assert.Equal("healthy", status)
 	assert.Equal("phpstatus: OK /var/www/html: OK mailhog: OK ", healthDetail)
 }
@@ -147,23 +145,21 @@ func TestContainerWait(t *testing.T) {
 	}
 
 	// Try a zero-wait, should show timed-out
-	_, err := ContainerWait(0, labels)
+	err := ContainerWait(0, labels)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "health check timed out")
 	}
 
-	// Try 15-second wait for "healthy", should show OK
-	healthDetail, err := ContainerWait(30, labels)
+	// Try short wait for "healthy", should show OK
+	err = ContainerWait(30, labels)
 	assert.NoError(err)
-
-	assert.Contains(healthDetail, "phpstatus: OK")
 
 	// Try a nonexistent container, should get error
 	labels = map[string]string{
 		"com.ddev.site-name": "nothing-there",
 	}
-	_, err = ContainerWait(1, labels)
+	err = ContainerWait(1, labels)
 	require.Error(t, err)
 	assert.Contains(err.Error(), "failed to query container")
 }
@@ -220,7 +216,7 @@ func TestComposeWithStreams(t *testing.T) {
 	//nolint: errcheck
 	defer ComposeCmd(composeFiles, "down")
 
-	_, err = ContainerWait(30, map[string]string{"com.ddev.site-name": t.Name()})
+	err = ContainerWait(30, map[string]string{"com.ddev.site-name": t.Name()})
 	if err != nil {
 		logout, _ := exec.RunCommand("docker", []string{"logs", t.Name()})
 		inspectOut, _ := exec.RunCommandPipe("sh", []string{"-c", fmt.Sprintf("docker inspect %s|jq -r '.[0].State.Health.Log'", t.Name())})
