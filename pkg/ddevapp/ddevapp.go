@@ -1065,12 +1065,9 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		opts.Service = "web"
 	}
 
-	container, err := dockerutil.FindContainerByName(fmt.Sprintf("ddev-%s-%s", app.Name, opts.Service))
-	if err != nil || container == nil {
-		return "", "", fmt.Errorf("service %s is not running in project %s", opts.Service, app.Name)
-	}
-	if container.State != "running" {
-		return "", "", fmt.Errorf("service %s is not current running in project %s", opts.Service, app.Name)
+	state, err := dockerutil.GetContainerStateByName(fmt.Sprintf("ddev-%s-%s", app.Name, opts.Service))
+	if state != "running" {
+		return "", "", fmt.Errorf("service %s is not current running in project %s (state=%s)", opts.Service, app.Name, state)
 	}
 
 	err = app.ProcessHooks("pre-exec")
@@ -1143,6 +1140,11 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 
 	if opts.Service == "" {
 		opts.Service = "web"
+	}
+
+	state, err := dockerutil.GetContainerStateByName(fmt.Sprintf("ddev-%s-%s", app.Name, opts.Service))
+	if state != "running" {
+		return fmt.Errorf("service %s is not current running in project %s (state=%s)", opts.Service, app.Name, state)
 	}
 
 	exec := []string{"exec"}

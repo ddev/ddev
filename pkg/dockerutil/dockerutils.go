@@ -86,6 +86,18 @@ func FindContainerByName(name string) (*docker.APIContainers, error) {
 	return &containers[0], nil
 }
 
+// GetContainerStateByName returns container state for the named container
+func GetContainerStateByName(name string) (string, error) {
+	container, err := FindContainerByName(name)
+	if err != nil || container == nil {
+		return "doesnotexist", fmt.Errorf("container %s does not exist", name)
+	}
+	if container.State == "running" {
+		return container.State, nil
+	}
+	return container.State, fmt.Errorf("container %s is state=%s so can't be accessed", name)
+}
+
 // FindContainerByLabels takes a map of label names and values and returns any docker containers which match all labels.
 func FindContainerByLabels(labels map[string]string) (*docker.APIContainers, error) {
 	containers, err := FindContainersByLabels(labels)
