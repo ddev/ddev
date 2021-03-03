@@ -1969,10 +1969,11 @@ func TestDdevExec(t *testing.T) {
 	assert.NoError(err)
 
 	// Make sure that exec works on non-ddev container like busybox as well
-	_, _, err = app.Exec(&ddevapp.ExecOpts{
+	grepOpts := &ddevapp.ExecOpts{
 		Service: "busybox",
 		Cmd:     "ls | grep bin",
-	})
+	}
+	_, _, err = app.Exec(grepOpts)
 	assert.NoError(err)
 
 	_, stderr, err := app.Exec(&ddevapp.ExecOpts{
@@ -1982,10 +1983,14 @@ func TestDdevExec(t *testing.T) {
 	assert.Error(err)
 	assert.Contains(stderr, "parameter not set")
 
-	_, stderr, err = app.Exec(&ddevapp.ExecOpts{
+	errorOpts := &ddevapp.ExecOpts{
 		Service: "busybox",
 		Cmd:     "this is an error;",
-	})
+	}
+	_, stderr, err = app.Exec(errorOpts)
+	assert.Error(err)
+	assert.Contains(stderr, "this: not found")
+	err = app.ExecWithTty(errorOpts)
 	assert.Error(err)
 	assert.Contains(stderr, "this: not found")
 
@@ -2009,7 +2014,7 @@ func TestDdevExec(t *testing.T) {
 	assert.NoError(err)
 	_, _, err = app.Exec(&simpleOpts)
 	assert.Error(err)
-	assert.Contains(err.Error(), "not currently running")
+	assert.Contains(err.Error(), "does not exist")
 	assert.Contains(err.Error(), "state=doesnotexist")
 
 	runTime()
