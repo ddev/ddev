@@ -95,7 +95,7 @@ func GetContainerStateByName(name string) (string, error) {
 	if container.State == "running" {
 		return container.State, nil
 	}
-	return container.State, fmt.Errorf("container %s is state=%s so can't be accessed", name)
+	return container.State, fmt.Errorf("container %s is in state=%s so can't be accessed", name, container.State)
 }
 
 // FindContainerByLabels takes a map of label names and values and returns any docker containers which match all labels.

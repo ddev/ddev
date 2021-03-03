@@ -1066,11 +1066,11 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	}
 
 	state, err := dockerutil.GetContainerStateByName(fmt.Sprintf("ddev-%s-%s", app.Name, opts.Service))
-	if state != "running" {
+	if err != nil || state != "running" {
 		if state == "doesnotexist" {
 			return "", "", fmt.Errorf("service %s does not exist in project %s (state=%s)", opts.Service, app.Name, state)
 		}
-		return "", "", fmt.Errorf("service %s is not currently running in project %s (state=%s). Try `ddev logs -s %s` to see what happened to it.", opts.Service, app.Name, state, opts.Service)
+		return "", "", fmt.Errorf("service %s is not currently running in project %s (state=%s), use `ddev logs -s %s` to see what happened to it", opts.Service, app.Name, state, opts.Service)
 	}
 
 	err = app.ProcessHooks("pre-exec")
@@ -1146,7 +1146,7 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 	}
 
 	state, err := dockerutil.GetContainerStateByName(fmt.Sprintf("ddev-%s-%s", app.Name, opts.Service))
-	if state != "running" {
+	if err != nil || state != "running" {
 		return fmt.Errorf("service %s is not current running in project %s (state=%s)", opts.Service, app.Name, state)
 	}
 
