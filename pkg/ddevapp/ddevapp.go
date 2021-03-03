@@ -922,12 +922,7 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	requiredContainers := []string{"web"}
-	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
-		requiredContainers = append(requiredContainers, "db")
-	}
-
-	err = app.Wait(requiredContainers)
+	err = app.WaitForServices()
 	if err != nil {
 		return err
 	}
@@ -1414,6 +1409,29 @@ func (app *DdevApp) Pause() error {
 	return StopRouterIfNoContainers()
 }
 
+// WaitForServices waits for all the services in docker-compose to come up
+func (app *DdevApp) WaitForServices() error {
+	requiredContainers := []string{}
+	if services, ok := app.ComposeYaml["services"].(map[interface{}]interface{}); ok {
+		for k := range services {
+			requiredContainers = append(requiredContainers, k.(string))
+		}
+	} else {
+		util.Failed("unable to get required startup services to wait for")
+	}
+	output.UserOut.Printf("Waiting for these services to become ready: %v", requiredContainers)
+
+	labels := map[string]string{
+		"com.ddev.site-name": app.GetName(),
+	}
+	waitTime := containerWaitTimeout
+	err := dockerutil.ContainerWait(waitTime, labels)
+	if err != nil {
+		return fmt.Errorf("timed out waiting for containers (%v) to start: err=%v", requiredContainers, err)
+	}
+	return nil
+}
+
 // Wait ensures that the app service containers are healthy.
 func (app *DdevApp) Wait(requiredContainers []string) error {
 	for _, containerType := range requiredContainers {
@@ -1422,9 +1440,9 @@ func (app *DdevApp) Wait(requiredContainers []string) error {
 			"com.docker.compose.service": containerType,
 		}
 		waitTime := containerWaitTimeout
-		logOutput, err := dockerutil.ContainerWait(waitTime, labels)
+		err := dockerutil.ContainerWait(waitTime, labels)
 		if err != nil {
-			return fmt.Errorf("%s container failed: log=%s, err=%v", containerType, logOutput, err)
+			return fmt.Errorf("%s container failed: err=%v", containerType, err)
 		}
 	}
 
@@ -1500,7 +1518,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 
 	// Ensure that db container is up.
 	labels := map[string]string{"com.ddev.site-name": app.Name, "com.docker.compose.service": "db"}
-	_, err = dockerutil.ContainerWait(containerWaitTimeout, labels)
+	err = dockerutil.ContainerWait(containerWaitTimeout, labels)
 	if err != nil {
 		return "", fmt.Errorf("unable to snapshot database, \nyour project %v is not running. \nPlease start the project if you want to snapshot it. \nIf removing, you can remove without a snapshot using \n'ddev stop --remove-data --omit-snapshot', \nwhich will destroy your database", app.Name)
 	}
