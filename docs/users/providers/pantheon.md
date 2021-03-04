@@ -10,7 +10,12 @@ If you have ddev installed, and have an active Pantheon account with an active s
 
 1. Get your Pantheon.io machine token:
    a. Login to your Pantheon Dashboard, and [Generate a Machine Token](https://pantheon.io/docs/machine-tokens/) for ddev to use.
-   b. Add the API token to the `web_environment` section in your global ddev configuration at ~/.ddev/global_config.yaml, `- DDEV_PANTHEON_API_TOKEN=abcdeyourtoken`
+   b. Add the API token to the `web_environment` section in your global ddev configuration at ~/.ddev/global_config.yaml
+
+   ```
+   web_environment:
+   - TERMINUS_MACHINE_TOKEN=abcdeyourtoken`
+   ```
 
 2. Choose a Pantheon site and environment you want to use with ddev. You'll need the site ID, which is the long 3rd component of your site dashboard URL. So if the site dashboard is at <https://dashboard.pantheon.io/sites/009a2cda-2c22-4eee-8f9d-96f017321627#dev/>, the site ID is 009a2cda-2c22-4eee-8f9d-96f017321627.
 
