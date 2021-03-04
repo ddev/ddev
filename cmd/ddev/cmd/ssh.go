@@ -46,11 +46,14 @@ ddev ssh -d /var/www/html`,
 		if !nodeps.ArrayContainsString([]string{"web", "db", "dba", "solr"}, serviceType) {
 			shell = "sh"
 		}
-		_ = app.ExecWithTty(&ddevapp.ExecOpts{
+		err = app.ExecWithTty(&ddevapp.ExecOpts{
 			Service: serviceType,
 			Cmd:     shell + " -l",
 			Dir:     sshDirArg,
 		})
+		if err != nil {
+			util.Failed("Failed to ddev ssh %s: %v", serviceType, err)
+		}
 	},
 }
 

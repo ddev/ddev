@@ -1905,126 +1905,120 @@ func TestDdevExec(t *testing.T) {
 	app := &ddevapp.DdevApp{}
 	testDir, _ := os.Getwd()
 
-	for index, site := range TestSites {
-		switchDir := site.Chdir()
-		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevExec", site.Name))
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevExec", site.Name))
 
-		if index == 0 {
+	// Make a dummy service out of busybox
+	err := fileutil.CopyFile(filepath.Join(testDir, "testdata", t.Name(), "docker-compose.busybox.yaml"), filepath.Join(site.Dir, ".ddev", "docker-compose.busybox.yaml"))
+	assert.NoError(err)
 
-			err := fileutil.CopyFile(filepath.Join(testDir, "testdata", t.Name(), "docker-compose.busybox.yaml"), filepath.Join(site.Dir, ".ddev", "docker-compose.busybox.yaml"))
-			defer func() {
-				err = os.RemoveAll(filepath.Join(site.Dir, ".ddev", "docker-compose.busybox.yaml"))
-				assert.NoError(err)
-			}()
-			assert.NoError(err)
-		}
-		err := app.Init(site.Dir)
-		assert.NoError(err)
+	err = app.Init(site.Dir)
+	assert.NoError(err)
 
-		app.Hooks = map[string][]ddevapp.YAMLTask{"post-exec": {{"exec-host": "touch hello-post-exec-" + app.Name}}, "pre-exec": {{"exec-host": "touch hello-pre-exec-" + app.Name}}}
-		defer func() {
-			app.Hooks = nil
-			_ = app.Stop(true, false)
-			_ = app.WriteConfig()
-		}()
-
-		startErr := app.Start()
-		if startErr != nil {
-			logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
-			assert.NoError(err)
-			t.Fatalf("app.Start() failed err=%v, logs from broken container:\n=======\n%s\n========\n", startErr, logs)
-		}
-
-		out, _, err := app.Exec(&ddevapp.ExecOpts{
-			Service: "web",
-			Cmd:     "pwd",
-		})
-		assert.NoError(err)
-		assert.Contains(out, "/var/www/html")
-
-		assert.FileExists("hello-pre-exec-" + app.Name)
-		assert.FileExists("hello-post-exec-" + app.Name)
-		err = os.Remove("hello-pre-exec-" + app.Name)
-		assert.NoError(err)
-		err = os.Remove("hello-post-exec-" + app.Name)
-		assert.NoError(err)
-
-		out, _, err = app.Exec(&ddevapp.ExecOpts{
-			Service: "web",
-			Dir:     "/usr/local",
-			Cmd:     "pwd",
-		})
-		assert.NoError(err)
-		assert.Contains(out, "/usr/local")
-
-		_, _, err = app.Exec(&ddevapp.ExecOpts{
-			Service: "db",
-			Cmd:     "mysql -e 'DROP DATABASE db;'",
-		})
-		assert.NoError(err)
-		_, _, err = app.Exec(&ddevapp.ExecOpts{
-			Service: "db",
-			Cmd:     "mysql information_schema -e 'CREATE DATABASE db;'",
-		})
-		assert.NoError(err)
-
-		switch app.GetType() {
-		case nodeps.AppTypeDrupal6:
-			fallthrough
-		case nodeps.AppTypeDrupal7:
-			out, _, err = app.Exec(&ddevapp.ExecOpts{
-				Service: "web",
-				Cmd:     "drush status",
-			})
-			assert.NoError(err)
-			assert.Regexp("PHP configuration[ :]*/etc/php/[0-9].[0-9]/cli/php.ini", out)
-		case nodeps.AppTypeWordPress:
-			out, _, err = app.Exec(&ddevapp.ExecOpts{
-				Service: "web",
-				Cmd:     "wp --info",
-			})
-			assert.NoError(err)
-			assert.Regexp("/etc/php.*/php.ini", out)
-
-			// Make sure error works for unset env vars, etc.
-			_, stderr, err := app.Exec(&ddevapp.ExecOpts{
-				Service: "web",
-				Cmd:     "echo $ENVDOESNOTEXIST",
-			})
-			assert.Error(err)
-			assert.Contains(stderr, "ENVDOESNOTEXIST: unbound variable")
-
-		}
-
-		// Make sure that exec works on non-ddev container like busybox as well
-		if index == 0 {
-			_, _, err = app.Exec(&ddevapp.ExecOpts{
-				Service: "busybox",
-				Cmd:     "ls | grep bin",
-			})
-			assert.NoError(err)
-
-			_, stderr, err := app.Exec(&ddevapp.ExecOpts{
-				Service: "busybox",
-				Cmd:     "echo $ENVDOESNOTEXIST",
-			})
-			assert.Error(err)
-			assert.Contains(stderr, "parameter not set")
-
-			_, stderr, err = app.Exec(&ddevapp.ExecOpts{
-				Service: "busybox",
-				Cmd:     "this is an error;",
-			})
-			assert.Error(err)
-			assert.Contains(stderr, "this: not found")
-		}
-
+	t.Cleanup(func() {
+		app.Hooks = nil
 		err = app.Stop(true, false)
 		assert.NoError(err)
+		err = app.WriteConfig()
+		assert.NoError(err)
+		err = os.RemoveAll(filepath.Join(site.Dir, ".ddev", "docker-compose.busybox.yaml"))
+		assert.NoError(err)
+	})
 
-		runTime()
-		switchDir()
+	app.Hooks = map[string][]ddevapp.YAMLTask{"post-exec": {{"exec-host": "touch hello-post-exec-" + app.Name}}, "pre-exec": {{"exec-host": "touch hello-pre-exec-" + app.Name}}}
+
+	startErr := app.Start()
+	if startErr != nil {
+		logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
+		assert.NoError(err)
+		t.Fatalf("app.Start() failed err=%v, logs from broken container:\n=======\n%s\n========\n", startErr, logs)
 	}
+
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     "pwd",
+	})
+	assert.NoError(err)
+	assert.Contains(out, "/var/www/html")
+
+	assert.FileExists("hello-pre-exec-" + app.Name)
+	assert.FileExists("hello-post-exec-" + app.Name)
+	err = os.Remove("hello-pre-exec-" + app.Name)
+	assert.NoError(err)
+	err = os.Remove("hello-post-exec-" + app.Name)
+	assert.NoError(err)
+
+	out, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Dir:     "/usr/local",
+		Cmd:     "pwd",
+	})
+	assert.NoError(err)
+	assert.Contains(out, "/usr/local")
+
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     "mysql -e 'DROP DATABASE db;'",
+	})
+	assert.NoError(err)
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     "mysql information_schema -e 'CREATE DATABASE db;'",
+	})
+	assert.NoError(err)
+
+	// Make sure that exec works on non-ddev container like busybox as well
+	grepOpts := &ddevapp.ExecOpts{
+		Service: "busybox",
+		Cmd:     "ls | grep bin",
+	}
+	_, _, err = app.Exec(grepOpts)
+	assert.NoError(err)
+
+	_, stderr, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "busybox",
+		Cmd:     "echo $ENVDOESNOTEXIST",
+	})
+	assert.Error(err)
+	assert.Contains(stderr, "parameter not set")
+
+	errorOpts := &ddevapp.ExecOpts{
+		Service: "busybox",
+		Cmd:     "this is an error;",
+	}
+	_, stderr, err = app.Exec(errorOpts)
+	assert.Error(err)
+	assert.Contains(stderr, "this: not found")
+	err = app.ExecWithTty(errorOpts)
+	assert.Error(err)
+	assert.Contains(stderr, "this: not found")
+
+	// Now kill the busybox service and make sure that responses to app.Exec are correct
+	client := dockerutil.GetDockerClient()
+	bbc, err := dockerutil.FindContainerByName(fmt.Sprintf("ddev-%s-%s", app.Name, "busybox"))
+	require.NoError(t, err)
+	err = client.StopContainer(bbc.ID, 2)
+	assert.NoError(err)
+
+	simpleOpts := ddevapp.ExecOpts{
+		Service: "busybox",
+		Cmd:     "ls",
+	}
+	_, _, err = app.Exec(&simpleOpts)
+	assert.Error(err)
+	assert.Contains(err.Error(), "not currently running")
+	assert.Contains(err.Error(), "state=exited")
+
+	err = client.RemoveContainer(docker.RemoveContainerOptions{ID: bbc.ID, Force: true})
+	assert.NoError(err)
+	_, _, err = app.Exec(&simpleOpts)
+	assert.Error(err)
+	assert.Contains(err.Error(), "does not exist")
+	assert.Contains(err.Error(), "state=doesnotexist")
+
+	runTime()
+	switchDir()
 }
 
 // TestDdevLogs tests the container log output functionality.
