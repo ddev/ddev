@@ -16,7 +16,7 @@ env:
     - DOCKER_CLI_EXPERIMENTAL=enabled
 
 before_install:
-  - ./.travis/linux_travis_arm64_setup.sh
+  - ./.ci-scripts/linux_arm64_setup.sh
 
 # Group tests to break up travis-CI build so it doesn't hit time limit.
 jobs:
