@@ -922,7 +922,7 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	err = app.WaitForServices()
+	err = app.WaitByLabels(map[string]string{"com.ddev.site-name": app.GetName()})
 	if err != nil {
 		return err
 	}
@@ -1446,6 +1446,18 @@ func (app *DdevApp) Wait(requiredContainers []string) error {
 		}
 	}
 
+	return nil
+}
+
+// WaitByLabels waits for containers found by list of labels to be
+// ready
+func (app *DdevApp) WaitByLabels(labels map[string]string) error {
+	waitTime := containerWaitTimeout
+	err := dockerutil.ContainersWait(waitTime, labels)
+	if err != nil {
+		// TODO: Improve this error message
+		return fmt.Errorf("container failed to become healthy: err=%v", err)
+	}
 	return nil
 }
 

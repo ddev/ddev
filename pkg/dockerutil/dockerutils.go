@@ -166,7 +166,7 @@ func NetExists(client *docker.Client, name string) bool {
 	return false
 }
 
-// ContainerWait provides a wait loop to check for container in "healthy" status.
+// ContainerWait provides a wait loop to check for a single container in "healthy" status.
 // waittime is in seconds.
 // This is modeled on https://gist.github.com/ngauthier/d6e6f80ce977bedca601
 // Returns logoutput, error, returns error if not "healthy"
@@ -188,9 +188,9 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 			if err != nil || container == nil {
 				return "", fmt.Errorf("failed to query container labels=%v: %v", labels, err)
 			}
-			status, logOutput := GetContainerHealth(container)
+			health, logOutput := GetContainerHealth(container)
 
-			switch status {
+			switch health {
 			case "healthy":
 				return logOutput, nil
 			case "unhealthy":
@@ -209,6 +209,58 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 	// We should never get here.
 	//nolint: govet
 	return "", fmt.Errorf("inappropriate break out of for loop in ContainerWait() waiting for container labels %v", labels)
+}
+
+// ContainesrWait provides a wait loop to check for multiple containers in "healthy" status.
+// waittime is in seconds.
+// Returns logoutput, error, returns error if not "healthy"
+func ContainersWait(waittime int, labels map[string]string) error {
+
+	timeoutChan := time.After(time.Duration(waittime) * time.Second)
+	tickChan := time.NewTicker(500 * time.Millisecond)
+	defer tickChan.Stop()
+
+	status := ""
+
+	for {
+		select {
+		case <-timeoutChan:
+			return fmt.Errorf("health check timed out: labels %v timed out without becoming healthy, status=%v", labels, status)
+
+		case <-tickChan.C:
+			containers, err := FindContainersByLabels(labels)
+			allHealthy := true
+			for _, c := range containers {
+				if err != nil || containers == nil {
+					return fmt.Errorf("failed to query container labels=%v: %v", labels, err)
+				}
+				health, logOutput := GetContainerHealth(&c)
+
+				switch health {
+				case "healthy":
+					continue
+				case "unhealthy":
+					return fmt.Errorf("container %s is unhealthy: %s", c.Names[0], logOutput)
+				case "exited":
+					service := c.Labels["com.docker.compose.service"]
+					suggestedCommand := fmt.Sprintf("ddev logs -s %s", service)
+					if service == "ddev-router" || service == "ddev-ssh-agent" {
+						suggestedCommand = fmt.Sprintf("docker logs %s", service)
+					}
+					return fmt.Errorf("container '%s' exited, please use '%s' to find out why it failed", service, suggestedCommand)
+				default:
+					allHealthy = false
+				}
+			}
+			if allHealthy {
+				return nil
+			}
+		}
+	}
+
+	// We should never get here.
+	//nolint: govet
+	return fmt.Errorf("inappropriate break out of for loop in ContainerWait() waiting for container labels %v", labels)
 }
 
 // ContainerWaitLog provides a wait loop to check for container in "healthy" status.
@@ -286,6 +338,15 @@ func GetContainerHealth(container *docker.APIContainers) (string, string) {
 	if len(inspect.State.Health.Log) > 0 {
 		numLogs := len(inspect.State.Health.Log)
 		logOutput = inspect.State.Health.Log[numLogs-1].Output
+	} else {
+		// Some containers may not have a healthcheck. In that case
+		// we use State to determine health
+		switch inspect.State.Status {
+		case "running":
+			status = "healthy"
+		case "exited":
+			status = "exited"
+		}
 	}
 
 	return status, logOutput

@@ -139,7 +139,7 @@ func TestCmdDescribeAppFunction(t *testing.T) {
 		_, err = exec.RunCommand("docker", []string{"start", "ddev-router"})
 		assert.NoError(err)
 
-		err = dockerutil.ContainerWait(10, map[string]string{"com.docker.compose.service": "ddev-router"})
+		_, err = dockerutil.ContainerWait(10, map[string]string{"com.docker.compose.service": "ddev-router"})
 		assert.NoError(err)
 
 		cleanup()
