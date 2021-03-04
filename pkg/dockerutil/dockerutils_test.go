@@ -211,14 +211,16 @@ func TestComposeWithStreams(t *testing.T) {
 
 	err = fileutil.ReplaceStringInFile("TEST-COMPOSE-WITH-STREAMS-IMAGE", version.WebImg+":"+version.WebTag, composeBase, realComposeFile)
 	assert.NoError(err)
-	defer os.Remove(realComposeFile)
 
 	composeFiles := []string{realComposeFile}
 
+	t.Cleanup(func() {
+		_, _, err = ComposeCmd(composeFiles, "down")
+		assert.NoError(err)
+	})
+
 	_, _, err = ComposeCmd(composeFiles, "up", "-d")
 	require.NoError(t, err)
-	//nolint: errcheck
-	defer ComposeCmd(composeFiles, "down")
 
 	_, err = ContainerWait(30, map[string]string{"com.ddev.site-name": t.Name()})
 	if err != nil {

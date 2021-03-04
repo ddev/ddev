@@ -335,9 +335,11 @@ func GetContainerHealth(container *docker.APIContainers) (string, string) {
 	logOutput := ""
 	status := inspect.State.Health.Status
 	// The last log is the most recent
-	if len(inspect.State.Health.Log) > 0 {
+	if inspect.State.Health.Status != "" {
 		numLogs := len(inspect.State.Health.Log)
-		logOutput = inspect.State.Health.Log[numLogs-1].Output
+		if numLogs > 0 {
+			logOutput = inspect.State.Health.Log[numLogs-1].Output
+		}
 	} else {
 		// Some containers may not have a healthcheck. In that case
 		// we use State to determine health
