@@ -1425,7 +1425,7 @@ func (app *DdevApp) WaitForServices() error {
 		"com.ddev.site-name": app.GetName(),
 	}
 	waitTime := containerWaitTimeout
-	err := dockerutil.ContainerWait(waitTime, labels)
+	_, err := dockerutil.ContainerWait(waitTime, labels)
 	if err != nil {
 		return fmt.Errorf("timed out waiting for containers (%v) to start: err=%v", requiredContainers, err)
 	}
@@ -1440,9 +1440,9 @@ func (app *DdevApp) Wait(requiredContainers []string) error {
 			"com.docker.compose.service": containerType,
 		}
 		waitTime := containerWaitTimeout
-		err := dockerutil.ContainerWait(waitTime, labels)
+		logOutput, err := dockerutil.ContainerWait(waitTime, labels)
 		if err != nil {
-			return fmt.Errorf("%s container failed: err=%v", containerType, err)
+			return fmt.Errorf("%s container failed: log=%s, err=%v", containerType, logOutput, err)
 		}
 	}
 
@@ -1518,7 +1518,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 
 	// Ensure that db container is up.
 	labels := map[string]string{"com.ddev.site-name": app.Name, "com.docker.compose.service": "db"}
-	err = dockerutil.ContainerWait(containerWaitTimeout, labels)
+	_, err = dockerutil.ContainerWait(containerWaitTimeout, labels)
 	if err != nil {
 		return "", fmt.Errorf("unable to snapshot database, \nyour project %v is not running. \nPlease start the project if you want to snapshot it. \nIf removing, you can remove without a snapshot using \n'ddev stop --remove-data --omit-snapshot', \nwhich will destroy your database", app.Name)
 	}
