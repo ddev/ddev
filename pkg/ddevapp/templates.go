@@ -347,7 +347,7 @@ const ConfigInstructions = `
 
 # disable_settings_management: false
 # If true, ddev will not create CMS-specific settings files like
-# Drupal's settings.php/settings.ddev.php or TYPO3's AdditionalSettings.php
+# Drupal's settings.php/settings.ddev.php or TYPO3's AdditionalConfiguration.php
 # In this case the user must provide all such settings.
 
 # You can inject environment variables into the web container with:
