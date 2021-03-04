@@ -25,7 +25,7 @@ jobs:
           make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_install EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: Build the ddev executables
     - run:
-        command: ./.circleci/generate_artifacts.sh ~/artifacts
+        command: ./.ci-scripts/generate_artifacts.sh ~/artifacts
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
     - store_artifacts:
@@ -87,7 +87,7 @@ jobs:
     steps:
       - checkout
       - run:
-          command: ./.travis/linux_travis_arm64_setup.sh
+          command: ./.ci-scripts/linux_arm64_setup.sh
           name: ARM64 VM setup
           no_output_timeout: "40m"
       - run:
@@ -329,7 +329,7 @@ jobs:
     steps:
       - checkout
       - run:
-          command: ./.travis/linux_travis_arm64_setup.sh
+          command: ./.ci-scripts/linux_arm64_setup.sh
           name: Circle VM setup
           no_output_timeout: "40m"
 
@@ -383,7 +383,7 @@ jobs:
     - attach_workspace:
         at: ~/
     - run:
-        command: ./.circleci/generate_artifacts.sh ~/artifacts
+        command: ./.ci-scripts/generate_artifacts.sh ~/artifacts
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
     - save_cache:
@@ -417,7 +417,7 @@ jobs:
 
     # We only build the xz version of the docker images on tag build.
     - run:
-        command: ./.circleci/generate_artifacts.sh ~/artifacts
+        command: ./.ci-scripts/generate_artifacts.sh ~/artifacts
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
 
