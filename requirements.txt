@@ -1,3 +1,5 @@
+# This requirements.txt file is exclusively for mkdocs docfile creation, and doesn't have anything
+# specifically to do with ddev.
 Babel==2.8.0
 click==7.1.2
 future==0.18.2
