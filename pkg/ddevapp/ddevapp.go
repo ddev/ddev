@@ -832,7 +832,7 @@ func (app *DdevApp) Start() error {
 	// container with a single focus of changing ownership, instead of having to use sudo
 	// inside the container
 	uid, _, _ := util.GetContainerUIDGid()
-	_, _, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.Name + "-mariadb:/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false)
+	_, _, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.Name + "-mariadb:/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, nil)
 	if err != nil {
 		return err
 	}

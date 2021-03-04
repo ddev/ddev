@@ -569,7 +569,7 @@ func GetDockerIP() (string, error) {
 // docker run -t -u '%s:%s' -e SNAPSHOT_NAME='%s' -v '%s:/mnt/ddev_config' -v '%s:/var/lib/mysql' --rm --entrypoint=/migrate_file_to_volume.sh %s:%s"
 // Example code from https://gist.github.com/fsouza/b0bf3043827f8e39c4589e88cec067d8
 // Returns containerID, output, error
-func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string, removeContainerAfterRun bool, detach bool) (containerID string, output string, returnErr error) {
+func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string, removeContainerAfterRun bool, detach bool, labels map[string]string) (containerID string, output string, returnErr error) {
 	client := GetDockerClient()
 
 	// Ensure image string includes a tag
@@ -624,6 +624,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 			Cmd:          cmd,
 			Env:          env,
 			User:         uid,
+			Labels:       labels,
 			Entrypoint:   entrypoint,
 			AttachStderr: true,
 			AttachStdout: true,
@@ -681,6 +682,25 @@ func RemoveContainer(id string, timeout uint) error {
 
 	err := client.RemoveContainer(docker.RemoveContainerOptions{ID: id, Force: true})
 	return err
+}
+
+// RemoveContainersByLabels() removes all containers that match a set of labels
+func RemoveContainersByLabels(labels map[string]string) error {
+	client := GetDockerClient()
+	containers, err := FindContainersByLabels(labels)
+	if err != nil {
+		return err
+	}
+	if containers == nil {
+		return nil
+	}
+	for _, c := range containers {
+		err = client.RemoveContainer(docker.RemoveContainerOptions{ID: c.ID, Force: true})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // ImageExistsLocally determines if an image is available locally.
@@ -839,7 +859,7 @@ func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid
 	// nolint errcheck
 	defer f.Close()
 
-	containerID, _, err := RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && tail -f /dev/null"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true)
+	containerID, _, err := RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && tail -f /dev/null"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, nil)
 	if err != nil {
 		return err
 	}

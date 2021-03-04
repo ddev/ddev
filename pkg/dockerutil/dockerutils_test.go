@@ -160,12 +160,71 @@ func TestContainerWait(t *testing.T) {
 	assert.Contains(healthDetail, "phpstatus: OK")
 
 	// Try a nonexistent container, should get error
-	labels = map[string]string{
-		"com.ddev.site-name": "nothing-there",
-	}
+	labels = map[string]string{"com.ddev.site-name": "nothing-there"}
 	_, err = ContainerWait(1, labels)
 	require.Error(t, err)
 	assert.Contains(err.Error(), "failed to query container")
+
+	// If we just run a quick container and it immediately exits, ContainerWait should find it not there
+	// and note that it exited.
+	labels = map[string]string{"test": "quickexit"}
+	_ = RemoveContainersByLabels(labels)
+	cID, _, err := RunSimpleContainer("busybox:latest", t.Name()+util.RandString(5), []string{"ls"}, nil, nil, nil, "0", false, true, labels)
+	t.Cleanup(func() {
+		_ = RemoveContainer(cID, 0)
+	})
+	require.NoError(t, err)
+	_, err = ContainerWait(5, labels)
+	assert.Error(err)
+	assert.Contains(err.Error(), "container exited")
+	_ = RemoveContainer(cID, 0)
+
+	// If we run a container that does not have a healthcheck
+	// it should be found as good immediately
+	labels = map[string]string{"test": "nohealthcheck"}
+	_ = RemoveContainersByLabels(labels)
+	cID, _, err = RunSimpleContainer("busybox:latest", t.Name()+util.RandString(5), []string{"sleep", "60"}, nil, nil, nil, "0", false, true, labels)
+	t.Cleanup(func() {
+		_ = RemoveContainer(cID, 0)
+	})
+	require.NoError(t, err)
+	_, err = ContainerWait(5, labels)
+	assert.NoError(err)
+	_ = RemoveContainer(cID, 0)
+
+	ddevWebserver := version.WebImg + ":" + version.WebTag
+	// If we run a container that *does* have a healthcheck but it's unhealthy
+	// then ContainerWait shouldn't return until specified wait, and should fail
+	// Use ddev-webserver for this; it won't have good health on normal run
+	labels = map[string]string{"test": "hashealthcheckbutbad"}
+	_ = RemoveContainersByLabels(labels)
+	cID, _, err = RunSimpleContainer(ddevWebserver, t.Name()+util.RandString(5), []string{"sleep", "5"}, nil, nil, nil, "0", false, true, labels)
+	t.Cleanup(func() {
+		_ = RemoveContainer(cID, 0)
+	})
+	require.NoError(t, err)
+	_, err = ContainerWait(3, labels)
+	assert.Error(err)
+	assert.Contains(err.Error(), "timed out without becoming healthy")
+	_ = RemoveContainer(cID, 0)
+
+	// If we run a container that *does* have a healthcheck but it's not healthy for a while
+	// then ContainerWait should detect failure early, but should succeed later
+	labels = map[string]string{"test": "hashealthcheckbutbad"}
+	_ = RemoveContainersByLabels(labels)
+	cID, _, err = RunSimpleContainer(ddevWebserver, t.Name()+util.RandString(5), []string{"bash", "-c", "sleep 5 && /start.sh"}, nil, nil, nil, "0", false, true, labels)
+	t.Cleanup(func() {
+		_ = RemoveContainer(cID, 0)
+	})
+	require.NoError(t, err)
+	_, err = ContainerWait(3, labels)
+	assert.Error(err)
+	assert.Contains(err.Error(), "timed out without becoming healthy")
+	// Try it again, wait 10s for health; on macOS it usually takes about 2s for ddev-webserver to become healthy
+	_, err = ContainerWait(10, labels)
+	assert.NoError(err)
+	_ = RemoveContainer(cID, 0)
+
 }
 
 // TestComposeCmd tests execution of docker-compose commands.
@@ -286,7 +345,7 @@ func TestFindContainerByName(t *testing.T) {
 	}
 
 	// Run a container, don't remove it.
-	cID, _, err := RunSimpleContainer("busybox:latest", containerName, []string{"//tempmount/sleepALittle.sh"}, nil, nil, []string{testdata + "://tempmount"}, "25", false, false)
+	cID, _, err := RunSimpleContainer("busybox:latest", containerName, []string{"//tempmount/sleepALittle.sh"}, nil, nil, []string{testdata + "://tempmount"}, "25", false, false, nil)
 	assert.NoError(err)
 
 	defer func() {
@@ -333,35 +392,35 @@ func TestRunSimpleContainer(t *testing.T) {
 	assert.DirExists(testdata)
 
 	// Try the success case; script found, runs, all good.
-	_, out, err := RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"//tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + "://tempmount"}, "25", true, false)
+	_, out, err := RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"//tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + "://tempmount"}, "25", true, false, nil)
 	assert.NoError(err)
 	assert.Contains(out, "simplescript.sh; TEMPENV=someenv UID=25")
 	assert.Contains(out, "stdout is captured")
 	assert.Contains(out, "stderr is also captured")
 
 	// Try the case of running nonexistent script
-	_, _, err = RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"nocommandbythatname"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + ":/tempmount"}, "25", true, false)
+	_, _, err = RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"nocommandbythatname"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + ":/tempmount"}, "25", true, false, nil)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "failed to StartContainer")
 	}
 
 	// Try the case of running a script that fails
-	_, _, err = RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"/tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv", "ERROROUT=true"}, []string{testdata + ":/tempmount"}, "25", true, false)
+	_, _, err = RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"/tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv", "ERROROUT=true"}, []string{testdata + ":/tempmount"}, "25", true, false, nil)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "container run failed with exit code 5")
 	}
 
 	// Provide an unqualified tag name
-	_, _, err = RunSimpleContainer("busybox", "TestRunSimpleContainer"+basename, nil, nil, nil, nil, "", true, false)
+	_, _, err = RunSimpleContainer("busybox", "TestRunSimpleContainer"+basename, nil, nil, nil, nil, "", true, false, nil)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "image name must specify tag")
 	}
 
 	// Provide a malformed tag name
-	_, _, err = RunSimpleContainer("busybox:", "TestRunSimpleContainer"+basename, nil, nil, nil, nil, "", true, false)
+	_, _, err = RunSimpleContainer("busybox:", "TestRunSimpleContainer"+basename, nil, nil, nil, nil, "", true, false, nil)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "malformed tag provided")
@@ -387,7 +446,7 @@ func TestDockerExec(t *testing.T) {
 	assert := asrt.New(t)
 	client := GetDockerClient()
 
-	id, _, err := RunSimpleContainer("busybox:latest", "", []string{"tail", "-f", "/dev/null"}, nil, nil, nil, "0", false, true)
+	id, _, err := RunSimpleContainer("busybox:latest", "", []string{"tail", "-f", "/dev/null"}, nil, nil, nil, "0", false, true, nil)
 	assert.NoError(err)
 
 	t.Cleanup(func() {
@@ -479,7 +538,7 @@ func TestDockerCopyToVolume(t *testing.T) {
 	err = CopyToVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "", "0")
 	assert.NoError(err)
 
-	mainContainerID, out, err := RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false)
+	mainContainerID, out, err := RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil)
 	assert.NoError(err)
 	assert.Equal(`.:
 root.txt
@@ -491,7 +550,7 @@ subdir1.txt
 
 	err = CopyToVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "somesubdir", "501")
 	assert.NoError(err)
-	subdirContainerID, out, err := RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "cd /mnt/" + t.Name() + "/somesubdir  && pwd && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "0", true, false)
+	subdirContainerID, out, err := RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "cd /mnt/" + t.Name() + "/somesubdir  && pwd && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "0", true, false, nil)
 	assert.NoError(err)
 	assert.Equal(`/mnt/TestDockerCopyToVolume/somesubdir
 .:
