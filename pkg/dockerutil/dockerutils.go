@@ -166,7 +166,7 @@ func NetExists(client *docker.Client, name string) bool {
 	return false
 }
 
-// ContainerWait provides a wait loop to check for container in "healthy" status.
+// ContainerWait provides a wait loop to check for a single container in "healthy" status.
 // waittime is in seconds.
 // This is modeled on https://gist.github.com/ngauthier/d6e6f80ce977bedca601
 // Returns logoutput, error, returns error if not "healthy"
@@ -188,9 +188,9 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 			if err != nil || container == nil {
 				return "", fmt.Errorf("failed to query container labels=%v: %v", labels, err)
 			}
-			status, logOutput := GetContainerHealth(container)
+			health, logOutput := GetContainerHealth(container)
 
-			switch status {
+			switch health {
 			case "healthy":
 				return logOutput, nil
 			case "unhealthy":
@@ -209,6 +209,58 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 	// We should never get here.
 	//nolint: govet
 	return "", fmt.Errorf("inappropriate break out of for loop in ContainerWait() waiting for container labels %v", labels)
+}
+
+// ContainesrWait provides a wait loop to check for multiple containers in "healthy" status.
+// waittime is in seconds.
+// Returns logoutput, error, returns error if not "healthy"
+func ContainersWait(waittime int, labels map[string]string) error {
+
+	timeoutChan := time.After(time.Duration(waittime) * time.Second)
+	tickChan := time.NewTicker(500 * time.Millisecond)
+	defer tickChan.Stop()
+
+	status := ""
+
+	for {
+		select {
+		case <-timeoutChan:
+			return fmt.Errorf("health check timed out: labels %v timed out without becoming healthy, status=%v", labels, status)
+
+		case <-tickChan.C:
+			containers, err := FindContainersByLabels(labels)
+			allHealthy := true
+			for _, c := range containers {
+				if err != nil || containers == nil {
+					return fmt.Errorf("failed to query container labels=%v: %v", labels, err)
+				}
+				health, logOutput := GetContainerHealth(&c)
+
+				switch health {
+				case "healthy":
+					continue
+				case "unhealthy":
+					return fmt.Errorf("container %s is unhealthy: %s", c.Names[0], logOutput)
+				case "exited":
+					service := c.Labels["com.docker.compose.service"]
+					suggestedCommand := fmt.Sprintf("ddev logs -s %s", service)
+					if service == "ddev-router" || service == "ddev-ssh-agent" {
+						suggestedCommand = fmt.Sprintf("docker logs %s", service)
+					}
+					return fmt.Errorf("container '%s' exited, please use '%s' to find out why it failed", service, suggestedCommand)
+				default:
+					allHealthy = false
+				}
+			}
+			if allHealthy {
+				return nil
+			}
+		}
+	}
+
+	// We should never get here.
+	//nolint: govet
+	return fmt.Errorf("inappropriate break out of for loop in ContainerWait() waiting for container labels %v", labels)
 }
 
 // ContainerWaitLog provides a wait loop to check for container in "healthy" status.
@@ -283,9 +335,20 @@ func GetContainerHealth(container *docker.APIContainers) (string, string) {
 	logOutput := ""
 	status := inspect.State.Health.Status
 	// The last log is the most recent
-	if len(inspect.State.Health.Log) > 0 {
+	if inspect.State.Health.Status != "" {
 		numLogs := len(inspect.State.Health.Log)
-		logOutput = inspect.State.Health.Log[numLogs-1].Output
+		if numLogs > 0 {
+			logOutput = inspect.State.Health.Log[numLogs-1].Output
+		}
+	} else {
+		// Some containers may not have a healthcheck. In that case
+		// we use State to determine health
+		switch inspect.State.Status {
+		case "running":
+			status = "healthy"
+		case "exited":
+			status = "exited"
+		}
 	}
 
 	return status, logOutput
@@ -506,7 +569,7 @@ func GetDockerIP() (string, error) {
 // docker run -t -u '%s:%s' -e SNAPSHOT_NAME='%s' -v '%s:/mnt/ddev_config' -v '%s:/var/lib/mysql' --rm --entrypoint=/migrate_file_to_volume.sh %s:%s"
 // Example code from https://gist.github.com/fsouza/b0bf3043827f8e39c4589e88cec067d8
 // Returns containerID, output, error
-func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string, removeContainerAfterRun bool, detach bool) (containerID string, output string, returnErr error) {
+func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string, removeContainerAfterRun bool, detach bool, labels map[string]string) (containerID string, output string, returnErr error) {
 	client := GetDockerClient()
 
 	// Ensure image string includes a tag
@@ -561,6 +624,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 			Cmd:          cmd,
 			Env:          env,
 			User:         uid,
+			Labels:       labels,
 			Entrypoint:   entrypoint,
 			AttachStderr: true,
 			AttachStdout: true,
@@ -618,6 +682,25 @@ func RemoveContainer(id string, timeout uint) error {
 
 	err := client.RemoveContainer(docker.RemoveContainerOptions{ID: id, Force: true})
 	return err
+}
+
+// RemoveContainersByLabels() removes all containers that match a set of labels
+func RemoveContainersByLabels(labels map[string]string) error {
+	client := GetDockerClient()
+	containers, err := FindContainersByLabels(labels)
+	if err != nil {
+		return err
+	}
+	if containers == nil {
+		return nil
+	}
+	for _, c := range containers {
+		err = client.RemoveContainer(docker.RemoveContainerOptions{ID: c.ID, Force: true})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // ImageExistsLocally determines if an image is available locally.
@@ -776,7 +859,7 @@ func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid
 	// nolint errcheck
 	defer f.Close()
 
-	containerID, _, err := RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && tail -f /dev/null"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true)
+	containerID, _, err := RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && tail -f /dev/null"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, nil)
 	if err != nil {
 		return err
 	}

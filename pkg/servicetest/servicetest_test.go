@@ -30,6 +30,9 @@ func TestServices(t *testing.T) {
 	}
 	assert := asrt.New(t)
 	os.Setenv("DRUD_NONINTERACTIVE", "true")
+
+	expectedServiceCount := 3
+
 	err := globalconfig.ReadGlobalConfig()
 	assert.NoError(err)
 
@@ -48,6 +51,12 @@ func TestServices(t *testing.T) {
 	err = fileutil.CopyDir(filepath.Join(pwd, "testdata", t.Name()), app.AppConfDir())
 	assert.NoError(err)
 
+	// the beanstalkd image is not pushed for arm64
+	if runtime.GOARCH == "arm64" {
+		err = os.RemoveAll(filepath.Join(app.GetConfigPath("docker-compose.beanstalkd.yaml")))
+		expectedServiceCount = expectedServiceCount - 1
+		assert.NoError(err)
+	}
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
@@ -75,7 +84,7 @@ func TestServices(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make sure desc had 3 services.
-	require.Len(t, desc["extra_services"], 3)
+	require.Len(t, desc["extra_services"], expectedServiceCount)
 
 	// A volume should have been created for solr (only)
 	assert.True(dockerutil.VolumeExists(strings.ToLower("ddev-" + app.Name + "_" + "solr")))

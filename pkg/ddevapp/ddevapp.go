@@ -832,7 +832,7 @@ func (app *DdevApp) Start() error {
 	// container with a single focus of changing ownership, instead of having to use sudo
 	// inside the container
 	uid, _, _ := util.GetContainerUIDGid()
-	_, _, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.Name + "-mariadb:/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false)
+	_, _, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.Name + "-mariadb:/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, nil)
 	if err != nil {
 		return err
 	}
@@ -922,12 +922,7 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	requiredContainers := []string{"web"}
-	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
-		requiredContainers = append(requiredContainers, "db")
-	}
-
-	err = app.Wait(requiredContainers)
+	err = app.WaitByLabels(map[string]string{"com.ddev.site-name": app.GetName()})
 	if err != nil {
 		return err
 	}
@@ -1414,6 +1409,29 @@ func (app *DdevApp) Pause() error {
 	return StopRouterIfNoContainers()
 }
 
+// WaitForServices waits for all the services in docker-compose to come up
+func (app *DdevApp) WaitForServices() error {
+	requiredContainers := []string{}
+	if services, ok := app.ComposeYaml["services"].(map[interface{}]interface{}); ok {
+		for k := range services {
+			requiredContainers = append(requiredContainers, k.(string))
+		}
+	} else {
+		util.Failed("unable to get required startup services to wait for")
+	}
+	output.UserOut.Printf("Waiting for these services to become ready: %v", requiredContainers)
+
+	labels := map[string]string{
+		"com.ddev.site-name": app.GetName(),
+	}
+	waitTime := containerWaitTimeout
+	_, err := dockerutil.ContainerWait(waitTime, labels)
+	if err != nil {
+		return fmt.Errorf("timed out waiting for containers (%v) to start: err=%v", requiredContainers, err)
+	}
+	return nil
+}
+
 // Wait ensures that the app service containers are healthy.
 func (app *DdevApp) Wait(requiredContainers []string) error {
 	for _, containerType := range requiredContainers {
@@ -1428,6 +1446,18 @@ func (app *DdevApp) Wait(requiredContainers []string) error {
 		}
 	}
 
+	return nil
+}
+
+// WaitByLabels waits for containers found by list of labels to be
+// ready
+func (app *DdevApp) WaitByLabels(labels map[string]string) error {
+	waitTime := containerWaitTimeout
+	err := dockerutil.ContainersWait(waitTime, labels)
+	if err != nil {
+		// TODO: Improve this error message
+		return fmt.Errorf("container failed to become healthy: err=%v", err)
+	}
 	return nil
 }
 
