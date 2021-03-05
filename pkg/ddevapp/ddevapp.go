@@ -1661,11 +1661,18 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	output.UserOut.Printf("Waiting for snapshot restore to complete...\nYou can also follow the restore progress in another terminal window with `ddev logs -s db -f %s`", app.Name)
 	// Now it's up, but we need to find out when it finishes loading.
 	for {
-		_, _, err = app.Exec(&ExecOpts{
-			Cmd:     "killall -0 mysqld 2>/dev/null",
+		// We used to use killall mysqld here, but docker-compose v1.28+
+		// has a bug where it reports that kind of error on exit.
+		// See https://github.com/docker/compose/issues/8169
+		out, _, err := app.Exec(&ExecOpts{
+			Cmd:     "pidof mysqld || true",
 			Service: "db",
+			Tty:     false,
 		})
-		if err == nil {
+		if err != nil {
+			return err
+		}
+		if out != "" {
 			break
 		}
 		time.Sleep(1 * time.Second)
