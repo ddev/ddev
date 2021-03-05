@@ -221,7 +221,7 @@ func TestContainerWait(t *testing.T) {
 	assert.Error(err)
 	assert.Contains(err.Error(), "timed out without becoming healthy")
 	// Try it again, wait 10s for health; on macOS it usually takes about 2s for ddev-webserver to become healthy
-	_, err = ContainerWait(10, labels)
+	_, err = ContainerWait(20, labels)
 	assert.NoError(err)
 	_ = RemoveContainer(cID, 0)
 

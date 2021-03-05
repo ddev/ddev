@@ -3265,6 +3265,9 @@ func TestHostDBPort(t *testing.T) {
 // TestPortSpecifications tests to make sure that one project can't step on the
 // ports used by another
 func TestPortSpecifications(t *testing.T) {
+	if nodeps.IsWSL2() {
+		t.Skip("Skipping on WSL2 because of inconsistent docker behavior acquiring ports")
+	}
 	assert := asrt.New(t)
 	runTime := util.TimeTrack(time.Now(), fmt.Sprint("TestPortSpecifications"))
 	defer runTime()
@@ -3284,8 +3287,6 @@ func TestPortSpecifications(t *testing.T) {
 
 	err = nospecApp.Start()
 	assert.NoError(err)
-	//nolint: errcheck
-	defer nospecApp.Stop(true, false)
 
 	// Now that we have a working nospecApp with unspecified ephemeral ports, test that we
 	// can't use those ports while nospecApp is running
@@ -3326,7 +3327,8 @@ func TestPortSpecifications(t *testing.T) {
 	conflictApp.Name = "conflictapp"
 
 	t.Cleanup(func() {
-		_ = conflictApp.Stop(true, false)
+		err = conflictApp.Stop(true, false)
+		assert.NoError(err)
 	})
 	err = conflictApp.WriteConfig()
 	assert.Error(err)
