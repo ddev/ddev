@@ -37,7 +37,7 @@ to allow ddev to modify your hosts file. If you are connected to the internet an
 		// Because the PATH variable also contains the PATH from the Windows
 		// side this could also be resolved to a ddev.exe on the Windows side.
 		// See also https://docs.microsoft.com/en-US/windows/wsl/interop#run-windows-tools-from-linux
-		if nodeps.IsWSL() {
+		if nodeps.IsWSL2() {
 			newArgs := append([]string{cmd.Name()}, args...)
 			out, err := exec.RunCommand("ddev.exe", newArgs)
 			if err == nil {
