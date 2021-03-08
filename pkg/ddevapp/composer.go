@@ -5,7 +5,7 @@ import (
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/mattn/go-isatty"
 	"os"
-	"path/filepath"
+	"path"
 	"runtime"
 	"strings"
 )
@@ -19,7 +19,7 @@ func (app *DdevApp) Composer(dir string, args []string) (string, string, error) 
 
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "web",
-		Dir:     filepath.Join("/var/www/html", dir),
+		Dir:     path.Join("/var/www/html", dir),
 		Cmd:     fmt.Sprintf("composer %s", strings.Join(args, " ")),
 		Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 	})
