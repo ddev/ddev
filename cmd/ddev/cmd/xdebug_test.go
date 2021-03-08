@@ -37,7 +37,7 @@ func TestCmdXdebug(t *testing.T) {
 		_, err := exec.RunCommand(DdevBin, []string{"config", "--php-version", phpVersion})
 		require.NoError(t, err)
 
-		_, err = exec.RunCommand(DdevBin, []string{"start"})
+		_, err = exec.RunCommand(DdevBin, []string{"start", "-y"})
 		assert.NoError(err)
 
 		out, err := exec.RunCommand(DdevBin, []string{"xdebug", "status"})

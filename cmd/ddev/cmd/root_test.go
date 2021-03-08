@@ -177,7 +177,7 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	assert.NoError(err)
 
 	// The .update file is only created by ddev start
-	_, err = exec.RunCommand(DdevBin, []string{"start"})
+	_, err = exec.RunCommand(DdevBin, []string{"start", "-y"})
 	assert.NoError(err)
 
 	_, err = os.Stat(tmpUpdateFilePath)
@@ -196,7 +196,7 @@ func addSites() error {
 		cleanup := site.Chdir()
 		defer cleanup()
 
-		out, err := exec.RunCommand(DdevBin, []string{"start"})
+		out, err := exec.RunCommand(DdevBin, []string{"start", "-y"})
 		if err != nil {
 			log.Fatalln("Error Output from ddev start:", out, "err:", err)
 		}
