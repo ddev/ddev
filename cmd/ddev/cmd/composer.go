@@ -8,6 +8,8 @@ import (
 	"os"
 )
 
+var execDir = ""
+
 var ComposerCmd = &cobra.Command{
 	Use:   "composer [command]",
 	Short: "Executes a composer command within the web container",
@@ -17,7 +19,8 @@ the command with 'ddev'.`,
 	Example: `ddev composer install
 ddev composer require <package>
 ddev composer outdated --minor-only
-ddev composer create drupal/recommended-project`,
+ddev composer create drupal/recommended-project
+ddev composer -d docroot install`,
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
@@ -30,7 +33,7 @@ ddev composer create drupal/recommended-project`,
 			}
 		}
 
-		stdout, stderr, err := app.Composer(args)
+		stdout, stderr, err := app.Composer(execDir, args)
 		if err != nil {
 			util.Failed("composer %v failed, %v. stderr=%v", args, err, stderr)
 		}
@@ -41,5 +44,6 @@ ddev composer create drupal/recommended-project`,
 
 func init() {
 	RootCmd.AddCommand(ComposerCmd)
+	ComposerCmd.Flags().StringVarP(&execDir, "dir", "d", "", "The relative directory  where composer will be run, defaults to empty, the project root")
 	ComposerCmd.Flags().SetInterspersed(false)
 }

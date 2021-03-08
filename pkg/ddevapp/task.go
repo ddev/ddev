@@ -96,7 +96,7 @@ func (c ExecHostTask) Execute() error {
 // and returns stdout, stderr, err
 func (c ComposerTask) Execute() error {
 	components := strings.Split(c.exec, " ")
-	_, _, err := c.app.Composer(components[0:])
+	_, _, err := c.app.Composer("", components[0:])
 
 	return err
 }
