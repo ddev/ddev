@@ -10,29 +10,30 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// PullCmd represents the `ddev pull` command.
-var PullCmd = &cobra.Command{
-	Use:   "pull",
-	Short: "Pull files and database using a configured provider plugin.",
-	Long: `Pull files and database using a configured provider plugin.
-	Running pull will connect to the configured provider and download + import the
-	database and files.`,
-	Example: `ddev pull pantheon
-ddev pull ddev-live
-ddev pull platform
-ddev pull pantheon -y
-ddev pull platform --skip-files -y`,
+// PushCmd represents the `ddev push` command.
+var PushCmd = &cobra.Command{
+	Use:   "push",
+	Short: "push files and database using a configured provider plugin.",
+	Long: `push files and database using a configured provider plugin.
+	Running push will connect to the configured provider and export and upload the
+	database and/or files. It is not recommended for most workflows since it is extremely dangerous to your production hosting.`,
+	Example: `ddev push pantheon
+ddev push ddev-live
+ddev push platform
+ddev push pantheon -y
+ddev push platform --skip-files -y
+ddev push acquia --skip-db -y`,
 	Args: cobra.ExactArgs(1),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		dockerutil.EnsureDdevNetwork()
 	},
 }
 
-// appPull() does the work of pull
-func appPull(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, skipImportArg bool, skipDbArg bool, skipFilesArg bool) {
+// apppush() does the work of push
+func apppush(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, skipImportArg bool, skipDbArg bool, skipFilesArg bool) {
 
 	// If we're not performing the import step, we won't be deleting the existing db or files.
-	if !skipConfirmation && !skipImportArg && os.Getenv("DDEV_NONINTERACTIVE") == "" {
+	if !skipConfirmation && !skipImportArg && os.Getenv("DRUD_NONINTERACTIVE") == "" {
 		// Only warn the user about relevant risks.
 		var message string
 		if skipDbArg && skipFilesArg {
@@ -46,9 +47,9 @@ func appPull(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, s
 			message = "database and files"
 		}
 
-		util.Warning("You're about to delete the current %s and replace with the results of a fresh pull.", message)
-		if !util.Confirm("Would you like to continue?") {
-			util.Failed("Pull cancelled")
+		util.Warning("You're about to push %s to your upstream production and replace it with your DDEV-Local project. This is not usually recommended.", message)
+		if !util.Confirm("Would you like to continue (not recommended)?") {
+			util.Failed("push cancelled")
 		}
 	}
 
@@ -57,15 +58,15 @@ func appPull(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, s
 		util.Failed("Failed to get provider: %v", err)
 	}
 
-	if err := app.Pull(provider, skipDbArg, skipFilesArg, skipImportArg); err != nil {
-		util.Failed("Pull failed: %v", err)
+	if err := app.Push(provider, skipDbArg, skipFilesArg); err != nil {
+		util.Failed("push failed: %v", err)
 	}
 
-	util.Success("Pull succeeded.")
+	util.Success("push succeeded.")
 }
 
 func init() {
-	RootCmd.AddCommand(PullCmd)
+	RootCmd.AddCommand(PushCmd)
 
 	app, err := ddevapp.GetActiveApp("")
 	if err != nil {
@@ -79,15 +80,15 @@ func init() {
 		subCommandName := p
 		subCommand := &cobra.Command{
 			Use:   subCommandName,
-			Short: fmt.Sprintf("Pull with %s", subCommandName),
-			Example: fmt.Sprintf(`ddev pull %s
-ddev pull %s -y
-ddev pull %s --skip-files -y`, subCommandName, subCommandName, subCommandName),
+			Short: fmt.Sprintf("push with %s", subCommandName),
+			Example: fmt.Sprintf(`ddev push %s
+ddev push %s -y
+ddev push %s --skip-files -y`, subCommandName, subCommandName, subCommandName),
 			Args: cobra.ExactArgs(0),
 			Run: func(cmd *cobra.Command, args []string) {
 				app, err := ddevapp.GetActiveApp("")
 				if err != nil {
-					util.Failed("Pull failed: %v", err)
+					util.Failed("push failed: %v", err)
 				}
 				providerName := subCommandName
 				p, err := app.GetProvider(subCommandName)
@@ -104,13 +105,13 @@ ddev pull %s --skip-files -y`, subCommandName, subCommandName, subCommandName),
 					}
 				}
 
-				appPull(providerName, app, flags["skip-confirmation"], flags["skip-import"], flags["skip-db"], flags["skip-files"])
+				apppush(providerName, app, flags["skip-confirmation"], flags["skip-import"], flags["skip-db"], flags["skip-files"])
 			},
 		}
-		PullCmd.AddCommand(subCommand)
+		PushCmd.AddCommand(subCommand)
 		subCommand.Flags().BoolP("skip-confirmation", "y", false, "Skip confirmation step")
-		subCommand.Flags().Bool("skip-db", false, "Skip pulling database archive")
-		subCommand.Flags().Bool("skip-files", false, "Skip pulling file archive")
+		subCommand.Flags().Bool("skip-db", false, "Skip pushing database archive")
+		subCommand.Flags().Bool("skip-files", false, "Skip pushing file archive")
 		subCommand.Flags().Bool("skip-import", false, "Downloads file and/or database archives, but does not import them")
 
 	}
