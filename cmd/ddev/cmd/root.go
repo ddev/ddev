@@ -186,8 +186,8 @@ func instrumentationNotSetUpWarning() {
 // checkDdevVersionAndOptInInstrumentation() reads global config and checks to see if current version is different
 // from the last saved version. If it is, prompt to request anon ddev usage stats
 // and update the info.
-func checkDdevVersionAndOptInInstrumentation() error {
-	if !output.JSONOutput && semver.Compare(version.DdevVersion, globalconfig.DdevGlobalConfig.LastStartedVersion) > 0 && globalconfig.DdevGlobalConfig.InstrumentationOptIn == false && !globalconfig.DdevNoInstrumentation {
+func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
+	if !output.JSONOutput && semver.Compare(version.DdevVersion, globalconfig.DdevGlobalConfig.LastStartedVersion) > 0 && globalconfig.DdevGlobalConfig.InstrumentationOptIn == false && !globalconfig.DdevNoInstrumentation && !skipConfirmation {
 		allowStats := util.Confirm("It looks like you have a new ddev release.\nMay we send anonymous ddev usage statistics and errors?\nTo know what we will see please take a look at\nhttps://ddev.readthedocs.io/en/stable/users/cli-usage/#opt-in-usage-information\nPermission to beam up?")
 		if allowStats {
 			globalconfig.DdevGlobalConfig.InstrumentationOptIn = true
@@ -204,12 +204,18 @@ func checkDdevVersionAndOptInInstrumentation() error {
 			}
 		}
 	}
-	if globalconfig.DdevGlobalConfig.LastStartedVersion != version.DdevVersion {
+	if globalconfig.DdevGlobalConfig.LastStartedVersion != version.DdevVersion && !skipConfirmation {
 		globalconfig.DdevGlobalConfig.LastStartedVersion = version.DdevVersion
 		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		if err != nil {
 			return err
 		}
+
+		okPoweroff := util.Confirm("It looks like you have a new DDEV version. During an upgrade it's important to `ddev poweroff`. May I do `ddev poweroff` before continuing? This does no harm and loses no data.")
+		if okPoweroff {
+			powerOff()
+		}
+		return nil
 	}
 
 	return nil
