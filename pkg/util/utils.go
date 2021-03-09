@@ -117,8 +117,11 @@ func MapKeysToArray(mapWithKeys map[string]interface{}) []string {
 func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 	curUser, err := user.Current()
 	if err != nil {
-		Warning("Unable to determine username, please at least set $USER environment variable: %v", err)
+		Failed("Unable to determine username and related UID, etc. Please at least set $USER environment variable: %v", err)
 	}
+	uidStr = curUser.Uid
+	gidStr = curUser.Gid
+	username = curUser.Username
 	//// Windows userids are non numeric,
 	//// so we have to run as arbitrary user 1000. We may have a host uidStr/gidStr greater in other contexts,
 	//// 1000 seems not to cause file permissions issues at least on docker-for-windows.
