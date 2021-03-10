@@ -784,7 +784,7 @@ func TestConfigGitignore(t *testing.T) {
 	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("touch ~/.ddev/commands/web/%s ~/.ddev/homeadditions/%s", t.Name(), t.Name())})
 	assert.NoError(err)
 
-	_, err = exec.RunCommand(DdevBin, []string{"start"})
+	_, err = exec.RunCommand(DdevBin, []string{"start", "-y"})
 	assert.NoError(err)
 	statusOut, err := exec.RunCommand("bash", []string{"-c", "git status"})
 	assert.NoError(err)
