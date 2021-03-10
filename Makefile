@@ -18,7 +18,7 @@ SRC_AND_UNDER = $(patsubst %,./%/...,$(SRC_DIRS))
 
 GOLANGCI_LINT_ARGS ?= --out-format=line-number --disable-all --enable=gofmt --enable=govet --enable=golint --enable=errcheck --enable=staticcheck --enable=ineffassign --enable=varcheck --enable=deadcode
 
-WINDOWS_SUDO_VERSION=v0.0.1
+WINDOWS_GSUDO_VERSION=v0.7.3
 WINNFSD_VERSION=2.4.0
 NSSM_VERSION=2.24-101-g897c7ad
 MKCERT_VERSION=v1.4.6
@@ -258,10 +258,11 @@ $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.
 	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/mkcert.exe  https://github.com/drud/mkcert/releases/download/$(MKCERT_VERSION)/mkcert-$(MKCERT_VERSION)-windows-amd64.exe
 	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/mkcert_license.txt -O https://raw.githubusercontent.com/drud/mkcert/master/LICENSE
 
+https://github.com/gerardog/gsudo/releases/download/v0.7.3/gsudo.v0.7.3.zip
 $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt:
-	curl  -sSL --create-dirs -o $(DOWNLOADTMP)/sudo.zip  https://github.com/mattn/sudo/releases/download/$(WINDOWS_SUDO_VERSION)/sudo-x86_64.zip
-	unzip -o -d $(GOTMP)/bin/windows_amd64 $(DOWNLOADTMP)/sudo.zip
-	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/sudo_license.txt https://raw.githubusercontent.com/mattn/sudo/master/LICENSE
+	curl  -sSL --create-dirs -o $(DOWNLOADTMP)/gsudo.zip  https://github.com/gerardog/gsudo/releases/download/$(WINDOWS_GSUDO_VERSION)/gsudo.$(WINDOWS_GSUDO_VERSION).zip
+	unzip -o -d $(GOTMP)/bin/windows_amd64 $(DOWNLOADTMP)/gsudo.zip && mv $(GOTMP)/bin/windows_amd64/gsudo $(GOTMP)/bin/windows_amd64/sudo
+	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/sudo_license.txt https://raw.githubusercontent.com/gerardog/gsudo/master/LICENSE.txt
 
 $(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.txt $(GOTMP)/bin/windows_amd64/winnfsd.exe :
 	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/winnfsd.exe  https://github.com/winnfsd/winnfsd/releases/download/$(WINNFSD_VERSION)/WinNFSd.exe
