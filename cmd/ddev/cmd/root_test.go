@@ -211,10 +211,6 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 
 	origHome := os.Getenv("HOME")
 
-	// Change the homedir temporarily
-	err = os.Setenv("HOME", tmpGlobal)
-	assert.NoError(err)
-
 	// Create an extra junk project to make sure it gets shut down on our start
 	junkName := t.Name() + "-tmpjunkproject"
 	tmpJunkProject := testcommon.CreateTmpDir(junkName)
@@ -229,15 +225,26 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	activeCount := len(apps)
 	assert.GreaterOrEqual(activeCount, 2)
 
+	// Change the homedir temporarily
+	err = os.Setenv("HOME", tmpGlobal)
+	assert.NoError(err)
+
 	t.Cleanup(
 		func() {
-			err = os.Chdir(origDir)
-			assert.NoError(err)
 
 			err = os.RemoveAll(tmpGlobal)
 			assert.NoError(err)
 
 			err = os.Setenv("HOME", origHome)
+			assert.NoError(err)
+
+			err = os.Chdir(tmpJunkProject)
+			assert.NoError(err)
+			_, _ = exec.RunCommand(DdevBin, []string{"delete", "-Oy"})
+
+			err = os.Chdir(origDir)
+			assert.NoError(err)
+			err = os.RemoveAll(tmpJunkProject)
 			assert.NoError(err)
 
 			// Because the start has done a poweroff (new ddev version),
