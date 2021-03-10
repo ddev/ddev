@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"os"
@@ -160,6 +161,12 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 
 			err = os.Setenv("HOME", origHome)
 			assert.NoError(err)
+
+			// Because the start will have done a poweroff (new version),
+			// make sure sites are running again.
+			for _, site := range TestSites {
+				_, _ = exec.RunCommand(DdevBin, []string{"start", "-y", site.Name})
+			}
 		})
 
 	// Make sure that the tmpDir/.ddev and tmpDir/.ddev/.update don't exist before we run ddev.
@@ -177,7 +184,8 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	assert.NoError(err)
 
 	// The .update file is only created by ddev start
-	_, err = exec.RunCommand(DdevBin, []string{"start", "-y"})
+	// We have to do the echo technique to get past the prompt about doing a ddev poweroff
+	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("echo y | %s start", DdevBin)})
 	assert.NoError(err)
 
 	_, err = os.Stat(tmpUpdateFilePath)
