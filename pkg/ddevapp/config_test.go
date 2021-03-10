@@ -285,7 +285,7 @@ func TestConfigCommandInteractiveCreateDocrootDenied(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
 
-	noninteractiveEnv := "DRUD_NONINTERACTIVE"
+	noninteractiveEnv := "DDEV_NONINTERACTIVE"
 	// nolint: errcheck
 	defer os.Setenv(noninteractiveEnv, os.Getenv(noninteractiveEnv))
 	err := os.Unsetenv(noninteractiveEnv)

@@ -187,11 +187,11 @@ While ddev can create a webserver and a docker network infrastructure for a proj
     * This technique may not work on Windows WSL2, see below.
     * Only 10 hosts are valid on a line on traditional Windows, see [below](#windows-hosts-file-limited-to-10-hosts-per-ip-address-line); beyond that hostnames are ignored.
 
-## Windows WSL2 Name resolution on non-ddev.site hostnames or when not internet-connected
+## Windows WSL2 name resolution on non-ddev.site hostnames or when not internet-connected
 
-On Windows WSL2, there is a hosts file inside the WSL2 instance (`/etc/hosts`), and there is also one on the Windows side (`C:\Windows\system32\drivers\etc\hosts`). Most people use a browser on the Windows side, which has no idea about hostnames that may be set up in the WSL2 /etc/hosts file. So a WSL2 project which uses `*.ddev.site` works fine when accessed by a browser on the Windows side, as long as internet connectivity is available (DNS lookups of `*.ddev.site` succeed).
+On Windows WSL2, there is a hosts file inside the WSL2 instance (`/etc/hosts`), and there is also one on the Windows side (`C:\Windows\system32\drivers\etc\hosts`). Many people use a browser on the Windows side, which has no idea about hostnames that may be set up in the WSL2 /etc/hosts file. So a WSL2 project which uses `*.ddev.site` works fine when accessed by a browser on the Windows side, as long as internet connectivity is available (DNS lookups of `*.ddev.site` succeed).
 
-However, if the project uses non-ddev.site hostnames, or if not connected to the Internet, a Windows-side browser will be unable to look up project hostnames, and you'll get complaints from the browser like "<url> server IP address could not be found" or "We can’t connect to the server at <url>".  In this case, you can
+However, if the project uses non-ddev.site hostnames, or if not connected to the Internet, or if use_dns_when_possible is false in the .ddev/config.yaml, a Windows-side browser will be unable to look up project hostnames, and you'll get complaints from the browser like "<url> server IP address could not be found" or "We can’t connect to the server at <url>".  In this case, you can:
 
 1. Add the needed hostname(s) manually to the Windows hosts file. This can easily be done with the *Windows* version of ddev.exe with `sudo ddev hostname <hostname> 127.0.0.1` on *Windows* in PowerShell or Cmd or git-bash.
 2. Or run a browser within WSL2 (currently requires an X11 server like X410, but Microsoft plans to provide natively)
@@ -202,7 +202,7 @@ Some DNS servers prevent the use of DNS records that resolve to `localhost` (127
 
 In this case, you can
 
-1. Reconfigure the DNS server to allow DNS Rebinding. Many Fritzbox routers have added default DNS Rebinding disallowal, and they can be reconfigured to allow it, see [issue](https://github.com/drud/ddev/issues/2409#issuecomment-686718237).
+1. Reconfigure the DNS server to allow DNS Rebinding. Many Fritzbox routers have added default DNS Rebinding disallowal, and they can be reconfigured to allow it, see [issue](https://github.com/drud/ddev/issues/2409#issuecomment-686718237). If you have the local dnsmasq DNS server it may also be configured to disallow DNS rebinding, but it's a simple change to a configuration directive to allow it.
 2. Most computers can use most relaxed DNS resolution if they are not on corporate intranets that have non-internet DNS. So for example, the computer can be set to use 8.8.8.8 (Google) or 1.1.1.1 (Cloudflare) for DNS name resolution.
 3. If you have control of the router, you can usually change its DHCP settings to choose a DNS server to a public, relaxed DNS server as in #2.
 4. You can live with ddev trying to edit the /etc/hosts file, which it only has to do when a new name is added to a project.

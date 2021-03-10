@@ -32,7 +32,7 @@ ddev pull platform --skip-files -y`,
 func appPull(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, skipImportArg bool, skipDbArg bool, skipFilesArg bool) {
 
 	// If we're not performing the import step, we won't be deleting the existing db or files.
-	if !skipConfirmation && !skipImportArg && os.Getenv("DRUD_NONINTERACTIVE") == "" {
+	if !skipConfirmation && !skipImportArg && os.Getenv("DDEV_NONINTERACTIVE") == "" {
 		// Only warn the user about relevant risks.
 		var message string
 		if skipDbArg && skipFilesArg {
