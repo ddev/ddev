@@ -116,8 +116,9 @@ func MapKeysToArray(mapWithKeys map[string]interface{}) []string {
 // GetContainerUIDGid() returns the uid and gid (and string forms) to be used running most containers.
 func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 	curUser, err := user.Current()
-	CheckErr(err)
-
+	if err != nil {
+		Failed("Unable to determine username and related UID, etc. Please at least set $USER environment variable: %v", err)
+	}
 	uidStr = curUser.Uid
 	gidStr = curUser.Gid
 	username = curUser.Username
