@@ -254,6 +254,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 			}
 		})
 
+	newStartTime := time.Now().Unix()
 	// We have to do the echo technique to get past the prompt about doing a ddev poweroff
 	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf("echo y | %s start", DdevBin)})
 	assert.NoError(err)
@@ -273,10 +274,9 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	require.NotEmpty(t, sshC)
 	sshCreateTime := (*sshC).Created
 
-	// router and ssh-agent should have been created within the last 20 seconds
-	now := time.Now().Unix()
-	assert.Greater(routerCreateTime+20, now)
-	assert.Greater(sshCreateTime+20, now)
+	// router and ssh-agent should have been created within after we started the new project
+	assert.GreaterOrEqual(routerCreateTime, newStartTime)
+	assert.GreaterOrEqual(sshCreateTime, newStartTime)
 }
 
 // addSites runs `ddev start` on the test apps
