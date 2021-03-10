@@ -15,7 +15,7 @@ export HOMEBREW_NO_INSTALL_CLEANUP=1
 sudo /Applications/Docker.app/Contents/MacOS/Docker --quit-after-install --unattended
 nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
 
-brew cask install ngrok >/dev/null
+brew install ngrok >/dev/null
 brew tap drud/ddev >/dev/null
 brew unlink python@2 >/dev/null || true
 
