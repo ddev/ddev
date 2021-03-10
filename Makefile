@@ -261,7 +261,7 @@ $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.
 https://github.com/gerardog/gsudo/releases/download/v0.7.3/gsudo.v0.7.3.zip
 $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt:
 	curl  -sSL --create-dirs -o $(DOWNLOADTMP)/gsudo.zip  https://github.com/gerardog/gsudo/releases/download/$(WINDOWS_GSUDO_VERSION)/gsudo.$(WINDOWS_GSUDO_VERSION).zip
-	unzip -o -d $(GOTMP)/bin/windows_amd64 $(DOWNLOADTMP)/gsudo.zip && mv $(GOTMP)/bin/windows_amd64/gsudo $(GOTMP)/bin/windows_amd64/sudo
+	unzip -o -d $(GOTMP)/bin/windows_amd64 $(DOWNLOADTMP)/gsudo.zip && mv $(GOTMP)/bin/windows_amd64/gsudo.exe $(GOTMP)/bin/windows_amd64/sudo.exe
 	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/sudo_license.txt https://raw.githubusercontent.com/gerardog/gsudo/master/LICENSE.txt
 
 $(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.txt $(GOTMP)/bin/windows_amd64/winnfsd.exe :
