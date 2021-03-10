@@ -22,7 +22,7 @@ fi
 # Upgrade various items on various operating systems
 case $os in
 darwin)
-    for item in mkcert mkdocs golang golangci-lint ddev; do
+    for item in ddev golang golangci-lint mkcert mkdocs python3-yq; do
         brew upgrade $item || brew install $item || true
     done
     ;;

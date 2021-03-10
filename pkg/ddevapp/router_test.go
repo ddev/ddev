@@ -107,6 +107,7 @@ func TestLetsEncrypt(t *testing.T) {
 	globalconfig.DdevGlobalConfig.LetsEncryptEmail = "nobody@example.com"
 	globalconfig.DdevGlobalConfig.RouterBindAllInterfaces = true
 	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	require.NoError(t, err)
 
 	site := TestSites[0]
 	switchDir := site.Chdir()
