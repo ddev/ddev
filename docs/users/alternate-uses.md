@@ -70,6 +70,14 @@ ExecStop=/usr/local/bin/ddev poweroff
 WantedBy=multi-user.target
 ```
 
+* ddev-router needs to be restarted in order to refresh the Let's Encrypt certificates, so you may have to `ddev poweroff` and `ddev start -a` every few weeks. Rebooting the server will accomplish this.
+* You'll likely want to turn off PHP errors to screen in a .ddev/php/noerrors.ini:
+
+```ini
+display_errors = Off
+display_startup_errors = Off
+```
+
 Caveats:
 
 * It's unknown how much traffic a given server and docker setup can sustain, or what the results will be if the traffic is more than the server can handle.

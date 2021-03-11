@@ -31,13 +31,13 @@ Docker and docker-compose are required before anything will work with DDEV. This
 
 ### Homebrew - macOS/Linux
 
-For macOS and Linux users, we recommend installing and upgrading via [Homebrew](https://brew.sh/) (macOS) or [Homebrew on Linux](https://docs.brew.sh/Homebrew-on-Linux) (Linux):
+For macOS (both amd64 and arm64) and Linux users, we recommend installing and upgrading via [Homebrew](https://brew.sh/) (macOS) or [Homebrew on Linux](https://docs.brew.sh/Homebrew-on-Linux) (Linux):
 
 ```
-brew tap drud/ddev && brew install ddev
+brew install drud/ddev/ddev
 ```
 
-If you would like more frequent "edge" releases then use `brew tap drud/ddev-edge` instead.)
+If you would like more frequent "edge" releases then use `brew install drud/ddev-edge/ddev` instead.)
 
 As a one-time initialization, run `mkcert -install`. Linux users may have to take additional actions as discussed below in "Linux `mkcert -install` additional instructions".
 

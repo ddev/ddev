@@ -14,7 +14,7 @@ Each of these commands has full help. For example, `ddev start -h` or `ddev help
 * `ddev sequelpro`, `ddev sequelace`, and `ddev tableplus` (macOS only, if the app is installed) give access to the Sequel Pro, Sequel Ace, or TablePlus database browser GUIs.
 * `ddev heidisql` (Windows/WSL2 only, if installed) gives access to the HeidiSQL database browser GUI.
 * `ddev import-db` and `ddev export-db` let you import or export a sql or compressed sql file.
-* `ddev composer` lets you run composer (inside the container), for example `ddev composer install` will do a full composer install for you without even needing composer on your computer. See [developer tools](developer-tools.md#ddev-and-composer).
+* `ddev composer` lets you run composer (inside the container), for example `ddev composer install` will do a full composer install for you without even needing composer on your computer. See [developer tools](developer-tools.md#ddev-and-composer). Composer version 2 is the default, but you can also configure composer version 1.
 * `ddev snapshot` makes a very fast snapshot of your database that can be easily and quickly restored with `ddev snapshot restore`.
 * `ddev share` works with [ngrok](https://ngrok.com/) (and requires ngrok) so you can let someone in the next office or on the other side of the planet see your project and what you're working on. `ddev share -h` gives more info about how to set up ngrok (it's easy).
 * `ddev ssh` opens a bash session in the web container (or other container).
@@ -31,7 +31,7 @@ In addition to the *commands* listed above, there are loads and loads of tools i
 
 * `ddev describe` tells how to access **MailHog**, which captures email in your development environment.
 * `ddev describe` tells how to use the built-in **phpMyAdmin** and `ddev launch -p` gives direct access to it.
-* Composer, git, node, npm, and dozens of other tools are installed in the web container, and you can access them via `ddev ssh` or `ddev exec`.
+* Composer, git, node, npm, and dozens of other tools are installed in the web container, and you can access them via `ddev ssh` or `ddev exec`. Composer v2 is the default. To use composer v1, `ddev config --composer-version=1`.
 * `ddev logs` gets you webserver logs; `ddev logs -s db` gets dbserver logs.
 * sqlite3 and the mysql client are inside the web container (and mysql client is also in the db container).
 
@@ -701,7 +701,7 @@ Commands can also be executed using the shorter `ddev . <cmd>` alias.
 
 The `ddev ssh` command will open an interactive bash or sh shell session to the container for a ddev service. The web service is connected to by default. The session can be ended by typing `exit`. To connect to another service, use the `--service` flag to specify the service you want to connect to. For example, to connect to the database container, you would run `ddev ssh --service db`. To specify the destination directory, use the `--dir` flag. For example, to connect to the database container and be placed into the `/home` directory, you would run `ddev ssh --service db --dir /home`.
 
-If you want to use your personal ssh keys within the web container, that's possible. Use `ddev auth ssh` to add the keys from your ~/.ssh directory and provide a passphrase, and then those keys will be usable from within the web container. You generally only have to `ddev auth ssh` one time per computer reboot.
+If you want to use your personal ssh keys within the web container, that's possible. Use `ddev auth ssh` to add the keys from your ~/.ssh directory and provide a passphrase, and then those keys will be usable from within the web container. You generally only have to `ddev auth ssh` one time per computer reboot. This is a very popular approach for accessing private composer repositories, or for using drush aliases against remote servers.
 
 ### Log Access
 

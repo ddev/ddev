@@ -24,7 +24,8 @@ docker run --rm -t -v /$HOME/.ddev:/tmp/junker99 busybox:latest ls //tmp/junker9
 echo "
 +-------------------------------------------+
 | Setup native NFS on macOS for Docker
-| Only localhost is allowed access;
+| Only localhost is allowed access on amd64;
+| Only docker network is allowed on arm64
 | Your home directory is shared by default.
 | But, of course, pay attention to security.
 +-------------------------------------------+
@@ -34,11 +35,19 @@ echo ""
 
 ddev poweroff || true
 
-echo "== Setting up nfs..."
-# Share /Users folder. If the projects are elsewhere the /etc/exports will need
+ARCH="$(uname -m)"
+echo "== Setting up nfs... You may be asked for your sudo password or other full disk access prompts..."
+# Share home directory. If the projects are elsewhere the /etc/exports will need
 # to be adapted.
 SHAREDIR=${HOME}
-LINE="${SHAREDIR} -alldirs -mapall=$(id -u):$(id -g) localhost"
+if [ "${ARCH}" = "amd64" ]; then
+  LINE="${SHAREDIR} -alldirs -mapall=$(id -u):$(id -g) localhost"
+else
+  # For mac m1, the source address from NFS driver is different. Gather from the internal
+  # ip of host.docker.internal
+  NET=$(docker run -it --rm busybox sh -c 'ping -c1 host.docker.internal | awk "/PING/ { gsub(/[\(\):]/, \"\"); print \$3 }"')
+  LINE="${SHAREDIR} -alldirs -mapall=$(id -u):$(id -g) -network=${NET%.[0-9]*}.0 -mask 255.255.255.0"
+fi
 FILE=/etc/exports
 sudo bash -c "echo >> $FILE" || ( echo "Unable to edit /etc/exports, need Full Disk Access on Mojave and later" && exit 103 )
 grep -qF -- "$LINE" "$FILE" || ( sudo echo "$LINE" | sudo tee -a $FILE > /dev/null )
@@ -48,5 +57,5 @@ FILE=/etc/nfs.conf
 grep -qF -- "$LINE" "$FILE" || ( sudo echo "$LINE" | sudo tee -a $FILE > /dev/null )
 
 echo "== Restarting nfsd..."
-sudo nfsd enable && sudo nfsd restart
+sudo nfsd enable && sudo nfsd restart && sleep 1 && sudo nfsd restart
 

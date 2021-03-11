@@ -73,6 +73,11 @@ semver_compare() {
   [ "${arr_version_a[$cursor]}" -gt "${arr_version_b[$cursor]}" ] && echo 1 || echo -1
 }
 
+if [[ $EUID -eq 0 ]]; then
+  echo "This script must NOT be run with sudo/root. Please re-run without sudo." 1>&2
+  exit 102
+fi
+
 unamearch=$(uname -m)
 case ${unamearch} in
   x86_64) ARCH="amd64";

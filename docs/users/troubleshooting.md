@@ -4,8 +4,9 @@ Things might go wrong! Besides the suggestions on this page don't forget about [
 
 ## General Troubleshooting Strategies
 
+* Temporarily turn off firewalls, VPNs, network proxies, and virus checkers while you're troubleshooting.
 * Please start with a `ddev poweroff` to make sure all containers can start fresh.
-* Temporarily turn off firewalls and virus checkers while you're troubleshooting.
+* On macOS and traditional Windows, please check to make sure that Docker Desktop is not out of disk space. In Settings (or Preferences)->Resources->Disk image size there should be lots of space left; I never let it go over 80% because the number reported here is not reliable. If it says zero used, something is wrong.
 * If you have customizations (PHP overrides, nginx or Apache overrides, MySQL overrides, custom services, config.yaml changes) please back them out while troubleshooting. It's important to have the simplest possible environment while troubleshooting.
 * Check your Docker disk space and memory allocation if you're using Docker Desktop on Windows or macOS.
 * Restart Docker. Consider a Docker factory reset in serious cases (this will destroy any databases you've loaded). See [Docker Troubleshooting](docker_installation.md#troubleshooting) for more.
@@ -65,9 +66,9 @@ Probably the most common conflicting application is Apache running locally. It c
 sudo apachectl stop
 ```
 
-**Common tools that use port 80:**
+**Common tools that use port 80 and port 443:**
 
-Here are some of the other common processes that could be using port 80 and methods to stop them.
+Here are some of the other common processes that could be using ports 80/443 and methods to stop them.
 
 * MAMP (macOS): [Stop MAMP](http://documentation.mamp.info/en/MAMP-Mac/Preferences/Start-Stop/)
 * Apache: Temporarily stop with `sudo apachectl stop`, permanent stop depends on your environment.
@@ -89,7 +90,7 @@ nginx   1608 www-data   46u  IPv4  13913      0t0  TCP *:http (LISTEN)
 nginx   5234     root   46u  IPv4  13913      0t0  TCP *:http (LISTEN)
 ```
 
-On Windows CMD, try using netstat and tasklist to find the pid:
+On Windows CMD, use [sysinternals tcpview](https://docs.microsoft.com/en-us/sysinternals/downloads/tcpview) or try using netstat and tasklist to find the pid:
 
 ```
 > netstat -aon | findstr ":80.*LISTENING"
@@ -123,7 +124,7 @@ Another approach to destroying the database is to destroy the docker volume wher
 
 ## "web service unhealthy" or "web service starting" or exited
 
-The most common cause of the web container being unhealthy is a user-defined .ddev/nginx-site.conf or .ddev/apache/apache-site.conf - Please rename these to <xxx_site.conf> during testing. To figure out what's wrong with it after you've identified that as the problem, use `ddev logs` and review the error.
+The most common cause of the web container being unhealthy is a user-defined .ddev/nginx-full/nginx-site.conf or .ddev/apache/apache-site.conf - Please rename these to <xxx_site.conf> during testing. To figure out what's wrong with it after you've identified that as the problem, use `ddev logs` and review the error.
 
 Changes to .ddev/nginx-site.conf and .ddev/apache/apache-site.conf take effect only when you do a `ddev restart` or the equivalent.
 
@@ -131,8 +132,8 @@ Changes to .ddev/nginx-site.conf and .ddev/apache/apache-site.conf take effect o
 
 If you get a 404 with "No input file specified" (nginx) or a 403 with "Forbidden" (apache) when you visit your project it may mean that no index.php or index.html is being found in the docroot. This can result from:
 
-* Missing index.php: There may not be an index.php or index.html in your project.
 * Misconfigured docroot: If the docroot isn't where the webserver thinks it is, then the webserver won't find the index.php. Look at your .ddev/config.yaml to verify it has a docroot that will lead to the index.php. It should be a relative path from the project root to the directory where the index.php is.
+* Missing index.php: There may not be an index.php or index.html in your project.
 * Docker not mounting your code: If you `ddev ssh` and `ls` and there's nothing there, Docker may not be mounting your code. See [docker installation](./docker_installation.md) for testing docker install. (Is Docker, the drive or directory where your project is must be shared.
 
 ## `ddev start` fails and logs contain "failed (28: No space left on device)" - Docker File Space
@@ -218,6 +219,6 @@ There are two workarounds for this problem:
 1. Use `ddev stop --all` and `sudo ddev hostname --remove-inactive` to prune the number of hosts on that hosts-file line. When you start a project, the hostname(s) associated with that project will be added back again.
 2. Manually edit the hosts file (typically `C:\Windows\System32\drivers\etc\hosts`) and put some of your hosts on a separate line in the file.
 
-## More Support
+## Windows WSL2 Network Issues
 
-[Support options](../index.md#support) has a variety of options.
+If you're using a browser on Windows, accessing a project in WSL2, you can end up with very confusing results if your project is listening on a port inside WSL2, but a Windows process is listening on the port on Windows. The way to sort this out is to stop your project inside WSL2, verify that nothing is listening on the port there, and then study the port on the Windows side, by visiting it with a browser or using other tools as described above.
