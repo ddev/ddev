@@ -1,6 +1,6 @@
 ## macOS Installation: Docker Desktop for Mac
 
-Docker Desktop for Mac can be installed via Homebrew (`brew install --cask docker`) or can be downloaded from [download.docker.com](https://download.docker.com/mac/stable/Docker.dmg).
+Docker Desktop for Mac can be installed via Homebrew (`brew install  homebrew/cask/docker`) or can be downloaded from [desktop.docker.com](https://desktop.docker.com/mac/stable/Docker.dmg).
 
 ## Windows Installation: Docker Desktop for Windows
 
