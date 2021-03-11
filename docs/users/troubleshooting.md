@@ -65,9 +65,9 @@ Probably the most common conflicting application is Apache running locally. It c
 sudo apachectl stop
 ```
 
-**Common tools that use port 80:**
+**Common tools that use port 80 and port 443:**
 
-Here are some of the other common processes that could be using port 80 and methods to stop them.
+Here are some of the other common processes that could be using ports 80/443 and methods to stop them.
 
 * MAMP (macOS): [Stop MAMP](http://documentation.mamp.info/en/MAMP-Mac/Preferences/Start-Stop/)
 * Apache: Temporarily stop with `sudo apachectl stop`, permanent stop depends on your environment.
@@ -89,7 +89,7 @@ nginx   1608 www-data   46u  IPv4  13913      0t0  TCP *:http (LISTEN)
 nginx   5234     root   46u  IPv4  13913      0t0  TCP *:http (LISTEN)
 ```
 
-On Windows CMD, try using netstat and tasklist to find the pid:
+On Windows CMD, use [sysinternals tcpview](https://docs.microsoft.com/en-us/sysinternals/downloads/tcpview) or try using netstat and tasklist to find the pid:
 
 ```
 > netstat -aon | findstr ":80.*LISTENING"
