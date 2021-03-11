@@ -24,7 +24,8 @@ docker run --rm -t -v /$HOME/.ddev:/tmp/junker99 busybox:latest ls //tmp/junker9
 echo "
 +-------------------------------------------+
 | Setup native NFS on macOS for Docker
-| Only localhost is allowed access;
+| Only localhost is allowed access on amd64;
+| Only docker network is allowed on arm64
 | Your home directory is shared by default.
 | But, of course, pay attention to security.
 +-------------------------------------------+
