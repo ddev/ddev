@@ -36,10 +36,10 @@ func Prompt(prompt string, defaultValue string) string {
 }
 
 // Confirm handles the asking and interpreting of a basic yes/no question.
-// If DRUD_NONINTERACTIVE is set, Confirm() returns true. The prompt will be
+// If DDEV_NONINTERACTIVE is set, Confirm() returns true. The prompt will be
 // presented at most three times before returning false.
 func Confirm(prompt string) bool {
-	if len(os.Getenv("DRUD_NONINTERACTIVE")) > 0 {
+	if len(os.Getenv("DDEV_NONINTERACTIVE")) > 0 {
 		return true
 	}
 

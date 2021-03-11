@@ -79,7 +79,7 @@ func (site *TestSite) Prepare() error {
 	testDir := CreateTmpDir(site.Name)
 	site.Dir = testDir
 
-	err := os.Setenv("DRUD_NONINTERACTIVE", "true")
+	err := os.Setenv("DDEV_NONINTERACTIVE", "true")
 	util.CheckErr(err)
 
 	cachedSrcDir, _, err := GetCachedArchive(site.Name, site.Name+"_siteArchive", site.ArchiveInternalExtractionPath, site.SourceURL)

@@ -5,7 +5,7 @@ export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 echo "--- buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} in ${PWD} with golang=$(go version | awk '{print $3}') docker=$(docker --version | awk '{print $3}') and docker-compose $(docker-compose --version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}')"
 
 export GOTEST_SHORT=1
-export DRUD_NONINTERACTIVE=true
+export DDEV_NONINTERACTIVE=true
 
 set -o errexit
 set -o pipefail

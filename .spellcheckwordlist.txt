@@ -193,6 +193,7 @@ disable
 disallowal
 distro
 distros
+dns
 dnsmasq
 docker
 docker's

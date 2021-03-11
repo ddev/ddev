@@ -5,7 +5,7 @@ jobs:
       image: ubuntu-2004:202101-01
     working_directory: ~/ddev
     environment:
-      DRUD_NONINTERACTIVE: "true"
+      DDEV_NONINTERACTIVE: "true"
     steps:
     - checkout
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
@@ -41,7 +41,7 @@ jobs:
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
-      DRUD_NONINTERACTIVE: "true"
+      DDEV_NONINTERACTIVE: "true"
     steps:
     - checkout
     - attach_workspace:
@@ -82,7 +82,7 @@ jobs:
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
-      DRUD_NONINTERACTIVE: "true"
+      DDEV_NONINTERACTIVE: "true"
       GOTEST_SHORT: "true"
     steps:
       - checkout
@@ -101,7 +101,7 @@ jobs:
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
-      DRUD_NONINTERACTIVE: "true"
+      DDEV_NONINTERACTIVE: "true"
       GOTEST_SHORT: "true"
     steps:
     - attach_workspace:
@@ -131,7 +131,7 @@ jobs:
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: apache-fpm
-      DRUD_NONINTERACTIVE: "true"
+      DDEV_NONINTERACTIVE: "true"
       GOTEST_SHORT: "true"
     steps:
     - attach_workspace:
@@ -161,7 +161,7 @@ jobs:
     working_directory: ~/ddev
     environment:
       DDEV_TEST_USE_NFSMOUNT: "true"
-      DRUD_NONINTERACTIVE: "true"
+      DDEV_NONINTERACTIVE: "true"
       GOTEST_SHORT: "true"
     steps:
     - attach_workspace:
@@ -192,7 +192,7 @@ jobs:
       DDEV_TEST_WEBSERVER_TYPE: apache-fpm
       # Experiment with only testing TYPO3 with the apache run.
       GOTEST_SHORT: 5
-      DRUD_NONINTERACTIVE: "true"
+      DDEV_NONINTERACTIVE: "true"
     steps:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
@@ -227,7 +227,7 @@ jobs:
       DDEV_TEST_USE_NFSMOUNT: true
       # Test only TYPO3 with the apache run.
       GOTEST_SHORT: 5
-      DRUD_NONINTERACTIVE: "true"
+      DDEV_NONINTERACTIVE: "true"
     steps:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:

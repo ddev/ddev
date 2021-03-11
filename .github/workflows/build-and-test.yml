@@ -87,7 +87,7 @@ jobs:
 
     env:
       DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
-      DRUD_NONINTERACTIVE: "true"
+      DDEV_NONINTERACTIVE: "true"
 
     steps:
       - uses: actions/checkout@v2

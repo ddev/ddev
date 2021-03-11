@@ -29,7 +29,7 @@ func TestServices(t *testing.T) {
 		t.Skip("skipping because unreliable on Windows")
 	}
 	assert := asrt.New(t)
-	os.Setenv("DRUD_NONINTERACTIVE", "true")
+	os.Setenv("DDEV_NONINTERACTIVE", "true")
 
 	expectedServiceCount := 3
 

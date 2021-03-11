@@ -60,7 +60,7 @@ func TestMain(m *testing.M) {
 	}
 	log.Println("Running ddev with ddev=", DdevBin)
 
-	err := os.Setenv("DRUD_NONINTERACTIVE", "true")
+	err := os.Setenv("DDEV_NONINTERACTIVE", "true")
 	if err != nil {
 		log.Errorln("could not set noninteractive mode, failed to Setenv, err: ", err)
 	}
