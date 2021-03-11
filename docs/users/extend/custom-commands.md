@@ -85,6 +85,7 @@ A number of environment variables are provided to the script. These are generall
 Useful variables for container scripts are:
 
 * DDEV_DOCROOT: Relative path from approot to docroot
+* DDEV_FILES_DIR: Directory of user-uploaded files
 * DDEV_HOSTNAME: Comma-separated list of FQDN hostnames
 * DDEV_PHP_VERSION
 * DDEV_PRIMARY_URL: Primary URL for the project

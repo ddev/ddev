@@ -118,6 +118,7 @@ services:
       - DDEV_ROUTER_HTTPS_PORT
       - DDEV_SITENAME
       - DDEV_TLD
+      - DDEV_FILES_DIR
       - DDEV_WEBSERVER_TYPE
       - DDEV_XDEBUG_ENABLED
       - DEPLOY_NAME=local

@@ -104,7 +104,6 @@ ddev push %s --skip-files -y`, subCommandName, subCommandName, subCommandName),
 						util.Failed("Failed to get flag %s: %v", f, err)
 					}
 				}
-
 				apppush(providerName, app, flags["skip-confirmation"], flags["skip-import"], flags["skip-db"], flags["skip-files"])
 			},
 		}
