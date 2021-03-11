@@ -38,6 +38,10 @@ To execute a fully-featured `composer create-project` command, you can execute t
 
 `ddev exec composer create-project ...`
 
+DDEV-Local uses composer version 2 by default. If you want to roll back to version 1, `ddev config --composer-version=1 && ddev start`
+
+If your composer.json is not in the project root, you'll need to provide the `-d` argument expressing the **in-container** path to the directory where the composer.json is, for example, `ddev composer install -d /var/www/html/path/to/dir`.
+
 Note: if you run `ddev composer global require`, (or run `composer global require` inside the web container) the global packages will be installed in the in-container user's home directory ( ~/.composer) and will disappear on the next container restart, requiring rerun of the command. You may need an additional step of synchronizing created composer configuration and installed packages with the DDEV's [homeadditions folder](extend/in-container-configuration.md) on the host.
 
 <a name="windows-os-and-ddev-composer"></a>
