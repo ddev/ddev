@@ -49,6 +49,7 @@ nav:
     - 'Additional Project Hostnames': 'users/extend/additional-hostnames.md'
     - 'Shell Completion (bash, zsh, etc.)': 'users/shell-completion.md'
     - 'Alternate Uses of DDEV-Local': 'users/alternate-uses.md'
+    - 'Special Environments': 'users/special-environments.md'
   - 'Extending ddev':
     - 'Extending and Customizing Environments': 'users/extend/customization-extendibility.md'
     - 'Additional Services': 'users/extend/additional-services.md'
