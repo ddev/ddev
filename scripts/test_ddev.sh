@@ -9,6 +9,7 @@
 # `ddev config global --nfs-mount-enabled=false`
 
 PROJECT_NAME=tryddevproject-${RANDOM}
+BASEDIR=$(dirname "$0")
 
 function cleanup {
   printf "\nPlease delete this project after debugging with 'ddev delete -Oy ${PROJECT_NAME}'\n"
@@ -18,6 +19,7 @@ trap cleanup EXIT
 uname -a
 ddev version
 ls -l "$(which docker)"
+${BASEDIR}/docker-desktop-version.sh && echo
 ddev poweroff
 docker ps -a
 docker run -it --rm busybox ls

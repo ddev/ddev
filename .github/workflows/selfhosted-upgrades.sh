@@ -8,7 +8,7 @@ os=$(go env GOOS)
 if ! command -v ngrok >/dev/null; then
     case $os in
     darwin)
-        brew cask install ngrok
+        brew install homebrew/cask/ngrok
         ;;
     windows)
         choco install -y ngrok

@@ -8,7 +8,7 @@ os=$(go env GOOS)
 if ! command -v ngrok >/dev/null; then
     case $os in
     darwin)
-        brew cask install ngrok
+        brew install homebrew/cask/ngrok
         ;;
     windows)
         choco install -y ngrok
@@ -22,7 +22,7 @@ fi
 # Upgrade various items on various operating systems
 case $os in
 darwin)
-    for item in mkcert mkdocs golang golangci-lint ddev; do
+    for item in ddev golang golangci-lint mkcert mkdocs python3-yq; do
         brew upgrade $item || brew install $item || true
     done
     ;;

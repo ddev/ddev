@@ -36,7 +36,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 1. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com.
 2. Change the name of the machine to something in keeping with current style. Maybe `testbot-macstadium-macos-3`.
 3. Install [Homebrew](https://brew.sh/) `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
-4. Install golang/git/docker with `brew tap drud/ddev-edge && brew install buildkite/buildkite/buildkite-agent iterm2 google-chrome  docker nosleep golang git mariadb jq p7zip bats-core composer ddev netcat mkcert ngrok`
+4. Install golang/git/docker with brew install buildkite/buildkite/buildkite-agent homebrew/cask/iterm2 homebrew/cask/google-chrome  homebrew/cask/docker homebrew/cask/nosleep golang git mariadb jq p7zip bats-core composer drud/ddev/ddev netcat mkcert homebrew/cask/ngrok`
 5. `mkcert -install`
 6. Run Docker manually and go through its configuration routine.
 7. Run iTerm. On Mojave and higher it may prompt for requiring full disk access permissions, follow through with that.

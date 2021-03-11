@@ -15,8 +15,8 @@ export HOMEBREW_NO_INSTALL_CLEANUP=1
 sudo /Applications/Docker.app/Contents/MacOS/Docker --quit-after-install --unattended
 nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
 
-brew cask install ngrok >/dev/null
-brew tap drud/ddev >/dev/null
+brew install homebrew/cask/ngrok >/dev/null
+brew install drud/ddev/ddev >/dev/null
 brew unlink python@2 >/dev/null || true
 
 brew install mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr gnu-getopt libgsf glib pcre >/dev/null || true
