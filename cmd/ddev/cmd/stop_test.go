@@ -85,7 +85,7 @@ func TestCmdStopMissingProjectDirectory(t *testing.T) {
 	//nolint: errcheck
 	defer exec.RunCommand(DdevBin, []string{"stop", "-RO", projectName})
 
-	_, err = exec.RunCommand(DdevBin, []string{"start"})
+	_, err = exec.RunCommand(DdevBin, []string{"start", "-y"})
 	assert.NoError(err)
 
 	_, err = exec.RunCommand(DdevBin, []string{"stop", projectName})

@@ -238,7 +238,7 @@ func TestCmdDescribeMissingProjectDirectory(t *testing.T) {
 	_, err = exec.RunCommand(DdevBin, []string{"config", "--project-type", "php", "--project-name", projectName})
 	assert.NoError(err)
 
-	_, err = exec.RunCommand(DdevBin, []string{"start"})
+	_, err = exec.RunCommand(DdevBin, []string{"start", "-y"})
 	assert.NoError(err)
 
 	t.Cleanup(func() {

@@ -30,8 +30,13 @@ ddev start --all`,
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 
+		skip, err := cmd.Flags().GetBool("skip-confirmation")
+		if err != nil {
+			util.Failed(err.Error())
+		}
+
 		// Look for version change and opt-in to instrumentation if it has changed.
-		err := checkDdevVersionAndOptInInstrumentation()
+		err = checkDdevVersionAndOptInInstrumentation(skip)
 		if err != nil {
 			util.Failed(err.Error())
 		}
@@ -67,5 +72,6 @@ ddev start --all`,
 
 func init() {
 	StartCmd.Flags().BoolVarP(&startAll, "all", "a", false, "Start all projects")
+	StartCmd.Flags().BoolP("skip-confirmation", "y", false, "Skip any confirmation steps")
 	RootCmd.AddCommand(StartCmd)
 }

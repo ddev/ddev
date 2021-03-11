@@ -64,7 +64,7 @@ func TestHomeadditions(t *testing.T) {
 	app, err := ddevapp.GetActiveApp(site.Name)
 	require.NoError(t, err)
 
-	_, err = exec.RunCommand(DdevBin, []string{"start"})
+	_, err = exec.RunCommand(DdevBin, []string{"start", "-y"})
 	assert.NoError(err)
 
 	// Make sure that even though there was a global and a project-level .myscript.sh

@@ -23,7 +23,7 @@ func TestCmdList(t *testing.T) {
 	// This gratuitous ddev start -a repopulates the ~/.ddev/global_config.yaml
 	// project list, which has been damaged by other tests which use
 	// direct app techniques.
-	_, err := exec.RunCommand(DdevBin, []string{"start", "-a"})
+	_, err := exec.RunCommand(DdevBin, []string{"start", "-a", "-y"})
 	assert.NoError(err)
 
 	// Execute "ddev list" and harvest plain text output.
@@ -94,7 +94,7 @@ func TestCmdList(t *testing.T) {
 	t.Logf("test projects (including inactive) shown with ddev list -j: %v", siteList)
 
 	// Leave firstApp running for other tests
-	out, err = exec.RunCommand(DdevBin, []string{"start", TestSites[0].Name})
+	out, err = exec.RunCommand(DdevBin, []string{"start", "-y", TestSites[0].Name})
 	assert.NoError(err, "error runnning ddev start: %v output=%s", err, out)
 }
 

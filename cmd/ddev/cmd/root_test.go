@@ -1,11 +1,15 @@
 package cmd
 
 import (
+	"fmt"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/stretchr/testify/require"
 	"os"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/drud/ddev/pkg/testcommon"
 	log "github.com/sirupsen/logrus"
@@ -147,19 +151,27 @@ func TestGetActiveAppRoot(t *testing.T) {
 func TestCreateGlobalDdevDir(t *testing.T) {
 	assert := asrt.New(t)
 
+	origDir, _ := os.Getwd()
 	tmpDir := testcommon.CreateTmpDir("globalDdevCheck")
-	switchDir := TestSites[0].Chdir()
+	_ = TestSites[0].Chdir()
 
 	origHome := os.Getenv("HOME")
 
 	t.Cleanup(
 		func() {
-			switchDir()
-			err := os.RemoveAll(tmpDir)
+			err := os.Chdir(origDir)
+			assert.NoError(err)
+			err = os.RemoveAll(tmpDir)
 			assert.NoError(err)
 
 			err = os.Setenv("HOME", origHome)
 			assert.NoError(err)
+
+			// Because the start will have done a poweroff (new version),
+			// make sure sites are running again.
+			for _, site := range TestSites {
+				_, _ = exec.RunCommand(DdevBin, []string{"start", "-y", site.Name})
+			}
 		})
 
 	// Make sure that the tmpDir/.ddev and tmpDir/.ddev/.update don't exist before we run ddev.
@@ -177,11 +189,94 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	assert.NoError(err)
 
 	// The .update file is only created by ddev start
-	_, err = exec.RunCommand(DdevBin, []string{"start"})
+	// We have to do the echo technique to get past the prompt about doing a ddev poweroff
+	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("echo y | %s start", DdevBin)})
 	assert.NoError(err)
 
 	_, err = os.Stat(tmpUpdateFilePath)
 	assert.NoError(err)
+
+}
+
+// TestPoweroffOnNewVersion checks that a poweroff happens when a new ddev version is deployed
+func TestPoweroffOnNewVersion(t *testing.T) {
+	assert := asrt.New(t)
+	var err error
+
+	origDir, _ := os.Getwd()
+
+	tmpGlobal := testcommon.CreateTmpDir(t.Name())
+	err = os.Chdir(TestSites[0].Dir)
+	assert.NoError(err)
+
+	origHome := os.Getenv("HOME")
+
+	// Create an extra junk project to make sure it gets shut down on our start
+	junkName := t.Name() + "-tmpjunkproject"
+	tmpJunkProject := testcommon.CreateTmpDir(junkName)
+	err = os.Chdir(tmpJunkProject)
+	assert.NoError(err)
+	_, err = exec.RunCommand(DdevBin, []string{"config", "--auto"})
+	assert.NoError(err)
+	_, _ = exec.RunCommand(DdevBin, []string{"start", "-y"})
+	assert.NoError(err)
+
+	apps := ddevapp.GetActiveProjects()
+	activeCount := len(apps)
+	assert.GreaterOrEqual(activeCount, 2)
+
+	// Change the homedir temporarily
+	err = os.Setenv("HOME", tmpGlobal)
+	assert.NoError(err)
+
+	t.Cleanup(
+		func() {
+
+			err = os.RemoveAll(tmpGlobal)
+			assert.NoError(err)
+
+			err = os.Setenv("HOME", origHome)
+			assert.NoError(err)
+
+			err = os.Chdir(tmpJunkProject)
+			assert.NoError(err)
+			_, _ = exec.RunCommand(DdevBin, []string{"delete", "-Oy"})
+
+			err = os.Chdir(origDir)
+			assert.NoError(err)
+			err = os.RemoveAll(tmpJunkProject)
+			assert.NoError(err)
+
+			// Because the start has done a poweroff (new ddev version),
+			// make sure sites are running again.
+			for _, site := range TestSites {
+				_, _ = exec.RunCommand(DdevBin, []string{"start", "-y", site.Name})
+			}
+		})
+
+	newStartTime := time.Now().Unix()
+	// We have to do the echo technique to get past the prompt about doing a ddev poweroff
+	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf("echo y | %s start", DdevBin)})
+	assert.NoError(err)
+	assert.Contains(out, "ddev-ssh-agent container has been removed")
+
+	apps = ddevapp.GetActiveProjects()
+	activeCount = len(apps)
+	assert.Equal(activeCount, 1)
+
+	// Verify that the ddev-router and ddev-ssh-agent have just been newly created
+	routerC, err := dockerutil.FindContainerByName("ddev-router")
+	assert.NoError(err)
+	require.NotEmpty(t, routerC)
+	routerCreateTime := (*routerC).Created
+	sshC, err := dockerutil.FindContainerByName("ddev-ssh-agent")
+	assert.NoError(err)
+	require.NotEmpty(t, sshC)
+	sshCreateTime := (*sshC).Created
+
+	// router and ssh-agent should have been created within after we started the new project
+	assert.GreaterOrEqual(routerCreateTime, newStartTime)
+	assert.GreaterOrEqual(sshCreateTime, newStartTime)
 }
 
 // addSites runs `ddev start` on the test apps
@@ -196,7 +291,7 @@ func addSites() error {
 		cleanup := site.Chdir()
 		defer cleanup()
 
-		out, err := exec.RunCommand(DdevBin, []string{"start"})
+		out, err := exec.RunCommand(DdevBin, []string{"start", "-y"})
 		if err != nil {
 			log.Fatalln("Error Output from ddev start:", out, "err:", err)
 		}
