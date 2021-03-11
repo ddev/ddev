@@ -24,6 +24,8 @@ The steps to set up NFS mounting on any operating system are:
 
 Note that you can use the NFS setup described for each operating system below (and the scripts provided) or you can set up NFS any way that works for you. For example, if you're already using NFS with vagrant on macOS,and you already have a number of exports, the default export here (your home directory) won't work, because you'll have overlaps in your /etc/exports. Or on Windows, you may want to use an NFS server other than Winnfsd, for example the [Allegro NFS Server](https://nfsforwindows.com). The setups provided below and the scripts provided below are only intended to get you started if you don't already use NFS.
 
+Note that NFS does not really add to performance on Linux, so it is not recommended.
+
 ### macOS NFS Setup
 
 Download, inspect, make executable, and run the [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh) script. Use `curl -O https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh && chmod +x macos_ddev_nfs_setup.sh && ./macos_ddev_nfs_setup.sh`. This stops running ddev projects, adds your home directory to the /etc/exports config file that nfsd uses, and enables nfsd to run on your computer. This is a one-time setup. Note that this shares your home directory via NFS to any NFS client on your computer, so it's critical to consider security issues; It's easy to make the shares in /etc/exports more limited as well, as long as they don't overlap (NFS doesn't allow overlapping exports).
@@ -43,25 +45,15 @@ The executable components required for Windows NFS (winnfsd and nssm) are packag
 
 Also see the debugging section below, and the special Windows debugging section.
 
-### Debian/Ubuntu Linux NFS Setup
-
-The nfs_mount_enabled feature does not really add performance on Linux systems because Docker on Linux is already quite fast. The primary reason for using it on a Linux system would be just to keep consistent with other team members working on other host OSs. However, since one can now set up NFS globally with `ddev config global --nfs-mount-enabled` it no longer needs to be set up on a project-by-project basis, so most teams can get by with just leaving NFS mounting out of the project-level config.yaml.
-
-Note that for all Linux systems, you can and should install and configure the NFS daemon and configure /etc/exports as you see fit and share the directories that you choose to share. The Debian/Ubuntu Linux script is just one way of accomplishing it.
-
-Download, inspect, and run the [debian_ubuntu_linux_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/debian_ubuntu_linux_ddev_nfs_setup.sh)). This stops running ddev projects, adds your home directory to the /etc/exports config file that nfs uses, and installs nfs-kernel-server  on your computer. This is one-time setup.
-
-Note that the script sets up a very restrictive /etc/exports that is based on the primary IP address of the Linux system at the time the script is run. You may want to edit it to make it less restrictive, or make it very open and use your firewall to control access.
-
 ### Debugging `ddev start` failures with `nfs_mount_enabled: true`
 
 There are a number of reasons that the NFS mount can fail on `ddev start`:
 
+* Firewall issues
 * NFS Server not running
 * Trying to start more than one NFS server.
 * NFS exports overlap. This is typically an issue if you've had another NFS client setup (like vagrant). You'll need to reconfigure your exports paths so they don't overlap.
 * Path of project not shared in `/etc/exports` (or `~/.ddev/nfs_exports.txt` on Windows)
-* Primary IP address not properly listed in /etc/exports (Linux)
 * Project is in the ~/Documents directory or an external drive on macOS Catalina or higher (see macOS information below)
 
 Tools to debug and solve permission problems:
@@ -69,9 +61,8 @@ Tools to debug and solve permission problems:
 * Try `ddev debug nfsmount` in a project directory to see if basic NFS mounting is working. If that works, it's likely that everything else will.
 * When debugging, please do `ddev restart` in between each change. Otherwise, you can have stale mounts inside the container and you'll miss any benefit you may find in the debugging process.
 * Inspect the /etc/exports (or `~/.ddev/nfs_exports.txt` on Windows).
-* Restart the server (`sudo nfsd restart` on macOS, `sudo nssm restart nfsd` on Windows, `sudo systemctl restart nfs-kernel-server` on Debian/Ubuntu, other commands for other Unixes).
-* `showmount -e` on macOS or Linux will show the shared mounts.
-* On Linux, the primary IP address needs to be in /etc/exports. Temporarily set the share in /etc/exports to `/home *`, which shares /home with any client, and `sudo systemctl restart nfs-kernel-server`. Then start a ddev project doing an nfs mount, and `showmount -a` and you'll find out what the primary IP address in use is. You can add that address to /etc/exports.
+* Restart the server (`sudo nfsd restart` on macOS, `sudo nssm restart nfsd` on Windows).
+* `showmount -e` on macOS will show the shared mounts.
 
 <a name="upgrading-catalina"></a>
 
@@ -93,6 +84,7 @@ You should then see nfsd in the list as shown:
 
 ### macOS-specific NFS debugging
 
+* Please temporarily disable any firewall or VPN.
 * Use `showmount -e` to find out what is exported via NFS. If you don't see a parent of your project directory in there, then NFS can't work.
 * If nothing is showing, use `nfsd checkexports` and read carefully for errors
 * Use `ps -ef | grep nfsd` to make sure nfsd is running
@@ -107,6 +99,8 @@ nfs.server.verbose = 3
 * Run Console.app and put "nfsd" in the search box at the top. `sudo nfsd restart` and read the messages carefully. Attempt to `ddev debug nfsmount` the problematic project directory.
 
 ### Windows-specific NFS debugging
+
+* Please temporarily disable any firewall or VPN.
 
 * You can only have one NFS daemon running, so if another application has installed one, you'll want to use that NFS daemon and reconfigure it to allow NFS mounts of your projects.
 
