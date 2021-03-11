@@ -102,6 +102,8 @@ Usage
 Use
 Uses
 Uz
+VPN
+VPNs
 WAMP
 WSL
 WSL2
@@ -314,6 +316,7 @@ nfsd
 nfsmount
 nginx
 ngrok
+noerrors
 nolock
 not
 npm
@@ -403,12 +406,14 @@ susi
 symlink
 symlinks
 sys
+sysinternals
 system32
 systemctl
 systemd
 tableplus
 tasklist
 tcp
+tcpview
 test
 testddev
 tgz
