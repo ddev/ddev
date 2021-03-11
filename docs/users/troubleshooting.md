@@ -6,6 +6,7 @@ Things might go wrong! Besides the suggestions on this page don't forget about [
 
 * Temporarily turn off firewalls, VPNs, network proxies, and virus checkers while you're troubleshooting.
 * Please start with a `ddev poweroff` to make sure all containers can start fresh.
+* On macOS and traditional Windows, please check to make sure that Docker Desktop is not out of disk space. In Settings (or Preferences)->Resources->Disk image size there should be lots of space left; I never let it go over 80% because the number reported here is not reliable. If it says zero used, something is wrong.
 * If you have customizations (PHP overrides, nginx or Apache overrides, MySQL overrides, custom services, config.yaml changes) please back them out while troubleshooting. It's important to have the simplest possible environment while troubleshooting.
 * Check your Docker disk space and memory allocation if you're using Docker Desktop on Windows or macOS.
 * Restart Docker. Consider a Docker factory reset in serious cases (this will destroy any databases you've loaded). See [Docker Troubleshooting](docker_installation.md#troubleshooting) for more.
@@ -217,3 +218,7 @@ There are two workarounds for this problem:
 
 1. Use `ddev stop --all` and `sudo ddev hostname --remove-inactive` to prune the number of hosts on that hosts-file line. When you start a project, the hostname(s) associated with that project will be added back again.
 2. Manually edit the hosts file (typically `C:\Windows\System32\drivers\etc\hosts`) and put some of your hosts on a separate line in the file.
+
+## Windows WSL2 Network Issues
+
+If you're using a browser on Windows, accessing a project in WSL2, you can end up with very confusing results if your project is listening on a port inside WSL2, but a Windows process is listening on the port on Windows. The way to sort this out is to stop your project inside WSL2, verify that nothing is listening on the port there, and then study the port on the Windows side, by visiting it with a browser or using other tools as described above.
