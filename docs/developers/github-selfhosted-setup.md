@@ -25,7 +25,7 @@ We are using GitHub Self-Hosted Agents for Windows and macOS testing. The build 
 1. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com.
 2. Change the name of the machine to something in keeping with current style. Maybe `testbot-macstadium-macos-3`.
 3. Install [Homebrew](https://brew.sh/) `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
-4. Install golang/git/docker with `brew install iterm2 google-chrome  homebrew/cask/docker drud/ddev/ddev nosleep buildkite/buildkite/buildkite-agent golang git mariadb jq p7zip bats-core composer netcat mkcert ngrok`
+4. Install golang/git/docker with `brew install homebrew/cask/iterm2 homebrew/cask/google-chrome homebrew/cask/docker drud/ddev/ddev homebrew/cask/nosleep buildkite/buildkite/buildkite-agent golang git mariadb jq p7zip bats-core composer netcat mkcert homebrew/cask/ngrok`
 5. `mkcert -install`
 6. Run Docker manually and go through its configuration routine.
 7. Run iTerm. On Mojave and higher it may prompt for requiring full disk access permissions, follow through with that.
