@@ -22,7 +22,7 @@ import (
 // TestCustomCommands does basic checks to make sure custom commands work OK.
 func TestCustomCommands(t *testing.T) {
 	assert := asrt.New(t)
-	runTime := util.TimeTrack(time.Now(), "ddev list")
+	runTime := util.TimeTrack(time.Now(), t.Name())
 
 	tmpHome := testcommon.CreateTmpDir(t.Name() + "tempHome")
 	origHome := os.Getenv("HOME")
@@ -186,7 +186,7 @@ func TestCustomCommands(t *testing.T) {
 	}
 
 	// Make sure that the non-command stuff we installed is there
-	for _, f := range []string{"db/mysqldump.example", "db/README.txt", "web/README.txt", "host/README.txt", "host/phpstorm.example"} {
+	for _, f := range []string{"db/mysqldump.example", "db/README.txt", "web/README.txt", "host/heidisql", "host/README.txt", "host/phpstorm.example", "host/sequelace", "host/sequelpro", "host/tableplus"} {
 		assert.FileExists(filepath.Join(projectCommandsDir, f))
 		assert.FileExists(filepath.Join(globalCommandsDir, f))
 	}
