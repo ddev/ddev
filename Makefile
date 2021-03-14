@@ -158,20 +158,6 @@ setup:
 	@mkdir -p $(TESTTMP)
 	@mkdir -p $(DOWNLOADTMP)
 
-packr2:
-	docker run -t --rm -u $(shell id -u):$(shell id -g)    \
-          	    -v "/$(PWD):/workdir$(DOCKERMOUNTFLAG)"  \
-          	    -v "/$(PWD)/$(GOTMP)/bin:$(S)/go/bin" \
-          	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
-          	    -w //workdir/cmd/ddev/cmd       \
-          	    $(BUILD_IMAGE) packr2
-	docker run -t --rm -u $(shell id -u):$(shell id -g)    \
-          	    -v "/$(PWD):/workdir$(DOCKERMOUNTFLAG)"  \
-          	    -v "/$(PWD)/$(GOTMP)/bin:$(S)/go/bin" \
-          	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
-          	    -w //workdir/pkg/ddevapp       \
-          	    $(BUILD_IMAGE) packr2
-
 # Required static analysis targets used in circleci - these cause fail if they don't work
 staticrequired: setup golangci-lint markdownlint mkdocs pyspelling
 

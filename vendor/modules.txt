@@ -73,25 +73,6 @@ github.com/fsnotify/fsnotify
 # github.com/fsouza/go-dockerclient v1.6.5
 ## explicit
 github.com/fsouza/go-dockerclient
-# github.com/gobuffalo/envy v1.7.0
-github.com/gobuffalo/envy
-# github.com/gobuffalo/logger v1.0.1
-## explicit
-github.com/gobuffalo/logger
-# github.com/gobuffalo/packd v0.3.0
-github.com/gobuffalo/packd
-github.com/gobuffalo/packd/internal/takeon/github.com/markbates/errx
-# github.com/gobuffalo/packr/v2 v2.5.2
-## explicit
-github.com/gobuffalo/packr/v2
-github.com/gobuffalo/packr/v2/file
-github.com/gobuffalo/packr/v2/file/resolver
-github.com/gobuffalo/packr/v2/file/resolver/encoding/hex
-github.com/gobuffalo/packr/v2/internal/takeon/github.com/markbates/errx
-github.com/gobuffalo/packr/v2/internal/takeon/github.com/markbates/oncer
-github.com/gobuffalo/packr/v2/internal/takeon/github.com/markbates/safe
-github.com/gobuffalo/packr/v2/jam/parser
-github.com/gobuffalo/packr/v2/plog
 # github.com/gogo/protobuf v1.3.1
 github.com/gogo/protobuf/proto
 # github.com/golang/protobuf v1.3.2
@@ -133,14 +114,11 @@ github.com/huandu/xstrings
 github.com/imdario/mergo
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
-# github.com/joho/godotenv v1.3.0
-github.com/joho/godotenv
 # github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a
 github.com/juju/ansiterm
 github.com/juju/ansiterm/tabwriter
-# github.com/karrick/godirwalk v1.10.12
-github.com/karrick/godirwalk
 # github.com/konsorten/go-windows-terminal-sequences v1.0.2
+## explicit
 github.com/konsorten/go-windows-terminal-sequences
 # github.com/lextoumbourou/goodhosts v2.1.0+incompatible
 ## explicit
@@ -188,8 +166,6 @@ github.com/pkg/errors
 github.com/pmezard/go-difflib/difflib
 # github.com/rogpeppe/go-internal v1.3.0
 ## explicit
-github.com/rogpeppe/go-internal/modfile
-github.com/rogpeppe/go-internal/module
 github.com/rogpeppe/go-internal/semver
 # github.com/segmentio/backo-go v0.0.0-20200129164019-23eae7c10bd3
 ## explicit
