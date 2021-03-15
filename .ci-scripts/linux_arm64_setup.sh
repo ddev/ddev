@@ -23,7 +23,7 @@ echo "capath=/etc/ssl/certs/" >>~/.curlrc
 
 . ~/.bashrc
 
-curl -sSL https://golang.org/dl/go${GO_VERSION}.linux-arm64.tar.gz -o /tmp/go.tgz && sudo rm -rf /usr/local/go && tar -zxf /tmp/go.tgz -C /usr/local
+curl -sSL https://golang.org/dl/go${GO_VERSION}.linux-arm64.tar.gz -o /tmp/go.tgz && sudo rm -rf /usr/local/go && sudo tar -zxf /tmp/go.tgz -C /usr/local
 
 git clone --branch v1.2.1 https://github.com/bats-core/bats-core.git /tmp/bats-core && pushd /tmp/bats-core >/dev/null && sudo ./install.sh /usr/local
 
