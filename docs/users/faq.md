@@ -74,3 +74,6 @@
 
 * **Why do I get a 403 or 404 on my project after `ddev launch`?**
   The most likely reason for this is that the docroot is misconfigured, or there's no index.php or index.html file in the docroot. Take a look at your .ddev/config.yaml and see what is there for the docroot. It should be a relative path to where your index.php is.
+
+* **Why do I see nginx headers when I'm configured to use `webserver_type: apache-fpm`?**
+  Apache runs in the web container but when you use the `http://*.ddev.site` URL, it goes through ddev-router, which is an nginx reverse proxy, and that's why you see the nginx headers. But rest assured you are using Apache. More detail in [Stack Overflow answer](https://stackoverflow.com/a/52780601/215713)
