@@ -68,7 +68,6 @@ func TestCustomCommands(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.FileExists(filepath.Join(projectCommandsDir, "db", "mysql"))
-	assert.FileExists(filepath.Join(projectCommandsDir, "host", "mysqlworkbench.example"))
 	out, err := exec.RunCommand(DdevBin, []string{})
 	assert.NoError(err)
 	assert.Contains(out, "mysql client in db container")
@@ -185,10 +184,13 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err, "expected to find command %s for app.Type=%s", c, app.Type)
 	}
 
-	// Make sure that the non-command stuff we installed is there
-	for _, f := range []string{"db/mysqldump.example", "db/README.txt", "web/README.txt", "host/heidisql", "host/README.txt", "host/phpstorm.example", "host/sequelace", "host/sequelpro", "host/tableplus"} {
-		assert.FileExists(filepath.Join(projectCommandsDir, f))
+	// Make sure that the non-command stuff we installed is in globalCommandsDir
+	for _, f := range []string{"db/mysqldump.example", "db/README.txt", "host/heidisql", "host/mysqlworkbench.example", "host/phpstorm.example", "host/README.txt", "host/sequelace", "host/sequelpro", "host/tableplus", "web/README.txt"} {
 		assert.FileExists(filepath.Join(globalCommandsDir, f))
+	}
+	// Make sure that the non-command stuff we installed is in project commands dir
+	for _, f := range []string{"db/mysql", "db/README.txt", "host/launch", "host/README.txt", "host/solrtail.example", "solr/README.txt", "solr/solrtail.example", "web/live", "web/README.txt", "web/xdebug"} {
+		assert.FileExists(filepath.Join(projectCommandsDir, f))
 	}
 
 	// Make sure we haven't accidentally created anything inappropriate in ~/.ddev
