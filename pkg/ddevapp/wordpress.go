@@ -406,11 +406,3 @@ func wordpressGetRelativeAbsPath(app *DdevApp) (string, error) {
 
 	return absPath, nil
 }
-
-// wordpressPostStartAction handles post-start actions
-func wordpressPostStartAction(app *DdevApp) error {
-	if _, err := app.CreateSettingsFile(); err != nil {
-		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
-	}
-	return nil
-}

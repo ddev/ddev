@@ -207,11 +207,3 @@ func typo3ImportFilesAction(app *DdevApp, importPath, extPath string) error {
 
 	return nil
 }
-
-// typo3PostStartAction handles default post-start actions
-func typo3PostStartAction(app *DdevApp) error {
-	if _, err := app.CreateSettingsFile(); err != nil {
-		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
-	}
-	return nil
-}
