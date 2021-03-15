@@ -1,11 +1,10 @@
 package ddevapp
 
 import (
+	"embed"
 	"fmt"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/gobuffalo/packr/v2"
-
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 
@@ -229,10 +228,12 @@ func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings, appTyp
 	return nil
 }
 
+//go:embed drupal_settings_assets
+var drupalSettingsAssets embed.FS
+
 // writeDrupalSettingsFile creates the project's settings.php if it doesn't exist
 func writeDrupalSettingsFile(filePath string, appType string) error {
-	box := packr.New("drupal_settings_packr_assets", "./drupal_settings_packr_assets")
-	content, err := box.Find(appType + "/settings.php")
+	content, err := drupalSettingsAssets.ReadFile(path.Join("drupal_settings_assets", appType, "settings.php"))
 	if err != nil {
 		return err
 	}
@@ -603,10 +604,6 @@ func drupal8PostStartAction(app *DdevApp) error {
 	if err := drupalEnsureWritePerms(app); err != nil {
 		return err
 	}
-
-	if _, err := app.CreateSettingsFile(); err != nil {
-		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
-	}
 	return nil
 }
 
@@ -626,9 +623,6 @@ func drupal7PostStartAction(app *DdevApp) error {
 		util.Warning("Failed to WriteDrushrc: %v", err)
 	}
 
-	if _, err = app.CreateSettingsFile(); err != nil {
-		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
-	}
 	return nil
 }
 
@@ -647,9 +641,6 @@ func drupal6PostStartAction(app *DdevApp) error {
 	err := WriteDrushrc(app, filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php"))
 	if err != nil {
 		util.Warning("Failed to WriteDrushrc: %v", err)
-	}
-	if _, err = app.CreateSettingsFile(); err != nil {
-		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 	return nil
 }

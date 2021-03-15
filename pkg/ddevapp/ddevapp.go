@@ -2,10 +2,10 @@ package ddevapp
 
 import (
 	"bytes"
+	"embed"
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/gobuffalo/packr/v2"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-isatty"
 	"golang.org/x/crypto/ssh/terminal"
@@ -927,6 +927,10 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
+	if _, err = app.CreateSettingsFile(); err != nil {
+		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
+	}
+
 	err = app.PostStartAction()
 	if err != nil {
 		return err
@@ -977,6 +981,9 @@ func (app *DdevApp) CheckExistingAppInApproot() error {
 	return nil
 }
 
+//go:embed webserver_config_assets
+var webserverConfigAssets embed.FS
+
 // GenerateWebserverConfig generates the default nginx and apache config files
 func (app *DdevApp) GenerateWebserverConfig() error {
 	// Prevent running as root for most cases
@@ -1011,10 +1018,10 @@ func (app *DdevApp) GenerateWebserverConfig() error {
 			}
 		}
 
-		box := packr.New("webserver_config_packr_assets", "./webserver_config_packr_assets")
-		c, err := box.Find(fmt.Sprintf("%s-site-%s.conf", t, app.Type))
+		cfgFile := fmt.Sprintf("%s-site-%s.conf", t, app.Type)
+		c, err := webserverConfigAssets.ReadFile(path.Join("webserver_config_assets", cfgFile))
 		if err != nil {
-			c, err = box.Find(fmt.Sprintf("%s-site-php.conf", t))
+			c, err = webserverConfigAssets.ReadFile(path.Join("webserver_config_assets", fmt.Sprintf("%s-site-php.conf", t)))
 			if err != nil {
 				return err
 			}

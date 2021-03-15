@@ -1340,8 +1340,11 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		err = app.WriteConfig()
 		assert.NoError(err)
 
+		restoreOutput := util.CaptureUserOut()
 		err = app.Start()
 		assert.NoError(err)
+		out := restoreOutput()
+		assert.NotContains(out, "Unable to create settings file")
 
 		// Validate PHPMyAdmin is working and database named db is present
 		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8036/index.php?route=/database/structure&server=1&db=db", "No tables found in database")

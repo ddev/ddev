@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"bufio"
+	"embed"
 	"fmt"
 	"github.com/drud/ddev/pkg/nodeps"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -16,7 +16,6 @@ import (
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/gobuffalo/packr/v2"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
@@ -309,60 +308,26 @@ func findDirectivesInScriptCommand(script string) map[string]string {
 	return directives
 }
 
-// populateExamplesCommandsHomeadditions grabs packr2 assets
-// When the items in the assets directory are changed, the packr2 command
-// must be run again in this directory (cmd/ddev/cmd) to update the saved
-// embedded files.
-// "make packr2" can be used to update the packr2 cache.
+//The bundled assets for the project .ddev directory are in directory dotddev_assets
+//The bundled assets for the global .ddev directory are in directory global_dotddev_assets
+//go:embed dotddev_assets global_dotddev_assets
+var bundledAssets embed.FS
+
+// populateExamplesCommandsHomeadditions grabs embedded assets
 func populateExamplesCommandsHomeadditions() error {
 	app, err := ddevapp.GetActiveApp("")
 	if err != nil {
 		return nil
 	}
-	box := packr.New("customcommands", "./dotddev_assets")
 
-	list := box.List()
-	for _, file := range list {
-		localPath := app.GetConfigPath(file)
-		sigFound, err := fileutil.FgrepStringInFile(localPath, ddevapp.DdevFileSignature)
-		if sigFound || err != nil {
-			content, err := box.Find(file)
-			if err != nil {
-				return err
-			}
-			err = os.MkdirAll(filepath.Dir(localPath), 0755)
-			if err != nil {
-				return err
-			}
-			err = ioutil.WriteFile(localPath, content, 0755)
-			if err != nil {
-				return err
-			}
-		}
+	err = ddevapp.CopyEmbedAssets(bundledAssets, "dotddev_assets", app.GetConfigPath(""))
+	if err != nil {
+		return err
+	}
+	err = ddevapp.CopyEmbedAssets(bundledAssets, "global_dotddev_assets", globalconfig.GetGlobalDdevDir())
+	if err != nil {
+		return err
 	}
 
-	// This brings in both the commands and the homeadditions files
-	box = packr.New("global_dotddev", "./global_dotddev_assets")
-
-	list = box.List()
-	globalDdevDir := globalconfig.GetGlobalDdevDir()
-	for _, file := range list {
-		localPath := filepath.Join(globalDdevDir, file)
-		sigFound, err := fileutil.FgrepStringInFile(localPath, ddevapp.DdevFileSignature)
-		if sigFound || err != nil {
-			content, err := box.Find(file)
-			if err != nil {
-				return err
-			}
-			err = os.MkdirAll(filepath.Dir(localPath), 0755)
-			if err != nil {
-				return err
-			}
-			err = ioutil.WriteFile(localPath, content, 0755)
-			if err != nil {
-				return err
-			}
-		}
-	}
 	return nil
 }
