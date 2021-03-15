@@ -50,7 +50,7 @@ func createMagentoSettingsFile(app *DdevApp) (string, error) {
 	} else {
 		output.UserOut.Printf("No %s file exists, creating one", app.SiteSettingsPath)
 
-		content, err := magentoConfigAssets.ReadFile("local.xml")
+		content, err := magentoConfigAssets.ReadFile("magento_assets/local.xml")
 		if err != nil {
 			return "", err
 		}
@@ -149,11 +149,10 @@ func createMagento2SettingsFile(app *DdevApp) (string, error) {
 	} else {
 		output.UserOut.Printf("No %s file exists, creating one", app.SiteSettingsPath)
 
-		content, err := magentoConfigAssets.ReadFile("env.php")
+		content, err := magentoConfigAssets.ReadFile("magento_assets/env.php")
 		if err != nil {
 			return "", err
 		}
-
 		err = ioutil.WriteFile(app.SiteSettingsPath, content, 0644)
 		if err != nil {
 			return "", err
