@@ -1,17 +1,22 @@
 #ddev-generated
 # Example Pantheon.io provider configuration.
+# This example is Drupal/drush oriented,
+# but can be adapted for other CMSs supported by Pantheon
 
-# To use this configuration,
-# 2. Make sure your public ssh key is configured in Pantheon (Account->SSH Keys)
-# 1. Create a Pantheon.io machine token (Account->Machine Tokens).
-# 2. Add add an entry to web_environment in ~/.ddev/global_config.yaml with the token:
+# To use this configuration:
+# 1. Check out the project code from your pantheon project
+# 2. Verify that drush is installed in your project, `ddev composer require drush/drush`
+# 3. Make sure your public ssh key is configured in Pantheon (Account->SSH Keys)
+# 4. Create a Pantheon.io machine token (Account->Machine Tokens).
+# 5. Add add an entry to web_environment in ~/.ddev/global_config.yaml with the token:
 # web_environment:
 # - TERMINUS_MACHINE_TOKEN=xxxxxxxx
-# 3. Copy pantheon.yaml.example to pantheon.yaml.
-# 4. `ddev auth ssh`
-# 5. Update project_id and environment_name. project_id can usually be the project name.
-# 6. `ddev restart`
-# 7. Use `ddev pull pantheon` to pull the project database and files.
+# 6. Copy pantheon.yaml.example to pantheon.yaml.
+# 7. `ddev auth ssh`
+# 8. Update project_id and environment_name. project_id can usually be the project name.
+# 9. `ddev restart`
+# 10. Use `ddev pull pantheon` to pull the project database and files.
+# 11. You can optionally use `ddev push pantheon` but it's a very dangerous thing to do and not recommended as part of your workflow
 
 # Debugging: Use `ddev exec terminus auth:whoami` to see what terminus knows about
 # `ddev exec terminus site:list` will show available sites
@@ -29,15 +34,22 @@ auth_command:
 
 db_pull_command:
   command: |
-    drush @pantheon.${project_id}.${environment_name} sql-dump --gzip >/var/www/html/.ddev/.downloads/db.sql.gz
+    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
+    drush @${project_id}.${environment_name} sql-dump --gzip >/var/www/html/.ddev/.downloads/db.sql.gz
 
 files_pull_command:
   command: |
-    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
-    drush rsync -y @d8ddevpantheon.dev:%files/ @self:%files/
+    ls ${DDEV_FILES_DIR} >/dev/null # This just refreshes stale NFS if possible
+    drush rsync -y @${project_id}.${environment_name}:%files/ @self:%files/
 
+# push is a dangerous command. If not absolutely needed it's better to delete these lines.
 db_push_command:
-  command: true
+  command: |
+    drush sql-sync -y @self @${project_id}.${environment_name}
 
+# push is a dangerous command. If not absolutely needed it's better to delete these lines.
 files_push_command:
-  command: true
+  command: |
+    ls ${DDEV_FILES_DIR} >/dev/null # This just refreshes stale NFS if possible
+    drush rsync -y @self:%files/ @${project_id}.${environment_name}:%files/
+

@@ -47,7 +47,7 @@ func apppush(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, s
 			message = "database and files"
 		}
 
-		util.Warning("You're about to push %s to your upstream production and replace it with your DDEV-Local project. This is not usually recommended.", message)
+		util.Warning("You're about to push your local %s to your upstream production\nand replace it with your local project's %s.\nThis is normally a very dangerous operation.", message, message)
 		if !util.Confirm("Would you like to continue (not recommended)?") {
 			util.Failed("push cancelled")
 		}
