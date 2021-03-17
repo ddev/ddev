@@ -10,7 +10,7 @@
 # - ACQUIA_API_KEY=xxxxxxxx
 # - ACQUIA_API_SECRET=xxxxx
 # 5. Copy acquia.yaml.example to acquia.yaml.
-# 6. Update project_id.
+# 6. Update project_id with your Acquia environment id.
 # 7. Your project must include drush; `ddev composer require drush/drush` if it doesn't already.
 # 8. `ddev restart`
 # 9. Use `ddev pull acquia` to pull the project database and files.
@@ -32,7 +32,7 @@ db_pull_command:
   command: |
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null
-    acli remote:drush -n eeamoreno.dev -- sql-dump --extra-dump=--no-tablespaces >db.sql
+    acli remote:drush -n ${project_id} -- sql-dump --extra-dump=--no-tablespaces >db.sql
     gzip db.sql
 
 files_pull_command:
