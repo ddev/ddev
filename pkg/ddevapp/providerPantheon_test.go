@@ -22,25 +22,27 @@ import (
  * need to set an environment variable called "DDEV_PANTHEON_API_TOKEN" with credentials for
  * this account. If no such environment variable is present, these tests will be skipped.
  *
- * A valid site (with backups) must be present which matches the test site and environment name
- * defined in the constants below.
  */
-const pantheonTestSiteName = "ddev-test-site-do-not-delete"
 
-// This ID corresponds to pantheonTestSiteName = "ddev-test-site-do-not-delete"
-const pantheonTestSiteID = "009a2cda-2c22-4eee-8f9d-96f017321627"
+const pantheonTestSiteID = "ddev-test-site-do-not-delete"
 const pantheonTestEnvName = "dev"
+const pantheonTestSiteGitURL = "ssh://codeserver.dev.009a2cda-2c22-4eee-8f9d-96f017321627@codeserver.dev.009a2cda-2c22-4eee-8f9d-96f017321627.drush.in:2222/~/repository.git"
 
 // TestPantheonPull ensures we can pull from pantheon.
 func TestPantheonPull(t *testing.T) {
 	token := ""
+	sshkey := ""
 	if token = os.Getenv("DDEV_PANTHEON_API_TOKEN"); token == "" {
 		t.Skipf("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping %v", t.Name())
 	}
+	if sshkey = os.Getenv("DDEV_PANTHEON_SSH_KEY"); sshkey == "" {
+		t.Skipf("No DDEV_PANTHEON_SSH_KEY env var has been set. Skipping %v", t.Name())
+	}
+	sshkey = strings.Replace(sshkey, "<SPLIT>", "\n", -1)
 
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
-	testDir, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 
 	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
 	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"TERMINUS_MACHINE_TOKEN=" + token}
@@ -53,6 +55,9 @@ func TestPantheonPull(t *testing.T) {
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
 
+	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
+	require.NoError(t, err)
+
 	app, err := NewApp(siteDir, true)
 	assert.NoError(err)
 
@@ -64,14 +69,16 @@ func TestPantheonPull(t *testing.T) {
 		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		assert.NoError(err)
 
-		_ = os.Chdir(testDir)
+		_ = os.Chdir(origDir)
 		err = os.RemoveAll(siteDir)
 		assert.NoError(err)
 	})
 
-	app.Name = pantheonTestSiteName
+	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal8
 	app.Hooks = map[string][]YAMLTask{"post-pull": {{"exec-host": "touch hello-post-pull-" + app.Name}}, "pre-pull": {{"exec-host": "touch hello-pre-pull-" + app.Name}}}
+
+	_ = app.Stop(true, false)
 
 	err = app.WriteConfig()
 	assert.NoError(err)
@@ -96,6 +103,10 @@ func TestPantheonPull(t *testing.T) {
 	require.NoError(t, err)
 	err = app.Start()
 	require.NoError(t, err)
+
+	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("%s composer require drush/drush >/dev/null 2>&1", DdevBin)})
+	require.NoError(t, err)
+
 	err = app.Pull(provider, false, false, false)
 	assert.NoError(err)
 
@@ -115,13 +126,18 @@ func TestPantheonPull(t *testing.T) {
 // TestPantheonPush ensures we can push to pantheon for a configured environment.
 func TestPantheonPush(t *testing.T) {
 	token := ""
+	sshkey := ""
 	if token = os.Getenv("DDEV_PANTHEON_API_TOKEN"); token == "" {
 		t.Skipf("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping %v", t.Name())
 	}
+	if sshkey = os.Getenv("DDEV_PANTHEON_SSH_KEY"); sshkey == "" {
+		t.Skipf("No DDEV_PANTHEON_SSH_KEY env var has been set. Skipping %v", t.Name())
+	}
+	sshkey = strings.Replace(sshkey, "<SPLIT>", "\n", -1)
 
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
-	testDir, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 
 	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
 	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"TERMINUS_MACHINE_TOKEN=" + token}
@@ -134,6 +150,9 @@ func TestPantheonPush(t *testing.T) {
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
 
+	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
+	require.NoError(t, err)
+
 	app, err := NewApp(siteDir, true)
 	assert.NoError(err)
 
@@ -145,17 +164,18 @@ func TestPantheonPush(t *testing.T) {
 		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		assert.NoError(err)
 
-		_ = os.Chdir(testDir)
+		_ = os.Chdir(origDir)
 		err = os.RemoveAll(siteDir)
 		assert.NoError(err)
 	})
 
-	app.Name = pantheonTestSiteName
+	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal8
 	app.Hooks = map[string][]YAMLTask{"post-push": {{"exec-host": "touch hello-post-pull-" + app.Name}}, "pre-push": {{"exec-host": "touch hello-pre-push-" + app.Name}}}
+	_ = app.Stop(true, false)
 
 	err = app.WriteConfig()
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	testcommon.ClearDockerEnv()
 
@@ -178,22 +198,43 @@ func TestPantheonPush(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
+	// For this dummy site, provide drush8 as drush
+	_, _, err = app.Exec(&ExecOpts{
+		Cmd: fmt.Sprintf(`ln -s /usr/local/bin/drush8 /usr/local/bin/drush`),
+	})
+	require.NoError(t, err)
+
+	// For this dummy site, do a pull to populate the database to begin with
+	err = app.Pull(provider, false, true, false)
+	require.NoError(t, err)
+
 	// Create database and files entries that we can verify after push
 	tval := nodeps.RandomString(10)
 	_, _, err = app.Exec(&ExecOpts{
-		Cmd: fmt.Sprintf("mysql -e 'CREATE TABLE IF NOT EXISTS %s ( title VARCHAR(255) NOT NULL ); INSERT INTO %s VALUES(%s);", t.Name(), t.Name(), tval),
+		Cmd: fmt.Sprintf(`mysql -e 'CREATE TABLE IF NOT EXISTS %s ( title VARCHAR(255) NOT NULL ); INSERT INTO %s VALUES("%s");'`, t.Name(), t.Name(), tval),
 	})
-	fContent := []byte(fmt.Sprintf("%s", tval))
-	err = ioutil.WriteFile(filepath.Join(siteDir, "sites/default/files", tval+".txt"), fContent, 0644)
+	require.NoError(t, err)
+	fName := tval + ".txt"
+	fContent := []byte(tval)
+	err = ioutil.WriteFile(filepath.Join(siteDir, "sites/default/files", fName), fContent, 0644)
 	assert.NoError(err)
 
 	err = app.Push(provider, false, false)
-	assert.NoError(err)
+	require.NoError(t, err)
 
-	assert.FileExists(filepath.Join(app.GetUploadDir(), "2017-07/22-24_tn.jpg"))
-	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="admin@example.com";' | %s mysql -N`, DdevBin)})
-	assert.NoError(err)
-	assert.True(strings.HasPrefix(out, "1\n"))
+	// Test that the database row was added
+	out, _, err := app.Exec(&ExecOpts{
+		Cmd: fmt.Sprintf(`echo 'SElECT COUNT(*) FROM %s WHERE title="%s" | drush @%s.%s sql-cli`, t.Name(), tval, pantheonTestSiteID, pantheonTestEnvName),
+	})
+	require.NoError(t, err)
+	assert.Contains(out, tval)
+
+	// Test that the file arrived there (by rsyncing it back)
+	out, _, err = app.Exec(&ExecOpts{
+		Cmd: fmt.Sprintf("drush rsync -y @d8ddevpantheon.dev:%%files/%s /tmp && cat /tmp/%s", fName, fName),
+	})
+	require.NoError(t, err)
+	assert.Contains(out, tval)
 
 	assert.FileExists("hello-pre-push-" + app.Name)
 	assert.FileExists("hello-post-push-" + app.Name)
@@ -201,4 +242,19 @@ func TestPantheonPush(t *testing.T) {
 	assert.NoError(err)
 	err = os.Remove("hello-post-push-" + app.Name)
 	assert.NoError(err)
+}
+
+// setupSSHKey takes a privatekey string and turns it into a file and then does `ddev auth ssh`
+func setupSSHKey(t *testing.T, privateKey string, expectScriptPath string) error {
+	pwd, _ := os.Getwd()
+	_ = pwd
+	// Provide an ssh key for `ddev auth ssh`
+	err := os.Mkdir("sshtest", 0755)
+	require.NoError(t, err)
+	err = ioutil.WriteFile(filepath.Join("sshtest", "id_rsa_test"), []byte(privateKey), 0600)
+	require.NoError(t, err)
+	out, err := exec.RunCommand("expect", []string{filepath.Join(expectScriptPath, "ddevauthssh.expect"), DdevBin, "./sshtest"})
+	require.NoError(t, err)
+	require.Contains(t, string(out), "Identity added:")
+	return nil
 }

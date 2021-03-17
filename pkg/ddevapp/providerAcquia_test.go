@@ -45,7 +45,7 @@ func TestAcquiaPull(t *testing.T) {
 
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
-	testDir, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 
 	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
 
@@ -59,14 +59,8 @@ func TestAcquiaPull(t *testing.T) {
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
 
-	// Provide an ssh key for `ddev auth ssh`
-	err = os.Mkdir("sshtest", 0755)
-	assert.NoError(err)
-	err = ioutil.WriteFile(filepath.Join("sshtest", "id_rsa_test"), []byte(sshkey), 0600)
-	assert.NoError(err)
-	out, err := exec.RunCommand("expect", []string{filepath.Join(testDir, "testdata", t.Name(), "ddevauthssh.expect"), DdevBin, "./sshtest"})
-	assert.NoError(err)
-	assert.Contains(string(out), "Identity added:")
+	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
+	require.NoError(t, err)
 
 	app, err := NewApp(siteDir, true)
 	assert.NoError(err)
@@ -79,7 +73,7 @@ func TestAcquiaPull(t *testing.T) {
 		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		assert.NoError(err)
 
-		_ = os.Chdir(testDir)
+		_ = os.Chdir(origDir)
 		err = os.RemoveAll(siteDir)
 		assert.NoError(err)
 	})
@@ -97,10 +91,10 @@ func TestAcquiaPull(t *testing.T) {
 	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("%s >/dev/null", DdevBin)})
 	require.NoError(t, err)
 
-	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("%s composer require drush/drush >/dev/null 2>&1", DdevBin)})
+	err = app.Start()
 	require.NoError(t, err)
 
-	err = app.Start()
+	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("%s composer require drush/drush >/dev/null 2>&1", DdevBin)})
 	require.NoError(t, err)
 
 	// Build our acquia.yaml from the example file
@@ -118,7 +112,7 @@ func TestAcquiaPull(t *testing.T) {
 	assert.NoError(err)
 
 	assert.FileExists(filepath.Join(app.GetUploadDir(), "chocolate-brownie-umami.jpg"))
-	out, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="randy@example.com";' | %s mysql -N`, DdevBin)})
+	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="randy@example.com";' | %s mysql -N`, DdevBin)})
 	assert.NoError(err)
 	assert.True(strings.HasPrefix(out, "1\n"))
 
