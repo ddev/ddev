@@ -32,7 +32,7 @@ db_pull_command:
   command: |
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null
-    acli remote:drush -n @project_id -- sql-dump --extra-dump=--no-tablespaces >db.sql
+    acli remote:drush -n ${project_id} -- sql-dump --extra-dump=--no-tablespaces >db.sql
     gzip db.sql
 
 files_pull_command:

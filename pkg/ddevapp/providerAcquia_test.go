@@ -83,6 +83,7 @@ func TestAcquiaPull(t *testing.T) {
 	app.Type = nodeps.AppTypeDrupal9
 	app.ComposerVersion = "2"
 
+	_ = app.Stop(true, false)
 	err = app.WriteConfig()
 	assert.NoError(err)
 
@@ -116,7 +117,6 @@ func TestAcquiaPull(t *testing.T) {
 	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="randy@example.com";' | %s mysql -N`, DdevBin)})
 	assert.NoError(err)
 	assert.True(strings.HasPrefix(out, "1\n"))
-
 }
 
 // TestAcquiaPush ensures we can push to acquia for a configured environment.
