@@ -13,7 +13,7 @@
 # - TERMINUS_MACHINE_TOKEN=xxxxxxxx
 # 6. Copy pantheon.yaml.example to pantheon.yaml.
 # 7. `ddev auth ssh`
-# 8. Update project_id and environment_name. project_id can usually be the project name.
+# 8. Update project (which includes the environment, like "d8ddevpantheon.dev". The project can usually be the project name, but in case of ambiguity may need to be the official project hashed id.
 # 9. `ddev restart`
 # 10. Use `ddev pull pantheon` to pull the project database and files.
 # 11. You can optionally use `ddev push pantheon` but it's a very dangerous thing to do and not recommended as part of your workflow
@@ -22,8 +22,7 @@
 # `ddev exec terminus site:list` will show available sites
 
 environment_variables:
-  project_id: d8ddevpantheon
-  environment_name: dev
+  project: d8ddevpantheon.dev
 
 auth_command:
   command: |
@@ -36,25 +35,25 @@ auth_command:
 db_pull_command:
   command: |
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
-    drush @${project_id}.${environment_name} sql-dump --gzip >/var/www/html/.ddev/.downloads/db.sql.gz
+    drush @${project} sql-dump --gzip >/var/www/html/.ddev/.downloads/db.sql.gz
 
 files_pull_command:
   command: |
     ls ${DDEV_FILES_DIR} >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null;
-    drush rsync -y @${project_id}.${environment_name}:%files/ /var/www/html/.ddev/.downloads/files/
+    drush rsync -y @${project}:%files/ /var/www/html/.ddev/.downloads/files/
 
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
 db_push_command:
   command: |
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null;
-    terminus remote:drush ${project_id}.${environment} -- sql-drop -y
-    gzip -dc db.sql.gz | terminus remote:drush ${project_id}.${environment} -- sql-cli
+    terminus remote:drush ${project} -- sql-drop -y
+    gzip -dc db.sql.gz | terminus remote:drush ${project} -- sql-cli
 
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
 files_push_command:
   command: |
     ls ${DDEV_FILES_DIR} >/dev/null # This just refreshes stale NFS if possible
-    drush rsync -y @self:%files/ @${project_id}.${environment_name}:%files/
+    drush rsync -y @self:%files/ @${project}:%files/
 
