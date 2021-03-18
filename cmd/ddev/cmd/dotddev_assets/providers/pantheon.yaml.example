@@ -47,7 +47,10 @@ files_pull_command:
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
 db_push_command:
   command: |
-    drush sql-sync -y @self @${project_id}.${environment_name}
+    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
+    pushd /var/www/html/.ddev/.downloads >/dev/null;
+    terminus remote:drush ${project_id}.${environment} -- sql-drop -y
+    gzip -dc db.sql.gz | terminus remote:drush ${project_id}.${environment} -- sql-cli
 
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
 files_push_command:

@@ -198,10 +198,8 @@ func TestPantheonPush(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	// For this dummy site, provide drush8 as drush
-	_, _, err = app.Exec(&ExecOpts{
-		Cmd: fmt.Sprintf(`ln -s /usr/local/bin/drush8 /usr/local/bin/drush`),
-	})
+	// Make sure we have drush
+	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("%s composer require drush/drush >/dev/null 2>&1", DdevBin)})
 	require.NoError(t, err)
 
 	// For this dummy site, do a pull to populate the database to begin with

@@ -225,11 +225,16 @@ func (p *Provider) UploadDB() error {
 		return nil
 	}
 
+	err := p.app.ExportDB(p.app.GetConfigPath(".downloads/db.sql.gz"), true, "")
+	if err != nil {
+		return err
+	}
+
 	s := p.DBPushCommand.Service
 	if s == "" {
 		s = "web"
 	}
-	err := p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.DBPushCommand.Command)
+	err = p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.DBPushCommand.Command)
 	if err != nil {
 		util.Failed("Failed to exec %s on %s: %v", p.DBPushCommand.Command, s, err)
 	}
