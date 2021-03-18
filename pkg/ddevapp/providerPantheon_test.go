@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
@@ -49,9 +50,9 @@ func TestPantheonPull(t *testing.T) {
 
 	siteDir := testcommon.CreateTmpDir(t.Name())
 	err = os.MkdirAll(filepath.Join(siteDir, "sites/default"), 0777)
-	assert.NoError(err)
+	require.NoError(t, err)
 	err = os.Chdir(siteDir)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
 	require.NoError(t, err)
@@ -142,10 +143,26 @@ func TestPantheonPush(t *testing.T) {
 	assert.NoError(err)
 
 	siteDir := testcommon.CreateTmpDir(t.Name())
-	err = os.MkdirAll(filepath.Join(siteDir, "sites/default"), 0777)
-	assert.NoError(err)
+
+	// We have to have a d8 codebase for drush to work right
+	d8code := FullTestSites[1]
+	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
+	if d8code.Dir == "" || !fileutil.FileExists(d8code.Dir) {
+		err := d8code.Prepare()
+		require.NoError(t, err)
+		app, err := NewApp(d8code.Dir, false)
+		require.NoError(t, err)
+		_ = app.Stop(true, false)
+		t.Cleanup(func() {
+			err = os.RemoveAll(d8code.Dir)
+			assert.NoError(err)
+		})
+	}
+	_ = os.Remove(siteDir)
+	err = os.Rename(d8code.Dir, siteDir)
+	require.NoError(t, err)
 	err = os.Chdir(siteDir)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
 	require.NoError(t, err)
@@ -168,7 +185,7 @@ func TestPantheonPush(t *testing.T) {
 
 	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal8
-	app.Hooks = map[string][]YAMLTask{"post-push": {{"exec-host": "touch hello-post-pull-" + app.Name}}, "pre-push": {{"exec-host": "touch hello-pre-push-" + app.Name}}}
+	app.Hooks = map[string][]YAMLTask{"post-push": {{"exec-host": "touch hello-post-push-" + app.Name}}, "pre-push": {{"exec-host": "touch hello-pre-push-" + app.Name}}}
 	_ = app.Stop(true, false)
 
 	err = app.WriteConfig()
@@ -218,14 +235,14 @@ func TestPantheonPush(t *testing.T) {
 
 	// Test that the database row was added
 	out, _, err := app.Exec(&ExecOpts{
-		Cmd: fmt.Sprintf(`echo 'SElECT COUNT(*) FROM %s WHERE title="%s" | drush @%s sql-cli`, t.Name(), tval, pantheonTestSiteID),
+		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s"' | drush @%s sql-cli --extra=-N`, t.Name(), tval, pantheonTestSiteID),
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)
 
 	// Test that the file arrived there (by rsyncing it back)
 	out, _, err = app.Exec(&ExecOpts{
-		Cmd: fmt.Sprintf("drush rsync -y @d8ddevpantheon.dev:%%files/%s /tmp && cat /tmp/%s", fName, fName),
+		Cmd: fmt.Sprintf("drush rsync -y @%s:%%files/%s /tmp && cat /tmp/%s", pantheonTestSiteID, fName, fName),
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)

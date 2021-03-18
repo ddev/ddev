@@ -55,5 +55,5 @@ db_push_command:
 files_push_command:
   command: |
     ls ${DDEV_FILES_DIR} >/dev/null # This just refreshes stale NFS if possible
-    drush rsync -y @self:%files/ @${project}:%files/
+    drush rsync -y @self:%files @${project}:%files
 

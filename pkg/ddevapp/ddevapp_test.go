@@ -55,8 +55,8 @@ var (
 		},
 		{
 			Name:                          "TestPkgDrupal8",
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.8.4.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-8.8.4/",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.9.13.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-8.9.13/",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d8_umami.files.tar.gz",
 			FilesZipballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d8_umami.files.zip",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d8_umami.sql.tar.gz",
