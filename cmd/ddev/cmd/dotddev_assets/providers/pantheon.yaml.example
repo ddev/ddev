@@ -42,6 +42,7 @@ files_pull_command:
     ls ${DDEV_FILES_DIR} >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null;
     drush rsync -y @${project}:%files/ /var/www/html/.ddev/.downloads/files/
+    drush cr
 
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
 db_push_command:

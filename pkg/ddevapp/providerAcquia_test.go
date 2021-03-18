@@ -191,6 +191,7 @@ func TestAcquiaPush(t *testing.T) {
 	app.Hooks = map[string][]YAMLTask{"post-push": {{"exec-host": "touch hello-post-push-" + app.Name}}, "pre-push": {{"exec-host": "touch hello-pre-push-" + app.Name}}}
 	_ = app.Stop(true, false)
 
+	_ = app.Stop(true, false)
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
@@ -200,16 +201,16 @@ func TestAcquiaPush(t *testing.T) {
 	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("%s >/dev/null", DdevBin)})
 	require.NoError(t, err)
 
-	// Build our pantheon.yaml from the example file
-	s, err := ioutil.ReadFile(app.GetConfigPath("providers/pantheon.yaml.example"))
+	// Build our acquia.yaml from the example file
+	s, err := ioutil.ReadFile(app.GetConfigPath("providers/acquia.yaml.example"))
 	require.NoError(t, err)
-	x := strings.Replace(string(s), "project:", fmt.Sprintf("project: %s\n#project:", pantheonTestSiteID), 1)
-	err = ioutil.WriteFile(app.GetConfigPath("providers/pantheon.yaml"), []byte(x), 0666)
+	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: %s\n#project_id:", acquiaTestSite), -1)
+	err = ioutil.WriteFile(app.GetConfigPath("providers/acquia.yaml"), []byte(x), 0666)
 	assert.NoError(err)
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
-	provider, err := app.GetProvider("pantheon")
+	provider, err := app.GetProvider("acquia")
 	require.NoError(t, err)
 	err = app.Start()
 	require.NoError(t, err)
@@ -238,14 +239,14 @@ func TestAcquiaPush(t *testing.T) {
 
 	// Test that the database row was added
 	out, _, err := app.Exec(&ExecOpts{
-		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s"' | drush @%s sql-cli --extra=-N`, t.Name(), tval, pantheonTestSiteID),
+		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s"' | drush @%s sql-cli --extra=-N`, t.Name(), tval, acquiaTestSite),
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)
 
 	// Test that the file arrived there (by rsyncing it back)
 	out, _, err = app.Exec(&ExecOpts{
-		Cmd: fmt.Sprintf("drush rsync -y @%s:%%files/%s /tmp && cat /tmp/%s", pantheonTestSiteID, fName, fName),
+		Cmd: fmt.Sprintf("drush rsync -y @%s:%%files/%s /tmp && cat /tmp/%s", acquiaTestSite, fName, fName),
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)

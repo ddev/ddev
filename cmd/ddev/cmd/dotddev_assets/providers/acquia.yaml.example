@@ -19,7 +19,7 @@
 # Make sure you remembered to `ddev auth ssh`
 
 environment_variables:
-  project_id: yourproject.dev
+  project_id: eeamoreno.dev
 
 auth_command:
   command: |
@@ -34,6 +34,7 @@ db_pull_command:
     pushd /var/www/html/.ddev/.downloads >/dev/null
     acli remote:drush -n ${project_id} -- sql-dump --extra-dump=--no-tablespaces >db.sql
     gzip db.sql
+    drush cr
 
 files_pull_command:
   command: |
@@ -41,3 +42,18 @@ files_pull_command:
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null;
     drush rsync -q -y @${project_id}:%files ./files
+
+# push is a dangerous command. If not absolutely needed it's better to delete these lines.
+db_push_command:
+  command: |
+    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
+    pushd /var/www/html/.ddev/.downloads >/dev/null;
+    acli remote:drush -n ${project_id} -- sql-drop -y
+    gzip -dc db.sql.gz | acli remote:drush -n ${project_id} -- sql-cli
+    acli remote:drush -n ${project_id} -- cr
+
+# push is a dangerous command. If not absolutely needed it's better to delete these lines.
+files_push_command:
+  command: |
+    ls ${DDEV_FILES_DIR} >/dev/null # This just refreshes stale NFS if possible
+    drush rsync -y @self:%files @${project_id}:%files
