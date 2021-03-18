@@ -24,9 +24,7 @@ import (
  *
  */
 
-const pantheonTestSiteID = "ddev-test-site-do-not-delete"
-const pantheonTestEnvName = "dev"
-const pantheonTestSiteGitURL = "ssh://codeserver.dev.009a2cda-2c22-4eee-8f9d-96f017321627@codeserver.dev.009a2cda-2c22-4eee-8f9d-96f017321627.drush.in:2222/~/repository.git"
+const pantheonTestSiteID = "ddev-test-site-do-not-delete.dev"
 
 // TestPantheonPull ensures we can pull from pantheon.
 func TestPantheonPull(t *testing.T) {
@@ -92,8 +90,7 @@ func TestPantheonPull(t *testing.T) {
 	// Build our pantheon.yaml from the example file
 	s, err := ioutil.ReadFile(app.GetConfigPath("providers/pantheon.yaml.example"))
 	require.NoError(t, err)
-	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: %s\n#project_id:", pantheonTestSiteID), 1)
-	x = strings.Replace(x, "environment_name:", fmt.Sprintf("environment_name: %s\n#environment_name: ", pantheonTestEnvName), 1)
+	x := strings.Replace(string(s), "project:", fmt.Sprintf("project: %s\n#project:", pantheonTestSiteID), 1)
 	err = ioutil.WriteFile(app.GetConfigPath("providers/pantheon.yaml"), []byte(x), 0666)
 	assert.NoError(err)
 	err = app.WriteConfig()
@@ -186,8 +183,7 @@ func TestPantheonPush(t *testing.T) {
 	// Build our pantheon.yaml from the example file
 	s, err := ioutil.ReadFile(app.GetConfigPath("providers/pantheon.yaml.example"))
 	require.NoError(t, err)
-	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: %s\n#project_id:", pantheonTestSiteID), 1)
-	x = strings.Replace(x, "environment_name:", fmt.Sprintf("environment_name: %s\n#environment_name: ", pantheonTestEnvName), 1)
+	x := strings.Replace(string(s), "project:", fmt.Sprintf("project: %s\n#project:", pantheonTestSiteID), 1)
 	err = ioutil.WriteFile(app.GetConfigPath("providers/pantheon.yaml"), []byte(x), 0666)
 	assert.NoError(err)
 	err = app.WriteConfig()
@@ -202,8 +198,8 @@ func TestPantheonPush(t *testing.T) {
 	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("%s composer require drush/drush >/dev/null 2>&1", DdevBin)})
 	require.NoError(t, err)
 
-	// For this dummy site, do a pull to populate the database to begin with
-	err = app.Pull(provider, false, true, false)
+	// For this dummy site, do a pull to populate the database+files to begin with
+	err = app.Pull(provider, false, false, false)
 	require.NoError(t, err)
 
 	// Create database and files entries that we can verify after push
@@ -222,7 +218,7 @@ func TestPantheonPush(t *testing.T) {
 
 	// Test that the database row was added
 	out, _, err := app.Exec(&ExecOpts{
-		Cmd: fmt.Sprintf(`echo 'SElECT COUNT(*) FROM %s WHERE title="%s" | drush @%s.%s sql-cli`, t.Name(), tval, pantheonTestSiteID, pantheonTestEnvName),
+		Cmd: fmt.Sprintf(`echo 'SElECT COUNT(*) FROM %s WHERE title="%s" | drush @%s sql-cli`, t.Name(), tval, pantheonTestSiteID),
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)
