@@ -22,17 +22,20 @@ environment_variables:
 
 auth_command:
   command: |
+    # set -x   # You can enable bash debugging output by uncommenting
     if [ -z "${DDEV_LIVE_API_TOKEN:-}" ]; then echo "Please make sure you have set DDEV_LIVE_API_TOKEN in ~/.ddev/global_config.yaml" && exit 1; fi
     ddev-live auth --token="${DDEV_LIVE_API_TOKEN}"
 
 db_pull_command:
   command: |
+    # set -x   # You can enable bash debugging output by uncommenting
     pushd /var/www/html/.ddev/.downloads >/dev/null
     ddev-live pull database ${database_backup}
     mv "${database_backup#*/}.sql.gz" db.sql.gz
 
 files_pull_command:
   command: |
+    # set -x   # You can enable bash debugging output by uncommenting
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null;
     ddev-live pull files ${project_id} --dest=files/ >/dev/null 2>&1

@@ -45,10 +45,12 @@ files_pull_command:
 # the current db or files there.
 db_push_command:
   command: |
+    # set -x   # You can enable bash debugging output by uncommenting
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     mysqldump db | gzip >/var/www/html/.ddev/.downloads/db_push.sql.gz
     rsync -avz /var/www/html/.ddev/.downloads/db_push.sql.gz "${dburl}"
 
 files_push_command:
   command: |
+    # set -x   # You can enable bash debugging output by uncommenting
     rsync -az "${DDEV_FILES_DIR}/" "${filesurl}/"
