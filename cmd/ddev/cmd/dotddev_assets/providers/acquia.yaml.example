@@ -34,7 +34,6 @@ db_pull_command:
     pushd /var/www/html/.ddev/.downloads >/dev/null
     acli remote:drush -n ${project_id} -- sql-dump --extra-dump=--no-tablespaces >db.sql
     gzip db.sql
-    drush cr
 
 files_pull_command:
   command: |

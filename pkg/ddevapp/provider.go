@@ -312,7 +312,7 @@ func (p *Provider) getDatabaseBackup() (filename string, error error) {
 	}
 	err := p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.DBPullCommand.Command)
 	if err != nil {
-		util.Failed("Failed to exec %s on %s: %v", p.DBPullCommand.Command, s, err)
+		return "", fmt.Errorf("Failed to exec %s on %s: %v", p.DBPullCommand.Command, s, err)
 	}
 	return filepath.Join(p.getDownloadDir(), "db.sql.gz"), nil
 }

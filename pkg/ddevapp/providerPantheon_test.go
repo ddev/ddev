@@ -106,7 +106,7 @@ func TestPantheonPull(t *testing.T) {
 	require.NoError(t, err)
 
 	err = app.Pull(provider, false, false, false)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	assert.FileExists(filepath.Join(app.GetUploadDir(), "2017-07/22-24_tn.jpg"))
 	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="admin@example.com";' | %s mysql -N`, DdevBin)})
