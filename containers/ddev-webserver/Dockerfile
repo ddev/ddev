@@ -57,7 +57,6 @@ FROM ddev-webserver-base as ddev-webserver-dev-base
 ENV MAILHOG_VERSION="1.0.2"
 ENV CAROOT /mnt/ddev-global-cache/mkcert
 ENV PHP_DEFAULT_VERSION="7.4"
-ENV DDEV_LIVE_DOWNLOAD_URL https://downloads.ddev.com/ddev-live-cli/latest/linux/ddev-live.zip
 
 RUN wget -q -O - https://packages.blackfire.io/gpg.key | apt-key add -
 RUN echo "deb http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
@@ -68,9 +67,11 @@ SHELL ["/bin/bash", "-c"]
 RUN mkdir /tmp/ddev && \
     if [[ $TARGETPLATFORM == "linux/arm64" ]]; then \
         printf 'MKCERT_ARCH="linux-arm64" \n\
+        DDEV_LIVE_ARCH=arm64 \n\
         MAILHOG_ARCH="linux_arm64"' > /tmp/ddev/vars; \
     else \
         printf 'MKCERT_ARCH="linux-amd64" \n\
+        DDEV_LIVE_ARCH=amd64 \n\
         MAILHOG_ARCH="linux_amd64"' > /tmp/ddev/vars; \
     fi
 
@@ -104,7 +105,8 @@ RUN curl -sSL https://github.com/pantheon-systems/terminus/releases/download/$(c
 RUN curl -sSL https://github.com/platformsh/platformsh-cli/releases/download/$(curl --silent "https://api.github.com/repos/platformsh/platformsh-cli/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/platform.phar --output /usr/local/bin/platform && chmod 777 /usr/local/bin/platform
 RUN curl -sSL --output /usr/local/bin/acli https://github.com/acquia/cli/releases/latest/download/acli.phar && chmod 777 /usr/local/bin/acli
 
-RUN curl -sSL -O $DDEV_LIVE_DOWNLOAD_URL && unzip ddev-live.zip && mv ddev-live /usr/local/bin && chmod 777 /usr/local/bin/ddev-live && rm ddev-live.zip
+# Temporary hack 20210319 until ddev-live has arm64 binaries
+RUN source /tmp/ddev/vars && curl -fsSL -o ddev-live.zip https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/ddev-live_${DDEV_LIVE_ARCH}.zip && unzip ddev-live.zip && mv ddev-live /usr/local/bin && chmod 777 /usr/local/bin/ddev-live && rm ddev-live.zip
 
 RUN curl -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/backdrop-drush-extension.zip -o /tmp/backdrop-drush-extension.zip && unzip -o /tmp/backdrop-drush-extension.zip -d /var/tmp/backdrop_drush_commands
 
