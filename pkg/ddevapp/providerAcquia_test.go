@@ -156,10 +156,6 @@ func TestAcquiaPush(t *testing.T) {
 		app, err := NewApp(d8code.Dir, false)
 		require.NoError(t, err)
 		_ = app.Stop(true, false)
-		t.Cleanup(func() {
-			err = os.RemoveAll(d8code.Dir)
-			assert.NoError(err)
-		})
 	}
 	_ = os.Remove(siteDir)
 	err = os.Rename(d8code.Dir, siteDir)
