@@ -42,21 +42,16 @@
     * Use project type "php" instead of the type of your CMS. "php" just means "Don't try to create settings files and such for me.". The "php" type works great for experienced developers.
     * "Take over" the settings file or .gitignore by deleting the line "#ddev-generated" in it (and then check in the file). If that line is removed, ddev will not try to replace or change the file.
   
-* **How can I move a project to a different directory?**
-  1. Stop and globally unlist the project `ddev stop --unlist`
-  2. Move the files of the project to the new directory.
-  3. `ddev start`
-  
 * **How can I change the name of a project?**
   1. Export the database of the project: `ddev export-db --file=/path/to/db.sql.gz`
-  2. `ddev delete <project>`. By default this will make a snapshot, which is a nice safety valve
+  2. `ddev delete <project>`. By default this will make a snapshot, which is a nice safety valve.
   3. Rename the project, `ddev config --project-name=<new_name>`
   4. `ddev start`
   5. `ddev import-db --src=/path/to/db.sql.gz`
 
 * **How can I move a project from one directory to another?**
   1. `ddev stop --unlist`
-  2. Move the directory
+  2. Move the directory.
   3. `ddev start`
   
 * **How can I move a project from one computer to another?**
