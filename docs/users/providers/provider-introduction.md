@@ -22,7 +22,6 @@ Each provider recipe is a file named `<provider>.yaml` and consists of several m
 
 The [environment variables provided to custom commands](../extend/custom-commands.md#environment-variables-provided) are also available for use in these recipes.
 
-
 ### Provider Debugging
 
 You can uncomment the `set -x` in each stanza to see more of what's going on. It really helps.
