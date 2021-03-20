@@ -4,19 +4,34 @@
 # but can be adapted for other CMSs supported by Pantheon
 
 # To use this configuration:
-# 1. Check out the project code from your pantheon project
-# 2. Verify that drush is installed in your project, `ddev composer require drush/drush`
+# 
+# 1. Get your Pantheon.io machine token:
+#    a. Login to your Pantheon Dashboard, and [Generate a Machine Token](https://pantheon.io/docs/machine-tokens/) for ddev to use.
+#    b. Add the API token to the `web_environment` section in your global ddev configuration at ~/.ddev/global_config.yaml
+# 
+#    ```
+#    web_environment:
+#    - TERMINUS_MACHINE_TOKEN=abcdeyourtoken`
+#    ```
+# 
+# 2. Choose a Pantheon site and environment you want to use with ddev. You can usually use the site name, but in some environments you may need the site ID, which is the long 3rd component of your site dashboard URL. So if the site dashboard is at <https://dashboard.pantheon.io/sites/009a2cda-2c22-4eee-8f9d-96f017321555#dev/>, the site ID is 009a2cda-2c22-4eee-8f9d-96f017321555.
+# 
 # 3. Make sure your public ssh key is configured in Pantheon (Account->SSH Keys)
-# 4. Create a Pantheon.io machine token (Account->Machine Tokens).
-# 5. Add add an entry to web_environment in ~/.ddev/global_config.yaml with the token:
-# web_environment:
-# - TERMINUS_MACHINE_TOKEN=xxxxxxxx
-# 6. Copy pantheon.yaml.example to pantheon.yaml.
-# 7. `ddev auth ssh`
-# 8. Update project (which includes the environment, like "d8ddevpantheon.dev". The project can usually be the project name, but in case of ambiguity may need to be the official project hashed id.
-# 9. `ddev restart`
-# 10. Use `ddev pull pantheon` to pull the project database and files.
-# 11. You can optionally use `ddev push pantheon` but it's a very dangerous thing to do and not recommended as part of your workflow
+# 
+# 4. Check out project codebase from Pantheon. Enable the "Git Connection Mode" and use `git clone` to check out the code locally.
+# 
+# 5. Verify that drush is installed in your project, `ddev composer require drush/drush`
+# 
+# 6. Configure the local checkout for ddev using `ddev config`
+# 
+# 7. In your project's .ddev/providers directory, copy pantheon.yaml.example to pantheon.yaml and edit the `project_id` and `environment_name`.
+# 
+# 8. `ddev restart`
+# 
+# 9. Run `ddev pull pantheon`. The ddev environment  download the Pantheon database and files, and import the database and files into the ddev environment. You should now be able to access the project locally.
+# 
+# 10. Optionally use `ddev push pantheon` to push local files and database to DDEV-Live. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
+# 
 
 # Debugging: Use `ddev exec terminus auth:whoami` to see what terminus knows about
 # `ddev exec terminus site:list` will show available sites

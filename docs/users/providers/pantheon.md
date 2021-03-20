@@ -19,14 +19,18 @@ If you have ddev installed, and have an active Pantheon account with an active s
 
 2. Choose a Pantheon site and environment you want to use with ddev. You can usually use the site name, but in some environments you may need the site ID, which is the long 3rd component of your site dashboard URL. So if the site dashboard is at <https://dashboard.pantheon.io/sites/009a2cda-2c22-4eee-8f9d-96f017321555#dev/>, the site ID is 009a2cda-2c22-4eee-8f9d-96f017321555.
 
-3. Check out project codebase from Pantheon. Enable the "Git Connection Mode" and use `git clone` to check out the code locally.
+3. Make sure your public ssh key is configured in Pantheon (Account->SSH Keys)
 
-4. Configure the local checkout for ddev using `ddev config`
+4. Check out project codebase from Pantheon. Enable the "Git Connection Mode" and use `git clone` to check out the code locally.
 
-5. In your project's .ddev/providers directory, copy pantheon.yaml.example to pantheon.yaml and edit the `project_id` and `environment_name`.
+5. Verify that drush is installed in your project, `ddev composer require drush/drush`
 
-6. `ddev start`
+6. Configure the local checkout for ddev using `ddev config`
 
-7. Run `ddev pull pantheon`. The ddev environment will spin up, download the latest backup from Pantheon, and import the database and files into the ddev environment. You should now be able to access the project locally.
+7. In your project's .ddev/providers directory, copy pantheon.yaml.example to pantheon.yaml and edit the `project_id` and `environment_name`.
 
-_**Note for WordPress Users:** In order for your local project to load file assets from your local environment rather than the Pantheon environment it was pulled from, the URL of the project must be changed in the database by performing a search and replace. ddev provides an example `wp search-replace` as a post-pull hook in the config.yaml for your project. It is recommended to populate and uncomment this example so that replacement is done any time a backup is pulled from Pantheon._
+8. `ddev restart`
+
+9. Run `ddev pull pantheon`. The ddev environment  download the Pantheon database and files, and import the database and files into the ddev environment. You should now be able to access the project locally.
+
+10. Optionally use `ddev push pantheon` to push local files and database to Pantheon. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
