@@ -19,7 +19,6 @@
 environment_variables:
   project_id: rfay/d9demo
   database_backup: rfay/d9demo-7vrl2
-  org: rfay
 
 auth_command:
   command: |
