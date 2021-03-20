@@ -158,7 +158,7 @@ func TestAcquiaPush(t *testing.T) {
 		_ = app.Stop(true, false)
 	}
 	_ = os.Remove(siteDir)
-	err = os.Rename(d8code.Dir, siteDir)
+	err = fileutil.CopyDir(d8code.Dir, siteDir)
 	require.NoError(t, err)
 	err = os.Chdir(siteDir)
 	require.NoError(t, err)

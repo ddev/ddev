@@ -153,9 +153,10 @@ func TestPantheonPush(t *testing.T) {
 		app, err := NewApp(d8code.Dir, false)
 		require.NoError(t, err)
 		_ = app.Stop(true, false)
+		_ = os.RemoveAll(d8code.Dir)
 	}
 	_ = os.Remove(siteDir)
-	err = os.Rename(d8code.Dir, siteDir)
+	err = fileutil.CopyDir(d8code.Dir, siteDir)
 	require.NoError(t, err)
 	err = os.Chdir(siteDir)
 	require.NoError(t, err)
