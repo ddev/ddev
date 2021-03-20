@@ -19,6 +19,7 @@
 environment_variables:
   project_id: rfay/d9demo
   database_backup: rfay/d9demo-7vrl2
+  org: rfay
 
 auth_command:
   command: |
@@ -44,14 +45,26 @@ files_pull_command:
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
 db_push_command:
   command: |
-    # set -x   # You can enable bash debugging output by uncommenting
+    set -x   # You can enable bash debugging output by uncommenting
+    if ! command -v jq; then echo "Please install jq to use this, brew install jq"; fi
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null;
-    ddev-live exec something
+    restore=$(ddev-live push database ${project_id} -o json db.sql.gz | jq -r .databaseRestore)
+    while true; do
+        restore_status=$(ddev-live describe restore database "${project_id%/*}/$restore" -o json | jq -r .status)
+        if [ "${restore_status}" = "ImportOpFinished" ]; then break; fi
+        sleep 1
+    done
 
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
 files_push_command:
   command: |
-    # set -x   # You can enable bash debugging output by uncommenting
+    set -x   # You can enable bash debugging output by uncommenting
     ls ${DDEV_FILES_DIR} >/dev/null # This just refreshes stale NFS if possible
-    ddev-live exec something
+    pushd $DDEV_FILES_DIR >/dev/null;
+    restore=$(ddev-live push files ${project_id} -o json . 2>/dev/null | jq -r .filesRestore)
+    while true; do
+        restore_status=$(ddev-live describe restore files "${project_id%/*}/${restore}" -o json | jq -r .complete)
+        if [ "${restore_status}" = "Completed" ]; then break; fi
+        sleep 1
+    done
