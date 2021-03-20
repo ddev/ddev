@@ -15,7 +15,7 @@
 # your configuration and whether it's working correctly.
 
 environment_variables:
-  project_id: lago3j23xu2w6
+  project_id: yourproject
   environment: master
 
 auth_command:
@@ -25,7 +25,7 @@ auth_command:
 
 db_pull_command:
   command: |
-    set -x   # You can enable bash debugging output by uncommenting
+    # set -x   # You can enable bash debugging output by uncommenting
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     platform db:dump --yes --gzip --file=/var/www/html/.ddev/.downloads/db.sql.gz --project="${project_id}" --environment="${environment}"
 

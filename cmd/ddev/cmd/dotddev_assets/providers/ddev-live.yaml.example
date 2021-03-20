@@ -17,9 +17,9 @@
 # Debugging: Use `ddev exec ddev-live list sites` and `ddev exec ddev-live list backups`
 
 environment_variables:
-  project_id: rfay/d9demo
-  database_backup: rfay/d9demo-7vrl2
-  org: rfay
+  project_id: yourorg/yourproject
+  database_backup: yourorg/yourdbbackup
+  org: yourorg
 
 auth_command:
   command: |

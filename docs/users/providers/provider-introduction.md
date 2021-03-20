@@ -20,6 +20,9 @@ Each provider recipe is a file named `<provider>.yaml` and consists of several m
 * `db_push_command`: A script that determines how ddev should push a database. It's job is to take a  gzipped database dump from /var/www/html/.ddev/.downloads/db.sql.gz and load it on the hosting provider.
 * `files_pull_command`: A script that determines how ddev push user-generated files to upstream. Its job is to copy the files from the project's user-files directory ($DDEV_FILES_DIR) to the correct place on the upstream provider.
 
+The [environment variables provided to custom commands](../extend/custom-commands.md#environment-variables-provided) are also available for use in these recipes.
+
+
 ### Provider Debugging
 
 You can uncomment the `set -x` in each stanza to see more of what's going on. It really helps.

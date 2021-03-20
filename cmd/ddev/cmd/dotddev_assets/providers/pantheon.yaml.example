@@ -22,7 +22,7 @@
 # `ddev exec terminus site:list` will show available sites
 
 environment_variables:
-  project: d8ddevpantheon.dev
+  project: yourproject.dev
 
 auth_command:
   command: |

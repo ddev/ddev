@@ -19,7 +19,7 @@
 # Make sure you remembered to `ddev auth ssh`
 
 environment_variables:
-  project_id: eeamoreno.dev
+  project_id: yourproject.dev
 
 auth_command:
   command: |
