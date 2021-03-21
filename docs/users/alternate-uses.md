@@ -70,7 +70,7 @@ ExecStop=/usr/local/bin/ddev poweroff
 WantedBy=multi-user.target
 ```
 
-* ddev-router needs to be restarted in order to refresh the Let's Encrypt certificates, so you may have to `ddev poweroff` and `ddev start -a` every few weeks. Rebooting the server will accomplish this.
+* You will probably want to regularly renew the Let's Encrypt certificates. This is often done on a system reboot, but that may not be soon enough. A cron with the command `docker exec ddev-router bash -c "certbot renew && nginx -s reload"` will do the renewals.
 * You'll likely want to turn off PHP errors to screen in a .ddev/php/noerrors.ini:
 
 ```ini
