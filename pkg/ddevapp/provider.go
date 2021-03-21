@@ -27,6 +27,8 @@ type ProviderInfo struct {
 	DBPullCommand        ProviderCommand   `yaml:"db_pull_command"`
 	FilesPullCommand     ProviderCommand   `yaml:"files_pull_command"`
 	CodePullCommand      ProviderCommand   `yaml:"code_pull_command,omitempty"`
+	DBPushCommand        ProviderCommand   `yaml:"db_push_command"`
+	FilesPushCommand     ProviderCommand   `yaml:"files_push_command"`
 }
 
 // Provider provides generic-specific import functionality.
@@ -128,6 +130,61 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 	return nil
 }
 
+// Push pushes db and files up to upstream hosting provider
+func (app *DdevApp) Push(provider *Provider, skipDbArg bool, skipFilesArg bool) error {
+	var err error
+	err = app.ProcessHooks("pre-push")
+	if err != nil {
+		return fmt.Errorf("Failed to process pre-push hooks: %v", err)
+	}
+
+	if app.SiteStatus() != SiteRunning {
+		util.Warning("Project is not currently running. Starting project before performing push.")
+		err = app.Start()
+		if err != nil {
+			return err
+		}
+	}
+
+	if provider.AuthCommand.Command != "" {
+		output.UserOut.Print("Authenticating...")
+		err := provider.app.ExecOnHostOrService(provider.AuthCommand.Service, provider.injectedEnvironment()+"; "+provider.AuthCommand.Command)
+		if err != nil {
+			return err
+		}
+	}
+
+	if skipDbArg {
+		output.UserOut.Println("Skipping database push.")
+	} else {
+		output.UserOut.Println("Uploading database...")
+		err = provider.UploadDB()
+		if err != nil {
+			return err
+		}
+
+		output.UserOut.Printf("Database uploaded")
+	}
+
+	if skipFilesArg {
+		output.UserOut.Println("Skipping files push.")
+	} else {
+		output.UserOut.Println("Uploading files...")
+		err = provider.UploadFiles()
+		if err != nil {
+			return err
+		}
+
+		output.UserOut.Printf("Files uploaded")
+	}
+	err = app.ProcessHooks("post-push")
+	if err != nil {
+		return fmt.Errorf("Failed to process post-push hooks: %v", err)
+	}
+
+	return nil
+}
+
 // GetBackup will create and download a backup
 // Valid values for backupType are "database" or "files".
 // returns fileURL, importPath, error
@@ -156,6 +213,53 @@ func (p *Provider) GetBackup(backupType string) (string, string, error) {
 	}
 
 	return filePath, importPath, nil
+}
+
+// UploadDB() is used by Push to push the database to hosting provider
+func (p *Provider) UploadDB() error {
+	_ = os.RemoveAll(p.getDownloadDir())
+	_ = os.Mkdir(p.getDownloadDir(), 0755)
+
+	if p.DBPushCommand.Command == "" {
+		util.Warning("No DBPushCommand is defined for provider %s", p.ProviderType)
+		return nil
+	}
+
+	err := p.app.ExportDB(p.app.GetConfigPath(".downloads/db.sql.gz"), true, "")
+	if err != nil {
+		return err
+	}
+
+	s := p.DBPushCommand.Service
+	if s == "" {
+		s = "web"
+	}
+	err = p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.DBPushCommand.Command)
+	if err != nil {
+		util.Failed("Failed to exec %s on %s: %v", p.DBPushCommand.Command, s, err)
+	}
+	return nil
+}
+
+// UploadFiles() is used by Push to push the user-generated files to the hosting provider
+func (p *Provider) UploadFiles() error {
+	_ = os.RemoveAll(p.getDownloadDir())
+	_ = os.Mkdir(p.getDownloadDir(), 0755)
+
+	if p.FilesPullCommand.Command == "" {
+		util.Warning("No FilesPushCommand is defined for provider %s", p.ProviderType)
+		return nil
+	}
+
+	s := p.FilesPushCommand.Service
+	if s == "" {
+		s = "web"
+	}
+	err := p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.FilesPushCommand.Command)
+	if err != nil {
+		util.Failed("Failed to exec %s on %s: %v", p.FilesPushCommand.Command, s, err)
+	}
+	return nil
 }
 
 // prepDownloadDir ensures the download cache directories are created and writeable.
@@ -208,7 +312,7 @@ func (p *Provider) getDatabaseBackup() (filename string, error error) {
 	}
 	err := p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.DBPullCommand.Command)
 	if err != nil {
-		util.Failed("Failed to exec %s on %s: %v", p.DBPullCommand.Command, s, err)
+		return "", fmt.Errorf("Failed to exec %s on %s: %v", p.DBPullCommand.Command, s, err)
 	}
 	return filepath.Join(p.getDownloadDir(), "db.sql.gz"), nil
 }

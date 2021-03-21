@@ -22,7 +22,7 @@ hooks:
 * `pre-import-db` and `post-import-db`: Execute tasks before or after database import.
 * `pre-import-files` and `post-import-files`: Execute tasks before or after files are imported
 * `pre-composer` and `post-composer`: Execute tasks before or after the `composer` command.
-* `pre-stop`, `pre-config`, `post-config`, `pre-exec`, `post-exec`, `pre-pause`, `post-pause`, `pre-pull`, `post-pull`, `pre-snapshot`, `post-snapshot`, `pre-restore-snapshot`, `post-restore-snapshot`: Execute as the name suggests.
+* `pre-stop`, `pre-config`, `post-config`, `pre-exec`, `post-exec`, `pre-pause`, `post-pause`, `pre-pull`, `post-pull`, `pre-push`, `post-push`, `pre-snapshot`, `post-snapshot`, `pre-restore-snapshot`, `post-restore-snapshot`: Execute as the name suggests.
 * `post-stop`: Hooks into "ddev stop". Execute tasks after the project environment stopped. **Note:** Only `exec-host` tasks can be generally run successfully during post-stop.
 
 ## Supported Tasks

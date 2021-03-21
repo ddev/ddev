@@ -59,10 +59,10 @@ nav:
     - 'In-container Configuration': 'users/extend/in-container-configuration.md'
     - 'Custom TLS Certificates': 'users/extend/custom-tls-certificates.md'
   - 'Integration with Hosting Providers':
+    - 'Introduction': '/users/providers/provider-introduction.md'
     - 'Acquia': 'users/providers/acquia.md'
     - 'DDEV-Live': 'users/providers/DDEV-Live.md'
     - 'Pantheon': 'users/providers/pantheon.md'
-    - 'Platform.sh': 'users/providers/platformsh.md'
-    - 'User-defined': 'users/providers/user-defined.md'
+    - 'Platform.sh': 'users/providers/platform.md'
   - 'Developer Documentation':
     - 'Building, Testing, and Contributing': 'developers/building-contributing.md'

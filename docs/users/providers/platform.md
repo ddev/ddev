@@ -6,16 +6,21 @@ ddev's Platform.sh integration pulls database and files from an existing Platfor
 
 ### Platform.sh Quickstart
 
-If you have ddev installed, and have an active Platform.sh account with an active site, you can follow this guide to spin up a Platform.sh project locally.
-
 1. Check out the site from platform.sh and then configure it with `ddev config`. You'll want to use `ddev start` and make sure the basic functionality is working.
 2. Obtain and configure an API token.
    a. Login to the Platform.sh Dashboard and go to Account->API Tokens to create an API token for ddev to use.
-   b. Add the API token to the `web_environment` section in your global ddev configuration at ~/.ddev/global_config.yaml, `- PLATFORMSH_CLI_TOKEN=abcdeyourtoken`
-   c. `ddev restart`
-3. Obtain your project id with `ddev exec platform`. The platform tool should show you all the information about your account and project.
-4. In your project's .ddev/providers directory, copy platform.yaml.example to platform.yaml and edit the `project_id` and `environment_name`.
-5. Run `ddev pull platform`. After you agree to the prompt, the current upstream database and files will be downloaded.
+   b. Add the API token to the `web_environment` section in your global ddev configuration at ~/.ddev/global_config.yaml:
+
+   ```yaml
+   web_environment:
+   - TERMINUS_MACHINE_TOKEN=abcdeyourtoken`
+   ```
+
+3. `ddev restart`
+4. Obtain your project id with `ddev exec platform`. The platform tool should show you all the information about your account and project.
+5. In your project's .ddev/providers directory, copy platform.yaml.example to platform.yaml and edit the `project_id` and `environment_name`.
+6. Run `ddev pull platform`. After you agree to the prompt, the current upstream database and files will be downloaded.
+7. Optionally use `ddev push platform` to push local files and database to Platform.sh. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
 
 ### Usage
 
