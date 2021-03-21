@@ -706,7 +706,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		}
 		// PHP 7.2 through 8.0 gets xdebug 3.0+
 		if app.PHPVersion == nodeps.PHP72 || app.PHPVersion == nodeps.PHP73 || app.PHPVersion == nodeps.PHP74 || app.PHPVersion == nodeps.PHP80 {
-			assert.Contains(stdout, "xdebug.mode => debug => debug", "xdebug is not enabled for %s", v)
+			assert.Contains(stdout, "xdebug.mode => debug,develop => debug,develop", "xdebug is not enabled for %s", v)
 		} else {
 			assert.Contains(stdout, "xdebug support => enabled", "xdebug is not enabled for %s", v)
 		}

@@ -23,7 +23,7 @@ case $1 in
   case ${xdebug_version} in
   v3*)
     status=$(php -r 'echo ini_get("xdebug.mode");' 2>/dev/null)
-    if [ "${status}" = "debug" ]; then
+    if [[ "${status}" =~ .*"debug".* ]]; then
       result="xdebug enabled"
     else
       result="xdebug disabled"
