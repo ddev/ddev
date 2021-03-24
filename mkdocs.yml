@@ -59,7 +59,7 @@ nav:
     - 'In-container Configuration': 'users/extend/in-container-configuration.md'
     - 'Custom TLS Certificates': 'users/extend/custom-tls-certificates.md'
   - 'Integration with Hosting Providers':
-    - 'Introduction': '/users/providers/provider-introduction.md'
+    - 'Introduction': 'users/providers/provider-introduction.md'
     - 'Acquia': 'users/providers/acquia.md'
     - 'DDEV-Live': 'users/providers/DDEV-Live.md'
     - 'Pantheon': 'users/providers/pantheon.md'
