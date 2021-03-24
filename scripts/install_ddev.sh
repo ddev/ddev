@@ -149,7 +149,7 @@ printf "${GREEN}Download verified. Ready to place ddev and mkcert in your /usr/l
 if [ -L /usr/local/bin/ddev ] ; then
     printf "${RED}ddev already exists as a link in /usr/local/bin. Was it installed with homebrew?${RESET}\n"
     printf "${RED}Cowardly refusing to install over existing symlink${RESET}\n"
-    printf "${RED}Use 'brew unlink ddev' to remove the symlink. Or use 'brew upgrade ddev' to upgrade.${RESET}\n"
+    printf "${RED}Use 'brew unlink ddev' to remove the symlink. Or use 'brew upgrade drud/ddev/ddev' to upgrade.${RESET}\n"
     exit 101
 fi
 

@@ -52,7 +52,7 @@ So follow those instructions and your zsh should be set up.
 
 ### Oh-My-Zsh Completion
 
-If you installed zsh with homebrew, ddev's completions will be automatically installed when you `brew install ddev`.
+If you installed zsh with homebrew, ddev's completions will be automatically installed when you `brew install drud/ddev/ddev`.
 
 Otherwise, Oh-My-Zsh may be set up very differently in different places, so as a power zsh user you'll need to put ddev_bash_completion.sh (see tar archive download above) where it belongs. `echo $fpath` will show you the places that it's most likely to belong. An obvious choice is ~/.oh-my-zsh/completions if that exists, so you can `mkdir -p ~/.oh-my-zsh/completions && cp ddev_zsh_completion.sh ~/.oh-my-zsh/completions/_ddev` and then `autoload -Uz compinit && compinit`.
 
