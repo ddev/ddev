@@ -34,7 +34,7 @@
           - "ddev-router:project2.ddev.site"
 ```
 
-* **How do I make DDEV match my production webserver environment?** You can change the PHP major version (currently 5.6 through 7.4) and choose between nginx+fpm (default and apache+fpm and choose the MariaDB version add [extra services like solr and memcached](extend/additional-services.md). You will not be able to make every detail match your production server, but with PHP version and webserver type you'll be close.
+* **How do I make DDEV match my production webserver environment?** You can change the PHP major version (currently 5.6 through 7.4) and choose between nginx+fpm (default and apache+fpm and choose the MariaDB or MySQL version add [extra services like solr and memcached](extend/additional-services.md). You will not be able to make every detail match your production server, but with database server type and version, PHP version and webserver type you'll be close.
 
 * **How do I completely destroy a project?** Use `ddev delete <project>` to destroy a project. (Also, `ddev stop --remove-data` will do the same thing.) By default, a `ddev snapshot` of your database is taken, but you can skip this, see `ddev delete -h` for options.
 
