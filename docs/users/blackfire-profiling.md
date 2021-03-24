@@ -20,7 +20,7 @@ The Blackfire CLI is built into the web container.
 2. `ddev start`
 3. Examples of using the Blackfire CLI:
 
-    * `ddev exec blackfire curl https://<yoursite>.ddev.site`
-    * `ddev exec blackfire drush st`
-    * `ddev exec blackfire curl https://<yoursite>.ddev.site`
-    * `ddev ssh` and then use the Blackfire CLI as described in [Profiling HTTP Requests with the CLI](https://blackfire.io/docs/profiling-cookbooks/profiling-http-via-cli).
+   * `ddev exec blackfire curl https://<yoursite>.ddev.site`
+   * `ddev exec blackfire drush st`
+   * `ddev exec blackfire curl https://<yoursite>.ddev.site`
+   * `ddev ssh` and then use the Blackfire CLI as described in [Profiling HTTP Requests with the CLI](https://blackfire.io/docs/profiling-cookbooks/profiling-http-via-cli).
