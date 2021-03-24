@@ -86,6 +86,7 @@ func GetVersionInfo() map[string]string {
 	versionInfo["ddev-ssh-agent"] = SSHAuthImage + ":" + SSHAuthTag
 	versionInfo["build info"] = BUILDINFO
 	versionInfo["os"] = runtime.GOOS
+	versionInfo["architecture"] = runtime.GOARCH
 	if versionInfo["docker"], err = GetDockerVersion(); err != nil {
 		versionInfo["docker"] = fmt.Sprintf("failed to GetDockerVersion(): %v", err)
 	}
