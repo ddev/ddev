@@ -44,7 +44,7 @@ As a one-time initialization, run `mkcert -install`. Linux users may have to tak
 Later, to upgrade to a newer version of DDEV-Local, run:
 
 ```
-ddev poweroff && brew upgrade ddev
+ddev poweroff && brew upgrade drud/ddev/ddev
 ```
 
 ### Installation or Upgrade - Windows (WSL2)
