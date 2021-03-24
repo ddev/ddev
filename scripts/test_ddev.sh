@@ -39,7 +39,6 @@ ddev version
 echo -n "docker location: " && ls -l "$(which docker)"
 echo -n "Docker Desktop Version: " && docker_desktop_version && echo
 ddev poweroff
-echo "result of ddev poweroff=$?"
 echo "Existing docker containers: " && docker ps -a
 docker run -it --rm busybox sh -c "echo 'docker can run busybox image'"
 mkdir -p ~/tmp/${PROJECT_NAME} && cd ~/tmp/${PROJECT_NAME}
