@@ -9,12 +9,10 @@
 # `ddev config global --nfs-mount-enabled=false`
 
 PROJECT_NAME=tryddevproject-${RANDOM}
-BASEDIR=$(dirname "$0")
 
 function cleanup {
   printf "\nPlease delete this project after debugging with 'ddev delete -Oy ${PROJECT_NAME}'\n"
 }
-trap cleanup EXIT
 
 function docker_desktop_version {
   MACOS_INFO_PATH=/Applications/Docker.app/Contents/Info.plist
@@ -41,11 +39,14 @@ ddev version
 echo -n "docker location: " && ls -l "$(which docker)"
 echo -n "Docker Desktop Version: " && docker_desktop_version && echo
 ddev poweroff
+echo "result of ddev poweroff=$?"
 echo "Existing docker containers: " && docker ps -a
 docker run -it --rm busybox sh -c "echo 'docker can run busybox image'"
 mkdir -p ~/tmp/${PROJECT_NAME} && cd ~/tmp/${PROJECT_NAME}
 printf "<?php\nprint 'ddev is working. You will want to delete this project with \"ddev delete -Oy ${PROJECT_NAME}\"';\n" >index.php
 ddev config --project-type=php
+trap cleanup EXIT
+
 echo y | ddev start || ( \
   set +x && \
   ddev list && \
