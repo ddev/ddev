@@ -81,7 +81,7 @@ We'll walk through these in more detail. You may prefer other techniques of inst
 16. Open the WSL2 terminal, for example `Ubuntu` from the Windows start menu.
 17. Install Homebrew: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` (See [https://brew.sh/](brew.sh).)
 18. Add brew to your path as prompted, for example, `echo 'eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)' >> ~/.profile && source ~/.profile`
-19. `brew install gcc && brew tap drud/ddev && brew install ddev`
+19. `brew install gcc && brew install drud/ddev/ddev`
 20. `sudo apt-get update && sudo apt-get install -y xdg-utils` to install the xdg-utils package that allows `ddev launch` to work.
 
 That's it! You have now installed DDEV on WSL2. If you're using WSL2 for ddev (recommended), remember to run all `ddev` commands inside the WSL2 distro.
@@ -124,7 +124,7 @@ You can also easily perform the installation or upgrade manually if preferred. D
 
 ### Installation via package managers - Linux
 
-The preferred Linux package manager is [Homebrew](http://brew.sh/) : `brew tap drud/ddev && brew install ddev`
+The preferred Linux package manager is [Homebrew](http://brew.sh/) : `brew install drud/ddev/ddev`
 
 We also currently maintain a package on [Arch Linux (AUR)](https://aur.archlinux.org/packages/ddev-bin/)
 
