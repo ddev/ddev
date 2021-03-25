@@ -23,7 +23,7 @@ This recipe adds an Apache Solr container to a project. It will set up a solr co
 * Add a solr server at `https://<projectname>>.ddev.site/en/admin/config/search/search-api/add-server`.
     * Use the "standard" Solr connector
     * Use the "http" protocol
-    * The "solr host" should be "ddev-<projectname>-solr" **NOT the default "localhost"**, because it does not run in the same container as the webserver.
+    * The "solr host" should be "ddev-<projectname>-solr" **NOT the default "localhost"**, because it does not run in the same container as the webserver. (Note that just using "solr" will often work, and used to be recommended, but it can be ambiguous if there are more than one projects running with a solr service.)
     * The "solr core" should be named "dev" unless you customize the docker-compose.solr.yaml
     * Under "Advanced server configuration" set the "solr.install.dir" to `/opt/solr`
 * Download the config.zip provided on /admin/config/search/search-api/server/dev
