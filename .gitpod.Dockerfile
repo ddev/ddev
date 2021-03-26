@@ -1,6 +1,8 @@
 FROM gitpod/workspace-full
 SHELL ["/bin/bash", "-c"]
 
+Run sudo apt-get update && sudo apt-get upgrade docker
+
 RUN brew update && brew install bash-completion drud/ddev/ddev golangci-lint
 
 RUN echo 'if [ -r "/home/linuxbrew/.linuxbrew/etc/profile.d/bash_completion.sh" ]; then . "/home/linuxbrew/.linuxbrew/etc/profile.d/bash_completion.sh"; fi' >>~/.bashrc
