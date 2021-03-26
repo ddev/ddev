@@ -23,7 +23,7 @@ nltk==3.5
 Pygments==2.6.1
 pymdown-extensions==8.0
 pytz==2020.1
-PyYAML==5.3.1
+PyYAML==5.4
 regex==2020.7.14
 six==1.15.0
 smmap==3.0.4
