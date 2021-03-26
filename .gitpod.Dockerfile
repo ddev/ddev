@@ -1,7 +1,7 @@
 FROM gitpod/workspace-full
 SHELL ["/bin/bash", "-c"]
 
-Run sudo apt-get update && sudo apt-get upgrade docker
+RUN sudo apt-get update -y && sudo apt-get upgrade docker -y
 
 RUN brew update && brew install bash-completion drud/ddev/ddev golangci-lint
 
