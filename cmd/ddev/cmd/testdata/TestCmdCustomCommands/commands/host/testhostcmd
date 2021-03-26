@@ -1,7 +1,0 @@
-#!/bin/bash
-
-## Description: Test host command
-## Usage: testhostcmd
-## Example: "ddev testhostcmd"
-
-echo "Test Host Command was executed with args=$@ on host $(hostname)"

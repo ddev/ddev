@@ -2,17 +2,16 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/output"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
+	"github.com/spf13/cobra"
 	"path/filepath"
 	"runtime"
 	"strings"
-
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/util"
-	"github.com/spf13/cobra"
 )
 
 // DebugNFSMountCmd implements the ddev debug nfsmount command
@@ -63,12 +62,22 @@ var DebugNFSMountCmd = &cobra.Command{
 		_ = volume
 		uidStr, _, _ := util.GetContainerUIDGid()
 
-		_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), containerName, []string{"sh", "-c", "findmnt -T /nfsmount && ls -d /nfsmount/.ddev"}, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, uidStr, true)
+		_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), containerName, []string{"sh", "-c", "findmnt -T /nfsmount && ls -d /nfsmount/.ddev"}, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, uidStr, true, false, nil)
 		if err != nil {
-			util.Failed("unable to access nfs mount: %v output=%v", err, out)
+			util.Warning("NFS does not seem to be set up yet, see debugging instructions at https://ddev.readthedocs.io/en/stable/users/performance/#debugging-ddev-start-failures-with-nfs_mount_enabled-true")
+			util.Failed("Details: error=%v\noutput=%v", err, out)
 		}
-		util.Success("Successfully accessed NFS mount of %s", app.AppRoot)
 		output.UserOut.Printf(strings.TrimSpace(out))
+		util.Success("")
+		util.Success("Successfully accessed NFS mount of %s", app.AppRoot)
+		switch {
+		case app.NFSMountEnabledGlobal:
+			util.Success("nfs_mount_enabled is set globally")
+		case app.NFSMountEnabled:
+			util.Success("nfs_mount_enabled is true in this project (%s), but is not set globally", app.Name)
+		default:
+			util.Warning("nfs_mount_enabled is not set either globally or in this project. \nUse `ddev config global --nfs-mount-enabled` to enable it.")
+		}
 	},
 }
 

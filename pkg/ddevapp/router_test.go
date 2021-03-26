@@ -1,10 +1,16 @@
 package ddevapp_test
 
 import (
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/netutil"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/stretchr/testify/require"
+	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -31,7 +37,7 @@ func TestPortOverride(t *testing.T) {
 
 		testcommon.ClearDockerEnv()
 
-		app, err := ddevapp.NewApp(testDir, true, nodeps.ProviderDefault)
+		app, err := ddevapp.NewApp(testDir, true)
 		assert.NoError(err)
 		app.RouterHTTPPort = strconv.Itoa(80 + i)
 		// Note that we start with port 453 instead of 443 here because Windows
@@ -59,7 +65,7 @@ func TestPortOverride(t *testing.T) {
 			assert.False(netutil.IsPortActive(app.RouterHTTPSPort))
 		}
 
-		startErr := app.StartAndWaitForSync(5)
+		startErr := app.StartAndWait(5)
 		// defer the app.Stop so we have a more diverse set of tests. If we brought
 		// each down before testing the next that would be a more trivial test.
 		// Don't worry about the possible error case as this is just a test cleanup
@@ -67,7 +73,7 @@ func TestPortOverride(t *testing.T) {
 		defer app.Stop(true, false)
 
 		if startErr != nil {
-			t.Logf("Failed app.StartAndWaitForSync: %v", startErr)
+			t.Logf("Failed app.StartAndWait: %v", startErr)
 			out, err := exec.RunCommand(DdevBin, []string{"list"})
 			assert.NoError(err)
 			t.Logf("\n=========== output of ddev list ==========\n%s\n============\n", out)
@@ -79,7 +85,7 @@ func TestPortOverride(t *testing.T) {
 			assert.NoError(err)
 			t.Logf("\n================== logsFromApp ====================\n%s\n", logsFromApp)
 
-			t.Fatalf("failed to app.StartAndWaitForSync(), err=%v", startErr)
+			t.Fatalf("failed to app.StartAndWait(), err=%v", startErr)
 		}
 		err = app.Wait([]string{"web"})
 		assert.NoError(err)
@@ -87,4 +93,99 @@ func TestPortOverride(t *testing.T) {
 		assert.True(netutil.IsPortActive(app.RouterHTTPSPort))
 	}
 
+}
+
+// Do a modest test of Lets Encrypt functionality
+// This just checks to see that certbot ran and populated /etc/letsencrypt and
+// that /etc/letsencrypt is mounted on volume.
+func TestLetsEncrypt(t *testing.T) {
+	assert := asrt.New(t)
+
+	savedGlobalconfig := globalconfig.DdevGlobalConfig
+
+	globalconfig.DdevGlobalConfig.UseLetsEncrypt = true
+	globalconfig.DdevGlobalConfig.LetsEncryptEmail = "nobody@example.com"
+	globalconfig.DdevGlobalConfig.RouterBindAllInterfaces = true
+	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	require.NoError(t, err)
+
+	site := TestSites[0]
+	switchDir := site.Chdir()
+	defer switchDir()
+
+	// Force router stop so it will start up with Lets Encrypt mount
+	dest := ddevapp.RouterComposeYAMLPath()
+	_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", ddevapp.RouterProjectName, "down")
+	assert.NoError(err)
+
+	err = dockerutil.RemoveVolume("ddev-router-letsencrypt")
+	assert.NoError(err)
+
+	app, err := ddevapp.NewApp(site.Dir, false)
+	assert.NoError(err)
+	err = app.Start()
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		globalconfig.DdevGlobalConfig = savedGlobalconfig
+		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		assert.NoError(err)
+		_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", ddevapp.RouterProjectName, "down")
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = dockerutil.RemoveVolume("ddev-router-letsencrypt")
+		assert.NoError(err)
+	})
+
+	container, err := dockerutil.FindContainerByName("ddev-router")
+	require.NoError(t, err)
+	require.NotNil(t, container)
+
+	stdout, _, err := dockerutil.Exec(container.ID, "df -T /etc/letsencrypt  | awk 'NR==2 {print $7;}'")
+	assert.NoError(err)
+	stdout = strings.Trim(stdout, "\n")
+
+	assert.Equal("/etc/letsencrypt", stdout)
+
+	_, _, err = dockerutil.Exec(container.ID, "test -f /etc/letsencrypt/options-ssl-nginx.conf")
+	assert.NoError(err)
+}
+
+// TestRouterConfigOverride tests that the ~/.ddev/.router-compose.yaml can be overridden
+// with ~/.ddev/router-compose.*.yaml
+func TestRouterConfigOverride(t *testing.T) {
+	assert := asrt.New(t)
+	pwd, _ := os.Getwd()
+	testDir := testcommon.CreateTmpDir(t.Name())
+	_ = os.Chdir(testDir)
+	overrideYaml := filepath.Join(globalconfig.GetGlobalDdevDir(), "router-compose.override.yaml")
+
+	testcommon.ClearDockerEnv()
+
+	app, err := ddevapp.NewApp(testDir, true)
+	assert.NoError(err)
+	err = app.WriteConfig()
+	assert.NoError(err)
+	err = fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "router-compose.override.yaml"), overrideYaml)
+	assert.NoError(err)
+
+	answer := fileutil.RandomFilenameBase()
+	os.Setenv("ANSWER", answer)
+	assert.NoError(err)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(pwd)
+		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
+		err = os.Remove(overrideYaml)
+		assert.NoError(err)
+	})
+
+	err = app.Start()
+	assert.NoError(err)
+
+	stdout, _, err := dockerutil.Exec("ddev-router", "bash -c 'echo $ANSWER'")
+	assert.Equal(answer+"\n", stdout)
 }

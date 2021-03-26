@@ -1,0 +1,24 @@
+#ddev-generated
+# Example local file provider configuration.
+
+# This will pull a database and files from an existing location, for example,
+# from a Dropbox location on disk
+
+# To use this configuration,
+# 1. You need a database dump and/or user-generated files tarball.
+# 2. Copy localfile.yaml.example to localfile.yaml.
+# 3. Change the copy commands as needed.
+# 4. Use `ddev pull localfile` to pull the project database and files.
+
+environment_variables:
+  # On Windows, PROJECT_ROOT must be the git-bash path to the project root, like
+  # /c/Users/rfay/workspace/project1
+  PROJECT_ROOT: /full/path/to/project/root
+
+db_pull_command:
+  command: cp ~/Dropbox/db.sql.gz ${PROJECT_ROOT}/.ddev/.downloads
+  service: host
+
+files_pull_command:
+  command: tar -zxf ~/Dropbox/files.tar.gz -C ${PROJECT_ROOT}/.ddev/.downloads/files
+  service: host

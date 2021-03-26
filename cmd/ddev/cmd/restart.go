@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"strings"
 
 	"github.com/drud/ddev/pkg/dockerutil"
@@ -17,6 +17,9 @@ var RestartCmd = &cobra.Command{
 	Use:   "restart [projects]",
 	Short: "Restart a project or several projects.",
 	Long:  `Stops named projects and then starts them back up again.`,
+	Example: `ddev restart
+ddev restart <project1> <project2>
+ddev restart --all`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		dockerutil.EnsureDdevNetwork()
 	},
@@ -24,6 +27,9 @@ var RestartCmd = &cobra.Command{
 		projects, err := getRequestedProjects(args, restartAll)
 		if err != nil {
 			util.Failed("Failed to get project(s): %v", err)
+		}
+		if len(projects) > 0 {
+			instrumentationApp = projects[0]
 		}
 
 		for _, app := range projects {
@@ -41,7 +47,7 @@ var RestartCmd = &cobra.Command{
 
 			util.Success("Restarted %s", app.GetName())
 			httpURLs, urlList, _ := app.GetAllURLs()
-			if ddevapp.GetCAROOT() == "" {
+			if globalconfig.GetCAROOT() == "" {
 				urlList = httpURLs
 			}
 

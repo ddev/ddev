@@ -21,6 +21,9 @@ in any directory by running 'ddev pause projectname [projectname ...]' or pause 
 		if err != nil {
 			util.Failed("Unable to get project(s): %v", err)
 		}
+		if len(projects) > 0 {
+			instrumentationApp = projects[0]
+		}
 
 		for _, project := range projects {
 			if err := ddevapp.CheckForMissingProjectFiles(project); err != nil {

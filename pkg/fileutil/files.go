@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"runtime"
 
@@ -63,7 +64,7 @@ func CopyFile(src string, dst string) error {
 
 // CopyDir recursively copies a directory tree, attempting to preserve permissions.
 // Source directory must exist, destination directory must *not* exist.
-// Symlinks are ignored and skipped. Credit @m4ng0squ4sh https://gist.github.com/m4ng0squ4sh/92462b38df26839a3ca324697c8cba04
+// Symlinks are ignored and skipped. Credit @r0l1 https://gist.github.com/r0l1/92462b38df26839a3ca324697c8cba04
 func CopyDir(src string, dst string) error {
 	src = filepath.Clean(src)
 	dst = filepath.Clean(dst)
@@ -73,7 +74,7 @@ func CopyDir(src string, dst string) error {
 		return err
 	}
 	if !si.IsDir() {
-		return fmt.Errorf("source is not a directory")
+		return fmt.Errorf("CopyDir: source directory %s is not a directory", src)
 	}
 
 	_, err = os.Stat(dst)
@@ -81,7 +82,7 @@ func CopyDir(src string, dst string) error {
 		return err
 	}
 	if err == nil {
-		return fmt.Errorf("destination already exists")
+		return fmt.Errorf("CopyDir: destination %s already exists", dst)
 	}
 
 	err = os.MkdirAll(dst, si.Mode())
@@ -201,6 +202,20 @@ func ListFilesInDir(path string) ([]string, error) {
 	return fileList, nil
 }
 
+// ListFilesInDirFullPath returns an array of full path of files found in a directory
+func ListFilesInDirFullPath(path string) ([]string, error) {
+	var fileList []string
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return fileList, err
+	}
+
+	for _, f := range files {
+		fileList = append(fileList, filepath.Join(path, f.Name()))
+	}
+	return fileList, nil
+}
+
 // RandomFilenameBase generates a temporary filename for use in testing or whatever.
 // From https://stackoverflow.com/a/28005931/215713
 func RandomFilenameBase() string {
@@ -239,12 +254,26 @@ func IsSameFile(path1 string, path2 string) (bool, error) {
 
 // ReadFileIntoString just gets the contents of file into string
 func ReadFileIntoString(path string) (string, error) {
-
 	bytes, err := ioutil.ReadFile(path)
 	if err != nil {
 		return "", err
 	}
 	return string(bytes), err
+}
+
+// AppendStirngtoFile takes a path to a file and a string to append
+// and it appends it, returning err
+func AppendStringToFile(path string, appendString string) error {
+	f, err := os.OpenFile(path,
+		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	if _, err := f.WriteString(appendString); err != nil {
+		return err
+	}
+	return nil
 }
 
 type XSymContents struct {
@@ -341,4 +370,53 @@ func ReplaceSimulatedLinks(path string) {
 	}
 	util.Success("Replaced these simulated symlinks with real symlinks: %v", replacedLinks)
 	return
+}
+
+// RemoveContents removes contents of passed directory
+// From https://stackoverflow.com/questions/33450980/how-to-remove-all-contents-of-a-directory-using-golang
+func RemoveContents(dir string) error {
+	d, err := os.Open(dir)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+	names, err := d.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+	for _, name := range names {
+		err = os.RemoveAll(filepath.Join(dir, name))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// TemplateStringToFile takes a template string, runs templ.Execute on it, and writes it out to file
+func TemplateStringToFile(content string, vars map[string]interface{}, targetFilePath string) error {
+
+	templ := template.New("templateStringToFile:" + targetFilePath)
+	templ, err := templ.Parse(content)
+	if err != nil {
+		return err
+	}
+
+	var doc bytes.Buffer
+	err = templ.Execute(&doc, vars)
+	if err != nil {
+		return err
+	}
+
+	f, err := os.Create(targetFilePath)
+	if err != nil {
+		return err
+	}
+	defer util.CheckClose(f)
+
+	_, err = f.WriteString(doc.String())
+	if err != nil {
+		return nil
+	}
+	return nil
 }

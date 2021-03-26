@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"path/filepath"
-	"testing"
-
 	"github.com/stretchr/testify/require"
+	"path/filepath"
+	"runtime"
+	"testing"
 
 	"os"
 
@@ -28,7 +28,7 @@ func TestCmdStart(t *testing.T) {
 	assert.NoError(err)
 
 	// Ensure all sites are started after ddev start --all.
-	out, err := exec.RunCommand(DdevBin, []string{"start", "--all"})
+	out, err := exec.RunCommand(DdevBin, []string{"start", "--all", "-y"})
 	assert.NoError(err, "ddev start --all should succeed but failed, err: %v, output: %s", err, out)
 
 	// Confirm all sites are running.
@@ -42,7 +42,7 @@ func TestCmdStart(t *testing.T) {
 	assert.NoError(err)
 
 	// Build start command startMultipleArgs
-	startMultipleArgs := []string{"start"}
+	startMultipleArgs := []string{"start", "-y"}
 	for _, app := range apps {
 		startMultipleArgs = append(startMultipleArgs, app.GetName())
 	}
@@ -62,6 +62,11 @@ func TestCmdStart(t *testing.T) {
 func TestCmdStartMissingProjectDirectory(t *testing.T) {
 	var err error
 	var out string
+
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping because unreliable on Windows")
+	}
+
 	assert := asrt.New(t)
 
 	projDir, _ := os.Getwd()
@@ -75,10 +80,13 @@ func TestCmdStartMissingProjectDirectory(t *testing.T) {
 	_, err = exec.RunCommand(DdevBin, []string{"config", "--project-type", "php", "--project-name", projectName})
 	assert.NoError(err)
 
-	_, err = exec.RunCommand(DdevBin, []string{"start"})
+	_, err = exec.RunCommand(DdevBin, []string{"start", "-y"})
 
 	//nolint: errcheck
-	defer exec.RunCommand(DdevBin, []string{"remove", "-RO", projectName})
+	defer exec.RunCommand(DdevBin, []string{"stop", "-RO", projectName})
+	assert.NoError(err)
+
+	_, err = exec.RunCommand(DdevBin, []string{"stop"})
 	assert.NoError(err)
 
 	err = os.Chdir(projDir)
@@ -88,7 +96,7 @@ func TestCmdStartMissingProjectDirectory(t *testing.T) {
 	err = os.Rename(tmpDir, copyDir)
 	assert.NoError(err)
 
-	out, err = exec.RunCommand(DdevBin, []string{"start", projectName})
+	out, err = exec.RunCommand(DdevBin, []string{"start", "-y", projectName})
 
 	assert.Error(err, "Expected an error when starting project with no project directory")
 	assert.Contains(out, "ddev can no longer find your project files")

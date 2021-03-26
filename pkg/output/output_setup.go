@@ -1,19 +1,15 @@
 package output
 
 import (
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/version"
-	"github.com/evalphobia/logrus_sentry"
-	"os"
-
 	"github.com/fatih/color"
 	log "github.com/sirupsen/logrus"
+	"os"
 )
 
 var (
 	// UserOut is the customized logrus log used for direct user output
 	UserOut = log.New()
+	UserErr = log.New()
 	// UserOutFormatter is the specialized formatter for UserOut
 	UserOutFormatter = new(TextFormatter)
 	// JSONOutput is a bool telling whether we're outputting in json. Set by command-line args.
@@ -23,27 +19,16 @@ var (
 // LogSetUp sets up UserOut and log loggers as needed by ddev
 func LogSetUp() {
 	// Use color.Output instead of stderr for all user output
-	log.SetOutput(color.Output)
 	UserOut.Out = color.Output
-
-	levels := []log.Level{
-		log.PanicLevel,
-		log.FatalLevel,
-		log.ErrorLevel,
-	}
-
-	// Report errors and panics to Sentry
-	if version.SentryDSN != "" && !globalconfig.DdevNoInstrumentation && globalconfig.DdevGlobalConfig.InstrumentationOptIn && nodeps.IsInternetActive() {
-		hook, err := logrus_sentry.NewAsyncWithTagsSentryHook(version.SentryDSN, nodeps.InstrumentationTags, levels)
-		if err == nil {
-			UserOut.Hooks.Add(hook)
-		}
-	}
+	UserErr.Out = os.Stderr
+	UserErr.SetOutput(&ErrorWriter{})
 
 	if !JSONOutput {
 		UserOut.Formatter = UserOutFormatter
+		UserErr.Formatter = UserOutFormatter
 	} else {
 		UserOut.Formatter = &JSONFormatter{}
+		UserErr.Formatter = &JSONFormatter{}
 	}
 
 	UserOutFormatter.DisableTimestamp = true
@@ -57,4 +42,12 @@ func LogSetUp() {
 		logLevel = log.DebugLevel
 	}
 	log.SetLevel(logLevel)
+}
+
+// Splitting to stderr approach from
+// https://huynvk.dev/blog/4-tips-for-logging-on-gcp-using-golang-and-logrus
+type ErrorWriter struct{}
+
+func (w *ErrorWriter) Write(p []byte) (n int, err error) {
+	return os.Stderr.Write(p)
 }

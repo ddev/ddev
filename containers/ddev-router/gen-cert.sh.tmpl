@@ -1,6 +1,0 @@
-#!/bin/bash
-set -euo pipefail
-set -x
-
-# mkcert is fully capable of generating all needed names in a single container.
-mkcert -cert-file /etc/nginx/certs/master.crt -key-file /etc/nginx/certs/master.key {{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }} {{ trim $host }} {{ end }} 127.0.0.1 localhost "*.ddev.local" "*.ddev.site"

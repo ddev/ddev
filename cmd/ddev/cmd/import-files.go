@@ -16,8 +16,9 @@ var extPath string
 
 // ImportFileCmd represents the `ddev import-db` command.
 var ImportFileCmd = &cobra.Command{
-	Use:   "import-files",
-	Short: "Pull the uploaded files directory of an existing project to the default public upload directory of your project.",
+	Use:     "import-files",
+	Example: `ddev import-files --src=/path/to/files.tar.gz`,
+	Short:   "Pull the uploaded files directory of an existing project to the default public upload directory of your project.",
 	Long: `Pull the uploaded files directory of an existing project to the default
 public upload directory of your project. The files can be provided as a
 directory path or an archive in .tar, .tar.gz, .tgz, or .zip format. For the

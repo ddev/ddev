@@ -1,48 +1,12 @@
 package nodeps
 
-// Providers
-const (
-	ProviderDrudS3   = "drud-s3"
-	ProviderPantheon = "pantheon"
+import "sort"
 
+// Providers
+//TODO: This should be removed as many providers will now be valid
+const (
 	// ProviderDefault contains the name of the default provider which will be used if one is not otherwise specified.
 	ProviderDefault = "default"
-)
-
-// ValidProviders should be updated whenever provider plugins are added or removed, and should
-// be used to ensure user-supplied values are valid.
-var ValidProviders = map[string]bool{
-	ProviderDefault:  true,
-	ProviderDrudS3:   true,
-	ProviderPantheon: true,
-}
-
-// PHP Versions
-const (
-	PHP56 = "5.6"
-	PHP70 = "7.0"
-	PHP71 = "7.1"
-	PHP72 = "7.2"
-	PHP73 = "7.3"
-	PHP74 = "7.4"
-)
-
-// MariaDB Versions
-const (
-	MariaDB55  = "5.5"
-	MariaDB100 = "10.0"
-	MariaDB101 = "10.1"
-	MariaDB102 = "10.2"
-	MariaDB103 = "10.3"
-	MariaDB104 = "10.4"
-)
-
-// Oracle MySQL versions
-const (
-	MySQL55 = "5.5"
-	MySQL56 = "5.6"
-	MySQL57 = "5.7"
-	MySQL80 = "8.0"
 )
 
 // Database Types
@@ -58,44 +22,12 @@ const (
 	DBContainer           = "db"
 	WebContainer          = "web"
 	RouterContainer       = "ddev-router"
-	BGSYNCContainer       = "bgsync"
 )
-
-// PHPDefault is the default PHP version, overridden by $DDEV_PHP_VERSION
-const PHPDefault = PHP72
-
-// ValidPHPVersions should be updated whenever PHP versions are added or removed, and should
-// be used to ensure user-supplied values are valid.
-var ValidPHPVersions = map[string]bool{
-	PHP56: true,
-	PHP70: true,
-	PHP71: true,
-	PHP72: true,
-	PHP73: true,
-	PHP74: true,
-}
-
-var ValidMariaDBVersions = map[string]bool{
-	MariaDB55:  true,
-	MariaDB100: true,
-	MariaDB101: true,
-	MariaDB102: true,
-	MariaDB103: true,
-	MariaDB104: true,
-}
-
-var ValidMySQLVersions = map[string]bool{
-	MySQL55: true,
-	MySQL56: true,
-	MySQL57: true,
-	MySQL80: true,
-}
 
 // Webserver types
 const (
 	WebserverNginxFPM  = "nginx-fpm"
 	WebserverApacheFPM = "apache-fpm"
-	WebserverApacheCGI = "apache-cgi"
 )
 
 var ValidOmitContainers = map[string]bool{
@@ -107,18 +39,17 @@ var ValidOmitContainers = map[string]bool{
 // WebserverDefault is the default webserver type, overridden by $DDEV_WEBSERVER_TYPE
 var WebserverDefault = WebserverNginxFPM
 
-// WebcacheEnabledDefault is the default value for app.WebCacheEnabled
-var WebcacheEnabledDefault = false
-
 // NFSMountEnabledDefault is default value for app.NFSMountEnabled
 var NFSMountEnabledDefault = false
+
+// FailOnHookFailDefault is the default value for app.FailOnHookFail
+var FailOnHookFailDefault = false
 
 // ValidWebserverTypes should be updated whenever supported webserver types are added or
 // removed, and should be used to ensure user-supplied values are valid.
 var ValidWebserverTypes = map[string]bool{
 	WebserverNginxFPM:  true,
 	WebserverApacheFPM: true,
-	WebserverApacheCGI: true,
 }
 
 // App types
@@ -127,9 +58,14 @@ const (
 	AppTypeDrupal6   = "drupal6"
 	AppTypeDrupal7   = "drupal7"
 	AppTypeDrupal8   = "drupal8"
+	AppTypeDrupal9   = "drupal9"
 	AppTypePHP       = "php"
 	AppTypeTYPO3     = "typo3"
 	AppTypeWordPress = "wordpress"
+	AppTypeMagento   = "magento"
+	AppTypeMagento2  = "magento2"
+	AppTypeLaravel   = "laravel"
+	AppTypeShopware6 = "shopware6"
 )
 
 // Ports and other defaults
@@ -140,33 +76,15 @@ const (
 	// DdevDefaultRouterHTTPSPort is the default router HTTPS port
 	DdevDefaultRouterHTTPSPort = "443"
 	// DdevDefaultPHPMyAdminPort is the default router port for dba/PHPMyadmin
-	DdevDefaultPHPMyAdminPort = "8036"
+	DdevDefaultPHPMyAdminPort      = "8036"
+	DdevDefaultPHPMyAdminHTTPSPort = "8037"
 	// DdevDefaultMailhogPort is the default router port for Mailhog
-	DdevDefaultMailhogPort = "8025"
+	DdevDefaultMailhogPort      = "8025"
+	DdevDefaultMailhogHTTPSPort = "8026"
 	// DdevDefaultTLD is the top-level-domain used by default, can be overridden
-	DdevDefaultTLD = "ddev.site"
+	DdevDefaultTLD                  = "ddev.site"
+	InternetDetectionTimeoutDefault = 750
 )
-
-// IsValidProvider is a helper function to determine if a provider value is valid, returning
-// true if the supplied provider is valid and false otherwise.
-func IsValidProvider(provider string) bool {
-	if _, ok := ValidProviders[provider]; !ok {
-		return false
-	}
-
-	return true
-}
-
-// GetValidProviders is a helper function that returns a list of valid providers.
-func GetValidProviders() []string {
-	s := make([]string, 0, len(ValidProviders))
-
-	for p := range ValidProviders {
-		s = append(s, p)
-	}
-
-	return s
-}
 
 // IsValidPHPVersion is a helper function to determine if a PHP version is valid, returning
 // true if the supplied PHP version is valid and false otherwise.
@@ -185,7 +103,7 @@ func GetValidPHPVersions() []string {
 	for p := range ValidPHPVersions {
 		s = append(s, p)
 	}
-
+	sort.Strings(s)
 	return s
 }
 
@@ -216,7 +134,7 @@ func GetValidMariaDBVersions() []string {
 	for p := range ValidMariaDBVersions {
 		s = append(s, p)
 	}
-
+	sort.Strings(s)
 	return s
 }
 
@@ -227,7 +145,7 @@ func GetValidMySQLVersions() []string {
 	for p := range ValidMySQLVersions {
 		s = append(s, p)
 	}
-
+	sort.Strings(s)
 	return s
 }
 

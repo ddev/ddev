@@ -23,27 +23,30 @@ func init() {
 // Failed will print a red error message and exit with failure.
 func Failed(format string, a ...interface{}) {
 	if a != nil {
-		output.UserOut.Fatalf(format, a...)
+		//output.UserOut.Fatalf(format, a...)
+		output.UserErr.Fatalf(format, a...)
+		//output.UserOut.WithField("level", "fatal").Fatalf(format, a...)
 	} else {
-		output.UserOut.Fatal(format)
+		output.UserErr.Fatal(format)
+		//output.UserOut.WithField("level", "fatal").Fatal(format)
 	}
 }
 
 // Error will print an red error message but will not exit.
 func Error(format string, a ...interface{}) {
 	if a != nil {
-		output.UserOut.Errorf(format, a...)
+		output.UserErr.Errorf(format, a...)
 	} else {
-		output.UserOut.Error(format)
+		output.UserErr.Error(format)
 	}
 }
 
 // Warning will present the user with warning text.
 func Warning(format string, a ...interface{}) {
 	if a != nil {
-		output.UserOut.Warnf(format, a...)
+		output.UserErr.Warnf(format, a...)
 	} else {
-		output.UserOut.Warn(format)
+		output.UserErr.Warn(format)
 	}
 }
 
@@ -113,8 +116,9 @@ func MapKeysToArray(mapWithKeys map[string]interface{}) []string {
 // GetContainerUIDGid() returns the uid and gid (and string forms) to be used running most containers.
 func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 	curUser, err := user.Current()
-	CheckErr(err)
-
+	if err != nil {
+		Failed("Unable to determine username and related UID, etc. Please at least set $USER environment variable: %v", err)
+	}
 	uidStr = curUser.Uid
 	gidStr = curUser.Gid
 	username = curUser.Username
@@ -170,7 +174,7 @@ func FindWindowsBashPath() string {
 // It tracks if DDEV_VERBOSE is set
 func TimeTrack(start time.Time, name string) func() {
 	if globalconfig.DdevVerbose {
-		logrus.Printf("starting %s at %v\n", name, start.Format("15:04:05"))
+		logrus.Printf("starting %s at %v\n", name, start.Format("15:04:05.000000000"))
 		return func() {
 			if globalconfig.DdevVerbose {
 				elapsed := time.Since(start)

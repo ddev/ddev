@@ -13,10 +13,11 @@ var ComposerCmd = &cobra.Command{
 	Short: "Executes a composer command within the web container",
 	Long: `Executes a composer command at the project root in the web container. Generally,
 any composer command can be forwarded to the container context by prepending
-the command with 'ddev'. For example:
-
+the command with 'ddev'.`,
+	Example: `ddev composer install
 ddev composer require <package>
-ddev composer outdated --minor-only`,
+ddev composer outdated --minor-only
+ddev composer create drupal/recommended-project`,
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {

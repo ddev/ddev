@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 	"testing"
 
@@ -82,12 +83,34 @@ func TestCaptureStdOut(t *testing.T) {
 	assert.Contains(out, text)
 }
 
+// TestCaptureOutputToFile tests CaptureOutputToFile.
+func TestCaptureOutputToFile(t *testing.T) {
+	assert := asrt.New(t)
+	restoreOutput, err := util.CaptureOutputToFile()
+	assert.NoError(err)
+	text := util.RandString(128)
+	fmt.Println("randstring-println=" + text)
+	c := exec.Command("sh", "-c", fmt.Sprintf("echo randstring-stdout=%s; echo 1>&2 randstring-stderr=%s", text, text))
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	err = c.Start()
+	assert.NoError(err)
+	err = c.Wait()
+	assert.NoError(err)
+
+	out := restoreOutput()
+
+	assert.Contains(out, "randstring-println="+text)
+	assert.Contains(out, "randstring-stdout="+text)
+	assert.Contains(out, "randstring-stderr="+text)
+}
+
 // TestConfirm ensures that the confirmation prompt works as expected.
 func TestConfirm(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Unset the env var, then reset after the test
-	noninteractiveEnv := "DRUD_NONINTERACTIVE"
+	noninteractiveEnv := "DDEV_NONINTERACTIVE"
 	defer os.Setenv(noninteractiveEnv, os.Getenv(noninteractiveEnv))
 	err := os.Unsetenv(noninteractiveEnv)
 	if err != nil {

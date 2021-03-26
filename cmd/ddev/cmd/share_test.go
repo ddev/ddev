@@ -17,6 +17,9 @@ import (
 
 // TestShareCmd tests `ddev share`
 func TestShareCmd(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping because unreliable on Windows due to DNS lookup failure")
+	}
 	assert := asrt.New(t)
 	urlRead := false
 

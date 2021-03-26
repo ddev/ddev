@@ -3,9 +3,6 @@ package output
 import (
 	"bytes"
 	"fmt"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/version"
-	"github.com/getsentry/raven-go"
 	"io"
 	"os"
 	"sort"
@@ -125,11 +122,6 @@ func (f *TextFormatter) Format(entry *log.Entry) ([]byte, error) {
 		for _, key := range keys {
 			f.appendKeyValue(b, key, entry.Data[key])
 		}
-	}
-
-	if entry.Level == log.FatalLevel && globalconfig.DdevGlobalConfig.InstrumentationOptIn && version.SentryDSN != "" {
-		_ = raven.SetDSN(version.SentryDSN)
-		_ = raven.CaptureMessageAndWait("Failed:"+entry.Message, map[string]string{"severity-level": "fatal", "report-type": "util-fail"})
 	}
 	b.WriteByte('\n')
 	return b.Bytes(), nil

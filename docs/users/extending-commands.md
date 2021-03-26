@@ -1,4 +1,3 @@
-## ddev Hooks
 
 Most ddev commands provide hooks to run tasks before or after the main command executes. To automate setup tasks specific to your project, define them in the project's config.yaml file.
 
@@ -6,7 +5,7 @@ To define command tasks in your configuration, specify the desired command hook 
 
 Example:
 
-```
+```yaml
 hooks:
   post-start:
     - exec: "simple command expression"
@@ -18,14 +17,13 @@ hooks:
 
 ## Supported Command Hooks
 
-- `pre-start`: Hooks into "ddev start". Execute tasks before the project environment starts. **Note:** Only `exec-host` tasks can be generally run successfully during pre-start. See Supported Tasks below for more info.
-- `post-start`: Execute tasks after the project environment has started. 
-- `pre-import-db` and `post-import-db`: Execute tasks before or after database import.
-- `pre-import-files` and `post-import-files`: Execute tasks before or after files are imported
-- `pre-composer` and `post-composer`: Execute tasks before or after the `composer` command.
-- `pre-stop`, `pre-config`, `post-config`, `pre-exec`, `post-exec`, `pre-pause`, `post-pause`, `pre-pull`, `post-pull`, `pre-snapshot`, `post-snapshot`, `pre-restore-snapshot`, `post-restore-snapshot`: Execute as the name suggests.
-- `post-stop`: Hooks into "ddev stop". Execute tasks after the project environment stopped. **Note:** Only `exec-host` tasks can be generally run successfully during post-stop.
-
+* `pre-start`: Hooks into "ddev start". Execute tasks before the project environment starts. **Note:** Only `exec-host` tasks can be generally run successfully during pre-start. See Supported Tasks below for more info.
+* `post-start`: Execute tasks after the project environment has started.
+* `pre-import-db` and `post-import-db`: Execute tasks before or after database import.
+* `pre-import-files` and `post-import-files`: Execute tasks before or after files are imported
+* `pre-composer` and `post-composer`: Execute tasks before or after the `composer` command.
+* `pre-stop`, `pre-config`, `post-config`, `pre-exec`, `post-exec`, `pre-pause`, `post-pause`, `pre-pull`, `post-pull`, `pre-push`, `post-push`, `pre-snapshot`, `post-snapshot`, `pre-restore-snapshot`, `post-restore-snapshot`: Execute as the name suggests.
+* `post-stop`: Hooks into "ddev stop". Execute tasks after the project environment stopped. **Note:** Only `exec-host` tasks can be generally run successfully during post-stop.
 
 ## Supported Tasks
 
@@ -35,31 +33,30 @@ ddev currently supports these tasks:
 * `exec-host` to execute a command on the host
 * `composer` to execute a composer command in the web container
 
-### `exec`: Execute a shell command in a container (defaults to web container).
+### `exec`: Execute a shell command in a container (defaults to web container)
 
 Value: string providing the command to run. Commands requiring user interaction are not supported. You can also add a "service" key to the command, specifying to run it on the db container or any other container you use.
 
 Example: _Use drush to clear the Drupal cache and get a user login link after database import_
 
-```
+```yaml
 hooks:
   post-import-db:
     - exec: drush cr
     - exec: drush uli
-  post-start:
-    - exec: sudo apt-get update && DEBIAN_FRONTEND=noninteractive sudo apt-get install -y ghostscript sqlite3 php7.2-sqlite3 && sudo killall -HUP php-fpm
 ```
 
 Example: _Use wp-cli to replace the production URL with development URL in the database of a WordPress project_
 
-```
+```yaml
 hooks:
   post-import-db:
     - exec: wp search-replace https://www.myproductionsite.com http://mydevsite.ddev.site
 ```
 
 Example: _Add an extra database before import-db, executing in db container_
-```
+
+```yaml
 hooks:
   pre-import-db:
     - exec: mysql -uroot -proot -e "CREATE DATABASE IF NOT EXISTS some_new_database;"
@@ -69,7 +66,7 @@ hooks:
 
 Example: _Add the common "ll" alias into the web container .bashrc file_
 
-```
+```yaml
 hooks:
   post-start:
   - exec: sudo echo alias ll=\"ls -lhA\" >> ~/.bashrc
@@ -77,37 +74,33 @@ hooks:
 
 (Note that this could probably be done more efficiently in a .ddev/web-build/Dockerfile as explained in [Customizing Images](extend/customizing-images.md).)
 
-### `exec-host`: Execute a shell command on the host system.
+### `exec-host`: Execute a shell command on the host system
 
 Value: string providing the command to run. Commands requiring user interaction are not supported.
 
-Example:
+Example: Run "composer install" from your system before starting the project (composer must already be installed on the host workstation):
 
-_Run "composer install" from your system before starting the project (composer must already be installed on the host workstation)_
-
-```
+```yaml
 hooks:
   pre-start:
     - exec-host: "composer install"
 ```
 
-### `composer`: Execute a composer command in the web container.
+### `composer`: Execute a composer command in the web container
 
-Value: string providing the composer command to run. 
-
+Value: string providing the composer command to run.
 
 Example:
 
-```
+```yaml
 hooks:
   post-start:
     - composer: config discard-changes true
 ```
 
-
 ## WordPress Example
 
-```
+```yaml
 hooks:
   post-start:
     # Install WordPress after start
@@ -120,11 +113,11 @@ hooks:
 
 ## Drupal 7 Example
 
-```
+```yaml
 hooks:
   post-start:
-    # Install Drupal after start
-    - exec: "drush site-install -y --db-url=db:db@db/db"
+    # Install Drupal after start if not installed already
+    - exec: "(drush status bootstrap | grep -q Successful) || drush site-install -y --db-url=db:db@db/db"
     # Generate a one-time login link for the admin account.
     - exec: "drush uli 1"
   post-import-db:
@@ -138,14 +131,14 @@ hooks:
 
 ## Drupal 8 Example
 
-```
+```yaml
 hooks:
   pre-start:
     # Install composer dependencies using composer on host system
     - exec-host: "composer install"
   post-start:
-    # Install Drupal after start
-    - exec: "drush site-install -y --db-url=mysql://db:db@db/db"
+    # Install Drupal after start if not installed already
+    - exec: "(drush status bootstrap | grep -q Successful) || drush site-install -y --db-url=mysql://db:db@db/db"
     # Generate a one-time login link for the admin account.
     - exec: "drush uli 1"
   post-import-db:
@@ -159,15 +152,15 @@ hooks:
 
 ## TYPO3 Example
 
-```
+```yaml
 hooks:
     post-start:
-      - exec: composer install -d /var/www/html/
+      - composer: install
 ```
 
 ## Adding Additional Debian Packages (PHP Modules) Example
 
-```
-webimage_extra_packages: ["php7.2-ldap", "php7.2-tidy"]
+```yaml
+webimage_extra_packages: ["php-bcmath", "php7.4-tidy"]
 dbimage_extra_packages: ["vim"]
 ```

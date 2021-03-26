@@ -18,7 +18,6 @@ function serverwait {
             echo "MariaDB initialization startup failed"
             return 2
         fi
-#        echo "MariaDB initialization startup process in progress... Try# $i"
         sleep 1
 	done
 	return 1
@@ -30,7 +29,9 @@ if [ $# = "2" -a "${1:-}" = "restore_snapshot" ] ; then
   snapshot_dir="/mnt/ddev_config/db_snapshots/${2:-nothingthere}"
   if [ -d "$snapshot_dir" ] ; then
     echo "Restoring from snapshot directory $snapshot_dir"
-    sudo rm -rf /var/lib/mysql/*
+    # Ugly macOS .DS_Store in this directory can break the restore
+    find ${snapshot_dir} -name .DS_Store -print0 | xargs rm -f
+    rm -rf /var/lib/mysql/*
   else
     echo "$snapshot_dir does not exist, not attempting restore of snapshot"
     unset snapshot_dir
@@ -38,42 +39,38 @@ if [ $# = "2" -a "${1:-}" = "restore_snapshot" ] ; then
   fi
 fi
 
-sudo chown -R "$(id -u):$(id -g)" /mysqlbase /var/lib/mysql
-
 server_db_version=$(PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld -V 2>/dev/null | awk '{sub( /\.[0-9]+(-.*)?$/, "", $3); print $3 }')
-
-sudo chown -R "$UID:$(id -g)" /var/lib/mysql
 
 # If we have extra mariadb cnf files,, copy them to where they go.
 if [ -d /mnt/ddev_config/mysql -a "$(echo /mnt/ddev_config/mysql/*.cnf)" != "/mnt/ddev_config/mysql/*.cnf" ] ; then
-  sudo cp /mnt/ddev_config/mysql/*.cnf /etc/mysql/conf.d
-  sudo chmod -R ugo-w /etc/mysql/conf.d
+  echo "!includedir /mnt/ddev_config/mysql" >/etc/mysql/conf.d/ddev.cnf
 fi
 
 export BACKUPTOOL=mariabackup
 if command -v xtrabackup; then BACKUPTOOL="xtrabackup"; fi
 
-# If mariadb has not been initialized, copy in the base image from either the default starter image (/var/tmp/mysqlbase)
+# If mariadb has not been initialized, copy in the base image from either the default starter image (/mysqlbase)
 # or from a provided $snapshot_dir.
-if [ ! -d "/var/lib/mysql/mysql" ]; then
+if [ ! -f "/var/lib/mysql/db_mariadb_version.txt" ]; then
+    # If snapshot_dir is not set, this is a normal startup, so
+    # tell healthcheck to wait by touching /tmp/initializing
+    if [ -z "${snapshot_dir:-}" ] ; then
+      touch /tmp/initializing
+    fi
     target=${snapshot_dir:-/mysqlbase/}
     name=$(basename $target)
-    sudo rm -rf /var/lib/mysql/* /var/lib/mysql/.[a-z]* && sudo chmod -R ugo+w /var/lib/mysql
-    sudo chmod -R ugo+r $target
+    rm -rf /var/lib/mysql/* /var/lib/mysql/.[a-z]*
     ${BACKUPTOOL} --prepare --skip-innodb-use-native-aio --target-dir "$target" --user=root --password=root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_prepare_$name.log"
     ${BACKUPTOOL} --copy-back --skip-innodb-use-native-aio --force-non-empty-directories --target-dir "$target" --user=root --password=root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_copy_back_$name.log"
-    echo 'Database initialized from $target'
+    echo "Database initialized from ${target}"
+    rm -f /tmp/initializing
 fi
 
-if [ -f /var/lib/mysql/db_mariadb_version.txt ]; then
-   database_db_version=$(cat /var/lib/mysql/db_mariadb_version.txt)
-else
-    database_db_version="unknown"
- fi
+database_db_version=$(cat /var/lib/mysql/db_mariadb_version.txt)
 
 if [ "${server_db_version}" != "${database_db_version}" ]; then
    echo "Starting with db server version=${server_db_version} but database was created with '${database_db_version}'."
-   echo "Attempting upgrade, but it may not work, you may need to export your database, 'ddev stop -RO', start, and reimport".
+   echo "Attempting upgrade, but it may not work, you may need to export your database, 'ddev delete --omit-snapshot', start, and reimport".
 
     PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld --skip-networking --skip-grant-tables --socket=$SOCKET >/tmp/mysqld_temp_startup.log 2>&1 &
     pid=$!
@@ -92,8 +89,7 @@ fi
 echo $server_db_version >/var/lib/mysql/db_mariadb_version.txt
 
 cp -r /home/{.my.cnf,.bashrc} ~/
-sudo mkdir -p /mnt/ddev-global-cache/bashhistory/${HOSTNAME}
-sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ ~/.my.cnf
+mkdir -p /mnt/ddev-global-cache/bashhistory/${HOSTNAME} || true
 
 echo
 echo 'MySQL init process done. Ready for start up.'

@@ -1,0 +1,16 @@
+#ddev-generated
+/.router-compose.yaml
+/.router-composer-full.yaml
+/.ssh-auth-compose.yaml
+/.ssh-auth-compose-full.yaml
+/.gitignore
+/**/*.example
+/**/README.*
+/CMS
+/global_config.yaml
+/pantheon*
+/*compose.yaml
+/*compose-full.yaml
+/.sshimageBuild
+/.update
+/testcache

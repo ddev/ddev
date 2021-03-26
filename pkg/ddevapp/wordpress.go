@@ -89,6 +89,7 @@ const wordpressSettingsTemplate = `<?php
 /**
  {{ $config.Signature }}: Automatically generated WordPress settings file.
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
+ It is recommended that you leave this file alone.
  */
 
 /** Authentication Unique Keys and Salts. */
@@ -106,13 +107,13 @@ define('ABSPATH', dirname(__FILE__) . '/{{ $config.AbsPath }}');
 
 // Include for settings managed by ddev.
 $ddev_settings = dirname(__FILE__) . '/wp-config-ddev.php';
-if (is_readable($ddev_settings) && !defined('DB_USER')) {
-	require_once($ddev_settings);
+if (is_readable($ddev_settings) && !defined('DB_USER') && getenv('IS_DDEV_PROJECT') == 'true') {
+  require_once($ddev_settings);
 }
 
 /** Include wp-settings.php */
 if (file_exists(ABSPATH . '/wp-settings.php')) {
-	require_once ABSPATH . '/wp-settings.php';
+  require_once ABSPATH . '/wp-settings.php';
 }
 `
 
@@ -121,29 +122,31 @@ const wordpressDdevSettingsTemplate = `<?php
 /**
 {{ $config.Signature }}: Automatically generated WordPress settings file.
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
+ */
 
-*/
+if (getenv('IS_DDEV_PROJECT') == 'true') {
+  /** The name of the database for WordPress */
+  define('DB_NAME', '{{ $config.DatabaseName }}');
+  
+  /** MySQL database username */
+  define('DB_USER', '{{ $config.DatabaseUsername }}');
+  
+  /** MySQL database password */
+  define('DB_PASSWORD', '{{ $config.DatabasePassword }}');
+  
+  /** MySQL hostname */
+  define('DB_HOST', '{{ $config.DatabaseHost }}');
 
-/** The name of the database for WordPress */
-define('DB_NAME', '{{ $config.DatabaseName }}');
-
-/** MySQL database username */
-define('DB_USER', '{{ $config.DatabaseUsername }}');
-
-/** MySQL database password */
-define('DB_PASSWORD', '{{ $config.DatabasePassword }}');
-
-/** MySQL hostname */
-define('DB_HOST', '{{ $config.DatabaseHost }}');
+  /** WP_HOME URL */
+  define('WP_HOME', '{{ $config.DeployURL }}');
+  
+  /** WP_SITEURL location */
+  define('WP_SITEURL', WP_HOME . '/{{ $config.AbsPath  }}');
+}
 
 /** Enable debug */
 define('WP_DEBUG', true);
 
-/** WP_HOME URL */
-define('WP_HOME', '{{ $config.DeployURL }}');
-
-/** WP_SITEURL location */
-define('WP_SITEURL', WP_HOME . '/{{ $config.AbsPath  }}');
 
 /** Define the database table prefix */
 $table_prefix  = 'wp_';
@@ -402,12 +405,4 @@ func wordpressGetRelativeAbsPath(app *DdevApp) (string, error) {
 	absPath := filepath.Base(filepath.Dir(subDirMatches[0]))
 
 	return absPath, nil
-}
-
-// wordpressPostStartAction handles post-start actions
-func wordpressPostStartAction(app *DdevApp) error {
-	if _, err := app.CreateSettingsFile(); err != nil {
-		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
-	}
-	return nil
 }

@@ -12,14 +12,9 @@ DDEV_WINDOWS_UID=1000
 DDEV_WINDOWS_GID=1000
 
 nfs_addr=127.0.0.1
-# Get IP address for docker toolbox docker host
-if [ "${DOCKER_TOOLBOX_INSTALL_PATH:-}" != "" ] ; then
-    hostDockerInternalIP=$(echo $DOCKER_HOST | awk -F '.' ' { sub(/tcp:\/\//,"",$1); printf ("%d.%d.%d.1", $1, $2, $3) }')
-    nfs_addr=${hostDockerInternalIP}
-fi
 
 mkdir -p ~/.ddev
-docker run --rm -t -v /$HOME/.ddev:/tmp/junker99 busybox:latest ls //tmp/junker99 >/dev/null || ( echo "Docker does not seem to be running or functional, please check it for problems" && exit 101)
+docker run --rm -t -v "/$HOME/.ddev:/tmp/junker99" busybox:latest ls //tmp/junker99 >/dev/null || ( echo "Docker does not seem to be running or functional, please check it for problems" && exit 101)
 
 
 status=uninstalled

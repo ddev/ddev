@@ -38,10 +38,8 @@ func TestLogs(t *testing.T) {
 	assert.NoError(err)
 	cleanup := v.Chdir()
 
-	app, err := ddevapp.NewApp(v.Dir, true, "")
+	app, err := ddevapp.NewApp(v.Dir, true)
 	assert.NoError(err)
-
-	ddevapp.WaitForSync(app, 2)
 
 	url := "http://" + v.Name + "." + app.ProjectTLD + "/logtest.php"
 	_, err = testcommon.EnsureLocalHTTPContent(t, url, "Notice to demonstrate logging", 5)

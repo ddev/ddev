@@ -1,0 +1,60 @@
+#!/bin/bash
+
+#ddev-generated: Remove this line to take over this script
+## Description: Enable or disable blackfire.io profiling
+## Usage: blackfire start|stop|on|off|enable|disable|true|false|status
+## Example: "ddev blackfire" (default is "on"), "ddev blackfire off", "ddev blackfire on", "ddev blackfire status"
+
+function enable {
+  if [ -z ${BLACKFIRE_SERVER_ID} ] || [ -z ${BLACKFIRE_SERVER_TOKEN} ]; then
+    echo "BLACKFIRE_SERVER_ID and BLACKFIRE_SERVER_TOKEN environment variables must be set" >&2
+    echo "See docs for how to set in global or project config" >&2
+    echo "For example, ddev config global --web-env=BLACKFIRE_SERVER_ID=<id>,BLACKFIRE_SERVER_TOKEN=<token>"
+    exit 1
+  fi
+  phpenmod blackfire
+  killall -HUP php-fpm
+  killall blackfire-agent 2>/dev/null
+  nohup blackfire-agent --log-level=4 >/tmp/blackfire_nohup.out 2>&1 &
+  sleep 1
+  echo "Enabled blackfire PHP extension and started blackfire-agent"
+  exit
+}
+function disable {
+  phpdismod blackfire
+  killall -HUP php-fpm
+  killall blackfire-agent 2>/dev/null
+  echo "Disabled blackfire PHP extension and stopped blackfire-agent"
+  exit
+}
+
+
+if [ $# -eq 0 ] ; then
+  enable
+fi
+
+case $1 in
+  on|true|enable|start)
+    disable_xdebug
+    enable
+    ;;
+  off|false|disable|stop)
+    disable
+    ;;
+  status)
+    php --version | grep "with blackfire" >/dev/null 2>&1
+    phpstatus=$?
+    killall -0 blackfire-agent 2>/dev/null
+    agentstatus=$?
+    if [ ${phpstatus} -eq 0 ]; then echo "blackfire PHP extension enabled"; else echo "blackfire PHP extension disabled"; fi
+    if [ ${agentstatus} -eq 0 ]; then echo "blackfire agent running"; else echo "blackfire agent not running"; fi
+
+    if [ ${phpstatus} -eq 0 ]; then printf "probe version %s\n" "$(php -v | awk  -F '[ ,\~]+' '/blackfire/{ print $4; }')"; fi
+    printf "agent version %s\n" "$(blackfire-agent -v | awk '{print $2;}')"
+    printf "cli version %s\n" "$(blackfire version | awk '{print $2;}')"
+    ;;
+
+  *)
+    echo "Invalid argument: $1"
+    ;;
+esac

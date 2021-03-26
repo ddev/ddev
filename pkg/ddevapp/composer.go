@@ -3,7 +3,6 @@ package ddevapp
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/mattn/go-isatty"
 	"os"
 	"runtime"
@@ -12,7 +11,7 @@ import (
 
 // Composer runs composer commands in the web container, managing pre- and post- hooks
 func (app *DdevApp) Composer(args []string) (string, string, error) {
-	_, _, err := app.ProcessHooks("pre-composer")
+	err := app.ProcessHooks("pre-composer")
 	if err != nil {
 		return "", "", fmt.Errorf("Failed to process pre-composer hooks: %v", err)
 	}
@@ -27,10 +26,10 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 		return stdout, stderr, fmt.Errorf("composer command failed: %v", err)
 	}
 
-	if runtime.GOOS == "windows" && !nodeps.IsDockerToolbox() {
+	if runtime.GOOS == "windows" {
 		fileutil.ReplaceSimulatedLinks(app.AppRoot)
 	}
-	_, _, err = app.ProcessHooks("post-composer")
+	err = app.ProcessHooks("post-composer")
 	if err != nil {
 		return "", "", fmt.Errorf("Failed to process post-composer hooks: %v", err)
 	}

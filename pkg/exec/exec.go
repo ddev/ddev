@@ -12,10 +12,6 @@ import (
 // RunCommand runs a command on the host system.
 // returns the stdout of the command and an err
 func RunCommand(command string, args []string) (string, error) {
-	output.UserOut.WithFields(log.Fields{
-		"Command": command + " " + strings.Join(args[:], " "),
-	}).Info("Running Command")
-
 	out, err := exec.Command(
 		command, args...,
 	).CombinedOutput()

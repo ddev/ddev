@@ -1,7 +1,9 @@
 package ddevapp_test
 
 import (
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"testing"
@@ -20,33 +22,28 @@ import (
 // sure the expected apptype is returned.
 func TestApptypeDetection(t *testing.T) {
 	assert := asrt.New(t)
-
-	fileLocations := map[string]string{
-		nodeps.AppTypeDrupal6:   "misc/ahah.js",
-		nodeps.AppTypeDrupal7:   "misc/ajax.js",
-		nodeps.AppTypeDrupal8:   "core/scripts/drupal.sh",
-		nodeps.AppTypeWordPress: "wp-settings.php",
-		nodeps.AppTypeBackdrop:  "core/scripts/backdrop.sh",
+	testDir, _ := os.Getwd()
+	appTypes := ddevapp.GetValidAppTypes()
+	var nonPHPAppTypes = []string{}
+	for _, t := range appTypes {
+		if t != nodeps.AppTypePHP {
+			nonPHPAppTypes = append(nonPHPAppTypes, t)
+		}
 	}
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	defer testcommon.CleanupDir(tmpDir)
+	defer testcommon.Chdir(tmpDir)()
 
-	for expectedType, expectedPath := range fileLocations {
-		testDir := testcommon.CreateTmpDir("TestApptype")
-
-		// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-		defer testcommon.CleanupDir(testDir)
-		defer testcommon.Chdir(testDir)()
-
-		err := os.MkdirAll(filepath.Join(testDir, filepath.Dir(expectedPath)), 0777)
+	err := fileutil.CopyDir(filepath.Join(testDir, "testdata", t.Name()), filepath.Join(tmpDir, "sampleapptypes"))
+	require.NoError(t, err)
+	for _, appType := range nonPHPAppTypes {
+		app, err := ddevapp.NewApp(filepath.Join(tmpDir, "sampleapptypes", appType), true)
 		assert.NoError(err)
-
-		_, err = os.OpenFile(filepath.Join(testDir, expectedPath), os.O_RDONLY|os.O_CREATE, 0666)
-		assert.NoError(err)
-
-		app, err := ddevapp.NewApp(testDir, true, nodeps.ProviderDefault)
-		assert.NoError(err)
+		//nolint: errcheck
+		defer app.Stop(true, false)
 
 		foundType := app.DetectAppType()
-		assert.EqualValues(expectedType, foundType)
+		assert.EqualValues(appType, foundType)
 	}
 }
 
@@ -59,19 +56,24 @@ func TestPostConfigAction(t *testing.T) {
 		nodeps.AppTypeDrupal6:   nodeps.PHP56,
 		nodeps.AppTypeDrupal7:   nodeps.PHPDefault,
 		nodeps.AppTypeDrupal8:   nodeps.PHPDefault,
+		nodeps.AppTypeDrupal9:   nodeps.PHPDefault,
 		nodeps.AppTypeWordPress: nodeps.PHPDefault,
 		nodeps.AppTypeBackdrop:  nodeps.PHPDefault,
+		nodeps.AppTypeMagento:   nodeps.PHP56,
 	}
 
 	for appType, expectedPHPVersion := range appTypes {
-		testDir := testcommon.CreateTmpDir("TestApptype")
+		testDir := testcommon.CreateTmpDir(t.Name())
 
-		// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-		defer testcommon.CleanupDir(testDir)
-		defer testcommon.Chdir(testDir)()
-
-		app, err := ddevapp.NewApp(testDir, true, nodeps.ProviderDefault)
+		app, err := ddevapp.NewApp(testDir, true)
 		assert.NoError(err)
+
+		t.Cleanup(func() {
+			err = app.Stop(true, false)
+			assert.NoError(err)
+			err = os.RemoveAll(testDir)
+			assert.NoError(err)
+		})
 
 		// Prompt for apptype as a way to get it into the config.
 		input := fmt.Sprintf(appType + "\n")

@@ -1,7 +1,6 @@
 package ddevapp
 
 type invalidConfigFile error
-type invalidAppName error
 type invalidHostname error
 type invalidAppType error
 type invalidPHPVersion error

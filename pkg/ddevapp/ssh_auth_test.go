@@ -5,7 +5,7 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
@@ -22,9 +22,6 @@ import (
 // TestSSHAuth tests basic ssh authentication
 func TestSSHAuth(t *testing.T) {
 	assert := asrt.New(t)
-	if nodeps.IsDockerToolbox() {
-		t.Skip("Skpping TestSSHAuth because running on Docker toolbox")
-	}
 	testDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
 
@@ -50,7 +47,7 @@ func TestSSHAuth(t *testing.T) {
 		}
 	}
 	destDdev := filepath.Join(app.AppRoot, ".ddev")
-	srcDdev := filepath.Join(testDir, "testdata", "TestSSHAuth", ".ddev")
+	srcDdev := filepath.Join(testDir, "testdata", t.Name(), ".ddev")
 	err = fileutil.CopyDir(filepath.Join(srcDdev, ".ssh"), filepath.Join(destDdev, ".ssh"))
 	require.NoError(t, err)
 	err = os.Chmod(filepath.Join(destDdev, ".ssh"), 0700)
@@ -67,15 +64,16 @@ func TestSSHAuth(t *testing.T) {
 	//nolint: errcheck
 	defer os.Remove(filepath.Join(destDdev, "docker-compose.sshserver.yaml"))
 
+	// Start with the testsite stopped (and everything stopped)
+	err = app.Stop(true, false)
+	assert.NoError(err)
+
 	// Make absolutely sure the ssh-agent is created from scratch.
 	err = ddevapp.RemoveSSHAgentContainer()
 	require.NoError(t, err)
 
-	startErr := app.StartAndWaitForSync(0)
-	if startErr != nil {
-		logs, _ := ddevapp.GetErrLogsFromApp(app, startErr)
-		t.Fatalf("app.StartAndWaitForSync failed, err=%v, logs=\n========\n%s\n===========\n", startErr, logs)
-	}
+	err = app.Start()
+	require.NoError(t, err)
 
 	err = app.EnsureSSHAgentContainer()
 	require.NoError(t, err)
@@ -128,4 +126,47 @@ func TestSSHAuth(t *testing.T) {
 
 	runTime()
 	switchDir()
+}
+
+// TestSshAuthConfigOverride tests that the ~/.ddev/.ssh-auth-compose-compose.yaml can be overridden
+// with ~/.ddev/ssh-auth-compose.*.yaml
+func TestSshAuthConfigOverride(t *testing.T) {
+	assert := asrt.New(t)
+	pwd, _ := os.Getwd()
+	testDir := testcommon.CreateTmpDir(t.Name())
+	_ = os.Chdir(testDir)
+	overrideYaml := filepath.Join(globalconfig.GetGlobalDdevDir(), "ssh-auth-compose.override.yaml")
+
+	// Remove the ddev-ssh-agent, since the start code simply checks to see if it's
+	// running and doesn't restart it if it's running
+	_ = dockerutil.RemoveContainer("ddev-ssh-agent", 0)
+
+	testcommon.ClearDockerEnv()
+
+	app, err := ddevapp.NewApp(testDir, true)
+	assert.NoError(err)
+	err = app.WriteConfig()
+	assert.NoError(err)
+	err = fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "ssh-auth-compose.override.yaml"), overrideYaml)
+	assert.NoError(err)
+
+	answer := fileutil.RandomFilenameBase()
+	os.Setenv("ANSWER", answer)
+	assert.NoError(err)
+	assert.NoError(err)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(pwd)
+		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
+		err = os.Remove(overrideYaml)
+		assert.NoError(err)
+	})
+
+	err = app.Start()
+	assert.NoError(err)
+
+	stdout, _, err := dockerutil.Exec("ddev-ssh-agent", "bash -c 'echo $ANSWER'")
+	assert.Equal(answer+"\n", stdout)
 }

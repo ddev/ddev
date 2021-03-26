@@ -1,0 +1,11 @@
+#!/bin/bash
+
+#ddev-generated
+# This assumes that the typo3cms command will be in the $PATH; if in vendor/bin/ it will be
+
+## Description: Run TYPO3 Console (typo3cms) command inside the web container
+## Usage: typo3cms [args]
+## Example: "ddev typo3cms cache:flush" or "ddev typo3cms database:export"
+## ProjectTypes: typo3
+
+typo3cms "$@"

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+#ddev-generated
+# This assumes that the typo3 command will be in the $PATH; if in vendor/bin/ it will be
+
+## Description: Run TYPO3 CLI (typo3) command inside the web container
+## Usage: typo3 [args]
+## Example: "ddev typo3 site:list" or "ddev typo3 list" or "ddev typo3 extension:list"
+## ProjectTypes: typo3
+
+typo3 "$@"

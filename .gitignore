@@ -1,16 +1,6 @@
 # Temporary build-tools artifacts to be ignored
-/.go/
 /.gotmp/
-/bin/
-/.container*
-/.push*
-/linux
-/darwin
-/windows
-/.dockerfile
 /VERSION.txt
-/.docker_image
-/debug
-/debug.test
-
+.docker_image
+/dictionary.dic
 /.idea

@@ -2,10 +2,9 @@ package cmd
 
 import (
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/stretchr/testify/require"
 	"runtime"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 
 	"os"
 
@@ -66,6 +65,11 @@ func TestCmdStop(t *testing.T) {
 func TestCmdStopMissingProjectDirectory(t *testing.T) {
 	var err error
 	var out string
+
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping because unreliable on Windows")
+	}
+
 	assert := asrt.New(t)
 	projDir, _ := os.Getwd()
 
@@ -81,7 +85,10 @@ func TestCmdStopMissingProjectDirectory(t *testing.T) {
 	//nolint: errcheck
 	defer exec.RunCommand(DdevBin, []string{"stop", "-RO", projectName})
 
-	_, err = exec.RunCommand(DdevBin, []string{"start"})
+	_, err = exec.RunCommand(DdevBin, []string{"start", "-y"})
+	assert.NoError(err)
+
+	_, err = exec.RunCommand(DdevBin, []string{"stop", projectName})
 	assert.NoError(err)
 
 	err = os.Chdir(projDir)
@@ -90,11 +97,11 @@ func TestCmdStopMissingProjectDirectory(t *testing.T) {
 	copyDir := filepath.Join(testcommon.CreateTmpDir(t.Name()), util.RandString(4))
 	err = os.Rename(tmpDir, copyDir)
 	assert.NoError(err)
+	//nolint: errcheck
+	defer os.Rename(copyDir, tmpDir)
 
 	out, err = exec.RunCommand(DdevBin, []string{"stop", projectName})
 	assert.NoError(err)
 	assert.Contains(out, "has been stopped")
 
-	err = os.Rename(copyDir, tmpDir)
-	assert.NoError(err)
 }

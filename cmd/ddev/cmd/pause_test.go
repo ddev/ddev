@@ -1,11 +1,10 @@
 package cmd
 
 import (
-	"testing"
-
 	"github.com/stretchr/testify/require"
-
 	"os"
+	"runtime"
+	"testing"
 
 	"path/filepath"
 
@@ -65,6 +64,11 @@ func TestCmdPauseContainers(t *testing.T) {
 func TestCmdPauseContainersMissingProjectDirectory(t *testing.T) {
 	var err error
 	var out string
+
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping because unreliable on Windows")
+	}
+
 	assert := asrt.New(t)
 
 	projDir, _ := os.Getwd()
@@ -78,11 +82,14 @@ func TestCmdPauseContainersMissingProjectDirectory(t *testing.T) {
 	_, err = exec.RunCommand(DdevBin, []string{"config", "--project-type", "php", "--project-name", projectName})
 	assert.NoError(err)
 
-	_, err = exec.RunCommand(DdevBin, []string{"start"})
+	_, err = exec.RunCommand(DdevBin, []string{"start", "-y"})
 	assert.NoError(err)
 
 	//nolint: errcheck
 	defer exec.RunCommand(DdevBin, []string{"stop", "-RO", projectName})
+
+	_, err = exec.RunCommand(DdevBin, []string{"pause", projectName})
+	assert.NoError(err)
 
 	err = os.Chdir(projDir)
 	assert.NoError(err)

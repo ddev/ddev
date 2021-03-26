@@ -7,13 +7,13 @@ services:
     container_name: TestComposeWithStreams
     environment:
       COLUMNS: '99'
-      DDEV_PHP_VERSION: '7.1'
       DDEV_PROJECT_TYPE: typo3
       DDEV_ROUTER_HTTPS_PORT: '443'
       DDEV_ROUTER_HTTP_PORT: '80'
       DDEV_URL: https://test-compose-with-streams.ddev.site
       DDEV_WEBSERVER_TYPE: nginx-fpm
       DDEV_XDEBUG_ENABLED: "false"
+      IS_DDEV_PROJECT: "true"
       DEPLOY_NAME: local
       DOCROOT: public
       HTTPS_EXPOSE: 443:80
@@ -21,6 +21,7 @@ services:
       LINES: '25'
       VIRTUAL_HOST: junk.ddev.site
     image: TEST-COMPOSE-WITH-STREAMS-IMAGE
+    user: "33:33"
     labels:
       com.ddev.app-type: php
       com.ddev.app-url: http://test-compose-with-streams.ddev.site

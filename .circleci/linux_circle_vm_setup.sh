@@ -1,14 +1,21 @@
 #!/usr/bin/env bash
 
 set -o errexit
-set -x
 
 # Basic tools
 
-sudo apt-get update -qq
-sudo apt-get install -qq mysql-client realpath zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev
+set -x
 
-curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip && sudo unzip -d /usr/local/bin /tmp/ngrok.zip
+if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
+  set +x
+  echo "${DOCKERHUB_PULL_PASSWORD}" | docker login --username "${DOCKERHUB_PULL_USERNAME}" --password-stdin
+  set -x
+fi
+
+sudo apt-get update -qq
+sudo apt-get install -qq mysql-client coreutils zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev
+
+curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip && sudo unzip -o -d /usr/local/bin /tmp/ngrok.zip
 
 if [ ! -d /home/linuxbrew/.linuxbrew/bin ] ; then
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
@@ -16,17 +23,33 @@ fi
 
 echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc
 
+# Without this .curlrc CircleCI linux image doesn't respect mkcert certs
+echo "capath=/etc/ssl/certs/" >>~/.curlrc
+
 . ~/.bashrc
 
-brew update && brew tap drud/ddev
-for item in osslsigncode golang mkcert ddev makensis; do
-    brew install $item || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item
+export HOMEBREW_NO_AUTO_UPDATE=1
+export HOMEBREW_NO_INSTALL_CLEANUP=1
+
+brew tap drud/ddev >/dev/null
+brew unlink bats-core || true
+for item in osslsigncode golang mingw-w64 mkcert mkdocs ddev; do
+    brew install $item >/dev/null || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item >/dev/null
 done
+brew install --build-from-source makensis
+
+git clone --branch v1.2.1 https://github.com/bats-core/bats-core.git /tmp/bats-core && pushd /tmp/bats-core >/dev/null && sudo ./install.sh /usr/local
+
+npm install --global markdownlint-cli
+markdownlint --version
+# readthedocs has ancient version of mkdocs in it.
+pyenv global 3.9.1 # added to make CircleCi give us pip3
+pip3 install -q yq mkdocs==0.17.5
 
 # Get the Stubs and Plugins for makensis; the linux makensis build doesn't do this.
-wget https://sourceforge.net/projects/nsis/files/NSIS%203/3.04/nsis-3.04.zip/download && sudo unzip -d /usr/local/share download && sudo mv /usr/local/share/nsis-3.04 /usr/local/share/nsis
-wget https://github.com/GsNSIS/EnVar/releases/latest/download/EnVar-Plugin.zip && sudo unzip -d /usr/local/share/nsis EnVar-Plugin.zip
-wget https://github.com/DigitalMediaServer/NSIS-INetC-plugin/releases/latest/download/INetC.zip && sudo unzip -d /usr/local/share/nsis/Plugins INetC.zip
+wget https://sourceforge.net/projects/nsis/files/NSIS%203/3.06.1/nsis-3.06.1.zip/download && sudo unzip -o -d /usr/local/share download && sudo mv /usr/local/share/nsis-3.06.1 /usr/local/share/nsis
+wget https://github.com/GsNSIS/EnVar/releases/latest/download/EnVar-Plugin.zip && sudo unzip -o -d /usr/local/share/nsis EnVar-Plugin.zip
+wget https://github.com/DigitalMediaServer/NSIS-INetC-plugin/releases/latest/download/INetC.zip && sudo unzip -o -d /usr/local/share/nsis/Plugins INetC.zip
 
 mkcert -install
 
@@ -39,12 +62,8 @@ EOF"
 
 sudo service nfs-kernel-server restart
 
-# gotestsum
-GOTESTSUM_VERSION=0.3.2
-curl -sSL "https://github.com/gotestyourself/gotestsum/releases/download/v$GOTESTSUM_VERSION/gotestsum_${GOTESTSUM_VERSION}_linux_amd64.tar.gz" | sudo tar -xz -C /usr/local/bin gotestsum && sudo chmod +x /usr/local/bin/gotestsum
-
 # Install ghr
-GHR_RELEASE="v0.12.0"
+GHR_RELEASE="v0.13.0"
 curl -fsL -o /tmp/ghr.tar.gz https://github.com/tcnksm/ghr/releases/download/${GHR_RELEASE}/ghr_${GHR_RELEASE}_linux_amd64.tar.gz
 sudo tar -C /usr/local/bin --strip-components=1 -xzf /tmp/ghr.tar.gz ghr_${GHR_RELEASE}_linux_amd64/ghr
 ghr -v

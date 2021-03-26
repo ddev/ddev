@@ -14,17 +14,21 @@ var sshDirArg string
 
 // DdevSSHCmd represents the ssh command.
 var DdevSSHCmd = &cobra.Command{
-	Use: "ssh [projectname]",
-
+	Use:   "ssh [projectname]",
 	Short: "Starts a shell session in the container for a service. Uses web service by default.",
 	Long:  `Starts a shell session in the container for a service. Uses web service by default. To start a shell session for another service, run "ddev ssh --service <service>`,
-	Args:  cobra.MaximumNArgs(1),
+	Example: `ddev ssh
+ddev ssh -s sb
+ddev ssh <projectname>
+ddev ssh -d /var/www/html`,
+	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		projects, err := getRequestedProjects(args, false)
-		if err != nil {
+		if err != nil || len(projects) == 0 {
 			util.Failed("Failed to ddev ssh: %v", err)
 		}
 		app := projects[0]
+		instrumentationApp = app
 
 		if strings.Contains(app.SiteStatus(), ddevapp.SiteStopped) {
 			util.Failed("Project is not currently running. Try 'ddev start'.")
@@ -42,11 +46,14 @@ var DdevSSHCmd = &cobra.Command{
 		if !nodeps.ArrayContainsString([]string{"web", "db", "dba", "solr"}, serviceType) {
 			shell = "sh"
 		}
-		_ = app.ExecWithTty(&ddevapp.ExecOpts{
+		err = app.ExecWithTty(&ddevapp.ExecOpts{
 			Service: serviceType,
 			Cmd:     shell + " -l",
 			Dir:     sshDirArg,
 		})
+		if err != nil {
+			util.Failed("Failed to ddev ssh %s: %v", serviceType, err)
+		}
 	},
 }
 

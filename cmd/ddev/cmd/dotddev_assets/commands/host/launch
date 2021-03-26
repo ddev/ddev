@@ -1,18 +1,59 @@
 #!/bin/bash
 
-## #ddev-generated
+## #ddev-generated: If you want to edit and own this file, remove this line.
 ## Description: Launch a browser with the current site
-## Usage: launch [path]
-## Example: "ddev launch" or "ddev launch /admin/reports/status/php" or "ddev launch phpinfo.php"
+## Usage: launch [path] [-p|--phpmyadmin] [-m|--mailhog]
+## Example: "ddev launch" or "ddev launch /admin/reports/status/php" or "ddev launch phpinfo.php", for PHPMyAdmin "ddev launch -p", MailHog "ddev launch -m"
 
 FULLURL=${DDEV_PRIMARY_URL}
+HTTPS=""
+if [ ${DDEV_PRIMARY_URL%://*} = "https" ]; then HTTPS=true; fi
 
-if [ -n "${1:-}" ] ; then 
-  if [[ ${1::1} != "/" ]] ; then 
-    FULLURL="${FULLURL}/"; 
+while :; do
+     case ${1:-} in
+         -h|-\?|--help)
+             show_help
+             exit
+             ;;
+         -p|--phpmyadmin)
+            if [ "${HTTPS}" = "" ]; then
+                FULLURL="${FULLURL%:[0-9]*}:${DDEV_PHPMYADMIN_PORT}"
+            else
+                FULLURL="${FULLURL%:[0-9]*}:${DDEV_PHPMYADMIN_HTTPS_PORT}"
+            fi
+             ;;
+         -m|--mailhog)
+            if [ "${HTTPS}" = "" ]; then
+                FULLURL="${FULLURL%:[0-9]*}:${DDEV_MAILHOG_PORT}"
+            else
+                FULLURL="${FULLURL%:[0-9]*}:${DDEV_MAILHOG_HTTPS_PORT}"
+            fi
+             ;;
+
+         --)              # End of all options.
+             shift
+             break
+             ;;
+         -?*)
+             printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
+             ;;
+         *)               # Default case: No more options, so break out of the loop.
+             break
+     esac
+
+     shift
+ done
+
+if [ -n "${1:-}" ] ; then
+  if [[ ${1::1} != "/" ]] ; then
+    FULLURL="${FULLURL}/";
   fi
 
-  FULLURL="${FULLURL}${1}"; 
+  FULLURL="${FULLURL}${1}";
+fi
+
+if [ ! -z ${DDEV_DEBUG:-} ]; then
+    printf "FULLURL $FULLURL\n" && exit 0
 fi
 
 case $OSTYPE in

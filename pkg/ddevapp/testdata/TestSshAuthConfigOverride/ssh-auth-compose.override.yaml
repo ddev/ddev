@@ -1,0 +1,5 @@
+version: '3.6'
+services:
+  ddev-ssh-agent:
+    environment:
+    - ANSWER

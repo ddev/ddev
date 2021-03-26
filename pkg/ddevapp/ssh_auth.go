@@ -18,10 +18,18 @@ import (
 // SSHAuthName is the "machine name" of the ddev-ssh-agent docker-compose service
 const SSHAuthName = "ddev-ssh-agent"
 
-// SSHAuthComposeYAMLPath returns the full filepath to the ssh-auth docker-compose yaml file.
+// SSHAuthComposeYAMLPath returns the filepath to the base .ssh-auth-compose yaml file.
 func SSHAuthComposeYAMLPath() string {
 	globalDir := globalconfig.GetGlobalDdevDir()
-	dest := path.Join(globalDir, "ssh-auth-compose.yaml")
+	dest := path.Join(globalDir, ".ssh-auth-compose.yaml")
+	return dest
+}
+
+// FullRenderedSSHAuthComposeYAMLPath returns the filepath to the rendered
+//.ssh-auth-compose-full.yaml file.
+func FullRenderedSSHAuthComposeYAMLPath() string {
+	globalDir := globalconfig.GetGlobalDdevDir()
+	dest := path.Join(globalDir, ".ssh-auth-compose-full.yaml")
 	return dest
 }
 
@@ -38,7 +46,7 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 
 	dockerutil.EnsureDdevNetwork()
 
-	path, err := CreateSSHAuthComposeFile()
+	path, err := app.CreateSSHAuthComposeFile()
 	if err != nil {
 		return err
 	}
@@ -56,7 +64,7 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 	label := map[string]string{"com.docker.compose.project": SSHAuthName}
 	_, err = dockerutil.ContainerWait(containerWaitTimeout, label)
 	if err != nil {
-		return fmt.Errorf("ddev-ssh-agent failed to become ready: %v", err)
+		return fmt.Errorf("ddev-ssh-agent failed to become ready; debug with 'docker logs ddev-ssh-agent'; error: %v", err)
 	}
 
 	util.Warning("ssh-agent container is running: If you want to add authentication to the ssh-agent container, run 'ddev auth ssh' to enable your keys.")
@@ -65,37 +73,22 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 
 // RemoveSSHAgentContainer brings down the ddev-ssh-agent if it's running.
 func RemoveSSHAgentContainer() error {
-	sshContainer, err := findDdevSSHAuth()
+	// Stop the container if it exists
+	err := dockerutil.RemoveContainer(globalconfig.DdevSSHAgentContainer, 0)
 	if err != nil {
-		return err
+		if _, ok := err.(*docker.NoSuchContainer); !ok {
+			return err
+		}
 	}
-	// If we don't have a container, there's nothing to do.
-	if sshContainer == nil {
-		return nil
-	}
-
-	// Otherwise we'll "down" the container"
-	path, err := CreateSSHAuthComposeFile()
-	if err != nil {
-		return err
-	}
-	// run docker-compose rm -f
-	_, _, err = dockerutil.ComposeCmd([]string{path}, "-p", SSHAuthName, "down")
-	if err != nil {
-		return fmt.Errorf("failed to rm ddev-ssh-agent: %v", err)
-	}
-
 	util.Warning("The ddev-ssh-agent container has been removed. When you start it again you will have to use 'ddev auth ssh' to provide key authentication again.")
 	return nil
 }
 
 // CreateSSHAuthComposeFile creates the docker-compose file for the ddev-ssh-agent
-func CreateSSHAuthComposeFile() (string, error) {
-
-	sshAuthComposePath := SSHAuthComposeYAMLPath()
+func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 
 	var doc bytes.Buffer
-	f, ferr := os.Create(sshAuthComposePath)
+	f, ferr := os.Create(SSHAuthComposeYAMLPath())
 	if ferr != nil {
 		return "", ferr
 	}
@@ -108,27 +101,49 @@ func CreateSSHAuthComposeFile() (string, error) {
 	}
 
 	context := filepath.Join(globalconfig.GetGlobalDdevDir(), ".sshimageBuild")
-	err = WriteBuildDockerfile(filepath.Join(context, "Dockerfile"), "", nil)
+	err = WriteBuildDockerfile(filepath.Join(context, "Dockerfile"), "", nil, "")
 	if err != nil {
 		return "", err
 	}
 
 	uid, gid, username := util.GetContainerUIDGid()
 
+	app.DockerEnv()
+
 	templateVars := map[string]interface{}{
-		"ssh_auth_image":  version.SSHAuthImage,
-		"ssh_auth_tag":    version.SSHAuthTag,
-		"compose_version": version.DockerComposeFileFormatVersion,
-		"Username":        username,
-		"UID":             uid,
-		"GID":             gid,
-		"BuildContext":    context,
+		"ssh_auth_image":        version.SSHAuthImage,
+		"ssh_auth_tag":          version.SSHAuthTag,
+		"compose_version":       version.DockerComposeFileFormatVersion,
+		"AutoRestartContainers": globalconfig.DdevGlobalConfig.AutoRestartContainers,
+		"Username":              username,
+		"UID":                   uid,
+		"GID":                   gid,
+		"BuildContext":          context,
 	}
 	err = templ.Execute(&doc, templateVars)
 	util.CheckErr(err)
 	_, err = f.WriteString(doc.String())
 	util.CheckErr(err)
-	return sshAuthComposePath, nil
+
+	fullHandle, err := os.Create(FullRenderedSSHAuthComposeYAMLPath())
+	if err != nil {
+		return "", err
+	}
+
+	userFiles, err := filepath.Glob(filepath.Join(globalconfig.GetGlobalDdevDir(), "ssh-auth-compose.*.yaml"))
+	if err != nil {
+		return "", err
+	}
+	files := append([]string{SSHAuthComposeYAMLPath()}, userFiles...)
+	fullContents, _, err := dockerutil.ComposeCmd(files, "config")
+	if err != nil {
+		return "", err
+	}
+	_, err = fullHandle.WriteString(fullContents)
+	if err != nil {
+		return "", err
+	}
+	return FullRenderedSSHAuthComposeYAMLPath(), nil
 }
 
 // findDdevSSHAuth usees FindContainerByLabels to get our sshAuth container and

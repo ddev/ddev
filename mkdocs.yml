@@ -3,18 +3,42 @@ repo_url: https://github.com/drud/ddev
 repo_name: GitHub
 edit_uri: blob/master/docs/
 copyright: DRUD Technology, LLC
-theme: readthedocs
+theme:
+  name: 'material'
+  palette:
+    primary: 'light-blue'
 extra_javascript:
-  - assets/fix-search.js
+  - 'assets/fix-search.js'
+  - 'assets/extra.js'
+  - 'assets/jquery-3.5.1.min.js'
 markdown_extensions:
-  - markdown.extensions.toc
-pages:
+    - toc:
+        permalink: true
+    - admonition
+    - def_list
+    - mdx_truly_sane_lists:
+        nested_indent: 2
+        truly_sane: true
+    - nl2br
+    - pymdownx.details
+    - pymdownx.superfences
+    - meta
+plugins:
+    - search
+    - git-revision-date-localized:
+        type: timeago
+        locale: en
+google_analytics:
+  - 'UA-105593079-2'
+  - 'auto'
+nav:
   - 'Home': 'index.md'
   - 'ddev Basics':
     - 'Using the CLI': 'users/cli-usage.md'
     - 'ddev Hooks': 'users/extending-commands.md'
     - 'Using Developer Tools with ddev': 'users/developer-tools.md'
     - 'PHP Step Debugging': 'users/step-debugging.md'
+    - 'Profiling with Blackfire': 'users/blackfire-profiling.md'
     - 'Troubleshooting': 'users/troubleshooting.md'
     - 'Docker Installation': 'users/docker_installation.md'
     - 'Performance': 'users/performance.md'
@@ -23,6 +47,9 @@ pages:
     - '.ddev/config.yaml Options': 'users/extend/config_yaml.md'
     - 'Database Server Types': 'users/extend/database_types.md'
     - 'Additional Project Hostnames': 'users/extend/additional-hostnames.md'
+    - 'Shell Completion (bash, zsh, etc.)': 'users/shell-completion.md'
+    - 'Alternate Uses of DDEV-Local': 'users/alternate-uses.md'
+    - 'Special Environments': 'users/special-environments.md'
   - 'Extending ddev':
     - 'Extending and Customizing Environments': 'users/extend/customization-extendibility.md'
     - 'Additional Services': 'users/extend/additional-services.md'
@@ -30,7 +57,12 @@ pages:
     - 'Customizing Docker Images': 'users/extend/customizing-images.md'
     - 'Custom Commands': 'users/extend/custom-commands.md'
     - 'In-container Configuration': 'users/extend/in-container-configuration.md'
+    - 'Custom TLS Certificates': 'users/extend/custom-tls-certificates.md'
   - 'Integration with Hosting Providers':
+    - 'Introduction': 'users/providers/provider-introduction.md'
+    - 'Acquia': 'users/providers/acquia.md'
+    - 'DDEV-Live': 'users/providers/DDEV-Live.md'
     - 'Pantheon': 'users/providers/pantheon.md'
+    - 'Platform.sh': 'users/providers/platform.md'
   - 'Developer Documentation':
     - 'Building, Testing, and Contributing': 'developers/building-contributing.md'

@@ -30,6 +30,7 @@ var drupalBackdropSettingsLocations = map[string]settingsLocations{
 	nodeps.AppTypeDrupal6:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
 	nodeps.AppTypeDrupal7:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
 	nodeps.AppTypeDrupal8:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
+	nodeps.AppTypeDrupal9:  {main: "sites/default/settings.php", local: "sites/default/settings.ddev.php"},
 	nodeps.AppTypeBackdrop: {main: "settings.php", local: "settings.ddev.php"},
 }
 
@@ -43,12 +44,13 @@ func TestWriteSettings(t *testing.T) {
 		nodeps.AppTypeDrupal6:   "sites/default/settings.ddev.php",
 		nodeps.AppTypeDrupal7:   "sites/default/settings.ddev.php",
 		nodeps.AppTypeDrupal8:   "sites/default/settings.ddev.php",
+		nodeps.AppTypeDrupal9:   "sites/default/settings.ddev.php",
 		nodeps.AppTypeWordPress: "wp-config-ddev.php",
 		nodeps.AppTypeTYPO3:     "typo3conf/AdditionalConfiguration.php",
 	}
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true, nodeps.ProviderDefault)
+	app, err := NewApp(dir, true)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
@@ -112,19 +114,11 @@ func TestWriteDrushConfig(t *testing.T) {
 		drushFilePath := filepath.Join(filepath.Dir(app.SiteSettingsPath), "drushrc.php")
 
 		switch app.Type {
-		case nodeps.AppTypeDrupal6, nodeps.AppTypeDrupal7, nodeps.AppTypeDrupal8, nodeps.AppTypeBackdrop:
+		case nodeps.AppTypeDrupal6, nodeps.AppTypeDrupal7, nodeps.AppTypeBackdrop:
 			require.True(t, fileutil.FileExists(drushFilePath))
 			optionFound, err := fileutil.FgrepStringInFile(drushFilePath, "options")
 			assert.NoError(err)
 			assert.True(optionFound)
-
-			if app.Type == nodeps.AppTypeDrupal8 {
-				drushYMLFilePath := filepath.Join(filepath.Dir(app.SiteSettingsPath), "..", "all", "drush", "drush.yml")
-				require.True(t, fileutil.FileExists(drushYMLFilePath))
-				optionFound, err := fileutil.FgrepStringInFile(drushYMLFilePath, "options")
-				assert.NoError(err)
-				assert.True(optionFound)
-			}
 
 		default:
 			assert.False(fileutil.FileExists(drushFilePath), "Drush settings file (%s) should not exist but it does (app.Type=%s)", drushFilePath, app.Type)
@@ -142,7 +136,7 @@ func TestDrupalBackdropIncludeSettingsDdevInNewSettingsFile(t *testing.T) {
 
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true, nodeps.ProviderDefault)
+	app, err := NewApp(dir, true)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
@@ -187,7 +181,7 @@ func TestDrupalBackdropIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true, nodeps.ProviderDefault)
+	app, err := NewApp(dir, true)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
@@ -208,10 +202,8 @@ func TestDrupalBackdropIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 		_ = os.Remove(expectedSettingsDdevLocation)
 
 		// Create a settings.php that does not include settings.ddev.php
-		originalContents := "not empty"
-		settingsFile, err := os.Create(expectedSettingsLocation)
-		assert.NoError(err)
-		_, err = settingsFile.Write([]byte(originalContents))
+		originalContents := "// this file is not empty\n"
+		err = ioutil.WriteFile(expectedSettingsLocation, []byte(originalContents), 0644)
 		assert.NoError(err)
 
 		// Invoke the settings file creation process
@@ -228,7 +220,7 @@ func TestDrupalBackdropIncludeSettingsDdevInExistingSettingsFile(t *testing.T) {
 		settingsDdev := filepath.Base(relativeSettingsDdevLocation)
 		existingSettingsIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedSettingsLocation, settingsDdev)
 		assert.NoError(err)
-		assert.True(existingSettingsIncludesSettingsDdev, "Failed to find %s in %s", settingsDdev, expectedSettingsLocation)
+		assert.True(existingSettingsIncludesSettingsDdev, "Failed to find %s in %s, apptype=%s", settingsDdev, expectedSettingsLocation, appType)
 
 		// Ensure that settings.php includes original contents
 		modifiedSettingsIncludesOriginalContents, err := fileutil.FgrepStringInFile(expectedSettingsLocation, originalContents)
@@ -244,7 +236,7 @@ func TestDrupalBackdropCreateGitIgnoreIfNoneExists(t *testing.T) {
 
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true, nodeps.ProviderDefault)
+	app, err := NewApp(dir, true)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
@@ -265,14 +257,16 @@ func TestDrupalBackdropCreateGitIgnoreIfNoneExists(t *testing.T) {
 		_, err = app.CreateSettingsFile()
 		assert.NoError(err)
 
-		// Ensure that a .gitignore exists
-		assert.True(fileutil.FileExists(expectedGitIgnoreLocation))
+		// Ensure that a .gitignore exists (except for backdrop, which has settings in project root)
+		if app.Type != nodeps.AppTypeBackdrop {
+			assert.True(fileutil.FileExists(expectedGitIgnoreLocation))
 
-		// Ensure that the new .gitignore includes settings.ddev.php
-		settingsDdev := filepath.Base(relativeSettingsDdevLocation)
-		newGitIgnoreIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedGitIgnoreLocation, settingsDdev)
-		assert.NoError(err)
-		assert.True(newGitIgnoreIncludesSettingsDdev, "Failed to find %s in %s", settingsDdev, expectedGitIgnoreLocation)
+			// Ensure that the new .gitignore includes settings.ddev.php
+			settingsDdev := filepath.Base(relativeSettingsDdevLocation)
+			newGitIgnoreIncludesSettingsDdev, err := fileutil.FgrepStringInFile(expectedGitIgnoreLocation, settingsDdev)
+			assert.NoError(err)
+			assert.True(newGitIgnoreIncludesSettingsDdev, "Failed to find %s in %s", settingsDdev, expectedGitIgnoreLocation)
+		}
 	}
 }
 
@@ -283,7 +277,7 @@ func TestDrupalBackdropGitIgnoreAlreadyExists(t *testing.T) {
 
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true, nodeps.ProviderDefault)
+	app, err := NewApp(dir, true)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
@@ -326,7 +320,7 @@ func TestDrupalBackdropOverwriteDdevSettings(t *testing.T) {
 
 	dir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true, nodeps.ProviderDefault)
+	app, err := NewApp(dir, true)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)

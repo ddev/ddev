@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/drud/ddev/pkg/output"
 	"io"
+	"io/ioutil"
 	"os"
 )
 
@@ -58,4 +59,26 @@ func CaptureStdOut() func() string {
 		out := <-outC
 		return out
 	}
+}
+
+// CaptureStdOutToFile captures Stdout to a string. Capturing starts when it is called. It returns an anonymous function that when called, will return a string
+// containing the output during capture, and revert once again to the original value of os.StdOut.
+func CaptureOutputToFile() (func() string, error) {
+	oldStdout := os.Stdout // keep backup of the real stdout
+	oldStderr := os.Stderr
+	f, err := ioutil.TempFile("", "CaptureOutputToFile")
+	if err != nil {
+		return nil, err
+	}
+	os.Stdout = f
+	os.Stderr = f
+
+	return func() string {
+		_ = f.Close()
+		os.Stdout = oldStdout // restoring the real stdout
+		os.Stderr = oldStderr
+		out, _ := ioutil.ReadFile(f.Name())
+		_ = os.RemoveAll(f.Name())
+		return string(out)
+	}, nil
 }

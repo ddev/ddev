@@ -7,10 +7,10 @@ SOCKET=/var/tmp/mysql.sock
 OUTDIR=/mysqlbase
 
 mkdir -p ${OUTDIR}
-sudo chown -R "$(id -u):$(id -g)" $OUTDIR
+chown -R "$(id -u):$(id -g)" $OUTDIR
 
-sudo chmod ugo+w /var/tmp
-sudo mkdir -p /var/lib/mysql /mnt/ddev_config/mysql && sudo rm -f /var/lib/mysql/* && sudo chmod -R ugo+w /var/lib/mysql
+chmod ugo+w /var/tmp
+mkdir -p /var/lib/mysql /mnt/ddev_config/mysql && rm -f /var/lib/mysql/* && chmod -R ugo+w /var/lib/mysql
 
 echo 'Initializing mysql'
 mysqld --version
@@ -26,13 +26,13 @@ else
     fi
     mysql_install_db --force --datadir=/var/lib/mysql
 fi
-echo 'Starting mysqld --skip-networking'
-mysqld --user=root --skip-networking --datadir=/var/lib/mysql --server-id=0 --skip-log-bin &
+echo "Starting mysqld --skip-networking --socket=${SOCKET}"
+mysqld --user=root --socket=$SOCKET --innodb_log_file_size=48M --skip-networking --datadir=/var/lib/mysql --server-id=0 --skip-log-bin &
 pid="$!"
 
 # Wait for the server to respond to mysqladmin ping, or fail if it never does,
 # or if the process dies.
-for i in {60..0}; do
+for i in {90..0}; do
 	if mysqladmin ping -uroot --socket=$SOCKET 2>/dev/null; then
 		break
 	fi
@@ -41,7 +41,6 @@ for i in {60..0}; do
 		echo "MariaDB initialization startup failed"
 		exit 3
 	fi
-#	echo "MariaDB initialization startup process in progress... Try# $i"
 	sleep 1
 done
 if [ "$i" -eq 0 ]; then
@@ -77,7 +76,7 @@ EOF
 fi
 
 
-sudo rm -rf $OUTDIR/*
+rm -rf $OUTDIR/*
 
 backuptool=mariabackup
 if command -v xtrabackup; then backuptool="xtrabackup --datadir=/var/lib/mysql"; fi

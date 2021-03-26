@@ -1,4 +1,4 @@
-<h1> Additional Project Hostnames</h1>
+## Additional Project Hostnames
 
 Add additional hostnames to a project in the project's .ddev/config.yaml:
 
@@ -6,17 +6,20 @@ Add additional hostnames to a project in the project's .ddev/config.yaml:
 name: mysite
 
 additional_hostnames:
-- extraname
-- fr.mysite
-- es.mysite
-- it.mysite
+- "extraname"
+- "fr.mysite"
+- "es.mysite"
+- "it.mysite"
+- "\*.lotsofnames"
 ```
 
 This configuration would result in working hostnames of mysite.ddev.site, extraname.ddev.site, fr.mysite.ddev.site, es.mysite.ddev.site, and it.mysite.ddev.site (with full http and https URLs for each).
 
+In addition, the wildcard `*.lotsofnames` will result in anything `*.lotsofnames.ddev.site` being recognized by the project. This works only if you're connected to the internet, using "ddev.site" for your top-level-domain, and using DNS for name lookups. (These are all the defaults.)
+
 **Although we recommend extreme care with this feature**, you can also provide additional_fqdn entries, which don't use the ".ddev.site" top-level domain.  **This feature populates your hosts file with entries which may hide the real DNS entries on the internet, causing way too much head-scratching.**
 
-**If you use a FQDN which is resolvable on the internet, you must use `use_dns_when_possible: false` or configure that with `ddev config --use-dns-when-possible=false`.
+**If you use a FQDN which is resolvable on the internet, you must use `use_dns_when_possible: false` or configure that with `ddev config --use-dns-when-possible=false`.**
 
 ```
 name: somename

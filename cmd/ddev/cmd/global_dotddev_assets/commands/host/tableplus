@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#ddev-generated
+# Support for TablePlus, https://tableplus.com/
+# This command is available if macOS and TablePlus is installed in the normal place
+## Description: Run tableplus with current project database
+## Usage: tableplus
+## Example: "ddev tableplus"
+## OSTypes: darwin
+## HostBinaryExists: /Applications/TablePlus.app
+
+set -x
+query="mysql://root:root@127.0.0.1:${DDEV_HOST_DB_PORT}/db"
+
+open "$query" -a "/Applications/TablePlus.app/Contents/MacOS/TablePlus"
+

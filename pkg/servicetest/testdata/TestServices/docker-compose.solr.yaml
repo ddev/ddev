@@ -1,0 +1,89 @@
+# DDev Apache Solr recipe file.
+#
+# To use this in your own project:
+# 1. Copy this file to your project's ".ddev" directory.
+# 2. Create the folder path ".ddev/solr/conf".
+# 3. Copy the Solr configuration files for the appropriate plugin/module to
+#    ".ddev/solr/conf". For example, using Drupal 8's Search API Solr module,
+#    you'll get the config files as a file config.zip from
+#    /admin/config/search/search-api/server/solr and unzip it into .ddev/solr/conf
+#    so that a file exists with the path ".ddev/solr/conf/solrconfig.xml".
+#
+# To access Solr after it is installed:
+# - The Solr admin interface will be accessible at:
+#   http://<projectname>.ddev.site:8983/solr/
+#   For example, if the project is named "myproject" the hostname will be:
+#   http://myproject.ddev.site:8983/solr/
+# - To access the Solr container from the web container use:
+#   http://solr:8983/solr/
+# - A Solr core is automatically created with the name "dev" unless you
+#   change that usage throughout. It can be
+#   accessed at the URL: http://solr:8983/solr/dev (inside web container)
+#   or at http://myproject.ddev.site:8983/solr/dev (on the host)
+
+version: '3.6'
+
+services:
+  solr:
+    # Name of container using standard ddev convention
+    container_name: ddev-${DDEV_SITENAME}-solr
+    # The solr docker image is at https://hub.docker.com/_/solr/
+    # and code at https://github.com/docker-solr/docker-solr
+    # README: https://github.com/docker-solr/docker-solr/blob/master/README.md
+    # It's almost impossible to work with it if you don't read the docs there
+    image: solr:8
+    restart: "no"
+    # Solr is served from this port inside the container.
+    ports:
+      - 8983
+    # These labels ensure this service is discoverable by ddev.
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: $DDEV_APPROOT
+    environment:
+      # This defines the host name the service should be accessible from. This
+      # will be sitename.ddev.site.
+      - VIRTUAL_HOST=$DDEV_HOSTNAME
+      # HTTP_EXPOSE exposes http traffic from the container port 8983
+      # to the host port 8983 vid ddev-router reverse proxy.
+      - HTTP_EXPOSE=8983:8983
+      # HTTPS_EXPOSE exposes https traffic from the container port 8983
+      # to the host port 8984 vid ddev-router reverse proxy.
+      - HTTPS_EXPOSE=8984:8983
+    volumes:
+      # solr core *data* is stored on the 'solr' docker volume
+      # This mount is optional; without it your search index disappears
+      # each time the ddev project is stopped and started.
+      - solr:/var/solr
+
+      # This mounts the conf in .ddev/solr into the container where
+      # the solr-precreate command in the entrypoint uses it as a one-time
+      # configuration to copy config into the newly-created core. It is not
+      # used if the core has previously been created.
+      - ./solr:/solr-conf
+
+      - ".:/mnt/ddev_config"
+
+      # solr-configupdate.sh copies fresh configuration files into the
+      # solr container on each
+      # startup, so if you change the config in .ddev/solr/conf
+      # it will be refreshed on `ddev start`. The file must be
+      # executable (`chmod +x .ddev/solr/solr-init.sh
+      - "./solr/solr-configupdate.sh:/docker-entrypoint-initdb.d/solr-configupdate.sh"
+
+    entrypoint: [ "sh", "-c", "docker-entrypoint.sh solr-precreate dev /solr-conf" ]
+
+    external_links:
+      - "ddev-router:${DDEV_SITENAME}.${DDEV_TLD}"
+
+  # This links the Solr service to the web service defined in the main
+  # docker-compose.yml, allowing applications running inside the web container to
+  # access the Solr service at http://solr:8983
+  web:
+    links:
+      - solr:solr
+volumes:
+  # solr is a persistent Docker volume for solr data
+  # The persistent volume should have the same name as the service so it can be deleted
+  # when the project is deleted.
+  solr:

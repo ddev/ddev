@@ -22,6 +22,7 @@ var DeleteCmd = &cobra.Command{
 ddev delete proj1 proj2 proj3
 ddev delete --omit-snapshot proj1
 ddev delete --omit-snapshot --yes proj1 proj2
+ddev delete -Oy
 ddev delete --all`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if noConfirm && deleteAll {
@@ -30,6 +31,9 @@ ddev delete --all`,
 		projects, err := getRequestedProjects(args, deleteAll)
 		if err != nil {
 			util.Failed("Failed to get project(s): %v", err)
+		}
+		if len(projects) > 0 {
+			instrumentationApp = projects[0]
 		}
 
 		// Iterate through the list of projects built above, removing each one.
@@ -60,8 +64,6 @@ ddev delete --all`,
 			if err := project.Stop(true, !omitSnapshot); err != nil {
 				util.Failed("Failed to remove project %s: \n%v", project.GetName(), err)
 			}
-
-			util.Success("Project %s has been deleted.", project.GetName())
 		}
 	},
 }

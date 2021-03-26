@@ -1,3 +1,2 @@
 nginx: nginx
-dockergen: docker-gen -watch -only-exposed -notify "chmod ugo+x /gen-cert.sh && /gen-cert.sh && sleep 1 && nginx -s reload" --notify-output /app/gen-cert.sh.tmpl /gen-cert.sh
-dockergen: docker-gen -watch -only-exposed -notify "sleep 1 && nginx -s reload" /app/nginx.tmpl /etc/nginx/conf.d/default.conf
+dockergen: docker-gen -watch -only-exposed --notify-output -notify "bash /gen-cert-and-nginx-config.sh" /app/gen-cert-and-nginx-config.sh.tmpl /gen-cert-and-nginx-config.sh

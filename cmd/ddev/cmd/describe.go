@@ -20,6 +20,7 @@ It also provides details for MySQL connections, and connection information for
 additional services like MailHog and phpMyAdmin. You can run 'ddev describe' from
 a project directory to describe that project, or you can specify a project to describe by
 running 'ddev describe <projectname>.`,
+	Example: "ddev describe\nddev describe <projectname>",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) > 1 {
 			util.Failed("Too many arguments provided. Please use 'ddev describe' or 'ddev describe [projectname]'")
@@ -35,7 +36,7 @@ running 'ddev describe <projectname>.`,
 			util.Failed("Failed to describe %s: %v", project.Name, err)
 		}
 
-		desc, err := project.Describe()
+		desc, err := project.Describe(false)
 		if err != nil {
 			util.Failed("Failed to describe project %s: %v", project.Name, err)
 		}
@@ -62,12 +63,17 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 		output = output + "\n\nProject Information\n-------------------\n"
 		siteInfo := uitable.New()
 		siteInfo.AddRow("PHP version:", desc["php_version"])
-
+		siteInfo.AddRow("NFS mount enabled:", desc["nfs_mount_enabled"])
 		var dbinfo map[string]interface{}
 		if _, ok := desc["dbinfo"]; ok {
 			dbinfo = desc["dbinfo"].(map[string]interface{})
-			siteInfo.AddRow("MariaDB version", dbinfo["mariadb_version"])
-			siteInfo.AddRow("MySQL version", dbinfo["mysql_version"])
+			siteInfo.AddRow("Database type:", dbinfo["database_type"])
+			if _, ok := dbinfo["mariadb_version"]; ok {
+				siteInfo.AddRow("MariaDB version:", dbinfo["mariadb_version"])
+			}
+			if _, ok := dbinfo["mysql_version"]; ok {
+				siteInfo.AddRow("MySQL version:", dbinfo["mysql_version"])
+			}
 		}
 
 		output = output + fmt.Sprintln(siteInfo)
@@ -100,9 +106,21 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 
 		output = output + "\nOther Services\n--------------\n"
 		other := uitable.New()
+		other.AddRow("MailHog (https):", desc["mailhog_https_url"])
 		other.AddRow("MailHog:", desc["mailhog_url"])
+		if _, ok := desc["phpmyadmin_https_url"]; ok {
+			other.AddRow("phpMyAdmin (https):", desc["phpmyadmin_https_url"])
+		}
 		if _, ok := desc["phpmyadmin_url"]; ok {
 			other.AddRow("phpMyAdmin:", desc["phpmyadmin_url"])
+		}
+		for k, v := range desc["extra_services"].(map[string]map[string]string) {
+			if httpsURL, ok := v["https_url"]; ok {
+				other.AddRow(k+" (https):", httpsURL)
+			}
+			if httpURL, ok := v["http_url"]; ok {
+				other.AddRow(k+":", httpURL)
+			}
 		}
 		output = output + fmt.Sprint(other)
 

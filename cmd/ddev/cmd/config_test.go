@@ -5,6 +5,7 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/mitchellh/go-homedir"
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"os"
@@ -30,7 +31,7 @@ func TestCmdConfigHooks(t *testing.T) {
 	defer site.Chdir()()
 	assert := asrt.New(t)
 
-	app, err := ddevapp.NewApp(site.Dir, true, "")
+	app, err := ddevapp.NewApp(site.Dir, true)
 	assert.NoError(err)
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-config": {{"exec-host": "touch hello-post-config-" + app.Name}}, "pre-config": {{"exec-host": "touch hello-pre-config-" + app.Name}}}
 	err = app.WriteConfig()
@@ -84,37 +85,38 @@ func TestConfigDescribeLocation(t *testing.T) {
 	assert.Contains(string(out), "No project configuration currently exists")
 }
 
-// TestConfigWithSitenameFlagDetectsDocroot tests docroot detected when flags passed.
+// TestConfigWithSitenameFlagDetectsDocroot tests that the docroot is detected when
+// flags like --project-name are passed.
 func TestConfigWithSitenameFlagDetectsDocroot(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Create a temporary directory and switch to it.
 	testDocrootName := "web"
-	tmpdir := testcommon.CreateTmpDir("config-with-sitename")
+	tmpdir := testcommon.CreateTmpDir(t.Name())
 	defer testcommon.CleanupDir(tmpdir)
 	defer testcommon.Chdir(tmpdir)()
 	// Create a document root folder.
-	err := os.MkdirAll(filepath.Join(tmpdir, testDocrootName), 0755)
-	if err != nil {
-		t.Errorf("Could not create %s directory under %s", testDocrootName, tmpdir)
-	}
-	err = os.MkdirAll(filepath.Join(tmpdir, testDocrootName, "sites", "default"), 0755)
+
+	expectedFile := filepath.Join(tmpdir, testDocrootName, "misc/ahah.js")
+	err := os.MkdirAll(filepath.Dir(expectedFile), 0777)
 	assert.NoError(err)
+
+	// create index.php that defines docroot
 	_, err = os.OpenFile(filepath.Join(tmpdir, testDocrootName, "index.php"), os.O_RDONLY|os.O_CREATE, 0666)
 	assert.NoError(err)
 
-	expectedPath := "web/core/scripts/drupal.sh"
-	err = os.MkdirAll(filepath.Join(tmpdir, filepath.Dir(expectedPath)), 0777)
-	assert.NoError(err)
-
-	_, err = os.OpenFile(filepath.Join(tmpdir, expectedPath), os.O_RDONLY|os.O_CREATE, 0666)
+	// create the misc/ahah.js that signals drupal6
+	_, err = os.OpenFile(expectedFile, os.O_RDONLY|os.O_CREATE, 0666)
 	assert.NoError(err)
 
 	// Create a config
-	args := []string{"config", "--sitename=config-with-sitename"}
+	args := []string{"config", "--project-name=config-with-sitename", "--php-version=7.2"}
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.Contains(string(out), "Found a drupal8 codebase")
+	defer func() {
+		_, _ = exec.RunCommand(DdevBin, []string{"delete", "-Oy", "config-with-sitename"})
+	}()
+	assert.Contains(string(out), "Found a drupal6 codebase", nodeps.AppTypeDrupal6)
 }
 
 // TestConfigSetValues sets all available configuration values using command flags, then confirms that the
@@ -147,13 +149,15 @@ func TestConfigSetValues(t *testing.T) {
 	hostWebserverPort := "60002"
 	hostHTTPSPort := "60003"
 	xdebugEnabled := true
+	noProjectMount := true
+	composerVersion := "2.0.0-RC2"
 	additionalHostnamesSlice := []string{"abc", "123", "xyz"}
 	additionalHostnames := strings.Join(additionalHostnamesSlice, ",")
 	additionalFQDNsSlice := []string{"abc.com", "123.pizza", "xyz.co.uk"}
 	additionalFQDNs := strings.Join(additionalFQDNsSlice, ",")
 	omitContainersSlice := []string{"dba", "ddev-ssh-agent"}
 	omitContainers := strings.Join(omitContainersSlice, ",")
-	webimageExtraPackagesSlice := []string{"php-ldap", "php7.3-tidy"}
+	webimageExtraPackagesSlice := []string{"php-bcmath", "php7.3-tidy"}
 	webimageExtraPackages := strings.Join(webimageExtraPackagesSlice, ",")
 	dbimageExtraPackagesSlice := []string{"netcat", "ncdu"}
 	dbimageExtraPackages := strings.Join(dbimageExtraPackagesSlice, ",")
@@ -171,6 +175,7 @@ func TestConfigSetValues(t *testing.T) {
 	projectTLD := "nowhere.example.com"
 	useDNSWhenPossible := false
 	timezone := "America/Chicago"
+	webEnv := "SOMEENV=someval"
 
 	args := []string{
 		"config",
@@ -178,9 +183,11 @@ func TestConfigSetValues(t *testing.T) {
 		"--docroot", docroot,
 		"--project-type", projectType,
 		"--php-version", phpVersion,
+		"--composer-version", composerVersion,
 		"--http-port", httpPort,
 		"--https-port", httpsPort,
 		fmt.Sprintf("--xdebug-enabled=%t", xdebugEnabled),
+		fmt.Sprintf("--no-project-mount=%t", noProjectMount),
 		"--additional-hostnames", additionalHostnames,
 		"--additional-fqdns", additionalFQDNs,
 		"--upload-dir", uploadDir,
@@ -200,6 +207,7 @@ func TestConfigSetValues(t *testing.T) {
 		"--phpmyadmin-port", phpMyAdminPort,
 		"--mailhog-port", mailhogPort,
 		"--project-tld", projectTLD,
+		"--web-environment", webEnv,
 		fmt.Sprintf("--use-dns-when-possible=%t", useDNSWhenPossible),
 		"--timezone", timezone,
 	}
@@ -222,11 +230,13 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(docroot, app.Docroot)
 	assert.Equal(projectType, app.Type)
 	assert.Equal(phpVersion, app.PHPVersion)
+	assert.Equal(composerVersion, app.ComposerVersion)
 	assert.Equal(httpPort, app.RouterHTTPPort)
 	assert.Equal(httpsPort, app.RouterHTTPSPort)
 	assert.Equal(hostWebserverPort, app.HostWebserverPort)
 	assert.Equal(hostDBPort, app.HostDBPort)
 	assert.Equal(xdebugEnabled, app.XdebugEnabled)
+	assert.Equal(noProjectMount, app.NoProjectMount)
 	assert.Equal(additionalHostnamesSlice, app.AdditionalHostnames)
 	assert.Equal(additionalFQDNsSlice, app.AdditionalFQDNs)
 	assert.Equal(uploadDir, app.UploadDir)
@@ -244,6 +254,8 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(useDNSWhenPossible, app.UseDNSWhenPossible)
 	assert.Equal(projectTLD, app.ProjectTLD)
 	assert.Equal(timezone, app.Timezone)
+	require.NotEmpty(t, app.WebEnvironment)
+	assert.Equal(webEnv, app.WebEnvironment[0])
 
 	// Test that container images and working dirs can be unset with default flags
 	args = []string{
@@ -335,6 +347,12 @@ func TestConfigInvalidProjectname(t *testing.T) {
 		assert.NoError(err)
 		assert.NotContains(out, "is not a valid project name")
 		assert.Contains(out, "You may now run 'ddev start'")
+		args = []string{
+			"stop",
+			"--unlist", projName,
+		}
+		_, _ = exec.RunCommand(DdevBin, args)
+
 		_ = os.Remove(filepath.Join(tmpdir, ".ddev", "config.yaml"))
 	}
 
@@ -367,6 +385,7 @@ func TestCmdDisasterConfig(t *testing.T) {
 	assert.NoError(err)
 	out, err := exec.RunCommand(DdevBin, []string{"config", "--project-type=php"})
 	assert.Error(err)
+	assert.Contains(out, "not useful in")
 	_ = out
 
 	err = os.Chdir(testDir)
@@ -377,16 +396,17 @@ func TestCmdDisasterConfig(t *testing.T) {
 	defer testcommon.CleanupDir(tmpdir)
 	defer testcommon.Chdir(tmpdir)()
 
-	out, err = exec.RunCommand(DdevBin, []string{"config", "--project-type=php"})
+	// Create a project
+	_, err = exec.RunCommand(DdevBin, []string{"config", "--project-type=php"})
 	assert.NoError(err)
-	subdir := filepath.Join(tmpdir, "junk")
+	subdirName := t.Name() + fileutil.RandomFilenameBase()
+	subdir := filepath.Join(tmpdir, subdirName)
 	err = os.Mkdir(subdir, 0777)
 	assert.NoError(err)
 	err = os.Chdir(subdir)
 	assert.NoError(err)
-	assert.NotContains(out, "possible you wanted to")
 
-	// Make sure that ddev config in subdir gives a warning
+	// Make sure that ddev config in a subdir gives a warning
 	out, err = exec.RunCommand(DdevBin, []string{"config", "--project-type=php"})
 	assert.NoError(err)
 	assert.Contains(out, "possible you wanted to")
@@ -423,7 +443,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 
 	assert := asrt.New(t)
 
-	testDir, _ := os.Getwd()
+	pwd, _ := os.Getwd()
 	versionsToTest := nodeps.ValidMariaDBVersions
 
 	// Create a temporary directory and switch to it.
@@ -440,18 +460,18 @@ func TestConfigMariaDBVersion(t *testing.T) {
 	// it should end up with default mariadb version dbimage
 	_ = os.RemoveAll(filepath.Join(tmpDir, ".ddev"))
 	_ = os.MkdirAll(filepath.Join(tmpDir, ".ddev"), 0777)
-	err := fileutil.CopyFile(filepath.Join(testDir, "testdata/TestConfigMariaDBVersion", "config.yaml.empty"), filepath.Join(tmpDir, ".ddev", "config.yaml"))
+	err := fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "config.yaml.empty"), filepath.Join(tmpDir, ".ddev", "config.yaml"))
 	assert.NoError(err)
-	app, err := ddevapp.NewApp(tmpDir, false, "")
+	app, err := ddevapp.NewApp(tmpDir, false)
 	//nolint: errcheck
 	defer app.Stop(true, false)
 	assert.NoError(err)
 	_, err = app.ReadConfig(false)
 	assert.NoError(err)
-	assert.Equal("", app.MariaDBVersion)
+	assert.Equal(nodeps.MariaDBDefaultVersion, app.MariaDBVersion)
 	err = app.Start()
 	assert.NoError(err)
-	assert.EqualValues(version.GetDBImage(nodeps.MariaDB, version.MariaDBDefaultVersion), app.DBImage)
+	assert.EqualValues(version.GetDBImage(nodeps.MariaDB, nodeps.MariaDBDefaultVersion), app.DBImage)
 	_ = app.Stop(true, false)
 
 	// Verify behavior with no existing config.yaml. It should
@@ -476,13 +496,14 @@ func TestConfigMariaDBVersion(t *testing.T) {
 		assert.Empty(app.DBImage, "generated config.yaml dbimage should have been empty for command '%s'", ddevCmd)
 
 		// Now use NewApp() to load, so that we get the full logic of that function.
-		app, err = ddevapp.NewApp(tmpDir, false, "")
+		app, err = ddevapp.NewApp(tmpDir, false)
 		//nolint: errcheck
 		defer app.Stop(true, false)
 		assert.NoError(err)
 		_, err = app.ReadConfig(false)
 		assert.NoError(err)
 		assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
+		_ = app.Stop(true, false)
 	}
 
 	// If we start with a config.yaml specifying basically anything for mariadb_version
@@ -491,7 +512,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 		for configMariaDBVersion := range versionsToTest {
 			_ = os.Remove(filepath.Join(tmpDir, ".ddev", "config.yaml"))
 
-			err := fileutil.CopyFile(filepath.Join(testDir, "testdata/TestConfigMariaDBVersion", "config.yaml."+configMariaDBVersion), filepath.Join(tmpDir, ".ddev", "config.yaml"))
+			err := fileutil.CopyFile(filepath.Join(pwd, "testdata/TestConfigMariaDBVersion", "config.yaml."+configMariaDBVersion), filepath.Join(tmpDir, ".ddev", "config.yaml"))
 			assert.NoError(err)
 			configArgs := append(args, cmdMariaDBVersion, "--project-name", "hasconfig-"+cmdMariaDBVersion)
 			out, err := exec.RunCommand(DdevBin, configArgs)
@@ -508,13 +529,14 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			assert.Empty(app.DBImage)
 
 			// Now test with the logical additions made by NewApp()
-			app, err = ddevapp.NewApp(tmpDir, false, "")
+			app, err = ddevapp.NewApp(tmpDir, false)
 			//nolint: errcheck
 			defer app.Stop(true, false)
 			assert.NoError(err)
 			_, err = app.ReadConfig(false)
 			assert.NoError(err)
 			assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
+			_ = app.Stop(true, false)
 		}
 	}
 
@@ -524,7 +546,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 		for configMariaDBVersion := range versionsToTest {
 			_ = os.Remove(filepath.Join(tmpDir, ".ddev", "config.yaml"))
 
-			testConfigFile := filepath.Join(testDir, "testdata/TestConfigMariaDBVersion", "config.yaml.imagespec."+configMariaDBVersion)
+			testConfigFile := filepath.Join(pwd, "testdata/TestConfigMariaDBVersion", "config.yaml.imagespec."+configMariaDBVersion)
 			err := fileutil.CopyFile(testConfigFile, filepath.Join(tmpDir, ".ddev", "config.yaml"))
 			assert.NoError(err)
 			tmpProjectName := "imagespec-" + cmdMariaDBVersion + ".cmdversion." + cmdMariaDBVersion
@@ -545,7 +567,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			assert.Equal("somerandomdbimg-"+nodeps.MariaDB+"-"+configMariaDBVersion, app.DBImage, "ddev %s did not result in respect for existing configured dbimg in file=%s", strings.Join(configArgs, " "))
 
 			// Now test with NewApp's additions, which should leave app.DBImage alone.
-			app, err = ddevapp.NewApp(tmpDir, false, "")
+			app, err = ddevapp.NewApp(tmpDir, false)
 			//nolint: errcheck
 			defer app.Stop(true, false)
 			assert.NoError(err)
@@ -575,7 +597,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			// First test the bare explicit values found in the config.yaml,
 			// without the NewApp adjustments
 			app := &ddevapp.DdevApp{}
-			assert.NoError(err)
+			//assert.NoError(err)
 			err = app.LoadConfigYamlFile(filepath.Join(tmpDir, ".ddev", "config.yaml"))
 			assert.NoError(err)
 			assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
@@ -589,7 +611,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			}
 
 			// Now test with NewApp()'s adjustments
-			app, err = ddevapp.NewApp(tmpDir, false, "")
+			app, err = ddevapp.NewApp(tmpDir, false)
 			//nolint: errcheck
 			defer app.Stop(true, false)
 			assert.NoError(err)
@@ -603,6 +625,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			} else {
 				assert.EqualValues(app.DBImage, version.GetDBImage(nodeps.MariaDB, cmdDBImageVersion))
 			}
+			_ = app.Stop(true, false)
 		}
 	}
 }
@@ -613,10 +636,21 @@ func TestConfigMySQLVersion(t *testing.T) {
 	assert := asrt.New(t)
 	versionsToTest := nodeps.ValidMySQLVersions
 
+	pwd, _ := os.Getwd()
+
 	// Create a temporary directory and switch to it.
-	tmpDir := testcommon.CreateTmpDir(t.Name())
-	defer testcommon.CleanupDir(tmpDir)
-	defer testcommon.Chdir(tmpDir)()
+	testDir := testcommon.CreateTmpDir(t.Name())
+	_ = os.Chdir(testDir)
+
+	t.Cleanup(func() {
+		err := os.Chdir(pwd)
+		assert.NoError(err)
+		err = os.RemoveAll(testDir)
+		assert.NoError(err)
+	})
+
+	err := os.MkdirAll(filepath.Join(testDir, ".ddev"), 0777)
+	require.NoError(t, err)
 
 	args := []string{
 		"config",
@@ -625,30 +659,31 @@ func TestConfigMySQLVersion(t *testing.T) {
 	}
 
 	// Try conflicting configurations
-	_ = os.RemoveAll(filepath.Join(tmpDir, ".ddev"))
+	_ = os.RemoveAll(filepath.Join(testDir, ".ddev"))
 	configArgs := append(args, "--project-name=conflicting-db-versions")
 	out, err := exec.RunCommand(DdevBin, configArgs)
 	assert.Error(err)
-	assert.Contains(out, "failed to validate config: both mariadb_version (10.1) and mysql_version (5.6) are set")
+	assert.Contains(out, "mysql-version cannot be set if mariadb-version is already set. mariadb-version is set to 10.1")
 
 	for cmdMySQLVersion := range versionsToTest {
 		for cmdDBImageVersion := range versionsToTest {
 			args := []string{
 				"config",
 			}
-			_ = os.RemoveAll(filepath.Join(tmpDir, ".ddev"))
+			_ = os.RemoveAll(filepath.Join(testDir, ".ddev"))
 			projectName := "mysqlversion-" + cmdMySQLVersion + "-dbimageversion-" + cmdDBImageVersion
 			configArgs := append(args, []string{
 				"--project-name=" + projectName,
 				"--db-image=" + version.GetDBImage(nodeps.MySQL, cmdDBImageVersion),
 				"--mysql-version=" + cmdMySQLVersion,
+				`--mariadb-version=`,
 			}...)
 			ddevCmd := strings.Join(configArgs, " ")
 			out, err = exec.RunCommand(DdevBin, configArgs)
 			assert.NoError(err, "failed to run ddevcmd=%s, out=%s", ddevCmd, out)
 			assert.Contains(out, "You may now run 'ddev start'")
 
-			app, err := ddevapp.NewApp(tmpDir, false, "")
+			app, err := ddevapp.NewApp(testDir, false)
 			assert.NoError(err)
 			// If the two versions are equal, we expect the app.DBImage to be empty
 			// because it's identical to the image we'd get with just app.MySQLVersion
@@ -660,4 +695,99 @@ func TestConfigMySQLVersion(t *testing.T) {
 			_, _ = exec.RunCommand(DdevBin, []string{"remove", "-RO"})
 		}
 	}
+
+}
+
+// TestMariaMysqlConflicts tests the various ways that mysql_version
+// and mariadb_version can interact.
+func TestMariaMysqlConflicts(t *testing.T) {
+	assert := asrt.New(t)
+	pwd, _ := os.Getwd()
+
+	// Create a temporary directory and switch to it.
+	testDir := testcommon.CreateTmpDir(t.Name())
+	_ = os.Chdir(testDir)
+	t.Cleanup(func() {
+		err := os.Chdir(pwd)
+		assert.NoError(err)
+		err = os.RemoveAll(testDir)
+		assert.NoError(err)
+	})
+
+	_ = os.MkdirAll(filepath.Join(testDir, ".ddev"), 0777)
+
+	// Use a config file that does not specify mariadb version
+	// but does specify mysql_version
+	err := fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "config.yaml.mysql8only"), filepath.Join(testDir, ".ddev", "config.yaml"))
+	assert.NoError(err)
+	app, err := ddevapp.NewApp(testDir, false)
+	assert.NoError(err)
+	assert.Equal(nodeps.MySQL80, app.MySQLVersion)
+	assert.Empty(app.MariaDBVersion)
+
+	// Use a config file that specifies both but with empty mariadb_version
+	err = fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "config.yaml.mysqlwithemptymaria"), filepath.Join(testDir, ".ddev", "config.yaml"))
+	assert.NoError(err)
+	app, err = ddevapp.NewApp(testDir, false)
+	assert.NoError(err)
+	assert.Equal(nodeps.MySQL80, app.MySQLVersion)
+	assert.Empty(app.MariaDBVersion)
+
+	// Use a config file that specifies both but with empty mysql_version
+	err = fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "config.yaml.mariawithemptymysql"), filepath.Join(testDir, ".ddev", "config.yaml"))
+	assert.NoError(err)
+	app, err = ddevapp.NewApp(testDir, false)
+	assert.NoError(err)
+	assert.Equal(nodeps.MariaDBDefaultVersion, app.MariaDBVersion)
+	assert.Empty(app.MySQLVersion)
+
+	// Use a config file that specifies neither.
+	err = fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "config.yaml.nodbspecified"), filepath.Join(testDir, ".ddev", "config.yaml"))
+	assert.NoError(err)
+	app, err = ddevapp.NewApp(testDir, false)
+	assert.NoError(err)
+	assert.Equal(nodeps.MariaDBDefaultVersion, app.MariaDBVersion)
+	assert.Empty(app.MySQLVersion)
+}
+
+//TestConfigGitignore checks that our gitignore is ignoring the right things.
+func TestConfigGitignore(t *testing.T) {
+	assert := asrt.New(t)
+
+	// Create a temporary directory and switch to it.
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	defer testcommon.CleanupDir(tmpDir)
+	defer testcommon.Chdir(tmpDir)()
+
+	_, err := exec.RunCommand(DdevBin, []string{"config", "--project-type=php"})
+	assert.NoError(err)
+	defer func() {
+		_, err = exec.RunCommand(DdevBin, []string{"delete", "-Oy"})
+		assert.NoError(err)
+		_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("rm -f ~/.ddev/commands/web/%s ~/.ddev/homeadditions/%s", t.Name(), t.Name())})
+		assert.NoError(err)
+	}()
+
+	_, err = exec.RunCommand("git", []string{"init"})
+	assert.NoError(err)
+	_, err = exec.RunCommand("git", []string{"add", "."})
+	assert.NoError(err)
+	out, err := exec.RunCommand("git", []string{"status"})
+	assert.NoError(err)
+
+	// git status should have one new file, config.yaml
+	assert.Contains(out, "new file:   .ddev/config.yaml")
+	// .ddev/config.yaml should be the only new file, remove it and check
+	out = strings.ReplaceAll(out, "new file:   .ddev/config.yaml", "")
+	assert.NotContains(out, "new file:")
+
+	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("touch ~/.ddev/commands/web/%s ~/.ddev/homeadditions/%s", t.Name(), t.Name())})
+	assert.NoError(err)
+
+	_, err = exec.RunCommand(DdevBin, []string{"start", "-y"})
+	assert.NoError(err)
+	statusOut, err := exec.RunCommand("bash", []string{"-c", "git status"})
+	assert.NoError(err)
+	_, err = exec.RunCommand("bash", []string{"-c", "git status | grep 'Untracked files'"})
+	assert.Error(err, "Untracked files were found were we didn't expect them: %s", statusOut)
 }

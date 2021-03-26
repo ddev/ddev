@@ -4,15 +4,13 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/fatih/color"
+	"github.com/fsouza/go-dockerclient"
+	"github.com/gosuri/uitable"
 	"path"
 	"path/filepath"
 	"sort"
 	"strings"
-	"time"
-
-	"github.com/fatih/color"
-	"github.com/fsouza/go-dockerclient"
-	"github.com/gosuri/uitable"
 
 	"os"
 	"text/template"
@@ -37,16 +35,15 @@ func GetActiveProjects() []*DdevApp {
 
 	if err == nil {
 		for _, siteContainer := range containers {
-			app := &DdevApp{}
 			approot, ok := siteContainer.Labels["com.ddev.approot"]
 			if !ok {
 				break
 			}
 
-			err = app.Init(approot)
+			app, err := NewApp(approot, true)
 
 			// Artificially populate sitename and apptype based on labels
-			// if app.Init() failed.
+			// if NewApp() failed.
 			if err != nil {
 				app.Name = siteContainer.Labels["com.ddev.site-name"]
 				app.Type = siteContainer.Labels["com.ddev.app-type"]
@@ -94,14 +91,10 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 	default:
 		status = color.CyanString(status)
 	}
-	syncStatus := row["sync_status"].(string)
-	if syncStatus != "" {
-		status = status + "\n" + syncStatus
-	}
 
 	urls := ""
 	if row["status"] == SiteRunning {
-		if GetCAROOT() != "" {
+		if globalconfig.GetCAROOT() != "" {
 			urls = row["httpsurl"].(string)
 		} else {
 			urls = row["httpurl"].(string)
@@ -173,7 +166,10 @@ func CheckForConf(confPath string) (string, error) {
 
 // ddevContainersRunning determines if any ddev-controlled containers are currently running.
 func ddevContainersRunning() (bool, error) {
-	containers, err := dockerutil.GetDockerContainers(false)
+	labels := map[string]string{
+		"com.ddev.platform": "ddev",
+	}
+	containers, err := dockerutil.FindContainersByLabels(labels)
 	if err != nil {
 		return false, err
 	}
@@ -202,6 +198,7 @@ func getTemplateFuncMap() map[string]interface{} {
 // a line in the resulting .gitignore.
 const gitIgnoreTemplate = `{{.Signature}}: Automatically generated ddev .gitignore.
 # You can remove the above line if you want to edit and maintain this file yourself.
+/.gitignore
 {{range .IgnoredItems}}
 /{{.}}{{end}}
 `
@@ -238,6 +235,14 @@ func CreateGitIgnore(targetDir string, ignores ...string) error {
 		return err
 	}
 
+	generatedIgnores := []string{}
+	for _, p := range ignores {
+		sigFound, err := fileutil.FgrepStringInFile(p, DdevFileSignature)
+		if sigFound || err != nil {
+			generatedIgnores = append(generatedIgnores, p)
+		}
+	}
+
 	tmpl, err := template.New("gitignore").Funcs(getTemplateFuncMap()).Parse(gitIgnoreTemplate)
 	if err != nil {
 		return err
@@ -251,7 +256,7 @@ func CreateGitIgnore(targetDir string, ignores ...string) error {
 
 	parms := ignoreTemplateContents{
 		Signature:    DdevFileSignature,
-		IgnoredItems: ignores,
+		IgnoredItems: generatedIgnores,
 	}
 
 	if err = tmpl.Execute(file, parms); err != nil {
@@ -300,7 +305,7 @@ func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, error) {
 	errString = strings.Trim(errString, " \t\n\r")
 	if strings.Contains(errString, "container failed") || strings.Contains(errString, "container did not become ready") || strings.Contains(errString, "failed to become ready") {
 		splitError := strings.Split(errString, " ")
-		if len(splitError) > 0 && nodeps.ArrayContainsString([]string{"web", "db", "bgsync", "ddev-router", "ddev-ssh-agent"}, splitError[0]) {
+		if len(splitError) > 0 && nodeps.ArrayContainsString([]string{"web", "db", "ddev-router", "ddev-ssh-agent"}, splitError[0]) {
 			serviceName = splitError[0]
 			logs, err := app.CaptureLogs(serviceName, false, "")
 			if err != nil {
@@ -312,20 +317,10 @@ func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, error) {
 	return "", fmt.Errorf("no logs found for service %s (Inspected err=%v)", serviceName, errorReceived)
 }
 
-// WaitForSync is a test helper; it's hard to know exactly when the bgsync
-// container will have completed syncing an operation, so we do app.WaitSync() and
-// add the number of seconds provided.
-func WaitForSync(app *DdevApp, seconds int) {
-	if app.WebcacheEnabled {
-		_ = app.WaitSync()
-		time.Sleep(time.Duration(seconds) * time.Second)
-	}
-}
-
 // CheckForMissingProjectFiles returns an error if the project's configuration or project root cannot be found
 func CheckForMissingProjectFiles(project *DdevApp) error {
 	if strings.Contains(project.SiteStatus(), SiteConfigMissing) || strings.Contains(project.SiteStatus(), SiteDirMissing) {
-		return fmt.Errorf("ddev can no longer find your project files at %s. If you would like to continue using ddev to manage this project please restore your files to that directory. If you would like to remove this site from ddev, you may run 'ddev stop --remove-data --omit-snaphot %s'", project.GetAppRoot(), project.GetName())
+		return fmt.Errorf("ddev can no longer find your project files at %s. If you would like to continue using ddev to manage this project please restore your files to that directory. If you would like to make ddev forget this project, you may run 'ddev stop --unlist %s'", project.GetAppRoot(), project.GetName())
 	}
 
 	return nil
@@ -353,19 +348,21 @@ func GetProjects(activeOnly bool) ([]*DdevApp, error) {
 		if _, ok := apps[name]; ok {
 			continue
 		}
-		// Skip if AppRoot hasn't been set in globalconfig
-		// This situation is transitional as globalconfig
-		// gets fully populated
-		if info.AppRoot == "" {
+
+		app, err := NewApp(info.AppRoot, true)
+		if err != nil {
+			util.Warning("unable to create project at project root '%s': %v", info.AppRoot, err)
 			continue
 		}
 
-		app, err := NewApp(info.AppRoot, true, nodeps.ProviderDefault)
-		if err != nil {
-			app.Name = name
+		// If the app we just loaded was already found with a different name, complain
+		if _, ok := apps[app.Name]; ok {
+			util.Warning(`Project '%s' was found in configured directory %s and it is already used by project '%s'. If you have changed the name of the project, please "ddev stop --unlist %s" `, app.Name, app.AppRoot, name, name)
+			continue
 		}
+
 		if !activeOnly || (app.SiteStatus() != SiteStopped && app.SiteStatus() != SiteConfigMissing && app.SiteStatus() != SiteDirMissing) {
-			apps[name] = app
+			apps[app.Name] = app
 		}
 	}
 

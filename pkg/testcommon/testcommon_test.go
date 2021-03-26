@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"testing"
 )
 
@@ -29,12 +30,12 @@ var TestSites = []TestSite{
 	},
 }
 
-// TestTmpDir tests the ability to create a temporary directory.
-func TestTmpDir(t *testing.T) {
+// TestCreateTmpDir tests the ability to create a temporary directory.
+func TestCreateTmpDir(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Create a temporary directory and ensure it exists.
-	testDir := CreateTmpDir("TestTmpDir")
+	testDir := CreateTmpDir("TestCreateTmpDir")
 	dirStat, err := os.Stat(testDir)
 	assert.NoError(err, "There is no error when getting directory details")
 	assert.True(dirStat.IsDir(), "Temp Directory created and exists")
@@ -135,6 +136,13 @@ func TestValidTestSite(t *testing.T) {
 
 // TestGetLocalHTTPResponse() brings up a project and hits a URL to get the response
 func TestGetLocalHTTPResponse(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping on Windows as we always seem to have port conflicts")
+	}
+	// We have to get globalconfig read so CA is known and installed.
+	err := globalconfig.ReadGlobalConfig()
+	require.NoError(t, err)
+
 	assert := asrt.New(t)
 
 	dockerutil.EnsureDdevNetwork()
@@ -155,7 +163,7 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 	//nolint: errcheck
 	defer globalconfig.RemoveProjectInfo(site.Name)
 
-	err := site.Prepare()
+	err = site.Prepare()
 	require.NoError(t, err, "Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
 
 	cleanup := site.Chdir()
@@ -174,10 +182,10 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 		err = app.WriteConfig()
 		assert.NoError(err)
 
-		startErr := app.StartAndWaitForSync(5)
+		startErr := app.StartAndWait(5)
+		assert.NoError(startErr, "app.StartAndWait failed for port pair %v", pair)
 		if startErr != nil {
-			logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
-			assert.NoError(err)
+			logs, _ := ddevapp.GetErrLogsFromApp(app, startErr)
 			t.Fatalf("logs from broken container:\n=======\n%s\n========\n", logs)
 		}
 

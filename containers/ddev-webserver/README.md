@@ -1,13 +1,15 @@
 # Docker ddev-webserver (webserver and php)
 
 ## Introduction
-This is a Dockerfile to build a container image for ddev's web container. 
+
+This is a Dockerfile to build a container image for ddev's web container.
 
 ## Developer Tools
 
 * [Composer](https://getcomposer.org/) (from the production container)
 * [Drush](http://www.drush.org) (from the production container)
 * [WP-CLI](http://www.wp-cli.org) (from the production container)
+* [Blackfire CLI](https://blackfire.io/docs/cookbooks/profiling-http-via-cli)
 * [Mailhog](https://github.com/mailhog/MailHog)
 * npm
 * yarn
@@ -23,6 +25,7 @@ make clean
 ```
 
 ## Running
+
 To run the container by itself:
 
 ```

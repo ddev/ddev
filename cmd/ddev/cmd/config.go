@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/version"
 	"github.com/mitchellh/go-homedir"
 	"os"
 	"strings"
@@ -31,7 +30,7 @@ var (
 	// projectTypeArg is the ddev app type, like drupal7/drupal8/wordpress.
 	projectTypeArg string
 
-	// phpVersionArg overrides the default version of PHP to be used in the web container, like 5.6/7.0/7.1/7.2/7.3.
+	// phpVersionArg overrides the default version of PHP to be used in the web container, like 5.6/7.0/7.1/7.2/7.3/7.4/8.0.
 	phpVersionArg string
 
 	// httpPortArg overrides the default HTTP port (80).
@@ -42,6 +41,9 @@ var (
 
 	// xdebugEnabledArg allows a user to enable XDebug from a command flag.
 	xdebugEnabledArg bool
+
+	// noProjectMountArg allows a user to skip the project mount from a command flag.
+	noProjectMountArg bool
 
 	// additionalHostnamesArg allows a user to provide a comma-delimited list of hostnames from a command flag.
 	additionalHostnamesArg string
@@ -103,11 +105,14 @@ var (
 	// omitContainersArg allows user to determine value of omit_containers
 	omitContainersArg string
 
-	// mariadbVersionArg is mariadb version 5.5-10.4
+	// mariadbVersionArg is mariadb version 5.5-10.5
 	mariaDBVersionArg string
 
 	// nfsMountEnabled sets nfs_mount_enabled
 	nfsMountEnabled bool
+
+	// failOnHookFail sets fail_on_hook_fail
+	failOnHookFail bool
 
 	// hostDBPortArg sets host_db_port
 	hostDBPortArg string
@@ -119,10 +124,12 @@ var (
 	hostHTTPSPortArg string
 
 	// mailhogPortArg is arg for mailhog port
-	mailhogPortArg string
+	mailhogPortArg      string
+	mailhogHTTPSPortArg string
 
 	// phpMyAdminPortArg is arg for phpmyadmin container port access
-	phpMyAdminPortArg string
+	phpMyAdminPortArg      string
+	phpMyAdminHTTPSPortArg string
 
 	// projectTLDArg specifies a project top-level-domain; defaults to ddevapp.DdevDefaultTLD
 	projectTLDArg string
@@ -132,6 +139,8 @@ var (
 
 	// ngrokArgs provides additional args to the ngrok command in `ddev share`
 	ngrokArgs string
+
+	webEnvironmentLocal string
 )
 
 var providerName = nodeps.ProviderDefault
@@ -160,11 +169,21 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 		util.Failed("Please do not use `ddev config` in your home directory")
 	}
 
-	_, _, err = app.ProcessHooks("pre-config")
+	err = app.CheckExistingAppInApproot()
+	if err != nil {
+		util.Failed(err.Error())
+	}
+
+	err = app.ProcessHooks("pre-config")
+	if err != nil {
+		util.Failed(err.Error())
+	}
+
 	if err != nil {
 		util.Failed("Failed to process hook 'pre-config'")
 	}
 
+	// If no flags are provided, prompt for configuration
 	if cmd.Flags().NFlag() == 0 {
 		err = app.PromptForConfig()
 		if err != nil {
@@ -183,15 +202,6 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	provider, err := app.GetProvider()
-	if err != nil {
-		util.Failed("Failed to get provider: %v", err)
-	}
-	err = provider.Validate()
-	if err != nil {
-		util.Failed("Failed to validate project name %v: %v", app.Name, err)
-	}
-
 	err = app.WriteConfig()
 	if err != nil {
 		util.Failed("Failed to write config: %v", err)
@@ -202,11 +212,7 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 		util.Warning("Could not write settings file: %v", err)
 	}
 
-	err = provider.Write(app.GetConfigPath("import.yaml"))
-	if err != nil {
-		util.Failed("Failed to write provider config: %v", err)
-	}
-	_, _, err = app.ProcessHooks("post-config")
+	err = app.ProcessHooks("post-config")
 	if err != nil {
 		util.Failed("Failed to process hook 'post-config'")
 	}
@@ -228,13 +234,15 @@ func init() {
 	ConfigCommand.Flags().StringVar(&httpPortArg, "http-port", "", "The router HTTP port for this project")
 	ConfigCommand.Flags().StringVar(&httpsPortArg, "https-port", "", "The router HTTPS port for this project")
 	ConfigCommand.Flags().BoolVar(&xdebugEnabledArg, "xdebug-enabled", false, "Whether or not XDebug is enabled in the web container")
+	ConfigCommand.Flags().BoolVar(&noProjectMountArg, "no-project-mount", false, "Whether or not to skip mounting project code into the web container")
 	ConfigCommand.Flags().StringVar(&additionalHostnamesArg, "additional-hostnames", "", "A comma-delimited list of hostnames for the project")
 	ConfigCommand.Flags().StringVar(&additionalFQDNsArg, "additional-fqdns", "", "A comma-delimited list of FQDNs for the project")
 	ConfigCommand.Flags().StringVar(&omitContainersArg, "omit-containers", "", "A comma-delimited list of container types that should not be started when the project is started")
+	ConfigCommand.Flags().StringVar(&webEnvironmentLocal, "web-environment", "", `Add environment variables to web container: --web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`)
 	ConfigCommand.Flags().BoolVar(&createDocroot, "create-docroot", false, "Prompts ddev to create the docroot if it doesn't exist")
 	ConfigCommand.Flags().BoolVar(&showConfigLocation, "show-config-location", false, "Output the location of the config.yaml file if it exists, or error that it doesn't exist.")
 	ConfigCommand.Flags().StringVar(&uploadDirArg, "upload-dir", "", "Sets the project's upload directory, the destination directory of the import-files command.")
-	ConfigCommand.Flags().StringVar(&webserverTypeArg, "webserver-type", "", "Sets the project's desired webserver type: nginx-fpm, apache-fpm, or apache-cgi")
+	ConfigCommand.Flags().StringVar(&webserverTypeArg, "webserver-type", "", "Sets the project's desired webserver type: nginx-fpm or apache-fpm")
 	ConfigCommand.Flags().StringVar(&webImageArg, "web-image", "", "Sets the web container image")
 	ConfigCommand.Flags().BoolVar(&webImageDefaultArg, "web-image-default", false, "Sets the default web container image for this ddev version")
 	ConfigCommand.Flags().StringVar(&dbImageArg, "db-image", "", "Sets the db container image")
@@ -253,12 +261,16 @@ func init() {
 	ConfigCommand.Flags().String("mysql-version", "", "Oracle mysql version to use (incompatible with --mariadb-version)")
 
 	ConfigCommand.Flags().BoolVar(&nfsMountEnabled, "nfs-mount-enabled", false, "enable NFS mounting of project in container")
+	ConfigCommand.Flags().BoolVar(&failOnHookFail, "fail-on-hook-fail", false, "Decide whether 'ddev start' should be interrupted by a failing hook")
 	ConfigCommand.Flags().StringVar(&hostWebserverPortArg, "host-webserver-port", "", "The web container's localhost-bound port")
 	ConfigCommand.Flags().StringVar(&hostHTTPSPortArg, "host-https-port", "", "The web container's localhost-bound https port")
 
 	ConfigCommand.Flags().StringVar(&hostDBPortArg, "host-db-port", "", "The db container's localhost-bound port")
 	ConfigCommand.Flags().StringVar(&phpMyAdminPortArg, "phpmyadmin-port", "", "Router port to be used for PHPMyAdmin (dba) container access")
+	ConfigCommand.Flags().StringVar(&phpMyAdminHTTPSPortArg, "phpmyadmin-https-port", "", "Router port to be used for PHPMyAdmin (dba) container access (https)")
+
 	ConfigCommand.Flags().StringVar(&mailhogPortArg, "mailhog-port", "", "Router port to be used for mailhog access")
+	ConfigCommand.Flags().StringVar(&mailhogHTTPSPortArg, "mailhog-https-port", "", "Router port to be used for mailhog access (https)")
 
 	// projectname flag exists for backwards compatability.
 	ConfigCommand.Flags().StringVar(&projectNameArg, "projectname", "", projectNameUsage)
@@ -292,7 +304,23 @@ func init() {
 
 	ConfigCommand.Flags().String("timezone", "", "Specify timezone for containers and php, like Europe/London or America/Denver or GMT or UTC")
 
+	ConfigCommand.Flags().Bool("disable-settings-management", false, "Prevent ddev from creating or updating CMS settings files")
+
+	ConfigCommand.Flags().String("composer-version", "", `Specify override for composer version in web container. This may be "", "1", "2", or a specific version.`)
+
+	ConfigCommand.Flags().Bool("auto", true, `Automatically run config without prompting.`)
+
 	RootCmd.AddCommand(ConfigCommand)
+
+	// Add hidden pantheon subcommand for people who have it in their fingers
+	ConfigCommand.AddCommand(&cobra.Command{
+		Use:    "pantheon",
+		Short:  "ddev config pantheon is no longer needed, see docs",
+		Hidden: true,
+		Run: func(cmd *cobra.Command, args []string) {
+			output.UserOut.Print("`ddev config pantheon` is no longer needed, see docs")
+		},
+	})
 }
 
 // getConfigApp() does the basic setup of the app (with provider) and returns it.
@@ -307,7 +335,7 @@ func getConfigApp(providerName string) (*ddevapp.DdevApp, error) {
 	if otherRoot != "" && otherRoot != appRoot {
 		util.Error("Is it possible you wanted to `ddev config` in parent directory %s?", otherRoot)
 	}
-	app, err := ddevapp.NewApp(appRoot, false, providerName)
+	app, err := ddevapp.NewApp(appRoot, false)
 	if err != nil {
 		return nil, fmt.Errorf("could not create new config: %v", err)
 	}
@@ -406,12 +434,6 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		util.Failed("failed to run ConfigFileOverrideAction: %v", err)
 	}
 
-	// We don't want to write out dbimage if it's just the one that goes with
-	// the mariadb_version.
-	if app.DBImage == version.GetDBImage(nodeps.MariaDB, "", app.MariaDBVersion) {
-		app.DBImage = ""
-	}
-
 	if phpVersionArg != "" {
 		app.PHPVersion = phpVersionArg
 	}
@@ -435,21 +457,37 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.HostDBPort = hostDBPortArg
 	}
 
-	// If the mariaDBVersionArg is set, use it
+	// If the mariadb-version changed, use it
 	if cmd.Flag("mariadb-version").Changed {
-		app.MariaDBVersion = mariaDBVersionArg
-	}
-	// If the mariaDBVersionArg is set, use it
-	if cmd.Flag("mysql-version").Changed {
-		app.MySQLVersion, err = cmd.Flags().GetString("mysql-version")
+		wantVer, err := cmd.Flags().GetString("mariadb-version")
 		if err != nil {
-			util.Failed("Incorrect mysql-version: %v", err)
+			util.Failed("Incorrect mariadb-version %s: '%v'", wantVer, err)
 		}
 
+		if app.MySQLVersion != "" && wantVer != "" {
+			util.Failed(`mariadb-version cannot be set if mysql-version is already set. mysql-version is set to %s. Use ddev config --mysql-version="" and then ddev config --mariadb-version=%s`, app.MySQLVersion, wantVer)
+		}
+
+		app.MariaDBVersion = wantVer
+	}
+	// If the mysql-version was changed is set, use it
+	if cmd.Flag("mysql-version").Changed {
+		wantVer, err := cmd.Flags().GetString("mysql-version")
+		if err != nil {
+			util.Failed("Incorrect mysql-version %s: '%v'", wantVer, err)
+		}
+		if app.MariaDBVersion != "" && wantVer != "" {
+			util.Failed(`mysql-version cannot be set if mariadb-version is already set. mariadb-version is set to %s. Use ddev config --mariadb-version="" --mysql-version=%s`, app.MariaDBVersion, wantVer)
+		}
+		app.MySQLVersion = wantVer
 	}
 
 	if cmd.Flag("nfs-mount-enabled").Changed {
 		app.NFSMountEnabled = nfsMountEnabled
+	}
+
+	if cmd.Flag("fail-on-hook-fail").Changed {
+		app.FailOnHookFail = failOnHookFail
 	}
 
 	// This bool flag is false by default, so only use the value if the flag was explicity set.
@@ -457,11 +495,23 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.XdebugEnabled = xdebugEnabledArg
 	}
 
+	// This bool flag is false by default, so only use the value if the flag was explicity set.
+	if cmd.Flag("no-project-mount").Changed {
+		app.NoProjectMount = noProjectMountArg
+	}
+
 	if cmd.Flag("phpmyadmin-port").Changed {
 		app.PHPMyAdminPort = phpMyAdminPortArg
 	}
+	if cmd.Flag("phpmyadmin-https-port").Changed {
+		app.PHPMyAdminHTTPSPort = phpMyAdminHTTPSPortArg
+	}
+
 	if cmd.Flag("mailhog-port").Changed {
 		app.MailhogPort = mailhogPortArg
+	}
+	if cmd.Flag("mailhog-https-port").Changed {
+		app.MailhogHTTPSPort = mailhogHTTPSPortArg
 	}
 
 	if additionalHostnamesArg != "" {
@@ -474,6 +524,15 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	if omitContainersArg != "" {
 		app.OmitContainers = strings.Split(omitContainersArg, ",")
+	}
+
+	if cmd.Flag("web-environment").Changed {
+		env := strings.Replace(webEnvironmentLocal, " ", "", -1)
+		if env == "" {
+			app.WebEnvironment = []string{}
+		} else {
+			app.WebEnvironment = strings.Split(env, ",")
+		}
 	}
 
 	if cmd.Flag("webimage-extra-packages").Changed {
@@ -509,6 +568,17 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		if err != nil {
 			util.Failed("Incorrect timezone: %v", err)
 		}
+	}
+
+	if cmd.Flag("composer-version").Changed {
+		app.ComposerVersion, err = cmd.Flags().GetString("composer-version")
+		if err != nil {
+			util.Failed("Incorrect composer-version: %v", err)
+		}
+	}
+
+	if cmd.Flag("disable-settings-management").Changed {
+		app.DisableSettingsManagement, _ = cmd.Flags().GetBool("disable-settings-management")
 	}
 
 	if uploadDirArg != "" {

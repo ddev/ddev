@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/stretchr/testify/require"
+	"runtime"
 	"strings"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 
 	"encoding/json"
 
@@ -119,7 +119,7 @@ func TestCmdDescribeAppFunction(t *testing.T) {
 		app, err := ddevapp.GetActiveApp("")
 		assert.NoError(err)
 
-		desc, err := app.Describe()
+		desc, err := app.Describe(false)
 		assert.NoError(err)
 		assert.EqualValues(ddevapp.SiteRunning, desc["status"])
 		assert.EqualValues(app.GetName(), desc["name"])
@@ -133,7 +133,7 @@ func TestCmdDescribeAppFunction(t *testing.T) {
 		// Stop the router using docker and then check the describe
 		_, err = exec.RunCommand("docker", []string{"stop", "ddev-router"})
 		assert.NoError(err)
-		desc, err = app.Describe()
+		desc, err = app.Describe(false)
 		assert.NoError(err)
 		assert.Equal("exited", desc["router_status"])
 		_, err = exec.RunCommand("docker", []string{"start", "ddev-router"})
@@ -158,7 +158,7 @@ func TestCmdDescribeAppUsingSitename(t *testing.T) {
 	for _, v := range TestSites {
 		app, err := ddevapp.GetActiveApp(v.Name)
 		assert.NoError(err)
-		desc, err := app.Describe()
+		desc, err := app.Describe(false)
 		assert.NoError(err)
 		assert.EqualValues(desc["status"], ddevapp.SiteRunning)
 		assert.EqualValues(app.GetName(), desc["name"])
@@ -220,6 +220,11 @@ func unmarshalJSONLogs(in string) ([]log.Fields, error) {
 func TestCmdDescribeMissingProjectDirectory(t *testing.T) {
 	var err error
 	var out string
+
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping because unreliable on Windows")
+	}
+
 	assert := asrt.New(t)
 
 	projDir, _ := os.Getwd()
@@ -233,9 +238,15 @@ func TestCmdDescribeMissingProjectDirectory(t *testing.T) {
 	_, err = exec.RunCommand(DdevBin, []string{"config", "--project-type", "php", "--project-name", projectName})
 	assert.NoError(err)
 
-	_, err = exec.RunCommand(DdevBin, []string{"start"})
-	//nolint: errcheck
-	defer exec.RunCommand(DdevBin, []string{"remove", "-RO", projectName})
+	_, err = exec.RunCommand(DdevBin, []string{"start", "-y"})
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		_, err = exec.RunCommand(DdevBin, []string{"delete", "-Oy", projectName})
+		assert.NoError(err)
+	})
+
+	_, err = exec.RunCommand(DdevBin, []string{"stop"})
 	assert.NoError(err)
 
 	err = os.Chdir(projDir)

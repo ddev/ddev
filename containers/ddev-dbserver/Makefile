@@ -1,87 +1,71 @@
-# Makefile for a standard repo with associated container
-
-##### These variables need to be adjusted in most repositories #####
-
-# This repo's root import path (under GOPATH).
-# PKG := github.com/drud/repo_name
-
-# Docker repo for a push
 DOCKER_REPO ?= drud/ddev-dbserver
-SHELL=/bin/bash
 
-# Upstream repo used in the Dockerfile
-# UPSTREAM_REPO ?= oraclelinux:7.3
-
-# Top-level directories to build
-#SRC_DIRS := files drudapi secrets utils
-
-# Optional to docker build
-# DOCKER_ARGS = --build-arg MYSQL_PACKAGE_VERSION=5.7.17-1
-
-
-# VERSION can be set by
-  # Default: git tag
-  # make command line: make VERSION=0.9.0
-# It can also be explicitly set in the Makefile as commented out below.
-
-# This version-strategy uses git tags to set the version string
-# VERSION can be overridden on make commandline: make VERSION=0.9.1 push
 VERSION := $(shell git describe --tags --always --dirty)
-#
-# This version-strategy uses a manual value to set the version string
-#VERSION := 1.2.3
 
-# Each section of the Makefile is included from standard components below.
-# If you need to override one, import its contents below and comment out the
-# include. That way the base components can easily be updated as our general needs
-# change.
-#include ../../../build-tools/makefile_components/base_build_go.mak
-#include ../../build-tools/makefile_components/base_build_python-docker.mak
-#include ../../build-tools/makefile_components/base_container.mak
-#include ../../build-tools/makefile_components/base_push.mak
-#include build-tools/makefile_components/base_test_go.mak
-#include ../../build-tools/makefile_components/base_test_python.mak
+.PHONY: build clean test
 
-build: container
+CURRENT_ARCH=$(shell ../get_arch.sh)
 
-MARIADB_VERSIONS=5.5 10.0 10.1 10.2 10.3 10.4
-MYSQL_VERSIONS=5.5 5.6 5.7 8.0
+# This Makefile explicitly does not include containers/containers_shared.mak,
+# So has to explicitly declare anything it might need from there (like SHELL)
+SHELL = /bin/bash
 
-container: mariadb_containers mysql_containers
+BUILD_TARGETS=mariadb_5.5_amd64 mariadb_10.0_amd64 mariadb_10.1_amd64 mariadb_10.2_both mariadb_10.3_both mariadb_10.4_both mariadb_10.5_both mysql_5.5_amd64 mysql_5.6_amd64 mysql_5.7_amd64 mysql_8.0_amd64_8.0.22
+TEST_TARGETS=$(shell if [ "$(CURRENT_ARCH)" = "amd64" ] ; then \
+	echo "mariadb_5.5_test mariadb_10.0_test mariadb_10.1_test mariadb_10.2_test mariadb_10.3_test mariadb_10.4_test mariadb_10.5_test mysql_5.5_test mysql_5.6_test mysql_5.7_test mysql_8.0_test"; \
+	else \
+	  echo "mariadb_10.2_test mariadb_10.3_test mariadb_10.4_test mariadb_10.5_test"; \
+  	fi )
 
-mariadb_containers:
-	for item in $(MARIADB_VERSIONS); do \
-		set -euo pipefail ; \
-		docker build $(DOCKER_ARGS) --build-arg "DBVERSION=$${item}" --build-arg="DBTYPE=mariadb" -t "drud/ddev-dbserver-mariadb-$${item}:$(VERSION)" . ; \
-	done
+container: build
+build: $(BUILD_TARGETS)
 
-mysql_containers:
-	for item in $(MYSQL_VERSIONS) ; do \
-		set -euo pipefail ;\
-		docker build $(DOCKER_ARGS) --build-arg "DBVERSION=$$item" --build-arg="DBTYPE=mysql" -t "drud/ddev-dbserver-mysql-$${item%%%.*}:$(VERSION)" . ; \
-	done
+mariadb_5.5: mariadb_5.5_amd64
+mariadb_10.0: mariadb_10.0_amd64
+mariadb_10.1: mariadb_10.1_amd64
+mariadb_10.2: mariadb_10.2_both
+mariadb_10.3: mariadb_10.3_both
+mariadb_10.4: mariadb_10.4_both
+mariadb_10.5: mariadb_10.5_both
 
-push: container
-	for item in $(MARIADB_VERSIONS); do \
-		set -euo pipefail ;\
-		docker push "drud/ddev-dbserver-mariadb-$${item%%%.*}:$(VERSION)"; \
-	done
-	for item in $(MYSQL_VERSIONS) ; do \
-		set -euo pipefail ;\
-		docker push "drud/ddev-dbserver-mysql-$${item%%%.*}:$(VERSION)"; \
-	done
+mysql_5.5: mysql_5.5_amd64
+mysql_5.6: mysql_5.6_amd64
+mysql_5.7: mysql_5.7_amd64
+# Mysql 8.0 often must be pinned because xtrabackup is not ready for latest 8.0
+# So check whether xtrabackup is available for latest 8.0 before changing pin
+mysql_8.0: mysql_8.0_amd64_8.0.22
 
 
-test: container
-	bash ./test/test_dbserver.sh # bash execution just for windows make
+# Examples:
+# make <dbtype>_<dbmajor>_[both|amd64]_<pin>  # pin is optional, often needed for mysql 8.0
+# make mariadb_10.3_both VERSION=someversion PUSH=true
+# make mysql_8.0_amd64_8.0.22 VERSION=someversion
+$(BUILD_TARGETS):
+	@echo "building $@";
+	export DB_TYPE=$(word 1, $(subst _, ,$@)) && \
+	export DB_MAJOR_VERSION=$(word 2, $(subst _, ,$@)) && \
+	export ARCH=$(word 3, $(subst _, ,$@)) && \
+	export DB_PINNED_VERSION=$(word 4, $(subst _, ,$@)) && \
+	if [ $${ARCH} = "both" ]; then ARCHS="linux/amd64,linux/arm64"; else ARCHS="linux/amd64"; fi && \
+	cmd="./build_image.sh --db-type=$${DB_TYPE} --db-major-version=$${DB_MAJOR_VERSION} --archs=$${ARCHS} --tag=$(VERSION) --docker-args=$(DOCKER_ARGS)" && \
+	if [ ! -z $${PUSH} ]; then cmd="$$cmd --push"; fi && \
+	if [ ! -z $${DB_PINNED_VERSION} ]; then cmd="$$cmd --db-pinned-version=$${DB_PINNED_VERSION}"; fi && \
+	echo $${cmd} && \
+	$${cmd}
+
+test: build $(TEST_TARGETS)
+
+push:
+	@echo "To push all images, use make PUSH=true VERSION=<tag>, to push a specific image, use something like make mariadb_10.3 PUSH=true VERSION=<tag>" && exit 1
+
+# make mariadb_10.2_test mysql_8.0_test VERSION=20210213_db_image_no_sudo
+# make test VERSION=20210213_db_image_no_sudo # for all
+$(TEST_TARGETS):
+	@export DB_TYPE=$(word 1, $(subst _, ,$@)) && \
+	export DB_MAJOR_VERSION=$(word 2, $(subst _, ,$@)) && \
+	export ARCH=$(CURRENT_ARCH) && \
+	printf "\n\n\n==== Testing $${DB_TYPE} $${DB_MAJOR_VERSION} $(VERSION)" && \
+	./test/test_dbserver.sh $${DB_TYPE} $${DB_MAJOR_VERSION} $(VERSION)
 
 clean:
-	for item in $(MARIADB_VERSIONS); do \
-		@if docker image inspect $(DOCKER_REPO)-mariadb-4$item:$(VERSION) >/dev/null 2>&1; then docker rmi -f $(DOCKER_REPO)-mariadb-4$item:$(VERSION); fi
-	done
-	for item in $(MYSQL_VERSIONS); do \
-		@if docker image inspect $(DOCKER_REPO)-myql-4$item:$(VERSION) >/dev/null 2>&1; then docker rmi -f $(DOCKER_REPO)-mysql-4$item:$(VERSION); fi
-	done
-
-	@rm -rf .container-* .dockerfile* .push-* linux darwin windows container VERSION.txt .docker_image
-
+	@rm -rf VERSION.txt

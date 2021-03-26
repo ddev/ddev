@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"strings"
 
 	"github.com/drud/ddev/pkg/dockerutil"
@@ -21,19 +22,31 @@ var StartCmd = &cobra.Command{
 to provide a local development environment. You can run 'ddev start' from a
 project directory to start that project, or you can start stopped projects in
 any directory by running 'ddev start projectname [projectname ...]'`,
+	Example: `ddev start
+ddev start <project1> <project2>
+ddev start --all`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+
+		skip, err := cmd.Flags().GetBool("skip-confirmation")
+		if err != nil {
+			util.Failed(err.Error())
+		}
+
+		// Look for version change and opt-in to instrumentation if it has changed.
+		err = checkDdevVersionAndOptInInstrumentation(skip)
+		if err != nil {
+			util.Failed(err.Error())
+		}
+
 		projects, err := getRequestedProjects(args, startAll)
 		if err != nil {
 			util.Failed("Failed to get project(s): %v", err)
 		}
-
-		// Look for version change and opt-in Sentry if it has changed.
-		err = checkDdevVersionAndOptInInstrumentation()
-		if err != nil {
-			util.Failed(err.Error())
+		if len(projects) > 0 {
+			instrumentationApp = projects[0]
 		}
 
 		for _, project := range projects {
@@ -49,19 +62,16 @@ any directory by running 'ddev start projectname [projectname ...]'`,
 
 			util.Success("Successfully started %s", project.GetName())
 			httpURLs, urlList, _ := project.GetAllURLs()
-			if ddevapp.GetCAROOT() == "" {
+			if globalconfig.GetCAROOT() == "" {
 				urlList = httpURLs
 			}
-
 			util.Success("Project can be reached at %s", strings.Join(urlList, " "))
-			if project.WebcacheEnabled {
-				util.Warning("All contents were copied to fast docker filesystem,\nbut bidirectional sync operation may not be fully functional for a few minutes.")
-			}
 		}
 	},
 }
 
 func init() {
 	StartCmd.Flags().BoolVarP(&startAll, "all", "a", false, "Start all projects")
+	StartCmd.Flags().BoolP("skip-confirmation", "y", false, "Skip any confirmation steps")
 	RootCmd.AddCommand(StartCmd)
 }

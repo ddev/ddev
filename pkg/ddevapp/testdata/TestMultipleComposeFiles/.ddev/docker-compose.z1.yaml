@@ -1,0 +1,13 @@
+version: "3.6"
+services:
+  web:
+    environment:
+    - DUMMY_BASE=1
+    - DUMMY_COMPOSE_ONE=1
+
+  dummy1:
+    image: busybox
+    environment:
+    - HTTP_EXPOSE=9101
+    - HTTPS_EXPOSE=9102
+    - VIRTUAL_HOST=$DDEV_HOSTNAME

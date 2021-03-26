@@ -2,11 +2,13 @@ package testcommon
 
 import (
 	"crypto/tls"
+	"github.com/docker/docker/pkg/homedir"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/output"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"time"
@@ -77,7 +79,7 @@ func (site *TestSite) Prepare() error {
 	testDir := CreateTmpDir(site.Name)
 	site.Dir = testDir
 
-	err := os.Setenv("DRUD_NONINTERACTIVE", "true")
+	err := os.Setenv("DDEV_NONINTERACTIVE", "true")
 	util.CheckErr(err)
 
 	cachedSrcDir, _, err := GetCachedArchive(site.Name, site.Name+"_siteArchive", site.ArchiveInternalExtractionPath, site.SourceURL)
@@ -90,23 +92,33 @@ func (site *TestSite) Prepare() error {
 	err = os.Remove(site.Dir)
 	util.CheckErr(err)
 
-	err = fileutil.CopyDir(cachedSrcDir, site.Dir)
+	output.UserOut.Printf("Copying directory %s to %s\n", cachedSrcDir, site.Dir)
+	if runtime.GOOS != "windows" {
+		// Simple cp -r is far, far faster than our fileutil.CopyDir
+		cmd := exec.Command("bash", "-c", fmt.Sprintf(`cp -rp %s %s`, cachedSrcDir, site.Dir))
+		err = cmd.Run()
+	} else {
+		err = fileutil.CopyDir(cachedSrcDir, site.Dir)
+	}
 	if err != nil {
 		site.Cleanup()
 		return fmt.Errorf("Failed to CopyDir from %s to %s, err=%v", cachedSrcDir, site.Dir, err)
 	}
+	output.UserOut.Println("Copying complete")
 
 	// Create an app. Err is ignored as we may not have
 	// a config file to read in from a test site.
-	app, _ := ddevapp.NewApp(site.Dir, true, "")
-
+	app, err := ddevapp.NewApp(site.Dir, true)
+	if err != nil {
+		return err
+	}
 	// Set app name to the name we define for test sites. We'll
 	// ignore app name defined in config file if present.
 	app.Name = site.Name
 	app.Docroot = site.Docroot
 	app.Type = app.DetectAppType()
 	if app.Type != site.Type {
-		return errors.Errorf("Detected apptype does not match provided apptype")
+		return errors.Errorf("Detected apptype (%s) does not match provided apptype (%s)", app.Type, site.Type)
 	}
 
 	err = app.ConfigFileOverrideAction()
@@ -160,14 +172,14 @@ func OsTempDir() (string, error) {
 
 // CreateTmpDir creates a temporary directory and returns its path as a string.
 func CreateTmpDir(prefix string) string {
-	systemTempDir, err := OsTempDir()
+	baseTmpDir := filepath.Join(homedir.Get(), "tmp", "ddevtest")
+	_ = os.MkdirAll(baseTmpDir, 0755)
+	fullPath, err := ioutil.TempDir(baseTmpDir, prefix)
 	if err != nil {
-		log.Fatalln("Failed getting system temp dir", err)
+		log.Fatalf("Failed to create temp directory %s, err=%v", fullPath, err)
 	}
-	fullPath, err := ioutil.TempDir(systemTempDir, prefix)
-	if err != nil {
-		log.Fatalln("Failed to create temp directory, err=", err)
-	}
+	// Make the tmpdir fully writeable/readable, NFS problems
+	_ = os.Chmod(fullPath, 0777)
 	return fullPath
 }
 
@@ -197,7 +209,6 @@ func ClearDockerEnv() {
 		"DDEV_SITENAME",
 		"DDEV_DBIMAGE",
 		"DDEV_WEBIMAGE",
-		"DDEV_BGSYNCIMAGE",
 		"DDEV_APPROOT",
 		"DDEV_HOST_WEBSERVER_PORT",
 		"DDEV_HOST_HTTPS_PORT",
@@ -211,10 +222,12 @@ func ClearDockerEnv() {
 		"DDEV_HOST_DB_PORT",
 		"DDEV_HOST_WEBSERVER_PORT",
 		"DDEV_PHPMYADMIN_PORT",
+		"DDEV_PHPMYADMIN_HTTPS_PORT",
 		"DDEV_MAILHOG_PORT",
 		"COLUMNS",
 		"LINES",
 		"DDEV_XDEBUG_ENABLED",
+		"IS_DDEV_PROJECT",
 	}
 	for _, env := range envVars {
 		err := os.Unsetenv(env)
@@ -299,7 +312,7 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 // hits the local docker for it, returns result
 // Returns error (with the body) if not 200 status code.
 func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (string, *http.Response, error) {
-	var timeoutSecs = 20
+	var timeoutSecs = 30
 	if len(timeoutSecsAry) > 0 {
 		timeoutSecs = timeoutSecsAry[0]
 	}
@@ -365,7 +378,7 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (s
 
 // EnsureLocalHTTPContent will verify a URL responds with a 200 and expected content string
 func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string, timeoutSeconds ...int) (*http.Response, error) {
-	var httpTimeout = 20
+	var httpTimeout = 30
 	if len(timeoutSeconds) > 0 {
 		httpTimeout = timeoutSeconds[0]
 	}

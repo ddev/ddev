@@ -2,7 +2,6 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/nodeps"
 	"io/ioutil"
 
 	"os"
@@ -15,42 +14,47 @@ import (
 )
 
 const typo3AdditionalConfigTemplate = `<?php
-/** ` + DdevFileSignature + `: Automatically generated TYPO3 AdditionalConfiguration.php file.
- ddev manages this file and may delete or overwrite the file unless this comment is removed.
- */
-$GLOBALS['TYPO3_CONF_VARS'] = array_replace_recursive(
-    $GLOBALS['TYPO3_CONF_VARS'],
-    [
-        'DB' => [
-            'Connections' => [
-                'Default' => [
-                    'dbname'   => 'db',
-                    'host'     => 'db',
-                    'password' => 'db',
-                    'port'     => '3306',
-                    'user'     => 'db',
-                ]
-            ]
-        ],
-        // This GFX configuration allows processing by installed ImageMagick 6
-        'GFX' => [
-            'processor' => 'ImageMagick',
-            'processor_path' => '/usr/bin/',
-            'processor_path_lzw' => '/usr/bin/'
-        ],
-        // This mail configuration sends all emails to mailhog
-        'MAIL' => [
-            'transport' => 'smtp',
-            'transport_smtp_server' => 'localhost:1025'
-        ],
-        'SYS' => [
-            'trustedHostsPattern' => '.*.*',
-            'devIPmask' => '*',
-            'displayErrors' => 1
-        ]
-    ]
-);
 
+/**
+ * ` + DdevFileSignature + `: Automatically generated TYPO3 AdditionalConfiguration.php file.
+ * ddev manages this file and may delete or overwrite the file unless this comment is removed.
+ * It is recommended that you leave this file alone.
+ */
+
+if (getenv('IS_DDEV_PROJECT') == 'true') {
+    $GLOBALS['TYPO3_CONF_VARS'] = array_replace_recursive(
+        $GLOBALS['TYPO3_CONF_VARS'],
+        [
+            'DB' => [
+                'Connections' => [
+                    'Default' => [
+                        'dbname' => 'db',
+                        'host' => 'db',
+                        'password' => 'db',
+                        'port' => '3306',
+                        'user' => 'db',
+                    ],
+                ],
+            ],
+            // This GFX configuration allows processing by installed ImageMagick 6
+            'GFX' => [
+                'processor' => 'ImageMagick',
+                'processor_path' => '/usr/bin/',
+                'processor_path_lzw' => '/usr/bin/',
+            ],
+            // This mail configuration sends all emails to mailhog
+            'MAIL' => [
+                'transport' => 'smtp',
+                'transport_smtp_server' => 'localhost:1025',
+            ],
+            'SYS' => [
+                'trustedHostsPattern' => '.*.*',
+                'devIPmask' => '*',
+                'displayErrors' => 1,
+            ],
+        ]
+    );
+}
 `
 
 // createTypo3SettingsFile creates the app's LocalConfiguration.php and
@@ -159,12 +163,6 @@ func isTypo3App(app *DdevApp) bool {
 	return false
 }
 
-// typo3ConfigOverrideAction sets a safe php_version for TYPO3
-func typo3ConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP72
-	return nil
-}
-
 // typo3ImportFilesAction defines the TYPO3 workflow for importing project files.
 // The TYPO3 import-files workflow is currently identical to the Drupal workflow.
 func typo3ImportFilesAction(app *DdevApp, importPath, extPath string) error {
@@ -207,13 +205,5 @@ func typo3ImportFilesAction(app *DdevApp, importPath, extPath string) error {
 		return err
 	}
 
-	return nil
-}
-
-// typo3PostStartAction handles default post-start actions
-func typo3PostStartAction(app *DdevApp) error {
-	if _, err := app.CreateSettingsFile(); err != nil {
-		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
-	}
 	return nil
 }

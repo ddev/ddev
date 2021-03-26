@@ -1,6 +1,7 @@
 package version
 
 import (
+	"github.com/drud/ddev/pkg/nodeps"
 	"runtime"
 	"testing"
 
@@ -15,10 +16,9 @@ func TestGetVersionInfo(t *testing.T) {
 	assert.Contains(v["web"], WebImg)
 	assert.Contains(v["web"], WebTag)
 	assert.Contains(v["db"], DBImg)
-	assert.Contains(v["db"], MariaDBDefaultVersion)
+	assert.Contains(v["db"], nodeps.MariaDBDefaultVersion)
 	assert.Contains(v["dba"], DBAImg)
 	assert.Contains(v["dba"], DBATag)
-	assert.Equal(COMMIT, v["commit"])
 	assert.Equal(runtime.GOOS, v["os"])
 	assert.Equal(BUILDINFO, v["build info"])
 	assert.NotEmpty(v["docker-compose"])

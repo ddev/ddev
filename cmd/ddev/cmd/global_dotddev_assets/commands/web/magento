@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#ddev-generated
+## Description: Run magento CLI inside the web container
+## Usage: magento [flags] [args]
+## Example: "ddev magento list" or "ddev magento maintenance:enable" or "ddev magento sampledata:reset"
+## ProjectTypes: magento2
+
+bin/magento "$@"
+
