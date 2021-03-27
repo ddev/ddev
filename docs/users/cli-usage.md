@@ -171,7 +171,7 @@ ddev composer create "drupal/recommended-project"
 ddev composer require drush/drush
 ddev drush site:install -y
 ddev drush uli
-ddev drush launch
+ddev launch
 ```
 
 #### Drupal 9 Git Clone Example
