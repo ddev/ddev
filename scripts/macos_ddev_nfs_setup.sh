@@ -35,28 +35,11 @@ echo ""
 
 ddev poweroff || true
 
-ARCH="$(uname -m)"
 echo "\n\n== Setting up nfs... You may be asked for your sudo password and for permission to administer your computer..."
 # Share home directory. If the projects are elsewhere the /etc/exports will need
 # to be adapted.
 SHAREDIR=${HOME}
-
-case ${ARCH} in
-  x86_64)
-    LINE="${SHAREDIR} -alldirs -mapall=$(id -u):$(id -g) localhost"
-    ;;
-  arm64)
-    # For mac m1, the source address from NFS driver is different. Gather from the internal
-    # ip of host.docker.internal
-    NET=$(docker run -it --rm busybox sh -c 'ping -c1 host.docker.internal | awk "/PING/ { gsub(/[\(\):]/, \"\"); print \$3 }"')
-    LINE="${SHAREDIR} -alldirs -mapall=$(id -u):$(id -g) -network=${NET%.[0-9]*}.0 -mask 255.255.255.0"
-    ;;
-  *)
-    echo "Unrecognized architecture '${ARCH}" && exit 2
-    ;;
-esac
-
-
+LINE="${SHAREDIR} -alldirs -mapall=$(id -u):$(id -g) localhost"
 FILE=/etc/exports
 sudo bash -c "echo >> $FILE" || ( echo "Unable to edit /etc/exports, need Full Disk Access on Mojave and later" && exit 103 )
 grep -qF -- "$LINE" "$FILE" || ( sudo echo "$LINE" | sudo tee -a $FILE > /dev/null )
