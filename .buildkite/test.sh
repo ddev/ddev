@@ -13,11 +13,11 @@ set -o nounset
 set -x
 
 # On macOS, restart docker to avoid bugs where containers can't be deleted
-if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
-  killall Docker || true
-  nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
-  sleep 10
-fi
+#if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
+#  killall Docker || true
+#  nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
+#  sleep 10
+#fi
 
 export TIMEOUT_CMD="timeout -v"
 if [ ${OSTYPE%%-*} = "linux" ]; then
