@@ -17,11 +17,6 @@ function cleanup {
 function docker_desktop_version {
   MACOS_INFO_PATH=/Applications/Docker.app/Contents/Info.plist
 
-  if [ "${OSTYPE%%[0-9]*}" = "darwin" ] && ! command -v xq >/dev/null; then
-    printf "Please install xq, brew install python-yq, to parse macOS Info.plist"
-    exit
-  fi
-
   if command -v powershell >/dev/null; then
     printf "Docker Desktop for Windows "
     powershell.exe -command '[System.Diagnostics.FileVersionInfo]::GetVersionInfo("C:\Program Files\Docker\Docker\Docker Desktop.exe").FileVersion'
@@ -37,7 +32,9 @@ function docker_desktop_version {
 echo -n "OS Information: " && uname -a
 ddev version
 echo -n "docker location: " && ls -l "$(which docker)"
-echo -n "Docker Desktop Version: " && docker_desktop_version && echo
+if [ ${OSTYPE%-*} != "linux" ]; then
+  echo -n "Docker Desktop Version: " && docker_desktop_version && echo
+fi
 ddev poweroff
 echo "Existing docker containers: " && docker ps -a
 docker run -it --rm busybox sh -c "echo 'docker can run busybox image'"
