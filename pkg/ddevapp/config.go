@@ -7,12 +7,12 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/mitchellh/go-homedir"
-	"html/template"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/drud/ddev/pkg/globalconfig"
@@ -672,7 +672,7 @@ type composeYAMLVars struct {
 func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error
-	templ, err := template.New("compose template").Funcs(sprig.HtmlFuncMap()).Parse(DDevComposeTemplate)
+	templ, err := template.New("compose template").Funcs(sprig.TxtFuncMap()).Parse(DDevComposeTemplate)
 	if err != nil {
 		return "", err
 	}
