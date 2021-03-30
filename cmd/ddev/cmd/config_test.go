@@ -175,7 +175,7 @@ func TestConfigSetValues(t *testing.T) {
 	projectTLD := "nowhere.example.com"
 	useDNSWhenPossible := false
 	timezone := "America/Chicago"
-	webEnv := "SOMEENV=someval"
+	webEnv := "SOMEENV=some+val"
 
 	args := []string{
 		"config",
