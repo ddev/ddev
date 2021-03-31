@@ -105,8 +105,7 @@ RUN curl -sSL https://github.com/pantheon-systems/terminus/releases/download/$(c
 RUN curl -sSL https://github.com/platformsh/platformsh-cli/releases/download/$(curl --silent "https://api.github.com/repos/platformsh/platformsh-cli/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/platform.phar --output /usr/local/bin/platform && chmod 777 /usr/local/bin/platform
 RUN curl -sSL --output /usr/local/bin/acli https://github.com/acquia/cli/releases/latest/download/acli.phar && chmod 777 /usr/local/bin/acli
 
-# Temporary hack 20210319 until ddev-live has arm64 binaries
-RUN source /tmp/ddev/vars && curl -fsSL -o ddev-live.zip https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/ddev-live_${DDEV_LIVE_ARCH}.zip && unzip ddev-live.zip && mv ddev-live /usr/local/bin && chmod 777 /usr/local/bin/ddev-live && rm ddev-live.zip
+RUN source /tmp/ddev/vars && curl -fsSL -o ddev-live.zip https://downloads.ddev.com/ddev-live-cli/latest/linux_${DDEV_LIVE_ARCH}/ddev-live.zip && unzip ddev-live.zip && mv ddev-live /usr/local/bin && chmod 777 /usr/local/bin/ddev-live && rm ddev-live.zip
 
 RUN curl -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/backdrop-drush-extension.zip -o /tmp/backdrop-drush-extension.zip && unzip -o /tmp/backdrop-drush-extension.zip -d /var/tmp/backdrop_drush_commands
 
