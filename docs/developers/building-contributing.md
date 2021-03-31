@@ -8,7 +8,7 @@ Each build of a PR has artifacts created in github, so you can click the details
 
 ![Github artifacts pulldown](images/github_artifacts.png)
 
-After you download and unzip the appropriate binary, you can place it in your $PATH. The easiest way to do this if you're using homebrew is `brew unlink ddev` and then copy the binary to /usr/local/bin/ddev. After you're done, you can remove the downloaded binary and `brew link ddev`.
+After you download and unzip the appropriate binary, you can place it in your $PATH. The easiest way to do this if you're using homebrew is `brew unlink ddev` and then `unzip ddev.zip && chmod +x ddev && mv ddev /usr/local/bin/ddev`. After you're done, you can remove the downloaded binary and `brew link ddev`.
 
 (On macOS Big Sur these downloaded binaries are not signed, so you will want to `xattr -r -d com.apple.quarantine /path/to/ddev` in order to use them. The final binaries in any release are signed, of course.)
 
