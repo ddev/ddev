@@ -1,5 +1,19 @@
 # Building, Testing, and Contributing
 
+## Testing a PR
+
+Each build of a PR has artifacts created in github, so you can click the details of the "Build DDEV Executables" test, and you can use the pulldown menu to access the ddev executable you need.
+
+![Build ddev executables test](images/build_ddev_executables.png)
+
+![Github artifacts pulldown](images/github_artifacts.png)
+
+After you download and unzip the appropriate binary, you can place it in your $PATH. The easiest way to do this if you're using homebrew is `brew unlink ddev` and then copy the binary to /usr/local/bin/ddev. After you're done, you can remove the downloaded binary and `brew link ddev`.
+
+(On macOS Big Sur these downloaded binaries are not signed, so you will want to `xattr -r -d com.apple.quarantine /path/to/ddev` in order to use them. The final binaries in any release are signed, of course.)
+
+You do not typically have to install anything else other than the downloaded binary; when you run it it will access any docker images that it needs.
+
 ## Open in Gitpod
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/drud/ddev)
