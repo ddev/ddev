@@ -16,6 +16,9 @@ You do not typically have to install anything else other than the downloaded bin
 
 ## Open in Gitpod
 
+Gitpod.io provides a quick preconfigured ddev experience in the browser, so you can test your PR (or someone else's) easily and without setting up an environment. In any PR you can use the URL `https://gitpod.io/#https://github.com/drud/ddev/pulls/<YOURPR>` to open that PR and build it in Gitpod.
+
+To just open and work on ddev you can use the button below.
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/drud/ddev)
 
 ## Pull Requests and PR Preparation
