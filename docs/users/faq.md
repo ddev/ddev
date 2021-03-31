@@ -72,3 +72,6 @@
 
 * **Why do I see nginx headers when I'm configured to use `webserver_type: apache-fpm`?**
   Apache runs in the web container but when you use the `http://*.ddev.site` URL, it goes through ddev-router, which is an nginx reverse proxy, and that's why you see the nginx headers. But rest assured you are using Apache. More detail in [Stack Overflow answer](https://stackoverflow.com/a/52780601/215713)
+
+* **Why does `ddev start` fail with "error while mounting volume, Permission denied"?**
+  This almost always means that you have NFS enabled in your project, but NFS isn't working on your machine. Start by completely turning NFS off for your projects with `ddev config --nfs-mount-enabled=false && ddev config global --nfs-mount-enabled=false`. Then later, [go get NFS working](https://ddev.readthedocs.io/en/latest/users/performance/#using-nfs-to-mount-the-project-into-the-web-container). NFS is a big performance help on macOS and traditional Windows, and not needed on Linux or Windows WSL2.

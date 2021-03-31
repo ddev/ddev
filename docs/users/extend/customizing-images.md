@@ -25,6 +25,8 @@ If you need a PHP extension, most PHP extensions are built in the deb.sury.org d
 
 If you need a package that is *not* a PHP package, you can view and search standard Debian packages at [packages.debian.org/stable](https://packages.debian.org/stable/), or just use google.
 
+To test that a package will do what you want, you can `ddev ssh` and then `sudo apt-get update && sudo apt-get install <package>` to verify that you can install it and you get what you need. A php extension may require `killall -HUP php-fpm` to take effect. After you've tried that, you can add the package to `webimage_extra_packages`.
+
 ### Adding extra Dockerfiles for webimage and dbimage
 
 For more complex requirements, you can add .ddev/web-build/Dockerfile or .ddev/db-build/Dockerfile.

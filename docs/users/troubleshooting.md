@@ -4,8 +4,8 @@ Things might go wrong! Besides the suggestions on this page don't forget about [
 
 ## General Troubleshooting Strategies
 
-* Temporarily turn off firewalls, VPNs, network proxies, and virus checkers while you're troubleshooting.
 * Please start with a `ddev poweroff` to make sure all containers can start fresh.
+* Temporarily turn off firewalls, VPNs, network proxies, and virus checkers while you're troubleshooting.
 * On macOS and traditional Windows, please check to make sure that Docker Desktop is not out of disk space. In Settings (or Preferences)->Resources->Disk image size there should be lots of space left; I never let it go over 80% because the number reported here is not reliable. If it says zero used, something is wrong.
 * If you have customizations (PHP overrides, nginx or Apache overrides, MySQL overrides, custom services, config.yaml changes) please back them out while troubleshooting. It's important to have the simplest possible environment while troubleshooting.
 * Check your Docker disk space and memory allocation if you're using Docker Desktop on Windows or macOS.
@@ -22,7 +22,7 @@ ddev notifies you about port conflicts with this message:
 Failed to start yoursite: Unable to listen on required ports, localhost port 80 is in use,
 ```
 
-This means there is another webserver listening on the named port(s) and ddev cannot access the port.
+This means there is another webserver listening on the named port(s) and ddev cannot access the port. The most common conflicts are on ports 80 and 443.
 
 (In some cases the conflict could be over port 8036 (phpMyAdmin) or port 8025 (MailHog)).
 
@@ -39,10 +39,11 @@ To configure a project to use non-conflicting ports, edit the project's .ddev/co
 For example, if there was a port conflict with a local apache http on port 80 add the following to the to the config.yaml file.
 
 ```yaml
-router_http_port: 8000
+router_http_port: 8080
+router_https_port: 8443
 ```
 
-Then run `ddev start`. This changes the project's http URL to <http://yoursite.ddev.site:8000.>
+Then run `ddev start`. This changes the project's http URL to <http://yoursite.ddev.site:8080> and the https URL to <https://yoursite.ddev.site:8443>.
 
 If the conflict is over port 8025, it's normally a conflict over the default port for MailHog. You can add to your .ddev/config.yaml
 
@@ -81,7 +82,7 @@ or `sudo launchctl stop homebrew.mxcl.nginx`
 
 To dig deeper, you can use a number of tools to find out what process is listening.
 
-On macOS and Linux, try the lsof tool:
+On macOS and Linux, try the lsof tool on ports 80 or 443 or whatever port you're having trouble with:
 
 ```
 $ sudo lsof -i :80 -sTCP:LISTEN
