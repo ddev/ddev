@@ -36,7 +36,8 @@ db_pull_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     pushd /var/www/html/.ddev/.downloads >/dev/null
-    ddev-live pull database ${database_backup}
+    filename=$(ddev-live pull database -o json ${database_backup} | jq -r .filename)
+    mv ${filename} db.sql.gz
 
 files_pull_command:
   command: |
