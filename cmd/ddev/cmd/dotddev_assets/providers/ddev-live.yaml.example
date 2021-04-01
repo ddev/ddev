@@ -24,7 +24,6 @@
 environment_variables:
   project_id: yourorg/yourproject
   database_backup: yourorg/yourdbbackup
-  org: yourorg
 
 auth_command:
   command: |
@@ -38,7 +37,6 @@ db_pull_command:
     # set -x   # You can enable bash debugging output by uncommenting
     pushd /var/www/html/.ddev/.downloads >/dev/null
     ddev-live pull database ${database_backup}
-    mv "${database_backup#*/}.sql.gz" db.sql.gz
 
 files_pull_command:
   command: |
@@ -51,7 +49,6 @@ files_pull_command:
 db_push_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
-    if ! command -v jq; then echo "Please install jq to use this, brew install jq"; fi
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null;
     restore=$(ddev-live push database ${project_id} -o json db.sql.gz | jq -r .databaseRestore)
