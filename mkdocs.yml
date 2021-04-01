@@ -64,5 +64,3 @@ nav:
     - 'DDEV-Live': 'users/providers/DDEV-Live.md'
     - 'Pantheon': 'users/providers/pantheon.md'
     - 'Platform.sh': 'users/providers/platform.md'
-  - 'Developer Documentation':
-    - 'Building, Testing, and Contributing': 'developers/building-contributing.md'
