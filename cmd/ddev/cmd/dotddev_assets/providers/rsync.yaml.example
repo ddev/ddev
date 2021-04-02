@@ -27,11 +27,14 @@ auth_command:
     ssh-add -l >/dev/null || ( echo "Please 'ddev auth ssh' before running this command." && exit 1 )
 
 db_pull_command:
-  command: rsync -az "${dburl}" /var/www/html/.ddev/.downloads
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    rsync -az "${dburl}" /var/www/html/.ddev/.downloads
   service: web
 
 files_pull_command:
   command: |
+    # set -x   # You can enable bash debugging output by uncommenting
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null
     rm -f files.tar.gz

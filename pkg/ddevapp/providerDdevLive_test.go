@@ -26,8 +26,7 @@ import (
  * A valid site (with backups) must be present which matches the test site and environment name
  * defined in the constants below.
  */
-const ddevliveTestSite = "ddev-live-test-no-delete"
-const ddevLiveOrg = "ddltest"
+const ddevliveTestSite = "ddltest/ddev-live-test-no-delete"
 
 var ddevLiveDBBackupName = ""
 
@@ -94,8 +93,9 @@ func TestDdevLivePull(t *testing.T) {
 	// Build our ddev-live.yaml from the example file
 	s, err := ioutil.ReadFile(app.GetConfigPath("providers/ddev-live.yaml.example"))
 	require.NoError(t, err)
-	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: %s/%s\n#project_id:", ddevLiveOrg, ddevliveTestSite), -1)
-	x = strings.Replace(x, "database_backup:", fmt.Sprintf("database_backup: %s/%s\n#database_backup: ", ddevLiveOrg, ddevLiveDBBackupName), -1)
+	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: %s\n#project_id:", ddevliveTestSite), -1)
+	x = strings.Replace(x, "database_backup:", fmt.Sprintf("database_backup: %s\n#database_backup: ", ddevLiveDBBackupName), -1)
+	x = strings.Replace(x, "# set -x", "set -x", -1)
 	err = ioutil.WriteFile(app.GetConfigPath("providers/ddev-live.yaml"), []byte(x), 0666)
 	require.NoError(t, err)
 	err = app.WriteConfig()
@@ -178,8 +178,8 @@ func TestDdevLivePush(t *testing.T) {
 	// Build our ddev-live.yaml from the example file
 	s, err := ioutil.ReadFile(app.GetConfigPath("providers/ddev-live.yaml.example"))
 	require.NoError(t, err)
-	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: %s/%s\n#project_id:", ddevLiveOrg, ddevliveTestSite), -1)
-	x = strings.Replace(x, "database_backup:", fmt.Sprintf("database_backup: %s/%s\n#database_backup: ", ddevLiveOrg, ddevLiveDBBackupName), -1)
+	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: %s\n#project_id:", ddevliveTestSite), -1)
+	x = strings.Replace(x, "database_backup:", fmt.Sprintf("database_backup: %s\n#database_backup: ", ddevLiveDBBackupName), -1)
 	err = ioutil.WriteFile(app.GetConfigPath("providers/ddev-live.yaml"), []byte(x), 0666)
 	assert.NoError(err)
 	err = app.WriteConfig()
@@ -219,7 +219,7 @@ func TestDdevLivePush(t *testing.T) {
 
 	// Test that the file arrived there (by execing a cat of it)
 	out, _, err := app.Exec(&ExecOpts{
-		Cmd: fmt.Sprintf(`ddev-live exec %s/%s -- cat %s `, ddevLiveOrg, ddevliveTestSite, path.Join("sites/default/files", fName)),
+		Cmd: fmt.Sprintf(`ddev-live exec %s -- cat %s `, ddevliveTestSite, path.Join("sites/default/files", fName)),
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)

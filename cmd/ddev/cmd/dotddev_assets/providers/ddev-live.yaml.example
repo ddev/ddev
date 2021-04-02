@@ -27,14 +27,12 @@ environment_variables:
 
 auth_command:
   command: |
-    # set -x   # You can enable bash debugging output by uncommenting
-    #if ! command -v drush >/dev/null ; then echo "Please make sure your project contains drush, ddev composer require drush/drush" && exit 1; fi
     if [ -z "${DDEV_LIVE_API_TOKEN:-}" ]; then echo "Please make sure you have set DDEV_LIVE_API_TOKEN in ~/.ddev/global_config.yaml" && exit 1; fi
     ddev-live auth --token="${DDEV_LIVE_API_TOKEN}"
 
 db_pull_command:
   command: |
-    # set -x   # You can enable bash debugging output by uncommenting
+    set -x   # You can enable bash debugging output by uncommenting
     pushd /var/www/html/.ddev/.downloads >/dev/null
     filename=$(ddev-live pull database -o json ${database_backup} | jq -r .filename)
     mv ${filename} db.sql.gz
