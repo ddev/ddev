@@ -28,13 +28,17 @@ import (
  */
 const ddevliveTestSite = "ddev-live-test-no-delete"
 const ddevLiveOrg = "ddltest"
-const ddevLiveDBBackupName = "ddev-live-test-no-delete-gg5pt"
+
+var ddevLiveDBBackupName = ""
 
 // TestDdevLivePull ensures we can pull backups from DDEV-Live
 func TestDdevLivePull(t *testing.T) {
 	token := ""
 	if token = os.Getenv("DDEV_DDEVLIVE_API_TOKEN"); token == "" {
 		t.Skipf("No DDEV_DDEVLIVE_API_TOKEN env var has been set. Skipping %v", t.Name())
+	}
+	if ddevLiveDBBackupName = os.Getenv("DDEV_DDEVLIVE_PULL_BACKUP"); ddevLiveDBBackupName == "" {
+		t.Skipf("No DDEV_DDEVLIVE_PULL_BACKUP env var has been set. Skipping %v", t.Name())
 	}
 
 	// Set up tests and give ourselves a working directory.
@@ -120,6 +124,9 @@ func TestDdevLivePush(t *testing.T) {
 	token := ""
 	if token = os.Getenv("DDEV_DDEVLIVE_API_TOKEN"); token == "" {
 		t.Skipf("No DDEV_DDEVLIVE_API_TOKEN env var has been set. Skipping %v", t.Name())
+	}
+	if ddevLiveDBBackupName = os.Getenv("DDEV_DDEVLIVE_PULL_BACKUP"); ddevLiveDBBackupName == "" {
+		t.Skipf("No DDEV_DDEVLIVE_PULL_BACKUP env var has been set. Skipping %v", t.Name())
 	}
 
 	// Set up tests and give ourselves a working directory.

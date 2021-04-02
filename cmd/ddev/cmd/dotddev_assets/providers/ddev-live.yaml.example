@@ -52,12 +52,13 @@ db_push_command:
     # set -x   # You can enable bash debugging output by uncommenting
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null;
-    restore=$(ddev-live push database ${project_id} -o json db.sql.gz | jq -r .databaseRestore)
+    restore=${project_id%/*}/$(ddev-live push database ${project_id} -o json db.sql.gz | jq -r .databaseRestore)
     while true; do
-        restore_status=$(ddev-live describe restore database "${project_id%/*}/$restore" -o json | jq -r .status)
+        restore_status=$(ddev-live describe restore database "${restore}" -o json | jq -r .status)
         if [ "${restore_status}" = "ImportOpFinished" ]; then break; fi
         sleep 1
     done
+    ddev-live delete backup db -y ${restore}
 
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
 files_push_command:
@@ -65,9 +66,10 @@ files_push_command:
     # set -x   # You can enable bash debugging output by uncommenting
     ls ${DDEV_FILES_DIR} >/dev/null # This just refreshes stale NFS if possible
     pushd $DDEV_FILES_DIR >/dev/null;
-    restore=$(ddev-live push files ${project_id} -o json . 2>/dev/null | jq -r .filesRestore)
+    restore=${project_id%/*}/$(ddev-live push files ${project_id} -o json . 2>/dev/null | jq -r .filesRestore)
     while true; do
-        restore_status=$(ddev-live describe restore files "${project_id%/*}/${restore}" -o json | jq -r .complete)
+        restore_status=$(ddev-live describe restore files "${restore}" -o json | jq -r .complete)
         if [ "${restore_status}" = "Completed" ]; then break; fi
         sleep 1
     done
+    ddev-live delete backup files -y ${restore}
