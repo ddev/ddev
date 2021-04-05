@@ -32,7 +32,6 @@ auth_command:
     ssh-add -l >/dev/null || ( echo "Please 'ddev auth ssh' before running this command." && exit 1 )
     acli auth:login -n --key="${ACQUIA_API_KEY}" --secret="${ACQUIA_API_SECRET}"
     acli remote:aliases:download -n >/dev/null
-    drush core:init -y >/dev/null 2>&1
 
 db_pull_command:
   command: |
@@ -45,10 +44,9 @@ db_pull_command:
 files_pull_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
-    drush core:init -y --quiet
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null;
-    drush rsync -q -y @${project_id}:%files ./files
+    drush rsync --alias-path=~/.drush -q -y @${project_id}:%files ./files
 
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
 db_push_command:
@@ -65,4 +63,4 @@ files_push_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     ls ${DDEV_FILES_DIR} >/dev/null # This just refreshes stale NFS if possible
-    drush rsync -y @self:%files @${project_id}:%files
+    drush rsync -y --alias-path=~/.drush @self:%files @${project_id}:%files
