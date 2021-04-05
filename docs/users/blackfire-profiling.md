@@ -30,9 +30,12 @@ The Blackfire CLI is built into the web container, so no installation needs to t
 
    It can also be done with `ddev config global --web-environment="BLACKFIRE_SERVER_ID=<id>,BLACKFIRE_SERVER_TOKEN=<token>,BLACKFIRE_CLIENT_ID=<id>,BLACKFIRE_CLIENT_TOKEN=<token>"`, but if there are already environment variables there they will be deleted.
 2. `ddev start`
+3. `ddev blackfire on`
+4. Click the "blackfire" browser extension to profile
 
 #### Examples of using the Blackfire CLI
 
+* `ddev blackfire on` and `ddev blackfire off`
 * `ddev exec blackfire curl https://<yoursite>.ddev.site`
 * `ddev exec blackfire drush st`
 * `ddev exec blackfire curl https://<yoursite>.ddev.site`
