@@ -14,13 +14,26 @@ DDEV-Local has built-in [blackfire.io](https://blackfire.io) integration.
 
 ### Profiling with the Blackfire CLI
 
-The Blackfire CLI is built into the web container.
+The Blackfire CLI is built into the web container, so no installation needs to take place.
 
-1. `ddev config global --web-environment="BLACKFIRE_SERVER_ID=<id>,BLACKFIRE_SERVER_TOKEN=<token>,BLACKFIRE_CLIENT_ID=<id>,BLACKFIRE_CLIENT_TOKEN=<token>"`
+1. Add the BLACKFIRE_SERVER_ID, BLACKFIRE_SERVER_TOKEN, BLACKFIRE_CLIENT_ID, and BLACKFIRE_CLIENT_TOKEN environment variables to your ~/.ddev/global_config.yaml. You can do this by adding to the`web_environment` key:
+
+    ```yaml
+      web_environment:
+      - OTHER_ENV=something
+      - BLACKFIRE_SERVER_ID=dde5f66d-xxxxxx
+      - BLACKFIRE_SERVER_TOKEN=09b0ec-xxxxx
+      - BLACKFIRE_CLIENT_ID=f5e88b7e-xxxxx
+      - BLACKFIRE_CLIENT_TOKEN=00cee15-xxxxx1
+
+    ```
+
+   It can also be done with `ddev config global --web-environment="BLACKFIRE_SERVER_ID=<id>,BLACKFIRE_SERVER_TOKEN=<token>,BLACKFIRE_CLIENT_ID=<id>,BLACKFIRE_CLIENT_TOKEN=<token>"`, but if there are already environment variables there they will be deleted.
 2. `ddev start`
-3. Examples of using the Blackfire CLI:
 
-   * `ddev exec blackfire curl https://<yoursite>.ddev.site`
-   * `ddev exec blackfire drush st`
-   * `ddev exec blackfire curl https://<yoursite>.ddev.site`
-   * `ddev ssh` and then use the Blackfire CLI as described in [Profiling HTTP Requests with the CLI](https://blackfire.io/docs/profiling-cookbooks/profiling-http-via-cli).
+#### Examples of using the Blackfire CLI
+
+* `ddev exec blackfire curl https://<yoursite>.ddev.site`
+* `ddev exec blackfire drush st`
+* `ddev exec blackfire curl https://<yoursite>.ddev.site`
+* `ddev ssh` and then use the Blackfire CLI as described in [Profiling HTTP Requests with the CLI](https://blackfire.io/docs/profiling-cookbooks/profiling-http-via-cli).
