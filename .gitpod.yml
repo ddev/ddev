@@ -5,10 +5,12 @@ tasks:
   - name: prebuild
     prebuild: |
       sudo docker-up >/dev/null 2>&1 &
+      DOCKERPID=$!
       while ! docker ps >/dev/null 2>&1; do sleep 1; done
       export DDEV_NONINTERACTIVE=true
       make
       mkdir -p /workspace/simpleproj && cd /workspace/simpleproj && ddev config --auto && cp ~/bin/gitpod-setup-ddev.sh .ddev && .ddev/gitpod-setup-ddev.sh
+      sudo kill $DOCKERPID
   - name: terminal
     command: |
       sudo docker-up >/dev/null 2>&1 &
