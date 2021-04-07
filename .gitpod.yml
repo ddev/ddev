@@ -3,17 +3,17 @@ image:
   file: .gitpod.Dockerfile
 
 tasks:
-  - name: make
+  - init: |
+    sudo docker-up >/dev/null 2>&1 &
+    while ! docker ps >/dev/null 2>&1; do sleep 1; done
+    make
+    .githooks/linkallchecks.sh
+    mkdir -p ~/tmp/simpleproj && cd ~/tmp/simpleproj && ddev config --auto && ddev start
+  - name: terminal
     command: |
-      # Wait for docker to come up before doing make (make requires docker)
-      while ! docker ps; do
-        sleep 1
-      done
-      .githooks/linkallchecks.sh
-      make
-  - name: docker_up
-    command: sudo docker-up      
-
+      sudo docker-up >/dev/null 2>&1 &
+      while ! docker ps >/dev/null 2>&1; do sleep 1; done
+      ddev start simpleproj
 vscode:
   extensions:
     - premparihar.gotestexplorer@0.1.10:jvUM8akrQ67vQxfjaxCgCg==
