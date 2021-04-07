@@ -6,8 +6,9 @@ tasks:
     prebuild: |
       sudo docker-up >/dev/null 2>&1 &
       while ! docker ps >/dev/null 2>&1; do sleep 1; done
+      export DDEV_NONINTERACTIVE=true
       make
-      mkdir -p ~/tmp/simpleproj && cd ~/tmp/simpleproj && ddev config --auto && ddev start -y
+      mkdir -p ~/tmp/simpleproj && cd ~/tmp/simpleproj && ddev config --router-http-port=8080 --router-https-port=8443 && cp ~/bin/gitpod-setup-ddev.sh .ddev && .ddev/gitpod-setup-ddev.sh
   - name: terminal
     command: |
       sudo docker-up >/dev/null 2>&1 &
