@@ -1,14 +1,13 @@
-
 image:
   file: .gitpod.Dockerfile
 
 tasks:
-  - init: |
-    sudo docker-up >/dev/null 2>&1 &
-    while ! docker ps >/dev/null 2>&1; do sleep 1; done
-    make
-    .githooks/linkallchecks.sh
-    mkdir -p ~/tmp/simpleproj && cd ~/tmp/simpleproj && ddev config --auto && ddev start
+  - name: prebuild
+    prebuild: |
+      sudo docker-up >/dev/null 2>&1 &
+      while ! docker ps >/dev/null 2>&1; do sleep 1; done
+      make
+      mkdir -p ~/tmp/simpleproj && cd ~/tmp/simpleproj && ddev config --auto && ddev start
   - name: terminal
     command: |
       sudo docker-up >/dev/null 2>&1 &
