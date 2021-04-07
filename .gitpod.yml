@@ -9,8 +9,10 @@ tasks:
       export DDEV_NONINTERACTIVE=true
       make
       mkdir -p ~/tmp/simpleproj && cd ~/tmp/simpleproj && ddev config --auto && cp ~/bin/gitpod-setup-ddev.sh .ddev && .ddev/gitpod-setup-ddev.sh
+      gp sync-done make
   - name: terminal
     command: |
+      gp sync-await make
       sudo docker-up >/dev/null 2>&1 &
       while ! docker ps >/dev/null 2>&1; do sleep 1; done
       ddev start -y simpleproj
