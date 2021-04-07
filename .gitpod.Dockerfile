@@ -11,6 +11,7 @@ RUN ln -sf /workspace/ddev/.gotmp/bin/linux_amd64/ddev ~/bin/ddev
 
 RUN curl -o ~/bin/gitpod-setup-ddev.sh --fail -lLs https://raw.githubusercontent.com/shaal/ddev-gitpod/main/.ddev/gitpod-setup-ddev.sh && chmod +x ~/bin/gitpod-setup-ddev.sh
 RUN mkcert -install
+RUN npm install -g markdownlint-cli
 
 # Install custom tools, runtimes, etc.
 # For example "bastet", a command-line tetris clone:
