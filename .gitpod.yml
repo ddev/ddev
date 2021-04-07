@@ -7,12 +7,12 @@ tasks:
       sudo docker-up >/dev/null 2>&1 &
       while ! docker ps >/dev/null 2>&1; do sleep 1; done
       make
-      mkdir -p ~/tmp/simpleproj && cd ~/tmp/simpleproj && ddev config --auto && ddev start
+      mkdir -p ~/tmp/simpleproj && cd ~/tmp/simpleproj && ddev config --auto && ddev start -y
   - name: terminal
     command: |
       sudo docker-up >/dev/null 2>&1 &
       while ! docker ps >/dev/null 2>&1; do sleep 1; done
-      ddev start simpleproj
+      ddev start -y simpleproj
 vscode:
   extensions:
     - premparihar.gotestexplorer@0.1.10:jvUM8akrQ67vQxfjaxCgCg==
