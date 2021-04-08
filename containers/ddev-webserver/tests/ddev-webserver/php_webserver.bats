@@ -86,6 +86,8 @@
   7.[01])
     extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring mysqli pgsql readline soap sqlite3 uploadprogress xml xmlrpc zip"
     ;;
+  8.0)
+    extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring memcached mysqli pgsql readline redis soap sqlite3 xml xmlrpc zip"
   esac
 
   run docker exec -t $CONTAINER_NAME enable_xdebug
