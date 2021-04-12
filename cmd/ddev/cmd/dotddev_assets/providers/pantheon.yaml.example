@@ -51,7 +51,7 @@ db_pull_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
-    terminus remote:drush -- ${project} sql-dump --gzip >/var/www/html/.ddev/.downloads/db.sql.gz
+    terminus drush ${project} -- sql-dump --gzip >/var/www/html/.ddev/.downloads/db.sql.gz
 
 files_pull_command:
   command: |
