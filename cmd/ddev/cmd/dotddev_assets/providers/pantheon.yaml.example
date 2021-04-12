@@ -24,7 +24,7 @@
 # 
 # 6. Configure the local checkout for ddev using `ddev config`
 # 
-# 7. In your project's .ddev/providers directory, copy pantheon.yaml.example to pantheon.yaml and edit the `project_id` and `environment_name`.
+# 7. In your project's .ddev/providers directory, copy pantheon.yaml.example to pantheon.yaml and edit `yourproject`. If you want to use a different enviornment than dev, update `dev` to the name of the environment.
 # 
 # 8. `ddev restart`
 # 
