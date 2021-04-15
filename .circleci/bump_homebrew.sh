@@ -42,7 +42,6 @@ class Ddev < Formula
 
   bottle do
     root_url "https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/download/${VERSION_NUMBER}/"
-    cellar :any_skip_relocation
     sha256 cellar: :any_skip_relocation, x86_64_linux: "${LINUX_BOTTLE_SHA}"
     sha256 cellar: :any_skip_relocation, high_sierra: "${MACOS_AMD64_BOTTLE_SHA}"
     sha256 cellar: :any_skip_relocation, arm64_big_sur: "${MACOS_ARM64_BOTTLE_SHA}"
