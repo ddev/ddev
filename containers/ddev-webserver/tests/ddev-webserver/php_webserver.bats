@@ -74,3 +74,29 @@
 @test "verify that test/phptest.php is interpreted ($project_type)" {
 	curl --fail 127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
 }
+
+@test "verify key php extensions are loaded on PHP${PHP_VERSION}" {
+  if [ "${WEBSERVER_TYPE}" = "apache-fpm" ]; then skip "Skipping on apache-fpm because we don't have to do this twice"; fi
+
+  extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring memcached mysqli pgsql readline redis soap sqlite3 uploadprogress xml xmlrpc zip"
+  case ${PHP_VERSION} in
+  5.6)
+    extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring mysql pgsql readline soap sqlite3 uploadprogress xml xmlrpc zip"
+    ;;
+  7.[01])
+    extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring mysqli pgsql readline soap sqlite3 uploadprogress xml xmlrpc zip"
+    ;;
+  8.0)
+    extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring memcached mysqli pgsql readline redis soap sqlite3 xml xmlrpc zip"
+  esac
+
+  run docker exec -t $CONTAINER_NAME enable_xdebug
+  run docker exec -t $CONTAINER_NAME bash -c "php -r \"print_r(get_loaded_extensions());\" 2>/dev/null | tr -d '\r\n'"
+  loaded="${output}"
+  # echo "# loaded=${output}" >&3
+  for item in $extensions; do
+#    echo "# extension: $item on PHP${PHP_VERSION}" >&3
+    grep -q "=> $item " <<< ${loaded} || (echo "# extension ${item} not loaded" >&3 && false)
+  done
+  run docker exec -t $CONTAINER_NAME disable_xdebug
+}
