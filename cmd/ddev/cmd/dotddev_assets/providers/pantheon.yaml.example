@@ -24,7 +24,7 @@
 # 
 # 6. Configure the local checkout for ddev using `ddev config`
 # 
-# 7. In your project's .ddev/providers directory, copy pantheon.yaml.example to pantheon.yaml and edit the `project_id` and `environment_name`.
+# 7. In your project's .ddev/providers directory, copy pantheon.yaml.example to pantheon.yaml and edit the "project" under `environment_variables` (change it from `yourproject.dev`). If you want to use a different environment than "dev", change `dev` to the name of the environment.
 # 
 # 8. `ddev restart`
 # 
@@ -75,4 +75,3 @@ files_push_command:
     # set -x   # You can enable bash debugging output by uncommenting
     ls ${DDEV_FILES_DIR} >/dev/null # This just refreshes stale NFS if possible
     drush rsync -y @self:%files @${project}:%files
-
