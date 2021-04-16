@@ -1,1 +1,1 @@
-export PATH="$PATH:/var/www/html/vendor/bin:/var/www/html/bin"
+export PATH="~/bin:$PATH:/var/www/html/vendor/bin:/var/www/html/bin"
