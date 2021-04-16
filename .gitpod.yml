@@ -1,19 +1,21 @@
-
 image:
   file: .gitpod.Dockerfile
 
 tasks:
-  - name: make
-    command: |
-      # Wait for docker to come up before doing make (make requires docker)
-      while ! docker ps; do
-        sleep 1
-      done
-      .githooks/linkallchecks.sh
+  - name: prebuild
+    prebuild: |
+      sudo docker-up >/dev/null 2>&1 &
+      DOCKERPID=$!
+      while ! docker ps >/dev/null 2>&1; do sleep 1; done
+      export DDEV_NONINTERACTIVE=true
       make
-  - name: docker_up
-    command: sudo docker-up      
-
+      mkdir -p /workspace/simpleproj && cd /workspace/simpleproj && ddev config --auto && cp ~/bin/gitpod-setup-ddev.sh .ddev && printf "<?php\nphpinfo();\n" >index.php &&.ddev/gitpod-setup-ddev.sh
+      sudo kill $DOCKERPID
+  - name: terminal
+    command: |
+      sudo docker-up >/dev/null 2>&1 &
+      while ! docker ps >/dev/null 2>&1; do sleep 1; done
+      ddev start -y simpleproj
 vscode:
   extensions:
     - premparihar.gotestexplorer@0.1.10:jvUM8akrQ67vQxfjaxCgCg==
