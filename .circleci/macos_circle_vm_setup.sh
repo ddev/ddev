@@ -8,9 +8,6 @@ DOCKER_URL=https://download.docker.com/mac/stable/31259/Docker.dmg
 curl -O -sSL $DOCKER_URL
 open -W Docker.dmg && cp -r /Volumes/Docker/Docker.app /Applications
 
-export HOMEBREW_NO_AUTO_UPDATE=1
-export HOMEBREW_NO_INSTALL_CLEANUP=1
-
 # Get docker in first so we can install it and work on other things
 sudo /Applications/Docker.app/Contents/MacOS/Docker --quit-after-install --unattended
 nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &

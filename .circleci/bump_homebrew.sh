@@ -32,24 +32,19 @@ cd ${TMPDIR} && git clone https://github.com/${GITHUB_REPO} && cd "$(basename ${
 
 cat >Formula/${PROJECT_NAME}.rb <<END
 class Ddev < Formula
-  desc "ddev: a local development environment management system"
+  desc "Local development environment management system"
   homepage "https://ddev.readthedocs.io/en/stable/"
   url "${SOURCE_URL}"
   sha256 "${SOURCE_SHA}"
 
-  # depends_on "docker" => :run
-  # depends_on "docker-compose" => :run
-  depends_on "docker" => :build
-  depends_on "go" => :build
   depends_on "mkcert" => :run
   depends_on "nss" => :run
 
   bottle do
     root_url "https://github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/releases/download/${VERSION_NUMBER}/"
-    cellar :any_skip_relocation
-    sha256 "${LINUX_BOTTLE_SHA}" => :x86_64_linux
-    sha256 "${MACOS_AMD64_BOTTLE_SHA}" => :high_sierra
-    sha256 "${MACOS_ARM64_BOTTLE_SHA}" => :arm64_big_sur
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "${LINUX_BOTTLE_SHA}"
+    sha256 cellar: :any_skip_relocation, high_sierra: "${MACOS_AMD64_BOTTLE_SHA}"
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "${MACOS_ARM64_BOTTLE_SHA}"
   end
   def install
     system "make", "VERSION=v#{version}", "COMMIT=v#{version}"
@@ -66,17 +61,17 @@ class Ddev < Formula
     fish_completion.install ".gotmp/bin/ddev_fish_completion.sh" => "ddev"
   end
 
-  test do
-    system "#{bin}/ddev", "--version"
+  def caveats
+    <<~EOS
+            Make sure to do a 'mkcert -install' if you haven't done it before, it may require your sudo password.
+      #{"      "}
+            ddev requires docker and docker-compose.
+            Docker installation instructions at https://ddev.readthedocs.io/en/stable/users/docker_installation/
+    EOS
   end
 
-  def caveats
-  <<~EOS
-Make sure to do a 'mkcert -install' if you haven't done it before, it may require your sudo password.
-
-ddev requires docker and docker-compose.
-Docker installation instructions at https://ddev.readthedocs.io/en/stable/users/docker_installation/
-  EOS
+  test do
+    system "#{bin}/ddev", "--version"
   end
 end
 END

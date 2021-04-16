@@ -399,7 +399,7 @@ jobs:
 
   release_build:
     macos:
-      xcode: "11.3.1"
+      xcode: "12.4.0"
     working_directory: ~/ddev
     environment:
       DDEV_DEBUG: "true"
