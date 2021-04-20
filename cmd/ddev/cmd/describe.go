@@ -12,15 +12,16 @@ import (
 
 // DescribeCommand represents the `ddev config` command
 var DescribeCommand = &cobra.Command{
-	Use:   "describe [projectname]",
-	Short: "Get a detailed description of a running ddev project.",
+	Use:     "describe [projectname]",
+	Aliases: []string{"status", "st", "desc"},
+	Short:   "Get a detailed description of a running ddev project.",
 	Long: `Get a detailed description of a running ddev project. Describe provides basic
 information about a ddev project, including its name, location, url, and status.
 It also provides details for MySQL connections, and connection information for
 additional services like MailHog and phpMyAdmin. You can run 'ddev describe' from
 a project directory to describe that project, or you can specify a project to describe by
 running 'ddev describe <projectname>.`,
-	Example: "ddev describe\nddev describe <projectname>",
+	Example: "ddev describe\nddev describe <projectname>\nddev status\nddev st",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) > 1 {
 			util.Failed("Too many arguments provided. Please use 'ddev describe' or 'ddev describe [projectname]'")
