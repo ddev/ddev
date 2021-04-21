@@ -23,7 +23,7 @@ If you have ddev installed, and have an active Pantheon account with an active s
 
 4. Check out project codebase from Pantheon. Enable the "Git Connection Mode" and use `git clone` to check out the code locally.
 
-5. Verify that drush is installed in your project, `ddev composer require drush/drush`
+5. If using Drupal 8+, verify that drush is installed in your project, `ddev composer require drush/drush`. If using Drupal 6 or 7, Drush is already part of DDEV, and you can skip this step.
 
 6. Configure the local checkout for ddev using `ddev config`
 
