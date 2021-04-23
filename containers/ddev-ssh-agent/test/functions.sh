@@ -10,10 +10,6 @@ function basic_setup {
     export MOUNTUID=33
     export MOUNTGID=33
 
-    # Homebrew mysql client realy really wants /usr/local/etc/my.cnf.d
-    if [ "${OS:-$(uname)}" != "Windows_NT" ] && [ ! -d "$(brew --prefix)/etc/my.cnf.d" ]; then
-        mkdir -p "$(brew --prefix)/etc/my.cnf.d" || sudo mkdir -p "$(brew --prefix)/etc/my.cnf.d"
-    fi
     docker rm -f ${CONTAINER_NAME} 2>/dev/null || true
 
     # Initialize the volume with the correct ownership
