@@ -743,13 +743,17 @@ func GetExposedContainerPorts(containerID string) ([]string, error) {
 		return nil, err
 	}
 
-	ports := []string{}
+	portMap := map[string]bool{}
 	for _, portMapping := range inspectInfo.NetworkSettings.Ports {
 		if portMapping != nil && len(portMapping) > 0 {
 			for _, item := range portMapping {
-				ports = append(ports, item.HostPort)
+				portMap[item.HostPort] = true
 			}
 		}
+	}
+	ports := []string{}
+	for k := range portMap {
+		ports = append(ports, k)
 	}
 	sort.Slice(ports, func(i, j int) bool {
 		return ports[i] < ports[j]

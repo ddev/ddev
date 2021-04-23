@@ -54,3 +54,9 @@ GHR_RELEASE="v0.13.0"
 curl -fsL -o /tmp/ghr.tar.gz https://github.com/tcnksm/ghr/releases/download/${GHR_RELEASE}/ghr_${GHR_RELEASE}_linux_amd64.tar.gz
 sudo tar -C /usr/local/bin --strip-components=1 -xzf /tmp/ghr.tar.gz ghr_${GHR_RELEASE}_linux_amd64/ghr
 ghr -v
+
+# Show info to simplify debugging
+docker info
+docker version
+docker-compose version
+lsb_release -a

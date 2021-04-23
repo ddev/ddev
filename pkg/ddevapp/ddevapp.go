@@ -1480,6 +1480,9 @@ func (app *DdevApp) StartAndWait(extraSleep int) error {
 	if err != nil {
 		return err
 	}
+	if extraSleep > 0 {
+		time.Sleep(time.Duration(extraSleep) * time.Second)
+	}
 	return nil
 }
 
