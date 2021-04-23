@@ -1,7 +1,7 @@
 FROM gitpod/workspace-full
 SHELL ["/bin/bash", "-c"]
 
-RUN sudo apt-get update && sudo apt-get install -y file netcat telnet
+RUN sudo apt-get update && sudo apt-get install -y file mysql-client netcat telnet
 RUN brew update && brew install bash-completion bats-core drud/ddev/ddev golangci-lint
 RUN npm install -g markdownlint-cli
 
