@@ -83,6 +83,8 @@ else
       today=$(date -I)
       let diff=($(date +%s -d ${item})-$(date +%s -d ${today}))/86400
       if [ ${diff} -le ${max} ]; then
+        echo "An apt key is expiring in ${diff} days"
+        apt-key list
         exit 1
       fi
     done
