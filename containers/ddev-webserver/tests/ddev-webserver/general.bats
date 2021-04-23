@@ -51,7 +51,7 @@
 
 @test "verify apt keys are not expiring" {
   MAX_DAYS_BEFORE_EXPIRATION=90
-  if [ "${DDEV_IGNORE_EXPIRING_KEYS}" = "true" ]; then
+  if [ "${DDEV_IGNORE_EXPIRING_KEYS:-}" = "true" ]; then
     skip "Skipping because DDEV_IGNORE_EXPIRING_KEYS is set"
   fi
   docker exec -it -e "max=$MAX_DAYS_BEFORE_EXPIRATION" ${CONTAINER_NAME} bash -c '
