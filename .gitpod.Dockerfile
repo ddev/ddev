@@ -2,7 +2,7 @@ FROM gitpod/workspace-full
 SHELL ["/bin/bash", "-c"]
 
 RUN sudo apt-get update && sudo apt-get install -y file netcat telnet
-RUN brew update && brew install bash-completion drud/ddev/ddev golangci-lint
+RUN brew update && brew install bash-completion bats-core drud/ddev/ddev golangci-lint
 RUN npm install -g markdownlint-cli
 
 RUN echo 'if [ -r "/home/linuxbrew/.linuxbrew/etc/profile.d/bash_completion.sh" ]; then . "/home/linuxbrew/.linuxbrew/etc/profile.d/bash_completion.sh"; fi' >>~/.bashrc
