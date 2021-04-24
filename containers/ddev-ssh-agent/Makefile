@@ -14,4 +14,4 @@ multi-arch:
 	echo "created multi-arch builds $(BUILD_ARCHS) for $(DOCKER_REPO)";
 
 test: container
-	true >/dev/null
+	test/test.sh $(DOCKER_REPO):$(VERSION)
