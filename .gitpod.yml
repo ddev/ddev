@@ -9,18 +9,14 @@ tasks:
       while ! docker ps >/dev/null 2>&1; do sleep 1; done
       export DDEV_NONINTERACTIVE=true
       make
-      ddev version | awk '/(drud|phpmyadmin)\// {print $2;}' >/tmp/images.txt
-      for item in $(cat /tmp/images.txt); do
-        docker pull $item
-      done
-
+      mkdir -p /workspace/simpleproj && cd /workspace/simpleproj && ddev config --auto && cp ~/bin/gitpod-setup-ddev.sh .ddev && printf "<?php\nphpinfo();\n" >index.php && .ddev/gitpod-setup-ddev.sh
       sudo kill $DOCKERPID
   - name: terminal
     command: |
       sudo docker-up >/dev/null 2>&1 &
       while ! docker ps >/dev/null 2>&1; do sleep 1; done
-      mkdir -p /workspace/simpleproj && cd /workspace/simpleproj && ddev config --auto && cp ~/bin/gitpod-setup-ddev.sh .ddev && printf "<?php\nphpinfo();\n" >index.php &&.ddev/gitpod-setup-ddev.sh
-      cd /workspace/simpleproj && ddev start -y
+      cd /workspace/simpleproj && .ddev/gitpod-setup-ddev.sh
+      gp await-port 8080 && gp preview $(gp url 8080)
 vscode:
   extensions:
     - premparihar.gotestexplorer@0.1.10:jvUM8akrQ67vQxfjaxCgCg==
