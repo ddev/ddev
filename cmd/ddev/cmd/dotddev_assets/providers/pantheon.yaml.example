@@ -32,7 +32,7 @@
 #
 # 10. Run `ddev pull pantheon`. The ddev environment  download the Pantheon database and files, and import the database and files into the ddev environment. You should now be able to access the project locally.
 #
-# 11. Optionally use `ddev push pantheon` to push local files and database to DDEV-Live. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
+# 11. Optionally un-comment `db_push_command` and `files_push_command` to use `ddev push pantheon` to push local files and database to DDEV-Live. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
 #
 
 # Debugging: Use `ddev exec terminus auth:whoami` to see what terminus knows about
@@ -47,7 +47,6 @@ auth_command:
     if ! command -v drush >/dev/null ; then echo "Please make sure your project contains drush, ddev composer require drush/drush" && exit 1; fi
     if [ -z "${TERMINUS_MACHINE_TOKEN:-}" ]; then echo "Please make sure you have set TERMINUS_MACHINE_TOKEN in ~/.ddev/global_config.yaml" && exit 1; fi
     terminus auth:login --machine-token="${TERMINUS_MACHINE_TOKEN}" >/dev/null 2>&1
-    terminus aliases 2>/dev/null
 
 db_pull_command:
   command: |
@@ -64,18 +63,19 @@ files_pull_command:
     terminus backup:get ${project} --element=files --to=files.tgz
     mkdir -p files && tar --strip-components=1 -C files -zxf files.tgz
 
-# push is a dangerous command. If not absolutely needed it's better to delete these lines.
-db_push_command:
-  command: |
-    # set -x   # You can enable bash debugging output by uncommenting
-    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
-    pushd /var/www/html/.ddev/.downloads >/dev/null;
-    terminus remote:drush ${project} -- sql-drop -y
-    gzip -dc db.sql.gz | terminus remote:drush ${project} -- sql-cli
-
-# push is a dangerous command. If not absolutely needed it's better to delete these lines.
-files_push_command:
-  command: |
-    # set -x   # You can enable bash debugging output by uncommenting
-    ls ${DDEV_FILES_DIR} >/dev/null # This just refreshes stale NFS if possible
-    drush rsync -y @self:%files @${project}:%files
+## push is a dangerous command. If not absolutely needed it's better to delete these lines.
+#db_push_command:
+#  command: |
+#    # set -x   # You can enable bash debugging output by uncommenting
+#    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
+#    pushd /var/www/html/.ddev/.downloads >/dev/null;
+#    terminus remote:drush ${project} -- sql-drop -y
+#    gzip -dc db.sql.gz | terminus remote:drush ${project} -- sql-cli
+#
+## push is a dangerous command. If not absolutely needed it's better to delete these lines.
+#files_push_command:
+#  command: |
+#    # set -x   # You can enable bash debugging output by uncommenting
+#    ls ${DDEV_FILES_DIR} >/dev/null # This just refreshes stale NFS if possible
+#    terminus aliases 2>/dev/null
+#    drush rsync -y @self:%files @${project}:%files
