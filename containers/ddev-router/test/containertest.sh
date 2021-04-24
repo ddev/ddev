@@ -3,7 +3,6 @@
 set -o errexit
 set -o pipefail
 set -o nounset
-set -x
 
 if [ "${OS:-$(uname)}" = "Windows_NT" ]; then exit; fi
 
@@ -47,6 +46,7 @@ cleanup
 
 # Make sure rootCA is created and installed on the ddev-global-cache/mkcert
 mkcert -install
+set -x
 docker run -t --rm  -v "$(mkcert -CAROOT):/mnt/mkcert" -v ddev-global-cache:/mnt/ddev-global-cache busybox sh -c "mkdir -p /mnt/ddev-global-cache/mkcert && chmod -R ugo+w /mnt/ddev-global-cache/* && cp -R /mnt/mkcert /mnt/ddev-global-cache"
 
 # Run the router alone
@@ -77,7 +77,7 @@ MAX_DAYS_BEFORE_EXPIRATION=90
 if [ "${DDEV_IGNORE_EXPIRING_KEYS:-}" = "true" ]; then
   echo "Skipping test of expiring keys because DDEV_IGNORE_EXPIRING_KEYS is set"
 else
-  docker exec -it -e "max=$MAX_DAYS_BEFORE_EXPIRATION" ${CONTAINER_NAME} bash -x -c '
+  docker exec -e "max=$MAX_DAYS_BEFORE_EXPIRATION" ${CONTAINER_NAME} bash -x -c '
     dates=$(apt-key list 2>/dev/null | awk "/\[expires/ { gsub(/[\[\]]/, \"\"); print \$6;}")
     for item in ${dates}; do
       today=$(date -I)
