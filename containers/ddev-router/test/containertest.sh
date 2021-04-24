@@ -77,7 +77,7 @@ MAX_DAYS_BEFORE_EXPIRATION=90
 if [ "${DDEV_IGNORE_EXPIRING_KEYS:-}" = "true" ]; then
   echo "Skipping test of expiring keys because DDEV_IGNORE_EXPIRING_KEYS is set"
 else
-  docker exec -it -e "max=$MAX_DAYS_BEFORE_EXPIRATION" ${CONTAINER_NAME} bash -c '
+  docker exec -it -e "max=$MAX_DAYS_BEFORE_EXPIRATION" ${CONTAINER_NAME} bash -x -c '
     dates=$(apt-key list 2>/dev/null | awk "/\[expires/ { gsub(/[\[\]]/, \"\"); print \$6;}")
     for item in ${dates}; do
       today=$(date -I)
