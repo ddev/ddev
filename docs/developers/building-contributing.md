@@ -21,7 +21,29 @@ Gitpod.io provides a quick preconfigured ddev experience in the browser, so you 
 To just open and work on ddev you can use the button below.
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/drud/ddev)
 
-If you want to run a project in there, the easy way to set it up based on [ddev-gitpod](https://github.com/shaal/ddev-gitpod) is to `ddev config` and then `cd .ddev && cp ~/bin/gitpod-setup-ddev.sh . && ./gitpod-setup-ddev.sh`. This sets up ports for the project that are compatible with gitpod, etc.
+If you want to run a project in there, the easy way to set it up in `/workspace/<yourproject>` based on [ddev-gitpod](https://github.com/shaal/ddev-gitpod) is to `ddev config` and then `cd .ddev && cp ~/bin/gitpod-setup-ddev.sh . && ./gitpod-setup-ddev.sh`. This sets up ports for the project that are compatible with gitpod, etc.
+
+A dummy project for gitpod is also provided already set up in /workspace/simpleproj.
+
+## Making changes to ddev images
+
+If you need to make a change to one of the ddev images, you can make the change but then it has to be built with a specific tag, and the tag has to be updated in pkg/version/version.go. So for example, make a change to containers/ddev-webserver/Dockerfile, then built it:
+
+```bash
+cd containers/ddev-webserver
+make VERSION=20210424_fix_dockerfile
+```
+
+Then edit pkg/version/version.go to set `var WebTag = "20210424_fix_dockerfile"` and
+
+```bash
+cd /workspace/ddev
+make
+```
+
+`ddev version` should show you that you are using the correct webtag, and `ddev start` will show it.
+
+It's easiest to do this using gitpod (see above) because gitpod already has `docker buildx` all set up for you and the built ddev is in the $PATH.
 
 ## Pull Requests and PR Preparation
 
