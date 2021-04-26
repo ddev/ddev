@@ -225,7 +225,7 @@ func (p *Provider) UploadDB() error {
 		return nil
 	}
 
-	if os.Getenv("DDEV_ALLOW_PUSH") == "true" {
+	if os.Getenv("DDEV_ALLOW_PUSH") != "true" {
 		util.Warning("You must set the enviorement DDEV_ALLOW_PUSH=true to allow DB push")
 		return nil
 	}
@@ -256,7 +256,7 @@ func (p *Provider) UploadFiles() error {
 		return nil
 	}
 
-	if os.Getenv("DDEV_ALLOW_PUSH") == "true" {
+	if os.Getenv("DDEV_ALLOW_PUSH") != "true" {
 		util.Warning("You must set the enviorement DDEV_ALLOW_PUSH=true to allow Files push")
 		return nil
 	}
