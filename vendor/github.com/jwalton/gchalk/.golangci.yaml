@@ -1,0 +1,5 @@
+issues:
+  exclude-rules:
+    - linters:
+        - staticcheck
+      text: "SA9003:"

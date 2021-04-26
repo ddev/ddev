@@ -7,6 +7,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/gosuri/uitable"
+	"github.com/jwalton/gchalk"
 	"path"
 	"path/filepath"
 	"sort"
@@ -56,13 +57,18 @@ func GetActiveProjects() []*DdevApp {
 	return apps
 }
 
+// h formats a column header
+func h(s string) string {
+	return gchalk.WithBlue().Bold(s)
+}
+
 // CreateAppTable will create a new app table for describe and list output
 func CreateAppTable() *uitable.Table {
 	table := uitable.New()
 	table.MaxColWidth = 140
 	table.Separator = "  "
 	table.Wrap = true
-	table.AddRow("NAME", "TYPE", "LOCATION", "URL", "STATUS")
+	table.AddRow(h("Name"), h("Type"), h("Location"), h("URL"), h("Status"))
 	return table
 }
 
@@ -112,23 +118,13 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 		status = color.CyanString(status)
 	}
 
-	if row["mutagen_enabled"] != true {
-		table.AddRow(
-			row["name"],
-			row["type"],
-			row["shortroot"],
-			urls,
-			status,
-		)
-	} else {
-		table.AddRow(
-			row["name"],
-			row["type"],
-			row["shortroot"],
-			urls,
-			status,
-		)
-	}
+	table.AddRow(
+		row["name"],
+		row["type"],
+		row["shortroot"],
+		urls,
+		status,
+	)
 
 }
 

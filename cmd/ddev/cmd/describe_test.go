@@ -63,8 +63,8 @@ func TestCmdDescribe(t *testing.T) {
 		args := []string{"describe", v.Name}
 		out, err := exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
-		assert.Contains(string(out), "NAME")
-		assert.Contains(string(out), "LOCATION")
+		assert.Contains(string(out), "Name")
+		assert.Contains(string(out), "Location")
 		assert.Contains(string(out), v.Name)
 		assert.Contains(string(out), "running")
 
@@ -76,8 +76,8 @@ func TestCmdDescribe(t *testing.T) {
 		args = []string{"describe"}
 		out, err = exec.RunCommand(DdevBin, args)
 		assert.NoError(err)
-		assert.Contains(string(out), "NAME")
-		assert.Contains(string(out), "LOCATION")
+		assert.Contains(string(out), "Name")
+		assert.Contains(string(out), "Location")
 		assert.Contains(string(out), v.Name)
 		assert.Contains(string(out), "running")
 
