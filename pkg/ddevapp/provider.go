@@ -225,6 +225,11 @@ func (p *Provider) UploadDB() error {
 		return nil
 	}
 
+	if os.Getenv("DDEV_ALLOW_PUSH") == "true" {
+		util.Warning("You must set the enviorement DDEV_ALLOW_PUSH=true to allow DB push")
+		return nil
+	}
+
 	err := p.app.ExportDB(p.app.GetConfigPath(".downloads/db.sql.gz"), true, "")
 	if err != nil {
 		return err
@@ -248,6 +253,11 @@ func (p *Provider) UploadFiles() error {
 
 	if p.FilesPullCommand.Command == "" {
 		util.Warning("No FilesPushCommand is defined for provider %s", p.ProviderType)
+		return nil
+	}
+
+	if os.Getenv("DDEV_ALLOW_PUSH") == "true" {
+		util.Warning("You must set the enviorement DDEV_ALLOW_PUSH=true to allow Files push")
 		return nil
 	}
 
