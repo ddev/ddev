@@ -74,7 +74,7 @@ RUN mkdir /tmp/ddev && \
     fi
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
-    blackfire-agent \
+    blackfire \
     blackfire-php \
     fontconfig \
     gettext \
