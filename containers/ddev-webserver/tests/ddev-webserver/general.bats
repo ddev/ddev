@@ -2,7 +2,7 @@
 
 @test "Verify required binaries are installed in normal image" {
     if [ "${IS_HARDENED}" == "true" ]; then skip "Skipping because IS_HARDENED==true"; fi
-    COMMANDS="composer ddev-live drush8 git magerun magerun2 mkcert node npm platform sudo terminus wp"
+    COMMANDS="composer drush8 git magerun magerun2 mkcert node npm platform sudo terminus wp"
     for item in $COMMANDS; do
 #      echo "# looking for $item" >&3
       docker exec $CONTAINER_NAME bash -c "command -v $item >/dev/null"
@@ -11,7 +11,7 @@
 
 @test "Verify some binaries binaries (sudo) are NOT installed in hardened image" {
     if [ "${IS_HARDENED}" != "true" ]; then skip "Skipping because IS_HARDENED==false"; fi
-    COMMANDS="ddev-live sudo terminus"
+    COMMANDS="sudo terminus"
     for item in $COMMANDS; do
       rv=1
       docker exec $CONTAINER_NAME bash -c "command -v $item >/dev/null 2>/dev/null" || rv=$?

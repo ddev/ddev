@@ -18,7 +18,6 @@ var PushCmd = &cobra.Command{
 	Running push will connect to the configured provider and export and upload the
 	database and/or files. It is not recommended for most workflows since it is extremely dangerous to your production hosting.`,
 	Example: `ddev push pantheon
-ddev push ddev-live
 ddev push platform
 ddev push pantheon -y
 ddev push platform --skip-files -y
