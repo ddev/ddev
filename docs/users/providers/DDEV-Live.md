@@ -8,7 +8,7 @@ Visit the [documentation pages for DDEV-Live](https://docs.ddev.com/getting-star
 
 If you have a DDEV-Live account with an active site, you can follow this quick start guide to spin up a DDEV-Live site locally. If you don't already have a DDEV-Live account, a free short-term trial is [available on signup](https://dash.ddev.com/).
 
-1. Get your DDEV-Live API token on the [DDEV Dashboar](https://dash.ddev.com/settings/integration).
+1. Get your DDEV-Live API token on the [DDEV Dashboard](https://dash.ddev.com/settings/integration).
 2. Using either `ddev-live` on the host or in the web container, authenticate and create a database backup, `ddev-live create backup database <sitename>`. You can do this again any time you need a fresh version from the upstream site.
 3. Create a files backup using `ddev-live create backup files <sitename>`. This doesn't need to be done again until you have upstream files that have changed that you need.
 4. Check out the git repository of the site.
