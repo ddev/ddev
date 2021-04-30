@@ -45,7 +45,6 @@ the .ddev/config.yaml is the primary configuration for the project.
 | project_tld | defaults to "ddev.site" so project urls become "someproject.ddev.site" | This can be changed to anything that works for you; to keep things the way they were before ddev v1.9, use "ddev.local" |
 | ngrok_args | Extra flags for ngrok when using the `ddev share` command | For example, `--subdomain mysite --auth user:pass`. See [ngrok docs on http flags](https://ngrok.com/docs#http) |
 | disable_settings_management | defaults to false | If true, ddev will not create or update CMS-specific settings files |  |
-| provider| hosting provider for `ddev pull` | "pantheon" or "ddev-live" or "default" |
 | hooks | | See [Extending Commands](../extending-commands.md) for more information. |
 | no_project_mount | Skip mounting the project into the web container | If true, the project will not be mounted by ddev into the web container. This is to enable experimentation with alternate file mounting strategies. Advanced users only! |
 

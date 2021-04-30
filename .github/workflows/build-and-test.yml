@@ -9,7 +9,6 @@ on:
 env:
   BUILDKIT_PROGRESS: plain
   DOCKER_CLI_EXPERIMENTAL: enabled
-  DDEV_LIVE_NO_ANALYTICS: true
   DDEV_DEBUG: true
 
 

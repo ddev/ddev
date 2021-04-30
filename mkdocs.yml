@@ -61,6 +61,5 @@ nav:
   - 'Integration with Hosting Providers':
     - 'Introduction': 'users/providers/provider-introduction.md'
     - 'Acquia': 'users/providers/acquia.md'
-    - 'DDEV-Live': 'users/providers/DDEV-Live.md'
     - 'Pantheon': 'users/providers/pantheon.md'
     - 'Platform.sh': 'users/providers/platform.md'

@@ -1,7 +1,7 @@
 
 ### ---------------------------ddev-webserver-base--------------------------------------
 ### Build ddev-php-base from ddev-webserver-base
-### ddev-php-base is the basic of ddev-php-prod (for DDEV-Live)
+### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV-Local)
 FROM drud/ddev-php-base:v1.17.1-alpha4 as ddev-webserver-base
 
@@ -67,11 +67,9 @@ SHELL ["/bin/bash", "-c"]
 RUN mkdir /tmp/ddev && \
     if [[ $TARGETPLATFORM == "linux/arm64" ]]; then \
         printf 'MKCERT_ARCH="linux-arm64" \n\
-        DDEV_LIVE_ARCH=arm64 \n\
         MAILHOG_ARCH="linux_arm64"' > /tmp/ddev/vars; \
     else \
         printf 'MKCERT_ARCH="linux-amd64" \n\
-        DDEV_LIVE_ARCH=amd64 \n\
         MAILHOG_ARCH="linux_amd64"' > /tmp/ddev/vars; \
     fi
 
@@ -104,9 +102,6 @@ RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/MailHog/releases/
 RUN curl -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod 777 /usr/local/bin/terminus
 RUN curl -sSL https://github.com/platformsh/platformsh-cli/releases/download/$(curl --silent "https://api.github.com/repos/platformsh/platformsh-cli/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/platform.phar --output /usr/local/bin/platform && chmod 777 /usr/local/bin/platform
 RUN curl -sSL --output /usr/local/bin/acli https://github.com/acquia/cli/releases/latest/download/acli.phar && chmod 777 /usr/local/bin/acli
-
-RUN source /tmp/ddev/vars && curl -fsSL -o ddev-live.zip https://downloads.ddev.com/ddev-live-cli/latest/linux_${DDEV_LIVE_ARCH}/ddev-live.zip && unzip ddev-live.zip && mv ddev-live /usr/local/bin && chmod 777 /usr/local/bin/ddev-live && rm ddev-live.zip
-
 RUN curl -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/backdrop-drush-extension.zip -o /tmp/backdrop-drush-extension.zip && unzip -o /tmp/backdrop-drush-extension.zip -d /var/tmp/backdrop_drush_commands
 
 RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib/apache2/module/enabled_by_admin /var/lib/apache2/module/disabled_by_admin && \
@@ -161,9 +156,6 @@ ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
 ENV CAROOT /mnt/ddev-global-cache/mkcert
-
-ENV DDEV_LIVE_CONFIG_FILE_PATH /mnt/ddev-global-cache/ddev-live/cli-config.json
-ENV DDEV_LIVE_NO_VERSION_PROMPT true
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_CACHE_DIR=/mnt/ddev-global-cache/composer

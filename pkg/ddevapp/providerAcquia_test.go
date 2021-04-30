@@ -19,10 +19,6 @@ import (
 )
 
 /**
- * These tests rely on an external test account managed by DRUD. To run them, you'll
- * need to set an environment variable called "DDEV_DDEVLIVE_API_TOKEN" with credentials for
- * this account. If no such environment variable is present, these tests will be skipped.
- *
  * A valid site (with backups) must be present which matches the test site and environment name
  * defined in the constants below.
  */
