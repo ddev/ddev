@@ -189,7 +189,7 @@ func TestCustomCommands(t *testing.T) {
 		assert.FileExists(filepath.Join(globalCommandsDir, f))
 	}
 	// Make sure that the non-command stuff we installed is in project commands dir
-	for _, f := range []string{"db/mysql", "db/README.txt", "host/launch", "host/README.txt", "host/solrtail.example", "solr/README.txt", "solr/solrtail.example", "web/live", "web/README.txt", "web/xdebug"} {
+	for _, f := range []string{"db/mysql", "db/README.txt", "host/launch", "host/README.txt", "host/solrtail.example", "solr/README.txt", "solr/solrtail.example", "web/README.txt", "web/xdebug"} {
 		assert.FileExists(filepath.Join(projectCommandsDir, f))
 	}
 
