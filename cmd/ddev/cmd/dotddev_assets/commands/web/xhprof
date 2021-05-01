@@ -1,0 +1,31 @@
+#!/bin/bash
+
+## Description: Enable or disable xhprof
+## Usage: xhprof on|off|enable|disable|true|false|status
+## Example: "ddev xhprof" (default is "on"), "ddev xhprof off", "ddev xhprof on", "ddev xhprof status"
+
+if [ $# -eq 0 ]; then
+  enable_xhprof
+  exit
+fi
+
+case $1 in
+on | true | enable)
+  enable_xhprof
+  ;;
+off | false | disable)
+  disable_xhprof
+  ;;
+status)
+  status=$(php -m | grep 'xhprof')
+  if [ "${status}" = "xhprof" ]; then
+    result="xhprof enabled"
+  else
+    result="xhprof disabled"
+  fi
+  echo $result
+  ;;
+*)
+  echo "Invalid argument: $1"
+  ;;
+esac
