@@ -5,15 +5,13 @@
 ## Example: "ddev xhprof" (default is "on"), "ddev xhprof off", "ddev xhprof on", "ddev xhprof status"
 
 enable_xhprof() {
-  export PATH=$PATH:/usr/sbin:/sbin;
-  phpenmod xhprof;
+  phpenmod -v $DDEV_PHP_VERSION xhprof;
   killall -HUP php-fpm 2>/dev/null || true;
   echo "Enabled xhprof";
 }
 
 disable_xhprof() {
-  export PATH=$PATH:/usr/sbin:/sbin;
-  phpdismod xhprof;
+  phpdismod -v $DDEV_PHP_VERSION xhprof;
   killall -HUP php-fpm 2>/dev/null || true;
   echo "Disabled xhprof";
 }
