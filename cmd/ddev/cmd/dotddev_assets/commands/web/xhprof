@@ -4,6 +4,20 @@
 ## Usage: xhprof on|off|enable|disable|true|false|status
 ## Example: "ddev xhprof" (default is "on"), "ddev xhprof off", "ddev xhprof on", "ddev xhprof status"
 
+enable_xhprof() {
+  export PATH=$PATH:/usr/sbin:/sbin;
+  phpenmod xhprof;
+  killall -HUP php-fpm 2>/dev/null || true;
+  echo "Enabled xhprof";
+}
+
+disable_xhprof() {
+  export PATH=$PATH:/usr/sbin:/sbin;
+  phpdismod xhprof;
+  killall -HUP php-fpm 2>/dev/null || true;
+  echo "Disabled xhprof";
+}
+
 if [ $# -eq 0 ]; then
   enable_xhprof
   exit
@@ -19,9 +33,9 @@ off | false | disable)
 status)
   status=$(php -m | grep 'xhprof')
   if [ "${status}" = "xhprof" ]; then
-    result="xhprof enabled"
+    result="xhprof is enabled"
   else
-    result="xhprof disabled"
+    result="xhprof is disabled"
   fi
   echo $result
   ;;
