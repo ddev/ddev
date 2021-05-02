@@ -764,6 +764,78 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	runTime()
 }
 
+// TestDdevXhprofEnabled tests running with xhprof_enabled = true, etc.
+func TestDdevXhprofEnabled(t *testing.T) {
+	// 2021-02: I've been unable to make this test work on WSL2, even though it's easy to demonstrate
+	// that it works using PhpStorm, etc. The go listener here doesn't seem to listen on all interfaces.
+	// If you get golang listening, then enter the web container and try to connect to the port golang
+	// is listening on, it can't connect. However, if you use netcat to listen on the wsl2 side and then
+	// connect to it from inside the container, it connects fine.
+	// Let's try at least, but it's fine if we need to remove these for WSL2.
+	// if nodeps.IsWSL2() {
+	//	t.Skip("Skipping on WSL2 because this test doesn't work although manual testing works")
+	//}
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+	testcommon.ClearDockerEnv()
+
+	site := TestSites[0]
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
+
+	phpVersions := nodeps.ValidPHPVersions
+	phpKeys := make([]string, 0, len(phpVersions))
+	for k := range phpVersions {
+		phpKeys = append(phpKeys, k)
+	}
+	sort.Strings(phpKeys)
+
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		app.XhprofEnabled = false
+		app.PHPVersion = nodeps.PHPDefault
+		err = app.WriteConfig()
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
+
+	for _, v := range phpKeys {
+		app.PHPVersion = v
+		t.Logf("Beginning XHProf checks with XHProf php%s\n", v)
+		fmt.Printf("Attempting XHProf checks with XHProf %s\n", v)
+		err = app.Start()
+		require.NoError(t, err)
+
+		opts := &ddevapp.ExecOpts{
+			Service: "web",
+			Cmd:     "php --ri xhprof",
+		}
+		stdout, _, err := app.Exec(opts)
+		assert.Error(err)
+		assert.Contains(stdout, "Extension 'xhprof' not present")
+
+		// Run with xhprof enabled
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
+			Cmd: "enable_xhprof",
+		})
+		assert.NoError(err)
+
+		stdout, _, err = app.Exec(opts)
+		assert.NoError(err)
+
+		if err != nil {
+			t.Errorf("Aborting xhprof check for php%s: %v", v, err)
+			continue
+		}
+		assert.Contains(stdout, "xhprof.output_dir", "xhprof is not enabled for %s", v)
+
+		// TODO: Not sure what else to test for xhprof.
+	}
+	runTime()
+}
+
 // TestDdevMysqlWorks tests that mysql client can be run in both containers.
 func TestDdevMysqlWorks(t *testing.T) {
 	assert := asrt.New(t)
