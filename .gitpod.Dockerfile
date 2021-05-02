@@ -24,3 +24,7 @@ RUN mkdir -p ~/.docker/cli-plugins && curl --output ~/.docker/cli-plugins/docker
 # RUN brew install bastet
 #
 # More information: https://www.gitpod.io/docs/config-docker/
+
+###
+### Initiate a rebuild of Gitpod's image by updating this comment #1
+###
