@@ -193,7 +193,7 @@ func RenderRouterStatus() string {
 	return fmt.Sprintf("\nDDEV ROUTER STATUS: %v", renderedStatus)
 }
 
-// GetRouterStatus retur s router status and warning if not
+// GetRouterStatus returns router status and warning if not
 // running or healthy, as applicable.
 // return status and most recent log
 func GetRouterStatus() (string, string) {
