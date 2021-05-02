@@ -34,6 +34,23 @@
   docker run  -e "DDEV_PHP_VERSION=${PHP_VERSION}" --rm $DOCKER_IMAGE bash -c 'php --version | grep "with Xdebug"'
 }
 
+@test "enable and disable xhprof for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+    CURRENT_ARCH=$(../get_arch.sh)
+
+    docker exec -t $CONTAINER_NAME enable_xhprof
+    docker exec -t $CONTAINER_NAME php --re xhprof | grep "xhprof.output_dir"
+    curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xhprof.php | grep "XHProf is enabled"
+    docker exec -t $CONTAINER_NAME disable_xhprof
+    docker exec -t $CONTAINER_NAME php --re xhprof | grep "xhprof does not exist"
+    curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xhprof.php | grep "XHProf is disabled"
+}
+
+@test "verify that xhprof is enabled by default when the image is not run with start.sh php${PHP_VERSION}" {
+  CURRENT_ARCH=$(../get_arch.sh)
+
+  docker run  -e "DDEV_PHP_VERSION=${PHP_VERSION}" --rm $DOCKER_IMAGE bash -c 'php --re xhprof | grep -v "xhprof does not exist"'
+}
+
 @test "verify mailhog for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   if [ ${IS_HARDENED} == "true" ]; then skip "Skipping because mailhog is not installed on hardened prod image"; fi
   curl -s 127.0.0.1:$HOST_HTTP_PORT/test/test-email.php | grep "Test email sent"
@@ -83,6 +100,7 @@
   esac
 
   run docker exec -t $CONTAINER_NAME enable_xdebug
+  run docker exec -t $CONTAINER_NAME enable_xhprof
   run docker exec -t $CONTAINER_NAME bash -c "php -r \"print_r(get_loaded_extensions());\" 2>/dev/null | tr -d '\r\n'"
   loaded="${output}"
   # echo "# loaded=${output}" >&3
@@ -91,4 +109,5 @@
     grep -q "=> $item " <<< ${loaded} || (echo "# extension ${item} not loaded" >&3 && false)
   done
   run docker exec -t $CONTAINER_NAME disable_xdebug
+  run docker exec -t $CONTAINER_NAME disable_xhprof
 }
