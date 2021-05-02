@@ -21,6 +21,7 @@ Each of these commands has full help. For example, `ddev start -h` or `ddev help
 * `ddev launch` or `ddev launch some/uri` will launch a browser with the current project's URL (or a full URL to `/some/uri`). `ddev launch -p` will launch the phpMyAdmin UI, and `ddev launch -m` will launch the MailHog UI.
 * `ddev delete` is the same as `ddev stop --remove-data` and will delete a project's database and ddev's record of the project's existence. It doesn't touch your project or code. `ddev delete -O` will omit the snapshot creation step that would otherwise take place, and `ddev delete images` gets rid of spare Docker images you may have on your machine.
 * `ddev xdebug` enables xdebug, `ddev xdebug off` disables it, `ddev xdebug status` shows status
+* `ddev xhprof` enables xhprof, `ddev xhprof off` disables it, `ddev xhprof status` shows status
 * `ddev drush` (Drupal and Backdrop only) gives direct access to the drush CLI
 * `ddev artisan` (Laravel only) gives direct access to the Laravel artisan CLI
 * `ddev magento` (Magento2 only) gives access to the magento CLI
