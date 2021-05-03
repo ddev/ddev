@@ -14,17 +14,21 @@ function enable {
   fi
   phpenmod blackfire
   killall -HUP php-fpm
-  killall blackfire-agent 2>/dev/null
+  # Can't use killall here because it kills this process!
+  pid=$(ps -ef | awk '$8~/^blackfire.*/ { print $2 }' 2>/dev/null)
+  if [ "${pid}" != "" ]; then kill $pid; fi
   nohup blackfire agent:start --log-level=4 >/tmp/blackfire_nohup.out 2>&1 &
   sleep 1
-  echo "Enabled blackfire PHP extension and started blackfire-agent"
+  echo "Enabled blackfire PHP extension and started blackfire agent"
   exit
 }
 function disable {
   phpdismod blackfire
   killall -HUP php-fpm
-  killall blackfire-agent 2>/dev/null
-  echo "Disabled blackfire PHP extension and stopped blackfire-agent"
+  # Can't use killall here because it kills this process!
+  pid=$(ps -ef | awk '$8~/^blackfire.*/ { print $2 }' 2>/dev/null)
+  if [ "${pid}" != "" ]; then kill ${pid}; fi
+  echo "Disabled blackfire PHP extension and stopped blackfire agent"
   exit
 }
 
@@ -44,13 +48,13 @@ case $1 in
   status)
     php --version | grep "with blackfire" >/dev/null 2>&1
     phpstatus=$?
-    killall -0 blackfire-agent 2>/dev/null
-    agentstatus=$?
+    # Can't use killall here because it kills this process!
+    agentstatus=$(ps -ef | awk '$8~/^blackfire.*/ { print $2 }' 2>/dev/null)
+    if [ "${pid}" != "" ]; then kill $pid; fi
     if [ ${phpstatus} -eq 0 ]; then echo "blackfire PHP extension enabled"; else echo "blackfire PHP extension disabled"; fi
-    if [ ${agentstatus} -eq 0 ]; then echo "blackfire agent running"; else echo "blackfire agent not running"; fi
-
+    if [ "${agentstatus}" != "" ]; then echo "blackfire agent running"; else echo "blackfire agent not running"; fi
     if [ ${phpstatus} -eq 0 ]; then printf "probe version %s\n" "$(php -v | awk  -F '[ ,\~]+' '/blackfire/{ print $4; }')"; fi
-    printf "agent version %s\n" "$(blackfire version | awk '{print $3;}')"
+    printf "blackfire version %s\n" "$(blackfire version | awk '{print $3;}')"
     ;;
 
   *)
