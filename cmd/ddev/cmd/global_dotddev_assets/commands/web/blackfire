@@ -6,7 +6,6 @@
 ## Example: "ddev blackfire" (default is "on"), "ddev blackfire off", "ddev blackfire on", "ddev blackfire status"
 
 function enable {
-  echo "step 0"
   if [ -z ${BLACKFIRE_SERVER_ID} ] || [ -z ${BLACKFIRE_SERVER_TOKEN} ]; then
     echo "BLACKFIRE_SERVER_ID and BLACKFIRE_SERVER_TOKEN environment variables must be set" >&2
     echo "See docs for how to set in global or project config" >&2
