@@ -50,7 +50,7 @@ case $1 in
     if [ ${agentstatus} -eq 0 ]; then echo "blackfire agent running"; else echo "blackfire agent not running"; fi
 
     if [ ${phpstatus} -eq 0 ]; then printf "probe version %s\n" "$(php -v | awk  -F '[ ,\~]+' '/blackfire/{ print $4; }')"; fi
-    printf "agent version %s\n" "$(blackfire version | awk '{print $2;}')"
+    printf "agent version %s\n" "$(blackfire version | awk '{print $3;}')"
     ;;
 
   *)
