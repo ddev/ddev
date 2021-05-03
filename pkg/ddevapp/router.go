@@ -57,6 +57,16 @@ func StopRouterIfNoContainers() error {
 
 // StartDdevRouter ensures the router is running.
 func StartDdevRouter() error {
+	// If the router is not healthy/running, we'll kill it so it
+	// starts over again.
+	router, err := FindDdevRouter()
+	if router != nil && err == nil && router.State != "running" {
+		err = dockerutil.RemoveContainer(nodeps.RouterContainer, 0)
+		if err != nil {
+			return err
+		}
+	}
+
 	routerComposeFullPath, err := generateRouterCompose()
 	if err != nil {
 		return err
