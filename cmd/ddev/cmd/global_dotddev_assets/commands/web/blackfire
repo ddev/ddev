@@ -50,7 +50,6 @@ case $1 in
     phpstatus=$?
     # Can't use killall here because it kills this process!
     agentstatus=$(ps -ef | awk '$8~/^blackfire.*/ { print $2 }' 2>/dev/null)
-    if [ "${pid}" != "" ]; then kill $pid; fi
     if [ ${phpstatus} -eq 0 ]; then echo "blackfire PHP extension enabled"; else echo "blackfire PHP extension disabled"; fi
     if [ "${agentstatus}" != "" ]; then echo "blackfire agent running"; else echo "blackfire agent not running"; fi
     if [ ${phpstatus} -eq 0 ]; then printf "probe version %s\n" "$(php -v | awk  -F '[ ,\~]+' '/blackfire/{ print $4; }')"; fi
