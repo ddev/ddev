@@ -469,6 +469,7 @@ wsize
 wsl2
 www
 xdebug
+xhprof
 yaml
 yml
 you
