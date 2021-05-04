@@ -62,11 +62,7 @@ else
 fi
 
 # Disable xhprof by default. Users can enable with /usr/local/bin/enable_xhprof
-if [ "$DDEV_XHPROF_ENABLED" = "true" ]; then
-  enable_xhprof
-else
-  disable_xhprof
-fi
+disable_xhprof
 
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 

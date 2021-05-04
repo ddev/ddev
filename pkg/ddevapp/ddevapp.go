@@ -74,7 +74,6 @@ type DdevApp struct {
 	RouterHTTPPort            string                `yaml:"router_http_port"`
 	RouterHTTPSPort           string                `yaml:"router_https_port"`
 	XdebugEnabled             bool                  `yaml:"xdebug_enabled"`
-	XhprofEnabled             bool                  `yaml:"xhprof_enabled"`
 	NoProjectMount            bool                  `yaml:"no_project_mount,omitempty"`
 	AdditionalHostnames       []string              `yaml:"additional_hostnames"`
 	AdditionalFQDNs           []string              `yaml:"additional_fqdns"`
@@ -298,7 +297,6 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["router_http_port"] = app.RouterHTTPPort
 	appDesc["router_https_port"] = app.RouterHTTPSPort
 	appDesc["xdebug_enabled"] = app.XdebugEnabled
-	appDesc["xhprof_enabled"] = app.XhprofEnabled
 	appDesc["webimg"] = app.WebImage
 	appDesc["dbimg"] = app.GetDBImage()
 	appDesc["dbaimg"] = app.DBAImage
@@ -1365,7 +1363,6 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_ROUTER_HTTP_PORT":      app.RouterHTTPPort,
 		"DDEV_ROUTER_HTTPS_PORT":     app.RouterHTTPSPort,
 		"DDEV_XDEBUG_ENABLED":        strconv.FormatBool(app.XdebugEnabled),
-		"DDEV_XHPROF_ENABLED":        strconv.FormatBool(app.XhprofEnabled),
 		"DDEV_PRIMARY_URL":           app.GetPrimaryURL(),
 		"DOCKER_SCAN_SUGGEST":        "false",
 		"IS_DDEV_PROJECT":            "true",
