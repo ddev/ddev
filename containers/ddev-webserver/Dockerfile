@@ -97,6 +97,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     zip
 
 ADD ddev-webserver-dev-base-files /
+RUN phpdismod blackfire xhprof
 RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_${MAILHOG_ARCH} -o /usr/local/bin/mailhog; 
 
 RUN phpdismod xdebug && curl -sSL --fail --output /usr/local/bin/phive "https://phar.io/releases/phive.phar" && chmod 777 /usr/local/bin/phive && phpenmod xdebug
@@ -130,8 +131,6 @@ RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.lo
 
 RUN a2dismod mpm_event
 RUN a2enmod ssl headers expires
-
-RUN phpdismod blackfire
 
 # scripts added last because they're most likely place to make changes, speeds up build
 ADD ddev-webserver-base-scripts /
