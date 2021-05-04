@@ -41,14 +41,14 @@
     docker exec -t $CONTAINER_NAME php --re xhprof | grep "xhprof.output_dir"
     curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xhprof.php | grep "XHProf is enabled"
     docker exec -t $CONTAINER_NAME disable_xhprof
-    docker exec -t $CONTAINER_NAME php --re xhprof | grep "xhprof does not exist"
+    docker exec -t $CONTAINER_NAME php --re xhprof | grep "\"xhprof\" does not exist"
     curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xhprof.php | grep "XHProf is disabled"
 }
 
 @test "verify that xhprof is enabled by default when the image is not run with start.sh php${PHP_VERSION}" {
   CURRENT_ARCH=$(../get_arch.sh)
 
-  docker run  -e "DDEV_PHP_VERSION=${PHP_VERSION}" --rm $DOCKER_IMAGE bash -c 'php --re xhprof | grep -v "xhprof does not exist"'
+  docker run  -e "DDEV_PHP_VERSION=${PHP_VERSION}" --rm $DOCKER_IMAGE bash -c 'php --re xhprof | grep -v "\"xhprof\" does not exist"'
 }
 
 @test "verify mailhog for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
