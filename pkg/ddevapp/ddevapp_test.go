@@ -816,8 +816,7 @@ func TestDdevXhprofEnabled(t *testing.T) {
 		// For PHP 8.0, php --ri gives no error but the same message.
 		if app.PHPVersion == nodeps.PHP80 {
 			assert.NoError(err)
-		}
-		else {
+		} else {
 			assert.Error(err)
 		}
 		assert.Contains(stdout, "Extension 'xhprof' not present")
