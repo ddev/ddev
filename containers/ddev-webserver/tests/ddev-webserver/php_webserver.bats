@@ -41,7 +41,7 @@
     docker exec -t $CONTAINER_NAME php --re xhprof | grep "xhprof.output_dir"
     curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xhprof.php | grep "XHProf is enabled"
     docker exec -t $CONTAINER_NAME disable_xhprof
-    docker exec -t $CONTAINER_NAME php --re xhprof | grep "\"xhprof\" does not exist"
+    docker exec -t $CONTAINER_NAME php --re xhprof | grep "does not exist"
     curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xhprof.php | grep "XHProf is disabled"
 }
 
