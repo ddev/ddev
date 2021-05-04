@@ -243,7 +243,7 @@ RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/mkcert/releases/d
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
   chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
 
-RUN a2dismod mpm_event xhprof
+RUN a2dismod mpm_event
 RUN a2enmod ssl headers expires
 
 # scripts added last because they're most likely place to make changes, speeds up build
