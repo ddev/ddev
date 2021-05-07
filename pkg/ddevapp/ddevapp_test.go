@@ -1533,13 +1533,18 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = app.Init(site.Dir)
 	require.NoError(t, err)
 
+	t.Cleanup(func() {
+		app.Hooks = nil
+		_ = app.WriteConfig()
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
+
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-snapshot": {{"exec-host": "touch hello-post-snapshot-" + app.Name}}, "pre-snapshot": {{"exec-host": "touch hello-pre-snapshot-" + app.Name}}}
 
 	// First do regular start, which is good enough to get us to an ImportDB()
 	err = app.Start()
 	require.NoError(t, err)
-	//nolint: errcheck
-	defer app.Stop(true, false)
 
 	err = app.ImportDB(d7testerTest1Dump, "", false, false, "db")
 	require.NoError(t, err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
@@ -1624,13 +1629,6 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = app.RestoreSnapshot("d7tester_test_1.snapshot_mariadb_10.1")
 	assert.Error(err)
 	assert.Contains(err.Error(), "is not compatible")
-
-	app.Hooks = nil
-	_ = app.WriteConfig()
-	err = app.Stop(true, false)
-	assert.NoError(err)
-
-	// TODO: Check behavior of ddev rm with snapshot, see if it has right stuff in it.
 
 	runTime()
 }
