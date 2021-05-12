@@ -11,9 +11,7 @@ This recipe adds an Apache Solr container to a project. It will set up a solr co
 #### Installation
 
 1. Copy [docker-compose.solr.yaml](https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/TestServices/docker-compose.solr.yaml) to the .ddev folder for your project.
-2. Solr version can be changed by updating this line `image: solr:8` in `docker-compose.solr.yaml` file, but the recipe here assumes solr:8 and it may not work with other versions. Acquia and Pantheon.io hosting seem to require versions from 3 to 7, and you'll want to see the [contributed recipe](https://github.com/drud/
-
-contrib/tree/master/docker-compose-services/solr-5) for those older versions of solr.
+2. Solr version can be changed by updating this line `image: solr:8` in `docker-compose.solr.yaml` file, but the recipe here assumes solr:8 and it may not work with other versions. Acquia and Pantheon.io hosting seem to require versions from 3 to 7, and you'll want to see the [contributed recipes](https://github.com/drud/ddev-contrib) for older versions of solr.
 3. Create the folder path .ddev/solr/conf.
     * If needed, you may copy/extract the Solr configuration files for your project into `.ddev/solr/conf`. Ensure that the configuration files are present before running `ddev start`.
 4. Run `ddev start` or `ddev restart` if your project is already running.
