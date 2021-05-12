@@ -17,3 +17,5 @@ curl -sSL -o /tmp/nsis-setup.exe https://prdownloads.sourceforge.net/nsis/nsis-$
 # Get the Plugins for NSIS
 curl -fsSL -o /tmp/EnVar-Plugin.zip https://github.com/GsNSIS/EnVar/releases/latest/download/EnVar-Plugin.zip && unzip -o -d "${NSIS_HOME}" /tmp/EnVar-Plugin.zip
 curl -fsSL -o /tmp/INetC.zip https://github.com/DigitalMediaServer/NSIS-INetC-plugin/releases/latest/download/INetC.zip && unzip -o -d "${NSIS_HOME}/Plugins" /tmp/INetC.zip
+
+echo "You must now add to the system path C:\Program Files (x86)\NSIS\bin, which for some reason is not added by the installer"
