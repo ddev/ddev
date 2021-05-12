@@ -127,8 +127,10 @@ TEST_TIMEOUT=150m
 BUILD_ARCH = $(shell go env GOARCH)
 
 DDEVNAME=ddev
+SHASUM="shasum -a 256"
 ifeq ($(BUILD_OS),windows)
 	DDEVNAME=ddev.exe
+	SHASUM=sha256sum
 endif
 
 DDEV_BINARY_FULLPATH=$(PWD)/$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/$(DDEVNAME)
@@ -224,7 +226,7 @@ $(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe:  $(GOTMP)/bin/
 
 	@makensis -DVERSION=$(VERSION) winpkg/ddev.nsi  # brew install makensis, apt-get install nsis, or install on Windows
 	@if [ -z "$(DDEV_WINDOWS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev_windows_installer, no DDEV_WINDOWS_SIGNING_PASSWORD provided"; else echo "Signing windows installer binary..."&& mv $@ $@.unsigned && osslsigncode sign -pkcs12 certfiles/drud_cs.p12  -n "DDEV-Local Installer" -i https://ddev.com -in $@.unsigned -out $@ -t http://timestamp.digicert.com -pass $(DDEV_WINDOWS_SIGNING_PASSWORD); fi
-	shasum -a 256 $@ >$@.sha256.txt
+	$(SHASUM) $@ >$@.sha256.txt
 
 no_v_version:
 	@echo $(NO_V_VERSION)
