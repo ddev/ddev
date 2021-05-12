@@ -127,7 +127,7 @@ TEST_TIMEOUT=150m
 BUILD_ARCH = $(shell go env GOARCH)
 
 DDEVNAME=ddev
-SHASUM="shasum -a 256"
+SHASUM=shasum -a 256
 ifeq ($(BUILD_OS),windows)
 	DDEVNAME=ddev.exe
 	SHASUM=sha256sum
