@@ -103,7 +103,7 @@ linux_arm64: $(GOTMP)/bin/linux_arm64/ddev
 linux_arm: $(GOTMP)/bin/linux_arm/ddev
 darwin_amd64: $(GOTMP)/bin/darwin_amd64/ddev
 darwin_arm64: $(GOTMP)/bin/darwin_arm64/ddev
-windows_amd64: $(GOTMP)/bin/windows_amd64/ddev.exe
+windows_amd64: windows_install
 windows_arm64: $(GOTMP)/bin/windows_arm64/ddev.exe
 
 TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe
