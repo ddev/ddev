@@ -103,9 +103,7 @@ jobs:
       - name: Save notarized binaries to cache
         uses: actions/cache@v2
         with:
-          path: |
-            .gotmp/bin/darwin_amd64
-            .gotmp/bin/darwin_arm64
+          path: .gotmp/bin/darwin*
           key: ${{ github.sha }}-notarize-macos
 
   artifacts:
@@ -136,12 +134,12 @@ jobs:
 
       - name: Restore Signed Mac artifacts
         uses: actions/cache@v2
-        id: signedmac
+        id: notarizedmac
         with:
           path: .gotmp/bin/darwin*
           key: ${{ github.sha }}-notarize-macos
-      - name: test that signed-mac was loaded
-        if: steps.signedmac.outputs.cache-hit != 'true'
+      - name: test that notarizedmac was loaded
+        if: steps.notarizedmac.outputs.cache-hit != 'true'
         run: exit 1
 
       - name: Generate artifacts
