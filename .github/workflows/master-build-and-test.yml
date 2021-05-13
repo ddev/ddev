@@ -116,12 +116,12 @@ jobs:
     steps:
       - name: Restore base linux builds
         uses: actions/cache@v2
-        id: baselinux
+        id: buildmost
         with:
           path: .gotmp/bin
           key: ${{ github.sha }}-base-linux
-      - name: test that unsignedbuild was loaded
-        if: steps.baselinux.outputs.cache-hit != 'true'
+      - name: test that build-most was loaded
+        if: steps.buildmost.outputs.cache-hit != 'true'
         run: exit 1
 
       - name: Restore Signed Windows artifacts
