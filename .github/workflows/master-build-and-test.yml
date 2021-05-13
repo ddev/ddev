@@ -47,6 +47,9 @@ jobs:
     name: Build and Sign ddev.exe on Windows
     runs-on: [ self-hosted, windows-signer ]
     steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Build and sign windows binaries and installer
         shell: bash
         run: |
