@@ -1,4 +1,9 @@
 name: golangci-lint
+
+defaults:
+  run:
+    shell: bash
+
 on:
   push:
     tags:

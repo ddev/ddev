@@ -1,0 +1,181 @@
+# Signs windows and macOS binaries and installers
+name: Master Build and test (signed)
+defaults:
+  run:
+    shell: bash
+
+on:
+  push:
+    branches: [ master ]
+
+env:
+  BUILDKIT_PROGRESS: plain
+  DOCKER_CLI_EXPERIMENTAL: enabled
+  DDEV_DEBUG: true
+
+jobs:
+  build-most:
+    name: Build DDEV executables except Windows
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # We need to get all branches and tags for git describe to work properly
+          fetch-depth: 0
+
+      - name: Install Docker and deps
+        run: ./.github/workflows/linux-setup.sh
+
+      - name: Install build tools
+        run: ./.github/workflows/linux-build-setup.sh
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.*
+      
+      - name: Build DDEV executables
+        run: make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64
+
+      - name: save build results to cache
+        uses: actions/cache@v2
+        with:
+          path: .gotmp/bin
+          key: ${{ github.sha }}-build-most
+
+  sign-windows:
+    name: Build and Sign ddev.exe on Windows
+    runs-on: [ self-hosted, windows-signer ]
+    steps:
+      - name: Build and sign windows binaries and installer
+        shell: bash
+        run: |
+          if [ ${DDEV_WINDOWS_SIGN} != "true" ]; then echo "DDEV_WINDOWS_SIGN is not set, exiting" && exit 1; fi
+          set -x
+          ls -l /c/tmp
+          signtool sign ".gotmp/bin/windows_amd64/ddev.exe" ".gotmp/bin/windows_amd64/mkcert.exe" ".gotmp/bin/windows_amd64/nssm.exe" ".gotmp/bin/windows_amd64/winnfsd.exe" ".gotmp/bin/windows_amd64/ddev_gen_autocomplete.exe"
+      - name: Cache signed binaries
+        uses: actions/cache@v2
+        with:
+          path: .gotmp/bin/windows_amd64
+          key: ${{ github.sha }}-signed-windows-binaries
+
+  notarize-macos:
+    name: Sign and Notarize ddev on macOS
+    runs-on: macos-latest
+    needs: build-most
+    steps:
+      - name: "setup macOS"
+        run: |
+          brew install coreutils gnu-getopt jq
+          pip3 install yq
+      - uses: actions/checkout@v2
+        with:
+          # We need to get all branches and tags for git describe to work properly
+          fetch-depth: 0
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.*
+
+      - name: restore build-most results from cache
+        uses: actions/cache@v2
+        id: unsignedbuild
+        with:
+          path: .gotmp/bin
+          key: ${{ github.sha }}-build-most
+      - name: test that build-most cache was loaded
+        if: steps.unsignedbuild.cache-hit != 'true'
+        run: exit 1
+
+      - name: Sign and notarize binaries (amd64 and arm64)
+        env:
+          DDEV_MACOS_SIGNING_PASSWORD: ${{ secrets.DDEV_MACOS_SIGNING_PASSWORD }}
+          DDEV_MACOS_APP_PASSWORD: ${{ secrets.DDEV_MACOS_APP_PASSWORD }}
+        run: |
+          set -o errexit -o pipefail
+          if [ -z "${DDEV_MACOS_SIGNING_PASSWORD}" ] ; then echo "DDEV_MACOS_SIGNING_PASSWORD is empty"; exit 1; fi
+          if [ -z "${DDEV_MACOS_APP_PASSWORD}" ] ; then echo "DDEV_MACOS_APP_PASSWORD is empty"; exit 1; fi
+          echo "Signing and notarizing .gotmp/bin/darwin_amd64/ddev ..."
+          curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="${DDEV_MACOS_SIGNING_PASSWORD}" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: DRUD Technology, LLC (3BAN66AG5M)" --target-binary=".gotmp/bin/darwin_amd64/ddev"
+          curl -sSL -f https://raw.githubusercontent.com/drud/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=${DDEV_MACOS_APP_PASSWORD} --apple-id=accounts@drud.com --primary-bundle-id=com.ddev.ddev --target-binary=".gotmp/bin/darwin_amd64/ddev"
+          ls -lR .gotmp/bin/darwin_amd64
+      - name: Save notarized binaries to cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            .gotmp/bin/darwin_amd64
+            .gotmp/bin/darwin_arm64
+          key: ${{ github.sha }}-notarize-macos
+
+  artifacts:
+    name: Upload artifacts
+    runs-on: ubuntu-20.04
+    needs: [build-most, sign-windows, notarize-macos]
+
+    steps:
+      - name: Restore base linux builds
+        uses: actions/cache@v2
+        id: base-linux
+        with:
+          path: .gotmp/bin
+          key: ${{ github.sha }}-base-linux
+      - name: test that unsignedbuild was loaded
+        if: steps.base-linux.cache-hit != 'true'
+        run: exit 1
+
+      - name: Restore Signed Windows artifacts
+        uses: actions/cache@v2
+        id: signed-windows
+        with:
+          path: .gotmp/bin/windows_amd64
+          key: ${{ github.sha }}-signed-windows-binaries
+      - name: test that signed-windows was loaded
+        if: steps.signed-windows.cache-hit != 'true'
+        run: exit 1
+
+      - name: Restore Signed Mac artifacts
+        uses: actions/cache@v2
+        id: signed-mac
+        with:
+          path: |
+            .gotmp/bin/darwin_amd64
+            .gotmp/bin/darwin_arm64
+          key: ${{ github.sha }}-notarize-macos
+        - name: test that signed-mac was loaded
+          if: steps.signed-mac.cache-hit != 'true'
+          run: exit 1
+
+      - name: Generate artifacts
+        run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
+
+      - name: Upload all artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: all-ddev-executables
+          path: ${{ github.workspace }}/artifacts/*
+      - name: Upload macos-amd64 binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: ddev-macos-amd64
+          path: .gotmp/bin/darwin_amd64/ddev
+      - name: Upload macos-arm64 binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: ddev-macos-arm64
+          path: .gotmp/bin/darwin_arm64/ddev
+      - name: Upload linux-arm64 binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: ddev-linux-arm64
+          path: .gotmp/bin/linux_arm64/ddev
+      - name: Upload inux_amd644 binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: ddev-linux-amd64
+          path: .gotmp/bin/linux_amd64/ddev
+      - name: Upload windows_amd64 installer
+        uses: actions/upload-artifact@v2
+        with:
+          name: ddev-windows-amd64-installer
+          path: .gotmp/bin/windows_amd64/ddev_windows_installer*.exe
+
