@@ -112,6 +112,10 @@ jobs:
     needs: [build-most, sign-windows, notarize-macos]
 
     steps:
+      - uses: actions/checkout@v2
+        with:
+          # We need to get all branches and tags for git describe to work properly
+          fetch-depth: 0
       - name: Restore build-most builds
         uses: actions/cache@v2
         id: buildmost
