@@ -7,6 +7,8 @@ defaults:
 on:
   push:
     branches: [ master ]
+  release:
+    types: [ published ]
 
 env:
   BUILDKIT_PROGRESS: plain
