@@ -8,7 +8,7 @@ on:
   push:
     branches: [ master ]
   release:
-    types: [ published ]
+    types: [ created ]
 
 env:
   BUILDKIT_PROGRESS: plain
@@ -180,4 +180,11 @@ jobs:
         with:
           name: ddev-windows-amd64-installer
           path: .gotmp/bin/windows_amd64/ddev_windows_installer*.exe
+      - name: "Upload release artifacts to github release"
+        if: contains(github.ref, "release")
+        uses: skx/github-action-publish-binaries@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: ${{ github.workspace }}/artifacts/*
 
