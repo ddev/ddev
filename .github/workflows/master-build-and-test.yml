@@ -52,7 +52,7 @@ jobs:
         run: |
           if [ ${DDEV_WINDOWS_SIGN} != "true" ]; then echo "DDEV_WINDOWS_SIGN is not set, exiting" && exit 1; fi
           set -x
-          ls -l /c/tmp
+          ls -l $(GOTMP)/bin/windows_amd64
           signtool sign ".gotmp/bin/windows_amd64/ddev.exe" ".gotmp/bin/windows_amd64/mkcert.exe" ".gotmp/bin/windows_amd64/nssm.exe" ".gotmp/bin/windows_amd64/winnfsd.exe" ".gotmp/bin/windows_amd64/ddev_gen_autocomplete.exe"
       - name: Cache signed binaries
         uses: actions/cache@v2
