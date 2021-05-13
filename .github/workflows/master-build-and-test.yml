@@ -54,8 +54,7 @@ jobs:
         shell: bash
         run: |
           if [ "${DDEV_WINDOWS_SIGN}" != "true" ]; then echo "DDEV_WINDOWS_SIGN is not true, exiting" && exit 1; fi
-          make windows_install
-          ls -l .gotmp/bin/windows_amd64
+          make windows_install chocolatey
       - name: Cache signed binaries
         uses: actions/cache@v2
         with:
