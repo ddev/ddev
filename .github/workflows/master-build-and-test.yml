@@ -137,13 +137,11 @@ jobs:
         uses: actions/cache@v2
         id: signed-mac
         with:
-          path: |
-            .gotmp/bin/darwin_amd64
-            .gotmp/bin/darwin_arm64
+          path: .gotmp/bin/darwin*
           key: ${{ github.sha }}-notarize-macos
-        - name: test that signed-mac was loaded
-          if: steps.signed-mac.cache-hit != 'true'
-          run: exit 1
+      - name: test that signed-mac was loaded
+        if: steps.signed-mac.cache-hit != 'true'
+        run: exit 1
 
       - name: Generate artifacts
         run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
