@@ -57,6 +57,9 @@ jobs:
         run: |
           if [ "${DDEV_WINDOWS_SIGN}" != "true" ]; then echo "DDEV_WINDOWS_SIGN is not true, exiting" && exit 1; fi
           make windows_install chocolatey
+      - name: Build chocolatey on release
+        if: contains(github.ref, "release")
+        run: make chocolatey
       - name: Cache signed binaries
         uses: actions/cache@v2
         with:
