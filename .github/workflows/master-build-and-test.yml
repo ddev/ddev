@@ -44,7 +44,7 @@ jobs:
           key: ${{ github.sha }}-build-most
 
   sign-windows:
-    name: Build and Sign ddev.exe on Windows
+    name: Build and Sign Windows binaries
     runs-on: [ self-hosted, windows-signer ]
     steps:
       - uses: actions/checkout@v2
@@ -85,8 +85,6 @@ jobs:
         with:
           path: .gotmp/bin
           key: ${{ github.sha }}-build-most
-      - name: See what we got in cache
-        run: ls -lR .gotmp/bin
       - name: test that buildmost cache was loaded
         if: steps.buildmost.outputs.cache-hit != 'true'
         run: exit 1
@@ -102,7 +100,6 @@ jobs:
           echo "Signing and notarizing .gotmp/bin/darwin_amd64/ddev ..."
           curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="${DDEV_MACOS_SIGNING_PASSWORD}" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: DRUD Technology, LLC (3BAN66AG5M)" --target-binary=".gotmp/bin/darwin_amd64/ddev"
           curl -sSL -f https://raw.githubusercontent.com/drud/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=${DDEV_MACOS_APP_PASSWORD} --apple-id=accounts@drud.com --primary-bundle-id=com.ddev.ddev --target-binary=".gotmp/bin/darwin_amd64/ddev"
-          ls -lR .gotmp/bin/darwin_amd64
       - name: Save notarized binaries to cache
         uses: actions/cache@v2
         with:
