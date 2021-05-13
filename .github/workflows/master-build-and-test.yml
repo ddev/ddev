@@ -83,8 +83,8 @@ jobs:
         with:
           path: .gotmp/bin
           key: ${{ github.sha }}-build-most
-      - name: test that build-most cache was loaded
-        if: steps.build-most.cache-hit != 'true'
+      - name: test that buildmost cache was loaded
+        if: steps.buildmost.cache-hit != 'true'
         run: exit 1
 
       - name: Sign and notarize binaries (amd64 and arm64)
@@ -115,32 +115,32 @@ jobs:
     steps:
       - name: Restore base linux builds
         uses: actions/cache@v2
-        id: base-linux
+        id: baselinux
         with:
           path: .gotmp/bin
           key: ${{ github.sha }}-base-linux
       - name: test that unsignedbuild was loaded
-        if: steps.base-linux.cache-hit != 'true'
+        if: steps.baselinux.cache-hit != 'true'
         run: exit 1
 
       - name: Restore Signed Windows artifacts
         uses: actions/cache@v2
-        id: signed-windows
+        id: signedwindows
         with:
           path: .gotmp/bin/windows_amd64
           key: ${{ github.sha }}-signed-windows-binaries
       - name: test that signed-windows was loaded
-        if: steps.signed-windows.cache-hit != 'true'
+        if: steps.signedwindows.cache-hit != 'true'
         run: exit 1
 
       - name: Restore Signed Mac artifacts
         uses: actions/cache@v2
-        id: signed-mac
+        id: signedmac
         with:
           path: .gotmp/bin/darwin*
           key: ${{ github.sha }}-notarize-macos
       - name: test that signed-mac was loaded
-        if: steps.signed-mac.cache-hit != 'true'
+        if: steps.signedmac.cache-hit != 'true'
         run: exit 1
 
       - name: Generate artifacts
