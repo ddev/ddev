@@ -76,6 +76,6 @@ fi
 echo "--- Running tests..."
 make test
 RV=$?
-echo "build.sh completed with status=$RV"
+echo "test.sh completed with status=$RV"
 ddev poweroff || true
 exit $RV

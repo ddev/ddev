@@ -50,3 +50,5 @@ nssm.exe status buildkite-agent || true
 winpty docker run -it --rm -p 80 busybox ls
 
 bash "/c/Program Files/ddev/windows_ddev_nfs_setup.sh"
+
+bash "scripts/windows_postinstall.sh"

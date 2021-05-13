@@ -25,7 +25,6 @@ MKCERT_VERSION=v1.4.6
 
 GOTESTSUM_FORMAT ?= short-verbose
 TESTTMP=/tmp/testresults
-DOWNLOADTMP=$(HOME)/tmp
 
 # This repo's root import path (under GOPATH).
 PKG := github.com/drud/ddev
@@ -104,7 +103,7 @@ linux_arm64: $(GOTMP)/bin/linux_arm64/ddev
 linux_arm: $(GOTMP)/bin/linux_arm/ddev
 darwin_amd64: $(GOTMP)/bin/darwin_amd64/ddev
 darwin_arm64: $(GOTMP)/bin/darwin_arm64/ddev
-windows_amd64: $(GOTMP)/bin/windows_amd64/ddev.exe
+windows_amd64: windows_install
 windows_arm64: $(GOTMP)/bin/windows_arm64/ddev.exe
 
 TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe
@@ -128,8 +127,10 @@ TEST_TIMEOUT=150m
 BUILD_ARCH = $(shell go env GOARCH)
 
 DDEVNAME=ddev
+SHASUM=shasum -a 256
 ifeq ($(BUILD_OS),windows)
 	DDEVNAME=ddev.exe
+	SHASUM=sha256sum
 endif
 
 DDEV_BINARY_FULLPATH=$(PWD)/$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/$(DDEVNAME)
@@ -156,7 +157,6 @@ testfullsitesetup: $(DEFAULT_BUILD) setup
 setup:
 	@mkdir -p $(GOTMP)/{src,pkg/mod/cache,.cache}
 	@mkdir -p $(TESTTMP)
-	@mkdir -p $(DOWNLOADTMP)
 
 # Required static analysis targets used in circleci - these cause fail if they don't work
 staticrequired: setup golangci-lint markdownlint mkdocs pyspelling
@@ -226,7 +226,7 @@ $(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe:  $(GOTMP)/bin/
 
 	@makensis -DVERSION=$(VERSION) winpkg/ddev.nsi  # brew install makensis, apt-get install nsis, or install on Windows
 	@if [ -z "$(DDEV_WINDOWS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev_windows_installer, no DDEV_WINDOWS_SIGNING_PASSWORD provided"; else echo "Signing windows installer binary..."&& mv $@ $@.unsigned && osslsigncode sign -pkcs12 certfiles/drud_cs.p12  -n "DDEV-Local Installer" -i https://ddev.com -in $@.unsigned -out $@ -t http://timestamp.digicert.com -pass $(DDEV_WINDOWS_SIGNING_PASSWORD); fi
-	shasum -a 256 $@ >$@.sha256.txt
+	$(SHASUM) $@ >$@.sha256.txt
 
 no_v_version:
 	@echo $(NO_V_VERSION)
@@ -244,11 +244,11 @@ $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.
 	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/mkcert.exe  https://github.com/drud/mkcert/releases/download/$(MKCERT_VERSION)/mkcert-$(MKCERT_VERSION)-windows-amd64.exe
 	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/mkcert_license.txt -O https://raw.githubusercontent.com/drud/mkcert/master/LICENSE
 
-https://github.com/gerardog/gsudo/releases/download/v0.7.3/gsudo.v0.7.3.zip
 $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt:
-	curl  -sSL --create-dirs -o $(DOWNLOADTMP)/gsudo.zip  https://github.com/gerardog/gsudo/releases/download/$(WINDOWS_GSUDO_VERSION)/gsudo.$(WINDOWS_GSUDO_VERSION).zip
-	unzip -o -d $(GOTMP)/bin/windows_amd64 $(DOWNLOADTMP)/gsudo.zip && mv $(GOTMP)/bin/windows_amd64/gsudo.exe $(GOTMP)/bin/windows_amd64/sudo.exe
-	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/sudo_license.txt https://raw.githubusercontent.com/gerardog/gsudo/master/LICENSE.txt
+	set -x
+	curl  -sSL --create-dirs -o "$(GOTMP)/bin/windows_amd64/gsudo.zip"  https://github.com/gerardog/gsudo/releases/download/$(WINDOWS_GSUDO_VERSION)/gsudo.$(WINDOWS_GSUDO_VERSION).zip
+	unzip -o -d "$(GOTMP)/bin/windows_amd64" "$(GOTMP)/bin/windows_amd64/gsudo.zip" gsudo.exe && mv "$(GOTMP)/bin/windows_amd64/gsudo.exe" "$(GOTMP)/bin/windows_amd64/sudo.exe"
+	curl --fail -sSL -o "$(GOTMP)/bin/windows_amd64/sudo_license.txt" "https://raw.githubusercontent.com/gerardog/gsudo/master/LICENSE.txt"
 
 $(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.txt $(GOTMP)/bin/windows_amd64/winnfsd.exe :
 	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/winnfsd.exe  https://github.com/winnfsd/winnfsd/releases/download/$(WINNFSD_VERSION)/WinNFSd.exe
