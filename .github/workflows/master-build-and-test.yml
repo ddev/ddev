@@ -79,12 +79,12 @@ jobs:
 
       - name: restore build-most results from cache
         uses: actions/cache@v2
-        id: unsignedbuild
+        id: build-most
         with:
           path: .gotmp/bin
           key: ${{ github.sha }}-build-most
       - name: test that build-most cache was loaded
-        if: steps.unsignedbuild.cache-hit != 'true'
+        if: steps.build-most.cache-hit != 'true'
         run: exit 1
 
       - name: Sign and notarize binaries (amd64 and arm64)
