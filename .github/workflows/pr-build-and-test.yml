@@ -5,8 +5,7 @@ defaults:
     shell: bash
 
 on:
-  pull_request
-
+  pull_request:
 env:
   BUILDKIT_PROGRESS: plain
   DOCKER_CLI_EXPERIMENTAL: enabled
