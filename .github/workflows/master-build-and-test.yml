@@ -82,6 +82,8 @@ jobs:
         with:
           path: .gotmp/bin
           key: ${{ github.sha }}-build-most
+      - name: See what we got in cache
+        run: ls -lR .gotmp/bin
       - name: test that buildmost cache was loaded
         if: steps.buildmost.cache-hit != 'true'
         run: exit 1
