@@ -57,6 +57,8 @@ jobs:
         run: |
           if [ "${DDEV_WINDOWS_SIGN}" != "true" ]; then echo "DDEV_WINDOWS_SIGN is not true, exiting" && exit 1; fi
           make windows_install chocolatey
+      - name: Show github.ref
+        run: echo ${{ github.ref }}
       - name: Build chocolatey on release
         if: startsWith( github.ref, 'refs/tags/releases/')
         run: make chocolatey
@@ -183,6 +185,8 @@ jobs:
         with:
           name: ddev-windows-amd64-installer
           path: .gotmp/bin/windows_amd64/ddev_windows_installer*.exe
+      - name: Show github.ref
+        run: echo ${{ github.ref }}
       - name: "Upload release artifacts to github release"
         if: startsWith( github.ref, 'refs/tags/releases/')
         uses: skx/github-action-publish-binaries@master
