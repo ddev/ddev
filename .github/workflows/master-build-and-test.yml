@@ -3,7 +3,6 @@ name: Master Build and test (signed)
 defaults:
   run:
     shell: bash
-
 on:
   push:
     branches: [ master ]
