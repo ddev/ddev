@@ -43,7 +43,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: .gotmp/bin
-          key: ${{ github.sha }}-build-most
+          key: ${{ github.sha }}-${{ github.ref }}-build-most
 
   sign-windows:
     name: Build and Sign Windows binaries
@@ -66,7 +66,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: .gotmp/bin/windows_amd64
-          key: ${{ github.sha }}-signed-windows-binaries
+          key: ${{ github.sha }}-${{ github.ref }}-signed-windows-binaries
 
   notarize-macos:
     name: Sign and Notarize ddev on macOS
@@ -90,7 +90,7 @@ jobs:
         id: buildmost
         with:
           path: .gotmp/bin
-          key: ${{ github.sha }}-build-most
+          key: ${{ github.sha }}-${{ github.ref }}-build-most
       - name: test that buildmost cache was loaded
         if: steps.buildmost.outputs.cache-hit != 'true'
         run: exit 1
@@ -110,7 +110,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: .gotmp/bin/darwin*
-          key: ${{ github.sha }}-notarize-macos
+          key: ${{ github.sha }}-${{ github.ref }}-notarize-macos
 
   artifacts:
     name: Upload artifacts
@@ -127,7 +127,7 @@ jobs:
         id: buildmost
         with:
           path: .gotmp/bin
-          key: ${{ github.sha }}-build-most
+          key: ${{ github.sha }}-${{ github.ref }}-build-most
       - name: test that build-most was loaded
         if: steps.buildmost.outputs.cache-hit != 'true'
         run: exit 1
@@ -137,7 +137,7 @@ jobs:
         id: signedwindows
         with:
           path: .gotmp/bin/windows_amd64
-          key: ${{ github.sha }}-signed-windows-binaries
+          key: ${{ github.sha }}-${{ github.ref }}-signed-windows-binaries
       - name: test that signed-windows was loaded
         if: steps.signedwindows.outputs.cache-hit != 'true'
         run: exit 1
@@ -147,7 +147,7 @@ jobs:
         id: notarizedmac
         with:
           path: .gotmp/bin/darwin*
-          key: ${{ github.sha }}-notarize-macos
+          key: ${{ github.sha }}-${{ github.ref }}-notarize-macos
       - name: test that notarizedmac was loaded
         if: steps.notarizedmac.outputs.cache-hit != 'true'
         run: exit 1
