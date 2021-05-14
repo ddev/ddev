@@ -20,6 +20,8 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
+      - name: Debug
+        run: echo ">${{ env.AUR_SSH_PRIVATE_KEY }}<"
       - uses: actions/checkout@v2
         with:
           # We need to get all branches and tags for git describe to work properly
