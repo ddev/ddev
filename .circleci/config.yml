@@ -441,12 +441,12 @@ jobs:
         name: Artifact storage
     - run:
         name: "Bump homebrew edge release"
-        command: ".circleci/bump_homebrew.sh ${HOMEBREW_EDGE_REPOSITORY} ddev ${CIRCLE_TAG} ~/artifacts"
+        command: ".ci-scripts/bump_homebrew.sh ${HOMEBREW_EDGE_REPOSITORY} ddev ${CIRCLE_TAG} ~/artifacts"
     - run:
         name: "Bump homebrew main release if necessary"
         command: |
           if [ ${CIRCLE_TAG%-*} = ${CIRCLE_TAG} ]; then
-            .circleci/bump_homebrew.sh ${HOMEBREW_STABLE_REPOSITORY} ddev ${CIRCLE_TAG} ~/artifacts
+            .ci-scripts/bump_homebrew.sh ${HOMEBREW_STABLE_REPOSITORY} ddev ${CIRCLE_TAG} ~/artifacts
           else
             echo "Skipping homebrew main release because ${CIRCLE_TAG} is an edge/prerelease"
           fi
@@ -454,7 +454,7 @@ jobs:
         name: Push AUR ddev-bin if necessary
         command: |
             if [ ! -z "${AUR_SSH_PRIVATE_KEY}" ] && [ "${CIRCLE_TAG%-*}" = "${CIRCLE_TAG}" ] ; then
-              .circleci/bump_aur.sh ddev-bin ${CIRCLE_TAG} ~/artifacts
+              .ci-scripts/bump_aur.sh ddev-bin ${CIRCLE_TAG} ~/artifacts
             else
               echo "Skipping AUR ddev-bin push"
             fi
@@ -462,7 +462,7 @@ jobs:
         name: Push AUR ddev-edge-bin
         command: |
           if [ ! -z "${AUR_SSH_PRIVATE_KEY}" ] ; then
-            .circleci/bump_aur.sh ddev-edge-bin ${CIRCLE_TAG} ~/artifacts
+            .ci-scripts/bump_aur.sh ddev-edge-bin ${CIRCLE_TAG} ~/artifacts
           else
             echo "Skipping AUR ddev-edge-bin push"
           fi
@@ -528,13 +528,13 @@ workflows:
     - lx_amd64_fpm_test
     - lx_arm64_fpm_test
 
-  release_build:
-    jobs:
-      - release_build:
-          context: ddev-local
-          filters:
-            tags:
-              only:
-                - "/.*/"
-            branches:
-              ignore: /.*/
+#  release_build:
+#    jobs:
+#      - release_build:
+#          context: ddev-local
+#          filters:
+#            tags:
+#              only:
+#                - "/.*/"
+#            branches:
+#              ignore: /.*/
