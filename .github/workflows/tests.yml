@@ -1,3 +1,4 @@
+name: Run DDEV tests
 on:
   pull_request:
   push:
