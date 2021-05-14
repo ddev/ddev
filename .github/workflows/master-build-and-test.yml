@@ -60,7 +60,7 @@ jobs:
       - name: Show github.ref
         run: echo ${{ github.ref }}
       - name: Build chocolatey on release
-        if: startsWith( github.ref, 'refs/tags/releases/')
+        if: startsWith( github.ref, 'refs/tags/v1')
         run: make chocolatey
       - name: Cache signed binaries
         uses: actions/cache@v2
@@ -188,7 +188,7 @@ jobs:
       - name: Show github.ref
         run: echo ${{ github.ref }}
       - name: "Upload release artifacts to github release"
-        if: startsWith( github.ref, 'refs/tags/releases/')
+        if: startsWith( github.ref, 'refs/tags/v1')
         uses: skx/github-action-publish-binaries@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
