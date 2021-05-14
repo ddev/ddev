@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# Requires $DDEV_AUR_SSH_PRIVATE_KEY, a private key in environment variable
+# Requires $AUR_SSH_PRIVATE_KEY, a private key in environment variable
 # This environment variable must be a single line, with \n replaced by "<SPLIT>"
 
 set -o errexit
 set -o pipefail
 set -o nounset
 
-if [ -z "${DDEV_AUR_SSH_PRIVATE_KEY:-}" ]; then
-    printf "\$DDEV_AUR_SSH_PRIVATE_KEY must be set in the environment. It should be a single line with \n replaced by <SPLIT>" && exit 101
+if [ -z "${AUR_SSH_PRIVATE_KEY:-}" ]; then
+    printf "\$AUR_SSH_PRIVATE_KEY must be set in the environment. It should be a single line with \n replaced by <SPLIT>" && exit 101
 fi
 if [ "$#" != "3" ]; then
     printf "Arguments: AUR_REPO (AUR repo ddev-bin or ddev-edge-bin)  \nVERSION_NUMBER (like v1.14.2) \nARTIFACTS_DIR (like /home/circleci/artifacts)\n" && exit 102
@@ -33,7 +33,7 @@ EDGE_DESCRIPTION=""
 if [ ${AUR_REPO} = "ddev-edge-bin" ] ; then EDGE_DESCRIPTION="  (edge channel)"; fi
 
 # Add temporary private key provided by CircleCI context
-echo $DDEV_AUR_SSH_PRIVATE_KEY | perl -p -e 's/<SPLIT>/\n/g' >/tmp/id_rsa_aur && chmod 600 /tmp/id_rsa_aur
+echo $AUR_SSH_PRIVATE_KEY | perl -p -e 's/<SPLIT>/\n/g' >/tmp/id_rsa_aur && chmod 600 /tmp/id_rsa_aur
 
 ssh-add /tmp/id_rsa_aur
 rm -rf ${AUR_REPO}
