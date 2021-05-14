@@ -18,11 +18,11 @@ jobs:
   build-most:
     name: Build DDEV executables except Windows
     runs-on: ubuntu-20.04
-    env:
-      AUR_SSH_PRIVATE_KEY: {{ secrets.AUR_SSH_PRIVATE_KEY }}
 
     steps:
       - name: debug
+        env:
+          AUR_SSH_PRIVATE_KEY: {{ secrets.AUR_SSH_PRIVATE_KEY }}
         if: ${{ env.AUR_SSH_PRIVATE_KEY }}
         run: echo "${AUR_SSH_PRIVATE_KEY}"
       - name: "debug2 - use GITHUB_REF as the condition"
