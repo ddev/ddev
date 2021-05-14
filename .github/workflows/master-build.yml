@@ -22,18 +22,6 @@ jobs:
       AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
 
     steps:
-      - name: debug
-        if: ${{ env.AUR_SSH_PRIVATE_KEY }}
-        run: echo "AUR_SSH_PRIVATE_KEY exists"
-      - name: "debug2 - use GITHUB_REF as the condition"
-        if: ${{ env.GITHUB_REF }}
-        run: echo "GITHUB_REF=${GITHUB_REF}"
-      - name: "debug3 - use one good and one empty env var"
-        if: ${{ env.GITHUB_REF && env.AUR_SSH_PRIVATE_KEY }}
-        run: echo "GITHUB_REF=${GITHUB_REF}"
-      - name: "debug4 - use two known env vars"
-        if: ${{ env.GITHUB_REF }} && {{ env.GITHUB_JOB }}
-        run: echo "GITHUB_REF=${GITHUB_REF} GITHUB_JOB=${GITHUB_JOB}"
       - uses: actions/checkout@v2
         with:
           # We need to get all branches and tags for git describe to work properly
@@ -129,7 +117,8 @@ jobs:
     name: Upload artifacts
     runs-on: ubuntu-20.04
     needs: [build-most, sign-windows, notarize-macos]
-
+    env:
+      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -211,12 +200,19 @@ jobs:
       - name: "Bump homebrew edge release"
         if: startsWith( github.ref, 'refs/tags/v1') && contains( github.ref, '-')
         run: ".ci-scripts/bump_homebrew.sh ${HOMEBREW_EDGE_REPOSITORY} ddev ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts"
+
       - name: "Bump homebrew main release if necessary"
         if: startsWith( github.ref, 'refs/tags/v1') && !contains( github.ref, '-')
         run: ".ci-scripts/bump_homebrew.sh ${HOMEBREW_EDGE_REPOSITORY} ddev ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts"
+
       - name: "Push AUR ddev-edge-bin"
-        if: startsWith( github.ref, 'refs/tags/v1') && contains( github.ref, '-') && ${{ env.AUR_SSH_PRIVATE_KEY != '' }}
-        run: .ci-scripts/bump_aur.sh ddev-edge-bin ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts
+        if: env.AUR_SSH_PRIVATE_KEY != '' && startsWith( github.ref, 'refs/tags/v1') && contains( github.ref, '-')
+        run: |
+          echo GITHUB_REF=${GITHUB_REF}
+          .ci-scripts/bump_aur.sh ddev-edge-bin ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts
+
       - name: "Push AUR ddev-bin if necessary"
-        if: startsWith( github.ref, 'refs/tags/v1') && !contains( github.ref, '-') && ${{ env.AUR_SSH_PRIVATE_KEY != '' }}
-        run: .ci-scripts/bump_aur.sh ddev-bin "${GITHUB_REF##*/}" ${{ github.workspace }}/artifacts
+        if: env.AUR_SSH_PRIVATE_KEY != '' &&  startsWith( github.ref, 'refs/tags/v1') && !contains( github.ref, '-')
+        run: |
+          echo GITHUB_REF=${GITHUB_REF}
+          .ci-scripts/bump_aur.sh ddev-bin "${GITHUB_REF##*/}" ${{ github.workspace }}/artifacts
