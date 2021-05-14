@@ -18,19 +18,21 @@ jobs:
   build-most:
     name: Build DDEV executables except Windows
     runs-on: ubuntu-20.04
+    env:
+      AUR_SSH_PRIVATE_KEY: {{ secrets.AUR_SSH_PRIVATE_KEY }}
 
     steps:
       - name: debug
-        if: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+        if: ${{ env.AUR_SSH_PRIVATE_KEY }}
         run: echo "${AUR_SSH_PRIVATE_KEY}"
       - name: "debug2 - use GITHUB_REF as the condition"
-        if: ${{ env.GITHUB_REF != '' }}
+        if: ${{ env.GITHUB_REF }}
         run: echo "${GITHUB_REF}"
       - name: "debug3 - use one good and one empty env var"
-        if: ${{ env.GITHUB_REF && secrets.AUR_SSH_PRIVATE_KEY }}
+        if: ${{ env.GITHUB_REF && env.AUR_SSH_PRIVATE_KEY }}
         run: echo "${GITHUB_REF}"
       - name: "debug4 - use two known env vars"
-        if: ${{ env.GITHUB_REF && env.GITHUB_JOB }}
+        if: ${{ env.GITHUB_REF }} && {{ env.GITHUB_JOB }}
         run: echo "GITHUB_REF=${GITHUB_REF} GITHUB_JOB=${GITHUB_JOB}"
       - uses: actions/checkout@v2
         with:
