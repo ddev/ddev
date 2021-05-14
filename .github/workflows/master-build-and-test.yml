@@ -22,16 +22,16 @@ jobs:
     steps:
       - name: debug
         if: ${{ env.AUR_SSH_PRIVATE_KEY }}
-        echo "${AUR_SSH_PRIVATE_KEY}"
-      - name: debug2 - use GITHUB_REF as the condition
+        run: echo "${AUR_SSH_PRIVATE_KEY}"
+      - name: "debug2 - use GITHUB_REF as the condition"
         if: ${{ env.GITHUB_REF }}
-        echo "${GITHUB_REF}"
-      - name: debug3 - use one good and one empty env var
+        run: echo "${GITHUB_REF}"
+      - name: "debug3 - use one good and one empty env var"
         if: ${{ env.GITHUB_REF && env.AUR_SSH_PRIVATE_KEY }}
-        echo "${GITHUB_REF}"
-      - name: debug4 - use two known env vars
+        run: echo "${GITHUB_REF}"
+      - name: "debug4 - use two known env vars"
         if: ${{ env.GITHUB_REF && env.GITHUB_JOB }}
-        echo "GITHUB_REF=${GITHUB_REF} GITHUB_JOB=${GITHUB_JOB}"
+        run: echo "GITHUB_REF=${GITHUB_REF} GITHUB_JOB=${GITHUB_JOB}"
       - uses: actions/checkout@v2
         with:
           # We need to get all branches and tags for git describe to work properly
