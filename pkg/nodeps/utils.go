@@ -39,6 +39,7 @@ func RemoveItemFromSlice(slice []string, item string) []string {
 }
 
 // From https://www.calhoun.io/creating-random-strings-in-go/
+//nolint: revive
 var seededRand *rand.Rand = rand.New(
 	rand.NewSource(time.Now().UnixNano()))
 
@@ -53,7 +54,7 @@ func RandomString(length int) string {
 	return string(b)
 }
 
-// IsWSL2() returns true if running WSL2
+// IsWSL2 returns true if running WSL2
 func IsWSL2() bool {
 	return GetWSLDistro() != ""
 }

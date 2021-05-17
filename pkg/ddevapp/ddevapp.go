@@ -41,7 +41,7 @@ var containerWaitTimeout = 61
 // SiteRunning defines the string used to denote running sites.
 const SiteRunning = "running"
 
-// SiteStarting
+// SiteStarting is the string for a project that is starting
 const SiteStarting = "starting"
 
 // SiteStopped defines the string used to denote a site where the containers were not found/do not exist, but the project is there.
@@ -115,7 +115,7 @@ type DdevApp struct {
 	ComposeYaml map[string]interface{} `yaml:"-"`
 }
 
-// List() provides the functionality for `ddev list`
+// List provides the functionality for `ddev list`
 // activeOnly if true only shows projects that are currently docker containers
 // continuous if true keeps requesting and outputting continuously
 // continuousSleepTime is the time between reports
@@ -666,6 +666,7 @@ func (app *DdevApp) ImportFiles(importPath string, extPath string) error {
 		return err
 	}
 
+	//nolint: revive
 	if err := app.ProcessHooks("post-import-files"); err != nil {
 		return err
 	}
@@ -1471,7 +1472,7 @@ func (app *DdevApp) WaitByLabels(labels map[string]string) error {
 	return nil
 }
 
-// StartAndWait() is primarily for use in tests.
+// StartAndWait is primarily for use in tests.
 // It does app.Start() but then waits for extra seconds
 // before returning.
 // extraSleep arg in seconds is the time to wait if > 0
@@ -1729,7 +1730,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	return nil
 }
 
-// Stops and Removes the docker containers for the project in current directory.
+// Stop stops and Removes the docker containers for the project in current directory.
 func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	app.DockerEnv()
 	var err error
@@ -1817,7 +1818,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	return nil
 }
 
-// RemoveGlobalProjectInfo() deletes the project from ProjectList
+// RemoveGlobalProjectInfo deletes the project from ProjectList
 func (app *DdevApp) RemoveGlobalProjectInfo() {
 	_ = globalconfig.RemoveProjectInfo(app.Name)
 }
@@ -1864,7 +1865,7 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 	return httpURLs, httpsURLs, append(httpsURLs, httpURLs...)
 }
 
-// GetPrimaryURL() returns the primary URL that can be used, https or http
+// GetPrimaryURL returns the primary URL that can be used, https or http
 func (app *DdevApp) GetPrimaryURL() string {
 	httpURLs, httpsURLs, _ := app.GetAllURLs()
 	urlList := httpsURLs
@@ -2177,12 +2178,12 @@ func (app *DdevApp) GetWorkingDir(service string, dir string) string {
 	return app.DefaultWorkingDirMap()[service]
 }
 
-// Returns the docker volume name of the nfs mount volume
+// GetNFSMountVolName returns the docker volume name of the nfs mount volume
 func (app *DdevApp) GetNFSMountVolName() string {
 	return strings.ToLower("ddev-" + app.Name + "_nfsmount")
 }
 
-// StartAppIfNotRunning() is intended to replace much-duplicated code in the commands.
+// StartAppIfNotRunning is intended to replace much-duplicated code in the commands.
 func (app *DdevApp) StartAppIfNotRunning() error {
 	var err error
 	if app.SiteStatus() != SiteRunning {

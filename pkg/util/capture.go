@@ -61,7 +61,7 @@ func CaptureStdOut() func() string {
 	}
 }
 
-// CaptureStdOutToFile captures Stdout to a string. Capturing starts when it is called. It returns an anonymous function that when called, will return a string
+// CaptureOutputToFile captures Stdout to a string. Capturing starts when it is called. It returns an anonymous function that when called, will return a string
 // containing the output during capture, and revert once again to the original value of os.StdOut.
 func CaptureOutputToFile() (func() string, error) {
 	oldStdout := os.Stdout // keep backup of the real stdout

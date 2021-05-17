@@ -252,6 +252,7 @@ func writeWordpressSettingsFile(wordpressConfig *WordpressConfig, filePath strin
 	}
 	defer util.CheckClose(file)
 
+	//nolint: revive
 	if err = tmpl.Execute(file, wordpressConfig); err != nil {
 		return err
 	}
@@ -296,6 +297,7 @@ func writeWordpressDdevSettingsFile(config *WordpressConfig, filePath string) er
 	}
 	defer util.CheckClose(file)
 
+	//nolint: revive
 	if err = tmpl.Execute(file, config); err != nil {
 		return err
 	}
@@ -367,6 +369,7 @@ func wordpressImportFilesAction(app *DdevApp, importPath, extPath string) error 
 		return nil
 	}
 
+	//nolint: revive
 	if err := fileutil.CopyDir(importPath, destPath); err != nil {
 		return err
 	}
