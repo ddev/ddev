@@ -13,6 +13,9 @@ function setup {
 }
 
 @test "verify apt keys are not expiring" {
+  if [ "${DB_TYPE}" = "mysql" ] && [ "${DB_VERSION}" = "5.5" ]; then
+    skip "Mysql5.5 is no longer supported, Jessie key is expiring"
+  fi
   MAX_DAYS_BEFORE_EXPIRATION=90
   if [ "${DDEV_IGNORE_EXPIRING_KEYS:-}" = "true" ]; then
     skip "Skipping because DDEV_IGNORE_EXPIRING_KEYS is set"
