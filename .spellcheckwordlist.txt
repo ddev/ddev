@@ -73,7 +73,10 @@ Netbeans
 Nginx
 OSs
 OpenMage
+PHAR
+PHIVE
 PHP
+PHPUnit
 PID
 PWD
 PartOf
