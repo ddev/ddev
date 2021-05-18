@@ -161,7 +161,7 @@ func (v *nameValue) validate(longOptions *map[nameValue]bool) error {
 // validate checks a shorthandValue for uniqueness and containing one ASCII
 // character only.
 func (v *shorthandValue) validate(shortOptions *map[shorthandValue]nameValue, name nameValue) error {
-	var errors string = ""
+	var errors string
 
 	// Check shorthand does not already exist
 	if flagOfShorthand, found := (*shortOptions)[*v]; found {

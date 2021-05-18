@@ -21,7 +21,7 @@ import (
 
 var hashedHostID string
 
-// Define a no-op logger to prevent Segment log messages from being emitted
+// SegmentNoopLogger defines a no-op logger to prevent Segment log messages from being emitted
 type SegmentNoopLogger struct{}
 
 func (n *SegmentNoopLogger) Logf(format string, args ...interface{})   {}

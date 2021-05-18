@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// DdevSnapshotRestoreCommand handles ddev snapshot restore
 var DdevSnapshotRestoreCommand = &cobra.Command{
 	Use:   "restore [snapshot_name]",
 	Short: "Restore a project's database to the provided snapshot version.",

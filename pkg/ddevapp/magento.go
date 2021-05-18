@@ -106,6 +106,7 @@ func magentoImportFilesAction(app *DdevApp, importPath, extPath string) error {
 		return nil
 	}
 
+	//nolint: revive
 	if err := fileutil.CopyDir(importPath, destPath); err != nil {
 		return err
 	}

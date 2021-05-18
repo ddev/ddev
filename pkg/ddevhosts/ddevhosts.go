@@ -30,7 +30,7 @@ func (h DdevHosts) GetIPPosition(ip string) int {
 	return -1
 }
 
-// New() is a simple wrapper on goodhosts.NewHosts()
+// New is a simple wrapper on goodhosts.NewHosts()
 func New() (*DdevHosts, error) {
 	h, err := goodhosts.NewHosts()
 	if err != nil {

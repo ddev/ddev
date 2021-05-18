@@ -150,6 +150,7 @@ func writeBackdropDdevSettingsFile(settings *BackdropSettings, filePath string) 
 	}
 	defer util.CheckClose(file)
 
+	//nolint: revive
 	if err := tmpl.Execute(file, settings); err != nil {
 		return err
 	}
@@ -235,6 +236,7 @@ func backdropImportFilesAction(app *DdevApp, importPath, extPath string) error {
 		return nil
 	}
 
+	//nolint: revive
 	if err := fileutil.CopyDir(importPath, destPath); err != nil {
 		return err
 	}

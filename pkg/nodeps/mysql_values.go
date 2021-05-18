@@ -2,6 +2,7 @@
 
 package nodeps
 
+// ValidMySQLVersions is the versions of MySQL that are valid
 var ValidMySQLVersions = map[string]bool{
 	MySQL55: true,
 	MySQL56: true,

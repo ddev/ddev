@@ -211,7 +211,7 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 	return "", fmt.Errorf("inappropriate break out of for loop in ContainerWait() waiting for container labels %v", labels)
 }
 
-// ContainesrWait provides a wait loop to check for multiple containers in "healthy" status.
+// ContainersWait provides a wait loop to check for multiple containers in "healthy" status.
 // waittime is in seconds.
 // Returns logoutput, error, returns error if not "healthy"
 func ContainersWait(waittime int, labels map[string]string) error {
@@ -684,7 +684,7 @@ func RemoveContainer(id string, timeout uint) error {
 	return err
 }
 
-// RemoveContainersByLabels() removes all containers that match a set of labels
+// RemoveContainersByLabels removes all containers that match a set of labels
 func RemoveContainersByLabels(labels map[string]string) error {
 	client := GetDockerClient()
 	containers, err := FindContainersByLabels(labels)
@@ -812,7 +812,7 @@ func CreateVolume(volumeName string, driver string, driverOpts map[string]string
 	return volume, err
 }
 
-// GetHostDockerInternalIP() returns either "host.docker.internal"
+// GetHostDockerInternalIP returns either "host.docker.internal"
 // (for docker-for-mac and Win10 Docker-for-windows) or a usable IP address
 func GetHostDockerInternalIP() (string, error) {
 	hostDockerInternal := ""

@@ -20,6 +20,7 @@ import (
 
 var composerCreateYesFlag bool
 
+// ComposerCreateCmd handles ddev composer create
 var ComposerCreateCmd = &cobra.Command{
 	Use: "create [args] [flags]",
 	FParseErrWhitelist: cobra.FParseErrWhitelist{
@@ -175,6 +176,8 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 	},
 }
 
+// ComposerCreateProjectCmd just sends people to the right thing
+// when they try ddev composer create-project
 var ComposerCreateProjectCmd = &cobra.Command{
 	Use: "create-project",
 	Run: func(cmd *cobra.Command, args []string) {

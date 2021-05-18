@@ -30,6 +30,7 @@ const (
 	WebserverApacheFPM = "apache-fpm"
 )
 
+// ValidOmitContainers is the list of things that can be omitted
 var ValidOmitContainers = map[string]bool{
 	DBContainer:           true,
 	DdevSSHAgentContainer: true,

@@ -215,7 +215,7 @@ func (p *Provider) GetBackup(backupType string) (string, string, error) {
 	return filePath, importPath, nil
 }
 
-// UploadDB() is used by Push to push the database to hosting provider
+// UploadDB is used by Push to push the database to hosting provider
 func (p *Provider) UploadDB() error {
 	_ = os.RemoveAll(p.getDownloadDir())
 	_ = os.Mkdir(p.getDownloadDir(), 0755)
@@ -241,7 +241,7 @@ func (p *Provider) UploadDB() error {
 	return nil
 }
 
-// UploadFiles() is used by Push to push the user-generated files to the hosting provider
+// UploadFiles is used by Push to push the user-generated files to the hosting provider
 func (p *Provider) UploadFiles() error {
 	_ = os.RemoveAll(p.getDownloadDir())
 	_ = os.Mkdir(p.getDownloadDir(), 0755)
