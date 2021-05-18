@@ -447,8 +447,9 @@ services:
       {{ if .letsencrypt }}
       - ddev-router-letsencrypt:/etc/letsencrypt:rw
       {{ end }}
-{{ if .letsencrypt }}
     environment:
+      - DISABLE_HTTP2={{ .disable_http2 }}
+{{ if .letsencrypt }}
       - LETSENCRYPT_EMAIL={{ .letsencrypt_email }}
       - USE_LETSENCRYPT={{ .letsencrypt }}
 {{ end }}

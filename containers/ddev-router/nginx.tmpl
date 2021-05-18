@@ -245,7 +245,7 @@ server {
 
         server {
             server_name {{ $host }};
-            listen {{ $listen_port }} ssl http2 {{ $default_server }};
+            listen {{ $listen_port }} ssl {{ $.Env.HTTP2 }} {{ $default_server }};
             access_log /var/log/nginx/access.log vhost;
 
             location @brokenupstream {

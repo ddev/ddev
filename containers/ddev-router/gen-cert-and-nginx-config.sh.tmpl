@@ -29,7 +29,7 @@ echo "${httpsports}" >/tmp/httpsports.txt
 
 # Convert the lists into unique sets of listen directives in /tmp
 awk -F: '$0 != "" {printf "\tlisten %s default_server;\n", $1;}' /tmp/httpports.txt | sort -u >/tmp/http_ports.conf
-awk -F: '$0 != "" {printf "\tlisten %s ssl http2 default_server;\n", $1;}' /tmp/httpsports.txt | sort -u >/tmp/https_ports.conf
+awk -F: -v http2=${HTTP2} '$0 != "" {printf "\tlisten %s ssl %s default_server;\n", $1, http2;}' /tmp/httpsports.txt | sort -u >/tmp/https_ports.conf
 
 
 if [ ! -z "${USE_LETSENCRYPT:-}" ]; then
