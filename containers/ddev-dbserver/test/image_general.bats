@@ -13,7 +13,7 @@ function setup {
 }
 
 @test "verify apt keys are not expiring" {
-  MAX_DAYS_BEFORE_EXPIRATION=90
+  MAX_DAYS_BEFORE_EXPIRATION=32
   if [ "${DDEV_IGNORE_EXPIRING_KEYS:-}" = "true" ]; then
     skip "Skipping because DDEV_IGNORE_EXPIRING_KEYS is set"
   fi
