@@ -57,7 +57,7 @@ jobs:
         shell: bash
         run: |
           if [ "${DDEV_WINDOWS_SIGN}" != "true" ]; then echo "DDEV_WINDOWS_SIGN is not true, exiting" && exit 1; fi
-          make windows_install chocolatey
+          make windows_install
       - name: Show github.ref
         run: echo ${{ github.ref }}
       - name: Build chocolatey on release
