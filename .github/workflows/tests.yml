@@ -1,0 +1,69 @@
+name: Run DDEV tests
+on:
+  pull_request:
+  push:
+    branches: [ master ]
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  BUILDKIT_PROGRESS: plain
+  DOCKER_CLI_EXPERIMENTAL: enabled
+  DDEV_DEBUG: true
+
+
+jobs:
+  tests:
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      matrix:
+        webserver: [apache-fpm, nginx-fpm]
+        tests: [test]
+        os: [ ubuntu-20.04 ]
+      fail-fast: false
+
+    runs-on: ${{ matrix.os }}
+
+    env:
+      DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
+      DDEV_NONINTERACTIVE: "true"
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: GOTEST_SHORT setup - use "true" except for testfullsitesetup
+        run: |
+          if [ "${{ matrix.tests }}" != "testfullsitesetup" ]; then
+            echo "GOTEST_SHORT=true" >> $GITHUB_ENV
+          fi
+
+      - name: Install Docker and deps (Linux)
+        if: matrix.os == 'ubuntu-20.04'
+        run: ./.github/workflows/linux-setup.sh
+
+      #      - name: Install Docker and deps (macOS)
+      #        if: matrix.os == 'macos-latest'
+      #        run: ./.github/workflows/macos-setup.sh
+
+      - uses: actions/setup-go@v2
+        if: matrix.os == 'ubuntu-20.04'
+        with:
+          go-version: 1.*
+
+      #      - name: Clean up self-hosted runners if necessary
+      #        if: matrix.os[1] == 'self-hosted'
+      #        run: .github/workflows/selfhosted-maintenance.sh
+
+      - name: DDEV tests
+        run: make ${{ matrix.tests }}
+
+      - name: Store test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: ddev-test-results-${{ matrix.webserver }}
+          path: /tmp/testresults/

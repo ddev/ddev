@@ -1,4 +1,7 @@
 name: Container tests
+defaults:
+  run:
+    shell: bash
 
 on:
   push:

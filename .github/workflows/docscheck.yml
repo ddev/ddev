@@ -1,4 +1,8 @@
 name: Check docs
+defaults:
+  run:
+    shell: bash
+
 on:
   push:
     branches:
