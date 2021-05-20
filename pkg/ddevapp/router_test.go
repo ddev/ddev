@@ -230,7 +230,7 @@ func TestDisableHTTP2(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
-	out, err = exec.RunCommand("bash", []string{"-c", "curl -s -I " + app.GetPrimaryURL() + "| head -1"})
+	out, err = exec.RunCommand("bash", []string{"-c", "curl -k -s -I " + app.GetPrimaryURL() + "| head -1"})
 	assert.Equal("HTTP/1.1 200 OK\r\n", out)
 
 }
