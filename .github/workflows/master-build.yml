@@ -106,6 +106,7 @@ jobs:
           if [ -z "${DDEV_MACOS_APP_PASSWORD}" ] ; then echo "DDEV_MACOS_APP_PASSWORD is empty"; exit 1; fi
           for item in .gotmp/bin/darwin*/ddev; do
             echo "Signing and notarizing ${item} ..."
+            codesign --remove-signature "${item}" || true
             curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="${DDEV_MACOS_SIGNING_PASSWORD}" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: DRUD Technology, LLC (3BAN66AG5M)" --target-binary="${item}"
             curl -sSL -f https://raw.githubusercontent.com/drud/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=${DDEV_MACOS_APP_PASSWORD} --apple-id=accounts@drud.com --primary-bundle-id=com.ddev.ddev --target-binary="${item}"
           done
