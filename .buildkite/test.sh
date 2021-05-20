@@ -19,6 +19,11 @@ set -x
 #  sleep 10
 #fi
 
+# Try to get important names cached; try twice
+for hostname in github.com raw.githubusercontent.com github-releases.githubusercontent.com; do
+  ping -c 1 $hostname 2>/dev/null || ping -c 1 $hostname 2>/dev/null || true
+done
+
 export TIMEOUT_CMD="timeout -v"
 if [ ${OSTYPE%%-*} = "linux" ]; then
   TIMEOUT_CMD="timeout"
