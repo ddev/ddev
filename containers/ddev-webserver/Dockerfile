@@ -100,9 +100,9 @@ ADD ddev-webserver-dev-base-files /
 RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_${MAILHOG_ARCH} -o /usr/local/bin/mailhog; 
 
 RUN curl -sSL --output /usr/local/bin/phive "https://phar.io/releases/phive.phar" && chmod 777 /usr/local/bin/phive
-RUN phive install --force-accept-unsigned --target /usr/local/bin/ --temporary pantheon-systems/terminus
-RUN phive install --force-accept-unsigned --target /usr/local/bin/ --temporary platformsh/platformsh-cli
-RUN phive install --force-accept-unsigned --target /usr/local/bin/ --temporary acquia/cli
+RUN phive install --force-accept-unsigned --global pantheon-systems/terminus
+RUN phive install --force-accept-unsigned --global platformsh/platformsh-cli
+RUN phive install --force-accept-unsigned --global acquia/cli
 RUN curl -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/backdrop-drush-extension.zip -o /tmp/backdrop-drush-extension.zip && unzip -o /tmp/backdrop-drush-extension.zip -d /var/tmp/backdrop_drush_commands
 
 RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib/apache2/module/enabled_by_admin /var/lib/apache2/module/disabled_by_admin && \
