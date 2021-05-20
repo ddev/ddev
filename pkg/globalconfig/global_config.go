@@ -52,6 +52,7 @@ type GlobalConfig struct {
 	AutoRestartContainers    bool     `yaml:"auto_restart_containers"`
 	FailOnHookFailGlobal     bool     `yaml:"fail_on_hook_fail"`
 	WebEnvironment           []string `yaml:"web_environment"`
+	DisableHTTP2             bool     `yaml:"disable_http2"`
 
 	ProjectList map[string]*ProjectInfo `yaml:"project_info"`
 }
@@ -164,6 +165,9 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 # You can enable 'ddev start' to be interrupted by a failing hook with
 # fail_on_hook_fail: true
+
+# disable_http2: false
+# Disable http2 on ddev-router if true
 
 # instrumentation_user: <your_username> # can be used to give ddev specific info about who you are
 # developer_mode: true # (defaults to false) is not used widely at this time.
