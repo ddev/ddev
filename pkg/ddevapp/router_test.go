@@ -222,7 +222,7 @@ func TestDisableHTTP2(t *testing.T) {
 	assert.NoError(err)
 
 	// Verify that http2 is on by default
-	out, err := exec.RunCommand("bash", []string{"-c", "curl -s -I " + app.GetPrimaryURL() + "| head -1"})
+	out, err := exec.RunCommand("bash", []string{"-c", "curl -k -s -I " + app.GetPrimaryURL() + "| head -1"})
 	assert.Equal("HTTP/2 200 \r\n", out)
 
 	// Now turn it off and verify
