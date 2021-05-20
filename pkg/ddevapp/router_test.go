@@ -200,6 +200,9 @@ func TestDisableHTTP2(t *testing.T) {
 	assert.NoError(err)
 	testcommon.ClearDockerEnv()
 
+	_, err = exec.RunCommand(DdevBin, []string{"poweroff"})
+	require.NoError(t, err)
+
 	app, err := ddevapp.NewApp(testDir, true)
 	assert.NoError(err)
 	err = app.WriteConfig()
