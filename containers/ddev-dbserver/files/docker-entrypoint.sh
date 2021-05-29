@@ -48,6 +48,7 @@ fi
 
 if [ "$(id -u)" = "0" ]; then
   echo "Switching to dedicated user 'mysql'"
+  mkdir -p /home/mysql
   exec gosu mysql "$BASH_SOURCE" "$@"
 fi
 
