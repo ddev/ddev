@@ -46,6 +46,11 @@ if [ -d /mnt/ddev_config/mysql -a "$(echo /mnt/ddev_config/mysql/*.cnf)" != "/mn
   echo "!includedir /mnt/ddev_config/mysql" >/etc/mysql/conf.d/ddev.cnf
 fi
 
+if [ "$(id -u)" = "0" ]; then
+  echo "Switching to dedicated user 'mysql'"
+  exec gosu mysql "$BASH_SOURCE" "$@"
+fi
+
 export BACKUPTOOL=mariabackup
 if command -v xtrabackup; then BACKUPTOOL="xtrabackup"; fi
 
