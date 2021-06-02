@@ -3,7 +3,7 @@ image:
 
 tasks:
   - name: terminal
-    prebuild: |
+    init: |
       export DDEV_NONINTERACTIVE=true
       make
       mkdir -p /workspace/simpleproj && cd /workspace/simpleproj && ddev config --auto && cp ~/bin/gitpod-setup-ddev.sh .ddev && printf "<?php\nphpinfo();\n" >index.php && .ddev/gitpod-setup-ddev.sh
