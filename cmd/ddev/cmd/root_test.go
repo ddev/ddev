@@ -5,6 +5,7 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 	"os"
 	"strconv"
@@ -256,7 +257,9 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 
 	newStartTime := time.Now().Unix()
 	// We have to do the echo technique to get past the prompt about doing a ddev poweroff
-	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf("echo y | %s start", DdevBin)})
+	// On Windows we have to make sure we have git-bash, not the Windows bash.exe
+	bashPath := util.FindWindowsBashPath()
+	out, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf("echo y | '%s' start", DdevBin)})
 	assert.NoError(err)
 	assert.Contains(out, "ddev-ssh-agent container has been removed")
 
