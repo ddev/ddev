@@ -155,10 +155,13 @@ func GetFirstWord(s string) string {
 }
 
 // FindWindowsBashPath returns the PATH to bash on Windows
-// preferring git-bash
+// preferring git-bash (or just "bash" elsewhere)
 // On Windows we'll need the path to bash to execute anything.
 // Returns empty string if not found, path if found
 func FindWindowsBashPath() string {
+	if runtime.GOOS != "windows" {
+		return "bash"
+	}
 	windowsBashPath, err := osexec.LookPath(`C:\Program Files\Git\bin\bash.exe`)
 	if err != nil {
 		// This one could come back with the WSL bash, in which case we may have some trouble.

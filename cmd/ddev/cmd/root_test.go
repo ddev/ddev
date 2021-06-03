@@ -5,8 +5,10 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 	"os"
+	"runtime"
 	"strconv"
 	"testing"
 	"time"
@@ -255,10 +257,17 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 		})
 
 	newStartTime := time.Now().Unix()
+	// Flaky test failures, possible failure of sync in docker desktop for Windows?
+	if runtime.GOOS == "windows" {
+		time.Sleep(5 * time.Second)
+	}
 	// We have to do the echo technique to get past the prompt about doing a ddev poweroff
-	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf("echo y | %s start", DdevBin)})
+	// On Windows we have to make sure we have git-bash, not the Windows bash.exe
+	bashPath := util.FindWindowsBashPath()
+	out, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf("echo y | '%s' start", DdevBin)})
 	assert.NoError(err)
 	assert.Contains(out, "ddev-ssh-agent container has been removed")
+	assert.Contains(out, "ssh-agent container is running")
 
 	apps = ddevapp.GetActiveProjects()
 	activeCount = len(apps)
@@ -266,11 +275,11 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 
 	// Verify that the ddev-router and ddev-ssh-agent have just been newly created
 	routerC, err := dockerutil.FindContainerByName("ddev-router")
-	assert.NoError(err)
+	require.NoError(t, err)
 	require.NotEmpty(t, routerC)
 	routerCreateTime := (*routerC).Created
 	sshC, err := dockerutil.FindContainerByName("ddev-ssh-agent")
-	assert.NoError(err)
+	require.NoError(t, err)
 	require.NotEmpty(t, sshC)
 	sshCreateTime := (*sshC).Created
 
