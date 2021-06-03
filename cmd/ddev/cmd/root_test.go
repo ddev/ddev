@@ -259,7 +259,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	newStartTime := time.Now().Unix()
 	// Flaky test failures, possible failure of sync in docker desktop for Windows?
 	if runtime.GOOS == "windows" {
-		time.Sleep(2 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 	// We have to do the echo technique to get past the prompt about doing a ddev poweroff
 	// On Windows we have to make sure we have git-bash, not the Windows bash.exe
