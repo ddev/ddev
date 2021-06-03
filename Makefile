@@ -241,7 +241,7 @@ chocolatey: $(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe
   		echo "Skipping chocolatey build on interim version"; \
 	else \
 		docker run --rm -v "/$(PWD)/$(GOTMP)/bin/windows_amd64/chocolatey:/tmp/chocolatey" -w "//tmp/chocolatey" linuturk/mono-choco pack ddev.nuspec; \
-		@echo "chocolatey package is in $(GOTMP)/bin/windows_amd64/chocolatey"; \
+		echo "chocolatey package is in $(GOTMP)/bin/windows_amd64/chocolatey"; \
 	fi
 
 $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.txt:
