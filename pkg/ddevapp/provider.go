@@ -226,7 +226,7 @@ func (p *Provider) UploadDB() error {
 	}
 
 	if os.Getenv("DDEV_ALLOW_PUSH") != "true" {
-		util.Warning("You must set the enviorement DDEV_ALLOW_PUSH=true to allow DB push")
+		util.Warning("You must set the environment variable DDEV_ALLOW_PUSH=true to allow DB push")
 		return nil
 	}
 
