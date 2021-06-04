@@ -44,6 +44,8 @@ jobs:
       - name: "Verify that SegmentKey is working (Linux amd64)"
         run: |
           echo "DDEV_NO_INSTRUMENTATION=${DDEV_NO_INSTRUMENTATION}"
+          if [ -z "${SegmentKey}" ]; then echo "SegmentKey is not set"; exit 1; fi
+          .gotmp/bin/linux_amd64/ddev config global
           .gotmp/bin/linux_amd64/ddev config global | grep instrumentation-opt-in=true
           .gotmp/bin/linux_amd64/ddev config global | grep -v "SegmentKey is not available."
 
@@ -77,6 +79,8 @@ jobs:
       - name: "Verify that SegmentKey is working (Windows)"
         run: |
           echo "DDEV_NO_INSTRUMENTATION=${DDEV_NO_INSTRUMENTATION}"
+          if [ -z "${SegmentKey}" ]; then echo "SegmentKey is not set"; exit 1; fi
+          .gotmp/bin/windows_amd64/ddev config global
           .gotmp/bin/windows_amd64/ddev.exe config global | grep instrumentation-opt-in=true
           .gotmp/bin/windows_amd64/ddev.exe config global | grep -v "SegmentKey is not available."
 
