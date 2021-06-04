@@ -207,7 +207,7 @@ jobs:
           args: ${{ github.workspace }}/artifacts/*
 
       - name: "Bump homebrew edge release"
-        if: env.DDEV_GITHUB_TOKEN != '' && startsWith( github.ref, 'refs/tags/v1') && contains( github.ref, '-')
+        if: env.DDEV_GITHUB_TOKEN != '' && startsWith( github.ref, 'refs/tags/v1')
         run: |
           bash -x .ci-scripts/bump_homebrew.sh ${HOMEBREW_EDGE_REPOSITORY} ddev ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts ${DDEV_MAIN_REPO_ORGNAME}
 
@@ -217,7 +217,7 @@ jobs:
           bash -x .ci-scripts/bump_homebrew.sh ${HOMEBREW_STABLE_REPOSITORY} ddev ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts ${DDEV_MAIN_REPO_ORGNAME}
 
       - name: "Push AUR ddev-edge-bin"
-        if: env.AUR_SSH_PRIVATE_KEY != '' && startsWith( github.ref, 'refs/tags/v1') && contains( github.ref, '-')
+        if: env.AUR_SSH_PRIVATE_KEY != '' && startsWith( github.ref, 'refs/tags/v1')
         run: |
           echo GITHUB_REF=${GITHUB_REF}
           .ci-scripts/bump_aur.sh ddev-edge-bin ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts
