@@ -526,9 +526,28 @@ SectionGroup /e "WinNFSd"
     SetOverwrite try
 
     ; Copy files
-    File "..\.gotmp\bin\windows_amd64\winnfsd.exe"
+    ;File "..\.gotmp\bin\windows_amd64\winnfsd.exe"
     File "..\.gotmp\bin\windows_amd64\winnfsd_license.txt"
     File "..\scripts\windows_ddev_nfs_setup.sh"
+
+    ; Set URL and temporary file name
+    !define WINNFSD_NAME "WinNFSd"
+    !define WINNFSD_VERSION "2.4.0"
+    !define WINNFSD_DEST "$INSTDIR\WinNFSd.exe"
+    !define WINNFSD_URL "https://github.com/winnfsd/winnfsd/releases/download/${WINNFSD_VERSION}/WinNFSd.exe"
+
+    ; Download installer
+    INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${WINNFSD_URL}" "${WINNFSD_DEST}" /END
+    Pop $R0 ; return value = exit code, "OK" if OK
+
+    ; Check download result
+    ${If} $R0 != "OK"
+      ; Download failed, show message and continue
+      SetDetailsView show
+      DetailPrint "Download of `${WINNFSD_NAME}` failed:"
+      DetailPrint " $R0"
+      MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${WINNFSD_NAME}` has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue the resting installation."
+    ${EndIf}
   SectionEnd
 
   /**
@@ -542,7 +561,26 @@ SectionGroup /e "WinNFSd"
       SetOverwrite try
 
       ; Copy files
-      File "..\.gotmp\bin\windows_amd64\nssm.exe"
+      ;File "..\.gotmp\bin\windows_amd64\nssm.exe"
+
+      ; Set URL and temporary file name
+      !define NSSM_NAME "NSSM"
+      !define NSSM_VERSION "2.24-101-g897c7ad"
+      !define NSSM_DEST "$INSTDIR\nssm.exe"
+      !define NSSM_URL "https://github.com/drud/nssm/releases/download/${NSSM_VERSION}/nssm.exe"
+
+      ; Download installer
+      INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${NSSM_URL}" "${NSSM_DEST}" /END
+      Pop $R0 ; return value = exit code, "OK" if OK
+
+      ; Check download result
+      ${If} $R0 != "OK"
+        ; Download failed, show message and continue
+        SetDetailsView show
+        DetailPrint "Download of `${NSSM_NAME}` failed:"
+        DetailPrint " $R0"
+        MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${NSSM_NAME}` has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue the resting installation."
+      ${EndIf}
     ${EndIf}
   SectionEnd
 SectionGroupEnd
