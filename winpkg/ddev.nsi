@@ -95,6 +95,21 @@
 
 
 /**
+ * Third Party Applications
+ */
+!define WINNFSD_NAME "WinNFSd"
+!define WINNFSD_VERSION "2.4.0"
+!define WINNFSD_SETUP "WinNFSd.exe"
+!define WINNFSD_URL "https://github.com/winnfsd/winnfsd/releases/download/${WINNFSD_VERSION}/WinNFSd.exe"
+
+!define NSSM_NAME "NSSM"
+!define NSSM_VERSION "2.24-101-g897c7ad"
+!define NSSM_SETUP "nssm.exe"
+!define NSSM_URL "https://github.com/drud/nssm/releases/download/${NSSM_VERSION}/nssm.exe"
+
+
+
+/**
  * Configuration
  *
  * Has to be done before including headers
@@ -520,7 +535,7 @@ SectionGroup /e "WinNFSd"
   /**
    * WinNFSd application install
    */
-  Section "WinNFSd" SecWinNFSd
+  Section "${WINNFSD_NAME}" SecWinNFSd
     SectionIn 1
     SetOutPath "$INSTDIR"
     SetOverwrite try
@@ -531,10 +546,7 @@ SectionGroup /e "WinNFSd"
     File "..\scripts\windows_ddev_nfs_setup.sh"
 
     ; Set URL and temporary file name
-    !define WINNFSD_NAME "WinNFSd"
-    !define WINNFSD_VERSION "2.4.0"
-    !define WINNFSD_DEST "$INSTDIR\WinNFSd.exe"
-    !define WINNFSD_URL "https://github.com/winnfsd/winnfsd/releases/download/${WINNFSD_VERSION}/WinNFSd.exe"
+    !define WINNFSD_DEST "$INSTDIR\${WINNFSD_SETUP}"
 
     ; Download installer
     INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${WINNFSD_URL}" "${WINNFSD_DEST}" /END
@@ -548,12 +560,14 @@ SectionGroup /e "WinNFSd"
       DetailPrint " $R0"
       MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${WINNFSD_NAME}` has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue the resting installation."
     ${EndIf}
+
+    !undef WINNFSD_DEST
   SectionEnd
 
   /**
    * NSSM application install
    */
-  Section "NSSM" SecNSSM
+  Section "${NSSM_NAME}" SecNSSM
     ; Install in non choco mode only
     ${IfNot} ${Chocolatey}
       SectionIn 1
@@ -564,10 +578,7 @@ SectionGroup /e "WinNFSd"
       ;File "..\.gotmp\bin\windows_amd64\nssm.exe"
 
       ; Set URL and temporary file name
-      !define NSSM_NAME "NSSM"
-      !define NSSM_VERSION "2.24-101-g897c7ad"
-      !define NSSM_DEST "$INSTDIR\nssm.exe"
-      !define NSSM_URL "https://github.com/drud/nssm/releases/download/${NSSM_VERSION}/nssm.exe"
+      !define NSSM_DEST "$INSTDIR\${NSSM_SETUP}"
 
       ; Download installer
       INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${NSSM_URL}" "${NSSM_DEST}" /END
@@ -581,6 +592,8 @@ SectionGroup /e "WinNFSd"
         DetailPrint " $R0"
         MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${NSSM_NAME}` has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue the resting installation."
       ${EndIf}
+
+      !undef NSSM_DEST
     ${EndIf}
   SectionEnd
 SectionGroupEnd
