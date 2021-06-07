@@ -40,12 +40,6 @@ for hostname in github.com raw.githubusercontent.com github-releases.githubuserc
   ping -c 1 $hostname 2>/dev/null || ping -c 1 $hostname 2>/dev/null || true
 done
 
-if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
-  set +x
-  echo "${DOCKERHUB_PULL_PASSWORD:-}" | docker login --username "${DOCKERHUB_PULL_USERNAME}" --password-stdin
-  set -x
-fi
-
 rm -rf ~/.ddev/Test* ~/.ddev/global_config.yaml ~/.ddev/homeadditions ~/.ddev/commands
 
 # There are discrepancies in golang hash checking in 1.11+, so kill off modcache to solve.
