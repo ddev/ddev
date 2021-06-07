@@ -62,7 +62,7 @@ VERSION := $(shell git describe --tags --always --dirty)
 # Some things insist on having the version without the leading 'v', so provide a
 # $(NO_V_VERSION) without it.
 # no_v_version removes the front v, for Chocolatey mostly
-NO_V_VERSION=$(shell echo $(VERSION) | awk  -F"-" '{ OFS="-"; sub(/^./, "", $$1); printf $$0; }')
+NO_V_VERSION=$(shell echo $(VERSION) | awk -F"-" '{ OFS="-"; sub(/^./, "", $$1); printf $$0; }')
 GITHUB_ORG := drud
 
 BUILD_OS = $(shell go env GOHOSTOS)
@@ -70,22 +70,22 @@ BUILD_ARCH = $(shell go env GOHOSTARCH)
 VERSION_LDFLAGS=$(foreach v,$(VERSION_VARIABLES),-X '$(PKG)/pkg/version.$(v)=$($(v))')
 LDFLAGS=-extldflags -static $(VERSION_LDFLAGS)
 BUILD_IMAGE ?= drud/golang-build-container:v1.16.0
-DOCKERBUILDCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)         \
-          	    -v "/$(PWD)://workdir$(DOCKERMOUNTFLAG)"                              \
-          	    -e GOPATH="//workdir/$(GOTMP)" \
-          	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
-          	    -e GOFLAGS="$(USEMODVENDOR)" \
-          	    -e CGO_ENABLED=0 \
-          	    -w //workdir              \
-          	    $(BUILD_IMAGE)
-DOCKERTESTCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)                    \
-          	    -v "/$(PWD):/workdir$(DOCKERMOUNTFLAG)"                              \
-          	    -e GOPATH="//workdir/$(GOTMP)" \
-          	    -e GOCACHE="//workdir/$(GOTMP)/.cache" \
-          	    -e GOLANGCI_LINT_CACHE="//workdir/$(GOTMP)/.golanci-lint-cache" \
-          	    -e GOFLAGS="$(USEMODVENDOR)" \
-          	    -w //workdir              \
-          	    $(BUILD_IMAGE)
+DOCKERBUILDCMD=docker run -t --rm -u $(shell id -u):$(shell id -g) \
+	-v "/$(PWD)://workdir$(DOCKERMOUNTFLAG)" \
+	-e GOPATH="//workdir/$(GOTMP)" \
+	-e GOCACHE="//workdir/$(GOTMP)/.cache" \
+	-e GOFLAGS="$(USEMODVENDOR)" \
+	-e CGO_ENABLED=0 \
+	-w //workdir \
+	$(BUILD_IMAGE)
+DOCKERTESTCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)\
+	-v "/$(PWD):/workdir$(DOCKERMOUNTFLAG)" \
+	-e GOPATH="//workdir/$(GOTMP)" \
+	-e GOCACHE="//workdir/$(GOTMP)/.cache" \
+	-e GOLANGCI_LINT_CACHE="//workdir/$(GOTMP)/.golanci-lint-cache" \
+	-e GOFLAGS="$(USEMODVENDOR)" \
+	-w //workdir \
+	$(BUILD_IMAGE)
 DEFAULT_BUILD=$(shell go env GOHOSTOS)_$(shell go env GOHOSTARCH)
 
 build: $(DEFAULT_BUILD)
@@ -167,8 +167,8 @@ markdownlint:
 	@CMD="markdownlint *.md docs/*.md docs/users 2>&1"; \
 	set -eu -o pipefail; \
 	if command -v markdownlint >/dev/null 2>&1 ; then \
-	  	$$CMD;  \
-  	else \
+		$$CMD; \
+	else \
 		sleep 1 && $(DOCKERTESTCMD) \
 		bash -c "$$CMD"; \
 	fi
@@ -179,7 +179,7 @@ mkdocs:
 	@CMD="mkdocs -q build -d /tmp/mkdocsbuild"; \
 	if command -v mkdocs >/dev/null 2>&1; then \
 		$$CMD ; \
-	else  \
+	else \
 		echo "Not running mkdocs because it's not installed"; \
 	fi
 
@@ -189,8 +189,8 @@ pyspelling:
 	@CMD="pyspelling --config .spellcheck.yml"; \
 	set -eu -o pipefail; \
 	if command -v pyspelling >/dev/null 2>&1 ; then \
-	  	$$CMD;  \
-  	else \
+		$$CMD; \
+	else \
 		echo "Not running pyspelling because it's not installed"; \
 	fi
 
@@ -216,12 +216,12 @@ darwin_arm64_notarized: darwin_arm64_signed
 	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
 		set -o errexit -o pipefail; \
 		echo "Notarizing $(GOTMP)/bin/darwin_arm64/ddev ..." ; \
-		curl -sSL -f https://raw.githubusercontent.com/drud/signing_tools/master/macos_notarize.sh | bash  -s - --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=accounts@drud.com --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_arm64/ddev" ; \
+		curl -sSL -f https://raw.githubusercontent.com/drud/signing_tools/master/macos_notarize.sh | bash -s - --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=accounts@drud.com --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_arm64/ddev" ; \
 	fi
 
 windows_install: $(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe
 
-$(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe:  $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt $(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.txt $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.txt winpkg/ddev.nsi
+$(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe: $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.txt winpkg/ddev.nsi
 	ls -l .gotmp/bin/windows_amd64
 	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing ddev.exe, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows binaries..." && signtool sign ".gotmp/bin/windows_amd64/ddev.exe" ".gotmp/bin/windows_amd64/mkcert.exe" ".gotmp/bin/windows_amd64/nssm.exe" ".gotmp/bin/windows_amd64/winnfsd.exe" ".gotmp/bin/windows_amd64/ddev_gen_autocomplete.exe"; fi
 	@makensis -DVERSION=$(VERSION) winpkg/ddev.nsi  # brew install makensis, apt-get install nsis, or install on Windows
@@ -238,26 +238,21 @@ chocolatey: $(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe
 	perl -pi -e 's/REPLACE_GITHUB_ORG/$(GITHUB_ORG)/g' $(GOTMP)/bin/windows_amd64/chocolatey/*.nuspec $(GOTMP)/bin/windows_amd64/chocolatey/tools/*.ps1 #GITHUB_ORG is for testing, for example when the binaries are on rfay acct
 	perl -pi -e "s/REPLACE_INSTALLER_CHECKSUM/$$(cat $(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe.sha256.txt | awk '{ print $$1; }')/g" $(GOTMP)/bin/windows_amd64/chocolatey/tools/*
 	if [[ "$(NO_V_VERSION)" =~ -g[0-9a-f]+ ]]; then \
-  		echo "Skipping chocolatey build on interim version"; \
+		echo "Skipping chocolatey build on interim version"; \
 	else \
 		docker run --rm -v "/$(PWD)/$(GOTMP)/bin/windows_amd64/chocolatey:/tmp/chocolatey" -w "//tmp/chocolatey" linuturk/mono-choco pack ddev.nuspec; \
 		echo "chocolatey package is in $(GOTMP)/bin/windows_amd64/chocolatey"; \
 	fi
 
 $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.txt:
-	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/mkcert.exe  https://github.com/drud/mkcert/releases/download/$(MKCERT_VERSION)/mkcert-$(MKCERT_VERSION)-windows-amd64.exe
+	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/mkcert.exe https://github.com/drud/mkcert/releases/download/$(MKCERT_VERSION)/mkcert-$(MKCERT_VERSION)-windows-amd64.exe
 	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/mkcert_license.txt -O https://raw.githubusercontent.com/drud/mkcert/master/LICENSE
 
 $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt:
 	set -x
-	curl  -sSL --create-dirs -o "$(GOTMP)/bin/windows_amd64/gsudo.zip"  https://github.com/gerardog/gsudo/releases/download/$(WINDOWS_GSUDO_VERSION)/gsudo.$(WINDOWS_GSUDO_VERSION).zip
+	curl -sSL --create-dirs -o "$(GOTMP)/bin/windows_amd64/gsudo.zip" https://github.com/gerardog/gsudo/releases/download/$(WINDOWS_GSUDO_VERSION)/gsudo.$(WINDOWS_GSUDO_VERSION).zip
 	unzip -o -d "$(GOTMP)/bin/windows_amd64" "$(GOTMP)/bin/windows_amd64/gsudo.zip" gsudo.exe && mv "$(GOTMP)/bin/windows_amd64/gsudo.exe" "$(GOTMP)/bin/windows_amd64/sudo.exe"
 	curl --fail -sSL -o "$(GOTMP)/bin/windows_amd64/sudo_license.txt" "https://raw.githubusercontent.com/gerardog/gsudo/master/LICENSE.txt"
-
-$(GOTMP)/bin/windows_amd64/nssm.exe $(GOTMP)/bin/windows_amd64/winnfsd_license.txt $(GOTMP)/bin/windows_amd64/winnfsd.exe :
-	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/winnfsd.exe  https://github.com/winnfsd/winnfsd/releases/download/$(WINNFSD_VERSION)/WinNFSd.exe
-	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/nssm.exe https://github.com/drud/nssm/releases/download/$(NSSM_VERSION)/nssm.exe
-	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/winnfsd_license.txt https://www.gnu.org/licenses/gpl.txt
 
 # Best to install golangci-lint locally with "curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin v1.31.0"
 golangci-lint:
