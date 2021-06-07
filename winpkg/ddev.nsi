@@ -229,7 +229,7 @@ Var MkcertSetup
 !define MUI_PAGE_HEADER_SUBTEXT "Please review the license terms before installing WinNFSd."
 !define MUI_PAGE_CUSTOMFUNCTION_PRE winNFSdLicPre
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE winNFSdLicLeave
-!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_amd64\winnfsd_license.txt"
+!insertmacro MUI_PAGE_LICENSE "licenses\winnfsd_license.txt"
 
 ; Directory page
 !define MUI_PAGE_CUSTOMFUNCTION_PRE DirectoryPre
@@ -527,7 +527,7 @@ SectionGroup /e "WinNFSd"
 
     ; Copy files
     ;File "..\.gotmp\bin\windows_amd64\winnfsd.exe"
-    File "..\.gotmp\bin\windows_amd64\winnfsd_license.txt"
+    File "licenses\winnfsd_license.txt"
     File "..\scripts\windows_ddev_nfs_setup.sh"
 
     ; Set URL and temporary file name
