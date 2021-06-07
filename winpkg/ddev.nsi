@@ -541,7 +541,6 @@ SectionGroup /e "WinNFSd"
     SetOverwrite try
 
     ; Copy files
-    ;File "..\.gotmp\bin\windows_amd64\winnfsd.exe"
     File "licenses\winnfsd_license.txt"
     File "..\scripts\windows_ddev_nfs_setup.sh"
 
@@ -573,9 +572,6 @@ SectionGroup /e "WinNFSd"
       SectionIn 1
       SetOutPath "$INSTDIR"
       SetOverwrite try
-
-      ; Copy files
-      ;File "..\.gotmp\bin\windows_amd64\nssm.exe"
 
       ; Set URL and temporary file name
       !define NSSM_DEST "$INSTDIR\${NSSM_SETUP}"
