@@ -8,10 +8,9 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 	"os"
-	"runtime"
 	"strconv"
+	"strings"
 	"testing"
-	"time"
 
 	"github.com/drud/ddev/pkg/testcommon"
 	log "github.com/sirupsen/logrus"
@@ -256,13 +255,16 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 			}
 		})
 
-	newStartTime := time.Now().Unix()
-	// Flaky test failures, possible failure of sync in docker desktop for Windows?
-	if runtime.GOOS == "windows" {
-		time.Sleep(5 * time.Second)
-	}
-	// We have to do the echo technique to get past the prompt about doing a ddev poweroff
-	// On Windows we have to make sure we have git-bash, not the Windows bash.exe
+	app, err := ddevapp.GetActiveApp("")
+	require.NoError(t, err)
+	oldTime, _, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     "date +%s",
+	})
+	oldTime = strings.Trim(oldTime, "\n")
+	oldTimeInt, err := strconv.ParseInt(oldTime, 10, 64)
+	require.NoError(t, err)
+
 	bashPath := util.FindWindowsBashPath()
 	out, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf("echo y | '%s' start", DdevBin)})
 	assert.NoError(err)
@@ -284,8 +286,8 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	sshCreateTime := (*sshC).Created
 
 	// router and ssh-agent should have been created within after we started the new project
-	assert.GreaterOrEqual(routerCreateTime, newStartTime)
-	assert.GreaterOrEqual(sshCreateTime, newStartTime)
+	assert.GreaterOrEqual(routerCreateTime, oldTimeInt)
+	assert.GreaterOrEqual(sshCreateTime, oldTimeInt)
 }
 
 // addSites runs `ddev start` on the test apps

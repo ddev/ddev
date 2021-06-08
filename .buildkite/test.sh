@@ -36,9 +36,11 @@ if ! docker ps >/dev/null 2>&1 ; then
 fi
 
 # Try to get important names cached; try twice
-for hostname in github.com raw.githubusercontent.com github-releases.githubusercontent.com registry-1.docker.io auth.docker.io production.cloudflare.docker.com; do
-  ping -c 1 $hostname 2>/dev/null || ping -c 1 $hostname 2>/dev/null || true
-done
+docker run --rm alpine sh -c '
+  for hostname in github.com raw.githubusercontent.com github-releases.githubusercontent.com registry-1.docker.io auth.docker.io production.cloudflare.docker.com; do
+    nslookup $hostname >/dev/null 2>&1 || nslookup $hostname >/dev/null 2>&1 || true
+  done
+'
 
 if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
   set +x
