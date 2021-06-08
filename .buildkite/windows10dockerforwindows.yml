@@ -1,4 +1,8 @@
   - command: ".buildkite/test.cmd"
+    plugins:
+      - docker-login#v2.0.1:
+          username: druddockerpullaccount
+          password-env: DOCKERHUB_PULL_PASSWORD
     agents:
       - "os=windows"
       - "dockertype=dockerforwindows"

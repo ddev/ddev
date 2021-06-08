@@ -1,4 +1,8 @@
   - command: ".buildkite/test_containers.sh"
+    plugins:
+      - docker-login#v2.0.1:
+          username: druddockerpullaccount
+          password-env: DOCKERHUB_PULL_PASSWORD
     agents:
       - "os=macos"
       - "dockertype=dockerformac"
