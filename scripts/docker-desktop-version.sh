@@ -2,11 +2,6 @@
 
 MACOS_INFO_PATH=/Applications/Docker.app/Contents/Info.plist
 
-if [ "${OSTYPE%%[0-9]*}" = "darwin" ] && ! command -v xq >/dev/null; then
-  printf "Please install xq, brew install python-yq, to parse macOS Info.plist"
-  exit
-fi
-
 if command -v powershell >/dev/null; then
   printf "Docker Desktop for Windows "
   powershell.exe -command '[System.Diagnostics.FileVersionInfo]::GetVersionInfo("C:\Program Files\Docker\Docker\Docker Desktop.exe").FileVersion'
