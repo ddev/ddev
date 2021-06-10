@@ -73,11 +73,10 @@ This recipe adds a [Beanstalk](https://beanstalkd.github.io/) container to a pro
 * The Beanstalk instance will listen on TCP port 11300 (the beanstalkd default).
 * Configure your application to access Beanstalk on the host:port `ddev-<projectname>-beanstalk:11300`.
 
-## Additional services in ddev-contrib (MongoDB, Blackfire, PostgresSQL, etc)
+## Additional services in ddev-contrib (MongoDB, PostgresSQL, etc)
 
 The [ddev-contrib](https://github.com/drud/ddev-contrib) repository has a wealth of additional examples and instructions:
 
-* **Blackfire.io for performance testing and profiling**: See [Blackfire.io](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/blackfire).
 * **ElasticHQ**:See [ElasticHQ](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/elastichq).
 * **Elasticsearch**: See [Elasticsearch](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/elasticsearch).
 * **Headless Chrome**: See [Headless Chrome for Behat Testing](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/headless-chrome)

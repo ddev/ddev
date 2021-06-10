@@ -41,6 +41,7 @@ FPATH
 FSTYPE
 Flags
 Fritzbox
+GUI
 GUIs
 Get
 Gitter
