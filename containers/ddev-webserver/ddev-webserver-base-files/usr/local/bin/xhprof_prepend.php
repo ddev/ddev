@@ -1,0 +1,2 @@
+<?php
+xhprof_enable();
