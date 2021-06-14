@@ -1,6 +1,6 @@
 <?php
 $xhprof_data = xhprof_disable();
-$appNamespace = getenv("DDEV_HOSTNAME");
+$appNamespace = "ddev";
 include_once '/var/www/xhprof/xhprof_lib/utils/xhprof_lib.php';
 include_once '/var/www/xhprof/xhprof_lib/utils/xhprof_runs.php';
 
