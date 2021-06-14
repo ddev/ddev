@@ -168,6 +168,7 @@ ENV TERM xterm
 ENV MH_SMTP_BIND_ADDR 127.0.0.1:1025
 
 ENV BASH_ENV /etc/bash.nointeractive.bashrc
+ENV XHPROF_OUTPUT_DIR=/tmp/xhprof
 
 COPY --from=ddev-webserver-dev-base / /
 EXPOSE 80 8025
