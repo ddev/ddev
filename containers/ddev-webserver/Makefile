@@ -9,9 +9,9 @@ DOCKER_BUILDKIT=1
 
 BUILD_ARCHS=linux/amd64,linux/arm64
 
-include ../containers_shared.mak
+build: images
 
-container build: images
+include ../containers_shared.mak
 
 images: $(DEFAULT_IMAGES)
 
@@ -29,8 +29,8 @@ multi-arch:
 		echo "created multi-arch builds $(BUILD_ARCHS) for $(DOCKER_ORG)/$$item"; \
 	done
 
-ddev-webserver ddev-webserver-dev-base ddev-webserver-prod-base ddev-webserver-prod:
-	docker buildx build -o type=docker --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
+$(DEFAULT_IMAGES):
+	 docker buildx build -o type=docker --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
 
 
 test: images
