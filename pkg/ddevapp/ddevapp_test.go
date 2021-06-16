@@ -774,6 +774,11 @@ func TestDdevXhprofEnabled(t *testing.T) {
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	phpVersions := nodeps.ValidPHPVersions
+	// Does not work with php5.6 anyway (SEGV), for resource conservation
+	// skip older unsupported versions
+	for _, k := range []string{"5.6", "7.0", "7.1"} {
+		delete(phpVersions, k)
+	}
 	phpKeys := make([]string, 0, len(phpVersions))
 	for k := range phpVersions {
 		phpKeys = append(phpKeys, k)
@@ -835,9 +840,6 @@ func TestDdevXhprofEnabled(t *testing.T) {
 				t.Errorf("Aborting xhprof check for php%s: %v", v, err)
 				continue
 			}
-			if v != "5.6" {
-				assert.Contains(stdout, "xhprof.output_dir")
-			}
 
 			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL()+"/phpinfo.php")
 			assert.NoError(err, "Failed to get base URL webserver_type=%s, php_version=%s", webserverKey, v)
@@ -845,13 +847,14 @@ func TestDdevXhprofEnabled(t *testing.T) {
 
 			out, _, err = testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL()+"/xhprof/")
 			assert.NoError(err)
+			// Output should contain at least one run
+			assert.Contains(out, ".ddev.xhprof</a><small>")
 
 			// Disable all to avoid confusion
 			_, _, err = app.Exec(&ddevapp.ExecOpts{
-				Cmd: fmt.Sprintf("disable_xhprof"),
+				Cmd: fmt.Sprintf("disable_xhprof && rm -rf /tmp/xhprof"),
 			})
 			assert.NoError(err)
-
 		}
 	}
 	runTime()
