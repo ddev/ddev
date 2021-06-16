@@ -11,6 +11,6 @@ if (extension_loaded('xhprof') && $_SERVER["SCRIPT_URL"] != "/xhprof/index.php")
 
     $base_link = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]/xhprof/";
 
-    $profiler_url = sprintf('%s/index.php?run=%s&amp;source=%s', $base_link, $run_id, $appNamespace);
-    echo '<a href="'. $profiler_url .'" target="_blank">xhprof profiler output</a>';
+    $profiler_url = sprintf('%sindex.php?run=%s&amp;source=%s', $base_link, $run_id, $appNamespace);
+    echo '<div id="xhprof"><a href="'. $profiler_url .'" target="_blank">xhprof profiler output</a></div>';
 }
