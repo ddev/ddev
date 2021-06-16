@@ -4,6 +4,7 @@ AdditionalConfiguration
 Apache
 Available
 Bash
+Callgraph
 CGroups
 CIFS
 CLI
@@ -74,6 +75,7 @@ Netbeans
 Nginx
 OSs
 OpenMage
+PECL
 PHAR
 PHIVE
 PHP
@@ -114,6 +116,7 @@ WSL2
 WantedBy
 Webhosting
 XDebug
+Xhprof
 XSym
 Zsh
 a
@@ -346,6 +349,7 @@ pre
 prepend
 prepending
 print
+profiler
 projdir
 project
 projectname
