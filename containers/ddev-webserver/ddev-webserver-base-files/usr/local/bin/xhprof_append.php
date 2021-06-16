@@ -10,5 +10,5 @@ $run_id =$xhprof_runs->save_run($xhprof_data, $appNamespace);
 
 $base_link = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]/xhprof/";
 
-$profiler_url = sprintf('%s/index.php?run=%s&amp;source=%s', $base_link, $run_id, $profiler_namespace);
+$profiler_url = sprintf('%s/index.php?run=%s&amp;source=%s', $base_link, $run_id, $appNamespace);
 echo '<a href="'. $profiler_url .'" target="_blank">xhprof profiler output</a>';
