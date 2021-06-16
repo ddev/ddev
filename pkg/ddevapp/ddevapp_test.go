@@ -783,51 +783,76 @@ func TestDdevXhprofEnabled(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
+	phpInfoFile := path.Join(app.AppRoot, app.Docroot, "phpinfo.php")
+	err = os.WriteFile(phpInfoFile, []byte("<?php phpinfo();"), 0755)
+	require.NoError(t, err)
 	t.Cleanup(func() {
 		app.PHPVersion = nodeps.PHPDefault
+		app.WebserverType = nodeps.WebserverDefault
+		err = os.Remove(phpInfoFile)
+		assert.NoError(err)
 		err = app.WriteConfig()
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
 	})
 
-	err = app.Start()
-	require.NoError(t, err)
-	for _, v := range phpKeys {
-		t.Logf("Beginning XHProf checks with XHProf php%s\n", v)
-		fmt.Printf("Attempting XHProf checks with XHProf %s\n", v)
+	webserverKeys := make([]string, 0, len(nodeps.ValidWebserverTypes))
+	for k := range nodeps.ValidWebserverTypes {
+		webserverKeys = append(webserverKeys, k)
+	}
 
-		stdout, _, err := app.Exec(&ddevapp.ExecOpts{
-			Service: "web",
-			Cmd:     fmt.Sprintf("php%s --ri xhprof", v),
-		})
-		assert.Error(err)
-		assert.Contains(stdout, "Extension 'xhprof' not present")
+	for _, webserverKey := range webserverKeys {
+		app.WebserverType = webserverKey
 
-		// Run with xhprof enabled
-		_, _, err = app.Exec(&ddevapp.ExecOpts{
-			Cmd: fmt.Sprintf("phpenmod -v %s xhprof", v),
-		})
-		assert.NoError(err)
+		for _, v := range phpKeys {
+			t.Logf("Beginning XHProf checks with XHProf webserver_type=%s php%s\n", webserverKey, v)
+			fmt.Printf("Attempting XHProf checks with XHProf PHP%s\n", v)
+			app.PHPVersion = v
 
-		stdout, _, err = app.Exec(&ddevapp.ExecOpts{
-			Service: "web",
-			Cmd:     fmt.Sprintf("php%s --ri xhprof", v),
-		})
-		assert.NoError(err)
-		if err != nil {
-			t.Errorf("Aborting xhprof check for php%s: %v", v, err)
-			continue
+			err = app.Start()
+			require.NoError(t, err)
+
+			stdout, _, err := app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				Cmd:     fmt.Sprintf("php --ri xhprof"),
+			})
+			assert.Error(err)
+			assert.Contains(stdout, "Extension 'xhprof' not present")
+
+			// Run with xhprof enabled
+			_, _, err = app.Exec(&ddevapp.ExecOpts{
+				Cmd: fmt.Sprintf("enable_xhprof"),
+			})
+			assert.NoError(err)
+
+			stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				Cmd:     fmt.Sprintf("php --ri xhprof"),
+			})
+			assert.NoError(err)
+			if err != nil {
+				t.Errorf("Aborting xhprof check for php%s: %v", v, err)
+				continue
+			}
+			if v != "5.6" {
+				assert.Contains(stdout, "xhprof.output_dir")
+			}
+
+			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL()+"/phpinfo.php")
+			assert.NoError(err, "Failed to get base URL webserver_type=%s, php_version=%s", webserverKey, v)
+			assert.Contains(out, "module_xhprof")
+
+			out, _, err = testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL()+"/xhprof/")
+			assert.NoError(err)
+
+			// Disable all to avoid confusion
+			_, _, err = app.Exec(&ddevapp.ExecOpts{
+				Cmd: fmt.Sprintf("disable_xhprof"),
+			})
+			assert.NoError(err)
+
 		}
-		if v != "5.6" {
-			assert.Contains(stdout, "xhprof.output_dir")
-		}
-		// Disable all to avoid confusion
-		_, _, err = app.Exec(&ddevapp.ExecOpts{
-			Cmd: fmt.Sprintf("phpdismod -v %s xhprof", v),
-		})
-		assert.NoError(err)
-
 	}
 	runTime()
 }
