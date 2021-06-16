@@ -840,6 +840,7 @@ func TestDdevXhprofEnabled(t *testing.T) {
 				t.Errorf("Aborting xhprof check for php%s: %v", v, err)
 				continue
 			}
+			assert.Contains(stdout, "xhprof.output_dir", "xhprof is not enabled for %s", v)
 
 			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL()+"/phpinfo.php")
 			assert.NoError(err, "Failed to get base URL webserver_type=%s, php_version=%s", webserverKey, v)
