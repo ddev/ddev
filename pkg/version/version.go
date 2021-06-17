@@ -58,7 +58,7 @@ var DBATag = "5" // Note that this can be overridden by make
 var RouterImage = "drud/ddev-router"
 
 // RouterTag defines the tag used for the router.
-var RouterTag = "20210615_use_large_header_buffers" // Note that this can be overridden by make
+var RouterTag = "20210617_ddev_router_latest_nginx" // Note that this can be overridden by make
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "drud/ddev-ssh-agent"
