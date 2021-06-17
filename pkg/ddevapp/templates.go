@@ -351,7 +351,7 @@ const ConfigInstructions = `
 # In this case the user must provide all such settings.
 
 # You can inject environment variables into the web container with:
-# web_environment: 
+# web_environment:
 # - SOMEENV=somevalue
 # - SOMEOTHERENV=someothervalue
 
