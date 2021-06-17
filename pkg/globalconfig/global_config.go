@@ -153,7 +153,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # nfs_mount_enabled: true
 #
 # You can inject environment variables into the web container with:
-# web_environment: 
+# web_environment:
 # - SOMEENV=somevalue
 # - SOMEOTHERENV=someothervalue
 
