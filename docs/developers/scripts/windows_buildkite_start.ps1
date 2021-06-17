@@ -13,6 +13,8 @@ Set-Timezone -Id "Mountain Standard Time"
 # Enable developer mode feature
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" /t REG_DWORD /f /v "AllowDevelopmentWithoutDevLicense" /d "1"
 
+setx /M PATH "C:\Program Files\Git\bin;%PATH%"
+
 # Install WSL2 and VirtualMachinePlatform
 dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
 dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all
