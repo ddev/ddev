@@ -1,4 +1,4 @@
-FROM nginx:1.18
+FROM nginx:stable
 
 ENV MKCERT_VERSION=v1.4.6
 
