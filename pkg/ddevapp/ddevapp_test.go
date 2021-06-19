@@ -718,7 +718,8 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		}
 
 		// Start a listener on port 9000 of localhost (where PHPStorm or whatever would listen)
-		listener, err := net.Listen("tcp", ":9000")
+		// Use localhost listening to not trigger firewall on macOS Big Sur+
+		listener, err := net.Listen("tcp", "127.0.0.1:9000")
 		require.NoError(t, err)
 
 		// Curl to the project's index.php or anything else
