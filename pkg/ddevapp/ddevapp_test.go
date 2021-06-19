@@ -654,6 +654,13 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	app := &ddevapp.DdevApp{}
 	testcommon.ClearDockerEnv()
 
+	// On macOS we want to just listen on localhost port, so as to not trigger
+	// firewall block. On other systems, just listen on all interfaces
+	listenPort := ":9000"
+	if runtime.GOOS == "darwin" {
+		listenPort = "127.0.0.1:9000"
+	}
+
 	site := TestSites[0]
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
@@ -718,7 +725,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		}
 
 		// Start a listener on port 9000 of localhost (where PHPStorm or whatever would listen)
-		listener, err := net.Listen("tcp", ":9000")
+		listener, err := net.Listen("tcp", listenPort)
 		require.NoError(t, err)
 
 		// Curl to the project's index.php or anything else
