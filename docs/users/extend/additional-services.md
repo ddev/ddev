@@ -11,16 +11,32 @@ This recipe adds an Apache Solr container to a project. It will set up a solr co
 #### Installation
 
 1. Copy [docker-compose.solr.yaml](https://raw.githubusercontent.com/drud/ddev/master/pkg/servicetest/testdata/TestServices/docker-compose.solr.yaml) to the .ddev folder for your project.
-2. Solr version can be changed by updating this line `image: solr:8` in `docker-compose.solr.yaml` file, but the recipe here assumes solr:8 and it may not work with other versions. Acquia and Pantheon.io hosting seem to require versions from 3 to 7, and you'll want to see the [contributed recipes](https://github.com/drud/ddev-contrib) for older versions of solr.
-3. Create the folder path .ddev/solr/conf.
-    * If needed, you may copy/extract the Solr configuration files for your project into `.ddev/solr/conf`. Ensure that the configuration files are present before running `ddev start`.
-4. Run `ddev start` or `ddev restart` if your project is already running.
+2. Solr version can be changed by updating this line `image: solr:8` in `docker-compose.solr.yaml` file, but the recipe here assumes solr:8 and it often won't work with other versions. Acquia and Pantheon.io hosting seem to require versions from 3 to 7, and you'll want to see the [contributed recipes](https://github.com/drud/ddev-contrib) for older versions of solr.
+3. `mkdir -p .ddev/solr/conf` (If you have already started your project you may need to use `sudo` to do this on Linux/WSL2.)
+4. Copy [solr-configupdate.sh](https://raw.githubusercontent.com/drud/ddev/master/pkg/servicetest/testdata/TestServices/solr-configupdate.sh) to .ddev/solr. This simple script is mounted into the container and updates config from .ddev/solr/conf on `ddev restart`:
+
+      ```
+      cd .ddev/solr
+      rm -rf solr-configupdate.sh
+      curl -O https://raw.githubusercontent.com/drud/ddev/master/pkg/servicetest/testdata/TestServices/solr-configupdate.sh
+      chmod +x solr-configupdate.sh
+     ```
+
+5. If you already have Solr configuration files for your project, put them in `.ddev/solr/conf`. Ensure that the configuration files are present before running `ddev start`.
+6. Run `ddev start` or `ddev restart` if your project is already running.
+7. When trying to get things to work, if you encounter huge solr failures, you may need to delete the entire solr volume and allow it to get recreated:
+
+  ```bash
+  ddev stop
+  docker volume rm ddev-<projectname>_solr
+  ddev start
+  ```
 
 ##### Drupal8-specific extra steps
 
 * `ddev start`
-* Enable the [Search API Solr](https://www.drupal.org/project/search_api_solr) Search Defaults module
-* Add a solr server at `https://<projectname>>.ddev.site/en/admin/config/search/search-api/add-server`.
+* Enable the [Search API Solr](https://www.drupal.org/project/search_api_solr) module.
+* Add a solr server at `https://<projectname>>.ddev.site/admin/config/search/search-api/add-server`.
     * Use the "standard" Solr connector
     * Use the "http" protocol
     * The "solr host" should be `ddev-<projectname>-solr` **NOT the default "localhost"**, because it does not run in the same container as the webserver. (Note that just using "solr" will often work, and used to be recommended, but it can be ambiguous if there are more than one projects running with a solr service.)
@@ -28,26 +44,10 @@ This recipe adds an Apache Solr container to a project. It will set up a solr co
     * Under "Advanced server configuration" set the "solr.install.dir" to `/opt/solr`
 * Download the config.zip provided on /admin/config/search/search-api/server/dev
 * Unzip the config.zip into .ddev/solr/conf. For example, `cd .ddev/solr/conf && unzip ~/Downloads/solr_8.x-config.zip`
-* In order for changes to take effect you must stop the project, remove the Solr volume, and start it again.  So run `docker volume rm ddev-<projectname>_solr` if your project is called "myproject" then you would run `ddev stop && docker volume rm ddev-myproject_solr && ddev restart`. (If you have installed solr-configupdate.sh as described below, then you need only `ddev restart`)
-
-##### Updating Apache Solr configuration on an existing Solr core
-
-The default [solr-precreate script](https://github.com/docker-solr/docker-solr/blob/master/scripts/solr-precreate) provided in [docker-solr](https://github.com/docker-solr/docker-solr) and used in the `entrypoint` in docker-compose.solr.yaml does not have the capability to update core configuration after the core has been created. It just copies mounted config into the core, where it would otherwise live forever. However, a simple optional script executed on startup can re-copy config into place. Here's the technique:
-
-* Copy [solr-configupdate.sh](https://raw.githubusercontent.com/drud/ddev/master/pkg/servicetest/testdata/TestServices/solr-configupdate.sh) to .ddev/solr. This simple script is mounted into the container and updates config from .ddev/solr/conf on `ddev restart`:
-
-  ```bash
-  cd .ddev/solr
-  rm -rf solr-configupdate.sh
-  curl -O https://raw.githubusercontent.com/drud/ddev/master/pkg/servicetest/testdata/TestServices/solr-configupdate.sh
-  chmod +x solr-configupdate.sh
-  ```
-
-* You can now copy/edit/update the solr configuration files for your project in .ddev/solr/conf and when you `ddev restart` the solr configuration will be live.
 
 ##### Interacting with Apache Solr
 
-* The Solr admin interface will be accessible at: `https://<projectname>.ddev.site:8984/solr/` For example, if the project is named "_myproject_" the hostname will be: `https://myproject.ddev.site:8984/solr/`.
+* The Solr admin interface will be accessible at: `https://<projectname>.ddev.site:8984/solr/#/` For example, if the project is named "_myproject_" the hostname will be: `https://myproject.ddev.site:8984/solr/`.
 * To access the Solr container from the web container use: `https://solr:8984/solr/`
 * A Solr core is automatically created with the name "dev"; it can be accessed (from inside the web container) at the URL: `https://solr:8984/solr/dev` or from the host at `https://<projectname>.ddev.site:8984/solr/#/~cores/dev`.
 
