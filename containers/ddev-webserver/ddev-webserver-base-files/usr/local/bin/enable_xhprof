@@ -3,5 +3,5 @@ export PATH=$PATH:/usr/sbin:/sbin
 phpdismod blackfire
 mkdir -p ${XHPROF_OUTPUT_DIR}
 phpenmod xhprof
-killall -HUP php-fpm 2>/dev/null || true
+killall -USR2 php-fpm 2>/dev/null || true
 echo "Enabled xhprof"
