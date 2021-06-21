@@ -4,7 +4,7 @@
 
 The Apple Mac M1 with its arm64 architecture has arrived to great acclaim. People love it.
 
-Docker on the Mac M1 requires the Apple Silicon version of Docker Desktop, which you can get at https://www.docker.com/products/docker-desktop "Mac with Apple Chip".
+Docker on the Mac M1 requires the Apple Silicon version of Docker Desktop, which you can get at [Docker Desktop Download](https://www.docker.com/products/docker-desktop) - you want "Mac with Apple Chip".
 
 There are a few limitations of DDEV-Local on the Mac M1.
 
