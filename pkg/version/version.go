@@ -40,7 +40,7 @@ var DockerComposeFileFormatVersion = "3.6"
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag for drud dev
-var WebTag = "20210615_use_large_header_buffers" // Note that this can be overridden by make
+var WebTag = "20210502_penyaskito_xhprof" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"

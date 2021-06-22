@@ -249,6 +249,11 @@ const ConfigInstructions = `
 # "ddev xdebug" to enable xdebug and "ddev xdebug off" to disable it work better,
 # as leaving xdebug enabled all the time is a big performance hit.
 
+# xhprof_enabled: false  # Set to true to enable xhprof and "ddev start" or "ddev restart"
+# Note that for most people the commands
+# "ddev xhprof" to enable xhprof and "ddev xhprof off" to disable it work better,
+# as leaving xhprof enabled all the time is a big performance hit.
+
 # webserver_type: nginx-fpm  # or apache-fpm
 
 # timezone: Europe/Berlin

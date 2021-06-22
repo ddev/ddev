@@ -79,6 +79,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     fontconfig \
     gettext \
     git \
+    graphviz \
     iproute2 \
     iputils-ping \
     jq \
@@ -97,11 +98,12 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     zip
 
 ADD ddev-webserver-dev-base-files /
+RUN phpdismod blackfire xhprof
 RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_${MAILHOG_ARCH} -o /usr/local/bin/mailhog; 
 
 RUN phpdismod xdebug && curl -sSL --fail --output /usr/local/bin/phive "https://phar.io/releases/phive.phar" && chmod 777 /usr/local/bin/phive && phpenmod xdebug
-RUN curl -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod 777 /usr/local/bin/terminus
-RUN curl -sSL https://github.com/platformsh/platformsh-cli/releases/download/$(curl --silent "https://api.github.com/repos/platformsh/platformsh-cli/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/platform.phar --output /usr/local/bin/platform && chmod 777 /usr/local/bin/platform
+RUN set -o pipefail && curl -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod 777 /usr/local/bin/terminus
+RUN set -o pipefail && curl -sSL https://github.com/platformsh/platformsh-cli/releases/download/$(curl --silent "https://api.github.com/repos/platformsh/platformsh-cli/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/platform.phar --output /usr/local/bin/platform && chmod 777 /usr/local/bin/platform
 RUN curl -sSL --output /usr/local/bin/acli https://github.com/acquia/cli/releases/latest/download/acli.phar && chmod 777 /usr/local/bin/acli
 RUN curl -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/backdrop-drush-extension.zip -o /tmp/backdrop-drush-extension.zip && unzip -o /tmp/backdrop-drush-extension.zip -d /var/tmp/backdrop_drush_commands
 
@@ -125,13 +127,13 @@ RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /var/lib/nginx
 
 RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-${MKCERT_ARCH} -o /usr/local/bin/mkcert && chmod 777 /usr/local/bin/mkcert
 
+RUN mkdir -p /var/www/xhprof && curl -o /tmp/xhprof.tgz -sSL https://pecl.php.net/get/xhprof && tar -zxf /tmp/xhprof.tgz --strip-components=1 -C /var/www/xhprof
+
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
   chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
 
 RUN a2dismod mpm_event
 RUN a2enmod ssl headers expires
-
-RUN phpdismod blackfire
 
 # scripts added last because they're most likely place to make changes, speeds up build
 ADD ddev-webserver-base-scripts /
@@ -166,6 +168,7 @@ ENV TERM xterm
 ENV MH_SMTP_BIND_ADDR 127.0.0.1:1025
 
 ENV BASH_ENV /etc/bash.nointeractive.bashrc
+ENV XHPROF_OUTPUT_DIR=/tmp/xhprof
 
 COPY --from=ddev-webserver-dev-base / /
 EXPOSE 80 8025

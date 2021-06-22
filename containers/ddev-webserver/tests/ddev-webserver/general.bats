@@ -27,6 +27,11 @@
     docker exec $CONTAINER_NAME bash -c 'php --version | grep -v "with Xdebug"'
 }
 
+@test "verify that xhprof is disabled by default when using start.sh to start" {
+    docker exec $CONTAINER_NAME bash -c 'php --modules | grep -v "xhprof"'
+}
+
+
 @test "verify that composer v2 is installed by default" {
     v=$(docker exec $CONTAINER_NAME bash -c 'composer --version | awk "{ print $3;}"')
     [[ "${v}" > "2." ]]

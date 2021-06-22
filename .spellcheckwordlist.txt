@@ -4,6 +4,7 @@ AdditionalConfiguration
 Apache
 Available
 Bash
+Callgraph
 CGroups
 CIFS
 CLI
@@ -41,6 +42,7 @@ FPATH
 FSTYPE
 Flags
 Fritzbox
+GUI
 GUIs
 Get
 Gitter
@@ -73,6 +75,7 @@ Netbeans
 Nginx
 OSs
 OpenMage
+PECL
 PHAR
 PHIVE
 PHP
@@ -113,6 +116,7 @@ WSL2
 WantedBy
 Webhosting
 XDebug
+Xhprof
 XSym
 Zsh
 a
@@ -345,6 +349,7 @@ pre
 prepend
 prepending
 print
+profiler
 projdir
 project
 projectname
@@ -469,6 +474,7 @@ wsize
 wsl2
 www
 xdebug
+xhprof
 yaml
 yml
 you
