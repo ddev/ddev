@@ -66,9 +66,9 @@ Tools to debug and solve permission problems:
 
 <a name="upgrading-catalina"></a>
 
-### Upgrading to macOS Catalina and Above
+### macOS Full Disk Access for Special Directories
 
-* If you are on macOS Catalina and above, and your projects are in a subdirectory of the ~/Documents directory or on an external drive, you must grant "Full Disk Access" privilege to /sbin/nfsd in the Privacy settings in the System Preferences. On the "Full disk access" section, click the "+" and add `/sbin/nfsd` as shown here: ![screenshot](images/sbin_nfsd_selection.png)
+* If you are on macOS, and your projects are in a subdirectory of the ~/Documents or ~/Desktop directories or on an external drive, you must grant "Full Disk Access" privilege to /sbin/nfsd in the Privacy settings in the System Preferences. On the "Full disk access" section, click the "+" and add `/sbin/nfsd` as shown here: ![screenshot](images/sbin_nfsd_selection.png)
 You should then see nfsd in the list as shown:
 ![screenshot](images/nfsd_full_disk_access.png).
 * `sudo nfsd restart`
