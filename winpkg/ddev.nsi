@@ -97,6 +97,10 @@
 /**
  * Third Party Applications
  */
+!define GSUDO_NAME "gsudo"
+!define GSUDO_SETUP "sudo.exe"
+!define GSUDO_URL "https://github.com/drud/gsudo/releases/download/v0.7.3/gsudo.exe"
+
 !define WINNFSD_NAME "WinNFSd"
 !define WINNFSD_VERSION "2.4.0"
 !define WINNFSD_SETUP "WinNFSd.exe"
@@ -460,15 +464,32 @@ SectionEnd
 /**
  * sudo application install
  */
-Section "sudo" SecSudo
+Section "${GSUDO_NAME}" SecSudo
   ; Force installation
   SectionIn 1 2 3 RO
   SetOutPath "$INSTDIR"
   SetOverwrite try
 
   ; Copy files
-  File "..\.gotmp\bin\windows_amd64\sudo.exe"
   File "..\.gotmp\bin\windows_amd64\sudo_license.txt"
+
+  ; Set URL and temporary file name
+  !define GSUDO_DEST "$INSTDIR\${GSUDO_SETUP}"
+
+  ; Download installer
+  INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${GSUDO_URL}" "${GSUDO_DEST}" /END
+  Pop $R0 ; return value = exit code, "OK" if OK
+
+  ; Check download result
+  ${If} $R0 != "OK"
+    ; Download failed, show message and continue
+    SetDetailsView show
+    DetailPrint "Download of `${GSUDO_NAME}` failed:"
+    DetailPrint " $R0"
+    MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${GSUDO_NAME}` has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue the resting installation."
+  ${EndIf}
+
+  !undef GSUDO_DEST
 SectionEnd
 
 /**
@@ -990,11 +1011,11 @@ Section Uninstall
   ; Remove installed files
   Delete "$INSTDIR\ddev_uninstall.exe"
 
-  Delete "$INSTDIR\nssm.exe"
+  Delete "$INSTDIR\${NSSM_SETUP}"
 
   Delete "$INSTDIR\windows_ddev_nfs_setup.sh"
   Delete "$INSTDIR\winnfsd_license.txt"
-  Delete "$INSTDIR\winnfsd.exe"
+  Delete "$INSTDIR\${WINNFSD_SETUP}"
 
   Delete "$INSTDIR\mkcert uninstall.lnk"
   Delete "$INSTDIR\mkcert install.lnk"
@@ -1002,7 +1023,7 @@ Section Uninstall
   Delete "$INSTDIR\mkcert.exe"
 
   Delete "$INSTDIR\sudo_license.txt"
-  Delete "$INSTDIR\sudo.exe"
+  Delete "$INSTDIR\${GSUDO_SETUP}"
 
   Delete "$INSTDIR\license.txt"
   Delete "$INSTDIR\ddev.exe"

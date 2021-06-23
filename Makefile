@@ -221,7 +221,7 @@ darwin_arm64_notarized: darwin_arm64_signed
 
 windows_install: $(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe
 
-$(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe: $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.txt winpkg/ddev.nsi
+$(GOTMP)/bin/windows_amd64/ddev_windows_installer.$(VERSION).exe: $(GOTMP)/bin/windows_amd64/ddev.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.txt winpkg/ddev.nsi
 	ls -l .gotmp/bin/windows_amd64
 	@if [ "$(DDEV_WINDOWS_SIGN)" != "true" ] ; then echo "Skipping signing ddev.exe, DDEV_WINDOWS_SIGN not set"; else echo "Signing windows binaries..." && signtool sign ".gotmp/bin/windows_amd64/ddev.exe" ".gotmp/bin/windows_amd64/mkcert.exe" ".gotmp/bin/windows_amd64/ddev_gen_autocomplete.exe"; fi
 	@makensis -DVERSION=$(VERSION) winpkg/ddev.nsi  # brew install makensis, apt-get install nsis, or install on Windows
@@ -248,10 +248,8 @@ $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.
 	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/mkcert.exe https://github.com/drud/mkcert/releases/download/$(MKCERT_VERSION)/mkcert-$(MKCERT_VERSION)-windows-amd64.exe
 	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/mkcert_license.txt -O https://raw.githubusercontent.com/drud/mkcert/master/LICENSE
 
-$(GOTMP)/bin/windows_amd64/sudo.exe $(GOTMP)/bin/windows_amd64/sudo_license.txt:
+$(GOTMP)/bin/windows_amd64/sudo_license.txt:
 	set -x
-	curl -sSL --create-dirs -o "$(GOTMP)/bin/windows_amd64/gsudo.zip" https://github.com/gerardog/gsudo/releases/download/$(WINDOWS_GSUDO_VERSION)/gsudo.$(WINDOWS_GSUDO_VERSION).zip
-	unzip -o -d "$(GOTMP)/bin/windows_amd64" "$(GOTMP)/bin/windows_amd64/gsudo.zip" gsudo.exe && mv "$(GOTMP)/bin/windows_amd64/gsudo.exe" "$(GOTMP)/bin/windows_amd64/sudo.exe"
 	curl --fail -sSL -o "$(GOTMP)/bin/windows_amd64/sudo_license.txt" "https://raw.githubusercontent.com/gerardog/gsudo/master/LICENSE.txt"
 
 # Best to install golangci-lint locally with "curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin v1.31.0"
