@@ -1,6 +1,6 @@
 #!/bin/bash
 export PATH=$PATH:/usr/sbin:/sbin
-phpdismod blackfire
+phpdismod blackfire xdebug
 mkdir -p ${XHPROF_OUTPUT_DIR}
 phpenmod xhprof
 killall -USR2 php-fpm 2>/dev/null || true

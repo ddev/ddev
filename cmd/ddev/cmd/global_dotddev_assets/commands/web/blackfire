@@ -12,7 +12,7 @@ function enable {
     echo "For example, ddev config global --web-environment=BLACKFIRE_SERVER_ID=<id>,BLACKFIRE_SERVER_TOKEN=<token>"
     exit 1
   fi
-  phpdismod xhprof
+  phpdismod xhprof xdebug
   phpenmod blackfire
   killall -USR2 php-fpm && killall -HUP nginx
   # Can't use killall here because it kills this process!
