@@ -52,6 +52,7 @@ services:
       - DOCKER_IP={{ .DockerIP }}
       - HOST_DOCKER_INTERNAL_IP={{ .HostDockerInternalIP }}
       - IS_DDEV_PROJECT=true
+      - LANG=C.UTF-8
       - LINES
       - TZ={{ .Timezone }}
     command: "$DDEV_MARIADB_LOCAL_COMMAND"
@@ -135,6 +136,7 @@ services:
       # To expose an HTTPS port, define the port as securePort:containerPort.
       - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80,${DDEV_MAILHOG_HTTPS_PORT}:{{ .MailhogPort }}
       - IS_DDEV_PROJECT=true
+      - LANG=C.UTF-8
       - LINES
       - SSH_AUTH_SOCK=/home/.ssh-agent/socket
       - TZ={{ .Timezone }}
