@@ -189,8 +189,8 @@ services:
 {{end}}
 networks:
   default:
-    external:
-      name: ddev_default
+    name: ddev_default
+    external: true
 volumes:
   {{if not .OmitDB }}
   mariadb-database:
@@ -467,8 +467,8 @@ services:
 
 networks:
   default:
-    external:
-      name: ddev_default
+    name: ddev_default
+    external: true
 volumes:
   ddev-global-cache:
     name: ddev-global-cache
@@ -510,6 +510,6 @@ services:
       timeout: 62s
 networks:
   default:
-    external:
-      name: ddev_default
+    name: ddev_default
+    external: true
 `
