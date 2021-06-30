@@ -729,10 +729,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		Username:                  username,
 		UID:                       uid,
 		GID:                       gid,
-		WebBuildContext:           app.GetConfigPath("web-build"),
-		DBBuildContext:            app.GetConfigPath("db-build"),
-		WebBuildDockerfile:        app.GetConfigPath(".webimageBuild/Dockerfile"),
-		DBBuildDockerfile:         app.GetConfigPath(".dbimageBuild/Dockerfile"),
+		WebBuildContext:           "./web-build",
+		DBBuildContext:            "./db-build",
+		WebBuildDockerfile:        "../.webimageBuild/Dockerfile",
+		DBBuildDockerfile:         "../.dbimageBuild/Dockerfile",
 		AutoRestartContainers:     globalconfig.DdevGlobalConfig.AutoRestartContainers,
 		FailOnHookFail:            app.FailOnHookFail || app.FailOnHookFailGlobal,
 		WebEnvironment:            webEnvironment,
@@ -779,7 +779,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	}
 
 	// SSH agent just needs extra to add the official related user, nothing else
-	err = WriteBuildDockerfile(app.GetConfigPath(".sshimageBuild/Dockerfile"), "", nil, "")
+	err = WriteBuildDockerfile(filepath.Join(globalconfig.GetGlobalDdevDir(), ".sshimageBuild/Dockerfile"), "", nil, "")
 	if err != nil {
 		return "", err
 	}
