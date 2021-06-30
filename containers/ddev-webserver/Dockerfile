@@ -168,6 +168,7 @@ ENV TERM xterm
 ENV MH_SMTP_BIND_ADDR 127.0.0.1:1025
 
 ENV BASH_ENV /etc/bash.nointeractive.bashrc
+ENV LANG=C.UTF-8
 ENV XHPROF_OUTPUT_DIR=/tmp/xhprof
 
 COPY --from=ddev-webserver-dev-base / /
@@ -274,6 +275,7 @@ ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_CACHE_DIR=/mnt/ddev-global-cache/composer
 ENV COMPOSER_PROCESS_TIMEOUT=2000
 ENV DEBIAN_FRONTEND noninteractive
+ENV LANG=C.UTF-8
 ENV TERM xterm
 
 ENV BASH_ENV /etc/bash.nointeractive.bashrc
