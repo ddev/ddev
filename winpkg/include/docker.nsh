@@ -76,9 +76,6 @@
   !define DOCKER_DESKTOP_URL `https://download.docker.com/win/stable/Docker%20Desktop%20Installer.exe`
   !define DOCKER_DESKTOP_SETUP `Docker Desktop Installer.exe`
 
-  !define DOCKER_TOOLBOX_NAME `Docker Toolbox`
-  !define DOCKER_TOOLBOX_URL `https://github.com/docker/toolbox/releases/latest`
-
   ; Macros
   !macro _DockerDesktopIsInstallable _a _b _t _f
     !insertmacro _LOGICLIB_TEMP
