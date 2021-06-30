@@ -972,6 +972,7 @@ Function checkDocker
 
         DockerDesktopSelect:
           StrCpy $DockerSelected "1"
+        ${EndIf}
 
         Goto CheckDockerEnd
 
