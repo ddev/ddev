@@ -483,6 +483,7 @@ const DdevSSHAuthTemplate = `version: '{{ .compose_version }}'
 volumes:
   dot_ssh:
   socket_dir:
+    name: ddev-ssh-agent_socket_dir
 
 services:
   ddev-ssh-agent:
