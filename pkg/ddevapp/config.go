@@ -779,7 +779,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	}
 
 	// SSH agent just needs extra to add the official related user, nothing else
-	err = WriteBuildDockerfile(app.GetConfigPath(".sshimageBuild/Dockerfile"), "", nil, "")
+	err = WriteBuildDockerfile(filepath.Join(globalconfig.GetGlobalDdevDir(), ".sshimageBuild/Dockerfile"), "", nil, "")
 	if err != nil {
 		return "", err
 	}
