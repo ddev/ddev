@@ -993,3 +993,4 @@ func CheckAvailableSpace() {
 		util.Error("Your docker installation has less than %d%% available space (%d%% used). Please increase disk image size.", nodeps.MinimumDockerSpaceWarning, spacePercent)
 	}
 }
+
