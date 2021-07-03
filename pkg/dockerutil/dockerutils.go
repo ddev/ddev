@@ -515,7 +515,7 @@ func CheckDockerCompose(versionConstraint string) error {
 		if len(errs) <= 1 {
 			// TODO: Remove these lines when docker-compose v2 starts working
 			// Probably this commit can be reverted at that time.
-			v2Constraint, _ := semver.NewConstraint("> 1.999.0")
+			v2Constraint, _ := semver.NewConstraint("< 2.0.0")
 			if m, _ := v2Constraint.Validate(dockerComposeVersion); !m {
 				util.Error("You have docker-compose v2 and it is not yet stable enough to use with ddev.\nPlease uncheck the 'Use Docker Compose V2' experimental feature\nin Docker Desktop, or run 'docker-compose disable-v2'")
 			}

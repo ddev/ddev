@@ -149,14 +149,6 @@ func GetDockerComposeVersion() (string, error) {
 		return "", fmt.Errorf("no docker-compose")
 	}
 
-	// Temporarily fake the docker-compose check on macOS because of
-	// the slow docker-compose problem in https://github.com/docker/compose/issues/6956
-	// This can be removed when that's resolved.
-	if runtime.GOOS != "darwin" {
-		DockerComposeVersion = "1.25.0-rc4"
-		return DockerComposeVersion, nil
-	}
-
 	out, err := exec.Command(path, "version", "--short").Output()
 	if err != nil {
 		return "", err
