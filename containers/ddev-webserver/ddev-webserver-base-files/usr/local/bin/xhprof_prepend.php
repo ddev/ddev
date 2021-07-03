@@ -19,6 +19,13 @@ if (extension_loaded('xhprof') && strpos($_SERVER['REQUEST_URI'], '/xhprof') ===
     }
     </style>
     <div id=xhprof-footer><a id=xhprof-link target=_blank href='/xhprof/latest/'>Click for latest xhprof run</a></div>
+
+    <script type='text/javascript'>
+    function xhprof_footer(l) {
+      document.getElementById('xhprof-footer').innerHTML = l;
+    }
+    </script>
+
     ");
 
     register_shutdown_function('xhprof_completion');
@@ -42,6 +49,6 @@ function xhprof_completion() {
     if (!file_put_contents($GLOBALS['xhprof_link_dir'] . "index.html", $run_content)) {
         exit("Failed to file_put_contents($xhprof_link_dir/index.html)");
     }
-    $c = "<a id=xhprof-link href='/xhprof/latest/'>Click for latest xhprof run</a>";
+    $c = "<a id=xhprof-link href='$profiler_url'>Click for this xhprof run</a>";
     printf('<script>window.onload = xhprof_footer("%s");</script>', $c);
 }
