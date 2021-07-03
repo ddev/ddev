@@ -1,8 +1,7 @@
 <?php
 $xhprof_link_dir = "/var/www/xhprof/xhprof_html/latest/";
-if (extension_loaded('xhprof')) {
+if (extension_loaded('xhprof') && strpos($_SERVER['REQUEST_URI'], '/xhprof') === false) {
     xhprof_enable();
-
     if (!is_dir($xhprof_link_dir) && !mkdir($xhprof_link_dir, 0777, true)) {
       exit("failed to create $xhprof_link_dir");
     }
@@ -39,7 +38,7 @@ function xhprof_completion() {
 
     $profiler_url = sprintf('%sindex.php?run=%s&amp;source=%s', $base_link, $run_id, $appNamespace);
 
-    $run_content = sprintf("<div class='explanation'><div class='xhprof-run'><a href='%s' target=_blank>Click for latest xhprof run</a></div>", $profiler_url);
+    $run_content = sprintf("<div class='explanation'><div class='xhprof-run'><a href='%s'>Click for latest xhprof run</a></div>", $profiler_url);
     if (!file_put_contents($GLOBALS['xhprof_link_dir'] . "index.html", $run_content)) {
         exit("Failed to file_put_contents($xhprof_link_dir/index.html)");
     }
