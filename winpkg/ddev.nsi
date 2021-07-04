@@ -67,7 +67,7 @@
 !define PRODUCT_PUBLISHER "Drud Technology LLC"
 
 !define PRODUCT_WEB_SITE "${PRODUCT_NAME} Website"
-!define PRODUCT_WEB_SITE_URL "https://www.ddev.com"
+!define PRODUCT_WEB_SITE_URL "https://ddev.readthedocs.io"
 
 !define PRODUCT_DOCUMENTATION "${PRODUCT_NAME} Documentation"
 !define PRODUCT_DOCUMENTATION_URL "https://ddev.readthedocs.io"
