@@ -14,11 +14,14 @@ if (extension_loaded('xhprof') && strpos($_SERVER['REQUEST_URI'], '/xhprof') ===
       bottom: 0;
       width: 100%;
       background-color: blue;
-      color: white;
       text-align: center;
+      color: white
+    }
+    .xhprof-link {
+      color: white
     }
     </style>
-    <div id=xhprof-footer><a id=xhprof-link target=_blank href='/xhprof/latest/'>Click for latest xhprof run</a></div>
+    <div id=xhprof-footer><a class=xhprof-link target=_blank href='/xhprof/latest/'>Click for latest xhprof run</a> or <a class='xhprof-link' target=_blank href='/xhprof/'>all runs</a></div>
 
     <script type='text/javascript'>
     function xhprof_footer(l) {
@@ -45,10 +48,10 @@ function xhprof_completion() {
 
     $profiler_url = sprintf('%sindex.php?run=%s&amp;source=%s', $base_link, $run_id, $appNamespace);
 
-    $run_content = sprintf("<div class='explanation'><div class='xhprof-run'><a href='%s'>Click for latest xhprof run</a></div>", $profiler_url);
+    $run_content = sprintf("<div id='xhprof-footer'><a class='xhprof-link' href='%s'>Click for latest xhprof run</a> or <a class='xhprof-link' target=_blank href='/xhprof/'>all runs</a></div>", $profiler_url);
     if (!file_put_contents($GLOBALS['xhprof_link_dir'] . "index.html", $run_content)) {
         exit("Failed to file_put_contents($xhprof_link_dir/index.html)");
     }
-    $c = "<a id=xhprof-link href='$profiler_url'>Click for this xhprof run</a>";
+    $c = "<a class=xhprof-link href='$profiler_url' target=_blank>Click for this xhprof run</a>  or <a class='xhprof-link' target=_blank href='/xhprof/'>all runs</a>";
     printf('<script>window.onload = xhprof_footer("%s");</script>', $c);
 }
