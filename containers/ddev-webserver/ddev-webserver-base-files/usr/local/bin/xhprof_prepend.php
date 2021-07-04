@@ -53,5 +53,5 @@ function xhprof_completion() {
         exit("Failed to file_put_contents($xhprof_link_dir/index.html)");
     }
     $c = "<a class=xhprof-link href='$profiler_url' target=_blank>Click for this xhprof run</a>  or <a class='xhprof-link' target=_blank href='/xhprof/'>all runs</a>";
-    printf('<script>window.onload = xhprof_footer("%s");</script>', $c);
+    printf('<script type="text/javascript">window.onload = xhprof_footer("%s");</script>', $c);
 }
