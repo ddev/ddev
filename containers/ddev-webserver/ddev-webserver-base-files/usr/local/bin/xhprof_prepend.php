@@ -1,6 +1,6 @@
 <?php
 $xhprof_link_dir = "/var/www/xhprof/xhprof_html/latest/";
-if (extension_loaded('xhprof') && strpos($_SERVER['REQUEST_URI'], '/xhprof') === false) {
+if (!defined('STDIN') && extension_loaded('xhprof') && strpos($_SERVER['REQUEST_URI'], '/xhprof') === false) {
     xhprof_enable();
     if (!is_dir($xhprof_link_dir) && !mkdir($xhprof_link_dir, 0777, true)) {
       exit("failed to create $xhprof_link_dir");
