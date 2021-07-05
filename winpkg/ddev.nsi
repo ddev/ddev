@@ -67,7 +67,7 @@
 !define PRODUCT_PUBLISHER "Drud Technology LLC"
 
 !define PRODUCT_WEB_SITE "${PRODUCT_NAME} Website"
-!define PRODUCT_WEB_SITE_URL "https://www.ddev.com"
+!define PRODUCT_WEB_SITE_URL "https://ddev.readthedocs.io"
 
 !define PRODUCT_DOCUMENTATION "${PRODUCT_NAME} Documentation"
 !define PRODUCT_DOCUMENTATION_URL "https://ddev.readthedocs.io"
@@ -972,12 +972,6 @@ Function checkDocker
 
         DockerDesktopSelect:
           StrCpy $DockerSelected "1"
-        ${Else}
-          MessageBox MB_ICONQUESTION|MB_YESNOCANCEL "`${DOCKER_TOOLBOX_NAME}` is not installed, but it is required for $(^Name) to function. Would you like to go to the download page of `${DOCKER_TOOLBOX_NAME}`? Cancel will not show this message again." IDYES DockerToolboxDownload IDCANCEL CheckDockerIgnore
-          Goto CheckDockerEnd
-
-        DockerToolboxDownload:
-          ExecShell "open" "${DOCKER_TOOLBOX_URL}"
         ${EndIf}
 
         Goto CheckDockerEnd

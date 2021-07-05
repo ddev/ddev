@@ -12,4 +12,4 @@ container-name:
 	@echo "container: $(DOCKER_REPO):$(VERSION)"
 
 push:
-	docker buildx build --push --platform $(BUILD_ARCHS) -t $(DOCKER_REPO):$(VERSION) --label "build-info=$(DOCKER_REPO):$(VERSION) commit=$(shell git describe --tags --always) built $$(date) by $$(id -un) on $$(hostname)" --label "maintainer=DDEV <rfay@ddev.com>" $(DOCKER_ARGS) .
+	docker buildx build --push --platform $(BUILD_ARCHS) -t $(DOCKER_REPO):$(VERSION) --label "build-info=$(DOCKER_REPO):$(VERSION) commit=$(shell git describe --tags --always) built $$(date) by $$(id -un) on $$(hostname)" --label "maintainer=DDEV <randy@randyfay.com>" $(DOCKER_ARGS) .
