@@ -4,4 +4,7 @@ phpdismod blackfire xdebug
 mkdir -p ${XHPROF_OUTPUT_DIR}
 phpenmod xhprof
 killall -USR2 php-fpm 2>/dev/null || true
-echo "Enabled xhprof"
+echo "Enabled xhprof.
+After each web request or  you can see
+* latest run link: ${DDEV_PRIMARY_URL}/xhprof/latest
+* all runs at ${DDEV_PRIMARY_URL}/xhprof"
