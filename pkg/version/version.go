@@ -33,9 +33,6 @@ var DockerVersionConstraint = ">= 18.06.1-alpha1"
 // See https://github.com/drud/ddev/pull/738.. and regression https://github.com/drud/ddev/issues/1431
 var DockerComposeVersionConstraint = "1.21.0-alpha1 - 1.999.0"
 
-// DockerComposeFileFormatVersion is the compose version to be used
-var DockerComposeFileFormatVersion = "3.6"
-
 // WebImg defines the default web image used for applications.
 var WebImg = "drud/ddev-webserver"
 

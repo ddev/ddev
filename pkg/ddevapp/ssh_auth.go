@@ -113,7 +113,6 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 	templateVars := map[string]interface{}{
 		"ssh_auth_image":        version.SSHAuthImage,
 		"ssh_auth_tag":          version.SSHAuthTag,
-		"compose_version":       version.DockerComposeFileFormatVersion,
 		"AutoRestartContainers": globalconfig.DdevGlobalConfig.AutoRestartContainers,
 		"Username":              username,
 		"UID":                   uid,

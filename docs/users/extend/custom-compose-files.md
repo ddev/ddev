@@ -21,8 +21,6 @@ The main docker-compose file is named `.ddev/.ddev-docker-compose-base.yaml` and
 * Expose an additional port 9999 to host port 9999, in a file perhaps called `docker-compose.ports.yaml`:
 
 ```yaml
-version: '3.6'
-
 services:
   web:
     ports:

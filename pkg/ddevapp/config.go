@@ -712,7 +712,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		DBPort:                    GetPort("db"),
 		DdevGenerated:             DdevFileSignature,
 		HostDockerInternalIP:      hostDockerInternalIP,
-		ComposeVersion:            version.DockerComposeFileFormatVersion,
 		DisableSettingsManagement: app.DisableSettingsManagement,
 		OmitDB:                    nodeps.ArrayContainsString(app.GetOmittedContainers(), "db"),
 		OmitDBA:                   nodeps.ArrayContainsString(app.GetOmittedContainers(), "dba") || nodeps.ArrayContainsString(app.OmitContainers, "db"),

@@ -21,8 +21,6 @@
 #   accessed at the URL: http://solr:8983/solr/dev (inside web container)
 #   or at http://myproject.ddev.site:8983/solr/dev (on the host)
 
-version: '3.6'
-
 services:
   solr:
     # Name of container using standard ddev convention

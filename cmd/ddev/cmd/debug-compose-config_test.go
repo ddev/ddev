@@ -11,7 +11,6 @@ import (
 )
 
 var override = `
-version: '3.6'
 services:
   web:
     labels:

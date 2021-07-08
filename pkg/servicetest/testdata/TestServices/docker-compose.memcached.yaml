@@ -8,8 +8,6 @@
 # 4. Optional: adjust the 'command' line below to change CLI flags sent to
 #    memcached.
 
-version: '3.6'
-
 services:
   # This is the service name used when running ddev commands accepting the
   # --service flag.

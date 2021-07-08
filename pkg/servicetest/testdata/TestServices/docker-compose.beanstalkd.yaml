@@ -2,8 +2,6 @@
 #
 # To use this in your own project: Copy this file to your project's .ddev folder.
 
-version: '3.6'
-
 services:
   beanstalk: # This is the service name used when running ddev commands accepting the --service flag
     container_name: ddev-${DDEV_SITENAME}-beanstalk # This is the name of the container. It is recommended to follow the same name convention used in the main docker-compose.yml file.

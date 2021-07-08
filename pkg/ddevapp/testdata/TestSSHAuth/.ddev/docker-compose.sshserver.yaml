@@ -1,5 +1,3 @@
-version: '3.6'
-
 services:
   test-ssh-server:
     container_name: test-ssh-server
