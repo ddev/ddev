@@ -9,7 +9,7 @@
 #    b. Add the API token to the `web_environment` section in your global ddev configuration at ~/.ddev/global_config.yaml:
 #    ```yaml
 #    web_environment:
-#    - TERMINUS_MACHINE_TOKEN=abcdeyourtoken`
+#    - PLATFORMSH_CLI_TOKEN=abcdeyourtoken
 #    ```
 # 3. `ddev restart`
 # 4. Obtain your project id with `ddev exec platform`. The platform tool should show you all the information about your account and project.
