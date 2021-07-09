@@ -19,6 +19,10 @@ RUN for item in "75DD C3C4 A499 F1A1 8CB5  F3C8 CBF8 D6FD 518E 17E1" "126C 0D24 
     apt-key remove "${item}" || true; \
   done;
 
+# Older versions of mariadb have been removed from
+# the mariadb apt repository, so we don't want to
+# look there when doing apt-get update. And we don't use new packages from there.
+RUN rm -f /etc/apt/sources.list.d/mariadb.list
 
 RUN apt-get -qq update && apt-get -qq install -y tzdata gnupg2 pv less vim wget curl lsb-release >/dev/null
 
