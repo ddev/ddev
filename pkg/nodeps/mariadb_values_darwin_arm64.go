@@ -5,6 +5,7 @@ const MariaDBDefaultVersion = MariaDB103
 
 // ValidMariaDBVersions is the versions of MariaDB that are valid
 var ValidMariaDBVersions = map[string]bool{
+	MariaDB101: true,
 	MariaDB102: true,
 	MariaDB103: true,
 	MariaDB104: true,
