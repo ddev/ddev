@@ -274,7 +274,7 @@ Copy [docker-compose.elasticsearch.yaml](https://github.com/drud/ddev-contrib/bl
 ddev start
 ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition
 ddev ssh
-bin/magento setup:install --base-url=https://ddev-magento2.ddev.site/ --db-host=db --db-name=db --db-user=db --db-password=db --elasticsearch-host=elasticsearch --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com --admin-user=admin --admin-password=admin123 --language=en_US
+bin/magento setup:install --base-url=https://ddev-magento2.ddev.site/ --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db --elasticsearch-host=elasticsearch --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com --admin-user=admin --admin-password=admin123 --language=en_US
 bin/magento deploy:mode:set developer
 bin/magento module:disable Magento_TwoFactorAuth
 bin/magento cache:flush
