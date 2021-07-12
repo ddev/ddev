@@ -48,7 +48,7 @@ files_pull_command:
     # set -x   # You can enable bash debugging output by uncommenting
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null;
-    drush rsync --alias-path=~/.drush -q -y @${project_id}:%files ./files
+    drush -r docroot rsync --alias-path=~/.drush -q -y @${project_id}:%files ./files
 
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
 db_push_command:
