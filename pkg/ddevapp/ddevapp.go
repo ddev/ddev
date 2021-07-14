@@ -933,6 +933,7 @@ func (app *DdevApp) Start() error {
 			return err
 		}
 		// TODO: syncName must be sanitized version of app.Name, remove ".", etc.
+		// TODO: Don't use bash raw, in these places use the official bash
 		syncName := app.Name
 		_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("(mutagen sync terminate %s 2>/dev/null || true)  && mutagen sync create %s docker://ddev-%s-web/var/www/html --sync-mode=two-way-resolved --symlink-mode=posix-raw --name=%s && mutagen sync flush %s", syncName, app.AppRoot, app.Name, syncName, syncName)})
 		if err != nil {
