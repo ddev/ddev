@@ -921,6 +921,18 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
+	// Make sure that if we have a volume mount it's got proper ownership
+	uidStr, gidStr, _ := util.GetContainerUIDGid()
+	if app.MutagenEnabled || app.MutagenEnabledGlobal {
+		_, _, err = app.Exec(
+			&ExecOpts{
+				Cmd: fmt.Sprintf("sudo chown -R %s:%s /var/www/html", uidStr, gidStr),
+			})
+		if err != nil {
+			return err
+		}
+	}
+
 	err = StartDdevRouter()
 	if err != nil {
 		return err

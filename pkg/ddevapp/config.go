@@ -653,6 +653,7 @@ type composeYAMLVars struct {
 	OmitDB                    bool
 	OmitDBA                   bool
 	OmitSSHAgent              bool
+	MutagenEnabled            bool
 	NFSMountEnabled           bool
 	NFSSource                 string
 	DockerIP                  string
@@ -718,25 +719,27 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		OmitDB:                    nodeps.ArrayContainsString(app.GetOmittedContainers(), "db"),
 		OmitDBA:                   nodeps.ArrayContainsString(app.GetOmittedContainers(), "dba") || nodeps.ArrayContainsString(app.OmitContainers, "db"),
 		OmitSSHAgent:              nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent"),
-		NFSMountEnabled:           app.NFSMountEnabled || app.NFSMountEnabledGlobal,
-		NFSSource:                 "",
-		IsWindowsFS:               runtime.GOOS == "windows",
-		NoProjectMount:            app.NoProjectMount,
-		MountType:                 "bind",
-		WebMount:                  "../",
-		Hostnames:                 app.GetHostnames(),
-		Timezone:                  app.Timezone,
-		ComposerVersion:           app.ComposerVersion,
-		Username:                  username,
-		UID:                       uid,
-		GID:                       gid,
-		WebBuildContext:           "./web-build",
-		DBBuildContext:            "./db-build",
-		WebBuildDockerfile:        "../.webimageBuild/Dockerfile",
-		DBBuildDockerfile:         "../.dbimageBuild/Dockerfile",
-		AutoRestartContainers:     globalconfig.DdevGlobalConfig.AutoRestartContainers,
-		FailOnHookFail:            app.FailOnHookFail || app.FailOnHookFailGlobal,
-		WebEnvironment:            webEnvironment,
+		MutagenEnabled:            app.MutagenEnabled || app.MutagenEnabledGlobal,
+
+		NFSMountEnabled:       app.NFSMountEnabled || app.NFSMountEnabledGlobal,
+		NFSSource:             "",
+		IsWindowsFS:           runtime.GOOS == "windows",
+		NoProjectMount:        app.NoProjectMount,
+		MountType:             "bind",
+		WebMount:              "../",
+		Hostnames:             app.GetHostnames(),
+		Timezone:              app.Timezone,
+		ComposerVersion:       app.ComposerVersion,
+		Username:              username,
+		UID:                   uid,
+		GID:                   gid,
+		WebBuildContext:       "./web-build",
+		DBBuildContext:        "./db-build",
+		WebBuildDockerfile:    "../.webimageBuild/Dockerfile",
+		DBBuildDockerfile:     "../.dbimageBuild/Dockerfile",
+		AutoRestartContainers: globalconfig.DdevGlobalConfig.AutoRestartContainers,
+		FailOnHookFail:        app.FailOnHookFail || app.FailOnHookFailGlobal,
+		WebEnvironment:        webEnvironment,
 	}
 	if app.NFSMountEnabled || app.NFSMountEnabledGlobal {
 		templateVars.MountType = "volume"
@@ -751,6 +754,12 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 			// and completely chokes in C:\Users\rfay...
 			templateVars.NFSSource = dockerutil.MassageWindowsNFSMount(app.AppRoot)
 		}
+	}
+
+	if app.MutagenEnabled || app.MutagenEnabledGlobal {
+		templateVars.MountType = "volume"
+		templateVars.WebMount = "project_mutagen"
+		templateVars.NFSSource = app.AppRoot
 	}
 
 	// Add web and db extra dockerfile info
