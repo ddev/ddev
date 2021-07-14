@@ -277,12 +277,13 @@ ddev ssh
 bin/magento setup:install --base-url=https://ddev-magento2.ddev.site/ --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db --elasticsearch-host=elasticsearch --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com --admin-user=admin --admin-password=admin123 --language=en_US
 bin/magento deploy:mode:set developer
 bin/magento module:disable Magento_TwoFactorAuth
+bin/magento setup:di:compile
 bin/magento cache:flush
 ```
 
 Of course, change the admin name and related information is needed. The project name here is derived from the directory name (ddev-magento2 in this example). Your project name (and thus the `setup:store-config:set --base-url`) will almost certainly be different.
 
-You may want to add the [Magento 2 Sample Data](https://devdocs.magento.com/guides/v2.4/install-gde/install/sample-data-after-composer.html).
+You may want to add the [Magento 2 Sample Data](https://devdocs.magento.com/guides/v2.4/install-gde/install/sample-data-after-composer.html) with `bin/magento sampledata:deploy` (inside the web container).
 
 Note that Magento 2 is a huge codebase and using `nfs_mount_enabled: true` is recommended for performance on macOS and Windows, see [docs](performance/#using-nfs-to-mount-the-project-into-the-container).
 
