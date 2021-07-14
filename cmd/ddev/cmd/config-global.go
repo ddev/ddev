@@ -63,6 +63,11 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 		dirty = true
 	}
 
+	if cmd.Flag("mutagen-enabled").Changed {
+		globalconfig.DdevGlobalConfig.MutagenEnabledGlobal, _ = cmd.Flags().GetBool("mutagen-enabled")
+		dirty = true
+	}
+
 	if cmd.Flag("router-bind-all-interfaces").Changed {
 		globalconfig.DdevGlobalConfig.RouterBindAllInterfaces, _ = cmd.Flags().GetBool("router-bind-all-interfaces")
 		dirty = true
@@ -124,6 +129,7 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 	output.UserOut.Printf("instrumentation-opt-in=%v", globalconfig.DdevGlobalConfig.InstrumentationOptIn)
 	output.UserOut.Printf("omit-containers=[%s]", strings.Join(globalconfig.DdevGlobalConfig.OmitContainersGlobal, ","))
 	output.UserOut.Printf("web-environment=[%s]", strings.Join(globalconfig.DdevGlobalConfig.WebEnvironment, ","))
+	output.UserOut.Printf("mutagen-enabled=%v", globalconfig.DdevGlobalConfig.MutagenEnabledGlobal)
 	output.UserOut.Printf("nfs-mount-enabled=%v", globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal)
 
 	output.UserOut.Printf("router-bind-all-interfaces=%v", globalconfig.DdevGlobalConfig.RouterBindAllInterfaces)

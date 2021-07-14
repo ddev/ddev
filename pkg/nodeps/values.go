@@ -40,6 +40,9 @@ var ValidOmitContainers = map[string]bool{
 // WebserverDefault is the default webserver type, overridden by $DDEV_WEBSERVER_TYPE
 var WebserverDefault = WebserverNginxFPM
 
+// MutagenEnabledDefault is default value for app.MutagenEnabled
+var MutagenEnabledDefault = false
+
 // NFSMountEnabledDefault is default value for app.NFSMountEnabled
 var NFSMountEnabledDefault = false
 

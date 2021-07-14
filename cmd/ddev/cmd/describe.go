@@ -65,6 +65,8 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 		siteInfo := uitable.New()
 		siteInfo.AddRow("PHP version:", desc["php_version"])
 		siteInfo.AddRow("NFS mount enabled:", desc["nfs_mount_enabled"])
+		siteInfo.AddRow("Mutagen enabled:", desc["mutagen_enabled"])
+
 		var dbinfo map[string]interface{}
 		if _, ok := desc["dbinfo"]; ok {
 			dbinfo = desc["dbinfo"].(map[string]interface{})

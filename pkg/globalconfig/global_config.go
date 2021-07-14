@@ -39,6 +39,7 @@ type ProjectInfo struct {
 type GlobalConfig struct {
 	OmitContainersGlobal     []string `yaml:"omit_containers,flow"`
 	NFSMountEnabledGlobal    bool     `yaml:"nfs_mount_enabled"`
+	MutagenEnabledGlobal     bool     `yaml:"mutagen_enabled"`
 	InstrumentationOptIn     bool     `yaml:"instrumentation_opt_in"`
 	RouterBindAllInterfaces  bool     `yaml:"router_bind_all_interfaces"`
 	InternetDetectionTimeout int64    `yaml:"internet_detection_timeout_ms"`
