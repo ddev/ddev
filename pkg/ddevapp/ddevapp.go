@@ -924,6 +924,7 @@ func (app *DdevApp) Start() error {
 	// Make sure that if we have a volume mount it's got proper ownership
 	uidStr, gidStr, _ := util.GetContainerUIDGid()
 	if app.MutagenEnabled || app.MutagenEnabledGlobal {
+		util.Success("Starting mutagen sync process...")
 		_, _, err = app.Exec(
 			&ExecOpts{
 				Cmd: fmt.Sprintf("sudo chown -R %s:%s /var/www/html", uidStr, gidStr),
@@ -931,6 +932,13 @@ func (app *DdevApp) Start() error {
 		if err != nil {
 			return err
 		}
+		// TODO: syncName must be sanitized version of app.Name, remove ".", etc.
+		syncName := app.Name
+		_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("(mutagen sync terminate %s 2>/dev/null || true)  && mutagen sync create %s docker://ddev-%s-web/var/www/html --sync-mode=two-way-resolved --symlink-mode=posix-raw --name=%s && mutagen sync flush %s", syncName, app.AppRoot, app.Name, syncName, syncName)})
+		if err != nil {
+			return err
+		}
+		util.Success("Initial mutagen sync completed")
 	}
 
 	err = StartDdevRouter()
@@ -1765,6 +1773,15 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 		t := time.Now()
 		_, err = app.Snapshot(app.Name + "_remove_data_snapshot_" + t.Format("20060102150405"))
+		if err != nil {
+			return err
+		}
+	}
+
+	if app.MutagenEnabled || app.MutagenEnabledGlobal {
+		// TODO: Use sanitized sync name
+		syncName := app.Name
+		_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("mutagen sync flush %s && mutagen sync terminate %s", syncName, syncName)})
 		if err != nil {
 			return err
 		}
