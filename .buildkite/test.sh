@@ -1,6 +1,8 @@
 #!/bin/bash
 # This script is used to build drud/ddev using buildkite
 
+docker-compose enable-v2
+
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 
 # Remove this when docker-compose v2 starts working
@@ -94,4 +96,6 @@ make test
 RV=$?
 echo "test.sh completed with status=$RV"
 ddev poweroff || true
+
+docker-compose disable-v2
 exit $RV
