@@ -28,13 +28,17 @@ func MutagenSyncName(name string) string {
 }
 
 // TerminateMutagen terminates the mutagen sync
-// It is not an error if the sync session does not exist, and stderr is buried
-func TerminateMutagen(app *DdevApp) {
+// It is not an error if the sync session does not exist
+func TerminateMutagen(app *DdevApp) error {
 	if app.MutagenEnabled || app.MutagenEnabledGlobal {
 		bashPath := util.FindBashPath()
 		syncName := MutagenSyncName(app.Name)
-		_, _ = exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf("mutagen sync terminate %s 2>/dev/null", syncName)})
+		_, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf("if mutagen sync list %s >/dev/null; then mutagen sync terminate %s 2>/dev/null; fi", syncName, syncName)})
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // SyncAndTerminateMutagen syncs and terminates the mutagen sync
@@ -42,11 +46,14 @@ func SyncAndTerminateMutagen(app *DdevApp) error {
 	if app.MutagenEnabled || app.MutagenEnabledGlobal {
 		bashPath := util.FindBashPath()
 		syncName := MutagenSyncName(app.Name)
-		_, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf("mutagen sync flush %s", syncName)})
+		_, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf("if mutagen sync list %s >/dev/null; then mutagen sync flush %s; fi", syncName, syncName)})
 		if err != nil {
 			return err
 		}
-		TerminateMutagen(app)
+		err = TerminateMutagen(app)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -58,8 +65,11 @@ func CreateMutagenSync(app *DdevApp) (string, error) {
 	syncName := MutagenSyncName(app.Name)
 	bashPath := util.FindBashPath()
 
-	TerminateMutagen(app)
-	_, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf(`mutagen sync create "%s" docker://ddev-%s-web/var/www/html --sync-mode=two-way-resolved --symlink-mode=posix-raw --name=%s >/dev/null && mutagen sync flush %s >/dev/null`, app.AppRoot, app.Name, syncName, syncName)})
+	err := TerminateMutagen(app)
+	if err != nil {
+		return "", err
+	}
+	_, err = exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf(`mutagen sync create "%s" docker://ddev-%s-web/var/www/html --sync-mode=two-way-resolved --symlink-mode=posix-raw --name=%s >/dev/null && mutagen sync flush %s >/dev/null`, app.AppRoot, app.Name, syncName, syncName)})
 	if err != nil {
 		return "", err
 	}
