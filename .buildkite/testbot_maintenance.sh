@@ -29,6 +29,16 @@ darwin)
 windows)
     choco upgrade -y golang nodejs markdownlint-cli mkcert mkdocs mutagen || true
     ;;
+# linux is currently WSL2
+linux)
+    # homebrew is only on amd64
+    if [ "$(arch)" = "x86_64" ]; then
+      for item in ddev golang mkcert mkdocs mutagen-io/mutagen/mutagen; do
+        brew upgrade $item || brew install $item || true
+      done
+    fi
+    ;;
+
 esac
 
 yes | ddev delete images
