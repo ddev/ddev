@@ -8,6 +8,17 @@ import (
 	"strings"
 )
 
+func SetMutagenVolumeOwnership(app *DdevApp) error {
+	// Make sure that if we have a volume mount it's got proper ownership
+	uidStr, gidStr, _ := util.GetContainerUIDGid()
+	_, _, err := app.Exec(
+		&ExecOpts{
+			Dir: "/tmp",
+			Cmd: fmt.Sprintf("sudo chown -R %s:%s /var/www/html", uidStr, gidStr),
+		})
+	return err
+}
+
 // MutagenSyncName transforms a projectname string into
 // an acceptable mutagen sync "name"
 // See restrictions on sync name at https://mutagen.io/documentation/introduction/names-labels-identifiers

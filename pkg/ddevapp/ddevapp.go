@@ -921,18 +921,12 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	// Make sure that if we have a volume mount it's got proper ownership
-	uidStr, gidStr, _ := util.GetContainerUIDGid()
 	if app.MutagenEnabled || app.MutagenEnabledGlobal {
 		util.Success("Starting mutagen sync process...")
-		_, _, err = app.Exec(
-			&ExecOpts{
-				Cmd: fmt.Sprintf("sudo chown -R %s:%s /var/www/html", uidStr, gidStr),
-			})
+		err = SetMutagenVolumeOwnership(app)
 		if err != nil {
 			return err
 		}
-
 		mutagenTimeTrack := util.ElapsedTime(time.Now())
 		out, err := CreateMutagenSync(app)
 		if err != nil {
@@ -1065,7 +1059,7 @@ func (app *DdevApp) GenerateWebserverConfig() error {
 type ExecOpts struct {
 	// Service is the service, as in 'web', 'db', 'dba'
 	Service string
-	// Dir is the working directory inside the container
+	// Dir is the full path to the working directory inside the container
 	Dir string
 	// Cmd is the string to execute
 	Cmd string
@@ -1433,10 +1427,7 @@ func (app *DdevApp) Pause() error {
 		return err
 	}
 
-	err = SyncAndTerminateMutagen(app)
-	if err != nil {
-		return err
-	}
+	_ = SyncAndTerminateMutagen(app)
 
 	if _, _, err := dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "stop"); err != nil {
 		return err
@@ -1784,10 +1775,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 	}
 
-	err = SyncAndTerminateMutagen(app)
-	if err != nil {
-		return err
-	}
+	_ = SyncAndTerminateMutagen(app)
 
 	if app.SiteStatus() == SiteRunning {
 		err = app.Pause()
