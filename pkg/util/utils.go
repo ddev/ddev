@@ -154,11 +154,11 @@ func GetFirstWord(s string) string {
 	return arr[0]
 }
 
-// FindWindowsBashPath returns the PATH to bash on Windows
-// preferring git-bash (or just "bash" elsewhere)
+// FindBashPath returns the PATH to bash on any system
+// on Windows preferring git-bash
 // On Windows we'll need the path to bash to execute anything.
 // Returns empty string if not found, path if found
-func FindWindowsBashPath() string {
+func FindBashPath() string {
 	if runtime.GOOS != "windows" {
 		return "bash"
 	}
@@ -188,5 +188,14 @@ func TimeTrack(start time.Time, name string) func() {
 		}
 	}
 	return func() {
+	}
+}
+
+// ElapsedTime is an easy way to report how long something took.
+// It returns an anonymous function that, when called, will return the elapsed run time.
+func ElapsedTime(start time.Time) func() float64 {
+	return func() float64 {
+		elapsed := time.Since(start)
+		return elapsed.Seconds()
 	}
 }

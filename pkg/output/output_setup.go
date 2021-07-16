@@ -38,8 +38,9 @@ func LogSetUp() {
 
 	// But we use custom DDEV_DEBUG-settable loglevel for log
 	logLevel := log.InfoLevel
-	drudDebug := os.Getenv("DDEV_DEBUG")
-	if drudDebug != "" {
+	ddevDebug := os.Getenv("DDEV_DEBUG")
+	if ddevDebug != "" {
+		println("DDEV_DEBUG=%s", ddevDebug)
 		logLevel = log.DebugLevel
 	}
 	log.SetLevel(logLevel)

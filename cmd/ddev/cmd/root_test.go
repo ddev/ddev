@@ -265,7 +265,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	oldTimeInt, err := strconv.ParseInt(oldTime, 10, 64)
 	require.NoError(t, err)
 
-	bashPath := util.FindWindowsBashPath()
+	bashPath := util.FindBashPath()
 	out, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf("echo y | '%s' start", DdevBin)})
 	assert.NoError(err)
 	assert.Contains(out, "ddev-ssh-agent container has been removed")

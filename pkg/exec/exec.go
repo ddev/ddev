@@ -18,7 +18,7 @@ func RunCommand(command string, args []string) (string, error) {
 
 	output.UserOut.WithFields(log.Fields{
 		"Result": string(out),
-	}).Debug("Command Result")
+	}).Debug("Command ")
 
 	return string(out), err
 }

@@ -68,7 +68,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				return err
 			}
 			if runtime.GOOS == "windows" {
-				windowsBashPath := util.FindWindowsBashPath()
+				windowsBashPath := util.FindBashPath()
 				if windowsBashPath == "" {
 					fmt.Println("Unable to find bash.exe in PATH, not loading custom commands")
 					return nil
@@ -209,7 +209,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Command, []string) {
 	var windowsBashPath = ""
 	if runtime.GOOS == "windows" {
-		windowsBashPath = util.FindWindowsBashPath()
+		windowsBashPath = util.FindBashPath()
 	}
 
 	return func(cmd *cobra.Command, cobraArgs []string) {

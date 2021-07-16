@@ -932,14 +932,14 @@ func (app *DdevApp) Start() error {
 		if err != nil {
 			return err
 		}
-		// TODO: syncName must be sanitized version of app.Name, remove ".", etc.
-		// TODO: Don't use bash raw, in these places use the official bash
-		syncName := app.Name
-		_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("(mutagen sync terminate %s 2>/dev/null || true)  && mutagen sync create %s docker://ddev-%s-web/var/www/html --sync-mode=two-way-resolved --symlink-mode=posix-raw --name=%s && mutagen sync flush %s", syncName, app.AppRoot, app.Name, syncName, syncName)})
+
+		mutagenTimeTrack := util.ElapsedTime(time.Now())
+		out, err := CreateMutagenSync(app)
 		if err != nil {
 			return err
 		}
-		util.Success("Initial mutagen sync completed")
+		secs := mutagenTimeTrack()
+		util.Success("Mutagen sync completed in %.1fs :\n%s", secs, out)
 	}
 
 	err = StartDdevRouter()
@@ -1220,7 +1220,7 @@ func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 		}
 		bashPath := "bash"
 		if runtime.GOOS == "windows" {
-			bashPath = util.FindWindowsBashPath()
+			bashPath = util.FindBashPath()
 			if bashPath == "" {
 				return fmt.Errorf("Unable to find bash.exe on Windows")
 			}
@@ -1429,6 +1429,11 @@ func (app *DdevApp) Pause() error {
 	}
 
 	err := app.ProcessHooks("pre-pause")
+	if err != nil {
+		return err
+	}
+
+	err = SyncAndTerminateMutagen(app)
 	if err != nil {
 		return err
 	}
@@ -1779,13 +1784,9 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 	}
 
-	if app.MutagenEnabled || app.MutagenEnabledGlobal {
-		// TODO: Use sanitized sync name
-		syncName := app.Name
-		_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("mutagen sync flush %s && mutagen sync terminate %s", syncName, syncName)})
-		if err != nil {
-			return err
-		}
+	err = SyncAndTerminateMutagen(app)
+	if err != nil {
+		return err
 	}
 
 	if app.SiteStatus() == SiteRunning {
