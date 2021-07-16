@@ -29,6 +29,10 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 	if runtime.GOOS == "windows" {
 		fileutil.ReplaceSimulatedLinks(app.AppRoot)
 	}
+	err = app.SyncFlush()
+	if err != nil {
+		return stdout, stderr, err
+	}
 	err = app.ProcessHooks("post-composer")
 	if err != nil {
 		return "", "", fmt.Errorf("Failed to process post-composer hooks: %v", err)

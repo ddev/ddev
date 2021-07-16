@@ -84,3 +84,26 @@ func CreateMutagenSync(app *DdevApp) (string, error) {
 	}
 	return out, nil
 }
+
+// SyncFlush performs a mutagen sync flush, waits for result, and checks for errors
+func (app *DdevApp) SyncFlush() error {
+	if app.MutagenEnabled || app.MutagenEnabledGlobal {
+		bashPath := util.FindBashPath()
+		syncName := MutagenSyncName(app.Name)
+		_, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf("mutagen sync flush %s", syncName)})
+		if err != nil {
+			return err
+		}
+
+		out, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf(`mutagen sync list %s`, syncName)})
+		if err != nil {
+			return err
+		}
+
+		if strings.Contains(out, "problems") || strings.Contains(out, "Conflicts") {
+			util.Error("mutagen sync %s is not working correctly: %s", syncName, out)
+			return errors.Errorf("mutagen sync %s is not working correctly, use 'mutagen sync list %s' for details", syncName, syncName)
+		}
+	}
+	return nil
+}
