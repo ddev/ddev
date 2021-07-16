@@ -22,12 +22,12 @@ fi
 # Upgrade various items on various operating systems
 case $os in
 darwin)
-    for item in ddev golang golangci-lint mkcert mkdocs python3-yq; do
+    for item in ddev golang golangci-lint mkcert mkdocs mutagen-io/mutagen/mutagen python3-yq; do
         brew upgrade $item || brew install $item || true
     done
     ;;
 windows)
-    choco upgrade -y golang nodejs markdownlint-cli mkcert mkdocs || true
+    choco upgrade -y golang nodejs markdownlint-cli mkcert mkdocs mutagen || true
     ;;
 esac
 

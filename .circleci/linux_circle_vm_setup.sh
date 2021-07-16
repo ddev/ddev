@@ -33,7 +33,7 @@ export HOMEBREW_NO_INSTALL_CLEANUP=1
 
 brew tap drud/ddev >/dev/null
 brew unlink bats-core || true
-for item in osslsigncode golang mingw-w64 mkcert mkdocs ddev; do
+for item in ddev golang mingw-w64 mkcert mkdocs mutagen-io/mutagen/mutagen osslsigncode; do
     brew install $item >/dev/null || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item >/dev/null
 done
 brew install --build-from-source makensis
