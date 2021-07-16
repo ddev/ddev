@@ -928,12 +928,12 @@ func (app *DdevApp) Start() error {
 			return err
 		}
 		mutagenTimeTrack := util.ElapsedTime(time.Now())
-		out, err := CreateMutagenSync(app)
+		_, err := CreateMutagenSync(app)
 		if err != nil {
 			return err
 		}
 		secs := mutagenTimeTrack()
-		util.Success("Mutagen sync completed in %.1fs :\n%s", secs, out)
+		util.Success("Mutagen sync completed in %.1fs. For details on sync status 'mutagen sync list %s'", secs, MutagenSyncName(app.Name))
 	}
 
 	err = StartDdevRouter()

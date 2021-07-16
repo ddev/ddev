@@ -59,7 +59,7 @@ func CreateMutagenSync(app *DdevApp) (string, error) {
 	bashPath := util.FindBashPath()
 
 	TerminateMutagen(app)
-	_, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf(`mutagen sync create "%s" docker://ddev-%s-web/var/www/html --sync-mode=two-way-resolved --symlink-mode=posix-raw --name=%s >/dev/null && mutagen sync flush %s >/dev/null`, app.Docroot, app.Name, syncName, syncName)})
+	_, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf(`mutagen sync create "%s" docker://ddev-%s-web/var/www/html --sync-mode=two-way-resolved --symlink-mode=posix-raw --name=%s >/dev/null && mutagen sync flush %s >/dev/null`, app.AppRoot, app.Name, syncName, syncName)})
 	if err != nil {
 		return "", err
 	}
