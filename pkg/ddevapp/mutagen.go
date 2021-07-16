@@ -69,7 +69,7 @@ func CreateMutagenSync(app *DdevApp) (string, error) {
 	}
 
 	if strings.Contains(out, "problems") || strings.Contains(out, "Conflicts") {
-		util.Error("mutagen sync %s is not working correctly: %s", out)
+		util.Error("mutagen sync %s is not working correctly: %s", syncName, out)
 		return out, errors.Errorf("mutagen sync %s is not working correctly, use 'mutagen sync list %s' for details", syncName, syncName)
 	}
 	return out, nil
