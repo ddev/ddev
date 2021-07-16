@@ -33,7 +33,7 @@ func TerminateMutagen(app *DdevApp) error {
 	if app.MutagenEnabled || app.MutagenEnabledGlobal {
 		bashPath := util.FindBashPath()
 		syncName := MutagenSyncName(app.Name)
-		_, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf("if mutagen sync list %s >/dev/null; then mutagen sync terminate %s 2>/dev/null; fi", syncName, syncName)})
+		_, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf("if mutagen sync list %s >/dev/null 2>&1; then mutagen sync terminate %s; fi", syncName, syncName)})
 		if err != nil {
 			return err
 		}
@@ -46,7 +46,7 @@ func SyncAndTerminateMutagen(app *DdevApp) error {
 	if app.MutagenEnabled || app.MutagenEnabledGlobal {
 		bashPath := util.FindBashPath()
 		syncName := MutagenSyncName(app.Name)
-		_, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf("if mutagen sync list %s >/dev/null; then mutagen sync flush %s; fi", syncName, syncName)})
+		_, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf("if mutagen sync list %s >/dev/null 2>&1; then mutagen sync flush %s; fi", syncName, syncName)})
 		if err != nil {
 			return err
 		}
@@ -69,7 +69,7 @@ func CreateMutagenSync(app *DdevApp) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	_, err = exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf(`mutagen sync create "%s" docker://ddev-%s-web/var/www/html --sync-mode=two-way-resolved --symlink-mode=posix-raw --name=%s >/dev/null && mutagen sync flush %s >/dev/null`, app.AppRoot, app.Name, syncName, syncName)})
+	_, err = exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf(`mutagen sync create "%s" docker://ddev-%s-web/var/www/html --sync-mode=two-way-resolved --symlink-mode=posix-raw --name=%s >/dev/null && mutagen sync flush %s >/dev/null 2>&1`, app.AppRoot, app.Name, syncName, syncName)})
 	if err != nil {
 		return "", err
 	}
