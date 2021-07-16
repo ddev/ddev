@@ -56,7 +56,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	args = []string{"config", "global", "--instrumentation-opt-in=false", "--omit-containers=dba,ddev-ssh-agent", "--nfs-mount-enabled=true", "--router-bind-all-interfaces=true", "--internet-detection-timeout-ms=850", "--use-letsencrypt", "--letsencrypt-email=nobody@example.com", "--auto-restart-containers=true", "--use-hardened-images=true", "--fail-on-hook-fail=true", `--disable-http2`, `--web-environment="SOMEENV=some+val"`}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[dba,ddev-ssh-agent]\nweb-environment=[\"SOMEENV=some+val\"]\nmutagenn-enabled=true\nnfs-mount-enabled=true\nrouter-bind-all-interfaces=true\ninternet-detection-timeout-ms=850\ndisable-http2=true\nuse-letsencrypt=true\nletsencrypt-email=nobody@example.com\nauto-restart-containers=true\nuse-hardened-images=true\nfail-on-hook-fail=true")
+	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[dba,ddev-ssh-agent]\nweb-environment=[\"SOMEENV=some+val\"]\nmutagen-enabled=true\nnfs-mount-enabled=true\nrouter-bind-all-interfaces=true\ninternet-detection-timeout-ms=850\ndisable-http2=true\nuse-letsencrypt=true\nletsencrypt-email=nobody@example.com\nauto-restart-containers=true\nuse-hardened-images=true\nfail-on-hook-fail=true")
 
 	err = globalconfig.ReadGlobalConfig()
 	assert.NoError(err)
