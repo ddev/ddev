@@ -113,6 +113,8 @@ func TestPantheonPull(t *testing.T) {
 	assert.NoError(err)
 	assert.True(strings.HasPrefix(out, "1\n"))
 
+	err = app.SyncFlush()
+	assert.NoError(err)
 	assert.FileExists("hello-pre-pull-" + app.Name)
 	assert.FileExists("hello-post-pull-" + app.Name)
 	err = os.Remove("hello-pre-pull-" + app.Name)
@@ -242,6 +244,9 @@ func TestPantheonPush(t *testing.T) {
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)
+
+	err = app.SyncFlush()
+	assert.NoError(err)
 
 	assert.FileExists("hello-pre-push-" + app.Name)
 	assert.FileExists("hello-post-push-" + app.Name)

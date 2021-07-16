@@ -243,6 +243,9 @@ func TestAcquiaPush(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(out, tval)
 
+	err = app.SyncFlush()
+	assert.NoError(err)
+
 	assert.FileExists("hello-pre-push-" + app.Name)
 	assert.FileExists("hello-post-push-" + app.Name)
 	err = os.Remove("hello-pre-push-" + app.Name)
