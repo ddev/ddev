@@ -209,7 +209,7 @@ volumes:
     driver_opts:
       type: nfs
       o: "addr={{ if .HostDockerInternalIP }}{{ .HostDockerInternalIP }}{{ else }}host.docker.internal{{end}},hard,nolock,rw"
-      device: ":{{ .NFSSource }}"
+      device: ':{{ .NFSSource }}'
   {{ end }}
   {{ if and .MutagenEnabled (not .NoProjectMount) }}
   project_mutagen:

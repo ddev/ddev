@@ -1,7 +1,7 @@
 #!/bin/bash
 # This script is used to build drud/ddev using buildkite
 
-export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
+export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin:~/bin
 
 # Remove this when docker-compose v2 starts working
 docker-compose disable-v2 || true

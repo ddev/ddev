@@ -69,7 +69,7 @@ func CreateMutagenSync(app *DdevApp) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	_, err = exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf(`mutagen sync create "%s" docker://ddev-%s-web/var/www/html --sync-mode=two-way-resolved --symlink-mode=posix-raw --name=%s >/dev/null && mutagen sync flush %s >/dev/null 2>&1`, app.AppRoot, app.Name, syncName, syncName)})
+	_, err = exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf(`mutagen sync create "%s" docker://ddev-%s-web/var/www/html --sync-mode=two-way-resolved --name=%s >/dev/null && mutagen sync flush %s >/dev/null 2>&1`, app.AppRoot, app.Name, syncName, syncName)})
 	if err != nil {
 		return "", err
 	}
@@ -78,7 +78,7 @@ func CreateMutagenSync(app *DdevApp) (string, error) {
 		return out, err
 	}
 
-	if strings.Contains(out, "problems") || strings.Contains(out, "Conflicts") {
+	if strings.Contains(out, "problems") || strings.Contains(out, "Conflicts") || strings.Contains(out, "error") {
 		util.Error("mutagen sync %s is not working correctly: %s", syncName, out)
 		return out, errors.Errorf("mutagen sync %s is not working correctly, use 'mutagen sync list %s' for details", syncName, syncName)
 	}
