@@ -21,8 +21,6 @@ func TestMutagenSimple(t *testing.T) {
 
 	// Make sure this leaves us in the original test directory
 	origDir, _ := os.Getwd()
-	//nolint: errcheck
-	defer os.Chdir(origDir)
 
 	// Use Drupal9 as it is a good target for composer failures
 	site := FullTestSites[8]

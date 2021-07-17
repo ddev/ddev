@@ -43,6 +43,9 @@ func init() {
 	if testNFSMount := os.Getenv("DDEV_TEST_USE_NFSMOUNT"); testNFSMount != "" {
 		nodeps.NFSMountEnabledDefault = true
 	}
+	if testMutagen := os.Getenv("DDEV_TEST_USE_MUTAGEN"); testMutagen != "" {
+		nodeps.MutagenEnabledDefault = true
+	}
 }
 
 // NewApp creates a new DdevApp struct with defaults set and overridden by any existing config.yml.
