@@ -27,7 +27,10 @@ darwin)
     done
     ;;
 windows)
-    choco upgrade -y golang nodejs markdownlint-cli mkcert mkdocs mutagen || true
+    choco upgrade -y golang nodejs markdownlint-cli mkcert mkdocs || true
+    mutagen daemon stop || true
+    curl -sSL -o /tmp/mutagen.tgz https://github.com/mutagen-io/mutagen/releases/download/v0.11.8/mutagen_windows_amd64_v0.11.8.tar.gz && tar -zxf /tmp/mutagen.tgz -C /usr/local/bin
+
     ;;
 # linux is currently WSL2
 linux)
