@@ -111,7 +111,13 @@
 !define NSSM_SETUP "nssm.exe"
 !define NSSM_URL "https://github.com/drud/nssm/releases/download/${NSSM_VERSION}/nssm.exe"
 
+!define MUTAGEN_NAME "MUTAGEN"
+!define MUTAGEN_VERSION "v0.11.8"
+!define MUTAGEN_URL "https://github.com/drud/mutagen/releases/download/${MUTAGEN_VERSION}/mutagen.exe"
 
+!define MUTAGEN_AGENTS_NAME "MUTAGEN_AGENTS"
+!define MUTAGEN_AGENTS_VERSION "v0.11.8"
+!define MUTAGEN_AGENTS_URL "https://github.com/drud/mutagen/releases/download/${MUTAGEN_VERSION}/mutagen-agents.tar.gz"
 
 /**
  * Configuration
@@ -615,6 +621,49 @@ SectionGroup /e "WinNFSd"
   SectionEnd
 SectionGroupEnd
 
+
+  /**
+   * Mutagen application install
+   */
+  Section "${MUTAGEN_NAME}" SecMutagen
+    SectionIn 1
+    SetOutPath "$INSTDIR"
+    SetOverwrite try
+
+    ; Set URL and dest file name
+    !define MUTAGEN_DEST "$INSTDIR\mutagen.exe"
+    ; Download Binaries
+    INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${MUTAGEN_URL}" "${MUTAGEN_DEST}" /END
+    Pop $R0 ; return value = exit code, "OK" if OK
+
+    ; Check download result
+    ${If} $R0 != "OK"
+      ; Download failed, show message and continue
+      SetDetailsView show
+      DetailPrint "Download of `${MUTAGEN_NAME}` failed:"
+      DetailPrint " $R0"
+      MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${MUTAGEN_NAME}` has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue the resting installation."
+    ${EndIf}
+    !undef MUTAGEN_DEST
+
+    ; Set URL and dest file name
+    !define MUTAGEN_AGENT_DEST "$INSTDIR\mutagen-agents.tar.gz"
+    ; Download Binaries
+    INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${MUTAGEN_AGENT_URL}" "${MUTAGEN_AGENT_DEST}" /END
+    Pop $R0 ; return value = exit code, "OK" if OK
+
+    ; Check download result
+    ${If} $R0 != "OK"
+      ; Download failed, show message and continue
+      SetDetailsView show
+      DetailPrint "Download of `${MUTAGEN_AGENT_NAME}` failed:"
+      DetailPrint " $R0"
+      MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${MUTAGEN_AGENT_NAME}` has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue the resting installation."
+    ${EndIf}
+    !undef MUTAGEN_AGENT_DEST
+  SectionEnd
+SectionGroupEnd
+
 /**
  * Last processed section
  *
@@ -669,6 +718,7 @@ LangString DESC_SecMkcert ${LANG_ENGLISH} "mkcert (github.com/ FiloSottile/mkcer
 LangString DESC_SecMkcertSetup ${LANG_ENGLISH} "Run `mkcert -install` to setup a local CA"
 LangString DESC_SecWinNFSd ${LANG_ENGLISH} "WinNFSd (github.com/ winnfsd/winnfsd) is an optional NFS server that can be used with ${PRODUCT_NAME_FULL}"
 LangString DESC_SecNSSM ${LANG_ENGLISH} "NSSM (nssm.cc) is used to install services, specifically WinNFSd for NFS"
+LangString DESC_SecMutagen ${LANG_ENGLISH} "Mutagen is optionally used to speed up container-to-host file updates"
 
 
 
@@ -688,6 +738,7 @@ LangString DESC_SecNSSM ${LANG_ENGLISH} "NSSM (nssm.cc) is used to install servi
   !insertmacro MUI_DESCRIPTION_TEXT ${SecMkcertSetup} $(DESC_SecMkcertSetup)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecWinNFSd} $(DESC_SecWinNFSd)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecNSSM} $(DESC_SecNSSM)
+  !insertmacro MUI_DESCRIPTION_TEXT ${SecMutagen} $(DESC_SecMutagen)
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 
