@@ -111,13 +111,12 @@
 !define NSSM_SETUP "nssm.exe"
 !define NSSM_URL "https://github.com/drud/nssm/releases/download/${NSSM_VERSION}/nssm.exe"
 
-!define MUTAGEN_NAME "MUTAGEN"
+!define MUTAGEN_NAME "Mutagen"
 !define MUTAGEN_VERSION "v0.11.8"
 !define MUTAGEN_URL "https://github.com/drud/mutagen/releases/download/${MUTAGEN_VERSION}/mutagen.exe"
 
-!define MUTAGEN_AGENTS_NAME "MUTAGEN_AGENTS"
-!define MUTAGEN_AGENTS_VERSION "v0.11.8"
-!define MUTAGEN_AGENTS_URL "https://github.com/drud/mutagen/releases/download/${MUTAGEN_VERSION}/mutagen-agents.tar.gz"
+!define MUTAGEN_AGENT_NAME "MUTAGEN_AGENT"
+!define MUTAGEN_AGENT_URL "https://github.com/drud/mutagen/releases/download/${MUTAGEN_VERSION}/mutagen-agents.tar.gz"
 
 /**
  * Configuration
@@ -255,6 +254,13 @@ Var MkcertSetup
 !define MUI_PAGE_CUSTOMFUNCTION_PRE winNFSdLicPre
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE winNFSdLicLeave
 !insertmacro MUI_PAGE_LICENSE "licenses\winnfsd_license.txt"
+
+; License page Mutagen
+!define MUI_PAGE_HEADER_TEXT "License Agreement for Mutagen"
+!define MUI_PAGE_HEADER_SUBTEXT "Please review the license terms before installing Mutagen."
+!define MUI_PAGE_CUSTOMFUNCTION_PRE mutagenLicPre
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE mutagenLicLeave
+!insertmacro MUI_PAGE_LICENSE "licenses\mutagen_license.txt"
 
 ; Directory page
 !define MUI_PAGE_CUSTOMFUNCTION_PRE DirectoryPre
@@ -662,7 +668,6 @@ SectionGroupEnd
     ${EndIf}
     !undef MUTAGEN_AGENT_DEST
   SectionEnd
-SectionGroupEnd
 
 /**
  * Last processed section
@@ -975,6 +980,23 @@ Function winNFSdLicLeave
 FunctionEnd
 
 /**
+ * Disable mutagen license page if component is not selected or already accepted before
+ */
+Function mutagenLicPre
+  ReadRegDWORD $R0 ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:mutagenLicenseAccepted"
+  ${If} $R0 = 1
+  ${OrIfNot} ${SectionIsSelected} ${Secmutagen}
+    Abort
+  ${EndIf}
+FunctionEnd
+
+/**
+ * Set mutagen license accepted flag
+ */
+Function mutagenLicLeave
+  WriteRegDWORD ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:mutagenLicenseAccepted" 0x00000001
+FunctionEnd
+/**
  * Disable on updates
  */
 Function DirectoryPre
@@ -1066,6 +1088,9 @@ Section Uninstall
   Delete "$INSTDIR\mkcert install.lnk"
   Delete "$INSTDIR\mkcert_license.txt"
   Delete "$INSTDIR\mkcert.exe"
+
+  Delete "$INSTDIR\mutagen.exe"
+  Delete "$INSTDIR\mutagen-agents.tar.gz"
 
   Delete "$INSTDIR\sudo_license.txt"
   Delete "$INSTDIR\${GSUDO_SETUP}"
