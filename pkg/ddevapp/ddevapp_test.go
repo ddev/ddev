@@ -1786,6 +1786,9 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	})
 	assert.NoError(createFileErr)
 
+	err = app.SyncFlush()
+	assert.NoError(err)
+
 	// Now try to append to the file on the host.
 	// os.OpenFile() for append here fails if the file does not already exist.
 	f, err = os.OpenFile(onHostRelativePath, os.O_APPEND|os.O_WRONLY, 0660)
@@ -1816,6 +1819,9 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	_, err = f.WriteString("this base content was inserted on the host side\n")
 	assert.NoError(err)
 	_ = f.Close()
+
+	err = app.SyncFlush()
+	assert.NoError(err)
 
 	// if the file exists, add to it. We don't want to add if it's not already there.
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
@@ -2221,6 +2227,10 @@ func TestProcessHooks(t *testing.T) {
 	err = app.ProcessHooks("hook-test")
 	assert.NoError(err)
 	out := captureOutputFunc()
+
+	err = app.SyncFlush()
+	assert.NoError(err)
+
 	userOut := userOutFunc()
 	// Ignore color in output, can be different in different OS's
 	out = vtclean.Clean(out, false)
@@ -3168,8 +3178,8 @@ func TestNFSMount(t *testing.T) {
 	if nodeps.IsWSL2() {
 		t.Skip("Skipping on WSL2")
 	}
-	if runtime.GOARCH == "arm64" && runtime.GOOS == "darwin" {
-		t.Skip("Temporarily skipping on mac M1 because NFS has some trouble")
+	if nodeps.MutagenEnabledDefault == true {
+		t.Skip("Skipping because mutagen enabled")
 	}
 
 	assert := asrt.New(t)
