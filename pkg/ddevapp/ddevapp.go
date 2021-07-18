@@ -1805,7 +1805,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 			if err != nil {
 				util.Warning("could not remove volume %s: %v", volName, err)
 			} else {
-				util.Success("Deleting database. Volume %s for project %s was deleted", volName, app.Name)
+				util.Success("Volume %s for project %s was deleted", volName, app.Name)
 			}
 		}
 		desc, err := app.Describe(false)
