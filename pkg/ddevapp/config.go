@@ -724,7 +724,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		OmitSSHAgent:              nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent"),
 		MutagenEnabled:            app.MutagenEnabled || app.MutagenEnabledGlobal,
 
-		NFSMountEnabled:       app.NFSMountEnabled || app.NFSMountEnabledGlobal,
+		NFSMountEnabled:       (app.NFSMountEnabled || app.NFSMountEnabledGlobal) && !(app.MutagenEnabled || app.MutagenEnabledGlobal),
 		NFSSource:             "",
 		IsWindowsFS:           runtime.GOOS == "windows",
 		NoProjectMount:        app.NoProjectMount,
