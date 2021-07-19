@@ -3546,13 +3546,14 @@ func TestDdevList(t *testing.T) {
 // in the web container and on the host.
 func TestEnvironmentVariables(t *testing.T) {
 	assert := asrt.New(t)
+	origDir, _ := os.Getwd()
 	pwd, _ := os.Getwd()
 	customCmd := filepath.Join(pwd, "testdata", t.Name(), "showhostenvvar")
 	site := TestSites[0]
-	switchDir := site.Chdir()
-	defer switchDir()
 
 	app, err := ddevapp.NewApp(site.Dir, false)
+	assert.NoError(err)
+	err = os.Chdir(site.Dir)
 	assert.NoError(err)
 	customCmdDest := app.GetConfigPath("commands/host/" + "showhostenvvar")
 
@@ -3582,6 +3583,8 @@ func TestEnvironmentVariables(t *testing.T) {
 		err = os.RemoveAll(customCmdDest)
 		assert.NoError(err)
 		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(origDir)
 		assert.NoError(err)
 	})
 
