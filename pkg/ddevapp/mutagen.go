@@ -106,7 +106,7 @@ func CheckMutagenErrors(app *DdevApp) (string, error) {
 // MutagenSyncFlush performs a mutagen sync flush, waits for result, and checks for errors
 func (app *DdevApp) MutagenSyncFlush() error {
 	if app.MutagenEnabled || app.MutagenEnabledGlobal {
-		out, err := CheckMutagenErrors(app)
+		_, err := CheckMutagenErrors(app)
 		if err != nil {
 			return err
 		}
@@ -115,7 +115,7 @@ func (app *DdevApp) MutagenSyncFlush() error {
 		if !MutagenSyncExists(app) {
 			return errors.Errorf("Mutagen sync %s does not exist", syncName)
 		}
-		out, err = CheckMutagenErrors(app)
+		out, err := CheckMutagenErrors(app)
 		if err != nil {
 			return errors.Errorf("Mutagen sync %s is in error state: %s (%v)", syncName, out, err)
 		}
@@ -125,7 +125,7 @@ func (app *DdevApp) MutagenSyncFlush() error {
 			return err
 		}
 
-		out, err = CheckMutagenErrors(app)
+		_, err = CheckMutagenErrors(app)
 		if err != nil {
 			return err
 		}
