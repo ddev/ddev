@@ -25,6 +25,7 @@ jobs:
         webserver: [apache-fpm, nginx-fpm]
         tests: [test]
         os: [ ubuntu-20.04 ]
+        mutagen: ["false", "true"]
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
@@ -60,6 +61,8 @@ jobs:
       #        run: .github/workflows/selfhosted-maintenance.sh
 
       - name: DDEV tests
+        env:
+          DDEV_TEST_USE_MUTAGEN: matrix.mutagen
         run: make ${{ matrix.tests }}
 
       - name: Store test results

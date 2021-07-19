@@ -43,7 +43,7 @@ func init() {
 	if testNFSMount := os.Getenv("DDEV_TEST_USE_NFSMOUNT"); testNFSMount != "" {
 		nodeps.NFSMountEnabledDefault = true
 	}
-	if testMutagen := os.Getenv("DDEV_TEST_USE_MUTAGEN"); testMutagen != "" {
+	if testMutagen := os.Getenv("DDEV_TEST_USE_MUTAGEN"); testMutagen == "true" {
 		nodeps.MutagenEnabledDefault = true
 	}
 }
