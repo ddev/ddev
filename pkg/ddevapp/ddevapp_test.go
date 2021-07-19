@@ -2531,14 +2531,14 @@ func TestRouterPortsCheck(t *testing.T) {
 func TestCleanupWithoutCompose(t *testing.T) {
 	assert := asrt.New(t)
 
-	// Skip test because we can't rename folders while they're in use if running on Windows.
-	if runtime.GOOS == "windows" {
-		t.Skip("Skipping test TestCleanupWithoutCompose on Windows")
+	// Skip test because we can't rename folders while they're in use if running on Windows or with mutagen.
+	if runtime.GOOS == "windows" || nodeps.MutagenEnabledDefault == true {
+		t.Skip("Skipping test TestCleanupWithoutCompose; doesn't work on Windows or mutagen because of renaming of whole project directory")
 	}
 
+	origDir, _ := os.Getwd()
 	site := TestSites[0]
 
-	revertDir := site.Chdir()
 	app := &ddevapp.DdevApp{}
 
 	testcommon.ClearDockerEnv()
@@ -2547,29 +2547,28 @@ func TestCleanupWithoutCompose(t *testing.T) {
 
 	// Ensure we have a site started so we have something to cleanup
 
-	startErr := app.StartAndWait(5)
-	//nolint: errcheck
-	defer app.Stop(true, false)
-	if startErr != nil {
-		appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
-		assert.NoError(getLogsErr)
-		t.Fatalf("app.StartAndWait failure; err=%v, logs:\n=====\n%s\n=====\n", startErr, appLogs)
-	}
+	err = app.Start()
+	require.NoError(t, err)
+
 	// Setup by creating temp directory and nesting a folder for our site.
 	tempPath := testcommon.CreateTmpDir("site-copy")
 	siteCopyDest := filepath.Join(tempPath, "site")
 
-	//nolint: errcheck
-	defer os.RemoveAll(tempPath)
-	//nolint: errcheck
-	defer revertDir()
-	// Move the site directory back to its original location.
-	//nolint: errcheck
-	defer os.Rename(siteCopyDest, site.Dir)
-
 	// Move site directory to a temp directory to mimick a missing directory.
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		// Move the site directory back to its original location.
+		err = os.Rename(siteCopyDest, site.Dir)
+		assert.NoError(err)
+		err = os.RemoveAll(tempPath)
+		assert.NoError(err)
+	})
 
 	// Call the Stop command()
 	// Notice that we set the removeData parameter to true.
@@ -2578,7 +2577,6 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	err = app.Stop(true, false)
 	assert.NoError(err)
 	assert.Empty(globalconfig.DdevGlobalConfig.ProjectList[app.Name])
-
 	for _, containerType := range [3]string{"web", "db", "dba"} {
 		_, err := constructContainerName(containerType, app)
 		assert.Error(err)
