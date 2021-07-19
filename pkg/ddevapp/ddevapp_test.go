@@ -1293,6 +1293,8 @@ func TestDdevAllDatabases(t *testing.T) {
 			assert.NoError(err)
 			assert.True(stringFound)
 
+			err = app.SyncFlush()
+			assert.NoError(err)
 			err = fileutil.PurgeDirectory("tmp")
 			assert.NoError(err)
 
