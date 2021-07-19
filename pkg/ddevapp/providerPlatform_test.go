@@ -198,7 +198,7 @@ func TestPlatformPush(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(out, tval)
 
-	err = app.SyncFlush()
+	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 
 	assert.FileExists("hello-pre-push-" + app.Name)

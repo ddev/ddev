@@ -29,7 +29,7 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 	if runtime.GOOS == "windows" {
 		fileutil.ReplaceSimulatedLinks(app.AppRoot)
 	}
-	err = app.SyncFlush()
+	err = app.MutagenSyncFlush()
 	if err != nil {
 		return stdout, stderr, err
 	}

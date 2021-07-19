@@ -81,7 +81,7 @@ func TestCmdExec(t *testing.T) {
 	assert.NoError(err)
 
 	// We just created in the container, must flush before looking for it on host
-	err = app.SyncFlush()
+	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 
 	assert.FileExists(filepath.Join(site.Dir, "TestCmdExec-touch-all-in-one.txt"))
@@ -90,7 +90,7 @@ func TestCmdExec(t *testing.T) {
 	_, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 
-	err = app.SyncFlush()
+	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 
 	assert.FileExists(filepath.Join(site.Dir, "TestCmdExec-touch-separate-args.txt"))

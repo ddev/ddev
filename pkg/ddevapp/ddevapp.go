@@ -8,6 +8,7 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-isatty"
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"net"
@@ -928,9 +929,9 @@ func (app *DdevApp) Start() error {
 			return err
 		}
 		mutagenTimeTrack := util.ElapsedTime(time.Now())
-		_, err := CreateMutagenSync(app)
+		err := CreateMutagenSync(app)
 		if err != nil {
-			return err
+			return errors.Errorf("Failed to create mutagen sync session %s. You may be able to resolve this problem with 'ddev stop && mutagen sync terminate %s && docker volume rm %s_project_mutagen'", MutagenSyncName(app.Name), app.Name)
 		}
 		secs := mutagenTimeTrack()
 		util.Success("Mutagen sync completed in %.1fs. For details on sync status 'mutagen sync list %s'", secs, MutagenSyncName(app.Name))

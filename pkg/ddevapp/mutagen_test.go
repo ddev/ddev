@@ -68,7 +68,7 @@ func TestMutagenSimple(t *testing.T) {
 	// Remove the vendor directory and sync
 	err = os.RemoveAll(filepath.Join(app.AppRoot, "vendor"))
 	assert.NoError(err)
-	err = app.SyncFlush()
+	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 	_, stderr, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd: "ls -l /var/www/html/vendor",
@@ -78,7 +78,7 @@ func TestMutagenSimple(t *testing.T) {
 	// Now composer install again and make sure all the stuff comes back
 	_, _, err = app.Composer([]string{"install"})
 	assert.NoError(err)
-	err = app.SyncFlush()
+	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 	assert.FileExists(filepath.Join(app.AppRoot, "vendor/bin/var-dump-server"))
 

@@ -1293,7 +1293,7 @@ func TestDdevAllDatabases(t *testing.T) {
 			assert.NoError(err)
 			assert.True(stringFound)
 
-			err = app.SyncFlush()
+			err = app.MutagenSyncFlush()
 			assert.NoError(err)
 			err = fileutil.PurgeDirectory("tmp")
 			assert.NoError(err)
@@ -1788,7 +1788,7 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	})
 	assert.NoError(createFileErr)
 
-	err = app.SyncFlush()
+	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 
 	// Now try to append to the file on the host.
@@ -1822,7 +1822,7 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	assert.NoError(err)
 	_ = f.Close()
 
-	err = app.SyncFlush()
+	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 
 	// if the file exists, add to it. We don't want to add if it's not already there.
@@ -2230,7 +2230,7 @@ func TestProcessHooks(t *testing.T) {
 	assert.NoError(err)
 	out := captureOutputFunc()
 
-	err = app.SyncFlush()
+	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 
 	userOut := userOutFunc()
