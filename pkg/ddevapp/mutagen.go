@@ -106,10 +106,6 @@ func CheckMutagenErrors(app *DdevApp) (string, error) {
 // MutagenSyncFlush performs a mutagen sync flush, waits for result, and checks for errors
 func (app *DdevApp) MutagenSyncFlush() error {
 	if app.MutagenEnabled || app.MutagenEnabledGlobal {
-		_, err := CheckMutagenErrors(app)
-		if err != nil {
-			return err
-		}
 		bashPath := util.FindBashPath()
 		syncName := MutagenSyncName(app.Name)
 		if !MutagenSyncExists(app) {
