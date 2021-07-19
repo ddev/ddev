@@ -34,7 +34,7 @@ jobs:
       DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
       DDEV_NONINTERACTIVE: "true"
       DDEV_TEST_USE_MUTAGEN: ${{ matrix.mutagen }}
-      
+
     steps:
       - uses: actions/checkout@v2
 
