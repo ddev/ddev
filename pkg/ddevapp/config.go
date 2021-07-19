@@ -45,6 +45,7 @@ func init() {
 	}
 	if testMutagen := os.Getenv("DDEV_TEST_USE_MUTAGEN"); testMutagen == "true" {
 		nodeps.MutagenEnabledDefault = true
+		util.Warning("Mutagen is turned on because DDEV_TEST_USE_MUTAGEN is true")
 	}
 }
 
