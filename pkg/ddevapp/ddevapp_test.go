@@ -2632,19 +2632,20 @@ func TestRouterNotRunning(t *testing.T) {
 // TestListWithoutDir prevents regression where ddev list panics if one of the
 // sites found is missing a directory
 func TestListWithoutDir(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("Skipping because unreliable on Windows")
+	// Can't run with mutagen because we actually delete the alpha
+	if runtime.GOOS == "windows" || nodeps.MutagenEnabledDefault == true {
+		t.Skip("Skipping because unreliable on Windows and can't be used with mutagen")
 	}
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
 	testcommon.ClearDockerEnv()
-	packageDir, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 
 	// startCount is the count of apps at the start of this adventure
 	apps := ddevapp.GetActiveProjects()
 	startCount := len(apps)
 
-	testDir := testcommon.CreateTmpDir("TestStartWithoutDdevConfig")
+	testDir := testcommon.CreateTmpDir(t.Name())
 	defer testcommon.CleanupDir(testDir)
 
 	err := os.MkdirAll(testDir+"/sites/default", 0777)
@@ -2654,7 +2655,16 @@ func TestListWithoutDir(t *testing.T) {
 
 	app, err := ddevapp.NewApp(testDir, true)
 	assert.NoError(err)
-	app.Name = "junk"
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.RemoveAll(testDir)
+		assert.NoError(err)
+	})
+	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal7
 	err = app.WriteConfig()
 	assert.NoError(err)
@@ -2665,14 +2675,11 @@ func TestListWithoutDir(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
-	// Make sure we move out of the directory for Windows' sake
-	garbageDir := testcommon.CreateTmpDir("RestingHere")
-	defer testcommon.CleanupDir(garbageDir)
-
-	err = os.Chdir(garbageDir)
+	err = os.Chdir(origDir)
 	assert.NoError(err)
 
-	testcommon.CleanupDir(testDir)
+	err = os.RemoveAll(testDir)
+	assert.NoError(err)
 
 	apps = ddevapp.GetActiveProjects()
 
@@ -2691,17 +2698,9 @@ func TestListWithoutDir(t *testing.T) {
 		ddevapp.RenderAppRow(table, desc)
 	}
 
-	// testDir on Windows has backslashes in it, resulting in invalid regexp
-	// Remove them and use ., which is good enough.
-	testDirSafe := strings.Replace(testDir, "\\", ".", -1)
-	assert.Regexp(regexp.MustCompile("(?s)"+ddevapp.SiteDirMissing+".*"+testDirSafe), table.String())
+	assert.Regexp(regexp.MustCompile("(?s)"+ddevapp.SiteDirMissing+".*"+testDir), table.String())
 
 	err = app.Stop(true, false)
-	assert.NoError(err)
-
-	// Change back to package dir. Lots of things will have to be cleaned up
-	// in defers, and for windows we have to not be sitting in them.
-	err = os.Chdir(packageDir)
 	assert.NoError(err)
 }
 
