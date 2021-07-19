@@ -1389,6 +1389,9 @@ func TestDdevExportDB(t *testing.T) {
 	assert.NoError(err)
 	assert.True(stringFound)
 
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+
 	err = fileutil.PurgeDirectory("tmp")
 	assert.NoError(err)
 
