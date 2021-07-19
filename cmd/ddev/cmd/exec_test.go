@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"path/filepath"
@@ -25,11 +26,13 @@ func TestCmdExecBadArgs(t *testing.T) {
 
 // TestCmdExec runs a number of exec commands to verify behavior
 func TestCmdExec(t *testing.T) {
-
 	assert := asrt.New(t)
 	site := TestSites[0]
 	cleanup := site.Chdir()
 	defer cleanup()
+
+	app, err := ddevapp.GetActiveApp(site.Name)
+	assert.NoError(err)
 
 	// Test default invocation
 	args := []string{"exec", "pwd"}
@@ -61,7 +64,7 @@ func TestCmdExec(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(out, "root")
 
-	// Test that an nonexistant working directory generates an error
+	// Test that an nonexistent working directory generates an error
 	args = []string{"exec", "-d", "/does/not/exist", "pwd"}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.Error(err)
@@ -70,16 +73,26 @@ func TestCmdExec(t *testing.T) {
 	args = []string{"exec", "ls >/var/www/html/TestCmdExec-${OSTYPE}.txt"}
 	_, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
+
 	assert.FileExists(filepath.Join(site.Dir, "TestCmdExec-linux-gnu.txt"))
 
 	args = []string{"exec", "ls >/dev/null && touch /var/www/html/TestCmdExec-touch-all-in-one.txt"}
 	_, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
+
+	// We just created in the container, must flush before looking for it on host
+	err = app.SyncFlush()
+	assert.NoError(err)
+
 	assert.FileExists(filepath.Join(site.Dir, "TestCmdExec-touch-all-in-one.txt"))
 
 	args = []string{"exec", "true", "&&", "touch", "/var/www/html/TestCmdExec-touch-separate-args.txt"}
 	_, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
+
+	err = app.SyncFlush()
+	assert.NoError(err)
+
 	assert.FileExists(filepath.Join(site.Dir, "TestCmdExec-touch-separate-args.txt"))
 
 	// Make sure we can pipe things into ddev exec and have them work in stdin inside container
