@@ -35,6 +35,7 @@ echo -n "docker location: " && ls -l "$(which docker)"
 if [ ${OSTYPE%-*} != "linux" ]; then
   echo -n "Docker Desktop Version: " && docker_desktop_version && echo
 fi
+echo "Docker disk space:" && docker run busybox df -h / && echo
 ddev poweroff
 echo "Existing docker containers: " && docker ps -a
 docker run -it --rm busybox sh -c "echo 'docker can run busybox image'"
