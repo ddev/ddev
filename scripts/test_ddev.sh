@@ -35,10 +35,9 @@ echo -n "docker location: " && ls -l "$(which docker)"
 if [ ${OSTYPE%-*} != "linux" ]; then
   echo -n "Docker Desktop Version: " && docker_desktop_version && echo
 fi
-echo "Docker disk space:" && docker run busybox df -h / && echo
+echo "Docker disk space:" && docker run --rm busybox df -h / && echo
 ddev poweroff
 echo "Existing docker containers: " && docker ps -a
-docker run -it --rm busybox sh -c "echo 'docker can run busybox image'"
 mkdir -p ~/tmp/${PROJECT_NAME} && cd ~/tmp/${PROJECT_NAME}
 printf "<?php\nprint 'ddev is working. You will want to delete this project with \"ddev delete -Oy ${PROJECT_NAME}\"';\n" >index.php
 ddev config --project-type=php
