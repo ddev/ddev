@@ -7,12 +7,12 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/mitchellh/go-homedir"
-	"html/template"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/drud/ddev/pkg/globalconfig"
@@ -672,7 +672,7 @@ type composeYAMLVars struct {
 func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error
-	templ, err := template.New("compose template").Funcs(sprig.HtmlFuncMap()).Parse(DDevComposeTemplate)
+	templ, err := template.New("compose template").Funcs(sprig.TxtFuncMap()).Parse(DDevComposeTemplate)
 	if err != nil {
 		return "", err
 	}
@@ -729,10 +729,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		Username:                  username,
 		UID:                       uid,
 		GID:                       gid,
-		WebBuildContext:           app.GetConfigPath("web-build"),
-		DBBuildContext:            app.GetConfigPath("db-build"),
-		WebBuildDockerfile:        app.GetConfigPath(".webimageBuild/Dockerfile"),
-		DBBuildDockerfile:         app.GetConfigPath(".dbimageBuild/Dockerfile"),
+		WebBuildContext:           "./web-build",
+		DBBuildContext:            "./db-build",
+		WebBuildDockerfile:        "../.webimageBuild/Dockerfile",
+		DBBuildDockerfile:         "../.dbimageBuild/Dockerfile",
 		AutoRestartContainers:     globalconfig.DdevGlobalConfig.AutoRestartContainers,
 		FailOnHookFail:            app.FailOnHookFail || app.FailOnHookFailGlobal,
 		WebEnvironment:            webEnvironment,
@@ -779,7 +779,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	}
 
 	// SSH agent just needs extra to add the official related user, nothing else
-	err = WriteBuildDockerfile(app.GetConfigPath(".sshimageBuild/Dockerfile"), "", nil, "")
+	err = WriteBuildDockerfile(filepath.Join(globalconfig.GetGlobalDdevDir(), ".sshimageBuild/Dockerfile"), "", nil, "")
 	if err != nil {
 		return "", err
 	}
@@ -1005,7 +1005,7 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
-	err := CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/live", "commands/web/xdebug", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "nginx_full/nginx-site.conf", "sequelpro.spf", "**/README.*")
+	err := CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "nginx_full/nginx-site.conf", "sequelpro.spf", "**/README.*")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}

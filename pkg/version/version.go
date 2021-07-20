@@ -31,7 +31,7 @@ var DockerVersionConstraint = ">= 18.06.1-alpha1"
 // REMEMBER TO CHANGE docs/index.md if you touch this!
 // The constraint MUST HAVE a -pre of some kind on it for successful comparison.
 // See https://github.com/drud/ddev/pull/738.. and regression https://github.com/drud/ddev/issues/1431
-var DockerComposeVersionConstraint = ">= 1.21.0-alpha1"
+var DockerComposeVersionConstraint = "1.21.0-alpha1 - 1.999.0"
 
 // DockerComposeFileFormatVersion is the compose version to be used
 var DockerComposeFileFormatVersion = "3.6"
@@ -40,13 +40,13 @@ var DockerComposeFileFormatVersion = "3.6"
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag for drud dev
-var WebTag = "20210308_push" // Note that this can be overridden by make
+var WebTag = "v1.17.7" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20210213_db_image_no_sudo"
+var BaseDBTag = "20210709_mariadb_versions"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"
@@ -58,11 +58,13 @@ var DBATag = "5" // Note that this can be overridden by make
 var RouterImage = "drud/ddev-router"
 
 // RouterTag defines the tag used for the router.
-var RouterTag = "20210106_nginx_default_server" // Note that this can be overridden by make
+var RouterTag = "v1.17.6" // Note that this can be overridden by make
 
+// SSHAuthImage is image for agent
 var SSHAuthImage = "drud/ddev-ssh-agent"
 
-var SSHAuthTag = "20210217_ddev_ssh_agent_chown"
+// SSHAuthTag is ssh-agent auth tag
+var SSHAuthTag = "v1.17.0"
 
 // BUILDINFO is information with date and context, supplied by make
 var BUILDINFO = "BUILDINFO should have new info"
@@ -145,14 +147,6 @@ func GetDockerComposeVersion() (string, error) {
 	path, err := exec.LookPath(executableName)
 	if err != nil {
 		return "", fmt.Errorf("no docker-compose")
-	}
-
-	// Temporarily fake the docker-compose check on macOS because of
-	// the slow docker-compose problem in https://github.com/docker/compose/issues/6956
-	// This can be removed when that's resolved.
-	if runtime.GOOS != "darwin" {
-		DockerComposeVersion = "1.25.0-rc4"
-		return DockerComposeVersion, nil
 	}
 
 	out, err := exec.Command(path, "version", "--short").Output()

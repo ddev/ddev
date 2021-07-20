@@ -1,6 +1,6 @@
 # ddev
 
-[![CircleCI](https://circleci.com/gh/drud/ddev.svg?style=shield)](https://circleci.com/gh/drud/ddev) [![Go Report Card](https://goreportcard.com/badge/github.com/drud/ddev)](https://goreportcard.com/report/github.com/drud/ddev) ![project is maintained](https://img.shields.io/maintenance/yes/2021.svg)
+[![CircleCI](https://circleci.com/gh/drud/ddev.svg?style=shield)](https://circleci.com/gh/drud/ddev) ![project is maintained](https://img.shields.io/maintenance/yes/2021.svg)
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/drud/ddev)
 
 ![ddev logo](images/ddev_logo.png)
@@ -59,4 +59,4 @@ We love to hear from our users and help them be successful with ddev. Support op
 ## Additional Information
 
 * **Contributing** See the "How can I contribute" question in the [FAQ](https://ddev.readthedocs.io/en/stable/users/faq/).
-* **Roadmap:** See the [ddev roadmap](https://github.com/drud/ddev/wiki/roadmap). We love your input! Make requests in the [ddev issue queue](https://github.com/drud/ddev/issues).
+* **Roadmap:** See the [ddev roadmap](https://github.com/drud/ddev/wiki/DDEV-Local-Roadmap). We love your input! Make requests in the [ddev issue queue](https://github.com/drud/ddev/issues).

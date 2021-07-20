@@ -44,5 +44,6 @@ services:
       timeout: 120s
 networks:
   default:
-    external:
-      name: ddev_default
+    name: ddev_default
+    external: true
+

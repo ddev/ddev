@@ -11,7 +11,7 @@ This recipe adds an Apache Solr container to a project. It will set up a solr co
 #### Installation
 
 1. Copy [docker-compose.solr.yaml](https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/TestServices/docker-compose.solr.yaml) to the .ddev folder for your project.
-2. Solr version can be changed by updating this line `image: solr:8` in `docker-compose.solr.yaml` file, but the recipe here assumes solr:8 and it may not work with other versions. Acquia and Pantheon.io hosting seem to require versions from 3 to 7, and you'll want to see the [contributed recipe](https://github.com/drud/ddev-contrib/tree/master/docker-compose-services/solr-5) for those older versions of solr.
+2. Solr version can be changed by updating this line `image: solr:8` in `docker-compose.solr.yaml` file, but the recipe here assumes solr:8 and it may not work with other versions. Acquia and Pantheon.io hosting seem to require versions from 3 to 7, and you'll want to see the [contributed recipes](https://github.com/drud/ddev-contrib) for older versions of solr.
 3. Create the folder path .ddev/solr/conf.
     * If needed, you may copy/extract the Solr configuration files for your project into `.ddev/solr/conf`. Ensure that the configuration files are present before running `ddev start`.
 4. Run `ddev start` or `ddev restart` if your project is already running.
@@ -23,7 +23,7 @@ This recipe adds an Apache Solr container to a project. It will set up a solr co
 * Add a solr server at `https://<projectname>>.ddev.site/en/admin/config/search/search-api/add-server`.
     * Use the "standard" Solr connector
     * Use the "http" protocol
-    * The "solr host" should be "ddev-<projectname>-solr" **NOT the default "localhost"**, because it does not run in the same container as the webserver. (Note that just using "solr" will often work, and used to be recommended, but it can be ambiguous if there are more than one projects running with a solr service.)
+    * The "solr host" should be `ddev-<projectname>-solr` **NOT the default "localhost"**, because it does not run in the same container as the webserver. (Note that just using "solr" will often work, and used to be recommended, but it can be ambiguous if there are more than one projects running with a solr service.)
     * The "solr core" should be named "dev" unless you customize the docker-compose.solr.yaml
     * Under "Advanced server configuration" set the "solr.install.dir" to `/opt/solr`
 * Download the config.zip provided on /admin/config/search/search-api/server/dev
@@ -73,11 +73,10 @@ This recipe adds a [Beanstalk](https://beanstalkd.github.io/) container to a pro
 * The Beanstalk instance will listen on TCP port 11300 (the beanstalkd default).
 * Configure your application to access Beanstalk on the host:port `ddev-<projectname>-beanstalk:11300`.
 
-## Additional services in ddev-contrib (MongoDB, Blackfire, PostgresSQL, etc)
+## Additional services in ddev-contrib (MongoDB, PostgresSQL, etc)
 
 The [ddev-contrib](https://github.com/drud/ddev-contrib) repository has a wealth of additional examples and instructions:
 
-* **Blackfire.io for performance testing and profiling**: See [Blackfire.io](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/blackfire).
 * **ElasticHQ**:See [ElasticHQ](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/elastichq).
 * **Elasticsearch**: See [Elasticsearch](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/elasticsearch).
 * **Headless Chrome**: See [Headless Chrome for Behat Testing](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/headless-chrome)

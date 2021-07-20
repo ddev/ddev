@@ -3,7 +3,6 @@
 set -o errexit
 set -o pipefail
 set -o nounset
-set -x
 
 if [ "${OS:-$(uname)}" = "Windows_NT" ]; then exit; fi
 
@@ -13,19 +12,28 @@ CONTAINER_NAME=ddev-router-test
 
 # Wait for container to be ready.
 function containercheck {
-    set +x
-	for i in {20..0};
-	do
-		# status contains uptime and health in parenthesis, sed to return health
-		status="$(docker ps --format "{{.Status}}" --filter "name=$CONTAINER_NAME" | sed  's/.*(\(.*\)).*/\1/')"
-		if [[ "$status" == "healthy" ]]
-		then
-			set -x
-			return 0
-		fi
-		sleep 1
-	done
-	return 1
+  for i in {15..0}; do
+    # fail if we can't find the container
+    if ! docker inspect ${CONTAINER_NAME} >/dev/null; then
+      break
+    fi
+
+    status="$(docker inspect ${CONTAINER_NAME} | jq -r '.[0].State.Status')"
+    if [ "${status}" != "running" ]; then
+      break
+    fi
+    health="$(docker inspect --format '{{json .State.Health }}' ${CONTAINER_NAME} | jq -r .Status)"
+    case ${health} in
+    healthy)
+      return 0
+      ;;
+    *)
+      sleep 1
+      ;;
+    esac
+  done
+  echo "# --- ddev-router FAIL -----"
+  return 1
 }
 
 function cleanup {
@@ -38,6 +46,7 @@ cleanup
 
 # Make sure rootCA is created and installed on the ddev-global-cache/mkcert
 mkcert -install
+set -x
 docker run -t --rm  -v "$(mkcert -CAROOT):/mnt/mkcert" -v ddev-global-cache:/mnt/ddev-global-cache busybox sh -c "mkdir -p /mnt/ddev-global-cache/mkcert && chmod -R ugo+w /mnt/ddev-global-cache/* && cp -R /mnt/mkcert /mnt/ddev-global-cache"
 
 # Run the router alone
@@ -62,3 +71,22 @@ if [ "${OS:-$(uname)}" != "Windows_NT" ]; then
 fi
 # Make sure internal access to https is working
 docker exec -t $CONTAINER_NAME curl --fail https://127.0.0.1/healthcheck || (echo "Failed to run https healthcheck inside container" && exit 104)
+
+
+MAX_DAYS_BEFORE_EXPIRATION=90
+if [ "${DDEV_IGNORE_EXPIRING_KEYS:-}" = "true" ]; then
+  echo "Skipping test of expiring keys because DDEV_IGNORE_EXPIRING_KEYS is set"
+else
+  docker exec -e "max=$MAX_DAYS_BEFORE_EXPIRATION" ${CONTAINER_NAME} bash -x -c '
+    dates=$(apt-key list 2>/dev/null | awk "/\[expires/ { gsub(/[\[\]]/, \"\"); print \$6;}")
+    for item in ${dates}; do
+      today=$(date -I)
+      let diff=($(date +%s -d ${item})-$(date +%s -d ${today}))/86400
+      if [ ${diff} -le ${max} ]; then
+        echo "An apt key is expiring in ${diff} days"
+        apt-key list
+        exit 1
+      fi
+    done
+  ' || (echo "apt keys are expiring in container" && exit 105)
+fi

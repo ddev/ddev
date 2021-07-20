@@ -113,7 +113,7 @@ func MapKeysToArray(mapWithKeys map[string]interface{}) []string {
 	return result
 }
 
-// GetContainerUIDGid() returns the uid and gid (and string forms) to be used running most containers.
+// GetContainerUIDGid returns the uid and gid (and string forms) to be used running most containers
 func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 	curUser, err := user.Current()
 	if err != nil {
@@ -154,9 +154,14 @@ func GetFirstWord(s string) string {
 	return arr[0]
 }
 
+// FindWindowsBashPath returns the PATH to bash on Windows
+// preferring git-bash (or just "bash" elsewhere)
 // On Windows we'll need the path to bash to execute anything.
 // Returns empty string if not found, path if found
 func FindWindowsBashPath() string {
+	if runtime.GOOS != "windows" {
+		return "bash"
+	}
 	windowsBashPath, err := osexec.LookPath(`C:\Program Files\Git\bin\bash.exe`)
 	if err != nil {
 		// This one could come back with the WSL bash, in which case we may have some trouble.

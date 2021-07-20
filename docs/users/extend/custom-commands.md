@@ -35,7 +35,7 @@ To provide a command which will execute in a container, add a bash script to `.d
 ## Usage: restart-nginx
 ## Example: "ddev restart-nginx"
 
-killall -HUP nginx php-fpm
+killall -USR2 nginx php-fpm
 ```
 
 In addition to commands that run in the standard ddev containers like "web" and "db", you can run commands in custom containers, just using the service name, like `.ddev/commands/solr/<command>`. Note, however, that your service must mount /mnt/ddev_config as the web and db containers do, so the `volumes` section of docker-compose.<servicename>.yaml needs:

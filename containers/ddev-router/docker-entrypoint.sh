@@ -3,6 +3,9 @@ set -eu -o pipefail
 
 rm -f /tmp/healthy
 
+export HTTP2=http2
+if [ "${DISABLE_HTTP2:-}" = "true" ]; then HTTP2=""; fi
+
 # Warn if the DOCKER_HOST socket does not exist
 if [[ $DOCKER_HOST = unix://* ]]; then
 	socket_file=${DOCKER_HOST#unix://}

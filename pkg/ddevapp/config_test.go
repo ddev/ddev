@@ -724,7 +724,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 	require.NoError(t, startErr, "app.StartAndWait() did not succeed: output:\n=====\n%s\n===== logs:\n========= logs =======\n%s\n========\n", stdout, logs)
 
-	assert.Contains(stdout, "utf.cnf")
+	assert.Contains(stdout, "collation.cnf")
 	assert.Contains(stdout, "my-php.ini")
 
 	switch app.WebserverType {

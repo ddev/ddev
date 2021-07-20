@@ -10,6 +10,7 @@ Hundreds of useful developer tools are included inside the containers. Any of th
 
 * MySQL Client (mysql) - Command-line interface for interacting with MySQL/MariaDB.
 * [Drush](http://www.drush.org) - Command-line shell and Unix scripting interface for Drupal.
+* [PHIVE](https://phar.io/) - Command line tool for "PHAR Installation and Verification Environment"
 * [WP-CLI](http://wp-cli.org/) - Command-line tools for managing WordPress installations, available both as "wp" and as "wp-cli".
 * npm and yarn
 * node

@@ -21,6 +21,7 @@ Each of these commands has full help. For example, `ddev start -h` or `ddev help
 * `ddev launch` or `ddev launch some/uri` will launch a browser with the current project's URL (or a full URL to `/some/uri`). `ddev launch -p` will launch the phpMyAdmin UI, and `ddev launch -m` will launch the MailHog UI.
 * `ddev delete` is the same as `ddev stop --remove-data` and will delete a project's database and ddev's record of the project's existence. It doesn't touch your project or code. `ddev delete -O` will omit the snapshot creation step that would otherwise take place, and `ddev delete images` gets rid of spare Docker images you may have on your machine.
 * `ddev xdebug` enables xdebug, `ddev xdebug off` disables it, `ddev xdebug status` shows status
+* `ddev xhprof` enables xhprof, `ddev xhprof off` disables it, `ddev xhprof status` shows status
 * `ddev drush` (Drupal and Backdrop only) gives direct access to the drush CLI
 * `ddev artisan` (Laravel only) gives direct access to the Laravel artisan CLI
 * `ddev magento` (Magento2 only) gives access to the magento CLI
@@ -171,7 +172,7 @@ ddev composer create "drupal/recommended-project"
 ddev composer require drush/drush
 ddev drush site:install -y
 ddev drush uli
-ddev drush launch
+ddev launch
 ```
 
 #### Drupal 9 Git Clone Example
@@ -273,15 +274,16 @@ Copy [docker-compose.elasticsearch.yaml](https://github.com/drud/ddev-contrib/bl
 ddev start
 ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition
 ddev ssh
-bin/magento setup:install --base-url=https://ddev-magento2.ddev.site/ --db-host=db --db-name=db --db-user=db --db-password=db --elasticsearch-host=elasticsearch --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com --admin-user=admin --admin-password=admin123 --language=en_US
+bin/magento setup:install --base-url=https://ddev-magento2.ddev.site/ --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db --elasticsearch-host=elasticsearch --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com --admin-user=admin --admin-password=admin123 --language=en_US
 bin/magento deploy:mode:set developer
 bin/magento module:disable Magento_TwoFactorAuth
+bin/magento setup:di:compile
 bin/magento cache:flush
 ```
 
 Of course, change the admin name and related information is needed. The project name here is derived from the directory name (ddev-magento2 in this example). Your project name (and thus the `setup:store-config:set --base-url`) will almost certainly be different.
 
-You may want to add the [Magento 2 Sample Data](https://devdocs.magento.com/guides/v2.4/install-gde/install/sample-data-after-composer.html).
+You may want to add the [Magento 2 Sample Data](https://devdocs.magento.com/guides/v2.4/install-gde/install/sample-data-after-composer.html) with `bin/magento sampledata:deploy && bin/magento setup:upgrade` (inside the web container).
 
 Note that Magento 2 is a huge codebase and using `nfs_mount_enabled: true` is recommended for performance on macOS and Windows, see [docs](performance/#using-nfs-to-mount-the-project-into-the-container).
 

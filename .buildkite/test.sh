@@ -13,11 +13,11 @@ set -o nounset
 set -x
 
 # On macOS, restart docker to avoid bugs where containers can't be deleted
-if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
-  killall Docker || true
-  nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
-  sleep 10
-fi
+#if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
+#  killall Docker || true
+#  nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
+#  sleep 10
+#fi
 
 export TIMEOUT_CMD="timeout -v"
 if [ ${OSTYPE%%-*} = "linux" ]; then
@@ -35,11 +35,12 @@ if ! docker ps >/dev/null 2>&1 ; then
   exit 1
 fi
 
-if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
-  set +x
-  echo "${DOCKERHUB_PULL_PASSWORD:-}" | docker login --username "${DOCKERHUB_PULL_USERNAME}" --password-stdin
-  set -x
-fi
+# Try to get important names cached; try twice
+docker run --rm alpine sh -c '
+  for hostname in github.com raw.githubusercontent.com github-releases.githubusercontent.com registry-1.docker.io auth.docker.io production.cloudflare.docker.com; do
+    nslookup $hostname >/dev/null 2>&1 || nslookup $hostname >/dev/null 2>&1 || true
+  done
+'
 
 rm -rf ~/.ddev/Test* ~/.ddev/global_config.yaml ~/.ddev/homeadditions ~/.ddev/commands
 
@@ -76,6 +77,6 @@ fi
 echo "--- Running tests..."
 make test
 RV=$?
-echo "build.sh completed with status=$RV"
+echo "test.sh completed with status=$RV"
 ddev poweroff || true
 exit $RV

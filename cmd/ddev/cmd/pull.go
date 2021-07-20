@@ -18,7 +18,6 @@ var PullCmd = &cobra.Command{
 	Running pull will connect to the configured provider and download + import the
 	database and files.`,
 	Example: `ddev pull pantheon
-ddev pull ddev-live
 ddev pull platform
 ddev pull pantheon -y
 ddev pull platform --skip-files -y`,

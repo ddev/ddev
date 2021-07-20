@@ -35,6 +35,7 @@ if [ ${AUR_REPO} = "ddev-edge-bin" ] ; then EDGE_DESCRIPTION="  (edge channel)";
 # Add temporary private key provided by CircleCI context
 echo $AUR_SSH_PRIVATE_KEY | perl -p -e 's/<SPLIT>/\n/g' >/tmp/id_rsa_aur && chmod 600 /tmp/id_rsa_aur
 
+eval $(ssh-agent)
 ssh-add /tmp/id_rsa_aur
 rm -rf ${AUR_REPO}
 git config --global core.sshCommand 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'

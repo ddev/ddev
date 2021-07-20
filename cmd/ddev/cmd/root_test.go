@@ -5,11 +5,12 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
-	"time"
 
 	"github.com/drud/ddev/pkg/testcommon"
 	log "github.com/sirupsen/logrus"
@@ -254,11 +255,21 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 			}
 		})
 
-	newStartTime := time.Now().Unix()
-	// We have to do the echo technique to get past the prompt about doing a ddev poweroff
-	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf("echo y | %s start", DdevBin)})
+	app, err := ddevapp.GetActiveApp("")
+	require.NoError(t, err)
+	oldTime, _, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
+		Cmd:     "date +%s",
+	})
+	oldTime = strings.Trim(oldTime, "\n")
+	oldTimeInt, err := strconv.ParseInt(oldTime, 10, 64)
+	require.NoError(t, err)
+
+	bashPath := util.FindWindowsBashPath()
+	out, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf("echo y | '%s' start", DdevBin)})
 	assert.NoError(err)
 	assert.Contains(out, "ddev-ssh-agent container has been removed")
+	assert.Contains(out, "ssh-agent container is running")
 
 	apps = ddevapp.GetActiveProjects()
 	activeCount = len(apps)
@@ -266,17 +277,17 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 
 	// Verify that the ddev-router and ddev-ssh-agent have just been newly created
 	routerC, err := dockerutil.FindContainerByName("ddev-router")
-	assert.NoError(err)
+	require.NoError(t, err)
 	require.NotEmpty(t, routerC)
 	routerCreateTime := (*routerC).Created
 	sshC, err := dockerutil.FindContainerByName("ddev-ssh-agent")
-	assert.NoError(err)
+	require.NoError(t, err)
 	require.NotEmpty(t, sshC)
 	sshCreateTime := (*sshC).Created
 
 	// router and ssh-agent should have been created within after we started the new project
-	assert.GreaterOrEqual(routerCreateTime, newStartTime)
-	assert.GreaterOrEqual(sshCreateTime, newStartTime)
+	assert.GreaterOrEqual(routerCreateTime, oldTimeInt)
+	assert.GreaterOrEqual(sshCreateTime, oldTimeInt)
 }
 
 // addSites runs `ddev start` on the test apps

@@ -41,7 +41,7 @@ var containerWaitTimeout = 61
 // SiteRunning defines the string used to denote running sites.
 const SiteRunning = "running"
 
-// SiteStarting
+// SiteStarting is the string for a project that is starting
 const SiteStarting = "starting"
 
 // SiteStopped defines the string used to denote a site where the containers were not found/do not exist, but the project is there.
@@ -115,7 +115,7 @@ type DdevApp struct {
 	ComposeYaml map[string]interface{} `yaml:"-"`
 }
 
-// List() provides the functionality for `ddev list`
+// List provides the functionality for `ddev list`
 // activeOnly if true only shows projects that are currently docker containers
 // continuous if true keeps requesting and outputting continuously
 // continuousSleepTime is the time between reports
@@ -508,7 +508,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 
 	// The perl manipulation removes statements like CREATE DATABASE and USE, which
 	// throw off imports. This is a scary manipulation, as it must not match actual content
-	// as has actually happened with https://www.ddev.com/ddev-local/ddev-local-database-management/
+	// as has actually happened with https://www.ddevhq.org/ddev-local/ddev-local-database-management/
 	// and in https://github.com/drud/ddev/issues/2787
 	// The backtick after USE is inserted via fmt.Sprintf argument because it seems there's
 	// no way to escape a backtick in a string literal.
@@ -666,6 +666,7 @@ func (app *DdevApp) ImportFiles(importPath string, extPath string) error {
 		return err
 	}
 
+	//nolint: revive
 	if err := app.ProcessHooks("post-import-files"); err != nil {
 		return err
 	}
@@ -1363,6 +1364,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_ROUTER_HTTPS_PORT":     app.RouterHTTPSPort,
 		"DDEV_XDEBUG_ENABLED":        strconv.FormatBool(app.XdebugEnabled),
 		"DDEV_PRIMARY_URL":           app.GetPrimaryURL(),
+		"DOCKER_SCAN_SUGGEST":        "false",
 		"IS_DDEV_PROJECT":            "true",
 	}
 
@@ -1470,7 +1472,7 @@ func (app *DdevApp) WaitByLabels(labels map[string]string) error {
 	return nil
 }
 
-// StartAndWait() is primarily for use in tests.
+// StartAndWait is primarily for use in tests.
 // It does app.Start() but then waits for extra seconds
 // before returning.
 // extraSleep arg in seconds is the time to wait if > 0
@@ -1478,6 +1480,9 @@ func (app *DdevApp) StartAndWait(extraSleep int) error {
 	err := app.Start()
 	if err != nil {
 		return err
+	}
+	if extraSleep > 0 {
+		time.Sleep(time.Duration(extraSleep) * time.Second)
 	}
 	return nil
 }
@@ -1725,7 +1730,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	return nil
 }
 
-// Stops and Removes the docker containers for the project in current directory.
+// Stop stops and Removes the docker containers for the project in current directory.
 func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	app.DockerEnv()
 	var err error
@@ -1813,7 +1818,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	return nil
 }
 
-// RemoveGlobalProjectInfo() deletes the project from ProjectList
+// RemoveGlobalProjectInfo deletes the project from ProjectList
 func (app *DdevApp) RemoveGlobalProjectInfo() {
 	_ = globalconfig.RemoveProjectInfo(app.Name)
 }
@@ -1860,7 +1865,7 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 	return httpURLs, httpsURLs, append(httpsURLs, httpURLs...)
 }
 
-// GetPrimaryURL() returns the primary URL that can be used, https or http
+// GetPrimaryURL returns the primary URL that can be used, https or http
 func (app *DdevApp) GetPrimaryURL() string {
 	httpURLs, httpsURLs, _ := app.GetAllURLs()
 	urlList := httpsURLs
@@ -2173,12 +2178,12 @@ func (app *DdevApp) GetWorkingDir(service string, dir string) string {
 	return app.DefaultWorkingDirMap()[service]
 }
 
-// Returns the docker volume name of the nfs mount volume
+// GetNFSMountVolName returns the docker volume name of the nfs mount volume
 func (app *DdevApp) GetNFSMountVolName() string {
 	return strings.ToLower("ddev-" + app.Name + "_nfsmount")
 }
 
-// StartAppIfNotRunning() is intended to replace much-duplicated code in the commands.
+// StartAppIfNotRunning is intended to replace much-duplicated code in the commands.
 func (app *DdevApp) StartAppIfNotRunning() error {
 	var err error
 	if app.SiteStatus() != SiteRunning {

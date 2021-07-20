@@ -6,12 +6,23 @@ FROM ${DB_TYPE}:${DB_PINNED_VERSION}
 ARG DB_TYPE
 ARG DB_VERSION
 
+ENV LANG=C.UTF-8
 ENV MYSQL_DATABASE db
 ENV MYSQL_USER db
 ENV MYSQL_PASSWORD db
 ENV MYSQL_ROOT_PASSWORD root
 
 SHELL ["/bin/bash", "-c"]
+
+# Remove obsolete MySQL 5.5/5.6 Jessie and before keys so they don't make expiration key test stumble
+RUN for item in "75DD C3C4 A499 F1A1 8CB5  F3C8 CBF8 D6FD 518E 17E1" "126C 0D24 BD8A 2942 CC7D  F8AC 7638 D044 2B90 D010" "D211 6914 1CEC D440 F2EB  8DDA 9D6D 8F6B C857 C906" "A1BD 8E9D 78F7 FE5C 3E65  D8AF 8B48 AD62 4692 5553" "ED6D 6527 1AAC F0FF 15D1  2303 6FB2 A1C2 65FF B764"; do \
+    apt-key remove "${item}" || true; \
+  done;
+
+# Older versions of mariadb have been removed from
+# the mariadb apt repository, so we don't want to
+# look there when doing apt-get update. And we don't use new packages from there.
+RUN rm -f /etc/apt/sources.list.d/mariadb.list
 
 RUN apt-get -qq update && apt-get -qq install -y tzdata gnupg2 pv less vim wget curl lsb-release >/dev/null
 

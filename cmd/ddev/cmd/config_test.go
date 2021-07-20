@@ -175,7 +175,7 @@ func TestConfigSetValues(t *testing.T) {
 	projectTLD := "nowhere.example.com"
 	useDNSWhenPossible := false
 	timezone := "America/Chicago"
-	webEnv := "SOMEENV=someval"
+	webEnv := "SOMEENV=some+val"
 
 	args := []string{
 		"config",
@@ -789,5 +789,5 @@ func TestConfigGitignore(t *testing.T) {
 	statusOut, err := exec.RunCommand("bash", []string{"-c", "git status"})
 	assert.NoError(err)
 	_, err = exec.RunCommand("bash", []string{"-c", "git status | grep 'Untracked files'"})
-	assert.Error(err, "Untracked files were found were we didn't expect them: %s", statusOut)
+	assert.Error(err, "Untracked files were found where we didn't expect them: %s", statusOut)
 }

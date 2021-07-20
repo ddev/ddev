@@ -1,9 +1,9 @@
 
 ### ---------------------------ddev-webserver-base--------------------------------------
 ### Build ddev-php-base from ddev-webserver-base
-### ddev-php-base is the basic of ddev-php-prod (for DDEV-Live)
+### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV-Local)
-FROM drud/ddev-php-base:v0.7.13 as ddev-webserver-base
+FROM drud/ddev-php-base:v1.17.7 as ddev-webserver-base
 
 ENV BACKDROP_DRUSH_VERSION=1.4.0
 ENV MKCERT_VERSION=v1.4.6
@@ -67,20 +67,19 @@ SHELL ["/bin/bash", "-c"]
 RUN mkdir /tmp/ddev && \
     if [[ $TARGETPLATFORM == "linux/arm64" ]]; then \
         printf 'MKCERT_ARCH="linux-arm64" \n\
-        DDEV_LIVE_ARCH=arm64 \n\
         MAILHOG_ARCH="linux_arm64"' > /tmp/ddev/vars; \
     else \
         printf 'MKCERT_ARCH="linux-amd64" \n\
-        DDEV_LIVE_ARCH=amd64 \n\
         MAILHOG_ARCH="linux_amd64"' > /tmp/ddev/vars; \
     fi
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
-    blackfire-agent \
+    blackfire \
     blackfire-php \
     fontconfig \
     gettext \
     git \
+    graphviz \
     iproute2 \
     iputils-ping \
     jq \
@@ -99,15 +98,13 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     zip
 
 ADD ddev-webserver-dev-base-files /
+RUN phpdismod blackfire xhprof
 RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_${MAILHOG_ARCH} -o /usr/local/bin/mailhog; 
 
-RUN curl -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod 777 /usr/local/bin/terminus
-RUN curl -sSL https://github.com/platformsh/platformsh-cli/releases/download/$(curl --silent "https://api.github.com/repos/platformsh/platformsh-cli/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/platform.phar --output /usr/local/bin/platform && chmod 777 /usr/local/bin/platform
+RUN phpdismod xdebug && curl -sSL --fail --output /usr/local/bin/phive "https://phar.io/releases/phive.phar" && chmod 777 /usr/local/bin/phive && phpenmod xdebug
+RUN set -o pipefail && curl -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod 777 /usr/local/bin/terminus
+RUN set -o pipefail && curl -sSL https://github.com/platformsh/platformsh-cli/releases/download/$(curl --silent "https://api.github.com/repos/platformsh/platformsh-cli/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/platform.phar --output /usr/local/bin/platform && chmod 777 /usr/local/bin/platform
 RUN curl -sSL --output /usr/local/bin/acli https://github.com/acquia/cli/releases/latest/download/acli.phar && chmod 777 /usr/local/bin/acli
-
-# Temporary hack 20210319 until ddev-live has arm64 binaries
-RUN source /tmp/ddev/vars && curl -fsSL -o ddev-live.zip https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/ddev-live_${DDEV_LIVE_ARCH}.zip && unzip ddev-live.zip && mv ddev-live /usr/local/bin && chmod 777 /usr/local/bin/ddev-live && rm ddev-live.zip
-
 RUN curl -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/backdrop-drush-extension.zip -o /tmp/backdrop-drush-extension.zip && unzip -o /tmp/backdrop-drush-extension.zip -d /var/tmp/backdrop_drush_commands
 
 RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib/apache2/module/enabled_by_admin /var/lib/apache2/module/disabled_by_admin && \
@@ -130,13 +127,13 @@ RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /var/lib/nginx
 
 RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-${MKCERT_ARCH} -o /usr/local/bin/mkcert && chmod 777 /usr/local/bin/mkcert
 
+RUN mkdir -p /var/www/xhprof && curl -o /tmp/xhprof.tgz -sSL https://pecl.php.net/get/xhprof && tar -zxf /tmp/xhprof.tgz --strip-components=1 -C /var/www/xhprof && chmod 777 /var/www/xhprof/xhprof_html
+
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
   chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
 
 RUN a2dismod mpm_event
 RUN a2enmod ssl headers expires
-
-RUN phpdismod blackfire
 
 # scripts added last because they're most likely place to make changes, speeds up build
 ADD ddev-webserver-base-scripts /
@@ -163,9 +160,6 @@ ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
 ENV CAROOT /mnt/ddev-global-cache/mkcert
 
-ENV DDEV_LIVE_CONFIG_FILE_PATH /mnt/ddev-global-cache/ddev-live/cli-config.json
-ENV DDEV_LIVE_NO_VERSION_PROMPT true
-
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_CACHE_DIR=/mnt/ddev-global-cache/composer
 ENV COMPOSER_PROCESS_TIMEOUT=2000
@@ -174,6 +168,8 @@ ENV TERM xterm
 ENV MH_SMTP_BIND_ADDR 127.0.0.1:1025
 
 ENV BASH_ENV /etc/bash.nointeractive.bashrc
+ENV LANG=C.UTF-8
+ENV XHPROF_OUTPUT_DIR=/tmp/xhprof
 
 COPY --from=ddev-webserver-dev-base / /
 EXPOSE 80 8025
@@ -279,6 +275,7 @@ ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_CACHE_DIR=/mnt/ddev-global-cache/composer
 ENV COMPOSER_PROCESS_TIMEOUT=2000
 ENV DEBIAN_FRONTEND noninteractive
+ENV LANG=C.UTF-8
 ENV TERM xterm
 
 ENV BASH_ENV /etc/bash.nointeractive.bashrc

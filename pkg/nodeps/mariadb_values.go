@@ -5,6 +5,7 @@ package nodeps
 // MariaDBDefaultVersion is the default MariaDB version
 const MariaDBDefaultVersion = MariaDB103
 
+// ValidMariaDBVersions is the versions of MariaDB that are valid
 var ValidMariaDBVersions = map[string]bool{
 	MariaDB55:  true,
 	MariaDB100: true,
@@ -13,6 +14,7 @@ var ValidMariaDBVersions = map[string]bool{
 	MariaDB103: true,
 	MariaDB104: true,
 	MariaDB105: true,
+	MariaDB106: true,
 }
 
 // MariaDB Versions
@@ -24,4 +26,5 @@ const (
 	MariaDB103 = "10.3"
 	MariaDB104 = "10.4"
 	MariaDB105 = "10.5"
+	MariaDB106 = "10.6"
 )

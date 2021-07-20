@@ -69,7 +69,7 @@ func NewDrupalSettings(app *DdevApp) *DrupalSettings {
 const settingsIncludeStanza = `
 // Automatically generated include for settings managed by ddev.
 $ddev_settings = dirname(__FILE__) . '/settings.ddev.php';
-if (is_readable($ddev_settings) && getenv('IS_DDEV_PROJECT') == 'true') {
+if (getenv('IS_DDEV_PROJECT') == 'true' && is_readable($ddev_settings)) {
   require $ddev_settings;
 }
 `
@@ -359,6 +359,7 @@ func writeDrupal8DdevSettingsFile(settings *DrupalSettings, filePath string) err
 	}
 	defer util.CheckClose(file)
 
+	//nolint: revive
 	if err := tmpl.Execute(file, settings); err != nil {
 		return err
 	}
@@ -601,6 +602,7 @@ func drupal8PostStartAction(app *DdevApp) error {
 		return err
 	}
 
+	//nolint: revive
 	if err := drupalEnsureWritePerms(app); err != nil {
 		return err
 	}
@@ -772,6 +774,7 @@ func drupalImportFilesAction(app *DdevApp, importPath, extPath string) error {
 		return nil
 	}
 
+	//nolint: revive
 	if err := fileutil.CopyDir(importPath, destPath); err != nil {
 		return err
 	}

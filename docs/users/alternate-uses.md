@@ -16,7 +16,7 @@ An experimental feature of DDEV-local is simplified small-project hosting on the
 
 This may be completely appropriate for small or abandoned sites that have special requirements like old versions of PHP that aren't supported elsewhere.
 
-**Note that this is no replacement for a scalable managed hosting offering like [DDEV-Live](https://www.ddev.com/ddev-live/) or other similar services. It's unknown how much traffic it can handle in a given environment. And it's EXPERIMENTAL. And it will never replace managed hosting.**
+**Note that this is no replacement for a scalable managed hosting offering. It's unknown how much traffic it can handle in a given environment. And it's EXPERIMENTAL. And it will never replace managed hosting.**
 
 1. Install DDEV-Local on a regular Linux server that is directly connected to the Internet. You're responsible for your firewall and maintenance of the server, of course.  
 2. On Debian/Ubuntu, you can set up a simple firewall with `ufw allow 80 && ufw allow 443 && ufw allow 22 && ufw enable`
@@ -81,7 +81,7 @@ display_startup_errors = Off
 Caveats:
 
 * It's unknown how much traffic a given server and docker setup can sustain, or what the results will be if the traffic is more than the server can handle.
-* DDEV-Local does not provide outgoing SMTP mailhandling service, and the development-focused MailHog feature is disabled if you're using `use_hardened_images`. You can provide SMTP service a number of ways, but the recommended way is to enable SMTP mailsending in your application and leverage a third-party transactional email service such as SendGrid, Mandrill, or Mailgun. This is the best way to make sure your mail actually gets delivered. See [DDEV-Live email sending docs](https://docs.ddev.com/services/#email) for hints.
+* DDEV-Local does not provide outgoing SMTP mailhandling service, and the development-focused MailHog feature is disabled if you're using `use_hardened_images`. You can provide SMTP service a number of ways, but the recommended way is to enable SMTP mailsending in your application and leverage a third-party transactional email service such as SendGrid, Mandrill, or Mailgun. This is the best way to make sure your mail actually gets delivered.
 * You may need an external cron trigger for some types of CMS.
 * Debugging Let's Encrypt failures requires viewing the ddev-router logs with `docker logs ddev-router`
 * A malicious attack on a website hosted with `use_hardened_images` will likely not be able to do anything significant to the host, but it can certainly change your code, which is mounted on the host.

@@ -67,7 +67,7 @@
 !define PRODUCT_PUBLISHER "Drud Technology LLC"
 
 !define PRODUCT_WEB_SITE "${PRODUCT_NAME} Website"
-!define PRODUCT_WEB_SITE_URL "https://www.ddev.com"
+!define PRODUCT_WEB_SITE_URL "https://ddev.readthedocs.io"
 
 !define PRODUCT_DOCUMENTATION "${PRODUCT_NAME} Documentation"
 !define PRODUCT_DOCUMENTATION_URL "https://ddev.readthedocs.io"
@@ -91,6 +91,25 @@
 !define REG_INSTDIR_KEY "Software\Microsoft\Windows\CurrentVersion\App Paths\ddev.exe"
 !define REG_UNINST_ROOT "HKLM"
 !define REG_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
+
+
+
+/**
+ * Third Party Applications
+ */
+!define GSUDO_NAME "gsudo"
+!define GSUDO_SETUP "sudo.exe"
+!define GSUDO_URL "https://github.com/drud/gsudo/releases/download/v0.7.3/gsudo.exe"
+
+!define WINNFSD_NAME "WinNFSd"
+!define WINNFSD_VERSION "2.4.0"
+!define WINNFSD_SETUP "WinNFSd.exe"
+!define WINNFSD_URL "https://github.com/winnfsd/winnfsd/releases/download/${WINNFSD_VERSION}/WinNFSd.exe"
+
+!define NSSM_NAME "NSSM"
+!define NSSM_VERSION "2.24-101-g897c7ad"
+!define NSSM_SETUP "nssm.exe"
+!define NSSM_URL "https://github.com/drud/nssm/releases/download/${NSSM_VERSION}/nssm.exe"
 
 
 
@@ -229,7 +248,7 @@ Var MkcertSetup
 !define MUI_PAGE_HEADER_SUBTEXT "Please review the license terms before installing WinNFSd."
 !define MUI_PAGE_CUSTOMFUNCTION_PRE winNFSdLicPre
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE winNFSdLicLeave
-!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_amd64\winnfsd_license.txt"
+!insertmacro MUI_PAGE_LICENSE "licenses\winnfsd_license.txt"
 
 ; Directory page
 !define MUI_PAGE_CUSTOMFUNCTION_PRE DirectoryPre
@@ -445,15 +464,32 @@ SectionEnd
 /**
  * sudo application install
  */
-Section "sudo" SecSudo
+Section "${GSUDO_NAME}" SecSudo
   ; Force installation
   SectionIn 1 2 3 RO
   SetOutPath "$INSTDIR"
   SetOverwrite try
 
   ; Copy files
-  File "..\.gotmp\bin\windows_amd64\sudo.exe"
   File "..\.gotmp\bin\windows_amd64\sudo_license.txt"
+
+  ; Set URL and temporary file name
+  !define GSUDO_DEST "$INSTDIR\${GSUDO_SETUP}"
+
+  ; Download installer
+  INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${GSUDO_URL}" "${GSUDO_DEST}" /END
+  Pop $R0 ; return value = exit code, "OK" if OK
+
+  ; Check download result
+  ${If} $R0 != "OK"
+    ; Download failed, show message and continue
+    SetDetailsView show
+    DetailPrint "Download of `${GSUDO_NAME}` failed:"
+    DetailPrint " $R0"
+    MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${GSUDO_NAME}` has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue the resting installation."
+  ${EndIf}
+
+  !undef GSUDO_DEST
 SectionEnd
 
 /**
@@ -520,29 +556,61 @@ SectionGroup /e "WinNFSd"
   /**
    * WinNFSd application install
    */
-  Section "WinNFSd" SecWinNFSd
+  Section "${WINNFSD_NAME}" SecWinNFSd
     SectionIn 1
     SetOutPath "$INSTDIR"
     SetOverwrite try
 
     ; Copy files
-    File "..\.gotmp\bin\windows_amd64\winnfsd.exe"
-    File "..\.gotmp\bin\windows_amd64\winnfsd_license.txt"
+    File "licenses\winnfsd_license.txt"
     File "..\scripts\windows_ddev_nfs_setup.sh"
+
+    ; Set URL and temporary file name
+    !define WINNFSD_DEST "$INSTDIR\${WINNFSD_SETUP}"
+
+    ; Download installer
+    INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${WINNFSD_URL}" "${WINNFSD_DEST}" /END
+    Pop $R0 ; return value = exit code, "OK" if OK
+
+    ; Check download result
+    ${If} $R0 != "OK"
+      ; Download failed, show message and continue
+      SetDetailsView show
+      DetailPrint "Download of `${WINNFSD_NAME}` failed:"
+      DetailPrint " $R0"
+      MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${WINNFSD_NAME}` has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue the resting installation."
+    ${EndIf}
+
+    !undef WINNFSD_DEST
   SectionEnd
 
   /**
    * NSSM application install
    */
-  Section "NSSM" SecNSSM
+  Section "${NSSM_NAME}" SecNSSM
     ; Install in non choco mode only
     ${IfNot} ${Chocolatey}
       SectionIn 1
       SetOutPath "$INSTDIR"
       SetOverwrite try
 
-      ; Copy files
-      File "..\.gotmp\bin\windows_amd64\nssm.exe"
+      ; Set URL and temporary file name
+      !define NSSM_DEST "$INSTDIR\${NSSM_SETUP}"
+
+      ; Download installer
+      INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${NSSM_URL}" "${NSSM_DEST}" /END
+      Pop $R0 ; return value = exit code, "OK" if OK
+
+      ; Check download result
+      ${If} $R0 != "OK"
+        ; Download failed, show message and continue
+        SetDetailsView show
+        DetailPrint "Download of `${NSSM_NAME}` failed:"
+        DetailPrint " $R0"
+        MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${NSSM_NAME}` has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue the resting installation."
+      ${EndIf}
+
+      !undef NSSM_DEST
     ${EndIf}
   SectionEnd
 SectionGroupEnd
@@ -904,12 +972,6 @@ Function checkDocker
 
         DockerDesktopSelect:
           StrCpy $DockerSelected "1"
-        ${Else}
-          MessageBox MB_ICONQUESTION|MB_YESNOCANCEL "`${DOCKER_TOOLBOX_NAME}` is not installed, but it is required for $(^Name) to function. Would you like to go to the download page of `${DOCKER_TOOLBOX_NAME}`? Cancel will not show this message again." IDYES DockerToolboxDownload IDCANCEL CheckDockerIgnore
-          Goto CheckDockerEnd
-
-        DockerToolboxDownload:
-          ExecShell "open" "${DOCKER_TOOLBOX_URL}"
         ${EndIf}
 
         Goto CheckDockerEnd
@@ -943,11 +1005,11 @@ Section Uninstall
   ; Remove installed files
   Delete "$INSTDIR\ddev_uninstall.exe"
 
-  Delete "$INSTDIR\nssm.exe"
+  Delete "$INSTDIR\${NSSM_SETUP}"
 
   Delete "$INSTDIR\windows_ddev_nfs_setup.sh"
   Delete "$INSTDIR\winnfsd_license.txt"
-  Delete "$INSTDIR\winnfsd.exe"
+  Delete "$INSTDIR\${WINNFSD_SETUP}"
 
   Delete "$INSTDIR\mkcert uninstall.lnk"
   Delete "$INSTDIR\mkcert install.lnk"
@@ -955,7 +1017,7 @@ Section Uninstall
   Delete "$INSTDIR\mkcert.exe"
 
   Delete "$INSTDIR\sudo_license.txt"
-  Delete "$INSTDIR\sudo.exe"
+  Delete "$INSTDIR\${GSUDO_SETUP}"
 
   Delete "$INSTDIR\license.txt"
   Delete "$INSTDIR\ddev.exe"

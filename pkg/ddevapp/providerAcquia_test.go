@@ -19,10 +19,6 @@ import (
 )
 
 /**
- * These tests rely on an external test account managed by DRUD. To run them, you'll
- * need to set an environment variable called "DDEV_DDEVLIVE_API_TOKEN" with credentials for
- * this account. If no such environment variable is present, these tests will be skipped.
- *
  * A valid site (with backups) must be present which matches the test site and environment name
  * defined in the constants below.
  */
@@ -183,7 +179,7 @@ func TestAcquiaPush(t *testing.T) {
 	})
 
 	app.Name = t.Name()
-	app.Type = nodeps.AppTypeDrupal8
+	app.Type = nodeps.AppTypeDrupal9
 	app.Hooks = map[string][]YAMLTask{"post-push": {{"exec-host": "touch hello-post-push-" + app.Name}}, "pre-push": {{"exec-host": "touch hello-pre-push-" + app.Name}}}
 	_ = app.Stop(true, false)
 
@@ -235,14 +231,14 @@ func TestAcquiaPush(t *testing.T) {
 
 	// Test that the database row was added
 	out, _, err := app.Exec(&ExecOpts{
-		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s"' | drush @%s sql-cli --extra=-N`, t.Name(), tval, acquiaTestSite),
+		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s"' | drush @%s --alias-path=~/.drush sql-cli --extra=-N`, t.Name(), tval, acquiaTestSite),
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)
 
 	// Test that the file arrived there (by rsyncing it back)
 	out, _, err = app.Exec(&ExecOpts{
-		Cmd: fmt.Sprintf("drush rsync -y @%s:%%files/%s /tmp && cat /tmp/%s", acquiaTestSite, fName, fName),
+		Cmd: fmt.Sprintf("drush --alias-path=~/.drush rsync -y @%s:%%files/%s /tmp && cat /tmp/%s", acquiaTestSite, fName, fName),
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)

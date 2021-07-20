@@ -57,6 +57,16 @@ func StopRouterIfNoContainers() error {
 
 // StartDdevRouter ensures the router is running.
 func StartDdevRouter() error {
+	// If the router is not healthy/running, we'll kill it so it
+	// starts over again.
+	router, err := FindDdevRouter()
+	if router != nil && err == nil && router.State != "running" {
+		err = dockerutil.RemoveContainer(nodeps.RouterContainer, 0)
+		if err != nil {
+			return err
+		}
+	}
+
 	routerComposeFullPath, err := generateRouterCompose()
 	if err != nil {
 		return err
@@ -111,6 +121,7 @@ func generateRouterCompose() (string, error) {
 		"router_bind_all_interfaces": globalconfig.DdevGlobalConfig.RouterBindAllInterfaces,
 		"compose_version":            version.DockerComposeFileFormatVersion,
 		"dockerIP":                   dockerIP,
+		"disable_http2":              globalconfig.DdevGlobalConfig.DisableHTTP2,
 		"letsencrypt":                globalconfig.DdevGlobalConfig.UseLetsEncrypt,
 		"letsencrypt_email":          globalconfig.DdevGlobalConfig.LetsEncryptEmail,
 		"AutoRestartContainers":      globalconfig.DdevGlobalConfig.AutoRestartContainers,
@@ -182,7 +193,7 @@ func RenderRouterStatus() string {
 	return fmt.Sprintf("\nDDEV ROUTER STATUS: %v", renderedStatus)
 }
 
-// GetRouterStatus retur s router status and warning if not
+// GetRouterStatus returns router status and warning if not
 // running or healthy, as applicable.
 // return status and most recent log
 func GetRouterStatus() (string, string) {

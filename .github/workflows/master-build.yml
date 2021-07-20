@@ -1,0 +1,262 @@
+# Signs windows and macOS binaries and installers
+name: Master branch build/release (signed)
+defaults:
+  run:
+    shell: bash
+on:
+  push:
+    branches: [ master ]
+  release:
+    types: [ created ]
+
+env:
+  BUILDKIT_PROGRESS: plain
+  DOCKER_CLI_EXPERIMENTAL: enabled
+  DDEV_DEBUG: true
+
+jobs:
+  build-most:
+    name: Build DDEV executables except Windows
+    runs-on: ubuntu-20.04
+    env:
+      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+      SegmentKey: ${{ secrets.SEGMENTKEY }}
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # We need to get all branches and tags for git describe to work properly
+          fetch-depth: 0
+
+      - name: Install Docker and deps
+        run: ./.github/workflows/linux-setup.sh
+
+      - name: Install build tools
+        run: ./.github/workflows/linux-build-setup.sh
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.*
+      
+      - name: Build DDEV executables
+        run: make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64
+
+      - name: "Verify that SegmentKey is working (Linux amd64)"
+        run: |
+          export PATH=".gotmp/bin/linux_amd64:$PATH"
+          echo "DDEV_NO_INSTRUMENTATION=${DDEV_NO_INSTRUMENTATION}"
+          if [ -z "${SegmentKey}" ]; then echo "SegmentKey is not set"; exit 1; fi
+          ddev config global --instrumentation-opt-in=true
+          ddev config global | grep instrumentation-opt-in=true
+          ddev config global | grep -v "SegmentKey is not available."
+          ddev config global --instrumentation-opt-in=false
+
+
+      - name: save build results to cache
+        uses: actions/cache@v2
+        with:
+          path: .gotmp/bin
+          key: ${{ github.sha }}-${{ github.ref }}-build-most
+
+  sign-windows:
+    name: Build and Sign Windows binaries
+    runs-on: [ self-hosted, windows-signer ]
+    env:
+      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+      SegmentKey: ${{ secrets.SEGMENTKEY }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Build and sign windows binaries and installer
+        shell: bash
+        run: |
+          if [ "${DDEV_WINDOWS_SIGN}" != "true" ]; then echo "DDEV_WINDOWS_SIGN is not true, exiting" && exit 1; fi
+          make windows_install
+      - name: Show github.ref
+        run: echo ${{ github.ref }}
+      - name: Build chocolatey on release
+        if: startsWith( github.ref, 'refs/tags/v1')
+        run: make chocolatey
+
+      - name: "Verify that SegmentKey is working (Windows)"
+        run: |
+          export PATH=".gotmp/bin/windows_amd64:$PATH"
+          echo "DDEV_NO_INSTRUMENTATION=${DDEV_NO_INSTRUMENTATION}"
+          if [ -z "${SegmentKey}" ]; then echo "SegmentKey is not set"; exit 1; fi
+          ddev config global --instrumentation-opt-in=true
+          ddev config global | grep instrumentation-opt-in=true
+          ddev config global | grep -v "SegmentKey is not available."
+          ddev config global --instrumentation-opt-in=false
+
+      - name: Cache signed binaries
+        uses: actions/cache@v2
+        with:
+          path: .gotmp/bin/windows_amd64
+          key: ${{ github.sha }}-${{ github.ref }}-signed-windows-binaries
+
+  notarize-macos:
+    name: Sign and Notarize ddev on macOS
+    runs-on: macos-latest
+    needs: build-most
+    steps:
+      - name: "setup macOS"
+        run: |
+          brew install coreutils gnu-getopt jq
+          pip3 install yq
+      - uses: actions/checkout@v2
+        with:
+          # We need to get all branches and tags for git describe to work properly
+          fetch-depth: 0
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.*
+
+      - name: restore build-most results from cache
+        uses: actions/cache@v2
+        id: buildmost
+        with:
+          path: .gotmp/bin
+          key: ${{ github.sha }}-${{ github.ref }}-build-most
+      - name: test that buildmost cache was loaded
+        if: steps.buildmost.outputs.cache-hit != 'true'
+        run: exit 1
+
+      - name: Sign and notarize binaries (amd64 and arm64)
+        env:
+          DDEV_MACOS_SIGNING_PASSWORD: ${{ secrets.DDEV_MACOS_SIGNING_PASSWORD }}
+          DDEV_MACOS_APP_PASSWORD: ${{ secrets.DDEV_MACOS_APP_PASSWORD }}
+        run: |
+          set -o errexit -o pipefail
+          if [ -z "${DDEV_MACOS_SIGNING_PASSWORD}" ] ; then echo "DDEV_MACOS_SIGNING_PASSWORD is empty"; exit 1; fi
+          if [ -z "${DDEV_MACOS_APP_PASSWORD}" ] ; then echo "DDEV_MACOS_APP_PASSWORD is empty"; exit 1; fi
+          for item in .gotmp/bin/darwin*/ddev; do
+            echo "Signing and notarizing ${item} ..."
+            codesign --remove-signature "${item}" || true
+            curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="${DDEV_MACOS_SIGNING_PASSWORD}" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: DRUD Technology, LLC (3BAN66AG5M)" --target-binary="${item}"
+            curl -sSL -f https://raw.githubusercontent.com/drud/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=${DDEV_MACOS_APP_PASSWORD} --apple-id=accounts@drud.com --primary-bundle-id=com.ddev.ddev --target-binary="${item}"
+          done
+      - name: Save notarized binaries to cache
+        uses: actions/cache@v2
+        with:
+          path: .gotmp/bin/darwin*
+          key: ${{ github.sha }}-${{ github.ref }}-notarize-macos
+
+  artifacts:
+    name: Upload artifacts
+    runs-on: ubuntu-20.04
+    needs: [build-most, sign-windows, notarize-macos]
+    env:
+      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+      DDEV_GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
+      HOMEBREW_EDGE_REPOSITORY: ${{ secrets.HOMEBREW_EDGE_REPOSITORY }}
+      HOMEBREW_STABLE_REPOSITORY: ${{ secrets.HOMEBREW_STABLE_REPOSITORY }}
+      DDEV_MAIN_REPO_ORGNAME: ${{ secrets.DDEV_MAIN_REPO_ORGNAME }}
+      CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # We need to get all branches and tags for git describe to work properly
+          fetch-depth: 0
+      - name: Restore build-most builds
+        uses: actions/cache@v2
+        id: buildmost
+        with:
+          path: .gotmp/bin
+          key: ${{ github.sha }}-${{ github.ref }}-build-most
+      - name: test that build-most was loaded
+        if: steps.buildmost.outputs.cache-hit != 'true'
+        run: exit 1
+
+      - name: Restore Signed Windows artifacts
+        uses: actions/cache@v2
+        id: signedwindows
+        with:
+          path: .gotmp/bin/windows_amd64
+          key: ${{ github.sha }}-${{ github.ref }}-signed-windows-binaries
+      - name: test that signed-windows was loaded
+        if: steps.signedwindows.outputs.cache-hit != 'true'
+        run: exit 1
+
+      - name: Restore Signed Mac artifacts
+        uses: actions/cache@v2
+        id: notarizedmac
+        with:
+          path: .gotmp/bin/darwin*
+          key: ${{ github.sha }}-${{ github.ref }}-notarize-macos
+      - name: test that notarizedmac was loaded
+        if: steps.notarizedmac.outputs.cache-hit != 'true'
+        run: exit 1
+
+      - name: Generate artifacts
+        run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
+
+      - name: Upload all artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: all-ddev-executables
+          path: ${{ github.workspace }}/artifacts/*
+      - name: Upload macos-amd64 binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: ddev-macos-amd64
+          path: .gotmp/bin/darwin_amd64/ddev
+      - name: Upload macos-arm64 binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: ddev-macos-arm64
+          path: .gotmp/bin/darwin_arm64/ddev
+      - name: Upload linux-arm64 binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: ddev-linux-arm64
+          path: .gotmp/bin/linux_arm64/ddev
+      - name: Upload inux_amd644 binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: ddev-linux-amd64
+          path: .gotmp/bin/linux_amd64/ddev
+      - name: Upload windows_amd64 installer
+        uses: actions/upload-artifact@v2
+        with:
+          name: ddev-windows-amd64-installer
+          path: .gotmp/bin/windows_amd64/ddev_windows_installer*.exe
+      - name: Show github.ref
+        run: echo ${{ github.ref }}
+      - name: "Upload release artifacts to github release"
+        if: startsWith( github.ref, 'refs/tags/v1')
+        uses: skx/github-action-publish-binaries@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: ${{ github.workspace }}/artifacts/*
+
+      - name: "Bump homebrew edge release"
+        if: env.DDEV_GITHUB_TOKEN != '' && startsWith( github.ref, 'refs/tags/v1')
+        run: |
+          bash -x .ci-scripts/bump_homebrew.sh ${HOMEBREW_EDGE_REPOSITORY} ddev ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts ${DDEV_MAIN_REPO_ORGNAME}
+
+      - name: "Bump homebrew main release if necessary"
+        if: env.DDEV_GITHUB_TOKEN != '' && startsWith( github.ref, 'refs/tags/v1') && !contains( github.ref, '-')
+        run: |
+          bash -x .ci-scripts/bump_homebrew.sh ${HOMEBREW_STABLE_REPOSITORY} ddev ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts ${DDEV_MAIN_REPO_ORGNAME}
+
+      - name: "Push AUR ddev-edge-bin"
+        if: env.AUR_SSH_PRIVATE_KEY != '' && startsWith( github.ref, 'refs/tags/v1')
+        run: |
+          echo GITHUB_REF=${GITHUB_REF}
+          .ci-scripts/bump_aur.sh ddev-edge-bin ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts
+
+      - name: "Push AUR ddev-bin if necessary"
+        if: env.AUR_SSH_PRIVATE_KEY != '' &&  startsWith( github.ref, 'refs/tags/v1') && !contains( github.ref, '-')
+        run: |
+          echo GITHUB_REF=${GITHUB_REF}
+          .ci-scripts/bump_aur.sh ddev-bin "${GITHUB_REF##*/}" ${{ github.workspace }}/artifacts
+
+      - name: Chocolatey windows release
+        if: env.CHOCOLATEY_API_KEY != '' && startsWith( github.ref, 'refs/tags/v1')
+        run: |
+          pushd .gotmp/bin/windows_amd64/chocolatey
+          docker run --rm -v $PWD:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key "${CHOCOLATEY_API_KEY}"
+          popd

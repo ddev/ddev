@@ -7,8 +7,8 @@ set -o nounset
 if [ $# != "1" ]; then echo "docker image spec must be \$1"; exit 1; fi
 DOCKER_IMAGE=$1
 export IS_HARDENED=false
-DOCKER_REPO=${DOCKER_IMAGE##:*}
-if [ ${DOCKER_REPO%_prod} ]; then
+DOCKER_REPO=${DOCKER_IMAGE%:*}
+if [[ "${DOCKER_REPO}" == "*prod*" ]]; then
   IS_HARDENED=true
 fi
 
@@ -31,20 +31,28 @@ docker run -t --rm  -v "$(mkcert -CAROOT):/mnt/mkcert" -v ddev-global-cache:/mnt
 
 # Wait for container to be ready.
 function containerwait {
-	for i in {60..0};
+	for i in {20..0};
 	do
-		# status contains uptime and health in parenthesis, sed to return health
-		status="$(docker ps --format "{{.Status}}" --filter "name=$CONTAINER_NAME" | sed  's/.*(\(.*\)).*/\1/')"
-		if [[ "$status" == "healthy" ]]
-		then
-			return 0
-		fi
-		sleep 1
+		status="$(docker inspect $CONTAINER_NAME | jq -r '.[0].State.Status')"
+    health="$(docker inspect $CONTAINER_NAME | jq -r '.[0].State.Health.Status')"
+
+		case $status in
+		running)
+      if [ ${health} = "healthy" ]; then
+		    return 0
+      else
+        sleep 1
+      fi
+		  ;;
+		exited)
+		  echo "# --- container exited"
+		  return 1
+		  ;;
+		*)
+  		sleep 1
+		esac
 	done
-	echo "# --- ddev-webserver containerwait failed: information:"
-	docker ps -a
-	docker logs $CONTAINER_NAME
-	docker inspect $CONTAINER_NAME
+	echo "# --- containerwait failed: information:"
 	return 1
 }
 
@@ -55,7 +63,7 @@ trap cleanup EXIT
 cleanup
 
 # We have to push the CA into the ddev-global-cache volume so it will be respected
-docker run --rm  -v "$(mkcert -CAROOT):/mnt/mkcert" -v ddev-global-cache:/mnt/ddev-global-cache ${DOCKER_IMAGE} bash -c "mkdir -p /mnt/ddev-global-cache/{mkcert,bashhistory,ddev-live,terminus} && cp -R /mnt/mkcert /mnt/ddev-global-cache/ && chown -Rf ${MOUNTUID}:${MOUNTGID} /mnt/ddev-global-cache/* && chmod -Rf ugo+w /mnt/ddev-global-cache/*"
+docker run --rm  -v "$(mkcert -CAROOT):/mnt/mkcert" -v ddev-global-cache:/mnt/ddev-global-cache ${DOCKER_IMAGE} bash -c "mkdir -p /mnt/ddev-global-cache/{mkcert,bashhistory,terminus} && cp -R /mnt/mkcert /mnt/ddev-global-cache/ && chown -Rf ${MOUNTUID}:${MOUNTGID} /mnt/ddev-global-cache/* && chmod -Rf ugo+w /mnt/ddev-global-cache/*"
 
 # Run general tests with a default container
 docker run -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DOCROOT=docroot" -e "DDEV_PHP_VERSION=${PHP_VERSION}" -e "DDEV_WEBSERVER_TYPE=${WEBSERVER_TYPE}" -d --name $CONTAINER_NAME -v ddev-global-cache:/mnt/ddev-global-cache -d $DOCKER_IMAGE >/dev/null
@@ -83,7 +91,7 @@ for PHP_VERSION in 5.6 7.0 7.1 7.2 7.3 7.4 8.0; do
 done
 
 for project_type in backdrop drupal6 drupal7 drupal8 drupal9 laravel magento magento2 typo3 wordpress default; do
-	export PHP_VERSION="7.3"
+	export PHP_VERSION="7.4"
     export project_type
 	if [ "$project_type" == "drupal6" ]; then
 	  PHP_VERSION="5.6"
@@ -99,7 +107,7 @@ for project_type in backdrop drupal6 drupal7 drupal8 drupal9 laravel magento mag
     cleanup
 done
 
-docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DDEV_PHP_VERSION=7.3" --mount "type=bind,src=$PWD/tests/ddev-webserver/testdata,target=/mnt/ddev_config" -v ddev-global-cache:/mnt/ddev-global-cache -d --name $CONTAINER_NAME -d $DOCKER_IMAGE >/dev/null
+docker run  -u "$MOUNTUID:$MOUNTGID" -p $HOST_HTTP_PORT:$CONTAINER_HTTP_PORT -p $HOST_HTTPS_PORT:$CONTAINER_HTTPS_PORT -e "DDEV_PHP_VERSION=7.4" --mount "type=bind,src=$PWD/tests/ddev-webserver/testdata,target=/mnt/ddev_config" -v ddev-global-cache:/mnt/ddev-global-cache -d --name $CONTAINER_NAME -d $DOCKER_IMAGE >/dev/null
 containerwait
 
 bats tests/ddev-webserver/custom_config.bats

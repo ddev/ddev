@@ -61,6 +61,9 @@ else
   disable_xdebug
 fi
 
+# Disable xhprof by default. Users can enable with /usr/local/bin/enable_xhprof
+disable_xhprof
+
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
 mkdir -p /mnt/ddev-global-cache/bashhistory/${HOSTNAME}

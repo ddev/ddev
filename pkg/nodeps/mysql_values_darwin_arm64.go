@@ -1,5 +1,6 @@
 package nodeps
 
+// ValidMySQLVersions is the versions of MySQL that are valid
 var ValidMySQLVersions = map[string]bool{}
 
 // Oracle MySQL versions

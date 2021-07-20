@@ -654,6 +654,13 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	app := &ddevapp.DdevApp{}
 	testcommon.ClearDockerEnv()
 
+	// On macOS we want to just listen on localhost port, so as to not trigger
+	// firewall block. On other systems, just listen on all interfaces
+	listenPort := ":9000"
+	if runtime.GOOS == "darwin" {
+		listenPort = "127.0.0.1:9000"
+	}
+
 	site := TestSites[0]
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
@@ -718,7 +725,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		}
 
 		// Start a listener on port 9000 of localhost (where PHPStorm or whatever would listen)
-		listener, err := net.Listen("tcp", ":9000")
+		listener, err := net.Listen("tcp", listenPort)
 		require.NoError(t, err)
 
 		// Curl to the project's index.php or anything else
@@ -752,6 +759,103 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			fmt.Printf("Read from acceptListenDone at %v\n", time.Now())
 		case <-time.After(3 * time.Second):
 			t.Fatalf("Timed out waiting for accept/listen at %v, PHP version %v\n", time.Now(), v)
+		}
+	}
+	runTime()
+}
+
+// TestDdevXhprofEnabled tests running with xhprof_enabled = true, etc.
+func TestDdevXhprofEnabled(t *testing.T) {
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+	testcommon.ClearDockerEnv()
+
+	site := TestSites[0]
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
+
+	phpVersions := nodeps.ValidPHPVersions
+	// Does not work with php5.6 anyway (SEGV), for resource conservation
+	// skip older unsupported versions
+	for _, k := range []string{"5.6", "7.0", "7.1"} {
+		delete(phpVersions, k)
+	}
+	phpKeys := make([]string, 0, len(phpVersions))
+	for k := range phpVersions {
+		phpKeys = append(phpKeys, k)
+	}
+	sort.Strings(phpKeys)
+
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+
+	phpInfoFile := path.Join(app.AppRoot, app.Docroot, "phpinfo.php")
+	err = os.WriteFile(phpInfoFile, []byte("<?php phpinfo();"), 0755)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		app.PHPVersion = nodeps.PHPDefault
+		app.WebserverType = nodeps.WebserverDefault
+		err = os.Remove(phpInfoFile)
+		assert.NoError(err)
+		err = app.WriteConfig()
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
+
+	webserverKeys := make([]string, 0, len(nodeps.ValidWebserverTypes))
+	for k := range nodeps.ValidWebserverTypes {
+		webserverKeys = append(webserverKeys, k)
+	}
+
+	for _, webserverKey := range webserverKeys {
+		app.WebserverType = webserverKey
+
+		for _, v := range phpKeys {
+			t.Logf("Beginning XHProf checks with XHProf webserver_type=%s php%s\n", webserverKey, v)
+			fmt.Printf("Attempting XHProf checks with XHProf PHP%s\n", v)
+			app.PHPVersion = v
+
+			err = app.Start()
+			require.NoError(t, err)
+
+			stdout, _, err := app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				Cmd:     fmt.Sprintf("php --ri xhprof"),
+			})
+			assert.Error(err)
+			assert.Contains(stdout, "Extension 'xhprof' not present")
+
+			// Run with xhprof enabled
+			_, _, err = app.Exec(&ddevapp.ExecOpts{
+				Cmd: fmt.Sprintf("enable_xhprof"),
+			})
+			assert.NoError(err)
+
+			stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				Cmd:     fmt.Sprintf("php --ri xhprof"),
+			})
+			assert.NoError(err)
+			if err != nil {
+				t.Errorf("Aborting xhprof check for php%s: %v", v, err)
+				continue
+			}
+			assert.Contains(stdout, "xhprof.output_dir", "xhprof is not enabled for %s", v)
+
+			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL()+"/phpinfo.php")
+			assert.NoError(err, "Failed to get base URL webserver_type=%s, php_version=%s", webserverKey, v)
+			assert.Contains(out, "module_xhprof")
+
+			out, _, err = testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL()+"/xhprof/")
+			assert.NoError(err)
+			// Output should contain at least one run
+			assert.Contains(out, ".ddev.xhprof</a><small>")
+
+			// Disable all to avoid confusion
+			_, _, err = app.Exec(&ddevapp.ExecOpts{
+				Cmd: fmt.Sprintf("disable_xhprof && rm -rf /tmp/xhprof"),
+			})
+			assert.NoError(err)
 		}
 	}
 	runTime()
@@ -1533,13 +1637,18 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = app.Init(site.Dir)
 	require.NoError(t, err)
 
+	t.Cleanup(func() {
+		app.Hooks = nil
+		_ = app.WriteConfig()
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
+
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-snapshot": {{"exec-host": "touch hello-post-snapshot-" + app.Name}}, "pre-snapshot": {{"exec-host": "touch hello-pre-snapshot-" + app.Name}}}
 
 	// First do regular start, which is good enough to get us to an ImportDB()
 	err = app.Start()
 	require.NoError(t, err)
-	//nolint: errcheck
-	defer app.Stop(true, false)
 
 	err = app.ImportDB(d7testerTest1Dump, "", false, false, "db")
 	require.NoError(t, err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
@@ -1624,13 +1733,6 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = app.RestoreSnapshot("d7tester_test_1.snapshot_mariadb_10.1")
 	assert.Error(err)
 	assert.Contains(err.Error(), "is not compatible")
-
-	app.Hooks = nil
-	_ = app.WriteConfig()
-	err = app.Stop(true, false)
-	assert.NoError(err)
-
-	// TODO: Check behavior of ddev rm with snapshot, see if it has right stuff in it.
 
 	runTime()
 }

@@ -155,7 +155,7 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 	// of the archive for this test, only that it exists and can be extracted. This should (knock on wood)
 	//not need to be updated over time.
 	site := TestSites[0]
-	site.Name = "TestGetLocalHTTPResponse"
+	site.Name = t.Name()
 
 	_, _ = exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
 	//nolint: errcheck

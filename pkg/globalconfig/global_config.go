@@ -52,11 +52,12 @@ type GlobalConfig struct {
 	AutoRestartContainers    bool     `yaml:"auto_restart_containers"`
 	FailOnHookFailGlobal     bool     `yaml:"fail_on_hook_fail"`
 	WebEnvironment           []string `yaml:"web_environment"`
+	DisableHTTP2             bool     `yaml:"disable_http2"`
 
 	ProjectList map[string]*ProjectInfo `yaml:"project_info"`
 }
 
-// GetGlobalConfigPath() gets the path to global config file
+// GetGlobalConfigPath gets the path to global config file
 func GetGlobalConfigPath() string {
 	return filepath.Join(GetGlobalDdevDir(), DdevGlobalConfigName)
 }
@@ -70,7 +71,7 @@ func ValidateGlobalConfig() error {
 	return nil
 }
 
-// ReadGlobalConfig() reads the global config file into DdevGlobalConfig
+// ReadGlobalConfig reads the global config file into DdevGlobalConfig
 func ReadGlobalConfig() error {
 	globalConfigFile := GetGlobalConfigPath()
 
@@ -152,7 +153,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # nfs_mount_enabled: true
 #
 # You can inject environment variables into the web container with:
-# web_environment: 
+# web_environment:
 # - SOMEENV=somevalue
 # - SOMEOTHERENV=someothervalue
 
@@ -164,6 +165,9 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 # You can enable 'ddev start' to be interrupted by a failing hook with
 # fail_on_hook_fail: true
+
+# disable_http2: false
+# Disable http2 on ddev-router if true
 
 # instrumentation_user: <your_username> # can be used to give ddev specific info about who you are
 # developer_mode: true # (defaults to false) is not used widely at this time.
@@ -268,7 +272,7 @@ func GetValidOmitContainers() []string {
 	return s
 }
 
-// HostPortIsAllocated returns the project name that has allocated
+// HostPostIsAllocated returns the project name that has allocated
 // the port, or empty string.
 func HostPostIsAllocated(port string) string {
 	for project, item := range DdevGlobalConfig.ProjectList {
@@ -279,7 +283,7 @@ func HostPostIsAllocated(port string) string {
 	return ""
 }
 
-// Check GlobalDdev UsedHostPorts to see if requested ports are available.
+// CheckHostPortsAvailable checks GlobalDdev UsedHostPorts to see if requested ports are available.
 func CheckHostPortsAvailable(projectName string, ports []string) error {
 	for _, port := range ports {
 		allocatedProject := HostPostIsAllocated(port)
@@ -327,7 +331,7 @@ func GetFreePort(localIPAddr string) (string, error) {
 
 }
 
-// ReservePorts() adds the ProjectInfo if necessary and assigns the reserved ports
+// ReservePorts adds the ProjectInfo if necessary and assigns the reserved ports
 func ReservePorts(projectName string, ports []string) error {
 	// If the project doesn't exist, add it.
 	_, ok := DdevGlobalConfig.ProjectList[projectName]
@@ -339,7 +343,7 @@ func ReservePorts(projectName string, ports []string) error {
 	return err
 }
 
-// SetProjectAppRoot() sets the approot in the ProjectInfo of global config
+// SetProjectAppRoot sets the approot in the ProjectInfo of global config
 func SetProjectAppRoot(projectName string, appRoot string) error {
 	// If the project doesn't exist, add it.
 	_, ok := DdevGlobalConfig.ProjectList[projectName]
@@ -368,7 +372,7 @@ func GetProject(projectName string) *ProjectInfo {
 	return project
 }
 
-// RemoveProjectInfo() removes the ProjectInfo line for a project
+// RemoveProjectInfo removes the ProjectInfo line for a project
 func RemoveProjectInfo(projectName string) error {
 	_, ok := DdevGlobalConfig.ProjectList[projectName]
 	if ok {
@@ -381,12 +385,12 @@ func RemoveProjectInfo(projectName string) error {
 	return nil
 }
 
-// GetGlobalProjectList() returns the global project list map
+// GetGlobalProjectList returns the global project list map
 func GetGlobalProjectList() map[string]*ProjectInfo {
 	return DdevGlobalConfig.ProjectList
 }
 
-// GetCAROOT() is just a wrapper on global config
+// GetCAROOT is just a wrapper on global config
 func GetCAROOT() string {
 	return DdevGlobalConfig.MkcertCARoot
 }
@@ -437,7 +441,10 @@ func fileExists(name string) bool {
 	return true
 }
 
+// IsInternetActiveAlreadyChecked just flags whether it's been checked
 var IsInternetActiveAlreadyChecked = false
+
+// IsInternetActiveResult is the result of the check
 var IsInternetActiveResult = false
 
 // IsInternetActiveNetResolver wraps the standard DNS resolver.
@@ -447,7 +454,7 @@ var IsInternetActiveNetResolver interface {
 	LookupHost(ctx context.Context, host string) (addrs []string, err error)
 } = net.DefaultResolver
 
-//IsInternetActive() checks to see if we have a viable
+//IsInternetActive checks to see if we have a viable
 // internet connection. It just tries a quick DNS query.
 // This requires that the named record be query-able.
 // This check will only be made once per command run.

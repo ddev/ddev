@@ -1,14 +1,9 @@
 
 {{ define "upstream" }}
     {{ if .Address }}
-        {{/* If we got the containers from swarm and this container's port is published to host, use host IP:PORT */}}
-        {{ if and .Container.Node.ID .Address.HostPort }}
-            # {{ .Container.Node.Name }}/{{ .Container.Name }}
-            server {{ .Container.Node.Address.IP }}:{{ .Address.HostPort }};
-        {{/* If there is no swarm node or the port is not published on host, use container's IP:PORT */}}
-        {{ else if .Network }}
+        {{ if .Network }}
             # Container={{ .Container.Name }} {{ .Network.IP }}:{{ .Address.Port }}
-            server {{ .Network.IP }}:{{ .Address.Port }};
+            server {{ .Container.Name }}:{{ .Address.Port }};
         {{ end }}
     {{ else if .Network }}
             # Container={{ .Container.Name }} (down)
@@ -250,7 +245,7 @@ server {
 
         server {
             server_name {{ $host }};
-            listen {{ $listen_port }} ssl http2 {{ $default_server }};
+            listen {{ $listen_port }} ssl {{ $.Env.HTTP2 }} {{ $default_server }};
             access_log /var/log/nginx/access.log vhost;
 
             location @brokenupstream {

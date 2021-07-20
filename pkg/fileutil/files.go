@@ -233,13 +233,14 @@ func ReplaceStringInFile(searchString string, replaceString string, origPath str
 
 	output := bytes.Replace(input, []byte(searchString), []byte(replaceString), -1)
 
+	// nolint: revive
 	if err = ioutil.WriteFile(destPath, output, 0666); err != nil {
 		return err
 	}
 	return nil
 }
 
-// IsSameFile() determines whether two paths refer to the same file/dir
+// IsSameFile determines whether two paths refer to the same file/dir
 func IsSameFile(path1 string, path2 string) (bool, error) {
 	path1fi, err := os.Stat(path1)
 	if err != nil {
@@ -261,7 +262,7 @@ func ReadFileIntoString(path string) (string, error) {
 	return string(bytes), err
 }
 
-// AppendStirngtoFile takes a path to a file and a string to append
+// AppendStringToFile takes a path to a file and a string to append
 // and it appends it, returning err
 func AppendStringToFile(path string, appendString string) error {
 	f, err := os.OpenFile(path,
@@ -281,7 +282,7 @@ type XSymContents struct {
 	LinkTarget   string
 }
 
-// FindSimulatedXsymSymlinks() searches the basePath provided for files
+// FindSimulatedXsymSymlinks searches the basePath provided for files
 // whose first line is XSym, which is used in cifs filesystem for simulated
 // symlinks.
 func FindSimulatedXsymSymlinks(basePath string) ([]XSymContents, error) {
@@ -314,7 +315,7 @@ func FindSimulatedXsymSymlinks(basePath string) ([]XSymContents, error) {
 	return symLinks, err
 }
 
-// ReplaceSimulatedXsymSymlinks() walks a list of XSymContents and makes real symlinks
+// ReplaceSimulatedXsymSymlinks walks a list of XSymContents and makes real symlinks
 // in their place. This is only valid on Windows host, only works with Docker for Windows
 // (cifs filesystem)
 func ReplaceSimulatedXsymSymlinks(links []XSymContents) error {
@@ -345,7 +346,7 @@ func CanCreateSymlinks() bool {
 	return true
 }
 
-// ReplaceSimulatedLinks() walks the path provided and tries to replace XSym links with real ones.
+// ReplaceSimulatedLinks walks the path provided and tries to replace XSym links with real ones.
 func ReplaceSimulatedLinks(path string) {
 	links, err := FindSimulatedXsymSymlinks(path)
 	if err != nil {

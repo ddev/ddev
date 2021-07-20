@@ -65,7 +65,7 @@ jobs:
         paths:
           - /home/linuxbrew
     - run:
-        command: make -s testpkg TESTARGS='-run "(TestDdevFullSite.*)"' EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
+        command: make -s testpkg TESTARGS='-run "(TestDdevFullSite.*|Test.*Pull)"' EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: ddev tests
         no_output_timeout: "40m"
     - store_test_results:
@@ -399,7 +399,7 @@ jobs:
 
   release_build:
     macos:
-      xcode: "11.3.1"
+      xcode: "12.4.0"
     working_directory: ~/ddev
     environment:
       DDEV_DEBUG: "true"
@@ -441,12 +441,12 @@ jobs:
         name: Artifact storage
     - run:
         name: "Bump homebrew edge release"
-        command: ".circleci/bump_homebrew.sh ${HOMEBREW_EDGE_REPOSITORY} ddev ${CIRCLE_TAG} ~/artifacts"
+        command: ".ci-scripts/bump_homebrew.sh ${HOMEBREW_EDGE_REPOSITORY} ddev ${CIRCLE_TAG} ~/artifacts"
     - run:
         name: "Bump homebrew main release if necessary"
         command: |
           if [ ${CIRCLE_TAG%-*} = ${CIRCLE_TAG} ]; then
-            .circleci/bump_homebrew.sh ${HOMEBREW_STABLE_REPOSITORY} ddev ${CIRCLE_TAG} ~/artifacts
+            .ci-scripts/bump_homebrew.sh ${HOMEBREW_STABLE_REPOSITORY} ddev ${CIRCLE_TAG} ~/artifacts
           else
             echo "Skipping homebrew main release because ${CIRCLE_TAG} is an edge/prerelease"
           fi
@@ -454,7 +454,7 @@ jobs:
         name: Push AUR ddev-bin if necessary
         command: |
             if [ ! -z "${AUR_SSH_PRIVATE_KEY}" ] && [ "${CIRCLE_TAG%-*}" = "${CIRCLE_TAG}" ] ; then
-              .circleci/bump_aur.sh ddev-bin ${CIRCLE_TAG} ~/artifacts
+              .ci-scripts/bump_aur.sh ddev-bin ${CIRCLE_TAG} ~/artifacts
             else
               echo "Skipping AUR ddev-bin push"
             fi
@@ -462,7 +462,7 @@ jobs:
         name: Push AUR ddev-edge-bin
         command: |
           if [ ! -z "${AUR_SSH_PRIVATE_KEY}" ] ; then
-            .circleci/bump_aur.sh ddev-edge-bin ${CIRCLE_TAG} ~/artifacts
+            .ci-scripts/bump_aur.sh ddev-edge-bin ${CIRCLE_TAG} ~/artifacts
           else
             echo "Skipping AUR ddev-edge-bin push"
           fi
@@ -488,7 +488,7 @@ workflows:
 #    - staticrequired
     - lx_amd64_fpm_test
     - lx_arm64_fpm_test
-    - lx_arm64_container_test
+#    - lx_arm64_container_test
 #        requires:
 #        - build
 #    - mac_nginx_fpm_test:
@@ -524,17 +524,17 @@ workflows:
                 - "pull/[0-9]+"
     jobs:
     - lx_amd64_container_test
-    - lx_arm64_container_test
-    - lx_amd64_fpm_test
+#    - lx_arm64_container_test
+#    - lx_amd64_fpm_test
     - lx_arm64_fpm_test
 
-  release_build:
-    jobs:
-      - release_build:
-          context: ddev-local
-          filters:
-            tags:
-              only:
-                - "/.*/"
-            branches:
-              ignore: /.*/
+#  release_build:
+#    jobs:
+#      - release_build:
+#          context: ddev-local
+#          filters:
+#            tags:
+#              only:
+#                - "/.*/"
+#            branches:
+#              ignore: /.*/

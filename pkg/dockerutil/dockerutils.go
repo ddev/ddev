@@ -211,7 +211,7 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 	return "", fmt.Errorf("inappropriate break out of for loop in ContainerWait() waiting for container labels %v", labels)
 }
 
-// ContainesrWait provides a wait loop to check for multiple containers in "healthy" status.
+// ContainersWait provides a wait loop to check for multiple containers in "healthy" status.
 // waittime is in seconds.
 // Returns logoutput, error, returns error if not "healthy"
 func ContainersWait(waittime int, labels map[string]string) error {
@@ -513,6 +513,12 @@ func CheckDockerCompose(versionConstraint string) error {
 	match, errs := constraint.Validate(dockerComposeVersion)
 	if !match {
 		if len(errs) <= 1 {
+			// TODO: Remove these lines when docker-compose v2 starts working
+			// Probably this commit can be reverted at that time.
+			v2Constraint, _ := semver.NewConstraint("< 2.0.0")
+			if m, _ := v2Constraint.Validate(dockerComposeVersion); !m {
+				util.Error("You have docker-compose v2 and it is not yet stable enough to use with ddev.\nPlease uncheck the 'Use Docker Compose V2' experimental feature\nin Docker Desktop, or run 'docker-compose disable-v2'")
+			}
 			return errs[0]
 		}
 
@@ -684,7 +690,7 @@ func RemoveContainer(id string, timeout uint) error {
 	return err
 }
 
-// RemoveContainersByLabels() removes all containers that match a set of labels
+// RemoveContainersByLabels removes all containers that match a set of labels
 func RemoveContainersByLabels(labels map[string]string) error {
 	client := GetDockerClient()
 	containers, err := FindContainersByLabels(labels)
@@ -743,13 +749,17 @@ func GetExposedContainerPorts(containerID string) ([]string, error) {
 		return nil, err
 	}
 
-	ports := []string{}
+	portMap := map[string]bool{}
 	for _, portMapping := range inspectInfo.NetworkSettings.Ports {
 		if portMapping != nil && len(portMapping) > 0 {
 			for _, item := range portMapping {
-				ports = append(ports, item.HostPort)
+				portMap[item.HostPort] = true
 			}
 		}
+	}
+	ports := []string{}
+	for k := range portMap {
+		ports = append(ports, k)
 	}
 	sort.Slice(ports, func(i, j int) bool {
 		return ports[i] < ports[j]
@@ -808,7 +818,7 @@ func CreateVolume(volumeName string, driver string, driverOpts map[string]string
 	return volume, err
 }
 
-// GetHostDockerInternalIP() returns either "host.docker.internal"
+// GetHostDockerInternalIP returns either "host.docker.internal"
 // (for docker-for-mac and Win10 Docker-for-windows) or a usable IP address
 func GetHostDockerInternalIP() (string, error) {
 	hostDockerInternal := ""

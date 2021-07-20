@@ -259,6 +259,7 @@ func CreateGitIgnore(targetDir string, ignores ...string) error {
 		IgnoredItems: generatedIgnores,
 	}
 
+	//nolint: revive
 	if err = tmpl.Execute(file, parms); err != nil {
 		return err
 	}

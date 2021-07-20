@@ -6,7 +6,7 @@
 
 * [Docker](https://www.docker.com/products/docker-desktop) version 18.06 or higher. Linux users make sure you upgrade docker-compose and do the [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
 
-* docker-compose 1.21.0 and higher (bundled with Docker in Docker Desktop for Mac and Docker Desktop for Windows)
+* docker-compose 1.21.0 and higher (bundled with Docker in Docker Desktop for Mac and Docker Desktop for Windows). docker-compose 2.x is not yet compatible with the features of docker-compose v1. However, the not-yet-compatible docker-compose v2 is being pushed to some users in Docker Desktop 3.5+ as an experimental feeature. If this is pushed to you, you can uncheck "Use Docker Compose V2" in "Experimental Features" of Docker Desktop, or issue the command `docker-compose disable-v2`.
 * OS Support
     * macOS Mojave and higher (macOS 10.14 and higher; it should run anywhere Docker Desktop for Mac runs (Current Docker Desktop has deprecated macOS 10.13 High Sierra, but Docker Desktop versions prior to  can still work with DDEV-Local on High Sierra.)
     * Linux: Most Linux distributions which can run Docker-ce are fine. This includes at least Ubuntu 16.04+, Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
@@ -79,7 +79,7 @@ We'll walk through these in more detail. You may prefer other techniques of inst
 14. Check that docker is working inside Ubuntu (or your distro): `docker ps`
 15. Optional: If you prefer to use the *Windows* ddev instead of working inside WSL2, install it with `choco install -y ddev`. The Windows ddev works fine with the WSL2-based Docker engine.
 16. Open the WSL2 terminal, for example `Ubuntu` from the Windows start menu.
-17. Install Homebrew: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` (See [https://brew.sh/](brew.sh).)
+17. Install Homebrew: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` (See [brew.sh](https://brew.sh/).)
 18. Add brew to your path as prompted, for example, `echo 'eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)' >> ~/.profile && source ~/.profile`
 19. `brew install gcc && brew install drud/ddev/ddev`
 20. `sudo apt-get update && sudo apt-get install -y xdg-utils` to install the xdg-utils package that allows `ddev launch` to work.
@@ -154,10 +154,10 @@ configuration by your self:
 * Run `mkcert -install` (you can use the shortcut from the start menu for that)
 * Run `mkcert -CAROOT` to see the local folder used for the newly created root
   certificate authority
-* Open the Firefox settings
+* Open the Firefox Preferences
 * Enter `certificates` into the search box on the top
-* Click to `Show certificates...`
-* Select the tab `Certificate authorities`
+* Click  `View Certificates...`
+* Select the tab `Authorities`
 * Click to `Import...`
 * Go to the folder where your root certificate authority was stored
 * Select the file `rootCA.pem`
@@ -183,5 +183,3 @@ We love to hear from our users and help them be successful with DDEV. Support op
 * [ddev-contrib](https://github.com/drud/ddev-contrib) repo provides a number of vetted user-contributed recipes for extending and using DDEV. Your contributions are welcome.
 * [awesome-ddev](https://github.com/drud/awesome-ddev) repo has loads of external resources, blog posts, recipes, screencasts, and the like. Your contributions are welcome.
 * [Twitter with tag #ddev](https://twitter.com/search?q=%23ddev&src=typd&f=live) will get to us, but it's not as good for interactive support, but we'll answer anywhere.
-
-<iframe src="https://github.com/sponsors/drud/button" title="Sponsor DDEV-Local" height="35" width="116" style="border: 0;"></iframe>

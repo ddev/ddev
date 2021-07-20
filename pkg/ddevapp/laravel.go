@@ -7,7 +7,9 @@ import (
 )
 
 const (
-	WarnTypeAbsent        = iota
+	// WarnTypeAbsent warns if type is absent
+	WarnTypeAbsent = iota
+	// WarnTypeNotConfigured warns if type not configured
 	WarnTypeNotConfigured = iota
 )
 

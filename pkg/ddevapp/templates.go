@@ -136,7 +136,6 @@ services:
       - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80,${DDEV_MAILHOG_HTTPS_PORT}:{{ .MailhogPort }}
       - IS_DDEV_PROJECT=true
       - LINES
-      - DDEV_LIVE_NO_ANALYTICS
       - SSH_AUTH_SOCK=/home/.ssh-agent/socket
       - TZ={{ .Timezone }}
       - VIRTUAL_HOST=${DDEV_HOSTNAME}
@@ -190,8 +189,8 @@ services:
 {{end}}
 networks:
   default:
-    external:
-      name: ddev_default
+    name: ddev_default
+    external: true
 volumes:
   {{if not .OmitDB }}
   mariadb-database:
@@ -249,6 +248,11 @@ const ConfigInstructions = `
 # Note that for most people the commands
 # "ddev xdebug" to enable xdebug and "ddev xdebug off" to disable it work better,
 # as leaving xdebug enabled all the time is a big performance hit.
+
+# xhprof_enabled: false  # Set to true to enable xhprof and "ddev start" or "ddev restart"
+# Note that for most people the commands
+# "ddev xhprof" to enable xhprof and "ddev xhprof off" to disable it work better,
+# as leaving xhprof enabled all the time is a big performance hit.
 
 # webserver_type: nginx-fpm  # or apache-fpm
 
@@ -352,7 +356,7 @@ const ConfigInstructions = `
 # In this case the user must provide all such settings.
 
 # You can inject environment variables into the web container with:
-# web_environment: 
+# web_environment:
 # - SOMEENV=somevalue
 # - SOMEOTHERENV=someothervalue
 
@@ -362,8 +366,6 @@ const ConfigInstructions = `
 # This is to enable experimentation with alternate file mounting strategies.
 # For advanced users only!
 
-# provider: default # Currently "default", "pantheon", "ddev-live"
-# 
 # Many ddev commands can be extended to run tasks before or after the
 # ddev command is executed, for example "post-start", "post-import-db",
 # "pre-composer", "post-composer"
@@ -450,8 +452,9 @@ services:
       {{ if .letsencrypt }}
       - ddev-router-letsencrypt:/etc/letsencrypt:rw
       {{ end }}
-{{ if .letsencrypt }}
     environment:
+      - DISABLE_HTTP2={{ .disable_http2 }}
+{{ if .letsencrypt }}
       - LETSENCRYPT_EMAIL={{ .letsencrypt_email }}
       - USE_LETSENCRYPT={{ .letsencrypt }}
 {{ end }}
@@ -464,8 +467,8 @@ services:
 
 networks:
   default:
-    external:
-      name: ddev_default
+    name: ddev_default
+    external: true
 volumes:
   ddev-global-cache:
     name: ddev-global-cache
@@ -480,6 +483,7 @@ const DdevSSHAuthTemplate = `version: '{{ .compose_version }}'
 volumes:
   dot_ssh:
   socket_dir:
+    name: ddev-ssh-agent_socket_dir
 
 services:
   ddev-ssh-agent:
@@ -507,6 +511,6 @@ services:
       timeout: 62s
 networks:
   default:
-    external:
-      name: ddev_default
+    name: ddev_default
+    external: true
 `

@@ -8,6 +8,7 @@ import (
 	"os"
 )
 
+// ComposerCmd handles ddev composer
 var ComposerCmd = &cobra.Command{
 	Use:   "composer [command]",
 	Short: "Executes a composer command within the web container",

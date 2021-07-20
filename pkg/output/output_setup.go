@@ -9,6 +9,7 @@ import (
 var (
 	// UserOut is the customized logrus log used for direct user output
 	UserOut = log.New()
+	// UserErr is the customized logrus log used for direct user stderr
 	UserErr = log.New()
 	// UserOutFormatter is the specialized formatter for UserOut
 	UserOutFormatter = new(TextFormatter)
@@ -44,6 +45,7 @@ func LogSetUp() {
 	log.SetLevel(logLevel)
 }
 
+// ErrorWriter allows writing stderr
 // Splitting to stderr approach from
 // https://huynvk.dev/blog/4-tips-for-logging-on-gcp-using-golang-and-logrus
 type ErrorWriter struct{}
