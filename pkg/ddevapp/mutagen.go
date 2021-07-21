@@ -100,6 +100,11 @@ func CheckMutagenErrors(app *DdevApp) (string, error) {
 		return out, err
 	}
 
+	// We're going to assume that if it's applying changes things are still OK,
+	// even though there may be a whole list of problems.
+	if strings.Contains(out, "Status: Applying changes") || strings.Contains(out, "Status: Staging files on alpha") {
+		return out, nil
+	}
 	if strings.Contains(out, "problems") || strings.Contains(out, "Conflicts") || strings.Contains(out, "error") {
 		util.Error("mutagen sync %s is not working correctly: %s", syncName, out)
 		return out, errors.Errorf("mutagen sync %s is not working correctly, use 'mutagen sync list %s' for details", syncName, syncName)
