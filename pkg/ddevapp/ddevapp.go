@@ -428,6 +428,7 @@ func (app *DdevApp) GetWebserverType() string {
 // ImportDB takes a source sql dump and imports it to an active site's database container.
 func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDrop bool, targetDB string) error {
 	app.DockerEnv()
+	dockerutil.CheckAvailableSpace()
 	if targetDB == "" {
 		targetDB = "db"
 	}
@@ -805,6 +806,8 @@ func (app *DdevApp) GetDBImage() string {
 // Start initiates docker-compose up
 func (app *DdevApp) Start() error {
 	var err error
+
+	dockerutil.CheckAvailableSpace()
 
 	app.DockerEnv()
 
