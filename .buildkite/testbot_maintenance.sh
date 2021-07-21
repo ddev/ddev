@@ -49,7 +49,7 @@ linux)
 esac
 
 # Stop mutagen daemon in case of existing one with different version
-mutagen daemon stop
+mutagen daemon stop || true
 
 yes | ddev delete images
 
