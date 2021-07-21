@@ -75,6 +75,9 @@ var DockerVersion = ""
 // DockerComposeVersion is filled with the version we find for docker-compose
 var DockerComposeVersion = ""
 
+// MutagenVersion is filled with the version we find for mutagen
+var MutagenVersion = ""
+
 // GetVersionInfo returns a map containing the version info defined above.
 func GetVersionInfo() map[string]string {
 	var err error
@@ -95,6 +98,10 @@ func GetVersionInfo() map[string]string {
 	if versionInfo["docker-compose"], err = GetDockerComposeVersion(); err != nil {
 		versionInfo["docker-compose"] = fmt.Sprintf("failed to GetDockerComposeVersion(): %v", err)
 	}
+	if versionInfo["mutagen"], err = GetMutagenVersion(); err != nil {
+		versionInfo["mutagen"] = fmt.Sprintf("failed to GetMutagenVersion(): %v", err)
+	}
+
 	if runtime.GOOS == "windows" {
 		versionInfo["docker type"] = "Docker Desktop For Windows"
 	}
@@ -177,4 +184,27 @@ func GetDockerVersion() (string, error) {
 	DockerVersion = v.Get("Version")
 
 	return DockerVersion, nil
+}
+
+// GetMutagenVersion runs mutagen version and caches result
+func GetMutagenVersion() (string, error) {
+	if MutagenVersion != "" {
+		return MutagenVersion, nil
+	}
+
+	executableName := "mutagen"
+
+	path, err := exec.LookPath(executableName)
+	if err != nil {
+		return "", fmt.Errorf("mutagen not found")
+	}
+
+	out, err := exec.Command(path, "version").Output()
+	if err != nil {
+		return "", err
+	}
+
+	v := string(out)
+	MutagenVersion = strings.TrimSpace(v)
+	return MutagenVersion, nil
 }
