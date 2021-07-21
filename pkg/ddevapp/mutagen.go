@@ -86,7 +86,7 @@ func CreateMutagenSync(app *DdevApp) error {
 }
 
 // CheckMutagenErrors checks to see if there is an error case in mutagen
-// We can't do a flush in that case.
+// We don't want to do a flush yet in that case.
 func CheckMutagenErrors(app *DdevApp) (string, error) {
 	syncName := MutagenSyncName(app.Name)
 	bashPath := util.FindBashPath()

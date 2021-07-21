@@ -22,14 +22,16 @@ fi
 # Upgrade various items on various operating systems
 case $os in
 darwin)
-    for item in drud/ddev/ddev golang golangci-lint mkcert mkdocs mutagen-io/mutagen/mutagen python3-yq; do
+    brew uninstall mutagen-io/mutagen/mutagen || true
+    for item in drud/ddev/ddev golang golangci-lint mkcert mkdocs brew install mutagen-io/mutagen/mutagen-beta python3-yq; do
         brew upgrade $item || brew install $item || true
     done
     ;;
 windows)
     choco upgrade -y golang nodejs markdownlint-cli mkcert mkdocs || true
     if ! command -v mutagen >/dev/null ; then
-      mkdir -p ~/tmp/mutagen ~/bin && curl -sSL -o ~/tmp/mutagen.tgz https://github.com/mutagen-io/mutagen/releases/download/v0.11.8/mutagen_windows_amd64_v0.11.8.tar.gz
+      MUTAGEN_VERSION=v0.12.0-beta3
+      mkdir -p ~/tmp/mutagen ~/bin && curl -sSL -o ~/tmp/mutagen.tgz https://github.com/mutagen-io/mutagen/releases/download/${MUTAGEN_VERSION}/mutagen_windows_amd64_${MUTAGEN_VERSION}.tar.gz
       tar -zxf ~/tmp/mutagen.tgz -C ~/bin
     fi
     ;;
@@ -37,7 +39,8 @@ windows)
 linux)
     # homebrew is only on amd64
     if [ "$(arch)" = "x86_64" ]; then
-      for item in drud/ddev/ddev golang mkcert mkdocs mutagen-io/mutagen/mutagen; do
+      brew uninstall mutagen || true
+      for item in drud/ddev/ddev golang mkcert mkdocs mutagen-io/mutagen/mutagen-beta; do
         brew upgrade $item || brew install $item || true
       done
     fi

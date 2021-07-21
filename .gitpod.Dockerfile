@@ -19,7 +19,8 @@ RUN mkdir -p ~/.docker/cli-plugins && curl --output ~/.docker/cli-plugins/docker
     --silent --show-error --location --fail --retry 3 \
     "$BUILDX_BINARY_URL" && chmod a+x ~/.docker/cli-plugins/docker-buildx
 
-RUN curl -o /tmp/mutagen.tgz -sSL https://github.com/mutagen-io/mutagen/releases/download/v0.11.8/mutagen_linux_amd64_v0.11.8.tar.gz && sudo tar -zxf /tmp/mutagen.tgz -C /usr/local/bin
+ENV MUTAGEN_VERSION=v0.12.0-beta3
+RUN curl -o /tmp/mutagen.tgz -sSL https://github.com/mutagen-io/mutagen/releases/download/${MUTAGEN_VERSION}/mutagen_linux_amd64_${MUTAGEN_VERSION}.tar.gz && sudo tar -zxf /tmp/mutagen.tgz -C /usr/local/bin
 # Install custom tools, runtimes, etc.
 # For example "bastet", a command-line tetris clone:
 # RUN brew install bastet
