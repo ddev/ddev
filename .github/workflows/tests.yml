@@ -63,6 +63,7 @@ jobs:
 
       - name: DDEV tests
         run: |
+          echo "$(docker --version) $(docker-compose --version) mutagen version=$(mutagen version)"
           echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN}"
           make ${{ matrix.tests }}
 

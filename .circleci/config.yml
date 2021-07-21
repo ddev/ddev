@@ -64,6 +64,7 @@ jobs:
         key: linux-homebrew-v24
         paths:
           - /home/linuxbrew
+    - run: echo "$(docker --version) $(docker-compose --version) mutagen version=$(mutagen version)"
     - run:
         command: make -s testpkg TESTARGS='-run "(TestDdevFullSite.*|Test.*Pull)"' EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: ddev tests
@@ -90,6 +91,7 @@ jobs:
           command: ./.ci-scripts/linux_arm64_setup.sh
           name: ARM64 VM setup
           no_output_timeout: "40m"
+      - run: echo "$(docker --version) $(docker-compose --version) mutagen version=$(mutagen version)"
       - run:
           command: make -s test
           name: ddev tests
