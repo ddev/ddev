@@ -49,7 +49,7 @@ func NewDrupalSettings(app *DdevApp) *DrupalSettings {
 		DatabaseName:     "db",
 		DatabaseUsername: "db",
 		DatabasePassword: "db",
-		DatabaseHost:     "db",
+		DatabaseHost:     "ddev-" + app.Name + "-db",
 		DatabaseDriver:   "mysql",
 		DatabasePort:     GetPort("db"),
 		DatabasePrefix:   "",
