@@ -48,6 +48,9 @@ linux)
 
 esac
 
+# Stop mutagen daemon in case of existing one with different version
+mutagen daemon stop
+
 yes | ddev delete images
 
 # Remove any -built images, as we want to make sure tests do the building.

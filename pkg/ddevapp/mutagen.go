@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/pkg/errors"
 	"strings"
@@ -70,14 +71,17 @@ func CreateMutagenSync(app *DdevApp) error {
 	syncName := MutagenSyncName(app.Name)
 	bashPath := util.FindBashPath()
 
+	output.UserOut.Printf("Terminating mutagen sync if already running")
 	err := TerminateMutagenSync(app)
 	if err != nil {
 		return err
 	}
+	output.UserOut.Printf("Starting mutagen sync %s", syncName)
 	_, err = exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf(`mutagen sync create "%s" docker://ddev-%s-web/var/www/html --sync-mode=two-way-resolved --name=%s >/dev/null`, app.AppRoot, app.Name, syncName)})
 	if err != nil {
 		return err
 	}
+	output.UserOut.Printf("Flushing mutagen sync %s", syncName)
 	err = app.MutagenSyncFlush()
 	if err != nil {
 		return err
