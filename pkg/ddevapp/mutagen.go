@@ -103,7 +103,7 @@ func CheckMutagenErrors(app *DdevApp) (string, error) {
 
 	// We're going to assume that if it's applying changes things are still OK,
 	// even though there may be a whole list of problems.
-	if strings.Contains(out, "Status: Applying changes") || strings.Contains(out, "Status: Staging files on alpha") {
+	if strings.Contains(out, "Status: Applying changes") || strings.Contains(out, "Status: Staging files on") || strings.Contains(out, "Status: Scanning files") || strings.Contains(out, "Status: Watching for changes") {
 		return out, nil
 	}
 	if strings.Contains(out, "problems") || strings.Contains(out, "Conflicts") || strings.Contains(out, "error") {
