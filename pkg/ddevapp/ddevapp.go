@@ -229,6 +229,13 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["httpsurl"] = app.GetHTTPSURL()
 	appDesc["primary_url"] = app.GetPrimaryURL()
 	appDesc["type"] = app.GetType()
+	appDesc["mutagen_enabled"] = app.MutagenEnabled
+	if app.MutagenEnabled {
+		appDesc["mutagen_status"], err = app.MutagenStatus()
+		if err != nil {
+			appDesc["mutagen_status"] = err.Error() + " " + appDesc["mutagen_status"].(string)
+		}
+	}
 
 	// if short is set, we don't need more information, so return what we have.
 	if short {

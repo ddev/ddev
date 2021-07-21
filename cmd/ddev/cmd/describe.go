@@ -42,14 +42,14 @@ running 'ddev describe <projectname>.`,
 			util.Failed("Failed to describe project %s: %v", project.Name, err)
 		}
 
-		renderedDesc, err := renderAppDescribe(desc)
+		renderedDesc, err := renderAppDescribe(project, desc)
 		util.CheckErr(err) // We shouldn't ever end up with an unrenderable desc.
 		output.UserOut.WithField("raw", desc).Print(renderedDesc)
 	},
 }
 
 // renderAppDescribe takes the map describing the app and renders it for plain-text output
-func renderAppDescribe(desc map[string]interface{}) (string, error) {
+func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (string, error) {
 
 	var output string
 
@@ -66,6 +66,9 @@ func renderAppDescribe(desc map[string]interface{}) (string, error) {
 		siteInfo.AddRow("PHP version:", desc["php_version"])
 		siteInfo.AddRow("NFS mount enabled:", desc["nfs_mount_enabled"])
 		siteInfo.AddRow("Mutagen enabled:", desc["mutagen_enabled"])
+		if desc["mutagen_enabled"] == true {
+			siteInfo.AddRow("Mutagen sync:", desc["mutagen_status"])
+		}
 
 		var dbinfo map[string]interface{}
 		if _, ok := desc["dbinfo"]; ok {

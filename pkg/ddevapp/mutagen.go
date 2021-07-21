@@ -6,6 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/pkg/errors"
+	osexec "os/exec"
 	"strings"
 )
 
@@ -145,4 +146,18 @@ func MutagenSyncExists(app *DdevApp) bool {
 
 	_, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf("mutagen sync list %s >/dev/null 2>&1", syncName)})
 	return err == nil
+}
+
+// MutagenStatus gives the current status line of mutagen for this sync session
+func (app *DdevApp) MutagenStatus() (string, error) {
+	bashPath := util.FindBashPath()
+	syncName := MutagenSyncName(app.Name)
+
+	c := osexec.Command(bashPath, "-c", fmt.Sprintf(`mutagen sync list %s | grep "^Status:" 2>&1`, syncName))
+	out, err := c.CombinedOutput()
+	if err != nil {
+		return string(out), err
+	}
+	pieces := strings.Split(string(out), ":")
+	return strings.Trim(pieces[1], " \n\r"), nil
 }

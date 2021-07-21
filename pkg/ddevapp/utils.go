@@ -78,6 +78,22 @@ func RenderHomeRootedDir(path string) string {
 // RenderAppRow will add an application row to an existing table for describe and list output.
 func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 	status := fmt.Sprint(row["status"])
+	urls := ""
+	mutagenStatus := ""
+	if row["status"] == SiteRunning {
+		if globalconfig.GetCAROOT() != "" {
+			urls = row["httpsurl"].(string)
+		} else {
+			urls = row["httpurl"].(string)
+		}
+		if row["mutagen_enabled"] == true {
+			mutagenStatus = row["mutagen_status"].(string)
+			if mutagenStatus != "Watching for changes" {
+				mutagenStatus = color.YellowString(mutagenStatus)
+			}
+			status = fmt.Sprintf("%s (%s)", status, mutagenStatus)
+		}
+	}
 
 	switch {
 	case strings.Contains(status, SitePaused):
@@ -92,22 +108,23 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 		status = color.CyanString(status)
 	}
 
-	urls := ""
-	if row["status"] == SiteRunning {
-		if globalconfig.GetCAROOT() != "" {
-			urls = row["httpsurl"].(string)
-		} else {
-			urls = row["httpurl"].(string)
-		}
+	if row["mutagen_enabled"] != true {
+		table.AddRow(
+			row["name"],
+			row["type"],
+			row["shortroot"],
+			urls,
+			status,
+		)
+	} else {
+		table.AddRow(
+			row["name"],
+			row["type"],
+			row["shortroot"],
+			urls,
+			status,
+		)
 	}
-
-	table.AddRow(
-		row["name"],
-		row["type"],
-		row["shortroot"],
-		urls,
-		status,
-	)
 
 }
 
