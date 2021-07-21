@@ -71,7 +71,7 @@ func CreateMutagenSync(app *DdevApp) error {
 	syncName := MutagenSyncName(app.Name)
 	bashPath := util.FindBashPath()
 
-	output.UserOut.Printf("Terminating mutagen sync if already running")
+	output.UserOut.Printf("Terminating mutagen sync if session already exists")
 	err := TerminateMutagenSync(app)
 	if err != nil {
 		return err
