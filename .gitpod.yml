@@ -13,9 +13,6 @@ tasks:
     command: |
       cd /workspace/simpleproj && .ddev/gitpod-setup-ddev.sh
       gp await-port 8080 && sleep 1 && gp preview $(gp url 8080)
-vscode:
-  extensions:
-    - premparihar.gotestexplorer@0.1.10:jvUM8akrQ67vQxfjaxCgCg==
 
 github:
   prebuilds:
