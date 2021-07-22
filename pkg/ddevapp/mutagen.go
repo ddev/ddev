@@ -13,11 +13,13 @@ import (
 func SetMutagenVolumeOwnership(app *DdevApp) error {
 	// Make sure that if we have a volume mount it's got proper ownership
 	uidStr, gidStr, _ := util.GetContainerUIDGid()
+	output.UserOut.Printf("chowning mutagen docker volume for user %s", uidStr)
 	_, _, err := app.Exec(
 		&ExecOpts{
 			Dir: "/tmp",
 			Cmd: fmt.Sprintf("sudo chown -R %s:%s /var/www/html", uidStr, gidStr),
 		})
+	output.UserOut.Printf("done chowning mutagen docker volume, result=%v", err)
 	return err
 }
 
