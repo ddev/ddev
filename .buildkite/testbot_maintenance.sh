@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eu
+set -eu -o pipefail
 
 os=$(go env GOOS)
 
@@ -11,7 +11,7 @@ if ! command -v ngrok >/dev/null; then
         brew install homebrew/cask/ngrok
         ;;
     windows)
-        choco install -y ngrok
+        (yes | choco install -y ngrok) || true
         ;;
     linux)
         curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip && sudo unzip -o -d /usr/local/bin /tmp/ngrok.zip
@@ -28,10 +28,10 @@ darwin)
     done
     ;;
 windows)
-    choco upgrade -y golang nodejs markdownlint-cli mkcert mkdocs || true
-    if ! command -v mutagen >/dev/null ; then
-      MUTAGEN_VERSION=v0.12.0-beta3
-      mkdir -p ~/tmp/mutagen ~/bin && curl -sSL -o ~/tmp/mutagen.tgz https://github.com/mutagen-io/mutagen/releases/download/${MUTAGEN_VERSION}/mutagen_windows_amd64_${MUTAGEN_VERSION}.tar.gz
+    (yes | choco upgrade -y golang nodejs markdownlint-cli mkcert mkdocs) || true
+    MUTAGEN_VERSION=0.12.0-beta3
+    if ! command -v mutagen >/dev/null || [ "$(mutagen version)" != "${MUTAGEN_VERSION}" ]; then
+      mkdir -p ~/tmp/mutagen ~/bin && curl -sSL -o ~/tmp/mutagen.tgz https://github.com/mutagen-io/mutagen/releases/download/v${MUTAGEN_VERSION}/mutagen_windows_amd64_v${MUTAGEN_VERSION}.tar.gz
       tar -zxf ~/tmp/mutagen.tgz -C ~/bin
     fi
     ;;
@@ -49,7 +49,7 @@ linux)
 esac
 
 # Stop mutagen daemon in case of existing one with different version
-mutagen daemon stop || true
+( echo y | mutagen daemon stop ) || true
 
 yes | ddev delete images
 
