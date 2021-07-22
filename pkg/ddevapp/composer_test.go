@@ -39,20 +39,42 @@ func TestComposer(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
-	app.ComposerVersion = "2"
 	assert.NoError(err)
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-composer": {{"exec-host": "touch hello-post-composer-" + app.Name}}, "pre-composer": {{"exec-host": "touch hello-pre-composer-" + app.Name}}}
 	// Make sure we get rid of this for other uses
-	defer func() {
+
+	t.Cleanup(func() {
 		app.Hooks = nil
 		app.ComposerVersion = ""
 		_ = app.WriteConfig()
 		_ = app.Stop(true, false)
-	}()
+	})
+
 	err = app.Start()
 	require.NoError(t, err)
+
+	// Make sure to remove the var-dump-server to start; composer install should replace it.
+	_ = os.RemoveAll("vendor/bin/var-dump-server")
+
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+
 	_, _, err = app.Composer([]string{"install"})
 	assert.NoError(err)
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: "ls -l vendor/bin/var-dump-server | awk '{print $1}'",
+	})
+	assert.NoError(err)
+	assert.Equal("lrwxr-xr-x\n", out)
+
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: "vendor/bin/var-dump-server -h",
+	})
+	assert.NoError(err)
+
 	assert.FileExists("hello-pre-composer-" + app.Name)
 	assert.FileExists("hello-post-composer-" + app.Name)
 	err = os.Remove("hello-pre-composer-" + app.Name)
