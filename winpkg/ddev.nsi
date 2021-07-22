@@ -112,7 +112,7 @@
 !define NSSM_URL "https://github.com/drud/nssm/releases/download/${NSSM_VERSION}/nssm.exe"
 
 !define MUTAGEN_NAME "Mutagen"
-!define MUTAGEN_VERSION "v0.11.8"
+!define MUTAGEN_VERSION "v0.12.0-beta3"
 !define MUTAGEN_URL "https://github.com/drud/mutagen/releases/download/${MUTAGEN_VERSION}/mutagen.exe"
 
 !define MUTAGEN_AGENT_NAME "MUTAGEN_AGENT"
