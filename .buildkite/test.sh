@@ -56,7 +56,7 @@ chmod -R u+w ~/go/pkg && rm -rf ~/go/pkg/*
 
 # Run any testbot maintenance that may need to be done
 echo "--- running testbot_maintenance.sh"
-bash $(dirname $0)/testbot_maintenance.sh
+bash $(dirname $0)/testbot_maintenance.sh || true
 
 echo "--- cleaning up docker and Test directories"
 echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"

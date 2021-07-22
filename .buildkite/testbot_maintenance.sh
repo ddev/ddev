@@ -23,7 +23,7 @@ fi
 case $os in
 darwin)
     brew uninstall mutagen-io/mutagen/mutagen || true
-    for item in drud/ddev/ddev golang golangci-lint mkcert mkdocs brew install mutagen-io/mutagen/mutagen-beta python3-yq; do
+    for item in drud/ddev/ddev golang golangci-lint mkcert mkdocs mutagen-io/mutagen/mutagen-beta; do
         brew upgrade $item || brew install $item || true
     done
     ;;
@@ -51,11 +51,8 @@ esac
 # Stop mutagen daemon in case of existing one with different version
 ( echo y | mutagen daemon stop ) || true
 
-yes | ddev delete images
+(yes | ddev delete images) || true
 
 # Remove any -built images, as we want to make sure tests do the building.
 docker rmi -f $(docker images --filter "dangling=true" -q --no-trunc) >/dev/null || true
 docker rmi -f $(docker images | awk '/drud.*-built/ {print $3}' ) >/dev/null || true
-
-# Make sure the global internet detection timeout is not set to 0 (broken)
-perl -pi -e 's/^internet_detection_timeout_ms:.*$/internet_detection_timeout_ms: 750/g' ~/.ddev/global_config.yaml
