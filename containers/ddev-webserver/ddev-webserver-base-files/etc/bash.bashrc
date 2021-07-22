@@ -56,4 +56,8 @@ fi
 
 export HISTFILE=/mnt/ddev-global-cache/bashhistory/${HOSTNAME}/bash_history
 
+# mysql history to be shared between web and db
+mkdir -p /mnt/ddev-global-cache/mysqlhistory/${DDEV_PROJECT}
+export MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_PROJECT}/mysql_history
+
 export PHP_IDE_CONFIG=serverName=${DDEV_SITENAME}.${DDEV_TLD}
