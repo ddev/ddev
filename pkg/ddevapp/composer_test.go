@@ -7,6 +7,7 @@ import (
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/require"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -69,7 +70,11 @@ func TestComposer(t *testing.T) {
 		Cmd: "ls -l vendor/bin/var-dump-server | awk '{print $1}'",
 	})
 	assert.NoError(err)
-	assert.True(strings.HasPrefix(out, "lrwx"))
+	expect := "lrwx"
+	if runtime.GOOS == "windows" {
+		expect = "-rwx"
+	}
+	assert.True(strings.HasPrefix(out, expect), "perms of var-dump-server should be '%s', got '%s' instead", expect, out)
 
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: "vendor/bin/var-dump-server -h",
