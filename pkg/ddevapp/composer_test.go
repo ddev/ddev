@@ -7,6 +7,7 @@ import (
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/require"
 	"os"
+	"strings"
 	"testing"
 
 	asrt "github.com/stretchr/testify/assert"
@@ -68,7 +69,7 @@ func TestComposer(t *testing.T) {
 		Cmd: "ls -l vendor/bin/var-dump-server | awk '{print $1}'",
 	})
 	assert.NoError(err)
-	assert.Equal("lrwxr-xr-x\n", out)
+	assert.True(strings.HasPrefix(out, "lrwx"))
 
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: "vendor/bin/var-dump-server -h",
