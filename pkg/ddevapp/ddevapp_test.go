@@ -1651,29 +1651,14 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-snapshot": {{"exec-host": "touch hello-post-snapshot-" + app.Name}}, "pre-snapshot": {{"exec-host": "touch hello-pre-snapshot-" + app.Name}}}
 
-	// First do regular start, which is good enough to get us to an ImportDB()
 	err = app.Start()
 	require.NoError(t, err)
 
 	err = app.ImportDB(d7testerTest1Dump, "", false, false, "db")
 	require.NoError(t, err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
 
-	err = app.StartAndWait(2)
-	require.NoError(t, err, "app.Start() failed on site %s, err=%v", site.Name, err)
-
 	resp, ensureErr := testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), "d7 tester test 1 has 1 node", 45)
 	assert.NoError(ensureErr)
-	if ensureErr != nil && strings.Contains(ensureErr.Error(), "container failed") {
-		logs, err := ddevapp.GetErrLogsFromApp(app, ensureErr)
-		assert.NoError(err)
-		t.Fatalf("container failed: logs:\n=======\n%s\n========\n", logs)
-	}
-	require.NotNil(t, resp)
-	if ensureErr != nil && resp.StatusCode != 200 {
-		logs, err := app.CaptureLogs("web", false, "")
-		assert.NoError(err)
-		t.Fatalf("EnsureLocalHTTPContent received %d. Resp=%v, web logs=\n========\n%s\n=========\n", resp.StatusCode, resp, logs)
-	}
 
 	// Make a snapshot of d7 tester test 1
 	backupsDir := filepath.Join(app.GetConfigPath(""), "db_snapshots")
