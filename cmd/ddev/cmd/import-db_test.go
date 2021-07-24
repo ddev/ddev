@@ -16,17 +16,21 @@ import (
 func TestCmdImportDB(t *testing.T) {
 	assert := asrt.New(t)
 
-	testDir, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 	site := TestSites[0]
-	cleanup := site.Chdir()
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
 	app, err := ddevapp.NewApp(site.Dir, false)
 	assert.NoError(err)
-	defer func() {
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
 		// Make sure all databases are back to default empty
-		_ = app.Stop(true, false)
-		_ = app.Start()
-		cleanup()
-	}()
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = app.Start()
+		assert.NoError(err)
+	})
 
 	// Make sure we start with nothing in db
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
@@ -37,7 +41,7 @@ func TestCmdImportDB(t *testing.T) {
 	require.Equal(t, "", out)
 
 	// Set up to read from the sql import file
-	inputFile := filepath.Join(testDir, "testdata", t.Name(), "users.sql")
+	inputFile := filepath.Join(origDir, "testdata", t.Name(), "users.sql")
 	f, err := os.Open(inputFile)
 	require.NoError(t, err)
 	// nolint: errcheck
@@ -48,7 +52,7 @@ func TestCmdImportDB(t *testing.T) {
 	command.Stdin = f
 
 	importDBOutput, err := command.CombinedOutput()
-	require.NoError(t, err, "failed import-db from stdin: %v", importDBOutput)
+	require.NoError(t, err, "failed import-db from stdin: %s (%v)", string(importDBOutput), err)
 
 	assert.Contains(string(importDBOutput), "Successfully imported database")
 
@@ -61,7 +65,7 @@ func TestCmdImportDB(t *testing.T) {
 
 	// Test with named project (outside project directory)
 	// Test with named project (outside project directory)
-	tmpDir := testcommon.CreateTmpDir("TestCmdExportDB")
+	tmpDir := testcommon.CreateTmpDir(t.Name())
 	err = os.Chdir(tmpDir)
 	assert.NoError(err)
 
