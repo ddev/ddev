@@ -3,10 +3,17 @@ package ddevapp
 import (
 	"fmt"
 	"github.com/Masterminds/semver"
+	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/pkg/errors"
+	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -167,8 +174,19 @@ func MutagenSyncExists(app *DdevApp) bool {
 
 // DownloadMutagen gets the mutagen binary and related and puts it into
 // ~/.ddev/.bin
-func DownloadMutagen() {
-
+func DownloadMutagen() error {
+	flavor := runtime.GOOS + "_" + runtime.GOARCH
+	globalMutagenDir := filepath.Join(globalconfig.GetGlobalDdevDir(), ".bin")
+	destFile := filepath.Join(globalMutagenDir, "mutagen.tgz")
+	mutagenURL := fmt.Sprintf("https://github.com/mutagen-io/mutagen/releases/download/%s/mutagen_%s_v%s.tar.gz", nodeps.RequiredMutagenVersion, flavor, nodeps.RequiredMutagenVersion)
+	output.UserOut.Printf("Downloading %s", mutagenURL)
+	_ = os.MkdirAll(globalMutagenDir, 0777)
+	err := util.DownloadFile(destFile, mutagenURL, true)
+	if err != nil {
+		return err
+	}
+	err = archive.Untar(destFile, globalMutagenDir, "")
+	return err
 }
 
 // CheckMutagenVersion determines if the mutagen version of the host

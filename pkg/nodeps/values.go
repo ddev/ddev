@@ -88,6 +88,7 @@ const (
 	// DdevDefaultTLD is the top-level-domain used by default, can be overridden
 	DdevDefaultTLD                  = "ddev.site"
 	InternetDetectionTimeoutDefault = 750
+	RequiredMutagenVersion          = "0.12.0-beta3"
 )
 
 // IsValidPHPVersion is a helper function to determine if a PHP version is valid, returning

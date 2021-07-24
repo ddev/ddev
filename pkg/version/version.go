@@ -37,7 +37,7 @@ var DockerComposeVersionConstraint = "1.21.0-alpha1 - 1.999.0"
 var DockerComposeFileFormatVersion = "3.6"
 
 // MutagenVersionConstraint defines the mutagen versions we'll accept
-var MutagenVersionConstraint = "0.12.0-beta3"
+var MutagenVersionConstraint = nodeps.RequiredMutagenVersion
 
 // WebImg defines the default web image used for applications.
 var WebImg = "drud/ddev-webserver"
