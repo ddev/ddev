@@ -30,6 +30,9 @@ var MutagenSyncCmd = &cobra.Command{
 		if err != nil {
 			util.Failed("Failed to get active project: %v", err)
 		}
+		if !app.MutagenEnabled {
+			util.Failed("Mutagen is not enabled on project %s", app.Name)
+		}
 
 		err = app.MutagenSyncFlush()
 		if err != nil {

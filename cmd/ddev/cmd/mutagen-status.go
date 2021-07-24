@@ -30,6 +30,9 @@ var MutagenStatusCmd = &cobra.Command{
 		if err != nil {
 			util.Failed("Failed to get active project: %v", err)
 		}
+		if !app.MutagenEnabled {
+			util.Failed("Mutagen is not enabled on project %s", app.Name)
+		}
 		status, shortResult, longResult, _ := app.MutagenStatus()
 
 		ok := "Mutagen not working"
