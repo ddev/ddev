@@ -78,5 +78,4 @@ func TestCmdImportDB(t *testing.T) {
 	})
 	assert.NoError(err)
 	assert.Equal("2\n", out)
-
 }
