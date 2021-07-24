@@ -231,7 +231,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["type"] = app.GetType()
 	appDesc["mutagen_enabled"] = app.MutagenEnabled
 	if app.MutagenEnabled {
-		appDesc["mutagen_status"], err = app.MutagenStatus()
+		_, appDesc["mutagen_status"], _, err = app.MutagenStatus()
 		if err != nil {
 			appDesc["mutagen_status"] = err.Error() + " " + appDesc["mutagen_status"].(string)
 		}
@@ -940,12 +940,12 @@ func (app *DdevApp) Start() error {
 			return err
 		}
 		mutagenTimeTrack := util.ElapsedTime(time.Now())
-		err := CreateMutagenSync(app)
+		err = CreateMutagenSync(app)
 		if err != nil {
 			return errors.Errorf("Failed to create mutagen sync session %s. You may be able to resolve this problem with 'ddev stop %s && mutagen sync terminate %s && docker volume rm %s_project_mutagen'", MutagenSyncName(app.Name), app.Name, MutagenSyncName(app.Name), app.Name)
 		}
 		secs := mutagenTimeTrack()
-		util.Success("Mutagen sync completed in %.1fs. For details on sync status 'mutagen sync list %s'", secs, MutagenSyncName(app.Name))
+		util.Success("Mutagen sync completed in %.1fs. For details on sync status 'ddev mutagen status --verbose %s'", secs, MutagenSyncName(app.Name))
 	}
 
 	err = StartDdevRouter()

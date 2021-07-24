@@ -6,7 +6,6 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/pkg/errors"
-	osexec "os/exec"
 	"strings"
 )
 
@@ -92,27 +91,42 @@ func CreateMutagenSync(app *DdevApp) error {
 	return nil
 }
 
-// CheckMutagenErrors checks to see if there is an error case in mutagen
+// MutagenStatus checks to see if there is an error case in mutagen
 // We don't want to do a flush yet in that case.
-func CheckMutagenErrors(app *DdevApp) (string, error) {
+func (app *DdevApp) MutagenStatus() (status bool, shortResult string, longResult string, err error) {
 	syncName := MutagenSyncName(app.Name)
 	bashPath := util.FindBashPath()
 
-	out, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf(`mutagen sync list %s`, syncName)})
+	longResult, err = exec.ExecCommand(bashPath, "-c", fmt.Sprintf(`mutagen sync list %s`, syncName))
+	shortResult = parseMutagenStatusLine(longResult)
 	if err != nil {
-		return out, err
+		return false, shortResult, longResult, err
 	}
 
 	// We're going to assume that if it's applying changes things are still OK,
 	// even though there may be a whole list of problems.
-	if strings.Contains(out, "Status: Applying changes") || strings.Contains(out, "Status: Staging files on") || strings.Contains(out, "Status: Scanning files") || strings.Contains(out, "Status: Watching for changes") {
-		return out, nil
+	if strings.Contains(shortResult, "Applying changes") || strings.Contains(shortResult, "Staging files on") || strings.Contains(shortResult, "Scanning files") || strings.Contains(shortResult, "Watching for changes") {
+		return true, shortResult, longResult, nil
 	}
-	if strings.Contains(out, "problems") || strings.Contains(out, "Conflicts") || strings.Contains(out, "error") || strings.Contains(out, "Halted") {
-		util.Error("mutagen sync %s is not working correctly: %s", syncName, out)
-		return out, errors.Errorf("mutagen sync %s is not working correctly, use 'mutagen sync list %s' for details", syncName, syncName)
+	if strings.Contains(longResult, "problems") || strings.Contains(longResult, "Conflicts") || strings.Contains(longResult, "error") || strings.Contains(shortResult, "Halted") {
+		util.Error("mutagen sync %s is not working correctly: %s", syncName, longResult)
+		return false, shortResult, longResult, errors.Errorf("mutagen sync %s is not working correctly, use 'mutagen sync list %s' for details", syncName, syncName)
 	}
-	return out, nil
+	return true, shortResult, longResult, nil
+}
+
+// parseMutagenStatusLine takes the full mutagen sync list output and
+// return just the right of the Status: line
+func parseMutagenStatusLine(fullStatus string) string {
+	statusLineLoc := strings.LastIndex(fullStatus, "\nStatus:")
+	statusLine := fullStatus[statusLineLoc+1:]
+	statusLineEnd := strings.Index(statusLine, "\n")
+	statusLine = statusLine[:statusLineEnd]
+	pieces := strings.Split(statusLine, ":")
+	if len(pieces) < 2 {
+		return ""
+	}
+	return strings.Trim(pieces[1], " \n\r")
 }
 
 // MutagenSyncFlush performs a mutagen sync flush, waits for result, and checks for errors
@@ -123,9 +137,9 @@ func (app *DdevApp) MutagenSyncFlush() error {
 		if !MutagenSyncExists(app) {
 			return errors.Errorf("Mutagen sync %s does not exist", syncName)
 		}
-		out, err := CheckMutagenErrors(app)
-		if err != nil {
-			return errors.Errorf("Mutagen sync %s is in error state: %s (%v)", syncName, out, err)
+		status, _, long, err := app.MutagenStatus()
+		if !status || err != nil {
+			return errors.Errorf("Mutagen sync %s is in error state: %s (%v)", syncName, long, err)
 		}
 
 		_, err = exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf("mutagen sync flush %s", syncName)})
@@ -133,8 +147,8 @@ func (app *DdevApp) MutagenSyncFlush() error {
 			return err
 		}
 
-		_, err = CheckMutagenErrors(app)
-		if err != nil {
+		status, _, long, err = app.MutagenStatus()
+		if !status || err != nil {
 			return err
 		}
 	}
@@ -148,18 +162,4 @@ func MutagenSyncExists(app *DdevApp) bool {
 
 	_, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf("mutagen sync list %s >/dev/null 2>&1", syncName)})
 	return err == nil
-}
-
-// MutagenStatus gives the current status line of mutagen for this sync session
-func (app *DdevApp) MutagenStatus() (string, error) {
-	bashPath := util.FindBashPath()
-	syncName := MutagenSyncName(app.Name)
-
-	c := osexec.Command(bashPath, "-c", fmt.Sprintf(`mutagen sync list %s | grep "^Status:" 2>&1`, syncName))
-	out, err := c.CombinedOutput()
-	if err != nil {
-		return string(out), err
-	}
-	pieces := strings.Split(string(out), ":")
-	return strings.Trim(pieces[1], " \n\r"), nil
 }

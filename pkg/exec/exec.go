@@ -49,3 +49,10 @@ func RunInteractiveCommand(command string, args []string) error {
 	err = cmd.Wait()
 	return err
 }
+
+// ExecCommand executes a command on the host and returns the
+// combined stdout/stderr results and error
+func ExecCommand(command string, args ...string) (string, error) {
+	o, err := exec.Command(command, args...).CombinedOutput()
+	return string(o), err
+}
