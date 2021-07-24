@@ -76,16 +76,17 @@ func TestMutagenSimple(t *testing.T) {
 	assert.Contains(stderr, "cannot access '/var/www/html/vendor'")
 
 	// Now composer install again and make sure all the stuff comes back
-	_, _, err = app.Composer([]string{"install"})
+	stdout, stderr, err := app.Composer([]string{"install"})
 	assert.NoError(err)
+	t.Logf("composer install output: \nstdout: %s\n\nstderr: %s\n", stdout, stderr)
+	_, stderr, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: "ls -l vendor/bin/var-dump-server >/dev/null",
+	})
+	assert.NoError(err)
+
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 	assert.FileExists(filepath.Join(app.AppRoot, "vendor/bin/var-dump-server"))
-
-	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: "ls -l /var/www/html/vendor/bin/var-dump-server",
-	})
-	assert.NoError(err)
 
 	// Stop app, should result in no more mutagen sync
 	err = app.Stop(false, false)
