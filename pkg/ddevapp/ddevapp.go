@@ -517,6 +517,10 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		preImportSQL = fmt.Sprintf("DROP DATABASE IF EXISTS %s; ", targetDB) + preImportSQL
 	}
 
+	err = app.MutagenSyncFlush()
+	if err != nil {
+		return err
+	}
 	// The perl manipulation removes statements like CREATE DATABASE and USE, which
 	// throw off imports. This is a scary manipulation, as it must not match actual content
 	// as has actually happened with https://www.ddevhq.org/ddev-local/ddev-local-database-management/
