@@ -50,9 +50,9 @@ func RunInteractiveCommand(command string, args []string) error {
 	return err
 }
 
-// ExecCommand executes a command on the host and returns the
+// RunHostCommand executes a command on the host and returns the
 // combined stdout/stderr results and error
-func ExecCommand(command string, args ...string) (string, error) {
+func RunHostCommand(command string, args ...string) (string, error) {
 	o, err := exec.Command(command, args...).CombinedOutput()
 	return string(o), err
 }

@@ -79,7 +79,7 @@ func TestMutagenSimple(t *testing.T) {
 	stdout, stderr, err := app.Composer([]string{"install"})
 	assert.NoError(err)
 	t.Logf("composer install output: \nstdout: %s\n\nstderr: %s\n", stdout, stderr)
-	_, stderr, err = app.Exec(&ddevapp.ExecOpts{
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: "ls -l vendor/bin/var-dump-server >/dev/null",
 	})
 	assert.NoError(err)

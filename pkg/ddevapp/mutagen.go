@@ -97,7 +97,7 @@ func (app *DdevApp) MutagenStatus() (status bool, shortResult string, longResult
 	syncName := MutagenSyncName(app.Name)
 	bashPath := util.FindBashPath()
 
-	longResult, err = exec.ExecCommand(bashPath, "-c", fmt.Sprintf(`mutagen sync list %s`, syncName))
+	longResult, err = exec.RunHostCommand(bashPath, "-c", fmt.Sprintf(`mutagen sync list %s`, syncName))
 	shortResult = parseMutagenStatusLine(longResult)
 	if err != nil {
 		return false, shortResult, longResult, err
@@ -147,7 +147,7 @@ func (app *DdevApp) MutagenSyncFlush() error {
 			return err
 		}
 
-		status, _, long, err = app.MutagenStatus()
+		status, _, _, err = app.MutagenStatus()
 		if !status || err != nil {
 			return err
 		}
