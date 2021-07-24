@@ -4,9 +4,12 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/require"
 	"os"
+	"runtime"
+	"strings"
 	"testing"
 
 	asrt "github.com/stretchr/testify/assert"
@@ -68,12 +71,11 @@ func TestComposer(t *testing.T) {
 		Cmd: "ls -l vendor/bin/var-dump-server | awk '{print $1}'",
 	})
 	assert.NoError(err)
-	_ = out
-	//expect := "lrwx"
-	//if runtime.GOOS == "windows" || nodeps.IsWSL2() {
-	//	expect = "-rwx"
-	//}
-	//assert.True(strings.HasPrefix(out, expect), "perms of var-dump-server should be '%s', got '%s' instead", runtime.GOOS, expect, out)
+	expect := "lrwx"
+	if runtime.GOOS == "windows" || nodeps.IsWSL2() {
+		expect = "-rwx"
+	}
+	assert.True(strings.HasPrefix(out, expect), "perms of var-dump-server should be '%s', got '%s' instead", runtime.GOOS, expect, out)
 
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: "vendor/bin/var-dump-server -h",
