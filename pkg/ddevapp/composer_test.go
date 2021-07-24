@@ -31,8 +31,12 @@ func TestComposer(t *testing.T) {
 
 		err := site.Prepare()
 		require.NoError(t, err)
-		// nolint: errcheck
-		defer os.RemoveAll(site.Dir)
+		t.Cleanup(func() {
+			err = app.Stop(true, false)
+			assert.NoError(err)
+			err = os.RemoveAll(app.AppRoot)
+			assert.NoError(err)
+		})
 	}
 
 	testDir, _ := os.Getwd()
