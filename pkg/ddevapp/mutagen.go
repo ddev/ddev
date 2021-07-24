@@ -108,7 +108,7 @@ func CheckMutagenErrors(app *DdevApp) (string, error) {
 	if strings.Contains(out, "Status: Applying changes") || strings.Contains(out, "Status: Staging files on") || strings.Contains(out, "Status: Scanning files") || strings.Contains(out, "Status: Watching for changes") {
 		return out, nil
 	}
-	if strings.Contains(out, "problems") || strings.Contains(out, "Conflicts") || strings.Contains(out, "error") {
+	if strings.Contains(out, "problems") || strings.Contains(out, "Conflicts") || strings.Contains(out, "error") || strings.Contains(out, "Halted") {
 		util.Error("mutagen sync %s is not working correctly: %s", syncName, out)
 		return out, errors.Errorf("mutagen sync %s is not working correctly, use 'mutagen sync list %s' for details", syncName, syncName)
 	}
