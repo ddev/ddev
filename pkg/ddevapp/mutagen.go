@@ -2,8 +2,10 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/Masterminds/semver"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/version"
 	"github.com/pkg/errors"
 	"strings"
 )
@@ -161,4 +163,42 @@ func MutagenSyncExists(app *DdevApp) bool {
 
 	_, err := exec.RunHostCommand(bashPath, "-c", fmt.Sprintf("mutagen sync list %s >/dev/null 2>&1", syncName))
 	return err == nil
+}
+
+// DownloadMutagen gets the mutagen binary and related and puts it into
+// ~/.ddev/.bin
+func DownloadMutagen() {
+
+}
+
+// CheckMutagenVersion determines if the mutagen version of the host
+//system meets the provided version constraint
+func CheckMutagenVersion(versionConstraint string) error {
+	currentVersion, err := version.GetMutagenVersion()
+	if err != nil {
+		return fmt.Errorf("no mutagen")
+	}
+	v, err := semver.NewVersion(currentVersion)
+	if err != nil {
+		return err
+	}
+
+	constraint, err := semver.NewConstraint(versionConstraint)
+	if err != nil {
+		return err
+	}
+
+	match, errs := constraint.Validate(v)
+	if !match {
+		if len(errs) <= 1 {
+			return errs[0]
+		}
+
+		msgs := "\n"
+		for _, err := range errs {
+			msgs = fmt.Sprint(msgs, err, "\n")
+		}
+		return fmt.Errorf(msgs)
+	}
+	return nil
 }

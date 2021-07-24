@@ -1,4 +1,5 @@
 #ddev-generated
+/.bin
 /.router-compose.yaml
 /.router-composer-full.yaml
 /.ssh-auth-compose.yaml
