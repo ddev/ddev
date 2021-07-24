@@ -60,6 +60,13 @@ func Success(format string, a ...interface{}) {
 	}
 }
 
+// Output controlled by DDEV_DEBUG environment variable
+func Debug(format string, a ...interface{}) {
+	if globalconfig.DdevDebug {
+		output.UserOut.Debugf(format, a...)
+	}
+}
+
 // FormatPlural is a simple wrapper which returns different strings based on the count value.
 func FormatPlural(count int, single string, plural string) string {
 	if count == 1 {

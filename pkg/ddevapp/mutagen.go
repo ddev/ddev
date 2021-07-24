@@ -3,7 +3,6 @@ package ddevapp
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/pkg/errors"
 	"strings"
@@ -12,13 +11,13 @@ import (
 func SetMutagenVolumeOwnership(app *DdevApp) error {
 	// Make sure that if we have a volume mount it's got proper ownership
 	uidStr, gidStr, _ := util.GetContainerUIDGid()
-	output.UserOut.Printf("chowning mutagen docker volume for user %s", uidStr)
+	util.Debug("chowning mutagen docker volume for user %s", uidStr)
 	_, _, err := app.Exec(
 		&ExecOpts{
 			Dir: "/tmp",
 			Cmd: fmt.Sprintf("sudo chown -R %s:%s /var/www/html", uidStr, gidStr),
 		})
-	output.UserOut.Printf("done chowning mutagen docker volume, result=%v", err)
+	util.Debug("done chowning mutagen docker volume, result=%v", err)
 	return err
 }
 
@@ -37,7 +36,7 @@ func TerminateMutagenSync(app *DdevApp) error {
 		bashPath := util.FindBashPath()
 		syncName := MutagenSyncName(app.Name)
 		if MutagenSyncExists(app) {
-			_, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf("mutagen sync terminate %s", syncName)})
+			_, err := exec.RunHostCommand(bashPath, "-c", fmt.Sprintf("mutagen sync terminate %s", syncName))
 			if err != nil {
 				return err
 			}
@@ -73,17 +72,17 @@ func CreateMutagenSync(app *DdevApp) error {
 	syncName := MutagenSyncName(app.Name)
 	bashPath := util.FindBashPath()
 
-	output.UserOut.Printf("Terminating mutagen sync if session already exists")
+	util.Debug("Terminating mutagen sync if session already exists")
 	err := TerminateMutagenSync(app)
 	if err != nil {
 		return err
 	}
-	output.UserOut.Printf("Starting mutagen sync %s", syncName)
-	_, err = exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf(`mutagen sync create "%s" docker://ddev-%s-web/var/www/html --sync-mode=two-way-resolved --name=%s >/dev/null`, app.AppRoot, app.Name, syncName)})
+	util.Debug("Starting mutagen sync %s", syncName)
+	_, err = exec.RunHostCommand(bashPath, "-c", fmt.Sprintf(`mutagen sync create "%s" docker://ddev-%s-web/var/www/html --sync-mode=two-way-resolved --name=%s >/dev/null`, app.AppRoot, app.Name, syncName))
 	if err != nil {
 		return err
 	}
-	output.UserOut.Printf("Flushing mutagen sync %s", syncName)
+	util.Debug("Flushing mutagen sync %s", syncName)
 	err = app.MutagenSyncFlush()
 	if err != nil {
 		return err
@@ -142,7 +141,7 @@ func (app *DdevApp) MutagenSyncFlush() error {
 			return errors.Errorf("Mutagen sync %s is in error state: %s (%v)", syncName, long, err)
 		}
 
-		_, err = exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf("mutagen sync flush %s", syncName)})
+		_, err = exec.RunHostCommand(bashPath, "-c", fmt.Sprintf("mutagen sync flush %s", syncName))
 		if err != nil {
 			return err
 		}
@@ -160,6 +159,6 @@ func MutagenSyncExists(app *DdevApp) bool {
 	bashPath := util.FindBashPath()
 	syncName := MutagenSyncName(app.Name)
 
-	_, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf("mutagen sync list %s >/dev/null 2>&1", syncName)})
+	_, err := exec.RunHostCommand(bashPath, "-c", fmt.Sprintf("mutagen sync list %s >/dev/null 2>&1", syncName))
 	return err == nil
 }
