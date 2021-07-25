@@ -1690,6 +1690,11 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-restore-snapshot": {{"exec-host": "touch hello-post-restore-snapshot-" + app.Name}}, "pre-restore-snapshot": {{"exec-host": "touch hello-pre-restore-snapshot-" + app.Name}}}
 
+	err = app.MutagenSyncFlush()
+	require.NoError(t, err)
+	// Sleep to let sync happen if needed (M1 failure)
+	time.Sleep(2 * time.Second)
+
 	err = app.RestoreSnapshot("d7testerTest1")
 	assert.NoError(err)
 
@@ -3098,6 +3103,9 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 			// Make sure access from host is successful
 			// But "localhost" is only for inside container.
 			if parts.Host != "localhost" {
+				// Dummy attempt to get webserver "warmed up" before real try.
+				// Forced by M1 constant EOFs
+				_, _, _ = testcommon.GetLocalHTTPResponse(t, site.Safe200URIWithExpectation.URI, 60)
 				_, _ = testcommon.EnsureLocalHTTPContent(t, item+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 			}
 
