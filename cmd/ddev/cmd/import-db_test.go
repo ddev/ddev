@@ -33,7 +33,7 @@ func TestCmdImportDB(t *testing.T) {
 	})
 
 	err = app.Start()
-	require.NotNil(t, err)
+	require.NoError(t, err)
 
 	if app.MutagenEnabled {
 		_, _, longStatus, _ := app.MutagenStatus()
