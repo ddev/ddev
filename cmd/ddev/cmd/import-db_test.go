@@ -48,9 +48,11 @@ func TestCmdImportDB(t *testing.T) {
 	defer f.Close()
 
 	// Run the import-db command with stdin coming from users.sql
-	_, _, longStatus, err := app.MutagenStatus()
-	assert.NoError(err)
-	t.Logf("mutagen status before import-db=%s", longStatus)
+	if app.MutagenEnabled {
+		_, _, longStatus, err := app.MutagenStatus()
+		assert.NoError(err)
+		t.Logf("mutagen status before import-db=%s", longStatus)
+	}
 
 	command := exec.Command(DdevBin, "import-db")
 	command.Stdin = f
