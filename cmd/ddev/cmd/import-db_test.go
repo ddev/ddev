@@ -32,6 +32,11 @@ func TestCmdImportDB(t *testing.T) {
 		assert.NoError(err)
 	})
 
+	if app.MutagenEnabled {
+		_, _, longStatus, _ := app.MutagenStatus()
+		t.Logf("mutagen status before show tables=%s", longStatus)
+	}
+
 	// Make sure we start with nothing in db
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
@@ -40,6 +45,11 @@ func TestCmdImportDB(t *testing.T) {
 	assert.NoError(err, "mysql exec output=%s", out)
 	require.Equal(t, "", out)
 
+	if app.MutagenEnabled {
+		_, _, longStatus, _ := app.MutagenStatus()
+		t.Logf("mutagen status before opening file=%s", longStatus)
+	}
+
 	// Set up to read from the sql import file
 	inputFile := filepath.Join(origDir, "testdata", t.Name(), "users.sql")
 	f, err := os.Open(inputFile)
@@ -47,13 +57,11 @@ func TestCmdImportDB(t *testing.T) {
 	// nolint: errcheck
 	defer f.Close()
 
-	// Run the import-db command with stdin coming from users.sql
 	if app.MutagenEnabled {
-		_, _, longStatus, err := app.MutagenStatus()
-		assert.NoError(err)
+		_, _, longStatus, _ := app.MutagenStatus()
 		t.Logf("mutagen status before import-db=%s", longStatus)
 	}
-
+	// Run the import-db command with stdin coming from users.sql
 	command := exec.Command(DdevBin, "import-db")
 	command.Stdin = f
 
