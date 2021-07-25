@@ -1,4 +1,4 @@
-name: Run DDEV tests
+name: Tests
 on:
   pull_request:
   push:
