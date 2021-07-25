@@ -32,6 +32,9 @@ func TestCmdImportDB(t *testing.T) {
 		assert.NoError(err)
 	})
 
+	err = app.Start()
+	require.NotNil(t, err)
+
 	if app.MutagenEnabled {
 		_, _, longStatus, _ := app.MutagenStatus()
 		t.Logf("mutagen status before show tables=%s", longStatus)
