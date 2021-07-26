@@ -123,7 +123,7 @@ $(TARGETS): pullbuildimage $(GOFILES)
 	@echo $(VERSION) >VERSION.txt
 
 
-TEST_TIMEOUT=3h
+TEST_TIMEOUT=4h
 BUILD_ARCH = $(shell go env GOARCH)
 
 DDEVNAME=ddev

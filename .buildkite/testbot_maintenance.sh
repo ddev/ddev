@@ -22,34 +22,27 @@ fi
 # Upgrade various items on various operating systems
 case $os in
 darwin)
-    brew uninstall mutagen-io/mutagen/mutagen || true
-    for item in drud/ddev/ddev golang golangci-lint mkcert mkdocs mutagen-io/mutagen/mutagen-beta; do
+    brew uninstall mutagen-io/mutagen/mutagen-beta mutagen-io/mutagen/mutagen || true
+    for item in drud/ddev/ddev golang golangci-lint mkcert mkdocs; do
         brew upgrade $item || brew install $item || true
     done
     ;;
 windows)
     (yes | choco upgrade -y golang nodejs markdownlint-cli mkcert mkdocs) || true
-    MUTAGEN_VERSION=0.12.0-beta3
-    if ! command -v mutagen >/dev/null || [ "$(mutagen version)" != "${MUTAGEN_VERSION}" ]; then
-      mkdir -p ~/tmp/mutagen ~/bin && curl -sSL -o ~/tmp/mutagen.tgz https://github.com/mutagen-io/mutagen/releases/download/v${MUTAGEN_VERSION}/mutagen_windows_amd64_v${MUTAGEN_VERSION}.tar.gz
-      tar -zxf ~/tmp/mutagen.tgz -C ~/bin
-    fi
+    (yes | choco uninstall -y mutagen) || true
     ;;
 # linux is currently WSL2
 linux)
     # homebrew is only on amd64
     if [ "$(arch)" = "x86_64" ]; then
-      brew uninstall mutagen || true
-      for item in drud/ddev/ddev golang mkcert mkdocs mutagen-io/mutagen/mutagen-beta; do
+      brew uninstall mutagen-beta mutagen || true
+      for item in drud/ddev/ddev golang mkcert mkdocs; do
         brew upgrade $item || brew install $item || true
       done
     fi
     ;;
 
 esac
-
-# Stop mutagen daemon in case of existing one with different version
-( echo y | mutagen daemon stop ) || true
 
 (yes | ddev delete images) || true
 

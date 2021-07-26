@@ -1775,6 +1775,9 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	assert.NoError(err)
 	_ = f.Close()
 
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+
 	_, _, createFileErr := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     "echo 'content created inside container\n' >" + inContainerRelativePath,

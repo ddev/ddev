@@ -195,14 +195,9 @@ func GetMutagenVersion() (string, error) {
 		return MutagenVersion, nil
 	}
 
-	executableName := "mutagen"
+	mutagenPath := globalconfig.GetMutagenPath()
 
-	path, err := exec.LookPath(executableName)
-	if err != nil {
-		return "", fmt.Errorf("mutagen not found")
-	}
-
-	out, err := exec.Command(path, "version").Output()
+	out, err := exec.Command(mutagenPath, "version").Output()
 	if err != nil {
 		return "", err
 	}

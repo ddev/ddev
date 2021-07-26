@@ -56,9 +56,6 @@ if [ ! -z "${TRAVIS_BUILD_NUMBER:-}" ]; then
   sudo cp /usr/bin/docker-compose /usr/local/bin/docker-compose
 fi
 
-MUTAGEN_VERSION=v0.12.0-beta3
-curl -sSL -o /tmp/mutagen.tgz https://github.com/mutagen-io/mutagen/releases/download/${MUTAGEN_VERSION}/mutagen_linux_arm64_${MUTAGEN_VERSION}.tar.gz && sudo tar -zxf /tmp/mutagen.tgz -C /usr/local/bin
-
 # Show info to simplify debugging and create a builder
 docker info
 docker version

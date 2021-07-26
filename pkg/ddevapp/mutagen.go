@@ -5,6 +5,7 @@ import (
 	"github.com/Masterminds/semver"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
@@ -41,11 +42,10 @@ func MutagenSyncName(name string) string {
 // TerminateMutagenSync terminates the mutagen sync
 // It is not an error if the sync session does not exist
 func TerminateMutagenSync(app *DdevApp) error {
-	if app.MutagenEnabled || app.MutagenEnabledGlobal {
-		bashPath := util.FindBashPath()
+	if app.MutagenEnabled {
 		syncName := MutagenSyncName(app.Name)
 		if MutagenSyncExists(app) {
-			_, err := exec.RunHostCommand(bashPath, "-c", fmt.Sprintf("mutagen sync terminate %s", syncName))
+			_, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "terminate", syncName)
 			if err != nil {
 				return err
 			}
@@ -74,22 +74,44 @@ func SyncAndTerminateMutagen(app *DdevApp) error {
 	return nil
 }
 
+// GetMutagenConfigFile looks to see if there's a global .mutagen.yml
+// in ~/.ddev/.mutagen
+// Then looks for one in project .ddev/.mutagen.yml
+// Project overrides global
+// If nothing is found, returns empty
+func GetMutagenConfigFile(app *DdevApp) string {
+	globalConfig := filepath.Join(globalconfig.GetMutagenDir(), "mutagen.yml")
+
+	projectConfig := filepath.Join(app.GetConfigPath("mutagen.yml"))
+	if fileutil.FileExists(projectConfig) {
+		return projectConfig
+	}
+	if fileutil.FileExists(globalConfig) {
+		return globalConfig
+	}
+	return ""
+}
+
 // CreateMutagenSync creates a sync (after making sure it doesn't exist)
 // It detects problems with the sync and errors if there are problems
 // and returns the output of `mutagen sync list <syncname>` along with error info
 func CreateMutagenSync(app *DdevApp) error {
 	syncName := MutagenSyncName(app.Name)
-	bashPath := util.FindBashPath()
+	configFile := GetMutagenConfigFile(app)
 
 	util.Debug("Terminating mutagen sync if session already exists")
 	err := TerminateMutagenSync(app)
 	if err != nil {
 		return err
 	}
-	util.Debug("Starting mutagen sync %s", syncName)
-	_, err = exec.RunHostCommand(bashPath, "-c", fmt.Sprintf(`mutagen sync create "%s" docker://ddev-%s-web/var/www/html --sync-mode=two-way-resolved --name=%s >/dev/null`, app.AppRoot, app.Name, syncName))
+	args := []string{"sync", "create", app.AppRoot, fmt.Sprintf("docker://ddev-%s-web/var/www/html", app.Name), "--sync-mode=two-way-resolved", "--no-global-configuration", "--name", syncName}
+	if configFile != "" {
+		args = append(args, fmt.Sprintf(`--configuration=file="%s"`, configFile))
+	}
+	util.Debug("Creating mutagen sync: mutagen %v", args)
+	out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), args...)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to mutagen %v (%v), output=%s", args, err, out)
 	}
 	util.Debug("Flushing mutagen sync %s", syncName)
 	err = app.MutagenSyncFlush()
@@ -103,9 +125,8 @@ func CreateMutagenSync(app *DdevApp) error {
 // We don't want to do a flush yet in that case.
 func (app *DdevApp) MutagenStatus() (status bool, shortResult string, longResult string, err error) {
 	syncName := MutagenSyncName(app.Name)
-	bashPath := util.FindBashPath()
 
-	longResult, err = exec.RunHostCommand(bashPath, "-c", fmt.Sprintf(`mutagen sync list %s`, syncName))
+	longResult, err = exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list", syncName)
 	shortResult = parseMutagenStatusLine(longResult)
 	if err != nil {
 		return false, shortResult, longResult, err
@@ -140,7 +161,6 @@ func parseMutagenStatusLine(fullStatus string) string {
 // MutagenSyncFlush performs a mutagen sync flush, waits for result, and checks for errors
 func (app *DdevApp) MutagenSyncFlush() error {
 	if app.MutagenEnabled || app.MutagenEnabledGlobal {
-		bashPath := util.FindBashPath()
 		syncName := MutagenSyncName(app.Name)
 		if !MutagenSyncExists(app) {
 			return errors.Errorf("Mutagen sync %s does not exist", syncName)
@@ -150,7 +170,7 @@ func (app *DdevApp) MutagenSyncFlush() error {
 			return errors.Errorf("Mutagen sync %s is in error state: %s (%v)", syncName, long, err)
 		}
 
-		_, err = exec.RunHostCommand(bashPath, "-c", fmt.Sprintf("mutagen sync flush %s", syncName))
+		_, err = exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "flush", syncName)
 		if err != nil {
 			return err
 		}
@@ -165,20 +185,20 @@ func (app *DdevApp) MutagenSyncFlush() error {
 
 // MutagenSyncExists detects whether the named sync exists
 func MutagenSyncExists(app *DdevApp) bool {
-	bashPath := util.FindBashPath()
 	syncName := MutagenSyncName(app.Name)
 
-	_, err := exec.RunHostCommand(bashPath, "-c", fmt.Sprintf("mutagen sync list %s >/dev/null 2>&1", syncName))
+	_, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list", syncName)
 	return err == nil
 }
 
 // DownloadMutagen gets the mutagen binary and related and puts it into
 // ~/.ddev/.bin
 func DownloadMutagen() error {
+	StopMutagenDaemon()
 	flavor := runtime.GOOS + "_" + runtime.GOARCH
-	globalMutagenDir := filepath.Join(globalconfig.GetGlobalDdevDir(), ".bin")
+	globalMutagenDir := filepath.Dir(globalconfig.GetMutagenPath())
 	destFile := filepath.Join(globalMutagenDir, "mutagen.tgz")
-	mutagenURL := fmt.Sprintf("https://github.com/mutagen-io/mutagen/releases/download/%s/mutagen_%s_v%s.tar.gz", nodeps.RequiredMutagenVersion, flavor, nodeps.RequiredMutagenVersion)
+	mutagenURL := fmt.Sprintf("https://github.com/mutagen-io/mutagen/releases/download/v%s/mutagen_%s_v%s.tar.gz", nodeps.RequiredMutagenVersion, flavor, nodeps.RequiredMutagenVersion)
 	output.UserOut.Printf("Downloading %s", mutagenURL)
 	_ = os.MkdirAll(globalMutagenDir, 0777)
 	err := util.DownloadFile(destFile, mutagenURL, true)
@@ -186,7 +206,34 @@ func DownloadMutagen() error {
 		return err
 	}
 	err = archive.Untar(destFile, globalMutagenDir, "")
+	_ = os.Remove(destFile)
+	if err != nil {
+		return err
+	}
+	err = os.Chmod(globalconfig.GetMutagenPath(), 0755)
 	return err
+}
+
+// StopMutagenDaemon will try to stop a running mutagen daemon
+// But no problem if there wasn't one
+func StopMutagenDaemon() {
+	_, _ = exec.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "stop")
+}
+
+// DownloadMutagenIfNeeded downloads the proper version of mutagen
+// if it's either not yet installed or has the wrong version.
+func DownloadMutagenIfNeeded(app *DdevApp) error {
+	if !app.MutagenEnabled {
+		return nil
+	}
+	curVersion, err := version.GetMutagenVersion()
+	if err != nil || curVersion != nodeps.RequiredMutagenVersion {
+		err = DownloadMutagen()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // CheckMutagenVersion determines if the mutagen version of the host

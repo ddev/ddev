@@ -821,6 +821,10 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
+	err = DownloadMutagenIfNeeded(app)
+	if err != nil {
+		return err
+	}
 	err = app.ProcessHooks("pre-start")
 	if err != nil {
 		return err
@@ -934,7 +938,7 @@ func (app *DdevApp) Start() error {
 	}
 
 	if app.MutagenEnabled || app.MutagenEnabledGlobal {
-		util.Success("Starting mutagen sync process...")
+		output.UserOut.Printf("Starting mutagen sync process...")
 		err = SetMutagenVolumeOwnership(app)
 		if err != nil {
 			return err
@@ -942,7 +946,7 @@ func (app *DdevApp) Start() error {
 		mutagenTimeTrack := util.ElapsedTime(time.Now())
 		err = CreateMutagenSync(app)
 		if err != nil {
-			return errors.Errorf("Failed to create mutagen sync session %s. You may be able to resolve this problem with 'ddev stop %s && mutagen sync terminate %s && docker volume rm %s_project_mutagen'", MutagenSyncName(app.Name), app.Name, MutagenSyncName(app.Name), app.Name)
+			return errors.Errorf("Failed to create mutagen sync session %s. You may be able to resolve this problem with 'ddev stop %s && mutagen sync terminate %s && docker volume rm %s_project_mutagen' (%v)", MutagenSyncName(app.Name), app.Name, MutagenSyncName(app.Name), app.Name, err)
 		}
 		secs := mutagenTimeTrack()
 		util.Success("Mutagen sync completed in %.1fs.\nFor details on sync status 'ddev mutagen status --verbose %s'", secs, MutagenSyncName(app.Name))
@@ -1396,6 +1400,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_PRIMARY_URL":           app.GetPrimaryURL(),
 		"DOCKER_SCAN_SUGGEST":        "false",
 		"IS_DDEV_PROJECT":            "true",
+		"MUTAGEN_DATA_DIRECTORY":     globalconfig.GetMutagenDir(),
 	}
 
 	// Set the mariadb_local command to empty to prevent docker-compose from complaining normally.
