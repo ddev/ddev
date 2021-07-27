@@ -160,7 +160,9 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 
 	t.Cleanup(
 		func() {
-			err := os.Chdir(origDir)
+			_, err := exec.RunHostCommand(DdevBin, "poweroff")
+			assert.NoError(err)
+			err = os.Chdir(origDir)
 			assert.NoError(err)
 			err = os.RemoveAll(tmpDir)
 			assert.NoError(err)
@@ -232,6 +234,8 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 
 	t.Cleanup(
 		func() {
+			_, err := exec.RunHostCommand(DdevBin, "poweroff")
+			assert.NoError(err)
 
 			err = os.RemoveAll(tmpGlobal)
 			assert.NoError(err)
