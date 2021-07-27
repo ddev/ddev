@@ -1,0 +1,19 @@
+#ddev-generated
+# To override this file remove the #ddev-generated line above
+# and add your own configuration. If you override it you will
+# probably want to check it in.
+# See ddev mutagen docs at
+# https://ddev.readthedocs.io/en/stable/users/performance/#using-mutagen
+# For detailed information about mutagen configuration options, see
+# https://mutagen.io/documentation/introduction/configuration
+sync:
+  defaults:
+    mode: "two-way-resolved"
+    ignore:
+      paths:
+        # /var/www/html/var does not need to sync in TYPO3
+        - "var"
+      vcs: true
+    symlink:
+      mode: "portable"
+

@@ -9,6 +9,7 @@
 /**/README.*
 /CMS
 /global_config.yaml
+/.mutagen
 /pantheon*
 /*compose.yaml
 /*compose-full.yaml

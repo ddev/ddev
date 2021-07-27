@@ -98,15 +98,18 @@ func GetMutagenConfigFile(app *DdevApp) string {
 func CreateMutagenSync(app *DdevApp) error {
 	syncName := MutagenSyncName(app.Name)
 	configFile := GetMutagenConfigFile(app)
+	if configFile != "" {
+		util.Success("Using additional mutagen config file %s", configFile)
+	}
 
 	util.Debug("Terminating mutagen sync if session already exists")
 	err := TerminateMutagenSync(app)
 	if err != nil {
 		return err
 	}
-	args := []string{"sync", "create", app.AppRoot, fmt.Sprintf("docker://ddev-%s-web/var/www/html", app.Name), "--sync-mode=two-way-resolved", "--no-global-configuration", "--name", syncName}
+	args := []string{"sync", "create", app.AppRoot, fmt.Sprintf("docker://ddev-%s-web/var/www/html", app.Name), "--no-global-configuration", "--name", syncName}
 	if configFile != "" {
-		args = append(args, fmt.Sprintf(`--configuration=file="%s"`, configFile))
+		args = append(args, fmt.Sprintf(`--configuration-file="%s"`, configFile))
 	}
 	util.Debug("Creating mutagen sync: mutagen %v", args)
 	out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), args...)
