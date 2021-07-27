@@ -3109,7 +3109,7 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 				// Dummy attempt to get webserver "warmed up" before real try.
 				// Forced by M1 constant EOFs
 				_, _, _ = testcommon.GetLocalHTTPResponse(t, site.Safe200URIWithExpectation.URI, 60)
-				_, _ = testcommon.EnsureLocalHTTPContent(t, item+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+				_, _ = testcommon.EnsureLocalHTTPContent(t, item+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect, 60)
 			}
 
 			if _, err := strconv.ParseInt(hostParts[0], 10, 64); err != nil {
