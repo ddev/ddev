@@ -150,7 +150,9 @@ func parseMutagenStatusLine(fullStatus string) string {
 	statusLineLoc := strings.LastIndex(fullStatus, "\nStatus:")
 	statusLine := fullStatus[statusLineLoc+1:]
 	statusLineEnd := strings.Index(statusLine, "\n")
-	statusLine = statusLine[:statusLineEnd]
+	if statusLineEnd != -1 {
+		statusLine = statusLine[:statusLineEnd]
+	}
 	pieces := strings.Split(statusLine, ":")
 	if len(pieces) < 2 {
 		return ""
