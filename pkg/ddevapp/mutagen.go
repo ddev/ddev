@@ -211,6 +211,8 @@ func DownloadMutagen() error {
 		return err
 	}
 	err = os.Chmod(globalconfig.GetMutagenPath(), 0755)
+	// Stop daemon in case it was already running somewhere else
+	StopMutagenDaemon()
 	return err
 }
 
