@@ -378,7 +378,7 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (s
 
 // EnsureLocalHTTPContent will verify a URL responds with a 200 and expected content string
 func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string, timeoutSeconds ...int) (*http.Response, error) {
-	var httpTimeout = 30
+	var httpTimeout = 40
 	if len(timeoutSeconds) > 0 {
 		httpTimeout = timeoutSeconds[0]
 	}
@@ -393,7 +393,7 @@ func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string,
 		time.Sleep(time.Second)
 		body, resp, err = GetLocalHTTPResponse(t, rawurl, httpTimeout)
 	}
-	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", rawurl, err)
+	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s, body=%v: %v", rawurl, body, err)
 	assert.Contains(body, expectedContent, "request %s got resp=%v, body:\n========\n%s\n==========\n", rawurl, resp, body)
 	return resp, err
 }
