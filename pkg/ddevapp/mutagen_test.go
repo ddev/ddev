@@ -19,6 +19,8 @@ import (
 func TestMutagenSimple(t *testing.T) {
 	assert := asrt.New(t)
 
+	mutagenPath := globalconfig.GetMutagenPath()
+
 	// Make sure this leaves us in the original test directory
 	origDir, _ := os.Getwd()
 
@@ -62,7 +64,7 @@ func TestMutagenSimple(t *testing.T) {
 	assert.True(desc["mutagen_enabled"].(bool))
 
 	// Make sure the sync is there
-	_, err = exec.RunCommand("mutagen", []string{"sync", "list", ddevapp.MutagenSyncName(app.Name)})
+	_, err = exec.RunCommand(mutagenPath, []string{"sync", "list", ddevapp.MutagenSyncName(app.Name)})
 	assert.NoError(err)
 
 	// Remove the vendor directory and sync
@@ -90,7 +92,7 @@ func TestMutagenSimple(t *testing.T) {
 
 	// Stop app, should result in no more mutagen sync
 	err = app.Stop(false, false)
-	_, err = exec.RunCommand("mutagen", []string{"sync", "list", ddevapp.MutagenSyncName(app.Name)})
+	_, err = exec.RunCommand(mutagenPath, []string{"sync", "list", ddevapp.MutagenSyncName(app.Name)})
 	assert.Error(err)
 
 	err = app.Start()
@@ -98,12 +100,12 @@ func TestMutagenSimple(t *testing.T) {
 
 	// Make sure sync is down on pause also
 	err = app.Pause()
-	_, err = exec.RunCommand("mutagen", []string{"sync", "list", ddevapp.MutagenSyncName(app.Name)})
+	_, err = exec.RunCommand(mutagenPath, []string{"sync", "list", ddevapp.MutagenSyncName(app.Name)})
 	assert.Error(err)
 
 	// And that it's re-established when we start again
 	err = app.Start()
-	_, err = exec.RunCommand("mutagen", []string{"sync", "list", ddevapp.MutagenSyncName(app.Name)})
+	_, err = exec.RunCommand(mutagenPath, []string{"sync", "list", ddevapp.MutagenSyncName(app.Name)})
 	assert.NoError(err)
 
 	runTime()
