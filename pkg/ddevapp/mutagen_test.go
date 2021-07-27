@@ -33,14 +33,6 @@ func TestMutagenSimple(t *testing.T) {
 
 	err := site.Prepare()
 	require.NoError(t, err)
-	t.Cleanup(func() {
-		err = os.Chdir(origDir)
-		assert.NoError(err)
-		err = app.Stop(true, false)
-		assert.NoError(err)
-		err = os.RemoveAll(site.Dir)
-		assert.NoError(err)
-	})
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	err = app.Init(site.Dir)
@@ -48,8 +40,11 @@ func TestMutagenSimple(t *testing.T) {
 	app.MutagenEnabled = true
 
 	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
+
 		assert.False(dockerutil.VolumeExists(app.Name + "_project_mutagen"))
 		app.MutagenEnabled = false
 		err = app.WriteConfig()

@@ -80,9 +80,9 @@ type DdevApp struct {
 	AdditionalFQDNs           []string              `yaml:"additional_fqdns"`
 	MariaDBVersion            string                `yaml:"mariadb_version"`
 	MySQLVersion              string                `yaml:"mysql_version"`
-	NFSMountEnabled           bool                  `yaml:"nfs_mount_enabled,omitempty"`
+	NFSMountEnabled           bool                  `yaml:"nfs_mount_enabled"`
 	NFSMountEnabledGlobal     bool                  `yaml:"-"`
-	MutagenEnabled            bool                  `yaml:"mutagen_enabled,omitempty"`
+	MutagenEnabled            bool                  `yaml:"mutagen_enabled"`
 	MutagenEnabledGlobal      bool                  `yaml:"-"`
 	FailOnHookFail            bool                  `yaml:"fail_on_hook_fail,omitempty"`
 	FailOnHookFailGlobal      bool                  `yaml:"-"`
@@ -229,7 +229,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["httpsurl"] = app.GetHTTPSURL()
 	appDesc["primary_url"] = app.GetPrimaryURL()
 	appDesc["type"] = app.GetType()
-	appDesc["mutagen_enabled"] = app.MutagenEnabled
+	appDesc["mutagen_enabled"] = app.MutagenEnabled || app.MutagenEnabledGlobal
 	if app.MutagenEnabled {
 		_, appDesc["mutagen_status"], _, err = app.MutagenStatus()
 		if err != nil {
@@ -244,7 +244,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["hostname"] = app.GetHostname()
 	appDesc["hostnames"] = app.GetHostnames()
 	appDesc["nfs_mount_enabled"] = (app.NFSMountEnabled || app.NFSMountEnabledGlobal)
-	appDesc["mutagen_enabled"] = (app.MutagenEnabled || app.MutagenEnabledGlobal)
+	appDesc["mutagen_enabled"] = app.MutagenEnabled || app.MutagenEnabledGlobal
 	appDesc["fail_on_hook_fail"] = (app.FailOnHookFail || app.FailOnHookFailGlobal)
 	httpURLs, httpsURLs, allURLs := app.GetAllURLs()
 	appDesc["httpURLs"] = httpURLs
@@ -949,7 +949,7 @@ func (app *DdevApp) Start() error {
 			return errors.Errorf("Failed to create mutagen sync session %s. You may be able to resolve this problem with 'ddev stop %s && mutagen sync terminate %s && docker volume rm %s_project_mutagen' (%v)", MutagenSyncName(app.Name), app.Name, MutagenSyncName(app.Name), app.Name, err)
 		}
 		secs := mutagenTimeTrack()
-		util.Success("Mutagen sync completed in %.1fs.\nFor details on sync status 'ddev mutagen status --verbose %s'", secs, MutagenSyncName(app.Name))
+		util.Success("Mutagen sync completed in %.1fs.\nFor details on sync status 'ddev mutagen status %s --verbose'", secs, MutagenSyncName(app.Name))
 	}
 
 	err = StartDdevRouter()

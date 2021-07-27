@@ -76,7 +76,8 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.WebserverType = nodeps.WebserverDefault
 	app.NFSMountEnabled = nodeps.NFSMountEnabledDefault
 	app.NFSMountEnabledGlobal = globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal
-	app.MutagenEnabled = nodeps.MutagenEnabledDefault || globalconfig.DdevGlobalConfig.MutagenEnabledGlobal
+	app.MutagenEnabled = nodeps.MutagenEnabledDefault
+	app.MutagenEnabledGlobal = globalconfig.DdevGlobalConfig.MutagenEnabledGlobal
 	app.FailOnHookFail = nodeps.FailOnHookFailDefault
 	app.FailOnHookFailGlobal = globalconfig.DdevGlobalConfig.FailOnHookFailGlobal
 	app.RouterHTTPPort = nodeps.DdevDefaultRouterHTTPPort
@@ -722,9 +723,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		OmitDB:                    nodeps.ArrayContainsString(app.GetOmittedContainers(), "db"),
 		OmitDBA:                   nodeps.ArrayContainsString(app.GetOmittedContainers(), "dba") || nodeps.ArrayContainsString(app.OmitContainers, "db"),
 		OmitSSHAgent:              nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent"),
-		MutagenEnabled:            app.MutagenEnabled || app.MutagenEnabledGlobal,
+		MutagenEnabled:            (app.MutagenEnabled || app.MutagenEnabledGlobal),
 
-		NFSMountEnabled:       (app.NFSMountEnabled || app.NFSMountEnabledGlobal) && !(app.MutagenEnabled || app.MutagenEnabledGlobal),
+		NFSMountEnabled:       (app.NFSMountEnabled || app.NFSMountEnabledGlobal) && !app.MutagenEnabled,
 		NFSSource:             "",
 		IsWindowsFS:           runtime.GOOS == "windows",
 		NoProjectMount:        app.NoProjectMount,

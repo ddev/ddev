@@ -27,11 +27,11 @@ func TestCmdGlobalConfig(t *testing.T) {
 	// We need to make sure that the (corrupted, bogus) global config file is removed
 	// and then read (empty)
 	// nolint: errcheck
-	defer func() {
+	t.Cleanup(func() {
 		// Even though the global config is going to be deleted, make sure it's sane before leaving
-		args := []string{"config", "global", "--omit-containers", "", "--nfs-mount-enabled=true", "--disable-http2=false"}
+		args := []string{"config", "global", "--omit-containers", "", "--nfs-mount-enabled", "--disable-http2=false", "--mutagen-enabled=false"}
 		globalconfig.DdevGlobalConfig.OmitContainersGlobal = nil
-		_, err := exec.RunCommand(DdevBin, args)
+		_, err := exec.RunHostCommand(DdevBin, args...)
 		assert.NoError(err)
 		globalconfig.DdevGlobalConfig = backupConfig
 		globalconfig.DdevGlobalConfig.OmitContainersGlobal = nil
@@ -44,7 +44,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 		if err != nil {
 			t.Logf("Unable to ReadGlobalConfig: %v", err)
 		}
-	}()
+	})
 
 	// Look at initial config
 	args := []string{"config", "global"}

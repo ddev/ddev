@@ -298,14 +298,19 @@ func addSites() error {
 	log.Debugln("Removing any existing TestSites")
 	for _, site := range TestSites {
 		// Make sure the site is gone in case it was hanging around
-		_, _ = exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
+		_, _ = exec.RunHostCommand(DdevBin, "stop", "-RO", site.Name)
 	}
 	log.Debugln("Starting TestSites")
+	origDir, _ := os.Getwd()
+	defer func() {
+		_ = os.Chdir(origDir)
+	}()
 	for _, site := range TestSites {
-		cleanup := site.Chdir()
-		defer cleanup()
-
-		out, err := exec.RunCommand(DdevBin, []string{"start", "-y"})
+		err := os.Chdir(site.Dir)
+		if err != nil {
+			log.Fatalf("Failed to Chdir to %v", site.Dir)
+		}
+		out, err := exec.RunHostCommand(DdevBin, "start", "-y")
 		if err != nil {
 			log.Fatalln("Error Output from ddev start:", out, "err:", err)
 		}

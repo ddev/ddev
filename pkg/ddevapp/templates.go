@@ -305,6 +305,10 @@ const ConfigInstructions = `
 # Great performance improvement but requires host configuration first.
 # See https://ddev.readthedocs.io/en/stable/users/performance/#using-nfs-to-mount-the-project-into-the-container
 
+# mutagen_enabled: false
+# Experimental performance improvement using mutagen asynchronous updates.
+# See https://ddev.readthedocs.io/en/stable/users/performance/#using-mutagen
+
 # fail_on_hook_fail: False
 # Decide whether 'ddev start' should be interrupted by a failing hook
 

@@ -42,7 +42,7 @@ func MutagenSyncName(name string) string {
 // TerminateMutagenSync terminates the mutagen sync
 // It is not an error if the sync session does not exist
 func TerminateMutagenSync(app *DdevApp) error {
-	if app.MutagenEnabled {
+	if app.MutagenEnabled || app.MutagenEnabledGlobal {
 		syncName := MutagenSyncName(app.Name)
 		if MutagenSyncExists(app) {
 			_, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "terminate", syncName)
@@ -227,7 +227,7 @@ func StopMutagenDaemon() {
 // DownloadMutagenIfNeeded downloads the proper version of mutagen
 // if it's either not yet installed or has the wrong version.
 func DownloadMutagenIfNeeded(app *DdevApp) error {
-	if !app.MutagenEnabled {
+	if !app.MutagenEnabled || app.MutagenEnabledGlobal {
 		return nil
 	}
 	curVersion, err := version.GetMutagenVersion()

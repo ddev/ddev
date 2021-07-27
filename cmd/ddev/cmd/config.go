@@ -494,8 +494,8 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.MutagenEnabled = mutagenEnabled
 		if app.NFSMountEnabled {
 			util.Warning("nfs-mount-enabled disabled because incompatible with mutagen, which is enabled")
+			app.NFSMountEnabled = false
 		}
-		app.NFSMountEnabled = false
 	}
 
 	if cmd.Flag("fail-on-hook-fail").Changed {
