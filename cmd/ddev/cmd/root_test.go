@@ -5,7 +5,6 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 	"os"
 	"strconv"
@@ -265,12 +264,12 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 		Service: "web",
 		Cmd:     "date +%s",
 	})
+	require.NoError(t, err)
 	oldTime = strings.Trim(oldTime, "\n")
 	oldTimeInt, err := strconv.ParseInt(oldTime, 10, 64)
 	require.NoError(t, err)
 
-	bashPath := util.FindBashPath()
-	out, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf("echo y | '%s' start", DdevBin)})
+	out, err := exec.RunHostCommand(DdevBin, "start")
 	assert.NoError(err)
 	assert.Contains(out, "ddev-ssh-agent container has been removed")
 	assert.Contains(out, "ssh-agent container is running")
