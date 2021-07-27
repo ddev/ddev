@@ -1681,6 +1681,10 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	err = app.ImportDB(d7testerTest2Dump, "", false, false, "db")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest2Dump, err)
+	// Do a dummy first GET just to warm things up after the import-db. This is
+	// an attempted workaround of a Mac M1 persistent failure
+	// "read: connection reset by peer"
+	_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL(), 45)
 	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), "d7 tester test 2 has 2 nodes", 45)
 
 	snapshotName, err = app.Snapshot("d7testerTest2")
