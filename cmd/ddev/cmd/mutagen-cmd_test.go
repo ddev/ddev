@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
@@ -14,6 +15,11 @@ import (
 // TestCmdMutagen tests `ddev mutagen` config and subcommands
 func TestCmdMutagen(t *testing.T) {
 	assert := asrt.New(t)
+
+	if nodeps.MutagenEnabledDefault {
+		t.Skip("Skipping because mutagen on by default")
+	}
+
 	site := TestSites[0]
 	origDir, _ := os.Getwd()
 
@@ -39,7 +45,6 @@ func TestCmdMutagen(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	// Make sure mutagen turned off at beginning
 	require.False(t, globalconfig.DdevGlobalConfig.MutagenEnabledGlobal)
 	require.False(t, app.MutagenEnabled)
 
@@ -100,5 +105,4 @@ func TestCmdMutagen(t *testing.T) {
 
 	// Make sure it got turned off
 	assert.False(app.MutagenEnabledGlobal)
-
 }
