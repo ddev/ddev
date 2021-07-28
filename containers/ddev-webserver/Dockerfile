@@ -3,7 +3,7 @@
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV-Local)
-FROM drud/ddev-php-base:v1.17.7 as ddev-webserver-base
+FROM drud/ddev-php-base:20210714_use_bullseye as ddev-webserver-base
 
 ENV BACKDROP_DRUSH_VERSION=1.4.0
 ENV MKCERT_VERSION=v1.4.6
@@ -19,9 +19,10 @@ ENV CAROOT /mnt/ddev-global-cache/mkcert
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 
-RUN wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key && \
-    apt-key add /tmp/nginx_signing.key && \
-    echo "deb http://nginx.org/packages/debian/ $(lsb_release -sc) nginx" > /etc/apt/sources.list.d/nginx.list
+#TODO: When upstream nginx package is ready for bullseye, use it.
+#RUN wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key && \
+#    apt-key add /tmp/nginx_signing.key && \
+#    echo "deb http://nginx.org/packages/debian/ $(lsb_release -sc) nginx" > /etc/apt/sources.list.d/nginx.list
 
 ADD ddev-webserver-etc-skel /
 RUN /sbin/mkhomedir_helper www-data
