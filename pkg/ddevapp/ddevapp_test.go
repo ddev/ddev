@@ -844,6 +844,8 @@ func TestDdevXhprofEnabled(t *testing.T) {
 			}
 			assert.Contains(stdout, "xhprof.output_dir", "xhprof is not enabled for %s", v)
 
+			// Dummy hit on phpinfo.php to avoid M1 "connection reset by peer"
+			_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL()+"/phpinfo.php")
 			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL()+"/phpinfo.php")
 			assert.NoError(err, "Failed to get base URL webserver_type=%s, php_version=%s", webserverKey, v)
 			assert.Contains(out, "module_xhprof")
@@ -1724,7 +1726,9 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = os.Remove("hello-post-restore-snapshot-" + app.Name)
 	assert.NoError(err)
 
-	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), "d7 tester test 1 has 1 node", 45)
+	// Dummy hit in advance to try to avoid M1 "connection reset by peer"
+	_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL(), 60)
+	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), "d7 tester test 1 has 1 node", 60)
 	err = app.RestoreSnapshot("d7testerTest2")
 	assert.NoError(err)
 
