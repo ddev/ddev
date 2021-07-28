@@ -1533,12 +1533,17 @@ func TestDdevSnapshotCleanup(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
-	err = app.StartAndWait(0)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
+
+	err = app.Start()
 	assert.NoError(err)
 
 	// Make a snapshot of d7 tester test 1
 	backupsDir := filepath.Join(app.GetConfigPath(""), "db_snapshots")
-	snapshotName, err := app.Snapshot("d7testerTest1")
+	snapshotName, err := app.Snapshot(t.Name() + "_1")
 	assert.NoError(err)
 
 	assert.True(fileutil.FileExists(filepath.Join(backupsDir, snapshotName, "xtrabackup_info")), "Expected that file xtrabackup_info in snapshot exists")
@@ -1548,10 +1553,8 @@ func TestDdevSnapshotCleanup(t *testing.T) {
 
 	err = app.Start()
 	require.NoError(t, err)
-	//nolint: errcheck
-	defer app.Stop(true, false)
 
-	err = app.DeleteSnapshot("d7testerTest1")
+	err = app.DeleteSnapshot(t.Name() + "_1")
 	assert.NoError(err)
 
 	// Snapshot data should be deleted
@@ -1565,53 +1568,57 @@ func TestGetLatestSnapshot(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 	site := TestSites[0]
-	switchDir := site.Chdir()
-	defer switchDir()
-
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("TestGetLatestSnapshot"))
-
-	testcommon.ClearDockerEnv()
-	err := app.Init(site.Dir)
+	origDir, _ := os.Getwd()
+	err := os.Chdir(site.Dir)
 	assert.NoError(err)
 
-	err = app.Start()
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf(t.Name()))
+
+	testcommon.ClearDockerEnv()
+	err = app.Init(site.Dir)
 	assert.NoError(err)
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
 	})
 
+	err = app.Start()
+	assert.NoError(err)
+
+	snapshots := []string{t.Name() + "_1", t.Name() + "_2", t.Name() + "_3"}
 	// Make three snapshots and compare the last
-	_, err = app.Snapshot("d7testerTest1")
+	_, err = app.Snapshot(snapshots[0])
 	assert.NoError(err)
-	_, err = app.Snapshot("d7testerTest2")
+	_, err = app.Snapshot(snapshots[1])
 	assert.NoError(err)
-	_, err = app.Snapshot("d7testerTest3") // last = latest
+	_, err = app.Snapshot(snapshots[2]) // last = latest
 	assert.NoError(err)
 
 	latestSnapshot, err := app.GetLatestSnapshot()
 	assert.NoError(err)
-	assert.Equal("d7testerTest3", latestSnapshot)
+	assert.Equal(snapshots[2], latestSnapshot)
 
 	// delete last latest
-	err = app.DeleteSnapshot("d7testerTest3")
+	err = app.DeleteSnapshot(snapshots[2])
 	assert.NoError(err)
 	latestSnapshot, err = app.GetLatestSnapshot()
 	assert.NoError(err)
-	assert.Equal("d7testerTest2", latestSnapshot, "d7testerTest2 should be latest snapshot")
+	assert.Equal(snapshots[1], latestSnapshot, "%s should be latest snapshot", snapshots[1])
 
 	// cleanup snapshots
-	err = app.DeleteSnapshot("d7testerTest2")
+	err = app.DeleteSnapshot(snapshots[1])
 	assert.NoError(err)
 	latestSnapshot, err = app.GetLatestSnapshot()
 	assert.NoError(err)
-	assert.Equal("d7testerTest1", latestSnapshot, "d7testerTest1 should be latest snapshot")
+	assert.Equal(snapshots[0], latestSnapshot, "%s should be latest snapshot", snapshots[0])
 
-	err = app.DeleteSnapshot("d7testerTest1")
+	err = app.DeleteSnapshot(snapshots[0])
 	assert.NoError(err)
 	latestSnapshot, _ = app.GetLatestSnapshot()
-	assert.NotEqual("d7testerTest1", latestSnapshot)
+	assert.NotEqual(snapshots[0], latestSnapshot)
 
 	runTime()
 }
