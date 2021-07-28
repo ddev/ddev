@@ -190,12 +190,15 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 		}
 
 		safeURL := app.GetHTTPURL() + site.Safe200URIWithExpectation.URI
-		out, _, err := GetLocalHTTPResponse(t, safeURL, 30)
+
+		// Extra dummy GetLocalHTTPResponse is for mac M1 to try to prime it.
+		_, _, _ = GetLocalHTTPResponse(t, safeURL, 60)
+		out, _, err := GetLocalHTTPResponse(t, safeURL, 60)
 		assert.NoError(err)
 		assert.Contains(out, site.Safe200URIWithExpectation.Expect)
 
 		safeURL = app.GetHTTPSURL() + site.Safe200URIWithExpectation.URI
-		out, _, err = GetLocalHTTPResponse(t, safeURL, 30)
+		out, _, err = GetLocalHTTPResponse(t, safeURL, 60)
 		assert.NoError(err)
 		assert.Contains(out, site.Safe200URIWithExpectation.Expect)
 
