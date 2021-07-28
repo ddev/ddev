@@ -149,8 +149,6 @@ The Mutagen project provides extensive configuration options that are [documente
 
 Each project by default already has a .ddev/mutagen.yml file with basic defaults which you can override if you remove the `#ddev-generated` line at the beginning of the file.
 
-If you prefer a global ~/.ddev/.mutagen/mutagen.yml file, you can also add that.
-
 The most likely thing you'll want to do is to exclude a path from mutagen syncing, which you can do in the `paths:` section of the `ignore:` stanza in the mutagen.yml.
 
 It is possible to exclude mutagen syncing from a path and bind-mount something from the host or a different volume on that path with a `docker-compose.*.yaml` file.

@@ -75,20 +75,12 @@ func SyncAndTerminateMutagen(app *DdevApp) error {
 	return nil
 }
 
-// GetMutagenConfigFile looks to see if there's a global .mutagen.yml
-// in ~/.ddev/.mutagen
-// Then looks for one in project .ddev/.mutagen.yml
-// Project overrides global
+// GetMutagenConfigFile looks to see if there's a project .mutagen.yml
 // If nothing is found, returns empty
 func GetMutagenConfigFile(app *DdevApp) string {
-	globalConfig := filepath.Join(globalconfig.GetMutagenDir(), "mutagen.yml")
-
 	projectConfig := filepath.Join(app.GetConfigPath("mutagen.yml"))
 	if fileutil.FileExists(projectConfig) {
 		return projectConfig
-	}
-	if fileutil.FileExists(globalConfig) {
-		return globalConfig
 	}
 	return ""
 }
