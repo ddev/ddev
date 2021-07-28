@@ -1574,10 +1574,13 @@ func TestGetLatestSnapshot(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
-	err = app.StartAndWait(0)
+	err = app.Start()
 	assert.NoError(err)
-	//nolint: errcheck
-	defer app.Stop(true, false)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
 
 	// Make three snapshots and compare the last
 	_, err = app.Snapshot("d7testerTest1")

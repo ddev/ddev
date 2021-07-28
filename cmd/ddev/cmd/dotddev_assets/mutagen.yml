@@ -13,6 +13,7 @@ sync:
       paths:
         # /var/www/html/var does not need to sync in TYPO3
         - "var"
+        - ".ddev"
       vcs: true
     symlink:
       mode: "portable"
