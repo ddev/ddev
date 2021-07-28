@@ -112,3 +112,41 @@ nfs.server.verbose = 3
 6. nssm logs failures and what it's doing to the system event log. Run "Event Viewer" and filter events as in the image below: ![Windows Event Viewer](images/windows_event_viewer.png).
 7. Please make sure you have excluded winnfsd from the Windows Defender Firewall, as described in the installation instructions above.
 8. On Windows 10 Pro you can "Turn Windows features on or off" and enable "Services for NFS"-> "Client for NFS". The `showmount -e` command will then show available exports on the current machine. This can help find out if a conflicting server is running or exactly what the problem with exports may be.
+
+## Using Mutagen
+
+### Introduction
+
+The experimental Mutagen asynchronous update feature is being introduced in v1.18 and offers advanced performance experiences for some projects.
+
+Mutagen is not useful on Linux or Windows WSL2, as it adds complexity but doesn't add significant performance, but it can make a huge difference in performance on macOS and traditional Windows.
+
+The reason that Docker bind-mounts (the traditional approach) can be slow on macOS and Windows (even with NFS) is that every file access has to be checked against the file on the host. And Docker's setup to do this on macOS and Windows offers far less than local filesystem performance. (On Linux and Linux-like systems, Docker provides native file-access performance.)
+
+Mutagen works by decoupling reads and writes inside the container from reads and writes on the host. If something changes on the host, it gets changed "pretty soon" in the container, and if something changes inside the container it gets updated "pretty soon" on the host. This means that the webserver inside the web container does not have to wait for slow file reads or writes, and gets near-native file speeds. However, it also means that at any given moment, the files on the host may not exactly match the files inside the container, and if files are changed both places, conflicts may result.
+
+### Enabling Mutagen
+
+To start using Mutagen, just `ddev stop` and then `ddev config --mutagen-enabled` and start the project again. If the mutagen artifacts need to be downloaded, they will be downloaded automatically.
+
+To stop using Mutagen on a project, `ddev config --mutagen-enabled=false` after stopping it.
+
+You can also enable mutagen globally (for every project) with `ddev config global --mutagen-enabled`
+
+### Caveats about Mutagen Integration
+
+* If your project is likely to change the same file on both the host and inside the container, you may be at risk for conflicts.
+* Keep backups. Mutagen syncing is an experimental feature.
+* The mutagen integration by default does not sync VCS directories like .git into the container, but this can be changed with advanced configuration options. (This means that by default you cannot do git operations inside the container with mutagen turned on.)
+
+### Advanced Mutagen configuration options
+
+The Mutagen project provides extensive configuration options that are [documented on the mutagen.io site](https://mutagen.io/documentation/introduction/configuration).
+
+Each project by default already has a .ddev/mutagen.yml file with basic defaults which you can override if you remove the `#ddev-generated` line at the beginning of the file.
+
+If you prefer a global ~/.ddev/.mutagen/mutagen.yml file, you can also add that.
+
+The most likely thing you'll want to do is to exclude a path from mutagen syncing, which you can do in the `paths:` section of the `ignore:` stanza in the mutagen.yml.
+
+It is possible to exclude mutagen syncing from a path and bind-mount something from the host or a different volume on that path with a `docker-compose.*.yaml` file.
