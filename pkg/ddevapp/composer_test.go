@@ -4,9 +4,12 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/stretchr/testify/require"
 	"os"
+	"runtime"
+	"strings"
 	"testing"
 
 	asrt "github.com/stretchr/testify/assert"
@@ -28,8 +31,12 @@ func TestComposer(t *testing.T) {
 
 		err := site.Prepare()
 		require.NoError(t, err)
-		// nolint: errcheck
-		defer os.RemoveAll(site.Dir)
+		t.Cleanup(func() {
+			err = app.Stop(true, false)
+			assert.NoError(err)
+			err = os.RemoveAll(app.AppRoot)
+			assert.NoError(err)
+		})
 	}
 
 	testDir, _ := os.Getwd()
@@ -39,20 +46,46 @@ func TestComposer(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
-	app.ComposerVersion = "2"
 	assert.NoError(err)
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-composer": {{"exec-host": "touch hello-post-composer-" + app.Name}}, "pre-composer": {{"exec-host": "touch hello-pre-composer-" + app.Name}}}
 	// Make sure we get rid of this for other uses
-	defer func() {
+
+	t.Cleanup(func() {
 		app.Hooks = nil
 		app.ComposerVersion = ""
 		_ = app.WriteConfig()
 		_ = app.Stop(true, false)
-	}()
+	})
+
 	err = app.Start()
 	require.NoError(t, err)
+
+	// Make sure to remove the var-dump-server to start; composer install should replace it.
+	_ = os.RemoveAll("vendor/bin/var-dump-server")
+
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+
 	_, _, err = app.Composer([]string{"install"})
 	assert.NoError(err)
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: "ls -l vendor/bin/var-dump-server | awk '{print $1}'",
+	})
+	assert.NoError(err)
+	expect := "lrwx"
+	if runtime.GOOS == "windows" || nodeps.IsWSL2() {
+		expect = "-rwx"
+	}
+	assert.True(strings.HasPrefix(out, expect), "perms of var-dump-server should be '%s', got '%s' instead", runtime.GOOS, expect, out)
+
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: "vendor/bin/var-dump-server -h",
+	})
+	assert.NoError(err)
+
 	assert.FileExists("hello-pre-composer-" + app.Name)
 	assert.FileExists("hello-post-composer-" + app.Name)
 	err = os.Remove("hello-pre-composer-" + app.Name)

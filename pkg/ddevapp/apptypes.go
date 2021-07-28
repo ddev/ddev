@@ -167,6 +167,11 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 		}
 		return settingsPath, nil
 	}
+	err = app.MutagenSyncFlush()
+	if err != nil {
+		return "", err
+	}
+
 	return "", nil
 }
 

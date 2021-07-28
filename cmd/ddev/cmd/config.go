@@ -108,6 +108,9 @@ var (
 	// mariadbVersionArg is mariadb version 5.5-10.5
 	mariaDBVersionArg string
 
+	// mutagenEnabled sets mutagen_enabled
+	mutagenEnabled bool
+
 	// nfsMountEnabled sets nfs_mount_enabled
 	nfsMountEnabled bool
 
@@ -259,6 +262,7 @@ func init() {
 	ConfigCommand.Flags().BoolVar(&workingDirDefaultsArg, "working-dir-defaults", false, "Unsets all service working directory overrides")
 	ConfigCommand.Flags().StringVar(&mariaDBVersionArg, "mariadb-version", "10.2", "mariadb version to use (incompatible with --mysql-version)")
 	ConfigCommand.Flags().String("mysql-version", "", "Oracle mysql version to use (incompatible with --mariadb-version)")
+	ConfigCommand.Flags().BoolVar(&mutagenEnabled, "mutagen-enabled", false, "enable mutagen asynchronous update of project in web container")
 
 	ConfigCommand.Flags().BoolVar(&nfsMountEnabled, "nfs-mount-enabled", false, "enable NFS mounting of project in container")
 	ConfigCommand.Flags().BoolVar(&failOnHookFail, "fail-on-hook-fail", false, "Decide whether 'ddev start' should be interrupted by a failing hook")
@@ -484,6 +488,14 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	if cmd.Flag("nfs-mount-enabled").Changed {
 		app.NFSMountEnabled = nfsMountEnabled
+	}
+
+	if cmd.Flag("mutagen-enabled").Changed {
+		app.MutagenEnabled = mutagenEnabled
+		if app.NFSMountEnabled {
+			util.Warning("nfs-mount-enabled disabled because incompatible with mutagen, which is enabled")
+			app.NFSMountEnabled = false
+		}
 	}
 
 	if cmd.Flag("fail-on-hook-fail").Changed {

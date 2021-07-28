@@ -209,7 +209,11 @@ volumes:
     driver_opts:
       type: nfs
       o: "addr={{ if .HostDockerInternalIP }}{{ .HostDockerInternalIP }}{{ else }}host.docker.internal{{end}},hard,nolock,rw"
-      device: ":{{ .NFSSource }}"
+      device: ':{{ .NFSSource }}'
+  {{ end }}
+  {{ if and .MutagenEnabled (not .NoProjectMount) }}
+  project_mutagen:
+    name: ${DDEV_PROJECT}_project_mutagen
   {{ end }}
 
   `
@@ -300,6 +304,10 @@ const ConfigInstructions = `
 # nfs_mount_enabled: false
 # Great performance improvement but requires host configuration first.
 # See https://ddev.readthedocs.io/en/stable/users/performance/#using-nfs-to-mount-the-project-into-the-container
+
+# mutagen_enabled: false
+# Experimental performance improvement using mutagen asynchronous updates.
+# See https://ddev.readthedocs.io/en/latest/users/performance/#using-mutagen
 
 # fail_on_hook_fail: False
 # Decide whether 'ddev start' should be interrupted by a failing hook

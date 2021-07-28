@@ -77,7 +77,7 @@ func (c ExecHostTask) Execute() error {
 
 	bashPath := "bash"
 	if runtime.GOOS == "windows" {
-		bashPath = util.FindWindowsBashPath()
+		bashPath = util.FindBashPath()
 	}
 
 	args := []string{

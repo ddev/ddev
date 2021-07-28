@@ -35,12 +35,7 @@ ddev restart --all`,
 		for _, app := range projects {
 
 			output.UserOut.Printf("Restarting project %s...", app.GetName())
-			err = app.Stop(false, false)
-			if err != nil {
-				util.Failed("Failed to restart %s: %v", app.GetName(), err)
-			}
-
-			err = app.Start()
+			err = app.Restart()
 			if err != nil {
 				util.Failed("Failed to restart %s: %v", app.GetName(), err)
 			}

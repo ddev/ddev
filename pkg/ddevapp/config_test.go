@@ -786,7 +786,7 @@ func TestPHPOverrides(t *testing.T) {
 		t.Fatalf("============== logs from app.StartAndWait() ==============\n%s\n", logs)
 	}
 
-	_, _ = testcommon.EnsureLocalHTTPContent(t, "http://"+app.GetHostname()+"/phpinfo.php", `max_input_time</td><td class="v">999`)
+	_, _ = testcommon.EnsureLocalHTTPContent(t, "http://"+app.GetHostname()+"/phpinfo.php", `max_input_time</td><td class="v">999`, 60)
 	err = app.Stop(true, false)
 	assert.NoError(err)
 

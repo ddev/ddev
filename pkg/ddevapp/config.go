@@ -43,6 +43,9 @@ func init() {
 	if testNFSMount := os.Getenv("DDEV_TEST_USE_NFSMOUNT"); testNFSMount != "" {
 		nodeps.NFSMountEnabledDefault = true
 	}
+	if testMutagen := os.Getenv("DDEV_TEST_USE_MUTAGEN"); testMutagen == "true" {
+		nodeps.MutagenEnabledDefault = true
+	}
 }
 
 // NewApp creates a new DdevApp struct with defaults set and overridden by any existing config.yml.
@@ -73,6 +76,8 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.WebserverType = nodeps.WebserverDefault
 	app.NFSMountEnabled = nodeps.NFSMountEnabledDefault
 	app.NFSMountEnabledGlobal = globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal
+	app.MutagenEnabled = nodeps.MutagenEnabledDefault
+	app.MutagenEnabledGlobal = globalconfig.DdevGlobalConfig.MutagenEnabledGlobal
 	app.FailOnHookFail = nodeps.FailOnHookFailDefault
 	app.FailOnHookFailGlobal = globalconfig.DdevGlobalConfig.FailOnHookFailGlobal
 	app.RouterHTTPPort = nodeps.DdevDefaultRouterHTTPPort
@@ -652,6 +657,7 @@ type composeYAMLVars struct {
 	OmitDB                    bool
 	OmitDBA                   bool
 	OmitSSHAgent              bool
+	MutagenEnabled            bool
 	NFSMountEnabled           bool
 	NFSSource                 string
 	DockerIP                  string
@@ -717,25 +723,27 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		OmitDB:                    nodeps.ArrayContainsString(app.GetOmittedContainers(), "db"),
 		OmitDBA:                   nodeps.ArrayContainsString(app.GetOmittedContainers(), "dba") || nodeps.ArrayContainsString(app.OmitContainers, "db"),
 		OmitSSHAgent:              nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent"),
-		NFSMountEnabled:           app.NFSMountEnabled || app.NFSMountEnabledGlobal,
-		NFSSource:                 "",
-		IsWindowsFS:               runtime.GOOS == "windows",
-		NoProjectMount:            app.NoProjectMount,
-		MountType:                 "bind",
-		WebMount:                  "../",
-		Hostnames:                 app.GetHostnames(),
-		Timezone:                  app.Timezone,
-		ComposerVersion:           app.ComposerVersion,
-		Username:                  username,
-		UID:                       uid,
-		GID:                       gid,
-		WebBuildContext:           "./web-build",
-		DBBuildContext:            "./db-build",
-		WebBuildDockerfile:        "../.webimageBuild/Dockerfile",
-		DBBuildDockerfile:         "../.dbimageBuild/Dockerfile",
-		AutoRestartContainers:     globalconfig.DdevGlobalConfig.AutoRestartContainers,
-		FailOnHookFail:            app.FailOnHookFail || app.FailOnHookFailGlobal,
-		WebEnvironment:            webEnvironment,
+		MutagenEnabled:            (app.MutagenEnabled || app.MutagenEnabledGlobal),
+
+		NFSMountEnabled:       (app.NFSMountEnabled || app.NFSMountEnabledGlobal) && !app.MutagenEnabled,
+		NFSSource:             "",
+		IsWindowsFS:           runtime.GOOS == "windows",
+		NoProjectMount:        app.NoProjectMount,
+		MountType:             "bind",
+		WebMount:              "../",
+		Hostnames:             app.GetHostnames(),
+		Timezone:              app.Timezone,
+		ComposerVersion:       app.ComposerVersion,
+		Username:              username,
+		UID:                   uid,
+		GID:                   gid,
+		WebBuildContext:       "./web-build",
+		DBBuildContext:        "./db-build",
+		WebBuildDockerfile:    "../.webimageBuild/Dockerfile",
+		DBBuildDockerfile:     "../.dbimageBuild/Dockerfile",
+		AutoRestartContainers: globalconfig.DdevGlobalConfig.AutoRestartContainers,
+		FailOnHookFail:        app.FailOnHookFail || app.FailOnHookFailGlobal,
+		WebEnvironment:        webEnvironment,
 	}
 	if app.NFSMountEnabled || app.NFSMountEnabledGlobal {
 		templateVars.MountType = "volume"
@@ -750,6 +758,12 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 			// and completely chokes in C:\Users\rfay...
 			templateVars.NFSSource = dockerutil.MassageWindowsNFSMount(app.AppRoot)
 		}
+	}
+
+	if app.MutagenEnabled || app.MutagenEnabledGlobal {
+		templateVars.MountType = "volume"
+		templateVars.WebMount = "project_mutagen"
+		templateVars.NFSSource = app.AppRoot
 	}
 
 	// Add web and db extra dockerfile info
@@ -1005,7 +1019,7 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
-	err := CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "nginx_full/nginx-site.conf", "sequelpro.spf", "**/README.*")
+	err := CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen.yml", "nginx_full/nginx-site.conf", "sequelpro.spf", "**/README.*")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}

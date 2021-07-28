@@ -33,6 +33,7 @@ func powerOff() {
 	for i, app := range apps {
 		if i == 0 {
 			_, _, err = app.Exec(&ddevapp.ExecOpts{
+				Dir: "/tmp",
 				Cmd: `if [ -d /mnt/ddev-global-cache/custom_certs ]; then rm -f /mnt/ddev-global-cache/custom_certs/*; fi`,
 			})
 			if err == nil {
@@ -50,4 +51,5 @@ func powerOff() {
 	if err := ddevapp.RemoveSSHAgentContainer(); err != nil {
 		util.Error("Failed to remove ddev-ssh-agent: %v", err)
 	}
+	ddevapp.StopMutagenDaemon()
 }

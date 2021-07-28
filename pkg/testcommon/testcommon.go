@@ -312,7 +312,7 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 // hits the local docker for it, returns result
 // Returns error (with the body) if not 200 status code.
 func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (string, *http.Response, error) {
-	var timeoutSecs = 30
+	var timeoutSecs = 60
 	if len(timeoutSecsAry) > 0 {
 		timeoutSecs = timeoutSecsAry[0]
 	}
@@ -378,7 +378,7 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (s
 
 // EnsureLocalHTTPContent will verify a URL responds with a 200 and expected content string
 func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string, timeoutSeconds ...int) (*http.Response, error) {
-	var httpTimeout = 30
+	var httpTimeout = 40
 	if len(timeoutSeconds) > 0 {
 		httpTimeout = timeoutSeconds[0]
 	}
@@ -388,12 +388,12 @@ func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string,
 	// We see intermittent php-fpm SIGBUS failures, only on macOS.
 	// That results in a 502/503. If we get a 502/503 on macOS, try again.
 	// It seems to be a 502 with nginx-fpm and a 503 with apache-fpm
-	if runtime.GOOS == "darwin" && resp != nil && (resp.StatusCode == 502 || resp.StatusCode == 503) {
+	if runtime.GOOS == "darwin" && resp != nil && (resp.StatusCode >= 500) {
 		t.Logf("Received %d error on macOS, retrying GetLocalHTTPResponse", resp.StatusCode)
 		time.Sleep(time.Second)
 		body, resp, err = GetLocalHTTPResponse(t, rawurl, httpTimeout)
 	}
-	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", rawurl, err)
+	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s, resp=%v, body=%v: %v", rawurl, resp, body, err)
 	assert.Contains(body, expectedContent, "request %s got resp=%v, body:\n========\n%s\n==========\n", rawurl, resp, body)
 	return resp, err
 }

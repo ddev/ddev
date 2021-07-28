@@ -36,6 +36,9 @@ var DockerComposeVersionConstraint = "1.21.0-alpha1 - 1.999.0"
 // DockerComposeFileFormatVersion is the compose version to be used
 var DockerComposeFileFormatVersion = "3.6"
 
+// MutagenVersionConstraint defines the mutagen versions we'll accept
+var MutagenVersionConstraint = nodeps.RequiredMutagenVersion
+
 // WebImg defines the default web image used for applications.
 var WebImg = "drud/ddev-webserver"
 
@@ -75,6 +78,9 @@ var DockerVersion = ""
 // DockerComposeVersion is filled with the version we find for docker-compose
 var DockerComposeVersion = ""
 
+// MutagenVersion is filled with the version we find for mutagen
+var MutagenVersion = ""
+
 // GetVersionInfo returns a map containing the version info defined above.
 func GetVersionInfo() map[string]string {
 	var err error
@@ -95,6 +101,10 @@ func GetVersionInfo() map[string]string {
 	if versionInfo["docker-compose"], err = GetDockerComposeVersion(); err != nil {
 		versionInfo["docker-compose"] = fmt.Sprintf("failed to GetDockerComposeVersion(): %v", err)
 	}
+	if versionInfo["mutagen"], err = GetMutagenVersion(); err != nil {
+		versionInfo["mutagen"] = fmt.Sprintf("failed to GetMutagenVersion(): %v", err)
+	}
+
 	if runtime.GOOS == "windows" {
 		versionInfo["docker type"] = "Docker Desktop For Windows"
 	}
@@ -177,4 +187,22 @@ func GetDockerVersion() (string, error) {
 	DockerVersion = v.Get("Version")
 
 	return DockerVersion, nil
+}
+
+// GetMutagenVersion runs mutagen version and caches result
+func GetMutagenVersion() (string, error) {
+	if MutagenVersion != "" {
+		return MutagenVersion, nil
+	}
+
+	mutagenPath := globalconfig.GetMutagenPath()
+
+	out, err := exec.Command(mutagenPath, "version").Output()
+	if err != nil {
+		return "", err
+	}
+
+	v := string(out)
+	MutagenVersion = strings.TrimSpace(v)
+	return MutagenVersion, nil
 }

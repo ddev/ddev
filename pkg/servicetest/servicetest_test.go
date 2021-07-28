@@ -87,7 +87,8 @@ func TestServices(t *testing.T) {
 	require.Len(t, desc["extra_services"], expectedServiceCount)
 
 	// A volume should have been created for solr (only)
-	assert.True(dockerutil.VolumeExists(strings.ToLower("ddev-" + app.Name + "_" + "solr")))
+	solrVolume := strings.ToLower("ddev-" + app.Name + "_" + "solr")
+	assert.True(dockerutil.VolumeExists(solrVolume), "solr volume %s does not exist", solrVolume)
 
 	err = app.Stop(true, false)
 	assert.NoError(err)
@@ -121,7 +122,7 @@ func checkSolrService(t *testing.T, app *ddevapp.DdevApp) {
 	assert.True(check, "%s container is not running", service)
 
 	// solr service seems to take a couple of seconds to come up after container running.
-	time.Sleep(2 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	// Ensure service is accessible from web container
 	checkCommand := fmt.Sprintf("curl -slL -w '%%{http_code}' %s -o /dev/null", path)

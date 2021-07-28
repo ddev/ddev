@@ -15,9 +15,9 @@ import (
 )
 
 // DownloadFile retrieves a file.
-func DownloadFile(fp string, url string, progressBar bool) (err error) {
+func DownloadFile(destPath string, url string, progressBar bool) (err error) {
 	// Create the file
-	out, err := os.Create(fp)
+	out, err := os.Create(destPath)
 	if err != nil {
 		return err
 	}
@@ -36,7 +36,7 @@ func DownloadFile(fp string, url string, progressBar bool) (err error) {
 	reader := resp.Body
 	if progressBar {
 
-		bar := pb.New(int(resp.ContentLength)).SetUnits(pb.U_BYTES).Prefix(filepath.Base(fp))
+		bar := pb.New(int(resp.ContentLength)).SetUnits(pb.U_BYTES).Prefix(filepath.Base(destPath))
 		bar.Start()
 
 		// create proxy reader

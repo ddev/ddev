@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/stretchr/testify/require"
+	"os"
 	"runtime"
 	"strings"
 	"testing"
@@ -19,11 +20,19 @@ import (
 // TestCmdList runs the binary with "ddev list" and checks the results
 func TestCmdList(t *testing.T) {
 	assert := asrt.New(t)
+	origDir, _ := os.Getwd()
 
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
 	// This gratuitous ddev start -a repopulates the ~/.ddev/global_config.yaml
 	// project list, which has been damaged by other tests which use
 	// direct app techniques.
-	_, err := exec.RunCommand(DdevBin, []string{"start", "-a", "-y"})
+	_, err = exec.RunCommand(DdevBin, []string{"start", "-a", "-y"})
 	assert.NoError(err)
 
 	// Execute "ddev list" and harvest plain text output.

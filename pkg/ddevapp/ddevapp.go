@@ -8,6 +8,7 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-isatty"
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh/terminal"
 	"io/ioutil"
 	"net"
@@ -79,8 +80,10 @@ type DdevApp struct {
 	AdditionalFQDNs           []string              `yaml:"additional_fqdns"`
 	MariaDBVersion            string                `yaml:"mariadb_version"`
 	MySQLVersion              string                `yaml:"mysql_version"`
-	NFSMountEnabled           bool                  `yaml:"nfs_mount_enabled,omitempty"`
+	NFSMountEnabled           bool                  `yaml:"nfs_mount_enabled"`
 	NFSMountEnabledGlobal     bool                  `yaml:"-"`
+	MutagenEnabled            bool                  `yaml:"mutagen_enabled"`
+	MutagenEnabledGlobal      bool                  `yaml:"-"`
 	FailOnHookFail            bool                  `yaml:"fail_on_hook_fail,omitempty"`
 	FailOnHookFailGlobal      bool                  `yaml:"-"`
 	ConfigPath                string                `yaml:"-"`
@@ -226,6 +229,13 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["httpsurl"] = app.GetHTTPSURL()
 	appDesc["primary_url"] = app.GetPrimaryURL()
 	appDesc["type"] = app.GetType()
+	appDesc["mutagen_enabled"] = app.MutagenEnabled || app.MutagenEnabledGlobal
+	if app.MutagenEnabled {
+		_, appDesc["mutagen_status"], _, err = app.MutagenStatus()
+		if err != nil {
+			appDesc["mutagen_status"] = err.Error() + " " + appDesc["mutagen_status"].(string)
+		}
+	}
 
 	// if short is set, we don't need more information, so return what we have.
 	if short {
@@ -234,6 +244,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["hostname"] = app.GetHostname()
 	appDesc["hostnames"] = app.GetHostnames()
 	appDesc["nfs_mount_enabled"] = (app.NFSMountEnabled || app.NFSMountEnabledGlobal)
+	appDesc["mutagen_enabled"] = app.MutagenEnabled || app.MutagenEnabledGlobal
 	appDesc["fail_on_hook_fail"] = (app.FailOnHookFail || app.FailOnHookFailGlobal)
 	httpURLs, httpsURLs, allURLs := app.GetAllURLs()
 	appDesc["httpURLs"] = httpURLs
@@ -506,6 +517,10 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		preImportSQL = fmt.Sprintf("DROP DATABASE IF EXISTS %s; ", targetDB) + preImportSQL
 	}
 
+	err = app.MutagenSyncFlush()
+	if err != nil {
+		return err
+	}
 	// The perl manipulation removes statements like CREATE DATABASE and USE, which
 	// throw off imports. This is a scary manipulation, as it must not match actual content
 	// as has actually happened with https://www.ddevhq.org/ddev-local/ddev-local-database-management/
@@ -806,6 +821,10 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
+	err = DownloadMutagenIfNeeded(app)
+	if err != nil {
+		return err
+	}
 	err = app.ProcessHooks("pre-start")
 	if err != nil {
 		return err
@@ -918,6 +937,21 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
+	if app.MutagenEnabled || app.MutagenEnabledGlobal {
+		output.UserOut.Printf("Starting mutagen sync process...")
+		err = SetMutagenVolumeOwnership(app)
+		if err != nil {
+			return err
+		}
+		mutagenTimeTrack := util.ElapsedTime(time.Now())
+		err = CreateMutagenSync(app)
+		if err != nil {
+			return errors.Errorf("Failed to create mutagen sync session %s. You may be able to resolve this problem with 'ddev stop %s && docker volume rm %s_project_mutagen' (err=%v)", MutagenSyncName(app.Name), app.Name, app.Name, err)
+		}
+		secs := mutagenTimeTrack()
+		util.Success("Mutagen sync completed in %.1fs.\nFor details on sync status 'ddev mutagen status %s --verbose'", secs, MutagenSyncName(app.Name))
+	}
+
 	err = StartDdevRouter()
 	if err != nil {
 		return err
@@ -943,6 +977,16 @@ func (app *DdevApp) Start() error {
 	}
 
 	return nil
+}
+
+// Restart does a Stop() and a Start
+func (app *DdevApp) Restart() error {
+	err := app.Stop(false, false)
+	if err != nil {
+		return err
+	}
+	err = app.Start()
+	return err
 }
 
 // PullContainerImages pulls the main images with full output, since docker-compose up won't show enough output
@@ -1041,7 +1085,7 @@ func (app *DdevApp) GenerateWebserverConfig() error {
 type ExecOpts struct {
 	// Service is the service, as in 'web', 'db', 'dba'
 	Service string
-	// Dir is the working directory inside the container
+	// Dir is the full path to the working directory inside the container
 	Dir string
 	// Cmd is the string to execute
 	Cmd string
@@ -1196,7 +1240,7 @@ func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 		}
 		bashPath := "bash"
 		if runtime.GOOS == "windows" {
-			bashPath = util.FindWindowsBashPath()
+			bashPath = util.FindBashPath()
 			if bashPath == "" {
 				return fmt.Errorf("Unable to find bash.exe on Windows")
 			}
@@ -1366,6 +1410,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_PRIMARY_URL":           app.GetPrimaryURL(),
 		"DOCKER_SCAN_SUGGEST":        "false",
 		"IS_DDEV_PROJECT":            "true",
+		"MUTAGEN_DATA_DIRECTORY":     globalconfig.GetMutagenDir(),
 	}
 
 	// Set the mariadb_local command to empty to prevent docker-compose from complaining normally.
@@ -1408,6 +1453,8 @@ func (app *DdevApp) Pause() error {
 	if err != nil {
 		return err
 	}
+
+	_ = SyncAndTerminateMutagen(app)
 
 	if _, _, err := dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "stop"); err != nil {
 		return err
@@ -1755,6 +1802,8 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 	}
 
+	_ = SyncAndTerminateMutagen(app)
+
 	if app.SiteStatus() == SiteRunning {
 		err = app.Pause()
 		if err != nil {
@@ -1778,12 +1827,12 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 			util.Warning("could not WriteGlobalConfig: %v", err)
 		}
 
-		for _, volName := range []string{app.Name + "-mariadb"} {
+		for _, volName := range []string{app.Name + "-mariadb", app.Name + "_project_mutagen"} {
 			err = dockerutil.RemoveVolume(volName)
 			if err != nil {
 				util.Warning("could not remove volume %s: %v", volName, err)
 			} else {
-				util.Success("Deleting database. Volume %s for project %s was deleted", volName, app.Name)
+				util.Success("Volume %s for project %s was deleted", volName, app.Name)
 			}
 		}
 		desc, err := app.Describe(false)

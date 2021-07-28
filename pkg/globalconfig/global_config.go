@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -39,6 +40,7 @@ type ProjectInfo struct {
 type GlobalConfig struct {
 	OmitContainersGlobal     []string `yaml:"omit_containers,flow"`
 	NFSMountEnabledGlobal    bool     `yaml:"nfs_mount_enabled"`
+	MutagenEnabledGlobal     bool     `yaml:"mutagen_enabled"`
 	InstrumentationOptIn     bool     `yaml:"instrumentation_opt_in"`
 	RouterBindAllInterfaces  bool     `yaml:"router_bind_all_interfaces"`
 	InternetDetectionTimeout int64    `yaml:"internet_detection_timeout_ms"`
@@ -60,6 +62,20 @@ type GlobalConfig struct {
 // GetGlobalConfigPath gets the path to global config file
 func GetGlobalConfigPath() string {
 	return filepath.Join(GetGlobalDdevDir(), DdevGlobalConfigName)
+}
+
+// GetMutagenDir returns the directory of the mutagen config and binary
+func GetMutagenDir() string {
+	return filepath.Join(GetGlobalDdevDir(), ".mutagen")
+}
+
+// GetMutagenPath gets the full path to the mutagen binary
+func GetMutagenPath() string {
+	mutagenBinary := "mutagen"
+	if runtime.GOOS == "windows" {
+		mutagenBinary = mutagenBinary + ".exe"
+	}
+	return filepath.Join(GetMutagenDir(), "bin", mutagenBinary)
 }
 
 // ValidateGlobalConfig validates global config

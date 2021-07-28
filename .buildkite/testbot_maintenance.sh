@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eu
+set -eu -o pipefail
 
 os=$(go env GOOS)
 
@@ -11,7 +11,7 @@ if ! command -v ngrok >/dev/null; then
         brew install homebrew/cask/ngrok
         ;;
     windows)
-        choco install -y ngrok
+        (yes | choco install -y ngrok) || true
         ;;
     linux)
         curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip && sudo unzip -o -d /usr/local/bin /tmp/ngrok.zip
@@ -22,20 +22,30 @@ fi
 # Upgrade various items on various operating systems
 case $os in
 darwin)
-    for item in ddev golang golangci-lint mkcert mkdocs python3-yq; do
+    brew uninstall mutagen-io/mutagen/mutagen-beta mutagen-io/mutagen/mutagen || true
+    for item in drud/ddev/ddev golang golangci-lint mkcert mkdocs; do
         brew upgrade $item || brew install $item || true
     done
     ;;
 windows)
-    choco upgrade -y golang nodejs markdownlint-cli mkcert mkdocs || true
+    (yes | choco upgrade -y golang nodejs markdownlint-cli mkcert mkdocs) || true
+    (yes | choco uninstall -y mutagen) || true
     ;;
+# linux is currently WSL2
+linux)
+    # homebrew is only on amd64
+    if [ "$(arch)" = "x86_64" ]; then
+      brew uninstall mutagen-beta mutagen || true
+      for item in drud/ddev/ddev golang mkcert mkdocs; do
+        brew upgrade $item || brew install $item || true
+      done
+    fi
+    ;;
+
 esac
 
-yes | ddev delete images
+(yes | ddev delete images) || true
 
 # Remove any -built images, as we want to make sure tests do the building.
 docker rmi -f $(docker images --filter "dangling=true" -q --no-trunc) >/dev/null || true
 docker rmi -f $(docker images | awk '/drud.*-built/ {print $3}' ) >/dev/null || true
-
-# Make sure the global internet detection timeout is not set to 0 (broken)
-perl -pi -e 's/^internet_detection_timeout_ms:.*$/internet_detection_timeout_ms: 750/g' ~/.ddev/global_config.yaml

@@ -68,6 +68,11 @@ func TestCustomCommands(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.FileExists(filepath.Join(projectCommandsDir, "db", "mysql"))
+
+	// Must sync our added commands before using them.
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+
 	out, err := exec.RunCommand(DdevBin, []string{})
 	assert.NoError(err)
 	assert.Contains(out, "mysql client in db container")
@@ -76,8 +81,10 @@ func TestCustomCommands(t *testing.T) {
 	inputFile := filepath.Join(testCustomCommandsDir, "select99.sql")
 	f, err := os.Open(inputFile)
 	require.NoError(t, err)
-	// nolint: errcheck
-	defer f.Close()
+	t.Cleanup(func() {
+		err = f.Close()
+		assert.NoError(err)
+	})
 	command := osexec.Command(DdevBin, "mysql")
 	command.Stdin = f
 	byteOut, err := command.CombinedOutput()
@@ -89,6 +96,10 @@ func TestCustomCommands(t *testing.T) {
 
 	// Now copy a project commands and global commands and make sure they show up and execute properly
 	err = fileutil.CopyDir(filepath.Join(testCustomCommandsDir, "project_commands"), projectCommandsDir)
+	assert.NoError(err)
+
+	// Must sync our added commands before using them.
+	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 
 	out, err = exec.RunCommand(DdevBin, []string{})
