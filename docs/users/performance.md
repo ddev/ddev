@@ -117,15 +117,17 @@ nfs.server.verbose = 3
 
 ### Introduction
 
-The experimental Mutagen asynchronous update feature is being introduced in v1.18 and offers advanced performance experiences for some projects.
+The experimental Mutagen asynchronous update feature introduced in v1.18 offers advanced performance experiences for some projects. Unlike the NFS feature, it requires no pre-configuration or installation. It can also be significantly faster than NFS and massively faster than plain vanilla Docker.
 
-Mutagen is not useful on Linux or Windows WSL2, as it adds complexity but doesn't add significant performance, but it can make a huge difference in performance on macOS and traditional Windows.
+Mutagen can offer massive webserver performance speedups on macOS and traditional Windows; it's not useful on Linux or Windows WSL2, as it adds complexity but doesn't add significant performance.
 
-The reason that Docker bind-mounts (the traditional approach) can be slow on macOS and Windows (even with NFS) is that every file access has to be checked against the file on the host. And Docker's setup to do this on macOS and Windows offers far less than local filesystem performance. (On Linux and Linux-like systems, Docker provides native file-access performance.)
+Docker bind-mounts (the traditional approach to getting your code into the DDEV web container) can be slow on macOS and Windows, even with NFS.  The reason is that every file access has to be checked against the file on the host, and Docker's setup to do this on macOS and Windows offers is not very performant. (On Linux and Linux-like systems, Docker provides native file-access performance.)
 
 Mutagen works by decoupling reads and writes inside the container from reads and writes on the host. If something changes on the host, it gets changed "pretty soon" in the container, and if something changes inside the container it gets updated "pretty soon" on the host. This means that the webserver inside the web container does not have to wait for slow file reads or writes, and gets near-native file speeds. However, it also means that at any given moment, the files on the host may not exactly match the files inside the container, and if files are changed both places, conflicts may result.
 
-If you trouble with the Mutagen feature, please try to recreate it and report via one of the [support channels](https://ddev.readthedocs.io/en/latest/#support-and-user-contributed-documentation). We really want to make it a robust go-to feature.
+Another major advantage of Mutagen over NFS is that it supports filesystem notifications, so file-watchers on both the host and inside the container will be notified when changes occur. This is a great advantage for many development tools, which had to poll for changes in the past, but now will be notified via normal inotify/fsnotify techniques.
+
+If you trouble with the Mutagen feature, please try to recreate it and report via one of the [support channels](https://ddev.readthedocs.io/en/latest/#support-and-user-contributed-documentation). We really want to make it a robust go-to feature. With your help, it has great potential.
 
 ### Enabling Mutagen
 

@@ -92,7 +92,7 @@ func CreateMutagenSync(app *DdevApp) error {
 	syncName := MutagenSyncName(app.Name)
 	configFile := GetMutagenConfigFile(app)
 	if configFile != "" {
-		util.Success("Using additional mutagen config file %s", configFile)
+		util.Success("Using mutagen config file %s", configFile)
 	}
 
 	util.Debug("Terminating mutagen sync if session already exists")

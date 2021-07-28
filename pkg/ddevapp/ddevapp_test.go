@@ -258,7 +258,9 @@ func TestMain(m *testing.M) {
 			log.Errorf("TestMain startup: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 			continue
 		}
-		err = app.WriteConfig()
+		// Use ddev binary here because just app.WriteConfig() doesn't
+		// populate the project .ddev
+		_, err = exec.RunHostCommand(DdevBin, "config", "--auto")
 		if err != nil {
 			testRun = -1
 			log.Errorf("TestMain startup: app.WriteConfig() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
@@ -1572,7 +1574,7 @@ func TestGetLatestSnapshot(t *testing.T) {
 	err := os.Chdir(site.Dir)
 	assert.NoError(err)
 
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf(t.Name()))
+	runTime := util.TimeTrack(time.Now(), t.Name())
 
 	testcommon.ClearDockerEnv()
 	err = app.Init(site.Dir)
@@ -1692,13 +1694,11 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = app.ImportDB(d7testerTest2Dump, "", false, false, "db")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest2Dump, err)
 
-	// This stop/start is to work around a persistent
+	// This restart is to work around a persistent
 	// failure on Mac M1.
 	// "read: connection reset by peer"
-	err = app.Stop(false, false)
-	assert.NoError(err)
-	err = app.Start()
-	assert.NoError(err)
+	err = app.Restart()
+	require.NoError(t, err)
 
 	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), "d7 tester test 2 has 2 nodes", 45)
 
@@ -1726,6 +1726,10 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), "d7 tester test 1 has 1 node", 45)
 	err = app.RestoreSnapshot("d7testerTest2")
+	assert.NoError(err)
+
+	// Try a restart to work around "connection reset by peer" error on Mac M1
+	err = app.Restart()
 	assert.NoError(err)
 
 	body, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL(), 45)
@@ -2849,7 +2853,10 @@ func TestHttpsRedirection(t *testing.T) {
 			for _, parts := range expectations {
 				reqURL := parts.scheme + "://" + strings.ToLower(app.GetHostname()) + parts.uri
 				//t.Logf("TestHttpsRedirection trying URL %s with webserver_type=%s", reqURL, webserverType)
-				out, resp, err := testcommon.GetLocalHTTPResponse(t, reqURL)
+				// Add extra hit to avoid occasional nil result
+				_, _, _ = testcommon.GetLocalHTTPResponse(t, reqURL, 60)
+				out, resp, err := testcommon.GetLocalHTTPResponse(t, reqURL, 60)
+
 				require.NotNil(t, resp, "resp was nil for projectType=%s webserver_type=%s url=%s, err=%v, out='%s'", projectType, webserverType, reqURL, err, out)
 				if resp != nil {
 					locHeader := resp.Header.Get("Location")

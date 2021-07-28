@@ -979,6 +979,16 @@ func (app *DdevApp) Start() error {
 	return nil
 }
 
+// Restart does a Stop() and a Start
+func (app *DdevApp) Restart() error {
+	err := app.Stop(false, false)
+	if err != nil {
+		return err
+	}
+	err = app.Start()
+	return err
+}
+
 // PullContainerImages pulls the main images with full output, since docker-compose up won't show enough output
 func (app *DdevApp) PullContainerImages() error {
 	containerImages := map[string]string{

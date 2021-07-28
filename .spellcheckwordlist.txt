@@ -238,6 +238,7 @@ fpm
 fqdn
 fqdns
 from
+fsnotify
 github
 githubusercontent
 gitignore
@@ -266,6 +267,7 @@ in
 including
 information
 ini
+inotify
 inside
 internet
 into
@@ -338,6 +340,7 @@ or
 oriented
 output
 pause
+performant
 php
 phpMyAdmin
 phpinfo
