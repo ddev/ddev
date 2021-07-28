@@ -18,6 +18,7 @@ import (
 	"strings"
 )
 
+// SetMutagenVolumeOwnership chowns the volume in use to the current user.
 func SetMutagenVolumeOwnership(app *DdevApp) error {
 	// Make sure that if we have a volume mount it's got proper ownership
 	uidStr, gidStr, _ := util.GetContainerUIDGid()

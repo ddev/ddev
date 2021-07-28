@@ -125,6 +125,8 @@ The reason that Docker bind-mounts (the traditional approach) can be slow on mac
 
 Mutagen works by decoupling reads and writes inside the container from reads and writes on the host. If something changes on the host, it gets changed "pretty soon" in the container, and if something changes inside the container it gets updated "pretty soon" on the host. This means that the webserver inside the web container does not have to wait for slow file reads or writes, and gets near-native file speeds. However, it also means that at any given moment, the files on the host may not exactly match the files inside the container, and if files are changed both places, conflicts may result.
 
+If you trouble with the Mutagen feature, please try to recreate it and report via one of the [support channels](https://ddev.readthedocs.io/en/latest/#support-and-user-contributed-documentation). We really want to make it a robust go-to feature.
+
 ### Enabling Mutagen
 
 To start using Mutagen, just `ddev stop` and then `ddev config --mutagen-enabled` and start the project again. If the mutagen artifacts need to be downloaded, they will be downloaded automatically.

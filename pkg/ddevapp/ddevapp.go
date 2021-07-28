@@ -946,7 +946,7 @@ func (app *DdevApp) Start() error {
 		mutagenTimeTrack := util.ElapsedTime(time.Now())
 		err = CreateMutagenSync(app)
 		if err != nil {
-			return errors.Errorf("Failed to create mutagen sync session %s. You may be able to resolve this problem with 'ddev stop %s && mutagen sync terminate %s && docker volume rm %s_project_mutagen' (%v)", MutagenSyncName(app.Name), app.Name, MutagenSyncName(app.Name), app.Name, err)
+			return errors.Errorf("Failed to create mutagen sync session %s. You may be able to resolve this problem with 'ddev stop %s && docker volume rm %s_project_mutagen' (err=%v)", MutagenSyncName(app.Name), app.Name, app.Name, err)
 		}
 		secs := mutagenTimeTrack()
 		util.Success("Mutagen sync completed in %.1fs.\nFor details on sync status 'ddev mutagen status %s --verbose'", secs, MutagenSyncName(app.Name))
