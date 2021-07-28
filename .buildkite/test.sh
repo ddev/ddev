@@ -39,6 +39,15 @@ if ! docker ps >/dev/null 2>&1 ; then
   exit 1
 fi
 
+# Make sure we have a reasonable mutagen setup
+if command -v mutagen >/dev/null ; then
+  mutagen daemon stop || true
+fi
+~/.ddev/.mutagen/bin/mutagen daemon stop || true
+if command -v killall >/dev/null ; then
+  killall mutagen || true
+fi
+
 # Try to get important names cached; try twice
 docker run --rm alpine sh -c '
   for hostname in github.com raw.githubusercontent.com github-releases.githubusercontent.com registry-1.docker.io auth.docker.io production.cloudflare.docker.com; do
