@@ -109,7 +109,7 @@ func CreateMutagenSync(app *DdevApp) error {
 	}
 	args := []string{"sync", "create", app.AppRoot, fmt.Sprintf("docker://ddev-%s-web/var/www/html", app.Name), "--no-global-configuration", "--name", syncName}
 	if configFile != "" {
-		args = append(args, fmt.Sprintf(`--configuration-file="%s"`, configFile))
+		args = append(args, fmt.Sprintf(`--configuration-file=%s`, configFile))
 	}
 	util.Debug("Creating mutagen sync: mutagen %v", args)
 	out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), args...)

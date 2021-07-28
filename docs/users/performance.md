@@ -136,6 +136,8 @@ You can also enable mutagen globally (for every project) with `ddev config globa
 ### Caveats about Mutagen Integration
 
 * If your project is likely to change the same file on both the host and inside the container, you may be at risk for conflicts.
+* Massive changes to either the host or the container are the most likely to introduce issues. This integration has been tested extensively with major changes introduced by `ddev composer` and `ddev composer create` but be aware of this issue. A script that deletes huge sections of the synced data is a related behavior that should raise caution.
+* You can cause an explicit sync with `ddev mutagen sync` and see syncing status with `ddev mutagen status`. Note that `ddev start` and `ddev start` automatically force a mutagen sync.
 * Keep backups. Mutagen syncing is an experimental feature.
 * The mutagen integration by default does not sync VCS directories like .git into the container, but this can be changed with advanced configuration options. (This means that by default you cannot do git operations inside the container with mutagen turned on.)
 
