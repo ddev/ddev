@@ -87,11 +87,11 @@ func TestMutagenSimple(t *testing.T) {
 	assert.Error(err)
 
 	// Make sure we can stop the daemon
+	_, err = exec.RunHostCommand("killall", "-0", "mutagen")
+	assert.NoError(err)
 	ddevapp.StopMutagenDaemon()
-	out, err := exec.RunHostCommand("killall", "-0", "mutagen")
-	_ = out
+	_, err = exec.RunHostCommand("killall", "-0", "mutagen")
 	assert.Error(err)
-	assert.Contains(out, "No matching processes")
 
 	err = app.Start()
 	assert.NoError(err)
