@@ -66,7 +66,7 @@ func GetGlobalConfigPath() string {
 
 // GetMutagenDir returns the directory of the mutagen config and binary
 func GetMutagenDir() string {
-	return filepath.Join(GetGlobalDdevDir(), ".mutagen")
+	return filepath.Join(GetGlobalDdevDir(), "bin")
 }
 
 // GetMutagenPath gets the full path to the mutagen binary
@@ -75,7 +75,7 @@ func GetMutagenPath() string {
 	if runtime.GOOS == "windows" {
 		mutagenBinary = mutagenBinary + ".exe"
 	}
-	return filepath.Join(GetMutagenDir(), "bin", mutagenBinary)
+	return filepath.Join(GetMutagenDir(), mutagenBinary)
 }
 
 // ValidateGlobalConfig validates global config

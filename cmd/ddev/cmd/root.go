@@ -66,11 +66,6 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 			}
 		}
 
-		err = ddevapp.CheckMutagenVersion(version.MutagenVersionConstraint)
-		if err != nil {
-			util.Warning("The mutagen version currently installed does not meet ddev's requirements: %v\nThe appropriate version will be downloaded when it is needed.", err)
-		}
-
 		updateFile := filepath.Join(globalconfig.GetGlobalDdevDir(), ".update")
 
 		// Do periodic detection of whether an update is available for ddev users.

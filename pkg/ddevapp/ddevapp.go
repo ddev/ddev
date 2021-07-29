@@ -1410,7 +1410,6 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_PRIMARY_URL":           app.GetPrimaryURL(),
 		"DOCKER_SCAN_SUGGEST":        "false",
 		"IS_DDEV_PROJECT":            "true",
-		"MUTAGEN_DATA_DIRECTORY":     globalconfig.GetMutagenDir(),
 	}
 
 	// Set the mariadb_local command to empty to prevent docker-compose from complaining normally.
