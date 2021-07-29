@@ -324,7 +324,7 @@ ddev launch
 In the examples above we used a one liner to copy `.env.example` as `env`and set the `DB_HOST`, `DB_DATABASE`, `DB_USERNAME` and `DB_PASSWORD` environment variables to the value of `db`.
 These values are DDEV's default settings for the Database connection.
 
-Instead of setting each connection variable we can add a ddev to the `connections` array in `config/databases.php` like this:
+Instead of setting each connection variable we can add a ddev to the `connections` array in `config/database.php` like this:
 
 ```php
 <?php
