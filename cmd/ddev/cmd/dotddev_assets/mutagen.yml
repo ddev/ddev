@@ -14,7 +14,9 @@ sync:
         - ".ddev"
         # For example /var/www/html/var does not need to sync in TYPO3
         # - "var"
-      vcs: true
+      # vcs like .git can be ignored for safety, but then some
+      # composer operations may fail if they use git.
+      # vcs: true
     symlink:
       mode: "portable"
 
