@@ -141,9 +141,12 @@ Note that the nfs-mount-enabled feature is automatically turned off if you're us
 
 ### Caveats about Mutagen Integration
 
+* Mutagen is not the right choice for every project. If filesystem consistency is your highest priority (as opposed to performance) then you'll want to walk carefully. At this point, there haven't been major issues reported, but two-way sync is a very difficult computational problem, and problems may surface. If you have backups (Time Machine!) and code under source control, you should be fine.
 * Multiple mutagen versions can't coexist on one machine, so please stop any running mutagen. On macOS, `killall mutagen`.
+* This is mostly for macOS users. WSL2 is already the preferred environment for Windows users, but if you're still using traditional Windows this makes a huge difference. Turning on mutagen doesn't make sense on Linux or WSL2.
+* Mutagen integration ends up at least doubling the size of your project code disk usage, because the code exists both on your computer and also inside a docker volume. So take care that you have enough overall disk space, and also (on macOS) that you have enough file space set up in Docker Desktop.
 * If your project is likely to change the same file on both the host and inside the container, you may be at risk for conflicts.
-* Massive changes to either the host or the container are the most likely to introduce issues. This integration has been tested extensively with major changes introduced by `ddev composer` and `ddev composer create` but be aware of this issue. A script that deletes huge sections of the synced data is a related behavior that should raise caution.
+* Massive changes to either the host or the container are the most likely to introduce issues. This integration has been tested extensively with major changes introduced by `ddev composer` and `ddev composer create` but be aware of this issue. Changing git branches or a script that deletes huge sections of the synced data are related behaviors that should raise caution.
 * You can cause an explicit sync with `ddev mutagen sync` and see syncing status with `ddev mutagen status`. Note that both `ddev start` and `ddev stop` automatically force a mutagen sync.
 * If you do composer actions inside the container (with `ddev ssh`) you'll probably want to do a `ddev mutagen sync` to make sure they get synced as soon as possible, although most people won't ever notice the difference and mutagen will get it synced soon enough.
 * Keep backups. Mutagen syncing is an experimental feature.
