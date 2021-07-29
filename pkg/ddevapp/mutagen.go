@@ -216,7 +216,10 @@ func DownloadMutagen() error {
 // StopMutagenDaemon will try to stop a running mutagen daemon
 // But no problem if there wasn't one
 func StopMutagenDaemon() {
-	_, _ = exec.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "stop")
+	out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "stop")
+	if err != nil && !strings.Contains(out, "unable to connect to daemon") {
+		util.Warning("Unable to stop mutagen daemon: %v", err)
+	}
 }
 
 // DownloadMutagenIfNeeded downloads the proper version of mutagen

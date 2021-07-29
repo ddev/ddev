@@ -55,7 +55,7 @@ func TestMutagenSimple(t *testing.T) {
 	assert.True(desc["mutagen_enabled"].(bool))
 
 	// Make sure the sync is there
-	_, err = exec.RunCommand(mutagenPath, []string{"sync", "list", ddevapp.MutagenSyncName(app.Name)})
+	_, err = exec.RunHostCommand(mutagenPath, "sync", "list", ddevapp.MutagenSyncName(app.Name))
 	assert.NoError(err)
 
 	// Remove the vendor directory and sync
@@ -83,20 +83,27 @@ func TestMutagenSimple(t *testing.T) {
 
 	// Stop app, should result in no more mutagen sync
 	err = app.Stop(false, false)
-	_, err = exec.RunCommand(mutagenPath, []string{"sync", "list", ddevapp.MutagenSyncName(app.Name)})
+	_, err = exec.RunHostCommand(mutagenPath, "sync", "list", ddevapp.MutagenSyncName(app.Name))
 	assert.Error(err)
+
+	// Make sure we can stop the daemon
+	ddevapp.StopMutagenDaemon()
+	out, err := exec.RunHostCommand("killall", "-0", "mutagen")
+	_ = out
+	assert.Error(err)
+	assert.Contains(out, "No matching processes")
 
 	err = app.Start()
 	assert.NoError(err)
 
 	// Make sure sync is down on pause also
 	err = app.Pause()
-	_, err = exec.RunCommand(mutagenPath, []string{"sync", "list", ddevapp.MutagenSyncName(app.Name)})
+	_, err = exec.RunHostCommand(mutagenPath, "sync", "list", ddevapp.MutagenSyncName(app.Name))
 	assert.Error(err)
 
 	// And that it's re-established when we start again
 	err = app.Start()
-	_, err = exec.RunCommand(mutagenPath, []string{"sync", "list", ddevapp.MutagenSyncName(app.Name)})
+	_, err = exec.RunHostCommand(mutagenPath, "sync", "list", ddevapp.MutagenSyncName(app.Name))
 	assert.NoError(err)
 
 	runTime()
