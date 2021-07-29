@@ -11,9 +11,9 @@ sync:
     mode: "two-way-resolved"
     ignore:
       paths:
-        # /var/www/html/var does not need to sync in TYPO3
-        - "var"
         - ".ddev"
+        # For example /var/www/html/var does not need to sync in TYPO3
+        # - "var"
       vcs: true
     symlink:
       mode: "portable"

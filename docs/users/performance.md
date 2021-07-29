@@ -137,8 +137,11 @@ To stop using Mutagen on a project, `ddev config --mutagen-enabled=false` after 
 
 You can also enable mutagen globally (for every project) with `ddev config global --mutagen-enabled`
 
+Note that the nfs-mount-enabled feature is automatically turned off if you're using mutagen.
+
 ### Caveats about Mutagen Integration
 
+* Multiple mutagen versions can't coexist on one machine, so please stop any running mutagen. On macOS, `killall mutagen`.
 * If your project is likely to change the same file on both the host and inside the container, you may be at risk for conflicts.
 * Massive changes to either the host or the container are the most likely to introduce issues. This integration has been tested extensively with major changes introduced by `ddev composer` and `ddev composer create` but be aware of this issue. A script that deletes huge sections of the synced data is a related behavior that should raise caution.
 * You can cause an explicit sync with `ddev mutagen sync` and see syncing status with `ddev mutagen status`. Note that both `ddev start` and `ddev stop` automatically force a mutagen sync.
