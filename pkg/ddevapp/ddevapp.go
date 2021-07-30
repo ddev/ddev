@@ -1453,7 +1453,7 @@ func (app *DdevApp) Pause() error {
 		return err
 	}
 
-	_ = SyncAndTerminateMutagen(app)
+	_ = SyncAndTerminateMutagenSession(app)
 
 	if _, _, err := dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "stop"); err != nil {
 		return err
@@ -1801,7 +1801,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 	}
 
-	_ = SyncAndTerminateMutagen(app)
+	_ = SyncAndTerminateMutagenSession(app)
 
 	if app.SiteStatus() == SiteRunning {
 		err = app.Pause()

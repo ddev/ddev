@@ -50,12 +50,13 @@ func TerminateMutagenSync(app *DdevApp) error {
 				return err
 			}
 		}
+		util.Success("Terminated mutagen sync session %s", syncName)
 	}
 	return nil
 }
 
-// SyncAndTerminateMutagen syncs and terminates the mutagen sync
-func SyncAndTerminateMutagen(app *DdevApp) error {
+// SyncAndTerminateMutagenSession syncs and terminates the mutagen sync session
+func SyncAndTerminateMutagenSession(app *DdevApp) error {
 	if app.MutagenEnabled || app.MutagenEnabledGlobal {
 		syncName := MutagenSyncName(app.Name)
 
@@ -176,6 +177,7 @@ func (app *DdevApp) MutagenSyncFlush() error {
 		if !status || err != nil {
 			return err
 		}
+		util.Success("Flushed mutagen sync session %s", syncName)
 	}
 	return nil
 }
