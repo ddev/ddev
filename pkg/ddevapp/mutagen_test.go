@@ -87,11 +87,10 @@ func TestMutagenSimple(t *testing.T) {
 	assert.Error(err)
 
 	// Make sure we can stop the daemon
-	_, err = exec.RunHostCommand("killall", "-0", "mutagen")
-	assert.NoError(err)
 	ddevapp.StopMutagenDaemon()
-	_, err = exec.RunHostCommand("killall", "-0", "mutagen")
-	assert.Error(err)
+	out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list")
+	assert.NoError(err)
+	assert.Contains(out, "Started Mutagen daemon in background")
 
 	err = app.Start()
 	assert.NoError(err)
