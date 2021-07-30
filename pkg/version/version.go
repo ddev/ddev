@@ -43,13 +43,13 @@ var MutagenVersionConstraint = nodeps.RequiredMutagenVersion
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag for drud dev
-var WebTag = "20210729_cspitzlay_mysql_history" // Note that this can be overridden by make
+var WebTag = "20210714_bullseye_web_image" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20210729_cspitzlay_mysql_history"
+var BaseDBTag = "20210709_mariadb_versions"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"
