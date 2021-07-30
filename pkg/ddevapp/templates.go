@@ -53,7 +53,7 @@ services:
       - HOST_DOCKER_INTERNAL_IP={{ .HostDockerInternalIP }}
       - IS_DDEV_PROJECT=true
       - LINES
-      - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_PROJECT}/db
+      - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-db/mysql_history
       - TZ={{ .Timezone }}
     command: "$DDEV_MARIADB_LOCAL_COMMAND"
     healthcheck:
@@ -137,7 +137,7 @@ services:
       - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80,${DDEV_MAILHOG_HTTPS_PORT}:{{ .MailhogPort }}
       - IS_DDEV_PROJECT=true
       - LINES
-      - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_PROJECT}/web
+      - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-web/mysql_history
       - SSH_AUTH_SOCK=/home/.ssh-agent/socket
       - TZ={{ .Timezone }}
       - VIRTUAL_HOST=${DDEV_HOSTNAME}

@@ -66,7 +66,7 @@ disable_xhprof
 
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
-mkdir -p /mnt/ddev-global-cache/bashhistory/${HOSTNAME}
+mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory}/${HOSTNAME}
 
 # This will need to be done by a separate container with privileges
 # chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/
