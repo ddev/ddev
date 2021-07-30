@@ -1413,7 +1413,6 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_PRIMARY_URL":           app.GetPrimaryURL(),
 		"DOCKER_SCAN_SUGGEST":        "false",
 		"IS_DDEV_PROJECT":            "true",
-		"MUTAGEN_DATA_DIRECTORY":     globalconfig.GetMutagenDir(),
 	}
 
 	// Set the mariadb_local command to empty to prevent docker-compose from complaining normally.
@@ -1457,7 +1456,7 @@ func (app *DdevApp) Pause() error {
 		return err
 	}
 
-	_ = SyncAndTerminateMutagen(app)
+	_ = SyncAndTerminateMutagenSession(app)
 
 	if _, _, err := dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "stop"); err != nil {
 		return err
@@ -1805,7 +1804,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 	}
 
-	_ = SyncAndTerminateMutagen(app)
+	_ = SyncAndTerminateMutagenSession(app)
 
 	if app.SiteStatus() == SiteRunning {
 		err = app.Pause()

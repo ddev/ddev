@@ -2,7 +2,6 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/Masterminds/semver"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -51,12 +50,13 @@ func TerminateMutagenSync(app *DdevApp) error {
 				return err
 			}
 		}
+		util.Success("Terminated mutagen sync session %s", syncName)
 	}
 	return nil
 }
 
-// SyncAndTerminateMutagen syncs and terminates the mutagen sync
-func SyncAndTerminateMutagen(app *DdevApp) error {
+// SyncAndTerminateMutagenSession syncs and terminates the mutagen sync session
+func SyncAndTerminateMutagenSession(app *DdevApp) error {
 	if app.MutagenEnabled || app.MutagenEnabledGlobal {
 		syncName := MutagenSyncName(app.Name)
 
@@ -177,6 +177,7 @@ func (app *DdevApp) MutagenSyncFlush() error {
 		if !status || err != nil {
 			return err
 		}
+		util.Success("Flushed mutagen sync session %s", syncName)
 	}
 	return nil
 }
@@ -217,7 +218,10 @@ func DownloadMutagen() error {
 // StopMutagenDaemon will try to stop a running mutagen daemon
 // But no problem if there wasn't one
 func StopMutagenDaemon() {
-	_, _ = exec.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "stop")
+	out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "stop")
+	if err != nil && !strings.Contains(out, "unable to connect to daemon") {
+		util.Warning("Unable to stop mutagen daemon: %v", err)
+	}
 }
 
 // DownloadMutagenIfNeeded downloads the proper version of mutagen
@@ -232,38 +236,6 @@ func DownloadMutagenIfNeeded(app *DdevApp) error {
 		if err != nil {
 			return err
 		}
-	}
-	return nil
-}
-
-// CheckMutagenVersion determines if the mutagen version of the host
-//system meets the provided version constraint
-func CheckMutagenVersion(versionConstraint string) error {
-	currentVersion, err := version.GetMutagenVersion()
-	if err != nil {
-		return fmt.Errorf("no mutagen")
-	}
-	v, err := semver.NewVersion(currentVersion)
-	if err != nil {
-		return err
-	}
-
-	constraint, err := semver.NewConstraint(versionConstraint)
-	if err != nil {
-		return err
-	}
-
-	match, errs := constraint.Validate(v)
-	if !match {
-		if len(errs) <= 1 {
-			return errs[0]
-		}
-
-		msgs := "\n"
-		for _, err := range errs {
-			msgs = fmt.Sprint(msgs, err, "\n")
-		}
-		return fmt.Errorf(msgs)
 	}
 	return nil
 }

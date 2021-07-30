@@ -7,8 +7,8 @@
 /**/*.example
 /**/README.*
 /CMS
+/bin
 /global_config.yaml
-/.mutagen
 /pantheon*
 /*compose.yaml
 /*compose-full.yaml

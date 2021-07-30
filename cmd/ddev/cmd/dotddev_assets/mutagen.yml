@@ -11,10 +11,12 @@ sync:
     mode: "two-way-resolved"
     ignore:
       paths:
-        # /var/www/html/var does not need to sync in TYPO3
-        - "var"
         - ".ddev"
-      vcs: true
+        # For example /var/www/html/var does not need to sync in TYPO3
+        # - "var"
+      # vcs like .git can be ignored for safety, but then some
+      # composer operations may fail if they use git.
+      # vcs: true
     symlink:
       mode: "portable"
 
