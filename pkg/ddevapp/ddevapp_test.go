@@ -1381,6 +1381,9 @@ func TestDdevExportDB(t *testing.T) {
 	assert.NoError(err)
 	assert.True(stringFound)
 
+	// Flush needs to be complete before purge or may conflict with mutagen on windows
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
 	err = fileutil.PurgeDirectory("tmp")
 	assert.NoError(err)
 
