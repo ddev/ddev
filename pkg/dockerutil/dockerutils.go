@@ -956,7 +956,7 @@ func CheckAvailableSpace() {
 	_, out, _ := RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", `df -h / | awk '/overlay/ {print $5;}'`}, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, "", true, false, nil)
 	out = strings.Trim(out, "% \n")
 	spacePercent, _ := strconv.Atoi(out)
-	if spacePercent < nodeps.MinimumDockerSpaceWarning {
-		util.Error("Your docker installation has less than %d%% available space. Please increase it!", nodeps.MinimumDockerSpaceWarning)
+	if (100 - spacePercent) < nodeps.MinimumDockerSpaceWarning {
+		util.Error("Your docker installation has less than %d%% available space (%d%% used). Please increase disk image size.", nodeps.MinimumDockerSpaceWarning, spacePercent)
 	}
 }
