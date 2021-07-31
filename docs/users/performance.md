@@ -149,6 +149,7 @@ Note that the nfs-mount-enabled feature is automatically turned off if you're us
 * Massive changes to either the host or the container are the most likely to introduce issues. This integration has been tested extensively with major changes introduced by `ddev composer` and `ddev composer create` but be aware of this issue. Changing git branches or a script that deletes huge sections of the synced data are related behaviors that should raise caution.
 * You can cause an explicit sync with `ddev mutagen sync` and see syncing status with `ddev mutagen status`. Note that both `ddev start` and `ddev stop` automatically force a mutagen sync.
 * If you do composer actions inside the container (with `ddev ssh`) you'll probably want to do a `ddev mutagen sync` to make sure they get synced as soon as possible, although most people won't ever notice the difference and mutagen will get it synced soon enough.
+* Big git operations (like switching branches) are best done on the host side, rather than inside the container, and you may want to do an explicit `ddev mutagen sync` command after doing something like that.
 * Keep backups. Mutagen syncing is an experimental feature.
 
 ### Advanced Mutagen configuration options
