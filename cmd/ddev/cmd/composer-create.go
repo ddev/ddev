@@ -164,14 +164,10 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		if runtime.GOOS == "windows" {
 			fileutil.ReplaceSimulatedLinks(app.AppRoot)
 		}
-		// Do a spare start, which will create any needed settings files
-		err = app.Stop(false, false)
+		// Do a spare restart, which will create any needed settings files
+		err = app.Restart()
 		if err != nil {
-			util.Warning("Failed to stop project after composer create: %v", err)
-		}
-		err = app.Start()
-		if err != nil {
-			util.Failed("Failed to start project after composer create: %v", err)
+			util.Warning("Failed to restart project after composer create: %v", err)
 		}
 	},
 }
