@@ -167,3 +167,18 @@ It is possible to exclude mutagen syncing from a path and bind-mount something f
 * DDEV's mutagen is installed in ~/.ddev/bin/mutagen. You can use all the features of mutagen by running that, including `~/.ddev/bin/mutagen sync list` and `~/.ddev/bin/mutagen daemon stop`.
   You can run the script [diagnose_mutagen.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/diagnose_mutagen.sh) to gather some information about the setup of mutagen. Please report its output when creating an issue or otherwise seeking support.
 * If you're having trouble, we really want to hear from you to learn and try to sort it out. See the [Support channels](https://ddev.readthedocs.io/en/latest/#support-and-user-contributed-documentation).
+
+### Mutagen Strategies and Design Considerations
+
+Mutagen provides enormous speed boosts in everyday usage, but of course it's trying desperately under the hood to keep everything that changes in the container updated in the host, and vice versa.
+
+The strategy in the DDEV integration is to try to make sure that at key points everything is completely in sync (consistent). Consistency is a really high priority for this integration.
+
+The life cycle of the mutagen daemon and each sync session are something like this:
+
+1. On `ddev start` the mutagen agent will be started if it's not already running.
+2. If there is already a sync session for this project it's stopped and recreated.
+3. On `ddev stop` and `ddev pause` the sync session is flushed (made completely consistent) and then terminated.
+4. On `ddev poweroff` the mutagen daemon is terminated.
+
+In addition, a synchronous flush is performed after any `ddev composer` command, because composer may cause massive changes to the filesystem inside the container, and those need to be synced before operation continues.
