@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"os"
 	osexec "os/exec"
 	"path/filepath"
@@ -21,6 +22,10 @@ import (
 
 // TestCustomCommands does basic checks to make sure custom commands work OK.
 func TestCustomCommands(t *testing.T) {
+	if nodeps.MutagenEnabledDefault || globalconfig.DdevGlobalConfig.MutagenEnabledGlobal {
+		t.Skip("Skipping because this changes homedir and breaks mutagen functionality")
+	}
+
 	assert := asrt.New(t)
 	runTime := util.TimeTrack(time.Now(), t.Name())
 
