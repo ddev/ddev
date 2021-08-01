@@ -222,6 +222,7 @@ func StopMutagenDaemon() {
 	if err != nil && !strings.Contains(out, "unable to connect to daemon") {
 		util.Warning("Unable to stop mutagen daemon: %v", err)
 	}
+	util.Success("Stopped mutagen daemon")
 }
 
 // DownloadMutagenIfNeeded downloads the proper version of mutagen
