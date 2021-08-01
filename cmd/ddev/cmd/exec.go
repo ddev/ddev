@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -43,7 +42,7 @@ var DdevExecCmd = &cobra.Command{
 
 		app.DockerEnv()
 
-		out, _, err := app.Exec(&ddevapp.ExecOpts{
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: serviceType,
 			Dir:     execDirArg,
 			Cmd:     strings.Join(args, " "),
@@ -53,7 +52,6 @@ var DdevExecCmd = &cobra.Command{
 		if err != nil {
 			util.Failed("Failed to execute command %s: %v", strings.Join(args, " "), err)
 		}
-		output.UserOut.Print(out)
 	},
 }
 
