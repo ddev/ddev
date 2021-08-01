@@ -161,7 +161,29 @@ Each project by default already has a .ddev/mutagen.yml file with basic defaults
 
 The most likely thing you'll want to do is to exclude a path from mutagen syncing, which you can do in the `paths:` section of the `ignore:` stanza in the mutagen.yml.
 
-It is possible to exclude mutagen syncing from a path and bind-mount something from the host or a different volume on that path with a `docker-compose.*.yaml` file.
+It is possible to exclude mutagen syncing from a path and then bind-mount something from the host or a different volume on that path with a `docker-compose.*.yaml` file. So if you have an extremely heavyweight subdirectory in your project (lots of fonts, for example), you could exclude that subdirectory in the .ddev/mutagen.yml and then add a docker-compose.exclude.yaml.
+
+For example, if I want the .tarballs subdirectory of the project to be available inside the container, but I don't need mutagen to be syncing it, I can use normal docker bind-mounting for that subdirectory with this procedure:
+
+1. Take over the .ddev/mutagen.yml by removing the `#ddev-generated` line
+
+2. Add `/.tarballs` to the excluded paths:
+
+    ```yaml
+        ignore:
+          paths:
+            - "/.tarballs"
+    ```
+
+3. Add a `.ddev/docker-compose.bindmount.yaml` something like this:
+
+    ```yaml
+    version: "3.6"
+    services:
+      web:
+        volumes:
+          - "./.tarballs:/var/www/html/.tarballs" 
+    ```
 
 ### Troubleshooting Mutagen Sync Issues
 
