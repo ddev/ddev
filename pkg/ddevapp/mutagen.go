@@ -50,7 +50,7 @@ func TerminateMutagenSync(app *DdevApp) error {
 				return err
 			}
 		}
-		util.Success("Terminated mutagen sync session %s", syncName)
+		util.Success("Terminated mutagen sync session '%s'", syncName)
 	}
 	return nil
 }
@@ -61,11 +61,11 @@ func SyncAndTerminateMutagenSession(app *DdevApp) error {
 		syncName := MutagenSyncName(app.Name)
 
 		if !MutagenSyncExists(app) {
-			return errors.Errorf("Sync %v does nto exist", syncName)
+			return errors.Errorf("Sync session '%v' does nto exist", syncName)
 		}
 		err := app.MutagenSyncFlush()
 		if err != nil {
-			util.Error("Error on mutagen sync flush %s: %v", syncName, err)
+			util.Error("Error on 'mutagen sync flush %s': %v", syncName, err)
 		}
 		err = TerminateMutagenSync(app)
 		if err != nil {
@@ -109,7 +109,7 @@ func CreateMutagenSync(app *DdevApp) error {
 	if err != nil {
 		return fmt.Errorf("Failed to mutagen %v (%v), output=%s", args, err, out)
 	}
-	util.Debug("Flushing mutagen sync %s", syncName)
+	util.Debug("Flushing mutagen sync session '%s'", syncName)
 	err = app.MutagenSyncFlush()
 	if err != nil {
 		return err
@@ -134,8 +134,8 @@ func (app *DdevApp) MutagenStatus() (status bool, shortResult string, longResult
 		return true, shortResult, longResult, nil
 	}
 	if strings.Contains(longResult, "problems") || strings.Contains(longResult, "Conflicts") || strings.Contains(longResult, "error") || strings.Contains(shortResult, "Halted") {
-		util.Error("mutagen sync %s is not working correctly: %s", syncName, longResult)
-		return false, shortResult, longResult, errors.Errorf("mutagen sync %s is not working correctly, use 'mutagen sync list %s' for details", syncName, syncName)
+		util.Error("mutagen sync session '%s' is not working correctly: %s", syncName, longResult)
+		return false, shortResult, longResult, errors.Errorf("mutagen sync session '%s' is not working correctly, use 'mutagen sync list %s' for details", syncName, syncName)
 	}
 	return true, shortResult, longResult, nil
 }
@@ -161,11 +161,11 @@ func (app *DdevApp) MutagenSyncFlush() error {
 	if app.MutagenEnabled || app.MutagenEnabledGlobal {
 		syncName := MutagenSyncName(app.Name)
 		if !MutagenSyncExists(app) {
-			return errors.Errorf("Mutagen sync %s does not exist", syncName)
+			return errors.Errorf("Mutagen sync session '%s' does not exist", syncName)
 		}
 		status, _, long, err := app.MutagenStatus()
 		if !status || err != nil {
-			return errors.Errorf("Mutagen sync %s is in error state: %s (%v)", syncName, long, err)
+			return errors.Errorf("Mutagen sync session '%s' is in error state: %s (%v)", syncName, long, err)
 		}
 
 		_, err = exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "flush", syncName)
@@ -177,7 +177,7 @@ func (app *DdevApp) MutagenSyncFlush() error {
 		if !status || err != nil {
 			return err
 		}
-		util.Success("Flushed mutagen sync session %s", syncName)
+		util.Success("Flushed mutagen sync session '%s'", syncName)
 	}
 	return nil
 }
