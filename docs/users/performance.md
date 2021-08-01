@@ -183,3 +183,11 @@ The life cycle of the mutagen daemon and each sync session are something like th
 3. On `ddev stop` and `ddev pause` the sync session is flushed (made completely consistent) and then terminated.
 
 In addition, a synchronous flush is performed after any `ddev composer` command, because composer may cause massive changes to the filesystem inside the container, and those need to be synced before operation continues.
+
+### Interaction with other usages of Mutagen
+
+DDEV requires and provides a specific version of Mutagen, which you can see with `ddev version`.
+
+Mutagen does not guarantee interoperability between different mutagen versions, so you may have trouble if you have another version of mutagen installed. You can find out what version of mutagen you may have installed outside of DDEV with `mutagen version`.
+
+You'll want your system version of mutagen to be the same as the one provided with DDEV if you're using mutagen for anything else, see the [Mutagen installation instructions](https://mutagen.io/documentation/introduction/installation) and install the required version.
