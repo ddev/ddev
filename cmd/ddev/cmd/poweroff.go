@@ -51,5 +51,4 @@ func powerOff() {
 	if err := ddevapp.RemoveSSHAgentContainer(); err != nil {
 		util.Error("Failed to remove ddev-ssh-agent: %v", err)
 	}
-	ddevapp.StopMutagenDaemon()
 }

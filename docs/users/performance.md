@@ -181,6 +181,5 @@ The life cycle of the mutagen daemon and each sync session are something like th
 1. On `ddev start` the mutagen agent will be started if it's not already running.
 2. If there is already a sync session for this project it's stopped and recreated.
 3. On `ddev stop` and `ddev pause` the sync session is flushed (made completely consistent) and then terminated.
-4. On `ddev poweroff` the mutagen daemon is stopped.
 
 In addition, a synchronous flush is performed after any `ddev composer` command, because composer may cause massive changes to the filesystem inside the container, and those need to be synced before operation continues.
