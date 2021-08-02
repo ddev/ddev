@@ -269,7 +269,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			dbinfo["username"] = "db"
 			dbinfo["password"] = "db"
 			dbinfo["dbname"] = "db"
-			dbinfo["host"] = "db"
+			dbinfo["host"] = GetDBHostname(app)
 			dbPublicPort, err := app.GetPublishedPort("db")
 			util.CheckErr(err)
 			dbinfo["dbPort"] = GetPort("db")

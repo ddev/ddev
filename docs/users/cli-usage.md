@@ -495,7 +495,7 @@ You can also see more detailed information about a project by running `ddev desc
 
 ```
 NAME        TYPE     LOCATION                URL                           STATUS
-d8composer  drupal8  ~/workspace/d8composer  https://d8composer.ddev.site  running
+d9composer  drupal8  ~/workspace/d9composer  https://d9composer.ddev.site  running
 
 Project Information
 -------------------
@@ -504,9 +504,9 @@ MariaDB version 10.3
 
 URLs
 ----
-https://d8composer.ddev.site
+https://d9composer.ddev.site
 https://127.0.0.1:33232
-http://d8composer.ddev.site
+http://d9composer.ddev.site
 http://127.0.0.1:33233
 
 MySQL/MariaDB Credentials
@@ -515,19 +515,19 @@ Username: "db", Password: "db", Default database: "db"
 
 or use root credentials when needed: Username: "root", Password: "root"
 
-Database hostname and port INSIDE container: db:3306
+Database hostname and port INSIDE container: ddev-d9-db:3306
 To connect to db server inside container or in project settings files:
-mysql --host=db --user=db --password=db --database=db
+mysql --host=ddev-d9-dbcomposer --user=db --password=db --database=db
 Database hostname and port from HOST: 127.0.0.1:33231
 To connect to mysql from your host machine,
 mysql --host=127.0.0.1 --port=33231 --user=db --password=db --database=db
 
 Other Services
 --------------
-MailHog (https):    https://d8composer.ddev.site:8026
-MailHog:            http://d8composer.ddev.site:8025
-phpMyAdmin (https): https://d8composer.ddev.site:8037
-phpMyAdmin:         http://d8composer.ddev.site:8036
+MailHog (https):    https://d9composer.ddev.site:8026
+MailHog:            http://d9composer.ddev.site:8025
+phpMyAdmin (https): https://d9composer.ddev.site:8037
+phpMyAdmin:         http://d9composer.ddev.site:8036
 
 DDEV ROUTER STATUS: healthy
 ssh-auth status: healthy

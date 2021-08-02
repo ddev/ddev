@@ -101,8 +101,8 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			output = output + "\n" + "MySQL/MariaDB Credentials\n-------------------------\n" + `Username: "db", Password: "db", Default database: "db"` + "\n"
 			output = output + "\n" + `or use root credentials when needed: Username: "root", Password: "root"` + "\n\n"
 
-			output = output + "Database hostname and port INSIDE container: db:3306\n"
-			output = output + fmt.Sprintf("To connect to db server inside container or in project settings files: \nmysql --host=db --user=db --password=db --database=db\n")
+			output = output + fmt.Sprintf("Database hostname and port INSIDE container: %s:3306\n", ddevapp.GetDBHostname(app))
+			output = output + fmt.Sprintf("To connect to db server inside container or in project settings files: \nmysql --host=%s --user=db --password=db --database=db\n", ddevapp.GetDBHostname(app))
 
 			output = output + fmt.Sprintf("Database hostname and port from HOST: %s:%d\n", dockerIP, dbinfo["published_port"])
 			output = output + fmt.Sprintf("To connect to mysql from your host machine, \nmysql --host=%s --port=%d --user=db --password=db --database=db\n", dockerIP, dbinfo["published_port"])
