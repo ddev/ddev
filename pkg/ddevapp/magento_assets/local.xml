@@ -46,7 +46,7 @@ ddev to ignore this file and not regenerate it.
             </db>
             <default_setup>
                 <connection>
-                    <host><![CDATA[db]]></host>
+                    <host><![CDATA[{{ .DBHostname }}]]></host>
                     <username><![CDATA[db]]></username>
                     <password><![CDATA[db]]></password>
                     <dbname><![CDATA[db]]></dbname>

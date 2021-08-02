@@ -15,7 +15,7 @@ return [
         'table_prefix' => '',
         'connection' => [
             'default' => [
-                'host' => 'db',
+                'host' => '{{ .DBHostname }}',
                 'dbname' => 'db',
                 'username' => 'db',
                 'password' => 'db',
