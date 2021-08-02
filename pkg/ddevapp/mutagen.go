@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/archive"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
@@ -241,4 +242,29 @@ func DownloadMutagenIfNeeded(app *DdevApp) error {
 		}
 	}
 	return nil
+}
+
+// MutagenReset stops (with flush), removes the docker volume, starts again (with flush)
+func MutagenReset(app *DdevApp) error {
+	if app.MutagenEnabled || app.MutagenEnabledGlobal {
+		err := app.Stop(false, false)
+		if err != nil {
+			return errors.Errorf("Failed to stop project %s: %v", app.Name, err)
+		}
+		err = dockerutil.RemoveVolume(GetMutagenVolumeName(app))
+		if err != nil {
+			return err
+		}
+		output.UserOut.Printf("Removed docker volume %s", GetMutagenVolumeName(app))
+		err = app.Start()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// GetMutagenVolumeName returns the name for the mutagen docker volume
+func GetMutagenVolumeName(app *DdevApp) string {
+	return app.Name + "_" + "project_mutagen"
 }

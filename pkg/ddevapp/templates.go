@@ -213,7 +213,7 @@ volumes:
   {{ end }}
   {{ if and .MutagenEnabled (not .NoProjectMount) }}
   project_mutagen:
-    name: ${DDEV_PROJECT}_project_mutagen
+    name: {{ .MutagenVolume }}
   {{ end }}
 
   `
