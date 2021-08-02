@@ -2,8 +2,6 @@ package ddevapp
 
 import (
 	"fmt"
-	"io/ioutil"
-
 	"os"
 	"path/filepath"
 
@@ -29,7 +27,7 @@ if (getenv('IS_DDEV_PROJECT') == 'true') {
                 'Connections' => [
                     'Default' => [
                         'dbname' => 'db',
-                        'host' => 'db',
+                        'host' => '{{ .DBHostname }}',
                         'password' => 'db',
                         'port' => '3306',
                         'user' => 'db',
@@ -111,16 +109,11 @@ func writeTypo3SettingsFile(app *DdevApp) error {
 		}
 	}
 
-	file, err := os.Create(filePath)
+	templateVars := map[string]interface{}{"DBHostname": GetDBHostname(app)}
+	err := fileutil.TemplateStringToFile(typo3AdditionalConfigTemplate, templateVars, filePath)
 	if err != nil {
 		return err
 	}
-	contents := []byte(typo3AdditionalConfigTemplate)
-	err = ioutil.WriteFile(filePath, contents, 0644)
-	if err != nil {
-		return err
-	}
-	util.CheckClose(file)
 	return nil
 }
 

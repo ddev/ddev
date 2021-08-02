@@ -2243,3 +2243,8 @@ func (app *DdevApp) StartAppIfNotRunning() error {
 
 	return err
 }
+
+// GetDBHostname gets the in-container hostname of the DB container
+func GetDBHostname(app *DdevApp) string {
+	return "ddev-" + app.Name + "-db"
+}
