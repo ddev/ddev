@@ -10,6 +10,7 @@ import (
 	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh/terminal"
+	"io/fs"
 	"net"
 	"os"
 	"path/filepath"
@@ -1672,31 +1673,30 @@ func (app *DdevApp) ListSnapshots() ([]string, error) {
 		return snapshots, nil
 	}
 
-	dirEntrySlice, err := os.ReadDir(snapshotDir)
+	fileNames, err := fileutil.ListFilesInDir(snapshotDir)
 	if err != nil {
 		return snapshots, err
 	}
 
-	// Get the mod times aligned with the DirEntry slice for comparison below.
-	dirEntryModTimeSlice := make([]time.Time, len(dirEntrySlice))
-	for i, de := range dirEntrySlice {
-		de, err := de.Info()
+	files := []fs.FileInfo{}
+	for _, n := range fileNames {
+		f, err := os.Stat(filepath.Join(snapshotDir, n))
 		if err != nil {
 			return snapshots, err
 		}
-		dirEntryModTimeSlice[i] = de.ModTime()
+		files = append(files, f)
 	}
 
 	// Sort snapshots by last modification time
 	// we need that to detect the latest snapshot
 	// first snapshot is the latest
-	sort.Slice(dirEntrySlice, func(i, j int) bool {
-		return dirEntryModTimeSlice[i].After(dirEntryModTimeSlice[j])
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].ModTime().After(files[j].ModTime())
 	})
 
-	for _, de := range dirEntrySlice {
-		if de.IsDir() {
-			snapshots = append(snapshots, de.Name())
+	for _, f := range files {
+		if f.IsDir() {
+			snapshots = append(snapshots, f.Name())
 		}
 	}
 
