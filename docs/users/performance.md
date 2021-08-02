@@ -159,6 +159,11 @@ The Mutagen project provides extensive configuration options that are [documente
 
 Each project by default already has a .ddev/mutagen.yml file with basic defaults which you can override if you remove the `#ddev-generated` line at the beginning of the file.
 
+Remember if you edit the .ddev/mutagen.yml file:
+
+* Remove the #ddev-generated line
+* Execute a `ddev mutagen reset` to avoid the situation where the docker volume still has files from an older configuration.
+
 The most likely thing you'll want to do is to exclude a path from mutagen syncing, which you can do in the `paths:` section of the `ignore:` stanza in the mutagen.yml.
 
 It is possible to exclude mutagen syncing from a path and then bind-mount something from the host or a different volume on that path with a `docker-compose.*.yaml` file. So if you have an extremely heavyweight subdirectory in your project (lots of fonts, for example), you could exclude that subdirectory in the .ddev/mutagen.yml and then add a docker-compose.exclude.yaml.
@@ -188,23 +193,28 @@ For example, if I want the .tarballs subdirectory of the project to be available
 ### Troubleshooting Mutagen Sync Issues
 
 * DDEV's mutagen may not be compatible with an existing mutagen on your system. Please make sure that any mutagen installs you have are not running, or stop them. You may want to `brew uninstall mutagen-io/mutagen/mutagen mutagen-io/mutagen/mutagen-beta` to get rid of brew-installed versions.
-* DDEV's mutagen is installed in ~/.ddev/bin/mutagen. You can use all the features of mutagen by running that, including `~/.ddev/bin/mutagen sync list` and `~/.ddev/bin/mutagen daemon stop`.
+* DDEV's mutagen is installed in `~/.ddev/bin/mutagen`. You can use all the features of mutagen by running that, including `~/.ddev/bin/mutagen sync list` and `~/.ddev/bin/mutagen daemon stop`.
   You can run the script [diagnose_mutagen.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/diagnose_mutagen.sh) to gather some information about the setup of mutagen. Please report its output when creating an issue or otherwise seeking support.
+* Use `ddev mutagen reset` if you suspect trouble (and always after changing the `.ddev/mutagen.yml`. This restarts everything from scratch, including the docker volume that's used to store your project inside the container.)
 * If you're having trouble, we really want to hear from you to learn and try to sort it out. See the [Support channels](https://ddev.readthedocs.io/en/latest/#support-and-user-contributed-documentation).
 
 ### Mutagen Strategies and Design Considerations
 
 Mutagen provides enormous speed boosts in everyday usage, but of course it's trying desperately under the hood to keep everything that changes in the container updated in the host, and vice versa.
 
+DDEV mounts a fast Docker volume onto `/var/www/html` inside the web container and then delegates to the mutagen daemon (on the host) the job of keeping all the contents of the project on the host in sync with the contents of the docker volume.
+
 The strategy in the DDEV integration is to try to make sure that at key points everything is completely in sync (consistent). Consistency is a really high priority for this integration.
 
-The life cycle of the mutagen daemon and each sync session are something like this:
+The life cycle of the mutagen daemon and sync sessions are something like this:
 
 1. On `ddev start` the mutagen agent will be started if it's not already running.
 2. If there is already a sync session for this project it's stopped and recreated.
 3. On `ddev stop` and `ddev pause` the sync session is flushed (made completely consistent) and then terminated.
 
 In addition, a synchronous flush is performed after any `ddev composer` command, because composer may cause massive changes to the filesystem inside the container, and those need to be synced before operation continues.
+
+If you need to reset everything for a project, you can do it with `ddev mutagen reset` which starts the mutagen session from scratch and removes the docker volume so it can be recreated from scratch.
 
 ### Interaction with other usages of Mutagen
 
