@@ -192,6 +192,7 @@ For example, if I want the .tarballs subdirectory of the project to be available
 
 ### Troubleshooting Mutagen Sync Issues
 
+* Please make sure that DDEV projects work *without* mutagen before troubleshooting mutagen. `ddev config --mutagen-enabled=false && ddev restart`.
 * DDEV's mutagen may not be compatible with an existing mutagen on your system. Please make sure that any mutagen installs you have are not running, or stop them. You may want to `brew uninstall mutagen-io/mutagen/mutagen mutagen-io/mutagen/mutagen-beta` to get rid of brew-installed versions.
 * DDEV's mutagen is installed in `~/.ddev/bin/mutagen`. You can use all the features of mutagen by running that, including `~/.ddev/bin/mutagen sync list` and `~/.ddev/bin/mutagen daemon stop`.
   You can run the script [diagnose_mutagen.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/diagnose_mutagen.sh) to gather some information about the setup of mutagen. Please report its output when creating an issue or otherwise seeking support.
