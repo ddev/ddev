@@ -149,6 +149,10 @@ func TestGetActiveAppRoot(t *testing.T) {
 
 // TestCreateGlobalDdevDir checks to make sure that ddev will create a ~/.ddev (and updatecheck)
 func TestCreateGlobalDdevDir(t *testing.T) {
+	if nodeps.MutagenEnabledDefault || globalconfig.DdevGlobalConfig.MutagenEnabledGlobal {
+		t.Skip("Skipping because this changes homedir and breaks mutagen functionality")
+	}
+
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
@@ -202,6 +206,10 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 
 // TestPoweroffOnNewVersion checks that a poweroff happens when a new ddev version is deployed
 func TestPoweroffOnNewVersion(t *testing.T) {
+	if nodeps.MutagenEnabledDefault || globalconfig.DdevGlobalConfig.MutagenEnabledGlobal {
+		t.Skip("Skipping because this changes homedir and breaks mutagen functionality")
+	}
+
 	assert := asrt.New(t)
 	var err error
 
@@ -248,8 +256,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 
 			err = os.Chdir(origDir)
 			assert.NoError(err)
-			err = os.RemoveAll(tmpJunkProject)
-			assert.NoError(err)
+			_ = os.RemoveAll(tmpJunkProject)
 
 			// Because the start has done a poweroff (new ddev version),
 			// make sure sites are running again.

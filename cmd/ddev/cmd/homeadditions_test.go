@@ -5,6 +5,8 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -16,6 +18,9 @@ import (
 // TestHomeadditions makes sure that extra files added to
 // .ddev/homeadditions and ~/.ddev/homeadditions get added into the container's ~/
 func TestHomeadditions(t *testing.T) {
+	if nodeps.MutagenEnabledDefault || globalconfig.DdevGlobalConfig.MutagenEnabledGlobal {
+		t.Skip("Skipping because this changes homedir and breaks mutagen functionality")
+	}
 	assert := asrt.New(t)
 
 	pwd, _ := os.Getwd()

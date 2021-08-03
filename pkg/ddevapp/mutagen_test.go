@@ -44,12 +44,12 @@ func TestMutagenSimple(t *testing.T) {
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		assert.False(dockerutil.VolumeExists(app.Name + "_project_mutagen"))
+		assert.False(dockerutil.VolumeExists(ddevapp.GetMutagenVolumeName(app)))
 	})
 	err = app.Start()
 	assert.NoError(err)
 
-	assert.True(dockerutil.VolumeExists(app.Name + "_project_mutagen"))
+	assert.True(dockerutil.VolumeExists(ddevapp.GetMutagenVolumeName(app)))
 
 	desc, err := app.Describe(false)
 	assert.True(desc["mutagen_enabled"].(bool))

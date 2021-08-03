@@ -147,8 +147,10 @@ Note that the nfs-mount-enabled feature is automatically turned off if you're us
 * Mutagen integration ends up at least doubling the size of your project code disk usage, because the code exists both on your computer and also inside a docker volume. So take care that you have enough overall disk space, and also (on macOS) that you have enough file space set up in Docker Desktop.
 * If your project is likely to change the same file on both the host and inside the container, you may be at risk for conflicts.
 * Massive changes to either the host or the container are the most likely to introduce issues. This integration has been tested extensively with major changes introduced by `ddev composer` and `ddev composer create` but be aware of this issue. Changing git branches or a script that deletes huge sections of the synced data are related behaviors that should raise caution.
+* The project-level .git directory is not synced by default, because using git at the project level inside the container isn't recommended. But you can change this in the `.ddev/mutagen.yml`.
 * You can cause an explicit sync with `ddev mutagen sync` and see syncing status with `ddev mutagen status`. Note that both `ddev start` and `ddev stop` automatically force a mutagen sync.
 * If you do composer actions inside the container (with `ddev ssh`) you'll probably want to do a `ddev mutagen sync` to make sure they get synced as soon as possible, although most people won't ever notice the difference and mutagen will get it synced soon enough.
+* Big git operations (like switching branches) are best done on the host side, rather than inside the container, and you may want to do an explicit `ddev mutagen sync` command after doing something like that.
 * Keep backups. Mutagen syncing is an experimental feature.
 
 ### Advanced Mutagen configuration options
@@ -157,13 +159,67 @@ The Mutagen project provides extensive configuration options that are [documente
 
 Each project by default already has a .ddev/mutagen.yml file with basic defaults which you can override if you remove the `#ddev-generated` line at the beginning of the file.
 
+Remember if you edit the .ddev/mutagen.yml file:
+
+* Remove the #ddev-generated line
+* Execute a `ddev mutagen reset` to avoid the situation where the docker volume still has files from an older configuration.
+
 The most likely thing you'll want to do is to exclude a path from mutagen syncing, which you can do in the `paths:` section of the `ignore:` stanza in the mutagen.yml.
 
-It is possible to exclude mutagen syncing from a path and bind-mount something from the host or a different volume on that path with a `docker-compose.*.yaml` file.
+It is possible to exclude mutagen syncing from a path and then bind-mount something from the host or a different volume on that path with a `docker-compose.*.yaml` file. So if you have an extremely heavyweight subdirectory in your project (lots of fonts, for example), you could exclude that subdirectory in the .ddev/mutagen.yml and then add a docker-compose.exclude.yaml.
+
+For example, if I want the .tarballs subdirectory of the project to be available inside the container, but I don't need mutagen to be syncing it, I can use normal docker bind-mounting for that subdirectory with this procedure:
+
+1. Take over the .ddev/mutagen.yml by removing the `#ddev-generated` line
+
+2. Add `/.tarballs` to the excluded paths:
+
+    ```yaml
+        ignore:
+          paths:
+            - "/.tarballs"
+    ```
+
+3. Add a `.ddev/docker-compose.bindmount.yaml` something like this:
+
+    ```yaml
+    version: "3.6"
+    services:
+      web:
+        volumes:
+          - "./.tarballs:/var/www/html/.tarballs" 
+    ```
 
 ### Troubleshooting Mutagen Sync Issues
 
 * DDEV's mutagen may not be compatible with an existing mutagen on your system. Please make sure that any mutagen installs you have are not running, or stop them. You may want to `brew uninstall mutagen-io/mutagen/mutagen mutagen-io/mutagen/mutagen-beta` to get rid of brew-installed versions.
-* DDEV's mutagen is installed in ~/.ddev/bin/mutagen. You can use all the features of mutagen by running that, including `~/.ddev/bin/mutagen sync list` and `~/.ddev/bin/mutagen daemon stop`.
+* DDEV's mutagen is installed in `~/.ddev/bin/mutagen`. You can use all the features of mutagen by running that, including `~/.ddev/bin/mutagen sync list` and `~/.ddev/bin/mutagen daemon stop`.
   You can run the script [diagnose_mutagen.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/diagnose_mutagen.sh) to gather some information about the setup of mutagen. Please report its output when creating an issue or otherwise seeking support.
+* Use `ddev mutagen reset` if you suspect trouble (and always after changing the `.ddev/mutagen.yml`. This restarts everything from scratch, including the docker volume that's used to store your project inside the container.)
 * If you're having trouble, we really want to hear from you to learn and try to sort it out. See the [Support channels](https://ddev.readthedocs.io/en/latest/#support-and-user-contributed-documentation).
+
+### Mutagen Strategies and Design Considerations
+
+Mutagen provides enormous speed boosts in everyday usage, but of course it's trying desperately under the hood to keep everything that changes in the container updated in the host, and vice versa.
+
+DDEV mounts a fast Docker volume onto `/var/www/html` inside the web container and then delegates to the mutagen daemon (on the host) the job of keeping all the contents of the project on the host in sync with the contents of the docker volume.
+
+The strategy in the DDEV integration is to try to make sure that at key points everything is completely in sync (consistent). Consistency is a really high priority for this integration.
+
+The life cycle of the mutagen daemon and sync sessions are something like this:
+
+1. On `ddev start` the mutagen agent will be started if it's not already running.
+2. If there is already a sync session for this project it's stopped and recreated.
+3. On `ddev stop` and `ddev pause` the sync session is flushed (made completely consistent) and then terminated.
+
+In addition, a synchronous flush is performed after any `ddev composer` command, because composer may cause massive changes to the filesystem inside the container, and those need to be synced before operation continues.
+
+If you need to reset everything for a project, you can do it with `ddev mutagen reset` which starts the mutagen session from scratch and removes the docker volume so it can be recreated from scratch.
+
+### Interaction with other usages of Mutagen
+
+DDEV requires and provides a specific version of Mutagen, which you can see with `ddev version`.
+
+Mutagen does not guarantee interoperability between different mutagen versions, so you may have trouble if you have another version of mutagen installed. You can find out what version of mutagen you may have installed outside of DDEV with `mutagen version`.
+
+You'll want your system version of mutagen to be the same as the one provided with DDEV if you're using mutagen for anything else, see the [Mutagen installation instructions](https://mutagen.io/documentation/introduction/installation) and install the required version.

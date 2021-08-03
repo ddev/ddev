@@ -658,6 +658,7 @@ type composeYAMLVars struct {
 	OmitDBA                   bool
 	OmitSSHAgent              bool
 	MutagenEnabled            bool
+	MutagenVolume             string
 	NFSMountEnabled           bool
 	NFSSource                 string
 	DockerIP                  string
@@ -763,6 +764,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if app.MutagenEnabled || app.MutagenEnabledGlobal {
 		templateVars.MountType = "volume"
 		templateVars.WebMount = "project_mutagen"
+		templateVars.MutagenVolume = GetMutagenVolumeName(app)
 		templateVars.NFSSource = app.AppRoot
 	}
 

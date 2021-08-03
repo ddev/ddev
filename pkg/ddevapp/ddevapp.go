@@ -949,7 +949,7 @@ func (app *DdevApp) Start() error {
 		mutagenTimeTrack := util.ElapsedTime(time.Now())
 		err = CreateMutagenSync(app)
 		if err != nil {
-			return errors.Errorf("Failed to create mutagen sync session %s. You may be able to resolve this problem with 'ddev stop %s && docker volume rm %s_project_mutagen' (err=%v)", MutagenSyncName(app.Name), app.Name, app.Name, err)
+			return errors.Errorf("Failed to create mutagen sync session %s. You may be able to resolve this problem with 'ddev stop %s && docker volume rm %s' (err=%v)", MutagenSyncName(app.Name), app.Name, GetMutagenVolumeName(app), err)
 		}
 		secs := mutagenTimeTrack()
 		util.Success("Mutagen sync completed in %.1fs.\nFor details on sync status 'ddev mutagen status %s --verbose'", secs, MutagenSyncName(app.Name))
@@ -1829,7 +1829,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 			util.Warning("could not WriteGlobalConfig: %v", err)
 		}
 
-		for _, volName := range []string{app.Name + "-mariadb", app.Name + "_project_mutagen"} {
+		for _, volName := range []string{app.Name + "-mariadb", GetMutagenVolumeName(app)} {
 			err = dockerutil.RemoveVolume(volName)
 			if err != nil {
 				util.Warning("could not remove volume %s: %v", volName, err)

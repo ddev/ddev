@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
@@ -66,6 +67,10 @@ func TestCmdMutagen(t *testing.T) {
 	out, err = exec.RunHostCommand(DdevBin, "mutagen", "status", "--verbose")
 	assert.NoError(err)
 	assert.Contains(out, "Alpha:")
+
+	out, err = exec.RunHostCommand(DdevBin, "mutagen", "reset")
+	assert.NoError(err)
+	assert.Contains(out, fmt.Sprintf("Removed docker volume %s", ddevapp.GetMutagenVolumeName(app)))
 
 	_, err = exec.RunHostCommand(DdevBin, "mutagen", "sync")
 	assert.NoError(err)
