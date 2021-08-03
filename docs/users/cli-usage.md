@@ -182,6 +182,7 @@ Note that the git URL shown below is an example only, you'll need to use your ow
 ```bash
 git clone https://github.com/example/example-site
 cd example-site
+ddev config --auto
 ddev composer install
 ddev launch
 ```
