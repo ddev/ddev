@@ -269,7 +269,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			dbinfo["username"] = "db"
 			dbinfo["password"] = "db"
 			dbinfo["dbname"] = "db"
-			dbinfo["host"] = "db"
+			dbinfo["host"] = GetDBHostname(app)
 			dbPublicPort, err := app.GetPublishedPort("db")
 			util.CheckErr(err)
 			dbinfo["dbPort"] = GetPort("db")
@@ -2242,4 +2242,9 @@ func (app *DdevApp) StartAppIfNotRunning() error {
 	}
 
 	return err
+}
+
+// GetDBHostname gets the in-container hostname of the DB container
+func GetDBHostname(app *DdevApp) string {
+	return "ddev-" + app.Name + "-db"
 }
