@@ -10,7 +10,7 @@ import (
 	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh/terminal"
-	"io/ioutil"
+	"io/fs"
 	"net"
 	"os"
 	"path/filepath"
@@ -433,7 +433,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		targetDB = "db"
 	}
 	var extPathPrompt bool
-	dbPath, err := ioutil.TempDir(filepath.Dir(app.ConfigPath), ".importdb")
+	dbPath, err := os.MkdirTemp(filepath.Dir(app.ConfigPath), ".importdb")
 	//nolint: errcheck
 	defer os.RemoveAll(dbPath)
 	if err != nil {
@@ -1673,9 +1673,18 @@ func (app *DdevApp) ListSnapshots() ([]string, error) {
 		return snapshots, nil
 	}
 
-	files, err := ioutil.ReadDir(snapshotDir)
+	fileNames, err := fileutil.ListFilesInDir(snapshotDir)
 	if err != nil {
 		return snapshots, err
+	}
+
+	files := []fs.FileInfo{}
+	for _, n := range fileNames {
+		f, err := os.Stat(filepath.Join(snapshotDir, n))
+		if err != nil {
+			return snapshots, err
+		}
+		files = append(files, f)
 	}
 
 	// Sort snapshots by last modification time
