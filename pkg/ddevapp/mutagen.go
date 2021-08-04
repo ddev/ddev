@@ -120,6 +120,8 @@ func CreateMutagenSync(app *DdevApp) error {
 
 // MutagenStatus checks to see if there is an error case in mutagen
 // We don't want to do a flush yet in that case.
+// Note that the available statuses are at https://github.com/mutagen-io/mutagen/blob/94b9862a06ab44970c7149aa0000628a6adf54d5/pkg/synchronization/state.go#L9
+// in func (s Status) Description()
 func (app *DdevApp) MutagenStatus() (status bool, shortResult string, longResult string, err error) {
 	syncName := MutagenSyncName(app.Name)
 
