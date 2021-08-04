@@ -2,6 +2,7 @@ package version
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/fsouza/go-dockerclient"
@@ -197,6 +198,10 @@ func GetMutagenVersion() (string, error) {
 
 	mutagenPath := globalconfig.GetMutagenPath()
 
+	if !fileutil.FileExists(mutagenPath) {
+		MutagenVersion = "not yet downloaded, will be automatically downloaded when needed"
+		return MutagenVersion, nil
+	}
 	out, err := exec.Command(mutagenPath, "version").Output()
 	if err != nil {
 		return "", err
