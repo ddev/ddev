@@ -2080,6 +2080,9 @@ func TestDdevExec(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(out, "/var/www/html")
 
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+
 	assert.FileExists("hello-pre-exec-" + app.Name)
 	assert.FileExists("hello-post-exec-" + app.Name)
 	err = os.Remove("hello-pre-exec-" + app.Name)
