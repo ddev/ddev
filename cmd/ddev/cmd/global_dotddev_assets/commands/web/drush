@@ -6,6 +6,9 @@
 ## Example: "ddev drush uli" or "ddev drush sql-cli" or "ddev drush --version"
 ## ProjectTypes: drupal7,drupal8,drupal9,backdrop
 
+# Set up variable needed for debugging.
+source /etc/bash.php-ide-config
+
 if ! command -v drush >/dev/null; then
   echo "drush is not available. You may need to 'ddev composer require drush/drush'"
   exit 1

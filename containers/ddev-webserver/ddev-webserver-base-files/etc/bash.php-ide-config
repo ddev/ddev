@@ -1,0 +1,2 @@
+# To be sourced in interactive mode and from select non-interactive scripts like drush.
+export PHP_IDE_CONFIG=serverName=${DDEV_SITENAME}.${DDEV_TLD}
