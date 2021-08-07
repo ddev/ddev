@@ -117,23 +117,19 @@ func CreateMutagenSync(app *DdevApp) error {
 	flushErr := make(chan error, 1)
 	defer close(flushErr)
 
-	go func() error {
+	go func() {
 		err = app.MutagenSyncFlush()
 		flushErr <- err
-		return err
 	}()
-	go func() error {
+	go func() {
 		err = watchSyncMonitor(syncName)
-		flushErr <- nil
-		return err
 	}()
 
 	select {
 	case err = <-flushErr:
 		break
 	}
-
-	return nil
+	return err
 }
 
 // watchSyncMonitor reads from `mutagen sync monitor` and outputs the result to stderr
@@ -162,25 +158,29 @@ func watchSyncMonitor(syncName string) error {
 // We don't want to do a flush yet in that case.
 // Note that the available statuses are at https://github.com/mutagen-io/mutagen/blob/94b9862a06ab44970c7149aa0000628a6adf54d5/pkg/synchronization/state.go#L9
 // in func (s Status) Description()
-func (app *DdevApp) MutagenStatus() (status bool, shortResult string, longResult string, err error) {
+func (app *DdevApp) MutagenStatus() (status string, shortResult string, longResult string, err error) {
 	syncName := MutagenSyncName(app.Name)
 
 	longResult, err = exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list", syncName)
 	shortResult = parseMutagenStatusLine(longResult)
 	if err != nil {
-		return false, shortResult, longResult, err
+		return "failing", shortResult, longResult, err
 	}
 
 	// We're going to assume that if it's applying changes things are still OK,
 	// even though there may be a whole list of problems.
 	if strings.Contains(shortResult, "Applying changes") || strings.Contains(shortResult, "Staging files on") || strings.Contains(shortResult, "Reconciling changes") || strings.Contains(shortResult, "Scanning files") || strings.Contains(shortResult, "Watching for changes") || strings.Contains(shortResult, "Saving archive") {
-		return true, shortResult, longResult, nil
+		rv := "ok"
+		if strings.Contains(longResult, "problems:") {
+			rv = "problems"
+		}
+		return rv, shortResult, longResult, nil
 	}
 	if strings.Contains(longResult, "problems") || strings.Contains(longResult, "Conflicts") || strings.Contains(longResult, "error") || strings.Contains(shortResult, "Halted") {
 		util.Error("mutagen sync session '%s' is not working correctly: %s", syncName, longResult)
-		return false, shortResult, longResult, errors.Errorf("mutagen sync session '%s' is not working correctly, use 'mutagen sync list %s' for details", syncName, syncName)
+		return "failing", shortResult, longResult, errors.Errorf("mutagen sync session '%s' is not working correctly, use 'mutagen sync list %s' for details", syncName, syncName)
 	}
-	return true, shortResult, longResult, nil
+	return "ok", shortResult, longResult, nil
 }
 
 // parseMutagenStatusLine takes the full mutagen sync list output and
@@ -207,7 +207,7 @@ func (app *DdevApp) MutagenSyncFlush() error {
 			return errors.Errorf("Mutagen sync session '%s' does not exist", syncName)
 		}
 		status, _, long, err := app.MutagenStatus()
-		if !status || err != nil {
+		if status != "ok" || err != nil {
 			return errors.Errorf("Mutagen sync session '%s' is in error state: %s (%v)", syncName, long, err)
 		}
 
@@ -217,7 +217,7 @@ func (app *DdevApp) MutagenSyncFlush() error {
 		}
 
 		status, _, _, err = app.MutagenStatus()
-		if !status || err != nil {
+		if status != "ok" || err != nil {
 			return err
 		}
 		util.Success("Flushed mutagen sync session '%s'", syncName)

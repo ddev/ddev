@@ -196,7 +196,7 @@ func (app *DdevApp) Init(basePath string) error {
 		return nil
 	}
 	// Init() is just putting together the DdevApp struct, the containers do
-	// not have to exist (app doesn't have to have been started, so the fact
+	// not have to exist (app doesn't have to have been started), so the fact
 	// we didn't find any is not an error.
 	return nil
 }
@@ -215,7 +215,7 @@ func (app *DdevApp) FindContainerByType(containerType string) (*docker.APIContai
 func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	err := app.ProcessHooks("pre-describe")
 	if err != nil {
-		return nil, fmt.Errorf("Failed to process pre-describe hooks: %v", err)
+		return nil, fmt.Errorf("failed to process pre-describe hooks: %v", err)
 	}
 
 	shortRoot := RenderHomeRootedDir(app.GetAppRoot())
@@ -231,7 +231,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["type"] = app.GetType()
 	appDesc["mutagen_enabled"] = app.MutagenEnabled || app.MutagenEnabledGlobal
 	if app.MutagenEnabled {
-		_, appDesc["mutagen_status"], _, err = app.MutagenStatus()
+		appDesc["mutagen_status"], _, _, err = app.MutagenStatus()
 		if err != nil {
 			appDesc["mutagen_status"] = err.Error() + " " + appDesc["mutagen_status"].(string)
 		}
@@ -243,9 +243,9 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	}
 	appDesc["hostname"] = app.GetHostname()
 	appDesc["hostnames"] = app.GetHostnames()
-	appDesc["nfs_mount_enabled"] = (app.NFSMountEnabled || app.NFSMountEnabledGlobal)
+	appDesc["nfs_mount_enabled"] = app.NFSMountEnabled || app.NFSMountEnabledGlobal
 	appDesc["mutagen_enabled"] = app.MutagenEnabled || app.MutagenEnabledGlobal
-	appDesc["fail_on_hook_fail"] = (app.FailOnHookFail || app.FailOnHookFailGlobal)
+	appDesc["fail_on_hook_fail"] = app.FailOnHookFail || app.FailOnHookFailGlobal
 	httpURLs, httpsURLs, allURLs := app.GetAllURLs()
 	appDesc["httpURLs"] = httpURLs
 	appDesc["httpsURLs"] = httpsURLs
@@ -361,7 +361,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 
 	err = app.ProcessHooks("post-describe")
 	if err != nil {
-		return nil, fmt.Errorf("Failed to process post-describe hooks: %v", err)
+		return nil, fmt.Errorf("failed to process post-describe hooks: %v", err)
 	}
 
 	return appDesc, nil
@@ -371,7 +371,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 func (app *DdevApp) GetPublishedPort(serviceName string) (int, error) {
 	container, err := app.FindContainerByType(serviceName)
 	if err != nil || container == nil {
-		return -1, fmt.Errorf("Failed to find container of type %s: %v", serviceName, err)
+		return -1, fmt.Errorf("failed to find container of type %s: %v", serviceName, err)
 	}
 
 	privatePort, _ := strconv.ParseInt(GetPort(serviceName), 10, 16)
@@ -434,8 +434,10 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 	}
 	var extPathPrompt bool
 	dbPath, err := os.MkdirTemp(filepath.Dir(app.ConfigPath), ".importdb")
-	//nolint: errcheck
-	defer os.RemoveAll(dbPath)
+
+	defer func() {
+		_ = os.RemoveAll(dbPath)
+	}()
 	if err != nil {
 		return err
 	}
@@ -589,8 +591,9 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool, targetDB string) error {
 			return fmt.Errorf("failed to open %s: %v", outFile, err)
 		}
 		opts.Stdout = f
-		// nolint: errcheck
-		defer f.Close()
+		defer func() {
+			_ = f.Close()
+		}()
 	}
 
 	_, _, err := app.Exec(opts)
@@ -694,9 +697,10 @@ func (app *DdevApp) ImportFiles(importPath string, extPath string) error {
 // It has to put the .ddev/docker-compose.*.y*ml first
 // It has to put the docker-compose.override.y*l last
 func (app *DdevApp) ComposeFiles() ([]string, error) {
-	dir, _ := os.Getwd()
-	// nolint:errcheck
-	defer os.Chdir(dir)
+	origDir, _ := os.Getwd()
+	defer func() {
+		_ = os.Chdir(origDir)
+	}()
 	err := os.Chdir(app.AppConfDir())
 	if err != nil {
 		return nil, err
@@ -706,9 +710,9 @@ func (app *DdevApp) ComposeFiles() ([]string, error) {
 		return []string{}, fmt.Errorf("unable to glob docker-compose.*.y*ml in %s: err=%v", app.AppConfDir(), err)
 	}
 
-	mainfile := app.DockerComposeYAMLPath()
-	if !fileutil.FileExists(mainfile) {
-		return nil, fmt.Errorf("failed to find %s", mainfile)
+	mainFile := app.DockerComposeYAMLPath()
+	if !fileutil.FileExists(mainFile) {
+		return nil, fmt.Errorf("failed to find %s", mainFile)
 	}
 
 	overrides, err := filepath.Glob("docker-compose.override.y*ml")
@@ -717,7 +721,7 @@ func (app *DdevApp) ComposeFiles() ([]string, error) {
 	orderedFiles := make([]string, 1)
 
 	// Make sure the main file goes first
-	orderedFiles[0] = mainfile
+	orderedFiles[0] = mainFile
 
 	for _, file := range files {
 		// We already have the main file, and it's not in the list anyway, so skip when we hit it.
@@ -760,7 +764,7 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 		if err != nil {
 			if app.FailOnHookFail || app.FailOnHookFailGlobal {
 				output.UserOut.Errorf("Task failed: %v: %v", a.GetDescription(), err)
-				return fmt.Errorf("Task failed: %v", err)
+				return fmt.Errorf("task failed: %v", err)
 			}
 			output.UserOut.Errorf("Task failed: %v: %v", a.GetDescription(), err)
 			output.UserOut.Warn("A task failure does not mean that ddev failed, but your hook configuration has a command that failed.")
@@ -951,8 +955,14 @@ func (app *DdevApp) Start() error {
 		if err != nil {
 			return errors.Errorf("Failed to create mutagen sync session %s. You may be able to resolve this problem with 'ddev stop %s && docker volume rm %s' (err=%v)", MutagenSyncName(app.Name), app.Name, GetMutagenVolumeName(app), err)
 		}
+		mStatus, _, _, _ := app.MutagenStatus()
+
 		secs := mutagenTimeTrack()
-		util.Success("Mutagen sync completed in %.1fs.\nFor details on sync status 'ddev mutagen status %s --verbose'", secs, MutagenSyncName(app.Name))
+		if mStatus == "ok" {
+			util.Success("Mutagen sync completed in %.1fs.\nFor details on sync status 'ddev mutagen status %s --verbose'", secs, MutagenSyncName(app.Name))
+		} else {
+			util.Error("Mutagen sync completed with problems in %.1fs.\nFor details on sync status 'ddev mutagen status %s --verbose'", secs, MutagenSyncName(app.Name))
+		}
 	}
 
 	err = StartDdevRouter()
@@ -1023,7 +1033,7 @@ func (app *DdevApp) CheckExistingAppInApproot() error {
 	pList := globalconfig.GetGlobalProjectList()
 	for name, v := range pList {
 		if app.AppRoot == v.AppRoot && name != app.Name {
-			return fmt.Errorf(`This project root %s already contains a project named %s. You may want to remove the existing project with "ddev stop --unlist %s"`, v.AppRoot, name, name)
+			return fmt.Errorf(`this project root %s already contains a project named %s. You may want to remove the existing project with "ddev stop --unlist %s"`, v.AppRoot, name, name)
 		}
 	}
 	return nil
@@ -1125,19 +1135,19 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 
 	err = app.ProcessHooks("pre-exec")
 	if err != nil {
-		return "", "", fmt.Errorf("Failed to process pre-exec hooks: %v", err)
+		return "", "", fmt.Errorf("failed to process pre-exec hooks: %v", err)
 	}
 
-	exec := []string{"exec"}
+	args := []string{"exec"}
 	if workingDir := app.GetWorkingDir(opts.Service, opts.Dir); workingDir != "" {
-		exec = append(exec, "-w", workingDir)
+		args = append(args, "-w", workingDir)
 	}
 
 	if !isatty.IsTerminal(os.Stdin.Fd()) || !opts.Tty {
-		exec = append(exec, "-T")
+		args = append(args, "-T")
 	}
 
-	exec = append(exec, opts.Service)
+	args = append(args, opts.Service)
 
 	if opts.Cmd == "" {
 		return "", "", fmt.Errorf("no command provided")
@@ -1146,7 +1156,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	// Cases to handle
 	// - Free form, all unquoted. Like `ls -l -a`
 	// - Quoted to delay pipes and other features to container, like `"ls -l -a | grep junk"`
-	// Note that a set quoted on the host in ddev exec will come through as a single arg
+	// Note that a set quoted on the host in ddev e will come through as a single arg
 
 	// Use bash for our containers, sh for 3rd-party containers
 	// that may not have bash.
@@ -1155,7 +1165,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		shell = "sh"
 	}
 	errcheck := "set -eu"
-	exec = append(exec, shell, "-c", errcheck+` && ( `+opts.Cmd+`)`)
+	args = append(args, shell, "-c", errcheck+` && ( `+opts.Cmd+`)`)
 
 	files, err := app.ComposeFiles()
 	if err != nil {
@@ -1173,14 +1183,14 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 
 	var stdoutResult, stderrResult string
 	if opts.NoCapture || opts.Tty {
-		err = dockerutil.ComposeWithStreams(files, os.Stdin, stdout, stderr, exec...)
+		err = dockerutil.ComposeWithStreams(files, os.Stdin, stdout, stderr, args...)
 	} else {
-		stdoutResult, stderrResult, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, exec...)
+		stdoutResult, stderrResult, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, args...)
 	}
 
-	hookErr := app.ProcessHooks("post-exec")
+	hookErr := app.ProcessHooks("post-e")
 	if hookErr != nil {
-		return stdoutResult, stderrResult, fmt.Errorf("Failed to process post-exec hooks: %v", hookErr)
+		return stdoutResult, stderrResult, fmt.Errorf("failed to process post-e hooks: %v", hookErr)
 	}
 
 	return stdoutResult, stderrResult, err
@@ -1200,12 +1210,12 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 		return fmt.Errorf("service %s is not current running in project %s (state=%s)", opts.Service, app.Name, state)
 	}
 
-	exec := []string{"exec"}
+	args := []string{"exec"}
 	if workingDir := app.GetWorkingDir(opts.Service, opts.Dir); workingDir != "" {
-		exec = append(exec, "-w", workingDir)
+		args = append(args, "-w", workingDir)
 	}
 
-	exec = append(exec, opts.Service)
+	args = append(args, opts.Service)
 
 	if opts.Cmd == "" {
 		return fmt.Errorf("no command provided")
@@ -1222,14 +1232,14 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 	if !nodeps.ArrayContainsString([]string{"web", "db", "dba"}, opts.Service) {
 		shell = "sh"
 	}
-	exec = append(exec, shell, "-c", opts.Cmd)
+	args = append(args, shell, "-c", opts.Cmd)
 
 	files, err := app.ComposeFiles()
 	if err != nil {
 		return err
 	}
 
-	return dockerutil.ComposeWithStreams(files, os.Stdin, os.Stdout, os.Stderr, exec...)
+	return dockerutil.ComposeWithStreams(files, os.Stdin, os.Stdout, os.Stderr, args...)
 }
 
 func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
@@ -1239,13 +1249,13 @@ func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 		cwd, _ := os.Getwd()
 		err = os.Chdir(app.GetAppRoot())
 		if err != nil {
-			return fmt.Errorf("Unable to GetAppRoot: %v", err)
+			return fmt.Errorf("unable to GetAppRoot: %v", err)
 		}
 		bashPath := "bash"
 		if runtime.GOOS == "windows" {
 			bashPath = util.FindBashPath()
 			if bashPath == "" {
-				return fmt.Errorf("Unable to find bash.exe on Windows")
+				return fmt.Errorf("unable to find bash.exe on Windows")
 			}
 		}
 
@@ -1360,7 +1370,7 @@ func (app *DdevApp) DockerEnv() {
 
 	uidStr, gidStr, _ := util.GetContainerUIDGid()
 
-	// Warn about running as root if we're not on windows.
+	// Warn about running as root if we're not on Windows.
 	if uidStr == "0" || gidStr == "0" {
 		util.Warning("Warning: containers will run as root. This could be a security risk on Linux.")
 	}
@@ -1471,7 +1481,7 @@ func (app *DdevApp) Pause() error {
 
 // WaitForServices waits for all the services in docker-compose to come up
 func (app *DdevApp) WaitForServices() error {
-	requiredContainers := []string{}
+	var requiredContainers []string
 	if services, ok := app.ComposeYaml["services"].(map[interface{}]interface{}); ok {
 		for k := range services {
 			requiredContainers = append(requiredContainers, k.(string))
@@ -1565,7 +1575,7 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	err := app.ProcessHooks("pre-snapshot")
 	if err != nil {
-		return "", fmt.Errorf("Failed to process pre-stop hooks: %v", err)
+		return "", fmt.Errorf("failed to process pre-stop hooks: %v", err)
 	}
 
 	if snapshotName == "" {
@@ -1612,7 +1622,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	util.Success("Created database snapshot %s in %s", snapshotName, hostSnapshotDir)
 	err = app.ProcessHooks("post-snapshot")
 	if err != nil {
-		return snapshotName, fmt.Errorf("Failed to process pre-stop hooks: %v", err)
+		return snapshotName, fmt.Errorf("failed to process pre-stop hooks: %v", err)
 	}
 	return snapshotName, nil
 }
@@ -1622,24 +1632,24 @@ func (app *DdevApp) DeleteSnapshot(snapshotName string) error {
 	var err error
 	err = app.ProcessHooks("pre-delete-snapshot")
 	if err != nil {
-		return fmt.Errorf("Failed to process pre-delete-snapshot hooks: %v", err)
+		return fmt.Errorf("failed to process pre-delete-snapshot hooks: %v", err)
 	}
 
 	snapshotDir := path.Join("db_snapshots", snapshotName)
 	hostSnapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), snapshotDir)
 
 	if err = fileutil.PurgeDirectory(hostSnapshotDir); err != nil {
-		return fmt.Errorf("Failed to purge contents of snapshot directory: %v", err)
+		return fmt.Errorf("failed to purge contents of snapshot directory: %v", err)
 	}
 
 	if err = os.Remove(hostSnapshotDir); err != nil {
-		return fmt.Errorf("Failed to delete snapshot directory: %v", err)
+		return fmt.Errorf("failed to delete snapshot directory: %v", err)
 	}
 
 	util.Success("Deleted database snapshot %s in %s", snapshotName, hostSnapshotDir)
 	err = app.ProcessHooks("post-delete-snapshot")
 	if err != nil {
-		return fmt.Errorf("Failed to process post-delete-snapshot hooks: %v", err)
+		return fmt.Errorf("failed to process post-delete-snapshot hooks: %v", err)
 	}
 
 	return nil
@@ -1678,7 +1688,7 @@ func (app *DdevApp) ListSnapshots() ([]string, error) {
 		return snapshots, err
 	}
 
-	files := []fs.FileInfo{}
+	var files []fs.FileInfo
 	for _, n := range fileNames {
 		f, err := os.Stat(filepath.Join(snapshotDir, n))
 		if err != nil {
@@ -1709,7 +1719,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	var err error
 	err = app.ProcessHooks("pre-restore-snapshot")
 	if err != nil {
-		return fmt.Errorf("Failed to process pre-restore-snapshot hooks: %v", err)
+		return fmt.Errorf("failed to process pre-restore-snapshot hooks: %v", err)
 	}
 
 	currentDBVersion := nodeps.MariaDBDefaultVersion
@@ -1723,7 +1733,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 
 	hostSnapshotDir := filepath.Join(app.AppConfDir(), snapshotDir)
 	if !fileutil.FileExists(hostSnapshotDir) {
-		return fmt.Errorf("Failed to find a snapshot in %s", hostSnapshotDir)
+		return fmt.Errorf("failed to find a snapshot in %s", hostSnapshotDir)
 	}
 
 	// Find out the mariadb version that correlates to the snapshot.
@@ -1755,7 +1765,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	util.CheckErr(err)
 	err = app.Start()
 	if err != nil {
-		return fmt.Errorf("Failed to start project for RestoreSnapshot: %v", err)
+		return fmt.Errorf("failed to start project for RestoreSnapshot: %v", err)
 	}
 	err = os.Unsetenv("DDEV_MARIADB_LOCAL_COMMAND")
 	util.CheckErr(err)
@@ -1783,7 +1793,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	util.Success("\nRestored database snapshot %s", hostSnapshotDir)
 	err = app.ProcessHooks("post-restore-snapshot")
 	if err != nil {
-		return fmt.Errorf("Failed to process post-restore-snapshot hooks: %v", err)
+		return fmt.Errorf("failed to process post-restore-snapshot hooks: %v", err)
 	}
 	return nil
 }
@@ -1795,7 +1805,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 
 	err = app.ProcessHooks("pre-stop")
 	if err != nil {
-		return fmt.Errorf("Failed to process pre-stop hooks: %v", err)
+		return fmt.Errorf("failed to process pre-stop hooks: %v", err)
 	}
 
 	if createSnapshot == true {
@@ -1803,7 +1813,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 			util.Warning("Must start non-running project to do database snapshot")
 			err = app.Start()
 			if err != nil {
-				return fmt.Errorf("Failed to start project to perform database snapshot")
+				return fmt.Errorf("failed to start project to perform database snapshot")
 			}
 		}
 		t := time.Now()
@@ -1872,7 +1882,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 
 	err = app.ProcessHooks("post-stop")
 	if err != nil {
-		return fmt.Errorf("Failed to process post-stop hooks: %v", err)
+		return fmt.Errorf("failed to process post-stop hooks: %v", err)
 	}
 
 	return nil
@@ -1963,7 +1973,7 @@ func (app *DdevApp) GetWebContainerPublicPort() (int, error) {
 
 	webContainer, err := app.FindContainerByType("web")
 	if err != nil || webContainer == nil {
-		return -1, fmt.Errorf("Unable to find web container for app: %s, err %v", app.Name, err)
+		return -1, fmt.Errorf("unable to find web container for app: %s, err %v", app.Name, err)
 	}
 
 	for _, p := range webContainer.Ports {
@@ -1971,7 +1981,7 @@ func (app *DdevApp) GetWebContainerPublicPort() (int, error) {
 			return int(p.PublicPort), nil
 		}
 	}
-	return -1, fmt.Errorf("No public port found for private port 80")
+	return -1, fmt.Errorf("no public port found for private port 80")
 }
 
 // GetWebContainerHTTPSPublicPort returns the direct-access public tcp port for https
@@ -1979,7 +1989,7 @@ func (app *DdevApp) GetWebContainerHTTPSPublicPort() (int, error) {
 
 	webContainer, err := app.FindContainerByType("web")
 	if err != nil || webContainer == nil {
-		return -1, fmt.Errorf("Unable to find https web container for app: %s, err %v", app.Name, err)
+		return -1, fmt.Errorf("unable to find https web container for app: %s, err %v", app.Name, err)
 	}
 
 	for _, p := range webContainer.Ports {
@@ -1987,7 +1997,7 @@ func (app *DdevApp) GetWebContainerHTTPSPublicPort() (int, error) {
 			return int(p.PublicPort), nil
 		}
 	}
-	return -1, fmt.Errorf("No public https port found for private port 443")
+	return -1, fmt.Errorf("no public https port found for private port 443")
 }
 
 // HostName returns the hostname of a given application.
@@ -2130,7 +2140,7 @@ func GetActiveAppRoot(siteName string) (string, error) {
 		}
 		_, err = CheckForConf(siteDir)
 		if err != nil {
-			return "", fmt.Errorf("Could not find a project in %s. Have you run 'ddev config'? Please specify a project name or change directories: %s", siteDir, err)
+			return "", fmt.Errorf("could not find a project in %s. Have you run 'ddev config'? Please specify a project name or change directories: %s", siteDir, err)
 		}
 	} else {
 		var ok bool
