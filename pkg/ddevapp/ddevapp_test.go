@@ -931,7 +931,7 @@ func TestStartWithoutDdevConfig(t *testing.T) {
 	_, err = ddevapp.GetActiveApp("")
 	assert.Error(err)
 	if err != nil {
-		assert.Contains(err.Error(), "Could not find a project")
+		assert.Contains(err.Error(), "could not find a project")
 	}
 }
 
