@@ -955,7 +955,10 @@ func (app *DdevApp) Start() error {
 		if err != nil {
 			return errors.Errorf("Failed to create mutagen sync session %s. You may be able to resolve this problem with 'ddev stop %s && docker volume rm %s' (err=%v)", MutagenSyncName(app.Name), app.Name, GetMutagenVolumeName(app), err)
 		}
-		mStatus, _, _, _ := app.MutagenStatus()
+		mStatus, _, _, err := app.MutagenStatus()
+		if err != nil {
+			return err
+		}
 
 		secs := mutagenTimeTrack()
 		if mStatus == "ok" {
