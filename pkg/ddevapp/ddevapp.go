@@ -1188,9 +1188,9 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		stdoutResult, stderrResult, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, args...)
 	}
 
-	hookErr := app.ProcessHooks("post-e")
+	hookErr := app.ProcessHooks("post-exec")
 	if hookErr != nil {
-		return stdoutResult, stderrResult, fmt.Errorf("failed to process post-e hooks: %v", hookErr)
+		return stdoutResult, stderrResult, fmt.Errorf("failed to process post-exec hooks: %v", hookErr)
 	}
 
 	return stdoutResult, stderrResult, err
