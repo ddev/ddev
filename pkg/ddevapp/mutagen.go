@@ -136,6 +136,9 @@ func CreateMutagenSync(app *DdevApp) error {
 func watchSyncMonitor(syncName string) error {
 	cmd := osexec.Command(globalconfig.GetMutagenPath(), "sync", "monitor", syncName)
 	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return err
+	}
 	err = cmd.Start()
 	if err != nil {
 		return err

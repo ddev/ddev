@@ -155,7 +155,7 @@ Note that the nfs-mount-enabled feature is automatically turned off if you're us
 
 ### Syncing after `git checkout`
 
-In general, it's best practice on most projects to do signficant git operations on the host, but they can be disruptive to the sync. It's easy to add a git post-checkout hook to do a `ddev mutagen sync` operation though. Add the file `.git/hooks/post-checkout` to your project and set it to be executable (`chmod +x .git/hooks/post-checkout`):
+In general, it's best practice on most projects to do significant git operations on the host, but they can be disruptive to the sync. It's easy to add a git post-checkout hook to do a `ddev mutagen sync` operation though. Add the file `.git/hooks/post-checkout` to your project and set it to be executable (`chmod +x .git/hooks/post-checkout`):
 
 ```bash
 #!/bin/bash
