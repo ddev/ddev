@@ -1,6 +1,7 @@
 package ddevapp
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/dockerutil"
@@ -13,6 +14,7 @@ import (
 	"github.com/drud/ddev/pkg/version"
 	"github.com/pkg/errors"
 	"os"
+	osexec "os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -111,9 +113,47 @@ func CreateMutagenSync(app *DdevApp) error {
 		return fmt.Errorf("Failed to mutagen %v (%v), output=%s", args, err, out)
 	}
 	util.Debug("Flushing mutagen sync session '%s'", syncName)
-	err = app.MutagenSyncFlush()
+
+	flushErr := make(chan error, 1)
+	defer close(flushErr)
+
+	go func() error {
+		err = app.MutagenSyncFlush()
+		flushErr <- err
+		return err
+	}()
+	go func() error {
+		err = watchSyncMonitor(syncName)
+		flushErr <- nil
+		return err
+	}()
+
+	select {
+	case err = <-flushErr:
+		break
+	}
+
+	return nil
+}
+
+// watchSyncMonitor reads from `mutagen sync monitor` and outputs the result to stderr
+func watchSyncMonitor(syncName string) error {
+	cmd := osexec.Command(globalconfig.GetMutagenPath(), "sync", "monitor", syncName)
+	stdout, err := cmd.StdoutPipe()
+	err = cmd.Start()
 	if err != nil {
 		return err
+	}
+	buf := bufio.NewReader(stdout)
+	for {
+		line, err := buf.ReadBytes('\r')
+		if err != nil {
+			break
+		}
+		l := string(line)
+		if strings.HasPrefix(l, "Status:") {
+			_, _ = fmt.Fprintf(os.Stderr, "%s", l)
+		}
 	}
 	return nil
 }

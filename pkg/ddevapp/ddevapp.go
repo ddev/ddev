@@ -941,7 +941,7 @@ func (app *DdevApp) Start() error {
 	}
 
 	if app.MutagenEnabled || app.MutagenEnabledGlobal {
-		output.UserOut.Printf("Starting mutagen sync process...")
+		output.UserOut.Printf("Starting mutagen sync process... This can take some time.")
 		err = SetMutagenVolumeOwnership(app)
 		if err != nil {
 			return err
