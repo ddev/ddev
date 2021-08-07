@@ -153,6 +153,19 @@ Note that the nfs-mount-enabled feature is automatically turned off if you're us
 * Big git operations (like switching branches) are best done on the host side, rather than inside the container, and you may want to do an explicit `ddev mutagen sync` command after doing something like that.
 * Keep backups. Mutagen syncing is an experimental feature.
 
+### Syncing after `git checkout`
+
+In general, it's best practice on most projects to do signficant git operations on the host, but they can be disruptive to the sync. It's easy to add a git post-checkout hook to do a `ddev mutagen sync` operation though. Add the file `.git/hooks/post-checkout` to your project and set it to be executable (`chmod +x .git/hooks/post-checkout`):
+
+```bash
+#!/bin/bash
+ddev mutagen sync || true
+```
+
+### Syncing after yarn actions
+
+Yarn actions can also set off massive filesystem changes. The `ddev yarn` command mitigates this problem by doing a mutagen sync after taking the action. So you can use `ddev yarn install` instead of using yarn directly, and it will take care of this for you. Alternately, you can just `ddev mutagen sync` after doing any similar action that has large filesystem consequences.
+
 ### Advanced Mutagen configuration options
 
 The Mutagen project provides extensive configuration options that are [documented on the mutagen.io site](https://mutagen.io/documentation/introduction/configuration).
