@@ -18,6 +18,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 )
 
 // SetMutagenVolumeOwnership chowns the volume in use to the current user.
@@ -122,12 +123,18 @@ func CreateMutagenSync(app *DdevApp) error {
 		flushErr <- err
 	}()
 	go func() {
-		err = watchSyncMonitor(syncName)
+		_ = watchSyncMonitor(syncName)
 	}()
 
-	select {
-	case err = <-flushErr:
-		break
+	for {
+		select {
+		// Complete when the MutagenSyncFlush() completes
+		case err = <-flushErr:
+			return err
+		// Show dots when it seems like nothing is happening
+		case <-time.After(1 * time.Second):
+			_, _ = fmt.Fprintf(os.Stderr, ".")
+		}
 	}
 	return err
 }

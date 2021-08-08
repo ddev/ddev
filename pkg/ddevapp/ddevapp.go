@@ -962,7 +962,7 @@ func (app *DdevApp) Start() error {
 
 		secs := mutagenTimeTrack()
 		if mStatus == "ok" {
-			util.Success("Mutagen sync completed in %.1fs.\nFor details on sync status 'ddev mutagen status %s --verbose'", secs, MutagenSyncName(app.Name))
+			util.Success("Mutagen sync flush completed in %.1fs.\nFor details on sync status 'ddev mutagen status %s --verbose'", secs, MutagenSyncName(app.Name))
 		} else {
 			util.Error("Mutagen sync completed with problems in %.1fs.\nFor details on sync status 'ddev mutagen status %s --verbose'", secs, MutagenSyncName(app.Name))
 		}
