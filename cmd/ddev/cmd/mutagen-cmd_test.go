@@ -63,7 +63,7 @@ func TestCmdMutagen(t *testing.T) {
 	require.NoError(t, err)
 	out, err := exec.RunHostCommand(DdevBin, "mutagen", "status")
 	assert.NoError(err)
-	assert.Contains(out, "Mutagen OK:")
+	assert.Contains(out, "Mutagen: ok")
 	out, err = exec.RunHostCommand(DdevBin, "mutagen", "status", "--verbose")
 	assert.NoError(err)
 	assert.Contains(out, "Alpha:")

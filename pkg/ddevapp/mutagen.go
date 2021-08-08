@@ -116,14 +116,35 @@ func CreateMutagenSync(app *DdevApp) error {
 	util.Debug("Flushing mutagen sync session '%s'", syncName)
 
 	flushErr := make(chan error, 1)
+	stopGoroutine := make(chan bool, 1)
 	defer close(flushErr)
 
 	go func() {
 		err = app.MutagenSyncFlush()
 		flushErr <- err
+		return
 	}()
 	go func() {
-		_ = watchSyncMonitor(syncName)
+		cmd := osexec.Command(globalconfig.GetMutagenPath(), "sync", "monitor", syncName)
+		stdout, _ := cmd.StdoutPipe()
+		err = cmd.Start()
+		buf := bufio.NewReader(stdout)
+		for {
+			select {
+			case <-stopGoroutine:
+				break
+			default:
+				line, err := buf.ReadBytes('\r')
+				if err != nil {
+					break
+				}
+				l := string(line)
+				if strings.HasPrefix(l, "Status:") {
+					_, _ = fmt.Fprintf(os.Stderr, "%s", l)
+				}
+			}
+		}
+		return
 	}()
 
 	for {
@@ -137,31 +158,6 @@ func CreateMutagenSync(app *DdevApp) error {
 		}
 	}
 	return err
-}
-
-// watchSyncMonitor reads from `mutagen sync monitor` and outputs the result to stderr
-func watchSyncMonitor(syncName string) error {
-	cmd := osexec.Command(globalconfig.GetMutagenPath(), "sync", "monitor", syncName)
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return err
-	}
-	err = cmd.Start()
-	if err != nil {
-		return err
-	}
-	buf := bufio.NewReader(stdout)
-	for {
-		line, err := buf.ReadBytes('\r')
-		if err != nil {
-			break
-		}
-		l := string(line)
-		if strings.HasPrefix(l, "Status:") {
-			_, _ = fmt.Fprintf(os.Stderr, "%s", l)
-		}
-	}
-	return nil
 }
 
 // MutagenStatus checks to see if there is an error case in mutagen
