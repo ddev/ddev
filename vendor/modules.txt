@@ -123,7 +123,7 @@ github.com/konsorten/go-windows-terminal-sequences
 # github.com/lextoumbourou/goodhosts v2.1.0+incompatible
 ## explicit
 github.com/lextoumbourou/goodhosts
-# github.com/lunixbochs/vtclean v0.0.0-20180621232353-2d01aacdc34a
+# github.com/lunixbochs/vtclean v1.0.0
 ## explicit
 github.com/lunixbochs/vtclean
 # github.com/magiconair/properties v1.8.1
