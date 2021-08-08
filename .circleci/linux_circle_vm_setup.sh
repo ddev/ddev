@@ -28,13 +28,9 @@ echo "capath=/etc/ssl/certs/" >>~/.curlrc
 
 . ~/.bashrc
 
-export HOMEBREW_NO_AUTO_UPDATE=1
-export HOMEBREW_NO_INSTALL_CLEANUP=1
-
-for item in drud/ddev/ddev golang mingw-w64 mkcert mkdocs osslsigncode; do
+for item in drud/ddev/ddev golang makensis mingw-w64 mkcert mkdocs; do
     brew install $item >/dev/null || brew upgrade $item >/dev/null
 done
-brew install --build-from-source makensis
 
 git clone --branch v1.2.1 https://github.com/bats-core/bats-core.git /tmp/bats-core && pushd /tmp/bats-core >/dev/null && sudo ./install.sh /usr/local
 
