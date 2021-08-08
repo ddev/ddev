@@ -132,11 +132,11 @@ func CreateMutagenSync(app *DdevApp) error {
 		for {
 			select {
 			case <-stopGoroutine:
-				break
+				return
 			default:
 				line, err := buf.ReadBytes('\r')
 				if err != nil {
-					break
+					return
 				}
 				l := string(line)
 				if strings.HasPrefix(l, "Status:") {
@@ -144,7 +144,6 @@ func CreateMutagenSync(app *DdevApp) error {
 				}
 			}
 		}
-		return
 	}()
 
 	for {
@@ -152,12 +151,12 @@ func CreateMutagenSync(app *DdevApp) error {
 		// Complete when the MutagenSyncFlush() completes
 		case err = <-flushErr:
 			return err
+
 		// Show dots when it seems like nothing is happening
 		case <-time.After(1 * time.Second):
 			_, _ = fmt.Fprintf(os.Stderr, ".")
 		}
 	}
-	return err
 }
 
 // MutagenStatus checks to see if there is an error case in mutagen
