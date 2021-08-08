@@ -199,10 +199,18 @@ func TimeTrack(start time.Time, name string) func() {
 }
 
 // ElapsedTime is an easy way to report how long something took.
-// It returns an anonymous function that, when called, will return the elapsed run time.
+// It returns an anonymous function that, when called, will return the elapsed seconds.
 func ElapsedTime(start time.Time) func() float64 {
 	return func() float64 {
 		elapsed := time.Since(start)
 		return elapsed.Seconds()
+	}
+}
+
+// ElapsedDuration is an easy way to report how long something took.
+// It returns an anonymous function that, when called, will return the elapsed duration.
+func ElapsedDuration(start time.Time) func() time.Duration {
+	return func() time.Duration {
+		return time.Since(start)
 	}
 }
