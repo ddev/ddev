@@ -32,7 +32,6 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/google/uuid"
-	"github.com/lunixbochs/vtclean"
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 )
@@ -2262,8 +2261,6 @@ func TestProcessHooks(t *testing.T) {
 	assert.NoError(err)
 
 	userOut := userOutFunc()
-	// Ignore color in output, can be different in different OS's
-	out = vtclean.Clean(out, false)
 
 	assert.Contains(userOut, "Executing hook-test hook")
 	assert.Contains(userOut, "Exec command 'ls /usr/local/bin/composer' in container/service 'web'")
