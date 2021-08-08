@@ -308,3 +308,13 @@ func MutagenReset(app *DdevApp) error {
 func GetMutagenVolumeName(app *DdevApp) string {
 	return app.Name + "_" + "project_mutagen"
 }
+
+// MutagenMonitor shows the ouput of `mutagen sync monitor <syncName>`
+func MutagenMonitor(app *DdevApp) {
+	syncName := MutagenSyncName(app.Name)
+
+	// This doesn't actually return; you have to <ctrl-c> to end it
+	c := osexec.Command(globalconfig.GetMutagenPath(), "sync", "monitor", syncName)
+	c.Stdout = os.Stdout
+	_ = c.Run()
+}
