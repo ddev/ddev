@@ -960,7 +960,7 @@ func (app *DdevApp) Start() error {
 			return err
 		}
 
-		dur := mutagenDuration()
+		dur := util.FormatDuration(mutagenDuration())
 		if mStatus == "ok" {
 			util.Success("Mutagen sync flush completed in %s.\nFor details on sync status 'ddev mutagen status %s --verbose'", dur, MutagenSyncName(app.Name))
 		} else {

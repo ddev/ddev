@@ -5,6 +5,7 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/sirupsen/logrus"
+	"math"
 	"math/rand"
 	osexec "os/exec"
 	"os/user"
@@ -213,4 +214,15 @@ func ElapsedDuration(start time.Time) func() time.Duration {
 	return func() time.Duration {
 		return time.Since(start)
 	}
+}
+
+// FormatDuration formats with 5m20s instead of lots of decimal points
+// Based on https://stackoverflow.com/a/47342272/215713
+func FormatDuration(d time.Duration) string {
+	minutes := int(d.Minutes())
+	seconds := int(math.Round(d.Seconds())) - (minutes * 60)
+	if minutes == 0 {
+		return fmt.Sprintf("%ds", seconds)
+	}
+	return fmt.Sprintf("%dm%ds", minutes, seconds)
 }
