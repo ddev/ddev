@@ -16,9 +16,8 @@ brew install homebrew/cask/ngrok >/dev/null
 brew install drud/ddev/ddev >/dev/null
 brew unlink python@2 >/dev/null || true
 
-brew uninstall mutagen-io/mutagen/mutagen-beta mutagen-io/mutagen/mutagen || true
-brew install mysql-client zip makensis jq expect coreutils golang drud/ddev/ddev mkcert osslsigncode ghr gnu-getopt libgsf glib pcre >/dev/null || true
-brew link mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr gnu-getopt libgsf glib pcre >/dev/null
+brew install mysql-client zip makensis jq expect coreutils golang drud/ddev/ddev mkcert gnu-getopt libgsf glib pcre >/dev/null || true
+brew link mysql-client zip makensis jq expect coreutils golang ddev mkcert gnu-getopt libgsf glib pcre >/dev/null
 
 brew link --force mysql-client >/dev/null
 

@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 	"testing"
 
@@ -42,12 +44,12 @@ func TestCmdRestartJSON(t *testing.T) {
 		assert.Fail("Could not find an active ddev configuration: %v", err)
 	}
 
-	args := []string{"restart", "-j"}
-	out, err := exec.RunCommand(DdevBin, args)
+	bash := util.FindBashPath()
+	out, err := exec.RunHostCommand(bash, "-c", fmt.Sprintf("%s restart -j 2>/dev/null", DdevBin))
 	require.NoError(t, err)
 
 	logItems, err := unmarshalJSONLogs(out)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	// The key item should be the last item; there may be a warning
 	// or other info before that.

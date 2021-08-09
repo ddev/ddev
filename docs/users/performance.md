@@ -153,6 +153,19 @@ Note that the nfs-mount-enabled feature is automatically turned off if you're us
 * Big git operations (like switching branches) are best done on the host side, rather than inside the container, and you may want to do an explicit `ddev mutagen sync` command after doing something like that.
 * Keep backups. Mutagen syncing is an experimental feature.
 
+### Syncing after `git checkout`
+
+In general, it's best practice on most projects to do significant git operations on the host, but they can be disruptive to the sync. It's easy to add a git post-checkout hook to do a `ddev mutagen sync` operation though. Add the file `.git/hooks/post-checkout` to your project and set it to be executable (`chmod +x .git/hooks/post-checkout`):
+
+```bash
+#!/bin/bash
+ddev mutagen sync || true
+```
+
+### Syncing after yarn actions
+
+Yarn actions can also set off massive filesystem changes. The `ddev yarn` command mitigates this problem by doing a mutagen sync after taking the action. So you can use `ddev yarn install` instead of using yarn directly, and it will take care of this for you. Alternately, you can just `ddev mutagen sync` after doing any similar action that has large filesystem consequences.
+
 ### Advanced Mutagen configuration options
 
 The Mutagen project provides extensive configuration options that are [documented on the mutagen.io site](https://mutagen.io/documentation/introduction/configuration).
@@ -198,6 +211,8 @@ For example, if I want the .tarballs subdirectory of the project to be available
   You can run the script [diagnose_mutagen.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/diagnose_mutagen.sh) to gather some information about the setup of mutagen. Please report its output when creating an issue or otherwise seeking support.
 * Try `~/.ddev/bin/mutagen daemon stop && ~/.ddev/bin/mutagen daemon start` to restart the mutagen daemon if you suspect it's hanging.
 * Use `ddev mutagen reset` if you suspect trouble (and always after changing the `.ddev/mutagen.yml`. This restarts everything from scratch, including the docker volume that's used to store your project inside the container.)
+* `ddev mutagen monitor` can help watch mutagen behavior. It's the same as `~/.ddev/bin/mutagen sync monitor <syncname>`
+* `ddev debug mutagen` will let you run any mutagen command using the binary in `~/.ddev/bin/mutagen`.
 * If you're having trouble, we really want to hear from you to learn and try to sort it out. See the [Support channels](https://ddev.readthedocs.io/en/latest/#support-and-user-contributed-documentation).
 
 ### Mutagen Strategies and Design Considerations

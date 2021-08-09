@@ -32,7 +32,6 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/google/uuid"
-	"github.com/lunixbochs/vtclean"
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
 )
@@ -758,7 +757,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		select {
 		case <-acceptListenDone:
 			fmt.Printf("Read from acceptListenDone at %v\n", time.Now())
-		case <-time.After(3 * time.Second):
+		case <-time.After(6 * time.Second):
 			t.Fatalf("Timed out waiting for accept/listen at %v, PHP version %v\n", time.Now(), v)
 		}
 	}
@@ -931,7 +930,7 @@ func TestStartWithoutDdevConfig(t *testing.T) {
 	_, err = ddevapp.GetActiveApp("")
 	assert.Error(err)
 	if err != nil {
-		assert.Contains(err.Error(), "Could not find a project")
+		assert.Contains(err.Error(), "could not find a project")
 	}
 }
 
@@ -2262,8 +2261,6 @@ func TestProcessHooks(t *testing.T) {
 	assert.NoError(err)
 
 	userOut := userOutFunc()
-	// Ignore color in output, can be different in different OS's
-	out = vtclean.Clean(out, false)
 
 	assert.Contains(userOut, "Executing hook-test hook")
 	assert.Contains(userOut, "Exec command 'ls /usr/local/bin/composer' in container/service 'web'")

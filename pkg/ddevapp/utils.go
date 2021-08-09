@@ -88,8 +88,8 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 		}
 		if row["mutagen_enabled"] == true {
 			mutagenStatus = row["mutagen_status"].(string)
-			if mutagenStatus != "Watching for changes" {
-				mutagenStatus = color.YellowString(mutagenStatus)
+			if mutagenStatus != "ok" {
+				mutagenStatus = color.RedString(mutagenStatus)
 			}
 			status = fmt.Sprintf("%s (%s)", status, mutagenStatus)
 		}

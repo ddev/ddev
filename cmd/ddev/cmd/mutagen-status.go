@@ -35,10 +35,7 @@ var MutagenStatusCmd = &cobra.Command{
 		}
 		status, shortResult, longResult, _ := app.MutagenStatus()
 
-		ok := "Mutagen not working"
-		if status {
-			ok = "Mutagen OK"
-		}
+		ok := "Mutagen: " + status
 		resultOut := shortResult
 		if verbose {
 			resultOut = "\n" + longResult

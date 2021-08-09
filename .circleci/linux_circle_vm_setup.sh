@@ -18,7 +18,7 @@ sudo apt-get install -qq mysql-client coreutils zip jq expect nfs-kernel-server 
 curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip && sudo unzip -o -d /usr/local/bin /tmp/ngrok.zip
 
 if [ ! -d /home/linuxbrew/.linuxbrew/bin ] ; then
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
 echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc
@@ -28,16 +28,9 @@ echo "capath=/etc/ssl/certs/" >>~/.curlrc
 
 . ~/.bashrc
 
-export HOMEBREW_NO_AUTO_UPDATE=1
-export HOMEBREW_NO_INSTALL_CLEANUP=1
-
-brew tap drud/ddev >/dev/null
-brew unlink bats-core || true
-brew uninstall mutagen-io/mutagen/mutagen-beta mutagen-io/mutagen/mutagen || true
-for item in ddev golang mingw-w64 mkcert mkdocs osslsigncode; do
-    brew install $item >/dev/null || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item >/dev/null
+for item in drud/ddev/ddev golang makensis mingw-w64 mkcert mkdocs; do
+    brew install $item >/dev/null || brew upgrade $item >/dev/null
 done
-brew install --build-from-source makensis
 
 git clone --branch v1.2.1 https://github.com/bats-core/bats-core.git /tmp/bats-core && pushd /tmp/bats-core >/dev/null && sudo ./install.sh /usr/local
 
@@ -64,7 +57,6 @@ EOF"
 sudo service nfs-kernel-server restart
 
 # Install ghr
-GHR_RELEASE="v0.13.0"
+GHR_RELEASE="v0.14.0"
 curl -fsL -o /tmp/ghr.tar.gz https://github.com/tcnksm/ghr/releases/download/${GHR_RELEASE}/ghr_${GHR_RELEASE}_linux_amd64.tar.gz
 sudo tar -C /usr/local/bin --strip-components=1 -xzf /tmp/ghr.tar.gz ghr_${GHR_RELEASE}_linux_amd64/ghr
-ghr -v

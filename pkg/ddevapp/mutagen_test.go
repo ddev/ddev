@@ -38,6 +38,8 @@ func TestMutagenSimple(t *testing.T) {
 	err = app.Init(site.Dir)
 	assert.NoError(err)
 	app.MutagenEnabled = true
+	err = app.WriteConfig()
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
