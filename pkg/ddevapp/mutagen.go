@@ -13,6 +13,7 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/ssh/terminal"
 	"os"
 	osexec "os/exec"
 	"path/filepath"
@@ -118,33 +119,40 @@ func CreateMutagenSync(app *DdevApp) error {
 	flushErr := make(chan error, 1)
 	stopGoroutine := make(chan bool, 1)
 	defer close(flushErr)
+	defer close(stopGoroutine)
 
 	go func() {
 		err = app.MutagenSyncFlush()
 		flushErr <- err
 		return
 	}()
-	go func() {
-		cmd := osexec.Command(globalconfig.GetMutagenPath(), "sync", "monitor", syncName)
-		stdout, _ := cmd.StdoutPipe()
-		err = cmd.Start()
-		buf := bufio.NewReader(stdout)
-		for {
-			select {
-			case <-stopGoroutine:
-				return
-			default:
-				line, err := buf.ReadBytes('\r')
-				if err != nil {
+
+	// In tests or other non-interactive environments we don't need to show the
+	// mutagen sync monitor output (and it fills up the test logs)
+
+	if terminal.IsTerminal(int(os.Stderr.Fd())) {
+		go func() {
+			cmd := osexec.Command(globalconfig.GetMutagenPath(), "sync", "monitor", syncName)
+			stdout, _ := cmd.StdoutPipe()
+			err = cmd.Start()
+			buf := bufio.NewReader(stdout)
+			for {
+				select {
+				case <-stopGoroutine:
 					return
-				}
-				l := string(line)
-				if strings.HasPrefix(l, "Status:") {
-					_, _ = fmt.Fprintf(os.Stderr, "%s", l)
+				default:
+					line, err := buf.ReadBytes('\r')
+					if err != nil {
+						return
+					}
+					l := string(line)
+					if strings.HasPrefix(l, "Status:") {
+						_, _ = fmt.Fprintf(os.Stderr, "%s", l)
+					}
 				}
 			}
-		}
-	}()
+		}()
+	}
 
 	for {
 		select {
