@@ -18,7 +18,7 @@ require (
 	github.com/imdario/mergo v0.3.5 // indirect
 	github.com/jwalton/gchalk v1.1.0
 	github.com/lextoumbourou/goodhosts v2.1.0+incompatible
-	github.com/lunixbochs/vtclean v1.0.0
+	github.com/lunixbochs/vtclean v1.0.0 // indirect
 	github.com/manifoldco/promptui v0.8.0
 	github.com/mattn/go-isatty v0.0.4
 	github.com/mattn/go-runewidth v0.0.2 // indirect
