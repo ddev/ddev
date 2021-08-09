@@ -1,23 +1,24 @@
 module github.com/fsouza/go-dockerclient
 
-go 1.12
+go 1.15
 
 require (
-	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
-	github.com/Microsoft/go-winio v0.4.15-0.20200113171025-3fe6c5262873
-	github.com/Microsoft/hcsshim v0.8.7 // indirect
-	github.com/containerd/containerd v1.3.0 // indirect
-	github.com/containerd/continuity v0.0.0-20200228182428-0f16d7a0959c // indirect
-	github.com/docker/distribution v2.7.1+incompatible // indirect
-	github.com/docker/docker v1.4.2-0.20191101170500-ac7306503d23
+	github.com/Microsoft/go-winio v0.5.0
+	github.com/Microsoft/hcsshim v0.8.14 // indirect
+	github.com/containerd/containerd v1.4.3 // indirect
+	github.com/containerd/continuity v0.0.0-20210208174643-50096c924a4e // indirect
+	github.com/docker/docker v20.10.7+incompatible
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0
-	github.com/gogo/protobuf v1.3.1 // indirect
-	github.com/google/go-cmp v0.4.0
-	github.com/gorilla/mux v1.7.4
+	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/google/go-cmp v0.5.6
+	github.com/gorilla/mux v1.8.0
+	github.com/moby/sys/mount v0.2.0 // indirect
+	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/opencontainers/runc v0.1.1 // indirect
-	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
-	google.golang.org/grpc v1.27.1 // indirect
+	golang.org/x/sys v0.0.0-20210216224549-f992740a1bac // indirect
+	golang.org/x/term v0.0.0-20201113234701-d7a72108b828
+	gotest.tools/v3 v3.0.3 // indirect
 )
