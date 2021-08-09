@@ -13,7 +13,7 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/pkg/errors"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 	"os"
 	osexec "os/exec"
 	"path/filepath"
@@ -130,7 +130,7 @@ func CreateMutagenSync(app *DdevApp) error {
 	// In tests or other non-interactive environments we don't need to show the
 	// mutagen sync monitor output (and it fills up the test logs)
 
-	if terminal.IsTerminal(int(os.Stderr.Fd())) {
+	if term.IsTerminal(int(os.Stderr.Fd())) {
 		go func() {
 			cmd := osexec.Command(globalconfig.GetMutagenPath(), "sync", "monitor", syncName)
 			stdout, _ := cmd.StdoutPipe()

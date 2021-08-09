@@ -9,7 +9,7 @@ import (
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 	"io/fs"
 	"net"
 	"os"
@@ -1436,7 +1436,7 @@ func (app *DdevApp) DockerEnv() {
 	}
 
 	// Find out terminal dimensions
-	columns, lines, err := terminal.GetSize(0)
+	columns, lines, err := term.GetSize(0)
 	if err != nil {
 		columns = 80
 		lines = 24
