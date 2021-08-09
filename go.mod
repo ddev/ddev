@@ -18,7 +18,7 @@ require (
 	github.com/imdario/mergo v0.3.5 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/lextoumbourou/goodhosts v2.1.0+incompatible
-	github.com/lunixbochs/vtclean v1.0.0
+	github.com/lunixbochs/vtclean v1.0.0 // indirect
 	github.com/manifoldco/promptui v0.8.0
 	github.com/mattn/go-isatty v0.0.4
 	github.com/mattn/go-runewidth v0.0.2 // indirect
@@ -35,7 +35,7 @@ require (
 	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.4.0
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
-	golang.org/x/crypto v0.0.0-20200220183623-bac4c82f6975
+	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
 	gopkg.in/cheggaaa/pb.v1 v1.0.26 // indirect
 	gopkg.in/segmentio/analytics-go.v3 v3.1.0
 	gopkg.in/yaml.v2 v2.2.8
