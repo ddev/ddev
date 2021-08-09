@@ -20,5 +20,5 @@ sync:
       # composer operations may fail if they use dev versions/git.
       # vcs: true
     symlink:
-      mode: "portable"
+      mode: "posix-raw"
 
