@@ -12,7 +12,7 @@ Hundreds of useful developer tools are included inside the containers. Any of th
 * [Drush](http://www.drush.org) - Command-line shell and Unix scripting interface for Drupal.
 * [PHIVE](https://phar.io/) - Command line tool for "PHAR Installation and Verification Environment"
 * [WP-CLI](http://wp-cli.org/) - Command-line tools for managing WordPress installations, available both as "wp" and as "wp-cli".
-* npm and yarn
+* npm and yarn (and the `ddev yarn` command will run yarn for you, `ddev help yarn`)
 * node
 * sqlite3
 
