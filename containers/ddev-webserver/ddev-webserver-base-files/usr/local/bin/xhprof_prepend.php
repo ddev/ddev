@@ -7,7 +7,7 @@ if (!empty($_SERVER) && array_key_exists('REQUEST_URI', $_SERVER)) {
 
 // Enable xhprof profiling if we're not on an xhprof page
 if (extension_loaded('xhprof') && strpos($uri, '/xhprof') === false) {
-    xhprof_enable();
+    xhprof_enable(XHPROF_FLAGS_CPU + XHPROF_FLAGS_MEMORY);
     register_shutdown_function('xhprof_completion');
 }
 
