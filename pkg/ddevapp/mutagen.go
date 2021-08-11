@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"bufio"
+	"embed"
 	"fmt"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/dockerutil"
@@ -16,6 +17,7 @@ import (
 	"golang.org/x/term"
 	"os"
 	osexec "os/exec"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -331,4 +333,38 @@ func MutagenMonitor(app *DdevApp) {
 	c := osexec.Command(globalconfig.GetMutagenPath(), "sync", "monitor", syncName)
 	c.Stdout = os.Stdout
 	_ = c.Run()
+}
+
+//go:embed mutagen_config_assets
+var mutagenConfigAssets embed.FS
+
+// GenerateMutagenYml generates the .ddev/mutagen.yml
+func (app *DdevApp) GenerateMutagenYml() error {
+	// Prevent running as root for most cases
+	// We really don't want ~/.ddev to have root ownership, breaks things.
+	if os.Geteuid() == 0 {
+		output.UserOut.Warning("not generating mutagen config file because running with root privileges")
+		return nil
+	}
+
+	mutagenYmlPath := app.GetConfigPath("mutagen.yml")
+	if sigExists, err := fileutil.FgrepStringInFile(mutagenYmlPath, DdevFileSignature); err == nil && !sigExists {
+		// If the signature doesn't exist, they have taken over the file, so return
+		return nil
+	}
+
+	c, err := mutagenConfigAssets.ReadFile(path.Join("mutagen_config_assets", "mutagen.yml"))
+	if err != nil {
+		return err
+	}
+	content := string(c)
+
+	// It's impossible to use posix-raw on traditional windows.
+	// But this means that there will be errors with rooted symlinks in the container on windows
+	symlinkMode := "posix-raw"
+	if runtime.GOOS == "windows" {
+		symlinkMode = "portable"
+	}
+	err = fileutil.TemplateStringToFile(content, map[string]interface{}{"SymlinkMode": symlinkMode}, mutagenYmlPath)
+	return err
 }
