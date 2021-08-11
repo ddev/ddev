@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/archive"
 	exec2 "github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
@@ -493,15 +494,20 @@ func CheckDockerVersion(versionConstraint string) error {
 
 // CheckDockerCompose determines if docker-compose is present and executable on the host system. This
 // relies on docker-compose being somewhere in the user's $PATH.
-func CheckDockerCompose(versionConstraint string) error {
+func CheckDockerCompose() error {
 	runTime := util.TimeTrack(time.Now(), "CheckDockerComposeVersion()")
 	defer runTime()
 
-	version, err := version.GetDockerComposeVersion()
+	if globalconfig.DdevAllowComposeV2 {
+		version.DockerComposeVersionConstraint = ">= 1.25.0-alpha1"
+	}
+	versionConstraint := version.DockerComposeVersionConstraint
+
+	v, err := version.GetDockerComposeVersion()
 	if err != nil {
 		return err
 	}
-	dockerComposeVersion, err := semver.NewVersion(version)
+	dockerComposeVersion, err := semver.NewVersion(v)
 	if err != nil {
 		return err
 	}
@@ -516,9 +522,11 @@ func CheckDockerCompose(versionConstraint string) error {
 		if len(errs) <= 1 {
 			// TODO: Remove these lines when docker-compose v2 starts working
 			// Probably this commit can be reverted at that time.
-			v2Constraint, _ := semver.NewConstraint("< 2.0.0")
-			if m, _ := v2Constraint.Validate(dockerComposeVersion); !m {
-				util.Error("You have docker-compose v2 and it is not yet stable enough to use with ddev.\nPlease uncheck the 'Use Docker Compose V2' experimental feature\nin Docker Desktop, or run 'docker-compose disable-v2'")
+			if !globalconfig.DdevAllowComposeV2 {
+				v2Constraint, _ := semver.NewConstraint("< 2.0.0")
+				if m, _ := v2Constraint.Validate(dockerComposeVersion); !m {
+					util.Error("You have docker-compose v2 and it is not yet stable enough to use with ddev.\nPlease uncheck the 'Use Docker Compose V2' experimental feature\nin Docker Desktop, or run 'docker-compose disable-v2'")
+				}
 			}
 			return errs[0]
 		}

@@ -22,3 +22,7 @@ var DdevDebug = (os.Getenv("DDEV_DEBUG") == "true")
 
 // DdevVerbose is set to true if the env var is set
 var DdevVerbose = (os.Getenv("DDEV_VERBOSE") == "true")
+
+// DdevAllowComposeV2 is a temporary setup that allows ddev to run even though the
+// incompatible compose-cli v2 is enabled... so we can get it working.
+var DdevAllowComposeV2 = (os.Getenv("DDEV_ALLOW_COMPOSE_V2") == "true")
