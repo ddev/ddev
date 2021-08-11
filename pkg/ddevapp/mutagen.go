@@ -190,7 +190,7 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, longResu
 		}
 		return rv, shortResult, longResult, nil
 	}
-	if strings.Contains(longResult, "problems") || strings.Contains(longResult, "Conflicts") || strings.Contains(longResult, "error") || strings.Contains(shortResult, "Halted") || strings.Contains(shortResult, "Errored") {
+	if strings.Contains(longResult, "problems") || strings.Contains(longResult, "Conflicts") || strings.Contains(longResult, "error") || strings.Contains(shortResult, "Halted") || strings.Contains(shortResult, "Waiting 5 seconds for rescan") || strings.Contains(longResult, "raw POSIX symbolic links not supported") {
 		util.Error("mutagen sync session '%s' is not working correctly: %s", syncName, longResult)
 		return "failing", shortResult, longResult, errors.Errorf("mutagen sync session '%s' is not working correctly, use 'mutagen sync list %s' for details", syncName, syncName)
 	}
