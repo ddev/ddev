@@ -62,20 +62,18 @@ func TerminateMutagenSync(app *DdevApp) error {
 
 // SyncAndTerminateMutagenSession syncs and terminates the mutagen sync session
 func SyncAndTerminateMutagenSession(app *DdevApp) error {
-	if app.MutagenEnabled || app.MutagenEnabledGlobal {
-		syncName := MutagenSyncName(app.Name)
+	syncName := MutagenSyncName(app.Name)
 
-		if !MutagenSyncExists(app) {
-			return errors.Errorf("Sync session '%v' does nto exist", syncName)
-		}
-		err := app.MutagenSyncFlush()
-		if err != nil {
-			util.Error("Error on 'mutagen sync flush %s': %v", syncName, err)
-		}
-		err = TerminateMutagenSync(app)
-		if err != nil {
-			return err
-		}
+	if !MutagenSyncExists(app) {
+		return nil
+	}
+	err := app.MutagenSyncFlush()
+	if err != nil {
+		util.Error("Error on 'mutagen sync flush %s': %v", syncName, err)
+	}
+	err = TerminateMutagenSync(app)
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -105,7 +103,12 @@ func CreateMutagenSync(app *DdevApp) error {
 	if err != nil {
 		return err
 	}
-	args := []string{"sync", "create", app.AppRoot, fmt.Sprintf("docker://ddev-%s-web/var/www/html", app.Name), "--no-global-configuration", "--name", syncName}
+	container, err := dockerutil.FindContainerByName(fmt.Sprintf("ddev-%s-web", app.Name))
+	if err != nil {
+		return err
+	}
+
+	args := []string{"sync", "create", app.AppRoot, fmt.Sprintf("docker://%s/var/www/html", container.ID), "--no-global-configuration", "--name", syncName}
 	if configFile != "" {
 		args = append(args, fmt.Sprintf(`--configuration-file=%s`, configFile))
 	}
