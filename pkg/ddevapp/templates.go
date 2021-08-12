@@ -18,6 +18,7 @@ services:
         gid: '{{ .GID }}'
     image: ${DDEV_DBIMAGE}-${DDEV_SITENAME}-built
     stop_grace_period: 60s
+    working_dir: "{{ .WebWorkingDir }}"
     volumes:
       - type: "volume"
         source: mariadb-database
@@ -75,6 +76,7 @@ services:
     image: ${DDEV_WEBIMAGE}-${DDEV_SITENAME}-built
     cap_add:
       - SYS_PTRACE
+    working_dir: "{{ .WebWorkingDir }}"
     volumes:
       {{ if not .NoProjectMount }}
       - type: {{ .MountType }}

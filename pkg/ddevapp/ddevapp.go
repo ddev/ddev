@@ -1141,8 +1141,8 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	}
 
 	args := []string{"exec"}
-	if workingDir := app.GetWorkingDir(opts.Service, opts.Dir); workingDir != "" {
-		args = append(args, "-w", workingDir)
+	if opts.Dir != "" {
+		args = append(args, "-w", opts.Dir)
 	}
 
 	if !isatty.IsTerminal(os.Stdin.Fd()) || !opts.Tty {
@@ -1169,7 +1169,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	errcheck := "set -eu"
 	args = append(args, shell, "-c", errcheck+` && ( `+opts.Cmd+`)`)
 
-	files, err := app.ComposeFiles()
+	files := []string{app.DockerComposeFullRenderedYAMLPath()}
 	if err != nil {
 		return "", "", err
 	}
@@ -1213,8 +1213,8 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 	}
 
 	args := []string{"exec"}
-	if workingDir := app.GetWorkingDir(opts.Service, opts.Dir); workingDir != "" {
-		args = append(args, "-w", workingDir)
+	if opts.Dir != "" {
+		args = append(args, "-w", opts.Dir)
 	}
 
 	args = append(args, opts.Service)

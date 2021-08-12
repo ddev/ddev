@@ -655,6 +655,8 @@ type composeYAMLVars struct {
 	GID                       string
 	AutoRestartContainers     bool
 	FailOnHookFail            bool
+	WebWorkingDir             string
+	DBWorkingDir              string
 	WebEnvironment            []string
 }
 
@@ -727,6 +729,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		DBBuildDockerfile:     "../.dbimageBuild/Dockerfile",
 		AutoRestartContainers: globalconfig.DdevGlobalConfig.AutoRestartContainers,
 		FailOnHookFail:        app.FailOnHookFail || app.FailOnHookFailGlobal,
+		WebWorkingDir:         app.GetWorkingDir("web", ""),
+		DBWorkingDir:          app.GetWorkingDir("db", ""),
 		WebEnvironment:        webEnvironment,
 	}
 	if app.NFSMountEnabled || app.NFSMountEnabledGlobal {
