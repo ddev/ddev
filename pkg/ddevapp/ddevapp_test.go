@@ -1304,6 +1304,9 @@ func TestDdevAllDatabases(t *testing.T) {
 			err = app.ExportDB("tmp/users2.sql", false, "db")
 			assert.NoError(err)
 
+			err = app.MutagenSyncFlush()
+			assert.NoError(err)
+
 			// Validate contents
 			stringFound, err = fileutil.FgrepStringInFile("tmp/users2.sql", "Table structure for table `users`")
 			assert.NoError(err)
