@@ -811,8 +811,6 @@ func (app *DdevApp) GetDBImage() string {
 func (app *DdevApp) Start() error {
 	var err error
 
-	dockerutil.CheckAvailableSpace()
-
 	app.DockerEnv()
 
 	app.DBImage = app.GetDBImage()
@@ -853,6 +851,8 @@ func (app *DdevApp) Start() error {
 	if err != nil {
 		return err
 	}
+
+	dockerutil.CheckAvailableSpace()
 
 	// Make sure that important volumes to mount already have correct ownership set
 	// Additional volumes can be added here. This allows us to run a single privileged
