@@ -90,6 +90,8 @@ func TestCmdExec(t *testing.T) {
 	filename := t.Name() + "_junk.txt"
 	_, err = exec.RunHostCommand("sh", "-c", fmt.Sprintf("printf 'This file was piped into ddev exec' | %s exec 'cat >/var/www/html/%s'", DdevBin, filename))
 	assert.NoError(err)
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
 	require.FileExists(t, filepath.Join(site.Dir, filename))
 
 	content, err := os.ReadFile(filepath.Join(site.Dir, filename))
