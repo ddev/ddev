@@ -11,14 +11,13 @@ sync:
     mode: "two-way-resolved"
     ignore:
       paths:
-        - "/.ddev"
-        # The top-level .git directory is ignored to encourage git actions on the host
-        # side, but if you need it inside the container you can remove this
-        - "/.git"
-        # For example /var/www/html/var does not need to sync in TYPO3
-        # - "var"
+      # The top-level .git directory is ignored to encourage git actions on the host
+      # side, but if you need it inside the container you can remove this
+      - "/.git"
+      # For example /var/www/html/var does not need to sync in TYPO3
+      # - "/var"
       # vcs like .git can be ignored for safety, but then some
-      # composer operations may fail if they use git.
+      # composer operations may fail if they use dev versions/git.
       # vcs: true
     symlink:
       mode: "portable"

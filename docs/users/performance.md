@@ -213,6 +213,7 @@ For example, if I want the .tarballs subdirectory of the project to be available
 * Use `ddev mutagen reset` if you suspect trouble (and always after changing the `.ddev/mutagen.yml`. This restarts everything from scratch, including the docker volume that's used to store your project inside the container.)
 * `ddev mutagen monitor` can help watch mutagen behavior. It's the same as `~/.ddev/bin/mutagen sync monitor <syncname>`
 * `ddev debug mutagen` will let you run any mutagen command using the binary in `~/.ddev/bin/mutagen`.
+* If you're working on the host and expecting things to show up immediately inside the container, you can learn a lot by running `ddev mutagen monitor` in a separate window as you work. You'll see when mutagen responds to your changes and get an idea about how much delay there is.
 * If you're having trouble, we really want to hear from you to learn and try to sort it out. See the [Support channels](https://ddev.readthedocs.io/en/latest/#support-and-user-contributed-documentation).
 
 ### Mutagen Strategies and Design Considerations

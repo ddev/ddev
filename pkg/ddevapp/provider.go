@@ -86,6 +86,10 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 		if err != nil {
 			return err
 		}
+		err = app.MutagenSyncFlush()
+		if err != nil {
+			return err
+		}
 
 		output.UserOut.Printf("Database downloaded to: %s", fileLocation)
 
@@ -105,6 +109,11 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 	} else {
 		output.UserOut.Println("Downloading files...")
 		fileLocation, importPath, err := provider.GetBackup("files")
+		if err != nil {
+			return err
+		}
+
+		err = app.MutagenSyncFlush()
 		if err != nil {
 			return err
 		}
