@@ -313,7 +313,7 @@ func TestComposeWithStreams(t *testing.T) {
 func TestCheckCompose(t *testing.T) {
 	assert := asrt.New(t)
 
-	err := CheckDockerCompose(version.DockerComposeVersionConstraint)
+	err := CheckDockerCompose()
 	assert.NoError(err)
 }
 

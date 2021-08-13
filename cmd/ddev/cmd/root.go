@@ -15,7 +15,6 @@ import (
 	"gopkg.in/segmentio/analytics-go.v3"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -35,7 +34,7 @@ Docs: https://ddev.readthedocs.io
 Support: https://ddev.readthedocs.io/en/stable/#support`,
 	Version: version.DdevVersion,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		command := strings.Join(os.Args[1:], " ")
+		command := os.Args[1]
 
 		// LogSetup() has already been done, but now needs to be done
 		// again *after* --json flag is parsed.
@@ -57,7 +56,7 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 			}
 		}
 
-		err = dockerutil.CheckDockerCompose(version.DockerComposeVersionConstraint)
+		err = dockerutil.CheckDockerCompose()
 		if err != nil {
 			if err.Error() == "no docker-compose" {
 				util.Failed("docker-compose does not appear to be installed.")
