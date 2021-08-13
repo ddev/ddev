@@ -3319,7 +3319,9 @@ func verifyNFSMount(t *testing.T, app *ddevapp.DdevApp) {
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Dir:     "/var/www/html",
-		Cmd:     "ln -s  .ddev nfscontainerlinked_ddev",
+		// symlink creation on windows can seem to fail with mysterious i/o error, when it actually worked
+		// so give it a second chance with the ls.
+		Cmd: "ln -s  .ddev nfscontainerlinked_ddev || ls nfscontainerlinked_ddev",
 	})
 	assert.NoError(err)
 
@@ -3333,7 +3335,9 @@ func verifyNFSMount(t *testing.T, app *ddevapp.DdevApp) {
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Dir:     "/var/www/html",
-		Cmd:     "ln -s  .ddev/config.yaml nfscontainerlinked_config.yaml",
+		// symlink creation on windows can fail... but actually succeed. We give it a second
+		// chance with the ls
+		Cmd: "ln -s  .ddev/config.yaml nfscontainerlinked_config.yaml || ls nfscontainerlinked_config.yaml",
 	})
 	assert.NoError(err)
 
