@@ -6,6 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -61,9 +62,9 @@ func TestCmdMutagen(t *testing.T) {
 	// Now test subcommands
 	err = app.Start()
 	require.NoError(t, err)
-	out, err := exec.RunHostCommand(DdevBin, "mutagen", "status")
+	out, err := exec.RunHostCommand(DdevBin, "mutagen", "status", "--verbose")
 	assert.NoError(err)
-	assert.Contains(out, "Mutagen: ok")
+	assert.True(strings.HasPrefix(out, "Mutagen: ok"), "verbose status does not start with 'Mutagen: ok', instead has `%s'", out)
 	out, err = exec.RunHostCommand(DdevBin, "mutagen", "status", "--verbose")
 	assert.NoError(err)
 	assert.Contains(out, "Alpha:")
