@@ -138,6 +138,7 @@ services:
       - IS_DDEV_PROJECT=true
       - LINES
       - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-web/mysql_history
+      - PHP_IDE_CONFIG=serverName=${DDEV_SITENAME}.${DDEV_TLD}
       - SSH_AUTH_SOCK=/home/.ssh-agent/socket
       - TZ={{ .Timezone }}
       - VIRTUAL_HOST=${DDEV_HOSTNAME}
