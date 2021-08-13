@@ -347,6 +347,7 @@ phpinfo
 phpmyadmin
 pid
 plugin
+posix
 postfix
 poweroff
 powershell
