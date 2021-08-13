@@ -238,6 +238,9 @@ func (app *DdevApp) MutagenSyncFlush() error {
 func MutagenSyncExists(app *DdevApp) bool {
 	syncName := MutagenSyncName(app.Name)
 
+	if !fileutil.FileExists(globalconfig.GetMutagenPath()) {
+		return false
+	}
 	_, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list", syncName)
 	return err == nil
 }
