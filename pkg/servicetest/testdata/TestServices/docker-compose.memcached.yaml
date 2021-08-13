@@ -20,7 +20,7 @@ services:
     image: memcached:1.5
     restart: "no"
     # memcached is available at this port inside the container.
-    ports:
+    expose:
       - 11211
     # These labels ensure this service is discoverable by ddev.
     labels:

@@ -172,7 +172,7 @@ services:
       com.ddev.approot: $DDEV_APPROOT
     links:
       - db:db
-    ports:
+    expose:
       - "80"
     hostname: {{ .Name }}-dba
     environment:
