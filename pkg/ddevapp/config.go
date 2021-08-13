@@ -519,22 +519,6 @@ func (app *DdevApp) GetHostnames() []string {
 func (app *DdevApp) WriteDockerComposeYAML() error {
 	var err error
 
-	// Because of move from docker-compose.yaml as base file to .ddev-docker-compose-base.yaml
-	// remove old ddev-managed docker-compose.yaml
-	oldDockerCompose := filepath.Join(app.AppConfDir(), "docker-compose.yaml")
-	if fileutil.FileExists(oldDockerCompose) {
-		found, err := fileutil.FgrepStringInFile(oldDockerCompose, DdevFileSignature)
-		if err != nil {
-			return err
-		}
-		if found {
-			err = os.Remove(oldDockerCompose)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
 	f, err := os.Create(app.DockerComposeYAMLPath())
 	if err != nil {
 		return err
