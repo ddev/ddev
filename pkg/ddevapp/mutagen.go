@@ -47,13 +47,11 @@ func MutagenSyncName(name string) string {
 // TerminateMutagenSync terminates the mutagen sync
 // It is not an error if the sync session does not exist
 func TerminateMutagenSync(app *DdevApp) error {
-	if app.MutagenEnabled || app.MutagenEnabledGlobal {
-		syncName := MutagenSyncName(app.Name)
-		if MutagenSyncExists(app) {
-			_, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "terminate", syncName)
-			if err != nil {
-				return err
-			}
+	syncName := MutagenSyncName(app.Name)
+	if MutagenSyncExists(app) {
+		_, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "terminate", syncName)
+		if err != nil {
+			return err
 		}
 		util.Success("Terminated mutagen sync session '%s'", syncName)
 	}
