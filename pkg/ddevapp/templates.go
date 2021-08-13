@@ -18,7 +18,7 @@ services:
         gid: '{{ .GID }}'
     image: ${DDEV_DBIMAGE}-${DDEV_SITENAME}-built
     stop_grace_period: 60s
-    working_dir: "{{ .WebWorkingDir }}"
+    working_dir: "{{ .DBWorkingDir }}"
     volumes:
       - type: "volume"
         source: mariadb-database
@@ -167,6 +167,7 @@ services:
   dba:
     container_name: ddev-${DDEV_SITENAME}-dba
     image: $DDEV_DBAIMAGE
+    working_dir: "{{ .DBAWorkingDir }}"
     restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
