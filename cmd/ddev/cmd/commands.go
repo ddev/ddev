@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bufio"
-	"embed"
 	"fmt"
 	"github.com/drud/ddev/pkg/nodeps"
 	"os"
@@ -310,28 +309,4 @@ func findDirectivesInScriptCommand(script string) map[string]string {
 	}
 
 	return directives
-}
-
-//The bundled assets for the project .ddev directory are in directory dotddev_assets
-//The bundled assets for the global .ddev directory are in directory global_dotddev_assets
-//go:embed dotddev_assets global_dotddev_assets
-var bundledAssets embed.FS
-
-// PopulateExamplesCommandsHomeadditions grabs embedded assets
-func PopulateExamplesCommandsHomeadditions() error {
-	app, err := ddevapp.GetActiveApp("")
-	if err != nil {
-		return nil
-	}
-
-	err = ddevapp.CopyEmbedAssets(bundledAssets, "dotddev_assets", app.GetConfigPath(""))
-	if err != nil {
-		return err
-	}
-	err = ddevapp.CopyEmbedAssets(bundledAssets, "global_dotddev_assets", globalconfig.GetGlobalDdevDir())
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

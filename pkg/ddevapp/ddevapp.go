@@ -818,6 +818,12 @@ func (app *DdevApp) Start() error {
 	if err != nil {
 		return err
 	}
+
+	// The .ddev directory may still need to be populated, especially in tests
+	err = PopulateExamplesCommandsHomeadditions(app.AppRoot)
+	if err != nil {
+		return err
+	}
 	// Make sure that any ports allocated are available.
 	// and of course add to global project list as well
 	err = app.UpdateGlobalProjectList()

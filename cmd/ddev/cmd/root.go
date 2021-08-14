@@ -164,7 +164,7 @@ func init() {
 	if os.Geteuid() == 0 {
 		output.UserOut.Warning("Not populating custom commands or hostadditions because running with root privileges")
 	} else {
-		err := PopulateExamplesCommandsHomeadditions()
+		err := ddevapp.PopulateExamplesCommandsHomeadditions("")
 		if err != nil {
 			util.Warning("populateExamplesAndCommands() failed: %v", err)
 		}

@@ -1,7 +1,6 @@
 package servicetest_test
 
 import (
-	"github.com/drud/ddev/cmd/ddev/cmd"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -74,7 +73,7 @@ func TestServices(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	err = cmd.PopulateExamplesCommandsHomeadditions()
+	err = ddevapp.PopulateExamplesCommandsHomeadditions("")
 	require.NoError(t, err)
 	err = app.Start()
 	require.NoError(t, err)

@@ -1,0 +1,24 @@
+#ddev-generated
+# To override this file remove the line above
+# and add your own configuration. If you override it you will
+# probably want to check it in.
+# See ddev mutagen docs at
+# https://ddev.readthedocs.io/en/latest/users/performance/#using-mutagen
+# For detailed information about mutagen configuration options, see
+# https://mutagen.io/documentation/introduction/configuration
+sync:
+  defaults:
+    mode: "two-way-resolved"
+    ignore:
+      paths:
+      # The top-level .git directory is ignored to encourage git actions on the host
+      # side, but if you need it inside the container you can remove this
+      - "/.git"
+      # For example /var/www/html/var does not need to sync in TYPO3
+      # - "/var"
+      # vcs like .git can be ignored for safety, but then some
+      # composer operations may fail if they use dev versions/git.
+      # vcs: true
+    symlink:
+      mode: "{{ .SymlinkMode }}"
+
