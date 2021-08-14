@@ -37,23 +37,30 @@ func TestCustomCommands(t *testing.T) {
 	require.NoError(t, err)
 	_ = os.Setenv("DDEV_DEBUG", "")
 
-	pwd, _ := os.Getwd()
-	testCustomCommandsDir := filepath.Join(pwd, "testdata", t.Name())
+	origDir, _ := os.Getwd()
+	testCustomCommandsDir := filepath.Join(origDir, "testdata", t.Name())
 
 	site := TestSites[0]
-	switchDir := TestSites[0].Chdir()
-	app, _ := ddevapp.NewApp(TestSites[0].Dir, false)
+	err = os.Chdir(site.Dir)
+	require.NoError(t, err)
+
+	app, _ := ddevapp.NewApp(site.Dir, false)
 	origType := app.Type
 	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
 		runTime()
 		app.Type = origType
-		_ = app.WriteConfig()
-		_ = os.RemoveAll(tmpHome)
+		err = app.WriteConfig()
+		assert.NoError(err)
+		err = os.RemoveAll(tmpHome)
+		assert.NoError(err)
 		_ = os.Setenv("HOME", origHome)
 		_ = os.Setenv("DDEV_DEBUG", origDebug)
-		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", "commands"))
-		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", ".global_commands"))
-		switchDir()
+		err = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", "commands"))
+		assert.NoError(err)
+		err = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", ".global_commands"))
+		assert.NoError(err)
 	})
 	err = app.Start()
 	require.NoError(t, err)
