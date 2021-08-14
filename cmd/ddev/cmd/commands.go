@@ -317,8 +317,8 @@ func findDirectivesInScriptCommand(script string) map[string]string {
 //go:embed dotddev_assets global_dotddev_assets
 var bundledAssets embed.FS
 
-// populateExamplesCommandsHomeadditions grabs embedded assets
-func populateExamplesCommandsHomeadditions() error {
+// PopulateExamplesCommandsHomeadditions grabs embedded assets
+func PopulateExamplesCommandsHomeadditions() error {
 	app, err := ddevapp.GetActiveApp("")
 	if err != nil {
 		return nil
