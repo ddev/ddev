@@ -265,12 +265,13 @@ func (app *DdevApp) ImportFilesAction(importPath, extPath string) error {
 
 // DefaultWorkingDirMap returns the app type's default working directory map.
 func (app *DdevApp) DefaultWorkingDirMap() map[string]string {
+	_, _, username := util.GetContainerUIDGid()
 	// Default working directory values are defined here.
 	// Services working directories can be overridden by app types if needed.
 	defaults := map[string]string{
 		"web": "/var/www/html/",
-		"db":  "/home",
-		"dba": "/home",
+		"db":  "/home/" + username,
+		"dba": "/root",
 	}
 
 	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.defaultWorkingDirMap != nil {
