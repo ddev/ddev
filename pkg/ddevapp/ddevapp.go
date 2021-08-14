@@ -944,6 +944,13 @@ func (app *DdevApp) Start() error {
 	}
 
 	if app.MutagenEnabled || app.MutagenEnabledGlobal {
+		mounted, err := IsMutagenVolumeMounted(app)
+		if err != nil {
+			return err
+		}
+		if !mounted {
+			util.Failed("Mutagen docker volume is not mounted. Please use `ddev restart`")
+		}
 		output.UserOut.Printf("Starting mutagen sync process... This can take some time.")
 		err = app.GenerateMutagenYml()
 		if err != nil {
