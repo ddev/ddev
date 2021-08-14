@@ -23,8 +23,8 @@ func TestHomeadditions(t *testing.T) {
 	}
 	assert := asrt.New(t)
 
-	pwd, _ := os.Getwd()
-	testdata := filepath.Join(pwd, "testdata", t.Name())
+	origDir, _ := os.Getwd()
+	testdata := filepath.Join(origDir, "testdata", t.Name())
 
 	tmpHome := testcommon.CreateTmpDir(t.Name() + "tempHome")
 	origHome := os.Getenv("HOME")
@@ -33,7 +33,6 @@ func TestHomeadditions(t *testing.T) {
 	require.NoError(t, err)
 
 	site := TestSites[0]
-	switchDir := TestSites[0].Chdir()
 	projectHomeadditionsDir := filepath.Join(site.Dir, ".ddev", "homeadditions")
 
 	// We can't use the standard getGlobalDDevDir here because *our* global hasn't changed.
@@ -49,13 +48,17 @@ func TestHomeadditions(t *testing.T) {
 	assert.NoError(err)
 	err = fileutil.CopyDir(filepath.Join(testdata, "project"), projectHomeadditionsDir)
 	assert.NoError(err)
-
-	defer func() {
-		_ = fileutil.PurgeDirectory(projectHomeadditionsDir)
-		_ = os.RemoveAll(tmpHome)
+	err = os.Chdir(site.Dir)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = fileutil.PurgeDirectory(projectHomeadditionsDir)
+		assert.NoError(err)
+		err = os.RemoveAll(tmpHome)
+		assert.NoError(err)
 		_ = os.Setenv("HOME", origHome)
-		switchDir()
-	}()
+	})
 
 	// Simply run "ddev" to make sure homeadditions example files get populated
 	_, err = exec.RunCommand(DdevBin, []string{})
