@@ -73,8 +73,6 @@ func TestServices(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	err = ddevapp.PopulateExamplesCommandsHomeadditions("")
-	require.NoError(t, err)
 	err = app.Start()
 	require.NoError(t, err)
 
