@@ -81,7 +81,7 @@ func SyncAndTerminateMutagenSession(app *DdevApp) error {
 // GetMutagenConfigFile looks to see if there's a project .mutagen.yml
 // If nothing is found, returns empty
 func GetMutagenConfigFile(app *DdevApp) string {
-	projectConfig := filepath.Join(app.GetConfigPath("mutagen.yml"))
+	projectConfig := filepath.Join(app.GetConfigPath("mutagen/mutagen.yml"))
 	if fileutil.FileExists(projectConfig) {
 		return projectConfig
 	}

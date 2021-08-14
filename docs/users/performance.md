@@ -171,20 +171,20 @@ Yarn actions can also set off massive filesystem changes. The `ddev yarn` comman
 
 The Mutagen project provides extensive configuration options that are [documented on the mutagen.io site](https://mutagen.io/documentation/introduction/configuration).
 
-Each project by default already has a .ddev/mutagen.yml file with basic defaults which you can override if you remove the `#ddev-generated` line at the beginning of the file.
+Each project by default already has a .ddev/mutagen/mutagen.yml file with basic defaults which you can override if you remove the `#ddev-generated` line at the beginning of the file.
 
-Remember if you edit the .ddev/mutagen.yml file:
+Remember if you edit the .ddev/mutagen/mutagen.yml file:
 
 * Remove the #ddev-generated line
 * Execute a `ddev mutagen reset` to avoid the situation where the docker volume still has files from an older configuration.
 
-The most likely thing you'll want to do is to exclude a path from mutagen syncing, which you can do in the `paths:` section of the `ignore:` stanza in the mutagen.yml.
+The most likely thing you'll want to do is to exclude a path from mutagen syncing, which you can do in the `paths:` section of the `ignore:` stanza in the `.ddev/mutagen/mutagen.yml`.
 
-It is possible to exclude mutagen syncing from a path and then bind-mount something from the host or a different volume on that path with a `docker-compose.*.yaml` file. So if you have an extremely heavyweight subdirectory in your project (lots of fonts, for example), you could exclude that subdirectory in the .ddev/mutagen.yml and then add a docker-compose.exclude.yaml.
+It is possible to exclude mutagen syncing from a path and then bind-mount something from the host or a different volume on that path with a `docker-compose.*.yaml` file. So if you have an extremely heavyweight subdirectory in your project (lots of fonts, for example), you could exclude that subdirectory in the .ddev/mutagen/mutagen.yml and then add a docker-compose.exclude.yaml.
 
 For example, if I want the .tarballs subdirectory of the project to be available inside the container, but I don't need mutagen to be syncing it, I can use normal docker bind-mounting for that subdirectory with this procedure:
 
-1. Take over the .ddev/mutagen.yml by removing the `#ddev-generated` line
+1. Take over the .ddev/mutagen/mutagen.yml by removing the `#ddev-generated` line
 
 2. Add `/.tarballs` to the excluded paths:
 
@@ -211,7 +211,7 @@ For example, if I want the .tarballs subdirectory of the project to be available
 * DDEV's mutagen is installed in `~/.ddev/bin/mutagen`. You can use all the features of mutagen by running that, including `~/.ddev/bin/mutagen sync list` and `~/.ddev/bin/mutagen daemon stop`.
   You can run the script [diagnose_mutagen.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/diagnose_mutagen.sh) to gather some information about the setup of mutagen. Please report its output when creating an issue or otherwise seeking support.
 * Try `~/.ddev/bin/mutagen daemon stop && ~/.ddev/bin/mutagen daemon start` to restart the mutagen daemon if you suspect it's hanging.
-* Use `ddev mutagen reset` if you suspect trouble (and always after changing the `.ddev/mutagen.yml`. This restarts everything from scratch, including the docker volume that's used to store your project inside the container.)
+* Use `ddev mutagen reset` if you suspect trouble (and always after changing the `.ddev/mutagen/mutagen.yml`. This restarts everything from scratch, including the docker volume that's used to store your project inside the container.)
 * `ddev mutagen monitor` can help watch mutagen behavior. It's the same as `~/.ddev/bin/mutagen sync monitor <syncname>`
 * `ddev debug mutagen` will let you run any mutagen command using the binary in `~/.ddev/bin/mutagen`.
 * If you're working on the host and expecting things to show up immediately inside the container, you can learn a lot by running `ddev mutagen monitor` in a separate window as you work. You'll see when mutagen responds to your changes and get an idea about how much delay there is.

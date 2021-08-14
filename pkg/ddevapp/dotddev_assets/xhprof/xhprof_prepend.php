@@ -6,7 +6,7 @@
 
 # This file is used by `ddev xhprof on` and determines the behavior
 # of xhprof when it is enabled. It is mounted into the ddev-webserver container
-# as /usr/local/bin/xhprof_prepend.php
+# as /usr/local/bin/xhprof/xhprof_prepend.php
 
 # It can be customized for particular sites or for particular CMS versions.
 # Some suggestions and examples are provided below.
