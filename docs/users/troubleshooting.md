@@ -236,12 +236,12 @@ There are two workarounds for this problem:
 
 If you're using a browser on Windows, accessing a project in WSL2, you can end up with very confusing results if your project is listening on a port inside WSL2, but a Windows process is listening on the port on Windows. The way to sort this out is to stop your project inside WSL2, verify that nothing is listening on the port there, and then study the port on the Windows side, by visiting it with a browser or using other tools as described above.
 
-## Other things to try!
+## Other things to try
   
 ### Delete and re-download docker images
   
 In just a few unusual cases, the actual downloaded docker images have somehow corrupted. In that case we can delete all images and they'll be re-downloaded or rebuilt. This does no harm, as everything is just rebuilt, but a `ddev start` make take extra time the first time while it downloads needed resources:
- 
+
 ```bash
 ddev poweroff
 docker rm -f $(docker ps -aq) # stop any other random containers that may be running
