@@ -226,3 +226,17 @@ func FormatDuration(d time.Duration) string {
 	}
 	return fmt.Sprintf("%dm%ds", minutes, seconds)
 }
+
+// IsBeforeCutoffTime returns true if the current time is before
+// the cutoff time, in format "01 Jan 21 10:00 UTC"
+func IsBeforeCutoffTime(cutoff string) bool {
+	cutoffTime, err := time.Parse(time.RFC822, cutoff)
+	if err != nil {
+		output.UserErr.Printf("Failed to parse cutoffTime %s: %v", cutoffTime, err)
+	}
+	currentTime := time.Now()
+	if currentTime.Before(cutoffTime) {
+		return true
+	}
+	return false
+}
