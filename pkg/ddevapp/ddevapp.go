@@ -940,7 +940,7 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	// Delete the NFS volumes before we bring up docker-compose.
+	// Delete the NFS volumes before we bring up docker-compose (and will be created again)
 	// We don't care if the volume wasn't there
 	_ = dockerutil.RemoveVolume(app.GetNFSMountVolName())
 
