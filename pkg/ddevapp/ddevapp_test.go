@@ -364,7 +364,7 @@ func TestDdevStart(t *testing.T) {
 	for _, imageName := range []string{webBuilt, dbBuilt} {
 		exists, err = dockerutil.ImageExistsLocally(imageName)
 		assert.NoError(err)
-		assert.False(exists, "image %s should not have existed but still exists (while testing %s)", app.Name)
+		assert.False(exists, "image %s should not have existed but still exists (while testing %s)", imageName, app.Name)
 	}
 
 	runTime()
