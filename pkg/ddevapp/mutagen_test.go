@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
 	"testing"
 	"time"
 )
@@ -90,9 +92,20 @@ func TestMutagenSimple(t *testing.T) {
 
 	// Make sure we can stop the daemon
 	ddevapp.StopMutagenDaemon()
+	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
+		out, err := exec.RunHostCommand("bash", "-c", "ps -ef | grep mutagen")
+		assert.NoError(err)
+		t.Logf("mutagen processes after StopMutagenDaemon: \n=====\n%s====\n", out)
+	}
+
 	out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list")
 	assert.NoError(err)
 	assert.Contains(out, "Started Mutagen daemon in background")
+	if !strings.Contains(out, "Started Mutagen daemon in background") && (runtime.GOOS == "darwin" || runtime.GOOS == "linux") {
+		out, err := exec.RunHostCommand("bash", "-c", "ps -ef | grep mutagen")
+		assert.NoError(err)
+		t.Logf("current mutagen processes: \n=====\n%s====\n", out)
+	}
 
 	err = app.Start()
 	assert.NoError(err)
