@@ -3,7 +3,6 @@ package ddevapp_test
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
@@ -140,29 +139,20 @@ func TestAcquiaPush(t *testing.T) {
 	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	assert.NoError(err)
 
-	siteDir := testcommon.CreateTmpDir(t.Name())
-
-	// We have to have a d8 codebase for drush to work right
-	d8code := FullTestSites[1]
-	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
-	if d8code.Dir == "" || !fileutil.FileExists(d8code.Dir) {
-		err := d8code.Prepare()
-		require.NoError(t, err)
-		app, err := NewApp(d8code.Dir, false)
-		require.NoError(t, err)
-		_ = app.Stop(true, false)
-	}
-	_ = os.Remove(siteDir)
-	err = fileutil.CopyDir(d8code.Dir, siteDir)
+	// Use a D9 codebase for drush to work right
+	d9code := FullTestSites[8]
+	d9code.Name = t.Name()
+	err = d9code.Prepare()
 	require.NoError(t, err)
-	err = os.Chdir(siteDir)
+	app, err := NewApp(d9code.Dir, false)
+	require.NoError(t, err)
+	_ = app.Stop(true, false)
+
+	err = os.Chdir(d9code.Dir)
 	require.NoError(t, err)
 
 	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
 	require.NoError(t, err)
-
-	app, err := NewApp(siteDir, true)
-	assert.NoError(err)
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
@@ -173,16 +163,13 @@ func TestAcquiaPush(t *testing.T) {
 		assert.NoError(err)
 
 		_ = os.Chdir(origDir)
-		err = os.RemoveAll(siteDir)
+		err = os.RemoveAll(d9code.Dir)
 		assert.NoError(err)
 	})
 
-	app.Name = t.Name()
-	app.Type = nodeps.AppTypeDrupal9
 	app.Hooks = map[string][]YAMLTask{"post-push": {{"exec-host": "touch hello-post-push-" + app.Name}}, "pre-push": {{"exec-host": "touch hello-pre-push-" + app.Name}}}
 	_ = app.Stop(true, false)
 
-	_ = app.Stop(true, false)
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
@@ -214,6 +201,15 @@ func TestAcquiaPush(t *testing.T) {
 	err = app.Pull(provider, false, false, false)
 	require.NoError(t, err)
 
+	// Make sure we got something valid and everything is OK.
+	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="randy@example.com";' | %s mysql -N`, DdevBin)})
+	require.NoError(t, err)
+	require.True(t, strings.HasPrefix(out, "1\n"), "pulled database does not seem to be valid - randy@example.com not found")
+
+	out, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'SHOW TABLES LIKE "watchdog";' | %s mysql -N`, DdevBin)})
+	require.NoError(t, err)
+	require.True(t, strings.HasPrefix(out, "watchdog\n"), "pulled database does not seem to be valid - watchdog table is missing")
+
 	// Create database and files entries that we can verify after push
 	tval := nodeps.RandomString(10)
 	_, _, err = app.Exec(&ExecOpts{
@@ -222,14 +218,14 @@ func TestAcquiaPush(t *testing.T) {
 	require.NoError(t, err)
 	fName := tval + ".txt"
 	fContent := []byte(tval)
-	err = os.WriteFile(filepath.Join(siteDir, "sites/default/files", fName), fContent, 0644)
+	err = os.WriteFile(filepath.Join(d9code.Dir, "sites/default/files", fName), fContent, 0644)
 	assert.NoError(err)
 
 	err = app.Push(provider, false, false)
 	require.NoError(t, err)
 
 	// Test that the database row was added
-	out, _, err := app.Exec(&ExecOpts{
+	out, _, err = app.Exec(&ExecOpts{
 		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s"' | drush @%s --alias-path=~/.drush sql-cli --extra=-N`, t.Name(), tval, acquiaTestSite),
 	})
 	require.NoError(t, err)
