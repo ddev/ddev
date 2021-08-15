@@ -789,7 +789,7 @@ func TestConfigGitignore(t *testing.T) {
 	_, err = exec.RunHostCommand("bash", "-c", fmt.Sprintf("touch ~/.ddev/commands/web/%s ~/.ddev/homeadditions/%s", t.Name(), t.Name()))
 	assert.NoError(err)
 	if err != nil {
-		out, err = exec.RunHostCommand("bash", "-c", "ls -lR ~/.ddev")
+		out, err = exec.RunHostCommand("bash", "-c", "ls -l ~/.ddev && ls -lR ~/.ddev/commands ~/.ddev/homeadditions")
 		assert.NoError(err)
 		t.Logf("Contents of global .ddev: \n=====\n%s\n====", out)
 	}
