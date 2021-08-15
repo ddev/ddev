@@ -755,9 +755,9 @@ func TestConfigGitignore(t *testing.T) {
 	origDir, _ := os.Getwd()
 
 	// Create a temporary directory and switch to it.
-	tmpDir := testcommon.CreateTmpDir(t.Name())
+	testDir := testcommon.CreateTmpDir(t.Name())
 
-	err := os.Chdir(tmpDir)
+	err := os.Chdir(testDir)
 	require.NoError(t, err)
 
 	_, err = exec.RunHostCommand(DdevBin, "config", "--auto")
@@ -769,7 +769,7 @@ func TestConfigGitignore(t *testing.T) {
 		assert.NoError(err)
 		_, err = exec.RunHostCommand("bash", "-c", fmt.Sprintf("rm -f ~/.ddev/commands/web/%s ~/.ddev/homeadditions/%s", t.Name(), t.Name()))
 		assert.NoError(err)
-		err = os.RemoveAll(tmpDir)
+		err = os.RemoveAll(testDir)
 		assert.NoError(err)
 	})
 
