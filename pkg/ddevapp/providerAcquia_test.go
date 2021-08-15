@@ -201,6 +201,11 @@ func TestAcquiaPush(t *testing.T) {
 	err = app.Pull(provider, false, false, false)
 	require.NoError(t, err)
 
+	// Make sure we got something valid and everything is OK.
+	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="randy@example.com";' | %s mysql -N`, DdevBin)})
+	require.NoError(t, err)
+	require.True(t, strings.HasPrefix(out, "1\n"), "pulled database does not seem to be valid - randy@example.com not found")
+
 	// Create database and files entries that we can verify after push
 	tval := nodeps.RandomString(10)
 	_, _, err = app.Exec(&ExecOpts{
@@ -216,7 +221,7 @@ func TestAcquiaPush(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test that the database row was added
-	out, _, err := app.Exec(&ExecOpts{
+	out, _, err = app.Exec(&ExecOpts{
 		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s"' | drush @%s --alias-path=~/.drush sql-cli --extra=-N`, t.Name(), tval, acquiaTestSite),
 	})
 	require.NoError(t, err)
