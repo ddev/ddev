@@ -13,6 +13,7 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
+	docker "github.com/fsouza/go-dockerclient"
 	"github.com/pkg/errors"
 	"golang.org/x/term"
 	"os"
@@ -94,7 +95,7 @@ func CreateMutagenSync(app *DdevApp) error {
 	syncName := MutagenSyncName(app.Name)
 	configFile := GetMutagenConfigFile(app)
 	if configFile != "" {
-		util.Success("Using mutagen config file %s", configFile)
+		util.Debug("Using mutagen config file %s", configFile)
 	}
 
 	util.Debug("Terminating mutagen sync if session already exists")
@@ -371,4 +372,26 @@ func (app *DdevApp) GenerateMutagenYml() error {
 	}
 	err = fileutil.TemplateStringToFile(content, map[string]interface{}{"SymlinkMode": symlinkMode}, mutagenYmlPath)
 	return err
+}
+
+// IsMutagenVolumeMounted checks to see if the mutagen volume is mounted
+func IsMutagenVolumeMounted(app *DdevApp) (bool, error) {
+	client := dockerutil.GetDockerClient()
+	container, err := dockerutil.FindContainerByName("ddev-" + app.Name + "-web")
+	if err != nil {
+		return false, err
+	}
+	inspect, err := client.InspectContainerWithOptions(docker.InspectContainerOptions{
+		ID: container.ID,
+	})
+	if err != nil {
+		return false, err
+	}
+	for _, m := range inspect.Mounts {
+		if m.Name == app.Name+"_project_mutagen" {
+			return true, nil
+		}
+	}
+	return false, nil
+
 }

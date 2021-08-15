@@ -30,6 +30,8 @@ func TestCmdMutagen(t *testing.T) {
 
 	app, err := ddevapp.GetActiveApp("")
 	require.NoError(t, err)
+	err = app.Stop(true, false)
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
@@ -53,7 +55,8 @@ func TestCmdMutagen(t *testing.T) {
 	_, err = exec.RunHostCommand(DdevBin, "config", "--mutagen-enabled=true")
 	assert.NoError(err)
 
-	app, err = ddevapp.NewApp("", false)
+	// Have to reload the app, since we just changed the config
+	app, err = ddevapp.GetActiveApp("")
 	require.NoError(t, err)
 
 	// Make sure it got turned on
