@@ -352,7 +352,7 @@ func (app *DdevApp) GenerateMutagenYml() error {
 		return nil
 	}
 
-	mutagenYmlPath := app.GetConfigPath("mutagen.yml")
+	mutagenYmlPath := GetMutagenConfigFile(app)
 	if sigExists, err := fileutil.FgrepStringInFile(mutagenYmlPath, DdevFileSignature); err == nil && !sigExists {
 		// If the signature doesn't exist, they have taken over the file, so return
 		return nil
