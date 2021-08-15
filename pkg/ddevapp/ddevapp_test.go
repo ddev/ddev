@@ -569,10 +569,16 @@ func TestDdevStartUnmanagedSettings(t *testing.T) {
 	assert.False(fileutil.FileExists(app.SiteSettingsPath))
 	assert.False(fileutil.FileExists(app.SiteDdevSettingsFile))
 
+	err = app.Stop(false, false)
+	assert.NoError(err)
+
 	app.DisableSettingsManagement = false
 	err = app.WriteConfig()
 	assert.NoError(err)
 	_, err = app.CreateSettingsFile()
+	assert.NoError(err)
+
+	err = app.Start()
 	assert.NoError(err)
 
 	// Now with DisableSettingsManagement=false, both should exist after config/settings creation

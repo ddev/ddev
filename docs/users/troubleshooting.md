@@ -236,6 +236,15 @@ There are two workarounds for this problem:
 
 If you're using a browser on Windows, accessing a project in WSL2, you can end up with very confusing results if your project is listening on a port inside WSL2, but a Windows process is listening on the port on Windows. The way to sort this out is to stop your project inside WSL2, verify that nothing is listening on the port there, and then study the port on the Windows side, by visiting it with a browser or using other tools as described above.
 
+## Limitations on Symbolic Links (symlinks)
+
+Symbolic links are widely used but have specific limitations in many environments, not just in DDEV. Here are some of the ways those may affect you:
+
+* **Crossing mount boundaries**: Symlinks may not generally cross between network mounts. In other words, if you have a relative symlink in the root of your project directory on the host that points to `../somefile.txt`,  that symlink will not be valid inside the container where `../` is a completely different filesystem (and is not mounted typically).
+* **Symlinks to absolute paths**: If you have an absolute symlink to something like `/Users/xxx/somefile.txt` on the host, it will not be resolvable inside the container because `/Users` is not mounted there. Note that some tools, especially on Magento 2, may create symlinks to rooted paths, with targets like `/var/www/html/path/to/something`. These basically can't make it to the host, so may create errors.
+* **Windows restrictions on symlinks**: Inside the Docker container on Windows you may not be able to even create a symlink that goes outside the container.
+* **Mutagen restrictions on Windows symlinks**: On macOS and Linux (including WSL2) the default .ddev/mutagen.yml chooses the `posix-raw` type of symlink handling (See [mutagen docs](https://mutagen.io/documentation/synchronization/symbolic-links). This basically means that any symlink created will try to sync, regardless of whether it's valid in the other environment. However, Mutagen does not support posix-raw on traditional Windows, so ddev uses the `portable` symlink mode. So on Windows with Mutagen... symlinks have to be strictly limited to relative links that are inside the mutagen section of the project.
+
 ## Other things to try
   
 ### Delete and re-download docker images
