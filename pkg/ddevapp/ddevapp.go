@@ -840,13 +840,6 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	// We used to support nginx overrides in .ddev/nginx-site.conf
-	// Warn in that case
-	oldNginxConfig := app.GetConfigPath("nginx-site.conf")
-	if fileutil.FileExists(oldNginxConfig) {
-		util.Warning("An old nginx-site.conf exists at %s. Please move it to ~/.ddev/nginx_full", oldNginxConfig)
-	}
-
 	err = app.GenerateWebserverConfig()
 	if err != nil {
 		return err

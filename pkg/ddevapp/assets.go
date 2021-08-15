@@ -12,9 +12,9 @@ var bundledAssets embed.FS
 // PopulateExamplesCommandsHomeadditions grabs embedded assets and
 // installs them into the named directory
 func PopulateExamplesCommandsHomeadditions(directory string) error {
-	app, err := GetActiveApp(directory)
+	app, err := NewApp(directory, false)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	err = CopyEmbedAssets(bundledAssets, "dotddev_assets", app.GetConfigPath(""))

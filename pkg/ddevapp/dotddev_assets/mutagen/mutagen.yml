@@ -1,11 +1,8 @@
 #ddev-generated
-# To override this file remove the line above
-# and add your own configuration. If you override it you will
-# probably want to check it in.
-# See ddev mutagen docs at
-# https://ddev.readthedocs.io/en/latest/users/performance/#using-mutagen
-# For detailed information about mutagen configuration options, see
-# https://mutagen.io/documentation/introduction/configuration
+'
+# This file should be overwritten by a file that has the
+# actual symlink mode for each OS
+
 sync:
   defaults:
     mode: "two-way-resolved"
@@ -20,5 +17,5 @@ sync:
       # composer operations may fail if they use dev versions/git.
       # vcs: true
     symlink:
-      mode: "{{ .SymlinkMode }}"
+      mode: "portable"
 
