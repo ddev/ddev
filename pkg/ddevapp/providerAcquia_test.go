@@ -206,6 +206,10 @@ func TestAcquiaPush(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, strings.HasPrefix(out, "1\n"), "pulled database does not seem to be valid - randy@example.com not found")
 
+	out, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'SHOW TABLES LIKE "watchdog";' | %s mysql -N`, DdevBin)})
+	require.NoError(t, err)
+	require.True(t, strings.HasPrefix(out, "watchdog\n"), "pulled database does not seem to be valid - watchdog table is missing")
+
 	// Create database and files entries that we can verify after push
 	tval := nodeps.RandomString(10)
 	_, _, err = app.Exec(&ExecOpts{
