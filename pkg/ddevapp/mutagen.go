@@ -391,5 +391,3 @@ func IsMutagenVolumeMounted(app *DdevApp) (bool, error) {
 	return false, nil
 
 }
-
-
