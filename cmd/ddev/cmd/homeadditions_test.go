@@ -61,7 +61,7 @@ func TestHomeadditions(t *testing.T) {
 	})
 
 	// Simply run "ddev" to make sure homeadditions example files get populated
-	_, err = exec.RunCommand(DdevBin, []string{})
+	_, err = exec.RunHostCommand(DdevBin)
 	assert.NoError(err)
 
 	for _, f := range []string{"bash_aliases.example", "README.txt"} {
@@ -72,7 +72,7 @@ func TestHomeadditions(t *testing.T) {
 	app, err := ddevapp.GetActiveApp(site.Name)
 	require.NoError(t, err)
 
-	_, err = exec.RunCommand(DdevBin, []string{"start", "-y"})
+	_, err = exec.RunHostCommand(DdevBin, "start", "-y")
 	assert.NoError(err)
 
 	// Make sure that even though there was a global and a project-level .myscript.sh
