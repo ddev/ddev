@@ -21,7 +21,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"time"
 )
 
 // SetMutagenVolumeOwnership chowns the volume in use to the current user.
@@ -55,7 +54,7 @@ func TerminateMutagenSync(app *DdevApp) error {
 		if err != nil {
 			return err
 		}
-		util.Success("Terminated mutagen sync session '%s'", syncName)
+		util.Debug("Terminated mutagen sync session '%s'", syncName)
 	}
 	return nil
 }
@@ -135,6 +134,8 @@ func CreateMutagenSync(app *DdevApp) error {
 
 	if term.IsTerminal(int(os.Stderr.Fd())) {
 		go func() {
+			previousStatus := ""
+			curStatus := ""
 			cmd := osexec.Command(globalconfig.GetMutagenPath(), "sync", "monitor", syncName)
 			stdout, _ := cmd.StdoutPipe()
 			err = cmd.Start()
@@ -151,6 +152,13 @@ func CreateMutagenSync(app *DdevApp) error {
 					l := string(line)
 					if strings.HasPrefix(l, "Status:") {
 						_, _ = fmt.Fprintf(os.Stderr, "%s", l)
+						t := strings.Replace(l, " ", "", 2)
+						c := strings.Split(t, " ")
+						curStatus = c[0]
+						if previousStatus != curStatus {
+							_, _ = fmt.Fprintf(os.Stderr, "\n")
+						}
+						previousStatus = curStatus
 					}
 				}
 			}
@@ -162,10 +170,6 @@ func CreateMutagenSync(app *DdevApp) error {
 		// Complete when the MutagenSyncFlush() completes
 		case err = <-flushErr:
 			return err
-
-		// Show dots when it seems like nothing is happening
-		case <-time.After(1 * time.Second):
-			_, _ = fmt.Fprintf(os.Stderr, ".")
 		}
 	}
 }
