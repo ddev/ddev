@@ -138,13 +138,17 @@ func TestGetActiveAppRoot(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(TestSites[0].Dir, appRoot)
 
-	switchDir := TestSites[0].Chdir()
+	origDir, _ := os.Getwd()
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
 
 	appRoot, err = ddevapp.GetActiveAppRoot("")
 	assert.NoError(err)
 	assert.Equal(TestSites[0].Dir, appRoot)
 
-	switchDir()
 }
 
 // TestCreateGlobalDdevDir checks to make sure that ddev will create a ~/.ddev (and updatecheck)

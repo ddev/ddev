@@ -2154,6 +2154,10 @@ func GetActiveAppRoot(siteName string) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("could not find a project in %s. Have you run 'ddev config'? Please specify a project name or change directories: %s", siteDir, err)
 		}
+		// Handle the case where it's registered globally but stopped
+	} else if p := globalconfig.GetProject(siteName); p != nil {
+		return p.AppRoot, nil
+		// Or find it by looking at docker containers
 	} else {
 		var ok bool
 
