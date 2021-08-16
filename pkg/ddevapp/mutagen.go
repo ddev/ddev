@@ -243,7 +243,7 @@ func (app *DdevApp) MutagenSyncFlush() error {
 		if status != "ok" || err != nil {
 			return err
 		}
-		util.Success("Flushed mutagen sync session '%s'", syncName)
+		util.Debug("Flushed mutagen sync session '%s'", syncName)
 	}
 	return nil
 }
