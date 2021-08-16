@@ -820,7 +820,7 @@ func (app *DdevApp) Start() error {
 	}
 
 	// The .ddev directory may still need to be populated, especially in tests
-	err = PopulateExamplesCommandsHomeadditions(app.AppRoot)
+	err = PopulateExamplesCommandsHomeadditions(app.Name)
 	if err != nil {
 		return err
 	}

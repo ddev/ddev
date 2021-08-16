@@ -11,10 +11,12 @@ var bundledAssets embed.FS
 
 // PopulateExamplesCommandsHomeadditions grabs embedded assets and
 // installs them into the named directory
-func PopulateExamplesCommandsHomeadditions(directory string) error {
-	app, err := NewApp(directory, false)
+func PopulateExamplesCommandsHomeadditions(appName string) error {
+	app, err := GetActiveApp(appName)
+	// If we have an error in GetActiveApp, it means we're not in a project directory
+	// That's no an error, just means we can't do this work, so return nil.
 	if err != nil {
-		return err
+		return nil
 	}
 
 	err = CopyEmbedAssets(bundledAssets, "dotddev_assets", app.GetConfigPath(""))
