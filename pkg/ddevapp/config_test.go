@@ -794,11 +794,6 @@ func TestPHPOverrides(t *testing.T) {
 // TestExtraPackages tests to make sure that *extra_packages config.yaml directives
 // work (and are overridden by *-build/Dockerfile).
 func TestExtraPackages(t *testing.T) {
-	embargoTime := "20 AUG 21 10:00 MDT"
-	if util.IsBeforeCutoffTime(embargoTime) {
-		t.Skipf("Skipping %s until %s", t.Name(), embargoTime)
-	}
-
 	assert := asrt.New(t)
 	app := &DdevApp{}
 
