@@ -374,6 +374,10 @@ func (app *DdevApp) GenerateMutagenYml() error {
 	if runtime.GOOS == "windows" {
 		symlinkMode = "portable"
 	}
+	err = os.MkdirAll(filepath.Dir(mutagenYmlPath), 0755)
+	if err != nil {
+		return err
+	}
 	err = fileutil.TemplateStringToFile(content, map[string]interface{}{"SymlinkMode": symlinkMode}, mutagenYmlPath)
 	return err
 }
