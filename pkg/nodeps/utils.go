@@ -59,6 +59,11 @@ func IsWSL2() bool {
 	return GetWSLDistro() != ""
 }
 
+// IsMacM1 returns true if running on mac M1
+func IsMacM1() bool {
+	return runtime.GOOS == "darwin" && runtime.GOARCH == "arm64"
+}
+
 // GetWSLDistro returns the WSL2 distro name if on Linux
 func GetWSLDistro() string {
 	wslDistro := ""
