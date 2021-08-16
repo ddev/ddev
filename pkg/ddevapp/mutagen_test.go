@@ -59,8 +59,8 @@ func TestMutagenSimple(t *testing.T) {
 	assert.True(desc["mutagen_enabled"].(bool))
 
 	// Make sure the sync is there
-	_, err = exec.RunHostCommand(mutagenPath, "sync", "list", ddevapp.MutagenSyncName(app.Name))
-	assert.NoError(err)
+	out, err := exec.RunHostCommand(mutagenPath, "sync", "list", ddevapp.MutagenSyncName(app.Name))
+	assert.NoError(err, "output=%s", out)
 
 	// Remove the vendor directory and sync
 	err = os.RemoveAll(filepath.Join(app.AppRoot, "vendor"))
@@ -87,8 +87,8 @@ func TestMutagenSimple(t *testing.T) {
 
 	// Stop app, should result in no more mutagen sync
 	err = app.Stop(false, false)
-	_, err = exec.RunHostCommand(mutagenPath, "sync", "list", ddevapp.MutagenSyncName(app.Name))
-	assert.Error(err)
+	out, err = exec.RunHostCommand(mutagenPath, "sync", "list", ddevapp.MutagenSyncName(app.Name))
+	assert.Error(err, "output=%s", out)
 
 	// Make sure we can stop the daemon
 	ddevapp.StopMutagenDaemon()
@@ -98,7 +98,7 @@ func TestMutagenSimple(t *testing.T) {
 		t.Logf("mutagen processes after StopMutagenDaemon: \n=====\n%s====\n", out)
 	}
 
-	out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list")
+	out, err = exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list")
 	assert.NoError(err)
 	assert.Contains(out, "Started Mutagen daemon in background")
 	if !strings.Contains(out, "Started Mutagen daemon in background") && (runtime.GOOS == "darwin" || runtime.GOOS == "linux") {
@@ -112,13 +112,13 @@ func TestMutagenSimple(t *testing.T) {
 
 	// Make sure sync is down on pause also
 	err = app.Pause()
-	_, err = exec.RunHostCommand(mutagenPath, "sync", "list", ddevapp.MutagenSyncName(app.Name))
-	assert.Error(err)
+	out, err = exec.RunHostCommand(mutagenPath, "sync", "list", ddevapp.MutagenSyncName(app.Name))
+	assert.Error(err, "output=%s", out)
 
 	// And that it's re-established when we start again
 	err = app.Start()
-	_, err = exec.RunHostCommand(mutagenPath, "sync", "list", ddevapp.MutagenSyncName(app.Name))
-	assert.NoError(err)
+	out, err = exec.RunHostCommand(mutagenPath, "sync", "list", ddevapp.MutagenSyncName(app.Name))
+	assert.NoError(err, "could not run mutagen sync list: output=%s", out)
 
 	runTime()
 }

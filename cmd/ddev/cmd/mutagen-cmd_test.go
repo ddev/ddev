@@ -62,12 +62,13 @@ func TestCmdMutagen(t *testing.T) {
 	// Make sure it got turned on
 	assert.True(app.MutagenEnabled)
 
-	// Now test subcommands
-	err = app.Start()
+	// Now test subcommands. Wait just a bit for mutagen to get completely done, with transition problems sorted outx
+	err = app.StartAndWait(10)
 	require.NoError(t, err)
 	out, err := exec.RunHostCommand(DdevBin, "mutagen", "status", "--verbose")
 	assert.NoError(err)
-	assert.True(strings.HasPrefix(out, "Mutagen: ok"), "verbose status does not start with 'Mutagen: ok', instead has `%s'", out)
+	assert.True(strings.HasPrefix(out, "Mutagen: ok"), "expected Mutagen: ok. Full output: %s", out)
+	assert.Contains(out, "Mutagen: ok")
 	out, err = exec.RunHostCommand(DdevBin, "mutagen", "status", "--verbose")
 	assert.NoError(err)
 	assert.Contains(out, "Alpha:")
