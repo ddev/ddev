@@ -149,6 +149,8 @@ func CreateMutagenSync(app *DdevApp) error {
 			for {
 				select {
 				case <-stopGoroutine:
+					_ = cmd.Process.Kill()
+					_, _ = cmd.Process.Wait()
 					return
 				default:
 					line, err := buf.ReadBytes('\r')
