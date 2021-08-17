@@ -2753,31 +2753,36 @@ type URLRedirectExpectations struct {
 // directory will fail
 func TestAppdirAlreadyInUse(t *testing.T) {
 	assert := asrt.New(t)
-	originalProjectName := "originalproject"
-	secondProjectName := "secondproject"
+	originalProjectName := t.Name() + "-originalproject"
+	secondProjectName := t.Name() + "_secondproject"
+	origDir, _ := os.Getwd()
 	// Create a temporary directory and switch to it.
-	tmpdir := testcommon.CreateTmpDir(t.Name())
+	testDir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := ddevapp.NewApp(tmpdir, false)
-	require.NoError(t, err)
-	defer func() {
+	app, err := ddevapp.NewApp(testDir, false)
+
+	t.Cleanup(func() {
 		app.Name = originalProjectName
 		_ = app.Stop(true, false)
 		app.Name = secondProjectName
 		_ = app.Stop(true, false)
-
-		testcommon.Chdir(tmpdir)()
-		testcommon.CleanupDir(tmpdir)
-	}()
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = os.RemoveAll(testDir)
+		assert.NoError(err)
+	})
 
 	// Write/create global with the name "originalproject"
 	app.Name = originalProjectName
+	require.NoError(t, err)
+	err = app.WriteConfig()
 	require.NoError(t, err)
 	err = app.Start()
 	require.NoError(t, err)
 
 	// Now change the project namename and look for the complaint
 	app.Name = secondProjectName
+
 	err = app.Start()
 	assert.Error(err)
 	assert.Contains(err.Error(), "already contains a project named "+originalProjectName)
@@ -2787,6 +2792,7 @@ func TestAppdirAlreadyInUse(t *testing.T) {
 	// Change back to original name
 	app.Name = originalProjectName
 	assert.NoError(err)
+
 	err = app.Start()
 	assert.NoError(err)
 
