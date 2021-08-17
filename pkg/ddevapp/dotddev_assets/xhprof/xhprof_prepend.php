@@ -1,15 +1,15 @@
 <?php
 
-#ddev-generated
-# If you want to take over and customize this file, remove the line above
-# And check this file in.
+// #ddev-generated
+// If you want to take over and customize this file, remove the line above
+// And check this file in.
 
-# This file is used by `ddev xhprof on` and determines the behavior
-# of xhprof when it is enabled. It is mounted into the ddev-webserver container
-# as /usr/local/bin/xhprof/xhprof_prepend.php
+// This file is used by `ddev xhprof on` and determines the behavior
+// of xhprof when it is enabled. It is mounted into the ddev-webserver container
+// as /usr/local/bin/xhprof/xhprof_prepend.php
 
-# It can be customized for particular sites or for particular CMS versions.
-# Some suggestions and examples are provided below.
+// It can be customized for particular sites or for particular CMS versions.
+// Some suggestions and examples are provided below.
 
 $uri = "none";
 if (!empty($_SERVER) && array_key_exists('REQUEST_URI', $_SERVER)) {

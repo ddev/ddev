@@ -1,7 +1,7 @@
 <?php
 
-# This file is built into the container and will normally be
-# mounted on top of by ddev. So you shouldn't be seeing these words.
+// This file is built into the container and will normally be
+// mounted on top of by ddev. So you shouldn't be seeing these words.
 
 $uri = "none";
 if (!empty($_SERVER) && array_key_exists('REQUEST_URI', $_SERVER)) {
