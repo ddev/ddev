@@ -106,7 +106,7 @@ An example configuration:
 ### Visual Studio Code (vscode) Debugging Setup
 
 1. Install the [php-debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension.
-2. Update the project's launch.json (.vscode/launch.json) to add "Listen for xdebug" (see [config snippet](snippets/launch.json))
+2. Update the project's [launch.json](https://code.visualstudio.com/docs/editor/debugging#_launch-configurations) (.vscode/launch.json) to add "Listen for xdebug" (see [config snippet](snippets/launch.json))
 3. Set a breakpoint in your index.php. If it isn't solid red, restart.
 4. In the menu, choose Run->Start Debugging.You may have to select "Listen for XDebug" by the green arrowhead at the top left. The bottom pane of vscode should now be orange (live) and should say "Listen for XDebug".
 5. Enable XDebug with `ddev xdebug on`
