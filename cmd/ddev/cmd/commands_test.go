@@ -29,7 +29,7 @@ func TestCustomCommands(t *testing.T) {
 	assert := asrt.New(t)
 	runTime := util.TimeTrack(time.Now(), t.Name())
 
-	tmpHome := testcommon.CreateTmpDir(t.Name() + "tempHome")
+	tmpHome := testcommon.CreateTmpDir(t.Name() + "-tempHome")
 	origHome := os.Getenv("HOME")
 	origDebug := os.Getenv("DDEV_DEBUG")
 	// Change the homedir temporarily
@@ -44,7 +44,7 @@ func TestCustomCommands(t *testing.T) {
 	err = os.Chdir(site.Dir)
 	require.NoError(t, err)
 
-	app, _ := ddevapp.NewApp(site.Dir, false)
+	app, _ := ddevapp.NewApp("", false)
 	origType := app.Type
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
