@@ -107,6 +107,9 @@ func TestComposerVersion(t *testing.T) {
 
 	app, err := ddevapp.NewApp(testDir, false)
 	assert.NoError(err)
+	app.Name = t.Name()
+	err = app.WriteConfig()
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
