@@ -19,10 +19,9 @@ ENV CAROOT /mnt/ddev-global-cache/mkcert
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 
-#TODO: When upstream nginx package is ready for bullseye, use it.
-#RUN wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key && \
-#    apt-key add /tmp/nginx_signing.key && \
-#    echo "deb http://nginx.org/packages/debian/ $(lsb_release -sc) nginx" > /etc/apt/sources.list.d/nginx.list
+RUN wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key && \
+    apt-key add /tmp/nginx_signing.key && \
+    echo "deb http://nginx.org/packages/debian/ $(lsb_release -sc) nginx" > /etc/apt/sources.list.d/nginx.list
 
 ADD ddev-webserver-etc-skel /
 RUN /sbin/mkhomedir_helper www-data
