@@ -14,4 +14,8 @@ DDEV-Local has built-in support for [xhprof](https://www.php.net/manual/en/book.
 
 For a tutorial on how to study the various xhprof reports, see the section "How to use XHPROF UI" in [A Guide to Profiling with XHPROF](https://inviqa.com/blog/profiling-xhprof). It takes a little time to get your eyes used to the reporting. (You do not need to do any of the installation described in that article, of course.)
 
-Some early versions of xhprof often added a link to the bottom of a web page, but that approach breaks all pages that aren't simple html, including command-line invocations,  json or other API results, and even breaks pages that consume json themselves.
+### Advanced xhprof configuration
+
+You can change the contents of the xhprof_prepend function - it's in `.ddev/xhprof/xhprof_prepend.php`.
+
+For example, you may want to add a link to the profile run to the bottom of the profiled web page; the provided xhprof_prepend.php has comments and a sample function to do that, which works with Drupal 7. If you change it, remove the `#ddev-generated` line from the top, and check it in (`git add -f .ddev/xhprof/xhprof_prepend.php`)
