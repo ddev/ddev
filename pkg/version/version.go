@@ -44,7 +44,7 @@ var MutagenVersionConstraint = nodeps.RequiredMutagenVersion
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag for drud dev
-var WebTag = "20210808_PHP_IDE_CONFIG" // Note that this can be overridden by make
+var WebTag = "20210817_nginx_1.20" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"
