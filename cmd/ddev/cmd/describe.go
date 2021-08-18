@@ -8,10 +8,11 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/fatih/color"
+	"github.com/gosuri/uitable"
 	"github.com/jwalton/gchalk"
 	"strings"
 
-	"github.com/gosuri/uitable"
+	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 )
 
@@ -69,13 +70,11 @@ func h(s string) string {
 // renderAppDescribe takes the map describing the app and renders it for plain-text output
 func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (string, error) {
 
-	var output string
-
 	status := desc["status"]
 
 	appTable := ddevapp.CreateAppTable()
 	ddevapp.RenderAppRow(appTable, desc)
-	output = fmt.Sprint(appTable) + "\n\n"
+	out := fmt.Sprint(appTable) + "\n\n"
 
 	url := ""
 	if status == ddevapp.SiteRunning {
@@ -97,17 +96,9 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		}
 
 		// Build our service table.
-		services := uitable.New()
-		services.MaxColWidth = 80
-		services.Wrap = true
-		services.Separator = " | "
-		services.AddRow(
-			h("Service"),
-			h("Hostname"),
-			h("Status"),
-			h("URL/Port"),
-			h("Info"),
-		)
+		t := table.NewWriter()
+		t.SetOutputMirror(output.UserOut.Out)
+		t.AppendHeader(table.Row{"Service", "Status", "URL/Port", "Info"})
 
 		// Basic info about the web container.
 		webStatus, _ := dockerutil.GetContainerStateByName("web")
@@ -119,13 +110,9 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		if app.NFSMountEnabled || app.NFSMountEnabledGlobal {
 			nfsStat = "NFS mount enabled"
 		}
-		services.AddRow(
-			"Web",
-			"ddev-"+app.Name+"-web",
-			webStatus,
-			fmt.Sprintf("%s\nInside: http://localhost", url),
-			fmt.Sprintf("PHP %s %s\n%s\n%s", desc["php_version"].(string), desc["webserver_type"].(string), nfsStat, mutagenStat),
-		)
+
+		t.AppendRow(table.Row{
+			"web", webStatus, fmt.Sprintf("%s\nInside: http://localhost", url), fmt.Sprintf("PHP %s %s\n%s\n%s", desc["php_version"].(string), desc["webserver_type"].(string), nfsStat, mutagenStat)})
 
 		// Basic info about the database container.
 		var dbinfo map[string]interface{}
@@ -144,37 +131,20 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		}
 
 		if dbinfo != nil {
-			services.AddRow(
-				"Database",
-				ddevapp.GetDBHostname(app),
-				dbStatus,
-				fmt.Sprintf("Host: %s:%d\nInside: %s:%d", dockerIP, dbinfo["published_port"], ddevapp.GetDBHostname(app), 3306),
-				dbinfoString,
-			)
+			t.AppendRow(table.Row{
+				"db", dbStatus, fmt.Sprintf("Host: %s:%d\nInside: %s:%d", dockerIP, dbinfo["published_port"], ddevapp.GetDBHostname(app), 3306), dbinfoString})
 		}
-
-		services.AddRow(
-			"MailHog",
-			"",
-			"",
-			fmt.Sprintf("%s\nSMTP: web:1025", desc["mailhog_https_url"]),
-			"",
-		)
 
 		phpmyadminStatus, _ := dockerutil.GetContainerStateByName("dba")
 
 		if _, ok := desc["phpmyadmin_https_url"]; ok {
-			services.AddRow(
-				"phpMyAdmin",
-				"dba",
-				phpmyadminStatus,
-				desc["phpmyadmin_https_url"],
-				"",
-			)
+			t.AppendRow(table.Row{
+				"dba", phpmyadminStatus, desc[phpmyadminStatus]})
+
 		}
 
 		for k, v := range desc["extra_services"].(map[string]map[string]string) {
-			url := ""
+			//url := ""
 
 			if httpsURL, ok := v["https_url"]; ok {
 				url = httpsURL
@@ -182,17 +152,14 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 				url = httpURL
 			}
 
-			services.AddRow(
-				k,
-				"",
-				formatStatus(v["status"]),
-				url,
-				v["version"],
-			)
+			t.AppendRow(table.Row{
+				k, "", formatStatus(v["status"]), v["version"]})
+
 		}
 
 		// Output our service table.
-		output = output + fmt.Sprintln(services)
+		t.SetStyle(table.StyleColoredBright)
+		t.Render()
 
 		// Extended info about the web container.
 		if verbose || service == "web" {
@@ -201,36 +168,36 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			for _, url := range desc["urls"].([]string) {
 				urlTable.AddRow(url)
 			}
-			output = output + "\nURLs\n----\n"
+			out = out + "\nURLs\n----\n"
 
-			output = output + fmt.Sprintln(urlTable)
+			out = out + fmt.Sprintln(urlTable)
 		}
 
 		// Extended info about the database container.
 		if verbose || service == "db" {
 			if dbinfo != nil {
-				output = output + "\n" + "MySQL/MariaDB Credentials\n-------------------------\n" + `Username: "db", Password: "db", Default database: "db"` + "\n"
-				output = output + "\n" + `or use root credentials when needed: Username: "root", Password: "root"` + "\n\n"
+				out = out + "\n" + "MySQL/MariaDB Credentials\n-------------------------\n" + `Username: "db", Password: "db", Default database: "db"` + "\n"
+				out = out + "\n" + `or use root credentials when needed: Username: "root", Password: "root"` + "\n\n"
 
-				output = output + fmt.Sprintf("Database hostname and port INSIDE container: %s:3306\n", ddevapp.GetDBHostname(app))
-				output = output + fmt.Sprintf("To connect to db server inside container or in project settings files: \nmysql --host=%s --user=db --password=db --database=db\n", ddevapp.GetDBHostname(app))
+				out = out + fmt.Sprintf("Database hostname and port INSIDE container: %s:3306\n", ddevapp.GetDBHostname(app))
+				out = out + fmt.Sprintf("To connect to db server inside container or in project settings files: \nmysql --host=%s --user=db --password=db --database=db\n", ddevapp.GetDBHostname(app))
 
-				output = output + fmt.Sprintf("Database hostname and port from HOST: %s:%d\n", dockerIP, dbinfo["published_port"])
-				output = output + fmt.Sprintf("To connect to mysql from your host machine, \nmysql --host=%s --port=%d --user=db --password=db --database=db\n", dockerIP, dbinfo["published_port"])
+				out = out + fmt.Sprintf("Database hostname and port from HOST: %s:%d\n", dockerIP, dbinfo["published_port"])
+				out = out + fmt.Sprintf("To connect to mysql from your host machine, \nmysql --host=%s --port=%d --user=db --password=db --database=db\n", dockerIP, dbinfo["published_port"])
 
 				// Extended info about MailHog.
 				if verbose || service == "mailhog" {
-					output = output + "\n" + "MailHog URLs\n------------\n"
+					out = out + "\n" + "MailHog URLs\n------------\n"
 					mailhog := uitable.New()
 					mailhog.AddRow("HTTPS", desc["mailhog_https_url"])
 					mailhog.AddRow("HTTP", desc["mailhog_url"])
-					output = output + fmt.Sprintln(mailhog)
+					out = out + fmt.Sprintln(mailhog)
 				}
 
 				// Extended info about database administration.
 				if _, ok := desc["phpmyadmin_https_url"]; ok {
 					if verbose || service == "dba" {
-						output = output + "\n" + "phpMyAdmin URLs\n------------\n"
+						out = out + "\n" + "phpMyAdmin URLs\n------------\n"
 						dba := uitable.New()
 						if _, ok := desc["phpmyadmin_https_url"]; ok {
 							dba.AddRow("HTTPS", desc["phpmyadmin_https_url"])
@@ -238,7 +205,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 						if _, ok := desc["phpmyadmin_url"]; ok {
 							dba.AddRow("HTTP", desc["phpmyadmin_url"])
 						}
-						output = output + fmt.Sprintln(dba)
+						out = out + fmt.Sprintln(dba)
 					}
 			for k, v := range desc["extra_services"].(map[string]map[string]string) {
 				if httpsURL, ok := v["https_url"]; ok {
@@ -247,18 +214,18 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 
 				for k, v := range desc["extra_services"].(map[string]map[string]string) {
 					if verbose || service == k {
-						output = output + "\n" + k + " URLs\n------------\n"
+						out = out + "\n" + k + " URLs\n------------\n"
 						other := uitable.New()
 						if httpsURL, ok := v["https_url"]; ok {
 							other.AddRow("HTTPS", httpsURL)
 						} else if httpURL, ok := v["http_url"]; ok {
 							other.AddRow("HTTP", httpURL)
 						}
-						output = output + fmt.Sprintln(other)
+						out = out + fmt.Sprintln(other)
 					}
 				}
 
-				output = output + "\n" + ddevapp.RenderRouterStatus() + "\t" + ddevapp.RenderSSHAuthStatus()
+				out = out + "\n" + ddevapp.RenderRouterStatus() + "\t" + ddevapp.RenderSSHAuthStatus()
 			}
 			output = output + fmt.Sprint(other)
 
@@ -266,7 +233,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		}
 	}
 
-	return output, nil
+	return out, nil
 }
 
 func init() {

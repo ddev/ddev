@@ -16,12 +16,12 @@ require (
 	github.com/gosuri/uitable v0.0.0-20160404203958-36ee7e946282
 	github.com/huandu/xstrings v1.0.0 // indirect
 	github.com/imdario/mergo v0.3.5 // indirect
+	github.com/jedib0t/go-pretty/v6 v6.2.4
 	github.com/jwalton/gchalk v1.1.0
 	github.com/lextoumbourou/goodhosts v2.1.0+incompatible
 	github.com/lunixbochs/vtclean v1.0.0 // indirect
 	github.com/manifoldco/promptui v0.8.0
 	github.com/mattn/go-isatty v0.0.4
-	github.com/mattn/go-runewidth v0.0.2 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pelletier/go-toml v1.4.0 // indirect
 	github.com/pkg/errors v0.9.1
