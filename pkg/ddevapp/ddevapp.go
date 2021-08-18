@@ -334,7 +334,9 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 				}
 				extraServices[serviceName] = map[string]string{}
 
-				extraServices[serviceName]["version"] = svc["image"].(string)
+				if _, ok = svc["image"]; !ok {
+					svc["image"] = "built"
+				}
 
 				// container_name may not be provided in all yaml contexts
 				if _, ok = svc["container_name"]; !ok {
