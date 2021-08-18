@@ -36,19 +36,22 @@ func TestServices(t *testing.T) {
 	err := globalconfig.ReadGlobalConfig()
 	assert.NoError(err)
 
-	pwd, _ := os.Getwd()
-
+	origDir, _ := os.Getwd()
 	testDir := testcommon.CreateTmpDir(t.Name())
 
-	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-	defer testcommon.CleanupDir(testDir)
-	defer testcommon.Chdir(testDir)()
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = os.RemoveAll(testDir)
+		assert.NoError(err)
+	})
+
 	err = os.Chdir(testDir)
 	assert.NoError(err)
 
 	app, err := ddevapp.NewApp(testDir, false)
 	assert.NoError(err)
-	err = fileutil.CopyDir(filepath.Join(pwd, "testdata", t.Name()), app.AppConfDir())
+	err = fileutil.CopyDir(filepath.Join(origDir, "testdata", t.Name()), app.AppConfDir())
 	assert.NoError(err)
 
 	// the beanstalkd image is not pushed for arm64

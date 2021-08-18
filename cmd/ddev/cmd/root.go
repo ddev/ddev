@@ -93,7 +93,6 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 				util.Warning("\n\nA new update is available! please visit %s to download the update.\nFor upgrade help see %s", updateURL, updateDocURL)
 			}
 		}
-
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		// Do not report these comamnds
@@ -152,7 +151,6 @@ func Execute() {
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(-1)
 	}
-
 }
 
 func init() {
@@ -160,11 +158,12 @@ func init() {
 
 	output.LogSetUp()
 
+	// Populate custom/script commands so they're visible
 	// We really don't want ~/.ddev or .ddev/homeadditions or .ddev/.globalcommands to have root ownership, breaks things.
 	if os.Geteuid() == 0 {
 		output.UserOut.Warning("Not populating custom commands or hostadditions because running with root privileges")
 	} else {
-		err := populateExamplesCommandsHomeadditions()
+		err := ddevapp.PopulateExamplesCommandsHomeadditions("")
 		if err != nil {
 			util.Warning("populateExamplesAndCommands() failed: %v", err)
 		}

@@ -101,17 +101,20 @@ func TestComposerVersion(t *testing.T) {
 
 	testDir := testcommon.CreateTmpDir(t.Name())
 
-	pwd, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 	err := os.Chdir(testDir)
 	assert.NoError(err)
 
 	app, err := ddevapp.NewApp(testDir, false)
 	assert.NoError(err)
+	app.Name = t.Name()
+	err = app.WriteConfig()
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		err = os.Chdir(pwd)
+		err = os.Chdir(origDir)
 		assert.NoError(err)
 		err = os.RemoveAll(testDir)
 		assert.NoError(err)

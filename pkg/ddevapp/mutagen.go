@@ -78,10 +78,15 @@ func SyncAndTerminateMutagenSession(app *DdevApp) error {
 	return nil
 }
 
+// GetMutagenConfigFilePath returns the canonical location where the mutagen.yml lives
+func GetMutagenConfigFilePath(app *DdevApp) string {
+	return filepath.Join(app.GetConfigPath("mutagen"), "mutagen.yml")
+}
+
 // GetMutagenConfigFile looks to see if there's a project .mutagen.yml
 // If nothing is found, returns empty
 func GetMutagenConfigFile(app *DdevApp) string {
-	projectConfig := filepath.Join(app.GetConfigPath("mutagen.yml"))
+	projectConfig := GetMutagenConfigFilePath(app)
 	if fileutil.FileExists(projectConfig) {
 		return projectConfig
 	}
@@ -351,8 +356,7 @@ func (app *DdevApp) GenerateMutagenYml() error {
 		output.UserOut.Warning("not generating mutagen config file because running with root privileges")
 		return nil
 	}
-
-	mutagenYmlPath := app.GetConfigPath("mutagen.yml")
+	mutagenYmlPath := GetMutagenConfigFilePath(app)
 	if sigExists, err := fileutil.FgrepStringInFile(mutagenYmlPath, DdevFileSignature); err == nil && !sigExists {
 		// If the signature doesn't exist, they have taken over the file, so return
 		return nil
@@ -369,6 +373,10 @@ func (app *DdevApp) GenerateMutagenYml() error {
 	symlinkMode := "posix-raw"
 	if runtime.GOOS == "windows" {
 		symlinkMode = "portable"
+	}
+	err = os.MkdirAll(filepath.Dir(mutagenYmlPath), 0755)
+	if err != nil {
+		return err
 	}
 	err = fileutil.TemplateStringToFile(content, map[string]interface{}{"SymlinkMode": symlinkMode}, mutagenYmlPath)
 	return err

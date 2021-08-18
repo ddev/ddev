@@ -128,23 +128,46 @@ func TestMain(m *testing.M) {
 func TestGetActiveAppRoot(t *testing.T) {
 	assert := asrt.New(t)
 
+	// Looking for active approot here should fail, because there is none
 	_, err := ddevapp.GetActiveAppRoot("")
 	assert.Contains(err.Error(), "Please specify a project name or change directories")
 
+	// There is also no project named "potato"
 	_, err = ddevapp.GetActiveAppRoot("potato")
 	assert.Error(err)
 
+	// However, TestSites[0] is running, so we should find it.
 	appRoot, err := ddevapp.GetActiveAppRoot(TestSites[0].Name)
 	assert.NoError(err)
 	assert.Equal(TestSites[0].Dir, appRoot)
 
-	switchDir := TestSites[0].Chdir()
+	origDir, _ := os.Getwd()
+	err = os.Chdir(TestSites[0].Dir)
+	require.NoError(t, err)
 
+	// We should also now be able to get it in the project directory
+	// since it's running and we're in the directory
 	appRoot, err = ddevapp.GetActiveAppRoot("")
 	assert.NoError(err)
 	assert.Equal(TestSites[0].Dir, appRoot)
 
-	switchDir()
+	// And we should be able to stop it and find it as well
+	app, err := ddevapp.GetActiveApp("")
+	err = app.Stop(false, true)
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		// Leave it running in case anybody cares
+		err = app.Start()
+		assert.NoError(err)
+	})
+
+	appRoot, err = ddevapp.GetActiveAppRoot(app.Name)
+	assert.NoError(err)
+	assert.Equal(TestSites[0].Dir, appRoot)
+
 }
 
 // TestCreateGlobalDdevDir checks to make sure that ddev will create a ~/.ddev (and updatecheck)

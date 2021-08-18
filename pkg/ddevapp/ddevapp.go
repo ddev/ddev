@@ -818,6 +818,12 @@ func (app *DdevApp) Start() error {
 	if err != nil {
 		return err
 	}
+
+	// The .ddev directory may still need to be populated, especially in tests
+	err = PopulateExamplesCommandsHomeadditions(app.Name)
+	if err != nil {
+		return err
+	}
 	// Make sure that any ports allocated are available.
 	// and of course add to global project list as well
 	err = app.UpdateGlobalProjectList()
@@ -832,13 +838,6 @@ func (app *DdevApp) Start() error {
 	err = app.ProcessHooks("pre-start")
 	if err != nil {
 		return err
-	}
-
-	// We used to support nginx overrides in .ddev/nginx-site.conf
-	// Warn in that case
-	oldNginxConfig := app.GetConfigPath("nginx-site.conf")
-	if fileutil.FileExists(oldNginxConfig) {
-		util.Warning("An old nginx-site.conf exists at %s. Please move it to ~/.ddev/nginx_full", oldNginxConfig)
 	}
 
 	err = app.GenerateWebserverConfig()
@@ -934,7 +933,7 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	// Delete the NFS volumes before we bring up docker-compose.
+	// Delete the NFS volumes before we bring up docker-compose (and will be created again)
 	// We don't care if the volume wasn't there
 	_ = dockerutil.RemoveVolume(app.GetNFSMountVolName())
 
@@ -2155,6 +2154,10 @@ func GetActiveAppRoot(siteName string) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("could not find a project in %s. Have you run 'ddev config'? Please specify a project name or change directories: %s", siteDir, err)
 		}
+		// Handle the case where it's registered globally but stopped
+	} else if p := globalconfig.GetProject(siteName); p != nil {
+		return p.AppRoot, nil
+		// Or find it by looking at docker containers
 	} else {
 		var ok bool
 

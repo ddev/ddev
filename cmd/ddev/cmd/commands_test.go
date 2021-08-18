@@ -29,7 +29,7 @@ func TestCustomCommands(t *testing.T) {
 	assert := asrt.New(t)
 	runTime := util.TimeTrack(time.Now(), t.Name())
 
-	tmpHome := testcommon.CreateTmpDir(t.Name() + "tempHome")
+	tmpHome := testcommon.CreateTmpDir(t.Name() + "-tempHome")
 	origHome := os.Getenv("HOME")
 	origDebug := os.Getenv("DDEV_DEBUG")
 	// Change the homedir temporarily
@@ -37,23 +37,30 @@ func TestCustomCommands(t *testing.T) {
 	require.NoError(t, err)
 	_ = os.Setenv("DDEV_DEBUG", "")
 
-	pwd, _ := os.Getwd()
-	testCustomCommandsDir := filepath.Join(pwd, "testdata", t.Name())
+	origDir, _ := os.Getwd()
+	testCustomCommandsDir := filepath.Join(origDir, "testdata", t.Name())
 
 	site := TestSites[0]
-	switchDir := TestSites[0].Chdir()
-	app, _ := ddevapp.NewApp(TestSites[0].Dir, false)
+	err = os.Chdir(site.Dir)
+	require.NoError(t, err)
+
+	app, _ := ddevapp.NewApp("", false)
 	origType := app.Type
 	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
 		runTime()
 		app.Type = origType
-		_ = app.WriteConfig()
-		_ = os.RemoveAll(tmpHome)
+		err = app.WriteConfig()
+		assert.NoError(err)
+		err = os.RemoveAll(tmpHome)
+		assert.NoError(err)
 		_ = os.Setenv("HOME", origHome)
 		_ = os.Setenv("DDEV_DEBUG", origDebug)
-		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", "commands"))
-		_ = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", ".global_commands"))
-		switchDir()
+		err = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", "commands"))
+		assert.NoError(err)
+		err = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", ".global_commands"))
+		assert.NoError(err)
 	})
 	err = app.Start()
 	require.NoError(t, err)
@@ -78,7 +85,7 @@ func TestCustomCommands(t *testing.T) {
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 
-	out, err := exec.RunCommand(DdevBin, []string{})
+	out, err := exec.RunHostCommand(DdevBin)
 	assert.NoError(err)
 	assert.Contains(out, "mysql client in db container")
 
@@ -107,7 +114,7 @@ func TestCustomCommands(t *testing.T) {
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 
-	out, err = exec.RunCommand(DdevBin, []string{})
+	out, err = exec.RunHostCommand(DdevBin)
 	assert.NoError(err)
 	assert.Contains(out, "testhostcmd project (shell host container command)")
 	assert.Contains(out, "testwebcmd project (shell web container command)")
@@ -117,9 +124,8 @@ func TestCustomCommands(t *testing.T) {
 	assert.NotContains(out, "testwebcmd global")  //the global testwebcmd should have been overridden by the projct one
 
 	for _, c := range []string{"testhostcmd", "testhostglobal", "testwebcmd", "testwebglobal"} {
-		args := []string{c, "hostarg1", "hostarg2", "--hostflag1"}
-		out, err = exec.RunCommand(DdevBin, args)
-		assert.NoError(err, "Failed to run ddev %s %v", c, args)
+		out, err = exec.RunHostCommand(DdevBin, c, "hostarg1", "hostarg2", "--hostflag1")
+		assert.NoError(err, "Failed to run ddev %s %v", c)
 		expectedHost, _ := os.Hostname()
 		if !strings.Contains(c, "host") {
 			expectedHost = site.Name + "-web"
@@ -129,22 +135,19 @@ func TestCustomCommands(t *testing.T) {
 
 	// Test line breaks in examples
 	c := "testhostcmd"
-	args := []string{c, "-h"}
-	out, err = exec.RunCommand(DdevBin, args)
-	assert.NoError(err, "Failed to run ddev %s %v", c, args)
+	out, err = exec.RunHostCommand(DdevBin, c, "-h")
+	assert.NoError(err, "Failed to run ddev %s %s", c, "-h")
 	assert.Contains(out, "Examples:\n  ddev testhostcmd\n  ddev testhostcmd -h")
 
 	// Test flags are imported from comments
 	c = "testhostcmdflags"
-	args = []string{c, "--test"}
-	out, err = exec.RunCommand(DdevBin, args)
+	out, err = exec.RunHostCommand(DdevBin, c, "--test")
 	expectedHost, _ := os.Hostname()
-	assert.NoError(err, "Failed to run ddev %s %v", c, args)
+	assert.NoError(err, "Failed to run ddev %s %v", c, "--test")
 	assert.Contains(out, fmt.Sprintf("%s was executed with args=--test on host %s", c, expectedHost))
 
-	args = []string{c, "-h"}
-	out, err = exec.RunCommand(DdevBin, args)
-	assert.NoError(err, "Failed to run ddev %s %v", c, args)
+	out, err = exec.RunHostCommand(DdevBin, c, "-h")
+	assert.NoError(err, "Failed to run ddev %s %v", c, "-h")
 	assert.Contains(out, "  -t, --test   Usage of test")
 
 	// Tests with app type PHP
@@ -154,49 +157,59 @@ func TestCustomCommands(t *testing.T) {
 
 	// Make sure that all the official ddev-provided custom commands are usable by just checking help
 	for _, c := range []string{"launch", "mysql", "xdebug"} {
-		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
+		_, err = exec.RunHostCommand(DdevBin, c, "-h")
 		assert.NoError(err, "Failed to run ddev %s -h", c)
 	}
 
 	// The various CMS commands should not be available here
 	for _, c := range []string{"artisan", "drush", "magento", "typo3", "typo3cms", "wp"} {
-		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
+		_, err = exec.RunHostCommand(DdevBin, c, "-h")
 		assert.Error(err, "found command %s when it should not have been there (no error) app.Type=%s", c, app.Type)
 	}
 
 	// TYPO3 commands should only be available for type typo3
 	app.Type = nodeps.AppTypeTYPO3
 	_ = app.WriteConfig()
-	_, _ = exec.RunCommand(DdevBin, nil)
+
+	_, _ = exec.RunHostCommand(DdevBin)
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
 	for _, c := range []string{"typo3", "typo3cms"} {
-		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
+		_, err = exec.RunHostCommand(DdevBin, c, "-h")
 		assert.NoError(err)
 	}
 
 	// Drupal types should only be available for type drupal*
 	app.Type = nodeps.AppTypeDrupal9
 	_ = app.WriteConfig()
-	_, _ = exec.RunCommand(DdevBin, nil)
+	_, _ = exec.RunHostCommand(DdevBin)
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+
 	for _, c := range []string{"drush"} {
-		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
+		_, err = exec.RunHostCommand(DdevBin, c, "-h")
 		assert.NoError(err)
 	}
 
 	// Laravel types should only be available for type laravel
 	app.Type = nodeps.AppTypeLaravel
 	_ = app.WriteConfig()
-	_, _ = exec.RunCommand(DdevBin, nil)
+	_, _ = exec.RunHostCommand(DdevBin)
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
 	for _, c := range []string{"artisan"} {
-		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
+		_, err = exec.RunHostCommand(DdevBin, c, "-h")
 		assert.NoError(err)
 	}
 
 	// Wordpress types should only be available for type drupal*
 	app.Type = nodeps.AppTypeWordPress
 	_ = app.WriteConfig()
-	_, _ = exec.RunCommand(DdevBin, nil)
+	_, _ = exec.RunHostCommand(DdevBin)
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
 	for _, c := range []string{"wp"} {
-		_, err = exec.RunCommand(DdevBin, []string{c, "-h"})
+		_, err = exec.RunHostCommand(DdevBin, c, "-h")
 		assert.NoError(err, "expected to find command %s for app.Type=%s", c, app.Type)
 	}
 
@@ -253,7 +266,7 @@ func TestLaunchCommand(t *testing.T) {
 	for partialCommand, expect := range cases {
 		// Try with the base URL, simplest case
 		c := DdevBin + `  launch ` + partialCommand + ` | awk '/FULLURL/ {print $2}'`
-		out, err := exec.RunCommand("bash", []string{"-c", c})
+		out, err := exec.RunHostCommand("bash", "-c", c)
 		out = strings.Trim(out, "\n")
 		assert.NoError(err, `couldn't run "%s"", output=%s`, c, out)
 		assert.Contains(out, expect, "output of %s is incorrect with app.RouterHTTPSPort=%s: %s", c, app.RouterHTTPSPort, out)
