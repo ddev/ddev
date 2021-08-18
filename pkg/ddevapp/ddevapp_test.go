@@ -1642,6 +1642,10 @@ func TestGetLatestSnapshot(t *testing.T) {
 
 // TestDdevRestoreSnapshot tests creating a snapshot and reverting to it.
 func TestDdevRestoreSnapshot(t *testing.T) {
+	if nodeps.IsMacM1() {
+		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+	}
+
 	assert := asrt.New(t)
 	testDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
@@ -2810,7 +2814,10 @@ func TestAppdirAlreadyInUse(t *testing.T) {
 // TestHttpsRedirection tests to make sure that webserver and php redirect to correct
 // scheme (http or https).
 func TestHttpsRedirection(t *testing.T) {
-	// Set up tests and give ourselves a working directory.
+	if nodeps.IsMacM1() {
+		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+	}
+
 	assert := asrt.New(t)
 	testcommon.ClearDockerEnv()
 	packageDir, _ := os.Getwd()
@@ -3103,6 +3110,10 @@ func TestWebserverType(t *testing.T) {
 // TestInternalAndExternalAccessToURL checks we can access content
 // from host and from inside container by URL (with port)
 func TestInternalAndExternalAccessToURL(t *testing.T) {
+	if nodeps.IsMacM1() {
+		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+	}
+
 	assert := asrt.New(t)
 
 	runTime := util.TimeTrack(time.Now(), t.Name())

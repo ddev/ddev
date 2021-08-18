@@ -540,11 +540,11 @@ func TestReadConfigCRLF(t *testing.T) {
 
 // TestConfigValidate tests validation of configuration values.
 func TestConfigValidate(t *testing.T) {
+	if nodeps.IsMacM1() {
+		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+	}
+
 	assert := asrt.New(t)
-
-	//pwd, err := os.Getwd()
-	//assert.NoError(err)
-
 	site := TestSites[0]
 	app, err := NewApp(site.Dir, false)
 	assert.NoError(err)
@@ -741,6 +741,10 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 // TestPHPOverrides tests to make sure that PHP overrides work in all webservers.
 func TestPHPOverrides(t *testing.T) {
+	if nodeps.IsMacM1() {
+		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+	}
+
 	assert := asrt.New(t)
 	app := &DdevApp{}
 	tDir, err := os.Getwd()
