@@ -4,6 +4,7 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
+	"strings"
 )
 
 // MutagenResetCmd implements the ddev mutagen reset command
@@ -32,7 +33,10 @@ var MutagenResetCmd = &cobra.Command{
 
 		err = app.MutagenSyncFlush()
 		if err != nil {
-			util.Failed("Failed to flush mutagen: %v", err)
+			// if the mutagen session just did not exist, continue on
+			if !strings.Contains(err.Error(), "does not exist") {
+				util.Failed("Failed to flush mutagen: %v", err)
+			}
 		}
 
 		err = ddevapp.MutagenReset(app)

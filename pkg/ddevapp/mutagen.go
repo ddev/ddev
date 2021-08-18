@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 )
 
 // SetMutagenVolumeOwnership chowns the volume in use to the current user.
@@ -126,8 +127,10 @@ func CreateMutagenSync(app *DdevApp) error {
 
 	flushErr := make(chan error, 1)
 	stopGoroutine := make(chan bool, 1)
+	firstOutputReceived := make(chan bool, 1)
 	defer close(flushErr)
 	defer close(stopGoroutine)
+	defer close(firstOutputReceived)
 
 	go func() {
 		err = app.MutagenSyncFlush()
@@ -142,6 +145,7 @@ func CreateMutagenSync(app *DdevApp) error {
 		go func() {
 			previousStatus := ""
 			curStatus := ""
+			sigSent := false
 			cmd := osexec.Command(globalconfig.GetMutagenPath(), "sync", "monitor", syncName)
 			stdout, _ := cmd.StdoutPipe()
 			err = cmd.Start()
@@ -149,6 +153,8 @@ func CreateMutagenSync(app *DdevApp) error {
 			for {
 				select {
 				case <-stopGoroutine:
+					_ = cmd.Process.Kill()
+					_, _ = cmd.Process.Wait()
 					return
 				default:
 					line, err := buf.ReadBytes('\r')
@@ -157,6 +163,14 @@ func CreateMutagenSync(app *DdevApp) error {
 					}
 					l := string(line)
 					if strings.HasPrefix(l, "Status:") {
+						// If we haven't already notified that output is coming in,
+						// then notify.
+						if !sigSent {
+							firstOutputReceived <- true
+							sigSent = true
+							_, _ = fmt.Fprintf(os.Stderr, "\n")
+						}
+
 						_, _ = fmt.Fprintf(os.Stderr, "%s", l)
 						t := strings.Replace(l, " ", "", 2)
 						c := strings.Split(t, " ")
@@ -171,11 +185,19 @@ func CreateMutagenSync(app *DdevApp) error {
 		}()
 	}
 
+	outputComing := false
 	for {
 		select {
 		// Complete when the MutagenSyncFlush() completes
 		case err = <-flushErr:
 			return err
+		case outputComing = <-firstOutputReceived:
+
+		// If we haven't yet received any "Status:" output, do a dot every second
+		case <-time.After(1 * time.Second):
+			if !outputComing {
+				_, _ = fmt.Fprintf(os.Stderr, ".")
+			}
 		}
 	}
 }
@@ -241,7 +263,7 @@ func (app *DdevApp) MutagenSyncFlush() error {
 		if status != "ok" || err != nil {
 			return err
 		}
-		util.Success("Flushed mutagen sync session '%s'", syncName)
+		util.Debug("Flushed mutagen sync session '%s'", syncName)
 	}
 	return nil
 }
