@@ -7,6 +7,7 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/fatih/color"
+	"sort"
 	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -71,7 +72,24 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		t.SetOutputMirror(&res)
 		t.AppendHeader(table.Row{"Service", "Status", "URL/Port", "Info"})
 
-		for k, v := range desc["services"].(map[string]map[string]string) {
+		serviceNames := []string{}
+		// Get a list of services in the order we want them, with web and db first
+		serviceMap := desc["services"].(map[string]map[string]string)
+		for k := range serviceMap {
+			if k != "web" && k != "db" {
+				serviceNames = append(serviceNames, k)
+			}
+		}
+		sort.Strings(serviceNames)
+
+		if _, ok := desc["dbinfo"]; ok {
+			serviceNames = append([]string{"db"}, serviceNames...)
+		}
+		serviceNames = append([]string{"web"}, serviceNames...)
+
+		for _, k := range serviceNames {
+			v := serviceMap[k]
+
 			// Gather inside networking information
 			urlPortParts := []string{}
 			if httpsURL, ok := v["https_url"]; ok {
