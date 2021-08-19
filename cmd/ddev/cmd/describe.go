@@ -80,7 +80,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 				urlPortParts = append(urlPortParts, httpURL)
 			}
 			if p, ok := v["exposed_ports"]; ok {
-				urlPortParts = append(urlPortParts, "Inside: "+v["full_name"]+":"+p)
+				urlPortParts = append(urlPortParts, "InDocker: "+v["full_name"]+":"+p)
 			}
 
 			extraInfo := []string{}
@@ -108,6 +108,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 						extraInfo = append(extraInfo, dbinfo["database_type"].(string))
 					}
 				}
+				extraInfo = append(extraInfo, "User/Pass:\n'db/db' or 'root/root'")
 			}
 
 			t.AppendRow(table.Row{k, formatStatus(v["status"]), strings.Join(urlPortParts, "\n"), strings.Join(extraInfo, "\n")})
@@ -116,21 +117,6 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		// Output our service table.
 		t.SetStyle(table.StyleColoredBright)
 		t.Render()
-
-		//for k, v := range desc["services"].(map[string]map[string]string) {
-		//	if verbose || service == k {
-		//		out = out + "\n" + k + " URLs\n------------\n"
-		//		other := uitable.New()
-		//		if httpsURL, ok := v["https_url"]; ok {
-		//			other.AddRow("HTTPS", httpsURL)
-		//		} else if httpURL, ok := v["http_url"]; ok {
-		//			other.AddRow("HTTP", httpURL)
-		//		}
-		//		out = out + fmt.Sprintln(other)
-		//	}
-		//}
-
-		//out = out + "\n" + ddevapp.RenderRouterStatus() + "\t" + ddevapp.RenderSSHAuthStatus()
 	}
 
 	return res.String(), nil
@@ -143,15 +129,19 @@ func init() {
 }
 
 func formatStatus(status string) string {
-	formattedStatus := fmt.Sprint(status)
+	if status == ddevapp.SiteRunning {
+		status = "OK"
+	}
+	formattedStatus := status
+
 	switch {
-	case strings.Contains(formattedStatus, ddevapp.SitePaused):
+	case strings.Contains(status, ddevapp.SitePaused):
 		formattedStatus = color.YellowString(formattedStatus)
-	case strings.Contains(formattedStatus, ddevapp.SiteStopped):
+	case strings.Contains(status, ddevapp.SiteStopped):
 		formattedStatus = color.RedString(formattedStatus)
-	case strings.Contains(formattedStatus, ddevapp.SiteDirMissing):
+	case strings.Contains(status, ddevapp.SiteDirMissing):
 		formattedStatus = color.RedString(formattedStatus)
-	case strings.Contains(formattedStatus, ddevapp.SiteConfigMissing):
+	case strings.Contains(status, ddevapp.SiteConfigMissing):
 		formattedStatus = color.RedString(formattedStatus)
 	default:
 		formattedStatus = color.CyanString(formattedStatus)
