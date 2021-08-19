@@ -80,7 +80,7 @@ func TestAvailableUpdates(t *testing.T) {
 	}
 
 	for _, tt := range versionTests {
-		updateNeeded, updateURL, err := AvailableUpdates(testOrg, testRepo, tt.in)
+		updateNeeded, _, updateURL, err := AvailableUpdates(testOrg, testRepo, tt.in)
 		if err != nil {
 			t.Skipf("AvailableUpdates() failed, err=%v", err)
 		}
