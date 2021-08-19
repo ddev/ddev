@@ -317,57 +317,50 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["dbaimg"] = app.DBAImage
 	appDesc["extra_services"] = map[string]map[string]string{}
 
-	if app.ComposeYaml != nil && len(app.ComposeYaml) > 0 {
-		if services, ok := app.ComposeYaml["services"].(map[interface{}]interface{}); ok {
-			extraServices := appDesc["extra_services"].(map[string]map[string]string)
-			for k, v := range services {
-				serviceName := k.(string)
+	containers, err := dockerutil.GetAppContainers(app.Name)
+	if err != nil {
+		return nil, err
+	}
+	extraServices := appDesc["extra_services"].(map[string]map[string]string)
+	for _, k := range containers {
+		serviceName := k.Names[0]
+		shortName := strings.Replace(serviceName, fmt.Sprintf("/ddev-%s-", app.Name), "", 1)
 
-				// Standard services are handled in other ways; we want custom services only
-				if nodeps.ArrayContainsString([]string{"web", "db", "dba"}, serviceName) {
-					continue
-				}
-
-				var svc map[interface{}]interface{}
-				if svc, ok = v.(map[interface{}]interface{}); !ok {
-					continue
-				}
-				extraServices[serviceName] = map[string]string{}
-
-				if _, ok = svc["image"]; !ok {
-					svc["image"] = "built"
-				}
-
-				// container_name may not be provided in all yaml contexts
-				if _, ok = svc["container_name"]; !ok {
-					svc["container_name"] = serviceName
-				}
-				extraServices[serviceName]["status"], _ = dockerutil.GetContainerStateByName(svc["container_name"].(string))
-
-				if env, ok := svc["environment"].(map[interface{}]interface{}); ok {
-					// Extract HTTP_EXPOSE and HTTPS_EXPOSE for additional info
-					for envName, envVal := range env {
-						if envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE" {
-							envValStr := fmt.Sprintf("%s", envVal)
-							portSpecs := strings.Split(envValStr, ",")
-							// There might be more than one exposed UI port, but this only handles the first listed,
-							// most often there's only one.
-							if len(portSpecs) > 0 {
-								// HTTPS portSpecs typically look like <exposed>:<containerPort>, for example - HTTPS_EXPOSE=1359:1358
-								ports := strings.Split(portSpecs[0], ":")
-								extraServices[serviceName][envName.(string)] = ports[0]
-								switch envName {
-								case "HTTP_EXPOSE":
-									extraServices[serviceName]["http_url"] = "http://" + appDesc["hostname"].(string) + ":" + ports[0]
-								case "HTTPS_EXPOSE":
-									extraServices[serviceName]["https_url"] = "https://" + appDesc["hostname"].(string) + ":" + ports[0]
-								}
-							}
-						}
+		c, err := dockerutil.InspectContainer(serviceName)
+		if err != nil {
+			util.Warning("Could not get container info for %s", serviceName)
+			continue
+		}
+		fullName := strings.TrimPrefix(serviceName, "/")
+		extraServices[shortName] = map[string]string{}
+		extraServices[shortName]["status"] = c.State.Status
+		extraServices[shortName]["full_name"] = fullName
+		ports := []string{}
+		for pk := range c.Config.ExposedPorts {
+			ports = append(ports, pk.Port())
+		}
+		extraServices[shortName]["exposed_ports"] = strings.Join(ports, ",")
+		// Extract HTTP_EXPOSE and HTTPS_EXPOSE for additional info
+		for _, e := range c.Config.Env {
+			split := strings.SplitN(e, "=", 2)
+			envName := split[0]
+			envVal := split[1]
+			if envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE" {
+				envValStr := fmt.Sprintf("%s", envVal)
+				portSpecs := strings.Split(envValStr, ",")
+				// There might be more than one exposed UI port, but this only handles the first listed,
+				// most often there's only one.
+				if len(portSpecs) > 0 {
+					// HTTPS portSpecs typically look like <exposed>:<containerPort>, for example - HTTPS_EXPOSE=1359:1358
+					ports := strings.Split(portSpecs[0], ":")
+					//extraServices[shortName][envName.(string)] = ports[0]
+					switch envName {
+					case "HTTP_EXPOSE":
+						extraServices[shortName]["http_url"] = "http://" + appDesc["hostname"].(string) + ":" + ports[0]
+					case "HTTPS_EXPOSE":
+						extraServices[shortName]["https_url"] = "https://" + appDesc["hostname"].(string) + ":" + ports[0]
 					}
 				}
-				// TODO: Handle volume names so they can be deleted on ddev destroy
-				// TODO: Show host port access, preferably exposed port. Might require docker inspect?
 			}
 		}
 	}

@@ -40,22 +40,22 @@ running 'ddev describe <projectname>.`,
 			util.Failed("Too many arguments provided. Please use 'ddev describe' or 'ddev describe [projectname]'")
 		}
 
-		projects, err := getRequestedProjects(args, false)
+		apps, err := getRequestedProjects(args, false)
 		if err != nil {
 			util.Failed("Failed to describe project(s): %v", err)
 		}
-		project := projects[0]
+		app := apps[0]
 
-		if err := ddevapp.CheckForMissingProjectFiles(project); err != nil {
-			util.Failed("Failed to describe %s: %v", project.Name, err)
+		if err := ddevapp.CheckForMissingProjectFiles(app); err != nil {
+			util.Failed("Failed to describe %s: %v", app.Name, err)
 		}
 
-		desc, err := project.Describe(false)
+		desc, err := app.Describe(false)
 		if err != nil {
-			util.Failed("Failed to describe project %s: %v", project.Name, err)
+			util.Failed("Failed to describe project %s: %v", app.Name, err)
 		}
 
-		renderedDesc, err := renderAppDescribe(project, desc)
+		renderedDesc, err := renderAppDescribe(app, desc)
 		util.CheckErr(err) // We shouldn't ever end up with an unrenderable desc.
 		output.UserOut.WithField("raw", desc).Print(renderedDesc)
 	},
@@ -63,14 +63,10 @@ running 'ddev describe <projectname>.`,
 
 // renderAppDescribe takes the map describing the app and renders it for plain-text output
 func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (string, error) {
-
 	status := desc["status"]
 
-	appTable := ddevapp.CreateAppTable()
-	ddevapp.RenderAppRow(appTable, desc)
-	out := fmt.Sprint(appTable) + "\n\n"
-
 	url := ""
+	out := ""
 	if status == ddevapp.SiteRunning {
 		if globalconfig.GetCAROOT() != "" {
 			url = desc["httpsurl"].(string)
@@ -78,9 +74,6 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			url = desc["httpurl"].(string)
 		}
 	}
-
-	appTable.Separator = "  "
-	appTable.Wrap = true
 
 	// Only show extended status for running sites.
 	if status == ddevapp.SiteRunning {
@@ -98,10 +91,10 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		webStatus, _ := dockerutil.GetContainerStateByName("web")
 		mutagenStat := "mutagen disabled"
 		nfsStat := "NFS disabled"
-		if app.MutagenEnabled || app.MutagenEnabledGlobal {
-			mutagenStat = fmt.Sprintf("Mutagen enabled (%s)", desc["mutagen_status"].(string))
+		if desc["mutagen_enabled"].(bool) {
+			mutagenStat = fmt.Sprintf("Mutagen enabled (%s)", formatStatus(desc["mutagen_status"].(string)))
 		}
-		if app.NFSMountEnabled || app.NFSMountEnabledGlobal {
+		if desc["nfs_mount_enabled"].(bool) {
 			nfsStat = "NFS mount enabled"
 		}
 
@@ -131,15 +124,15 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 
 		phpmyadminStatus, _ := dockerutil.GetContainerStateByName("dba")
 
+		phpmyadminURL := desc["phpmyadmin_http_url"]
 		if _, ok := desc["phpmyadmin_https_url"]; ok {
-			t.AppendRow(table.Row{
-				"dba", phpmyadminStatus, desc[phpmyadminStatus]})
-
+			phpmyadminURL = desc["phpmyadmin_https_url"]
 		}
+		t.AppendRow(table.Row{
+			"dba", phpmyadminStatus, phpmyadminURL})
 
 		for k, v := range desc["extra_services"].(map[string]map[string]string) {
-			//url := ""
-
+			url = ""
 			if httpsURL, ok := v["https_url"]; ok {
 				url = httpsURL
 			} else if httpURL, ok := v["http_url"]; ok {
@@ -147,7 +140,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			}
 
 			t.AppendRow(table.Row{
-				k, formatStatus(v["status"]), "", v["version"]})
+				k, formatStatus(v["status"]), url, v["version"]})
 
 		}
 
@@ -189,22 +182,19 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 				}
 
 				// Extended info about database administration.
-				if _, ok := desc["phpmyadmin_https_url"]; ok {
-					if verbose || service == "dba" {
-						out = out + "\n" + "phpMyAdmin URLs\n------------\n"
-						dba := uitable.New()
-						if _, ok := desc["phpmyadmin_https_url"]; ok {
-							dba.AddRow("HTTPS", desc["phpmyadmin_https_url"])
-						}
-						if _, ok := desc["phpmyadmin_url"]; ok {
-							dba.AddRow("HTTP", desc["phpmyadmin_url"])
-						}
-						out = out + fmt.Sprintln(dba)
-					}
-			for k, v := range desc["extra_services"].(map[string]map[string]string) {
-				if httpsURL, ok := v["https_url"]; ok {
-					other.AddRow(k+" (https):", httpsURL)
-				}
+				//if _, ok := desc["phpmyadmin_https_url"]; ok {
+				//	if verbose || service == "dba" {
+				//		out = out + "\n" + "phpMyAdmin URLs\n------------\n"
+				//		dba := uitable.New()
+				//		if _, ok := desc["phpmyadmin_https_url"]; ok {
+				//			dba.AddRow("HTTPS", desc["phpmyadmin_https_url"])
+				//		}
+				//		if _, ok := desc["phpmyadmin_url"]; ok {
+				//			dba.AddRow("HTTP", desc["phpmyadmin_url"])
+				//		}
+				//		out = out + fmt.Sprintln(dba)
+				//	}
+				//}
 
 				for k, v := range desc["extra_services"].(map[string]map[string]string) {
 					if verbose || service == k {

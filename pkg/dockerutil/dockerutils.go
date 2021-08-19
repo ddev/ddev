@@ -72,10 +72,26 @@ func GetDockerClient() *docker.Client {
 	return client
 }
 
+// InspectContainer returns the full result of inspection
+func InspectContainer(name string) (*docker.Container, error) {
+	client, err := docker.NewClientFromEnv()
+
+	if err != nil {
+		return nil, err
+	}
+	c, err := FindContainerByName(name)
+	if err != nil {
+		return nil, err
+	}
+	x, err := client.InspectContainerWithOptions(docker.InspectContainerOptions{ID: c.ID})
+	return x, err
+}
+
 // FindContainerByName takes a container name and returns the container ID
 // If container is not found, returns nil with no error
 func FindContainerByName(name string) (*docker.APIContainers, error) {
 	client := GetDockerClient()
+
 	containers, err := client.ListContainers(docker.ListContainersOptions{
 		All:     true,
 		Filters: map[string][]string{"name": {name}},
@@ -83,10 +99,14 @@ func FindContainerByName(name string) (*docker.APIContainers, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(containers) == 0 {
-		return nil, nil
+	// ListContainers can return partial matches. Make sure we only match the exact one
+	// we're after.
+	for _, c := range containers {
+		if c.Names[0] == name {
+			return &c, nil
+		}
 	}
-	return &containers[0], nil
+	return nil, nil
 }
 
 // GetContainerStateByName returns container state for the named container
