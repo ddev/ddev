@@ -323,11 +323,11 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	}
 	services := appDesc["services"].(map[string]map[string]string)
 	for _, k := range containers {
-		serviceName := k.Names[0]
-		shortName := strings.Replace(serviceName, fmt.Sprintf("/ddev-%s-", app.Name), "", 1)
+		serviceName := strings.TrimPrefix(k.Names[0], "/")
+		shortName := strings.Replace(serviceName, fmt.Sprintf("ddev-%s-", app.Name), "", 1)
 
 		c, err := dockerutil.InspectContainer(serviceName)
-		if err != nil {
+		if err != nil || c == nil {
 			util.Warning("Could not get container info for %s", serviceName)
 			continue
 		}

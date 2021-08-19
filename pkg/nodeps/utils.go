@@ -1,6 +1,7 @@
 package nodeps
 
 import (
+	"golang.org/x/term"
 	"math/rand"
 	"os"
 	"runtime"
@@ -90,3 +91,16 @@ func IsInteger(s string) bool {
 	_, err := strconv.ParseInt(s, 0, 64)
 	return err == nil
 }
+
+// GetTerminalWidthHeight returns width, height if on terminal
+// or 0, 0 if not
+func GetTerminalWidthHeight() (int, int) {
+	if term.IsTerminal(0) {
+		width, height, err := term.GetSize(0)
+		if err == nil {
+			return width, height
+		}
+	}
+	return 0, 0
+}
+

@@ -80,7 +80,7 @@ func InspectContainer(name string) (*docker.Container, error) {
 		return nil, err
 	}
 	c, err := FindContainerByName(name)
-	if err != nil {
+	if err != nil || c == nil {
 		return nil, err
 	}
 	x, err := client.InspectContainerWithOptions(docker.InspectContainerOptions{ID: c.ID})
@@ -102,7 +102,7 @@ func FindContainerByName(name string) (*docker.APIContainers, error) {
 	// ListContainers can return partial matches. Make sure we only match the exact one
 	// we're after.
 	for _, c := range containers {
-		if c.Names[0] == name {
+		if c.Names[0] == "/"+name {
 			return &c, nil
 		}
 	}
@@ -450,11 +450,11 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 // GetAppContainers retrieves docker containers for a given sitename.
 func GetAppContainers(sitename string) ([]docker.APIContainers, error) {
 	label := map[string]string{"com.ddev.site-name": sitename}
-	sites, err := FindContainersByLabels(label)
+	containers, err := FindContainersByLabels(label)
 	if err != nil {
-		return sites, err
+		return containers, err
 	}
-	return sites, nil
+	return containers, nil
 }
 
 // GetContainerEnv returns the value of a given environment variable from a given container.

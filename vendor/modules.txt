@@ -128,6 +128,7 @@ github.com/imdario/mergo
 github.com/inconshreveable/mousetrap
 # github.com/jedib0t/go-pretty/v6 v6.2.4
 ## explicit
+github.com/jedib0t/go-pretty/v6/list
 github.com/jedib0t/go-pretty/v6/table
 github.com/jedib0t/go-pretty/v6/text
 # github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a

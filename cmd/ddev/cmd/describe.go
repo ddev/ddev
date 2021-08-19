@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/fatih/color"
+	"github.com/jedib0t/go-pretty/v6/list"
+	"github.com/jedib0t/go-pretty/v6/text"
 	"sort"
 	"strings"
 
@@ -70,7 +73,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		// Build our service table.
 		t := table.NewWriter()
 		t.SetOutputMirror(&res)
-		t.AppendHeader(table.Row{"Service", "Status", "URL/Port", "Info"})
+		t.AppendHeader(table.Row{"Service", "Stat", "URL/Port", "Info"})
 
 		serviceNames := []string{}
 		// Get a list of services in the order we want them, with web and db first
@@ -126,7 +129,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 						extraInfo = append(extraInfo, dbinfo["database_type"].(string))
 					}
 				}
-				extraInfo = append(extraInfo, "User/Pass:\n'db/db' or 'root/root'")
+				extraInfo = append(extraInfo, "User/Pass: 'db/db'\nor 'root/root'")
 			}
 
 			t.AppendRow(table.Row{k, formatStatus(v["status"]), strings.Join(urlPortParts, "\n"), strings.Join(extraInfo, "\n")})
@@ -134,8 +137,62 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 
 		// Output our service table.
 		t.SetStyle(table.StyleColoredBright)
+		tWidth, _ := nodeps.GetTerminalWidthHeight()
+		urlPortWidth := 40
+		infoWidth := 30
+		if tWidth != 0 {
+			urlPortWidth = tWidth / 2
+			infoWidth = tWidth / 4
+		}
+		t.SetColumnConfigs([]table.ColumnConfig{
+			{
+				Name:     "Service",
+				WidthMax: 8,
+			},
+			{
+				Name:     "URL/Port",
+				WidthMax: urlPortWidth,
+			},
+			{
+				Name:     "Info",
+				WidthMax: infoWidth,
+			},
+		})
 		t.Render()
 	}
+
+	_, _ = fmt.Fprintf(&res, "\nHints and Tips\n")
+	l := list.NewWriter()
+	l.SetOutputMirror(&res)
+
+	phpMyAdminURL := ""
+	if _, ok := desc["phpmyadmin_url"]; ok {
+		phpMyAdminURL = desc["phpmyadmin_url"].(string)
+	}
+	if _, ok := desc["phpmyadmin_https_url"]; ok {
+		phpMyAdminURL = desc["phpmyadmin_https_url"].(string)
+	}
+	if phpMyAdminURL != "" {
+		l.AppendItem(fmt.Sprintf("PHPMyAdmin: %s or `ddev launch -p`", desc["phpmyadmin_url"]))
+	}
+
+	mailhogURL := ""
+	if _, ok := desc["mailhog_url"]; ok {
+		mailhogURL = desc["mailhog_url"].(string)
+	}
+	if _, ok := desc["mailhog_https_url"]; ok {
+		mailhogURL = desc["mailhog_https_url"].(string)
+	}
+
+	l.AppendItem(fmt.Sprintf("MailHog: %s or `ddev launch -m`", mailhogURL))
+	_, _, urls := app.GetAllURLs()
+	l.AppendItem("All URLs:")
+	l.Indent()
+	for _, url := range urls {
+		l.AppendItem(url)
+	}
+	l.SetStyle(list.StyleBulletCircle)
+	l.Render()
 
 	return res.String(), nil
 }
@@ -154,13 +211,9 @@ func formatStatus(status string) string {
 
 	switch {
 	case strings.Contains(status, ddevapp.SitePaused):
-		formattedStatus = color.YellowString(formattedStatus)
-	case strings.Contains(status, ddevapp.SiteStopped):
-		formattedStatus = color.RedString(formattedStatus)
-	case strings.Contains(status, ddevapp.SiteDirMissing):
-		formattedStatus = color.RedString(formattedStatus)
-	case strings.Contains(status, ddevapp.SiteConfigMissing):
-		formattedStatus = color.RedString(formattedStatus)
+		formattedStatus = text.FgYellow.Sprint(formattedStatus)
+	case strings.Contains(status, ddevapp.SiteStopped) || strings.Contains(status, ddevapp.SiteDirMissing) || strings.Contains(status, ddevapp.SiteConfigMissing):
+		formattedStatus = text.FgRed.Sprint(formattedStatus)
 	default:
 		formattedStatus = color.CyanString(formattedStatus)
 	}
