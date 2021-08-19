@@ -13,11 +13,9 @@ require (
 	github.com/google/go-github v0.0.0-20180716180158-c0b63e2f9bb1
 	github.com/google/go-querystring v0.0.0-20170111101155-53e6ce116135 // indirect
 	github.com/google/uuid v0.0.0-20161128191214-064e2069ce9c
-	github.com/gosuri/uitable v0.0.0-20160404203958-36ee7e946282
 	github.com/huandu/xstrings v1.0.0 // indirect
 	github.com/imdario/mergo v0.3.5 // indirect
 	github.com/jedib0t/go-pretty/v6 v6.2.4
-	github.com/jwalton/gchalk v1.1.0
 	github.com/lextoumbourou/goodhosts v2.1.0+incompatible
 	github.com/lunixbochs/vtclean v1.0.0 // indirect
 	github.com/manifoldco/promptui v0.8.0

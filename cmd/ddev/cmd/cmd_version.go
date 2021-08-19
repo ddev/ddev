@@ -1,13 +1,14 @@
 package cmd
 
 import (
+	"bytes"
 	"os"
 	"sort"
 
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/gosuri/uitable"
+	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/spf13/cobra"
 )
 
@@ -25,7 +26,15 @@ var versionCmd = &cobra.Command{
 
 		v := version.GetVersionInfo()
 
-		versionOutput := uitable.New()
+		var out bytes.Buffer
+		versionOutput := table.NewWriter()
+		versionOutput.SetOutputMirror(&out)
+		versionOutput.AppendHeader(table.Row{"Item", "Value"})
+		versionOutput.SetColumnConfigs([]table.ColumnConfig{{
+			Name:     "Value",
+			WidthMax: 50,
+		},
+		})
 
 		keys := make([]string, 0, len(v))
 		for k := range v {
@@ -35,11 +44,13 @@ var versionCmd = &cobra.Command{
 
 		for _, label := range keys {
 			if label != "build info" {
-				versionOutput.AddRow(label, v[label])
+				versionOutput.AppendRow(table.Row{
+					label, v[label],
+				})
 			}
 		}
-
-		output.UserOut.WithField("raw", v).Println(versionOutput)
+		versionOutput.Render()
+		output.UserOut.WithField("raw", v).Println(out.String())
 	},
 }
 
