@@ -189,13 +189,13 @@ func RenderRouterStatus() string {
 	case SiteStopped:
 		renderedStatus = text.FgRed.Sprint(status) + badRouter
 	case "healthy":
-		renderedStatus = text.FgCyan.Sprint(status)
+		renderedStatus = text.FgHiGreen.Sprint(status)
 	case "exited":
 		fallthrough
 	default:
 		renderedStatus = text.FgRed.Sprint(status) + badRouter + "\n" + logOutput
 	}
-	return fmt.Sprintf("Router Status: %v", renderedStatus)
+	return fmt.Sprintf("Router Status: %s", renderedStatus)
 }
 
 // GetRouterStatus returns router status and warning if not
