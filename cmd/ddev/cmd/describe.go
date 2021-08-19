@@ -7,7 +7,6 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/fatih/color"
 	"github.com/jedib0t/go-pretty/v6/list"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"sort"
@@ -66,13 +65,13 @@ running 'ddev describe <projectname>.`,
 // renderAppDescribe takes the map describing the app and renders it for plain-text output
 func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (string, error) {
 	status := desc["status"]
-	var res bytes.Buffer
+	var out bytes.Buffer
 
 	// Only show extended status for running sites.
 	if status == ddevapp.SiteRunning {
 		// Build our service table.
 		t := table.NewWriter()
-		t.SetOutputMirror(&res)
+		t.SetOutputMirror(&out)
 		t.AppendHeader(table.Row{"Service", "Stat", "URL/Port", "Info"})
 
 		serviceNames := []string{}
@@ -113,7 +112,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 					extraInfo = append(extraInfo, fmt.Sprintf("NFS Enabled"))
 				}
 				if desc["mutagen_enabled"].(bool) {
-					extraInfo = append(extraInfo, fmt.Sprintf("Mutagen enabled (%s)", formatStatus(desc["mutagen_status"].(string))))
+					extraInfo = append(extraInfo, fmt.Sprintf("Mutagen enabled (%s)", ddevapp.FormatSiteStatus(desc["mutagen_status"].(string))))
 				}
 			}
 
@@ -132,7 +131,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 				extraInfo = append(extraInfo, "User/Pass: 'db/db'\nor 'root/root'")
 			}
 
-			t.AppendRow(table.Row{k, formatStatus(v["status"]), strings.Join(urlPortParts, "\n"), strings.Join(extraInfo, "\n")})
+			t.AppendRow(table.Row{k, ddevapp.FormatSiteStatus(v["status"]), strings.Join(urlPortParts, "\n"), strings.Join(extraInfo, "\n")})
 		}
 
 		// Output our service table.
@@ -161,9 +160,9 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		t.Render()
 	}
 
-	_, _ = fmt.Fprintf(&res, text.Bold.Sprint("\nMore Info:\n"))
+	_, _ = fmt.Fprintf(&out, text.Bold.Sprint("\nMore Info:\n"))
 	l := list.NewWriter()
-	l.SetOutputMirror(&res)
+	l.SetOutputMirror(&out)
 
 	l.AppendItem("Project Name: " + app.Name)
 	l.AppendItem("Location: " + desc["shortroot"].(string))
@@ -196,28 +195,11 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 	l.SetStyle(list.StyleBulletCircle)
 	l.Render()
 
-	return res.String(), nil
+	return out.String(), nil
 }
 
 func init() {
 	RootCmd.AddCommand(DescribeCommand)
 	DescribeCommand.Flags().StringVarP(&service, "service", "s", "", "The service for additional information")
 	DescribeCommand.Flags().BoolVarP(&verbose, "verbose", "v", false, "Show extended output for all services")
-}
-
-func formatStatus(status string) string {
-	if status == ddevapp.SiteRunning {
-		status = "OK"
-	}
-	formattedStatus := status
-
-	switch {
-	case strings.Contains(status, ddevapp.SitePaused):
-		formattedStatus = text.FgYellow.Sprint(formattedStatus)
-	case strings.Contains(status, ddevapp.SiteStopped) || strings.Contains(status, ddevapp.SiteDirMissing) || strings.Contains(status, ddevapp.SiteConfigMissing):
-		formattedStatus = text.FgRed.Sprint(formattedStatus)
-	default:
-		formattedStatus = color.CyanString(formattedStatus)
-	}
-	return formattedStatus
 }

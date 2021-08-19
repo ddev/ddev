@@ -6,6 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/netutil"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/jedib0t/go-pretty/v6/text"
 	"html/template"
 	"os"
 	"path"
@@ -16,7 +17,6 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/fatih/color"
 	"github.com/fsouza/go-dockerclient"
 )
 
@@ -183,19 +183,19 @@ func FindDdevRouter() (*docker.APIContainers, error) {
 func RenderRouterStatus() string {
 	status, logOutput := GetRouterStatus()
 	var renderedStatus string
-	badRouter := "\nThe router is not yet healthy. Your projects may not be accessible.\nIf it doesn't become healthy try running 'ddev start' on a project to recreate it."
+	badRouter := "The router is not yet healthy. Your projects may not be accessible.\nIf it doesn't become healthy try running 'ddev start' on a project to recreate it."
 
 	switch status {
 	case SiteStopped:
-		renderedStatus = color.RedString(status) + badRouter
+		renderedStatus = text.FgRed.Sprint(status) + badRouter
 	case "healthy":
-		renderedStatus = color.CyanString(status)
+		renderedStatus = text.FgCyan.Sprint(status)
 	case "exited":
 		fallthrough
 	default:
-		renderedStatus = color.RedString(status) + badRouter + "\n" + logOutput
+		renderedStatus = text.FgRed.Sprint(status) + badRouter + "\n" + logOutput
 	}
-	return fmt.Sprintf("\nDDEV ROUTER STATUS: %v", renderedStatus)
+	return fmt.Sprintf("Router Status: %v", renderedStatus)
 }
 
 // GetRouterStatus returns router status and warning if not

@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/fatih/color"
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
@@ -130,6 +133,8 @@ func List(activeOnly bool, continuous bool, continuousSleepTime int) {
 	runTime := util.TimeTrack(time.Now(), "ddev list")
 	defer runTime()
 
+	var out bytes.Buffer
+
 	for {
 		apps, err := GetProjects(activeOnly)
 		if err != nil {
@@ -140,16 +145,20 @@ func List(activeOnly bool, continuous bool, continuousSleepTime int) {
 		if len(apps) < 1 {
 			output.UserOut.WithField("raw", appDescs).Println("No ddev projects were found.")
 		} else {
-			table := CreateAppTable()
+			t := CreateAppTable(&out)
 			for _, app := range apps {
 				desc, err := app.Describe(true)
 				if err != nil {
 					util.Error("Failed to describe project %s: %v", app.GetName(), err)
 				}
 				appDescs = append(appDescs, desc)
-				RenderAppRow(table, desc)
+				RenderAppRow(t, desc)
 			}
-			output.UserOut.WithField("raw", appDescs).Print(table.String() + "\n" + RenderRouterStatus())
+			t.AppendFooter(table.Row{
+				RenderRouterStatus(),
+			})
+			t.Render()
+			output.UserOut.WithField("raw", appDescs).Print(out.String())
 		}
 
 		if !continuous {
@@ -2318,4 +2327,22 @@ func (app *DdevApp) StartAppIfNotRunning() error {
 // GetDBHostname gets the in-container hostname of the DB container
 func GetDBHostname(app *DdevApp) string {
 	return "ddev-" + app.Name + "-db"
+}
+
+// FormatSiteStatus formats "paused" or "running" with color
+func FormatSiteStatus(status string) string {
+	if status == SiteRunning {
+		status = "OK"
+	}
+	formattedStatus := status
+
+	switch {
+	case strings.Contains(status, SitePaused):
+		formattedStatus = text.FgYellow.Sprint(formattedStatus)
+	case strings.Contains(status, SiteStopped) || strings.Contains(status, SiteDirMissing) || strings.Contains(status, SiteConfigMissing):
+		formattedStatus = text.FgRed.Sprint(formattedStatus)
+	default:
+		formattedStatus = color.CyanString(formattedStatus)
+	}
+	return formattedStatus
 }
