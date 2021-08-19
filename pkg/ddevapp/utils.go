@@ -8,7 +8,6 @@ import (
 	"github.com/fatih/color"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
 	"path"
 	"path/filepath"
 	"sort"
@@ -56,11 +55,6 @@ func GetActiveProjects() []*DdevApp {
 	}
 
 	return apps
-}
-
-// h formats a column header
-func h(s string) string {
-	return text.FgCyan.Sprint(s)
 }
 
 // CreateAppTable will create a new app table for describe and list output

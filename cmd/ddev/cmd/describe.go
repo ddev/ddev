@@ -160,7 +160,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		t.Render()
 	}
 
-	_, _ = fmt.Fprintf(&out, text.Bold.Sprint("\nMore Info:\n"))
+	_, _ = fmt.Fprint(&out, text.Bold.Sprint("\nMore Info:\n"))
 	l := list.NewWriter()
 	l.SetOutputMirror(&out)
 
