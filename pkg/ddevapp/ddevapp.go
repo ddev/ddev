@@ -315,13 +315,13 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["webimg"] = app.WebImage
 	appDesc["dbimg"] = app.GetDBImage()
 	appDesc["dbaimg"] = app.DBAImage
-	appDesc["extra_services"] = map[string]map[string]string{}
+	appDesc["services"] = map[string]map[string]string{}
 
 	containers, err := dockerutil.GetAppContainers(app.Name)
 	if err != nil {
 		return nil, err
 	}
-	extraServices := appDesc["extra_services"].(map[string]map[string]string)
+	services := appDesc["services"].(map[string]map[string]string)
 	for _, k := range containers {
 		serviceName := k.Names[0]
 		shortName := strings.Replace(serviceName, fmt.Sprintf("/ddev-%s-", app.Name), "", 1)
@@ -332,14 +332,15 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			continue
 		}
 		fullName := strings.TrimPrefix(serviceName, "/")
-		extraServices[shortName] = map[string]string{}
-		extraServices[shortName]["status"] = c.State.Status
-		extraServices[shortName]["full_name"] = fullName
+		services[shortName] = map[string]string{}
+		services[shortName]["status"] = c.State.Status
+		services[shortName]["full_name"] = fullName
+		services[shortName]["image"] = strings.TrimSuffix(c.Config.Image, fmt.Sprintf("-%s-built", app.Name))
 		ports := []string{}
 		for pk := range c.Config.ExposedPorts {
 			ports = append(ports, pk.Port())
 		}
-		extraServices[shortName]["exposed_ports"] = strings.Join(ports, ",")
+		services[shortName]["exposed_ports"] = strings.Join(ports, ",")
 		// Extract HTTP_EXPOSE and HTTPS_EXPOSE for additional info
 		for _, e := range c.Config.Env {
 			split := strings.SplitN(e, "=", 2)
@@ -353,12 +354,18 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 				if len(portSpecs) > 0 {
 					// HTTPS portSpecs typically look like <exposed>:<containerPort>, for example - HTTPS_EXPOSE=1359:1358
 					ports := strings.Split(portSpecs[0], ":")
-					//extraServices[shortName][envName.(string)] = ports[0]
+					//services[shortName][envName.(string)] = ports[0]
 					switch envName {
 					case "HTTP_EXPOSE":
-						extraServices[shortName]["http_url"] = "http://" + appDesc["hostname"].(string) + ":" + ports[0]
+						services[shortName]["http_url"] = "http://" + appDesc["hostname"].(string)
+						if ports[0] != "80" {
+							services[shortName]["http_url"] = services[shortName]["http_url"] + ":" + ports[0]
+						}
 					case "HTTPS_EXPOSE":
-						extraServices[shortName]["https_url"] = "https://" + appDesc["hostname"].(string) + ":" + ports[0]
+						services[shortName]["https_url"] = "https://" + appDesc["hostname"].(string)
+						if ports[0] != "443" {
+							services[shortName]["https_url"] = services[shortName]["https_url"] + ":" + ports[0]
+						}
 					}
 				}
 			}
@@ -1882,7 +1889,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		if err != nil {
 			util.Warning("could not run app.Describe(): %v", err)
 		}
-		for extraService := range desc["extra_services"].(map[string]map[string]string) {
+		for extraService := range desc["services"].(map[string]map[string]string) {
 			// volName default if name: is not specified is ddev-<project>_volume
 			volName := strings.ToLower("ddev-" + app.Name + "_" + extraService)
 			if dockerutil.VolumeExists(volName) {

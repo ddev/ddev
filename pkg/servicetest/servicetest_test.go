@@ -87,7 +87,7 @@ func TestServices(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make sure desc had 3 services.
-	require.Len(t, desc["extra_services"], expectedServiceCount)
+	require.Len(t, desc["services"], expectedServiceCount)
 
 	// A volume should have been created for solr (only)
 	solrVolume := strings.ToLower("ddev-" + app.Name + "_" + "solr")
