@@ -2153,6 +2153,7 @@ func TestDdevExec(t *testing.T) {
 	client := dockerutil.GetDockerClient()
 	bbc, err := dockerutil.FindContainerByName(fmt.Sprintf("ddev-%s-%s", app.Name, "busybox"))
 	require.NoError(t, err)
+	require.NotEmpty(t, bbc)
 	err = client.StopContainer(bbc.ID, 2)
 	assert.NoError(err)
 
