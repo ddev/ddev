@@ -9,7 +9,6 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/fatih/color"
 	"github.com/gosuri/uitable"
-	"github.com/jwalton/gchalk"
 	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -60,11 +59,6 @@ running 'ddev describe <projectname>.`,
 		util.CheckErr(err) // We shouldn't ever end up with an unrenderable desc.
 		output.UserOut.WithField("raw", desc).Print(renderedDesc)
 	},
-}
-
-// h formats a column header
-func h(s string) string {
-	return gchalk.WithBlue().Bold(s)
 }
 
 // renderAppDescribe takes the map describing the app and renders it for plain-text output
@@ -153,7 +147,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			}
 
 			t.AppendRow(table.Row{
-				k, "", formatStatus(v["status"]), v["version"]})
+				k, formatStatus(v["status"]), "", v["version"]})
 
 		}
 
