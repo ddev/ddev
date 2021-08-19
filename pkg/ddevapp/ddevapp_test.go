@@ -515,42 +515,36 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 // TestDdevStartUnmanagedSettings start and config with disable_settings_management
 func TestDdevStartUnmanagedSettings(t *testing.T) {
 	assert := asrt.New(t)
-	app := &ddevapp.DdevApp{}
 
 	// Make sure this leaves us in the original test directory
-	testDir, _ := os.Getwd()
-	//nolint: errcheck
-	defer os.Chdir(testDir)
+	origDir, _ := os.Getwd()
 
-	// Use Drupal8 only, mostly for the composer example
-	site := FullTestSites[1]
-	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
-	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
-		app := &ddevapp.DdevApp{Name: site.Name}
+	// Use Drupal9 as it is a good target for composer failures
+	site := FullTestSites[8]
+	// We will create directory from scratch, as we'll be removing files and changing it.
+	app := &ddevapp.DdevApp{Name: site.Name}
+	_ = app.Stop(true, false)
+	_ = globalconfig.RemoveProjectInfo(site.Name)
+	err := site.Prepare()
+	require.NoError(t, err)
+
+	err = app.Init(site.Dir)
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
 		_ = app.Stop(true, false)
-		_ = globalconfig.RemoveProjectInfo(site.Name)
+		err = os.RemoveAll(site.Dir)
+		assert.NoError(err)
+	})
 
-		err := site.Prepare()
-		require.NoError(t, err)
-		// nolint: errcheck
-		defer os.RemoveAll(site.Dir)
-	}
-	switchDir := site.Chdir()
-	defer switchDir()
-
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStart", site.Name))
-	defer runTime()
-
-	err := app.Init(site.Dir)
+	err = os.Chdir(app.AppRoot)
 	assert.NoError(err)
 
 	// Previous tests may have left settings files
 	_ = os.Remove(app.SiteSettingsPath)
 	_ = os.Remove(app.SiteDdevSettingsFile)
-
-	// On initial init, settings files should not exist
-	assert.False(fileutil.FileExists(app.SiteSettingsPath))
-	assert.False(fileutil.FileExists(app.SiteDdevSettingsFile))
 
 	app.DisableSettingsManagement = true
 	err = app.WriteConfig()
@@ -562,8 +556,6 @@ func TestDdevStartUnmanagedSettings(t *testing.T) {
 
 	err = app.Start()
 	assert.NoError(err)
-	//nolint: errcheck
-	defer app.Stop(true, false)
 
 	// After start, they should still not exist, because we had DisableSettingsManagement
 	assert.False(fileutil.FileExists(app.SiteSettingsPath))
@@ -585,16 +577,19 @@ func TestDdevStartUnmanagedSettings(t *testing.T) {
 	assert.FileExists(app.SiteSettingsPath)
 	assert.FileExists(app.SiteDdevSettingsFile)
 
-	_ = os.Remove(filepath.Join(app.SiteSettingsPath))
-	_ = os.Remove(filepath.Join(app.SiteDdevSettingsFile))
+	err = os.Remove(filepath.Join(app.SiteSettingsPath))
+	assert.NoError(err)
+	err = os.Remove(filepath.Join(app.SiteDdevSettingsFile))
+	assert.NoError(err)
+	// Flush to prevent conflict with mutagen holding file below
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
 
 	assert.False(fileutil.FileExists(app.SiteSettingsPath))
 	assert.False(fileutil.FileExists(app.SiteDdevSettingsFile))
 
 	err = app.Start()
 	assert.NoError(err)
-	//nolint: errcheck
-	defer app.Stop(true, false)
 
 	// Now with DisableSettingsManagement=false, start should have created both
 	assert.FileExists(app.SiteSettingsPath)
