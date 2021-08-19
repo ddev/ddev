@@ -1846,6 +1846,12 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		return fmt.Errorf("failed to process pre-stop hooks: %v", err)
 	}
 
+	// Describe the app before we destroy everything
+	desc, err := app.Describe(false)
+	if err != nil {
+		util.Warning("could not run app.Describe(): %v", err)
+	}
+
 	if createSnapshot == true {
 		if app.SiteStatus() != SiteRunning {
 			util.Warning("Must start non-running project to do database snapshot")
@@ -1894,19 +1900,15 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 				util.Success("Volume %s for project %s was deleted", volName, app.Name)
 			}
 		}
-		desc, err := app.Describe(false)
-		if err != nil {
-			util.Warning("could not run app.Describe(): %v", err)
-		}
-		for extraService := range desc["services"].(map[string]map[string]string) {
+		for s := range desc["services"].(map[string]map[string]string) {
 			// volName default if name: is not specified is ddev-<project>_volume
-			volName := strings.ToLower("ddev-" + app.Name + "_" + extraService)
+			volName := strings.ToLower("ddev-" + app.Name + "_" + s)
 			if dockerutil.VolumeExists(volName) {
 				err = dockerutil.RemoveVolume(volName)
 				if err != nil {
 					util.Warning("could not remove volume %s: %v", volName, err)
 				} else {
-					util.Success("Deleting third-party persistent volume %s for service %s...", volName, extraService)
+					util.Success("Deleting third-party persistent volume %s for service %s...", volName, s)
 				}
 			}
 		}
