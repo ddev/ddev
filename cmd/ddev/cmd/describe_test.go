@@ -60,30 +60,27 @@ func TestCmdDescribe(t *testing.T) {
 		cleanup := testcommon.Chdir(tmpdir)
 		defer testcommon.CleanupDir(tmpdir)
 
-		args := []string{"describe", v.Name}
-		out, err := exec.RunCommand(DdevBin, args)
+		out, err := exec.RunHostCommand(DdevBin, "describe", v.Name)
 		assert.NoError(err)
 		assert.Contains(string(out), "Name")
 		assert.Contains(string(out), "Location")
 		assert.Contains(string(out), v.Name)
-		assert.Contains(string(out), "running")
+		assert.Contains(string(out), "OK")
 
 		cleanup()
 
 		cleanup = v.Chdir()
 		defer cleanup()
 
-		args = []string{"describe"}
-		out, err = exec.RunCommand(DdevBin, args)
+		out, err = exec.RunHostCommand(DdevBin, "describe")
 		assert.NoError(err)
 		assert.Contains(string(out), "Name")
 		assert.Contains(string(out), "Location")
 		assert.Contains(string(out), v.Name)
-		assert.Contains(string(out), "running")
+		assert.Contains(string(out), "OK")
 
 		// Test describe in current directory with json flag
-		args = []string{"describe", "-j"}
-		out, err = exec.RunCommand(DdevBin, args)
+		out, err = exec.RunHostCommand(DdevBin, "describe", "-j")
 		assert.NoError(err)
 		logItems, err := unmarshalJSONLogs(out)
 		require.NoError(t, err, "Unable to unmarshall ===\n%s\n===\n", logItems)

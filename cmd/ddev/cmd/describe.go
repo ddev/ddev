@@ -161,10 +161,12 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		t.Render()
 	}
 
-	_, _ = fmt.Fprintf(&res, "\nHints and Tips\n")
+	_, _ = fmt.Fprintf(&res, text.Bold.Sprint("\nMore Info:\n"))
 	l := list.NewWriter()
 	l.SetOutputMirror(&res)
 
+	l.AppendItem("Project Name: " + app.Name)
+	l.AppendItem("Location: " + desc["shortroot"].(string))
 	phpMyAdminURL := ""
 	if _, ok := desc["phpmyadmin_url"]; ok {
 		phpMyAdminURL = desc["phpmyadmin_url"].(string)
