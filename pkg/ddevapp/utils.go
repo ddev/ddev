@@ -2,10 +2,10 @@ package ddevapp
 
 import (
 	"bytes"
+
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/fatih/color"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"path"
@@ -61,7 +61,7 @@ func GetActiveProjects() []*DdevApp {
 func CreateAppTable(out *bytes.Buffer) table.Writer {
 	t := table.NewWriter()
 	t.AppendHeader(table.Row{"Name", "Type", "Location", "URL", "Status"})
-	if !nodeps.UseSimpleFormatting {
+	if !nodeps.RequireSimpleFormatting() {
 		t.SetStyle(table.StyleColoredBright)
 	}
 	t.SetOutputMirror(out)
@@ -95,7 +95,7 @@ func RenderAppRow(t table.Writer, row map[string]interface{}) {
 				mutagenStatus = "not enabled"
 			}
 			if mutagenStatus != "ok" {
-				mutagenStatus = color.RedString(mutagenStatus)
+				mutagenStatus = util.ColorizeText(mutagenStatus, "red")
 			}
 			status = fmt.Sprintf("%s (%s)", status, mutagenStatus)
 		}
@@ -373,3 +373,11 @@ func GetProjects(activeOnly bool) ([]*DdevApp, error) {
 
 	return appSlice, nil
 }
+
+//func ColorText(in string, color string) (out string) {
+//	switch color {
+//	case "green":
+//		return text.DisableColors()
+//
+//	}
+//}

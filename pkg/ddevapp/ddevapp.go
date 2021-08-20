@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/fatih/color"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/lextoumbourou/goodhosts"
@@ -2344,7 +2343,7 @@ func FormatSiteStatus(status string) string {
 	case strings.Contains(status, SiteStopped) || strings.Contains(status, SiteDirMissing) || strings.Contains(status, SiteConfigMissing):
 		formattedStatus = text.FgRed.Sprint(formattedStatus)
 	default:
-		formattedStatus = color.CyanString(formattedStatus)
+		formattedStatus = text.FgGreen.Sprint(formattedStatus)
 	}
 	return formattedStatus
 }

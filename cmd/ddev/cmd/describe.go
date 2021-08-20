@@ -135,7 +135,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		}
 
 		// Output our service table.
-		if !nodeps.UseSimpleFormatting {
+		if !nodeps.RequireSimpleFormatting() {
 			t.SetStyle(table.StyleColoredBright)
 		}
 		tWidth, _ := nodeps.GetTerminalWidthHeight()

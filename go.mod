@@ -8,7 +8,6 @@ require (
 	github.com/cheggaaa/pb v1.0.25
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/docker/docker v20.10.7+incompatible
-	github.com/fatih/color v1.7.0
 	github.com/fsouza/go-dockerclient v1.7.3
 	github.com/google/go-github v0.0.0-20180716180158-c0b63e2f9bb1
 	github.com/google/go-querystring v0.0.0-20170111101155-53e6ce116135 // indirect

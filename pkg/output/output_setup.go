@@ -1,7 +1,6 @@
 package output
 
 import (
-	"github.com/fatih/color"
 	log "github.com/sirupsen/logrus"
 	"os"
 )
@@ -20,7 +19,7 @@ var (
 // LogSetUp sets up UserOut and log loggers as needed by ddev
 func LogSetUp() {
 	// Use color.Output instead of stderr for all user output
-	UserOut.Out = color.Output
+	UserOut.Out = os.Stdout
 	UserErr.Out = os.Stderr
 	UserErr.SetOutput(&ErrorWriter{})
 

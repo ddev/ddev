@@ -81,7 +81,6 @@ github.com/docker/go-connections/nat
 github.com/docker/go-units
 # github.com/fatih/color v1.7.0
 ## explicit
-github.com/fatih/color
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
 # github.com/fsouza/go-dockerclient v1.7.3
@@ -129,8 +128,6 @@ github.com/jedib0t/go-pretty/v6/text
 # github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a
 github.com/juju/ansiterm
 github.com/juju/ansiterm/tabwriter
-# github.com/jwalton/gchalk v1.1.0
-## explicit
 # github.com/lextoumbourou/goodhosts v2.1.0+incompatible
 ## explicit
 github.com/lextoumbourou/goodhosts

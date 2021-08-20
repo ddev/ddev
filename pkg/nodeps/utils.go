@@ -104,3 +104,10 @@ func GetTerminalWidthHeight() (int, int) {
 	return 0, 0
 }
 
+// RequireSimpleFormatting() returns true if we should not be colorizing/styling text
+func RequireSimpleFormatting() bool {
+	if UseSimpleFormatting || !term.IsTerminal(1) || !term.IsTerminal(0) {
+		return true
+	}
+	return false
+}
