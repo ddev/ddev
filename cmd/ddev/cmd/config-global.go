@@ -97,6 +97,12 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 		dirty = true
 	}
 
+	if cmd.Flag("table-style").Changed {
+		val, _ := cmd.Flags().GetString("table-style")
+		globalconfig.DdevGlobalConfig.TableStyle = val
+		dirty = true
+	}
+
 	if cmd.Flag("auto-restart-containers").Changed {
 		val, _ := cmd.Flags().GetBool("auto-restart-containers")
 		globalconfig.DdevGlobalConfig.AutoRestartContainers = val
@@ -137,6 +143,7 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 	output.UserOut.Printf("disable-http2=%v", globalconfig.DdevGlobalConfig.DisableHTTP2)
 	output.UserOut.Printf("use-letsencrypt=%v", globalconfig.DdevGlobalConfig.UseLetsEncrypt)
 	output.UserOut.Printf("letsencrypt-email=%v", globalconfig.DdevGlobalConfig.LetsEncryptEmail)
+	output.UserOut.Printf("table-style=%v", globalconfig.DdevGlobalConfig.TableStyle)
 	output.UserOut.Printf("auto-restart-containers=%v", globalconfig.DdevGlobalConfig.AutoRestartContainers)
 	output.UserOut.Printf("use-hardened-images=%v", globalconfig.DdevGlobalConfig.UseHardenedImages)
 	output.UserOut.Printf("fail-on-hook-fail=%v", globalconfig.DdevGlobalConfig.FailOnHookFailGlobal)
@@ -156,6 +163,7 @@ func init() {
 	configGlobalCommand.Flags().Bool("use-hardened-images", false, "If true, use more secure 'hardened' images for an actual internet deployment.")
 	configGlobalCommand.Flags().Bool("fail-on-hook-fail", false, "If true, 'ddev start' will fail when a hook fails.")
 	configGlobalCommand.Flags().Bool("mutagen-enabled", false, "If true, web container will use mutagen caching/asynchronous updates.")
+	configGlobalCommand.Flags().String("table-style", "", "Table style for list and describe, see ~/.ddev/global_config.yaml for values")
 
 	ConfigCommand.AddCommand(configGlobalCommand)
 }

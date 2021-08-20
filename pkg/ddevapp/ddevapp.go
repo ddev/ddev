@@ -154,8 +154,9 @@ func List(activeOnly bool, continuous bool, continuousSleepTime int) {
 				RenderAppRow(t, desc)
 			}
 			t.AppendFooter(table.Row{
-				RenderRouterStatus(),
-			})
+				"Router", RenderRouterStatus()},
+				table.RowConfig{AutoMerge: true},
+			)
 			t.Render()
 			output.UserOut.WithField("raw", appDescs).Print(out.String())
 		}

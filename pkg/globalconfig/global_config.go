@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
+	"github.com/drud/ddev/pkg/styles"
+	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -54,6 +56,7 @@ type GlobalConfig struct {
 	FailOnHookFailGlobal     bool                    `yaml:"fail_on_hook_fail"`
 	WebEnvironment           []string                `yaml:"web_environment"`
 	DisableHTTP2             bool                    `yaml:"disable_http2"`
+	TableStyle               string                  `yaml:"table_style"`
 	ProjectList              map[string]*ProjectInfo `yaml:"project_info"`
 }
 
@@ -76,12 +79,20 @@ func GetMutagenPath() string {
 	return filepath.Join(GetMutagenDir(), mutagenBinary)
 }
 
+// GetTableStyle returns the configured (string) table style
+func GetTableStyle() string {
+	return DdevGlobalConfig.TableStyle
+}
+
 // ValidateGlobalConfig validates global config
 func ValidateGlobalConfig() error {
 	if !IsValidOmitContainers(DdevGlobalConfig.OmitContainersGlobal) {
 		return fmt.Errorf("Invalid omit_containers: %s, must contain only %s", strings.Join(DdevGlobalConfig.OmitContainersGlobal, ","), strings.Join(GetValidOmitContainers(), ",")).(InvalidOmitContainers)
 	}
 
+	if !styles.IsValidTableStyle(DdevGlobalConfig.TableStyle) {
+		return fmt.Errorf("Invalid table-style: Must be one of %v", styles.ValidTableStyleList())
+	}
 	return nil
 }
 
@@ -171,6 +182,9 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # web_environment:
 # - SOMEENV=somevalue
 # - SOMEOTHERENV=someothervalue
+
+# You can set the table style with
+# table_style: 
 
 # In unusual cases the default value to wait to detect internet availability is too short.
 # You can adjust this value higher to make it less likely that ddev will declare internet
@@ -266,7 +280,7 @@ func GetGlobalDdevDir() string {
 	return ddevDir
 }
 
-// IsValidOmitContainers is a helper function to determine if a the OmitContainers array is valid
+// IsValidOmitContainers is a helper function to determine if the OmitContainers array is valid
 func IsValidOmitContainers(containerList []string) bool {
 	for _, containerName := range containerList {
 		if _, ok := ValidOmitContainers[containerName]; !ok {
@@ -500,4 +514,10 @@ func IsInternetActive() bool {
 	IsInternetActiveResult = active
 
 	return active
+}
+
+// SetGlobalTableStyle sets the table style to the globally configured style
+func SetGlobalTableStyle(writer table.Writer) {
+	styleName := GetTableStyle()
+	writer.SetStyle(styles.GetTableStyle(styleName))
 }

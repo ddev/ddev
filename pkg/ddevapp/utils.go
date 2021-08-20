@@ -2,7 +2,6 @@ package ddevapp
 
 import (
 	"bytes"
-
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
@@ -61,9 +60,7 @@ func GetActiveProjects() []*DdevApp {
 func CreateAppTable(out *bytes.Buffer) table.Writer {
 	t := table.NewWriter()
 	t.AppendHeader(table.Row{"Name", "Type", "Location", "URL", "Status"})
-	if !nodeps.RequireSimpleFormatting() {
-		t.SetStyle(table.StyleColoredBright)
-	}
+	globalconfig.SetGlobalTableStyle(t)
 	t.SetOutputMirror(out)
 	return t
 }

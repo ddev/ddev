@@ -195,7 +195,7 @@ func RenderRouterStatus() string {
 	default:
 		renderedStatus = text.FgRed.Sprint(status) + badRouter + "\n" + logOutput
 	}
-	return fmt.Sprintf("Router Status: %s", renderedStatus)
+	return renderedStatus
 }
 
 // GetRouterStatus returns router status and warning if not

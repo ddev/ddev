@@ -37,7 +37,7 @@ func TestCmdImportDB(t *testing.T) {
 
 	if app.MutagenEnabled || app.MutagenEnabledGlobal {
 		_, _, longStatus, _ := app.MutagenStatus()
-		t.Logf("mutagen status before show tables=%s", longStatus)
+		t.Logf("mutagen status before show styles=%s", longStatus)
 	}
 
 	// Make sure we start with nothing in db
