@@ -424,7 +424,7 @@ func (app *DdevApp) GenerateMutagenYml() error {
 func IsMutagenVolumeMounted(app *DdevApp) (bool, error) {
 	client := dockerutil.GetDockerClient()
 	container, err := dockerutil.FindContainerByName("ddev-" + app.Name + "-web")
-	// If there is no web container, to volume is not mounted
+	// If there is no web container found, the volume is not mounted
 	if err != nil || container == nil {
 		return false, nil
 	}
