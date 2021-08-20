@@ -45,6 +45,9 @@ func init() {
 	if testMutagen := os.Getenv("DDEV_TEST_USE_MUTAGEN"); testMutagen == "true" {
 		nodeps.MutagenEnabledDefault = true
 	}
+	if fmt := os.Getenv("DDEV_USE_SIMPLE_FORMATTING"); fmt == "true" {
+		nodeps.UseSimpleFormatting = true
+	}
 }
 
 // NewApp creates a new DdevApp struct with defaults set and overridden by any existing config.yml.

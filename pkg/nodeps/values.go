@@ -46,6 +46,10 @@ var MutagenEnabledDefault = false
 // NFSMountEnabledDefault is default value for app.NFSMountEnabled
 var NFSMountEnabledDefault = false
 
+// UseSimpleFormatting is turned on by DDEV_USE_SIMPLE_FORMATTING
+// and makes ddev list and describe, etc. use simpler formatting
+var UseSimpleFormatting = false
+
 // FailOnHookFailDefault is the default value for app.FailOnHookFail
 var FailOnHookFailDefault = false
 

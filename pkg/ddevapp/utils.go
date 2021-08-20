@@ -61,13 +61,10 @@ func GetActiveProjects() []*DdevApp {
 func CreateAppTable(out *bytes.Buffer) table.Writer {
 	t := table.NewWriter()
 	t.AppendHeader(table.Row{"Name", "Type", "Location", "URL", "Status"})
-	t.SetStyle(table.StyleColoredBright)
+	if !nodeps.UseSimpleFormatting {
+		t.SetStyle(table.StyleColoredBright)
+	}
 	t.SetOutputMirror(out)
-
-	//table.MaxColWidth = 140
-	//table.Separator = "  "
-	//table.Wrap = true
-	//table.AddRow(h("Name"), h("Type"), h("Location"), h("URL"), h("Status"))
 	return t
 }
 
