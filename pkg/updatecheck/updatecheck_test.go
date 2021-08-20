@@ -53,6 +53,9 @@ func TestIsReleaseVersion(t *testing.T) {
 		{"0.1.0", true},
 		{"v0.1.0", true},
 		{"v19.99.99", true},
+		{"v1.17.0-alpha1", true},
+		{"v1.18.0-alpha4-43-gb5ff9108-dirty", false},
+		{"v1.18.0-alpha4-43-gb5ff9108", false},
 		{"19.99.99-8us8dfgh7-dirty", false},
 		{"v0.3-7-g3ca5586-dirty", false},
 	}

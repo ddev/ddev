@@ -76,9 +76,9 @@ func ResetUpdateTime(filepath string) error {
 
 // isReleaseVersion does a (very naive) check on whether a version string consistutes a release version or a dev build.
 func isReleaseVersion(version string) bool {
-	parts := strings.Split(version, "-g")
+	parts := strings.Split(version, "-")
 
-	if len(parts) > 1 {
+	if len(parts) > 2 || strings.Contains(version, "dirty") || strings.Contains(version, "-g") {
 		return false
 	}
 
