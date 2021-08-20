@@ -21,7 +21,7 @@ func TestComposer(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
-	// Use drupal8 only for this test, just need a little composer action
+	// Use drupal9 only for this test, just need a little composer action
 	site := FullTestSites[8]
 	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
 	if site.Dir == "" || !fileutil.FileExists(site.Dir) {

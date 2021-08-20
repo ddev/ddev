@@ -73,6 +73,7 @@ func GetDockerClient() *docker.Client {
 }
 
 // FindContainerByName takes a container name and returns the container ID
+// If container is not found, returns nil with no error
 func FindContainerByName(name string) (*docker.APIContainers, error) {
 	client := GetDockerClient()
 	containers, err := client.ListContainers(docker.ListContainersOptions{

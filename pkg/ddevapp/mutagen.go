@@ -113,6 +113,9 @@ func CreateMutagenSync(app *DdevApp) error {
 	if err != nil {
 		return err
 	}
+	if container == nil {
+		return errors.Errorf("web container not found")
+	}
 
 	args := []string{"sync", "create", app.AppRoot, fmt.Sprintf("docker://%s/var/www/html", container.ID), "--no-global-configuration", "--name", syncName}
 	if configFile != "" {
@@ -408,8 +411,9 @@ func (app *DdevApp) GenerateMutagenYml() error {
 func IsMutagenVolumeMounted(app *DdevApp) (bool, error) {
 	client := dockerutil.GetDockerClient()
 	container, err := dockerutil.FindContainerByName("ddev-" + app.Name + "-web")
-	if err != nil {
-		return false, err
+	// If there is no web container, to volume is not mounted
+	if err != nil || container == nil {
+		return false, nil
 	}
 	inspect, err := client.InspectContainerWithOptions(docker.InspectContainerOptions{
 		ID: container.ID,
