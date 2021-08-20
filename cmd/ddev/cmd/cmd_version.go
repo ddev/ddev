@@ -32,7 +32,7 @@ var versionCmd = &cobra.Command{
 		versionOutput.AppendHeader(table.Row{"Item", "Value"})
 		versionOutput.SetColumnConfigs([]table.ColumnConfig{{
 			Name:     "Value",
-			WidthMax: 50,
+			WidthMax: 70,
 		},
 		})
 
