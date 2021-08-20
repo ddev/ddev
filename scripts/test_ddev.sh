@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Please run this script with "bash testddev.sh"
-# You can copy and paste it (make a file named testddev.sh)
+# Please run this script with "bash test_ddev.sh"
+# You can copy and paste it (make a file named test_ddev.sh)
 # Or use curl or wget to download the *raw* version.
 # If you're on Windows (not WSL2) please run it in a git-bash window
 # When you are reporting an issue, please include the full output of this script.
