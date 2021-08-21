@@ -1099,7 +1099,7 @@ func TestDdevImportDB(t *testing.T) {
 	os.Stdin = oldStdin
 	checkImportDbImports(t, app)
 
-	// Verify that the count of styles is exactly what it should be, that nothing was lost in the
+	// Verify that the count of tables is exactly what it should be, that nothing was lost in the
 	// import due to embedded DDL statements.
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
@@ -1193,7 +1193,7 @@ func TestDdevImportDB(t *testing.T) {
 		assert.Equal("1\n", out)
 
 		// Import 2-user users.sql again, but with nodrop=true
-		// We should end up with 2 styles now
+		// We should end up with 2 tables now
 		path = filepath.Join(testDir, "testdata", t.Name(), "users.sql")
 		err = app.ImportDB(path, "", false, true, db)
 		assert.NoError(err)
@@ -1490,7 +1490,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		assert.NotContains(out, "Unable to create settings file")
 
 		// Validate PHPMyAdmin is working and database named db is present
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8036/index.php?route=/database/structure&server=1&db=db", "No styles found in database")
+		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8036/index.php?route=/database/structure&server=1&db=db", "No tables found in database")
 		// Validate MailHog is working and "connected"
 		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8025/#", "Connected")
 
