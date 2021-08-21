@@ -131,7 +131,7 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 			util.Failed("Failed to write global config: %v", err)
 		}
 	}
-	util.Success("Global configuration:")
+	output.UserOut.Println("Global configuration:")
 	output.UserOut.Printf("instrumentation-opt-in=%v", globalconfig.DdevGlobalConfig.InstrumentationOptIn)
 	output.UserOut.Printf("omit-containers=[%s]", strings.Join(globalconfig.DdevGlobalConfig.OmitContainersGlobal, ","))
 	output.UserOut.Printf("web-environment=[%s]", strings.Join(globalconfig.DdevGlobalConfig.WebEnvironment, ","))
