@@ -935,7 +935,7 @@ func (app *DdevApp) Start() error {
 
 	// Delete the NFS volumes before we bring up docker-compose (and will be created again)
 	// We don't care if the volume wasn't there
-	_ = dockerutil.RemoveVolume(app.GetNFSMountVolName())
+	_ = dockerutil.RemoveVolume(app.GetNFSMountVolumeName())
 
 	_, _, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "up", "--build", "-d")
 	if err != nil {
@@ -2264,9 +2264,17 @@ func (app *DdevApp) GetWorkingDir(service string, dir string) string {
 	return app.DefaultWorkingDirMap()[service]
 }
 
-// GetNFSMountVolName returns the docker volume name of the nfs mount volume
-func (app *DdevApp) GetNFSMountVolName() string {
+// GetNFSMountVolumeName returns the docker volume name of the nfs mount volume
+func (app *DdevApp) GetNFSMountVolumeName() string {
+	// This is lowercased because the automatic naming in docker-compose v1/2
+	// defaulted to lowercase the name
 	return strings.ToLower("ddev-" + app.Name + "_nfsmount")
+}
+
+// GetMariaDBVolumeName returns the docker volume name of the mariadb/database volume
+// For historical reasons this isn't lowercased.
+func (app *DdevApp) GetMariaDBVolumeName() string {
+	return app.Name + "-mariadb"
 }
 
 // StartAppIfNotRunning is intended to replace much-duplicated code in the commands.

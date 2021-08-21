@@ -156,7 +156,7 @@ func Cleanup(app *DdevApp) error {
 		}
 	}
 	// Always kill the nfs volume on ddev remove
-	for _, volName := range []string{app.GetNFSMountVolName()} {
+	for _, volName := range []string{app.GetNFSMountVolumeName()} {
 		_ = dockerutil.RemoveVolume(volName)
 	}
 

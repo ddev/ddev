@@ -637,10 +637,12 @@ type composeYAMLVars struct {
 	OmitDB                    bool
 	OmitDBA                   bool
 	OmitSSHAgent              bool
+	MariaDBVolumeName         string
 	MutagenEnabled            bool
-	MutagenVolume             string
+	MutagenVolumeName         string
 	NFSMountEnabled           bool
 	NFSSource                 string
+	NFSMountVolumeName        string
 	DockerIP                  string
 	IsWindowsFS               bool
 	NoProjectMount            bool
@@ -731,6 +733,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		DBWorkingDir:          app.GetWorkingDir("db", ""),
 		DBAWorkingDir:         app.GetWorkingDir("dba", ""),
 		WebEnvironment:        webEnvironment,
+		MariaDBVolumeName:     app.GetMariaDBVolumeName(),
+		NFSMountVolumeName:    app.GetNFSMountVolumeName(),
 	}
 	if app.NFSMountEnabled || app.NFSMountEnabledGlobal {
 		templateVars.MountType = "volume"
@@ -750,7 +754,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if app.MutagenEnabled || app.MutagenEnabledGlobal {
 		templateVars.MountType = "volume"
 		templateVars.WebMount = "project_mutagen"
-		templateVars.MutagenVolume = GetMutagenVolumeName(app)
+		templateVars.MutagenVolumeName = GetMutagenVolumeName(app)
 		templateVars.NFSSource = app.AppRoot
 	}
 
