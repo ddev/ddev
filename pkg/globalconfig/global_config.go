@@ -37,25 +37,25 @@ type ProjectInfo struct {
 
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
-	OmitContainersGlobal     []string `yaml:"omit_containers,flow"`
-	NFSMountEnabledGlobal    bool     `yaml:"nfs_mount_enabled"`
-	MutagenEnabledGlobal     bool     `yaml:"mutagen_enabled"`
-	InstrumentationOptIn     bool     `yaml:"instrumentation_opt_in"`
-	RouterBindAllInterfaces  bool     `yaml:"router_bind_all_interfaces"`
-	InternetDetectionTimeout int64    `yaml:"internet_detection_timeout_ms"`
-	DeveloperMode            bool     `yaml:"developer_mode,omitempty"`
-	InstrumentationUser      string   `yaml:"instrumentation_user,omitempty"`
-	LastStartedVersion       string   `yaml:"last_started_version"`
-	MkcertCARoot             string   `yaml:"mkcert_caroot"`
-	UseHardenedImages        bool     `yaml:"use_hardened_images"`
-	UseLetsEncrypt           bool     `yaml:"use_letsencrypt"`
-	LetsEncryptEmail         string   `yaml:"letsencrypt_email"`
-	AutoRestartContainers    bool     `yaml:"auto_restart_containers"`
-	FailOnHookFailGlobal     bool     `yaml:"fail_on_hook_fail"`
-	WebEnvironment           []string `yaml:"web_environment"`
-	DisableHTTP2             bool     `yaml:"disable_http2"`
-
-	ProjectList map[string]*ProjectInfo `yaml:"project_info"`
+	OmitContainersGlobal     []string                `yaml:"omit_containers,flow"`
+	NFSMountEnabledGlobal    bool                    `yaml:"nfs_mount_enabled"`
+	MutagenEnabledGlobal     bool                    `yaml:"mutagen_enabled"`
+	InstrumentationOptIn     bool                    `yaml:"instrumentation_opt_in"`
+	RouterBindAllInterfaces  bool                    `yaml:"router_bind_all_interfaces"`
+	InternetDetectionTimeout int64                   `yaml:"internet_detection_timeout_ms"`
+	DeveloperMode            bool                    `yaml:"developer_mode,omitempty"`
+	InstrumentationUser      string                  `yaml:"instrumentation_user,omitempty"`
+	LastStartedVersion       string                  `yaml:"last_started_version"`
+	MkcertCARoot             string                  `yaml:"mkcert_caroot"`
+	UseHardenedImages        bool                    `yaml:"use_hardened_images"`
+	UseLetsEncrypt           bool                    `yaml:"use_letsencrypt"`
+	LetsEncryptEmail         string                  `yaml:"letsencrypt_email"`
+	AutoRestartContainers    bool                    `yaml:"auto_restart_containers"`
+	FailOnHookFailGlobal     bool                    `yaml:"fail_on_hook_fail"`
+	WebEnvironment           []string                `yaml:"web_environment"`
+	DisableHTTP2             bool                    `yaml:"disable_http2"`
+	DisableRouter            bool                    `yaml:"disable_router"`
+	ProjectList              map[string]*ProjectInfo `yaml:"project_info"`
 }
 
 // GetGlobalConfigPath gets the path to global config file
@@ -225,6 +225,10 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 # fail_on_hook_fail: false
 # Decide whether 'ddev start' should be interrupted by a failing hook
+
+# disable_router: false
+# In special cases the router can be disabled and another reverse proxy
+# used in its place
 
 `
 	cfgbytes = append(cfgbytes, instructions...)

@@ -891,37 +891,38 @@ func (app *DdevApp) Start() error {
 		}
 	}
 
-	caRoot := globalconfig.GetCAROOT()
-	if caRoot == "" {
-		util.Warning("mkcert may not be properly installed, we suggest installing it for trusted https support, `brew install mkcert nss`, `choco install -y mkcert`, etc. and then `mkcert -install`")
-	}
-	router, _ := FindDdevRouter()
-	// If the router doesn't exist, go ahead and push mkcert root ca certs into the ddev-global-cache/mkcert
-	// This will often be redundant
-	if router == nil {
-		// Copy ca certs into ddev-global-cache/mkcert
-		if caRoot != "" {
+	if !globalconfig.DdevGlobalConfig.DisableRouter {
+		caRoot := globalconfig.GetCAROOT()
+		if caRoot == "" {
+			util.Warning("mkcert may not be properly installed, we suggest installing it for trusted https support, `brew install mkcert nss`, `choco install -y mkcert`, etc. and then `mkcert -install`")
+		}
+		router, _ := FindDdevRouter()
+		// If the router doesn't exist, go ahead and push mkcert root ca certs into the ddev-global-cache/mkcert
+		// This will often be redundant
+		if router == nil {
+			// Copy ca certs into ddev-global-cache/mkcert
+			if caRoot != "" {
+				uid, _, _ := util.GetContainerUIDGid()
+				err = dockerutil.CopyToVolume(caRoot, "ddev-global-cache", "mkcert", uid)
+				if err != nil {
+					util.Warning("failed to copy root CA into docker volume ddev-global-cache/mkcert: %v", err)
+				} else {
+					util.Success("Pushed mkcert rootca certs to ddev-global-cache/mkcert")
+				}
+			}
+		}
+
+		certPath := app.GetConfigPath("custom_certs")
+		if fileutil.FileExists(certPath) {
 			uid, _, _ := util.GetContainerUIDGid()
-			err = dockerutil.CopyToVolume(caRoot, "ddev-global-cache", "mkcert", uid)
+			err = dockerutil.CopyToVolume(certPath, "ddev-global-cache", "custom_certs", uid)
 			if err != nil {
-				util.Warning("failed to copy root CA into docker volume ddev-global-cache/mkcert: %v", err)
+				util.Warning("failed to copy custom certs into docker volume ddev-global-cache/custom_certs: %v", err)
 			} else {
-				util.Success("Pushed mkcert rootca certs to ddev-global-cache/mkcert")
+				util.Success("Copied custom certs in %s to ddev-global-cache/custom_certs", certPath)
 			}
 		}
 	}
-
-	certPath := app.GetConfigPath("custom_certs")
-	if fileutil.FileExists(certPath) {
-		uid, _, _ := util.GetContainerUIDGid()
-		err = dockerutil.CopyToVolume(certPath, "ddev-global-cache", "custom_certs", uid)
-		if err != nil {
-			util.Warning("failed to copy custom certs into docker volume ddev-global-cache/custom_certs: %v", err)
-		} else {
-			util.Success("Copied custom certs in %s to ddev-global-cache/custom_certs", certPath)
-		}
-	}
-
 	// WriteConfig .ddev-docker-compose-*.yaml
 	err = app.WriteDockerComposeYAML()
 	if err != nil {
@@ -977,9 +978,11 @@ func (app *DdevApp) Start() error {
 		}
 	}
 
-	err = StartDdevRouter()
-	if err != nil {
-		return err
+	if !globalconfig.DdevGlobalConfig.DisableRouter {
+		err = StartDdevRouter()
+		if err != nil {
+			return err
+		}
 	}
 
 	err = app.WaitByLabels(map[string]string{"com.ddev.site-name": app.GetName()})
@@ -1907,25 +1910,34 @@ func (app *DdevApp) RemoveGlobalProjectInfo() {
 
 // GetHTTPURL returns the HTTP URL for an app.
 func (app *DdevApp) GetHTTPURL() string {
-	url := "http://" + app.GetHostname()
-	if app.RouterHTTPPort != "80" {
-		url = url + ":" + app.RouterHTTPPort
+	url := ""
+	if !globalconfig.DdevGlobalConfig.DisableRouter {
+		url = "http://" + app.GetHostname()
+		if app.RouterHTTPPort != "80" {
+			url = url + ":" + app.RouterHTTPPort
+		}
+	} else {
+		url = app.GetWebContainerDirectHTTPURL()
 	}
 	return url
 }
 
 // GetHTTPSURL returns the HTTPS URL for an app.
 func (app *DdevApp) GetHTTPSURL() string {
-	url := "https://" + app.GetHostname()
-	if app.RouterHTTPSPort != "443" {
-		url = url + ":" + app.RouterHTTPSPort
+	url := ""
+	if !globalconfig.DdevGlobalConfig.DisableRouter {
+		url = "https://" + app.GetHostname()
+		if app.RouterHTTPSPort != "443" {
+			url = url + ":" + app.RouterHTTPSPort
+		}
+	} else {
+		url = app.GetWebContainerDirectHTTPSURL()
 	}
 	return url
 }
 
 // GetAllURLs returns an array of all the URLs for the project
 func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs []string) {
-
 	// Get configured URLs
 	for _, name := range app.GetHostnames() {
 		httpPort := ""

@@ -486,29 +486,30 @@ func (app *DdevApp) GetHostnames() []string {
 	// Use a map to make sure that we have unique hostnames
 	// The value is useless, so just use the int 1 for assignment.
 	nameListMap := make(map[string]int)
+	nameListArray := []string{}
 
-	for _, name := range app.AdditionalHostnames {
-		name = strings.ToLower(name)
-		nameListMap[name+"."+app.ProjectTLD] = 1
+	if !globalconfig.DdevGlobalConfig.DisableRouter {
+		for _, name := range app.AdditionalHostnames {
+			name = strings.ToLower(name)
+			nameListMap[name+"."+app.ProjectTLD] = 1
+		}
+
+		for _, name := range app.AdditionalFQDNs {
+			name = strings.ToLower(name)
+			nameListMap[name] = 1
+		}
+
+		// Make sure the primary hostname didn't accidentally get added, it will be prepended
+		delete(nameListMap, app.GetHostname())
+
+		// Now walk the map and extract the keys into an array.
+		for k := range nameListMap {
+			nameListArray = append(nameListArray, k)
+		}
+		sort.Strings(nameListArray)
+		// We want the primary hostname to be first in the list.
+		nameListArray = append([]string{app.GetHostname()}, nameListArray...)
 	}
-
-	for _, name := range app.AdditionalFQDNs {
-		name = strings.ToLower(name)
-		nameListMap[name] = 1
-	}
-
-	// Make sure the primary hostname didn't accidentally get added, it will be prepended
-	delete(nameListMap, app.GetHostname())
-
-	// Now walk the map and extract the keys into an array.
-	nameListArray := make([]string, 0, len(nameListMap))
-	for k := range nameListMap {
-		nameListArray = append(nameListArray, k)
-	}
-	sort.Strings(nameListArray)
-	// We want the primary hostname to be first in the list.
-	nameListArray = append([]string{app.GetHostname()}, nameListArray...)
-
 	return nameListArray
 }
 
