@@ -130,7 +130,11 @@ func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 	uidStr = curUser.Uid
 	gidStr = curUser.Gid
 	username = curUser.Username
-	//// Windows userids are non numeric,
+	// Remove at least spaces that aren't allowed in linux usernames and can appear in windows
+	// Example problem usernames from https://stackoverflow.com/questions/64933879/docker-ddev-unicodedecodeerror-utf-8-codec-cant-decode-byte-0xe9-in-positio/64934264#64934264
+	// 'André Kraus', 'Mück'
+	username = strings.Replace(username, " ", "", -1)
+	//// Windows userids are non-numeric,
 	//// so we have to run as arbitrary user 1000. We may have a host uidStr/gidStr greater in other contexts,
 	//// 1000 seems not to cause file permissions issues at least on docker-for-windows.
 	if runtime.GOOS == "windows" {
