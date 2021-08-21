@@ -81,7 +81,7 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 	urls := ""
 	mutagenStatus := ""
 	if row["status"] == SiteRunning {
-		if globalconfig.GetCAROOT() != "" && !globalconfig.DdevGlobalConfig.DisableRouter {
+		if globalconfig.GetCAROOT() != "" && !row["router_disabled"].(bool) {
 			urls = row["httpsurl"].(string)
 		} else {
 			urls = row["httpurl"].(string)

@@ -85,12 +85,6 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 		dirty = true
 	}
 
-	if cmd.Flag("disable-router").Changed {
-		val, _ := cmd.Flags().GetBool("disable-router")
-		globalconfig.DdevGlobalConfig.DisableRouter = val
-		dirty = true
-	}
-
 	if cmd.Flag("use-letsencrypt").Changed {
 		val, _ := cmd.Flags().GetBool("use-letsencrypt")
 		globalconfig.DdevGlobalConfig.UseLetsEncrypt = val
@@ -141,7 +135,6 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 	output.UserOut.Printf("router-bind-all-interfaces=%v", globalconfig.DdevGlobalConfig.RouterBindAllInterfaces)
 	output.UserOut.Printf("internet-detection-timeout-ms=%v", globalconfig.DdevGlobalConfig.InternetDetectionTimeout)
 	output.UserOut.Printf("disable-http2=%v", globalconfig.DdevGlobalConfig.DisableHTTP2)
-	output.UserOut.Printf("disable-router=%v", globalconfig.DdevGlobalConfig.DisableRouter)
 	output.UserOut.Printf("use-letsencrypt=%v", globalconfig.DdevGlobalConfig.UseLetsEncrypt)
 	output.UserOut.Printf("letsencrypt-email=%v", globalconfig.DdevGlobalConfig.LetsEncryptEmail)
 	output.UserOut.Printf("auto-restart-containers=%v", globalconfig.DdevGlobalConfig.AutoRestartContainers)
@@ -157,7 +150,6 @@ func init() {
 	configGlobalCommand.Flags().Bool("router-bind-all-interfaces", false, "router-bind-all-interfaces=true")
 	configGlobalCommand.Flags().Int("internet-detection-timeout-ms", 750, "Increase timeout when checking internet timeout, in milliseconds")
 	configGlobalCommand.Flags().Bool("disable-http2", false, "Optionally disable http2 in ddev-router, 'ddev global --disable-http2' or `ddev global --disable-http2=false'")
-	configGlobalCommand.Flags().Bool("disable-router", false, "Disable ddev-router so another ")
 	configGlobalCommand.Flags().Bool("use-letsencrypt", false, "Enables experimental Let's Encrypt integration, 'ddev global --use-letsencrypt' or `ddev global --use-letsencrypt=false'")
 	configGlobalCommand.Flags().String("letsencrypt-email", "", "Email associated with Let's Encrypt, `ddev global --letsencrypt-email=me@example.com'")
 	configGlobalCommand.Flags().Bool("auto-restart-containers", false, "If true, automatically restart containers after a reboot or docker restart")

@@ -155,9 +155,11 @@ services:
 {{ if .HostDockerInternalIP }}
     extra_hosts: [ "host.docker.internal:{{ .HostDockerInternalIP }}" ]
 {{ end }}
+{{ if not .OmitRouter }}
     external_links:
     {{ range $hostname := .Hostnames }}- "ddev-router:{{ $hostname }}"
     {{ end }}
+{{ end }}
     healthcheck:
       interval: 1s
       retries: 120

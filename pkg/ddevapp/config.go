@@ -488,7 +488,7 @@ func (app *DdevApp) GetHostnames() []string {
 	nameListMap := make(map[string]int)
 	nameListArray := []string{}
 
-	if !globalconfig.DdevGlobalConfig.DisableRouter {
+	if !IsRouterDisabled(app) {
 		for _, name := range app.AdditionalHostnames {
 			name = strings.ToLower(name)
 			nameListMap[name+"."+app.ProjectTLD] = 1
@@ -641,6 +641,7 @@ type composeYAMLVars struct {
 	SSHAgentBuildContext      string
 	OmitDB                    bool
 	OmitDBA                   bool
+	OmitRouter                bool
 	OmitSSHAgent              bool
 	MariaDBVolumeName         string
 	MutagenEnabled            bool
@@ -711,8 +712,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		HostDockerInternalIP:      hostDockerInternalIP,
 		ComposeVersion:            version.DockerComposeFileFormatVersion,
 		DisableSettingsManagement: app.DisableSettingsManagement,
-		OmitDB:                    nodeps.ArrayContainsString(app.GetOmittedContainers(), "db"),
-		OmitDBA:                   nodeps.ArrayContainsString(app.GetOmittedContainers(), "dba") || nodeps.ArrayContainsString(app.OmitContainers, "db"),
+		OmitDB:                    nodeps.ArrayContainsString(app.GetOmittedContainers(), nodeps.DBContainer),
+		OmitDBA:                   nodeps.ArrayContainsString(app.GetOmittedContainers(), nodeps.DBAContainer) || nodeps.ArrayContainsString(app.OmitContainers, nodeps.DBContainer),
+		OmitRouter:                nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer),
 		OmitSSHAgent:              nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent"),
 		MutagenEnabled:            (app.MutagenEnabled || app.MutagenEnabledGlobal),
 

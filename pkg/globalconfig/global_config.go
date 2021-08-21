@@ -54,7 +54,6 @@ type GlobalConfig struct {
 	FailOnHookFailGlobal     bool                    `yaml:"fail_on_hook_fail"`
 	WebEnvironment           []string                `yaml:"web_environment"`
 	DisableHTTP2             bool                    `yaml:"disable_http2"`
-	DisableRouter            bool                    `yaml:"disable_router"`
 	ProjectList              map[string]*ProjectInfo `yaml:"project_info"`
 }
 
@@ -159,9 +158,10 @@ func WriteGlobalConfig(config GlobalConfig) error {
 	// Append current image information
 	instructions := `
 # You can turn off usage of the dba (phpmyadmin) container and/or
-# ddev-ssh-agent containers with
-# omit_containers["dba", "ddev-ssh-agent"]
-# and you can opt in or out of sending instrumentation the ddev developers with
+# ddev-ssh-agent and ddev-router containers with
+# omit_containers["dba", "ddev-ssh-agent", "ddev-router"]
+
+# You can opt in or out of sending instrumentation the ddev developers with
 # instrumentation_opt_in: true # or false
 #
 # You can enable nfs mounting for all projects with
@@ -225,10 +225,6 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 # fail_on_hook_fail: false
 # Decide whether 'ddev start' should be interrupted by a failing hook
-
-# disable_router: false
-# In special cases the router can be disabled and another reverse proxy
-# used in its place
 
 `
 	cfgbytes = append(cfgbytes, instructions...)

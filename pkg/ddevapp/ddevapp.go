@@ -227,6 +227,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["shortroot"] = shortRoot
 	appDesc["httpurl"] = app.GetHTTPURL()
 	appDesc["httpsurl"] = app.GetHTTPSURL()
+	appDesc["router_disabled"] = IsRouterDisabled(app)
 	appDesc["primary_url"] = app.GetPrimaryURL()
 	appDesc["type"] = app.GetType()
 	appDesc["mutagen_enabled"] = app.MutagenEnabled || app.MutagenEnabledGlobal
@@ -891,7 +892,7 @@ func (app *DdevApp) Start() error {
 		}
 	}
 
-	if !globalconfig.DdevGlobalConfig.DisableRouter {
+	if !IsRouterDisabled(app) {
 		caRoot := globalconfig.GetCAROOT()
 		if caRoot == "" {
 			util.Warning("mkcert may not be properly installed, we suggest installing it for trusted https support, `brew install mkcert nss`, `choco install -y mkcert`, etc. and then `mkcert -install`")
@@ -978,7 +979,7 @@ func (app *DdevApp) Start() error {
 		}
 	}
 
-	if !globalconfig.DdevGlobalConfig.DisableRouter {
+	if !IsRouterDisabled(app) {
 		err = StartDdevRouter()
 		if err != nil {
 			return err
@@ -1911,7 +1912,7 @@ func (app *DdevApp) RemoveGlobalProjectInfo() {
 // GetHTTPURL returns the HTTP URL for an app.
 func (app *DdevApp) GetHTTPURL() string {
 	url := ""
-	if !globalconfig.DdevGlobalConfig.DisableRouter {
+	if !IsRouterDisabled(app) {
 		url = "http://" + app.GetHostname()
 		if app.RouterHTTPPort != "80" {
 			url = url + ":" + app.RouterHTTPPort
@@ -1925,7 +1926,7 @@ func (app *DdevApp) GetHTTPURL() string {
 // GetHTTPSURL returns the HTTPS URL for an app.
 func (app *DdevApp) GetHTTPSURL() string {
 	url := ""
-	if !globalconfig.DdevGlobalConfig.DisableRouter {
+	if !IsRouterDisabled(app) {
 		url = "https://" + app.GetHostname()
 		if app.RouterHTTPSPort != "443" {
 			url = url + ":" + app.RouterHTTPSPort

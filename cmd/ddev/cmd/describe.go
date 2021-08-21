@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/gosuri/uitable"
@@ -111,7 +110,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			output = output + "\n" + "DB container is excluded, so no db information provided\n"
 		}
 
-		if !globalconfig.DdevGlobalConfig.DisableRouter {
+		if !ddevapp.IsRouterDisabled(app) {
 			output = output + "\nOther Services\n--------------\n"
 			other := uitable.New()
 			other.AddRow("MailHog (https):", desc["mailhog_https_url"])
