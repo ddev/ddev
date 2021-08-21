@@ -962,7 +962,7 @@ func Exec(containerID string, command string) (string, string, error) {
 
 // CheckAvailableSpace outputs a warning if docker space is low
 func CheckAvailableSpace() {
-	_, out, _ := RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", `df -h / | awk '/overlay/ {print $5;}'`}, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, "", true, false, nil)
+	_, out, _ := RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", `df -h / | awk '/overlay/ {print $5;}'`}, []string{}, []string{}, []string{}, "", true, false, nil)
 	out = strings.Trim(out, "% \n")
 	spacePercent, _ := strconv.Atoi(out)
 	if (100 - spacePercent) < nodeps.MinimumDockerSpaceWarning {
