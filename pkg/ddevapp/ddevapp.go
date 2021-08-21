@@ -1954,7 +1954,9 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 		httpURLs = append(httpURLs, "http://"+name+httpPort)
 	}
 
-	httpsURLs = append(httpsURLs, app.GetWebContainerDirectHTTPSURL())
+	if !IsRouterDisabled(app) {
+		httpsURLs = append(httpsURLs, app.GetWebContainerDirectHTTPSURL())
+	}
 	httpURLs = append(httpURLs, app.GetWebContainerDirectHTTPURL())
 
 	return httpURLs, httpsURLs, append(httpsURLs, httpURLs...)
@@ -1965,7 +1967,7 @@ func (app *DdevApp) GetPrimaryURL() string {
 	httpURLs, httpsURLs, _ := app.GetAllURLs()
 	urlList := httpsURLs
 	// If no mkcert trusted https, use the httpURLs instead
-	if globalconfig.GetCAROOT() == "" {
+	if globalconfig.GetCAROOT() == "" || IsRouterDisabled(app) {
 		urlList = httpURLs
 	}
 	return urlList[0]
