@@ -8,8 +8,6 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/jedib0t/go-pretty/v6/list"
-	"github.com/jedib0t/go-pretty/v6/text"
 	"sort"
 	"strings"
 
@@ -133,6 +131,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			}
 
 			t.AppendRow(table.Row{k, ddevapp.FormatSiteStatus(v["status"]), strings.Join(urlPortParts, "\n"), strings.Join(extraInfo, "\n")})
+			//t.AppendSeparator()
 		}
 
 		// Output our service table.
@@ -158,44 +157,36 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 				WidthMax: infoWidth,
 			},
 		})
+
+		t.AppendRow(table.Row{"Project", "", app.Name})
+		t.AppendRow(table.Row{"Location", "", desc["shortroot"].(string)})
+		phpMyAdminURL := ""
+		if _, ok := desc["phpmyadmin_url"]; ok {
+			phpMyAdminURL = desc["phpmyadmin_url"].(string)
+		}
+		if _, ok := desc["phpmyadmin_https_url"]; ok {
+			phpMyAdminURL = desc["phpmyadmin_https_url"].(string)
+		}
+		if phpMyAdminURL != "" {
+			info := fmt.Sprintf("%s or `ddev launch -p`", desc["phpmyadmin_url"])
+			t.AppendRow(table.Row{"PHPMyAdmin", "", info})
+		}
+
+		mailhogURL := ""
+		if _, ok := desc["mailhog_url"]; ok {
+			mailhogURL = desc["mailhog_url"].(string)
+		}
+		if _, ok := desc["mailhog_https_url"]; ok {
+			mailhogURL = desc["mailhog_https_url"].(string)
+		}
+
+		t.AppendRow(table.Row{"Mailhog", "", fmt.Sprintf("MailHog: %s or `ddev launch -m`", mailhogURL)})
+		_, _, urls := app.GetAllURLs()
+		t.AppendRow(table.Row{"All URLs", "", strings.Join(urls, ", ")})
+
 		t.Render()
-	}
 
-	_, _ = fmt.Fprint(&out, text.Bold.Sprint("\nMore Info:\n"))
-	l := list.NewWriter()
-	l.SetOutputMirror(&out)
-
-	l.AppendItem("Project Name: " + app.Name)
-	l.AppendItem("Location: " + desc["shortroot"].(string))
-	phpMyAdminURL := ""
-	if _, ok := desc["phpmyadmin_url"]; ok {
-		phpMyAdminURL = desc["phpmyadmin_url"].(string)
 	}
-	if _, ok := desc["phpmyadmin_https_url"]; ok {
-		phpMyAdminURL = desc["phpmyadmin_https_url"].(string)
-	}
-	if phpMyAdminURL != "" {
-		l.AppendItem(fmt.Sprintf("PHPMyAdmin: %s or `ddev launch -p`", desc["phpmyadmin_url"]))
-	}
-
-	mailhogURL := ""
-	if _, ok := desc["mailhog_url"]; ok {
-		mailhogURL = desc["mailhog_url"].(string)
-	}
-	if _, ok := desc["mailhog_https_url"]; ok {
-		mailhogURL = desc["mailhog_https_url"].(string)
-	}
-
-	l.AppendItem(fmt.Sprintf("MailHog: %s or `ddev launch -m`", mailhogURL))
-	_, _, urls := app.GetAllURLs()
-	l.AppendItem("All URLs:")
-	l.Indent()
-	for _, url := range urls {
-		l.AppendItem(url)
-	}
-	l.SetStyle(list.StyleBulletCircle)
-	l.Render()
-
 	return out.String(), nil
 }
 

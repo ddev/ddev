@@ -9,6 +9,24 @@ var DefaultTableStyle = "StyleLight"
 // For descriptions of the various styles, see
 // https://github.com/jedib0t/go-pretty/blob/main/table/style.go
 
+var OptionsSeparateRows = table.Options{
+	DrawBorder:      true,
+	SeparateColumns: true,
+	SeparateFooter:  true,
+	SeparateHeader:  true,
+	SeparateRows:    true,
+}
+
+var StyleDescribe = table.Style{
+	Name:    "StyleDescribe",
+	HTML:    table.DefaultHTMLOptions,
+	Box:     table.StyleBoxLight,
+	Color:   table.ColorOptionsDefault,
+	Format:  table.FormatOptionsDefault,
+	Options: OptionsSeparateRows,
+	Title:   table.TitleOptionsDefault,
+}
+
 var styleMap map[string]table.Style = map[string]table.Style{
 	"StyleDefault":                    table.StyleDefault,
 	"StyleBold":                       table.StyleBold,
@@ -29,6 +47,7 @@ var styleMap map[string]table.Style = map[string]table.Style{
 	"StyleColoredMagentaWhiteOnBlack": table.StyleColoredMagentaWhiteOnBlack,
 	"StyleColoredRedWhiteOnBlack":     table.StyleColoredRedWhiteOnBlack,
 	"StyleColoredYellowWhiteOnBlack":  table.StyleColoredYellowWhiteOnBlack,
+	"StyleDescribe":                   StyleDescribe,
 }
 
 // ValidTableStyleList returns an array of valid styles
