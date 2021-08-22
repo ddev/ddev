@@ -201,7 +201,7 @@ networks:
 volumes:
   {{if not .OmitDB }}
   mariadb-database:
-    name: "${DDEV_SITENAME}-mariadb"
+    name: "{{ .MariaDBVolumeName}}"
   {{end}}
   {{ if not .OmitSSHAgent }}
   ddev-ssh-agent_socket_dir:
@@ -212,6 +212,7 @@ volumes:
 
   {{ if and .NFSMountEnabled (not .NoProjectMount) }}
   nfsmount:
+    name: "{{ .NFSMountVolumeName }}"
     driver: local
     driver_opts:
       type: nfs
@@ -220,7 +221,7 @@ volumes:
   {{ end }}
   {{ if and .MutagenEnabled (not .NoProjectMount) }}
   project_mutagen:
-    name: {{ .MutagenVolume }}
+    name: {{ .MutagenVolumeName }}
   {{ end }}
 
   `
@@ -497,8 +498,9 @@ const DdevSSHAuthTemplate = `version: '{{ .compose_version }}'
 
 volumes:
   dot_ssh:
+    name: "ddev-ssh-agent_dot_ssh"
   socket_dir:
-    name: ddev-ssh-agent_socket_dir
+    name: "ddev-ssh-agent_socket_dir"
 
 services:
   ddev-ssh-agent:
