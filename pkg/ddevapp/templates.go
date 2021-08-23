@@ -30,7 +30,7 @@ services:
         target: "/mnt/ddev_config"
       - ddev-global-cache:/mnt/ddev-global-cache
     restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
-    user: "$DDEV_UID:$DDEV_GID"
+    user: '$DDEV_UID:$DDEV_GID'
     hostname: {{ .Name }}-db
     ports:
       - "{{ .DockerIP }}:$DDEV_HOST_DB_PORT:3306"
@@ -99,7 +99,7 @@ services:
       {{ end }}
 
     restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
-    user: "$DDEV_UID:$DDEV_GID"
+    user: '$DDEV_UID:$DDEV_GID'
     hostname: {{ .Name }}-web
     {{if not .OmitDB }}
     links:
@@ -515,7 +515,7 @@ services:
         gid: '{{ .GID }}'
     image: '{{ .ssh_auth_image }}:{{ .ssh_auth_tag }}-built'
     restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
-    user: "$DDEV_UID:$DDEV_GID"
+    user: '$DDEV_UID:$DDEV_GID'
     volumes:
       - "dot_ssh:/tmp/.ssh"
       - "socket_dir:/tmp/.ssh-agent"
