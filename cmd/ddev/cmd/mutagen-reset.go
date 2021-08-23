@@ -11,7 +11,7 @@ import (
 var MutagenResetCmd = &cobra.Command{
 	Use:     "reset",
 	Short:   "Reset mutagen for project",
-	Long:    "Stops project, removes the mutagen docker volume, restarts mutagen with fresh sync session",
+	Long:    "Stops project, removes the mutagen docker volume",
 	Example: `"ddev mutagen reset", "ddev mutagen reset <projectname>"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		projectName := ""
@@ -43,7 +43,7 @@ var MutagenResetCmd = &cobra.Command{
 		if err != nil {
 			util.Failed("Could not reset mutagen: %v", err)
 		}
-
+		util.Success("Mutagen has been reset. You may now `ddev start` with or without mutagen enabled.")
 	},
 }
 

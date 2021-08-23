@@ -347,10 +347,6 @@ func MutagenReset(app *DdevApp) error {
 			return err
 		}
 		output.UserOut.Printf("Removed docker volume %s", GetMutagenVolumeName(app))
-		err = app.Start()
-		if err != nil {
-			return err
-		}
 	}
 	return nil
 }
