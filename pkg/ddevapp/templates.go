@@ -509,11 +509,11 @@ services:
     build:
       context: '{{ .BuildContext }}'
       args:
-        BASE_IMAGE: {{ .ssh_auth_image }}:{{ .ssh_auth_tag }}
+        BASE_IMAGE: '{{ .ssh_auth_image }}:{{ .ssh_auth_tag }}'
         username: '{{ .Username }}'
         uid: '{{ .UID }}'
         gid: '{{ .GID }}'
-    image: {{ .ssh_auth_image }}:{{ .ssh_auth_tag }}-built
+    image: '{{ .ssh_auth_image }}:{{ .ssh_auth_tag }}-built'
     restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
     user: "$DDEV_UID:$DDEV_GID"
     volumes:
