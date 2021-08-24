@@ -33,7 +33,11 @@ services:
     user: '$DDEV_UID:$DDEV_GID'
     hostname: {{ .Name }}-db
     ports:
+{{ if not .BindOnAllInterfaces }}
       - "{{ .DockerIP }}:$DDEV_HOST_DB_PORT:3306"
+{{ else }}
+      - "$DDEV_HOST_DB_PORT:3306"
+{{ end }}
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.platform: {{ .Plugin }}
@@ -107,8 +111,13 @@ services:
     {{end}}
     # ports is list of exposed *container* ports
     ports:
-      - "{{ .DockerIP }}:$DDEV_HOST_WEBSERVER_PORT:80"
-      - "{{ .DockerIP }}:$DDEV_HOST_HTTPS_PORT:443"
+{{if not .BindOnAllInterfaces}}
+    - "{{ .DockerIP }}:$DDEV_HOST_WEBSERVER_PORT:80"
+    - "{{ .DockerIP }}:$DDEV_HOST_HTTPS_PORT:443"
+{{else}}
+    - "$DDEV_HOST_WEBSERVER_PORT:80"
+    - "$DDEV_HOST_HTTPS_PORT:443"
+{{end}}
     environment:
       - COLUMNS
       - DOCROOT=${DDEV_DOCROOT}
@@ -179,8 +188,13 @@ services:
       com.ddev.approot: $DDEV_APPROOT
     links:
       - db:db
+{{ if not .BindOnAllInterfaces }}
     expose:
       - "80"
+{{ else }}
+    ports:
+      - "{{ .HostDBAPort }}:{{ .DBAPort }}"
+{{end}}
     hostname: {{ .Name }}-dba
     environment:
       - PMA_USER=root

@@ -85,6 +85,7 @@ type DdevApp struct {
 	MutagenEnabled            bool                  `yaml:"mutagen_enabled"`
 	MutagenEnabledGlobal      bool                  `yaml:"-"`
 	FailOnHookFail            bool                  `yaml:"fail_on_hook_fail,omitempty"`
+	BindAllInterfaces         bool                  `yaml:"bind_on_all_interfaces"`
 	FailOnHookFailGlobal      bool                  `yaml:"-"`
 	ConfigPath                string                `yaml:"-"`
 	AppRoot                   string                `yaml:"-"`
@@ -98,6 +99,7 @@ type DdevApp struct {
 	OmitContainers            []string              `yaml:"omit_containers,omitempty,flow"`
 	OmitContainerGlobal       []string              `yaml:"-"`
 	HostDBPort                string                `yaml:"host_db_port,omitempty"`
+	HostDBAPort               string                `yaml:"host_dba_port"`
 	HostWebserverPort         string                `yaml:"host_webserver_port,omitempty"`
 	HostHTTPSPort             string                `yaml:"host_https_port,omitempty"`
 	MailhogPort               string                `yaml:"mailhog_port,omitempty"`
