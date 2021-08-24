@@ -87,7 +87,11 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 			urls = row["httpurl"].(string)
 		}
 		if row["mutagen_enabled"] == true {
-			mutagenStatus = row["mutagen_status"].(string)
+			if _, ok := row["mutagen_status"]; ok {
+				mutagenStatus = row["mutagen_status"].(string)
+			} else {
+				mutagenStatus = "not enabled"
+			}
 			if mutagenStatus != "ok" {
 				mutagenStatus = color.RedString(mutagenStatus)
 			}

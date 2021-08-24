@@ -77,6 +77,9 @@ func TestCmdMutagen(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(out, fmt.Sprintf("Removed docker volume %s", ddevapp.GetMutagenVolumeName(app)))
 
+	assert.Equal("stopped", app.SiteStatus())
+	err = app.Start()
+	assert.NoError(err)
 	_, err = exec.RunHostCommand(DdevBin, "mutagen", "sync")
 	assert.NoError(err)
 

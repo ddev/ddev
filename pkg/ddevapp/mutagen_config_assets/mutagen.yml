@@ -14,6 +14,9 @@ sync:
       # The top-level .git directory is ignored to encourage git actions on the host
       # side, but if you need it inside the container you can remove this
       - "/.git"
+      - "/.tarballs"
+      - "/.ddev/db_snapshots"
+      - "/.ddev/.importdb*"
       # For example /var/www/html/var does not need to sync in TYPO3
       # - "/var"
       # vcs like .git can be ignored for safety, but then some

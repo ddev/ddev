@@ -215,6 +215,12 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, longResu
 	longResult, err = exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list", syncName)
 	shortResult = parseMutagenStatusLine(longResult)
 	if err != nil {
+		// In the odd case where somebody enabled mutagen when it wasn't actually running
+		// show a simpler result
+		mounted, err := IsMutagenVolumeMounted(app)
+		if !mounted {
+			return "not enabled", "", "", nil
+		}
 		return "failing", shortResult, longResult, err
 	}
 
@@ -347,10 +353,6 @@ func MutagenReset(app *DdevApp) error {
 			return err
 		}
 		output.UserOut.Printf("Removed docker volume %s", GetMutagenVolumeName(app))
-		err = app.Start()
-		if err != nil {
-			return err
-		}
 	}
 	return nil
 }
