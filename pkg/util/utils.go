@@ -146,6 +146,12 @@ func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 	username = strings.Replace(username, " ", "", -1)
 	username = strings.ToLower(username)
 
+	// If we have a numeric username it's going to create havoc, so
+	// change it into "a" + number
+	// Example in https://github.com/drud/ddev/issues/3187 - username="310822", uid=1663749668, gid=1240132652
+	if !nodeps.IsLetter(string(username[0])) {
+		username = "a" + username
+	}
 	//// Windows userids are non-numeric,
 	//// so we have to run as arbitrary user 1000. We may have a host uidStr/gidStr greater in other contexts,
 	//// 1000 seems not to cause file permissions issues at least on docker-for-windows.

@@ -4,7 +4,9 @@ import (
 	"math/rand"
 	"os"
 	"runtime"
+	"strconv"
 	"time"
+	"unicode"
 )
 
 // ArrayContainsString returns true if slice contains element
@@ -71,4 +73,20 @@ func GetWSLDistro() string {
 		wslDistro = os.Getenv("WSL_DISTRO_NAME")
 	}
 	return wslDistro
+}
+
+// IsLetter returns true if all chars in string are alpha
+func IsLetter(s string) bool {
+	for _, r := range s {
+		if !unicode.IsLetter(r) {
+			return false
+		}
+	}
+	return true
+}
+
+// IsInteger returns true if the string is integer
+func IsInteger(s string) bool {
+	_, err := strconv.ParseInt(s, 0, 64)
+	return err == nil
 }
