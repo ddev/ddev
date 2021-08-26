@@ -323,7 +323,7 @@ func DownloadMutagen() error {
 
 	// Stop daemon in case it was already running somewhere else
 	StopMutagenDaemon()
-	return err
+	return nil
 }
 
 // StopMutagenDaemon will try to stop a running mutagen daemon
