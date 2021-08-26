@@ -296,6 +296,13 @@ func DownloadMutagen() error {
 	globalMutagenDir := filepath.Dir(globalconfig.GetMutagenPath())
 	destFile := filepath.Join(globalMutagenDir, "mutagen.tgz")
 	mutagenURL := fmt.Sprintf("https://github.com/mutagen-io/mutagen/releases/download/v%s/mutagen_%s_v%s.tar.gz", nodeps.RequiredMutagenVersion, flavor, nodeps.RequiredMutagenVersion)
+	// Temporary workaround to get signed/notarized binaries for macOS.
+	// See https://github.com/drud/mutagen/releases/tag/v0.12.0-beta5 and
+	// https://github.com/mutagen-io/mutagen/issues/290
+	// TODO: Remove this when mutagen has signed releases
+	if runtime.GOOS == "darwin" {
+		mutagenURL = fmt.Sprintf("https://github.com/drud/mutagen/releases/download/v%s/mutagen_%s_v%s.tar.gz", nodeps.RequiredMutagenVersion, flavor, nodeps.RequiredMutagenVersion)
+	}
 	output.UserOut.Printf("Downloading %s", mutagenURL)
 	_ = os.MkdirAll(globalMutagenDir, 0777)
 	err := util.DownloadFile(destFile, mutagenURL, true)
@@ -310,15 +317,6 @@ func DownloadMutagen() error {
 	err = os.Chmod(globalconfig.GetMutagenPath(), 0755)
 	if err != nil {
 		return err
-	}
-
-	if runtime.GOOS == "darwin" {
-		// Unfortunately, mutagen is not signed or notarized, so we have to remove quarantine flag
-		// or we can't run it.
-		out, err := exec.RunHostCommand("xattr", "-c", globalconfig.GetMutagenPath())
-		if err != nil {
-			return fmt.Errorf("Failed to clear xattrs like quarantine from %s err=%v out=%s", globalconfig.GetMutagenPath(), err, out)
-		}
 	}
 
 	// Stop daemon in case it was already running somewhere else
