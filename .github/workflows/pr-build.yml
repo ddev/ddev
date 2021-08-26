@@ -24,7 +24,7 @@ jobs:
           fetch-depth: 0
 
       - run: "git describe --tags --always --dirty"
-      - run: "git log --oneline | head -10"
+      - run: "git log --oneline | head -5"
 
       - name: Install Docker and deps
         run: ./.github/workflows/linux-setup.sh
