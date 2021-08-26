@@ -147,7 +147,7 @@ func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
 	username, _, _ = transform.String(t, username)
 
-	username = strings.Replace(username, " ", "", -1)
+	username = strings.ReplaceAll(username, " ", "")
 	username = strings.ToLower(username)
 
 	// If we have a numeric username it's going to create havoc, so
@@ -156,16 +156,17 @@ func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 	if !nodeps.IsLetter(string(username[0])) {
 		username = "a" + username
 	}
+
+	// Windows usernames may have a \ to separate domain\user - get just the user
+	parts := strings.Split(username, `\`)
+	username = parts[len(parts)-1]
+
 	//// Windows userids are non-numeric,
 	//// so we have to run as arbitrary user 1000. We may have a host uidStr/gidStr greater in other contexts,
 	//// 1000 seems not to cause file permissions issues at least on docker-for-windows.
 	if runtime.GOOS == "windows" {
 		uidStr = "1000"
 		gidStr = "1000"
-		parts := strings.Split(curUser.Username, `\`)
-		username = parts[len(parts)-1]
-		username = strings.ReplaceAll(username, " ", "")
-		username = strings.ToLower(username)
 	}
 	return uidStr, gidStr, username
 }
