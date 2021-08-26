@@ -296,6 +296,13 @@ func DownloadMutagen() error {
 	globalMutagenDir := filepath.Dir(globalconfig.GetMutagenPath())
 	destFile := filepath.Join(globalMutagenDir, "mutagen.tgz")
 	mutagenURL := fmt.Sprintf("https://github.com/mutagen-io/mutagen/releases/download/v%s/mutagen_%s_v%s.tar.gz", nodeps.RequiredMutagenVersion, flavor, nodeps.RequiredMutagenVersion)
+	// Temporary workaround to get signed/notarized binaries for macOS.
+	// See https://github.com/drud/mutagen/releases/tag/v0.12.0-beta5 and
+	// https://github.com/mutagen-io/mutagen/issues/290
+	// TODO: Remove this when mutagen has signed releases
+	if runtime.GOOS == "darwin" {
+		mutagenURL = fmt.Sprintf("https://github.com/drud/mutagen/releases/download/v%s/mutagen_%s_v%s.tar.gz", nodeps.RequiredMutagenVersion, flavor, nodeps.RequiredMutagenVersion)
+	}
 	output.UserOut.Printf("Downloading %s", mutagenURL)
 	_ = os.MkdirAll(globalMutagenDir, 0777)
 	err := util.DownloadFile(destFile, mutagenURL, true)
@@ -308,9 +315,13 @@ func DownloadMutagen() error {
 		return err
 	}
 	err = os.Chmod(globalconfig.GetMutagenPath(), 0755)
+	if err != nil {
+		return err
+	}
+
 	// Stop daemon in case it was already running somewhere else
 	StopMutagenDaemon()
-	return err
+	return nil
 }
 
 // StopMutagenDaemon will try to stop a running mutagen daemon

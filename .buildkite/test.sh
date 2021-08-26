@@ -47,6 +47,8 @@ fi
 if command -v killall >/dev/null ; then
   killall mutagen || true
 fi
+# Force download of new mutagen.
+rm -f ~/.ddev/bin/mutagen*
 
 # Try to get important names cached; try twice
 docker run --rm alpine sh -c '
