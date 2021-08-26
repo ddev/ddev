@@ -23,6 +23,8 @@ jobs:
           # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0
 
+      - run: "git describe --tags --always --dirty"
+
       - name: Install Docker and deps
         run: ./.github/workflows/linux-setup.sh
 
