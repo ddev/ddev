@@ -137,7 +137,11 @@ func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 	username = curUser.Username
 	// Remove at least spaces that aren't allowed in linux usernames and can appear in windows
 	// Example problem usernames from https://stackoverflow.com/questions/64933879/docker-ddev-unicodedecodeerror-utf-8-codec-cant-decode-byte-0xe9-in-positio/64934264#64934264
-	// 'André Kraus', 'Mück'
+	// "André Kraus", "Mück"
+	// With docker-compose 1.29.2 you can't have a proper fully-qualified user pathname either
+	// so end up with trouble based on that (not quoted correctly)
+	// But for the context path it's possible to change the User home directory with
+	// https://superuser.com/questions/890812/how-to-rename-the-user-folder-in-windows-10/1346983#1346983
 
 	// Normalize username per https://stackoverflow.com/a/65981868/215713
 	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
@@ -164,7 +168,6 @@ func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 		username = strings.ToLower(username)
 	}
 	return uidStr, gidStr, username
-
 }
 
 // IsCommandAvailable uses shell's "command" to find out if a command is available
