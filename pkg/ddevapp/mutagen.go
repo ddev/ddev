@@ -308,6 +308,19 @@ func DownloadMutagen() error {
 		return err
 	}
 	err = os.Chmod(globalconfig.GetMutagenPath(), 0755)
+	if err != nil {
+		return err
+	}
+
+	if runtime.GOOS == "darwin" {
+		// Unfortunately, mutagen is not signed or notarized, so we have to remove quarantine flag
+		// or we can't run it.
+		out, err := exec.RunHostCommand("xattr", "-c", globalconfig.GetMutagenPath())
+		if err != nil {
+			return fmt.Errorf("Failed to clear xattrs like quarantine from %s err=%v out=%s", globalconfig.GetMutagenPath(), err, out)
+		}
+	}
+
 	// Stop daemon in case it was already running somewhere else
 	StopMutagenDaemon()
 	return err
