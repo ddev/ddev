@@ -23,8 +23,9 @@ jobs:
           # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0
 
+      # Find out info about how github is getting the hash
       - run: "git describe --tags --always --dirty"
-      - run: "git log --oneline | head -5"
+      - run: "(git log --oneline | head -5) || true"
 
       - name: Install Docker and deps
         run: ./.github/workflows/linux-setup.sh
