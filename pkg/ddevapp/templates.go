@@ -33,11 +33,7 @@ services:
     user: '$DDEV_UID:$DDEV_GID'
     hostname: {{ .Name }}-db
     ports:
-{{ if not .BindOnAllInterfaces }}
-      - "{{ .DockerIP }}:$DDEV_HOST_DB_PORT:3306"
-{{ else }}
-      - "$DDEV_HOST_DB_PORT:3306"
-{{ end }}
+      - "{{ if not .BindOnAllInterfaces }}{{ .DockerIP }}:{{ end }}$DDEV_HOST_DB_PORT:3306"
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.platform: {{ .Plugin }}
@@ -111,13 +107,11 @@ services:
     {{end}}
     # ports is list of exposed *container* ports
     ports:
-{{if not .BindOnAllInterfaces}}
-    - "{{ .DockerIP }}:$DDEV_HOST_WEBSERVER_PORT:80"
-    - "{{ .DockerIP }}:$DDEV_HOST_HTTPS_PORT:443"
-{{else}}
-    - "$DDEV_HOST_WEBSERVER_PORT:80"
-    - "$DDEV_HOST_HTTPS_PORT:443"
-{{end}}
+    - "{{ if not .BindOnAllInterfaces }}{{ .DockerIP }}:{{ end }}$DDEV_HOST_WEBSERVER_PORT:80"
+    - "{{ if not .BindOnAllInterfaces }}{{ .DockerIP }}:{{ end }}$DDEV_HOST_HTTPS_PORT:443"
+{{ if .HostMailhogPort }}
+    - "{{ if not .BindOnAllInterfaces }}{{ .DockerIP }}:{{ end }}{{ .HostMailhogPort }}:8025"
+{{ end }}
     environment:
       - COLUMNS
       - DOCROOT=${DDEV_DOCROOT}
@@ -188,13 +182,12 @@ services:
       com.ddev.approot: $DDEV_APPROOT
     links:
       - db:db
-{{ if not .BindOnAllInterfaces }}
     expose:
       - "80"
-{{ else }}
+{{ if .HostPHPMyAdminPort }}
     ports:
-      - "{{ .HostDBAPort }}:{{ .DBAPort }}"
-{{end}}
+      - "{{ if not .BindOnAllInterfaces }}{{ .DockerIP }}:{{ end }}{{ .HostPHPMyAdminPort }}:80"
+{{ end }}
     hostname: {{ .Name }}-dba
     environment:
       - PMA_USER=root
@@ -356,9 +349,17 @@ const ConfigInstructions = `
 # phpmyadmin_https_port: "8037"
 # The PHPMyAdmin ports can be changed from the default 8036 and 8037
 
+# host_phpmyadmin_port: "8036"
+# The phpmyadmin (dba) port is not normally bound on the host at all, instead being routed
+# through ddev-router, but it can be specified and bound.
+
 # mailhog_port: "8025"
 # mailhog_https_port: "8026"
 # The MailHog ports can be changed from the default 8025 and 8026
+
+# host_mailhog_port: "8025"
+# The mailhog port is not normally bound on the host at all, instead being routed
+# through ddev-router, but it can be bound directly to localhost if specified here.
 
 # webimage_extra_packages: [php7.4-tidy, php-bcmath]
 # Extra Debian packages that are needed in the webimage can be added here

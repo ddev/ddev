@@ -626,9 +626,10 @@ type composeYAMLVars struct {
 	Plugin                    string
 	AppType                   string
 	MailhogPort               string
+	HostMailhogPort           string
 	DBAPort                   string
 	DBPort                    string
-	HostDBAPort               string
+	HostPHPMyAdminPort        string
 	DdevGenerated             string
 	HostDockerInternalIP      string
 	ComposeVersion            string
@@ -708,9 +709,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		Plugin:                    "ddev",
 		AppType:                   app.Type,
 		MailhogPort:               GetPort("mailhog"),
+		HostMailhogPort:           app.HostMailhogPort,
 		DBAPort:                   GetPort("dba"),
 		DBPort:                    GetPort("db"),
-		HostDBAPort:               app.HostDBAPort,
+		HostPHPMyAdminPort:        app.HostPHPMyAdminPort,
 		DdevGenerated:             DdevFileSignature,
 		HostDockerInternalIP:      hostDockerInternalIP,
 		ComposeVersion:            version.DockerComposeFileFormatVersion,

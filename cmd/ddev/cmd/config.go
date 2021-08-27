@@ -567,7 +567,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	}
 
 	if cmd.Flag("host-dba-port").Changed {
-		app.HostDBAPort = cmd.Flag("host-dba-port").Value.String()
+		app.HostPHPMyAdminPort = cmd.Flag("host-dba-port").Value.String()
 	}
 
 	if cmd.Flag("use-dns-when-possible").Changed {
