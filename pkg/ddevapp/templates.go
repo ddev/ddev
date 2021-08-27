@@ -1,6 +1,6 @@
 package ddevapp
 
-// DDevComposeTemplate is used to create the main docker-compose file
+// DDevComposeTemplate is used to create the .ddev/.ddev-docker-compose-base.yaml
 // file for a ddev project.
 const DDevComposeTemplate = `version: '{{ .ComposeVersion }}'
 {{ .DdevGenerated }}
@@ -33,7 +33,7 @@ services:
     user: '$DDEV_UID:$DDEV_GID'
     hostname: {{ .Name }}-db
     ports:
-      - "{{ if not .BindOnAllInterfaces }}{{ .DockerIP }}:{{ end }}$DDEV_HOST_DB_PORT:3306"
+      - "{{ .DockerIP }}:$DDEV_HOST_DB_PORT:3306"
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
       com.ddev.platform: {{ .Plugin }}
@@ -105,12 +105,12 @@ services:
     links:
       - db:db
     {{end}}
-    # ports is list of exposed *container* ports
+
     ports:
-    - "{{ if not .BindOnAllInterfaces }}{{ .DockerIP }}:{{ end }}$DDEV_HOST_WEBSERVER_PORT:80"
-    - "{{ if not .BindOnAllInterfaces }}{{ .DockerIP }}:{{ end }}$DDEV_HOST_HTTPS_PORT:443"
+      - "{{ .DockerIP }}:$DDEV_HOST_WEBSERVER_PORT:80"
+      - "{{ .DockerIP }}:$DDEV_HOST_HTTPS_PORT:443"
 {{ if .HostMailhogPort }}
-    - "{{ if not .BindOnAllInterfaces }}{{ .DockerIP }}:{{ end }}{{ .HostMailhogPort }}:8025"
+      - "{{ .DockerIP }}:{{ .HostMailhogPort }}:8025"
 {{ end }}
     environment:
       - COLUMNS
@@ -186,7 +186,7 @@ services:
       - "80"
 {{ if .HostPHPMyAdminPort }}
     ports:
-      - "{{ if not .BindOnAllInterfaces }}{{ .DockerIP }}:{{ end }}{{ .HostPHPMyAdminPort }}:80"
+      - "{{ .DockerIP }}:{{ .HostPHPMyAdminPort }}:80"
 {{ end }}
     hostname: {{ .Name }}-dba
     environment:
@@ -398,6 +398,12 @@ const ConfigInstructions = `
 # the user is responsible for mounting it manually or via a script.
 # This is to enable experimentation with alternate file mounting strategies.
 # For advanced users only!
+
+# bind_on_all_interfaces: false
+# If true, host ports will be bound on all network interfaces,
+# not just the localhost interface. This means that ports
+# will be available on the local network if the host firewall
+# allows it.
 
 # Many ddev commands can be extended to run tasks before or after the
 # ddev command is executed, for example "post-start", "post-import-db",

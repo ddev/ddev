@@ -807,6 +807,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if app.BindAllInterfaces {
+		templateVars.DockerIP = "0.0.0.0"
+	}
 
 	err = templ.Execute(&doc, templateVars)
 	return doc.String(), err
