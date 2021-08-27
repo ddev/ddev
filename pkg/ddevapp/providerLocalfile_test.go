@@ -43,8 +43,7 @@ func TestLocalfilePull(t *testing.T) {
 		assert.NoError(err)
 
 		_ = os.Chdir(testDir)
-		err = os.RemoveAll(siteDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(siteDir)
 	})
 
 	_, err = exec.Command(DdevBin).CombinedOutput()

@@ -116,8 +116,8 @@ func TestComposerVersion(t *testing.T) {
 		assert.NoError(err)
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		err = os.RemoveAll(testDir)
-		assert.NoError(err)
+		// Mutagen can compete with removal, so go ahead and ignore result
+		_ = os.RemoveAll(testDir)
 	})
 
 	// Make sure base version (default) is composer v1
