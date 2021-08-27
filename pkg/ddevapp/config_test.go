@@ -831,7 +831,7 @@ func TestExtraPackages(t *testing.T) {
 
 	// Start and make sure that the packages don't exist already
 	err = app.Start()
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	// Test db container to make sure no ncdu in there at beginning
 	_, _, err = app.Exec(&ExecOpts{
@@ -855,7 +855,7 @@ func TestExtraPackages(t *testing.T) {
 	app.WebImageExtraPackages = []string{"php" + app.PHPVersion + "-" + addedPackage}
 	app.DBImageExtraPackages = []string{"ncdu"}
 	err = app.Start()
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "web",

@@ -2847,8 +2847,7 @@ func TestHttpsRedirection(t *testing.T) {
 		assert.NoError(err)
 		err = os.Chdir(packageDir)
 		assert.NoError(err)
-		err = os.RemoveAll(testDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
 	})
 
 	expectations := []URLRedirectExpectations{
