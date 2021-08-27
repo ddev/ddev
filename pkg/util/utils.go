@@ -2,9 +2,13 @@ package util
 
 import (
 	"fmt"
+	"golang.org/x/text/runes"
+
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 	"math"
 	"math/rand"
 	osexec "os/exec"
@@ -12,6 +16,7 @@ import (
 	"runtime"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/drud/ddev/pkg/output"
 	"github.com/fatih/color"
@@ -130,19 +135,40 @@ func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 	uidStr = curUser.Uid
 	gidStr = curUser.Gid
 	username = curUser.Username
-	//// Windows userids are non numeric,
+	// Remove at least spaces that aren't allowed in linux usernames and can appear in windows
+	// Example problem usernames from https://stackoverflow.com/questions/64933879/docker-ddev-unicodedecodeerror-utf-8-codec-cant-decode-byte-0xe9-in-positio/64934264#64934264
+	// "André Kraus", "Mück"
+	// With docker-compose 1.29.2 you can't have a proper fully-qualified user pathname either
+	// so end up with trouble based on that (not quoted correctly)
+	// But for the context path it's possible to change the User home directory with
+	// https://superuser.com/questions/890812/how-to-rename-the-user-folder-in-windows-10/1346983#1346983
+
+	// Normalize username per https://stackoverflow.com/a/65981868/215713
+	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+	username, _, _ = transform.String(t, username)
+
+	username = strings.ReplaceAll(username, " ", "")
+	username = strings.ToLower(username)
+
+	// If we have a numeric username it's going to create havoc, so
+	// change it into "a" + number
+	// Example in https://github.com/drud/ddev/issues/3187 - username="310822", uid=1663749668, gid=1240132652
+	if !nodeps.IsLetter(string(username[0])) {
+		username = "a" + username
+	}
+
+	// Windows usernames may have a \ to separate domain\user - get just the user
+	parts := strings.Split(username, `\`)
+	username = parts[len(parts)-1]
+
+	//// Windows userids are non-numeric,
 	//// so we have to run as arbitrary user 1000. We may have a host uidStr/gidStr greater in other contexts,
 	//// 1000 seems not to cause file permissions issues at least on docker-for-windows.
 	if runtime.GOOS == "windows" {
 		uidStr = "1000"
 		gidStr = "1000"
-		parts := strings.Split(curUser.Username, `\`)
-		username = parts[len(parts)-1]
-		username = strings.ReplaceAll(username, " ", "")
-		username = strings.ToLower(username)
 	}
 	return uidStr, gidStr, username
-
 }
 
 // IsCommandAvailable uses shell's "command" to find out if a command is available

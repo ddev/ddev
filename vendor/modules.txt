@@ -36,8 +36,6 @@ github.com/Microsoft/hcsshim/osversion
 # github.com/aokoli/goutils v1.0.1
 ## explicit
 github.com/aokoli/goutils
-# github.com/blang/semver v3.1.0+incompatible
-## explicit
 # github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869
 ## explicit
 # github.com/cheggaaa/pb v1.0.25
@@ -55,8 +53,6 @@ github.com/davecgh/go-spew/spew
 # github.com/denisbrodbeck/machineid v1.0.1
 ## explicit
 github.com/denisbrodbeck/machineid
-# github.com/docker/distribution v2.7.1+incompatible
-## explicit
 # github.com/docker/docker v20.10.7+incompatible
 ## explicit
 github.com/docker/docker/api/types/blkiodev
@@ -91,8 +87,6 @@ github.com/fsnotify/fsnotify
 # github.com/fsouza/go-dockerclient v1.7.3
 ## explicit
 github.com/fsouza/go-dockerclient
-# github.com/godbus/dbus v0.0.0-20190422162347-ade71ed3457e
-## explicit
 # github.com/gogo/protobuf v1.3.2
 github.com/gogo/protobuf/gogoproto
 github.com/gogo/protobuf/proto
@@ -135,8 +129,6 @@ github.com/inconshreveable/mousetrap
 # github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a
 github.com/juju/ansiterm
 github.com/juju/ansiterm/tabwriter
-# github.com/konsorten/go-windows-terminal-sequences v1.0.2
-## explicit
 # github.com/lextoumbourou/goodhosts v2.1.0+incompatible
 ## explicit
 github.com/lextoumbourou/goodhosts
@@ -172,10 +164,6 @@ github.com/moby/term
 github.com/moby/term/windows
 # github.com/morikuni/aec v1.0.0
 github.com/morikuni/aec
-# github.com/onsi/ginkgo v1.10.1
-## explicit
-# github.com/onsi/gomega v1.7.0
-## explicit
 # github.com/opencontainers/go-digest v1.0.0
 github.com/opencontainers/go-digest
 # github.com/opencontainers/image-spec v1.0.1
@@ -183,8 +171,6 @@ github.com/opencontainers/image-spec/specs-go
 github.com/opencontainers/image-spec/specs-go/v1
 # github.com/opencontainers/runc v0.1.1
 github.com/opencontainers/runc/libcontainer/user
-# github.com/opencontainers/runtime-tools v0.0.0-20181011054405-1d69bd0f9c39
-## explicit
 # github.com/pelletier/go-toml v1.4.0
 ## explicit
 github.com/pelletier/go-toml
@@ -193,8 +179,6 @@ github.com/pelletier/go-toml
 github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
-# github.com/prometheus/procfs v0.0.5
-## explicit
 # github.com/rogpeppe/go-internal v1.3.0
 ## explicit
 github.com/rogpeppe/go-internal/semver
@@ -228,14 +212,6 @@ github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 # github.com/subosito/gotenv v1.2.0
 github.com/subosito/gotenv
-# github.com/syndtr/gocapability v0.0.0-20170704070218-db04d3cc01c8
-## explicit
-# github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f
-## explicit
-# github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415
-## explicit
-# github.com/xeipuuv/gojsonschema v0.0.0-20180618132009-1d523034197f
-## explicit
 # github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c
 ## explicit
 github.com/xtgo/uuid
@@ -260,15 +236,11 @@ golang.org/x/sys/windows/registry
 ## explicit
 golang.org/x/term
 # golang.org/x/text v0.3.3
+## explicit
+golang.org/x/text/runes
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
-# google.golang.org/grpc v1.27.1
-## explicit
-# gopkg.in/airbrake/gobrake.v2 v2.0.9
-## explicit
 # gopkg.in/cheggaaa/pb.v1 v1.0.26
-## explicit
-# gopkg.in/gemnasium/logrus-airbrake-hook.v2 v2.1.2
 ## explicit
 # gopkg.in/ini.v1 v1.51.0
 gopkg.in/ini.v1
@@ -278,5 +250,3 @@ gopkg.in/segmentio/analytics-go.v3
 # gopkg.in/yaml.v2 v2.2.8
 ## explicit
 gopkg.in/yaml.v2
-# k8s.io/kubernetes v1.13.0
-## explicit
