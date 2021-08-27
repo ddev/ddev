@@ -539,6 +539,10 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	if err != nil {
 		return err
 	}
+	// Replace `docker-compose config`'s full-path usage with relative pathing
+	// for https://youtrack.jetbrains.com/issue/WI-61976 - PhpStorm
+	// This is an ugly an shortsighted approach, but otherwise we'd have to parse the yaml.
+	fullContents = strings.Replace(fullContents, fmt.Sprintf("source: %s\n", app.AppRoot), "source: ../\n", -1)
 	fullHandle, err := os.Create(app.DockerComposeFullRenderedYAMLPath())
 	if err != nil {
 		return err
