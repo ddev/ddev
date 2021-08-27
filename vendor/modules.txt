@@ -79,8 +79,6 @@ github.com/docker/docker/pkg/system
 github.com/docker/go-connections/nat
 # github.com/docker/go-units v0.4.0
 github.com/docker/go-units
-# github.com/fatih/color v1.7.0
-## explicit
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
 # github.com/fsouza/go-dockerclient v1.7.3
@@ -122,7 +120,6 @@ github.com/imdario/mergo
 github.com/inconshreveable/mousetrap
 # github.com/jedib0t/go-pretty/v6 v6.2.4
 ## explicit
-github.com/jedib0t/go-pretty/v6/list
 github.com/jedib0t/go-pretty/v6/table
 github.com/jedib0t/go-pretty/v6/text
 # github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a
@@ -230,7 +227,7 @@ golang.org/x/sys/plan9
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 golang.org/x/sys/windows/registry
-# golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d
+# golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1
 ## explicit
 golang.org/x/term
 # golang.org/x/text v0.3.3
