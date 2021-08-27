@@ -64,3 +64,5 @@ nav:
     - 'Acquia': 'users/providers/acquia.md'
     - 'Pantheon': 'users/providers/pantheon.md'
     - 'Platform.sh': 'users/providers/platform.md'
+  - 'Topics':
+      - 'Sharing a project with `ddev share` or by exposing a port': 'users/topics/sharing.md'
