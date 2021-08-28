@@ -645,7 +645,7 @@ type composeYAMLVars struct {
 	OmitDBA                   bool
 	OmitRouter                bool
 	OmitSSHAgent              bool
-	BindOnAllInterfaces       bool
+	BindAllInterfaces         bool
 	MariaDBVolumeName         string
 	MutagenEnabled            bool
 	MutagenVolumeName         string
@@ -721,7 +721,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		OmitDBA:                   nodeps.ArrayContainsString(app.GetOmittedContainers(), nodeps.DBAContainer) || nodeps.ArrayContainsString(app.OmitContainers, nodeps.DBContainer),
 		OmitRouter:                nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer),
 		OmitSSHAgent:              nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent"),
-		BindOnAllInterfaces:       app.BindAllInterfaces,
+		BindAllInterfaces:         app.BindAllInterfaces,
 		MutagenEnabled:            (app.MutagenEnabled || app.MutagenEnabledGlobal),
 
 		NFSMountEnabled:       (app.NFSMountEnabled || app.NFSMountEnabledGlobal) && !app.MutagenEnabled,

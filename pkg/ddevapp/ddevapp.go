@@ -85,7 +85,7 @@ type DdevApp struct {
 	MutagenEnabled        bool                  `yaml:"mutagen_enabled"`
 	MutagenEnabledGlobal  bool                  `yaml:"-"`
 	FailOnHookFail        bool                  `yaml:"fail_on_hook_fail,omitempty"`
-	BindAllInterfaces     bool                  `yaml:"bind_on_all_interfaces,omitempty"`
+	BindAllInterfaces     bool                  `yaml:"bind_all_interfaces,omitempty"`
 	FailOnHookFailGlobal  bool                  `yaml:"-"`
 	ConfigPath            string                `yaml:"-"`
 	AppRoot               string                `yaml:"-"`

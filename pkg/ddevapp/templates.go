@@ -316,7 +316,8 @@ const ConfigInstructions = `
 # Currently only these containers are supported. Some containers can also be
 # omitted globally in the ~/.ddev/global_config.yaml. Note that if you omit
 # the "db" container, several standard features of ddev that access the
-# database container will be unusable.
+# database container will be unusable. In the global configuration it is also
+# possible to omit ddev-router, but not here.
 
 # nfs_mount_enabled: false
 # Great performance improvement but requires host configuration first.
@@ -399,7 +400,7 @@ const ConfigInstructions = `
 # This is to enable experimentation with alternate file mounting strategies.
 # For advanced users only!
 
-# bind_on_all_interfaces: false
+# bind_all_interfaces: false
 # If true, host ports will be bound on all network interfaces,
 # not just the localhost interface. This means that ports
 # will be available on the local network if the host firewall
