@@ -99,6 +99,10 @@ func FindContainerByName(name string) (*docker.APIContainers, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(containers) == 0 {
+		return nil, nil
+	}
+
 	// ListContainers can return partial matches. Make sure we only match the exact one
 	// we're after.
 	for _, c := range containers {

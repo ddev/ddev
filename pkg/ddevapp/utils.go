@@ -370,11 +370,3 @@ func GetProjects(activeOnly bool) ([]*DdevApp, error) {
 
 	return appSlice, nil
 }
-
-//func ColorText(in string, color string) (out string) {
-//	switch color {
-//	case "green":
-//		return text.DisableColors()
-//
-//	}
-//}

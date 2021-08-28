@@ -18,7 +18,6 @@ var (
 
 // LogSetUp sets up UserOut and log loggers as needed by ddev
 func LogSetUp() {
-	// Use color.Output instead of stderr for all user output
 	UserOut.Out = os.Stdout
 	UserErr.Out = os.Stderr
 	UserErr.SetOutput(&ErrorWriter{})
