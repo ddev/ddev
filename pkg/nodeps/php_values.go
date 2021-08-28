@@ -9,6 +9,7 @@ const (
 	PHP73 = "7.3"
 	PHP74 = "7.4"
 	PHP80 = "8.0"
+	PHP81 = "8.1"
 )
 
 // PHPDefault is the default PHP version, overridden by $DDEV_PHP_VERSION
@@ -24,4 +25,5 @@ var ValidPHPVersions = map[string]bool{
 	PHP73: true,
 	PHP74: true,
 	PHP80: true,
+	PHP81: true,
 }
