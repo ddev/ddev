@@ -161,7 +161,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # ddev-ssh-agent and ddev-router containers with
 # omit_containers["dba", "ddev-ssh-agent", "ddev-router"]
 
-# You can opt in or out of sending instrumentation the ddev developers with
+# You can opt in or out of sending instrumentation to the ddev developers with
 # instrumentation_opt_in: true # or false
 #
 # You can enable nfs mounting for all projects with
