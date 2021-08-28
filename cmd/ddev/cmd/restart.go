@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"strings"
 
@@ -42,7 +43,7 @@ ddev restart --all`,
 
 			util.Success("Restarted %s", app.GetName())
 			httpURLs, urlList, _ := app.GetAllURLs()
-			if globalconfig.GetCAROOT() == "" {
+			if globalconfig.GetCAROOT() == "" || ddevapp.IsRouterDisabled(app) {
 				urlList = httpURLs
 			}
 

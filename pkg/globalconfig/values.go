@@ -6,10 +6,12 @@ import "os"
 const (
 	DdevSSHAgentContainer = "ddev-ssh-agent"
 	DBAContainer          = "dba"
+	DdevRouterContainer   = "ddev-router"
 )
 
 // ValidOmitContainers is the valid omit's that can be done in for a project
 var ValidOmitContainers = map[string]bool{
+	DdevRouterContainer:   true,
 	DdevSSHAgentContainer: true,
 	DBAContainer:          true,
 }

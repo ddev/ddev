@@ -242,6 +242,7 @@ fsnotify
 github
 githubusercontent
 gitignore
+gitignored
 gitignores
 gitter
 global

@@ -64,56 +64,60 @@ const DdevFileSignature = "#ddev-generated"
 // DdevApp is the struct that represents a ddev app, mostly its config
 // from config.yaml.
 type DdevApp struct {
-	Name                      string                `yaml:"name"`
-	Type                      string                `yaml:"type"`
-	Docroot                   string                `yaml:"docroot"`
-	PHPVersion                string                `yaml:"php_version"`
-	WebserverType             string                `yaml:"webserver_type"`
-	WebImage                  string                `yaml:"webimage,omitempty"`
-	DBImage                   string                `yaml:"dbimage,omitempty"`
-	DBAImage                  string                `yaml:"dbaimage,omitempty"`
-	RouterHTTPPort            string                `yaml:"router_http_port"`
-	RouterHTTPSPort           string                `yaml:"router_https_port"`
-	XdebugEnabled             bool                  `yaml:"xdebug_enabled"`
-	NoProjectMount            bool                  `yaml:"no_project_mount,omitempty"`
-	AdditionalHostnames       []string              `yaml:"additional_hostnames"`
-	AdditionalFQDNs           []string              `yaml:"additional_fqdns"`
-	MariaDBVersion            string                `yaml:"mariadb_version"`
-	MySQLVersion              string                `yaml:"mysql_version"`
-	NFSMountEnabled           bool                  `yaml:"nfs_mount_enabled"`
-	NFSMountEnabledGlobal     bool                  `yaml:"-"`
-	MutagenEnabled            bool                  `yaml:"mutagen_enabled"`
-	MutagenEnabledGlobal      bool                  `yaml:"-"`
-	FailOnHookFail            bool                  `yaml:"fail_on_hook_fail,omitempty"`
-	FailOnHookFailGlobal      bool                  `yaml:"-"`
-	ConfigPath                string                `yaml:"-"`
-	AppRoot                   string                `yaml:"-"`
-	DataDir                   string                `yaml:"-"`
-	SiteSettingsPath          string                `yaml:"-"`
-	SiteDdevSettingsFile      string                `yaml:"-"`
-	ProviderInstance          *Provider             `yaml:"-"`
-	Hooks                     map[string][]YAMLTask `yaml:"hooks,omitempty"`
-	UploadDir                 string                `yaml:"upload_dir,omitempty"`
-	WorkingDir                map[string]string     `yaml:"working_dir,omitempty"`
-	OmitContainers            []string              `yaml:"omit_containers,omitempty,flow"`
-	OmitContainerGlobal       []string              `yaml:"-"`
-	HostDBPort                string                `yaml:"host_db_port,omitempty"`
-	HostWebserverPort         string                `yaml:"host_webserver_port,omitempty"`
-	HostHTTPSPort             string                `yaml:"host_https_port,omitempty"`
-	MailhogPort               string                `yaml:"mailhog_port,omitempty"`
-	MailhogHTTPSPort          string                `yaml:"mailhog_https_port,omitempty"`
-	PHPMyAdminPort            string                `yaml:"phpmyadmin_port,omitempty"`
-	PHPMyAdminHTTPSPort       string                `yaml:"phpmyadmin_https_port,omitempty"`
-	WebImageExtraPackages     []string              `yaml:"webimage_extra_packages,omitempty,flow"`
-	DBImageExtraPackages      []string              `yaml:"dbimage_extra_packages,omitempty,flow"`
-	ProjectTLD                string                `yaml:"project_tld,omitempty"`
-	UseDNSWhenPossible        bool                  `yaml:"use_dns_when_possible"`
-	MkcertEnabled             bool                  `yaml:"-"`
-	NgrokArgs                 string                `yaml:"ngrok_args,omitempty"`
-	Timezone                  string                `yaml:"timezone,omitempty"`
-	ComposerVersion           string                `yaml:"composer_version"`
-	DisableSettingsManagement bool                  `yaml:"disable_settings_management,omitempty"`
-	WebEnvironment            []string              `yaml:"web_environment"`
+	Name                  string                `yaml:"name"`
+	Type                  string                `yaml:"type"`
+	Docroot               string                `yaml:"docroot"`
+	PHPVersion            string                `yaml:"php_version"`
+	WebserverType         string                `yaml:"webserver_type"`
+	WebImage              string                `yaml:"webimage,omitempty"`
+	DBImage               string                `yaml:"dbimage,omitempty"`
+	DBAImage              string                `yaml:"dbaimage,omitempty"`
+	RouterHTTPPort        string                `yaml:"router_http_port"`
+	RouterHTTPSPort       string                `yaml:"router_https_port"`
+	XdebugEnabled         bool                  `yaml:"xdebug_enabled"`
+	NoProjectMount        bool                  `yaml:"no_project_mount,omitempty"`
+	AdditionalHostnames   []string              `yaml:"additional_hostnames"`
+	AdditionalFQDNs       []string              `yaml:"additional_fqdns"`
+	MariaDBVersion        string                `yaml:"mariadb_version"`
+	MySQLVersion          string                `yaml:"mysql_version"`
+	NFSMountEnabled       bool                  `yaml:"nfs_mount_enabled"`
+	NFSMountEnabledGlobal bool                  `yaml:"-"`
+	MutagenEnabled        bool                  `yaml:"mutagen_enabled"`
+	MutagenEnabledGlobal  bool                  `yaml:"-"`
+	FailOnHookFail        bool                  `yaml:"fail_on_hook_fail,omitempty"`
+	BindAllInterfaces     bool                  `yaml:"bind_all_interfaces,omitempty"`
+	FailOnHookFailGlobal  bool                  `yaml:"-"`
+	ConfigPath            string                `yaml:"-"`
+	AppRoot               string                `yaml:"-"`
+	DataDir               string                `yaml:"-"`
+	SiteSettingsPath      string                `yaml:"-"`
+	SiteDdevSettingsFile  string                `yaml:"-"`
+	ProviderInstance      *Provider             `yaml:"-"`
+	Hooks                 map[string][]YAMLTask `yaml:"hooks,omitempty"`
+	UploadDir             string                `yaml:"upload_dir,omitempty"`
+	WorkingDir            map[string]string     `yaml:"working_dir,omitempty"`
+	OmitContainers        []string              `yaml:"omit_containers,omitempty,flow"`
+	OmitContainerGlobal   []string              `yaml:"-"`
+	HostDBPort            string                `yaml:"host_db_port,omitempty"`
+	HostWebserverPort     string                `yaml:"host_webserver_port,omitempty"`
+	HostHTTPSPort         string                `yaml:"host_https_port,omitempty"`
+	MailhogPort           string                `yaml:"mailhog_port,omitempty"`
+	MailhogHTTPSPort      string                `yaml:"mailhog_https_port,omitempty"`
+	HostMailhogPort       string                `yaml:"host_mailhog_port,omitempty"`
+	PHPMyAdminPort        string                `yaml:"phpmyadmin_port,omitempty"`
+	PHPMyAdminHTTPSPort   string                `yaml:"phpmyadmin_https_port,omitempty"`
+	// HostPHPMyAdminPort is normally empty, as it is not normaly bound
+	HostPHPMyAdminPort        string   `yaml:"host_phpmyadmin_port,omitempty"`
+	WebImageExtraPackages     []string `yaml:"webimage_extra_packages,omitempty,flow"`
+	DBImageExtraPackages      []string `yaml:"dbimage_extra_packages,omitempty,flow"`
+	ProjectTLD                string   `yaml:"project_tld,omitempty"`
+	UseDNSWhenPossible        bool     `yaml:"use_dns_when_possible"`
+	MkcertEnabled             bool     `yaml:"-"`
+	NgrokArgs                 string   `yaml:"ngrok_args,omitempty"`
+	Timezone                  string   `yaml:"timezone,omitempty"`
+	ComposerVersion           string   `yaml:"composer_version"`
+	DisableSettingsManagement bool     `yaml:"disable_settings_management,omitempty"`
+	WebEnvironment            []string `yaml:"web_environment"`
 	//Providers                 map[string]*ProviderInfo `yaml:"providers"`
 	ComposeYaml map[string]interface{} `yaml:"-"`
 }
@@ -227,6 +231,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["shortroot"] = shortRoot
 	appDesc["httpurl"] = app.GetHTTPURL()
 	appDesc["httpsurl"] = app.GetHTTPSURL()
+	appDesc["router_disabled"] = IsRouterDisabled(app)
 	appDesc["primary_url"] = app.GetPrimaryURL()
 	appDesc["type"] = app.GetType()
 	appDesc["mutagen_enabled"] = app.MutagenEnabled || app.MutagenEnabledGlobal
@@ -891,37 +896,38 @@ func (app *DdevApp) Start() error {
 		}
 	}
 
-	caRoot := globalconfig.GetCAROOT()
-	if caRoot == "" {
-		util.Warning("mkcert may not be properly installed, we suggest installing it for trusted https support, `brew install mkcert nss`, `choco install -y mkcert`, etc. and then `mkcert -install`")
-	}
-	router, _ := FindDdevRouter()
-	// If the router doesn't exist, go ahead and push mkcert root ca certs into the ddev-global-cache/mkcert
-	// This will often be redundant
-	if router == nil {
-		// Copy ca certs into ddev-global-cache/mkcert
-		if caRoot != "" {
+	if !IsRouterDisabled(app) {
+		caRoot := globalconfig.GetCAROOT()
+		if caRoot == "" {
+			util.Warning("mkcert may not be properly installed, we suggest installing it for trusted https support, `brew install mkcert nss`, `choco install -y mkcert`, etc. and then `mkcert -install`")
+		}
+		router, _ := FindDdevRouter()
+		// If the router doesn't exist, go ahead and push mkcert root ca certs into the ddev-global-cache/mkcert
+		// This will often be redundant
+		if router == nil {
+			// Copy ca certs into ddev-global-cache/mkcert
+			if caRoot != "" {
+				uid, _, _ := util.GetContainerUIDGid()
+				err = dockerutil.CopyToVolume(caRoot, "ddev-global-cache", "mkcert", uid)
+				if err != nil {
+					util.Warning("failed to copy root CA into docker volume ddev-global-cache/mkcert: %v", err)
+				} else {
+					util.Success("Pushed mkcert rootca certs to ddev-global-cache/mkcert")
+				}
+			}
+		}
+
+		certPath := app.GetConfigPath("custom_certs")
+		if fileutil.FileExists(certPath) {
 			uid, _, _ := util.GetContainerUIDGid()
-			err = dockerutil.CopyToVolume(caRoot, "ddev-global-cache", "mkcert", uid)
+			err = dockerutil.CopyToVolume(certPath, "ddev-global-cache", "custom_certs", uid)
 			if err != nil {
-				util.Warning("failed to copy root CA into docker volume ddev-global-cache/mkcert: %v", err)
+				util.Warning("failed to copy custom certs into docker volume ddev-global-cache/custom_certs: %v", err)
 			} else {
-				util.Success("Pushed mkcert rootca certs to ddev-global-cache/mkcert")
+				util.Success("Copied custom certs in %s to ddev-global-cache/custom_certs", certPath)
 			}
 		}
 	}
-
-	certPath := app.GetConfigPath("custom_certs")
-	if fileutil.FileExists(certPath) {
-		uid, _, _ := util.GetContainerUIDGid()
-		err = dockerutil.CopyToVolume(certPath, "ddev-global-cache", "custom_certs", uid)
-		if err != nil {
-			util.Warning("failed to copy custom certs into docker volume ddev-global-cache/custom_certs: %v", err)
-		} else {
-			util.Success("Copied custom certs in %s to ddev-global-cache/custom_certs", certPath)
-		}
-	}
-
 	// WriteConfig .ddev-docker-compose-*.yaml
 	err = app.WriteDockerComposeYAML()
 	if err != nil {
@@ -977,9 +983,11 @@ func (app *DdevApp) Start() error {
 		}
 	}
 
-	err = StartDdevRouter()
-	if err != nil {
-		return err
+	if !IsRouterDisabled(app) {
+		err = StartDdevRouter()
+		if err != nil {
+			return err
+		}
 	}
 
 	err = app.WaitByLabels(map[string]string{"com.ddev.site-name": app.GetName()})
@@ -1907,25 +1915,34 @@ func (app *DdevApp) RemoveGlobalProjectInfo() {
 
 // GetHTTPURL returns the HTTP URL for an app.
 func (app *DdevApp) GetHTTPURL() string {
-	url := "http://" + app.GetHostname()
-	if app.RouterHTTPPort != "80" {
-		url = url + ":" + app.RouterHTTPPort
+	url := ""
+	if !IsRouterDisabled(app) {
+		url = "http://" + app.GetHostname()
+		if app.RouterHTTPPort != "80" {
+			url = url + ":" + app.RouterHTTPPort
+		}
+	} else {
+		url = app.GetWebContainerDirectHTTPURL()
 	}
 	return url
 }
 
 // GetHTTPSURL returns the HTTPS URL for an app.
 func (app *DdevApp) GetHTTPSURL() string {
-	url := "https://" + app.GetHostname()
-	if app.RouterHTTPSPort != "443" {
-		url = url + ":" + app.RouterHTTPSPort
+	url := ""
+	if !IsRouterDisabled(app) {
+		url = "https://" + app.GetHostname()
+		if app.RouterHTTPSPort != "443" {
+			url = url + ":" + app.RouterHTTPSPort
+		}
+	} else {
+		url = app.GetWebContainerDirectHTTPSURL()
 	}
 	return url
 }
 
 // GetAllURLs returns an array of all the URLs for the project
 func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs []string) {
-
 	// Get configured URLs
 	for _, name := range app.GetHostnames() {
 		httpPort := ""
@@ -1941,7 +1958,9 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 		httpURLs = append(httpURLs, "http://"+name+httpPort)
 	}
 
-	httpsURLs = append(httpsURLs, app.GetWebContainerDirectHTTPSURL())
+	if !IsRouterDisabled(app) {
+		httpsURLs = append(httpsURLs, app.GetWebContainerDirectHTTPSURL())
+	}
 	httpURLs = append(httpURLs, app.GetWebContainerDirectHTTPURL())
 
 	return httpURLs, httpsURLs, append(httpsURLs, httpURLs...)
@@ -1952,7 +1971,7 @@ func (app *DdevApp) GetPrimaryURL() string {
 	httpURLs, httpsURLs, _ := app.GetAllURLs()
 	urlList := httpsURLs
 	// If no mkcert trusted https, use the httpURLs instead
-	if globalconfig.GetCAROOT() == "" {
+	if globalconfig.GetCAROOT() == "" || IsRouterDisabled(app) {
 		urlList = httpURLs
 	}
 	return urlList[0]

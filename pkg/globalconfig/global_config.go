@@ -37,25 +37,24 @@ type ProjectInfo struct {
 
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
-	OmitContainersGlobal     []string `yaml:"omit_containers,flow"`
-	NFSMountEnabledGlobal    bool     `yaml:"nfs_mount_enabled"`
-	MutagenEnabledGlobal     bool     `yaml:"mutagen_enabled"`
-	InstrumentationOptIn     bool     `yaml:"instrumentation_opt_in"`
-	RouterBindAllInterfaces  bool     `yaml:"router_bind_all_interfaces"`
-	InternetDetectionTimeout int64    `yaml:"internet_detection_timeout_ms"`
-	DeveloperMode            bool     `yaml:"developer_mode,omitempty"`
-	InstrumentationUser      string   `yaml:"instrumentation_user,omitempty"`
-	LastStartedVersion       string   `yaml:"last_started_version"`
-	MkcertCARoot             string   `yaml:"mkcert_caroot"`
-	UseHardenedImages        bool     `yaml:"use_hardened_images"`
-	UseLetsEncrypt           bool     `yaml:"use_letsencrypt"`
-	LetsEncryptEmail         string   `yaml:"letsencrypt_email"`
-	AutoRestartContainers    bool     `yaml:"auto_restart_containers"`
-	FailOnHookFailGlobal     bool     `yaml:"fail_on_hook_fail"`
-	WebEnvironment           []string `yaml:"web_environment"`
-	DisableHTTP2             bool     `yaml:"disable_http2"`
-
-	ProjectList map[string]*ProjectInfo `yaml:"project_info"`
+	OmitContainersGlobal     []string                `yaml:"omit_containers,flow"`
+	NFSMountEnabledGlobal    bool                    `yaml:"nfs_mount_enabled"`
+	MutagenEnabledGlobal     bool                    `yaml:"mutagen_enabled"`
+	InstrumentationOptIn     bool                    `yaml:"instrumentation_opt_in"`
+	RouterBindAllInterfaces  bool                    `yaml:"router_bind_all_interfaces"`
+	InternetDetectionTimeout int64                   `yaml:"internet_detection_timeout_ms"`
+	DeveloperMode            bool                    `yaml:"developer_mode,omitempty"`
+	InstrumentationUser      string                  `yaml:"instrumentation_user,omitempty"`
+	LastStartedVersion       string                  `yaml:"last_started_version"`
+	MkcertCARoot             string                  `yaml:"mkcert_caroot"`
+	UseHardenedImages        bool                    `yaml:"use_hardened_images"`
+	UseLetsEncrypt           bool                    `yaml:"use_letsencrypt"`
+	LetsEncryptEmail         string                  `yaml:"letsencrypt_email"`
+	AutoRestartContainers    bool                    `yaml:"auto_restart_containers"`
+	FailOnHookFailGlobal     bool                    `yaml:"fail_on_hook_fail"`
+	WebEnvironment           []string                `yaml:"web_environment"`
+	DisableHTTP2             bool                    `yaml:"disable_http2"`
+	ProjectList              map[string]*ProjectInfo `yaml:"project_info"`
 }
 
 // GetGlobalConfigPath gets the path to global config file
@@ -159,9 +158,10 @@ func WriteGlobalConfig(config GlobalConfig) error {
 	// Append current image information
 	instructions := `
 # You can turn off usage of the dba (phpmyadmin) container and/or
-# ddev-ssh-agent containers with
-# omit_containers["dba", "ddev-ssh-agent"]
-# and you can opt in or out of sending instrumentation the ddev developers with
+# ddev-ssh-agent and ddev-router containers with
+# omit_containers["dba", "ddev-ssh-agent", "ddev-router"]
+
+# You can opt in or out of sending instrumentation to the ddev developers with
 # instrumentation_opt_in: true # or false
 #
 # You can enable nfs mounting for all projects with

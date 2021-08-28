@@ -486,29 +486,30 @@ func (app *DdevApp) GetHostnames() []string {
 	// Use a map to make sure that we have unique hostnames
 	// The value is useless, so just use the int 1 for assignment.
 	nameListMap := make(map[string]int)
+	nameListArray := []string{}
 
-	for _, name := range app.AdditionalHostnames {
-		name = strings.ToLower(name)
-		nameListMap[name+"."+app.ProjectTLD] = 1
+	if !IsRouterDisabled(app) {
+		for _, name := range app.AdditionalHostnames {
+			name = strings.ToLower(name)
+			nameListMap[name+"."+app.ProjectTLD] = 1
+		}
+
+		for _, name := range app.AdditionalFQDNs {
+			name = strings.ToLower(name)
+			nameListMap[name] = 1
+		}
+
+		// Make sure the primary hostname didn't accidentally get added, it will be prepended
+		delete(nameListMap, app.GetHostname())
+
+		// Now walk the map and extract the keys into an array.
+		for k := range nameListMap {
+			nameListArray = append(nameListArray, k)
+		}
+		sort.Strings(nameListArray)
+		// We want the primary hostname to be first in the list.
+		nameListArray = append([]string{app.GetHostname()}, nameListArray...)
 	}
-
-	for _, name := range app.AdditionalFQDNs {
-		name = strings.ToLower(name)
-		nameListMap[name] = 1
-	}
-
-	// Make sure the primary hostname didn't accidentally get added, it will be prepended
-	delete(nameListMap, app.GetHostname())
-
-	// Now walk the map and extract the keys into an array.
-	nameListArray := make([]string, 0, len(nameListMap))
-	for k := range nameListMap {
-		nameListArray = append(nameListArray, k)
-	}
-	sort.Strings(nameListArray)
-	// We want the primary hostname to be first in the list.
-	nameListArray = append([]string{app.GetHostname()}, nameListArray...)
-
 	return nameListArray
 }
 
@@ -625,8 +626,10 @@ type composeYAMLVars struct {
 	Plugin                    string
 	AppType                   string
 	MailhogPort               string
+	HostMailhogPort           string
 	DBAPort                   string
 	DBPort                    string
+	HostPHPMyAdminPort        string
 	DdevGenerated             string
 	HostDockerInternalIP      string
 	ComposeVersion            string
@@ -640,7 +643,9 @@ type composeYAMLVars struct {
 	SSHAgentBuildContext      string
 	OmitDB                    bool
 	OmitDBA                   bool
+	OmitRouter                bool
 	OmitSSHAgent              bool
+	BindAllInterfaces         bool
 	MariaDBVolumeName         string
 	MutagenEnabled            bool
 	MutagenVolumeName         string
@@ -704,15 +709,19 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		Plugin:                    "ddev",
 		AppType:                   app.Type,
 		MailhogPort:               GetPort("mailhog"),
+		HostMailhogPort:           app.HostMailhogPort,
 		DBAPort:                   GetPort("dba"),
 		DBPort:                    GetPort("db"),
+		HostPHPMyAdminPort:        app.HostPHPMyAdminPort,
 		DdevGenerated:             DdevFileSignature,
 		HostDockerInternalIP:      hostDockerInternalIP,
 		ComposeVersion:            version.DockerComposeFileFormatVersion,
 		DisableSettingsManagement: app.DisableSettingsManagement,
-		OmitDB:                    nodeps.ArrayContainsString(app.GetOmittedContainers(), "db"),
-		OmitDBA:                   nodeps.ArrayContainsString(app.GetOmittedContainers(), "dba") || nodeps.ArrayContainsString(app.OmitContainers, "db"),
+		OmitDB:                    nodeps.ArrayContainsString(app.GetOmittedContainers(), nodeps.DBContainer),
+		OmitDBA:                   nodeps.ArrayContainsString(app.GetOmittedContainers(), nodeps.DBAContainer) || nodeps.ArrayContainsString(app.OmitContainers, nodeps.DBContainer),
+		OmitRouter:                nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer),
 		OmitSSHAgent:              nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent"),
+		BindAllInterfaces:         app.BindAllInterfaces,
 		MutagenEnabled:            (app.MutagenEnabled || app.MutagenEnabledGlobal),
 
 		NFSMountEnabled:       (app.NFSMountEnabled || app.NFSMountEnabledGlobal) && !app.MutagenEnabled,
@@ -797,6 +806,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	templateVars.DockerIP, err = dockerutil.GetDockerIP()
 	if err != nil {
 		return "", err
+	}
+	if app.BindAllInterfaces {
+		templateVars.DockerIP = "0.0.0.0"
 	}
 
 	err = templ.Execute(&doc, templateVars)

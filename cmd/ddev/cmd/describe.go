@@ -110,27 +110,29 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			output = output + "\n" + "DB container is excluded, so no db information provided\n"
 		}
 
-		output = output + "\nOther Services\n--------------\n"
-		other := uitable.New()
-		other.AddRow("MailHog (https):", desc["mailhog_https_url"])
-		other.AddRow("MailHog:", desc["mailhog_url"])
-		if _, ok := desc["phpmyadmin_https_url"]; ok {
-			other.AddRow("phpMyAdmin (https):", desc["phpmyadmin_https_url"])
-		}
-		if _, ok := desc["phpmyadmin_url"]; ok {
-			other.AddRow("phpMyAdmin:", desc["phpmyadmin_url"])
-		}
-		for k, v := range desc["extra_services"].(map[string]map[string]string) {
-			if httpsURL, ok := v["https_url"]; ok {
-				other.AddRow(k+" (https):", httpsURL)
+		if !ddevapp.IsRouterDisabled(app) {
+			output = output + "\nOther Services\n--------------\n"
+			other := uitable.New()
+			other.AddRow("MailHog (https):", desc["mailhog_https_url"])
+			other.AddRow("MailHog:", desc["mailhog_url"])
+			if _, ok := desc["phpmyadmin_https_url"]; ok {
+				other.AddRow("phpMyAdmin (https):", desc["phpmyadmin_https_url"])
 			}
-			if httpURL, ok := v["http_url"]; ok {
-				other.AddRow(k+":", httpURL)
+			if _, ok := desc["phpmyadmin_url"]; ok {
+				other.AddRow("phpMyAdmin:", desc["phpmyadmin_url"])
 			}
-		}
-		output = output + fmt.Sprint(other)
+			for k, v := range desc["extra_services"].(map[string]map[string]string) {
+				if httpsURL, ok := v["https_url"]; ok {
+					other.AddRow(k+" (https):", httpsURL)
+				}
+				if httpURL, ok := v["http_url"]; ok {
+					other.AddRow(k+":", httpURL)
+				}
+			}
+			output = output + fmt.Sprint(other)
 
-		output = output + "\n" + ddevapp.RenderRouterStatus() + "\t" + ddevapp.RenderSSHAuthStatus()
+			output = output + "\n" + ddevapp.RenderRouterStatus() + "\t" + ddevapp.RenderSSHAuthStatus()
+		}
 	}
 
 	return output, nil

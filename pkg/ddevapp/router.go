@@ -37,6 +37,11 @@ func FullRenderedRouterComposeYAMLPath() string {
 	return dest
 }
 
+// IsRouterDisabled returns true if the router is disabled
+func IsRouterDisabled(app *DdevApp) bool {
+	return nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer)
+}
+
 // StopRouterIfNoContainers stops the router if there are no ddev containers running.
 func StopRouterIfNoContainers() error {
 	containersRunning, err := ddevContainersRunning()
