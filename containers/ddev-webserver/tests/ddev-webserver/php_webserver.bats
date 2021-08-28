@@ -14,10 +14,13 @@
 }
 
 @test "enable and disable xdebug for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+    if [[ ${PHP_VERSION} == "8.1" ]]; then
+      skip "xdebug is not yet available for php8.1"
+    fi
     CURRENT_ARCH=$(../get_arch.sh)
 
     docker exec -t $CONTAINER_NAME enable_xdebug
-    if [ ${PHP_VERSION} != "8.0" -a ${PHP_VERSION != "8.1"} ] ; then
+    if [[ ${PHP_VERSION} != 8.? ]] ; then
       docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug.remote_enable"
     else
       docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug.mode"
@@ -29,12 +32,18 @@
 }
 
 @test "verify that xdebug is enabled by default when the image is not run with start.sh php${PHP_VERSION}" {
+  if [[ ${PHP_VERSION} == "8.1" ]]; then
+    skip "xdebug not yet available for php 8.1"
+  fi
   CURRENT_ARCH=$(../get_arch.sh)
 
   docker run  -e "DDEV_PHP_VERSION=${PHP_VERSION}" --rm $DOCKER_IMAGE bash -c 'php --version | grep "with Xdebug"'
 }
 
 @test "enable and disable xhprof for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+    if [[ ${PHP_VERSION} == "8.1" ]]; then
+      skip "xhprof is not yet available for php8.1"
+    fi
     CURRENT_ARCH=$(../get_arch.sh)
 
     docker exec -t $CONTAINER_NAME enable_xhprof
@@ -46,6 +55,9 @@
 }
 
 @test "verify that xhprof is enabled by default when the image is not run with start.sh php${PHP_VERSION}" {
+    if [[ ${PHP_VERSION} == "8.1" ]]; then
+      skip "xhprof is not yet available for php8.1"
+    fi
   CURRENT_ARCH=$(../get_arch.sh)
 
   docker run  -e "DDEV_PHP_VERSION=${PHP_VERSION}" --rm $DOCKER_IMAGE bash -c 'php --re xhprof | grep -v "\"xhprof\" does not exist"'
@@ -59,7 +71,7 @@
 
 @test "verify PHP ini settings for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   # Default settings for assert.active should be 1
-  if [ ${PHP_VERSION} != "8.0" -a ${PHP_VERSION} != "8.1"]; then
+  if [[ ${PHP_VERSION} != 8.? ]]; then
     docker exec -t $CONTAINER_NAME php -i | grep "assert.active.*=> 1 => 1"
   else
     docker exec -t $CONTAINER_NAME php -i | grep "assert.active.*=> On => On"
@@ -96,10 +108,11 @@
     extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring mysqli pgsql readline soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
     ;;
   8.0)
-    extensions="apcu bcmath bz2 curl cli common fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
+    extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring memcached mysqli pgsql readline redis soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
+    ;;
   8.1)
     # TODO: Update this list as more extensions become available
-    extensions="bcmath bz2 curl cli common fpm gd intl ldap mbstring mysql opcache pgsql readline soap sqlite3 xml zip"
+    extensions="bcmath bz2 curl gd intl json ldap mbstring mysqli pgsql readline soap sqlite3 xml zip"
   esac
 
   run docker exec -t $CONTAINER_NAME enable_xdebug
