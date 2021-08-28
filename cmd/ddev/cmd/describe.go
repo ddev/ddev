@@ -15,17 +15,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Define flags for the describe command
-var (
-	// service is the service for additional output.
-	service string
-	// verbose is whether we want full output.
-	verbose bool
-)
-
 // DescribeCommand represents the `ddev config` command
 var DescribeCommand = &cobra.Command{
-	Use:     "describe [projectname] [--service=name]",
+	Use:     "describe [projectname]",
 	Aliases: []string{"status", "st", "desc"},
 	Short:   "Get a detailed description of a running ddev project.",
 	Long: `Get a detailed description of a running ddev project. Describe provides basic
@@ -34,7 +26,7 @@ It also provides details for MySQL connections, and connection information for
 additional services like MailHog and phpMyAdmin. You can run 'ddev describe' from
 a project directory to describe that project, or you can specify a project to describe by
 running 'ddev describe <projectname>.`,
-	Example: "ddev describe\nddev describe <projectname>\nddev describe --service=web\nddev status\nddev st",
+	Example: "ddev describe\nddev describe <projectname>\nddev status\nddev st",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) > 1 {
 			util.Failed("Too many arguments provided. Please use 'ddev describe' or 'ddev describe [projectname]'")
@@ -192,6 +184,4 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 
 func init() {
 	RootCmd.AddCommand(DescribeCommand)
-	DescribeCommand.Flags().StringVarP(&service, "service", "s", "", "The service for additional information")
-	DescribeCommand.Flags().BoolVarP(&verbose, "verbose", "v", false, "Show extended output for all services")
 }
