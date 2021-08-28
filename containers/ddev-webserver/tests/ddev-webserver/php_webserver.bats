@@ -17,7 +17,7 @@
     CURRENT_ARCH=$(../get_arch.sh)
 
     docker exec -t $CONTAINER_NAME enable_xdebug
-    if [ ]${PHP_VERSION} != "8.0" ] ; then
+    if [ ${PHP_VERSION} != "8.0" -a ${PHP_VERSION != "8.1"} ] ; then
       docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug.remote_enable"
     else
       docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug.mode"
@@ -59,7 +59,7 @@
 
 @test "verify PHP ini settings for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   # Default settings for assert.active should be 1
-  if [ ${PHP_VERSION} != "8.0" ]; then
+  if [ ${PHP_VERSION} != "8.0" -a ${PHP_VERSION} != "8.1"]; then
     docker exec -t $CONTAINER_NAME php -i | grep "assert.active.*=> 1 => 1"
   else
     docker exec -t $CONTAINER_NAME php -i | grep "assert.active.*=> On => On"
@@ -92,11 +92,14 @@
   5.6)
     extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring mysql pgsql readline soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
     ;;
-  7.[01])
+  7.[01234])
     extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring mysqli pgsql readline soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
     ;;
   8.0)
-    extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring memcached mysqli pgsql readline redis soap sqlite3 xhprof xml xmlrpc zip"
+    extensions="apcu bcmath bz2 curl cli common fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
+  8.1)
+    # TODO: Update this list as more extensions become available
+    extensions="bcmath bz2 curl cli common fpm gd intl ldap mbstring mysql opcache pgsql readline soap sqlite3 xml zip"
   esac
 
   run docker exec -t $CONTAINER_NAME enable_xdebug
