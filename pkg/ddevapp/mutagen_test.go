@@ -51,7 +51,7 @@ func TestMutagenSimple(t *testing.T) {
 		assert.False(dockerutil.VolumeExists(ddevapp.GetMutagenVolumeName(app)))
 	})
 	err = app.Start()
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	assert.True(dockerutil.VolumeExists(ddevapp.GetMutagenVolumeName(app)))
 
