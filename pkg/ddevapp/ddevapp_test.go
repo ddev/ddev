@@ -663,6 +663,11 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		t.Skip("Skipping on WSL2 because this test doesn't work although manual testing works")
 	}
 	assert := asrt.New(t)
+
+	phpVersions := nodeps.ValidPHPVersions
+	// TODO: Remove the 8.1 exception when xdebug is available for 8.1
+	delete(phpVersions, "8.1")
+
 	app := &ddevapp.DdevApp{}
 	testcommon.ClearDockerEnv()
 
@@ -676,9 +681,9 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	site := TestSites[0]
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
-	phpVersions := nodeps.ValidPHPVersions
 	phpKeys := make([]string, 0, len(phpVersions))
 	for k := range phpVersions {
+		// TODO: Remove this exception when 8.1 xdebug available
 		phpKeys = append(phpKeys, k)
 	}
 	sort.Strings(phpKeys)
@@ -783,13 +788,17 @@ func TestDdevXhprofEnabled(t *testing.T) {
 	}
 
 	assert := asrt.New(t)
+
+	phpVersions := nodeps.ValidPHPVersions
+	// TODO: Remove the 8.1 exception when xdebug is available for 8.1
+	delete(phpVersions, "8.1")
+
 	app := &ddevapp.DdevApp{}
 	testcommon.ClearDockerEnv()
 
 	site := TestSites[0]
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
-	phpVersions := nodeps.ValidPHPVersions
 	// Does not work with php5.6 anyway (SEGV), for resource conservation
 	// skip older unsupported versions
 	for _, k := range []string{"5.6", "7.0", "7.1"} {
