@@ -153,15 +153,19 @@ func List(activeOnly bool, continuous bool, continuousSleepTime int) {
 				RenderAppRow(t, desc)
 			}
 
-			var routerStatus = RenderRouterStatus()
+			routerStatus, _ := GetRouterStatus()
+			var extendedRouterStatus = RenderRouterStatus()
 			if nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, globalconfig.DdevRouterContainer) {
-				routerStatus = "disabled"
+				extendedRouterStatus = "disabled"
 			}
 			t.AppendFooter(table.Row{
 				"Router", "", routerStatus},
 			)
 			t.Render()
 			output.UserOut.WithField("raw", appDescs).Print(out.String())
+			if routerStatus != "healthy" {
+				output.UserOut.WithField("raw", extendedRouterStatus).Print("ddev-router is " + extendedRouterStatus)
+			}
 		}
 
 		if !continuous {

@@ -58,13 +58,14 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 	status := desc["status"]
 	var out bytes.Buffer
 
+	t := table.NewWriter()
+	t.SetOutputMirror(&out)
+	t.AppendHeader(table.Row{"Service", "Stat", "URL/Port", "Info"})
+
+	t.AppendRow(table.Row{"Project", "", app.Name, desc["shortroot"].(string)})
+
 	// Only show extended status for running sites.
 	if status == ddevapp.SiteRunning {
-		// Build our service table.
-		t := table.NewWriter()
-		t.SetOutputMirror(&out)
-		t.AppendHeader(table.Row{"Service", "Stat", "URL/Port", "Info"})
-
 		serviceNames := []string{}
 		// Get a list of services in the order we want them, with web and db first
 		serviceMap := desc["services"].(map[string]map[string]string)
@@ -163,8 +164,6 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			},
 		})
 
-		t.AppendRow(table.Row{"Project", "", app.Name})
-		t.AppendRow(table.Row{"Location", "", desc["shortroot"].(string)})
 		if !ddevapp.IsRouterDisabled(app) {
 			mailhogURL := ""
 			if _, ok := desc["mailhog_url"]; ok {
@@ -188,10 +187,9 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		if len(bindInfo) > 0 {
 			t.AppendRow(table.Row{"Network", "", strings.Join(bindInfo, "\n")})
 		}
-
-		t.Render()
-
 	}
+	t.Render()
+
 	return out.String(), nil
 }
 
