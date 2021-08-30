@@ -2,6 +2,8 @@ package styles
 
 import (
 	"github.com/jedib0t/go-pretty/v6/table"
+	"golang.org/x/term"
+	"os"
 )
 
 var DefaultTableStyle = "StyleLight"
@@ -27,27 +29,38 @@ var StyleDescribe = table.Style{
 	Title:   table.TitleOptionsDefault,
 }
 
+var (
+	ddevDefault = table.Style{
+		Name:    "StyleLight",
+		Box:     table.StyleBoxLight,
+		Color:   table.ColorOptionsDefault,
+		Format:  table.FormatOptionsDefault,
+		HTML:    table.DefaultHTMLOptions,
+		Options: OptionsSeparateRows,
+		Title:   table.TitleOptionsDefault,
+	}
+)
+
 var styleMap map[string]table.Style = map[string]table.Style{
-	"StyleDefault":                    table.StyleDefault,
-	"StyleBold":                       table.StyleBold,
-	"StyleLight":                      table.StyleLight,
-	"StyleDouble":                     table.StyleDouble,
-	"StyleRounded":                    table.StyleRounded,
-	"StyleColoredBright":              table.StyleColoredBright,
-	"StyleColoredDark":                table.StyleColoredDark,
-	"StyleColoredBlackOnBlueWhite":    table.StyleColoredBlackOnBlueWhite,
-	"StyleColoredBlackOnCyanWhite":    table.StyleColoredBlackOnCyanWhite,
-	"StyleColoredBlackOnGreenWhite":   table.StyleColoredBlackOnGreenWhite,
-	"StyleColoredBlackOnMagentaWhite": table.StyleColoredBlackOnMagentaWhite,
-	"StyleColoredBlackOnYellowWhite":  table.StyleColoredBlackOnYellowWhite,
-	"StyleColoredBlackOnRedWhite":     table.StyleColoredBlackOnRedWhite,
-	"StyleColoredBlueWhiteOnBlack":    table.StyleColoredBlueWhiteOnBlack,
-	"StyleColoredCyanWhiteOnBlack":    table.StyleColoredCyanWhiteOnBlack,
-	"StyleColoredGreenWhiteOnBlack":   table.StyleColoredGreenWhiteOnBlack,
-	"StyleColoredMagentaWhiteOnBlack": table.StyleColoredMagentaWhiteOnBlack,
-	"StyleColoredRedWhiteOnBlack":     table.StyleColoredRedWhiteOnBlack,
-	"StyleColoredYellowWhiteOnBlack":  table.StyleColoredYellowWhiteOnBlack,
-	"StyleDescribe":                   StyleDescribe,
+	"default": ddevDefault,
+	"bold":    table.StyleBold,
+	"bright":  table.StyleColoredBright,
+	//"StyleDouble":                     table.StyleDouble,
+	//"StyleRounded":                    table.StyleRounded,
+	//"StyleColoredDark":                table.StyleColoredDark,
+	//"StyleColoredBlackOnBlueWhite":    table.StyleColoredBlackOnBlueWhite,
+	//"StyleColoredBlackOnCyanWhite":    table.StyleColoredBlackOnCyanWhite,
+	//"StyleColoredBlackOnGreenWhite":   table.StyleColoredBlackOnGreenWhite,
+	//"StyleColoredBlackOnMagentaWhite": table.StyleColoredBlackOnMagentaWhite,
+	//"StyleColoredBlackOnYellowWhite":  table.StyleColoredBlackOnYellowWhite,
+	//"StyleColoredBlackOnRedWhite":     table.StyleColoredBlackOnRedWhite,
+	//"StyleColoredBlueWhiteOnBlack":    table.StyleColoredBlueWhiteOnBlack,
+	//"StyleColoredCyanWhiteOnBlack":    table.StyleColoredCyanWhiteOnBlack,
+	//"StyleColoredGreenWhiteOnBlack":   table.StyleColoredGreenWhiteOnBlack,
+	//"StyleColoredMagentaWhiteOnBlack": table.StyleColoredMagentaWhiteOnBlack,
+	//"StyleColoredRedWhiteOnBlack":     table.StyleColoredRedWhiteOnBlack,
+	//"StyleColoredYellowWhiteOnBlack":  table.StyleColoredYellowWhiteOnBlack,
+	//"StyleDescribe":                   StyleDescribe,
 }
 
 // ValidTableStyleList returns an array of valid styles
@@ -72,6 +85,13 @@ func IsValidTableStyle(style string) bool {
 func GetTableStyle(name string) (style table.Style) {
 	if _, ok := styleMap[name]; ok {
 		style = styleMap[name]
+		if !term.IsTerminal(int(os.Stdout.Fd())) {
+			style.Options.SeparateRows = false
+			style.Options.SeparateFooter = false
+			style.Options.SeparateColumns = false
+			style.Options.SeparateHeader = false
+			style.Options.DrawBorder = false
+		}
 		return style
 	}
 	return styleMap[DefaultTableStyle]

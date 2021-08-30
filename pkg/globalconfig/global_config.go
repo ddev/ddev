@@ -520,6 +520,5 @@ func IsInternetActive() bool {
 func SetGlobalTableStyle(writer table.Writer) {
 	styleName := GetTableStyle()
 	style := styles.GetTableStyle(styleName)
-	style.Options.SeparateRows = true
 	writer.SetStyle(style)
 }
