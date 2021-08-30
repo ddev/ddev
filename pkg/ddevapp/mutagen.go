@@ -342,7 +342,7 @@ func DownloadMutagenIfNeeded(app *DdevApp) error {
 	if !app.MutagenEnabled || app.MutagenEnabledGlobal {
 		return nil
 	}
-	curVersion, err := version.GetMutagenVersion()
+	curVersion, err := version.GetLiveMutagenVersion()
 	if err != nil || curVersion != nodeps.RequiredMutagenVersion {
 		err = DownloadMutagen()
 		if err != nil {

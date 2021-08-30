@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"github.com/drud/ddev/pkg/styles"
 	"os"
 	"sort"
 
@@ -27,10 +28,11 @@ var versionCmd = &cobra.Command{
 		v := version.GetVersionInfo()
 
 		var out bytes.Buffer
-		versionOutput := table.NewWriter()
-		versionOutput.SetOutputMirror(&out)
-		versionOutput.AppendHeader(table.Row{"Item", "Value"})
-		versionOutput.SetColumnConfigs([]table.ColumnConfig{{
+		t := table.NewWriter()
+		t.SetOutputMirror(&out)
+		styles.SetGlobalTableStyle(t)
+		t.AppendHeader(table.Row{"Item", "Value"})
+		t.SetColumnConfigs([]table.ColumnConfig{{
 			Name:     "Value",
 			WidthMax: 70,
 		},
@@ -44,12 +46,12 @@ var versionCmd = &cobra.Command{
 
 		for _, label := range keys {
 			if label != "build info" {
-				versionOutput.AppendRow(table.Row{
+				t.AppendRow(table.Row{
 					label, v[label],
 				})
 			}
 		}
-		versionOutput.Render()
+		t.Render()
 		output.UserOut.WithField("raw", v).Println(out.String())
 	},
 }

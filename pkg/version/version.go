@@ -102,9 +102,7 @@ func GetVersionInfo() map[string]string {
 	if versionInfo["docker-compose"], err = GetDockerComposeVersion(); err != nil {
 		versionInfo["docker-compose"] = fmt.Sprintf("failed to GetDockerComposeVersion(): %v", err)
 	}
-	if versionInfo["mutagen"], err = GetMutagenVersion(); err != nil {
-		versionInfo["mutagen"] = fmt.Sprintf("failed to GetMutagenVersion(): %v", err)
-	}
+	versionInfo["mutagen"] = nodeps.RequiredMutagenVersion
 
 	if runtime.GOOS == "windows" {
 		versionInfo["docker type"] = "Docker Desktop For Windows"
@@ -190,8 +188,8 @@ func GetDockerVersion() (string, error) {
 	return DockerVersion, nil
 }
 
-// GetMutagenVersion runs mutagen version and caches result
-func GetMutagenVersion() (string, error) {
+// GetLiveMutagenVersion runs `mutagen version` and caches result
+func GetLiveMutagenVersion() (string, error) {
 	if MutagenVersion != "" {
 		return MutagenVersion, nil
 	}
