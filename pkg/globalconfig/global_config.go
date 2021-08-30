@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/styles"
-	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -57,6 +55,7 @@ type GlobalConfig struct {
 	WebEnvironment           []string                `yaml:"web_environment"`
 	DisableHTTP2             bool                    `yaml:"disable_http2"`
 	TableStyle               string                  `yaml:"table_style"`
+	SimpleFormatting         bool                    `yaml:"simple_formatting"`
 	ProjectList              map[string]*ProjectInfo `yaml:"project_info"`
 }
 
@@ -90,8 +89,8 @@ func ValidateGlobalConfig() error {
 		return fmt.Errorf("Invalid omit_containers: %s, must contain only %s", strings.Join(DdevGlobalConfig.OmitContainersGlobal, ","), strings.Join(GetValidOmitContainers(), ",")).(InvalidOmitContainers)
 	}
 
-	if !styles.IsValidTableStyle(DdevGlobalConfig.TableStyle) {
-		return fmt.Errorf("Invalid table-style: Must be one of %v", styles.ValidTableStyleList())
+	if !IsValidTableStyle(DdevGlobalConfig.TableStyle) {
+		return fmt.Errorf("Invalid table-style: Must be one of %v", ValidTableStyleList())
 	}
 	return nil
 }
@@ -183,14 +182,19 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # - SOMEENV=somevalue
 # - SOMEOTHERENV=someothervalue
 
-# You can set the table style with
-# table_style: 
+# Adjust the default table style used in ddev list and describe
+# table_style: default
+# table_style: bold
+# table_style: bright
+
+# Require simpler formatting where possible
+# simpler_formatting: false
 
 # In unusual cases the default value to wait to detect internet availability is too short.
 # You can adjust this value higher to make it less likely that ddev will declare internet
-# unavailable, but ddev may wait longer on some commands. This should not be set below the default 750
+# unavailable, but ddev may wait longer on some commands. This should not be set below the default 1000
 # ddev will ignore low values, as they're not useful
-# internet_detection_timeout_ms: 750
+# internet_detection_timeout_ms: 1000
 
 # You can enable 'ddev start' to be interrupted by a failing hook with
 # fail_on_hook_fail: true
@@ -514,11 +518,4 @@ func IsInternetActive() bool {
 	IsInternetActiveResult = active
 
 	return active
-}
-
-// SetGlobalTableStyle sets the table style to the globally configured style
-func SetGlobalTableStyle(writer table.Writer) {
-	styleName := GetTableStyle()
-	style := styles.GetTableStyle(styleName)
-	writer.SetStyle(style)
 }

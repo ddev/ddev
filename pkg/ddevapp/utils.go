@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/styles"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"path"
@@ -60,7 +61,7 @@ func GetActiveProjects() []*DdevApp {
 func CreateAppTable(out *bytes.Buffer) table.Writer {
 	t := table.NewWriter()
 	t.AppendHeader(table.Row{"Name", "Type", "Location", "URL", "Status"})
-	globalconfig.SetGlobalTableStyle(t)
+	styles.SetGlobalTableStyle(t)
 	t.SetOutputMirror(out)
 	return t
 }

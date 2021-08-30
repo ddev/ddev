@@ -7,6 +7,7 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
+	"github.com/drud/ddev/pkg/styles"
 	"github.com/drud/ddev/pkg/util"
 	"sort"
 	"strings"
@@ -141,7 +142,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		}
 
 		// Output our service table.
-		globalconfig.SetGlobalTableStyle(t)
+		styles.SetGlobalTableStyle(t)
 		tWidth, _ := nodeps.GetTerminalWidthHeight()
 		urlPortWidth := 40
 		infoWidth := 30

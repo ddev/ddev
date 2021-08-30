@@ -271,7 +271,11 @@ func DisableColors() {
 	text.DisableColors()
 }
 
+// ColorizeText colorizes text unless SimpleFormatting is turned on
 func ColorizeText(s string, c string) (out string) {
+	if globalconfig.DdevGlobalConfig.SimpleFormatting {
+		text.DisableColors()
+	}
 	switch c {
 	case "green":
 		out = text.FgGreen.Sprint(s)
