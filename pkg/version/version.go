@@ -87,7 +87,7 @@ func GetVersionInfo() map[string]string {
 	var err error
 	versionInfo := make(map[string]string)
 
-	versionInfo["DDEV-Local version"] = DdevVersion
+	versionInfo["DDEV version"] = DdevVersion
 	versionInfo["web"] = GetWebImage()
 	versionInfo["db"] = GetDBImage(nodeps.MariaDB)
 	versionInfo["dba"] = GetDBAImage()

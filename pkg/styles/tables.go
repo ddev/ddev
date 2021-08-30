@@ -20,8 +20,8 @@ func GetTableStyle(name string) (style table.Style) {
 	return globalconfig.StyleMap[DefaultTableStyle]
 }
 
-// RequireSimpleFormatting() returns true if we should not be colorizing/styling text
-func RequireSimpleFormatting() bool {
+// SimpleFormattingRequired() returns true if we should not be colorizing/styling text
+func SimpleFormattingRequired() bool {
 	if globalconfig.DdevGlobalConfig.SimpleFormatting || !term.IsTerminal(1) || !term.IsTerminal(0) {
 		return true
 	}
@@ -32,7 +32,7 @@ func RequireSimpleFormatting() bool {
 func SetGlobalTableStyle(writer table.Writer) {
 	styleName := globalconfig.GetTableStyle()
 	style := GetTableStyle(styleName)
-	if RequireSimpleFormatting() {
+	if SimpleFormattingRequired() {
 		style = GetTableStyle("default")
 		style.Options.SeparateRows = false
 		style.Options.SeparateFooter = false

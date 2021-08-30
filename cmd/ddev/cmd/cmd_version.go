@@ -30,13 +30,17 @@ var versionCmd = &cobra.Command{
 		var out bytes.Buffer
 		t := table.NewWriter()
 		t.SetOutputMirror(&out)
-		styles.SetGlobalTableStyle(t)
+
+		// Use simplest possible output
+		s := styles.GetTableStyle("default")
+		s.Options.SeparateRows = false
+		s.Options.SeparateFooter = false
+		s.Options.SeparateColumns = false
+		s.Options.SeparateHeader = false
+		s.Options.DrawBorder = false
+		t.SetStyle(s)
+
 		t.AppendHeader(table.Row{"Item", "Value"})
-		t.SetColumnConfigs([]table.ColumnConfig{{
-			Name:     "Value",
-			WidthMax: 70,
-		},
-		})
 
 		keys := make([]string, 0, len(v))
 		for k := range v {
