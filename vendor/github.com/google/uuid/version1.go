@@ -13,16 +13,10 @@ import (
 // or SetNodeInterface then it will be set automatically.  If the NodeID cannot
 // be set NewUUID returns nil.  If clock sequence has not been set by
 // SetClockSequence then it will be set automatically.  If GetTime fails to
-// return the current NewUUID returns Nil and an error.
+// return the current NewUUID returns nil and an error.
 //
 // In most cases, New should be used.
 func NewUUID() (UUID, error) {
-	nodeMu.Lock()
-	if nodeID == zeroID {
-		setNodeInterface("")
-	}
-	nodeMu.Unlock()
-
 	var uuid UUID
 	now, seq, err := GetTime()
 	if err != nil {
@@ -38,7 +32,13 @@ func NewUUID() (UUID, error) {
 	binary.BigEndian.PutUint16(uuid[4:], timeMid)
 	binary.BigEndian.PutUint16(uuid[6:], timeHi)
 	binary.BigEndian.PutUint16(uuid[8:], seq)
+
+	nodeMu.Lock()
+	if nodeID == zeroID {
+		setNodeInterface("")
+	}
 	copy(uuid[10:], nodeID[:])
+	nodeMu.Unlock()
 
 	return uuid, nil
 }
