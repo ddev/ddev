@@ -40,7 +40,7 @@ ddev logs -s db [projectname]`,
 
 		err = project.Logs(serviceType, follow, timestamp, tail)
 		if err != nil {
-			util.Failed("Failed to retrieve logs for %s: %v", app.GetName(), err)
+			util.Failed("Failed to retrieve logs for %s: %v", project.GetName(), err)
 		}
 	},
 }
