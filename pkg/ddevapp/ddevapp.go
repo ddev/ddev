@@ -109,19 +109,18 @@ type DdevApp struct {
 	PHPMyAdminPort        string                `yaml:"phpmyadmin_port,omitempty"`
 	PHPMyAdminHTTPSPort   string                `yaml:"phpmyadmin_https_port,omitempty"`
 	// HostPHPMyAdminPort is normally empty, as it is not normaly bound
-	HostPHPMyAdminPort        string   `yaml:"host_phpmyadmin_port,omitempty"`
-	WebImageExtraPackages     []string `yaml:"webimage_extra_packages,omitempty,flow"`
-	DBImageExtraPackages      []string `yaml:"dbimage_extra_packages,omitempty,flow"`
-	ProjectTLD                string   `yaml:"project_tld,omitempty"`
-	UseDNSWhenPossible        bool     `yaml:"use_dns_when_possible"`
-	MkcertEnabled             bool     `yaml:"-"`
-	NgrokArgs                 string   `yaml:"ngrok_args,omitempty"`
-	Timezone                  string   `yaml:"timezone,omitempty"`
-	ComposerVersion           string   `yaml:"composer_version"`
-	DisableSettingsManagement bool     `yaml:"disable_settings_management,omitempty"`
-	WebEnvironment            []string `yaml:"web_environment"`
-	//Providers                 map[string]*ProviderInfo `yaml:"providers"`
-	ComposeYaml map[string]interface{} `yaml:"-"`
+	HostPHPMyAdminPort        string                 `yaml:"host_phpmyadmin_port,omitempty"`
+	WebImageExtraPackages     []string               `yaml:"webimage_extra_packages,omitempty,flow"`
+	DBImageExtraPackages      []string               `yaml:"dbimage_extra_packages,omitempty,flow"`
+	ProjectTLD                string                 `yaml:"project_tld,omitempty"`
+	UseDNSWhenPossible        bool                   `yaml:"use_dns_when_possible"`
+	MkcertEnabled             bool                   `yaml:"-"`
+	NgrokArgs                 string                 `yaml:"ngrok_args,omitempty"`
+	Timezone                  string                 `yaml:"timezone,omitempty"`
+	ComposerVersion           string                 `yaml:"composer_version"`
+	DisableSettingsManagement bool                   `yaml:"disable_settings_management,omitempty"`
+	WebEnvironment            []string               `yaml:"web_environment"`
+	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
 // List provides the functionality for `ddev list`
@@ -153,9 +152,13 @@ func List(activeOnly bool, continuous bool, continuousSleepTime int) {
 				appDescs = append(appDescs, desc)
 				RenderAppRow(t, desc)
 			}
+
+			var routerStatus = RenderRouterStatus()
+			if nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, globalconfig.DdevRouterContainer) {
+				routerStatus = "disabled"
+			}
 			t.AppendFooter(table.Row{
-				"Router", RenderRouterStatus()},
-				table.RowConfig{AutoMerge: true},
+				"Router", "", routerStatus},
 			)
 			t.Render()
 			output.UserOut.WithField("raw", appDescs).Print(out.String())
@@ -350,34 +353,46 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			ports = append(ports, pk.Port())
 		}
 		services[shortName]["exposed_ports"] = strings.Join(ports, ",")
+		hostPorts := []string{}
+		for pk, pv := range c.HostConfig.PortBindings {
+			hostPorts = append(hostPorts, "x")
+			_ = pv
+			_ = pk
+		}
 		// Extract HTTP_EXPOSE and HTTPS_EXPOSE for additional info
-		for _, e := range c.Config.Env {
-			split := strings.SplitN(e, "=", 2)
-			envName := split[0]
-			envVal := split[1]
-			if envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE" {
-				envValStr := fmt.Sprintf("%s", envVal)
-				portSpecs := strings.Split(envValStr, ",")
-				// There might be more than one exposed UI port, but this only handles the first listed,
-				// most often there's only one.
-				if len(portSpecs) > 0 {
-					// HTTPS portSpecs typically look like <exposed>:<containerPort>, for example - HTTPS_EXPOSE=1359:1358
-					ports := strings.Split(portSpecs[0], ":")
-					//services[shortName][envName.(string)] = ports[0]
-					switch envName {
-					case "HTTP_EXPOSE":
-						services[shortName]["http_url"] = "http://" + appDesc["hostname"].(string)
-						if ports[0] != "80" {
-							services[shortName]["http_url"] = services[shortName]["http_url"] + ":" + ports[0]
-						}
-					case "HTTPS_EXPOSE":
-						services[shortName]["https_url"] = "https://" + appDesc["hostname"].(string)
-						if ports[0] != "443" {
-							services[shortName]["https_url"] = services[shortName]["https_url"] + ":" + ports[0]
+		if !IsRouterDisabled(app) {
+			for _, e := range c.Config.Env {
+				split := strings.SplitN(e, "=", 2)
+				envName := split[0]
+				envVal := split[1]
+				if envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE" {
+					envValStr := fmt.Sprintf("%s", envVal)
+					portSpecs := strings.Split(envValStr, ",")
+					// There might be more than one exposed UI port, but this only handles the first listed,
+					// most often there's only one.
+					if len(portSpecs) > 0 {
+						// HTTPS portSpecs typically look like <exposed>:<containerPort>, for example - HTTPS_EXPOSE=1359:1358
+						ports := strings.Split(portSpecs[0], ":")
+						//services[shortName][envName.(string)] = ports[0]
+						switch envName {
+						case "HTTP_EXPOSE":
+							services[shortName]["http_url"] = "http://" + appDesc["hostname"].(string)
+							if ports[0] != "80" {
+								services[shortName]["http_url"] = services[shortName]["http_url"] + ":" + ports[0]
+							}
+						case "HTTPS_EXPOSE":
+							services[shortName]["https_url"] = "https://" + appDesc["hostname"].(string)
+							if ports[0] != "443" {
+								services[shortName]["https_url"] = services[shortName]["https_url"] + ":" + ports[0]
+							}
 						}
 					}
 				}
 			}
+		}
+		if shortName == "web" {
+			services[shortName]["host_http_url"] = app.GetWebContainerDirectHTTPURL()
+			services[shortName]["host_https_url"] = app.GetWebContainerDirectHTTPSURL()
 		}
 	}
 

@@ -181,19 +181,21 @@ func FindDdevRouter() (*docker.APIContainers, error) {
 
 // RenderRouterStatus returns a user-friendly string showing router-status
 func RenderRouterStatus() string {
-	status, logOutput := GetRouterStatus()
 	var renderedStatus string
-	badRouter := "The router is not yet healthy. Your projects may not be accessible.\nIf it doesn't become healthy try running 'ddev start' on a project to recreate it."
+	if !nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, globalconfig.DdevRouterContainer) {
+		status, logOutput := GetRouterStatus()
+		badRouter := "The router is not yet healthy. Your projects may not be accessible.\nIf it doesn't become healthy try running 'ddev start' on a project to recreate it."
 
-	switch status {
-	case SiteStopped:
-		renderedStatus = text.FgRed.Sprint(status) + badRouter
-	case "healthy":
-		renderedStatus = text.FgHiGreen.Sprint(status)
-	case "exited":
-		fallthrough
-	default:
-		renderedStatus = text.FgRed.Sprint(status) + badRouter + "\n" + logOutput
+		switch status {
+		case SiteStopped:
+			renderedStatus = text.FgRed.Sprint(status) + badRouter
+		case "healthy":
+			renderedStatus = text.FgHiGreen.Sprint(status)
+		case "exited":
+			fallthrough
+		default:
+			renderedStatus = text.FgRed.Sprint(status) + badRouter + "\n" + logOutput
+		}
 	}
 	return renderedStatus
 }
