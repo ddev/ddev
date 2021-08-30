@@ -6,7 +6,6 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/netutil"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/jedib0t/go-pretty/v6/text"
 	"html/template"
 	"os"
 	"path"
@@ -188,13 +187,13 @@ func RenderRouterStatus() string {
 
 		switch status {
 		case SiteStopped:
-			renderedStatus = text.FgRed.Sprint(status) + " " + badRouter
+			renderedStatus = util.ColorizeText(status, "red") + " " + badRouter
 		case "healthy":
-			renderedStatus = text.FgHiGreen.Sprint(status)
+			renderedStatus = util.ColorizeText(status, "green")
 		case "exited":
 			fallthrough
 		default:
-			renderedStatus = text.FgRed.Sprint(status) + " " + badRouter + "\n" + logOutput
+			renderedStatus = util.ColorizeText(status, "red") + " " + badRouter + "\n" + logOutput
 		}
 	}
 	return renderedStatus

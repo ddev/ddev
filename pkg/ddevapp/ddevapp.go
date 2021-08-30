@@ -7,7 +7,6 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
@@ -2361,11 +2360,11 @@ func FormatSiteStatus(status string) string {
 
 	switch {
 	case strings.Contains(status, SitePaused):
-		formattedStatus = text.FgYellow.Sprint(formattedStatus)
+		formattedStatus = util.ColorizeText(formattedStatus, "yellow")
 	case strings.Contains(status, SiteStopped) || strings.Contains(status, SiteDirMissing) || strings.Contains(status, SiteConfigMissing):
-		formattedStatus = text.FgRed.Sprint(formattedStatus)
+		formattedStatus = util.ColorizeText(formattedStatus, "red")
 	default:
-		formattedStatus = text.FgGreen.Sprint(formattedStatus)
+		formattedStatus = util.ColorizeText(formattedStatus, "green")
 	}
 	return formattedStatus
 }
