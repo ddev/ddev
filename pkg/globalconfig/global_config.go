@@ -90,7 +90,7 @@ func ValidateGlobalConfig() error {
 	}
 
 	if !IsValidTableStyle(DdevGlobalConfig.TableStyle) {
-		return fmt.Errorf("Invalid table-style: Must be one of %v", ValidTableStyleList())
+		DdevGlobalConfig.TableStyle = "default"
 	}
 	return nil
 }

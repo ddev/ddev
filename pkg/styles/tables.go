@@ -15,13 +15,6 @@ var DefaultTableStyle = "StyleLight"
 func GetTableStyle(name string) (style table.Style) {
 	if _, ok := globalconfig.StyleMap[name]; ok {
 		style = globalconfig.StyleMap[name]
-		if RequireSimpleFormatting() {
-			style.Options.SeparateRows = false
-			style.Options.SeparateFooter = false
-			style.Options.SeparateColumns = false
-			style.Options.SeparateHeader = false
-			style.Options.DrawBorder = false
-		}
 		return style
 	}
 	return globalconfig.StyleMap[DefaultTableStyle]
@@ -39,5 +32,13 @@ func RequireSimpleFormatting() bool {
 func SetGlobalTableStyle(writer table.Writer) {
 	styleName := globalconfig.GetTableStyle()
 	style := GetTableStyle(styleName)
+	if RequireSimpleFormatting() {
+		style = GetTableStyle("default")
+		style.Options.SeparateRows = false
+		style.Options.SeparateFooter = false
+		style.Options.SeparateColumns = false
+		style.Options.SeparateHeader = false
+		style.Options.DrawBorder = false
+	}
 	writer.SetStyle(style)
 }
