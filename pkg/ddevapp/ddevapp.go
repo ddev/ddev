@@ -354,11 +354,13 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 		}
 		services[shortName]["exposed_ports"] = strings.Join(ports, ",")
 		hostPorts := []string{}
-		for pk, pv := range c.HostConfig.PortBindings {
-			hostPorts = append(hostPorts, "x")
-			_ = pv
-			_ = pk
+		for _, pv := range k.Ports {
+			if pv.PublicPort != 0 {
+				hostPorts = append(hostPorts, strconv.FormatInt(pv.PublicPort, 10))
+			}
 		}
+		services[shortName]["host_ports"] = strings.Join(hostPorts, ",")
+
 		// Extract HTTP_EXPOSE and HTTPS_EXPOSE for additional info
 		if !IsRouterDisabled(app) {
 			for _, e := range c.Config.Env {

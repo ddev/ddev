@@ -101,6 +101,9 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			if p, ok := v["exposed_ports"]; ok {
 				urlPortParts = append(urlPortParts, "InDocker: "+v["full_name"]+":"+p)
 			}
+			if p, ok := v["host_ports"]; ok && p != "" {
+				urlPortParts = append(urlPortParts, "Host: localhost:"+p)
+			}
 
 			extraInfo := []string{}
 
@@ -112,12 +115,6 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 				}
 				if desc["mutagen_enabled"].(bool) {
 					extraInfo = append(extraInfo, fmt.Sprintf("Mutagen enabled (%s)", ddevapp.FormatSiteStatus(desc["mutagen_status"].(string))))
-				}
-				if app.BindAllInterfaces {
-					extraInfo = append(extraInfo, "bind-all-interfaces ENABLED")
-				}
-				if globalconfig.DdevGlobalConfig.RouterBindAllInterfaces && !ddevapp.IsRouterDisabled(app) {
-					extraInfo = append(extraInfo, "router-bind-all-interfaces ENABLED")
 				}
 			}
 
@@ -134,6 +131,10 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 					}
 				}
 				extraInfo = append(extraInfo, "User/Pass: 'db/db'\nor 'root/root'")
+			}
+			if k == "dba" {
+				k = "PHPMyAdmin"
+				urlPortParts = append(urlPortParts, "`ddev launch -p`")
 			}
 			t.AppendRow(table.Row{k, v["status"], strings.Join(urlPortParts, "\n"), strings.Join(extraInfo, "\n")})
 		}
@@ -162,24 +163,9 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			},
 		})
 
-		//hostPhpMyAdminURL := "x"
-		//hostMailhogURL := "x"
-
 		t.AppendRow(table.Row{"Project", "", app.Name})
 		t.AppendRow(table.Row{"Location", "", desc["shortroot"].(string)})
 		if !ddevapp.IsRouterDisabled(app) {
-			phpMyAdminURL := ""
-			if _, ok := desc["phpmyadmin_url"]; ok {
-				phpMyAdminURL = desc["phpmyadmin_url"].(string)
-			}
-			if _, ok := desc["phpmyadmin_https_url"]; ok {
-				phpMyAdminURL = desc["phpmyadmin_https_url"].(string)
-			}
-			if phpMyAdminURL != "" {
-				info := fmt.Sprintf("%s or `ddev launch -p`", desc["phpmyadmin_url"])
-				t.AppendRow(table.Row{"PHPMyAdmin", "", info})
-			}
-
 			mailhogURL := ""
 			if _, ok := desc["mailhog_url"]; ok {
 				mailhogURL = desc["mailhog_url"].(string)
@@ -188,9 +174,19 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 				mailhogURL = desc["mailhog_https_url"].(string)
 			}
 
-			t.AppendRow(table.Row{"Mailhog", "", fmt.Sprintf("MailHog: %s or `ddev launch -m`", mailhogURL)})
+			t.AppendRow(table.Row{"Mailhog", "", fmt.Sprintf("MailHog: %s\n`ddev launch -m`", mailhogURL)})
 			_, _, urls := app.GetAllURLs()
 			t.AppendRow(table.Row{"All URLs", "", strings.Join(urls, ", ")})
+		}
+		bindInfo := []string{}
+		if app.BindAllInterfaces {
+			bindInfo = append(bindInfo, "bind-all-interfaces ENABLED")
+		}
+		if globalconfig.DdevGlobalConfig.RouterBindAllInterfaces && !ddevapp.IsRouterDisabled(app) {
+			bindInfo = append(bindInfo, "router-bind-all-interfaces ENABLED")
+		}
+		if len(bindInfo) > 0 {
+			t.AppendRow(table.Row{"Network", "", strings.Join(bindInfo, "\n")})
 		}
 
 		t.Render()
