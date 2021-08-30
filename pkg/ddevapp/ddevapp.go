@@ -157,6 +157,9 @@ func List(activeOnly bool, continuous bool, continuousSleepTime int) {
 			if nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, globalconfig.DdevRouterContainer) {
 				extendedRouterStatus = "disabled"
 			}
+			tWidth, _ := nodeps.GetTerminalWidthHeight()
+			t.SetAllowedRowLength(tWidth)
+			t.SortBy([]table.SortBy{{Name: "Name"}})
 			t.AppendFooter(table.Row{
 				"Router", "", routerStatus},
 			)
