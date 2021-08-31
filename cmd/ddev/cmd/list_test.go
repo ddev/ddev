@@ -116,7 +116,7 @@ func getSitesFromList(t *testing.T, jsonOut string) []interface{} {
 	assert.EqualValues(data["level"], "info")
 
 	raw, ok := data["raw"].([]interface{})
-	assert.True(ok)
+	require.True(t, ok)
 	return raw
 }
 

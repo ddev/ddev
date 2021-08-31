@@ -165,7 +165,13 @@ func List(activeOnly bool, continuous bool, continuousSleepTime int) {
 			t.Render()
 			output.UserOut.WithField("raw", appDescs).Print(out.String())
 			if routerStatus != "healthy" {
-				output.UserOut.WithField("raw", extendedRouterStatus).Print("ddev-router is " + extendedRouterStatus)
+				rawResult := map[string]string{
+					"routerStatus":         routerStatus,
+					"extendedRouterStatus": extendedRouterStatus,
+				}
+				rawResult["routerStatus"] = routerStatus
+				rawResult["extendedStatus"] = extendedRouterStatus
+				output.UserOut.WithField("raw", rawResult)
 			}
 		}
 
