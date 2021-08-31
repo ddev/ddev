@@ -62,10 +62,10 @@ func TestCmdDescribe(t *testing.T) {
 
 		out, err := exec.RunHostCommand(DdevBin, "describe", v.Name)
 		assert.NoError(err)
-		assert.Contains(string(out), "Name")
-		assert.Contains(string(out), "Location")
+		assert.Contains(string(out), "SERVICE")
+		assert.Contains(string(out), "STAT")
 		assert.Contains(string(out), v.Name)
-		assert.Contains(string(out), "OK")
+		assert.Contains(string(out), "running")
 
 		cleanup()
 
@@ -74,10 +74,10 @@ func TestCmdDescribe(t *testing.T) {
 
 		out, err = exec.RunHostCommand(DdevBin, "describe")
 		assert.NoError(err)
-		assert.Contains(string(out), "Name")
-		assert.Contains(string(out), "Location")
+		assert.Contains(string(out), "SERVICE")
+		assert.Contains(string(out), "STAT")
 		assert.Contains(string(out), v.Name)
-		assert.Contains(string(out), "OK")
+		assert.Contains(string(out), "running")
 
 		// Test describe in current directory with json flag
 		out, err = exec.RunHostCommand(DdevBin, "describe", "-j")
