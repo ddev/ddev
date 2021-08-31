@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/spf13/cobra"
 )
 
@@ -176,7 +177,9 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 
 			t.AppendRow(table.Row{"Mailhog", "", fmt.Sprintf("MailHog: %s\n`ddev launch -m`", mailhogURL)})
 			_, _, urls := app.GetAllURLs()
-			t.AppendRow(table.Row{"All URLs", "", strings.Join(urls, ", ")})
+			s := strings.Join(urls, ", ")
+			urlString := text.WrapSoft(s, urlPortWidth)
+			t.AppendRow(table.Row{"All URLs", "", urlString})
 		}
 		bindInfo := []string{}
 		if app.BindAllInterfaces {
