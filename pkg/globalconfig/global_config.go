@@ -128,6 +128,9 @@ func ReadGlobalConfig() error {
 	if err != nil {
 		return err
 	}
+	if DdevGlobalConfig.TableStyle == "" {
+		DdevGlobalConfig.TableStyle = "default"
+	}
 	if DdevGlobalConfig.ProjectList == nil {
 		DdevGlobalConfig.ProjectList = map[string]*ProjectInfo{}
 	}
