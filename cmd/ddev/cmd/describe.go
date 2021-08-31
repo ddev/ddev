@@ -145,12 +145,14 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		// Output our service table.
 		styles.SetGlobalTableStyle(t)
 		tWidth, _ := nodeps.GetTerminalWidthHeight()
-		urlPortWidth := 40
+		urlPortWidth := float64(35)
 		infoWidth := 30
+		urlPortWidthFactor := float64(2.5)
 		if tWidth != 0 {
-			urlPortWidth = tWidth / 2
+			urlPortWidth = float64(tWidth) / urlPortWidthFactor
 			infoWidth = tWidth / 4
 		}
+		t.SetAllowedRowLength(tWidth)
 		t.SetColumnConfigs([]table.ColumnConfig{
 			{
 				Name:     "Service",
@@ -158,7 +160,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			},
 			{
 				Name:     "URL/Port",
-				WidthMax: urlPortWidth,
+				WidthMax: int(urlPortWidth),
 			},
 			{
 				Name:     "Info",
@@ -178,7 +180,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			t.AppendRow(table.Row{"Mailhog", "", fmt.Sprintf("MailHog: %s\n`ddev launch -m`", mailhogURL)})
 			_, _, urls := app.GetAllURLs()
 			s := strings.Join(urls, ", ")
-			urlString := text.WrapSoft(s, urlPortWidth)
+			urlString := text.WrapSoft(s, int(urlPortWidth))
 			t.AppendRow(table.Row{"All URLs", "", urlString})
 		}
 		bindInfo := []string{}
