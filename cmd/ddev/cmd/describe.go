@@ -62,8 +62,32 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 
 	t := table.NewWriter()
 	t.SetOutputMirror(&out)
+	styles.SetGlobalTableStyle(t)
+	tWidth, _ := nodeps.GetTerminalWidthHeight()
+	urlPortWidth := float64(35)
+	infoWidth := 30
+	urlPortWidthFactor := float64(2.5)
+	if tWidth != 0 {
+		urlPortWidth = float64(tWidth) / urlPortWidthFactor
+		infoWidth = tWidth / 4
+	}
+	output.UserOut.Debugf("tWidth=%v urlPortWidth=%v infoWidth=%v", tWidth, urlPortWidth, infoWidth)
+	t.SetAllowedRowLength(tWidth)
+	t.SetColumnConfigs([]table.ColumnConfig{
+		{
+			Name:     "Service",
+			WidthMax: 8,
+		},
+		{
+			Name:     "URL/Port",
+			WidthMax: int(urlPortWidth),
+		},
+		{
+			Name:     "Info",
+			WidthMax: infoWidth,
+		},
+	})
 	t.AppendHeader(table.Row{"Service", "Stat", "URL/Port", "Info"})
-
 	t.AppendRow(table.Row{"Project", "", app.Name, desc["shortroot"].(string)})
 
 	// Only show extended status for running sites.
@@ -141,33 +165,6 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			t.AppendRow(table.Row{k, v["status"], strings.Join(urlPortParts, "\n"), strings.Join(extraInfo, "\n")})
 		}
 
-		// Output our service table.
-		styles.SetGlobalTableStyle(t)
-		tWidth, _ := nodeps.GetTerminalWidthHeight()
-		urlPortWidth := float64(35)
-		infoWidth := 30
-		urlPortWidthFactor := float64(2.5)
-		if tWidth != 0 {
-			urlPortWidth = float64(tWidth) / urlPortWidthFactor
-			infoWidth = tWidth / 4
-		}
-		output.UserOut.Printf("tWidth=%v urlPortWidth=%v infoWidth=%v", tWidth, urlPortWidth, infoWidth)
-		t.SetAllowedRowLength(tWidth)
-		t.SetColumnConfigs([]table.ColumnConfig{
-			{
-				Name:     "Service",
-				WidthMax: 8,
-			},
-			{
-				Name:     "URL/Port",
-				WidthMax: int(urlPortWidth),
-			},
-			{
-				Name:     "Info",
-				WidthMax: infoWidth,
-			},
-		})
-
 		if !ddevapp.IsRouterDisabled(app) {
 			mailhogURL := ""
 			if _, ok := desc["mailhog_url"]; ok {
@@ -194,6 +191,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			t.AppendRow(table.Row{"Network", "", strings.Join(bindInfo, "\n")})
 		}
 	}
+
 	t.Render()
 
 	return out.String(), nil
