@@ -30,7 +30,7 @@ ddev logs -s db [projectname]`,
 
 		projects, err := getRequestedProjects(args, false)
 		if err != nil {
-			util.Failed("Failed to retrieve logs for project(s): %v", err)
+			util.Failed("GetRequestedProjects() failed:  %v", err)
 		}
 		project := projects[0]
 
