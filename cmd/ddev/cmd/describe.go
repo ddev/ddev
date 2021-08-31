@@ -86,8 +86,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		for _, k := range serviceNames {
 			v := serviceMap[k]
 
-			var httpURL = ""
-
+			httpURL := ""
 			urlPortParts := []string{}
 			if !ddevapp.IsRouterDisabled(app) {
 				if httpsURL, ok := v["https_url"]; ok {
