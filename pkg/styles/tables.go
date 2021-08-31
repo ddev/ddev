@@ -4,6 +4,7 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"golang.org/x/term"
+	"os"
 )
 
 var DefaultTableStyle = "StyleLight"
@@ -22,7 +23,7 @@ func GetTableStyle(name string) (style table.Style) {
 
 // SimpleFormattingRequired() returns true if we should not be colorizing/styling text
 func SimpleFormattingRequired() bool {
-	if globalconfig.DdevGlobalConfig.SimpleFormatting || !term.IsTerminal(1) || !term.IsTerminal(0) {
+	if globalconfig.DdevGlobalConfig.SimpleFormatting || !term.IsTerminal(int(os.Stdout.Fd())) {
 		return true
 	}
 	return false

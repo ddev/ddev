@@ -10,7 +10,6 @@ import (
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
-	"golang.org/x/term"
 	"io/fs"
 	"net"
 	"os"
@@ -1494,11 +1493,12 @@ func (app *DdevApp) DockerEnv() {
 	}
 
 	// Find out terminal dimensions
-	columns, lines, err := term.GetSize(0)
-	if err != nil {
+	columns, lines := nodeps.GetTerminalWidthHeight()
+	if columns == 0 {
 		columns = 80
 		lines = 24
 	}
+
 	envVars["COLUMNS"] = strconv.Itoa(columns)
 	envVars["LINES"] = strconv.Itoa(lines)
 
