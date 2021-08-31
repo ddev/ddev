@@ -54,6 +54,8 @@ type GlobalConfig struct {
 	FailOnHookFailGlobal     bool                    `yaml:"fail_on_hook_fail"`
 	WebEnvironment           []string                `yaml:"web_environment"`
 	DisableHTTP2             bool                    `yaml:"disable_http2"`
+	TableStyle               string                  `yaml:"table_style"`
+	SimpleFormatting         bool                    `yaml:"simple_formatting"`
 	ProjectList              map[string]*ProjectInfo `yaml:"project_info"`
 }
 
@@ -76,12 +78,20 @@ func GetMutagenPath() string {
 	return filepath.Join(GetMutagenDir(), mutagenBinary)
 }
 
+// GetTableStyle returns the configured (string) table style
+func GetTableStyle() string {
+	return DdevGlobalConfig.TableStyle
+}
+
 // ValidateGlobalConfig validates global config
 func ValidateGlobalConfig() error {
 	if !IsValidOmitContainers(DdevGlobalConfig.OmitContainersGlobal) {
 		return fmt.Errorf("Invalid omit_containers: %s, must contain only %s", strings.Join(DdevGlobalConfig.OmitContainersGlobal, ","), strings.Join(GetValidOmitContainers(), ",")).(InvalidOmitContainers)
 	}
 
+	if !IsValidTableStyle(DdevGlobalConfig.TableStyle) {
+		DdevGlobalConfig.TableStyle = "default"
+	}
 	return nil
 }
 
@@ -117,6 +127,9 @@ func ReadGlobalConfig() error {
 	err = yaml.Unmarshal(source, &DdevGlobalConfig)
 	if err != nil {
 		return err
+	}
+	if DdevGlobalConfig.TableStyle == "" {
+		DdevGlobalConfig.TableStyle = "default"
 	}
 	if DdevGlobalConfig.ProjectList == nil {
 		DdevGlobalConfig.ProjectList = map[string]*ProjectInfo{}
@@ -172,11 +185,19 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # - SOMEENV=somevalue
 # - SOMEOTHERENV=someothervalue
 
+# Adjust the default table style used in ddev list and describe
+# table_style: default
+# table_style: bold
+# table_style: bright
+
+# Require simpler formatting where possible
+# simpler_formatting: false
+
 # In unusual cases the default value to wait to detect internet availability is too short.
 # You can adjust this value higher to make it less likely that ddev will declare internet
-# unavailable, but ddev may wait longer on some commands. This should not be set below the default 750
+# unavailable, but ddev may wait longer on some commands. This should not be set below the default 1000
 # ddev will ignore low values, as they're not useful
-# internet_detection_timeout_ms: 750
+# internet_detection_timeout_ms: 1000
 
 # You can enable 'ddev start' to be interrupted by a failing hook with
 # fail_on_hook_fail: true
@@ -266,7 +287,7 @@ func GetGlobalDdevDir() string {
 	return ddevDir
 }
 
-// IsValidOmitContainers is a helper function to determine if a the OmitContainers array is valid
+// IsValidOmitContainers is a helper function to determine if the OmitContainers array is valid
 func IsValidOmitContainers(containerList []string) bool {
 	for _, containerName := range containerList {
 		if _, ok := ValidOmitContainers[containerName]; !ok {

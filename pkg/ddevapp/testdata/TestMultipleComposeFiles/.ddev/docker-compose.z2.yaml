@@ -7,6 +7,7 @@ services:
 
   dummy2:
     image: busybox
+    container_name: dummy2
     environment:
     - HTTP_EXPOSE=9201
     - HTTPS_EXPOSE=9202

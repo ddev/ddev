@@ -14,35 +14,37 @@ import (
 )
 
 // AvailableUpdates returns true (along with a release URL) if there is an update available in the specified repo which is newer than the currentVersion string.
-func AvailableUpdates(repoOrg string, repoName string, currentVersion string) (bool, string, error) {
+func AvailableUpdates(repoOrg string, repoName string, currentVersion string) (avail bool, newVersion string, releaseURL string, err error) {
+	newVersion = ""
 	client := github.NewClient(nil)
 	opt := &github.ListOptions{Page: 1}
 	releases, _, err := client.Repositories.ListReleases(context.Background(), repoOrg, repoName, opt)
 	if err != nil {
-		return false, "", err
+		return false, newVersion, "", err
 	}
 
 	if isReleaseVersion(currentVersion) {
 		cv, err := semver.NewVersion(currentVersion)
 		if err != nil {
-			return false, "", err
+			return false, newVersion, "", err
 		}
 		for _, release := range releases {
 			if *release.Prerelease {
 				continue
 			}
-			releaseVersion, err := semver.NewVersion(*release.TagName)
+			newReleaseVersion, err := semver.NewVersion(*release.TagName)
 			if err != nil {
-				return false, "", err
+				return false, newVersion, "", err
 			}
+			newVersion = *release.TagName
 
-			if cv.Compare(releaseVersion) == -1 {
-				return true, *release.HTMLURL, nil
+			if cv.Compare(newReleaseVersion) == -1 {
+				return true, newVersion, *release.HTMLURL, nil
 			}
 		}
 	}
 
-	return false, "", nil
+	return false, newVersion, "", nil
 }
 
 // IsUpdateNeeded returns true if the modification date on filepath is older than the duration specified.
@@ -76,7 +78,7 @@ func ResetUpdateTime(filepath string) error {
 func isReleaseVersion(version string) bool {
 	parts := strings.Split(version, "-")
 
-	if len(parts) > 1 {
+	if len(parts) > 2 || strings.Contains(version, "dirty") || strings.Contains(version, "-g") {
 		return false
 	}
 

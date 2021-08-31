@@ -2,6 +2,7 @@ package ddevapp_test
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"net"
 	"net/url"
@@ -2748,7 +2749,8 @@ func TestListWithoutDir(t *testing.T) {
 	// Make a whole table and make sure our app directory missing shows up.
 	// This could be done otherwise, but we'd have to go find the site in the
 	// array first.
-	table := ddevapp.CreateAppTable()
+	out := bytes.Buffer{}
+	table := ddevapp.CreateAppTable(&out)
 	for _, site := range apps {
 		desc, err := site.Describe(false)
 		if err != nil {
@@ -2757,8 +2759,8 @@ func TestListWithoutDir(t *testing.T) {
 
 		ddevapp.RenderAppRow(table, desc)
 	}
-
-	assert.Regexp(regexp.MustCompile("(?s)"+ddevapp.SiteDirMissing+".*"+testDir), table.String())
+	table.Render()
+	assert.Regexp(regexp.MustCompile("(?s)"+ddevapp.SiteDirMissing+".*"+testDir), out.String())
 
 	err = app.Stop(true, false)
 	assert.NoError(err)

@@ -31,7 +31,8 @@ func TestServices(t *testing.T) {
 	assert := asrt.New(t)
 	os.Setenv("DDEV_NONINTERACTIVE", "true")
 
-	expectedServiceCount := 3
+	// We expect to find web + db + dba + what we add on here
+	expectedServiceCount := 6
 
 	err := globalconfig.ReadGlobalConfig()
 	assert.NoError(err)
@@ -86,8 +87,8 @@ func TestServices(t *testing.T) {
 	desc, err := app.Describe(false)
 	require.NoError(t, err)
 
-	// Make sure desc had 3 services.
-	require.Len(t, desc["extra_services"], expectedServiceCount)
+	// Make sure desc has right number of services.
+	require.Len(t, desc["services"].(map[string]map[string]string), expectedServiceCount)
 
 	// A volume should have been created for solr (only)
 	solrVolume := strings.ToLower("ddev-" + app.Name + "_" + "solr")

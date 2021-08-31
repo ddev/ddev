@@ -7,7 +7,6 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/fatih/color"
 	"github.com/fsouza/go-dockerclient"
 	"html/template"
 	"os"
@@ -166,14 +165,12 @@ func RenderSSHAuthStatus() string {
 	var renderedStatus string
 
 	switch status {
-	case SiteStopped:
-		renderedStatus = color.RedString(status)
 	case "healthy":
-		renderedStatus = color.CyanString(status)
+		renderedStatus = util.ColorizeText(status, "green")
 	case "exited":
 		fallthrough
 	default:
-		renderedStatus = color.RedString(status)
+		renderedStatus = util.ColorizeText(status, "red")
 	}
 	return fmt.Sprintf("\nssh-auth status: %v", renderedStatus)
 }

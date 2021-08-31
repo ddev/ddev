@@ -1,12 +1,13 @@
 package ddevapp
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/fatih/color"
+	"github.com/drud/ddev/pkg/styles"
 	"github.com/fsouza/go-dockerclient"
-	"github.com/gosuri/uitable"
+	"github.com/jedib0t/go-pretty/v6/table"
 	"path"
 	"path/filepath"
 	"sort"
@@ -57,13 +58,12 @@ func GetActiveProjects() []*DdevApp {
 }
 
 // CreateAppTable will create a new app table for describe and list output
-func CreateAppTable() *uitable.Table {
-	table := uitable.New()
-	table.MaxColWidth = 140
-	table.Separator = "  "
-	table.Wrap = true
-	table.AddRow("NAME", "TYPE", "LOCATION", "URL", "STATUS")
-	return table
+func CreateAppTable(out *bytes.Buffer) table.Writer {
+	t := table.NewWriter()
+	t.AppendHeader(table.Row{"Name", "Type", "Location", "URL", "Status"})
+	styles.SetGlobalTableStyle(t)
+	t.SetOutputMirror(out)
+	return t
 }
 
 // RenderHomeRootedDir shortens a directory name to replace homedir with ~
@@ -76,7 +76,7 @@ func RenderHomeRootedDir(path string) string {
 }
 
 // RenderAppRow will add an application row to an existing table for describe and list output.
-func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
+func RenderAppRow(t table.Writer, row map[string]interface{}) {
 	status := fmt.Sprint(row["status"])
 	urls := ""
 	mutagenStatus := ""
@@ -93,42 +93,17 @@ func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
 				mutagenStatus = "not enabled"
 			}
 			if mutagenStatus != "ok" {
-				mutagenStatus = color.RedString(mutagenStatus)
+				mutagenStatus = util.ColorizeText(mutagenStatus, "red")
 			}
 			status = fmt.Sprintf("%s (%s)", status, mutagenStatus)
 		}
 	}
 
-	switch {
-	case strings.Contains(status, SitePaused):
-		status = color.YellowString(status)
-	case strings.Contains(status, SiteStopped):
-		status = color.RedString(status)
-	case strings.Contains(status, SiteDirMissing):
-		status = color.RedString(status)
-	case strings.Contains(status, SiteConfigMissing):
-		status = color.RedString(status)
-	default:
-		status = color.CyanString(status)
-	}
+	status = FormatSiteStatus(status)
 
-	if row["mutagen_enabled"] != true {
-		table.AddRow(
-			row["name"],
-			row["type"],
-			row["shortroot"],
-			urls,
-			status,
-		)
-	} else {
-		table.AddRow(
-			row["name"],
-			row["type"],
-			row["shortroot"],
-			urls,
-			status,
-		)
-	}
+	t.AppendRow(table.Row{
+		row["name"], row["type"], row["shortroot"], urls, status,
+	})
 
 }
 

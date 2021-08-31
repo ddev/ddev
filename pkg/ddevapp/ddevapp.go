@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
-	"golang.org/x/term"
 	"io/fs"
 	"net"
 	"os"
@@ -107,19 +107,18 @@ type DdevApp struct {
 	PHPMyAdminPort        string                `yaml:"phpmyadmin_port,omitempty"`
 	PHPMyAdminHTTPSPort   string                `yaml:"phpmyadmin_https_port,omitempty"`
 	// HostPHPMyAdminPort is normally empty, as it is not normaly bound
-	HostPHPMyAdminPort        string   `yaml:"host_phpmyadmin_port,omitempty"`
-	WebImageExtraPackages     []string `yaml:"webimage_extra_packages,omitempty,flow"`
-	DBImageExtraPackages      []string `yaml:"dbimage_extra_packages,omitempty,flow"`
-	ProjectTLD                string   `yaml:"project_tld,omitempty"`
-	UseDNSWhenPossible        bool     `yaml:"use_dns_when_possible"`
-	MkcertEnabled             bool     `yaml:"-"`
-	NgrokArgs                 string   `yaml:"ngrok_args,omitempty"`
-	Timezone                  string   `yaml:"timezone,omitempty"`
-	ComposerVersion           string   `yaml:"composer_version"`
-	DisableSettingsManagement bool     `yaml:"disable_settings_management,omitempty"`
-	WebEnvironment            []string `yaml:"web_environment"`
-	//Providers                 map[string]*ProviderInfo `yaml:"providers"`
-	ComposeYaml map[string]interface{} `yaml:"-"`
+	HostPHPMyAdminPort        string                 `yaml:"host_phpmyadmin_port,omitempty"`
+	WebImageExtraPackages     []string               `yaml:"webimage_extra_packages,omitempty,flow"`
+	DBImageExtraPackages      []string               `yaml:"dbimage_extra_packages,omitempty,flow"`
+	ProjectTLD                string                 `yaml:"project_tld,omitempty"`
+	UseDNSWhenPossible        bool                   `yaml:"use_dns_when_possible"`
+	MkcertEnabled             bool                   `yaml:"-"`
+	NgrokArgs                 string                 `yaml:"ngrok_args,omitempty"`
+	Timezone                  string                 `yaml:"timezone,omitempty"`
+	ComposerVersion           string                 `yaml:"composer_version"`
+	DisableSettingsManagement bool                   `yaml:"disable_settings_management,omitempty"`
+	WebEnvironment            []string               `yaml:"web_environment"`
+	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
 // List provides the functionality for `ddev list`
@@ -129,6 +128,8 @@ type DdevApp struct {
 func List(activeOnly bool, continuous bool, continuousSleepTime int) {
 	runTime := util.TimeTrack(time.Now(), "ddev list")
 	defer runTime()
+
+	var out bytes.Buffer
 
 	for {
 		apps, err := GetProjects(activeOnly)
@@ -140,16 +141,38 @@ func List(activeOnly bool, continuous bool, continuousSleepTime int) {
 		if len(apps) < 1 {
 			output.UserOut.WithField("raw", appDescs).Println("No ddev projects were found.")
 		} else {
-			table := CreateAppTable()
+			t := CreateAppTable(&out)
 			for _, app := range apps {
 				desc, err := app.Describe(true)
 				if err != nil {
 					util.Error("Failed to describe project %s: %v", app.GetName(), err)
 				}
 				appDescs = append(appDescs, desc)
-				RenderAppRow(table, desc)
+				RenderAppRow(t, desc)
 			}
-			output.UserOut.WithField("raw", appDescs).Print(table.String() + "\n" + RenderRouterStatus())
+
+			routerStatus, _ := GetRouterStatus()
+			var extendedRouterStatus = RenderRouterStatus()
+			if nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, globalconfig.DdevRouterContainer) {
+				extendedRouterStatus = "disabled"
+			}
+			tWidth, _ := nodeps.GetTerminalWidthHeight()
+			t.SetAllowedRowLength(tWidth)
+			t.SortBy([]table.SortBy{{Name: "Name"}})
+			t.AppendFooter(table.Row{
+				"Router", "", routerStatus},
+			)
+			t.Render()
+			output.UserOut.WithField("raw", appDescs).Print(out.String())
+			if routerStatus != "healthy" {
+				rawResult := map[string]string{
+					"routerStatus":         routerStatus,
+					"extendedRouterStatus": extendedRouterStatus,
+				}
+				rawResult["routerStatus"] = routerStatus
+				rawResult["extendedStatus"] = extendedRouterStatus
+				output.UserOut.WithField("raw", rawResult)
+			}
 		}
 
 		if !continuous {
@@ -315,51 +338,74 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["webimg"] = app.WebImage
 	appDesc["dbimg"] = app.GetDBImage()
 	appDesc["dbaimg"] = app.DBAImage
-	appDesc["extra_services"] = map[string]map[string]string{}
+	appDesc["services"] = map[string]map[string]string{}
 
-	if app.ComposeYaml != nil && len(app.ComposeYaml) > 0 {
-		if services, ok := app.ComposeYaml["services"].(map[interface{}]interface{}); ok {
-			extraServices := appDesc["extra_services"].(map[string]map[string]string)
-			for k, v := range services {
-				serviceName := k.(string)
+	containers, err := dockerutil.GetAppContainers(app.Name)
+	if err != nil {
+		return nil, err
+	}
+	services := appDesc["services"].(map[string]map[string]string)
+	for _, k := range containers {
+		serviceName := strings.TrimPrefix(k.Names[0], "/")
+		shortName := strings.Replace(serviceName, fmt.Sprintf("ddev-%s-", app.Name), "", 1)
 
-				// Standard services are handled in other ways; we want custom services only
-				if nodeps.ArrayContainsString([]string{"web", "db", "dba"}, serviceName) {
-					continue
-				}
+		c, err := dockerutil.InspectContainer(serviceName)
+		if err != nil || c == nil {
+			util.Warning("Could not get container info for %s", serviceName)
+			continue
+		}
+		fullName := strings.TrimPrefix(serviceName, "/")
+		services[shortName] = map[string]string{}
+		services[shortName]["status"] = c.State.Status
+		services[shortName]["full_name"] = fullName
+		services[shortName]["image"] = strings.TrimSuffix(c.Config.Image, fmt.Sprintf("-%s-built", app.Name))
+		ports := []string{}
+		for pk := range c.Config.ExposedPorts {
+			ports = append(ports, pk.Port())
+		}
+		services[shortName]["exposed_ports"] = strings.Join(ports, ",")
+		hostPorts := []string{}
+		for _, pv := range k.Ports {
+			if pv.PublicPort != 0 {
+				hostPorts = append(hostPorts, strconv.FormatInt(pv.PublicPort, 10))
+			}
+		}
+		services[shortName]["host_ports"] = strings.Join(hostPorts, ",")
 
-				var svc map[interface{}]interface{}
-				if svc, ok = v.(map[interface{}]interface{}); !ok {
-					continue
-				}
-
-				extraServices[serviceName] = map[string]string{}
-
-				if env, ok := svc["environment"].(map[interface{}]interface{}); ok {
-					// Extract HTTP_EXPOSE and HTTPS_EXPOSE for additional info
-					for envName, envVal := range env {
-						if envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE" {
-							envValStr := fmt.Sprintf("%s", envVal)
-							portSpecs := strings.Split(envValStr, ",")
-							// There might be more than one exposed UI port, but this only handles the first listed,
-							// most often there's only one.
-							if len(portSpecs) > 0 {
-								// HTTPS portSpecs typically look like <exposed>:<containerPort>, for example - HTTPS_EXPOSE=1359:1358
-								ports := strings.Split(portSpecs[0], ":")
-								extraServices[serviceName][envName.(string)] = ports[0]
-								switch envName {
-								case "HTTP_EXPOSE":
-									extraServices[serviceName]["http_url"] = "http://" + appDesc["hostname"].(string) + ":" + ports[0]
-								case "HTTPS_EXPOSE":
-									extraServices[serviceName]["https_url"] = "https://" + appDesc["hostname"].(string) + ":" + ports[0]
-								}
+		// Extract HTTP_EXPOSE and HTTPS_EXPOSE for additional info
+		if !IsRouterDisabled(app) {
+			for _, e := range c.Config.Env {
+				split := strings.SplitN(e, "=", 2)
+				envName := split[0]
+				envVal := split[1]
+				if envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE" {
+					envValStr := fmt.Sprintf("%s", envVal)
+					portSpecs := strings.Split(envValStr, ",")
+					// There might be more than one exposed UI port, but this only handles the first listed,
+					// most often there's only one.
+					if len(portSpecs) > 0 {
+						// HTTPS portSpecs typically look like <exposed>:<containerPort>, for example - HTTPS_EXPOSE=1359:1358
+						ports := strings.Split(portSpecs[0], ":")
+						//services[shortName][envName.(string)] = ports[0]
+						switch envName {
+						case "HTTP_EXPOSE":
+							services[shortName]["http_url"] = "http://" + appDesc["hostname"].(string)
+							if ports[0] != "80" {
+								services[shortName]["http_url"] = services[shortName]["http_url"] + ":" + ports[0]
+							}
+						case "HTTPS_EXPOSE":
+							services[shortName]["https_url"] = "https://" + appDesc["hostname"].(string)
+							if ports[0] != "443" {
+								services[shortName]["https_url"] = services[shortName]["https_url"] + ":" + ports[0]
 							}
 						}
 					}
 				}
-				// TODO: Handle volume names so they can be deleted on ddev destroy
-				// TODO: Show host port access, preferably exposed port. Might require docker inspect?
 			}
+		}
+		if shortName == "web" {
+			services[shortName]["host_http_url"] = app.GetWebContainerDirectHTTPURL()
+			services[shortName]["host_https_url"] = app.GetWebContainerDirectHTTPSURL()
 		}
 	}
 
@@ -1453,11 +1499,12 @@ func (app *DdevApp) DockerEnv() {
 	}
 
 	// Find out terminal dimensions
-	columns, lines, err := term.GetSize(0)
-	if err != nil {
+	columns, lines := nodeps.GetTerminalWidthHeight()
+	if columns == 0 {
 		columns = 80
 		lines = 24
 	}
+
 	envVars["COLUMNS"] = strconv.Itoa(columns)
 	envVars["LINES"] = strconv.Itoa(lines)
 
@@ -1828,6 +1875,12 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		return fmt.Errorf("failed to process pre-stop hooks: %v", err)
 	}
 
+	// Describe the app before we destroy everything
+	desc, err := app.Describe(false)
+	if err != nil {
+		util.Warning("could not run app.Describe(): %v", err)
+	}
+
 	if createSnapshot == true {
 		if app.SiteStatus() != SiteRunning {
 			util.Warning("Must start non-running project to do database snapshot")
@@ -1876,19 +1929,15 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 				util.Success("Volume %s for project %s was deleted", volName, app.Name)
 			}
 		}
-		desc, err := app.Describe(false)
-		if err != nil {
-			util.Warning("could not run app.Describe(): %v", err)
-		}
-		for extraService := range desc["extra_services"].(map[string]map[string]string) {
+		for s := range desc["services"].(map[string]map[string]string) {
 			// volName default if name: is not specified is ddev-<project>_volume
-			volName := strings.ToLower("ddev-" + app.Name + "_" + extraService)
+			volName := strings.ToLower("ddev-" + app.Name + "_" + s)
 			if dockerutil.VolumeExists(volName) {
 				err = dockerutil.RemoveVolume(volName)
 				if err != nil {
 					util.Warning("could not remove volume %s: %v", volName, err)
 				} else {
-					util.Success("Deleting third-party persistent volume %s for service %s...", volName, extraService)
+					util.Success("Deleting third-party persistent volume %s for service %s...", volName, s)
 				}
 			}
 		}
@@ -2309,4 +2358,22 @@ func (app *DdevApp) StartAppIfNotRunning() error {
 // GetDBHostname gets the in-container hostname of the DB container
 func GetDBHostname(app *DdevApp) string {
 	return "ddev-" + app.Name + "-db"
+}
+
+// FormatSiteStatus formats "paused" or "running" with color
+func FormatSiteStatus(status string) string {
+	if status == SiteRunning {
+		status = "OK"
+	}
+	formattedStatus := status
+
+	switch {
+	case strings.Contains(status, SitePaused):
+		formattedStatus = util.ColorizeText(formattedStatus, "yellow")
+	case strings.Contains(status, SiteStopped) || strings.Contains(status, SiteDirMissing) || strings.Contains(status, SiteConfigMissing):
+		formattedStatus = util.ColorizeText(formattedStatus, "red")
+	default:
+		formattedStatus = util.ColorizeText(formattedStatus, "green")
+	}
+	return formattedStatus
 }

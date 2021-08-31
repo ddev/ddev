@@ -6,6 +6,7 @@ import (
 
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
@@ -19,7 +20,6 @@ import (
 	"unicode"
 
 	"github.com/drud/ddev/pkg/output"
-	"github.com/fatih/color"
 )
 
 func init() {
@@ -58,7 +58,7 @@ func Warning(format string, a ...interface{}) {
 
 // Success will indicate an operation succeeded with colored confirmation text.
 func Success(format string, a ...interface{}) {
-	format = color.CyanString(format)
+	format = ColorizeText(format, "green")
 	if a != nil {
 		output.UserOut.Infof(format, a...)
 	} else {
@@ -265,4 +265,24 @@ func IsBeforeCutoffTime(cutoff string) bool {
 		return true
 	}
 	return false
+}
+
+func DisableColors() {
+	text.DisableColors()
+}
+
+// ColorizeText colorizes text unless SimpleFormatting is turned on
+func ColorizeText(s string, c string) (out string) {
+	if globalconfig.DdevGlobalConfig.SimpleFormatting {
+		text.DisableColors()
+	}
+	switch c {
+	case "green":
+		out = text.FgGreen.Sprint(s)
+	case "red":
+		out = text.FgRed.Sprint(s)
+	case "yellow":
+		out = text.FgYellow.Sprint(s)
+	}
+	return out
 }

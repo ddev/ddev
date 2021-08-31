@@ -342,7 +342,7 @@ func DownloadMutagenIfNeeded(app *DdevApp) error {
 	if !app.MutagenEnabled || app.MutagenEnabledGlobal {
 		return nil
 	}
-	curVersion, err := version.GetMutagenVersion()
+	curVersion, err := version.GetLiveMutagenVersion()
 	if err != nil || curVersion != nodeps.RequiredMutagenVersion {
 		err = DownloadMutagen()
 		if err != nil {
@@ -424,7 +424,7 @@ func (app *DdevApp) GenerateMutagenYml() error {
 func IsMutagenVolumeMounted(app *DdevApp) (bool, error) {
 	client := dockerutil.GetDockerClient()
 	container, err := dockerutil.FindContainerByName("ddev-" + app.Name + "-web")
-	// If there is no web container, to volume is not mounted
+	// If there is no web container found, the volume is not mounted
 	if err != nil || container == nil {
 		return false, nil
 	}
