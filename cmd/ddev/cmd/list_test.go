@@ -32,15 +32,15 @@ func TestCmdList(t *testing.T) {
 	// This gratuitous ddev start -a repopulates the ~/.ddev/global_config.yaml
 	// project list, which has been damaged by other tests which use
 	// direct app techniques.
-	_, err = exec.RunCommand(DdevBin, []string{"start", "-a", "-y"})
+	_, err = exec.RunHostCommand(DdevBin, "start", "-a", "-y")
 	assert.NoError(err)
 
 	// Execute "ddev list" and harvest plain text output.
-	out, err := exec.RunCommand(DdevBin, []string{"list"})
+	out, err := exec.RunHostCommand(DdevBin, "list")
 	assert.NoError(err, "error runnning ddev list: %v output=%s", out)
 
 	// Execute "ddev list -j" and harvest the json output
-	jsonOut, err := exec.RunCommand(DdevBin, []string{"list", "-j"})
+	jsonOut, err := exec.RunHostCommand(DdevBin, "list", "-j")
 	assert.NoError(err, "error running ddev list -j: %v, output=%s", jsonOut)
 
 	siteList := getTestingSitesFromList(t, jsonOut)
@@ -82,28 +82,25 @@ func TestCmdList(t *testing.T) {
 	}
 
 	// Stop the first app
-	out, err = exec.RunCommand(DdevBin, []string{"stop", TestSites[0].Name})
-	t.Logf("Stopped first project with ddev stop %s", TestSites[0].Name)
+	out, err = exec.RunHostCommand(DdevBin, "stop", TestSites[0].Name)
 	assert.NoError(err, "error runnning ddev stop %v: %v output=%s", TestSites[0].Name, err, out)
 
 	// Execute "ddev list" and harvest json output.
 	// Now there should be one less active project in list
-	jsonOut, err = exec.RunCommand(DdevBin, []string{"list", "-jA"})
+	jsonOut, err = exec.RunHostCommand(DdevBin, "list", "-jA")
 	assert.NoError(err, "error runnning ddev list: %v output=%s", err, jsonOut)
 
 	siteList = getTestingSitesFromList(t, jsonOut)
 	assert.Equal(len(TestSites)-1, len(siteList))
-	t.Logf("test projects active with ddev list -jA: %v", siteList)
 
 	// Now list without -A, make sure we show all projects
-	jsonOut, err = exec.RunCommand(DdevBin, []string{"list", "-j"})
+	jsonOut, err = exec.RunHostCommand(DdevBin, "list", "-j")
 	assert.NoError(err, "error runnning ddev list: %v output=%s", err, out)
 	siteList = getTestingSitesFromList(t, jsonOut)
 	assert.Equal(len(TestSites), len(siteList))
-	t.Logf("test projects (including inactive) shown with ddev list -j: %v", siteList)
 
 	// Leave firstApp running for other tests
-	out, err = exec.RunCommand(DdevBin, []string{"start", "-y", TestSites[0].Name})
+	out, err = exec.RunHostCommand(DdevBin, "start", "-y", TestSites[0].Name)
 	assert.NoError(err, "error runnning ddev start: %v output=%s", err, out)
 }
 

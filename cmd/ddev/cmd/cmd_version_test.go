@@ -25,7 +25,7 @@ func TestCmdVersion(t *testing.T) {
 	raw, ok := versionData["raw"].(map[string]interface{})
 	require.True(t, ok, "raw section wasn't found in versioninfo %v", out)
 
-	assert.Equal(version.DdevVersion, raw["DDEV-Local version"])
+	assert.Equal(version.DdevVersion, raw["DDEV version"])
 	assert.Equal(version.WebImg+":"+version.WebTag, raw["web"])
 	assert.Equal(version.GetDBImage(nodeps.MariaDB), raw["db"])
 	assert.Equal(version.GetDBAImage(), raw["dba"])
