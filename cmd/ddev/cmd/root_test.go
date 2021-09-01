@@ -290,11 +290,11 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 
 	app, err := ddevapp.GetActiveApp("")
 	require.NoError(t, err)
-	oldTime, _, err := app.Exec(&ddevapp.ExecOpts{
+	oldTime, stderr, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     "date +%s",
 	})
-	require.NoError(t, err)
+	require.NoError(t, err, "failed to run exec: %v, output=%s, stderr=", err, oldTime, stderr)
 	oldTime = strings.Trim(oldTime, "\n")
 	oldTimeInt, err := strconv.ParseInt(oldTime, 10, 64)
 	require.NoError(t, err)

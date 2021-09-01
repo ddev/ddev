@@ -446,7 +446,7 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 
 	err = proc.Wait()
 	if err != nil {
-		return stdout.String(), stderr, fmt.Errorf("Failed to run docker-compose %v, err='%v', stdout='%s', stderr='%s'", arg, err, stdout.String(), stderr)
+		return stdout.String(), stderr, fmt.Errorf("ComposeCmd failed to run 'COMPOSE_PROJECT_NAME=%s docker-compose %v', action='%v', err='%v', stdout='%s', stderr='%s'", os.Getenv("COMPOSE_PROJECT_NAME"), strings.Join(arg, " "), action, err, stdout.String(), stderr)
 	}
 	return stdout.String(), stderr, nil
 }
