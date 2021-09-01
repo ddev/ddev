@@ -1,12 +1,14 @@
 #!/bin/bash
 # This script is used to build drud/ddev using buildkite
 
+# Temporarily allow compose v2
+export DDEV_ALLOW_COMPOSE_V2=true
 docker-compose enable-v2
 
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 
 # Remove this when docker-compose v2 starts working
-docker-compose disable-v2 || true
+#docker-compose disable-v2 || true
 
 echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} in ${PWD} with golang=$(go version | awk '{print $3}') docker-desktop=$(scripts/docker-desktop-version.sh) docker=$(docker --version | awk '{print $3}') and docker-compose $(docker-compose --version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}'))"
 
