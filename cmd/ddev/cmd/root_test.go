@@ -294,7 +294,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 		Service: "web",
 		Cmd:     "date +%s",
 	})
-	require.NoError(t, err, "failed to run exec: %v, output=%s, stderr=", err, oldTime, stderr)
+	require.NoError(t, err, "failed to run exec: %v, output='%s', stderr='%s'", err, oldTime, stderr)
 	oldTime = strings.Trim(oldTime, "\n")
 	oldTimeInt, err := strconv.ParseInt(oldTime, 10, 64)
 	require.NoError(t, err)
