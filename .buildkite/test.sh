@@ -10,7 +10,7 @@ export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 # Remove this when docker-compose v2 starts working
 #docker-compose disable-v2 || true
 
-echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} in ${PWD} with golang=$(go version | awk '{print $3}') docker-desktop=$(scripts/docker-desktop-version.sh) docker=$(docker --version | awk '{print $3}') and docker-compose $(docker-compose --version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}'))"
+echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} in ${PWD} with golang=$(go version | awk '{print $3}') docker-desktop=$(scripts/docker-desktop-version.sh) docker=$(docker --version | awk '{print $3}') and $(docker-compose --version) ddev version=$(ddev --version | awk '{print $3}'))"
 
 export GOTEST_SHORT=1
 export DDEV_NONINTERACTIVE=true
