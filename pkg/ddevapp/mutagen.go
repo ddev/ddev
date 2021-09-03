@@ -315,12 +315,20 @@ func DownloadMutagen() error {
 	if runtime.GOOS == "darwin" {
 		mutagenURL = fmt.Sprintf("https://github.com/drud/mutagen/releases/download/v%s/mutagen_%s_v%s.tar.gz", nodeps.RequiredMutagenVersion, flavor, nodeps.RequiredMutagenVersion)
 	}
-	output.UserOut.Printf("Downloading %s", mutagenURL)
+	output.UserOut.Printf("Downloading %s ...", mutagenURL)
+
+	// Remove the existing file. This may help on macOS to prevent the Gatekeeper's
+	// caching bug from confusing with a previously downloaded file?
+	// Discussion in https://github.com/mutagen-io/mutagen/issues/290#issuecomment-906612749
+	_ = os.Remove(destFile)
+
 	_ = os.MkdirAll(globalMutagenDir, 0777)
-	err := util.DownloadFile(destFile, mutagenURL, true)
+	err := util.DownloadFile(destFile, mutagenURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"))
 	if err != nil {
 		return err
 	}
+	output.UserOut.Printf("Download complete.")
+
 	err = archive.Untar(destFile, globalMutagenDir, "")
 	_ = os.Remove(destFile)
 	if err != nil {
