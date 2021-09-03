@@ -320,7 +320,7 @@ func DownloadMutagen() error {
 	// Remove the existing file. This may help on macOS to prevent the Gatekeeper's
 	// caching bug from confusing with a previously downloaded file?
 	// Discussion in https://github.com/mutagen-io/mutagen/issues/290#issuecomment-906612749
-	_ = os.Remove(destFile)
+	_ = os.Remove(globalconfig.GetMutagenPath())
 
 	_ = os.MkdirAll(globalMutagenDir, 0777)
 	err := util.DownloadFile(destFile, mutagenURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"))
