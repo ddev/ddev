@@ -11,3 +11,20 @@
 ### Running any PHP App with DDEV
 
 Nearly any PHP app will run fine with DDEV, and lots of others. If your project type is not one of the explicitly supported project types, that's fine. Just set the project type to 'php' and go about setting up settings files or .env as you normally would.
+
+### DDEV-managed Files
+
+These files created by DDEV are also updated and managed by DDEV by default.  If this is changed, you will receive the message "settings.ddev.php already exists and is managed by the user."
+
+If you wish to return it to being managed by DDEV, you can restore DDEV management by adding `#ddev-generated` in a comment at the top of the file, like so:
+
+```php
+<?php
+
+/**
+ * @file
+ * #ddev-generated: Automatically generated Drupal settings file.
+ * ddev manages this file and may delete or overwrite the file unless this
+ * comment is removed.  It is recommended that you leave this file alone.
+ */
+```
