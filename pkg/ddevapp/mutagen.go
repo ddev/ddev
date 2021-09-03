@@ -65,12 +65,24 @@ func TerminateMutagenSync(app *DdevApp) error {
 func SyncAndTerminateMutagenSession(app *DdevApp) error {
 	syncName := MutagenSyncName(app.Name)
 
+	projStatus := app.SiteStatus()
+
 	if !MutagenSyncExists(app) {
 		return nil
 	}
-	err := app.MutagenSyncFlush()
+
+	mutagenStatus, shortResult, longResult, err := app.MutagenStatus()
 	if err != nil {
-		util.Error("Error on 'mutagen sync flush %s': %v", syncName, err)
+		return fmt.Errorf("MutagenStatus failed, rv=%v, shortResult=%s, longResult=%s, err=%v", mutagenStatus, shortResult, longResult, err)
+	}
+
+	// We don't want to flush if the web container isn't running
+	// because mutagen flush will hang forever - disconnected
+	if projStatus == SiteRunning && !strings.Contains(longResult, "Connection state: Disconnected") {
+		err := app.MutagenSyncFlush()
+		if err != nil {
+			util.Error("Error on 'mutagen sync flush %s': %v", syncName, err)
+		}
 	}
 	err = TerminateMutagenSync(app)
 	if err != nil {
@@ -235,7 +247,7 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, longResu
 	}
 	if strings.Contains(longResult, "problems") || strings.Contains(longResult, "Conflicts") || strings.Contains(longResult, "error") || strings.Contains(shortResult, "Halted") || strings.Contains(shortResult, "Waiting 5 seconds for rescan") || strings.Contains(longResult, "raw POSIX symbolic links not supported") {
 		util.Error("mutagen sync session '%s' is not working correctly: %s", syncName, longResult)
-		return "failing", shortResult, longResult, errors.Errorf("mutagen sync session '%s' is not working correctly, use 'mutagen sync list %s' for details", syncName, syncName)
+		return "failing", shortResult, longResult, nil
 	}
 	return "ok", shortResult, longResult, nil
 }
