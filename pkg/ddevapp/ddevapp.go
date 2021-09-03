@@ -1003,6 +1003,7 @@ func (app *DdevApp) Start() error {
 			util.Failed("Mutagen docker volume is not mounted. Please use `ddev restart`")
 		}
 		output.UserOut.Printf("Starting mutagen sync process... This can take some time.")
+		mutagenDuration := util.ElapsedDuration(time.Now())
 		err = app.GenerateMutagenYml()
 		if err != nil {
 			return err
@@ -1011,7 +1012,6 @@ func (app *DdevApp) Start() error {
 		if err != nil {
 			return err
 		}
-		mutagenDuration := util.ElapsedDuration(time.Now())
 		err = CreateMutagenSync(app)
 		if err != nil {
 			return errors.Errorf("Failed to create mutagen sync session %s. You may be able to resolve this problem with 'ddev stop %s && docker volume rm %s' (err=%v)", MutagenSyncName(app.Name), app.Name, GetMutagenVolumeName(app), err)
