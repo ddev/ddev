@@ -73,7 +73,7 @@ func TestMutagenSimple(t *testing.T) {
 	assert.Contains(stderr, "cannot access '/var/www/html/vendor'")
 
 	// Now composer install again and make sure all the stuff comes back
-	stdout, stderr, err := app.Composer([]string{"install"})
+	stdout, stderr, err := app.Composer([]string{"install", "--no-progress", "--no-interaction"})
 	assert.NoError(err)
 	t.Logf("composer install output: \nstdout: %s\n\nstderr: %s\n", stdout, stderr)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
