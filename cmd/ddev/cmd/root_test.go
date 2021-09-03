@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
@@ -261,6 +262,9 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	// Change the homedir temporarily
 	err = os.Setenv("HOME", tmpGlobal)
 	assert.NoError(err)
+
+	// docker-compose v2 is dependent on the ~/.docker directory
+	_ = fileutil.CopyDir(filepath.Join(origHome, ".docker"), filepath.Join(tmpGlobal, ".docker"))
 
 	t.Cleanup(
 		func() {
