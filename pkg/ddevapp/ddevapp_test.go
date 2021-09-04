@@ -750,6 +750,9 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		listener, err := net.Listen("tcp", listenPort)
 		require.NoError(t, err)
 
+		// Curl to the project's phpinfo.php with 1s timeout, we don't care about result
+		_, _, _ = testcommon.GetLocalHTTPResponse(t, curlURL, 1)
+
 		// Accept is blocking, no way to timeout, so use
 		// goroutine instead.
 		acceptListenDone := make(chan bool, 1)
@@ -769,9 +772,6 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			assert.Contains(lineString, `xdebug:language_version="`+v)
 			acceptListenDone <- true
 		}()
-
-		// Curl to the project's phpinfo.php with 1s timeout, we don't care about result
-		_, _, _ = testcommon.GetLocalHTTPResponse(t, curlURL, 1)
 
 		select {
 		case <-acceptListenDone:
