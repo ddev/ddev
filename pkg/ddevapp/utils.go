@@ -1,11 +1,9 @@
 package ddevapp
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/styles"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"path"
@@ -55,15 +53,6 @@ func GetActiveProjects() []*DdevApp {
 	}
 
 	return apps
-}
-
-// CreateAppTable will create a new app table for describe and list output
-func CreateAppTable(out *bytes.Buffer) table.Writer {
-	t := table.NewWriter()
-	t.AppendHeader(table.Row{"Name", "Type", "Location", "URL", "Status"})
-	styles.SetGlobalTableStyle(t)
-	t.SetOutputMirror(out)
-	return t
 }
 
 // RenderHomeRootedDir shortens a directory name to replace homedir with ~
