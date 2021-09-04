@@ -2336,7 +2336,9 @@ func (app *DdevApp) GetWorkingDir(service string, dir string) string {
 func (app *DdevApp) GetNFSMountVolumeName() string {
 	// This is lowercased because the automatic naming in docker-compose v1/2
 	// defaulted to lowercase the name
-	return strings.ToLower("ddev-" + app.Name + "_nfsmount")
+	// Although some volume names are auto-lowercased by docker, this one
+	// is explicitly specified by us and is not lowercased.
+	return "ddev-" + app.Name + "_nfsmount"
 }
 
 // GetMariaDBVolumeName returns the docker volume name of the mariadb/database volume

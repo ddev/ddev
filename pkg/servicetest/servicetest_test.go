@@ -91,8 +91,7 @@ func TestServices(t *testing.T) {
 	require.Len(t, desc["services"].(map[string]map[string]string), expectedServiceCount)
 
 	// A volume should have been created for solr (only)
-	solrVolume := strings.ToLower("ddev-" + app.Name + "_" + "solr")
-	assert.True(dockerutil.VolumeExists(solrVolume), "solr volume %s does not exist", solrVolume)
+	assert.True(dockerutil.VolumeExists(strings.ToLower("ddev-" + app.Name + "_" + "solr")))
 
 	err = app.Stop(true, false)
 	assert.NoError(err)

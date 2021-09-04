@@ -1,7 +1,8 @@
 module github.com/drud/ddev
 
 require (
-	github.com/Masterminds/semver v1.4.2
+	github.com/Masterminds/semver v1.5.0 // indirect
+	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/Masterminds/sprig v2.15.0+incompatible
 	github.com/Microsoft/hcsshim v0.8.21 // indirect
 	github.com/aokoli/goutils v1.0.1 // indirect

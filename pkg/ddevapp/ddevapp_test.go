@@ -531,8 +531,10 @@ func TestDdevStartUnmanagedSettings(t *testing.T) {
 	// Use Drupal9 as it is a good target for composer failures
 	site := FullTestSites[8]
 	// We will create directory from scratch, as we'll be removing files and changing it.
+
 	app := &ddevapp.DdevApp{Name: site.Name}
 	_ = app.Stop(true, false)
+
 	_ = globalconfig.RemoveProjectInfo(site.Name)
 	err := site.Prepare()
 	require.NoError(t, err)

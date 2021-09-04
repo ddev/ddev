@@ -1,12 +1,16 @@
 #!/bin/bash
 # This script is used to build drud/ddev using buildkite
 
+# Use docker-compose v2 on WSL2 to make sure we get testing on it
+if [ ! -z "${WSL_DISTRO_NAME:-}" ]; then
+  docker-compose enable-v2
+else
+  docker-compose disable-v2
+fi
+
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 
-# Remove this when docker-compose v2 starts working
-docker-compose disable-v2 || true
-
-echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} in ${PWD} with golang=$(go version | awk '{print $3}') docker-desktop=$(scripts/docker-desktop-version.sh) docker=$(docker --version | awk '{print $3}') and docker-compose $(docker-compose --version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}'))"
+echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} in ${PWD} with golang=$(go version | awk '{print $3}') docker-desktop=$(scripts/docker-desktop-version.sh) docker=$(docker --version | awk '{print $3}') and $(docker-compose --version) ddev version=$(ddev --version | awk '{print $3}'))"
 
 export GOTEST_SHORT=1
 export DDEV_NONINTERACTIVE=true
@@ -94,4 +98,6 @@ make test
 RV=$?
 echo "test.sh completed with status=$RV"
 ddev poweroff || true
+
+docker-compose disable-v2
 exit $RV

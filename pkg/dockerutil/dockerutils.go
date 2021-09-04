@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/archive"
 	exec2 "github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
@@ -23,7 +22,7 @@ import (
 
 	"net/url"
 
-	"github.com/Masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/fsouza/go-dockerclient"
 )
@@ -446,7 +445,7 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 
 	err = proc.Wait()
 	if err != nil {
-		return stdout.String(), stderr, fmt.Errorf("Failed to run docker-compose %v, err='%v', stdout='%s', stderr='%s'", arg, err, stdout.String(), stderr)
+		return stdout.String(), stderr, fmt.Errorf("ComposeCmd failed to run 'COMPOSE_PROJECT_NAME=%s docker-compose %v', action='%v', err='%v', stdout='%s', stderr='%s'", os.Getenv("COMPOSE_PROJECT_NAME"), strings.Join(arg, " "), action, err, stdout.String(), stderr)
 	}
 	return stdout.String(), stderr, nil
 }
@@ -523,9 +522,6 @@ func CheckDockerCompose() error {
 	runTime := util.TimeTrack(time.Now(), "CheckDockerComposeVersion()")
 	defer runTime()
 
-	if globalconfig.DdevAllowComposeV2 {
-		version.DockerComposeVersionConstraint = ">= 1.25.0-alpha1"
-	}
 	versionConstraint := version.DockerComposeVersionConstraint
 
 	v, err := version.GetDockerComposeVersion()
@@ -545,14 +541,6 @@ func CheckDockerCompose() error {
 	match, errs := constraint.Validate(dockerComposeVersion)
 	if !match {
 		if len(errs) <= 1 {
-			// TODO: Remove these lines when docker-compose v2 starts working
-			// Probably this commit can be reverted at that time.
-			if !globalconfig.DdevAllowComposeV2 {
-				v2Constraint, _ := semver.NewConstraint("< 2.0.0")
-				if m, _ := v2Constraint.Validate(dockerComposeVersion); !m {
-					util.Error("You have docker-compose v2 and it is not yet stable enough to use with ddev.\nPlease uncheck the 'Use Docker Compose V2' experimental feature\nin Docker Desktop, or run 'docker-compose disable-v2'")
-				}
-			}
 			return errs[0]
 		}
 

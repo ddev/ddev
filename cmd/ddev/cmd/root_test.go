@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
@@ -262,6 +263,9 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	err = os.Setenv("HOME", tmpGlobal)
 	assert.NoError(err)
 
+	// docker-compose v2 is dependent on the ~/.docker directory
+	_ = fileutil.CopyDir(filepath.Join(origHome, ".docker"), filepath.Join(tmpGlobal, ".docker"))
+
 	t.Cleanup(
 		func() {
 			_, err := exec.RunHostCommand(DdevBin, "poweroff")
@@ -290,11 +294,11 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 
 	app, err := ddevapp.GetActiveApp("")
 	require.NoError(t, err)
-	oldTime, _, err := app.Exec(&ddevapp.ExecOpts{
+	oldTime, stderr, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     "date +%s",
 	})
-	require.NoError(t, err)
+	require.NoError(t, err, "failed to run exec: %v, output='%s', stderr='%s'", err, oldTime, stderr)
 	oldTime = strings.Trim(oldTime, "\n")
 	oldTimeInt, err := strconv.ParseInt(oldTime, 10, 64)
 	require.NoError(t, err)

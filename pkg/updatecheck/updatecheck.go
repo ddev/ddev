@@ -8,7 +8,7 @@ import (
 
 	"os"
 
-	"github.com/Masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/google/go-github/github"
 )
