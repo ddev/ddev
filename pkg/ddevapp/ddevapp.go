@@ -1438,10 +1438,6 @@ func (app *DdevApp) DockerEnv() {
 
 	// Find out terminal dimensions
 	columns, lines := nodeps.GetTerminalWidthHeight()
-	if columns == 0 {
-		columns = 80
-		lines = 24
-	}
 
 	envVars["COLUMNS"] = strconv.Itoa(columns)
 	envVars["LINES"] = strconv.Itoa(lines)
