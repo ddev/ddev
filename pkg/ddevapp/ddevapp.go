@@ -158,6 +158,7 @@ func List(activeOnly bool, continuous bool, continuousSleepTime int) {
 			}
 			tWidth, _ := nodeps.GetTerminalWidthHeight()
 			t.SetAllowedRowLength(tWidth)
+			util.Debug("detected terminal width=%v", tWidth)
 			t.SortBy([]table.SortBy{{Name: "Name"}})
 			t.AppendFooter(table.Row{
 				"Router", "", routerStatus},

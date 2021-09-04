@@ -71,7 +71,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		urlPortWidth = float64(tWidth) / urlPortWidthFactor
 		infoWidth = tWidth / 4
 	}
-	output.UserOut.Debugf("tWidth=%v urlPortWidth=%v infoWidth=%v", tWidth, urlPortWidth, infoWidth)
+	util.Debug("detected terminal width=%v urlPortWidth=%v infoWidth=%v", tWidth, urlPortWidth, infoWidth)
 	t.SetAllowedRowLength(tWidth)
 	t.SetColumnConfigs([]table.ColumnConfig{
 		{
