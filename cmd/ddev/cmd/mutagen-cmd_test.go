@@ -44,13 +44,13 @@ func TestCmdMutagen(t *testing.T) {
 		assert.NoError(err)
 		err = app.Start()
 		assert.NoError(err)
-		assert.False(app.MutagenEnabled)
+		assert.False(app.IsMutagenEnabled())
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 	})
 
 	require.False(t, globalconfig.DdevGlobalConfig.MutagenEnabledGlobal)
-	require.False(t, app.MutagenEnabled)
+	require.False(t, app.IsMutagenEnabled())
 
 	_, err = exec.RunHostCommand(DdevBin, "config", "--mutagen-enabled=true")
 	assert.NoError(err)
@@ -60,7 +60,7 @@ func TestCmdMutagen(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make sure it got turned on
-	assert.True(app.MutagenEnabled)
+	assert.True(app.IsMutagenEnabled())
 
 	// Now test subcommands. Wait just a bit for mutagen to get completely done, with transition problems sorted outx
 	err = app.StartAndWait(10)
@@ -94,7 +94,7 @@ func TestCmdMutagen(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make sure it got turned off
-	assert.False(app.MutagenEnabled)
+	assert.False(app.IsMutagenEnabled())
 
 	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--mutagen-enabled=true")
 	assert.NoError(err)

@@ -257,8 +257,8 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["router_disabled"] = IsRouterDisabled(app)
 	appDesc["primary_url"] = app.GetPrimaryURL()
 	appDesc["type"] = app.GetType()
-	appDesc["mutagen_enabled"] = app.MutagenEnabled || app.MutagenEnabledGlobal
-	if app.MutagenEnabled {
+	appDesc["mutagen_enabled"] = app.IsMutagenEnabled()
+	if app.IsMutagenEnabled() {
 		appDesc["mutagen_status"], _, _, err = app.MutagenStatus()
 		if err != nil {
 			appDesc["mutagen_status"] = err.Error() + " " + appDesc["mutagen_status"].(string)
@@ -271,7 +271,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	}
 	appDesc["hostname"] = app.GetHostname()
 	appDesc["hostnames"] = app.GetHostnames()
-	appDesc["nfs_mount_enabled"] = (app.NFSMountEnabled || app.NFSMountEnabledGlobal) && !(app.MutagenEnabled || app.MutagenEnabledGlobal)
+	appDesc["nfs_mount_enabled"] = (app.NFSMountEnabled || app.NFSMountEnabledGlobal) && !(app.IsMutagenEnabled())
 	appDesc["fail_on_hook_fail"] = app.FailOnHookFail || app.FailOnHookFailGlobal
 	httpURLs, httpsURLs, allURLs := app.GetAllURLs()
 	appDesc["httpURLs"] = httpURLs
@@ -994,7 +994,7 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	if app.MutagenEnabled || app.MutagenEnabledGlobal {
+	if app.IsMutagenEnabled() {
 		mounted, err := IsMutagenVolumeMounted(app)
 		if err != nil {
 			return err

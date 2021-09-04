@@ -35,7 +35,7 @@ func TestCmdImportDB(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	if app.MutagenEnabled || app.MutagenEnabledGlobal {
+	if app.IsMutagenEnabled() {
 		_, _, longStatus, _ := app.MutagenStatus()
 		t.Logf("mutagen status before show tables=%s", longStatus)
 	}
@@ -48,7 +48,7 @@ func TestCmdImportDB(t *testing.T) {
 	assert.NoError(err, "mysql exec output=%s", out)
 	require.Equal(t, "", out)
 
-	if app.MutagenEnabled || app.MutagenEnabledGlobal {
+	if app.IsMutagenEnabled() {
 		_, _, longStatus, _ := app.MutagenStatus()
 		t.Logf("mutagen status before opening file=%s", longStatus)
 	}
@@ -60,7 +60,7 @@ func TestCmdImportDB(t *testing.T) {
 	// nolint: errcheck
 	defer f.Close()
 
-	if app.MutagenEnabled || app.MutagenEnabledGlobal {
+	if app.IsMutagenEnabled() {
 		_, _, longStatus, _ := app.MutagenStatus()
 		t.Logf("mutagen status before import-db=%s", longStatus)
 	}
