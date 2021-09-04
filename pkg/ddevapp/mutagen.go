@@ -397,7 +397,10 @@ func MutagenMonitor(app *DdevApp) {
 
 	// This doesn't actually return; you have to <ctrl-c> to end it
 	c := osexec.Command(globalconfig.GetMutagenPath(), "sync", "monitor", syncName)
+	// We only need all three of these because of Windows behavior on git-bash with no pty
 	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	c.Stdin = os.Stdin
 	_ = c.Run()
 }
 
