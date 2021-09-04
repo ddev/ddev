@@ -377,8 +377,9 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			for _, e := range c.Config.Env {
 				split := strings.SplitN(e, "=", 2)
 				envName := split[0]
-				envVal := split[1]
-				if envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE" {
+				if len(split) == 2 && (envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE") {
+					envVal := split[1]
+
 					envValStr := fmt.Sprintf("%s", envVal)
 					portSpecs := strings.Split(envValStr, ",")
 					// There might be more than one exposed UI port, but this only handles the first listed,
