@@ -694,7 +694,10 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	})
 
 	err := app.Init(site.Dir)
-	assert.NoError(err)
+	require.NoError(t, err)
+	err = fileutil.AppendStringToFile(filepath.Join(site.Dir, site.Docroot, "phpinfo.php"), "<?php\nphpinfo();\n")
+	require.NoError(t, err)
+	curlURL := app.GetPrimaryURL() + "/phpinfo.php"
 
 	t.Cleanup(func() {
 		app.XdebugEnabled = false
@@ -747,17 +750,13 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		listener, err := net.Listen("tcp", listenPort)
 		require.NoError(t, err)
 
-		// Curl to the project's index.php or anything else
-		_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL())
-
-		fmt.Printf("Attempting accept of port 9000 with xdebug enabled, PHP version=%s\n", v)
-
 		// Accept is blocking, no way to timeout, so use
 		// goroutine instead.
 		acceptListenDone := make(chan bool, 1)
 		defer close(acceptListenDone)
 
 		go func() {
+			t.Logf("Attempting accept of port 9000 with xdebug enabled, PHP version=%s, time=%v\n", v, time.Now())
 			conn, err := listener.Accept()
 			require.NoError(t, err)
 			t.Logf("Completed accept of port 9000 with xdebug enabled, PHP version=%s, time=%v\n", v, time.Now())
@@ -770,6 +769,9 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			assert.Contains(lineString, `xdebug:language_version="`+v)
 			acceptListenDone <- true
 		}()
+
+		// Curl to the project's phpinfo.php with 1s timeout, we don't care about result
+		_, _, _ = testcommon.GetLocalHTTPResponse(t, curlURL, 1)
 
 		select {
 		case <-acceptListenDone:
