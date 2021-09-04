@@ -14,7 +14,6 @@ import (
 	"github.com/drud/ddev/pkg/version"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/pkg/errors"
-	"golang.org/x/term"
 	"os"
 	osexec "os/exec"
 	"path"
@@ -155,7 +154,7 @@ func CreateMutagenSync(app *DdevApp) error {
 	// In tests or other non-interactive environments we don't need to show the
 	// mutagen sync monitor output (and it fills up the test logs)
 
-	if term.IsTerminal(int(os.Stderr.Fd())) {
+	if os.Getenv("DDEV_NONINTERACTIVE") != "true" {
 		go func() {
 			previousStatus := ""
 			curStatus := ""
