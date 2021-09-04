@@ -62,7 +62,7 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 			if err.Error() == "no docker-compose" {
 				util.Failed("docker-compose does not appear to be installed.")
 			} else {
-				util.Failed("The docker-compose version currently installed does not meet ddev's requirements: %v", err)
+				util.Failed("The docker-compose version currently installed does not meet ddev's requirements: %v", version.DockerComposeVersionConstraint)
 			}
 		}
 

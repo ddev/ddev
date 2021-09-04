@@ -1,9 +1,12 @@
 # github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1
 github.com/Azure/go-ansiterm
 github.com/Azure/go-ansiterm/winterm
-# github.com/Masterminds/semver v1.4.2
+# github.com/Masterminds/semver v1.5.0
 ## explicit
 github.com/Masterminds/semver
+# github.com/Masterminds/semver/v3 v3.1.1
+## explicit
+github.com/Masterminds/semver/v3
 # github.com/Masterminds/sprig v2.15.0+incompatible
 ## explicit
 github.com/Masterminds/sprig
