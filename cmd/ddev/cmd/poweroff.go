@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/version"
 	"github.com/spf13/cobra"
 )
 
@@ -29,19 +31,14 @@ func powerOff() {
 		util.Failed("Failed to get project(s): %v", err)
 	}
 
+	// Remove any custom certs that may have been added
+	_, _, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", "rm -f /mnt/ddev-global-cache/custom_certs/*"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-global-cache"}, "", true, false, nil)
+	if err != nil {
+		util.Warning("Failed removing custom certs: %v", err)
+	}
+
 	// Iterate through the list of apps built above, removing each one.
-	for i, app := range apps {
-		if i == 0 {
-			_, _, err = app.Exec(&ddevapp.ExecOpts{
-				Dir: "/tmp",
-				Cmd: `if [ -d /mnt/ddev-global-cache/custom_certs ]; then rm -f /mnt/ddev-global-cache/custom_certs/*; fi`,
-			})
-			if err == nil {
-				util.Success("Removed any existing custom TLS certificates")
-			} else {
-				util.Warning("Could not remove existing custom TLS certificates: %v", err)
-			}
-		}
+	for _, app := range apps {
 		if err := app.Stop(false, false); err != nil {
 			util.Failed("Failed to stop project %s: \n%v", app.GetName(), err)
 		}
