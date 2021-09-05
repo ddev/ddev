@@ -14,6 +14,7 @@ echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER
 
 export GOTEST_SHORT=1
 export DDEV_NONINTERACTIVE=true
+export DDEV_DEBUG=true
 
 set -o errexit
 set -o pipefail

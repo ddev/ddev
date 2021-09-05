@@ -30,6 +30,8 @@ func testMain(m *testing.M) int {
 
 	EnsureDdevNetwork()
 
+	_ = os.Setenv("DDEV_NONINTERACTIVE", "true")
+
 	// prep docker container for docker util tests
 	client := GetDockerClient()
 	imageExists, err := ImageExistsLocally(version.WebImg + ":" + version.WebTag)

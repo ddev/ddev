@@ -65,12 +65,24 @@ func TerminateMutagenSync(app *DdevApp) error {
 func SyncAndTerminateMutagenSession(app *DdevApp) error {
 	syncName := MutagenSyncName(app.Name)
 
+	projStatus := app.SiteStatus()
+
 	if !MutagenSyncExists(app) {
 		return nil
 	}
-	err := app.MutagenSyncFlush()
+
+	mutagenStatus, shortResult, longResult, err := app.MutagenStatus()
 	if err != nil {
-		util.Error("Error on 'mutagen sync flush %s': %v", syncName, err)
+		return fmt.Errorf("MutagenStatus failed, rv=%v, shortResult=%s, longResult=%s, err=%v", mutagenStatus, shortResult, longResult, err)
+	}
+
+	// We don't want to flush if the web container isn't running
+	// because mutagen flush will hang forever - disconnected
+	if projStatus == SiteRunning && !strings.Contains(longResult, "Connection state: Disconnected") {
+		err := app.MutagenSyncFlush()
+		if err != nil {
+			util.Error("Error on 'mutagen sync flush %s': %v", syncName, err)
+		}
 	}
 	err = TerminateMutagenSync(app)
 	if err != nil {
@@ -235,7 +247,7 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, longResu
 	}
 	if strings.Contains(longResult, "problems") || strings.Contains(longResult, "Conflicts") || strings.Contains(longResult, "error") || strings.Contains(shortResult, "Halted") || strings.Contains(shortResult, "Waiting 5 seconds for rescan") || strings.Contains(longResult, "raw POSIX symbolic links not supported") {
 		util.Error("mutagen sync session '%s' is not working correctly: %s", syncName, longResult)
-		return "failing", shortResult, longResult, errors.Errorf("mutagen sync session '%s' is not working correctly, use 'mutagen sync list %s' for details", syncName, syncName)
+		return "failing", shortResult, longResult, nil
 	}
 	return "ok", shortResult, longResult, nil
 }
@@ -303,12 +315,20 @@ func DownloadMutagen() error {
 	if runtime.GOOS == "darwin" {
 		mutagenURL = fmt.Sprintf("https://github.com/drud/mutagen/releases/download/v%s/mutagen_%s_v%s.tar.gz", nodeps.RequiredMutagenVersion, flavor, nodeps.RequiredMutagenVersion)
 	}
-	output.UserOut.Printf("Downloading %s", mutagenURL)
+	output.UserOut.Printf("Downloading %s ...", mutagenURL)
+
+	// Remove the existing file. This may help on macOS to prevent the Gatekeeper's
+	// caching bug from confusing with a previously downloaded file?
+	// Discussion in https://github.com/mutagen-io/mutagen/issues/290#issuecomment-906612749
+	_ = os.Remove(globalconfig.GetMutagenPath())
+
 	_ = os.MkdirAll(globalMutagenDir, 0777)
-	err := util.DownloadFile(destFile, mutagenURL, true)
+	err := util.DownloadFile(destFile, mutagenURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"))
 	if err != nil {
 		return err
 	}
+	output.UserOut.Printf("Download complete.")
+
 	err = archive.Untar(destFile, globalMutagenDir, "")
 	_ = os.Remove(destFile)
 	if err != nil {

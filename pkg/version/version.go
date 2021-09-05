@@ -194,7 +194,7 @@ func GetLiveMutagenVersion() (string, error) {
 	mutagenPath := globalconfig.GetMutagenPath()
 
 	if !fileutil.FileExists(mutagenPath) {
-		MutagenVersion = "not yet downloaded, will be automatically downloaded when needed"
+		MutagenVersion = ""
 		return MutagenVersion, nil
 	}
 	out, err := exec.Command(mutagenPath, "version").Output()
