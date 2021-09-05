@@ -76,7 +76,6 @@ func CreateAppTable(out *bytes.Buffer) table.Writer {
 	t.AppendHeader(table.Row{"Name", "Type", "Location", "URL", "Status"})
 	termWidth, _ := nodeps.GetTerminalWidthHeight()
 	usableWidth := termWidth - 15
-	t.SetAllowedRowLength(termWidth)
 	statusWidth := 7 // Maybe just "running"
 	nameWidth := 10
 	typeWidth := 7 // drupal7
@@ -85,34 +84,39 @@ func CreateAppTable(out *bytes.Buffer) table.Writer {
 	if termWidth > 80 {
 		urlWidth = urlWidth + (termWidth-80)/2
 		locationWidth = locationWidth + (termWidth-80)/2
+		statusWidth = statusWidth + (termWidth-80)/3
 	}
 	totUsedWidth := nameWidth + typeWidth + locationWidth + urlWidth + statusWidth
 
 	util.Debug("detected terminal width=%v usableWidth=%d statusWidth=%d nameWidth=%d typeWIdth=%d locationWidth=%d urlWidth=%d totUsedWidth=%d", termWidth, usableWidth, statusWidth, nameWidth, typeWidth, locationWidth, urlWidth, totUsedWidth)
 	t.SortBy([]table.SortBy{{Name: "Name"}})
 
-	t.SetColumnConfigs([]table.ColumnConfig{
-		{
-			Name:     "Name",
-			WidthMax: nameWidth,
-		},
-		{
-			Name:     "Type",
-			WidthMax: int(typeWidth),
-		},
-		{
-			Name:     "Location",
-			WidthMax: locationWidth,
-		},
-		{
-			Name:     "URL",
-			WidthMax: urlWidth,
-		},
-		{
-			Name:     "Status",
-			WidthMax: statusWidth,
-		},
-	})
+	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
+		t.SetAllowedRowLength(termWidth)
+
+		t.SetColumnConfigs([]table.ColumnConfig{
+			{
+				Name:     "Name",
+				WidthMax: nameWidth,
+			},
+			{
+				Name:     "Type",
+				WidthMax: int(typeWidth),
+			},
+			{
+				Name:     "Location",
+				WidthMax: locationWidth,
+			},
+			{
+				Name:     "URL",
+				WidthMax: urlWidth,
+			},
+			{
+				Name:     "Status",
+				WidthMax: statusWidth,
+			},
+		})
+	}
 	styles.SetGlobalTableStyle(t)
 	t.SetOutputMirror(out)
 	return t

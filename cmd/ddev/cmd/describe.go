@@ -72,21 +72,23 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		infoWidth = tWidth / 4
 	}
 	util.Debug("detected terminal width=%v urlPortWidth=%v infoWidth=%v", tWidth, urlPortWidth, infoWidth)
-	t.SetAllowedRowLength(tWidth)
-	t.SetColumnConfigs([]table.ColumnConfig{
-		{
-			Name:     "Service",
-			WidthMax: 8,
-		},
-		{
-			Name:     "URL/Port",
-			WidthMax: int(urlPortWidth),
-		},
-		{
-			Name:     "Info",
-			WidthMax: infoWidth,
-		},
-	})
+	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
+		t.SetAllowedRowLength(tWidth)
+		t.SetColumnConfigs([]table.ColumnConfig{
+			{
+				Name:     "Service",
+				WidthMax: 8,
+			},
+			{
+				Name:     "URL/Port",
+				WidthMax: int(urlPortWidth),
+			},
+			{
+				Name:     "Info",
+				WidthMax: infoWidth,
+			},
+		})
+	}
 	t.AppendHeader(table.Row{"Service", "Stat", "URL/Port", "Info"})
 	t.AppendRow(table.Row{"Project", "", app.Name, desc["shortroot"].(string)})
 

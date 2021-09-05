@@ -3,9 +3,11 @@ package ddevapp_test
 import (
 	"bytes"
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/testcommon"
 	assert2 "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"os"
 	"regexp"
 	"runtime"
@@ -37,16 +39,27 @@ func TestListWithoutDir(t *testing.T) {
 	assert.NoError(err)
 
 	app, err := ddevapp.NewApp(testDir, true)
+	app.Name = t.Name()
+	_ = globalconfig.RemoveProjectInfo(app.Name)
+
 	assert.NoError(err)
+	_ = app.Stop(true, false)
+	err = os.Chdir(testDir)
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
+		_ = globalconfig.RemoveProjectInfo(app.Name)
 		err = app.Stop(true, false)
 		assert.NoError(err)
 		err = os.RemoveAll(testDir)
 		assert.NoError(err)
+		globalconfig.DdevGlobalConfig.SimpleFormatting = false
+		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	})
+	globalconfig.DdevGlobalConfig.SimpleFormatting = true
+	_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal7
 	err = app.WriteConfig()
