@@ -697,7 +697,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	require.NoError(t, err)
 	err = fileutil.AppendStringToFile(filepath.Join(site.Dir, site.Docroot, "phpinfo.php"), "<?php\nphpinfo();\n")
 	require.NoError(t, err)
-	//curlURL := app.GetPrimaryURL() + "/phpinfo.php"
+	curlURL := app.GetPrimaryURL() + "/phpinfo.php"
 
 	t.Cleanup(func() {
 		app.XdebugEnabled = false
@@ -749,11 +749,6 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		listener, err := net.Listen("tcp", listenPort)
 		require.NoError(t, err)
 
-		t.Logf("Curling to port 9000 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
-
-		// Curl to the project's index.php or anything else
-		_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL())
-
 		// Accept is blocking, no way to timeout, so use
 		// goroutine instead.
 		acceptListenDone := make(chan bool, 1)
@@ -780,6 +775,11 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			assert.Contains(lineString, `xdebug:language_version="`+v)
 			acceptListenDone <- true
 		}()
+
+		t.Logf("Curling to port 9000 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
+
+		// Curl to the project's index.php or anything else
+		_, _, _ = testcommon.GetLocalHTTPResponse(t, curlURL, 2)
 
 		select {
 		case <-acceptListenDone:
