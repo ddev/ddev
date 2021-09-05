@@ -25,9 +25,14 @@ func TestCmdList(t *testing.T) {
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)
 
+	globalconfig.DdevGlobalConfig.SimpleFormatting = true
+	_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
+		globalconfig.DdevGlobalConfig.SimpleFormatting = false
+		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	})
 	// This gratuitous ddev start -a repopulates the ~/.ddev/global_config.yaml
 	// project list, which has been damaged by other tests which use
@@ -146,6 +151,12 @@ func TestCmdListContinuous(t *testing.T) {
 
 	assert := asrt.New(t)
 
+	globalconfig.DdevGlobalConfig.SimpleFormatting = true
+	_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	t.Cleanup(func() {
+		globalconfig.DdevGlobalConfig.SimpleFormatting = false
+		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	})
 	// Execute "ddev list --continuous"
 	cmd := oexec.Command(DdevBin, "list", "-j", "--continuous")
 	stdout, err := cmd.StdoutPipe()
