@@ -686,13 +686,18 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	phpKeys := make([]string, 0, len(phpVersions))
 	for k := range phpVersions {
-		// TODO: Remove this exception when 8.1 xdebug available
 		phpKeys = append(phpKeys, k)
 	}
-	sort.Strings(phpKeys)
+	// Reverse sort to start with more recent php first
+	sort.Slice(phpKeys, func(a, b int) bool {
+		return phpKeys[b] < phpKeys[a]
+	})
 
 	err := app.Init(site.Dir)
-	assert.NoError(err)
+	require.NoError(t, err)
+	err = fileutil.AppendStringToFile(filepath.Join(site.Dir, site.Docroot, "phpinfo.php"), "<?php\nphpinfo();\n")
+	require.NoError(t, err)
+	//curlURL := app.GetPrimaryURL() + "/phpinfo.php"
 
 	t.Cleanup(func() {
 		app.XdebugEnabled = false
@@ -705,10 +710,10 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	for _, v := range phpKeys {
 		app.PHPVersion = v
-		t.Logf("Beginning XDebug checks with XDebug php%s\n", v)
-		fmt.Printf("Attempting XDebug checks with XDebug %s\n", v)
 		err = app.Start()
 		require.NoError(t, err)
+
+		t.Logf("Beginning XDebug checks with XDebug php%s\n", v)
 
 		opts := &ddevapp.ExecOpts{
 			Service: "web",
@@ -731,16 +736,12 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			t.Errorf("Aborting xdebug check for php%s: %v", v, err)
 			continue
 		}
-		// PHP 7.2 through 8.0 gets xdebug 3.0+
-		if app.PHPVersion == nodeps.PHP72 || app.PHPVersion == nodeps.PHP73 || app.PHPVersion == nodeps.PHP74 || app.PHPVersion == nodeps.PHP80 {
+		// PHP 7.2 through 8.1 gets xdebug 3.0+
+		if nodeps.ArrayContainsString([]string{nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80, nodeps.PHP81}, app.PHPVersion) {
 			assert.Contains(stdout, "xdebug.mode => debug,develop => debug,develop", "xdebug is not enabled for %s", v)
-		} else {
-			assert.Contains(stdout, "xdebug support => enabled", "xdebug is not enabled for %s", v)
-		}
-
-		if app.PHPVersion == nodeps.PHP72 || app.PHPVersion == nodeps.PHP73 || app.PHPVersion == nodeps.PHP74 || app.PHPVersion == nodeps.PHP80 {
 			assert.Contains(stdout, "xdebug.client_host => host.docker.internal => host.docker.internal")
 		} else {
+			assert.Contains(stdout, "xdebug support => enabled", "xdebug is not enabled for %s", v)
 			assert.Contains(stdout, "xdebug.remote_host => host.docker.internal => host.docker.internal")
 		}
 
@@ -748,10 +749,10 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		listener, err := net.Listen("tcp", listenPort)
 		require.NoError(t, err)
 
+		t.Logf("Curling to port 9000 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
+
 		// Curl to the project's index.php or anything else
 		_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL())
-
-		fmt.Printf("Attempting accept of port 9000 with xdebug enabled, PHP version=%s\n", v)
 
 		// Accept is blocking, no way to timeout, so use
 		// goroutine instead.
@@ -759,10 +760,16 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		defer close(acceptListenDone)
 
 		go func() {
+			t.Logf("Attempting accept of port 9000 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
+
 			conn, err := listener.Accept()
 			assert.NoError(err)
 			if err == nil {
 				t.Logf("Completed accept of port 9000 with xdebug enabled, PHP version=%s, time=%v\n", v, time.Now())
+			} else {
+				t.Logf("Failed accept on port 9000, err=%v", err)
+				acceptListenDone <- true
+				return
 			}
 			// Grab the Xdebug connection start and look in it for "Xdebug"
 			b := make([]byte, 650)
