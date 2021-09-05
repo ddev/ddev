@@ -9,7 +9,6 @@ import (
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
@@ -307,13 +306,13 @@ func DownloadMutagen() error {
 	flavor := runtime.GOOS + "_" + runtime.GOARCH
 	globalMutagenDir := filepath.Dir(globalconfig.GetMutagenPath())
 	destFile := filepath.Join(globalMutagenDir, "mutagen.tgz")
-	mutagenURL := fmt.Sprintf("https://github.com/mutagen-io/mutagen/releases/download/v%s/mutagen_%s_v%s.tar.gz", nodeps.RequiredMutagenVersion, flavor, nodeps.RequiredMutagenVersion)
+	mutagenURL := fmt.Sprintf("https://github.com/mutagen-io/mutagen/releases/download/v%s/mutagen_%s_v%s.tar.gz", version.RequiredMutagenVersion, flavor, version.RequiredMutagenVersion)
 	// Temporary workaround to get signed/notarized binaries for macOS.
 	// See https://github.com/drud/mutagen/releases/tag/v0.12.0-beta5 and
 	// https://github.com/mutagen-io/mutagen/issues/290
 	// TODO: Remove this when mutagen has signed releases
 	if runtime.GOOS == "darwin" {
-		mutagenURL = fmt.Sprintf("https://github.com/drud/mutagen/releases/download/v%s/mutagen_%s_v%s.tar.gz", nodeps.RequiredMutagenVersion, flavor, nodeps.RequiredMutagenVersion)
+		mutagenURL = fmt.Sprintf("https://github.com/drud/mutagen/releases/download/v%s/mutagen_%s_v%s.tar.gz", version.RequiredMutagenVersion, flavor, version.RequiredMutagenVersion)
 	}
 	output.UserOut.Printf("Downloading %s ...", mutagenURL)
 
@@ -363,7 +362,7 @@ func DownloadMutagenIfNeeded(app *DdevApp) error {
 		return nil
 	}
 	curVersion, err := version.GetLiveMutagenVersion()
-	if err != nil || curVersion != nodeps.RequiredMutagenVersion {
+	if err != nil || curVersion != version.RequiredMutagenVersion {
 		err = DownloadMutagen()
 		if err != nil {
 			return err
