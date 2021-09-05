@@ -15,11 +15,13 @@ import (
 
 // ProviderCommand defines the shell command to be run for one of the commands (db pull, etc.)
 type ProviderCommand struct {
-	Command string `yaml:"command"`
-	Service string `yaml:"service,omitempty"`
+	Command    string `yaml:"command"`
+	Service    string `yaml:"service,omitempty"`
+	SkipImport bool   `yaml:"skip_import"`
 }
 
 // ProviderInfo defines the provider
+// @todo: CodePullCommand unused
 type ProviderInfo struct {
 	EnvironmentVariables map[string]string `yaml:"environment_variables"`
 	AuthCommand          ProviderCommand   `yaml:"auth_command"`
@@ -91,11 +93,10 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 			return err
 		}
 
-		output.UserOut.Printf("Database downloaded to: %s", fileLocation)
-
-		if skipImportArg {
-			output.UserOut.Println("Skipping database import.")
+		if skipImportArg || provider.DBPullCommand.SkipImport {
+			output.UserOut.Println("Skipping default database import.")
 		} else {
+			output.UserOut.Printf("Database downloaded to: %s", fileLocation)
 			output.UserOut.Println("Importing database...")
 			err = app.ImportDB(fileLocation, importPath, true, false, "db")
 			if err != nil {
@@ -118,11 +119,10 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 			return err
 		}
 
-		output.UserOut.Printf("Files downloaded to: %s", fileLocation)
-
-		if skipImportArg {
-			output.UserOut.Println("Skipping files import.")
+		if skipImportArg || provider.FilesPullCommand.SkipImport {
+			output.UserOut.Println("Skipping default file locations import.")
 		} else {
+			output.UserOut.Printf("Files downloaded to: %s", fileLocation)
 			output.UserOut.Println("Importing files...")
 			err = app.ImportFiles(fileLocation, importPath)
 			if err != nil {

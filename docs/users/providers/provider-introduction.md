@@ -15,8 +15,10 @@ Each provider recipe is a yaml file that can be named any way you want to name i
 Each provider recipe is a file named `<provider>.yaml` and consists of several mostly-optional stanzas:
 
 * `environment_variables`: Environment variables will be created in the web container for each of these during pull or push operations. They're used to provide context (project id, environment name, etc.) for each of the other stanzas.
-* `db_pull_command`: A script that determines how ddev should pull a database. It's job is to create a gzipped database dump in /var/www/html/.ddev/.downloads/db.sql.gz.
-* `files_pull_command`: A script that determines how ddev can get user-generated files from upstream. Its job is to copy the files from upstream to  /var/www/html/.ddev/.downloads/files.
+* `db_pull_command`: A script that determines how ddev should pull a database.
+   If `skip_import` (boolean, default `false`) is `true`, the command handles downloading and inserting data into the project. Else, its job is to create a gzipped database dump in /var/www/html/.ddev/.downloads/db.sql.gz.
+* `files_pull_command`: A script that determines how ddev can get user-generated files from upstream.
+   If `skip_import` (boolean, default `false`) is `true`, the command handles downloading and inserting data into the project. Else, its job is to copy the files from upstream to  /var/www/html/.ddev/.downloads/files.
 * `db_push_command`: A script that determines how ddev should push a database. It's job is to take a  gzipped database dump from /var/www/html/.ddev/.downloads/db.sql.gz and load it on the hosting provider.
 * `files_push_command`: A script that determines how ddev push user-generated files to upstream. Its job is to copy the files from the project's user-files directory ($DDEV_FILES_DIR) to the correct place on the upstream provider.
 
