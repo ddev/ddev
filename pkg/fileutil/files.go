@@ -350,6 +350,33 @@ func CanCreateSymlinks() bool {
 	return true
 }
 
+// ReplaceSimulatedLinks walks the path provided and tries to replace XSym links with real ones.
+func ReplaceSimulatedLinks(path string) {
+	links, err := FindSimulatedXsymSymlinks(path)
+	if err != nil {
+		util.Warning("Error finding XSym Symlinks: %v", err)
+	}
+	if len(links) == 0 {
+		return
+	}
+
+	if !CanCreateSymlinks() {
+		util.Warning("This host computer is unable to create real symlinks, please see the docs to enable developer mode:\n%s\nNote that the simulated symlinks created inside the container will work fine for most projects.", "https://ddev.readthedocs.io/en/stable/users/developer-tools/#windows-os-and-ddev-composer")
+		return
+	}
+
+	err = ReplaceSimulatedXsymSymlinks(links)
+	if err != nil {
+		util.Warning("Failed replacing simulated symlinks: %v", err)
+	}
+	replacedLinks := make([]string, 0)
+	for _, l := range links {
+		replacedLinks = append(replacedLinks, l.LinkLocation)
+	}
+	util.Success("Replaced these simulated symlinks with real symlinks: %v", replacedLinks)
+	return
+}
+
 // RemoveContents removes contents of passed directory
 // From https://stackoverflow.com/questions/33450980/how-to-remove-all-contents-of-a-directory-using-golang
 func RemoveContents(dir string) error {
