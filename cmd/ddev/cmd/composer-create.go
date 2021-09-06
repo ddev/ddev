@@ -2,14 +2,13 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/mattn/go-isatty"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
-
-	"github.com/drud/ddev/pkg/fileutil"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/output"
@@ -61,14 +60,14 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		}
 
 		// Make the user confirm that existing contents will be deleted
-		util.Warning("Warning: ALL EXISTING CONTENT of the project root (%s) will be deleted", app.AppRoot)
+		util.Warning("Warning: MOST EXISTING CONTENT in the project root (%s) will be deleted by the composer create-project operation. .git and .ddev will be preserved.", app.AppRoot)
 		if !composerCreateYesFlag {
 			if !util.Confirm("Would you like to continue?") {
 				util.Failed("create-project cancelled")
 			}
 		}
 
-		// Remove any contents of project root
+		// Remove most contents of project root
 		util.Warning("Removing any existing files in project root")
 		objs, err := fileutil.ListFilesInDir(app.AppRoot)
 		if err != nil {
@@ -77,7 +76,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 		for _, o := range objs {
 			// Preserve .ddev/
-			if o == ".ddev" {
+			if o == ".ddev" || o == ".git" {
 				continue
 			}
 
@@ -86,6 +85,10 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			}
 		}
 
+		err = app.MutagenSyncFlush()
+		if err != nil {
+			util.Failed("Failed to sync mutagen contents: %v", err)
+		}
 		// Define a randomly named temp directory for install target
 		tmpDir := util.RandString(6)
 		containerInstallPath := path.Join("/tmp", tmpDir)
