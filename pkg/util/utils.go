@@ -38,7 +38,7 @@ func Failed(format string, a ...interface{}) {
 	}
 }
 
-// Error will print an red error message but will not exit.
+// Error will print a red error message but will not exit.
 func Error(format string, a ...interface{}) {
 	if a != nil {
 		output.UserErr.Errorf(format, a...)
