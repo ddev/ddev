@@ -7,7 +7,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/drud/ddev/pkg/fileutil"
@@ -88,9 +87,8 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		}
 
 		// Define a randomly named temp directory for install target
-		tmpDir := fmt.Sprintf(".tmp_ddev_composer_create_%s", util.RandString(6))
-		containerInstallPath := path.Join("/var/www/html", tmpDir)
-		hostInstallPath := filepath.Join(app.AppRoot, tmpDir)
+		tmpDir := util.RandString(6)
+		containerInstallPath := path.Join("/tmp", tmpDir)
 
 		// Build container composer command
 		composerCmd := []string{
@@ -118,53 +116,17 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 		output.UserOut.Printf("Moving installation to project root")
 
-		// Windows has serious problems with performance.
-		// If not NFSMountEnabled,
-		// we will move the contents of the temp installation
-		// using host-side manipulation, but can't do that with a cached filesystem.
-		if runtime.GOOS == "windows" && !(app.NFSMountEnabled || app.NFSMountEnabledGlobal) {
-			// If traditional windows mount
-			err = filepath.Walk(hostInstallPath, func(path string, info os.FileInfo, err error) error {
-				// Skip the initial tmp install directory
-				if path == hostInstallPath {
-					return nil
-				}
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
+			Service: "web",
+			Cmd:     fmt.Sprintf("shopt -s dotglob && mv %s/* /var/www/html && rmdir %s", containerInstallPath, containerInstallPath),
+			Dir:     "/var/www/html",
+		})
 
-				elements := strings.Split(path, tmpDir)
-				newPath := filepath.Join(elements...)
-
-				// Dirs must be created, not renamed
-				if info.IsDir() {
-					if err := os.MkdirAll(newPath, info.Mode()); err != nil {
-						return fmt.Errorf("unable to move %s to %s: %v", path, newPath, err)
-					}
-
-					return nil
-				}
-
-				// Rename files to to a path excluding the tmpDir
-				if err := os.Rename(path, newPath); err != nil {
-					return fmt.Errorf("unable to move %s to %s: %v", path, newPath, err)
-				}
-
-				return nil
-			})
-		} else {
-			// All other cases than Windows, we can move the contents easily and quickly inside the container.
-			_, _, err = app.Exec(&ddevapp.ExecOpts{
-				Service: "web",
-				Cmd:     fmt.Sprintf("shopt -s dotglob && mv %s/* /var/www/html && rmdir %s", containerInstallPath, containerInstallPath),
-				Dir:     "/var/www/html",
-			})
-		}
-		// This err check picks up either of the above: The filepath.Walk and the mv
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
 		}
-		if runtime.GOOS == "windows" {
-			fileutil.ReplaceSimulatedLinks(app.AppRoot)
-		}
 		// Do a spare restart, which will create any needed settings files
+		// and also restart mutagen
 		err = app.Restart()
 		if err != nil {
 			util.Warning("Failed to restart project after composer create: %v", err)
