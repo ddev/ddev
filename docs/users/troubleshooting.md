@@ -34,6 +34,12 @@ ddev notifies you about port conflicts with this message:
 Failed to start yoursite: Unable to listen on required ports, localhost port 80 is in use,
 ```
 
+ddev sometimes also has this error message that will alert you to port conflicts:
+
+```
+ERROR: for ddev-router Cannot start service ddev-router: Ports are not available: listen tcp 127.0.0.1:XX: bind: An attempt was made to access a socket in a way forbidden by its access permissions.
+```
+
 This means there is another webserver listening on the named port(s) and ddev cannot access the port. The most common conflicts are on ports 80 and 443.
 
 (In some cases the conflict could be over port 8036 (phpMyAdmin) or port 8025 (MailHog)).
@@ -115,7 +121,7 @@ On Windows CMD, use [sysinternals tcpview](https://docs.microsoft.com/en-us/sysi
 com.docker.backend.exe        5760 Services                   0      9,536 K
 ```
 
-The resulting output displays which command is running and its pid. Choose the appropriate method to stop the other server.
+The resulting output displays which command is running and its pid. Choose the appropriate method to stop the other server. 
 
 We welcome your [suggestions](https://github.com/drud/ddev/issues/new) based on other issues you've run into and your troubleshooting technique.
 
@@ -170,6 +176,17 @@ For ddev-ssh-agent, `docker inspect --format "{{json .State.Health }}" ddev-ssh-
 Don't forget that `ddev logs` (for the web container) or `ddev logs -s db` (for the db container) are your friend.
 
 For ddev-router and ddev-ssh-agent, `docker logs ddev-router` and `docker logs ddev-ssh-agent`.
+  
+## `ddev start` fails with "Failed to start [project name]: No such container: ddev-router"  
+Deeting the images and re-pulling them generally solves this problem.  
+  
+Try running the following commands from the host machine.  
+
+```ddev poweroff
+docker rm -f $(docker ps -aq)
+docker rmi -f $(docker images -q)
+```
+You should then be able to start your ddev machine.    
 
 ## Trouble Building Dockerfiles
 
