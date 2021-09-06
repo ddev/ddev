@@ -722,9 +722,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		OmitRouter:                nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer),
 		OmitSSHAgent:              nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent"),
 		BindAllInterfaces:         app.BindAllInterfaces,
-		MutagenEnabled:            (app.MutagenEnabled || app.MutagenEnabledGlobal),
+		MutagenEnabled:            (app.IsMutagenEnabled()),
 
-		NFSMountEnabled:       (app.NFSMountEnabled || app.NFSMountEnabledGlobal) && !app.MutagenEnabled,
+		NFSMountEnabled:       (app.NFSMountEnabled || app.NFSMountEnabledGlobal) && !app.IsMutagenEnabled(),
 		NFSSource:             "",
 		IsWindowsFS:           runtime.GOOS == "windows",
 		NoProjectMount:        app.NoProjectMount,
@@ -764,7 +764,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		}
 	}
 
-	if app.MutagenEnabled || app.MutagenEnabledGlobal {
+	if app.IsMutagenEnabled() {
 		templateVars.MountType = "volume"
 		templateVars.WebMount = "project_mutagen"
 		templateVars.MutagenVolumeName = GetMutagenVolumeName(app)

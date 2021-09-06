@@ -27,7 +27,7 @@ var MutagenResetCmd = &cobra.Command{
 		if err != nil {
 			util.Failed("Failed to get active project: %v", err)
 		}
-		if !(app.MutagenEnabled || app.MutagenEnabledGlobal) {
+		if !(app.IsMutagenEnabled()) {
 			util.Failed("Mutagen is not enabled on project %s", app.Name)
 		}
 

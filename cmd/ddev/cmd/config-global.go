@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
@@ -104,8 +105,12 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 
 	if cmd.Flag("table-style").Changed {
 		val, _ := cmd.Flags().GetString("table-style")
-		globalconfig.DdevGlobalConfig.TableStyle = val
-		dirty = true
+		if nodeps.ArrayContainsString(globalconfig.ValidTableStyleList(), val) {
+			globalconfig.DdevGlobalConfig.TableStyle = val
+			dirty = true
+		} else {
+			util.Error("table-style=%s is not valid. Valid options include %s. Not changing table-style.\n", val, strings.Join(globalconfig.ValidTableStyleList(), ", "))
+		}
 	}
 
 	if cmd.Flag("auto-restart-containers").Changed {

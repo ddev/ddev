@@ -14,7 +14,6 @@ import (
 	"github.com/drud/ddev/pkg/version"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/pkg/errors"
-	"golang.org/x/term"
 	"os"
 	osexec "os/exec"
 	"path"
@@ -155,7 +154,7 @@ func CreateMutagenSync(app *DdevApp) error {
 	// In tests or other non-interactive environments we don't need to show the
 	// mutagen sync monitor output (and it fills up the test logs)
 
-	if term.IsTerminal(int(os.Stderr.Fd())) {
+	if os.Getenv("DDEV_NONINTERACTIVE") != "true" {
 		go func() {
 			previousStatus := ""
 			curStatus := ""
@@ -269,7 +268,7 @@ func parseMutagenStatusLine(fullStatus string) string {
 
 // MutagenSyncFlush performs a mutagen sync flush, waits for result, and checks for errors
 func (app *DdevApp) MutagenSyncFlush() error {
-	if app.MutagenEnabled || app.MutagenEnabledGlobal {
+	if app.IsMutagenEnabled() {
 		syncName := MutagenSyncName(app.Name)
 		if !MutagenSyncExists(app) {
 			return errors.Errorf("Mutagen sync session '%s' does not exist", syncName)
@@ -358,7 +357,7 @@ func StopMutagenDaemon() {
 // DownloadMutagenIfNeeded downloads the proper version of mutagen
 // if it's either not yet installed or has the wrong version.
 func DownloadMutagenIfNeeded(app *DdevApp) error {
-	if !app.MutagenEnabled || app.MutagenEnabledGlobal {
+	if !app.IsMutagenEnabled() {
 		return nil
 	}
 	curVersion, err := version.GetLiveMutagenVersion()
@@ -373,7 +372,7 @@ func DownloadMutagenIfNeeded(app *DdevApp) error {
 
 // MutagenReset stops (with flush), removes the docker volume, starts again (with flush)
 func MutagenReset(app *DdevApp) error {
-	if app.MutagenEnabled || app.MutagenEnabledGlobal {
+	if app.IsMutagenEnabled() {
 		err := app.Stop(false, false)
 		if err != nil {
 			return errors.Errorf("Failed to stop project %s: %v", app.Name, err)
@@ -398,7 +397,10 @@ func MutagenMonitor(app *DdevApp) {
 
 	// This doesn't actually return; you have to <ctrl-c> to end it
 	c := osexec.Command(globalconfig.GetMutagenPath(), "sync", "monitor", syncName)
+	// We only need all three of these because of Windows behavior on git-bash with no pty
 	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	c.Stdin = os.Stdin
 	_ = c.Run()
 }
 
@@ -459,5 +461,9 @@ func IsMutagenVolumeMounted(app *DdevApp) (bool, error) {
 		}
 	}
 	return false, nil
+}
 
+// IsMutagenEnabled returns true if mutagen is enabled locally or globally
+func (app *DdevApp) IsMutagenEnabled() bool {
+	return app.MutagenEnabled || app.MutagenEnabledGlobal
 }

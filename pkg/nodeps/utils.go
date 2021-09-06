@@ -93,7 +93,7 @@ func IsInteger(s string) bool {
 }
 
 // GetTerminalWidthHeight returns width, height if on terminal
-// or 0, 0 if not
+// or 80, 0 if not. If we can't get terminal info, we'll just assume 80x24
 func GetTerminalWidthHeight() (int, int) {
 	if term.IsTerminal(int(os.Stdout.Fd())) {
 		width, height, err := term.GetSize(int(os.Stdout.Fd()))
@@ -101,5 +101,5 @@ func GetTerminalWidthHeight() (int, int) {
 			return width, height
 		}
 	}
-	return 0, 0
+	return 80, 24
 }

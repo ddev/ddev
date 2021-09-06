@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
@@ -121,68 +120,6 @@ type DdevApp struct {
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
-// List provides the functionality for `ddev list`
-// activeOnly if true only shows projects that are currently docker containers
-// continuous if true keeps requesting and outputting continuously
-// continuousSleepTime is the time between reports
-func List(activeOnly bool, continuous bool, continuousSleepTime int) {
-	runTime := util.TimeTrack(time.Now(), "ddev list")
-	defer runTime()
-
-	var out bytes.Buffer
-
-	for {
-		apps, err := GetProjects(activeOnly)
-		if err != nil {
-			util.Failed("failed getting GetProjects: %v", err)
-		}
-		appDescs := make([]map[string]interface{}, 0)
-
-		if len(apps) < 1 {
-			output.UserOut.WithField("raw", appDescs).Println("No ddev projects were found.")
-		} else {
-			t := CreateAppTable(&out)
-			for _, app := range apps {
-				desc, err := app.Describe(true)
-				if err != nil {
-					util.Error("Failed to describe project %s: %v", app.GetName(), err)
-				}
-				appDescs = append(appDescs, desc)
-				RenderAppRow(t, desc)
-			}
-
-			routerStatus, _ := GetRouterStatus()
-			var extendedRouterStatus = RenderRouterStatus()
-			if nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, globalconfig.DdevRouterContainer) {
-				extendedRouterStatus = "disabled"
-			}
-			tWidth, _ := nodeps.GetTerminalWidthHeight()
-			t.SetAllowedRowLength(tWidth)
-			t.SortBy([]table.SortBy{{Name: "Name"}})
-			t.AppendFooter(table.Row{
-				"Router", "", routerStatus},
-			)
-			t.Render()
-			output.UserOut.WithField("raw", appDescs).Print(out.String())
-			if routerStatus != "healthy" {
-				rawResult := map[string]string{
-					"routerStatus":         routerStatus,
-					"extendedRouterStatus": extendedRouterStatus,
-				}
-				rawResult["routerStatus"] = routerStatus
-				rawResult["extendedStatus"] = extendedRouterStatus
-				output.UserOut.WithField("raw", rawResult)
-			}
-		}
-
-		if !continuous {
-			break
-		}
-
-		time.Sleep(time.Duration(continuousSleepTime) * time.Second)
-	}
-}
-
 // GetType returns the application type as a (lowercase) string
 func (app *DdevApp) GetType() string {
 	return strings.ToLower(app.Type)
@@ -257,8 +194,8 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["router_disabled"] = IsRouterDisabled(app)
 	appDesc["primary_url"] = app.GetPrimaryURL()
 	appDesc["type"] = app.GetType()
-	appDesc["mutagen_enabled"] = app.MutagenEnabled || app.MutagenEnabledGlobal
-	if app.MutagenEnabled {
+	appDesc["mutagen_enabled"] = app.IsMutagenEnabled()
+	if app.IsMutagenEnabled() {
 		appDesc["mutagen_status"], _, _, err = app.MutagenStatus()
 		if err != nil {
 			appDesc["mutagen_status"] = err.Error() + " " + appDesc["mutagen_status"].(string)
@@ -271,7 +208,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	}
 	appDesc["hostname"] = app.GetHostname()
 	appDesc["hostnames"] = app.GetHostnames()
-	appDesc["nfs_mount_enabled"] = (app.NFSMountEnabled || app.NFSMountEnabledGlobal) && !(app.MutagenEnabled || app.MutagenEnabledGlobal)
+	appDesc["nfs_mount_enabled"] = (app.NFSMountEnabled || app.NFSMountEnabledGlobal) && !(app.IsMutagenEnabled())
 	appDesc["fail_on_hook_fail"] = app.FailOnHookFail || app.FailOnHookFailGlobal
 	httpURLs, httpsURLs, allURLs := app.GetAllURLs()
 	appDesc["httpURLs"] = httpURLs
@@ -377,8 +314,9 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			for _, e := range c.Config.Env {
 				split := strings.SplitN(e, "=", 2)
 				envName := split[0]
-				envVal := split[1]
-				if envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE" {
+				if len(split) == 2 && (envName == "HTTP_EXPOSE" || envName == "HTTPS_EXPOSE") {
+					envVal := split[1]
+
 					envValStr := fmt.Sprintf("%s", envVal)
 					portSpecs := strings.Split(envValStr, ",")
 					// There might be more than one exposed UI port, but this only handles the first listed,
@@ -994,7 +932,7 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	if app.MutagenEnabled || app.MutagenEnabledGlobal {
+	if app.IsMutagenEnabled() {
 		mounted, err := IsMutagenVolumeMounted(app)
 		if err != nil {
 			return err
@@ -1500,10 +1438,6 @@ func (app *DdevApp) DockerEnv() {
 
 	// Find out terminal dimensions
 	columns, lines := nodeps.GetTerminalWidthHeight()
-	if columns == 0 {
-		columns = 80
-		lines = 24
-	}
 
 	envVars["COLUMNS"] = strconv.Itoa(columns)
 	envVars["LINES"] = strconv.Itoa(lines)
