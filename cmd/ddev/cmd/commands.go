@@ -38,7 +38,11 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 	projectCommandPath := app.GetConfigPath("commands")
 	// Make sure our target global command directory is empty
 	targetGlobalCommandPath := app.GetConfigPath(".global_commands")
-	_ = os.RemoveAll(targetGlobalCommandPath)
+	err = os.RemoveAll(targetGlobalCommandPath)
+	if err != nil {
+		util.Error("Unable to remove %s: %v", targetGlobalCommandPath, err)
+		return nil
+	}
 
 	err = fileutil.CopyDir(sourceGlobalCommandPath, targetGlobalCommandPath)
 	if err != nil {
