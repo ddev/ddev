@@ -86,7 +86,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 
 				// If command has already been added, we won't work with it again.
 				if _, ok := commandsAdded[commandName]; ok {
-					util.Warning("not adding command %s (%s) because it was already added to project %s", commandName, onHostFullPath, app.Name)
+					util.Warning("Project-level command '%s' is overriding the global '%s' command", commandName, commandName)
 					continue
 				}
 
