@@ -79,7 +79,7 @@ var DockerComposeVersion = ""
 // MutagenVersion is filled with the version we find for mutagen in use
 var MutagenVersion = ""
 
-const RequiredMutagenVersion = "0.12.0-beta6"
+const RequiredMutagenVersion = "0.12.0-beta7"
 
 // GetVersionInfo returns a map containing the version info defined above.
 func GetVersionInfo() map[string]string {
