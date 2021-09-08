@@ -38,7 +38,11 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 	projectCommandPath := app.GetConfigPath("commands")
 	// Make sure our target global command directory is empty
 	targetGlobalCommandPath := app.GetConfigPath(".global_commands")
-	_ = os.RemoveAll(targetGlobalCommandPath)
+	err = os.RemoveAll(targetGlobalCommandPath)
+	if err != nil {
+		util.Error("Unable to remove %s: %v", targetGlobalCommandPath, err)
+		return nil
+	}
 
 	err = fileutil.CopyDir(sourceGlobalCommandPath, targetGlobalCommandPath)
 	if err != nil {
@@ -86,7 +90,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 
 				// If command has already been added, we won't work with it again.
 				if _, ok := commandsAdded[commandName]; ok {
-					util.Warning("not adding command %s (%s) because it was already added to project %s", commandName, onHostFullPath, app.Name)
+					util.Warning("Project-level command '%s' is overriding the global '%s' command", commandName, commandName)
 					continue
 				}
 
