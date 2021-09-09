@@ -45,22 +45,6 @@ If your composer.json is not in the project root, you'll need to provide the `-d
 
 Note: if you run `ddev composer global require`, (or run `composer global require` inside the web container) the global packages will be installed in the in-container user's home directory ( ~/.composer) and will disappear on the next container restart, requiring rerun of the command. You may need an additional step of synchronizing created composer configuration and installed packages with the DDEV's [homeadditions folder](extend/in-container-configuration.md) on the host.
 
-<a name="windows-os-and-ddev-composer"></a>
-
-#### Windows OS and `ddev composer`
-
-Both composer and Docker Desktop for Windows introduce quite complex filesystem workarounds. DDEV attempts to help you with each of them.
-
-You generally don't have to worry about any of this, but it does keep things cleaner. Mostly just a few of the more complex TYPO3 projects have been affected.
-
-* On Docker Desktop for Windows, symlinks are created in the container as "simulated symlinks", or XSym files. These are special text files that behave as symlinks inside the container (on CIFS filesystem), but appear as simple text files on the Windows host. (on the CIFS filesystem used by Docker for Windows inside the container there is no capability to create real symlinks, even though Windows now has this capability.)
-* DDEV-Local attempts to clean up for this situation. Since Windows 10 (in developer mode) can now create real symlinks, DDEV-Local scans your repository after a `ddev composer` command and attempts to convert XSym files into real symlinks. It can only do this if your Windows 10 host is set to Developer Mode.
-* On Windows 10, to set your computer to developer mode, search for "developer" in settings. Screenshots are below.
-
-![finding developer mode](images/developer_mode_1.png)
-
-![setting developer mode](images/developer_mode_2.png)
-
 #### Limitations with `ddev composer`
 
 * Using `ddev composer --version` or `ddev composer -V` will not work, since `ddev` tries to utilize the command for itself. Use `ddev exec composer --version` instead.
