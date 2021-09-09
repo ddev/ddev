@@ -36,7 +36,6 @@ Failed to start yoursite: Unable to listen on required ports, localhost port 80 
 
 ddev sometimes also has this error message that will alert you to port conflicts:
 
-
 `ERROR: for ddev-router Cannot start service ddev-router: Ports are not available: listen tcp 127.0.0.1:XX: bind: An attempt was made to access a socket in a way forbidden by its access permissions.`
 
 This means there is another webserver listening on the named port(s) and ddev cannot access the port. The most common conflicts are on ports 80 and 443.
@@ -177,15 +176,18 @@ Don't forget that `ddev logs` (for the web container) or `ddev logs -s db` (for 
 For ddev-router and ddev-ssh-agent, `docker logs ddev-router` and `docker logs ddev-ssh-agent`.
   
 ## `ddev start` fails with "Failed to start [project name]: No such container: ddev-router"  
+
 Deleting the images and re-pulling them generally solves this problem.  
   
 Try running the following commands from the host machine.  
 
-```ddev poweroff
+```
+ddev poweroff
 docker rm -f $(docker ps -aq)
 docker rmi -f $(docker images -q)
 ```
-You should then be able to start your ddev machine.    
+
+You should then be able to start your ddev machine.
 
 ## Trouble Building Dockerfiles
 
