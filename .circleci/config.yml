@@ -66,8 +66,8 @@ jobs:
           - /home/linuxbrew
     - run: echo "$(docker --version) $(docker-compose --version)"
     - run:
+        name: ddev tests - TestPull and TetsDdevFullSiteSetup
         command: make -s testpkg TESTARGS='-run "(TestDdevFullSite.*|Test.*Pull)"' EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
-        name: ddev tests
         no_output_timeout: "40m"
     - store_test_results:
         path: /tmp/testresults
@@ -85,6 +85,7 @@ jobs:
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
       DDEV_NONINTERACTIVE: "true"
       GOTEST_SHORT: "true"
+      DDEV_TEST_USE_MUTAGEN: "true"
     steps:
       - checkout
       - run:
