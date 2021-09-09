@@ -75,7 +75,6 @@ func TestAcquiaPull(t *testing.T) {
 
 	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal9
-	app.ComposerVersion = "2"
 
 	_ = app.Stop(true, false)
 	err = app.WriteConfig()
@@ -100,6 +99,8 @@ func TestAcquiaPull(t *testing.T) {
 	err = os.WriteFile(app.GetConfigPath("providers/acquia.yaml"), []byte(x), 0666)
 	assert.NoError(err)
 	err = app.WriteConfig()
+	require.NoError(t, err)
+	err = app.MutagenSyncFlush()
 	require.NoError(t, err)
 
 	provider, err := app.GetProvider("acquia")
