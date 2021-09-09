@@ -28,6 +28,7 @@ func init() {
 
 // Failed will print a red error message and exit with failure.
 func Failed(format string, a ...interface{}) {
+	format = ColorizeText(format, "red")
 	if a != nil {
 		//output.UserOut.Fatalf(format, a...)
 		output.UserErr.Fatalf(format, a...)
@@ -40,6 +41,7 @@ func Failed(format string, a ...interface{}) {
 
 // Error will print a red error message but will not exit.
 func Error(format string, a ...interface{}) {
+	format = ColorizeText(format, "red")
 	if a != nil {
 		output.UserErr.Errorf(format, a...)
 	} else {
@@ -49,6 +51,7 @@ func Error(format string, a ...interface{}) {
 
 // Warning will present the user with warning text.
 func Warning(format string, a ...interface{}) {
+	format = ColorizeText(format, "yellow")
 	if a != nil {
 		output.UserErr.Warnf(format, a...)
 	} else {
