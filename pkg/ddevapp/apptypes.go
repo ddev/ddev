@@ -257,7 +257,13 @@ func (app *DdevApp) PostStartAction() error {
 // ImportFilesAction executes the relevant import files workflow for each app type.
 func (app *DdevApp) ImportFilesAction(importPath, extPath string) error {
 	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.importFilesAction != nil {
-		return appFuncs.importFilesAction(app, importPath, extPath)
+		err := appFuncs.importFilesAction(app, importPath, extPath)
+		if err != nil {
+			return err
+		} else {
+			err = app.MutagenSyncFlush()
+			return err
+		}
 	}
 
 	return fmt.Errorf("this project type (%s) does not support import-files", app.Type)
