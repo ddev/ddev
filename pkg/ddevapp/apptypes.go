@@ -260,10 +260,9 @@ func (app *DdevApp) ImportFilesAction(importPath, extPath string) error {
 		err := appFuncs.importFilesAction(app, importPath, extPath)
 		if err != nil {
 			return err
-		} else {
-			err = app.MutagenSyncFlush()
-			return err
 		}
+		err = app.MutagenSyncFlush()
+		return err
 	}
 
 	return fmt.Errorf("this project type (%s) does not support import-files", app.Type)

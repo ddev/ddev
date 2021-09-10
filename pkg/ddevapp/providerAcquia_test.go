@@ -269,5 +269,8 @@ func isPullSiteValid(siteURL string, siteExpectation string) bool {
 		return false
 	}
 	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return false
+	}
 	return strings.Contains(string(body), siteExpectation)
 }
