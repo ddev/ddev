@@ -6,6 +6,8 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,6 +23,8 @@ import (
  * defined in the constants below.
  */
 const acquiaTestSite = "eeamoreno.dev"
+const acquiaSiteURL = "http://eeamorenodev.prod.acquia-sites.com/"
+const acquiaSiteExpectation = "Super easy vegetarian pasta"
 
 // TestAcquiaPull ensures we can pull backups from Acquia
 func TestAcquiaPull(t *testing.T) {
@@ -38,6 +42,7 @@ func TestAcquiaPull(t *testing.T) {
 	}
 	sshkey = strings.Replace(sshkey, "<SPLIT>", "\n", -1)
 
+	require.True(t, isPullSiteValid(acquiaSiteURL, acquiaSiteExpectation), "acquiaSiteURL %s isn't working right", acquiaSiteURL)
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
@@ -133,6 +138,8 @@ func TestAcquiaPush(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
+
+	require.True(t, isPullSiteValid(acquiaSiteURL, acquiaSiteExpectation), "acquiaSiteURL %s isn't working right", acquiaSiteURL)
 
 	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
 
@@ -248,4 +255,19 @@ func TestAcquiaPush(t *testing.T) {
 	assert.NoError(err)
 	err = os.Remove("hello-post-push-" + app.Name)
 	assert.NoError(err)
+}
+
+// isPullSiteValid just checks to make sure the site we're testing against is OK
+func isPullSiteValid(siteURL string, siteExpectation string) bool {
+	resp, err := http.Get(siteURL)
+	if err != nil {
+		return false
+	}
+	//nolint: errcheck
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return false
+	}
+	body, err := io.ReadAll(resp.Body)
+	return strings.Contains(string(body), siteExpectation)
 }
