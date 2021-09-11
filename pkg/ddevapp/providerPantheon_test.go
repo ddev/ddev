@@ -25,6 +25,8 @@ import (
  */
 
 const pantheonTestSiteID = "ddev-test-site-do-not-delete.dev"
+const pantheonSiteURL = "https://dev-ddev-test-site-do-not-delete.pantheonsite.io/"
+const pantheonSiteExpectation = "DDEV DRUPAL8 TEST SITE"
 
 // TestPantheonPull ensures we can pull from pantheon.
 func TestPantheonPull(t *testing.T) {
@@ -41,6 +43,8 @@ func TestPantheonPull(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
+
+	require.True(t, isPullSiteValid(pantheonSiteURL, pantheonSiteExpectation), "pantheonSiteURL %s isn't working right", pantheonSiteURL)
 
 	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
 	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"TERMINUS_MACHINE_TOKEN=" + token}
@@ -137,6 +141,8 @@ func TestPantheonPush(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
+
+	require.True(t, isPullSiteValid(pantheonSiteURL, pantheonSiteExpectation), "pantheonSiteURL %s isn't working right", pantheonSiteURL)
 
 	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
 	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"TERMINUS_MACHINE_TOKEN=" + token}
