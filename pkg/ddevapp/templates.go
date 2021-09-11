@@ -78,7 +78,7 @@ services:
       - SYS_PTRACE
     working_dir: "{{ .WebWorkingDir }}"
     volumes:
-      {{ if not .NoProjectMount }}
+      {{ if and (not .MutagenEnabled) (not .NoProjectMount) }}
       - type: {{ .MountType }}
         source: {{ .WebMount }}
         target: /var/www/html
@@ -88,6 +88,11 @@ services:
         {{ else }}
         consistency: cached
         {{ end }}
+      {{ end }}
+      {{ if and .MutagenEnabled (not .NoProjectMount) }}
+      # For mutagen, mount a directory higher so that we can use
+      # stageMode: "neighboring"
+      - "project_mutagen:/var/www"
       {{ end }}
       - ".:/mnt/ddev_config:ro"
       - "./nginx_full:/etc/nginx/sites-enabled:ro"

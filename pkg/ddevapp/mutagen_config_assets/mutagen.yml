@@ -9,6 +9,7 @@
 sync:
   defaults:
     mode: "two-way-resolved"
+    stageMode: "neighboring"
     ignore:
       paths:
       # The top-level .git directory is ignored to encourage git actions on the host
