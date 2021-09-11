@@ -26,17 +26,20 @@ environment_variables:
 
 auth_command:
   command: |
+    set -eu -o pipefail
     if [ -z "${PLATFORMSH_CLI_TOKEN:-}" ]; then echo "Please make sure you have set PLATFORMSH_CLI_TOKEN in ~/.ddev/global_config.yaml" && exit 1; fi
 
 db_pull_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     platform db:dump --yes --gzip --file=/var/www/html/.ddev/.downloads/db.sql.gz --project="${project_id}" --environment="${environment}"
 
 files_pull_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     platform mount:download --yes --quiet --project="${project_id}" --environment="${environment}" --mount=web/sites/default/files --target=/var/www/html/.ddev/.downloads/files
 
@@ -45,6 +48,7 @@ files_pull_command:
 db_push_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null;
     gzip -dc db.sql.gz | platform db:sql --project="${project_id}" --environment="${environment}"
@@ -53,5 +57,6 @@ db_push_command:
 files_push_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
     ls "${DDEV_FILES_DIR}" >/dev/null # This just refreshes stale NFS if possible
     platform mount:upload --yes --quiet --project="${project_id}" --environment="${environment}" --source="${DDEV_FILES_DIR}" --mount=web/sites/default/files

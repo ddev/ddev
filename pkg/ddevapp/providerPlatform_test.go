@@ -29,6 +29,9 @@ import (
 var platformTestSiteID = "lago3j23xu2w6"
 var platformTestSiteEnvironment = "master"
 
+const platformSiteURL = "https://master-7rqtwti-lago3j23xu2w6.eu-3.platformsh.site/"
+const platformSiteExpectation = "Super easy vegetarian pasta"
+
 // TestPlatformPull ensures we can pull backups from platform.sh for a configured environment.
 func TestPlatformPull(t *testing.T) {
 	var token string
@@ -37,6 +40,8 @@ func TestPlatformPull(t *testing.T) {
 	}
 	assert := asrt.New(t)
 	var err error
+
+	require.True(t, isPullSiteValid(platformSiteURL, platformSiteExpectation), "platformSiteURL %s isn't working right", platformSiteURL)
 
 	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
 
@@ -108,6 +113,8 @@ func TestPlatformPush(t *testing.T) {
 
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
+
+	require.True(t, isPullSiteValid(platformSiteURL, platformSiteExpectation), "platformSiteURL %s isn't working right", platformSiteURL)
 
 	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
 
