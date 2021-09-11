@@ -90,9 +90,13 @@ services:
         {{ end }}
       {{ end }}
       {{ if and .MutagenEnabled (not .NoProjectMount) }}
-      # For mutagen, mount a directory higher so that we can use
+      # For mutagen, mount a directory higher in /var/www so that we can use
       # stageMode: "neighboring"
-      - "project_mutagen:/var/www"
+      - type: volume
+        source: project_mutagen
+        target: /var/www
+        volume:
+          nocopy: true
       {{ end }}
       - ".:/mnt/ddev_config:ro"
       - "./nginx_full:/etc/nginx/sites-enabled:ro"
