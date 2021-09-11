@@ -241,6 +241,10 @@ func (p *Provider) UploadDB() error {
 	if err != nil {
 		return err
 	}
+	err = p.app.MutagenSyncFlush()
+	if err != nil {
+		return err
+	}
 
 	s := p.DBPushCommand.Service
 	if s == "" {
