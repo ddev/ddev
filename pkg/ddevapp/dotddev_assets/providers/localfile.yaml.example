@@ -16,9 +16,13 @@ environment_variables:
   PROJECT_ROOT: /full/path/to/project/root
 
 db_pull_command:
-  command: cp ~/Dropbox/db.sql.gz ${PROJECT_ROOT}/.ddev/.downloads
+  command: |
+    set -eu -o pipefail
+    cp ~/Dropbox/db.sql.gz ${PROJECT_ROOT}/.ddev/.downloads
   service: host
 
 files_pull_command:
-  command: tar -zxf ~/Dropbox/files.tar.gz -C ${PROJECT_ROOT}/.ddev/.downloads/files
+  command: |
+    set -eu -o pipefail
+    tar -zxf ~/Dropbox/files.tar.gz -C ${PROJECT_ROOT}/.ddev/.downloads/files
   service: host
