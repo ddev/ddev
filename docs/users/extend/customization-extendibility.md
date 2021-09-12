@@ -45,8 +45,7 @@ You can also have more than one config file in the `.ddev/nginx_full` directory,
 * Any errors in your configuration may cause the web container to fail and try to restart, so if you see that behavior, use `ddev logs` to diagnose it.
 * You can `ddev exec nginx -t` to test whether your configuration is valid. (Or `ddev ssh` and run `nginx -t`)
 * You can reload the nginx configuration either with `ddev start` or `ddev exec nginx -s reload`
-* The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the healthcheck script to work.
-* **IMPORTANT**: Changes to configuration take place on a `ddev start`, when the container is rebuilt for another reason, or when the nginx server receives the reload signal.
+* **IMPORTANT**: Changes to configuration take place on a `ddev restart`, when the container is rebuilt for another reason, or when the nginx server receives the reload signal.
 
 #### Multiple docroots in nginx (advanced)
 
@@ -66,9 +65,8 @@ If you're using `webserver_type: apache-fpm` in your .ddev/config.yaml, you can 
 * Add your configuration changes.
 * Save your configuration file and run `ddev start` to reload the project. If you encounter issues with your configuration or the project fails to start, use `ddev logs` to inspect the logs for possible apache configuration errors.
 * Use `ddev exec apachectl -t` to do a general apache syntax check.
-* The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the healthcheck script to work.
 * Any errors in your configuration may cause the web container to fail, so if you see that behavior, use `ddev logs` to diagnose.
-* **IMPORTANT**: Changes to .ddev/apache/apache-site.conf take place on a `ddev start`. You can also `ddev exec apachectl -k graceful` to reload the apache configuration.
+* **IMPORTANT**: Changes to .ddev/apache/apache-site.conf take place on a `ddev restart`. You can also `ddev exec apachectl -k graceful` to reload the apache configuration.
 
 ### Providing custom PHP configuration (php.ini)
 
