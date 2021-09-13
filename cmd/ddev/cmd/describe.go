@@ -77,7 +77,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		t.SetColumnConfigs([]table.ColumnConfig{
 			{
 				Name:     "Service",
-				WidthMax: 8,
+				WidthMax: 10,
 			},
 			{
 				Name:     "URL/Port",
@@ -89,8 +89,8 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			},
 		})
 	}
+	t.SetTitle(fmt.Sprintf("Project: %s %s %s", app.Name, desc["shortroot"].(string), app.GetPrimaryURL()))
 	t.AppendHeader(table.Row{"Service", "Stat", "URL/Port", "Info"})
-	t.AppendRow(table.Row{"Project", "", app.Name, desc["shortroot"].(string)})
 
 	// Only show extended status for running sites.
 	if status == ddevapp.SiteRunning {
@@ -164,7 +164,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 				k = "PHPMyAdmin"
 				urlPortParts = append(urlPortParts, "`ddev launch -p`")
 			}
-			t.AppendRow(table.Row{k, v["status"], strings.Join(urlPortParts, "\n"), strings.Join(extraInfo, "\n")})
+			t.AppendRow(table.Row{k, ddevapp.FormatSiteStatus(v["status"]), strings.Join(urlPortParts, "\n"), strings.Join(extraInfo, "\n")})
 		}
 
 		if !ddevapp.IsRouterDisabled(app) {

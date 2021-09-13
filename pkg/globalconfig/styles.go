@@ -2,25 +2,50 @@ package globalconfig
 
 import (
 	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
 )
 
 var (
+	FormatOptionsDefault = table.FormatOptions{
+		//Footer: text.FormatUpper,
+		Header: text.FormatUpper,
+		Row:    text.FormatDefault,
+	}
+
 	DdevDefaultStyle = table.Style{
 		Name:    "StyleLight",
 		Box:     table.StyleBoxLight,
 		Color:   table.ColorOptionsDefault,
-		Format:  table.FormatOptionsDefault,
+		Format:  FormatOptionsDefault,
 		HTML:    table.DefaultHTMLOptions,
 		Options: OptionsSeparateRows,
 		Title:   table.TitleOptionsDefault,
+	}
+	DdevStyleBold = table.Style{
+		Name:    "StyleBold",
+		Box:     table.StyleBoxBold,
+		Color:   table.ColorOptionsDefault,
+		Format:  FormatOptionsDefault,
+		HTML:    table.DefaultHTMLOptions,
+		Options: table.OptionsDefault,
+		Title:   table.TitleOptionsDefault,
+	}
+	DdevStyleColoredBright = table.Style{
+		Name:    "StyleColoredBright",
+		Box:     table.StyleBoxDefault,
+		Color:   table.ColorOptionsBright,
+		Format:  FormatOptionsDefault,
+		HTML:    table.DefaultHTMLOptions,
+		Options: table.OptionsNoBordersAndSeparators,
+		Title:   table.TitleOptionsDark,
 	}
 )
 
 // StyleMap give the list of available styles
 var StyleMap map[string]table.Style = map[string]table.Style{
 	"default": DdevDefaultStyle,
-	"bold":    table.StyleBold,
-	"bright":  table.StyleColoredBright,
+	"bold":    DdevStyleBold,
+	"bright":  DdevStyleColoredBright,
 	//"StyleDouble":                     table.StyleDouble,
 	//"StyleRounded":                    table.StyleRounded,
 	//"StyleColoredDark":                table.StyleColoredDark,
