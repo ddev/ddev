@@ -8,8 +8,8 @@ import (
 var (
 	FormatOptionsDefault = table.FormatOptions{
 		//Footer: text.FormatUpper,
-		//Header: text.FormatUpper,
-		Row: text.FormatDefault,
+		Header: text.FormatUpper,
+		Row:    text.FormatDefault,
 	}
 
 	DdevDefaultStyle = table.Style{
