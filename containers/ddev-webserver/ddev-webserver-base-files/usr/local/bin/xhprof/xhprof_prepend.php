@@ -18,12 +18,12 @@ if (extension_loaded('xhprof') && strpos($uri, '/xhprof') === false) {
 // Write to the xhprof_html output and latest on completion
 function xhprof_completion()
 {
-  $xhprof_link_dir = "/var/www/xhprof/xhprof_html/latest/";
+  $xhprof_link_dir = "/var/xhprof/xhprof_html/latest/";
 
   $xhprof_data = xhprof_disable();
   $appNamespace = "ddev";
-  include_once '/var/www/xhprof/xhprof_lib/utils/xhprof_lib.php';
-  include_once '/var/www/xhprof/xhprof_lib/utils/xhprof_runs.php';
+  include_once '/var/xhprof/xhprof_lib/utils/xhprof_lib.php';
+  include_once '/var/xhprof/xhprof_lib/utils/xhprof_runs.php';
 
   $xhprof_runs = new XHProfRuns_Default();
   $run_id = $xhprof_runs->save_run($xhprof_data, $appNamespace);

@@ -31,7 +31,7 @@ func SetMutagenVolumeOwnership(app *DdevApp) error {
 	_, _, err := app.Exec(
 		&ExecOpts{
 			Dir: "/tmp",
-			Cmd: fmt.Sprintf("sudo chown -R %s:%s /var/www/html", uidStr, gidStr),
+			Cmd: fmt.Sprintf("sudo chown -R %s:%s /var/www", uidStr, gidStr),
 		})
 	util.Debug("done chowning mutagen docker volume, result=%v", err)
 	return err

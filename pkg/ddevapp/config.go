@@ -765,10 +765,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	}
 
 	if app.IsMutagenEnabled() {
-		templateVars.MountType = "volume"
-		templateVars.WebMount = "project_mutagen"
 		templateVars.MutagenVolumeName = GetMutagenVolumeName(app)
-		templateVars.NFSSource = app.AppRoot
 	}
 
 	// Add web and db extra dockerfile info

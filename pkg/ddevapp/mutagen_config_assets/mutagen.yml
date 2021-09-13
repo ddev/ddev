@@ -9,6 +9,7 @@
 sync:
   defaults:
     mode: "two-way-resolved"
+    stageMode: "neighboring"
     ignore:
       paths:
       # The top-level .git directory is ignored to encourage git actions on the host
@@ -18,6 +19,7 @@ sync:
       - "/.ddev/db_snapshots"
       - "/.ddev/.importdb*"
       - ".DS_Store"
+      - ".idea"
       # For example /var/www/html/var does not need to sync in TYPO3
       # - "/var"
       # vcs like .git can be ignored for safety, but then some
