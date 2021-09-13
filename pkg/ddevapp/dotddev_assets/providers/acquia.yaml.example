@@ -35,8 +35,6 @@ auth_command:
     ssh-add -l >/dev/null || ( echo "Please 'ddev auth ssh' before running this command." && exit 1 )
     acli auth:login -n --key="${ACQUIA_API_KEY}" --secret="${ACQUIA_API_SECRET}"
     acli remote:aliases:download -n >/dev/null
-    drush core:init -y   # make aliases available to Drush
-    source ~/.bashrc
 
 db_pull_command:
   command: |
@@ -44,7 +42,7 @@ db_pull_command:
     set -eu -o pipefail
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null
-    drush @${project_id} sql-dump -n --extra-dump=--no-tablespaces --gzip >db.sql.gz
+    drush @${project_id} sql-dump -n --alias-path=~/.drush --extra-dump=--no-tablespaces --gzip >db.sql.gz
 
 files_pull_command:
   command: |
