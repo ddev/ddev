@@ -47,7 +47,7 @@ var WebTag = "20210916_gilbertsoft_phpstatus" // Note that this can be overridde
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20210729_cspitzlay_mysql_history"
+var BaseDBTag = "20210917_update_images"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"
