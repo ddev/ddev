@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import os
 import signal
@@ -15,10 +15,10 @@ def main():
    while 1:
        write_stdout('READY\n')
        line = sys.stdin.readline()
-       write_stdout('This line kills supervisor: ' + line);
+       write_stdout('This line kills supervisor: ' + line)
        try:
                pidfile = open('/var/run/supervisord.pid','r')
-               pid = int(pidfile.readline());
+               pid = int(pidfile.readline())
                os.kill(pid, signal.SIGQUIT)
        except Exception as e:
                write_stdout('Could not kill supervisor: ' + e.strerror + '\n')

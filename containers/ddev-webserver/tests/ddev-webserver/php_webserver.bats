@@ -127,3 +127,32 @@
   run docker exec -t $CONTAINER_NAME disable_xdebug
   run docker exec -t $CONTAINER_NAME disable_xhprof
 }
+
+@test "verify htaccess doesn't break ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+  docker cp tests/ddev-webserver/testdata/nginx/auth.conf ${CONTAINER_NAME}:/etc/nginx/common.d
+  docker cp tests/ddev-webserver/testdata/nginx/junkpass ${CONTAINER_NAME}:/tmp
+  docker cp tests/ddev-webserver/testdata/apache/auth.conf ${CONTAINER_NAME}:/etc/apache2/conf-enabled
+  # Reload webserver
+  if [ "${WEBSERVER_TYPE}" = "apache-fpm" ]; then
+    docker exec ${CONTAINER_NAME} apache2ctl -k graceful
+  else
+    docker exec ${CONTAINER_NAME} nginx -s reload
+  fi
+  sleep 2
+  # Make sure we can hit /phpstatus without auth
+  run curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$HOST_HTTP_PORT/phpstatus
+  echo "# phpstatus status=$output"
+  [ "$status" = 0 ]
+  [ "$output" = "200" ]
+  curl --fail -s http://127.0.0.1:$HOST_HTTP_PORT/phpstatus | egrep "idle processes|php is working"
+  # Make sure the auth requirement is actually working
+  curlstmt="curl --fail -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$HOST_HTTP_PORT/test/phptest.php"
+  run ${curlstmt}
+  [ "$output" = "401" ]
+
+  # Make sure it works with auth when hitting phptest.php
+  AUTH=$(echo -ne "junk:junk" | base64)
+  curl --fail --header "Authorization: Basic $AUTH" 127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
+  docker exec ${CONTAINER_NAME} rm /etc/nginx/common.d/auth.conf /etc/apache2/conf-enabled/auth.conf
+  docker exec ${CONTAINER_NAME} kill -HUP 1
+}
