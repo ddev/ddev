@@ -31,7 +31,7 @@ mysql_5.6: mysql_5.6_amd64
 mysql_5.7: mysql_5.7_amd64
 # Mysql 8.0 often must be pinned because xtrabackup is not ready for latest 8.0
 # So check whether xtrabackup is available for latest 8.0 before changing pin
-mysql_8.0: mysql_8.0_amd64_8.0.22
+mysql_8.0: mysql_8.0_amd64_8.0.26
 
 
 # Examples:
