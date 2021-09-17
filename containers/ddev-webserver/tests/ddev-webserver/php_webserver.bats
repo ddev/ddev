@@ -132,9 +132,13 @@
   docker cp tests/ddev-webserver/testdata/nginx/auth.conf ${CONTAINER_NAME}:/etc/nginx/common.d
   docker cp tests/ddev-webserver/testdata/nginx/junkpass ${CONTAINER_NAME}:/tmp
   docker cp tests/ddev-webserver/testdata/apache/auth.conf ${CONTAINER_NAME}:/etc/apache2/conf-enabled
-  # Reload everything
-  docker exec ${CONTAINER_NAME} kill -HUP 1
-  sleep 4
+  # Reload webserver
+  if [ "${WEBSERVER_TYPE}" = "apache-fpm" ]; then
+    docker exec ${CONTAINER_NAME} apache2ctl -k graceful
+  else
+    docker exec ${CONTAINER_NAME} nginx -s reload
+  fi
+  sleep 2
   # Make sure we can hit /phpstatus without auth
   run curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$HOST_HTTP_PORT/phpstatus
   echo "# phpstatus status=$output"
