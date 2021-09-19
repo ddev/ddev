@@ -129,39 +129,6 @@ Now start your project with `ddev start`
 
 Quickstart instructions regarding database imports can be found under [Database Imports](#database-imports).
 
-### Drupal 8 Quickstart
-
-Get started with Drupal 8 projects on ddev either using a new or existing composer project or by cloning a git repository.
-
-#### Composer Setup Example
-
-```bash
-mkdir my-drupal8-site
-cd my-drupal8-site
-ddev config --project-type=drupal8 --docroot=web --create-docroot
-ddev start
-ddev composer create "drupal/recommended-project:^8"
-ddev composer require drush/drush
-ddev drush site:install -y
-ddev drush uli
-ddev launch
-```
-
-#### Drupal 8 Git Clone Example
-
-Note that the git URL shown below is an example only, you'll need to use your own project.
-
-```bash
-git clone https://github.com/example/example-site
-cd example-site
-ddev composer install
-ddev launch
-```
-
-### Drupal 9 Quickstart
-
-Get started with Drupal 9 projects on ddev either using a new or existing composer project or by cloning a git repository.
-
 #### Drupal 9 Composer Setup Example
 
 ```bash
