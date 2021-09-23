@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -75,8 +76,8 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		}
 
 		for _, o := range objs {
-			// Preserve .ddev/
-			if o == ".ddev" || o == ".git" {
+			// Preserve .ddev, .git. .tarballs
+			if o == ".ddev" || o == ".git" || o == ".tarballs" {
 				continue
 			}
 
@@ -133,6 +134,9 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		err = app.Restart()
 		if err != nil {
 			util.Warning("Failed to restart project after composer create: %v", err)
+		}
+		if runtime.GOOS == "windows" {
+			fileutil.ReplaceSimulatedLinks(app.AppRoot)
 		}
 	},
 }
