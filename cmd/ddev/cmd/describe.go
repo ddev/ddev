@@ -137,7 +137,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 
 			// Get extra info for web container
 			if k == "web" {
-				extraInfo = append(extraInfo, fmt.Sprintf("PHP %s %s", desc["php_version"], desc["webserver_type"]))
+				extraInfo = append(extraInfo, fmt.Sprintf("%s PHP%s\n%s docroot:'%s'", desc["type"], desc["php_version"], desc["webserver_type"], desc["docroot"]))
 				if desc["nfs_mount_enabled"].(bool) {
 					extraInfo = append(extraInfo, fmt.Sprintf("NFS Enabled"))
 				}
