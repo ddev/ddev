@@ -60,7 +60,7 @@ tail -f /opt/solr/server/logs/solr.log
 
 ### Global commands
 
-Global commands work exactly the same as project-level commands, you just have to put them in your global .ddev directory. Your home directory has a .ddev/commands in it; there you can add host or web or db commands. 
+Global commands work exactly the same as project-level commands, you just have to put them in your global .ddev directory. Your home directory has a .ddev/commands in it; there you can add host or web or db commands.
 
 ### Environment variables provided
 
