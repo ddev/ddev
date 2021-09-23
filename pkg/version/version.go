@@ -47,7 +47,7 @@ var WebTag = "20210916_gilbertsoft_phpstatus" // Note that this can be overridde
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20210729_cspitzlay_mysql_history"
+var BaseDBTag = "20210917_update_images"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"
@@ -59,13 +59,13 @@ var DBATag = "5" // Note that this can be overridden by make
 var RouterImage = "drud/ddev-router"
 
 // RouterTag defines the tag used for the router.
-var RouterTag = "v1.17.6" // Note that this can be overridden by make
+var RouterTag = "20210917_update_images" // Note that this can be overridden by make
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "drud/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "v1.17.0"
+var SSHAuthTag = "20210917_update_images"
 
 // BUILDINFO is information with date and context, supplied by make
 var BUILDINFO = "BUILDINFO should have new info"
