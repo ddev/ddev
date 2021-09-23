@@ -814,6 +814,17 @@ func (app *DdevApp) Start() error {
 	if err != nil {
 		return err
 	}
+	if _, err = app.CreateSettingsFile(); err != nil {
+		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
+	}
+
+	err = app.PullContainerImages()
+	if err != nil {
+		return err
+	}
+
+	dockerutil.CheckAvailableSpace()
+
 	// Make sure that any ports allocated are available.
 	// and of course add to global project list as well
 	err = app.UpdateGlobalProjectList()
@@ -834,13 +845,6 @@ func (app *DdevApp) Start() error {
 	if err != nil {
 		return err
 	}
-
-	err = app.PullContainerImages()
-	if err != nil {
-		return err
-	}
-
-	dockerutil.CheckAvailableSpace()
 
 	// Make sure that important volumes to mount already have correct ownership set
 	// Additional volumes can be added here. This allows us to run a single privileged
@@ -978,10 +982,6 @@ func (app *DdevApp) Start() error {
 	err = app.WaitByLabels(map[string]string{"com.ddev.site-name": app.GetName()})
 	if err != nil {
 		return err
-	}
-
-	if _, err = app.CreateSettingsFile(); err != nil {
-		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 
 	err = app.PostStartAction()
