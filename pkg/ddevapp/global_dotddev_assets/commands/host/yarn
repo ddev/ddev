@@ -5,4 +5,4 @@
 ## Example: "ddev yarn install" or "ddev yarn add learna" or "ddev yarn --cwd web/core add learna"
 
 ddev exec yarn "$@"
-ddev mutagen sync
+ddev mutagen sync 2>/dev/null
