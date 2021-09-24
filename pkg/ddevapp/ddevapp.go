@@ -188,6 +188,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["name"] = app.GetName()
 	appDesc["status"] = app.SiteStatus()
 	appDesc["approot"] = app.GetAppRoot()
+	appDesc["docroot"] = app.GetDocroot()
 	appDesc["shortroot"] = shortRoot
 	appDesc["httpurl"] = app.GetHTTPURL()
 	appDesc["httpsurl"] = app.GetHTTPSURL()
