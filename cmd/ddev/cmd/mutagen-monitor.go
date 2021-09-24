@@ -25,7 +25,8 @@ var MutagenMonitorCmd = &cobra.Command{
 			util.Failed("Failed to get active project: %v", err)
 		}
 		if !(app.IsMutagenEnabled()) {
-			util.Failed("Mutagen is not enabled on project %s", app.Name)
+			util.Warning("Mutagen is not enabled on project %s", app.Name)
+			return
 		}
 		ddevapp.MutagenMonitor(app)
 	},
