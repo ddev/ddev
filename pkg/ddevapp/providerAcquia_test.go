@@ -124,6 +124,9 @@ func TestAcquiaPush(t *testing.T) {
 	acquiaKey := ""
 	acquiaSecret := ""
 	sshkey := ""
+	if os.Getenv("DDEV_ALLOW_ACQUIA_PUSH") != "true" {
+		t.Skip("TestAcquiaPush is currently embargoed by DDEV_ALLOW_ACQUIA_PUSH not set to true")
+	}
 	if acquiaKey = os.Getenv("DDEV_ACQUIA_API_KEY"); acquiaKey == "" {
 		t.Skipf("No DDEV_ACQUIA_KEY env var has been set. Skipping %v", t.Name())
 	}
