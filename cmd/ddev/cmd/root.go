@@ -209,17 +209,6 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 			return err
 		}
 
-		// Get current app, or if it's not there, get a default.
-		// Only need it to pull images
-		app, err := ddevapp.NewApp("", true)
-		if err != nil {
-			app = &ddevapp.DdevApp{}
-		}
-		err = app.PullContainerImages()
-		if err != nil {
-			return err
-		}
-
 		okPoweroff := util.Confirm("It looks like you have a new DDEV version. During an upgrade it's important to `ddev poweroff`. May I do `ddev poweroff` before continuing? This does no harm and loses no data.")
 		if okPoweroff {
 			powerOff()
