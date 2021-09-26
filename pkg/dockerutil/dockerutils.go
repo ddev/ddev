@@ -618,9 +618,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 	}
 
 	if !existsLocally {
-		var buf bytes.Buffer
-		pullErr := client.PullImage(docker.PullImageOptions{Repository: image, OutputStream: &buf},
-			docker.AuthConfiguration{})
+		pullErr := Pull(image)
 		if pullErr != nil {
 			return "", "", fmt.Errorf("failed to pull image %s: %v", image, pullErr)
 		}
