@@ -60,9 +60,10 @@ Another solution is to **not** use `*.ddev.site` as your project URLs, but to us
 
 DDEV's web container also exposes an HTTP port directly (in addition to the normal routing by name and via ddev_router). You can expose this port and it may be a useful approach in some situations.
 
-* Configure the project `host_webserver_port` to a known port (that does not conflict with already configured ports). For example, using port 8080, `ddev config --host-webserver-port=8080 --bind-to-all-interfaces`. This will configure the host-bound port to 8080 and allow it to bind to all network interfaces so colleagues (or hackers) on your local network can access this project's ports.
+* Configure the project `host_webserver_port` to a known port (that does not conflict with already configured ports). For example, using port 8080, `ddev config --host-webserver-port=8080 --bind-all-interfaces`. This will configure the host-bound port to 8080 and allow it to bind to all network interfaces so colleagues (or hackers) on your local network can access this project's ports.
 * Make sure your firewall allows access to the port on your host machine.
 * If you're using WordPress or Magento 2 you'll need to change the base URL as described in the `ddev share` instructions above.
 * Each project on your computer must use different ports or you'll have port conflicts, and you can't typically use ports 80 or 443 because ddev-router is already using those for normal routing.
+* If you don't want to run ddev-router at all you can actually omit it globally, `ddev config global --omit-containers=ddev-router`. This is a specialty thing to do, when you don't need the reverse proxy at all for anything, as for [DrupalPod](https://github.com/shaal/DrupalPod) or other [GitPod](https://www.gitpod.io/) applications.
 
 Computers and mobile devices on your local network should now be able to access port 8080, on the (example) host address 192.168.5.23, so `http://192.168.5.23:8080` You'll probably want to use the http URL; your coworker's browser will not trust the developer TLS certificate you're using.
