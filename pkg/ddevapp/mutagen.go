@@ -21,6 +21,7 @@ import (
 	"runtime"
 	"strings"
 	"time"
+	"unicode"
 )
 
 // SetMutagenVolumeOwnership chowns the volume in use to the current user.
@@ -42,7 +43,11 @@ func SetMutagenVolumeOwnership(app *DdevApp) error {
 // See restrictions on sync name at https://mutagen.io/documentation/introduction/names-labels-identifiers
 // The input must be a valid DNS name (valid ddev project name)
 func MutagenSyncName(name string) string {
-	return strings.ReplaceAll(name, ".", "")
+	name = strings.ReplaceAll(name, ".", "")
+	if unicode.IsNumber(rune(name[0])) {
+		name = "a" + name
+	}
+	return name
 }
 
 // TerminateMutagenSync terminates the mutagen sync
