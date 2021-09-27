@@ -19,12 +19,12 @@ Steps:
     1. Use the "+" to select "From Docker, Vagrant, VM..."
     2. Choose "Docker Compose"
     3. Create a server; the default name is "docker", but since the "server" for each project will be different, name it for the project, for example "DDEV d9". Choose "Docker for Windows" or "Docker for Mac"
-    4. In the "Path mappings" of the "Server" map the local paths (which on WSL2 means /home/...) to the in-container paths. So "Virtual Machine Path" would be "/var/www/html" and "Local path" would be something like /Users/rfay/workspace/d9 (on macOS) or \\wsl$\Ubuntu\home\rfay\workspace\d9 on Windows using WSL2
-    5. Now back in the "Configure Remote PHP Interpreter" for "Configuration files" use .ddev/.ddev-docker-compose-full.yaml
+    4. In the "Path mappings" of the "Server" you may have to map the local paths (which on WSL2 means /home/...) to the in-container paths, especially if you have mutagen enabled. So "Virtual Machine Path" would be "/var/www/html" and "Local path" would be something like /Users/rfay/workspace/d9 (on macOS) or \\wsl$\Ubuntu\home\rfay\workspace\d9 on Windows using WSL2.
+    5. Now back in the "Configure Remote PHP Interpreter" for "Configuration files" use `.ddev/.ddev-docker-compose-full.yaml`
     6. Service: web
-    7. Add an environment variable `COMPOSE_PROJECT_NAME=ddev-<projectname>`. In my case, it's `ddev-d9`
+    7. Add an environment variable `COMPOSE_PROJECT_NAME=ddev-<projectname>`. In this case, it's `ddev-d9`
     8. In the CLI interpreter "Lifecycle" select "Connect to existing container"
-    9. In the PHP Interpreter path, you can just put "php" if you're using the default PHP version (currently 7.4). Due to a [PhpStorm bug](https://youtrack.jetbrains.com/issue/WI-62463) you'll want to put the full name of the binary, like "php8.0" if you're not using the default version.
+    9. In the PHP Interpreter path, you can just put `php` if you're using the default PHP version (currently 7.4). Due to a [PhpStorm bug](https://youtrack.jetbrains.com/issue/WI-62463) you'll want to put the full name of the binary, like `php8.0` if you're not using the default version.
     10. Here's an example filled out ![example configuration](images/cli_interpreter.png)
 4. In the main PHP setup dialog, add an entry to the path mappings, as it doesn't correctly derive the full path mapping. Add an entry that maps your project location to /var/www/html. So in this example, the Local Path is /Users/rfay/workspace/d9 and the Remote Path is /var/www/html. ![example mapping](images/mapping.png)
 5. Configure composer under PHP→Composer.
