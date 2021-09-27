@@ -28,9 +28,6 @@ plugins:
     - git-revision-date-localized:
         type: timeago
         locale: en
-google_analytics:
-  - 'UA-105593079-2'
-  - 'auto'
 nav:
   - 'Home': 'index.md'
   - 'ddev Basics':
