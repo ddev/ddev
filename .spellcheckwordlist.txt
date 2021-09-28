@@ -224,6 +224,7 @@ exec
 existing
 export
 extradb
+facebook
 fi
 file
 files
@@ -341,6 +342,7 @@ or
 oriented
 output
 pause
+pecl
 performant
 php
 phpMyAdmin
@@ -387,6 +389,7 @@ s
 sTCP
 sbin
 scalable
+screencast
 sequelace
 sequelpro
 serverName
