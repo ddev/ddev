@@ -20,7 +20,7 @@ You can change the contents of the xhprof_prepend function - it's in `.ddev/xhpr
 
 For example, you may want to add a link to the profile run to the bottom of the profiled web page; the provided xhprof_prepend.php has comments and a sample function to do that, which works with Drupal 7. If you change it, remove the `#ddev-generated` line from the top, and check it in (`git add -f .ddev/xhprof/xhprof_prepend.php`)
 
-For another example, if you want to exclude the memory profiling so there are less columns to study, change `xhprof_enable(XHPROF_FLAGS_CPU + XHPROF_FLAGS_MEMORY);` to just `xhprof_enable(XHPROF_FLAGS_CPU);` in `.ddev/xhprof/xhprof_prepend.php` and remote the `#ddev-generated` at the top of the file. See the docs on [xhprof_enable()](https://www.php.net/manual/en/function.xhprof-enable.php). 
+For another example, if you want to exclude the memory profiling so there are less columns to study, change `xhprof_enable(XHPROF_FLAGS_CPU + XHPROF_FLAGS_MEMORY);` to just `xhprof_enable(XHPROF_FLAGS_CPU);` in `.ddev/xhprof/xhprof_prepend.php` and remote the `#ddev-generated` at the top of the file. See the docs on [xhprof_enable()](https://www.php.net/manual/en/function.xhprof-enable.php).
 
 ### Information Links
 
@@ -28,4 +28,4 @@ For another example, if you want to exclude the memory profiling so there are le
 * [Old facebook xhprof docs](http://web.archive.org/web/20110514095512/http://mirror.facebook.net/facebook/xhprof/doc.html)
 * [rfay screencast on xhprof and blackfire.io](https://www.youtube.com/watch?v=6h2QMAtRjTA)
 * [pecl.php.net docs](https://pecl.php.net/package/xhprof)
-* [Upstream github repo lonngxhinH/xhprof](https://github.com/longxinH/xhprof)
+* [Upstream github repo `lonngxhinH/xhprof`](https://github.com/longxinH/xhprof)
