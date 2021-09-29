@@ -21,9 +21,8 @@ brew link mysql-client zip makensis jq expect coreutils golang ddev mkcert gnu-g
 
 brew link --force mysql-client >/dev/null
 
-# Get the Plugins for NSIS
-curl -fsSL -o /tmp/EnVar-Plugin.zip https://github.com/GsNSIS/EnVar/releases/latest/download/EnVar-Plugin.zip && sudo unzip -o -d /usr/local/share/nsis /tmp/EnVar-Plugin.zip
-curl -fsSL -o /tmp/INetC.zip https://github.com/DigitalMediaServer/NSIS-INetC-plugin/releases/latest/download/INetC.zip && sudo unzip -o -d /usr/local/share/nsis/Plugins /tmp/INetC.zip
+# Get the Stubs and Plugins for makensis; the macOS makensis build doesn't do this.
+.ci-scripts/nsis_setup.sh /usr/local/share/nsis
 
 # homebrew sometimes removes /usr/local/etc/my.cnf.d
 mkdir -p "$(brew --prefix)/etc/my.cnf.d"
