@@ -131,7 +131,9 @@ If you trouble with the Mutagen feature, please try to recreate it and report vi
 
 ### Enabling Mutagen
 
-To start using Mutagen, just `ddev stop` and then `ddev config --mutagen-enabled` and start the project again. If the mutagen artifacts need to be downloaded, they will be downloaded automatically.
+**You do not need to separately install mutagen. It's better if you don't have it installed. DDEV does the installation and upgrades when needed.**
+
+To begin using Mutagen, just `ddev stop` and then `ddev config --mutagen-enabled` and start the project again. If the mutagen artifacts need to be downloaded, they will be downloaded automatically.
 
 To stop using Mutagen on a project, `ddev config --mutagen-enabled=false` after stopping it.
 
@@ -139,10 +141,12 @@ You can also enable mutagen globally (for every project) with `ddev config globa
 
 Note that the nfs-mount-enabled feature is automatically turned off if you're using mutagen.
 
+You can run mutagen on all your projects, there's no limit. To configure it globally, `ddev config global --mutagen-enabled`.
+
 ### Caveats about Mutagen Integration
 
 * **Not for every project**: Mutagen is not the right choice for every project. If filesystem consistency is your highest priority (as opposed to performance) then you'll want to walk carefully. At this point, there haven't been major issues reported, but two-way sync is a very difficult computational problem, and problems may surface. If you have backups (Time Machine!) and code under source control, you should be fine.
-* **Only one mutagen version on machine please**: Multiple mutagen versions can't coexist on one machine, so please stop any running mutagen. On macOS, `killall mutagen`.
+* **Only one mutagen version on machine please**: Multiple mutagen versions can't coexist on one machine, so please stop any running mutagen. On macOS, `killall mutagen`. If you absolutely have to have mutagen installed via homebrew or another technique (for another project) make sure it's the same version as you get with `ddev debug mutagen version`.
 * **Best on macOS**: This is mostly for macOS users. WSL2 is already the preferred environment for Windows users, but if you're still using traditional Windows this makes a huge difference. Turning on mutagen doesn't make sense on Linux or WSL2.
 * **Increased disk usage**: Mutagen integration ends up at least doubling the size of your project code disk usage, because the code exists both on your computer and also inside a docker volume. So take care that you have enough overall disk space, and also (on macOS) that you have enough file space set up in Docker Desktop.
 * If your project is likely to change the same file on both the host and inside the container, you may be at risk for conflicts.
