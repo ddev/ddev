@@ -57,7 +57,21 @@ For example, to add a "solrtail" command that runs in a solr service, add `.ddev
 tail -f /opt/solr/server/logs/solr.log
 
 ```
+#### Arguments forwarding
+    
+You can also pass arguments from the ddev custom command to the command(s) run. Append `$@` behind the custom command where to place the arguments.
+    
+```bash
+#!/bin/bash
 
+## Description: Run phpcs with progress and optional forwarded parameters
+## Usage: phpcs
+## Example: ddev phpcs --standard=Drupal -v
+
+phpcs -p $@
+
+```
+    
 ### Global commands
 
 Global commands work exactly the same as project-level commands, you just have to put them in your global .ddev directory. Your home directory has a .ddev/commands in it; there you can add host or web or db commands.
