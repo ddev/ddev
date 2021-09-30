@@ -543,6 +543,9 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	// Replace `docker-compose config`'s full-path usage with relative pathing
 	// for https://youtrack.jetbrains.com/issue/WI-61976 - PhpStorm
 	// This is an ugly an shortsighted approach, but otherwise we'd have to parse the yaml.
+	// Note that this issue with docker-compose config was fixed in docker-compose 2.0.0RC4
+	// so it's in Docker Desktop 4.1.0.
+	// https://github.com/docker/compose/issues/8503#issuecomment-930969241
 	fullContents = strings.Replace(fullContents, fmt.Sprintf("source: %s\n", app.AppRoot), "source: ../\n", -1)
 	fullHandle, err := os.Create(app.DockerComposeFullRenderedYAMLPath())
 	if err != nil {
