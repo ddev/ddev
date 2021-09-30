@@ -8,6 +8,6 @@ sudo apt-get update -qq
 sudo apt-get install -qq osslsigncode nsis
 
 # Get the Stubs and Plugins for makensis; the linux makensis build doesn't do this.
-.ci-scripts/nsis_setup.sh /usr/share/nsis
+./.ci-scripts/nsis_setup.sh /usr/share/nsis
 
 set +eu

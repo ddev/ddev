@@ -4,6 +4,8 @@
 # $1 should be the target directory where nsis is
 set -eu -o pipefail
 
+NSIS_VERSION=3.06.1
+
 if [ $1 = "" ]; then
   echo "first arg must be the NSIS_HOME"
   echo "For example nsis_setup.sh /usr/share/nsis"
@@ -12,6 +14,6 @@ if [ $1 = "" ]; then
   exit 1
 fi
 NSIS_HOME=$1
-wget https://sourceforge.net/projects/nsis/files/NSIS%203/3.06.1/nsis-3.06.1.zip/download && sudo unzip -o -d /usr/share download && sudo mv $NSIS_HOME-3.06.1 $NSIS_HOME
-wget https://github.com/GsNSIS/EnVar/releases/latest/download/EnVar-Plugin.zip && sudo unzip -o -d $NSIS_HOME EnVar-Plugin.zip
-wget https://github.com/DigitalMediaServer/NSIS-INetC-plugin/releases/latest/download/INetC.zip && sudo unzip -o -d $NSIS_HOME/Plugins INetC.zip
+wget -O /tmp/nsis.zip https://sourceforge.net/projects/nsis/files/NSIS%203/${NSIS_VERSION}/nsis-${NSIS_VERSION}.zip/download && unzip -o -d /tmp/nsistemp && sudo mv /tmp/nsistemp/*/* $NSIS_HOME && rm -rf /tmp/nsistemp /tmp/nsis.zip
+wget -O /tmp/EnVar-Plugin.zip https://github.com/GsNSIS/EnVar/releases/latest/download/EnVar-Plugin.zip && sudo unzip -o -d $NSIS_HOME /tmp/EnVar-Plugin.zip && rm /tmp/EnVar-Plugin.zip
+wget -O /tmp/INetC.zip https://github.com/DigitalMediaServer/NSIS-INetC-plugin/releases/latest/download/INetC.zip && sudo unzip -o -d $NSIS_HOME/Plugins /tmp/INetC.zip && rm /tmp/INetC.zip

@@ -22,7 +22,7 @@ brew link mysql-client zip makensis jq expect coreutils golang ddev mkcert gnu-g
 brew link --force mysql-client >/dev/null
 
 # Get the Stubs and Plugins for makensis; the macOS makensis build doesn't do this.
-.ci-scripts/nsis_setup.sh /usr/local/share/nsis
+./.ci-scripts/nsis_setup.sh /usr/local/share/nsis
 
 # homebrew sometimes removes /usr/local/etc/my.cnf.d
 mkdir -p "$(brew --prefix)/etc/my.cnf.d"
