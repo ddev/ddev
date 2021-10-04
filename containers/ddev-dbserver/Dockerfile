@@ -22,15 +22,20 @@ RUN for item in "75DD C3C4 A499 F1A1 8CB5  F3C8 CBF8 D6FD 518E 17E1" "126C 0D24 
 # Older versions of mariadb have been removed from
 # the mariadb apt repository, so we don't want to
 # look there when doing apt-get update. And we don't use new packages from there.
-RUN rm -f /etc/apt/sources.list.d/mariadb.list
+# And we're going to install our own percona.list if needed, so get that if needed
+# and remove it here
+RUN rm -f /etc/apt/sources.list.d/mariadb.list /etc/apt/sources.list.d/percona.list
 
 RUN apt-get -qq update && apt-get -qq install -y tzdata gnupg2 pv less vim wget curl lsb-release >/dev/null
 
+# If on 14.04 Ubuntu the percona repositories won't allow TLS apparently, so
+# Use http when connecting. This currently only affects MariaDB 5.5
 RUN set -x; if ( ! command -v xtrabackup && ! command -v mariabackup ); then \
     curl -sSL https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb -o percona-release_latest.$(lsb_release -sc)_all.deb; \
     dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb >/dev/null; \
     rm percona-release*.deb ; \
     xtrabackup_version=percona-xtrabackup-24 ; \
+    if [ "$(lsb_release -i -s)" = "Ubuntu" && "$(lsb_release -r -s)" <= "16.04" ]; then sed -i s/https:/http:/g /etc/apt/sources.list.d/percona.list; fi; \
     if [ "$DB_VERSION" = "8.0" ]; then xtrabackup_version=percona-xtrabackup-80; fi ; \
     apt-get -qq update && apt-get -qq install -y ${xtrabackup_version} >/dev/null ; \
 fi
