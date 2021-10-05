@@ -32,7 +32,7 @@ for item in drud/ddev/ddev golang makensis mingw-w64 mkcert mkdocs; do
     brew install $item >/dev/null || brew upgrade $item >/dev/null
 done
 
-git clone --branch v1.2.1 https://github.com/bats-core/bats-core.git /tmp/bats-core && pushd /tmp/bats-core >/dev/null && sudo ./install.sh /usr/local
+git clone --branch v1.2.1 https://github.com/bats-core/bats-core.git /tmp/bats-core && pushd /tmp/bats-core >/dev/null && sudo ./install.sh /usr/local && popd >/dev/null
 
 npm install --global markdownlint-cli
 markdownlint --version
@@ -41,9 +41,7 @@ pyenv global 3.9.1 # added to make CircleCi give us pip3
 pip3 install -q yq mkdocs==0.17.5
 
 # Get the Stubs and Plugins for makensis; the linux makensis build doesn't do this.
-wget https://sourceforge.net/projects/nsis/files/NSIS%203/3.06.1/nsis-3.06.1.zip/download && sudo unzip -o -d /usr/local/share download && sudo mv /usr/local/share/nsis-3.06.1 /usr/local/share/nsis
-wget https://github.com/GsNSIS/EnVar/releases/latest/download/EnVar-Plugin.zip && sudo unzip -o -d /usr/local/share/nsis EnVar-Plugin.zip
-wget https://github.com/DigitalMediaServer/NSIS-INetC-plugin/releases/latest/download/INetC.zip && sudo unzip -o -d /usr/local/share/nsis/Plugins INetC.zip
+pwd && ./.ci-scripts/nsis_setup.sh /usr/local/share/nsis
 
 mkcert -install
 
