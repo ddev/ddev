@@ -41,7 +41,7 @@ pyenv global 3.9.1 # added to make CircleCi give us pip3
 pip3 install -q yq mkdocs==0.17.5
 
 # Get the Stubs and Plugins for makensis; the linux makensis build doesn't do this.
-./.ci-scripts/nsis_setup.sh /usr/local/share/nsis
+pwd && ./.ci-scripts/nsis_setup.sh /usr/local/share/nsis
 
 mkcert -install
 
