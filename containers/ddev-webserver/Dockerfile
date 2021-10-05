@@ -83,6 +83,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     iproute2 \
     iputils-ping \
     jq \
+    libldap-common \
     libpcre3 \
     locales-all \
     nano \
