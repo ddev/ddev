@@ -32,7 +32,7 @@ for item in drud/ddev/ddev golang makensis mingw-w64 mkcert mkdocs; do
     brew install $item >/dev/null || brew upgrade $item >/dev/null
 done
 
-git clone --branch v1.2.1 https://github.com/bats-core/bats-core.git /tmp/bats-core && pushd /tmp/bats-core >/dev/null && sudo ./install.sh /usr/local
+git clone --branch v1.2.1 https://github.com/bats-core/bats-core.git /tmp/bats-core && pushd /tmp/bats-core >/dev/null && sudo ./install.sh /usr/local && popd >/dev/null
 
 npm install --global markdownlint-cli
 markdownlint --version
