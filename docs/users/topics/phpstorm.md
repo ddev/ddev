@@ -14,7 +14,7 @@ Steps:
 
 1. Open a DDEV project. In this example, the project name is "d9" and the site is "d9.ddev.site".
     - If you're on Windows, running PhpStorm on the Windows side but  using WSL2 for your DDEV project, open the project as a WSL2 project. In other words, in the "Open" dialog, browse to `\\wsl$\Ubuntu\home\rfay\workspace\d9` (in this example). (If you're running PhpStorm inside WSL2, there are no special instructions.)
-2. Set up your project to do normal Xdebug, as described in the [Step Debugging section](../step_debugging.md). This will result in a PhpStorm "Server" with the proper name, normally the same as the FQDN of the project. In this example, "d9.ddev.site". (All you have to do here is click the little telephone to "Start listening for PHP Debug Connections", then `ddev xdebug on`, then visit a web page and choose the correct mapping from host to server. )
+2. Set up your project to do normal Xdebug, as described in the [Step Debugging section](../step-debugging.md). This will result in a PhpStorm "Server" with the proper name, normally the same as the FQDN of the project. In this example, "d9.ddev.site". (All you have to do here is click the little telephone to "Start listening for PHP Debug Connections", then `ddev xdebug on`, then visit a web page and choose the correct mapping from host to server. )
 3. Under File→Settings→PHP (Windows) or Preferences→PHP (macOS), click the "..." to the right of "CLI Interpreter"
     1. Use the "+" to select "From Docker, Vagrant, VM..."
     2. Choose "Docker Compose"
