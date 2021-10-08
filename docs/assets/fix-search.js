@@ -21,7 +21,7 @@
     if (!MutationObserver) {
       return;
     }
-    var target = document.getElementById('rtd-search-form');
+    var target = document.getElementsByClassName('md-search__form');
     var config = {attributes: true, childList: true};
 
     var observer = new MutationObserver(function(mutations) {
@@ -39,6 +39,6 @@
       }).appendTo(form);
     });
 
-    observer.observe(target, config);
+    observer.observe(target[0], config);
   });
 }());
