@@ -8,9 +8,9 @@ theme:
   palette:
     primary: 'light-blue'
 extra_javascript:
+  - 'assets/jquery-3.5.1.min.js'
   - 'assets/fix-search.js'
   - 'assets/extra.js'
-  - 'assets/jquery-3.5.1.min.js'
 markdown_extensions:
     - toc:
         permalink: true
