@@ -9,7 +9,7 @@ jobs:
     steps:
     - checkout
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
-    - restore_cache:
+    - restore_homebrew_cache:
         keys:
         - linux-homebrew-v25
     - run:
@@ -47,15 +47,12 @@ jobs:
     - attach_workspace:
         at: ~/
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
-    - restore_cache:
+    - restore_homebrew_cache:
         keys:
         - linux-homebrew-v25
-    - restore_cache:
+    - restore_testcache_cache:
         keys:
           - linux-testcache-v24
-    - run:
-        command: ls -lR ~/.ddev || true
-        name: Check cache contents
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup
