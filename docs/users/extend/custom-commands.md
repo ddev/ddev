@@ -57,24 +57,14 @@ For example, to add a "solrtail" command that runs in a solr service, add `.ddev
 tail -f /opt/solr/server/logs/solr.log
 
 ```
-#### Arguments forwarding
-    
-You can also pass arguments from the ddev custom command to the command(s) run. Append `$@` behind the custom command where to place the arguments.
-    
-```bash
-#!/bin/bash
 
-## Description: Run phpcs with progress and optional forwarded parameters
-## Usage: phpcs
-## Example: ddev phpcs --standard=Drupal -v
-
-phpcs -p $@
-
-```
-    
 ### Global commands
 
 Global commands work exactly the same as project-level commands, you just have to put them in your global .ddev directory. Your home directory has a .ddev/commands in it; there you can add host or web or db commands.
+
+### Shell Command Examples
+
+There are many examples of [global](https://github.com/drud/ddev/tree/master/pkg/ddevapp/global_dotddev_assets/commands) and  [project-level](https://github.com/drud/ddev/tree/master/pkg/ddevapp/dotddev_assets/commands) custom/shell commands that are provided directly by DDEV, and you can adapt these to your use. They can be found in your `~/.ddev/commands/*` directories and in your project's `.ddev/commands/*` directories. There you'll see how to provide usage, examples, and how to use arguments provided to the commands. For example, the [xdebug command](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/commands/web/xdebug) shows simple argument processing and the [launch command](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/commands/host/launch) demonstrates flag processing.
 
 ### Environment variables provided
 
