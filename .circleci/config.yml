@@ -9,7 +9,7 @@ jobs:
     steps:
     - checkout
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
-    - restore_homebrew_cache:
+    - restore_cache:
         keys:
         - linux-homebrew-v25
     - run:
@@ -47,10 +47,10 @@ jobs:
     - attach_workspace:
         at: ~/
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
-    - restore_homebrew_cache:
+    - restore_cache:
         keys:
         - linux-homebrew-v25
-    - restore_testcache_cache:
+    - restore_cache:
         keys:
           - linux-testcache-v24
     - run:
