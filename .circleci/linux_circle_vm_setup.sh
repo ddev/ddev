@@ -13,7 +13,7 @@ if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
 fi
 
 sudo apt-get update -qq
-sudo apt-get install -qq mysql-client coreutils zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev
+sudo apt-get install -qq mysql-client coreutils zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev mkdocs
 
 curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip && sudo unzip -o -d /usr/local/bin /tmp/ngrok.zip
 
@@ -28,7 +28,7 @@ echo "capath=/etc/ssl/certs/" >>~/.curlrc
 
 . ~/.bashrc
 
-for item in drud/ddev/ddev golang makensis mingw-w64 mkcert mkdocs; do
+for item in drud/ddev/ddev golang makensis mingw-w64 mkcert; do
     brew install $item >/dev/null || brew upgrade $item >/dev/null
 done
 
