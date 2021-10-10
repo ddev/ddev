@@ -103,7 +103,9 @@ define('LOGGED_IN_SALT',   '{{ $config.LoggedInSalt }}');
 define('NONCE_SALT',       '{{ $config.NonceSalt }}');
 
 /** Absolute path to the WordPress directory. */
-define('ABSPATH', dirname(__FILE__) . '/{{ $config.AbsPath }}');
+if (!defined('ABSPATH')) {
+  define('ABSPATH', dirname(__FILE__) . '/{{ $config.AbsPath }}');
+}
 
 // Include for settings managed by ddev.
 $ddev_settings = dirname(__FILE__) . '/wp-config-ddev.php';
