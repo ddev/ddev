@@ -20,7 +20,6 @@ func TestDebugRouterNginxConfigCmd(t *testing.T) {
 
 	t.Cleanup(func() {
 		// Make sure all databases are back to default empty
-		_ = app.Stop(true, false)
 		cleanup()
 	})
 
