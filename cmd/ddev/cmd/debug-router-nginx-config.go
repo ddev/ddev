@@ -13,8 +13,9 @@ import (
 
 // DebugRouterNginxConfigCmd implements the ddev debug router-config command
 var DebugRouterNginxConfigCmd = &cobra.Command{
-	Use:   "router-nginx-config",
-	Short: "Prints the nginx config of the router",
+	Use:     "router-nginx-config",
+	Short:   "Prints the nginx config of the router",
+	Example: "ddev debug router-nginx-config",
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
