@@ -30,6 +30,7 @@ function docker_desktop_version {
 }
 
 echo -n "OS Information: " && uname -a
+echo "User information: $(id -a)"
 ddev version
 echo -n "docker location: " && ls -l "$(which docker)"
 if [ ${OSTYPE%-*} != "linux" ]; then
