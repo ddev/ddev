@@ -2,7 +2,7 @@
 
 DDEV-Local has built-in support for [xdebug](https://xdebug.org/).
 
-### Basic xdebug 
+### Basic usage 
 
 * Switch XDebug to profiling mode:
 ```
