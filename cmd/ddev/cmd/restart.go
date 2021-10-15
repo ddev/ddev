@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"strings"
 
@@ -35,19 +36,14 @@ ddev restart --all`,
 		for _, app := range projects {
 
 			output.UserOut.Printf("Restarting project %s...", app.GetName())
-			err = app.Stop(false, false)
-			if err != nil {
-				util.Failed("Failed to restart %s: %v", app.GetName(), err)
-			}
-
-			err = app.Start()
+			err = app.Restart()
 			if err != nil {
 				util.Failed("Failed to restart %s: %v", app.GetName(), err)
 			}
 
 			util.Success("Restarted %s", app.GetName())
 			httpURLs, urlList, _ := app.GetAllURLs()
-			if globalconfig.GetCAROOT() == "" {
+			if globalconfig.GetCAROOT() == "" || ddevapp.IsRouterDisabled(app) {
 				urlList = httpURLs
 			}
 

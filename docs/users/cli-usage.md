@@ -8,8 +8,8 @@ Each of these commands has full help. For example, `ddev start -h` or `ddev help
 
 * `ddev config` configures a project for ddev, creating a .ddev directory according to your responses. It should be executed in the project (repository) root.
 * `ddev start` and `ddev stop` start and stop the containers that comprise a project. `ddev restart` just does a stop and a start. `ddev poweroff` stops all ddev-related containers and projects.
-* `ddev describe` or `ddev describe <projectname>` gives you full details about the project, what ports it uses, how to access them, etc.
-* `ddev list` shows running projects
+* `ddev describe` or `ddev describe <projectname>` gives you full details about the project, what ports it uses, how to access them, etc. (Change the format with `ddev config global --table-style=bright` or `bold` or `default`)
+* `ddev list` shows running projects. (Change the format with `ddev config global --table-style=bright` or `bold` or `default`)
 * `ddev mysql` gives direct access to the mysql client
 * `ddev sequelpro`, `ddev sequelace`, and `ddev tableplus` (macOS only, if the app is installed) give access to the Sequel Pro, Sequel Ace, or TablePlus database browser GUIs.
 * `ddev heidisql` (Windows/WSL2 only, if installed) gives access to the HeidiSQL database browser GUI.
@@ -25,6 +25,7 @@ Each of these commands has full help. For example, `ddev start -h` or `ddev help
 * `ddev drush` (Drupal and Backdrop only) gives direct access to the drush CLI
 * `ddev artisan` (Laravel only) gives direct access to the Laravel artisan CLI
 * `ddev magento` (Magento2 only) gives access to the magento CLI
+* `ddev config global --simple-formatting` tells ddev to not try to make a fancy table in `ddev describe` and `ddev list`
 
 ## Partial Bundled Tools List
 
@@ -128,38 +129,7 @@ Now start your project with `ddev start`
 
 Quickstart instructions regarding database imports can be found under [Database Imports](#database-imports).
 
-### Drupal 8 Quickstart
-
-Get started with Drupal 8 projects on ddev either using a new or existing composer project or by cloning a git repository.
-
-#### Composer Setup Example
-
-```bash
-mkdir my-drupal8-site
-cd my-drupal8-site
-ddev config --project-type=drupal8 --docroot=web --create-docroot
-ddev start
-ddev composer create "drupal/recommended-project:^8"
-ddev composer require drush/drush
-ddev drush site:install -y
-ddev drush uli
-ddev launch
-```
-
-#### Drupal 8 Git Clone Example
-
-Note that the git URL shown below is an example only, you'll need to use your own project.
-
-```bash
-git clone https://github.com/example/example-site
-cd example-site
-ddev composer install
-ddev launch
-```
-
 ### Drupal 9 Quickstart
-
-Get started with Drupal 9 projects on ddev either using a new or existing composer project or by cloning a git repository.
 
 #### Drupal 9 Composer Setup Example
 
@@ -182,6 +152,7 @@ Note that the git URL shown below is an example only, you'll need to use your ow
 ```bash
 git clone https://github.com/example/example-site
 cd example-site
+ddev config --auto
 ddev composer install
 ddev launch
 ```
@@ -324,7 +295,7 @@ ddev launch
 In the examples above we used a one liner to copy `.env.example` as `env`and set the `DB_HOST`, `DB_DATABASE`, `DB_USERNAME` and `DB_PASSWORD` environment variables to the value of `db`.
 These values are DDEV's default settings for the Database connection.
 
-Instead of setting each connection variable we can add a ddev to the `connections` array in `config/databases.php` like this:
+Instead of setting each connection variable we can add a ddev to the `connections` array in `config/database.php` like this:
 
 ```php
 <?php
@@ -495,7 +466,7 @@ You can also see more detailed information about a project by running `ddev desc
 
 ```
 NAME        TYPE     LOCATION                URL                           STATUS
-d8composer  drupal8  ~/workspace/d8composer  https://d8composer.ddev.site  running
+d9composer  drupal8  ~/workspace/d9composer  https://d9composer.ddev.site  running
 
 Project Information
 -------------------
@@ -504,9 +475,9 @@ MariaDB version 10.3
 
 URLs
 ----
-https://d8composer.ddev.site
+https://d9composer.ddev.site
 https://127.0.0.1:33232
-http://d8composer.ddev.site
+http://d9composer.ddev.site
 http://127.0.0.1:33233
 
 MySQL/MariaDB Credentials
@@ -515,19 +486,19 @@ Username: "db", Password: "db", Default database: "db"
 
 or use root credentials when needed: Username: "root", Password: "root"
 
-Database hostname and port INSIDE container: db:3306
+Database hostname and port INSIDE container: ddev-d9-db:3306
 To connect to db server inside container or in project settings files:
-mysql --host=db --user=db --password=db --database=db
+mysql --host=ddev-d9-dbcomposer --user=db --password=db --database=db
 Database hostname and port from HOST: 127.0.0.1:33231
 To connect to mysql from your host machine,
 mysql --host=127.0.0.1 --port=33231 --user=db --password=db --database=db
 
 Other Services
 --------------
-MailHog (https):    https://d8composer.ddev.site:8026
-MailHog:            http://d8composer.ddev.site:8025
-phpMyAdmin (https): https://d8composer.ddev.site:8037
-phpMyAdmin:         http://d8composer.ddev.site:8036
+MailHog (https):    https://d9composer.ddev.site:8026
+MailHog:            http://d9composer.ddev.site:8025
+phpMyAdmin (https): https://d9composer.ddev.site:8037
+phpMyAdmin:         http://d9composer.ddev.site:8036
 
 DDEV ROUTER STATUS: healthy
 ssh-auth status: healthy
@@ -750,3 +721,13 @@ In `.ddev/config.yaml` `use_dns_when_possible: false` will make ddev never try t
 In `.ddev/config.yaml` `project_tld: example.com` (or any other domain) can set ddev to use a project that could never be looked up in DNS. You can also use `ddev config --project-tld=example.com`
 
 You can also set up a local DNS server like dnsmasq (Linux and macOS, `brew install dnsmasq`) or ([unbound](https://github.com/NLnetLabs/unbound) or many others on Windows) in your own host environment that serves the project_tld that you choose, and DNS resolution will work just fine. You'll likely want a wildcard A record pointing to 127.0.0.1 (on most ddev installations). If you use dnsmasq you must configure it to allow DNS rebinding.
+
+If you're using a browser on Windows, accessing a DDEV project in WSL2, Windows will attempt to resolve the site name via DNS. If you do not have an internet connection, this will fail. To resolve this, update your `C:\Windows\System32\drivers\etc\hosts` file.
+
+```
+127.0.0.1 example.ddev.site
+```
+
+* Note: You must have administrative privileges to save this file.
+
+* See [Windows Hosts File limited to 10 hosts per IP address line](https://ddev.readthedocs.io/en/stable/users/troubleshooting/#windows-hosts-file-limited-to-10-hosts-per-ip-address-line) for additional troubleshooting.

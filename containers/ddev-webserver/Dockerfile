@@ -3,7 +3,7 @@
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV-Local)
-FROM drud/ddev-php-base:v1.17.7 as ddev-webserver-base
+FROM drud/ddev-php-base:v1.18.0 as ddev-webserver-base
 
 ENV BACKDROP_DRUSH_VERSION=1.4.0
 ENV MKCERT_VERSION=v1.4.6
@@ -83,6 +83,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     iproute2 \
     iputils-ping \
     jq \
+    libldap-common \
     libpcre3 \
     locales-all \
     nano \
@@ -127,7 +128,7 @@ RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /var/lib/nginx
 
 RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-${MKCERT_ARCH} -o /usr/local/bin/mkcert && chmod 777 /usr/local/bin/mkcert
 
-RUN mkdir -p /var/www/xhprof && curl -o /tmp/xhprof.tgz -sSL https://pecl.php.net/get/xhprof && tar -zxf /tmp/xhprof.tgz --strip-components=1 -C /var/www/xhprof && chmod 777 /var/www/xhprof/xhprof_html
+RUN mkdir -p /var/xhprof && curl -o /tmp/xhprof.tgz -sSL https://pecl.php.net/get/xhprof && tar -zxf /tmp/xhprof.tgz --strip-components=1 -C /var/xhprof && chmod 777 /var/xhprof/xhprof_html
 
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
   chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log

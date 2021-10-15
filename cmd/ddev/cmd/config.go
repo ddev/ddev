@@ -108,6 +108,9 @@ var (
 	// mariadbVersionArg is mariadb version 5.5-10.5
 	mariaDBVersionArg string
 
+	// mutagenEnabled sets mutagen_enabled
+	mutagenEnabled bool
+
 	// nfsMountEnabled sets nfs_mount_enabled
 	nfsMountEnabled bool
 
@@ -259,6 +262,7 @@ func init() {
 	ConfigCommand.Flags().BoolVar(&workingDirDefaultsArg, "working-dir-defaults", false, "Unsets all service working directory overrides")
 	ConfigCommand.Flags().StringVar(&mariaDBVersionArg, "mariadb-version", "10.2", "mariadb version to use (incompatible with --mysql-version)")
 	ConfigCommand.Flags().String("mysql-version", "", "Oracle mysql version to use (incompatible with --mariadb-version)")
+	ConfigCommand.Flags().BoolVar(&mutagenEnabled, "mutagen-enabled", false, "enable mutagen asynchronous update of project in web container")
 
 	ConfigCommand.Flags().BoolVar(&nfsMountEnabled, "nfs-mount-enabled", false, "enable NFS mounting of project in container")
 	ConfigCommand.Flags().BoolVar(&failOnHookFail, "fail-on-hook-fail", false, "Decide whether 'ddev start' should be interrupted by a failing hook")
@@ -266,6 +270,8 @@ func init() {
 	ConfigCommand.Flags().StringVar(&hostHTTPSPortArg, "host-https-port", "", "The web container's localhost-bound https port")
 
 	ConfigCommand.Flags().StringVar(&hostDBPortArg, "host-db-port", "", "The db container's localhost-bound port")
+	ConfigCommand.Flags().String("host-dba-port", "", "The dba (PHPMyAdmin) container's localhost-bound port, if exposed via bind-all-interfaces")
+
 	ConfigCommand.Flags().StringVar(&phpMyAdminPortArg, "phpmyadmin-port", "", "Router port to be used for PHPMyAdmin (dba) container access")
 	ConfigCommand.Flags().StringVar(&phpMyAdminHTTPSPortArg, "phpmyadmin-https-port", "", "Router port to be used for PHPMyAdmin (dba) container access (https)")
 
@@ -309,6 +315,7 @@ func init() {
 	ConfigCommand.Flags().String("composer-version", "", `Specify override for composer version in web container. This may be "", "1", "2", or a specific version.`)
 
 	ConfigCommand.Flags().Bool("auto", true, `Automatically run config without prompting.`)
+	ConfigCommand.Flags().Bool("bind-all-interfaces", false, `Bind host ports on all interfaces, not just on localhost network interface`)
 
 	RootCmd.AddCommand(ConfigCommand)
 
@@ -486,6 +493,14 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.NFSMountEnabled = nfsMountEnabled
 	}
 
+	if cmd.Flag("mutagen-enabled").Changed {
+		app.MutagenEnabled = mutagenEnabled
+		if app.NFSMountEnabled {
+			util.Warning("nfs-mount-enabled disabled because incompatible with mutagen, which is enabled")
+			app.NFSMountEnabled = false
+		}
+	}
+
 	if cmd.Flag("fail-on-hook-fail").Changed {
 		app.FailOnHookFail = failOnHookFail
 	}
@@ -551,6 +566,10 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		}
 	}
 
+	if cmd.Flag("host-dba-port").Changed {
+		app.HostPHPMyAdminPort = cmd.Flag("host-dba-port").Value.String()
+	}
+
 	if cmd.Flag("use-dns-when-possible").Changed {
 		app.UseDNSWhenPossible = useDNSWhenPossibleArg
 	}
@@ -579,6 +598,10 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	if cmd.Flag("disable-settings-management").Changed {
 		app.DisableSettingsManagement, _ = cmd.Flags().GetBool("disable-settings-management")
+	}
+
+	if cmd.Flag("bind-all-interfaces").Changed {
+		app.BindAllInterfaces, _ = cmd.Flags().GetBool("bind-all-interfaces")
 	}
 
 	if uploadDirArg != "" {

@@ -15,8 +15,6 @@ import (
 
 	"fmt"
 
-	"io/ioutil"
-
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/testcommon"
@@ -216,7 +214,7 @@ func TestConfigSetValues(t *testing.T) {
 	assert.NoError(err, "error running ddev %v: %v, output=%s", args, err, out)
 
 	configFile := filepath.Join(tmpdir, ".ddev", "config.yaml")
-	configContents, err := ioutil.ReadFile(configFile)
+	configContents, err := os.ReadFile(configFile)
 	if err != nil {
 		t.Errorf("Unable to read %s: %v", configFile, err)
 	}
@@ -271,7 +269,7 @@ func TestConfigSetValues(t *testing.T) {
 	_, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 
-	configContents, err = ioutil.ReadFile(configFile)
+	configContents, err = os.ReadFile(configFile)
 	assert.NoError(err, "Unable to read %s: %v", configFile, err)
 
 	app = &ddevapp.DdevApp{}
@@ -306,7 +304,7 @@ func TestConfigSetValues(t *testing.T) {
 	_, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
 
-	configContents, err = ioutil.ReadFile(configFile)
+	configContents, err = os.ReadFile(configFile)
 	assert.NoError(err, "Unable to read %s: %v", configFile, err)
 
 	app = &ddevapp.DdevApp{}
@@ -754,25 +752,32 @@ func TestMariaMysqlConflicts(t *testing.T) {
 func TestConfigGitignore(t *testing.T) {
 	assert := asrt.New(t)
 
+	origDir, _ := os.Getwd()
+
 	// Create a temporary directory and switch to it.
-	tmpDir := testcommon.CreateTmpDir(t.Name())
-	defer testcommon.CleanupDir(tmpDir)
-	defer testcommon.Chdir(tmpDir)()
+	testDir := testcommon.CreateTmpDir(t.Name())
 
-	_, err := exec.RunCommand(DdevBin, []string{"config", "--project-type=php"})
-	assert.NoError(err)
-	defer func() {
-		_, err = exec.RunCommand(DdevBin, []string{"delete", "-Oy"})
-		assert.NoError(err)
-		_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("rm -f ~/.ddev/commands/web/%s ~/.ddev/homeadditions/%s", t.Name(), t.Name())})
-		assert.NoError(err)
-	}()
+	err := os.Chdir(testDir)
+	require.NoError(t, err)
 
-	_, err = exec.RunCommand("git", []string{"init"})
+	_, err = exec.RunHostCommand(DdevBin, "config", "--auto")
 	assert.NoError(err)
-	_, err = exec.RunCommand("git", []string{"add", "."})
+	t.Cleanup(func() {
+		_, err = exec.RunHostCommand(DdevBin, "delete", "-Oy")
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		_, err = exec.RunHostCommand("bash", "-c", fmt.Sprintf("rm -f ~/.ddev/commands/web/%s ~/.ddev/homeadditions/%s", t.Name(), t.Name()))
+		assert.NoError(err)
+		err = os.RemoveAll(testDir)
+		assert.NoError(err)
+	})
+
+	_, err = exec.RunHostCommand("git", "init")
 	assert.NoError(err)
-	out, err := exec.RunCommand("git", []string{"status"})
+	_, err = exec.RunHostCommand("git", "add", ".")
+	assert.NoError(err)
+	out, err := exec.RunHostCommand("git", "status")
 	assert.NoError(err)
 
 	// git status should have one new file, config.yaml
@@ -781,13 +786,18 @@ func TestConfigGitignore(t *testing.T) {
 	out = strings.ReplaceAll(out, "new file:   .ddev/config.yaml", "")
 	assert.NotContains(out, "new file:")
 
-	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("touch ~/.ddev/commands/web/%s ~/.ddev/homeadditions/%s", t.Name(), t.Name())})
+	_, err = exec.RunHostCommand("bash", "-c", fmt.Sprintf("touch ~/.ddev/commands/web/%s ~/.ddev/homeadditions/%s", t.Name(), t.Name()))
 	assert.NoError(err)
+	if err != nil {
+		out, err = exec.RunHostCommand("bash", "-c", "ls -l ~/.ddev && ls -lR ~/.ddev/commands ~/.ddev/homeadditions")
+		assert.NoError(err)
+		t.Logf("Contents of global .ddev: \n=====\n%s\n====", out)
+	}
 
-	_, err = exec.RunCommand(DdevBin, []string{"start", "-y"})
+	_, err = exec.RunHostCommand(DdevBin, "start", "-y")
 	assert.NoError(err)
-	statusOut, err := exec.RunCommand("bash", []string{"-c", "git status"})
+	statusOut, err := exec.RunHostCommand("bash", "-c", "git status")
 	assert.NoError(err)
-	_, err = exec.RunCommand("bash", []string{"-c", "git status | grep 'Untracked files'"})
+	_, err = exec.RunHostCommand("bash", "-c", "git status | grep 'Untracked files'")
 	assert.Error(err, "Untracked files were found where we didn't expect them: %s", statusOut)
 }

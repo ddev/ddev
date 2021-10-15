@@ -7,7 +7,6 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,6 +25,8 @@ import (
  */
 
 const pantheonTestSiteID = "ddev-test-site-do-not-delete.dev"
+const pantheonSiteURL = "https://dev-ddev-test-site-do-not-delete.pantheonsite.io/"
+const pantheonSiteExpectation = "DDEV DRUPAL8 TEST SITE"
 
 // TestPantheonPull ensures we can pull from pantheon.
 func TestPantheonPull(t *testing.T) {
@@ -42,6 +43,8 @@ func TestPantheonPull(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
+
+	require.True(t, isPullSiteValid(pantheonSiteURL, pantheonSiteExpectation), "pantheonSiteURL %s isn't working right", pantheonSiteURL)
 
 	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
 	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"TERMINUS_MACHINE_TOKEN=" + token}
@@ -89,10 +92,10 @@ func TestPantheonPull(t *testing.T) {
 	require.NoError(t, err)
 
 	// Build our pantheon.yaml from the example file
-	s, err := ioutil.ReadFile(app.GetConfigPath("providers/pantheon.yaml.example"))
+	s, err := os.ReadFile(app.GetConfigPath("providers/pantheon.yaml.example"))
 	require.NoError(t, err)
 	x := strings.Replace(string(s), "project:", fmt.Sprintf("project: %s\n#project:", pantheonTestSiteID), 1)
-	err = ioutil.WriteFile(app.GetConfigPath("providers/pantheon.yaml"), []byte(x), 0666)
+	err = os.WriteFile(app.GetConfigPath("providers/pantheon.yaml"), []byte(x), 0666)
 	assert.NoError(err)
 	err = app.WriteConfig()
 	require.NoError(t, err)
@@ -113,6 +116,8 @@ func TestPantheonPull(t *testing.T) {
 	assert.NoError(err)
 	assert.True(strings.HasPrefix(out, "1\n"))
 
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
 	assert.FileExists("hello-pre-pull-" + app.Name)
 	assert.FileExists("hello-post-pull-" + app.Name)
 	err = os.Remove("hello-pre-pull-" + app.Name)
@@ -136,6 +141,8 @@ func TestPantheonPush(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
+
+	require.True(t, isPullSiteValid(pantheonSiteURL, pantheonSiteExpectation), "pantheonSiteURL %s isn't working right", pantheonSiteURL)
 
 	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
 	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"TERMINUS_MACHINE_TOKEN=" + token}
@@ -194,10 +201,10 @@ func TestPantheonPush(t *testing.T) {
 	require.NoError(t, err)
 
 	// Build our pantheon.yaml from the example file
-	s, err := ioutil.ReadFile(app.GetConfigPath("providers/pantheon.yaml.example"))
+	s, err := os.ReadFile(app.GetConfigPath("providers/pantheon.yaml.example"))
 	require.NoError(t, err)
 	x := strings.Replace(string(s), "project:", fmt.Sprintf("project: %s\n#project:", pantheonTestSiteID), 1)
-	err = ioutil.WriteFile(app.GetConfigPath("providers/pantheon.yaml"), []byte(x), 0666)
+	err = os.WriteFile(app.GetConfigPath("providers/pantheon.yaml"), []byte(x), 0666)
 	assert.NoError(err)
 	err = app.WriteConfig()
 	require.NoError(t, err)
@@ -223,7 +230,7 @@ func TestPantheonPush(t *testing.T) {
 	require.NoError(t, err)
 	fName := tval + ".txt"
 	fContent := []byte(tval)
-	err = ioutil.WriteFile(filepath.Join(siteDir, "sites/default/files", fName), fContent, 0644)
+	err = os.WriteFile(filepath.Join(siteDir, "sites/default/files", fName), fContent, 0644)
 	assert.NoError(err)
 
 	err = app.Push(provider, false, false)
@@ -243,6 +250,9 @@ func TestPantheonPush(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(out, tval)
 
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+
 	assert.FileExists("hello-pre-push-" + app.Name)
 	assert.FileExists("hello-post-push-" + app.Name)
 	err = os.Remove("hello-pre-push-" + app.Name)
@@ -256,7 +266,7 @@ func setupSSHKey(t *testing.T, privateKey string, expectScriptDir string) error 
 	// Provide an ssh key for `ddev auth ssh`
 	err := os.Mkdir("sshtest", 0755)
 	require.NoError(t, err)
-	err = ioutil.WriteFile(filepath.Join("sshtest", "id_rsa_test"), []byte(privateKey), 0600)
+	err = os.WriteFile(filepath.Join("sshtest", "id_rsa_test"), []byte(privateKey), 0600)
 	require.NoError(t, err)
 	out, err := exec.RunCommand("expect", []string{filepath.Join(expectScriptDir, "ddevauthssh.expect"), DdevBin, "./sshtest"})
 	require.NoError(t, err)

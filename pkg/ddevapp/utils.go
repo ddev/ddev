@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/fatih/color"
 	"github.com/fsouza/go-dockerclient"
-	"github.com/gosuri/uitable"
+	"github.com/jedib0t/go-pretty/v6/table"
 	"path"
 	"path/filepath"
 	"sort"
@@ -56,16 +55,6 @@ func GetActiveProjects() []*DdevApp {
 	return apps
 }
 
-// CreateAppTable will create a new app table for describe and list output
-func CreateAppTable() *uitable.Table {
-	table := uitable.New()
-	table.MaxColWidth = 140
-	table.Separator = "  "
-	table.Wrap = true
-	table.AddRow("NAME", "TYPE", "LOCATION", "URL", "STATUS")
-	return table
-}
-
 // RenderHomeRootedDir shortens a directory name to replace homedir with ~
 func RenderHomeRootedDir(path string) string {
 	userDir, err := gohomedir.Dir()
@@ -76,38 +65,34 @@ func RenderHomeRootedDir(path string) string {
 }
 
 // RenderAppRow will add an application row to an existing table for describe and list output.
-func RenderAppRow(table *uitable.Table, row map[string]interface{}) {
+func RenderAppRow(t table.Writer, row map[string]interface{}) {
 	status := fmt.Sprint(row["status"])
-
-	switch {
-	case strings.Contains(status, SitePaused):
-		status = color.YellowString(status)
-	case strings.Contains(status, SiteStopped):
-		status = color.RedString(status)
-	case strings.Contains(status, SiteDirMissing):
-		status = color.RedString(status)
-	case strings.Contains(status, SiteConfigMissing):
-		status = color.RedString(status)
-	default:
-		status = color.CyanString(status)
-	}
-
 	urls := ""
+	mutagenStatus := ""
 	if row["status"] == SiteRunning {
-		if globalconfig.GetCAROOT() != "" {
+		if globalconfig.GetCAROOT() != "" && !row["router_disabled"].(bool) {
 			urls = row["httpsurl"].(string)
 		} else {
 			urls = row["httpurl"].(string)
 		}
+		if row["mutagen_enabled"] == true {
+			if _, ok := row["mutagen_status"]; ok {
+				mutagenStatus = row["mutagen_status"].(string)
+			} else {
+				mutagenStatus = "not enabled"
+			}
+			if mutagenStatus != "ok" {
+				mutagenStatus = util.ColorizeText(mutagenStatus, "red")
+			}
+			status = fmt.Sprintf("%s (%s)", status, mutagenStatus)
+		}
 	}
 
-	table.AddRow(
-		row["name"],
-		row["type"],
-		row["shortroot"],
-		urls,
-		status,
-	)
+	status = FormatSiteStatus(status)
+
+	t.AppendRow(table.Row{
+		row["name"], row["type"], row["shortroot"], urls, status,
+	})
 
 }
 
@@ -139,7 +124,7 @@ func Cleanup(app *DdevApp) error {
 		}
 	}
 	// Always kill the nfs volume on ddev remove
-	for _, volName := range []string{app.GetNFSMountVolName()} {
+	for _, volName := range []string{app.GetNFSMountVolumeName()} {
 		_ = dockerutil.RemoveVolume(volName)
 	}
 

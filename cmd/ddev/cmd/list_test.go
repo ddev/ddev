@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/stretchr/testify/require"
+	"os"
 	"runtime"
 	"strings"
 	"testing"
@@ -19,19 +20,32 @@ import (
 // TestCmdList runs the binary with "ddev list" and checks the results
 func TestCmdList(t *testing.T) {
 	assert := asrt.New(t)
+	origDir, _ := os.Getwd()
 
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+
+	globalconfig.DdevGlobalConfig.SimpleFormatting = true
+	_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		globalconfig.DdevGlobalConfig.SimpleFormatting = false
+		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	})
 	// This gratuitous ddev start -a repopulates the ~/.ddev/global_config.yaml
 	// project list, which has been damaged by other tests which use
 	// direct app techniques.
-	_, err := exec.RunCommand(DdevBin, []string{"start", "-a", "-y"})
+	_, err = exec.RunHostCommand(DdevBin, "start", "-a", "-y")
 	assert.NoError(err)
 
 	// Execute "ddev list" and harvest plain text output.
-	out, err := exec.RunCommand(DdevBin, []string{"list"})
+	out, err := exec.RunHostCommand(DdevBin, "list")
 	assert.NoError(err, "error runnning ddev list: %v output=%s", out)
 
 	// Execute "ddev list -j" and harvest the json output
-	jsonOut, err := exec.RunCommand(DdevBin, []string{"list", "-j"})
+	jsonOut, err := exec.RunHostCommand(DdevBin, "list", "-j")
 	assert.NoError(err, "error running ddev list -j: %v, output=%s", jsonOut)
 
 	siteList := getTestingSitesFromList(t, jsonOut)
@@ -73,28 +87,25 @@ func TestCmdList(t *testing.T) {
 	}
 
 	// Stop the first app
-	out, err = exec.RunCommand(DdevBin, []string{"stop", TestSites[0].Name})
-	t.Logf("Stopped first project with ddev stop %s", TestSites[0].Name)
+	out, err = exec.RunHostCommand(DdevBin, "stop", TestSites[0].Name)
 	assert.NoError(err, "error runnning ddev stop %v: %v output=%s", TestSites[0].Name, err, out)
 
 	// Execute "ddev list" and harvest json output.
 	// Now there should be one less active project in list
-	jsonOut, err = exec.RunCommand(DdevBin, []string{"list", "-jA"})
+	jsonOut, err = exec.RunHostCommand(DdevBin, "list", "-jA")
 	assert.NoError(err, "error runnning ddev list: %v output=%s", err, jsonOut)
 
 	siteList = getTestingSitesFromList(t, jsonOut)
 	assert.Equal(len(TestSites)-1, len(siteList))
-	t.Logf("test projects active with ddev list -jA: %v", siteList)
 
 	// Now list without -A, make sure we show all projects
-	jsonOut, err = exec.RunCommand(DdevBin, []string{"list", "-j"})
+	jsonOut, err = exec.RunHostCommand(DdevBin, "list", "-j")
 	assert.NoError(err, "error runnning ddev list: %v output=%s", err, out)
 	siteList = getTestingSitesFromList(t, jsonOut)
 	assert.Equal(len(TestSites), len(siteList))
-	t.Logf("test projects (including inactive) shown with ddev list -j: %v", siteList)
 
 	// Leave firstApp running for other tests
-	out, err = exec.RunCommand(DdevBin, []string{"start", "-y", TestSites[0].Name})
+	out, err = exec.RunHostCommand(DdevBin, "start", "-y", TestSites[0].Name)
 	assert.NoError(err, "error runnning ddev start: %v output=%s", err, out)
 }
 
@@ -110,7 +121,7 @@ func getSitesFromList(t *testing.T, jsonOut string) []interface{} {
 	assert.EqualValues(data["level"], "info")
 
 	raw, ok := data["raw"].([]interface{})
-	assert.True(ok)
+	require.True(t, ok)
 	return raw
 }
 
@@ -140,6 +151,11 @@ func TestCmdListContinuous(t *testing.T) {
 
 	assert := asrt.New(t)
 
+	oldDdevDebug := os.Getenv("DDEV_DEBUG")
+	_ = os.Setenv("DDEV_DEBUG", "")
+	t.Cleanup(func() {
+		_ = os.Setenv("DDEV_DEBUG", oldDdevDebug)
+	})
 	// Execute "ddev list --continuous"
 	cmd := oexec.Command(DdevBin, "list", "-j", "--continuous")
 	stdout, err := cmd.StdoutPipe()
@@ -150,18 +166,15 @@ func TestCmdListContinuous(t *testing.T) {
 
 	reader := bufio.NewReader(stdout)
 
-	blob := make([]byte, 16000)
-	byteCount, err := reader.Read(blob)
+	blob, err := reader.ReadBytes('\n')
 	assert.NoError(err)
+	byteCount := len(blob)
 	blob = blob[:byteCount-1]
-	require.True(t, byteCount > 300, "byteCount should have been >300 and was %v", byteCount)
+	require.True(t, byteCount > 300, "byteCount should have been >300 and was %v blob=%s", byteCount, string(blob))
 
 	f, err := unmarshalJSONLogs(string(blob))
-	if err != nil {
-		assert.NoError(err, "could not unmarshal ddev output: %v", err)
-		t.Logf("============== ddev list -j --continuous failed logs =================\n%s\n", string(blob))
-		t.FailNow()
-	}
+	require.NoError(t, err, "Could not unmarshall blob, err=%v, content=%s", err, blob)
+
 	assert.NotEmpty(f[0]["raw"])
 	time1 := f[0]["time"]
 	if len(f) > 1 {
@@ -171,13 +184,13 @@ func TestCmdListContinuous(t *testing.T) {
 	time.Sleep(time.Millisecond * 1500)
 
 	// Now read more from the pipe after resetting blob
-	blob = make([]byte, 16000)
-	byteCount, err = reader.Read(blob)
+	blob, err = reader.ReadBytes('\n')
+	byteCount = len(blob)
 	assert.NoError(err)
 	blob = blob[:byteCount-1]
-	require.True(t, byteCount > 300)
+	require.True(t, byteCount > 300, "byteCount should have been >300 and was %v blob=%s", byteCount, string(blob))
 	f, err = unmarshalJSONLogs(string(blob))
-	require.NoError(t, err)
+	require.NoError(t, err, "Could not unmarshall blob, err=%v, content=%s", err, blob)
 	if len(f) > 1 {
 		t.Logf("Expected just one line in second read, but got %d lines instead", len(f))
 	}
@@ -189,5 +202,4 @@ func TestCmdListContinuous(t *testing.T) {
 	// Kill the process we started.
 	err = cmd.Process.Kill()
 	assert.NoError(err)
-
 }

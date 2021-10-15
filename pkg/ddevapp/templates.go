@@ -1,6 +1,6 @@
 package ddevapp
 
-// DDevComposeTemplate is used to create the main docker-compose file
+// DDevComposeTemplate is used to create the .ddev/.ddev-docker-compose-base.yaml
 // file for a ddev project.
 const DDevComposeTemplate = `version: '{{ .ComposeVersion }}'
 {{ .DdevGenerated }}
@@ -18,6 +18,7 @@ services:
         gid: '{{ .GID }}'
     image: ${DDEV_DBIMAGE}-${DDEV_SITENAME}-built
     stop_grace_period: 60s
+    working_dir: "{{ .DBWorkingDir }}"
     volumes:
       - type: "volume"
         source: mariadb-database
@@ -29,7 +30,7 @@ services:
         target: "/mnt/ddev_config"
       - ddev-global-cache:/mnt/ddev-global-cache
     restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
-    user: "$DDEV_UID:$DDEV_GID"
+    user: '$DDEV_UID:$DDEV_GID'
     hostname: {{ .Name }}-db
     ports:
       - "{{ .DockerIP }}:$DDEV_HOST_DB_PORT:3306"
@@ -53,6 +54,7 @@ services:
       - HOST_DOCKER_INTERNAL_IP={{ .HostDockerInternalIP }}
       - IS_DDEV_PROJECT=true
       - LINES
+      - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-db/mysql_history
       - TZ={{ .Timezone }}
     command: "$DDEV_MARIADB_LOCAL_COMMAND"
     healthcheck:
@@ -74,8 +76,9 @@ services:
     image: ${DDEV_WEBIMAGE}-${DDEV_SITENAME}-built
     cap_add:
       - SYS_PTRACE
+    working_dir: "{{ .WebWorkingDir }}"
     volumes:
-      {{ if not .NoProjectMount }}
+      {{ if and (not .MutagenEnabled) (not .NoProjectMount) }}
       - type: {{ .MountType }}
         source: {{ .WebMount }}
         target: /var/www/html
@@ -86,25 +89,38 @@ services:
         consistency: cached
         {{ end }}
       {{ end }}
+      {{ if and .MutagenEnabled (not .NoProjectMount) }}
+      # For mutagen, mount a directory higher in /var/www so that we can use
+      # stageMode: "neighboring"
+      - type: volume
+        source: project_mutagen
+        target: /var/www
+        volume:
+          nocopy: true
+      {{ end }}
       - ".:/mnt/ddev_config:ro"
       - "./nginx_full:/etc/nginx/sites-enabled:ro"
       - "./apache:/etc/apache2/sites-enabled:ro"
       - ddev-global-cache:/mnt/ddev-global-cache
+      - ./xhprof:/usr/local/bin/xhprof
       {{ if not .OmitSSHAgent }}
       - ddev-ssh-agent_socket_dir:/home/.ssh-agent
       {{ end }}
 
     restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
-    user: "$DDEV_UID:$DDEV_GID"
+    user: '$DDEV_UID:$DDEV_GID'
     hostname: {{ .Name }}-web
     {{if not .OmitDB }}
     links:
       - db:db
     {{end}}
-    # ports is list of exposed *container* ports
+
     ports:
       - "{{ .DockerIP }}:$DDEV_HOST_WEBSERVER_PORT:80"
       - "{{ .DockerIP }}:$DDEV_HOST_HTTPS_PORT:443"
+{{ if .HostMailhogPort }}
+      - "{{ .DockerIP }}:{{ .HostMailhogPort }}:8025"
+{{ end }}
     environment:
       - COLUMNS
       - DOCROOT=${DDEV_DOCROOT}
@@ -136,6 +152,8 @@ services:
       - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80,${DDEV_MAILHOG_HTTPS_PORT}:{{ .MailhogPort }}
       - IS_DDEV_PROJECT=true
       - LINES
+      - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-web/mysql_history
+      - PHP_IDE_CONFIG=serverName=${DDEV_SITENAME}.${DDEV_TLD}
       - SSH_AUTH_SOCK=/home/.ssh-agent/socket
       - TZ={{ .Timezone }}
       - VIRTUAL_HOST=${DDEV_HOSTNAME}
@@ -149,9 +167,11 @@ services:
 {{ if .HostDockerInternalIP }}
     extra_hosts: [ "host.docker.internal:{{ .HostDockerInternalIP }}" ]
 {{ end }}
+{{ if not .OmitRouter }}
     external_links:
     {{ range $hostname := .Hostnames }}- "ddev-router:{{ $hostname }}"
     {{ end }}
+{{ end }}
     healthcheck:
       interval: 1s
       retries: 120
@@ -162,6 +182,7 @@ services:
   dba:
     container_name: ddev-${DDEV_SITENAME}-dba
     image: $DDEV_DBAIMAGE
+    working_dir: "{{ .DBAWorkingDir }}"
     restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
     labels:
       com.ddev.site-name: ${DDEV_SITENAME}
@@ -170,8 +191,12 @@ services:
       com.ddev.approot: $DDEV_APPROOT
     links:
       - db:db
-    ports:
+    expose:
       - "80"
+{{ if .HostPHPMyAdminPort }}
+    ports:
+      - "{{ .DockerIP }}:{{ .HostPHPMyAdminPort }}:80"
+{{ end }}
     hostname: {{ .Name }}-dba
     environment:
       - PMA_USER=root
@@ -194,7 +219,7 @@ networks:
 volumes:
   {{if not .OmitDB }}
   mariadb-database:
-    name: "${DDEV_SITENAME}-mariadb"
+    name: "{{ .MariaDBVolumeName}}"
   {{end}}
   {{ if not .OmitSSHAgent }}
   ddev-ssh-agent_socket_dir:
@@ -205,11 +230,16 @@ volumes:
 
   {{ if and .NFSMountEnabled (not .NoProjectMount) }}
   nfsmount:
+    name: "{{ .NFSMountVolumeName }}"
     driver: local
     driver_opts:
       type: nfs
       o: "addr={{ if .HostDockerInternalIP }}{{ .HostDockerInternalIP }}{{ else }}host.docker.internal{{end}},hard,nolock,rw"
-      device: ":{{ .NFSSource }}"
+      device: ':{{ .NFSSource }}'
+  {{ end }}
+  {{ if and .MutagenEnabled (not .NoProjectMount) }}
+  project_mutagen:
+    name: {{ .MutagenVolumeName }}
   {{ end }}
 
   `
@@ -295,11 +325,16 @@ const ConfigInstructions = `
 # Currently only these containers are supported. Some containers can also be
 # omitted globally in the ~/.ddev/global_config.yaml. Note that if you omit
 # the "db" container, several standard features of ddev that access the
-# database container will be unusable.
+# database container will be unusable. In the global configuration it is also
+# possible to omit ddev-router, but not here.
 
 # nfs_mount_enabled: false
 # Great performance improvement but requires host configuration first.
 # See https://ddev.readthedocs.io/en/stable/users/performance/#using-nfs-to-mount-the-project-into-the-container
+
+# mutagen_enabled: false
+# Experimental performance improvement using mutagen asynchronous updates.
+# See https://ddev.readthedocs.io/en/latest/users/performance/#using-mutagen
 
 # fail_on_hook_fail: False
 # Decide whether 'ddev start' should be interrupted by a failing hook
@@ -324,9 +359,17 @@ const ConfigInstructions = `
 # phpmyadmin_https_port: "8037"
 # The PHPMyAdmin ports can be changed from the default 8036 and 8037
 
+# host_phpmyadmin_port: "8036"
+# The phpmyadmin (dba) port is not normally bound on the host at all, instead being routed
+# through ddev-router, but it can be specified and bound.
+
 # mailhog_port: "8025"
 # mailhog_https_port: "8026"
 # The MailHog ports can be changed from the default 8025 and 8026
+
+# host_mailhog_port: "8025"
+# The mailhog port is not normally bound on the host at all, instead being routed
+# through ddev-router, but it can be bound directly to localhost if specified here.
 
 # webimage_extra_packages: [php7.4-tidy, php-bcmath]
 # Extra Debian packages that are needed in the webimage can be added here
@@ -365,6 +408,12 @@ const ConfigInstructions = `
 # the user is responsible for mounting it manually or via a script.
 # This is to enable experimentation with alternate file mounting strategies.
 # For advanced users only!
+
+# bind_all_interfaces: false
+# If true, host ports will be bound on all network interfaces,
+# not just the localhost interface. This means that ports
+# will be available on the local network if the host firewall
+# allows it.
 
 # Many ddev commands can be extended to run tasks before or after the
 # ddev command is executed, for example "post-start", "post-import-db",
@@ -482,8 +531,9 @@ const DdevSSHAuthTemplate = `version: '{{ .compose_version }}'
 
 volumes:
   dot_ssh:
+    name: "ddev-ssh-agent_dot_ssh"
   socket_dir:
-    name: ddev-ssh-agent_socket_dir
+    name: "ddev-ssh-agent_socket_dir"
 
 services:
   ddev-ssh-agent:
@@ -492,13 +542,13 @@ services:
     build:
       context: '{{ .BuildContext }}'
       args:
-        BASE_IMAGE: {{ .ssh_auth_image }}:{{ .ssh_auth_tag }}
+        BASE_IMAGE: '{{ .ssh_auth_image }}:{{ .ssh_auth_tag }}'
         username: '{{ .Username }}'
         uid: '{{ .UID }}'
         gid: '{{ .GID }}'
-    image: {{ .ssh_auth_image }}:{{ .ssh_auth_tag }}-built
+    image: '{{ .ssh_auth_image }}:{{ .ssh_auth_tag }}-built'
     restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
-    user: "$DDEV_UID:$DDEV_GID"
+    user: '$DDEV_UID:$DDEV_GID'
     volumes:
       - "dot_ssh:/tmp/.ssh"
       - "socket_dir:/tmp/.ssh-agent"

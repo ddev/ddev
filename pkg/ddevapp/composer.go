@@ -10,6 +10,7 @@ import (
 )
 
 // Composer runs composer commands in the web container, managing pre- and post- hooks
+// returns stdout, stderr, error
 func (app *DdevApp) Composer(args []string) (string, string, error) {
 	err := app.ProcessHooks("pre-composer")
 	if err != nil {
@@ -26,6 +27,10 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 		return stdout, stderr, fmt.Errorf("composer command failed: %v", err)
 	}
 
+	err = app.MutagenSyncFlush()
+	if err != nil {
+		return stdout, stderr, err
+	}
 	if runtime.GOOS == "windows" {
 		fileutil.ReplaceSimulatedLinks(app.AppRoot)
 	}

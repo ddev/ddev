@@ -192,6 +192,10 @@ func TestRouterConfigOverride(t *testing.T) {
 
 // TestDisableHTTP2 tests we can enable or disable http2
 func TestDisableHTTP2(t *testing.T) {
+	if nodeps.IsMacM1() {
+		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+	}
+
 	assert := asrt.New(t)
 	pwd, _ := os.Getwd()
 	testDir := testcommon.CreateTmpDir(t.Name())
@@ -222,7 +226,7 @@ func TestDisableHTTP2(t *testing.T) {
 	assert.NoError(err)
 
 	// Verify that http2 is on by default
-	out, err := exec.RunCommand("bash", []string{"-c", "curl -k -s -I " + app.GetPrimaryURL() + "| head -1"})
+	out, err := exec.RunCommand("bash", []string{"-c", "curl -k -s -L -I " + app.GetPrimaryURL() + "| head -1"})
 	assert.NoError(err, "failed to curl, err=%v out=%v", err, out)
 	assert.Equal("HTTP/2 200 \r\n", out)
 
@@ -231,7 +235,8 @@ func TestDisableHTTP2(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
-	out, err = exec.RunCommand("bash", []string{"-c", "curl -k -s -I " + app.GetPrimaryURL() + "| head -1"})
+	out, err = exec.RunCommand("bash", []string{"-c", "curl -k -s -L -I " + app.GetPrimaryURL() + "| head -1"})
+	assert.NoError(err, "failed to curl, err=%v out=%v", err, out)
 	assert.Equal("HTTP/1.1 200 OK\r\n", out)
 
 }

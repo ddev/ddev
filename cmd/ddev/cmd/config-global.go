@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
@@ -63,8 +64,18 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 		dirty = true
 	}
 
+	if cmd.Flag("mutagen-enabled").Changed {
+		globalconfig.DdevGlobalConfig.MutagenEnabledGlobal, _ = cmd.Flags().GetBool("mutagen-enabled")
+		dirty = true
+	}
+
 	if cmd.Flag("router-bind-all-interfaces").Changed {
 		globalconfig.DdevGlobalConfig.RouterBindAllInterfaces, _ = cmd.Flags().GetBool("router-bind-all-interfaces")
+		dirty = true
+	}
+
+	if cmd.Flag("simple-formatting").Changed {
+		globalconfig.DdevGlobalConfig.SimpleFormatting, _ = cmd.Flags().GetBool("simple-formatting")
 		dirty = true
 	}
 
@@ -90,6 +101,16 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 		val, _ := cmd.Flags().GetString("letsencrypt-email")
 		globalconfig.DdevGlobalConfig.LetsEncryptEmail = val
 		dirty = true
+	}
+
+	if cmd.Flag("table-style").Changed {
+		val, _ := cmd.Flags().GetString("table-style")
+		if nodeps.ArrayContainsString(globalconfig.ValidTableStyleList(), val) {
+			globalconfig.DdevGlobalConfig.TableStyle = val
+			dirty = true
+		} else {
+			util.Error("table-style=%s is not valid. Valid options include %s. Not changing table-style.\n", val, strings.Join(globalconfig.ValidTableStyleList(), ", "))
+		}
 	}
 
 	if cmd.Flag("auto-restart-containers").Changed {
@@ -120,10 +141,11 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 			util.Failed("Failed to write global config: %v", err)
 		}
 	}
-	util.Success("Global configuration:")
+	output.UserOut.Println("Global configuration:")
 	output.UserOut.Printf("instrumentation-opt-in=%v", globalconfig.DdevGlobalConfig.InstrumentationOptIn)
 	output.UserOut.Printf("omit-containers=[%s]", strings.Join(globalconfig.DdevGlobalConfig.OmitContainersGlobal, ","))
 	output.UserOut.Printf("web-environment=[%s]", strings.Join(globalconfig.DdevGlobalConfig.WebEnvironment, ","))
+	output.UserOut.Printf("mutagen-enabled=%v", globalconfig.DdevGlobalConfig.MutagenEnabledGlobal)
 	output.UserOut.Printf("nfs-mount-enabled=%v", globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal)
 
 	output.UserOut.Printf("router-bind-all-interfaces=%v", globalconfig.DdevGlobalConfig.RouterBindAllInterfaces)
@@ -131,6 +153,8 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 	output.UserOut.Printf("disable-http2=%v", globalconfig.DdevGlobalConfig.DisableHTTP2)
 	output.UserOut.Printf("use-letsencrypt=%v", globalconfig.DdevGlobalConfig.UseLetsEncrypt)
 	output.UserOut.Printf("letsencrypt-email=%v", globalconfig.DdevGlobalConfig.LetsEncryptEmail)
+	output.UserOut.Printf("table-style=%v", globalconfig.DdevGlobalConfig.TableStyle)
+	output.UserOut.Printf("simple-formatting=%v", globalconfig.DdevGlobalConfig.SimpleFormatting)
 	output.UserOut.Printf("auto-restart-containers=%v", globalconfig.DdevGlobalConfig.AutoRestartContainers)
 	output.UserOut.Printf("use-hardened-images=%v", globalconfig.DdevGlobalConfig.UseHardenedImages)
 	output.UserOut.Printf("fail-on-hook-fail=%v", globalconfig.DdevGlobalConfig.FailOnHookFailGlobal)
@@ -147,8 +171,11 @@ func init() {
 	configGlobalCommand.Flags().Bool("use-letsencrypt", false, "Enables experimental Let's Encrypt integration, 'ddev global --use-letsencrypt' or `ddev global --use-letsencrypt=false'")
 	configGlobalCommand.Flags().String("letsencrypt-email", "", "Email associated with Let's Encrypt, `ddev global --letsencrypt-email=me@example.com'")
 	configGlobalCommand.Flags().Bool("auto-restart-containers", false, "If true, automatically restart containers after a reboot or docker restart")
+	configGlobalCommand.Flags().Bool("simple-formatting", false, "If true, use simple formatting and no color for tables")
 	configGlobalCommand.Flags().Bool("use-hardened-images", false, "If true, use more secure 'hardened' images for an actual internet deployment.")
 	configGlobalCommand.Flags().Bool("fail-on-hook-fail", false, "If true, 'ddev start' will fail when a hook fails.")
+	configGlobalCommand.Flags().Bool("mutagen-enabled", false, "If true, web container will use mutagen caching/asynchronous updates.")
+	configGlobalCommand.Flags().String("table-style", "", "Table style for list and describe, see ~/.ddev/global_config.yaml for values")
 
 	ConfigCommand.AddCommand(configGlobalCommand)
 }

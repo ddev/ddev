@@ -7,7 +7,6 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/mitchellh/go-homedir"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -43,6 +42,9 @@ func init() {
 	if testNFSMount := os.Getenv("DDEV_TEST_USE_NFSMOUNT"); testNFSMount != "" {
 		nodeps.NFSMountEnabledDefault = true
 	}
+	if testMutagen := os.Getenv("DDEV_TEST_USE_MUTAGEN"); testMutagen == "true" {
+		nodeps.MutagenEnabledDefault = true
+	}
 }
 
 // NewApp creates a new DdevApp struct with defaults set and overridden by any existing config.yml.
@@ -73,6 +75,8 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.WebserverType = nodeps.WebserverDefault
 	app.NFSMountEnabled = nodeps.NFSMountEnabledDefault
 	app.NFSMountEnabledGlobal = globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal
+	app.MutagenEnabled = nodeps.MutagenEnabledDefault
+	app.MutagenEnabledGlobal = globalconfig.DdevGlobalConfig.MutagenEnabledGlobal
 	app.FailOnHookFail = nodeps.FailOnHookFailDefault
 	app.FailOnHookFailGlobal = globalconfig.DdevGlobalConfig.FailOnHookFailGlobal
 	app.RouterHTTPPort = nodeps.DdevDefaultRouterHTTPPort
@@ -197,14 +201,11 @@ func (app *DdevApp) WriteConfig() error {
 		return err
 	}
 
-	// Append current image information
-	cfgbytes = append(cfgbytes, []byte(fmt.Sprintf("\n\n# This config.yaml was created with ddev version %s\n# webimage: %s\n# dbimage: %s\n# dbaimage: %s\n# However we do not recommend explicitly wiring these images into the\n# config.yaml as they may break future versions of ddev.\n# You can update this config.yaml using 'ddev config'.\n", version.DdevVersion, version.GetWebImage(), version.GetDBImage(nodeps.MariaDB), version.GetDBAImage()))...)
-
 	// Append hook information and sample hook suggestions.
 	cfgbytes = append(cfgbytes, []byte(ConfigInstructions)...)
 	cfgbytes = append(cfgbytes, appcopy.GetHookDefaultComments()...)
 
-	err = ioutil.WriteFile(appcopy.ConfigPath, cfgbytes, 0644)
+	err = os.WriteFile(appcopy.ConfigPath, cfgbytes, 0644)
 	if err != nil {
 		return err
 	}
@@ -312,7 +313,7 @@ func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 
 // LoadConfigYamlFile loads one config.yaml into app, overriding what might be there.
 func (app *DdevApp) LoadConfigYamlFile(filePath string) error {
-	source, err := ioutil.ReadFile(filePath)
+	source, err := os.ReadFile(filePath)
 	if err != nil {
 		return fmt.Errorf("could not find an active ddev configuration at %s have you run 'ddev config'? %v", app.ConfigPath, err)
 	}
@@ -485,51 +486,36 @@ func (app *DdevApp) GetHostnames() []string {
 	// Use a map to make sure that we have unique hostnames
 	// The value is useless, so just use the int 1 for assignment.
 	nameListMap := make(map[string]int)
+	nameListArray := []string{}
 
-	for _, name := range app.AdditionalHostnames {
-		name = strings.ToLower(name)
-		nameListMap[name+"."+app.ProjectTLD] = 1
+	if !IsRouterDisabled(app) {
+		for _, name := range app.AdditionalHostnames {
+			name = strings.ToLower(name)
+			nameListMap[name+"."+app.ProjectTLD] = 1
+		}
+
+		for _, name := range app.AdditionalFQDNs {
+			name = strings.ToLower(name)
+			nameListMap[name] = 1
+		}
+
+		// Make sure the primary hostname didn't accidentally get added, it will be prepended
+		delete(nameListMap, app.GetHostname())
+
+		// Now walk the map and extract the keys into an array.
+		for k := range nameListMap {
+			nameListArray = append(nameListArray, k)
+		}
+		sort.Strings(nameListArray)
+		// We want the primary hostname to be first in the list.
+		nameListArray = append([]string{app.GetHostname()}, nameListArray...)
 	}
-
-	for _, name := range app.AdditionalFQDNs {
-		name = strings.ToLower(name)
-		nameListMap[name] = 1
-	}
-
-	// Make sure the primary hostname didn't accidentally get added, it will be prepended
-	delete(nameListMap, app.GetHostname())
-
-	// Now walk the map and extract the keys into an array.
-	nameListArray := make([]string, 0, len(nameListMap))
-	for k := range nameListMap {
-		nameListArray = append(nameListArray, k)
-	}
-	sort.Strings(nameListArray)
-	// We want the primary hostname to be first in the list.
-	nameListArray = append([]string{app.GetHostname()}, nameListArray...)
-
 	return nameListArray
 }
 
 // WriteDockerComposeYAML writes a .ddev-docker-compose-base.yaml and related to the .ddev directory.
 func (app *DdevApp) WriteDockerComposeYAML() error {
 	var err error
-
-	// Because of move from docker-compose.yaml as base file to .ddev-docker-compose-base.yaml
-	// remove old ddev-managed docker-compose.yaml
-	oldDockerCompose := filepath.Join(app.AppConfDir(), "docker-compose.yaml")
-	if fileutil.FileExists(oldDockerCompose) {
-		found, err := fileutil.FgrepStringInFile(oldDockerCompose, DdevFileSignature)
-		if err != nil {
-			return err
-		}
-		if found {
-			err = os.Remove(oldDockerCompose)
-			if err != nil {
-				return err
-			}
-		}
-	}
 
 	f, err := os.Create(app.DockerComposeYAMLPath())
 	if err != nil {
@@ -554,6 +540,13 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	if err != nil {
 		return err
 	}
+	// Replace `docker-compose config`'s full-path usage with relative pathing
+	// for https://youtrack.jetbrains.com/issue/WI-61976 - PhpStorm
+	// This is an ugly an shortsighted approach, but otherwise we'd have to parse the yaml.
+	// Note that this issue with docker-compose config was fixed in docker-compose 2.0.0RC4
+	// so it's in Docker Desktop 4.1.0.
+	// https://github.com/docker/compose/issues/8503#issuecomment-930969241
+	fullContents = strings.Replace(fullContents, fmt.Sprintf("source: %s\n", app.AppRoot), "source: ../\n", -1)
 	fullHandle, err := os.Create(app.DockerComposeFullRenderedYAMLPath())
 	if err != nil {
 		return err
@@ -636,8 +629,10 @@ type composeYAMLVars struct {
 	Plugin                    string
 	AppType                   string
 	MailhogPort               string
+	HostMailhogPort           string
 	DBAPort                   string
 	DBPort                    string
+	HostPHPMyAdminPort        string
 	DdevGenerated             string
 	HostDockerInternalIP      string
 	ComposeVersion            string
@@ -651,9 +646,15 @@ type composeYAMLVars struct {
 	SSHAgentBuildContext      string
 	OmitDB                    bool
 	OmitDBA                   bool
+	OmitRouter                bool
 	OmitSSHAgent              bool
+	BindAllInterfaces         bool
+	MariaDBVolumeName         string
+	MutagenEnabled            bool
+	MutagenVolumeName         string
 	NFSMountEnabled           bool
 	NFSSource                 string
+	NFSMountVolumeName        string
 	DockerIP                  string
 	IsWindowsFS               bool
 	NoProjectMount            bool
@@ -665,6 +666,9 @@ type composeYAMLVars struct {
 	GID                       string
 	AutoRestartContainers     bool
 	FailOnHookFail            bool
+	WebWorkingDir             string
+	DBWorkingDir              string
+	DBAWorkingDir             string
 	WebEnvironment            []string
 }
 
@@ -708,34 +712,45 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		Plugin:                    "ddev",
 		AppType:                   app.Type,
 		MailhogPort:               GetPort("mailhog"),
+		HostMailhogPort:           app.HostMailhogPort,
 		DBAPort:                   GetPort("dba"),
 		DBPort:                    GetPort("db"),
+		HostPHPMyAdminPort:        app.HostPHPMyAdminPort,
 		DdevGenerated:             DdevFileSignature,
 		HostDockerInternalIP:      hostDockerInternalIP,
 		ComposeVersion:            version.DockerComposeFileFormatVersion,
 		DisableSettingsManagement: app.DisableSettingsManagement,
-		OmitDB:                    nodeps.ArrayContainsString(app.GetOmittedContainers(), "db"),
-		OmitDBA:                   nodeps.ArrayContainsString(app.GetOmittedContainers(), "dba") || nodeps.ArrayContainsString(app.OmitContainers, "db"),
+		OmitDB:                    nodeps.ArrayContainsString(app.GetOmittedContainers(), nodeps.DBContainer),
+		OmitDBA:                   nodeps.ArrayContainsString(app.GetOmittedContainers(), nodeps.DBAContainer) || nodeps.ArrayContainsString(app.OmitContainers, nodeps.DBContainer),
+		OmitRouter:                nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer),
 		OmitSSHAgent:              nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent"),
-		NFSMountEnabled:           app.NFSMountEnabled || app.NFSMountEnabledGlobal,
-		NFSSource:                 "",
-		IsWindowsFS:               runtime.GOOS == "windows",
-		NoProjectMount:            app.NoProjectMount,
-		MountType:                 "bind",
-		WebMount:                  "../",
-		Hostnames:                 app.GetHostnames(),
-		Timezone:                  app.Timezone,
-		ComposerVersion:           app.ComposerVersion,
-		Username:                  username,
-		UID:                       uid,
-		GID:                       gid,
-		WebBuildContext:           "./web-build",
-		DBBuildContext:            "./db-build",
-		WebBuildDockerfile:        "../.webimageBuild/Dockerfile",
-		DBBuildDockerfile:         "../.dbimageBuild/Dockerfile",
-		AutoRestartContainers:     globalconfig.DdevGlobalConfig.AutoRestartContainers,
-		FailOnHookFail:            app.FailOnHookFail || app.FailOnHookFailGlobal,
-		WebEnvironment:            webEnvironment,
+		BindAllInterfaces:         app.BindAllInterfaces,
+		MutagenEnabled:            (app.IsMutagenEnabled()),
+
+		NFSMountEnabled:       (app.NFSMountEnabled || app.NFSMountEnabledGlobal) && !app.IsMutagenEnabled(),
+		NFSSource:             "",
+		IsWindowsFS:           runtime.GOOS == "windows",
+		NoProjectMount:        app.NoProjectMount,
+		MountType:             "bind",
+		WebMount:              "../",
+		Hostnames:             app.GetHostnames(),
+		Timezone:              app.Timezone,
+		ComposerVersion:       app.ComposerVersion,
+		Username:              username,
+		UID:                   uid,
+		GID:                   gid,
+		WebBuildContext:       "./web-build",
+		DBBuildContext:        "./db-build",
+		WebBuildDockerfile:    "../.webimageBuild/Dockerfile",
+		DBBuildDockerfile:     "../.dbimageBuild/Dockerfile",
+		AutoRestartContainers: globalconfig.DdevGlobalConfig.AutoRestartContainers,
+		FailOnHookFail:        app.FailOnHookFail || app.FailOnHookFailGlobal,
+		WebWorkingDir:         app.GetWorkingDir("web", ""),
+		DBWorkingDir:          app.GetWorkingDir("db", ""),
+		DBAWorkingDir:         app.GetWorkingDir("dba", ""),
+		WebEnvironment:        webEnvironment,
+		MariaDBVolumeName:     app.GetMariaDBVolumeName(),
+		NFSMountVolumeName:    app.GetNFSMountVolumeName(),
 	}
 	if app.NFSMountEnabled || app.NFSMountEnabledGlobal {
 		templateVars.MountType = "volume"
@@ -750,6 +765,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 			// and completely chokes in C:\Users\rfay...
 			templateVars.NFSSource = dockerutil.MassageWindowsNFSMount(app.AppRoot)
 		}
+	}
+
+	if app.IsMutagenEnabled() {
+		templateVars.MutagenVolumeName = GetMutagenVolumeName(app)
 	}
 
 	// Add web and db extra dockerfile info
@@ -788,6 +807,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if app.BindAllInterfaces {
+		templateVars.DockerIP = "0.0.0.0"
+	}
 
 	err = templ.Execute(&doc, templateVars)
 	return doc.String(), err
@@ -819,7 +841,7 @@ FROM $BASE_IMAGE
 ARG username
 ARG uid
 ARG gid
-RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' --uid $uid "$username" || useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' "$username")
+RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' --uid $uid "$username" || useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' "$username" || useradd  -l -m -s "/bin/bash" --gid "$gid" --comment '' "$username")
 `
 	if extraPackages != nil {
 		contents = contents + `
@@ -855,7 +877,7 @@ func WriteImageDockerfile(fullpath string, contents []byte) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(fullpath, contents, 0644)
+	err = os.WriteFile(fullpath, contents, 0644)
 	if err != nil {
 		return err
 	}
@@ -1005,7 +1027,7 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
-	err := CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "nginx_full/nginx-site.conf", "sequelpro.spf", "**/README.*")
+	err := CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen", "nginx_full/nginx-site.conf", "sequelpro.spf", "xhprof", "**/README.*")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}

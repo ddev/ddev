@@ -54,19 +54,6 @@ ENV NODE_VERSION=12
 RUN sudo apt-get remove -y nodejs
 RUN curl -sSL --fail https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests nodejs
-
-```
-
-**Note that if a Dockerfile is provided, any config.yaml `webimage_extra_packages`, `dbimage_extra_packages`, or `composer_version` statements will be ignored.** If you need to add packages as well as other custom configuration, add them to your Dockerfile with a line like
-
-```dockerfile
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests php7.3-tidy
-```
-
-If you need to set an explicit composer version in this situation use a command like
-
-```dockerfile
-RUN composer self-update --2
 ```
 
 **Remember that the Dockerfile is building a docker image that will be used later with ddev.** At the time the Dockerfile is executing, your code is not mounted and the container is not running, it's just being built. So for example, an `npm install` in /var/www/html will not do anything useful because the code is not there at image building time.

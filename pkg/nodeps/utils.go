@@ -1,10 +1,13 @@
 package nodeps
 
 import (
+	"golang.org/x/term"
 	"math/rand"
 	"os"
 	"runtime"
+	"strconv"
 	"time"
+	"unicode"
 )
 
 // ArrayContainsString returns true if slice contains element
@@ -59,6 +62,11 @@ func IsWSL2() bool {
 	return GetWSLDistro() != ""
 }
 
+// IsMacM1 returns true if running on mac M1
+func IsMacM1() bool {
+	return runtime.GOOS == "darwin" && runtime.GOARCH == "arm64"
+}
+
 // GetWSLDistro returns the WSL2 distro name if on Linux
 func GetWSLDistro() string {
 	wslDistro := ""
@@ -66,4 +74,32 @@ func GetWSLDistro() string {
 		wslDistro = os.Getenv("WSL_DISTRO_NAME")
 	}
 	return wslDistro
+}
+
+// IsLetter returns true if all chars in string are alpha
+func IsLetter(s string) bool {
+	for _, r := range s {
+		if !unicode.IsLetter(r) {
+			return false
+		}
+	}
+	return true
+}
+
+// IsInteger returns true if the string is integer
+func IsInteger(s string) bool {
+	_, err := strconv.ParseInt(s, 0, 64)
+	return err == nil
+}
+
+// GetTerminalWidthHeight returns width, height if on terminal
+// or 80, 0 if not. If we can't get terminal info, we'll just assume 80x24
+func GetTerminalWidthHeight() (int, int) {
+	if term.IsTerminal(int(os.Stdout.Fd())) {
+		width, height, err := term.GetSize(int(os.Stdout.Fd()))
+		if err == nil {
+			return width, height
+		}
+	}
+	return 80, 24
 }

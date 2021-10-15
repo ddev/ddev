@@ -13,6 +13,10 @@ import (
 // TestCmdXdebug tests the `ddev xdebug` command
 func TestCmdXdebug(t *testing.T) {
 	assert := asrt.New(t)
+
+	phpVersions := nodeps.ValidPHPVersions
+	delete(phpVersions, "8.1")
+
 	pwd, _ := os.Getwd()
 	v := TestSites[0]
 
@@ -32,7 +36,7 @@ func TestCmdXdebug(t *testing.T) {
 	_, err = exec.RunCommand(DdevBin, []string{"config", "--composer-version=2"})
 	assert.NoError(err)
 
-	for phpVersion := range nodeps.ValidPHPVersions {
+	for phpVersion := range phpVersions {
 		t.Logf("Testing xdebug command in php%s", phpVersion)
 		_, err := exec.RunCommand(DdevBin, []string{"config", "--php-version", phpVersion})
 		require.NoError(t, err)

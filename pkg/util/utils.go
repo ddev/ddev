@@ -2,18 +2,24 @@ package util
 
 import (
 	"fmt"
+	"golang.org/x/text/runes"
+
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
+	"math"
 	"math/rand"
 	osexec "os/exec"
 	"os/user"
 	"runtime"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/drud/ddev/pkg/output"
-	"github.com/fatih/color"
 )
 
 func init() {
@@ -22,6 +28,7 @@ func init() {
 
 // Failed will print a red error message and exit with failure.
 func Failed(format string, a ...interface{}) {
+	format = ColorizeText(format, "red")
 	if a != nil {
 		//output.UserOut.Fatalf(format, a...)
 		output.UserErr.Fatalf(format, a...)
@@ -32,8 +39,9 @@ func Failed(format string, a ...interface{}) {
 	}
 }
 
-// Error will print an red error message but will not exit.
+// Error will print a red error message but will not exit.
 func Error(format string, a ...interface{}) {
+	format = ColorizeText(format, "red")
 	if a != nil {
 		output.UserErr.Errorf(format, a...)
 	} else {
@@ -43,6 +51,7 @@ func Error(format string, a ...interface{}) {
 
 // Warning will present the user with warning text.
 func Warning(format string, a ...interface{}) {
+	format = ColorizeText(format, "yellow")
 	if a != nil {
 		output.UserErr.Warnf(format, a...)
 	} else {
@@ -52,11 +61,18 @@ func Warning(format string, a ...interface{}) {
 
 // Success will indicate an operation succeeded with colored confirmation text.
 func Success(format string, a ...interface{}) {
-	format = color.CyanString(format)
+	format = ColorizeText(format, "green")
 	if a != nil {
 		output.UserOut.Infof(format, a...)
 	} else {
 		output.UserOut.Info(format)
+	}
+}
+
+// Output controlled by DDEV_DEBUG environment variable
+func Debug(format string, a ...interface{}) {
+	if globalconfig.DdevDebug {
+		output.UserOut.Debugf(format, a...)
 	}
 }
 
@@ -122,19 +138,40 @@ func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 	uidStr = curUser.Uid
 	gidStr = curUser.Gid
 	username = curUser.Username
-	//// Windows userids are non numeric,
+	// Remove at least spaces that aren't allowed in linux usernames and can appear in windows
+	// Example problem usernames from https://stackoverflow.com/questions/64933879/docker-ddev-unicodedecodeerror-utf-8-codec-cant-decode-byte-0xe9-in-positio/64934264#64934264
+	// "André Kraus", "Mück"
+	// With docker-compose 1.29.2 you can't have a proper fully-qualified user pathname either
+	// so end up with trouble based on that (not quoted correctly)
+	// But for the context path it's possible to change the User home directory with
+	// https://superuser.com/questions/890812/how-to-rename-the-user-folder-in-windows-10/1346983#1346983
+
+	// Normalize username per https://stackoverflow.com/a/65981868/215713
+	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+	username, _, _ = transform.String(t, username)
+
+	username = strings.ReplaceAll(username, " ", "")
+	username = strings.ToLower(username)
+
+	// If we have a numeric username it's going to create havoc, so
+	// change it into "a" + number
+	// Example in https://github.com/drud/ddev/issues/3187 - username="310822", uid=1663749668, gid=1240132652
+	if !nodeps.IsLetter(string(username[0])) {
+		username = "a" + username
+	}
+
+	// Windows usernames may have a \ to separate domain\user - get just the user
+	parts := strings.Split(username, `\`)
+	username = parts[len(parts)-1]
+
+	//// Windows userids are non-numeric,
 	//// so we have to run as arbitrary user 1000. We may have a host uidStr/gidStr greater in other contexts,
 	//// 1000 seems not to cause file permissions issues at least on docker-for-windows.
 	if runtime.GOOS == "windows" {
 		uidStr = "1000"
 		gidStr = "1000"
-		parts := strings.Split(curUser.Username, `\`)
-		username = parts[len(parts)-1]
-		username = strings.ReplaceAll(username, " ", "")
-		username = strings.ToLower(username)
 	}
 	return uidStr, gidStr, username
-
 }
 
 // IsCommandAvailable uses shell's "command" to find out if a command is available
@@ -154,11 +191,11 @@ func GetFirstWord(s string) string {
 	return arr[0]
 }
 
-// FindWindowsBashPath returns the PATH to bash on Windows
-// preferring git-bash (or just "bash" elsewhere)
+// FindBashPath returns the PATH to bash on any system
+// on Windows preferring git-bash
 // On Windows we'll need the path to bash to execute anything.
 // Returns empty string if not found, path if found
-func FindWindowsBashPath() string {
+func FindBashPath() string {
 	if runtime.GOOS != "windows" {
 		return "bash"
 	}
@@ -189,4 +226,66 @@ func TimeTrack(start time.Time, name string) func() {
 	}
 	return func() {
 	}
+}
+
+// ElapsedTime is an easy way to report how long something took.
+// It returns an anonymous function that, when called, will return the elapsed seconds.
+func ElapsedTime(start time.Time) func() float64 {
+	return func() float64 {
+		elapsed := time.Since(start)
+		return elapsed.Seconds()
+	}
+}
+
+// ElapsedDuration is an easy way to report how long something took.
+// It returns an anonymous function that, when called, will return the elapsed duration.
+func ElapsedDuration(start time.Time) func() time.Duration {
+	return func() time.Duration {
+		return time.Since(start)
+	}
+}
+
+// FormatDuration formats with 5m20s instead of lots of decimal points
+// Based on https://stackoverflow.com/a/47342272/215713
+func FormatDuration(d time.Duration) string {
+	minutes := int(d.Minutes())
+	seconds := int(math.Round(d.Seconds())) - (minutes * 60)
+	if minutes == 0 {
+		return fmt.Sprintf("%ds", seconds)
+	}
+	return fmt.Sprintf("%dm%ds", minutes, seconds)
+}
+
+// IsBeforeCutoffTime returns true if the current time is before
+// the cutoff time, in format "01 Jan 21 10:00 UTC"
+func IsBeforeCutoffTime(cutoff string) bool {
+	cutoffTime, err := time.Parse(time.RFC822, cutoff)
+	if err != nil {
+		output.UserErr.Printf("Failed to parse cutoffTime %s: %v", cutoffTime, err)
+	}
+	currentTime := time.Now()
+	if currentTime.Before(cutoffTime) {
+		return true
+	}
+	return false
+}
+
+func DisableColors() {
+	text.DisableColors()
+}
+
+// ColorizeText colorizes text unless SimpleFormatting is turned on
+func ColorizeText(s string, c string) (out string) {
+	if globalconfig.DdevGlobalConfig.SimpleFormatting {
+		text.DisableColors()
+	}
+	switch c {
+	case "green":
+		out = text.FgGreen.Sprint(s)
+	case "red":
+		out = text.FgRed.Sprint(s)
+	case "yellow":
+		out = text.FgYellow.Sprint(s)
+	}
+	return out
 }

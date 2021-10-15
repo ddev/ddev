@@ -12,7 +12,7 @@ Hundreds of useful developer tools are included inside the containers. Any of th
 * [Drush](http://www.drush.org) - Command-line shell and Unix scripting interface for Drupal.
 * [PHIVE](https://phar.io/) - Command line tool for "PHAR Installation and Verification Environment"
 * [WP-CLI](http://wp-cli.org/) - Command-line tools for managing WordPress installations, available both as "wp" and as "wp-cli".
-* npm and yarn
+* npm and yarn (and the `ddev yarn` command will run yarn for you, `ddev help yarn`)
 * node
 * sqlite3
 
@@ -49,13 +49,13 @@ Note: if you run `ddev composer global require`, (or run `composer global requir
 
 #### Windows OS and `ddev composer`
 
-Both composer and Docker Desktop for Windows introduce quite complex filesystem workarounds. DDEV attempts to help you with each of them.
+Both composer and some configurations of Docker Desktop for Windows introduce quite complex filesystem workarounds. DDEV attempts to help you with each of them.
 
 You generally don't have to worry about any of this, but it does keep things cleaner. Mostly just a few of the more complex TYPO3 projects have been affected.
 
-* On Docker Desktop for Windows, symlinks are created in the container as "simulated symlinks", or XSym files. These are special text files that behave as symlinks inside the container (on CIFS filesystem), but appear as simple text files on the Windows host. (on the CIFS filesystem used by Docker for Windows inside the container there is no capability to create real symlinks, even though Windows now has this capability.)
-* DDEV-Local attempts to clean up for this situation. Since Windows 10 (in developer mode) can now create real symlinks, DDEV-Local scans your repository after a `ddev composer` command and attempts to convert XSym files into real symlinks. It can only do this if your Windows 10 host is set to Developer Mode.
-* On Windows 10, to set your computer to developer mode, search for "developer" in settings. Screenshots are below.
+* On some older configurations of Docker Desktop for Windows, symlinks are created in the container as "simulated symlinks", or XSym files. These are special text files that behave as symlinks inside the container (on CIFS filesystem), but appear as simple text files on the Windows host. (on the CIFS filesystem used by Docker for Windows inside the container there is no capability to create real symlinks, even though Windows now has this capability.)
+* DDEV-Local attempts to clean up for this situation. Since Windows 10+ (in developer mode) can create real symlinks, DDEV-Local scans your repository after a `ddev composer` command and attempts to convert XSym files into real symlinks. On older versions of Windows 10, it can only do this if your Windows 10 workstation is set to "Developer Mode".
+* On Windows 10+, to set your computer to developer mode, search for "developer" in settings. Screenshots are below.
 
 ![finding developer mode](images/developer_mode_1.png)
 

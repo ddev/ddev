@@ -108,6 +108,7 @@ Usage
 Use
 Uses
 Uz
+VCS
 VPN
 VPNs
 WAMP
@@ -223,6 +224,7 @@ exec
 existing
 export
 extradb
+facebook
 fi
 file
 files
@@ -237,9 +239,11 @@ fpm
 fqdn
 fqdns
 from
+fsnotify
 github
 githubusercontent
 gitignore
+gitignored
 gitignores
 gitter
 global
@@ -265,6 +269,7 @@ in
 including
 information
 ini
+inotify
 inside
 internet
 into
@@ -308,6 +313,7 @@ more
 mountaddr
 mountproto
 mountvers
+mutagen
 mv
 mxcl
 mydevsite
@@ -336,12 +342,15 @@ or
 oriented
 output
 pause
+pecl
+performant
 php
 phpMyAdmin
 phpinfo
 phpmyadmin
 pid
 plugin
+posix
 postfix
 poweroff
 powershell
@@ -380,6 +389,7 @@ s
 sTCP
 sbin
 scalable
+screencast
 sequelace
 sequelpro
 serverName

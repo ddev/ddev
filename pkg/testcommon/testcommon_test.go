@@ -136,8 +136,8 @@ func TestValidTestSite(t *testing.T) {
 
 // TestGetLocalHTTPResponse() brings up a project and hits a URL to get the response
 func TestGetLocalHTTPResponse(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("Skipping on Windows as we always seem to have port conflicts")
+	if runtime.GOOS == "windows" || nodeps.IsMacM1() {
+		t.Skip("Skipping on Windows/Mac M1 as we always seem to have port conflicts")
 	}
 	// We have to get globalconfig read so CA is known and installed.
 	err := globalconfig.ReadGlobalConfig()
@@ -190,12 +190,15 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 		}
 
 		safeURL := app.GetHTTPURL() + site.Safe200URIWithExpectation.URI
-		out, _, err := GetLocalHTTPResponse(t, safeURL)
+
+		// Extra dummy GetLocalHTTPResponse is for mac M1 to try to prime it.
+		_, _, _ = GetLocalHTTPResponse(t, safeURL, 60)
+		out, _, err := GetLocalHTTPResponse(t, safeURL, 60)
 		assert.NoError(err)
 		assert.Contains(out, site.Safe200URIWithExpectation.Expect)
 
 		safeURL = app.GetHTTPSURL() + site.Safe200URIWithExpectation.URI
-		out, _, err = GetLocalHTTPResponse(t, safeURL)
+		out, _, err = GetLocalHTTPResponse(t, safeURL, 60)
 		assert.NoError(err)
 		assert.Contains(out, site.Safe200URIWithExpectation.Expect)
 

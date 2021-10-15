@@ -55,6 +55,9 @@ The $HOME/.ddev/global_config.yaml has a few key global config options.
 | Item  | Description   | Notes  |
 |---|---|---|
 | nfs_mount_enabled | Enables NFS mounting globally for all projects | Only a "true" value has any effect. If true, NFS will be used on all projects, regardless of any settings in the individual projects. |
+| mutagen_enabled | Enables Mutagen asynchronous caching globally for all projects | If true, Mutagen will be used on all projects, and this overrides NFS mounting as it's incompatible with NFS. |
+| table-style | Set the style for `ddev list` and `ddev describe`| Options are "default", "bold", and "bright". "bright" is a pleasant colored output that some people will like. |
+| simple-formatting | If true, turns off most table formatting in `ddev list` and `ddev describe` | This tries to give plain vanilla output for list and describe, and also suppresses colorized text everywhere. |
 | fail_on_hook_fail | Enables `ddev start` interruption globally for all projects when a hook fails | Decide whether `ddev start` should be interrupted by a failing hook |
 | omit_containers | Allows the project to not load specified containers | For example, `omit_containers: [ "dba", "ddev-ssh-agent"]`. Currently only these containers are supported. Note that you cannot omit the "db" container in the global configuration, but you can in the per-project .ddev/config.yaml. |
 | web_environment | Inject environment variables into web container | For example, `web_environment: ["SOMEENV=someval", "SOMEOTHERENV=someotherval"]`.  |

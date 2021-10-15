@@ -31,24 +31,28 @@ func TestServices(t *testing.T) {
 	assert := asrt.New(t)
 	os.Setenv("DDEV_NONINTERACTIVE", "true")
 
-	expectedServiceCount := 3
+	// We expect to find web + db + dba + what we add on here
+	expectedServiceCount := 6
 
 	err := globalconfig.ReadGlobalConfig()
 	assert.NoError(err)
 
-	pwd, _ := os.Getwd()
-
+	origDir, _ := os.Getwd()
 	testDir := testcommon.CreateTmpDir(t.Name())
 
-	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-	defer testcommon.CleanupDir(testDir)
-	defer testcommon.Chdir(testDir)()
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = os.RemoveAll(testDir)
+		assert.NoError(err)
+	})
+
 	err = os.Chdir(testDir)
 	assert.NoError(err)
 
 	app, err := ddevapp.NewApp(testDir, false)
 	assert.NoError(err)
-	err = fileutil.CopyDir(filepath.Join(pwd, "testdata", t.Name()), app.AppConfDir())
+	err = fileutil.CopyDir(filepath.Join(origDir, "testdata", t.Name()), app.AppConfDir())
 	assert.NoError(err)
 
 	// the beanstalkd image is not pushed for arm64
@@ -83,8 +87,8 @@ func TestServices(t *testing.T) {
 	desc, err := app.Describe(false)
 	require.NoError(t, err)
 
-	// Make sure desc had 3 services.
-	require.Len(t, desc["extra_services"], expectedServiceCount)
+	// Make sure desc has right number of services.
+	require.Len(t, desc["services"].(map[string]map[string]string), expectedServiceCount)
 
 	// A volume should have been created for solr (only)
 	assert.True(dockerutil.VolumeExists(strings.ToLower("ddev-" + app.Name + "_" + "solr")))
@@ -121,7 +125,7 @@ func checkSolrService(t *testing.T, app *ddevapp.DdevApp) {
 	assert.True(check, "%s container is not running", service)
 
 	// solr service seems to take a couple of seconds to come up after container running.
-	time.Sleep(2 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	// Ensure service is accessible from web container
 	checkCommand := fmt.Sprintf("curl -slL -w '%%{http_code}' %s -o /dev/null", path)

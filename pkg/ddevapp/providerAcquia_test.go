@@ -3,11 +3,11 @@ package ddevapp_test
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
-	"io/ioutil"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,6 +23,8 @@ import (
  * defined in the constants below.
  */
 const acquiaTestSite = "eeamoreno.dev"
+const acquiaSiteURL = "http://eeamorenodev.prod.acquia-sites.com/"
+const acquiaSiteExpectation = "Super easy vegetarian pasta"
 
 // TestAcquiaPull ensures we can pull backups from Acquia
 func TestAcquiaPull(t *testing.T) {
@@ -40,6 +42,7 @@ func TestAcquiaPull(t *testing.T) {
 	}
 	sshkey = strings.Replace(sshkey, "<SPLIT>", "\n", -1)
 
+	require.True(t, isPullSiteValid(acquiaSiteURL, acquiaSiteExpectation), "acquiaSiteURL %s isn't working right", acquiaSiteURL)
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
@@ -77,7 +80,6 @@ func TestAcquiaPull(t *testing.T) {
 
 	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal9
-	app.ComposerVersion = "2"
 
 	_ = app.Stop(true, false)
 	err = app.WriteConfig()
@@ -96,12 +98,14 @@ func TestAcquiaPull(t *testing.T) {
 	require.NoError(t, err)
 
 	// Build our acquia.yaml from the example file
-	s, err := ioutil.ReadFile(app.GetConfigPath("providers/acquia.yaml.example"))
+	s, err := os.ReadFile(app.GetConfigPath("providers/acquia.yaml.example"))
 	require.NoError(t, err)
 	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: %s\n#project_id:", acquiaTestSite), -1)
-	err = ioutil.WriteFile(app.GetConfigPath("providers/acquia.yaml"), []byte(x), 0666)
+	err = os.WriteFile(app.GetConfigPath("providers/acquia.yaml"), []byte(x), 0666)
 	assert.NoError(err)
 	err = app.WriteConfig()
+	require.NoError(t, err)
+	err = app.MutagenSyncFlush()
 	require.NoError(t, err)
 
 	provider, err := app.GetProvider("acquia")
@@ -120,6 +124,9 @@ func TestAcquiaPush(t *testing.T) {
 	acquiaKey := ""
 	acquiaSecret := ""
 	sshkey := ""
+	if os.Getenv("DDEV_ALLOW_ACQUIA_PUSH") != "true" {
+		t.Skip("TestAcquiaPush is currently embargoed by DDEV_ALLOW_ACQUIA_PUSH not set to true")
+	}
 	if acquiaKey = os.Getenv("DDEV_ACQUIA_API_KEY"); acquiaKey == "" {
 		t.Skipf("No DDEV_ACQUIA_KEY env var has been set. Skipping %v", t.Name())
 	}
@@ -135,35 +142,28 @@ func TestAcquiaPush(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 
+	require.True(t, isPullSiteValid(acquiaSiteURL, acquiaSiteExpectation), "acquiaSiteURL %s isn't working right", acquiaSiteURL)
+
 	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
 
 	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"ACQUIA_API_KEY=" + acquiaKey, "ACQUIA_API_SECRET=" + acquiaSecret}
 	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	assert.NoError(err)
 
-	siteDir := testcommon.CreateTmpDir(t.Name())
-
-	// We have to have a d8 codebase for drush to work right
-	d8code := FullTestSites[1]
-	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
-	if d8code.Dir == "" || !fileutil.FileExists(d8code.Dir) {
-		err := d8code.Prepare()
-		require.NoError(t, err)
-		app, err := NewApp(d8code.Dir, false)
-		require.NoError(t, err)
-		_ = app.Stop(true, false)
-	}
-	_ = os.Remove(siteDir)
-	err = fileutil.CopyDir(d8code.Dir, siteDir)
+	// Use a D9 codebase for drush to work right
+	d9code := FullTestSites[8]
+	d9code.Name = t.Name()
+	err = d9code.Prepare()
 	require.NoError(t, err)
-	err = os.Chdir(siteDir)
+	app, err := NewApp(d9code.Dir, false)
+	require.NoError(t, err)
+	_ = app.Stop(true, false)
+
+	err = os.Chdir(d9code.Dir)
 	require.NoError(t, err)
 
 	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
 	require.NoError(t, err)
-
-	app, err := NewApp(siteDir, true)
-	assert.NoError(err)
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
@@ -174,16 +174,13 @@ func TestAcquiaPush(t *testing.T) {
 		assert.NoError(err)
 
 		_ = os.Chdir(origDir)
-		err = os.RemoveAll(siteDir)
+		err = os.RemoveAll(d9code.Dir)
 		assert.NoError(err)
 	})
 
-	app.Name = t.Name()
-	app.Type = nodeps.AppTypeDrupal9
 	app.Hooks = map[string][]YAMLTask{"post-push": {{"exec-host": "touch hello-post-push-" + app.Name}}, "pre-push": {{"exec-host": "touch hello-pre-push-" + app.Name}}}
 	_ = app.Stop(true, false)
 
-	_ = app.Stop(true, false)
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
@@ -194,10 +191,10 @@ func TestAcquiaPush(t *testing.T) {
 	require.NoError(t, err)
 
 	// Build our acquia.yaml from the example file
-	s, err := ioutil.ReadFile(app.GetConfigPath("providers/acquia.yaml.example"))
+	s, err := os.ReadFile(app.GetConfigPath("providers/acquia.yaml.example"))
 	require.NoError(t, err)
 	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: %s\n#project_id:", acquiaTestSite), -1)
-	err = ioutil.WriteFile(app.GetConfigPath("providers/acquia.yaml"), []byte(x), 0666)
+	err = os.WriteFile(app.GetConfigPath("providers/acquia.yaml"), []byte(x), 0666)
 	assert.NoError(err)
 	err = app.WriteConfig()
 	require.NoError(t, err)
@@ -215,6 +212,15 @@ func TestAcquiaPush(t *testing.T) {
 	err = app.Pull(provider, false, false, false)
 	require.NoError(t, err)
 
+	// Make sure we got something valid and everything is OK.
+	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="randy@example.com";' | %s mysql -N`, DdevBin)})
+	require.NoError(t, err)
+	require.True(t, strings.HasPrefix(out, "1\n"), "pulled database does not seem to be valid - randy@example.com not found")
+
+	out, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'SHOW TABLES LIKE "watchdog";' | %s mysql -N`, DdevBin)})
+	require.NoError(t, err)
+	require.True(t, strings.HasPrefix(out, "watchdog\n"), "pulled database does not seem to be valid - watchdog table is missing")
+
 	// Create database and files entries that we can verify after push
 	tval := nodeps.RandomString(10)
 	_, _, err = app.Exec(&ExecOpts{
@@ -223,14 +229,14 @@ func TestAcquiaPush(t *testing.T) {
 	require.NoError(t, err)
 	fName := tval + ".txt"
 	fContent := []byte(tval)
-	err = ioutil.WriteFile(filepath.Join(siteDir, "sites/default/files", fName), fContent, 0644)
+	err = os.WriteFile(filepath.Join(d9code.Dir, "sites/default/files", fName), fContent, 0644)
 	assert.NoError(err)
 
 	err = app.Push(provider, false, false)
 	require.NoError(t, err)
 
 	// Test that the database row was added
-	out, _, err := app.Exec(&ExecOpts{
+	out, _, err = app.Exec(&ExecOpts{
 		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s"' | drush @%s --alias-path=~/.drush sql-cli --extra=-N`, t.Name(), tval, acquiaTestSite),
 	})
 	require.NoError(t, err)
@@ -243,10 +249,31 @@ func TestAcquiaPush(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(out, tval)
 
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+
 	assert.FileExists("hello-pre-push-" + app.Name)
 	assert.FileExists("hello-post-push-" + app.Name)
 	err = os.Remove("hello-pre-push-" + app.Name)
 	assert.NoError(err)
 	err = os.Remove("hello-post-push-" + app.Name)
 	assert.NoError(err)
+}
+
+// isPullSiteValid just checks to make sure the site we're testing against is OK
+func isPullSiteValid(siteURL string, siteExpectation string) bool {
+	resp, err := http.Get(siteURL)
+	if err != nil {
+		return false
+	}
+	//nolint: errcheck
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return false
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return false
+	}
+	return strings.Contains(string(body), siteExpectation)
 }

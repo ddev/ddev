@@ -34,7 +34,7 @@ services:
     image: solr:8
     restart: "no"
     # Solr is served from this port inside the container.
-    ports:
+    expose:
       - 8983
     # These labels ensure this service is discoverable by ddev.
     labels:

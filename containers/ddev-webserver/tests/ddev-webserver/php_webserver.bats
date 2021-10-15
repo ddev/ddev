@@ -14,10 +14,13 @@
 }
 
 @test "enable and disable xdebug for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+    if [[ ${PHP_VERSION} == "8.1" ]]; then
+      skip "xdebug is not yet available for php8.1"
+    fi
     CURRENT_ARCH=$(../get_arch.sh)
 
     docker exec -t $CONTAINER_NAME enable_xdebug
-    if [ ]${PHP_VERSION} != "8.0" ] ; then
+    if [[ ${PHP_VERSION} != 8.? ]] ; then
       docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug.remote_enable"
     else
       docker exec -t $CONTAINER_NAME php --re xdebug | grep "xdebug.mode"
@@ -29,12 +32,18 @@
 }
 
 @test "verify that xdebug is enabled by default when the image is not run with start.sh php${PHP_VERSION}" {
+  if [[ ${PHP_VERSION} == "8.1" ]]; then
+    skip "xdebug not yet available for php 8.1"
+  fi
   CURRENT_ARCH=$(../get_arch.sh)
 
   docker run  -e "DDEV_PHP_VERSION=${PHP_VERSION}" --rm $DOCKER_IMAGE bash -c 'php --version | grep "with Xdebug"'
 }
 
 @test "enable and disable xhprof for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+    if [[ ${PHP_VERSION} == "8.1" ]]; then
+      skip "xhprof is not yet available for php8.1"
+    fi
     CURRENT_ARCH=$(../get_arch.sh)
 
     docker exec -t $CONTAINER_NAME enable_xhprof
@@ -46,6 +55,9 @@
 }
 
 @test "verify that xhprof is enabled by default when the image is not run with start.sh php${PHP_VERSION}" {
+    if [[ ${PHP_VERSION} == "8.1" ]]; then
+      skip "xhprof is not yet available for php8.1"
+    fi
   CURRENT_ARCH=$(../get_arch.sh)
 
   docker run  -e "DDEV_PHP_VERSION=${PHP_VERSION}" --rm $DOCKER_IMAGE bash -c 'php --re xhprof | grep -v "\"xhprof\" does not exist"'
@@ -59,7 +71,7 @@
 
 @test "verify PHP ini settings for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
   # Default settings for assert.active should be 1
-  if [ ${PHP_VERSION} != "8.0" ]; then
+  if [[ ${PHP_VERSION} != 8.? ]]; then
     docker exec -t $CONTAINER_NAME php -i | grep "assert.active.*=> 1 => 1"
   else
     docker exec -t $CONTAINER_NAME php -i | grep "assert.active.*=> On => On"
@@ -92,11 +104,15 @@
   5.6)
     extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring mysql pgsql readline soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
     ;;
-  7.[01])
+  7.[01234])
     extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring mysqli pgsql readline soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
     ;;
   8.0)
-    extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring memcached mysqli pgsql readline redis soap sqlite3 xhprof xml xmlrpc zip"
+    extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring memcached mysqli pgsql readline redis soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
+    ;;
+  8.1)
+    # TODO: Update this list as more extensions become available
+    extensions="bcmath bz2 curl gd intl json ldap mbstring mysqli pgsql readline soap sqlite3 xml zip"
   esac
 
   run docker exec -t $CONTAINER_NAME enable_xdebug
@@ -110,4 +126,33 @@
   done
   run docker exec -t $CONTAINER_NAME disable_xdebug
   run docker exec -t $CONTAINER_NAME disable_xhprof
+}
+
+@test "verify htaccess doesn't break ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+  docker cp tests/ddev-webserver/testdata/nginx/auth.conf ${CONTAINER_NAME}:/etc/nginx/common.d
+  docker cp tests/ddev-webserver/testdata/nginx/junkpass ${CONTAINER_NAME}:/tmp
+  docker cp tests/ddev-webserver/testdata/apache/auth.conf ${CONTAINER_NAME}:/etc/apache2/conf-enabled
+  # Reload webserver
+  if [ "${WEBSERVER_TYPE}" = "apache-fpm" ]; then
+    docker exec ${CONTAINER_NAME} apache2ctl -k graceful
+  else
+    docker exec ${CONTAINER_NAME} nginx -s reload
+  fi
+  sleep 2
+  # Make sure we can hit /phpstatus without auth
+  run curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$HOST_HTTP_PORT/phpstatus
+  echo "# phpstatus status=$output"
+  [ "$status" = 0 ]
+  [ "$output" = "200" ]
+  curl --fail -s http://127.0.0.1:$HOST_HTTP_PORT/phpstatus | egrep "idle processes|php is working"
+  # Make sure the auth requirement is actually working
+  curlstmt="curl --fail -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$HOST_HTTP_PORT/test/phptest.php"
+  run ${curlstmt}
+  [ "$output" = "401" ]
+
+  # Make sure it works with auth when hitting phptest.php
+  AUTH=$(echo -ne "junk:junk" | base64)
+  curl --fail --header "Authorization: Basic $AUTH" 127.0.0.1:$HOST_HTTP_PORT/test/phptest.php
+  docker exec ${CONTAINER_NAME} rm /etc/nginx/common.d/auth.conf /etc/apache2/conf-enabled/auth.conf
+  docker exec ${CONTAINER_NAME} kill -HUP 1
 }

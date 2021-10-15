@@ -18,7 +18,7 @@ func RunCommand(command string, args []string) (string, error) {
 
 	output.UserOut.WithFields(log.Fields{
 		"Result": string(out),
-	}).Debug("Command Result")
+	}).Debug("Command ")
 
 	return string(out), err
 }
@@ -48,4 +48,11 @@ func RunInteractiveCommand(command string, args []string) error {
 	}
 	err = cmd.Wait()
 	return err
+}
+
+// RunHostCommand executes a command on the host and returns the
+// combined stdout/stderr results and error
+func RunHostCommand(command string, args ...string) (string, error) {
+	o, err := exec.Command(command, args...).CombinedOutput()
+	return string(o), err
 }

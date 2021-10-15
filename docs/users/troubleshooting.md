@@ -11,7 +11,18 @@ Things might go wrong! Besides the suggestions on this page don't forget about [
 * If you have customizations (PHP overrides, nginx or Apache overrides, MySQL overrides, custom services, config.yaml changes) please back them out while troubleshooting. It's important to have the simplest possible environment while troubleshooting.
 * Check your Docker disk space and memory allocation if you're using Docker Desktop on Windows or macOS.
 * Restart Docker. Consider a Docker factory reset in serious cases (this will destroy any databases you've loaded). See [Docker Troubleshooting](docker_installation.md#troubleshooting) for more.
-* Try the simplest possible ddev project to try to get it to work: `ddev poweroff && mkdir ~/tmp/testddev && cd ~/tmp/testddev && ddev config --project-type=php && ddev start`. Does that start up OK? If so, maybe something is wrong with the more complicated project you're trying to start.
+* Try the simplest possible ddev project to try to get it to work:
+
+  ```bash
+  ddev poweroff
+  mkdir ~/tmp/testddev
+  cd ~/tmp/testddev
+  ddev config --auto
+  printf "<?php\nphpinfo();\n" > index.php
+  ddev start
+  ```
+
+  Does that start up OK? If so, maybe something is wrong with the more complicated project you're trying to start.
 
 <a name="unable-listen"></a>
 
@@ -22,6 +33,10 @@ ddev notifies you about port conflicts with this message:
 ```
 Failed to start yoursite: Unable to listen on required ports, localhost port 80 is in use,
 ```
+
+ddev sometimes also has this error message that will alert you to port conflicts:
+
+`ERROR: for ddev-router Cannot start service ddev-router: Ports are not available: listen tcp 127.0.0.1:XX: bind: An attempt was made to access a socket in a way forbidden by its access permissions.`
 
 This means there is another webserver listening on the named port(s) and ddev cannot access the port. The most common conflicts are on ports 80 and 443.
 
@@ -159,6 +174,20 @@ For ddev-ssh-agent, `docker inspect --format "{{json .State.Health }}" ddev-ssh-
 Don't forget that `ddev logs` (for the web container) or `ddev logs -s db` (for the db container) are your friend.
 
 For ddev-router and ddev-ssh-agent, `docker logs ddev-router` and `docker logs ddev-ssh-agent`.
+  
+## `ddev start` fails with "Failed to start [project name]: No such container: ddev-router"  
+
+Deleting the images and re-pulling them generally solves this problem.  
+  
+Try running the following commands from the host machine.  
+
+```
+ddev poweroff
+docker rm -f $(docker ps -aq)
+docker rmi -f $(docker images -q)
+```
+
+You should then be able to start your ddev machine.
 
 ## Trouble Building Dockerfiles
 
@@ -224,3 +253,24 @@ There are two workarounds for this problem:
 ## Windows WSL2 Network Issues
 
 If you're using a browser on Windows, accessing a project in WSL2, you can end up with very confusing results if your project is listening on a port inside WSL2, but a Windows process is listening on the port on Windows. The way to sort this out is to stop your project inside WSL2, verify that nothing is listening on the port there, and then study the port on the Windows side, by visiting it with a browser or using other tools as described above.
+
+## Limitations on Symbolic Links (symlinks)
+
+Symbolic links are widely used but have specific limitations in many environments, not just in DDEV. Here are some of the ways those may affect you:
+
+* **Crossing mount boundaries**: Symlinks may not generally cross between network mounts. In other words, if you have a relative symlink in the root of your project directory on the host that points to `../somefile.txt`,  that symlink will not be valid inside the container where `../` is a completely different filesystem (and is not mounted typically).
+* **Symlinks to absolute paths**: If you have an absolute symlink to something like `/Users/xxx/somefile.txt` on the host, it will not be resolvable inside the container because `/Users` is not mounted there. Note that some tools, especially on Magento 2, may create symlinks to rooted paths, with targets like `/var/www/html/path/to/something`. These basically can't make it to the host, so may create errors.
+* **Windows restrictions on symlinks**: Inside the Docker container on Windows you may not be able to even create a symlink that goes outside the container.
+* **Mutagen restrictions on Windows symlinks**: On macOS and Linux (including WSL2) the default `.ddev/mutagen/mutagen.yml` chooses the `posix-raw` type of symlink handling (See [mutagen docs](https://mutagen.io/documentation/synchronization/symbolic-links). This basically means that any symlink created will try to sync, regardless of whether it's valid in the other environment. However, Mutagen does not support posix-raw on traditional Windows, so ddev uses the `portable` symlink mode. So on Windows with Mutagen... symlinks have to be strictly limited to relative links that are inside the mutagen section of the project.
+
+## Other things to try
+  
+### Delete and re-download docker images
+  
+In just a few unusual cases, the actual downloaded docker images have somehow corrupted. In that case we can delete all images and they'll be re-downloaded or rebuilt. This does no harm, as everything is just rebuilt, but a `ddev start` make take extra time the first time while it downloads needed resources:
+
+```bash
+ddev poweroff
+docker rm -f $(docker ps -aq) # stop any other random containers that may be running
+docker rmi -f $(docker images -q) # You might have to repeat this a time or two to get rid of all images
+```

@@ -27,11 +27,11 @@ func TestCmdGlobalConfig(t *testing.T) {
 	// We need to make sure that the (corrupted, bogus) global config file is removed
 	// and then read (empty)
 	// nolint: errcheck
-	defer func() {
+	t.Cleanup(func() {
 		// Even though the global config is going to be deleted, make sure it's sane before leaving
-		args := []string{"config", "global", "--omit-containers", "", "--nfs-mount-enabled=true", "--disable-http2=false"}
+		args := []string{"config", "global", "--omit-containers", "", "--nfs-mount-enabled", "--disable-http2=false", "--mutagen-enabled=false", "--simple-formatting=false", "--table-style=default"}
 		globalconfig.DdevGlobalConfig.OmitContainersGlobal = nil
-		_, err := exec.RunCommand(DdevBin, args)
+		_, err := exec.RunHostCommand(DdevBin, args...)
 		assert.NoError(err)
 		globalconfig.DdevGlobalConfig = backupConfig
 		globalconfig.DdevGlobalConfig.OmitContainersGlobal = nil
@@ -44,25 +44,26 @@ func TestCmdGlobalConfig(t *testing.T) {
 		if err != nil {
 			t.Logf("Unable to ReadGlobalConfig: %v", err)
 		}
-	}()
+	})
 
 	// Look at initial config
 	args := []string{"config", "global"}
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[]\nweb-environment=[]\nnfs-mount-enabled=false\nrouter-bind-all-interfaces=false\ninternet-detection-timeout-ms=750\ndisable-http2=false\nuse-letsencrypt=false\nletsencrypt-email=\nauto-restart-containers=false\nuse-hardened-images=false\nfail-on-hook-fail=false")
+	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[]\nweb-environment=[]\nmutagen-enabled=false\nnfs-mount-enabled=false\nrouter-bind-all-interfaces=false\ninternet-detection-timeout-ms=750\ndisable-http2=false\nuse-letsencrypt=false\nletsencrypt-email=\ntable-style=default\nsimple-formatting=false\nauto-restart-containers=false\nuse-hardened-images=false\nfail-on-hook-fail=false")
 
 	// Update a config
-	args = []string{"config", "global", "--instrumentation-opt-in=false", "--omit-containers=dba,ddev-ssh-agent", "--nfs-mount-enabled=true", "--router-bind-all-interfaces=true", "--internet-detection-timeout-ms=850", "--use-letsencrypt", "--letsencrypt-email=nobody@example.com", "--auto-restart-containers=true", "--use-hardened-images=true", "--fail-on-hook-fail=true", `--disable-http2`, `--web-environment="SOMEENV=some+val"`}
+	args = []string{"config", "global", "--instrumentation-opt-in=false", "--omit-containers=dba,ddev-ssh-agent", "--mutagen-enabled=true", "--nfs-mount-enabled=true", "--router-bind-all-interfaces=true", "--internet-detection-timeout-ms=850", "--use-letsencrypt", "--letsencrypt-email=nobody@example.com", "--table-style=bright", "--simple-formatting=true", "--auto-restart-containers=true", "--use-hardened-images=true", "--fail-on-hook-fail=true", `--disable-http2`, `--web-environment="SOMEENV=some+val"`}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[dba,ddev-ssh-agent]\nweb-environment=[\"SOMEENV=some+val\"]\nnfs-mount-enabled=true\nrouter-bind-all-interfaces=true\ninternet-detection-timeout-ms=850\ndisable-http2=true\nuse-letsencrypt=true\nletsencrypt-email=nobody@example.com\nauto-restart-containers=true\nuse-hardened-images=true\nfail-on-hook-fail=true")
+	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[dba,ddev-ssh-agent]\nweb-environment=[\"SOMEENV=some+val\"]\nmutagen-enabled=true\nnfs-mount-enabled=true\nrouter-bind-all-interfaces=true\ninternet-detection-timeout-ms=850\ndisable-http2=true\nuse-letsencrypt=true\nletsencrypt-email=nobody@example.com\ntable-style=bright\nsimple-formatting=true\nauto-restart-containers=true\nuse-hardened-images=true\nfail-on-hook-fail=true")
 
 	err = globalconfig.ReadGlobalConfig()
 	assert.NoError(err)
 	assert.False(globalconfig.DdevGlobalConfig.InstrumentationOptIn)
 	assert.Contains(globalconfig.DdevGlobalConfig.OmitContainersGlobal, "ddev-ssh-agent")
 	assert.Contains(globalconfig.DdevGlobalConfig.OmitContainersGlobal, "dba")
+	assert.True(globalconfig.DdevGlobalConfig.MutagenEnabledGlobal)
 	assert.True(globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal)
 	assert.Len(globalconfig.DdevGlobalConfig.OmitContainersGlobal, 2)
 	assert.Equal("nobody@example.com", globalconfig.DdevGlobalConfig.LetsEncryptEmail)
@@ -70,4 +71,6 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.True(globalconfig.DdevGlobalConfig.UseHardenedImages)
 	assert.True(globalconfig.DdevGlobalConfig.FailOnHookFailGlobal)
 	assert.True(globalconfig.DdevGlobalConfig.DisableHTTP2)
+	assert.True(globalconfig.DdevGlobalConfig.SimpleFormatting)
+	assert.Equal("bright", globalconfig.DdevGlobalConfig.TableStyle)
 }

@@ -12,7 +12,7 @@ func TestGetVersionInfo(t *testing.T) {
 	assert := asrt.New(t)
 	v := GetVersionInfo()
 
-	assert.Equal(DdevVersion, v["DDEV-Local version"])
+	assert.Equal(DdevVersion, v["DDEV version"])
 	assert.Contains(v["web"], WebImg)
 	assert.Contains(v["web"], WebTag)
 	assert.Contains(v["db"], DBImg)

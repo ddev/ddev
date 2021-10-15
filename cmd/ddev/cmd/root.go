@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
@@ -9,13 +10,12 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/rogpeppe/go-internal/semver"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/segmentio/analytics-go.v3"
 	"os"
 	"path/filepath"
-	"strings"
+
 	"time"
 )
 
@@ -35,7 +35,7 @@ Docs: https://ddev.readthedocs.io
 Support: https://ddev.readthedocs.io/en/stable/#support`,
 	Version: version.DdevVersion,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		command := strings.Join(os.Args[1:], " ")
+		command := os.Args[1]
 
 		// LogSetup() has already been done, but now needs to be done
 		// again *after* --json flag is parsed.
@@ -57,12 +57,12 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 			}
 		}
 
-		err = dockerutil.CheckDockerCompose(version.DockerComposeVersionConstraint)
+		err = dockerutil.CheckDockerCompose()
 		if err != nil {
 			if err.Error() == "no docker-compose" {
 				util.Failed("docker-compose does not appear to be installed.")
 			} else {
-				util.Failed("The docker-compose version currently installed does not meet ddev's requirements: %v", err)
+				util.Failed("The docker-compose version currently installed does not meet ddev's requirements: %v", version.DockerComposeVersionConstraint)
 			}
 		}
 
@@ -82,19 +82,17 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 				return // Do not continue as we'll end up with github api violations.
 			}
 
-			updateNeeded, updateURL, err := updatecheck.AvailableUpdates("drud", "ddev", version.DdevVersion)
+			updateNeeded, updateVersion, updateURL, err := updatecheck.AvailableUpdates("drud", "ddev", version.DdevVersion)
 
 			if err != nil {
 				util.Warning("Could not check for updates. This is most often caused by a networking issue.")
-				log.Debug(err)
 				return
 			}
 
 			if updateNeeded {
-				util.Warning("\n\nA new update is available! please visit %s to download the update.\nFor upgrade help see %s", updateURL, updateDocURL)
+				output.UserOut.Printf(util.ColorizeText(fmt.Sprintf("\n\nUpgraded DDEV %s is available!\nPlease visit %s to get the upgrade.\nFor upgrade help see %s\n\n", updateVersion, updateURL, updateDocURL), "green"))
 			}
 		}
-
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		// Do not report these comamnds
@@ -153,7 +151,6 @@ func Execute() {
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(-1)
 	}
-
 }
 
 func init() {
@@ -161,11 +158,12 @@ func init() {
 
 	output.LogSetUp()
 
+	// Populate custom/script commands so they're visible
 	// We really don't want ~/.ddev or .ddev/homeadditions or .ddev/.globalcommands to have root ownership, breaks things.
 	if os.Geteuid() == 0 {
 		output.UserOut.Warning("Not populating custom commands or hostadditions because running with root privileges")
 	} else {
-		err := populateExamplesCommandsHomeadditions()
+		err := ddevapp.PopulateExamplesCommandsHomeadditions("")
 		if err != nil {
 			util.Warning("populateExamplesAndCommands() failed: %v", err)
 		}

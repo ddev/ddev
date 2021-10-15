@@ -5,7 +5,6 @@ import (
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
-	"io/ioutil"
 	"os"
 	"runtime"
 	"testing"
@@ -30,6 +29,8 @@ func testMain(m *testing.M) int {
 	output.LogSetUp()
 
 	EnsureDdevNetwork()
+
+	_ = os.Setenv("DDEV_NONINTERACTIVE", "true")
 
 	// prep docker container for docker util tests
 	client := GetDockerClient()
@@ -264,7 +265,7 @@ func TestComposeWithStreams(t *testing.T) {
 
 	// Use the current actual web container for this, so replace in base docker-compose file
 	composeBase := filepath.Join("testdata", "TestComposeWithStreams", "test-compose-with-streams.yaml")
-	tmp, err := ioutil.TempDir("", "")
+	tmp, err := os.MkdirTemp("", "")
 	assert.NoError(err)
 	realComposeFile := filepath.Join(tmp, "replaced-compose-with-streams.yaml")
 
@@ -314,7 +315,7 @@ func TestComposeWithStreams(t *testing.T) {
 func TestCheckCompose(t *testing.T) {
 	assert := asrt.New(t)
 
-	err := CheckDockerCompose(version.DockerComposeVersionConstraint)
+	err := CheckDockerCompose()
 	assert.NoError(err)
 }
 

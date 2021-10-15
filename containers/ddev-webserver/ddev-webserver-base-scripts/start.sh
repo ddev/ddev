@@ -69,7 +69,7 @@ ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/
 # Make sure the TERMINUS_CACHE_DIR (/mnt/ddev-global-cache/terminus/cache) exists
 sudo mkdir -p ${TERMINUS_CACHE_DIR}
 
-sudo mkdir -p /mnt/ddev-global-cache/bashhistory/${HOSTNAME}
+sudo mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory}/${HOSTNAME}
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ ~/{.ssh*,.drush,.gitconfig,.my.cnf}
 
 if [ -d /mnt/ddev_config/.homeadditions ]; then
@@ -87,5 +87,8 @@ mkcert -install
 # VIRTUAL_HOST is a comma-delimited set of fqdns, convert it to space-separated and mkcert
 CAROOT=$CAROOT mkcert -cert-file /etc/ssl/certs/master.crt -key-file /etc/ssl/certs/master.key ${VIRTUAL_HOST//,/ } localhost 127.0.0.1 ${DOCKER_IP} web ddev-${DDEV_PROJECT:-}-web ddev-${DDEV_PROJECT:-}-web.ddev_default
 echo 'Server started'
+
+# We don't want the various daemons to know about PHP_IDE_CONFIG
+unset PHP_IDE_CONFIG
 
 exec /usr/bin/supervisord -n -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"

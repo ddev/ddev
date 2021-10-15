@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Please run this script with "bash testddev.sh"
-# You can copy and paste it (make a file named testddev.sh)
+# Please run this script with "bash test_ddev.sh"
+# You can copy and paste it (make a file named test_ddev.sh)
 # Or use curl or wget to download the *raw* version.
 # If you're on Windows (not WSL2) please run it in a git-bash window
 # When you are reporting an issue, please include the full output of this script.
@@ -30,11 +30,28 @@ function docker_desktop_version {
 }
 
 echo -n "OS Information: " && uname -a
+echo "User information: $(id -a)"
 ddev version
 echo -n "docker location: " && ls -l "$(which docker)"
 if [ ${OSTYPE%-*} != "linux" ]; then
   echo -n "Docker Desktop Version: " && docker_desktop_version && echo
 fi
+
+echo "======= Mutagen Info ========="
+if [ -f ~/.ddev/bin/mutagen ]; then
+  echo "Mutagen is installed in ddev, version=$(~/.ddev/bin/mutagen version)"
+  ~/.ddev/bin/mutagen sync list
+fi
+if command -v mutagen >/dev/null ; then
+  echo "mutagen additionally installed in PATH at $(command -v mutagen), version $(mutagen version)"
+fi
+if killall -0 mutagen 2>/dev/null; then
+  echo "mutagen is running on this system:"
+  ps -ef | grep mutagen
+fi
+
+echo "======= Docker Info ========="
+
 echo "Docker disk space:" && docker run --rm busybox df -h / && echo
 ddev poweroff
 echo "Existing docker containers: " && docker ps -a

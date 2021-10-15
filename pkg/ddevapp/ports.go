@@ -24,7 +24,8 @@ var ports = map[string]string{
 	"web":     webPort,
 }
 
-// GetPort returns the external router (as a string) for the given service. This can be used to find a given port for docker-compose manifests,
+// GetPort returns the external router port (as a string) for the given service.
+// This can be used to find a given port for docker-compose manifests,
 // or for automated testing.
 func GetPort(service string) string {
 	service = strings.ToLower(service)

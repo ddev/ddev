@@ -6,22 +6,23 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/archive"
 	exec2 "github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"regexp"
 	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
 	"net/url"
 
-	"github.com/Masterminds/semver"
+	"github.com/Masterminds/semver/v3"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/fsouza/go-dockerclient"
 )
@@ -70,9 +71,26 @@ func GetDockerClient() *docker.Client {
 	return client
 }
 
+// InspectContainer returns the full result of inspection
+func InspectContainer(name string) (*docker.Container, error) {
+	client, err := docker.NewClientFromEnv()
+
+	if err != nil {
+		return nil, err
+	}
+	c, err := FindContainerByName(name)
+	if err != nil || c == nil {
+		return nil, err
+	}
+	x, err := client.InspectContainerWithOptions(docker.InspectContainerOptions{ID: c.ID})
+	return x, err
+}
+
 // FindContainerByName takes a container name and returns the container ID
+// If container is not found, returns nil with no error
 func FindContainerByName(name string) (*docker.APIContainers, error) {
 	client := GetDockerClient()
+
 	containers, err := client.ListContainers(docker.ListContainersOptions{
 		All:     true,
 		Filters: map[string][]string{"name": {name}},
@@ -83,7 +101,15 @@ func FindContainerByName(name string) (*docker.APIContainers, error) {
 	if len(containers) == 0 {
 		return nil, nil
 	}
-	return &containers[0], nil
+
+	// ListContainers can return partial matches. Make sure we only match the exact one
+	// we're after.
+	for _, c := range containers {
+		if c.Names[0] == "/"+name {
+			return &c, nil
+		}
+	}
+	return nil, nil
 }
 
 // GetContainerStateByName returns container state for the named container
@@ -419,7 +445,7 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 
 	err = proc.Wait()
 	if err != nil {
-		return stdout.String(), stderr, fmt.Errorf("Failed to run docker-compose %v, err='%v', stdout='%s', stderr='%s'", arg, err, stdout.String(), stderr)
+		return stdout.String(), stderr, fmt.Errorf("ComposeCmd failed to run 'COMPOSE_PROJECT_NAME=%s docker-compose %v', action='%v', err='%v', stdout='%s', stderr='%s'", os.Getenv("COMPOSE_PROJECT_NAME"), strings.Join(arg, " "), action, err, stdout.String(), stderr)
 	}
 	return stdout.String(), stderr, nil
 }
@@ -427,11 +453,11 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 // GetAppContainers retrieves docker containers for a given sitename.
 func GetAppContainers(sitename string) ([]docker.APIContainers, error) {
 	label := map[string]string{"com.ddev.site-name": sitename}
-	sites, err := FindContainersByLabels(label)
+	containers, err := FindContainersByLabels(label)
 	if err != nil {
-		return sites, err
+		return containers, err
 	}
-	return sites, nil
+	return containers, nil
 }
 
 // GetContainerEnv returns the value of a given environment variable from a given container.
@@ -492,15 +518,17 @@ func CheckDockerVersion(versionConstraint string) error {
 
 // CheckDockerCompose determines if docker-compose is present and executable on the host system. This
 // relies on docker-compose being somewhere in the user's $PATH.
-func CheckDockerCompose(versionConstraint string) error {
+func CheckDockerCompose() error {
 	runTime := util.TimeTrack(time.Now(), "CheckDockerComposeVersion()")
 	defer runTime()
 
-	version, err := version.GetDockerComposeVersion()
+	versionConstraint := version.DockerComposeVersionConstraint
+
+	v, err := version.GetDockerComposeVersion()
 	if err != nil {
 		return err
 	}
-	dockerComposeVersion, err := semver.NewVersion(version)
+	dockerComposeVersion, err := semver.NewVersion(v)
 	if err != nil {
 		return err
 	}
@@ -513,12 +541,6 @@ func CheckDockerCompose(versionConstraint string) error {
 	match, errs := constraint.Validate(dockerComposeVersion)
 	if !match {
 		if len(errs) <= 1 {
-			// TODO: Remove these lines when docker-compose v2 starts working
-			// Probably this commit can be reverted at that time.
-			v2Constraint, _ := semver.NewConstraint("< 2.0.0")
-			if m, _ := v2Constraint.Validate(dockerComposeVersion); !m {
-				util.Error("You have docker-compose v2 and it is not yet stable enough to use with ddev.\nPlease uncheck the 'Use Docker Compose V2' experimental feature\nin Docker Desktop, or run 'docker-compose disable-v2'")
-			}
 			return errs[0]
 		}
 
@@ -596,9 +618,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 	}
 
 	if !existsLocally {
-		var buf bytes.Buffer
-		pullErr := client.PullImage(docker.PullImageOptions{Repository: image, OutputStream: &buf},
-			docker.AuthConfiguration{})
+		pullErr := Pull(image)
 		if pullErr != nil {
 			return "", "", fmt.Errorf("failed to pull image %s: %v", image, pullErr)
 		}
@@ -843,12 +863,13 @@ func GetHostDockerInternalIP() (string, error) {
 	return hostDockerInternal, nil
 }
 
-// RemoveImage removes an image
+// RemoveImage removes an image with force
 func RemoveImage(tag string) error {
 	client := GetDockerClient()
-	err := client.RemoveImage(tag)
+	err := client.RemoveImageExtended(tag, docker.RemoveImageOptions{Force: true})
+
 	if err == nil {
-		util.Success("Deleting docker image %s", tag)
+		util.Success("Deleted docker image %s", tag)
 	} else {
 		util.Warning("Unable to delete %s: %v", tag, err)
 	}
@@ -876,7 +897,7 @@ func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid
 	// nolint: errcheck
 	defer RemoveContainer(containerID, 0)
 
-	tmpTar, err := ioutil.TempFile("", "CopyToVolume")
+	tmpTar, err := os.CreateTemp("", "CopyToVolume")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -947,4 +968,14 @@ func Exec(containerID string, command string) (string, string, error) {
 	}
 
 	return stdout.String(), stderr.String(), execErr
+}
+
+// CheckAvailableSpace outputs a warning if docker space is low
+func CheckAvailableSpace() {
+	_, out, _ := RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", `df -h / | awk '/overlay/ {print $5;}'`}, []string{}, []string{}, []string{}, "", true, false, nil)
+	out = strings.Trim(out, "% \n")
+	spacePercent, _ := strconv.Atoi(out)
+	if (100 - spacePercent) < nodeps.MinimumDockerSpaceWarning {
+		util.Error("Your docker installation has less than %d%% available space (%d%% used). Please increase disk image size.", nodeps.MinimumDockerSpaceWarning, spacePercent)
+	}
 }

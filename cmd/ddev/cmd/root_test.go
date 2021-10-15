@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 	"os"
 	"strconv"
@@ -129,27 +129,54 @@ func TestMain(m *testing.M) {
 func TestGetActiveAppRoot(t *testing.T) {
 	assert := asrt.New(t)
 
+	// Looking for active approot here should fail, because there is none
 	_, err := ddevapp.GetActiveAppRoot("")
 	assert.Contains(err.Error(), "Please specify a project name or change directories")
 
+	// There is also no project named "potato"
 	_, err = ddevapp.GetActiveAppRoot("potato")
 	assert.Error(err)
 
+	// However, TestSites[0] is running, so we should find it.
 	appRoot, err := ddevapp.GetActiveAppRoot(TestSites[0].Name)
 	assert.NoError(err)
 	assert.Equal(TestSites[0].Dir, appRoot)
 
-	switchDir := TestSites[0].Chdir()
+	origDir, _ := os.Getwd()
+	err = os.Chdir(TestSites[0].Dir)
+	require.NoError(t, err)
 
+	// We should also now be able to get it in the project directory
+	// since it's running and we're in the directory
 	appRoot, err = ddevapp.GetActiveAppRoot("")
 	assert.NoError(err)
 	assert.Equal(TestSites[0].Dir, appRoot)
 
-	switchDir()
+	// And we should be able to stop it and find it as well
+	app, err := ddevapp.GetActiveApp("")
+	err = app.Stop(false, true)
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		// Leave it running in case anybody cares
+		err = app.Start()
+		assert.NoError(err)
+	})
+
+	appRoot, err = ddevapp.GetActiveAppRoot(app.Name)
+	assert.NoError(err)
+	assert.Equal(TestSites[0].Dir, appRoot)
+
 }
 
 // TestCreateGlobalDdevDir checks to make sure that ddev will create a ~/.ddev (and updatecheck)
 func TestCreateGlobalDdevDir(t *testing.T) {
+	if nodeps.MutagenEnabledDefault || globalconfig.DdevGlobalConfig.MutagenEnabledGlobal {
+		t.Skip("Skipping because this changes homedir and breaks mutagen functionality")
+	}
+
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
@@ -160,7 +187,9 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 
 	t.Cleanup(
 		func() {
-			err := os.Chdir(origDir)
+			_, err := exec.RunHostCommand(DdevBin, "poweroff")
+			assert.NoError(err)
+			err = os.Chdir(origDir)
 			assert.NoError(err)
 			err = os.RemoveAll(tmpDir)
 			assert.NoError(err)
@@ -201,6 +230,10 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 
 // TestPoweroffOnNewVersion checks that a poweroff happens when a new ddev version is deployed
 func TestPoweroffOnNewVersion(t *testing.T) {
+	if nodeps.MutagenEnabledDefault || globalconfig.DdevGlobalConfig.MutagenEnabledGlobal {
+		t.Skip("Skipping because this changes homedir and breaks mutagen functionality")
+	}
+
 	assert := asrt.New(t)
 	var err error
 
@@ -230,8 +263,13 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	err = os.Setenv("HOME", tmpGlobal)
 	assert.NoError(err)
 
+	// docker-compose v2 is dependent on the ~/.docker directory
+	_ = fileutil.CopyDir(filepath.Join(origHome, ".docker"), filepath.Join(tmpGlobal, ".docker"))
+
 	t.Cleanup(
 		func() {
+			_, err := exec.RunHostCommand(DdevBin, "poweroff")
+			assert.NoError(err)
 
 			err = os.RemoveAll(tmpGlobal)
 			assert.NoError(err)
@@ -245,8 +283,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 
 			err = os.Chdir(origDir)
 			assert.NoError(err)
-			err = os.RemoveAll(tmpJunkProject)
-			assert.NoError(err)
+			_ = os.RemoveAll(tmpJunkProject)
 
 			// Because the start has done a poweroff (new ddev version),
 			// make sure sites are running again.
@@ -257,16 +294,16 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 
 	app, err := ddevapp.GetActiveApp("")
 	require.NoError(t, err)
-	oldTime, _, err := app.Exec(&ddevapp.ExecOpts{
+	oldTime, stderr, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     "date +%s",
 	})
+	require.NoError(t, err, "failed to run exec: %v, output='%s', stderr='%s'", err, oldTime, stderr)
 	oldTime = strings.Trim(oldTime, "\n")
 	oldTimeInt, err := strconv.ParseInt(oldTime, 10, 64)
 	require.NoError(t, err)
 
-	bashPath := util.FindWindowsBashPath()
-	out, err := exec.RunCommand(bashPath, []string{"-c", fmt.Sprintf("echo y | '%s' start", DdevBin)})
+	out, err := exec.RunHostCommand(DdevBin, "start")
 	assert.NoError(err)
 	assert.Contains(out, "ddev-ssh-agent container has been removed")
 	assert.Contains(out, "ssh-agent container is running")
@@ -295,14 +332,19 @@ func addSites() error {
 	log.Debugln("Removing any existing TestSites")
 	for _, site := range TestSites {
 		// Make sure the site is gone in case it was hanging around
-		_, _ = exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
+		_, _ = exec.RunHostCommand(DdevBin, "stop", "-RO", site.Name)
 	}
 	log.Debugln("Starting TestSites")
+	origDir, _ := os.Getwd()
+	defer func() {
+		_ = os.Chdir(origDir)
+	}()
 	for _, site := range TestSites {
-		cleanup := site.Chdir()
-		defer cleanup()
-
-		out, err := exec.RunCommand(DdevBin, []string{"start", "-y"})
+		err := os.Chdir(site.Dir)
+		if err != nil {
+			log.Fatalf("Failed to Chdir to %v", site.Dir)
+		}
+		out, err := exec.RunHostCommand(DdevBin, "start", "-y")
 		if err != nil {
 			log.Fatalln("Error Output from ddev start:", out, "err:", err)
 		}

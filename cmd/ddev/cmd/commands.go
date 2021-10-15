@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bufio"
-	"embed"
 	"fmt"
 	"github.com/drud/ddev/pkg/nodeps"
 	"os"
@@ -39,7 +38,11 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 	projectCommandPath := app.GetConfigPath("commands")
 	// Make sure our target global command directory is empty
 	targetGlobalCommandPath := app.GetConfigPath(".global_commands")
-	_ = os.RemoveAll(targetGlobalCommandPath)
+	err = os.RemoveAll(targetGlobalCommandPath)
+	if err != nil {
+		util.Error("Unable to remove %s: %v", targetGlobalCommandPath, err)
+		return nil
+	}
 
 	err = fileutil.CopyDir(sourceGlobalCommandPath, targetGlobalCommandPath)
 	if err != nil {
@@ -68,7 +71,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				return err
 			}
 			if runtime.GOOS == "windows" {
-				windowsBashPath := util.FindWindowsBashPath()
+				windowsBashPath := util.FindBashPath()
 				if windowsBashPath == "" {
 					fmt.Println("Unable to find bash.exe in PATH, not loading custom commands")
 					return nil
@@ -87,7 +90,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 
 				// If command has already been added, we won't work with it again.
 				if _, ok := commandsAdded[commandName]; ok {
-					util.Warning("not adding command %s (%s) because it was already added to project %s", commandName, onHostFullPath, app.Name)
+					util.Warning("Project-level command '%s' is overriding the global '%s' command", commandName, commandName)
 					continue
 				}
 
@@ -209,7 +212,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Command, []string) {
 	var windowsBashPath = ""
 	if runtime.GOOS == "windows" {
-		windowsBashPath = util.FindWindowsBashPath()
+		windowsBashPath = util.FindBashPath()
 	}
 
 	return func(cmd *cobra.Command, cobraArgs []string) {
@@ -310,28 +313,4 @@ func findDirectivesInScriptCommand(script string) map[string]string {
 	}
 
 	return directives
-}
-
-//The bundled assets for the project .ddev directory are in directory dotddev_assets
-//The bundled assets for the global .ddev directory are in directory global_dotddev_assets
-//go:embed dotddev_assets global_dotddev_assets
-var bundledAssets embed.FS
-
-// populateExamplesCommandsHomeadditions grabs embedded assets
-func populateExamplesCommandsHomeadditions() error {
-	app, err := ddevapp.GetActiveApp("")
-	if err != nil {
-		return nil
-	}
-
-	err = ddevapp.CopyEmbedAssets(bundledAssets, "dotddev_assets", app.GetConfigPath(""))
-	if err != nil {
-		return err
-	}
-	err = ddevapp.CopyEmbedAssets(bundledAssets, "global_dotddev_assets", globalconfig.GetGlobalDdevDir())
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

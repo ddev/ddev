@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/mattn/go-isatty"
 	"os"
@@ -9,8 +10,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-
-	"github.com/drud/ddev/pkg/fileutil"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/output"
@@ -62,14 +61,14 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		}
 
 		// Make the user confirm that existing contents will be deleted
-		util.Warning("Warning: ALL EXISTING CONTENT of the project root (%s) will be deleted", app.AppRoot)
+		util.Warning("Warning: MOST EXISTING CONTENT in the project root (%s) will be deleted by the composer create-project operation. .git and .ddev will be preserved.", app.AppRoot)
 		if !composerCreateYesFlag {
 			if !util.Confirm("Would you like to continue?") {
 				util.Failed("create-project cancelled")
 			}
 		}
 
-		// Remove any contents of project root
+		// Remove most contents of project root
 		util.Warning("Removing any existing files in project root")
 		objs, err := fileutil.ListFilesInDir(app.AppRoot)
 		if err != nil {
@@ -77,8 +76,8 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		}
 
 		for _, o := range objs {
-			// Preserve .ddev/
-			if o == ".ddev" {
+			// Preserve .ddev, .git. .tarballs
+			if o == ".ddev" || o == ".git" || o == ".tarballs" {
 				continue
 			}
 
@@ -87,10 +86,13 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			}
 		}
 
+		err = app.MutagenSyncFlush()
+		if err != nil {
+			util.Failed("Failed to sync mutagen contents: %v", err)
+		}
 		// Define a randomly named temp directory for install target
-		tmpDir := fmt.Sprintf(".tmp_ddev_composer_create_%s", util.RandString(6))
-		containerInstallPath := path.Join("/var/www/html", tmpDir)
-		hostInstallPath := filepath.Join(app.AppRoot, tmpDir)
+		tmpDir := util.RandString(6)
+		containerInstallPath := path.Join("/tmp", tmpDir)
 
 		// Build container composer command
 		composerCmd := []string{
@@ -118,60 +120,23 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 		output.UserOut.Printf("Moving installation to project root")
 
-		// Windows has serious problems with performance.
-		// If not NFSMountEnabled,
-		// we will move the contents of the temp installation
-		// using host-side manipulation, but can't do that with a cached filesystem.
-		if runtime.GOOS == "windows" && !(app.NFSMountEnabled || app.NFSMountEnabledGlobal) {
-			// If traditional windows mount
-			err = filepath.Walk(hostInstallPath, func(path string, info os.FileInfo, err error) error {
-				// Skip the initial tmp install directory
-				if path == hostInstallPath {
-					return nil
-				}
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
+			Service: "web",
+			Cmd:     fmt.Sprintf("shopt -s dotglob && mv %s/* /var/www/html && rmdir %s", containerInstallPath, containerInstallPath),
+			Dir:     "/var/www/html",
+		})
 
-				elements := strings.Split(path, tmpDir)
-				newPath := filepath.Join(elements...)
-
-				// Dirs must be created, not renamed
-				if info.IsDir() {
-					if err := os.MkdirAll(newPath, info.Mode()); err != nil {
-						return fmt.Errorf("unable to move %s to %s: %v", path, newPath, err)
-					}
-
-					return nil
-				}
-
-				// Rename files to to a path excluding the tmpDir
-				if err := os.Rename(path, newPath); err != nil {
-					return fmt.Errorf("unable to move %s to %s: %v", path, newPath, err)
-				}
-
-				return nil
-			})
-		} else {
-			// All other cases than Windows, we can move the contents easily and quickly inside the container.
-			_, _, err = app.Exec(&ddevapp.ExecOpts{
-				Service: "web",
-				Cmd:     fmt.Sprintf("shopt -s dotglob && mv %s/* /var/www/html && rmdir %s", containerInstallPath, containerInstallPath),
-				Dir:     "/var/www/html",
-			})
-		}
-		// This err check picks up either of the above: The filepath.Walk and the mv
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
 		}
+		// Do a spare restart, which will create any needed settings files
+		// and also restart mutagen
+		err = app.Restart()
+		if err != nil {
+			util.Warning("Failed to restart project after composer create: %v", err)
+		}
 		if runtime.GOOS == "windows" {
 			fileutil.ReplaceSimulatedLinks(app.AppRoot)
-		}
-		// Do a spare start, which will create any needed settings files
-		err = app.Stop(false, false)
-		if err != nil {
-			util.Warning("Failed to stop project after composer create: %v", err)
-		}
-		err = app.Start()
-		if err != nil {
-			util.Failed("Failed to start project after composer create: %v", err)
 		}
 	},
 }

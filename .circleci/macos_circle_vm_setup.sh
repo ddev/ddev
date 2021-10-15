@@ -16,14 +16,13 @@ brew install homebrew/cask/ngrok >/dev/null
 brew install drud/ddev/ddev >/dev/null
 brew unlink python@2 >/dev/null || true
 
-brew install mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr gnu-getopt libgsf glib pcre >/dev/null || true
-brew link mysql-client zip makensis jq expect coreutils golang ddev mkcert osslsigncode ghr gnu-getopt libgsf glib pcre >/dev/null
+brew install mysql-client zip makensis jq expect coreutils golang drud/ddev/ddev mkcert gnu-getopt libgsf glib pcre >/dev/null || true
+brew link mysql-client zip makensis jq expect coreutils golang ddev mkcert gnu-getopt libgsf glib pcre >/dev/null
 
 brew link --force mysql-client >/dev/null
 
-# Get the Plugins for NSIS
-curl -fsSL -o /tmp/EnVar-Plugin.zip https://github.com/GsNSIS/EnVar/releases/latest/download/EnVar-Plugin.zip && sudo unzip -o -d /usr/local/share/nsis /tmp/EnVar-Plugin.zip
-curl -fsSL -o /tmp/INetC.zip https://github.com/DigitalMediaServer/NSIS-INetC-plugin/releases/latest/download/INetC.zip && sudo unzip -o -d /usr/local/share/nsis/Plugins /tmp/INetC.zip
+# Get the Stubs and Plugins for makensis; the macOS makensis build doesn't do this.
+./.ci-scripts/nsis_setup.sh /usr/local/share/nsis
 
 # homebrew sometimes removes /usr/local/etc/my.cnf.d
 mkdir -p "$(brew --prefix)/etc/my.cnf.d"

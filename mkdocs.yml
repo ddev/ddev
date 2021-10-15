@@ -28,9 +28,6 @@ plugins:
     - git-revision-date-localized:
         type: timeago
         locale: en
-google_analytics:
-  - 'UA-105593079-2'
-  - 'auto'
 nav:
   - 'Home': 'index.md'
   - 'ddev Basics':
@@ -64,3 +61,9 @@ nav:
     - 'Acquia': 'users/providers/acquia.md'
     - 'Pantheon': 'users/providers/pantheon.md'
     - 'Platform.sh': 'users/providers/platform.md'
+  - 'Topics':
+      - 'CMS-Specific Topics': 'users/topics/cms_specific_help.md'
+      - 'PhpStorm Integration': 'users/topics/phpstorm.md'
+      - 'Settings Files Management': 'users/topics/settings_files.md'
+      - 'Sharing a project with `ddev share` or by exposing a port': 'users/topics/sharing.md'
+      - 'Webserver-Specific Topics': 'users/topics/webserver.md'

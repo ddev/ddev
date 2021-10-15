@@ -89,7 +89,7 @@ fi
 echo $server_db_version >/var/lib/mysql/db_mariadb_version.txt
 
 cp -r /home/{.my.cnf,.bashrc} ~/
-mkdir -p /mnt/ddev-global-cache/bashhistory/${HOSTNAME} || true
+mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory}/${HOSTNAME} || true
 
 echo
 echo 'MySQL init process done. Ready for start up.'

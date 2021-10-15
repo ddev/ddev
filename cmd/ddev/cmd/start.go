@@ -62,7 +62,7 @@ ddev start --all`,
 
 			util.Success("Successfully started %s", project.GetName())
 			httpURLs, urlList, _ := project.GetAllURLs()
-			if globalconfig.GetCAROOT() == "" {
+			if globalconfig.GetCAROOT() == "" || ddevapp.IsRouterDisabled(project) {
 				urlList = httpURLs
 			}
 			util.Success("Project can be reached at %s", strings.Join(urlList, " "))

@@ -8,11 +8,11 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
 	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -37,29 +37,50 @@ type ProjectInfo struct {
 
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
-	OmitContainersGlobal     []string `yaml:"omit_containers,flow"`
-	NFSMountEnabledGlobal    bool     `yaml:"nfs_mount_enabled"`
-	InstrumentationOptIn     bool     `yaml:"instrumentation_opt_in"`
-	RouterBindAllInterfaces  bool     `yaml:"router_bind_all_interfaces"`
-	InternetDetectionTimeout int64    `yaml:"internet_detection_timeout_ms"`
-	DeveloperMode            bool     `yaml:"developer_mode,omitempty"`
-	InstrumentationUser      string   `yaml:"instrumentation_user,omitempty"`
-	LastStartedVersion       string   `yaml:"last_started_version"`
-	MkcertCARoot             string   `yaml:"mkcert_caroot"`
-	UseHardenedImages        bool     `yaml:"use_hardened_images"`
-	UseLetsEncrypt           bool     `yaml:"use_letsencrypt"`
-	LetsEncryptEmail         string   `yaml:"letsencrypt_email"`
-	AutoRestartContainers    bool     `yaml:"auto_restart_containers"`
-	FailOnHookFailGlobal     bool     `yaml:"fail_on_hook_fail"`
-	WebEnvironment           []string `yaml:"web_environment"`
-	DisableHTTP2             bool     `yaml:"disable_http2"`
-
-	ProjectList map[string]*ProjectInfo `yaml:"project_info"`
+	OmitContainersGlobal     []string                `yaml:"omit_containers,flow"`
+	NFSMountEnabledGlobal    bool                    `yaml:"nfs_mount_enabled"`
+	MutagenEnabledGlobal     bool                    `yaml:"mutagen_enabled"`
+	InstrumentationOptIn     bool                    `yaml:"instrumentation_opt_in"`
+	RouterBindAllInterfaces  bool                    `yaml:"router_bind_all_interfaces"`
+	InternetDetectionTimeout int64                   `yaml:"internet_detection_timeout_ms"`
+	DeveloperMode            bool                    `yaml:"developer_mode,omitempty"`
+	InstrumentationUser      string                  `yaml:"instrumentation_user,omitempty"`
+	LastStartedVersion       string                  `yaml:"last_started_version"`
+	MkcertCARoot             string                  `yaml:"mkcert_caroot"`
+	UseHardenedImages        bool                    `yaml:"use_hardened_images"`
+	UseLetsEncrypt           bool                    `yaml:"use_letsencrypt"`
+	LetsEncryptEmail         string                  `yaml:"letsencrypt_email"`
+	AutoRestartContainers    bool                    `yaml:"auto_restart_containers"`
+	FailOnHookFailGlobal     bool                    `yaml:"fail_on_hook_fail"`
+	WebEnvironment           []string                `yaml:"web_environment"`
+	DisableHTTP2             bool                    `yaml:"disable_http2"`
+	TableStyle               string                  `yaml:"table_style"`
+	SimpleFormatting         bool                    `yaml:"simple_formatting"`
+	ProjectList              map[string]*ProjectInfo `yaml:"project_info"`
 }
 
 // GetGlobalConfigPath gets the path to global config file
 func GetGlobalConfigPath() string {
 	return filepath.Join(GetGlobalDdevDir(), DdevGlobalConfigName)
+}
+
+// GetMutagenDir returns the directory of the mutagen config and binary
+func GetMutagenDir() string {
+	return filepath.Join(GetGlobalDdevDir(), "bin")
+}
+
+// GetMutagenPath gets the full path to the mutagen binary
+func GetMutagenPath() string {
+	mutagenBinary := "mutagen"
+	if runtime.GOOS == "windows" {
+		mutagenBinary = mutagenBinary + ".exe"
+	}
+	return filepath.Join(GetMutagenDir(), mutagenBinary)
+}
+
+// GetTableStyle returns the configured (string) table style
+func GetTableStyle() string {
+	return DdevGlobalConfig.TableStyle
 }
 
 // ValidateGlobalConfig validates global config
@@ -68,6 +89,9 @@ func ValidateGlobalConfig() error {
 		return fmt.Errorf("Invalid omit_containers: %s, must contain only %s", strings.Join(DdevGlobalConfig.OmitContainersGlobal, ","), strings.Join(GetValidOmitContainers(), ",")).(InvalidOmitContainers)
 	}
 
+	if !IsValidTableStyle(DdevGlobalConfig.TableStyle) {
+		DdevGlobalConfig.TableStyle = "default"
+	}
 	return nil
 }
 
@@ -93,7 +117,7 @@ func ReadGlobalConfig() error {
 		}
 	}
 
-	source, err := ioutil.ReadFile(globalConfigFile)
+	source, err := os.ReadFile(globalConfigFile)
 	if err != nil {
 		return fmt.Errorf("Unable to read ddev global config file %s: %v", source, err)
 	}
@@ -103,6 +127,9 @@ func ReadGlobalConfig() error {
 	err = yaml.Unmarshal(source, &DdevGlobalConfig)
 	if err != nil {
 		return err
+	}
+	if DdevGlobalConfig.TableStyle == "" {
+		DdevGlobalConfig.TableStyle = "default"
 	}
 	if DdevGlobalConfig.ProjectList == nil {
 		DdevGlobalConfig.ProjectList = map[string]*ProjectInfo{}
@@ -144,9 +171,10 @@ func WriteGlobalConfig(config GlobalConfig) error {
 	// Append current image information
 	instructions := `
 # You can turn off usage of the dba (phpmyadmin) container and/or
-# ddev-ssh-agent containers with
-# omit_containers["dba", "ddev-ssh-agent"]
-# and you can opt in or out of sending instrumentation the ddev developers with
+# ddev-ssh-agent and ddev-router containers with
+# omit_containers["dba", "ddev-ssh-agent", "ddev-router"]
+
+# You can opt in or out of sending instrumentation to the ddev developers with
 # instrumentation_opt_in: true # or false
 #
 # You can enable nfs mounting for all projects with
@@ -157,11 +185,19 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # - SOMEENV=somevalue
 # - SOMEOTHERENV=someothervalue
 
+# Adjust the default table style used in ddev list and describe
+# table_style: default
+# table_style: bold
+# table_style: bright
+
+# Require simpler formatting where possible
+# simpler_formatting: false
+
 # In unusual cases the default value to wait to detect internet availability is too short.
 # You can adjust this value higher to make it less likely that ddev will declare internet
-# unavailable, but ddev may wait longer on some commands. This should not be set below the default 750
+# unavailable, but ddev may wait longer on some commands. This should not be set below the default 1000
 # ddev will ignore low values, as they're not useful
-# internet_detection_timeout_ms: 750
+# internet_detection_timeout_ms: 1000
 
 # You can enable 'ddev start' to be interrupted by a failing hook with
 # fail_on_hook_fail: true
@@ -214,7 +250,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 `
 	cfgbytes = append(cfgbytes, instructions...)
 
-	err = ioutil.WriteFile(GetGlobalConfigPath(), cfgbytes, 0644)
+	err = os.WriteFile(GetGlobalConfigPath(), cfgbytes, 0644)
 	if err != nil {
 		return err
 	}
@@ -251,7 +287,7 @@ func GetGlobalDdevDir() string {
 	return ddevDir
 }
 
-// IsValidOmitContainers is a helper function to determine if a the OmitContainers array is valid
+// IsValidOmitContainers is a helper function to determine if the OmitContainers array is valid
 func IsValidOmitContainers(containerList []string) bool {
 	for _, containerName := range containerList {
 		if _, ok := ValidOmitContainers[containerName]; !ok {

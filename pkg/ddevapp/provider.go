@@ -2,7 +2,6 @@ package ddevapp
 
 import (
 	"github.com/drud/ddev/pkg/output"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -87,12 +86,20 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 		if err != nil {
 			return err
 		}
+		err = app.MutagenSyncFlush()
+		if err != nil {
+			return err
+		}
 
 		output.UserOut.Printf("Database downloaded to: %s", fileLocation)
 
 		if skipImportArg {
 			output.UserOut.Println("Skipping database import.")
 		} else {
+			err = app.MutagenSyncFlush()
+			if err != nil {
+				return err
+			}
 			output.UserOut.Println("Importing database...")
 			err = app.ImportDB(fileLocation, importPath, true, false, "db")
 			if err != nil {
@@ -106,6 +113,11 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 	} else {
 		output.UserOut.Println("Downloading files...")
 		fileLocation, importPath, err := provider.GetBackup("files")
+		if err != nil {
+			return err
+		}
+
+		err = app.MutagenSyncFlush()
 		if err != nil {
 			return err
 		}
@@ -229,6 +241,10 @@ func (p *Provider) UploadDB() error {
 	if err != nil {
 		return err
 	}
+	err = p.app.MutagenSyncFlush()
+	if err != nil {
+		return err
+	}
 
 	s := p.DBPushCommand.Service
 	if s == "" {
@@ -310,7 +326,11 @@ func (p *Provider) getDatabaseBackup() (filename string, error error) {
 	if s == "" {
 		s = "web"
 	}
-	err := p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.DBPullCommand.Command)
+	err := p.app.MutagenSyncFlush()
+	if err != nil {
+		return "", err
+	}
+	err = p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.DBPullCommand.Command)
 	if err != nil {
 		return "", fmt.Errorf("Failed to exec %s on %s: %v", p.DBPullCommand.Command, s, err)
 	}
@@ -324,7 +344,7 @@ func (p *Provider) Write(configPath string) error {
 
 // Read generic provider configuration from a specified location on disk.
 func (p *Provider) Read(configPath string) error {
-	source, err := ioutil.ReadFile(configPath)
+	source, err := os.ReadFile(configPath)
 	if err != nil {
 		return err
 	}

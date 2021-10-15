@@ -40,8 +40,15 @@ var ValidOmitContainers = map[string]bool{
 // WebserverDefault is the default webserver type, overridden by $DDEV_WEBSERVER_TYPE
 var WebserverDefault = WebserverNginxFPM
 
+// MutagenEnabledDefault is default value for app.MutagenEnabled
+var MutagenEnabledDefault = false
+
 // NFSMountEnabledDefault is default value for app.NFSMountEnabled
 var NFSMountEnabledDefault = false
+
+// SimpleFormatting is turned on by DDEV_USE_SIMPLE_FORMATTING
+// and makes ddev list and describe, etc. use simpler formatting
+var SimpleFormatting = false
 
 // FailOnHookFailDefault is the default value for app.FailOnHookFail
 var FailOnHookFailDefault = false
@@ -85,6 +92,8 @@ const (
 	// DdevDefaultTLD is the top-level-domain used by default, can be overridden
 	DdevDefaultTLD                  = "ddev.site"
 	InternetDetectionTimeoutDefault = 750
+
+	MinimumDockerSpaceWarning = 15
 )
 
 // IsValidPHPVersion is a helper function to determine if a PHP version is valid, returning
