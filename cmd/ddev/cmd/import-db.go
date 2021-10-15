@@ -65,6 +65,7 @@ gzip -dc db.sql.gz | ddev import-db`,
 
 func init() {
 	ImportDBCmd.Flags().StringVarP(&dbSource, "src", "f", "", "Provide the path to a sql dump in .sql or tar/tar.gz/tgz/zip format")
+	ImportDBCmd.Flags().StringVarP(&dbSource, "file", "", "", "Provide the path to a sql dump in .sql or tar/tar.gz/tgz/zip format")
 	ImportDBCmd.Flags().StringVarP(&dbExtPath, "extract-path", "", "", "If provided asset is an archive, provide the path to extract within the archive.")
 	ImportDBCmd.Flags().StringVarP(&targetDB, "target-db", "d", "db", "If provided, target-db is alternate database to import into")
 	ImportDBCmd.Flags().BoolVarP(&noDrop, "no-drop", "", false, "Set if you do NOT want to drop the db before importing")
