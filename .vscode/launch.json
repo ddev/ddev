@@ -7,10 +7,8 @@
             "request": "launch",
             "mode": "debug",
             "remotePath": "",
-            "port": 2345,
-            "host": "127.0.0.1",
             "program": "${workspaceRoot}/cmd/ddev",
-            "cwd": "$HOME/sites/drupal8",
+            "cwd": "/workspace/simpleproj",
             "env": {"DDEV_DEBUG": true},
             "args": [],
             "showLog": true
