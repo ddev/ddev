@@ -4,11 +4,6 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/lextoumbourou/goodhosts"
-	"github.com/mattn/go-isatty"
-	"github.com/pkg/errors"
 	"io/fs"
 	"net"
 	"os"
@@ -17,6 +12,12 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/lextoumbourou/goodhosts"
+	"github.com/mattn/go-isatty"
+	"github.com/pkg/errors"
 
 	osexec "os/exec"
 
@@ -32,7 +33,7 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/fsouza/go-dockerclient"
+	docker "github.com/fsouza/go-dockerclient"
 )
 
 // containerWaitTimeout is the max time we wait for all containers to become ready.
@@ -1010,11 +1011,12 @@ func (app *DdevApp) Restart() error {
 // PullContainerImages pulls the main images with full output, since docker-compose up won't show enough output
 func (app *DdevApp) PullContainerImages() error {
 	containerImages := map[string]string{
-		"db":             app.DBImage,
+		"db":             app.GetDBImage(),
 		"dba":            app.DBAImage,
 		"ddev-ssh-agent": version.GetSSHAuthImage(),
 		"web":            app.WebImage,
 		"router":         version.GetRouterImage(),
+		"busybox":        "busybox:stable",
 	}
 
 	omitted := app.GetOmittedContainers()

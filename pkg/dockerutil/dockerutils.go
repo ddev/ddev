@@ -4,11 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/drud/ddev/pkg/archive"
-	exec2 "github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/version"
 	"io"
 	"log"
 	"os"
@@ -20,11 +15,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/drud/ddev/pkg/archive"
+	exec2 "github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/version"
+
 	"net/url"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/drud/ddev/pkg/output"
-	"github.com/fsouza/go-dockerclient"
+	docker "github.com/fsouza/go-dockerclient"
 )
 
 // NetName provides the default network name for ddev.
@@ -890,7 +891,7 @@ func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid
 	// nolint errcheck
 	defer f.Close()
 
-	containerID, _, err := RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && tail -f /dev/null"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, nil)
+	containerID, _, err := RunSimpleContainer("busybox:stable", "", []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && tail -f /dev/null"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, nil)
 	if err != nil {
 		return err
 	}
