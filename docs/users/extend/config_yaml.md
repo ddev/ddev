@@ -36,15 +36,15 @@ the .ddev/config.yaml is the primary configuration for the project.
 | host_webserver_port | Specify a specific and persistent http port for direct binding to the localhost interface | This is not commonly used, but a specific port can be provided here and the https URL will always remain the same. For example, if you put "59000", the project will always use "<http://127.0.0.1:59000".> for the localhost URL. (Note that the named URL is more commonly used and for most purposes is better.) If this is not set the port will change from `ddev start` to `ddev start` |
 | host_db_port | localhost binding port for database server | If specified here, the database port will remain consistent. This is useful for configuration of host-side database browsers. Note, though, that `ddev sequelpro` and `ddev mysql` do all this automatically, as does the sample command `ddev mysqlworkbench`. |
 | phpmyadmin_port | port used for phpMyAdmin URL | This is sometimes changed from the default 8036 when a port conflict is discovered |
-| phpmyadmin_https_port | port used for phpMyAdmin URL (https) | This is sometimes changed from the default 8037 when a port conflict is discovered |
+| phpmyadmin_https_<wbr>port | port used for phpMyAdmin URL (https) | This is sometimes changed from the default 8037 when a port conflict is discovered |
 | mailhog_port | port used in MailHog URL | this can be changed from the default 8025 in case of port conflicts |
 | mailhog_https_port | port used in MailHog URL | this can be changed from the default 8026 in case of port conflicts |
-| webimage_extra_packages| Add extra Debian packages to the ddev-webserver. | For example, `webimage_extra_packages: [php-yaml, php-bcmath]` will add those two packages |
-| dbimage_extra_packages| Add extra Debian packages to the ddev-dbserver. | For example, `dbimage_extra_packages: ["less"]` will add those that package. |
-| use_dns_when_possible | defaults to true (using DNS instead of editing /etc/hosts) | If set to false, ddev will always update the /etc/hosts file with the project hostname instead of using DNS for name resolution |
+| webimage_extra_<wbr>packages| Add extra Debian packages to the ddev-webserver. | For example, `webimage_extra_packages: [php-yaml, php-bcmath]` will add those two packages |
+| dbimage_extra_<wbr>packages| Add extra Debian packages to the ddev-dbserver. | For example, `dbimage_extra_packages: ["less"]` will add those that package. |
+| use_dns_when_<wbr>possible | defaults to true (using DNS instead of editing /etc/hosts) | If set to false, ddev will always update the /etc/hosts file with the project hostname instead of using DNS for name resolution |
 | project_tld | defaults to "ddev.site" so project urls become "someproject.ddev.site" | This can be changed to anything that works for you; to keep things the way they were before ddev v1.9, use "ddev.local" |
 | ngrok_args | Extra flags for ngrok when using the `ddev share` command | For example, `--subdomain mysite --auth user:pass`. See [ngrok docs on http flags](https://ngrok.com/docs#http) |
-| disable_settings_management | defaults to false | If true, ddev will not create or update CMS-specific settings files |  |
+| disable_settings_<wbr>management | defaults to false | If true, ddev will not create or update CMS-specific settings files |  |
 | hooks | | See [Extending Commands](../extending-commands.md) for more information. |
 | no_project_mount | Skip mounting the project into the web container | If true, the project will not be mounted by ddev into the web container. This is to enable experimentation with alternate file mounting strategies. Advanced users only! |
 
