@@ -52,7 +52,7 @@ fi
 
 echo "======= Docker Info ========="
 
-echo "Docker disk space:" && docker run --rm busybox df -h / && echo
+echo "Docker disk space:" && docker run --rm busybox:stable df -h / && echo
 ddev poweroff
 echo "Existing docker containers: " && docker ps -a
 mkdir -p ~/tmp/${PROJECT_NAME} && cd ~/tmp/${PROJECT_NAME}

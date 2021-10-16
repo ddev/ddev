@@ -6,7 +6,7 @@ services:
     - DUMMY_COMPOSE_OVERRIDE=override
 
   dummy1:
-    image: busybox
+    image: busybox:stable
     environment:
     - HTTP_EXPOSE=9101
     - HTTPS_EXPOSE=1102

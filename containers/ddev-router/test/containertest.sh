@@ -47,7 +47,7 @@ cleanup
 # Make sure rootCA is created and installed on the ddev-global-cache/mkcert
 mkcert -install
 set -x
-docker run -t --rm  -v "$(mkcert -CAROOT):/mnt/mkcert" -v ddev-global-cache:/mnt/ddev-global-cache busybox sh -c "mkdir -p /mnt/ddev-global-cache/mkcert && chmod -R ugo+w /mnt/ddev-global-cache/* && cp -R /mnt/mkcert /mnt/ddev-global-cache"
+docker run -t --rm  -v "$(mkcert -CAROOT):/mnt/mkcert" -v ddev-global-cache:/mnt/ddev-global-cache busybox:stable sh -c "mkdir -p /mnt/ddev-global-cache/mkcert && chmod -R ugo+w /mnt/ddev-global-cache/* && cp -R /mnt/mkcert /mnt/ddev-global-cache"
 
 # Run the router alone
 docker run --rm --name $CONTAINER_NAME -p 8080:80 -p 8443:443 --mount "type=bind,src=/var/run/docker.sock,target=/tmp/docker.sock" -v ddev-global-cache:/mnt/ddev-global-cache --name ddev-router-test -d $DOCKER_IMAGE

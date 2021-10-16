@@ -8,6 +8,7 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/drud/ddev/pkg/version"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net"
@@ -51,7 +52,7 @@ func TestGetFreePort(t *testing.T) {
 		assert.NotContains(globalconfig.DdevGlobalConfig.ProjectList["TestGetFreePort"].UsedHostPorts, port)
 
 		// Make sure we can actually use the port.
-		dockerCommand := []string{"run", "--rm", "-p" + dockerIP + ":" + port + ":" + port, "busybox:latest"}
+		dockerCommand := []string{"run", "--rm", "-p" + dockerIP + ":" + port + ":" + port, version.BusyboxImage}
 		_, err = exec.RunCommand("docker", dockerCommand)
 
 		assert.NoError(err, "failed to 'docker %v': %v", dockerCommand, err)
