@@ -9,7 +9,6 @@ theme:
     primary: 'light-blue'
 extra_javascript:
   - 'assets/jquery-3.5.1.min.js'
-  - 'assets/fix-search.js'
   - 'assets/extra.js'
 markdown_extensions:
     - toc:
