@@ -1016,7 +1016,7 @@ func (app *DdevApp) PullContainerImages() error {
 		"ddev-ssh-agent": version.GetSSHAuthImage(),
 		"web":            app.WebImage,
 		"router":         version.GetRouterImage(),
-		"busybox":        "busybox:stable",
+		"busybox":        version.BusyboxImage,
 	}
 
 	omitted := app.GetOmittedContainers()
