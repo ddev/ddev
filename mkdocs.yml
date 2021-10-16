@@ -10,6 +10,8 @@ theme:
 extra_javascript:
   - 'assets/jquery-3.5.1.min.js'
   - 'assets/extra.js'
+extra_css:
+  - 'assets/extra.css'
 markdown_extensions:
     - toc:
         permalink: true
