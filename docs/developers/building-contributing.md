@@ -85,6 +85,8 @@ To see which DDEV commands the tests are executing, set the environment variable
 
 Use GOTEST_SHORT=true to run just one CMS in each test, or GOTEST_SHORT=<integer> to run exactly one project type from the list of project types in the [TestSites array](https://github.com/drud/ddev/blob/a4ab2827d8b6e706b2420700045d889a3a69f3f2/pkg/ddevapp/ddevapp_test.go#L43). For example, GOTEST_SHORT=5 will run many tests only against TYPO3.
 
+To run a test (in the cmd package) against a individually compiled ddev binary set the DDEV_BINARY_FULLPATH environment variable, for example DDEV_BINARY_FULLPATH=$PWD/.gotmp/bin/linux_amd64/ddev make testcmd`.
+ 
 ## Automated testing
 
 Anybody can view the CircleCI automated tests, and they usually show up any problems that are not OS-specific. Just click through on the testing section of the PR to see them.
