@@ -393,35 +393,35 @@ func TestRunSimpleContainer(t *testing.T) {
 	assert.DirExists(testdata)
 
 	// Try the success case; script found, runs, all good.
-	_, out, err := RunSimpleContainer(version.BusyboxImage, "TestRunSimpleContainer"+basename, []string{"//tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + "://tempmount"}, "25", true, false, nil)
+	_, out, err := RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"//tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + "://tempmount"}, "25", true, false, nil)
 	assert.NoError(err)
 	assert.Contains(out, "simplescript.sh; TEMPENV=someenv UID=25")
 	assert.Contains(out, "stdout is captured")
 	assert.Contains(out, "stderr is also captured")
 
 	// Try the case of running nonexistent script
-	_, _, err = RunSimpleContainer(version.BusyboxImage, "TestRunSimpleContainer"+basename, []string{"nocommandbythatname"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + ":/tempmount"}, "25", true, false, nil)
+	_, _, err = RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"nocommandbythatname"}, nil, []string{"TEMPENV=someenv"}, []string{testdata + ":/tempmount"}, "25", true, false, nil)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "failed to StartContainer")
 	}
 
 	// Try the case of running a script that fails
-	_, _, err = RunSimpleContainer(version.BusyboxImage, "TestRunSimpleContainer"+basename, []string{"/tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv", "ERROROUT=true"}, []string{testdata + ":/tempmount"}, "25", true, false, nil)
+	_, _, err = RunSimpleContainer("busybox:latest", "TestRunSimpleContainer"+basename, []string{"/tempmount/simplescript.sh"}, nil, []string{"TEMPENV=someenv", "ERROROUT=true"}, []string{testdata + ":/tempmount"}, "25", true, false, nil)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "container run failed with exit code 5")
 	}
 
 	// Provide an unqualified tag name
-	_, _, err = RunSimpleContainer(version.BusyboxImage, "TestRunSimpleContainer"+basename, nil, nil, nil, nil, "", true, false, nil)
+	_, _, err = RunSimpleContainer("busybox", "TestRunSimpleContainer"+basename, nil, nil, nil, nil, "", true, false, nil)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "image name must specify tag")
 	}
 
 	// Provide a malformed tag name
-	_, _, err = RunSimpleContainer(version.BusyboxImage, "TestRunSimpleContainer"+basename, nil, nil, nil, nil, "", true, false, nil)
+	_, _, err = RunSimpleContainer("busybox:", "TestRunSimpleContainer"+basename, nil, nil, nil, nil, "", true, false, nil)
 	assert.Error(err)
 	if err != nil {
 		assert.Contains(err.Error(), "malformed tag provided")
