@@ -278,6 +278,7 @@ iterm
 j
 jq
 json
+kcachegrind
 kbox
 lando
 launch

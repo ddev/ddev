@@ -38,6 +38,7 @@ nav:
     - 'PHP Step Debugging': 'users/step-debugging.md'
     - 'Profiling with Blackfire': 'users/blackfire-profiling.md'
     - 'Profiling with xhprof': 'users/xhprof-profiling.md'
+    - 'Profiling with Xdebug': 'users/xdebug-profiling.md'
     - 'Troubleshooting': 'users/troubleshooting.md'
     - 'Docker Installation': 'users/docker_installation.md'
     - 'Performance': 'users/performance.md'
