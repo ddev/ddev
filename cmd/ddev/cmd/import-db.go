@@ -25,9 +25,9 @@ can be provided if it is not located at the top level of the archive. An optiona
 can also be provided; the default is the default database named "db".
 Also note the related "ddev mysql" command`,
 	Example: `ddev import-db
-ddev import-db --src=.tarballs/junk.sql
-ddev import-db --src=.tarballs/junk.sql.gz
-ddev import-db --target-db=newdb --src=.tarballs/junk.sql.gz
+ddev import-db --file=.tarballs/junk.sql
+ddev import-db --file=.tarballs/junk.sql.gz
+ddev import-db --target-db=newdb --file=.tarballs/junk.sql.gz
 ddev import-db <db.sql
 ddev import-db someproject <db.sql
 gzip -dc db.sql.gz | ddev import-db`,
@@ -64,8 +64,9 @@ gzip -dc db.sql.gz | ddev import-db`,
 }
 
 func init() {
-	ImportDBCmd.Flags().StringVarP(&dbSource, "src", "f", "", "Provide the path to a sql dump in .sql or tar/tar.gz/tgz/zip format")
-	ImportDBCmd.Flags().StringVarP(&dbSource, "file", "", "", "Provide the path to a sql dump in .sql or tar/tar.gz/tgz/zip format")
+	ImportDBCmd.Flags().StringVarP(&dbSource, "src", "", "", "Provide the path to a sql dump in .sql or tar/tar.gz/tgz/zip format (same as --file)")
+	ImportDBCmd.Flags().StringVarP(&dbSource, "file", "f", "", "Provide the path to a sql dump in .sql or tar/tar.gz/tgz/zip format (same as --src)")
+	_ = ImportDBCmd.Flags().MarkHidden("src")
 	ImportDBCmd.Flags().StringVarP(&dbExtPath, "extract-path", "", "", "If provided asset is an archive, provide the path to extract within the archive.")
 	ImportDBCmd.Flags().StringVarP(&targetDB, "target-db", "d", "db", "If provided, target-db is alternate database to import into")
 	ImportDBCmd.Flags().BoolVarP(&noDrop, "no-drop", "", false, "Set if you do NOT want to drop the db before importing")
