@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
-	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	"net"
@@ -260,7 +259,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 // GetGlobalDdevDir returns ~/.ddev, the global caching directory
 func GetGlobalDdevDir() string {
-	userHome, err := homedir.Dir()
+	userHome, err := os.UserHomeDir()
 	if err != nil {
 		logrus.Fatal("could not get home directory for current user. is it set?")
 	}

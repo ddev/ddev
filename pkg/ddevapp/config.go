@@ -6,7 +6,6 @@ import (
 	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/mitchellh/go-homedir"
 	"os"
 	"path/filepath"
 	"sort"
@@ -60,7 +59,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		app.AppRoot = appRoot
 	}
 
-	homeDir, _ := homedir.Dir()
+	homeDir, _ := os.UserHomeDir()
 	if appRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) || app.AppRoot == homeDir {
 		return nil, fmt.Errorf("ddev config is not useful in your home directory (%s)", homeDir)
 	}
