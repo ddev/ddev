@@ -20,10 +20,6 @@ var DebugDownloadImagesCmd = &cobra.Command{
 		if err != nil {
 			util.Failed("Failed to debug download-images: %v", err)
 		}
-		err = app.Init("")
-		if err != nil {
-			util.Failed("Failed to init: %v", err)
-		}
 		err = app.PullContainerImages()
 		if err != nil {
 			util.Failed("Failed to debug download-images: %v", err)
