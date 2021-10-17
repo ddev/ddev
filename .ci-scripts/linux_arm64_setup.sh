@@ -5,7 +5,7 @@ set -o errexit
 # Basic tools
 
 set -x
-export GO_VERSION=1.16.2
+export GO_VERSION=1.17.2
 
 if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
   set +x
