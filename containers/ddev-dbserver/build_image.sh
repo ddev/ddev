@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # Build a ddev-dbserver image for variety of mariadb/mysql
 # and per architecture, optionally push
@@ -102,7 +102,9 @@ fi
 BASE_IMAGE=${DB_TYPE}
 
 # For mysql, we have to use our own base images at drud/mysql
-if [ ${DB_TYPE} = "mysql" ] && [ ${ARCHS} = "linux/arm64" ]; then
+set -x
+
+if [ ${DB_TYPE} = "mysql" ] && [[ "$ARCHS" == *"linux/arm64"* ]]; then
   BASE_IMAGE=drud/mysql
 fi
 printf "\n\n========== Building drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG} from ${BASE_IMAGE} for ${ARCHS} with pinned version ${DB_PINNED_VERSION} ==========\n"
