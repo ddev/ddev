@@ -37,7 +37,7 @@ git clone --branch v1.2.1 https://github.com/bats-core/bats-core.git /tmp/bats-c
 npm install --global markdownlint-cli
 markdownlint --version
 # readthedocs has ancient version of mkdocs in it.
-pyenv global 3.9.1 # added to make CircleCi give us pip3
+pyenv global 3.9.4 # added to make CircleCi give us pip3
 pip3 install -q yq mkdocs==0.17.5
 
 # Get the Stubs and Plugins for makensis; the linux makensis build doesn't do this.
