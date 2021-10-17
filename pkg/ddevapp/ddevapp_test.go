@@ -2580,7 +2580,7 @@ func TestRouterPortsCheck(t *testing.T) {
 
 	// Occupy port 80 using docker busybox trick, then see if we can start router.
 	// This is done with docker so that we don't have to use explicit sudo
-	containerID, err := exec.RunCommand("sh", []string{"-c", "docker run -d -p80:80 --rm busybox:latest sleep 100 2>/dev/null"})
+	containerID, err := exec.RunCommand("sh", []string{"-c", "docker run -d -p80:80 --rm busybox:stable sleep 100 2>/dev/null"})
 	if err != nil {
 		t.Fatalf("Failed to run docker command to occupy port 80, err=%v output=%v", err, containerID)
 	}

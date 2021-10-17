@@ -42,12 +42,12 @@ nssm.exe stop buildkite-agent || true
 nssm.exe remove buildkite-agent confirm || true
 nssm.exe install buildkite-agent "C:\buildkite-agent\bin\buildkite-agent.exe" "start" || true
 nssm.exe set buildkite-agent AppStdout "C:\buildkite-agent\buildkite-agent.log"
-nssm.exe set buildkite-agent AppStderr "C:\buildkite-agent\buildkite-agent.lwinpty docker run -it -p 80 busybox lsog"
+nssm.exe set buildkite-agent AppStderr "C:\buildkite-agent\buildkite-agent.lwinpty docker run -it -p 80 busybox:stable log"
 nssm.exe start buildkite-agent || true
 nssm.exe status buildkite-agent || true
 
 # Get firewall set up with a single run
-winpty docker run -it --rm -p 80 busybox ls
+winpty docker run -it --rm -p 80 busybox:stable ls
 
 bash "/c/Program Files/ddev/windows_ddev_nfs_setup.sh"
 
