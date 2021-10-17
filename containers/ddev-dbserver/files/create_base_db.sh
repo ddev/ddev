@@ -14,7 +14,9 @@ mkdir -p /var/lib/mysql /mnt/ddev_config/mysql && rm -f /var/lib/mysql/* && chmo
 
 echo 'Initializing mysql'
 mysqld --version
-mysqld_version=$(mysqld --version | awk '{ gsub(/-log/, ""); gsub(/\.[0-9]+$/, "", $3);  print $3}')
+mysqld_version=$(mysqld --version | awk '{ print $3 }')
+mysqld_version=${mysqld_version%%-*}
+mysqld_version=${mysqld_version%.*}
 echo version=$mysqld_version
 # Oracle mysql 5.7+ deprecates mysql_install_db
 if [ "${mysqld_version}" = "5.7" ] || [  "${mysqld_version%%%.*}" = "8.0" ]; then
