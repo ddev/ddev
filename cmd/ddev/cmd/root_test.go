@@ -25,7 +25,7 @@ import (
 )
 
 var (
-	// DdevBin is the full path to the drud binary
+	// DdevBin is the full path to the ddev binary
 	DdevBin   = "ddev"
 	TestSites = []testcommon.TestSite{
 		{

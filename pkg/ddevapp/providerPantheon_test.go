@@ -18,7 +18,7 @@ import (
 )
 
 /**
- * These tests rely on an external test account managed by DRUD. To run them, you'll
+ * These tests rely on an external test account. To run them, you'll
  * need to set an environment variable called "DDEV_PANTHEON_API_TOKEN" with credentials for
  * this account. If no such environment variable is present, these tests will be skipped.
  *

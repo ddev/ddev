@@ -2,7 +2,7 @@ site_name: DDEV-Local Documentation
 repo_url: https://github.com/drud/ddev
 repo_name: GitHub
 edit_uri: blob/master/docs/
-copyright: DRUD Technology, LLC
+copyright: Localdev Foundation
 theme:
   name: 'material'
   palette:
