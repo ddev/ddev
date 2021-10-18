@@ -4,7 +4,6 @@ import (
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/require"
 	"testing"
 
@@ -378,7 +377,7 @@ func TestCmdDisasterConfig(t *testing.T) {
 
 	testDir, _ := os.Getwd()
 	// Make sure we're not allowed to config in home directory.
-	home, _ := homedir.Dir()
+	home, _ := os.UserHomeDir()
 	err = os.Chdir(home)
 	assert.NoError(err)
 	out, err := exec.RunCommand(DdevBin, []string{"config", "--project-type=php"})

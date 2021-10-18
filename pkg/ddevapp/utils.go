@@ -19,7 +19,6 @@ import (
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
-	gohomedir "github.com/mitchellh/go-homedir"
 )
 
 // GetActiveProjects returns an array of ddev projects
@@ -57,7 +56,7 @@ func GetActiveProjects() []*DdevApp {
 
 // RenderHomeRootedDir shortens a directory name to replace homedir with ~
 func RenderHomeRootedDir(path string) string {
-	userDir, err := gohomedir.Dir()
+	userDir, err := os.UserHomeDir()
 	util.CheckErr(err)
 	result := strings.Replace(path, userDir, "~", 1)
 	result = strings.Replace(result, "\\", "/", -1)
