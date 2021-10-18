@@ -48,7 +48,14 @@ $(BUILD_TARGETS):
 	export DB_MAJOR_VERSION=$(word 2, $(subst _, ,$@)) && \
 	export ARCH=$(word 3, $(subst _, ,$@)) && \
 	export DB_PINNED_VERSION=$(word 4, $(subst _, ,$@)) && \
-	if [ $${ARCH} = "both" ]; then ARCHS="linux/amd64,linux/arm64"; else ARCHS="linux/amd64"; fi && \
+	case $${ARCH} in \
+	  both) \
+	    ARCHS="linux/amd64,linux/arm64"; \
+	    ;; \
+	  amd64 | arm64) \
+	    ARCHS="linux/$${ARCH}"; \
+	    ;; \
+	esac; \
 	cmd="./build_image.sh --db-type=$${DB_TYPE} --db-major-version=$${DB_MAJOR_VERSION} --archs=$${ARCHS} --tag=$(VERSION) --docker-args=$(DOCKER_ARGS)" && \
 	if [ ! -z $${PUSH} ]; then cmd="$$cmd --push"; fi && \
 	if [ ! -z $${DB_PINNED_VERSION} ]; then cmd="$$cmd --db-pinned-version=$${DB_PINNED_VERSION}"; fi && \
