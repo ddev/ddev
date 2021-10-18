@@ -14,7 +14,7 @@ BUILD_TARGETS=mariadb_5.5_amd64 mariadb_10.0_amd64 mariadb_10.1_amd64 mariadb_10
 TEST_TARGETS=$(shell if [ "$(CURRENT_ARCH)" = "amd64" ] ; then \
 	echo "mariadb_5.5_test mariadb_10.0_test mariadb_10.1_test mariadb_10.2_test mariadb_10.3_test mariadb_10.4_test mariadb_10.5_test mariadb_10.6_test mysql_5.5_test mysql_5.6_test mysql_5.7_test mysql_8.0_test"; \
 	else \
-	  echo "mariadb_10.2_test mariadb_10.3_test mariadb_10.4_test mariadb_10.5_test mariadb_10.6_test"; \
+	  echo "mariadb_10.2_test mariadb_10.3_test mariadb_10.4_test mariadb_10.5_test mariadb_10.6_test mysql_5.7_test mysql_8.0_test"; \
   	fi )
 
 container: build
