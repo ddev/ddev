@@ -82,7 +82,8 @@ jobs:
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
       DDEV_NONINTERACTIVE: "true"
       GOTEST_SHORT: "true"
-      DDEV_TEST_USE_MUTAGEN: "true"
+      DDEV_TEST_USE_MUTAGEN: ""
+      DDEV_ACQUIA_API_KEY: ""
     steps:
       - checkout
       - run:
