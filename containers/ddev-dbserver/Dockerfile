@@ -46,7 +46,7 @@ RUN if ! command -v xtrabackup && [ "$(arch)" = "aarch64" ] && [ "${DB_VERSION}"
 fi
 RUN apt-get -qq autoclean
 
-RUN rm -rf /var/lib/mysql/* /etc/mysql
+RUN rm -rf /var/lib/mysql /etc/mysql
 RUN mkdir -p /var/lib/mysql
 
 ADD files /
