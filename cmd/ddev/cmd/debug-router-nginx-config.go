@@ -34,7 +34,7 @@ var DebugRouterNginxConfigCmd = &cobra.Command{
 		}
 
 		// see containers/ddev-router/testtools/testgen.sh
-		stdout, _, err := dockerutil.Exec(container.ID, "docker-gen -only-exposed /app/nginx.tmpl")
+		stdout, _, err := dockerutil.Exec(container.ID, "cat /etc/nginx/conf.d/ddev.conf")
 
 		if err != nil {
 			util.Failed("Failed to run docker-gen command in ddev-router container: %v", err)
