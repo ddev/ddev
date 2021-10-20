@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
@@ -27,18 +28,17 @@ func TestDebugRouterNginxConfigCmd(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test default invocation
-	args := []string{"debug", "router-nginx-config"}
-	out, err := exec.RunCommand(DdevBin, args)
+	out, err := exec.RunHostCommand(DdevBin, "debug", "router-nginx-config")
 	assert.NoError(err)
 	assert.Contains(
 		out,
-		"# Container=ddev-TestCmdWordpress-web",
+		fmt.Sprintf("# Container=ddev-%s-web", app.Name),
 		"Cannot find generated config of wordpress test site in generated router nginx config",
 	)
 
 	assert.Contains(
 		out,
 		"proxy_set_header",
-		"Cannot find nginx related proxy settings in outout",
+		"Cannot find nginx related proxy settings in output",
 	)
 }
