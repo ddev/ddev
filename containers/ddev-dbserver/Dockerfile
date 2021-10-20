@@ -39,11 +39,6 @@ RUN set -x; if ( ! command -v xtrabackup && ! command -v mariabackup && [ $(arch
     if [ "$DB_VERSION" = "8.0" ]; then xtrabackup_version=percona-xtrabackup-80; fi ; \
     apt-get -qq update && apt-get -qq install -y ${xtrabackup_version} >/dev/null ; \
 fi
-RUN if ! command -v xtrabackup && [ "$(arch)" = "aarch64" ] && [ "${DB_VERSION}" = "8.0" ]; then \
-    wget -O /tmp/xtrabackup_arm64.tar.gz "https://github.com/drud/xtradb-arm64/releases/download/v0.0/xtrabackup8.0.26-ubuntu20.04-arm64.tar.gz"; \
-    tar -C /usr/local -xzf /tmp/xtrabackup_arm64.tar.gz ; \
-    rm -f /tmp/xtrabackup_arm64.tar.gz ; \
-fi
 RUN apt-get -qq autoclean
 
 RUN rm -rf /var/lib/mysql /etc/mysql
