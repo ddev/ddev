@@ -175,6 +175,8 @@ Don't forget that `ddev logs` (for the web container) or `ddev logs -s db` (for 
 
 For ddev-router and ddev-ssh-agent, `docker logs ddev-router` and `docker logs ddev-ssh-agent`.
   
+Run `ddev debug router-nginx-config` to print the Nginx configuration of the currently running ddev-router.
+
 ## `ddev start` fails with "Failed to start [project name]: No such container: ddev-router"  
 
 Deleting the images and re-pulling them generally solves this problem.  
