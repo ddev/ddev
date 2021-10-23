@@ -1,10 +1,10 @@
 ## macOS Installation: Docker Desktop for Mac
 
-Docker Desktop for Mac can be installed via Homebrew (`brew install  homebrew/cask/docker`) or can be downloaded from [desktop.docker.com](https://desktop.docker.com/mac/stable/Docker.dmg).
+Docker Desktop for Mac can be installed via Homebrew (`brew install  homebrew/cask/docker`) or can be downloaded from [desktop.docker.com](https://www.docker.com/products/docker-desktop).
 
 ## Windows Installation: Docker Desktop for Windows
 
-Docker Desktop for Windows can be downloaded via [Chocolatey](https://chocolatey.org/install) with `choco install docker-desktop` or it can be downloaded from [download.docker.com](https://download.docker.com/win/stable/Docker%20for%20Windows%20Installer.exe).
+Docker Desktop for Windows can be downloaded via [Chocolatey](https://chocolatey.org/install) with `choco install docker-desktop` or it can be downloaded from [download.docker.com](https://www.docker.com/products/docker-desktop).
 
 ## Linux Installation: Docker and docker-compose
 

@@ -87,7 +87,7 @@ sudo apachectl stop
 
 Here are some of the other common processes that could be using ports 80/443 and methods to stop them.
 
-* MAMP (macOS): [Stop MAMP](http://documentation.mamp.info/en/MAMP-Mac/Preferences/Start-Stop/)
+* MAMP (macOS): Stop MAMP.
 * Apache: Temporarily stop with `sudo apachectl stop`, permanent stop depends on your environment.
 * nginx (macOS Homebrew): `sudo brew services stop nginx`
 or `sudo launchctl stop homebrew.mxcl.nginx`
