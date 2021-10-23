@@ -1,7 +1,7 @@
 image: drud/ddev-gitpod-base:latest
 
 tasks:
-  - name: terminal
+  - name: simpleproj
     init: |
       export DDEV_NONINTERACTIVE=true
       make
@@ -12,6 +12,7 @@ tasks:
       ddev composer create drupal/recommended-project -y && ddev composer require drush/drush
     command: |
       gp await-port 8080 && sleep 1 && gp preview $(gp url 8080)
+  - name: ddev
 
 vscode:
   extensions:
