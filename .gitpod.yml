@@ -1,6 +1,7 @@
 image: drud/ddev-gitpod-base:latest
 
 tasks:
+  - name: ddev
   - name: simpleproj
     init: |
       export DDEV_NONINTERACTIVE=true
@@ -9,10 +10,9 @@ tasks:
       mkdir -p /workspace/simpleproj && cd /workspace/simpleproj
       ddev config --project-type=drupal9 --docroot=web --create-docroot
       ddev config global --router-bind-all-interfaces=true
-      gitpod-setup-ddev.sh .
+      gitpod-setup-ddev.sh /workspace/simpleproj
       ddev composer create drupal/recommended-project -y && ddev composer require drush/drush
       gp await-port 8080 && sleep 1 && gp preview $(gp url 8080)
-  - name: ddev
 
 vscode:
   extensions:
