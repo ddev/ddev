@@ -183,6 +183,17 @@ mkdocs:
 		echo "Not running mkdocs because it's not installed"; \
 	fi
 
+# Install linkcheckMarkdown locally with "pip3 install linkcheckmd"
+linkcheckMarkdown:
+	@echo "linkcheckMarkdown: "
+	if command -v linkcheckMarkdown >/dev/null 2>&1; then \
+		for item in *.md docs/ ; do \
+		  linkcheckMarkdown -r $$item; \
+		done; \
+	else \
+		echo "Not running linkcheckMarkdown because it's not installed"; \
+	fi
+
 # Best to install pyspelling locally with "pip3 install pyspelling pymdown-extensions"
 pyspelling:
 	@echo "pyspelling: "
