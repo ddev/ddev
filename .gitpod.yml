@@ -6,14 +6,20 @@ tasks:
     init: |
       export DDEV_NONINTERACTIVE=true
       make
-    command: |
       mkdir -p /workspace/simpleproj && cd /workspace/simpleproj
       ddev config --project-type=drupal9 --docroot=web --create-docroot
       ddev config global --router-bind-all-interfaces=true
       gitpod-setup-ddev.sh /workspace/simpleproj
       ddev composer create drupal/recommended-project -y && ddev composer require drush/drush
+      ddev drush si demo_umami -y --account-pass=admin
+      mkdir -p .tarballs
+      ddev export-db --file=.tarballs/db.sql.gz
+    command: |
+      cd /workspace/simpleproj
+      ddev config global --router-bind-all-interfaces=true
+      ddev start
+      ddev import-db --src=.tarballs/db.sql.gz
       gp await-port 8080 && sleep 1 && gp preview $(gp url 8080)
-
 vscode:
   extensions:
     - golang.go
