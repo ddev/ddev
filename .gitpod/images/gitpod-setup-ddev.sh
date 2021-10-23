@@ -16,17 +16,19 @@ cd ${PROJDIR}
 shortgpurl="${GITPOD_WORKSPACE_URL#'https://'}"
 
 cat <<CONFIGEND > ${PROJDIR}/config.gitpod.yaml
-#ddev-gitpod-generated
-use_dns_when_possible: false
+web_environment:
+- DRUSH_OPTIONS_URI=$(gp url 8080)
 
-# Throwaway ports, otherwise Gitpod throw an error 'port needs to be > 1024'
-router_http_port: "8888"
-router_https_port: "8889"
-
-additional_fqdns:
-- 8888-${shortgpurl}
-- 8025-${shortgpurl}
-- 8036-${shortgpurl}
+bind_all_interfaces: true
+host_webserver_port: 8080
+# Will ignore the direct-bind https port, which will land on 2222
+host_https_port: 2222
+# Allows local db clients to run
+host_db_port: 3306
+# Assign MailHog port
+host_mailhog_port: "8025"
+# Assign phpMyAdmin port
+host_phpmyadmin_port: 8036
 CONFIGEND
 
 # We need host.docker.internal inside the container,
@@ -40,9 +42,4 @@ services:
   web:
     extra_hosts:
     - "host.docker.internal:${hostip}"
-    # This adds 8080 on the host (bound on all interfaces)
-    # It goes directly to the web container without
-    # ddev-nginx
-    ports:
-    - 8080:80
 COMPOSEEND
