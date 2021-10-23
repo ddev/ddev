@@ -33,7 +33,13 @@ jobs:
         args: '*.md docs/*.md docs/users'
 #    - name: Debugging with tmate
 #      uses: mxschmitt/action-tmate@v3.1
-    - uses: gaurav-nelson/github-action-markdown-link-check@v1
+    - name: "Check links in markdown"
+      uses: gaurav-nelson/github-action-markdown-link-check@v1
+      with:
+        use-quiet-mode: 'yes'
+        folder-path: "docs/users"
+        file-path: "index.md"
+        config-file: 'markdown-link-check.json'
     - name: Test mkdocs
       run: |
         sudo pip3 install setuptools

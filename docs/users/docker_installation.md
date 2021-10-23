@@ -47,7 +47,7 @@ If that fails (if you get an error, or you don't see the contents of your projec
 * "port is already allocated": See [troubleshooting](troubleshooting.md).
 * `invalid mount config for type "bind": bind mount source path does not exist: <some path>` means the filesystem isn't successfully shared into the docker container.
 * "The path ... is not shared and is not known to Docker": Visit docker's preferences/settings->File sharing and share the appropriate path or drive.
-* "Error response from daemon: Get <https://registry-1.docker.io/v2/"> - Docker may not be running (restart it) or you may not have any access to the internet.
+* `Error response from daemon: Get https://registry-1.docker.io/v2/` - Docker may not be running (restart it) or you may not have any access to the internet.
 * "403 authentication required" when trying to `ddev start`: Try `docker logout` and do it again. Docker authentication is *not* required for any normal ddev action.
 
 If you are on Docker Desktop for Windows or Docker Desktop for Mac and you are seeing shared directories not show up in the web container (nothing there when you `ddev ssh`) then:

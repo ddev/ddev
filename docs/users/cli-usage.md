@@ -228,7 +228,7 @@ You may want the [Magento 1 Sample Data](https://raw.githubusercontent.com/Vinai
 * Extract the download, for example `tar -zxf ~/Downloads/compressed-magento-sample-data-1.9.1.0.tgz --strip-components=1`
 * Import example data to database **before** running OpenMage install.
 
-Note that OpenMage is a huge codebase and using `nfs_mount_enabled: true` is recommended for performance on macOS and Windows, see [docs](performance/#using-nfs-to-mount-the-project-into-the-container).
+Note that OpenMage is a huge codebase and using `nfs_mount_enabled: true` is recommended for performance on macOS and Windows, see [docs](performance.md/#using-nfs-to-mount-the-project-into-the-container).
 
 ### Magento 2 Quickstart
 
@@ -256,7 +256,7 @@ Of course, change the admin name and related information is needed. The project 
 
 You may want to add the [Magento 2 Sample Data](https://devdocs.magento.com/guides/v2.4/install-gde/install/sample-data-after-composer.html) with `bin/magento sampledata:deploy && bin/magento setup:upgrade` (inside the web container).
 
-Note that Magento 2 is a huge codebase and using `nfs_mount_enabled: true` is recommended for performance on macOS and Windows, see [docs](performance/#using-nfs-to-mount-the-project-into-the-container).
+Note that Magento 2 is a huge codebase and using `mutagen_enabled: true` or `nfs_mount_enabled: true` is recommended for performance on macOS and Windows, see [docs](performance.md/#using-nfs-to-mount-the-project-into-the-container).
 
 ### Laravel Quickstart
 
