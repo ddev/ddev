@@ -1,5 +1,4 @@
-image:
-  file: .gitpod.Dockerfile
+image: drud/ddev-gitpod-base:latest
 
 tasks:
   - name: terminal
@@ -11,7 +10,7 @@ tasks:
       ddev composer create drupal/recommended-project -y && ddev composer require drush/drush
       cp ~/bin/gitpod-setup-ddev.sh .ddev && .ddev/gitpod-setup-ddev.sh
     command: |
-      cd /workspace/simpleproj && .ddev/gitpod-setup-ddev.sh
+      cd /workspace/simpleproj && gitpod-setup-ddev.sh
       gp await-port 8080 && sleep 1 && gp preview $(gp url 8080)
 
 vscode:
