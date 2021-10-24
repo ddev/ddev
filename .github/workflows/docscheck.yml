@@ -36,8 +36,8 @@ jobs:
       - name: "Check links in markdown"
         uses: gaurav-nelson/github-action-markdown-link-check@v1
         with:
-#          use-quiet-mode: 'yes'
-          use-verbose-mode: 'yes'
+          use-quiet-mode: 'yes'
+#          use-verbose-mode: 'yes'
           folder-path: 'docs/'
 #          file-path: 'README.md', 'CONTRIBUTING.md'
           config-file: 'markdown-link-check.json'
