@@ -16,7 +16,7 @@ tasks:
       ddev export-db --file=.tarballs/db.sql.gz
     command: |
       cd /workspace/simpleproj
-      ddev config global --router-bind-all-interfaces=true
+      ddev config global --omit-containers=ddev-router,ddev-ssh-agent,dba
       ddev start
       ddev import-db --src=.tarballs/db.sql.gz
       gp await-port 8080 && sleep 1 && gp preview $(gp url 8080)
