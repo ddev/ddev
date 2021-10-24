@@ -11,6 +11,7 @@ tasks:
       ddev config --project-type=drupal9 --docroot=web --create-docroot
       ddev config global --router-bind-all-interfaces=true
       gitpod-setup-ddev.sh /workspace/simpleproj
+      ddev start
       ddev composer create drupal/recommended-project -y && ddev composer require drush/drush
       ddev drush si demo_umami -y --account-pass=admin
       mkdir -p .tarballs
