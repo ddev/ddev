@@ -7,6 +7,7 @@ tasks:
       export DDEV_NONINTERACTIVE=true
       make
       mkdir -p /workspace/simpleproj && cd /workspace/simpleproj
+      ddev config global --omit-containers=ddev-router,ddev-ssh-agent,dba
       ddev config --project-type=drupal9 --docroot=web --create-docroot
       ddev config global --router-bind-all-interfaces=true
       gitpod-setup-ddev.sh /workspace/simpleproj
@@ -17,7 +18,7 @@ tasks:
     command: |
       cd /workspace/simpleproj
       ddev config global --omit-containers=ddev-router,ddev-ssh-agent,dba
-      ddev start
+      ddev start -y
       ddev import-db --src=.tarballs/db.sql.gz
       gp await-port 8080 && sleep 1 && gp preview $(gp url 8080)
 vscode:
