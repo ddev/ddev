@@ -13,6 +13,9 @@ tasks:
       ddev config global --router-bind-all-interfaces=true
       gitpod-setup-ddev.sh /workspace/simpleproj
       
+      # Download ddev's docker images
+      ddev debug download-images
+
       # Configure ddev Drupal9 project
       mkdir -p /workspace/simpleproj && cd /workspace/simpleproj
       ddev config --project-type=drupal9 --docroot=web --create-docroot
