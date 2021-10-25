@@ -2,15 +2,16 @@ site_name: DDEV-Local Documentation
 repo_url: https://github.com/drud/ddev
 repo_name: GitHub
 edit_uri: blob/master/docs/
-copyright: DRUD Technology, LLC
+copyright: Localdev Foundation
 theme:
   name: 'material'
   palette:
     primary: 'light-blue'
 extra_javascript:
-  - 'assets/fix-search.js'
-  - 'assets/extra.js'
   - 'assets/jquery-3.5.1.min.js'
+  - 'assets/extra.js'
+extra_css:
+  - 'assets/extra.css'
 markdown_extensions:
     - toc:
         permalink: true
@@ -37,6 +38,7 @@ nav:
     - 'PHP Step Debugging': 'users/step-debugging.md'
     - 'Profiling with Blackfire': 'users/blackfire-profiling.md'
     - 'Profiling with xhprof': 'users/xhprof-profiling.md'
+    - 'Profiling with Xdebug': 'users/xdebug-profiling.md'
     - 'Troubleshooting': 'users/troubleshooting.md'
     - 'Docker Installation': 'users/docker_installation.md'
     - 'Performance': 'users/performance.md'

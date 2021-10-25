@@ -16,7 +16,7 @@ To remove all /etc/hosts entries owned by ddev: `ddev hostname --remove-inactive
 
 To remove the global .ddev directory: `rm -r ~/.ddev`
 
-If you installed docker just for ddev and want to uninstall it with all containers and images, just uninstall it for your version of Docker. [google link](https://www.google.com/search?q=uninstall+docker&oq=uninstall+docker&aqs=chrome.0.0j69i60j0l2j35i39j0.1970j0j4&sourceid=chrome&ie=UTF-8).
+If you installed docker just for ddev and want to uninstall it with all containers and images, just uninstall it for your version of Docker.
 
 Otherwise:
 

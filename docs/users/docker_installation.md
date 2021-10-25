@@ -1,10 +1,10 @@
 ## macOS Installation: Docker Desktop for Mac
 
-Docker Desktop for Mac can be installed via Homebrew (`brew install  homebrew/cask/docker`) or can be downloaded from [desktop.docker.com](https://desktop.docker.com/mac/stable/Docker.dmg).
+Docker Desktop for Mac can be installed via Homebrew (`brew install  homebrew/cask/docker`) or can be downloaded from [desktop.docker.com](https://www.docker.com/products/docker-desktop).
 
 ## Windows Installation: Docker Desktop for Windows
 
-Docker Desktop for Windows can be downloaded via [Chocolatey](https://chocolatey.org/install) with `choco install docker-desktop` or it can be downloaded from [download.docker.com](https://download.docker.com/win/stable/Docker%20for%20Windows%20Installer.exe).
+Docker Desktop for Windows can be downloaded via [Chocolatey](https://chocolatey.org/install) with `choco install docker-desktop` or it can be downloaded from [download.docker.com](https://www.docker.com/products/docker-desktop).
 
 ## Linux Installation: Docker and docker-compose
 
@@ -47,7 +47,7 @@ If that fails (if you get an error, or you don't see the contents of your projec
 * "port is already allocated": See [troubleshooting](troubleshooting.md).
 * `invalid mount config for type "bind": bind mount source path does not exist: <some path>` means the filesystem isn't successfully shared into the docker container.
 * "The path ... is not shared and is not known to Docker": Visit docker's preferences/settings->File sharing and share the appropriate path or drive.
-* "Error response from daemon: Get <https://registry-1.docker.io/v2/"> - Docker may not be running (restart it) or you may not have any access to the internet.
+* `Error response from daemon: Get https://registry-1.docker.io/v2/` - Docker may not be running (restart it) or you may not have any access to the internet.
 * "403 authentication required" when trying to `ddev start`: Try `docker logout` and do it again. Docker authentication is *not* required for any normal ddev action.
 
 If you are on Docker Desktop for Windows or Docker Desktop for Mac and you are seeing shared directories not show up in the web container (nothing there when you `ddev ssh`) then:

@@ -40,7 +40,7 @@ var DockerComposeFileFormatVersion = "3.6"
 // WebImg defines the default web image used for applications.
 var WebImg = "drud/ddev-webserver"
 
-// WebTag defines the default web image tag for drud dev
+// WebTag defines the default web image tag
 var WebTag = "20211004_joelpittet_ldap" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
@@ -66,6 +66,9 @@ var SSHAuthImage = "drud/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
 var SSHAuthTag = "v1.18.0"
+
+// Busybox is used a couple of places for a quick-pull
+var BusyboxImage = "busybox:stable"
 
 // BUILDINFO is information with date and context, supplied by make
 var BUILDINFO = "BUILDINFO should have new info"

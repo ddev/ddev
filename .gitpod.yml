@@ -1,18 +1,30 @@
-image:
-  file: .gitpod.Dockerfile
+image: drud/ddev-gitpod-base:latest
 
 tasks:
-  - name: terminal
+  - name: ddev
+  - name: simpleproj
     init: |
       export DDEV_NONINTERACTIVE=true
       make
       mkdir -p /workspace/simpleproj && cd /workspace/simpleproj
+      ddev config global --omit-containers=ddev-router,ddev-ssh-agent,dba
       ddev config --project-type=drupal9 --docroot=web --create-docroot
+      ddev config global --router-bind-all-interfaces=true
+      gitpod-setup-ddev.sh /workspace/simpleproj
+      ddev start
       ddev composer create drupal/recommended-project -y && ddev composer require drush/drush
-      cp ~/bin/gitpod-setup-ddev.sh .ddev && .ddev/gitpod-setup-ddev.sh
+      ddev drush si demo_umami -y --account-pass=admin
+      mkdir -p .tarballs
+      ddev export-db --file=.tarballs/db.sql.gz
     command: |
-      cd /workspace/simpleproj && .ddev/gitpod-setup-ddev.sh
+      cd /workspace/simpleproj
+      ddev config global --omit-containers=ddev-router,ddev-ssh-agent,dba
+      ddev start -y
+      ddev import-db --src=.tarballs/db.sql.gz
       gp await-port 8080 && sleep 1 && gp preview $(gp url 8080)
+vscode:
+  extensions:
+    - golang.go
 
 github:
   prebuilds:
@@ -32,3 +44,44 @@ github:
     addBadge: true
     # add a label once the prebuild is ready to pull requests (defaults to false)
     addLabel: true
+
+ports:
+  # Used by projector
+  - port: 6942
+    onOpen: ignore
+    visibility: private
+  # Direct-connect ddev-webserver port that is the main port
+  - port: 8080
+    onOpen: ignore
+    visibility: private
+  # Currently un-notified and unsupported mailhog http port
+  - port: 8025
+    onOpen: ignore
+    visibility: private
+  # Currently un-notified and unsupported mailhog https port
+  - port: 8026
+    onOpen: ignore
+    visibility: private
+  # Currently un-notified and unsupported phpmyadmin http port
+  - port: 8036
+    onOpen: ignore
+    visibility: private
+  # Currently un-notified and unsupported phpmyadmin https port
+  - port: 8037
+    onOpen: ignore
+    visibility: private
+  # router http port that we're ignoring.
+  - port: 8888
+    onOpen: ignore
+    visibility: private
+  # router https port that we're ignoring.
+  - port: 8889
+    onOpen: ignore
+    visibility: private
+  # xdebug port
+  - port: 9000
+    onOpen: ignore
+    visibility: private
+  # projector port
+  - port: 9999
+    visibility: private

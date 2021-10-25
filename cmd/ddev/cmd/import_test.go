@@ -8,7 +8,6 @@ import (
 
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
-	gohomedir "github.com/mitchellh/go-homedir"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -18,7 +17,7 @@ func TestImportTilde(t *testing.T) {
 
 	site := TestSites[0]
 
-	homedir, err := gohomedir.Dir()
+	homedir, err := os.UserHomeDir()
 	assert.NoError(err)
 	cwd, _ := os.Getwd()
 	testFile := filepath.Join(homedir, "testfile.tar.gz")

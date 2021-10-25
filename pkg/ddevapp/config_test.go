@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
@@ -72,7 +71,7 @@ func TestDisasterConfig(t *testing.T) {
 	pwd, _ := os.Getwd()
 
 	// Make sure we're not allowed to config in home directory.
-	tmpDir, _ := homedir.Dir()
+	tmpDir, _ := os.UserHomeDir()
 	_, err := NewApp(tmpDir, false)
 	assert.Error(err)
 	assert.Contains(err.Error(), "ddev config is not useful")

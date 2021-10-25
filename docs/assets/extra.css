@@ -1,0 +1,5 @@
+/* table does not need a scrollbar, see https://github.com/drud/ddev/pull/3290#issuecomment-942888867
+ */
+.md-typeset__table {
+  padding-right: 0;
+}

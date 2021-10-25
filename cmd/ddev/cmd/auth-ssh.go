@@ -8,7 +8,6 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
@@ -32,7 +31,7 @@ var AuthSSHCommand = &cobra.Command{
 		uidStr, _, _ := util.GetContainerUIDGid()
 
 		if sshKeyPath == "" {
-			homeDir, err := homedir.Dir()
+			homeDir, err := os.UserHomeDir()
 			if err != nil {
 				util.Failed("Unable to determine home directory: %v", err)
 			}

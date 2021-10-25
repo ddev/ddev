@@ -17,7 +17,7 @@ function basic_setup {
     docker rm -f ${CONTAINER_NAME} 2>/dev/null || true
 
     # Initialize the volume with the correct ownership
-    docker run --rm -v "${VOLUME}:/var/lib/mysql:nocopy" busybox chown -R ${MOUNTUID}:${MOUNTGID} /var/lib/mysql
+    docker run --rm -v "${VOLUME}:/var/lib/mysql:nocopy" busybox:stable chown -R ${MOUNTUID}:${MOUNTGID} /var/lib/mysql
 }
 
 function teardown {

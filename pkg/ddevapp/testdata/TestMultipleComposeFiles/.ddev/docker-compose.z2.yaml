@@ -6,7 +6,7 @@ services:
     - DUMMY_COMPOSE_TWO=2
 
   dummy2:
-    image: busybox
+    image: busybox:stable
     container_name: dummy2
     environment:
     - HTTP_EXPOSE=9201

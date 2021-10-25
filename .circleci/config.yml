@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     machine:
-      image: ubuntu-2004:202101-01
+      image: ubuntu-2004:202107-02
     working_directory: ~/ddev
     environment:
       DDEV_NONINTERACTIVE: "true"
@@ -11,13 +11,13 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-homebrew-v25
+        - linux-homebrew-v26
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: NORMAL Circle VM setup
         no_output_timeout: "40m"
     - save_cache:
-        key: linux-homebrew-v25
+        key: linux-homebrew-v26
         paths:
           - /home/linuxbrew
     - run:
@@ -37,7 +37,7 @@ jobs:
 
   lx_amd64_fpm_test:
     machine:
-      image: ubuntu-2004:202101-01
+      image: ubuntu-2004:202107-02
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
@@ -49,7 +49,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-homebrew-v25
+        - linux-homebrew-v26
     - restore_cache:
         keys:
           - linux-testcache-v24
@@ -58,7 +58,7 @@ jobs:
         name: Circle VM setup
         no_output_timeout: "40m"
     - save_cache:
-        key: linux-homebrew-v25
+        key: linux-homebrew-v26
         paths:
           - /home/linuxbrew
     - run: echo "$(docker --version) $(docker-compose --version)"
@@ -82,7 +82,8 @@ jobs:
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
       DDEV_NONINTERACTIVE: "true"
       GOTEST_SHORT: "true"
-      DDEV_TEST_USE_MUTAGEN: "true"
+      DDEV_TEST_USE_MUTAGEN: ""
+      DDEV_ACQUIA_API_KEY: ""
     steps:
       - checkout
       - run:
@@ -186,7 +187,7 @@ jobs:
 
   lx_apache_fpm_test:
     machine:
-      image: ubuntu-2004:202101-01
+      image: ubuntu-2004:202107-02
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: apache-fpm
@@ -197,7 +198,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v23
+        - homebrew-linux-v26
     - attach_workspace:
         at: ~/
     - run:
@@ -214,14 +215,14 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v23
+        key: homebrew-linux-v26
         paths:
         - /home/linuxbrew
         - /home/circleci/.ddev/testcache
 
   lx_nfsmount_test:
     machine:
-      image: ubuntu-2004:202101-01
+      image: ubuntu-2004:202107-02
     working_directory: ~/ddev
     environment:
       DDEV_TEST_USE_NFSMOUNT: true
@@ -232,7 +233,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v23
+        - homebrew-linux-v26
     - attach_workspace:
         at: ~/
     - run:
@@ -251,14 +252,14 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v23
+        key: homebrew-linux-v26
         paths:
         - /home/linuxbrew
         - /home/circleci/.ddev/testcache
 
   staticrequired:
     machine:
-      image: ubuntu-2004:202101-01
+      image: ubuntu-2004:202107-02
     working_directory: ~/ddev
     environment:
     steps:
@@ -266,7 +267,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v23
+        - homebrew-linux-v26
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup
@@ -277,7 +278,7 @@ jobs:
 
   lx_amd64_container_test:
     machine:
-      image: ubuntu-2004:202101-01
+      image: ubuntu-2004:202107-02
     working_directory: ~/ddev
     environment:
       GOTEST_SHORT: true
@@ -288,7 +289,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v23
+        - homebrew-linux-v26
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup
@@ -312,14 +313,14 @@ jobs:
         name: linux container test
 
     - save_cache:
-        key: linux-v23
+        key: homebrew-linux-v26
         paths:
         - /home/linuxbrew
         - /home/circleci/.ddev/testcache
 
   lx_arm64_container_test:
     machine:
-      image: ubuntu-2004:202101-01
+      image: ubuntu-2004:202107-02
     resource_class: arm.medium
     working_directory: ~/ddev
     environment:
@@ -373,13 +374,13 @@ jobs:
 
   artifacts:
     machine:
-      image: ubuntu-2004:202101-01
+      image: ubuntu-2004:202107-02
     working_directory: ~/ddev
     steps:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v23
+        - homebrew-linux-v26
     - attach_workspace:
         at: ~/
     - run:
@@ -387,7 +388,7 @@ jobs:
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
     - save_cache:
-        key: linux-v23
+        key: homebrew-linux-v26
         paths:
         - /home/linuxbrew
         - /home/circleci/.ddev/testcache

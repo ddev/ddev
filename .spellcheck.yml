@@ -15,6 +15,7 @@ matrix:
       ignores:
       - code
       - pre
+  - pyspelling.filters.url:
   sources:
   - 'docs/users/*.md'
   - 'index.md'

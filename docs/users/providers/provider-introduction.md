@@ -2,7 +2,7 @@
 
 As of DDEV-Local v1.17, the hosting provider integration has been completely rewritten and reorganized, and integrations for Platform.sh and Acquia hosting have been added to the previous ones for Pantheon.io and DDEV-Live.
 
-The best part of this is you can change them and adapt them in any way you need to, they're all short scripted recipes. There are several example recipes created in the .ddev/providers directory of every project or [see them in the code](https://github.com/drud/ddev/tree/master/cmd/ddev/cmd/dotddev_assets/providers).
+The best part of this is you can change them and adapt them in any way you need to, they're all short scripted recipes. There are several example recipes created in the .ddev/providers directory of every project or [see them in the code](https://github.com/drud/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers).
 
 ddev provides the `pull` command with whatever recipes you have configured. For example, `ddev pull acquia` if you have created `.ddev/providers/acquia.yaml`.
 

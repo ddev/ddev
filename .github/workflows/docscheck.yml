@@ -6,35 +6,43 @@ defaults:
 on:
   push:
     branches:
-    - master
+      - master
   pull_request:
     paths:
-    - "docs/**"
-    - "index.md"
-    - ".spellcheckwordlist.txt"
-    - ".spellcheck.yml"
-    - ".markdownlintrc"
-    - "mkdocs.yml"
-    - ".readthedocs.yml"
-    - "requirements.txt"
+      - "docs/**"
+      - "index.md"
+      - ".spellcheckwordlist.txt"
+      - ".spellcheck.yml"
+      - ".markdownlintrc"
+      - "mkdocs.yml"
+      - ".readthedocs.yml"
+      - "requirements.txt"
 
 jobs:
   build:
     name: Docs check (spellcheck, markdownlint)
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
-    - uses: rojopolis/spellcheck-github-actions@0.8.0
-      name: Spellcheck
-    - name: Run markdownlint on docs
-      uses: docker://avtodev/markdown-lint:v1
-      with:
-        config: '.markdownlintrc'
-        args: '*.md docs/*.md docs/users'
-#    - name: Debugging with tmate
-#      uses: mxschmitt/action-tmate@v3.1
-    - name: Test mkdocs
-      run: |
-        sudo pip3 install setuptools
-        sudo pip3 install -r requirements.txt
-        mkdocs -q build -d /tmp/mkdocsbuild
+      - uses: actions/checkout@master
+      - uses: rojopolis/spellcheck-github-actions@0.8.0
+        name: Spellcheck
+      - name: Run markdownlint on docs
+        uses: docker://avtodev/markdown-lint:v1
+        with:
+          config: '.markdownlintrc'
+          args: '*.md docs/*.md docs/users'
+      #    - name: Debugging with tmate
+      #      uses: mxschmitt/action-tmate@v3.1
+      - name: "Check links in markdown"
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: 'yes'
+#          use-verbose-mode: 'yes'
+          folder-path: 'docs/'
+#          file-path: 'README.md', 'CONTRIBUTING.md'
+          config-file: 'markdown-link-check.json'
+      - name: Test mkdocs
+        run: |
+          sudo pip3 install setuptools
+          sudo pip3 install -r requirements.txt
+          mkdocs -q build -d /tmp/mkdocsbuild

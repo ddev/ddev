@@ -170,7 +170,7 @@ func TestContainerWait(t *testing.T) {
 	// and note that it exited.
 	labels = map[string]string{"test": "quickexit"}
 	_ = RemoveContainersByLabels(labels)
-	cID, _, err := RunSimpleContainer("busybox:latest", t.Name()+util.RandString(5), []string{"ls"}, nil, nil, nil, "0", false, true, labels)
+	cID, _, err := RunSimpleContainer(version.BusyboxImage, t.Name()+util.RandString(5), []string{"ls"}, nil, nil, nil, "0", false, true, labels)
 	t.Cleanup(func() {
 		_ = RemoveContainer(cID, 0)
 	})
@@ -184,7 +184,7 @@ func TestContainerWait(t *testing.T) {
 	// it should be found as good immediately
 	labels = map[string]string{"test": "nohealthcheck"}
 	_ = RemoveContainersByLabels(labels)
-	cID, _, err = RunSimpleContainer("busybox:latest", t.Name()+util.RandString(5), []string{"sleep", "60"}, nil, nil, nil, "0", false, true, labels)
+	cID, _, err = RunSimpleContainer(version.BusyboxImage, t.Name()+util.RandString(5), []string{"sleep", "60"}, nil, nil, nil, "0", false, true, labels)
 	t.Cleanup(func() {
 		_ = RemoveContainer(cID, 0)
 	})
@@ -346,7 +346,7 @@ func TestFindContainerByName(t *testing.T) {
 	}
 
 	// Run a container, don't remove it.
-	cID, _, err := RunSimpleContainer("busybox:latest", containerName, []string{"//tempmount/sleepALittle.sh"}, nil, nil, []string{testdata + "://tempmount"}, "25", false, false, nil)
+	cID, _, err := RunSimpleContainer(version.BusyboxImage, containerName, []string{"//tempmount/sleepALittle.sh"}, nil, nil, []string{testdata + "://tempmount"}, "25", false, false, nil)
 	assert.NoError(err)
 
 	defer func() {
@@ -447,7 +447,7 @@ func TestDockerExec(t *testing.T) {
 	assert := asrt.New(t)
 	client := GetDockerClient()
 
-	id, _, err := RunSimpleContainer("busybox:latest", "", []string{"tail", "-f", "/dev/null"}, nil, nil, nil, "0", false, true, nil)
+	id, _, err := RunSimpleContainer(version.BusyboxImage, "", []string{"tail", "-f", "/dev/null"}, nil, nil, nil, "0", false, true, nil)
 	assert.NoError(err)
 
 	t.Cleanup(func() {
@@ -539,7 +539,7 @@ func TestDockerCopyToVolume(t *testing.T) {
 	err = CopyToVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "", "0")
 	assert.NoError(err)
 
-	mainContainerID, out, err := RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil)
+	mainContainerID, out, err := RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil)
 	assert.NoError(err)
 	assert.Equal(`.:
 root.txt
@@ -551,7 +551,7 @@ subdir1.txt
 
 	err = CopyToVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "somesubdir", "501")
 	assert.NoError(err)
-	subdirContainerID, out, err := RunSimpleContainer("busybox:latest", "", []string{"sh", "-c", "cd /mnt/" + t.Name() + "/somesubdir  && pwd && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "0", true, false, nil)
+	subdirContainerID, out, err := RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + "/somesubdir  && pwd && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "0", true, false, nil)
 	assert.NoError(err)
 	assert.Equal(`/mnt/TestDockerCopyToVolume/somesubdir
 .:
