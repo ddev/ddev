@@ -1,8 +1,7 @@
 # ddev-ssh-agent
 
-forked from https://github.com/nardeas/docker-ssh-agent
-at https://github.com/nardeas/docker-ssh-agent/commit/fb6822d0003d1c0a795e183f5d257c2540fa74a4
-
+originally forked from <https://github.com/nardeas/docker-ssh-agent>
+at `fb6822d0003d1c0a795e183f5d257c2540fa74a4`.
 
 # Docker SSH Agent
 
@@ -30,11 +29,13 @@ docker pull nardeas/ssh-agent
 If you don't want to build your own images, here's a 3-step guide:
 
 1\. Run agent
+
 ```
 docker run -d --name=ssh-agent nardeas/ssh-agent
 ```
 
 2\. Add your keys
+
 ```
 docker run --rm --volumes-from=ssh-agent -v ~/.ssh:/.ssh -it nardeas/ssh-agent ssh-add /root/.ssh/id_rsa
 ```
@@ -64,6 +65,7 @@ Remove your keys from ssh-agent and stop container:
 ### Step by step
 
 #### 0. Build
+
 Navigate to the project directory and launch the following command to build the image:
 
 ```
@@ -71,6 +73,7 @@ docker build -t docker-ssh-agent:latest -f Dockerfile .
 ```
 
 #### 1. Run a long-lived container
+
 ```
 docker run -d --name=ssh-agent docker-ssh-agent:latest
 ```
@@ -85,7 +88,7 @@ docker run --rm --volumes-from=ssh-agent -v ~/.ssh:/.ssh -it docker-ssh-agent:la
 
 The ssh-agent container is now ready to use.
 
-#### 3. Add ssh-agent socket to other container:
+#### 3. Add ssh-agent socket to other container
 
 If you're using `docker-compose` this is how you forward the socket to a container:
 
@@ -97,24 +100,32 @@ If you're using `docker-compose` this is how you forward the socket to a contain
 ```
 
 ##### For non-root users
+
 The above only works for root. ssh-agent socket is accessible only to the user which started this agent or for root user. So other users don't have access to `/.ssh-agent/socket`. If you have another user in your container you should do the following:
 
 1. Install `socat` utility in your container
 2. Make proxy-socket in your container:
+
 ```
 sudo socat UNIX-LISTEN:~/.ssh/socket,fork UNIX-CONNECT:/.ssh-agent/socket &
 ```
+
 3. Change the owner of this proxy-socket
+
 ```
 sudo chown $(id -u) ~/.ssh/socket
 ```
+
 4. You will need to use different SSH_AUTH_SOCK for this user:
+
 ```
 SSH_AUTH_SOCK=~/.ssh/socket
 ```
 
 ##### Without docker-compose
+
 Here's an example how to run a Ubuntu container that uses the ssh authentication socket:
+
 ```
 docker run -it --volumes-from=ssh-agent -e SSH_AUTH_SOCK=/.ssh-agent/socket ubuntu:latest /bin/bash
 ```

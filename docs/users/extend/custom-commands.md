@@ -2,7 +2,7 @@
 
 It's quite easy to add custom commands to ddev; they can execute either on the host or in the various containers. The basic idea is to add a bash script to either the specific project in `.ddev/commands/host` or `.ddev/commands/<containername>` or globally for every project in `~/.ddev/commands`
 
-There are example commands provided in `ddev/commands/*/*.example` that can just be copied or moved (or symlinked) and used as commands. For example, [.ddev/commands/host/mysqlworkbench.example](https://github.com/drud/ddev/blob/master/cmd/ddev/cmd/dotddev_assets/commands/host/mysqlworkbench.example) can be used to add a "ddev mysqlworkbench" command, just change it from "mysqlworkbench.example" to "mysqlworkbench". Also, a new `ddev mysql` command has been added using this technique (as a db container command). See [mysql command](https://github.com/drud/ddev/blob/master/cmd/ddev/cmd/dotddev_assets/commands/db/mysql). If you're on macOS or Linux (or some configurations of Windows) you can just `cd .ddev/commands/host && ln -s mysqlworkbench.example mysqlworkbench`.
+There are example commands provided in `ddev/commands/*/*.example` that can just be copied or moved (or symlinked) and used as commands. For example, [.ddev/commands/host/mysqlworkbench.example](https://github.com/drud/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/host/mysqlworkbench.example) can be used to add a "ddev mysqlworkbench" command, just change it from "mysqlworkbench.example" to "mysqlworkbench".  If you're on macOS or Linux (or some configurations of Windows) you can just `cd .ddev/commands/host && ln -s mysqlworkbench.example mysqlworkbench`. Also, a new `ddev mysql` command has been added using this technique (as a db container command). Also see the  [ddev mysql command](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/commands/db/mysql).
 
 ### Notes for all command types
 
@@ -26,17 +26,7 @@ open -a PhpStorm.app ${DDEV_APPROOT}
 
 ### Container commands
 
-To provide a command which will execute in a container, add a bash script to `.ddev/commands/<container_name>`, for example, `.ddev/commands/web/mycommand`. The bash script will be executed inside the named container. For example, the [reload-nginx.example](https://github.com/drud/ddev/blob/master/cmd/ddev/cmd/dotddev_assets/commands/web/reload-nginx.example), which executes a script inside the container with the arguments provided, would go in `.ddev/commands/web/reload-nginx` as:
-
-```bash
-#!/bin/bash
-
-## Description: Reload config for nginx and php-fpm inside web container
-## Usage: restart-nginx
-## Example: "ddev restart-nginx"
-
-killall -USR2 nginx php-fpm
-```
+To provide a command which will execute in a container, add a bash script to `.ddev/commands/<container_name>`, for example, `.ddev/commands/web/mycommand`. The bash script will be executed inside the named container. For example, see the [several standard ddev script-based web container commands](https://github.com/drud/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/web),
 
 In addition to commands that run in the standard ddev containers like "web" and "db", you can run commands in custom containers, just using the service name, like `.ddev/commands/solr/<command>`. Note, however, that your service must mount /mnt/ddev_config as the web and db containers do, so the `volumes` section of docker-compose.<servicename>.yaml needs:
 

@@ -46,11 +46,11 @@ This set of steps assumes an ngrok subdomain "mg2"
 * `bin/magento setup:store-config:set --base-url="https://mg2.ngrok.io/`
 * `ddev share` and you'll see your project on `mg2.ngrok.io`
 
-### Using xip.io and or your own name resolution and open up to the local network
+### Using nip.io and or your own name resolution and open up to the local network
 
 Another solution is to **not** use `*.ddev.site` as your project URLs, but to use DNS that you control (and that points to the host machine where your project lives). In general, you'll want to use http URLs with this approach, because it requires manual configuration of the client machine to get it to trust the development certificate that ddev uses (and configures with mkcert on the local machine).
 
-* Use [xip.io](http://xip.io/) to point a domain name to your host.  If your computer's IP address is 192.168.5.101, you can use a domain name like `mysite.192.168.5.101.xip.io` and that domain name will point to your computer. Now add that as an additional_fqdn to your project, `ddev config --additional-fqdns=mysite.192.168.5.101.xip.io` and `ddev start`. Now people in your internal network should be able to `ping mysite.192.168.5.101.xip.io` if your firewall allows it. (Note that if you have other convenient ways to create a DNS entry for this, you can use those instead of using xip.io.)
+* Use [nip.io](http://nip.io/) to point a domain name to your host.  If your computer's IP address is 192.168.5.101, you can use a domain name like `mysite.192.168.5.101.nip.io` and that domain name will point to your computer. Now add that as an additional_fqdn to your project, `ddev config --additional-fqdns=mysite.192.168.5.101.nip.io` and `ddev start`. Now people in your internal network should be able to `ping mysite.192.168.5.101.nip.io` if your firewall allows it. (Note that if you have other convenient ways to create a DNS entry for this, you can use those instead of using nip.io.)
 * Configure `~/.ddev/global_config.yaml` to bind to all ports: `ddev config global --router-bind-all-interfaces && ddev poweroff && ddev start`
 * Now mobile apps or other computers which are on your **local** network should be able to access your project. Use the http URL rather than the https URL because computers outside yours don't know how to trust the developer TLS certificate you're using. (You can use `ddev describe` to see the http URL, but it's typically the same as the https URL, but with "http" instead of "https".)
 * Make sure your firewall allows access from your local network to the main interface you're using. In the example here you should be able to ping 192.168.5.101 and `curl http://192.168.5.101` and get an answer in each case.

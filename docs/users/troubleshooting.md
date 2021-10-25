@@ -59,7 +59,7 @@ router_http_port: 8080
 router_https_port: 8443
 ```
 
-Then run `ddev start`. This changes the project's http URL to <http://yoursite.ddev.site:8080> and the https URL to <https://yoursite.ddev.site:8443>.
+Then run `ddev start`. This changes the project's http URL to `http://yoursite.ddev.site:8080` and the https URL to `https://yoursite.ddev.site:8443`.
 
 If the conflict is over port 8025, it's normally a conflict over the default port for MailHog. You can add to your .ddev/config.yaml
 
@@ -87,7 +87,7 @@ sudo apachectl stop
 
 Here are some of the other common processes that could be using ports 80/443 and methods to stop them.
 
-* MAMP (macOS): [Stop MAMP](http://documentation.mamp.info/en/MAMP-Mac/Preferences/Start-Stop/)
+* MAMP (macOS): Stop MAMP.
 * Apache: Temporarily stop with `sudo apachectl stop`, permanent stop depends on your environment.
 * nginx (macOS Homebrew): `sudo brew services stop nginx`
 or `sudo launchctl stop homebrew.mxcl.nginx`

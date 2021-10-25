@@ -119,8 +119,8 @@ Note that on Drupal 8+ if you want to use `drush uli` on the host (or other drus
 
 To use terminus, you'll first need to:
 
-1. Authenticate ddev with a pantheon machine token ([more info here](providers/pantheon/#pantheon-hosting-provider-integration))
+1. Use a machine token, more discussion in [Pantheon provider discussion](providers/pantheon.md).
 2. Use `ddev ssh` to tunnel into your container
 3. Issue a command using the keyword `terminus`. For help using terminus try `terminus list` to get a list of possible commands.
 
-Terminus also allows you to issue [drush](https://www.drush.org/), [WP-CLI](https://wp-cli.org/), [composer](https://getcomposer.org/), and [drupal console](https://drupalconsole.com/) commands to your pantheon server. These are all usable from within the container as well, but will require authentication via either your Pantheon password or an SSH key. To use your host machine's SSH key, you can use the `ddev auth ssh` command [described here](cli-usage/#ssh-into-containers).
+Terminus also allows you to issue [drush](https://www.drush.org/), [WP-CLI](https://wp-cli.org/), [composer](https://getcomposer.org/), and [drupal console](https://drupalconsole.com/) commands to your pantheon server. These are all usable from within the container as well, but will require authentication via either your Pantheon password or an SSH key. To use your host machine's SSH key, you can use the `ddev auth ssh` command [described here](cli-usage.md/#ssh-into-containers).

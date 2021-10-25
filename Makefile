@@ -183,6 +183,15 @@ mkdocs:
 		echo "Not running mkdocs because it's not installed"; \
 	fi
 
+# Install markdown-link-check locally with "npm install -g markdown-link-check"
+markdown-link-check:
+	@echo "markdown-link-check: "
+	if command -v markdown-link-check >/dev/null 2>&1; then \
+  		find docs *.md -name "*.md" -exec markdown-link-check -q -c markdown-link-check.json {} \; 2>&1  ;\
+	else \
+		echo "Not running markdown-link-check because it's not installed"; \
+	fi
+
 # Best to install pyspelling locally with "pip3 install pyspelling pymdown-extensions"
 pyspelling:
 	@echo "pyspelling: "
