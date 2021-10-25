@@ -21,6 +21,7 @@ tasks:
       ddev debug download-images
 
       # Create 'simpleproj' - Umami demo on latest stable Drupal version
+      ddev start
       ddev composer create drupal/recommended-project -y && ddev composer require drush/drush
       ddev drush si demo_umami -y --account-pass=admin
       
