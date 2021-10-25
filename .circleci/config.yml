@@ -487,13 +487,13 @@ workflows:
     jobs:
     - build
 #    - mac_container_test
-#    - lx_amd64_container_test
+    - lx_amd64_container_test
 #    - staticrequired
     - lx_amd64_fpm_test
     - lx_arm64_fpm_test
-    - lx_arm64_container_test
-        requires:
-        - build
+#    - lx_arm64_container_test
+#        requires:
+#        - build
 #    - mac_nginx_fpm_test:
 #        requires:
 #        - build
