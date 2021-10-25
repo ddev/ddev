@@ -46,8 +46,6 @@ jobs:
     - checkout
     - attach_workspace:
         at: ~/
-    # Temporary cache-clear, remove this after run
-    - run: rm -rf /home/linuxbrew ~/.cache/Homebrew
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
@@ -485,9 +483,9 @@ workflows:
   version: 2
   normal_build_and_test:
     jobs:
-    - build
+#    - build
 #    - mac_container_test
-    - lx_amd64_container_test
+#    - lx_amd64_container_test
 #    - staticrequired
     - lx_amd64_fpm_test
     - lx_arm64_fpm_test
