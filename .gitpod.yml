@@ -64,6 +64,10 @@ github:
     addLabel: true
 
 ports:
+  # Ignore direct-build https port
+  - port: 2222
+    onOpen: ignore
+    visibility: private
   # Used by projector
   - port: 6942
     onOpen: ignore
