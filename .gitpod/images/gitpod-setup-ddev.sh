@@ -41,7 +41,3 @@ services:
     extra_hosts:
     - "host.docker.internal:${hostip}"
 COMPOSEEND
-
-export DDEV_NONINTERACTIVE=true
-ddev config global --omit-containers=ddev-router,ddev-ssh-agent,dba
-ddev config global --router-bind-all-interfaces=true
