@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu -o pipefail
 
-DOCKER_REPO=drud/ddev-gitpod-base:latest
+DOCKER_REPO=drud/ddev-gitpod-base:20211025_shaal_gitpod
 
 echo "Pushing ${DOCKER_REPO}"
 set -x

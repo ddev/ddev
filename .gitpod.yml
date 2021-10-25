@@ -1,4 +1,4 @@
-image: drud/ddev-gitpod-base:latest
+image: drud/ddev-gitpod-base:20211025_shaal_gitpod
 
 tasks:
   - name: ddev
