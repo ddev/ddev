@@ -20,7 +20,6 @@ tasks:
       cd /workspace/simpleproj
       ddev config global --omit-containers=ddev-router,ddev-ssh-agent,dba
       ddev start -y
-      ddev import-db --src=.tarballs/db.sql.gz
       gp await-port 8080 && sleep 1 && gp preview $(gp url 8080)
 vscode:
   extensions:
