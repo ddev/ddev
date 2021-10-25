@@ -11,13 +11,13 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-homebrew-v25
+        - linux-homebrew-v26
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: NORMAL Circle VM setup
         no_output_timeout: "40m"
     - save_cache:
-        key: linux-homebrew-v25
+        key: linux-homebrew-v26
         paths:
           - /home/linuxbrew
     - run:
@@ -49,7 +49,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-homebrew-v25
+        - linux-homebrew-v26
     - restore_cache:
         keys:
           - linux-testcache-v24
@@ -58,7 +58,7 @@ jobs:
         name: Circle VM setup
         no_output_timeout: "40m"
     - save_cache:
-        key: linux-homebrew-v25
+        key: linux-homebrew-v26
         paths:
           - /home/linuxbrew
     - run: echo "$(docker --version) $(docker-compose --version)"
@@ -198,7 +198,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v24
+        - homebrew-linux-v26
     - attach_workspace:
         at: ~/
     - run:
@@ -215,7 +215,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v24
+        key: homebrew-linux-v26
         paths:
         - /home/linuxbrew
         - /home/circleci/.ddev/testcache
@@ -233,7 +233,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v24
+        - homebrew-linux-v26
     - attach_workspace:
         at: ~/
     - run:
@@ -252,7 +252,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v24
+        key: homebrew-linux-v26
         paths:
         - /home/linuxbrew
         - /home/circleci/.ddev/testcache
@@ -267,7 +267,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v24
+        - homebrew-linux-v26
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup
@@ -289,7 +289,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v24
+        - homebrew-linux-v26
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup
@@ -313,7 +313,7 @@ jobs:
         name: linux container test
 
     - save_cache:
-        key: linux-v24
+        key: homebrew-linux-v26
         paths:
         - /home/linuxbrew
         - /home/circleci/.ddev/testcache
@@ -380,7 +380,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v24
+        - homebrew-linux-v26
     - attach_workspace:
         at: ~/
     - run:
@@ -388,7 +388,7 @@ jobs:
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
     - save_cache:
-        key: linux-v24
+        key: homebrew-linux-v26
         paths:
         - /home/linuxbrew
         - /home/circleci/.ddev/testcache
