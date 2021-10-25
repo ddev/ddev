@@ -200,7 +200,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v25
+        - homebrew-linux-v26
     - attach_workspace:
         at: ~/
     - run:
@@ -217,7 +217,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v25
+        key: homebrew-linux-v26
         paths:
         - /home/linuxbrew
         - /home/circleci/.ddev/testcache
@@ -235,7 +235,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v25
+        - homebrew-linux-v26
     - attach_workspace:
         at: ~/
     - run:
@@ -254,7 +254,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-v25
+        key: homebrew-linux-v26
         paths:
         - /home/linuxbrew
         - /home/circleci/.ddev/testcache
@@ -269,7 +269,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v25
+        - homebrew-linux-v26
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup
@@ -291,7 +291,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v25
+        - homebrew-linux-v26
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup
@@ -315,7 +315,7 @@ jobs:
         name: linux container test
 
     - save_cache:
-        key: linux-v25
+        key: homebrew-linux-v26
         paths:
         - /home/linuxbrew
         - /home/circleci/.ddev/testcache
@@ -382,7 +382,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-v25
+        - homebrew-linux-v26
     - attach_workspace:
         at: ~/
     - run:
@@ -390,7 +390,7 @@ jobs:
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
     - save_cache:
-        key: linux-v25
+        key: homebrew-linux-v26
         paths:
         - /home/linuxbrew
         - /home/circleci/.ddev/testcache
