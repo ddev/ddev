@@ -1,29 +1,12 @@
-# DDEV Local Roadmap
+## DDEV Version History
 
-This roadmap for DDEV-Local is intended to answer what we hear from our wonderful community of users. If you have lobbying for a favorite item or think things should be re-prioritized, just lobby in the [issue queue](https://github.com/drud/ddev/issues). We listen. Or talk to us in any of the [support locations](https://ddev.readthedocs.io/en/stable/#support).
-
-These items are listed in loose priority order, so you can expect the top items to show up in nearer releases. We regularly fix bugs that are annoying our users, so only new features show up on this list.
-
-We try to flag issues that we definitely intend to get done with the [prioritized](https://github.com/drud/ddev/issues?q=is%3Aissue+is%3Aopen+label%3APrioritized) label. If you think something is super-important, please request that it be marked "prioritized". It doesn't mean it will get tagged, but your vote absolutely counts.
-
-## v1.17 and beyond
-
-- [ ] Improve visual appearance of docs on readthedocs; consider switching build process.
-- [ ] Global --root and --project flags (#2128)
-- [ ] [Provide "ddev debug dockercheck" command](https://github.com/drud/ddev/issues/1443)
-- [ ] Improve docs tutorial so people can just start right up with it.
-- [ ] Implement automated testing for WSL2 projects
-- [ ] Explicit support for additional CMSs, including Sulu, Joomla, CraftCMS
-- [ ] GUI! again.
-
-## Historical Releases
+This version history has been driven by what we hear from our wonderful community of users. If you have lobbying for a favorite item or think things should be re-prioritized, just lobby in the [issue queue](https://github.com/drud/ddev/issues). We listen. Or talk to us in any of the [support locations](https://ddev.readthedocs.io/en/stable/#support).
 
 ### v1.16 (Released 2020-11-12)
 
 - [x] Support Shopware 6
 - [x] Remove support for docker toolbox on Win10 Home (in favor of new docker desktop)
 - [x] Remove apache-cgi webserver_type
-- [ ] Remove nginx snippet support (.ddev/nginx)
 - [x] Per-project-type commands like `ddev drush`, `ddev typo3`
 - [x] Build hardened ddev with hardened images for open-source production hosting
 
