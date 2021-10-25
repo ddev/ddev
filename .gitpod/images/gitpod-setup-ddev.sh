@@ -9,13 +9,11 @@ if [ $# != 1 ]; then
 fi
 
 PROJDIR="$1/.ddev"
-cd ${PROJDIR}
+cd "${PROJDIR}"
 
 # Generate a config.gitpod.yaml that adds the gitpod
 # proxied ports so they're known to ddev.
-shortgpurl="${GITPOD_WORKSPACE_URL#'https://'}"
-
-cat <<CONFIGEND > ${PROJDIR}/config.gitpod.yaml
+cat <<CONFIGEND > "${PROJDIR}"/config.gitpod.yaml
 web_environment:
 - DRUSH_OPTIONS_URI=$(gp url 8080)
 
@@ -35,7 +33,7 @@ CONFIGEND
 # So add it via docker-compose.host-docker-internal.yaml
 hostip=$(awk "\$2 == \"$HOSTNAME\" { print \$1; }" /etc/hosts)
 
-cat <<COMPOSEEND >${PROJDIR}/docker-compose.host-docker-internal.yaml
+cat <<COMPOSEEND >"${PROJDIR}"/docker-compose.host-docker-internal.yaml
 #ddev-gitpod-generated
 version: "3.6"
 services:
@@ -43,3 +41,7 @@ services:
     extra_hosts:
     - "host.docker.internal:${hostip}"
 COMPOSEEND
+
+export DDEV_NONINTERACTIVE=true
+ddev config global --omit-containers=ddev-router,ddev-ssh-agent,dba
+ddev config global --router-bind-all-interfaces=true

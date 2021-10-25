@@ -8,9 +8,6 @@ tasks:
       make
       
       # Configure ddev to run on Gitpod
-      export DDEV_NONINTERACTIVE=true
-      ddev config global --omit-containers=ddev-router,ddev-ssh-agent,dba
-      ddev config global --router-bind-all-interfaces=true
       gitpod-setup-ddev.sh /workspace/simpleproj
 
       # Configure ddev Drupal9 project
@@ -29,6 +26,7 @@ tasks:
       mkdir -p .tarballs
       ddev export-db --file=.tarballs/db.sql.gz
     command: |
+      gitpod-setup-ddev.sh /workspace/simpleproj
       cd /workspace/simpleproj
       ddev start -y
       gp await-port 8080 && sleep 1 && gp preview $(gp url 8080)
