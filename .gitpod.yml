@@ -12,14 +12,14 @@ tasks:
       ddev config global --omit-containers=ddev-router,ddev-ssh-agent,dba
       ddev config global --router-bind-all-interfaces=true
       gitpod-setup-ddev.sh /workspace/simpleproj
-      
-      # Download ddev's docker images
-      ddev debug download-images
 
       # Configure ddev Drupal9 project
       mkdir -p /workspace/simpleproj && cd /workspace/simpleproj
       ddev config --project-type=drupal9 --docroot=web --create-docroot
       
+      # Download ddev's docker images
+      ddev debug download-images
+
       # Create 'simpleproj' - Umami demo on latest stable Drupal version
       ddev composer create drupal/recommended-project -y && ddev composer require drush/drush
       ddev drush si demo_umami -y --account-pass=admin
