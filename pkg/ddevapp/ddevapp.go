@@ -1015,7 +1015,7 @@ func (app *DdevApp) PullContainerImages() error {
 		"dba":            app.DBAImage,
 		"ddev-ssh-agent": version.GetSSHAuthImage(),
 		"web":            app.WebImage,
-		"router":         version.GetRouterImage(),
+		"ddev-router":    version.GetRouterImage(),
 		"busybox":        version.BusyboxImage,
 	}
 
