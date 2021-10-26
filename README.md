@@ -59,4 +59,5 @@ We love to hear from our users and help them be successful with ddev. Support op
 ## Additional Information
 
 * **Contributing** See the "How can I contribute" question in the [FAQ](https://ddev.readthedocs.io/en/stable/users/faq/).
-* **Roadmap:** See the [ddev roadmap](https://github.com/drud/ddev/wiki/DDEV-Local-Roadmap). We love your input! Make requests in the [ddev issue queue](https://github.com/drud/ddev/issues).
+* **Version History:** See DDEV's [version history](https://ddev.readthedocs.io/en/latest/users/topics/version-history/) to browse through all the features that have been added.
+* **Roadmap:** Take a look at the milestones in the [ddev issue queue](https://github.com/drud/ddev/issues) to get an understanding of what's prioritized and what's next. We love your input! Make requests in the issue queue (if your request doesn't exist yet).
