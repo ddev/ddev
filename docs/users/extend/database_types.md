@@ -2,7 +2,7 @@
 
 DDEV-Local supports most versions of MariaDB and MySQL database servers, but of course the two types are mutually exclusive.
 
-The default database type is MariaDB, and the default version is currently 10.2, but you can use nearly any MariaDB version (5.5 through 10.5) and nearly any MySQL version (5.5 through 8.0). For example, you can use `ddev config --mariadb-version="" --mysql-version=5.7` to configure for MySQL 5.7.
+The default database type is MariaDB, and the default version is currently 10.3, but you can use nearly any MariaDB version (5.5 through 10.6) and nearly any MySQL version (5.5 through 8.0). For example, you can use `ddev config --mariadb-version="" --mysql-version=5.7` to configure for MySQL 5.7.
 
 In the config.yaml, either `mysql_version` or `mariadb_version` should be left blank, for example:
 
