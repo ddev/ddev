@@ -311,13 +311,6 @@ func DownloadMutagen() error {
 	globalMutagenDir := filepath.Dir(globalconfig.GetMutagenPath())
 	destFile := filepath.Join(globalMutagenDir, "mutagen.tgz")
 	mutagenURL := fmt.Sprintf("https://github.com/mutagen-io/mutagen/releases/download/v%s/mutagen_%s_v%s.tar.gz", version.RequiredMutagenVersion, flavor, version.RequiredMutagenVersion)
-	// Temporary workaround to get signed/notarized binaries for macOS.
-	// See https://github.com/drud/mutagen/releases/tag/v0.12.0-beta5 and
-	// https://github.com/mutagen-io/mutagen/issues/290
-	// TODO: Remove this when mutagen has signed releases
-	if runtime.GOOS == "darwin" {
-		mutagenURL = fmt.Sprintf("https://github.com/drud/mutagen/releases/download/v%s/mutagen_%s_v%s.tar.gz", version.RequiredMutagenVersion, flavor, version.RequiredMutagenVersion)
-	}
 	output.UserOut.Printf("Downloading %s ...", mutagenURL)
 
 	// Remove the existing file. This may help on macOS to prevent the Gatekeeper's
