@@ -29,7 +29,6 @@ tasks:
       # Configure ddev to run on Gitpod
       export DDEV_NONINTERACTIVE=true
       ddev config global --omit-containers=ddev-router,ddev-ssh-agent,dba
-      ddev config global --router-bind-all-interfaces=true
       gitpod-setup-ddev.sh /workspace/simpleproj
 
       # Start ddev
