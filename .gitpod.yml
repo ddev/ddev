@@ -14,9 +14,8 @@ tasks:
       gitpod-setup-ddev.sh /workspace/simpleproj
 
       mkcert -install
-      BUILDX_BINARY_URL="https://github.com/docker/buildx/releases/download/v0.6.3/buildx-v0.6.3.linux-amd64"
-      mkdir -p ~/.docker/cli-plugins && curl --output ~/.docker/cli-plugins/docker-buildx --silent --show-error --location --fail --retry 3 "$BUILDX_BINARY_URL" && chmod a+x ~/.docker/cli-plugins/docker-buildx
-      # Configure ddev Drupal9 project
+
+      # Configure ddev Drupal project
       mkdir -p /workspace/simpleproj && cd /workspace/simpleproj
       ddev config --project-type=drupal9 --docroot=web --create-docroot
 
@@ -65,6 +64,9 @@ github:
 ports:
   # Ignore direct-build https port
   - port: 2222
+    onOpen: ignore
+    visibility: private
+  - port: 3306
     onOpen: ignore
     visibility: private
   # Used by projector
