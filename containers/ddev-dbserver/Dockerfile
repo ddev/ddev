@@ -1,9 +1,9 @@
-ARG DB_TYPE
+ARG BASE_IMAGE
 ARG DB_PINNED_VERSION
-FROM ${DB_TYPE}:${DB_PINNED_VERSION}
+FROM ${BASE_IMAGE}:${DB_PINNED_VERSION}
 
 # This must be reiterated because everything is emptied on FROM
-ARG DB_TYPE
+ARG BASE_IMAGE
 ARG DB_VERSION
 
 ENV LANG=C.UTF-8
@@ -26,11 +26,11 @@ RUN for item in "75DD C3C4 A499 F1A1 8CB5  F3C8 CBF8 D6FD 518E 17E1" "126C 0D24 
 # and remove it here
 RUN rm -f /etc/apt/sources.list.d/mariadb.list /etc/apt/sources.list.d/percona.list
 
-RUN apt-get -qq update && apt-get -qq install -y tzdata gnupg2 pv less vim wget curl lsb-release >/dev/null
+RUN apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" curl gnupg2 less lsb-release pv tzdata vim wget >/dev/null
 
 # If on 14.04 Ubuntu the percona repositories won't allow TLS apparently, so
 # Use http when connecting. This currently only affects MariaDB 5.5
-RUN set -x; if ( ! command -v xtrabackup && ! command -v mariabackup ); then \
+RUN set -x; if ( ! command -v xtrabackup && ! command -v mariabackup && [ $(arch) != "aarch64" ] ); then \
     curl -sSL https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb -o percona-release_latest.$(lsb_release -sc)_all.deb; \
     dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb >/dev/null; \
     rm percona-release*.deb ; \
@@ -41,7 +41,7 @@ RUN set -x; if ( ! command -v xtrabackup && ! command -v mariabackup ); then \
 fi
 RUN apt-get -qq autoclean
 
-RUN rm -rf /var/lib/mysql/* /etc/mysql
+RUN rm -rf /var/lib/mysql /etc/mysql
 RUN mkdir -p /var/lib/mysql
 
 ADD files /

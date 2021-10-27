@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # Build a ddev-dbserver image for variety of mariadb/mysql
 # and per architecture, optionally push
@@ -99,24 +99,26 @@ if [ -z ${DB_PINNED_VERSION:-} ]; then
   DB_PINNED_VERSION=${DB_MAJOR_VERSION}
 fi
 
-printf "\n\n========== Building drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG} for ${ARCHS} with pinned version ${DB_PINNED_VERSION} ==========\n"
+BASE_IMAGE=${DB_TYPE}
+
+# For mysql, we have to use our own base images at drud/mysql
+set -x
+
+if [ ${DB_TYPE} = "mysql" ] && [[ "$ARCHS" == *"linux/arm64"* ]]; then
+  BASE_IMAGE=drud/mysql
+fi
+printf "\n\n========== Building drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG} from ${BASE_IMAGE} for ${ARCHS} with pinned version ${DB_PINNED_VERSION} ==========\n"
 
 if [ ! -z ${PUSH:-} ]; then
   echo "building/pushing drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}"
   set -x
-  docker buildx build --push --platform ${ARCHS} ${DOCKER_ARGS} --build-arg="DB_TYPE=${DB_TYPE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" --build-arg="DB_VERSION=${DB_MAJOR_VERSION}" -t "drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}" .
+  docker buildx build --push --platform ${ARCHS} ${DOCKER_ARGS} --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" --build-arg="DB_VERSION=${DB_MAJOR_VERSION}" -t "drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}" .
   set +x
 fi
 
 # By default, load/import into local docker
-if [ -z ${NO_LOAD:-} ]; then
-  if [[ ${ARCHS} =~ ${MYARCH} ]]; then
+set -x
+if [ -z "${PUSH:-}" ]; then
     echo "Loading to local docker drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}"
-    set -x
-    docker buildx build --load --platform ${MYARCH} ${DOCKER_ARGS} --build-arg="DB_TYPE=${DB_TYPE}" --build-arg="DB_VERSION=${DB_MAJOR_VERSION}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" -t "drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}" .
-    set +x
-  else
-    echo "This architecture (${MYARCH}) was not built, so not loading"
-    exit
-  fi
+    docker buildx build --load ${DOCKER_ARGS} --build-arg="DB_TYPE=${DB_TYPE}" --build-arg="DB_VERSION=${DB_MAJOR_VERSION}" --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" -t "drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}" .
 fi

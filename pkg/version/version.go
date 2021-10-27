@@ -47,7 +47,7 @@ var WebTag = "20211004_joelpittet_ldap" // Note that this can be overridden by m
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20211004_use_http_for_mariadb_5.5"
+var BaseDBTag = "20211017_mysql_arm64"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"
