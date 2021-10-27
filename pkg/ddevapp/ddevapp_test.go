@@ -672,7 +672,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	app := &ddevapp.DdevApp{}
 	testcommon.ClearDockerEnv()
 
-	// On macOS we want to just listen on localhost port, so as to not trigger
+	// On macOS we want to just listen on localhost port, to not trigger
 	// firewall block. On other systems, just listen on all interfaces
 	listenPort := ":9000"
 	if runtime.GOOS == "darwin" {
