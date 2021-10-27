@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -28,16 +29,19 @@ func TestHomeadditions(t *testing.T) {
 
 	tmpHome := testcommon.CreateTmpDir(t.Name() + "tempHome")
 	origHome := os.Getenv("HOME")
+	if runtime.GOOS == "windows" {
+		origHome = os.Getenv("USERPROFILE")
+	}
 	// Change the homedir temporarily
-	err := os.Setenv("HOME", tmpHome)
-	require.NoError(t, err)
+	_ = os.Setenv("HOME", tmpHome)
+	_ = os.Setenv("USERPROFILE", tmpHome)
 
 	site := TestSites[0]
 	projectHomeadditionsDir := filepath.Join(site.Dir, ".ddev", "homeadditions")
 
 	// We can't use the standard getGlobalDDevDir here because *our* global hasn't changed.
 	// It's changed via $HOME for the ddev subprocess
-	err = os.MkdirAll(filepath.Join(tmpHome, ".ddev"), 0755)
+	err := os.MkdirAll(filepath.Join(tmpHome, ".ddev"), 0755)
 	assert.NoError(err)
 	tmpHomeGlobalHomeadditionsDir := filepath.Join(tmpHome, ".ddev", "homeadditions")
 	err = os.RemoveAll(tmpHomeGlobalHomeadditionsDir)
@@ -58,6 +62,7 @@ func TestHomeadditions(t *testing.T) {
 		err = os.RemoveAll(tmpHome)
 		assert.NoError(err)
 		_ = os.Setenv("HOME", origHome)
+		_ = os.Setenv("USERPROFILE", origHome)
 	})
 
 	// Simply run "ddev" to make sure homeadditions example files get populated

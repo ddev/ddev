@@ -1,13 +1,13 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -184,6 +184,9 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	_ = TestSites[0].Chdir()
 
 	origHome := os.Getenv("HOME")
+	if runtime.GOOS == "windows" {
+		origHome = os.Getenv("USERPROFILE")
+	}
 
 	t.Cleanup(
 		func() {
@@ -194,8 +197,8 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 			err = os.RemoveAll(tmpDir)
 			assert.NoError(err)
 
-			err = os.Setenv("HOME", origHome)
-			assert.NoError(err)
+			_ = os.Setenv("HOME", origHome)
+			_ = os.Setenv("USERPROFILE", origHome)
 
 			// Because the start will have done a poweroff (new version),
 			// make sure sites are running again.
@@ -215,17 +218,15 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	assert.True(os.IsNotExist(err))
 
 	// Change the homedir temporarily
-	err = os.Setenv("HOME", tmpDir)
-	assert.NoError(err)
+	_ = os.Setenv("HOME", tmpDir)
+	_ = os.Setenv("USERPROFILE", tmpDir)
 
 	// The .update file is only created by ddev start
-	// We have to do the echo technique to get past the prompt about doing a ddev poweroff
-	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("echo y | %s start", DdevBin)})
+	_, err = exec.RunHostCommand(DdevBin, "start", "-y")
 	assert.NoError(err)
 
 	_, err = os.Stat(tmpUpdateFilePath)
 	assert.NoError(err)
-
 }
 
 // TestPoweroffOnNewVersion checks that a poweroff happens when a new ddev version is deployed
@@ -244,15 +245,18 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	assert.NoError(err)
 
 	origHome := os.Getenv("HOME")
+	if runtime.GOOS == "windows" {
+		origHome = os.Getenv("USERPROFILE")
+	}
 
 	// Create an extra junk project to make sure it gets shut down on our start
 	junkName := t.Name() + "-tmpjunkproject"
 	tmpJunkProject := testcommon.CreateTmpDir(junkName)
 	err = os.Chdir(tmpJunkProject)
 	assert.NoError(err)
-	_, err = exec.RunCommand(DdevBin, []string{"config", "--auto"})
+	_, err = exec.RunHostCommand(DdevBin, "config", "--auto")
 	assert.NoError(err)
-	_, _ = exec.RunCommand(DdevBin, []string{"start", "-y"})
+	_, _ = exec.RunHostCommand(DdevBin, "start", "-y")
 	assert.NoError(err)
 
 	apps := ddevapp.GetActiveProjects()
@@ -260,8 +264,8 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	assert.GreaterOrEqual(activeCount, 2)
 
 	// Change the homedir temporarily
-	err = os.Setenv("HOME", tmpGlobal)
-	assert.NoError(err)
+	_ = os.Setenv("HOME", tmpGlobal)
+	_ = os.Setenv("USERPROFILE", tmpGlobal)
 
 	// docker-compose v2 is dependent on the ~/.docker directory
 	_ = fileutil.CopyDir(filepath.Join(origHome, ".docker"), filepath.Join(tmpGlobal, ".docker"))
@@ -274,12 +278,12 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 			err = os.RemoveAll(tmpGlobal)
 			assert.NoError(err)
 
-			err = os.Setenv("HOME", origHome)
-			assert.NoError(err)
+			_ = os.Setenv("HOME", origHome)
+			_ = os.Setenv("USERPROFILE", origHome)
 
 			err = os.Chdir(tmpJunkProject)
 			assert.NoError(err)
-			_, _ = exec.RunCommand(DdevBin, []string{"delete", "-Oy"})
+			_, _ = exec.RunHostCommand(DdevBin, "delete", "-Oy")
 
 			err = os.Chdir(origDir)
 			assert.NoError(err)
