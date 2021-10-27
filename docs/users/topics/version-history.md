@@ -2,6 +2,30 @@
 
 This version history has been driven by what we hear from our wonderful community of users. If you have lobbying for a favorite item or think things should be re-prioritized, just lobby in the [issue queue](https://github.com/drud/ddev/issues). We listen. Or talk to us in any of the [support locations](https://ddev.readthedocs.io/en/stable/#support).
 
+### v1.18 (Released 2021-09-28)
+
+- [x] Mutagen support results in a huge speedup for macOS and traditional Windows users
+- [x] Support docker-compose v1 and v2
+- [x] Support MariaDB 10.6
+- [x] Support PHP 8.1
+- [x] Improved integration with PhpStorm on all platforms, including WSL
+- [x] xhprof support for performance profiling alongside blackfire.io support
+- [x] Base image for the ddev-webserver is now Debian 11 Bullseye
+
+### v1.17 (Released 2021-04-07)
+
+- [x] Composer v2 is now the default composer version
+- [x] Brand new provider integration system, with user-configurable and extensible techniques, Acquia, Platform.sh, DDEV-Live, Pantheon.io integration
+- [x] Excellent improvements to `ddev snapshot`, including `ddev snapshot restore --latest`, prompted `ddev snapshot restore`, `ddev snapshot --list`, `ddev snapshot --cleanup`, `ddev snapshot --all`
+- [x] `ddev snapshot` restore now shows progress as it goes
+- [x] Built-in support for Blackfire.io profiling
+- [x] New ddev config --auto option that configures a project with detected defaults
+- [x] Web container environment variables can be set in `config.yaml` or `global_config.yaml` with the `web_environment key`
+- [x] `ddev heidisql` command provides a nice database browser on Windows and Windows WSL2
+- [x] The PHP default for new projects is now PHP 7.4
+- [x] The MariaDB default for new projects is 10.3
+- [x] New docs theme
+
 ### v1.16 (Released 2020-11-12)
 
 - [x] Support Shopware 6
