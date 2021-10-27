@@ -2,6 +2,10 @@
 
 This version history has been driven by what we hear from our wonderful community of users. If you have lobbying for a favorite item or think things should be re-prioritized, just lobby in the [issue queue](https://github.com/drud/ddev/issues). We listen. Or talk to us in any of the [support locations](https://ddev.readthedocs.io/en/stable/#support).
 
+### Coming... v1.19
+
+Take a look at the [v1.19 milestone](https://github.com/drud/ddev/milestone/53) to see what's currently slated. Comment there on your favorites, or lobby for other things to be added.
+
 ### v1.18 (Released 2021-09-28)
 
 - [x] Mutagen support results in a huge speedup for macOS and traditional Windows users
