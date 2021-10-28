@@ -843,24 +843,9 @@ func CreateVolume(volumeName string, driver string, driverOpts map[string]string
 // (for docker-for-mac and Win10 Docker-for-windows) or a usable IP address
 func GetHostDockerInternalIP() (string, error) {
 	hostDockerInternal := ""
-	hostGatewayEnabled := false
-	client := GetDockerClient()
-	info, err := client.Info()
-	if err != nil {
-		return "", err
-	}
-
-	hostGatewayFirstVersion, _ := semver.NewVersion("20.10.6")
-	serverVersion, err := semver.NewVersion(info.ServerVersion)
-	if err == nil {
-		hostGatewayEnabled = serverVersion.GreaterThan(hostGatewayFirstVersion)
-	}
 
 	// Docker on linux doesn't define host.docker.internal
-	// so we need to go get the ip address of docker0 (preferably)
-	// or fall back and try eth0
-	// We would hope to be able to remove this when
-	// https://github.com/docker/for-linux/issues/264 gets resolved.
+	// so we need to go get the bridge IP address
 	if runtime.GOOS == "linux" {
 		// Gitpod does not use standard docker networking, so we need to use the official hostname
 		if nodeps.IsGitpod() {
@@ -868,9 +853,8 @@ func GetHostDockerInternalIP() (string, error) {
 			if err == nil && len(addrs) > 0 {
 				hostDockerInternal = addrs[0]
 			}
-		} else if hostGatewayEnabled { // In a normal Docker 20.10+ we can use host-gateway
-			hostDockerInternal = "host-gateway"
-		} else { // In pre-docker 20.10 we can lookup info from the bridge network
+		} else { // look up info from the bridge network
+			client := GetDockerClient()
 			n, err := client.NetworkInfo("bridge")
 			if err != nil {
 				return "", err
