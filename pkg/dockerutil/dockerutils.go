@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"os"
 	"os/exec"
 	"regexp"
@@ -861,15 +862,21 @@ func GetHostDockerInternalIP() (string, error) {
 	// We would hope to be able to remove this when
 	// https://github.com/docker/for-linux/issues/264 gets resolved.
 	if runtime.GOOS == "linux" {
-		if hostGatewayEnabled {
+		// Gitpod does not use standard docker networking, so we need to use the official hostname
+		if nodeps.IsGitpod() {
+			addrs, err := net.LookupHost(os.Getenv("HOSTNAME"))
+			if err == nil && len(addrs) > 0 {
+				hostDockerInternal = addrs[0]
+			}
+		} else if hostGatewayEnabled { // In a normal Docker 20.10+ we can use host-gateway
 			hostDockerInternal = "host-gateway"
-		} else {
-			net, err := client.NetworkInfo("bridge")
+		} else { // In pre-docker 20.10 we can lookup info from the bridge network
+			n, err := client.NetworkInfo("bridge")
 			if err != nil {
 				return "", err
 			}
-			if len(net.IPAM.Config) > 0 {
-				hostDockerInternal = net.IPAM.Config[0].Gateway
+			if len(n.IPAM.Config) > 0 {
+				hostDockerInternal = n.IPAM.Config[0].Gateway
 			}
 		}
 	}
