@@ -4,21 +4,20 @@ tasks:
   - name: ddev
   - name: simpleproj
     init: |
-      set -eu -o pipefail
       # Compile ddev
       make
 
       # Configure ddev to run on Gitpod
       export DDEV_NONINTERACTIVE=true
       ddev config global --omit-containers=ddev-router,ddev-ssh-agent,dba
-      ddev config global --router-bind-all-interfaces=true
-      gitpod-setup-ddev.sh /workspace/simpleproj
-
-      mkcert -install
 
       # Configure ddev Drupal project
       mkdir -p /workspace/simpleproj && cd /workspace/simpleproj
       ddev config --project-type=drupal9 --docroot=web --create-docroot
+
+      gitpod-setup-ddev.sh /workspace/simpleproj
+
+      mkcert -install
 
       # Download ddev's docker images
       ddev debug download-images
@@ -29,7 +28,6 @@ tasks:
       ddev drush si demo_umami -y --account-pass=admin
 
     command: |
-      set -eu -o pipefail
       # Configure ddev to run on Gitpod
       export DDEV_NONINTERACTIVE=true
       ddev config global --omit-containers=ddev-router,ddev-ssh-agent,dba
