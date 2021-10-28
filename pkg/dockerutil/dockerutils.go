@@ -850,7 +850,7 @@ func GetHostDockerInternalIP() (string, error) {
 		return "", err
 	}
 
-	hostGatewayFirstVersion, _ := semver.NewVersion("20.10.0")
+	hostGatewayFirstVersion, _ := semver.NewVersion("20.10.6")
 	serverVersion, err := semver.NewVersion(info.ServerVersion)
 	if err == nil {
 		hostGatewayEnabled = serverVersion.GreaterThan(hostGatewayFirstVersion)
