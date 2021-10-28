@@ -16,7 +16,6 @@ import (
 	"time"
 
 	"github.com/drud/ddev/pkg/archive"
-	exec2 "github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
@@ -844,21 +843,19 @@ func CreateVolume(volumeName string, driver string, driverOpts map[string]string
 func GetHostDockerInternalIP() (string, error) {
 	hostDockerInternal := ""
 
-	// Docker 18.09 on linux and docker-toolbox don't define host.docker.internal
-	// so we need to go get the ip address of docker0
+	// Docker on linux doesn't define host.docker.internal
+	// so we need to go get the ip address of docker0 (preferably)
+	// or fall back and try eth0
 	// We would hope to be able to remove this when
 	// https://github.com/docker/for-linux/issues/264 gets resolved.
 	if runtime.GOOS == "linux" {
-		out, err := exec2.RunCommandPipe("ip", []string{"address", "show", "dev", "docker0"})
-		// Do not process if ip command fails, we'll just ignore and not act.
-		if err == nil {
-			addr := regexp.MustCompile(`inet *[0-9\.]+`).FindString(out)
-			components := strings.Split(addr, " ")
-			if len(components) == 2 {
-				hostDockerInternal = components[1]
-			} else {
-				return "", fmt.Errorf("docker0 interface IP address cannot be determined. You may need to 'ip link set docker0 up' or restart docker or reboot to get xdebug or nfsmount_enabled to work")
-			}
+		client := GetDockerClient()
+		net, err := client.NetworkInfo("bridge")
+		if err != nil {
+			return "", err
+		}
+		if len(net.IPAM.Config) > 0 {
+			hostDockerInternal = net.IPAM.Config[0].Gateway
 		}
 	}
 	return hostDockerInternal, nil
