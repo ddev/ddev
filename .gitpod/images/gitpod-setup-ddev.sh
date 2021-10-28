@@ -9,7 +9,7 @@ if [ $# != 1 ]; then
 fi
 
 PROJDIR="$1/.ddev"
-cd "${PROJDIR}"
+mkdir -p ${PROJDIR} && cd "${PROJDIR}"
 
 # Generate a config.gitpod.yaml that adds the gitpod
 # proxied ports so they're known to ddev.
