@@ -1,9 +1,10 @@
-image: drud/ddev-gitpod-base:20211027_improve_gitpod
+image: drud/ddev-gitpod-base:20211028_fix_gitpod_setup
 
 tasks:
   - name: ddev
   - name: simpleproj
     init: |
+      set -eu -o pipefail
       # Compile ddev
       make
 
@@ -28,6 +29,7 @@ tasks:
       ddev drush si demo_umami -y --account-pass=admin
 
     command: |
+      set -eu -o pipefail
       # Configure ddev to run on Gitpod
       export DDEV_NONINTERACTIVE=true
       ddev config global --omit-containers=ddev-router,ddev-ssh-agent,dba
@@ -65,46 +67,34 @@ ports:
   # Ignore direct-build https port
   - port: 2222
     onOpen: ignore
-    visibility: private
   - port: 3306
     onOpen: ignore
-    visibility: private
   # Used by projector
   - port: 6942
     onOpen: ignore
-    visibility: private
   # Direct-connect ddev-webserver port that is the main port
   - port: 8080
     onOpen: ignore
-    visibility: private
   # Currently un-notified and unsupported mailhog http port
   - port: 8025
     onOpen: ignore
-    visibility: private
   # Currently un-notified and unsupported mailhog https port
   - port: 8026
     onOpen: ignore
-    visibility: private
   # Currently un-notified and unsupported phpmyadmin http port
   - port: 8036
     onOpen: ignore
-    visibility: private
   # Currently un-notified and unsupported phpmyadmin https port
   - port: 8037
     onOpen: ignore
-    visibility: private
   # router http port that we're ignoring.
   - port: 8888
     onOpen: ignore
-    visibility: private
   # router https port that we're ignoring.
   - port: 8889
     onOpen: ignore
-    visibility: private
   # xdebug port
   - port: 9000
     onOpen: ignore
-    visibility: private
   # projector port
   - port: 9999
-    visibility: private
