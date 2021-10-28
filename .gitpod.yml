@@ -1,4 +1,4 @@
-image: drud/ddev-gitpod-base:20211025_shaal_gitpod
+image: drud/ddev-gitpod-base:20211027_improve_gitpod
 
 tasks:
   - name: ddev
@@ -6,17 +6,19 @@ tasks:
     init: |
       # Compile ddev
       make
-      
+
       # Configure ddev to run on Gitpod
       export DDEV_NONINTERACTIVE=true
       ddev config global --omit-containers=ddev-router,ddev-ssh-agent,dba
       ddev config global --router-bind-all-interfaces=true
       gitpod-setup-ddev.sh /workspace/simpleproj
 
-      # Configure ddev Drupal9 project
+      mkcert -install
+
+      # Configure ddev Drupal project
       mkdir -p /workspace/simpleproj && cd /workspace/simpleproj
       ddev config --project-type=drupal9 --docroot=web --create-docroot
-      
+
       # Download ddev's docker images
       ddev debug download-images
 
@@ -24,7 +26,7 @@ tasks:
       ddev start -y
       ddev composer create drupal/recommended-project -y && ddev composer require drush/drush
       ddev drush si demo_umami -y --account-pass=admin
-      
+
     command: |
       # Configure ddev to run on Gitpod
       export DDEV_NONINTERACTIVE=true
@@ -62,6 +64,9 @@ github:
 ports:
   # Ignore direct-build https port
   - port: 2222
+    onOpen: ignore
+    visibility: private
+  - port: 3306
     onOpen: ignore
     visibility: private
   # Used by projector
