@@ -842,6 +842,18 @@ func CreateVolume(volumeName string, driver string, driverOpts map[string]string
 // (for docker-for-mac and Win10 Docker-for-windows) or a usable IP address
 func GetHostDockerInternalIP() (string, error) {
 	hostDockerInternal := ""
+	hostGatewayEnabled := false
+	client := GetDockerClient()
+	info, err := client.Info()
+	if err != nil {
+		return "", err
+	}
+
+	hostGatewayFirstVersion, _ := semver.NewVersion("20.10.0")
+	serverVersion, err := semver.NewVersion(info.ServerVersion)
+	if err == nil {
+		hostGatewayEnabled = serverVersion.GreaterThan(hostGatewayFirstVersion)
+	}
 
 	// Docker on linux doesn't define host.docker.internal
 	// so we need to go get the ip address of docker0 (preferably)
@@ -849,13 +861,16 @@ func GetHostDockerInternalIP() (string, error) {
 	// We would hope to be able to remove this when
 	// https://github.com/docker/for-linux/issues/264 gets resolved.
 	if runtime.GOOS == "linux" {
-		client := GetDockerClient()
-		net, err := client.NetworkInfo("bridge")
-		if err != nil {
-			return "", err
-		}
-		if len(net.IPAM.Config) > 0 {
-			hostDockerInternal = net.IPAM.Config[0].Gateway
+		if hostGatewayEnabled {
+			hostDockerInternal = "host-gateway"
+		} else {
+			net, err := client.NetworkInfo("bridge")
+			if err != nil {
+				return "", err
+			}
+			if len(net.IPAM.Config) > 0 {
+				hostDockerInternal = net.IPAM.Config[0].Gateway
+			}
 		}
 	}
 	return hostDockerInternal, nil
