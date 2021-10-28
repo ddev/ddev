@@ -28,16 +28,3 @@ host_mailhog_port: "8025"
 # Assign phpMyAdmin port
 host_phpmyadmin_port: 8036
 CONFIGEND
-
-# We need host.docker.internal inside the container,
-# So add it via docker-compose.host-docker-internal.yaml
-hostip=$(awk "\$2 == \"$HOSTNAME\" { print \$1; }" /etc/hosts)
-
-cat <<COMPOSEEND >"${PROJDIR}"/docker-compose.host-docker-internal.yaml
-#ddev-gitpod-generated
-version: "3.6"
-services:
-  web:
-    extra_hosts:
-    - "host.docker.internal:${hostip}"
-COMPOSEEND
