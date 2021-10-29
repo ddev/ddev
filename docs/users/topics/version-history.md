@@ -180,6 +180,6 @@ Take a look at the [v1.19 milestone](https://github.com/drud/ddev/milestone/53) 
 ### v1.0 (released 2018-07-19)
 
 - Improvements of settings file management for Drupal and Backdrop (more below) (#468)
-- Support for fully qualified domain names (FQDNs) (#868) - You can now add to your .ddev/config.yaml `additional_fqdns: ["mysite.example.com"]` and your site will be available at <http://mysite.example.com> after restart. More in [the docs](https://ddev.readthedocs.io/en/latest/users/extend/additional-hostnames/)
+- Support for fully qualified domain names (FQDNs) (#868) - You can now add to your .ddev/config.yaml `additional_fqdns: ["mysite.example.com"]` and your site will be available at `http://mysite.example.com` after restart. More in [the docs](https://ddev.readthedocs.io/en/latest/users/extend/additional-hostnames/)
 - Start, stop, and remove multiple (or all) projects at once (#952). You can `ddev rm project1 project2 project3` or `ddev rm --all`; it works with `ddev stop` as well, and with `ddev start` for running or stopped projects.
 - Much better resilience when a project is running and the host is rebooted or docker is restarted, etc. This used to result in database corruption regularly on nontrivial databases, and seems to be much improved.
