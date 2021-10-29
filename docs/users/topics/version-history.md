@@ -22,7 +22,7 @@ Take a look at the [v1.19 milestone](https://github.com/drud/ddev/milestone/53) 
 - [x] Brand new provider integration system, with user-configurable and extensible techniques, Acquia, Platform.sh, DDEV-Live, Pantheon.io integration
 - [x] Excellent improvements to `ddev snapshot`, including `ddev snapshot restore --latest`, prompted `ddev snapshot restore`, `ddev snapshot --list`, `ddev snapshot --cleanup`, `ddev snapshot --all`
 - [x] `ddev snapshot` restore now shows progress as it goes
-- [x] Built-in support for Blackfire.io profiling
+- [x] Built-in support for both xhprof and Blackfire.io profiling
 - [x] New ddev config --auto option that configures a project with detected defaults
 - [x] Web container environment variables can be set in `config.yaml` or `global_config.yaml` with the `web_environment key`
 - [x] `ddev heidisql` command provides a nice database browser on Windows and Windows WSL2
