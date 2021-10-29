@@ -846,6 +846,8 @@ func GetHostDockerInternalIP() (string, error) {
 
 	// Docker on linux doesn't define host.docker.internal
 	// so we need to go get the bridge IP address
+	// WSL2 (with Docker Desktop) defines host.docker.internal itself.
+	// If people install docker *inside* WSL2, this logic won't be right.
 	if runtime.GOOS == "linux" && !nodeps.IsWSL2() {
 		// Gitpod does not use standard docker networking, so we need to use the official hostname
 		if nodeps.IsGitpod() {
