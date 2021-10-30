@@ -40,7 +40,15 @@ tasks:
 
 vscode:
   extensions:
+    # Go extension
     - golang.go
+
+    # PHP extension
+    - felixfbecker.php-debug
+
+    # Bash extensions
+    - timonwong.shellcheck
+    - rogalmic.bash-debug
 
 github:
   prebuilds:
