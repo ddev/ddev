@@ -1253,7 +1253,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		}
 		// If we have any mysql, limit what we test (but there may not be any)
 		if len(dbVersions["mysql"]) != 0 {
-			dbVersions["mysql"] = map[string]bool{nodeps.MySQL80: true, nodeps.MySQL56: true}
+			dbVersions["mysql"] = map[string]bool{nodeps.MySQL80: true, nodeps.MySQL57: true}
 		}
 	}
 

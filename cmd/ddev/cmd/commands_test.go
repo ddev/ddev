@@ -6,6 +6,7 @@ import (
 	"os"
 	osexec "os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -31,17 +32,20 @@ func TestCustomCommands(t *testing.T) {
 
 	tmpHome := testcommon.CreateTmpDir(t.Name() + "-tempHome")
 	origHome := os.Getenv("HOME")
+	if runtime.GOOS == "windows" {
+		origHome = os.Getenv("USERPROFILE")
+	}
 	origDebug := os.Getenv("DDEV_DEBUG")
 	// Change the homedir temporarily
-	err := os.Setenv("HOME", tmpHome)
-	require.NoError(t, err)
+	_ = os.Setenv("HOME", tmpHome)
+	_ = os.Setenv("USERPROFILE", tmpHome)
 	_ = os.Setenv("DDEV_DEBUG", "")
 
 	origDir, _ := os.Getwd()
 	testCustomCommandsDir := filepath.Join(origDir, "testdata", t.Name())
 
 	site := TestSites[0]
-	err = os.Chdir(site.Dir)
+	err := os.Chdir(site.Dir)
 	require.NoError(t, err)
 
 	app, _ := ddevapp.NewApp("", false)
@@ -56,6 +60,7 @@ func TestCustomCommands(t *testing.T) {
 		err = os.RemoveAll(tmpHome)
 		assert.NoError(err)
 		_ = os.Setenv("HOME", origHome)
+		_ = os.Setenv("USERPROFILE", origHome)
 		_ = os.Setenv("DDEV_DEBUG", origDebug)
 		err = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", "commands"))
 		assert.NoError(err)

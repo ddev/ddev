@@ -1,27 +1,43 @@
-image: drud/ddev-gitpod-base:latest
+image: drud/ddev-gitpod-base:20211028_fix_gitpod_setup
 
 tasks:
   - name: ddev
   - name: simpleproj
     init: |
-      export DDEV_NONINTERACTIVE=true
+      # Compile ddev
       make
-      mkdir -p /workspace/simpleproj && cd /workspace/simpleproj
+
+      # Configure ddev to run on Gitpod
+      export DDEV_NONINTERACTIVE=true
       ddev config global --omit-containers=ddev-router,ddev-ssh-agent,dba
+
+      # Configure ddev Drupal project
+      mkdir -p /workspace/simpleproj && cd /workspace/simpleproj
       ddev config --project-type=drupal9 --docroot=web --create-docroot
-      ddev config global --router-bind-all-interfaces=true
+
       gitpod-setup-ddev.sh /workspace/simpleproj
-      ddev start
+
+      mkcert -install
+
+      # Download ddev's docker images
+      ddev debug download-images
+
+      # Create 'simpleproj' - Umami demo on latest stable Drupal version
+      ddev start -y
       ddev composer create drupal/recommended-project -y && ddev composer require drush/drush
       ddev drush si demo_umami -y --account-pass=admin
-      mkdir -p .tarballs
-      ddev export-db --file=.tarballs/db.sql.gz
+
     command: |
-      cd /workspace/simpleproj
+      # Configure ddev to run on Gitpod
+      export DDEV_NONINTERACTIVE=true
       ddev config global --omit-containers=ddev-router,ddev-ssh-agent,dba
+      gitpod-setup-ddev.sh /workspace/simpleproj
+
+      # Start ddev
+      cd /workspace/simpleproj
       ddev start -y
-      ddev import-db --src=.tarballs/db.sql.gz
       gp await-port 8080 && sleep 1 && gp preview $(gp url 8080)
+
 vscode:
   extensions:
     - golang.go
@@ -46,42 +62,37 @@ github:
     addLabel: true
 
 ports:
+  # Ignore direct-build https port
+  - port: 2222
+    onOpen: ignore
+  - port: 3306
+    onOpen: ignore
   # Used by projector
   - port: 6942
     onOpen: ignore
-    visibility: private
   # Direct-connect ddev-webserver port that is the main port
   - port: 8080
     onOpen: ignore
-    visibility: private
   # Currently un-notified and unsupported mailhog http port
   - port: 8025
     onOpen: ignore
-    visibility: private
   # Currently un-notified and unsupported mailhog https port
   - port: 8026
     onOpen: ignore
-    visibility: private
   # Currently un-notified and unsupported phpmyadmin http port
   - port: 8036
     onOpen: ignore
-    visibility: private
   # Currently un-notified and unsupported phpmyadmin https port
   - port: 8037
     onOpen: ignore
-    visibility: private
   # router http port that we're ignoring.
   - port: 8888
     onOpen: ignore
-    visibility: private
   # router https port that we're ignoring.
   - port: 8889
     onOpen: ignore
-    visibility: private
   # xdebug port
   - port: 9000
     onOpen: ignore
-    visibility: private
   # projector port
   - port: 9999
-    visibility: private

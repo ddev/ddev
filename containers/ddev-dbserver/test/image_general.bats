@@ -27,5 +27,14 @@ function setup {
       fi
     done
   '
+}
 
+@test "verify xtrabackup version equal to mysql-server version" {
+  if [ "${DB_TYPE:-}" != "mysql" ] && [ ${DB_VERSION} != "8.0" ]; then
+    skip "Skipping because not mysql 8.0, so need for the test"
+  fi
+  mysql_version=$(docker exec ${CONTAINER_NAME} bash -c "mysqld --version | awk {'print $3'}")
+  xtrabackup_version=$(docker exec ${CONTAINER_NAME} bash -c "xtrabackup --version 2>&1 | awk '/xtrabackup version/ {print $3}'")
+  [ "${mysql_version}" != "" ]
+  [ "${xtrabackup_version}" \> "${mysql_version}" ]
 }

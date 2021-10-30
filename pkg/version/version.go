@@ -47,7 +47,7 @@ var WebTag = "20211004_joelpittet_ldap" // Note that this can be overridden by m
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20211004_use_http_for_mariadb_5.5"
+var BaseDBTag = "20211017_mysql_arm64"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"
@@ -82,7 +82,7 @@ var DockerComposeVersion = ""
 // MutagenVersion is filled with the version we find for mutagen in use
 var MutagenVersion = ""
 
-const RequiredMutagenVersion = "0.12.0-beta7"
+const RequiredMutagenVersion = "0.12.0"
 
 // GetVersionInfo returns a map containing the version info defined above.
 func GetVersionInfo() map[string]string {
