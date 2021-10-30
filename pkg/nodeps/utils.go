@@ -67,6 +67,11 @@ func IsMacM1() bool {
 	return runtime.GOOS == "darwin" && runtime.GOARCH == "arm64"
 }
 
+// IsGitpod returns true if running on gitpod.io
+func IsGitpod() bool {
+	return runtime.GOOS == "linux" && os.Getenv("GITPOD_WORKSPACE_ID") != ""
+}
+
 // GetWSLDistro returns the WSL2 distro name if on Linux
 func GetWSLDistro() string {
 	wslDistro := ""

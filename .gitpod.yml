@@ -1,4 +1,4 @@
-image: drud/ddev-gitpod-base:20211028_fix_gitpod_setup
+image: drud/ddev-gitpod-base:20211028_new_host_docker_internal_detection
 
 tasks:
   - name: ddev
