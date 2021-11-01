@@ -3,6 +3,9 @@ image: drud/ddev-gitpod-base:20211028_new_host_docker_internal_detection
 experimentalNetwork: true
 tasks:
   - name: ddev
+  - name: check-prebuild-env
+    init: |
+      echo ${SOMETHING}
   - name: simpleproj
     init: |
       # Compile ddev
