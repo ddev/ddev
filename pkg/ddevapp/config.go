@@ -70,6 +70,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.ConfigPath = app.GetConfigPath("config.yaml")
 	app.Type = nodeps.AppTypePHP
 	app.PHPVersion = nodeps.PHPDefault
+	app.ComposerVersion = nodeps.ComposerDefault
 	app.MariaDBVersion = nodeps.MariaDBDefaultVersion
 	app.WebserverType = nodeps.WebserverDefault
 	app.NFSMountEnabled = nodeps.NFSMountEnabledDefault

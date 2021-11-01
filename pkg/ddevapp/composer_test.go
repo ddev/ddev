@@ -18,6 +18,7 @@ import (
 func TestComposer(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
+	origDir, _ := os.Getwd()
 
 	// Use drupal9 only for this test, just need a little composer action
 	site := FullTestSites[8]
@@ -32,14 +33,13 @@ func TestComposer(t *testing.T) {
 		t.Cleanup(func() {
 			err = app.Stop(true, false)
 			assert.NoError(err)
+			err := os.Chdir(origDir)
+			assert.NoError(err)
 			err = os.RemoveAll(app.AppRoot)
 			assert.NoError(err)
 		})
 	}
 
-	testDir, _ := os.Getwd()
-	// nolint: errcheck
-	defer os.Chdir(testDir)
 	_ = os.Chdir(site.Dir)
 
 	testcommon.ClearDockerEnv()
