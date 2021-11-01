@@ -5,9 +5,9 @@ tasks:
   - name: ddev
   - name: demand-setup
     command: |
-      if [ ! -z ${REPO} ]; then
+      if [ ! -z ${DDEV_REPO} ]; then
         mkdir /workspace/repo
-        git clone ${REPO} /workspace/repo --branch=${BRANCH}
+        git clone ${DDEV_REPO} /workspace/repo --branch=${DDEV_BRANCH}
         ddev config global --omit-containers=ddev-router,dba,ddev-ssh-agent
         if [ ! -f .ddev/config.yaml ]; then
           ddev config --auto
