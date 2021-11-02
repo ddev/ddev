@@ -13,10 +13,7 @@ tasks:
         if [ ! -f .ddev/config.yaml ]; then
           ddev config --auto
         fi
-        cat <<-END  >.ddev/config.gitpod.yaml
-          host_http_port: 8080
-          bind-all-interfaces: true
-        END 
+        printf "host_http_port: 8080\nbind-all-interfaces: true\n" >.ddev/config.gitpod.yaml
         ddev stop -a
         ddev start -y
       fi
