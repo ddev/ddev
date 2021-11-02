@@ -7,7 +7,8 @@ tasks:
     command: |
       if [ ! -z ${DDEV_REPO} ]; then
         mkdir /workspace/repo
-        git clone ${DDEV_REPO} /workspace/repo --branch=${DDEV_BRANCH}
+        cd /workspace/repo
+        git clone ${DDEV_REPO} --branch=${DDEV_BRANCH} /workspace/repo 
         ddev config global --omit-containers=ddev-router,dba,ddev-ssh-agent
         if [ ! -f .ddev/config.yaml ]; then
           ddev config --auto
