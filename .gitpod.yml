@@ -13,11 +13,12 @@ tasks:
         if [ ! -f .ddev/config.yaml ]; then
           ddev config --auto
         fi
-        echo <<<END >.ddev/config.gitpod.yaml 
+        cat <<END  >.ddev/config.gitpod.yaml
           host_http_port: 8080
           bind-all-interfaces: true
-        END
-          
+        END 
+        ddev stop -a
+        ddev start -y
       fi
   - name: simpleproj
     init: |
