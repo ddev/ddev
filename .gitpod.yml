@@ -13,7 +13,7 @@ tasks:
         if [ ! -f .ddev/config.yaml ]; then
           ddev config --auto
         fi
-        printf "host_http_port: 8080\nbind-all-interfaces: true\n" >.ddev/config.gitpod.yaml
+        printf "host_webserver_port: 8080\nhost_https_port: 2222\nhost_db_port: 3306\nhost_mailhog_port: 8025\nhost_phpmyadmin_port: 8036\nbind_all_interfaces: true\n" >.ddev/config.gitpod.yaml
         ddev stop -a
         ddev start -y
       fi
@@ -50,7 +50,7 @@ tasks:
 
       # Start ddev
       cd /workspace/simpleproj
-      ddev start -y
+      # ddev start -y
       gp await-port 8080 && sleep 1 && gp preview $(gp url 8080)
 
 vscode:
