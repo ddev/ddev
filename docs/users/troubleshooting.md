@@ -243,7 +243,7 @@ In this case, you can
 
 <a name="windows-hosts-file-limited"></a>
 
-### Windows Hosts File limited to 10 hosts per IP address line
+## Windows Hosts File limited to 10 hosts per IP address line
 
 On Windows only, there is a limit to the number of hosts that can be placed in one line. But since all ddev hosts are typically on the same IP address (typically 127.0.0.1, localhost), they can really add up. As soon as you have more than 10 entries there, your browser won't be able to resolve the addresses beyond the 10th entry.
 
