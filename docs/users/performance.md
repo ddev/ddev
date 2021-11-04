@@ -117,7 +117,7 @@ nfs.server.verbose = 3
 
 ### Introduction
 
-The experimental Mutagen asynchronous update feature introduced in v1.18 offers advanced performance experiences for some projects. Unlike the NFS feature, it requires no pre-configuration or installation. It can also be significantly faster than NFS and massively faster than plain vanilla Docker.
+The experimental Mutagen asynchronous update feature introduced in v1.18 offers advanced performance experiences for some projects. Unlike the NFS feature, it requires no pre-configuration or installation. **You do not need to install mutagen.** It can also be significantly faster than NFS and massively faster than plain vanilla Docker.
 
 Mutagen can offer massive webserver performance speedups on macOS and traditional Windows; it's not useful on Linux or Windows WSL2, as it adds complexity but doesn't add significant performance.
 
@@ -146,7 +146,7 @@ You can run mutagen on all your projects, there's no limit. To configure it glob
 ### Caveats about Mutagen Integration
 
 * **Not for every project**: Mutagen is not the right choice for every project. If filesystem consistency is your highest priority (as opposed to performance) then you'll want to walk carefully. At this point, there haven't been major issues reported, but two-way sync is a very difficult computational problem, and problems may surface. If you have backups (Time Machine!) and code under source control, you should be fine.
-* **Only one mutagen version on machine please**: Multiple mutagen versions can't coexist on one machine, so please stop any running mutagen. On macOS, `killall mutagen`. If you absolutely have to have mutagen installed via homebrew or another technique (for another project) make sure it's the same version as you get with `ddev debug mutagen version`.
+* **Only one mutagen version on machine please**: DDEV installs its own mutagen. **You do not need to install mutagen.** Multiple mutagen versions can't coexist on one machine, so please stop any running mutagen. On macOS, `killall mutagen`. If you absolutely have to have mutagen installed via homebrew or another technique (for another project) make sure it's the same version as you get with `ddev version`.
 * **Best on macOS**: This is mostly for macOS users. WSL2 is already the preferred environment for Windows users, but if you're still using traditional Windows this makes a huge difference. Turning on mutagen doesn't make sense on Linux or WSL2.
 * **Increased disk usage**: Mutagen integration ends up at least doubling the size of your project code disk usage, because the code exists both on your computer and also inside a docker volume. So take care that you have enough overall disk space, and also (on macOS) that you have enough file space set up in Docker Desktop.
 * If your project is likely to change the same file on both the host and inside the container, you may be at risk for conflicts.
