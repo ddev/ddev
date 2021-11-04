@@ -70,6 +70,7 @@ echo y | ddev start || ( \
   ddev logs >logs.txt && \
   printf "Start failed. Please provide this output and the contents of ~/tmp/${PROJECT_NAME}/logs.txt in a new gist at gist.github.com\n" && \
   exit 1 )
+set -x && curl -I ${PROJECT_NAME}.ddev.site && set +x
 echo "Thanks for running the diagnostic. It was successful."
 echo "Please provide the output of this script in a new gist at gist.github.com"
 echo "Running ddev launch in 5 seconds" && sleep 5
