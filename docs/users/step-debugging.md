@@ -65,11 +65,10 @@ Server creation:
 
 #### PhpStorm and Command-Line Debugging
 
-If you need to debug command-line PHP processes, especially code that is outside the docroot (as in /vendor) there's a little extra work to be done:
+If you need to debug command-line PHP processes, especially code that is outside the docroot, the environment variable PHP_IDE_CONFIG is already set inside the web container, so you don't have to do much more.
 
-* If you have used PhpStorm with xdebug you already have a PhpStorm "server" with the same name as your primary URL (see "Languages and Frameworks" -> "PHP" -> "Servers"). The key job of the "server" is to map filesystem locations on the workstation (your computer) to filesystem locations on the remote server (in this case the ddev-webserver container). Often, PhpStorm has automatically set up a mapping that doesn't include the entire project (so the vendor directory is not mapped, for example). So map the top-level directory of your project to /var/www/html in the container, as in this image:
+However, if you have not yet used PhpStorm with xdebug for a regular web request, do that to automatically create the PhpStorm "server" with the same name as your primary URL (see "Languages and Frameworks" -> "PHP" -> "Servers"). The key job of the "server" is to map filesystem locations on the workstation (your computer) to filesystem locations on the remote server (in this case the ddev-webserver container). Often, PhpStorm has automatically set up a mapping that doesn't include the entire project (so the vendor directory is not mapped, for example). So map the top-level directory of your project to /var/www/html in the container, as in this image:
 ![PhpStorm mapping](images/PHPStormServerMapping.png)
-* When debugging a command-line script inside the container, the environment variable PHP_IDE_CONFIG is automatically set for you, so it will be something like `PHP_IDE_CONFIG=serverName=d8composer.ddev.site`.  
 
 <a name="atom"></a>
 
