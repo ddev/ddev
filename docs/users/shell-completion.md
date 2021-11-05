@@ -1,4 +1,4 @@
-## Shell Completion
+## Shell Completion/Autocompletion
 
 Most people like to have shell completion on the command line. In other words, when you're typing a command, you can hit `<TAB>` and the shell will show you what the options are. For example, if you type `ddev <TAB>`, you'll see all the possible commands. `ddev debug <TAB>` will show you the options for the command. And `ddev list -<TAB>` will show you all the flags available for `ddev list`.
 
@@ -10,7 +10,7 @@ Although most people will use techniques like homebrew for installation, a tar a
 
 Note that scripts for the fish shell and Windows PowerShell are also provided, but no instructions are given here for deploying them.
 
-## Bash Completion with Homebrew
+## Bash Completion/Autocompletion with Homebrew
 
 **Bash Completion with Homebrew**: The easiest way to use bash completion on either macOS or Linux is to install with homebrew. `brew install bash-completion`. When you install it though, it will warn you with something like this, which may vary on your system.
 
@@ -26,7 +26,7 @@ Then, if you're installing ddev from homebrew, each new release will automatical
 
 **Bash Completion without Homebrew**: The completion script is exactly the same, it's just that you have to install it yourself. Each system may have a slightly different technique, and you'll need to figure it out. On Debian/Ubuntu, you would use [these instructions](http://crsouza.com/2008/07/28/enabling-bash-autocompletion-on-debian/) to enable bash-completion, and then `sudo mkdir -p /etc/bash_completion.d && sudo cp ddev_bash_completion.sh /etc/bash_completion.d`. This deploys the ddev_bash_completion.sh script where it needs to be. Again, every Linux distro has a different technique, and you may have to figure yours out.
 
-### Zsh Completion
+### Zsh Completion/Autocompletion
 
 **Zsh Completion with Homebrew**: This works exactly the same as bash completion. `brew install zsh-completions`. You'll get instructions something like this:
 
