@@ -148,7 +148,7 @@ You can run mutagen on all your projects, there's no limit. To configure it glob
 * **Not for every project**: Mutagen is not the right choice for every project. If filesystem consistency is your highest priority (as opposed to performance) then you'll want to walk carefully. At this point, there haven't been major issues reported, but two-way sync is a very difficult computational problem, and problems may surface. If you have backups (Time Machine!) and code under source control, you should be fine.
 * **Only one mutagen version on machine please**: DDEV installs its own mutagen. **You do not need to install mutagen.** Multiple mutagen versions can't coexist on one machine, so please stop any running mutagen. On macOS, `killall mutagen`. If you absolutely have to have mutagen installed via homebrew or another technique (for another project) make sure it's the same version as you get with `ddev version`.
 * **Best on macOS**: This is mostly for macOS users. WSL2 is already the preferred environment for Windows users, but if you're still using traditional Windows this makes a huge difference. Turning on mutagen doesn't make sense on Linux or WSL2.
-* **Increased disk usage**: Mutagen integration ends up at least doubling the size of your project code disk usage, because the code exists both on your computer and also inside a docker volume. So take care that you have enough overall disk space, and also (on macOS) that you have enough file space set up in Docker Desktop.
+* **Increased disk usage**: Mutagen integration ends up at least doubling the size of your project code disk usage, because the code exists both on your computer and also inside a docker volume. So take care that you have enough overall disk space, and also (on macOS) that you have enough file space set up in Docker Desktop. If you have a large amount of data like user-generated content that does not need syncing (i.e. "fileadmin" for TYPO3 or "sites/default/files" for Drupal), you can exclude specific directories from getting synced and use regular docker mount for them instead. See [below for Advanced Mutagen configuration options](#mutagen-config).
 * If your project is likely to change the same file on both the host and inside the container, you may be at risk for conflicts.
 * **Massive changes** to either the host or the container are the most likely to introduce issues. This integration has been tested extensively with major changes introduced by `ddev composer` and `ddev composer create` but be aware of this issue. Changing git branches or a script that deletes huge sections of the synced data are related behaviors that should raise caution.
 * **Mutagen is asynchronous**: If you make a massive change on either the host or inside the container, you may not see the results for a little while. In studying situations like this, use `ddev mutagen monitor` to watch what's going on on your computer.
@@ -173,6 +173,8 @@ ddev mutagen sync || true
 
 Yarn actions can also set off massive filesystem changes. The `ddev yarn` command mitigates this problem by doing a mutagen sync after taking the action. So you can use `ddev yarn install` instead of using yarn directly, and it will take care of this for you. Alternately, you can just `ddev mutagen sync` after doing any similar action that has large filesystem consequences.
 
+<a name="mutagen-config"></a>
+
 ### Advanced Mutagen configuration options
 
 The Mutagen project provides extensive configuration options that are [documented on the mutagen.io site](https://mutagen.io/documentation/introduction/configuration).
@@ -186,9 +188,9 @@ Remember if you edit the .ddev/mutagen/mutagen.yml file:
 
 The most likely thing you'll want to do is to exclude a path from mutagen syncing, which you can do in the `paths:` section of the `ignore:` stanza in the `.ddev/mutagen/mutagen.yml`.
 
-It is possible to exclude mutagen syncing from a path and then bind-mount something from the host or a different volume on that path with a `docker-compose.*.yaml` file. So if you have an extremely heavyweight subdirectory in your project (lots of fonts, for example), you could exclude that subdirectory in the .ddev/mutagen/mutagen.yml and then add a docker-compose.exclude.yaml.
+It is possible to exclude mutagen syncing from a path and then bind-mount something from the host or a different volume on that path with a `docker-compose.*.yaml` file. So if you have an extremely heavyweight subdirectory in your project (lots of fonts or user-generated content for example), you could exclude that subdirectory in the .ddev/mutagen/mutagen.yml and then add a docker-compose.exclude.yaml.
 
-For example, if I want the .tarballs subdirectory of the project to be available inside the container, but I don't need mutagen to be syncing it, I can use normal docker bind-mounting for that subdirectory with this procedure:
+For example, if you want the .tarballs subdirectory of the project to be available inside the container, but do not need mutagen to be syncing it, you can use normal docker bind-mounting for that subdirectory with this procedure:
 
 1. Take over the .ddev/mutagen/mutagen.yml by removing the `#ddev-generated` line
 
