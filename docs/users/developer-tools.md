@@ -80,6 +80,17 @@ After your project is started, access the MailHog web interface at its default p
 
 Please note this will not intercept emails if your application is configured to use SMTP or a 3rd-party ESP integration. If you are using SMTP for outgoing mail handling ([Swift Mailer](https://www.drupal.org/project/swiftmailer) or [SMTP](https://www.drupal.org/project/smtp) modules for example), update your application configuration to use `localhost` on port `1025` as the SMTP server locally in order to use MailHog.
 
+For Laravel projects, Mailhog will capture Swift messages via SMTP. Update your `.env` to use Mailhog with the following settings:
+
+```env
+MAIL_MAILER=smtp
+MAIL_HOST=localhost
+MAIL_PORT=1025
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+```
+
 ### Database Management
 
 [phpMyAdmin](https://www.phpmyadmin.net/) is a free software tool to manage MySQL and MariaDB databases from a browser. phpMyAdmin comes installed with ddev. After your project is started, use `ddev launch -p` or just access the phpMyAdmin web interface at its default port, `http://mysite.ddev.site:8036`.
