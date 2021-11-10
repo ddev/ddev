@@ -847,28 +847,32 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 		contents = contents + `
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
 	}
-	// If composerVersion is set,
-	// run composer self-update to the version (or --1 or --2)
-	// defaults to "2" even if ""
-	var composerSelfUpdateArg string
-	switch composerVersion {
-	case "1":
-		composerSelfUpdateArg = "--1"
-	case "":
-		fallthrough
-	case "2":
-		composerSelfUpdateArg = "--2"
-	default:
-		composerSelfUpdateArg = composerVersion
-	}
 
-	// If composerVersion is not set, we don't need to self-update.
-	// Composer v2 is default
-	// Try composer self-update twice because of troubles with composer downloads
-	// breaking testing.
-	contents = contents + fmt.Sprintf(`
-RUN export XDEBUG_MODE=off && (composer self-update %s || composer self-update %s )
+	// For webimage, update to latest composer.
+	if strings.Contains(fullpath, "webimageBuild") {
+		// If composerVersion is set,
+		// run composer self-update to the version (or --1 or --2)
+		// defaults to "2" even if ""
+		var composerSelfUpdateArg string
+		switch composerVersion {
+		case "1":
+			composerSelfUpdateArg = "--1"
+		case "":
+			fallthrough
+		case "2":
+			composerSelfUpdateArg = "--2"
+		default:
+			composerSelfUpdateArg = composerVersion
+		}
+
+		// If composerVersion is not set, we don't need to self-update.
+		// Composer v2 is default
+		// Try composer self-update twice because of troubles with composer downloads
+		// breaking testing.
+		contents = contents + fmt.Sprintf(`
+RUN export XDEBUG_MODE=off && ( composer self-update %s || composer self-update %s )
 `, composerSelfUpdateArg, composerSelfUpdateArg)
+	}
 	return WriteImageDockerfile(fullpath, []byte(contents))
 }
 
