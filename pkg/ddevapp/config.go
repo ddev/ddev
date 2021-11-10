@@ -863,14 +863,12 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg:
 	}
 
 	// If composerVersion is not set, we don't need to self-update.
-	// Currently by default it will be composer v2 because of upstream setting
+	// Composer v2 is default
 	// Try composer self-update twice because of troubles with composer downloads
 	// breaking testing.
-	if composerVersion != "" {
-		contents = contents + fmt.Sprintf(`
+	contents = contents + fmt.Sprintf(`
 RUN export XDEBUG_MODE=off && (composer self-update %s || composer self-update %s )
 `, composerSelfUpdateArg, composerSelfUpdateArg)
-	}
 	return WriteImageDockerfile(fullpath, []byte(contents))
 }
 
