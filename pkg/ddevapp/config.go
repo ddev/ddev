@@ -847,12 +847,15 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 		contents = contents + `
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
 	}
-	// If composerVersion is set, and composer is in the container,
+	// If composerVersion is set,
 	// run composer self-update to the version (or --1 or --2)
+	// defaults to "2" even if ""
 	var composerSelfUpdateArg string
 	switch composerVersion {
 	case "1":
 		composerSelfUpdateArg = "--1"
+	case "":
+		fallthrough
 	case "2":
 		composerSelfUpdateArg = "--2"
 	default:
