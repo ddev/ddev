@@ -65,8 +65,11 @@ nav:
     - 'Platform.sh': 'users/providers/platform.md'
   - 'Topics':
       - 'CMS-Specific Topics': 'users/topics/cms_specific_help.md'
+      - 'Database Management': 'users/topics/database_management.md'
+      - 'How DDEV Works': 'users/topics/how_ddev_works.md'
       - 'PhpStorm Integration': 'users/topics/phpstorm.md'
       - 'Settings Files Management': 'users/topics/settings_files.md'
       - 'Sharing a project with `ddev share` or by exposing a port': 'users/topics/sharing.md'
       - 'Webserver-Specific Topics': 'users/topics/webserver.md'
+      - "What's in the .ddev directory": 'users/topics/whats_in_ddev_dir.md'
       - 'Version History': 'users/topics/version-history.md'

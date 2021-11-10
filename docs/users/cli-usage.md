@@ -60,7 +60,7 @@ DDEV works happily with most any PHP or static HTML project, although it has spe
 
 ### WordPress Quickstart
 
-#### Commandline Setup Example using WP-CLI
+#### Command-line Setup Example using WP-CLI
 
 DDEV has built-in support for [WP-CLI](https://wp-cli.org/), the command-line interface for WordPress.
 
@@ -93,7 +93,6 @@ ddev launch
 
 ddev launch wp-admin/
 ```
-
 
 #### Composer Setup Example Using roots/bedrock
 
