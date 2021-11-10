@@ -60,6 +60,41 @@ DDEV works happily with most any PHP or static HTML project, although it has spe
 
 ### WordPress Quickstart
 
+#### Commandline Setup Example using WP-CLI
+
+DDEV has built-in support for [WP-CLI](https://wp-cli.org/), the command-line interface for WordPress.
+
+```bash
+
+mkdir my-wp-site
+cd my-wp-site/
+
+# create a new DDEV project inside the newly created folder
+# (the primary URL is automatically set to https://<folder>.ddev.site) 
+
+ddev config --project-type=wordpress
+ddev start
+
+# download latest WordPress (via WP-CLI)
+
+ddev exec wp core download
+
+# optional: you can use the following installation command 
+# or finish the installation in the browser (see next step, run ddev launch)
+# (we need to use single quotes to get the primary site URL from .ddev/config.yaml as variable)
+
+ddev exec 'wp core install --url=$DDEV_PRIMARY_URL --title="New WordPress" --admin_user=admin --admin_email=admin@example.com --prompt=admin_password'
+
+# open the website (https://my-wp-site.ddev.site) in your browser:
+
+ddev launch
+
+# open WordPress admin dashboard in your browser:
+
+ddev launch wp-admin/
+```
+
+
 #### Composer Setup Example Using roots/bedrock
 
 ```bash
