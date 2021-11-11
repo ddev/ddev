@@ -666,8 +666,6 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	assert := asrt.New(t)
 
 	phpVersions := nodeps.ValidPHPVersions
-	// TODO: Remove the 8.1 exception when xdebug is available for 8.1
-	delete(phpVersions, "8.1")
 
 	app := &ddevapp.DdevApp{}
 	testcommon.ClearDockerEnv()
@@ -798,8 +796,6 @@ func TestDdevXhprofEnabled(t *testing.T) {
 	assert := asrt.New(t)
 
 	phpVersions := nodeps.ValidPHPVersions
-	// TODO: Remove the 8.1 exception when xdebug is available for 8.1
-	delete(phpVersions, "8.1")
 
 	app := &ddevapp.DdevApp{}
 	testcommon.ClearDockerEnv()

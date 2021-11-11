@@ -15,7 +15,6 @@ func TestCmdXdebug(t *testing.T) {
 	assert := asrt.New(t)
 
 	phpVersions := nodeps.ValidPHPVersions
-	delete(phpVersions, "8.1")
 
 	pwd, _ := os.Getwd()
 	v := TestSites[0]
