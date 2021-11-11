@@ -4,7 +4,7 @@ DDEV provides lots and lots of flexibility for you in managing your databases be
 
 Remember, you can run `ddev [command] --help` for more info on many of the topics below.
 
-**Many database backends**: You can use a vast array of different database types, including MariaDB from 5.5 through 10.6 and MySQL from 5.5 through 8.0 ([docs](../extend/database_types/#database-server-types)). Note that if you want to _change_ database type, especially to downgrade, you need to export your database and then `ddev delete` the project (to kill off the existing database), make the change to a new db type, start again, and import.
+**Many database backends**: You can use a vast array of different database types, including MariaDB from 5.5 through 10.6 and MySQL from 5.5 through 8.0 ([docs](../extend/database_types.md#database-server-types)). Note that if you want to _change_ database type, especially to downgrade, you need to export your database and then `ddev delete` the project (to kill off the existing database), make the change to a new db type, start again, and import.
 
 **Default database**: DDEV creates a default database named `db` and default permissions for the `db` user with password `db`, and it's on the (inside Docker) hostname `ddev-<projectname>-db`.
 

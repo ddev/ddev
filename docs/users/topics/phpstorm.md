@@ -59,15 +59,13 @@ It is possible right now to use PHPStorm with DDEV-Local on WSL2 in at least two
 2. Enabling X11 on Windows and running PHPStorm inside WSL2 as a Linux app. PHPStorm works fine this way, but it’s yet another complexity to manage and requires enabling X11 (easy) on your Windows system.
 We’ll walk through both of these approaches.
 
-I tested these approaches on an 16GB Windows 11 Home machine with Docker 4.1.1 and DDEV-Local v1.18.0 and the Ubuntu 20.04 distro.
-
 (JetBrains is really working to catch up with the slick WSL2 support of vscode. A third option is the [Projector](https://lp.jetbrains.com/projector/) app, which runs PhpStorm on WSL2 (or anywhere else) but displays it in a browser.)
 
 #### Basics
 
 - Start with a working DDEV-Local/WSL2 setup as described in the [docs](../../index.md#installation-or-upgrade-windows-wsl2). Until that’s all working it doesn’t help to go farther.
 
-- If you haven’t used Xdebug with DDEV-Local and PHPStorm before, you’ll want to read the [step debugging instructions](../step-debgging.md).
+- If you haven’t used Xdebug with DDEV-Local and PHPStorm before, you’ll want to read the [step debugging instructions](../step-debugging.md).
 
 - For good performance, you want your project to be in `/home` inside WSL2, which is on the Linux filesystem. Although you can certainly keep your project on the Windows filesystem and access it in WSL2 via /mnt/c, the performance is even worse than native Windows. It does work though, but don't do it. You'll be miserable.
 
