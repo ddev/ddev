@@ -706,10 +706,10 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	for _, v := range phpKeys {
 		app.PHPVersion = v
+		t.Logf("Beginning XDebug checks with XDebug php%s\n", v)
+
 		err = app.Start()
 		require.NoError(t, err)
-
-		t.Logf("Beginning XDebug checks with XDebug php%s\n", v)
 
 		opts := &ddevapp.ExecOpts{
 			Service: "web",
