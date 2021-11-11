@@ -70,6 +70,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.ConfigPath = app.GetConfigPath("config.yaml")
 	app.Type = nodeps.AppTypePHP
 	app.PHPVersion = nodeps.PHPDefault
+	app.ComposerVersion = nodeps.ComposerDefault
 	app.MariaDBVersion = nodeps.MariaDBDefaultVersion
 	app.WebserverType = nodeps.WebserverDefault
 	app.NFSMountEnabled = nodeps.NFSMountEnabledDefault
@@ -846,25 +847,30 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 		contents = contents + `
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
 	}
-	// If composerVersion is set, and composer is in the container,
-	// run composer self-update to the version (or --1 or --2)
-	var composerSelfUpdateArg string
-	switch composerVersion {
-	case "1":
-		composerSelfUpdateArg = "--1"
-	case "2":
-		composerSelfUpdateArg = "--2"
-	default:
-		composerSelfUpdateArg = composerVersion
-	}
 
-	// If composerVersion is not set, we don't need to self-update.
-	// Currently by default it will be composer v1 because of upstream setting
-	// Try composer self-update twice because of troubles with composer downloads
-	// breaking testing.
-	if composerVersion != "" {
+	// For webimage, update to latest composer.
+	if strings.Contains(fullpath, "webimageBuild") {
+		// If composerVersion is set,
+		// run composer self-update to the version (or --1 or --2)
+		// defaults to "2" even if ""
+		var composerSelfUpdateArg string
+		switch composerVersion {
+		case "1":
+			composerSelfUpdateArg = "--1"
+		case "":
+			fallthrough
+		case "2":
+			composerSelfUpdateArg = "--2"
+		default:
+			composerSelfUpdateArg = composerVersion
+		}
+
+		// If composerVersion is not set, we don't need to self-update.
+		// Composer v2 is default
+		// Try composer self-update twice because of troubles with composer downloads
+		// breaking testing.
 		contents = contents + fmt.Sprintf(`
-RUN if command -v composer >/dev/null 2>&1 ; then export XDEBUG_MODE=off && (composer self-update %s || composer self-update %s ) && chmod 777 /usr/local/bin/composer;  fi
+RUN export XDEBUG_MODE=off && ( composer self-update %s || composer self-update %s )
 `, composerSelfUpdateArg, composerSelfUpdateArg)
 	}
 	return WriteImageDockerfile(fullpath, []byte(contents))
