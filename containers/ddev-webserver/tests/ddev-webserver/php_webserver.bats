@@ -100,7 +100,7 @@
     ;;
   8.1)
     # TODO: Update this list as more extensions become available
-    extensions="apcu bcmath bz2 curl gd imagick intl ldap mbstring mysql opcache pgsql readline soap sqlite3 uploadprogress xdebug xhprof xml zip"
+    extensions="apcu bcmath bz2 curl gd imagick intl ldap mbstring mysql opcache pgsql readline soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
   esac
 
   run docker exec -t $CONTAINER_NAME enable_xdebug
