@@ -52,7 +52,7 @@ auth_command:
 
 db_pull_command:
   command: |
-    # set -x   # You can enable bash debugging output by uncommenting
+    set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null
@@ -60,7 +60,7 @@ db_pull_command:
 
 files_pull_command:
   command: |
-    # set -x   # You can enable bash debugging output by uncommenting
+    set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null;
@@ -70,7 +70,7 @@ files_pull_command:
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
 db_push_command:
   command: |
-    # set -x   # You can enable bash debugging output by uncommenting
+    set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null;
@@ -80,7 +80,7 @@ db_push_command:
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
 files_push_command:
   command: |
-    # set -x   # You can enable bash debugging output by uncommenting
+    set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
     ls ${DDEV_FILES_DIR} >/dev/null # This just refreshes stale NFS if possible
     drush rsync -y @self:%files @${project}:%files
