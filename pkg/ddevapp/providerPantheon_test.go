@@ -26,7 +26,7 @@ import (
 
 const pantheonTestSiteID = "ddev-test-site-do-not-delete.dev"
 const pantheonSiteURL = "https://dev-ddev-test-site-do-not-delete.pantheonsite.io/"
-const pantheonSiteExpectation = "DDEV DRUPAL8 TEST SITE"
+const pantheonSiteExpectation = "Pantheon Pull test site"
 
 // TestPantheonPull ensures we can pull from pantheon.
 func TestPantheonPull(t *testing.T) {
@@ -87,8 +87,7 @@ func TestPantheonPull(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	// Run ddev once to create all the files in .ddev, including the example
-	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("%s >/dev/null", DdevBin)})
+	err = PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
 	// Build our pantheon.yaml from the example file
@@ -105,7 +104,10 @@ func TestPantheonPull(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("%s composer require drush/drush >/dev/null 2>&1", DdevBin)})
+	// Make sure we have drush
+	_, _, err = app.Exec(&ExecOpts{
+		Cmd: "composer require drush/drush >/dev/null 2>/dev/null",
+	})
 	require.NoError(t, err)
 
 	err = app.Pull(provider, false, false, false)
@@ -141,8 +143,6 @@ func TestPantheonPush(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
-
-	require.True(t, isPullSiteValid(pantheonSiteURL, pantheonSiteExpectation), "pantheonSiteURL %s isn't working right", pantheonSiteURL)
 
 	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
 	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"TERMINUS_MACHINE_TOKEN=" + token}
@@ -196,8 +196,7 @@ func TestPantheonPush(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	// Run ddev once to create all the files in .ddev, including the example
-	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("%s >/dev/null", DdevBin)})
+	err = PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
 	// Build our pantheon.yaml from the example file
@@ -215,7 +214,9 @@ func TestPantheonPush(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make sure we have drush
-	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("%s composer require drush/drush >/dev/null 2>&1", DdevBin)})
+	_, _, err = app.Exec(&ExecOpts{
+		Cmd: "composer require drush/drush >/dev/null 2>/dev/null",
+	})
 	require.NoError(t, err)
 
 	// For this dummy site, do a pull to populate the database+files to begin with
