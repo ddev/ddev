@@ -34,7 +34,7 @@ func TestAcquiaPull(t *testing.T) {
 	acquiaSecret := ""
 	sshkey := ""
 	if acquiaKey = os.Getenv("DDEV_ACQUIA_API_KEY"); acquiaKey == "" {
-		t.Skipf("No DDEV_ACQUIA_KEY env var has been set. Skipping %v", t.Name())
+		t.Skipf("No DDEV_ACQUIA_API_KEY env var has been set. Skipping %v", t.Name())
 	}
 	if acquiaSecret = os.Getenv("DDEV_ACQUIA_API_SECRET"); acquiaSecret == "" {
 		t.Skipf("No DDEV_ACQUIA_SECRET env var has been set. Skipping %v", t.Name())
