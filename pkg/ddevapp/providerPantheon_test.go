@@ -26,7 +26,7 @@ import (
 const pantheonPullTestSite = "ddev-test-site-do-not-delete.dev"
 const pantheonPushTestSite = "ddev-pantheon-push.dev"
 const pantheonSiteURL = "https://dev-ddev-test-site-do-not-delete.pantheonsite.io/"
-const pantheonSiteExpectation = "Pantheon Pull test site"
+const pantheonSiteExpectation = "DDEV DRUPAL8 TEST SITE"
 
 // TestPantheonPull ensures we can pull from pantheon.
 func TestPantheonPull(t *testing.T) {
