@@ -27,9 +27,10 @@ import (
  */
 
 var platformTestSiteID = "lago3j23xu2w6"
-var platformTestSiteEnvironment = "master"
+var platformPullTestSiteEnvironment = "platform-pull"
+var platformPushTestSiteEnvironment = "platform-push"
 
-const platformSiteURL = "https://master-7rqtwti-lago3j23xu2w6.eu-3.platformsh.site/"
+const platformPullSiteURL = "https://master-7rqtwti-lago3j23xu2w6.eu-3.platformsh.site/"
 const platformSiteExpectation = "Super easy vegetarian pasta"
 
 // TestPlatformPull ensures we can pull backups from platform.sh for a configured environment.
@@ -41,13 +42,16 @@ func TestPlatformPull(t *testing.T) {
 	assert := asrt.New(t)
 	var err error
 
-	require.True(t, isPullSiteValid(platformSiteURL, platformSiteExpectation), "platformSiteURL %s isn't working right", platformSiteURL)
+	require.True(t, isPullSiteValid(platformPullSiteURL, platformSiteExpectation), "platformPullSiteURL %s isn't working right", platformPullSiteURL)
 
 	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
 
 	testDir, _ := os.Getwd()
 
 	siteDir := testcommon.CreateTmpDir(t.Name())
+
+	err = globalconfig.RemoveProjectInfo(t.Name())
+	require.NoError(t, err)
 
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
@@ -79,13 +83,14 @@ func TestPlatformPull(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("%s >/dev/null", DdevBin)})
+	err = PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
 	// Build our platform.yaml from the example file
 	s, err := os.ReadFile(app.GetConfigPath("providers/platform.yaml.example"))
 	require.NoError(t, err)
 	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: "+platformTestSiteID+"\n#project_id:"), 1)
+	x = strings.Replace(x, "environment:", fmt.Sprintf("environment: %s\nenvironment:", platformPullTestSiteEnvironment), 1)
 	err = os.WriteFile(app.GetConfigPath("providers/platform.yaml"), []byte(x), 0666)
 	assert.NoError(err)
 	err = app.WriteConfig()
@@ -99,7 +104,7 @@ func TestPlatformPull(t *testing.T) {
 	assert.NoError(err)
 
 	assert.FileExists(filepath.Join(app.GetUploadDir(), "victoria-sponge-umami.jpg"))
-	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="margaret.hopper@example.com";' | %s mysql -N`, DdevBin)})
+	out, err := exec.RunHostCommand("bash", "-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="margaret.hopper@example.com";' | %s mysql -N`, DdevBin))
 	assert.NoError(err)
 	assert.True(strings.HasPrefix(out, "1\n"))
 }
@@ -114,8 +119,6 @@ func TestPlatformPush(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 
-	require.True(t, isPullSiteValid(platformSiteURL, platformSiteExpectation), "platformSiteURL %s isn't working right", platformSiteURL)
-
 	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
 
 	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"PLATFORMSH_CLI_TOKEN=" + token}
@@ -125,6 +128,9 @@ func TestPlatformPush(t *testing.T) {
 	siteDir := testcommon.CreateTmpDir(t.Name())
 
 	err = os.Chdir(siteDir)
+	require.NoError(t, err)
+
+	err = globalconfig.RemoveProjectInfo(t.Name())
 	require.NoError(t, err)
 
 	app, err := NewApp(siteDir, true)
@@ -153,14 +159,15 @@ func TestPlatformPush(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	// Run ddev once to create all the files in .ddev, including the example
-	_, err = exec.RunCommand("bash", []string{"-c", fmt.Sprintf("%s >/dev/null", DdevBin)})
+	err = PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
 	// Build our platform.yaml from the example file
 	s, err := os.ReadFile(app.GetConfigPath("providers/platform.yaml.example"))
 	require.NoError(t, err)
 	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: %s\n#project_id:", platformTestSiteID), -1)
+	x = strings.Replace(x, " environment:", fmt.Sprintf(" environment: %s\n#environment:", platformPushTestSiteEnvironment), 1)
+
 	err = os.WriteFile(app.GetConfigPath("providers/platform.yaml"), []byte(x), 0666)
 	assert.NoError(err)
 	err = app.WriteConfig()
@@ -169,10 +176,6 @@ func TestPlatformPush(t *testing.T) {
 	provider, err := app.GetProvider("platform")
 	require.NoError(t, err)
 	err = app.Start()
-	require.NoError(t, err)
-
-	// For this dummy site, do a pull to populate the database+files to begin with
-	err = app.Pull(provider, false, false, false)
 	require.NoError(t, err)
 
 	// Create database and files entries that we can verify after push
@@ -191,7 +194,7 @@ func TestPlatformPush(t *testing.T) {
 
 	// Test that the database row was added
 	out, _, err := app.Exec(&ExecOpts{
-		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s";' | platform db:sql --project="%s" --environment="%s"`, t.Name(), tval, platformTestSiteID, platformTestSiteEnvironment),
+		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s";' | platform db:sql --project="%s" --environment="%s"`, t.Name(), tval, platformTestSiteID, platformPushTestSiteEnvironment),
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)
@@ -199,7 +202,7 @@ func TestPlatformPush(t *testing.T) {
 	// Test that the file arrived there (by rsyncing it back)
 	tmpRsyncDir := filepath.Join("/tmp", t.Name()+util.RandString(5))
 	out, _, err = app.Exec(&ExecOpts{
-		Cmd: fmt.Sprintf(`platform mount:download --yes --quiet --project="%s" --environment="%s" --mount=web/sites/default/files --target=%s && cat %s/%s && rm -rf %s`, platformTestSiteID, platformTestSiteEnvironment, tmpRsyncDir, tmpRsyncDir, fName, tmpRsyncDir),
+		Cmd: fmt.Sprintf(`platform mount:download --yes --quiet --project="%s" --environment="%s" --mount=web/sites/default/files --target=%s && cat %s/%s && rm -rf %s`, platformTestSiteID, platformPushTestSiteEnvironment, tmpRsyncDir, tmpRsyncDir, fName, tmpRsyncDir),
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)

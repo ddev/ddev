@@ -114,7 +114,7 @@ func TestPantheonPull(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.FileExists(filepath.Join(app.GetUploadDir(), "2017-07/22-24_tn.jpg"))
-	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="admin@example.com";' | %s mysql -N`, DdevBin)})
+	out, err := exec.RunHostCommand("bash", "-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="admin@example.com";' | %s mysql -N`, DdevBin))
 	assert.NoError(err)
 	assert.True(strings.HasPrefix(out, "1\n"))
 
@@ -262,7 +262,7 @@ func setupSSHKey(t *testing.T, privateKey string, expectScriptDir string) error 
 	require.NoError(t, err)
 	err = os.WriteFile(filepath.Join("sshtest", "id_rsa_test"), []byte(privateKey), 0600)
 	require.NoError(t, err)
-	out, err := exec.RunCommand("expect", []string{filepath.Join(expectScriptDir, "ddevauthssh.expect"), DdevBin, "./sshtest"})
+	out, err := exec.RunHostCommand("expect", filepath.Join(expectScriptDir, "ddevauthssh.expect"), DdevBin, "./sshtest")
 	require.NoError(t, err)
 	require.Contains(t, string(out), "Identity added:")
 	return nil
