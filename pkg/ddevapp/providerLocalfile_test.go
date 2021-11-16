@@ -5,7 +5,6 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
@@ -46,7 +45,7 @@ func TestLocalfilePull(t *testing.T) {
 		_ = os.RemoveAll(siteDir)
 	})
 
-	_, err = exec.Command(DdevBin).CombinedOutput()
+	err = PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
 	// Build our localfile.yaml from the example file
@@ -62,6 +61,7 @@ func TestLocalfilePull(t *testing.T) {
 
 	provider, err := app.GetProvider("localfile")
 	require.NoError(t, err)
+
 	err = app.Start()
 	require.NoError(t, err)
 	err = app.Pull(provider, false, false, false)
