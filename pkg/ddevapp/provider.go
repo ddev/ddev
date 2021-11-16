@@ -72,7 +72,7 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 
 	if provider.AuthCommand.Command != "" {
 		output.UserOut.Print("Authenticating...")
-		err := provider.app.ExecOnHostOrService(provider.AuthCommand.Service, provider.injectedEnvironment()+"; "+provider.AuthCommand.Command)
+		err = provider.app.ExecOnHostOrService(provider.AuthCommand.Service, provider.injectedEnvironment()+"; "+provider.AuthCommand.Command)
 		if err != nil {
 			return err
 		}

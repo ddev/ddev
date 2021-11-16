@@ -55,13 +55,16 @@ files_pull_command:
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
 db_push_command:
   command: |
-    # set -x   # You can enable bash debugging output by uncommenting
+    set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
+    TIMESTAMP=$(date +%y%m%d%H%M%S)
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
-    pushd /var/www/html/.ddev/.downloads >/dev/null;
-    acli remote:drush -n ${project_id} -- sql-drop -y
-    gzip -dc db.sql.gz | acli remote:drush -n ${project_id} -- sql-cli
+    cd /var/www/html/.ddev/.downloads
+    drush rsync -y --alias-path=~/.drush ./db.sql.gz @${project_id}:/tmp/db.${TIMESTAMP}.sql.gz
+    acli remote:ssh -n ${project_id} -- "cd /tmp && gunzip db.${TIMESTAMP}.sql.gz"
+    acli remote:drush -n ${project_id} -- "sql-cli </tmp/db.${TIMESTAMP}.sql"
     acli remote:drush -n ${project_id} -- cr
+    acli remote:ssh -n ${project_id} -- "rm /tmp/db.${TIMESTAMP}.*"
 
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
 files_push_command:

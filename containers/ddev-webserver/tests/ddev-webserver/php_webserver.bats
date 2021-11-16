@@ -14,9 +14,6 @@
 }
 
 @test "enable and disable xdebug for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
-    if [[ ${PHP_VERSION} == "8.1" ]]; then
-      skip "xdebug is not yet available for php8.1"
-    fi
     CURRENT_ARCH=$(../get_arch.sh)
 
     docker exec -t $CONTAINER_NAME enable_xdebug
@@ -32,18 +29,12 @@
 }
 
 @test "verify that xdebug is enabled by default when the image is not run with start.sh php${PHP_VERSION}" {
-  if [[ ${PHP_VERSION} == "8.1" ]]; then
-    skip "xdebug not yet available for php 8.1"
-  fi
   CURRENT_ARCH=$(../get_arch.sh)
 
   docker run  -e "DDEV_PHP_VERSION=${PHP_VERSION}" --rm $DOCKER_IMAGE bash -c 'php --version | grep "with Xdebug"'
 }
 
 @test "enable and disable xhprof for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
-    if [[ ${PHP_VERSION} == "8.1" ]]; then
-      skip "xhprof is not yet available for php8.1"
-    fi
     CURRENT_ARCH=$(../get_arch.sh)
 
     docker exec -t $CONTAINER_NAME enable_xhprof
@@ -55,9 +46,6 @@
 }
 
 @test "verify that xhprof is enabled by default when the image is not run with start.sh php${PHP_VERSION}" {
-    if [[ ${PHP_VERSION} == "8.1" ]]; then
-      skip "xhprof is not yet available for php8.1"
-    fi
   CURRENT_ARCH=$(../get_arch.sh)
 
   docker run  -e "DDEV_PHP_VERSION=${PHP_VERSION}" --rm $DOCKER_IMAGE bash -c 'php --re xhprof | grep -v "\"xhprof\" does not exist"'
@@ -112,7 +100,7 @@
     ;;
   8.1)
     # TODO: Update this list as more extensions become available
-    extensions="bcmath bz2 curl gd intl json ldap mbstring mysqli pgsql readline soap sqlite3 xml zip"
+    extensions="apcu bcmath bz2 curl gd imagick intl ldap mbstring mysql opcache pgsql readline soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
   esac
 
   run docker exec -t $CONTAINER_NAME enable_xdebug

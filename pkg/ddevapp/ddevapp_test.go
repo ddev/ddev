@@ -666,13 +666,11 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	assert := asrt.New(t)
 
 	phpVersions := nodeps.ValidPHPVersions
-	// TODO: Remove the 8.1 exception when xdebug is available for 8.1
-	delete(phpVersions, "8.1")
 
 	app := &ddevapp.DdevApp{}
 	testcommon.ClearDockerEnv()
 
-	// On macOS we want to just listen on localhost port, so as to not trigger
+	// On macOS we want to just listen on localhost port, to not trigger
 	// firewall block. On other systems, just listen on all interfaces
 	listenPort := ":9000"
 	if runtime.GOOS == "darwin" {
@@ -708,10 +706,10 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	for _, v := range phpKeys {
 		app.PHPVersion = v
+		t.Logf("Beginning XDebug checks with XDebug php%s\n", v)
+
 		err = app.Start()
 		require.NoError(t, err)
-
-		t.Logf("Beginning XDebug checks with XDebug php%s\n", v)
 
 		opts := &ddevapp.ExecOpts{
 			Service: "web",
@@ -798,8 +796,6 @@ func TestDdevXhprofEnabled(t *testing.T) {
 	assert := asrt.New(t)
 
 	phpVersions := nodeps.ValidPHPVersions
-	// TODO: Remove the 8.1 exception when xdebug is available for 8.1
-	delete(phpVersions, "8.1")
 
 	app := &ddevapp.DdevApp{}
 	testcommon.ClearDockerEnv()
