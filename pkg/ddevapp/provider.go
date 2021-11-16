@@ -24,7 +24,9 @@ type ProviderInfo struct {
 	EnvironmentVariables map[string]string `yaml:"environment_variables"`
 	AuthCommand          ProviderCommand   `yaml:"auth_command"`
 	DBPullCommand        ProviderCommand   `yaml:"db_pull_command"`
+	DBImportCommand      ProviderCommand   `yaml:"db_import_command"`
 	FilesPullCommand     ProviderCommand   `yaml:"files_pull_command"`
+	FilesImportCommand   ProviderCommand   `yaml:"files_import_command"`
 	CodePullCommand      ProviderCommand   `yaml:"code_pull_command,omitempty"`
 	DBPushCommand        ProviderCommand   `yaml:"db_push_command"`
 	FilesPushCommand     ProviderCommand   `yaml:"files_push_command"`
@@ -101,7 +103,8 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 				return err
 			}
 			output.UserOut.Println("Importing database...")
-			err = app.ImportDB(fileLocation, importPath, true, false, "db")
+			err = provider.importDatabaseBackup(fileLocation, importPath)
+
 			if err != nil {
 				return err
 			}
@@ -335,6 +338,23 @@ func (p *Provider) getDatabaseBackup() (filename string, error error) {
 		return "", fmt.Errorf("Failed to exec %s on %s: %v", p.DBPullCommand.Command, s, err)
 	}
 	return filepath.Join(p.getDownloadDir(), "db.sql.gz"), nil
+}
+
+// importDatabaseBackup will import a downloaded database
+// If a custom importer is provided, that will be used, otherwise
+// the default is app.
+func (p *Provider) importDatabaseBackup(fileLocation string, importPath string) error {
+	var err error
+	if p.DBImportCommand.Command == "" {
+		err = p.app.ImportDB(fileLocation, importPath, true, false, "db")
+	} else {
+		s := p.DBImportCommand.Service
+		if s == "" {
+			s = "web"
+		}
+		err = p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.DBImportCommand.Command)
+	}
+	return err
 }
 
 // Write the generic provider configuration to a specified location on disk.
