@@ -10,11 +10,7 @@
 # 3. Change the copy commands as needed.
 # 4. Use `ddev pull localfile` to pull the project database and files.
 
-# In this example, db_pull_command doesn't do anything
-db_pull_command:
-  command: |
-    set -eu -o pipefail
-  service: host
+# In this example, db_pull_command is not used
 
 # Here db_import_command imports directly from the source location
 # instead of looking in .ddev/.downloads/files
@@ -24,11 +20,7 @@ db_import_command:
     gzip -dc ~/Dropbox/db.sql.gz | ddev mysql
   service: host
 
-files_pull_command:
-  command: |
-    set -eu -o pipefail
-    echo "Just trying out files_pull_command"
-  service: host
+# In this example, files_pull_command is not used
 
 # files_import_command is an example of a custom importer
 # that directly untars the files into their appropriate destination

@@ -93,7 +93,9 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 			return err
 		}
 
-		output.UserOut.Printf("Database downloaded to: %s", fileLocation)
+		if fileLocation != "" {
+			output.UserOut.Printf("Database downloaded to: %s", fileLocation)
+		}
 
 		if skipImportArg {
 			output.UserOut.Println("Skipping database import.")
@@ -125,7 +127,9 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 			return err
 		}
 
-		output.UserOut.Printf("Files downloaded to: %s", fileLocation)
+		if fileLocation != "" {
+			output.UserOut.Printf("Files downloaded to: %s", fileLocation)
+		}
 
 		if skipImportArg {
 			output.UserOut.Println("Skipping files import.")
@@ -265,7 +269,7 @@ func (p *Provider) UploadFiles() error {
 	_ = os.RemoveAll(p.getDownloadDir())
 	_ = os.Mkdir(p.getDownloadDir(), 0755)
 
-	if p.FilesPullCommand.Command == "" {
+	if p.FilesPushCommand.Command == "" {
 		util.Warning("No FilesPushCommand is defined for provider %s", p.ProviderType)
 		return nil
 	}
@@ -301,6 +305,10 @@ func (p *Provider) getFilesBackup() (filename string, error error) {
 	_ = os.RemoveAll(destDir)
 	_ = os.MkdirAll(destDir, 0755)
 
+	if p.FilesPullCommand.Command == "" {
+		util.Warning("No FilesPullCommand is defined for provider %s", p.ProviderType)
+		return "", nil
+	}
 	s := p.FilesPullCommand.Service
 	if s == "" {
 		s = "web"
