@@ -26,30 +26,11 @@ db_pull_command:
   command: |
     set -eu -o pipefail
     set -x
-    cp ${target}/db.sql.gz .ddev/.downloads
+    ln -s ${target}/db.sql.gz .ddev/.downloads/db.sql.gz
 
 files_pull_command:
   service: host
   command: |
     set -eu -o pipefail
     set -x
-    tar -zxf ${target}/files.tgz -C .ddev/.downloads/files
-
-
-
-# push is a dangerous command. If not absolutely needed it's better to delete these lines.
-db_push_command:
-  command: |
-    set -x   # You can enable bash debugging output by uncommenting
-    set -eu -o pipefail
-    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
-    pushd /var/www/html/.ddev/.downloads >/dev/null;
-    gzip -dc db.sql.gz | platform db:sql --project="${project_id}" --environment="${environment}"
-
-# push is a dangerous command. If not absolutely needed it's better to delete these lines.
-files_push_command:
-  command: |
-    set -x   # You can enable bash debugging output by uncommenting
-    set -eu -o pipefail
-    ls "${DDEV_FILES_DIR}" >/dev/null # This just refreshes stale NFS if possible
-    platform mount:upload --yes --quiet --project="${project_id}" --environment="${environment}" --source="${DDEV_FILES_DIR}" --mount=web/sites/default/files
+    rmdir .ddev/.downloads/files && ln -s ${target}/files .ddev/.downloads/files
