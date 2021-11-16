@@ -33,4 +33,4 @@ files_pull_command:
   command: |
     set -eu -o pipefail
     set -x
-    rmdir .ddev/.downloads/files && ln -s ${target}/files .ddev/.downloads/files
+    rm -rf .ddev/.downloads/files && ln -s ${target}/files .ddev/.downloads/files
