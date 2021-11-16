@@ -20,12 +20,14 @@ db_pull_command:
 # instead of looking in .ddev/.downloads/files
 db_import_command:
   command: |
+    set -eu -o pipefail
     gzip -dc ~/Dropbox/db.sql.gz | ddev mysql
   service: host
 
 files_pull_command:
   command: |
     set -eu -o pipefail
+    echo "Just trying out files_pull_command"
   service: host
 
 # files_import_command is an example of a custom importer

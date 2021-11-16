@@ -405,9 +405,12 @@ func (p *Provider) Validate() error {
 // injectedEnvironment() returns a string with environment variables that should be injected
 // before a command.
 func (p *Provider) injectedEnvironment() string {
-	s := "export "
-	for k, v := range p.EnvironmentVariables {
-		s = s + fmt.Sprintf(" %s=%s ", k, v)
+	s := "true"
+	if len(p.EnvironmentVariables) > 0 {
+		s = "export "
+		for k, v := range p.EnvironmentVariables {
+			s = s + fmt.Sprintf(" %s=%s ", k, v)
+		}
 	}
 	return s
 }
