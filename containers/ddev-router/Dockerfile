@@ -1,4 +1,4 @@
-FROM nginx:stable
+FROM nginx:1.20.1
 
 ENV MKCERT_VERSION=v1.4.6
 
@@ -13,19 +13,12 @@ SHELL ["/bin/bash", "-c"]
 # Get forego, which may be either a binary download (jwilder) or
 # a tarball (from https://github.com/ddollar/forego download)
 RUN set -eu -o pipefail && \
-    FOREGO_URL="https://github.com/jwilder/forego/releases/download/v0.16.1/forego" && \
-    if [[ "${TARGETARCH}" = "arm"* ]]; then \
-        FOREGO_URL="https://bin.equinox.io/c/ekMN3bCZFUn/forego-stable-linux-${TARGETARCH}.tgz"; \
-    fi && \
-    cd /tmp && curl -sSL -O "${FOREGO_URL}"  && \
-    if [ ${FOREGO_URL##*.} = "tgz" ]; then \
-        tar -zxf ${FOREGO_URL##*/} ; \
-    fi && \
-    mv forego /usr/local/bin && chmod +x /usr/local/bin/forego
+    FOREGO_URL="https://github.com/drud/forego/releases/download/v0.16.1/forego-${TARGETARCH}" && \
+    cd /tmp && curl -sSL -o /usr/local/bin/forego "${FOREGO_URL}"  && chmod +x /usr/local/bin/forego
 
 RUN apt-get -qq update && \
     apt-get -qq install --no-install-recommends --no-install-suggests -y \
-        ca-certificates certbot curl iputils-ping less python-certbot-nginx procps telnet vim wget && \
+        ca-certificates certbot curl iputils-ping less python3-certbot-nginx procps telnet vim wget && \
     apt-get autoremove -y && \
     apt-get clean -y && \
 	rm -rf /var/lib/apt/lists/*
