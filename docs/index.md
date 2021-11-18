@@ -77,7 +77,7 @@ We'll walk through these in more detail. You may prefer other techniques of inst
 12. Optional: If you prefer to use the *traditional Windows* ddev instead of working inside WSL2, install it with `choco install -y ddev`. The Windows ddev works fine with the WSL2-based Docker engine. However, the WSL2 ddev setup is vastly preferable and at least 10 times as fast. Support for the traditional Windows approach will eventually be dropped.
 13. Open the WSL2 terminal, for example `Ubuntu` from the Windows start menu.
 14. Install Homebrew: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` (See [brew.sh](https://brew.sh/).)
-15. Add brew to your path as prompted:, `echo 'eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)' >> ~/.profile && source ~/.profile`
+15. Add brew to your path as prompted:, `echo 'eval $(~/.linuxbrew/bin/brew shellenv)' >> ~/.profile && source ~/.profile`
 16. `brew install gcc && brew install drud/ddev/ddev`
 17. `sudo apt-get update && sudo apt-get install -y xdg-utils` to install the xdg-utils package that allows `ddev launch` to work.
 
