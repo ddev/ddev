@@ -16,6 +16,7 @@ env:
   BUILDKIT_PROGRESS: plain
   DOCKER_CLI_EXPERIMENTAL: enabled
   NO_LOAD: true
+  DDEV_IGNORE_EXPIRING_KEYS: ${{ secrets.DDEV_IGNORE_EXPIRING_KEYS }}
 
 jobs:
 
