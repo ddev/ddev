@@ -7,7 +7,7 @@ load functions.sh
 function setup {
   basic_setup
 
-  echo "# Starting container using: docker run --rm -u "$MOUNTUID:$MOUNTGID" --rm -v $VOLUME:/var/lib/mysql --mount "type=bind,src=$PWD/test/testdata,target=/mnt/ddev_config" --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE"
+  echo "# Starting container using: docker run --rm -u "$MOUNTUID:$MOUNTGID" --rm -v $VOLUME:/var/lib/mysql --mount "type=bind,src=$PWD/test/testdata,target=/mnt/ddev_config" --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE" >&3
   docker run --rm -u "$MOUNTUID:$MOUNTGID" --rm -v $VOLUME:/var/lib/mysql --mount "type=bind,src=$PWD/test/testdata,target=/mnt/ddev_config" --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE
   containercheck
 }
@@ -17,7 +17,8 @@ function setup {
   if [ "${DDEV_IGNORE_EXPIRING_KEYS:-}" = "true" ]; then
     skip "Skipping because DDEV_IGNORE_EXPIRING_KEYS is set"
   fi
-  docker exec -e "max=$DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION" ${CONTAINER_NAME} bash -c '
+  echo "# DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION='${DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION}' DDEV_IGNORE_EXPIRING_KEYS='${DDEV_IGNORE_EXPIRING_KEYS}'" >&3
+  docker exec -e "max=${DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION}" ${CONTAINER_NAME} bash -c '
     dates=$(apt-key list 2>/dev/null | awk "/\[expires/ { gsub(/[\[\]]/, \"\"); print \$6;}")
     for item in ${dates}; do
       today=$(date -I)
