@@ -8,7 +8,7 @@ load functions.sh
 function setup {
   basic_setup
 
-  echo "# Starting container using: docker run --rm -u "$MOUNTUID:$MOUNTGID" -v $VOLUME:/var/lib/mysql --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE"
+  echo "# Starting container using: docker run --rm -u "$MOUNTUID:$MOUNTGID" -v $VOLUME:/var/lib/mysql --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE" >&3
   docker run -u "$MOUNTUID:$MOUNTGID" -v $VOLUME:/var/lib/mysql:nocopy --name=$CONTAINER_NAME -p $HOSTPORT:3306 -d $IMAGE
   containercheck
 }
