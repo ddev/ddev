@@ -68,7 +68,7 @@ var (
 	// dbImageArg allows a user to set the project's db server container image
 	dbImageArg string
 
-	// dbImageDefaultArg allows a user to uset the specific db server container image
+	// dbImageDefaultArg allows a user to use the specific db server container image
 	dbImageDefaultArg bool
 
 	// dbaImageArg allows a user to set the project's dba container image

@@ -28,7 +28,7 @@ type Flag struct {
 	Type        typeValue        // type, defaults to bool
 	DefValue    defValueValue    // default value (as text); for usage message
 	NoOptDefVal noOptDefValValue // default value (as text); if the flag is on the command line without any options
-	Annotations annotationsValue // used by cobra.Command bash autocomple code
+	Annotations annotationsValue // used by cobra.Command bash autocomplete code
 }
 
 // FlagsDefinition is an array of Flag holding all defined flags of a command.
@@ -287,7 +287,7 @@ func (f *Flags) Init(commandName, script string) {
 func (f *Flags) validateFlags(flags *FlagsDefinition) error {
 	var errors string
 
-	// Temporay vars to precheck for duplicated flags. It's still possible
+	// Temporary vars to precheck for duplicated flags. It's still possible
 	// other commands will introduce the same flags which is tested
 	// afterwards by cobra.
 	long := map[nameValue]bool{"help": true}

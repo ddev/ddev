@@ -25,7 +25,7 @@ var HostNameCmd = &cobra.Command{
 	Short:   "Manage your hostfile entries.",
 	Long: `Manage your hostfile entries. Managing host names has security and usability
 implications and requires elevated privileges. You may be asked for a password
-to allow ddev to modify your hosts file. If you are connected to the internet and using the domain ddev.site this is generally not necessary, becauses the hosts file never gets manipulated.`,
+to allow ddev to modify your hosts file. If you are connected to the internet and using the domain ddev.site this is generally not necessary, because the hosts file never gets manipulated.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		hosts, err := goodhosts.NewHosts()
 		if err != nil {
