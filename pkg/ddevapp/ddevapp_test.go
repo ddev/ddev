@@ -191,6 +191,19 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/Main-product-with-properties/SWDEMO10007.1", Expect: "Main product with properties"},
 			FilesImageURI:                 "/media/2f/b0/e2/1603218072/hemd_600x600.jpg",
 		},
+		{
+			Name:                          "TestPkgPHP",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-6.38.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-6.38/",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6.38_db.tar.gz",
+			FullSiteTarballURL:            "",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6_files.tar.gz",
+			Docroot:                       "",
+			Type:                          nodeps.AppTypeDrupal6,
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/CHANGELOG.txt", Expect: "Drupal 6.38, 2016-02-24"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/2", Expect: "This is a story. The story is somewhat shaky"},
+			FilesImageURI:                 "/sites/default/files/garland_logo.jpg",
+		},
 	}
 
 	FullTestSites = TestSites
@@ -1473,6 +1486,12 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
+		// TestPkgPHP uses mostly stuff from Drupal6, but we'll set the type to php
+		if site.Name == "TestPkgPHP" {
+			app.Type = "php"
+			app.UploadDir = "sites/default/files"
+		}
+
 		// Get files before start, as syncing can start immediately.
 		if site.FilesTarballURL != "" {
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
@@ -1493,9 +1512,9 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		assert.NotContains(out, "Unable to create settings file")
 
 		// Validate PHPMyAdmin is working and database named db is present
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8036/index.php?route=/database/structure&server=1&db=db", "No tables found in database")
+		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL()+":8037/index.php?route=/database/structure&server=1&db=db", "Database:          db")
 		// Validate MailHog is working and "connected"
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8025/#", "Connected")
+		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL()+":8026/#", "Connected")
 
 		settingsLocation, err := app.DetermineSettingsPathLocation()
 		assert.NoError(err)
@@ -1546,6 +1565,17 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		// Make sure we can do a simple hit against the host-mount of web container.
 		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetWebContainerDirectHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 
+		// Project type 'php' should fail ImportFiles if no upload_dir is provided
+		if app.Type == "php" {
+			app.UploadDir = ""
+			err = app.WriteConfig()
+			assert.NoError(err)
+			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
+			require.NoError(t, err)
+			err = app.ImportFiles(tarballPath, "")
+			assert.Error(err)
+			assert.Contains(err.Error(), "No upload_dir is set")
+		}
 		// We don't want all the projects running at once.
 		err = app.Stop(true, false)
 		assert.NoError(err)
