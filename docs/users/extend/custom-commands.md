@@ -60,7 +60,7 @@ There are many examples of [global](https://github.com/drud/ddev/tree/master/pkg
 
 A number of environment variables are provided to the script. These are generally supported, but please avoid using undocumented environment variables. Useful variables for host scripts are:
 
-* DDEV_APPROOT: file system location of the project on the host)
+* DDEV_APPROOT: file system location of the project on the host
 * DDEV_DOCROOT: Relative path from approot to docroot
 * DDEV_HOSTNAME: Comma-separated list of FQDN hostnames
 * DDEV_HOST_DB_PORT: Localhost port of the database server
@@ -154,7 +154,7 @@ The following fields can be used for a flag definition:
 * `Type`: possible values are `bool`, `string`, `int`, `uint` (defaults to bool)
 * `DefValue`: default value for usage message
 * `NoOptDefVal`: default value, if the flag is on the command line without any options
-* `Annotations`: used by cobra.Command bash autocomple code see <https://github.com/spf13/cobra/blob/master/bash_completions.md>
+* `Annotations`: used by cobra.Command bash autocomplete code see <https://github.com/spf13/cobra/blob/master/bash_completions.md>
 
 #### ProjectTypes
 
@@ -183,5 +183,5 @@ Example: `## HostBinaryExists: /Applications/Sequel ace.app`
 
 ### Known Windows OS issues
 
-* **Line Endings**: If you are editing a custom command which will run in a container, it must have LF line endings (not traditional Windows CRLF line endings). Remember that a custom command in a container is a script that must execute in a Linux environmet.
+* **Line Endings**: If you are editing a custom command which will run in a container, it must have LF line endings (not traditional Windows CRLF line endings). Remember that a custom command in a container is a script that must execute in a Linux environment.
 * If ddev can't find "bash" to execute it, then the commands can't be used. If you are running inside git-bash in most any terminal, this shouldn't be an issue, and ddev should be able to find git-bash if it's in "C:\Program Files\Git\bin" as well. But if neither of those is true, add the directory of bash.exe to your PATH environment variable.

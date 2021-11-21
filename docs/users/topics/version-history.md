@@ -118,7 +118,7 @@ Take a look at the [v1.19 milestone](https://github.com/drud/ddev/milestone/53) 
 
 ### v1.6 (released 2019-02-11)
 
-- ddev now supports) NFS mounting into the container on all platforms.  This provides nearly the speed increase of the experimental webcache feature, but with far greater reliability, and it works on all platforms. In addition, it seems to solve perpetual symlink problems that windows users had. It does require some configuration on the host side, so [please read the docs](https://ddev.readthedocs.io/en/latest/users/performance/#using-nfs-to-mount-the-project-into-the-container)
+- ddev now supports NFS mounting into the container on all platforms.  This provides nearly the speed increase of the experimental webcache feature, but with far greater reliability, and it works on all platforms. In addition, it seems to solve perpetual symlink problems that Windows users had. It does require some configuration on the host side, so [please read the docs](https://ddev.readthedocs.io/en/latest/users/performance/#using-nfs-to-mount-the-project-into-the-container)
 - Chocolatey installs on Windows: [Chocolatey](https://chocolatey.org/) is a leading package manager for Windows, and it makes so many packages so easy to install. On our Windows testbots we use choco to install all the key items that a testbot needs with `choco install -y git mysql-cli golang make docker-desktop nssm GoogleChrome zip jq composer cmder netcat ddev`, note that ddev is in there now :).
 - The ddev-dbserver container has been updated so that triggers work, for those of you who use triggers.
 - Root/sudo usage of ddev is prevented  (#1407). We found that people kept getting themselves in trouble by trying to use sudo and then they would have files that could not be accessed by an ordinary user.
@@ -172,7 +172,7 @@ Take a look at the [v1.19 milestone](https://github.com/drud/ddev/milestone/53) 
 - The project database is now stored in a docker volume instead of in the `~/.ddev/<project>/mysql` directory.  This means that on your first `ddev start` it will be migrated from the ~/.ddev file into a docker volume. The old `~/.ddev/<project>/mysql` will be renamed to `~/.ddev/<project>/mysql.bak`.
 - Database snapshotting is now available. At any time you can create a snapshot (in mariabackup format) using `ddev snapshot` or `ddev snapshot --name <somename>`. That db snapshot can easily be restored later with `ddev restore-snapshot <somename>`. These are stored in the project's .ddev/db_snapshots directory.
 - `ddev remove --remove-data` now creates a snapshot by default.
-- For Drupal users, drush now works on the host for many commands (after you've done a `ddev config` and `ddev start`. So, for example, you can run `drush sql-cli` or `drush cr` on the *host* when you need it, rather than using `ddev exec` or `ddev ssh` to do it in the web container. This assumes you have drush available on the host of course.
+- For Drupal users, drush now works on the host for many commands (after you've done a `ddev config` and `ddev start`). So, for example, you can run `drush sql-cli` or `drush cr` on the *host* when you need it, rather than using `ddev exec` or `ddev ssh` to do it in the web container. This assumes you have drush available on the host of course.
 - `ddev --import-files` now works on TYPO3 and Backdrop.
 - ddev now has integration with the Drud hosting service, so `ddev config drud-s3` works for users of the Drud hosting service.
 - Php-redis was added to web container.
