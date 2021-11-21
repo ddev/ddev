@@ -37,7 +37,7 @@ For macOS (both amd64 and arm64) and Linux users, we recommend installing and up
 brew install drud/ddev/ddev
 ```
 
-If you would like more frequent "edge" releases then use `brew install drud/ddev-edge/ddev` instead.)
+If you would like more frequent "edge" releases then use `brew install drud/ddev-edge/ddev` instead.
 
 As a one-time initialization, run `mkcert -install`. Linux users may have to take additional actions as discussed below in "Linux `mkcert -install` additional instructions".
 
@@ -117,7 +117,7 @@ You can also easily perform the installation or upgrade manually if preferred. D
 * Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for your architecture.
 * Move ddev to /usr/local/bin: `mv ddev /usr/local/bin/` (may require sudo), or another directory in your `$PATH` as preferred.
 * Run `ddev` to test your installation. You should see DDEV's command usage output.
-* As a one-time initialization, run `mkcert -install`, which may require your sudo password. Linux users may have to take additional actions as discussed below in "Linux `mkcert -install` additional instructions. If you don't have mkcert installed, you can install it from <https://github.com/FiloSottile/mkcert/releases>. Download the version for the correct architecture and `sudo mv <downloaded_file> /usr/local/bin/mkcert && sudo chmod +x /usr/local/bin/mkcert`.
+* As a one-time initialization, run `mkcert -install`, which may require your sudo password. Linux users may have to take additional actions as discussed below in "Linux `mkcert -install` additional instructions". If you don't have mkcert installed, you can install it from <https://github.com/FiloSottile/mkcert/releases>. Download the version for the correct architecture and `sudo mv <downloaded_file> /usr/local/bin/mkcert && sudo chmod +x /usr/local/bin/mkcert`.
 
 ### Installation via package managers - Linux
 

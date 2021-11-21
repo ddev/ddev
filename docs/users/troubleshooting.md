@@ -52,7 +52,7 @@ To resolve this conflict, choose one of two methods:
 
 To configure a project to use non-conflicting ports, edit the project's .ddev/config.yaml to add entries like `router_http_port: 8000` and `router_https_port: 8443` depending on your needs. Then use `ddev start` again.
 
-For example, if there was a port conflict with a local apache http on port 80 add the following to the to the config.yaml file.
+For example, if there was a port conflict with a local apache http on port 80 add the following to the config.yaml file.
 
 ```yaml
 router_http_port: 8080
@@ -151,7 +151,7 @@ If you get a 404 with "No input file specified" (nginx) or a 403 with "Forbidden
 
 * Misconfigured docroot: If the docroot isn't where the webserver thinks it is, then the webserver won't find the index.php. Look at your .ddev/config.yaml to verify it has a docroot that will lead to the index.php. It should be a relative path from the project root to the directory where the index.php is.
 * Missing index.php: There may not be an index.php or index.html in your project.
-* Docker not mounting your code: If you `ddev ssh` and `ls` and there's nothing there, Docker may not be mounting your code. See [docker installation](./docker_installation.md) for testing docker install. (Is Docker, the drive or directory where your project is must be shared.
+* Docker not mounting your code: If you `ddev ssh` and `ls` and there's nothing there, Docker may not be mounting your code. See [docker installation](./docker_installation.md) for testing docker install. Docker, the drive or directory where your project is must be shared.
 
 ## `ddev start` fails and logs contain "failed (28: No space left on device)" - Docker File Space
 
@@ -263,7 +263,7 @@ Symbolic links are widely used but have specific limitations in many environment
 * **Crossing mount boundaries**: Symlinks may not generally cross between network mounts. In other words, if you have a relative symlink in the root of your project directory on the host that points to `../somefile.txt`,  that symlink will not be valid inside the container where `../` is a completely different filesystem (and is not mounted typically).
 * **Symlinks to absolute paths**: If you have an absolute symlink to something like `/Users/xxx/somefile.txt` on the host, it will not be resolvable inside the container because `/Users` is not mounted there. Note that some tools, especially on Magento 2, may create symlinks to rooted paths, with targets like `/var/www/html/path/to/something`. These basically can't make it to the host, so may create errors.
 * **Windows restrictions on symlinks**: Inside the Docker container on Windows you may not be able to even create a symlink that goes outside the container.
-* **Mutagen restrictions on Windows symlinks**: On macOS and Linux (including WSL2) the default `.ddev/mutagen/mutagen.yml` chooses the `posix-raw` type of symlink handling (See [mutagen docs](https://mutagen.io/documentation/synchronization/symbolic-links). This basically means that any symlink created will try to sync, regardless of whether it's valid in the other environment. However, Mutagen does not support posix-raw on traditional Windows, so ddev uses the `portable` symlink mode. So on Windows with Mutagen... symlinks have to be strictly limited to relative links that are inside the mutagen section of the project.
+* **Mutagen restrictions on Windows symlinks**: On macOS and Linux (including WSL2) the default `.ddev/mutagen/mutagen.yml` chooses the `posix-raw` type of symlink handling (See [mutagen docs](https://mutagen.io/documentation/synchronization/symbolic-links)). This basically means that any symlink created will try to sync, regardless of whether it's valid in the other environment. However, Mutagen does not support posix-raw on traditional Windows, so ddev uses the `portable` symlink mode. So on Windows with Mutagen... symlinks have to be strictly limited to relative links that are inside the mutagen section of the project.
 
 ## Other things to try
   
