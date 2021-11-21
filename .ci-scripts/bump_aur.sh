@@ -59,7 +59,7 @@ sha256sums=("${LINUX_HASH}")
 
 package() {
 	install -D -m 0755 ddev "\$pkgdir/usr/bin/ddev"
-	install -D -m 0755 ddev_bash_completion.sh "\$pkgdir/usr/share/bash-completion/completions/ddev"
+	install -D -m 0644 ddev_bash_completion.sh "\$pkgdir/usr/share/bash-completion/completions/ddev"
 }
 END
 
