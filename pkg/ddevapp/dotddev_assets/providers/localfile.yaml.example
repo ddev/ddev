@@ -27,5 +27,6 @@ db_import_command:
 files_import_command:
   command: |
     set -eu -o pipefail
+    mkdir -p web/sites/default/files
     tar -zxf ~/Dropbox/files.tar.gz -C web/sites/default/files
   service: host

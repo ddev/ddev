@@ -30,6 +30,7 @@ func TestLocalfilePull(t *testing.T) {
 	assert.NoError(err)
 	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal9
+	app.Docroot = "web"
 	err = app.Stop(true, false)
 	require.NoError(t, err)
 	err = app.WriteConfig()
