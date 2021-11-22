@@ -17,7 +17,7 @@
 db_import_command:
   command: |
     set -eu -o pipefail
-    gzip -dc ~/Dropbox/db.sql.gz | ddev mysql
+    gzip -dc ~/Dropbox/db.sql.gz | ddev mysql db
   service: host
 
 # In this example, files_pull_command is not used
@@ -27,5 +27,5 @@ db_import_command:
 files_import_command:
   command: |
     set -eu -o pipefail
-    tar -zxf ~/Dropbox/files.tar.gz -C sites/default/files
+    tar -zxf ~/Dropbox/files.tar.gz -C web/sites/default/files
   service: host
