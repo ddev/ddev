@@ -60,6 +60,8 @@ sha256sums=("${LINUX_HASH}")
 package() {
 	install -D -m 0755 ddev "\$pkgdir/usr/bin/ddev"
 	install -D -m 0644 ddev_bash_completion.sh "\$pkgdir/usr/share/bash-completion/completions/ddev"
+	install -D -m 0644 ddev_zsh_completion.sh "\$pkgdir/usr/share/zsh/site-functions/_ddev"
+	install -D -m 0644 ddev_fish_completion.sh "\$pkgdir/usr/share/fish/vendor_completions.d/ddev.fish"
 }
 END
 
