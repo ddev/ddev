@@ -53,3 +53,4 @@ docker rmi -f $(docker images | awk '/drud.*-built/ {print $3}' ) >/dev/null || 
 # Make sure there aren't any dangling NFS volumes
 if docker volume ls | grep '[Tt]est.*_nfsmount'; then
   docker volume rm -f $(docker volume ls | awk '/[Tt]est.*_nfsmount/ { print $2; }') || true
+fi
