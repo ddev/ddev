@@ -83,7 +83,7 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 	if skipDbArg {
 		output.UserOut.Println("Skipping database pull.")
 	} else {
-		output.UserOut.Println("Downloading database...")
+		output.UserOut.Println("Obtaining database...")
 		fileLocation, importPath, err := provider.GetBackup("database")
 		if err != nil {
 			return err
@@ -91,10 +91,6 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 		err = app.MutagenSyncFlush()
 		if err != nil {
 			return err
-		}
-
-		if fileLocation != "" {
-			output.UserOut.Printf("Database downloaded to: %s", fileLocation)
 		}
 
 		if skipImportArg {
@@ -116,7 +112,7 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 	if skipFilesArg {
 		output.UserOut.Println("Skipping files pull.")
 	} else {
-		output.UserOut.Println("Downloading files...")
+		output.UserOut.Println("Obtaining files...")
 		fileLocation, importPath, err := provider.GetBackup("files")
 		if err != nil {
 			return err
@@ -125,10 +121,6 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 		err = app.MutagenSyncFlush()
 		if err != nil {
 			return err
-		}
-
-		if fileLocation != "" {
-			output.UserOut.Printf("Files downloaded to: %s", fileLocation)
 		}
 
 		if skipImportArg {
