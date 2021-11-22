@@ -79,7 +79,7 @@ ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/
 sudo mkdir -p ${TERMINUS_CACHE_DIR}
 
 sudo mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory}/${HOSTNAME}
-sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/
+sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ /var/lib/php
 
 # /mnt/ddev_config/.homeadditions may be either
 # a bind-mount, or a volume mount, but we don't care,
