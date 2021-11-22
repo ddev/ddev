@@ -20,7 +20,8 @@ var PullCmd = &cobra.Command{
 	Example: `ddev pull pantheon
 ddev pull platform
 ddev pull pantheon -y
-ddev pull platform --skip-files -y`,
+ddev pull platform --skip-files -y
+ddev pull localfile --skip-db -y`,
 	Args: cobra.ExactArgs(1),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		dockerutil.EnsureDdevNetwork()

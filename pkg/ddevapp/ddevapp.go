@@ -1271,6 +1271,7 @@ func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
 			cmd,
 		}
 
+		app.DockerEnv()
 		err = exec.RunInteractiveCommand(bashPath, args)
 		_ = os.Chdir(cwd)
 	} else { // handle case in container
