@@ -65,7 +65,7 @@ var appTypeMatrix map[string]AppTypeFuncs
 
 func init() {
 	appTypeMatrix = map[string]AppTypeFuncs{
-		nodeps.AppTypePHP: {postStartAction: phpPostStartAction},
+		nodeps.AppTypePHP: {uploadDir: getPHPUploadDir, postStartAction: phpPostStartAction, importFilesAction: phpImportFilesAction},
 		nodeps.AppTypeDrupal6: {
 			settingsCreator: createDrupal6SettingsFile, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal6Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal6App, postImportDBAction: nil, configOverrideAction: drupal6ConfigOverrideAction, postConfigAction: nil, postStartAction: drupal6PostStartAction, importFilesAction: drupalImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
 		},
@@ -181,7 +181,7 @@ func (app *DdevApp) GetUploadDir() string {
 		uploadDir := appFuncs.uploadDir(app)
 		return uploadDir
 	}
-	return ""
+	return app.UploadDir
 }
 
 // GetHookDefaultComments gets the actual text of the config.yaml hook suggestions
