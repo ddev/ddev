@@ -30,13 +30,13 @@ require (
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/Microsoft/go-winio v0.5.0 // indirect
-	github.com/Microsoft/hcsshim v0.9.0 // indirect
+	github.com/Microsoft/go-winio v0.5.1 // indirect
+	github.com/Microsoft/hcsshim v0.9.1 // indirect
 	github.com/aokoli/goutils v1.0.1 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/containerd/cgroups v1.0.2 // indirect
-	github.com/containerd/containerd v1.5.7 // indirect
-	github.com/containerd/continuity v0.2.0 // indirect
+	github.com/containerd/containerd v1.5.8 // indirect
+	github.com/containerd/continuity v0.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
@@ -56,11 +56,11 @@ require (
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/moby/sys/mount v0.2.0 // indirect
-	github.com/moby/sys/mountinfo v0.4.1 // indirect
+	github.com/moby/sys/mountinfo v0.5.0 // indirect
 	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/opencontainers/image-spec v1.0.1 // indirect
+	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/opencontainers/runc v1.0.2 // indirect
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -72,8 +72,7 @@ require (
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
-	golang.org/x/sys v0.0.0-20211007075335-d3039528d8ac // indirect
-	google.golang.org/protobuf v1.27.1 // indirect
+	golang.org/x/sys v0.0.0-20211117180635-dee7805ff2e1 // indirect
 	gopkg.in/cheggaaa/pb.v1 v1.0.26 // indirect
 	gopkg.in/ini.v1 v1.51.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect

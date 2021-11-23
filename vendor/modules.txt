@@ -11,13 +11,13 @@ github.com/Masterminds/semver/v3
 # github.com/Masterminds/sprig v2.15.0+incompatible
 ## explicit
 github.com/Masterminds/sprig
-# github.com/Microsoft/go-winio v0.5.0
+# github.com/Microsoft/go-winio v0.5.1
 ## explicit; go 1.12
 github.com/Microsoft/go-winio
 github.com/Microsoft/go-winio/pkg/guid
 github.com/Microsoft/go-winio/pkg/security
 github.com/Microsoft/go-winio/vhd
-# github.com/Microsoft/hcsshim v0.9.0
+# github.com/Microsoft/hcsshim v0.9.1
 ## explicit; go 1.13
 github.com/Microsoft/hcsshim
 github.com/Microsoft/hcsshim/computestorage
@@ -42,6 +42,8 @@ github.com/Microsoft/hcsshim/osversion
 # github.com/aokoli/goutils v1.0.1
 ## explicit
 github.com/aokoli/goutils
+# github.com/bits-and-blooms/bitset v1.2.1
+## explicit; go 1.14
 # github.com/cheggaaa/pb v1.0.25
 ## explicit
 github.com/cheggaaa/pb
@@ -51,12 +53,18 @@ github.com/chzyer/readline
 # github.com/containerd/cgroups v1.0.2
 ## explicit; go 1.16
 github.com/containerd/cgroups/stats/v1
-# github.com/containerd/containerd v1.5.7
+# github.com/containerd/containerd v1.5.8
 ## explicit; go 1.16
 github.com/containerd/containerd/log
 github.com/containerd/containerd/pkg/userns
 github.com/containerd/containerd/sys
-# github.com/containerd/continuity v0.2.0
+# github.com/containerd/continuity v0.2.1
+## explicit; go 1.13
+# github.com/containerd/fifo v1.0.0
+## explicit; go 1.13
+# github.com/containerd/ttrpc v1.1.0
+## explicit; go 1.13
+# github.com/containerd/typeurl v1.0.2
 ## explicit; go 1.13
 # github.com/davecgh/go-spew v1.1.1
 ## explicit
@@ -89,6 +97,8 @@ github.com/docker/docker/pkg/system
 # github.com/docker/go-connections v0.4.0
 ## explicit
 github.com/docker/go-connections/nat
+# github.com/docker/go-events v0.0.0-20190806004212-e31b211e4f1c
+## explicit
 # github.com/docker/go-units v0.4.0
 ## explicit
 github.com/docker/go-units
@@ -98,6 +108,8 @@ github.com/fsnotify/fsnotify
 # github.com/fsouza/go-dockerclient v1.7.4
 ## explicit; go 1.16
 github.com/fsouza/go-dockerclient
+# github.com/gogo/googleapis v1.4.1
+## explicit; go 1.12
 # github.com/gogo/protobuf v1.3.2
 ## explicit; go 1.15
 github.com/gogo/protobuf/gogoproto
@@ -146,6 +158,8 @@ github.com/jedib0t/go-pretty/v6/text
 ## explicit
 github.com/juju/ansiterm
 github.com/juju/ansiterm/tabwriter
+# github.com/klauspost/compress v1.13.6
+## explicit; go 1.15
 # github.com/lextoumbourou/goodhosts v2.1.0+incompatible
 ## explicit
 github.com/lextoumbourou/goodhosts
@@ -175,11 +189,13 @@ github.com/mitchellh/go-homedir
 # github.com/mitchellh/mapstructure v1.1.2
 ## explicit
 github.com/mitchellh/mapstructure
+# github.com/moby/locker v1.0.1
+## explicit; go 1.13
 # github.com/moby/sys/mount v0.2.0
 ## explicit; go 1.14
 github.com/moby/sys/mount
-# github.com/moby/sys/mountinfo v0.4.1
-## explicit; go 1.14
+# github.com/moby/sys/mountinfo v0.5.0
+## explicit; go 1.16
 github.com/moby/sys/mountinfo
 # github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6
 ## explicit; go 1.13
@@ -191,13 +207,17 @@ github.com/morikuni/aec
 # github.com/opencontainers/go-digest v1.0.0
 ## explicit; go 1.13
 github.com/opencontainers/go-digest
-# github.com/opencontainers/image-spec v1.0.1
+# github.com/opencontainers/image-spec v1.0.2
 ## explicit
 github.com/opencontainers/image-spec/specs-go
 github.com/opencontainers/image-spec/specs-go/v1
 # github.com/opencontainers/runc v1.0.2
 ## explicit; go 1.13
 github.com/opencontainers/runc/libcontainer/user
+# github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417
+## explicit
+# github.com/opencontainers/selinux v1.10.0
+## explicit; go 1.13
 # github.com/pelletier/go-toml v1.8.1
 ## explicit; go 1.12
 github.com/pelletier/go-toml
@@ -256,7 +276,11 @@ go.opencensus.io/trace/tracestate
 ## explicit; go 1.17
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/scrypt
-# golang.org/x/sys v0.0.0-20211007075335-d3039528d8ac
+# golang.org/x/net v0.0.0-20211118161319-6a13c67c3ce4
+## explicit; go 1.17
+# golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
+## explicit
+# golang.org/x/sys v0.0.0-20211117180635-dee7805ff2e1
 ## explicit; go 1.17
 golang.org/x/sys/execabs
 golang.org/x/sys/internal/unsafeheader
@@ -272,6 +296,10 @@ golang.org/x/term
 golang.org/x/text/runes
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
+# google.golang.org/genproto v0.0.0-20211118181313-81c1377c94b1
+## explicit; go 1.11
+# google.golang.org/grpc v1.42.0
+## explicit; go 1.14
 # google.golang.org/protobuf v1.27.1
 ## explicit; go 1.9
 # gopkg.in/cheggaaa/pb.v1 v1.0.26
