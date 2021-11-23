@@ -15,7 +15,7 @@ Each provider recipe is a yaml file that can be named any way you want to name i
 Each provider recipe is a file named `<provider>.yaml` and consists of several mostly-optional stanzas:
 
 * `environment_variables`: Environment variables will be created in the web container for each of these during pull or push operations. They're used to provide context (project id, environment name, etc.) for each of the other stanzas.
-* `db_pull_command`: A script that determines how ddev should pull a database. It's job is to create a gzipped database dump in /var/www/html/.ddev/.downloads/db.sql.gz. This is optional; if nothing has to be done to obtain the database dump, this step can be omitted.
+* `db_pull_command`: A script that determines how ddev should obtain a database. It's job is to create a gzipped database dump in /var/www/html/.ddev/.downloads/db.sql.gz. This is optional; if nothing has to be done to obtain the database dump, this step can be omitted.
 * `db_import_command`: (optional) A script that imports the downloaded database. This is for advanced usages like multiple databases. The default behavior only imports a single database into the `db` database. The [localfile example](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/localfile.yaml.example) uses this technique.
 * `files_pull_command`: A script that determines how ddev can get user-generated files from upstream. Its job is to copy the files from upstream to  /var/www/html/.ddev/.downloads/files. This is optional; if nothing has to be done to obtain the files, this step can be omitted.
 * `files_import_command`: (optional) A script that imports the downloaded files. There are a number of situations where it's just messy to push a directory of files around, and one can just put it directly where it's needed. The [localfile example](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/localfile.yaml.example) uses this technique.
@@ -24,8 +24,13 @@ Each provider recipe is a file named `<provider>.yaml` and consists of several m
 
 The [environment variables provided to custom commands](../extend/custom-commands.md#environment-variables-provided) are also available for use in these recipes.
 
+### Example Integrations and Hints
+
+* All of the [supplied integrations](https://github.com/drud/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers) are really just examples of what you can do.
+* You can name a provider anything you want. For example, an Acquia integration doesn't have to be named "acquia", it can be named "upstream", for example. This is a great technique for [downloading a particulr multisite](https://stackoverflow.com/a/68553116/215713)
+
 ### Provider Debugging
 
-You can uncomment the `set -x` in each stanza to see more of what's going on. It really helps.
+You can uncomment the `set -x` in each stanza to see more of what's going on. It really helps. Watch it as you do a `ddev pull <whatever>`.
 
 Although the various commands could be executed on the host or in other containers if configured that way, most commands are executed in the web container. So the best thing to do is to `ddev ssh` and manually execute each command you want to use. When you have it right, use it in the yaml file.

@@ -1,0 +1,40 @@
+#ddev-generated
+# Example git provider configuration.
+
+# To use this configuration,
+
+# 1. Create a git repository that contains a database dump (db.sql.gz) and a files tarball. It can be private or public, but for most people they will be private.
+# 2. Configure access to the repository so that it can be accessed from where you need it. For example, on gitpod, you'll need to enable access to GitHub or Gitlab. On a regular local dev environment, you'll need to be able to access github via https or ssh.
+# 3. Update the environment_variables below to point to the git repository that contains your database dump and files.
+
+environment_variables:
+  project_url: https://github.com/drud/ddev-pull-git-test-repo
+  branch: main
+  checkout_dir: ~/tmp/ddev-pull-git-test-repo
+
+
+auth_command:
+  service: host
+  # This actually doesn't auth, but rather just checks out the repository
+  command: |
+    set -eu -o pipefail
+    if [ ! -d ${checkout_dir}/.git ] ; then
+        git clone -q ${project_url} --branch=${branch} ${checkout_dir}
+    else
+        cd ${checkout_dir}
+        git reset --hard -q && git fetch && git checkout -q origin/${branch}
+    fi
+
+db_import_command:
+  service: host
+  command: |
+    set -eu -o pipefail
+    # set -x
+    ddev import-db --src="${checkout_dir}/db.sql.gz"
+
+files_import_command:
+  service: host
+  command: |
+    set -eu -o pipefail
+    # set -x
+    ddev import-files --src="${checkout_dir}/files"
