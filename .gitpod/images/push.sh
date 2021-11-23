@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu -o pipefail
 
-DOCKER_REPO=drud/ddev-gitpod-base:20211028_new_host_docker_internal_detection
+DOCKER_REPO=drud/ddev-gitpod-base:20211101_gitpod_experiments
 
 echo "Pushing ${DOCKER_REPO}"
 set -x

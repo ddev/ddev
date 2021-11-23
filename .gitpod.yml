@@ -1,4 +1,4 @@
-image: drud/ddev-gitpod-base:20211028_new_host_docker_internal_detection
+image: drud/ddev-gitpod-base:20211101_gitpod_experiments
 
 experimentalNetwork: true
 tasks:
