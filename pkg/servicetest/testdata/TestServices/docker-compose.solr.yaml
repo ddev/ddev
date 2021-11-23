@@ -47,9 +47,6 @@ services:
       # HTTP_EXPOSE exposes http traffic from the container port 8983
       # to the host port 8983 vid ddev-router reverse proxy.
       - HTTP_EXPOSE=8983:8983
-      # HTTPS_EXPOSE exposes https traffic from the container port 8983
-      # to the host port 8984 vid ddev-router reverse proxy.
-      - HTTPS_EXPOSE=8984:8983
     volumes:
       # solr core *data* is stored on the 'solr' docker volume
       # This mount is optional; without it your search index disappears

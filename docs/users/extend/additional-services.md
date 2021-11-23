@@ -6,6 +6,8 @@ If you need a service not provided here, see [Defining an additional service wit
 
 ### Apache Solr
 
+**Note:** The [ddev-contrib Apache Solr recipe](https://github.com/drud/ddev-contrib/tree/master/docker-compose-services/solr) will soon replace this one. It's a more sophisticated and easier-to-manage approach.
+
 This recipe adds an Apache Solr container to a project. It will set up a solr core named "dev" with the solr configuration you define.
 
 #### Installation
