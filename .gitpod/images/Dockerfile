@@ -2,7 +2,7 @@ FROM gitpod/workspace-full
 SHELL ["/bin/bash", "-c"]
 ENV HOMEBREW_INSTALL_FROM_API=true
 
-RUN sudo apt-get update >/dev/null && sudo apt-get install -y file mysql-client netcat telnet >/dev/null
+RUN sudo apt-get update >/dev/null && sudo apt-get install -y autojump file mysql-client netcat telnet >/dev/null
 RUN brew install bash-completion bats-core drud/ddev/ddev golangci-lint
 RUN npm install -g markdownlint-cli
 
@@ -10,5 +10,8 @@ RUN echo 'if [ -r "/home/linuxbrew/.linuxbrew/etc/profile.d/bash_completion.sh" 
 
 RUN echo 'export PATH=~/bin:$PATH' >>~/.bashrc && mkdir -p ~/bin
 RUN ln -sf /workspace/ddev/.gotmp/bin/linux_amd64/ddev ~/bin/ddev
+RUN echo ". /usr/share/autojump/autojump.sh" >> ~/.bash_profile
+RUN ddev config global --omit-containers=ddev-router,dba,ddev-ssh-agent
+
 
 COPY gitpod-setup-ddev.sh /usr/local/bin
