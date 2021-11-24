@@ -9,7 +9,6 @@ tasks:
     command: |
       set -eu -o pipefail
       export DDEV_NONINTERACTIVE=true
-      ddev config global --omit-containers=ddev-router,ddev-ssh-agent,dba
       DDEV_REPO=${DDEV_REPO:-https://github.com/drud/d9simple}
       DDEV_ARTIFACTS=${DDEV_ARTIFACTS:-https://github.com/drud/d9simple-artifacts}
       git clone ${DDEV_ARTIFACTS} "/tmp/${DDEV_ARTIFACTS##*/}"
@@ -26,7 +25,6 @@ tasks:
       ddev import-db --src=/tmp/${DDEV_ARTIFACTS##*/}/db.sql.gz
       ddev import-files --src=/tmp/${DDEV_ARTIFACTS##*/}/files.tgz
       gp await-port 8080 && sleep 1 && gp preview $(gp url 8080)
-  - name: ddev-build
 
 vscode:
   extensions:
