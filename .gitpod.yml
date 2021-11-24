@@ -11,19 +11,19 @@ tasks:
       ddev delete -Oy tmp
     command: |
       echo "This is a test"
-      # set -eu -o pipefail
-      # set -x
-      # export DDEV_NONINTERACTIVE=true
-      # DDEV_REPO=${DDEV_REPO:-https://github.com/drud/d9simple}
-      # DDEV_BRANCH=${DDEV_BRANCH:-main}
-      # DDEV_ARTIFACTS=${DDEV_ARTIFACTS:-https://github.com/drud/d9simple-artifacts}
-      # git clone ${DDEV_ARTIFACTS} "/tmp/${DDEV_ARTIFACTS##*/}"
-      # reponame=${DDEV_REPO##*/}
-      # mkdir /workspace/${reponame} && cd /workspace/${reponame}
-      # git clone ${DDEV_REPO} --branch=${DDEV_BRANCH} .
-      # if [ ! -f .ddev/config.yaml ]; then
-      #   ddev config --auto
-      # fi
+      set -eu -o pipefail
+      set -x
+      export DDEV_NONINTERACTIVE=true
+      DDEV_REPO=${DDEV_REPO:-https://github.com/drud/d9simple}
+      DDEV_BRANCH=${DDEV_BRANCH:-main}
+      DDEV_ARTIFACTS=${DDEV_ARTIFACTS:-https://github.com/drud/d9simple-artifacts}
+      git clone ${DDEV_ARTIFACTS} "/tmp/${DDEV_ARTIFACTS##*/}"
+      reponame=${DDEV_REPO##*/}
+      mkdir /workspace/${reponame} && cd /workspace/${reponame}
+      git clone ${DDEV_REPO} --branch=${DDEV_BRANCH} .
+      if [ ! -f .ddev/config.yaml ]; then
+        ddev config --auto
+      fi
       # printf "host_webserver_port: 8080\nhost_https_port: 2222\nhost_db_port: 3306\nhost_mailhog_port: 8025\nhost_phpmyadmin_port: 8036\nbind_all_interfaces: true\n" >.ddev/config.gitpod.yaml
       # ddev stop -a
       # ddev start -y
