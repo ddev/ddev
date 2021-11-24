@@ -10,9 +10,6 @@ tasks:
       ddev debug download-images
       ddev delete -Oy tmp
     command: |
-      echo "This is a test"
-      # set -eu -o pipefail
-      set -x
       export DDEV_NONINTERACTIVE=true
       DDEV_REPO=${DDEV_REPO:-https://github.com/drud/d9simple}
       DDEV_BRANCH=${DDEV_BRANCH:-main}
@@ -24,12 +21,12 @@ tasks:
       if [ ! -f .ddev/config.yaml ]; then
         ddev config --auto
       fi
-      # printf "host_webserver_port: 8080\nhost_https_port: 2222\nhost_db_port: 3306\nhost_mailhog_port: 8025\nhost_phpmyadmin_port: 8036\nbind_all_interfaces: true\n" >.ddev/config.gitpod.yaml
-      # ddev stop -a
-      # ddev start -y
-      # ddev import-db --src=/tmp/${DDEV_ARTIFACTS##*/}/db.sql.gz
-      # ddev import-files --src=/tmp/${DDEV_ARTIFACTS##*/}/files.tgz
-      # gp await-port 8080 && sleep 1 && gp preview $(gp url 8080)
+      printf "host_webserver_port: 8080\nhost_https_port: 2222\nhost_db_port: 3306\nhost_mailhog_port: 8025\nhost_phpmyadmin_port: 8036\nbind_all_interfaces: true\n" >.ddev/config.gitpod.yaml
+      ddev stop -a
+      ddev start -y
+      ddev import-db --src=/tmp/${DDEV_ARTIFACTS##*/}/db.sql.gz
+      ddev import-files --src=/tmp/${DDEV_ARTIFACTS##*/}/files.tgz
+      gp await-port 8080 && sleep 1 && gp preview $(gp url 8080)
 
 vscode:
   extensions:
