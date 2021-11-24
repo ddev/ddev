@@ -105,7 +105,6 @@ func TestServices(t *testing.T) {
 func checkSolrService(t *testing.T, app *ddevapp.DdevApp) {
 	service := "solr"
 	httpPort := 8983
-	httpsPort := 8984
 	path := fmt.Sprintf("http://%s:%d/solr/", service, httpPort)
 
 	var err error
@@ -138,10 +137,6 @@ func checkSolrService(t *testing.T, app *ddevapp.DdevApp) {
 
 	// Ensure solr service is available via HTTP at exposed port location
 	resp, err := testcommon.EnsureLocalHTTPContent(t, fmt.Sprintf("http://%s.ddev.site:%d/solr/", app.GetName(), httpPort), "", 5)
-	assert.NoError(err, "resp=%v", resp)
-
-	// Ensure solr service is available via HTTPS at exposed port location 8984
-	resp, err = testcommon.EnsureLocalHTTPContent(t, fmt.Sprintf("https://%s.ddev.site:%d/solr/", app.GetName(), httpsPort), "", 5)
 	assert.NoError(err, "resp=%v", resp)
 }
 
