@@ -5,7 +5,9 @@ tasks:
   - init: |
       # Compile ddev
       make
+      cd /tmp && ddev config --auto
       ddev debug download-images
+      ddev delete -Oy tmp
     command: |
       set -eu -o pipefail
       export DDEV_NONINTERACTIVE=true
