@@ -10,9 +10,11 @@ tasks:
       ddev debug download-images
       ddev delete -Oy tmp
     command: |
+      echo "This is a test"
       set -eu -o pipefail
       export DDEV_NONINTERACTIVE=true
       DDEV_REPO=${DDEV_REPO:-https://github.com/drud/d9simple}
+      DDEV_BRANCH=${DDEV_BRANCH:-main}
       DDEV_ARTIFACTS=${DDEV_ARTIFACTS:-https://github.com/drud/d9simple-artifacts}
       git clone ${DDEV_ARTIFACTS} "/tmp/${DDEV_ARTIFACTS##*/}"
       reponame=${DDEV_REPO##*/}
