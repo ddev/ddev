@@ -11,7 +11,7 @@ tasks:
       ddev delete -Oy tmp
     command: |
       echo "This is a test"
-      set -eu -o pipefail
+      # set -eu -o pipefail
       set -x
       export DDEV_NONINTERACTIVE=true
       DDEV_REPO=${DDEV_REPO:-https://github.com/drud/d9simple}
