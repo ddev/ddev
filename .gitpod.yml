@@ -20,7 +20,6 @@ tasks:
       reponame=${DDEV_REPO##*/}
       mkdir /workspace/${reponame} && cd /workspace/${reponame}
       git clone ${DDEV_REPO} --branch=${DDEV_BRANCH} .
-      ddev config global --omit-containers=ddev-router,dba,ddev-ssh-agent
       if [ ! -f .ddev/config.yaml ]; then
         ddev config --auto
       fi
