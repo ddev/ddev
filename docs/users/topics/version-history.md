@@ -131,7 +131,7 @@ Take a look at the [v1.19 milestone](https://github.com/drud/ddev/milestone/53) 
 
 ### v1.4 (released 2018-11-15)
 
-- The `ddev composer` command now provides in-container composer commands for nearly anything you'd want to do with composer. We found that lots of people, and especially WIndows users, were having trouble with fairly difficult workarounds to use composer. However this has value to most ddev users:
+- The `ddev composer` command now provides in-container composer commands for nearly anything you'd want to do with composer. We found that lots of people, and especially Windows users, were having trouble with fairly difficult workarounds to use composer. However this has value to most ddev users:
     - The composer and php version used are the exact version configured for your project.
     - Your composer project will be configured for the OS it's actually running (Linux in the container). This was a serious problem for Windows users, as `composer install` on Windows OS did not result in the same results as `composer install` in Linux, even if symlinks were working.
     - Note that because of problems with symlinks on Windows, it is *not* recommended to use code from the host (Windows) side, or to check it in. That means it will not be appropriate to check in the vendor directory on the host (although it would be safe inside the container), but most people do a composer build anyway.
