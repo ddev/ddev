@@ -8,7 +8,8 @@ RUN mkdir ~/.cache && /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.c
 ENV PATH=$PATH:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin/
 ENV MANPATH="$MANPATH:/home/linuxbrew/.linuxbrew/share/man"
 ENV INFOPATH="$INFOPATH:/home/linuxbrew/.linuxbrew/share/info"
-ENV HOMEBREW_NO_AUTO_UPDATE=1
+RUN sudo apt remove -y cmake \
+    && brew update && brew install cmake
 
 USER root
 RUN curl -o /var/lib/apt/dazzle-marks/docker.gpg -fsSL https://download.docker.com/linux/ubuntu/gpg \
@@ -23,7 +24,7 @@ RUN curl -o /usr/local/bin/docker-compose -fsSL https://github.com/docker/compos
     && chmod +x /usr/local/bin/docker-compose
 USER gitpod
 RUN sudo apt-get update >/dev/null && sudo apt-get install -y autojump file mysql-client netcat telnet >/dev/null
-RUN brew install bash-completion bats-core drud/ddev/ddev golang golangci-lint
+RUN brew install bash-completion bats-core drud/ddev/ddev golang golangci-lint nodejs
 RUN npm install -g markdownlint-cli
 
 RUN echo 'if [ -r "/home/linuxbrew/.linuxbrew/etc/profile.d/bash_completion.sh" ]; then . "/home/linuxbrew/.linuxbrew/etc/profile.d/bash_completion.sh"; fi' >>~/.bashrc
