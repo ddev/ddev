@@ -59,7 +59,7 @@ semver_compare() {
     [ "$pr_a" \> "$pr_b" ] && [ -n "$pr_b" ] && echo 1 && return 0
 
     ####
-    # Retrun -1 when A is lower than B
+    # Return -1 when A is lower than B
     echo -1 && return 0
   fi
   arr_version_a=(${version_a//./ })

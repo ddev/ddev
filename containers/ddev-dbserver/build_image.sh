@@ -82,7 +82,7 @@ while true; do
     shift 2
     ;;
   -h | --help)
-    echo "Usage: $0 --db-type [mariadb|mysql] --db-major-version <major> --tag <image_tag> --archs <comma-delimted_architectures> --push --no-load"
+    echo "Usage: $0 --db-type [mariadb|mysql] --db-major-version <major> --tag <image_tag> --archs <comma-delimited_architectures> --push --no-load"
     printf "Examples: $0 ./build_image.sh --db-type mysql --db-major-version 8.0 --tag junker99 --archs linux/amd64 --push
   $0 --db-type mariadb --db-major-version 10.3 --tag junker99 --archs linux/amd64,linux/arm64"
     exit 0

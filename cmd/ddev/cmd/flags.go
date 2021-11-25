@@ -261,7 +261,7 @@ func (v *annotationsValue) validate() error {
 func (f *Flag) validateFlag(longOptions *map[nameValue]bool, shortOptions *map[shorthandValue]nameValue) error {
 	errors := ""
 
-	// Chech all fields
+	// Check all fields
 	errors += extractError(f.Name.validate(longOptions))
 	errors += extractError(f.Shorthand.validate(shortOptions, f.Name))
 	errors += extractError(f.Usage.validate())

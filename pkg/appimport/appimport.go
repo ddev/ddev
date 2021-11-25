@@ -13,7 +13,7 @@ import (
 )
 
 // ValidateAsset determines if a given asset matches the required criteria for a given asset type
-// and returns the aboslute path to the asset, whether or not the asset is an archive type, and an error.
+// and returns the absolute path to the asset, whether or not the asset is an archive type, and an error.
 func ValidateAsset(unexpandedAssetPath string, assetType string) (string, bool, error) {
 	var invalidAssetError = "invalid asset: %v"
 	extensions := []string{"tar", "gz", "tgz", "zip"}

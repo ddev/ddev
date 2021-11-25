@@ -40,7 +40,7 @@ func TestCreateTmpDir(t *testing.T) {
 	assert.NoError(err, "There is no error when getting directory details")
 	assert.True(dirStat.IsDir(), "Temp Directory created and exists")
 
-	// Clean up tempoary directory and ensure it no longer exists.
+	// Clean up temporary directory and ensure it no longer exists.
 	CleanupDir(testDir)
 	_, err = os.Stat(testDir)
 	assert.Error(err, "Could not stat temporary directory")

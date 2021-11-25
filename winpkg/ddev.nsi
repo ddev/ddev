@@ -198,7 +198,7 @@ Caption "${PRODUCT_NAME_FULL} ${PRODUCT_VERSION} $InstallerModeCaption"
 /**
  * Language Selection Dialog Settings
  *
- * This enables the remeber of the previously choosen language.
+ * This enables the remember of the previously chosen language.
  */
 !define MUI_LANGDLL_REGISTRY_ROOT ${REG_UNINST_ROOT}
 !define MUI_LANGDLL_REGISTRY_KEY "${REG_UNINST_KEY}"
@@ -624,7 +624,7 @@ Section -Post
   ; Write the uninstaller
   WriteUninstaller "$INSTDIR\ddev_uninstall.exe"
 
-  ; Remeber install directory for updates
+  ; Remember install directory for updates
   WriteRegStr ${REG_INSTDIR_ROOT} "${REG_INSTDIR_KEY}" "" "$INSTDIR\ddev.exe"
   WriteRegStr ${REG_INSTDIR_ROOT} "${REG_INSTDIR_KEY}" "Path" "$INSTDIR"
 
@@ -675,7 +675,7 @@ LangString DESC_SecNSSM ${LANG_ENGLISH} "NSSM (nssm.cc) is used to install servi
 /**
  * Section Descriptions
  *
- * Assign a decription to each section
+ * Assign a description to each section
  */
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
   !insertmacro MUI_DESCRIPTION_TEXT ${SecDDEV} $(DESC_SecDDEV)

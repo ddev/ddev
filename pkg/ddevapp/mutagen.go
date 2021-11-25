@@ -389,7 +389,7 @@ func GetMutagenVolumeName(app *DdevApp) string {
 	return app.Name + "_" + "project_mutagen"
 }
 
-// MutagenMonitor shows the ouput of `mutagen sync monitor <syncName>`
+// MutagenMonitor shows the output of `mutagen sync monitor <syncName>`
 func MutagenMonitor(app *DdevApp) {
 	syncName := MutagenSyncName(app.Name)
 

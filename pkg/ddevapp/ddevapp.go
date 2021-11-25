@@ -106,7 +106,7 @@ type DdevApp struct {
 	HostMailhogPort       string                `yaml:"host_mailhog_port,omitempty"`
 	PHPMyAdminPort        string                `yaml:"phpmyadmin_port,omitempty"`
 	PHPMyAdminHTTPSPort   string                `yaml:"phpmyadmin_https_port,omitempty"`
-	// HostPHPMyAdminPort is normally empty, as it is not normaly bound
+	// HostPHPMyAdminPort is normally empty, as it is not normally bound
 	HostPHPMyAdminPort        string                 `yaml:"host_phpmyadmin_port,omitempty"`
 	WebImageExtraPackages     []string               `yaml:"webimage_extra_packages,omitempty,flow"`
 	DBImageExtraPackages      []string               `yaml:"dbimage_extra_packages,omitempty,flow"`
@@ -1397,7 +1397,7 @@ func (app *DdevApp) DockerEnv() {
 	}
 
 	envVars := map[string]string{
-		// Without COMPOSE_DOCKER_CLI_BUILD=0, docker-cmpose makes all kinds of mess
+		// Without COMPOSE_DOCKER_CLI_BUILD=0, docker-compose makes all kinds of mess
 		// of output. BUILDKIT_PROGRESS doesn't help either.
 		"COMPOSE_DOCKER_CLI_BUILD":      "0",
 		"COMPOSE_PROJECT_NAME":          "ddev-" + app.Name,

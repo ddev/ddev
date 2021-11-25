@@ -63,7 +63,7 @@ jobs:
           - /home/linuxbrew
     - run: echo "$(docker --version) $(docker-compose --version)"
     - run:
-        name: ddev tests - TestPull and TetsDdevFullSiteSetup
+        name: ddev tests - TestPull and TestDdevFullSiteSetup
         command: make -s testpkg TESTARGS='-run "(TestDdevFullSite.*|Test.*Pull)"' EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         no_output_timeout: "40m"
     - store_test_results:

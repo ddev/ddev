@@ -366,7 +366,7 @@ func TestDdevStart(t *testing.T) {
 		assert.NoError(err)
 		assert.Contains(out, "1")
 	} else {
-		fmt.Print("TestDddevStart skipping check for local mysql connection because mysql command not in path")
+		fmt.Print("TestDdevStart skipping check for local mysql connection because mysql command not in path")
 	}
 
 	err = app.Stop(true, false)
@@ -1827,7 +1827,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 }
 
 // TestWriteableFilesDirectory tests to make sure that files created on host are writable on container
-// and files ceated in container are correct user on host.
+// and files created in container are correct user on host.
 func TestWriteableFilesDirectory(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
@@ -2345,7 +2345,7 @@ func TestProcessHooks(t *testing.T) {
 			{"exec": "ls /does-not-exist"},
 		},
 	}
-	// With default setting, ProcessHooks should succeeed
+	// With default setting, ProcessHooks should succeed
 	err = app.ProcessHooks("hook-test")
 	assert.NoError(err)
 	// With FailOnHookFail or FailOnHookFailGlobal or both, it should fail.
@@ -2648,7 +2648,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	tempPath := testcommon.CreateTmpDir("site-copy")
 	siteCopyDest := filepath.Join(tempPath, "site")
 
-	// Move site directory to a temp directory to mimick a missing directory.
+	// Move site directory to a temp directory to mimic a missing directory.
 	err = os.Rename(site.Dir, siteCopyDest)
 	assert.NoError(err)
 
@@ -2686,7 +2686,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 
 }
 
-// TestGetappsEmpty ensures that GetActiveProjects returns an empty list when no applications are running.
+// TestGetAppsEmpty ensures that GetActiveProjects returns an empty list when no applications are running.
 func TestGetAppsEmpty(t *testing.T) {
 	assert := asrt.New(t)
 
@@ -2760,7 +2760,7 @@ func TestAppdirAlreadyInUse(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	// Now change the project namename and look for the complaint
+	// Now change the project name and look for the complaint
 	app.Name = secondProjectName
 
 	err = app.Start()
@@ -3644,7 +3644,7 @@ func TestEnvironmentVariables(t *testing.T) {
 		dbPortStr = app.HostDBPort
 	}
 
-	// This set of hostExpections should bne maintained in parallel with documentation
+	// This set of hostExpectations should be maintained in parallel with documentation
 	hostExpectations := map[string]string{
 		"DDEV_APPROOT":             app.AppRoot,
 		"DDEV_DOCROOT":             app.GetDocroot(),
