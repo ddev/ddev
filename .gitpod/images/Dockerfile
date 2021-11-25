@@ -1,7 +1,27 @@
-FROM gitpod/workspace-full as workspace-base
+FROM gitpod/workspace-base as workspace-base
 SHELL ["/bin/bash", "-c"]
 ENV HOMEBREW_INSTALL_FROM_API=true
 
+### Homebrew ###
+USER gitpod
+RUN mkdir ~/.cache && /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+ENV PATH=$PATH:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin/
+ENV MANPATH="$MANPATH:/home/linuxbrew/.linuxbrew/share/man"
+ENV INFOPATH="$INFOPATH:/home/linuxbrew/.linuxbrew/share/info"
+ENV HOMEBREW_NO_AUTO_UPDATE=1
+
+USER root
+RUN curl -o /var/lib/apt/dazzle-marks/docker.gpg -fsSL https://download.docker.com/linux/ubuntu/gpg \
+    && apt-key add /var/lib/apt/dazzle-marks/docker.gpg \
+    && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
+    && install-packages docker-ce docker-ce-cli containerd.io
+
+RUN curl -o /usr/bin/slirp4netns -fsSL https://github.com/rootless-containers/slirp4netns/releases/download/v1.1.12/slirp4netns-$(uname -m) \
+    && chmod +x /usr/bin/slirp4netns
+
+RUN curl -o /usr/local/bin/docker-compose -fsSL https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64 \
+    && chmod +x /usr/local/bin/docker-compose
+USER gitpod
 RUN sudo apt-get update >/dev/null && sudo apt-get install -y autojump file mysql-client netcat telnet >/dev/null
 RUN brew install bash-completion bats-core drud/ddev/ddev golang golangci-lint
 RUN npm install -g markdownlint-cli
@@ -21,5 +41,10 @@ COPY gitpod-setup-ddev.sh /usr/local/bin
 FROM scratch as ddev-gitpod-base
 SHELL ["/bin/bash", "-c"]
 ENV HOMEBREW_INSTALL_FROM_API=true
+ENV PATH=$PATH:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin/
+ENV MANPATH="$MANPATH:/home/linuxbrew/.linuxbrew/share/man"
+ENV INFOPATH="$INFOPATH:/home/linuxbrew/.linuxbrew/share/info"
+ENV HOMEBREW_NO_AUTO_UPDATE=1
+
 COPY --from=workspace-base / /
 
