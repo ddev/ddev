@@ -1414,7 +1414,7 @@ func (app *DdevApp) DockerEnv() {
 			app.HostDBPort = "3306"
 		}
 		if app.HostMailhogPort == "" {
-			app.HostMailhogPort = "8025"
+			app.HostMailhogPort = "8027"
 		}
 		if app.HostPHPMyAdminPort == "" {
 			app.HostPHPMyAdminPort = "8036"
