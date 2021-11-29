@@ -1966,6 +1966,13 @@ func (app *DdevApp) GetHTTPSURL() string {
 
 // GetAllURLs returns an array of all the URLs for the project
 func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs []string) {
+	if nodeps.IsGitpod() {
+		url, err := exec.RunHostCommand("gp", "url", app.HostWebserverPort)
+		if err != nil {
+			httpsURLs = append(httpsURLs, url)
+		}
+	}
+
 	// Get configured URLs
 	for _, name := range app.GetHostnames() {
 		httpPort := ""
