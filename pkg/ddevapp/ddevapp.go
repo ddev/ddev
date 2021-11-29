@@ -1427,6 +1427,7 @@ func (app *DdevApp) DockerEnv() {
 		if app.HostPHPMyAdminPort == "" {
 			app.HostPHPMyAdminPort = "8036"
 		}
+		app.BindAllInterfaces = true
 	}
 	isWSL2 := "false"
 	if nodeps.IsWSL2() {
