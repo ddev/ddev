@@ -12,9 +12,9 @@ tasks:
     command: |
       export DDEV_NONINTERACTIVE=true
       DDEV_REPO=${DDEV_REPO:-https://github.com/drud/d9simple}
+      DDEV_ARTIFACTS=${DDEV_REPO}-artifacts
       DDEV_BRANCH=${DDEV_BRANCH:-main}
-      DDEV_ARTIFACTS=${DDEV_ARTIFACTS:-https://github.com/drud/d9simple-artifacts}
-      git clone ${DDEV_ARTIFACTS} "/tmp/${DDEV_ARTIFACTS##*/}"
+      git clone ${DDEV_ARTIFACTS} "/tmp/${DDEV_ARTIFACTS##*/}" || true
       reponame=${DDEV_REPO##*/}
       mkdir /workspace/${reponame} && cd /workspace/${reponame}
       git clone ${DDEV_REPO} --branch=${DDEV_BRANCH} .
@@ -24,8 +24,10 @@ tasks:
       printf "host_webserver_port: 8080\nhost_https_port: 2222\nhost_db_port: 3306\nhost_mailhog_port: 8025\nhost_phpmyadmin_port: 8036\nbind_all_interfaces: true\n" >.ddev/config.gitpod.yaml
       ddev stop -a
       ddev start -y
-      ddev import-db --src=/tmp/${DDEV_ARTIFACTS##*/}/db.sql.gz
-      ddev import-files --src=/tmp/${DDEV_ARTIFACTS##*/}/files.tgz
+      if [ -d "/tmp/${DDEV_ARTIFACTS##*/}" ]; then
+        ddev import-db --src=/tmp/${DDEV_ARTIFACTS##*/}/db.sql.gz
+        ddev import-files --src=/tmp/${DDEV_ARTIFACTS##*/}/files.tgz
+      fi
       gp await-port 8080 && sleep 1 && gp preview $(gp url 8080)
 
 vscode:
