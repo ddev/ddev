@@ -1967,7 +1967,8 @@ func (app *DdevApp) GetHTTPSURL() string {
 func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs []string) {
 	if nodeps.IsGitpod() {
 		url, err := exec.RunHostCommand("gp", "url", app.HostWebserverPort)
-		if err != nil {
+		if err == nil {
+			url = strings.Trim(url, "\n")
 			httpsURLs = append(httpsURLs, url)
 		}
 	}
@@ -2000,10 +2001,14 @@ func (app *DdevApp) GetPrimaryURL() string {
 	httpURLs, httpsURLs, _ := app.GetAllURLs()
 	urlList := httpsURLs
 	// If no mkcert trusted https, use the httpURLs instead
-	if globalconfig.GetCAROOT() == "" || IsRouterDisabled(app) {
+	if !nodeps.IsGitpod() && (globalconfig.GetCAROOT() == "" || IsRouterDisabled(app)) {
 		urlList = httpURLs
 	}
-	return urlList[0]
+	if len(urlList) > 0 {
+		return urlList[0]
+	} else {
+		return ""
+	}
 }
 
 // GetWebContainerDirectHTTPURL returns the URL that can be used without the router to get to web container.
