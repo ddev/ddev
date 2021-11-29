@@ -1998,7 +1998,8 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 	}
 	httpURLs = append(httpURLs, app.GetWebContainerDirectHTTPURL())
 
-	return httpURLs, httpsURLs, append(httpsURLs, httpURLs...)
+	allURLs = append(httpsURLs, httpURLs...)
+	return httpURLs, httpsURLs, allURLs
 }
 
 // GetPrimaryURL returns the primary URL that can be used, https or http
