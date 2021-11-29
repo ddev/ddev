@@ -39,7 +39,7 @@ func FullRenderedRouterComposeYAMLPath() string {
 // IsRouterDisabled returns true if the router is disabled
 func IsRouterDisabled(app *DdevApp) bool {
 	if nodeps.IsGitpod() {
-		return false
+		return true
 	}
 	return nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer)
 }
@@ -279,7 +279,6 @@ func determineRouterPorts() []string {
 // if they're available for docker to bind to. Returns an error if either one results
 // in a successful connection.
 func CheckRouterPorts() error {
-
 	routerContainer, _ := FindDdevRouter()
 	var existingExposedPorts []string
 	var err error

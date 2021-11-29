@@ -57,7 +57,7 @@ var AuthSSHCommand = &cobra.Command{
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil || app == nil {
 			// We don't actually have to start ssh-agent in a project directory, so use a dummy app.
-			app = &ddevapp.DdevApp{OmitContainerGlobal: globalconfig.DdevGlobalConfig.OmitContainersGlobal}
+			app = &ddevapp.DdevApp{OmitContainersGlobal: globalconfig.DdevGlobalConfig.OmitContainersGlobal}
 		}
 		omitted := app.GetOmittedContainers()
 		if nodeps.ArrayContainsString(omitted, nodeps.DdevSSHAgentContainer) {
