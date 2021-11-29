@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"strings"
 
 	"github.com/drud/ddev/pkg/dockerutil"
@@ -61,11 +62,11 @@ ddev start --all`,
 			}
 
 			util.Success("Successfully started %s", project.GetName())
-			httpURLs, urlList, _ := project.GetAllURLs()
-			if globalconfig.GetCAROOT() == "" || ddevapp.IsRouterDisabled(project) {
-				urlList = httpURLs
+			httpURLs, httpsURLs, _ := project.GetAllURLs()
+			if !nodeps.IsGitpod() && (globalconfig.GetCAROOT() == "" || ddevapp.IsRouterDisabled(project)) {
+				httpsURLs = httpURLs
 			}
-			util.Success("Project can be reached at %s", strings.Join(urlList, " "))
+			util.Success("Project can be reached at %s", strings.Join(httpsURLs, " "))
 		}
 	},
 }
