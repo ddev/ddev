@@ -2012,9 +2012,9 @@ func (app *DdevApp) GetPrimaryURL() string {
 	}
 	if len(urlList) > 0 {
 		return urlList[0]
-	} else {
-		return ""
 	}
+	// Failure mode, just return empty string
+	return ""
 }
 
 // GetWebContainerDirectHTTPURL returns the URL that can be used without the router to get to web container.
