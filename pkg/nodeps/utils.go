@@ -85,6 +85,9 @@ func IsMacM1() bool {
 
 // IsGitpod returns true if running on gitpod.io
 func IsGitpod() bool {
+	if os.Getenv("DDEV_PRETEND_GITPOD") == "true" {
+		return true
+	}
 	return runtime.GOOS == "linux" && os.Getenv("GITPOD_WORKSPACE_ID") != ""
 }
 

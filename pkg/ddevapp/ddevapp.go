@@ -97,7 +97,7 @@ type DdevApp struct {
 	UploadDir             string                `yaml:"upload_dir,omitempty"`
 	WorkingDir            map[string]string     `yaml:"working_dir,omitempty"`
 	OmitContainers        []string              `yaml:"omit_containers,omitempty,flow"`
-	OmitContainerGlobal   []string              `yaml:"-"`
+	OmitContainersGlobal  []string              `yaml:"-"`
 	HostDBPort            string                `yaml:"host_db_port,omitempty"`
 	HostWebserverPort     string                `yaml:"host_webserver_port,omitempty"`
 	HostHTTPSPort         string                `yaml:"host_https_port,omitempty"`
@@ -372,8 +372,11 @@ func (app *DdevApp) GetPublishedPort(serviceName string) (int, error) {
 
 // GetOmittedContainers returns full list of global and local omitted containers
 func (app *DdevApp) GetOmittedContainers() []string {
-	omitted := app.OmitContainerGlobal
+	omitted := app.OmitContainersGlobal
 	omitted = append(omitted, app.OmitContainers...)
+	if IsRouterDisabled(app) && !nodeps.ArrayContainsString(omitted, "ddev-router") {
+		omitted = append(omitted, "ddev-router")
+	}
 	return omitted
 }
 
