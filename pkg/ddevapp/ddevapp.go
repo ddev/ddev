@@ -374,9 +374,6 @@ func (app *DdevApp) GetPublishedPort(serviceName string) (int, error) {
 func (app *DdevApp) GetOmittedContainers() []string {
 	omitted := app.OmitContainersGlobal
 	omitted = append(omitted, app.OmitContainers...)
-	if IsRouterDisabled(app) && !nodeps.ArrayContainsString(omitted, "ddev-router") {
-		omitted = append(omitted, "ddev-router")
-	}
 	return omitted
 }
 
