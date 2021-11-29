@@ -8,9 +8,9 @@
             "mode": "debug",
             "remotePath": "",
             "program": "${workspaceRoot}/cmd/ddev",
-            "cwd": "/workspace/simpleproj",
+            "cwd": "/workspace/d9simple",
             "env": {"DDEV_DEBUG": true},
-            "args": [],
+            "args": ["start", "-y"],
             "showLog": true
         },
         {
