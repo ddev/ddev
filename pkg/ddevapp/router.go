@@ -38,6 +38,9 @@ func FullRenderedRouterComposeYAMLPath() string {
 
 // IsRouterDisabled returns true if the router is disabled
 func IsRouterDisabled(app *DdevApp) bool {
+	if nodeps.IsGitpod() {
+		return false
+	}
 	return nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer)
 }
 

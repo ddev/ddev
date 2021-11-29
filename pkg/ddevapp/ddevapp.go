@@ -1395,6 +1395,35 @@ func (app *DdevApp) DockerEnv() {
 	if app.HostDBPort != "" {
 		dbPortStr = app.HostDBPort
 	}
+	isGitpod := "false"
+
+	// For gitpod,
+	// * provide IS_GITPOD environment variable
+	// * provide default host-side port bindings, assuming only one project running,
+	//   as is usual on gitpod, but if more than one project, can override with normal
+	//   config.yaml settings.
+	if nodeps.IsGitpod() {
+		isGitpod = "true"
+		if app.HostWebserverPort == "" {
+			app.HostWebserverPort = "8080"
+		}
+		if app.HostHTTPSPort == "" {
+			app.HostHTTPSPort = "8443"
+		}
+		if app.HostDBPort == "" {
+			app.HostDBPort = "3306"
+		}
+		if app.HostMailhogPort == "" {
+			app.HostMailhogPort = "8025"
+		}
+		if app.HostPHPMyAdminPort == "" {
+			app.HostPHPMyAdminPort = "8036"
+		}
+	}
+	isWSL2 := "false"
+	if nodeps.IsWSL2() {
+		isWSL2 = "true"
+	}
 
 	envVars := map[string]string{
 		// Without COMPOSE_DOCKER_CLI_BUILD=0, docker-compose makes all kinds of mess
@@ -1431,6 +1460,8 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_PRIMARY_URL":           app.GetPrimaryURL(),
 		"DOCKER_SCAN_SUGGEST":        "false",
 		"IS_DDEV_PROJECT":            "true",
+		"IS_GITPOD":                  isGitpod,
+		"IS_WSL2":                    isWSL2,
 	}
 
 	// Set the mariadb_local command to empty to prevent docker-compose from complaining normally.
