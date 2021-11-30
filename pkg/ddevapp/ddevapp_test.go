@@ -1424,6 +1424,7 @@ func TestDdevExportDB(t *testing.T) {
 	assert.NoError(err)
 	assert.Greater(f.Size(), int64(2000))
 	l, err := readLastLine("tmp/users1.sql")
+	assert.NoError(err)
 	assert.Contains(l, "-- Dump completed on")
 
 	// Now rename our (larger) users1.sql to users1.sql.gz
@@ -1505,6 +1506,9 @@ func readLastLine(fileName string) (string, error) {
 
 	buf := make([]byte, 80)
 	stat, err := os.Stat(fileName)
+	if err != nil {
+		return "", err
+	}
 	start := stat.Size() - 80
 	_, err = file.ReadAt(buf, start)
 	if err != nil {
