@@ -232,7 +232,7 @@ func CreateGitIgnore(targetDir string, ignores ...string) error {
 		return err
 	}
 
-	file, err := os.OpenFile(gitIgnoreFilePath, os.O_RDWR|os.O_CREATE, 0644)
+	file, err := os.OpenFile(gitIgnoreFilePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
