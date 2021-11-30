@@ -178,6 +178,7 @@ func (app *DdevApp) FindContainerByType(containerType string) (*docker.APIContai
 
 // Describe returns a map which provides detailed information on services associated with the running site.
 func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
+	app.DockerEnv()
 	err := app.ProcessHooks("pre-describe")
 	if err != nil {
 		return nil, fmt.Errorf("failed to process pre-describe hooks: %v", err)

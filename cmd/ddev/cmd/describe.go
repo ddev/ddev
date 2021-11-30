@@ -120,7 +120,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 				} else if httpURL, ok = v["http_url"]; ok {
 					urlPortParts = append(urlPortParts, httpURL)
 				}
-			} else if nodeps.IsGitpod() {
+			} else if nodeps.IsGitpod() && k == "web" {
 				urlPortParts = append(urlPortParts, app.GetPrimaryURL())
 			} else {
 				httpURL = v["host_http_url"]

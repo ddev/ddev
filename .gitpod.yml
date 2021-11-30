@@ -10,13 +10,7 @@ tasks:
       ddev debug download-images
       ddev delete -Oy tmp
       mkcert -install
-      export GOPATH=/workspace/go
-      for item in golang.org/x/tools/gopls@latest github.com/go-delve/delve/cmd/dlv@latest; do
-        go install $item
-      done
-      mv ~/go/bin/dlv ~/go/bin/dlv-dap
     command: |
-      export GOPATH=/workspace/go
       export DDEV_NONINTERACTIVE=true
       DDEV_REPO=${DDEV_REPO:-https://github.com/drud/d9simple}
       DDEV_ARTIFACTS=${DDEV_REPO}-artifacts
