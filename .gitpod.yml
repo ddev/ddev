@@ -10,15 +10,17 @@ tasks:
       ddev debug download-images
       ddev delete -Oy tmp
       mkcert -install
+      sudo ln -s $(which gcd) /usr/local/bin/gcc-5
     command: |
       export DDEV_NONINTERACTIVE=true
       DDEV_REPO=${DDEV_REPO:-https://github.com/drud/d9simple}
       DDEV_ARTIFACTS=${DDEV_REPO}-artifacts
-      DDEV_BRANCH=${DDEV_BRANCH:-main}
       git clone ${DDEV_ARTIFACTS} "/tmp/${DDEV_ARTIFACTS##*/}" || true
       reponame=${DDEV_REPO##*/}
-      mkdir /workspace/${reponame} && cd /workspace/${reponame}
-      git clone ${DDEV_REPO} --branch=${DDEV_BRANCH} .
+      mkdir -p /workspace/${reponame} && cd /workspace/${reponame}
+      if [ ! -d /workspace/${reponame}/.git ]; then
+        git clone ${DDEV_REPO} /workspace/${reponame}
+      fi
       if [ ! -f .ddev/config.yaml ]; then
         ddev config --auto
       fi
