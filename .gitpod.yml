@@ -10,7 +10,11 @@ tasks:
       ddev debug download-images
       ddev delete -Oy tmp
       mkcert -install
-      sudo ln -s $(which gcd) /usr/local/bin/gcc-5
+      sudo ln -sf $(which gcc) /usr/local/bin/gcc-5
+      for item in golang.org/x/tools/gopls@latest github.com/go-delve/delve/cmd/dlv@latest; do
+        go install $item
+      done
+      mv ~/go/bin/dlv ~/go/bin/dlv-dap
     command: |
       export DDEV_NONINTERACTIVE=true
       DDEV_REPO=${DDEV_REPO:-https://github.com/drud/d9simple}
