@@ -37,6 +37,8 @@ RUN brew cleanup
 RUN sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
 
 COPY gitpod-setup-ddev.sh /usr/local/bin
+# a gcc instance named gcc-5 is required for some vscode installations
+RUN sudo ln -sf $(which gcc) /usr/local/bin/gcc-5
 # End workspace-base
 
 FROM scratch as ddev-gitpod-base
