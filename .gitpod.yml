@@ -10,7 +10,6 @@ tasks:
       ddev debug download-images
       ddev delete -Oy tmp
       mkcert -install
-      sudo ln -sf $(which gcc) /usr/local/bin/gcc-5
       export GOPATH=/workspace/go
       for item in golang.org/x/tools/gopls@latest github.com/go-delve/delve/cmd/dlv@latest; do
         go install $item
