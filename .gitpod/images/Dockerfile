@@ -39,6 +39,12 @@ RUN sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
 COPY gitpod-setup-ddev.sh /usr/local/bin
 # a gcc instance named gcc-5 is required for some vscode installations
 RUN sudo ln -sf $(which gcc) /usr/local/bin/gcc-5
+
+RUN for item in golang.org/x/tools/gopls@latest github.com/go-delve/delve/cmd/dlv@latest; do \
+        go install $item; \
+    done
+RUN cp ~/go/bin/dlv ~/go/bin/dlv-dap
+
 # End workspace-base
 
 FROM scratch as ddev-gitpod-base
