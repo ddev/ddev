@@ -145,7 +145,7 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 	return FullRenderedSSHAuthComposeYAMLPath(), nil
 }
 
-// findDdevSSHAuth usees FindContainerByLabels to get our sshAuth container and
+// findDdevSSHAuth uses FindContainerByLabels to get our sshAuth container and
 // return it (or nil if it doesn't exist yet)
 func findDdevSSHAuth() (*docker.APIContainers, error) {
 	containerQuery := map[string]string{

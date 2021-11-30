@@ -504,12 +504,12 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.FailOnHookFail = failOnHookFail
 	}
 
-	// This bool flag is false by default, so only use the value if the flag was explicity set.
+	// This bool flag is false by default, so only use the value if the flag was explicitly set.
 	if cmd.Flag("xdebug-enabled").Changed {
 		app.XdebugEnabled = xdebugEnabledArg
 	}
 
-	// This bool flag is false by default, so only use the value if the flag was explicity set.
+	// This bool flag is false by default, so only use the value if the flag was explicitly set.
 	if cmd.Flag("no-project-mount").Changed {
 		app.NoProjectMount = noProjectMountArg
 	}

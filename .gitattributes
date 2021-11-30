@@ -5,7 +5,7 @@
 # In general on this project there's no reason to have git changing line endings.
 # Modern editors can do the right thing with lf and should be set to do so, whether
 # on Windows or elsewhere.
-# The incredibly big gotcha here is that if a *.sh gets checked out on WIndows with CRLF and then built
+# The incredibly big gotcha here is that if a *.sh gets checked out on Windows with CRLF and then built
 # into a container with the CRLF, it can't run in linux.
 
 # -text here essentially is the same as core.autocrlf=false

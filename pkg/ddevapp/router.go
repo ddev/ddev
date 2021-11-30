@@ -162,7 +162,7 @@ func generateRouterCompose() (string, error) {
 	return routerComposeFullPath, nil
 }
 
-// FindDdevRouter usees FindContainerByLabels to get our router container and
+// FindDdevRouter uses FindContainerByLabels to get our router container and
 // return it.
 func FindDdevRouter() (*docker.APIContainers, error) {
 	containerQuery := map[string]string{

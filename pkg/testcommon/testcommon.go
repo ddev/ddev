@@ -58,7 +58,7 @@ type TestSite struct {
 	Dir string
 	// HTTPProbeURI is the URI that can be probed to look for a working web container
 	HTTPProbeURI string
-	// Docroot is the subdirectory witin the site that is the root/index.php
+	// Docroot is the subdirectory within the site that is the root/index.php
 	Docroot string
 	// Type is the type of application. This can be specified when a config file is not present
 	// for a test site.

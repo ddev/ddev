@@ -105,7 +105,7 @@ func init() {
 func (app *DdevApp) CreateSettingsFile() (string, error) {
 	err := PrepDdevDirectory(filepath.Dir(app.ConfigPath))
 	if err != nil {
-		util.Warning("Unable to PrepDdevDiredtory: %v", err)
+		util.Warning("Unable to PrepDdevDirectory: %v", err)
 	}
 
 	app.SetApptypeSettingsPaths()

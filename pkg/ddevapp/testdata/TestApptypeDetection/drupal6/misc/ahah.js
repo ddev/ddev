@@ -234,7 +234,7 @@ Drupal.ahah.prototype.success = function (response, status) {
  */
 Drupal.ahah.prototype.error = function (response, uri) {
   alert(Drupal.ahahError(response, uri));
-  // Resore the previous action and target to the form.
+  // Restore the previous action and target to the form.
   $(this.element).parent('form').attr( { action: this.form_action, target: this.form_target} );
   // Remove the progress element.
   if (this.progress.element) {
@@ -246,7 +246,7 @@ Drupal.ahah.prototype.error = function (response, uri) {
   // Undo hide.
   $(this.wrapper).show();
   // Re-enable the element.
-  $(this.element).removeClass('progess-disabled').attr('disabled', false);
+  $(this.element).removeClass('progress-disabled').attr('disabled', false);
 };
 
 /**

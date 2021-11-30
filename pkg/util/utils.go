@@ -176,7 +176,7 @@ func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 
 // IsCommandAvailable uses shell's "command" to find out if a command is available
 // https://siongui.github.io/2018/03/16/go-check-if-command-exists/
-// This lives here instead of in fileutil to avoid unecessary import cycles.
+// This lives here instead of in fileutil to avoid unnecessary import cycles.
 func IsCommandAvailable(cmdName string) bool {
 	_, err := osexec.LookPath(cmdName)
 	if err == nil {

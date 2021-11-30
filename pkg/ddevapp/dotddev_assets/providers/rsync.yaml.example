@@ -9,7 +9,7 @@
 #
 # 1. You need a database dump and/or user-generated files tarball that you
 #    have access to somewhere on the internet
-# 2. Copy rsync.yaml.example to rync.yaml (or name it as you see fit)
+# 2. Copy rsync.yaml.example to rsync.yaml (or name it as you see fit)
 # 3. `ddev auth ssh` (only needs to be done once per ddev session or reboot)
 # 4. Use `ddev pull rsync` to pull the project database and files.
 # 5. `ddev push rsync` can push the project database and files
