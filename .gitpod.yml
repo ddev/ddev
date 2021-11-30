@@ -63,8 +63,8 @@ github:
     addLabel: true
 
 ports:
-  # Ignore direct-build https port
-  - port: 2222
+  # Ignore host https port
+  - port: 8443
     onOpen: ignore
   - port: 3306
     onOpen: ignore
