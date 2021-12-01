@@ -1007,7 +1007,7 @@ func CheckAvailableSpace() {
 // if it's either not yet installed or has the wrong version.
 func DownloadDockerComposeIfNeeded() error {
 	curVersion, err := version.GetLiveDockerComposeVersion()
-	if err != nil || curVersion != version.RequiredDockerComposeVersion {
+	if err != nil || curVersion != "v"+version.RequiredDockerComposeVersion {
 		err = DownloadDockerCompose()
 		if err != nil {
 			return err
@@ -1019,25 +1019,19 @@ func DownloadDockerComposeIfNeeded() error {
 // DownloadDockerCompose gets the docker-compose binary and puts it into
 // ~/.ddev/.bin
 func DownloadDockerCompose() error {
-	arch := runtime.GOARCH
-	switch arch {
-	case "arm64":
-		arch = "aarch64"
-	case "amd64":
-		arch = "x86_64"
-	default:
-		return fmt.Errorf("Only arm64 and amd64 architectures are supported for docker-compose, not %s", arch)
-	}
-	flavor := runtime.GOOS + "-" + arch
 	globalBinDir := globalconfig.GetDDEVBinDir()
 	destFile := globalconfig.GetDockerComposePath()
-	composeURL := fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/docker-compose-%s", version.RequiredDockerComposeVersion, flavor)
+
+	composeURL, err := dockerComposeDownloadLink()
+	if err != nil {
+		return err
+	}
 	output.UserOut.Printf("Downloading %s ...", composeURL)
 
 	_ = os.Remove(globalconfig.GetDockerComposePath())
 
 	_ = os.MkdirAll(globalBinDir, 0777)
-	err := util.DownloadFile(destFile, composeURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"))
+	err = util.DownloadFile(destFile, composeURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"))
 	if err != nil {
 		return err
 	}
@@ -1049,4 +1043,57 @@ func DownloadDockerCompose() error {
 	}
 
 	return nil
+}
+
+func dockerComposeDownloadLink() (string, error) {
+	baseVersion := version.RequiredDockerComposeVersion[1:2]
+	switch baseVersion {
+	case "1":
+		return dockerComposeDownloadLinkV1()
+	case "2":
+		return dockerComposeDownloadLinkV2()
+	}
+	return "", fmt.Errorf("Invalid docker-compose base version %s", version.RequiredDockerComposeVersion)
+}
+
+// dockerComposeDownloadLinkV1 downlods compose v1 downloads like
+//   https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Darwin-x86_64
+//   https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
+//   https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Windows-x86_64.exe
+func dockerComposeDownloadLinkV1() (string, error) {
+	arch := runtime.GOARCH
+	goos := strings.Title(runtime.GOOS)
+
+	switch arch {
+	case "amd64":
+		arch = "x86_64"
+	default:
+		return "", fmt.Errorf("Only amd64 architecture is supported for docker-compose v1, not %s", arch)
+	}
+	// docker-compose v1 does not use the 'v', so strip it.
+	v := version.RequiredDockerComposeVersion[1:]
+	flavor := goos + "-" + arch
+	ComposeURL := fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/docker-compose-%s", v, flavor)
+	return ComposeURL, nil
+}
+
+// dockerComposeDownloadLinkV2 downlods compose v1 downloads like
+//   https://github.com/docker/compose/releases/download/v2.2.1/docker-compose-darwin-aarch64
+//   https://github.com/docker/compose/releases/download/v2.2.1/docker-compose-darwin-x86_64
+//   https://github.com/docker/compose/releases/download/v2.2.1/docker-compose-windows-x86_64.exe
+
+func dockerComposeDownloadLinkV2() (string, error) {
+	arch := runtime.GOARCH
+
+	switch arch {
+	case "arm64":
+		arch = "aarch64"
+	case "amd64":
+		arch = "x86_64"
+	default:
+		return "", fmt.Errorf("Only arm64 and amd64 architectures are supported for docker-compose v2, not %s", arch)
+	}
+	flavor := runtime.GOOS + "-" + arch
+	ComposeURL := fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/docker-compose-%s", version.RequiredDockerComposeVersion, flavor)
+	return ComposeURL, nil
 }

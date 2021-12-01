@@ -228,16 +228,25 @@ func GetLiveDockerComposeVersion() (string, error) {
 		DockerComposeVersion = ""
 		return DockerComposeVersion, nil
 	}
-	out, err := exec.Command(DockerComposePath, "--version").Output()
+	out, err := exec.Command(DockerComposePath, "--version", "--short").Output()
 	if err != nil {
 		return "", err
 	}
 
-	v := string(out)
+	v := strings.Trim(string(out), "\n")
 	parts := strings.Split(v, " ")
-	if len(parts) != 4 {
-		return "", fmt.Errorf("docker-compose --version does not have 4 parts")
+	if len(parts) == 1 {
+		if strings.HasPrefix(parts[0], "v2") {
+			DockerComposeVersion = parts[0]
+		}
+	} else if len(parts) == 5 {
+		if strings.HasPrefix(parts[2], "1.") {
+			DockerComposeVersion = "v" + parts[2]
+		}
+	} else {
+		return "", fmt.Errorf("Unable to parse docker-compose version %s", v)
 	}
+
 	DockerComposeVersion = strings.TrimSpace(parts[3])
 	return DockerComposeVersion, nil
 }
