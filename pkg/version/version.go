@@ -154,7 +154,10 @@ func GetDockerComposeVersion() (string, error) {
 		return DockerComposeVersion, nil
 	}
 
-	path := globalconfig.GetDockerComposePath()
+	path, err := globalconfig.GetDockerComposePath()
+	if err != nil {
+		return "", err
+	}
 
 	// TODO: Handle the case where global config overrides the docker-compose version or path
 	//executableName := "docker-compose"
@@ -222,7 +225,12 @@ func GetLiveDockerComposeVersion() (string, error) {
 		return DockerComposeVersion, nil
 	}
 
-	DockerComposePath := globalconfig.GetDockerComposePath()
+	path, err := globalconfig.GetDockerComposePath()
+	if err != nil {
+		return "", err
+	}
+
+	DockerComposePath := path
 
 	if !fileutil.FileExists(DockerComposePath) {
 		DockerComposeVersion = ""
@@ -239,7 +247,7 @@ func GetLiveDockerComposeVersion() (string, error) {
 		if strings.HasPrefix(parts[0], "v2") {
 			DockerComposeVersion = parts[0]
 		}
-	} else if len(parts) == 5 {
+	} else if len(parts) == 5 { // As in docker-compose v1
 		if strings.HasPrefix(parts[2], "1.") {
 			DockerComposeVersion = "v" + parts[2]
 		}
@@ -247,6 +255,5 @@ func GetLiveDockerComposeVersion() (string, error) {
 		return "", fmt.Errorf("Unable to parse docker-compose version %s", v)
 	}
 
-	DockerComposeVersion = strings.TrimSpace(parts[3])
 	return DockerComposeVersion, nil
 }

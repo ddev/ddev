@@ -402,7 +402,11 @@ func ComposeWithStreams(composeFiles []string, stdin io.Reader, stdout io.Writer
 
 	arg = append(arg, action...)
 
-	proc := exec.Command(globalconfig.GetDockerComposePath(), arg...)
+	path, err := globalconfig.GetDockerComposePath()
+	if err != nil {
+		return err
+	}
+	proc := exec.Command(path, arg...)
 	proc.Stdout = stdout
 	proc.Stdin = stdin
 	proc.Stderr = stderr
@@ -429,7 +433,11 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 
 	arg = append(arg, action...)
 
-	proc := exec.Command(globalconfig.GetDockerComposePath(), arg...)
+	path, err := globalconfig.GetDockerComposePath()
+	if err != nil {
+		return "", "", err
+	}
+	proc := exec.Command(path, arg...)
 	proc.Stdout = &stdout
 	proc.Stdin = os.Stdin
 
@@ -1007,7 +1015,7 @@ func CheckAvailableSpace() {
 // if it's either not yet installed or has the wrong version.
 func DownloadDockerComposeIfNeeded() error {
 	curVersion, err := version.GetLiveDockerComposeVersion()
-	if err != nil || curVersion != "v"+version.RequiredDockerComposeVersion {
+	if err != nil || curVersion != version.RequiredDockerComposeVersion {
 		err = DownloadDockerCompose()
 		if err != nil {
 			return err
@@ -1020,7 +1028,7 @@ func DownloadDockerComposeIfNeeded() error {
 // ~/.ddev/.bin
 func DownloadDockerCompose() error {
 	globalBinDir := globalconfig.GetDDEVBinDir()
-	destFile := globalconfig.GetDockerComposePath()
+	destFile, _ := globalconfig.GetDockerComposePath()
 
 	composeURL, err := dockerComposeDownloadLink()
 	if err != nil {
@@ -1028,7 +1036,11 @@ func DownloadDockerCompose() error {
 	}
 	output.UserOut.Printf("Downloading %s ...", composeURL)
 
-	_ = os.Remove(globalconfig.GetDockerComposePath())
+	path, err := globalconfig.GetDockerComposePath()
+	if err != nil {
+		return err
+	}
+	_ = os.Remove(path)
 
 	_ = os.MkdirAll(globalBinDir, 0777)
 	err = util.DownloadFile(destFile, composeURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"))

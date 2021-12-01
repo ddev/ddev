@@ -36,26 +36,28 @@ type ProjectInfo struct {
 
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
-	OmitContainersGlobal     []string                `yaml:"omit_containers,flow"`
-	NFSMountEnabledGlobal    bool                    `yaml:"nfs_mount_enabled"`
-	MutagenEnabledGlobal     bool                    `yaml:"mutagen_enabled"`
-	InstrumentationOptIn     bool                    `yaml:"instrumentation_opt_in"`
-	RouterBindAllInterfaces  bool                    `yaml:"router_bind_all_interfaces"`
-	InternetDetectionTimeout int64                   `yaml:"internet_detection_timeout_ms"`
-	DeveloperMode            bool                    `yaml:"developer_mode,omitempty"`
-	InstrumentationUser      string                  `yaml:"instrumentation_user,omitempty"`
-	LastStartedVersion       string                  `yaml:"last_started_version"`
-	MkcertCARoot             string                  `yaml:"mkcert_caroot"`
-	UseHardenedImages        bool                    `yaml:"use_hardened_images"`
-	UseLetsEncrypt           bool                    `yaml:"use_letsencrypt"`
-	LetsEncryptEmail         string                  `yaml:"letsencrypt_email"`
-	AutoRestartContainers    bool                    `yaml:"auto_restart_containers"`
-	FailOnHookFailGlobal     bool                    `yaml:"fail_on_hook_fail"`
-	WebEnvironment           []string                `yaml:"web_environment"`
-	DisableHTTP2             bool                    `yaml:"disable_http2"`
-	TableStyle               string                  `yaml:"table_style"`
-	SimpleFormatting         bool                    `yaml:"simple_formatting"`
-	ProjectList              map[string]*ProjectInfo `yaml:"project_info"`
+	OmitContainersGlobal         []string                `yaml:"omit_containers,flow"`
+	NFSMountEnabledGlobal        bool                    `yaml:"nfs_mount_enabled"`
+	MutagenEnabledGlobal         bool                    `yaml:"mutagen_enabled"`
+	InstrumentationOptIn         bool                    `yaml:"instrumentation_opt_in"`
+	RouterBindAllInterfaces      bool                    `yaml:"router_bind_all_interfaces"`
+	InternetDetectionTimeout     int64                   `yaml:"internet_detection_timeout_ms"`
+	DeveloperMode                bool                    `yaml:"developer_mode,omitempty"`
+	InstrumentationUser          string                  `yaml:"instrumentation_user,omitempty"`
+	LastStartedVersion           string                  `yaml:"last_started_version"`
+	MkcertCARoot                 string                  `yaml:"mkcert_caroot"`
+	UseHardenedImages            bool                    `yaml:"use_hardened_images"`
+	UseLetsEncrypt               bool                    `yaml:"use_letsencrypt"`
+	LetsEncryptEmail             string                  `yaml:"letsencrypt_email"`
+	AutoRestartContainers        bool                    `yaml:"auto_restart_containers"`
+	FailOnHookFailGlobal         bool                    `yaml:"fail_on_hook_fail"`
+	WebEnvironment               []string                `yaml:"web_environment"`
+	DisableHTTP2                 bool                    `yaml:"disable_http2"`
+	TableStyle                   string                  `yaml:"table_style"`
+	SimpleFormatting             bool                    `yaml:"simple_formatting"`
+	ProjectList                  map[string]*ProjectInfo `yaml:"project_info"`
+	RequiredDockerComposeVersion string                  `yaml:"required_docker_compose_version,omitempty"`
+	UseDockerComposeFromPath     bool                    `yaml:"use_docker_compose_from_path,omitempty"`
 }
 
 // GetGlobalConfigPath gets the path to global config file
@@ -78,12 +80,22 @@ func GetMutagenPath() string {
 }
 
 // GetDockerComposePath gets the full path to the docker-compose binary
-func GetDockerComposePath() string {
-	mutagenBinary := "docker-compose"
-	if runtime.GOOS == "windows" {
-		mutagenBinary = mutagenBinary + ".exe"
+// Normally this is the one that has been downloaded to ~/.ddev/bin, but if
+// UseDockerComposeFromPath, then it will be whatever if found in $PATH
+func GetDockerComposePath() (string, error) {
+	if DdevGlobalConfig.UseDockerComposeFromPath {
+		executableName := "docker-compose"
+		path, err := exec.LookPath(executableName)
+		if err != nil {
+			return "", fmt.Errorf("no docker-compose")
+		}
+		return path, nil
 	}
-	return filepath.Join(GetDDEVBinDir(), mutagenBinary)
+	composeBinary := "docker-compose"
+	if runtime.GOOS == "windows" {
+		composeBinary = composeBinary + ".exe"
+	}
+	return filepath.Join(GetDDEVBinDir(), composeBinary), nil
 }
 
 // GetTableStyle returns the configured (string) table style
@@ -254,6 +266,16 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 # fail_on_hook_fail: false
 # Decide whether 'ddev start' should be interrupted by a failing hook
+
+# required_docker_compose_version: ""
+# This can be used to override the default required docker-compose version
+# It should normally be left alone, but can be set to, for example, "v2.1.1"
+
+# use_docker_compose_from_path: false
+# This can be set to true to allow ddev to use whatever docker-compose is
+# found in the $PATH instead of using the private docker-compose downloaded
+# to ~/.ddev/bin/docker-compose.
+# Please don't use this unless directed to do so
 
 `
 	cfgbytes = append(cfgbytes, instructions...)
