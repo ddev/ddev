@@ -390,6 +390,11 @@ func ComposeWithStreams(composeFiles []string, stdin io.Reader, stdout io.Writer
 	runTime := util.TimeTrack(time.Now(), "dockerutil.ComposeWithStreams")
 	defer runTime()
 
+	err := DownloadDockerComposeIfNeeded()
+	if err != nil {
+		return err
+	}
+
 	for _, file := range composeFiles {
 		arg = append(arg, "-f")
 		arg = append(arg, file)
@@ -402,7 +407,7 @@ func ComposeWithStreams(composeFiles []string, stdin io.Reader, stdout io.Writer
 	proc.Stdin = stdin
 	proc.Stderr = stderr
 
-	err := proc.Run()
+	err = proc.Run()
 	return err
 }
 
@@ -412,6 +417,11 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 	var arg []string
 	var stdout bytes.Buffer
 	var stderr string
+
+	err := DownloadDockerComposeIfNeeded()
+	if err != nil {
+		return "", "", err
+	}
 
 	for _, file := range composeFiles {
 		arg = append(arg, "-f", file)
@@ -991,4 +1001,47 @@ func CheckAvailableSpace() {
 	if (100 - spacePercent) < nodeps.MinimumDockerSpaceWarning {
 		util.Error("Your docker installation has less than %d%% available space (%d%% used). Please increase disk image size.", nodeps.MinimumDockerSpaceWarning, spacePercent)
 	}
+}
+
+// DownloadDockerComposeIfNeeded downloads the proper version of docker-compose
+// if it's either not yet installed or has the wrong version.
+func DownloadDockerComposeIfNeeded() error {
+	curVersion, err := version.GetLiveDockerComposeVersion()
+	if err != nil || curVersion != version.RequiredDockerComposeVersion {
+		err = DownloadDockerCompose()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// DownloadDockerCompose gets the docker-compose binary and puts it into
+// ~/.ddev/.bin
+func DownloadDockerCompose() error {
+	arch := runtime.GOARCH
+	if arch == "arm64" {
+		arch = "aarch64"
+	}
+	flavor := runtime.GOOS + "-" + arch
+	globalBinDir := globalconfig.GetDDEVBinDir()
+	destFile := globalconfig.GetDockerComposePath()
+	composeURL := fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/docker-compose-%s", version.RequiredDockerComposeVersion, flavor)
+	output.UserOut.Printf("Downloading %s ...", composeURL)
+
+	_ = os.Remove(globalconfig.GetDockerComposePath())
+
+	_ = os.MkdirAll(globalBinDir, 0777)
+	err := util.DownloadFile(destFile, composeURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"))
+	if err != nil {
+		return err
+	}
+	output.UserOut.Printf("Download complete.")
+
+	err = os.Chmod(destFile, 0755)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
