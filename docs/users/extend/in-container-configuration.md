@@ -18,6 +18,7 @@ Usage examples:
     StrictHostKeyChecking=no
     ```
 
+* You can add small scripts to the `.bashrc.d` directory and they will be executed on `ddev ssh`. For example, add a `~/.ddev/homeadditions/.bashrc.d/whereami` containing `echo "I am in the $(hostname) container"` and (after `ddev restart`) when you `ddev ssh` that will be executed.
 * If you have a favorite .bashrc, copy it in to either the global or project homeadditions.
 
 * If you like the traditional `ll` bash alias for `ls -l`, add a .ddev/homeadditions/.bash_aliases with these contents:

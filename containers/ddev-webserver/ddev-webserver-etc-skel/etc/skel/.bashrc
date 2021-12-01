@@ -115,3 +115,5 @@ fi
 for f in /etc/bashrc/*.bashrc; do
   source $f;
 done
+
+for i in $HOME/.bashrc.d/*; do source $i; done
