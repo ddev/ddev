@@ -576,7 +576,7 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool, targetDB string) error {
 		opts.Cmd = fmt.Sprintf("mysqldump %s | gzip", targetDB)
 	}
 	if outFile != "" {
-		f, err := os.OpenFile(outFile, os.O_RDWR|os.O_CREATE, 0644)
+		f, err := os.OpenFile(outFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
 			return fmt.Errorf("failed to open %s: %v", outFile, err)
 		}

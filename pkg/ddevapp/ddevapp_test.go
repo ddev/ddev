@@ -1413,9 +1413,33 @@ func TestDdevExportDB(t *testing.T) {
 	err = fileutil.PurgeDirectory("tmp")
 	assert.NoError(err)
 
-	// Test that we can export-db to a gzipped file
+	// Test that we can export-db to a plain file. This should be larger than
+	// the gzipped file we'll do next.
+	err = app.ExportDB("tmp/users1.sql", false, "db")
+	assert.NoError(err)
+
+	// The users1.sql should be something over 2K
+	// and should finish with "Dump completed on"
+	f, err := os.Stat("tmp/users1.sql")
+	assert.NoError(err)
+	assert.Greater(f.Size(), int64(2000))
+	l, err := readLastLine("tmp/users1.sql")
+	assert.NoError(err)
+	assert.Contains(l, "-- Dump completed on")
+
+	// Now rename our (larger) users1.sql to users1.sql.gz
+	// so we can overwrite it and come out with a totally valid new file.
+	err = os.Rename("tmp/users1.sql", "tmp/users1.sql.gz")
+	assert.NoError(err)
+
+	// Test that we can export-db to an existing gzipped file
 	err = app.ExportDB("tmp/users1.sql.gz", true, "db")
 	assert.NoError(err)
+
+	// The new gzipped file should be less than 1K
+	f, err = os.Stat("tmp/users1.sql.gz")
+	assert.NoError(err)
+	assert.Less(f.Size(), int64(1000))
 
 	// Validate contents
 	err = archive.Ungzip("tmp/users1.sql.gz", "tmp")
@@ -1469,6 +1493,28 @@ func TestDdevExportDB(t *testing.T) {
 	assert.Equal("2\n", out)
 
 	runTime()
+}
+
+// readLastLine opens the fileName listed and returns the last
+// 80 bytes of the file
+func readLastLine(fileName string) (string, error) {
+	file, err := os.Open(fileName)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	buf := make([]byte, 80)
+	stat, err := os.Stat(fileName)
+	if err != nil {
+		return "", err
+	}
+	start := stat.Size() - 80
+	_, err = file.ReadAt(buf, start)
+	if err != nil {
+		return "", err
+	}
+	return string(buf), nil
 }
 
 // TestDdevFullSiteSetup tests a full import-db and import-files and then looks to see if

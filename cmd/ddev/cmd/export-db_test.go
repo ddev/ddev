@@ -60,6 +60,8 @@ func TestCmdExportDB(t *testing.T) {
 	err = os.Chdir(tmpDir)
 	assert.NoError(err)
 
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
 	err = os.RemoveAll(outputFileName)
 	assert.NoError(err)
 	command = exec.Command(DdevBin, "export-db", site.Name, "-f="+outputFileName, "--gzip=false")
