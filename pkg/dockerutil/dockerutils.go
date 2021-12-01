@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"io"
 	"log"
 	"net"
@@ -396,7 +397,7 @@ func ComposeWithStreams(composeFiles []string, stdin io.Reader, stdout io.Writer
 
 	arg = append(arg, action...)
 
-	proc := exec.Command("docker-compose", arg...)
+	proc := exec.Command(globalconfig.GetDockerComposePath(), arg...)
 	proc.Stdout = stdout
 	proc.Stdin = stdin
 	proc.Stderr = stderr
@@ -418,7 +419,7 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 
 	arg = append(arg, action...)
 
-	proc := exec.Command("docker-compose", arg...)
+	proc := exec.Command(globalconfig.GetDockerComposePath(), arg...)
 	proc.Stdout = &stdout
 	proc.Stdin = os.Stdin
 

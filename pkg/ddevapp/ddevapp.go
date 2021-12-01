@@ -826,6 +826,11 @@ func (app *DdevApp) Start() error {
 	if err != nil {
 		return err
 	}
+	err = DownloadDockerComposeIfNeeded(app)
+	if err != nil {
+		return err
+	}
+
 	err = app.ProcessHooks("pre-start")
 	if err != nil {
 		return err

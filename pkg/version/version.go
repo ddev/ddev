@@ -79,6 +79,8 @@ var DockerVersion = ""
 // DockerComposeVersion is filled with the version we find for docker-compose
 var DockerComposeVersion = ""
 
+const RequiredDockerComposeVersion = "v2.1.1"
+
 // MutagenVersion is filled with the version we find for mutagen in use
 var MutagenVersion = ""
 
@@ -148,17 +150,19 @@ func GetRouterImage() string {
 
 // GetDockerComposeVersion runs docker-compose -v to get the current version
 func GetDockerComposeVersion() (string, error) {
-
 	if DockerComposeVersion != "" {
 		return DockerComposeVersion, nil
 	}
 
-	executableName := "docker-compose"
+	path := globalconfig.GetDockerComposePath()
 
-	path, err := exec.LookPath(executableName)
-	if err != nil {
-		return "", fmt.Errorf("no docker-compose")
-	}
+	// TODO: Handle the case where global config overrides the docker-compose version or path
+	//executableName := "docker-compose"
+
+	//path, err := exec.LookPath(executableName)
+	//if err != nil {
+	//	return "", fmt.Errorf("no docker-compose")
+	//}
 
 	out, err := exec.Command(path, "version", "--short").Output()
 	if err != nil {
@@ -210,4 +214,30 @@ func GetLiveMutagenVersion() (string, error) {
 	v := string(out)
 	MutagenVersion = strings.TrimSpace(v)
 	return MutagenVersion, nil
+}
+
+// GetLiveDockerComposeVersion runs `docker-compose --version` and caches result
+func GetLiveDockerComposeVersion() (string, error) {
+	if DockerComposeVersion != "" {
+		return DockerComposeVersion, nil
+	}
+
+	DockerComposePath := globalconfig.GetDockerComposePath()
+
+	if !fileutil.FileExists(DockerComposePath) {
+		DockerComposeVersion = ""
+		return DockerComposeVersion, nil
+	}
+	out, err := exec.Command(DockerComposePath, "--version").Output()
+	if err != nil {
+		return "", err
+	}
+
+	v := string(out)
+	parts := strings.Split(v, " ")
+	if len(parts) != 4 {
+		return "", fmt.Errorf("docker-compose --version does not have 4 parts")
+	}
+	DockerComposeVersion = strings.TrimSpace(parts[3])
+	return DockerComposeVersion, nil
 }

@@ -63,8 +63,8 @@ func GetGlobalConfigPath() string {
 	return filepath.Join(GetGlobalDdevDir(), DdevGlobalConfigName)
 }
 
-// GetMutagenDir returns the directory of the mutagen config and binary
-func GetMutagenDir() string {
+// GetDDEVBinDir returns the directory of the mutagen config and binary
+func GetDDEVBinDir() string {
 	return filepath.Join(GetGlobalDdevDir(), "bin")
 }
 
@@ -74,7 +74,16 @@ func GetMutagenPath() string {
 	if runtime.GOOS == "windows" {
 		mutagenBinary = mutagenBinary + ".exe"
 	}
-	return filepath.Join(GetMutagenDir(), mutagenBinary)
+	return filepath.Join(GetDDEVBinDir(), mutagenBinary)
+}
+
+// GetDockerComposePath gets the full path to the docker-compose binary
+func GetDockerComposePath() string {
+	mutagenBinary := "docker-compose"
+	if runtime.GOOS == "windows" {
+		mutagenBinary = mutagenBinary + ".exe"
+	}
+	return filepath.Join(GetDDEVBinDir(), mutagenBinary)
 }
 
 // GetTableStyle returns the configured (string) table style
