@@ -1020,8 +1020,13 @@ func DownloadDockerComposeIfNeeded() error {
 // ~/.ddev/.bin
 func DownloadDockerCompose() error {
 	arch := runtime.GOARCH
-	if arch == "arm64" {
+	switch arch {
+	case "arm64":
 		arch = "aarch64"
+	case "amd64":
+		arch = "x86_64"
+	default:
+		return fmt.Errorf("Only arm64 and amd64 architectures are supported for docker-compose, not %s", arch)
 	}
 	flavor := runtime.GOOS + "-" + arch
 	globalBinDir := globalconfig.GetDDEVBinDir()
