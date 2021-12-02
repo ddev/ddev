@@ -390,7 +390,7 @@ func ComposeWithStreams(composeFiles []string, stdin io.Reader, stdout io.Writer
 	runTime := util.TimeTrack(time.Now(), "dockerutil.ComposeWithStreams")
 	defer runTime()
 
-	err := DownloadDockerComposeIfNeeded()
+	_, err := DownloadDockerComposeIfNeeded()
 	if err != nil {
 		return err
 	}
@@ -422,7 +422,7 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 	var stdout bytes.Buffer
 	var stderr string
 
-	err := DownloadDockerComposeIfNeeded()
+	_, err := DownloadDockerComposeIfNeeded()
 	if err != nil {
 		return "", "", err
 	}
@@ -1013,20 +1013,22 @@ func CheckAvailableSpace() {
 
 // DownloadDockerComposeIfNeeded downloads the proper version of docker-compose
 // if it's either not yet installed or has the wrong version.
-func DownloadDockerComposeIfNeeded() error {
+// Returns downloaded bool (true if it did the download) and err
+func DownloadDockerComposeIfNeeded() (bool, error) {
 	requiredVersion := version.GetRequiredDockerComposeVersion()
+	var err error
 	if requiredVersion == "" {
 		util.Debug("globalconfig use_docker_compose_from_path is set, so not downloading")
-		return nil
+		return false, nil
 	}
 	curVersion, err := version.GetLiveDockerComposeVersion()
 	if err != nil || curVersion != requiredVersion {
 		err = DownloadDockerCompose()
-		if err != nil {
-			return err
+		if err == nil {
+			return true, err
 		}
 	}
-	return nil
+	return false, err
 }
 
 // DownloadDockerCompose gets the docker-compose binary and puts it into

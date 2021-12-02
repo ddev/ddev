@@ -79,7 +79,9 @@ var DockerVersion = ""
 // DockerComposeVersion is filled with the version we find for docker-compose
 var DockerComposeVersion = ""
 
-const RequiredDockerComposeVersion = "v2.1.1"
+// This is var instead of const so it can be changed in test, but should not otherwise be touched.
+// Otherwise we can't test if the version on the machine is equal to version required
+var RequiredDockerComposeVersion = "v2.1.1"
 
 // MutagenVersion is filled with the version we find for mutagen in use
 var MutagenVersion = ""
@@ -241,22 +243,29 @@ func GetLiveDockerComposeVersion() (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	v := strings.Trim(string(out), "\n")
-	parts := strings.Split(v, " ")
+
+	DockerComposeVersion, err = ParseDockerComposeVersion(v)
+	return DockerComposeVersion, err
+}
+
+// ParseDockerComposeVersion returns the actual version found
+// in `docker-compose version` with either v1 or v2
+func ParseDockerComposeVersion(versionString string) (string, error) {
+	parts := strings.Split(versionString, " ")
+	foundVersion := ""
 	if len(parts) == 1 {
 		if strings.HasPrefix(parts[0], "v2") {
-			DockerComposeVersion = parts[0]
+			foundVersion = parts[0]
 		}
 	} else if len(parts) == 5 { // As in docker-compose v1
 		if strings.HasPrefix(parts[2], "1.") {
-			DockerComposeVersion = "v" + parts[2]
+			foundVersion = "v" + parts[2]
 		}
 	} else {
-		return "", fmt.Errorf("Unable to parse docker-compose version %s", v)
+		return "", fmt.Errorf("Unable to parse docker-compose version %s", versionString)
 	}
-
-	return DockerComposeVersion, nil
+	return foundVersion, nil
 }
 
 // GetRequiredDockerComposeVersion returns the version of docker-compose we need
