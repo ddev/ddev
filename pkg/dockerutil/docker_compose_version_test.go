@@ -86,7 +86,7 @@ func TestDockerComposeDownload(t *testing.T) {
 	assert.NoError(err)
 	out, err := exec2.RunHostCommand(path, "version", "--short")
 	assert.NoError(err)
-	parsedFoundVersion := strings.Trim(string(out), "\n")
+	parsedFoundVersion := strings.Trim(string(out), "\r\n")
 	if strings.HasPrefix(parsedFoundVersion, "1") {
 		parsedFoundVersion = "v" + parsedFoundVersion
 	}

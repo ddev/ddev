@@ -303,7 +303,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 		Cmd:     "date +%s",
 	})
 	require.NoError(t, err, "failed to run exec: %v, output='%s', stderr='%s'", err, oldTime, stderr)
-	oldTime = strings.Trim(oldTime, "\n")
+	oldTime = strings.Trim(oldTime, "\r\n")
 	oldTimeInt, err := strconv.ParseInt(oldTime, 10, 64)
 	require.NoError(t, err)
 

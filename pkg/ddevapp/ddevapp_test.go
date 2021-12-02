@@ -3461,7 +3461,7 @@ func TestHostDBPort(t *testing.T) {
 		_, _ = exec.RunCommand(DdevBin, []string{})
 		out, err := exec.RunCommand(DdevBin, []string{"showport"})
 		assert.NoError(err)
-		assert.EqualValues("DDEV_HOST_DB_PORT="+dbPortStr, strings.Trim(out, "\n"))
+		assert.EqualValues("DDEV_HOST_DB_PORT="+dbPortStr, strings.Trim(out, "\r\n"))
 	}
 }
 
@@ -3601,7 +3601,7 @@ func TestCustomCerts(t *testing.T) {
 	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd: fmt.Sprintf("openssl s_client -connect %s:443 -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetHostname()),
 	})
-	stdout = strings.Trim(stdout, "\n")
+	stdout = strings.Trim(stdout, "\r\n")
 	// This should be our regular wildcard cert
 	assert.Contains(stdout, "*.ddev.site")
 
@@ -3620,7 +3620,7 @@ func TestCustomCerts(t *testing.T) {
 	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: fmt.Sprintf("openssl s_client -connect %s:443 -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetHostname()),
 	})
-	stdout = strings.Trim(stdout, "\n")
+	stdout = strings.Trim(stdout, "\r\n")
 	// If we had the regular cert, there would be several things here including *.ddev.site
 	// But e should only see the hostname listed.
 	assert.Equal(app.GetHostname(), stdout)
@@ -3677,7 +3677,7 @@ func TestEnvironmentVariables(t *testing.T) {
 			Cmd: fmt.Sprintf("echo ${%s}", k),
 		})
 		assert.NoError(err)
-		envVal = strings.Trim(envVal, "\n")
+		envVal = strings.Trim(envVal, "\r\n")
 		assert.Equal(v, envVal)
 	}
 
@@ -3711,7 +3711,7 @@ func TestEnvironmentVariables(t *testing.T) {
 	for k, v := range hostExpectations {
 		envVal, err := exec.RunCommand(DdevBin, []string{"showhostenvvar", k})
 		assert.NoError(err, "could not run %s %s %s, result=%s", DdevBin, "showhostenvvar", k, envVal)
-		envVal = strings.Trim(envVal, "\n")
+		envVal = strings.Trim(envVal, "\r\n")
 		assert.Equal(v, envVal, "expected envvar $%s to equal '%s', but it was '%s'", k, v, envVal)
 	}
 

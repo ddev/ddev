@@ -41,7 +41,7 @@ func TestCmdAuthSSH(t *testing.T) {
 	defer dockerutil.RemoveContainer("test-cmd-ssh-server", 10)
 
 	internalIPAddr, err := exec.RunCommand("docker", []string{"inspect", "-f", "'{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'", "test-cmd-ssh-server"})
-	internalIPAddr = strings.Trim(internalIPAddr, "\n\"'")
+	internalIPAddr = strings.Trim(internalIPAddr, "\r\n\"'")
 	assert.NoError(err)
 
 	app, err := ddevapp.GetActiveApp("")

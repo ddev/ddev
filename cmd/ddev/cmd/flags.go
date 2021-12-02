@@ -140,7 +140,7 @@ func formatErrorItem(level int, prefix string, format string, a ...interface{}) 
 // line or an empty string if no error was given.
 func extractError(err error) string {
 	if err != nil {
-		return "\n" + strings.Trim(err.Error(), "\n")
+		return "\n" + strings.Trim(err.Error(), "\r\n")
 	}
 
 	return ""

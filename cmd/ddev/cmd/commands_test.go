@@ -272,7 +272,7 @@ func TestLaunchCommand(t *testing.T) {
 		// Try with the base URL, simplest case
 		c := DdevBin + `  launch ` + partialCommand + ` | awk '/FULLURL/ {print $2}'`
 		out, err := exec.RunHostCommand("bash", "-c", c)
-		out = strings.Trim(out, "\n")
+		out = strings.Trim(out, "\r\n")
 		assert.NoError(err, `couldn't run "%s"", output=%s`, c, out)
 		assert.Contains(out, expect, "output of %s is incorrect with app.RouterHTTPSPort=%s: %s", c, app.RouterHTTPSPort, out)
 	}

@@ -1753,7 +1753,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	} else {
 		snapshotDBVersion = "unknown"
 	}
-	snapshotDBVersion = strings.Trim(snapshotDBVersion, " \n\t")
+	snapshotDBVersion = strings.Trim(snapshotDBVersion, " \r\n\t")
 
 	if snapshotDBVersion != currentDBVersion {
 		return fmt.Errorf("snapshot %s is a DB server %s snapshot and is not compatible with the configured ddev DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the ddev DB version", snapshotDir, snapshotDBVersion, currentDBVersion)

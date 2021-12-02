@@ -477,7 +477,7 @@ func readCAROOT() string {
 	if err != nil {
 		return ""
 	}
-	root := strings.Trim(string(out), "\n")
+	root := strings.Trim(string(out), "\r\n")
 	if !fileIsReadable(filepath.Join(root, "rootCA-key.pem")) || !fileExists(filepath.Join(root, "rootCA.pem")) {
 		return ""
 	}

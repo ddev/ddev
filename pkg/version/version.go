@@ -222,7 +222,7 @@ func GetLiveDockerComposeVersion() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	v := strings.Trim(string(out), "\n")
+	v := strings.Trim(string(out), "\r\n")
 
 	// docker-compose v1 returns a version without the prefix "v", so add it.
 	if strings.HasPrefix(v, "1") {
