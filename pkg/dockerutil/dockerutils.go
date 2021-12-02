@@ -846,7 +846,7 @@ func GetHostDockerInternalIP() (string, error) {
 	// Docker on linux doesn't define host.docker.internal
 	// so we need to go get the bridge IP address
 	// WSL2 (with Docker Desktop) defines host.docker.internal itself.
-	if runtime.GOOS == "linux" {
+	if runtime.GOOS == "linux" && !nodeps.IsDockerDesktopWSL2() {
 		// look up info from the bridge network
 		client := GetDockerClient()
 		n, err := client.NetworkInfo("bridge")
