@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/styles"
 	"os"
 	"sort"
@@ -23,6 +24,11 @@ var versionCmd = &cobra.Command{
 			err := cmd.Usage()
 			util.CheckErr(err)
 			os.Exit(1)
+		}
+
+		_, err := dockerutil.DownloadDockerComposeIfNeeded()
+		if err != nil {
+			util.Failed("Failed to check for and download docker-compose: %v", err)
 		}
 
 		v := version.GetVersionInfo()
