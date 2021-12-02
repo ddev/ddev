@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net"
 	"os"
 	"os/exec"
 	"regexp"
@@ -847,23 +846,15 @@ func GetHostDockerInternalIP() (string, error) {
 	// Docker on linux doesn't define host.docker.internal
 	// so we need to go get the bridge IP address
 	// WSL2 (with Docker Desktop) defines host.docker.internal itself.
-	// If people install docker *inside* WSL2, this logic won't be right.
-	if runtime.GOOS == "linux" && !nodeps.IsWSL2() {
-		// Gitpod does not use standard docker networking, so we need to use the official hostname
-		if nodeps.IsGitpod() {
-			addrs, err := net.LookupHost(os.Getenv("HOSTNAME"))
-			if err == nil && len(addrs) > 0 {
-				hostDockerInternal = addrs[0]
-			}
-		} else { // look up info from the bridge network
-			client := GetDockerClient()
-			n, err := client.NetworkInfo("bridge")
-			if err != nil {
-				return "", err
-			}
-			if len(n.IPAM.Config) > 0 {
-				hostDockerInternal = n.IPAM.Config[0].Gateway
-			}
+	if runtime.GOOS == "linux" {
+		// look up info from the bridge network
+		client := GetDockerClient()
+		n, err := client.NetworkInfo("bridge")
+		if err != nil {
+			return "", err
+		}
+		if len(n.IPAM.Config) > 0 {
+			hostDockerInternal = n.IPAM.Config[0].Gateway
 		}
 	}
 	return hostDockerInternal, nil
