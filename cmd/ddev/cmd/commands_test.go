@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/globalconfig"
 	"os"
 	osexec "os/exec"
 	"path/filepath"
@@ -23,9 +22,6 @@ import (
 
 // TestCustomCommands does basic checks to make sure custom commands work OK.
 func TestCustomCommands(t *testing.T) {
-	if nodeps.MutagenEnabledDefault || globalconfig.DdevGlobalConfig.MutagenEnabledGlobal {
-		t.Skip("Skipping because this changes homedir and breaks mutagen functionality")
-	}
 
 	assert := asrt.New(t)
 	runTime := util.TimeTrack(time.Now(), t.Name())
@@ -41,11 +37,15 @@ func TestCustomCommands(t *testing.T) {
 	_ = os.Setenv("USERPROFILE", tmpHome)
 	_ = os.Setenv("DDEV_DEBUG", "")
 
+	// Make sure we have the .ddev/bin dir we need
+	err := fileutil.CopyDir(filepath.Join(origHome, ".ddev/bin"), filepath.Join(tmpHome, ".ddev/bin"))
+	require.NoError(t, err)
+
 	origDir, _ := os.Getwd()
 	testCustomCommandsDir := filepath.Join(origDir, "testdata", t.Name())
 
 	site := TestSites[0]
-	err := os.Chdir(site.Dir)
+	err = os.Chdir(site.Dir)
 	require.NoError(t, err)
 
 	app, _ := ddevapp.NewApp("", false)
