@@ -27,10 +27,17 @@ func TestCmdExecBadArgs(t *testing.T) {
 // TestCmdExec runs a number of exec commands to verify behavior
 func TestCmdExec(t *testing.T) {
 	assert := asrt.New(t)
-	site := TestSites[0]
-	cleanup := site.Chdir()
-	defer cleanup()
+	origDir, err := os.Getwd()
+	require.NoError(t, err)
 
+	site := TestSites[0]
+	err = os.Chdir(site.Dir)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
 	app, err := ddevapp.GetActiveApp(site.Name)
 	assert.NoError(err)
 
@@ -66,7 +73,8 @@ func TestCmdExec(t *testing.T) {
 
 	_, err = exec.RunHostCommand(DdevBin, "exec", "ls >/var/www/html/TestCmdExec-${OSTYPE}.txt")
 	assert.NoError(err)
-
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
 	assert.FileExists(filepath.Join(site.Dir, "TestCmdExec-linux-gnu.txt"))
 
 	_, err = exec.RunHostCommand(DdevBin, "exec", "ls >/dev/null && touch /var/www/html/TestCmdExec-touch-all-in-one.txt")
