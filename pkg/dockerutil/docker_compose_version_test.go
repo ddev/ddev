@@ -58,7 +58,7 @@ func TestDockerComposeDownload(t *testing.T) {
 	assert.NoError(err)
 	assert.False(downloaded)
 
-	for _, v := range []string{"v2.0.1", "v1.28.2"} {
+	for _, v := range []string{"v2.0.1", "v1.29.0"} {
 		version.DockerComposeVersion = ""
 		// Skip v1 tests on arm64, as they aren't provided
 		if strings.HasPrefix(v, "v1") && runtime.GOARCH == "arm64" {
@@ -86,7 +86,9 @@ func TestDockerComposeDownload(t *testing.T) {
 	assert.NoError(err)
 	out, err := exec2.RunHostCommand(path, "version", "--short")
 	assert.NoError(err)
-	foundVersion, err := version.ParseDockerComposeVersion(strings.Trim(string(out), "\n"))
-	assert.NoError(err)
-	assert.Equal(foundVersion, activeVersion)
+	parsedFoundVersion := strings.Trim(string(out), "\n")
+	if strings.HasPrefix(parsedFoundVersion, "1") {
+		parsedFoundVersion = "v" + parsedFoundVersion
+	}
+	assert.Equal(parsedFoundVersion, activeVersion)
 }

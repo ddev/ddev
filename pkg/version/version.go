@@ -157,27 +157,6 @@ func GetDockerComposeVersion() (string, error) {
 	}
 
 	return GetLiveDockerComposeVersion()
-	//path, err := globalconfig.GetDockerComposePath()
-	//if err != nil {
-	//	return "", err
-	//}
-
-	// TODO: Handle the case where global config overrides the docker-compose version or path
-	//executableName := "docker-compose"
-
-	//path, err := exec.LookPath(executableName)
-	//if err != nil {
-	//	return "", fmt.Errorf("no docker-compose")
-	//}
-
-	//out, err := exec.Command(path, "version", "--short").Output()
-	//if err != nil {
-	//	return "", err
-	//}
-	//
-	//v := string(out)
-	//DockerComposeVersion = strings.TrimSpace(v)
-	//return DockerComposeVersion, nil
 }
 
 // GetDockerVersion gets the cached or api-sourced version of docker engine
@@ -245,27 +224,13 @@ func GetLiveDockerComposeVersion() (string, error) {
 	}
 	v := strings.Trim(string(out), "\n")
 
-	DockerComposeVersion, err = ParseDockerComposeVersion(v)
-	return DockerComposeVersion, err
-}
-
-// ParseDockerComposeVersion returns the actual version found
-// in `docker-compose version` with either v1 or v2
-func ParseDockerComposeVersion(versionString string) (string, error) {
-	parts := strings.Split(versionString, " ")
-	foundVersion := ""
-	if len(parts) == 1 {
-		if strings.HasPrefix(parts[0], "v2") {
-			foundVersion = parts[0]
-		}
-	} else if len(parts) == 5 { // As in docker-compose v1
-		if strings.HasPrefix(parts[2], "1.") {
-			foundVersion = "v" + parts[2]
-		}
-	} else {
-		return "", fmt.Errorf("Unable to parse docker-compose version %s", versionString)
+	// docker-compose v1 returns a version without the prefix "v", so add it.
+	if strings.HasPrefix(v, "1") {
+		v = "v" + v
 	}
-	return foundVersion, nil
+
+	DockerComposeVersion = v
+	return DockerComposeVersion, nil
 }
 
 // GetRequiredDockerComposeVersion returns the version of docker-compose we need
