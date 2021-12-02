@@ -1014,8 +1014,13 @@ func CheckAvailableSpace() {
 // DownloadDockerComposeIfNeeded downloads the proper version of docker-compose
 // if it's either not yet installed or has the wrong version.
 func DownloadDockerComposeIfNeeded() error {
+	requiredVersion := version.GetRequiredDockerComposeVersion()
+	if requiredVersion == "" {
+		util.Debug("globalconfig use_docker_compose_from_path is set, so not downloading")
+		return nil
+	}
 	curVersion, err := version.GetLiveDockerComposeVersion()
-	if err != nil || curVersion != version.RequiredDockerComposeVersion {
+	if err != nil || curVersion != requiredVersion {
 		err = DownloadDockerCompose()
 		if err != nil {
 			return err
@@ -1058,14 +1063,19 @@ func DownloadDockerCompose() error {
 }
 
 func dockerComposeDownloadLink() (string, error) {
-	baseVersion := version.RequiredDockerComposeVersion[1:2]
+	v := version.GetRequiredDockerComposeVersion()
+	if len(v) < 3 {
+		return "", fmt.Errorf("required docker-compose version is invalid: %v", v)
+	}
+	baseVersion := v[1:2]
+
 	switch baseVersion {
 	case "1":
 		return dockerComposeDownloadLinkV1()
 	case "2":
 		return dockerComposeDownloadLinkV2()
 	}
-	return "", fmt.Errorf("Invalid docker-compose base version %s", version.RequiredDockerComposeVersion)
+	return "", fmt.Errorf("Invalid docker-compose base version %s", v)
 }
 
 // dockerComposeDownloadLinkV1 downlods compose v1 downloads like
@@ -1083,7 +1093,7 @@ func dockerComposeDownloadLinkV1() (string, error) {
 		return "", fmt.Errorf("Only amd64 architecture is supported for docker-compose v1, not %s", arch)
 	}
 	// docker-compose v1 does not use the 'v', so strip it.
-	v := version.RequiredDockerComposeVersion[1:]
+	v := version.GetRequiredDockerComposeVersion()[1:]
 	flavor := goos + "-" + arch
 	ComposeURL := fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/docker-compose-%s", v, flavor)
 	if runtime.GOOS == "windows" {
@@ -1109,7 +1119,7 @@ func dockerComposeDownloadLinkV2() (string, error) {
 		return "", fmt.Errorf("Only arm64 and amd64 architectures are supported for docker-compose v2, not %s", arch)
 	}
 	flavor := runtime.GOOS + "-" + arch
-	ComposeURL := fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/docker-compose-%s", version.RequiredDockerComposeVersion, flavor)
+	ComposeURL := fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/docker-compose-%s", version.GetRequiredDockerComposeVersion(), flavor)
 	if runtime.GOOS == "windows" {
 		ComposeURL = ComposeURL + ".exe"
 	}

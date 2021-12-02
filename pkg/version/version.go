@@ -154,10 +154,11 @@ func GetDockerComposeVersion() (string, error) {
 		return DockerComposeVersion, nil
 	}
 
-	path, err := globalconfig.GetDockerComposePath()
-	if err != nil {
-		return "", err
-	}
+	return GetLiveDockerComposeVersion()
+	//path, err := globalconfig.GetDockerComposePath()
+	//if err != nil {
+	//	return "", err
+	//}
 
 	// TODO: Handle the case where global config overrides the docker-compose version or path
 	//executableName := "docker-compose"
@@ -167,14 +168,14 @@ func GetDockerComposeVersion() (string, error) {
 	//	return "", fmt.Errorf("no docker-compose")
 	//}
 
-	out, err := exec.Command(path, "version", "--short").Output()
-	if err != nil {
-		return "", err
-	}
-
-	v := string(out)
-	DockerComposeVersion = strings.TrimSpace(v)
-	return DockerComposeVersion, nil
+	//out, err := exec.Command(path, "version", "--short").Output()
+	//if err != nil {
+	//	return "", err
+	//}
+	//
+	//v := string(out)
+	//DockerComposeVersion = strings.TrimSpace(v)
+	//return DockerComposeVersion, nil
 }
 
 // GetDockerVersion gets the cached or api-sourced version of docker engine
@@ -236,7 +237,7 @@ func GetLiveDockerComposeVersion() (string, error) {
 		DockerComposeVersion = ""
 		return DockerComposeVersion, nil
 	}
-	out, err := exec.Command(DockerComposePath, "--version", "--short").Output()
+	out, err := exec.Command(DockerComposePath, "version", "--short").Output()
 	if err != nil {
 		return "", err
 	}
@@ -256,4 +257,20 @@ func GetLiveDockerComposeVersion() (string, error) {
 	}
 
 	return DockerComposeVersion, nil
+}
+
+// GetRequiredDockerComposeVersion returns the version of docker-compose we need
+// based on the compiled version, or overrides in globalconfig, like
+// required_docker_compose_version and use_docker_compose_from_path
+// In the case of UseDockerComposeFromPath there is no required version, so this
+// will return empty string.
+func GetRequiredDockerComposeVersion() string {
+	v := RequiredDockerComposeVersion
+	switch {
+	case globalconfig.DdevGlobalConfig.UseDockerComposeFromPath:
+		v = ""
+	case globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion != "":
+		v = globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion
+	}
+	return v
 }
