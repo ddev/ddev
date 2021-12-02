@@ -27,7 +27,7 @@ func TestCmdStop(t *testing.T) {
 	for _, site := range TestSites {
 		cleanup := site.Chdir()
 
-		out, err := exec.RunCommand(DdevBin, []string{"stop"})
+		out, err := exec.RunHostCommand(DdevBin, "stop")
 		assert.NoError(err, "ddev stop should succeed but failed, err: %v, output: %s", err, out)
 		assert.Contains(out, "has been stopped")
 
@@ -45,19 +45,19 @@ func TestCmdStop(t *testing.T) {
 	require.NoError(t, err)
 
 	// Ensure the --all option can remove all active apps
-	out, err := exec.RunCommand(DdevBin, []string{"stop", "--all"})
+	out, err := exec.RunHostCommand(DdevBin, "stop", "--all")
 	assert.NoError(err, "ddev stop --all should succeed but failed, err: %v, output: %s", err, out)
-	containers, err := dockerutil.GetDockerContainers(true)
+
+	out, err = exec.RunHostCommand(DdevBin, "list", "--active-only")
 	assert.NoError(err)
-	// Just the ddev-ssh-agent should remain running (1 container)
-	assert.Equal(1, len(containers), "Not all projects were removed after ddev stop --all")
-	_, err = exec.RunCommand(DdevBin, []string{"stop", "--all", "--stop-ssh-agent"})
+	assert.Contains(out, "No ddev projects were found.")
+
+	_, err = exec.RunHostCommand(DdevBin, "stop", "--all", "--stop-ssh-agent")
 	assert.NoError(err)
-	containers, err = dockerutil.GetDockerContainers(true)
+	sshAgent, err := dockerutil.FindContainerByName("ddev-ssh-agent")
 	assert.NoError(err)
-	// All containers should now be gone
-	assert.Equal(0, len(containers))
-	t.Logf("goprocs: %v", runtime.NumGoroutine())
+	// ssh-agent should be gone
+	assert.Nil(sshAgent)
 }
 
 // TestCmdStopMissingProjectDirectory ensures the `ddev stop` command can operate on a project when the
@@ -71,27 +71,33 @@ func TestCmdStopMissingProjectDirectory(t *testing.T) {
 	}
 
 	assert := asrt.New(t)
-	projDir, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 
 	projectName := util.RandString(6)
-
 	tmpDir := testcommon.CreateTmpDir(t.Name())
-	defer testcommon.CleanupDir(tmpDir)
-	defer testcommon.Chdir(tmpDir)()
+	err = os.Chdir(tmpDir)
+	require.NoError(t, err)
 
-	_, err = exec.RunCommand(DdevBin, []string{"config", "--project-type", "php", "--project-name", projectName})
+	t.Cleanup(func() {
+		_, err = exec.RunHostCommand(DdevBin, "stop", "-RO", projectName)
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+
+		err = os.RemoveAll(tmpDir)
+		assert.NoError(err)
+	})
+
+	_, err = exec.RunHostCommand(DdevBin, "config", "--project-type", "php", "--project-name", projectName)
 	assert.NoError(err)
 
-	//nolint: errcheck
-	defer exec.RunCommand(DdevBin, []string{"stop", "-RO", projectName})
-
-	_, err = exec.RunCommand(DdevBin, []string{"start", "-y"})
+	_, err = exec.RunHostCommand(DdevBin, "start", "-y")
 	assert.NoError(err)
 
-	_, err = exec.RunCommand(DdevBin, []string{"stop", projectName})
+	_, err = exec.RunHostCommand(DdevBin, "stop", projectName)
 	assert.NoError(err)
 
-	err = os.Chdir(projDir)
+	err = os.Chdir(origDir)
 	assert.NoError(err)
 
 	copyDir := filepath.Join(testcommon.CreateTmpDir(t.Name()), util.RandString(4))
@@ -100,7 +106,7 @@ func TestCmdStopMissingProjectDirectory(t *testing.T) {
 	//nolint: errcheck
 	defer os.Rename(copyDir, tmpDir)
 
-	out, err = exec.RunCommand(DdevBin, []string{"stop", projectName})
+	out, err = exec.RunHostCommand(DdevBin, "stop", projectName)
 	assert.NoError(err)
 	assert.Contains(out, "has been stopped")
 
