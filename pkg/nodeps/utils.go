@@ -4,6 +4,7 @@ import (
 	"golang.org/x/term"
 	"math/rand"
 	"os"
+	"os/exec"
 	"runtime"
 	"strconv"
 	"strings"
@@ -66,9 +67,12 @@ func IsWSL2() bool {
 // IsDockerDesktopWSL2 detects if running on WSL2 using Docker Desktop
 func IsDockerDesktopWSL2() bool {
 	if IsWSL2() {
-		link, err := os.Readlink("docker")
-		if err == nil && strings.HasPrefix(link, "/mnt/wsl/docker-desktop") {
-			return true
+		p, err := exec.LookPath("docker")
+		if err == nil {
+			link, err := os.Readlink(p)
+			if err == nil && strings.HasPrefix(link, "/mnt/wsl/docker-desktop") {
+				return true
+			}
 		}
 	}
 	return false
