@@ -1086,6 +1086,9 @@ func dockerComposeDownloadLinkV1() (string, error) {
 	v := version.RequiredDockerComposeVersion[1:]
 	flavor := goos + "-" + arch
 	ComposeURL := fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/docker-compose-%s", v, flavor)
+	if runtime.GOOS == "windows" {
+		ComposeURL = ComposeURL + ".exe"
+	}
 	return ComposeURL, nil
 }
 
@@ -1107,5 +1110,8 @@ func dockerComposeDownloadLinkV2() (string, error) {
 	}
 	flavor := runtime.GOOS + "-" + arch
 	ComposeURL := fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/docker-compose-%s", version.RequiredDockerComposeVersion, flavor)
+	if runtime.GOOS == "windows" {
+		ComposeURL = ComposeURL + ".exe"
+	}
 	return ComposeURL, nil
 }
