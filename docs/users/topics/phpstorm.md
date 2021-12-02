@@ -9,7 +9,7 @@ This is based on the wonderful [article](https://web.archive.org/web/20210514053
 #### Requirements
 
 - PhpStorm 2021.2 or higher
-- docker-compose v1. Due to a [bug or two in PhpStorm](https://youtrack.jetbrains.com/issue/WI-61205), it can't properly interpret docker-compose v2 output as of Sept 2021.  Use `docker-compose disable-v2` to switch to docker-compose v1. (Check version with `docker-compose --version`.)
+- docker-compose v1. Due to a [bug or two in PhpStorm](https://youtrack.jetbrains.com/issue/WI-61205), it can't properly interpret docker-compose v2 output as of Sept 2021.  If this is still a problem, you can `ddev config global --required-docker-compose-version=v1.29.2` to globally require docker-compose v1.
 - Any OS platform, but if you're using Windows PhpStorm with WSL2 the path mappings are slightly more complex. WSL2 instructions are provided where necessary.
 
 #### Setup Technique

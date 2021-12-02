@@ -6,11 +6,9 @@ Docker Desktop for Mac can be installed via Homebrew (`brew install  homebrew/ca
 
 Docker Desktop for Windows can be downloaded via [Chocolatey](https://chocolatey.org/install) with `choco install docker-desktop` or it can be downloaded from [download.docker.com](https://www.docker.com/products/docker-desktop).
 
-## Linux Installation: Docker and docker-compose
+## Linux Installation: Docker
 
 * __Please don't forget that Linux installation absolutely requires post-install steps (below).__
-
-* __docker-compose must be installed or upgraded separately except on very recent distros, as it is not bundled with in the Docker repositories, see below.__
 
 * __Please don't use `sudo` with docker. If you're needing it, you haven't finished the installation. Don't use `sudo` with ddev, except the rare case where you need the `ddev hostname` command.__
 
@@ -21,8 +19,6 @@ Docker installation on Linux depends on what flavor you're using. Where possible
 * [Debian](https://docs.docker.com/install/linux/docker-ce/debian/)
 * [Fedora](https://docs.docker.com/install/linux/docker-ce/fedora/). Recent versions of Fedora (32, 33+) require a [different approach, installing the original CGroups](https://fedoramagazine.org/docker-and-fedora-32/). In addition, you must [disable SELinux](https://www.cyberciti.biz/faq/disable-selinux-on-centos-7-rhel-7-fedora-linux/).
 * [binaries](https://docs.docker.com/install/linux/docker-ce/binaries/)
-
-After installing Docker you *must* install docker-compose separately except on Ubuntu 20.04+: If using Homebrew you can `brew install docker-compose`, otherwise [Follow download instructions](https://docs.docker.com/compose/install/#install-compose) (select "linux" tab). This really is just downloading docker-compose binary from <https://github.com/docker/compose/releases> and installing it in /usr/local/bin with executable permissions. On ARM64 computers you may have to install docker-compose using `pip install docker-compose` or `pip3 install docker-compose`.
 
 ### Linux Post-installation steps (required)
 
@@ -55,5 +51,3 @@ If you are on Docker Desktop for Windows or Docker Desktop for Mac and you are s
 
 * Unshare and then reshare the drive (you may have to re-enter your credentials)
 * Consider resetting Docker to factory defaults. This often helps in this situation because Docker goes through the whole authentication process again.
-
-If you are on Linux, the most common problem is having an old docker-compose, since the docker-compose that installs by default is incompatible with ddev. You'll find out about this right away because ddev will tell you on `ddev start` or most other ddev commands.

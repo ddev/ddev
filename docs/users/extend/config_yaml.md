@@ -69,3 +69,5 @@ The $HOME/.ddev/global_config.yaml has a few key global config options.
 | use_letsencrypt | If true, enables experimental Let's Encrypt integration | 'ddev global --use-letsencrypt' or `ddev global --use-letsencrypt=false'. This requires letsencrypt_email to be set, and can't work if the system is not available on the internet. Used with experimental casual hosting feature. |
 | letsencrypt_email | Email associated with Let's Encrypt for experimental Let's Encrypt feature | Set with`ddev global --letsencrypt-email=me@example.com'. Used with experimental casual hosting feature.|
 | developer_mode | Set developer mode | If true, developer_mode is set. This is not currently used. |
+| required_docker_compose_version | Specify an alternate docker-compose version for download | If set to `v1.29.2`, for example, it will download and use that version instead of the expected version for docker-compose. |
+| use_docker_compose_from_path | Use the system-installed docker-compose | If this is true, then DDEV will use the docker-compose found in on your system's path instead of using its private known-good docker-compose version. |

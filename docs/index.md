@@ -4,9 +4,7 @@
 
 ## System Requirements
 
-* [Docker](https://www.docker.com/products/docker-desktop) version 18.06 or higher. Linux users make sure you upgrade docker-compose and do the [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
-
-* docker-compose 1.25.0 and higher (bundled with Docker in Docker Desktop for Mac and Docker Desktop for Windows).
+* [Docker](https://www.docker.com/products/docker-desktop) version 18.06 or higher. Linux users make sure you do the [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user). Installing or upgrading docker-compose is not required as DDEV uses its own private docker-compose version.
 * OS Support
     * macOS Mojave and higher (macOS 10.14 and higher; it should run anywhere Docker Desktop for Mac runs (Current Docker Desktop has deprecated macOS 10.13 High Sierra, but Docker Desktop versions prior to  can still work with DDEV-Local on High Sierra.)
     * Linux: Most Linux distributions which can run Docker-ce are fine. This includes at least Ubuntu 16.04+, Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
@@ -27,7 +25,7 @@ _When upgrading, please run `ddev poweroff` and check the [release notes](https:
 
 ### Docker Installation
 
-Docker and docker-compose are required before anything will work with DDEV. This is pretty easy on most environments; see the [docker_installation](users/docker_installation.md) page to help sort out the details, especially on Windows and Linux.
+Docker is required before anything will work with DDEV. This is pretty easy on most environments; see the [docker_installation](users/docker_installation.md) page to help sort out the details, especially on Windows and Linux. It is not required to install docker-compose because DDEV uses its own private version.
 
 ### Homebrew - macOS/Linux
 

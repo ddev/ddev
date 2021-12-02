@@ -24,12 +24,11 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 1. Do not set up buildkite-agent on the Windows side, or disable it.
 2. Open WSL2 and check out ddev
    3. [Install buildkite-agent in WSL2](https://buildkite.com/docs/agent/v3/ubuntu) and configure it. It needs the same changes as macOS, but tags `tags="os=wsl2,architecture=amd64,dockertype=dockerforwindows"` and build-path should be in ~/tmp/buildkite-agent
-4. As root user, run .github/workflows/linux-setup.sh
-5. As root user, add sudo capability with `echo "ALL ALL=NOPASSWD: ALL" >/etc/sudoers.d/all && chmod 440 /etc/sudoers.d/all`
-6. (Temporary) Install an older version of docker-compose. docker-compose 1.28 (provided by docker desktop) is crashing with https://github.com/docker/compose/issues/8048 - I removed theirs and manually put the other one in /usr/local/bin - alternately use "normal" docker desktop.
-7. Test from PowerShell that `wsl -d Ubuntu buildkite-agent start` succeeds and starts listening.
-8. Set up Windows to automatically start WSL2 buildkite-agent: Use task scheduler to create a simple task that runs `C:\Windows\System32\wsl.exe -d Ubuntu buildkite-agent start` at login.
-9. Install homebrew, `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
+3. As root user, run .github/workflows/linux-setup.sh
+4. As root user, add sudo capability with `echo "ALL ALL=NOPASSWD: ALL" >/etc/sudoers.d/all && chmod 440 /etc/sudoers.d/all`
+5. Test from PowerShell that `wsl -d Ubuntu buildkite-agent start` succeeds and starts listening.
+Set up Windows to automatically start WSL2 buildkite-agent: Use task scheduler to create a simple task that runs `C:\Windows\System32\wsl.exe -d Ubuntu buildkite-agent start` at login.
+6. Install homebrew, `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 
 ## macOS Test Agent Setup (works for M1 as well)
 
