@@ -227,6 +227,7 @@ volumes:
   {{ end }}
   ddev-global-cache:
     name: ddev-global-cache
+    external: true
 
   {{ if and .NFSMountEnabled (not .NoProjectMount) }}
   nfsmount:
@@ -521,6 +522,7 @@ networks:
 volumes:
   ddev-global-cache:
     name: ddev-global-cache
+    external: true
 {{ if .letsencrypt }}
   ddev-router-letsencrypt:
     name: ddev-router-letsencrypt
