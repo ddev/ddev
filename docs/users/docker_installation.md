@@ -16,8 +16,7 @@ Docker Desktop for Windows can be downloaded via [Chocolatey](https://chocolatey
 
 Docker installation on Linux depends on what flavor you're using. Where possible the Ubuntu/Deb/yum repository is the preferred technique.
 
-* Ubuntu 20.04+ has recent enough versions that you can `sudo apt-get update && sudo apt-get install docker.io docker-compose`
-* [Ubuntu before 20.04](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
+* [Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
 * [CentOS](https://docs.docker.com/install/linux/docker-ce/centos/)
 * [Debian](https://docs.docker.com/install/linux/docker-ce/debian/)
 * [Fedora](https://docs.docker.com/install/linux/docker-ce/fedora/). Recent versions of Fedora (32, 33+) require a [different approach, installing the original CGroups](https://fedoramagazine.org/docker-and-fedora-32/). In addition, you must [disable SELinux](https://www.cyberciti.biz/faq/disable-selinux-on-centos-7-rhel-7-fedora-linux/).
@@ -28,6 +27,8 @@ After installing Docker you *must* install docker-compose separately except on U
 ### Linux Post-installation steps (required)
 
 See [Docker's post-installation steps](https://docs.docker.com/install/linux/linux-postinstall/). You need to add your linux user to the "docker" group and configure the docker daemon to start on boot.
+
+On systems that do not include systemd or equivalent (mostly if installing inside WSL2) you'll need to manually start docker with `service docker start` or the equivalent in your distro. You can add this into your .profile or equivalent.
 
 <a name="troubleshooting"></a>
 
