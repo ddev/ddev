@@ -299,6 +299,11 @@ func createDrupal9SettingsFile(app *DdevApp) (string, error) {
 	return createDrupal8SettingsFile(app)
 }
 
+// createDrupal9SettingsFile is just a wrapper on d9
+func createDrupal10SettingsFile(app *DdevApp) (string, error) {
+	return createDrupal9SettingsFile(app)
+}
+
 // createDrupal6SettingsFile manages creation and modification of settings.php and settings.ddev.php.
 // If a settings.php file already exists, it will be modified to ensure that it includes
 // settings.ddev.php, which contains ddev-specific configuration.
@@ -575,6 +580,15 @@ func isDrupal9App(app *DdevApp) bool {
 	return false
 }
 
+// isDrupal10App returns true if the app is of type drupal10
+func isDrupal10App(app *DdevApp) bool {
+	isD10, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "core/lib/Drupal.php"), `const VERSION = '10`)
+	if err == nil && isD10 {
+		return true
+	}
+	return false
+}
+
 // isDrupal6App returns true if the app is of type Drupal6
 func isDrupal6App(app *DdevApp) bool {
 	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "misc/ahah.js")); err == nil {
@@ -587,6 +601,12 @@ func isDrupal6App(app *DdevApp) bool {
 // with php7+
 func drupal6ConfigOverrideAction(app *DdevApp) error {
 	app.PHPVersion = nodeps.PHP56
+	return nil
+}
+
+// drupal10ConfigOverrideAction overrides php_version for D10, requires PHP8.0
+func drupal10ConfigOverrideAction(app *DdevApp) error {
+	app.PHPVersion = nodeps.PHP80
 	return nil
 }
 
