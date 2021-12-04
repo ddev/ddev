@@ -275,8 +275,11 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 			_, err := exec.RunHostCommand(DdevBin, "poweroff")
 			assert.NoError(err)
 
-			_, err = exec.RunHostCommand(DdevBin, "debug", "mutagen", "daemon", "stop")
-			assert.NoError(err)
+			_, err = os.Stat(globalconfig.GetMutagenPath())
+			if err == nil {
+				out, err := exec.RunHostCommand(DdevBin, "debug", "mutagen", "daemon", "stop")
+				assert.NoError(err, "mutagen daemon stop returned %s", string(out))
+			}
 
 			err = os.RemoveAll(tmpHome)
 			assert.NoError(err)

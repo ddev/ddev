@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"os"
 	osexec "os/exec"
 	"path/filepath"
@@ -51,8 +52,11 @@ func TestCustomCommands(t *testing.T) {
 	app, _ := ddevapp.NewApp("", false)
 	origType := app.Type
 	t.Cleanup(func() {
-		_, err = exec.RunHostCommand(DdevBin, "debug", "mutagen", "daemon", "stop")
-		assert.NoError(err)
+		_, err := os.Stat(globalconfig.GetMutagenPath())
+		if err == nil {
+			out, err := exec.RunHostCommand(DdevBin, "debug", "mutagen", "daemon", "stop")
+			assert.NoError(err, "mutagen daemon stop returned %s", string(out))
+		}
 
 		err = os.Chdir(origDir)
 		assert.NoError(err)

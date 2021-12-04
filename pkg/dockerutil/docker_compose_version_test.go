@@ -43,10 +43,12 @@ func TestDockerComposeDownload(t *testing.T) {
 	//require.NoError(t, err)
 
 	t.Cleanup(func() {
-		_, err = exec2.RunHostCommand(DdevBin, "debug", "mutagen", "daemon", "stop")
-		assert.NoError(err)
+		_, err := os.Stat(globalconfig.GetMutagenPath())
+		if err == nil {
+			out, err := exec2.RunHostCommand(DdevBin, "debug", "mutagen", "daemon", "stop")
+			assert.NoError(err, "mutagen daemon stop returned %s", string(out))
+		}
 
-		assert.NoError(err)
 		err = os.RemoveAll(tmpHome)
 		assert.NoError(err)
 		_ = os.Setenv("HOME", origHome)
@@ -60,6 +62,7 @@ func TestDockerComposeDownload(t *testing.T) {
 	assert.NoError(err)
 	assert.True(downloaded)
 	v, err := version.GetLiveDockerComposeVersion()
+	assert.NoError(err)
 	assert.Equal(version.GetRequiredDockerComposeVersion(), v)
 
 	// Make sure it doesn't download a second time
@@ -91,6 +94,7 @@ func TestDockerComposeDownload(t *testing.T) {
 	version.RequiredDockerComposeVersion = "v2.1.0"
 	globalconfig.DdevGlobalConfig.UseDockerComposeFromPath = true
 	activeVersion, err := version.GetLiveDockerComposeVersion()
+	assert.NoError(err)
 	path, err := exec.LookPath("docker-compose")
 	assert.NoError(err)
 	out, err := exec2.RunHostCommand(path, "version", "--short")
