@@ -55,6 +55,9 @@ func TestHomeadditions(t *testing.T) {
 	err = os.Chdir(site.Dir)
 	require.NoError(t, err)
 	t.Cleanup(func() {
+		_, err = exec.RunHostCommand(DdevBin, "debug", "mutagen", "daemon", "stop")
+		assert.NoError(err)
+
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 		err = fileutil.PurgeDirectory(projectHomeadditionsDir)

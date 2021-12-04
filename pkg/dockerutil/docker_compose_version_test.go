@@ -14,10 +14,16 @@ import (
 	"testing"
 )
 
+var DdevBin = "ddev"
+
 // TestDockerComposeDownload
 func TestDockerComposeDownload(t *testing.T) {
 	assert := asrt.New(t)
 	var err error
+
+	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
+		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
+	}
 
 	origHome := os.Getenv("HOME")
 	if runtime.GOOS == "windows" {
@@ -37,6 +43,9 @@ func TestDockerComposeDownload(t *testing.T) {
 	//require.NoError(t, err)
 
 	t.Cleanup(func() {
+		_, err = exec2.RunHostCommand(DdevBin, "debug", "mutagen", "daemon", "stop")
+		assert.NoError(err)
+
 		assert.NoError(err)
 		err = os.RemoveAll(tmpHome)
 		assert.NoError(err)

@@ -51,6 +51,9 @@ func TestCustomCommands(t *testing.T) {
 	app, _ := ddevapp.NewApp("", false)
 	origType := app.Type
 	t.Cleanup(func() {
+		_, err = exec.RunHostCommand(DdevBin, "debug", "mutagen", "daemon", "stop")
+		assert.NoError(err)
+
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 		runTime()

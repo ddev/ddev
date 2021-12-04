@@ -275,6 +275,9 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 			_, err := exec.RunHostCommand(DdevBin, "poweroff")
 			assert.NoError(err)
 
+			_, err = exec.RunHostCommand(DdevBin, "debug", "mutagen", "daemon", "stop")
+			assert.NoError(err)
+
 			err = os.RemoveAll(tmpHome)
 			assert.NoError(err)
 
