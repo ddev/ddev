@@ -152,6 +152,8 @@ func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 
 	username = strings.ReplaceAll(username, " ", "")
 	username = strings.ToLower(username)
+	username = strings.ReplaceAll(username, "(", "")
+	username = strings.ReplaceAll(username, ")", "")
 
 	// If we have a numeric username it's going to create havoc, so
 	// change it into "a" + number
