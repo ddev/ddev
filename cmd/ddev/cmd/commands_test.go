@@ -55,7 +55,9 @@ func TestCustomCommands(t *testing.T) {
 		_, err := os.Stat(globalconfig.GetMutagenPath())
 		if err == nil {
 			out, err := exec.RunHostCommand(DdevBin, "debug", "mutagen", "daemon", "stop")
-			assert.NoError(err, "mutagen daemon stop returned %s", string(out))
+			if err != nil {
+				t.Logf("mutagen daemon stop failed: %v, output=%s", err, string(out))
+			}
 		}
 
 		err = os.Chdir(origDir)
