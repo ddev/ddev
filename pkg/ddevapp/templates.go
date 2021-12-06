@@ -220,6 +220,7 @@ volumes:
   {{if not .OmitDB }}
   mariadb-database:
     name: "{{ .MariaDBVolumeName}}"
+    external: true
   {{end}}
   {{ if not .OmitSSHAgent }}
   ddev-ssh-agent_socket_dir:
@@ -237,6 +238,7 @@ volumes:
       type: nfs
       o: "addr={{ if .HostDockerInternalIP }}{{ .HostDockerInternalIP }}{{ else }}host.docker.internal{{end}},hard,nolock,rw"
       device: ':{{ .NFSSource }}'
+      external: true
   {{ end }}
   {{ if and .MutagenEnabled (not .NoProjectMount) }}
   project_mutagen:
