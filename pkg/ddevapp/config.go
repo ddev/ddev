@@ -845,7 +845,7 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 `
 	if extraPackages != nil {
 		contents = contents + `
-RUN apt-get update && apt-get dist-upgrade -y && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
 	}
 
 	// For webimage, update to latest composer.
