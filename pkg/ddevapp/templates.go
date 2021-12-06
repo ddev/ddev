@@ -238,7 +238,6 @@ volumes:
       type: nfs
       o: "addr={{ if .HostDockerInternalIP }}{{ .HostDockerInternalIP }}{{ else }}host.docker.internal{{end}},hard,nolock,rw"
       device: ':{{ .NFSSource }}'
-      external: true
   {{ end }}
   {{ if and .MutagenEnabled (not .NoProjectMount) }}
   project_mutagen:
