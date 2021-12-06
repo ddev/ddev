@@ -839,33 +839,39 @@ func CreateVolume(volumeName string, driver string, driverOpts map[string]string
 	return volume, err
 }
 
-// GetHostDockerInternalIP returns either "host.docker.internal"
+// GetHostDockerInternalIP returns either "" (will use the hostname as is)
 // (for docker-for-mac and Win10 Docker-for-windows) or a usable IP address
 func GetHostDockerInternalIP() (string, error) {
 	hostDockerInternal := ""
 
+	switch {
+	// TODO: Remove this stanza when experimentalNetwork: true is no longer
+	// required on Gitpod - then it behaves as normal linux
+	case nodeps.IsGitpod():
+		addrs, err := net.LookupHost(os.Getenv("HOSTNAME"))
+		if err == nil && len(addrs) > 0 {
+			hostDockerInternal = addrs[0]
+		}
+
 	// Docker on linux doesn't define host.docker.internal
 	// so we need to go get the bridge IP address
 	// WSL2 (with Docker Desktop) defines host.docker.internal itself.
-	// If people install docker *inside* WSL2, this logic won't be right.
-	if runtime.GOOS == "linux" && !nodeps.IsWSL2() {
-		// Gitpod does not use standard docker networking, so we need to use the official hostname
-		if nodeps.IsGitpod() {
-			addrs, err := net.LookupHost(os.Getenv("HOSTNAME"))
-			if err == nil && len(addrs) > 0 {
-				hostDockerInternal = addrs[0]
-			}
-		} else { // look up info from the bridge network
-			client := GetDockerClient()
-			n, err := client.NetworkInfo("bridge")
-			if err != nil {
-				return "", err
-			}
-			if len(n.IPAM.Config) > 0 {
+	case runtime.GOOS == "linux" && !nodeps.IsDockerDesktopWSL2():
+		// look up info from the bridge network
+		client := GetDockerClient()
+		n, err := client.NetworkInfo("bridge")
+		if err != nil {
+			return "", err
+		}
+		if len(n.IPAM.Config) > 0 {
+			if n.IPAM.Config[0].Gateway != "" {
 				hostDockerInternal = n.IPAM.Config[0].Gateway
+			} else {
+				util.Warning("Unable to determine host.docker.internal - no gateway")
 			}
 		}
 	}
+
 	return hostDockerInternal, nil
 }
 

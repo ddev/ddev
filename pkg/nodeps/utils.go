@@ -4,8 +4,10 @@ import (
 	"golang.org/x/term"
 	"math/rand"
 	"os"
+	"os/exec"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 	"unicode"
 )
@@ -60,6 +62,20 @@ func RandomString(length int) string {
 // IsWSL2 returns true if running WSL2
 func IsWSL2() bool {
 	return GetWSLDistro() != ""
+}
+
+// IsDockerDesktopWSL2 detects if running on WSL2 using Docker Desktop
+func IsDockerDesktopWSL2() bool {
+	if IsWSL2() {
+		p, err := exec.LookPath("docker")
+		if err == nil {
+			link, err := os.Readlink(p)
+			if err == nil && strings.HasPrefix(link, "/mnt/wsl/docker-desktop") {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // IsMacM1 returns true if running on mac M1
