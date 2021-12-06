@@ -20,11 +20,6 @@ services:
     stop_grace_period: 60s
     working_dir: "{{ .DBWorkingDir }}"
     volumes:
-      - type: "volume"
-        source: mariadb-database
-        target: "/var/lib/mysql"
-        volume:
-          nocopy: true
       - type: "bind"
         source: "."
         target: "/mnt/ddev_config"
