@@ -2,18 +2,30 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "debug",
+            "name": "debug ddev start",
             "type": "go",
             "request": "launch",
             "mode": "debug",
             "remotePath": "",
             "program": "${workspaceRoot}/cmd/ddev",
-            "cwd": "/workspace/simpleproj",
+            "cwd": "/workspace/d9simple",
             "env": {"DDEV_DEBUG": true},
-            "args": [],
+            "args": ["start", "-y"],
             "showLog": true
         },
         {
+            "name": "debug ddev describe",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "remotePath": "",
+            "program": "${workspaceRoot}/cmd/ddev",
+            "cwd": "/workspace/d9simple",
+            "env": {"DDEV_DEBUG": true},
+            "args": ["describe"],
+            "showLog": true
+        },
+{
             "name": "pkg-level test",
             "type": "go",
             "request": "launch",

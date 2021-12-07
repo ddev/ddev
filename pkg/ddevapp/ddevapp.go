@@ -97,7 +97,7 @@ type DdevApp struct {
 	UploadDir             string                `yaml:"upload_dir,omitempty"`
 	WorkingDir            map[string]string     `yaml:"working_dir,omitempty"`
 	OmitContainers        []string              `yaml:"omit_containers,omitempty,flow"`
-	OmitContainerGlobal   []string              `yaml:"-"`
+	OmitContainersGlobal  []string              `yaml:"-"`
 	HostDBPort            string                `yaml:"host_db_port,omitempty"`
 	HostWebserverPort     string                `yaml:"host_webserver_port,omitempty"`
 	HostHTTPSPort         string                `yaml:"host_https_port,omitempty"`
@@ -178,6 +178,7 @@ func (app *DdevApp) FindContainerByType(containerType string) (*docker.APIContai
 
 // Describe returns a map which provides detailed information on services associated with the running site.
 func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
+	app.DockerEnv()
 	err := app.ProcessHooks("pre-describe")
 	if err != nil {
 		return nil, fmt.Errorf("failed to process pre-describe hooks: %v", err)
@@ -372,7 +373,7 @@ func (app *DdevApp) GetPublishedPort(serviceName string) (int, error) {
 
 // GetOmittedContainers returns full list of global and local omitted containers
 func (app *DdevApp) GetOmittedContainers() []string {
-	omitted := app.OmitContainerGlobal
+	omitted := app.OmitContainersGlobal
 	omitted = append(omitted, app.OmitContainers...)
 	return omitted
 }
@@ -1388,6 +1389,37 @@ func (app *DdevApp) DockerEnv() {
 		util.Warning("Warning: containers will run as root. This could be a security risk on Linux.")
 	}
 
+	isGitpod := "false"
+
+	// For gitpod,
+	// * provide IS_GITPOD environment variable
+	// * provide default host-side port bindings, assuming only one project running,
+	//   as is usual on gitpod, but if more than one project, can override with normal
+	//   config.yaml settings.
+	if nodeps.IsGitpod() {
+		isGitpod = "true"
+		if app.HostWebserverPort == "" {
+			app.HostWebserverPort = "8080"
+		}
+		if app.HostHTTPSPort == "" {
+			app.HostHTTPSPort = "8443"
+		}
+		if app.HostDBPort == "" {
+			app.HostDBPort = "3306"
+		}
+		if app.HostMailhogPort == "" {
+			app.HostMailhogPort = "8027"
+		}
+		if app.HostPHPMyAdminPort == "" {
+			app.HostPHPMyAdminPort = "8036"
+		}
+		app.BindAllInterfaces = true
+	}
+	isWSL2 := "false"
+	if nodeps.IsWSL2() {
+		isWSL2 = "true"
+	}
+
 	// DDEV_HOST_DB_PORT is actually used for 2 things.
 	// 1. To specify via base docker-compose file the value of host_db_port config. And it's expected to be empty
 	//    there if the host_db_port is empty.
@@ -1436,6 +1468,8 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_PRIMARY_URL":           app.GetPrimaryURL(),
 		"DOCKER_SCAN_SUGGEST":        "false",
 		"IS_DDEV_PROJECT":            "true",
+		"IS_GITPOD":                  isGitpod,
+		"IS_WSL2":                    isWSL2,
 	}
 
 	// Set the mariadb_local command to empty to prevent docker-compose from complaining normally.
@@ -1935,6 +1969,14 @@ func (app *DdevApp) GetHTTPSURL() string {
 
 // GetAllURLs returns an array of all the URLs for the project
 func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs []string) {
+	if nodeps.IsGitpod() {
+		url, err := exec.RunHostCommand("gp", "url", app.HostWebserverPort)
+		if err == nil {
+			url = strings.Trim(url, "\n")
+			httpsURLs = append(httpsURLs, url)
+		}
+	}
+
 	// Get configured URLs
 	for _, name := range app.GetHostnames() {
 		httpPort := ""
@@ -1955,7 +1997,8 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 	}
 	httpURLs = append(httpURLs, app.GetWebContainerDirectHTTPURL())
 
-	return httpURLs, httpsURLs, append(httpsURLs, httpURLs...)
+	allURLs = append(httpsURLs, httpURLs...)
+	return httpURLs, httpsURLs, allURLs
 }
 
 // GetPrimaryURL returns the primary URL that can be used, https or http
@@ -1963,10 +2006,14 @@ func (app *DdevApp) GetPrimaryURL() string {
 	httpURLs, httpsURLs, _ := app.GetAllURLs()
 	urlList := httpsURLs
 	// If no mkcert trusted https, use the httpURLs instead
-	if globalconfig.GetCAROOT() == "" || IsRouterDisabled(app) {
+	if !nodeps.IsGitpod() && (globalconfig.GetCAROOT() == "" || IsRouterDisabled(app)) {
 		urlList = httpURLs
 	}
-	return urlList[0]
+	if len(urlList) > 0 {
+		return urlList[0]
+	}
+	// Failure mode, just return empty string
+	return ""
 }
 
 // GetWebContainerDirectHTTPURL returns the URL that can be used without the router to get to web container.

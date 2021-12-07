@@ -88,7 +88,12 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 
 	// Provide a default app name based on directory name
 	app.Name = filepath.Base(app.AppRoot)
-	app.OmitContainerGlobal = globalconfig.DdevGlobalConfig.OmitContainersGlobal
+
+	// Gather containers to omit, adding ddev-router for gitpod
+	app.OmitContainersGlobal = globalconfig.DdevGlobalConfig.OmitContainersGlobal
+	if nodeps.IsGitpod() {
+		app.OmitContainersGlobal = append(app.OmitContainersGlobal, "ddev-router")
+	}
 	app.ProjectTLD = nodeps.DdevDefaultTLD
 	app.UseDNSWhenPossible = true
 
