@@ -1389,18 +1389,6 @@ func (app *DdevApp) DockerEnv() {
 		util.Warning("Warning: containers will run as root. This could be a security risk on Linux.")
 	}
 
-	// DDEV_HOST_DB_PORT is actually used for 2 things.
-	// 1. To specify via base docker-compose file the value of host_db_port config. And it's expected to be empty
-	//    there if the host_db_port is empty.
-	// 2. To tell custom commands the db port. And it's expected always to be populated for them.
-	dbPort, err := app.GetPublishedPort("db")
-	dbPortStr := strconv.Itoa(dbPort)
-	if dbPortStr == "-1" || err != nil {
-		dbPortStr = ""
-	}
-	if app.HostDBPort != "" {
-		dbPortStr = app.HostDBPort
-	}
 	isGitpod := "false"
 
 	// For gitpod,
@@ -1431,6 +1419,20 @@ func (app *DdevApp) DockerEnv() {
 	if nodeps.IsWSL2() {
 		isWSL2 = "true"
 	}
+
+	// DDEV_HOST_DB_PORT is actually used for 2 things.
+	// 1. To specify via base docker-compose file the value of host_db_port config. And it's expected to be empty
+	//    there if the host_db_port is empty.
+	// 2. To tell custom commands the db port. And it's expected always to be populated for them.
+	dbPort, err := app.GetPublishedPort("db")
+	dbPortStr := strconv.Itoa(dbPort)
+	if dbPortStr == "-1" || err != nil {
+		dbPortStr = ""
+	}
+	if app.HostDBPort != "" {
+		dbPortStr = app.HostDBPort
+	}
+
 
 	envVars := map[string]string{
 		// Without COMPOSE_DOCKER_CLI_BUILD=0, docker-compose makes all kinds of mess
