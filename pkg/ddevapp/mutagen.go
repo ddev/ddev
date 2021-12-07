@@ -44,7 +44,7 @@ func SetMutagenVolumeOwnership(app *DdevApp) error {
 // The input must be a valid DNS name (valid ddev project name)
 func MutagenSyncName(name string) string {
 	name = strings.ReplaceAll(name, ".", "")
-	if unicode.IsNumber(rune(name[0])) {
+	if len(name) > 0 && unicode.IsNumber(rune(name[0])) {
 		name = "a" + name
 	}
 	return name
@@ -66,6 +66,9 @@ func TerminateMutagenSync(app *DdevApp) error {
 
 // SyncAndTerminateMutagenSession syncs and terminates the mutagen sync session
 func SyncAndTerminateMutagenSession(app *DdevApp) error {
+	if app.Name == "" {
+		return fmt.Errorf("No app.Name provided to SyncAndTerminateMutagenSession")
+	}
 	syncName := MutagenSyncName(app.Name)
 
 	projStatus := app.SiteStatus()
