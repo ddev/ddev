@@ -64,34 +64,12 @@ ports:
   # Ignore host https port
   - port: 8443
     onOpen: ignore
-  - port: 3306
-    onOpen: ignore
-  # Used by projector
-  - port: 6942
-    onOpen: ignore
   # Direct-connect ddev-webserver port that is the main port
   - port: 8080
     onOpen: ignore
-  # Currently un-notified and unsupported mailhog http port
-  - port: 8025
-    onOpen: ignore
   # Currently un-notified and unsupported mailhog https port
-  - port: 8026
-    onOpen: ignore
-  # Currently un-notified and unsupported phpmyadmin http port
-  - port: 8036
-    onOpen: ignore
-  # Currently un-notified and unsupported phpmyadmin https port
-  - port: 8037
-    onOpen: ignore
-  # router http port that we're ignoring.
-  - port: 8888
-    onOpen: ignore
-  # router https port that we're ignoring.
-  - port: 8889
+  - port: 8027
     onOpen: ignore
   # xdebug port
   - port: 9000
     onOpen: ignore
-  # projector port
-  - port: 9999
