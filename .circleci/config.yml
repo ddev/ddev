@@ -47,6 +47,7 @@ jobs:
     - attach_workspace:
         at: ~/
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
+    - run: 'mkdir -p ~/.ngrok2 && echo "authtoken: ${NGROK_TOKEN}" >~/.ngrok2/ngrok.yml'
     - restore_cache:
         keys:
         - linux-homebrew-v27
@@ -90,6 +91,7 @@ jobs:
           name: ARM64 VM setup
           no_output_timeout: "40m"
       - run: echo "$(docker --version) $(docker-compose --version)"
+      - run: 'mkdir -p ~/.ngrok2 && echo "authtoken: ${NGROK_TOKEN}" >~/.ngrok2/ngrok.yml'
       - run:
           command: make -s test
           name: ddev tests
