@@ -49,7 +49,7 @@ The default [solr-precreate script](https://github.com/docker-solr/docker-solr/b
 
 ### Memcached
 
-This recipe adds a Memcached 1.5 container to a project. The default configuration allocates 128 MB of RAM for the Memcached instance; to change that or other command line arguments, edit the `command` array within the docker-compose file.
+This recipe adds a Memcached 1.5 container to a project. The default configuration allocates 128 MB of RAM for the Memcached instance; to change that or other command line arguments, edit the `command` array within the `docker-compose.memcached.yaml` file.
 
 #### Memcached Installation
 

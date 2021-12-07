@@ -101,7 +101,7 @@ func TestSSHAuth(t *testing.T) {
 		Service: "web",
 		Cmd:     "ssh -o StrictHostKeyChecking=false root@test-ssh-server pwd",
 	})
-	stdout = strings.Trim(stdout, "\n")
+	stdout = strings.Trim(stdout, "\r\n")
 	assert.Equal(stdout, "/root")
 	assert.NoError(err)
 
@@ -117,7 +117,7 @@ func TestSSHAuth(t *testing.T) {
 		Service: "web",
 		Cmd:     "ssh -o StrictHostKeyChecking=false root@test-ssh-server pwd",
 	})
-	stdout = strings.Trim(stdout, "\n")
+	stdout = strings.Trim(stdout, "\r\n")
 	assert.Equal(stdout, "/root")
 	assert.NoError(err)
 

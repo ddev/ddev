@@ -6,6 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 // DebugMutagenCmd implements the ddev debug mutagen command
@@ -18,7 +19,13 @@ ddev debug mutagen daemon stop
 ddev debug mutagen
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), args...)
+		mutagenPath := globalconfig.GetMutagenPath()
+		_, err := os.Stat(mutagenPath)
+		if err != nil {
+			util.Warning("mutagen does not seem to be set up in %s, not executing command", mutagenPath)
+			return
+		}
+		out, err := exec.RunHostCommand(mutagenPath, args...)
 		output.UserOut.Printf(out)
 		if err != nil {
 			util.Failed("Error running '%s %v': %v", globalconfig.GetMutagenPath(), args, err)

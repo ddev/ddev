@@ -8,7 +8,7 @@ There are [many examples of custom Docker compose files](https://github.com/drud
 
 ### Background
 
-Under the hood, ddev uses docker-compose to define and run the multiple containers that make up the local environment for a project. docker-compose supports defining multiple compose files to facilitate [sharing Compose configurations between files and projects](https://docs.docker.com/compose/extends/), and ddev is designed to leverage this ability.
+Under the hood, ddev uses a private copy of docker-compose to define and run the multiple containers that make up the local environment for a project. docker-compose supports defining multiple compose files to facilitate [sharing Compose configurations between files and projects](https://docs.docker.com/compose/extends/), and ddev is designed to leverage this ability.
 
 To add custom configuration or additional services to your project, create docker-compose files in the `.ddev` directory for your project. ddev will process any files using the `docker-compose.[servicename].yaml` naming convention and include them in executing docker-compose functionality. Optionally you can also create a `docker-compose.override.yaml` to override any configurations from the main `.ddev/.ddev-docker-compose-base.yaml` or any additional docker-compose files added to your project.
 
@@ -16,7 +16,7 @@ To add custom configuration or additional services to your project, create docke
 
 The main docker-compose file is named `.ddev/.ddev-docker-compose-base.yaml` and exclusively reserved for ddev's use; it is overwritten every time a project is started, so it should not be edited because edits will be lost. If you need to override configuration provided by .ddev/.ddev-docker-compose-base.yaml, use an additional file "docker-compose.<whatever>.yaml" to do so.
 
-### docker-compose.\*.yaml examples
+### `docker-compose.*.yaml` examples
 
 * Expose an additional port 9999 to host port 9999, in a file perhaps called `docker-compose.ports.yaml`:
 

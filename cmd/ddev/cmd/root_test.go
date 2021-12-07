@@ -231,16 +231,12 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 
 // TestPoweroffOnNewVersion checks that a poweroff happens when a new ddev version is deployed
 func TestPoweroffOnNewVersion(t *testing.T) {
-	if nodeps.MutagenEnabledDefault || globalconfig.DdevGlobalConfig.MutagenEnabledGlobal {
-		t.Skip("Skipping because this changes homedir and breaks mutagen functionality")
-	}
-
 	assert := asrt.New(t)
 	var err error
 
 	origDir, _ := os.Getwd()
 
-	tmpGlobal := testcommon.CreateTmpDir(t.Name())
+	tmpHome := testcommon.CreateTmpDir(t.Name())
 	err = os.Chdir(TestSites[0].Dir)
 	assert.NoError(err)
 
@@ -264,18 +260,28 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	assert.GreaterOrEqual(activeCount, 2)
 
 	// Change the homedir temporarily
-	_ = os.Setenv("HOME", tmpGlobal)
-	_ = os.Setenv("USERPROFILE", tmpGlobal)
+	_ = os.Setenv("HOME", tmpHome)
+	_ = os.Setenv("USERPROFILE", tmpHome)
+
+	// Make sure we have the .ddev/bin dir we need
+	err = fileutil.CopyDir(filepath.Join(origHome, ".ddev/bin"), filepath.Join(tmpHome, ".ddev/bin"))
+	require.NoError(t, err)
 
 	// docker-compose v2 is dependent on the ~/.docker directory
-	_ = fileutil.CopyDir(filepath.Join(origHome, ".docker"), filepath.Join(tmpGlobal, ".docker"))
+	_ = fileutil.CopyDir(filepath.Join(origHome, ".docker"), filepath.Join(tmpHome, ".docker"))
 
 	t.Cleanup(
 		func() {
 			_, err := exec.RunHostCommand(DdevBin, "poweroff")
 			assert.NoError(err)
 
-			err = os.RemoveAll(tmpGlobal)
+			_, err = os.Stat(globalconfig.GetMutagenPath())
+			if err == nil {
+				out, err := exec.RunHostCommand(DdevBin, "debug", "mutagen", "daemon", "stop")
+				assert.NoError(err, "mutagen daemon stop returned %s", string(out))
+			}
+
+			err = os.RemoveAll(tmpHome)
 			assert.NoError(err)
 
 			_ = os.Setenv("HOME", origHome)
@@ -303,7 +309,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 		Cmd:     "date +%s",
 	})
 	require.NoError(t, err, "failed to run exec: %v, output='%s', stderr='%s'", err, oldTime, stderr)
-	oldTime = strings.Trim(oldTime, "\n")
+	oldTime = strings.Trim(oldTime, "\r\n")
 	oldTimeInt, err := strconv.ParseInt(oldTime, 10, 64)
 	require.NoError(t, err)
 

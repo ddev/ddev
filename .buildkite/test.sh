@@ -60,7 +60,7 @@ docker run --rm alpine sh -c '
   done
 '
 
-rm -rf ~/.ddev/Test* ~/.ddev/global_config.yaml ~/.ddev/homeadditions ~/.ddev/commands
+rm -rf ~/.ddev/Test* ~/.ddev/global_config.yaml ~/.ddev/homeadditions ~/.ddev/commands ~/.ddev/bin/docker-comnpose*
 
 # There are discrepancies in golang hash checking in 1.11+, so kill off modcache to solve.
 # See https://github.com/golang/go/issues/27925
@@ -70,7 +70,7 @@ chmod -R u+w ~/go/pkg && rm -rf ~/go/pkg/*
 
 # Run any testbot maintenance that may need to be done
 echo "--- running testbot_maintenance.sh"
-bash $(dirname $0)/testbot_maintenance.sh || true
+bash "$(dirname $0)/testbot_maintenance.sh" || true
 
 echo "--- cleaning up docker and Test directories"
 echo "Warning: deleting all docker containers and deleting ~/.ddev/Test*"

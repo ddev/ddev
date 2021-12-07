@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"io"
 	"log"
 	"net"
@@ -389,6 +390,11 @@ func ComposeWithStreams(composeFiles []string, stdin io.Reader, stdout io.Writer
 	runTime := util.TimeTrack(time.Now(), "dockerutil.ComposeWithStreams")
 	defer runTime()
 
+	_, err := DownloadDockerComposeIfNeeded()
+	if err != nil {
+		return err
+	}
+
 	for _, file := range composeFiles {
 		arg = append(arg, "-f")
 		arg = append(arg, file)
@@ -396,12 +402,16 @@ func ComposeWithStreams(composeFiles []string, stdin io.Reader, stdout io.Writer
 
 	arg = append(arg, action...)
 
-	proc := exec.Command("docker-compose", arg...)
+	path, err := globalconfig.GetDockerComposePath()
+	if err != nil {
+		return err
+	}
+	proc := exec.Command(path, arg...)
 	proc.Stdout = stdout
 	proc.Stdin = stdin
 	proc.Stderr = stderr
 
-	err := proc.Run()
+	err = proc.Run()
 	return err
 }
 
@@ -412,13 +422,22 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 	var stdout bytes.Buffer
 	var stderr string
 
+	_, err := DownloadDockerComposeIfNeeded()
+	if err != nil {
+		return "", "", err
+	}
+
 	for _, file := range composeFiles {
 		arg = append(arg, "-f", file)
 	}
 
 	arg = append(arg, action...)
 
-	proc := exec.Command("docker-compose", arg...)
+	path, err := globalconfig.GetDockerComposePath()
+	if err != nil {
+		return "", "", err
+	}
+	proc := exec.Command(path, arg...)
 	proc.Stdout = &stdout
 	proc.Stdin = os.Stdin
 
@@ -985,9 +1004,129 @@ func Exec(containerID string, command string) (string, string, error) {
 // CheckAvailableSpace outputs a warning if docker space is low
 func CheckAvailableSpace() {
 	_, out, _ := RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", `df -h / | awk '/overlay/ {print $5;}'`}, []string{}, []string{}, []string{}, "", true, false, nil)
-	out = strings.Trim(out, "% \n")
+	out = strings.Trim(out, "% \r\n")
 	spacePercent, _ := strconv.Atoi(out)
 	if (100 - spacePercent) < nodeps.MinimumDockerSpaceWarning {
 		util.Error("Your docker installation has less than %d%% available space (%d%% used). Please increase disk image size.", nodeps.MinimumDockerSpaceWarning, spacePercent)
 	}
+}
+
+// DownloadDockerComposeIfNeeded downloads the proper version of docker-compose
+// if it's either not yet installed or has the wrong version.
+// Returns downloaded bool (true if it did the download) and err
+func DownloadDockerComposeIfNeeded() (bool, error) {
+	requiredVersion := version.GetRequiredDockerComposeVersion()
+	var err error
+	if requiredVersion == "" {
+		util.Debug("globalconfig use_docker_compose_from_path is set, so not downloading")
+		return false, nil
+	}
+	curVersion, err := version.GetLiveDockerComposeVersion()
+	if err != nil || curVersion != requiredVersion {
+		err = DownloadDockerCompose()
+		if err == nil {
+			return true, err
+		}
+	}
+	return false, err
+}
+
+// DownloadDockerCompose gets the docker-compose binary and puts it into
+// ~/.ddev/.bin
+func DownloadDockerCompose() error {
+	globalBinDir := globalconfig.GetDDEVBinDir()
+	destFile, _ := globalconfig.GetDockerComposePath()
+
+	composeURL, err := dockerComposeDownloadLink()
+	if err != nil {
+		return err
+	}
+	output.UserOut.Printf("Downloading %s ...", composeURL)
+
+	path, err := globalconfig.GetDockerComposePath()
+	if err != nil {
+		return err
+	}
+	_ = os.Remove(path)
+
+	_ = os.MkdirAll(globalBinDir, 0777)
+	err = util.DownloadFile(destFile, composeURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"))
+	if err != nil {
+		return err
+	}
+	output.UserOut.Printf("Download complete.")
+
+	// Remove the cached DockerComposeVersion
+	version.DockerComposeVersion = ""
+
+	err = os.Chmod(destFile, 0755)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func dockerComposeDownloadLink() (string, error) {
+	v := version.GetRequiredDockerComposeVersion()
+	if len(v) < 3 {
+		return "", fmt.Errorf("required docker-compose version is invalid: %v", v)
+	}
+	baseVersion := v[1:2]
+
+	switch baseVersion {
+	case "1":
+		return dockerComposeDownloadLinkV1()
+	case "2":
+		return dockerComposeDownloadLinkV2()
+	}
+	return "", fmt.Errorf("Invalid docker-compose base version %s", v)
+}
+
+// dockerComposeDownloadLinkV1 downlods compose v1 downloads like
+//   https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Darwin-x86_64
+//   https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
+//   https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Windows-x86_64.exe
+func dockerComposeDownloadLinkV1() (string, error) {
+	arch := runtime.GOARCH
+	goos := strings.Title(runtime.GOOS)
+
+	switch arch {
+	case "amd64":
+		arch = "x86_64"
+	default:
+		return "", fmt.Errorf("Only amd64 architecture is supported for docker-compose v1, not %s", arch)
+	}
+	// docker-compose v1 does not use the 'v', so strip it.
+	v := version.GetRequiredDockerComposeVersion()[1:]
+	flavor := goos + "-" + arch
+	ComposeURL := fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/docker-compose-%s", v, flavor)
+	if runtime.GOOS == "windows" {
+		ComposeURL = ComposeURL + ".exe"
+	}
+	return ComposeURL, nil
+}
+
+// dockerComposeDownloadLinkV2 downlods compose v1 downloads like
+//   https://github.com/docker/compose/releases/download/v2.2.1/docker-compose-darwin-aarch64
+//   https://github.com/docker/compose/releases/download/v2.2.1/docker-compose-darwin-x86_64
+//   https://github.com/docker/compose/releases/download/v2.2.1/docker-compose-windows-x86_64.exe
+
+func dockerComposeDownloadLinkV2() (string, error) {
+	arch := runtime.GOARCH
+
+	switch arch {
+	case "arm64":
+		arch = "aarch64"
+	case "amd64":
+		arch = "x86_64"
+	default:
+		return "", fmt.Errorf("Only arm64 and amd64 architectures are supported for docker-compose v2, not %s", arch)
+	}
+	flavor := runtime.GOOS + "-" + arch
+	ComposeURL := fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/docker-compose-%s", version.GetRequiredDockerComposeVersion(), flavor)
+	if runtime.GOOS == "windows" {
+		ComposeURL = ComposeURL + ".exe"
+	}
+	return ComposeURL, nil
 }

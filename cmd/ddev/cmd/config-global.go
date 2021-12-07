@@ -131,6 +131,18 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 		dirty = true
 	}
 
+	if cmd.Flag("required-docker-compose-version").Changed {
+		val, _ := cmd.Flags().GetString("required-docker-compose-version")
+		globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion = val
+		dirty = true
+	}
+
+	if cmd.Flag("use-docker-compose-from-path").Changed {
+		val, _ := cmd.Flags().GetBool("use-docker-compose-from-path")
+		globalconfig.DdevGlobalConfig.UseDockerComposeFromPath = val
+		dirty = true
+	}
+
 	if dirty {
 		err = globalconfig.ValidateGlobalConfig()
 		if err != nil {
@@ -158,6 +170,9 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 	output.UserOut.Printf("auto-restart-containers=%v", globalconfig.DdevGlobalConfig.AutoRestartContainers)
 	output.UserOut.Printf("use-hardened-images=%v", globalconfig.DdevGlobalConfig.UseHardenedImages)
 	output.UserOut.Printf("fail-on-hook-fail=%v", globalconfig.DdevGlobalConfig.FailOnHookFailGlobal)
+	output.UserOut.Printf("required-docker-compose-version=%v", globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion)
+	output.UserOut.Printf("use-docker-compose-from-path=%v", globalconfig.DdevGlobalConfig.UseDockerComposeFromPath)
+
 }
 
 func init() {
@@ -176,6 +191,8 @@ func init() {
 	configGlobalCommand.Flags().Bool("fail-on-hook-fail", false, "If true, 'ddev start' will fail when a hook fails.")
 	configGlobalCommand.Flags().Bool("mutagen-enabled", false, "If true, web container will use mutagen caching/asynchronous updates.")
 	configGlobalCommand.Flags().String("table-style", "", "Table style for list and describe, see ~/.ddev/global_config.yaml for values")
+	configGlobalCommand.Flags().String("required-docker-compose-version", "", "Override default docker-compose version")
+	configGlobalCommand.Flags().Bool("use-docker-compose-from-path", true, "If true, use docker-compose from path instead of private ~/.ddev/bin/docker-compose")
 
 	ConfigCommand.AddCommand(configGlobalCommand)
 }

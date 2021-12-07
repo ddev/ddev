@@ -220,6 +220,7 @@ volumes:
   {{if not .OmitDB }}
   mariadb-database:
     name: "{{ .MariaDBVolumeName}}"
+    external: true
   {{end}}
   {{ if not .OmitSSHAgent }}
   ddev-ssh-agent_socket_dir:
@@ -227,6 +228,7 @@ volumes:
   {{ end }}
   ddev-global-cache:
     name: ddev-global-cache
+    external: true
 
   {{ if and .NFSMountEnabled (not .NoProjectMount) }}
   nfsmount:
@@ -521,6 +523,7 @@ networks:
 volumes:
   ddev-global-cache:
     name: ddev-global-cache
+    external: true
 {{ if .letsencrypt }}
   ddev-router-letsencrypt:
     name: ddev-router-letsencrypt

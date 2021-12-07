@@ -28,7 +28,7 @@ open -a PhpStorm.app ${DDEV_APPROOT}
 
 To provide a command which will execute in a container, add a bash script to `.ddev/commands/<container_name>`, for example, `.ddev/commands/web/mycommand`. The bash script will be executed inside the named container. For example, see the [several standard ddev script-based web container commands](https://github.com/drud/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/web),
 
-In addition to commands that run in the standard ddev containers like "web" and "db", you can run commands in custom containers, just using the service name, like `.ddev/commands/solr/<command>`. Note, however, that your service must mount /mnt/ddev_config as the web and db containers do, so the `volumes` section of docker-compose.<servicename>.yaml needs:
+In addition to commands that run in the standard ddev containers like "web" and "db", you can run commands in custom containers, just using the service name, like `.ddev/commands/solr/<command>`. Note, however, that your service must mount /mnt/ddev_config as the web and db containers do, so the `volumes` section of `docker-compose.<servicename>.yaml` needs:
 
 ```
     volumes:

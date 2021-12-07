@@ -802,6 +802,10 @@ func (app *DdevApp) Start() error {
 	var err error
 
 	app.DockerEnv()
+	_, err = dockerutil.CreateVolume("ddev-global-cache", "local", nil)
+	if err != nil {
+		return fmt.Errorf("unable to create docker volume ddev-global-cache: %v", err)
+	}
 
 	app.DBImage = app.GetDBImage()
 
@@ -826,6 +830,7 @@ func (app *DdevApp) Start() error {
 	if err != nil {
 		return err
 	}
+
 	err = app.ProcessHooks("pre-start")
 	if err != nil {
 		return err
@@ -1752,7 +1757,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	} else {
 		snapshotDBVersion = "unknown"
 	}
-	snapshotDBVersion = strings.Trim(snapshotDBVersion, " \n\t")
+	snapshotDBVersion = strings.Trim(snapshotDBVersion, " \r\n\t")
 
 	if snapshotDBVersion != currentDBVersion {
 		return fmt.Errorf("snapshot %s is a DB server %s snapshot and is not compatible with the configured ddev DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the ddev DB version", snapshotDir, snapshotDBVersion, currentDBVersion)

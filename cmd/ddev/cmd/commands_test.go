@@ -23,9 +23,6 @@ import (
 
 // TestCustomCommands does basic checks to make sure custom commands work OK.
 func TestCustomCommands(t *testing.T) {
-	if nodeps.MutagenEnabledDefault || globalconfig.DdevGlobalConfig.MutagenEnabledGlobal {
-		t.Skip("Skipping because this changes homedir and breaks mutagen functionality")
-	}
 
 	assert := asrt.New(t)
 	runTime := util.TimeTrack(time.Now(), t.Name())
@@ -41,16 +38,28 @@ func TestCustomCommands(t *testing.T) {
 	_ = os.Setenv("USERPROFILE", tmpHome)
 	_ = os.Setenv("DDEV_DEBUG", "")
 
+	// Make sure we have the .ddev/bin dir we need
+	err := fileutil.CopyDir(filepath.Join(origHome, ".ddev/bin"), filepath.Join(tmpHome, ".ddev/bin"))
+	require.NoError(t, err)
+
 	origDir, _ := os.Getwd()
 	testCustomCommandsDir := filepath.Join(origDir, "testdata", t.Name())
 
 	site := TestSites[0]
-	err := os.Chdir(site.Dir)
+	err = os.Chdir(site.Dir)
 	require.NoError(t, err)
 
 	app, _ := ddevapp.NewApp("", false)
 	origType := app.Type
 	t.Cleanup(func() {
+		_, err := os.Stat(globalconfig.GetMutagenPath())
+		if err == nil {
+			out, err := exec.RunHostCommand(DdevBin, "debug", "mutagen", "daemon", "stop")
+			if err != nil {
+				t.Logf("mutagen daemon stop failed: %v, output=%s", err, string(out))
+			}
+		}
+
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 		runTime()
@@ -272,7 +281,7 @@ func TestLaunchCommand(t *testing.T) {
 		// Try with the base URL, simplest case
 		c := DdevBin + `  launch ` + partialCommand + ` | awk '/FULLURL/ {print $2}'`
 		out, err := exec.RunHostCommand("bash", "-c", c)
-		out = strings.Trim(out, "\n")
+		out = strings.Trim(out, "\r\n")
 		assert.NoError(err, `couldn't run "%s"", output=%s`, c, out)
 		assert.Contains(out, expect, "output of %s is incorrect with app.RouterHTTPSPort=%s: %s", c, app.RouterHTTPSPort, out)
 	}

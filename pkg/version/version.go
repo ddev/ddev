@@ -79,6 +79,10 @@ var DockerVersion = ""
 // DockerComposeVersion is filled with the version we find for docker-compose
 var DockerComposeVersion = ""
 
+// This is var instead of const so it can be changed in test, but should not otherwise be touched.
+// Otherwise we can't test if the version on the machine is equal to version required
+var RequiredDockerComposeVersion = "v2.2.2"
+
 // MutagenVersion is filled with the version we find for mutagen in use
 var MutagenVersion = ""
 
@@ -148,26 +152,11 @@ func GetRouterImage() string {
 
 // GetDockerComposeVersion runs docker-compose -v to get the current version
 func GetDockerComposeVersion() (string, error) {
-
 	if DockerComposeVersion != "" {
 		return DockerComposeVersion, nil
 	}
 
-	executableName := "docker-compose"
-
-	path, err := exec.LookPath(executableName)
-	if err != nil {
-		return "", fmt.Errorf("no docker-compose")
-	}
-
-	out, err := exec.Command(path, "version", "--short").Output()
-	if err != nil {
-		return "", err
-	}
-
-	v := string(out)
-	DockerComposeVersion = strings.TrimSpace(v)
-	return DockerComposeVersion, nil
+	return GetLiveDockerComposeVersion()
 }
 
 // GetDockerVersion gets the cached or api-sourced version of docker engine
@@ -210,4 +199,52 @@ func GetLiveMutagenVersion() (string, error) {
 	v := string(out)
 	MutagenVersion = strings.TrimSpace(v)
 	return MutagenVersion, nil
+}
+
+// GetLiveDockerComposeVersion runs `docker-compose --version` and caches result
+func GetLiveDockerComposeVersion() (string, error) {
+	if DockerComposeVersion != "" {
+		return DockerComposeVersion, nil
+	}
+
+	path, err := globalconfig.GetDockerComposePath()
+	if err != nil {
+		return "", err
+	}
+
+	DockerComposePath := path
+
+	if !fileutil.FileExists(DockerComposePath) {
+		DockerComposeVersion = ""
+		return DockerComposeVersion, nil
+	}
+	out, err := exec.Command(DockerComposePath, "version", "--short").Output()
+	if err != nil {
+		return "", err
+	}
+	v := strings.Trim(string(out), "\r\n")
+
+	// docker-compose v1 returns a version without the prefix "v", so add it.
+	if strings.HasPrefix(v, "1") {
+		v = "v" + v
+	}
+
+	DockerComposeVersion = v
+	return DockerComposeVersion, nil
+}
+
+// GetRequiredDockerComposeVersion returns the version of docker-compose we need
+// based on the compiled version, or overrides in globalconfig, like
+// required_docker_compose_version and use_docker_compose_from_path
+// In the case of UseDockerComposeFromPath there is no required version, so this
+// will return empty string.
+func GetRequiredDockerComposeVersion() string {
+	v := RequiredDockerComposeVersion
+	switch {
+	case globalconfig.DdevGlobalConfig.UseDockerComposeFromPath:
+		v = ""
+	case globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion != "":
+		v = globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion
+	}
+	return v
 }

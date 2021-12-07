@@ -17,6 +17,9 @@
 db_import_command:
   command: |
     set -eu -o pipefail
+    echo $PATH
+    ddev --version
+    set -x
     gzip -dc ~/Dropbox/db.sql.gz | ddev mysql db
   service: host
 
@@ -27,6 +30,9 @@ db_import_command:
 files_import_command:
   command: |
     set -eu -o pipefail
+    echo $PATH
+    ddev --version
+    set -x
     mkdir -p web/sites/default/files
     tar -zxf ~/Dropbox/files.tar.gz -C web/sites/default/files
   service: host

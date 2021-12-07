@@ -144,7 +144,7 @@ func TestLetsEncrypt(t *testing.T) {
 
 	stdout, _, err := dockerutil.Exec(container.ID, "df -T /etc/letsencrypt  | awk 'NR==2 {print $7;}'")
 	assert.NoError(err)
-	stdout = strings.Trim(stdout, "\n")
+	stdout = strings.Trim(stdout, "\r\n")
 
 	assert.Equal("/etc/letsencrypt", stdout)
 

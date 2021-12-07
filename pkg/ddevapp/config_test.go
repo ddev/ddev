@@ -873,7 +873,7 @@ func TestExtraPackages(t *testing.T) {
 		Cmd:     "command -v ncdu",
 	})
 	assert.NoError(err)
-	assert.Equal("/usr/bin/ncdu", strings.Trim(stdout, "\n"))
+	assert.Equal("/usr/bin/ncdu", strings.Trim(stdout, "\r\n"))
 }
 
 // TestTimezoneConfig tests to make sure setting timezone config takes effect in the container.
@@ -973,7 +973,7 @@ func TestComposerVersionConfig(t *testing.T) {
 		Cmd:     "composer --version | awk '{print $3;}'",
 	})
 	assert.NoError(err)
-	assert.Equal(testVersion, strings.Trim(stdout, "\n"))
+	assert.Equal(testVersion, strings.Trim(stdout, "\r\n"))
 
 	runTime()
 }

@@ -48,21 +48,21 @@ func TestUserProvisioningInContainer(t *testing.T) {
 			Cmd:     "id -un",
 		})
 		assert.NoError(err)
-		assert.Equal(username, strings.Trim(out, "\n"))
+		assert.Equal(username, strings.Trim(out, "\r\n"))
 
 		out, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: service,
 			Cmd:     "id -u",
 		})
 		assert.NoError(err)
-		assert.Equal(uid, strings.Trim(out, "\n"))
+		assert.Equal(uid, strings.Trim(out, "\r\n"))
 
 		out, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: service,
 			Cmd:     "id -g",
 		})
 		assert.NoError(err)
-		assert.Equal(gid, strings.Trim(out, "\n"))
+		assert.Equal(gid, strings.Trim(out, "\r\n"))
 	}
 
 }

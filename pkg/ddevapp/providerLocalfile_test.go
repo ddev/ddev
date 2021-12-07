@@ -2,6 +2,7 @@ package ddevapp_test
 
 import (
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -23,6 +24,10 @@ func TestLocalfilePull(t *testing.T) {
 	testDir, _ := os.Getwd()
 
 	siteDir := testcommon.CreateTmpDir(t.Name())
+
+	out, err := exec.RunHostCommand("ddev", "--version")
+	assert.NoError(err)
+	t.Logf("ddev --version=%v", out)
 
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
@@ -66,10 +71,10 @@ func TestLocalfilePull(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 	err = app.Pull(provider, false, false, false)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	assert.FileExists(filepath.Join(app.AppRoot, app.Docroot, app.GetUploadDir(), "docs/developers/building-contributing.md"))
-	out, _, err := app.Exec(&ExecOpts{
+	out, _, err = app.Exec(&ExecOpts{
 		Cmd:     "echo 'select COUNT(*) from users_field_data where mail=\"margaret.hopper@example.com\";' | mysql -N",
 		Service: "db",
 	})
