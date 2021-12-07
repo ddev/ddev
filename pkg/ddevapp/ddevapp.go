@@ -1433,7 +1433,6 @@ func (app *DdevApp) DockerEnv() {
 		dbPortStr = app.HostDBPort
 	}
 
-
 	envVars := map[string]string{
 		// Without COMPOSE_DOCKER_CLI_BUILD=0, docker-compose makes all kinds of mess
 		// of output. BUILDKIT_PROGRESS doesn't help either.
