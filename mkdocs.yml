@@ -66,6 +66,7 @@ nav:
   - 'Topics':
       - 'CMS-Specific Topics': 'users/topics/cms_specific_help.md'
       - 'Database Management': 'users/topics/database_management.md'
+      - 'Gitpod.io Usage': 'users/topics/gitpod.md'
       - 'How DDEV Works': 'users/topics/how_ddev_works.md'
       - 'PhpStorm Integration': 'users/topics/phpstorm.md'
       - 'Settings Files Management': 'users/topics/settings_files.md'
