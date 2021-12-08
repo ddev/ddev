@@ -110,6 +110,7 @@ Use
 Uses
 Uz
 VCS
+VM
 VPN
 VPNs
 WAMP

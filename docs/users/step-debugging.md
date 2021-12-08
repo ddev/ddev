@@ -29,7 +29,7 @@ For each IDE the link to their documentation is provided, and the skeleton steps
 
 [PhpStorm](https://www.jetbrains.com/phpstorm/download) is a leading PHP development IDE with extensive built-in debugging support. It provides two different ways to do debugging. One requires very little effort in the PhpStorm IDE (they call it zero-configuration debugging) and the other requires you to set up a "run configuration", and is basically identical to the Netbeans or Eclipse setup.
 
-__If you are using PhpStorm inside WSL2 (or perhaps other Linux configurations), under Help→ Edit Custom VM Options, add an additional line: `-Djava.net.preferIPv4Stack=true` This makes PHPStorm listen for Xdebug using IPV4; the Linux version of PHPStorm seems to default to using only IPV6.__
+__If you are using PhpStorm inside WSL2 (or perhaps other Linux configurations), under `Help→ Edit Custom VM Options`, add an additional line: `-Djava.net.preferIPv4Stack=true` This makes PhpStorm listen for Xdebug using IPV4; the Linux version of PhpStorm seems to default to using only IPV6.__
 
 #### PhpStorm Zero-Configuration Debugging
 
@@ -145,4 +145,4 @@ Debugging Xdebug in any setup can be a little trouble, but here are the steps to
 * `ddev ssh` and try the `telnet host.docker.internal 9000` again. It should connect. If not, maybe PhpStorm is not listening, or not configured to listen on port 9000?
 * Check to make sure that Xdebug is enabled. You can use `php -i | grep Xdebug` inside the container, or use any other technique you want that gives the output of `phpinfo()`, including Drupal's admin/reports/status/php. You should see `with Xdebug v2.9.6, Copyright (c) 2002-2020` and `php -i | grep "xdebug.remote_enable"` should give you `xdebug.remote_enable: On`.
 * Set a breakpoint in the first relevant line of the index.php of your project and then visit the site in a browser. It should stop at that first line.
-* If you are using PhpStorm inside WSL2 (or perhaps other Linux configurations), under Help→ Edit Custom VM Options, add an additional line: `-Djava.net.preferIPv4Stack=true` This makes PHPStorm listen for Xdebug using IPV4; the Linux version of PHPStorm seems to default to using only IPV6.
+* If you are using PhpStorm inside WSL2 (or perhaps other Linux configurations), under `Help→ Edit Custom VM Options`, add an additional line: `-Djava.net.preferIPv4Stack=true` This makes PhpStorm listen for Xdebug using IPV4; the Linux version of PhpStorm seems to default to using only IPV6.

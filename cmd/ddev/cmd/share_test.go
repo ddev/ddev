@@ -63,7 +63,10 @@ func TestShareCmd(t *testing.T) {
 				}
 			}
 			if logErr, ok := logData["err"]; ok && logErr != "<nil>" {
-				t.Fatalf("ngrok error: %v", logErr)
+				assert.Equal("<nil>", logErr)
+				err = pKill(cmd)
+				assert.NoError(err)
+				return
 			}
 			// If URL is provided, try to hit it and look for expected response
 			if url, ok := logData["url"]; ok {
