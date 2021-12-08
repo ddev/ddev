@@ -110,6 +110,7 @@ Use
 Uses
 Uz
 VCS
+VM
 VPN
 VPNs
 WAMP
@@ -210,6 +211,8 @@ docker
 docker's
 dockerfile
 docroot
+dotfile
+dotfiles
 drud
 drupal
 drush

@@ -62,6 +62,12 @@ func TestShareCmd(t *testing.T) {
 					break
 				}
 			}
+			if logErr, ok := logData["err"]; ok && logErr != "<nil>" {
+				assert.Equal("<nil>", logErr)
+				err = pKill(cmd)
+				assert.NoError(err)
+				return
+			}
 			// If URL is provided, try to hit it and look for expected response
 			if url, ok := logData["url"]; ok {
 				resp, err := http.Get(url + site.Safe200URIWithExpectation.URI)
