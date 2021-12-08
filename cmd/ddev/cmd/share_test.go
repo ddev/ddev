@@ -20,6 +20,9 @@ func TestShareCmd(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Skipping because unreliable on Windows due to DNS lookup failure")
 	}
+	if os.Getenv("GITHUB_ACTIONS") == "true" {
+		t.Skip("Skipping on GitHub actions because no auth can be provided")
+	}
 	assert := asrt.New(t)
 	urlRead := false
 
