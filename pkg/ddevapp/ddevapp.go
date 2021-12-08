@@ -1847,6 +1847,9 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	app.DockerEnv()
 	var err error
 
+	if app.Name == "" {
+		return fmt.Errorf("invalid app.Name provided to app.Stop(), app=%v", app)
+	}
 	err = app.ProcessHooks("pre-stop")
 	if err != nil {
 		return fmt.Errorf("failed to process pre-stop hooks: %v", err)

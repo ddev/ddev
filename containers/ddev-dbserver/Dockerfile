@@ -62,6 +62,17 @@ RUN chmod -R ugo+rw /var/lib/mysql /etc/mysql/conf.d /mysqlbase && find /mysqlba
 
 RUN /sbin/mkhomedir_helper www-data
 
+# Remove the /etc/apt entry so that if they don't renew the key
+# apt-get update will continue to function
+# Remove MySQL published key that expires 2022-02-15
+# Have requested them to update this in https://bugs.mysql.com/bug.php?id=105632
+# But they haven't done it, and it will break things when it expires.
+RUN rm -f /etc/apt/sources.list.d/mysql.list && \
+  for item in "A4A9 4068 76FC BD3C 4567  70C8 8C71 8D3B 5072 E1F5" ; do \
+    apt-key remove "${item}" || true; \
+  done;
+
+
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 EXPOSE 3306
