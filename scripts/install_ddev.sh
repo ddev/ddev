@@ -128,10 +128,6 @@ if ! docker --version >/dev/null 2>&1; then
     printf "${YELLOW}Docker is required for ddev. Please see https://ddev.readthedocs.io/en/stable/#docker-installation.${RESET}\n"
 fi
 
-if ! docker-compose --version >/dev/null 2>&1; then
-    printf "${YELLOW}docker-compose is required for ddev. Please see https://ddev.readthedocs.io/en/stable/#docker-installation.${RESET}\n"
-fi
-
 TARBALL="$FILEBASE.$VERSION.tar.gz"
 SHAFILE="$TARBALL.sha256.txt"
 
