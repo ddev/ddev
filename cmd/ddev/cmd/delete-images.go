@@ -17,10 +17,11 @@ var deleteImagesNocConfirm bool
 
 // DeleteImagesCmd implements the ddev delete images command
 var DeleteImagesCmd = &cobra.Command{
-	Use:     "images",
-	Short:   "Delete docker images not currently in use",
-	Example: `ddev delete images\nddev delete images -y`,
-	Args:    cobra.NoArgs,
+	Use:   "images",
+	Short: "Delete docker images not currently in use",
+	Example: `ddev delete images
+ddev delete images -y`,
+	Args: cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		if !deleteImagesNocConfirm {
 			if !util.Confirm("Deleting unused ddev images. \nThis is a non-destructive operation, \nbut it may require that the images be downloaded again when you need them. \nOK to continue?") {
