@@ -874,8 +874,8 @@ func GetHostDockerInternalIP() (string, error) {
 
 	// Docker on linux doesn't define host.docker.internal
 	// so we need to go get the bridge IP address
-	// WSL2 (with Docker Desktop) defines host.docker.internal itself.
-	case runtime.GOOS == "linux" && !nodeps.IsDockerDesktopWSL2():
+	// Docker Desktop) defines host.docker.internal itself.
+	case runtime.GOOS == "linux" && !IsDockerDesktop():
 		// look up info from the bridge network
 		client := GetDockerClient()
 		n, err := client.NetworkInfo("bridge")
@@ -1129,4 +1129,18 @@ func dockerComposeDownloadLinkV2() (string, error) {
 		ComposeURL = ComposeURL + ".exe"
 	}
 	return ComposeURL, nil
+}
+
+// IsDockerDesktop detects if running on Docker Desktop
+func IsDockerDesktop() bool {
+	client := GetDockerClient()
+	info, err := client.Info()
+	if err != nil {
+		util.Warning("IsDockerDesktop(): Unable to get docker info, err=%v", err)
+		return false
+	}
+	if info.OperatingSystem == "Docker Desktop" {
+		return true
+	}
+	return false
 }

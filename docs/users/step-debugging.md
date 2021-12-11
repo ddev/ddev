@@ -133,7 +133,7 @@ NOTE: If you are using a PHP version below PHP7.2, you will be using Xdebug vers
 Debugging Xdebug in any setup can be a little trouble, but here are the steps to take. The steps here assume that you're using PhpStorm, but they can be adapted to any IDE.
 
 * Reboot your computer.
-* Temporarily disable any firewall or vpn if you're having trouble. Xdebug is a network protocol, and the php process inside the web container must be able to establish a TCP connection to the listening IDE (PhpStorm, for example).
+* Temporarily disable any firewall or VPN if you're having trouble. Xdebug is a network protocol, and the php process inside the web container must be able to establish a TCP connection to the listening IDE (PhpStorm, for example).
 * Use `ddev xdebug on` to enable xdebug when you want it, and `ddev xdebug off` when you're done with it.
 * Set a breakpoint at the first executable line of your index.php.
 * Tell your IDE to start listening. (PhpStorm: Click the telephone button, vscode: run the debugger.)
