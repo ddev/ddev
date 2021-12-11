@@ -33,6 +33,15 @@ if [ -d /mnt/ddev_config/php ] ; then
     fi
 fi
 
+if [ -d /mnt/ddev_config/nginx_full ]; then
+  rm -rf /etc/nginx/sites-enabled
+  cp -r /mnt/ddev_config/nginx_full /etc/nginx/sites-enabled/
+fi
+if [ -d /mnt/ddev_config/apache ]; then
+  rm -rf /etc/apache2/sites-enabled
+  cp -r /mnt/ddev_config/apache /etc/apache2/sites-enabled
+fi
+
 if [ "$DDEV_PROJECT_TYPE" = "backdrop" ] ; then
     # Start can be executed when the container is already running.
     mkdir -p ~/.drush/commands && ln -s /var/tmp/backdrop_drush_commands ~/.drush/commands/backdrop

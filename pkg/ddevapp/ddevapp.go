@@ -854,9 +854,15 @@ func (app *DdevApp) Start() error {
 	// container with a single focus of changing ownership, instead of having to use sudo
 	// inside the container
 	uid, _, _ := util.GetContainerUIDGid()
-	_, _, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.Name + "-mariadb:/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, nil)
+
+	err = dockerutil.CopyToVolume(app.GetConfigPath(""), app.Name+"-ddev-config", "", uid)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to copy .ddev directory to volume: %v", err)
+	}
+
+	_, _, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache /mnt/ddev_config", uid)}, []string{}, []string{}, []string{app.Name + "-mariadb:/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache", app.Name + "-ddev-config:/mnt/ddev_config"}, "", true, false, nil)
+	if err != nil {
+		return fmt.Errorf("failed to RunSimpleContainer to chown volumes: %v", err)
 	}
 
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
@@ -1901,7 +1907,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 			util.Warning("could not WriteGlobalConfig: %v", err)
 		}
 
-		for _, volName := range []string{app.Name + "-mariadb", GetMutagenVolumeName(app)} {
+		for _, volName := range []string{app.Name + "-mariadb", app.Name + "-ddev-config", GetMutagenVolumeName(app)} {
 			err = dockerutil.RemoveVolume(volName)
 			if err != nil {
 				util.Warning("could not remove volume %s: %v", volName, err)

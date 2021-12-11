@@ -25,9 +25,7 @@ services:
         target: "/var/lib/mysql"
         volume:
           nocopy: true
-      - type: "bind"
-        source: "."
-        target: "/mnt/ddev_config"
+      - ddev-config:/mnt/ddev_config
       - ddev-global-cache:/mnt/ddev-global-cache
     restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
     user: '$DDEV_UID:$DDEV_GID'
@@ -98,11 +96,8 @@ services:
         volume:
           nocopy: true
       {{ end }}
-      - ".:/mnt/ddev_config:ro"
-      - "./nginx_full:/etc/nginx/sites-enabled:ro"
-      - "./apache:/etc/apache2/sites-enabled:ro"
+      - ddev-config:/mnt/ddev_config
       - ddev-global-cache:/mnt/ddev-global-cache
-      - ./xhprof:/usr/local/bin/xhprof
       {{ if not .OmitSSHAgent }}
       - ddev-ssh-agent_socket_dir:/home/.ssh-agent
       {{ end }}
@@ -229,6 +224,8 @@ volumes:
   ddev-global-cache:
     name: ddev-global-cache
     external: true
+  ddev-config:
+    name: ${DDEV_PROJECT}-ddev-config
 
   {{ if and .NFSMountEnabled (not .NoProjectMount) }}
   nfsmount:
