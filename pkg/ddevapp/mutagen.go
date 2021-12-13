@@ -127,7 +127,7 @@ func CreateMutagenSync(app *DdevApp) error {
 	if err != nil {
 		return err
 	}
-	container, err := dockerutil.FindContainerByName(fmt.Sprintf("ddev-%s-web", app.Name))
+	container, err := GetContainerID(app, "web")
 	if err != nil {
 		return err
 	}

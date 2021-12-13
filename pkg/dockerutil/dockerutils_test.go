@@ -613,7 +613,7 @@ func TestCopyIntoContainer(t *testing.T) {
 	require.NoError(t, err)
 
 	out, _, err := Exec(cid.ID, fmt.Sprintf(`bash -c "cd %s && ls -R"`, targetDir))
-
+	require.NoError(t, err)
 	assert.Equal(`.:
 root.txt
 subdir1

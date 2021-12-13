@@ -503,8 +503,20 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		}
 	}
 
-	// Inside the db container, the dir for imports will be at /mnt/ddev_config/<tmpdir_name>
-	insideContainerImportPath := path.Join("/mnt/ddev_config", filepath.Base(dbPath))
+	cid, err := GetContainerID(app, "db")
+	if err != nil {
+		return err
+	}
+	insideContainerImportPath, _, err := dockerutil.Exec(cid.ID, "mktemp -d")
+	if err != nil {
+		return err
+	}
+	insideContainerImportPath = strings.Trim(insideContainerImportPath, "\n")
+
+	err = dockerutil.CopyIntoContainer(dbPath, GetContainerName(app, "db"), insideContainerImportPath)
+	if err != nil {
+		return err
+	}
 
 	preImportSQL := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s; GRANT ALL ON %s.* TO 'db'@'%%';", targetDB, targetDB)
 	if !noDrop {
@@ -2359,6 +2371,23 @@ func (app *DdevApp) StartAppIfNotRunning() error {
 // GetDBHostname gets the in-container hostname of the DB container
 func GetDBHostname(app *DdevApp) string {
 	return "ddev-" + app.Name + "-db"
+}
+
+// GetContainerName returns the contructed container name of the
+// service provided.
+func GetContainerName(app *DdevApp, service string) string {
+	return "ddev-" + app.Name + "-" + service
+}
+
+// GetContainerID returns the containerID of the
+// service name provided.
+func GetContainerID(app *DdevApp, service string) (*docker.APIContainers, error) {
+	name := GetContainerName(app, service)
+	cid, err := dockerutil.FindContainerByName(name)
+	if err != nil || cid == nil {
+		return nil, fmt.Errorf("unable to find container %s: %v", name, err)
+	}
+	return cid, nil
 }
 
 // FormatSiteStatus formats "paused" or "running" with color
