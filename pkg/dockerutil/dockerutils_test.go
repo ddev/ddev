@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"os"
 	"runtime"
+	"strings"
 	"testing"
 
 	logOutput "github.com/sirupsen/logrus"
@@ -571,7 +572,6 @@ subdir1.txt
 	})
 
 }
-
 // TestDockerIP tries out a number of DOCKER_HOST permutations
 // to verify that GetDockerIP does them right
 func TestGetDockerIP(t *testing.T) {
@@ -593,4 +593,33 @@ func TestGetDockerIP(t *testing.T) {
 		assert.NoError(err)
 		assert.Equal(v, result, "for %s expected %s, got %s", k, v, result)
 	}
+}
+
+TestCopyIntoContainer makes sure CopyToVolume copies a local directory into a specified
+// path in container
+func TestCopyIntoContainer(t *testing.T) {
+	assert := asrt.New(t)
+	pwd, _ := os.Getwd()
+
+	cid, err := FindContainerByName(testContainerName)
+	require.NoError(t, err)
+	require.NotNil(t, cid)
+
+	targetDir, _, err := Exec(cid.ID, "mktemp -d")
+	require.NoError(t, err)
+	targetDir = strings.Trim(targetDir, "\n")
+
+	err = CopyIntoContainer(filepath.Join(pwd, "testdata", t.Name()), testContainerName, targetDir)
+	require.NoError(t, err)
+
+	out, _, err := Exec(cid.ID, fmt.Sprintf(`bash -c "cd %s && ls -R"`, targetDir))
+
+	assert.Equal(`.:
+root.txt
+subdir1
+
+./subdir1:
+subdir1.txt
+`, out)
+
 }

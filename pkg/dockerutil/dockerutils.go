@@ -1188,3 +1188,42 @@ func IsDockerDesktop() bool {
 	}
 	return false
 }
+
+// CopyIntoContainer copies a path into a specified container and location
+func CopyIntoContainer(srcPath string, containerName string, dstPath string) error {
+	client := GetDockerClient()
+	cid, err := FindContainerByName(containerName)
+	if err != nil {
+		return err
+	}
+	if cid == nil {
+		return fmt.Errorf("CopyIntoContainer unable to find a container named %s", containerName)
+	}
+	tarball, err := os.CreateTemp(os.TempDir(), "containercopytmp*.tar")
+	if err != nil {
+		return err
+	}
+	// nolint: errcheck
+	defer os.Remove(tarball.Name())
+	// nolint: errcheck
+	defer tarball.Close()
+
+	// Tar up the source directory into the tarball
+	err = archive.Tar(srcPath, tarball.Name())
+	if err != nil {
+		return err
+	}
+	t, err := os.Open(tarball.Name())
+	if err != nil {
+		return err
+	}
+
+	// nolint: errcheck
+	defer t.Close()
+
+	err = client.UploadToContainer(cid.ID, docker.UploadToContainerOptions{
+		InputStream: t,
+		Path:        dstPath,
+	})
+	return err
+}
