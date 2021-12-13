@@ -354,7 +354,7 @@ func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string
 	return "", fmt.Errorf("inappropriate break out of for loop in ContainerWaitLog() waiting for container labels %v", labels)
 }
 
-// ContainerName returns the containers human readable name.
+// ContainerName returns the container's human readable name.
 func ContainerName(container docker.APIContainers) string {
 	return container.Names[0][1:]
 }
@@ -1199,6 +1199,12 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string) err
 	if cid == nil {
 		return fmt.Errorf("CopyIntoContainer unable to find a container named %s", containerName)
 	}
+
+	_, stderr, err := Exec(cid.ID, "mkdir -p "+dstPath)
+	if err != nil {
+		return fmt.Errorf("unable to mkdir -p %s inside %s: %v (stderr=%s)", dstPath, containerName, err, stderr)
+	}
+
 	tarball, err := os.CreateTemp(os.TempDir(), "containercopytmp*.tar")
 	if err != nil {
 		return err
