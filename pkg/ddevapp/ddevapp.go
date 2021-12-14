@@ -4,12 +4,10 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
-	"io/fs"
 	"net"
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -1658,12 +1656,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	// Container side has to use path.Join instead of filepath.Join because they are
 	// targeted at the linux filesystem, so won't work with filepath on Windows
 	snapshotDir := path.Join(snapshotDirBase, snapshotName)
-	hostSnapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), snapshotDir)
 	containerSnapshotDir := snapshotDir
-	err = os.MkdirAll(hostSnapshotDir, 0777)
-	if err != nil {
-		return snapshotName, err
-	}
 
 	// Ensure that db container is up.
 	labels := map[string]string{"com.ddev.site-name": app.Name, "com.docker.compose.service": "db"}
@@ -1683,7 +1676,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 		return "", err
 	}
 
-	util.Success("Created database snapshot %s in %s", snapshotName, hostSnapshotDir)
+	util.Success("Created database snapshot %s", snapshotName)
 	err = app.ProcessHooks("post-snapshot")
 	if err != nil {
 		return snapshotName, fmt.Errorf("failed to process pre-stop hooks: %v", err)
@@ -1737,42 +1730,23 @@ func (app *DdevApp) GetLatestSnapshot() (string, error) {
 // ListSnapshots returns a list of the names of all project snapshots
 func (app *DdevApp) ListSnapshots() ([]string, error) {
 	var err error
-	var snapshots []string
 
-	snapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), "db_snapshots")
-
-	if !fileutil.FileExists(snapshotDir) {
-		return snapshots, nil
-	}
-
-	fileNames, err := fileutil.ListFilesInDir(snapshotDir)
-	if err != nil {
-		return snapshots, err
-	}
-
-	var files []fs.FileInfo
-	for _, n := range fileNames {
-		f, err := os.Stat(filepath.Join(snapshotDir, n))
-		if err != nil {
-			return snapshots, err
-		}
-		files = append(files, f)
-	}
-
-	// Sort snapshots by last modification time
-	// we need that to detect the latest snapshot
-	// first snapshot is the latest
-	sort.Slice(files, func(i, j int) bool {
-		return files[i].ModTime().After(files[j].ModTime())
+	out, _, err := app.Exec(&ExecOpts{
+		Service: "db",
+		Dir:     "/mnt/snapshots",
+		Cmd:     "if ls -d */ >/dev/null 2>&1 ; then ls -d -t */; else echo ''; fi",
 	})
-
-	for _, f := range files {
-		if f.IsDir() {
-			snapshots = append(snapshots, f.Name())
-		}
+	if err != nil {
+		return nil, err
 	}
 
-	return snapshots, nil
+	out = strings.Trim(out, "\n")
+	out = strings.ReplaceAll(out, "/", "")
+	fileNames := strings.Split(out, "\n")
+	if fileNames[0] == "" {
+		fileNames = nil
+	}
+	return fileNames, nil
 }
 
 // RestoreSnapshot restores a mariadb snapshot of the db to be loaded

@@ -55,7 +55,11 @@ func listAppSnapshots(app *ddevapp.DdevApp) {
 	if snapshotNames, err := app.ListSnapshots(); err != nil {
 		util.Failed("Failed to list snapshots %s: %v", app.GetName(), err)
 	} else {
-		util.Success("Snapshots of project %s: %s", app.GetName(), strings.Join(snapshotNames, ", "))
+		if len(snapshotNames) > 0 {
+			util.Success("Snapshots of project %s: %s", app.GetName(), strings.Join(snapshotNames, ", "))
+		} else {
+			util.Success("There are no snapshots for project %s", app.GetName())
+		}
 	}
 }
 
