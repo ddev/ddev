@@ -110,7 +110,7 @@ RUN set -o pipefail && curl -sSL https://github.com/platformsh/platformsh-cli/re
 # and https://github.com/acquia/cli/issues/721 and https://github.com/acquia/cli/issues/722
 # When things sort out, additional work will be required in acquia.yaml.example to make it work
 # and then maybe we can use latest, but might be best to lock it to a version anyway.
-RUN curl -sSL --output /usr/local/bin/acli https://github.com/acquia/cli/releases/download/1.14.0/acli.phar && chmod 777 /usr/local/bin/acli
+RUN curl -sSL --output /usr/local/bin/acli https://github.com/acquia/cli/releases/download/1.19.0/acli.phar && chmod 777 /usr/local/bin/acli
 RUN curl -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/backdrop-drush-extension.zip -o /tmp/backdrop-drush-extension.zip && unzip -o /tmp/backdrop-drush-extension.zip -d /var/tmp/backdrop_drush_commands
 
 RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib/apache2/module/enabled_by_admin /var/lib/apache2/module/disabled_by_admin && \
