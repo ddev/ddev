@@ -1746,7 +1746,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	testDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
 
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf(t.Name()))
+	runTime := util.TimeTrack(time.Now(), t.Name())
 
 	d7testerTest1Dump, err := filepath.Abs(filepath.Join("testdata", t.Name(), "restore_snapshot", "d7tester_test_1.sql.gz"))
 	assert.NoError(err)
