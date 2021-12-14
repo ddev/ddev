@@ -1655,7 +1655,7 @@ func TestDdevSnapshotCleanup(t *testing.T) {
 	assert.NoError(err)
 
 	// Make a snapshot of d7 tester test 1
-	backupsDir := filepath.Join(app.GetConfigPath(""), "db_snapshots")
+	//backupsDir := filepath.Join(app.GetConfigPath(""), "db_snapshots")
 	snapshotName, err := app.Snapshot(t.Name() + "_1")
 	assert.NoError(err)
 
@@ -1865,7 +1865,11 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	oldSnapshotTarball, err := filepath.Abs(filepath.Join(testDir, "testdata", t.Name(), "restore_snapshot", "d7tester_test_1.snapshot_mariadb_10_1.tgz"))
 	assert.NoError(err)
 
-	err = archive.Untar(oldSnapshotTarball, filepath.Join(site.Dir, ".ddev", "db_snapshots"), "")
+	//err = archive.Untar(oldSnapshotTarball, filepath.Join(site.Dir, ".ddev", "db_snapshots"), "")
+	push
+	into
+	container
+	instead
 	assert.NoError(err)
 	err = app.RestoreSnapshot("d7tester_test_1.snapshot_mariadb_10.1")
 	assert.Error(err)

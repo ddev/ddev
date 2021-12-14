@@ -47,7 +47,7 @@ var WebTag = "20211211_volumes_for_config" // Note that this can be overridden b
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.18.2"
+var BaseDBTag = "20211211_volumes_for_config"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"

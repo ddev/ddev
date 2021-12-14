@@ -1632,8 +1632,8 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 
 var snapshotDirBase = "/mnt/snapshots"
 
-// Snapshot forces a mariadb snapshot of the db to be written into .ddev/db_snapshots
-// Returns the dirname of the snapshot and err
+// Snapshot causes a snapshot of the db to be written into the snapshots volume
+// Returns the name of the snapshot and err
 func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	err := app.ProcessHooks("pre-snapshot")
 	if err != nil {
