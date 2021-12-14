@@ -872,7 +872,7 @@ func (app *DdevApp) Start() error {
 		return fmt.Errorf("failed to copy .ddev directory to volume: %v", err)
 	}
 
-	_, _, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache /mnt/ddev_config", uid)}, []string{}, []string{}, []string{app.Name + "-mariadb:/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache", app.Name + "-ddev-config:/mnt/ddev_config"}, "", true, false, nil)
+	_, _, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache /mnt/ddev_config /mnt/snapshots", uid)}, []string{}, []string{}, []string{app.Name + "-mariadb:/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache", app.Name + "-ddev-config:/mnt/ddev_config", app.Name + "-ddev-snapshots:/mnt/snapshots"}, "", true, false, nil)
 	if err != nil {
 		return fmt.Errorf("failed to RunSimpleContainer to chown volumes: %v", err)
 	}
@@ -1632,6 +1632,8 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 	return "", fmt.Errorf("settings files already exist and are being managed by the user")
 }
 
+var snapshotDirBase = "/mnt/snapshots"
+
 // Snapshot forces a mariadb snapshot of the db to be written into .ddev/db_snapshots
 // Returns the dirname of the snapshot and err
 func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
@@ -1655,9 +1657,9 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 
 	// Container side has to use path.Join instead of filepath.Join because they are
 	// targeted at the linux filesystem, so won't work with filepath on Windows
-	snapshotDir := path.Join("db_snapshots", snapshotName)
+	snapshotDir := path.Join(snapshotDirBase, snapshotName)
 	hostSnapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), snapshotDir)
-	containerSnapshotDir := path.Join("/mnt/ddev_config", snapshotDir)
+	containerSnapshotDir := snapshotDir
 	err = os.MkdirAll(hostSnapshotDir, 0777)
 	if err != nil {
 		return snapshotName, err
@@ -1919,7 +1921,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 			util.Warning("could not WriteGlobalConfig: %v", err)
 		}
 
-		for _, volName := range []string{app.Name + "-mariadb", app.Name + "-ddev-config", GetMutagenVolumeName(app)} {
+		for _, volName := range []string{app.Name + "-mariadb", app.Name + "-ddev-config", app.Name + "-ddev-snapshots", GetMutagenVolumeName(app)} {
 			err = dockerutil.RemoveVolume(volName)
 			if err != nil {
 				util.Warning("could not remove volume %s: %v", volName, err)
