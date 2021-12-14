@@ -228,11 +228,11 @@ func TestCustomCommands(t *testing.T) {
 	}
 
 	// Make sure that the non-command stuff we installed is in globalCommandsDir
-	for _, f := range []string{"db/mysqldump.example", "db/README.txt", "host/heidisql", "host/mysqlworkbench.example", "host/phpstorm.example", "host/README.txt", "host/sequelace", "host/sequelpro", "host/tableplus", "web/README.txt"} {
+	for _, f := range []string{".gitattributes", "db/mysqldump.example", "db/README.txt", "host/heidisql", "host/mysqlworkbench.example", "host/phpstorm.example", "host/README.txt", "host/sequelace", "host/sequelpro", "host/tableplus", "web/README.txt"} {
 		assert.FileExists(filepath.Join(globalCommandsDir, f))
 	}
 	// Make sure that the non-command stuff we installed is in project commands dir
-	for _, f := range []string{"db/mysql", "db/README.txt", "host/launch", "host/README.txt", "host/solrtail.example", "solr/README.txt", "solr/solrtail.example", "web/README.txt", "web/xdebug"} {
+	for _, f := range []string{".gitattributes", "db/mysql", "db/README.txt", "host/launch", "host/README.txt", "host/solrtail.example", "solr/README.txt", "solr/solrtail.example", "web/README.txt", "web/xdebug"} {
 		assert.FileExists(filepath.Join(projectCommandsDir, f))
 	}
 
