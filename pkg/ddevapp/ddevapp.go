@@ -1700,17 +1700,15 @@ func (app *DdevApp) DeleteSnapshot(snapshotName string) error {
 	}
 
 	snapshotDir := path.Join(snapshotDirBase, snapshotName)
-	hostSnapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), snapshotDir)
-
-	if err = fileutil.PurgeDirectory(hostSnapshotDir); err != nil {
-		return fmt.Errorf("failed to purge contents of snapshot directory: %v", err)
-	}
-
-	if err = os.Remove(hostSnapshotDir); err != nil {
+	_, _, err = app.Exec(&ExecOpts{
+		Service: "db",
+		Cmd:     "rm -rf " + snapshotDir,
+	})
+	if err != nil {
 		return fmt.Errorf("failed to delete snapshot directory: %v", err)
 	}
 
-	util.Success("Deleted database snapshot %s in %s", snapshotName, hostSnapshotDir)
+	util.Success("Deleted database snapshot %s", snapshotName)
 	err = app.ProcessHooks("post-delete-snapshot")
 	if err != nil {
 		return fmt.Errorf("failed to process post-delete-snapshot hooks: %v", err)
