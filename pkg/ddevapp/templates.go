@@ -227,6 +227,7 @@ volumes:
     external: true
   ddev-config:
     name: ${DDEV_PROJECT}-ddev-config
+    external: true
   ddev-snapshots:
     name: ${DDEV_PROJECT}-ddev-snapshots
     external: true

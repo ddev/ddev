@@ -1655,11 +1655,8 @@ func TestDdevSnapshotCleanup(t *testing.T) {
 	assert.NoError(err)
 
 	// Make a snapshot of d7 tester test 1
-	//backupsDir := filepath.Join(app.GetConfigPath(""), "db_snapshots")
 	snapshotName, err := app.Snapshot(t.Name() + "_1")
 	assert.NoError(err)
-
-	assert.True(fileutil.FileExists(filepath.Join(backupsDir, snapshotName, "xtrabackup_info")), "Expected that file xtrabackup_info in snapshot exists")
 
 	err = app.Init(site.Dir)
 	require.NoError(t, err)
@@ -1667,11 +1664,12 @@ func TestDdevSnapshotCleanup(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	err = app.DeleteSnapshot(t.Name() + "_1")
+	err = app.DeleteSnapshot(snapshotName)
 	assert.NoError(err)
 
 	// Snapshot data should be deleted
-	assert.False(fileutil.FileExists(filepath.Join(backupsDir, snapshotName, "xtrabackup_info")), "Expected that file of snapshot is deleted during cleanup")
+	err = app.DeleteSnapshot(snapshotName)
+	assert.Error(err)
 
 	runTime()
 }
@@ -1865,12 +1863,12 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	oldSnapshotTarball, err := filepath.Abs(filepath.Join(testDir, "testdata", t.Name(), "restore_snapshot", "d7tester_test_1.snapshot_mariadb_10_1.tgz"))
 	assert.NoError(err)
 
-	//err = archive.Untar(oldSnapshotTarball, filepath.Join(site.Dir, ".ddev", "db_snapshots"), "")
-	push
-	into
-	container
-	instead
+	untarred := filepath.Join(site.Dir, ".ddev", "tmp")
+	err = archive.Untar(oldSnapshotTarball, untarred, "")
 	assert.NoError(err)
+	err = dockerutil.CopyIntoContainer(untarred, ddevapp.GetContainerName(app, "db"), "/mnt/snapshots")
+	require.NoError(t, err)
+
 	err = app.RestoreSnapshot("d7tester_test_1.snapshot_mariadb_10.1")
 	assert.Error(err)
 	assert.Contains(err.Error(), "is not compatible")

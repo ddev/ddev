@@ -1655,8 +1655,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 
 	// Container side has to use path.Join instead of filepath.Join because they are
 	// targeted at the linux filesystem, so won't work with filepath on Windows
-	snapshotDir := path.Join(snapshotDirBase, snapshotName)
-	containerSnapshotDir := snapshotDir
+	containerSnapshotDir := path.Join(snapshotDirBase, snapshotName)
 
 	// Ensure that db container is up.
 	labels := map[string]string{"com.ddev.site-name": app.Name, "com.docker.compose.service": "db"}
@@ -1692,13 +1691,13 @@ func (app *DdevApp) DeleteSnapshot(snapshotName string) error {
 		return fmt.Errorf("failed to process pre-delete-snapshot hooks: %v", err)
 	}
 
-	snapshotDir := path.Join(snapshotDirBase, snapshotName)
 	_, _, err = app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     "rm -rf " + snapshotDir,
+		Dir:     snapshotDirBase,
+		Cmd:     fmt.Sprintf("test -d %s && rm -rf %s", snapshotName, snapshotName),
 	})
 	if err != nil {
-		return fmt.Errorf("failed to delete snapshot directory: %v", err)
+		return fmt.Errorf("failed to delete snapshot: %v", err)
 	}
 
 	util.Success("Deleted database snapshot %s", snapshotName)

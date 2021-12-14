@@ -956,6 +956,10 @@ func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid
 	volPath := "/mnt/v"
 	targetSubdirFullPath := volPath + "/" + targetSubdir
 	client := GetDockerClient()
+	fi, err := os.Stat(sourcePath)
+	if !fi.IsDir() {
+		return fmt.Errorf("sourcePath '%s' must be a directory", sourcePath)
+	}
 
 	f, err := os.Open(sourcePath)
 	if err != nil {
@@ -1191,6 +1195,11 @@ func IsDockerDesktop() bool {
 
 // CopyIntoContainer copies a path into a specified container and location
 func CopyIntoContainer(srcPath string, containerName string, dstPath string) error {
+	fi, err := os.Stat(srcPath)
+	if !fi.IsDir() {
+		return fmt.Errorf("sourcePath '%s' must be a directory", srcPath)
+	}
+
 	client := GetDockerClient()
 	cid, err := FindContainerByName(containerName)
 	if err != nil {
