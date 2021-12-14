@@ -1738,15 +1738,15 @@ func TestGetLatestSnapshot(t *testing.T) {
 
 // TestDdevRestoreSnapshot tests creating a snapshot and reverting to it.
 func TestDdevRestoreSnapshot(t *testing.T) {
-	if nodeps.IsMacM1() {
-		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
-	}
+	//if nodeps.IsMacM1() {
+	//	t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+	//}
 
 	assert := asrt.New(t)
 	testDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
 
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("TestDdevRestoreSnapshot"))
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf(t.Name()))
 
 	d7testerTest1Dump, err := filepath.Abs(filepath.Join("testdata", t.Name(), "restore_snapshot", "d7tester_test_1.sql.gz"))
 	assert.NoError(err)
@@ -1788,12 +1788,13 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.NoError(ensureErr)
 
 	// Make a snapshot of d7 tester test 1
-	backupsDir := filepath.Join(app.GetConfigPath(""), "db_snapshots")
 	snapshotName, err := app.Snapshot("d7testerTest1")
 	assert.NoError(err)
 
 	assert.EqualValues(snapshotName, "d7testerTest1")
-	assert.True(fileutil.FileExists(filepath.Join(backupsDir, snapshotName, "xtrabackup_info")))
+	latest, err := app.GetLatestSnapshot()
+	assert.NoError(err)
+	assert.Equal(snapshotName, latest)
 
 	assert.FileExists("hello-pre-snapshot-" + app.Name)
 	assert.FileExists("hello-post-snapshot-" + app.Name)
@@ -1812,15 +1813,16 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	// This restart is to work around a persistent
 	// failure on Mac M1.
 	// "read: connection reset by peer"
-	err = app.Restart()
-	require.NoError(t, err)
+	//err = app.Restart()
+	//require.NoError(t, err)
 
 	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), "d7 tester test 2 has 2 nodes", 45)
 
 	snapshotName, err = app.Snapshot("d7testerTest2")
 	assert.NoError(err)
 	assert.EqualValues(snapshotName, "d7testerTest2")
-	assert.True(fileutil.FileExists(filepath.Join(backupsDir, snapshotName, "xtrabackup_info")))
+	latest, err = app.GetLatestSnapshot()
+	assert.Equal(snapshotName, latest)
 
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-restore-snapshot": {{"exec-host": "touch hello-post-restore-snapshot-" + app.Name}}, "pre-restore-snapshot": {{"exec-host": "touch hello-pre-restore-snapshot-" + app.Name}}}
 
@@ -1846,8 +1848,8 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.NoError(err)
 
 	// Try a restart to work around "connection reset by peer" error on Mac M1
-	err = app.Restart()
-	assert.NoError(err)
+	//err = app.Restart()
+	//assert.NoError(err)
 
 	body, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL(), 45)
 	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", app.GetHTTPSURL(), err)

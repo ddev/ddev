@@ -1765,28 +1765,15 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		currentDBVersion = app.MySQLVersion
 	}
 
-	snapshotDir := filepath.Join("db_snapshots", snapshotName)
-
-	hostSnapshotDir := filepath.Join(app.AppConfDir(), snapshotDir)
-	if !fileutil.FileExists(hostSnapshotDir) {
-		return fmt.Errorf("failed to find a snapshot in %s", hostSnapshotDir)
-	}
-
 	// Find out the mariadb version that correlates to the snapshot.
-	versionFile := filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")
-	var snapshotDBVersion string
-	if fileutil.FileExists(versionFile) {
-		snapshotDBVersion, err = fileutil.ReadFileIntoString(versionFile)
-		if err != nil {
-			return fmt.Errorf("unable to read the version file in the snapshot (%s): %v", versionFile, err)
-		}
-	} else {
+	snapshotDBVersion, err := app.GetSnapshotVersion(snapshotName)
+	if err != nil {
 		snapshotDBVersion = "unknown"
 	}
 	snapshotDBVersion = strings.Trim(snapshotDBVersion, " \r\n\t")
 
 	if snapshotDBVersion != currentDBVersion {
-		return fmt.Errorf("snapshot %s is a DB server %s snapshot and is not compatible with the configured ddev DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the ddev DB version", snapshotDir, snapshotDBVersion, currentDBVersion)
+		return fmt.Errorf("snapshot %s is a DB server %s snapshot and is not compatible with the configured ddev DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the ddev DB version", snapshotName, snapshotDBVersion, currentDBVersion)
 	}
 
 	//dockerutil.GetAppContainers(app.Name)
@@ -1826,12 +1813,25 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		time.Sleep(1 * time.Second)
 		fmt.Print(".")
 	}
-	util.Success("\nRestored database snapshot %s", hostSnapshotDir)
+	util.Success("\nRestored database snapshot %s", snapshotName)
 	err = app.ProcessHooks("post-restore-snapshot")
 	if err != nil {
 		return fmt.Errorf("failed to process post-restore-snapshot hooks: %v", err)
 	}
 	return nil
+}
+
+func (app *DdevApp) GetSnapshotVersion(snapshotName string) (string, error) {
+	out, _, err := app.Exec(&ExecOpts{
+		Service: "db",
+		Dir:     "/mnt/snapshots/" + snapshotName,
+		Cmd:     "cat db_mariadb_version.txt",
+	})
+	if err != nil {
+		return "", err
+	}
+	v := strings.Trim(out, "\n")
+	return v, nil
 }
 
 // Stop stops and Removes the docker containers for the project in current directory.
