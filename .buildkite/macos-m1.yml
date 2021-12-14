@@ -1,0 +1,16 @@
+  - command: ".buildkite/test.sh"
+    plugins:
+      - docker-login#v2.0.1:
+          username: druddockerpullaccount
+          password-env: DOCKERHUB_PULL_PASSWORD
+    agents:
+      - "os=macos"
+      - "dockertype=dockerformac"
+      - "architecture=arm64"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
+      BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
+      BUILDKIT_PROGRESS: plain
+      # M1 has some NFS failures (TestComposer, TestProcessHooks, TestNFSMount) and  as of 2021-02-18; test without NFS by default
+#      DDEV_TEST_USE_NFSMOUNT: true
+    parallelism: 1

@@ -16,26 +16,31 @@ var (
 
 // DdevLogsCmd contains the "ddev logs" command
 var DdevLogsCmd = &cobra.Command{
-	Use:   "logs",
+	Use:   "logs [projectname]",
 	Short: "Get the logs from your running services.",
 	Long:  `Uses 'docker logs' to display stdout from the running services.`,
+	Example: `ddev logs
+ddev logs -f
+ddev logs -s db
+ddev logs -s db [projectname]`,
 	Run: func(cmd *cobra.Command, args []string) {
-		app, err := ddevapp.GetActiveApp("")
-		if err != nil {
-			util.Failed("Failed to retrieve logs: %v", err)
+		if len(args) > 1 {
+			util.Failed("Too many arguments provided. Please use 'ddev logs' or 'ddev logs [projectname]'")
 		}
 
-		if strings.Contains(app.SiteStatus(), ddevapp.SiteNotFound) {
+		projects, err := getRequestedProjects(args, false)
+		if err != nil {
+			util.Failed("GetRequestedProjects() failed:  %v", err)
+		}
+		project := projects[0]
+
+		if strings.Contains(project.SiteStatus(), ddevapp.SiteStopped) {
 			util.Failed("Project is not currently running. Try 'ddev start'.")
 		}
 
-		if strings.Contains(app.SiteStatus(), ddevapp.SiteStopped) {
-			util.Failed("Project is stopped. Run 'ddev start' to start the environment.")
-		}
-
-		err = app.Logs(serviceType, follow, timestamp, tail)
+		err = project.Logs(serviceType, follow, timestamp, tail)
 		if err != nil {
-			util.Failed("Failed to retrieve logs for %s: %v", app.GetName(), err)
+			util.Failed("Failed to retrieve logs for %s: %v", project.GetName(), err)
 		}
 	},
 }

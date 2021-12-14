@@ -1,0 +1,9 @@
+# DirectorySlash off
+# DirectoryIndex index.php
+# DirectorySlash off
+# DirectoryIndexRedirect on
+# Redirect to HTTPS before Apache mod_dir DirectorySlash redirect to HTTP
+RewriteCond %{HTTP:X-Forwarded-Proto} =https
+RewriteCond %{LA-U:REQUEST_FILENAME} -d
+RewriteRule ^/(.*[^/])$ https://%{HTTP_HOST}/$1/ [R=301,L,QSA]
+

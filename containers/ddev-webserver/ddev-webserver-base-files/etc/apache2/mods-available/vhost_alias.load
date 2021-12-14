@@ -1,0 +1,1 @@
+LoadModule vhost_alias_module /usr/lib/apache2/modules/mod_vhost_alias.so

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+## #ddev-generated
+## Description: Tail the main solr log
+## Usage: solrtail
+## Example: ddev solrtail
+
+# This can't work unless you have a solr service,
+# See https://ddev.readthedocs.io/en/stable/users/extend/additional-services/#apache-solr
+
+ddev exec -s solr tail -40lf /opt/solr/server/logs/solr.log

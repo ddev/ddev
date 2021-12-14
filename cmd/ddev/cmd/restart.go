@@ -1,53 +1,58 @@
 package cmd
 
 import (
-	"os"
+	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"strings"
 
-	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
-// DdevRestartCmd rebuilds an apps settings
-var DdevRestartCmd = &cobra.Command{
-	Use:   "restart",
-	Short: "Restart the development environment for a project.",
-	Long:  `Restart stops the containers for project and starts them back up again.`,
-	PreRun: func(cmd *cobra.Command, args []string) {
-		if len(args) > 0 {
-			err := cmd.Usage()
-			util.CheckErr(err)
-			os.Exit(0)
-		}
+var restartAll bool
 
+// RestartCmd rebuilds an apps settings
+var RestartCmd = &cobra.Command{
+	Use:   "restart [projects]",
+	Short: "Restart a project or several projects.",
+	Long:  `Stops named projects and then starts them back up again.`,
+	Example: `ddev restart
+ddev restart <project1> <project2>
+ddev restart --all`,
+	PreRun: func(cmd *cobra.Command, args []string) {
 		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		app, err := ddevapp.GetActiveApp("")
+		projects, err := getRequestedProjects(args, restartAll)
 		if err != nil {
-			util.Failed("Failed to restart: %v", err)
+			util.Failed("Failed to get project(s): %v", err)
+		}
+		if len(projects) > 0 {
+			instrumentationApp = projects[0]
 		}
 
-		output.UserOut.Printf("Restarting project %s...", app.GetName())
-		err = app.Stop()
-		if err != nil {
-			util.Failed("Failed to restart %s: %v", app.GetName(), err)
-		}
+		for _, app := range projects {
 
-		err = app.Start()
-		if err != nil {
-			util.Failed("Failed to restart %s: %v", app.GetName(), err)
-		}
+			output.UserOut.Printf("Restarting project %s...", app.GetName())
+			err = app.Restart()
+			if err != nil {
+				util.Failed("Failed to restart %s: %v", app.GetName(), err)
+			}
 
-		util.Success("Successfully restarted %s", app.GetName())
-		util.Success("Your project can be reached at %s", strings.Join(app.GetAllURLs(), ", "))
+			util.Success("Restarted %s", app.GetName())
+			httpURLs, urlList, _ := app.GetAllURLs()
+			if globalconfig.GetCAROOT() == "" || ddevapp.IsRouterDisabled(app) {
+				urlList = httpURLs
+			}
+
+			util.Success("Your project can be reached at %s", strings.Join(urlList, " "))
+		}
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(DdevRestartCmd)
-
+	RestartCmd.Flags().BoolVarP(&restartAll, "all", "a", false, "restart all projects")
+	RootCmd.AddCommand(RestartCmd)
 }

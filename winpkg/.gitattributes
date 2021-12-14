@@ -1,0 +1,3 @@
+# Force line endings to CRLF for NSIS files
+*.nsi text eol=crlf
+*.nsh text eol=crlf

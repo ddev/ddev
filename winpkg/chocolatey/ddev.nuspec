@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Do not remove this test for UTF-8: if “Ω” doesn’t appear as greek uppercase omega letter enclosed in quotation marks, you should use an editor that supports UTF-8, not this one. -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <!-- == PACKAGE SPECIFIC SECTION == -->
+    <id>ddev</id>
+    <version>REPLACE_DDEV_VERSION</version>
+    <packageSourceUrl>https://github.com/drud/ddev/tree/master/winpkg/chocolatey</packageSourceUrl>
+    <owners>Randy Fay, Andrew French</owners>
+
+    <title>ddev (Install)</title>
+    <authors>Drud Tech</authors>
+    <projectUrl>https://github.com/drud/ddev</projectUrl>
+    <licenseUrl>https://github.com/drud/ddev/blob/master/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <docsUrl>https://ddev.readthedocs.io/en/stable/</docsUrl>
+    <bugTrackerUrl>https://github.com/drud/ddev/issues</bugTrackerUrl>
+    <tags>ddev drupal TYPO3 backdrop php</tags>
+    <summary>ddev is a local web development tool optimized for PHP projects and CMSs.</summary>
+    <description>ddev allows developers to use both nginx and apache, and many versions of PHP, with no host configurations. It works for most web apps, but has a bias toward TYPO3 and Drupal and Wordpress.</description>
+    <releaseNotes>See https://github.com/drud/ddev/releases/tag/vREPLACE_DDEV_VERSION</releaseNotes>
+  <dependencies>
+      <dependency id="gsudo" />
+      <dependency id="ngrok" />
+      <dependency id="mkcert" />
+      <dependency id="nssm" />
+  </dependencies>
+
+  </metadata>
+  <files>
+    <file src="tools/**" target="tools" />
+  </files>
+
+</package>

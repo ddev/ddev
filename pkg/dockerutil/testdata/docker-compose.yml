@@ -1,12 +1,10 @@
-version: '2'
+version: '3.6'
 
 services:
   db:
     container_name: ddev-test-db
     image: DDEV_DBIMAGE
     user: "$DDEV_UID:$DDEV_GID"
-    volumes:
-      - "${DDEV_IMPORTDIR}:/db"
     restart: always
     environment:
       - SOME_ENV=env_value_goes_here
@@ -39,7 +37,13 @@ services:
       com.ddev.site-name: test
       com.ddev.platform: local
       com.ddev.app-type: wordpress
+    healthcheck:
+      interval: 1s
+      retries: 25
+      start_period: 20s
+      timeout: 120s
 networks:
   default:
-    external:
-      name: ddev_default
+    name: ddev_default
+    external: true
+

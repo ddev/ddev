@@ -1,0 +1,64 @@
+#ddev-generated
+# Example rsync provider configuration.
+
+# This will pull a database and files from a network location, for example,
+# server or other jumphost. It operates inside the web container and uses
+# ssh, so you need to `ddev auth ssh` first.
+
+# To use this configuration,
+#
+# 1. You need a database dump and/or user-generated files tarball that you
+#    have access to somewhere on the internet
+# 2. Copy rsync.yaml.example to rsync.yaml (or name it as you see fit)
+# 3. `ddev auth ssh` (only needs to be done once per ddev session or reboot)
+# 4. Use `ddev pull rsync` to pull the project database and files.
+# 5. `ddev push rsync` can push the project database and files
+
+# Note that while this is done in the web container (because rsync will always be there)
+# it could also be done on the host, and then you wouldn't need the
+# `ddev auth ssh`
+
+environment_variables:
+  dburl: you@yourhost.example.com:tmp/db.sql.gz
+  filesurl: you@yourhost.example.com:tmp/files.tar.gz
+
+auth_command:
+  command: |
+    set -eu -o pipefail
+    ssh-add -l >/dev/null || ( echo "Please 'ddev auth ssh' before running this command." && exit 1 )
+
+db_pull_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    rsync -az "${dburl}" /var/www/html/.ddev/.downloads
+  service: web
+
+files_pull_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
+    pushd /var/www/html/.ddev/.downloads >/dev/null
+    rm -f files.tar.gz
+    rsync -avz "${filesurl}" .
+    tar -xzf files.tar.gz -C files/
+  service: web
+
+# Pushing a database or files to upstream can be dangerous and not recommended.
+# This example is not very dangerous because it's not actually deploying the
+# files. But if the db were deployed on production it would overwrite
+# the current db or files there.
+db_push_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
+    mysqldump db | gzip >/var/www/html/.ddev/.downloads/db_push.sql.gz
+    rsync -avz /var/www/html/.ddev/.downloads/db_push.sql.gz "${dburl}"
+
+files_push_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    rsync -az "${DDEV_FILES_DIR}/" "${filesurl}/"

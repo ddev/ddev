@@ -1,0 +1,38 @@
+#ddev-generated
+# Example local file provider configuration.
+
+# This will pull a database and files from an existing location, for example,
+# from a Dropbox location on disk
+
+# To use this configuration,
+# 1. You need a database dump and/or user-generated files tarball.
+# 2. Copy localfile.yaml.example to localfile.yaml.
+# 3. Change the copy commands as needed.
+# 4. Use `ddev pull localfile` to pull the project database and files.
+
+# In this example, db_pull_command is not used
+
+# Here db_import_command imports directly from the source location
+# instead of looking in .ddev/.downloads/files
+db_import_command:
+  command: |
+    set -eu -o pipefail
+    echo $PATH
+    ddev --version
+    set -x
+    gzip -dc ~/Dropbox/db.sql.gz | ddev mysql db
+  service: host
+
+# In this example, files_pull_command is not used
+
+# files_import_command is an example of a custom importer
+# that directly untars the files into their appropriate destination
+files_import_command:
+  command: |
+    set -eu -o pipefail
+    echo $PATH
+    ddev --version
+    set -x
+    mkdir -p web/sites/default/files
+    tar -zxf ~/Dropbox/files.tar.gz -C web/sites/default/files
+  service: host

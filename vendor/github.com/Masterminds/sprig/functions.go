@@ -98,6 +98,8 @@ var genericMap = map[string]interface{}{
 	"htmlDateInZone": htmlDateInZone,
 	"dateInZone":     dateInZone,
 	"dateModify":     dateModify,
+	"ago":            dateAgo,
+	"toDate":         toDate,
 
 	// Strings
 	"abbrev":     abbrev,
@@ -137,8 +139,10 @@ var genericMap = map[string]interface{}{
 	"squote":    squote,
 	"cat":       cat,
 	"indent":    indent,
+	"nindent":   nindent,
 	"replace":   replace,
 	"plural":    plural,
+	"sha1sum":   sha1sum,
 	"sha256sum": sha256sum,
 	"toString":  strval,
 
@@ -183,6 +187,9 @@ var genericMap = map[string]interface{}{
 	"biggest": max,
 	"max":     max,
 	"min":     min,
+	"ceil":    ceil,
+	"floor":   floor,
+	"round":   round,
 
 	// string slices. Note that we reverse the order b/c that's better
 	// for template processing.
@@ -196,6 +203,7 @@ var genericMap = map[string]interface{}{
 	"compact":      compact,
 	"toJson":       toJson,
 	"toPrettyJson": toPrettyJson,
+	"ternary":      ternary,
 
 	// Reflection
 	"typeOf":     typeOf,
@@ -243,11 +251,15 @@ var genericMap = map[string]interface{}{
 	"reverse": reverse,
 	"uniq":    uniq,
 	"without": without,
-	"has":     func(needle interface{}, haystack []interface{}) bool { return inList(haystack, needle) },
+	"has":     has,
 
 	// Crypto:
-	"genPrivateKey":  generatePrivateKey,
-	"derivePassword": derivePassword,
+	"genPrivateKey":     generatePrivateKey,
+	"derivePassword":    derivePassword,
+	"buildCustomCert":   buildCustomCertificate,
+	"genCA":             generateCertificateAuthority,
+	"genSelfSignedCert": generateSelfSignedCertificate,
+	"genSignedCert":     generateSignedCertificate,
 
 	// UUIDs:
 	"uuidv4": uuidv4,
@@ -258,4 +270,12 @@ var genericMap = map[string]interface{}{
 
 	// Flow Control:
 	"fail": func(msg string) (string, error) { return "", errors.New(msg) },
+
+	// Regex
+	"regexMatch":             regexMatch,
+	"regexFindAll":           regexFindAll,
+	"regexFind":              regexFind,
+	"regexReplaceAll":        regexReplaceAll,
+	"regexReplaceAllLiteral": regexReplaceAllLiteral,
+	"regexSplit":             regexSplit,
 }

@@ -3,17 +3,19 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/netutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"html/template"
 	"os"
 	"path"
 	"path/filepath"
-
+	"sort"
 	"strings"
 
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/fatih/color"
 	"github.com/fsouza/go-dockerclient"
 )
 
@@ -22,155 +24,207 @@ const RouterProjectName = "ddev-router"
 
 // RouterComposeYAMLPath returns the full filepath to the routers docker-compose yaml file.
 func RouterComposeYAMLPath() string {
-	ddevDir := util.GetGlobalDdevDir()
-	dest := path.Join(ddevDir, "router-compose.yaml")
+	globalDir := globalconfig.GetGlobalDdevDir()
+	dest := path.Join(globalDir, ".router-compose.yaml")
 	return dest
+}
+
+// FullRenderedRouterComposeYAMLPath returns the path of the full rendered .router-compose-full.yaml
+func FullRenderedRouterComposeYAMLPath() string {
+	globalDir := globalconfig.GetGlobalDdevDir()
+	dest := path.Join(globalDir, ".router-compose-full.yaml")
+	return dest
+}
+
+// IsRouterDisabled returns true if the router is disabled
+func IsRouterDisabled(app *DdevApp) bool {
+	if nodeps.IsGitpod() {
+		return true
+	}
+	return nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer)
 }
 
 // StopRouterIfNoContainers stops the router if there are no ddev containers running.
 func StopRouterIfNoContainers() error {
-
 	containersRunning, err := ddevContainersRunning()
 	if err != nil {
 		return err
 	}
 
 	if !containersRunning {
-		dest := RouterComposeYAMLPath()
-		_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", RouterProjectName, "down", "-v")
-		return err
+		err = dockerutil.RemoveContainer(nodeps.RouterContainer, 0)
+		if err != nil {
+			if _, ok := err.(*docker.NoSuchContainer); !ok {
+				return err
+			}
+		}
 	}
 	return nil
 }
 
 // StartDdevRouter ensures the router is running.
 func StartDdevRouter() error {
-	exposedPorts := determineRouterPorts()
-
-	routerComposePath := RouterComposeYAMLPath()
-	routerdir := filepath.Dir(routerComposePath)
-	err := os.MkdirAll(routerdir, 0755)
-	if err != nil {
-		return fmt.Errorf("unable to create directory for ddev router: %v", err)
-	}
-
-	certDir := filepath.Join(util.GetGlobalDdevDir(), "certs")
-	if _, err = os.Stat(certDir); os.IsNotExist(err) {
-		err = os.MkdirAll(certDir, 0755)
+	// If the router is not healthy/running, we'll kill it so it
+	// starts over again.
+	router, err := FindDdevRouter()
+	if router != nil && err == nil && router.State != "running" {
+		err = dockerutil.RemoveContainer(nodeps.RouterContainer, 0)
 		if err != nil {
-			return fmt.Errorf("unable to create directory for ddev certs: %v", err)
+			return err
 		}
 	}
 
-	var doc bytes.Buffer
-	f, ferr := os.Create(routerComposePath)
-	if ferr != nil {
-		return ferr
-	}
-	defer util.CheckClose(f)
-
-	templ := template.New("compose template")
-	templ, err = templ.Parse(DdevRouterTemplate)
+	routerComposeFullPath, err := generateRouterCompose()
 	if err != nil {
 		return err
 	}
-
-	templateVars := map[string]interface{}{
-		"router_image": version.RouterImage,
-		"router_tag":   version.RouterTag,
-		"ports":        exposedPorts,
-	}
-
-	err = templ.Execute(&doc, templateVars)
-	util.CheckErr(err)
-	_, err = f.WriteString(doc.String())
-	util.CheckErr(err)
-
-	// Since the ports in use may have changed, stop the router and make sure
-	// we can access all ports.
-	// It might be possible to do this instead by reading from docker all the
-	// existing mapped ports.
-	_, _, err = dockerutil.ComposeCmd([]string{routerComposePath}, "-p", RouterProjectName, "down", "-v")
-	util.CheckErr(err)
-
 	err = CheckRouterPorts()
 	if err != nil {
-		return fmt.Errorf("Unable to listen on required ports, %v,\nTroubleshooting suggestions at https://ddev.readthedocs.io/en/latest/users/troubleshooting/#unable-listen", err)
+		return fmt.Errorf("Unable to listen on required ports, %v,\nTroubleshooting suggestions at https://ddev.readthedocs.io/en/stable/users/troubleshooting/#unable-listen", err)
 	}
 
-	// run docker-compose up -d in the newly created directory
-	_, _, err = dockerutil.ComposeCmd([]string{routerComposePath}, "-p", RouterProjectName, "up", "-d")
+	// run docker-compose up -d against the ddev-router full compose file
+	_, _, err = dockerutil.ComposeCmd([]string{routerComposeFullPath}, "-p", RouterProjectName, "up", "-d")
 	if err != nil {
 		return fmt.Errorf("failed to start ddev-router: %v", err)
 	}
 
 	// ensure we have a happy router
 	label := map[string]string{"com.docker.compose.service": "ddev-router"}
-	err = dockerutil.ContainerWait(containerWaitTimeout, label)
+	logOutput, err := dockerutil.ContainerWait(containerWaitTimeout, label)
 	if err != nil {
-		return fmt.Errorf("ddev-router failed to become ready: %v", err)
+		return fmt.Errorf("ddev-router failed to become ready; debug with 'docker logs ddev-router'; logOutput=%s, err=%v", logOutput, err)
 	}
 
 	return nil
 }
 
-// findDdevRouter usees FindContainerByLabels to get our router container and
-// return it. This is currently unused but may be useful in the future.
-// nolint: deadcode
-func findDdevRouter() (docker.APIContainers, error) {
+// generateRouterCompose() generates the ~/.ddev/.router-compose.yaml and ~/.ddev/.router-compose-full.yaml
+func generateRouterCompose() (string, error) {
+	exposedPorts := determineRouterPorts()
+
+	routerComposeBasePath := RouterComposeYAMLPath()
+	routerComposeFullPath := FullRenderedRouterComposeYAMLPath()
+
+	var doc bytes.Buffer
+	f, ferr := os.Create(routerComposeBasePath)
+	if ferr != nil {
+		return "", ferr
+	}
+	defer util.CheckClose(f)
+
+	templ := template.New("routerTemplate")
+	templ, err := templ.Parse(DdevRouterTemplate)
+	if err != nil {
+		return "", err
+	}
+
+	dockerIP, _ := dockerutil.GetDockerIP()
+
+	templateVars := map[string]interface{}{
+		"router_image":               version.RouterImage,
+		"router_tag":                 version.RouterTag,
+		"ports":                      exposedPorts,
+		"router_bind_all_interfaces": globalconfig.DdevGlobalConfig.RouterBindAllInterfaces,
+		"compose_version":            version.DockerComposeFileFormatVersion,
+		"dockerIP":                   dockerIP,
+		"disable_http2":              globalconfig.DdevGlobalConfig.DisableHTTP2,
+		"letsencrypt":                globalconfig.DdevGlobalConfig.UseLetsEncrypt,
+		"letsencrypt_email":          globalconfig.DdevGlobalConfig.LetsEncryptEmail,
+		"AutoRestartContainers":      globalconfig.DdevGlobalConfig.AutoRestartContainers,
+	}
+
+	err = templ.Execute(&doc, templateVars)
+	if err != nil {
+		return "", err
+	}
+	_, err = f.WriteString(doc.String())
+	if err != nil {
+		return "", err
+	}
+
+	fullHandle, err := os.Create(routerComposeFullPath)
+	if err != nil {
+		return "", err
+	}
+
+	userFiles, err := filepath.Glob(filepath.Join(globalconfig.GetGlobalDdevDir(), "router-compose.*.yaml"))
+	if err != nil {
+		return "", err
+	}
+	files := append([]string{RouterComposeYAMLPath()}, userFiles...)
+	fullContents, _, err := dockerutil.ComposeCmd(files, "config")
+	if err != nil {
+		return "", err
+	}
+	_, err = fullHandle.WriteString(fullContents)
+	if err != nil {
+		return "", err
+	}
+
+	return routerComposeFullPath, nil
+}
+
+// FindDdevRouter uses FindContainerByLabels to get our router container and
+// return it.
+func FindDdevRouter() (*docker.APIContainers, error) {
 	containerQuery := map[string]string{
 		"com.docker.compose.service": RouterProjectName,
 	}
 	container, err := dockerutil.FindContainerByLabels(containerQuery)
 	if err != nil {
-		return docker.APIContainers{}, fmt.Errorf("failed to execute findContainersByLabels, %v", err)
+		return nil, fmt.Errorf("failed to execute findContainersByLabels, %v", err)
+	}
+	if container == nil {
+		return nil, fmt.Errorf("No ddev-router was found")
 	}
 	return container, nil
 }
 
 // RenderRouterStatus returns a user-friendly string showing router-status
 func RenderRouterStatus() string {
-	status := GetRouterStatus()
 	var renderedStatus string
-	badRouter := "\nThe router is not currently running. Your sites are likely inaccessible at this time.\nTry running 'ddev start' on a site to recreate the router."
+	if !nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, globalconfig.DdevRouterContainer) {
+		status, logOutput := GetRouterStatus()
+		badRouter := "The router is not healthy. Your projects may not be accessible.\nIf it doesn't become healthy try running 'ddev start' on a project to recreate it."
 
-	switch status {
-	case SiteNotFound:
-		renderedStatus = color.RedString(status) + badRouter
-	case "healthy":
-		renderedStatus = color.CyanString(status)
-	case "exited":
-		fallthrough
-	default:
-		renderedStatus = color.RedString(status) + badRouter
+		switch status {
+		case SiteStopped:
+			renderedStatus = util.ColorizeText(status, "red") + " " + badRouter
+		case "healthy":
+			renderedStatus = util.ColorizeText(status, "green")
+		case "exited":
+			fallthrough
+		default:
+			renderedStatus = util.ColorizeText(status, "red") + " " + badRouter + "\n" + logOutput
+		}
 	}
-	return fmt.Sprintf("\nDDEV ROUTER STATUS: %v", renderedStatus)
+	return renderedStatus
 }
 
-// GetRouterStatus outputs router status and warning if not
+// GetRouterStatus returns router status and warning if not
 // running or healthy, as applicable.
-func GetRouterStatus() string {
-	var status string
+// return status and most recent log
+func GetRouterStatus() (string, string) {
+	var status, logOutput string
+	container, err := FindDdevRouter()
 
-	label := map[string]string{"com.docker.compose.service": "ddev-router"}
-	container, err := dockerutil.FindContainerByLabels(label)
-
-	if err != nil {
-		status = SiteNotFound
+	if err != nil || container == nil {
+		status = SiteStopped
 	} else {
-		status = dockerutil.GetContainerHealth(container)
+		status, logOutput = dockerutil.GetContainerHealth(container)
 	}
 
-	return status
+	return status, logOutput
 }
 
 // determineRouterPorts returns a list of port mappings retrieved from running site
 // containers defining VIRTUAL_PORT env var
 func determineRouterPorts() []string {
 	var routerPorts []string
-	containers, err := dockerutil.GetDockerContainers(false)
+	containers, err := dockerutil.FindContainersWithLabel("com.ddev.site-name")
 	if err != nil {
-		util.Failed("failed to retrieve containers for determining port mappings", err)
+		util.Failed("failed to retrieve containers for determining port mappings: %v", err)
 	}
 
 	// loop through all containers with site-name label
@@ -214,6 +268,10 @@ func determineRouterPorts() []string {
 			}
 		}
 	}
+	sort.Slice(routerPorts, func(i, j int) bool {
+		return routerPorts[i] < routerPorts[j]
+	})
+
 	return routerPorts
 }
 
@@ -221,10 +279,23 @@ func determineRouterPorts() []string {
 // if they're available for docker to bind to. Returns an error if either one results
 // in a successful connection.
 func CheckRouterPorts() error {
-	routerPorts := determineRouterPorts()
-	for _, port := range routerPorts {
-		if util.IsPortActive(port) {
-			return fmt.Errorf("localhost port %s is in use", port)
+	routerContainer, _ := FindDdevRouter()
+	var existingExposedPorts []string
+	var err error
+	if routerContainer != nil {
+		existingExposedPorts, err = dockerutil.GetExposedContainerPorts(routerContainer.ID)
+		if err != nil {
+			return err
+		}
+	}
+	newRouterPorts := determineRouterPorts()
+
+	for _, port := range newRouterPorts {
+		if nodeps.ArrayContainsString(existingExposedPorts, port) {
+			continue
+		}
+		if netutil.IsPortActive(port) {
+			return fmt.Errorf("port %s is already in use", port)
 		}
 	}
 	return nil

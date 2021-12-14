@@ -5,6 +5,7 @@ package toml
 import (
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -13,9 +14,9 @@ import (
 )
 
 type tomlParser struct {
-	flow          chan token
+	flowIdx       int
+	flow          []token
 	tree          *Tree
-	tokensBuffer  []token
 	currentTable  []string
 	seenTableKeys []string
 }
@@ -34,16 +35,10 @@ func (p *tomlParser) run() {
 }
 
 func (p *tomlParser) peek() *token {
-	if len(p.tokensBuffer) != 0 {
-		return &(p.tokensBuffer[0])
-	}
-
-	tok, ok := <-p.flow
-	if !ok {
+	if p.flowIdx >= len(p.flow) {
 		return nil
 	}
-	p.tokensBuffer = append(p.tokensBuffer, tok)
-	return &tok
+	return &p.flow[p.flowIdx]
 }
 
 func (p *tomlParser) assume(typ tokenType) {
@@ -57,16 +52,12 @@ func (p *tomlParser) assume(typ tokenType) {
 }
 
 func (p *tomlParser) getToken() *token {
-	if len(p.tokensBuffer) != 0 {
-		tok := p.tokensBuffer[0]
-		p.tokensBuffer = p.tokensBuffer[1:]
-		return &tok
-	}
-	tok, ok := <-p.flow
-	if !ok {
+	tok := p.peek()
+	if tok == nil {
 		return nil
 	}
-	return &tok
+	p.flowIdx++
+	return tok
 }
 
 func (p *tomlParser) parseStart() tomlParserStateFn {
@@ -86,8 +77,10 @@ func (p *tomlParser) parseStart() tomlParserStateFn {
 		return p.parseAssign
 	case tokenEOF:
 		return nil
+	case tokenError:
+		p.raiseError(tok, "parsing error: %s", tok.String())
 	default:
-		p.raiseError(tok, "unexpected token")
+		p.raiseError(tok, "unexpected token %s", tok.typ)
 	}
 	return nil
 }
@@ -165,6 +158,11 @@ func (p *tomlParser) parseGroup() tomlParserStateFn {
 	if err := p.tree.createSubTree(keys, startToken.Position); err != nil {
 		p.raiseError(key, "%s", err)
 	}
+	destTree := p.tree.GetPath(keys)
+	if target, ok := destTree.(*Tree); ok && target != nil && target.inline {
+		p.raiseError(key, "could not re-define exist inline table or its sub-table : %s",
+			strings.Join(keys, "."))
+	}
 	p.assume(tokenRightBracket)
 	p.currentTable = keys
 	return p.parseStart
@@ -174,6 +172,11 @@ func (p *tomlParser) parseAssign() tomlParserStateFn {
 	key := p.getToken()
 	p.assume(tokenEqual)
 
+	parsedKey, err := parseKey(key.val)
+	if err != nil {
+		p.raiseError(key, "invalid key: %s", err.Error())
+	}
+
 	value := p.parseRvalue()
 	var tableKey []string
 	if len(p.currentTable) > 0 {
@@ -182,6 +185,9 @@ func (p *tomlParser) parseAssign() tomlParserStateFn {
 		tableKey = []string{}
 	}
 
+	prefixKey := parsedKey[0 : len(parsedKey)-1]
+	tableKey = append(tableKey, prefixKey...)
+
 	// find the table to assign, looking out for arrays of tables
 	var targetNode *Tree
 	switch node := p.tree.GetPath(tableKey).(type) {
@@ -189,20 +195,24 @@ func (p *tomlParser) parseAssign() tomlParserStateFn {
 		targetNode = node[len(node)-1]
 	case *Tree:
 		targetNode = node
+	case nil:
+		// create intermediate
+		if err := p.tree.createSubTree(tableKey, key.Position); err != nil {
+			p.raiseError(key, "could not create intermediate group: %s", err)
+		}
+		targetNode = p.tree.GetPath(tableKey).(*Tree)
 	default:
 		p.raiseError(key, "Unknown table type for path: %s",
 			strings.Join(tableKey, "."))
 	}
 
+	if targetNode.inline {
+		p.raiseError(key, "could not add key or sub-table to exist inline table or its sub-table : %s",
+			strings.Join(tableKey, "."))
+	}
+
 	// assign value to the found table
-	keyVals, err := parseKey(key.val)
-	if err != nil {
-		p.raiseError(key, "%s", err)
-	}
-	if len(keyVals) != 1 {
-		p.raiseError(key, "Invalid key")
-	}
-	keyVal := keyVals[0]
+	keyVal := parsedKey[len(parsedKey)-1]
 	localKey := []string{keyVal}
 	finalKey := append(tableKey, keyVal)
 	if targetNode.GetPath(localKey) != nil {
@@ -215,20 +225,32 @@ func (p *tomlParser) parseAssign() tomlParserStateFn {
 	case *Tree, []*Tree:
 		toInsert = value
 	default:
-		toInsert = &tomlValue{value, key.Position}
+		toInsert = &tomlValue{value: value, position: key.Position}
 	}
 	targetNode.values[keyVal] = toInsert
 	return p.parseStart
 }
 
 var numberUnderscoreInvalidRegexp *regexp.Regexp
+var hexNumberUnderscoreInvalidRegexp *regexp.Regexp
 
-func cleanupNumberToken(value string) (string, error) {
+func numberContainsInvalidUnderscore(value string) error {
 	if numberUnderscoreInvalidRegexp.MatchString(value) {
-		return "", errors.New("invalid use of _ in number")
+		return errors.New("invalid use of _ in number")
 	}
+	return nil
+}
+
+func hexNumberContainsInvalidUnderscore(value string) error {
+	if hexNumberUnderscoreInvalidRegexp.MatchString(value) {
+		return errors.New("invalid use of _ in hex number")
+	}
+	return nil
+}
+
+func cleanupNumberToken(value string) string {
 	cleanedVal := strings.Replace(value, "_", "", -1)
-	return cleanedVal, nil
+	return cleanedVal
 }
 
 func (p *tomlParser) parseRvalue() interface{} {
@@ -244,28 +266,98 @@ func (p *tomlParser) parseRvalue() interface{} {
 		return true
 	case tokenFalse:
 		return false
-	case tokenInteger:
-		cleanedVal, err := cleanupNumberToken(tok.val)
-		if err != nil {
-			p.raiseError(tok, "%s", err)
+	case tokenInf:
+		if tok.val[0] == '-' {
+			return math.Inf(-1)
 		}
-		val, err := strconv.ParseInt(cleanedVal, 10, 64)
+		return math.Inf(1)
+	case tokenNan:
+		return math.NaN()
+	case tokenInteger:
+		cleanedVal := cleanupNumberToken(tok.val)
+		var err error
+		var val int64
+		if len(cleanedVal) >= 3 && cleanedVal[0] == '0' {
+			switch cleanedVal[1] {
+			case 'x':
+				err = hexNumberContainsInvalidUnderscore(tok.val)
+				if err != nil {
+					p.raiseError(tok, "%s", err)
+				}
+				val, err = strconv.ParseInt(cleanedVal[2:], 16, 64)
+			case 'o':
+				err = numberContainsInvalidUnderscore(tok.val)
+				if err != nil {
+					p.raiseError(tok, "%s", err)
+				}
+				val, err = strconv.ParseInt(cleanedVal[2:], 8, 64)
+			case 'b':
+				err = numberContainsInvalidUnderscore(tok.val)
+				if err != nil {
+					p.raiseError(tok, "%s", err)
+				}
+				val, err = strconv.ParseInt(cleanedVal[2:], 2, 64)
+			default:
+				panic("invalid base") // the lexer should catch this first
+			}
+		} else {
+			err = numberContainsInvalidUnderscore(tok.val)
+			if err != nil {
+				p.raiseError(tok, "%s", err)
+			}
+			val, err = strconv.ParseInt(cleanedVal, 10, 64)
+		}
 		if err != nil {
 			p.raiseError(tok, "%s", err)
 		}
 		return val
 	case tokenFloat:
-		cleanedVal, err := cleanupNumberToken(tok.val)
+		err := numberContainsInvalidUnderscore(tok.val)
 		if err != nil {
 			p.raiseError(tok, "%s", err)
 		}
+		cleanedVal := cleanupNumberToken(tok.val)
 		val, err := strconv.ParseFloat(cleanedVal, 64)
 		if err != nil {
 			p.raiseError(tok, "%s", err)
 		}
 		return val
 	case tokenDate:
-		val, err := time.ParseInLocation(time.RFC3339Nano, tok.val, time.UTC)
+		layout := time.RFC3339Nano
+		if !strings.Contains(tok.val, "T") {
+			layout = strings.Replace(layout, "T", " ", 1)
+		}
+		val, err := time.ParseInLocation(layout, tok.val, time.UTC)
+		if err != nil {
+			p.raiseError(tok, "%s", err)
+		}
+		return val
+	case tokenLocalDate:
+		v := strings.Replace(tok.val, " ", "T", -1)
+		isDateTime := false
+		isTime := false
+		for _, c := range v {
+			if c == 'T' || c == 't' {
+				isDateTime = true
+				break
+			}
+			if c == ':' {
+				isTime = true
+				break
+			}
+		}
+
+		var val interface{}
+		var err error
+
+		if isDateTime {
+			val, err = ParseLocalDateTime(v)
+		} else if isTime {
+			val, err = ParseLocalTime(v)
+		} else {
+			val, err = ParseLocalDate(v)
+		}
+
 		if err != nil {
 			p.raiseError(tok, "%s", err)
 		}
@@ -302,36 +394,40 @@ Loop:
 		case tokenRightCurlyBrace:
 			p.getToken()
 			break Loop
-		case tokenKey:
+		case tokenKey, tokenInteger, tokenString:
 			if !tokenIsComma(previous) && previous != nil {
 				p.raiseError(follow, "comma expected between fields in inline table")
 			}
 			key := p.getToken()
 			p.assume(tokenEqual)
-			value := p.parseRvalue()
-			tree.Set(key.val, value)
-		case tokenComma:
-			if previous == nil {
-				p.raiseError(follow, "inline table cannot start with a comma")
+
+			parsedKey, err := parseKey(key.val)
+			if err != nil {
+				p.raiseError(key, "invalid key: %s", err)
 			}
+
+			value := p.parseRvalue()
+			tree.SetPath(parsedKey, value)
+		case tokenComma:
 			if tokenIsComma(previous) {
 				p.raiseError(follow, "need field between two commas in inline table")
 			}
 			p.getToken()
 		default:
-			p.raiseError(follow, "unexpected token type in inline table: %s", follow.typ.String())
+			p.raiseError(follow, "unexpected token type in inline table: %s", follow.String())
 		}
 		previous = follow
 	}
 	if tokenIsComma(previous) {
 		p.raiseError(previous, "trailing comma at the end of inline table")
 	}
+	tree.inline = true
 	return tree
 }
 
 func (p *tomlParser) parseArray() interface{} {
 	var array []interface{}
-	arrayType := reflect.TypeOf(nil)
+	arrayType := reflect.TypeOf(newTree())
 	for {
 		follow := p.peek()
 		if follow == nil || follow.typ == tokenEOF {
@@ -342,11 +438,8 @@ func (p *tomlParser) parseArray() interface{} {
 			break
 		}
 		val := p.parseRvalue()
-		if arrayType == nil {
-			arrayType = reflect.TypeOf(val)
-		}
 		if reflect.TypeOf(val) != arrayType {
-			p.raiseError(follow, "mixed types in array")
+			arrayType = nil
 		}
 		array = append(array, val)
 		follow = p.peek()
@@ -359,6 +452,12 @@ func (p *tomlParser) parseArray() interface{} {
 		if follow.typ == tokenComma {
 			p.getToken()
 		}
+	}
+
+	// if the array is a mixed-type array or its length is 0,
+	// don't convert it to a table array
+	if len(array) <= 0 {
+		arrayType = nil
 	}
 	// An array of Trees is actually an array of inline
 	// tables, which is a shorthand for a table array. If the
@@ -374,13 +473,13 @@ func (p *tomlParser) parseArray() interface{} {
 	return array
 }
 
-func parseToml(flow chan token) *Tree {
+func parseToml(flow []token) *Tree {
 	result := newTree()
 	result.position = Position{1, 1}
 	parser := &tomlParser{
+		flowIdx:       0,
 		flow:          flow,
 		tree:          result,
-		tokensBuffer:  make([]token, 0),
 		currentTable:  make([]string, 0),
 		seenTableKeys: make([]string, 0),
 	}
@@ -389,5 +488,6 @@ func parseToml(flow chan token) *Tree {
 }
 
 func init() {
-	numberUnderscoreInvalidRegexp = regexp.MustCompile(`([^\d]_|_[^\d]|_$|^_)`)
+	numberUnderscoreInvalidRegexp = regexp.MustCompile(`([^\d]_|_[^\d])|_$|^_`)
+	hexNumberUnderscoreInvalidRegexp = regexp.MustCompile(`(^0x_)|([^\da-f]_|_[^\da-f])|_$|^_`)
 }

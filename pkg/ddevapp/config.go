@@ -3,98 +3,135 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
-	"html/template"
-	"io/ioutil"
+	"github.com/Masterminds/sprig"
+	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
+	"text/template"
+	"time"
+
+	"github.com/drud/ddev/pkg/globalconfig"
 
 	"regexp"
 
-	"github.com/drud/ddev/pkg/appports"
+	"runtime"
+
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	log "github.com/sirupsen/logrus"
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 )
-
-// DefaultProviderName contains the name of the default provider which will be used if one is not otherwise specified.
-const DefaultProviderName = "default"
-
-// DdevDefaultPHPVersion is the default PHP version, overridden by $DDEV_PHP_VERSION
-const DdevDefaultPHPVersion = "7.1"
-
-// DdevDefaultRouterHTTPPort is the starting router port, 80
-const DdevDefaultRouterHTTPPort = "80"
-
-// DdevDefaultRouterHTTPSPort is the starting https router port, 443
-const DdevDefaultRouterHTTPSPort = "443"
-
-// CurrentAppVersion sets the current YAML config file version.
-// We're not doing anything with AppVersion, so just default it to 1 for now.
-const CurrentAppVersion = "1"
 
 // Regexp pattern to determine if a hostname is valid per RFC 1123.
 var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$`)
 
-// Command defines commands to be run as pre/post hooks
-type Command struct {
-	Exec     string `yaml:"exec,omitempty"`
-	ExecHost string `yaml:"exec-host,omitempty"`
-}
+// init() is for testing situations only, allowing us to override the default webserver type
+// or caching behavior
 
-// Provider is the interface which all provider plugins must implement.
-type Provider interface {
-	Init(app *DdevApp) error
-	ValidateField(string, string) error
-	PromptForConfig() error
-	Write(string) error
-	Read(string) error
-	Validate() error
-	GetBackup(string) (fileLocation string, importPath string, err error)
+func init() {
+	// This is for automated testing only. It allows us to override the webserver type.
+	if testWebServerType := os.Getenv("DDEV_TEST_WEBSERVER_TYPE"); testWebServerType != "" {
+		nodeps.WebserverDefault = testWebServerType
+	}
+	if testNFSMount := os.Getenv("DDEV_TEST_USE_NFSMOUNT"); testNFSMount != "" {
+		nodeps.NFSMountEnabledDefault = true
+	}
+	if testMutagen := os.Getenv("DDEV_TEST_USE_MUTAGEN"); testMutagen == "true" {
+		nodeps.MutagenEnabledDefault = true
+	}
 }
 
 // NewApp creates a new DdevApp struct with defaults set and overridden by any existing config.yml.
-func NewApp(AppRoot string, provider string) (*DdevApp, error) {
-	// Set defaults.
-	app := &DdevApp{}
-	app.ConfigPath = filepath.Join(AppRoot, ".ddev", "config.yaml")
+func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("ddevapp.NewApp(%s)", appRoot))
+	defer runTime()
 
-	app.AppRoot = AppRoot
+	app := &DdevApp{}
+
+	if appRoot == "" {
+		app.AppRoot, _ = os.Getwd()
+	} else {
+		app.AppRoot = appRoot
+	}
+
+	homeDir, _ := os.UserHomeDir()
+	if appRoot == filepath.Dir(globalconfig.GetGlobalDdevDir()) || app.AppRoot == homeDir {
+		return nil, fmt.Errorf("ddev config is not useful in your home directory (%s)", homeDir)
+	}
+
+	if !fileutil.FileExists(app.AppRoot) {
+		return app, fmt.Errorf("project root %s does not exist", app.AppRoot)
+	}
 	app.ConfigPath = app.GetConfigPath("config.yaml")
-	app.APIVersion = CurrentAppVersion
-	app.PHPVersion = DdevDefaultPHPVersion
-	app.RouterHTTPPort = DdevDefaultRouterHTTPPort
-	app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
+	app.Type = nodeps.AppTypePHP
+	app.PHPVersion = nodeps.PHPDefault
+	app.ComposerVersion = nodeps.ComposerDefault
+	app.MariaDBVersion = nodeps.MariaDBDefaultVersion
+	app.WebserverType = nodeps.WebserverDefault
+	app.NFSMountEnabled = nodeps.NFSMountEnabledDefault
+	app.NFSMountEnabledGlobal = globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal
+	app.MutagenEnabled = nodeps.MutagenEnabledDefault
+	app.MutagenEnabledGlobal = globalconfig.DdevGlobalConfig.MutagenEnabledGlobal
+	app.FailOnHookFail = nodeps.FailOnHookFailDefault
+	app.FailOnHookFailGlobal = globalconfig.DdevGlobalConfig.FailOnHookFailGlobal
+	app.RouterHTTPPort = nodeps.DdevDefaultRouterHTTPPort
+	app.RouterHTTPSPort = nodeps.DdevDefaultRouterHTTPSPort
+	app.PHPMyAdminPort = nodeps.DdevDefaultPHPMyAdminPort
+	app.PHPMyAdminHTTPSPort = nodeps.DdevDefaultPHPMyAdminHTTPSPort
+	app.MailhogPort = nodeps.DdevDefaultMailhogPort
+	app.MailhogHTTPSPort = nodeps.DdevDefaultMailhogHTTPSPort
+
+	// Provide a default app name based on directory name
+	app.Name = filepath.Base(app.AppRoot)
+
+	// Gather containers to omit, adding ddev-router for gitpod
+	app.OmitContainersGlobal = globalconfig.DdevGlobalConfig.OmitContainersGlobal
+	if nodeps.IsGitpod() {
+		app.OmitContainersGlobal = append(app.OmitContainersGlobal, "ddev-router")
+	}
+	app.ProjectTLD = nodeps.DdevDefaultTLD
+	app.UseDNSWhenPossible = true
 
 	// These should always default to the latest image/tag names from the Version package.
-	app.WebImage = version.WebImg + ":" + version.WebTag
-	app.DBImage = version.DBImg + ":" + version.DBTag
-	app.DBAImage = version.DBAImg + ":" + version.DBATag
+	app.WebImage = version.GetWebImage()
+	app.DBAImage = version.GetDBAImage()
 
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
 	if _, err := os.Stat(app.ConfigPath); !os.IsNotExist(err) {
-		err = app.ReadConfig()
+		_, err = app.ReadConfig(includeOverrides)
 		if err != nil {
 			return app, fmt.Errorf("%v exists but cannot be read. It may be invalid due to a syntax error.: %v", app.ConfigPath, err)
 		}
 	}
-
-	// Allow override with "pantheon" from function provider arg, but nothing else.
-	// Otherwise we accept whatever might have been in config file if there was anything.
-	if provider == "" && app.Provider != "" {
-		// Do nothing. This is the case where the config has a provider and no override is provided. Config wins.
-	} else if provider == "pantheon" || provider == DefaultProviderName {
-		app.Provider = provider // Use the provider passed-in. Function argument wins.
-	} else if provider == "" && app.Provider == "" {
-		app.Provider = DefaultProviderName // Nothing passed in, nothing configured. Set c.Provider to default
-	} else {
-		return app, fmt.Errorf("Provider '%s' is not implemented", provider)
+	// If MySQLVersion is now non-default/non-empty, then empty
+	// MariaDBVersion in its favor.
+	if app.MySQLVersion != "" {
+		app.MariaDBVersion = ""
 	}
+	app.SetApptypeSettingsPaths()
 
+	// Rendered yaml is not there until after ddev config or ddev start
+	if fileutil.FileExists(app.ConfigPath) && fileutil.FileExists(app.DockerComposeFullRenderedYAMLPath()) {
+		content, err := fileutil.ReadFileIntoString(app.DockerComposeFullRenderedYAMLPath())
+		if err != nil {
+			return app, err
+		}
+		err = yaml.Unmarshal([]byte(content), &app.ComposeYaml)
+		if err != nil {
+			return app, err
+		}
+
+		_, err = app.ReadConfig(includeOverrides)
+		if err != nil {
+			return app, fmt.Errorf("%v exists but cannot be read. It may be invalid due to a syntax error: %v", app.ConfigPath, err)
+		}
+	}
 	return app, nil
 }
 
@@ -106,37 +143,106 @@ func (app *DdevApp) GetConfigPath(filename string) string {
 // WriteConfig writes the app configuration into the .ddev folder.
 func (app *DdevApp) WriteConfig() error {
 
-	err := PrepDdevDirectory(filepath.Dir(app.ConfigPath))
+	// Work against a copy of the DdevApp, since we don't want to actually change it.
+	appcopy := *app
+
+	// Only set the images on write if non-default values have been specified.
+	if appcopy.WebImage == version.GetWebImage() {
+		appcopy.WebImage = ""
+	}
+	// If the DBImage is actually just created/equal to the maria or mysql version
+	// then remove it from the output.
+	if appcopy.DBImage == version.GetDBImage(nodeps.MariaDB, appcopy.MariaDBVersion) || appcopy.DBImage == version.GetDBImage(nodeps.MySQL, appcopy.MySQLVersion) {
+		appcopy.DBImage = ""
+	}
+	if appcopy.DBAImage == version.GetDBAImage() {
+		appcopy.DBAImage = ""
+	}
+	if appcopy.DBAImage == version.GetDBAImage() {
+		appcopy.DBAImage = ""
+	}
+	if appcopy.MailhogPort == nodeps.DdevDefaultMailhogPort {
+		appcopy.MailhogPort = ""
+	}
+	if appcopy.MailhogHTTPSPort == nodeps.DdevDefaultMailhogHTTPSPort {
+		appcopy.MailhogHTTPSPort = ""
+	}
+	if appcopy.PHPMyAdminPort == nodeps.DdevDefaultPHPMyAdminPort {
+		appcopy.PHPMyAdminPort = ""
+	}
+	if appcopy.PHPMyAdminHTTPSPort == nodeps.DdevDefaultPHPMyAdminHTTPSPort {
+		appcopy.PHPMyAdminHTTPSPort = ""
+	}
+	if appcopy.ProjectTLD == nodeps.DdevDefaultTLD {
+		appcopy.ProjectTLD = ""
+	}
+	// If mariadb-version is "" and mysql-version is not set, then set mariadb-version to default
+	if appcopy.MariaDBVersion == "" && appcopy.MySQLVersion == "" {
+		appcopy.MariaDBVersion = nodeps.MariaDBDefaultVersion
+	}
+
+	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't
+	// accidentally get used for other projects.
+	err := app.UpdateGlobalProjectList()
 	if err != nil {
 		return err
 	}
 
-	cfgbytes, err := yaml.Marshal(app)
+	// Don't write default working dir values to config
+	defaults := appcopy.DefaultWorkingDirMap()
+	for service, defaultWorkingDir := range defaults {
+		if app.WorkingDir[service] == defaultWorkingDir {
+			delete(appcopy.WorkingDir, service)
+		}
+	}
+
+	err = PrepDdevDirectory(filepath.Dir(appcopy.ConfigPath))
+	if err != nil {
+		return err
+	}
+
+	cfgbytes, err := yaml.Marshal(appcopy)
 	if err != nil {
 		return err
 	}
 
 	// Append hook information and sample hook suggestions.
 	cfgbytes = append(cfgbytes, []byte(ConfigInstructions)...)
-	cfgbytes = append(cfgbytes, app.GetHookDefaultComments()...)
+	cfgbytes = append(cfgbytes, appcopy.GetHookDefaultComments()...)
 
-	err = ioutil.WriteFile(app.ConfigPath, cfgbytes, 0644)
+	err = os.WriteFile(appcopy.ConfigPath, cfgbytes, 0644)
 	if err != nil {
 		return err
 	}
 
-	provider, err := app.GetProvider()
+	// Allow project-specific post-config action
+	err = appcopy.PostConfigAction()
 	if err != nil {
 		return err
 	}
 
-	err = provider.Write(app.GetConfigPath("import.yaml"))
+	// Write example Dockerfiles into build directories
+	contents := []byte(`
+# You can copy this Dockerfile.example to Dockerfile to add configuration
+# or packages or anything else to your webimage
+ARG BASE_IMAGE
+FROM $BASE_IMAGE
+RUN npm install --global gulp-cli
+`)
+
+	err = WriteImageDockerfile(app.GetConfigPath("web-build")+"/Dockerfile.example", contents)
 	if err != nil {
 		return err
 	}
+	contents = []byte(`
+# You can copy this Dockerfile.example to Dockerfile to add configuration
+# or packages or anything else to your dbimage
+ARG BASE_IMAGE
+FROM $BASE_IMAGE
+RUN echo "Built from ` + app.GetDBImage() + `" >/var/tmp/built-from.txt
+`)
 
-	// Allow app-specific post-config action
-	err = app.PostConfigAction()
+	err = WriteImageDockerfile(app.GetConfigPath("db-build")+"/Dockerfile.example", contents)
 	if err != nil {
 		return err
 	}
@@ -144,17 +250,81 @@ func (app *DdevApp) WriteConfig() error {
 	return nil
 }
 
-// ReadConfig reads app configuration from a specified location on disk, falling
-// back to defaults for config values not defined in the read config file.
-func (app *DdevApp) ReadConfig() error {
+// UpdateGlobalProjectList updates any information about project that
+// is tracked in global project list:
+// - approot
+// - configured host ports
+// checks that configured host ports are not already
+// reserved by another project
+func (app *DdevApp) UpdateGlobalProjectList() error {
+	portsToReserve := []string{}
+	if app.HostDBPort != "" {
+		portsToReserve = append(portsToReserve, app.HostDBPort)
+	}
+	if app.HostWebserverPort != "" {
+		portsToReserve = append(portsToReserve, app.HostWebserverPort)
+	}
+	if app.HostHTTPSPort != "" {
+		portsToReserve = append(portsToReserve, app.HostHTTPSPort)
+	}
 
-	source, err := ioutil.ReadFile(app.ConfigPath)
+	if len(portsToReserve) > 0 {
+		err := globalconfig.CheckHostPortsAvailable(app.Name, portsToReserve)
+		if err != nil {
+			return err
+		}
+	}
+	err := globalconfig.ReservePorts(app.Name, portsToReserve)
+	if err != nil {
+		return err
+	}
+	err = globalconfig.SetProjectAppRoot(app.Name, app.AppRoot)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ReadConfig reads project configuration from the config.yaml file
+// It does not attempt to set default values; that's NewApp's job.
+func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
+
+	// Load config.yaml
+	err := app.LoadConfigYamlFile(app.ConfigPath)
+	if err != nil {
+		return []string{}, fmt.Errorf("unable to load config file %s: %v", app.ConfigPath, err)
+	}
+
+	configOverrides := []string{}
+	// Load config.*.y*ml after in glob order
+	if includeOverrides {
+		glob := filepath.Join(filepath.Dir(app.ConfigPath), "config.*.y*ml")
+		configOverrides, err = filepath.Glob(glob)
+		if err != nil {
+			return []string{}, err
+		}
+
+		for _, item := range configOverrides {
+			err = app.LoadConfigYamlFile(item)
+			if err != nil {
+				return []string{}, fmt.Errorf("unable to load config file %s: %v", item, err)
+			}
+		}
+	}
+
+	return append([]string{app.ConfigPath}, configOverrides...), nil
+}
+
+// LoadConfigYamlFile loads one config.yaml into app, overriding what might be there.
+func (app *DdevApp) LoadConfigYamlFile(filePath string) error {
+	source, err := os.ReadFile(filePath)
 	if err != nil {
 		return fmt.Errorf("could not find an active ddev configuration at %s have you run 'ddev config'? %v", app.ConfigPath, err)
 	}
 
 	// validate extend command keys
-	err = validateCommandYaml(source)
+	err = validateHookYAML(source)
 	if err != nil {
 		return fmt.Errorf("invalid configuration in %s: %v", app.ConfigPath, err)
 	}
@@ -164,46 +334,13 @@ func (app *DdevApp) ReadConfig() error {
 	if err != nil {
 		return err
 	}
-
-	// If any of these values aren't defined in the config file, set them to defaults.
-	if app.Name == "" {
-		app.Name = filepath.Base(app.AppRoot)
-	}
-	if app.PHPVersion == "" {
-		app.PHPVersion = DdevDefaultPHPVersion
-	}
-
-	if app.RouterHTTPPort == "" {
-		app.RouterHTTPPort = DdevDefaultRouterHTTPPort
-	}
-
-	if app.RouterHTTPSPort == "" {
-		app.RouterHTTPSPort = DdevDefaultRouterHTTPSPort
-	}
-
-	if app.WebImage == "" {
-		app.WebImage = version.WebImg + ":" + version.WebTag
-	}
-	if app.DBImage == "" {
-		app.DBImage = version.DBImg + ":" + version.DBTag
-	}
-	if app.DBAImage == "" {
-		app.DBAImage = version.DBAImg + ":" + version.DBATag
-	}
-
-	dirPath := filepath.Join(util.GetGlobalDdevDir(), app.Name)
-	app.DataDir = filepath.Join(dirPath, "mysql")
-	app.ImportDir = filepath.Join(dirPath, "import-db")
-
-	app.SetApptypeSettingsPaths()
-
 	return nil
 }
 
 // WarnIfConfigReplace just messages user about whether config is being replaced or created
 func (app *DdevApp) WarnIfConfigReplace() {
 	if app.ConfigExists() {
-		util.Warning("You are reconfiguring the project at %s. \nThe existing configuration will be updated and replaced.", app.AppRoot)
+		util.Warning("You are reconfiguring the project at %s.\nThe existing configuration will be updated and replaced.", app.AppRoot)
 	} else {
 		util.Success("Creating a new ddev project config in the current directory (%s)", app.AppRoot)
 		util.Success("Once completed, your configuration will be written to %s\n", app.ConfigPath)
@@ -225,17 +362,11 @@ func (app *DdevApp) PromptForConfig() error {
 		output.UserOut.Printf("%v", err)
 	}
 
-	for {
-		err := app.docrootPrompt()
-
-		if err == nil {
-			break
-		}
-
-		output.UserOut.Printf("%v", err)
+	if err := app.docrootPrompt(); err != nil {
+		return err
 	}
 
-	err := app.appTypePrompt()
+	err := app.AppTypePrompt()
 	if err != nil {
 		return err
 	}
@@ -245,80 +376,192 @@ func (app *DdevApp) PromptForConfig() error {
 		return err
 	}
 
-	err = app.providerInstance.PromptForConfig()
+	err = app.ValidateConfig()
+	if err != nil {
+		return err
+	}
 
-	return err
+	return nil
+}
+
+// ValidateProjectName checks to see if the project name works for a proper hostname
+func ValidateProjectName(name string) error {
+	match := hostRegex.MatchString(name)
+	if !match {
+		return fmt.Errorf("%s is not a valid project name. Please enter a project name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", name)
+	}
+	return nil
 }
 
 // ValidateConfig ensures the configuration meets ddev's requirements.
 func (app *DdevApp) ValidateConfig() error {
-	// validate docroot
-	fullPath := filepath.Join(app.AppRoot, app.Docroot)
-	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-		return fmt.Errorf("no directory could be found at %s. Please enter a valid docroot in your configuration", fullPath)
+
+	// validate project name
+	if err := ValidateProjectName(app.Name); err != nil {
+		return err
 	}
 
-	// validate hostname
-	match := hostRegex.MatchString(app.GetHostname())
-	if !match {
-		return fmt.Errorf("%s is not a valid hostname. Please enter a site name in your configuration that will allow for a valid hostname. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", app.GetHostname())
+	// validate hostnames
+	for _, hn := range app.GetHostnames() {
+		// If they have provided "*.<hostname>" then ignore the *. part.
+		hn = strings.TrimPrefix(hn, "*.")
+		if hn == "ddev.site" {
+			return fmt.Errorf("wildcarding the full hostname or using 'ddev.site' as fqdn is not allowed because other projects would not work in that case")
+		}
+		if !hostRegex.MatchString(hn) {
+			return fmt.Errorf("invalid hostname: %s. See https://en.wikipedia.org/wiki/Hostname#Restrictions_on_valid_hostnames for valid hostname requirements", hn).(invalidHostname)
+		}
 	}
 
 	// validate apptype
-	match = IsValidAppType(app.Type)
-	if !match {
-		return fmt.Errorf("'%s' is not a valid apptype", app.Type)
+	if !IsValidAppType(app.Type) {
+		return fmt.Errorf("invalid app type: %s", app.Type).(invalidAppType)
+	}
+
+	// validate PHP version
+	if !nodeps.IsValidPHPVersion(app.PHPVersion) {
+		return fmt.Errorf("unsupported PHP version: %s, ddev (%s) only supports the following versions: %v", app.PHPVersion, runtime.GOARCH, nodeps.GetValidPHPVersions()).(invalidPHPVersion)
+	}
+
+	// validate webserver type
+	if !nodeps.IsValidWebserverType(app.WebserverType) {
+		return fmt.Errorf("unsupported webserver type: %s, ddev (%s) only supports the following webserver types: %s", app.WebserverType, runtime.GOARCH, nodeps.GetValidWebserverTypes()).(invalidWebserverType)
+	}
+
+	if !nodeps.IsValidOmitContainers(app.OmitContainers) {
+		return fmt.Errorf("unsupported omit_containers: %s, ddev (%s) only supports the following for omit_containers: %s", app.OmitContainers, runtime.GOARCH, nodeps.GetValidOmitContainers()).(InvalidOmitContainers)
+	}
+
+	if app.MariaDBVersion != "" {
+		// Validate mariadb version
+		if !nodeps.IsValidMariaDBVersion(app.MariaDBVersion) {
+			return fmt.Errorf("unsupported mariadb_version: %s, ddev (%s) only supports the following versions: %s", app.MariaDBVersion, runtime.GOARCH, nodeps.GetValidMariaDBVersions()).(invalidMariaDBVersion)
+		}
+	}
+	if app.MySQLVersion != "" {
+		// Validate /mysql version
+		if !nodeps.IsValidMySQLVersion(app.MySQLVersion) {
+			if len(nodeps.GetValidMySQLVersions()) == 0 {
+				return fmt.Errorf("MySQL is not yet supported on your architecture (%s) because mysql does not provide packages (or docker images)", runtime.GOARCH)
+			}
+			return fmt.Errorf("unsupported mysql_version: %s; ddev (%s) only supports the following versions %s", app.MySQLVersion, runtime.GOARCH, nodeps.GetValidMySQLVersions()).(invalidMySQLVersion)
+		}
+	}
+
+	// Validate db versions
+	if app.MariaDBVersion != "" && app.MySQLVersion != "" {
+		return fmt.Errorf("both mariadb_version (%v) and mysql_version (%v) are set, but they are mutually exclusive", app.MariaDBVersion, app.MySQLVersion)
+	}
+
+	// golang on windows is not able to time.LoadLocation unless
+	// go is installed... so skip validation on Windows
+	if runtime.GOOS != "windows" {
+		_, err := time.LoadLocation(app.Timezone)
+		if err != nil {
+			// golang on Windows is often not able to time.LoadLocation.
+			// It often works if go is installed and $GOROOT is set, but
+			// that's not the norm for our users.
+			return fmt.Errorf("invalid timezone %s: %v", app.Timezone, err)
+		}
 	}
 
 	return nil
 }
 
 // DockerComposeYAMLPath returns the absolute path to where the
-// docker-compose.yaml should exist for this app.
+// base generated yaml file should exist for this project.
 func (app *DdevApp) DockerComposeYAMLPath() string {
-	return app.GetConfigPath("docker-compose.yaml")
+	return app.GetConfigPath(".ddev-docker-compose-base.yaml")
+}
+
+// DockerComposeFullRenderedYAMLPath returns the absolute path to where the
+// the complete generated yaml file should exist for this project.
+func (app *DdevApp) DockerComposeFullRenderedYAMLPath() string {
+	return app.GetConfigPath(".ddev-docker-compose-full.yaml")
 }
 
 // GetHostname returns the primary hostname of the app.
 func (app *DdevApp) GetHostname() string {
-	return app.Name + "." + version.DDevTLD
+	return strings.ToLower(app.Name) + "." + app.ProjectTLD
 }
 
 // GetHostnames returns an array of all the configured hostnames.
 func (app *DdevApp) GetHostnames() []string {
 
-	var nameList []string
-	nameList = append(nameList, app.GetHostname())
+	// Use a map to make sure that we have unique hostnames
+	// The value is useless, so just use the int 1 for assignment.
+	nameListMap := make(map[string]int)
+	nameListArray := []string{}
 
-	for _, name := range app.AdditionalHostnames {
-		nameList = append(nameList, name+"."+version.DDevTLD)
+	if !IsRouterDisabled(app) {
+		for _, name := range app.AdditionalHostnames {
+			name = strings.ToLower(name)
+			nameListMap[name+"."+app.ProjectTLD] = 1
+		}
+
+		for _, name := range app.AdditionalFQDNs {
+			name = strings.ToLower(name)
+			nameListMap[name] = 1
+		}
+
+		// Make sure the primary hostname didn't accidentally get added, it will be prepended
+		delete(nameListMap, app.GetHostname())
+
+		// Now walk the map and extract the keys into an array.
+		for k := range nameListMap {
+			nameListArray = append(nameListArray, k)
+		}
+		sort.Strings(nameListArray)
+		// We want the primary hostname to be first in the list.
+		nameListArray = append([]string{app.GetHostname()}, nameListArray...)
 	}
-	return nameList
+	return nameListArray
 }
 
-// WriteDockerComposeConfig writes a docker-compose.yaml to the app configuration directory.
-func (app *DdevApp) WriteDockerComposeConfig() error {
+// WriteDockerComposeYAML writes a .ddev-docker-compose-base.yaml and related to the .ddev directory.
+func (app *DdevApp) WriteDockerComposeYAML() error {
 	var err error
 
-	if !fileutil.FileExists(app.DockerComposeYAMLPath()) {
-
-		// nolint: vetshadow
-		f, err := os.Create(app.DockerComposeYAMLPath())
-		if err != nil {
-			return err
-		}
-		defer util.CheckClose(f)
-
-		rendered, err := app.RenderComposeYAML()
-		if err != nil {
-			return err
-		}
-		_, err = f.WriteString(rendered)
-		if err != nil {
-			return err
-		}
+	f, err := os.Create(app.DockerComposeYAMLPath())
+	if err != nil {
+		return err
 	}
-	return err
+	defer util.CheckClose(f)
+
+	rendered, err := app.RenderComposeYAML()
+	if err != nil {
+		return err
+	}
+	_, err = f.WriteString(rendered)
+	if err != nil {
+		return err
+	}
+
+	files, err := app.ComposeFiles()
+	if err != nil {
+		return err
+	}
+	fullContents, _, err := dockerutil.ComposeCmd(files, "config")
+	if err != nil {
+		return err
+	}
+	// Replace `docker-compose config`'s full-path usage with relative pathing
+	// for https://youtrack.jetbrains.com/issue/WI-61976 - PhpStorm
+	// This is an ugly an shortsighted approach, but otherwise we'd have to parse the yaml.
+	// Note that this issue with docker-compose config was fixed in docker-compose 2.0.0RC4
+	// so it's in Docker Desktop 4.1.0.
+	// https://github.com/docker/compose/issues/8503#issuecomment-930969241
+	fullContents = strings.Replace(fullContents, fmt.Sprintf("source: %s\n", app.AppRoot), "source: ../\n", -1)
+	fullHandle, err := os.Create(app.DockerComposeFullRenderedYAMLPath())
+	if err != nil {
+		return err
+	}
+	_, err = fullHandle.WriteString(fullContents)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // CheckCustomConfig warns the user if any custom configuration files are in use.
@@ -328,14 +571,37 @@ func (app *DdevApp) CheckCustomConfig() {
 	ddevDir := filepath.Dir(app.ConfigPath)
 
 	customConfig := false
-	if _, err := os.Stat(filepath.Join(ddevDir, "nginx-site.conf")); err == nil {
+	if _, err := os.Stat(filepath.Join(ddevDir, "nginx-site.conf")); err == nil && app.WebserverType == nodeps.WebserverNginxFPM {
 		util.Warning("Using custom nginx configuration in nginx-site.conf")
 		customConfig = true
+	}
+	nginxFullConfigPath := app.GetConfigPath("nginx_full/nginx-site.conf")
+	sigFound, _ := fileutil.FgrepStringInFile(nginxFullConfigPath, DdevFileSignature)
+	if !sigFound && app.WebserverType == nodeps.WebserverNginxFPM {
+		util.Warning("Using custom nginx configuration in %s", nginxFullConfigPath)
+		customConfig = true
+	}
+
+	apacheFullConfigPath := app.GetConfigPath("apache/apache-site.conf")
+	sigFound, _ = fileutil.FgrepStringInFile(apacheFullConfigPath, DdevFileSignature)
+	if !sigFound && app.WebserverType != nodeps.WebserverNginxFPM {
+		util.Warning("Using custom apache configuration in %s", apacheFullConfigPath)
+		customConfig = true
+	}
+
+	nginxPath := filepath.Join(ddevDir, "nginx")
+	if _, err := os.Stat(nginxPath); err == nil {
+		nginxFiles, err := filepath.Glob(nginxPath + "/*.conf")
+		util.CheckErr(err)
+		if len(nginxFiles) > 0 {
+			util.Warning("Using nginx snippets: %v", nginxFiles)
+			customConfig = true
+		}
 	}
 
 	mysqlPath := filepath.Join(ddevDir, "mysql")
 	if _, err := os.Stat(mysqlPath); err == nil {
-		mysqlFiles, err := fileutil.ListFilesInDir(mysqlPath)
+		mysqlFiles, err := filepath.Glob(mysqlPath + "/*.cnf")
 		util.CheckErr(err)
 		if len(mysqlFiles) > 0 {
 			util.Warning("Using custom mysql configuration: %v", mysqlFiles)
@@ -345,7 +611,7 @@ func (app *DdevApp) CheckCustomConfig() {
 
 	phpPath := filepath.Join(ddevDir, "php")
 	if _, err := os.Stat(phpPath); err == nil {
-		phpFiles, err := fileutil.ListFilesInDir(phpPath)
+		phpFiles, err := filepath.Glob(phpPath + "/*.ini")
 		util.CheckErr(err)
 		if len(phpFiles) > 0 {
 			util.Warning("Using custom PHP configuration: %v", phpFiles)
@@ -353,65 +619,311 @@ func (app *DdevApp) CheckCustomConfig() {
 		}
 	}
 	if customConfig {
-		util.Warning("Custom configuration takes effect when container is created, \nusually on start, use 'ddev restart' if you're not seeing it take effect.")
+		util.Warning("Custom configuration takes effect when container is created,\nusually on start, use 'ddev restart' if you're not seeing it take effect.")
 	}
 
 }
 
-// RenderComposeYAML renders the contents of docker-compose.yaml.
+// CheckDeprecations warns the user if anything in use is deprecated.
+func (app *DdevApp) CheckDeprecations() {
+
+}
+
+type composeYAMLVars struct {
+	Name                      string
+	Plugin                    string
+	AppType                   string
+	MailhogPort               string
+	HostMailhogPort           string
+	DBAPort                   string
+	DBPort                    string
+	HostPHPMyAdminPort        string
+	DdevGenerated             string
+	HostDockerInternalIP      string
+	ComposeVersion            string
+	DisableSettingsManagement bool
+	MountType                 string
+	WebMount                  string
+	WebBuildContext           string
+	DBBuildContext            string
+	WebBuildDockerfile        string
+	DBBuildDockerfile         string
+	SSHAgentBuildContext      string
+	OmitDB                    bool
+	OmitDBA                   bool
+	OmitRouter                bool
+	OmitSSHAgent              bool
+	BindAllInterfaces         bool
+	MariaDBVolumeName         string
+	MutagenEnabled            bool
+	MutagenVolumeName         string
+	NFSMountEnabled           bool
+	NFSSource                 string
+	NFSMountVolumeName        string
+	DockerIP                  string
+	IsWindowsFS               bool
+	NoProjectMount            bool
+	Hostnames                 []string
+	Timezone                  string
+	ComposerVersion           string
+	Username                  string
+	UID                       string
+	GID                       string
+	AutoRestartContainers     bool
+	FailOnHookFail            bool
+	WebWorkingDir             string
+	DBWorkingDir              string
+	DBAWorkingDir             string
+	WebEnvironment            []string
+}
+
+// RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
 func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error
-	templ := template.New("compose template")
+	templ, err := template.New("compose template").Funcs(sprig.TxtFuncMap()).Parse(DDevComposeTemplate)
+	if err != nil {
+		return "", err
+	}
 	templ, err = templ.Parse(DDevComposeTemplate)
 	if err != nil {
 		return "", err
 	}
-	templateVars := map[string]string{
-		"name":        app.Name,
-		"plugin":      "ddev",
-		"appType":     app.Type,
-		"mailhogport": appports.GetPort("mailhog"),
-		"dbaport":     appports.GetPort("dba"),
-		"dbport":      appports.GetPort("db"),
+
+	hostDockerInternalIP, err := dockerutil.GetHostDockerInternalIP()
+	if err != nil {
+		util.Warning("Could not determine host.docker.internal IP address: %v", err)
+	}
+	// The fallthrough default for hostDockerInternalIdentifier is the
+	// hostDockerInternalHostname == host.docker.internal
+
+	webEnvironment := globalconfig.DdevGlobalConfig.WebEnvironment
+	localWebEnvironment := app.WebEnvironment
+	for _, v := range localWebEnvironment {
+		// docker-compose won't accept a duplicate environment value
+		if !nodeps.ArrayContainsString(webEnvironment, v) {
+			webEnvironment = append(webEnvironment, v)
+		}
+	}
+
+	uid, gid, username := util.GetContainerUIDGid()
+	_, err = app.GetProvider("")
+	if err != nil {
+		return "", err
+	}
+
+	templateVars := composeYAMLVars{
+		Name:                      app.Name,
+		Plugin:                    "ddev",
+		AppType:                   app.Type,
+		MailhogPort:               GetPort("mailhog"),
+		HostMailhogPort:           app.HostMailhogPort,
+		DBAPort:                   GetPort("dba"),
+		DBPort:                    GetPort("db"),
+		HostPHPMyAdminPort:        app.HostPHPMyAdminPort,
+		DdevGenerated:             DdevFileSignature,
+		HostDockerInternalIP:      hostDockerInternalIP,
+		ComposeVersion:            version.DockerComposeFileFormatVersion,
+		DisableSettingsManagement: app.DisableSettingsManagement,
+		OmitDB:                    nodeps.ArrayContainsString(app.GetOmittedContainers(), nodeps.DBContainer),
+		OmitDBA:                   nodeps.ArrayContainsString(app.GetOmittedContainers(), nodeps.DBAContainer) || nodeps.ArrayContainsString(app.OmitContainers, nodeps.DBContainer),
+		OmitRouter:                nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer),
+		OmitSSHAgent:              nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent"),
+		BindAllInterfaces:         app.BindAllInterfaces,
+		MutagenEnabled:            (app.IsMutagenEnabled()),
+
+		NFSMountEnabled:       (app.NFSMountEnabled || app.NFSMountEnabledGlobal) && !app.IsMutagenEnabled(),
+		NFSSource:             "",
+		IsWindowsFS:           runtime.GOOS == "windows",
+		NoProjectMount:        app.NoProjectMount,
+		MountType:             "bind",
+		WebMount:              "../",
+		Hostnames:             app.GetHostnames(),
+		Timezone:              app.Timezone,
+		ComposerVersion:       app.ComposerVersion,
+		Username:              username,
+		UID:                   uid,
+		GID:                   gid,
+		WebBuildContext:       "./web-build",
+		DBBuildContext:        "./db-build",
+		WebBuildDockerfile:    "../.webimageBuild/Dockerfile",
+		DBBuildDockerfile:     "../.dbimageBuild/Dockerfile",
+		AutoRestartContainers: globalconfig.DdevGlobalConfig.AutoRestartContainers,
+		FailOnHookFail:        app.FailOnHookFail || app.FailOnHookFailGlobal,
+		WebWorkingDir:         app.GetWorkingDir("web", ""),
+		DBWorkingDir:          app.GetWorkingDir("db", ""),
+		DBAWorkingDir:         app.GetWorkingDir("dba", ""),
+		WebEnvironment:        webEnvironment,
+		MariaDBVolumeName:     app.GetMariaDBVolumeName(),
+		NFSMountVolumeName:    app.GetNFSMountVolumeName(),
+	}
+	if app.NFSMountEnabled || app.NFSMountEnabledGlobal {
+		templateVars.MountType = "volume"
+		templateVars.WebMount = "nfsmount"
+		templateVars.NFSSource = app.AppRoot
+		// Workaround for Catalina sharing nfs as /System/Volumes/Data
+		if runtime.GOOS == "darwin" && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", app.AppRoot)) {
+			templateVars.NFSSource = filepath.Join("/System/Volumes/Data", app.AppRoot)
+		}
+		if runtime.GOOS == "windows" {
+			// WinNFSD can only handle a mountpoint like /C/Users/rfay/workspace/d8git
+			// and completely chokes in C:\Users\rfay...
+			templateVars.NFSSource = dockerutil.MassageWindowsNFSMount(app.AppRoot)
+		}
+	}
+
+	if app.IsMutagenEnabled() {
+		templateVars.MutagenVolumeName = GetMutagenVolumeName(app)
+	}
+
+	// Add web and db extra dockerfile info
+	// If there is a user-provided Dockerfile, use that as the base and then add
+	// our extra stuff like usernames, etc.
+	// The db-build and web-build directories are used for context
+	// so must exist. They usually do.
+	err = os.MkdirAll(app.GetConfigPath("db-build"), 0755)
+	if err != nil {
+		return "", err
+	}
+
+	err = os.MkdirAll(app.GetConfigPath("web-build"), 0755)
+	if err != nil {
+		return "", err
+	}
+
+	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build/Dockerfile"), app.WebImageExtraPackages, app.ComposerVersion)
+	if err != nil {
+		return "", err
+	}
+
+	err = WriteBuildDockerfile(app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build/Dockerfile"), app.DBImageExtraPackages, "")
+
+	if err != nil {
+		return "", err
+	}
+
+	// SSH agent just needs extra to add the official related user, nothing else
+	err = WriteBuildDockerfile(filepath.Join(globalconfig.GetGlobalDdevDir(), ".sshimageBuild/Dockerfile"), "", nil, "")
+	if err != nil {
+		return "", err
+	}
+
+	templateVars.DockerIP, err = dockerutil.GetDockerIP()
+	if err != nil {
+		return "", err
+	}
+	if app.BindAllInterfaces {
+		templateVars.DockerIP = "0.0.0.0"
 	}
 
 	err = templ.Execute(&doc, templateVars)
 	return doc.String(), err
 }
 
-// Define an application name.
-func (app *DdevApp) promptForName() error {
-	provider, err := app.GetProvider()
+// WriteBuildDockerfile writes a Dockerfile to be used in the
+// docker-compose 'build'
+// It may include the contents of .ddev/<container>-build
+func WriteBuildDockerfile(fullpath string, userDockerfile string, extraPackages []string, composerVersion string) error {
+	// Start with user-built dockerfile if there is one.
+	err := os.MkdirAll(filepath.Dir(fullpath), 0755)
 	if err != nil {
 		return err
 	}
 
-	namePrompt := "Project name"
+	// Normal starting content is just the arg and base image
+	contents := `
+ARG BASE_IMAGE
+FROM $BASE_IMAGE
+`
+	// If there is a user dockerfile, start with its contents
+	if userDockerfile != "" && fileutil.FileExists(userDockerfile) {
+		contents, err = fileutil.ReadFileIntoString(userDockerfile)
+		if err != nil {
+			return err
+		}
+	}
+	contents = contents + `
+ARG username
+ARG uid
+ARG gid
+RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' --uid $uid "$username" || useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' "$username" || useradd  -l -m -s "/bin/bash" --gid "$gid" --comment '' "$username")
+`
+	if extraPackages != nil {
+		contents = contents + `
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
+	}
+
+	// For webimage, update to latest composer.
+	if strings.Contains(fullpath, "webimageBuild") {
+		// If composerVersion is set,
+		// run composer self-update to the version (or --1 or --2)
+		// defaults to "2" even if ""
+		var composerSelfUpdateArg string
+		switch composerVersion {
+		case "1":
+			composerSelfUpdateArg = "--1"
+		case "":
+			fallthrough
+		case "2":
+			composerSelfUpdateArg = "--2"
+		default:
+			composerSelfUpdateArg = composerVersion
+		}
+
+		// If composerVersion is not set, we don't need to self-update.
+		// Composer v2 is default
+		// Try composer self-update twice because of troubles with composer downloads
+		// breaking testing.
+		contents = contents + fmt.Sprintf(`
+RUN export XDEBUG_MODE=off && ( composer self-update %s || composer self-update %s )
+`, composerSelfUpdateArg, composerSelfUpdateArg)
+	}
+	return WriteImageDockerfile(fullpath, []byte(contents))
+}
+
+// WriteImageDockerfile writes a dockerfile at the fullpath (including the filename)
+func WriteImageDockerfile(fullpath string, contents []byte) error {
+	err := os.MkdirAll(filepath.Dir(fullpath), 0755)
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(fullpath, contents, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// prompt for a project name.
+func (app *DdevApp) promptForName() error {
 	if app.Name == "" {
 		dir, err := os.Getwd()
 		// if working directory name is invalid for hostnames, we shouldn't suggest it
 		if err == nil && hostRegex.MatchString(filepath.Base(dir)) {
-
 			app.Name = filepath.Base(dir)
 		}
 	}
 
-	namePrompt = fmt.Sprintf("%s (%s)", namePrompt, app.Name)
-	fmt.Print(namePrompt + ": ")
-	app.Name = util.GetInput(app.Name)
-	return provider.ValidateField("Name", app.Name)
+	name := util.Prompt("Project name", app.Name)
+	if err := ValidateProjectName(name); err != nil {
+		return err
+	}
+	app.Name = name
+	return nil
 }
 
 // AvailableDocrootLocations returns an of default docroot locations to look for.
 func AvailableDocrootLocations() []string {
 	return []string{
-		"web/public",
-		"web",
+		"_www",
 		"docroot",
 		"htdocs",
-		"_www",
+		"html",
+		"pub",
 		"public",
+		"web",
+		"web/public",
+		"webroot",
 	}
 }
 
@@ -421,10 +933,11 @@ func DiscoverDefaultDocroot(app *DdevApp) string {
 	var defaultDocroot = app.Docroot
 	if defaultDocroot == "" {
 		for _, docroot := range AvailableDocrootLocations() {
-			if _, err := os.Stat(docroot); err != nil {
+			if _, err := os.Stat(filepath.Join(app.AppRoot, docroot)); err != nil {
 				continue
 			}
-			if fileutil.FileExists(filepath.Join(docroot, "index.php")) {
+
+			if fileutil.FileExists(filepath.Join(app.AppRoot, docroot, "index.php")) {
 				defaultDocroot = docroot
 				break
 			}
@@ -435,21 +948,21 @@ func DiscoverDefaultDocroot(app *DdevApp) string {
 
 // Determine the document root.
 func (app *DdevApp) docrootPrompt() error {
-	provider, err := app.GetProvider()
-	if err != nil {
-		return err
-	}
 
 	// Determine the document root.
-	output.UserOut.Printf("\nThe docroot is the directory from which your site is served. This is a relative path from your project root (%s)", app.AppRoot)
+	util.Warning("\nThe docroot is the directory from which your site is served.\nThis is a relative path from your project root at %s", app.AppRoot)
 	output.UserOut.Println("You may leave this value blank if your site files are in the project root")
 	var docrootPrompt = "Docroot Location"
 	var defaultDocroot = DiscoverDefaultDocroot(app)
 	// If there is a default docroot, display it in the prompt.
 	if defaultDocroot != "" {
 		docrootPrompt = fmt.Sprintf("%s (%s)", docrootPrompt, defaultDocroot)
-	} else {
+	} else if cd, _ := os.Getwd(); cd == filepath.Join(app.AppRoot, defaultDocroot) {
+		// Preserve the case where the docroot is the current directory
 		docrootPrompt = fmt.Sprintf("%s (current directory)", docrootPrompt)
+	} else {
+		// Explicitly state 'project root' when in a subdirectory
+		docrootPrompt = fmt.Sprintf("%s (project root)", docrootPrompt)
 	}
 
 	fmt.Print(docrootPrompt + ": ")
@@ -458,11 +971,21 @@ func (app *DdevApp) docrootPrompt() error {
 	// Ensure the docroot exists. If it doesn't, prompt the user to verify they entered it correctly.
 	fullPath := filepath.Join(app.AppRoot, app.Docroot)
 	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-		output.UserOut.Errorf("No directory could be found at %s. Please enter a valid docroot\n", fullPath)
-		app.Docroot = ""
-		return app.docrootPrompt()
+		util.Warning("Warning: the provided docroot at %s does not currently exist.", fullPath)
+
+		// Ask the user for permission to create the docroot
+		if !util.Confirm(fmt.Sprintf("Create docroot at %s?", fullPath)) {
+			return fmt.Errorf("docroot must exist to continue configuration")
+		}
+
+		if err = os.MkdirAll(fullPath, 0755); err != nil {
+			return fmt.Errorf("unable to create docroot: %v", err)
+		}
+
+		util.Success("Created docroot at %s.", fullPath)
 	}
-	return provider.ValidateField("Docroot", app.Docroot)
+
+	return nil
 }
 
 // ConfigExists determines if a ddev config file exists for this application.
@@ -473,12 +996,8 @@ func (app *DdevApp) ConfigExists() bool {
 	return true
 }
 
-// appTypePrompt handles the Type workflow.
-func (app *DdevApp) appTypePrompt() error {
-	provider, err := app.GetProvider()
-	if err != nil {
-		return err
-	}
+// AppTypePrompt handles the Type workflow.
+func (app *DdevApp) AppTypePrompt() error {
 	validAppTypes := strings.Join(GetValidAppTypes(), ", ")
 	typePrompt := fmt.Sprintf("Project Type [%s]", validAppTypes)
 
@@ -501,7 +1020,7 @@ func (app *DdevApp) appTypePrompt() error {
 		appType = strings.ToLower(util.GetInput(appType))
 	}
 	app.Type = appType
-	return provider.ValidateField("Type", app.Type)
+	return nil
 }
 
 // PrepDdevDirectory creates a .ddev directory in the current working directory
@@ -518,11 +1037,16 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
+	err := CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen", "nginx_full/nginx-site.conf", "sequelpro.spf", "xhprof", "**/README.*")
+	if err != nil {
+		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
+	}
+
 	return nil
 }
 
-// validateCommandYaml validates command hooks and tasks defined in hooks for config.yaml
-func validateCommandYaml(source []byte) error {
+// validateHookYAML validates command hooks and tasks defined in hooks for config.yaml
+func validateHookYAML(source []byte) error {
 	validHooks := []string{
 		"pre-start",
 		"post-start",
@@ -530,11 +1054,32 @@ func validateCommandYaml(source []byte) error {
 		"post-import-db",
 		"pre-import-files",
 		"post-import-files",
+		"pre-composer",
+		"post-composer",
+		"pre-stop",
+		"post-stop",
+		"pre-config",
+		"post-config",
+		"pre-describe",
+		"post-describe",
+		"pre-exec",
+		"post-exec",
+		"pre-pause",
+		"post-pause",
+		"pre-pull",
+		"post-pull",
+		"pre-push",
+		"post-push",
+		"pre-snapshot",
+		"post-snapshot",
+		"pre-restore-snapshot",
+		"post-restore-snapshot",
 	}
 
 	validTasks := []string{
 		"exec",
 		"exec-host",
+		"composer",
 	}
 
 	type Validate struct {
@@ -547,29 +1092,28 @@ func validateCommandYaml(source []byte) error {
 		return err
 	}
 
-	for command, tasks := range val.Commands {
+	for foundHook, tasks := range val.Commands {
 		var match bool
-		for _, hook := range validHooks {
-			if command == hook {
+		for _, h := range validHooks {
+			if foundHook == h {
 				match = true
 			}
 		}
 		if !match {
-			return fmt.Errorf("invalid command hook %s defined in config.yaml", command)
+			return fmt.Errorf("invalid hook %s defined in config.yaml", foundHook)
 		}
 
-		for _, taskSet := range tasks {
-			for taskName := range taskSet {
-				var match bool
-				for _, validTask := range validTasks {
-					if taskName == validTask {
-						match = true
-					}
-				}
-				if !match {
-					return fmt.Errorf("invalid task '%s' defined for %s hook in config.yaml", taskName, command)
+		for _, foundTask := range tasks {
+			var match bool
+			for _, validTaskName := range validTasks {
+				if _, ok := foundTask[validTaskName]; ok {
+					match = true
 				}
 			}
+			if !match {
+				return fmt.Errorf("invalid task '%s' defined for hook %s in config.yaml", foundTask, foundHook)
+			}
+
 		}
 
 	}

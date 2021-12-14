@@ -1,52 +1,36 @@
 package cmd
 
 import (
-	"time"
-
 	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
+// continuous, if set, makes list continuously output
 var continuous bool
 
-// DevListCmd represents the list command
-var DevListCmd = &cobra.Command{
+// activeOnly, if set, shows only running projects
+var activeOnly bool
+
+// continuousSleepTime is time to sleep between reads with --continuous
+var continuousSleepTime = 1
+
+// ListCmd represents the list command
+var ListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List projects",
-	Long:  `List projects.`,
+	Long:  `List projects. Shows all projects by default, shows active projects only with --active-only`,
+	Example: `ddev list
+ddev list --active-only
+ddev list -A`,
 	Run: func(cmd *cobra.Command, args []string) {
-		for {
-			apps := ddevapp.GetApps()
-			var appDescs []map[string]interface{}
-
-			if len(apps) < 1 {
-				output.UserOut.Println("There are no running ddev projects.")
-			} else {
-				table := ddevapp.CreateAppTable()
-				for _, app := range apps {
-					desc, err := app.Describe()
-					if err != nil {
-						util.Failed("Failed to describe project %s: %v", app.GetName(), err)
-					}
-					appDescs = append(appDescs, desc)
-					ddevapp.RenderAppRow(table, desc)
-				}
-				output.UserOut.WithField("raw", appDescs).Print(table.String() + "\n" + ddevapp.RenderRouterStatus())
-			}
-
-			if !continuous {
-				break
-			}
-
-			time.Sleep(time.Second)
-		}
-
+		ddevapp.List(activeOnly, continuous, continuousSleepTime)
 	},
 }
 
 func init() {
-	DevListCmd.Flags().BoolVarP(&continuous, "continuous", "", false, "If set, project information will be emitted once per second")
-	RootCmd.AddCommand(DevListCmd)
+	ListCmd.Flags().BoolVarP(&activeOnly, "active-only", "A", false, "If set, only currently active projects will be displayed.")
+	ListCmd.Flags().BoolVarP(&continuous, "continuous", "", false, "If set, project information will be emitted until the command is stopped.")
+	ListCmd.Flags().IntVarP(&continuousSleepTime, "continuous-sleep-interval", "I", 1, "Time in seconds between ddev list --continuous output lists.")
+
+	RootCmd.AddCommand(ListCmd)
 }

@@ -1,0 +1,2 @@
+nginx: nginx
+dockergen: docker-gen -watch -only-exposed --notify-output -notify "bash /gen-cert-and-nginx-config.sh" /app/gen-cert-and-nginx-config.sh.tmpl /gen-cert-and-nginx-config.sh

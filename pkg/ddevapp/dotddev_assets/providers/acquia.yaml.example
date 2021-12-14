@@ -1,0 +1,75 @@
+#ddev-generated
+# Example Acquia provider configuration.
+
+# To use this configuration,
+
+# 1. Get your Acquia API token from your Account Settings->API Tokens.
+# 2. Make sure your ssh key is authorized on your Acquia account at Account Settings->SSH Keys
+# 3. `ddev auth ssh` (this typically needs only be done once per ddev session, not every pull.)
+# 4. Add / update the web_environment section in ~/.ddev/global_config.yaml with the API keys:
+#    ```yaml
+#    web_environment:
+#    - ACQUIA_API_KEY=xxxxxxxx
+#    - ACQUIA_API_SECRET=xxxxx
+#    ```
+# 5. Copy .ddev/providers/acquia.yaml.example to .ddev/providers/acquia.yaml.
+# 6. Update the project_id corresponding to the environment you want to work with.
+#   - If have acli install, you can use the following command: `acli remote:aliases:list`
+#   - Or, on the Acquia Cloud Platform navigate to the environments page, click on the header and look for the "SSH URL" line. Eg. `project1.dev@cool-projects.acquia-sites.com` would have a project ID of `project1.dev`
+# 7. Your project must include drush; `ddev composer require drush/drush` if it isn't there already.
+# 8. `ddev restart`
+# 9. Use `ddev pull acquia` to pull the project database and files.
+# 10. Optionally use `ddev push acquia` to push local files and database to Acquia. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
+
+# Debugging: Use `ddev exec acli command` and `ddev exec acli auth:login`
+# Make sure you remembered to `ddev auth ssh`
+
+environment_variables:
+  project_id: yourproject.dev
+
+auth_command:
+  command: |
+    set -eu -o pipefail
+    if [ -z "${ACQUIA_API_KEY:-}" ] || [ -z "${ACQUIA_API_SECRET:-}" ]; then echo "Please make sure you have set ACQUIA_API_KEY and ACQUIA_API_SECRET in ~/.ddev/global_config.yaml" && exit 1; fi
+    if ! command -v drush >/dev/null ; then echo "Please make sure your project contains drush, ddev composer require drush/drush" && exit 1; fi
+    ssh-add -l >/dev/null || ( echo "Please 'ddev auth ssh' before running this command." && exit 1 )
+    acli auth:login -n --key="${ACQUIA_API_KEY}" --secret="${ACQUIA_API_SECRET}"
+    acli remote:aliases:download -n >/dev/null
+
+db_pull_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
+    pushd /var/www/html/.ddev/.downloads >/dev/null
+    drush @${project_id} sql-dump -n --alias-path=~/.drush --extra-dump=--no-tablespaces --gzip >db.sql.gz
+
+files_pull_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
+    pushd /var/www/html/.ddev/.downloads >/dev/null;
+    drush -r docroot rsync --exclude-paths='styles:css:js' --alias-path=~/.drush -q -y @${project_id}:%files ./files
+
+# push is a dangerous command. If not absolutely needed it's better to delete these lines.
+db_push_command:
+  command: |
+    set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    TIMESTAMP=$(date +%y%m%d%H%M%S)
+    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
+    cd /var/www/html/.ddev/.downloads
+    drush rsync -y --alias-path=~/.drush ./db.sql.gz @${project_id}:/tmp/db.${TIMESTAMP}.sql.gz
+    acli remote:ssh -n ${project_id} -- "cd /tmp && gunzip db.${TIMESTAMP}.sql.gz"
+    acli remote:drush -n ${project_id} -- "sql-cli </tmp/db.${TIMESTAMP}.sql"
+    acli remote:drush -n ${project_id} -- cr
+    acli remote:ssh -n ${project_id} -- "rm /tmp/db.${TIMESTAMP}.*"
+
+# push is a dangerous command. If not absolutely needed it's better to delete these lines.
+files_push_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    ls ${DDEV_FILES_DIR} >/dev/null # This just refreshes stale NFS if possible
+    drush rsync -y --alias-path=~/.drush @self:%files @${project_id}:%files

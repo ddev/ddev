@@ -1,0 +1,3 @@
+[mysqld]
+collation-server = latin1_swedish_ci
+character-set-server = latin1

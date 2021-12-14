@@ -1,11 +1,9 @@
-version: '2'
+version: '3.6'
 
 services:
   foo:
     container_name: ddev-test-foo
     image: some/image:1.1.0
-    volumes:
-      - "${DDEV_IMPORTDIR}:/db"
     restart: always
     environment:
       - HTTP_EXPOSE=3306

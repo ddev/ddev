@@ -1,0 +1,4 @@
+name: imagespec10.0
+type: php
+docroot: ""
+dbimage: somerandomdbimg-mariadb-10.0

@@ -1,6 +1,4 @@
-// +build windows
-
-package system
+package system // import "github.com/docker/docker/pkg/system"
 
 import (
 	"time"
@@ -8,8 +6,8 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-//setCTime will set the create time on a file. On Windows, this requires
-//calling SetFileTime and explicitly including the create time.
+// setCTime will set the create time on a file. On Windows, this requires
+// calling SetFileTime and explicitly including the create time.
 func setCTime(path string, ctime time.Time) error {
 	ctimespec := windows.NsecToTimespec(ctime.UnixNano())
 	pathp, e := windows.UTF16PtrFromString(path)

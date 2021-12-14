@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# This gets preprocessed by docker-gen into a script which generates needed
+# mkcert certs and updates the nginx configs for all projects
+
+set -eu -o pipefail
+
+{{/* Output details about each container into the output script file */}}
+{{/* Not only is this good for debugging, but it makes the output file */}}
+{{/* unique so that docker-gen won't fail to update it if any of these details change */}}
+{{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }}
+{{ range $container := $containers }}
+# {{ $container.Name }} VIRTUAL_HOST={{ $container.Env.VIRTUAL_HOST }} HTTP_EXPOSE={{ $container.Env.HTTP_EXPOSE }} HTTPS_EXPOSE={{ $container.Env.HTTPS_EXPOSE }}
+{{ end }}
+{{ end }}
+
+hostnames='{{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }}{{ trim $host }} {{ end }}'
+echo "Processing certs and nginx for hostnames: $hostnames"
+
+# To redirect invalid hostnames, we need a list of http ports and https ports
+httpports='80
+{{ range $port, $containers := groupByMulti $ "Env.HTTP_EXPOSE" "," }}{{ trim $port }}
+{{ end }}'
+echo "${httpports}" >/tmp/httpports.txt
+httpsports='443
+{{ range $port, $containers := groupByMulti $ "Env.HTTPS_EXPOSE" "," }}{{ trim $port }}
+{{ end }}'
+echo "${httpsports}" >/tmp/httpsports.txt
+
+# Convert the lists into unique sets of listen directives in /tmp
+awk -F: '$0 != "" {printf "\tlisten %s default_server;\n", $1;}' /tmp/httpports.txt | sort -u >/tmp/http_ports.conf
+awk -F: -v http2=${HTTP2} '$0 != "" {printf "\tlisten %s ssl %s default_server;\n", $1, http2;}' /tmp/httpsports.txt | sort -u >/tmp/https_ports.conf
+
+
+if [ ! -z "${USE_LETSENCRYPT:-}" ]; then
+  for host in ${hostnames}; do
+    # certbot challenge can fail for many reasons, but don't let it break everything
+    certbot --nginx certonly -n --domain "${host}" --agree-tos --email "${LETSENCRYPT_EMAIL:-}" || true
+  done
+fi
+
+mkcert -cert-file /etc/nginx/certs/master.crt -key-file /etc/nginx/certs/master.key $hostnames 127.0.0.1 localhost "*.ddev.site"
+
+# This is not recursive, as it executes completely different instructions.
+# It's important for the nginx config creation and the nginx reload to take place after all cert
+# activities are completed.
+docker-gen -only-exposed -notify-output -notify "nginx -s reload" /app/nginx.tmpl /etc/nginx/conf.d/ddev.conf

@@ -1,0 +1,1 @@
+LoadModule authz_owner_module /usr/lib/apache2/modules/mod_authz_owner.so

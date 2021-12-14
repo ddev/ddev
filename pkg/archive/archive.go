@@ -8,13 +8,14 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/drud/ddev/pkg/util"
 )
 
-// Ungzip accepts a gzipped file and uncompresses it to the provided destination path.
-func Ungzip(source string, dest string) error {
+// Ungzip accepts a gzipped file and uncompresses it to the provided destination directory.
+func Ungzip(source string, destDirectory string) error {
 	f, err := os.Open(source)
 	if err != nil {
 		return err
@@ -38,7 +39,7 @@ func Ungzip(source string, dest string) error {
 	}()
 
 	fname := strings.TrimSuffix(filepath.Base(f.Name()), ".gz")
-	exFile, err := os.Create(filepath.Join(dest, fname))
+	exFile, err := os.Create(filepath.Join(destDirectory, fname))
 	if err != nil {
 		return err
 	}
@@ -75,6 +76,10 @@ func Untar(source string, dest string, extractionDir string) error {
 
 	defer util.CheckClose(f)
 
+	if err = os.MkdirAll(dest, 0755); err != nil {
+		return err
+	}
+
 	if strings.HasSuffix(source, "gz") {
 		gf, err := gzip.NewReader(f)
 		if err != nil {
@@ -88,19 +93,26 @@ func Untar(source string, dest string, extractionDir string) error {
 		tf = tar.NewReader(f)
 	}
 
+	// Define a boolean that indicates whether or not at least one
+	// file matches the extraction directory.
+	foundPathMatch := false
 	for {
 		file, err := tf.Next()
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("Error during read of tar archive %v, err: %v", source, err)
+			return fmt.Errorf("error during read of tar archive %v, err: %v", source, err)
 		}
 
 		// If we have an extractionDir and this doesn't match, skip it.
 		if !strings.HasPrefix(file.Name, extractionDir) {
 			continue
 		}
+
+		// If we haven't continue-ed above, the file matches the extraction dir and this flag
+		// should be ensured to be true.
+		foundPathMatch = true
 
 		// If extractionDir matches file name and isn't a directory, we should be extracting a specific file.
 		if file.Name == extractionDir && file.Typeflag != tar.TypeDir {
@@ -121,7 +133,6 @@ func Untar(source string, dest string, extractionDir string) error {
 		switch file.Typeflag {
 		case tar.TypeDir:
 			// For a directory, if it doesn't exist, we create it.
-			// nolint: vetshadow
 			finfo, err := os.Stat(fullPath)
 			if err == nil && finfo.IsDir() {
 				continue
@@ -139,20 +150,25 @@ func Untar(source string, dest string, extractionDir string) error {
 			fullPathDir := filepath.Dir(fullPath)
 			err = os.MkdirAll(fullPathDir, 0755)
 			if err != nil {
-				return fmt.Errorf("Failed to create the directory %s, err: %v", fullPathDir, err)
+				return fmt.Errorf("failed to create the directory %s, err: %v", fullPathDir, err)
 			}
 
 			// For a regular file, create and copy the file.
 			exFile, err := os.Create(fullPath)
 			if err != nil {
-				return fmt.Errorf("Failed to create file %v, err: %v", fullPath, err)
+				return fmt.Errorf("failed to create file %v, err: %v", fullPath, err)
 			}
 			_, err = io.Copy(exFile, tf)
 			_ = exFile.Close()
 			if err != nil {
-				return fmt.Errorf("Failed to copy to file %v, err: %v", fullPath, err)
+				return fmt.Errorf("failed to copy to file %v, err: %v", fullPath, err)
 			}
 		}
+	}
+
+	// If no files matched the extraction path, return an error.
+	if !foundPathMatch {
+		return fmt.Errorf("failed to find files in extraction path: %s", extractionDir)
 	}
 
 	return nil
@@ -168,11 +184,22 @@ func Unzip(source string, dest string, extractionDir string) error {
 	}
 	defer util.CheckClose(zf)
 
+	if err = os.MkdirAll(dest, 0755); err != nil {
+		return err
+	}
+
+	// Define a boolean that indicates whether or not at least one
+	// file matches the extraction directory.
+	foundPathMatch := false
 	for _, file := range zf.File {
 		// If we have an extractionDir and this doesn't match, skip it.
 		if !strings.HasPrefix(file.Name, extractionDir) {
 			continue
 		}
+
+		// If we haven't continue-ed above, the file matches the extraction dir and this flag
+		// should be ensured to be true.
+		foundPathMatch = true
 
 		// If extractionDir matches file name and isn't a directory, we should be extracting a specific file.
 		fileInfo := file.FileInfo()
@@ -215,5 +242,85 @@ func Unzip(source string, dest string, extractionDir string) error {
 		}
 	}
 
+	// If no files matched the extraction path, return an error.
+	if !foundPathMatch {
+		return fmt.Errorf("failed to find files in extraction path: %s", extractionDir)
+	}
+
 	return nil
+}
+
+// Tar takes a source and variable writers and walks 'source' writing each file
+// found to the tar writer; the purpose for accepting multiple writers is to allow
+// for multiple outputs (for example a file, or md5 hash)
+// From https://gist.github.com/sdomino/635a5ed4f32c93aad131#file-untargz-go
+func Tar(src string, tarballFilePath string) error {
+
+	// ensure the src actually exists before trying to tar it
+	if _, err := os.Stat(src); err != nil {
+		return fmt.Errorf("Unable to tar files - %v", err.Error())
+	}
+
+	file, err := os.Create(tarballFilePath)
+	if err != nil {
+		return fmt.Errorf("Could not create tarball file '%s', got error '%s'", tarballFilePath, err.Error())
+	}
+	// nolint: errcheck
+	defer file.Close()
+
+	mw := io.MultiWriter(file)
+
+	//gzw := gzip.NewWriter(mw)
+	//defer gzw.Close()
+
+	tw := tar.NewWriter(mw)
+	defer tw.Close()
+
+	// walk path
+	return filepath.Walk(src, func(file string, fi os.FileInfo, err error) error {
+
+		// return on any error
+		if err != nil {
+			return err
+		}
+
+		// return on non-regular files (thanks to [kumo](https://medium.com/@komuw/just-like-you-did-fbdd7df829d3) for this suggested update)
+		if !fi.Mode().IsRegular() {
+			return nil
+		}
+
+		// create a new dir/file header
+		header, err := tar.FileInfoHeader(fi, fi.Name())
+		if err != nil {
+			return err
+		}
+
+		// update the name to correctly reflect the desired destination when untaring
+		header.Name = strings.TrimPrefix(strings.Replace(file, src, "", -1), string(filepath.Separator))
+		if runtime.GOOS == "windows" {
+			header.Name = strings.Replace(header.Name, `\`, `/`, -1)
+		}
+
+		// write the header
+		if err := tw.WriteHeader(header); err != nil {
+			return err
+		}
+
+		// open files for taring
+		f, err := os.Open(file)
+		if err != nil {
+			return err
+		}
+
+		// copy file data into tar writer
+		if _, err := io.Copy(tw, f); err != nil {
+			return err
+		}
+
+		// manually close here after each file operation; deferring would cause each file close
+		// to wait until all operations have completed.
+		f.Close()
+
+		return nil
+	})
 }

@@ -3,6 +3,7 @@ package output
 import (
 	"bytes"
 	"fmt"
+	"golang.org/x/term"
 	"io"
 	"os"
 	"sort"
@@ -10,7 +11,6 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/crypto/ssh/terminal"
 )
 
 // This file is minor adaptations from sirupsen/Logrus at f006c2a (v1.0.3)
@@ -74,7 +74,7 @@ func (f *TextFormatter) init(entry *log.Entry) {
 func (f *TextFormatter) checkIfTerminal(w io.Writer) bool {
 	switch v := w.(type) {
 	case *os.File:
-		return terminal.IsTerminal(int(v.Fd()))
+		return term.IsTerminal(int(v.Fd()))
 	default:
 		return false
 	}
@@ -123,7 +123,6 @@ func (f *TextFormatter) Format(entry *log.Entry) ([]byte, error) {
 			f.appendKeyValue(b, key, entry.Data[key])
 		}
 	}
-
 	b.WriteByte('\n')
 	return b.Bytes(), nil
 }
@@ -143,11 +142,11 @@ func (f *TextFormatter) printColored(b *bytes.Buffer, entry *log.Entry, keys []s
 		levelColor = nocolor
 	}
 
-	fmt.Fprintf(b, "\x1b[%dm%s\x1b[0m ", levelColor, entry.Message)
+	_, _ = fmt.Fprintf(b, "\x1b[%dm%s\x1b[0m ", levelColor, entry.Message)
 
 	for _, k := range keys {
 		v := entry.Data[k]
-		fmt.Fprintf(b, " \x1b[%dm%s\x1b[0m=", levelColor, k)
+		_, _ = fmt.Fprintf(b, " \x1b[%dm%s\x1b[0m=", levelColor, k)
 		f.appendValue(b, v)
 	}
 }

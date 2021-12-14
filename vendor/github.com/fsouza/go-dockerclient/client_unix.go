@@ -12,19 +12,20 @@ import (
 	"net/http"
 )
 
+const defaultHost = "unix:///var/run/docker.sock"
+
 // initializeNativeClient initializes the native Unix domain socket client on
 // Unix-style operating systems
-func (c *Client) initializeNativeClient() {
+func (c *Client) initializeNativeClient(trFunc func() *http.Transport) {
 	if c.endpointURL.Scheme != unixProtocol {
 		return
 	}
-	socketPath := c.endpointURL.Path
-	tr := defaultTransport()
-	tr.Dial = func(network, addr string) (net.Conn, error) {
-		return c.Dialer.Dial(unixProtocol, socketPath)
+	sockPath := c.endpointURL.Path
+
+	tr := trFunc()
+	tr.Proxy = nil
+	tr.DialContext = func(_ context.Context, network, addr string) (net.Conn, error) {
+		return c.Dialer.Dial(unixProtocol, sockPath)
 	}
-	tr.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
-		return c.Dialer.Dial(unixProtocol, socketPath)
-	}
-	c.nativeHTTPClient = &http.Client{Transport: tr}
+	c.HTTPClient.Transport = tr
 }

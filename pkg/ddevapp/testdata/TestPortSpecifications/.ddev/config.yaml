@@ -1,0 +1,5 @@
+name: specapp
+type: php
+docroot: ""
+host_db_port: "64288"
+host_webserver_port: "64286"

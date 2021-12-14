@@ -1,0 +1,14 @@
+  - command: ".buildkite/test_containers.sh"
+    plugins:
+      - docker-login#v2.0.1:
+          username: druddockerpullaccount
+          password-env: DOCKERHUB_PULL_PASSWORD
+    agents:
+      - "os=macos"
+      - "dockertype=dockerformac"
+      - "architecture=amd64"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
+      BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
+      BUILDKIT_PROGRESS: plain
+    parallelism: 1

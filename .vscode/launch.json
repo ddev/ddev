@@ -2,20 +2,30 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "debug",
+            "name": "debug ddev start",
             "type": "go",
             "request": "launch",
             "mode": "debug",
             "remotePath": "",
-            "port": 2345,
-            "host": "127.0.0.1",
             "program": "${workspaceRoot}/cmd/ddev",
-            "cwd": "$HOME/sites/drupal8",
-            "env": {"DRUD_DEBUG": true},
-            "args": [],
+            "cwd": "/workspace/d9simple",
+            "env": {"DDEV_DEBUG": true},
+            "args": ["start", "-y"],
             "showLog": true
         },
         {
+            "name": "debug ddev describe",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "remotePath": "",
+            "program": "${workspaceRoot}/cmd/ddev",
+            "cwd": "/workspace/d9simple",
+            "env": {"DDEV_DEBUG": true},
+            "args": ["describe"],
+            "showLog": true
+        },
+{
             "name": "pkg-level test",
             "type": "go",
             "request": "launch",
@@ -24,9 +34,27 @@
             "port": 2345,
             "host": "127.0.0.1",
             "program": "${workspaceRoot}/pkg/plugins/platform",
-            "env": {"DRUD_DEBUG": true},
+            "env": {"DDEV_DEBUG": true},
             "args": [],
             "showLog": true
+        },
+        {
+            "type": "bashdb",
+            "request": "launch",
+            "name": "Bash-Debug (select script from list of sh files)",
+            "cwd": "${workspaceFolder}",
+            "program": "${command:SelectScriptName}",
+            "args": []
+        },
+        {
+            "name": "Listen for XDebug",
+            "type": "php",
+            "request": "launch",
+            "hostname": "0.0.0.0",
+            "port": 9000,
+            "pathMappings": {
+                "/var/www/html": "${workspaceRoot}"
+            }
         }
     ]
 }

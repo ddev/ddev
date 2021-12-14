@@ -1,0 +1,53 @@
+## macOS Installation: Docker Desktop for Mac
+
+Docker Desktop for Mac can be installed via Homebrew (`brew install  homebrew/cask/docker`) or can be downloaded from [desktop.docker.com](https://www.docker.com/products/docker-desktop).
+
+## Windows Installation: Docker Desktop for Windows
+
+Docker Desktop for Windows can be downloaded via [Chocolatey](https://chocolatey.org/install) with `choco install docker-desktop` or it can be downloaded from [download.docker.com](https://www.docker.com/products/docker-desktop).
+
+## Linux Installation: Docker
+
+* __Please don't forget that Linux installation absolutely requires post-install steps (below).__
+
+* __Please don't use `sudo` with docker. If you're needing it, you haven't finished the installation. Don't use `sudo` with ddev, except the rare case where you need the `ddev hostname` command.__
+
+Docker installation on Linux depends on what flavor you're using. Where possible the Ubuntu/Deb/yum repository is the preferred technique.
+
+* [Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
+* [CentOS](https://docs.docker.com/install/linux/docker-ce/centos/)
+* [Debian](https://docs.docker.com/install/linux/docker-ce/debian/)
+* [Fedora](https://docs.docker.com/install/linux/docker-ce/fedora/). Recent versions of Fedora (32, 33+) require a [different approach, installing the original CGroups](https://fedoramagazine.org/docker-and-fedora-32/). In addition, you must [disable SELinux](https://www.cyberciti.biz/faq/disable-selinux-on-centos-7-rhel-7-fedora-linux/).
+* [binaries](https://docs.docker.com/install/linux/docker-ce/binaries/)
+
+### Linux Post-installation steps (required)
+
+See [Docker's post-installation steps](https://docs.docker.com/install/linux/linux-postinstall/). You need to add your linux user to the "docker" group and configure the docker daemon to start on boot.
+
+On systems that do not include systemd or equivalent (mostly if installing inside WSL2) you'll need to manually start docker with `service docker start` or the equivalent in your distro. You can add this into your .profile or equivalent.
+
+<a name="troubleshooting"></a>
+
+## Testing and Troubleshooting Your Docker Installation
+
+Docker needs to be able to a few things for ddev to work:
+
+* Mount the project code directory from the host into the container; the project code directory is usually somewhere in a subdirectory of your home directory.
+* Access TCP ports on the host to serve HTTP and HTTPS. These are ports 80 and 443 by default, but they can be changed on a per-project basis.
+
+We can use a single docker command to make sure that docker is set up to do what we want:
+
+**On Windows this command should be run in git-bash.** In your *project directory* run `docker run --rm -t -p 80:80 -v "/$PWD:/tmp/projdir" busybox sh -c "echo ---- Project Directory && ls /tmp/projdir"` - you should see the contents of your project directory displayed. (On Windows, make sure you run this using git-bash)
+
+If that fails (if you get an error, or you don't see the contents of your project directory and your home directory) you'll need to troubleshoot:
+
+* "port is already allocated": See [troubleshooting](troubleshooting.md).
+* `invalid mount config for type "bind": bind mount source path does not exist: <some path>` means the filesystem isn't successfully shared into the docker container.
+* "The path ... is not shared and is not known to Docker": Visit docker's preferences/settings->File sharing and share the appropriate path or drive.
+* `Error response from daemon: Get https://registry-1.docker.io/v2/` - Docker may not be running (restart it) or you may not have any access to the internet.
+* "403 authentication required" when trying to `ddev start`: Try `docker logout` and do it again. Docker authentication is *not* required for any normal ddev action.
+
+If you are on Docker Desktop for Windows or Docker Desktop for Mac and you are seeing shared directories not show up in the web container (nothing there when you `ddev ssh`) then:
+
+* Unshare and then reshare the drive (you may have to re-enter your credentials)
+* Consider resetting Docker to factory defaults. This often helps in this situation because Docker goes through the whole authentication process again.

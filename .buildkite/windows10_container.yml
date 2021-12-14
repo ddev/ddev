@@ -1,0 +1,12 @@
+  - command: ".buildkite/test_containers.cmd"
+    plugins:
+      - docker-login#v2.0.1:
+          username: druddockerpullaccount
+          password-env: DOCKERHUB_PULL_PASSWORD
+    agents:
+      - "os=windows"
+      - "dockertype=dockerforwindows"
+      - "architecture=amd64"
+    env:
+      BUILDKITE_CLEAN_CHECKOUT: true
+    parallelism: 1

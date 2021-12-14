@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
@@ -11,43 +9,65 @@ import (
 
 var dbSource string
 var dbExtPath string
+var targetDB string
+var noDrop bool
+var progressOption bool
 
 // ImportDBCmd represents the `ddev import-db` command.
 var ImportDBCmd = &cobra.Command{
-	Use:   "import-db",
-	Short: "Import the database of an existing project to the dev environment.",
-	Long: `Import the database of an existing project to the development environment.
-The database can be provided as a SQL dump in a .sql, .sql.gz, .zip, .tgz, or .tar.gz
+	Use:   "import-db [project]",
+	Args:  cobra.RangeArgs(0, 1),
+	Short: "Import a sql file into the project.",
+	Long: `Import a sql file into the project.
+The database dump file can be provided as a SQL dump in a .sql, .sql.gz, .mysql, .mysql.gz, .zip, .tgz, or .tar.gz
 format. For the zip and tar formats, the path to a .sql file within the archive
-can be provided if it is not located at the top level of the archive.`,
+can be provided if it is not located at the top level of the archive. An optional target database
+can also be provided; the default is the default database named "db".
+Also note the related "ddev mysql" command`,
+	Example: `ddev import-db
+ddev import-db --src=.tarballs/junk.sql
+ddev import-db --src=.tarballs/junk.sql.gz
+ddev import-db --target-db=newdb --src=.tarballs/junk.sql.gz
+ddev import-db <db.sql
+ddev import-db someproject <db.sql
+gzip -dc db.sql.gz | ddev import-db`,
+
 	PreRun: func(cmd *cobra.Command, args []string) {
-		if len(args) > 0 {
-			err := cmd.Usage()
-			util.CheckErr(err)
-			os.Exit(0)
-		}
 		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		app, err := ddevapp.GetActiveApp("")
+		projects, err := getRequestedProjects(args, false)
 		if err != nil {
-			util.Failed("Failed to import database: %v", err)
+			util.Failed("Unable to get project(s): %v", err)
 		}
+
+		app := projects[0]
 
 		if app.SiteStatus() != ddevapp.SiteRunning {
-			util.Failed("The project is not running. The project must be running in order to import a database.")
+			err = app.Start()
+			if err != nil {
+				util.Failed("Failed to start app %s to import-db: %v", app.Name, err)
+			}
 		}
 
-		err = app.ImportDB(dbSource, dbExtPath)
+		err = app.ImportDB(dbSource, dbExtPath, progressOption, noDrop, targetDB)
 		if err != nil {
-			util.Failed("Failed to import database for %s: %v", app.GetName(), err)
+			util.Failed("Failed to import database %s for %s: %v", targetDB, app.GetName(), err)
 		}
-		util.Success("Successfully imported database for %v", app.GetName())
+		util.Success("Successfully imported database '%s' for %v", targetDB, app.GetName())
+		if noDrop {
+			util.Success("Existing database '%s' was NOT dropped before importing", targetDB)
+		} else {
+			util.Success("Existing database '%s' was dropped before importing", targetDB)
+		}
 	},
 }
 
 func init() {
-	ImportDBCmd.Flags().StringVarP(&dbSource, "src", "", "", "Provide the path to a sql dump in .sql or tar/tar.gz/tgz/zip format")
+	ImportDBCmd.Flags().StringVarP(&dbSource, "src", "f", "", "Provide the path to a sql dump in .sql or tar/tar.gz/tgz/zip format")
 	ImportDBCmd.Flags().StringVarP(&dbExtPath, "extract-path", "", "", "If provided asset is an archive, provide the path to extract within the archive.")
+	ImportDBCmd.Flags().StringVarP(&targetDB, "target-db", "d", "db", "If provided, target-db is alternate database to import into")
+	ImportDBCmd.Flags().BoolVarP(&noDrop, "no-drop", "", false, "Set if you do NOT want to drop the db before importing")
+	ImportDBCmd.Flags().BoolVarP(&progressOption, "progress", "p", true, "Display a progress bar during import")
 	RootCmd.AddCommand(ImportDBCmd)
 }

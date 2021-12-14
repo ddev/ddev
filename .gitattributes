@@ -1,0 +1,21 @@
+# Article: https://help.github.com/articles/dealing-with-line-endings/
+# Helpful examples: https://github.com/alexkaratarakis/gitattributes
+# Way more than you can stand to read: https://git-scm.com/docs/gitattributes
+
+# In general on this project there's no reason to have git changing line endings.
+# Modern editors can do the right thing with lf and should be set to do so, whether
+# on Windows or elsewhere.
+# The incredibly big gotcha here is that if a *.sh gets checked out on Windows with CRLF and then built
+# into a container with the CRLF, it can't run in linux.
+
+# -text here essentially is the same as core.autocrlf=false
+* -text eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.JPG binary
+*.JPEG binary
+*.tar binary
+*gz binary
+*MY? binary

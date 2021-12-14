@@ -1,6 +1,9 @@
+  "atom-ide-ui":
+    "atom-ide-debugger": {}
+    use:
+      "atom-ide-debugger": "never"
   "php-debug":
     PathMaps: [
       "remotepath;localpath"
-      "/var/www/html/docroot;/Users/<change_me_to_correct_path>/<changeme>/<changeme>/docroot"
+      "/var/www/html;/Users/<change_me_to_correct_path>/<changeme>/<changeme>"
     ]
-    ServerPort: 11011

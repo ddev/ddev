@@ -1,0 +1,39 @@
+networks:
+  default:
+    name: ddev_default
+    external: true
+
+services:
+  web:
+    container_name: TestComposeWithStreams
+    environment:
+      COLUMNS: '99'
+      DDEV_PROJECT_TYPE: typo3
+      DDEV_ROUTER_HTTPS_PORT: '443'
+      DDEV_ROUTER_HTTP_PORT: '80'
+      DDEV_URL: https://test-compose-with-streams.ddev.site
+      DDEV_WEBSERVER_TYPE: nginx-fpm
+      DDEV_XDEBUG_ENABLED: "false"
+      IS_DDEV_PROJECT: "true"
+      DEPLOY_NAME: local
+      DOCROOT: public
+      HTTPS_EXPOSE: 443:80
+      HTTP_EXPOSE: 80:80,8025
+      LINES: '25'
+      VIRTUAL_HOST: junk.ddev.site
+    image: TEST-COMPOSE-WITH-STREAMS-IMAGE
+    user: "33:33"
+    labels:
+      com.ddev.app-type: php
+      com.ddev.app-url: http://test-compose-with-streams.ddev.site
+      com.ddev.approot: .
+      com.ddev.platform: ddev
+      com.ddev.site-name: TestComposeWithStreams
+    restart: "no"
+    healthcheck:
+      interval: 1s
+      retries: 25
+      start_period: 20s
+      timeout: 120s
+
+version: '3.6'

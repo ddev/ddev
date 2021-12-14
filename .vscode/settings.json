@@ -2,7 +2,7 @@
 {
     "go.testTimeout": "360s",
     "go.testEnvVars": {
-        "DRUD_DEBUG": "true",
+        "DDEV_DEBUG": "true",
         "GOTEST_SHORT": "true"
     }
 }

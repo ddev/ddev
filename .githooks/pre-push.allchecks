@@ -1,11 +1,10 @@
 #!/bin/sh
 
-set -o errexit
-
 # Look for uncommitted files, http://stackoverflow.com/a/2659808/215713
 git diff-index --quiet HEAD || (echo "There are uncommitted files" && exit 1)
 
 # Look for unstaged files
 test -z "$(git ls-files --exclude-standard --others)" || (echo "There are unstaged files" && exit 2)
 
-make -s gofmt govet golint errcheck staticcheck codecoroner
+# And check make staticrequired
+make -s staticrequired
