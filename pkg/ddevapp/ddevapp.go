@@ -1699,7 +1699,7 @@ func (app *DdevApp) DeleteSnapshot(snapshotName string) error {
 		return fmt.Errorf("failed to process pre-delete-snapshot hooks: %v", err)
 	}
 
-	snapshotDir := path.Join("db_snapshots", snapshotName)
+	snapshotDir := path.Join(snapshotDirBase, snapshotName)
 	hostSnapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), snapshotDir)
 
 	if err = fileutil.PurgeDirectory(hostSnapshotDir); err != nil {
