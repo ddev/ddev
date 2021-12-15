@@ -531,14 +531,14 @@ func TestRemoveVolume(t *testing.T) {
 
 }
 
-// TestDockerCopyToVolume makes sure CopyToVolume copies a local directory into a volume
-func TestDockerCopyToVolume(t *testing.T) {
+// TestCopyToVolume makes sure CopyToVolume copies a local directory into a volume
+func TestCopyToVolume(t *testing.T) {
 	assert := asrt.New(t)
 	err := RemoveVolume(t.Name())
 	assert.NoError(err)
 
 	pwd, _ := os.Getwd()
-	err = CopyToVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "", "0")
+	err = CopyToVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "", "0", "")
 	assert.NoError(err)
 
 	mainContainerID, out, err := RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil)
@@ -551,11 +551,11 @@ subdir1
 subdir1.txt
 `, out)
 
-	err = CopyToVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "somesubdir", "501")
+	err = CopyToVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "somesubdir", "501", "")
 	assert.NoError(err)
 	subdirContainerID, out, err := RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + "/somesubdir  && pwd && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "0", true, false, nil)
 	assert.NoError(err)
-	assert.Equal(`/mnt/TestDockerCopyToVolume/somesubdir
+	assert.Equal(`/mnt/TestCopyToVolume/somesubdir
 .:
 root.txt
 subdir1
@@ -610,7 +610,7 @@ func TestCopyIntoContainer(t *testing.T) {
 	require.NoError(t, err)
 	targetDir = strings.Trim(targetDir, "\n")
 
-	err = CopyIntoContainer(filepath.Join(pwd, "testdata", t.Name()), testContainerName, targetDir)
+	err = CopyIntoContainer(filepath.Join(pwd, "testdata", t.Name()), testContainerName, targetDir, "")
 	require.NoError(t, err)
 
 	out, _, err := Exec(cid.ID, fmt.Sprintf(`bash -c "cd %s && ls -R"`, targetDir))

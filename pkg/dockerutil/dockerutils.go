@@ -953,7 +953,7 @@ func RemoveImage(tag string) error {
 }
 
 // CopyToVolume copies a directory on the host into a docker volume
-func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid string) error {
+func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid string, exclusion string) error {
 	volPath := "/mnt/v"
 	targetSubdirFullPath := volPath + "/" + targetSubdir
 	client := GetDockerClient()
@@ -989,7 +989,8 @@ func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid
 	// nolint: errcheck
 	defer os.Remove(tmpTar.Name()) // clean up
 
-	err = archive.Tar(sourcePath, tmpTar.Name())
+	// Tar up the sourcePath into a temporary tarball to be pushed
+	err = archive.Tar(sourcePath, tmpTar.Name(), exclusion)
 	if err != nil {
 		return err
 	}
@@ -1199,7 +1200,7 @@ func IsDockerDesktop() bool {
 }
 
 // CopyIntoContainer copies a path into a specified container and location
-func CopyIntoContainer(srcPath string, containerName string, dstPath string) error {
+func CopyIntoContainer(srcPath string, containerName string, dstPath string, exclusion string) error {
 	fi, err := os.Stat(srcPath)
 	if err != nil {
 		return err
@@ -1232,7 +1233,7 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string) err
 	defer tarball.Close()
 
 	// Tar up the source directory into the tarball
-	err = archive.Tar(srcPath, tarball.Name())
+	err = archive.Tar(srcPath, tarball.Name(), exclusion)
 	if err != nil {
 		return err
 	}

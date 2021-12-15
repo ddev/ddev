@@ -6,6 +6,7 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -250,12 +251,10 @@ func Unzip(source string, dest string, extractionDir string) error {
 	return nil
 }
 
-// Tar takes a source and variable writers and walks 'source' writing each file
-// found to the tar writer; the purpose for accepting multiple writers is to allow
-// for multiple outputs (for example a file, or md5 hash)
+// Tar takes a source dir and tarballFilePath
 // From https://gist.github.com/sdomino/635a5ed4f32c93aad131#file-untargz-go
-func Tar(src string, tarballFilePath string) error {
-
+// So sorry that exclusion is a single relative path. It should be a set of patterns, rfay 2021-12-15
+func Tar(src string, tarballFilePath string, exclusion string) error {
 	// ensure the src actually exists before trying to tar it
 	if _, err := os.Stat(src); err != nil {
 		return fmt.Errorf("Unable to tar files - %v", err.Error())
@@ -270,21 +269,22 @@ func Tar(src string, tarballFilePath string) error {
 
 	mw := io.MultiWriter(file)
 
-	//gzw := gzip.NewWriter(mw)
-	//defer gzw.Close()
-
 	tw := tar.NewWriter(mw)
 	defer tw.Close()
 
 	// walk path
-	return filepath.Walk(src, func(file string, fi os.FileInfo, err error) error {
+	return filepath.WalkDir(src, func(file string, info fs.DirEntry, err error) error {
+		relativePath := strings.TrimPrefix(file, src+"/")
 
-		// return on any error
-		if err != nil {
-			return err
+		if exclusion != "" && strings.HasPrefix(relativePath, exclusion) {
+			return nil
 		}
 
 		// return on non-regular files (thanks to [kumo](https://medium.com/@komuw/just-like-you-did-fbdd7df829d3) for this suggested update)
+		fi, err := info.Info()
+		if err != nil {
+			return nil
+		}
 		if !fi.Mode().IsRegular() {
 			return nil
 		}

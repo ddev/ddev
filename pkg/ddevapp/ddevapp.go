@@ -513,7 +513,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 	}
 	insideContainerImportPath = strings.Trim(insideContainerImportPath, "\n")
 
-	err = dockerutil.CopyIntoContainer(dbPath, GetContainerName(app, "db"), insideContainerImportPath)
+	err = dockerutil.CopyIntoContainer(dbPath, GetContainerName(app, "db"), insideContainerImportPath, "")
 	if err != nil {
 		return err
 	}
@@ -867,7 +867,7 @@ func (app *DdevApp) Start() error {
 	// inside the container
 	uid, _, _ := util.GetContainerUIDGid()
 
-	err = dockerutil.CopyToVolume(app.GetConfigPath(""), app.Name+"-ddev-config", "", uid)
+	err = dockerutil.CopyToVolume(app.GetConfigPath(""), app.Name+"-ddev-config", "", uid, "db_snapshots")
 	if err != nil {
 		return fmt.Errorf("failed to copy .ddev directory to volume: %v", err)
 	}
@@ -902,7 +902,7 @@ func (app *DdevApp) Start() error {
 			// Copy ca certs into ddev-global-cache/mkcert
 			if caRoot != "" {
 				uid, _, _ := util.GetContainerUIDGid()
-				err = dockerutil.CopyToVolume(caRoot, "ddev-global-cache", "mkcert", uid)
+				err = dockerutil.CopyToVolume(caRoot, "ddev-global-cache", "mkcert", uid, "")
 				if err != nil {
 					util.Warning("failed to copy root CA into docker volume ddev-global-cache/mkcert: %v", err)
 				} else {
@@ -914,7 +914,7 @@ func (app *DdevApp) Start() error {
 		certPath := app.GetConfigPath("custom_certs")
 		if fileutil.FileExists(certPath) {
 			uid, _, _ := util.GetContainerUIDGid()
-			err = dockerutil.CopyToVolume(certPath, "ddev-global-cache", "custom_certs", uid)
+			err = dockerutil.CopyToVolume(certPath, "ddev-global-cache", "custom_certs", uid, "")
 			if err != nil {
 				util.Warning("failed to copy custom certs into docker volume ddev-global-cache/custom_certs: %v", err)
 			} else {
@@ -981,7 +981,7 @@ func (app *DdevApp) Start() error {
 	_, _, username := util.GetContainerUIDGid()
 	globalHomeadditionsPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "homeadditions")
 	if fileutil.IsDirectory(globalHomeadditionsPath) {
-		err = dockerutil.CopyIntoContainer(globalHomeadditionsPath, GetContainerName(app, "web"), "/home/"+username)
+		err = dockerutil.CopyIntoContainer(globalHomeadditionsPath, GetContainerName(app, "web"), "/home/"+username, "")
 		if err != nil {
 			util.Warning("failed to copy global homeadditions into web container from %s: %v", globalHomeadditionsPath, err)
 		}
@@ -989,7 +989,7 @@ func (app *DdevApp) Start() error {
 
 	projectHomeadditionsPath := app.GetConfigPath("homeadditions")
 	if fileutil.IsDirectory(projectHomeadditionsPath) {
-		err = dockerutil.CopyIntoContainer(projectHomeadditionsPath, GetContainerName(app, "web"), "/home/"+username)
+		err = dockerutil.CopyIntoContainer(projectHomeadditionsPath, GetContainerName(app, "web"), "/home/"+username, "")
 		if err != nil {
 			util.Warning("failed to copy project homeadditions into web container from %s: %v", projectHomeadditionsPath, err)
 		}
