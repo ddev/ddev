@@ -1817,7 +1817,6 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("snapshot %s is a DB server %s snapshot and is not compatible with the configured ddev DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the ddev DB version", snapshotName, snapshotDBVersion, currentDBVersion)
 	}
 
-	//dockerutil.GetAppContainers(app.Name)
 	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SitePaused {
 		err := app.Stop(false, false)
 		if err != nil {
@@ -1825,6 +1824,11 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		}
 	}
 
+	uid, _, _ := util.GetContainerUIDGid()
+	err = dockerutil.CopyIntoVolume(filepath.Join(app.GetConfigPath("db_snapshots"), snapshotName), app.Name+"-ddev-snapshots", "", uid, "")
+	if err != nil {
+		return err
+	}
 	err = os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "restore_snapshot "+snapshotName)
 	util.CheckErr(err)
 	err = app.Start()
