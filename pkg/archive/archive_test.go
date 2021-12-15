@@ -65,7 +65,7 @@ func TestArchiveTar(t *testing.T) {
 	tarballFile, err := os.CreateTemp("", t.Name())
 	assert.NoError(err)
 
-	err = archive.Tar(filepath.Join(pwd, "testdata", t.Name()), tarballFile.Name(), "subdir1/subdir2")
+	err = archive.Tar(filepath.Join(pwd, "testdata", t.Name()), tarballFile.Name(), filepath.Join("subdir1", "subdir2"))
 	assert.NoError(err)
 
 	tmpDir := testcommon.CreateTmpDir(t.Name())
@@ -82,6 +82,6 @@ func TestArchiveTar(t *testing.T) {
 	assert.NoError(err)
 
 	assert.FileExists(filepath.Join(tmpDir, "root.txt"))
-	assert.FileExists(filepath.Join(tmpDir, "subdir1/subdir1.txt"))
-	assert.NoFileExists(filepath.Join(tmpDir, "subdir1/subdir2/s2.txt"))
+	assert.FileExists(filepath.Join(tmpDir, "subdir1", "subdir1.txt"))
+	assert.NoFileExists(filepath.Join(tmpDir, "subdir1", "subdir2", "s2.txt"))
 }
