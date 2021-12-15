@@ -815,9 +815,11 @@ func (app *DdevApp) Start() error {
 	var err error
 
 	app.DockerEnv()
-	_, err = dockerutil.CreateVolume("ddev-global-cache", "local", nil)
-	if err != nil {
-		return fmt.Errorf("unable to create docker volume ddev-global-cache: %v", err)
+	for _, v := range []string{"ddev-global-cache", app.Name + "-ddev-snapshots"} {
+		_, err = dockerutil.CreateVolume(v, "local", nil)
+		if err != nil {
+			return fmt.Errorf("unable to create docker volume %s: %v", v, err)
+		}
 	}
 
 	app.DBImage = app.GetDBImage()
