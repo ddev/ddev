@@ -973,6 +973,7 @@ func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid
 	// nolint errcheck
 	defer f.Close()
 
+	track := util.TimeTrack(time.Now(), "CopyIntoVolume "+sourcePath+" "+volumeName)
 	containerID, _, err := RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && tail -f /dev/null"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, nil)
 	if err != nil {
 		return err
@@ -1013,7 +1014,7 @@ func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid
 	if err != nil {
 		return err
 	}
-
+	track()
 	return nil
 }
 
