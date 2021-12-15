@@ -1703,16 +1703,18 @@ func (app *DdevApp) DeleteSnapshot(snapshotName string) error {
 		return fmt.Errorf("failed to process pre-delete-snapshot hooks: %v", err)
 	}
 
-	_, _, err = app.Exec(&ExecOpts{
-		Service: "db",
-		Dir:     containerSnapshotDirBase,
-		Cmd:     fmt.Sprintf("test -d %s && rm -rf %s", snapshotName, snapshotName),
-	})
-	if err != nil {
-		return fmt.Errorf("failed to delete snapshot: %v", err)
+	snapshotDir := path.Join("db_snapshots", snapshotName)
+	hostSnapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), snapshotDir)
+
+	if err = fileutil.PurgeDirectory(hostSnapshotDir); err != nil {
+		return fmt.Errorf("failed to purge contents of snapshot directory: %v", err)
 	}
 
-	util.Success("Deleted database snapshot %s", snapshotName)
+	if err = os.Remove(hostSnapshotDir); err != nil {
+		return fmt.Errorf("failed to delete snapshot directory: %v", err)
+	}
+
+	util.Success("Deleted database snapshot %s in %s", snapshotName, hostSnapshotDir)
 	err = app.ProcessHooks("post-delete-snapshot")
 	if err != nil {
 		return fmt.Errorf("failed to process post-delete-snapshot hooks: %v", err)
