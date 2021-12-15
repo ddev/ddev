@@ -1825,7 +1825,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	}
 
 	uid, _, _ := util.GetContainerUIDGid()
-	err = dockerutil.CopyIntoVolume(filepath.Join(app.GetConfigPath("db_snapshots"), snapshotName), app.Name+"-ddev-snapshots", "", uid, "")
+	err = dockerutil.CopyIntoVolume(filepath.Join(app.GetConfigPath("db_snapshots"), snapshotName), app.Name+"-ddev-snapshots", snapshotName, uid, "")
 	if err != nil {
 		return err
 	}
