@@ -273,7 +273,12 @@ func Tar(src string, tarballFilePath string, exclusion string) error {
 	defer tw.Close()
 
 	// walk path
-	return filepath.WalkDir(src, func(file string, info fs.DirEntry, err error) error {
+	return filepath.WalkDir(src, func(file string, info fs.DirEntry, errArg error) error {
+		// return on any error
+		if errArg != nil {
+			return errArg
+		}
+
 		relativePath := strings.TrimPrefix(file, src+"/")
 
 		if exclusion != "" && strings.HasPrefix(relativePath, exclusion) {
