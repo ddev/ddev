@@ -11,6 +11,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"sort"
@@ -1247,4 +1248,50 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string) err
 		Path:        dstPath,
 	})
 	return err
+}
+
+// CopyFromContainer copies a path from a specified container and location to a dstPath on host
+func CopyFromContainer(containerName string, containerPath string, hostPath string) error {
+	err := os.MkdirAll(hostPath, 0755)
+	if err != nil {
+		return err
+	}
+
+	client := GetDockerClient()
+	cid, err := FindContainerByName(containerName)
+	if err != nil {
+		return err
+	}
+	if cid == nil {
+		return fmt.Errorf("CopyFromContainer unable to find a container named %s", containerName)
+	}
+
+	f, err := os.CreateTemp("", filepath.Base(hostPath)+".tar.gz")
+	if err != nil {
+		return err
+	}
+	//nolint: errcheck
+	defer f.Close()
+	//nolint: errcheck
+	defer os.Remove(f.Name())
+	// nolint: errcheck
+
+	err = client.DownloadFromContainer(cid.ID, docker.DownloadFromContainerOptions{
+		Path:         containerPath,
+		OutputStream: f,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = f.Close()
+	if err != nil {
+		return err
+	}
+
+	err = archive.Untar(f.Name(), hostPath, "")
+	if err != nil {
+		return err
+	}
+	return nil
 }

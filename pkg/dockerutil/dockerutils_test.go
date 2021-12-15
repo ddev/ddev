@@ -6,6 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 	"os"
+	"path"
 	"runtime"
 	"strings"
 	"testing"
@@ -595,7 +596,7 @@ func TestGetDockerIP(t *testing.T) {
 	}
 }
 
-TestCopyIntoContainer makes sure CopyToVolume copies a local directory into a specified
+// TestCopyIntoContainer makes sure CopyIntoContainer copies a local directory into a specified
 // path in container
 func TestCopyIntoContainer(t *testing.T) {
 	assert := asrt.New(t)
@@ -622,4 +623,23 @@ subdir1
 subdir1.txt
 `, out)
 
+}
+
+// TestCopyFromContainer makes sure CopyToVolume copies a local directory into a specified
+// path in container
+func TestCopyFromContainer(t *testing.T) {
+	assert := asrt.New(t)
+	containerSourceDir := "/var/tmp/backdrop_drush_commands/backdrop-drush-extension"
+	containerExpectedFile := "backdrop.drush.inc"
+	cid, err := FindContainerByName(testContainerName)
+	require.NoError(t, err)
+	require.NotNil(t, cid)
+
+	targetDir, err := os.MkdirTemp("", t.Name())
+	require.NoError(t, err)
+
+	err = CopyFromContainer(testContainerName, containerSourceDir, targetDir)
+	require.NoError(t, err)
+
+	assert.FileExists(filepath.Join(targetDir, path.Base(containerSourceDir), containerExpectedFile))
 }

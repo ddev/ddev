@@ -1631,7 +1631,7 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 	return "", fmt.Errorf("settings files already exist and are being managed by the user")
 }
 
-var snapshotDirBase = "/mnt/snapshots"
+var containerSnapshotDirBase = "/var/tmp"
 
 // Snapshot causes a snapshot of the db to be written into the snapshots volume
 // Returns the name of the snapshot and err
@@ -1656,13 +1656,13 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 
 	// Container side has to use path.Join instead of filepath.Join because they are
 	// targeted at the linux filesystem, so won't work with filepath on Windows
-	containerSnapshotDir := path.Join(snapshotDirBase, snapshotName)
+	containerSnapshotDir := path.Join(containerSnapshotDirBase, snapshotName)
 
 	// Ensure that db container is up.
 	labels := map[string]string{"com.ddev.site-name": app.Name, "com.docker.compose.service": "db"}
 	_, err = dockerutil.ContainerWait(containerWaitTimeout, labels)
 	if err != nil {
-		return "", fmt.Errorf("unable to snapshot database, \nyour project %v is not running. \nPlease start the project if you want to snapshot it. \nIf removing, you can remove without a snapshot using \n'ddev stop --remove-data --omit-snapshot', \nwhich will destroy your database", app.Name)
+		return "", fmt.Errorf("unable to snapshot database, \nyour project %v is not running. \nPlease start the project if you want to snapshot it. \nIf deleting project, you can delete without a snapshot using \n'ddev delete --remove-data --yes', \nwhich will destroy your database", app.Name)
 	}
 
 	util.Warning("Creating database snapshot %s", snapshotName)
@@ -1675,6 +1675,8 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 		util.Warning("Failed to create snapshot: %v, stdout=%s, stderr=%s", err, stdout, stderr)
 		return "", err
 	}
+
+	// Copy snapshot back to the host
 
 	util.Success("Created database snapshot %s", snapshotName)
 	err = app.ProcessHooks("post-snapshot")
@@ -1694,7 +1696,7 @@ func (app *DdevApp) DeleteSnapshot(snapshotName string) error {
 
 	_, _, err = app.Exec(&ExecOpts{
 		Service: "db",
-		Dir:     snapshotDirBase,
+		Dir:     containerSnapshotDirBase,
 		Cmd:     fmt.Sprintf("test -d %s && rm -rf %s", snapshotName, snapshotName),
 	})
 	if err != nil {
