@@ -952,8 +952,13 @@ func RemoveImage(tag string) error {
 	return nil
 }
 
-// CopyToVolume copies a directory on the host into a docker volume
-func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid string, exclusion string) error {
+// CopyIntoVolume copies a directory on the host into a docker volume
+// It destroys the volume first
+func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, uid string, exclusion string) error {
+	err := RemoveVolume(volumeName)
+	if err != nil {
+		util.Debug("could not remove volume %s: %v", volumeName, err)
+	}
 	volPath := "/mnt/v"
 	targetSubdirFullPath := volPath + "/" + targetSubdir
 	client := GetDockerClient()
@@ -981,7 +986,7 @@ func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid
 	// nolint: errcheck
 	defer RemoveContainer(containerID, 0)
 
-	tmpTar, err := os.CreateTemp("", "CopyToVolume")
+	tmpTar, err := os.CreateTemp("", "CopyIntoVolume")
 	if err != nil {
 		log.Fatal(err)
 	}

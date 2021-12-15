@@ -531,14 +531,14 @@ func TestRemoveVolume(t *testing.T) {
 
 }
 
-// TestCopyToVolume makes sure CopyToVolume copies a local directory into a volume
-func TestCopyToVolume(t *testing.T) {
+// TestCopyIntoVolume makes sure CopyToVolume copies a local directory into a volume
+func TestCopyIntoVolume(t *testing.T) {
 	assert := asrt.New(t)
 	err := RemoveVolume(t.Name())
 	assert.NoError(err)
 
 	pwd, _ := os.Getwd()
-	err = CopyToVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "", "0", "")
+	err = CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "", "0", "")
 	assert.NoError(err)
 
 	mainContainerID, out, err := RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil)
@@ -551,11 +551,11 @@ subdir1
 subdir1.txt
 `, out)
 
-	err = CopyToVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "somesubdir", "501", "")
+	err = CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "somesubdir", "501", "")
 	assert.NoError(err)
 	subdirContainerID, out, err := RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + "/somesubdir  && pwd && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "0", true, false, nil)
 	assert.NoError(err)
-	assert.Equal(`/mnt/TestCopyToVolume/somesubdir
+	assert.Equal(`/mnt/TestCopyIntoVolume/somesubdir
 .:
 root.txt
 subdir1
@@ -625,7 +625,7 @@ subdir1.txt
 
 }
 
-// TestCopyFromContainer makes sure CopyToVolume copies a local directory into a specified
+// TestCopyFromContainer makes sure CopyIntoVolume copies a local directory into a specified
 // path in container
 func TestCopyFromContainer(t *testing.T) {
 	assert := asrt.New(t)
