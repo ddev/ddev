@@ -1863,11 +1863,8 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	oldSnapshotTarball, err := filepath.Abs(filepath.Join(testDir, "testdata", t.Name(), "restore_snapshot", "d7tester_test_1.snapshot_mariadb_10_1.tgz"))
 	assert.NoError(err)
 
-	untarred := filepath.Join(site.Dir, ".ddev", "tmp")
-	err = archive.Untar(oldSnapshotTarball, untarred, "")
+	err = archive.Untar(oldSnapshotTarball, app.GetConfigPath("db_snapshots"), "")
 	assert.NoError(err)
-	err = dockerutil.CopyIntoContainer(untarred, ddevapp.GetContainerName(app, "db"), "/mnt/snapshots", "")
-	require.NoError(t, err)
 
 	err = app.RestoreSnapshot("d7tester_test_1.snapshot_mariadb_10.1")
 	assert.Error(err)
