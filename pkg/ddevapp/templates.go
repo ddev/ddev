@@ -226,10 +226,10 @@ volumes:
     name: ddev-global-cache
     external: true
   ddev-config:
-    name: ${DDEV_PROJECT}-ddev-config
+    name: ${DDEV_SITENAME}-ddev-config
     external: true
   snapshots:
-    name: ${DDEV_PROJECT}-ddev-snapshots
+    name: ${DDEV_SITENAME}-ddev-snapshots
     external: true
   {{ if and .NFSMountEnabled (not .NoProjectMount) }}
   nfsmount:
