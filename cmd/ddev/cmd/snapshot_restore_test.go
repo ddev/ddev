@@ -5,7 +5,6 @@ import (
 	"github.com/drud/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"runtime"
 	"testing"
 )
 
@@ -41,11 +40,12 @@ func TestCmdSnapshotRestore(t *testing.T) {
 	assert.Contains(out, "Restored database snapshot")
 
 	// Try interactive command
-	if runtime.GOOS != "windows" {
-		out, err = exec.RunCommand("bash", []string{"-c", "echo -nq '\n' | " + DdevBin + " snapshot restore"})
-		assert.NoError(err)
-		assert.Contains(out, "Restored database snapshot")
-	}
+	// Doesn't seem to work without pty, 2021-12-14
+	//if runtime.GOOS != "windows" {
+	//	out, err = exec.RunCommand("bash", []string{"-c", "echo -nq '\n' | " + DdevBin + " snapshot restore"})
+	//	assert.NoError(err)
+	//	assert.Contains(out, "Restored database snapshot")
+	//}
 
 	// Ensure that latest snapshot can be restored
 	args = []string{"snapshot", "restore", "--latest"}
