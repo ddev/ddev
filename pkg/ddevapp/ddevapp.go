@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"io/fs"
 	"net"
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -870,9 +872,9 @@ func (app *DdevApp) Start() error {
 		return fmt.Errorf("failed to copy .ddev directory to volume: %v", err)
 	}
 
-	_, _, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache /mnt/ddev_config /mnt/snapshots", uid)}, []string{}, []string{}, []string{app.Name + "-mariadb:/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache", app.Name + "-ddev-config:/mnt/ddev_config", app.Name + "-ddev-snapshots:/mnt/snapshots"}, "", true, false, nil)
+	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.Name + "-mariadb:/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache", app.Name + "-ddev-config:/mnt/ddev_config"}, "", true, false, nil)
 	if err != nil {
-		return fmt.Errorf("failed to RunSimpleContainer to chown volumes: %v", err)
+		return fmt.Errorf("failed to RunSimpleContainer to chown volumes: %v, output=%s", err, out)
 	}
 
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
@@ -1676,8 +1678,13 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 		return "", err
 	}
 
+	elapsed := util.TimeTrack(time.Now(), "CopySnapshotFromContainer")
 	// Copy snapshot back to the host
-
+	err = dockerutil.CopyFromContainer(GetContainerName(app, "db"), containerSnapshotDir, app.GetConfigPath("db_snapshots"))
+	elapsed()
+	if err != nil {
+		return "", err
+	}
 	util.Success("Created database snapshot %s", snapshotName)
 	err = app.ProcessHooks("post-snapshot")
 	if err != nil {
@@ -1732,23 +1739,42 @@ func (app *DdevApp) GetLatestSnapshot() (string, error) {
 // ListSnapshots returns a list of the names of all project snapshots
 func (app *DdevApp) ListSnapshots() ([]string, error) {
 	var err error
+	var snapshots []string
 
-	out, _, err := app.Exec(&ExecOpts{
-		Service: "db",
-		Dir:     "/mnt/snapshots",
-		Cmd:     "if ls -d */ >/dev/null 2>&1 ; then ls -d -t */; else echo ''; fi",
-	})
+	snapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), "db_snapshots")
+
+	if !fileutil.FileExists(snapshotDir) {
+		return snapshots, nil
+	}
+
+	fileNames, err := fileutil.ListFilesInDir(snapshotDir)
 	if err != nil {
-		return nil, err
+		return snapshots, err
 	}
 
-	out = strings.Trim(out, "\n")
-	out = strings.ReplaceAll(out, "/", "")
-	fileNames := strings.Split(out, "\n")
-	if fileNames[0] == "" {
-		fileNames = nil
+	var files []fs.FileInfo
+	for _, n := range fileNames {
+		f, err := os.Stat(filepath.Join(snapshotDir, n))
+		if err != nil {
+			return snapshots, err
+		}
+		files = append(files, f)
 	}
-	return fileNames, nil
+
+	// Sort snapshots by last modification time
+	// we need that to detect the latest snapshot
+	// first snapshot is the latest
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].ModTime().After(files[j].ModTime())
+	})
+
+	for _, f := range files {
+		if f.IsDir() {
+			snapshots = append(snapshots, f.Name())
+		}
+	}
+
+	return snapshots, nil
 }
 
 // RestoreSnapshot restores a mariadb snapshot of the db to be loaded
@@ -1767,9 +1793,22 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		currentDBVersion = app.MySQLVersion
 	}
 
+	snapshotDir := filepath.Join("db_snapshots", snapshotName)
+
+	hostSnapshotDir := filepath.Join(app.AppConfDir(), snapshotDir)
+	if !fileutil.FileExists(hostSnapshotDir) {
+		return fmt.Errorf("failed to find a snapshot in %s", hostSnapshotDir)
+	}
+
 	// Find out the mariadb version that correlates to the snapshot.
-	snapshotDBVersion, err := app.GetSnapshotVersion(snapshotName)
-	if err != nil {
+	versionFile := filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")
+	var snapshotDBVersion string
+	if fileutil.FileExists(versionFile) {
+		snapshotDBVersion, err = fileutil.ReadFileIntoString(versionFile)
+		if err != nil {
+			return fmt.Errorf("unable to read the version file in the snapshot (%s): %v", versionFile, err)
+		}
+	} else {
 		snapshotDBVersion = "unknown"
 	}
 	snapshotDBVersion = strings.Trim(snapshotDBVersion, " \r\n\t")
@@ -1821,19 +1860,6 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("failed to process post-restore-snapshot hooks: %v", err)
 	}
 	return nil
-}
-
-func (app *DdevApp) GetSnapshotVersion(snapshotName string) (string, error) {
-	out, _, err := app.Exec(&ExecOpts{
-		Service: "db",
-		Dir:     "/mnt/snapshots/" + snapshotName,
-		Cmd:     "cat db_mariadb_version.txt",
-	})
-	if err != nil {
-		return "", err
-	}
-	v := strings.Trim(out, "\n")
-	return v, nil
 }
 
 // Stop stops and Removes the docker containers for the project in current directory.

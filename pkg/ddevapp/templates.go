@@ -27,7 +27,6 @@ services:
           nocopy: true
       - ddev-config:/mnt/ddev_config
       - ddev-global-cache:/mnt/ddev-global-cache
-      - ddev-snapshots:/mnt/snapshots
     restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
     user: '$DDEV_UID:$DDEV_GID'
     hostname: {{ .Name }}-db
@@ -228,10 +227,6 @@ volumes:
   ddev-config:
     name: ${DDEV_PROJECT}-ddev-config
     external: true
-  ddev-snapshots:
-    name: ${DDEV_PROJECT}-ddev-snapshots
-    external: true
-
   {{ if and .NFSMountEnabled (not .NoProjectMount) }}
   nfsmount:
     name: "{{ .NFSMountVolumeName }}"

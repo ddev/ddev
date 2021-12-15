@@ -26,7 +26,7 @@ function serverwait {
 # If we have a restore_snapshot arg, get the snapshot directory
 # otherwise, fail and abort startup
 if [ $# = "2" -a "${1:-}" = "restore_snapshot" ] ; then
-  snapshot_dir="/mnt/snapshots/${2:-nothingthere}"
+  snapshot_dir="/mnt/ddev_config/db_snapshots/${2:-nothingthere}"
   if [ -d "$snapshot_dir" ] ; then
     echo "Restoring from snapshot directory $snapshot_dir"
     # Ugly macOS .DS_Store in this directory can break the restore
