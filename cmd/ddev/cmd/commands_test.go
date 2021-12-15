@@ -137,9 +137,12 @@ func TestCustomCommands(t *testing.T) {
 	assert.NotContains(out, "testhostcmd global") //the global testhostcmd should have been overridden by the project one
 	assert.NotContains(out, "testwebcmd global")  //the global testwebcmd should have been overridden by the project one
 
+	// Have to do app.Start() because commands are copied into containers on start
+	err = app.Start()
+	require.NoError(t, err)
 	for _, c := range []string{"testhostcmd", "testhostglobal", "testwebcmd", "testwebglobal"} {
 		out, err = exec.RunHostCommand(DdevBin, c, "hostarg1", "hostarg2", "--hostflag1")
-		assert.NoError(err, "Failed to run ddev %s %v", c)
+		assert.NoError(err, "Failed to run ddev %s: %v, output=%s", c, err, out)
 		expectedHost, _ := os.Hostname()
 		if !strings.Contains(c, "host") {
 			expectedHost = site.Name + "-web"
