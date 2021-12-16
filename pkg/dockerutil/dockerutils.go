@@ -61,7 +61,7 @@ func EnsureDdevNetwork() {
 	}
 }
 
-// GetDockerClient returns a docker client for a docker-machine.
+// GetDockerClient returns a docker client respecting DOCKER_HOST, etc
 func GetDockerClient() *docker.Client {
 	client, err := docker.NewClientFromEnv()
 	if err != nil {
