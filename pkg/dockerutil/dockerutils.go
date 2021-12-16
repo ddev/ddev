@@ -953,16 +953,18 @@ func RemoveImage(tag string) error {
 }
 
 // CopyIntoVolume copies a directory on the host into a docker volume
-// It destroys the volume first
 // sourcePath is the host-side full path
 // volumeName is the volume name to copy to
 // targetSubdir is where to copy it to on the volume
 // uid is the uid of the resulting files
 // exclusion is a path to be excluded
-func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, uid string, exclusion string) error {
-	err := RemoveVolume(volumeName)
-	if err != nil {
-		util.Debug("could not remove volume %s: %v", volumeName, err)
+// If destroyExisting the volume is removed and recreated
+func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, uid string, exclusion string, destroyExisting bool) error {
+	if destroyExisting {
+		err := RemoveVolume(volumeName)
+		if err != nil {
+			util.Warning("could not remove docker volume %s: %v", volumeName, err)
+		}
 	}
 	volPath := "/mnt/v"
 	targetSubdirFullPath := volPath + "/" + targetSubdir

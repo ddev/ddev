@@ -869,7 +869,7 @@ func (app *DdevApp) Start() error {
 	// inside the container
 	uid, _, _ := util.GetContainerUIDGid()
 
-	err = dockerutil.CopyIntoVolume(app.GetConfigPath(""), app.Name+"-ddev-config", "", uid, "db_snapshots")
+	err = dockerutil.CopyIntoVolume(app.GetConfigPath(""), app.Name+"-ddev-config", "", uid, "db_snapshots", true)
 	if err != nil {
 		return fmt.Errorf("failed to copy .ddev directory to volume: %v", err)
 	}
@@ -904,7 +904,7 @@ func (app *DdevApp) Start() error {
 			// Copy ca certs into ddev-global-cache/mkcert
 			if caRoot != "" {
 				uid, _, _ := util.GetContainerUIDGid()
-				err = dockerutil.CopyIntoVolume(caRoot, "ddev-global-cache", "mkcert", uid, "")
+				err = dockerutil.CopyIntoVolume(caRoot, "ddev-global-cache", "mkcert", uid, "", false)
 				if err != nil {
 					util.Warning("failed to copy root CA into docker volume ddev-global-cache/mkcert: %v", err)
 				} else {
@@ -916,7 +916,7 @@ func (app *DdevApp) Start() error {
 		certPath := app.GetConfigPath("custom_certs")
 		if fileutil.FileExists(certPath) {
 			uid, _, _ := util.GetContainerUIDGid()
-			err = dockerutil.CopyIntoVolume(certPath, "ddev-global-cache", "custom_certs", uid, "")
+			err = dockerutil.CopyIntoVolume(certPath, "ddev-global-cache", "custom_certs", uid, "", false)
 			if err != nil {
 				util.Warning("failed to copy custom certs into docker volume ddev-global-cache/custom_certs: %v", err)
 			} else {
@@ -1829,7 +1829,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	}
 
 	uid, _, _ := util.GetContainerUIDGid()
-	err = dockerutil.CopyIntoVolume(filepath.Join(app.GetConfigPath("db_snapshots"), snapshotName), app.Name+"-ddev-snapshots", snapshotName, uid, "")
+	err = dockerutil.CopyIntoVolume(filepath.Join(app.GetConfigPath("db_snapshots"), snapshotName), app.Name+"-ddev-snapshots", snapshotName, uid, "", true)
 	if err != nil {
 		return err
 	}

@@ -538,7 +538,7 @@ func TestCopyIntoVolume(t *testing.T) {
 	assert.NoError(err)
 
 	pwd, _ := os.Getwd()
-	err = CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "", "0", "")
+	err = CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "", "0", "", true)
 	assert.NoError(err)
 
 	mainContainerID, out, err := RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil)
@@ -551,7 +551,7 @@ subdir1
 subdir1.txt
 `, out)
 
-	err = CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "somesubdir", "501", "")
+	err = CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "somesubdir", "501", "", true)
 	assert.NoError(err)
 	subdirContainerID, out, err := RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + "/somesubdir  && pwd && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "0", true, false, nil)
 	assert.NoError(err)
@@ -625,8 +625,8 @@ subdir1.txt
 
 }
 
-// TestCopyFromContainer makes sure CopyIntoVolume copies a local directory into a specified
-// path in container
+// TestCopyFromContainer makes sure CopyFromContainer copies a container into a specified
+// local directory
 func TestCopyFromContainer(t *testing.T) {
 	assert := asrt.New(t)
 	containerSourceDir := "/var/tmp/backdrop_drush_commands/backdrop-drush-extension"
