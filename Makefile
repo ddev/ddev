@@ -118,7 +118,6 @@ $(TARGETS): pullbuildimage $(GOFILES)
 	export DEFCTX=$(shell docker context inspect -f '{{ .Name }}') && docker context use default >/dev/null 2>&1 &&\
 	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
 	chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
-	docker context use default >/dev/null && \
 	$(DOCKERBUILDCMD) \
 	bash -c "GOOS=$$GOOS GOARCH=$$GOARCH $$GOBUILDER build -o $(GOTMP)/bin/$$TARGET -installsuffix static -ldflags \" $(LDFLAGS) \" $(SRC_AND_UNDER)" && \
 	docker context use $$DEFCTX >/dev/null 2>&1

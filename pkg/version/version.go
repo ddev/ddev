@@ -26,7 +26,7 @@ var SegmentKey = ""
 // REMEMBER TO CHANGE docs/index.md if you touch this!
 // The constraint MUST HAVE a -pre of some kind on it for successful comparison.
 // See https://github.com/drud/ddev/pull/738.. and regression https://github.com/drud/ddev/issues/1431
-var DockerVersionConstraint = ">= 18.06.1-alpha1"
+var DockerVersionConstraint = ">= 19.03.9-alpha1"
 
 // DockerComposeVersionConstraint is the versions allowed for ddev
 // REMEMBER TO CHANGE docs/index.md if you touch this!
