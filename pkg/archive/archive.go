@@ -251,7 +251,7 @@ func Unzip(source string, dest string, extractionDir string) error {
 	return nil
 }
 
-// Tar takes a source dir and tarballFilePath
+// Tar takes a source dir and tarballFilePath and a single exclusion path
 // From https://gist.github.com/sdomino/635a5ed4f32c93aad131#file-untargz-go
 // So sorry that exclusion is a single relative path. It should be a set of patterns, rfay 2021-12-15
 func Tar(src string, tarballFilePath string, exclusion string) error {
@@ -259,6 +259,7 @@ func Tar(src string, tarballFilePath string, exclusion string) error {
 	if _, err := os.Stat(src); err != nil {
 		return fmt.Errorf("Unable to tar files - %v", err.Error())
 	}
+	separator := string(rune(filepath.Separator))
 
 	file, err := os.Create(tarballFilePath)
 	if err != nil {
@@ -279,7 +280,7 @@ func Tar(src string, tarballFilePath string, exclusion string) error {
 			return errArg
 		}
 
-		relativePath := strings.TrimPrefix(file, src+"/")
+		relativePath := strings.TrimPrefix(file, src+separator)
 
 		if exclusion != "" && strings.HasPrefix(relativePath, exclusion) {
 			return nil
