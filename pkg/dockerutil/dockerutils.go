@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	exec2 "github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"io"
 	"log"
@@ -61,8 +62,27 @@ func EnsureDdevNetwork() {
 	}
 }
 
-// GetDockerClient returns a docker client respecting DOCKER_HOST, etc
+var dockerContextEndpoint string
+
+// GetDockerClient returns a docker client respecting the current docker context
+// but DOCKER_HOST gets priority
 func GetDockerClient() *docker.Client {
+	var err error
+
+	// This is a cheap way of using docker contexts by running `docker context inspect`
+	// I would wish for something far better, but trying to transplant the code from
+	// docker/cli did not succeed. rfay 2021-12-16
+	if dockerContextEndpoint == "" {
+		dockerContextEndpoint, err = exec2.RunHostCommand("docker", "context", "inspect", "-f", `{{ .Endpoints.docker.Host }}`)
+		if err != nil {
+			util.Warning("unable to run docker context inspect: %v", err)
+		}
+		dockerContextEndpoint = strings.Trim(dockerContextEndpoint, "\r\n ")
+	}
+	// Respect DOCKER_HOST first in case it's set
+	if os.Getenv("DOCKER_HOST") == "" {
+		_ = os.Setenv("DOCKER_HOST", dockerContextEndpoint)
+	}
 	client, err := docker.NewClientFromEnv()
 	if err != nil {
 		output.UserOut.Warnf("could not get docker client. is docker running? error: %v", err)
