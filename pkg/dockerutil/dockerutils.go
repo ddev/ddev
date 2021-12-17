@@ -625,18 +625,20 @@ func GetDockerIP() (string, error) {
 			return "", fmt.Errorf("failed to parse $DOCKER_HOST=%s: %v", dockerHostRawURL, err)
 		}
 		hostPart := dockerHostURL.Hostname()
-		// Check to see if the hostname we found is an IP address
-		addr := net.ParseIP(hostPart)
-		if addr == nil {
-			// If it wasn't an IP address, look it up to get IP address
-			ip, err := net.LookupHost(hostPart)
-			if err == nil && len(ip) > 0 {
-				hostPart = ip[0]
-			} else {
-				return "", fmt.Errorf("failed to look up IP address for $DOCKER_HOST=%s, hostname=%s: %v", dockerHostRawURL, hostPart, err)
+		if hostPart != "" {
+			// Check to see if the hostname we found is an IP address
+			addr := net.ParseIP(hostPart)
+			if addr == nil {
+				// If it wasn't an IP address, look it up to get IP address
+				ip, err := net.LookupHost(hostPart)
+				if err == nil && len(ip) > 0 {
+					hostPart = ip[0]
+				} else {
+					return "", fmt.Errorf("failed to look up IP address for $DOCKER_HOST=%s, hostname=%s: %v", dockerHostRawURL, hostPart, err)
+				}
 			}
+			dockerIP = hostPart
 		}
-		dockerIP = hostPart
 	}
 	return dockerIP, nil
 }
