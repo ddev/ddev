@@ -615,19 +615,29 @@ func CheckForHTTPS(container docker.APIContainers) bool {
 }
 
 // GetDockerIP returns either the default Docker IP address (127.0.0.1)
-// or the value as configured by $DOCKER_HOST.
+// or the value as configured by $DOCKER_HOST (if DOCKER_HOST is an http/s URL)
 func GetDockerIP() (string, error) {
 	dockerIP := "127.0.0.1"
 	dockerHostRawURL := os.Getenv("DOCKER_HOST")
 	if dockerHostRawURL != "" {
 		dockerHostURL, err := url.Parse(dockerHostRawURL)
 		if err != nil {
-			return "", fmt.Errorf("failed to parse $DOCKER_HOST: %v, err: %v", dockerHostRawURL, err)
+			return "", fmt.Errorf("failed to parse $DOCKER_HOST=%s: %v, err: %v", dockerHostRawURL, err)
 		}
-
-		dockerIP = dockerHostURL.Hostname()
+		hostPart := dockerHostURL.Hostname()
+		// Check to see if the hostname we found is an IP address
+		addr := net.ParseIP(hostPart)
+		if addr == nil {
+			// If it wasn't an IP address, look it up to get IP address
+			ip, err := net.LookupHost(hostPart)
+			if err == nil && len(ip) > 0 {
+				hostPart = ip[0]
+			} else {
+				return "", fmt.Errorf("failed to look up IP address for $DOCKER_HOST=%s, hostname=%s: %v, err: %v", dockerHostRawURL, hostPart, err)
+			}
+		}
+		dockerIP = hostPart
 	}
-
 	return dockerIP, nil
 }
 
