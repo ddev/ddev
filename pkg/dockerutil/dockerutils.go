@@ -986,7 +986,7 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 	defer f.Close()
 
 	track := util.TimeTrack(time.Now(), "CopyIntoVolume "+sourcePath+" "+volumeName)
-	containerID, _, err := RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && tail -f /dev/null"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, nil)
+	containerID, _, err := RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && tail -f /dev/null"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, nil)
 	if err != nil {
 		return err
 	}
@@ -1015,15 +1015,16 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 		return err
 	}
 
-	// chown the uploaded content
-	e, err := client.CreateExec(docker.CreateExecOptions{
-		Container: containerID,
-		Cmd:       []string{"chown", "-R", uid, targetSubdirFullPath},
-	})
-	if err != nil {
-		return err
+	// chown/chmod the uploaded content
+	c := fmt.Sprintf("chown -R %s %s", uid, targetSubdirFullPath)
+	// On Windows, the tarball upload provided by Docker doesn't properly handle
+	// the executable bit, so we'll chmod +x each shellscript
+	if runtime.GOOS == "windows" {
+		c = c + fmt.Sprintf(" && find %s -type f | xargs file -i  | awk -F: '/text.x-shellscript/ { print $1 }' >/tmp/scripts.txt; if [ -s /tmp/scripts.txt ]; then chmod +x $(cat /tmp/scripts.txt); fi", targetSubdirFullPath)
 	}
-	err = client.StartExec(e.ID, docker.StartExecOptions{})
+	stdout, stderr, err := Exec(containerID, c)
+	util.Debug("Exec %s stdout=%s, stderr=%s, err=%v", c, stdout, stderr, err)
+
 	if err != nil {
 		return err
 	}
@@ -1032,6 +1033,7 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 }
 
 // Exec does a simple docker exec, no frills, just executes the command
+// Returns stdout, stderr, error
 func Exec(containerID string, command string) (string, string, error) {
 	client := GetDockerClient()
 
