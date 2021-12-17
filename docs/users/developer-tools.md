@@ -95,7 +95,7 @@ MAIL_ENCRYPTION=null
 
 [phpMyAdmin](https://www.phpmyadmin.net/) is a free software tool to manage MySQL and MariaDB databases from a browser. phpMyAdmin comes installed with ddev. After your project is started, use `ddev launch -p` or just access the phpMyAdmin web interface at its default port, `http://mysite.ddev.site:8036`.
 
-If you use the free [Sequel Ace](https://github.com/Sequel-Ace/Sequel-Ace) database browser for macOS, run `ddev sequelace` within a project folder, and Sequel Ace will launch and access the database for that project. `ddev sequelpro`, `ddev tableplus`, `ddev heidisql` are also provided for users of those applications. In addition, PhpStorm can be used to browse the database, and there's an example command for mysqlworkbench in `~/.ddev/commands/host/mysqlworkbench.example`.
+If you use the free [Sequel Ace](https://github.com/Sequel-Ace/Sequel-Ace) database browser for macOS, run `ddev sequelace` within a project folder, and Sequel Ace will launch and access the database for that project. `ddev sequelpro`, `ddev tableplus`, `ddev heidisql` are also provided for users of those applications. In addition, PhpStorm can be used to browse the database, and there's an example command for [MySQL Workbench](https://www.mysql.com/products/workbench/) in `~/.ddev/commands/host/mysqlworkbench.example`.
 
 For more discussion of database management, see the [database management topic](topics/database_management.md).
 
