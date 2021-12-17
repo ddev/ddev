@@ -95,7 +95,9 @@ MAIL_ENCRYPTION=null
 
 [phpMyAdmin](https://www.phpmyadmin.net/) is a free software tool to manage MySQL and MariaDB databases from a browser. phpMyAdmin comes installed with ddev. After your project is started, use `ddev launch -p` or just access the phpMyAdmin web interface at its default port, `http://mysite.ddev.site:8036`.
 
-If you use the free [Sequel Pro](https://www.sequelpro.com/) database browser for macOS, run `ddev sequelpro` within a project folder, and Sequel Pro will launch and access the database for that project.
+If you use the free [Sequel Ace](https://github.com/Sequel-Ace/Sequel-Ace) database browser for macOS, run `ddev sequelace` within a project folder, and Sequel Ace will launch and access the database for that project. `ddev sequelpro`, `ddev tableplus`, `ddev heidisql` are also provided for users of those applications. In addition, PhpStorm can be used to browse the database, and there's an example command for [MySQL Workbench](https://www.mysql.com/products/workbench/) in `~/.ddev/commands/host/mysqlworkbench.example`.
+
+For more discussion of database management, see the [database management topic](topics/database_management.md).
 
 ## Using Development Tools on the Host Machine
 
@@ -103,18 +105,11 @@ It is possible in many cases to use development tools installed on your host mac
 
 ### Database Connections from the Host
 
-If you need to connect to the database of your project from the host machine, run `ddev describe` to retrieve the database connection information. The last line of the database credentials will provide your host connection info, similar to this:
-
-```
-
-To connect to mysql from your host machine, use port 32838 on 127.0.0.1
-For example: mysql --host 127.0.0.1 --port 32838
-
-```
+If you need to connect to the database of your project from the host machine, run `ddev describe` to show the database connection information, like `Host: localhost:49156`.
 
 The port referenced is unique per running project, and randomly chosen from available ports on your system when you run `ddev start`.
 
-**Note:** The host database port is likely to change any time a project is stopped/removed and then later started again.
+You can force this port to be the same on every `ddev start` by setting `host_db_port` in the project .ddev/config.yaml. For example, `host_db_port: "49156"` or `ddev config --host-db-port=49156`. This value needs to be different on each running DDEV project, and unless it is set, the database port will change on every `ddev start`.
 
 ### Using Drush 8 installed Installation on the Host Computer
 
