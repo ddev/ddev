@@ -62,7 +62,35 @@ func TestUnarchive(t *testing.T) {
 func TestArchiveTar(t *testing.T) {
 	assert := asrt.New(t)
 	pwd, _ := os.Getwd()
-	tarballFile, err := os.CreateTemp("", t.Name())
+	tarballFile, err := os.CreateTemp("", t.Name()+"_*.tar.gz")
+	assert.NoError(err)
+
+	err = archive.Tar(filepath.Join(pwd, "testdata", t.Name()), tarballFile.Name(), filepath.Join("subdir1", "subdir2"))
+	assert.NoError(err)
+
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+
+	t.Cleanup(
+		func() {
+			// Could not figure out what causes this not to be removable
+			//err = os.Remove(tarballFile.Name())
+			//assert.NoError(err)
+			err = os.RemoveAll(tmpDir)
+			assert.NoError(err)
+		})
+	err = archive.Untar(tarballFile.Name(), tmpDir, "")
+	assert.NoError(err)
+
+	assert.FileExists(filepath.Join(tmpDir, "root.txt"))
+	assert.FileExists(filepath.Join(tmpDir, "subdir1", "subdir1.txt"))
+	assert.NoFileExists(filepath.Join(tmpDir, "subdir1", "subdir2", "s2.txt"))
+}
+
+// TestArchiveTar tests creation of a simple tarball
+func TestArchiveTarGz(t *testing.T) {
+	assert := asrt.New(t)
+	pwd, _ := os.Getwd()
+	tarballFile, err := os.CreateTemp("", t.Name()+"*.tar.gz")
 	assert.NoError(err)
 
 	err = archive.Tar(filepath.Join(pwd, "testdata", t.Name()), tarballFile.Name(), filepath.Join("subdir1", "subdir2"))

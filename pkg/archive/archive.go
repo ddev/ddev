@@ -251,8 +251,8 @@ func Unzip(source string, dest string, extractionDir string) error {
 	return nil
 }
 
-// Tar takes a source dir and tarballFilePath and a single exclusion path
-// From https://gist.github.com/sdomino/635a5ed4f32c93aad131#file-untargz-go
+// TarGz takes a source dir and tarballFilePath and a single exclusion path
+// It creates a gzipped tarball.
 // So sorry that exclusion is a single relative path. It should be a set of patterns, rfay 2021-12-15
 func Tar(src string, tarballFilePath string, exclusion string) error {
 	// ensure the src actually exists before trying to tar it
@@ -261,16 +261,19 @@ func Tar(src string, tarballFilePath string, exclusion string) error {
 	}
 	separator := string(rune(filepath.Separator))
 
-	file, err := os.Create(tarballFilePath)
+	tarball, err := os.Create(tarballFilePath)
 	if err != nil {
 		return fmt.Errorf("Could not create tarball file '%s', got error '%s'", tarballFilePath, err.Error())
 	}
 	// nolint: errcheck
-	defer file.Close()
+	defer tarball.Close()
 
-	mw := io.MultiWriter(file)
+	mw := io.MultiWriter(tarball)
 
-	tw := tar.NewWriter(mw)
+	gzw := gzip.NewWriter(mw)
+	defer gzw.Close()
+
+	tw := tar.NewWriter(gzw)
 	defer tw.Close()
 
 	// walk path
