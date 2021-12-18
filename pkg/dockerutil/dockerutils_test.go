@@ -571,3 +571,26 @@ subdir1.txt
 	})
 
 }
+
+// TestDockerIP tries out a number of DOCKER_HOST permutations
+// to verify that GetDockerIP does them right
+func TestGetDockerIP(t *testing.T) {
+	assert := asrt.New(t)
+
+	expectations := map[string]string{
+		"":                            "127.0.0.1",
+		"unix:///var/run/docker.sock": "127.0.0.1",
+		"unix:///Users/rfay/.docker/run/docker.sock": "127.0.0.1",
+		"unix:///Users/rfay/.colima/docker.sock":     "127.0.0.1",
+		"tcp://ddev.com:2375":                        "35.202.87.134",
+	}
+
+	for k, v := range expectations {
+		_ = os.Setenv("DOCKER_HOST", k)
+		// DockerIP is cached, so we have to reset it to check
+		DockerIP = ""
+		result, err := GetDockerIP()
+		assert.NoError(err)
+		assert.Equal(v, result, "for %s expected %s, got %s", k, v, result)
+	}
+}
