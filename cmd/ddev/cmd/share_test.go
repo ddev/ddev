@@ -17,6 +17,9 @@ import (
 
 // TestShareCmd tests `ddev share`
 func TestShareCmd(t *testing.T) {
+	if os.Getenv("DDEV_TEST_SHARE_CMD") != "true" {
+		t.Skip("Skipping because DDEV_TEST_SHARE_CMD != true")
+	}
 	if runtime.GOOS == "windows" {
 		t.Skip("Skipping because unreliable on Windows due to DNS lookup failure")
 	}

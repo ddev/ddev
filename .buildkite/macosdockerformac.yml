@@ -12,4 +12,5 @@
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
       BUILDKIT_PROGRESS: plain
       DDEV_TEST_USE_NFSMOUNT: true
+      DDEV_TEST_SHARE_CMD: "true"
     parallelism: 1
