@@ -1,6 +1,7 @@
 package archive_test
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
@@ -81,6 +82,9 @@ func TestArchiveTar(t *testing.T) {
 	err = archive.Untar(tarballFile.Name(), tmpDir, "")
 	assert.NoError(err)
 
+	fi, err := os.Stat(filepath.Join(tmpDir, ".test.sh"))
+	assert.NoError(err)
+	assert.True(fi.Mode() == fs.FileMode(0755), ".test.sh should be executable but isn't, fi.Mode()=%v", fi.Mode())
 	assert.FileExists(filepath.Join(tmpDir, "root.txt"))
 	assert.FileExists(filepath.Join(tmpDir, "subdir1", "subdir1.txt"))
 	assert.NoFileExists(filepath.Join(tmpDir, "subdir1", "subdir2", "s2.txt"))

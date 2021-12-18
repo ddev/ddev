@@ -144,6 +144,11 @@ func Untar(source string, dest string, extractionDir string) error {
 				return err
 			}
 
+			err = os.Chmod(fullPath, fs.FileMode(file.Mode))
+			if err != nil {
+				return fmt.Errorf("failed to chmod %v dir %v, err: %v", fs.FileMode(file.Mode), fullPath, err)
+			}
+
 		case tar.TypeReg:
 			fallthrough
 		case tar.TypeRegA:
@@ -164,6 +169,11 @@ func Untar(source string, dest string, extractionDir string) error {
 			if err != nil {
 				return fmt.Errorf("failed to copy to file %v, err: %v", fullPath, err)
 			}
+			err = os.Chmod(fullPath, fs.FileMode(file.Mode))
+			if err != nil {
+				return fmt.Errorf("failed to chmod %v file %v, err: %v", fs.FileMode(file.Mode), fullPath, err)
+			}
+
 		}
 	}
 
