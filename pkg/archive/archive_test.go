@@ -62,17 +62,34 @@ func TestUnarchive(t *testing.T) {
 // TestArchiveTar tests creation of a simple tarball
 func TestArchiveTar(t *testing.T) {
 	assert := asrt.New(t)
-	pwd, _ := os.Getwd()
+	origDir, _ := os.Getwd()
+
 	tarballFile, err := os.CreateTemp("", t.Name()+"_*.tar.gz")
 	assert.NoError(err)
 
-	err = archive.Tar(filepath.Join(pwd, "testdata", t.Name()), tarballFile.Name(), filepath.Join("subdir1", "subdir2"))
+	tarSrc := filepath.Join(origDir, "testdata", t.Name())
+	err = os.Chdir(tarSrc)
+	assert.NoError(err)
+
+	expectations := map[string]fs.FileMode{}
+	for _, f := range []string{".test.sh", "root.txt", filepath.Join("subdir1", "subdir1.txt")} {
+		fi, err := os.Stat(f)
+		assert.NoError(err)
+		expectations[f] = fi.Mode()
+	}
+
+	err = archive.Tar(tarSrc, tarballFile.Name(), filepath.Join("subdir1", "subdir2"))
 	assert.NoError(err)
 
 	tmpDir := testcommon.CreateTmpDir(t.Name())
 
+	err = os.Chdir(tmpDir)
+	assert.NoError(err)
 	t.Cleanup(
 		func() {
+			err := os.Chdir(origDir)
+			assert.NoError(err)
+
 			// Could not figure out what causes this not to be removable
 			//err = os.Remove(tarballFile.Name())
 			//assert.NoError(err)
@@ -82,11 +99,11 @@ func TestArchiveTar(t *testing.T) {
 	err = archive.Untar(tarballFile.Name(), tmpDir, "")
 	assert.NoError(err)
 
-	fi, err := os.Stat(filepath.Join(tmpDir, ".test.sh"))
-	assert.NoError(err)
-	assert.True(fi.Mode() == fs.FileMode(0755), ".test.sh should be executable but isn't, fi.Mode()=%v", fi.Mode())
-	assert.FileExists(filepath.Join(tmpDir, "root.txt"))
-	assert.FileExists(filepath.Join(tmpDir, "subdir1", "subdir1.txt"))
+	for f, m := range expectations {
+		fi, err := os.Stat(f)
+		assert.NoError(err)
+		assert.Equal(m, fi.Mode(), "expected mode for %s was %o but got %o", f, m, fi.Mode())
+	}
 	assert.NoFileExists(filepath.Join(tmpDir, "subdir1", "subdir2", "s2.txt"))
 }
 
