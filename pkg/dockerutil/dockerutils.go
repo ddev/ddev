@@ -619,7 +619,7 @@ var dockerHostRawURL string
 var DockerIP string
 
 // GetDockerIP returns either the default Docker IP address (127.0.0.1)
-// or the value as configured by $DOCKER_HOST (if DOCKER_HOST is an http/s URL)
+// or the value as configured by $DOCKER_HOST (if DOCKER_HOST is an tcp:// URL)
 func GetDockerIP() (string, error) {
 	if DockerIP == "" {
 		DockerIP = "127.0.0.1"
