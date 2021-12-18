@@ -575,6 +575,7 @@ subdir1.txt
 	})
 
 }
+
 // TestDockerIP tries out a number of DOCKER_HOST permutations
 // to verify that GetDockerIP does them right
 func TestGetDockerIP(t *testing.T) {
