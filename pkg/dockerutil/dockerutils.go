@@ -72,6 +72,7 @@ func GetDockerClient() *docker.Client {
 	// This is a cheap way of using docker contexts by running `docker context inspect`
 	// I would wish for something far better, but trying to transplant the code from
 	// docker/cli did not succeed. rfay 2021-12-16
+	// `docker context inspect` will already respect $DOCKER_CONTEXT so we don't have to do that.
 	if dockerContextEndpoint == "" {
 		dockerContextEndpoint, err = exec2.RunHostCommand("docker", "context", "inspect", "-f", `{{ .Endpoints.docker.Host }}`)
 		if err != nil {
@@ -614,33 +615,44 @@ func CheckForHTTPS(container docker.APIContainers) bool {
 	return false
 }
 
+var dockerHostRawURL string
+var DockerIP string
+
 // GetDockerIP returns either the default Docker IP address (127.0.0.1)
 // or the value as configured by $DOCKER_HOST (if DOCKER_HOST is an http/s URL)
 func GetDockerIP() (string, error) {
-	dockerIP := "127.0.0.1"
-	dockerHostRawURL := os.Getenv("DOCKER_HOST")
-	if dockerHostRawURL != "" {
-		dockerHostURL, err := url.Parse(dockerHostRawURL)
-		if err != nil {
-			return "", fmt.Errorf("failed to parse $DOCKER_HOST=%s: %v", dockerHostRawURL, err)
+	if DockerIP == "" {
+		DockerIP = "127.0.0.1"
+		dockerHostRawURL = os.Getenv("DOCKER_HOST")
+		// If DOCKER_HOST is empty, then the client hasn't been initialized
+		// from the docker context
+		if dockerHostRawURL == "" {
+			_ = GetDockerClient()
+			dockerHostRawURL = os.Getenv("DOCKER_HOST")
 		}
-		hostPart := dockerHostURL.Hostname()
-		if hostPart != "" {
-			// Check to see if the hostname we found is an IP address
-			addr := net.ParseIP(hostPart)
-			if addr == nil {
-				// If it wasn't an IP address, look it up to get IP address
-				ip, err := net.LookupHost(hostPart)
-				if err == nil && len(ip) > 0 {
-					hostPart = ip[0]
-				} else {
-					return "", fmt.Errorf("failed to look up IP address for $DOCKER_HOST=%s, hostname=%s: %v", dockerHostRawURL, hostPart, err)
-				}
+		if dockerHostRawURL != "" {
+			dockerHostURL, err := url.Parse(dockerHostRawURL)
+			if err != nil {
+				return "", fmt.Errorf("failed to parse $DOCKER_HOST=%s: %v", dockerHostRawURL, err)
 			}
-			dockerIP = hostPart
+			hostPart := dockerHostURL.Hostname()
+			if hostPart != "" {
+				// Check to see if the hostname we found is an IP address
+				addr := net.ParseIP(hostPart)
+				if addr == nil {
+					// If it wasn't an IP address, look it up to get IP address
+					ip, err := net.LookupHost(hostPart)
+					if err == nil && len(ip) > 0 {
+						hostPart = ip[0]
+					} else {
+						return "", fmt.Errorf("failed to look up IP address for $DOCKER_HOST=%s, hostname=%s: %v", dockerHostRawURL, hostPart, err)
+					}
+				}
+				DockerIP = hostPart
+			}
 		}
 	}
-	return dockerIP, nil
+	return DockerIP, nil
 }
 
 // RunSimpleContainer runs a container (non-daemonized) and captures the stdout/stderr.

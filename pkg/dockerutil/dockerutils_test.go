@@ -587,8 +587,10 @@ func TestGetDockerIP(t *testing.T) {
 
 	for k, v := range expectations {
 		_ = os.Setenv("DOCKER_HOST", k)
+		// DockerIP is cached, so we have to reset it to check
+		DockerIP = ""
 		result, err := GetDockerIP()
 		assert.NoError(err)
-		assert.Equal(v, result)
+		assert.Equal(v, result, "for %s expected %s, got %s", k, v, result)
 	}
 }
