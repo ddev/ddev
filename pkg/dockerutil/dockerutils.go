@@ -1248,9 +1248,10 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 	}
 
 	// On Windows, the tarball upload provided by Docker doesn't properly handle
-	// the executable bit, so we'll chmod +x each shell script
+	// the executable bit, so we'll chmod +x each shell script using the
+	// windows_chmod_scripts.sh script built into web container
 	if runtime.GOOS == "windows" {
-		c := fmt.Sprintf("find %s -type f | xargs file -i  | awk -F: '/text.x-shellscript/ { print $1 }' >/tmp/scripts.txt; if [ -s /tmp/scripts.txt ]; then chmod +x $(cat /tmp/scripts.txt); fi", dstPath)
+		c := "windows_chmod_scripts.sh " + dstPath
 		stdout, stderr, err := Exec(cid.Names[0], c)
 		util.Debug("CopyIntoContainer: Exec %s stdout=%s, stderr=%s, err=%v", c, stdout, stderr, err)
 	}
