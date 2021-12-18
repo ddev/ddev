@@ -541,14 +541,16 @@ func TestCopyIntoVolume(t *testing.T) {
 	err = CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "", "0", "", true)
 	assert.NoError(err)
 
-	mainContainerID, out, err := RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil)
+	// Make sure that the content is the same, and that .test.sh is executable
+	// On Windows the upload can result in losing executable bit
+	mainContainerID, out, err := RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R .test.sh * && ./.test.sh"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil)
 	assert.NoError(err)
-	assert.Equal(`.:
+	assert.Equal(`.test.sh
 root.txt
-subdir1
 
-./subdir1:
+subdir1:
 subdir1.txt
+hi this is a test file
 `, out)
 
 	err = CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "somesubdir", "501", "", true)
@@ -613,14 +615,14 @@ func TestCopyIntoContainer(t *testing.T) {
 	err = CopyIntoContainer(filepath.Join(pwd, "testdata", t.Name()), testContainerName, targetDir, "")
 	require.NoError(t, err)
 
-	out, _, err := Exec(cid.ID, fmt.Sprintf(`bash -c "cd %s && ls -R"`, targetDir))
+	out, _, err := Exec(cid.ID, fmt.Sprintf(`bash -c "cd %s && ls -R * .test.sh && ./.test.sh"`, targetDir))
 	require.NoError(t, err)
-	assert.Equal(`.:
+	assert.Equal(`.test.sh
 root.txt
-subdir1
 
-./subdir1:
+subdir1:
 subdir1.txt
+hi this is a test file
 `, out)
 
 }

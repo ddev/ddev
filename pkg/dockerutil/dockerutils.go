@@ -968,7 +968,6 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 	}
 	volPath := "/mnt/v"
 	targetSubdirFullPath := volPath + "/" + targetSubdir
-	client := GetDockerClient()
 	fi, err := os.Stat(sourcePath)
 	if err != nil {
 		return err
@@ -985,43 +984,24 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 	// nolint errcheck
 	defer f.Close()
 
+	containerName := "CopyIntoVolue" + nodeps.RandomString(12)
+
 	track := util.TimeTrack(time.Now(), "CopyIntoVolume "+sourcePath+" "+volumeName)
-	containerID, _, err := RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && tail -f /dev/null"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, nil)
+	containerID, _, err := RunSimpleContainer(version.GetWebImage(), containerName, []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && tail -f /dev/null"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, nil)
 	if err != nil {
 		return err
 	}
 	// nolint: errcheck
 	defer RemoveContainer(containerID, 0)
 
-	tmpTar, err := os.CreateTemp("", "CopyIntoVolume")
-	if err != nil {
-		log.Fatal(err)
-	}
+	err = CopyIntoContainer(sourcePath, containerName, targetSubdirFullPath, exclusion)
 
-	// nolint: errcheck
-	defer os.Remove(tmpTar.Name()) // clean up
-
-	// Tar up the sourcePath into a temporary tarball to be pushed
-	err = archive.Tar(sourcePath, tmpTar.Name(), exclusion)
-	if err != nil {
-		return err
-	}
-
-	err = client.UploadToContainer(containerID, docker.UploadToContainerOptions{
-		InputStream: tmpTar,
-		Path:        targetSubdirFullPath,
-	})
 	if err != nil {
 		return err
 	}
 
 	// chown/chmod the uploaded content
 	c := fmt.Sprintf("chown -R %s %s", uid, targetSubdirFullPath)
-	// On Windows, the tarball upload provided by Docker doesn't properly handle
-	// the executable bit, so we'll chmod +x each shellscript
-	if runtime.GOOS == "windows" {
-		c = c + fmt.Sprintf(" && find %s -type f | xargs file -i  | awk -F: '/text.x-shellscript/ { print $1 }' >/tmp/scripts.txt; if [ -s /tmp/scripts.txt ]; then chmod +x $(cat /tmp/scripts.txt); fi", targetSubdirFullPath)
-	}
 	stdout, stderr, err := Exec(containerID, c)
 	util.Debug("Exec %s stdout=%s, stderr=%s, err=%v", c, stdout, stderr, err)
 
@@ -1237,7 +1217,7 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 		return fmt.Errorf("unable to mkdir -p %s inside %s: %v (stderr=%s)", dstPath, containerName, err, stderr)
 	}
 
-	tarball, err := os.CreateTemp(os.TempDir(), "containercopytmp*.tar")
+	tarball, err := os.CreateTemp(os.TempDir(), "containercopytmp*.tar.gz")
 	if err != nil {
 		return err
 	}
@@ -1263,6 +1243,17 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 		InputStream: t,
 		Path:        dstPath,
 	})
+	if err != nil {
+		return err
+	}
+
+	// On Windows, the tarball upload provided by Docker doesn't properly handle
+	// the executable bit, so we'll chmod +x each shell script
+	if runtime.GOOS == "windows" {
+		c := fmt.Sprintf("find %s -type f | xargs file -i  | awk -F: '/text.x-shellscript/ { print $1 }' >/tmp/scripts.txt; if [ -s /tmp/scripts.txt ]; then chmod +x $(cat /tmp/scripts.txt); fi", dstPath)
+		stdout, stderr, err := Exec(cid.Names[0], c)
+		util.Debug("CopyIntoContainer: Exec %s stdout=%s, stderr=%s, err=%v", c, stdout, stderr, err)
+	}
 	return err
 }
 
