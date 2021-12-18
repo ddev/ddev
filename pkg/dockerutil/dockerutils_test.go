@@ -581,6 +581,10 @@ subdir1.txt
 func TestGetDockerIP(t *testing.T) {
 	assert := asrt.New(t)
 
+	origDOCKERHOST := os.Getenv("DOCKER_HOST")
+	t.Cleanup(func() {
+		_ = os.Setenv("DOCKER_HOST", origDOCKERHOST)
+	})
 	expectations := map[string]string{
 		"":                            "127.0.0.1",
 		"unix:///var/run/docker.sock": "127.0.0.1",
