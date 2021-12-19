@@ -810,7 +810,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		templateVars.DockerIP = "0.0.0.0"
 	}
 
-	t, err := template.New("compose template").Funcs(sprig.TxtFuncMap()).ParseFS(bundledAssets, "app_compose_template.yaml")
+	t, err := template.New("app_compose_template.yaml").Funcs(sprig.TxtFuncMap()).ParseFS(bundledAssets, "app_compose_template.yaml")
 	if err != nil {
 		return "", err
 	}

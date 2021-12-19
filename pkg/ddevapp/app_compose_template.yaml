@@ -143,66 +143,66 @@ services:
     - DDEV_XDEBUG_ENABLED
     - DEPLOY_NAME=local
     {{ if not .DisableSettingsManagement }}
-  - DRUSH_OPTIONS_URI=$DDEV_PRIMARY_URL
+    - DRUSH_OPTIONS_URI=$DDEV_PRIMARY_URL
     {{ end }}
-  - DRUSH_ALLOW_XDEBUG=1
-  - DOCKER_IP={{ .DockerIP }}
-  - HOST_DOCKER_INTERNAL_IP={{ .HostDockerInternalIP }}
-  # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.site:<port>
-  # To expose a container port to a different host port, define the port as hostPort:containerPort
-  - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80,${DDEV_MAILHOG_PORT}:{{ .MailhogPort }}
-  # You can optionally expose an HTTPS port option for any ports defined in HTTP_EXPOSE.
-  # To expose an HTTPS port, define the port as securePort:containerPort.
-  - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80,${DDEV_MAILHOG_HTTPS_PORT}:{{ .MailhogPort }}
-  - IS_DDEV_PROJECT=true
-  - LINES
-  - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-web/mysql_history
-  - PHP_IDE_CONFIG=serverName=${DDEV_SITENAME}.${DDEV_TLD}
-  - SSH_AUTH_SOCK=/home/.ssh-agent/socket
-  - TZ={{ .Timezone }}
-  - VIRTUAL_HOST=${DDEV_HOSTNAME}
+    - DRUSH_ALLOW_XDEBUG=1
+    - DOCKER_IP={{ .DockerIP }}
+    - HOST_DOCKER_INTERNAL_IP={{ .HostDockerInternalIP }}
+    # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.site:<port>
+    # To expose a container port to a different host port, define the port as hostPort:containerPort
+    - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80,${DDEV_MAILHOG_PORT}:{{ .MailhogPort }}
+    # You can optionally expose an HTTPS port option for any ports defined in HTTP_EXPOSE.
+    # To expose an HTTPS port, define the port as securePort:containerPort.
+    - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80,${DDEV_MAILHOG_HTTPS_PORT}:{{ .MailhogPort }}
+    - IS_DDEV_PROJECT=true
+    - LINES
+    - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-web/mysql_history
+    - PHP_IDE_CONFIG=serverName=${DDEV_SITENAME}.${DDEV_TLD}
+    - SSH_AUTH_SOCK=/home/.ssh-agent/socket
+    - TZ={{ .Timezone }}
+    - VIRTUAL_HOST=${DDEV_HOSTNAME}
     {{ range $env := .WebEnvironment }}- "{{ $env }}"
     {{ end }}
-  labels:
-    com.ddev.site-name: ${DDEV_SITENAME}
-    com.ddev.platform: {{ .Plugin }}
-    com.ddev.app-type: {{ .AppType }}
-    com.ddev.approot: $DDEV_APPROOT
-    {{ if .HostDockerInternalIP }}
-  extra_hosts: [ "host.docker.internal:{{ .HostDockerInternalIP }}" ]
-    {{ end }}
-    {{ if not .OmitRouter }}
-  external_links:
-    {{ range $hostname := .Hostnames }}- "ddev-router:{{ $hostname }}"
-    {{ end }}
-    {{ end }}
-  healthcheck:
-    interval: 1s
-    retries: 120
-    start_period: 120s
-    timeout: 120s
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.platform: {{ .Plugin }}
+      com.ddev.app-type: {{ .AppType }}
+      com.ddev.approot: $DDEV_APPROOT
+      {{ if .HostDockerInternalIP }}
+    extra_hosts: [ "host.docker.internal:{{ .HostDockerInternalIP }}" ]
+      {{ end }}
+      {{ if not .OmitRouter }}
+    external_links:
+      {{ range $hostname := .Hostnames }}- "ddev-router:{{ $hostname }}"
+      {{ end }}
+      {{ end }}
+    healthcheck:
+      interval: 1s
+      retries: 120
+      start_period: 120s
+      timeout: 120s
 
-{{ if not .OmitDBA }}
-dba:
-  container_name: ddev-${DDEV_SITENAME}-dba
-  image: $DDEV_DBAIMAGE
-  working_dir: "{{ .DBAWorkingDir }}"
-  restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
-  labels:
-    com.ddev.site-name: ${DDEV_SITENAME}
-    com.ddev.platform: {{ .Plugin }}
-    com.ddev.app-type: {{ .AppType }}
-    com.ddev.approot: $DDEV_APPROOT
-  links:
-    - db:db
-  expose:
-    - "80"
-  {{ if .HostPHPMyAdminPort }}
-  ports:
-    - "{{ .DockerIP }}:{{ .HostPHPMyAdminPort }}:80"
-  {{ end }} {{/* end if .HostPHPMyAdminPort */}}
-  hostname: {{ .Name }}-dba
-  environment:
+  {{ if not .OmitDBA }}
+  dba:
+    container_name: ddev-${DDEV_SITENAME}-dba
+    image: $DDEV_DBAIMAGE
+    working_dir: "{{ .DBAWorkingDir }}"
+    restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.platform: {{ .Plugin }}
+      com.ddev.app-type: {{ .AppType }}
+      com.ddev.approot: $DDEV_APPROOT
+    links:
+      - db:db
+    expose:
+      - "80"
+    {{ if .HostPHPMyAdminPort }}
+    ports:
+      - "{{ .DockerIP }}:{{ .HostPHPMyAdminPort }}:80"
+    {{ end }} {{/* end if .HostPHPMyAdminPort */}}
+    hostname: {{ .Name }}-dba
+    environment:
     - PMA_USER=root
     - PMA_PASSWORD=root
     - VIRTUAL_HOST=$DDEV_HOSTNAME
@@ -211,11 +211,11 @@ dba:
     # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.site:<port>
     - HTTP_EXPOSE=${DDEV_PHPMYADMIN_PORT}:{{ .DBAPort }}
     - HTTPS_EXPOSE=${DDEV_PHPMYADMIN_HTTPS_PORT}:{{ .DBAPort }}
-  healthcheck:
-    interval: 120s
-    timeout: 2s
-    retries: 1
-  {{ end }}{{/* end if not .OmitDBA */}}
+    healthcheck:
+      interval: 120s
+      timeout: 2s
+      retries: 1
+    {{ end }}{{/* end if not .OmitDBA */}}
 networks:
   default:
     name: ddev_default
