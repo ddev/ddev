@@ -1682,8 +1682,10 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 
 	elapsed := util.TimeTrack(time.Now(), "CopySnapshotFromContainer")
 	// Copy snapshot back to the host
-
 	err = dockerutil.CopyFromContainer(GetContainerName(app, "db"), containerSnapshotDir, app.GetConfigPath("db_snapshots"))
+	if err != nil {
+		return "", err
+	}
 	elapsed()
 
 	id, err := GetContainerID(app, "db")
@@ -1700,6 +1702,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	if err != nil {
 		return snapshotName, fmt.Errorf("failed to process pre-stop hooks: %v", err)
 	}
+
 	return snapshotName, nil
 }
 
