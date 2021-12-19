@@ -675,20 +675,13 @@ type composeYAMLVars struct {
 	DBWorkingDir              string
 	DBAWorkingDir             string
 	WebEnvironment            []string
+	NoBindMounts              bool
 }
 
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
 func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error
-	templ, err := template.New("compose template").Funcs(sprig.TxtFuncMap()).Parse(DDevComposeTemplate)
-	if err != nil {
-		return "", err
-	}
-	templ, err = templ.Parse(DDevComposeTemplate)
-	if err != nil {
-		return "", err
-	}
 
 	hostDockerInternalIP, err := dockerutil.GetHostDockerInternalIP()
 	if err != nil {
@@ -756,6 +749,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		WebEnvironment:        webEnvironment,
 		MariaDBVolumeName:     app.GetMariaDBVolumeName(),
 		NFSMountVolumeName:    app.GetNFSMountVolumeName(),
+		NoBindMounts:          globalconfig.DdevGlobalConfig.NoBindMounts,
 	}
 	if app.NFSMountEnabled || app.NFSMountEnabledGlobal {
 		templateVars.MountType = "volume"
@@ -816,7 +810,12 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		templateVars.DockerIP = "0.0.0.0"
 	}
 
-	err = templ.Execute(&doc, templateVars)
+	t, err := template.New("compose template").Funcs(sprig.TxtFuncMap()).ParseFS(bundledAssets, "app_compose_template.yaml")
+	if err != nil {
+		return "", err
+	}
+
+	err = t.Execute(&doc, templateVars)
 	return doc.String(), err
 }
 
