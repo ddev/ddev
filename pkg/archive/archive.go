@@ -320,14 +320,16 @@ func Tar(src string, tarballFilePath string, exclusion string) error {
 			return err
 		}
 
-		// Windows has no concept of executable bit, but we're copying shell scripts
-		// and they need to be executable. SO if we detect a shell script
-		// set its mode to executable
+		// Windows filesystem has no concept of executable bit, but we're copying shell scripts
+		// and they need to be executable. So if we detect a shell script
+		// set its mode to executable. It seems this is what utilities like git-bash
+		// and cygwin, etc. have done for years to work around the lack of mode bits on NTFS,
+		// for example, see https://stackoverflow.com/a/25730108/215713
 		if runtime.GOOS == "windows" {
-			buffer := make([]byte, 128)
+			buffer := make([]byte, 16)
 			_, _ = f.Read(buffer)
 			_, _ = f.Seek(0, 0)
-			if strings.HasPrefix(string(buffer), "#!/") {
+			if strings.HasPrefix(string(buffer), "#!") {
 				header.Mode = 0755
 			}
 		}
