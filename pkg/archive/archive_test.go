@@ -99,10 +99,14 @@ func TestArchiveTar(t *testing.T) {
 	err = archive.Untar(tarballFile.Name(), tmpDir, "")
 	assert.NoError(err)
 
-	for f, m := range expectations {
-		fi, err := os.Stat(f)
+	for fileName, mode := range expectations {
+		testedFileName, err := filepath.Abs(fileName)
+		assert.NoError(err, "fileName err: %v %v", testedFileName, err)
+		fi, err := os.Stat(fileName)
 		assert.NoError(err)
-		assert.Equal(m, fi.Mode(), "expected mode for %s was %o but got %o", f, m, fi.Mode())
+		//desc := fmt.Sprintf("%s: Orig mode=%o, found mode=%o", fileName, mode, fi.Mode())
+		//t.Log(desc)
+		assert.Equal(mode, fi.Mode(), "expected mode for %s was %o but got %o", fileName, mode, fi.Mode())
 	}
 	assert.NoFileExists(filepath.Join(tmpDir, "subdir1", "subdir2", "s2.txt"))
 }
