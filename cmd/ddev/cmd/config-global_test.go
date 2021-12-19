@@ -50,13 +50,13 @@ func TestCmdGlobalConfig(t *testing.T) {
 	args := []string{"config", "global"}
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[]\nweb-environment=[]\nmutagen-enabled=false\nnfs-mount-enabled=false\nrouter-bind-all-interfaces=false\ninternet-detection-timeout-ms=750\ndisable-http2=false\nuse-letsencrypt=false\nletsencrypt-email=\ntable-style=default\nsimple-formatting=false\nauto-restart-containers=false\nuse-hardened-images=false\nfail-on-hook-fail=false\nrequired-docker-compose-version=\nuse-docker-compose-from-path=false")
+	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[]\nweb-environment=[]\nmutagen-enabled=false\nnfs-mount-enabled=false\nrouter-bind-all-interfaces=false\ninternet-detection-timeout-ms=750\ndisable-http2=false\nuse-letsencrypt=false\nletsencrypt-email=\ntable-style=default\nsimple-formatting=false\nauto-restart-containers=false\nuse-hardened-images=false\nfail-on-hook-fail=false\nrequired-docker-compose-version=\nuse-docker-compose-from-path=false\nno-bind-mounts=false")
 
 	// Update a config
-	args = []string{"config", "global", "--instrumentation-opt-in=false", "--omit-containers=dba,ddev-ssh-agent", "--mutagen-enabled=true", "--nfs-mount-enabled=true", "--router-bind-all-interfaces=true", "--internet-detection-timeout-ms=850", "--use-letsencrypt", "--letsencrypt-email=nobody@example.com", "--table-style=bright", "--simple-formatting=true", "--auto-restart-containers=true", "--use-hardened-images=true", "--fail-on-hook-fail=true", `--disable-http2`, `--web-environment="SOMEENV=some+val"`}
+	args = []string{"config", "global", "--instrumentation-opt-in=false", "--omit-containers=dba,ddev-ssh-agent", "--mutagen-enabled=true", "--nfs-mount-enabled=true", "--router-bind-all-interfaces=true", "--internet-detection-timeout-ms=850", "--use-letsencrypt", "--letsencrypt-email=nobody@example.com", "--table-style=bright", "--simple-formatting=true", "--auto-restart-containers=true", "--use-hardened-images=true", "--fail-on-hook-fail=true", `--disable-http2`, `--web-environment="SOMEENV=some+val"`, `--no-bind-mounts`}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[dba,ddev-ssh-agent]\nweb-environment=[\"SOMEENV=some+val\"]\nmutagen-enabled=true\nnfs-mount-enabled=true\nrouter-bind-all-interfaces=true\ninternet-detection-timeout-ms=850\ndisable-http2=true\nuse-letsencrypt=true\nletsencrypt-email=nobody@example.com\ntable-style=bright\nsimple-formatting=true\nauto-restart-containers=true\nuse-hardened-images=true\nfail-on-hook-fail=true\nrequired-docker-compose-version=\nuse-docker-compose-from-path=false")
+	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[dba,ddev-ssh-agent]\nweb-environment=[\"SOMEENV=some+val\"]\nmutagen-enabled=true\nnfs-mount-enabled=true\nrouter-bind-all-interfaces=true\ninternet-detection-timeout-ms=850\ndisable-http2=true\nuse-letsencrypt=true\nletsencrypt-email=nobody@example.com\ntable-style=bright\nsimple-formatting=true\nauto-restart-containers=true\nuse-hardened-images=true\nfail-on-hook-fail=true\nrequired-docker-compose-version=\nuse-docker-compose-from-path=false\nno-bind-mounts=true")
 
 	err = globalconfig.ReadGlobalConfig()
 	assert.NoError(err)
@@ -73,4 +73,5 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.True(globalconfig.DdevGlobalConfig.DisableHTTP2)
 	assert.True(globalconfig.DdevGlobalConfig.SimpleFormatting)
 	assert.Equal("bright", globalconfig.DdevGlobalConfig.TableStyle)
+	assert.True(globalconfig.DdevGlobalConfig.NoBindMounts)
 }
