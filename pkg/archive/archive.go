@@ -314,7 +314,25 @@ func Tar(src string, tarballFilePath string, exclusion string) error {
 			return err
 		}
 
-		// update the name to correctly reflect the desired destination when untaring
+		// open files for tarring
+		f, err := os.Open(file)
+		if err != nil {
+			return err
+		}
+
+		// Windows has no concept of executable bit, but we're copying shell scripts
+		// and they need to be executable. SO if we detect a shell script
+		// set its mode to executable
+		if runtime.GOOS == "windows" {
+			buffer := make([]byte, 128)
+			_, _ = f.Read(buffer)
+			_, _ = f.Seek(0, 0)
+			if strings.HasPrefix(string(buffer), "#!/") {
+				header.Mode = 0755
+			}
+		}
+
+		// update the name to correctly reflect the desired destination when untarring
 		header.Name = strings.TrimPrefix(strings.Replace(file, src, "", -1), string(filepath.Separator))
 		if runtime.GOOS == "windows" {
 			header.Name = strings.Replace(header.Name, `\`, `/`, -1)
@@ -322,12 +340,6 @@ func Tar(src string, tarballFilePath string, exclusion string) error {
 
 		// write the header
 		if err := tw.WriteHeader(header); err != nil {
-			return err
-		}
-
-		// open files for taring
-		f, err := os.Open(file)
-		if err != nil {
 			return err
 		}
 

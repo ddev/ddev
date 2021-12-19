@@ -1247,15 +1247,7 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 		return err
 	}
 
-	// On Windows, the tarball upload provided by Docker doesn't properly handle
-	// the executable bit, so we'll chmod +x each shell script using the
-	// windows_chmod_scripts.sh script built into web container
-	if runtime.GOOS == "windows" {
-		c := "windows_chmod_scripts.sh " + dstPath
-		stdout, stderr, err := Exec(cid.Names[0], c)
-		util.Debug("CopyIntoContainer: Exec %s stdout=%s, stderr=%s, err=%v", c, stdout, stderr, err)
-	}
-	return err
+	return nil
 }
 
 // CopyFromContainer copies a path from a specified container and location to a dstPath on host

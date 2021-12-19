@@ -1,6 +1,7 @@
 package archive_test
 
 import (
+	"github.com/stretchr/testify/require"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -104,6 +105,7 @@ func TestArchiveTar(t *testing.T) {
 		assert.NoError(err, "fileName err: %v %v", testedFileName, err)
 		fi, err := os.Stat(fileName)
 		assert.NoError(err)
+		require.NotNil(t, fi)
 		//desc := fmt.Sprintf("%s: Orig mode=%o, found mode=%o", fileName, mode, fi.Mode())
 		//t.Log(desc)
 		assert.Equal(mode, fi.Mode(), "expected mode for %s was %o but got %o", fileName, mode, fi.Mode())
