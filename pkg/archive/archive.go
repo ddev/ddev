@@ -261,7 +261,7 @@ func Unzip(source string, dest string, extractionDir string) error {
 	return nil
 }
 
-// TarGz takes a source dir and tarballFilePath and a single exclusion path
+// Tar takes a source dir and tarballFilePath and a single exclusion path
 // It creates a gzipped tarball.
 // So sorry that exclusion is a single relative path. It should be a set of patterns, rfay 2021-12-15
 func Tar(src string, tarballFilePath string, exclusion string) error {
