@@ -39,7 +39,7 @@ ddev delete --all`,
 		// Iterate through the list of projects built above, removing each one.
 		for _, project := range projects {
 			if !noConfirm {
-				prompt := "OK to delete this project and its database and snapshots?\n  %s in %s\nThe code and its .ddev directory will not be touched.\n"
+				prompt := "OK to delete this project and its database?\n  %s in %s\nThe code and its .ddev directory will not be touched.\n"
 				if !omitSnapshot {
 					prompt = prompt + "A database snapshot will be made before the database is deleted.\n"
 				}
