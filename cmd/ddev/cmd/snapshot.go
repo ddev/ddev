@@ -67,7 +67,7 @@ func createAppSnapshot(app *ddevapp.DdevApp) {
 	if snapshotNameOutput, err := app.Snapshot(snapshotName); err != nil {
 		util.Failed("Failed to snapshot %s: %v", app.GetName(), err)
 	} else {
-		util.Success("Created snapshot %s", snapshotNameOutput)
+		util.Success("Created database snapshot %s", snapshotNameOutput)
 	}
 }
 

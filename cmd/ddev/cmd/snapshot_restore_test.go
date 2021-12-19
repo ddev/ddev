@@ -31,7 +31,7 @@ func TestCmdSnapshotRestore(t *testing.T) {
 	args := []string{"snapshot", "--name", "test-snapshot"}
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.Contains(out, "Created snapshot test-snapshot")
+	assert.Contains(out, "Created database snapshot test-snapshot")
 
 	// Ensure that a snapshot can be restored
 	args = []string{"snapshot", "restore", "test-snapshot"}

@@ -1195,6 +1195,7 @@ func IsDockerDesktop() bool {
 
 // CopyIntoContainer copies a path into a specified container and location
 func CopyIntoContainer(srcPath string, containerName string, dstPath string, exclusion string) error {
+	startTime := time.Now()
 	fi, err := os.Stat(srcPath)
 	if err != nil {
 		return err
@@ -1247,11 +1248,13 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 		return err
 	}
 
+	util.Success("Copied %s:%s into %s in %v", srcPath, containerName, dstPath, time.Since(startTime))
 	return nil
 }
 
 // CopyFromContainer copies a path from a specified container and location to a dstPath on host
 func CopyFromContainer(containerName string, containerPath string, hostPath string) error {
+	startTime := time.Now()
 	err := os.MkdirAll(hostPath, 0755)
 	if err != nil {
 		return err
@@ -1293,5 +1296,7 @@ func CopyFromContainer(containerName string, containerPath string, hostPath stri
 	if err != nil {
 		return err
 	}
+	util.Success("Copied %s:%s to %s in %v", containerName, containerPath, hostPath, time.Since(startTime))
+
 	return nil
 }
