@@ -44,8 +44,6 @@ github.com/Microsoft/hcsshim/internal/vmcompute
 github.com/Microsoft/hcsshim/internal/wclayer
 github.com/Microsoft/hcsshim/internal/winapi
 github.com/Microsoft/hcsshim/osversion
-# github.com/aokoli/goutils v1.0.1
-## explicit
 # github.com/cheggaaa/pb v1.0.25
 ## explicit
 github.com/cheggaaa/pb
