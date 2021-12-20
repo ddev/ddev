@@ -507,17 +507,17 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 	insideContainerImportPath := path.Join("/mnt/ddev_config/", path.Base(dbPath))
 	// But if we don't have bind mounts, we have to copy dump into the container
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
-		dbContainer, err := GetContainerID(app, "db")
+		dbContainerName := GetContainerName(app, "db")
 		if err != nil {
 			return err
 		}
-		insideContainerImportPath, _, err = dockerutil.Exec(dbContainer.ID, "mktemp -d")
+		insideContainerImportPath, _, err = dockerutil.Exec(dbContainerName, "mktemp -d")
 		if err != nil {
 			return err
 		}
 		insideContainerImportPath = strings.Trim(insideContainerImportPath, "\n")
 
-		err = dockerutil.CopyIntoContainer(dbPath, dbContainer.Names[0], insideContainerImportPath, "")
+		err = dockerutil.CopyIntoContainer(dbPath, dbContainerName, insideContainerImportPath, "")
 		if err != nil {
 			return err
 		}
