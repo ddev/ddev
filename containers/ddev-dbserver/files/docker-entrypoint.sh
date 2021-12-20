@@ -23,6 +23,11 @@ function serverwait {
 	return 1
 }
 
+# There may be a snapshots volume mounted on /mnt/snapshots
+# But if not, it means we can use snapshots from /mnt/ddev_config/snapshots
+if [ ! -d /mnt/snapshots ]; then
+  ln -s /mnt/ddev_config/ddev_snapshots /mnt/snapshots
+fi
 # If we have a restore_snapshot arg, get the snapshot directory
 # otherwise, fail and abort startup
 if [ $# = "2" -a "${1:-}" = "restore_snapshot" ] ; then

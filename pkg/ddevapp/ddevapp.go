@@ -299,12 +299,12 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 		services[shortName]["status"] = c.State.Status
 		services[shortName]["full_name"] = fullName
 		services[shortName]["image"] = strings.TrimSuffix(c.Config.Image, fmt.Sprintf("-%s-built", app.Name))
-		ports := []string{}
+		var ports []string
 		for pk := range c.Config.ExposedPorts {
 			ports = append(ports, pk.Port())
 		}
 		services[shortName]["exposed_ports"] = strings.Join(ports, ",")
-		hostPorts := []string{}
+		var hostPorts []string
 		for _, pv := range k.Ports {
 			if pv.PublicPort != 0 {
 				hostPorts = append(hostPorts, strconv.FormatInt(pv.PublicPort, 10))
@@ -1854,10 +1854,14 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		}
 	}
 
-	uid, _, _ := util.GetContainerUIDGid()
-	err = dockerutil.CopyIntoVolume(filepath.Join(app.GetConfigPath("db_snapshots"), snapshotName), app.Name+"-ddev-snapshots", snapshotName, uid, "", true)
-	if err != nil {
-		return err
+	// If we have no bind mounts, we need to copy our snapshot into the snapshots volme
+	// With bind mounts, they'll already be there in the /mnt/ddev_config/db_snapshots folder
+	if globalconfig.DdevGlobalConfig.NoBindMounts {
+		uid, _, _ := util.GetContainerUIDGid()
+		err = dockerutil.CopyIntoVolume(filepath.Join(app.GetConfigPath("db_snapshots"), snapshotName), app.Name+"-ddev-snapshots", snapshotName, uid, "", true)
+		if err != nil {
+			return err
+		}
 	}
 	err = os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "restore_snapshot "+snapshotName)
 	util.CheckErr(err)
