@@ -17,8 +17,8 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-isatty"
+	copy "github.com/otiai10/copy"
 	"github.com/pkg/errors"
-
 	osexec "os/exec"
 
 	"path"
@@ -900,17 +900,22 @@ func (app *DdevApp) Start() error {
 	// Warn user if there are deprecated items used in the config
 	app.CheckDeprecations()
 
-	// Copy any global homeadditions content into its mount location
+	// Copy any homeadditions content into .ddev/.homeadditions
+	tmpHomeadditionsPath := app.GetConfigPath(".homeadditions")
+	err = os.RemoveAll(tmpHomeadditionsPath)
+	if err != nil {
+		util.Warning("unable to remove %s: %v", tmpHomeadditionsPath, err)
+	}
 	globalHomeadditionsPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "homeadditions")
 	if fileutil.IsDirectory(globalHomeadditionsPath) {
-		tmpHomeadditionsPath := app.GetConfigPath(".homeadditions")
-		if fileutil.IsDirectory(tmpHomeadditionsPath) {
-			err = os.RemoveAll(tmpHomeadditionsPath)
-			if err != nil {
-				return err
-			}
+		err = copy.Copy(globalHomeadditionsPath, tmpHomeadditionsPath)
+		if err != nil {
+			return err
 		}
-		err = fileutil.CopyDir(globalHomeadditionsPath, tmpHomeadditionsPath)
+	}
+	projectHomeAdditionsPath := app.GetConfigPath("homeadditions")
+	if fileutil.IsDirectory(projectHomeAdditionsPath) {
+		err = copy.Copy(projectHomeAdditionsPath, tmpHomeadditionsPath)
 		if err != nil {
 			return err
 		}
