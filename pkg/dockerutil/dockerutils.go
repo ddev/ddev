@@ -75,11 +75,17 @@ func GetDockerClient() *docker.Client {
 	// docker/cli did not succeed. rfay 2021-12-16
 	// `docker context inspect` will already respect $DOCKER_CONTEXT so we don't have to do that.
 	if dockerContextEndpoint == "" {
-		dockerContextEndpoint, err = exec2.RunHostCommand("docker", "context", "inspect", "-f", `{{ .Endpoints.docker.Host }}`)
+		contextInfo, err := exec2.RunHostCommand("docker", "context", "inspect", "-f", `{{ .Name }} {{ .Endpoints.docker.Host }}`)
 		if err != nil {
 			util.Warning("unable to run docker context inspect: %v", err)
 		}
-		dockerContextEndpoint = strings.Trim(dockerContextEndpoint, "\r\n ")
+		contextInfo = strings.Trim(contextInfo, " \r\n")
+		parts := strings.SplitN(contextInfo, " ", 2)
+		if len(parts) != 2 {
+			util.Warning("unable to run split docker context info %s: %v", contextInfo, err)
+		}
+		dockerContextEndpoint = parts[1]
+		util.Debug("Using docker context %s (%v)", parts[0], dockerContextEndpoint)
 	}
 	// Respect DOCKER_HOST first in case it's set
 	if os.Getenv("DOCKER_HOST") == "" {
