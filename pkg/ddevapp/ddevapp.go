@@ -900,6 +900,22 @@ func (app *DdevApp) Start() error {
 	// Warn user if there are deprecated items used in the config
 	app.CheckDeprecations()
 
+	// Copy any global homeadditions content into its mount location
+	globalHomeadditionsPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "homeadditions")
+	if fileutil.IsDirectory(globalHomeadditionsPath) {
+		tmpHomeadditionsPath := app.GetConfigPath(".homeadditions")
+		if fileutil.IsDirectory(tmpHomeadditionsPath) {
+			err = os.RemoveAll(tmpHomeadditionsPath)
+			if err != nil {
+				return err
+			}
+		}
+		err = fileutil.CopyDir(globalHomeadditionsPath, tmpHomeadditionsPath)
+		if err != nil {
+			return err
+		}
+	}
+
 	if !IsRouterDisabled(app) {
 		caRoot := globalconfig.GetCAROOT()
 		if caRoot == "" {
@@ -987,23 +1003,6 @@ func (app *DdevApp) Start() error {
 		}
 	}
 
-	// Copy any global/project homeadditions content into homedir
-	_, _, username := util.GetContainerUIDGid()
-	globalHomeadditionsPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "homeadditions")
-	if fileutil.IsDirectory(globalHomeadditionsPath) {
-		err = dockerutil.CopyIntoContainer(globalHomeadditionsPath, GetContainerName(app, "web"), "/home/"+username, "")
-		if err != nil {
-			util.Warning("failed to copy global homeadditions into web container from %s: %v", globalHomeadditionsPath, err)
-		}
-	}
-
-	projectHomeadditionsPath := app.GetConfigPath("homeadditions")
-	if fileutil.IsDirectory(projectHomeadditionsPath) {
-		err = dockerutil.CopyIntoContainer(projectHomeadditionsPath, GetContainerName(app, "web"), "/home/"+username, "")
-		if err != nil {
-			util.Warning("failed to copy project homeadditions into web container from %s: %v", projectHomeadditionsPath, err)
-		}
-	}
 	if !IsRouterDisabled(app) {
 		err = StartDdevRouter()
 		if err != nil {
