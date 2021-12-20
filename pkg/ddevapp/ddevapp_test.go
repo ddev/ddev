@@ -3259,8 +3259,8 @@ func TestNFSMount(t *testing.T) {
 	if nodeps.IsWSL2() {
 		t.Skip("Skipping on WSL2")
 	}
-	if nodeps.MutagenEnabledDefault == true {
-		t.Skip("Skipping because mutagen enabled")
+	if nodeps.MutagenEnabledDefault == true || nodeps.NoBindMountsDefault {
+		t.Skip("Skipping because mutagen/nobindmounts enabled")
 	}
 
 	assert := asrt.New(t)
