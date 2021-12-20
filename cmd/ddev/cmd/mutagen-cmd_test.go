@@ -18,7 +18,7 @@ import (
 func TestCmdMutagen(t *testing.T) {
 	assert := asrt.New(t)
 
-	if nodeps.MutagenEnabledDefault {
+	if nodeps.MutagenEnabledDefault || nodeps.NoBindMountsDefault {
 		t.Skip("Skipping because mutagen on by default")
 	}
 

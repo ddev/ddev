@@ -530,7 +530,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 
 // TestDdevStartUnmanagedSettings start and config with disable_settings_management
 func TestDdevStartUnmanagedSettings(t *testing.T) {
-	if nodeps.MutagenEnabledDefault || globalconfig.DdevGlobalConfig.MutagenEnabledGlobal {
+	if nodeps.MutagenEnabledDefault || globalconfig.DdevGlobalConfig.MutagenEnabledGlobal || nodeps.NoBindMountsDefault {
 		t.Skip("Skipping with mutagen because conflict on settings files")
 	}
 
