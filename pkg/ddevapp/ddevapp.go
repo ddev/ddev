@@ -969,6 +969,13 @@ func (app *DdevApp) Start() error {
 	// We don't care if the volume wasn't there
 	_ = dockerutil.RemoveVolume(app.GetNFSMountVolumeName())
 
+	// The db_snapshots subdirectory may be created on docker-compose up, so
+	// we need to precreate it so permissions are correct (and not root:root)
+	err = os.MkdirAll(app.GetConfigPath("db_snapshots"), 0777)
+	if err != nil {
+		return err
+	}
+
 	_, _, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "up", "--build", "-d")
 	if err != nil {
 		return err
