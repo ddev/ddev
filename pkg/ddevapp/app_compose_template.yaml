@@ -102,8 +102,6 @@ services:
       - ddev-config:/mnt/ddev_config
       {{ else }}
       - ".:/mnt/ddev_config:ro"
-      - "./nginx_full:/etc/nginx/sites-enabled:ro"
-      - "./apache:/etc/apache2/sites-enabled:ro"
       - ./xhprof:/usr/local/bin/xhprof
       {{ end }}
       - ddev-global-cache:/mnt/ddev-global-cache
