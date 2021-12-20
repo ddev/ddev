@@ -113,12 +113,6 @@ func generateRouterCompose() (string, error) {
 	}
 	defer util.CheckClose(f)
 
-	templ := template.New("routerTemplate")
-	templ, err := templ.Parse(DdevRouterTemplate)
-	if err != nil {
-		return "", err
-	}
-
 	dockerIP, _ := dockerutil.GetDockerIP()
 
 	templateVars := map[string]interface{}{
@@ -134,7 +128,12 @@ func generateRouterCompose() (string, error) {
 		"AutoRestartContainers":      globalconfig.DdevGlobalConfig.AutoRestartContainers,
 	}
 
-	err = templ.Execute(&doc, templateVars)
+	t, err := template.New("router_compose_template.yaml").ParseFS(bundledAssets, "router_compose_template.yaml")
+	if err != nil {
+		return "", err
+	}
+
+	err = t.Execute(&doc, templateVars)
 	if err != nil {
 		return "", err
 	}
