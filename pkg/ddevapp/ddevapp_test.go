@@ -1057,7 +1057,7 @@ func TestDdevImportDB(t *testing.T) {
 			continue
 		}
 
-		// There should be exactly the one users table for each of these files
+		// There should be exactly the one "users" table for each of these files
 		out, _, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
 			Cmd:     "mysql -N -e 'SHOW TABLES;' | cat",
