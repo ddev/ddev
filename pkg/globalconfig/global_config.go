@@ -171,6 +171,10 @@ func ReadGlobalConfig() error {
 		DdevGlobalConfig.InternetDetectionTimeout = nodeps.InternetDetectionTimeoutDefault
 	}
 
+	// For testing only, override NoBindMounts no matter what it's set to
+	if nodeps.NoBindMountsDefault == true {
+		DdevGlobalConfig.NoBindMounts = true
+	}
 	err = ValidateGlobalConfig()
 	if err != nil {
 		return err

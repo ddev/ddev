@@ -44,6 +44,10 @@ func init() {
 	if testMutagen := os.Getenv("DDEV_TEST_USE_MUTAGEN"); testMutagen == "true" {
 		nodeps.MutagenEnabledDefault = true
 	}
+	if os.Getenv("DDEV_TEST_NO_BIND_MOUNTS") == "true" {
+		nodeps.NoBindMountsDefault = true
+	}
+
 }
 
 // NewApp creates a new DdevApp struct with defaults set and overridden by any existing config.yml.
