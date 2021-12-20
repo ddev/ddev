@@ -723,7 +723,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		OmitRouter:                nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer),
 		OmitSSHAgent:              nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent"),
 		BindAllInterfaces:         app.BindAllInterfaces,
-		MutagenEnabled:            (app.IsMutagenEnabled()),
+		MutagenEnabled:            app.IsMutagenEnabled() || globalconfig.DdevGlobalConfig.NoBindMounts,
 
 		NFSMountEnabled:       (app.NFSMountEnabled || app.NFSMountEnabledGlobal) && !app.IsMutagenEnabled(),
 		NFSSource:             "",
