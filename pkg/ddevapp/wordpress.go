@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/Masterminds/sprig/v3"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
@@ -9,7 +10,6 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
-	"github.com/Masterminds/sprig/v3"
 )
 
 // WordpressConfig encapsulates all the configurations for a WordPress site.
