@@ -984,7 +984,7 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 	// nolint errcheck
 	defer f.Close()
 
-	containerName := "CopyIntoVolue" + nodeps.RandomString(12)
+	containerName := "CopyIntoVolume_" + nodeps.RandomString(12)
 
 	track := util.TimeTrack(time.Now(), "CopyIntoVolume "+sourcePath+" "+volumeName)
 	containerID, _, err := RunSimpleContainer(version.GetWebImage(), containerName, []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && tail -f /dev/null"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, nil)
