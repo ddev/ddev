@@ -71,3 +71,4 @@ The $HOME/.ddev/global_config.yaml has a few key global config options.
 | developer_mode | Set developer mode | If true, developer_mode is set. This is not currently used. |
 | required_docker_compose_version | Specify an alternate docker-compose version for download | If set to `v1.29.2`, for example, it will download and use that version instead of the expected version for docker-compose. |
 | use_docker_compose_from_path | Use the system-installed docker-compose | If this is true, then DDEV will use the docker-compose found in on your system's path instead of using its private known-good docker-compose version. |
+| no_bind_mounts | Do not use docker bind mounts | Some docker environments (like remote docker) do not allow bind mounts, so this option turns off those and turns on mutagen and uses volume copies to do what bind mounts would otherwise do. |
