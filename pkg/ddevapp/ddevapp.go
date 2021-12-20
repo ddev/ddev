@@ -17,7 +17,7 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-isatty"
-	copy "github.com/otiai10/copy"
+	"github.com/otiai10/copy"
 	"github.com/pkg/errors"
 	osexec "os/exec"
 
@@ -511,7 +511,8 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		if err != nil {
 			return err
 		}
-		insideContainerImportPath, _, err = dockerutil.Exec(dbContainerName, "mktemp -d")
+		uid, _, _ := util.GetContainerUIDGid()
+		insideContainerImportPath, _, err = dockerutil.Exec(dbContainerName, "mktemp -d", uid)
 		if err != nil {
 			return err
 		}
@@ -1711,14 +1712,15 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 		// But if we are using bind-mounts, we can just copy it to where the snapshot is
 		// mounted into the db container (/mnt/ddev_config/db_snapshots)
 		c := fmt.Sprintf("cp -r %s /mnt/ddev_config/db_snapshots", containerSnapshotDir)
-		stdout, stderr, err = dockerutil.Exec(dbContainer.ID, c)
+		uid, _, _ := util.GetContainerUIDGid()
+		stdout, stderr, err = dockerutil.Exec(dbContainer.ID, c, uid)
 		if err != nil {
 			return "", fmt.Errorf("failed to '%s': %v, stdout=%s, stderr=%s", c, err, stdout, stderr)
 		}
 	}
 
 	// Clean up the in-container dir that we just used
-	_, _, err = dockerutil.Exec(dbContainer.ID, "rm -rf "+containerSnapshotDir)
+	_, _, err = dockerutil.Exec(dbContainer.ID, "rm -rf "+containerSnapshotDir, "")
 	if err != nil {
 		return "", err
 	}

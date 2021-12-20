@@ -151,7 +151,7 @@ func TestSshAuthConfigOverride(t *testing.T) {
 	assert.NoError(err)
 
 	answer := fileutil.RandomFilenameBase()
-	os.Setenv("ANSWER", answer)
+	_ = os.Setenv("ANSWER", answer)
 	assert.NoError(err)
 	assert.NoError(err)
 	t.Cleanup(func() {
@@ -167,6 +167,6 @@ func TestSshAuthConfigOverride(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
-	stdout, _, err := dockerutil.Exec("ddev-ssh-agent", "bash -c 'echo $ANSWER'")
+	stdout, _, err := dockerutil.Exec("ddev-ssh-agent", "bash -c 'echo $ANSWER'", "")
 	assert.Equal(answer+"\n", stdout)
 }

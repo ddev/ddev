@@ -460,11 +460,11 @@ func TestDockerExec(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	stdout, _, err := Exec(id, "ls /etc")
+	stdout, _, err := Exec(id, "ls /etc", "")
 	assert.NoError(err)
 	assert.Contains(stdout, "group\nhostname")
 
-	_, stderr, err := Exec(id, "ls /nothingthere")
+	_, stderr, err := Exec(id, "ls /nothingthere", "")
 	assert.Error(err)
 	assert.Contains(stderr, "No such file or directory")
 
@@ -613,14 +613,15 @@ func TestCopyIntoContainer(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, cid)
 
-	targetDir, _, err := Exec(cid.ID, "mktemp -d")
+	uid, _, _ := util.GetContainerUIDGid()
+	targetDir, _, err := Exec(cid.ID, "mktemp -d", uid)
 	require.NoError(t, err)
 	targetDir = strings.Trim(targetDir, "\n")
 
 	err = CopyIntoContainer(filepath.Join(pwd, "testdata", t.Name()), testContainerName, targetDir, "")
 	require.NoError(t, err)
 
-	out, _, err := Exec(cid.ID, fmt.Sprintf(`bash -c "cd %s && ls -R * .test.sh && ./.test.sh"`, targetDir))
+	out, _, err := Exec(cid.ID, fmt.Sprintf(`bash -c "cd %s && ls -R * .test.sh && ./.test.sh"`, targetDir), uid)
 	require.NoError(t, err)
 	assert.Equal(`.test.sh
 root.txt

@@ -1002,7 +1002,7 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 
 	// chown/chmod the uploaded content
 	c := fmt.Sprintf("chown -R %s %s", uid, targetSubdirFullPath)
-	stdout, stderr, err := Exec(containerID, c)
+	stdout, stderr, err := Exec(containerID, c, "0")
 	util.Debug("Exec %s stdout=%s, stderr=%s, err=%v", c, stdout, stderr, err)
 
 	if err != nil {
@@ -1013,15 +1013,20 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 }
 
 // Exec does a simple docker exec, no frills, just executes the command
+// with the specified uid (or defaults to root=0 if empty uid)
 // Returns stdout, stderr, error
-func Exec(containerID string, command string) (string, string, error) {
+func Exec(containerID string, command string, uid string) (string, string, error) {
 	client := GetDockerClient()
 
+	if uid == "" {
+		uid = "0"
+	}
 	exec, err := client.CreateExec(docker.CreateExecOptions{
 		Container:    containerID,
 		Cmd:          []string{"sh", "-c", command},
 		AttachStdout: true,
 		AttachStderr: true,
+		User:         uid,
 	})
 	if err != nil {
 		return "", "", err
@@ -1213,7 +1218,8 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 		return fmt.Errorf("CopyIntoContainer unable to find a container named %s", containerName)
 	}
 
-	_, stderr, err := Exec(cid.ID, "mkdir -p "+dstPath)
+	uid, _, _ := util.GetContainerUIDGid()
+	_, stderr, err := Exec(cid.ID, "mkdir -p "+dstPath, uid)
 	if err != nil {
 		return fmt.Errorf("unable to mkdir -p %s inside %s: %v (stderr=%s)", dstPath, containerName, err, stderr)
 	}
