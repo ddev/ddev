@@ -5,17 +5,12 @@ github.com/Azure/go-ansiterm/winterm
 # github.com/Masterminds/goutils v1.1.1
 ## explicit
 github.com/Masterminds/goutils
-# github.com/Masterminds/semver v1.5.0
-## explicit
-github.com/Masterminds/semver
 # github.com/Masterminds/semver/v3 v3.1.1
 ## explicit; go 1.12
 github.com/Masterminds/semver/v3
-# github.com/Masterminds/sprig v2.22.0+incompatible
-## explicit
-github.com/Masterminds/sprig
 # github.com/Masterminds/sprig/v3 v3.2.2
 ## explicit; go 1.13
+github.com/Masterminds/sprig/v3
 # github.com/Microsoft/go-winio v0.5.1
 ## explicit; go 1.12
 github.com/Microsoft/go-winio
@@ -226,6 +221,7 @@ github.com/rogpeppe/go-internal/semver
 github.com/segmentio/backo-go
 # github.com/shopspring/decimal v1.3.1
 ## explicit; go 1.13
+github.com/shopspring/decimal
 # github.com/sirupsen/logrus v1.8.1
 ## explicit; go 1.13
 github.com/sirupsen/logrus
@@ -267,6 +263,8 @@ go.opencensus.io/trace/internal
 go.opencensus.io/trace/tracestate
 # golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
 ## explicit; go 1.17
+golang.org/x/crypto/bcrypt
+golang.org/x/crypto/blowfish
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/scrypt
 # golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e

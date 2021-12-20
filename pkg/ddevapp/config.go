@@ -3,8 +3,9 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
-	"github.com/Masterminds/sprig"
+	"github.com/Masterminds/sprig/v3"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"os"
 	"path/filepath"
@@ -12,8 +13,6 @@ import (
 	"strings"
 	"text/template"
 	"time"
-
-	"github.com/drud/ddev/pkg/globalconfig"
 
 	"regexp"
 

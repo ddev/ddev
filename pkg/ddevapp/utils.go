@@ -14,11 +14,11 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/Masterminds/sprig"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/Masterminds/sprig/v3"
 )
 
 // GetActiveProjects returns an array of ddev projects

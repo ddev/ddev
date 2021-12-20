@@ -1711,7 +1711,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	} else {
 		// But if we are using bind-mounts, we can just copy it to where the snapshot is
 		// mounted into the db container (/mnt/ddev_config/db_snapshots)
-		c := fmt.Sprintf("set -x && id && mkdir -p /mnt/ddev_config/db_snapshots && chmod 777 /mnt/ddev_config/db_snapshots && ls -ld /mnt/ddev_config/db_snapshots && cp -r %s /mnt/ddev_config/db_snapshots", containerSnapshotDir)
+		c := fmt.Sprintf("ls -l /mnt/ddev_config && set -x && id && mkdir -p /mnt/ddev_config/db_snapshots && ls -ld /mnt/ddev_config/db_snapshots && chmod 777 /mnt/ddev_config/db_snapshots && ls -ld /mnt/ddev_config/db_snapshots && cp -r %s /mnt/ddev_config/db_snapshots", containerSnapshotDir)
 		uid, _, _ := util.GetContainerUIDGid()
 		stdout, stderr, err = dockerutil.Exec(dbContainer.ID, c, uid)
 		if err != nil {

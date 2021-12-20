@@ -2,7 +2,7 @@ module github.com/drud/ddev
 
 require (
 	github.com/Masterminds/semver/v3 v3.1.1
-	github.com/Masterminds/sprig v2.22.0+incompatible
+	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/cheggaaa/pb v1.0.25
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/docker/docker v20.10.12+incompatible
@@ -31,7 +31,6 @@ require (
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
-	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/Microsoft/go-winio v0.5.1 // indirect
 	github.com/Microsoft/hcsshim v0.9.1 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
@@ -68,6 +67,7 @@ require (
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/segmentio/backo-go v0.0.0-20200129164019-23eae7c10bd3 // indirect
+	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
