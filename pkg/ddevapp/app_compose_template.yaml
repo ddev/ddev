@@ -235,9 +235,6 @@ volumes:
   ddev-config:
     name: ${DDEV_SITENAME}-ddev-config
     external: true
-  snapshots:
-    name: ${DDEV_SITENAME}-ddev-snapshots
-    external: true
   {{ end }}{{/* end if .NoBindMounts */}}
   {{ if and .NFSMountEnabled (not .NoProjectMount) }}
   nfsmount:

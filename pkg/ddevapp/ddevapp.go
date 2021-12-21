@@ -821,7 +821,7 @@ func (app *DdevApp) Start() error {
 	var err error
 
 	app.DockerEnv()
-	volumesNeeded := []string{"ddev-global-cache", app.Name + "-ddev-snapshots"}
+	volumesNeeded := []string{"ddev-global-cache"}
 	for _, v := range volumesNeeded {
 		_, err = dockerutil.CreateVolume(v, "local", nil)
 		if err != nil {
@@ -1977,7 +1977,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 			util.Warning("could not WriteGlobalConfig: %v", err)
 		}
 
-		for _, volName := range []string{app.Name + "-mariadb", app.Name + "-ddev-config", app.Name + "-ddev-snapshots", GetMutagenVolumeName(app)} {
+		for _, volName := range []string{app.Name + "-mariadb", app.Name + "-ddev-config", GetMutagenVolumeName(app)} {
 			err = dockerutil.RemoveVolume(volName)
 			if err != nil {
 				util.Warning("could not remove volume %s: %v", volName, err)
