@@ -115,12 +115,10 @@ $(TARGETS): pullbuildimage $(GOFILES)
 	export GOOS="$${TARGET%_*}" && \
 	export GOARCH="$${TARGET#*_}" && \
 	export GOBUILDER=go && \
-	export DEFCTX=$(shell docker context inspect -f '{{ .Name }}') && docker context use default >/dev/null 2>&1 &&\
 	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
 	chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
 	$(DOCKERBUILDCMD) \
-	bash -c "GOOS=$$GOOS GOARCH=$$GOARCH $$GOBUILDER build -o $(GOTMP)/bin/$$TARGET -installsuffix static -ldflags \" $(LDFLAGS) \" $(SRC_AND_UNDER)" && \
-	docker context use $$DEFCTX >/dev/null 2>&1
+	bash -c "GOOS=$$GOOS GOARCH=$$GOARCH $$GOBUILDER build -o $(GOTMP)/bin/$$TARGET -installsuffix static -ldflags \" $(LDFLAGS) \" $(SRC_AND_UNDER)"
 	$( shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi )
 	@echo $(VERSION) >VERSION.txt
 
