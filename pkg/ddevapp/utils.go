@@ -122,8 +122,9 @@ func Cleanup(app *DdevApp) error {
 			return fmt.Errorf("could not remove container %s: %v", containerName, err)
 		}
 	}
-	// Always kill the nfs volume on ddev remove
-	for _, volName := range []string{app.GetNFSMountVolumeName()} {
+	// Always kill the temporary volumes on ddev remove
+	vols := []string{app.GetNFSMountVolumeName(), app.Name + "-ddev-snapshots", app.Name + "-ddev-config"}
+	for _, volName := range vols {
 		_ = dockerutil.RemoveVolume(volName)
 	}
 
