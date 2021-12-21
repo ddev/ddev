@@ -392,7 +392,7 @@ ddev launch /admin
 
 Now log into the admin site (/admin) using the web browser. The default credentials are username=admin, password=shopware. You can use the web UI to install sample data or accomplish many other tasks.
 
-For more advanced tasks like adding elasticsearch, building and watching storefront and administration, see [susi.dev](https://web.archive.org/web/20210508043534/https://susi.dev/ddev-shopware-6).
+For more advanced tasks like adding elasticsearch, building and watching storefront and administration, see [susi.dev](https://susi.dev/ddev-shopware-6).
 
 ### Database Imports
 
