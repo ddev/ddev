@@ -1736,9 +1736,9 @@ func TestGetLatestSnapshot(t *testing.T) {
 
 // TestDdevRestoreSnapshot tests creating a snapshot and reverting to it.
 func TestDdevRestoreSnapshot(t *testing.T) {
-	//if nodeps.IsMacM1() {
-	//	t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
-	//}
+	if nodeps.IsMacM1() {
+		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+	}
 
 	assert := asrt.New(t)
 	testDir, _ := os.Getwd()
