@@ -1260,7 +1260,7 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 		return err
 	}
 
-	util.Success("Copied %s:%s into %s in %v", srcPath, containerName, dstPath, time.Since(startTime))
+	util.Debug("Copied %s:%s into %s in %v", srcPath, containerName, dstPath, time.Since(startTime))
 	return nil
 }
 
