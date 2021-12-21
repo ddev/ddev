@@ -109,7 +109,7 @@ func writeTypo3SettingsFile(app *DdevApp) error {
 		}
 	}
 
-	templateVars := map[string]interface{}{"DBHostname": GetDBHostname(app)}
+	templateVars := map[string]interface{}{"DBHostname": GetContainerName(app, "db")}
 	err := fileutil.TemplateStringToFile(typo3AdditionalConfigTemplate, templateVars, filePath)
 	if err != nil {
 		return err
