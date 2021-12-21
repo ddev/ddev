@@ -53,7 +53,7 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 					util.Failed("Could not connect to docker. Please ensure Docker is installed and running.")
 				}
 			} else {
-				util.Failed("The docker version currently installed does not meet ddev's requirements: %v", err)
+				util.Warning("The docker version currently installed does not seem to meet ddev's requirements: %v", err)
 			}
 		}
 
