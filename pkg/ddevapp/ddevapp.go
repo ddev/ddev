@@ -821,7 +821,7 @@ func (app *DdevApp) Start() error {
 	var err error
 
 	app.DockerEnv()
-	volumesNeeded := []string{"ddev-global-cache"}
+	volumesNeeded := []string{"ddev-global-cache", app.Name + "-ddev-snapshots"}
 	for _, v := range volumesNeeded {
 		_, err = dockerutil.CreateVolume(v, "local", nil)
 		if err != nil {
