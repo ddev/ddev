@@ -1246,7 +1246,7 @@ func checkImportDbImports(t *testing.T, app *ddevapp.DdevApp) {
 
 }
 
-// TestDdevAllDatabases tests db import/export/start with all MariaDB versions
+// TestDdevAllDatabases tests db import/export/start with supported MariaDB/MySQL versions
 func TestDdevAllDatabases(t *testing.T) {
 	assert := asrt.New(t)
 
