@@ -127,7 +127,7 @@ func CreateMutagenSync(app *DdevApp) error {
 	if err != nil {
 		return err
 	}
-	container, err := GetContainerID(app, "web")
+	container, err := GetContainer(app, "web")
 	if err != nil {
 		return err
 	}

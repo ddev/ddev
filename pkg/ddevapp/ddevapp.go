@@ -1700,7 +1700,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 		return "", err
 	}
 
-	dbContainer, err := GetContainerID(app, "db")
+	dbContainer, err := GetContainer(app, "db")
 	if err != nil {
 		return "", err
 	}
@@ -2436,9 +2436,8 @@ func GetContainerName(app *DdevApp, service string) string {
 	return "ddev-" + app.Name + "-" + service
 }
 
-// GetContainerID returns the containerID of the
-// service name provided.
-func GetContainerID(app *DdevApp, service string) (*docker.APIContainers, error) {
+// GetContainer returns the containerID of the app service name provided.
+func GetContainer(app *DdevApp, service string) (*docker.APIContainers, error) {
 	name := GetContainerName(app, service)
 	cid, err := dockerutil.FindContainerByName(name)
 	if err != nil || cid == nil {
