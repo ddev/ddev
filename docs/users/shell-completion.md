@@ -24,7 +24,7 @@ Add the following line to your ~/.bash_profile:
 
 Then, if you're installing ddev from homebrew, each new release will automatically get a refreshed completions script.
 
-**Bash Completion without Homebrew**: The completion script is exactly the same, it's just that you have to install it yourself. Each system may have a slightly different technique, and you'll need to figure it out. On Debian/Ubuntu, you would use [these instructions](https://web.archive.org/web/20201001033147/http://crsouza.com/2008/07/28/enabling-bash-autocompletion-on-debian/) to enable bash-completion, and then `sudo mkdir -p /etc/bash_completion.d && sudo cp ddev_bash_completion.sh /etc/bash_completion.d`. This deploys the ddev_bash_completion.sh script where it needs to be. Again, every Linux distro has a different technique, and you may have to figure yours out.
+**Bash Completion without Homebrew**: The completion script is exactly the same, it's just that you have to install it yourself. Each system may have a slightly different technique, and you'll need to figure it out. On Debian/Ubuntu, you would use [these instructions](https://www.howtoforge.com/how-to-add-bash-completion-in-debian) to enable bash-completion, and then `sudo mkdir -p /etc/bash_completion.d && sudo cp ddev_bash_completion.sh /etc/bash_completion.d`. This deploys the ddev_bash_completion.sh script where it needs to be. Again, every Linux distro has a different technique, and you may have to figure yours out.
 
 ### Zsh Completion/Autocompletion
 
