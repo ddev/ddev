@@ -3,7 +3,6 @@
 # Circleci doesn't seem to provide a decent way to add to path, just adding here, for case where
 # linux build and linuxbrew is installed.
 export PATH := $(EXTRA_PATH):$(PATH)
-DOCKERMOUNTFLAG := :cached
 
 BUILD_BASE_DIR ?= $(PWD)
 
@@ -29,12 +28,6 @@ TESTTMP=/tmp/testresults
 # This repo's root import path (under GOPATH).
 PKG := github.com/drud/ddev
 
-# Docker repo for a push
-#DOCKER_REPO ?= drud/drupal-deploy
-
-# Upstream repo used in the Dockerfile
-#UPSTREAM_REPO ?= drud/site-deploy:latest
-
 # Top-level directories to build
 SRC_DIRS := cmd pkg
 
@@ -47,9 +40,6 @@ DdevVersion ?= $(VERSION)
 # DBTag ?=  $(VERSION)  # DBTag is normally specified in version.go, sometimes overridden (night-build.mak)
 # RouterTag ?= $(VERSION) #RouterTag is normally specified in version.go, sometimes overridden (night-build.mak)
 # DBATag ?= $(VERSION) #DBATag is normally specified in version.go, sometimes overridden (night-build.mak)
-
-# Optional to docker build
-#DOCKER_ARGS =
 
 # VERSION can be set by
   # Default: git tag
@@ -88,7 +78,7 @@ $(TARGETS): $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER)";
 	@#echo "LDFLAGS=$(LDFLAGS)";
 	@rm -f $@
-	@set -x && export TARGET=$(word 3, $(subst /, ,$@)) && \
+	@export TARGET=$(word 3, $(subst /, ,$@)) && \
 	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" GOPATH="$(PWD)/$(GOTMP)" GOCACHE="$(PWD)/$(GOTMP)/.cache" && \
 	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
 	chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
