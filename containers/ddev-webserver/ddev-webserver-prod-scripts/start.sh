@@ -33,6 +33,15 @@ if [ -d /mnt/ddev_config/php ] ; then
     fi
 fi
 
+if [ -d /mnt/ddev_config/nginx_full ]; then
+  rm -rf /etc/nginx/sites-enabled
+  cp -r /mnt/ddev_config/nginx_full /etc/nginx/sites-enabled/
+fi
+if [ -d /mnt/ddev_config/apache ]; then
+  rm -rf /etc/apache2/sites-enabled
+  cp -r /mnt/ddev_config/apache /etc/apache2/sites-enabled
+fi
+
 if [ "$DDEV_PROJECT_TYPE" = "backdrop" ] ; then
     # Start can be executed when the container is already running.
     mkdir -p ~/.drush/commands && ln -s /var/tmp/backdrop_drush_commands ~/.drush/commands/backdrop
@@ -74,14 +83,15 @@ mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory}/${HOSTNAME}
 if [ -d /mnt/ddev_config/.homeadditions ]; then
     cp -r /mnt/ddev_config/.homeadditions/. ~/
 fi
-if [ -d /mnt/ddev_config/homeadditions ]; then
-    cp -r /mnt/ddev_config/homeadditions/. ~/
-fi
 
 # It's possible CAROOT does not exist or is not writeable (if host-side mkcert -install not run yet)
 mkdir -p ${CAROOT}
 # This will install the certs from $CAROOT (/mnt/ddev-global-cache/mkcert)
 mkcert -install
+
+if [ -f ~/.my.cnf ]; then
+  perl -pi -e "s/host=db/host=ddev-${DDEV_PROJECT}-db/" ~/.my.cnf
+fi
 
 # VIRTUAL_HOST is a comma-delimited set of fqdns, convert it to space-separated and mkcert
 CAROOT=$CAROOT mkcert -cert-file /etc/ssl/certs/master.crt -key-file /etc/ssl/certs/master.key ${VIRTUAL_HOST//,/ } localhost 127.0.0.1 ${DOCKER_IP} web ddev-${DDEV_PROJECT:-}-web ddev-${DDEV_PROJECT:-}-web.ddev_default

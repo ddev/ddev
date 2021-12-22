@@ -127,7 +127,7 @@ func CreateMutagenSync(app *DdevApp) error {
 	if err != nil {
 		return err
 	}
-	container, err := dockerutil.FindContainerByName(fmt.Sprintf("ddev-%s-web", app.Name))
+	container, err := GetContainer(app, "web")
 	if err != nil {
 		return err
 	}
@@ -465,6 +465,8 @@ func IsMutagenVolumeMounted(app *DdevApp) (bool, error) {
 }
 
 // IsMutagenEnabled returns true if mutagen is enabled locally or globally
+// It's also required and set if NoBindMounts is set, since we have to have a way
+// to get code on there.
 func (app *DdevApp) IsMutagenEnabled() bool {
-	return app.MutagenEnabled || app.MutagenEnabledGlobal
+	return app.MutagenEnabled || app.MutagenEnabledGlobal || globalconfig.DdevGlobalConfig.NoBindMounts
 }

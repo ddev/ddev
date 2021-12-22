@@ -11,6 +11,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"sort"
@@ -62,7 +63,7 @@ func EnsureDdevNetwork() {
 	}
 }
 
-var dockerContextEndpoint string
+var dockerHost string
 
 // GetDockerClient returns a docker client respecting the current docker context
 // but DOCKER_HOST gets priority
@@ -73,16 +74,24 @@ func GetDockerClient() *docker.Client {
 	// I would wish for something far better, but trying to transplant the code from
 	// docker/cli did not succeed. rfay 2021-12-16
 	// `docker context inspect` will already respect $DOCKER_CONTEXT so we don't have to do that.
-	if dockerContextEndpoint == "" {
-		dockerContextEndpoint, err = exec2.RunHostCommand("docker", "context", "inspect", "-f", `{{ .Endpoints.docker.Host }}`)
+	// This section is skipped anyway if $DOCKER_HOST is set
+	if dockerHost == "" {
+		contextInfo, err := exec2.RunHostCommand("docker", "context", "inspect", "-f", `{{ .Name }} {{ .Endpoints.docker.Host }}`)
 		if err != nil {
 			util.Warning("unable to run docker context inspect: %v", err)
+		} else {
+			contextInfo = strings.Trim(contextInfo, " \r\n")
+			parts := strings.SplitN(contextInfo, " ", 2)
+			if len(parts) != 2 {
+				util.Warning("unable to run split docker context info %s: %v", contextInfo, err)
+			}
+			dockerHost = parts[1]
+			util.Debug("Using docker context %s (%v)", parts[0], dockerHost)
 		}
-		dockerContextEndpoint = strings.Trim(dockerContextEndpoint, "\r\n ")
 	}
-	// Respect DOCKER_HOST first in case it's set
+	// Respect DOCKER_HOST in case it's set
 	if os.Getenv("DOCKER_HOST") == "" {
-		_ = os.Setenv("DOCKER_HOST", dockerContextEndpoint)
+		_ = os.Setenv("DOCKER_HOST", dockerHost)
 	}
 	client, err := docker.NewClientFromEnv()
 	if err != nil {
@@ -354,7 +363,7 @@ func ContainerWaitLog(waittime int, labels map[string]string, expectedLog string
 	return "", fmt.Errorf("inappropriate break out of for loop in ContainerWaitLog() waiting for container labels %v", labels)
 }
 
-// ContainerName returns the containers human readable name.
+// ContainerName returns the container's human readable name.
 func ContainerName(container docker.APIContainers) string {
 	return container.Names[0][1:]
 }
@@ -951,11 +960,29 @@ func RemoveImage(tag string) error {
 	return nil
 }
 
-// CopyToVolume copies a directory on the host into a docker volume
-func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid string) error {
+// CopyIntoVolume copies a directory on the host into a docker volume
+// sourcePath is the host-side full path
+// volumeName is the volume name to copy to
+// targetSubdir is where to copy it to on the volume
+// uid is the uid of the resulting files
+// exclusion is a path to be excluded
+// If destroyExisting the volume is removed and recreated
+func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, uid string, exclusion string, destroyExisting bool) error {
+	if destroyExisting {
+		err := RemoveVolume(volumeName)
+		if err != nil {
+			util.Warning("could not remove docker volume %s: %v", volumeName, err)
+		}
+	}
 	volPath := "/mnt/v"
 	targetSubdirFullPath := volPath + "/" + targetSubdir
-	client := GetDockerClient()
+	fi, err := os.Stat(sourcePath)
+	if err != nil {
+		return err
+	}
+	if !fi.IsDir() {
+		return fmt.Errorf("sourcePath '%s' must be a directory", sourcePath)
+	}
 
 	f, err := os.Open(sourcePath)
 	if err != nil {
@@ -965,59 +992,49 @@ func CopyToVolume(sourcePath string, volumeName string, targetSubdir string, uid
 	// nolint errcheck
 	defer f.Close()
 
-	containerID, _, err := RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && tail -f /dev/null"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, nil)
+	containerName := "CopyIntoVolume_" + nodeps.RandomString(12)
+
+	track := util.TimeTrack(time.Now(), "CopyIntoVolume "+sourcePath+" "+volumeName)
+	containerID, _, err := RunSimpleContainer(version.GetWebImage(), containerName, []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && tail -f /dev/null"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, nil)
 	if err != nil {
 		return err
 	}
 	// nolint: errcheck
 	defer RemoveContainer(containerID, 0)
 
-	tmpTar, err := os.CreateTemp("", "CopyToVolume")
-	if err != nil {
-		log.Fatal(err)
-	}
+	err = CopyIntoContainer(sourcePath, containerName, targetSubdirFullPath, exclusion)
 
-	// nolint: errcheck
-	defer os.Remove(tmpTar.Name()) // clean up
-
-	err = archive.Tar(sourcePath, tmpTar.Name())
 	if err != nil {
 		return err
 	}
 
-	err = client.UploadToContainer(containerID, docker.UploadToContainerOptions{
-		InputStream: tmpTar,
-		Path:        targetSubdirFullPath,
-	})
-	if err != nil {
-		return err
-	}
+	// chown/chmod the uploaded content
+	c := fmt.Sprintf("chown -R %s %s", uid, targetSubdirFullPath)
+	stdout, stderr, err := Exec(containerID, c, "0")
+	util.Debug("Exec %s stdout=%s, stderr=%s, err=%v", c, stdout, stderr, err)
 
-	// chown the uploaded content
-	e, err := client.CreateExec(docker.CreateExecOptions{
-		Container: containerID,
-		Cmd:       []string{"chown", "-R", uid, targetSubdirFullPath},
-	})
 	if err != nil {
 		return err
 	}
-	err = client.StartExec(e.ID, docker.StartExecOptions{})
-	if err != nil {
-		return err
-	}
-
+	track()
 	return nil
 }
 
 // Exec does a simple docker exec, no frills, just executes the command
-func Exec(containerID string, command string) (string, string, error) {
+// with the specified uid (or defaults to root=0 if empty uid)
+// Returns stdout, stderr, error
+func Exec(containerID string, command string, uid string) (string, string, error) {
 	client := GetDockerClient()
 
+	if uid == "" {
+		uid = "0"
+	}
 	exec, err := client.CreateExec(docker.CreateExecOptions{
 		Container:    containerID,
 		Cmd:          []string{"sh", "-c", command},
 		AttachStdout: true,
 		AttachStderr: true,
+		User:         uid,
 	})
 	if err != nil {
 		return "", "", err
@@ -1187,4 +1204,113 @@ func IsDockerDesktop() bool {
 		return true
 	}
 	return false
+}
+
+// CopyIntoContainer copies a path into a specified container and location
+func CopyIntoContainer(srcPath string, containerName string, dstPath string, exclusion string) error {
+	startTime := time.Now()
+	fi, err := os.Stat(srcPath)
+	if err != nil {
+		return err
+	}
+	if !fi.IsDir() {
+		return fmt.Errorf("sourcePath '%s' must be a directory", srcPath)
+	}
+
+	client := GetDockerClient()
+	cid, err := FindContainerByName(containerName)
+	if err != nil {
+		return err
+	}
+	if cid == nil {
+		return fmt.Errorf("CopyIntoContainer unable to find a container named %s", containerName)
+	}
+
+	uid, _, _ := util.GetContainerUIDGid()
+	_, stderr, err := Exec(cid.ID, "mkdir -p "+dstPath, uid)
+	if err != nil {
+		return fmt.Errorf("unable to mkdir -p %s inside %s: %v (stderr=%s)", dstPath, containerName, err, stderr)
+	}
+
+	tarball, err := os.CreateTemp(os.TempDir(), "containercopytmp*.tar.gz")
+	if err != nil {
+		return err
+	}
+	// nolint: errcheck
+	defer os.Remove(tarball.Name())
+	// nolint: errcheck
+	defer tarball.Close()
+
+	// Tar up the source directory into the tarball
+	err = archive.Tar(srcPath, tarball.Name(), exclusion)
+	if err != nil {
+		return err
+	}
+	t, err := os.Open(tarball.Name())
+	if err != nil {
+		return err
+	}
+
+	// nolint: errcheck
+	defer t.Close()
+
+	err = client.UploadToContainer(cid.ID, docker.UploadToContainerOptions{
+		InputStream: t,
+		Path:        dstPath,
+	})
+	if err != nil {
+		return err
+	}
+
+	util.Debug("Copied %s:%s into %s in %v", srcPath, containerName, dstPath, time.Since(startTime))
+	return nil
+}
+
+// CopyFromContainer copies a path from a specified container and location to a dstPath on host
+func CopyFromContainer(containerName string, containerPath string, hostPath string) error {
+	startTime := time.Now()
+	err := os.MkdirAll(hostPath, 0755)
+	if err != nil {
+		return err
+	}
+
+	client := GetDockerClient()
+	cid, err := FindContainerByName(containerName)
+	if err != nil {
+		return err
+	}
+	if cid == nil {
+		return fmt.Errorf("CopyFromContainer unable to find a container named %s", containerName)
+	}
+
+	f, err := os.CreateTemp("", filepath.Base(hostPath)+".tar.gz")
+	if err != nil {
+		return err
+	}
+	//nolint: errcheck
+	defer f.Close()
+	//nolint: errcheck
+	defer os.Remove(f.Name())
+	// nolint: errcheck
+
+	err = client.DownloadFromContainer(cid.ID, docker.DownloadFromContainerOptions{
+		Path:         containerPath,
+		OutputStream: f,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = f.Close()
+	if err != nil {
+		return err
+	}
+
+	err = archive.Untar(f.Name(), hostPath, "")
+	if err != nil {
+		return err
+	}
+	util.Success("Copied %s:%s to %s in %v", containerName, containerPath, hostPath, time.Since(startTime))
+
+	return nil
 }

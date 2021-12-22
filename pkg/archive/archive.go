@@ -6,6 +6,7 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -143,6 +144,11 @@ func Untar(source string, dest string, extractionDir string) error {
 				return err
 			}
 
+			err = os.Chmod(fullPath, fs.FileMode(file.Mode))
+			if err != nil {
+				return fmt.Errorf("failed to chmod %v dir %v, err: %v", fs.FileMode(file.Mode), fullPath, err)
+			}
+
 		case tar.TypeReg:
 			fallthrough
 		case tar.TypeRegA:
@@ -163,6 +169,11 @@ func Untar(source string, dest string, extractionDir string) error {
 			if err != nil {
 				return fmt.Errorf("failed to copy to file %v, err: %v", fullPath, err)
 			}
+			err = os.Chmod(fullPath, fs.FileMode(file.Mode))
+			if err != nil {
+				return fmt.Errorf("failed to chmod %v file %v, err: %v", fs.FileMode(file.Mode), fullPath, err)
+			}
+
 		}
 	}
 
@@ -250,41 +261,49 @@ func Unzip(source string, dest string, extractionDir string) error {
 	return nil
 }
 
-// Tar takes a source and variable writers and walks 'source' writing each file
-// found to the tar writer; the purpose for accepting multiple writers is to allow
-// for multiple outputs (for example a file, or md5 hash)
-// From https://gist.github.com/sdomino/635a5ed4f32c93aad131#file-untargz-go
-func Tar(src string, tarballFilePath string) error {
-
+// Tar takes a source dir and tarballFilePath and a single exclusion path
+// It creates a gzipped tarball.
+// So sorry that exclusion is a single relative path. It should be a set of patterns, rfay 2021-12-15
+func Tar(src string, tarballFilePath string, exclusion string) error {
 	// ensure the src actually exists before trying to tar it
 	if _, err := os.Stat(src); err != nil {
 		return fmt.Errorf("Unable to tar files - %v", err.Error())
 	}
+	separator := string(rune(filepath.Separator))
 
-	file, err := os.Create(tarballFilePath)
+	tarball, err := os.Create(tarballFilePath)
 	if err != nil {
 		return fmt.Errorf("Could not create tarball file '%s', got error '%s'", tarballFilePath, err.Error())
 	}
 	// nolint: errcheck
-	defer file.Close()
+	defer tarball.Close()
 
-	mw := io.MultiWriter(file)
+	mw := io.MultiWriter(tarball)
 
-	//gzw := gzip.NewWriter(mw)
-	//defer gzw.Close()
+	gzw := gzip.NewWriter(mw)
+	defer gzw.Close()
 
-	tw := tar.NewWriter(mw)
+	tw := tar.NewWriter(gzw)
 	defer tw.Close()
 
 	// walk path
-	return filepath.Walk(src, func(file string, fi os.FileInfo, err error) error {
-
+	return filepath.WalkDir(src, func(file string, info fs.DirEntry, errArg error) error {
 		// return on any error
-		if err != nil {
-			return err
+		if errArg != nil {
+			return errArg
+		}
+
+		relativePath := strings.TrimPrefix(file, src+separator)
+
+		if exclusion != "" && strings.HasPrefix(relativePath, exclusion) {
+			return nil
 		}
 
 		// return on non-regular files (thanks to [kumo](https://medium.com/@komuw/just-like-you-did-fbdd7df829d3) for this suggested update)
+		fi, err := info.Info()
+		if err != nil {
+			return nil
+		}
 		if !fi.Mode().IsRegular() {
 			return nil
 		}
@@ -295,7 +314,27 @@ func Tar(src string, tarballFilePath string) error {
 			return err
 		}
 
-		// update the name to correctly reflect the desired destination when untaring
+		// open files for tarring
+		f, err := os.Open(file)
+		if err != nil {
+			return err
+		}
+
+		// Windows filesystem has no concept of executable bit, but we're copying shell scripts
+		// and they need to be executable. So if we detect a shell script
+		// set its mode to executable. It seems this is what utilities like git-bash
+		// and cygwin, etc. have done for years to work around the lack of mode bits on NTFS,
+		// for example, see https://stackoverflow.com/a/25730108/215713
+		if runtime.GOOS == "windows" {
+			buffer := make([]byte, 16)
+			_, _ = f.Read(buffer)
+			_, _ = f.Seek(0, 0)
+			if strings.HasPrefix(string(buffer), "#!") {
+				header.Mode = 0755
+			}
+		}
+
+		// update the name to correctly reflect the desired destination when untarring
 		header.Name = strings.TrimPrefix(strings.Replace(file, src, "", -1), string(filepath.Separator))
 		if runtime.GOOS == "windows" {
 			header.Name = strings.Replace(header.Name, `\`, `/`, -1)
@@ -303,12 +342,6 @@ func Tar(src string, tarballFilePath string) error {
 
 		// write the header
 		if err := tw.WriteHeader(header); err != nil {
-			return err
-		}
-
-		// open files for taring
-		f, err := os.Open(file)
-		if err != nil {
 			return err
 		}
 

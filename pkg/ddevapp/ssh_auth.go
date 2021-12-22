@@ -93,14 +93,8 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 	}
 	defer util.CheckClose(f)
 
-	templ := template.New("compose template")
-	templ, err := templ.Parse(DdevSSHAuthTemplate)
-	if err != nil {
-		return "", err
-	}
-
 	context := "./.sshimageBuild"
-	err = WriteBuildDockerfile(filepath.Join(globalconfig.GetGlobalDdevDir(), context, "Dockerfile"), "", nil, "")
+	err := WriteBuildDockerfile(filepath.Join(globalconfig.GetGlobalDdevDir(), context, "Dockerfile"), "", nil, "")
 	if err != nil {
 		return "", err
 	}
@@ -119,7 +113,11 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 		"GID":                   gid,
 		"BuildContext":          context,
 	}
-	err = templ.Execute(&doc, templateVars)
+	t, err := template.New("ssh_auth_compose_template.yaml").ParseFS(bundledAssets, "ssh_auth_compose_template.yaml")
+	if err != nil {
+		return "", err
+	}
+	err = t.Execute(&doc, templateVars)
 	util.CheckErr(err)
 	_, err = f.WriteString(doc.String())
 	util.CheckErr(err)

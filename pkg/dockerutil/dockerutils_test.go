@@ -6,7 +6,9 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 	"os"
+	"path"
 	"runtime"
+	"strings"
 	"testing"
 
 	logOutput "github.com/sirupsen/logrus"
@@ -458,11 +460,11 @@ func TestDockerExec(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	stdout, _, err := Exec(id, "ls /etc")
+	stdout, _, err := Exec(id, "ls /etc", "")
 	assert.NoError(err)
 	assert.Contains(stdout, "group\nhostname")
 
-	_, stderr, err := Exec(id, "ls /nothingthere")
+	_, stderr, err := Exec(id, "ls /nothingthere", "")
 	assert.Error(err)
 	assert.Contains(stderr, "No such file or directory")
 
@@ -529,31 +531,33 @@ func TestRemoveVolume(t *testing.T) {
 
 }
 
-// TestDockerCopyToVolume makes sure CopyToVolume copies a local directory into a volume
-func TestDockerCopyToVolume(t *testing.T) {
+// TestCopyIntoVolume makes sure CopyToVolume copies a local directory into a volume
+func TestCopyIntoVolume(t *testing.T) {
 	assert := asrt.New(t)
 	err := RemoveVolume(t.Name())
 	assert.NoError(err)
 
 	pwd, _ := os.Getwd()
-	err = CopyToVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "", "0")
+	err = CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "", "0", "", true)
 	assert.NoError(err)
 
-	mainContainerID, out, err := RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil)
+	// Make sure that the content is the same, and that .test.sh is executable
+	// On Windows the upload can result in losing executable bit
+	mainContainerID, out, err := RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R .test.sh * && ./.test.sh"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil)
 	assert.NoError(err)
-	assert.Equal(`.:
+	assert.Equal(`.test.sh
 root.txt
-subdir1
 
-./subdir1:
+subdir1:
 subdir1.txt
+hi this is a test file
 `, out)
 
-	err = CopyToVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "somesubdir", "501")
+	err = CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "somesubdir", "501", "", true)
 	assert.NoError(err)
 	subdirContainerID, out, err := RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + "/somesubdir  && pwd && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "0", true, false, nil)
 	assert.NoError(err)
-	assert.Equal(`/mnt/TestDockerCopyToVolume/somesubdir
+	assert.Equal(`/mnt/TestCopyIntoVolume/somesubdir
 .:
 root.txt
 subdir1
@@ -577,6 +581,10 @@ subdir1.txt
 func TestGetDockerIP(t *testing.T) {
 	assert := asrt.New(t)
 
+	origDOCKERHOST := os.Getenv("DOCKER_HOST")
+	t.Cleanup(func() {
+		_ = os.Setenv("DOCKER_HOST", origDOCKERHOST)
+	})
 	expectations := map[string]string{
 		"":                            "127.0.0.1",
 		"unix:///var/run/docker.sock": "127.0.0.1",
@@ -593,4 +601,53 @@ func TestGetDockerIP(t *testing.T) {
 		assert.NoError(err)
 		assert.Equal(v, result, "for %s expected %s, got %s", k, v, result)
 	}
+}
+
+// TestCopyIntoContainer makes sure CopyIntoContainer copies a local directory into a specified
+// path in container
+func TestCopyIntoContainer(t *testing.T) {
+	assert := asrt.New(t)
+	pwd, _ := os.Getwd()
+
+	cid, err := FindContainerByName(testContainerName)
+	require.NoError(t, err)
+	require.NotNil(t, cid)
+
+	uid, _, _ := util.GetContainerUIDGid()
+	targetDir, _, err := Exec(cid.ID, "mktemp -d", uid)
+	require.NoError(t, err)
+	targetDir = strings.Trim(targetDir, "\n")
+
+	err = CopyIntoContainer(filepath.Join(pwd, "testdata", t.Name()), testContainerName, targetDir, "")
+	require.NoError(t, err)
+
+	out, _, err := Exec(cid.ID, fmt.Sprintf(`bash -c "cd %s && ls -R * .test.sh && ./.test.sh"`, targetDir), uid)
+	require.NoError(t, err)
+	assert.Equal(`.test.sh
+root.txt
+
+subdir1:
+subdir1.txt
+hi this is a test file
+`, out)
+
+}
+
+// TestCopyFromContainer makes sure CopyFromContainer copies a container into a specified
+// local directory
+func TestCopyFromContainer(t *testing.T) {
+	assert := asrt.New(t)
+	containerSourceDir := "/var/tmp/backdrop_drush_commands/backdrop-drush-extension"
+	containerExpectedFile := "backdrop.drush.inc"
+	cid, err := FindContainerByName(testContainerName)
+	require.NoError(t, err)
+	require.NotNil(t, cid)
+
+	targetDir, err := os.MkdirTemp("", t.Name())
+	require.NoError(t, err)
+
+	err = CopyFromContainer(testContainerName, containerSourceDir, targetDir)
+	require.NoError(t, err)
+
+	assert.FileExists(filepath.Join(targetDir, path.Base(containerSourceDir), containerExpectedFile))
 }

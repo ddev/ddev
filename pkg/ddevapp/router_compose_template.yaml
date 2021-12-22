@@ -1,0 +1,39 @@
+version: '{{ .compose_version }}'
+services:
+  ddev-router:
+    image: {{ .router_image }}:{{ .router_tag }}
+    container_name: ddev-router
+    ports:{{ $dockerIP := .dockerIP }}{{ if not .router_bind_all_interfaces }}{{ range $port := .ports }}
+    - "{{ $dockerIP }}:{{ $port }}:{{ $port }}"{{ end }}{{ else }}{{ range $port := .ports }}
+    - "{{ $port }}:{{ $port }}"{{ end }}{{ end }}
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ddev-global-cache:/mnt/ddev-global-cache:rw
+      {{ if .letsencrypt }}
+      - ddev-router-letsencrypt:/etc/letsencrypt:rw
+      {{ end }} {{/* end if .letsencrypt */}}
+    environment:
+      - DISABLE_HTTP2={{ .disable_http2 }}
+        {{ if .letsencrypt }}
+      - LETSENCRYPT_EMAIL={{ .letsencrypt_email }}
+      - USE_LETSENCRYPT={{ .letsencrypt }}
+        {{ end }}{{/* end if .letsencrypt */}}
+    restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
+    healthcheck:
+      interval: 1s
+      retries: 120
+      start_period: 120s
+      timeout: 120s
+
+networks:
+  default:
+    name: ddev_default
+    external: true
+volumes:
+  ddev-global-cache:
+    name: ddev-global-cache
+    external: true
+  {{ if .letsencrypt }}
+  ddev-router-letsencrypt:
+    name: ddev-router-letsencrypt
+  {{ end }}

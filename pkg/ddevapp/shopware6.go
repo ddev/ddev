@@ -82,7 +82,7 @@ func getShopwareUploadDir(app *DdevApp) string {
 func shopware6PostStartAction(app *DdevApp) error {
 	envFile := filepath.Join(app.AppRoot, ".env")
 	var addOnConfig string
-	expectedDatabaseURL := fmt.Sprintf(`DATABASE_URL="mysql://db:db@%s:3306/db"`, GetDBHostname(app))
+	expectedDatabaseURL := fmt.Sprintf(`DATABASE_URL="mysql://db:db@%s:3306/db"`, GetContainerName(app, "db"))
 	expectedPrimaryURL := fmt.Sprintf(`APP_URL="%s"`, app.GetPrimaryURL())
 	expectedMailerURL := `MAILER_URL="smtp://localhost:1025?encryption=&auth_mode="`
 

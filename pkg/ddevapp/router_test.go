@@ -142,13 +142,13 @@ func TestLetsEncrypt(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, container)
 
-	stdout, _, err := dockerutil.Exec(container.ID, "df -T /etc/letsencrypt  | awk 'NR==2 {print $7;}'")
+	stdout, _, err := dockerutil.Exec(container.ID, "df -T /etc/letsencrypt  | awk 'NR==2 {print $7;}'", "")
 	assert.NoError(err)
 	stdout = strings.Trim(stdout, "\r\n")
 
 	assert.Equal("/etc/letsencrypt", stdout)
 
-	_, _, err = dockerutil.Exec(container.ID, "test -f /etc/letsencrypt/options-ssl-nginx.conf")
+	_, _, err = dockerutil.Exec(container.ID, "test -f /etc/letsencrypt/options-ssl-nginx.conf", "")
 	assert.NoError(err)
 }
 
@@ -186,7 +186,7 @@ func TestRouterConfigOverride(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
-	stdout, _, err := dockerutil.Exec("ddev-router", "bash -c 'echo $ANSWER'")
+	stdout, _, err := dockerutil.Exec("ddev-router", "bash -c 'echo $ANSWER'", "")
 	assert.Equal(answer+"\n", stdout)
 }
 

@@ -33,6 +33,15 @@ if [ -d /mnt/ddev_config/php ] ; then
     fi
 fi
 
+if [ -d /mnt/ddev_config/nginx_full ]; then
+  rm -rf /etc/nginx/sites-enabled
+  cp -r /mnt/ddev_config/nginx_full /etc/nginx/sites-enabled/
+fi
+if [ -d /mnt/ddev_config/apache ]; then
+  rm -rf /etc/apache2/sites-enabled
+  cp -r /mnt/ddev_config/apache /etc/apache2/sites-enabled
+fi
+
 if [ "$DDEV_PROJECT_TYPE" = "backdrop" ] ; then
     # Start can be executed when the container is already running.
     mkdir -p ~/.drush/commands && ln -s /var/tmp/backdrop_drush_commands ~/.drush/commands/backdrop
@@ -72,11 +81,12 @@ sudo mkdir -p ${TERMINUS_CACHE_DIR}
 sudo mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory}/${HOSTNAME}
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ ~/{.ssh*,.drush,.gitconfig,.my.cnf}
 
+# /mnt/ddev_config/.homeadditions may be either
+# a bind-mount, or a volume mount, but we don't care,
+# should all be set up with both global and local
+# either way.
 if [ -d /mnt/ddev_config/.homeadditions ]; then
     cp -r /mnt/ddev_config/.homeadditions/. ~/
-fi
-if [ -d /mnt/ddev_config/homeadditions ]; then
-    cp -r /mnt/ddev_config/homeadditions/. ~/
 fi
 
 # It's possible CAROOT does not exist or is not writeable (if host-side mkcert -install not run yet)

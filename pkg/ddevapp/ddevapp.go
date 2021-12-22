@@ -17,8 +17,8 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-isatty"
+	"github.com/otiai10/copy"
 	"github.com/pkg/errors"
-
 	osexec "os/exec"
 
 	"path"
@@ -236,7 +236,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			dbinfo["username"] = "db"
 			dbinfo["password"] = "db"
 			dbinfo["dbname"] = "db"
-			dbinfo["host"] = GetDBHostname(app)
+			dbinfo["host"] = GetContainerName(app, "db")
 			dbPublicPort, err := app.GetPublishedPort("db")
 			util.CheckErr(err)
 			dbinfo["dbPort"] = GetPort("db")
@@ -299,12 +299,12 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 		services[shortName]["status"] = c.State.Status
 		services[shortName]["full_name"] = fullName
 		services[shortName]["image"] = strings.TrimSuffix(c.Config.Image, fmt.Sprintf("-%s-built", app.Name))
-		ports := []string{}
+		var ports []string
 		for pk := range c.Config.ExposedPorts {
 			ports = append(ports, pk.Port())
 		}
 		services[shortName]["exposed_ports"] = strings.Join(ports, ",")
-		hostPorts := []string{}
+		var hostPorts []string
 		for _, pv := range k.Ports {
 			if pv.PublicPort != 0 {
 				hostPorts = append(hostPorts, strconv.FormatInt(pv.PublicPort, 10))
@@ -503,8 +503,26 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		}
 	}
 
-	// Inside the db container, the dir for imports will be at /mnt/ddev_config/<tmpdir_name>
-	insideContainerImportPath := path.Join("/mnt/ddev_config", filepath.Base(dbPath))
+	// default insideContainerImportPath is the one mounted from .ddev directory
+	insideContainerImportPath := path.Join("/mnt/ddev_config/", filepath.Base(dbPath))
+	// But if we don't have bind mounts, we have to copy dump into the container
+	if globalconfig.DdevGlobalConfig.NoBindMounts {
+		dbContainerName := GetContainerName(app, "db")
+		if err != nil {
+			return err
+		}
+		uid, _, _ := util.GetContainerUIDGid()
+		insideContainerImportPath, _, err = dockerutil.Exec(dbContainerName, "mktemp -d", uid)
+		if err != nil {
+			return err
+		}
+		insideContainerImportPath = strings.Trim(insideContainerImportPath, "\n")
+
+		err = dockerutil.CopyIntoContainer(dbPath, dbContainerName, insideContainerImportPath, "")
+		if err != nil {
+			return err
+		}
+	}
 
 	preImportSQL := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s; GRANT ALL ON %s.* TO 'db'@'%%';", targetDB, targetDB)
 	if !noDrop {
@@ -803,9 +821,12 @@ func (app *DdevApp) Start() error {
 	var err error
 
 	app.DockerEnv()
-	_, err = dockerutil.CreateVolume("ddev-global-cache", "local", nil)
-	if err != nil {
-		return fmt.Errorf("unable to create docker volume ddev-global-cache: %v", err)
+	volumesNeeded := []string{"ddev-global-cache", app.Name + "-ddev-snapshots"}
+	for _, v := range volumesNeeded {
+		_, err = dockerutil.CreateVolume(v, "local", nil)
+		if err != nil {
+			return fmt.Errorf("unable to create docker volume %s: %v", v, err)
+		}
 	}
 
 	app.DBImage = app.GetDBImage()
@@ -854,9 +875,17 @@ func (app *DdevApp) Start() error {
 	// container with a single focus of changing ownership, instead of having to use sudo
 	// inside the container
 	uid, _, _ := util.GetContainerUIDGid()
-	_, _, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.Name + "-mariadb:/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, nil)
+
+	if globalconfig.DdevGlobalConfig.NoBindMounts {
+		err = dockerutil.CopyIntoVolume(app.GetConfigPath(""), app.Name+"-ddev-config", "", uid, "db_snapshots", true)
+		if err != nil {
+			return fmt.Errorf("failed to copy project .ddev directory to volume: %v", err)
+		}
+	}
+
+	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.Name + "-mariadb:/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to RunSimpleContainer to chown volumes: %v, output=%s", err, out)
 	}
 
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
@@ -872,17 +901,22 @@ func (app *DdevApp) Start() error {
 	// Warn user if there are deprecated items used in the config
 	app.CheckDeprecations()
 
-	// Copy any global homeadditions content into its mount location
+	// Copy any homeadditions content into .ddev/.homeadditions
+	tmpHomeadditionsPath := app.GetConfigPath(".homeadditions")
+	err = os.RemoveAll(tmpHomeadditionsPath)
+	if err != nil {
+		util.Warning("unable to remove %s: %v", tmpHomeadditionsPath, err)
+	}
 	globalHomeadditionsPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "homeadditions")
 	if fileutil.IsDirectory(globalHomeadditionsPath) {
-		projectGlobalHomeadditionsPath := app.GetConfigPath(".homeadditions")
-		if fileutil.IsDirectory(projectGlobalHomeadditionsPath) {
-			err = os.RemoveAll(projectGlobalHomeadditionsPath)
-			if err != nil {
-				return err
-			}
+		err = copy.Copy(globalHomeadditionsPath, tmpHomeadditionsPath)
+		if err != nil {
+			return err
 		}
-		err = fileutil.CopyDir(globalHomeadditionsPath, projectGlobalHomeadditionsPath)
+	}
+	projectHomeAdditionsPath := app.GetConfigPath("homeadditions")
+	if fileutil.IsDirectory(projectHomeAdditionsPath) {
+		err = copy.Copy(projectHomeAdditionsPath, tmpHomeadditionsPath)
 		if err != nil {
 			return err
 		}
@@ -900,7 +934,7 @@ func (app *DdevApp) Start() error {
 			// Copy ca certs into ddev-global-cache/mkcert
 			if caRoot != "" {
 				uid, _, _ := util.GetContainerUIDGid()
-				err = dockerutil.CopyToVolume(caRoot, "ddev-global-cache", "mkcert", uid)
+				err = dockerutil.CopyIntoVolume(caRoot, "ddev-global-cache", "mkcert", uid, "", false)
 				if err != nil {
 					util.Warning("failed to copy root CA into docker volume ddev-global-cache/mkcert: %v", err)
 				} else {
@@ -912,7 +946,7 @@ func (app *DdevApp) Start() error {
 		certPath := app.GetConfigPath("custom_certs")
 		if fileutil.FileExists(certPath) {
 			uid, _, _ := util.GetContainerUIDGid()
-			err = dockerutil.CopyToVolume(certPath, "ddev-global-cache", "custom_certs", uid)
+			err = dockerutil.CopyIntoVolume(certPath, "ddev-global-cache", "custom_certs", uid, "", false)
 			if err != nil {
 				util.Warning("failed to copy custom certs into docker volume ddev-global-cache/custom_certs: %v", err)
 			} else {
@@ -934,6 +968,13 @@ func (app *DdevApp) Start() error {
 	// Delete the NFS volumes before we bring up docker-compose (and will be created again)
 	// We don't care if the volume wasn't there
 	_ = dockerutil.RemoveVolume(app.GetNFSMountVolumeName())
+
+	// The db_snapshots subdirectory may be created on docker-compose up, so
+	// we need to precreate it so permissions are correct (and not root:root)
+	err = os.MkdirAll(app.GetConfigPath("db_snapshots"), 0777)
+	if err != nil {
+		return err
+	}
 
 	_, _, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "up", "--build", "-d")
 	if err != nil {
@@ -1614,9 +1655,11 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 	return "", fmt.Errorf("settings files already exist and are being managed by the user")
 }
 
-// Snapshot forces a mariadb snapshot of the db to be written into .ddev/db_snapshots
-// Returns the dirname of the snapshot and err
+// Snapshot causes a snapshot of the db to be written into the snapshots volume
+// Returns the name of the snapshot and err
 func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
+	containerSnapshotDirBase := "/var/tmp"
+
 	err := app.ProcessHooks("pre-snapshot")
 	if err != nil {
 		return "", fmt.Errorf("failed to process pre-stop hooks: %v", err)
@@ -1637,19 +1680,13 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 
 	// Container side has to use path.Join instead of filepath.Join because they are
 	// targeted at the linux filesystem, so won't work with filepath on Windows
-	snapshotDir := path.Join("db_snapshots", snapshotName)
-	hostSnapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), snapshotDir)
-	containerSnapshotDir := path.Join("/mnt/ddev_config", snapshotDir)
-	err = os.MkdirAll(hostSnapshotDir, 0777)
-	if err != nil {
-		return snapshotName, err
-	}
+	containerSnapshotDir := path.Join(containerSnapshotDirBase, snapshotName)
 
 	// Ensure that db container is up.
 	labels := map[string]string{"com.ddev.site-name": app.Name, "com.docker.compose.service": "db"}
 	_, err = dockerutil.ContainerWait(containerWaitTimeout, labels)
 	if err != nil {
-		return "", fmt.Errorf("unable to snapshot database, \nyour project %v is not running. \nPlease start the project if you want to snapshot it. \nIf removing, you can remove without a snapshot using \n'ddev stop --remove-data --omit-snapshot', \nwhich will destroy your database", app.Name)
+		return "", fmt.Errorf("unable to snapshot database, \nyour project %v is not running. \nPlease start the project if you want to snapshot it. \nIf deleting project, you can delete without a snapshot using \n'ddev delete --remove-data --yes', \nwhich will destroy your database", app.Name)
 	}
 
 	util.Warning("Creating database snapshot %s", snapshotName)
@@ -1663,11 +1700,42 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 		return "", err
 	}
 
-	util.Success("Created database snapshot %s in %s", snapshotName, hostSnapshotDir)
+	dbContainer, err := GetContainer(app, "db")
+	if err != nil {
+		return "", err
+	}
+
+	if globalconfig.DdevGlobalConfig.NoBindMounts {
+		// If we're not using bind-mounts, we have to copy the snapshot back into
+		// the host project's .ddev/db_snapshots directory
+		elapsed := util.TimeTrack(time.Now(), "CopySnapshotFromContainer")
+		// Copy snapshot back to the host
+		err = dockerutil.CopyFromContainer(GetContainerName(app, "db"), containerSnapshotDir, app.GetConfigPath("db_snapshots"))
+		if err != nil {
+			return "", err
+		}
+		elapsed()
+	} else {
+		// But if we are using bind-mounts, we can just copy it to where the snapshot is
+		// mounted into the db container (/mnt/ddev_config/db_snapshots)
+		c := fmt.Sprintf("ls -l /mnt/ddev_config && id && mkdir -p /mnt/ddev_config/db_snapshots && ls -ld /mnt/ddev_config/db_snapshots && cp -r %s /mnt/ddev_config/db_snapshots", containerSnapshotDir)
+		uid, _, _ := util.GetContainerUIDGid()
+		stdout, stderr, err = dockerutil.Exec(dbContainer.ID, c, uid)
+		if err != nil {
+			return "", fmt.Errorf("failed to '%s': %v, stdout=%s, stderr=%s", c, err, stdout, stderr)
+		}
+	}
+
+	// Clean up the in-container dir that we just used
+	_, _, err = dockerutil.Exec(dbContainer.ID, "rm -rf "+containerSnapshotDir, "")
+	if err != nil {
+		return "", err
+	}
 	err = app.ProcessHooks("post-snapshot")
 	if err != nil {
 		return snapshotName, fmt.Errorf("failed to process pre-stop hooks: %v", err)
 	}
+
 	return snapshotName, nil
 }
 
@@ -1794,10 +1862,9 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	snapshotDBVersion = strings.Trim(snapshotDBVersion, " \r\n\t")
 
 	if snapshotDBVersion != currentDBVersion {
-		return fmt.Errorf("snapshot %s is a DB server %s snapshot and is not compatible with the configured ddev DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the ddev DB version", snapshotDir, snapshotDBVersion, currentDBVersion)
+		return fmt.Errorf("snapshot %s is a DB server %s snapshot and is not compatible with the configured ddev DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the ddev DB version", snapshotName, snapshotDBVersion, currentDBVersion)
 	}
 
-	//dockerutil.GetAppContainers(app.Name)
 	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SitePaused {
 		err := app.Stop(false, false)
 		if err != nil {
@@ -1805,6 +1872,15 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		}
 	}
 
+	// If we have no bind mounts, we need to copy our snapshot into the snapshots volme
+	// With bind mounts, they'll already be there in the /mnt/ddev_config/db_snapshots folder
+	if globalconfig.DdevGlobalConfig.NoBindMounts {
+		uid, _, _ := util.GetContainerUIDGid()
+		err = dockerutil.CopyIntoVolume(filepath.Join(app.GetConfigPath("db_snapshots"), snapshotName), app.Name+"-ddev-snapshots", snapshotName, uid, "", true)
+		if err != nil {
+			return err
+		}
+	}
 	err = os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "restore_snapshot "+snapshotName)
 	util.CheckErr(err)
 	err = app.Start()
@@ -1834,7 +1910,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		time.Sleep(1 * time.Second)
 		fmt.Print(".")
 	}
-	util.Success("\nRestored database snapshot %s", hostSnapshotDir)
+	util.Success("\nRestored database snapshot %s", snapshotName)
 	err = app.ProcessHooks("post-restore-snapshot")
 	if err != nil {
 		return fmt.Errorf("failed to process post-restore-snapshot hooks: %v", err)
@@ -1901,7 +1977,11 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 			util.Warning("could not WriteGlobalConfig: %v", err)
 		}
 
-		for _, volName := range []string{app.Name + "-mariadb", GetMutagenVolumeName(app)} {
+		vols := []string{app.Name + "-mariadb", GetMutagenVolumeName(app)}
+		if globalconfig.DdevGlobalConfig.NoBindMounts {
+			vols = append(vols, app.Name+"-ddev-config")
+		}
+		for _, volName := range vols {
 			err = dockerutil.RemoveVolume(volName)
 			if err != nil {
 				util.Warning("could not remove volume %s: %v", volName, err)
@@ -2350,9 +2430,20 @@ func (app *DdevApp) StartAppIfNotRunning() error {
 	return err
 }
 
-// GetDBHostname gets the in-container hostname of the DB container
-func GetDBHostname(app *DdevApp) string {
-	return "ddev-" + app.Name + "-db"
+// GetContainerName returns the contructed container name of the
+// service provided.
+func GetContainerName(app *DdevApp, service string) string {
+	return "ddev-" + app.Name + "-" + service
+}
+
+// GetContainer returns the containerID of the app service name provided.
+func GetContainer(app *DdevApp, service string) (*docker.APIContainers, error) {
+	name := GetContainerName(app, service)
+	cid, err := dockerutil.FindContainerByName(name)
+	if err != nil || cid == nil {
+		return nil, fmt.Errorf("unable to find container %s: %v", name, err)
+	}
+	return cid, nil
 }
 
 // FormatSiteStatus formats "paused" or "running" with color

@@ -26,6 +26,7 @@ jobs:
         tests: [test]
         os: [ ubuntu-20.04 ]
         mutagen: ['false', 'true']
+        no-bind-mounts: ['false', 'true']
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
@@ -34,7 +35,7 @@ jobs:
       DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
       DDEV_NONINTERACTIVE: "true"
       DDEV_TEST_USE_MUTAGEN: ${{ matrix.mutagen }}
-
+      DDEV_TEST_NO_BIND_MOUNTS: ${{ matrix.no-bind-mounts }}
     steps:
       - uses: actions/checkout@v2
 

@@ -530,7 +530,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 
 // TestDdevStartUnmanagedSettings start and config with disable_settings_management
 func TestDdevStartUnmanagedSettings(t *testing.T) {
-	if nodeps.MutagenEnabledDefault || globalconfig.DdevGlobalConfig.MutagenEnabledGlobal {
+	if nodeps.MutagenEnabledDefault || globalconfig.DdevGlobalConfig.MutagenEnabledGlobal || nodeps.NoBindMountsDefault {
 		t.Skip("Skipping with mutagen because conflict on settings files")
 	}
 
@@ -621,8 +621,8 @@ func TestDdevStartUnmanagedSettings(t *testing.T) {
 
 // TestDdevNoProjectMount tests running without the app file mount.
 func TestDdevNoProjectMount(t *testing.T) {
-	if nodeps.MutagenEnabledDefault == true {
-		t.Skip("Skipping because this doesn't make sense with mutagen")
+	if nodeps.MutagenEnabledDefault == true || nodeps.NoBindMountsDefault == true {
+		t.Skip("Skipping because this doesn't make sense with mutagen or NoBindMounts")
 	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
@@ -654,7 +654,7 @@ func TestDdevNoProjectMount(t *testing.T) {
 		assert.NoError(err)
 	}()
 
-	err = app.Start()
+	err = app.Restart()
 	assert.NoError(err)
 
 	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
@@ -1057,7 +1057,7 @@ func TestDdevImportDB(t *testing.T) {
 			continue
 		}
 
-		// There should be exactly the one users table for each of these files
+		// There should be exactly the one "users" table for each of these files
 		out, _, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
 			Cmd:     "mysql -N -e 'SHOW TABLES;' | cat",
@@ -1246,7 +1246,7 @@ func checkImportDbImports(t *testing.T, app *ddevapp.DdevApp) {
 
 }
 
-// TestDdevAllDatabases tests db import/export/start with all MariaDB versions
+// TestDdevAllDatabases tests db import/export/start with supported MariaDB/MySQL versions
 func TestDdevAllDatabases(t *testing.T) {
 	assert := asrt.New(t)
 
@@ -1655,11 +1655,8 @@ func TestDdevSnapshotCleanup(t *testing.T) {
 	assert.NoError(err)
 
 	// Make a snapshot of d7 tester test 1
-	backupsDir := filepath.Join(app.GetConfigPath(""), "db_snapshots")
 	snapshotName, err := app.Snapshot(t.Name() + "_1")
 	assert.NoError(err)
-
-	assert.True(fileutil.FileExists(filepath.Join(backupsDir, snapshotName, "xtrabackup_info")), "Expected that file xtrabackup_info in snapshot exists")
 
 	err = app.Init(site.Dir)
 	require.NoError(t, err)
@@ -1667,11 +1664,12 @@ func TestDdevSnapshotCleanup(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	err = app.DeleteSnapshot(t.Name() + "_1")
+	err = app.DeleteSnapshot(snapshotName)
 	assert.NoError(err)
 
 	// Snapshot data should be deleted
-	assert.False(fileutil.FileExists(filepath.Join(backupsDir, snapshotName, "xtrabackup_info")), "Expected that file of snapshot is deleted during cleanup")
+	err = app.DeleteSnapshot(snapshotName)
+	assert.Error(err)
 
 	runTime()
 }
@@ -1746,7 +1744,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	testDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
 
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("TestDdevRestoreSnapshot"))
+	runTime := util.TimeTrack(time.Now(), t.Name())
 
 	d7testerTest1Dump, err := filepath.Abs(filepath.Join("testdata", t.Name(), "restore_snapshot", "d7tester_test_1.sql.gz"))
 	assert.NoError(err)
@@ -1788,12 +1786,13 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.NoError(ensureErr)
 
 	// Make a snapshot of d7 tester test 1
-	backupsDir := filepath.Join(app.GetConfigPath(""), "db_snapshots")
 	snapshotName, err := app.Snapshot("d7testerTest1")
 	assert.NoError(err)
 
 	assert.EqualValues(snapshotName, "d7testerTest1")
-	assert.True(fileutil.FileExists(filepath.Join(backupsDir, snapshotName, "xtrabackup_info")))
+	latest, err := app.GetLatestSnapshot()
+	assert.NoError(err)
+	assert.Equal(snapshotName, latest)
 
 	assert.FileExists("hello-pre-snapshot-" + app.Name)
 	assert.FileExists("hello-post-snapshot-" + app.Name)
@@ -1812,15 +1811,16 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	// This restart is to work around a persistent
 	// failure on Mac M1.
 	// "read: connection reset by peer"
-	err = app.Restart()
-	require.NoError(t, err)
+	//err = app.Restart()
+	//require.NoError(t, err)
 
 	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), "d7 tester test 2 has 2 nodes", 45)
 
 	snapshotName, err = app.Snapshot("d7testerTest2")
 	assert.NoError(err)
 	assert.EqualValues(snapshotName, "d7testerTest2")
-	assert.True(fileutil.FileExists(filepath.Join(backupsDir, snapshotName, "xtrabackup_info")))
+	latest, err = app.GetLatestSnapshot()
+	assert.Equal(snapshotName, latest)
 
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-restore-snapshot": {{"exec-host": "touch hello-post-restore-snapshot-" + app.Name}}, "pre-restore-snapshot": {{"exec-host": "touch hello-pre-restore-snapshot-" + app.Name}}}
 
@@ -1846,8 +1846,8 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.NoError(err)
 
 	// Try a restart to work around "connection reset by peer" error on Mac M1
-	err = app.Restart()
-	assert.NoError(err)
+	//err = app.Restart()
+	//assert.NoError(err)
 
 	body, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL(), 45)
 	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", app.GetHTTPSURL(), err)
@@ -1863,8 +1863,9 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	oldSnapshotTarball, err := filepath.Abs(filepath.Join(testDir, "testdata", t.Name(), "restore_snapshot", "d7tester_test_1.snapshot_mariadb_10_1.tgz"))
 	assert.NoError(err)
 
-	err = archive.Untar(oldSnapshotTarball, filepath.Join(site.Dir, ".ddev", "db_snapshots"), "")
+	err = archive.Untar(oldSnapshotTarball, app.GetConfigPath("db_snapshots"), "")
 	assert.NoError(err)
+
 	err = app.RestoreSnapshot("d7tester_test_1.snapshot_mariadb_10.1")
 	assert.Error(err)
 	assert.Contains(err.Error(), "is not compatible")
@@ -3258,8 +3259,8 @@ func TestNFSMount(t *testing.T) {
 	if nodeps.IsWSL2() {
 		t.Skip("Skipping on WSL2")
 	}
-	if nodeps.MutagenEnabledDefault == true {
-		t.Skip("Skipping because mutagen enabled")
+	if nodeps.MutagenEnabledDefault == true || nodeps.NoBindMountsDefault {
+		t.Skip("Skipping because mutagen/nobindmounts enabled")
 	}
 
 	assert := asrt.New(t)

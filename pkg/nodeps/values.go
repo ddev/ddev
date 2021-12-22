@@ -46,6 +46,9 @@ var MutagenEnabledDefault = false
 // NFSMountEnabledDefault is default value for app.NFSMountEnabled
 var NFSMountEnabledDefault = false
 
+// NoBindMountsDefault is default value for globalconfig.DDEVGlobalConfig.NoBindMounts
+var NoBindMountsDefault = false
+
 // SimpleFormatting is turned on by DDEV_USE_SIMPLE_FORMATTING
 // and makes ddev list and describe, etc. use simpler formatting
 var SimpleFormatting = false

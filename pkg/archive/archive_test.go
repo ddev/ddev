@@ -1,6 +1,8 @@
 package archive_test
 
 import (
+	"github.com/stretchr/testify/require"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
@@ -61,11 +63,64 @@ func TestUnarchive(t *testing.T) {
 // TestArchiveTar tests creation of a simple tarball
 func TestArchiveTar(t *testing.T) {
 	assert := asrt.New(t)
-	pwd, _ := os.Getwd()
-	tarballFile, err := os.CreateTemp("", t.Name())
+	origDir, _ := os.Getwd()
+
+	tarballFile, err := os.CreateTemp("", t.Name()+"_*.tar.gz")
 	assert.NoError(err)
 
-	err = archive.Tar(filepath.Join(pwd, "testdata", t.Name()), tarballFile.Name())
+	tarSrc := filepath.Join(origDir, "testdata", t.Name())
+	err = os.Chdir(tarSrc)
+	assert.NoError(err)
+
+	expectations := map[string]fs.FileMode{}
+	for _, f := range []string{".test.sh", "root.txt", filepath.Join("subdir1", "subdir1.txt")} {
+		fi, err := os.Stat(f)
+		assert.NoError(err)
+		expectations[f] = fi.Mode()
+	}
+
+	err = archive.Tar(tarSrc, tarballFile.Name(), filepath.Join("subdir1", "subdir2"))
+	assert.NoError(err)
+
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+
+	err = os.Chdir(tmpDir)
+	assert.NoError(err)
+	t.Cleanup(
+		func() {
+			err := os.Chdir(origDir)
+			assert.NoError(err)
+
+			// Could not figure out what causes this not to be removable
+			//err = os.Remove(tarballFile.Name())
+			//assert.NoError(err)
+			err = os.RemoveAll(tmpDir)
+			assert.NoError(err)
+		})
+	err = archive.Untar(tarballFile.Name(), tmpDir, "")
+	assert.NoError(err)
+
+	for fileName, mode := range expectations {
+		testedFileName, err := filepath.Abs(fileName)
+		assert.NoError(err, "fileName err: %v %v", testedFileName, err)
+		fi, err := os.Stat(fileName)
+		assert.NoError(err)
+		require.NotNil(t, fi)
+		//desc := fmt.Sprintf("%s: Orig mode=%o, found mode=%o", fileName, mode, fi.Mode())
+		//t.Log(desc)
+		assert.Equal(mode, fi.Mode(), "expected mode for %s was %o but got %o", fileName, mode, fi.Mode())
+	}
+	assert.NoFileExists(filepath.Join(tmpDir, "subdir1", "subdir2", "s2.txt"))
+}
+
+// TestArchiveTar tests creation of a simple tarball
+func TestArchiveTarGz(t *testing.T) {
+	assert := asrt.New(t)
+	pwd, _ := os.Getwd()
+	tarballFile, err := os.CreateTemp("", t.Name()+"*.tar.gz")
+	assert.NoError(err)
+
+	err = archive.Tar(filepath.Join(pwd, "testdata", t.Name()), tarballFile.Name(), filepath.Join("subdir1", "subdir2"))
 	assert.NoError(err)
 
 	tmpDir := testcommon.CreateTmpDir(t.Name())
@@ -82,5 +137,6 @@ func TestArchiveTar(t *testing.T) {
 	assert.NoError(err)
 
 	assert.FileExists(filepath.Join(tmpDir, "root.txt"))
-	assert.FileExists(filepath.Join(tmpDir, "subdir1/subdir1.txt"))
+	assert.FileExists(filepath.Join(tmpDir, "subdir1", "subdir1.txt"))
+	assert.NoFileExists(filepath.Join(tmpDir, "subdir1", "subdir2", "s2.txt"))
 }

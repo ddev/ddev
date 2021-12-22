@@ -1,0 +1,35 @@
+version: '{{ .compose_version }}'
+volumes:
+  dot_ssh:
+    name: "ddev-ssh-agent_dot_ssh"
+  socket_dir:
+    name: "ddev-ssh-agent_socket_dir"
+
+services:
+  ddev-ssh-agent:
+    container_name: ddev-ssh-agent
+    hostname: ddev-ssh-agent
+    build:
+      context: '{{ .BuildContext }}'
+      args:
+        BASE_IMAGE: '{{ .ssh_auth_image }}:{{ .ssh_auth_tag }}'
+        username: '{{ .Username }}'
+        uid: '{{ .UID }}'
+        gid: '{{ .GID }}'
+    image: '{{ .ssh_auth_image }}:{{ .ssh_auth_tag }}-built'
+    restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
+    user: '$DDEV_UID:$DDEV_GID'
+    volumes:
+      - "dot_ssh:/tmp/.ssh"
+      - "socket_dir:/tmp/.ssh-agent"
+    environment:
+      - SSH_AUTH_SOCK=/tmp/.ssh-agent/socket
+    healthcheck:
+      interval: 1s
+      retries: 2
+      start_period: 10s
+      timeout: 62s
+networks:
+  default:
+    name: ddev_default
+    external: true

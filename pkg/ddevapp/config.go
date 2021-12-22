@@ -3,8 +3,9 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
-	"github.com/Masterminds/sprig"
+	"github.com/Masterminds/sprig/v3"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"os"
 	"path/filepath"
@@ -12,8 +13,6 @@ import (
 	"strings"
 	"text/template"
 	"time"
-
-	"github.com/drud/ddev/pkg/globalconfig"
 
 	"regexp"
 
@@ -44,6 +43,10 @@ func init() {
 	if testMutagen := os.Getenv("DDEV_TEST_USE_MUTAGEN"); testMutagen == "true" {
 		nodeps.MutagenEnabledDefault = true
 	}
+	if os.Getenv("DDEV_TEST_NO_BIND_MOUNTS") == "true" {
+		nodeps.NoBindMountsDefault = true
+	}
+
 }
 
 // NewApp creates a new DdevApp struct with defaults set and overridden by any existing config.yml.
@@ -675,20 +678,13 @@ type composeYAMLVars struct {
 	DBWorkingDir              string
 	DBAWorkingDir             string
 	WebEnvironment            []string
+	NoBindMounts              bool
 }
 
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
 func (app *DdevApp) RenderComposeYAML() (string, error) {
 	var doc bytes.Buffer
 	var err error
-	templ, err := template.New("compose template").Funcs(sprig.TxtFuncMap()).Parse(DDevComposeTemplate)
-	if err != nil {
-		return "", err
-	}
-	templ, err = templ.Parse(DDevComposeTemplate)
-	if err != nil {
-		return "", err
-	}
 
 	hostDockerInternalIP, err := dockerutil.GetHostDockerInternalIP()
 	if err != nil {
@@ -730,7 +726,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		OmitRouter:                nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer),
 		OmitSSHAgent:              nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent"),
 		BindAllInterfaces:         app.BindAllInterfaces,
-		MutagenEnabled:            (app.IsMutagenEnabled()),
+		MutagenEnabled:            app.IsMutagenEnabled() || globalconfig.DdevGlobalConfig.NoBindMounts,
 
 		NFSMountEnabled:       (app.NFSMountEnabled || app.NFSMountEnabledGlobal) && !app.IsMutagenEnabled(),
 		NFSSource:             "",
@@ -756,6 +752,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		WebEnvironment:        webEnvironment,
 		MariaDBVolumeName:     app.GetMariaDBVolumeName(),
 		NFSMountVolumeName:    app.GetNFSMountVolumeName(),
+		NoBindMounts:          globalconfig.DdevGlobalConfig.NoBindMounts,
 	}
 	if app.NFSMountEnabled || app.NFSMountEnabledGlobal {
 		templateVars.MountType = "volume"
@@ -816,7 +813,12 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		templateVars.DockerIP = "0.0.0.0"
 	}
 
-	err = templ.Execute(&doc, templateVars)
+	t, err := template.New("app_compose_template.yaml").Funcs(sprig.TxtFuncMap()).ParseFS(bundledAssets, "app_compose_template.yaml")
+	if err != nil {
+		return "", err
+	}
+
+	err = t.Execute(&doc, templateVars)
 	return doc.String(), err
 }
 

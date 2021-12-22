@@ -55,9 +55,10 @@ type GlobalConfig struct {
 	DisableHTTP2                 bool                    `yaml:"disable_http2"`
 	TableStyle                   string                  `yaml:"table_style"`
 	SimpleFormatting             bool                    `yaml:"simple_formatting"`
-	ProjectList                  map[string]*ProjectInfo `yaml:"project_info"`
 	RequiredDockerComposeVersion string                  `yaml:"required_docker_compose_version,omitempty"`
 	UseDockerComposeFromPath     bool                    `yaml:"use_docker_compose_from_path,omitempty"`
+	NoBindMounts                 bool                    `yaml:"no_bind_mounts"`
+	ProjectList                  map[string]*ProjectInfo `yaml:"project_info"`
 }
 
 // GetGlobalConfigPath gets the path to global config file
@@ -170,6 +171,10 @@ func ReadGlobalConfig() error {
 		DdevGlobalConfig.InternetDetectionTimeout = nodeps.InternetDetectionTimeoutDefault
 	}
 
+	// For testing only, override NoBindMounts no matter what it's set to
+	if nodeps.NoBindMountsDefault == true {
+		DdevGlobalConfig.NoBindMounts = true
+	}
 	err = ValidateGlobalConfig()
 	if err != nil {
 		return err

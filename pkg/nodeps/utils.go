@@ -12,6 +12,9 @@ import (
 
 // ArrayContainsString returns true if slice contains element
 func ArrayContainsString(slice []string, element string) bool {
+	if slice == nil {
+		return false
+	}
 	return !(PosString(slice, element) == -1)
 }
 
