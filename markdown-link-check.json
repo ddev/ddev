@@ -7,6 +7,12 @@
       "pattern": "^https://www.drupal.org/slack"
     },
     {
+      "pattern": "^https://github.com/%27"
+    },
+    {
+      "pattern": "^https://github.com/drud/ddev-gitpod-launcher/%27"
+    },
+    {
       "pattern": "^https://www.drupal.org/(u|project)"
     }
   ],
