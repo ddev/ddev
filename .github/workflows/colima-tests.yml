@@ -21,7 +21,7 @@ env:
 
 jobs:
   tests:
-    name: Colima tests
+    name: colima-${{ matrix.tests }}-no-bind-mounts=${{ matrix.no-bind-mounts }}
     defaults:
       run:
         shell: bash
