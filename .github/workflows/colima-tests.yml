@@ -29,11 +29,9 @@ jobs:
     strategy:
       matrix:
         webserver: [nginx-fpm]
-#        tests: [ notddevapp, ddevapp, cmd ]
-        tests: [notddevapp]
+        tests: [ notddevapp, ddevapp, cmd ]
         os: [ macos-11 ]
-#        no-bind-mounts: ['true', 'false']
-        no-bind-mounts: ['true']
+        no-bind-mounts: ['true', 'false']
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
@@ -93,10 +91,10 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
 
-#      - name: make "test${{ matrix.tests }}"
-#        run: |
-#          echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN}"
-#          make "test${{ matrix.tests }}"
+      - name: make "test${{ matrix.tests }}"
+        run: |
+          echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN}"
+          make "test${{ matrix.tests }}"
 
       - name: Turn off /clean up
         run: |
