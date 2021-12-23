@@ -1543,7 +1543,7 @@ func (app *DdevApp) Pause() error {
 	app.DockerEnv()
 
 	if app.SiteStatus() == SiteStopped {
-		return fmt.Errorf("no project to stop")
+		return nil
 	}
 
 	err := app.ProcessHooks("pre-pause")
