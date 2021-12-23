@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/util"
 )
@@ -15,4 +16,6 @@ func init() {
 		util.Failed("unable to read global config: %v", err)
 	}
 	globalconfig.GetCAROOT()
+	// GetDockerClient should be called early to get DOCKER_HOST set
+	_ = dockerutil.GetDockerClient()
 }
