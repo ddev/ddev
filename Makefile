@@ -3,7 +3,6 @@
 # Circleci doesn't seem to provide a decent way to add to path, just adding here, for case where
 # linux build and linuxbrew is installed.
 export PATH := $(EXTRA_PATH):$(PATH)
-DOCKERMOUNTFLAG := :cached
 
 BUILD_BASE_DIR ?= $(PWD)
 
@@ -29,12 +28,6 @@ TESTTMP=/tmp/testresults
 # This repo's root import path (under GOPATH).
 PKG := github.com/drud/ddev
 
-# Docker repo for a push
-#DOCKER_REPO ?= drud/drupal-deploy
-
-# Upstream repo used in the Dockerfile
-#UPSTREAM_REPO ?= drud/site-deploy:latest
-
 # Top-level directories to build
 SRC_DIRS := cmd pkg
 
@@ -47,9 +40,6 @@ DdevVersion ?= $(VERSION)
 # DBTag ?=  $(VERSION)  # DBTag is normally specified in version.go, sometimes overridden (night-build.mak)
 # RouterTag ?= $(VERSION) #RouterTag is normally specified in version.go, sometimes overridden (night-build.mak)
 # DBATag ?= $(VERSION) #DBATag is normally specified in version.go, sometimes overridden (night-build.mak)
-
-# Optional to docker build
-#DOCKER_ARGS =
 
 # VERSION can be set by
   # Default: git tag
@@ -69,32 +59,9 @@ BUILD_OS = $(shell go env GOHOSTOS)
 BUILD_ARCH = $(shell go env GOHOSTARCH)
 VERSION_LDFLAGS=$(foreach v,$(VERSION_VARIABLES),-X '$(PKG)/pkg/version.$(v)=$($(v))')
 LDFLAGS=-extldflags -static $(VERSION_LDFLAGS)
-BUILD_IMAGE ?= drud/golang-build-container:v1.17.2
-DOCKERBUILDCMD=docker run -t --rm -u $(shell id -u):$(shell id -g) \
-	-v "/$(PWD)://workdir$(DOCKERMOUNTFLAG)" \
-	-e GOPATH="//workdir/$(GOTMP)" \
-	-e GOCACHE="//workdir/$(GOTMP)/.cache" \
-	-e GOFLAGS="$(USEMODVENDOR)" \
-	-e CGO_ENABLED=0 \
-	-w //workdir \
-	$(BUILD_IMAGE)
-DOCKERTESTCMD=docker run -t --rm -u $(shell id -u):$(shell id -g)\
-	-v "/$(PWD):/workdir$(DOCKERMOUNTFLAG)" \
-	-e GOPATH="//workdir/$(GOTMP)" \
-	-e GOCACHE="//workdir/$(GOTMP)/.cache" \
-	-e GOLANGCI_LINT_CACHE="//workdir/$(GOTMP)/.golanci-lint-cache" \
-	-e GOFLAGS="$(USEMODVENDOR)" \
-	-w //workdir \
-	$(BUILD_IMAGE)
 DEFAULT_BUILD=$(shell go env GOHOSTOS)_$(shell go env GOHOSTARCH)
 
 build: $(DEFAULT_BUILD)
-
-pullbuildimage:
-	@if [ ! -z "$(docker images -q $(BUILD_IMAGE))" ]; then \
-		@echo "Pulling $(BUILD_IMAGE) if possible..."; \
-		@docker pull $(BUILD_IMAGE) || true ;\
-	fi
 
 
 # Provide shorthand targets
@@ -107,18 +74,15 @@ windows_amd64: windows_install
 windows_arm64: $(GOTMP)/bin/windows_arm64/ddev.exe
 
 TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe
-$(TARGETS): pullbuildimage $(GOFILES)
+$(TARGETS): $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER)";
 	@#echo "LDFLAGS=$(LDFLAGS)";
 	@rm -f $@
 	@export TARGET=$(word 3, $(subst /, ,$@)) && \
-	export GOOS="$${TARGET%_*}" && \
-	export GOARCH="$${TARGET#*_}" && \
-	export GOBUILDER=go && \
+	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" CGO_ENABLED=0 GOPATH="$(PWD)/$(GOTMP)" GOCACHE="$(PWD)/$(GOTMP)/.cache" && \
 	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
 	chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
-	$(DOCKERBUILDCMD) \
-	bash -c "GOOS=$$GOOS GOARCH=$$GOARCH $$GOBUILDER build -o $(GOTMP)/bin/$$TARGET -installsuffix static -ldflags \" $(LDFLAGS) \" $(SRC_AND_UNDER)"
+	go build -o $(GOTMP)/bin/$$TARGET -installsuffix static -ldflags " $(LDFLAGS) " $(SRC_AND_UNDER)
 	$( shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi )
 	@echo $(VERSION) >VERSION.txt
 
@@ -170,8 +134,7 @@ markdownlint:
 	if command -v markdownlint >/dev/null 2>&1 ; then \
 		$$CMD; \
 	else \
-		sleep 1 && $(DOCKERTESTCMD) \
-		bash -c "$$CMD"; \
+		echo "Skipping markdownlint as not installed"; \
 	fi
 
 # Best to install mkdocs locally with "sudo pip3 install -r requirements.txt"
@@ -270,18 +233,13 @@ golangci-lint:
 	if command -v golangci-lint >/dev/null 2>&1; then \
 		$$CMD; \
 	else \
-		$(DOCKERTESTCMD) \
-		bash -c "$$CMD"; \
+		echo "Skipping golanci-lint as not installed"; \
 	fi
 
 version:
 	@echo VERSION:$(VERSION)
 
-clean: container-clean bin-clean
-
-container-clean:
-	@if docker image inspect $(DOCKER_REPO):$(VERSION) >/dev/null 2>&1; then docker rmi -f $(DOCKER_REPO):$(VERSION); fi
-	@rm -rf .container-* .dockerfile* .push-* linux darwin windows container VERSION.txt .docker_image
+clean: bin-clean
 
 bin-clean:
 	@rm -rf bin
