@@ -12,7 +12,6 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"runtime"
 	"testing"
 )
 
@@ -136,9 +135,6 @@ func TestValidTestSite(t *testing.T) {
 
 // TestGetLocalHTTPResponse() brings up a project and hits a URL to get the response
 func TestGetLocalHTTPResponse(t *testing.T) {
-	if runtime.GOOS == "windows" || nodeps.IsMacM1() {
-		t.Skip("Skipping on Windows/Mac M1 as we always seem to have port conflicts")
-	}
 	// We have to get globalconfig read so CA is known and installed.
 	err := globalconfig.ReadGlobalConfig()
 	require.NoError(t, err)
@@ -175,7 +171,7 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 	// nolint: errcheck
 	defer app.Stop(true, false)
 
-	for _, pair := range []PortPair{{"80", "443"}, {"8080", "8443"}} {
+	for _, pair := range []PortPair{{"8000", "8043"}, {"8080", "8443"}} {
 		ClearDockerEnv()
 		app.RouterHTTPPort = pair.HTTPPort
 		app.RouterHTTPSPort = pair.HTTPSPort
@@ -197,13 +193,15 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 		assert.NoError(err)
 		assert.Contains(out, site.Safe200URIWithExpectation.Expect)
 
-		safeURL = app.GetHTTPSURL() + site.Safe200URIWithExpectation.URI
-		out, _, err = GetLocalHTTPResponse(t, safeURL, 60)
-		assert.NoError(err)
-		assert.Contains(out, site.Safe200URIWithExpectation.Expect)
-
-		// This does the same thing as previous, but worth exercising it here.
-		_, _ = EnsureLocalHTTPContent(t, safeURL, site.Safe200URIWithExpectation.Expect)
+		// Skip the https version if we don't have mkcert working
+		if globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
+			safeURL = app.GetHTTPSURL() + site.Safe200URIWithExpectation.URI
+			out, _, err = GetLocalHTTPResponse(t, safeURL, 60)
+			assert.NoError(err)
+			assert.Contains(out, site.Safe200URIWithExpectation.Expect)
+			// This does the same thing as previous, but worth exercising it here.
+			_, _ = EnsureLocalHTTPContent(t, safeURL, site.Safe200URIWithExpectation.Expect)
+		}
 	}
 	// Set the ports back to the default was so we don't break any following tests.
 	app.RouterHTTPSPort = "443"
