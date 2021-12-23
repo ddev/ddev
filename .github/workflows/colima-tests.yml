@@ -1,0 +1,111 @@
+name: Colima tests
+on:
+  pull_request:
+  push:
+#    branches: [ main ]
+    branches: [ 20211223_colima ]
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate set "debug_enabled"'
+        required: false
+        default: false
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  DDEV_DEBUG: true
+
+jobs:
+  tests:
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      matrix:
+        webserver: [nginx-fpm]
+        tests: [test]
+        os: [ macos-11 ]
+        no-bind-mounts: ['true']
+      fail-fast: false
+
+    runs-on: ${{ matrix.os }}
+
+    env:
+      DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
+      DDEV_NONINTERACTIVE: "true"
+      DDEV_TEST_NO_BIND_MOUNTS: ${{ matrix.no-bind-mounts }}
+      GOTEST_SHORT: "true"
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Homebrew cache/restore
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-homebrew-v2
+        with:
+          path: |
+            /usr/local/Cellar
+            /usr/local/bin
+            /usr/local/etc
+            /usr/local/lib
+            /usr/local/opt
+            /usr/local/share
+          key: ${{ runner.os }}-build-${{ env.cache-name }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}
+
+      - name: Lima cache/restore
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-lima
+        with:
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.lima
+          key: ${{ runner.os }}-build-${{ env.cache-name }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}
+
+      - name: Install Colima and deps (macOS)
+        if: matrix.os == 'macos-11'
+        run: ./.github/workflows/macos-colima-setup.sh
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+
+      - name: Build ddev
+        run: | 
+          time make
+          ls -l $PWD/.gotmp/bin/darwin_amd64
+      - name: Basic ddev usage
+        run: | 
+          ls -ld /usr/local/bin
+          sudo ln -sf $PWD/.gotmp/bin/darwin_amd64/ddev /usr/local/bin/ddev
+          ls -l /usr/local/bin/ddev
+          sudo chmod +x /usr/local/bin/ddev
+          mkdir -p ~/workspace/d9 && cd ~/workspace/d9
+          ddev config --composer-version=2.1.14 --project-type=drupal9 --docroot=web --create-docroot
+          ddev start
+          ddev composer create drupal/recommended-project
+          ddev composer require drush/drush
+          ddev drush si -y demo_umami --account-pass=admin
+          curl -I http://d9.ddev.site
+          # Pre-cache these so we don't see a mess in the later pull
+          for image in schickling/beanstalkd:latest memcached:1.5 solr:8; do
+            docker pull $image
+          done >/dev/null
+#      - name: DDEV tests
+#        run: |
+#          make ${{ matrix.tests }}
+      - name: Store test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: ddev-test-results-${{ matrix.webserver }}
+          path: /tmp/testresults/
