@@ -5,6 +5,7 @@ on:
 #    branches: [ main ]
     branches: [ 20211223_colima ]
   workflow_dispatch:
+    branches: [ 20211223_colima ]
     inputs:
       debug_enabled:
         description: 'Run the build with tmate set "debug_enabled"'
@@ -27,7 +28,7 @@ jobs:
     strategy:
       matrix:
         webserver: [nginx-fpm]
-        tests: [test]
+        tests: [testnotddevapp testddevapp testcmd]
         os: [ macos-11 ]
         no-bind-mounts: ['true']
       fail-fast: false
@@ -73,23 +74,12 @@ jobs:
         if: matrix.os == 'macos-11'
         run: ./.github/workflows/macos-colima-setup.sh
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
-
       - name: Build ddev
         run: | 
-          time make
-          ls -l $PWD/.gotmp/bin/darwin_amd64
+          make
       - name: Basic ddev usage
         run: | 
-          ls -ld /usr/local/bin
-          sudo ln -sf $PWD/.gotmp/bin/darwin_amd64/ddev /usr/local/bin/ddev
-          ls -l /usr/local/bin/ddev
-          sudo chmod +x /usr/local/bin/ddev
+          docker images
           mkdir -p ~/workspace/d9 && cd ~/workspace/d9
           ddev config --composer-version=2.1.14 --project-type=drupal9 --docroot=web --create-docroot
           ddev start
@@ -101,9 +91,18 @@ jobs:
           for image in schickling/beanstalkd:latest memcached:1.5 solr:8; do
             docker pull $image
           done >/dev/null
-#      - name: DDEV tests
-#        run: |
-#          make ${{ matrix.tests }}
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+
+      - name: DDEV tests
+        run: |
+          make ${{ matrix.tests }}
+
       - name: Store test results
         uses: actions/upload-artifact@v2
         with:
