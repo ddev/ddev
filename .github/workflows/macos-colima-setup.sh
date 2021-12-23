@@ -14,4 +14,7 @@ brew link go
 # Mentioned in https://github.com/actions/virtual-environments/issues/4519#issuecomment-970202641
 sudo security authorizationdb write com.apple.trust-settings.admin allow
 colima start
-mkcert -install
+
+# Remove mkcert -install for now so that ddev doesn't try to use https,
+# which doesn't seem to work right on github macos runner
+#mkcert -install

@@ -86,7 +86,7 @@ jobs:
           ddev composer create drupal/recommended-project
           ddev composer require drush/drush
           ddev drush si -y demo_umami --account-pass=admin
-          curl -I http://d9.ddev.site
+          curl -sSL -I http://d9.ddev.site
           # Pre-cache these so we don't see a mess in the later pull
           for image in schickling/beanstalkd:latest memcached:1.5 solr:8; do
             docker pull $image
