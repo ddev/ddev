@@ -89,7 +89,9 @@ func TestServices(t *testing.T) {
 	// now that files are in place
 	app, err = ddevapp.NewApp(app.AppRoot, false)
 
-	checkSolrService(t, app)
+	if fileutil.FileExists(filepath.Join(app.GetConfigPath("docker-compose.solr.yaml"))) {
+		checkSolrService(t, app)
+	}
 	checkMemcachedService(t, app)
 
 	desc, err := app.Describe(false)
