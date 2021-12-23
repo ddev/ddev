@@ -28,6 +28,7 @@ func TestServices(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("skipping because unreliable on Windows")
 	}
+
 	assert := asrt.New(t)
 	os.Setenv("DDEV_NONINTERACTIVE", "true")
 
@@ -61,6 +62,13 @@ func TestServices(t *testing.T) {
 		expectedServiceCount = expectedServiceCount - 1
 		assert.NoError(err)
 	}
+	// If bind-mounts are required, as currently with solr image, skip solr
+	if globalconfig.DdevGlobalConfig.NoBindMounts {
+		err = os.RemoveAll(filepath.Join(app.GetConfigPath("docker-compose.solr.yaml")))
+		expectedServiceCount = expectedServiceCount - 1
+		assert.NoError(err)
+	}
+
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)

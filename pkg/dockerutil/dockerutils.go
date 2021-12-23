@@ -1206,6 +1206,20 @@ func IsDockerDesktop() bool {
 	return false
 }
 
+// IsColima detects if running on Colima
+func IsColima() bool {
+	client := GetDockerClient()
+	info, err := client.Info()
+	if err != nil {
+		util.Warning("IsColima(): Unable to get docker info, err=%v", err)
+		return false
+	}
+	if info.Name == "colima" {
+		return true
+	}
+	return false
+}
+
 // CopyIntoContainer copies a path into a specified container and location
 func CopyIntoContainer(srcPath string, containerName string, dstPath string, exclusion string) error {
 	startTime := time.Now()
