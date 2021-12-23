@@ -101,6 +101,7 @@ jobs:
 
       - name: DDEV tests
         run: |
+          echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN}"
           make ${{ matrix.tests }}
 
       - name: Turn off /clean up
