@@ -3133,9 +3133,9 @@ func TestWebserverType(t *testing.T) {
 // TestInternalAndExternalAccessToURL checks we can access content
 // from host and from inside container by URL (with port)
 func TestInternalAndExternalAccessToURL(t *testing.T) {
-	if nodeps.IsMacM1() {
-		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
-	}
+	//if nodeps.IsMacM1() {
+	//	t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+	//}
 
 	assert := asrt.New(t)
 
@@ -3147,11 +3147,24 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
+	t.Cleanup(func() {
+		// Set the ports back to the default was so we don't break any following tests.
+		app.RouterHTTPSPort = "443"
+		app.RouterHTTPPort = "80"
+		app.AdditionalFQDNs = []string{}
+		app.AdditionalHostnames = []string{}
+
+		err = app.WriteConfig()
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
+
 	// Add some additional hostnames
 	app.AdditionalHostnames = []string{"sub1", "sub2", "sub3"}
 	app.AdditionalFQDNs = []string{"junker99.example.com"}
 
-	for _, pair := range []testcommon.PortPair{{HTTPPort: "80", HTTPSPort: "443"}, {HTTPPort: "8080", HTTPSPort: "8443"}} {
+	for _, pair := range []testcommon.PortPair{{HTTPPort: "8000", HTTPSPort: "8143"}, {HTTPPort: "8080", HTTPSPort: "8443"}} {
 		testcommon.ClearDockerEnv()
 		app.RouterHTTPPort = pair.HTTPPort
 		app.RouterHTTPSPort = pair.HTTPSPort
@@ -3165,7 +3178,14 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		err = app.StartAndWait(5)
 		assert.NoError(err)
 
-		_, _, urls := app.GetAllURLs()
+		expectedNumUrls := len(app.GetHostnames())*2 + 2
+		httpURLs, _, urls := app.GetAllURLs()
+
+		// If no https/mkcert, number of hostnames is different
+		if globalconfig.DdevGlobalConfig.MkcertCARoot == "" {
+			urls = httpURLs
+			expectedNumUrls = len(app.GetHostnames()) + 1
+		}
 
 		// Convert URLs to map[string]bool
 		urlMap := make(map[string]bool)
@@ -3173,13 +3193,14 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 			urlMap[u] = true
 		}
 
-		// We expect two URLs for each hostname (http/https) and two direct web container addresses.
-		expectedNumUrls := len(app.GetHostnames())*2 + 2
 		assert.Equal(len(urlMap), expectedNumUrls, "Unexpected number of URLs returned: %d", len(urlMap))
 
-		_, _, URLList := app.GetAllURLs()
-		URLList = append(URLList, "http://localhost", "http://localhost")
-		for _, item := range URLList {
+		httpURLs, _, urls = app.GetAllURLs()
+		if globalconfig.DdevGlobalConfig.MkcertCARoot == "" {
+			urls = httpURLs
+		}
+		urls = append(urls, "http://localhost", "http://localhost")
+		for _, item := range urls {
 			// Make sure internal (web container) access is successful
 			parts, err := url.Parse(item)
 			require.NoError(t, err, "url.Parse of item=%v failed", item)
@@ -3213,17 +3234,6 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 	out, err = exec.RunCommand("docker", []string{"logs", "ddev-router"})
 	assert.NoError(err)
 	t.Logf("\n=========== output of docker logs ddev-router ==========\n%s\n============\n", out)
-
-	// Set the ports back to the default was so we don't break any following tests.
-	app.RouterHTTPSPort = "443"
-	app.RouterHTTPPort = "80"
-	app.AdditionalFQDNs = []string{}
-	app.AdditionalHostnames = []string{}
-
-	err = app.WriteConfig()
-	assert.NoError(err)
-	err = app.Stop(true, false)
-	assert.NoError(err)
 
 	runTime()
 }
