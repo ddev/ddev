@@ -2838,6 +2838,9 @@ func TestHttpsRedirection(t *testing.T) {
 	if nodeps.IsMacM1() {
 		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
 	}
+	if globalconfig.DdevGlobalConfig.MkcertCARoot == "" {
+		t.Skip("Skipping because MkcertCARoot is not set, no https")
+	}
 
 	assert := asrt.New(t)
 	testcommon.ClearDockerEnv()
