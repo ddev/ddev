@@ -69,11 +69,7 @@ func RenderAppRow(t table.Writer, row map[string]interface{}) {
 	urls := ""
 	mutagenStatus := ""
 	if row["status"] == SiteRunning {
-		if globalconfig.GetCAROOT() != "" && !row["router_disabled"].(bool) {
-			urls = row["httpsurl"].(string)
-		} else {
-			urls = row["httpurl"].(string)
-		}
+		urls = row["primary_url"].(string)
 		if row["mutagen_enabled"] == true {
 			if _, ok := row["mutagen_status"]; ok {
 				mutagenStatus = row["mutagen_status"].(string)

@@ -25,6 +25,18 @@
             "args": ["describe"],
             "showLog": true
         },
+        {
+            "name": "debug ddev list",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "remotePath": "",
+            "program": "${workspaceRoot}/cmd/ddev",
+            "cwd": "/workspace/d9simple",
+            "env": {"DDEV_DEBUG": true},
+            "args": ["list"],
+            "showLog": true
+        },
 {
             "name": "pkg-level test",
             "type": "go",
