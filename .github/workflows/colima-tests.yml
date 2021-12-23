@@ -30,9 +30,9 @@ jobs:
       matrix:
         webserver: [nginx-fpm]
         tests:
-          - testnotddevapp
-          - testddevapp
-          - testcmd
+          - notddevapp
+          - ddevapp
+          - cmd
         os: [ macos-11 ]
         no-bind-mounts: ['true']
       fail-fast: false
@@ -106,7 +106,7 @@ jobs:
       - name: DDEV tests
         run: |
           echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN}"
-          make ${{ matrix.tests }}
+          make "test${{ matrix.tests }}"
 
       - name: Turn off /clean up
         run: |
