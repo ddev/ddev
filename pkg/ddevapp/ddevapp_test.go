@@ -362,7 +362,7 @@ func TestDdevStart(t *testing.T) {
 		assert.NoError(err)
 
 		dockerIP, _ := dockerutil.GetDockerIP()
-		out, err := exec.RunCommand("mysql", []string{"--user=db", "--password=db", "--port=" + strconv.Itoa(dbPort), "--database=db", "--host=" + dockerIP, "-e", "SELECT 1;"})
+		out, err := exec.RunHostCommand("mysql", "--user=db", "--password=db", "--port="+strconv.Itoa(dbPort), "--database=db", "--host="+dockerIP, "-e", "SELECT 1;")
 		assert.NoError(err)
 		assert.Contains(out, "1")
 	} else {
@@ -2651,7 +2651,7 @@ func TestRouterPortsCheck(t *testing.T) {
 
 	// Occupy port 80 using docker busybox trick, then see if we can start router.
 	// This is done with docker so that we don't have to use explicit sudo
-	containerID, err := exec.RunCommand("sh", []string{"-c", "docker run -d -p80:80 --rm busybox:stable sleep 100 2>/dev/null"})
+	containerID, err := exec.RunHostCommand("sh", "-c", "docker run -d -p80:80 --rm busybox:stable sleep 100 2>/dev/null")
 	if err != nil {
 		t.Fatalf("Failed to run docker command to occupy port 80, err=%v output=%v", err, containerID)
 	}
@@ -2662,7 +2662,7 @@ func TestRouterPortsCheck(t *testing.T) {
 	assert.Error(err, "Failure: router started even though port 80 was occupied")
 
 	// Remove our dummy busybox docker container.
-	out, err := exec.RunCommand("docker", []string{"rm", "-f", containerID})
+	out, err := exec.RunHostCommand("docker", "rm", "-f", containerID)
 	assert.NoError(err, "Failed to docker rm the port-occupier container, err=%v output=%v", err, out)
 }
 
@@ -3228,10 +3228,10 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		}
 	}
 
-	out, err := exec.RunCommand(DdevBin, []string{"list"})
+	out, err := exec.RunHostCommand(DdevBin, "list")
 	assert.NoError(err)
 	t.Logf("\n=========== output of ddev list ==========\n%s\n============\n", out)
-	out, err = exec.RunCommand("docker", []string{"logs", "ddev-router"})
+	out, err = exec.RunHostCommand("docker", "logs", "ddev-router")
 	assert.NoError(err)
 	t.Logf("\n=========== output of docker logs ddev-router ==========\n%s\n============\n", out)
 
@@ -3462,7 +3462,7 @@ func TestHostDBPort(t *testing.T) {
 		} else {
 			// Running mysql against the container ensures that we can get there via the values
 			// in ddev describe
-			out, err := exec.RunCommand("mysql", []string{"--user=db", "--password=db", "--host=" + dockerIP, fmt.Sprintf("--port=%d", dbPort), "--database=db", `--execute=SELECT 1;`})
+			out, err := exec.RunHostCommand("mysql", "--user=db", "--password=db", "--host="+dockerIP, fmt.Sprintf("--port=%d", dbPort), "--database=db", `--execute=SELECT 1;`)
 			assert.NoError(err, "Failed to run mysql: %v", out)
 			out = strings.Replace(out, "\r", "", -1)
 			assert.Contains(out, "1\n1\n")
@@ -3470,8 +3470,8 @@ func TestHostDBPort(t *testing.T) {
 
 		// Running the test host custom command "showport" ensures that the DDEV_HOST_DB_PORT
 		// is getting in there available to host custom commands.
-		_, _ = exec.RunCommand(DdevBin, []string{})
-		out, err := exec.RunCommand(DdevBin, []string{"showport"})
+		_, _ = exec.RunHostCommand(DdevBin)
+		out, err := exec.RunHostCommand(DdevBin, "showport")
 		assert.NoError(err)
 		assert.EqualValues("DDEV_HOST_DB_PORT="+dbPortStr, strings.Trim(out, "\r\n"))
 	}
@@ -3623,7 +3623,7 @@ func TestCustomCerts(t *testing.T) {
 
 	// Create a certfile/key in .ddev/custom_certs with just one DNS name in it
 	// mkcert --cert-file d9composer.ddev.site.crt --key-file d9composer.ddev.site.key d9composer.ddev.site
-	out, err := exec.RunCommand("mkcert", []string{"--cert-file", filepath.Join(certDir, app.GetHostname()+".crt"), "--key-file", filepath.Join(certDir, app.GetHostname()+".key"), app.GetHostname()})
+	out, err := exec.RunHostCommand("mkcert", "--cert-file", filepath.Join(certDir, app.GetHostname()+".crt"), "--key-file", filepath.Join(certDir, app.GetHostname()+".key"), app.GetHostname())
 	assert.NoError(err, "mkcert command failed, out=%s", out)
 
 	err = app.Start()
@@ -3721,7 +3721,7 @@ func TestEnvironmentVariables(t *testing.T) {
 		"DDEV_WEBSERVER_TYPE":      app.WebserverType,
 	}
 	for k, v := range hostExpectations {
-		envVal, err := exec.RunCommand(DdevBin, []string{"showhostenvvar", k})
+		envVal, err := exec.RunHostCommand(DdevBin, "showhostenvvar", k)
 		assert.NoError(err, "could not run %s %s %s, result=%s", DdevBin, "showhostenvvar", k, envVal)
 		envVal = strings.Trim(envVal, "\r\n")
 		assert.Equal(v, envVal, "expected envvar $%s to equal '%s', but it was '%s'", k, v, envVal)
