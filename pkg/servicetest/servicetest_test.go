@@ -30,7 +30,7 @@ func TestServices(t *testing.T) {
 	}
 
 	assert := asrt.New(t)
-	os.Setenv("DDEV_NONINTERACTIVE", "true")
+	_ = os.Setenv("DDEV_NONINTERACTIVE", "true")
 
 	// We expect to find web + db + dba + what we add on here
 	expectedServiceCount := 6
@@ -48,6 +48,11 @@ func TestServices(t *testing.T) {
 		assert.NoError(err)
 	})
 
+	workingServices := map[string]bool{
+		"beanstalkd": true,
+		"memcached":  true,
+		"solr":       true,
+	}
 	err = os.Chdir(testDir)
 	assert.NoError(err)
 
@@ -58,15 +63,20 @@ func TestServices(t *testing.T) {
 
 	// the beanstalkd image is not pushed for arm64
 	if runtime.GOARCH == "arm64" {
-		err = os.RemoveAll(filepath.Join(app.GetConfigPath("docker-compose.beanstalkd.yaml")))
-		expectedServiceCount = expectedServiceCount - 1
-		assert.NoError(err)
+		workingServices["beanstalkd"] = false
 	}
+
 	// If bind-mounts are required, as currently with solr image, skip solr
-	if globalconfig.DdevGlobalConfig.NoBindMounts {
-		err = os.RemoveAll(filepath.Join(app.GetConfigPath("docker-compose.solr.yaml")))
-		expectedServiceCount = expectedServiceCount - 1
-		assert.NoError(err)
+	if globalconfig.DdevGlobalConfig.NoBindMounts || dockerutil.IsColima() {
+		workingServices["solr"] = false
+	}
+
+	for s, enabled := range workingServices {
+		if !enabled {
+			err = os.RemoveAll(filepath.Join(app.GetConfigPath("docker-compose." + s + ".yaml")))
+			expectedServiceCount = expectedServiceCount - 1
+			assert.NoError(err)
+		}
 	}
 
 	t.Cleanup(func() {
@@ -89,7 +99,7 @@ func TestServices(t *testing.T) {
 	// now that files are in place
 	app, err = ddevapp.NewApp(app.AppRoot, false)
 
-	if fileutil.FileExists(filepath.Join(app.GetConfigPath("docker-compose.solr.yaml"))) {
+	if workingServices["solr"] {
 		checkSolrService(t, app)
 	}
 	checkMemcachedService(t, app)
@@ -100,14 +110,17 @@ func TestServices(t *testing.T) {
 	// Make sure desc has right number of services.
 	require.Len(t, desc["services"].(map[string]map[string]string), expectedServiceCount)
 
-	// A volume should have been created for solr (only)
-	assert.True(dockerutil.VolumeExists(strings.ToLower("ddev-" + app.Name + "_" + "solr")))
-
+	if workingServices["solr"] {
+		// A volume should have been created for solr (only)
+		assert.True(dockerutil.VolumeExists(strings.ToLower("ddev-" + app.Name + "_" + "solr")))
+	}
 	err = app.Stop(true, false)
 	assert.NoError(err)
 
-	// Solr volume should have been deleted
-	assert.False(dockerutil.VolumeExists(strings.ToLower("ddev-" + app.Name + "_" + "solr")))
+	if workingServices["solr"] {
+		// Solr volume should have been deleted
+		assert.False(dockerutil.VolumeExists(strings.ToLower("ddev-" + app.Name + "_" + "solr")))
+	}
 }
 
 // checkSolrService ensures that the solr service's container is
