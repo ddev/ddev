@@ -318,6 +318,7 @@ Note that the git URL shown below is an example only, you'll need to use your ow
 git clone https://github.com/example/example-site
 cd example-site
 ddev config --project-type=laravel
+ddev start
 ddev composer install
 ddev exec "cat .env.example | sed  -E 's/DB_(HOST|DATABASE|USERNAME|PASSWORD)=(.*)/DB_\1=db/g' > .env"
 ddev exec "php artisan key:generate"
