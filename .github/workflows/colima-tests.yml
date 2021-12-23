@@ -21,6 +21,7 @@ env:
 
 jobs:
   tests:
+    name: Colima tests
     defaults:
       run:
         shell: bash
@@ -28,7 +29,10 @@ jobs:
     strategy:
       matrix:
         webserver: [nginx-fpm]
-        tests: [testnotddevapp testddevapp testcmd]
+        tests:
+          - testnotddevapp
+          - testddevapp
+          - testcmd
         os: [ macos-11 ]
         no-bind-mounts: ['true']
       fail-fast: false
