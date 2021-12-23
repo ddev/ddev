@@ -29,9 +29,11 @@ jobs:
     strategy:
       matrix:
         webserver: [nginx-fpm]
-        tests: [ notddevapp, ddevapp, cmd ]
+#        tests: [ notddevapp, ddevapp, cmd ]
+        tests: [notddevapp]
         os: [ macos-11 ]
-        no-bind-mounts: ['true', 'false']
+#        no-bind-mounts: ['true', 'false']
+        no-bind-mounts: ['true']
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
@@ -72,9 +74,9 @@ jobs:
       - name: Build ddev
         run: | 
           make
+          ln -s $PWD/.gotmp/bin/darwin_amd64/ddev /usr/local/bin/ddev
       - name: Basic ddev usage
         run: | 
-          docker images
           mkdir -p ~/workspace/d9 && cd ~/workspace/d9
           ddev config --composer-version=2.1.14 --project-type=drupal9 --docroot=web --create-docroot
           ddev start
@@ -91,10 +93,10 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
 
-      - name: make "test${{ matrix.tests }}"
-        run: |
-          echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN}"
-          make "test${{ matrix.tests }}"
+#      - name: make "test${{ matrix.tests }}"
+#        run: |
+#          echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN}"
+#          make "test${{ matrix.tests }}"
 
       - name: Turn off /clean up
         run: |
