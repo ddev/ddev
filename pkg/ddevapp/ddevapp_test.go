@@ -453,9 +453,9 @@ func TestDdevStart(t *testing.T) {
 
 // TestDdevStartMultipleHostnames tests start with multiple hostnames
 func TestDdevStartMultipleHostnames(t *testing.T) {
-	if nodeps.IsMacM1() {
-		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
-	}
+	//if nodeps.IsMacM1() {
+	//	t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+	//}
 
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
@@ -486,7 +486,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		if err != nil && strings.Contains(err.Error(), "db container failed") {
 			container, err := app.FindContainerByType("db")
 			assert.NoError(err)
-			out, err := exec.RunCommand("docker", []string{"logs", container.Names[0]})
+			out, err := exec.RunHostCommand("docker", "logs", container.Names[0])
 			assert.NoError(err)
 			t.Logf("DB Logs after app.Start: \n%s\n== END DB LOGS ==", out)
 		}
@@ -503,14 +503,16 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			assert.True(check, "Container check on %s failed", containerType)
 		}
 
-		_, _, urls := app.GetAllURLs()
+		httpURLs, _, urls := app.GetAllURLs()
+		if globalconfig.DdevGlobalConfig.MkcertCARoot == "" {
+			urls = httpURLs
+		}
 		t.Logf("Testing these URLs: %v", urls)
-		_, _, allURLs := app.GetAllURLs()
-		for _, url := range allURLs {
+		for _, url := range urls {
 			_, _ = testcommon.EnsureLocalHTTPContent(t, url+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		}
 
-		out, err := exec.RunCommand(DdevBin, []string{"list"})
+		out, err := exec.RunHostCommand(DdevBin, "list")
 		assert.NoError(err)
 		t.Logf("=========== output of ddev list ==========\n%s\n============", out)
 
