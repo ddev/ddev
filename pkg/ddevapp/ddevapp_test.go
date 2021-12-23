@@ -763,7 +763,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		t.Logf("Curling to port 9000 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
 
 		// Curl to the project's index.php or anything else
-		_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL())
+		_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL(), 1)
 
 		// Accept is blocking, no way to timeout, so use
 		// goroutine instead.
