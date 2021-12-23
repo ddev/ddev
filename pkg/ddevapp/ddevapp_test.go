@@ -804,10 +804,6 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 // TestDdevXhprofEnabled tests running with xhprof_enabled = true, etc.
 func TestDdevXhprofEnabled(t *testing.T) {
-	//if nodeps.IsMacM1() {
-	//	t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
-	//}
-
 	assert := asrt.New(t)
 
 	phpVersions := nodeps.ValidPHPVersions
@@ -887,12 +883,12 @@ func TestDdevXhprofEnabled(t *testing.T) {
 			assert.Contains(stdout, "xhprof.output_dir", "xhprof is not enabled for %s", v)
 
 			// Dummy hit on phpinfo.php to avoid M1 "connection reset by peer"
-			_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL()+"/phpinfo.php")
-			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL()+"/phpinfo.php")
+			_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL()+"/phpinfo.php", 1)
+			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL()+"/phpinfo.php", 1)
 			assert.NoError(err, "Failed to get base URL webserver_type=%s, php_version=%s", webserverKey, v)
 			assert.Contains(out, "module_xhprof")
 
-			out, _, err = testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL()+"/xhprof/")
+			out, _, err = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL()+"/xhprof/", 1)
 			assert.NoError(err)
 			// Output should contain at least one run
 			assert.Contains(out, ".ddev.xhprof</a><small>")
