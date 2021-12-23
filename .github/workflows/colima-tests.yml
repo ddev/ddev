@@ -50,15 +50,9 @@ jobs:
       - name: Homebrew cache/restore
         uses: actions/cache@v2
         env:
-          cache-name: cache-homebrew-v2
+          cache-name: cache-homebrew-cache
         with:
-          path: |
-            /usr/local/Cellar
-            /usr/local/bin
-            /usr/local/etc
-            /usr/local/lib
-            /usr/local/opt
-            /usr/local/share
+          path: ~/Library/Caches/Homebrew
           key: ${{ runner.os }}-build-${{ env.cache-name }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}
@@ -87,10 +81,7 @@ jobs:
           mkdir -p ~/workspace/d9 && cd ~/workspace/d9
           ddev config --composer-version=2.1.14 --project-type=drupal9 --docroot=web --create-docroot
           ddev start
-          ddev composer create drupal/recommended-project
-          ddev composer require drush/drush
-          ddev drush si -y demo_umami --account-pass=admin
-          curl -sSL -I http://d9.ddev.site
+          ddev poweroff
           # Pre-cache these so we don't see a mess in the later pull
           for image in schickling/beanstalkd:latest memcached:1.5 solr:8; do
             docker pull $image
