@@ -1556,9 +1556,9 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		assert.NotContains(out, "Unable to create settings file")
 
 		// Validate PHPMyAdmin is working and database named db is present
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL()+":8037/index.php?route=/database/structure&server=1&db=db", "Database:          db")
+		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8036/index.php?route=/database/structure&server=1&db=db", "Database:          db")
 		// Validate MailHog is working and "connected"
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL()+":8026/#", "Connected")
+		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8025/#", "Connected")
 
 		settingsLocation, err := app.DetermineSettingsPathLocation()
 		assert.NoError(err)
@@ -1585,9 +1585,9 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		}
 
 		// Test static content.
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		// Test dynamic php + database content.
-		rawurl := app.GetHTTPSURL() + site.DynamicURI.URI
+		rawurl := app.GetPrimaryURL() + site.DynamicURI.URI
 		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 120)
 		assert.NoError(err, "GetLocalHTTPResponse returned err on project=%s rawurl %s, resp=%v: %v", site.Name, rawurl, resp, err)
 		if err != nil && strings.Contains(err.Error(), "container ") {
@@ -1599,7 +1599,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		// Load an image from the files section
 		if site.FilesImageURI != "" {
-			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL()+site.FilesImageURI)
+			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL()+site.FilesImageURI)
 			assert.NoError(err, "failed ImageURI response on project %s", site.Name)
 			if err != nil && resp != nil {
 				assert.Equal("image/jpeg", resp.Header["Content-Type"][0])
@@ -1780,7 +1780,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = app.ImportDB(d7testerTest1Dump, "", false, false, "db")
 	require.NoError(t, err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
 
-	_, ensureErr := testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), "d7 tester test 1 has 1 node", 45)
+	_, ensureErr := testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL(), "d7 tester test 1 has 1 node", 45)
 	assert.NoError(ensureErr)
 
 	// Make a snapshot of d7 tester test 1
@@ -1812,7 +1812,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	//err = app.Restart()
 	//require.NoError(t, err)
 
-	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), "d7 tester test 2 has 2 nodes", 45)
+	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL(), "d7 tester test 2 has 2 nodes", 45)
 
 	snapshotName, err = app.Snapshot("d7testerTest2")
 	assert.NoError(err)
@@ -1838,8 +1838,8 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.NoError(err)
 
 	// Dummy hit in advance to try to avoid M1 "connection reset by peer"
-	_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL(), 60)
-	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), "d7 tester test 1 has 1 node", 60)
+	_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), 60)
+	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL(), "d7 tester test 1 has 1 node", 60)
 	err = app.RestoreSnapshot("d7testerTest2")
 	assert.NoError(err)
 
@@ -1847,8 +1847,8 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	//err = app.Restart()
 	//assert.NoError(err)
 
-	body, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL(), 45)
-	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", app.GetHTTPSURL(), err)
+	body, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), 45)
+	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", app.GetPrimaryURL(), err)
 	assert.Contains(body, "d7 tester test 2 has 2 nodes")
 	if err != nil {
 		t.Logf("resp after timeout: %v", resp)
