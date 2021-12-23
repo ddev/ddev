@@ -281,6 +281,10 @@ func TestLaunchCommand(t *testing.T) {
 		"-p": desc["phpmyadmin_https_url"].(string),
 		"-m": desc["mailhog_https_url"].(string),
 	}
+	if globalconfig.DdevGlobalConfig.MkcertCARoot == "" {
+		cases["-p"] = desc["phpmyadmin_url"].(string)
+		cases["-m"] = desc["mailhog_url"].(string)
+	}
 	for partialCommand, expect := range cases {
 		// Try with the base URL, simplest case
 		c := DdevBin + `  launch ` + partialCommand + ` | awk '/FULLURL/ {print $2}'`
