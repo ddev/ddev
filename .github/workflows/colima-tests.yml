@@ -99,10 +99,14 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
 
-      - name: DDEV tests
-        run: |
-          make ${{ matrix.tests }}
+#      - name: DDEV tests
+#        run: |
+#          make ${{ matrix.tests }}
 
+      - name: Turn off /clean up
+        run: |
+          ddev poweroff
+          colima stop
       - name: Store test results
         uses: actions/upload-artifact@v2
         with:
