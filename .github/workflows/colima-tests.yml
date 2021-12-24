@@ -33,7 +33,7 @@ jobs:
         webserver: [nginx-fpm]
         tests: [ test ]
         os: [ macos-11 ]
-        no-bind-mounts: ['true', 'false']
+        no-bind-mounts: ['false']
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
@@ -94,10 +94,11 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
 
-      - name: time make "{{ matrix.tests }}"
+      - name: time make "${{ matrix.tests }}"
         run: |
           echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN}"
           echo "TESTARGS='${{ github.event.inputs.testargs }}'"
+          echo "mkcert_caroot=$(grep mkcert_caroot ~/.ddev/global_config.yaml)"
           make "${{ matrix.tests }}" TESTARGS='${{ github.event.inputs.testargs }}'
 
       - name: Turn off /clean up
