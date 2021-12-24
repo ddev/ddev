@@ -44,6 +44,12 @@ jobs:
       DDEV_NONINTERACTIVE: "true"
     steps:
     - checkout
+#    - run: |
+#        if ! git diff --name-only upstream/master | egrep "^(Makefile|pkg|cmd|vendor|go\.)"; then
+#          echo "No code found changed, so stopping build"
+#          circleci-agent step halt
+#        fi
+
     - attach_workspace:
         at: ~/
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew

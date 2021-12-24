@@ -1,10 +1,16 @@
 #!/bin/bash
 # This script is used to build drud/ddev using buildkite
+set -x
+if [  $BUILDKITE_PULL_REQUEST_BASE_BRANCH != "" ]; then
+  git diff --name-only refs/pull/$BUILDKITE_PULL_REQUEST/head
+fi
 
 if !git diff --name-only HEAD^ | egrep "^(Makefile|pkg|cmd|vendor|go\.)"; then
   echo "Skipping build since no code found"
   exit 0
 fi
+set +x
+
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 
 echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} in ${PWD} with golang=$(go version | awk '{print $3}') docker-desktop=$(scripts/docker-desktop-version.sh) docker=$(docker --version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}'))"
