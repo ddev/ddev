@@ -3579,12 +3579,10 @@ func TestDdevGetProjects(t *testing.T) {
 
 // TestCustomCerts makes sure that added custom certificates are respected and used
 func TestCustomCerts(t *testing.T) {
+	if globalconfig.GetCAROOT() == "" {
+		t.Skip("can't test custom certs without https enabled, skipping")
+	}
 	assert := asrt.New(t)
-
-	// Force router stop - shouldn't be necessary
-	//dest := ddevapp.RouterComposeYAMLPath()
-	//_, _, err := dockerutil.ComposeCmd([]string{dest}, "-p", ddevapp.RouterProjectName, "down")
-	//assert.NoError(err)
 
 	site := TestSites[0]
 	switchDir := site.Chdir()
