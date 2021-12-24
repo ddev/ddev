@@ -1,8 +1,14 @@
 name: Tests
 on:
   pull_request:
+    paths:
+      - "go.*"
+      - "pkg/**"
+      - "cmd/**"
+      - "Makefile"
+      - "vendor/**"
   push:
-    branches: [ master ]
+    branches: [ master, main ]
 
 defaults:
   run:
