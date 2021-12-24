@@ -84,73 +84,80 @@ func getWordpressUploadDir(app *DdevApp) string {
 }
 
 const wordpressSettingsTemplate = `<?php
-{{ $config := . }}
-/**
- {{ $config.Signature }}: Automatically generated WordPress settings file.
- ddev manages this file and may delete or overwrite the file unless this comment is removed.
- It is recommended that you leave this file alone.
+{{ $config := . }}/**
+ * {{ $config.Signature }}: Automatically generated WordPress settings file.
+ * ddev manages this file and may delete or overwrite the file unless this comment is removed.
+ * It is recommended that you leave this file alone.
+ *
+ * @package ddevapp
  */
 
 /** Authentication Unique Keys and Salts. */
-define('AUTH_KEY',         '{{ $config.AuthKey }}');
-define('SECURE_AUTH_KEY',  '{{ $config.SecureAuthKey }}');
-define('LOGGED_IN_KEY',    '{{ $config.LoggedInKey }}');
-define('NONCE_KEY',        '{{ $config.NonceKey }}');
-define('AUTH_SALT',        '{{ $config.AuthSalt }}');
-define('SECURE_AUTH_SALT', '{{ $config.SecureAuthSalt }}');
-define('LOGGED_IN_SALT',   '{{ $config.LoggedInSalt }}');
-define('NONCE_SALT',       '{{ $config.NonceSalt }}');
+define( 'AUTH_KEY', '{{ $config.AuthKey }}' );
+define( 'SECURE_AUTH_KEY', '{{ $config.SecureAuthKey }}' );
+define( 'LOGGED_IN_KEY', '{{ $config.LoggedInKey }}' );
+define( 'NONCE_KEY', '{{ $config.NonceKey }}' );
+define( 'AUTH_SALT', '{{ $config.AuthSalt }}' );
+define( 'SECURE_AUTH_SALT', '{{ $config.SecureAuthSalt }}' );
+define( 'LOGGED_IN_SALT', '{{ $config.LoggedInSalt }}' );
+define( 'NONCE_SALT', '{{ $config.NonceSalt }}' );
 
 /** Absolute path to the WordPress directory. */
-if (!defined('ABSPATH')) {
-  define('ABSPATH', dirname(__FILE__) . '/{{ $config.AbsPath }}');
-}
+defined( 'ABSPATH' ) || define( 'ABSPATH', dirname( __FILE__ ) . '/{{ $config.AbsPath }}' );
 
 // Include for settings managed by ddev.
-$ddev_settings = dirname(__FILE__) . '/wp-config-ddev.php';
-if (is_readable($ddev_settings) && !defined('DB_USER') && getenv('IS_DDEV_PROJECT') == 'true') {
-  require_once($ddev_settings);
+$ddev_settings = dirname( __FILE__ ) . '/wp-config-ddev.php';
+if ( is_readable( $ddev_settings ) && ! defined( 'DB_USER' ) && getenv( 'IS_DDEV_PROJECT' ) == 'true' ) {
+	require_once( $ddev_settings );
 }
 
 /** Include wp-settings.php */
-if (file_exists(ABSPATH . '/wp-settings.php')) {
-  require_once ABSPATH . '/wp-settings.php';
+if ( file_exists( ABSPATH . '/wp-settings.php' ) ) {
+	require_once ABSPATH . '/wp-settings.php';
 }
 `
 
 const wordpressDdevSettingsTemplate = `<?php
-{{ $config := . }}
-/**
-{{ $config.Signature }}: Automatically generated WordPress settings file.
- ddev manages this file and may delete or overwrite the file unless this comment is removed.
+{{ $config := . }}/**
+ * {{ $config.Signature }}: Automatically generated WordPress settings file.
+ * ddev manages this file and may delete or overwrite the file unless this comment is removed.
+ *
+ * @package ddevapp
  */
 
-if (getenv('IS_DDEV_PROJECT') == 'true') {
-  /** The name of the database for WordPress */
-  define('DB_NAME', '{{ $config.DatabaseName }}');
-  
-  /** MySQL database username */
-  define('DB_USER', '{{ $config.DatabaseUsername }}');
-  
-  /** MySQL database password */
-  define('DB_PASSWORD', '{{ $config.DatabasePassword }}');
-  
-  /** MySQL hostname */
-  define('DB_HOST', '{{ $config.DatabaseHost }}');
+if ( getenv( 'IS_DDEV_PROJECT' ) == 'true' ) {
+	/** The name of the database for WordPress */
+	defined( 'DB_NAME' ) || define( 'DB_NAME', '{{ $config.DatabaseName }}' );
 
-  /** WP_HOME URL */
-  define('WP_HOME', '{{ $config.DeployURL }}');
-  
-  /** WP_SITEURL location */
-  define('WP_SITEURL', WP_HOME . '/{{ $config.AbsPath  }}');
+	/** MySQL database username */
+	defined( 'DB_USER' ) || define( 'DB_USER', '{{ $config.DatabaseUsername }}' );
+
+	/** MySQL database password */
+	defined( 'DB_PASSWORD' ) || define( 'DB_PASSWORD', '{{ $config.DatabasePassword }}' );
+
+	/** MySQL hostname */
+	defined( 'DB_HOST' ) || define( 'DB_HOST', '{{ $config.DatabaseHost }}' );
+
+	/** WP_HOME URL */
+	defined( 'WP_HOME' ) || define( 'WP_HOME', '{{ $config.DeployURL }}' );
+
+	/** WP_SITEURL location */
+	defined( 'WP_SITEURL' ) || define( 'WP_SITEURL', WP_HOME . '/{{ $config.AbsPath  }}' );
+
+	/** Enable debug */
+	defined( 'WP_DEBUG' ) || define( 'WP_DEBUG', true );
+
+	/**
+	 * Set WordPress Database Table prefix if not already set.
+	 *
+	 * @global string $table_prefix
+	 */
+	if ( ! isset( $table_prefix ) || empty( $table_prefix ) ) {
+		// phpcs:disable WordPress.WP.GlobalVariablesOverride.Prohibited
+		$table_prefix = 'wp_';
+		// phpcs:enable
+	}
 }
-
-/** Enable debug */
-define('WP_DEBUG', true);
-
-
-/** Define the database table prefix */
-$table_prefix  = 'wp_';
 `
 
 const wordpressConfigInstructions = `
