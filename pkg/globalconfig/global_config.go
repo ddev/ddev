@@ -45,7 +45,6 @@ type GlobalConfig struct {
 	DeveloperMode                bool                    `yaml:"developer_mode,omitempty"`
 	InstrumentationUser          string                  `yaml:"instrumentation_user,omitempty"`
 	LastStartedVersion           string                  `yaml:"last_started_version"`
-	MkcertCARoot                 string                  `yaml:"mkcert_caroot"`
 	UseHardenedImages            bool                    `yaml:"use_hardened_images"`
 	UseLetsEncrypt               bool                    `yaml:"use_letsencrypt"`
 	LetsEncryptEmail             string                  `yaml:"letsencrypt_email"`
@@ -58,6 +57,7 @@ type GlobalConfig struct {
 	RequiredDockerComposeVersion string                  `yaml:"required_docker_compose_version,omitempty"`
 	UseDockerComposeFromPath     bool                    `yaml:"use_docker_compose_from_path,omitempty"`
 	NoBindMounts                 bool                    `yaml:"no_bind_mounts"`
+	MkcertCARoot                 string                  `yaml:"mkcert_caroot"`
 	ProjectList                  map[string]*ProjectInfo `yaml:"project_info"`
 }
 

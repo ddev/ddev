@@ -17,4 +17,4 @@ sudo security authorizationdb write com.apple.trust-settings.admin allow
 # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
 colima start --cpu 3 --memory 6
 
-sudo mkcert -install
+sudo mkcert -install && sudo chown -R $UID "$(mkcert -CAROOT)"
