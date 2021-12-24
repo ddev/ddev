@@ -1,6 +1,5 @@
 module github.com/drud/ddev
 
-
 require (
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/Masterminds/sprig/v3 v3.2.2
