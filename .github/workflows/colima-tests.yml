@@ -28,7 +28,8 @@ jobs:
     strategy:
       matrix:
         webserver: [nginx-fpm]
-        tests: [ notddevapp, ddevapp, cmd, pkg TESTARGS='-run TestEnvironmentVariables' ]
+#        tests: [ notddevapp, ddevapp, cmd, pkg TESTARGS='-run TestEnvironmentVariables' ]
+        tests: [ pkg TESTARGS='-run TestEnvironmentVariables' ]
         os: [ macos-11 ]
         no-bind-mounts: ['true', 'false']
       fail-fast: false
