@@ -30,6 +30,8 @@ jobs:
         containers: [dbserver, webserver, others]
 
     steps:
+      - uses: actions/checkout@v2
+
       - name: Install Docker and deps (Linux)
         if: matrix.os == 'ubuntu-20.04'
         run: ./.github/workflows/linux-setup.sh
