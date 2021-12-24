@@ -2,14 +2,17 @@ name: Colima tests
 on:
   pull_request:
   push:
-#    branches: [ main ]
-    branches: [ 20211223_colima ]
+    branches: [ main, master, 20211223_colima ]
   workflow_dispatch:
     inputs:
       debug_enabled:
         description: 'Run the build with tmate set "debug_enabled"'
         required: false
         default: false
+      testargs:
+        description: Add specific test to run like -run TestEnvironmentVariables or -run "(TestDdevFullSite.*|Test.*Pull)"
+        required: false
+        default: ""
 
 defaults:
   run:
@@ -28,8 +31,7 @@ jobs:
     strategy:
       matrix:
         webserver: [nginx-fpm]
-#        tests: [ notddevapp, ddevapp, cmd, pkg TESTARGS='-run TestEnvironmentVariables' ]
-        tests: [ pkg TESTARGS='-run TestEnvironmentVariables' ]
+        tests: [ notddevapp, ddevapp, cmd ]
         os: [ macos-11 ]
         no-bind-mounts: ['true', 'false']
       fail-fast: false
@@ -73,11 +75,12 @@ jobs:
         run: | 
           make
           ln -s $PWD/.gotmp/bin/darwin_amd64/ddev /usr/local/bin/ddev
+
       - name: Basic ddev usage
         run: | 
           mkdir -p ~/workspace/d9 && cd ~/workspace/d9
           ddev config --composer-version=2.1.14 --project-type=drupal9 --docroot=web --create-docroot
-          ddev start
+          ddev debug download-images
           ddev poweroff
           # Pre-cache these so we don't see a mess in the later pull
           for image in schickling/beanstalkd:latest memcached:1.5 solr:8; do
@@ -94,7 +97,7 @@ jobs:
       - name: time make "test${{ matrix.tests }}"
         run: |
           echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN}"
-          make "test${{ matrix.tests }}"
+          make "test${{ matrix.tests }}" TESTARGS=${{ github.event.inputs.extra_testargs }}
 
       - name: Turn off /clean up
         run: |
