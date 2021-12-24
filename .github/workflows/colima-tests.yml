@@ -31,7 +31,7 @@ jobs:
     strategy:
       matrix:
         webserver: [nginx-fpm]
-        tests: [ ddevapp TESTARGS='-run TestEnvironmentVariables', ddevapp, notddevapp, cmd ]
+        tests: [ test ]
         os: [ macos-11 ]
         no-bind-mounts: ['true', 'false']
       fail-fast: false
@@ -97,7 +97,7 @@ jobs:
       - name: time make "test${{ matrix.tests }}"
         run: |
           echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN}"
-          make "test${{ matrix.tests }}" TESTARGS=${{ github.event.inputs.extra_testargs }}
+          make "test${{ matrix.tests }}" TESTARGS='${{ github.event.inputs.extra_testargs }}'
 
       - name: Turn off /clean up
         run: |
