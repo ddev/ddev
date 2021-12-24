@@ -43,10 +43,6 @@ jobs:
       DDEV_TEST_USE_MUTAGEN: ${{ matrix.mutagen }}
       DDEV_TEST_NO_BIND_MOUNTS: ${{ matrix.no-bind-mounts }}
     steps:
-      - name: Cancel Redundant Runs
-        uses: styfle/cancel-workflow-action@0.9.1
-        with:
-          access_token: ${{ github.token }}
       - uses: actions/checkout@v2
 
       - name: GOTEST_SHORT setup - use "true" except for testfullsitesetup

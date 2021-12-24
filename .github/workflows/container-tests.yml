@@ -30,12 +30,6 @@ jobs:
         containers: [dbserver, webserver, others]
 
     steps:
-      - name: Cancel Redundant Runs
-        uses: styfle/cancel-workflow-action@0.9.1
-        with:
-          access_token: ${{ github.token }}
-      - uses: actions/checkout@v2
-
       - name: Install Docker and deps (Linux)
         if: matrix.os == 'ubuntu-20.04'
         run: ./.github/workflows/linux-setup.sh
