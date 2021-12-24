@@ -94,10 +94,11 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
 
-      - name: time make "test${{ matrix.tests }}"
+      - name: time make "{{ matrix.tests }}"
         run: |
           echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN}"
-          make "test${{ matrix.tests }}" TESTARGS='${{ github.event.inputs.extra_testargs }}'
+          echo "TESTARGS='${{ github.event.inputs.testargs }}'"
+          make "${{ matrix.tests }}" TESTARGS='${{ github.event.inputs.testargs }}'
 
       - name: Turn off /clean up
         run: |
