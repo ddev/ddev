@@ -1,11 +1,12 @@
 #!/bin/bash
 # This script is used to build drud/ddev using buildkite
 set -x
-if [  $BUILDKITE_PULL_REQUEST_BASE_BRANCH != "" ]; then
+git show-ref
+if [ "$BUILDKITE_PULL_REQUEST_BASE_BRANCH" != "" ]; then
   git diff --name-only refs/pull/$BUILDKITE_PULL_REQUEST/head
 fi
 
-if !git diff --name-only HEAD^ | egrep "^(Makefile|pkg|cmd|vendor|go\.)"; then
+if ! git diff --name-only HEAD^ | egrep "^(Makefile|pkg|cmd|vendor|go\.)"; then
   echo "Skipping build since no code found"
   exit 0
 fi
