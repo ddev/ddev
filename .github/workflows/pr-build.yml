@@ -6,6 +6,13 @@ defaults:
 
 on:
   pull_request:
+    paths:
+      - "go.*"
+      - "pkg"
+      - "cmd"
+      - "Makefile"
+      - "vendor"
+
 env:
   BUILDKIT_PROGRESS: plain
   DOCKER_CLI_EXPERIMENTAL: enabled
