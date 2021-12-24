@@ -3634,7 +3634,7 @@ func TestCustomCerts(t *testing.T) {
 	})
 	stdout = strings.Trim(stdout, "\r\n")
 	// If we had the regular cert, there would be several things here including *.ddev.site
-	// But e should only see the hostname listed.
+	// But we should only see the hostname listed.
 	assert.Equal(app.GetHostname(), stdout)
 }
 
