@@ -198,7 +198,7 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 		assert.Contains(out, site.Safe200URIWithExpectation.Expect)
 
 		// Skip the https version if we don't have mkcert working
-		if globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
+		if globalconfig.GetCAROOT() != "" {
 			safeURL = app.GetHTTPSURL() + site.Safe200URIWithExpectation.URI
 			out, _, err = GetLocalHTTPResponse(t, safeURL, 60)
 			assert.NoError(err)

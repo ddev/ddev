@@ -195,7 +195,7 @@ func TestDisableHTTP2(t *testing.T) {
 	if nodeps.IsMacM1() {
 		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
 	}
-	if globalconfig.DdevGlobalConfig.MkcertCARoot == "" {
+	if globalconfig.GetCAROOT() == "" {
 		t.Skip("Skipping because mkcert/http not enabled")
 	}
 

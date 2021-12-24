@@ -504,7 +504,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		}
 
 		httpURLs, _, urls := app.GetAllURLs()
-		if globalconfig.DdevGlobalConfig.MkcertCARoot == "" {
+		if globalconfig.GetCAROOT() == "" {
 			urls = httpURLs
 		}
 		t.Logf("Testing these URLs: %v", urls)
@@ -2838,7 +2838,7 @@ func TestHttpsRedirection(t *testing.T) {
 	if nodeps.IsMacM1() {
 		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
 	}
-	if globalconfig.DdevGlobalConfig.MkcertCARoot == "" {
+	if globalconfig.GetCAROOT() == "" {
 		t.Skip("Skipping because MkcertCARoot is not set, no https")
 	}
 
@@ -3182,7 +3182,7 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		httpURLs, _, urls := app.GetAllURLs()
 
 		// If no https/mkcert, number of hostnames is different
-		if globalconfig.DdevGlobalConfig.MkcertCARoot == "" {
+		if globalconfig.GetCAROOT() == "" {
 			urls = httpURLs
 			expectedNumUrls = len(app.GetHostnames()) + 1
 		}
@@ -3196,7 +3196,7 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		assert.Equal(len(urlMap), expectedNumUrls, "Unexpected number of URLs returned: %d", len(urlMap))
 
 		httpURLs, _, urls = app.GetAllURLs()
-		if globalconfig.DdevGlobalConfig.MkcertCARoot == "" {
+		if globalconfig.GetCAROOT() == "" {
 			urls = httpURLs
 		}
 		urls = append(urls, "http://localhost", "http://localhost")
