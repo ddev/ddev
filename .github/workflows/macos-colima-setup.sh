@@ -13,7 +13,9 @@ brew link go
 # This command allows adding CA (in mkcert, etc) without the popup trust prompt
 # Mentioned in https://github.com/actions/virtual-environments/issues/4519#issuecomment-970202641
 sudo security authorizationdb write com.apple.trust-settings.admin allow
-colima start
+# Github actions macOS runners have 14BG RAM so might as well use it.
+# https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+colima start --cpu 3 --memory 6
 
 # Remove mkcert -install for now so that ddev doesn't try to use https,
 # which doesn't seem to work right on github macos runner
