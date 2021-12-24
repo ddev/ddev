@@ -25,8 +25,8 @@ import (
 // runs each service's check function to ensure it's accessible from
 // the web container.
 func TestServices(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("skipping because unreliable on Windows")
+	if runtime.GOOS == "windows" || dockerutil.IsColima() {
+		t.Skip("skipping because unreliable, windows and colima seem to have port conflicts")
 	}
 
 	assert := asrt.New(t)
