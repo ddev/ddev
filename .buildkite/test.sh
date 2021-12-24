@@ -1,15 +1,10 @@
 #!/bin/bash
 # This script is used to build drud/ddev using buildkite
-set -x
-git show-ref
-echo "BUILDKITE_PULL_REQUEST_BASE_BRANCH=$BUILDKITE_PULL_REQUEST_BASE_BRANCH"
-
 # If this is a PR and the diff doesn't have code, skip it
 if [ "${BUILDKITE_PULL_REQUEST}" != "" ] && ! git diff --name-only refs/remotes/origin/$BUILDKITE_PULL_REQUEST_BASE_BRANCH | egrep "^(Makefile|pkg|cmd|vendor|go\.)"; then
-  echo "Skipping build since no code found"
+  echo "Skipping build since no code changes found"
   exit 0
 fi
-set +x
 
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 

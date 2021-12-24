@@ -53,7 +53,7 @@ jobs:
           if [ "${CIRCLE_PR_NUMBER}" != "" ] ; then
             echo "base_revision=<< pipeline.git.base_revision >>"
             if ! git diff --name-only "<< pipeline.git.base_revision >>" | egrep "^(Makefile|pkg|cmd|vendor|go\.)"; then
-              echo "Skipping build since no code found"
+              echo "Skipping build since no code changes found"
               circleci-agent step halt
             fi
           fi
@@ -100,6 +100,17 @@ jobs:
       DDEV_TEST_USE_MUTAGEN: ""
     steps:
       - checkout
+      - run:
+          name: "Skip if no code changes"
+          command: |
+            set -x
+            if [ "${CIRCLE_PR_NUMBER}" != "" ] ; then
+              echo "base_revision=<< pipeline.git.base_revision >>"
+              if ! git diff --name-only "<< pipeline.git.base_revision >>" | egrep "^(Makefile|pkg|cmd|vendor|go\.)"; then
+                echo "Skipping build since no code changes found"
+                circleci-agent step halt
+              fi
+            fi
       - run:
           command: ./.ci-scripts/linux_arm64_setup.sh
           name: ARM64 VM setup
