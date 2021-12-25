@@ -264,7 +264,8 @@ func TestLaunchCommand(t *testing.T) {
 		assert.NoError(err)
 		err = os.Chdir(pwd)
 		assert.NoError(err)
-		_ = os.RemoveAll(tmpdir)
+		err = os.RemoveAll(tmpdir)
+		assert.NoError(err)
 	})
 
 	// This only tests the https port changes, but that might be enough
