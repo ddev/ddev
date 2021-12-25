@@ -19,6 +19,9 @@ import (
 
 // TestMutagenSimple tests basic mutagen functionality
 func TestMutagenSimple(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("TestMutagenSimple one takes way too long on Windows, skipping")
+	}
 	assert := asrt.New(t)
 
 	mutagenPath := globalconfig.GetMutagenPath()
