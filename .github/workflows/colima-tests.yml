@@ -2,7 +2,7 @@ name: Colima tests
 on:
   pull_request:
   push:
-    branches: [ main, master, 20211223_colima ]
+    branches: [ main, master ]
   workflow_dispatch:
     inputs:
       debug_enabled:
