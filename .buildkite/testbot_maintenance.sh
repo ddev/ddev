@@ -4,6 +4,8 @@ set -eu -o pipefail
 
 os=$(go env GOOS)
 
+rm -rf ~/.ddev/Test* ~/.ddev/global_config.yaml ~/.ddev/homeadditions ~/.ddev/commands ~/.ddev/bin/docker-comnpose* ~/tmp/ddevtest
+
 # Install ngrok if it's not there.
 if ! command -v ngrok >/dev/null; then
     case $os in
