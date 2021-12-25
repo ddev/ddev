@@ -10,7 +10,7 @@
 environment_variables:
   project_url: https://github.com/drud/ddev-pull-git-test-repo
   branch: main
-  checkout_dir: ~/tmp/ddev-pull-git-test-repo
+  checkout_dir: /tmp/ddev-pull-git-test-repo
 
 
 auth_command:
