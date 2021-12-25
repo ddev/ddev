@@ -1070,6 +1070,8 @@ func (app *DdevApp) PullContainerImages() error {
 		"web":            app.WebImage,
 		"ddev-router":    version.GetRouterImage(),
 		"busybox":        version.BusyboxImage,
+		"docker-compose": version.RequiredDockerComposeVersion,
+		"mutagen":        version.RequiredMutagenVersion,
 	}
 
 	omitted := app.GetOmittedContainers()
