@@ -682,6 +682,13 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	phpVersions := nodeps.ValidPHPVersions
 
+	// Most of the time there's no reason to do all versions of PHP
+	if os.Getenv("GOTEST_SHORT") != "" {
+		for _, k := range []string{"5.6", "7.0", "7.1", "7.2", "7.3"} {
+			delete(phpVersions, k)
+		}
+	}
+
 	app := &ddevapp.DdevApp{}
 	testcommon.ClearDockerEnv()
 
@@ -760,15 +767,18 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		listener, err := net.Listen("tcp", listenPort)
 		require.NoError(t, err)
 
-		t.Logf("Curling to port 9000 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
+		acceptListenDone := make(chan bool, 1)
+		defer close(acceptListenDone)
 
-		// Curl to the project's index.php or anything else
-		_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL(), 1)
+		go func() {
+			time.Sleep(time.Second)
+			t.Logf("Curling to port 9000 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
+			// Curl to the project's index.php or anything else
+			_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL(), 10)
+		}()
 
 		// Accept is blocking, no way to timeout, so use
 		// goroutine instead.
-		acceptListenDone := make(chan bool, 1)
-		defer close(acceptListenDone)
 
 		go func() {
 			t.Logf("Attempting accept of port 9000 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
