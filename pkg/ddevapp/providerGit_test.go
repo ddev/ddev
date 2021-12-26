@@ -2,6 +2,7 @@ package ddevapp_test
 
 import (
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
@@ -42,6 +43,8 @@ func TestGitPull(t *testing.T) {
 
 		_ = os.Chdir(testDir)
 		_ = os.RemoveAll(siteDir)
+		home, _ := homedir.Dir()
+		_ = os.RemoveAll(filepath.Join(home, "tmp", "ddev-pull-git-test-repo"))
 	})
 
 	err = PopulateExamplesCommandsHomeadditions(app.Name)
