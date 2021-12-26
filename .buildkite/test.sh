@@ -1,16 +1,14 @@
 #!/bin/bash
 # This script is used to build drud/ddev using buildkite
-
-# Use docker-compose v2 on WSL2 to make sure we get testing on it
-if [ ! -z "${WSL_DISTRO_NAME:-}" ]; then
-  docker-compose enable-v2
-else
-  docker-compose disable-v2
+# If this is a PR and the diff doesn't have code, skip it
+if [ "${BUILDKITE_PULL_REQUEST}" != "" ] && ! git diff --name-only refs/remotes/origin/$BUILDKITE_PULL_REQUEST_BASE_BRANCH | egrep "^(Makefile|pkg|cmd|vendor|go\.)"; then
+  echo "Skipping build since no code changes found"
+  exit 0
 fi
 
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 
-echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} in ${PWD} with golang=$(go version | awk '{print $3}') docker-desktop=$(scripts/docker-desktop-version.sh) docker=$(docker --version | awk '{print $3}') and $(docker-compose --version) ddev version=$(ddev --version | awk '{print $3}'))"
+echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} in ${PWD} with golang=$(go version | awk '{print $3}') docker-desktop=$(scripts/docker-desktop-version.sh) docker=$(docker --version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}'))"
 
 export GOTEST_SHORT=1
 export DDEV_NONINTERACTIVE=true
@@ -83,5 +81,4 @@ RV=$?
 echo "test.sh completed with status=$RV"
 ddev poweroff || true
 
-docker-compose disable-v2
 exit $RV
