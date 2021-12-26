@@ -1,6 +1,12 @@
 name: Colima tests
 on:
   pull_request:
+    paths:
+      - "go.*"
+      - "pkg/**"
+      - "cmd/**"
+      - "Makefile"
+      - "vendor/**"
   push:
     branches: [ main, master ]
   workflow_dispatch:
