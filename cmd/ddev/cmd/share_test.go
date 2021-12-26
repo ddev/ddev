@@ -12,7 +12,9 @@ import (
 	"os/exec"
 	"runtime"
 	"strconv"
+	"strings"
 	"testing"
+	"time"
 )
 
 // TestShareCmd tests `ddev share`
@@ -27,7 +29,6 @@ func TestShareCmd(t *testing.T) {
 		t.Skip("Skipping on GitHub actions because no auth can be provided")
 	}
 	assert := asrt.New(t)
-	urlRead := false
 
 	site := TestSites[0]
 	defer site.Chdir()()
@@ -39,7 +40,7 @@ func TestShareCmd(t *testing.T) {
 	err = cmd.Wait()
 	require.NoError(t, err)
 
-	cmd = exec.Command(DdevBin, "share", "--use-http")
+	cmd = exec.Command(DdevBin, "share")
 	cmdReader, err := cmd.StdoutPipe()
 	require.NoError(t, err)
 	scanner := bufio.NewScanner(cmdReader)
@@ -47,13 +48,25 @@ func TestShareCmd(t *testing.T) {
 	// Make absolutely sure the ngrok process gets killed off, because otherwise
 	// the testbot (windows) can remain occupied forever.
 	// nolint: errcheck
-	defer pKill(cmd)
+	t.Cleanup(func() {
+		err = pKill(cmd)
+		assert.NoError(err)
+		_ = cmd.Wait()
+		_ = cmdReader.Close()
+
+		if err != nil && !strings.Contains(err.Error(), "process already finished") {
+			assert.NoError(err)
+		}
+	})
+	logData := make(map[string]string)
+
+	scanDone := make(chan bool, 1)
+	defer close(scanDone)
 
 	// Read through the ngrok json output until we get the url it has opened
 	go func() {
 		for scanner.Scan() {
 			logLine := scanner.Text()
-			logData := make(map[string]string)
 
 			err := json.Unmarshal([]byte(logLine), &logData)
 			if err != nil {
@@ -66,38 +79,42 @@ func TestShareCmd(t *testing.T) {
 				}
 			}
 			if logErr, ok := logData["err"]; ok && logErr != "<nil>" {
-				assert.Equal("<nil>", logErr)
-				err = pKill(cmd)
-				assert.NoError(err)
-				return
-			}
-			// If URL is provided, try to hit it and look for expected response
-			if url, ok := logData["url"]; ok {
-				resp, err := http.Get(url + site.Safe200URIWithExpectation.URI)
-				if err != nil {
-					t.Logf("http.Get on url=%s failed, err=%v", url+site.Safe200URIWithExpectation.URI, err)
-					err = pKill(cmd)
-					assert.NoError(err)
-					return
+				if strings.Contains(logErr, "Your account is limited to 1 simultaneous") {
+					t.Errorf("Failed because ngrok account in use elsewhere: %s", logErr)
+					break
 				}
-				//nolint: errcheck
-				defer resp.Body.Close()
-				body, err := io.ReadAll(resp.Body)
-				assert.NoError(err)
-				assert.Contains(string(body), site.Safe200URIWithExpectation.Expect)
-				urlRead = true
-				err = pKill(cmd)
-				assert.NoError(err)
-				return
+			}
+			if _, ok := logData["url"]; ok {
+				break
 			}
 		}
+		scanDone <- true
 	}()
 	err = cmd.Start()
 	require.NoError(t, err)
-	err = cmd.Wait()
-	t.Logf("cmd.Wait() err: %v", err)
-	assert.True(urlRead)
-	_ = cmdReader.Close()
+	select {
+	case <-scanDone:
+		fmt.Printf("Scanning all done at %v\n", time.Now())
+	case <-time.After(20 * time.Second):
+		t.Fatal("Timed out waiting for reads\n", time.Now())
+	}
+	// If URL is provided, try to hit it and look for expected response
+	if url, ok := logData["url"]; ok {
+		resp, err := http.Get(url + site.Safe200URIWithExpectation.URI)
+		if err != nil {
+			t.Logf("http.Get on url=%s failed, err=%v", url+site.Safe200URIWithExpectation.URI, err)
+			err = pKill(cmd)
+			assert.NoError(err)
+			return
+		}
+		//nolint: errcheck
+		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
+		assert.NoError(err)
+		assert.Contains(string(body), site.Safe200URIWithExpectation.Expect)
+	} else {
+		t.Errorf("no URL found: %v", logData)
+	}
 }
 
 // pKill kills a started cmd; If windows, it shells out to the
