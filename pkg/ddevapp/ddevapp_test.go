@@ -362,7 +362,7 @@ func TestDdevStart(t *testing.T) {
 		assert.NoError(err)
 
 		dockerIP, _ := dockerutil.GetDockerIP()
-		out, err := exec.RunCommand("mysql", []string{"--user=db", "--password=db", "--port=" + strconv.Itoa(dbPort), "--database=db", "--host=" + dockerIP, "-e", "SELECT 1;"})
+		out, err := exec.RunHostCommand("mysql", "--user=db", "--password=db", "--port="+strconv.Itoa(dbPort), "--database=db", "--host="+dockerIP, "-e", "SELECT 1;")
 		assert.NoError(err)
 		assert.Contains(out, "1")
 	} else {
@@ -453,9 +453,9 @@ func TestDdevStart(t *testing.T) {
 
 // TestDdevStartMultipleHostnames tests start with multiple hostnames
 func TestDdevStartMultipleHostnames(t *testing.T) {
-	if nodeps.IsMacM1() {
-		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
-	}
+	//if nodeps.IsMacM1() {
+	//	t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+	//}
 
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
@@ -486,7 +486,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		if err != nil && strings.Contains(err.Error(), "db container failed") {
 			container, err := app.FindContainerByType("db")
 			assert.NoError(err)
-			out, err := exec.RunCommand("docker", []string{"logs", container.Names[0]})
+			out, err := exec.RunHostCommand("docker", "logs", container.Names[0])
 			assert.NoError(err)
 			t.Logf("DB Logs after app.Start: \n%s\n== END DB LOGS ==", out)
 		}
@@ -503,14 +503,16 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			assert.True(check, "Container check on %s failed", containerType)
 		}
 
-		_, _, urls := app.GetAllURLs()
+		httpURLs, _, urls := app.GetAllURLs()
+		if globalconfig.GetCAROOT() == "" {
+			urls = httpURLs
+		}
 		t.Logf("Testing these URLs: %v", urls)
-		_, _, allURLs := app.GetAllURLs()
-		for _, url := range allURLs {
+		for _, url := range urls {
 			_, _ = testcommon.EnsureLocalHTTPContent(t, url+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		}
 
-		out, err := exec.RunCommand(DdevBin, []string{"list"})
+		out, err := exec.RunHostCommand(DdevBin, "list")
 		assert.NoError(err)
 		t.Logf("=========== output of ddev list ==========\n%s\n============", out)
 
@@ -680,6 +682,13 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	phpVersions := nodeps.ValidPHPVersions
 
+	// Most of the time there's no reason to do all versions of PHP
+	if os.Getenv("GOTEST_SHORT") != "" {
+		for _, k := range []string{"5.6", "7.0", "7.1", "7.2", "7.3"} {
+			delete(phpVersions, k)
+		}
+	}
+
 	app := &ddevapp.DdevApp{}
 	testcommon.ClearDockerEnv()
 
@@ -758,15 +767,18 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		listener, err := net.Listen("tcp", listenPort)
 		require.NoError(t, err)
 
-		t.Logf("Curling to port 9000 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
+		acceptListenDone := make(chan bool, 1)
+		defer close(acceptListenDone)
 
-		// Curl to the project's index.php or anything else
-		_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL())
+		go func() {
+			time.Sleep(time.Second)
+			t.Logf("Curling to port 9000 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
+			// Curl to the project's index.php or anything else
+			_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL(), 10)
+		}()
 
 		// Accept is blocking, no way to timeout, so use
 		// goroutine instead.
-		acceptListenDone := make(chan bool, 1)
-		defer close(acceptListenDone)
 
 		go func() {
 			t.Logf("Attempting accept of port 9000 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
@@ -802,10 +814,6 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 // TestDdevXhprofEnabled tests running with xhprof_enabled = true, etc.
 func TestDdevXhprofEnabled(t *testing.T) {
-	//if nodeps.IsMacM1() {
-	//	t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
-	//}
-
 	assert := asrt.New(t)
 
 	phpVersions := nodeps.ValidPHPVersions
@@ -885,12 +893,12 @@ func TestDdevXhprofEnabled(t *testing.T) {
 			assert.Contains(stdout, "xhprof.output_dir", "xhprof is not enabled for %s", v)
 
 			// Dummy hit on phpinfo.php to avoid M1 "connection reset by peer"
-			_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL()+"/phpinfo.php")
-			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL()+"/phpinfo.php")
+			_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL()+"/phpinfo.php", 1)
+			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL()+"/phpinfo.php", 1)
 			assert.NoError(err, "Failed to get base URL webserver_type=%s, php_version=%s", webserverKey, v)
 			assert.Contains(out, "module_xhprof")
 
-			out, _, err = testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL()+"/xhprof/")
+			out, _, err = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL()+"/xhprof/", 1)
 			assert.NoError(err)
 			// Output should contain at least one run
 			assert.Contains(out, ".ddev.xhprof</a><small>")
@@ -1558,9 +1566,9 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		assert.NotContains(out, "Unable to create settings file")
 
 		// Validate PHPMyAdmin is working and database named db is present
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL()+":8037/index.php?route=/database/structure&server=1&db=db", "Database:          db")
+		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8036/index.php?route=/database/structure&server=1&db=db", "Database:          db")
 		// Validate MailHog is working and "connected"
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL()+":8026/#", "Connected")
+		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8025/#", "Connected")
 
 		settingsLocation, err := app.DetermineSettingsPathLocation()
 		assert.NoError(err)
@@ -1587,9 +1595,9 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		}
 
 		// Test static content.
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		// Test dynamic php + database content.
-		rawurl := app.GetHTTPSURL() + site.DynamicURI.URI
+		rawurl := app.GetPrimaryURL() + site.DynamicURI.URI
 		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 120)
 		assert.NoError(err, "GetLocalHTTPResponse returned err on project=%s rawurl %s, resp=%v: %v", site.Name, rawurl, resp, err)
 		if err != nil && strings.Contains(err.Error(), "container ") {
@@ -1601,7 +1609,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		// Load an image from the files section
 		if site.FilesImageURI != "" {
-			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL()+site.FilesImageURI)
+			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL()+site.FilesImageURI)
 			assert.NoError(err, "failed ImageURI response on project %s", site.Name)
 			if err != nil && resp != nil {
 				assert.Equal("image/jpeg", resp.Header["Content-Type"][0])
@@ -1782,7 +1790,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = app.ImportDB(d7testerTest1Dump, "", false, false, "db")
 	require.NoError(t, err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
 
-	_, ensureErr := testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), "d7 tester test 1 has 1 node", 45)
+	_, ensureErr := testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL(), "d7 tester test 1 has 1 node", 45)
 	assert.NoError(ensureErr)
 
 	// Make a snapshot of d7 tester test 1
@@ -1814,7 +1822,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	//err = app.Restart()
 	//require.NoError(t, err)
 
-	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), "d7 tester test 2 has 2 nodes", 45)
+	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL(), "d7 tester test 2 has 2 nodes", 45)
 
 	snapshotName, err = app.Snapshot("d7testerTest2")
 	assert.NoError(err)
@@ -1840,8 +1848,8 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.NoError(err)
 
 	// Dummy hit in advance to try to avoid M1 "connection reset by peer"
-	_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL(), 60)
-	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPSURL(), "d7 tester test 1 has 1 node", 60)
+	_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), 60)
+	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL(), "d7 tester test 1 has 1 node", 60)
 	err = app.RestoreSnapshot("d7testerTest2")
 	assert.NoError(err)
 
@@ -1849,8 +1857,8 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	//err = app.Restart()
 	//assert.NoError(err)
 
-	body, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetHTTPSURL(), 45)
-	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", app.GetHTTPSURL(), err)
+	body, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), 45)
+	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", app.GetPrimaryURL(), err)
 	assert.Contains(body, "d7 tester test 2 has 2 nodes")
 	if err != nil {
 		t.Logf("resp after timeout: %v", resp)
@@ -2653,7 +2661,7 @@ func TestRouterPortsCheck(t *testing.T) {
 
 	// Occupy port 80 using docker busybox trick, then see if we can start router.
 	// This is done with docker so that we don't have to use explicit sudo
-	containerID, err := exec.RunCommand("sh", []string{"-c", "docker run -d -p80:80 --rm busybox:stable sleep 100 2>/dev/null"})
+	containerID, err := exec.RunHostCommand("sh", "-c", "docker run -d -p80:80 --rm busybox:stable sleep 100 2>/dev/null")
 	if err != nil {
 		t.Fatalf("Failed to run docker command to occupy port 80, err=%v output=%v", err, containerID)
 	}
@@ -2664,7 +2672,7 @@ func TestRouterPortsCheck(t *testing.T) {
 	assert.Error(err, "Failure: router started even though port 80 was occupied")
 
 	// Remove our dummy busybox docker container.
-	out, err := exec.RunCommand("docker", []string{"rm", "-f", containerID})
+	out, err := exec.RunHostCommand("docker", "rm", "-f", containerID)
 	assert.NoError(err, "Failed to docker rm the port-occupier container, err=%v output=%v", err, out)
 }
 
@@ -2839,6 +2847,9 @@ func TestAppdirAlreadyInUse(t *testing.T) {
 func TestHttpsRedirection(t *testing.T) {
 	if nodeps.IsMacM1() {
 		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+	}
+	if globalconfig.GetCAROOT() == "" {
+		t.Skip("Skipping because MkcertCARoot is not set, no https")
 	}
 
 	assert := asrt.New(t)
@@ -3132,9 +3143,9 @@ func TestWebserverType(t *testing.T) {
 // TestInternalAndExternalAccessToURL checks we can access content
 // from host and from inside container by URL (with port)
 func TestInternalAndExternalAccessToURL(t *testing.T) {
-	if nodeps.IsMacM1() {
-		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
-	}
+	//if nodeps.IsMacM1() {
+	//	t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+	//}
 
 	assert := asrt.New(t)
 
@@ -3146,11 +3157,24 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
+	t.Cleanup(func() {
+		// Set the ports back to the default was so we don't break any following tests.
+		app.RouterHTTPSPort = "443"
+		app.RouterHTTPPort = "80"
+		app.AdditionalFQDNs = []string{}
+		app.AdditionalHostnames = []string{}
+
+		err = app.WriteConfig()
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
+
 	// Add some additional hostnames
 	app.AdditionalHostnames = []string{"sub1", "sub2", "sub3"}
 	app.AdditionalFQDNs = []string{"junker99.example.com"}
 
-	for _, pair := range []testcommon.PortPair{{HTTPPort: "80", HTTPSPort: "443"}, {HTTPPort: "8080", HTTPSPort: "8443"}} {
+	for _, pair := range []testcommon.PortPair{{HTTPPort: "8000", HTTPSPort: "8143"}, {HTTPPort: "8080", HTTPSPort: "8443"}} {
 		testcommon.ClearDockerEnv()
 		app.RouterHTTPPort = pair.HTTPPort
 		app.RouterHTTPSPort = pair.HTTPSPort
@@ -3164,7 +3188,14 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		err = app.StartAndWait(5)
 		assert.NoError(err)
 
-		_, _, urls := app.GetAllURLs()
+		expectedNumUrls := len(app.GetHostnames())*2 + 2
+		httpURLs, _, urls := app.GetAllURLs()
+
+		// If no https/mkcert, number of hostnames is different
+		if globalconfig.GetCAROOT() == "" {
+			urls = httpURLs
+			expectedNumUrls = len(app.GetHostnames()) + 1
+		}
 
 		// Convert URLs to map[string]bool
 		urlMap := make(map[string]bool)
@@ -3172,13 +3203,14 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 			urlMap[u] = true
 		}
 
-		// We expect two URLs for each hostname (http/https) and two direct web container addresses.
-		expectedNumUrls := len(app.GetHostnames())*2 + 2
 		assert.Equal(len(urlMap), expectedNumUrls, "Unexpected number of URLs returned: %d", len(urlMap))
 
-		_, _, URLList := app.GetAllURLs()
-		URLList = append(URLList, "http://localhost", "http://localhost")
-		for _, item := range URLList {
+		httpURLs, _, urls = app.GetAllURLs()
+		if globalconfig.GetCAROOT() == "" {
+			urls = httpURLs
+		}
+		urls = append(urls, "http://localhost", "http://localhost")
+		for _, item := range urls {
 			// Make sure internal (web container) access is successful
 			parts, err := url.Parse(item)
 			require.NoError(t, err, "url.Parse of item=%v failed", item)
@@ -3206,23 +3238,12 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 		}
 	}
 
-	out, err := exec.RunCommand(DdevBin, []string{"list"})
+	out, err := exec.RunHostCommand(DdevBin, "list")
 	assert.NoError(err)
 	t.Logf("\n=========== output of ddev list ==========\n%s\n============\n", out)
-	out, err = exec.RunCommand("docker", []string{"logs", "ddev-router"})
+	out, err = exec.RunHostCommand("docker", "logs", "ddev-router")
 	assert.NoError(err)
 	t.Logf("\n=========== output of docker logs ddev-router ==========\n%s\n============\n", out)
-
-	// Set the ports back to the default was so we don't break any following tests.
-	app.RouterHTTPSPort = "443"
-	app.RouterHTTPPort = "80"
-	app.AdditionalFQDNs = []string{}
-	app.AdditionalHostnames = []string{}
-
-	err = app.WriteConfig()
-	assert.NoError(err)
-	err = app.Stop(true, false)
-	assert.NoError(err)
 
 	runTime()
 }
@@ -3256,8 +3277,8 @@ func TestCaptureLogs(t *testing.T) {
 // This requires that the test machine must have NFS shares working
 // Tests using both app-specific nfs_mount_enabled and global nfs_mount_enabled
 func TestNFSMount(t *testing.T) {
-	if nodeps.IsWSL2() {
-		t.Skip("Skipping on WSL2")
+	if nodeps.IsWSL2() || dockerutil.IsColima() {
+		t.Skip("Skipping on WSL2/Colima")
 	}
 	if nodeps.MutagenEnabledDefault == true || nodeps.NoBindMountsDefault {
 		t.Skip("Skipping because mutagen/nobindmounts enabled")
@@ -3451,7 +3472,7 @@ func TestHostDBPort(t *testing.T) {
 		} else {
 			// Running mysql against the container ensures that we can get there via the values
 			// in ddev describe
-			out, err := exec.RunCommand("mysql", []string{"--user=db", "--password=db", "--host=" + dockerIP, fmt.Sprintf("--port=%d", dbPort), "--database=db", `--execute=SELECT 1;`})
+			out, err := exec.RunHostCommand("mysql", "--user=db", "--password=db", "--host="+dockerIP, fmt.Sprintf("--port=%d", dbPort), "--database=db", `--execute=SELECT 1;`)
 			assert.NoError(err, "Failed to run mysql: %v", out)
 			out = strings.Replace(out, "\r", "", -1)
 			assert.Contains(out, "1\n1\n")
@@ -3459,8 +3480,8 @@ func TestHostDBPort(t *testing.T) {
 
 		// Running the test host custom command "showport" ensures that the DDEV_HOST_DB_PORT
 		// is getting in there available to host custom commands.
-		_, _ = exec.RunCommand(DdevBin, []string{})
-		out, err := exec.RunCommand(DdevBin, []string{"showport"})
+		_, _ = exec.RunHostCommand(DdevBin)
+		out, err := exec.RunHostCommand(DdevBin, "showport")
 		assert.NoError(err)
 		assert.EqualValues("DDEV_HOST_DB_PORT="+dbPortStr, strings.Trim(out, "\r\n"))
 	}
@@ -3568,12 +3589,10 @@ func TestDdevGetProjects(t *testing.T) {
 
 // TestCustomCerts makes sure that added custom certificates are respected and used
 func TestCustomCerts(t *testing.T) {
+	if globalconfig.GetCAROOT() == "" {
+		t.Skip("can't test custom certs without https enabled, skipping")
+	}
 	assert := asrt.New(t)
-
-	// Force router stop - shouldn't be necessary
-	//dest := ddevapp.RouterComposeYAMLPath()
-	//_, _, err := dockerutil.ComposeCmd([]string{dest}, "-p", ddevapp.RouterProjectName, "down")
-	//assert.NoError(err)
 
 	site := TestSites[0]
 	switchDir := site.Chdir()
@@ -3612,7 +3631,7 @@ func TestCustomCerts(t *testing.T) {
 
 	// Create a certfile/key in .ddev/custom_certs with just one DNS name in it
 	// mkcert --cert-file d9composer.ddev.site.crt --key-file d9composer.ddev.site.key d9composer.ddev.site
-	out, err := exec.RunCommand("mkcert", []string{"--cert-file", filepath.Join(certDir, app.GetHostname()+".crt"), "--key-file", filepath.Join(certDir, app.GetHostname()+".key"), app.GetHostname()})
+	out, err := exec.RunHostCommand("mkcert", "--cert-file", filepath.Join(certDir, app.GetHostname()+".crt"), "--key-file", filepath.Join(certDir, app.GetHostname()+".key"), app.GetHostname())
 	assert.NoError(err, "mkcert command failed, out=%s", out)
 
 	err = app.Start()
@@ -3623,7 +3642,7 @@ func TestCustomCerts(t *testing.T) {
 	})
 	stdout = strings.Trim(stdout, "\r\n")
 	// If we had the regular cert, there would be several things here including *.ddev.site
-	// But e should only see the hostname listed.
+	// But we should only see the hostname listed.
 	assert.Equal(app.GetHostname(), stdout)
 }
 
@@ -3710,7 +3729,7 @@ func TestEnvironmentVariables(t *testing.T) {
 		"DDEV_WEBSERVER_TYPE":      app.WebserverType,
 	}
 	for k, v := range hostExpectations {
-		envVal, err := exec.RunCommand(DdevBin, []string{"showhostenvvar", k})
+		envVal, err := exec.RunHostCommand(DdevBin, "showhostenvvar", k)
 		assert.NoError(err, "could not run %s %s %s, result=%s", DdevBin, "showhostenvvar", k, envVal)
 		envVal = strings.Trim(envVal, "\r\n")
 		assert.Equal(v, envVal, "expected envvar $%s to equal '%s', but it was '%s'", k, v, envVal)

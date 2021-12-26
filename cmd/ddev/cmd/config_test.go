@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/version"
@@ -437,7 +438,9 @@ func TestCmdDisasterConfig(t *testing.T) {
 // ddev config --mariadb-version and ddev config --dbimage behave correctly,
 // either separately or together.
 func TestConfigMariaDBVersion(t *testing.T) {
-
+	if dockerutil.IsColima() {
+		t.Skip("Skipping on colima due to problems with monting")
+	}
 	assert := asrt.New(t)
 
 	pwd, _ := os.Getwd()

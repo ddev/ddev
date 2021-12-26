@@ -45,7 +45,6 @@ type GlobalConfig struct {
 	DeveloperMode                bool                    `yaml:"developer_mode,omitempty"`
 	InstrumentationUser          string                  `yaml:"instrumentation_user,omitempty"`
 	LastStartedVersion           string                  `yaml:"last_started_version"`
-	MkcertCARoot                 string                  `yaml:"mkcert_caroot"`
 	UseHardenedImages            bool                    `yaml:"use_hardened_images"`
 	UseLetsEncrypt               bool                    `yaml:"use_letsencrypt"`
 	LetsEncryptEmail             string                  `yaml:"letsencrypt_email"`
@@ -58,6 +57,7 @@ type GlobalConfig struct {
 	RequiredDockerComposeVersion string                  `yaml:"required_docker_compose_version,omitempty"`
 	UseDockerComposeFromPath     bool                    `yaml:"use_docker_compose_from_path,omitempty"`
 	NoBindMounts                 bool                    `yaml:"no_bind_mounts"`
+	MkcertCARoot                 string                  `yaml:"mkcert_caroot"`
 	ProjectList                  map[string]*ProjectInfo `yaml:"project_info"`
 }
 
@@ -157,7 +157,7 @@ func ReadGlobalConfig() error {
 	}
 	// Set/read the CAROOT if it's unset or different from $CAROOT (perhaps $CAROOT changed)
 	caRootEnv := os.Getenv("CAROOT")
-	if DdevGlobalConfig.MkcertCARoot == "" || (caRootEnv != "" && caRootEnv != DdevGlobalConfig.MkcertCARoot) {
+	if GetCAROOT() == "" || !fileExists(filepath.Join(DdevGlobalConfig.MkcertCARoot, "rootCA.pem")) || (caRootEnv != "" && caRootEnv != DdevGlobalConfig.MkcertCARoot) {
 		DdevGlobalConfig.MkcertCARoot = readCAROOT()
 	}
 	// This is added just so we can see it in global; not checked.
@@ -472,7 +472,6 @@ func GetCAROOT() string {
 // 3. If not, see if mkcert is even available, return empty
 
 func readCAROOT() string {
-
 	_, err := exec.LookPath("mkcert")
 	if err != nil {
 		return ""

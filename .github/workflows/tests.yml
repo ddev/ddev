@@ -7,6 +7,7 @@ on:
       - "cmd/**"
       - "Makefile"
       - "vendor/**"
+
   push:
     branches: [ master, main ]
 
@@ -32,7 +33,7 @@ jobs:
         tests: [test]
         os: [ ubuntu-20.04 ]
         mutagen: ['false', 'true']
-        no-bind-mounts: ['false', 'true']
+        no-bind-mounts: ['true', 'false']
       fail-fast: false
 
     runs-on: ${{ matrix.os }}

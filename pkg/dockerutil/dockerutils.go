@@ -924,6 +924,10 @@ func GetHostDockerInternalIP() (string, error) {
 		if err == nil && len(addrs) > 0 {
 			hostDockerInternal = addrs[0]
 		}
+	case IsColima():
+		// Lima just specifies this as a named explicit IP address at this time
+		// see https://github.com/lima-vm/lima/blob/master/docs/network.md#host-ip-19216852
+		hostDockerInternal = "192.168.5.2"
 
 	// Docker on linux doesn't define host.docker.internal
 	// so we need to go get the bridge IP address
@@ -1201,6 +1205,20 @@ func IsDockerDesktop() bool {
 		return false
 	}
 	if info.OperatingSystem == "Docker Desktop" {
+		return true
+	}
+	return false
+}
+
+// IsColima detects if running on Colima
+func IsColima() bool {
+	client := GetDockerClient()
+	info, err := client.Info()
+	if err != nil {
+		util.Warning("IsColima(): Unable to get docker info, err=%v", err)
+		return false
+	}
+	if info.Name == "colima" {
 		return true
 	}
 	return false

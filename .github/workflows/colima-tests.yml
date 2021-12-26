@@ -1,0 +1,118 @@
+name: Colima tests
+on:
+  pull_request:
+    paths:
+      - "go.*"
+      - "pkg/**"
+      - "cmd/**"
+      - "Makefile"
+      - "vendor/**"
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate set "debug_enabled"'
+        required: false
+        default: false
+      testargs:
+        description: Add specific test to run like -run TestEnvironmentVariables or -run "(TestDdevFullSite.*|Test.*Pull)"
+        required: false
+        default: ""
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  DDEV_DEBUG: true
+
+jobs:
+  tests:
+    name: colima-${{ matrix.tests }}-no-bind-mounts=${{ matrix.no-bind-mounts }}
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      matrix:
+        webserver: [nginx-fpm]
+        tests: [ test ]
+        os: [ macos-11 ]
+        no-bind-mounts: ['false']
+      fail-fast: false
+
+    runs-on: ${{ matrix.os }}
+
+    env:
+      DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
+      DDEV_NONINTERACTIVE: "true"
+      DDEV_TEST_NO_BIND_MOUNTS: ${{ matrix.no-bind-mounts }}
+      GOTEST_SHORT: "true"
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Homebrew cache/restore
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-homebrew-cache
+        with:
+          path: ~/Library/Caches/Homebrew
+          key: ${{ runner.os }}-build-${{ env.cache-name }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}
+
+      - name: Lima cache/restore
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-lima
+        with:
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.lima
+          key: ${{ runner.os }}-build-${{ env.cache-name }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}
+
+      - name: Install Colima and deps (macOS)
+        if: matrix.os == 'macos-11'
+        run: ./.github/workflows/macos-colima-setup.sh
+
+      - name: Build ddev
+        run: | 
+          make
+          ln -s $PWD/.gotmp/bin/darwin_amd64/ddev /usr/local/bin/ddev
+
+      - name: Basic ddev usage
+        run: | 
+          mkdir -p ~/workspace/d9 && cd ~/workspace/d9
+          ddev config --composer-version=2.1.14 --project-type=drupal9 --docroot=web --create-docroot
+          ddev debug download-images
+          ddev poweroff
+          # Pre-cache these so we don't see a mess in the later pull
+          for image in schickling/beanstalkd:latest memcached:1.5 solr:8; do
+            docker pull $image
+          done >/dev/null
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+
+      - name: time make "${{ matrix.tests }}"
+        run: |
+          echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN}"
+          echo "TESTARGS='${{ github.event.inputs.testargs }}'"
+          echo "mkcert_caroot=$(grep mkcert_caroot ~/.ddev/global_config.yaml)"
+          make "${{ matrix.tests }}" TESTARGS='${{ github.event.inputs.testargs }}'
+
+      - name: Turn off /clean up
+        run: |
+          ddev poweroff
+          colima stop
+      - name: Store test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: ddev-test-results-${{ matrix.webserver }}
+          path: /tmp/testresults/

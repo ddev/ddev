@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/testcommon"
@@ -47,10 +48,10 @@ func TestComposerCmd(t *testing.T) {
 	})
 
 	// Test create-project
-	// These two often fail on Windows with NFS
+	// These two often fail on Windows with NFS, also Colima
 	// It appears to be something about composer itself?
 
-	if !(runtime.GOOS == "windows" && (app.NFSMountEnabled || app.NFSMountEnabledGlobal)) {
+	if !(dockerutil.IsColima() || (runtime.GOOS == "windows" && (app.NFSMountEnabled || app.NFSMountEnabledGlobal))) {
 		// ddev composer create --prefer-dist --no-interaction --no-dev psr/log:1.1.0
 		args := []string{"composer", "create", "--prefer-dist", "--no-interaction", "--no-dev", "psr/log:1.1.0"}
 		out, err = exec.RunHostCommand(DdevBin, args...)
@@ -60,7 +61,7 @@ func TestComposerCmd(t *testing.T) {
 
 		err = app.StartAndWait(5)
 		assert.NoError(err)
-		// ddev composer create --prefer-dist--no-dev --no-install psr/log:1.1.0
+		// ddev composer create --prefer-dist --no-dev --no-install psr/log:1.1.0
 		args = []string{"composer", "create", "--prefer-dist", "--no-dev", "--no-install", "psr/log:1.1.0"}
 		out, err = exec.RunHostCommand(DdevBin, args...)
 		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)

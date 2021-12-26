@@ -112,22 +112,8 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		for _, k := range serviceNames {
 			v := serviceMap[k]
 
-			httpURL := ""
 			urlPortParts := []string{}
-			if !ddevapp.IsRouterDisabled(app) {
-				if httpsURL, ok := v["https_url"]; ok {
-					urlPortParts = append(urlPortParts, httpsURL)
-				} else if httpURL, ok = v["http_url"]; ok {
-					urlPortParts = append(urlPortParts, httpURL)
-				}
-			} else if nodeps.IsGitpod() && k == "web" {
-				urlPortParts = append(urlPortParts, app.GetPrimaryURL())
-			} else {
-				httpURL = v["host_http_url"]
-				if httpURL != "" {
-					urlPortParts = append(urlPortParts, httpURL)
-				}
-			}
+			urlPortParts = append(urlPortParts, app.GetPrimaryURL())
 			if p, ok := v["exposed_ports"]; ok {
 				urlPortParts = append(urlPortParts, "InDocker: "+v["full_name"]+":"+p)
 			}
