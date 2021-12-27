@@ -1,10 +1,5 @@
 #!/bin/bash
 # This script is used to build drud/ddev using buildkite
-# If this is a PR and the diff doesn't have code, skip it
-if [ "${BUILDKITE_PULL_REQUEST}" != "" ] && ! git diff --name-only refs/remotes/origin/$BUILDKITE_PULL_REQUEST_BASE_BRANCH | egrep "^(Makefile|pkg|cmd|vendor|go\.)"; then
-  echo "Skipping build since no code changes found"
-  exit 0
-fi
 
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 
@@ -18,6 +13,12 @@ set -o errexit
 set -o pipefail
 set -o nounset
 set -x
+
+# If this is a PR and the diff doesn't have code, skip it
+if [ "${BUILDKITE_PULL_REQUEST}" != "false" ] && ! git diff --name-only refs/remotes/origin/${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-} | egrep "^(Makefile|pkg|cmd|vendor|go\.)"; then
+  echo "Skipping build since no code changes found"
+  exit 0
+fi
 
 # On macOS, restart docker to avoid bugs where containers can't be deleted
 #if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
@@ -46,7 +47,9 @@ fi
 if command -v mutagen >/dev/null ; then
   mutagen daemon stop || true
 fi
-~/.ddev/.mutagen/bin/mutagen daemon stop || true
+if [ -f ~/.ddev/.mutagen/bin/mutagen ]; then
+  ~/.ddev/.mutagen/bin/mutagen daemon stop || true
+fi
 if command -v killall >/dev/null ; then
   killall mutagen || true
 fi
