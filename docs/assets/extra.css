@@ -3,3 +3,7 @@
 .md-typeset__table {
   padding-right: 0;
 }
+
+dt {
+  font-weight: bold;
+}

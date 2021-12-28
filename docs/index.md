@@ -4,46 +4,36 @@
 
 ## System Requirements
 
-* [Docker](https://www.docker.com/products/docker-desktop) version 18.06 or higher. Linux users make sure you do the [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user). Installing or upgrading docker-compose is not required as DDEV uses its own private docker-compose version.
+* [Docker Desktop](https://www.docker.com/products/docker-desktop), `docker-ce` or a Docker alternative like Colima. Installing or upgrading docker-compose is not required as DDEV uses its own private docker-compose version. See [Docker Installation](users/docker_installation.md).
 * OS Support
-    * macOS Mojave and higher (macOS 10.14 and higher; it should run anywhere Docker Desktop for Mac runs (Current Docker Desktop has deprecated macOS 10.13 High Sierra, but Docker Desktop versions prior to  can still work with DDEV-Local on High Sierra.)
-    * Linux: Most Linux distributions which can run Docker-ce are fine. This includes at least Ubuntu 16.04+, Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
-    * Windows 10 (all editions) with WSL2 (version [1903.1049, 1909.1049](https://devblogs.microsoft.com/commandline/wsl-2-support-is-coming-to-windows-10-versions-1903-and-1909/), 2004 or later)
-    * (Non-WSL2) Windows 10 Home, Pro, or Enterprise with [Docker Desktop for Windows](https://docs.docker.com/docker-for-windows/install/)
+    * macOS Catalina and higher (macOS 10.15 and higher); it should run anywhere docker runs (Current Docker Desktop has deprecated macOS 10.14 and below, but Docker Desktop versions prior to  can still work with DDEV-Local on High Sierra. You can look through the [Docker Desktop for Mac Release Notes](https://docs.docker.com/desktop/mac/release-notes/) for older versions.)
+    * Linux: Most Linux distributions which can run Docker-ce are fine. This includes at least Ubuntu 18.04+ (20.04 is recommended), Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
+    * Windows 10/11 (all editions) with WSL2 (version [1903.1049, 1909.1049](https://devblogs.microsoft.com/commandline/wsl-2-support-is-coming-to-windows-10-versions-1903-and-1909/), 2004 or later)
+    * (Non-WSL2) Windows 10 Home, Pro, or Enterprise with [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop)
 * Architecture Support
-    * AMD64 is supported on Windows 10 (with either traditional Windows or WSL2), macOS, and Linux.
+    * AMD64 is supported on Windows 10/11 (with either traditional Windows or WSL2), macOS, and Linux.
     * ARM64 machines are currently supported on Linux and in WSL2 in Windows ARM64 computers.
-    * Apple Silicon M1 (ARM64) is supported in v1.17-alpha1+ (edge versions).
+    * Apple Silicon M1 (ARM64) is supported since DDEV v1.17.
 
 ## Using DDEV alongside other development environments
 
-DDEV by default uses ports 80 and 443 on your system when projects are running. If you are using another local development environment you can either stop the other environment or configure DDEV to use different ports. See [troubleshooting](users/troubleshooting.md#unable-listen) for more detailed problem solving.
+DDEV by default uses ports 80 and 443 on your system when projects are running. If you are using another local development environment you can either stop the other environment or configure DDEV to use different ports. See [troubleshooting](users/troubleshooting.md#unable-listen) for more detailed problemsolving.
 
 ## Installation
 
-_When upgrading, please run `ddev poweroff` and check the [release notes](https://github.com/drud/ddev/releases) for actions you might need to take on each project._
-
 ### Docker Installation
 
-Docker is required before anything will work with DDEV. This is pretty easy on most environments; see the [docker_installation](users/docker_installation.md) page to help sort out the details, especially on Windows and Linux. It is not required to install docker-compose because DDEV uses its own private version.
+Docker or an alternative is required before anything will work with DDEV. This is pretty easy on most environments; see the [docker_installation](users/docker_installation.md) page to help sort out the details, especially on Windows and Linux. It is not required to install docker-compose because DDEV uses its own private version.
 
 ### Homebrew - macOS/Linux
 
-For macOS (both amd64 and arm64) and Linux users, we recommend installing and upgrading via [Homebrew](https://brew.sh/) (macOS) or [Homebrew on Linux](https://docs.brew.sh/Homebrew-on-Linux) (Linux):
-
-```
-brew install drud/ddev/ddev
-```
-
-If you would like more frequent "edge" releases then use `brew install drud/ddev-edge/ddev` instead.
+For macOS (both amd64 and arm64) and Linux users, we recommend installing and upgrading via [Homebrew](https://brew.sh/) (macOS) or [Homebrew on Linux](https://docs.brew.sh/Homebrew-on-Linux) (Linux): `brew install drud/ddev/ddev`.
 
 As a one-time initialization, run `mkcert -install`. Linux users may have to take additional actions as discussed below in [Linux `mkcert -install` additional instructions](#Linux-mkcert--install-additional-instructions).
 
-Later, to upgrade to a newer version of DDEV-Local, run:
+Later, to upgrade to a newer version of DDEV-Local, run `brew upgrade ddev`.
 
-```
-ddev poweroff && brew upgrade drud/ddev/ddev
-```
+To install the latest unreleased DDEV version, `brew unlink ddev && brew install drud/ddev/ddev --HEAD`.
 
 ### Installation or Upgrade - Windows (WSL2)
 
