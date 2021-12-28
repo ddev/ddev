@@ -52,10 +52,6 @@ func NewBackdropSettings(app *DdevApp) *BackdropSettings {
 	}
 }
 
-// BackdropDdevSettingsTemplate defines the template that will become settings.ddev.php.
-const BackdropDdevSettingsTemplate = `
-`
-
 // createBackdropSettingsFile manages creation and modification of settings.php and settings.ddev.php.
 // If a settings.php file already exists, it will be modified to ensure that it includes
 // settings.ddev.php, which contains ddev-specific configuration.
@@ -84,16 +80,16 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 		}
 	}
 
-	if err = writeBackdropDdevSettingsFile(settings, app.SiteDdevSettingsFile); err != nil {
+	if err = writeBackdropSettingsDdevPHP(settings, app.SiteDdevSettingsFile, app); err != nil {
 		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 
 	return app.SiteDdevSettingsFile, nil
 }
 
-// writeBackdropDdevSettingsFile dynamically produces a valid settings.ddev.php file
+// writeBackdropSettingsDdevPHP dynamically produces a valid settings.ddev.php file
 // by combining a configuration object with a data-driven template.
-func writeBackdropDdevSettingsFile(settings *BackdropSettings, filePath string) error {
+func writeBackdropSettingsDdevPHP(settings *BackdropSettings, filePath string, app *DdevApp) error {
 	if fileutil.FileExists(filePath) {
 		// Check if the file is managed by ddev.
 		signatureFound, err := fileutil.FgrepStringInFile(filePath, DdevFileSignature)
@@ -107,7 +103,7 @@ func writeBackdropDdevSettingsFile(settings *BackdropSettings, filePath string) 
 			return nil
 		}
 	}
-	tmpl, err := template.New("settings.ddev.php").Funcs(getTemplateFuncMap()).Parse(BackdropDdevSettingsTemplate)
+	t, err := template.New("settings.ddev.php").ParseFS(bundledAssets, filepath.Join("drupal", app.Type, "settings.ddev.php"))
 	if err != nil {
 		return err
 	}
@@ -128,8 +124,7 @@ func writeBackdropDdevSettingsFile(settings *BackdropSettings, filePath string) 
 	}
 	defer util.CheckClose(file)
 
-	//nolint: revive
-	if err := tmpl.Execute(file, settings); err != nil {
+	if err := t.Execute(file, settings); err != nil {
 		return err
 	}
 
