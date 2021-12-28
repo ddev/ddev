@@ -64,7 +64,7 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 
 	if !fileutil.FileExists(app.SiteSettingsPath) {
 		output.UserOut.Printf("No %s file exists, creating one", settings.SiteSettings)
-		if err := writeDrupalSettingsFile(app.SiteSettingsPath, app.Type); err != nil {
+		if err := writeDrupalSettingsPHP(app.SiteSettingsPath, app.Type); err != nil {
 			return "", err
 		}
 	}
