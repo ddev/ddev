@@ -38,6 +38,7 @@ import (
 var (
 	DdevBin   = "ddev"
 	TestSites = []testcommon.TestSite{
+		// 0: wordpress
 		{
 			Name:                          "TestPkgWordpress",
 			SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
@@ -50,6 +51,7 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "this post has a photo"},
 			FilesImageURI:                 "/wp-content/uploads/2017/04/pexels-photo-265186-1024x683.jpeg",
 		},
+		// 1: drupal8
 		{
 			Name:                          "TestPkgDrupal8",
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.9.13.tar.gz",
@@ -65,6 +67,7 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/2", Expect: "Vegan chocolate and nut brownies"},
 			FilesImageURI:                 "/sites/default/files/vegan-chocolate-nut-brownies.jpg",
 		},
+		// 2: drupal7
 		{
 			Name:                          "TestPkgDrupal7", // Drupal D7
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-7.61.tar.gz",
@@ -79,6 +82,7 @@ var (
 			FilesImageURI:                 "/sites/default/files/field/image/kittens-large.jpg",
 			FullSiteArchiveExtPath:        "docroot/sites/default/files",
 		},
+		// 3: drupal6
 		{
 			Name:                          "TestPkgDrupal6",
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-6.38.tar.gz",
@@ -92,6 +96,7 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/2", Expect: "This is a story. The story is somewhat shaky"},
 			FilesImageURI:                 "/sites/default/files/garland_logo.jpg",
 		},
+		// 4: backdrop
 		{
 			Name:                          "TestPkgBackdrop",
 			SourceURL:                     "https://github.com/backdrop/backdrop/archive/1.11.0.tar.gz",
@@ -105,6 +110,7 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/posts/first-post-all-about-kittens", Expect: "Lots of kittens are a good thing"},
 			FilesImageURI:                 "/files/styles/large/public/field/image/kittens-large.jpg",
 		},
+		// 5: typo3
 		{
 			Name:                          "TestPkgTypo3",
 			SourceURL:                     "https://github.com/drud/typo3-v9-test/archive/v0.2.2.tar.gz",
@@ -118,6 +124,7 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/index.php?id=65", Expect: "Boxed Content"},
 			FilesImageURI:                 "/fileadmin/introduction/images/streets/nikita-maru-70928.jpg",
 		},
+		// 6: magento
 		{
 			Name:                          "testpkgmagento",
 			SourceURL:                     "https://github.com/OpenMage/magento-mirror/archive/1.9.4.3.tar.gz",
@@ -131,6 +138,7 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "This is a demo store"},
 			FilesImageURI:                 "/media/wrapping/Chrysanthemum.jpg",
 		},
+		// 7: magento2
 		// Note that testpkgmagento2 code is enormous and makes this really, really slow.
 		{
 			Name: "testpkgmagento2",
@@ -148,6 +156,7 @@ var (
 			DynamicURI:                testcommon.URIWithExpect{URI: "/index.php/unicycle.html", Expect: "Unicycle"},
 			FilesImageURI:             "/media/catalog/product/r/a/randy_4th_of_july_unicycle.jpg",
 		},
+		// 8: drupal9
 		{
 			Name:                          "TestPkgDrupal9",
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-9.1.4.tar.gz",
@@ -163,6 +172,7 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "Deep mediterranean quiche"},
 			FilesImageURI:                 "/sites/default/files/mediterranean-quiche-umami.jpg",
 		},
+		// 9: laravel
 		{
 			Name:                          "TestPkgLaravel",
 			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/ddev-lumen-testapp.tar.gz",
@@ -178,6 +188,7 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/api/status-code/200", Expect: "indicates that the request has succeeded."},
 			FilesImageURI:                 "/images/200.jpg",
 		},
+		// 10: shopware6
 		{
 			Name:                          "testpkgshopware6",
 			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_code.tgz",
@@ -191,6 +202,7 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/Main-product-with-properties/SWDEMO10007.1", Expect: "Main product with properties"},
 			FilesImageURI:                 "/media/2f/b0/e2/1603218072/hemd_600x600.jpg",
 		},
+		// 11: php
 		{
 			Name:                          "TestPkgPHP",
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-6.38.tar.gz",
@@ -203,6 +215,19 @@ var (
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/CHANGELOG.txt", Expect: "Drupal 6.38, 2016-02-24"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/2", Expect: "This is a story. The story is somewhat shaky"},
 			FilesImageURI:                 "/sites/default/files/garland_logo.jpg",
+		},
+		// 12: drupal10
+		{
+			Name:                          "TestPkgDrupal10",
+			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d10_code.tgz",
+			ArchiveInternalExtractionPath: "",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d10_files.tgz",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d10.sql.tar.gz",
+			FullSiteTarballURL:            "",
+			Type:                          nodeps.AppTypeDrupal10,
+			Docroot:                       "",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Drupal is an open source content management platform"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Welcome to d10"},
 		},
 	}
 
