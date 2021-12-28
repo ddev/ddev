@@ -143,7 +143,7 @@ func createDrupalSettingsPHP(app *DdevApp) (string, error) {
 		return "", err
 	}
 
-	if err := writeDrupalSettingsDdevPhp(drupalConfig, app.SiteDdevSettingsFile); err != nil {
+	if err := writeDrupalSettingsDdevPhp(drupalConfig, app.SiteDdevSettingsFile, app); err != nil {
 		return "", fmt.Errorf("`failed to write` Drupal settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 
@@ -152,7 +152,7 @@ func createDrupalSettingsPHP(app *DdevApp) (string, error) {
 
 // writeDrupalSettingsDdevPhp dynamically produces valid settings.ddev.php file by combining a configuration
 // object with a data-driven template.
-func writeDrupalSettingsDdevPhp(settings *DrupalSettings, filePath string) error {
+func writeDrupalSettingsDdevPhp(settings *DrupalSettings, filePath string, app *DdevApp) error {
 	if fileutil.FileExists(filePath) {
 		// Check if the file is managed by ddev.
 		signatureFound, err := fileutil.FgrepStringInFile(filePath, DdevFileSignature)
@@ -167,7 +167,7 @@ func writeDrupalSettingsDdevPhp(settings *DrupalSettings, filePath string) error
 		}
 	}
 
-	t, err := template.New("settings.ddev.php").ParseFS(bundledAssets, "drupal/settings.ddev.php")
+	t, err := template.New("settings.ddev.php").ParseFS(bundledAssets, filepath.Join("drupal", app.Type, "settings.ddev.php"))
 	if err != nil {
 		return err
 	}
