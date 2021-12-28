@@ -2,7 +2,6 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/Masterminds/sprig/v3"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
@@ -83,76 +82,6 @@ func getWordpressUploadDir(app *DdevApp) string {
 	return app.UploadDir
 }
 
-const wordpressSettingsTemplate = `<?php
-{{ $config := . }}
-/**
- {{ $config.Signature }}: Automatically generated WordPress settings file.
- ddev manages this file and may delete or overwrite the file unless this comment is removed.
- It is recommended that you leave this file alone.
- */
-
-/** Authentication Unique Keys and Salts. */
-define('AUTH_KEY',         '{{ $config.AuthKey }}');
-define('SECURE_AUTH_KEY',  '{{ $config.SecureAuthKey }}');
-define('LOGGED_IN_KEY',    '{{ $config.LoggedInKey }}');
-define('NONCE_KEY',        '{{ $config.NonceKey }}');
-define('AUTH_SALT',        '{{ $config.AuthSalt }}');
-define('SECURE_AUTH_SALT', '{{ $config.SecureAuthSalt }}');
-define('LOGGED_IN_SALT',   '{{ $config.LoggedInSalt }}');
-define('NONCE_SALT',       '{{ $config.NonceSalt }}');
-
-/** Absolute path to the WordPress directory. */
-if (!defined('ABSPATH')) {
-  define('ABSPATH', dirname(__FILE__) . '/{{ $config.AbsPath }}');
-}
-
-// Include for settings managed by ddev.
-$ddev_settings = dirname(__FILE__) . '/wp-config-ddev.php';
-if (is_readable($ddev_settings) && !defined('DB_USER') && getenv('IS_DDEV_PROJECT') == 'true') {
-  require_once($ddev_settings);
-}
-
-/** Include wp-settings.php */
-if (file_exists(ABSPATH . '/wp-settings.php')) {
-  require_once ABSPATH . '/wp-settings.php';
-}
-`
-
-const wordpressDdevSettingsTemplate = `<?php
-{{ $config := . }}
-/**
-{{ $config.Signature }}: Automatically generated WordPress settings file.
- ddev manages this file and may delete or overwrite the file unless this comment is removed.
- */
-
-if (getenv('IS_DDEV_PROJECT') == 'true') {
-  /** The name of the database for WordPress */
-  define('DB_NAME', '{{ $config.DatabaseName }}');
-  
-  /** MySQL database username */
-  define('DB_USER', '{{ $config.DatabaseUsername }}');
-  
-  /** MySQL database password */
-  define('DB_PASSWORD', '{{ $config.DatabasePassword }}');
-  
-  /** MySQL hostname */
-  define('DB_HOST', '{{ $config.DatabaseHost }}');
-
-  /** WP_HOME URL */
-  define('WP_HOME', '{{ $config.DeployURL }}');
-  
-  /** WP_SITEURL location */
-  define('WP_SITEURL', WP_HOME . '/{{ $config.AbsPath  }}');
-}
-
-/** Enable debug */
-define('WP_DEBUG', true);
-
-
-/** Define the database table prefix */
-$table_prefix  = 'wp_';
-`
-
 const wordpressConfigInstructions = `
 An existing user-managed wp-config.php file has been detected!
 Project ddev settings have been written to:
@@ -232,7 +161,7 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 // writeWordpressSettingsFile dynamically produces valid wp-config.php file by combining a configuration
 // object with a data-driven template.
 func writeWordpressSettingsFile(wordpressConfig *WordpressConfig, filePath string) error {
-	tmpl, err := template.New("wordpressConfig").Funcs(sprig.TxtFuncMap()).Parse(wordpressSettingsTemplate)
+	t, err := template.New("wp-config.php").ParseFS(bundledAssets, "wordpress/wp-config.php")
 	if err != nil {
 		return err
 	}
@@ -254,7 +183,7 @@ func writeWordpressSettingsFile(wordpressConfig *WordpressConfig, filePath strin
 	defer util.CheckClose(file)
 
 	//nolint: revive
-	if err = tmpl.Execute(file, wordpressConfig); err != nil {
+	if err = t.Execute(file, wordpressConfig); err != nil {
 		return err
 	}
 
@@ -277,7 +206,7 @@ func writeWordpressDdevSettingsFile(config *WordpressConfig, filePath string) er
 		}
 	}
 
-	tmpl, err := template.New("wordpressConfig").Funcs(sprig.TxtFuncMap()).Parse(wordpressDdevSettingsTemplate)
+	t, err := template.New("wp-config-ddev.php").ParseFS(bundledAssets, "wordpress/wp-config-ddev.php")
 	if err != nil {
 		return err
 	}
@@ -298,8 +227,7 @@ func writeWordpressDdevSettingsFile(config *WordpressConfig, filePath string) er
 	}
 	defer util.CheckClose(file)
 
-	//nolint: revive
-	if err = tmpl.Execute(file, config); err != nil {
+	if err = t.Execute(file, config); err != nil {
 		return err
 	}
 
