@@ -10,7 +10,7 @@ CURRENT_ARCH=$(shell ../get_arch.sh)
 # So has to explicitly declare anything it might need from there (like SHELL)
 SHELL = /bin/bash
 
-BUILD_TARGETS=mariadb_5.5_amd64 mariadb_10.0_amd64 mariadb_10.1_amd64 mariadb_10.2_both mariadb_10.3_both mariadb_10.4_both mariadb_10.5_both mariadb_10.6_both mysql_5.5_amd64 mysql_5.6_amd64 mysql_5.7_both mysql_8.0_both_8.0.26
+BUILD_TARGETS=mariadb_5.5_amd64 mariadb_10.0_amd64 mariadb_10.1_both mariadb_10.2_both mariadb_10.3_both mariadb_10.4_both mariadb_10.5_both mariadb_10.6_both mysql_5.5_amd64 mysql_5.6_amd64 mysql_5.7_both mysql_8.0_both_8.0.26
 TEST_TARGETS=$(shell if [ "$(CURRENT_ARCH)" = "amd64" ] ; then \
 	echo "mariadb_5.5_test mariadb_10.0_test mariadb_10.1_test mariadb_10.2_test mariadb_10.3_test mariadb_10.4_test mariadb_10.5_test mariadb_10.6_test mysql_5.5_test mysql_5.6_test mysql_5.7_test mysql_8.0_test"; \
 	else \
