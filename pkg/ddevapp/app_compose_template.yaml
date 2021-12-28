@@ -118,10 +118,6 @@ services:
     restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
     user: '$DDEV_UID:$DDEV_GID'
     hostname: {{ .Name }}-web
-    {{if not .OmitDB }}
-    links:
-      - db:db
-    {{end}}
 
     ports:
       - "{{ .DockerIP }}:$DDEV_HOST_WEBSERVER_PORT:80"
@@ -200,8 +196,6 @@ services:
       com.ddev.platform: {{ .Plugin }}
       com.ddev.app-type: {{ .AppType }}
       com.ddev.approot: $DDEV_APPROOT
-    links:
-      - db:db
     expose:
       - "80"
     {{ if .HostPHPMyAdminPort }}

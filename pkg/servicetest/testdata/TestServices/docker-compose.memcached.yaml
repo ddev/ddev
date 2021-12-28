@@ -31,6 +31,3 @@ services:
 
     volumes:
     - ".:/mnt/ddev_config"
-  web:
-    links:
-    - memcached:memcached

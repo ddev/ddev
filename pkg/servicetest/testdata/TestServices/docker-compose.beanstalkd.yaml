@@ -19,7 +19,4 @@ services:
       com.ddev.site-name: ${DDEV_SITENAME}
     volumes:
     - ".:/mnt/ddev_config"
-  web:
-    links:
-    - beanstalk:beanstalk
 
