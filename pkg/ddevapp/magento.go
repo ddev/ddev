@@ -1,7 +1,6 @@
 package ddevapp
 
 import (
-	"embed"
 	"fmt"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -28,9 +27,6 @@ func isMagento2App(app *DdevApp) bool {
 	return false
 }
 
-//go:embed magento_assets
-var magentoConfigAssets embed.FS
-
 // createMagentoSettingsFile manages creation and modification of local.xml.
 func createMagentoSettingsFile(app *DdevApp) (string, error) {
 
@@ -49,7 +45,7 @@ func createMagentoSettingsFile(app *DdevApp) (string, error) {
 	} else {
 		output.UserOut.Printf("No %s file exists, creating one", app.SiteSettingsPath)
 
-		content, err := magentoConfigAssets.ReadFile("magento_assets/local.xml")
+		content, err := bundledAssets.ReadFile("magento/local.xml")
 		if err != nil {
 			return "", err
 		}
@@ -150,7 +146,7 @@ func createMagento2SettingsFile(app *DdevApp) (string, error) {
 	} else {
 		output.UserOut.Printf("No %s file exists, creating one", app.SiteSettingsPath)
 
-		content, err := magentoConfigAssets.ReadFile("magento_assets/env.php")
+		content, err := bundledAssets.ReadFile("magento/env.php")
 		if err != nil {
 			return "", err
 		}
