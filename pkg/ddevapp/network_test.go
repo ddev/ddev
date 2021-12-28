@@ -13,8 +13,7 @@ import (
 )
 
 // TestNetworkAmbiguity tests the behavior and setup of docker networking.
-// With `links:` statement, we should get unambiguous name resolution,
-// but without it, our two projects can have crosstalk.
+// There should be no crosstalk between different projects
 func TestNetworkAmbiguity(t *testing.T) {
 	assert := asrt.New(t)
 
@@ -61,9 +60,10 @@ func TestNetworkAmbiguity(t *testing.T) {
 		assert.NoError(err)
 	}
 
-	// With the standard setup, we'll get TWO matching "test" services on db
+	// With the improved two-network handling, the simple service names
+	// are no longer ambiguious. We'll see just one entry for web and one for db
 	// very ambiguous, but just one on web, because it has 'links'
-	expectations := map[string]int{"web": 1, "db": 2}
+	expectations := map[string]int{"web": 1, "db": 1}
 	for projName := range projects {
 		app, err := ddevapp.GetActiveApp(projName)
 		assert.NoError(err)
