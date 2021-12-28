@@ -70,6 +70,7 @@ const (
 	AppTypeDrupal7   = "drupal7"
 	AppTypeDrupal8   = "drupal8"
 	AppTypeDrupal9   = "drupal9"
+	AppTypeDrupal10  = "drupal10"
 	AppTypePHP       = "php"
 	AppTypeTYPO3     = "typo3"
 	AppTypeWordPress = "wordpress"

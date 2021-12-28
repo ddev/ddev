@@ -57,6 +57,7 @@ func TestPostConfigAction(t *testing.T) {
 		nodeps.AppTypeDrupal7:   nodeps.PHPDefault,
 		nodeps.AppTypeDrupal8:   nodeps.PHPDefault,
 		nodeps.AppTypeDrupal9:   nodeps.PHPDefault,
+		nodeps.AppTypeDrupal10:  nodeps.PHP80,
 		nodeps.AppTypeWordPress: nodeps.PHPDefault,
 		nodeps.AppTypeBackdrop:  nodeps.PHPDefault,
 		nodeps.AppTypeMagento:   nodeps.PHP56,

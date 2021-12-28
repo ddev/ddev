@@ -73,125 +73,16 @@ if (getenv('IS_DDEV_PROJECT') == 'true' && is_readable($ddev_settings)) {
 }
 `
 const (
-	drupal8DdevSettingsTemplate = `<?php
-{{ $config := . }}
-/**
- * @file
- * {{ $config.Signature }}: Automatically generated Drupal settings file.
- * ddev manages this file and may delete or overwrite the file unless this
- * comment is removed.  It is recommended that you leave this file alone.
- */
+	drupal8DdevSettingsTemplate = ``
+)
 
-$host = "{{ $config.DatabaseHost }}";
-$port = {{ $config.DatabasePort }};
-
-// If DDEV_PHP_VERSION is not set but IS_DDEV_PROJECT *is*, it means we're running (drush) on the host,
-// so use the host-side bind port on docker IP
-if (empty(getenv('DDEV_PHP_VERSION') && getenv('IS_DDEV_PROJECT') == 'true')) {
-  $host = "{{ $config.DockerIP }}";
-  $port = {{ $config.DBPublishedPort }};
-}
-
-$databases['default']['default'] = array(
-  'database' => "{{ $config.DatabaseName }}",
-  'username' => "{{ $config.DatabaseUsername }}",
-  'password' => "{{ $config.DatabasePassword }}",
-  'host' => $host,
-  'driver' => "{{ $config.DatabaseDriver }}",
-  'port' => $port,
-  'prefix' => "{{ $config.DatabasePrefix }}",
-);
-
-$settings['hash_salt'] = '{{ $config.HashSalt }}';
-
-// This will prevent Drupal from setting read-only permissions on sites/default.
-$settings['skip_permissions_hardening'] = TRUE;
-
-// This will ensure the site can only be accessed through the intended host
-// names. Additional host patterns can be added for custom configurations.
-$settings['trusted_host_patterns'] = ['.*'];
-
-// Don't use Symfony's APCLoader. ddev includes APCu; Composer's APCu loader has
-// better performance.
-$settings['class_loader_auto_detect'] = FALSE;
-
-// This specifies the default configuration sync directory.
-// For D8 before 8.8.0, we set $config_directories[CONFIG_SYNC_DIRECTORY] if not set
-if (version_compare(Drupal::VERSION, "8.8.0", '<') &&
-  empty($config_directories[CONFIG_SYNC_DIRECTORY])) {
-  $config_directories[CONFIG_SYNC_DIRECTORY] = 'sites/default/files/sync';
-}
-// For D8.8/D8.9, set $settings['config_sync_directory'] if neither
-// $config_directories nor $settings['config_sync_directory is set
-if (version_compare(DRUPAL::VERSION, "8.8.0", '>=') &&
-  version_compare(DRUPAL::VERSION, "9.0.0", '<') &&
-  empty($config_directories[CONFIG_SYNC_DIRECTORY]) &&
-  empty($settings['config_sync_directory'])) {
-  $settings['config_sync_directory'] = 'sites/default/files/sync';
-}
-// For Drupal9, it's always $settings['config_sync_directory']
-if (version_compare(DRUPAL::VERSION, "9.0.0", '>=') &&
-  empty($settings['config_sync_directory'])) {
-  $settings['config_sync_directory'] = 'sites/default/files/sync';
-}
+const (
+	drupal7DdevSettingsTemplate = `
 `
 )
 
 const (
-	drupal7DdevSettingsTemplate = `<?php
-{{ $config := . }}
-/**
- * @file
- * {{ $config.Signature }}: Automatically generated Drupal settings file.
- * ddev manages this file and may delete or overwrite the file unless this
- * comment is removed.
- */
-
-$host = "{{ $config.DatabaseHost }}";
-$port = {{ $config.DatabasePort }};
-
-// If DDEV_PHP_VERSION is not set but IS_DDEV_PROJECT *is*, it means we're running (drush) on the host,
-// so use the host-side bind port on docker IP
-if (empty(getenv('DDEV_PHP_VERSION') && getenv('IS_DDEV_PROJECT') == 'true')) {
-  $host = "{{ $config.DockerIP }}";
-  $port = {{ $config.DBPublishedPort }};
-}
-
-$databases['default']['default'] = array(
-  'database' => "{{ $config.DatabaseName }}",
-  'username' => "{{ $config.DatabaseUsername }}",
-  'password' => "{{ $config.DatabasePassword }}",
-  'host' => $host,
-  'driver' => "{{ $config.DatabaseDriver }}",
-  'port' => $port,
-  'prefix' => "{{ $config.DatabasePrefix }}",
-);
-
-$drupal_hash_salt = '{{ $config.HashSalt }}';
-`
-)
-
-const (
-	drupal6DdevSettingsTemplate = `<?php
-{{ $config := . }}
-/**
- * @file
- * {{ $config.Signature }}: Automatically generated Drupal settings file.
- * ddev manages this file and may delete or overwrite the file unless this
- * comment is removed.
- */
-$host = "{{ $config.DatabaseHost }}";
-$port = {{ $config.DatabasePort }};
-
-// If DDEV_PHP_VERSION is not set but IS_DDEV_PROJECT *is*, it means we're running (drush) on the host,
-// so use the host-side bind port on docker IP
-if (empty(getenv('DDEV_PHP_VERSION') && getenv('IS_DDEV_PROJECT') == 'true')) {
-  $host = "{{ $config.DockerIP }}";
-  $port = {{ $config.DBPublishedPort }};
-}
-
-$db_url = "{{ $config.DatabaseDriver }}://{{ $config.DatabaseUsername }}:{{ $config.DatabasePassword }}@$host:$port/{{ $config.DatabaseName }}";
-`
+	drupal6DdevSettingsTemplate = ``
 )
 
 // manageDrupalSettingsFile will direct inspecting and writing of settings.php.
@@ -227,12 +118,12 @@ func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings, appTyp
 	return nil
 }
 
-//go:embed drupal_settings_assets
+//go:embed drupal
 var drupalSettingsAssets embed.FS
 
 // writeDrupalSettingsFile creates the project's settings.php if it doesn't exist
 func writeDrupalSettingsFile(filePath string, appType string) error {
-	content, err := drupalSettingsAssets.ReadFile(path.Join("drupal_settings_assets", appType, "settings.php"))
+	content, err := drupalSettingsAssets.ReadFile(path.Join("drupal", appType, "settings.php"))
 	if err != nil {
 		return err
 	}
@@ -297,6 +188,11 @@ func createDrupal8SettingsFile(app *DdevApp) (string, error) {
 // createDrupal9SettingsFile is just a wrapper on d8
 func createDrupal9SettingsFile(app *DdevApp) (string, error) {
 	return createDrupal8SettingsFile(app)
+}
+
+// createDrupal10SettingsFile is just a wrapper on d9
+func createDrupal10SettingsFile(app *DdevApp) (string, error) {
+	return createDrupal9SettingsFile(app)
 }
 
 // createDrupal6SettingsFile manages creation and modification of settings.php and settings.ddev.php.
@@ -575,6 +471,15 @@ func isDrupal9App(app *DdevApp) bool {
 	return false
 }
 
+// isDrupal10App returns true if the app is of type drupal10
+func isDrupal10App(app *DdevApp) bool {
+	isD10, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "core/lib/Drupal.php"), `const VERSION = '10`)
+	if err == nil && isD10 {
+		return true
+	}
+	return false
+}
+
 // isDrupal6App returns true if the app is of type Drupal6
 func isDrupal6App(app *DdevApp) bool {
 	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "misc/ahah.js")); err == nil {
@@ -587,6 +492,12 @@ func isDrupal6App(app *DdevApp) bool {
 // with php7+
 func drupal6ConfigOverrideAction(app *DdevApp) error {
 	app.PHPVersion = nodeps.PHP56
+	return nil
+}
+
+// drupal10ConfigOverrideAction overrides php_version for D10, requires PHP8.0
+func drupal10ConfigOverrideAction(app *DdevApp) error {
+	app.PHPVersion = nodeps.PHP80
 	return nil
 }
 
