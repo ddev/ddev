@@ -100,11 +100,19 @@ func Cleanup(app *DdevApp) error {
 	labels := map[string]string{
 		"com.ddev.site-name": app.GetName(),
 	}
-	containers, err := dockerutil.FindContainersByLabels(labels)
+
+	// remove project network
+	// "docker-compose down" - removes project network and any left-overs
+	_, _, err := dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "down")
 	if err != nil {
 		return err
 	}
 
+	// If any leftovers or lost souls, find them as well
+	containers, err := dockerutil.FindContainersByLabels(labels)
+	if err != nil {
+		return err
+	}
 	// First, try stopping the listed containers if they are running.
 	for i := range containers {
 		containerName := containers[i].Names[0][1:len(containers[i].Names[0])]

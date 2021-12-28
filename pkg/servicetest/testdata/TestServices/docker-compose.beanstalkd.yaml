@@ -8,6 +8,9 @@ services:
   beanstalk: # This is the service name used when running ddev commands accepting the --service flag
     container_name: ddev-${DDEV_SITENAME}-beanstalk # This is the name of the container. It is recommended to follow the same name convention used in the main docker-compose.yml file.
     image: schickling/beanstalkd:latest
+    networks:
+      - default
+      - ddev_default
     restart: "no"
     expose:
     - 11300 # beanstalk is available at this port inside the container (default port for beanstalkd)

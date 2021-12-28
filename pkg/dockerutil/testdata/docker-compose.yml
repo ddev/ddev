@@ -4,6 +4,9 @@ services:
   db:
     container_name: ddev-test-db
     image: DDEV_DBIMAGE
+    networks:
+      - default
+      - ddev_default
     user: "$DDEV_UID:$DDEV_GID"
     restart: always
     environment:
@@ -17,6 +20,9 @@ services:
   web:
     container_name: ddev-test-web
     image: DDEV_WEBIMAGE
+    networks:
+      - default
+      - ddev_default
     user: "$DDEV_UID:$DDEV_GID"
     volumes:
       - "../htdocs/:/var/www/html/docroot:cached"
@@ -43,7 +49,7 @@ services:
       start_period: 20s
       timeout: 120s
 networks:
-  default:
+  ddev_default:
     name: ddev_default
     external: true
 

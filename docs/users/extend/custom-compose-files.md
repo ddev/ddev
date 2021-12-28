@@ -26,7 +26,7 @@ version: '3.6'
 services:
   someservice:
     ports:
-      - "9999:9999"
+    - "9999:9999"
 ```
 
 That approach usually isn't sustainable because two projects might want to use the same port, so we *expose* the additional port (to the docker network) and then use the ddev-router to bind it to the host. This works only for services with an http API, but results in having both http and https ports (9998 and 9999).
@@ -37,11 +37,14 @@ version: '3.6'
 services:
   someservice:
     expose: 
-      - 9999
+    - 9999
     environment:
-      - VIRTUAL_HOST=$DDEV_HOSTNAME
-      - HTTP_EXPOSE=9998:9999
-      - HTTPS_EXPOSE=9999:9999
+    - VIRTUAL_HOST=$DDEV_HOSTNAME
+    - HTTP_EXPOSE=9998:9999
+    - HTTPS_EXPOSE=9999:9999
+    networks:
+    - default
+    - ddev_default
 ```
 
 ### Confirming docker-compose configurations
