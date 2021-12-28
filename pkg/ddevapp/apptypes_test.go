@@ -22,7 +22,7 @@ import (
 // sure the expected apptype is returned.
 func TestApptypeDetection(t *testing.T) {
 	assert := asrt.New(t)
-	testDir, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 	appTypes := ddevapp.GetValidAppTypes()
 	var nonPHPAppTypes = []string{}
 	for _, t := range appTypes {
@@ -31,16 +31,23 @@ func TestApptypeDetection(t *testing.T) {
 		}
 	}
 	tmpDir := testcommon.CreateTmpDir(t.Name())
-	defer testcommon.CleanupDir(tmpDir)
-	defer testcommon.Chdir(tmpDir)()
 
-	err := fileutil.CopyDir(filepath.Join(testDir, "testdata", t.Name()), filepath.Join(tmpDir, "sampleapptypes"))
+	t.Cleanup(func() {
+		err := os.Chdir(origDir)
+		assert.NoError(err)
+		err = os.RemoveAll(tmpDir)
+		assert.NoError(err)
+	})
+
+	err := fileutil.CopyDir(filepath.Join(origDir, "testdata", t.Name()), filepath.Join(tmpDir, "sampleapptypes"))
 	require.NoError(t, err)
 	for _, appType := range nonPHPAppTypes {
 		app, err := ddevapp.NewApp(filepath.Join(tmpDir, "sampleapptypes", appType), true)
 		assert.NoError(err)
-		//nolint: errcheck
-		defer app.Stop(true, false)
+		t.Cleanup(func() {
+			err = app.Stop(true, false)
+			assert.NoError(err)
+		})
 
 		foundType := app.DetectAppType()
 		assert.EqualValues(appType, foundType)
