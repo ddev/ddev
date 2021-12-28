@@ -9,6 +9,6 @@ Docker on the Mac M1 requires the Apple Silicon version of Docker Desktop, which
 There are a few limitations of DDEV-Local on the Mac M1.
 
 * Only mysql 5.7 and 8.0 are available for arm64/Mac M1 users.
-* Because MariaDB does not publish arm64 packages or images for versions that are out of support, only MariaDB versions 10.1 and higher are supported by DDEV.
+* Because MariaDB does not publish arm64 packages or images for versions that are out of support, only MariaDB versions 10.2 and higher are supported by DDEV.
 
 Both [Mutagen](performance.md#using-mutagen) and [NFS mounting](performance.md#macos-nfs-setup) are supported and work great on the Mac M1.
