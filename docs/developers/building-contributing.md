@@ -1,16 +1,20 @@
 # Building, Testing, and Contributing
 
+## Testing latest commits
+
+On macOS and Linux you can `brew unlink ddev && brew install drud/ddev/ddev --HEAD --fetch-HEAD` to get the latest commit of ddev, even if it's not yet in a release.
+
+To download the latest version, you can visit the [master-build](https://github.com/drud/ddev/actions/workflows/master-build.yml) workflow and choose the latest item (or the one that matches a commit you want to test). You'll see the artifacts for each OS there on the bottom of the page.
+
+And of course you can just see the latest build in action by visiting ddev on [gitpod](https://gitpod.io/#https://github.com/drud/ddev).
+
 ## Testing a PR
 
-Each build of a PR has artifacts created in github, so you can click the details of the "Build DDEV Executables" test, and you can use the pulldown menu to access the ddev executable you need.
-
-![Build ddev executables test](images/build_ddev_executables.png)
-
-![Github artifacts pulldown](images/github_artifacts.png)
+Each build of a PR has artifacts created in github, so you can click the details of the [PR Build](https://github.com/drud/ddev/actions/workflows/pr-build.yml) test, choose the PR you want to work with, and download the artifacts you need there.
 
 After you download and unzip the appropriate binary, you can place it in your $PATH. The easiest way to do this if you're using homebrew is `brew unlink ddev` and then `unzip ddev.zip && chmod +x ddev && mv ddev /usr/local/bin/ddev`. After you're done, you can remove the downloaded binary and `brew link ddev`.
 
-(On macOS Big Sur these downloaded binaries are not signed, so you will want to `xattr -r -d com.apple.quarantine /path/to/ddev` in order to use them. The final binaries in any release are signed, of course.)
+(On macOS Big Sur these downloaded binaries are not signed, so you will want to `xattr -r -d com.apple.quarantine /path/to/ddev` in order to use them. The binaries on the master branch and the final binaries in any release are signed, of course.)
 
 You do not typically have to install anything else other than the downloaded binary; when you run it it will access any docker images that it needs.
 
@@ -21,7 +25,7 @@ Gitpod.io provides a quick preconfigured ddev experience in the browser, so you 
 To just open and work on ddev you can use the button below.
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/drud/ddev)
 
-If you want to run a web project in there, you can just check it out into `/workspace/<yourproject>` and use it as usual. The things you're familiar with work as expected, except that `ddev-router` does not run, and 
+If you want to run a web project in there, you can just check it out into `/workspace/<yourproject>` and use it as usual. The things you're familiar with work as expected, except that `ddev-router` does not run, and
 
 A dummy project for gitpod is provided by default in /workspace/d9simple. You can just `ddev poweroff` and use your own.
 
@@ -86,7 +90,7 @@ To see which DDEV commands the tests are executing, set the environment variable
 Use GOTEST_SHORT=true to run just one CMS in each test, or GOTEST_SHORT=<integer> to run exactly one project type from the list of project types in the [TestSites array](https://github.com/drud/ddev/blob/a4ab2827d8b6e706b2420700045d889a3a69f3f2/pkg/ddevapp/ddevapp_test.go#L43). For example, GOTEST_SHORT=5 will run many tests only against TYPO3.
 
 To run a test (in the cmd package) against a individually compiled ddev binary set the DDEV_BINARY_FULLPATH environment variable, for example DDEV_BINARY_FULLPATH=$PWD/.gotmp/bin/linux_amd64/ddev make testcmd`.
- 
+
 ## Automated testing
 
 Anybody can view the CircleCI automated tests, and they usually show up any problems that are not OS-specific. Just click through on the testing section of the PR to see them.

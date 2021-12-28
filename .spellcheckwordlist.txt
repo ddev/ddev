@@ -12,6 +12,7 @@ CLI
 CMD
 CMS
 CMSs
+Colima
 CPUs
 CTRL
 CentOS
@@ -60,6 +61,7 @@ Kalabox
 Lando
 Laravel
 Let's
+Lima
 MAMP
 Magento
 Magento's
@@ -152,6 +154,7 @@ browser
 busybox
 by
 cd
+ce
 checkexports
 chmod
 choco
@@ -159,6 +162,8 @@ cli
 client
 cms
 codebase
+colima
+colima's
 collection
 command
 compinit
@@ -208,6 +213,8 @@ distros
 dns
 dnsmasq
 docker
+docker-ce
+dockerd
 docker's
 dockerfile
 docroot
@@ -290,6 +297,7 @@ launchctl
 letsencrypt
 lhA
 like
+lima
 linux
 list
 live
@@ -312,6 +320,7 @@ mapall
 mariadb
 memcached
 misconfigured
+mkcert
 mkdir
 modify
 more
@@ -444,6 +453,8 @@ th
 the
 timeo
 tld
+tls
+tlsverify
 tmp
 to
 transactional
