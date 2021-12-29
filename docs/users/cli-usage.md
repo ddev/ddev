@@ -77,13 +77,13 @@ ddev start
 
 # download latest WordPress (via WP-CLI)
 
-ddev exec wp core download
+ddev wp core download
 
 # optional: you can use the following installation command 
 # or finish the installation in the browser (see next step, run ddev launch)
 # (we need to use single quotes to get the primary site URL from .ddev/config.yaml as variable)
 
-ddev exec 'wp core install --url=$DDEV_PRIMARY_URL --title="New WordPress" --admin_user=admin --admin_email=admin@example.com --prompt=admin_password'
+`ddev wp core install --url='$DDEV_PRIMARY_URL' --title='New-WordPress' --admin_user=admin --admin_email=admin@example.com --prompt=admin_password`
 
 # open the website (https://my-wp-site.ddev.site) in your browser:
 
@@ -114,7 +114,7 @@ Now, since [Bedrock](https://roots.io/bedrock/) uses a configuration technique w
     DB_USER=db
     DB_PASSWORD=db
     DB_HOST=db
-    WP_HOME=https://my-wp-bedrock-site.ddev.site
+    WP_HOME=${DDEV_PRIMARY_URL}
     WP_SITEURL=${WP_HOME}/wp
     WP_ENV=development
 ```
@@ -216,7 +216,7 @@ mkdir my-typo3-site
 cd my-typo3-site
 ddev config --project-type=typo3 --docroot=public --create-docroot
 ddev start
-ddev composer create "typo3/cms-base-distribution:^11"
+ddev composer create "typo3/cms-base-distribution"
 ddev exec touch public/FIRST_INSTALL
 ddev launch
 ```
@@ -256,13 +256,13 @@ ddev launch
 5. Run `ddev start`
 6. Follow the URL to the base site.
 
-You may want the [Magento 1 Sample Data](https://raw.githubusercontent.com/Vinai/compressed-magento-sample-data/1.9.1.0/compressed-magento-sample-data-1.9.1.0.tgz) for experimentation:
+You may want the [Magento 1 Sample Data](https://github.com/Vinai/compressed-magento-sample-data) for experimentation:
 
-* Download Magento 1.9.1.x Sample Data.
+* Download Magento [1.9.1.0 Sample Data](https://raw.githubusercontent.com/Vinai/compressed-magento-sample-data/1.9.1.0/compressed-magento-sample-data-1.9.1.0.tgz).
 * Extract the download, for example `tar -zxf ~/Downloads/compressed-magento-sample-data-1.9.1.0.tgz --strip-components=1`
-* Import example data to database **before** running OpenMage install.
+* Import the example database "magento_sample_data_for_1.9.1.0.sql" with `ddev import-db --src=magento_sample_data_for_1.9.1.0.sql` to database **before** running OpenMage install.
 
-Note that OpenMage is a huge codebase and using `nfs_mount_enabled: true` is recommended for performance on macOS and Windows, see [docs](performance.md/#using-nfs-to-mount-the-project-into-the-container).
+Note that OpenMage is a huge codebase and using `mutagen_enabled: true` is recommended for performance on macOS and traditional Windows, see [docs](performance.md/#using-mutagen).
 
 ### Magento 2 Quickstart
 
@@ -273,24 +273,23 @@ mkdir ddev-magento2 && cd ddev-magento2
 ddev config --project-type=magento2 --docroot=pub --create-docroot
 ```
 
-Copy [docker-compose.elasticsearch.yaml](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/elasticsearch/docker-compose.elasticsearch.yaml) to local `.ddev` directory.
+Copy [docker-compose.elasticsearch.yaml](https://raw.githubusercontent.com/drud/ddev-contrib/master/docker-compose-services/elasticsearch/docker-compose.elasticsearch.yaml) to local `.ddev` directory.
 
 ```bash
 ddev start
 ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition
-ddev ssh
-bin/magento setup:install --base-url=https://ddev-magento2.ddev.site/ --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db --elasticsearch-host=elasticsearch --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com --admin-user=admin --admin-password=admin123 --language=en_US
-bin/magento deploy:mode:set developer
-bin/magento module:disable Magento_TwoFactorAuth
-bin/magento setup:di:compile
-bin/magento cache:flush
+ddev magento setup:install --base-url='${DDEV_PRIMARY_URL}' --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db --elasticsearch-host=elasticsearch --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com --admin-user=admin --admin-password=admin123 --language=en_US
+ddev magento deploy:mode:set developer
+ddev magento module:disable Magento_TwoFactorAuth
+ddev magento setup:di:compile
+ddev magento cache:flush
 ```
 
-Of course, change the admin name and related information is needed. The project name here is derived from the directory name (ddev-magento2 in this example). Your project name (and thus the `setup:store-config:set --base-url`) will almost certainly be different.
+Of course, change the admin name and related information is needed.
 
-You may want to add the [Magento 2 Sample Data](https://devdocs.magento.com/guides/v2.4/install-gde/install/sample-data-after-composer.html) with `bin/magento sampledata:deploy && bin/magento setup:upgrade` (inside the web container).
+You may want to add the [Magento 2 Sample Data](https://devdocs.magento.com/guides/v2.4/install-gde/install/sample-data-after-composer.html) with `ddev magento sampledata:deploy && ddev magento setup:upgrade`.
 
-Note that Magento 2 is a huge codebase and using `mutagen_enabled: true` or `nfs_mount_enabled: true` is recommended for performance on macOS and Windows, see [docs](performance.md/#using-nfs-to-mount-the-project-into-the-container).
+Note that Magento 2 is a huge codebase and using `mutagen_enabled: true` is recommended for performance on macOS and traditional Windows, see [docs](performance.md/#using-mutagen).
 
 ### Laravel Quickstart
 
@@ -334,15 +333,10 @@ Instead of setting each connection variable we can add a ddev to the `connection
 
 ```php
 <?php
-
 return [
-
     ...
-
     'connections' => [
-
         ...
-
         'ddev' => [
             'driver' => 'mysql',
             'host' => 'db',
@@ -357,11 +351,8 @@ return [
             'strict' => true,
             'engine' => null,
         ],
-
     ],
-
   ...
-
 ];
 ```
 
@@ -373,21 +364,13 @@ This is very handy if you have a local database installed and you want to switch
 You can set up a Shopware 6 environment many ways, but this shows you one recommended technique:
 
 ```bash
-git clone --branch=6.2 https://github.com/shopware/production my-shopware6
+git clone --branch=6.4 https://github.com/shopware/production my-shopware6
 cd my-shopware6
 ddev config --project-type=shopware6 --docroot=public
 ddev start
 ddev composer install
-ddev exec bin/console system:setup
-# In system:startup use
-# URL https://<project.ddev.site>, here https://my-shopware6.ddev.site
-# Database User: db
-# Database Password: db
-# Database Host: db
-# Database Port: (default)
-# Database Name: db
+ddev exec bin/console system:setup --no-interaction --database-url=mysql://db:db@db:3306/db --app-url='${DDEV_PRIMARY_URL}'
 ddev exec bin/console system:install --create-database --basic-setup
-ddev start
 ddev launch /admin
 ```
 
