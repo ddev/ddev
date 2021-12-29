@@ -44,6 +44,7 @@ func TestApptypeDetection(t *testing.T) {
 	for _, appType := range nonPHPAppTypes {
 		app, err := ddevapp.NewApp(filepath.Join(tmpDir, "sampleapptypes", appType), true)
 		assert.NoError(err)
+		app.Docroot = ddevapp.DiscoverDefaultDocroot(app)
 		t.Cleanup(func() {
 			err = app.Stop(true, false)
 			assert.NoError(err)

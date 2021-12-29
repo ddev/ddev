@@ -21,7 +21,7 @@ func isMagentoApp(app *DdevApp) bool {
 
 // isMagento2App returns true if the app is of type magento2
 func isMagento2App(app *DdevApp) bool {
-	ism2, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "static.php"), `\Magento\Framework\App\Bootstrap::create`)
+	ism2, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "..", "SECURITY.md"), `https://hackerone.com/magento`)
 	if err == nil && ism2 {
 		return true
 	}
