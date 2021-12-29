@@ -89,10 +89,6 @@ mkdir -p ${CAROOT}
 # This will install the certs from $CAROOT (/mnt/ddev-global-cache/mkcert)
 mkcert -install
 
-if [ -f ~/.my.cnf ]; then
-  perl -pi -e "s/host=db/host=ddev-${DDEV_PROJECT}-db/" ~/.my.cnf
-fi
-
 # VIRTUAL_HOST is a comma-delimited set of fqdns, convert it to space-separated and mkcert
 CAROOT=$CAROOT mkcert -cert-file /etc/ssl/certs/master.crt -key-file /etc/ssl/certs/master.key ${VIRTUAL_HOST//,/ } localhost 127.0.0.1 ${DOCKER_IP} web ddev-${DDEV_PROJECT:-}-web ddev-${DDEV_PROJECT:-}-web.ddev_default
 echo 'Server started'

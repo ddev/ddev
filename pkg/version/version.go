@@ -47,7 +47,7 @@ var WebTag = "20211230_blackfire_on_prod" // Note that this can be overridden by
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20211211_volumes_for_config"
+var BaseDBTag = "20211128__docker-compose-networking"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"
