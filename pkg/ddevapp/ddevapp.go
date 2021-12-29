@@ -507,7 +507,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 	insideContainerImportPath := path.Join("/mnt/ddev_config/", filepath.Base(dbPath))
 	// But if we don't have bind mounts, we have to copy dump into the container
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
-		dbContainerName := "db"
+		dbContainerName := GetContainerName(app, "db")
 		if err != nil {
 			return err
 		}
