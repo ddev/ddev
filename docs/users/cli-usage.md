@@ -77,13 +77,13 @@ ddev start
 
 # download latest WordPress (via WP-CLI)
 
-ddev exec wp core download
+ddev wp core download
 
 # optional: you can use the following installation command 
 # or finish the installation in the browser (see next step, run ddev launch)
 # (we need to use single quotes to get the primary site URL from .ddev/config.yaml as variable)
 
-ddev exec 'wp core install --url=$DDEV_PRIMARY_URL --title="New WordPress" --admin_user=admin --admin_email=admin@example.com --prompt=admin_password'
+`ddev wp core install --url='$DDEV_PRIMARY_URL' --title='New-WordPress' --admin_user=admin --admin_email=admin@example.com --prompt=admin_password`
 
 # open the website (https://my-wp-site.ddev.site) in your browser:
 
