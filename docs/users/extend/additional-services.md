@@ -25,7 +25,7 @@ This recipe adds an Apache Solr container to a project. It will set up a solr co
 * Add a solr server at `https://<projectname>>.ddev.site/en/admin/config/search/search-api/add-server`.
     * Use the "standard" Solr connector
     * Use the "http" protocol
-    * The "solr host" should be `ddev-<projectname>-solr` **NOT the default "localhost"**, because it does not run in the same container as the webserver. (Note that just using "solr" will often work, and used to be recommended, but it can be ambiguous if there are more than one projects running with a solr service.)
+    * The "solr host" should be `solr` **NOT the default "localhost"**, because it does not run in the same container as the webserver. (Note that just using "solr" will often work, and used to be recommended, but it can be ambiguous if there are more than one projects running with a solr service.)
     * The "solr core" should be named "dev" unless you customize the docker-compose.solr.yaml
     * Systems that use the Solr API v1 should use the "solr path" value of "/solr", while systems that use the Solr API v2 should use "/", otherwise they won't be able to connect to the Solr server.
     * Under "Advanced server configuration" set the "solr.install.dir" to `/opt/solr`
@@ -59,8 +59,8 @@ This recipe adds a Memcached 1.5 container to a project. The default configurati
 #### Interacting with Memcached
 
 * The Memcached instance will listen on TCP port 11211 (the Memcached default).
-* Configure your application to access Memcached on the host:port `ddev-<projectname>-memcached:11211`.
-* To reach the Memcached admin interface, run `ddev ssh` to connect to the web container, then use `nc` or `telnet` to connect to the Memcached container on port 11211, i.e. `nc ddev-<projectname>-memcached 11211`. You can then run commands such as `stats` to see usage information.
+* Configure your application to access Memcached on the host:port `memcached:11211`.
+* To reach the Memcached admin interface, run `ddev ssh` to connect to the web container, then use `nc` or `telnet` to connect to the Memcached container on port 11211, i.e. `nc memcached 11211`. You can then run commands such as `stats` to see usage information.
 
 ### Beanstalk (Work Queue)
 
@@ -74,7 +74,7 @@ This recipe adds a [Beanstalk](https://beanstalkd.github.io/) container to a pro
 #### Interacting with the Beanstalk Queue
 
 * The Beanstalk instance will listen on TCP port 11300 (the beanstalkd default).
-* Configure your application to access Beanstalk on the host:port `ddev-<projectname>-beanstalk:11300`.
+* Configure your application to access Beanstalk on the host:port `beanstalk:11300`.
 
 ## Additional services in ddev-contrib (MongoDB, PostgresSQL, etc)
 

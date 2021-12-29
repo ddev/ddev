@@ -3,7 +3,7 @@
 The easiest way to think about how DDEV works is to think of it as a set of little networked computers (docker containers). You can think of them as being in a different network world than your workstation computer, but reachable from there.
 
 * The `ddev-webserver` container (one per project) runs `nginx` or `apache` and `php-fpm` for a single site, so it does all the basic work of a PHP-interpreting webserver.
-* The `ddev-dbserver` container (one per project) handles MariaDB or MySQL database management. It can be reached from the webserver by the hostname `db` but better with the more explicit name `ddev-<projectname>-db`.
+* The `ddev-dbserver` container (one per project) handles MariaDB or MySQL database management. It can be reached from the webserver by the hostname `db` or with the more explicit name `ddev-<projectname>-db`.
 * The optional `dba` container runs PhpMyAdmin.
 * Additional add-on services may be there for a given project, for example `solr` or `elasticsearch` or `memcached`.
 

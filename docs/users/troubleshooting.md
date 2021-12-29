@@ -165,7 +165,7 @@ If you see "no space left on device" on Linux, it most likely means your filesys
 
 If a container fails to become ready, it means it's failing the healthcheck.  This can happen to any of the containers, but you can usually find out quickly what the issue is with a `docker inspect` command.
 
-You may need to install `jq` for these, `brew install jq`, or just remove the "| jq" from the command and read the raw json output.
+You may need to install [jq](https://stedolan.github.io/jq/download/) for these, `brew install jq`, or just remove the "| jq" from the command and read the raw json output.
 
 For the web container, `docker inspect --format "{{json .State.Health }}" ddev-<projectname>-web | jq`
 For ddev-router, `docker inspect --format "{{json .State.Health }}" ddev-router`
