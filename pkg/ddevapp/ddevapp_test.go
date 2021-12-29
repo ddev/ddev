@@ -124,11 +124,11 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/index.php?id=65", Expect: "Boxed Content"},
 			FilesImageURI:                 "/fileadmin/introduction/images/streets/nikita-maru-70928.jpg",
 		},
-		// 6: magento
+		// 6: magento1
 		{
 			Name:                          "testpkgmagento",
-			SourceURL:                     "https://github.com/OpenMage/magento-mirror/archive/1.9.4.3.tar.gz",
-			ArchiveInternalExtractionPath: "magento-mirror-1.9.4.3/",
+			SourceURL:                     "https://github.com/OpenMage/magento-lts/archive/refs/tags/v20.0.13.tar.gz",
+			ArchiveInternalExtractionPath: "magento-lts-20.0.13/",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/TestPkgMagento_db_secure_url.tar.gz",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/magento_upload_files.tgz",
 			FullSiteTarballURL:            "",

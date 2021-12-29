@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"os"
@@ -164,11 +163,4 @@ func createMagento2SettingsFile(app *DdevApp) (string, error) {
 // setMagento2SiteSettingsPaths sets the paths to settings.php for templating.
 func setMagento2SiteSettingsPaths(app *DdevApp) {
 	app.SiteSettingsPath = filepath.Join(app.AppRoot, "app", "etc", "env.php")
-}
-
-// magentoConfigOverrideAction overrides php_version for magento2, since it is incompatible
-// with php7.3+
-func magentoConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP56
-	return nil
 }
