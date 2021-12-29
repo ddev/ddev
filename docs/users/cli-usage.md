@@ -333,15 +333,10 @@ Instead of setting each connection variable we can add a ddev to the `connection
 
 ```php
 <?php
-
 return [
-
     ...
-
     'connections' => [
-
         ...
-
         'ddev' => [
             'driver' => 'mysql',
             'host' => 'db',
@@ -356,11 +351,8 @@ return [
             'strict' => true,
             'engine' => null,
         ],
-
     ],
-
   ...
-
 ];
 ```
 
@@ -372,21 +364,13 @@ This is very handy if you have a local database installed and you want to switch
 You can set up a Shopware 6 environment many ways, but this shows you one recommended technique:
 
 ```bash
-git clone --branch=6.2 https://github.com/shopware/production my-shopware6
+git clone --branch=6.4 https://github.com/shopware/production my-shopware6
 cd my-shopware6
 ddev config --project-type=shopware6 --docroot=public
 ddev start
 ddev composer install
-ddev exec bin/console system:setup
-# In system:startup use
-# URL https://<project.ddev.site>, here https://my-shopware6.ddev.site
-# Database User: db
-# Database Password: db
-# Database Host: db
-# Database Port: (default)
-# Database Name: db
+ddev exec bin/console system:setup --no-interaction --database-url=mysql://db:db@db:3306/db --app-url='${DDEV_PRIMARY_URL}'
 ddev exec bin/console system:install --create-database --basic-setup
-ddev start
 ddev launch /admin
 ```
 
