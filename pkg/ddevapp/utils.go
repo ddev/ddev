@@ -107,7 +107,9 @@ func Cleanup(app *DdevApp) error {
 	// yaml does not exist, all in testing situations.
 	if fileutil.FileExists(app.DockerComposeFullRenderedYAMLPath()) {
 		_, _, err := dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "down")
-		util.Warning("Failed to docker-compose down: %v", err)
+		if err != nil {
+			util.Warning("Failed to docker-compose down: %v", err)
+		}
 	}
 
 	// If any leftovers or lost souls, find them as well
