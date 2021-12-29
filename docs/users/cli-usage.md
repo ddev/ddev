@@ -290,7 +290,7 @@ Of course, change the admin name and related information is needed. The project 
 
 You may want to add the [Magento 2 Sample Data](https://devdocs.magento.com/guides/v2.4/install-gde/install/sample-data-after-composer.html) with `bin/magento sampledata:deploy && bin/magento setup:upgrade` (inside the web container).
 
-Note that Magento 2 is a huge codebase and using `mutagen_enabled: true` or `nfs_mount_enabled: true` is recommended for performance on macOS and Windows, see [docs](performance.md/#using-nfs-to-mount-the-project-into-the-container).
+Note that Magento 2 is a huge codebase and using `mutagen_enabled: true` is recommended for performance on macOS and traditional Windows, see [docs](performance.md/#using-mutagen).
 
 ### Laravel Quickstart
 
