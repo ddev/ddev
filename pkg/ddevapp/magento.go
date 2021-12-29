@@ -12,7 +12,8 @@ import (
 
 // isMagentoApp returns true if the app is of type magento
 func isMagentoApp(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "get.php")); err == nil {
+	ism1, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "README.md"), `Magento - Long Term Support`)
+	if err == nil && ism1 {
 		return true
 	}
 	return false
@@ -20,7 +21,8 @@ func isMagentoApp(app *DdevApp) bool {
 
 // isMagento2App returns true if the app is of type magento2
 func isMagento2App(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "static.php")); err == nil {
+	ism2, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "static.php"), `\Magento\Framework\App\Bootstrap::create`)
+	if err == nil && ism2 {
 		return true
 	}
 	return false
@@ -161,5 +163,5 @@ func createMagento2SettingsFile(app *DdevApp) (string, error) {
 
 // setMagento2SiteSettingsPaths sets the paths to settings.php for templating.
 func setMagento2SiteSettingsPaths(app *DdevApp) {
-	app.SiteSettingsPath = filepath.Join(app.AppRoot, "app", "etc", "env.php")
+	app.SiteSettingsPath = filepath.Join(app.AppRoot, app.Docroot, "..", "app", "etc", "env.php")
 }
