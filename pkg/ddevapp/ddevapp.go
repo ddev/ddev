@@ -236,7 +236,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			dbinfo["username"] = "db"
 			dbinfo["password"] = "db"
 			dbinfo["dbname"] = "db"
-			dbinfo["host"] = GetContainerName(app, "db")
+			dbinfo["host"] = "db"
 			dbPublicPort, err := app.GetPublishedPort("db")
 			util.CheckErr(err)
 			dbinfo["dbPort"] = GetPort("db")
@@ -507,7 +507,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 	insideContainerImportPath := path.Join("/mnt/ddev_config/", filepath.Base(dbPath))
 	// But if we don't have bind mounts, we have to copy dump into the container
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
-		dbContainerName := GetContainerName(app, "db")
+		dbContainerName := "db"
 		if err != nil {
 			return err
 		}
