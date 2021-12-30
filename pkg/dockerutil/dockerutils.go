@@ -483,6 +483,16 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 	// read command's stdout line by line
 	in := bufio.NewScanner(stderrPipe)
 
+	// Ignore chatty things from docker-compose like:
+	// Container (or Volume) ... Creating or Created or Stopping or Starting or Removing
+	// Container Stopped or Created
+	// No resource found to remove (when doing a stop and no project exists)
+	ignoreRegex := "(^(Container|Volume) .* (Creat|Start|Stopp|Remov)ing$|^Container .*(Stopp|Creat)(ed|ing)$|Warning: No resource found to remove$)"
+	downRE, err := regexp.Compile(ignoreRegex)
+	if err != nil {
+		util.Warning("failed to compile regex %v: %v", ignoreRegex, err)
+	}
+
 	for in.Scan() {
 		line := in.Text()
 		if len(stderr) > 0 {
@@ -490,7 +500,12 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 		}
 		stderr = stderr + line
 		line = strings.Trim(line, "\n\r")
-		output.UserOut.Println(line)
+		switch {
+		case downRE.MatchString(line):
+			break
+		default:
+			output.UserOut.Println(line)
+		}
 	}
 
 	err = proc.Wait()
