@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"os"
+	"path"
 	"path/filepath"
 	"text/template"
 
@@ -103,7 +104,7 @@ func writeBackdropSettingsDdevPHP(settings *BackdropSettings, filePath string, a
 			return nil
 		}
 	}
-	t, err := template.New("settings.ddev.php").ParseFS(bundledAssets, filepath.Join("drupal", app.Type, "settings.ddev.php"))
+	t, err := template.New("settings.ddev.php").ParseFS(bundledAssets, path.Join("drupal/backdrop/settings.ddev.php"))
 	if err != nil {
 		return err
 	}

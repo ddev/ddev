@@ -167,7 +167,7 @@ func writeDrupalSettingsDdevPhp(settings *DrupalSettings, filePath string, app *
 		}
 	}
 
-	t, err := template.New("settings.ddev.php").ParseFS(bundledAssets, filepath.Join("drupal", app.Type, "settings.ddev.php"))
+	t, err := template.New("settings.ddev.php").ParseFS(bundledAssets, path.Join("drupal", app.Type, "settings.ddev.php"))
 	if err != nil {
 		return err
 	}
