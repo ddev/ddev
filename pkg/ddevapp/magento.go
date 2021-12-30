@@ -1,11 +1,9 @@
 package ddevapp
 
 import (
-	"embed"
 	"fmt"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"os"
@@ -14,7 +12,8 @@ import (
 
 // isMagentoApp returns true if the app is of type magento
 func isMagentoApp(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.AppRoot, "get.php")); err == nil {
+	ism1, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "README.md"), `Magento - Long Term Support`)
+	if err == nil && ism1 {
 		return true
 	}
 	return false
@@ -22,14 +21,12 @@ func isMagentoApp(app *DdevApp) bool {
 
 // isMagento2App returns true if the app is of type magento2
 func isMagento2App(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.AppRoot, "pub", "static.php")); err == nil {
+	ism2, err := fileutil.FgrepStringInFile(filepath.Join(app.AppRoot, app.Docroot, "..", "SECURITY.md"), `https://hackerone.com/magento`)
+	if err == nil && ism2 {
 		return true
 	}
 	return false
 }
-
-//go:embed magento_assets
-var magentoConfigAssets embed.FS
 
 // createMagentoSettingsFile manages creation and modification of local.xml.
 func createMagentoSettingsFile(app *DdevApp) (string, error) {
@@ -49,7 +46,7 @@ func createMagentoSettingsFile(app *DdevApp) (string, error) {
 	} else {
 		output.UserOut.Printf("No %s file exists, creating one", app.SiteSettingsPath)
 
-		content, err := magentoConfigAssets.ReadFile("magento_assets/local.xml")
+		content, err := bundledAssets.ReadFile("magento/local.xml")
 		if err != nil {
 			return "", err
 		}
@@ -65,8 +62,7 @@ func createMagentoSettingsFile(app *DdevApp) (string, error) {
 
 // setMagentoSiteSettingsPaths sets the paths to settings.php for templating.
 func setMagentoSiteSettingsPaths(app *DdevApp) {
-	settingsFileBasePath := app.AppRoot
-	app.SiteSettingsPath = filepath.Join(settingsFileBasePath, "app", "etc", "local.xml")
+	app.SiteSettingsPath = filepath.Join(app.AppRoot, app.Docroot, "app", "etc", "local.xml")
 }
 
 // magentoImportFilesAction defines the magento workflow for importing project files.
@@ -150,7 +146,7 @@ func createMagento2SettingsFile(app *DdevApp) (string, error) {
 	} else {
 		output.UserOut.Printf("No %s file exists, creating one", app.SiteSettingsPath)
 
-		content, err := magentoConfigAssets.ReadFile("magento_assets/env.php")
+		content, err := bundledAssets.ReadFile("magento/env.php")
 		if err != nil {
 			return "", err
 		}
@@ -167,12 +163,5 @@ func createMagento2SettingsFile(app *DdevApp) (string, error) {
 
 // setMagento2SiteSettingsPaths sets the paths to settings.php for templating.
 func setMagento2SiteSettingsPaths(app *DdevApp) {
-	app.SiteSettingsPath = filepath.Join(app.AppRoot, "app", "etc", "env.php")
-}
-
-// magentoConfigOverrideAction overrides php_version for magento2, since it is incompatible
-// with php7.3+
-func magentoConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP56
-	return nil
+	app.SiteSettingsPath = filepath.Join(app.AppRoot, app.Docroot, "..", "app", "etc", "env.php")
 }

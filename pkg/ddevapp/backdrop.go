@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"os"
+	"path"
 	"path/filepath"
 	"text/template"
 
@@ -52,32 +53,6 @@ func NewBackdropSettings(app *DdevApp) *BackdropSettings {
 	}
 }
 
-// BackdropDdevSettingsTemplate defines the template that will become settings.ddev.php.
-const BackdropDdevSettingsTemplate = `<?php
-{{ $config := . }}
-/**
- {{ $config.Signature }}: Automatically generated Backdrop settings.ddev.php file.
- ddev manages this file and may delete or overwrite the file unless this comment is removed.
- */
-
-$host = "{{ $config.DatabaseHost }}";
-$port = {{ $config.DatabasePort }};
-
-// If DDEV_PHP_VERSION is not set but IS_DDEV_PROJECT *is*, it means we're running (drush) on the host,
-// so use the host-side bind port on docker IP
-if (empty(getenv('DDEV_PHP_VERSION') && getenv('IS_DDEV_PROJECT') == "true")) {
-  $host = "{{ $config.DockerIP }}";
-  $port = {{ $config.DBPublishedPort }};
-} 
-
-$database = "{{ $config.DatabaseDriver }}://{{ $config.DatabaseUsername }}:{{ $config.DatabasePassword }}@$host:$port/{{ $config.DatabaseName }}";
-$database_prefix = '{{ $config.DatabasePrefix }}';
-
-$settings['update_free_access'] = FALSE;
-$settings['hash_salt'] = '{{ $config.HashSalt }}';
-$settings['backdrop_drupal_compatibility'] = TRUE;
-`
-
 // createBackdropSettingsFile manages creation and modification of settings.php and settings.ddev.php.
 // If a settings.php file already exists, it will be modified to ensure that it includes
 // settings.ddev.php, which contains ddev-specific configuration.
@@ -86,7 +61,7 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 
 	if !fileutil.FileExists(app.SiteSettingsPath) {
 		output.UserOut.Printf("No %s file exists, creating one", settings.SiteSettings)
-		if err := writeDrupalSettingsFile(app.SiteSettingsPath, app.Type); err != nil {
+		if err := writeDrupalSettingsPHP(app.SiteSettingsPath, app.Type); err != nil {
 			return "", err
 		}
 	}
@@ -106,16 +81,16 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 		}
 	}
 
-	if err = writeBackdropDdevSettingsFile(settings, app.SiteDdevSettingsFile); err != nil {
+	if err = writeBackdropSettingsDdevPHP(settings, app.SiteDdevSettingsFile, app); err != nil {
 		return "", fmt.Errorf("failed to write Drupal settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 
 	return app.SiteDdevSettingsFile, nil
 }
 
-// writeBackdropDdevSettingsFile dynamically produces a valid settings.ddev.php file
+// writeBackdropSettingsDdevPHP dynamically produces a valid settings.ddev.php file
 // by combining a configuration object with a data-driven template.
-func writeBackdropDdevSettingsFile(settings *BackdropSettings, filePath string) error {
+func writeBackdropSettingsDdevPHP(settings *BackdropSettings, filePath string, app *DdevApp) error {
 	if fileutil.FileExists(filePath) {
 		// Check if the file is managed by ddev.
 		signatureFound, err := fileutil.FgrepStringInFile(filePath, DdevFileSignature)
@@ -129,7 +104,7 @@ func writeBackdropDdevSettingsFile(settings *BackdropSettings, filePath string) 
 			return nil
 		}
 	}
-	tmpl, err := template.New("settings.ddev.php").Funcs(getTemplateFuncMap()).Parse(BackdropDdevSettingsTemplate)
+	t, err := template.New("settings.ddev.php").ParseFS(bundledAssets, path.Join("drupal/backdrop/settings.ddev.php"))
 	if err != nil {
 		return err
 	}
@@ -150,8 +125,7 @@ func writeBackdropDdevSettingsFile(settings *BackdropSettings, filePath string) 
 	}
 	defer util.CheckClose(file)
 
-	//nolint: revive
-	if err := tmpl.Execute(file, settings); err != nil {
+	if err := t.Execute(file, settings); err != nil {
 		return err
 	}
 

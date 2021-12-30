@@ -18,7 +18,7 @@ func isShopware6App(app *DdevApp) bool {
 	return false
 }
 
-// setShopware6SiteSettingsPaths sets the paths to settings.php for templating.
+// setShopware6SiteSettingsPaths sets the paths to .env file.
 func setShopware6SiteSettingsPaths(app *DdevApp) {
 	app.SiteSettingsPath = filepath.Join(app.AppRoot, ".env")
 }
