@@ -540,20 +540,20 @@ workflows:
 #        requires:
 #        - build
 
-  nightly_build:
-    triggers:
-      - schedule:
-          cron: "0 3 * * *"
-          filters:
-            branches:
-              only:
-                - master
-                - "pull/[0-9]+"
-    jobs:
-    - lx_amd64_container_test
-#    - lx_arm64_container_test
-#    - lx_amd64_fpm_test
-    - lx_arm64_fpm_test
+#  nightly_build:
+#    triggers:
+#      - schedule:
+#          cron: "0 3 * * *"
+#          filters:
+#            branches:
+#              only:
+#                - master
+#                - "pull/[0-9]+"
+#    jobs:
+#    - lx_amd64_container_test
+##    - lx_arm64_container_test
+##    - lx_amd64_fpm_test
+#    - lx_arm64_fpm_test
 
 #  release_build:
 #    jobs:

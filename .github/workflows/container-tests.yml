@@ -11,6 +11,8 @@ on:
     # Only run when something changes in the actual containers
     paths:
     - "containers/**"
+  schedule:
+    - cron: '01 24 * * *'
 
 env:
   DDEV_IGNORE_EXPIRING_KEYS: "false"
