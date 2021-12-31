@@ -18,7 +18,7 @@ services:
         gid: '{{ .GID }}'
     image: '{{ .ssh_auth_image }}:{{ .ssh_auth_tag }}-built'
     networks:
-      - ddev_default
+      - ddev
     restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
     user: '$DDEV_UID:$DDEV_GID'
     volumes:
@@ -32,6 +32,6 @@ services:
       start_period: 10s
       timeout: 62s
 networks:
-  ddev_default:
-    name: ddev_default
+  ddev:
+    name: ddev
     external: true

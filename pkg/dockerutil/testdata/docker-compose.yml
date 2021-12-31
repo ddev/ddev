@@ -6,7 +6,7 @@ services:
     image: DDEV_DBIMAGE
     networks:
       - default
-      - ddev_default
+      - ddev
     user: "$DDEV_UID:$DDEV_GID"
     restart: always
     environment:
@@ -22,7 +22,7 @@ services:
     image: DDEV_WEBIMAGE
     networks:
       - default
-      - ddev_default
+      - ddev
     user: "$DDEV_UID:$DDEV_GID"
     volumes:
       - "../htdocs/:/var/www/html/docroot:cached"
@@ -47,7 +47,7 @@ services:
       start_period: 20s
       timeout: 120s
 networks:
-  ddev_default:
-    name: ddev_default
+  ddev:
+    name: ddev
     external: true
 

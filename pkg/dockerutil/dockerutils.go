@@ -52,7 +52,7 @@ func EnsureNetwork(client *docker.Client, name string) error {
 	return nil
 }
 
-// EnsureDdevNetwork just creates or ensures the ddev_default network exists or
+// EnsureDdevNetwork just creates or ensures the ddev network exists or
 // exits with fatal.
 func EnsureDdevNetwork() {
 	// ensure we have docker network

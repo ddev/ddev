@@ -34,7 +34,7 @@ services:
     image: solr:8
     networks:
       - default
-      - ddev_default
+      - ddev
     restart: "no"
     # Solr is served from this port inside the container.
     expose:

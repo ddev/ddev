@@ -245,7 +245,7 @@ func TestMain(m *testing.M) {
 	output.LogSetUp()
 
 	// Since this may be first time ddev has been used, we need the
-	// ddev_default network available.
+	// ddev network available.
 	dockerutil.EnsureDdevNetwork()
 
 	// Avoid having sudo try to add to /etc/hosts.

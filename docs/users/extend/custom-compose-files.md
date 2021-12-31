@@ -44,7 +44,7 @@ services:
     - HTTPS_EXPOSE=9999:9999
     networks:
     - default
-    - ddev_default
+    - ddev
 ```
 
 ### Confirming docker-compose configurations

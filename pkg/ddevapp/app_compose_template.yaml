@@ -15,7 +15,7 @@ services:
     image: ${DDEV_DBIMAGE}-${DDEV_SITENAME}-built
     networks:
       - default
-      - ddev_default
+      - ddev
     stop_grace_period: 60s
     working_dir: "{{ .DBWorkingDir }}"
     volumes:
@@ -79,7 +79,7 @@ services:
     image: ${DDEV_WEBIMAGE}-${DDEV_SITENAME}-built
     networks:
       - default
-      - ddev_default
+      - ddev
     cap_add:
       - SYS_PTRACE
     working_dir: "{{ .WebWorkingDir }}"
@@ -188,7 +188,7 @@ services:
     image: $DDEV_DBAIMAGE
     networks:
       - default
-      - ddev_default
+      - ddev
     working_dir: "{{ .DBAWorkingDir }}"
     restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
     labels:
@@ -218,8 +218,8 @@ services:
       retries: 1
     {{ end }}{{/* end if not .OmitDBA */}}
 networks:
-  ddev_default:
-    name: ddev_default
+  ddev:
+    name: ddev
     external: true
 volumes:
   {{if not .OmitDB }}
