@@ -809,7 +809,12 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			t.Logf("Curling to port 9000 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
 			// Curl to the project's index.php or anything else
 			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL(), 12)
-			assert.NoError(err, "got errcode %v output %s: %v", resp.StatusCode, out, err)
+			if err != nil {
+				assert.NoError(err, "got resp %v output %s: %v", resp, out, err)
+				if resp != nil {
+					t.Logf("resp code=%v", resp.StatusCode)
+				}
+			}
 		}()
 
 		// Accept is blocking, no way to timeout, so use
