@@ -12,7 +12,7 @@ on:
     paths:
     - "containers/**"
   schedule:
-    - cron: '01 24 * * *'
+    - cron: '01 00 * * *'
 
 env:
   DDEV_IGNORE_EXPIRING_KEYS: "false"
