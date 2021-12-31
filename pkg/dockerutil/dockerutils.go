@@ -32,7 +32,7 @@ import (
 )
 
 // NetName provides the default network name for ddev.
-const NetName = "ddev_default"
+const NetName = "ddev"
 
 // EnsureNetwork will ensure the docker network for ddev is created.
 func EnsureNetwork(client *docker.Client, name string) error {
@@ -487,7 +487,7 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 	// Container (or Volume) ... Creating or Created or Stopping or Starting or Removing
 	// Container Stopped or Created
 	// No resource found to remove (when doing a stop and no project exists)
-	ignoreRegex := "(^(Container|Volume) .* (Creat|Start|Stopp|Remov)ing$|^Container .*(Stopp|Creat)(ed|ing)$|Warning: No resource found to remove$)"
+	ignoreRegex := "(^(Network|Container|Volume) .* (Creat|Start|Stopp|Remov)ing$|^Container .*(Stopp|Creat)(ed|ing)$|Warning: No resource found to remove$)"
 	downRE, err := regexp.Compile(ignoreRegex)
 	if err != nil {
 		util.Warning("failed to compile regex %v: %v", ignoreRegex, err)
