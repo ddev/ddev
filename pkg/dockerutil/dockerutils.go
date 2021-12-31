@@ -63,6 +63,14 @@ func EnsureDdevNetwork() {
 	}
 }
 
+// NetworkExists returns true if the named network exists
+// Mostly intended for tests
+func NetworkExists(netName string) bool {
+	// ensure we have docker network
+	client := GetDockerClient()
+	return NetExists(client, strings.ToLower(netName))
+}
+
 var dockerHost string
 
 // GetDockerClient returns a docker client respecting the current docker context

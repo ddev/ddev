@@ -360,15 +360,18 @@ func TestDdevStart(t *testing.T) {
 	err = app.Start()
 	assert.NoError(err)
 
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		assert.False(dockerutil.NetworkExists("ddev-" + app.Name + "_default"))
+	})
+
 	// Make sure the -built docker image exists before stop
 	webBuilt := version.GetWebImage() + "-" + site.Name + "-built"
 	dbBuilt := version.GetWebImage() + "-" + site.Name + "-built"
 	exists, err := dockerutil.ImageExistsLocally(webBuilt)
 	assert.NoError(err)
 	assert.True(exists)
-
-	//nolint: errcheck
-	defer app.Stop(true, false)
 
 	// ensure .ddev/.ddev-docker-compose* exists inside .ddev site folder
 	composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
@@ -381,6 +384,9 @@ func TestDdevStart(t *testing.T) {
 		assert.NoError(err)
 		assert.True(check, "Container check on %s failed", containerType)
 	}
+
+	x := dockerutil.NetworkExists("ddev-" + app.Name + "_default")
+	_ = x
 
 	if util.IsCommandAvailable("mysql") {
 		dbPort, err := app.GetPublishedPort("db")
@@ -420,8 +426,11 @@ func TestDdevStart(t *testing.T) {
 	promptOutFunc := util.CaptureUserOut()
 	err = app.Start()
 	assert.NoError(err)
-	//nolint: errcheck
-	defer app.Stop(true, false)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		assert.False(dockerutil.NetworkExists("ddev-" + app.Name + "_default"))
+	})
 	out := stdoutFunc()
 	UOut := promptOutFunc()
 	assert.Contains(UOut, "Running task: Exec command 'echo hello' in container/service 'web'")
@@ -434,8 +443,11 @@ func TestDdevStart(t *testing.T) {
 	err = fileutil.CopyDir(site.Dir, copyDir)
 	assert.NoError(err)
 	another.Dir = copyDir
-	//nolint: errcheck
-	defer os.RemoveAll(copyDir)
+
+	t.Cleanup(func() {
+		err = os.RemoveAll(copyDir)
+		assert.NoError(err)
+	})
 
 	badapp := &ddevapp.DdevApp{}
 
@@ -456,8 +468,12 @@ func TestDdevStart(t *testing.T) {
 	symlink := filepath.Join(tmpDir, fileutil.RandomFilenameBase())
 	err = os.Symlink(app.AppRoot, symlink)
 	assert.NoError(err)
-	//nolint: errcheck
-	defer os.Remove(symlink)
+
+	t.Cleanup(func() {
+		err = os.Remove(symlink)
+		assert.NoError(err)
+	})
+
 	symlinkApp := &ddevapp.DdevApp{}
 
 	err = symlinkApp.Init(symlink)
