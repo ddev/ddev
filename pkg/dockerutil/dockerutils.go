@@ -71,6 +71,13 @@ func NetworkExists(netName string) bool {
 	return NetExists(client, strings.ToLower(netName))
 }
 
+// RemoveNetwork removes the named docker network
+func RemoveNetwork(netName string) error {
+	client := GetDockerClient()
+	err := client.RemoveNetwork(netName)
+	return err
+}
+
 var dockerHost string
 
 // GetDockerClient returns a docker client respecting the current docker context
