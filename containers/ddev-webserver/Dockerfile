@@ -204,11 +204,8 @@ RUN mkdir /tmp/ddev && \
         echo 'MKCERT_ARCH="linux-amd64"' >/tmp/ddev/vars; \
     fi
 
-# blackfire-php is not available for arm64 (yet)
-RUN if [[ $TARGETPLATFORM != "linux/arm64" ]]; then \
-    DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" blackfire-php -y --allow-unauthenticated; \
-    fi
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
+    blackfire-php \
     fontconfig \
     gettext \
     git \
@@ -228,6 +225,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     zip
 
 ADD ddev-webserver-prod-files /
+RUN phpdismod blackfire xhprof
 
 RUN curl -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/backdrop-drush-extension.zip -o /tmp/backdrop-drush-extension.zip && unzip -o /tmp/backdrop-drush-extension.zip -d /var/tmp/backdrop_drush_commands
 
