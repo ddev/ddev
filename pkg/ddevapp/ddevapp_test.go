@@ -810,7 +810,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			// Curl to the project's index.php or anything else
 			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL(), 12)
 			if err != nil {
-				assert.NoError(err, "got resp %v output %s: %v", resp, out, err)
+				assert.NoError(err, "time=%v got resp %v output %s: %v", time.Now(), resp, out, err)
 				if resp != nil {
 					t.Logf("resp code=%v", resp.StatusCode)
 				}
