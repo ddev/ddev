@@ -11,6 +11,10 @@ on:
   push:
     branches: [ master, main ]
 
+  schedule:
+    - cron: '01 00 * * *'
+
+
 defaults:
   run:
     shell: bash
