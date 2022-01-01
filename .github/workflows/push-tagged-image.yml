@@ -14,6 +14,10 @@ on:
         description: Tag for pushed image (v1.19.3 for example)'
         required: true
         default: ""
+      debug_enabled:
+        description: 'Enable debug mode'
+        required: false
+        default: false
 env:
   REGISTRY: docker.io
   DOCKER_ORG: drud
@@ -26,7 +30,7 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-
+    - uses: actions/checkout@v2
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v1
     - name: Set up Docker Buildx
@@ -36,25 +40,14 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-    - name: Build and push Docker image
-      id: build-and-push
-      uses: docker/build-push-action@v2.7.0
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
       with:
-        context: containers/${{ github.event.inputs.image }}
-        tags: ${{ env.IMAGE_TAG }}
-        labels: ${{ steps.meta.outputs.labels }}
-        platforms: linux/amd64,linux/arm64
-        push: true
+        limit-access-to-actor: true
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+    - name: Push image
+      run: |
+        cd containers/${{ github.event.inputs.image }}
+        make push VERSION=${{ env.IMAGE_TAG }}
 
-    # Sign the resulting Docker image digest except on PRs.
-    # This will only write to the public Rekor transparency log when the Docker
-    # repository is public to avoid leaking data.  If you would like to publish
-    # transparency data even for private images, pass --force to cosign below.
-    # https://github.com/sigstore/cosign
-    - name: Sign the published Docker image
-      if: ${{ github.event_name != 'pull_request' }}
-      env:
-        COSIGN_EXPERIMENTAL: "true"
-      # This step uses the identity token to provision an ephemeral certificate
-      # against the sigstore community Fulcio instance.
-      run: cosign sign ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build-and-push.outputs.digest }}
