@@ -21,9 +21,7 @@ on:
 env:
   REGISTRY: docker.io
   DOCKER_ORG: drud
-  # github.repository as <account>/<repo>
-#  IMAGE_TAG: "${{ env.DOCKER_ORG}}/%${{ github.event.inputs.image }}:%${{ github.event.inputs.tag }}"
-  IMAGE_TAG: junk
+  IMAGE_TAG: "${{ env.DOCKER_ORG}}/${{ github.event.inputs.image }}:${{ github.event.inputs.tag }}"
 jobs:
   push-tagged-image:
     name: "push tagged image"
@@ -46,8 +44,14 @@ jobs:
         limit-access-to-actor: true
         github-token: ${{ secrets.GITHUB_TOKEN }}
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
-    - name: Push image
+    - name: Push non-dbserver image
+      if: "!equal(github.event.inputs.image, 'ddev-dbserver')"
       run: |
         cd containers/${{ github.event.inputs.image }}
         make push VERSION=${{ env.IMAGE_TAG }}
+    - name: Push ddev-dbserver image
+      if: "equal(github.event.inputs.image, 'ddev-dbserver')"
+      run: |
+        cd containers/${{ github.event.inputs.image }}
+        make PUSH=true VERSION=${{ env.IMAGE_TAG }}
 
