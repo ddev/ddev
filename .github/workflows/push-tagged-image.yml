@@ -22,7 +22,7 @@ env:
 
 jobs:
   push-tagged-image:
-    name: "push"
+    name: "push tagged image"
     runs-on: ubuntu-20.04
 
     steps:
