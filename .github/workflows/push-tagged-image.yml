@@ -21,7 +21,6 @@ on:
 env:
   REGISTRY: docker.io
   DOCKER_ORG: drud
-  IMAGE_TAG: "${{ env.DOCKER_ORG}}/${{ github.event.inputs.image }}:${{ github.event.inputs.tag }}"
 jobs:
   push-tagged-image:
     name: "push tagged image"
@@ -47,11 +46,11 @@ jobs:
     - name: Push non-dbserver image
       if: "!equal(github.event.inputs.image, 'ddev-dbserver')"
       run: |
-        cd containers/${{ github.event.inputs.image }}
-        make push VERSION=${{ env.IMAGE_TAG }}
+        cd "containers/${{ github.event.inputs.image }}"
+        make push VERSION="${{ github.event.inputs.tag }}"
     - name: Push ddev-dbserver image
       if: "equal(github.event.inputs.image, 'ddev-dbserver')"
       run: |
-        cd containers/${{ github.event.inputs.image }}
-        make PUSH=true VERSION=${{ env.IMAGE_TAG }}
+        cd "containers/${{ github.event.inputs.image }}"
+        make PUSH=true VERSION="${{ github.event.inputs.tag }}"
 
