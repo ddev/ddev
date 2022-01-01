@@ -41,15 +41,15 @@ var (
 		// 0: wordpress
 		{
 			Name:                          "TestPkgWordpress",
-			SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
-			ArchiveInternalExtractionPath: "wordpress-0.4.0/",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/wordpress_files.tar.gz",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.0/wordpress_db.tar.gz",
-			Docroot:                       "htdocs",
+			SourceURL:                     "https://wordpress.org/wordpress-5.8.2.tar.gz",
+			ArchiveInternalExtractionPath: "wordpress/",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/wordpress5.8.2_files.tar.gz",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/wordpress5.8.2_db.sql.tar.gz",
+			Docroot:                       "",
 			Type:                          nodeps.AppTypeWordPress,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "this post has a photo"},
-			FilesImageURI:                 "/wp-content/uploads/2017/04/pexels-photo-265186-1024x683.jpeg",
+			FilesImageURI:                 "/wp-content/uploads/2021/12/DSCF0436-randy-and-nancy-with-traditional-wedding-out-fit-2048x1536.jpg",
 		},
 		// 1: drupal8
 		{
