@@ -385,9 +385,6 @@ func TestDdevStart(t *testing.T) {
 		assert.True(check, "Container check on %s failed", containerType)
 	}
 
-	x := dockerutil.NetworkExists("ddev-" + app.Name + "_default")
-	_ = x
-
 	if util.IsCommandAvailable("mysql") {
 		dbPort, err := app.GetPublishedPort("db")
 		assert.NoError(err)
