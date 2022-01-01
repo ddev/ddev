@@ -40,7 +40,7 @@ jobs:
       id: build-and-push
       uses: docker/build-push-action@v2.7.0
       with:
-        context: containers/%${{ github.event.inputs.image }}
+        context: containers/${{ github.event.inputs.image }}
         tags: ${{ env.IMAGE_TAG }}
         labels: ${{ steps.meta.outputs.labels }}
         platforms: linux/amd64,linux/arm64
