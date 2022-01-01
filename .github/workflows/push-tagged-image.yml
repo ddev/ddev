@@ -44,12 +44,12 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
     - name: Push non-dbserver image
-      if: "!equal(github.event.inputs.image, 'ddev-dbserver')"
+      if: github.event.inputs.image != 'ddev-dbserver'
       run: |
         cd "containers/${{ github.event.inputs.image }}"
         make push VERSION="${{ github.event.inputs.tag }}"
     - name: Push ddev-dbserver image
-      if: "equal(github.event.inputs.image, 'ddev-dbserver')"
+      if: github.event.inputs.image == 'ddev-dbserver'
       run: |
         cd "containers/${{ github.event.inputs.image }}"
         make PUSH=true VERSION="${{ github.event.inputs.tag }}"
