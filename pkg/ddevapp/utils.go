@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/fsouza/go-dockerclient"
+	"github.com/drud/ddev/pkg/output"
+	docker "github.com/fsouza/go-dockerclient"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"path"
 	"path/filepath"
@@ -17,7 +18,6 @@ import (
 	"github.com/Masterminds/sprig/v3"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 )
 
@@ -100,11 +100,23 @@ func Cleanup(app *DdevApp) error {
 	labels := map[string]string{
 		"com.ddev.site-name": app.GetName(),
 	}
+
+	// remove project network
+	// "docker-compose down" - removes project network and any left-overs
+	// There can be awkward cases where we're doing an app.Stop() but the rendered
+	// yaml does not exist, all in testing situations.
+	if fileutil.FileExists(app.DockerComposeFullRenderedYAMLPath()) {
+		_, _, err := dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "down")
+		if err != nil {
+			util.Warning("Failed to docker-compose down: %v", err)
+		}
+	}
+
+	// If any leftovers or lost souls, find them as well
 	containers, err := dockerutil.FindContainersByLabels(labels)
 	if err != nil {
 		return err
 	}
-
 	// First, try stopping the listed containers if they are running.
 	for i := range containers {
 		containerName := containers[i].Names[0][1:len(containers[i].Names[0])]

@@ -183,6 +183,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	assert.NoError(err)
 
 	// After the config has been written and directories exist, the write should work.
+	app.DockerEnv()
 	err = app.WriteDockerComposeYAML()
 	assert.NoError(err)
 

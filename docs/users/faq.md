@@ -7,7 +7,7 @@ Do I lose my data when I do a `ddev poweroff` or `ddev stop` or `ddev restart`?
 : No, you don't lose data in your database or code with any of these commands. Your database is safely stored on a docker volume.
 
 How does my project connect to the database?
-: `ddev describe` gives full details of how to connect to the database. *Inside* the container the hostname is 'ddev-<projectname>-db' (**NOT** 127.0.0.1). User/password/database are all 'db'. For connection from the *host*, see `ddev describe`.
+: `ddev describe` gives full details of how to connect to the database. *Inside* the container the hostname is 'db' (**NOT** 127.0.0.1). User/password/database are all 'db'. For connection from the *host*, see `ddev describe`.
 
 How can I troubleshoot what's going wrong?
 : See the [troubleshooting](troubleshooting.md), [Docker troubleshooting](docker_installation.md#troubleshooting) and [Xdebug troubleshooting](step-debugging.md#troubleshooting-xdebug) sections of the docs.

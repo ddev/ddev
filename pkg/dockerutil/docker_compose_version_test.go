@@ -7,6 +7,7 @@ import (
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/version"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"os"
 	"os/exec"
 	"runtime"
@@ -78,7 +79,7 @@ func TestDockerComposeDownload(t *testing.T) {
 		}
 		globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion = v
 		downloaded, err = dockerutil.DownloadDockerComposeIfNeeded()
-		assert.NoError(err)
+		require.NoError(t, err)
 		assert.True(downloaded)
 		// We have to reset version.DockerComposeVersion so it will actually check
 		// instead of using cached value.

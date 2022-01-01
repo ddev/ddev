@@ -32,7 +32,7 @@ import (
 )
 
 // NetName provides the default network name for ddev.
-const NetName = "ddev_default"
+const NetName = "ddev"
 
 // EnsureNetwork will ensure the docker network for ddev is created.
 func EnsureNetwork(client *docker.Client, name string) error {
@@ -52,7 +52,7 @@ func EnsureNetwork(client *docker.Client, name string) error {
 	return nil
 }
 
-// EnsureDdevNetwork just creates or ensures the ddev_default network exists or
+// EnsureDdevNetwork just creates or ensures the ddev network exists or
 // exits with fatal.
 func EnsureDdevNetwork() {
 	// ensure we have docker network
@@ -61,6 +61,21 @@ func EnsureDdevNetwork() {
 	if err != nil {
 		log.Fatalf("Failed to ensure docker network %s: %v", NetName, err)
 	}
+}
+
+// NetworkExists returns true if the named network exists
+// Mostly intended for tests
+func NetworkExists(netName string) bool {
+	// ensure we have docker network
+	client := GetDockerClient()
+	return NetExists(client, strings.ToLower(netName))
+}
+
+// RemoveNetwork removes the named docker network
+func RemoveNetwork(netName string) error {
+	client := GetDockerClient()
+	err := client.RemoveNetwork(netName)
+	return err
 }
 
 var dockerHost string
@@ -483,6 +498,16 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 	// read command's stdout line by line
 	in := bufio.NewScanner(stderrPipe)
 
+	// Ignore chatty things from docker-compose like:
+	// Container (or Volume) ... Creating or Created or Stopping or Starting or Removing
+	// Container Stopped or Created
+	// No resource found to remove (when doing a stop and no project exists)
+	ignoreRegex := "(^(Network|Container|Volume) .* (Creat|Start|Stopp|Remov)ing$|^Container .*(Stopp|Creat)(ed|ing)$|Warning: No resource found to remove$)"
+	downRE, err := regexp.Compile(ignoreRegex)
+	if err != nil {
+		util.Warning("failed to compile regex %v: %v", ignoreRegex, err)
+	}
+
 	for in.Scan() {
 		line := in.Text()
 		if len(stderr) > 0 {
@@ -490,7 +515,12 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 		}
 		stderr = stderr + line
 		line = strings.Trim(line, "\n\r")
-		output.UserOut.Println(line)
+		switch {
+		case downRE.MatchString(line):
+			break
+		default:
+			output.UserOut.Println(line)
+		}
 	}
 
 	err = proc.Wait()

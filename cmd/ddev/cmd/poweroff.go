@@ -5,6 +5,7 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
+	docker "github.com/fsouza/go-dockerclient"
 	"github.com/spf13/cobra"
 )
 
@@ -47,5 +48,15 @@ func powerOff() {
 
 	if err := ddevapp.RemoveSSHAgentContainer(); err != nil {
 		util.Error("Failed to remove ddev-ssh-agent: %v", err)
+	}
+	// Remove current global network ("ddev") plus the former "ddev_default"
+	removals := []string{"ddev", "ddev_default"}
+	for _, networkName := range removals {
+		err = dockerutil.RemoveNetwork(networkName)
+		_, isNoSuchNetwork := err.(*docker.NoSuchNetwork)
+		// If it's a "no such network" there's no reason to report error
+		if err != nil && !isNoSuchNetwork {
+			util.Warning("Unable to remove network %s: %v", "ddev", err)
+		}
 	}
 }

@@ -2,6 +2,8 @@ version: '{{ .compose_version }}'
 services:
   ddev-router:
     image: {{ .router_image }}:{{ .router_tag }}
+    networks:
+        - ddev
     container_name: ddev-router
     ports:{{ $dockerIP := .dockerIP }}{{ if not .router_bind_all_interfaces }}{{ range $port := .ports }}
     - "{{ $dockerIP }}:{{ $port }}:{{ $port }}"{{ end }}{{ else }}{{ range $port := .ports }}
@@ -26,8 +28,8 @@ services:
       timeout: 120s
 
 networks:
-  default:
-    name: ddev_default
+  ddev:
+    name: ddev
     external: true
 volumes:
   ddev-global-cache:
