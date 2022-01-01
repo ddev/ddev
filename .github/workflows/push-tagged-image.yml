@@ -18,8 +18,8 @@ env:
   REGISTRY: docker.io
   DOCKER_ORG: drud
   # github.repository as <account>/<repo>
-  IMAGE_TAG: "${DOCKER_ORG}/%${{ github.event.inputs.image }}:%${{ github.event.inputs.tag }}"
-
+#  IMAGE_TAG: "${{ env.DOCKER_ORG}}/%${{ github.event.inputs.image }}:%${{ github.event.inputs.tag }}"
+  IMAGE_TAG: junk
 jobs:
   push-tagged-image:
     name: "push tagged image"
@@ -41,7 +41,7 @@ jobs:
       uses: docker/build-push-action@v2.7.0
       with:
         context: containers/%${{ github.event.inputs.image }}
-        tags: $DOCKER_ORG/%${{ github.event.inputs.image }}:%${{ github.event.inputs.tag }}
+        tags: ${{ env.IMAGE_TAG }}
         labels: ${{ steps.meta.outputs.labels }}
         platforms: linux/amd64,linux/arm64
         push: true
