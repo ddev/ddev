@@ -705,6 +705,8 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	}
 	assert := asrt.New(t)
 
+	origDir, _ := os.Getwd()
+
 	phpVersions := nodeps.ValidPHPVersions
 
 	// Most of the time there's no reason to do all versions of PHP
@@ -724,8 +726,29 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		listenPort = "127.0.0.1:9000"
 	}
 
-	site := TestSites[0]
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
+	projDir := testcommon.CreateTmpDir(t.Name())
+	app, err := ddevapp.NewApp(projDir, false)
+	require.NoError(t, err)
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	// Create the simplest possible php file
+	err = fileutil.TemplateStringToFile("<?php\necho \"hi there\";\n", nil, filepath.Join(app.AppRoot, "index.php"))
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err := os.Chdir(origDir)
+		assert.NoError(err)
+		err = os.RemoveAll(projDir)
+		assert.NoError(err)
+	})
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", app.Name, t.Name()))
+
+	_ = os.Chdir(app.AppRoot)
+
+	testcommon.ClearDockerEnv()
 
 	phpKeys := make([]string, 0, len(phpVersions))
 	for k := range phpVersions {
@@ -736,26 +759,11 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		return phpKeys[b] < phpKeys[a]
 	})
 
-	err := app.Init(site.Dir)
-	require.NoError(t, err)
-	err = fileutil.AppendStringToFile(filepath.Join(site.Dir, site.Docroot, "phpinfo.php"), "<?php\nphpinfo();\n")
-	require.NoError(t, err)
-	//curlURL := app.GetPrimaryURL() + "/phpinfo.php"
-
-	t.Cleanup(func() {
-		app.XdebugEnabled = false
-		app.PHPVersion = nodeps.PHPDefault
-		err = app.WriteConfig()
-		assert.NoError(err)
-		err = app.Stop(true, false)
-		assert.NoError(err)
-	})
-
 	for _, v := range phpKeys {
 		app.PHPVersion = v
 		t.Logf("Beginning XDebug checks with XDebug php%s\n", v)
 
-		err = app.Start()
+		err = app.Restart()
 		require.NoError(t, err)
 
 		opts := &ddevapp.ExecOpts{
@@ -791,6 +799,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		// Start a listener on port 9000 of localhost (where PHPStorm or whatever would listen)
 		listener, err := net.Listen("tcp", listenPort)
 		require.NoError(t, err)
+		time.Sleep(time.Second * 1)
 
 		acceptListenDone := make(chan bool, 1)
 		defer close(acceptListenDone)
@@ -799,7 +808,13 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			time.Sleep(time.Second)
 			t.Logf("Curling to port 9000 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
 			// Curl to the project's index.php or anything else
-			_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetHTTPURL(), 10)
+			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL(), 12)
+			if err != nil {
+				t.Logf("time=%v got resp %v output %s: %v", time.Now(), resp, out, err)
+				if resp != nil {
+					t.Logf("resp code=%v", resp.StatusCode)
+				}
+			}
 		}()
 
 		// Accept is blocking, no way to timeout, so use
@@ -808,6 +823,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		go func() {
 			t.Logf("Attempting accept of port 9000 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
 
+			// Accept the listen on 9000 coming in from in-container php-xdebug
 			conn, err := listener.Accept()
 			assert.NoError(err)
 			if err == nil {
@@ -830,7 +846,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		select {
 		case <-acceptListenDone:
 			fmt.Printf("Read from acceptListenDone at %v\n", time.Now())
-		case <-time.After(6 * time.Second):
+		case <-time.After(time.Second * 11):
 			t.Fatalf("Timed out waiting for accept/listen at %v, PHP version %v\n", time.Now(), v)
 		}
 	}
@@ -841,17 +857,26 @@ func TestDdevXdebugEnabled(t *testing.T) {
 func TestDdevXhprofEnabled(t *testing.T) {
 	assert := asrt.New(t)
 
+	origDir, _ := os.Getwd()
 	phpVersions := nodeps.ValidPHPVersions
 
-	app := &ddevapp.DdevApp{}
 	testcommon.ClearDockerEnv()
 
-	site := TestSites[0]
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
+	projDir := testcommon.CreateTmpDir(t.Name())
+	app, err := ddevapp.NewApp(projDir, false)
+	require.NoError(t, err)
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	// Create the simplest possible php file
+	err = fileutil.TemplateStringToFile("<?php\nphpinfo();\n", nil, filepath.Join(app.AppRoot, "index.php"))
+	require.NoError(t, err)
+
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", app.Name, t.Name()))
 
 	// Does not work with php5.6 anyway (SEGV), for resource conservation
 	// skip older unsupported versions
-	for _, k := range []string{"5.6", "7.0", "7.1"} {
+	for _, k := range []string{"5.6", "7.0", "7.1", "7.2"} {
 		delete(phpVersions, k)
 	}
 	phpKeys := make([]string, 0, len(phpVersions))
@@ -860,20 +885,15 @@ func TestDdevXhprofEnabled(t *testing.T) {
 	}
 	sort.Strings(phpKeys)
 
-	err := app.Init(site.Dir)
-	assert.NoError(err)
-
-	phpInfoFile := path.Join(app.AppRoot, app.Docroot, "phpinfo.php")
-	err = os.WriteFile(phpInfoFile, []byte("<?php phpinfo();"), 0755)
+	err = app.Init(app.AppRoot)
 	require.NoError(t, err)
+
 	t.Cleanup(func() {
-		app.PHPVersion = nodeps.PHPDefault
-		app.WebserverType = nodeps.WebserverDefault
-		err = os.Remove(phpInfoFile)
-		assert.NoError(err)
-		err = app.WriteConfig()
-		assert.NoError(err)
 		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = os.RemoveAll(projDir)
 		assert.NoError(err)
 	})
 
@@ -890,7 +910,7 @@ func TestDdevXhprofEnabled(t *testing.T) {
 			fmt.Printf("Attempting XHProf checks with XHProf PHP%s\n", v)
 			app.PHPVersion = v
 
-			err = app.Start()
+			err = app.Restart()
 			require.NoError(t, err)
 
 			stdout, _, err := app.Exec(&ddevapp.ExecOpts{
@@ -917,9 +937,9 @@ func TestDdevXhprofEnabled(t *testing.T) {
 			}
 			assert.Contains(stdout, "xhprof.output_dir", "xhprof is not enabled for %s", v)
 
-			// Dummy hit on phpinfo.php to avoid M1 "connection reset by peer"
-			_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL()+"/phpinfo.php", 1)
-			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL()+"/phpinfo.php", 1)
+			// Dummy hit to avoid M1 "connection reset by peer"
+			_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), 1)
+			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), 1)
 			assert.NoError(err, "Failed to get base URL webserver_type=%s, php_version=%s", webserverKey, v)
 			assert.Contains(out, "module_xhprof")
 
