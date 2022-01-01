@@ -43,12 +43,12 @@ jobs:
         limit-access-to-actor: true
         github-token: ${{ secrets.GITHUB_TOKEN }}
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
-    - name: Push non-dbserver image
+    - name: Push ${{  github.event.inputs.image }} image
       if: github.event.inputs.image != 'ddev-dbserver'
       run: |
         cd "containers/${{ github.event.inputs.image }}"
         make push VERSION="${{ github.event.inputs.tag }}"
-    - name: Push ddev-dbserver image
+    - name: Push ${{  github.event.inputs.image }} ddev-dbserver image
       if: github.event.inputs.image == 'ddev-dbserver'
       run: |
         cd "containers/${{ github.event.inputs.image }}"
