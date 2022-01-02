@@ -1675,6 +1675,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 		t := time.Now()
 		snapshotName = app.Name + "_" + t.Format("20060102150405")
 	}
+	snapshotName = snapshotName + ".gz"
 
 	existingSnapshots, err := app.ListSnapshots()
 	if err != nil {
@@ -1686,19 +1687,18 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 
 	// Container side has to use path.Join instead of filepath.Join because they are
 	// targeted at the linux filesystem, so won't work with filepath on Windows
-	containerSnapshotDir := path.Join(containerSnapshotDirBase, snapshotName)
+	containerSnapshotDir := containerSnapshotDirBase
 
 	// Ensure that db container is up.
-	labels := map[string]string{"com.ddev.site-name": app.Name, "com.docker.compose.service": "db"}
-	_, err = dockerutil.ContainerWait(containerWaitTimeout, labels)
+	err = app.Wait([]string{"db"})
 	if err != nil {
-		return "", fmt.Errorf("unable to snapshot database, \nyour project %v is not running. \nPlease start the project if you want to snapshot it. \nIf deleting project, you can delete without a snapshot using \n'ddev delete --remove-data --yes', \nwhich will destroy your database", app.Name)
+		return "", fmt.Errorf("unable to snapshot database, \nyour db container in project %v is not running. \nPlease start the project if you want to snapshot it. \nIf deleting project, you can delete without a snapshot using \n'ddev delete --remove-data --yes', \nwhich will destroy your database", app.Name)
 	}
 
-	util.Warning("Creating database snapshot %s", snapshotName)
+	util.Success("Creating database snapshot %s", snapshotName)
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     fmt.Sprintf("$(/backuptool.sh) --backup --target-dir=%s --user=root --password=root --socket=/var/tmp/mysql.sock 2>/var/log/mariadbackup_backup_%s.log && cp /var/lib/mysql/db_mariadb_version.txt %s", containerSnapshotDir, snapshotName, containerSnapshotDir),
+		Cmd:     fmt.Sprintf(`$(/backuptool.sh) --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock | gzip > %s/%s 2>/var/log/mariadbackup_backup_%s.log`, containerSnapshotDir, snapshotName, snapshotName),
 	})
 
 	if err != nil {
@@ -1716,7 +1716,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 		// the host project's .ddev/db_snapshots directory
 		elapsed := util.TimeTrack(time.Now(), "CopySnapshotFromContainer")
 		// Copy snapshot back to the host
-		err = dockerutil.CopyFromContainer(GetContainerName(app, "db"), containerSnapshotDir, app.GetConfigPath("db_snapshots"))
+		err = dockerutil.CopyFromContainer(GetContainerName(app, "db"), path.Join(containerSnapshotDir, snapshotName), app.GetConfigPath("db_snapshots"))
 		if err != nil {
 			return "", err
 		}
@@ -1724,7 +1724,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	} else {
 		// But if we are using bind-mounts, we can just copy it to where the snapshot is
 		// mounted into the db container (/mnt/ddev_config/db_snapshots)
-		c := fmt.Sprintf("ls -l /mnt/ddev_config && id && mkdir -p /mnt/ddev_config/db_snapshots && ls -ld /mnt/ddev_config/db_snapshots && cp -r %s /mnt/ddev_config/db_snapshots", containerSnapshotDir)
+		c := fmt.Sprintf("ls -l /mnt/ddev_config && id && mkdir -p /mnt/ddev_config/db_snapshots && ls -ld /mnt/ddev_config/db_snapshots && cp -r %s/%s /mnt/ddev_config/db_snapshots", containerSnapshotDir, snapshotName)
 		uid, _, _ := util.GetContainerUIDGid()
 		stdout, stderr, err = dockerutil.Exec(dbContainer.ID, c, uid)
 		if err != nil {
@@ -1733,7 +1733,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	}
 
 	// Clean up the in-container dir that we just used
-	_, _, err = dockerutil.Exec(dbContainer.ID, "rm -rf "+containerSnapshotDir, "")
+	_, _, err = dockerutil.Exec(dbContainer.ID, fmt.Sprintf("rm -f %s/%s", containerSnapshotDir, snapshotName), "")
 	if err != nil {
 		return "", err
 	}
