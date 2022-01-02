@@ -142,7 +142,17 @@ func TestCustomCommands(t *testing.T) {
 	require.NoError(t, err)
 	for _, c := range []string{"testhostcmd", "testhostglobal", "testwebcmd", "testwebglobal"} {
 		out, err = exec.RunHostCommand(DdevBin, c, "hostarg1", "hostarg2", "--hostflag1")
-		assert.NoError(err, "Failed to run ddev %s: %v, output=%s", c, err, out)
+		if err != nil {
+			userHome, err := os.UserHomeDir()
+			assert.NoError(err)
+			globalDdevDir := globalconfig.GetGlobalDdevDir()
+			homeEnv := os.Getenv("HOME")
+			t.Errorf("userHome=%s, globalDdevDir=%s, homeEnv=%s", userHome, globalDdevDir, homeEnv)
+			t.Errorf("Failed to run ddev %s: %v, home=%s output=%s", c, err, userHome, out)
+			out, err = exec.RunHostCommand("ls", "-lR", globalDdevDir, "comamnds")
+			assert.NoError(err)
+			t.Errorf("Commands dir: %s", out)
+		}
 		expectedHost, _ := os.Hostname()
 		if !strings.Contains(c, "host") {
 			expectedHost = site.Name + "-web"
