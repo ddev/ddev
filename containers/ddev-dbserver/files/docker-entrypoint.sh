@@ -31,15 +31,23 @@ fi
 # If we have a restore_snapshot arg, get the snapshot directory
 # otherwise, fail and abort startup
 if [ $# = "2" -a "${1:-}" = "restore_snapshot" ] ; then
-  snapshot_dir="/mnt/snapshots/${2:-nothingthere}"
-  if [ -d "$snapshot_dir" ] ; then
-    echo "Restoring from snapshot directory $snapshot_dir"
+  snapshot_basename=${2:-nothingthere}
+  snapshot="/mnt/snapshots/${snapshot_basename}"
+  # If a gzipped snapshot is passed in, unzip it
+  if [ -f "$snapshot" -a ${snapshot_basename##*.} = "gz" ]; then
+    echo "Restoring from snapshot file $snapshot"
+    mkdir -p "/var/tmp/${snapshot_basename}"
+    cd "/var/tmp/${snapshot_basename}"
+    gunzip -c ${snapshot} | mbstream -x
+  # Otherwise use it as is from the direcotry
+  elif [ -d "$snapshot" ] ; then
+    echo "Restoring from snapshot directory $snapshot"
     # Ugly macOS .DS_Store in this directory can break the restore
-    find ${snapshot_dir} -name .DS_Store -print0 | xargs rm -f
+    find ${snapshot} -name .DS_Store -print0 | xargs rm -f
     rm -rf /var/lib/mysql/*
   else
-    echo "$snapshot_dir does not exist, not attempting restore of snapshot"
-    unset snapshot_dir
+    echo "$snapshot does not exist, not attempting restore of snapshot"
+    unset snapshot
     exit 101
   fi
 fi
@@ -59,10 +67,10 @@ if command -v xtrabackup; then BACKUPTOOL="xtrabackup"; fi
 if [ ! -f "/var/lib/mysql/db_mariadb_version.txt" ]; then
     # If snapshot_dir is not set, this is a normal startup, so
     # tell healthcheck to wait by touching /tmp/initializing
-    if [ -z "${snapshot_dir:-}" ] ; then
+    if [ -z "${snapshot:-}" ] ; then
       touch /tmp/initializing
     fi
-    target=${snapshot_dir:-/mysqlbase/}
+    target=${snapshot:-/mysqlbase/}
     name=$(basename $target)
     rm -rf /var/lib/mysql/* /var/lib/mysql/.[a-z]*
     ${BACKUPTOOL} --prepare --skip-innodb-use-native-aio --target-dir "$target" --user=root --password=root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_prepare_$name.log"

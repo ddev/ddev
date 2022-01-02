@@ -1840,12 +1840,12 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("failed to process pre-restore-snapshot hooks: %v", err)
 	}
 
-	currentDBVersion := nodeps.MariaDBDefaultVersion
-	if app.MariaDBVersion != "" {
-		currentDBVersion = app.MariaDBVersion
-	} else if app.MySQLVersion != "" {
-		currentDBVersion = app.MySQLVersion
-	}
+	//currentDBVersion := nodeps.MariaDBDefaultVersion
+	//if app.MariaDBVersion != "" {
+	//	currentDBVersion = app.MariaDBVersion
+	//} else if app.MySQLVersion != "" {
+	//	currentDBVersion = app.MySQLVersion
+	//}
 
 	snapshotDir := filepath.Join("db_snapshots", snapshotName)
 
@@ -1855,21 +1855,21 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	}
 
 	// Find out the mariadb version that correlates to the snapshot.
-	versionFile := filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")
+	//versionFile := filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")
 	var snapshotDBVersion string
-	if fileutil.FileExists(versionFile) {
-		snapshotDBVersion, err = fileutil.ReadFileIntoString(versionFile)
-		if err != nil {
-			return fmt.Errorf("unable to read the version file in the snapshot (%s): %v", versionFile, err)
-		}
-	} else {
-		snapshotDBVersion = "unknown"
-	}
+	//if fileutil.FileExists(versionFile) {
+	//	snapshotDBVersion, err = fileutil.ReadFileIntoString(versionFile)
+	//	if err != nil {
+	//		return fmt.Errorf("unable to read the version file in the snapshot (%s): %v", versionFile, err)
+	//	}
+	//} else {
+	//	snapshotDBVersion = "unknown"
+	//}
 	snapshotDBVersion = strings.Trim(snapshotDBVersion, " \r\n\t")
 
-	if snapshotDBVersion != currentDBVersion {
-		return fmt.Errorf("snapshot %s is a DB server %s snapshot and is not compatible with the configured ddev DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the ddev DB version", snapshotName, snapshotDBVersion, currentDBVersion)
-	}
+	//if snapshotDBVersion != currentDBVersion {
+	//	return fmt.Errorf("snapshot %s is a DB server %s snapshot and is not compatible with the configured ddev DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the ddev DB version", snapshotName, snapshotDBVersion, currentDBVersion)
+	//}
 
 	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SitePaused {
 		err := app.Stop(false, false)
