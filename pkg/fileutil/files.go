@@ -192,7 +192,7 @@ func FgrepStringInFile(fullPath string, needle string) (bool, error) {
 	return strings.Contains(fullFileString, needle), nil
 }
 
-// ListFilesInDir returns an array of files found in a directory
+// ListFilesInDir returns an array of files or directories found in a directory
 func ListFilesInDir(path string) ([]string, error) {
 	var fileList []string
 	dirEntrySlice, err := os.ReadDir(path)

@@ -1698,7 +1698,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	util.Success("Creating database snapshot %s", snapshotName)
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     fmt.Sprintf(`$(/backuptool.sh) --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock | gzip > %s/%s 2>/var/log/mariadbackup_backup_%s.log`, containerSnapshotDir, snapshotName, snapshotName),
+		Cmd:     fmt.Sprintf(`$(/backuptool.sh) --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/var/log/mariadbackup_backup_%s.log | gzip >"%s/%s"`, snapshotName, containerSnapshotDir, snapshotName),
 	})
 
 	if err != nil {
@@ -1823,7 +1823,7 @@ func (app *DdevApp) ListSnapshots() ([]string, error) {
 	})
 
 	for _, f := range files {
-		if f.IsDir() {
+		if f.IsDir() || strings.HasSuffix(f.Name(), ".gz") {
 			snapshots = append(snapshots, f.Name())
 		}
 	}
