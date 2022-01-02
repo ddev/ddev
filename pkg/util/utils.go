@@ -2,12 +2,12 @@ package util
 
 import (
 	"fmt"
-	"golang.org/x/text/runes"
-
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/text/runes"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 	"math"
@@ -290,4 +290,17 @@ func ColorizeText(s string, c string) (out string) {
 		out = text.FgYellow.Sprint(s)
 	}
 	return out
+}
+
+// Killall a process name on linux/macOS/windows.
+// Avoid this as it may have unintended consequences.
+func Killall(processName string) {
+	if runtime.GOOS == "windows" {
+		// Windows has a completely different process model, no SIGCHLD,
+		// no killing of subprocesses. I wasn't successful in finding a way
+		// to properly kill a process set using golang; rfay 20190622
+		_, _ = exec.RunHostCommand("TASKKILL", "/T", "/F", processName)
+	} else {
+		_, _ = exec.RunHostCommand("killall", processName)
+	}
 }
