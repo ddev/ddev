@@ -1760,25 +1760,23 @@ func (app *DdevApp) DeleteSnapshot(snapshotName string) error {
 		return fmt.Errorf("failed to process pre-delete-snapshot hooks: %v", err)
 	}
 
-	snapshotDir := path.Join("db_snapshots", snapshotName)
-	hostSnapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), snapshotDir)
+	snapshot := path.Join("db_snapshots", snapshotName)
+	hostSnapshot := app.GetConfigPath(snapshot)
 
-	if err = fileutil.PurgeDirectory(hostSnapshotDir); err != nil {
-		return fmt.Errorf("failed to purge contents of snapshot directory: %v", err)
+	if !fileutil.FileExists(hostSnapshot) {
+		return fmt.Errorf("No snapshot '%s' currently exists in project '%s'", snapshotName, app.Name)
+	}
+	if err = os.RemoveAll(hostSnapshot); err != nil {
+		return fmt.Errorf("failed to remove snapshot '%s': %v", hostSnapshot, err)
 	}
 
-	if err = os.Remove(hostSnapshotDir); err != nil {
-		return fmt.Errorf("failed to delete snapshot directory: %v", err)
-	}
-
-	util.Success("Deleted database snapshot %s in %s", snapshotName, hostSnapshotDir)
+	util.Success("Deleted database snapshot '%s'", snapshotName)
 	err = app.ProcessHooks("post-delete-snapshot")
 	if err != nil {
 		return fmt.Errorf("failed to process post-delete-snapshot hooks: %v", err)
 	}
 
 	return nil
-
 }
 
 // GetLatestSnapshot returns the latest created snapshot of a project
