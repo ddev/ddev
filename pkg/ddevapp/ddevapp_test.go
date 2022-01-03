@@ -1767,35 +1767,35 @@ func TestGetLatestSnapshot(t *testing.T) {
 
 	snapshots := []string{t.Name() + "_1", t.Name() + "_2", t.Name() + "_3"}
 	// Make three snapshots and compare the last
-	_, err = app.Snapshot(snapshots[0])
+	s1Name, err := app.Snapshot(snapshots[0])
 	assert.NoError(err)
-	_, err = app.Snapshot(snapshots[1])
+	s2Name, err := app.Snapshot(snapshots[1])
 	assert.NoError(err)
-	_, err = app.Snapshot(snapshots[2]) // last = latest
+	s3Name, err := app.Snapshot(snapshots[2]) // last = latest
 	assert.NoError(err)
 
 	latestSnapshot, err := app.GetLatestSnapshot()
 	assert.NoError(err)
-	assert.Equal(snapshots[2], latestSnapshot)
+	assert.Equal(s3Name, latestSnapshot)
 
-	// delete last latest
-	err = app.DeleteSnapshot(snapshots[2])
+	// delete last
+	err = app.DeleteSnapshot(s3Name)
 	assert.NoError(err)
 	latestSnapshot, err = app.GetLatestSnapshot()
 	assert.NoError(err)
-	assert.Equal(snapshots[1], latestSnapshot, "%s should be latest snapshot", snapshots[1])
+	assert.Equal(s2Name, latestSnapshot, "%s should be latest snapshot", snapshots[1])
 
-	// cleanup snapshots
-	err = app.DeleteSnapshot(snapshots[1])
+	// clean up snapshots
+	err = app.DeleteSnapshot(s2Name)
 	assert.NoError(err)
 	latestSnapshot, err = app.GetLatestSnapshot()
 	assert.NoError(err)
-	assert.Equal(snapshots[0], latestSnapshot, "%s should be latest snapshot", snapshots[0])
+	assert.Equal(s1Name, latestSnapshot, "%s should now be latest snapshot", s1Name)
 
-	err = app.DeleteSnapshot(snapshots[0])
+	err = app.DeleteSnapshot(s1Name)
 	assert.NoError(err)
 	latestSnapshot, _ = app.GetLatestSnapshot()
-	assert.NotEqual(snapshots[0], latestSnapshot)
+	assert.Equal("", latestSnapshot)
 
 	runTime()
 }
