@@ -1678,11 +1678,11 @@ func (app *DdevApp) Snapshot(baseSnapshotName string) (string, error) {
 	serverVersion := ""
 	switch {
 	case app.MySQLVersion != "":
-		serverVersion = "mysql-" + app.MySQLVersion
+		serverVersion = "mysql_" + app.MySQLVersion
 	case app.MariaDBVersion != "":
-		serverVersion = "mariadb-" + app.MariaDBVersion
+		serverVersion = "mariadb_" + app.MariaDBVersion
 	}
-	snapshotName := baseSnapshotName + "." + serverVersion + ".gz"
+	snapshotName := baseSnapshotName + "-" + serverVersion + ".gz"
 
 	existingSnapshots, err := app.ListSnapshots()
 	if err != nil {
@@ -1802,7 +1802,7 @@ func (app *DdevApp) ListSnapshots() ([]string, error) {
 	var err error
 	var snapshots []string
 
-	snapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), "db_snapshots")
+	snapshotDir := app.GetConfigPath("db_snapshots")
 
 	if !fileutil.FileExists(snapshotDir) {
 		return snapshots, nil
@@ -1847,41 +1847,68 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("failed to process pre-restore-snapshot hooks: %v", err)
 	}
 
-	//currentDBVersion := nodeps.MariaDBDefaultVersion
-	//if app.MariaDBVersion != "" {
-	//	currentDBVersion = app.MariaDBVersion
-	//} else if app.MySQLVersion != "" {
-	//	currentDBVersion = app.MySQLVersion
-	//}
-
-	snapshotDir := filepath.Join("db_snapshots", snapshotName)
-
-	hostSnapshotDir := filepath.Join(app.AppConfDir(), snapshotDir)
-	if !fileutil.FileExists(hostSnapshotDir) {
-		return fmt.Errorf("failed to find a snapshot in %s", hostSnapshotDir)
+	currentDBVersion := "mariadb_" + nodeps.MariaDBDefaultVersion
+	if app.MariaDBVersion != "" {
+		currentDBVersion = "mariadb_" + app.MariaDBVersion
+	} else if app.MySQLVersion != "" {
+		currentDBVersion = "mysql_" + app.MySQLVersion
 	}
 
-	// Find out the mariadb version that correlates to the snapshot.
-	//versionFile := filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")
-	var snapshotDBVersion string
-	//if fileutil.FileExists(versionFile) {
-	//	snapshotDBVersion, err = fileutil.ReadFileIntoString(versionFile)
-	//	if err != nil {
-	//		return fmt.Errorf("unable to read the version file in the snapshot (%s): %v", versionFile, err)
-	//	}
-	//} else {
-	//	snapshotDBVersion = "unknown"
-	//}
-	snapshotDBVersion = strings.Trim(snapshotDBVersion, " \r\n\t")
+	snapshotFileOrDir := filepath.Join("db_snapshots", snapshotName)
 
-	//if snapshotDBVersion != currentDBVersion {
-	//	return fmt.Errorf("snapshot %s is a DB server %s snapshot and is not compatible with the configured ddev DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the ddev DB version", snapshotName, snapshotDBVersion, currentDBVersion)
-	//}
+	hostSnapshotFileOrDir := app.GetConfigPath(snapshotFileOrDir)
+
+	if !fileutil.FileExists(hostSnapshotFileOrDir) {
+		return fmt.Errorf("failed to find a snapshot at %s", hostSnapshotFileOrDir)
+	}
+
+	snapshotDBVersion := ""
+	x := ""
+
+	// If the snapshot is a directory, (old obsolete style) then
+	// look for db_mariadb_version.txt in the directory to get the version.
+	if fileutil.IsDirectory(hostSnapshotFileOrDir) {
+		// Find out the mariadb version that correlates to the snapshot.
+		versionFile := filepath.Join(hostSnapshotFileOrDir, "db_mariadb_version.txt")
+		if fileutil.FileExists(versionFile) {
+			snapshotDBVersion, err = fileutil.ReadFileIntoString(versionFile)
+			if err != nil {
+				return fmt.Errorf("unable to read the version file in the snapshot (%s): %v", versionFile, err)
+			}
+			snapshotDBVersion = strings.Trim(snapshotDBVersion, "\r\n\t ")
+			snapshotDBVersion = fullDBFromVersion(snapshotDBVersion)
+			x = snapshotDBVersion
+		} else {
+			snapshotDBVersion = "unknown"
+		}
+	} else {
+		base := strings.TrimSuffix(snapshotName, ".gz")
+		parts := strings.Split(base, "-")
+		if len(parts) < 2 {
+			return fmt.Errorf("unable to determine database type/version from snapshot name %s", snapshotName)
+		}
+		snapshotDBVersion = parts[len(parts)-1]
+		if !(strings.HasPrefix(snapshotDBVersion, "mariadb_") || strings.HasPrefix(snapshotDBVersion, "mysql_")) {
+			return fmt.Errorf("unable to determine database type/version from snapshot name %s", snapshotName)
+		}
+	}
+	y := snapshotDBVersion
+	_ = x
+	_ = y
+
+	if snapshotDBVersion != currentDBVersion {
+		return fmt.Errorf("snapshot '%s' is a DB server '%s' snapshot and is not compatible with the configured ddev DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the ddev DB version", snapshotName, snapshotDBVersion, currentDBVersion)
+	}
 
 	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SitePaused {
-		err := app.Stop(false, false)
+		util.Success("Stopping db container for snapshot restore of '%s'...", snapshotName)
+		dbContainer, err := GetContainer(app, "db")
+		if err != nil || dbContainer == nil {
+			return fmt.Errorf("no container found for db; err=%v", err)
+		}
+		err = dockerutil.RemoveContainer(dbContainer.ID, 20)
 		if err != nil {
-			return fmt.Errorf("Failed to rm  project for RestoreSnapshot: %v", err)
+			return fmt.Errorf("failed to remove db container: %v", err)
 		}
 	}
 
@@ -1929,6 +1956,26 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("failed to process post-restore-snapshot hooks: %v", err)
 	}
 	return nil
+}
+
+// fullDBFromVersion takes just a mariadb or mysql version number
+// in x.xx format and returns something like mariadb-10.5
+func fullDBFromVersion(v string) string {
+	snapshotDBVersion := ""
+	// The old way (when we only had mariadb and then when had mariadb and also mysql)
+	// was to just have the version number and derive the database type from it,
+	// so that's what is going on here. But we create a string like "mariadb_10.3" from
+	// the version number
+	switch {
+	case v == "5.6" || v == "5.7" || v == "8.0":
+		snapshotDBVersion = "mysql_" + v
+
+	// 5.5 isn't actually necessarily correct, because could be
+	// mysql 5.5. But maria and mysql 5.5 databases were compatible anyway.
+	case v == "5.5" || v >= "10.0":
+		snapshotDBVersion = "mariadb_" + v
+	}
+	return snapshotDBVersion
 }
 
 // Stop stops and Removes the docker containers for the project in current directory.
