@@ -555,6 +555,31 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		return err
 	}
 
+	rowsImported := 0
+	for i := 0; i < 10; i++ {
+
+		stdout, _, err := app.Exec(&ExecOpts{
+			Cmd:     `mysqladmin -uroot -proot extended -r | awk -F'|' '/Innodb_rows_inserted/ {print $3}'`,
+			Service: "db",
+		})
+		if err != nil {
+			util.Warning("mysqladmin command failed: %v", err)
+		}
+		stdout = strings.Trim(stdout, "\r\n\t ")
+		newRowsImported, err := strconv.Atoi(stdout)
+		if err != nil {
+			util.Warning("Error converting '%s' to int", stdout)
+			break
+		}
+		// See if mysqld is still importing. If it is, sleep and try again
+		if newRowsImported == rowsImported {
+			break
+		} else {
+			rowsImported = newRowsImported
+			time.Sleep(time.Millisecond * 500)
+		}
+	}
+
 	_, err = app.CreateSettingsFile()
 	if err != nil {
 		util.Warning("A custom settings file exists for your application, so ddev did not generate one.")
