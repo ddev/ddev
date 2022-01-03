@@ -1663,7 +1663,7 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 
 // Snapshot causes a snapshot of the db to be written into the snapshots volume
 // Returns the name of the snapshot and err
-func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
+func (app *DdevApp) Snapshot(baseSnapshotName string) (string, error) {
 	containerSnapshotDirBase := "/var/tmp"
 
 	err := app.ProcessHooks("pre-snapshot")
@@ -1671,11 +1671,18 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 		return "", fmt.Errorf("failed to process pre-stop hooks: %v", err)
 	}
 
-	if snapshotName == "" {
+	if baseSnapshotName == "" {
 		t := time.Now()
-		snapshotName = app.Name + "_" + t.Format("20060102150405")
+		baseSnapshotName = app.Name + "_" + t.Format("20060102150405")
 	}
-	snapshotName = snapshotName + ".gz"
+	serverVersion := ""
+	switch {
+	case app.MySQLVersion != "":
+		serverVersion = "mysql-" + app.MySQLVersion
+	case app.MariaDBVersion != "":
+		serverVersion = "mariadb-" + app.MariaDBVersion
+	}
+	snapshotName := baseSnapshotName + "." + serverVersion + ".gz"
 
 	existingSnapshots, err := app.ListSnapshots()
 	if err != nil {
