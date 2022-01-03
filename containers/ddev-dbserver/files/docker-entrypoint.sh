@@ -52,7 +52,11 @@ if [ $# = "2" -a "${1:-}" = "restore_snapshot" ] ; then
   fi
 fi
 
-server_db_version=$(PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld -V 2>/dev/null | awk '{sub( /\.[0-9]+(-.*)?$/, "", $3); print $3 }')
+PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld -V 2>/dev/null  | awk '{print $3}' > /tmp/raw_mysql_version.txt
+# mysqld -V gives us the version in the form of 5.7.28-log for mysql or
+# 5.5.64-MariaDB-1~trusty for MariaDB. Detect database type and version and output
+# mysql-8.0 or mariadb-10.5.
+server_db_version=$(awk -F- '{ sub( /\.[0-9]+(-.*)?$/, "", $1); server_type="mysql"; if ($2 ~ /^MariaDB/) { server_type="mariadb" }; print server_type "-" $1 }' /tmp/raw_mysql_version.txt)
 
 # If we have extra mariadb cnf files,, copy them to where they go.
 if [ -d /mnt/ddev_config/mysql -a "$(echo /mnt/ddev_config/mysql/*.cnf)" != "/mnt/ddev_config/mysql/*.cnf" ] ; then
@@ -79,9 +83,10 @@ if [ ! -f "/var/lib/mysql/db_mariadb_version.txt" ]; then
     rm -f /tmp/initializing
 fi
 
+# db_mariadb_version.txt may be "mariadb-10.5" or "mysql-8.0" or old "10.0" or "8.0"
 database_db_version=$(cat /var/lib/mysql/db_mariadb_version.txt)
 
-if [ "${server_db_version}" != "${database_db_version}" ]; then
+if [ "${server_db_version##*-}" != "${database_db_version##*-}" ]; then
    echo "Starting with db server version=${server_db_version} but database was created with '${database_db_version}'."
    echo "Attempting upgrade, but it may not work, you may need to export your database, 'ddev delete --omit-snapshot', start, and reimport".
 
