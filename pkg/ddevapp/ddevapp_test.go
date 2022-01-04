@@ -1433,17 +1433,34 @@ func TestDdevAllDatabases(t *testing.T) {
 			snapshotName := dbType + "_" + v + "_" + fileutil.RandomFilenameBase()
 			fullSnapshotName, err := app.Snapshot(snapshotName)
 			assert.NoError(err, "could not create snapshot %s for version %s: %v output=%v", snapshotName, v, err, fullSnapshotName)
+
+			// Delete the user in the database so we can later verify snapshot restore
+			_, _, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     `echo "DELETE FROM users;" | mysql`,
+			})
+			assert.NoError(err)
+
 			err = app.RestoreSnapshot(fullSnapshotName)
 			assert.NoError(err, "could not restore snapshot %s for version %s: %v", fullSnapshotName, v, err)
 			if err != nil {
+				_ = app.Stop(true, false)
 				continue
 			}
 			// Make sure the version of db running matches expected
-			containerDBVersion, _, _ = app.Exec(&ddevapp.ExecOpts{
+			containerDBVersion, _, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
 				Cmd:     "cat /var/lib/mysql/db_mariadb_version.txt",
 			})
+			assert.NoError(err)
 			assert.Equal(dbType+"_"+v, strings.Trim(containerDBVersion, "\n\r "))
+
+			out, _, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
+			})
+			assert.NoError(err)
+			assert.Equal("2\n", out)
 
 			// TODO: Restore a snapshot from a different version note warning.
 

@@ -98,10 +98,14 @@ if [ ! -f "/var/lib/mysql/db_mariadb_version.txt" ]; then
     rm -f /tmp/initializing
 fi
 
-# db_mariadb_version.txt may be "mariadb-10.5" or "mysql-8.0" or old "10.0" or "8.0"
+# db_mariadb_version.txt may be "mariadb_10.5" or "mysql_8.0" or old "10.0" or "8.0"
 database_db_version=$(cat /var/lib/mysql/db_mariadb_version.txt)
+# If we have an old-style reference, like "10.5", prefix it with the database type
+if [ "${database_db_version#*_}" = "${database_db_version}" ]; then
+  database_db_version="${server_db_version%_*}_${database_db_version}"
+fi
 
-if [ "${server_db_version##*-}" != "${database_db_version##*-}" ]; then
+if [ "${server_db_version}" != "${database_db_version}" ]; then
    echo "Starting with db server version=${server_db_version} but database was created with '${database_db_version}'."
    echo "Attempting upgrade, but it may not work, you may need to export your database, 'ddev delete --omit-snapshot', start, and reimport".
 
