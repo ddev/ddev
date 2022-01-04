@@ -1430,18 +1430,20 @@ func TestDdevAllDatabases(t *testing.T) {
 			out := stdout()
 			assert.Contains(out, "Table structure for table `users`")
 
-			snapshotName := v + "_" + fileutil.RandomFilenameBase()
+			snapshotName := dbType + "_" + v + "_" + fileutil.RandomFilenameBase()
 			fullSnapshotName, err := app.Snapshot(snapshotName)
 			assert.NoError(err, "could not create snapshot %s for version %s: %v output=%v", snapshotName, v, err, fullSnapshotName)
 			err = app.RestoreSnapshot(fullSnapshotName)
 			assert.NoError(err, "could not restore snapshot %s for version %s: %v", fullSnapshotName, v, err)
-
+			if err != nil {
+				continue
+			}
 			// Make sure the version of db running matches expected
 			containerDBVersion, _, _ = app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
 				Cmd:     "cat /var/lib/mysql/db_mariadb_version.txt",
 			})
-			assert.Equal(v, strings.Trim(containerDBVersion, "\n\r "))
+			assert.Equal(dbType+"_"+v, strings.Trim(containerDBVersion, "\n\r "))
 
 			// TODO: Restore a snapshot from a different version note warning.
 
