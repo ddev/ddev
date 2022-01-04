@@ -1802,9 +1802,6 @@ func TestGetLatestSnapshot(t *testing.T) {
 
 // TestDdevRestoreSnapshot tests creating a snapshot and reverting to it.
 func TestDdevRestoreSnapshot(t *testing.T) {
-	if nodeps.IsMacM1() {
-		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
-	}
 
 	assert := asrt.New(t)
 	testDir, _ := os.Getwd()
@@ -1848,17 +1845,21 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = app.ImportDB(d7testerTest1Dump, "", false, false, "db")
 	require.NoError(t, err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
 
-	_, ensureErr := testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL(), "d7 tester test 1 has 1 node", 45)
-	assert.NoError(ensureErr)
+	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     `echo "SELECT title FROM node WHERE nid=1;" | mysql -N`,
+	})
+	assert.NoError(err)
+	assert.Contains(stdout, "d7 tester test 1 has 1 node")
 
 	// Make a snapshot of d7 tester test 1
-	snapshotName, err := app.Snapshot("d7testerTest1")
+	tester1Snapshot, err := app.Snapshot("d7testerTest1")
 	assert.NoError(err)
 
-	assert.EqualValues(snapshotName, "d7testerTest1")
+	assert.Contains(tester1Snapshot, "d7testerTest1")
 	latest, err := app.GetLatestSnapshot()
 	assert.NoError(err)
-	assert.Equal(snapshotName, latest)
+	assert.Equal(tester1Snapshot, latest)
 
 	assert.FileExists("hello-pre-snapshot-" + app.Name)
 	assert.FileExists("hello-post-snapshot-" + app.Name)
@@ -1868,25 +1869,24 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.NoError(err)
 
 	// Make sure duplicate snapshot name gives an error
-	_, err = app.Snapshot(snapshotName)
+	_, err = app.Snapshot("d7testerTest1")
 	assert.Error(err)
 
 	err = app.ImportDB(d7testerTest2Dump, "", false, false, "db")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest2Dump, err)
 
-	// This restart is to work around a persistent
-	// failure on Mac M1.
-	// "read: connection reset by peer"
-	//err = app.Restart()
-	//require.NoError(t, err)
-
-	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL(), "d7 tester test 2 has 2 nodes", 45)
-
-	snapshotName, err = app.Snapshot("d7testerTest2")
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     `echo "SELECT title FROM node WHERE nid=1;" | mysql -N`,
+	})
 	assert.NoError(err)
-	assert.EqualValues(snapshotName, "d7testerTest2")
+	assert.Contains(stdout, "d7 tester test 2 has 2 nodes")
+
+	tester2Snapshot, err := app.Snapshot("d7testerTest2")
+	assert.NoError(err)
+	assert.Contains(tester2Snapshot, "d7testerTest2")
 	latest, err = app.GetLatestSnapshot()
-	assert.Equal(snapshotName, latest)
+	assert.Equal(tester2Snapshot, latest)
 
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-restore-snapshot": {{"exec-host": "touch hello-post-restore-snapshot-" + app.Name}}, "pre-restore-snapshot": {{"exec-host": "touch hello-pre-restore-snapshot-" + app.Name}}}
 
@@ -1895,7 +1895,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	// Sleep to let sync happen if needed (M1 failure)
 	time.Sleep(2 * time.Second)
 
-	err = app.RestoreSnapshot("d7testerTest1")
+	err = app.RestoreSnapshot(tester1Snapshot)
 	assert.NoError(err)
 
 	assert.FileExists("hello-pre-restore-snapshot-" + app.Name)
@@ -1905,25 +1905,22 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = os.Remove("hello-post-restore-snapshot-" + app.Name)
 	assert.NoError(err)
 
-	// Dummy hit in advance to try to avoid M1 "connection reset by peer"
-	_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), 60)
-	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL(), "d7 tester test 1 has 1 node", 60)
-	err = app.RestoreSnapshot("d7testerTest2")
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     `echo "SELECT title FROM node WHERE nid=1;" | mysql -N`,
+	})
+	assert.NoError(err)
+	assert.Contains(stdout, "d7 tester test 1 has 1 node")
+
+	err = app.RestoreSnapshot(tester2Snapshot)
 	assert.NoError(err)
 
-	// Try a restart to work around "connection reset by peer" error on Mac M1
-	//err = app.Restart()
-	//assert.NoError(err)
-
-	body, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), 45)
-	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", app.GetPrimaryURL(), err)
-	assert.Contains(body, "d7 tester test 2 has 2 nodes")
-	if err != nil {
-		t.Logf("resp after timeout: %v", resp)
-		out, err := app.CaptureLogs("web", false, "")
-		assert.NoError(err)
-		t.Logf("web container logs after timeout: %s", out)
-	}
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     `echo "SELECT title FROM node WHERE nid=1;" | mysql -N`,
+	})
+	assert.NoError(err)
+	assert.Contains(stdout, "d7 tester test 2 has 2 nodes")
 
 	// Attempt a restore with a pre-mariadb_10.2 snapshot. It should fail and give a link.
 	oldSnapshotTarball, err := filepath.Abs(filepath.Join(testDir, "testdata", t.Name(), "restore_snapshot", "d7tester_test_1.snapshot_mariadb_10_1.tgz"))
@@ -2360,8 +2357,10 @@ func TestDdevLogs(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
-	//nolint: errcheck
-	defer app.Stop(true, false)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
 
 	startErr := app.StartAndWait(0)
 	if startErr != nil {

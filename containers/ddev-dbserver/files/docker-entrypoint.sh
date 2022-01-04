@@ -30,15 +30,15 @@ if [ ! -d /mnt/snapshots ]; then
 fi
 # If we have a restore_snapshot arg, get the snapshot directory
 # otherwise, fail and abort startup
-if [ $# = "2" -a "${1:-}" = "restore_snapshot" ] ; then
+if [ $# = "2" ] && [ "${1:-}" = "restore_snapshot" ] ; then
   snapshot_basename=${2:-nothingthere}
   snapshot="/mnt/snapshots/${snapshot_basename}"
   # If a gzipped snapshot is passed in, unzip it
-  if [ -f "$snapshot" -a ${snapshot_basename##*.} = "gz" ]; then
+  if [ -f "$snapshot" ] && [ "${snapshot_basename##*.}" = "gz" ]; then
     echo "Restoring from snapshot file $snapshot"
-    mkdir -p "/var/tmp/${snapshot_basename}"
-    cd "/var/tmp/${snapshot_basename}"
-    gunzip -c ${snapshot} | mbstream -x
+    target="/var/tmp/${snapshot_basename}"
+    mkdir -p "${target}"
+    rm -rf /var/lib/mysql/*
   # Otherwise use it as is from the direcotry
   elif [ -d "$snapshot" ] ; then
     echo "Restoring from snapshot directory $snapshot"
@@ -59,7 +59,7 @@ PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld -V 2>/dev/null  
 server_db_version=$(awk -F- '{ sub( /\.[0-9]+(-.*)?$/, "", $1); server_type="mysql"; if ($2 ~ /^MariaDB/) { server_type="mariadb" }; print server_type "-" $1 }' /tmp/raw_mysql_version.txt)
 
 # If we have extra mariadb cnf files,, copy them to where they go.
-if [ -d /mnt/ddev_config/mysql -a "$(echo /mnt/ddev_config/mysql/*.cnf)" != "/mnt/ddev_config/mysql/*.cnf" ] ; then
+if [ -d /mnt/ddev_config/mysql ] && [ "$(echo /mnt/ddev_config/mysql/*.cnf)" != "/mnt/ddev_config/mysql/*.cnf" ] ; then
   echo "!includedir /mnt/ddev_config/mysql" >/etc/mysql/conf.d/ddev.cnf
 fi
 
@@ -74,11 +74,20 @@ if [ ! -f "/var/lib/mysql/db_mariadb_version.txt" ]; then
     if [ -z "${snapshot:-}" ] ; then
       touch /tmp/initializing
     fi
-    target=${snapshot:-/mysqlbase/}
+    if [ "${target:-}" = "" ]; then
+      target=${snapshot:-/mysqlbase/}
+    fi
     name=$(basename $target)
+
+    if [ "${snapshot_basename:-}" != "" ] && [ "${snapshot_basename##*.}" = "gz" ]; then
+      cd "/var/tmp/${snapshot_basename}"
+      gunzip -c ${snapshot} | mbstream -x
+    fi
+
     rm -rf /var/lib/mysql/* /var/lib/mysql/.[a-z]*
     ${BACKUPTOOL} --prepare --skip-innodb-use-native-aio --target-dir "$target" --user=root --password=root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_prepare_$name.log"
     ${BACKUPTOOL} --copy-back --skip-innodb-use-native-aio --force-non-empty-directories --target-dir "$target" --user=root --password=root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_copy_back_$name.log"
+    echo $server_db_version >/var/lib/mysql/db_mariadb_version.txt
     echo "Database initialized from ${target}"
     rm -f /tmp/initializing
 fi
