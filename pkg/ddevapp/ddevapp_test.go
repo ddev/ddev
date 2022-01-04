@@ -1325,10 +1325,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		t.Log("Using limited set of database servers because GOTEST_SHORT is set")
 		dbVersions = map[string]map[string]bool{
 			"mariadb": {nodeps.MariaDB102: true, nodeps.MariaDB103: true},
-		}
-		// If we have any mysql, limit what we test (but there may not be any)
-		if len(dbVersions["mysql"]) != 0 {
-			dbVersions["mysql"] = map[string]bool{nodeps.MySQL80: true, nodeps.MySQL57: true}
+			"mysql":   {nodeps.MySQL80: true, nodeps.MySQL57: true},
 		}
 	}
 
@@ -1346,15 +1343,18 @@ func TestDdevAllDatabases(t *testing.T) {
 
 	// Make sure there isn't an old db laying around
 	_ = dockerutil.RemoveVolume(app.Name + "-mariadb")
-	//nolint: errcheck
-	defer func() {
-		_ = app.Stop(true, false)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
+		assert.NoError(err)
+
 		// Make sure we leave the config.yaml in expected state
 		app.MariaDBVersion = ""
 		app.MySQLVersion = ""
 		app.DBImage = ""
 		_ = app.WriteConfig()
-	}()
+	})
 
 	for dbType, versions := range dbVersions {
 		for v := range versions {
@@ -1382,7 +1382,7 @@ func TestDdevAllDatabases(t *testing.T) {
 				Service: "db",
 				Cmd:     "cat /var/lib/mysql/db_mariadb_version.txt",
 			})
-			assert.Equal(v, strings.Trim(containerDBVersion, "\n\r "))
+			assert.Equal(dbType+"_"+v, strings.Trim(containerDBVersion, "\n\r "))
 
 			importPath := filepath.Join(testDir, "testdata", t.Name(), "users.sql")
 			err = app.ImportDB(importPath, "", false, false, "db")
@@ -1431,10 +1431,10 @@ func TestDdevAllDatabases(t *testing.T) {
 			assert.Contains(out, "Table structure for table `users`")
 
 			snapshotName := v + "_" + fileutil.RandomFilenameBase()
-			output, err := app.Snapshot(snapshotName)
-			assert.NoError(err, "could not create snapshot %s for version %s: %v output=%v", snapshotName, v, err, output)
-			err = app.RestoreSnapshot(snapshotName)
-			assert.NoError(err, "could not restore snapshot %s for version %s: %v", snapshotName, v, err)
+			fullSnapshotName, err := app.Snapshot(snapshotName)
+			assert.NoError(err, "could not create snapshot %s for version %s: %v output=%v", snapshotName, v, err, fullSnapshotName)
+			err = app.RestoreSnapshot(fullSnapshotName)
+			assert.NoError(err, "could not restore snapshot %s for version %s: %v", fullSnapshotName, v, err)
 
 			// Make sure the version of db running matches expected
 			containerDBVersion, _, _ = app.Exec(&ddevapp.ExecOpts{
@@ -1715,6 +1715,8 @@ func TestDdevSnapshotCleanup(t *testing.T) {
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
+		err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
+		assert.NoError(err)
 	})
 
 	err = app.Start()
@@ -1758,6 +1760,8 @@ func TestGetLatestSnapshot(t *testing.T) {
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
+		err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
+		assert.NoError(err)
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 	})
@@ -1778,20 +1782,21 @@ func TestGetLatestSnapshot(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(s3Name, latestSnapshot)
 
-	// delete last
+	// delete snapshot 3
 	err = app.DeleteSnapshot(s3Name)
 	assert.NoError(err)
 	latestSnapshot, err = app.GetLatestSnapshot()
 	assert.NoError(err)
 	assert.Equal(s2Name, latestSnapshot, "%s should be latest snapshot", snapshots[1])
 
-	// clean up snapshots
+	// delete snapshot 2
 	err = app.DeleteSnapshot(s2Name)
 	assert.NoError(err)
 	latestSnapshot, err = app.GetLatestSnapshot()
 	assert.NoError(err)
 	assert.Equal(s1Name, latestSnapshot, "%s should now be latest snapshot", s1Name)
 
+	// delete snapshot 1 (should be last)
 	err = app.DeleteSnapshot(s1Name)
 	assert.NoError(err)
 	latestSnapshot, _ = app.GetLatestSnapshot()
