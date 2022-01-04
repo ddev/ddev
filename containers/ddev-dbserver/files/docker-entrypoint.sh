@@ -56,7 +56,7 @@ PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld -V 2>/dev/null  
 # mysqld -V gives us the version in the form of 5.7.28-log for mysql or
 # 5.5.64-MariaDB-1~trusty for MariaDB. Detect database type and version and output
 # mysql-8.0 or mariadb-10.5.
-server_db_version=$(awk -F- '{ sub( /\.[0-9]+(-.*)?$/, "", $1); server_type="mysql"; if ($2 ~ /^MariaDB/) { server_type="mariadb" }; print server_type "-" $1 }' /tmp/raw_mysql_version.txt)
+server_db_version=$(awk -F- '{ sub( /\.[0-9]+(-.*)?$/, "", $1); server_type="mysql"; if ($2 ~ /^MariaDB/) { server_type="mariadb" }; print server_type "_" $1 }' /tmp/raw_mysql_version.txt)
 
 # If we have extra mariadb cnf files,, copy them to where they go.
 if [ -d /mnt/ddev_config/mysql ] && [ "$(echo /mnt/ddev_config/mysql/*.cnf)" != "/mnt/ddev_config/mysql/*.cnf" ] ; then
