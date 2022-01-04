@@ -559,7 +559,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 	for i := 0; i < 10; i++ {
 
 		stdout, _, err := app.Exec(&ExecOpts{
-			Cmd:     `mysqladmin -uroot -proot extended -r | awk -F'|' '/Innodb_rows_inserted/ {print $3}'`,
+			Cmd:     `mysqladmin -uroot -proot extended -r 2>/dev/null | awk -F'|' '/Innodb_rows_inserted/ {print $3}'`,
 			Service: "db",
 		})
 		if err != nil {
@@ -1793,7 +1793,7 @@ func (app *DdevApp) DeleteSnapshot(snapshotName string) error {
 	hostSnapshot := app.GetConfigPath(snapshot)
 
 	if !fileutil.FileExists(hostSnapshot) {
-		return fmt.Errorf("No snapshot '%s' currently exists in project '%s'", snapshotName, app.Name)
+		return fmt.Errorf("no snapshot '%s' currently exists in project '%s'", snapshotName, app.Name)
 	}
 	if err = os.RemoveAll(hostSnapshot); err != nil {
 		return fmt.Errorf("failed to remove snapshot '%s': %v", hostSnapshot, err)
@@ -1890,7 +1890,6 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	}
 
 	snapshotDBVersion := ""
-	x := ""
 
 	// If the snapshot is a directory, (old obsolete style) then
 	// look for db_mariadb_version.txt in the directory to get the version.
@@ -1904,7 +1903,6 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 			}
 			snapshotDBVersion = strings.Trim(snapshotDBVersion, "\r\n\t ")
 			snapshotDBVersion = fullDBFromVersion(snapshotDBVersion)
-			x = snapshotDBVersion
 		} else {
 			snapshotDBVersion = "unknown"
 		}
@@ -1919,9 +1917,6 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 			return fmt.Errorf("unable to determine database type/version from snapshot name %s", snapshotName)
 		}
 	}
-	y := snapshotDBVersion
-	_ = x
-	_ = y
 
 	if snapshotDBVersion != currentDBVersion {
 		return fmt.Errorf("snapshot '%s' is a DB server '%s' snapshot and is not compatible with the configured ddev DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the ddev DB version", snapshotName, snapshotDBVersion, currentDBVersion)
@@ -1960,11 +1955,11 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	output.UserOut.Printf("Waiting for snapshot restore to complete...\nYou can also follow the restore progress in another terminal window with `ddev logs -s db -f %s`", app.Name)
 	// Now it's up, but we need to find out when it finishes loading.
 	for {
-		// We used to use killall mysqld here, but docker-compose v1.28+
-		// has a bug where it reports that kind of error on exit.
-		// See https://github.com/docker/compose/issues/8169
+		// We used to use killall -1 mysqld here
+		// also used to use "pidof mysqld", but apparently the
+		// server may not quite be ready when its pid appears
 		out, _, err := app.Exec(&ExecOpts{
-			Cmd:     "pidof mysqld || true",
+			Cmd:     `(echo "SHOW TABLES;" | mysql 2>/dev/null) || true`,
 			Service: "db",
 			Tty:     false,
 		})
