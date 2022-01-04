@@ -19,7 +19,7 @@ Then the additional packages will be built into the containers during `ddev star
 
 ### How to figure out what packages you need
 
-The web container is a Debian 11 Bullseye image, and its PHP distributions are packaged (thank you!) by [deb.sury.org](https://deb.sury.org/).
+The web container is a Debian image, and its PHP distributions are packaged (thank you!) by [deb.sury.org](https://deb.sury.org/).
 
 If you need a PHP extension, most PHP extensions are built in the deb.sury.org distribution. You can google the extension you want, or download and search the [Packages](https://packages.sury.org/php/dists/buster/main/binary-amd64/Packages) list from the sury distribution. For example, the "bcmath" PHP extension is provided by "php-bcmath". Many packages have version-specific names, for example `php7.3-tidy`.
 
