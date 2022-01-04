@@ -63,8 +63,14 @@ if [ -d /mnt/ddev_config/mysql ] && [ "$(echo /mnt/ddev_config/mysql/*.cnf)" != 
   echo "!includedir /mnt/ddev_config/mysql" >/etc/mysql/conf.d/ddev.cnf
 fi
 
+# We can't just switch on database type here, because early versions
+# of mariadb used xtrabackup
 export BACKUPTOOL=mariabackup
-if command -v xtrabackup; then BACKUPTOOL="xtrabackup"; fi
+export STREAMTOOL=mbstream
+if command -v xtrabackup >/dev/null 2>&1 ; then
+  BACKUPTOOL="xtrabackup"
+  STREAMTOOL="xbstream"
+fi
 
 # If mariadb has not been initialized, copy in the base image from either the default starter image (/mysqlbase)
 # or from a provided $snapshot_dir.
@@ -81,7 +87,7 @@ if [ ! -f "/var/lib/mysql/db_mariadb_version.txt" ]; then
 
     if [ "${snapshot_basename:-}" != "" ] && [ "${snapshot_basename##*.}" = "gz" ]; then
       cd "/var/tmp/${snapshot_basename}"
-      gunzip -c ${snapshot} | mbstream -x
+      gunzip -c ${snapshot} | ${STREAMTOOL} -x
     fi
 
     rm -rf /var/lib/mysql/* /var/lib/mysql/.[a-z]*

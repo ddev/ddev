@@ -1728,9 +1728,13 @@ func (app *DdevApp) Snapshot(baseSnapshotName string) (string, error) {
 	}
 
 	util.Success("Creating database snapshot %s", snapshotName)
+	streamTool := "mbstream"
+	if strings.HasPrefix(serverVersion, "mysql") {
+		streamTool = "xbstream"
+	}
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     fmt.Sprintf(`$(/backuptool.sh) --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/var/log/mariadbackup_backup_%s.log | gzip >"%s/%s"`, snapshotName, containerSnapshotDir, snapshotName),
+		Cmd:     fmt.Sprintf(`$(/backuptool.sh) --backup --stream=%s --user=root --password=root --socket=/var/tmp/mysql.sock  2>/var/log/mariadbackup_backup_%s.log | gzip >"%s/%s"`, streamTool, snapshotName, containerSnapshotDir, snapshotName),
 	})
 
 	if err != nil {
