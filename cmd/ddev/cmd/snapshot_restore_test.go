@@ -33,12 +33,6 @@ func TestCmdSnapshotRestore(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(out, "Created database snapshot test-snapshot")
 
-	// Ensure that a snapshot can be restored
-	args = []string{"snapshot", "restore", "test-snapshot"}
-	out, err = exec.RunCommand(DdevBin, args)
-	assert.NoError(err)
-	assert.Contains(out, "Restored database snapshot")
-
 	// Try interactive command
 	// Doesn't seem to work without pty, 2021-12-14
 	//if runtime.GOOS != "windows" {
