@@ -131,7 +131,8 @@ func Cleanup(app *DdevApp) error {
 		}
 	}
 	// Always kill the temporary volumes on ddev remove
-	vols := []string{app.GetNFSMountVolumeName(), app.Name + "-ddev-snapshots", app.Name + "-ddev-config"}
+	vols := []string{app.GetNFSMountVolumeName(), "ddev-" + app.Name + "-snapshots", app.Name + "-ddev-config"}
+
 	for _, volName := range vols {
 		_ = dockerutil.RemoveVolume(volName)
 	}

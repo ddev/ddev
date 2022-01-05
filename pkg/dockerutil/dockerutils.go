@@ -814,6 +814,14 @@ func RemoveContainer(id string, timeout uint) error {
 	return err
 }
 
+// RestartContainer stops and removes a container
+func RestartContainer(id string, timeout uint) error {
+	client := GetDockerClient()
+
+	err := client.RestartContainer(id, 20)
+	return err
+}
+
 // RemoveContainersByLabels removes all containers that match a set of labels
 func RemoveContainersByLabels(labels map[string]string) error {
 	client := GetDockerClient()

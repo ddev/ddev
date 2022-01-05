@@ -6,6 +6,16 @@ set -o pipefail
 SOCKET=/var/tmp/mysql.sock
 rm -f /tmp/healthy
 
+# We can't just switch on database type here, because early versions
+# of mariadb used xtrabackup
+export BACKUPTOOL=mariabackup
+export STREAMTOOL=mbstream
+if command -v xtrabackup >/dev/null 2>&1 ; then
+  BACKUPTOOL="xtrabackup"
+  STREAMTOOL="xbstream"
+fi
+
+
 # Wait for mysql server to be ready.
 function serverwait {
 	for i in {60..0};
@@ -28,18 +38,22 @@ function serverwait {
 if [ ! -d /mnt/snapshots ]; then
   ln -s /mnt/ddev_config/ddev_snapshots /mnt/snapshots
 fi
-# If we have a restore_snapshot arg, get the snapshot directory
+# If we have a restore_snapshot arg, get the snapshot file/directory
 # otherwise, fail and abort startup
 if [ $# = "2" ] && [ "${1:-}" = "restore_snapshot" ] ; then
   snapshot_basename=${2:-nothingthere}
   snapshot="/mnt/snapshots/${snapshot_basename}"
+  file ${snapshot}
+  ls -l ${snapshot}
   # If a gzipped snapshot is passed in, unzip it
   if [ -f "$snapshot" ] && [ "${snapshot_basename##*.}" = "gz" ]; then
     echo "Restoring from snapshot file $snapshot"
     target="/var/tmp/${snapshot_basename}"
     mkdir -p "${target}"
+    cd "${target}"
+    gunzip -c ${snapshot} | ${STREAMTOOL} -x
     rm -rf /var/lib/mysql/*
-  # Otherwise use it as is from the direcotry
+  # Otherwise use it as is from the directory
   elif [ -d "$snapshot" ] ; then
     echo "Restoring from snapshot directory $snapshot"
     # Ugly macOS .DS_Store in this directory can break the restore
@@ -63,14 +77,6 @@ if [ -d /mnt/ddev_config/mysql ] && [ "$(echo /mnt/ddev_config/mysql/*.cnf)" != 
   echo "!includedir /mnt/ddev_config/mysql" >/etc/mysql/conf.d/ddev.cnf
 fi
 
-# We can't just switch on database type here, because early versions
-# of mariadb used xtrabackup
-export BACKUPTOOL=mariabackup
-export STREAMTOOL=mbstream
-if command -v xtrabackup >/dev/null 2>&1 ; then
-  BACKUPTOOL="xtrabackup"
-  STREAMTOOL="xbstream"
-fi
 
 # If mariadb has not been initialized, copy in the base image from either the default starter image (/mysqlbase)
 # or from a provided $snapshot_dir.
@@ -85,14 +91,9 @@ if [ ! -f "/var/lib/mysql/db_mariadb_version.txt" ]; then
     fi
     name=$(basename $target)
 
-    if [ "${snapshot_basename:-}" != "" ] && [ "${snapshot_basename##*.}" = "gz" ]; then
-      cd "/var/tmp/${snapshot_basename}"
-      gunzip -c ${snapshot} | ${STREAMTOOL} -x
-    fi
-
     rm -rf /var/lib/mysql/* /var/lib/mysql/.[a-z]*
-    ${BACKUPTOOL} --prepare --skip-innodb-use-native-aio --target-dir "$target" --user=root --password=root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_prepare_$name.log"
-    ${BACKUPTOOL} --copy-back --skip-innodb-use-native-aio --force-non-empty-directories --target-dir "$target" --user=root --password=root --socket=$SOCKET 2>&1 | tee "/var/log/mariabackup_copy_back_$name.log"
+    ${BACKUPTOOL} --prepare --skip-innodb-use-native-aio --target-dir "$target" --user=root --password=root 2>&1 | tee "/var/log/mariabackup_prepare_$name.log"
+    ${BACKUPTOOL} --copy-back --skip-innodb-use-native-aio --force-non-empty-directories --target-dir "$target" --user=root --password=root 2>&1 | tee "/var/log/mariabackup_copy_back_$name.log"
     echo $server_db_version >/var/lib/mysql/db_mariadb_version.txt
     echo "Database initialized from ${target}"
     rm -f /tmp/initializing

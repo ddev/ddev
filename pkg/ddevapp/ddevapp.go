@@ -846,7 +846,7 @@ func (app *DdevApp) Start() error {
 	var err error
 
 	app.DockerEnv()
-	volumesNeeded := []string{"ddev-global-cache", app.Name + "-ddev-snapshots"}
+	volumesNeeded := []string{"ddev-global-cache", "ddev-" + app.Name + "-snapshots"}
 	for _, v := range volumesNeeded {
 		_, err = dockerutil.CreateVolume(v, "local", nil)
 		if err != nil {
@@ -1939,13 +1939,12 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	// With bind mounts, they'll already be there in the /mnt/ddev_config/db_snapshots folder
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
 		uid, _, _ := util.GetContainerUIDGid()
-		err = dockerutil.CopyIntoVolume(filepath.Join(app.GetConfigPath("db_snapshots"), snapshotName), app.Name+"-ddev-snapshots", snapshotName, uid, "", true)
+		err = dockerutil.CopyIntoVolume(filepath.Join(app.GetConfigPath("db_snapshots"), snapshotName), "ddev-"+app.Name+"-snapshots", "", uid, "", true)
 		if err != nil {
 			return err
 		}
 	}
-	err = os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "restore_snapshot "+snapshotName)
-	util.CheckErr(err)
+	_ = os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "restore_snapshot "+snapshotName)
 	err = app.Start()
 	if err != nil {
 		return fmt.Errorf("failed to start project for RestoreSnapshot: %v", err)
