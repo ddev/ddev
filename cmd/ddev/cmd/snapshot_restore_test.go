@@ -42,8 +42,7 @@ func TestCmdSnapshotRestore(t *testing.T) {
 	//}
 
 	// Ensure that latest snapshot can be restored
-	args = []string{"snapshot", "restore", "--latest"}
-	out, err = exec.RunCommand(DdevBin, args)
+	out, err = exec.RunHostCommand(DdevBin, "snapshot", "restore", "--latest")
 	assert.NoError(err)
 	assert.Contains(out, "Restored database snapshot")
 }
