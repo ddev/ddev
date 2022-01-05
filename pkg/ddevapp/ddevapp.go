@@ -1729,7 +1729,8 @@ func (app *DdevApp) Snapshot(baseSnapshotName string) (string, error) {
 
 	util.Success("Creating database snapshot %s", snapshotName)
 	streamTool := "mbstream"
-	if strings.HasPrefix(serverVersion, "mysql") {
+	// mbstream/mariadbackup don't make their appearance in mariadb until 10.2
+	if strings.HasPrefix(serverVersion, "mysql") || (serverVersion == "mariadb_5.5" || serverVersion == "mariadb_10.0" || serverVersion == "mariadb_10.1") {
 		streamTool = "xbstream"
 	}
 	stdout, stderr, err := app.Exec(&ExecOpts{
