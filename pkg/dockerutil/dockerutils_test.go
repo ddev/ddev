@@ -543,7 +543,7 @@ func TestCopyIntoVolume(t *testing.T) {
 
 	// Make sure that the content is the same, and that .test.sh is executable
 	// On Windows the upload can result in losing executable bit
-	mainContainerID, out, err := RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R .test.sh * && ./.test.sh"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil)
+	_, out, err := RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R .test.sh * && ./.test.sh"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil)
 	assert.NoError(err)
 	assert.Equal(`.test.sh
 root.txt
@@ -555,7 +555,7 @@ hi this is a test file
 
 	err = CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "somesubdir", "501", "", true)
 	assert.NoError(err)
-	subdirContainerID, out, err := RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + "/somesubdir  && pwd && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "0", true, false, nil)
+	_, out, err = RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + "/somesubdir  && pwd && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "0", true, false, nil)
 	assert.NoError(err)
 	assert.Equal(`/mnt/TestCopyIntoVolume/somesubdir
 .:
@@ -566,13 +566,14 @@ subdir1
 subdir1.txt
 `, out)
 
-	t.Cleanup(func() {
-		_ = RemoveContainer(mainContainerID, 0)
-		assert.NoError(err)
-		_ = RemoveContainer(subdirContainerID, 0)
-		err = RemoveVolume(t.Name())
-		assert.NoError(err)
-	})
+	// Now try just a file
+	err = CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name(), "root.txt"), t.Name(), "", "0", "", true)
+	assert.NoError(err)
+
+	// Make sure that the content is the same, and that .test.sh is executable
+	_, out, err = RunSimpleContainer(version.BusyboxImage, "", []string{"cat", "/mnt/" + t.Name() + "/root.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil)
+	assert.NoError(err)
+	assert.Equal("root.txt here\n", out)
 
 }
 
@@ -603,7 +604,7 @@ func TestGetDockerIP(t *testing.T) {
 	}
 }
 
-// TestCopyIntoContainer makes sure CopyIntoContainer copies a local directory into a specified
+// TestCopyIntoContainer makes sure CopyIntoContainer copies a local file or directory into a specified
 // path in container
 func TestCopyIntoContainer(t *testing.T) {
 	assert := asrt.New(t)
@@ -631,6 +632,13 @@ subdir1.txt
 hi this is a test file
 `, out)
 
+	// Now try just a file
+	err = CopyIntoContainer(filepath.Join(pwd, "testdata", t.Name(), "root.txt"), testContainerName, "/tmp", "")
+	require.NoError(t, err)
+
+	out, _, err = Exec(cid.ID, `cat /tmp/root.txt`, uid)
+	require.NoError(t, err)
+	assert.Equal("root.txt here\n", out)
 }
 
 // TestCopyFromContainer makes sure CopyFromContainer copies a container into a specified
