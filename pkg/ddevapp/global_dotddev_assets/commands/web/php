@@ -1,0 +1,7 @@
+#!/bin/bash
+
+## Description: Run php inside the web container
+## Usage: php [flags] [args]
+## Example: "ddev php --version"
+
+php "$@"
