@@ -1374,7 +1374,10 @@ func TestDdevAllDatabases(t *testing.T) {
 			if startErr != nil {
 				appLogs, err := ddevapp.GetErrLogsFromApp(app, startErr)
 				assert.NoError(err)
-				t.Fatalf("app.Start() failure %v; logs:\n=====\n%s\n=====\n", startErr, appLogs)
+				err = app.Stop(true, false)
+				assert.NoError(err)
+				t.Logf("Continuing/skippping %s_%s due to app.Start() failure %v; logs:\n=====\n%s\n=====\n", dbType, v, startErr, appLogs)
+				continue
 			}
 
 			// Make sure the version of db running matches expected
@@ -1433,6 +1436,11 @@ func TestDdevAllDatabases(t *testing.T) {
 			snapshotName := dbType + "_" + v + "_" + fileutil.RandomFilenameBase()
 			fullSnapshotName, err := app.Snapshot(snapshotName)
 			assert.NoError(err, "could not create snapshot %s for version %s: %v output=%v", snapshotName, v, err, fullSnapshotName)
+
+			fi, err := os.Stat(app.GetConfigPath(filepath.Join("db_snapshots", fullSnapshotName)))
+			require.NoError(t, err)
+			// make sure there's something in the snapshot
+			assert.Greater(fi.Size(), int64(1000), "snapshot seems to be empty")
 
 			// Delete the user in the database so we can later verify snapshot restore
 			_, _, err = app.Exec(&ddevapp.ExecOpts{
