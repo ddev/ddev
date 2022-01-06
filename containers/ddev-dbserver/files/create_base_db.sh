@@ -78,15 +78,24 @@ EOF
 fi
 
 
-rm -rf $OUTDIR/*
+rm -rf ${OUTDIR}/*
 
 backuptool=mariabackup
-if command -v xtrabackup; then backuptool="xtrabackup --datadir=/var/lib/mysql"; fi
-${backuptool} --backup --target-dir=$OUTDIR --user=root --password=root --socket=$SOCKET
+streamtool=xbstream
+if command -v xtrabackup; then
+  backuptool="xtrabackup --datadir=/var/lib/mysql";
+  streamtool=xbstream
+fi
 
 # Initialize with current mariadb_version
-my_mariadb_version=$(PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld -V 2>/dev/null | awk '{sub( /\.[0-9]+(-.*)?$/, "", $3); print $3 }')
-echo $my_mariadb_version >$OUTDIR/db_mariadb_version.txt
+PATH=$PATH:/usr/sbin:/usr/local/bin:/usr/local/mysql/bin mysqld -V 2>/dev/null  | awk '{print $3}' > /tmp/raw_mysql_version.txt
+# mysqld -V gives us the version in the form of 5.7.28-log for mysql or
+# 5.5.64-MariaDB-1~trusty for MariaDB. Detect database type and version and output
+# mysql-8.0 or mariadb-10.5.
+server_db_version=$(awk -F- '{ sub( /\.[0-9]+(-.*)?$/, "", $1); server_type="mysql"; if ($2 ~ /^MariaDB/) { server_type="mariadb" }; print server_type "_" $1 }' /tmp/raw_mysql_version.txt)
+echo ${server_db_version} >/var/lib/mysql/db_mariadb_version.txt
+${backuptool} --backup --stream=${streamtool} --user=root --password=root --socket=$SOCKET  | gzip >${OUTDIR}/base_db.gz
+rm -f /tmp/raw_mysql_version.txt
 
 if ! kill -s TERM "$pid" || ! wait "$pid"; then
 	echo >&2 'Database initialization process failed.'
