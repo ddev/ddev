@@ -5,7 +5,7 @@ import (
 	"github.com/drud/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"strings"
+	"os"
 	"testing"
 )
 
@@ -14,15 +14,21 @@ func TestCmdSnapshot(t *testing.T) {
 	assert := asrt.New(t)
 
 	site := TestSites[0]
-	cleanup := site.Chdir()
+	origDir, _ := os.Getwd()
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
 
 	app, err := ddevapp.NewApp(site.Dir, false)
 	assert.NoError(err)
 
 	t.Cleanup(func() {
 		// Make sure all databases are back to default empty
-		_ = app.Stop(true, false)
-		cleanup()
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
+		assert.NoError(err)
 	})
 
 	err = app.Start()
@@ -35,10 +41,8 @@ func TestCmdSnapshot(t *testing.T) {
 	// Ensure that a snapshot can be created
 	out, err := exec.RunHostCommand(DdevBin, "snapshot", "--name", "test-snapshot")
 	assert.NoError(err)
-	assert.Contains(out, "Created database snapshot test-snapshot")
-	parts := strings.Split(strings.Trim(out, " \n\r\t"), " ")
-	require.Len(t, parts, 7)
-	snapshotName := parts[6]
+	require.Contains(t, out, "Created database snapshot test-snapshot")
+	snapshotName := "test-snapshot-mariadb_" + app.MariaDBVersion + ".gz"
 
 	// Try to delete a not existing snapshot
 	out, err = exec.RunHostCommand(DdevBin, "snapshot", "--name", "not-existing-snapshot", "--cleanup", "--yes")
