@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       image:
-        description: 'Image to be pushed (base-webserver, ddev-webserver, etc)'
+        description: 'Image to be pushed (ddev-php-base, ddev-webserver, etc)'
         required: true
         default: ddev-webserver
       tag:
