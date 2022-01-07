@@ -1939,7 +1939,15 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	// With bind mounts, they'll already be there in the /mnt/ddev_config/db_snapshots folder
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
 		uid, _, _ := util.GetContainerUIDGid()
-		err = dockerutil.CopyIntoVolume(filepath.Join(app.GetConfigPath("db_snapshots"), snapshotName), "ddev-"+app.Name+"-snapshots", "", uid, "", true)
+
+		// If the snapshot is an old-style directory-based snapshot, then we have to copy into a subdirectory
+		// named for the snapshot
+		subdir := ""
+		if fileutil.IsDirectory(hostSnapshotFileOrDir) {
+			subdir = snapshotName
+		}
+
+		err = dockerutil.CopyIntoVolume(filepath.Join(app.GetConfigPath("db_snapshots"), snapshotName), "ddev-"+app.Name+"-snapshots", subdir, uid, "", true)
 		if err != nil {
 			return err
 		}
