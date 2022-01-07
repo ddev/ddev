@@ -54,6 +54,7 @@ if [ $# = "2" ] && [ "${1:-}" = "restore_snapshot" ] ; then
   # Otherwise use it as is from the directory
   elif [ -d "$snapshot" ] ; then
     echo "Restoring from snapshot directory $snapshot"
+    target="${snapshot}"
     # Ugly macOS .DS_Store in this directory can break the restore
     find ${snapshot} -name .DS_Store -print0 | xargs rm -f
     rm -rf /var/lib/mysql/*

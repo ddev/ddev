@@ -1834,41 +1834,41 @@ func TestGetLatestSnapshot(t *testing.T) {
 
 // TestDdevRestoreSnapshot tests creating a snapshot and reverting to it.
 func TestDdevRestoreSnapshot(t *testing.T) {
-
 	assert := asrt.New(t)
-	testDir, _ := os.Getwd()
-	app := &ddevapp.DdevApp{}
 
 	runTime := util.TimeTrack(time.Now(), t.Name())
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
 
 	d7testerTest1Dump, err := filepath.Abs(filepath.Join("testdata", t.Name(), "restore_snapshot", "d7tester_test_1.sql.gz"))
 	assert.NoError(err)
 	d7testerTest2Dump, err := filepath.Abs(filepath.Join("testdata", t.Name(), "restore_snapshot", "d7tester_test_2.sql.gz"))
 	assert.NoError(err)
 
-	// Use d7 only for this test, the key thing is the database interaction
-	site := FullTestSites[2]
-	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
-	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
-		err = site.Prepare()
-		require.NoError(t, err)
-	}
-
-	switchDir := site.Chdir()
-	defer switchDir()
-
 	testcommon.ClearDockerEnv()
 
-	err = app.Init(site.Dir)
+	app, err := ddevapp.NewApp(site.Dir, false)
 	require.NoError(t, err)
+	origMariaVersion := app.MariaDBVersion
+	origMysqlVersion := app.MySQLVersion
 
 	t.Cleanup(func() {
-		app.Hooks = nil
-		_ = app.WriteConfig()
 		err = app.Stop(true, false)
+		assert.NoError(err)
+
+		app.Hooks = nil
+		app.MariaDBVersion = origMariaVersion
+		app.MySQLVersion = origMysqlVersion
+		err = app.WriteConfig()
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
 		assert.NoError(err)
 	})
 
+	err = os.Chdir(app.AppRoot)
+	require.NoError(t, err)
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-snapshot": {{"exec-host": "touch hello-post-snapshot-" + app.Name}}, "pre-snapshot": {{"exec-host": "touch hello-pre-snapshot-" + app.Name}}}
 
 	err = app.Start()
@@ -1955,7 +1955,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.Contains(stdout, "d7 tester test 2 has 2 nodes")
 
 	// Attempt a restore with a pre-mariadb_10.2 snapshot. It should fail and give a link.
-	oldSnapshotTarball, err := filepath.Abs(filepath.Join(testDir, "testdata", t.Name(), "restore_snapshot", "d7tester_test_1.snapshot_mariadb_10_1.tgz"))
+	oldSnapshotTarball, err := filepath.Abs(filepath.Join(origDir, "testdata", t.Name(), "restore_snapshot", "d7tester_test_1.snapshot_mariadb_10_1.tgz"))
 	assert.NoError(err)
 
 	err = archive.Untar(oldSnapshotTarball, app.GetConfigPath("db_snapshots"), "")
@@ -1965,6 +1965,54 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.Error(err)
 	assert.Contains(err.Error(), "is not compatible")
 
+	// Make sure that we can use old-style directory-based snapshots
+	for dbDesc, dirSnapshot := range map[string]string{
+		"mariadb_10.3": "mariadb10.3-users",
+		"mysql_5.7":    "mysql5.7-users",
+	} {
+		oldSnapshotTarball, err = filepath.Abs(filepath.Join(origDir, "testdata", t.Name(), dirSnapshot+".tgz"))
+		assert.NoError(err)
+		fullsnapshotDir := filepath.Join(app.GetConfigPath("db_snapshots"), dirSnapshot)
+		err = os.MkdirAll(fullsnapshotDir, 0755)
+		require.NoError(t, err)
+		err = archive.Untar(oldSnapshotTarball, fullsnapshotDir, "")
+		assert.NoError(err)
+
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		parts := strings.Split(dbDesc, "_")
+		require.Equal(t, 2, len(parts))
+		dbType := parts[0]
+		dbVersion := parts[1]
+		switch dbType {
+		case "mariadb":
+			app.MariaDBVersion = dbVersion
+			app.MySQLVersion = ""
+		case "mysql":
+			app.MySQLVersion = dbVersion
+			app.MariaDBVersion = ""
+		default:
+			t.Failed()
+		}
+		err = app.Start()
+		assert.NoError(err)
+
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
+			Service: "db",
+			Cmd:     `echo "DROP TABLE IF EXISTS users;" | mysql`,
+		})
+		assert.NoError(err)
+
+		err = app.RestoreSnapshot(dirSnapshot)
+		assert.NoError(err)
+
+		stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+			Service: "db",
+			Cmd:     `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
+		})
+		assert.NoError(err)
+		assert.Equal(stdout, "2\n")
+	}
 	runTime()
 }
 
