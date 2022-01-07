@@ -21,6 +21,8 @@ on:
 env:
   REGISTRY: docker.io
   DOCKER_ORG: drud
+  TAG: "${{ github.event.inputs.tag }}"
+
 jobs:
   push-tagged-image:
     name: "push tagged image"
@@ -44,10 +46,15 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
     - name: Push ${{  github.event.inputs.image }} image
-      if: github.event.inputs.image != 'ddev-dbserver'
+      if: github.event.inputs.image != 'ddev-dbserver' && github.event.inputs.image != 'all'
       run: |
         cd "containers/${{ github.event.inputs.image }}"
         make push VERSION="${{ github.event.inputs.tag }}"
+    - name: Push ${{  github.event.inputs.image }} image
+      if: github.event.inputs.image == 'all'
+      run: |
+        cd "containers"
+        VERSION="${{ github.event.inputs.tag }}" ./push-all.sh
     - name: Push ${{  github.event.inputs.image }} ddev-dbserver image
       if: github.event.inputs.image == 'ddev-dbserver'
       run: |
