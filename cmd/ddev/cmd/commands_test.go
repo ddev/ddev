@@ -23,43 +23,48 @@ import (
 
 // TestCustomCommands does basic checks to make sure custom commands work OK.
 func TestCustomCommands(t *testing.T) {
-
 	assert := asrt.New(t)
 	runTime := util.TimeTrack(time.Now(), t.Name())
 
-	tmpHome := testcommon.CreateTmpDir(t.Name() + "-tempHome")
-	origHome := os.Getenv("HOME")
+	origDir, _ := os.Getwd()
+
+	origHome, err := os.UserHomeDir()
+	require.NoError(t, err)
+
 	if runtime.GOOS == "windows" {
 		origHome = os.Getenv("USERPROFILE")
 	}
 	origDebug := os.Getenv("DDEV_DEBUG")
+
+	site := TestSites[0]
+	err = os.Chdir(site.Dir)
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp("", false)
+	assert.NoError(err)
+
+	// Must be stopped before changing homedir or mutagen will lose track
+	// of sessions which are also tracked in the homedir.
+	err = app.Stop(true, false)
+	require.NoError(t, err)
+
+	tmpHome := testcommon.CreateTmpDir(t.Name() + "-tempHome")
+
 	// Change the homedir temporarily
 	_ = os.Setenv("HOME", tmpHome)
 	_ = os.Setenv("USERPROFILE", tmpHome)
 	_ = os.Setenv("DDEV_DEBUG", "")
 
 	// Make sure we have the .ddev/bin dir we need
-	err := fileutil.CopyDir(filepath.Join(origHome, ".ddev/bin"), filepath.Join(tmpHome, ".ddev/bin"))
+	err = fileutil.CopyDir(filepath.Join(origHome, ".ddev/bin"), filepath.Join(tmpHome, ".ddev/bin"))
 	require.NoError(t, err)
 
-	origDir, _ := os.Getwd()
-	testCustomCommandsDir := filepath.Join(origDir, "testdata", t.Name())
+	testdataCustomCommandsDir := filepath.Join(origDir, "testdata", t.Name())
 
-	site := TestSites[0]
-	err = os.Chdir(site.Dir)
-	require.NoError(t, err)
-
-	app, _ := ddevapp.NewApp("", false)
 	origType := app.Type
 	t.Cleanup(func() {
-		_, err := os.Stat(globalconfig.GetMutagenPath())
-		if err == nil {
-			out, err := exec.RunHostCommand(DdevBin, "debug", "mutagen", "daemon", "stop")
-			if err != nil {
-				t.Logf("mutagen daemon stop failed: %v, output=%s", err, string(out))
-			}
-		}
-
+		// Stop the mutagen daemon runnning in the bogus homedir
+		ddevapp.StopMutagenDaemon()
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 		runTime()
@@ -88,9 +93,9 @@ func TestCustomCommands(t *testing.T) {
 	assert.NoError(err)
 
 	projectCommandsDir := app.GetConfigPath("commands")
-	globalCommandsDir := app.GetConfigPath(".global_commands")
-	_ = os.RemoveAll(globalCommandsDir)
-	err = fileutil.CopyDir(filepath.Join(testCustomCommandsDir, "global_commands"), tmpHomeGlobalCommandsDir)
+	projectGlobalCommandsCopy := app.GetConfigPath(".global_commands")
+	_ = os.RemoveAll(projectGlobalCommandsCopy)
+	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "global_commands"), tmpHomeGlobalCommandsDir)
 	require.NoError(t, err)
 
 	assert.FileExists(filepath.Join(projectCommandsDir, "db", "mysql"))
@@ -104,7 +109,7 @@ func TestCustomCommands(t *testing.T) {
 	assert.Contains(out, "mysql client in db container")
 
 	// Test the `ddev mysql` command with stdin
-	inputFile := filepath.Join(testCustomCommandsDir, "select99.sql")
+	inputFile := filepath.Join(testdataCustomCommandsDir, "select99.sql")
 	f, err := os.Open(inputFile)
 	require.NoError(t, err)
 	t.Cleanup(func() {
@@ -117,14 +122,16 @@ func TestCustomCommands(t *testing.T) {
 	require.NoError(t, err, "Failed ddev mysql; output=%v", string(byteOut))
 	assert.Contains(string(byteOut), "99\n99\n")
 
-	_ = os.RemoveAll(projectCommandsDir)
-	_ = os.RemoveAll(globalCommandsDir)
-
-	// Now copy a project commands and global commands and make sure they show up and execute properly
-	err = fileutil.CopyDir(filepath.Join(testCustomCommandsDir, "project_commands"), projectCommandsDir)
+	err = os.RemoveAll(projectCommandsDir)
+	assert.NoError(err)
+	err = os.RemoveAll(projectGlobalCommandsCopy)
 	assert.NoError(err)
 
-	// Must sync our added commands before using them.
+	// Now copy a project commands and global commands and make sure they show up and execute properly
+	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "project_commands"), projectCommandsDir)
+	assert.NoError(err)
+
+	// Must sync our added in-container commands before using them.
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 
@@ -142,7 +149,17 @@ func TestCustomCommands(t *testing.T) {
 	require.NoError(t, err)
 	for _, c := range []string{"testhostcmd", "testhostglobal", "testwebcmd", "testwebglobal"} {
 		out, err = exec.RunHostCommand(DdevBin, c, "hostarg1", "hostarg2", "--hostflag1")
-		assert.NoError(err, "Failed to run ddev %s: %v, output=%s", c, err, out)
+		if err != nil {
+			userHome, err := os.UserHomeDir()
+			assert.NoError(err)
+			globalDdevDir := globalconfig.GetGlobalDdevDir()
+			homeEnv := os.Getenv("HOME")
+			t.Errorf("userHome=%s, globalDdevDir=%s, homeEnv=%s", userHome, globalDdevDir, homeEnv)
+			t.Errorf("Failed to run ddev %s: %v, home=%s output=%s", c, err, userHome, out)
+			out, err = exec.RunHostCommand("ls", "-lR", globalDdevDir, "comamnds")
+			assert.NoError(err)
+			t.Errorf("Commands dir: %s", out)
+		}
 		expectedHost, _ := os.Hostname()
 		if !strings.Contains(c, "host") {
 			expectedHost = site.Name + "-web"
@@ -219,7 +236,7 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err)
 	}
 
-	// Wordpress types should only be available for type drupal*
+	// WordPress types should only be available for type drupal*
 	app.Type = nodeps.AppTypeWordPress
 	_ = app.WriteConfig()
 	_, _ = exec.RunHostCommand(DdevBin)
@@ -230,9 +247,9 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err, "expected to find command %s for app.Type=%s", c, app.Type)
 	}
 
-	// Make sure that the non-command stuff we installed is in globalCommandsDir
+	// Make sure that the non-command stuff we installed has been copied into projectGlobalCommandsCopy
 	for _, f := range []string{".gitattributes", "db/mysqldump.example", "db/README.txt", "host/heidisql", "host/mysqlworkbench.example", "host/phpstorm.example", "host/README.txt", "host/sequelace", "host/sequelpro", "host/tableplus", "web/README.txt"} {
-		assert.FileExists(filepath.Join(globalCommandsDir, f))
+		assert.FileExists(filepath.Join(projectGlobalCommandsCopy, f))
 	}
 	// Make sure that the non-command stuff we installed is in project commands dir
 	for _, f := range []string{".gitattributes", "db/mysql", "db/README.txt", "host/launch", "host/README.txt", "host/solrtail.example", "solr/README.txt", "solr/solrtail.example", "web/README.txt", "web/xdebug"} {

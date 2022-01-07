@@ -37,14 +37,14 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 
 	projectCommandPath := app.GetConfigPath("commands")
 	// Make sure our target global command directory is empty
-	targetGlobalCommandPath := app.GetConfigPath(".global_commands")
-	err = os.RemoveAll(targetGlobalCommandPath)
+	copiedGlobalCommandPath := app.GetConfigPath(".global_commands")
+	err = os.RemoveAll(copiedGlobalCommandPath)
 	if err != nil {
-		util.Error("Unable to remove %s: %v", targetGlobalCommandPath, err)
+		util.Error("Unable to remove %s: %v", copiedGlobalCommandPath, err)
 		return nil
 	}
 
-	err = fileutil.CopyDir(sourceGlobalCommandPath, targetGlobalCommandPath)
+	err = fileutil.CopyDir(sourceGlobalCommandPath, copiedGlobalCommandPath)
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 	}
 
 	commandsAdded := map[string]int{}
-	for _, commandSet := range []string{projectCommandPath, targetGlobalCommandPath} {
+	for _, commandSet := range []string{projectCommandPath, copiedGlobalCommandPath} {
 		commandDirs, err := fileutil.ListFilesInDirFullPath(commandSet)
 		if err != nil {
 			return err
@@ -90,7 +90,6 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 
 				// If command has already been added, we won't work with it again.
 				if _, ok := commandsAdded[commandName]; ok {
-					util.Warning("Project-level command '%s' is overriding the global '%s' command", commandName, commandName)
 					continue
 				}
 
@@ -172,7 +171,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 
 				// Create proper description suffix
 				descSuffix := " (shell " + service + " container command)"
-				if commandSet == targetGlobalCommandPath {
+				if commandSet == copiedGlobalCommandPath {
 					descSuffix = " (global shell " + service + " container command)"
 				}
 

@@ -170,7 +170,7 @@ func init() {
 
 		err = addCustomCommands(RootCmd)
 		if err != nil {
-			util.Warning("Adding custom commands failed: %v", err)
+			util.Warning("Adding custom/shell commands failed: %v", err)
 		}
 	}
 }

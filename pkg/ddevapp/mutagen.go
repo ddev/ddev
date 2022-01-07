@@ -91,10 +91,7 @@ func SyncAndTerminateMutagenSession(app *DdevApp) error {
 		}
 	}
 	err = TerminateMutagenSync(app)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // GetMutagenConfigFilePath returns the canonical location where the mutagen.yml lives
@@ -302,7 +299,11 @@ func MutagenSyncExists(app *DdevApp) bool {
 	if !fileutil.FileExists(globalconfig.GetMutagenPath()) {
 		return false
 	}
-	_, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list", syncName)
+	c := []string{globalconfig.GetMutagenPath(), "sync", "list", syncName}
+	out, err := exec.RunHostCommand(c[0], c[1:]...)
+	if err != nil && !strings.Contains(out, "Error: unable to locate requested sessions") {
+		util.Warning("%v failed: %v output=%v", c, err, out)
+	}
 	return err == nil
 }
 

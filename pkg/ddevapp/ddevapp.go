@@ -982,6 +982,12 @@ func (app *DdevApp) Start() error {
 	}
 
 	if app.IsMutagenEnabled() {
+		// Must wait for web container to be healthy before fiddling with mutagen
+		err = app.Wait([]string{"web"})
+		if err != nil {
+			return fmt.Errorf("web container failed to become ready: %v", err)
+		}
+
 		mounted, err := IsMutagenVolumeMounted(app)
 		if err != nil {
 			return err
@@ -1001,7 +1007,7 @@ func (app *DdevApp) Start() error {
 		}
 		err = CreateMutagenSync(app)
 		if err != nil {
-			return errors.Errorf("Failed to create mutagen sync session %s. You may be able to resolve this problem with 'ddev stop %s && docker volume rm %s' (err=%v)", MutagenSyncName(app.Name), app.Name, GetMutagenVolumeName(app), err)
+			return errors.Errorf("Failed to create mutagen sync session %s. You may be able to resolve this problem 'ddev mutagen reset' (err=%v)", MutagenSyncName(app.Name), err)
 		}
 		mStatus, _, _, err := app.MutagenStatus()
 		if err != nil {
@@ -1952,7 +1958,10 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 	}
 
-	_ = SyncAndTerminateMutagenSession(app)
+	err = SyncAndTerminateMutagenSession(app)
+	if err != nil {
+		util.Warning("Unable to SyncAndterminateMutagenSession: %v", err)
+	}
 
 	if app.SiteStatus() == SiteRunning {
 		err = app.Pause()
