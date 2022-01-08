@@ -63,6 +63,24 @@ If you make changes to a docker image (like ddev-webserver), it won't have any e
 * Push a container to hub.docker.com. Push with the tag that matches your branch. Pushing to drud/ddev-webserver repo is easy to accomplish with `make push VERSION=<branchname>` **in the container directory**. You might have to use other techniques to push to another repo (`docker push`)
 * Update pkg/version/version.go with the WebImg and WebTag that relate to the docker image you pushed.
 
+## Pushing Docker Images
+
+### Local builds and pushes
+
+* For push, most of the images (except ddev-dbserver) will work with just `make push VERSION=<version>`
+* `ddev-dbserver` requires `make PUSH=true VERSION=<version>`
+* If you just want to work locally and do a quick build for your own architecture, you can:
+    * `make VERSION=<version>`
+    * for `ddev-dbserver`: `make mariadb_10.3_both VERSION=<version>` etc.
+
+### Pushes using GitHub Actions
+
+To manually push using GitHub Actions,
+
+* Visit [Actions->Push Tagged Image](https://github.com/drud/ddev/actions/workflows/push-tagged-image.yml)
+* Click "Run workflow" in the blue band near the top.
+* Choose the branch, usually `master` and then the image to be pushed, `ddev-webserver`, `ddev-dbserver`, etc. Also you can use `all` to build and push all of them. Include a tag for the pushed image and GitHub will do all the work.
+
 ## Building
 
 Build the project with `make` and your resulting executable will end up in .gotmp/bin/ddev (for Linux) or .gotmp/bin/windows_amd64/ddev.exe (for Windows) or .gotmp/bin/darwin/ddev (for macOS).

@@ -3,7 +3,7 @@
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV-Local)
-FROM drud/ddev-php-base:v1.18.2-alpha2 as ddev-webserver-base
+FROM drud/ddev-php-base:v1.19.0-alpha1 as ddev-webserver-base
 
 ENV BACKDROP_DRUSH_VERSION=1.4.0
 ENV MKCERT_VERSION=v1.4.6
@@ -19,17 +19,11 @@ ENV CAROOT /mnt/ddev-global-cache/mkcert
 ARG TARGETPLATFORM
 ARG BUILDPLATFORM
 
-RUN wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key && \
-    apt-key add /tmp/nginx_signing.key && \
-    rm /tmp/nginx_signing.key && \
-    echo "deb http://nginx.org/packages/debian/ $(lsb_release -sc) nginx" > /etc/apt/sources.list.d/nginx.list
-
 ADD ddev-webserver-etc-skel /
 RUN /sbin/mkhomedir_helper www-data
-RUN cp -r ~www-data/.[^.]* ~root/
 
 RUN apt-get -qq update
-RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y apache2 file libcap2-bin locales-all nginx supervisor
+RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y libcap2-bin locales-all supervisor
 
 # Arbitrary user needs to be able to bind to privileged ports (for nginx and apache2)
 RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/nginx
