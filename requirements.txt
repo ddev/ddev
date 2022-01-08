@@ -17,7 +17,7 @@ mkdocs-git-revision-date-localized-plugin==0.9
 mkdocs-material==7.3.3
 mkdocs-material-extensions==1.0.3
 mkdocs-minify-plugin==0.4.1
-nltk==3.6.5
+nltk==3.6.6
 packaging==20.9
 Pygments==2.8.1
 pymdown-extensions==9.0
