@@ -734,9 +734,9 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	// On macOS we want to just listen on localhost port, to not trigger
 	// firewall block. On other systems, just listen on all interfaces
-	listenPort := ":9000"
+	listenPort := ":9003"
 	if runtime.GOOS == "darwin" {
-		listenPort = "127.0.0.1:9000"
+		listenPort = "127.0.0.1:9003"
 	}
 
 	projDir := testcommon.CreateTmpDir(t.Name())
@@ -809,7 +809,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			assert.Contains(stdout, "xdebug.remote_host => host.docker.internal => host.docker.internal")
 		}
 
-		// Start a listener on port 9000 of localhost (where PHPStorm or whatever would listen)
+		// Start a listener on port 9003 of localhost (where PHPStorm or whatever would listen)
 		listener, err := net.Listen("tcp", listenPort)
 		require.NoError(t, err)
 		time.Sleep(time.Second * 1)
@@ -819,7 +819,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 		go func() {
 			time.Sleep(time.Second)
-			t.Logf("Curling to port 9000 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
+			t.Logf("Curling to port 9003 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
 			// Curl to the project's index.php or anything else
 			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL(), 12)
 			if err != nil {
@@ -834,15 +834,15 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		// goroutine instead.
 
 		go func() {
-			t.Logf("Attempting accept of port 9000 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
+			t.Logf("Attempting accept of port 9003 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
 
-			// Accept the listen on 9000 coming in from in-container php-xdebug
+			// Accept the listen on 9003 coming in from in-container php-xdebug
 			conn, err := listener.Accept()
 			assert.NoError(err)
 			if err == nil {
-				t.Logf("Completed accept of port 9000 with xdebug enabled, PHP version=%s, time=%v\n", v, time.Now())
+				t.Logf("Completed accept of port 9003 with xdebug enabled, PHP version=%s, time=%v\n", v, time.Now())
 			} else {
-				t.Logf("Failed accept on port 9000, err=%v", err)
+				t.Logf("Failed accept on port 9003, err=%v", err)
 				acceptListenDone <- true
 				return
 			}

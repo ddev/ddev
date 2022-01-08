@@ -73,5 +73,5 @@ ports:
   - port: 8027
     onOpen: ignore
   # xdebug port
-  - port: 9000
+  - port: 9003
     onOpen: ignore
