@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -18,8 +19,18 @@ var DebugDownloadImagesCmd = &cobra.Command{
 
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
-			util.Failed("Failed to debug download-images: %v", err)
+			util.Failed("No active project was found: %v", err)
 		}
+
+		_, err = dockerutil.DownloadDockerComposeIfNeeded()
+		if err != nil {
+			util.Warning("Unable to download docker-compose: %v", err)
+		}
+		err = ddevapp.DownloadMutagenIfNeeded(app)
+		if err != nil {
+			util.Warning("Unable to download mutagen: %v", err)
+		}
+
 		err = app.PullContainerImages()
 		if err != nil {
 			util.Failed("Failed to debug download-images: %v", err)
