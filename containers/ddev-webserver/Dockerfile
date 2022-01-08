@@ -21,7 +21,6 @@ ARG BUILDPLATFORM
 
 ADD ddev-webserver-etc-skel /
 RUN /sbin/mkhomedir_helper www-data
-RUN cp -r ~www-data/.[^.]* ~root/
 
 RUN apt-get -qq update
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y libcap2-bin locales-all supervisor
