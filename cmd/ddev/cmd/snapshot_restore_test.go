@@ -5,6 +5,7 @@ import (
 	"github.com/drud/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"os"
 	"testing"
 )
 
@@ -12,16 +13,21 @@ import (
 func TestCmdSnapshotRestore(t *testing.T) {
 	assert := asrt.New(t)
 
+	origDir, _ := os.Getwd()
 	site := TestSites[0]
-	cleanup := site.Chdir()
-
-	app, err := ddevapp.NewApp(site.Dir, false)
+	err := os.Chdir(site.Dir)
 	assert.NoError(err)
+	app, err := ddevapp.NewApp(site.Dir, false)
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		// Make sure all databases are back to default empty
-		_ = app.Stop(true, false)
-		cleanup()
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
+		assert.NoError(err)
 	})
 
 	err = app.Start()
@@ -33,12 +39,6 @@ func TestCmdSnapshotRestore(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(out, "Created database snapshot test-snapshot")
 
-	// Ensure that a snapshot can be restored
-	args = []string{"snapshot", "restore", "test-snapshot"}
-	out, err = exec.RunCommand(DdevBin, args)
-	assert.NoError(err)
-	assert.Contains(out, "Restored database snapshot")
-
 	// Try interactive command
 	// Doesn't seem to work without pty, 2021-12-14
 	//if runtime.GOOS != "windows" {
@@ -48,8 +48,7 @@ func TestCmdSnapshotRestore(t *testing.T) {
 	//}
 
 	// Ensure that latest snapshot can be restored
-	args = []string{"snapshot", "restore", "--latest"}
-	out, err = exec.RunCommand(DdevBin, args)
+	out, err = exec.RunHostCommand(DdevBin, "snapshot", "restore", "--latest")
 	assert.NoError(err)
 	assert.Contains(out, "Restored database snapshot")
 }

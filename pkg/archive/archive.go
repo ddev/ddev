@@ -67,7 +67,7 @@ func Ungzip(source string, destDirectory string) error {
 
 // Untar accepts a tar or tar.gz file and extracts the contents to the provided destination path.
 // extractionDir is the path at which extraction should start; nothing will be extracted except the contents of
-// extractionDir
+// extractionDir. If extranctionDir is empty, the entire tarball is extracted.
 func Untar(source string, dest string, extractionDir string) error {
 	var tf *tar.Reader
 	f, err := os.Open(source)

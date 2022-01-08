@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	exec2 "github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"io"
 	"log"
@@ -813,6 +814,14 @@ func RemoveContainer(id string, timeout uint) error {
 	return err
 }
 
+// RestartContainer stops and removes a container
+func RestartContainer(id string, timeout uint) error {
+	client := GetDockerClient()
+
+	err := client.RestartContainer(id, 20)
+	return err
+}
+
 // RemoveContainersByLabels removes all containers that match a set of labels
 func RemoveContainersByLabels(labels map[string]string) error {
 	client := GetDockerClient()
@@ -994,7 +1003,7 @@ func RemoveImage(tag string) error {
 	return nil
 }
 
-// CopyIntoVolume copies a directory on the host into a docker volume
+// CopyIntoVolume copies a file or directory on the host into a docker volume
 // sourcePath is the host-side full path
 // volumeName is the volume name to copy to
 // targetSubdir is where to copy it to on the volume
@@ -1010,12 +1019,9 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 	}
 	volPath := "/mnt/v"
 	targetSubdirFullPath := volPath + "/" + targetSubdir
-	fi, err := os.Stat(sourcePath)
+	_, err := os.Stat(sourcePath)
 	if err != nil {
 		return err
-	}
-	if !fi.IsDir() {
-		return fmt.Errorf("sourcePath '%s' must be a directory", sourcePath)
 	}
 
 	f, err := os.Open(sourcePath)
@@ -1254,15 +1260,25 @@ func IsColima() bool {
 	return false
 }
 
-// CopyIntoContainer copies a path into a specified container and location
+// CopyIntoContainer copies a path (file or directory) into a specified container and location
 func CopyIntoContainer(srcPath string, containerName string, dstPath string, exclusion string) error {
 	startTime := time.Now()
 	fi, err := os.Stat(srcPath)
 	if err != nil {
 		return err
 	}
+	// If a file has been passed in, we'll copy it into a temp directory
 	if !fi.IsDir() {
-		return fmt.Errorf("sourcePath '%s' must be a directory", srcPath)
+		dirName, err := os.MkdirTemp("", "")
+		if err != nil {
+			return err
+		}
+		defer os.RemoveAll(dirName)
+		err = fileutil.CopyFile(srcPath, filepath.Join(dirName, filepath.Base(srcPath)))
+		if err != nil {
+			return err
+		}
+		srcPath = dirName
 	}
 
 	client := GetDockerClient()

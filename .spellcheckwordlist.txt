@@ -259,6 +259,7 @@ gitignores
 gitter
 global
 gz
+gzipped
 h
 harm
 healthcheck

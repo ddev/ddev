@@ -656,23 +656,21 @@ The project database is stored in a docker volume, but can be snapshotted (and l
 
 ```bash
 ddev snapshot
-Creating database snapshot d8git_20180801132403
-Created database snapshot d8git_20180801132403 in /Users/rfay/workspace/d8git/.ddev/db_snapshots/d8git_20180801132403
-Created snapshot d8git_20180801132403
+Creating database snapshot d9_20220107124831-mariadb_10.3.gz
+Created database snapshot d9_20220107124831-mariadb_10.3.gz
 
-ddev snapshot restore d8git_20180801132403
-Restored database snapshot: /Users/rfay/workspace/d8git/.ddev/db_snapshots/d8git_20180801132403
+ddev snapshot restore d9_20220107124831-mariadb_10.3.gz
+Stopping db container for snapshot restore of 'd9_20220107124831-mariadb_10.3.gz'...
+Restored database snapshot d9_20220107124831-mariadb_10.3.gz
 ```
 
-Snapshots are stored in the project's .ddev/db_snapshots directory, and the directory created for a snapshot can be renamed as necessary. For example, if you rename the above d8git_20180801132403 directory to "working_before_migration", then you can use `ddev snapshot restore working_before_migration`.
+Snapshots are stored as gzipped files in the project's .ddev/db_snapshots directory, and the file created for a snapshot can be renamed as necessary. For example, if you rename the above d9_20220107124831-mariadb_10.3.gz file to "working-before-migration-mariadb_10.3.gz", then you can use `ddev snapshot restore working-before-migration-mariadb_10.3.gz`. (Note that the description of the database type and version (`mariadb_10.3` for example) must remain intact.)
 To restore the latest snapshot add the `--latest` flag (`ddev snapshot restore --latest`).
 
 All snapshots of a project can be removed with `ddev snapshot --cleanup`. A single snapshot can be removed by `ddev snapshot --cleanup --name <snapshot-name>`.
 
 To see all existing snapshots of a project use `ddev snapshot --list`.
-All existing snapshots of your system can be listed by adding the `--all` option to the command (`ddev snapshot --list --all`).
-
-There are some interesting consequences of restoring huge multi-gigabyte databases. Ddev may show the project as ready and started when in reality tables are still being loaded. You can see this behavior with `ddev logs -s db -f`.
+All existing snapshots of all projects can be listed by adding the `--all` option to the command (`ddev snapshot --list --all`).
 
 ## Interacting with your project
 

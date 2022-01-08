@@ -1325,10 +1325,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		t.Log("Using limited set of database servers because GOTEST_SHORT is set")
 		dbVersions = map[string]map[string]bool{
 			"mariadb": {nodeps.MariaDB102: true, nodeps.MariaDB103: true},
-		}
-		// If we have any mysql, limit what we test (but there may not be any)
-		if len(dbVersions["mysql"]) != 0 {
-			dbVersions["mysql"] = map[string]bool{nodeps.MySQL80: true, nodeps.MySQL57: true}
+			"mysql":   {nodeps.MySQL80: true, nodeps.MySQL57: true},
 		}
 	}
 
@@ -1346,15 +1343,18 @@ func TestDdevAllDatabases(t *testing.T) {
 
 	// Make sure there isn't an old db laying around
 	_ = dockerutil.RemoveVolume(app.Name + "-mariadb")
-	//nolint: errcheck
-	defer func() {
-		_ = app.Stop(true, false)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
+		assert.NoError(err)
+
 		// Make sure we leave the config.yaml in expected state
 		app.MariaDBVersion = ""
 		app.MySQLVersion = ""
 		app.DBImage = ""
 		_ = app.WriteConfig()
-	}()
+	})
 
 	for dbType, versions := range dbVersions {
 		for v := range versions {
@@ -1374,7 +1374,10 @@ func TestDdevAllDatabases(t *testing.T) {
 			if startErr != nil {
 				appLogs, err := ddevapp.GetErrLogsFromApp(app, startErr)
 				assert.NoError(err)
-				t.Fatalf("app.Start() failure %v; logs:\n=====\n%s\n=====\n", startErr, appLogs)
+				err = app.Stop(true, false)
+				assert.NoError(err)
+				t.Logf("Continuing/skippping %s_%s due to app.Start() failure %v; logs:\n=====\n%s\n=====\n", dbType, v, startErr, appLogs)
+				continue
 			}
 
 			// Make sure the version of db running matches expected
@@ -1382,7 +1385,7 @@ func TestDdevAllDatabases(t *testing.T) {
 				Service: "db",
 				Cmd:     "cat /var/lib/mysql/db_mariadb_version.txt",
 			})
-			assert.Equal(v, strings.Trim(containerDBVersion, "\n\r "))
+			assert.Equal(dbType+"_"+v, strings.Trim(containerDBVersion, "\n\r "))
 
 			importPath := filepath.Join(testDir, "testdata", t.Name(), "users.sql")
 			err = app.ImportDB(importPath, "", false, false, "db")
@@ -1430,18 +1433,42 @@ func TestDdevAllDatabases(t *testing.T) {
 			out := stdout()
 			assert.Contains(out, "Table structure for table `users`")
 
-			snapshotName := v + "_" + fileutil.RandomFilenameBase()
-			output, err := app.Snapshot(snapshotName)
-			assert.NoError(err, "could not create snapshot %s for version %s: %v output=%v", snapshotName, v, err, output)
-			err = app.RestoreSnapshot(snapshotName)
-			assert.NoError(err, "could not restore snapshot %s for version %s: %v", snapshotName, v, err)
+			snapshotName := dbType + "_" + v + "_" + fileutil.RandomFilenameBase()
+			fullSnapshotName, err := app.Snapshot(snapshotName)
+			assert.NoError(err, "could not create snapshot %s for version %s: %v output=%v", snapshotName, v, err, fullSnapshotName)
 
+			fi, err := os.Stat(app.GetConfigPath(filepath.Join("db_snapshots", fullSnapshotName)))
+			require.NoError(t, err)
+			// make sure there's something in the snapshot
+			assert.Greater(fi.Size(), int64(1000), "snapshot seems to be empty")
+
+			// Delete the user in the database so we can later verify snapshot restore
+			_, _, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     `echo "DELETE FROM users;" | mysql`,
+			})
+			assert.NoError(err)
+
+			err = app.RestoreSnapshot(fullSnapshotName)
+			assert.NoError(err, "could not restore snapshot %s for version %s: %v", fullSnapshotName, v, err)
+			if err != nil {
+				_ = app.Stop(true, false)
+				continue
+			}
 			// Make sure the version of db running matches expected
-			containerDBVersion, _, _ = app.Exec(&ddevapp.ExecOpts{
+			containerDBVersion, _, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
 				Cmd:     "cat /var/lib/mysql/db_mariadb_version.txt",
 			})
-			assert.Equal(v, strings.Trim(containerDBVersion, "\n\r "))
+			assert.NoError(err)
+			assert.Equal(dbType+"_"+v, strings.Trim(containerDBVersion, "\n\r "))
+
+			out, _, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
+			})
+			assert.NoError(err)
+			assert.Equal("2\n", out)
 
 			// TODO: Restore a snapshot from a different version note warning.
 
@@ -1715,6 +1742,8 @@ func TestDdevSnapshotCleanup(t *testing.T) {
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
+		err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
+		assert.NoError(err)
 	})
 
 	err = app.Start()
@@ -1758,6 +1787,8 @@ func TestGetLatestSnapshot(t *testing.T) {
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
+		err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
+		assert.NoError(err)
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 	})
@@ -1767,79 +1798,77 @@ func TestGetLatestSnapshot(t *testing.T) {
 
 	snapshots := []string{t.Name() + "_1", t.Name() + "_2", t.Name() + "_3"}
 	// Make three snapshots and compare the last
-	_, err = app.Snapshot(snapshots[0])
+	s1Name, err := app.Snapshot(snapshots[0])
 	assert.NoError(err)
-	_, err = app.Snapshot(snapshots[1])
+	s2Name, err := app.Snapshot(snapshots[1])
 	assert.NoError(err)
-	_, err = app.Snapshot(snapshots[2]) // last = latest
+	s3Name, err := app.Snapshot(snapshots[2]) // last = latest
 	assert.NoError(err)
 
 	latestSnapshot, err := app.GetLatestSnapshot()
 	assert.NoError(err)
-	assert.Equal(snapshots[2], latestSnapshot)
+	assert.Equal(s3Name, latestSnapshot)
 
-	// delete last latest
-	err = app.DeleteSnapshot(snapshots[2])
+	// delete snapshot 3
+	err = app.DeleteSnapshot(s3Name)
 	assert.NoError(err)
 	latestSnapshot, err = app.GetLatestSnapshot()
 	assert.NoError(err)
-	assert.Equal(snapshots[1], latestSnapshot, "%s should be latest snapshot", snapshots[1])
+	assert.Equal(s2Name, latestSnapshot, "%s should be latest snapshot", snapshots[1])
 
-	// cleanup snapshots
-	err = app.DeleteSnapshot(snapshots[1])
+	// delete snapshot 2
+	err = app.DeleteSnapshot(s2Name)
 	assert.NoError(err)
 	latestSnapshot, err = app.GetLatestSnapshot()
 	assert.NoError(err)
-	assert.Equal(snapshots[0], latestSnapshot, "%s should be latest snapshot", snapshots[0])
+	assert.Equal(s1Name, latestSnapshot, "%s should now be latest snapshot", s1Name)
 
-	err = app.DeleteSnapshot(snapshots[0])
+	// delete snapshot 1 (should be last)
+	err = app.DeleteSnapshot(s1Name)
 	assert.NoError(err)
 	latestSnapshot, _ = app.GetLatestSnapshot()
-	assert.NotEqual(snapshots[0], latestSnapshot)
+	assert.Equal("", latestSnapshot)
 
 	runTime()
 }
 
 // TestDdevRestoreSnapshot tests creating a snapshot and reverting to it.
 func TestDdevRestoreSnapshot(t *testing.T) {
-	if nodeps.IsMacM1() {
-		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
-	}
-
 	assert := asrt.New(t)
-	testDir, _ := os.Getwd()
-	app := &ddevapp.DdevApp{}
 
 	runTime := util.TimeTrack(time.Now(), t.Name())
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
 
 	d7testerTest1Dump, err := filepath.Abs(filepath.Join("testdata", t.Name(), "restore_snapshot", "d7tester_test_1.sql.gz"))
 	assert.NoError(err)
 	d7testerTest2Dump, err := filepath.Abs(filepath.Join("testdata", t.Name(), "restore_snapshot", "d7tester_test_2.sql.gz"))
 	assert.NoError(err)
 
-	// Use d7 only for this test, the key thing is the database interaction
-	site := FullTestSites[2]
-	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
-	if site.Dir == "" || !fileutil.FileExists(site.Dir) {
-		err = site.Prepare()
-		require.NoError(t, err)
-	}
-
-	switchDir := site.Chdir()
-	defer switchDir()
-
 	testcommon.ClearDockerEnv()
 
-	err = app.Init(site.Dir)
+	app, err := ddevapp.NewApp(site.Dir, false)
 	require.NoError(t, err)
+	origMariaVersion := app.MariaDBVersion
+	origMysqlVersion := app.MySQLVersion
 
 	t.Cleanup(func() {
-		app.Hooks = nil
-		_ = app.WriteConfig()
 		err = app.Stop(true, false)
+		assert.NoError(err)
+
+		app.Hooks = nil
+		app.MariaDBVersion = origMariaVersion
+		app.MySQLVersion = origMysqlVersion
+		err = app.WriteConfig()
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
 		assert.NoError(err)
 	})
 
+	err = os.Chdir(app.AppRoot)
+	require.NoError(t, err)
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-snapshot": {{"exec-host": "touch hello-post-snapshot-" + app.Name}}, "pre-snapshot": {{"exec-host": "touch hello-pre-snapshot-" + app.Name}}}
 
 	err = app.Start()
@@ -1848,17 +1877,21 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = app.ImportDB(d7testerTest1Dump, "", false, false, "db")
 	require.NoError(t, err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
 
-	_, ensureErr := testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL(), "d7 tester test 1 has 1 node", 45)
-	assert.NoError(ensureErr)
+	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     `echo "SELECT title FROM node WHERE nid=1;" | mysql -N`,
+	})
+	assert.NoError(err)
+	assert.Contains(stdout, "d7 tester test 1 has 1 node")
 
 	// Make a snapshot of d7 tester test 1
-	snapshotName, err := app.Snapshot("d7testerTest1")
+	tester1Snapshot, err := app.Snapshot("d7testerTest1")
 	assert.NoError(err)
 
-	assert.EqualValues(snapshotName, "d7testerTest1")
+	assert.Contains(tester1Snapshot, "d7testerTest1")
 	latest, err := app.GetLatestSnapshot()
 	assert.NoError(err)
-	assert.Equal(snapshotName, latest)
+	assert.Equal(tester1Snapshot, latest)
 
 	assert.FileExists("hello-pre-snapshot-" + app.Name)
 	assert.FileExists("hello-post-snapshot-" + app.Name)
@@ -1868,25 +1901,24 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.NoError(err)
 
 	// Make sure duplicate snapshot name gives an error
-	_, err = app.Snapshot(snapshotName)
+	_, err = app.Snapshot("d7testerTest1")
 	assert.Error(err)
 
 	err = app.ImportDB(d7testerTest2Dump, "", false, false, "db")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest2Dump, err)
 
-	// This restart is to work around a persistent
-	// failure on Mac M1.
-	// "read: connection reset by peer"
-	//err = app.Restart()
-	//require.NoError(t, err)
-
-	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL(), "d7 tester test 2 has 2 nodes", 45)
-
-	snapshotName, err = app.Snapshot("d7testerTest2")
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     `echo "SELECT title FROM node WHERE nid=1;" | mysql -N`,
+	})
 	assert.NoError(err)
-	assert.EqualValues(snapshotName, "d7testerTest2")
+	assert.Contains(stdout, "d7 tester test 2 has 2 nodes")
+
+	tester2Snapshot, err := app.Snapshot("d7testerTest2")
+	assert.NoError(err)
+	assert.Contains(tester2Snapshot, "d7testerTest2")
 	latest, err = app.GetLatestSnapshot()
-	assert.Equal(snapshotName, latest)
+	assert.Equal(tester2Snapshot, latest)
 
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-restore-snapshot": {{"exec-host": "touch hello-post-restore-snapshot-" + app.Name}}, "pre-restore-snapshot": {{"exec-host": "touch hello-pre-restore-snapshot-" + app.Name}}}
 
@@ -1895,7 +1927,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	// Sleep to let sync happen if needed (M1 failure)
 	time.Sleep(2 * time.Second)
 
-	err = app.RestoreSnapshot("d7testerTest1")
+	err = app.RestoreSnapshot(tester1Snapshot)
 	assert.NoError(err)
 
 	assert.FileExists("hello-pre-restore-snapshot-" + app.Name)
@@ -1905,28 +1937,25 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	err = os.Remove("hello-post-restore-snapshot-" + app.Name)
 	assert.NoError(err)
 
-	// Dummy hit in advance to try to avoid M1 "connection reset by peer"
-	_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), 60)
-	_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL(), "d7 tester test 1 has 1 node", 60)
-	err = app.RestoreSnapshot("d7testerTest2")
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     `echo "SELECT title FROM node WHERE nid=1;" | mysql -N`,
+	})
+	assert.NoError(err)
+	assert.Contains(stdout, "d7 tester test 1 has 1 node")
+
+	err = app.RestoreSnapshot(tester2Snapshot)
 	assert.NoError(err)
 
-	// Try a restart to work around "connection reset by peer" error on Mac M1
-	//err = app.Restart()
-	//assert.NoError(err)
-
-	body, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), 45)
-	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s: %v", app.GetPrimaryURL(), err)
-	assert.Contains(body, "d7 tester test 2 has 2 nodes")
-	if err != nil {
-		t.Logf("resp after timeout: %v", resp)
-		out, err := app.CaptureLogs("web", false, "")
-		assert.NoError(err)
-		t.Logf("web container logs after timeout: %s", out)
-	}
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     `echo "SELECT title FROM node WHERE nid=1;" | mysql -N`,
+	})
+	assert.NoError(err)
+	assert.Contains(stdout, "d7 tester test 2 has 2 nodes")
 
 	// Attempt a restore with a pre-mariadb_10.2 snapshot. It should fail and give a link.
-	oldSnapshotTarball, err := filepath.Abs(filepath.Join(testDir, "testdata", t.Name(), "restore_snapshot", "d7tester_test_1.snapshot_mariadb_10_1.tgz"))
+	oldSnapshotTarball, err := filepath.Abs(filepath.Join(origDir, "testdata", t.Name(), "restore_snapshot", "d7tester_test_1.snapshot_mariadb_10_1.tgz"))
 	assert.NoError(err)
 
 	err = archive.Untar(oldSnapshotTarball, app.GetConfigPath("db_snapshots"), "")
@@ -1936,6 +1965,54 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	assert.Error(err)
 	assert.Contains(err.Error(), "is not compatible")
 
+	// Make sure that we can use old-style directory-based snapshots
+	for dbDesc, dirSnapshot := range map[string]string{
+		"mariadb_10.3": "mariadb10.3-users",
+		"mysql_5.7":    "mysql5.7-users",
+	} {
+		oldSnapshotTarball, err = filepath.Abs(filepath.Join(origDir, "testdata", t.Name(), dirSnapshot+".tgz"))
+		assert.NoError(err)
+		fullsnapshotDir := filepath.Join(app.GetConfigPath("db_snapshots"), dirSnapshot)
+		err = os.MkdirAll(fullsnapshotDir, 0755)
+		require.NoError(t, err)
+		err = archive.Untar(oldSnapshotTarball, fullsnapshotDir, "")
+		assert.NoError(err)
+
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		parts := strings.Split(dbDesc, "_")
+		require.Equal(t, 2, len(parts))
+		dbType := parts[0]
+		dbVersion := parts[1]
+		switch dbType {
+		case "mariadb":
+			app.MariaDBVersion = dbVersion
+			app.MySQLVersion = ""
+		case "mysql":
+			app.MySQLVersion = dbVersion
+			app.MariaDBVersion = ""
+		default:
+			t.Failed()
+		}
+		err = app.Start()
+		assert.NoError(err)
+
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
+			Service: "db",
+			Cmd:     `echo "DROP TABLE IF EXISTS users;" | mysql`,
+		})
+		assert.NoError(err)
+
+		err = app.RestoreSnapshot(dirSnapshot)
+		assert.NoError(err)
+
+		stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+			Service: "db",
+			Cmd:     `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
+		})
+		assert.NoError(err)
+		assert.Equal(stdout, "2\n")
+	}
 	runTime()
 }
 
@@ -2360,8 +2437,10 @@ func TestDdevLogs(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
-	//nolint: errcheck
-	defer app.Stop(true, false)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
 
 	startErr := app.StartAndWait(0)
 	if startErr != nil {

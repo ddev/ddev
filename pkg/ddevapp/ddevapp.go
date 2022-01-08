@@ -555,6 +555,31 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		return err
 	}
 
+	rowsImported := 0
+	for i := 0; i < 10; i++ {
+
+		stdout, _, err := app.Exec(&ExecOpts{
+			Cmd:     `mysqladmin -uroot -proot extended -r 2>/dev/null | awk -F'|' '/Innodb_rows_inserted/ {print $3}'`,
+			Service: "db",
+		})
+		if err != nil {
+			util.Warning("mysqladmin command failed: %v", err)
+		}
+		stdout = strings.Trim(stdout, "\r\n\t ")
+		newRowsImported, err := strconv.Atoi(stdout)
+		if err != nil {
+			util.Warning("Error converting '%s' to int", stdout)
+			break
+		}
+		// See if mysqld is still importing. If it is, sleep and try again
+		if newRowsImported == rowsImported {
+			break
+		} else {
+			rowsImported = newRowsImported
+			time.Sleep(time.Millisecond * 500)
+		}
+	}
+
 	_, err = app.CreateSettingsFile()
 	if err != nil {
 		util.Warning("A custom settings file exists for your application, so ddev did not generate one.")
@@ -821,7 +846,7 @@ func (app *DdevApp) Start() error {
 	var err error
 
 	app.DockerEnv()
-	volumesNeeded := []string{"ddev-global-cache", app.Name + "-ddev-snapshots"}
+	volumesNeeded := []string{"ddev-global-cache", "ddev-" + app.Name + "-snapshots"}
 	for _, v := range volumesNeeded {
 		_, err = dockerutil.CreateVolume(v, "local", nil)
 		if err != nil {
@@ -1663,7 +1688,7 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 
 // Snapshot causes a snapshot of the db to be written into the snapshots volume
 // Returns the name of the snapshot and err
-func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
+func (app *DdevApp) Snapshot(baseSnapshotName string) (string, error) {
 	containerSnapshotDirBase := "/var/tmp"
 
 	err := app.ProcessHooks("pre-snapshot")
@@ -1671,10 +1696,18 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 		return "", fmt.Errorf("failed to process pre-stop hooks: %v", err)
 	}
 
-	if snapshotName == "" {
+	if baseSnapshotName == "" {
 		t := time.Now()
-		snapshotName = app.Name + "_" + t.Format("20060102150405")
+		baseSnapshotName = app.Name + "_" + t.Format("20060102150405")
 	}
+	serverVersion := ""
+	switch {
+	case app.MySQLVersion != "":
+		serverVersion = "mysql_" + app.MySQLVersion
+	case app.MariaDBVersion != "":
+		serverVersion = "mariadb_" + app.MariaDBVersion
+	}
+	snapshotName := baseSnapshotName + "-" + serverVersion + ".gz"
 
 	existingSnapshots, err := app.ListSnapshots()
 	if err != nil {
@@ -1686,19 +1719,23 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 
 	// Container side has to use path.Join instead of filepath.Join because they are
 	// targeted at the linux filesystem, so won't work with filepath on Windows
-	containerSnapshotDir := path.Join(containerSnapshotDirBase, snapshotName)
+	containerSnapshotDir := containerSnapshotDirBase
 
 	// Ensure that db container is up.
-	labels := map[string]string{"com.ddev.site-name": app.Name, "com.docker.compose.service": "db"}
-	_, err = dockerutil.ContainerWait(containerWaitTimeout, labels)
+	err = app.Wait([]string{"db"})
 	if err != nil {
-		return "", fmt.Errorf("unable to snapshot database, \nyour project %v is not running. \nPlease start the project if you want to snapshot it. \nIf deleting project, you can delete without a snapshot using \n'ddev delete --remove-data --yes', \nwhich will destroy your database", app.Name)
+		return "", fmt.Errorf("unable to snapshot database, \nyour db container in project %v is not running. \nPlease start the project if you want to snapshot it. \nIf deleting project, you can delete without a snapshot using \n'ddev delete --remove-data --yes', \nwhich will destroy your database", app.Name)
 	}
 
-	util.Warning("Creating database snapshot %s", snapshotName)
+	util.Success("Creating database snapshot %s", snapshotName)
+	streamTool := "mbstream"
+	// mbstream/mariadbackup don't make their appearance in mariadb until 10.2
+	if strings.HasPrefix(serverVersion, "mysql") || (serverVersion == "mariadb_5.5" || serverVersion == "mariadb_10.0" || serverVersion == "mariadb_10.1") {
+		streamTool = "xbstream"
+	}
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     fmt.Sprintf("$(/backuptool.sh) --backup --target-dir=%s --user=root --password=root --socket=/var/tmp/mysql.sock 2>/var/log/mariadbackup_backup_%s.log && cp /var/lib/mysql/db_mariadb_version.txt %s", containerSnapshotDir, snapshotName, containerSnapshotDir),
+		Cmd:     fmt.Sprintf(`$(/backuptool.sh) --backup --stream=%s --user=root --password=root --socket=/var/tmp/mysql.sock  2>/var/log/mariadbackup_backup_%s.log | gzip >"%s/%s"`, streamTool, snapshotName, containerSnapshotDir, snapshotName),
 	})
 
 	if err != nil {
@@ -1716,7 +1753,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 		// the host project's .ddev/db_snapshots directory
 		elapsed := util.TimeTrack(time.Now(), "CopySnapshotFromContainer")
 		// Copy snapshot back to the host
-		err = dockerutil.CopyFromContainer(GetContainerName(app, "db"), containerSnapshotDir, app.GetConfigPath("db_snapshots"))
+		err = dockerutil.CopyFromContainer(GetContainerName(app, "db"), path.Join(containerSnapshotDir, snapshotName), app.GetConfigPath("db_snapshots"))
 		if err != nil {
 			return "", err
 		}
@@ -1724,7 +1761,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	} else {
 		// But if we are using bind-mounts, we can just copy it to where the snapshot is
 		// mounted into the db container (/mnt/ddev_config/db_snapshots)
-		c := fmt.Sprintf("ls -l /mnt/ddev_config && id && mkdir -p /mnt/ddev_config/db_snapshots && ls -ld /mnt/ddev_config/db_snapshots && cp -r %s /mnt/ddev_config/db_snapshots", containerSnapshotDir)
+		c := fmt.Sprintf("ls -l /mnt/ddev_config && id && mkdir -p /mnt/ddev_config/db_snapshots && ls -ld /mnt/ddev_config/db_snapshots && cp -r %s/%s /mnt/ddev_config/db_snapshots", containerSnapshotDir, snapshotName)
 		uid, _, _ := util.GetContainerUIDGid()
 		stdout, stderr, err = dockerutil.Exec(dbContainer.ID, c, uid)
 		if err != nil {
@@ -1733,7 +1770,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	}
 
 	// Clean up the in-container dir that we just used
-	_, _, err = dockerutil.Exec(dbContainer.ID, "rm -rf "+containerSnapshotDir, "")
+	_, _, err = dockerutil.Exec(dbContainer.ID, fmt.Sprintf("rm -f %s/%s", containerSnapshotDir, snapshotName), "")
 	if err != nil {
 		return "", err
 	}
@@ -1753,25 +1790,23 @@ func (app *DdevApp) DeleteSnapshot(snapshotName string) error {
 		return fmt.Errorf("failed to process pre-delete-snapshot hooks: %v", err)
 	}
 
-	snapshotDir := path.Join("db_snapshots", snapshotName)
-	hostSnapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), snapshotDir)
+	snapshot := path.Join("db_snapshots", snapshotName)
+	hostSnapshot := app.GetConfigPath(snapshot)
 
-	if err = fileutil.PurgeDirectory(hostSnapshotDir); err != nil {
-		return fmt.Errorf("failed to purge contents of snapshot directory: %v", err)
+	if !fileutil.FileExists(hostSnapshot) {
+		return fmt.Errorf("no snapshot '%s' currently exists in project '%s'", snapshotName, app.Name)
+	}
+	if err = os.RemoveAll(hostSnapshot); err != nil {
+		return fmt.Errorf("failed to remove snapshot '%s': %v", hostSnapshot, err)
 	}
 
-	if err = os.Remove(hostSnapshotDir); err != nil {
-		return fmt.Errorf("failed to delete snapshot directory: %v", err)
-	}
-
-	util.Success("Deleted database snapshot %s in %s", snapshotName, hostSnapshotDir)
+	util.Success("Deleted database snapshot '%s'", snapshotName)
 	err = app.ProcessHooks("post-delete-snapshot")
 	if err != nil {
 		return fmt.Errorf("failed to process post-delete-snapshot hooks: %v", err)
 	}
 
 	return nil
-
 }
 
 // GetLatestSnapshot returns the latest created snapshot of a project
@@ -1795,7 +1830,7 @@ func (app *DdevApp) ListSnapshots() ([]string, error) {
 	var err error
 	var snapshots []string
 
-	snapshotDir := filepath.Join(filepath.Dir(app.ConfigPath), "db_snapshots")
+	snapshotDir := app.GetConfigPath("db_snapshots")
 
 	if !fileutil.FileExists(snapshotDir) {
 		return snapshots, nil
@@ -1823,7 +1858,7 @@ func (app *DdevApp) ListSnapshots() ([]string, error) {
 	})
 
 	for _, f := range files {
-		if f.IsDir() {
+		if f.IsDir() || strings.HasSuffix(f.Name(), ".gz") {
 			snapshots = append(snapshots, f.Name())
 		}
 	}
@@ -1840,41 +1875,63 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("failed to process pre-restore-snapshot hooks: %v", err)
 	}
 
-	currentDBVersion := nodeps.MariaDBDefaultVersion
+	currentDBVersion := "mariadb_" + nodeps.MariaDBDefaultVersion
 	if app.MariaDBVersion != "" {
-		currentDBVersion = app.MariaDBVersion
+		currentDBVersion = "mariadb_" + app.MariaDBVersion
 	} else if app.MySQLVersion != "" {
-		currentDBVersion = app.MySQLVersion
+		currentDBVersion = "mysql_" + app.MySQLVersion
 	}
 
-	snapshotDir := filepath.Join("db_snapshots", snapshotName)
+	snapshotFileOrDir := filepath.Join("db_snapshots", snapshotName)
 
-	hostSnapshotDir := filepath.Join(app.AppConfDir(), snapshotDir)
-	if !fileutil.FileExists(hostSnapshotDir) {
-		return fmt.Errorf("failed to find a snapshot in %s", hostSnapshotDir)
+	hostSnapshotFileOrDir := app.GetConfigPath(snapshotFileOrDir)
+
+	if !fileutil.FileExists(hostSnapshotFileOrDir) {
+		return fmt.Errorf("failed to find a snapshot at %s", hostSnapshotFileOrDir)
 	}
 
-	// Find out the mariadb version that correlates to the snapshot.
-	versionFile := filepath.Join(hostSnapshotDir, "db_mariadb_version.txt")
-	var snapshotDBVersion string
-	if fileutil.FileExists(versionFile) {
-		snapshotDBVersion, err = fileutil.ReadFileIntoString(versionFile)
-		if err != nil {
-			return fmt.Errorf("unable to read the version file in the snapshot (%s): %v", versionFile, err)
+	snapshotDBVersion := ""
+
+	// If the snapshot is a directory, (old obsolete style) then
+	// look for db_mariadb_version.txt in the directory to get the version.
+	if fileutil.IsDirectory(hostSnapshotFileOrDir) {
+		// Find out the mariadb version that correlates to the snapshot.
+		versionFile := filepath.Join(hostSnapshotFileOrDir, "db_mariadb_version.txt")
+		if fileutil.FileExists(versionFile) {
+			snapshotDBVersion, err = fileutil.ReadFileIntoString(versionFile)
+			if err != nil {
+				return fmt.Errorf("unable to read the version file in the snapshot (%s): %v", versionFile, err)
+			}
+			snapshotDBVersion = strings.Trim(snapshotDBVersion, "\r\n\t ")
+			snapshotDBVersion = fullDBFromVersion(snapshotDBVersion)
+		} else {
+			snapshotDBVersion = "unknown"
 		}
 	} else {
-		snapshotDBVersion = "unknown"
+		base := strings.TrimSuffix(snapshotName, ".gz")
+		parts := strings.Split(base, "-")
+		if len(parts) < 2 {
+			return fmt.Errorf("unable to determine database type/version from snapshot name %s", snapshotName)
+		}
+		snapshotDBVersion = parts[len(parts)-1]
+		if !(strings.HasPrefix(snapshotDBVersion, "mariadb_") || strings.HasPrefix(snapshotDBVersion, "mysql_")) {
+			return fmt.Errorf("unable to determine database type/version from snapshot name %s", snapshotName)
+		}
 	}
-	snapshotDBVersion = strings.Trim(snapshotDBVersion, " \r\n\t")
 
 	if snapshotDBVersion != currentDBVersion {
-		return fmt.Errorf("snapshot %s is a DB server %s snapshot and is not compatible with the configured ddev DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the ddev DB version", snapshotName, snapshotDBVersion, currentDBVersion)
+		return fmt.Errorf("snapshot '%s' is a DB server '%s' snapshot and is not compatible with the configured ddev DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the ddev DB version", snapshotName, snapshotDBVersion, currentDBVersion)
 	}
 
 	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SitePaused {
-		err := app.Stop(false, false)
+		util.Success("Stopping db container for snapshot restore of '%s'...", snapshotName)
+		dbContainer, err := GetContainer(app, "db")
+		if err != nil || dbContainer == nil {
+			return fmt.Errorf("no container found for db; err=%v", err)
+		}
+		err = dockerutil.RemoveContainer(dbContainer.ID, 20)
 		if err != nil {
-			return fmt.Errorf("Failed to rm  project for RestoreSnapshot: %v", err)
+			return fmt.Errorf("failed to remove db container: %v", err)
 		}
 	}
 
@@ -1882,13 +1939,20 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	// With bind mounts, they'll already be there in the /mnt/ddev_config/db_snapshots folder
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
 		uid, _, _ := util.GetContainerUIDGid()
-		err = dockerutil.CopyIntoVolume(filepath.Join(app.GetConfigPath("db_snapshots"), snapshotName), app.Name+"-ddev-snapshots", snapshotName, uid, "", true)
+
+		// If the snapshot is an old-style directory-based snapshot, then we have to copy into a subdirectory
+		// named for the snapshot
+		subdir := ""
+		if fileutil.IsDirectory(hostSnapshotFileOrDir) {
+			subdir = snapshotName
+		}
+
+		err = dockerutil.CopyIntoVolume(filepath.Join(app.GetConfigPath("db_snapshots"), snapshotName), "ddev-"+app.Name+"-snapshots", subdir, uid, "", true)
 		if err != nil {
 			return err
 		}
 	}
-	err = os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "restore_snapshot "+snapshotName)
-	util.CheckErr(err)
+	_ = os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "restore_snapshot "+snapshotName)
 	err = app.Start()
 	if err != nil {
 		return fmt.Errorf("failed to start project for RestoreSnapshot: %v", err)
@@ -1899,11 +1963,11 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	output.UserOut.Printf("Waiting for snapshot restore to complete...\nYou can also follow the restore progress in another terminal window with `ddev logs -s db -f %s`", app.Name)
 	// Now it's up, but we need to find out when it finishes loading.
 	for {
-		// We used to use killall mysqld here, but docker-compose v1.28+
-		// has a bug where it reports that kind of error on exit.
-		// See https://github.com/docker/compose/issues/8169
+		// We used to use killall -1 mysqld here
+		// also used to use "pidof mysqld", but apparently the
+		// server may not quite be ready when its pid appears
 		out, _, err := app.Exec(&ExecOpts{
-			Cmd:     "pidof mysqld || true",
+			Cmd:     `(echo "SHOW VARIABLES like 'v%';" | mysql 2>/dev/null) || true`,
 			Service: "db",
 			Tty:     false,
 		})
@@ -1922,6 +1986,26 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("failed to process post-restore-snapshot hooks: %v", err)
 	}
 	return nil
+}
+
+// fullDBFromVersion takes just a mariadb or mysql version number
+// in x.xx format and returns something like mariadb-10.5
+func fullDBFromVersion(v string) string {
+	snapshotDBVersion := ""
+	// The old way (when we only had mariadb and then when had mariadb and also mysql)
+	// was to just have the version number and derive the database type from it,
+	// so that's what is going on here. But we create a string like "mariadb_10.3" from
+	// the version number
+	switch {
+	case v == "5.6" || v == "5.7" || v == "8.0":
+		snapshotDBVersion = "mysql_" + v
+
+	// 5.5 isn't actually necessarily correct, because could be
+	// mysql 5.5. But maria and mysql 5.5 databases were compatible anyway.
+	case v == "5.5" || v >= "10.0":
+		snapshotDBVersion = "mariadb_" + v
+	}
+	return snapshotDBVersion
 }
 
 // Stop stops and Removes the docker containers for the project in current directory.
