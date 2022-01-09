@@ -439,7 +439,13 @@ func (app *DdevApp) GenerateMutagenYml() error {
 	if err != nil {
 		return err
 	}
-	err = fileutil.TemplateStringToFile(content, map[string]interface{}{"SymlinkMode": symlinkMode}, mutagenYmlPath)
+
+	templateMap := map[string]interface{}{
+		"SymlinkMode": symlinkMode,
+		"UploadDir":   path.Join(app.GetDocroot(), app.GetUploadDir()),
+	}
+
+	err = fileutil.TemplateStringToFile(content, templateMap, mutagenYmlPath)
 	return err
 }
 

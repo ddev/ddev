@@ -20,6 +20,9 @@ sync:
       - "/.ddev/.importdb*"
       - ".DS_Store"
       - ".idea"
+      {{ if .UploadDir }}
+      - "/{{ .UploadDir }}"
+      {{ end }}
       # For example /var/www/html/var does not need to sync in TYPO3
       # - "/var"
       # vcs like .git can be ignored for safety, but then some

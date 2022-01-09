@@ -8,6 +8,7 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -695,6 +696,8 @@ type composeYAMLVars struct {
 	DBAWorkingDir             string
 	WebEnvironment            []string
 	NoBindMounts              bool
+	Docroot                   string
+	UploadDir                 string
 }
 
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
@@ -769,6 +772,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		MariaDBVolumeName:     app.GetMariaDBVolumeName(),
 		NFSMountVolumeName:    app.GetNFSMountVolumeName(),
 		NoBindMounts:          globalconfig.DdevGlobalConfig.NoBindMounts,
+		Docroot:               app.GetDocroot(),
+		UploadDir:             path.Join(app.GetDocroot(), app.GetUploadDir()),
 	}
 	if app.NFSMountEnabled || app.NFSMountEnabledGlobal {
 		templateVars.MountType = "volume"
