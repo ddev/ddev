@@ -98,8 +98,6 @@ func TestCustomCommands(t *testing.T) {
 	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "global_commands"), tmpHomeGlobalCommandsDir)
 	require.NoError(t, err)
 
-	assert.FileExists(filepath.Join(projectGlobalCommandsCopy, "db", "mysql"))
-
 	// Must sync our added commands before using them.
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)

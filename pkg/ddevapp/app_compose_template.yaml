@@ -105,14 +105,14 @@ services:
           nocopy: true
       {{ end }}
       {{ if .NoBindMounts }}
-      - ddev-config:/mnt/ddev_config
+      - "ddev-config:/mnt/ddev_config"
       {{ else }}
       - ".:/mnt/ddev_config:ro"
-      - ./xhprof:/usr/local/bin/xhprof
+      - "./xhprof:/usr/local/bin/xhprof:ro"
       {{ end }}
-      - ddev-global-cache:/mnt/ddev-global-cache
+      - "ddev-global-cache:/mnt/ddev-global-cache"
       {{ if not .OmitSSHAgent }}
-      - ddev-ssh-agent_socket_dir:/home/.ssh-agent
+      - "ddev-ssh-agent_socket_dir:/home/.ssh-agent"
       {{ end }}
 
     restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
