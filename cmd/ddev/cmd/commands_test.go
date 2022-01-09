@@ -98,7 +98,7 @@ func TestCustomCommands(t *testing.T) {
 	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "global_commands"), tmpHomeGlobalCommandsDir)
 	require.NoError(t, err)
 
-	assert.FileExists(filepath.Join(projectCommandsDir, "db", "mysql"))
+	assert.FileExists(filepath.Join(projectGlobalCommandsCopy, "db", "mysql"))
 
 	// Must sync our added commands before using them.
 	err = app.MutagenSyncFlush()
@@ -252,13 +252,20 @@ func TestCustomCommands(t *testing.T) {
 		assert.FileExists(filepath.Join(projectGlobalCommandsCopy, f))
 	}
 	// Make sure that the non-command stuff we installed is in project commands dir
-	for _, f := range []string{".gitattributes", "db/mysql", "db/README.txt", "host/launch", "host/README.txt", "host/solrtail.example", "solr/README.txt", "solr/solrtail.example", "web/README.txt", "web/xdebug"} {
+	for _, f := range []string{".gitattributes", "db/README.txt", "host/README.txt", "host/solrtail.example", "solr/README.txt", "solr/solrtail.example", "web/README.txt"} {
 		assert.FileExists(filepath.Join(projectCommandsDir, f))
 	}
 
 	// Make sure we haven't accidentally created anything inappropriate in ~/.ddev
 	assert.False(fileutil.FileExists(filepath.Join(tmpHome, ".ddev", ".globalcommands")))
 	assert.False(fileutil.FileExists(filepath.Join(origHome, ".ddev", ".globalcommands")))
+
+	// Make sure that the old launch, mysql, and xdebug commands aren't in the project directory
+	for _, command := range []string{"db/mysql", "host/launch", "web/xdebug"} {
+		cmdPath := app.GetConfigPath(filepath.Join("commands", command))
+		assert.False(fileutil.FileExists(cmdPath), "file %s exists but it should not", cmdPath)
+	}
+
 }
 
 // TestLaunchCommand tests that the launch command behaves all the ways it should behave

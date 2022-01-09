@@ -926,6 +926,9 @@ func (app *DdevApp) Start() error {
 	// Warn user if there are deprecated items used in the config
 	app.CheckDeprecations()
 
+	// Fix any obsolete things like old shell commands, etc.
+	app.FixObsolete()
+
 	// Copy any homeadditions content into .ddev/.homeadditions
 	tmpHomeadditionsPath := app.GetConfigPath(".homeadditions")
 	err = os.RemoveAll(tmpHomeadditionsPath)
