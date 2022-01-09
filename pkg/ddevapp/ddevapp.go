@@ -895,6 +895,27 @@ func (app *DdevApp) Start() error {
 
 	dockerutil.CheckAvailableSpace()
 
+	// Copy any homeadditions content into .ddev/.homeadditions
+	tmpHomeadditionsPath := app.GetConfigPath(".homeadditions")
+	err = os.RemoveAll(tmpHomeadditionsPath)
+	if err != nil {
+		util.Warning("unable to remove %s: %v", tmpHomeadditionsPath, err)
+	}
+	globalHomeadditionsPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "homeadditions")
+	if fileutil.IsDirectory(globalHomeadditionsPath) {
+		err = copy.Copy(globalHomeadditionsPath, tmpHomeadditionsPath)
+		if err != nil {
+			return err
+		}
+	}
+	projectHomeAdditionsPath := app.GetConfigPath("homeadditions")
+	if fileutil.IsDirectory(projectHomeAdditionsPath) {
+		err = copy.Copy(projectHomeAdditionsPath, tmpHomeadditionsPath)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Make sure that important volumes to mount already have correct ownership set
 	// Additional volumes can be added here. This allows us to run a single privileged
 	// container with a single focus of changing ownership, instead of having to use sudo
@@ -928,27 +949,6 @@ func (app *DdevApp) Start() error {
 
 	// Fix any obsolete things like old shell commands, etc.
 	app.FixObsolete()
-
-	// Copy any homeadditions content into .ddev/.homeadditions
-	tmpHomeadditionsPath := app.GetConfigPath(".homeadditions")
-	err = os.RemoveAll(tmpHomeadditionsPath)
-	if err != nil {
-		util.Warning("unable to remove %s: %v", tmpHomeadditionsPath, err)
-	}
-	globalHomeadditionsPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "homeadditions")
-	if fileutil.IsDirectory(globalHomeadditionsPath) {
-		err = copy.Copy(globalHomeadditionsPath, tmpHomeadditionsPath)
-		if err != nil {
-			return err
-		}
-	}
-	projectHomeAdditionsPath := app.GetConfigPath("homeadditions")
-	if fileutil.IsDirectory(projectHomeAdditionsPath) {
-		err = copy.Copy(projectHomeAdditionsPath, tmpHomeadditionsPath)
-		if err != nil {
-			return err
-		}
-	}
 
 	if !IsRouterDisabled(app) {
 		caRoot := globalconfig.GetCAROOT()

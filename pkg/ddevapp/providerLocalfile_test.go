@@ -25,12 +25,9 @@ func TestLocalfilePull(t *testing.T) {
 
 	siteDir := testcommon.CreateTmpDir(t.Name())
 
-	out, err := exec.RunHostCommand("ddev", "--version")
-	assert.NoError(err)
-	t.Logf("ddev --version=%v", out)
-
 	err = os.Chdir(siteDir)
 	assert.NoError(err)
+
 	app, err := NewApp(siteDir, true)
 	assert.NoError(err)
 	app.Name = t.Name()
@@ -40,6 +37,13 @@ func TestLocalfilePull(t *testing.T) {
 	require.NoError(t, err)
 	err = app.WriteConfig()
 	require.NoError(t, err)
+
+	// This not only shows us the version but also populates the project's
+	// .ddev/.global_commands which otherwise doesn't get done until ddev start
+	// This matters when --no-bind-mount=true
+	out, err := exec.RunHostCommand("ddev", "--version")
+	assert.NoError(err)
+	t.Logf("ddev --version=%v", out)
 
 	testcommon.ClearDockerEnv()
 
