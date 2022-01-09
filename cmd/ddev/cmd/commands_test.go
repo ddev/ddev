@@ -321,20 +321,36 @@ func TestLaunchCommand(t *testing.T) {
 func TestMysqlCommand(t *testing.T) {
 	assert := asrt.New(t)
 
-	// Create a temporary directory and switch to it.
-	tmpdir := testcommon.CreateTmpDir(t.Name())
-	defer testcommon.CleanupDir(tmpdir)
-	defer testcommon.Chdir(tmpdir)()
+	origDir, _ := os.Getwd()
 
-	app, err := ddevapp.NewApp(tmpdir, false)
+	// Create a temporary directory and switch to it.
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	err := os.Chdir(tmpDir)
 	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(tmpDir, false)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = os.RemoveAll(tmpDir)
+		assert.NoError(err)
+	})
+
 	err = app.WriteConfig()
 	require.NoError(t, err)
+
+	// This populates the project's
+	// .ddev/.global_commands which otherwise doesn't get done until ddev start
+	// This matters when --no-bind-mount=true
+	_, err = exec.RunHostCommand("ddev")
+	assert.NoError(err)
+
 	err = app.Start()
 	require.NoError(t, err)
-	defer func() {
-		_ = app.Stop(true, false)
-	}()
 
 	// Test ddev mysql -uroot -proot mysql
 	command := osexec.Command("bash", "-c", "echo 'SHOW TABLES;' | "+DdevBin+" mysql --user=root --password=root --database=mysql")
@@ -343,5 +359,4 @@ func TestMysqlCommand(t *testing.T) {
 	assert.Contains(string(byteOut), `Tables_in_mysql
 column_stats
 columns_priv`)
-
 }
