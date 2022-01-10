@@ -301,6 +301,14 @@ func TestMain(m *testing.M) {
 			log.Errorf("TestMain startup: app.WriteConfig() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 			continue
 		}
+		// Pre-download any images we may need, just to get them out of the way so they don't clutter tests
+		_, err = exec.RunHostCommand("sh", "-c", fmt.Sprintf("%s debug download-images >/dev/null", DdevBin))
+		if err != nil {
+			testRun = -1
+			log.Errorf("TestMain startup: failed to download-images, site %s in dir %s: %v", TestSites[i].Name, TestSites[i].Dir, err)
+			continue
+		}
+
 		for _, volume := range []string{app.Name + "-mariadb"} {
 			err = dockerutil.RemoveVolume(volume)
 			if err != nil {
@@ -2029,8 +2037,11 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
-	err = app.StartAndWait(0)
+	// Not all the example projects have an upload dir, so create it just in case
+	err = os.MkdirAll(filepath.Join(app.AppRoot, app.GetDocroot(), app.GetUploadDir()), 0777)
 	assert.NoError(err)
+	err = app.Start()
+	require.NoError(t, err)
 
 	uploadDir := app.GetUploadDir()
 	assert.NotEmpty(uploadDir)

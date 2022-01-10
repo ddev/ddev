@@ -110,8 +110,12 @@ services:
       - ".:/mnt/ddev_config:ro"
       - "./xhprof:/usr/local/bin/xhprof:ro"
         {{ if .MutagenEnabled }}
-      - "../{{ .UploadDir }}:/var/www/html/{{ .UploadDir }}:rw"
-      - "../.git:/var/www/html/.git:rw"
+          {{ if .UploadDir }}
+      - ../{{ .UploadDir }}:/var/www/html/{{ .UploadDir }}:rw
+          {{ end }} {{/* end if .UploadDir */}}
+          {{ if .GitDirMount }}
+      - ../.git:/var/www/html/.git:rw
+          {{ end }} {{/* end if .GitDirMount */}}
         {{ end }} {{/* end if .MutagenEnabled */}}
       {{ end }} {{/* end else of if .NoBindMounts */}}
       - "ddev-global-cache:/mnt/ddev-global-cache"
