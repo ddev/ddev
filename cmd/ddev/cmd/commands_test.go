@@ -98,8 +98,6 @@ func TestCustomCommands(t *testing.T) {
 	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "global_commands"), tmpHomeGlobalCommandsDir)
 	require.NoError(t, err)
 
-	assert.FileExists(filepath.Join(projectCommandsDir, "db", "mysql"))
-
 	// Must sync our added commands before using them.
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
@@ -252,13 +250,20 @@ func TestCustomCommands(t *testing.T) {
 		assert.FileExists(filepath.Join(projectGlobalCommandsCopy, f))
 	}
 	// Make sure that the non-command stuff we installed is in project commands dir
-	for _, f := range []string{".gitattributes", "db/mysql", "db/README.txt", "host/launch", "host/README.txt", "host/solrtail.example", "solr/README.txt", "solr/solrtail.example", "web/README.txt", "web/xdebug"} {
+	for _, f := range []string{".gitattributes", "db/README.txt", "host/README.txt", "host/solrtail.example", "solr/README.txt", "solr/solrtail.example", "web/README.txt"} {
 		assert.FileExists(filepath.Join(projectCommandsDir, f))
 	}
 
 	// Make sure we haven't accidentally created anything inappropriate in ~/.ddev
 	assert.False(fileutil.FileExists(filepath.Join(tmpHome, ".ddev", ".globalcommands")))
 	assert.False(fileutil.FileExists(filepath.Join(origHome, ".ddev", ".globalcommands")))
+
+	// Make sure that the old launch, mysql, and xdebug commands aren't in the project directory
+	for _, command := range []string{"db/mysql", "host/launch", "web/xdebug"} {
+		cmdPath := app.GetConfigPath(filepath.Join("commands", command))
+		assert.False(fileutil.FileExists(cmdPath), "file %s exists but it should not", cmdPath)
+	}
+
 }
 
 // TestLaunchCommand tests that the launch command behaves all the ways it should behave
@@ -316,20 +321,36 @@ func TestLaunchCommand(t *testing.T) {
 func TestMysqlCommand(t *testing.T) {
 	assert := asrt.New(t)
 
-	// Create a temporary directory and switch to it.
-	tmpdir := testcommon.CreateTmpDir(t.Name())
-	defer testcommon.CleanupDir(tmpdir)
-	defer testcommon.Chdir(tmpdir)()
+	origDir, _ := os.Getwd()
 
-	app, err := ddevapp.NewApp(tmpdir, false)
+	// Create a temporary directory and switch to it.
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	err := os.Chdir(tmpDir)
 	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(tmpDir, false)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = os.RemoveAll(tmpDir)
+		assert.NoError(err)
+	})
+
 	err = app.WriteConfig()
 	require.NoError(t, err)
+
+	// This populates the project's
+	// .ddev/.global_commands which otherwise doesn't get done until ddev start
+	// This matters when --no-bind-mount=true
+	_, err = exec.RunHostCommand("ddev")
+	assert.NoError(err)
+
 	err = app.Start()
 	require.NoError(t, err)
-	defer func() {
-		_ = app.Stop(true, false)
-	}()
 
 	// Test ddev mysql -uroot -proot mysql
 	command := osexec.Command("bash", "-c", "echo 'SHOW TABLES;' | "+DdevBin+" mysql --user=root --password=root --database=mysql")
@@ -338,5 +359,4 @@ func TestMysqlCommand(t *testing.T) {
 	assert.Contains(string(byteOut), `Tables_in_mysql
 column_stats
 columns_priv`)
-
 }

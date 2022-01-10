@@ -4,14 +4,14 @@ Every ddev project is automatically configured with xdebug so that popular IDEs 
 
 xdebug is a server-side tool: It is installed automatically on the container and you do *not* need to install or configure it on your workstation.
 
-All IDEs basically work the same: They listen on a port and react when they're contacted there. IDEs other than those listed here work fine, if they listen on the default xdebug port 9000.
+All IDEs basically work the same: They listen on a port and react when they're contacted there. IDEs other than those listed here work fine, if they listen on the default xdebug port 9003.
 
 **Key facts:**
 
 * Enable xdebug by running `ddev xdebug` or `ddev xdebug on` in your project directory. It will remain enabled until you start or restart the project.
 * Disable xdebug for better performance when not debugging with `ddev xdebug off`
 * `ddev xdebug status` will show current status.
-* The debug server port on the IDE must be set to port 9000, which is the default and is probably already set in most IDEs. (If you need to change the xdebug port due to a port conflict on your host computer, you can do it with a PHP override, explained below.)
+* The debug server port on the IDE must be set to port 9003, which is the default and is probably already set in most popular IDEs. (If you need to change the xdebug port due to a port conflict on your host computer, you can do it with a PHP override, explained below.)
 
 For more background on XDebug see [XDebug documentation](https://xdebug.org/docs/remote). The intention here is that one won't have to understand XDebug to do debugging.
 
@@ -83,7 +83,7 @@ However, if you have not yet used PhpStorm with xdebug for a regular web request
 3. Restart Atom to ensure new settings are loaded.
 4. Open a project/folder and open a PHP file you'd like to debug.
 5. Set a breakpoint. (Right-click->PHP Debug->Toggle breakpoint)
-6. Open the debug view and enable debugging by choosing Packages->PHP-Debug->Toggle Debugging. You should see "Listening on address:port 127.0.0.1:9000".
+6. Open the debug view and enable debugging by choosing Packages->PHP-Debug->Toggle Debugging. You should see "Listening on address:port 127.0.0.1:9003".
 7. Visit a page that should trigger your breakpoint.
 
 An example configuration:
@@ -115,13 +115,13 @@ Note that if you're using vscode on Windows with WSL2, you'll want the "PHP Debu
 
 ### Using Xdebug on a Port Other than the Default
 
-By default, ddev is set up to contact the default port, port 9000 on your IDE. However, if you have something else listening on that port, you'll need to change the port. (The most likely conflict is php-fpm, which also has 9000 as a default port.)
+By default, ddev is set up to contact the default port, port 9003 on your IDE. However, if you have something else listening on that port or your IDE does not yet default to 9003, you'll need to change the port. (PhpStorm and vscode have switch to supporting 9003 instead of 9000 for some time now.)
 
-* To override the port, add an override file in the project's .ddev/php directory. For example, a file .ddev/php/xdebug_client_port.ini:
+* To override the port, add an override file in the project's .ddev/php directory. For example, a file .ddev/php/xdebug_client_port.ini would change to use the traditional old port 9000:
 
 ```ini
 [PHP]
-xdebug.client_port=9003
+xdebug.client_port=9000
 ```
 
 * Then change your IDE's configuration to listen on the new port.
@@ -138,12 +138,12 @@ Debugging Xdebug in any setup can be a little trouble, but here are the steps to
 * Set a breakpoint at the first executable line of your index.php.
 * Tell your IDE to start listening. (PhpStorm: Click the telephone button, vscode: run the debugger.)
 * Use `curl` or a browser to create a web request. For example, `curl https://d9.ddev.site`
-* If the IDE doesn't respond, take a look at `ddev logs`. If you see a message like ""PHP message: Xdebug: [Step Debug] Could not connect to debugging client. Tried: host.docker.internal:9000 (through xdebug.client_host/xdebug.client_port)" then php/xdebug (inside the container) is not able to make a connection to port 9000.
-* `ddev ssh` into the web container. Can you `telnet host.docker.internal` and have it connect? If you can't, you might have an over-aggressive firewall. Disable it, or add a rule that would allow the connection to pass through. For example, on Debian/ Ubuntu that would be `sudo ufw allow 9000/tcp`.
+* If the IDE doesn't respond, take a look at `ddev logs`. If you see a message like ""PHP message: Xdebug: [Step Debug] Could not connect to debugging client. Tried: host.docker.internal:9003 (through xdebug.client_host/xdebug.client_port)" then php/xdebug (inside the container) is not able to make a connection to port 9003.
+* `ddev ssh` into the web container. Can you `telnet host.docker.internal` and have it connect? If you can't, you might have an over-aggressive firewall. Disable it, or add a rule that would allow the connection to pass through. For example, on Debian/ Ubuntu that would be `sudo ufw allow 9003/tcp`.
 * In PhpStorm, disable the "listen for connections" button so it won't listen. Or just exit PhpStorm. With another IDE like vscode, stop the debugger from listening.
-* `ddev ssh`: Can `telnet host.docker.internal 9000` connect? If it does, you have something else running on port 9000, probably php-fpm. On the host, use `sudo lsof -i :9000 -sTCP:LISTEN` to find out what is there and stop it, or [change the xdebug port and configure PhpStorm to use the new one](#using-xdebug-on-a-port-other-than-the-default) . Don't continue debugging until your telnet command does not connect.
+* `ddev ssh`: Can `telnet host.docker.internal 9003` connect? If it does, you have something else running on port 9003. On the host, use `sudo lsof -i :9003 -sTCP:LISTEN` to find out what is there and stop it, or [change the xdebug port and configure PhpStorm to use the new one](#using-xdebug-on-a-port-other-than-the-default) . Don't continue debugging until your telnet command does not connect. (Note that on Windows WSL2 you may have to look for listeners both inside WSL2 and on the Windows side.)
 * Now click the listen button on PhpStorm to start it listening for connections.
-* `ddev ssh` and try the `telnet host.docker.internal 9000` again. It should connect. If not, maybe PhpStorm is not listening, or not configured to listen on port 9000?
+* `ddev ssh` and try the `telnet host.docker.internal 9003` again. It should connect. If not, maybe PhpStorm is not listening, or not configured to listen on port 9003?
 * Check to make sure that Xdebug is enabled. You can use `php -i | grep -i xdebug` inside the container, or use any other technique you want that gives the output of `phpinfo()`, including Drupal's admin/reports/status/php. You should see `with Xdebug v3` and `php -i | grep xdebug.mode` should give you `xdebug.mode => debug,develop => debug,develop"`.
 * Set a breakpoint in the first relevant line of the index.php of your project and then visit the site in a browser. It should stop at that first line.
 * If you are using PhpStorm inside WSL2 (or perhaps other Linux configurations), under `Help→ Edit Custom VM Options`, add an additional line: `-Djava.net.preferIPv4Stack=true` This makes PhpStorm listen for Xdebug using IPV4; the Linux version of PhpStorm seems to default to using only IPV6.

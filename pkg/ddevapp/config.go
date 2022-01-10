@@ -632,6 +632,22 @@ func (app *DdevApp) CheckDeprecations() {
 
 }
 
+// FixObsolete removes files that may be obsolete, etc.
+func (app *DdevApp) FixObsolete() {
+
+	// Remove old in-project commands (which have been moved to global)
+	for _, command := range []string{"db/mysql", "host/launch", "web/xdebug"} {
+		cmdPath := app.GetConfigPath(filepath.Join("commands", command))
+		signatureFound, err := fileutil.FgrepStringInFile(cmdPath, DdevFileSignature)
+		if err == nil && signatureFound {
+			err = os.Remove(cmdPath)
+			if err != nil {
+				util.Warning("attempted to remove %s but failed, you may want to remove it manually: %v", cmdPath, err)
+			}
+		}
+	}
+}
+
 type composeYAMLVars struct {
 	Name                      string
 	Plugin                    string

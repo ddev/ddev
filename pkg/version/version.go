@@ -41,7 +41,7 @@ var DockerComposeFileFormatVersion = "3.6"
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20211231_base_webserver" // Note that this can be overridden by make
+var WebTag = "20220108_xdebug_9003" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"
