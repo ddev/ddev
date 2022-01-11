@@ -988,6 +988,11 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
+	err = app.CheckAddonIncompatibilities()
+	if err != nil {
+		util.Failed("third-party service incompatibilities: %v", err)
+	}
+
 	err = app.AddHostsEntriesIfNeeded()
 	if err != nil {
 		return err
@@ -2524,6 +2529,27 @@ func (app *DdevApp) StartAppIfNotRunning() error {
 	}
 
 	return err
+}
+
+// CheckAddonIncompatibilities() looks for problems with docker-compose.*.yaml 3rd-party services
+func (app *DdevApp) CheckAddonIncompatibilities() error {
+	// Look for missing "networks" stanza and request it.
+	for s, v := range app.ComposeYaml["services"].(map[interface{}]interface{}) {
+		x := v.(map[interface{}]interface{})
+		errMsg := fmt.Errorf("service '%s' does not have the 'networks: [default, ddev]' stanza, required since v1.19, please add it, see %s", s, "https://ddev.readthedocs.io/en/latest/users/extend/custom-compose-files/#docker-composeyaml-examples")
+		var nets map[interface{}]interface{}
+		ok := false
+		if nets, ok = x["networks"].(map[interface{}]interface{}); !ok {
+			return errMsg
+		}
+		// Make sure both "default" and "ddev" networks are in there.
+		for _, requiredNetwork := range []string{"default", "ddev"} {
+			if _, ok := nets[requiredNetwork]; !ok {
+				return errMsg
+			}
+		}
+	}
+	return nil
 }
 
 // GetContainerName returns the contructed container name of the
