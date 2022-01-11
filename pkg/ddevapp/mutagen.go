@@ -439,7 +439,17 @@ func (app *DdevApp) GenerateMutagenYml() error {
 	if err != nil {
 		return err
 	}
-	err = fileutil.TemplateStringToFile(content, map[string]interface{}{"SymlinkMode": symlinkMode}, mutagenYmlPath)
+
+	templateMap := map[string]interface{}{
+		"SymlinkMode": symlinkMode,
+		"UploadDir":   path.Join(app.GetDocroot(), app.GetUploadDir()),
+	}
+	// If no bind mounts, then we can't ignore UploadDir, must sync it
+	if globalconfig.DdevGlobalConfig.NoBindMounts {
+		templateMap["UploadDir"] = ""
+	}
+
+	err = fileutil.TemplateStringToFile(content, templateMap, mutagenYmlPath)
 	return err
 }
 

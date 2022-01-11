@@ -93,7 +93,7 @@ services:
           nocopy: true
         {{ else }} {{/* if eq .MountType "volume"*/}}
         consistency: cached
-        {{ end }} {{/* end if eq .MountType "volume"*/}}
+        {{ end }} {{/* end if eq .MountType "volume" */}}
       {{ end }} {{/* end if and (not .MutagenEnabled) (not .NoProjectMount)*/}}
       {{ if and .MutagenEnabled (not .NoProjectMount) }}
       # For mutagen, mount a directory higher in /var/www so that we can use
@@ -109,7 +109,15 @@ services:
       {{ else }}
       - ".:/mnt/ddev_config:ro"
       - "./xhprof:/usr/local/bin/xhprof:ro"
-      {{ end }}
+        {{ if .MutagenEnabled }}
+          {{ if .UploadDir }}
+      - ../{{ .UploadDir }}:/var/www/html/{{ .UploadDir }}:rw
+          {{ end }} {{/* end if .UploadDir */}}
+          {{ if .GitDirMount }}
+      - ../.git:/var/www/html/.git:rw
+          {{ end }} {{/* end if .GitDirMount */}}
+        {{ end }} {{/* end if .MutagenEnabled */}}
+      {{ end }} {{/* end else of if .NoBindMounts */}}
       - "ddev-global-cache:/mnt/ddev-global-cache"
       {{ if not .OmitSSHAgent }}
       - "ddev-ssh-agent_socket_dir:/home/.ssh-agent"
