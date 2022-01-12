@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"io/fs"
 	"net"
 	"os"
@@ -2552,6 +2553,15 @@ func (app *DdevApp) CheckAddonIncompatibilities() error {
 				return errMsg
 			}
 		}
+	}
+	return nil
+}
+
+// UpdateComposeYaml updates app.ComposeYaml from available content
+func (app *DdevApp) UpdateComposeYaml(content string) error {
+	err := yaml.Unmarshal([]byte(content), &app.ComposeYaml)
+	if err != nil {
+		return err
 	}
 	return nil
 }
