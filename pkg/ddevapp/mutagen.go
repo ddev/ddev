@@ -25,6 +25,9 @@ import (
 )
 
 // SetMutagenVolumeOwnership chowns the volume in use to the current user.
+// The mutagen volume is mounted both in /var/www (where it gets used) and
+// also on /tmp/project_mutagen (where it can be chowned without accidentally hitting
+// lots of bind-mounted files).
 func SetMutagenVolumeOwnership(app *DdevApp) error {
 	// Make sure that if we have a volume mount it's got proper ownership
 	uidStr, gidStr, _ := util.GetContainerUIDGid()
@@ -32,9 +35,9 @@ func SetMutagenVolumeOwnership(app *DdevApp) error {
 	_, _, err := app.Exec(
 		&ExecOpts{
 			Dir: "/tmp",
-			Cmd: fmt.Sprintf("sudo chown -R %s:%s /var/www", uidStr, gidStr),
+			Cmd: fmt.Sprintf("sudo chown -R %s:%s /tmp/project_mutagen", uidStr, gidStr),
 		})
-	util.Debug("done chowning mutagen docker volume, result=%v", err)
+	util.Debug("done chowning mutagen docker volume")
 	return err
 }
 
