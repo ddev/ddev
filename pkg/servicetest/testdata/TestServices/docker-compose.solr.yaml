@@ -37,7 +37,7 @@ services:
     image: solr:8
     # CRITICAL COMPATIBILITY ISSUE WITH DDEV V1.18.x and below.
     # REMOVE THIS `networks:` line for ddev v1.18.x and below
-    networks: [default, ddev]
+    networks: [default, ddev_default]
     restart: "no"
     # Solr is served from this port inside the container.
     expose:

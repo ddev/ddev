@@ -2541,14 +2541,14 @@ func (app *DdevApp) CheckAddonIncompatibilities() error {
 	// Look for missing "networks" stanza and request it.
 	for s, v := range app.ComposeYaml["services"].(map[interface{}]interface{}) {
 		x := v.(map[interface{}]interface{})
-		errMsg := fmt.Errorf("service '%s' does not have the 'networks: [default, ddev]' stanza, required since v1.19, please add it, see %s", s, "https://ddev.readthedocs.io/en/latest/users/extend/custom-compose-files/#docker-composeyaml-examples")
+		errMsg := fmt.Errorf("service '%s' does not have the 'networks: [default, ddev_default]' stanza, required since v1.19, please add it, see %s", s, "https://ddev.readthedocs.io/en/latest/users/extend/custom-compose-files/#docker-composeyaml-examples")
 		var nets map[interface{}]interface{}
 		ok := false
 		if nets, ok = x["networks"].(map[interface{}]interface{}); !ok {
 			return errMsg
 		}
 		// Make sure both "default" and "ddev" networks are in there.
-		for _, requiredNetwork := range []string{"default", "ddev"} {
+		for _, requiredNetwork := range []string{"default", "ddev_default"} {
 			if _, ok := nets[requiredNetwork]; !ok {
 				return errMsg
 			}

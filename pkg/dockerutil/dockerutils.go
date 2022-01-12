@@ -33,7 +33,7 @@ import (
 )
 
 // NetName provides the default network name for ddev.
-const NetName = "ddev"
+const NetName = "ddev_default"
 
 // EnsureNetwork will ensure the docker network for ddev is created.
 func EnsureNetwork(client *docker.Client, name string) error {
@@ -56,7 +56,7 @@ func EnsureNetwork(client *docker.Client, name string) error {
 // EnsureDdevNetwork just creates or ensures the ddev network exists or
 // exits with fatal.
 func EnsureDdevNetwork() {
-	// ensure we have docker network
+	// ensure we have the fallback global ddev network
 	client := GetDockerClient()
 	err := EnsureNetwork(client, NetName)
 	if err != nil {
