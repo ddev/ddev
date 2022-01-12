@@ -990,7 +990,7 @@ func (app *DdevApp) Start() error {
 
 	err = app.CheckAddonIncompatibilities()
 	if err != nil {
-		util.Failed("third-party service incompatibilities: %v", err)
+		return err
 	}
 
 	err = app.AddHostsEntriesIfNeeded()
