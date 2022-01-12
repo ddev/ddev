@@ -1,0 +1,46 @@
+package cmd
+
+import (
+	"fmt"
+	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/util"
+	"github.com/spf13/cobra"
+)
+
+// ServiceEnable implements the ddev service enable command
+var ServiceEnable = &cobra.Command{
+	Use:     "enable [service]",
+	Short:   "Enable a 3rd party service",
+	Long:    `Enable a 3rd party service. The service must exist as .ddev/services/docker-compose.<service>.yaml.`,
+	Example: `ddev service enable solr`,
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) < 1 {
+			util.Failed("You must specify a service to enable")
+		}
+		apps, err := getRequestedProjects(args[1:], false)
+		if err != nil {
+			util.Failed("Unable to get project(s) %v: %v", args, err)
+		}
+		if len(apps) == 0 {
+			util.Failed("No project(s) found")
+		}
+		app := apps[0]
+		serviceName := args[0]
+		fName := fmt.Sprintf("docker-compose.%s.yaml", serviceName)
+		if fileutil.FileExists(app.GetConfigPath(fName)) {
+			util.Failed("Service %s already enabled, see %s", serviceName, fName)
+		}
+		if !fileutil.FileExists(app.GetConfigPath("services/" + fName)) {
+			util.Failed("No %s found in %s", fName, app.GetConfigPath("services"))
+		}
+		err = fileutil.CopyFile(app.GetConfigPath("services/"+fName), app.GetConfigPath(fName))
+		if err != nil {
+			util.Failed("Unable to enable service %s: %v", serviceName, err)
+		}
+		util.Success("Enabled service %s, use `ddev restart` to turn it on.", serviceName)
+	},
+}
+
+func init() {
+	ServiceCmd.AddCommand(ServiceEnable)
+}
