@@ -9,7 +9,7 @@ import (
 
 // ServiceEnable implements the ddev service enable command
 var ServiceEnable = &cobra.Command{
-	Use:     "enable [service]",
+	Use:     "enable [service] [project]",
 	Short:   "Enable a 3rd party service",
 	Long:    `Enable a 3rd party service. The service must exist as .ddev/services/docker-compose.<service>.yaml.`,
 	Example: `ddev service enable solr`,
