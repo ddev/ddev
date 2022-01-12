@@ -2533,6 +2533,10 @@ func (app *DdevApp) StartAppIfNotRunning() error {
 
 // CheckAddonIncompatibilities() looks for problems with docker-compose.*.yaml 3rd-party services
 func (app *DdevApp) CheckAddonIncompatibilities() error {
+	if _, ok := app.ComposeYaml["services"]; !ok {
+		util.Warning("Unable to check 3rd-party services for missing networks stanza")
+		return nil
+	}
 	// Look for missing "networks" stanza and request it.
 	for s, v := range app.ComposeYaml["services"].(map[interface{}]interface{}) {
 		x := v.(map[interface{}]interface{})
