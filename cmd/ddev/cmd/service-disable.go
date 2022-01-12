@@ -11,7 +11,7 @@ import (
 
 // ServiceDisable implements the ddev service disable command
 var ServiceDisable = &cobra.Command{
-	Use:     "disable [service] [project]",
+	Use:     "disable service [project]",
 	Short:   "disable a 3rd party service",
 	Long:    `disable a 3rd party service. The docker-compose.*.yaml will be moved from .ddev into .ddev/services.`,
 	Example: `ddev service disable solr`,
