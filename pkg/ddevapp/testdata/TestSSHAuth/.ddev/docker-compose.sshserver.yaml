@@ -4,6 +4,7 @@ services:
   test-ssh-server:
     container_name: test-ssh-server
     image: drud/test-ssh-server:v1.16.0
+    networks: [default, ddev]
     restart: "no"
     ports:
     # Port is published for debugging reasons only. ssh -p 3333 root@localhost

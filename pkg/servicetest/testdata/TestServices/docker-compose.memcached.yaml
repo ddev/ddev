@@ -18,6 +18,7 @@ services:
     # name convention used in the main docker-compose.yml file.
     container_name: ddev-${DDEV_SITENAME}-memcached
     image: memcached:1.5
+    networks: [default, ddev]
     restart: "no"
     # memcached is available at this port inside the container.
     expose:

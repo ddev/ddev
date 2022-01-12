@@ -25,6 +25,7 @@ import (
 // runs each service's check function to ensure it's accessible from
 // the web container.
 func TestServices(t *testing.T) {
+	// Colima can't do solr at this point because it requires single-file mount.
 	if runtime.GOOS == "windows" || dockerutil.IsColima() {
 		t.Skip("skipping because unreliable, windows and colima seem to have port conflicts")
 	}
