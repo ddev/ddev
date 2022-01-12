@@ -97,7 +97,7 @@ func TestAcquiaPull(t *testing.T) {
 
 	// Make sure we have drush
 	_, _, err = app.Exec(&ExecOpts{
-		Cmd: "composer require drush/drush >/dev/null 2>/dev/null",
+		Cmd: "composer require --no-interaction drush/drush:* >/dev/null 2>/dev/null",
 	})
 	require.NoError(t, err)
 
@@ -198,7 +198,7 @@ func TestAcquiaPush(t *testing.T) {
 
 	// Make sure we have drush
 	_, _, err = app.Exec(&ExecOpts{
-		Cmd: "composer require drush/drush >/dev/null 2>/dev/null",
+		Cmd: "composer require --no-interaction drush/drush:* >/dev/null 2>/dev/null",
 	})
 	require.NoError(t, err)
 

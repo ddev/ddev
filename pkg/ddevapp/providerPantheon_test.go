@@ -106,7 +106,7 @@ func TestPantheonPull(t *testing.T) {
 
 	// Make sure we have drush
 	_, _, err = app.Exec(&ExecOpts{
-		Cmd: "composer require drush/drush >/dev/null 2>/dev/null",
+		Cmd: "composer require --no-interaction drush/drush:* >/dev/null 2>/dev/null",
 	})
 	require.NoError(t, err)
 
@@ -206,9 +206,11 @@ func TestPantheonPush(t *testing.T) {
 
 	// Make sure we have drush
 	_, _, err = app.Exec(&ExecOpts{
-		Cmd: "composer require drush/drush >/dev/null 2>/dev/null",
+		Cmd: "composer require --no-interaction drush/drush:* >/dev/null 2>/dev/null",
 	})
 	require.NoError(t, err)
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
 
 	// Do minimal install so it can find %file dir
 	_, _, err = app.Exec(&ExecOpts{
