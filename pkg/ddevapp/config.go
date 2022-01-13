@@ -126,7 +126,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		if err != nil {
 			return app, err
 		}
-		err = yaml.Unmarshal([]byte(content), &app.ComposeYaml)
+		err = app.UpdateComposeYaml(content)
 		if err != nil {
 			return app, err
 		}
@@ -565,6 +565,10 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 		return err
 	}
 
+	err = app.UpdateComposeYaml(fullContents)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

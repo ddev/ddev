@@ -25,6 +25,7 @@ import (
 // runs each service's check function to ensure it's accessible from
 // the web container.
 func TestServices(t *testing.T) {
+	// Colima can't do solr at this point because it requires single-file mount.
 	if runtime.GOOS == "windows" || dockerutil.IsColima() {
 		t.Skip("skipping because unreliable, windows and colima seem to have port conflicts")
 	}
@@ -40,13 +41,6 @@ func TestServices(t *testing.T) {
 
 	origDir, _ := os.Getwd()
 	testDir := testcommon.CreateTmpDir(t.Name())
-
-	t.Cleanup(func() {
-		err = os.Chdir(origDir)
-		assert.NoError(err)
-		err = os.RemoveAll(testDir)
-		assert.NoError(err)
-	})
 
 	workingServices := map[string]bool{
 		"beanstalkd": true,
@@ -79,13 +73,6 @@ func TestServices(t *testing.T) {
 		}
 	}
 
-	t.Cleanup(func() {
-		err = app.Stop(true, false)
-		assert.NoError(err)
-		err = os.RemoveAll(testDir)
-		assert.NoError(err)
-	})
-
 	app.Name = t.Name()
 	err = app.WriteConfig()
 	assert.NoError(err)
@@ -98,6 +85,16 @@ func TestServices(t *testing.T) {
 	// Unfortunately to get service description to work, we have to create a new app
 	// now that files are in place
 	app, err = ddevapp.NewApp(app.AppRoot, false)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = os.RemoveAll(testDir)
+		assert.NoError(err)
+	})
 
 	if workingServices["solr"] {
 		checkSolrService(t, app)

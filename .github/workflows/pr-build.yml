@@ -8,10 +8,10 @@ on:
   pull_request:
     paths:
       - "go.*"
-      - "pkg"
-      - "cmd"
+      - "pkg/**"
+      - "cmd/**"
       - "Makefile"
-      - "vendor"
+      - "vendor/**"
 
 env:
   BUILDKIT_PROGRESS: plain

@@ -22,30 +22,32 @@ func TestCmdAuthSSH(t *testing.T) {
 		t.Skip("Skipping TestCmdAuthSSH because expect scripting tool is not available")
 	}
 
-	testDir, _ := os.Getwd()
-	defer cmd.TestSites[0].Chdir()()
-
-	_, err := exec.RunCommand(cmd.DdevBin, []string{"start"})
+	origDir, _ := os.Getwd()
+	err := os.Chdir(cmd.TestSites[0].Dir)
 	require.NoError(t, err)
-	// nolint: errcheck
-	defer exec.RunCommand(cmd.DdevBin, []string{"stop", "--remove-data", "--omit-snapshot"})
+
+	app, err := ddevapp.NewApp("", false)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = dockerutil.RemoveContainer("test-cmd-ssh-server", 10)
+		assert.NoError(err)
+	})
 
 	// Delete any existing identities from ddev-ssh-agent
 	_, err = exec.RunCommand("docker", []string{"exec", "ddev-ssh-agent", "ssh-add", "-D"})
 	assert.NoError(err)
 
 	// Run a simple ssh server to act on and get its internal IP address
-	_, err = exec.RunCommand("docker", []string{"run", "-d", "--name=test-cmd-ssh-server", "--network=ddev", "drud/test-ssh-server:v1.16.0"})
+	_, err = exec.RunCommand("docker", []string{"run", "-d", "--name=test-cmd-ssh-server", "--network=ddev_default", "drud/test-ssh-server:v1.16.0"})
 	assert.NoError(err)
-	//nolint: errcheck
-	defer dockerutil.RemoveContainer("test-cmd-ssh-server", 10)
-
 	internalIPAddr, err := exec.RunCommand("docker", []string{"inspect", "-f", "'{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'", "test-cmd-ssh-server"})
 	internalIPAddr = strings.Trim(internalIPAddr, "\r\n\"'")
 	assert.NoError(err)
-
-	app, err := ddevapp.GetActiveApp("")
-	require.NoError(t, err)
 
 	app.DockerEnv()
 
@@ -59,7 +61,7 @@ func TestCmdAuthSSH(t *testing.T) {
 	assert.Error(err)
 
 	// Now we add the key with passphrase
-	testAuthSSHDir := filepath.Join(testDir, "testdata", "TestCmdAuthSSH")
+	testAuthSSHDir := filepath.Join(origDir, "testdata", "TestCmdAuthSSH")
 	err = os.Chmod(filepath.Join(testAuthSSHDir, ".ssh", "id_rsa"), 0600)
 	assert.NoError(err)
 	sshDir := filepath.Join(testAuthSSHDir, ".ssh")

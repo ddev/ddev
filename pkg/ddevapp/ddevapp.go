@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"io/fs"
 	"net"
 	"os"
@@ -984,6 +985,11 @@ func (app *DdevApp) Start() error {
 	}
 	// WriteConfig .ddev-docker-compose-*.yaml
 	err = app.WriteDockerComposeYAML()
+	if err != nil {
+		return err
+	}
+
+	err = app.CheckAddonIncompatibilities()
 	if err != nil {
 		return err
 	}
@@ -2524,6 +2530,40 @@ func (app *DdevApp) StartAppIfNotRunning() error {
 	}
 
 	return err
+}
+
+// CheckAddonIncompatibilities() looks for problems with docker-compose.*.yaml 3rd-party services
+func (app *DdevApp) CheckAddonIncompatibilities() error {
+	if _, ok := app.ComposeYaml["services"]; !ok {
+		util.Warning("Unable to check 3rd-party services for missing networks stanza")
+		return nil
+	}
+	// Look for missing "networks" stanza and request it.
+	for s, v := range app.ComposeYaml["services"].(map[interface{}]interface{}) {
+		x := v.(map[interface{}]interface{})
+		errMsg := fmt.Errorf("service '%s' does not have the 'networks: [default, ddev_default]' stanza, required since v1.19, please add it, see %s", s, "https://ddev.readthedocs.io/en/latest/users/extend/custom-compose-files/#docker-composeyaml-examples")
+		var nets map[interface{}]interface{}
+		ok := false
+		if nets, ok = x["networks"].(map[interface{}]interface{}); !ok {
+			return errMsg
+		}
+		// Make sure both "default" and "ddev" networks are in there.
+		for _, requiredNetwork := range []string{"default", "ddev_default"} {
+			if _, ok := nets[requiredNetwork]; !ok {
+				return errMsg
+			}
+		}
+	}
+	return nil
+}
+
+// UpdateComposeYaml updates app.ComposeYaml from available content
+func (app *DdevApp) UpdateComposeYaml(content string) error {
+	err := yaml.Unmarshal([]byte(content), &app.ComposeYaml)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // GetContainerName returns the contructed container name of the

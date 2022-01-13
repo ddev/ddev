@@ -50,7 +50,7 @@ func powerOff() {
 		util.Error("Failed to remove ddev-ssh-agent: %v", err)
 	}
 	// Remove current global network ("ddev") plus the former "ddev_default"
-	removals := []string{"ddev", "ddev_default"}
+	removals := []string{"ddev_default"}
 	for _, networkName := range removals {
 		err = dockerutil.RemoveNetwork(networkName)
 		_, isNoSuchNetwork := err.(*docker.NoSuchNetwork)
