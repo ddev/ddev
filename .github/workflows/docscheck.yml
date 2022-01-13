@@ -18,6 +18,7 @@ on:
       - "mkdocs.yml"
       - ".readthedocs.yml"
       - "requirements.txt"
+      - ".github/workflows/**"
 
 jobs:
   build:

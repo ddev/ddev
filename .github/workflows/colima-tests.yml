@@ -7,6 +7,7 @@ on:
       - "cmd/**"
       - "Makefile"
       - "vendor/**"
+      - ".github/workflows/**"
   push:
     branches: [ main, master ]
   workflow_dispatch:
