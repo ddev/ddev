@@ -105,7 +105,7 @@ github.com/gogo/protobuf/protoc-gen-gogo/descriptor
 github.com/golang/groupcache/lru
 # github.com/golang/protobuf v1.5.2
 ## explicit; go 1.9
-# github.com/google/go-github v0.0.0-20180716180158-c0b63e2f9bb1
+# github.com/google/go-github v17.0.0+incompatible
 ## explicit
 github.com/google/go-github/github
 # github.com/google/go-querystring v0.0.0-20170111101155-53e6ce116135
