@@ -16,9 +16,10 @@ import (
 )
 
 type serviceDesc struct {
-	Name    string
-	Files   []string
-	Actions []string
+	Name               string   `yaml:"name"`
+	Files              []string `yaml:"files"`
+	PreInstallActions  []string `yaml:"pre_install_actions,omitempty"`
+	PostInstallActions []string `yaml:"post_install_actions,omitempty"`
 }
 
 // ServiceGet implements the ddev service get command
@@ -39,59 +40,74 @@ var ServiceGet = &cobra.Command{
 			util.Failed("No project(s) found")
 		}
 		app := apps[0]
+		app.DockerEnv()
 		serviceRepo := args[0]
+		removeDir := ""
+		srcDest := ""
+		if fileutil.IsDirectory(serviceRepo) {
+			// Use the directory as the source
+			srcDest = serviceRepo
+		} else {
+			// assume it's a github repo
+			serviceRepo = ""
+			parts := strings.Split(serviceRepo, "/")
+			if len(parts) != 2 {
+				util.Failed("Invalid service name %s", serviceRepo)
+			}
+			owner := parts[0]
+			repo := parts[1]
+			client := github.NewClient(nil)
+			ctx := context.Background()
+			releases, _, err := client.Repositories.ListReleases(ctx, owner, repo, &github.ListOptions{})
+			if err != nil {
+				util.Failed("Unable to get releases for %v: %v", serviceRepo, err)
+			}
+			if len(releases) == 0 {
+				util.Failed("No releases found for %v", serviceRepo)
+			}
+			f, err := os.CreateTemp("", fmt.Sprintf("%s-%s*.tar.gz", owner, repo))
+			// nolint: errcheck
+			defer f.Close()
+			tarball := f.Name()
+			defer os.RemoveAll(tarball)
+			err = util.DownloadFile(tarball, releases[0].GetTarballURL(), true)
+			if err != nil {
+				util.Failed("Unable to download %v: %v", releases[0].GetTarballURL(), err)
+			}
+			srcDest, err := os.MkdirTemp("", "service_repo_")
+			if err != nil {
+				util.Failed("Unable to create temp dir: %v", err)
+			}
+			defer os.RemoveAll(srcDest)
 
-		parts := strings.Split(serviceRepo, "/")
-		if len(parts) != 2 {
-			util.Failed("Invalid service name %s", serviceRepo)
-		}
-		owner := parts[0]
-		repo := parts[1]
-		client := github.NewClient(nil)
-		ctx := context.Background()
-		releases, _, err := client.Repositories.ListReleases(ctx, owner, repo, &github.ListOptions{})
-		//util.Success("releases=%v, rsp=%v, err=%v", releases, rsp, err)
-		if err != nil {
-			util.Failed("Unable to get releases for %v: %v", serviceRepo, err)
-		}
-		if len(releases) == 0 {
-			util.Failed("No releases found for %v", serviceRepo)
-		}
-		f, err := os.CreateTemp("", fmt.Sprintf("%s-%s*.tar.gz", owner, repo))
-		// nolint: errcheck
-		defer f.Close()
-		tarball := f.Name()
-		defer os.RemoveAll(tarball)
-		err = util.DownloadFile(tarball, releases[0].GetTarballURL(), true)
-		if err != nil {
-			util.Failed("Unable to download %v: %v", releases[0].GetTarballURL(), err)
-		}
-		srcDest, err := os.MkdirTemp("", "service_repo_")
-		if err != nil {
-			util.Failed("Unable to create temp dir: %v", err)
-		}
-		defer os.RemoveAll(srcDest)
+			err = archive.Untar(tarball, srcDest, "")
+			if err != nil {
+				util.Failed("Unable to untar %v: %v", srcDest, err)
+			}
 
-		err = archive.Untar(tarball, srcDest, "")
-		if err != nil {
-			util.Failed("Unable to untar %v: %v", srcDest, err)
+			list, err := fileutil.ListFilesInDir(srcDest)
+			if err != nil {
+				util.Failed("Unable to list files in %v: %v", srcDest, err)
+			}
+			if len(list) == 0 {
+				util.Failed("No files found in %v", srcDest)
+			}
+			removeDir = list[0]
 		}
-
-		list, err := fileutil.ListFilesInDir(srcDest)
-		if err != nil {
-			util.Failed("Unable to list files in %v: %v", srcDest, err)
-		}
-		if len(list) == 0 {
-			util.Failed("No files found in %v", srcDest)
-		}
-		removeDir := list[0]
-
 		yamlFile := filepath.Join(srcDest, removeDir, "install.yaml")
 		yamlContent, err := fileutil.ReadFileIntoString(yamlFile)
 		var s serviceDesc
 		err = yaml.Unmarshal([]byte(yamlContent), &s)
 		if err != nil {
 			util.Failed("Unable to parse %v: %v", yamlFile, err)
+		}
+
+		for _, action := range s.PreInstallActions {
+			out, err := exec.RunHostCommand("bash", "-c", action)
+			if err != nil {
+				util.Failed("Unable to run action %v: %v, output=%s", action, err, out)
+			}
+			util.Success("%v\n%s", action, out)
 		}
 
 		for _, file := range s.Files {
@@ -117,9 +133,8 @@ var ServiceGet = &cobra.Command{
 			util.Failed("Unable to chdir to %v: %v", app.GetConfigPath(""), err)
 		}
 
-		for _, action := range s.Actions {
-			//TODO: This is ugly and relies on sh for no reason. Fix.
-			out, err := exec.RunHostCommand("sh", "-c", action)
+		for _, action := range s.PostInstallActions {
+			out, err := exec.RunHostCommand("bash", "-c", action)
 			if err != nil {
 				util.Failed("Unable to run action %v: %v, output=%s", action, err, out)
 			}
