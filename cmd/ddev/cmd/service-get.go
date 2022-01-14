@@ -66,8 +66,12 @@ var ServiceGet = &cobra.Command{
 				util.Failed("No releases found for %v", serviceRepo)
 			}
 			f, err := os.CreateTemp("", fmt.Sprintf("%s-%s*.tar.gz", owner, repo))
-			// nolint: errcheck
-			defer f.Close()
+			if err != nil {
+				util.Failed("Unable to create temp file: %v", err)
+			}
+			defer func() {
+				_ = f.Close()
+			}()
 			tarball := f.Name()
 			defer os.RemoveAll(tarball)
 			err = util.DownloadFile(tarball, releases[0].GetTarballURL(), true)
@@ -96,6 +100,9 @@ var ServiceGet = &cobra.Command{
 		}
 		yamlFile := filepath.Join(srcDest, removeDir, "install.yaml")
 		yamlContent, err := fileutil.ReadFileIntoString(yamlFile)
+		if err != nil {
+			util.Failed("Unable to read %v: %v", yamlFile, err)
+		}
 		var s serviceDesc
 		err = yaml.Unmarshal([]byte(yamlContent), &s)
 		if err != nil {
