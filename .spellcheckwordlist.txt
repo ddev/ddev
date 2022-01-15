@@ -427,6 +427,7 @@ sql
 sqlite
 src
 ssh
+sshfs
 stable
 start
 stdin
