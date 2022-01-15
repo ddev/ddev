@@ -122,7 +122,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
-			Cmd:     fmt.Sprintf("shopt -s dotglob && mv %s/* /var/www/html && rmdir %s", containerInstallPath, containerInstallPath),
+			Cmd:     fmt.Sprintf(`rsync -a --exclude="%s" "%s/" /var/www/html/ && mv "%s" /tmp`, containerInstallPath, containerInstallPath, containerInstallPath),
 			Dir:     "/var/www/html",
 		})
 
