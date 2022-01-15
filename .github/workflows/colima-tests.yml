@@ -40,7 +40,7 @@ jobs:
         webserver: [nginx-fpm]
         tests: [ test ]
         os: [ macos-11 ]
-        no-bind-mounts: ['false']
+        no-bind-mounts: ['false', 'true']
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
