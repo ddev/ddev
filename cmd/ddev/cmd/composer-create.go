@@ -90,9 +90,9 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		if err != nil {
 			util.Failed("Failed to sync mutagen contents: %v", err)
 		}
-		// Define a randomly named temp directory for install target
-		tmpDir := util.RandString(6)
-		containerInstallPath := path.Join("/tmp", tmpDir)
+		// Define a randomly named subdirectory for install target
+		tmpDir := fmt.Sprintf(".tmp_ddev_composer_create_%s", util.RandString(6))
+		containerInstallPath := path.Join("/var/www/html", tmpDir)
 
 		// Build container composer command
 		composerCmd := []string{
