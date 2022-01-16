@@ -7,6 +7,7 @@ on:
       - "cmd/**"
       - "Makefile"
       - "vendor/**"
+      - ".github/workflows/**"
   push:
     branches: [ main, master ]
   workflow_dispatch:
@@ -39,7 +40,7 @@ jobs:
         webserver: [nginx-fpm]
         tests: [ test ]
         os: [ macos-11 ]
-        no-bind-mounts: ['false']
+        no-bind-mounts: ['false', 'true']
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
@@ -48,6 +49,7 @@ jobs:
       DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
       DDEV_NONINTERACTIVE: "true"
       DDEV_TEST_NO_BIND_MOUNTS: ${{ matrix.no-bind-mounts }}
+      DDEV_TEST_USE_MUTAGEN: "true"
       GOTEST_SHORT: "true"
     steps:
       - uses: actions/checkout@v2
@@ -85,7 +87,7 @@ jobs:
       - name: Basic ddev usage
         run: | 
           mkdir -p ~/workspace/d9 && cd ~/workspace/d9
-          ddev config --composer-version=2.1.14 --project-type=drupal9 --docroot=web --create-docroot
+          ddev config --project-type=drupal9 --docroot=web --create-docroot
           ddev debug download-images
           ddev poweroff
           # Pre-cache these so we don't see a mess in the later pull

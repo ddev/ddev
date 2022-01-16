@@ -15,7 +15,7 @@ on:
     paths:
     - "pkg/**"
     - "cmd/**"
-    - ".github/workflows/golangci-lint.yml"
+    - ".github/workflows/**"
 jobs:
   golangci:
     name: lint

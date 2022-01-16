@@ -11,6 +11,7 @@ on:
     # Only run when something changes in the actual containers
     paths:
     - "containers/**"
+    - ".github/workflows/**"
   schedule:
     - cron: '01 00 * * *'
 

@@ -14,15 +14,13 @@ Reasons to use Colima include:
 * Working for an organization that due to its size requires a paid Docker plan to use Docker Desktop, and wanting to avoid that cost and business relationship.
 * Preferring a CLI-focused approach to Docker Desktop's GUI focus.
 
-In day-to-day use, Colima is very similar to how WSL2 works on Windows.
-
-* Install colima with `brew install colima --HEAD` using homebrew or see the other [installation options](https://github.com/abiosoft/colima/blob/main/INSTALL.md).
+* Install colima with `brew install colima` using homebrew or see the other [installation options](https://github.com/abiosoft/colima/blob/main/INSTALL.md).
 * Start colima: `colima start --cpu 4 --memory 4` will set up a colima instance with 4 CPUs and 4GB of memory allocated. Your needs may vary. After the first start you can just use `colima start`
 * `colima status` will show colima's status.
 * After a computer restart you'll need to `colima start` again.
 * If you don't have Docker Desktop installed, you'll need the docker client, `brew install docker`.
 * Colima activates its own docker context in order to not conflict with Docker Desktop, so if you `docker context show` you'll see the current context (which will be "colima" after you've started colima). You can change to the default with `docker context use default` and see all the contexts with `docker context ls`.
-* For webserver performance you'll probably want to use mutagen, `ddev config global --mutagen-enabled`. See [Performance docs](performance.md#using-mutagen).
+* For webserver performance and predictability mutagen is recommended, `ddev config global --mutagen-enabled`. See [Performance docs](performance.md#using-mutagen). Since the file mounting technique on lima/colima is immature (sshfs) you may want to just use no-bind-mounts, `ddev config global --no-bind-mounts` (which also implies mutagen).
 
 DDEV has extensive automated test coverage for colima on macOS, but of course colima is new and this integration is new, so please share your results and open issues or [contact us](../index.md#support-and-user-contributed-documentation) for help.
 
