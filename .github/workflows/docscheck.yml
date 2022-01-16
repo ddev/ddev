@@ -19,7 +19,7 @@ on:
       - ".readthedocs.yml"
       - "requirements.txt"
       - ".github/workflows/**"
-
+      - "markdown-link-check.json"
 jobs:
   build:
     name: Docs check (spellcheck, markdownlint)
