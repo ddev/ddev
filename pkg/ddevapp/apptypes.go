@@ -127,7 +127,7 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 
 	// Create the upload dir so that mounts will happen with mutagen.
 	if app.GetUploadDir() != "" {
-		err = os.MkdirAll(path.Join(app.Docroot, app.GetUploadDir()), 0755)
+		err = os.MkdirAll(filepath.Join(app.AppRoot, app.Docroot, app.GetUploadDir()), 0755)
 		if err != nil {
 			return "", fmt.Errorf("Unable to create upload directory: %v", err)
 		}
