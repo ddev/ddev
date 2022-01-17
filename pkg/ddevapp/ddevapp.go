@@ -1035,6 +1035,8 @@ func (app *DdevApp) Start() error {
 		if err != nil {
 			return err
 		}
+		_ = TerminateMutagenSync(app)
+
 		err = SetMutagenVolumeOwnership(app)
 		if err != nil {
 			return err
