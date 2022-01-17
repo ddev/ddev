@@ -9,6 +9,7 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"os"
 	"path/filepath"
+	"path"
 	"sort"
 	"strings"
 	"text/template"
@@ -777,7 +778,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		NFSMountVolumeName:    app.GetNFSMountVolumeName(),
 		NoBindMounts:          globalconfig.DdevGlobalConfig.NoBindMounts,
 		Docroot:               app.GetDocroot(),
-		UploadDir:             filepath.Join(app.GetDocroot(), app.GetUploadDir()),
+		UploadDir:             path.Join(app.GetDocroot(), app.GetUploadDir()),
 		GitDirMount:           false,
 	}
 	// We don't want to bind-mount git dir if it doesn't exist
