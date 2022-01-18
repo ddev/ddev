@@ -32,6 +32,7 @@ var ServiceGet = &cobra.Command{
 		if len(args) < 1 {
 			util.Failed("You must specify a service to enable")
 		}
+		bash := util.FindBashPath()
 		apps, err := getRequestedProjects(args[1:], false)
 		if err != nil {
 			util.Failed("Unable to get project(s) %v: %v", args, err)
@@ -110,7 +111,7 @@ var ServiceGet = &cobra.Command{
 		}
 
 		for _, action := range s.PreInstallActions {
-			out, err := exec.RunHostCommand("bash", "-c", action)
+			out, err := exec.RunHostCommand(bash, "-c", action)
 			if err != nil {
 				util.Failed("Unable to run action %v: %v, output=%s", action, err, out)
 			}
@@ -141,7 +142,7 @@ var ServiceGet = &cobra.Command{
 		}
 
 		for _, action := range s.PostInstallActions {
-			out, err := exec.RunHostCommand("bash", "-c", action)
+			out, err := exec.RunHostCommand(bash, "-c", action)
 			if err != nil {
 				util.Failed("Unable to run action %v: %v, output=%s", action, err, out)
 			}
