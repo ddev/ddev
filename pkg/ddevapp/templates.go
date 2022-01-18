@@ -68,7 +68,7 @@ const ConfigInstructions = `
 # Please take care with this because it can cause great confusion.
 
 # upload_dir: custom/upload/dir
-# would set the destination path for ddev import-files to <docroot>/custom/upload/dir 
+# would set the destination path for ddev import-files to <docroot>/custom/upload/dir
 
 # working_dir:
 #   web: /var/www/html
