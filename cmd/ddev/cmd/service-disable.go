@@ -13,7 +13,7 @@ import (
 var ServiceDisable = &cobra.Command{
 	Use:     "disable service [project]",
 	Short:   "disable a 3rd party service",
-	Long:    `disable a 3rd party service. The docker-compose.*.yaml will be moved from .ddev into .ddev/services.`,
+	Long:    fmt.Sprintf(`disable a 3rd party service. The docker-compose.*.yaml will be moved from .ddev into .ddev/%s.`, disabledServicesDir),
 	Example: `ddev service disable solr`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
@@ -29,21 +29,21 @@ var ServiceDisable = &cobra.Command{
 		app := apps[0]
 		serviceName := args[0]
 		fName := fmt.Sprintf("docker-compose.%s.yaml", serviceName)
-		err = os.MkdirAll(app.GetConfigPath("services"), 0755)
+		err = os.MkdirAll(app.GetConfigPath(disabledServicesDir), 0755)
 		if err != nil {
-			util.Failed("Unable to create %s: %v", app.GetConfigPath("services"), err)
+			util.Failed("Unable to create %s: %v", app.GetConfigPath(disabledServicesDir), err)
 		}
 
 		if !fileutil.FileExists(app.GetConfigPath(fName)) {
 			util.Failed("Service %s does not currently exist in .ddev directory", serviceName)
 		}
-		err = os.Remove(app.GetConfigPath("services/" + fName))
+		err = os.Remove(app.GetConfigPath(disabledServicesDir + "/" + fName))
 		if err != nil /*&& err != os.PathError*/ {
 			if _, ok := err.(*fs.PathError); !ok {
-				util.Failed("Unable to remove %s: %v", app.GetConfigPath("services/"+fName), err)
+				util.Failed("Unable to remove %s: %v", app.GetConfigPath(disabledServicesDir+"/"+fName), err)
 			}
 		}
-		err = fileutil.CopyFile(app.GetConfigPath(fName), app.GetConfigPath("services/"+fName))
+		err = fileutil.CopyFile(app.GetConfigPath(fName), app.GetConfigPath(disabledServicesDir+"/"+fName))
 		if err != nil {
 			util.Failed("Unable to disable service %s: %v", serviceName, err)
 		}

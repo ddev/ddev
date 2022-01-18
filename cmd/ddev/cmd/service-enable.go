@@ -7,11 +7,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const disabledServicesDir = ".disabled-services"
+
 // ServiceEnable implements the ddev service enable command
 var ServiceEnable = &cobra.Command{
 	Use:     "enable service [project]",
 	Short:   "Enable a 3rd party service",
-	Long:    `Enable a 3rd party service. The service must exist as .ddev/services/docker-compose.<service>.yaml.`,
+	Long:    fmt.Sprintf(`Enable a 3rd party service. The service must exist as .ddev/%s/docker-compose.<service>.yaml. Note that you can use "ddev service get" to obtain a service not already on your system.`, disabledServicesDir),
 	Example: `ddev service enable solr`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
@@ -30,10 +32,10 @@ var ServiceEnable = &cobra.Command{
 		if fileutil.FileExists(app.GetConfigPath(fName)) {
 			util.Failed("Service %s already enabled, see %s", serviceName, fName)
 		}
-		if !fileutil.FileExists(app.GetConfigPath("services/" + fName)) {
-			util.Failed("No %s found in %s", fName, app.GetConfigPath("services"))
+		if !fileutil.FileExists(app.GetConfigPath(disabledServicesDir + "/" + fName)) {
+			util.Failed("No %s found in %s", fName, app.GetConfigPath(disabledServicesDir))
 		}
-		err = fileutil.CopyFile(app.GetConfigPath("services/"+fName), app.GetConfigPath(fName))
+		err = fileutil.CopyFile(app.GetConfigPath(disabledServicesDir+"/"+fName), app.GetConfigPath(fName))
 		if err != nil {
 			util.Failed("Unable to enable service %s: %v", serviceName, err)
 		}
