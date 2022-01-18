@@ -90,8 +90,12 @@ if [ -d /mnt/ddev_config/.homeadditions ]; then
 fi
 
 # It's possible CAROOT does not exist or is not writeable (if host-side mkcert -install not run yet)
-sudo mkdir -p ${CAROOT} && sudo chmod -R ugo+rw ${CAROOT}
+sudo mkdir -p ${CAROOT} && sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/
 # This will install the certs from $CAROOT (/mnt/ddev-global-cache/mkcert)
+# It also creates them if they don't already exist
+if [ ! -f  "${CAROOT}/rootCA.pem" ]; then
+  echo "rootCA.pem not found in ${CAROOT}"
+fi
 mkcert -install
 
 # VIRTUAL_HOST is a comma-delimited set of fqdns, convert it to space-separated and mkcert
