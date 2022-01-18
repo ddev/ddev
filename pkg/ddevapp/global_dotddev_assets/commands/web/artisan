@@ -6,5 +6,5 @@
 ## Example: "ddev artisan list" or "ddev artisan cache:clear"
 ## ProjectTypes: laravel
 
-./artisan "$@"
+php ./artisan "$@"
 
