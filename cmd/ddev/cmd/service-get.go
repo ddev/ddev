@@ -24,10 +24,11 @@ type serviceDesc struct {
 
 // ServiceGet implements the ddev service get command
 var ServiceGet = &cobra.Command{
-	Use:     "get servicename [project]",
-	Short:   "Get/Download a 3rd party service",
-	Long:    `Get/Download a 3rd party service. The service must exist as .ddev/services/docker-compose.<service>.yaml.`,
-	Example: `ddev service get rfay/solr`,
+	Use:   "get servicename [project]",
+	Short: "Get/Download a 3rd party service",
+	Long:  `Get/Download a 3rd party service. This can be a github repo, in which case the latest release will be used, or it can be a local directory.`,
+	Example: `ddev service get rfay/solr
+ddev service get /path/to/service`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
 			util.Failed("You must specify a service to enable")
@@ -45,13 +46,15 @@ var ServiceGet = &cobra.Command{
 		serviceRepo := args[0]
 		removeDir := ""
 		srcDest := ""
-		if fileutil.IsDirectory(serviceRepo) {
+		parts := strings.Split(serviceRepo, "/")
+
+		switch {
+		case fileutil.IsDirectory(serviceRepo):
 			// Use the directory as the source
 			srcDest = serviceRepo
-		} else {
+
+		case len(parts) == 2: // github.com/user/repo
 			// assume it's a github repo
-			serviceRepo = ""
-			parts := strings.Split(serviceRepo, "/")
 			if len(parts) != 2 {
 				util.Failed("Invalid service name %s", serviceRepo)
 			}
@@ -73,13 +76,15 @@ var ServiceGet = &cobra.Command{
 			defer func() {
 				_ = f.Close()
 			}()
+
+			util.Success("Downloading latest release from github.com/%v (%s)", serviceRepo, releases[0].GetTarballURL())
 			tarball := f.Name()
 			defer os.RemoveAll(tarball)
 			err = util.DownloadFile(tarball, releases[0].GetTarballURL(), true)
 			if err != nil {
 				util.Failed("Unable to download %v: %v", releases[0].GetTarballURL(), err)
 			}
-			srcDest, err := os.MkdirTemp("", "service_repo_")
+			srcDest, err = os.MkdirTemp("", "service_repo_")
 			if err != nil {
 				util.Failed("Unable to create temp dir: %v", err)
 			}
@@ -98,6 +103,8 @@ var ServiceGet = &cobra.Command{
 				util.Failed("No files found in %v", srcDest)
 			}
 			removeDir = list[0]
+		default:
+			util.Failed("Invalid service repo or path '%s'", serviceRepo)
 		}
 		yamlFile := filepath.Join(srcDest, removeDir, "install.yaml")
 		yamlContent, err := fileutil.ReadFileIntoString(yamlFile)
