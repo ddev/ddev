@@ -71,8 +71,7 @@ func TestCustomCommands(t *testing.T) {
 		app.Type = origType
 		err = app.WriteConfig()
 		assert.NoError(err)
-		err = os.RemoveAll(tmpHome)
-		assert.NoError(err)
+		_ = os.RemoveAll(tmpHome)
 		_ = os.Setenv("HOME", origHome)
 		_ = os.Setenv("USERPROFILE", origHome)
 		_ = os.Setenv("DDEV_DEBUG", origDebug)

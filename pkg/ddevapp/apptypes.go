@@ -125,6 +125,14 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 		return "", nil
 	}
 
+	// Create the upload dir so that mounts will happen with mutagen.
+	if app.GetUploadDir() != "" {
+		err = os.MkdirAll(filepath.Join(app.AppRoot, app.Docroot, app.GetUploadDir()), 0755)
+		if err != nil {
+			return "", fmt.Errorf("Unable to create upload directory: %v", err)
+		}
+	}
+
 	// Drupal and WordPress love to change settings files to be unwriteable.
 	// Chmod them to something we can work with in the event that they already
 	// exist.

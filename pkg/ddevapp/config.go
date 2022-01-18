@@ -785,8 +785,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if fileutil.IsDirectory(filepath.Join(app.AppRoot, ".git")) {
 		templateVars.GitDirMount = true
 	}
-	// And we don't want to bind-mount upload dir if it doesn't exist
-	if app.GetUploadDir() == "" || !fileutil.FileExists(templateVars.UploadDir) {
+	// And we don't want to bind-mount upload dir if it doesn't exist.
+	// templateVars.UploadDir is relative path rooted in approot.
+	if app.GetUploadDir() == "" || !fileutil.FileExists(filepath.Join(app.AppRoot, templateVars.UploadDir)) {
 		templateVars.UploadDir = ""
 	}
 
