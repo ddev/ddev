@@ -15,23 +15,23 @@ import (
 	"strings"
 )
 
-type serviceDesc struct {
+type installDesc struct {
 	Name               string   `yaml:"name"`
 	Files              []string `yaml:"files"`
 	PreInstallActions  []string `yaml:"pre_install_actions,omitempty"`
 	PostInstallActions []string `yaml:"post_install_actions,omitempty"`
 }
 
-// ServiceGet implements the ddev service get command
-var ServiceGet = &cobra.Command{
-	Use:   "get servicename [project]",
-	Short: "Get/Download a 3rd party service",
-	Long:  `Get/Download a 3rd party service. This can be a github repo, in which case the latest release will be used, or it can be a local directory.`,
-	Example: `ddev service get rfay/solr
-ddev service get /path/to/service`,
+// Get implements the ddev get command
+var Get = &cobra.Command{
+	Use:   "get addon [project]",
+	Short: "Get/Download a 3rd party add-on (service, provider, etc.)",
+	Long:  `Get/Download a 3rd party add-on (service, provider, etc.). This can be a github repo, in which case the latest release will be used, or it can be a local directory.`,
+	Example: `ddev get drud/ddev-drupal9-solr
+ddev get /path/to/package`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
-			util.Failed("You must specify a service to enable")
+			util.Failed("You must specify an add-on to download")
 		}
 		bash := util.FindBashPath()
 		apps, err := getRequestedProjects(args[1:], false)
@@ -43,20 +43,20 @@ ddev service get /path/to/service`,
 		}
 		app := apps[0]
 		app.DockerEnv()
-		serviceRepo := args[0]
+		repo := args[0]
 		removeDir := ""
 		srcDest := ""
-		parts := strings.Split(serviceRepo, "/")
+		parts := strings.Split(repo, "/")
 
 		switch {
-		case fileutil.IsDirectory(serviceRepo):
+		case fileutil.IsDirectory(repo):
 			// Use the directory as the source
-			srcDest = serviceRepo
+			srcDest = repo
 
 		case len(parts) == 2: // github.com/user/repo
 			// assume it's a github repo
 			if len(parts) != 2 {
-				util.Failed("Invalid service name %s", serviceRepo)
+				util.Failed("Invalid service name %s", repo)
 			}
 			owner := parts[0]
 			repo := parts[1]
@@ -64,10 +64,10 @@ ddev service get /path/to/service`,
 			ctx := context.Background()
 			releases, _, err := client.Repositories.ListReleases(ctx, owner, repo, &github.ListOptions{})
 			if err != nil {
-				util.Failed("Unable to get releases for %v: %v", serviceRepo, err)
+				util.Failed("Unable to get releases for %v: %v", repo, err)
 			}
 			if len(releases) == 0 {
-				util.Failed("No releases found for %v", serviceRepo)
+				util.Failed("No releases found for %v", repo)
 			}
 			f, err := os.CreateTemp("", fmt.Sprintf("%s-%s*.tar.gz", owner, repo))
 			if err != nil {
@@ -77,7 +77,7 @@ ddev service get /path/to/service`,
 				_ = f.Close()
 			}()
 
-			util.Success("Downloading latest release from github.com/%v (%s)", serviceRepo, releases[0].GetTarballURL())
+			util.Success("Downloading latest release from github.com/%v (%s)", repo, releases[0].GetTarballURL())
 			tarball := f.Name()
 			defer os.RemoveAll(tarball)
 			err = util.DownloadFile(tarball, releases[0].GetTarballURL(), true)
@@ -104,14 +104,14 @@ ddev service get /path/to/service`,
 			}
 			removeDir = list[0]
 		default:
-			util.Failed("Invalid service repo or path '%s'", serviceRepo)
+			util.Failed("Invalid service repo or path '%s'", repo)
 		}
 		yamlFile := filepath.Join(srcDest, removeDir, "install.yaml")
 		yamlContent, err := fileutil.ReadFileIntoString(yamlFile)
 		if err != nil {
 			util.Failed("Unable to read %v: %v", yamlFile, err)
 		}
-		var s serviceDesc
+		var s installDesc
 		err = yaml.Unmarshal([]byte(yamlContent), &s)
 		if err != nil {
 			util.Failed("Unable to parse %v: %v", yamlFile, err)
@@ -155,10 +155,10 @@ ddev service get /path/to/service`,
 			}
 		}
 
-		util.Success("Downloaded and enabled service %s, use `ddev restart` to turn it on.", serviceRepo)
+		util.Success("Downloaded add-on %s, use `ddev restart` to enable.", repo)
 	},
 }
 
 func init() {
-	ServiceCmd.AddCommand(ServiceGet)
+	RootCmd.AddCommand(Get)
 }
