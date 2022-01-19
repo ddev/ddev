@@ -23,7 +23,7 @@ type installDesc struct {
 
 // Get implements the ddev get command
 var Get = &cobra.Command{
-	Use:   "get addon [project]",
+	Use:   "get <addonOrURL> [project]",
 	Short: "Get/Download a 3rd party add-on (service, provider, etc.)",
 	Long:  `Get/Download a 3rd party add-on (service, provider, etc.). This can be a github repo, in which case the latest release will be used, or it can be a link to a .tar.gz in the correct format (like a particular release's .tar.gz) or it can be a local directory.`,
 	Example: `ddev get drud/ddev-drupal9-solr
@@ -59,7 +59,12 @@ ddev get /path/to/tarball.tar.gz`,
 		// if sourceRepoArg is a tarball on local filesystem, we can use that
 		case fileutil.FileExists(sourceRepoArg) && (strings.HasSuffix(filepath.Base(sourceRepoArg), "tar.gz") || strings.HasSuffix(filepath.Base(sourceRepoArg), "tar") || strings.HasSuffix(filepath.Base(sourceRepoArg), "tgz")):
 			// If the provided sourceRepoArg is a file, then we will use that as the source
-			extractedDir = sourceRepoArg
+			extractedDir, cleanup, err = archive.ExtractTarballWithCleanup(sourceRepoArg, true)
+			if err != nil {
+				util.Failed("Unable to extract %s: %v", sourceRepoArg, err)
+			}
+			defer cleanup()
+
 		// If the provided sourceRepoArg is a github sourceRepoArg, then we will use that as the source
 		case len(parts) == 2: // github.com/owner/sourceRepoArg
 			owner := parts[0]
@@ -76,7 +81,7 @@ ddev get /path/to/tarball.tar.gz`,
 			tarballURL = releases[0].GetTarballURL()
 			fallthrough
 
-		// Otherwise, use the provided source as a URL to a tar.gz
+		// Otherwise, use the provided source as a URL to a tarball
 		default:
 			if tarballURL == "" {
 				tarballURL = sourceRepoArg
