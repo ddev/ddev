@@ -5,8 +5,10 @@ import (
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/google/go-github/github"
+	"github.com/otiai10/copy"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 	"os"
@@ -17,6 +19,7 @@ import (
 type installDesc struct {
 	Name               string   `yaml:"name"`
 	Files              []string `yaml:"files"`
+	GlobalFiles        []string `yaml:"global_files,omitempty"`
 	PreInstallActions  []string `yaml:"pre_install_actions,omitempty"`
 	PostInstallActions []string `yaml:"post_install_actions,omitempty"`
 }
@@ -113,18 +116,22 @@ ddev get /path/to/tarball.tar.gz`,
 
 		for _, file := range s.Files {
 			src := filepath.Join(extractedDir, file)
-			//TODO: How dangerous is this? Rethink.
-			_ = os.RemoveAll(app.GetConfigPath(file))
-			if fileutil.IsDirectory(src) {
-				err = fileutil.CopyDir(src, app.GetConfigPath(file))
-			} else {
-				err = fileutil.CopyFile(src, app.GetConfigPath(file))
-			}
+			dest := app.GetConfigPath(file)
+
+			err = copy.Copy(src, dest)
 			if err != nil {
-				util.Failed("Unable to copy %v to %v: %v", src, app.GetConfigPath(file), err)
+				util.Failed("Unable to copy %v to %v: %v", src, dest, err)
 			}
 		}
-
+		globalDotDdev := filepath.Join(globalconfig.GetGlobalDdevDir())
+		for _, file := range s.GlobalFiles {
+			src := filepath.Join(extractedDir, file)
+			dest := filepath.Join(globalDotDdev, file)
+			err = copy.Copy(src, dest)
+			if err != nil {
+				util.Failed("Unable to copy %v to %v: %v", src, dest, err)
+			}
+		}
 		origDir, _ := os.Getwd()
 
 		//nolint: errcheck
