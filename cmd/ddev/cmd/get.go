@@ -45,7 +45,7 @@ ddev get /path/to/tarball.tar.gz`,
 		app := apps[0]
 		app.DockerEnv()
 		sourceRepoArg := args[0]
-		srcDest := ""
+		extractedDir := ""
 		parts := strings.Split(sourceRepoArg, "/")
 		tarballURL := ""
 		var cleanup func()
@@ -54,11 +54,12 @@ ddev get /path/to/tarball.tar.gz`,
 		// If the provided sourceRepoArg is a directory, then we will use that as the source
 		case fileutil.IsDirectory(sourceRepoArg):
 			// Use the directory as the source
-			srcDest = sourceRepoArg
+			extractedDir = sourceRepoArg
+
 		// if sourceRepoArg is a tarball on local filesystem, we can use that
 		case fileutil.FileExists(sourceRepoArg) && (strings.HasSuffix(filepath.Base(sourceRepoArg), "tar.gz") || strings.HasSuffix(filepath.Base(sourceRepoArg), "tar") || strings.HasSuffix(filepath.Base(sourceRepoArg), "tgz")):
 			// If the provided sourceRepoArg is a file, then we will use that as the source
-			srcDest = sourceRepoArg
+			extractedDir = sourceRepoArg
 		// If the provided sourceRepoArg is a github sourceRepoArg, then we will use that as the source
 		case len(parts) == 2: // github.com/owner/sourceRepoArg
 			owner := parts[0]
@@ -80,13 +81,13 @@ ddev get /path/to/tarball.tar.gz`,
 			if tarballURL == "" {
 				tarballURL = sourceRepoArg
 			}
-			srcDest, cleanup, err = archive.DownloadTarball(tarballURL)
+			extractedDir, cleanup, err = archive.DownloadAndExtractTarball(tarballURL, true)
 			if err != nil {
 				util.Failed("Unable to download %v: %v", sourceRepoArg, err)
 			}
 			defer cleanup()
 		}
-		yamlFile := filepath.Join(srcDest, "install.yaml")
+		yamlFile := filepath.Join(extractedDir, "install.yaml")
 		yamlContent, err := fileutil.ReadFileIntoString(yamlFile)
 		if err != nil {
 			util.Failed("Unable to read %v: %v", yamlFile, err)
@@ -106,7 +107,7 @@ ddev get /path/to/tarball.tar.gz`,
 		}
 
 		for _, file := range s.Files {
-			src := filepath.Join(srcDest, file)
+			src := filepath.Join(extractedDir, file)
 			//TODO: How dangerous is this? Rethink.
 			_ = os.RemoveAll(app.GetConfigPath(file))
 			if fileutil.IsDirectory(src) {

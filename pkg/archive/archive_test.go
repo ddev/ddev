@@ -4,6 +4,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 
@@ -139,4 +140,40 @@ func TestArchiveTarGz(t *testing.T) {
 	assert.FileExists(filepath.Join(tmpDir, "root.txt"))
 	assert.FileExists(filepath.Join(tmpDir, "subdir1", "subdir1.txt"))
 	assert.NoFileExists(filepath.Join(tmpDir, "subdir1", "subdir2", "s2.txt"))
+}
+
+// TestExtractTarballWithCleanup tests ExtractTarballWithCleanup
+func TestExtractTarballWithCleanup(t *testing.T) {
+	assert := asrt.New(t)
+
+	for _, suffix := range []string{"tar", "tar.gz", "tgz"} {
+		tarball := filepath.Join("testdata", t.Name(), "testfile"+"."+suffix)
+		dir, cleanup, err := archive.ExtractTarballWithCleanup(tarball, false)
+		assert.NoError(err)
+		assert.DirExists(dir)
+		assert.FileExists(filepath.Join(dir, "dir1/dir1_file.txt"))
+		cleanup()
+		assert.NoDirExists(dir)
+
+		dir, cleanup, err = archive.ExtractTarballWithCleanup(tarball, true)
+		assert.NoError(err)
+		assert.DirExists(dir)
+		assert.FileExists(filepath.Join(dir, "dir1_file.txt"))
+		cleanup()
+		assert.NoDirExists(dir)
+	}
+}
+
+// TestDownloadAndExtractTarball tests DownloadAndExtractTarball
+func TestDownloadAndExtractTarball(t *testing.T) {
+	assert := asrt.New(t)
+
+	testTarball := "https://github.com/drud/ddev-drupal9-solr/archive/refs/tags/v0.1.1.tar.gz"
+
+	dir, cleanup, err := archive.DownloadAndExtractTarball(testTarball, true)
+	require.NoError(t, err)
+	assert.DirExists(dir)
+	assert.FileExists(path.Join(dir, "install.yaml"))
+	cleanup()
+	assert.NoDirExists(dir)
 }
