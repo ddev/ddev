@@ -8,24 +8,12 @@ Although anyone can create their own services with a `docker-compose.*.yaml` fil
 
 * [Apache Solr for Drupal 9](https://github.com/drud/ddev-drupal9-solr): `ddev service get drud/ddev-drupal9-solr`.
 * [Memcached](https://github.com/drud/ddev-memcached): `ddev service get drud/ddev-memcached`.
-
-### Beanstalk (Work Queue)
-
-This recipe adds a [Beanstalk](https://beanstalkd.github.io/) container to a project.
-
-#### Beanstalk Installation
-
-* Copy [docker-compose.beanstalk.yaml](https://github.com/drud/ddev/tree/master/pkg/servicetest/testdata/TestServices/docker-compose.beanstalkd.yaml) to the .ddev folder for your project.
-* Run `ddev start`.
-
-#### Interacting with the Beanstalk Queue
-
-* The Beanstalk instance will listen on TCP port 11300 (the beanstalkd default).
-* Configure your application to access Beanstalk on the host:port `beanstalk:11300`.
+* [Beanstalkd](https://github.com/drud/ddev-beanstalkd): `ddev service get drud/ddev-beanstalkd`.
 
 ## Additional services in ddev-contrib (MongoDB, PostgresSQL, etc)
 
-The [ddev-contrib](https://github.com/drud/ddev-contrib) repository has a wealth of additional examples and instructions:
+Commonly used services will be migrated from the ddev-contrib repository to individual, tested, supported repositories, but
+ [ddev-contrib](https://github.com/drud/ddev-contrib) repository has a wealth of additional examples and instructions:
 
 * **ElasticHQ**:See [ElasticHQ](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/elastichq).
 * **Elasticsearch**: See [Elasticsearch](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/elasticsearch).
