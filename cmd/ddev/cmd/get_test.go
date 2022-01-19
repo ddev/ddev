@@ -35,7 +35,7 @@ func TestCmdGet(t *testing.T) {
 	tarballFile := filepath.Join(origDir, "testdata", t.Name(), "ddev-memcached.tar.gz")
 	for _, arg := range []string{
 		"drud/ddev-memcached",
-		"https://github.com/drud/ddev-memcached/archive/refs/tags/v1.0.1.tar.gz",
+		"https://github.com/drud/ddev-memcached/archive/refs/tags/v1.1.1.tar.gz",
 		tarballFile} {
 		out, err := exec.RunHostCommand(DdevBin, "get", arg)
 		assert.NoError(err, "failed ddev get %s", arg)
