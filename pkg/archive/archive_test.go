@@ -147,18 +147,18 @@ func TestExtractTarballWithCleanup(t *testing.T) {
 	assert := asrt.New(t)
 
 	for _, suffix := range []string{"tar", "tar.gz", "tgz"} {
-		tarball := filepath.Join("testdata", t.Name(), "testfile"+"."+suffix)
+		tarball := path.Join("testdata", t.Name(), "testfile"+"."+suffix)
 		dir, cleanup, err := archive.ExtractTarballWithCleanup(tarball, false)
 		assert.NoError(err)
 		assert.DirExists(dir)
-		assert.FileExists(filepath.Join(dir, "dir1/dir1_file.txt"))
+		assert.FileExists(path.Join(dir, "dir1/dir1_file.txt"))
 		cleanup()
 		assert.NoDirExists(dir)
 
 		dir, cleanup, err = archive.ExtractTarballWithCleanup(tarball, true)
 		assert.NoError(err)
 		assert.DirExists(dir)
-		assert.FileExists(filepath.Join(dir, "dir1_file.txt"))
+		assert.FileExists(path.Join(dir, "dir1_file.txt"))
 		cleanup()
 		assert.NoDirExists(dir)
 	}
