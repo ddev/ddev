@@ -18,7 +18,7 @@ import (
 
 type installDesc struct {
 	Name               string   `yaml:"name"`
-	Files              []string `yaml:"files"`
+	ProjectFiles       []string `yaml:"project_files"`
 	GlobalFiles        []string `yaml:"global_files,omitempty"`
 	PreInstallActions  []string `yaml:"pre_install_actions,omitempty"`
 	PostInstallActions []string `yaml:"post_install_actions,omitempty"`
@@ -114,7 +114,7 @@ ddev get /path/to/tarball.tar.gz`,
 			util.Success("%v\n%s", action, out)
 		}
 
-		for _, file := range s.Files {
+		for _, file := range s.ProjectFiles {
 			src := filepath.Join(extractedDir, file)
 			dest := app.GetConfigPath(file)
 
