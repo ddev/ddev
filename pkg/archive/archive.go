@@ -5,9 +5,11 @@ import (
 	"archive/zip"
 	"compress/gzip"
 	"fmt"
+	"github.com/drud/ddev/pkg/fileutil"
 	"io"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -356,4 +358,50 @@ func Tar(src string, tarballFilePath string, exclusion string) error {
 
 		return nil
 	})
+}
+
+// DownloadTarball takes an url to a tar.gz file and
+// extracts into a new a temp directory and the directory
+// and a cleanup function.
+// It's the caller's responsibility to call the cleanup function.
+func DownloadTarball(url string) (string, func(), error) {
+	base := filepath.Base(url)
+	f, err := os.CreateTemp("", fmt.Sprintf("%s_*.tar.gz", base))
+	if err != nil {
+		return "", nil, fmt.Errorf("Unable to create temp file: %v", err)
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+
+	util.Success("Downloading %s", url)
+	tarball := f.Name()
+	defer func() {
+		_ = os.Remove(tarball)
+	}()
+
+	err = util.DownloadFile(tarball, url, true)
+	if err != nil {
+		return "", nil, fmt.Errorf("Unable to download %v: %v", url, err)
+	}
+	srcDest, err := os.MkdirTemp("", "ddev_addon_repo_")
+	if err != nil {
+		return "", nil, fmt.Errorf("Unable to create temp dir: %v", err)
+	}
+
+	err = Untar(tarball, srcDest, "")
+	if err != nil {
+		return "", nil, fmt.Errorf("Unable to untar %v: %v", srcDest, err)
+	}
+
+	list, err := fileutil.ListFilesInDir(srcDest)
+	if err != nil {
+		return "", nil, fmt.Errorf("Unable to list files in %v: %v", srcDest, err)
+	}
+	if len(list) == 0 {
+		return "", nil, fmt.Errorf("No files found in %v", srcDest)
+	}
+	extractedDir := path.Join(srcDest, list[0])
+	cleanupFunc := func() { _ = os.RemoveAll(srcDest) }
+	return extractedDir, cleanupFunc, nil
 }

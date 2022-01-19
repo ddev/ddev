@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -26,8 +25,9 @@ type installDesc struct {
 var Get = &cobra.Command{
 	Use:   "get addon [project]",
 	Short: "Get/Download a 3rd party add-on (service, provider, etc.)",
-	Long:  `Get/Download a 3rd party add-on (service, provider, etc.). This can be a github repo, in which case the latest release will be used, or it can be a local directory.`,
+	Long:  `Get/Download a 3rd party add-on (service, provider, etc.). This can be a github repo, in which case the latest release will be used, or it can be a link to a .tar.gz in the correct format (like a particular release's .tar.gz) or it can be a local directory.`,
 	Example: `ddev get drud/ddev-drupal9-solr
+ddev get https://github.com/drud/ddev-drupal9-solr/archive/refs/tags/v0.0.5.tar.gz
 ddev get /path/to/package`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
@@ -43,21 +43,19 @@ ddev get /path/to/package`,
 		}
 		app := apps[0]
 		app.DockerEnv()
-		repo := args[0]
-		removeDir := ""
+		sourceRepoArg := args[0]
 		srcDest := ""
-		parts := strings.Split(repo, "/")
+		parts := strings.Split(sourceRepoArg, "/")
+		tarballURL := ""
+		var cleanup func()
 
 		switch {
-		case fileutil.IsDirectory(repo):
+		// If the provided sourceRepoArg is a directory, then we will use that as the source
+		case fileutil.IsDirectory(sourceRepoArg):
 			// Use the directory as the source
-			srcDest = repo
-
-		case len(parts) == 2: // github.com/user/repo
-			// assume it's a github repo
-			if len(parts) != 2 {
-				util.Failed("Invalid service name %s", repo)
-			}
+			srcDest = sourceRepoArg
+		// If the provided sourceRepoArg is a github sourceRepoArg, then we will use that as the source
+		case len(parts) == 2: // github.com/owner/sourceRepoArg
 			owner := parts[0]
 			repo := parts[1]
 			client := github.NewClient(nil)
@@ -69,44 +67,21 @@ ddev get /path/to/package`,
 			if len(releases) == 0 {
 				util.Failed("No releases found for %v", repo)
 			}
-			f, err := os.CreateTemp("", fmt.Sprintf("%s-%s*.tar.gz", owner, repo))
-			if err != nil {
-				util.Failed("Unable to create temp file: %v", err)
-			}
-			defer func() {
-				_ = f.Close()
-			}()
+			tarballURL = releases[0].GetTarballURL()
+			fallthrough
 
-			util.Success("Downloading latest release from github.com/%v (%s)", repo, releases[0].GetTarballURL())
-			tarball := f.Name()
-			defer os.RemoveAll(tarball)
-			err = util.DownloadFile(tarball, releases[0].GetTarballURL(), true)
-			if err != nil {
-				util.Failed("Unable to download %v: %v", releases[0].GetTarballURL(), err)
-			}
-			srcDest, err = os.MkdirTemp("", "service_repo_")
-			if err != nil {
-				util.Failed("Unable to create temp dir: %v", err)
-			}
-			defer os.RemoveAll(srcDest)
-
-			err = archive.Untar(tarball, srcDest, "")
-			if err != nil {
-				util.Failed("Unable to untar %v: %v", srcDest, err)
-			}
-
-			list, err := fileutil.ListFilesInDir(srcDest)
-			if err != nil {
-				util.Failed("Unable to list files in %v: %v", srcDest, err)
-			}
-			if len(list) == 0 {
-				util.Failed("No files found in %v", srcDest)
-			}
-			removeDir = list[0]
+		// Otherwise, use the provided source as a URL to a tar.gz
 		default:
-			util.Failed("Invalid service repo or path '%s'", repo)
+			if tarballURL == "" {
+				tarballURL = sourceRepoArg
+			}
+			srcDest, cleanup, err = archive.DownloadTarball(tarballURL)
+			if err != nil {
+				util.Failed("Unable to download %v: %v", sourceRepoArg, err)
+			}
+			defer cleanup()
 		}
-		yamlFile := filepath.Join(srcDest, removeDir, "install.yaml")
+		yamlFile := filepath.Join(srcDest, "install.yaml")
 		yamlContent, err := fileutil.ReadFileIntoString(yamlFile)
 		if err != nil {
 			util.Failed("Unable to read %v: %v", yamlFile, err)
@@ -126,7 +101,7 @@ ddev get /path/to/package`,
 		}
 
 		for _, file := range s.Files {
-			src := filepath.Join(srcDest, removeDir, file)
+			src := filepath.Join(srcDest, file)
 			//TODO: How dangerous is this? Rethink.
 			_ = os.RemoveAll(app.GetConfigPath(file))
 			if fileutil.IsDirectory(src) {
@@ -155,7 +130,7 @@ ddev get /path/to/package`,
 			}
 		}
 
-		util.Success("Downloaded add-on %s, use `ddev restart` to enable.", repo)
+		util.Success("Downloaded add-on %s, use `ddev restart` to enable.", sourceRepoArg)
 	},
 }
 
