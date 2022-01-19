@@ -28,7 +28,7 @@ func TestCmdService(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	tarballFile := filepath.Join(origDir, "testdata", t.Name(), "ddev-memcached-1.0.1.tar.gz")
+	tarballFile := filepath.Join(origDir, "testdata", t.Name(), "ddev-memcached-1.1.1.tar.gz")
 	_, err = exec.RunHostCommand(DdevBin, "get", tarballFile)
 	require.NoError(t, err)
 	assert.FileExists(app.GetConfigPath("docker-compose.memcached.yaml"))

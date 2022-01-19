@@ -393,7 +393,7 @@ func DownloadAndExtractTarball(url string, removeTopLevel bool) (string, func(),
 // cleanup function.
 // If removeTopLevel is true, the top level directory will be removed.
 func ExtractTarballWithCleanup(tarball string, removeTopLevel bool) (string, func(), error) {
-	tmpDir, err := os.MkdirTemp("", fmt.Sprintf("ddev_%s_*", path.Base(tarball)))
+	tmpDir, err := os.MkdirTemp("", fmt.Sprintf("ddev_%s_*", filepath.Base(tarball)))
 	if err != nil {
 		return "", nil, fmt.Errorf("Unable to create temp dir: %v", err)
 	}
