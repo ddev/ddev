@@ -384,7 +384,15 @@ func DownloadTarball(url string) (string, func(), error) {
 	if err != nil {
 		return "", nil, fmt.Errorf("Unable to download %v: %v", url, err)
 	}
-	srcDest, err := os.MkdirTemp("", "ddev_addon_repo_")
+	srcDest, cleanup, err := ExtractTarballWithCleanup(tarball)
+	return srcDest, cleanup, err
+}
+
+// ExtractTarballWithCleanup takes a tarball file and extracts it into a temp directory
+// Caller is responsible for cleanup of the temp directory using the returned
+// cleanup function.
+func ExtractTarballWithCleanup(tarball string) (string, func(), error) {
+	srcDest, err := os.MkdirTemp("", fmt.Sprintf("ddev_%s_*", path.Base(tarball)))
 	if err != nil {
 		return "", nil, fmt.Errorf("Unable to create temp dir: %v", err)
 	}

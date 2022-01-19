@@ -28,7 +28,8 @@ var Get = &cobra.Command{
 	Long:  `Get/Download a 3rd party add-on (service, provider, etc.). This can be a github repo, in which case the latest release will be used, or it can be a link to a .tar.gz in the correct format (like a particular release's .tar.gz) or it can be a local directory.`,
 	Example: `ddev get drud/ddev-drupal9-solr
 ddev get https://github.com/drud/ddev-drupal9-solr/archive/refs/tags/v0.0.5.tar.gz
-ddev get /path/to/package`,
+ddev get /path/to/package
+ddev get /path/to/tarball.tar.gz`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
 			util.Failed("You must specify an add-on to download")
@@ -53,6 +54,10 @@ ddev get /path/to/package`,
 		// If the provided sourceRepoArg is a directory, then we will use that as the source
 		case fileutil.IsDirectory(sourceRepoArg):
 			// Use the directory as the source
+			srcDest = sourceRepoArg
+		// if sourceRepoArg is a tarball on local filesystem, we can use that
+		case fileutil.FileExists(sourceRepoArg) && (strings.HasSuffix(filepath.Base(sourceRepoArg), "tar.gz") || strings.HasSuffix(filepath.Base(sourceRepoArg), "tar") || strings.HasSuffix(filepath.Base(sourceRepoArg), "tgz")):
+			// If the provided sourceRepoArg is a file, then we will use that as the source
 			srcDest = sourceRepoArg
 		// If the provided sourceRepoArg is a github sourceRepoArg, then we will use that as the source
 		case len(parts) == 2: // github.com/owner/sourceRepoArg
