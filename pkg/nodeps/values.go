@@ -1,6 +1,8 @@
 package nodeps
 
-import "sort"
+import (
+	"sort"
+)
 
 // Providers
 //TODO: This should be removed as many providers will now be valid
@@ -96,8 +98,7 @@ const (
 	// DdevDefaultTLD is the top-level-domain used by default, can be overridden
 	DdevDefaultTLD                  = "ddev.site"
 	InternetDetectionTimeoutDefault = 750
-
-	MinimumDockerSpaceWarning = 15
+	MinimumDockerSpaceWarning       = 15
 )
 
 // IsValidPHPVersion is a helper function to determine if a PHP version is valid, returning
@@ -121,7 +122,7 @@ func GetValidPHPVersions() []string {
 	return s
 }
 
-// IsValidDatabaseVersion checks if the version is valid
+// IsValidDatabaseVersion checks if the version is valid for the provided database type
 func IsValidDatabaseVersion(dbType string, dbVersion string) bool {
 	switch dbType {
 	case MariaDB:
@@ -130,6 +131,19 @@ func IsValidDatabaseVersion(dbType string, dbVersion string) bool {
 		return IsValidMySQLVersion(dbVersion)
 	}
 	return false
+}
+
+// GetValidDatabaseVersions returns a slice of valid versions with the format
+// mariadb:10.5 or mysql:5.7
+func GetValidDatabaseVersions() []string {
+	combos := []string{}
+	for _, v := range GetValidMariaDBVersions() {
+		combos = append(combos, MariaDB+":"+v)
+	}
+	for _, v := range GetValidMySQLVersions() {
+		combos = append(combos, MySQL+":"+v)
+	}
+	return combos
 }
 
 // IsValidMariaDBVersion is a helper function to determine if a MariaDB version is valid, returning

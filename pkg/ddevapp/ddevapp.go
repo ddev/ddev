@@ -62,6 +62,9 @@ const SitePaused = "paused"
 // If this string is found, we assume we can replace/update the file.
 const DdevFileSignature = "#ddev-generated"
 
+// DatabaseDefault is the default database/version
+var DatabaseDefault = DatabaseDesc{nodeps.MariaDB, nodeps.MariaDBDefaultVersion}
+
 type DatabaseDesc struct {
 	Type    string `yaml:"type"`
 	Version string `yaml:"version"`
