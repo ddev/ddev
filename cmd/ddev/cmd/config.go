@@ -310,7 +310,7 @@ func init() {
 
 	ConfigCommand.Flags().Bool("auto", true, `Automatically run config without prompting.`)
 	ConfigCommand.Flags().Bool("bind-all-interfaces", false, `Bind host ports on all interfaces, not just on localhost network interface`)
-
+	ConfigCommand.Flags().String("database", "", fmt.Sprintf(`Specify the database type:version to use. Defaults to amriadb:%s`, nodeps.MariaDBDefaultVersion))
 	RootCmd.AddCommand(ConfigCommand)
 
 	// Add hidden pantheon subcommand for people who have it in their fingers
@@ -571,6 +571,19 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	if cmd.Flag("bind-all-interfaces").Changed {
 		app.BindAllInterfaces, _ = cmd.Flags().GetBool("bind-all-interfaces")
+	}
+
+	if cmd.Flag("database").Changed {
+		raw, err := cmd.Flags().GetString("database")
+		if err != nil {
+			util.Failed("Incorrect value for database: %v", err)
+		}
+		parts := strings.Split(raw, ":")
+		if len(parts) != 2 {
+			util.Failed("Incorrect database value: %s - use something like 'mariadb:10.3 or mysql:8.0", raw)
+		}
+		app.Database.Type = parts[0]
+		app.Database.Version = parts[1]
 	}
 
 	if uploadDirArg != "" {
