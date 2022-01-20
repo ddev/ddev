@@ -1675,14 +1675,8 @@ func (app *DdevApp) Snapshot(baseSnapshotName string) (string, error) {
 		t := time.Now()
 		baseSnapshotName = app.Name + "_" + t.Format("20060102150405")
 	}
-	serverVersion := ""
-	switch {
-	case app.MySQLVersion != "":
-		serverVersion = "mysql_" + app.MySQLVersion
-	case app.MariaDBVersion != "":
-		serverVersion = "mariadb_" + app.MariaDBVersion
-	}
-	snapshotName := baseSnapshotName + "-" + serverVersion + ".gz"
+
+	snapshotName := baseSnapshotName + "-" + app.Database.Type + "_" + app.Database.Version + ".gz"
 
 	existingSnapshots, err := app.ListSnapshots()
 	if err != nil {
@@ -1704,13 +1698,15 @@ func (app *DdevApp) Snapshot(baseSnapshotName string) (string, error) {
 
 	util.Success("Creating database snapshot %s", snapshotName)
 	streamTool := "mbstream"
+
 	// mbstream/mariadbackup don't make their appearance in mariadb until 10.2
-	if strings.HasPrefix(serverVersion, "mysql") || (serverVersion == "mariadb_5.5" || serverVersion == "mariadb_10.0" || serverVersion == "mariadb_10.1") {
+	streamtoolVersions := []string{"mysql:5.5", "mysql:5.6", "mysql:5.7", "mysql:8.0", "mariadb:5.5", "mariadb:10.0", "mariadb:10.1"}
+	if nodeps.ArrayContainsString(streamtoolVersions, app.Database.Type+":"+app.Database.Version) {
 		streamTool = "xbstream"
 	}
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     fmt.Sprintf(`$(/backuptool.sh) --backup --stream=%s --user=root --password=root --socket=/var/tmp/mysql.sock  2>/var/log/mariadbackup_backup_%s.log | gzip >"%s/%s"`, streamTool, snapshotName, containerSnapshotDir, snapshotName),
+		Cmd:     fmt.Sprintf(`set -eu -o pipefail; $(/backuptool.sh) --backup --stream=%s --user=root --password=root --socket=/var/tmp/mysql.sock  2>/var/log/mariadbackup_backup_%s.log | gzip >"%s/%s"`, streamTool, snapshotName, containerSnapshotDir, snapshotName),
 	})
 
 	if err != nil {
@@ -1850,12 +1846,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("failed to process pre-restore-snapshot hooks: %v", err)
 	}
 
-	currentDBVersion := "mariadb_" + nodeps.MariaDBDefaultVersion
-	if app.MariaDBVersion != "" {
-		currentDBVersion = "mariadb_" + app.MariaDBVersion
-	} else if app.MySQLVersion != "" {
-		currentDBVersion = "mysql_" + app.MySQLVersion
-	}
+	currentDBVersion := app.Database.Type + "_" + app.Database.Version
 
 	snapshotFileOrDir := filepath.Join("db_snapshots", snapshotName)
 
