@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	exec2 "github.com/drud/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -53,6 +54,11 @@ func TestShareCmd(t *testing.T) {
 		assert.NoError(err)
 		_ = cmd.Wait()
 		_ = cmdReader.Close()
+		_, err = exec.LookPath("killall")
+		// Try to kill ngrok any way we can, avoid having two run at same time.
+		if err == nil {
+			_, _ = exec2.RunHostCommand("killall", "-9", "ngrok")
+		}
 
 		if err != nil && !strings.Contains(err.Error(), "process already finished") {
 			assert.NoError(err)
