@@ -63,8 +63,8 @@ const SitePaused = "paused"
 const DdevFileSignature = "#ddev-generated"
 
 type DatabaseDesc struct {
-	Type    string `yaml:"database_type"`
-	Version string `yaml:"database_version"`
+	Type    string `yaml:"type"`
+	Version string `yaml:"version"`
 }
 
 // DdevApp is the struct that represents a ddev app, mostly its config

@@ -1855,16 +1855,12 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	app, err := ddevapp.NewApp(site.Dir, false)
 	require.NoError(t, err)
-	origMariaVersion := app.MariaDBVersion
-	origMysqlVersion := app.MySQLVersion
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
 
 		app.Hooks = nil
-		app.MariaDBVersion = origMariaVersion
-		app.MySQLVersion = origMysqlVersion
 		err = app.WriteConfig()
 		assert.NoError(err)
 		err = os.Chdir(origDir)

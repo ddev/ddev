@@ -19,8 +19,9 @@ const ConfigInstructions = `
 
 # webimage: <docker_image>  # nginx/php docker image.
 
-# database_version
-# Specify with "mariadb" or "mysql" and the version
+# database:
+#   type: <dbtype> # mysql, mariadb
+#   version: <version> # database version, like "10.3" or "8.0"
 
 # router_http_port: <port>  # Port to be used for http (defaults to port 80)
 # router_https_port: <port> # Port for https (defaults to 443)

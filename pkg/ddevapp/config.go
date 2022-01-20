@@ -75,7 +75,6 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.Type = nodeps.AppTypePHP
 	app.PHPVersion = nodeps.PHPDefault
 	app.ComposerVersion = nodeps.ComposerDefault
-	app.MariaDBVersion = nodeps.MariaDBDefaultVersion
 	app.WebserverType = nodeps.WebserverDefault
 	app.NFSMountEnabled = nodeps.NFSMountEnabledDefault
 	app.NFSMountEnabledGlobal = globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal
@@ -110,11 +109,6 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		if err != nil {
 			return app, fmt.Errorf("%v exists but cannot be read. It may be invalid due to a syntax error.: %v", app.ConfigPath, err)
 		}
-	}
-	// If MySQLVersion is now non-default/non-empty, then empty
-	// MariaDBVersion in its favor.
-	if app.MySQLVersion != "" {
-		app.MariaDBVersion = ""
 	}
 	app.SetApptypeSettingsPaths()
 
@@ -170,19 +164,23 @@ func (app *DdevApp) WriteConfig() error {
 
 	// Convert from pre-v1.19 mariadb_version and mysql_version to new
 	// Database config.
-	switch {
-	case appcopy.MariaDBVersion == "" && appcopy.MySQLVersion == "":
-		appcopy.Database.Type = nodeps.MariaDB
-		appcopy.Database.Version = nodeps.MariaDBDefaultVersion
+	if appcopy.Database.Type == "" {
+		switch {
+		case appcopy.MariaDBVersion == "" && appcopy.MySQLVersion == "":
+			appcopy.Database.Type = nodeps.MariaDB
+			appcopy.Database.Version = nodeps.MariaDBDefaultVersion
 
-	case appcopy.MariaDBVersion != "":
-		appcopy.Database.Type = nodeps.MariaDB
-		appcopy.Database.Version = appcopy.MariaDBVersion
+		case appcopy.MariaDBVersion != "":
+			appcopy.Database.Type = nodeps.MariaDB
+			appcopy.Database.Version = appcopy.MariaDBVersion
 
-	case appcopy.MySQLVersion != "":
-		appcopy.Database.Type = nodeps.MySQL
-		appcopy.Database.Version = appcopy.MySQLVersion
+		case appcopy.MySQLVersion != "":
+			appcopy.Database.Type = nodeps.MySQL
+			appcopy.Database.Version = appcopy.MySQLVersion
+		}
 	}
+	appcopy.MariaDBVersion = ""
+	appcopy.MySQLVersion = ""
 
 	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't
 	// accidentally get used for other projects.
