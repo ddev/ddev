@@ -7,7 +7,7 @@ require (
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/docker/docker v20.10.12+incompatible
 	github.com/fsouza/go-dockerclient v1.7.7
-	github.com/google/go-github v0.0.0-20180716180158-c0b63e2f9bb1
+	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/uuid v1.3.0
 	github.com/jedib0t/go-pretty/v6 v6.2.4
 	github.com/lextoumbourou/goodhosts v2.1.0+incompatible

@@ -5,9 +5,11 @@ import (
 	"archive/zip"
 	"compress/gzip"
 	"fmt"
+	"github.com/drud/ddev/pkg/fileutil"
 	"io"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -356,4 +358,65 @@ func Tar(src string, tarballFilePath string, exclusion string) error {
 
 		return nil
 	})
+}
+
+// DownloadAndExtractTarball takes an url to a tar.gz file and
+// extracts into a new a temp directory and the directory
+// and a cleanup function.
+// It's the caller's responsibility to call the cleanup function.
+func DownloadAndExtractTarball(url string, removeTopLevel bool) (string, func(), error) {
+	base := filepath.Base(url)
+	f, err := os.CreateTemp("", fmt.Sprintf("%s_*.tar.gz", base))
+	if err != nil {
+		return "", nil, fmt.Errorf("Unable to create temp file: %v", err)
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+
+	util.Success("Downloading %s", url)
+	tarball := f.Name()
+	defer func() {
+		_ = os.Remove(tarball)
+	}()
+
+	err = util.DownloadFile(tarball, url, true)
+	if err != nil {
+		return "", nil, fmt.Errorf("Unable to download %v: %v", url, err)
+	}
+	extractedDir, cleanup, err := ExtractTarballWithCleanup(tarball, removeTopLevel)
+	return extractedDir, cleanup, err
+}
+
+// ExtractTarballWithCleanup takes a tarball file and extracts it into a temp directory
+// Caller is responsible for cleanup of the temp directory using the returned
+// cleanup function.
+// If removeTopLevel is true, the top level directory will be removed.
+func ExtractTarballWithCleanup(tarball string, removeTopLevel bool) (string, func(), error) {
+	tmpDir, err := os.MkdirTemp("", fmt.Sprintf("ddev_%s_*", filepath.Base(tarball)))
+	if err != nil {
+		return "", nil, fmt.Errorf("Unable to create temp dir: %v", err)
+	}
+
+	err = Untar(tarball, tmpDir, "")
+	if err != nil {
+		return "", nil, fmt.Errorf("Unable to untar %v: %v", tmpDir, err)
+	}
+
+	// If removeTopLevel then the guts of the tarball are the first level directory
+	// Really the UnTar() function should take strip-components as an argument
+	// but not going to do that right now.
+	extractedDir := tmpDir
+	if removeTopLevel {
+		list, err := fileutil.ListFilesInDir(tmpDir)
+		if err != nil {
+			return "", nil, fmt.Errorf("Unable to list files in %v: %v", tmpDir, err)
+		}
+		if len(list) == 0 {
+			return "", nil, fmt.Errorf("No files found in %v", tmpDir)
+		}
+		extractedDir = path.Join(tmpDir, list[0])
+	}
+	cleanupFunc := func() { _ = os.RemoveAll(tmpDir) }
+	return extractedDir, cleanupFunc, nil
 }
