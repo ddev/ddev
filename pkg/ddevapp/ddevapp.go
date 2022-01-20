@@ -76,6 +76,8 @@ type DdevApp struct {
 	PHPVersion            string                `yaml:"php_version"`
 	WebserverType         string                `yaml:"webserver_type"`
 	WebImage              string                `yaml:"webimage,omitempty"`
+	DBImage               string                `yaml:"dbimage,omitempty"`
+	DBAImage              string                `yaml:"dbaimage,omitempty"`
 	RouterHTTPPort        string                `yaml:"router_http_port"`
 	RouterHTTPSPort       string                `yaml:"router_https_port"`
 	XdebugEnabled         bool                  `yaml:"xdebug_enabled"`
@@ -1483,6 +1485,8 @@ func (app *DdevApp) DockerEnv() {
 		"COMPOSE_CONVERT_WINDOWS_PATHS": "true",
 		"DDEV_SITENAME":                 app.Name,
 		"DDEV_TLD":                      app.ProjectTLD,
+		"DDEV_DBIMAGE":                  app.GetDBImage(),
+		"DDEV_DBAIMAGE":                 version.GetDBAImage(),
 		"DDEV_PROJECT":                  app.Name,
 		"DDEV_WEBIMAGE":                 app.WebImage,
 		"DDEV_APPROOT":                  app.AppRoot,
