@@ -62,6 +62,11 @@ const SitePaused = "paused"
 // If this string is found, we assume we can replace/update the file.
 const DdevFileSignature = "#ddev-generated"
 
+type DatabaseDesc struct {
+	DatabaseType    string `yaml:"database_type"`
+	DatabaseVersion string `yaml:"database_version"`
+}
+
 // DdevApp is the struct that represents a ddev app, mostly its config
 // from config.yaml.
 type DdevApp struct {
@@ -79,8 +84,9 @@ type DdevApp struct {
 	NoProjectMount        bool                  `yaml:"no_project_mount,omitempty"`
 	AdditionalHostnames   []string              `yaml:"additional_hostnames"`
 	AdditionalFQDNs       []string              `yaml:"additional_fqdns"`
-	MariaDBVersion        string                `yaml:"mariadb_version"`
-	MySQLVersion          string                `yaml:"mysql_version"`
+	MariaDBVersion        string                `yaml:"mariadb_version,omitempty"`
+	MySQLVersion          string                `yaml:"mysql_version,omitempty"`
+	Database              DatabaseDesc          `yaml:"database"`
 	NFSMountEnabled       bool                  `yaml:"nfs_mount_enabled"`
 	NFSMountEnabledGlobal bool                  `yaml:"-"`
 	MutagenEnabled        bool                  `yaml:"mutagen_enabled"`
@@ -219,16 +225,8 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["httpsURLs"] = httpsURLs
 	appDesc["urls"] = allURLs
 
-	if app.MySQLVersion != "" {
-		appDesc["database_type"] = "mysql"
-		appDesc["mysql_version"] = app.MySQLVersion
-	} else {
-		appDesc["database_type"] = "mariadb" // default
-		appDesc["mariadb_version"] = app.MariaDBVersion
-		if app.MariaDBVersion == "" {
-			appDesc["mariadb_version"] = nodeps.MariaDBDefaultVersion
-		}
-	}
+	appDesc["database_type"] = app.Database.DatabaseType
+	appDesc["database_version"] = app.Database.DatabaseVersion
 
 	// Only show extended status for running sites.
 	if app.SiteStatus() == SiteRunning {
@@ -244,16 +242,9 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			util.CheckErr(err)
 			dbinfo["published_port"] = dbPublicPort
 			dbinfo["database_type"] = "mariadb" // default
-			if app.MySQLVersion != "" {
-				dbinfo["database_type"] = "mysql"
-				dbinfo["mysql_version"] = app.MySQLVersion
-			} else {
-				if app.MariaDBVersion != "" {
-					dbinfo["mariadb_version"] = app.MariaDBVersion
-				} else {
-					dbinfo["mariadb_version"] = nodeps.MariaDBDefaultVersion
-				}
-			}
+			dbinfo["database_type"] = app.Database.DatabaseType
+			dbinfo["database_version"] = app.Database.DatabaseVersion
+
 			appDesc["dbinfo"] = dbinfo
 
 			if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "dba") {
@@ -816,30 +807,9 @@ func (app *DdevApp) GetDBImage() string {
 		return app.DBImage
 	}
 
-	dbImage := ""
-	// If the dbimage has not been overridden (because dbimage takes precedence)
-	// and the mariadb_version/mysql_version *has* been changed by config,
-	// use the dbimage derived from dbversion.
-	// IF dbimage has not been specified (it equals mariadb default)
-	// AND mariadb version is NOT the default version
-	// Then override the dbimage with related mariadb or mysql version
+	app.DBImage = version.GetDBImage(app.Database.DatabaseType, app.Database.DatabaseVersion)
 
-	// If no (dbimage set or it's the default image) and MariaDB or MySQL version set
-	if (app.DBImage == "" || app.DBImage == version.GetDBImage(nodeps.MariaDB)) && (app.MariaDBVersion != "" || app.MySQLVersion != "") {
-		switch {
-		// mariadb_version is explicitly set
-		case app.MariaDBVersion != "":
-			dbImage = version.GetDBImage(nodeps.MariaDB, app.MariaDBVersion)
-		// mysql_version is explicitly set
-		case app.MySQLVersion != "":
-			dbImage = version.GetDBImage(nodeps.MySQL, app.MySQLVersion)
-		}
-	}
-	// Default behavior is just to use the MariaDB image.
-	if dbImage == "" {
-		dbImage = version.GetDBImage(nodeps.MariaDB)
-	}
-	return dbImage
+	return app.DBImage
 }
 
 // Start initiates docker-compose up
@@ -2534,7 +2504,7 @@ func (app *DdevApp) StartAppIfNotRunning() error {
 	return err
 }
 
-// CheckAddonIncompatibilities() looks for problems with docker-compose.*.yaml 3rd-party services
+// CheckAddonIncompatibilities looks for problems with docker-compose.*.yaml 3rd-party services
 func (app *DdevApp) CheckAddonIncompatibilities() error {
 	if _, ok := app.ComposeYaml["services"]; !ok {
 		util.Warning("Unable to check 3rd-party services for missing networks stanza")

@@ -180,9 +180,22 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.ProjectTLD == nodeps.DdevDefaultTLD {
 		appcopy.ProjectTLD = ""
 	}
-	// If mariadb-version is "" and mysql-version is not set, then set mariadb-version to default
-	if appcopy.MariaDBVersion == "" && appcopy.MySQLVersion == "" {
-		appcopy.MariaDBVersion = nodeps.MariaDBDefaultVersion
+
+	// Convert from pre-v1.19 mariadb_version and mysql_version to new
+	// Database config.
+	// TODO: Needs test
+	switch {
+	case appcopy.MariaDBVersion == "" && appcopy.MySQLVersion == "":
+		appcopy.Database.DatabaseType = nodeps.MariaDB
+		appcopy.Database.DatabaseVersion = nodeps.MariaDBDefaultVersion
+
+	case appcopy.MariaDBVersion != "":
+		appcopy.Database.DatabaseType = nodeps.MariaDB
+		appcopy.Database.DatabaseVersion = appcopy.MariaDBVersion
+
+	case appcopy.MySQLVersion != "":
+		appcopy.Database.DatabaseType = nodeps.MySQL
+		appcopy.Database.DatabaseVersion = appcopy.MySQLVersion
 	}
 
 	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't
@@ -434,27 +447,6 @@ func (app *DdevApp) ValidateConfig() error {
 
 	if !nodeps.IsValidOmitContainers(app.OmitContainers) {
 		return fmt.Errorf("unsupported omit_containers: %s, ddev (%s) only supports the following for omit_containers: %s", app.OmitContainers, runtime.GOARCH, nodeps.GetValidOmitContainers()).(InvalidOmitContainers)
-	}
-
-	if app.MariaDBVersion != "" {
-		// Validate mariadb version
-		if !nodeps.IsValidMariaDBVersion(app.MariaDBVersion) {
-			return fmt.Errorf("unsupported mariadb_version: %s, ddev (%s) only supports the following versions: %s", app.MariaDBVersion, runtime.GOARCH, nodeps.GetValidMariaDBVersions()).(invalidMariaDBVersion)
-		}
-	}
-	if app.MySQLVersion != "" {
-		// Validate /mysql version
-		if !nodeps.IsValidMySQLVersion(app.MySQLVersion) {
-			if len(nodeps.GetValidMySQLVersions()) == 0 {
-				return fmt.Errorf("MySQL is not yet supported on your architecture (%s) because mysql does not provide packages (or docker images)", runtime.GOARCH)
-			}
-			return fmt.Errorf("unsupported mysql_version: %s; ddev (%s) only supports the following versions %s", app.MySQLVersion, runtime.GOARCH, nodeps.GetValidMySQLVersions()).(invalidMySQLVersion)
-		}
-	}
-
-	// Validate db versions
-	if app.MariaDBVersion != "" && app.MySQLVersion != "" {
-		return fmt.Errorf("both mariadb_version (%v) and mysql_version (%v) are set, but they are mutually exclusive", app.MariaDBVersion, app.MySQLVersion)
 	}
 
 	// golang on windows is not able to time.LoadLocation unless

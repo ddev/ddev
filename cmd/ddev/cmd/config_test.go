@@ -704,58 +704,6 @@ func TestConfigMySQLVersion(t *testing.T) {
 
 }
 
-// TestMariaMysqlConflicts tests the various ways that mysql_version
-// and mariadb_version can interact.
-func TestMariaMysqlConflicts(t *testing.T) {
-	assert := asrt.New(t)
-	pwd, _ := os.Getwd()
-
-	// Create a temporary directory and switch to it.
-	testDir := testcommon.CreateTmpDir(t.Name())
-	_ = os.Chdir(testDir)
-	t.Cleanup(func() {
-		err := os.Chdir(pwd)
-		assert.NoError(err)
-		err = os.RemoveAll(testDir)
-		assert.NoError(err)
-	})
-
-	_ = os.MkdirAll(filepath.Join(testDir, ".ddev"), 0777)
-
-	// Use a config file that does not specify mariadb version
-	// but does specify mysql_version
-	err := fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "config.yaml.mysql8only"), filepath.Join(testDir, ".ddev", "config.yaml"))
-	assert.NoError(err)
-	app, err := ddevapp.NewApp(testDir, false)
-	assert.NoError(err)
-	assert.Equal(nodeps.MySQL80, app.MySQLVersion)
-	assert.Empty(app.MariaDBVersion)
-
-	// Use a config file that specifies both but with empty mariadb_version
-	err = fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "config.yaml.mysqlwithemptymaria"), filepath.Join(testDir, ".ddev", "config.yaml"))
-	assert.NoError(err)
-	app, err = ddevapp.NewApp(testDir, false)
-	assert.NoError(err)
-	assert.Equal(nodeps.MySQL80, app.MySQLVersion)
-	assert.Empty(app.MariaDBVersion)
-
-	// Use a config file that specifies both but with empty mysql_version
-	err = fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "config.yaml.mariawithemptymysql"), filepath.Join(testDir, ".ddev", "config.yaml"))
-	assert.NoError(err)
-	app, err = ddevapp.NewApp(testDir, false)
-	assert.NoError(err)
-	assert.Equal(nodeps.MariaDBDefaultVersion, app.MariaDBVersion)
-	assert.Empty(app.MySQLVersion)
-
-	// Use a config file that specifies neither.
-	err = fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "config.yaml.nodbspecified"), filepath.Join(testDir, ".ddev", "config.yaml"))
-	assert.NoError(err)
-	app, err = ddevapp.NewApp(testDir, false)
-	assert.NoError(err)
-	assert.Equal(nodeps.MariaDBDefaultVersion, app.MariaDBVersion)
-	assert.Empty(app.MySQLVersion)
-}
-
 //TestConfigGitignore checks that our gitignore is ignoring the right things.
 func TestConfigGitignore(t *testing.T) {
 	assert := asrt.New(t)

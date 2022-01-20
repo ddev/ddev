@@ -1677,7 +1677,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
 			require.NoError(t, err)
 			err = app.ImportDB(cachedArchive, "", false, false, "db")
-			assert.NoError(err, "failed to import-db with dbtarball %s, app.Type=%s, mariadb_version=%s, mysql_version=%s", site.DBTarURL, app.Type, app.MariaDBVersion, app.MySQLVersion)
+			assert.NoError(err, "failed to import-db with dbtarball %s, app.Type=%s, database=%s", site.DBTarURL, app.Type, app.Database.DatabaseType+":"+app.Database.DatabaseVersion)
 		}
 
 		startErr := app.StartAndWait(2)

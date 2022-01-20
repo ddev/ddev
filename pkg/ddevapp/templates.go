@@ -21,11 +21,8 @@ const ConfigInstructions = `
 # dbimage: <docker_image>  # mariadb docker image.
 # dbaimage: <docker_image>
 
-# mariadb_version and mysql_version
-# ddev can use many versions of mariadb and mysql
-# However these directives are mutually exclusive
-# mariadb_version: 10.2
-# mysql_version: 8.0
+# database_version
+# Specify with "mariadb" or "mysql" and the version
 
 # router_http_port: <port>  # Port to be used for http (defaults to port 80)
 # router_https_port: <port> # Port for https (defaults to 443)

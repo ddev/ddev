@@ -104,9 +104,6 @@ var (
 	// omitContainersArg allows user to determine value of omit_containers
 	omitContainersArg string
 
-	// mariadbVersionArg is mariadb version 5.5-10.5
-	mariaDBVersionArg string
-
 	// mutagenEnabled sets mutagen_enabled
 	mutagenEnabled bool
 
@@ -259,8 +256,6 @@ func init() {
 	ConfigCommand.Flags().BoolVar(&dbWorkingDirDefaultArg, "db-working-dir-default", false, "Unsets a db service working directory override")
 	ConfigCommand.Flags().BoolVar(&dbaWorkingDirDefaultArg, "dba-working-dir-default", false, "Unsets a dba service working directory override")
 	ConfigCommand.Flags().BoolVar(&workingDirDefaultsArg, "working-dir-defaults", false, "Unsets all service working directory overrides")
-	ConfigCommand.Flags().StringVar(&mariaDBVersionArg, "mariadb-version", "10.2", "mariadb version to use (incompatible with --mysql-version)")
-	ConfigCommand.Flags().String("mysql-version", "", "Oracle mysql version to use (incompatible with --mariadb-version)")
 	ConfigCommand.Flags().BoolVar(&mutagenEnabled, "mutagen-enabled", false, "enable mutagen asynchronous update of project in web container")
 
 	ConfigCommand.Flags().BoolVar(&nfsMountEnabled, "nfs-mount-enabled", false, "enable NFS mounting of project in container")
@@ -461,31 +456,6 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	if hostDBPortArg != "" {
 		app.HostDBPort = hostDBPortArg
-	}
-
-	// If the mariadb-version changed, use it
-	if cmd.Flag("mariadb-version").Changed {
-		wantVer, err := cmd.Flags().GetString("mariadb-version")
-		if err != nil {
-			util.Failed("Incorrect mariadb-version %s: '%v'", wantVer, err)
-		}
-
-		if app.MySQLVersion != "" && wantVer != "" {
-			util.Failed(`mariadb-version cannot be set if mysql-version is already set. mysql-version is set to %s. Use ddev config --mysql-version="" and then ddev config --mariadb-version=%s`, app.MySQLVersion, wantVer)
-		}
-
-		app.MariaDBVersion = wantVer
-	}
-	// If the mysql-version was changed is set, use it
-	if cmd.Flag("mysql-version").Changed {
-		wantVer, err := cmd.Flags().GetString("mysql-version")
-		if err != nil {
-			util.Failed("Incorrect mysql-version %s: '%v'", wantVer, err)
-		}
-		if app.MariaDBVersion != "" && wantVer != "" {
-			util.Failed(`mysql-version cannot be set if mariadb-version is already set. mariadb-version is set to %s. Use ddev config --mariadb-version="" --mysql-version=%s`, app.MariaDBVersion, wantVer)
-		}
-		app.MySQLVersion = wantVer
 	}
 
 	if cmd.Flag("nfs-mount-enabled").Changed {

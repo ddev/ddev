@@ -136,16 +136,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 
 			// Get extra info for db container
 			if k == "db" {
-				if _, ok := desc["dbinfo"]; ok {
-					dbinfo := desc["dbinfo"].(map[string]interface{})
-					if _, ok := dbinfo["mariadb_version"]; ok {
-						extraInfo = append(extraInfo, "MariaDB "+dbinfo["mariadb_version"].(string))
-					} else if _, ok := dbinfo["mysql_version"]; ok {
-						extraInfo = append(extraInfo, "MySQL"+dbinfo["mysql_version"].(string))
-					} else {
-						extraInfo = append(extraInfo, dbinfo["database_type"].(string))
-					}
-				}
+				extraInfo = append(extraInfo, app.Database.DatabaseType+":"+app.Database.DatabaseVersion)
 				extraInfo = append(extraInfo, "User/Pass: 'db/db'\nor 'root/root'")
 			}
 			if k == "dba" {
