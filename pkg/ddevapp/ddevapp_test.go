@@ -1360,7 +1360,6 @@ func TestDdevAllDatabases(t *testing.T) {
 		// Make sure we leave the config.yaml in expected state
 		app.MariaDBVersion = ""
 		app.MySQLVersion = ""
-		app.DBImage = ""
 		_ = app.WriteConfig()
 	})
 
@@ -1376,7 +1375,6 @@ func TestDdevAllDatabases(t *testing.T) {
 				app.MariaDBVersion = ""
 				app.MySQLVersion = v
 			}
-			app.DBImage = ""
 			_ = app.WriteConfig()
 			startErr := app.Start()
 			if startErr != nil {
@@ -1677,7 +1675,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
 			require.NoError(t, err)
 			err = app.ImportDB(cachedArchive, "", false, false, "db")
-			assert.NoError(err, "failed to import-db with dbtarball %s, app.Type=%s, database=%s", site.DBTarURL, app.Type, app.Database.DatabaseType+":"+app.Database.DatabaseVersion)
+			assert.NoError(err, "failed to import-db with dbtarball %s, app.Type=%s, database=%s", site.DBTarURL, app.Type, app.Database.Type+":"+app.Database.Version)
 		}
 
 		startErr := app.StartAndWait(2)

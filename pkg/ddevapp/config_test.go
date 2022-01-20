@@ -1124,18 +1124,12 @@ func TestPkgConfigMariaDBVersion(t *testing.T) {
 			appRoot := filepath.Join(targetBase, configType+"-"+v)
 			err = app.LoadConfigYamlFile(filepath.Join(appRoot, ".ddev", "config.yaml"))
 			assert.NoError(err)
-			if configType == "dbimage" {
-				assert.Equal("somedbimage:"+v, app.DBImage)
-			}
 			if configType == "mariadb-version" {
 				assert.Equal(v, app.MariaDBVersion)
 			}
 
 			app, err = NewApp(appRoot, false)
 			assert.NoError(err)
-			if configType == "dbimage" {
-				assert.Equal("somedbimage:"+v, app.DBImage, "NewApp() failed to respect existing dbimage")
-			}
 			if configType == "mariadb-version" {
 				assert.Equal(v, app.MariaDBVersion)
 				assert.Equal(version.GetDBImage(nodeps.MariaDB, v), app.GetDBImage(), "dbimage derived from app.MariaDBVersion was incorrect")

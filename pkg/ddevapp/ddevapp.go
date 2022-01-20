@@ -63,8 +63,8 @@ const SitePaused = "paused"
 const DdevFileSignature = "#ddev-generated"
 
 type DatabaseDesc struct {
-	DatabaseType    string `yaml:"database_type"`
-	DatabaseVersion string `yaml:"database_version"`
+	Type    string `yaml:"database_type"`
+	Version string `yaml:"database_version"`
 }
 
 // DdevApp is the struct that represents a ddev app, mostly its config
@@ -76,8 +76,6 @@ type DdevApp struct {
 	PHPVersion            string                `yaml:"php_version"`
 	WebserverType         string                `yaml:"webserver_type"`
 	WebImage              string                `yaml:"webimage,omitempty"`
-	DBImage               string                `yaml:"dbimage,omitempty"`
-	DBAImage              string                `yaml:"dbaimage,omitempty"`
 	RouterHTTPPort        string                `yaml:"router_http_port"`
 	RouterHTTPSPort       string                `yaml:"router_https_port"`
 	XdebugEnabled         bool                  `yaml:"xdebug_enabled"`
@@ -225,8 +223,8 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["httpsURLs"] = httpsURLs
 	appDesc["urls"] = allURLs
 
-	appDesc["database_type"] = app.Database.DatabaseType
-	appDesc["database_version"] = app.Database.DatabaseVersion
+	appDesc["database_type"] = app.Database.Type
+	appDesc["database_version"] = app.Database.Version
 
 	// Only show extended status for running sites.
 	if app.SiteStatus() == SiteRunning {
@@ -242,8 +240,8 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			util.CheckErr(err)
 			dbinfo["published_port"] = dbPublicPort
 			dbinfo["database_type"] = "mariadb" // default
-			dbinfo["database_type"] = app.Database.DatabaseType
-			dbinfo["database_version"] = app.Database.DatabaseVersion
+			dbinfo["database_type"] = app.Database.Type
+			dbinfo["database_version"] = app.Database.Version
 
 			appDesc["dbinfo"] = dbinfo
 
@@ -269,7 +267,6 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["xdebug_enabled"] = app.XdebugEnabled
 	appDesc["webimg"] = app.WebImage
 	appDesc["dbimg"] = app.GetDBImage()
-	appDesc["dbaimg"] = app.DBAImage
 	appDesc["services"] = map[string]map[string]string{}
 
 	containers, err := dockerutil.GetAppContainers(app.Name)
@@ -800,16 +797,10 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 	return nil
 }
 
-// GetDBImage uses the available mariadb or mysql version or provides the default
+// GetDBImage uses the available version info
 func (app *DdevApp) GetDBImage() string {
-	// If an explicit dbimage is set, just use it.
-	if app.DBImage != "" {
-		return app.DBImage
-	}
-
-	app.DBImage = version.GetDBImage(app.Database.DatabaseType, app.Database.DatabaseVersion)
-
-	return app.DBImage
+	dbImage := version.GetDBImage(app.Database.Type, app.Database.Version)
+	return dbImage
 }
 
 // Start initiates docker-compose up
@@ -824,8 +815,6 @@ func (app *DdevApp) Start() error {
 			return fmt.Errorf("unable to create docker volume %s: %v", v, err)
 		}
 	}
-
-	app.DBImage = app.GetDBImage()
 
 	err = app.CheckExistingAppInApproot()
 	if err != nil {
@@ -1071,7 +1060,7 @@ func (app *DdevApp) Restart() error {
 func (app *DdevApp) PullContainerImages() error {
 	containerImages := map[string]string{
 		"db":             app.GetDBImage(),
-		"dba":            app.DBAImage,
+		"dba":            version.GetDBAImage(),
 		"ddev-ssh-agent": version.GetSSHAuthImage(),
 		"web":            app.WebImage,
 		"ddev-router":    version.GetRouterImage(),
@@ -1494,8 +1483,6 @@ func (app *DdevApp) DockerEnv() {
 		"COMPOSE_CONVERT_WINDOWS_PATHS": "true",
 		"DDEV_SITENAME":                 app.Name,
 		"DDEV_TLD":                      app.ProjectTLD,
-		"DDEV_DBIMAGE":                  app.GetDBImage(),
-		"DDEV_DBAIMAGE":                 app.DBAImage,
 		"DDEV_PROJECT":                  app.Name,
 		"DDEV_WEBIMAGE":                 app.WebImage,
 		"DDEV_APPROOT":                  app.AppRoot,

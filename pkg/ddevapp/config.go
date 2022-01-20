@@ -101,9 +101,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.ProjectTLD = nodeps.DdevDefaultTLD
 	app.UseDNSWhenPossible = true
 
-	// These should always default to the latest image/tag names from the Version package.
 	app.WebImage = version.GetWebImage()
-	app.DBAImage = version.GetDBAImage()
 
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
@@ -154,17 +152,6 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.WebImage == version.GetWebImage() {
 		appcopy.WebImage = ""
 	}
-	// If the DBImage is actually just created/equal to the maria or mysql version
-	// then remove it from the output.
-	if appcopy.DBImage == version.GetDBImage(nodeps.MariaDB, appcopy.MariaDBVersion) || appcopy.DBImage == version.GetDBImage(nodeps.MySQL, appcopy.MySQLVersion) {
-		appcopy.DBImage = ""
-	}
-	if appcopy.DBAImage == version.GetDBAImage() {
-		appcopy.DBAImage = ""
-	}
-	if appcopy.DBAImage == version.GetDBAImage() {
-		appcopy.DBAImage = ""
-	}
 	if appcopy.MailhogPort == nodeps.DdevDefaultMailhogPort {
 		appcopy.MailhogPort = ""
 	}
@@ -183,19 +170,18 @@ func (app *DdevApp) WriteConfig() error {
 
 	// Convert from pre-v1.19 mariadb_version and mysql_version to new
 	// Database config.
-	// TODO: Needs test
 	switch {
 	case appcopy.MariaDBVersion == "" && appcopy.MySQLVersion == "":
-		appcopy.Database.DatabaseType = nodeps.MariaDB
-		appcopy.Database.DatabaseVersion = nodeps.MariaDBDefaultVersion
+		appcopy.Database.Type = nodeps.MariaDB
+		appcopy.Database.Version = nodeps.MariaDBDefaultVersion
 
 	case appcopy.MariaDBVersion != "":
-		appcopy.Database.DatabaseType = nodeps.MariaDB
-		appcopy.Database.DatabaseVersion = appcopy.MariaDBVersion
+		appcopy.Database.Type = nodeps.MariaDB
+		appcopy.Database.Version = appcopy.MariaDBVersion
 
 	case appcopy.MySQLVersion != "":
-		appcopy.Database.DatabaseType = nodeps.MySQL
-		appcopy.Database.DatabaseVersion = appcopy.MySQLVersion
+		appcopy.Database.Type = nodeps.MySQL
+		appcopy.Database.Version = appcopy.MySQLVersion
 	}
 
 	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't

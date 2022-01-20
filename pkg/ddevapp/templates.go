@@ -13,13 +13,11 @@ const ConfigInstructions = `
 
 # php_version: "7.4"  # PHP version to use, "5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0", "8.1"
 
-# You can explicitly specify the webimage, dbimage, dbaimage lines but this
+# You can explicitly specify the webimage but this
 # is not recommended, as the images are often closely tied to ddev's' behavior,
 # so this can break upgrades.
 
 # webimage: <docker_image>  # nginx/php docker image.
-# dbimage: <docker_image>  # mariadb docker image.
-# dbaimage: <docker_image>
 
 # database_version
 # Specify with "mariadb" or "mysql" and the version

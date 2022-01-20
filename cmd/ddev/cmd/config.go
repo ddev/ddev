@@ -589,26 +589,8 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.WebImage = ""
 	}
 
-	if dbImageArg != "" {
-		app.DBImage = dbImageArg
-	}
-
-	if dbImageDefaultArg {
-		app.DBImage = ""
-	}
-
-	if dbaImageArg != "" {
-		app.DBAImage = dbaImageArg
-	}
-
-	if dbaImageDefaultArg {
-		app.DBAImage = ""
-	}
-
 	if imageDefaultsArg {
 		app.WebImage = ""
-		app.DBImage = ""
-		app.DBAImage = ""
 	}
 
 	if app.WorkingDir == nil {

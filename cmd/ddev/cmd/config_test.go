@@ -163,8 +163,6 @@ func TestConfigSetValues(t *testing.T) {
 	uploadDir := filepath.Join("custom", "config", "path")
 	webserverType := nodeps.WebserverApacheFPM
 	webImage := "custom-web-image"
-	dbImage := "custom-db-image"
-	dbaImage := "custom-dba-image"
 	webWorkingDir := "/custom/web/dir"
 	dbWorkingDir := "/custom/db/dir"
 	dbaWorkingDir := "/custom/dba/dir"
@@ -191,8 +189,6 @@ func TestConfigSetValues(t *testing.T) {
 		"--upload-dir", uploadDir,
 		"--webserver-type", webserverType,
 		"--web-image", webImage,
-		"--db-image", dbImage,
-		"--dba-image", dbaImage,
 		"--web-working-dir", webWorkingDir,
 		"--db-working-dir", dbWorkingDir,
 		"--dba-working-dir", dbaWorkingDir,
@@ -240,8 +236,6 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(uploadDir, app.UploadDir)
 	assert.Equal(webserverType, app.WebserverType)
 	assert.Equal(webImage, app.WebImage)
-	assert.Equal(dbImage, app.DBImage)
-	assert.Equal(dbaImage, app.DBAImage)
 	assert.Equal(webWorkingDir, app.WorkingDir["web"])
 	assert.Equal(dbWorkingDir, app.WorkingDir["db"])
 	assert.Equal(dbaWorkingDir, app.WorkingDir["dba"])
@@ -277,16 +271,12 @@ func TestConfigSetValues(t *testing.T) {
 	assert.NoError(err, "Could not unmarshal %s: %v", configFile, err)
 
 	assert.Equal(app.WebImage, "")
-	assert.Equal(app.DBImage, "")
-	assert.Equal(app.DBAImage, "")
 	assert.Equal(len(app.WorkingDir), 0)
 
 	// Test that all container images and working dirs can each be unset with single default images flag
 	args = []string{
 		"config",
 		"--web-image", webImage,
-		"--db-image", dbImage,
-		"--dba-image", dbaImage,
 		"--web-working-dir", webWorkingDir,
 		"--db-working-dir", dbWorkingDir,
 		"--dba-working-dir", dbaWorkingDir,
@@ -312,8 +302,6 @@ func TestConfigSetValues(t *testing.T) {
 	assert.NoError(err, "Could not unmarshal %s: %v", configFile, err)
 
 	assert.Equal(app.WebImage, "")
-	assert.Equal(app.DBImage, "")
-	assert.Equal(app.DBAImage, "")
 	assert.Equal(len(app.WorkingDir), 0)
 }
 
@@ -474,7 +462,6 @@ func TestConfigMariaDBVersion(t *testing.T) {
 	assert.Equal(nodeps.MariaDBDefaultVersion, app.MariaDBVersion)
 	err = app.Start()
 	assert.NoError(err)
-	assert.EqualValues(version.GetDBImage(nodeps.MariaDB, nodeps.MariaDBDefaultVersion), app.DBImage)
 	_ = app.Stop(true, false)
 
 	// Verify behavior with no existing config.yaml. It should
@@ -484,8 +471,7 @@ func TestConfigMariaDBVersion(t *testing.T) {
 	for _, cmdMariaDBVersion := range versionsToTest {
 		_ = os.RemoveAll(filepath.Join(tmpDir, ".ddev"))
 		configArgs := append(args, cmdMariaDBVersion, "--project-name", "noconfigyet-"+cmdMariaDBVersion)
-		ddevCmd := "ddev " + strings.Join(configArgs, " ")
-		out, err := exec.RunCommand(DdevBin, configArgs)
+		out, err := exec.RunHostCommand(DdevBin, configArgs...)
 		assert.NoError(err)
 		assert.Contains(out, "You may now run 'ddev start'")
 
@@ -496,7 +482,6 @@ func TestConfigMariaDBVersion(t *testing.T) {
 		err = app.LoadConfigYamlFile(filepath.Join(tmpDir, ".ddev", "config.yaml"))
 		assert.NoError(err)
 		assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
-		assert.Empty(app.DBImage, "generated config.yaml dbimage should have been empty for command '%s'", ddevCmd)
 
 		// Now use NewApp() to load, so that we get the full logic of that function.
 		app, err = ddevapp.NewApp(tmpDir, false)
@@ -529,7 +514,6 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			err = app.LoadConfigYamlFile(filepath.Join(tmpDir, ".ddev", "config.yaml"))
 			assert.NoError(err)
 			assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
-			assert.Empty(app.DBImage)
 
 			// Now test with the logical additions made by NewApp()
 			app, err = ddevapp.NewApp(tmpDir, false)
@@ -567,7 +551,6 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
 			// The ddev config --mariadb-version should *not* have changed the dbimg
 			// which was in the config.yaml
-			assert.Equal("somerandomdbimg-"+nodeps.MariaDB+"-"+configMariaDBVersion, app.DBImage, "ddev %s did not result in respect for existing configured dbimg in file=%s", strings.Join(configArgs, " "))
 
 			// Now test with NewApp's additions, which should leave app.DBImage alone.
 			app, err = ddevapp.NewApp(tmpDir, false)
@@ -577,7 +560,6 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			_, err = app.ReadConfig(false)
 			assert.NoError(err)
 			assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
-			assert.Equal("somerandomdbimg-"+nodeps.MariaDB+"-"+configMariaDBVersion, app.DBImage)
 			_ = app.Stop(true, false)
 		}
 	}
@@ -604,14 +586,6 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			err = app.LoadConfigYamlFile(filepath.Join(tmpDir, ".ddev", "config.yaml"))
 			assert.NoError(err)
 			assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
-			// Loaded app dbimage version should be the explicit value found in
-			// config.yaml. Or it should be empty if the cmdDbImage is the default
-			if app.DBImage == "" && cmdDBImageVersion == cmdMariaDBVersion {
-				// Should have blank dbimage
-				// if the specified dbimage is the default for this mariadb version
-			} else {
-				assert.Equal(version.GetDBImage(nodeps.MariaDB, cmdDBImageVersion), app.DBImage, "Incorrect dbimage '%s' for cmdMariaDBVersion '%s' and cmdDBImageVersion=%s", app.DBImage, cmdMariaDBVersion, cmdDBImageVersion)
-			}
 
 			// Now test with NewApp()'s adjustments
 			app, err = ddevapp.NewApp(tmpDir, false)
@@ -622,12 +596,6 @@ func TestConfigMariaDBVersion(t *testing.T) {
 			assert.NoError(err)
 			assert.Equal(cmdMariaDBVersion, app.MariaDBVersion)
 
-			// app.DBImage should be "" if it's the default for that maria version
-			if cmdDBImageVersion == cmdMariaDBVersion {
-				assert.Equal("", app.DBImage)
-			} else {
-				assert.EqualValues(app.DBImage, version.GetDBImage(nodeps.MariaDB, cmdDBImageVersion))
-			}
 			_ = app.Stop(true, false)
 		}
 	}
@@ -689,15 +657,6 @@ func TestConfigMySQLVersion(t *testing.T) {
 			assert.NoError(err, "failed to run ddevcmd=%s, out=%s", ddevCmd, out)
 			assert.Contains(out, "You may now run 'ddev start'")
 
-			app, err := ddevapp.NewApp(testDir, false)
-			assert.NoError(err)
-			// If the two versions are equal, we expect the app.DBImage to be empty
-			// because it's identical to the image we'd get with just app.MySQLVersion
-			if cmdMySQLVersion == cmdDBImageVersion {
-				assert.EqualValues("", app.DBImage)
-			} else {
-				assert.EqualValues(version.GetDBImage(nodeps.MySQL, cmdDBImageVersion), app.DBImage)
-			}
 			_, _ = exec.RunCommand(DdevBin, []string{"delete", "-Oy"})
 		}
 	}
