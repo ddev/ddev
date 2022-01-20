@@ -8,5 +8,3 @@ type invalidWebserverType error
 type invalidProvider error
 type InvalidOmitContainers error
 type webContainerExists error
-type invalidMariaDBVersion error
-type invalidMySQLVersion error

@@ -433,6 +433,10 @@ func (app *DdevApp) ValidateConfig() error {
 		return fmt.Errorf("unsupported omit_containers: %s, ddev (%s) only supports the following for omit_containers: %s", app.OmitContainers, runtime.GOARCH, nodeps.GetValidOmitContainers()).(InvalidOmitContainers)
 	}
 
+	if !nodeps.IsValidDatabaseVersion(app.Database.Type, app.Database.Version) {
+		return fmt.Errorf("unsupported database type/version: %s:%s, ddev %s only supports the following database types and versions: mariadb: %v, mysql: %v", app.Database.Type, app.Database.Version, runtime.GOARCH, nodeps.GetValidMariaDBVersions(), nodeps.GetValidMySQLVersions())
+	}
+
 	// golang on windows is not able to time.LoadLocation unless
 	// go is installed... so skip validation on Windows
 	if runtime.GOOS != "windows" {

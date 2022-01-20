@@ -121,6 +121,17 @@ func GetValidPHPVersions() []string {
 	return s
 }
 
+// IsValidDatabaseVersion checks if the version is valid
+func IsValidDatabaseVersion(dbType string, dbVersion string) bool {
+	switch dbType {
+	case MariaDB:
+		return IsValidMariaDBVersion(dbVersion)
+	case MySQL:
+		return IsValidMySQLVersion(dbVersion)
+	}
+	return false
+}
+
 // IsValidMariaDBVersion is a helper function to determine if a MariaDB version is valid, returning
 // true if the supplied MariaDB version is valid and false otherwise.
 func IsValidMariaDBVersion(MariaDBVersion string) bool {
