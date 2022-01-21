@@ -1123,8 +1123,7 @@ func TestPkgConfigDatabaseDBVersion(t *testing.T) {
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		err = os.RemoveAll(tmpDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(tmpDir)
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 	})
