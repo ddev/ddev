@@ -147,6 +147,17 @@ mkdocs:
 		echo "Not running mkdocs because it's not installed"; \
 	fi
 
+# To see what the docs build will be, you can use `make mkdocs-serve`
+# It works best with mkdocs installed, `pip3 install mkdocs`,
+# see https://www.mkdocs.org/user-guide/installation/
+# But it will also work using docker.
+mkdocs-serve:
+	if command -v mkdocs >/dev/null ; then \
+  		mkdocs serve; \
+	else \
+		docker run -it -p 8000:8000 -v "$${PWD}:/docs" -e "ADD_MODULES=mkdocs-material mdx_truly_sane_lists mkdocs-git-revision-date-localized-plugin" -e "LIVE_RELOAD_SUPPORT=true"  -e "FAST_MODE=true" -e "DOCS_DIRECTORY=./docs" polinux/mkdocs; \
+	fi
+
 # Install markdown-link-check locally with "npm install -g markdown-link-check"
 markdown-link-check:
 	@echo "markdown-link-check: "
