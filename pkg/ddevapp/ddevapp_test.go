@@ -2043,7 +2043,7 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	uploadDir := app.GetUploadDirFullPath()
+	uploadDir := app.GetUploadDir()
 	assert.NotEmpty(uploadDir)
 
 	// Use exec to touch a file in the container and see what the result is. Make sure it comes out with ownership
