@@ -1848,6 +1848,8 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 		assert.NoError(err)
 
 		app.Hooks = nil
+		app.Database.Type = nodeps.MariaDB
+		app.Database.Version = nodeps.MariaDBDefaultVersion
 		err = app.WriteConfig()
 		assert.NoError(err)
 		err = os.Chdir(origDir)
