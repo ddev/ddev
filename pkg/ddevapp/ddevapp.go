@@ -1529,7 +1529,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_PROJECT":                  app.Name,
 		"DDEV_WEBIMAGE":                 app.WebImage,
 		"DDEV_APPROOT":                  app.AppRoot,
-		"DDEV_FILES_DIR":                path.Join("/var/www/html", app.GetDocroot(), app.GetUploadDir()),
+		"DDEV_FILES_DIR":                app.GetContainerUploadDirFullPath(),
 
 		"DDEV_HOST_DB_PORT":          dbPortStr,
 		"DDEV_HOST_WEBSERVER_PORT":   app.HostWebserverPort,
