@@ -969,9 +969,11 @@ func (app *DdevApp) Start() error {
 
 	// The db_snapshots subdirectory may be created on docker-compose up, so
 	// we need to precreate it so permissions are correct (and not root:root)
-	err = os.MkdirAll(app.GetConfigPath("db_snapshots"), 0777)
-	if err != nil {
-		return err
+	if !fileutil.IsDirectory(app.GetConfigPath("db_snapshots")) {
+		err = os.MkdirAll(app.GetConfigPath("db_snapshots"), 0755)
+		if err != nil {
+			return err
+		}
 	}
 
 	_, _, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "up", "--build", "-d")
@@ -1732,7 +1734,7 @@ func (app *DdevApp) Snapshot(baseSnapshotName string) (string, error) {
 	} else {
 		// But if we are using bind-mounts, we can just copy it to where the snapshot is
 		// mounted into the db container (/mnt/ddev_config/db_snapshots)
-		c := fmt.Sprintf("ls -l /mnt/ddev_config && id && mkdir -p /mnt/ddev_config/db_snapshots && ls -ld /mnt/ddev_config/db_snapshots && cp -r %s/%s /mnt/ddev_config/db_snapshots", containerSnapshotDir, snapshotName)
+		c := fmt.Sprintf("cp -r %s/%s /mnt/ddev_config/db_snapshots", containerSnapshotDir, snapshotName)
 		uid, _, _ := util.GetContainerUIDGid()
 		stdout, stderr, err = dockerutil.Exec(dbContainer.ID, c, uid)
 		if err != nil {
