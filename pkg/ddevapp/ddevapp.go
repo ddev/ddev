@@ -1921,12 +1921,12 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		}
 	}
 	_ = os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "restore_snapshot "+snapshotName)
+	// nolint: errcheck
+	defer os.Unsetenv("DDEV_MARIADB_LOCAL_COMMAND")
 	err = app.Start()
 	if err != nil {
 		return fmt.Errorf("failed to start project for RestoreSnapshot: %v", err)
 	}
-	err = os.Unsetenv("DDEV_MARIADB_LOCAL_COMMAND")
-	util.CheckErr(err)
 
 	output.UserOut.Printf("Waiting for snapshot restore to complete...\nYou can also follow the restore progress in another terminal window with `ddev logs -s db -f %s`", app.Name)
 	// Now it's up, but we need to find out when it finishes loading.

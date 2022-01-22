@@ -1856,6 +1856,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 		assert.NoError(err)
 		err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
 		assert.NoError(err)
+		testcommon.ClearDockerEnv()
 	})
 
 	err = os.Chdir(app.AppRoot)
