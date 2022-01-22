@@ -177,6 +177,9 @@ func GetDockerVersion() (string, error) {
 	DockerVersion = v.Get("Version")
 
 	i, err := client.Info()
+	if err != nil {
+		return "", err
+	}
 	if i.Name == "colima" {
 		DockerVersion = DockerVersion + " (colima)"
 	}
