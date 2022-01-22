@@ -2038,7 +2038,7 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	assert.NoError(err)
 
 	// Not all the example projects have an upload dir, so create it just in case
-	err = os.MkdirAll(app.GetUploadDirFullPath(), 0777)
+	err = os.MkdirAll(app.GetHostUploadDirFullPath(), 0777)
 	assert.NoError(err)
 	err = app.Start()
 	require.NoError(t, err)
@@ -2173,7 +2173,7 @@ func TestDdevImportFilesDir(t *testing.T) {
 		assert.NoError(err, "Importing a directory returned an error:", err)
 
 		// Confirm contents of destination dir after import
-		absUploadDir := app.GetUploadDirFullPath()
+		absUploadDir := app.GetHostUploadDirFullPath()
 		uploadedFilesDirEntrySlice, err := os.ReadDir(absUploadDir)
 		assert.NoError(err)
 

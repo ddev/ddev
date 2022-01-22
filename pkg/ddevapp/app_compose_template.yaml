@@ -114,9 +114,9 @@ services:
       - ".:/mnt/ddev_config:ro"
       - "./xhprof:/usr/local/bin/xhprof:ro"
         {{ if .MutagenEnabled }}
-          {{ if .UploadDir }}
-      - ../{{ .UploadDir }}:/var/www/html/{{ .UploadDir }}:rw
-          {{ end }} {{/* end if .UploadDir */}}
+          {{ if .ContainerUploadDir }}
+      - {{ .HostUploadDir }}:{{ .ContainerUploadDir }}:rw
+          {{ end }} {{/* end if .ContainerUploadDir */}}
           {{ if .GitDirMount }}
       - ../.git:/var/www/html/.git:rw
           {{ end }} {{/* end if .GitDirMount */}}

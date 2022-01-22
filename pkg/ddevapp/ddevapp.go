@@ -2602,10 +2602,18 @@ func FormatSiteStatus(status string) string {
 	return formattedStatus
 }
 
-// GetUploadDirFullPath returns the full path to the upload directory or "" if there is none
-func (app *DdevApp) GetUploadDirFullPath() string {
+// GetHostUploadDirFullPath returns the full path to the upload directory on the host or "" if there is none
+func (app *DdevApp) GetHostUploadDirFullPath() string {
 	if app.GetUploadDir() != "" {
 		return path.Join(app.AppRoot, app.Docroot, app.GetUploadDir())
+	}
+	return ""
+}
+
+// GetContainerUploadDirFullPath returns the full path to the upload directory in container or "" if there is none
+func (app *DdevApp) GetContainerUploadDirFullPath() string {
+	if app.GetUploadDir() != "" {
+		return path.Join("/var/www/html", app.Docroot, app.GetUploadDir())
 	}
 	return ""
 }

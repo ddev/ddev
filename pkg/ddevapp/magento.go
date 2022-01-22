@@ -67,7 +67,7 @@ func setMagentoSiteSettingsPaths(app *DdevApp) {
 
 // magentoImportFilesAction defines the magento workflow for importing project files.
 func magentoImportFilesAction(app *DdevApp, importPath, extPath string) error {
-	destPath := app.GetUploadDirFullPath()
+	destPath := app.GetHostUploadDirFullPath()
 
 	// parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {

@@ -175,7 +175,7 @@ func backdropPostImportDBAction(app *DdevApp) error {
 // backdropImportFilesAction defines the Backdrop workflow for importing project files.
 // The Backdrop workflow is currently identical to the Drupal import-files workflow.
 func backdropImportFilesAction(app *DdevApp, importPath, extPath string) error {
-	destPath := app.GetUploadDirFullPath()
+	destPath := app.GetHostUploadDirFullPath()
 
 	// parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {

@@ -25,7 +25,7 @@ func setShopware6SiteSettingsPaths(app *DdevApp) {
 
 // shopware6ImportFilesAction defines the shopware6 workflow for importing user-generated files.
 func shopware6ImportFilesAction(app *DdevApp, importPath, extPath string) error {
-	destPath := app.GetUploadDirFullPath()
+	destPath := app.GetHostUploadDirFullPath()
 
 	// parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {

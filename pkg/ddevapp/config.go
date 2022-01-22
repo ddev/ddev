@@ -700,7 +700,8 @@ type composeYAMLVars struct {
 	WebEnvironment            []string
 	NoBindMounts              bool
 	Docroot                   string
-	UploadDir                 string
+	ContainerUploadDir        string
+	HostUploadDir             string
 	GitDirMount               bool
 }
 
@@ -777,7 +778,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		NFSMountVolumeName:    app.GetNFSMountVolumeName(),
 		NoBindMounts:          globalconfig.DdevGlobalConfig.NoBindMounts,
 		Docroot:               app.GetDocroot(),
-		UploadDir:             app.GetUploadDirFullPath(),
+		HostUploadDir:         app.GetHostUploadDirFullPath(),
+		ContainerUploadDir:    app.GetContainerUploadDirFullPath(),
 		GitDirMount:           false,
 	}
 	// We don't want to bind-mount git dir if it doesn't exist
@@ -786,8 +788,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	}
 	// And we don't want to bind-mount upload dir if it doesn't exist.
 	// templateVars.UploadDir is relative path rooted in approot.
-	if app.GetUploadDirFullPath() == "" || !fileutil.FileExists(app.GetUploadDirFullPath()) {
-		templateVars.UploadDir = ""
+	if app.GetHostUploadDirFullPath() == "" || !fileutil.FileExists(app.GetHostUploadDirFullPath()) {
+		templateVars.HostUploadDir = ""
+		templateVars.ContainerUploadDir = ""
 	}
 
 	if app.NFSMountEnabled || app.NFSMountEnabledGlobal {
