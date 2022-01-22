@@ -2601,3 +2601,11 @@ func FormatSiteStatus(status string) string {
 	}
 	return formattedStatus
 }
+
+// GetUploadDirFullPath returns the full path to the upload directory or "" if there is none
+func (app *DdevApp) GetUploadDirFullPath() string {
+	if app.GetUploadDir() != "" {
+		return path.Join(app.AppRoot, app.Docroot, app.GetUploadDir())
+	}
+	return ""
+}

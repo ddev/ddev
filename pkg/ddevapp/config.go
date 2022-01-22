@@ -8,7 +8,6 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"os"
-	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -778,7 +777,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		NFSMountVolumeName:    app.GetNFSMountVolumeName(),
 		NoBindMounts:          globalconfig.DdevGlobalConfig.NoBindMounts,
 		Docroot:               app.GetDocroot(),
-		UploadDir:             path.Join(app.GetDocroot(), app.GetUploadDir()),
+		UploadDir:             app.GetUploadDirFullPath(),
 		GitDirMount:           false,
 	}
 	// We don't want to bind-mount git dir if it doesn't exist
@@ -787,7 +786,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	}
 	// And we don't want to bind-mount upload dir if it doesn't exist.
 	// templateVars.UploadDir is relative path rooted in approot.
-	if app.GetUploadDir() == "" || !fileutil.FileExists(filepath.Join(app.AppRoot, templateVars.UploadDir)) {
+	if app.GetUploadDirFullPath() == "" || !fileutil.FileExists(app.GetUploadDirFullPath()) {
 		templateVars.UploadDir = ""
 	}
 

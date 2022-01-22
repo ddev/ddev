@@ -2038,12 +2038,12 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	assert.NoError(err)
 
 	// Not all the example projects have an upload dir, so create it just in case
-	err = os.MkdirAll(filepath.Join(app.AppRoot, app.GetDocroot(), app.GetUploadDir()), 0777)
+	err = os.MkdirAll(app.GetUploadDirFullPath(), 0777)
 	assert.NoError(err)
 	err = app.Start()
 	require.NoError(t, err)
 
-	uploadDir := app.GetUploadDir()
+	uploadDir := app.GetUploadDirFullPath()
 	assert.NotEmpty(uploadDir)
 
 	// Use exec to touch a file in the container and see what the result is. Make sure it comes out with ownership
@@ -2173,7 +2173,7 @@ func TestDdevImportFilesDir(t *testing.T) {
 		assert.NoError(err, "Importing a directory returned an error:", err)
 
 		// Confirm contents of destination dir after import
-		absUploadDir := filepath.Join(app.AppRoot, app.Docroot, app.GetUploadDir())
+		absUploadDir := app.GetUploadDirFullPath()
 		uploadedFilesDirEntrySlice, err := os.ReadDir(absUploadDir)
 		assert.NoError(err)
 

@@ -263,7 +263,7 @@ func isWordpressApp(app *DdevApp) bool {
 // wordpressImportFilesAction defines the Wordpress workflow for importing project files.
 // The Wordpress workflow is currently identical to the Drupal import-files workflow.
 func wordpressImportFilesAction(app *DdevApp, importPath, extPath string) error {
-	destPath := filepath.Join(app.GetAppRoot(), app.GetDocroot(), app.GetUploadDir())
+	destPath := app.GetUploadDirFullPath()
 
 	// parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {
