@@ -43,7 +43,7 @@ func NewDrupalSettings(app *DdevApp) *DrupalSettings {
 	dockerIP, _ := dockerutil.GetDockerIP()
 	dbPublishedPort, _ := app.GetPublishedPort("db")
 
-	return &DrupalSettings{
+	settings := &DrupalSettings{
 		DatabaseName:     "db",
 		DatabaseUsername: "db",
 		DatabasePassword: "db",
@@ -60,6 +60,10 @@ func NewDrupalSettings(app *DdevApp) *DrupalSettings {
 		DockerIP:         dockerIP,
 		DBPublishedPort:  dbPublishedPort,
 	}
+	if app.Type == "drupal6" {
+		settings.DatabaseDriver = "mysqli"
+	}
+	return settings
 }
 
 // settingsIncludeStanza defines the template that will be appended to
