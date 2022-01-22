@@ -36,7 +36,7 @@ func TestCmdSnapshot(t *testing.T) {
 	require.NoError(t, err)
 
 	// Ensure that there are no snapshots available before we create one
-	err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
+	_, err = exec.RunHostCommand(DdevBin, "snapshot", "--cleanup", "--yes")
 	assert.NoError(err)
 
 	// Ensure that a snapshot can be created
@@ -52,6 +52,6 @@ func TestCmdSnapshot(t *testing.T) {
 
 	// Ensure that an existing snapshot can be deleted
 	out, err = exec.RunHostCommand(DdevBin, "snapshot", "--name", snapshotName, "--cleanup", "--yes")
-	assert.NoError(err)
+	assert.NoError(err, "failed to delete snapshot %s: %s", snapshotName, out)
 	assert.Contains(out, "Deleted database snapshot '"+snapshotName)
 }
