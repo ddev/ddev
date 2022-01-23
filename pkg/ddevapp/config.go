@@ -92,9 +92,6 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	// Provide a default app name based on directory name
 	app.Name = filepath.Base(app.AppRoot)
 
-	if app.Database.Type == "" {
-		app.Database = DatabaseDefault
-	}
 	// Gather containers to omit, adding ddev-router for gitpod
 	app.OmitContainersGlobal = globalconfig.DdevGlobalConfig.OmitContainersGlobal
 	if nodeps.IsGitpod() {
@@ -113,6 +110,19 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 			return app, fmt.Errorf("%v exists but cannot be read. It may be invalid due to a syntax error.: %v", app.ConfigPath, err)
 		}
 	}
+
+	// Upgrade any pre-v1.19.0 config that has mariadb_version or mysql_version
+	if app.MariaDBVersion != "" {
+		app.Database = DatabaseDesc{Type: nodeps.MariaDB, Version: app.MariaDBVersion}
+		app.MariaDBVersion = ""
+	}
+	if app.MySQLVersion != "" {
+		app.Database = DatabaseDesc{Type: nodeps.MySQL, Version: app.MySQLVersion}
+		app.MySQLVersion = ""
+	}
+	if app.Database.Type == "" {
+		app.Database = DatabaseDefault
+	}
 	app.SetApptypeSettingsPaths()
 
 	// Rendered yaml is not there until after ddev config or ddev start
@@ -124,11 +134,6 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		err = app.UpdateComposeYaml(content)
 		if err != nil {
 			return app, err
-		}
-
-		_, err = app.ReadConfig(includeOverrides)
-		if err != nil {
-			return app, fmt.Errorf("%v exists but cannot be read. It may be invalid due to a syntax error: %v", app.ConfigPath, err)
 		}
 	}
 	return app, nil
@@ -164,26 +169,6 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.ProjectTLD == nodeps.DdevDefaultTLD {
 		appcopy.ProjectTLD = ""
 	}
-
-	// Convert from pre-v1.19 mariadb_version and mysql_version to new
-	// Database config.
-	if appcopy.Database.Type == "" {
-		switch {
-		case appcopy.MariaDBVersion == "" && appcopy.MySQLVersion == "":
-			appcopy.Database.Type = nodeps.MariaDB
-			appcopy.Database.Version = nodeps.MariaDBDefaultVersion
-
-		case appcopy.MariaDBVersion != "":
-			appcopy.Database.Type = nodeps.MariaDB
-			appcopy.Database.Version = appcopy.MariaDBVersion
-
-		case appcopy.MySQLVersion != "":
-			appcopy.Database.Type = nodeps.MySQL
-			appcopy.Database.Version = appcopy.MySQLVersion
-		}
-	}
-	appcopy.MariaDBVersion = ""
-	appcopy.MySQLVersion = ""
 
 	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't
 	// accidentally get used for other projects.

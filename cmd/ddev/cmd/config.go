@@ -310,7 +310,7 @@ func init() {
 
 	ConfigCommand.Flags().Bool("auto", true, `Automatically run config without prompting.`)
 	ConfigCommand.Flags().Bool("bind-all-interfaces", false, `Bind host ports on all interfaces, not just on localhost network interface`)
-	ConfigCommand.Flags().String("database", "", fmt.Sprintf(`Specify the database type:version to use. Defaults to amriadb:%s`, nodeps.MariaDBDefaultVersion))
+	ConfigCommand.Flags().String("database", "", fmt.Sprintf(`Specify the database type:version to use. Defaults to mariadb:%s`, nodeps.MariaDBDefaultVersion))
 	RootCmd.AddCommand(ConfigCommand)
 
 	// Add hidden pantheon subcommand for people who have it in their fingers
