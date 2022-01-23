@@ -2032,12 +2032,6 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		return fmt.Errorf("failed to process pre-stop hooks: %v", err)
 	}
 
-	// Describe the app before we destroy everything
-	desc, err := app.Describe(false)
-	if err != nil {
-		util.Warning("could not run app.Describe(): %v", err)
-	}
-
 	if createSnapshot == true {
 		if app.SiteStatus() != SiteRunning {
 			util.Warning("Must start non-running project to do database snapshot")
@@ -2093,18 +2087,8 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 				util.Success("Volume %s for project %s was deleted", volName, app.Name)
 			}
 		}
-		for s := range desc["services"].(map[string]map[string]string) {
-			// volName default if name: is not specified is ddev-<project>_volume
-			volName := strings.ToLower("ddev-" + app.Name + "_" + s)
-			if dockerutil.VolumeExists(volName) {
-				err = dockerutil.RemoveVolume(volName)
-				if err != nil {
-					util.Warning("could not remove volume %s: %v", volName, err)
-				} else {
-					util.Success("Deleting third-party persistent volume %s for service %s...", volName, s)
-				}
-			}
-		}
+		deleteServiceVolumes(app)
+
 		dbBuilt := app.GetDBImage() + "-" + app.Name + "-built"
 		_ = dockerutil.RemoveImage(dbBuilt)
 
@@ -2119,6 +2103,34 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	}
 
 	return nil
+}
+
+// deleteServiceVolumes finds all the volumes created by services and removes them.
+// All volumes that are not external (likely not global) are removed.
+func deleteServiceVolumes(app *DdevApp) {
+	var err error
+	y := app.ComposeYaml
+	if s, ok := y["volumes"]; ok {
+		for _, v := range s.(map[interface{}]interface{}) {
+			vol := v.(map[interface{}]interface{})
+			if vol["external"] == true {
+				continue
+			}
+			if vol["name"] == nil {
+				continue
+			}
+			volName := vol["name"].(string)
+
+			if dockerutil.VolumeExists(volName) {
+				err = dockerutil.RemoveVolume(volName)
+				if err != nil {
+					util.Warning("could not remove volume %s: %v", volName, err)
+				} else {
+					util.Success("Deleting third-party persistent volume %s for service %s...", volName, s)
+				}
+			}
+		}
+	}
 }
 
 // RemoveGlobalProjectInfo deletes the project from ProjectList
