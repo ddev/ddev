@@ -22,6 +22,8 @@ const ConfigInstructions = `
 # database:
 #   type: <dbtype> # mysql, mariadb
 #   version: <version> # database version, like "10.3" or "8.0"
+# Note that mariadb_version or mysql_version from v1.18 and earlier
+# will automatically be converted to this notation with just a "ddev config --auto"
 
 # router_http_port: <port>  # Port to be used for http (defaults to port 80)
 # router_https_port: <port> # Port for https (defaults to 443)
