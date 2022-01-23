@@ -334,6 +334,13 @@ func TestMain(m *testing.M) {
 			log.Fatalf("TestMain shutdown: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 		}
 
+		if app.SiteStatus() != ddevapp.SiteStopped {
+			err = app.Stop(true, false)
+			if err != nil {
+				log.Fatalf("TestMain shutdown: app.Stop() failed on site %s, err=%v", TestSites[i].Name, err)
+			}
+		}
+		site.Cleanup()
 	}
 
 	os.Exit(testRun)
