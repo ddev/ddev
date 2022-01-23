@@ -443,9 +443,14 @@ func (app *DdevApp) GenerateMutagenYml() error {
 		return err
 	}
 
+	uploadDir := ""
+	if app.GetUploadDir() != "" {
+		uploadDir = path.Join(app.Docroot, app.GetUploadDir())
+	}
+
 	templateMap := map[string]interface{}{
 		"SymlinkMode": symlinkMode,
-		"UploadDir":   path.Join(app.GetDocroot(), app.GetUploadDir()),
+		"UploadDir":   uploadDir,
 	}
 	// If no bind mounts, then we can't ignore UploadDir, must sync it
 	if globalconfig.DdevGlobalConfig.NoBindMounts {

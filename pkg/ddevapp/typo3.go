@@ -159,7 +159,7 @@ func isTypo3App(app *DdevApp) bool {
 // typo3ImportFilesAction defines the TYPO3 workflow for importing project files.
 // The TYPO3 import-files workflow is currently identical to the Drupal workflow.
 func typo3ImportFilesAction(app *DdevApp, importPath, extPath string) error {
-	destPath := filepath.Join(app.GetAppRoot(), app.GetDocroot(), app.GetUploadDir())
+	destPath := app.GetHostUploadDirFullPath()
 
 	// parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {

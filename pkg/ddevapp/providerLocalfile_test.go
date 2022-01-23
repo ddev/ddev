@@ -77,7 +77,7 @@ func TestLocalfilePull(t *testing.T) {
 	err = app.Pull(provider, false, false, false)
 	require.NoError(t, err)
 
-	assert.FileExists(filepath.Join(app.AppRoot, app.Docroot, app.GetUploadDir(), "docs/developers/building-contributing.md"))
+	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "docs/developers/building-contributing.md"))
 	out, _, err = app.Exec(&ExecOpts{
 		Cmd:     "echo 'select COUNT(*) from users_field_data where mail=\"margaret.hopper@example.com\";' | mysql -N",
 		Service: "db",

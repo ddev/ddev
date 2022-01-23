@@ -497,7 +497,7 @@ func appendIncludeToDrupalSettingsFile(siteSettingsPath string, appType string) 
 
 // drupalImportFilesAction defines the Drupal workflow for importing project files.
 func drupalImportFilesAction(app *DdevApp, importPath, extPath string) error {
-	destPath := filepath.Join(app.GetAppRoot(), app.GetDocroot(), app.GetUploadDir())
+	destPath := app.GetHostUploadDirFullPath()
 
 	// parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {

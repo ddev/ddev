@@ -28,7 +28,7 @@ func phpImportFilesAction(app *DdevApp, importPath, extPath string) error {
 	if app.UploadDir == "" {
 		return errors.Errorf("No upload_dir is set for this project")
 	}
-	destPath := filepath.Join(app.GetAppRoot(), app.GetDocroot(), app.GetUploadDir())
+	destPath := app.GetHostUploadDirFullPath()
 
 	// parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {

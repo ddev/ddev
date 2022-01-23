@@ -117,7 +117,7 @@ func TestAcquiaPull(t *testing.T) {
 	err = app.Pull(provider, false, false, false)
 	require.NoError(t, err)
 
-	assert.FileExists(filepath.Join(app.GetUploadDir(), "chocolate-brownie-umami.jpg"))
+	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "chocolate-brownie-umami.jpg"))
 	out, err := exec.RunCommand("bash", []string{"-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="randy@example.com";' | %s mysql -N`, DdevBin)})
 	assert.NoError(err)
 	assert.True(strings.HasPrefix(out, "1\n"))

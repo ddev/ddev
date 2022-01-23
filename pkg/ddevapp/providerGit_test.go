@@ -66,7 +66,7 @@ func TestGitPull(t *testing.T) {
 	err = app.Pull(provider, false, false, false)
 	assert.NoError(err)
 
-	assert.FileExists(filepath.Join(app.AppRoot, app.Docroot, app.GetUploadDir(), "tmp/veggie-pasta-bake-hero-umami.jpg"))
+	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "tmp/veggie-pasta-bake-hero-umami.jpg"))
 	out, _, err := app.Exec(&ExecOpts{
 		Cmd:     "echo 'select COUNT(*) from users_field_data where mail=\"margaret.hopper@example.com\";' | mysql -N",
 		Service: "db",

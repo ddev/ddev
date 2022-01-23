@@ -1529,7 +1529,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_PROJECT":                  app.Name,
 		"DDEV_WEBIMAGE":                 app.WebImage,
 		"DDEV_APPROOT":                  app.AppRoot,
-		"DDEV_FILES_DIR":                path.Join("/var/www/html", app.GetDocroot(), app.GetUploadDir()),
+		"DDEV_FILES_DIR":                app.GetContainerUploadDirFullPath(),
 
 		"DDEV_HOST_DB_PORT":          dbPortStr,
 		"DDEV_HOST_WEBSERVER_PORT":   app.HostWebserverPort,
@@ -2612,4 +2612,20 @@ func FormatSiteStatus(status string) string {
 		formattedStatus = util.ColorizeText(formattedStatus, "green")
 	}
 	return formattedStatus
+}
+
+// GetHostUploadDirFullPath returns the full path to the upload directory on the host or "" if there is none
+func (app *DdevApp) GetHostUploadDirFullPath() string {
+	if app.GetUploadDir() != "" {
+		return path.Join(app.AppRoot, app.Docroot, app.GetUploadDir())
+	}
+	return ""
+}
+
+// GetContainerUploadDirFullPath returns the full path to the upload directory in container or "" if there is none
+func (app *DdevApp) GetContainerUploadDirFullPath() string {
+	if app.GetUploadDir() != "" {
+		return path.Join("/var/www/html", app.Docroot, app.GetUploadDir())
+	}
+	return ""
 }

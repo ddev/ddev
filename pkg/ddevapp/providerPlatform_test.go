@@ -103,7 +103,7 @@ func TestPlatformPull(t *testing.T) {
 	err = app.Pull(provider, false, false, false)
 	assert.NoError(err)
 
-	assert.FileExists(filepath.Join(app.GetUploadDir(), "victoria-sponge-umami.jpg"))
+	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "victoria-sponge-umami.jpg"))
 	out, err := exec.RunHostCommand("bash", "-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="margaret.hopper@example.com";' | %s mysql -N`, DdevBin))
 	assert.NoError(err)
 	assert.True(strings.HasPrefix(out, "1\n"))
