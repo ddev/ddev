@@ -94,7 +94,7 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 	defer util.CheckClose(f)
 
 	context := "./.sshimageBuild"
-	err := WriteBuildDockerfile(filepath.Join(globalconfig.GetGlobalDdevDir(), context, "Dockerfile"), "", nil, "")
+	err := WriteBuildDockerfile(filepath.Join(globalconfig.GetGlobalDdevDir(), context, "Dockerfile"), "", nil, "", "")
 	if err != nil {
 		return "", err
 	}

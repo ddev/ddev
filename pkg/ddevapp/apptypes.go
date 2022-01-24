@@ -288,6 +288,9 @@ func (app *DdevApp) DefaultWorkingDirMap() map[string]string {
 		return appFuncs.defaultWorkingDirMap(app, defaults)
 	}
 
+	if app.Database.Type == nodeps.Postgres {
+		defaults["db"] = "/var/lib/postgresql"
+	}
 	return defaults
 }
 

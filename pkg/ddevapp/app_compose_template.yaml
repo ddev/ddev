@@ -11,7 +11,7 @@ services:
         BASE_IMAGE: $DDEV_DBIMAGE
         username: '{{ .Username }}'
         uid: '{{ .UID }}'
-        gid: '{{ .GID }}'
+        gid: {{ if ne .DBType "postgres" }} {{ .GID }} {{ else }} "999" {{ end }}
     image: ${DDEV_DBIMAGE}-${DDEV_SITENAME}-built
     networks: ["default", "ddev_default"]
     stop_grace_period: 60s
