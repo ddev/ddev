@@ -1,7 +1,7 @@
 version: '{{ .ComposeVersion }}'
   {{ .DdevGenerated }}
 services:
-  {{if not .OmitDB }}
+  {{ if and (not .OmitDB) ( ne .DBType "postgres") }}
   db:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-db
     build:
@@ -63,7 +63,62 @@ services:
       retries: 120
       start_period: 120s
       timeout: 120s
-  {{ end }} {{/* end if not .OmitDB */}}
+  {{ end }} {{/* end if or (not .OmitDB) ( eq .DBType "postgres") */}}
+  {{ if and (eq .DBType "postgres") (not .OmitDB) }}
+  db:
+    container_name: {{ .Plugin }}-${DDEV_SITENAME}-db
+    image: {{ .DBType }}:{{ .DBVersion }}
+    networks: [ "default", "ddev_default" ]
+    stop_grace_period: 60s
+    volumes:
+    - type: "volume"
+      source: postgres
+      target: "/var/lib/postgresql/data"
+      volume:
+        nocopy: true
+      {{ if .NoBindMounts }}
+    - ddev-config:/mnt/ddev_config
+    - snapshots:/mnt/snapshots
+      {{ else }} {{/* if .NoBindMounts */}}
+    - .:/mnt/ddev_config
+    - ./db_snapshots:/mnt/snapshots
+      {{ end }} {{/* end if .NoBindMounts */}}
+    - ddev-global-cache:/mnt/ddev-global-cache
+    restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
+    user: "999:999"
+    hostname: {{ .Name }}-db
+    ports:
+      - "{{ .DockerIP }}:$DDEV_HOST_DB_PORT:5432"
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.platform: {{ .Plugin }}
+      com.ddev.app-type: {{ .AppType }}
+      com.ddev.approot: $DDEV_APPROOT
+    environment:
+    - COLUMNS
+    - DDEV_HOSTNAME
+    - DDEV_PHP_VERSION
+    - DDEV_PRIMARY_URL
+    - DDEV_PROJECT
+    - DDEV_PROJECT_TYPE
+    - DDEV_ROUTER_HTTP_PORT
+    - DDEV_ROUTER_HTTPS_PORT
+    - DDEV_SITENAME
+    - DDEV_TLD
+    - DOCKER_IP={{ .DockerIP }}
+    - HOST_DOCKER_INTERNAL_IP={{ .HostDockerInternalIP }}
+    - IS_DDEV_PROJECT=true
+    - LINES
+    - POSTGRES_PASSWORD=db
+    - POSTGRES_USER=db
+    - POSTGRES_DB=db
+    - TZ={{ .Timezone }}
+    healthcheck:
+      interval: 1s
+      retries: 120
+      start_period: 120s
+      timeout: 120s
+  {{ end }} {{/* if and (eq .DBType "postgres") (not .OmitDB) */}}
   web:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-web
     build:
@@ -232,11 +287,18 @@ networks:
     name: ddev_default
     external: true
 volumes:
-  {{if not .OmitDB }}
+  {{if and (not .OmitDB) (ne .DBType "postgres") }}
   mariadb-database:
     name: "{{ .MariaDBVolumeName}}"
     external: true
-  {{ end }} {{/* end if not .OmitDBA */}}
+  {{ end }} {{/* end if and (not .OmitDB) (ne .DBType postgres) */}}
+  
+  {{if and (not .OmitDB) ( eq .DBType "postgres") }}
+  postgres:
+    name: "{{ .PostgresVolumeName }}"
+    external: true
+  {{ end }} {{/* end if and (not .OmitDB) ( ne .DBType postgres) */}}
+
   {{ if not .OmitSSHAgent }}
   ddev-ssh-agent_socket_dir:
     external: true

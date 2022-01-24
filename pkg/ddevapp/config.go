@@ -421,7 +421,7 @@ func (app *DdevApp) ValidateConfig() error {
 	}
 
 	if !nodeps.IsValidDatabaseVersion(app.Database.Type, app.Database.Version) {
-		return fmt.Errorf("unsupported database type/version: %s:%s, ddev %s only supports the following database types and versions: mariadb: %v, mysql: %v", app.Database.Type, app.Database.Version, runtime.GOARCH, nodeps.GetValidMariaDBVersions(), nodeps.GetValidMySQLVersions())
+		return fmt.Errorf("unsupported database type/version: %s:%s, ddev %s only supports the following database types and versions: mariadb: %v, mysql: %v, postgres: %v", app.Database.Type, app.Database.Version, runtime.GOARCH, nodeps.GetValidMariaDBVersions(), nodeps.GetValidMySQLVersions(), nodeps.GetValidPostgresVersions())
 	}
 
 	// golang on windows is not able to time.LoadLocation unless
@@ -626,6 +626,8 @@ type composeYAMLVars struct {
 	AppType                   string
 	MailhogPort               string
 	HostMailhogPort           string
+	DBType                    string
+	DBVersion                 string
 	DBAPort                   string
 	DBPort                    string
 	HostPHPMyAdminPort        string
@@ -646,6 +648,7 @@ type composeYAMLVars struct {
 	OmitSSHAgent              bool
 	BindAllInterfaces         bool
 	MariaDBVolumeName         string
+	PostgresVolumeName        string
 	MutagenEnabled            bool
 	MutagenVolumeName         string
 	NFSMountEnabled           bool
@@ -706,6 +709,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		AppType:                   app.Type,
 		MailhogPort:               GetPort("mailhog"),
 		HostMailhogPort:           app.HostMailhogPort,
+		DBType:                    app.Database.Type,
+		DBVersion:                 app.Database.Version,
 		DBAPort:                   GetPort("dba"),
 		DBPort:                    GetPort("db"),
 		HostPHPMyAdminPort:        app.HostPHPMyAdminPort,
@@ -743,6 +748,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		DBAWorkingDir:         app.GetWorkingDir("dba", ""),
 		WebEnvironment:        webEnvironment,
 		MariaDBVolumeName:     app.GetMariaDBVolumeName(),
+		PostgresVolumeName:    app.GetPostgresVolumeName(),
 		NFSMountVolumeName:    app.GetNFSMountVolumeName(),
 		NoBindMounts:          globalconfig.DdevGlobalConfig.NoBindMounts,
 		Docroot:               app.GetDocroot(),

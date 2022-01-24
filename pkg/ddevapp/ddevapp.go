@@ -862,7 +862,7 @@ func (app *DdevApp) Start() error {
 
 	err = app.PullContainerImages()
 	if err != nil {
-		return err
+		util.Warning("Unable to pull docker images: %v", err)
 	}
 
 	dockerutil.CheckAvailableSpace()
@@ -901,9 +901,18 @@ func (app *DdevApp) Start() error {
 		}
 	}
 
-	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.Name + "-mariadb:/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, nil)
+	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.GetMariaDBVolumeName() + ":/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, nil)
 	if err != nil {
 		return fmt.Errorf("failed to RunSimpleContainer to chown volumes: %v, output=%s", err, out)
+	}
+
+	// Chown the postgres volume; this shouldn't have to be a separate stanze, but the
+	// uid is 999 instead of current user
+	if app.Database.Type == nodeps.Postgres {
+		_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/postgresql/data", "999:999")}, []string{}, []string{}, []string{app.GetPostgresVolumeName() + ":/var/lib/postgresql/data"}, "", true, false, nil)
+		if err != nil {
+			return fmt.Errorf("failed to RunSimpleContainer to chown postgres volume: %v, output=%s", err, out)
+		}
 	}
 
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
@@ -2498,6 +2507,12 @@ func (app *DdevApp) GetNFSMountVolumeName() string {
 // For historical reasons this isn't lowercased.
 func (app *DdevApp) GetMariaDBVolumeName() string {
 	return app.Name + "-mariadb"
+}
+
+// GetPostgresVolumeName returns the docker volume name of the Postgres/database volume
+// For historical reasons this isn't lowercased.
+func (app *DdevApp) GetPostgresVolumeName() string {
+	return app.Name + "-postgres"
 }
 
 // StartAppIfNotRunning is intended to replace much-duplicated code in the commands.

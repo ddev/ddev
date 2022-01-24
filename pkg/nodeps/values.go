@@ -13,8 +13,9 @@ const (
 
 // Database Types
 const (
-	MariaDB = "mariadb"
-	MySQL   = "mysql"
+	MariaDB  = "mariadb"
+	MySQL    = "mysql"
+	Postgres = "postgres"
 )
 
 // Container types used with ddev
@@ -129,6 +130,8 @@ func IsValidDatabaseVersion(dbType string, dbVersion string) bool {
 		return IsValidMariaDBVersion(dbVersion)
 	case MySQL:
 		return IsValidMySQLVersion(dbVersion)
+	case Postgres:
+		return IsValidPostgresVersion(dbVersion)
 	}
 	return false
 }
@@ -177,11 +180,32 @@ func GetValidMariaDBVersions() []string {
 	return s
 }
 
+// IsValidPostgresVersion is a helper function to determine if a Postgres version is valid, returning
+// true if the supplied version is valid and false otherwise.
+func IsValidPostgresVersion(v string) bool {
+	if _, ok := ValidPostgresVersions[v]; !ok {
+		return false
+	}
+
+	return true
+}
+
 // GetValidMySQLVersions is a helper function that returns a list of valid MySQL versions.
 func GetValidMySQLVersions() []string {
 	s := make([]string, 0, len(ValidMySQLVersions))
 
 	for p := range ValidMySQLVersions {
+		s = append(s, p)
+	}
+	sort.Strings(s)
+	return s
+}
+
+// GetValidPostgresVersions is a helper function that returns a list of valid Postgres versions.
+func GetValidPostgresVersions() []string {
+	s := make([]string, 0, len(ValidPostgresVersions))
+
+	for p := range ValidPostgresVersions {
 		s = append(s, p)
 	}
 	sort.Strings(s)
