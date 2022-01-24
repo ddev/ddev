@@ -1,6 +1,7 @@
 package ddevapp
 
 import (
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"strings"
 )
@@ -27,7 +28,10 @@ var ports = map[string]string{
 // GetPort returns the external router port (as a string) for the given service.
 // This can be used to find a given port for docker-compose manifests,
 // or for automated testing.
-func GetPort(service string) string {
+func GetPort(app *DdevApp, service string) string {
+	if app.Database.Type == nodeps.Postgres {
+		ports["db"] = "5432"
+	}
 	service = strings.ToLower(service)
 	val, ok := ports[service]
 	if !ok {

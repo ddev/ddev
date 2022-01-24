@@ -42,7 +42,7 @@ func NewBackdropSettings(app *DdevApp) *BackdropSettings {
 		DatabasePassword: "db",
 		DatabaseHost:     "ddev-" + app.Name + "-db",
 		DatabaseDriver:   "mysql",
-		DatabasePort:     GetPort("db"),
+		DatabasePort:     GetPort(app, "db"),
 		DatabasePrefix:   "",
 		HashSalt:         util.RandString(64),
 		Signature:        DdevFileSignature,
