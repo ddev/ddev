@@ -4,11 +4,11 @@ DDEV-Local projects can be extended to provide additional services. This is achi
 
 If you need a service not provided here, see [Defining an additional service with Docker Compose](custom-compose-files.md)
 
-Although anyone can create their own services with a `docker-compose.*.yaml` file, a growing number of services are supported and tested and can be installed with the `ddev service get` command starting with DDEV v1.19.0-alpha3.
+Although anyone can create their own services with a `docker-compose.*.yaml` file, a growing number of services are supported and tested and can be installed with the `ddev get` command starting with DDEV v1.19.0-alpha3.
 
-* [Apache Solr for Drupal 9](https://github.com/drud/ddev-drupal9-solr): `ddev service get drud/ddev-drupal9-solr`.
-* [Memcached](https://github.com/drud/ddev-memcached): `ddev service get drud/ddev-memcached`.
-* [Beanstalkd](https://github.com/drud/ddev-beanstalkd): `ddev service get drud/ddev-beanstalkd`.
+* [Apache Solr for Drupal 9](https://github.com/drud/ddev-drupal9-solr): `ddev get drud/ddev-drupal9-solr`.
+* [Memcached](https://github.com/drud/ddev-memcached): `ddev get drud/ddev-memcached`.
+* [Beanstalkd](https://github.com/drud/ddev-beanstalkd): `ddev get drud/ddev-beanstalkd`.
 
 ## Additional services in ddev-contrib (MongoDB, PostgresSQL, etc)
 

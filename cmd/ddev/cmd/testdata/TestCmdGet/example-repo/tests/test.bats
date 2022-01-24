@@ -17,7 +17,7 @@ teardown() {
 
 @test "basic installation" {
   cd ${TESTDIR}
-  ddev service get ${DIR}
+  ddev get ${DIR}
   ddev restart
   v=$(ddev exec 'printf "version\nquit\nquit\n" | nc memcached 11211')
   [[ "${v}" = VERSION* ]]
