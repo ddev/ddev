@@ -628,6 +628,7 @@ type composeYAMLVars struct {
 	HostMailhogPort           string
 	DBType                    string
 	DBVersion                 string
+	DBMountDir                string
 	DBAPort                   string
 	DBPort                    string
 	HostPHPMyAdminPort        string
@@ -711,6 +712,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		HostMailhogPort:           app.HostMailhogPort,
 		DBType:                    app.Database.Type,
 		DBVersion:                 app.Database.Version,
+		DBMountDir:                "/var/lib/mysql",
 		DBAPort:                   GetPort(app, "dba"),
 		DBPort:                    GetPort(app, "db"),
 		HostPHPMyAdminPort:        app.HostPHPMyAdminPort,
@@ -767,6 +769,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		templateVars.ContainerUploadDir = ""
 	}
 
+	if app.Database.Type == nodeps.Postgres {
+		templateVars.DBMountDir = "/var/lib/postgresql/data"
+	}
 	if app.NFSMountEnabled || app.NFSMountEnabledGlobal {
 		templateVars.MountType = "volume"
 		templateVars.WebMount = "nfsmount"
