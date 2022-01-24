@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
@@ -42,7 +43,7 @@ func TestCmdSnapshot(t *testing.T) {
 	out, err := exec.RunHostCommand(DdevBin, "snapshot", "--name", "test-snapshot")
 	assert.NoError(err)
 	require.Contains(t, out, "Created database snapshot test-snapshot")
-	snapshotName := "test-snapshot-mariadb_" + app.MariaDBVersion + ".gz"
+	snapshotName := fmt.Sprintf("test-snapshot-%s_%s.gz", app.Database.Type, app.Database.Version)
 
 	// Try to delete a not existing snapshot
 	out, err = exec.RunHostCommand(DdevBin, "snapshot", "--name", "not-existing-snapshot", "--cleanup", "--yes")
@@ -51,6 +52,6 @@ func TestCmdSnapshot(t *testing.T) {
 
 	// Ensure that an existing snapshot can be deleted
 	out, err = exec.RunHostCommand(DdevBin, "snapshot", "--name", snapshotName, "--cleanup", "--yes")
-	assert.NoError(err)
+	assert.NoError(err, "failed to delete snapshot %s: %s", snapshotName, out)
 	assert.Contains(out, "Deleted database snapshot '"+snapshotName)
 }

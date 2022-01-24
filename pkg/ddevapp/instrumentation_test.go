@@ -41,7 +41,7 @@ func TestSetInstrumentationAppTags(t *testing.T) {
 	}
 
 	// Make sure that expected attributes come through
-	for _, wanted := range []string{"database_type", "dbimg", "dbaimg", "nfs_mount_enabled", "ProjectID", "php_version", "router_http_port", "router_https_port", "router_status", "ssh_agent_status", "status", "type", "webimg", "webserver_type"} {
+	for _, wanted := range []string{"database_type", "nfs_mount_enabled", "ProjectID", "php_version", "router_http_port", "router_https_port", "router_status", "ssh_agent_status", "status", "type", "webimg", "webserver_type"} {
 		assert.NotEmpty(nodeps.InstrumentationTags[wanted], "tag '%s' was not found and it should have been", wanted)
 	}
 	runTime()

@@ -62,6 +62,14 @@ const SitePaused = "paused"
 // If this string is found, we assume we can replace/update the file.
 const DdevFileSignature = "#ddev-generated"
 
+// DatabaseDefault is the default database/version
+var DatabaseDefault = DatabaseDesc{nodeps.MariaDB, nodeps.MariaDBDefaultVersion}
+
+type DatabaseDesc struct {
+	Type    string `yaml:"type"`
+	Version string `yaml:"version"`
+}
+
 // DdevApp is the struct that represents a ddev app, mostly its config
 // from config.yaml.
 type DdevApp struct {
@@ -79,8 +87,9 @@ type DdevApp struct {
 	NoProjectMount        bool                  `yaml:"no_project_mount,omitempty"`
 	AdditionalHostnames   []string              `yaml:"additional_hostnames"`
 	AdditionalFQDNs       []string              `yaml:"additional_fqdns"`
-	MariaDBVersion        string                `yaml:"mariadb_version"`
-	MySQLVersion          string                `yaml:"mysql_version"`
+	MariaDBVersion        string                `yaml:"mariadb_version,omitempty"`
+	MySQLVersion          string                `yaml:"mysql_version,omitempty"`
+	Database              DatabaseDesc          `yaml:"database"`
 	NFSMountEnabled       bool                  `yaml:"nfs_mount_enabled"`
 	NFSMountEnabledGlobal bool                  `yaml:"-"`
 	MutagenEnabled        bool                  `yaml:"mutagen_enabled"`
@@ -219,16 +228,8 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["httpsURLs"] = httpsURLs
 	appDesc["urls"] = allURLs
 
-	if app.MySQLVersion != "" {
-		appDesc["database_type"] = "mysql"
-		appDesc["mysql_version"] = app.MySQLVersion
-	} else {
-		appDesc["database_type"] = "mariadb" // default
-		appDesc["mariadb_version"] = app.MariaDBVersion
-		if app.MariaDBVersion == "" {
-			appDesc["mariadb_version"] = nodeps.MariaDBDefaultVersion
-		}
-	}
+	appDesc["database_type"] = app.Database.Type
+	appDesc["database_version"] = app.Database.Version
 
 	// Only show extended status for running sites.
 	if app.SiteStatus() == SiteRunning {
@@ -244,16 +245,9 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			util.CheckErr(err)
 			dbinfo["published_port"] = dbPublicPort
 			dbinfo["database_type"] = "mariadb" // default
-			if app.MySQLVersion != "" {
-				dbinfo["database_type"] = "mysql"
-				dbinfo["mysql_version"] = app.MySQLVersion
-			} else {
-				if app.MariaDBVersion != "" {
-					dbinfo["mariadb_version"] = app.MariaDBVersion
-				} else {
-					dbinfo["mariadb_version"] = nodeps.MariaDBDefaultVersion
-				}
-			}
+			dbinfo["database_type"] = app.Database.Type
+			dbinfo["database_version"] = app.Database.Version
+
 			appDesc["dbinfo"] = dbinfo
 
 			if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "dba") {
@@ -278,7 +272,6 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["xdebug_enabled"] = app.XdebugEnabled
 	appDesc["webimg"] = app.WebImage
 	appDesc["dbimg"] = app.GetDBImage()
-	appDesc["dbaimg"] = app.DBAImage
 	appDesc["services"] = map[string]map[string]string{}
 
 	containers, err := dockerutil.GetAppContainers(app.Name)
@@ -809,36 +802,9 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 	return nil
 }
 
-// GetDBImage uses the available mariadb or mysql version or provides the default
+// GetDBImage uses the available version info
 func (app *DdevApp) GetDBImage() string {
-	// If an explicit dbimage is set, just use it.
-	if app.DBImage != "" {
-		return app.DBImage
-	}
-
-	dbImage := ""
-	// If the dbimage has not been overridden (because dbimage takes precedence)
-	// and the mariadb_version/mysql_version *has* been changed by config,
-	// use the dbimage derived from dbversion.
-	// IF dbimage has not been specified (it equals mariadb default)
-	// AND mariadb version is NOT the default version
-	// Then override the dbimage with related mariadb or mysql version
-
-	// If no (dbimage set or it's the default image) and MariaDB or MySQL version set
-	if (app.DBImage == "" || app.DBImage == version.GetDBImage(nodeps.MariaDB)) && (app.MariaDBVersion != "" || app.MySQLVersion != "") {
-		switch {
-		// mariadb_version is explicitly set
-		case app.MariaDBVersion != "":
-			dbImage = version.GetDBImage(nodeps.MariaDB, app.MariaDBVersion)
-		// mysql_version is explicitly set
-		case app.MySQLVersion != "":
-			dbImage = version.GetDBImage(nodeps.MySQL, app.MySQLVersion)
-		}
-	}
-	// Default behavior is just to use the MariaDB image.
-	if dbImage == "" {
-		dbImage = version.GetDBImage(nodeps.MariaDB)
-	}
+	dbImage := version.GetDBImage(app.Database.Type, app.Database.Version)
 	return dbImage
 }
 
@@ -854,8 +820,6 @@ func (app *DdevApp) Start() error {
 			return fmt.Errorf("unable to create docker volume %s: %v", v, err)
 		}
 	}
-
-	app.DBImage = app.GetDBImage()
 
 	err = app.CheckExistingAppInApproot()
 	if err != nil {
@@ -1005,9 +969,11 @@ func (app *DdevApp) Start() error {
 
 	// The db_snapshots subdirectory may be created on docker-compose up, so
 	// we need to precreate it so permissions are correct (and not root:root)
-	err = os.MkdirAll(app.GetConfigPath("db_snapshots"), 0777)
-	if err != nil {
-		return err
+	if !fileutil.IsDirectory(app.GetConfigPath("db_snapshots")) {
+		err = os.MkdirAll(app.GetConfigPath("db_snapshots"), 0755)
+		if err != nil {
+			return err
+		}
 	}
 
 	_, _, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "up", "--build", "-d")
@@ -1101,7 +1067,7 @@ func (app *DdevApp) Restart() error {
 func (app *DdevApp) PullContainerImages() error {
 	containerImages := map[string]string{
 		"db":             app.GetDBImage(),
-		"dba":            app.DBAImage,
+		"dba":            version.GetDBAImage(),
 		"ddev-ssh-agent": version.GetSSHAuthImage(),
 		"web":            app.WebImage,
 		"ddev-router":    version.GetRouterImage(),
@@ -1525,7 +1491,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_SITENAME":                 app.Name,
 		"DDEV_TLD":                      app.ProjectTLD,
 		"DDEV_DBIMAGE":                  app.GetDBImage(),
-		"DDEV_DBAIMAGE":                 app.DBAImage,
+		"DDEV_DBAIMAGE":                 version.GetDBAImage(),
 		"DDEV_PROJECT":                  app.Name,
 		"DDEV_WEBIMAGE":                 app.WebImage,
 		"DDEV_APPROOT":                  app.AppRoot,
@@ -1711,14 +1677,8 @@ func (app *DdevApp) Snapshot(baseSnapshotName string) (string, error) {
 		t := time.Now()
 		baseSnapshotName = app.Name + "_" + t.Format("20060102150405")
 	}
-	serverVersion := ""
-	switch {
-	case app.MySQLVersion != "":
-		serverVersion = "mysql_" + app.MySQLVersion
-	case app.MariaDBVersion != "":
-		serverVersion = "mariadb_" + app.MariaDBVersion
-	}
-	snapshotName := baseSnapshotName + "-" + serverVersion + ".gz"
+
+	snapshotName := baseSnapshotName + "-" + app.Database.Type + "_" + app.Database.Version + ".gz"
 
 	existingSnapshots, err := app.ListSnapshots()
 	if err != nil {
@@ -1740,13 +1700,15 @@ func (app *DdevApp) Snapshot(baseSnapshotName string) (string, error) {
 
 	util.Success("Creating database snapshot %s", snapshotName)
 	streamTool := "mbstream"
+
 	// mbstream/mariadbackup don't make their appearance in mariadb until 10.2
-	if strings.HasPrefix(serverVersion, "mysql") || (serverVersion == "mariadb_5.5" || serverVersion == "mariadb_10.0" || serverVersion == "mariadb_10.1") {
+	streamtoolVersions := []string{"mysql:5.5", "mysql:5.6", "mysql:5.7", "mysql:8.0", "mariadb:5.5", "mariadb:10.0", "mariadb:10.1"}
+	if nodeps.ArrayContainsString(streamtoolVersions, app.Database.Type+":"+app.Database.Version) {
 		streamTool = "xbstream"
 	}
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     fmt.Sprintf(`$(/backuptool.sh) --backup --stream=%s --user=root --password=root --socket=/var/tmp/mysql.sock  2>/var/log/mariadbackup_backup_%s.log | gzip >"%s/%s"`, streamTool, snapshotName, containerSnapshotDir, snapshotName),
+		Cmd:     fmt.Sprintf(`set -eu -o pipefail; $(/backuptool.sh) --backup --stream=%s --user=root --password=root --socket=/var/tmp/mysql.sock  2>/var/log/mariadbackup_backup_%s.log | gzip >"%s/%s"`, streamTool, snapshotName, containerSnapshotDir, snapshotName),
 	})
 
 	if err != nil {
@@ -1772,7 +1734,7 @@ func (app *DdevApp) Snapshot(baseSnapshotName string) (string, error) {
 	} else {
 		// But if we are using bind-mounts, we can just copy it to where the snapshot is
 		// mounted into the db container (/mnt/ddev_config/db_snapshots)
-		c := fmt.Sprintf("ls -l /mnt/ddev_config && id && mkdir -p /mnt/ddev_config/db_snapshots && ls -ld /mnt/ddev_config/db_snapshots && cp -r %s/%s /mnt/ddev_config/db_snapshots", containerSnapshotDir, snapshotName)
+		c := fmt.Sprintf("cp -r %s/%s /mnt/ddev_config/db_snapshots", containerSnapshotDir, snapshotName)
 		uid, _, _ := util.GetContainerUIDGid()
 		stdout, stderr, err = dockerutil.Exec(dbContainer.ID, c, uid)
 		if err != nil {
@@ -1886,12 +1848,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("failed to process pre-restore-snapshot hooks: %v", err)
 	}
 
-	currentDBVersion := "mariadb_" + nodeps.MariaDBDefaultVersion
-	if app.MariaDBVersion != "" {
-		currentDBVersion = "mariadb_" + app.MariaDBVersion
-	} else if app.MySQLVersion != "" {
-		currentDBVersion = "mysql_" + app.MySQLVersion
-	}
+	currentDBVersion := app.Database.Type + "_" + app.Database.Version
 
 	snapshotFileOrDir := filepath.Join("db_snapshots", snapshotName)
 
@@ -1964,12 +1921,12 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		}
 	}
 	_ = os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "restore_snapshot "+snapshotName)
+	// nolint: errcheck
+	defer os.Unsetenv("DDEV_MARIADB_LOCAL_COMMAND")
 	err = app.Start()
 	if err != nil {
 		return fmt.Errorf("failed to start project for RestoreSnapshot: %v", err)
 	}
-	err = os.Unsetenv("DDEV_MARIADB_LOCAL_COMMAND")
-	util.CheckErr(err)
 
 	output.UserOut.Printf("Waiting for snapshot restore to complete...\nYou can also follow the restore progress in another terminal window with `ddev logs -s db -f %s`", app.Name)
 	// Now it's up, but we need to find out when it finishes loading.
@@ -2546,7 +2503,7 @@ func (app *DdevApp) StartAppIfNotRunning() error {
 	return err
 }
 
-// CheckAddonIncompatibilities() looks for problems with docker-compose.*.yaml 3rd-party services
+// CheckAddonIncompatibilities looks for problems with docker-compose.*.yaml 3rd-party services
 func (app *DdevApp) CheckAddonIncompatibilities() error {
 	if _, ok := app.ComposeYaml["services"]; !ok {
 		util.Warning("Unable to check 3rd-party services for missing networks stanza")

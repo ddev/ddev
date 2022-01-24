@@ -1,0 +1,3 @@
+database:
+  type: mariadb
+  version: 10.2

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -48,7 +49,6 @@ func TestNewConfig(t *testing.T) {
 	// Ensure the config uses specified defaults.
 	assert.Equal(app.GetDBImage(), version.GetDBImage(nodeps.MariaDB))
 	assert.Equal(app.WebImage, version.GetWebImage())
-	assert.Equal(app.DBAImage, version.GetDBAImage())
 	app.Name = util.RandString(32)
 	app.Type = nodeps.AppTypeDrupal8
 
@@ -1096,52 +1096,90 @@ func TestConfigLoadingOrder(t *testing.T) {
 
 }
 
-func TestPkgConfigMariaDBVersion(t *testing.T) {
-	// NewApp from scratch
-	// NewApp with config.yaml with mariadb_version and no dbimage
-	// NewApp with config.yaml with dbimage and no mariadb_version
-	// NewApp with both dbimage and
+// TestPkgConfigDatabaseDBVersion tests config for database
+func TestPkgConfigDatabaseDBVersion(t *testing.T) {
 	assert := asrt.New(t)
 
-	testDir, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 
 	// Create a temporary directory and switch to it.
 	tmpDir := testcommon.CreateTmpDir(t.Name())
-	defer testcommon.CleanupDir(tmpDir)
-	defer testcommon.Chdir(tmpDir)()
-
-	systemTempDir, _ := testcommon.OsTempDir()
-
-	targetBase := filepath.Join(systemTempDir, "TestPkgConfigMariaDBVersion")
-	_ = os.RemoveAll(targetBase)
-	err := fileutil.CopyDir(filepath.Join(testDir, "testdata", "TestPkgConfigMariaDBVersion"), targetBase)
+	err := os.Chdir(tmpDir)
 	require.NoError(t, err)
 
-	mariaDBVersions := nodeps.ValidMariaDBVersions
-	for v := range mariaDBVersions {
-		for _, configType := range []string{"dbimage", "mariadb-version"} {
-			app := &DdevApp{}
-			appRoot := filepath.Join(targetBase, configType+"-"+v)
-			err = app.LoadConfigYamlFile(filepath.Join(appRoot, ".ddev", "config.yaml"))
-			assert.NoError(err)
-			if configType == "dbimage" {
-				assert.Equal("somedbimage:"+v, app.DBImage)
-			}
-			if configType == "mariadb-version" {
-				assert.Equal(v, app.MariaDBVersion)
-			}
+	_, _ = exec.RunHostCommand(DdevBin, "delete", "-Oy", t.Name())
+	err = globalconfig.ReadGlobalConfig()
+	require.NoError(t, err)
 
-			app, err = NewApp(appRoot, false)
-			assert.NoError(err)
-			if configType == "dbimage" {
-				assert.Equal("somedbimage:"+v, app.DBImage, "NewApp() failed to respect existing dbimage")
-			}
-			if configType == "mariadb-version" {
-				assert.Equal(v, app.MariaDBVersion)
-				assert.Equal(version.GetDBImage(nodeps.MariaDB, v), app.GetDBImage(), "dbimage derived from app.MariaDBVersion was incorrect")
-			}
+	app, err := NewApp(tmpDir, false)
+	require.NoError(t, err)
+	app.Name = t.Name()
+	err = app.WriteConfig()
+	require.NoError(t, err)
 
-		}
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		_ = os.RemoveAll(tmpDir)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+	dbVersions := nodeps.GetValidDatabaseVersions()
+	for _, v := range dbVersions {
+		parts := strings.Split(v, ":")
+		require.True(t, len(parts) == 2)
+		configFile := app.ConfigPath
+		err = os.RemoveAll(configFile)
+		assert.NoError(err)
+		err = fileutil.AppendStringToFile(configFile, fmt.Sprintf("database:\n  type: %s\n  version: %s ", parts[0], parts[1]))
+		err = app.LoadConfigYamlFile(configFile)
+		assert.NoError(err)
+		assert.Equal(parts[0], app.Database.Type)
+		assert.Equal(parts[1], app.Database.Version)
 	}
+}
 
+// TestDatabaseConfigUpgrade tests whether upgrade from mariadb_version/mysql_version
+// to database format works correctly
+func TestDatabaseConfigUpgrade(t *testing.T) {
+	assert := asrt.New(t)
+
+	origDir, _ := os.Getwd()
+
+	// Create a temporary directory and switch to it.
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	err := os.Chdir(tmpDir)
+	require.NoError(t, err)
+
+	_, _ = exec.RunHostCommand(DdevBin, "delete", "-Oy", t.Name())
+	err = globalconfig.ReadGlobalConfig()
+	require.NoError(t, err)
+
+	app, err := NewApp(tmpDir, false)
+	require.NoError(t, err)
+	app.Name = t.Name()
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		_ = os.RemoveAll(tmpDir)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+	for _, v := range []string{"mariadb:10.5", "mysql:5.7"} {
+		parts := strings.Split(v, ":")
+		require.True(t, len(parts) == 2)
+		configFile := app.ConfigPath
+		err = os.RemoveAll(configFile)
+		assert.NoError(err)
+		err = fileutil.AppendStringToFile(configFile, fmt.Sprintf("name: %s\n%s_version: %s\n", t.Name(), parts[0], parts[1]))
+		app, err := NewApp(tmpDir, false)
+		require.NoError(t, err)
+		assert.Equal(parts[0], app.Database.Type)
+		assert.Equal(parts[1], app.Database.Version)
+		assert.Empty(app.MySQLVersion)
+		assert.Empty(app.MariaDBVersion)
+	}
 }

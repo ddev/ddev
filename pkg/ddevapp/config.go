@@ -74,7 +74,6 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.Type = nodeps.AppTypePHP
 	app.PHPVersion = nodeps.PHPDefault
 	app.ComposerVersion = nodeps.ComposerDefault
-	app.MariaDBVersion = nodeps.MariaDBDefaultVersion
 	app.WebserverType = nodeps.WebserverDefault
 	app.NFSMountEnabled = nodeps.NFSMountEnabledDefault
 	app.NFSMountEnabledGlobal = globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal
@@ -100,9 +99,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.ProjectTLD = nodeps.DdevDefaultTLD
 	app.UseDNSWhenPossible = true
 
-	// These should always default to the latest image/tag names from the Version package.
 	app.WebImage = version.GetWebImage()
-	app.DBAImage = version.GetDBAImage()
 
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
@@ -112,10 +109,18 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 			return app, fmt.Errorf("%v exists but cannot be read. It may be invalid due to a syntax error.: %v", app.ConfigPath, err)
 		}
 	}
-	// If MySQLVersion is now non-default/non-empty, then empty
-	// MariaDBVersion in its favor.
-	if app.MySQLVersion != "" {
+
+	// Upgrade any pre-v1.19.0 config that has mariadb_version or mysql_version
+	if app.MariaDBVersion != "" {
+		app.Database = DatabaseDesc{Type: nodeps.MariaDB, Version: app.MariaDBVersion}
 		app.MariaDBVersion = ""
+	}
+	if app.MySQLVersion != "" {
+		app.Database = DatabaseDesc{Type: nodeps.MySQL, Version: app.MySQLVersion}
+		app.MySQLVersion = ""
+	}
+	if app.Database.Type == "" {
+		app.Database = DatabaseDefault
 	}
 	app.SetApptypeSettingsPaths()
 
@@ -128,11 +133,6 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		err = app.UpdateComposeYaml(content)
 		if err != nil {
 			return app, err
-		}
-
-		_, err = app.ReadConfig(includeOverrides)
-		if err != nil {
-			return app, fmt.Errorf("%v exists but cannot be read. It may be invalid due to a syntax error: %v", app.ConfigPath, err)
 		}
 	}
 	return app, nil
@@ -153,17 +153,6 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.WebImage == version.GetWebImage() {
 		appcopy.WebImage = ""
 	}
-	// If the DBImage is actually just created/equal to the maria or mysql version
-	// then remove it from the output.
-	if appcopy.DBImage == version.GetDBImage(nodeps.MariaDB, appcopy.MariaDBVersion) || appcopy.DBImage == version.GetDBImage(nodeps.MySQL, appcopy.MySQLVersion) {
-		appcopy.DBImage = ""
-	}
-	if appcopy.DBAImage == version.GetDBAImage() {
-		appcopy.DBAImage = ""
-	}
-	if appcopy.DBAImage == version.GetDBAImage() {
-		appcopy.DBAImage = ""
-	}
 	if appcopy.MailhogPort == nodeps.DdevDefaultMailhogPort {
 		appcopy.MailhogPort = ""
 	}
@@ -178,10 +167,6 @@ func (app *DdevApp) WriteConfig() error {
 	}
 	if appcopy.ProjectTLD == nodeps.DdevDefaultTLD {
 		appcopy.ProjectTLD = ""
-	}
-	// If mariadb-version is "" and mysql-version is not set, then set mariadb-version to default
-	if appcopy.MariaDBVersion == "" && appcopy.MySQLVersion == "" {
-		appcopy.MariaDBVersion = nodeps.MariaDBDefaultVersion
 	}
 
 	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't
@@ -435,25 +420,8 @@ func (app *DdevApp) ValidateConfig() error {
 		return fmt.Errorf("unsupported omit_containers: %s, ddev (%s) only supports the following for omit_containers: %s", app.OmitContainers, runtime.GOARCH, nodeps.GetValidOmitContainers()).(InvalidOmitContainers)
 	}
 
-	if app.MariaDBVersion != "" {
-		// Validate mariadb version
-		if !nodeps.IsValidMariaDBVersion(app.MariaDBVersion) {
-			return fmt.Errorf("unsupported mariadb_version: %s, ddev (%s) only supports the following versions: %s", app.MariaDBVersion, runtime.GOARCH, nodeps.GetValidMariaDBVersions()).(invalidMariaDBVersion)
-		}
-	}
-	if app.MySQLVersion != "" {
-		// Validate /mysql version
-		if !nodeps.IsValidMySQLVersion(app.MySQLVersion) {
-			if len(nodeps.GetValidMySQLVersions()) == 0 {
-				return fmt.Errorf("MySQL is not yet supported on your architecture (%s) because mysql does not provide packages (or docker images)", runtime.GOARCH)
-			}
-			return fmt.Errorf("unsupported mysql_version: %s; ddev (%s) only supports the following versions %s", app.MySQLVersion, runtime.GOARCH, nodeps.GetValidMySQLVersions()).(invalidMySQLVersion)
-		}
-	}
-
-	// Validate db versions
-	if app.MariaDBVersion != "" && app.MySQLVersion != "" {
-		return fmt.Errorf("both mariadb_version (%v) and mysql_version (%v) are set, but they are mutually exclusive", app.MariaDBVersion, app.MySQLVersion)
+	if !nodeps.IsValidDatabaseVersion(app.Database.Type, app.Database.Version) {
+		return fmt.Errorf("unsupported database type/version: %s:%s, ddev %s only supports the following database types and versions: mariadb: %v, mysql: %v", app.Database.Type, app.Database.Version, runtime.GOARCH, nodeps.GetValidMariaDBVersions(), nodeps.GetValidMySQLVersions())
 	}
 
 	// golang on windows is not able to time.LoadLocation unless

@@ -13,19 +13,17 @@ const ConfigInstructions = `
 
 # php_version: "7.4"  # PHP version to use, "5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0", "8.1"
 
-# You can explicitly specify the webimage, dbimage, dbaimage lines but this
+# You can explicitly specify the webimage but this
 # is not recommended, as the images are often closely tied to ddev's' behavior,
 # so this can break upgrades.
 
 # webimage: <docker_image>  # nginx/php docker image.
-# dbimage: <docker_image>  # mariadb docker image.
-# dbaimage: <docker_image>
 
-# mariadb_version and mysql_version
-# ddev can use many versions of mariadb and mysql
-# However these directives are mutually exclusive
-# mariadb_version: 10.2
-# mysql_version: 8.0
+# database:
+#   type: <dbtype> # mysql, mariadb
+#   version: <version> # database version, like "10.3" or "8.0"
+# Note that mariadb_version or mysql_version from v1.18 and earlier
+# will automatically be converted to this notation with just a "ddev config --auto"
 
 # router_http_port: <port>  # Port to be used for http (defaults to port 80)
 # router_https_port: <port> # Port for https (defaults to 443)

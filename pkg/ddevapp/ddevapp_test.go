@@ -1320,29 +1320,22 @@ func checkImportDbImports(t *testing.T, app *ddevapp.DdevApp) {
 
 }
 
-// TestDdevAllDatabases tests db import/export/start with supported MariaDB/MySQL versions
+// TestDdevAllDatabases tests db import/export/snapshot/restore/start with supported database versions
 func TestDdevAllDatabases(t *testing.T) {
 	assert := asrt.New(t)
 
-	dbVersions := map[string]map[string]bool{
-		"mariadb": nodeps.ValidMariaDBVersions,
-		"mysql":   nodeps.ValidMySQLVersions,
-	}
+	dbVersions := nodeps.GetValidDatabaseVersions()
+
 	//Use a smaller list if GOTEST_SHORT
 	if os.Getenv("GOTEST_SHORT") != "" {
-		t.Log("Using limited set of database servers because GOTEST_SHORT is set")
-		dbVersions = map[string]map[string]bool{
-			"mariadb": {nodeps.MariaDB102: true, nodeps.MariaDB103: true},
-			"mysql":   {nodeps.MySQL80: true, nodeps.MySQL57: true},
-		}
+		dbVersions = []string{"mariadb:10.2", "mariadb:10.3", "mysql:8.0", "mysql:5.7"}
+		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
 	}
 
 	app := &ddevapp.DdevApp{}
-	testDir, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 
 	site := TestSites[0]
-	switchDir := site.Chdir()
-	defer switchDir()
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	testcommon.ClearDockerEnv()
@@ -1358,130 +1351,129 @@ func TestDdevAllDatabases(t *testing.T) {
 		assert.NoError(err)
 
 		// Make sure we leave the config.yaml in expected state
-		app.MariaDBVersion = ""
-		app.MySQLVersion = ""
-		app.DBImage = ""
-		_ = app.WriteConfig()
+		app.Database.Type = nodeps.MariaDB
+		app.Database.Version = nodeps.MariaDBDefaultVersion
+		err = app.WriteConfig()
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
 	})
 
-	for dbType, versions := range dbVersions {
-		for v := range versions {
+	for _, dbTypeVersion := range dbVersions {
+		t.Logf("testing db server functionality of %s", dbTypeVersion)
+		parts := strings.Split(dbTypeVersion, ":")
+		dbType := parts[0]
+		dbVersion := parts[1]
+		require.Len(t, parts, 2)
 
-			t.Logf("testing db server functionality of %v:%v", dbType, v)
-			_ = app.Stop(true, false)
-			if dbType == "mariadb" {
-				app.MySQLVersion = ""
-				app.MariaDBVersion = v
-			} else if dbType == "mysql" {
-				app.MariaDBVersion = ""
-				app.MySQLVersion = v
-			}
-			app.DBImage = ""
-			_ = app.WriteConfig()
-			startErr := app.Start()
-			if startErr != nil {
-				appLogs, err := ddevapp.GetErrLogsFromApp(app, startErr)
-				assert.NoError(err)
-				err = app.Stop(true, false)
-				assert.NoError(err)
-				t.Logf("Continuing/skippping %s_%s due to app.Start() failure %v; logs:\n=====\n%s\n=====\n", dbType, v, startErr, appLogs)
-				continue
-			}
+		err = app.Stop(true, false)
+		require.NoError(t, err)
+		app.Database.Type = dbType
+		app.Database.Version = dbVersion
+		err = app.WriteConfig()
+		require.NoError(t, err)
 
-			// Make sure the version of db running matches expected
-			containerDBVersion, _, _ := app.Exec(&ddevapp.ExecOpts{
-				Service: "db",
-				Cmd:     "cat /var/lib/mysql/db_mariadb_version.txt",
-			})
-			assert.Equal(dbType+"_"+v, strings.Trim(containerDBVersion, "\n\r "))
-
-			importPath := filepath.Join(testDir, "testdata", t.Name(), "users.sql")
-			err = app.ImportDB(importPath, "", false, false, "db")
-			assert.NoError(err, "failed to import %v", importPath)
-
-			_ = os.Mkdir("tmp", 0777)
-			err = fileutil.PurgeDirectory("tmp")
+		startErr := app.Start()
+		if startErr != nil {
+			appLogs, err := ddevapp.GetErrLogsFromApp(app, startErr)
 			assert.NoError(err)
-
-			// Test that we can export-db to a gzipped file
-			err = app.ExportDB("tmp/users1.sql.gz", true, "db")
+			err = app.Stop(true, false)
 			assert.NoError(err)
-
-			// Validate contents
-			err = archive.Ungzip("tmp/users1.sql.gz", "tmp")
-			assert.NoError(err)
-			stringFound, err := fileutil.FgrepStringInFile("tmp/users1.sql", "Table structure for table `users`")
-			assert.NoError(err)
-			assert.True(stringFound)
-
-			err = app.MutagenSyncFlush()
-			assert.NoError(err)
-			err = fileutil.PurgeDirectory("tmp")
-			assert.NoError(err)
-
-			// Export to an ungzipped file and validate
-			err = app.ExportDB("tmp/users2.sql", false, "db")
-			assert.NoError(err)
-
-			err = app.MutagenSyncFlush()
-			assert.NoError(err)
-
-			// Validate contents
-			stringFound, err = fileutil.FgrepStringInFile("tmp/users2.sql", "Table structure for table `users`")
-			assert.NoError(err)
-			assert.True(stringFound)
-
-			err = fileutil.PurgeDirectory("tmp")
-			assert.NoError(err)
-
-			// Capture to stdout without gzip compression
-			stdout := util.CaptureStdOut()
-			err = app.ExportDB("", false, "db")
-			assert.NoError(err)
-			out := stdout()
-			assert.Contains(out, "Table structure for table `users`")
-
-			snapshotName := dbType + "_" + v + "_" + fileutil.RandomFilenameBase()
-			fullSnapshotName, err := app.Snapshot(snapshotName)
-			assert.NoError(err, "could not create snapshot %s for version %s: %v output=%v", snapshotName, v, err, fullSnapshotName)
-
-			fi, err := os.Stat(app.GetConfigPath(filepath.Join("db_snapshots", fullSnapshotName)))
-			require.NoError(t, err)
-			// make sure there's something in the snapshot
-			assert.Greater(fi.Size(), int64(1000), "snapshot seems to be empty")
-
-			// Delete the user in the database so we can later verify snapshot restore
-			_, _, err = app.Exec(&ddevapp.ExecOpts{
-				Service: "db",
-				Cmd:     `echo "DELETE FROM users;" | mysql`,
-			})
-			assert.NoError(err)
-
-			err = app.RestoreSnapshot(fullSnapshotName)
-			assert.NoError(err, "could not restore snapshot %s for version %s: %v", fullSnapshotName, v, err)
-			if err != nil {
-				_ = app.Stop(true, false)
-				continue
-			}
-			// Make sure the version of db running matches expected
-			containerDBVersion, _, err = app.Exec(&ddevapp.ExecOpts{
-				Service: "db",
-				Cmd:     "cat /var/lib/mysql/db_mariadb_version.txt",
-			})
-			assert.NoError(err)
-			assert.Equal(dbType+"_"+v, strings.Trim(containerDBVersion, "\n\r "))
-
-			out, _, err = app.Exec(&ddevapp.ExecOpts{
-				Service: "db",
-				Cmd:     `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
-			})
-			assert.NoError(err)
-			assert.Equal("2\n", out)
-
-			// TODO: Restore a snapshot from a different version note warning.
-
-			_ = app.Stop(true, false)
+			t.Logf("Continuing/skippping %s due to app.Start() failure %v; logs:\n=====\n%s\n=====\n", dbVersion, startErr, appLogs)
+			continue
 		}
+
+		// Make sure the version of db running matches expected
+		containerDBVersion, _, _ := app.Exec(&ddevapp.ExecOpts{
+			Service: "db",
+			Cmd:     "cat /var/lib/mysql/db_mariadb_version.txt",
+		})
+		assert.Equal(dbType+"_"+dbVersion, strings.Trim(containerDBVersion, "\n\r "))
+
+		importPath := filepath.Join(origDir, "testdata", t.Name(), "users.sql")
+		err = app.ImportDB(importPath, "", false, false, "db")
+		assert.NoError(err, "failed to import %v", importPath)
+
+		_ = os.Mkdir("tmp", 0777)
+		err = fileutil.PurgeDirectory("tmp")
+		assert.NoError(err)
+
+		// Test that we can export-db to a gzipped file
+		err = app.ExportDB("tmp/users1.sql.gz", true, "db")
+		assert.NoError(err)
+
+		// Validate contents
+		err = archive.Ungzip("tmp/users1.sql.gz", "tmp")
+		assert.NoError(err)
+		stringFound, err := fileutil.FgrepStringInFile("tmp/users1.sql", "Table structure for table `users`")
+		assert.NoError(err)
+		assert.True(stringFound)
+
+		err = app.MutagenSyncFlush()
+		assert.NoError(err)
+		err = fileutil.PurgeDirectory("tmp")
+		assert.NoError(err)
+
+		// Export to an ungzipped file and validate
+		err = app.ExportDB("tmp/users2.sql", false, "db")
+		assert.NoError(err)
+
+		err = app.MutagenSyncFlush()
+		assert.NoError(err)
+
+		// Validate contents
+		stringFound, err = fileutil.FgrepStringInFile("tmp/users2.sql", "Table structure for table `users`")
+		assert.NoError(err)
+		assert.True(stringFound)
+
+		err = fileutil.PurgeDirectory("tmp")
+		assert.NoError(err)
+
+		// Capture to stdout without gzip compression
+		stdout := util.CaptureStdOut()
+		err = app.ExportDB("", false, "db")
+		assert.NoError(err)
+		out := stdout()
+		assert.Contains(out, "Table structure for table `users`")
+
+		snapshotName := dbType + "_" + dbVersion + "_" + fileutil.RandomFilenameBase()
+		fullSnapshotName, err := app.Snapshot(snapshotName)
+		assert.NoError(err, "could not create snapshot %s for %s: %v output=%v", snapshotName, dbTypeVersion, err, fullSnapshotName)
+
+		fi, err := os.Stat(app.GetConfigPath(filepath.Join("db_snapshots", fullSnapshotName)))
+		require.NoError(t, err)
+		// make sure there's something in the snapshot
+		assert.Greater(fi.Size(), int64(1000), "snapshot %s for %s may be empty: %v", fi.Name(), dbTypeVersion, fi)
+
+		// Delete the user in the database so we can later verify snapshot restore
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
+			Service: "db",
+			Cmd:     `echo "DELETE FROM users;" | mysql`,
+		})
+		assert.NoError(err)
+
+		err = app.RestoreSnapshot(fullSnapshotName)
+		assert.NoError(err, "could not restore snapshot %s for %s: %v", fullSnapshotName, dbTypeVersion, err)
+		if err != nil {
+			_ = app.Stop(true, false)
+			continue
+		}
+		// Make sure the version of db running matches expected
+		containerDBVersion, _, err = app.Exec(&ddevapp.ExecOpts{
+			Service: "db",
+			Cmd:     "cat /var/lib/mysql/db_mariadb_version.txt",
+		})
+		assert.NoError(err)
+		assert.Equal(dbType+"_"+dbVersion, strings.Trim(containerDBVersion, "\n\r "))
+
+		out, _, err = app.Exec(&ddevapp.ExecOpts{
+			Service: "db",
+			Cmd:     `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
+		})
+		assert.NoError(err)
+		assert.Equal("2\n", out)
+
+		_ = app.Stop(true, false)
 	}
 	runTime()
 }
@@ -1677,7 +1669,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
 			require.NoError(t, err)
 			err = app.ImportDB(cachedArchive, "", false, false, "db")
-			assert.NoError(err, "failed to import-db with dbtarball %s, app.Type=%s, mariadb_version=%s, mysql_version=%s", site.DBTarURL, app.Type, app.MariaDBVersion, app.MySQLVersion)
+			assert.NoError(err, "failed to import-db with dbtarball %s, app.Type=%s, database=%s", site.DBTarURL, app.Type, app.Database.Type+":"+app.Database.Version)
 		}
 
 		startErr := app.StartAndWait(2)
@@ -1857,22 +1849,21 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	app, err := ddevapp.NewApp(site.Dir, false)
 	require.NoError(t, err)
-	origMariaVersion := app.MariaDBVersion
-	origMysqlVersion := app.MySQLVersion
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
 
 		app.Hooks = nil
-		app.MariaDBVersion = origMariaVersion
-		app.MySQLVersion = origMysqlVersion
+		app.Database.Type = nodeps.MariaDB
+		app.Database.Version = nodeps.MariaDBDefaultVersion
 		err = app.WriteConfig()
 		assert.NoError(err)
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 		err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
 		assert.NoError(err)
+		testcommon.ClearDockerEnv()
 	})
 
 	err = os.Chdir(app.AppRoot)
@@ -1975,8 +1966,8 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 	// Make sure that we can use old-style directory-based snapshots
 	for dbDesc, dirSnapshot := range map[string]string{
-		"mariadb_10.3": "mariadb10.3-users",
-		"mysql_5.7":    "mysql5.7-users",
+		"mariadb:10.3": "mariadb10.3-users",
+		"mysql:5.7":    "mysql5.7-users",
 	} {
 		oldSnapshotTarball, err = filepath.Abs(filepath.Join(origDir, "testdata", t.Name(), dirSnapshot+".tgz"))
 		assert.NoError(err)
@@ -1988,20 +1979,14 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		parts := strings.Split(dbDesc, "_")
+
+		parts := strings.Split(dbDesc, ":")
 		require.Equal(t, 2, len(parts))
 		dbType := parts[0]
 		dbVersion := parts[1]
-		switch dbType {
-		case "mariadb":
-			app.MariaDBVersion = dbVersion
-			app.MySQLVersion = ""
-		case "mysql":
-			app.MySQLVersion = dbVersion
-			app.MariaDBVersion = ""
-		default:
-			t.Failed()
-		}
+		app.Database.Type = dbType
+		app.Database.Version = dbVersion
+
 		err = app.Start()
 		assert.NoError(err)
 
@@ -2012,7 +1997,10 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 		assert.NoError(err)
 
 		err = app.RestoreSnapshot(dirSnapshot)
-		assert.NoError(err)
+		if err != nil {
+			t.Logf("Failed to restore snapshot %s: %v, continuing", dirSnapshot, err)
+			continue
+		}
 
 		stdout, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
