@@ -105,6 +105,9 @@ func GetVersionInfo() map[string]string {
 	if versionInfo["docker"], err = GetDockerVersion(); err != nil {
 		versionInfo["docker"] = fmt.Sprintf("failed to GetDockerVersion(): %v", err)
 	}
+	if versionInfo["docker-platform"], err = GetDockerPlatform(); err != nil {
+		versionInfo["docker-platform"] = fmt.Sprintf("failed to GetDockerPlatform(): %v", err)
+	}
 	if versionInfo["docker-compose"], err = GetDockerComposeVersion(); err != nil {
 		versionInfo["docker-compose"] = fmt.Sprintf("failed to GetDockerComposeVersion(): %v", err)
 	}
@@ -176,15 +179,24 @@ func GetDockerVersion() (string, error) {
 	}
 	DockerVersion = v.Get("Version")
 
-	i, err := client.Info()
+	return DockerVersion, nil
+}
+
+// GetDockerPlatform gets the platform used for docker engine
+func GetDockerPlatform() (string, error) {
+	var client *docker.Client
+	var err error
+	if client, err = docker.NewClientFromEnv(); err != nil {
+		return "", err
+	}
+
+	info, err := client.Info()
 	if err != nil {
 		return "", err
 	}
-	if i.Name == "colima" {
-		DockerVersion = DockerVersion + " (colima)"
-	}
+	platform := info.Name
 
-	return DockerVersion, nil
+	return platform, nil
 }
 
 // GetLiveMutagenVersion runs `mutagen version` and caches result
