@@ -13,7 +13,7 @@ const disabledServicesDir = ".disabled-services"
 var ServiceEnable = &cobra.Command{
 	Use:     "enable service [project]",
 	Short:   "Enable a 3rd party service",
-	Long:    fmt.Sprintf(`Enable a 3rd party service. The service must exist as .ddev/%s/docker-compose.<service>.yaml. Note that you can use "ddev service get" to obtain a service not already on your system.`, disabledServicesDir),
+	Long:    fmt.Sprintf(`Enable a 3rd party service. The service must exist as .ddev/%s/docker-compose.<service>.yaml. Note that you can use "ddev get" to obtain a service not already on your system.`, disabledServicesDir),
 	Example: `ddev service enable solr`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {

@@ -2,11 +2,11 @@
 
 ## What is this?
 
-This repository allows you to quickly install memcached into a [Ddev](https://ddev.readthedocs.io) project using just `ddev service get drud/ddev-memcached`.
+This repository allows you to quickly install memcached into a [Ddev](https://ddev.readthedocs.io) project using just `ddev  get drud/ddev-memcached`.
 
 ## Installation
 
-1.`ddev service get drud/ddev-memcached && ddev restart`
+1.`ddev get drud/ddev-memcached && ddev restart`
 5. `ddev restart`
 
 ## Explanation
