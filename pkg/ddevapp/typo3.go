@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
 	"os"
 	"path/filepath"
 
@@ -27,9 +28,10 @@ if (getenv('IS_DDEV_PROJECT') == 'true') {
                 'Connections' => [
                     'Default' => [
                         'dbname' => 'db',
+                        'driver' => '{{ .DBDriver }}',
                         'host' => '{{ .DBHostname }}',
                         'password' => 'db',
-                        'port' => '3306',
+                        'port' => '{{ .DBPort }}',
                         'user' => 'db',
                     ],
                 ],
@@ -108,8 +110,11 @@ func writeTypo3SettingsFile(app *DdevApp) error {
 			return err
 		}
 	}
-
-	templateVars := map[string]interface{}{"DBHostname": "db"}
+	dbDriver := "pdo_mysql"
+	if app.Database.Type == nodeps.Postgres {
+		dbDriver = "pdo_pgsql"
+	}
+	templateVars := map[string]interface{}{"DBHostname": "db", "DBDriver": dbDriver, "DBPort": GetPort(app, "db")}
 	err := fileutil.TemplateStringToFile(typo3AdditionalConfigTemplate, templateVars, filePath)
 	if err != nil {
 		return err
