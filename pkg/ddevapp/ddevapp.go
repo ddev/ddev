@@ -533,33 +533,44 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 	switch app.Database.Type {
 	case nodeps.MySQL:
 		fallthrough
-	//case nodeps.MariaDB:
-	//	preImportSQL := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s; GRANT ALL ON %s.* TO 'db'@'%%';", targetDB, targetDB)
-	//	if !noDrop {
-	//		preImportSQL = fmt.Sprintf("DROP DATABASE IF EXISTS %s; ", targetDB) + preImportSQL
-	//	}
-	//
-	//	inContainerCommand = fmt.Sprintf(`mysql -uroot -proot -e "%s" && pv %s/*.*sql | perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, insideContainerImportPath, "`", targetDB)
-	//	// Handle the case where we are reading from stdin
-	//	if imPath == "" && extPath == "" {
-	//		inContainerCommand = fmt.Sprintf(`mysql -uroot -proot -e "%s" && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, "`", targetDB)
-	//	}
+	case nodeps.MariaDB:
+		preImportSQL := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s; GRANT ALL ON %s.* TO 'db'@'%%';", targetDB, targetDB)
+		if !noDrop {
+			preImportSQL = fmt.Sprintf("DROP DATABASE IF EXISTS %s; ", targetDB) + preImportSQL
+		}
+
+		// Case for reading from file
+		inContainerCommand = append(inContainerCommand, []string{"mysql", "-uroot", "=-proot", "-e", preImportSQL})
+		inContainerCommand = append(inContainerCommand, []string{"bash", "-c", fmt.Sprintf(`pv %s/*.*sql |  perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, insideContainerImportPath, "`", targetDB)})
+
+		// Alternate case where we are reading from stdin
+		if imPath == "" && extPath == "" {
+			inContainerCommand = [][]string{{"bash", "-c", fmt.Sprintf(`mysql -uroot -proot -e "%s" && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, "`", targetDB)}}
+		}
+
 	case nodeps.Postgres:
+		// In postgres nothing can be connected to the database we're working on.
+		// https://stackoverflow.com/a/5408501/215713
+		preImportCommand := [][]string{
+			{"psql", "-U", "db", "postgres", "-c", fmt.Sprintf(`SELECT pg_terminate_backend(pg_stat_activity.pid)
+				FROM pg_stat_activity
+				WHERE pg_stat_activity.datname = '%s'
+  				AND pid <> pg_backend_pid();`, targetDB)},
+		}
+
 		// CREATE DATABASE IF NOT EXISTS doesn't work on postgres
 		// https://stackoverflow.com/questions/18389124/simulate-create-database-if-not-exists-for-postgresql
 		// echo "SELECT 'CREATE DATABASE mydb' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'mydb')\gexec" | psql
-		preImportCommand := [][]string{
-			{"psql", "-U", "db", "-c", fmt.Sprintf(`SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = "%s";`, targetDB)},
-		}
 
-		// If we are not dropping the db, need to create if doesn't exist
+		// If we are not dropping the db, must create it if doesn't exist
 		if noDrop {
-			preImportCommand = append(preImportCommand, []string{"psql", "-U", "db", "-c", fmt.Sprintf(`SELECT "CREATE DATABASE %s WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '%s')\gexec;`, targetDB, targetDB)})
+			preImportCommand = append(preImportCommand, []string{"bash", "-c", fmt.Sprintf(`psql -U db postgres -c "SELECT 'CREATE DATABASE %s' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '%s')\gexec" | psql -U db`, targetDB, targetDB)})
 		} else { // Otherwise drop and create
-			preImportCommand = append(preImportCommand, []string{"psql", "-U", "db", "-c", fmt.Sprintf("DROP DATABASE IF EXISTS %s;", targetDB)})
+			preImportCommand = append(preImportCommand, []string{"psql", "-U", "db", "postgres", "-c", fmt.Sprintf("DROP DATABASE IF EXISTS %s;", targetDB)})
+			preImportCommand = append(preImportCommand, []string{"psql", "-U", "db", "postgres", "-c", fmt.Sprintf("CREATE DATABASE %s;", targetDB)})
 		}
 
-		preImportCommand = append(preImportCommand, []string{"psql", "-U", "db", "-c", fmt.Sprintf(`GRANT ALL ON %s TO "db";'`, targetDB)})
+		preImportCommand = append(preImportCommand, []string{"psql", "-U", "db", "-c", fmt.Sprintf(`GRANT ALL PRIVILEGES ON DATABASE %s to db;;`, targetDB)})
 
 		// If there is no import path, we're getting it from stdin
 		if imPath == "" && extPath == "" {
