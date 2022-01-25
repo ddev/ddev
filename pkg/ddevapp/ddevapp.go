@@ -1258,16 +1258,16 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		return "", "", fmt.Errorf("failed to process pre-exec hooks: %v", err)
 	}
 
-	cmd := []string{"exec"}
+	baseComposeExecCmd := []string{"exec"}
 	if opts.Dir != "" {
-		cmd = append(cmd, "-w", opts.Dir)
+		baseComposeExecCmd = append(baseComposeExecCmd, "-w", opts.Dir)
 	}
 
 	if !isatty.IsTerminal(os.Stdin.Fd()) || !opts.Tty {
-		cmd = append(cmd, "-T")
+		baseComposeExecCmd = append(baseComposeExecCmd, "-T")
 	}
 
-	cmd = append(cmd, opts.Service)
+	baseComposeExecCmd = append(baseComposeExecCmd, opts.Service)
 
 	// Cases to handle
 	// - Free form, all unquoted. Like `ls -l -a`
@@ -1282,10 +1282,8 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 			shell = "sh"
 		}
 		errcheck := "set -eu"
-		cmd = append(cmd, shell, "-c", errcheck+` && ( `+opts.Cmd+`)`)
-		opts.RawCmd = append(opts.RawCmd, cmd)
+		opts.RawCmd = append(opts.RawCmd, []string{shell, "-c", errcheck + ` && ( ` + opts.Cmd + `)`})
 	}
-
 	files := []string{app.DockerComposeFullRenderedYAMLPath()}
 	if err != nil {
 		return "", "", err
@@ -1301,11 +1299,18 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	}
 
 	var stdoutResult, stderrResult string
+	var outRes, errRes string
 	for _, c := range opts.RawCmd {
+		r := append(baseComposeExecCmd, c...)
 		if opts.NoCapture || opts.Tty {
-			err = dockerutil.ComposeWithStreams(files, os.Stdin, stdout, stderr, c...)
+			err = dockerutil.ComposeWithStreams(files, os.Stdin, stdout, stderr, r...)
 		} else {
-			stdoutResult, stderrResult, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, c...)
+			outRes, errRes, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, r...)
+			stdoutResult = stdoutResult + outRes
+			stderrResult = stderrResult + errRes
+		}
+		if err != nil {
+			return stdoutResult, stderrResult, err
 		}
 	}
 	hookErr := app.ProcessHooks("post-exec")

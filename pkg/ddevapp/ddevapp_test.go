@@ -2413,6 +2413,24 @@ func TestDdevExec(t *testing.T) {
 	assert.Contains(err.Error(), "does not exist")
 	assert.Contains(err.Error(), "state=doesnotexist")
 
+	// Test use of RawCmd, should see the single quotes in there
+	stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+		RawCmd: [][]string{{"bash", "-c", `echo '"hi there"'`}},
+	})
+	assert.NoError(err)
+	assert.Contains(stdout, `"hi there"`, "stdout=%s, stderr=%s", stdout, stderr)
+
+	// Test use of RawCmd with multiple cmds
+	stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
+		RawCmd: [][]string{
+			{"ls", "/var/www"},
+			{"ls", "/usr/local"},
+		},
+	})
+	assert.NoError(err)
+	assert.Contains(stdout, "phpstatus.php", "stdout=%s, stderr=%s", stdout, stderr)
+	assert.Contains(stdout, "bin\netc\ngames", "stdout=%s, stderr=%s", stdout, stderr)
+
 	runTime()
 	switchDir()
 }
