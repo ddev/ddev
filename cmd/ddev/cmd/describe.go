@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/styles"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/version"
 	"sort"
 	"strings"
 
@@ -89,7 +91,11 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			},
 		})
 	}
-	t.SetTitle(fmt.Sprintf("Project: %s %s %s", app.Name, desc["shortroot"].(string), app.GetPrimaryURL()))
+	dockerEnv := fmt.Sprintf("docker %s", version.DockerVersion)
+	if dockerutil.IsColima() {
+		dockerEnv = "Colima"
+	}
+	t.SetTitle(fmt.Sprintf("Project: %s %s %s\nDocker environment: %s", app.Name, desc["shortroot"].(string), app.GetPrimaryURL(), dockerEnv))
 	t.AppendHeader(table.Row{"Service", "Stat", "URL/Port", "Info"})
 
 	// Only show extended status for running sites.
@@ -112,8 +118,29 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		for _, k := range serviceNames {
 			v := serviceMap[k]
 
+			httpURL := ""
 			urlPortParts := []string{}
-			urlPortParts = append(urlPortParts, app.GetPrimaryURL())
+
+			switch {
+			// Normal case, using ddev-router based URLs
+			case !ddevapp.IsRouterDisabled(app):
+				if httpsURL, ok := v["https_url"]; ok {
+					urlPortParts = append(urlPortParts, httpsURL)
+				} else if httpURL, ok = v["http_url"]; ok {
+					urlPortParts = append(urlPortParts, httpURL)
+				}
+			// Gitpod, web container only, using port proxied by gitpod
+			case nodeps.IsGitpod() && k == "web":
+				urlPortParts = append(urlPortParts, app.GetPrimaryURL())
+
+			// Router disabled, but not because of gitpod, use direct http url
+			case ddevapp.IsRouterDisabled(app):
+				httpURL = v["host_http_url"]
+				if httpURL != "" {
+					urlPortParts = append(urlPortParts, httpURL)
+				}
+			}
+
 			if p, ok := v["exposed_ports"]; ok {
 				urlPortParts = append(urlPortParts, "InDocker: "+v["full_name"]+":"+p)
 			}

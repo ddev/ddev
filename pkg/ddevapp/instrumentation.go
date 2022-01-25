@@ -44,7 +44,7 @@ func SetInstrumentationBaseTags() {
 
 	if globalconfig.DdevGlobalConfig.InstrumentationOptIn {
 		dockerVersion, _ := version.GetDockerVersion()
-
+		dockerPlaform, _ := version.GetDockerPlatform()
 		timezone, _ := time.Now().In(time.Local).Zone()
 		lang := os.Getenv("LANG")
 
@@ -57,6 +57,7 @@ func SetInstrumentationBaseTags() {
 			nodeps.InstrumentationTags["OS"] = "wsl2"
 		}
 		nodeps.InstrumentationTags["dockerVersion"] = dockerVersion
+		nodeps.InstrumentationTags["dockerPlatform"] = dockerPlaform
 		nodeps.InstrumentationTags["dockerToolbox"] = strconv.FormatBool(false)
 		nodeps.InstrumentationTags["version"] = version.DdevVersion
 		nodeps.InstrumentationTags["ServerHash"] = GetInstrumentationUser()

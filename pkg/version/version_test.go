@@ -36,5 +36,7 @@ func TestGetVersionInfo(t *testing.T) {
 	assert.Equal(runtime.GOOS, v["os"])
 	assert.Equal(BUILDINFO, v["build info"])
 	assert.NotEmpty(v["docker-compose"])
+	assert.NotEmpty(v["docker-platform"])
+
 	assert.NotEmpty(v["docker"])
 }
