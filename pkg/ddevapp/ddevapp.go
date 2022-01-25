@@ -540,7 +540,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		}
 
 		// Case for reading from file
-		inContainerCommand = append(inContainerCommand, []string{"mysql", "-uroot", "=-proot", "-e", preImportSQL})
+		inContainerCommand = append(inContainerCommand, []string{"mysql", "-uroot", "-proot", "-e", preImportSQL})
 		inContainerCommand = append(inContainerCommand, []string{"bash", "-c", fmt.Sprintf(`pv %s/*.*sql |  perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, insideContainerImportPath, "`", targetDB)})
 
 		// Alternate case where we are reading from stdin
