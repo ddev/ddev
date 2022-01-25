@@ -4,5 +4,6 @@
 ## Description: run pgsql client in db container
 ## Usage: psql [flags] [args]
 ## Example: "ddev psql" or "ddev psql -U db somedb" or "echo 'SELECT current_database();' | ddev psql"
+## DBTypes: postgres
 
 psql -U db $@

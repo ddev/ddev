@@ -101,7 +101,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				}
 
 				directives := findDirectivesInScriptCommand(onHostFullPath)
-				var description, usage, example, projectTypes, osTypes, hostBinaryExists string
+				var description, usage, example, projectTypes, osTypes, hostBinaryExists, dbTypes string
 
 				description = commandName
 				if val, ok := directives["Description"]; ok {
@@ -165,6 +165,18 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 						}
 					}
 					if !binExists {
+						continue
+					}
+				}
+
+				// Import and handle DBTypes
+				if val, ok := directives["DBTypes"]; ok {
+					dbTypes = val
+				}
+
+				// If DBTypes is specified and we aren't using that DBTypes
+				if dbTypes != "" {
+					if !strings.Contains(dbTypes, app.Database.Type) {
 						continue
 					}
 				}
