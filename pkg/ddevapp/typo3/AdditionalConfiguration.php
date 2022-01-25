@@ -31,6 +31,7 @@ if (getenv('IS_DDEV_PROJECT') == 'true') {
             // This mail configuration sends all emails to mailhog
             'MAIL' => [
                 'transport' => 'smtp',
+                'transport_smtp_encrypt' => false,
                 'transport_smtp_server' => 'localhost:1025',
             ],
             'SYS' => [
