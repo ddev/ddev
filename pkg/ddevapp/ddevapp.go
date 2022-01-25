@@ -414,6 +414,7 @@ func (app *DdevApp) GetWebserverType() string {
 func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDrop bool, targetDB string) error {
 	app.DockerEnv()
 	dockerutil.CheckAvailableSpace()
+
 	if targetDB == "" {
 		targetDB = "db"
 	}
@@ -440,7 +441,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		if extPath == "" {
 			extPathPrompt = true
 		}
-		output.UserOut.Println("Provide the path to the database you wish to import.")
+		output.UserOut.Println("Provide the path to the database you want to import.")
 		fmt.Print("Pull path: ")
 
 		imPath = util.GetInput("")
@@ -518,11 +519,6 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		}
 	}
 
-	preImportSQL := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s; GRANT ALL ON %s.* TO 'db'@'%%';", targetDB, targetDB)
-	if !noDrop {
-		preImportSQL = fmt.Sprintf("DROP DATABASE IF EXISTS %s; ", targetDB) + preImportSQL
-	}
-
 	err = app.MutagenSyncFlush()
 	if err != nil {
 		return err
@@ -533,11 +529,34 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 	// and in https://github.com/drud/ddev/issues/2787
 	// The backtick after USE is inserted via fmt.Sprintf argument because it seems there's
 	// no way to escape a backtick in a string literal.
-	inContainerCommand := fmt.Sprintf(`mysql -uroot -proot -e "%s" && pv %s/*.*sql | perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, insideContainerImportPath, "`", targetDB)
+	inContainerCommand := ""
+	switch app.Database.Type {
+	case nodeps.MySQL:
+		fallthrough
+	case nodeps.MariaDB:
+		preImportSQL := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s; GRANT ALL ON %s.* TO 'db'@'%%';", targetDB, targetDB)
+		if !noDrop {
+			preImportSQL = fmt.Sprintf("DROP DATABASE IF EXISTS %s; ", targetDB) + preImportSQL
+		}
 
-	// Handle the case where we are reading from stdin
-	if imPath == "" && extPath == "" {
-		inContainerCommand = fmt.Sprintf(`mysql -uroot -proot -e "%s" && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, "`", targetDB)
+		inContainerCommand = fmt.Sprintf(`mysql -uroot -proot -e "%s" && pv %s/*.*sql | perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, insideContainerImportPath, "`", targetDB)
+		// Handle the case where we are reading from stdin
+		if imPath == "" && extPath == "" {
+			inContainerCommand = fmt.Sprintf(`mysql -uroot -proot -e "%s" && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, "`", targetDB)
+		}
+	case nodeps.Postgres:
+		// CREATE DATABASE IF NOT EXISTS doesn't work on postgres
+		// https://stackoverflow.com/questions/18389124/simulate-create-database-if-not-exists-for-postgresql
+		// echo "SELECT 'CREATE DATABASE mydb' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'mydb')\gexec" | psql
+		preImportCommand := fmt.Sprintf(`CREATE DATABASE IF NOT EXISTS %s; GRANT ALL ON %s.* TO 'db'@'%%';`, targetDB, targetDB)
+		if !noDrop {
+			preImportCommand = fmt.Sprintf(`echo 'SELECT "CREATE DATABASE %s WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '%s')\gexec;" '| psql -U db`, targetDB, targetDB)
+		}
+
+		inContainerCommand = fmt.Sprintf(`%s && pv %s/*.*sql | psql -U db %s`, preImportCommand, insideContainerImportPath, targetDB)
+		if imPath == "" && extPath == "" {
+			inContainerCommand = fmt.Sprintf(`%s && psql -U db %s`, preImportCommand, targetDB)
+		}
 	}
 	_, _, err = app.Exec(&ExecOpts{
 		Service: "db",
@@ -549,28 +568,31 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		return err
 	}
 
-	rowsImported := 0
-	for i := 0; i < 10; i++ {
+	// Wait for import to really complete
+	if app.Database.Type != nodeps.Postgres {
+		rowsImported := 0
+		for i := 0; i < 10; i++ {
 
-		stdout, _, err := app.Exec(&ExecOpts{
-			Cmd:     `mysqladmin -uroot -proot extended -r 2>/dev/null | awk -F'|' '/Innodb_rows_inserted/ {print $3}'`,
-			Service: "db",
-		})
-		if err != nil {
-			util.Warning("mysqladmin command failed: %v", err)
-		}
-		stdout = strings.Trim(stdout, "\r\n\t ")
-		newRowsImported, err := strconv.Atoi(stdout)
-		if err != nil {
-			util.Warning("Error converting '%s' to int", stdout)
-			break
-		}
-		// See if mysqld is still importing. If it is, sleep and try again
-		if newRowsImported == rowsImported {
-			break
-		} else {
-			rowsImported = newRowsImported
-			time.Sleep(time.Millisecond * 500)
+			stdout, _, err := app.Exec(&ExecOpts{
+				Cmd:     `mysqladmin -uroot -proot extended -r 2>/dev/null | awk -F'|' '/Innodb_rows_inserted/ {print $3}'`,
+				Service: "db",
+			})
+			if err != nil {
+				util.Warning("mysqladmin command failed: %v", err)
+			}
+			stdout = strings.Trim(stdout, "\r\n\t ")
+			newRowsImported, err := strconv.Atoi(stdout)
+			if err != nil {
+				util.Warning("Error converting '%s' to int", stdout)
+				break
+			}
+			// See if mysqld is still importing. If it is, sleep and try again
+			if newRowsImported == rowsImported {
+				break
+			} else {
+				rowsImported = newRowsImported
+				time.Sleep(time.Millisecond * 500)
+			}
 		}
 	}
 

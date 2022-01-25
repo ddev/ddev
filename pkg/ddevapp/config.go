@@ -820,6 +820,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if app.Database.Type == nodeps.Postgres {
 		extraDBContent = `RUN echo "*:*:db:db:db" > ~postgres/.pgpass && chown postgres:postgres ~postgres/.pgpass && chmod 600 ~postgres/.pgpass`
 	}
+	app.DBImageExtraPackages = append(app.DBImageExtraPackages, "pv")
 	err = WriteBuildDockerfile(app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build/Dockerfile"), app.DBImageExtraPackages, "", extraDBContent)
 
 	if err != nil {
