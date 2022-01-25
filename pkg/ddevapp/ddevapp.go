@@ -574,9 +574,9 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 
 		// If there is no import path, we're getting it from stdin
 		if imPath == "" && extPath == "" {
-			inContainerCommand = append(preImportCommand, []string{"pgsql", "-U", "db", targetDB})
+			inContainerCommand = append(preImportCommand, []string{"pgsql", "-q", "-U", "db", targetDB})
 		} else { // otherwise getting it from mounted file
-			inContainerCommand = append(preImportCommand, []string{"bash", "-c", fmt.Sprintf(`pv %s/*.*sql | psql -U db %s`, insideContainerImportPath, targetDB)})
+			inContainerCommand = append(preImportCommand, []string{"bash", "-c", fmt.Sprintf(`pv %s/*.*sql | psql -q -U db %s`, insideContainerImportPath, targetDB)})
 		}
 	}
 	_, _, err = app.Exec(&ExecOpts{
