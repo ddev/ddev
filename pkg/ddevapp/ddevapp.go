@@ -529,38 +529,48 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 	// and in https://github.com/drud/ddev/issues/2787
 	// The backtick after USE is inserted via fmt.Sprintf argument because it seems there's
 	// no way to escape a backtick in a string literal.
-	inContainerCommand := ""
+	inContainerCommand := [][]string{}
 	switch app.Database.Type {
 	case nodeps.MySQL:
 		fallthrough
-	case nodeps.MariaDB:
-		preImportSQL := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s; GRANT ALL ON %s.* TO 'db'@'%%';", targetDB, targetDB)
-		if !noDrop {
-			preImportSQL = fmt.Sprintf("DROP DATABASE IF EXISTS %s; ", targetDB) + preImportSQL
-		}
-
-		inContainerCommand = fmt.Sprintf(`mysql -uroot -proot -e "%s" && pv %s/*.*sql | perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, insideContainerImportPath, "`", targetDB)
-		// Handle the case where we are reading from stdin
-		if imPath == "" && extPath == "" {
-			inContainerCommand = fmt.Sprintf(`mysql -uroot -proot -e "%s" && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, "`", targetDB)
-		}
+	//case nodeps.MariaDB:
+	//	preImportSQL := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s; GRANT ALL ON %s.* TO 'db'@'%%';", targetDB, targetDB)
+	//	if !noDrop {
+	//		preImportSQL = fmt.Sprintf("DROP DATABASE IF EXISTS %s; ", targetDB) + preImportSQL
+	//	}
+	//
+	//	inContainerCommand = fmt.Sprintf(`mysql -uroot -proot -e "%s" && pv %s/*.*sql | perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, insideContainerImportPath, "`", targetDB)
+	//	// Handle the case where we are reading from stdin
+	//	if imPath == "" && extPath == "" {
+	//		inContainerCommand = fmt.Sprintf(`mysql -uroot -proot -e "%s" && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, "`", targetDB)
+	//	}
 	case nodeps.Postgres:
 		// CREATE DATABASE IF NOT EXISTS doesn't work on postgres
 		// https://stackoverflow.com/questions/18389124/simulate-create-database-if-not-exists-for-postgresql
 		// echo "SELECT 'CREATE DATABASE mydb' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'mydb')\gexec" | psql
-		preImportCommand := fmt.Sprintf(`CREATE DATABASE IF NOT EXISTS %s; GRANT ALL ON %s.* TO 'db'@'%%';`, targetDB, targetDB)
-		if !noDrop {
-			preImportCommand = fmt.Sprintf(`echo 'SELECT "CREATE DATABASE %s WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '%s')\gexec;" '| psql -U db`, targetDB, targetDB)
+		preImportCommand := [][]string{
+			{"psql", "-U", "db", "-c", fmt.Sprintf(`SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = "%s";`, targetDB)},
 		}
 
-		inContainerCommand = fmt.Sprintf(`%s && pv %s/*.*sql | psql -U db %s`, preImportCommand, insideContainerImportPath, targetDB)
+		// If we are not dropping the db, need to create if doesn't exist
+		if noDrop {
+			preImportCommand = append(preImportCommand, []string{"psql", "-U", "db", "-c", fmt.Sprintf(`SELECT "CREATE DATABASE %s WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '%s')\gexec;`, targetDB, targetDB)})
+		} else { // Otherwise drop and create
+			preImportCommand = append(preImportCommand, []string{"psql", "-U", "db", "-c", fmt.Sprintf("DROP DATABASE IF EXISTS %s;", targetDB)})
+		}
+
+		preImportCommand = append(preImportCommand, []string{"psql", "-U", "db", "-c", fmt.Sprintf(`GRANT ALL ON %s TO "db";'`, targetDB)})
+
+		// If there is no import path, we're getting it from stdin
 		if imPath == "" && extPath == "" {
-			inContainerCommand = fmt.Sprintf(`%s && psql -U db %s`, preImportCommand, targetDB)
+			inContainerCommand = append(preImportCommand, []string{"pgsql", "-U", "db", targetDB})
+		} else { // otherwise getting it from mounted file
+			inContainerCommand = append(preImportCommand, []string{"bash", "-c", fmt.Sprintf(`pv %s/*.*sql | psql -U db %s`, insideContainerImportPath, targetDB)})
 		}
 	}
 	_, _, err = app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     inContainerCommand,
+		RawCmd:  inContainerCommand,
 		Tty:     progress && isatty.IsTerminal(os.Stdin.Fd()),
 	})
 
@@ -1204,8 +1214,10 @@ type ExecOpts struct {
 	Service string
 	// Dir is the full path to the working directory inside the container
 	Dir string
-	// Cmd is the string to execute
+	// Cmd is the string to execute via bash/sh
 	Cmd string
+	// RawCmd is the array to execute if not using
+	RawCmd [][]string
 	// Nocapture if true causes use of ComposeNoCapture, so the stdout and stderr go right to stdout/stderr
 	NoCapture bool
 	// Tty if true causes a tty to be allocated
@@ -1225,6 +1237,10 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("app.Exec %v", opts))
 	defer runTime()
 
+	if opts.Cmd == "" && len(opts.RawCmd) == 0 {
+		return "", "", fmt.Errorf("no command provided")
+	}
+
 	if opts.Service == "" {
 		opts.Service = "web"
 	}
@@ -1242,34 +1258,33 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		return "", "", fmt.Errorf("failed to process pre-exec hooks: %v", err)
 	}
 
-	args := []string{"exec"}
+	cmd := []string{"exec"}
 	if opts.Dir != "" {
-		args = append(args, "-w", opts.Dir)
+		cmd = append(cmd, "-w", opts.Dir)
 	}
 
 	if !isatty.IsTerminal(os.Stdin.Fd()) || !opts.Tty {
-		args = append(args, "-T")
+		cmd = append(cmd, "-T")
 	}
 
-	args = append(args, opts.Service)
-
-	if opts.Cmd == "" {
-		return "", "", fmt.Errorf("no command provided")
-	}
+	cmd = append(cmd, opts.Service)
 
 	// Cases to handle
 	// - Free form, all unquoted. Like `ls -l -a`
 	// - Quoted to delay pipes and other features to container, like `"ls -l -a | grep junk"`
 	// Note that a set quoted on the host in ddev e will come through as a single arg
 
-	// Use bash for our containers, sh for 3rd-party containers
-	// that may not have bash.
-	shell := "bash"
-	if !nodeps.ArrayContainsString([]string{"web", "db", "dba"}, opts.Service) {
-		shell = "sh"
+	if len(opts.RawCmd) == 0 { // Use opts.Cmd and prepend with bash
+		// Use bash for our containers, sh for 3rd-party containers
+		// that may not have bash.
+		shell := "bash"
+		if !nodeps.ArrayContainsString([]string{"web", "db", "dba"}, opts.Service) {
+			shell = "sh"
+		}
+		errcheck := "set -eu"
+		cmd = append(cmd, shell, "-c", errcheck+` && ( `+opts.Cmd+`)`)
+		opts.RawCmd = append(opts.RawCmd, cmd)
 	}
-	errcheck := "set -eu"
-	args = append(args, shell, "-c", errcheck+` && ( `+opts.Cmd+`)`)
 
 	files := []string{app.DockerComposeFullRenderedYAMLPath()}
 	if err != nil {
@@ -1286,17 +1301,17 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	}
 
 	var stdoutResult, stderrResult string
-	if opts.NoCapture || opts.Tty {
-		err = dockerutil.ComposeWithStreams(files, os.Stdin, stdout, stderr, args...)
-	} else {
-		stdoutResult, stderrResult, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, args...)
+	for _, c := range opts.RawCmd {
+		if opts.NoCapture || opts.Tty {
+			err = dockerutil.ComposeWithStreams(files, os.Stdin, stdout, stderr, c...)
+		} else {
+			stdoutResult, stderrResult, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, c...)
+		}
 	}
-
 	hookErr := app.ProcessHooks("post-exec")
 	if hookErr != nil {
 		return stdoutResult, stderrResult, fmt.Errorf("failed to process post-exec hooks: %v", hookErr)
 	}
-
 	return stdoutResult, stderrResult, err
 }
 
