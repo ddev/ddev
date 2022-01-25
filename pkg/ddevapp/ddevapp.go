@@ -645,20 +645,23 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 // targetDB is the db name if not default "db"
 func (app *DdevApp) ExportDB(outFile string, gzip bool, targetDB string) error {
 	app.DockerEnv()
-	exportCmd := "mysql"
+	exportCmd := []string{"mysqldump"}
 	if app.Database.Type == "postgres" {
-		exportCmd = "pg_dump -U db"
+		exportCmd = []string{"pg_dump", "-U", "db"}
 	}
 	if targetDB == "" {
 		targetDB = "db"
 	}
+	exportCmd = append(exportCmd, targetDB)
+
+	if gzip {
+		exportCmd = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; %s | gzip`, strings.Join(exportCmd, " "))}
+	}
+
 	opts := &ExecOpts{
 		Service:   "db",
-		Cmd:       exportCmd + " " + targetDB,
+		RawCmd:    [][]string{exportCmd},
 		NoCapture: true,
-	}
-	if gzip {
-		opts.Cmd = fmt.Sprintf("%s %s | gzip", exportCmd, targetDB)
 	}
 	if outFile != "" {
 		f, err := os.OpenFile(outFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
@@ -670,14 +673,13 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool, targetDB string) error {
 			_ = f.Close()
 		}()
 	}
-
-	_, _, err := app.Exec(opts)
+	stdout, stderr, err := app.Exec(opts)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to export db: %v\nstdout: %s\nstderr: %s", err, stdout, stderr)
 	}
 
-	confMsg := "Wrote database dump from " + app.Name + " database '" + targetDB + "'"
+	confMsg := "Wrote database dump from project '" + app.Name + "' database '" + targetDB + "'"
 	if outFile != "" {
 		confMsg = confMsg + " to file " + outFile
 	} else {
