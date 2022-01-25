@@ -602,16 +602,20 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 // targetDB is the db name if not default "db"
 func (app *DdevApp) ExportDB(outFile string, gzip bool, targetDB string) error {
 	app.DockerEnv()
+	exportCmd := "mysql"
+	if app.Database.Type == "postgres" {
+		exportCmd = "pg_dump -U db"
+	}
 	if targetDB == "" {
 		targetDB = "db"
 	}
 	opts := &ExecOpts{
 		Service:   "db",
-		Cmd:       "mysqldump " + targetDB,
+		Cmd:       exportCmd + " " + targetDB,
 		NoCapture: true,
 	}
 	if gzip {
-		opts.Cmd = fmt.Sprintf("mysqldump %s | gzip", targetDB)
+		opts.Cmd = fmt.Sprintf("%s %s | gzip", exportCmd, targetDB)
 	}
 	if outFile != "" {
 		f, err := os.OpenFile(outFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
