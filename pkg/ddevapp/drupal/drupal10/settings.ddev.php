@@ -40,4 +40,7 @@ $settings['trusted_host_patterns'] = ['.*'];
 // better performance.
 $settings['class_loader_auto_detect'] = FALSE;
 
-$settings['config_sync_directory'] = 'sites/default/files/sync';
+// Set $settings['config_sync_directory'] if not set in settings.php.
+if (empty($settings['config_sync_directory'])) {
+  $settings['config_sync_directory'] = 'sites/default/files/sync';
+}
