@@ -1774,16 +1774,11 @@ func (app *DdevApp) Snapshot(baseSnapshotName string) (string, error) {
 	}
 
 	util.Success("Creating database snapshot %s", snapshotName)
-	streamTool := "mbstream"
 
-	// mbstream/mariadbackup don't make their appearance in mariadb until 10.2
-	streamtoolVersions := []string{"mysql:5.5", "mysql:5.6", "mysql:5.7", "mysql:8.0", "mariadb:5.5", "mariadb:10.0", "mariadb:10.1"}
-	if nodeps.ArrayContainsString(streamtoolVersions, app.Database.Type+":"+app.Database.Version) {
-		streamTool = "xbstream"
-	}
+	c := getBackupCommand(app)
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     fmt.Sprintf(`set -eu -o pipefail; $(/backuptool.sh) --backup --stream=%s --user=root --password=root --socket=/var/tmp/mysql.sock  2>/var/log/mariadbackup_backup_%s.log | gzip >"%s/%s"`, streamTool, snapshotName, containerSnapshotDir, snapshotName),
+		Cmd:     fmt.Sprintf(`set -eu -o pipefail; %s  2>/tmp/snapshot_%s.log | gzip >"%s/%s"`, c, snapshotName, containerSnapshotDir, snapshotName),
 	})
 
 	if err != nil {
@@ -1828,6 +1823,27 @@ func (app *DdevApp) Snapshot(baseSnapshotName string) (string, error) {
 	}
 
 	return snapshotName, nil
+}
+
+// getBackupCommand returns the command to dump the entire db system for the various databases
+func getBackupCommand(app *DdevApp) string {
+
+	c := "mariabackup --backup --stream=%s --user=root --password=root --socket=/var/tmp/mysql.sock"
+
+	oldMariaVersions := []string{"5.5", "10.0", "10.1"}
+
+	switch {
+	// Old mariadb versions don't have mariabackup, use xtrabackup for them as well as MySQL
+	case app.Database.Type == nodeps.MariaDB && nodeps.ArrayContainsString(oldMariaVersions, app.Database.Version):
+		fallthrough
+	case app.Database.Type == nodeps.MySQL:
+		if nodeps.ArrayContainsString(oldMariaVersions, app.Database.Version) {
+			c = "xtrabackup --backup --stream=%s --user=root --password=root --socket=/var/tmp/mysql.sock"
+		}
+	case app.Database.Type == nodeps.Postgres:
+		c = "pg_dumpall -U db"
+	}
+	return c
 }
 
 // DeleteSnapshot removes the snapshot directory inside a project

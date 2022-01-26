@@ -49,7 +49,7 @@ ADD files /
 # Build a starter base db
 RUN /create_base_db.sh
 
-RUN chmod ugo+x /healthcheck.sh /backuptool.sh
+RUN chmod ugo+x /healthcheck.sh
 
 # But make sure these are right
 RUN chmod ugo+wx /mnt /var/tmp
