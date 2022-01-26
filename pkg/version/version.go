@@ -47,7 +47,7 @@ var WebTag = "20220117_no_volume_copy" // Note that this can be overridden by ma
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20220124_postgres"
+var BaseDBTag = "20220102_gzip_snapshots"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"

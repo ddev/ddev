@@ -818,9 +818,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	// Add .pgpass to homedir on postgres
 	extraDBContent := ""
 	if app.Database.Type == nodeps.Postgres {
-		extraDBContent = `RUN echo "*:*:db:db:db" > ~postgres/.pgpass && chown postgres:postgres ~postgres/.pgpass && chmod 600 ~postgres/.pgpass`
+		extraDBContent = `RUN echo "*:*:db:db:db" > ~postgres/.pgpass && chown postgres:postgres ~postgres/.pgpass && chmod 600 ~postgres/.pgpass && chmod 777 /var/tmp`
 	}
-	app.DBImageExtraPackages = append(app.DBImageExtraPackages, "pv")
+	app.DBImageExtraPackages = append(app.DBImageExtraPackages, "less", "procps", "pv")
 	err = WriteBuildDockerfile(app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build/Dockerfile"), app.DBImageExtraPackages, "", extraDBContent)
 
 	if err != nil {

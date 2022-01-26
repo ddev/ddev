@@ -1775,10 +1775,10 @@ func (app *DdevApp) Snapshot(baseSnapshotName string) (string, error) {
 
 	util.Success("Creating database snapshot %s", snapshotName)
 
-	c := getBackupCommand(app)
+	c := getBackupCommand(app, path.Join(containerSnapshotDir, snapshotName))
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     fmt.Sprintf(`set -eu -o pipefail; %s  2>/tmp/snapshot_%s.log | gzip >"%s/%s"`, c, snapshotName, containerSnapshotDir, snapshotName),
+		Cmd:     fmt.Sprintf(`set -eu -o pipefail; %s `, c),
 	})
 
 	if err != nil {
@@ -1806,6 +1806,9 @@ func (app *DdevApp) Snapshot(baseSnapshotName string) (string, error) {
 		// mounted into the db container (/mnt/ddev_config/db_snapshots)
 		c := fmt.Sprintf("cp -r %s/%s /mnt/ddev_config/db_snapshots", containerSnapshotDir, snapshotName)
 		uid, _, _ := util.GetContainerUIDGid()
+		if app.Database.Type == nodeps.Postgres {
+			uid = "999"
+		}
 		stdout, stderr, err = dockerutil.Exec(dbContainer.ID, c, uid)
 		if err != nil {
 			return "", fmt.Errorf("failed to '%s': %v, stdout=%s, stderr=%s", c, err, stdout, stderr)
@@ -1826,9 +1829,9 @@ func (app *DdevApp) Snapshot(baseSnapshotName string) (string, error) {
 }
 
 // getBackupCommand returns the command to dump the entire db system for the various databases
-func getBackupCommand(app *DdevApp) string {
+func getBackupCommand(app *DdevApp, targetFile string) string {
 
-	c := "mariabackup --backup --stream=%s --user=root --password=root --socket=/var/tmp/mysql.sock"
+	c := fmt.Sprintf(`mariabackup --backup --stream=mbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | gzip > "%s"`, path.Base(targetFile), targetFile)
 
 	oldMariaVersions := []string{"5.5", "10.0", "10.1"}
 
@@ -1838,10 +1841,10 @@ func getBackupCommand(app *DdevApp) string {
 		fallthrough
 	case app.Database.Type == nodeps.MySQL:
 		if nodeps.ArrayContainsString(oldMariaVersions, app.Database.Version) {
-			c = "xtrabackup --backup --stream=%s --user=root --password=root --socket=/var/tmp/mysql.sock"
+			c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | gzip > "%s"`, path.Base(targetFile), targetFile)
 		}
 	case app.Database.Type == nodeps.Postgres:
-		c = "pg_dumpall -U db"
+		c = fmt.Sprintf("pg_basebackup -U db -D /var/tmp/basebackup -z --format=tar 2>/tmp/snapshot_%s.log && cp -r /var/tmp/basebackup/base.tar.gz %s", path.Base(targetFile), targetFile)
 	}
 	return c
 }
@@ -1973,7 +1976,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 			return fmt.Errorf("unable to determine database type/version from snapshot name %s", snapshotName)
 		}
 		snapshotDBVersion = parts[len(parts)-1]
-		if !(strings.HasPrefix(snapshotDBVersion, "mariadb_") || strings.HasPrefix(snapshotDBVersion, "mysql_")) {
+		if !(strings.HasPrefix(snapshotDBVersion, "mariadb_") || strings.HasPrefix(snapshotDBVersion, "mysql_") || strings.HasPrefix(snapshotDBVersion, "postgres_")) {
 			return fmt.Errorf("unable to determine database type/version from snapshot name %s", snapshotName)
 		}
 	}
@@ -1982,6 +1985,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("snapshot '%s' is a DB server '%s' snapshot and is not compatible with the configured ddev DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the ddev DB version", snapshotName, snapshotDBVersion, currentDBVersion)
 	}
 
+	// For mariadb/mysql restart container and wait for restore
 	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SitePaused {
 		util.Success("Stopping db container for snapshot restore of '%s'...", snapshotName)
 		dbContainer, err := GetContainer(app, "db")
@@ -2011,7 +2015,12 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 			return err
 		}
 	}
-	_ = os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "restore_snapshot "+snapshotName)
+
+	restoreCmd := "restore_snapshot " + snapshotName
+	if app.Database.Type == nodeps.Postgres {
+		restoreCmd = fmt.Sprintf(`bash -c 'postgres & sleep 2 && gzip -dc /mnt/snapshots/%s | psql -U db'`, snapshotName)
+	}
+	_ = os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", restoreCmd)
 	// nolint: errcheck
 	defer os.Unsetenv("DDEV_MARIADB_LOCAL_COMMAND")
 	err = app.Start()
@@ -2019,25 +2028,29 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("failed to start project for RestoreSnapshot: %v", err)
 	}
 
-	output.UserOut.Printf("Waiting for snapshot restore to complete...\nYou can also follow the restore progress in another terminal window with `ddev logs -s db -f %s`", app.Name)
-	// Now it's up, but we need to find out when it finishes loading.
-	for {
-		// We used to use killall -1 mysqld here
-		// also used to use "pidof mysqld", but apparently the
-		// server may not quite be ready when its pid appears
-		out, _, err := app.Exec(&ExecOpts{
-			Cmd:     `(echo "SHOW VARIABLES like 'v%';" | mysql 2>/dev/null) || true`,
-			Service: "db",
-			Tty:     false,
-		})
-		if err != nil {
-			return err
+	// On mysql/mariadb the snapshot restore doesn't actually complete right away after
+	// the mariabackup/xtrabackup returns.
+	if app.Database.Type != nodeps.Postgres {
+		output.UserOut.Printf("Waiting for snapshot restore to complete...\nYou can also follow the restore progress in another terminal window with `ddev logs -s db -f %s`", app.Name)
+		// Now it's up, but we need to find out when it finishes loading.
+		for {
+			// We used to use killall -1 mysqld here
+			// also used to use "pidof mysqld", but apparently the
+			// server may not quite be ready when its pid appears
+			out, _, err := app.Exec(&ExecOpts{
+				Cmd:     `(echo "SHOW VARIABLES like 'v%';" | mysql 2>/dev/null) || true`,
+				Service: "db",
+				Tty:     false,
+			})
+			if err != nil {
+				return err
+			}
+			if out != "" {
+				break
+			}
+			time.Sleep(1 * time.Second)
+			fmt.Print(".")
 		}
-		if out != "" {
-			break
-		}
-		time.Sleep(1 * time.Second)
-		fmt.Print(".")
 	}
 	util.Success("\nRestored database snapshot %s", snapshotName)
 	err = app.ProcessHooks("post-restore-snapshot")
