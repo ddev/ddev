@@ -62,7 +62,7 @@ services:
       - POSTGRES_USER=db
       - POSTGRES_DB=db
       - TZ={{ .Timezone }}
-    command: "$DDEV_MARIADB_LOCAL_COMMAND"
+    command: "$DDEV_SNAPSHOT_RESTORE_COMMAND"
     healthcheck:
       {{ if eq .DBType "postgres" }}
       test: ["pg_isready"]

@@ -1598,8 +1598,8 @@ func (app *DdevApp) DockerEnv() {
 
 	// Set the mariadb_local command to empty to prevent docker-compose from complaining normally.
 	// It's used for special startup on restoring to a snapshot.
-	if len(os.Getenv("DDEV_MARIADB_LOCAL_COMMAND")) == 0 {
-		err := os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "")
+	if len(os.Getenv("DDEV_SNAPSHOT_RESTORE_COMMAND")) == 0 {
+		err := os.Setenv("DDEV_SNAPSHOT_RESTORE_COMMAND", "")
 		util.CheckErr(err)
 	}
 
@@ -2018,11 +2018,17 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 
 	restoreCmd := "restore_snapshot " + snapshotName
 	if app.Database.Type == nodeps.Postgres {
-		restoreCmd = fmt.Sprintf(`bash -c 'chmod 700 /var/lib/postgresql/data && rm -rf /var/lib/postgresql/data/* && tar -C /var/lib/postgresql/data -zxf /mnt/snapshots/%s && touch /var/lib/postgresql/data/recovery.signal && cat /var/lib/postgresql/recovery.conf >>/var/lib/postgresql/data/postgresql.conf && postgres'`, snapshotName)
+		targetConfName := "postgresql.conf"
+		v, _ := strconv.Atoi(app.Database.Version)
+		// Before postgres v12 the recovery info went into its own file
+		if v < 12 {
+			targetConfName = "recovery.conf"
+		}
+		restoreCmd = fmt.Sprintf(`bash -c 'chmod 700 /var/lib/postgresql/data && rm -rf /var/lib/postgresql/data/* && tar -C /var/lib/postgresql/data -zxf /mnt/snapshots/%s && touch /var/lib/postgresql/data/recovery.signal && cat /var/lib/postgresql/recovery.conf >>/var/lib/postgresql/data/%s && postgres'`, snapshotName, targetConfName)
 	}
-	_ = os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", restoreCmd)
+	_ = os.Setenv("DDEV_SNAPSHOT_RESTORE_COMMAND", restoreCmd)
 	// nolint: errcheck
-	defer os.Unsetenv("DDEV_MARIADB_LOCAL_COMMAND")
+	defer os.Unsetenv("DDEV_SNAPSHOT_RESTORE_COMMAND")
 	err = app.Start()
 	if err != nil {
 		return fmt.Errorf("failed to start project for RestoreSnapshot: %v", err)
