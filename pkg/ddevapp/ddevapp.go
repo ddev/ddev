@@ -1844,7 +1844,7 @@ func getBackupCommand(app *DdevApp, targetFile string) string {
 			c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | gzip > "%s"`, path.Base(targetFile), targetFile)
 		}
 	case app.Database.Type == nodeps.Postgres:
-		c = fmt.Sprintf("pg_basebackup -U db -D /var/tmp/basebackup -z --format=tar 2>/tmp/snapshot_%s.log && cp -r /var/tmp/basebackup/base.tar.gz %s", path.Base(targetFile), targetFile)
+		c = fmt.Sprintf("rm -rf /var/tmp/pgbackup && pg_basebackup -U db -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && tar -czf %s -C /var/tmp/pgbackup/ .", path.Base(targetFile), targetFile)
 	}
 	return c
 }
@@ -2018,7 +2018,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 
 	restoreCmd := "restore_snapshot " + snapshotName
 	if app.Database.Type == nodeps.Postgres {
-		restoreCmd = fmt.Sprintf(`bash -c 'postgres & sleep 2 && gzip -dc /mnt/snapshots/%s | psql -U db'`, snapshotName)
+		restoreCmd = fmt.Sprintf(`bash -c 'chmod 700 /var/lib/postgresql/data && rm -rf /var/lib/postgresql/data/* && tar -C /var/lib/postgresql/data -zxf /mnt/snapshots/%s && touch /var/lib/postgresql/data/recovery.signal && cat /var/lib/postgresql/recovery.conf >>/var/lib/postgresql/data/postgresql.conf && postgres'`, snapshotName)
 	}
 	_ = os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", restoreCmd)
 	// nolint: errcheck
@@ -2136,7 +2136,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 			util.Warning("could not WriteGlobalConfig: %v", err)
 		}
 
-		vols := []string{app.Name + "-mariadb", GetMutagenVolumeName(app)}
+		vols := []string{app.GetMariaDBVolumeName(), app.GetPostgresVolumeName(), GetMutagenVolumeName(app)}
 		if globalconfig.DdevGlobalConfig.NoBindMounts {
 			vols = append(vols, app.Name+"-ddev-config")
 		}
