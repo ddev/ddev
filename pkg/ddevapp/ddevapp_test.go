@@ -1137,10 +1137,8 @@ func TestDdevImportDB(t *testing.T) {
 		err = app.Start()
 		require.NoError(t, err)
 
-		// Make sure database "test" does not exist
 		c[nodeps.MariaDB] = "mysql -N -e 'DROP DATABASE IF EXISTS test;'"
-		c[nodeps.Postgres] = fmt.Sprintf(`echo "SELECT 'DROP DATABASE %s' WHERE EXISTS (SELECT FROM pg_database WHERE datname = '%s')\gexec" | psql -U db -v ON_ERROR_STOP=1 -d postgres`, "test", "test")
-
+		c[nodeps.Postgres] = fmt.Sprintf(`echo "SELECT 'DROP DATABASE test' WHERE EXISTS (SELECT FROM pg_database WHERE datname = 'test')\gexec" | psql -U db -v ON_ERROR_STOP=1 -d postgres`)
 		out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
 			Cmd:     c[dbType],
@@ -1227,7 +1225,7 @@ func TestDdevImportDB(t *testing.T) {
 			os.Stdin = savedStdin
 			assert.NoError(err)
 
-			c[nodeps.MariaDB] = fmt.Sprintf(`mysql -N -e "SHOW DATABASES LIKE '%s'; SELECT COUNT(*) from stdintable"`, db)
+			c[nodeps.MariaDB] = fmt.Sprintf(`mysql -N %s -e "SHOW DATABASES LIKE '%s'; SELECT COUNT(*) from stdintable"`, db, db)
 			c[nodeps.Postgres] = fmt.Sprintf(`psql -t -U db -d %s -c "SELECT datname FROM pg_database WHERE datname='%s' ;" && psql -t -U db -d %s -c "SELECT COUNT(*) from stdintable"`, db, db, db)
 
 			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
@@ -1236,9 +1234,9 @@ func TestDdevImportDB(t *testing.T) {
 			})
 			assert.NoError(err, "db=%s dbType=%s stdout=%s, stderr=%s", db, dbType, out, stderr)
 			out = strings.ReplaceAll(out, "\n", "")
-			out = strings.ReplaceAll(out, "   ", " ")
+			out = strings.ReplaceAll(out, " ", "")
 			out = strings.Trim(out, " \n")
-			assert.Equal(fmt.Sprintf("%s 2", db), out)
+			assert.Equal(fmt.Sprintf("%s2", db), out)
 
 			// Import 2-user users.sql into users table
 			path := filepath.Join(testDir, "testdata", t.Name(), dbType, "users.sql")
@@ -1251,9 +1249,11 @@ func TestDdevImportDB(t *testing.T) {
 				Cmd:     c[dbType],
 			})
 			assert.NoError(err, "db=%s, dbType=%s, out=%s, stderr=%s", db, dbType, out, stderr)
-			assert.Equal("1\n", out)
+			out = strings.Trim(out, "\n")
+			lines := strings.Split(out, "\n")
+			assert.Len(lines, 1)
 
-			// Import 1-user sql (users_just_one table) and make sure only one row is left there
+			// Import 1-user sql (users_just_one table) and make sure only one table is left there
 			path = filepath.Join(testDir, "testdata", t.Name(), dbType, "oneuser.sql")
 			err = app.ImportDB(path, "", false, false, db)
 			assert.NoError(err)
@@ -1263,23 +1263,26 @@ func TestDdevImportDB(t *testing.T) {
 			})
 			assert.NoError(err)
 			out = strings.Trim(out, "\n")
-			lines := strings.Split(out, "\n")
+			lines = strings.Split(out, "\n")
 			assert.Len(lines, 1)
 			assert.Contains(out, "users_just_one")
 
-			// Import 2-user users.sql again, but with nodrop=true
-			// We should end up with 2 tables now
-			path = filepath.Join(testDir, "testdata", t.Name(), dbType, "users.sql")
-			err = app.ImportDB(path, "", false, true, db)
-			assert.NoError(err)
-			out, _, err = app.Exec(&ddevapp.ExecOpts{
-				Service: "db",
-				Cmd:     c[dbType],
-			})
-			assert.NoError(err)
-			out = strings.Trim(out, "\n")
-			lines = strings.Split(out, "\n")
-			assert.Len(lines, 2)
+			// This import-on-top-of-existing-file can't work on postgres
+			if dbType != nodeps.Postgres {
+				// Import 2-user users.sql again, but with nodrop=true
+				// We should end up with 2 tables now
+				path = filepath.Join(testDir, "testdata", t.Name(), dbType, "users.sql")
+				err = app.ImportDB(path, "", false, true, db)
+				assert.NoError(err)
+				out, _, err = app.Exec(&ddevapp.ExecOpts{
+					Service: "db",
+					Cmd:     c[dbType],
+				})
+				assert.NoError(err)
+				out = strings.Trim(out, "\n")
+				lines = strings.Split(out, "\n")
+				assert.Len(lines, 2)
+			}
 		}
 	}
 	app.Database = ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}
@@ -1289,10 +1292,20 @@ func TestDdevImportDB(t *testing.T) {
 	require.NoError(t, err)
 
 	// Test database that has SQL DDL in the content to make sure nothing gets corrupted.
+	// Make sure database "test" does not exist initially
+	dbType := nodeps.MariaDB
+	c[nodeps.MariaDB] = "mysql -N -e 'DROP DATABASE IF EXISTS test;'"
+	c[nodeps.Postgres] = fmt.Sprintf(`echo "SELECT 'DROP DATABASE test' WHERE EXISTS (SELECT FROM pg_database WHERE datname = 'test')\gexec" | psql -U db -v ON_ERROR_STOP=1 -d postgres`)
+	out, stderr, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     c[dbType],
+	})
+	assert.NoError(err, "out=%s, stderr=%s", out, stderr)
+
 	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: "mysql -N -e 'DROP TABLE IF EXISTS wp_posts;'"})
 	require.NoError(t, err)
 	file := "posts_with_ddl_content.sql"
-	path := filepath.Join(testDir, "testdata", t.Name(), file)
+	path := filepath.Join(testDir, "testdata", t.Name(), "mariadb", file)
 	err = app.ImportDB(path, "", false, false, "db")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
 	checkImportDbImports(t, app)
@@ -1315,11 +1328,11 @@ func TestDdevImportDB(t *testing.T) {
 
 	// Verify that the count of tables is exactly what it should be, that nothing was lost in the
 	// import due to embedded DDL statements.
-	out, _, err := app.Exec(&ddevapp.ExecOpts{
+	out, stderr, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
 		Cmd:     `mysql -N -e 'SELECT COUNT(*) FROM wp_posts;'`,
 	})
-	assert.NoError(err)
+	assert.NoError(err, "out=%s, stderr=%s", out, stderr)
 	assert.Equal("180\n", out)
 
 	// Now check standard archive imports
@@ -1378,14 +1391,13 @@ func checkImportDbImports(t *testing.T, app *ddevapp.DdevApp) {
 	assert.NoError(err)
 	assert.Equal("wp_posts\n", out)
 
-	// Verify that no extra database was created (this one has a CREATE DATABASE statement)
+	// Verify that no additional database was created (this one has a CREATE DATABASE statement)
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
 		Cmd:     `mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql)$"`,
 	})
 	assert.NoError(err)
 	assert.Equal("db\n", out)
-
 }
 
 // TestDdevAllDatabases tests db import/export/snapshot/restore/start with supported database versions
