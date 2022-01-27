@@ -530,11 +530,12 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 	// The backtick after USE is inserted via fmt.Sprintf argument because it seems there's
 	// no way to escape a backtick in a string literal.
 	inContainerCommand := [][]string{}
+	preImportSQL := ""
 	switch app.Database.Type {
 	case nodeps.MySQL:
 		fallthrough
 	case nodeps.MariaDB:
-		preImportSQL := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s; GRANT ALL ON %s.* TO 'db'@'%%';", targetDB, targetDB)
+		preImportSQL = fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s; GRANT ALL ON %s.* TO 'db'@'%%';", targetDB, targetDB)
 		if !noDrop {
 			preImportSQL = fmt.Sprintf("DROP DATABASE IF EXISTS %s; ", targetDB) + preImportSQL
 		}
@@ -549,44 +550,36 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		}
 
 	case nodeps.Postgres:
-		// In postgres nothing can be connected to the database we're working on.
-		// https://stackoverflow.com/a/5408501/215713
-		preImportCommand := [][]string{
-			{"psql", "-U", "db", "postgres", "-c", fmt.Sprintf(`SELECT pg_terminate_backend(pg_stat_activity.pid)
-				FROM pg_stat_activity
-				WHERE pg_stat_activity.datname = '%s'
-  				AND pid <> pg_backend_pid();`, targetDB)},
+		preImportSQL = ""
+		if !noDrop { // Normal case, drop and recreate database
+			preImportSQL = preImportSQL + fmt.Sprintf(`
+				\SET AUTOCOMMIT = ON
+				DROP DATABASE IF EXISTS %s;
+				CREATE DATABASE %s;
+			`, targetDB, targetDB)
+		} else { // Leave database alone, but create if not exists
+			preImportSQL = preImportSQL + fmt.Sprintf(`
+				SELECT 'CREATE DATABASE %s' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '%s')\gexec
+			`, targetDB, targetDB)
 		}
-
-		// CREATE DATABASE IF NOT EXISTS doesn't work on postgres
-		// https://stackoverflow.com/questions/18389124/simulate-create-database-if-not-exists-for-postgresql
-		// echo "SELECT 'CREATE DATABASE mydb' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'mydb')\gexec" | psql
-
-		// If we are not dropping the db, must create it if doesn't exist
-		if noDrop {
-			preImportCommand = append(preImportCommand, []string{"bash", "-c", fmt.Sprintf(`psql -U db -v "ON_ERROR_STOP=1" postgres -c "SELECT 'CREATE DATABASE %s' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '%s')\gexec" | psql -U db`, targetDB, targetDB)})
-		} else { // Otherwise drop and create
-			preImportCommand = append(preImportCommand, []string{"psql", "-U", "db", "-v", "ON_ERROR_STOP=1", "postgres", "-c", fmt.Sprintf("DROP DATABASE IF EXISTS %s;", targetDB)})
-			preImportCommand = append(preImportCommand, []string{"psql", "-U", "db", "-v", "ON_ERROR_STOP=1", "postgres", "-c", fmt.Sprintf("CREATE DATABASE %s;", targetDB)})
-		}
-
-		preImportCommand = append(preImportCommand, []string{"psql", "-U", "db", "-v", "ON_ERROR_STOP=1", "-c", fmt.Sprintf(`GRANT ALL PRIVILEGES ON DATABASE %s to db;;`, targetDB)})
+		preImportSQL = preImportSQL + fmt.Sprintf(`
+			GRANT ALL PRIVILEGES ON DATABASE %s TO db;`, targetDB)
 
 		// If there is no import path, we're getting it from stdin
 		if imPath == "" && extPath == "" {
-			inContainerCommand = append(preImportCommand, []string{"pgsql", "-q", "-U", "db", "-v", "ON_ERROR_STOP=1", targetDB})
+			inContainerCommand = [][]string{{"bash", "-c", fmt.Sprintf(`(echo '%s' | psql -U db -d postgres) && psql -U db -v ON_ERROR_STOP=1 -d %s`, preImportSQL, targetDB)}}
 		} else { // otherwise getting it from mounted file
-			inContainerCommand = append(preImportCommand, []string{"bash", "-c", fmt.Sprintf(`pv %s/*.*sql | psql -q -U db -v ON_ERROR_STOP=1 %s`, insideContainerImportPath, targetDB)})
+			inContainerCommand = [][]string{{"bash", "-c", fmt.Sprintf(`pv %s/*.*sql | psql -q -U db -v ON_ERROR_STOP=1 %s`, insideContainerImportPath, targetDB)}}
 		}
 	}
-	_, _, err = app.Exec(&ExecOpts{
+	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "db",
 		RawCmd:  inContainerCommand,
 		Tty:     progress && isatty.IsTerminal(os.Stdin.Fd()),
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to import database: %v\nstdout: %s\nstderr: %s", err, stdout, stderr)
 	}
 
 	// Wait for import to really complete

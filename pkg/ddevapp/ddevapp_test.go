@@ -1203,6 +1203,78 @@ func TestDdevImportDB(t *testing.T) {
 		require.NoError(t, err)
 	}
 
+	//for _, dbType := range []string{nodeps.MariaDB, nodeps.Postgres} {
+	for _, dbType := range []string{nodeps.Postgres} {
+		err = app.Stop(true, false)
+		app.Database = ddevapp.DatabaseDesc{Type: dbType, Version: nodeps.MariaDBDefaultVersion}
+		if dbType == nodeps.Postgres {
+			app.Database.Version = nodeps.PostgresDefaultVersion
+		}
+		err = app.WriteConfig()
+		require.NoError(t, err)
+		err = app.Start()
+		require.NoError(t, err)
+
+		for _, db := range []string{"db", "extradb"} {
+			// Import from stdin, make sure that works
+			inputFile := filepath.Join(testDir, "testdata", t.Name(), dbType, "stdintable.sql")
+			f, err := os.Open(inputFile)
+			require.NoError(t, err)
+			// nolint: errcheck
+			defer f.Close()
+			savedStdin := os.Stdin
+			os.Stdin = f
+			err = app.ImportDB("", "", false, false, db)
+			os.Stdin = savedStdin
+			assert.NoError(err)
+
+			c[nodeps.MySQL] = `mysql -N -e 'SHOW DATABASES LIKE '%s'; SELECT COUNT(*) from stdintable"`
+			c[nodeps.Postgres] = `psql -t -U db %s -c "SELECT datname FROM pg_database WHERE datname='%s'; SELECT COUNT(*) from stdintable"`
+
+			out, _, err := app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     fmt.Sprintf(c[dbType], db),
+			})
+			assert.NoError(err)
+			assert.Equal(out, fmt.Sprintf("%s\n2\n", db))
+
+			// Import 2-user users.sql into users table
+			path := filepath.Join(testDir, "testdata", t.Name(), dbType, "users.sql")
+			err = app.ImportDB(path, "", false, false, db)
+			assert.NoError(err)
+			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     fmt.Sprintf(`echo "SELECT COUNT(*) AS TOTALNUMBEROFTABLES FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db),
+			})
+			assert.NoError(err, "exec failed: %v", stderr)
+			assert.Equal("1\n", out)
+
+			// Import 1-user sql and make sure only one row is left there
+			path = filepath.Join(testDir, "testdata", t.Name(), dbType, "oneuser.sql")
+			err = app.ImportDB(path, "", false, false, db)
+			assert.NoError(err)
+
+			out, _, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     fmt.Sprintf(`echo "SELECT COUNT(*) AS TOTALNUMBEROFTABLES FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db),
+			})
+			assert.NoError(err)
+			assert.Equal("1\n", out)
+
+			// Import 2-user users.sql again, but with nodrop=true
+			// We should end up with 2 tables now
+			path = filepath.Join(testDir, "testdata", t.Name(), dbType, "users.sql")
+			err = app.ImportDB(path, "", false, true, db)
+			assert.NoError(err)
+			out, _, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     fmt.Sprintf(`echo "SELECT COUNT(*) AS TOTALNUMBEROFTABLES FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db),
+			})
+			assert.NoError(err)
+			assert.Equal("2\n", out)
+
+		}
+	}
 	app.Database = ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}
 	err = app.WriteConfig()
 	require.NoError(t, err)
@@ -1284,73 +1356,6 @@ func TestDdevImportDB(t *testing.T) {
 
 	app.Hooks = nil
 
-	for _, dbType := range []string{nodeps.MariaDB, nodeps.Postgres} {
-		err = app.Stop(true, false)
-		app.Database = ddevapp.DatabaseDesc{Type: dbType, Version: nodeps.MariaDBDefaultVersion}
-		if dbType == nodeps.Postgres {
-			app.Database.Version = nodeps.PostgresDefaultVersion
-		}
-		err = app.WriteConfig()
-		require.NoError(t, err)
-		err = app.Start()
-		require.NoError(t, err)
-
-		for _, db := range []string{"db", "extradb"} {
-			// Import from stdin, make sure that works
-			inputFile := filepath.Join(testDir, "testdata", t.Name(), dbType, "stdintable.sql")
-			f, err := os.Open(inputFile)
-			require.NoError(t, err)
-			// nolint: errcheck
-			defer f.Close()
-			savedStdin := os.Stdin
-			os.Stdin = f
-			err = app.ImportDB("", "", false, false, db)
-			os.Stdin = savedStdin
-			assert.NoError(err)
-			out, _, err := app.Exec(&ddevapp.ExecOpts{
-				Service: "db",
-				Cmd:     fmt.Sprintf(`echo "SHOW DATABASES LIKE '%s'; SELECT COUNT(*) FROM stdintable;" | mysql -N %s`, db, db),
-			})
-			assert.NoError(err)
-			assert.Equal(out, fmt.Sprintf("%s\n2\n", db))
-
-			// Import 2-user users.sql into users table
-			path := filepath.Join(testDir, "testdata", t.Name(), dbType, "users.sql")
-			err = app.ImportDB(path, "", false, false, db)
-			assert.NoError(err)
-			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
-				Service: "db",
-				Cmd:     fmt.Sprintf(`echo "SELECT COUNT(*) AS TOTALNUMBEROFTABLES FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db),
-			})
-			assert.NoError(err, "exec failed: %v", stderr)
-			assert.Equal("1\n", out)
-
-			// Import 1-user sql and make sure only one row is left there
-			path = filepath.Join(testDir, "testdata", t.Name(), dbType, "oneuser.sql")
-			err = app.ImportDB(path, "", false, false, db)
-			assert.NoError(err)
-
-			out, _, err = app.Exec(&ddevapp.ExecOpts{
-				Service: "db",
-				Cmd:     fmt.Sprintf(`echo "SELECT COUNT(*) AS TOTALNUMBEROFTABLES FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db),
-			})
-			assert.NoError(err)
-			assert.Equal("1\n", out)
-
-			// Import 2-user users.sql again, but with nodrop=true
-			// We should end up with 2 tables now
-			path = filepath.Join(testDir, "testdata", t.Name(), dbType, "users.sql")
-			err = app.ImportDB(path, "", false, true, db)
-			assert.NoError(err)
-			out, _, err = app.Exec(&ddevapp.ExecOpts{
-				Service: "db",
-				Cmd:     fmt.Sprintf(`echo "SELECT COUNT(*) AS TOTALNUMBEROFTABLES FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db),
-			})
-			assert.NoError(err)
-			assert.Equal("2\n", out)
-
-		}
-	}
 	runTime()
 	switchDir()
 }

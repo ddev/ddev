@@ -8,6 +8,8 @@ var ValidPostgresVersions = map[string]bool{
 	Postgres14: true,
 	Postgres13: true,
 	Postgres12: true,
+	Postgres11: true,
+	Postgres10: true,
 }
 
 // Postgres Versions
@@ -15,4 +17,6 @@ const (
 	Postgres14 = "14"
 	Postgres13 = "13"
 	Postgres12 = "12"
+	Postgres11 = "11"
+	Postgres10 = "10"
 )
