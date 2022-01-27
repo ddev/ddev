@@ -564,19 +564,19 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 
 		// If we are not dropping the db, must create it if doesn't exist
 		if noDrop {
-			preImportCommand = append(preImportCommand, []string{"bash", "-c", fmt.Sprintf(`psql -U db postgres -c "SELECT 'CREATE DATABASE %s' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '%s')\gexec" | psql -U db`, targetDB, targetDB)})
+			preImportCommand = append(preImportCommand, []string{"bash", "-c", fmt.Sprintf(`psql -U db -v "ON_ERROR_STOP=1" postgres -c "SELECT 'CREATE DATABASE %s' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '%s')\gexec" | psql -U db`, targetDB, targetDB)})
 		} else { // Otherwise drop and create
-			preImportCommand = append(preImportCommand, []string{"psql", "-U", "db", "postgres", "-c", fmt.Sprintf("DROP DATABASE IF EXISTS %s;", targetDB)})
-			preImportCommand = append(preImportCommand, []string{"psql", "-U", "db", "postgres", "-c", fmt.Sprintf("CREATE DATABASE %s;", targetDB)})
+			preImportCommand = append(preImportCommand, []string{"psql", "-U", "db", "-v", "ON_ERROR_STOP=1", "postgres", "-c", fmt.Sprintf("DROP DATABASE IF EXISTS %s;", targetDB)})
+			preImportCommand = append(preImportCommand, []string{"psql", "-U", "db", "-v", "ON_ERROR_STOP=1", "postgres", "-c", fmt.Sprintf("CREATE DATABASE %s;", targetDB)})
 		}
 
-		preImportCommand = append(preImportCommand, []string{"psql", "-U", "db", "-c", fmt.Sprintf(`GRANT ALL PRIVILEGES ON DATABASE %s to db;;`, targetDB)})
+		preImportCommand = append(preImportCommand, []string{"psql", "-U", "db", "-v", "ON_ERROR_STOP=1", "-c", fmt.Sprintf(`GRANT ALL PRIVILEGES ON DATABASE %s to db;;`, targetDB)})
 
 		// If there is no import path, we're getting it from stdin
 		if imPath == "" && extPath == "" {
-			inContainerCommand = append(preImportCommand, []string{"pgsql", "-q", "-U", "db", targetDB})
+			inContainerCommand = append(preImportCommand, []string{"pgsql", "-q", "-U", "db", "-v", "ON_ERROR_STOP=1", targetDB})
 		} else { // otherwise getting it from mounted file
-			inContainerCommand = append(preImportCommand, []string{"bash", "-c", fmt.Sprintf(`pv %s/*.*sql | psql -q -U db %s`, insideContainerImportPath, targetDB)})
+			inContainerCommand = append(preImportCommand, []string{"bash", "-c", fmt.Sprintf(`pv %s/*.*sql | psql -q -U db -v ON_ERROR_STOP=1 %s`, insideContainerImportPath, targetDB)})
 		}
 	}
 	_, _, err = app.Exec(&ExecOpts{

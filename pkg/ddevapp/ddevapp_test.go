@@ -1106,46 +1106,83 @@ func TestDdevImportDB(t *testing.T) {
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
 	assert.NoError(err)
-	err = app.Start()
-	assert.NoError(err)
-	defer func() {
+
+	t.Cleanup(func() {
 		app.Hooks = nil
-		_ = app.WriteConfig()
-		_ = app.Stop(true, false)
-	}()
-
-	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Service: "db",
-		Cmd:     "mysql -N -e 'DROP DATABASE IF EXISTS test;'",
+		app.Database.Type = nodeps.MariaDB
+		app.Database.Version = nodeps.MariaDBDefaultVersion
+		err = app.WriteConfig()
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
 	})
-	assert.NoError(err)
 
-	app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-db": {{"exec-host": "touch hello-post-import-db-" + app.Name}}, "pre-import-db": {{"exec-host": "touch hello-pre-import-db-" + app.Name}}}
+	c := make(map[string]string)
 
-	// Test simple db loads.
-	for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.mysql.gz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.mysql.tar.gz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip", "users_with_USE_statement.sql"} {
-		path := filepath.Join(testDir, "testdata", t.Name(), file)
-		err = app.ImportDB(path, "", false, false, "db")
-		assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
-		if err != nil {
-			continue
+	for _, dbType := range []string{nodeps.MariaDB, nodeps.Postgres} {
+		err = app.Stop(true, false)
+		require.NoError(t, err)
+
+		//for _, dbType := range []string{nodeps.Postgres} {
+		app.Database = ddevapp.DatabaseDesc{
+			Type:    dbType,
+			Version: nodeps.MariaDBDefaultVersion,
 		}
+		if dbType == nodeps.Postgres {
+			app.Database.Version = nodeps.PostgresDefaultVersion
+		}
+		err = app.WriteConfig()
+		assert.NoError(err)
 
-		// There should be exactly the one "users" table for each of these files
-		out, _, err := app.Exec(&ddevapp.ExecOpts{
+		err = app.Start()
+		require.NoError(t, err)
+
+		// Make sure existing database "test" does not exist
+		c[nodeps.MySQL] = "mysql -N -e 'DROP DATABASE IF EXISTS test;'"
+		c[nodeps.Postgres] = fmt.Sprintf(`psql -U db -v ON_ERROR_STOP=1 postgres -c "SELECT 'CREATE DATABASE %s' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '%s')\gexec" | psql -U db`, "test", "test")
+
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
-			Cmd:     "mysql -N -e 'SHOW TABLES;' | cat",
+			Cmd:     c[dbType],
 		})
 		assert.NoError(err)
-		assert.Equal("users\n", out)
 
-		// Verify that no extra database was created
-		out, _, err = app.Exec(&ddevapp.ExecOpts{
-			Service: "db",
-			Cmd:     `mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql)$"`,
-		})
-		assert.NoError(err)
-		assert.Equal("db\n", out)
+		app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-db": {{"exec-host": "touch hello-post-import-db-" + app.Name}}, "pre-import-db": {{"exec-host": "touch hello-pre-import-db-" + app.Name}}}
+
+		// Test simple db loads.
+		for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.mysql.gz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.mysql.tar.gz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip", "users_with_USE_statement.sql"} {
+			path := filepath.Join(testDir, "testdata", t.Name(), dbType, file)
+			if !fileutil.FileExists(path) {
+				continue
+			}
+			err = app.ImportDB(path, "", false, false, "db")
+			assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
+			if err != nil {
+				continue
+			}
+
+			c[nodeps.MySQL] = `mysql -N -e 'SHOW TABLES;' | cat`
+			c[nodeps.Postgres] = `set -eu -o pipefail; psql -t -U db -v ON_ERROR_STOP=1 db -c '\dt' |awk -F' *\| *' '{ if (NF>2) print $2 }' `
+			// There should be exactly the one "users" table for each of these files
+			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     c[dbType],
+			})
+			assert.NoError(err)
+			assert.Equal("users\n", out, "Failed to find users table for file %s, stdout='%s', stderr='%s'", file, out, stderr)
+
+			c[nodeps.MySQL] = `mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql)$"`
+			c[nodeps.Postgres] = `psql -t -U db -c "SELECT datname FROM pg_database;" | egrep -v "template?|postgres"`
+
+			// Verify that no extra database was created
+			out, stderr, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     c[dbType],
+			})
+			assert.NoError(err)
+			out = strings.Trim(out, " \n")
+			assert.Equal("db", out, "found extra database, out=%s, stderr=%s", out, stderr)
+		}
 
 		// Test that a settings file has correct hash_salt format
 		switch app.Type {
@@ -1153,7 +1190,7 @@ func TestDdevImportDB(t *testing.T) {
 			drupalHashSalt, err := fileutil.FgrepStringInFile(app.SiteDdevSettingsFile, "$drupal_hash_salt")
 			assert.NoError(err)
 			assert.True(drupalHashSalt)
-		case nodeps.AppTypeDrupal8:
+		case nodeps.AppTypeDrupal9:
 			settingsHashSalt, err := fileutil.FgrepStringInFile(app.SiteDdevSettingsFile, "settings['hash_salt']")
 			assert.NoError(err)
 			assert.True(settingsHashSalt)
@@ -1162,6 +1199,8 @@ func TestDdevImportDB(t *testing.T) {
 			assert.NoError(err)
 			assert.True(hasAuthSalt)
 		}
+		err = app.Stop(true, false)
+		require.NoError(t, err)
 	}
 
 	// Test database that has SQL DDL in the content to make sure nothing gets corrupted.
@@ -1240,7 +1279,6 @@ func TestDdevImportDB(t *testing.T) {
 	app.Hooks = nil
 
 	for _, db := range []string{"db", "extradb"} {
-
 		// Import from stdin, make sure that works
 		inputFile := filepath.Join(testDir, "testdata", t.Name(), "stdintable.sql")
 		f, err := os.Open(inputFile)
