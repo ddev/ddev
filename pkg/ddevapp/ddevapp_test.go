@@ -1137,15 +1137,15 @@ func TestDdevImportDB(t *testing.T) {
 		err = app.Start()
 		require.NoError(t, err)
 
-		// Make sure existing database "test" does not exist
-		c[nodeps.MySQL] = "mysql -N -e 'DROP DATABASE IF EXISTS test;'"
-		c[nodeps.Postgres] = fmt.Sprintf(`psql -U db -v ON_ERROR_STOP=1 postgres -c "SELECT 'CREATE DATABASE %s' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '%s')\gexec" | psql -U db`, "test", "test")
+		// Make sure database "test" does not exist
+		c[nodeps.MariaDB] = "mysql -N -e 'DROP DATABASE IF EXISTS test;'"
+		c[nodeps.Postgres] = fmt.Sprintf(`echo "SELECT 'DROP DATABASE %s' WHERE EXISTS (SELECT FROM pg_database WHERE datname = '%s')\gexec" | psql -U db -v ON_ERROR_STOP=1 -d postgres`, "test", "test")
 
-		_, _, err = app.Exec(&ddevapp.ExecOpts{
+		out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
 			Cmd:     c[dbType],
 		})
-		assert.NoError(err)
+		assert.NoError(err, "out=%s, stderr=%s", out, stderr)
 
 		app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-db": {{"exec-host": "touch hello-post-import-db-" + app.Name}}, "pre-import-db": {{"exec-host": "touch hello-pre-import-db-" + app.Name}}}
 
@@ -1161,7 +1161,7 @@ func TestDdevImportDB(t *testing.T) {
 				continue
 			}
 
-			c[nodeps.MySQL] = `mysql -N -e 'SHOW TABLES;' | cat`
+			c[nodeps.MariaDB] = `mysql -N -e 'SHOW TABLES;' | cat`
 			c[nodeps.Postgres] = `set -eu -o pipefail; psql -t -U db -v ON_ERROR_STOP=1 db -c '\dt' |awk -F' *\| *' '{ if (NF>2) print $2 }' `
 			// There should be exactly the one "users" table for each of these files
 			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
@@ -1171,7 +1171,7 @@ func TestDdevImportDB(t *testing.T) {
 			assert.NoError(err)
 			assert.Equal("users\n", out, "Failed to find users table for file %s, stdout='%s', stderr='%s'", file, out, stderr)
 
-			c[nodeps.MySQL] = `mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql)$"`
+			c[nodeps.MariaDB] = `mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql)$"`
 			c[nodeps.Postgres] = `psql -t -U db -c "SELECT datname FROM pg_database;" | egrep -v "template?|postgres"`
 
 			// Verify that no extra database was created
@@ -1203,8 +1203,7 @@ func TestDdevImportDB(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	//for _, dbType := range []string{nodeps.MariaDB, nodeps.Postgres} {
-	for _, dbType := range []string{nodeps.Postgres} {
+	for _, dbType := range []string{nodeps.MariaDB, nodeps.Postgres} {
 		err = app.Stop(true, false)
 		app.Database = ddevapp.DatabaseDesc{Type: dbType, Version: nodeps.MariaDBDefaultVersion}
 		if dbType == nodeps.Postgres {
@@ -1228,14 +1227,14 @@ func TestDdevImportDB(t *testing.T) {
 			os.Stdin = savedStdin
 			assert.NoError(err)
 
-			c[nodeps.MySQL] = fmt.Sprintf(`mysql -N -e 'SHOW DATABASES LIKE '%s'; SELECT COUNT(*) from stdintable"`, db)
+			c[nodeps.MariaDB] = fmt.Sprintf(`mysql -N -e "SHOW DATABASES LIKE '%s'; SELECT COUNT(*) from stdintable"`, db)
 			c[nodeps.Postgres] = fmt.Sprintf(`psql -t -U db -d %s -c "SELECT datname FROM pg_database WHERE datname='%s' ;" && psql -t -U db -d %s -c "SELECT COUNT(*) from stdintable"`, db, db, db)
 
-			out, _, err := app.Exec(&ddevapp.ExecOpts{
+			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
 				Cmd:     c[dbType],
 			})
-			assert.NoError(err)
+			assert.NoError(err, "db=%s dbType=%s stdout=%s, stderr=%s", db, dbType, out, stderr)
 			out = strings.ReplaceAll(out, "\n", "")
 			out = strings.ReplaceAll(out, "   ", " ")
 			out = strings.Trim(out, " \n")
@@ -1245,13 +1244,13 @@ func TestDdevImportDB(t *testing.T) {
 			path := filepath.Join(testDir, "testdata", t.Name(), dbType, "users.sql")
 			err = app.ImportDB(path, "", false, false, db)
 			assert.NoError(err)
-			c[nodeps.MySQL] = fmt.Sprintf(`echo "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db)
+			c[nodeps.MariaDB] = fmt.Sprintf(`echo "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db)
 			c[nodeps.Postgres] = fmt.Sprintf(`bash -c "echo '\dt' | psql -t -U db -d %s | awk 'NF > 1'"`, db)
-			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
+			out, stderr, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
 				Cmd:     c[dbType],
 			})
-			assert.NoError(err, "exec failed: %v", stderr)
+			assert.NoError(err, "db=%s, dbType=%s, out=%s, stderr=%s", db, dbType, out, stderr)
 			assert.Equal("1\n", out)
 
 			// Import 1-user sql (users_just_one table) and make sure only one row is left there
@@ -1278,8 +1277,9 @@ func TestDdevImportDB(t *testing.T) {
 				Cmd:     c[dbType],
 			})
 			assert.NoError(err)
-			assert.Equal("2\n", out)
-
+			out = strings.Trim(out, "\n")
+			lines = strings.Split(out, "\n")
+			assert.Len(lines, 2)
 		}
 	}
 	app.Database = ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}
