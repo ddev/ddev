@@ -568,7 +568,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		if imPath == "" && extPath == "" {
 			inContainerCommand = [][]string{{"bash", "-c", fmt.Sprintf(`(echo '%s' | psql -U db -d postgres) && psql -U db -v ON_ERROR_STOP=1 -d %s`, preImportSQL, targetDB)}}
 		} else { // otherwise getting it from mounted file
-			inContainerCommand = [][]string{{"bash", "-c", fmt.Sprintf(`(echo '%s' | psql -q -U db -d postgres -v ON_ERROR_STOP=1) && pv %s/*.*sql | psql -q -U db -v ON_ERROR_STOP=1 %s >/dev/null`, preImportSQL, insideContainerImportPath, targetDB)}}
+			inContainerCommand = [][]string{{"bash", "-c", fmt.Sprintf(`(echo "%s" | psql -q -U db -d postgres -v ON_ERROR_STOP=1) && pv %s/*.*sql | psql -q -U db -v ON_ERROR_STOP=1 %s >/dev/null`, preImportSQL, insideContainerImportPath, targetDB)}}
 		}
 	}
 	stdout, stderr, err := app.Exec(&ExecOpts{
