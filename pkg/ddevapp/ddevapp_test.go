@@ -1409,7 +1409,7 @@ func TestDdevAllDatabases(t *testing.T) {
 
 	//Use a smaller list if GOTEST_SHORT
 	if os.Getenv("GOTEST_SHORT") != "" {
-		dbVersions = []string{"mariadb:10.2", "mariadb:10.3", "mysql:8.0", "mysql:5.7"}
+		dbVersions = []string{"postgres:14", "mariadb:10.2", "mariadb:10.3", "mysql:8.0", "mysql:5.7"}
 		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
 	}
 
@@ -1464,14 +1464,17 @@ func TestDdevAllDatabases(t *testing.T) {
 			continue
 		}
 
-		// Make sure the version of db running matches expected
-		containerDBVersion, _, _ := app.Exec(&ddevapp.ExecOpts{
-			Service: "db",
-			Cmd:     "cat /var/lib/mysql/db_mariadb_version.txt",
-		})
-		assert.Equal(dbType+"_"+dbVersion, strings.Trim(containerDBVersion, "\n\r "))
+		// The db_mariadb_version.txt file does not exist on postgres
+		if dbType != nodeps.Postgres {
+			// Make sure the version of db running matches expected
+			containerDBVersion, _, _ := app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     "cat /var/lib/mysql/db_mariadb_version.txt",
+			})
+			assert.Equal(dbType+"_"+dbVersion, strings.Trim(containerDBVersion, "\n\r "))
+		}
 
-		importPath := filepath.Join(origDir, "testdata", t.Name(), "users.sql")
+		importPath := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
 		err = app.ImportDB(importPath, "", false, false, "db")
 		assert.NoError(err, "failed to import %v", importPath)
 
@@ -1486,7 +1489,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		// Validate contents
 		err = archive.Ungzip("tmp/users1.sql.gz", "tmp")
 		assert.NoError(err)
-		stringFound, err := fileutil.FgrepStringInFile("tmp/users1.sql", "Table structure for table `users`")
+		stringFound, err := fileutil.GrepStringInFile("tmp/users1.sql", "CREATE TABLE.*users")
 		assert.NoError(err)
 		assert.True(stringFound)
 
@@ -1503,7 +1506,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		assert.NoError(err)
 
 		// Validate contents
-		stringFound, err = fileutil.FgrepStringInFile("tmp/users2.sql", "Table structure for table `users`")
+		stringFound, err = fileutil.GrepStringInFile("tmp/users2.sql", "CREATE TABLE.*users")
 		assert.NoError(err)
 		assert.True(stringFound)
 
@@ -1515,7 +1518,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		err = app.ExportDB("", false, "db")
 		assert.NoError(err)
 		out := stdout()
-		assert.Contains(out, "Table structure for table `users`")
+		assert.Regexp(regexp.MustCompilePOSIX("CREATE TABLE.*users"), out)
 
 		snapshotName := dbType + "_" + dbVersion + "_" + fileutil.RandomFilenameBase()
 		fullSnapshotName, err := app.Snapshot(snapshotName)
@@ -1527,9 +1530,13 @@ func TestDdevAllDatabases(t *testing.T) {
 		assert.Greater(fi.Size(), int64(1000), "snapshot %s for %s may be empty: %v", fi.Name(), dbTypeVersion, fi)
 
 		// Delete the user in the database so we can later verify snapshot restore
+		c := map[string]string{
+			nodeps.MariaDB:  fmt.Sprintf(`echo "DELETE FROM users;" | mysql`),
+			nodeps.Postgres: fmt.Sprintf(`echo "DELETE FROM users;" | psql -U db`),
+		}
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
-			Cmd:     `echo "DELETE FROM users;" | mysql`,
+			Cmd:     c[dbType],
 		})
 		assert.NoError(err)
 
@@ -1539,20 +1546,28 @@ func TestDdevAllDatabases(t *testing.T) {
 			_ = app.Stop(true, false)
 			continue
 		}
-		// Make sure the version of db running matches expected
-		containerDBVersion, _, err = app.Exec(&ddevapp.ExecOpts{
-			Service: "db",
-			Cmd:     "cat /var/lib/mysql/db_mariadb_version.txt",
-		})
-		assert.NoError(err)
-		assert.Equal(dbType+"_"+dbVersion, strings.Trim(containerDBVersion, "\n\r "))
 
+		if dbType != nodeps.Postgres {
+			// Make sure the version of db running matches expected
+			containerDBVersion, _, err := app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     "cat /var/lib/mysql/db_mariadb_version.txt",
+			})
+			assert.NoError(err)
+			assert.Equal(dbType+"_"+dbVersion, strings.Trim(containerDBVersion, "\n\r "))
+		}
+
+		c = map[string]string{
+			nodeps.MariaDB:  `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
+			nodeps.Postgres: `echo "SELECT COUNT(*) FROM users;" | psql -U db -t`,
+		}
 		out, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
-			Cmd:     `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
+			Cmd:     c[dbType],
 		})
 		assert.NoError(err)
-		assert.Equal("2\n", out)
+		out = strings.Trim(out, "\n\r ")
+		assert.Equal("2", out)
 
 		_ = app.Stop(true, false)
 	}
