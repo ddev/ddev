@@ -848,6 +848,11 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
+	err = PrepDdevDirectory(filepath.Dir(app.ConfigPath))
+	if err != nil {
+		util.Warning("Unable to PrepDdevDirectory: %v", err)
+	}
+
 	err = app.GenerateWebserverConfig()
 	if err != nil {
 		return err
