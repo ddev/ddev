@@ -1228,38 +1228,45 @@ func TestDdevImportDB(t *testing.T) {
 			os.Stdin = savedStdin
 			assert.NoError(err)
 
-			c[nodeps.MySQL] = `mysql -N -e 'SHOW DATABASES LIKE '%s'; SELECT COUNT(*) from stdintable"`
-			c[nodeps.Postgres] = `psql -t -U db %s -c "SELECT datname FROM pg_database WHERE datname='%s'; SELECT COUNT(*) from stdintable"`
+			c[nodeps.MySQL] = fmt.Sprintf(`mysql -N -e 'SHOW DATABASES LIKE '%s'; SELECT COUNT(*) from stdintable"`, db)
+			c[nodeps.Postgres] = fmt.Sprintf(`psql -t -U db -d %s -c "SELECT datname FROM pg_database WHERE datname='%s' ;" && psql -t -U db -d %s -c "SELECT COUNT(*) from stdintable"`, db, db, db)
 
 			out, _, err := app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
-				Cmd:     fmt.Sprintf(c[dbType], db),
+				Cmd:     c[dbType],
 			})
 			assert.NoError(err)
-			assert.Equal(out, fmt.Sprintf("%s\n2\n", db))
+			out = strings.ReplaceAll(out, "\n", "")
+			out = strings.ReplaceAll(out, "   ", " ")
+			out = strings.Trim(out, " \n")
+			assert.Equal(fmt.Sprintf("%s 2", db), out)
 
 			// Import 2-user users.sql into users table
 			path := filepath.Join(testDir, "testdata", t.Name(), dbType, "users.sql")
 			err = app.ImportDB(path, "", false, false, db)
 			assert.NoError(err)
+			c[nodeps.MySQL] = fmt.Sprintf(`echo "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db)
+			c[nodeps.Postgres] = fmt.Sprintf(`bash -c "echo '\dt' | psql -t -U db -d %s | awk 'NF > 1'"`, db)
 			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
-				Cmd:     fmt.Sprintf(`echo "SELECT COUNT(*) AS TOTALNUMBEROFTABLES FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db),
+				Cmd:     c[dbType],
 			})
 			assert.NoError(err, "exec failed: %v", stderr)
 			assert.Equal("1\n", out)
 
-			// Import 1-user sql and make sure only one row is left there
+			// Import 1-user sql (users_just_one table) and make sure only one row is left there
 			path = filepath.Join(testDir, "testdata", t.Name(), dbType, "oneuser.sql")
 			err = app.ImportDB(path, "", false, false, db)
 			assert.NoError(err)
-
 			out, _, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
-				Cmd:     fmt.Sprintf(`echo "SELECT COUNT(*) AS TOTALNUMBEROFTABLES FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db),
+				Cmd:     c[dbType],
 			})
 			assert.NoError(err)
-			assert.Equal("1\n", out)
+			out = strings.Trim(out, "\n")
+			lines := strings.Split(out, "\n")
+			assert.Len(lines, 1)
+			assert.Contains(out, "users_just_one")
 
 			// Import 2-user users.sql again, but with nodrop=true
 			// We should end up with 2 tables now
@@ -1268,7 +1275,7 @@ func TestDdevImportDB(t *testing.T) {
 			assert.NoError(err)
 			out, _, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
-				Cmd:     fmt.Sprintf(`echo "SELECT COUNT(*) AS TOTALNUMBEROFTABLES FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db),
+				Cmd:     c[dbType],
 			})
 			assert.NoError(err)
 			assert.Equal("2\n", out)

@@ -77,12 +77,6 @@ ALTER TABLE ONLY public.stdintable ALTER COLUMN uid SET DEFAULT nextval('public.
 COPY public.stdintable (uid, uuid, langcode) FROM stdin;
 0	e6b6f38b-3133-474a-b1b0-35a6459ef010	en
 1	6c3ec872-f73e-4074-bfd3-029633935e26	en
-2	459dc762-7f8f-4d10-a4cb-48121b7aa65c	en
-3	2ea4cb47-0460-4853-b6ad-77c5bdbd33b2	en
-4	1697002f-9dad-4351-8a17-8c9e0d4557be	en
-5	84eea205-8451-4a53-a17d-9c8227fd4378	en
-6	e6761cb5-1867-40e7-959e-9541a37c8c79	en
-7	88ced13c-527b-453e-bd03-412147ea92a2	en
 \.
 
 

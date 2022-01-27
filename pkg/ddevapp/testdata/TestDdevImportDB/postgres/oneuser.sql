@@ -21,10 +21,10 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: db
+-- Name: users_just_one; Type: TABLE; Schema: public; Owner: db
 --
 
-CREATE TABLE public.users (
+CREATE TABLE public.users_just_one (
     uid integer NOT NULL,
     uuid character varying(128) NOT NULL,
     langcode character varying(12) NOT NULL,
@@ -32,13 +32,13 @@ CREATE TABLE public.users (
 );
 
 
-ALTER TABLE public.users OWNER TO db;
+ALTER TABLE public.users_just_one OWNER TO db;
 
 --
--- Name: TABLE users; Type: COMMENT; Schema: public; Owner: db
+-- Name: TABLE users_just_one; Type: COMMENT; Schema: public; Owner: db
 --
 
-COMMENT ON TABLE public.users IS 'The base table for user entities.';
+COMMENT ON TABLE public.users_just_one IS 'The base table for user entities.';
 
 
 --
@@ -60,21 +60,21 @@ ALTER TABLE public.users_uid_seq OWNER TO db;
 -- Name: users_uid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: db
 --
 
-ALTER SEQUENCE public.users_uid_seq OWNED BY public.users.uid;
+ALTER SEQUENCE public.users_uid_seq OWNED BY public.users_just_one.uid;
 
 
 --
--- Name: users uid; Type: DEFAULT; Schema: public; Owner: db
+-- Name: users_just_one uid; Type: DEFAULT; Schema: public; Owner: db
 --
 
-ALTER TABLE ONLY public.users ALTER COLUMN uid SET DEFAULT nextval('public.users_uid_seq'::regclass);
+ALTER TABLE ONLY public.users_just_one ALTER COLUMN uid SET DEFAULT nextval('public.users_uid_seq'::regclass);
 
 
 --
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: db
+-- Data for Name: users_just_one; Type: TABLE DATA; Schema: public; Owner: db
 --
 
-COPY public.users (uid, uuid, langcode) FROM stdin;
+COPY public.users_just_one (uid, uuid, langcode) FROM stdin;
 0	21ac33ef-45f8-44c2-b766-c4bb2f061a29	en
 \.
 
@@ -87,18 +87,18 @@ SELECT pg_catalog.setval('public.users_uid_seq', 7, true);
 
 
 --
--- Name: users users____pkey; Type: CONSTRAINT; Schema: public; Owner: db
+-- Name: users_just_one users____pkey; Type: CONSTRAINT; Schema: public; Owner: db
 --
 
-ALTER TABLE ONLY public.users
+ALTER TABLE ONLY public.users_just_one
     ADD CONSTRAINT users____pkey PRIMARY KEY (uid);
 
 
 --
--- Name: users users__user_field__uuid__value__key; Type: CONSTRAINT; Schema: public; Owner: db
+-- Name: users_just_one users__user_field__uuid__value__key; Type: CONSTRAINT; Schema: public; Owner: db
 --
 
-ALTER TABLE ONLY public.users
+ALTER TABLE ONLY public.users_just_one
     ADD CONSTRAINT users__user_field__uuid__value__key UNIQUE (uuid);
 
 
