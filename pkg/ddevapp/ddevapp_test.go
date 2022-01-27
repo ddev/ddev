@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"sort"
 	"strconv"
@@ -1573,97 +1574,133 @@ func TestDdevExportDB(t *testing.T) {
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
 	assert.NoError(err)
-	err = app.Start()
-	assert.NoError(err)
-	//nolint: errcheck
-	defer app.Stop(true, false)
-	importPath := filepath.Join(testDir, "testdata", t.Name(), "users.sql")
-	err = app.ImportDB(importPath, "", false, false, "db")
-	require.NoError(t, err)
 
-	_ = os.Mkdir("tmp", 0777)
-	// Most likely reason for failure is it exists, so let that go
-	err = fileutil.PurgeDirectory("tmp")
-	assert.NoError(err)
-
-	// Test that we can export-db to a plain file. This should be larger than
-	// the gzipped file we'll do next.
-	err = app.ExportDB("tmp/users1.sql", false, "db")
-	assert.NoError(err)
-
-	// The users1.sql should be something over 2K
-	// and should finish with "Dump completed on"
-	f, err := os.Stat("tmp/users1.sql")
-	assert.NoError(err)
-	assert.Greater(f.Size(), int64(2000))
-	l, err := readLastLine("tmp/users1.sql")
-	assert.NoError(err)
-	assert.Contains(l, "-- Dump completed on")
-
-	// Now rename our (larger) users1.sql to users1.sql.gz
-	// so we can overwrite it and come out with a totally valid new file.
-	err = os.Rename("tmp/users1.sql", "tmp/users1.sql.gz")
-	assert.NoError(err)
-
-	// Test that we can export-db to an existing gzipped file
-	err = app.ExportDB("tmp/users1.sql.gz", true, "db")
-	assert.NoError(err)
-
-	// The new gzipped file should be less than 1K
-	f, err = os.Stat("tmp/users1.sql.gz")
-	assert.NoError(err)
-	assert.Less(f.Size(), int64(1000))
-
-	// Validate contents
-	err = archive.Ungzip("tmp/users1.sql.gz", "tmp")
-	assert.NoError(err)
-	stringFound, err := fileutil.FgrepStringInFile("tmp/users1.sql", "Table structure for table `users`")
-	assert.NoError(err)
-	assert.True(stringFound)
-
-	// Flush needs to be complete before purge or may conflict with mutagen on windows
-	err = app.MutagenSyncFlush()
-	assert.NoError(err)
-	err = fileutil.PurgeDirectory("tmp")
-	assert.NoError(err)
-
-	// Export to an ungzipped file and validate
-	err = app.ExportDB("tmp/users2.sql", false, "db")
-	assert.NoError(err)
-
-	// Validate contents
-	stringFound, err = fileutil.FgrepStringInFile("tmp/users2.sql", "Table structure for table `users`")
-	assert.NoError(err)
-	assert.True(stringFound)
-
-	err = app.MutagenSyncFlush()
-	assert.NoError(err)
-
-	err = fileutil.PurgeDirectory("tmp")
-	assert.NoError(err)
-
-	// Capture to stdout without gzip compression
-	stdout := util.CaptureStdOut()
-	err = app.ExportDB("", false, "db")
-	assert.NoError(err)
-	output := stdout()
-	assert.Contains(output, "Table structure for table `users`")
-
-	// Export an alternate database
-	importPath = filepath.Join(testDir, "testdata", t.Name(), "users.sql")
-	err = app.ImportDB(importPath, "", false, false, "anotherdb")
-	require.NoError(t, err)
-	err = app.ExportDB("tmp/anotherdb.sql.gz", true, "anotherdb")
-	assert.NoError(err)
-	importPath = "tmp/anotherdb.sql.gz"
-	err = app.ImportDB(importPath, "", false, false, "thirddb")
-	assert.NoError(err)
-	out, _, err := app.Exec(&ddevapp.ExecOpts{
-		Service: "db",
-		Cmd:     fmt.Sprintf(`echo "SELECT COUNT(*) FROM users;" | mysql -N thirddb`),
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		app.Database = ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}
+		err = app.WriteConfig()
+		assert.NoError(err)
 	})
-	assert.NoError(err)
-	assert.Equal("2\n", out)
+
+	for _, dbType := range []string{nodeps.MariaDB, nodeps.Postgres} {
+		err = app.Stop(true, false)
+		require.NoError(t, err)
+		app.Database = ddevapp.DatabaseDesc{
+			Type:    dbType,
+			Version: nodeps.MariaDBDefaultVersion,
+		}
+		if dbType == nodeps.Postgres {
+			app.Database.Version = nodeps.PostgresDefaultVersion
+		}
+		err = app.WriteConfig()
+		require.NoError(t, err)
+		err = app.Start()
+		require.NoError(t, err)
+
+		importPath := filepath.Join(testDir, "testdata", t.Name(), dbType, "users.sql")
+		err = app.ImportDB(importPath, "", false, false, "db")
+		require.NoError(t, err)
+
+		_ = os.Mkdir("tmp", 0777)
+		// Most likely reason for failure is it exists, so let that go
+		err = fileutil.PurgeDirectory("tmp")
+		assert.NoError(err)
+
+		// Test that we can export-db to a plain file. This should be larger than
+		// the gzipped file we'll do next.
+		err = app.ExportDB("tmp/users1.sql", false, "db")
+		assert.NoError(err)
+
+		// The users1.sql should be something over 2K
+		// and should finish with "Dump completed on"
+		f, err := os.Stat("tmp/users1.sql")
+		assert.NoError(err)
+		assert.Greater(f.Size(), int64(2000))
+		l, err := readLastLine("tmp/users1.sql")
+		assert.NoError(err)
+		assert.Contains(l, "ump complete")
+
+		// Now rename our (larger) users1.sql to users1.sql.gz
+		// so we can overwrite it and come out with a totally valid new file.
+		err = os.Rename("tmp/users1.sql", "tmp/users1.sql.gz")
+		assert.NoError(err)
+
+		// Test that we can export-db to an existing gzipped file
+		err = app.ExportDB("tmp/users1.sql.gz", true, "db")
+		assert.NoError(err)
+
+		// The new gzipped file should be less than 1K
+		f, err = os.Stat("tmp/users1.sql.gz")
+		assert.NoError(err)
+		assert.Less(f.Size(), int64(1500))
+
+		// Validate contents
+		err = archive.Ungzip("tmp/users1.sql.gz", "tmp")
+		assert.NoError(err)
+		stringFound, err := fileutil.FgrepStringInFile("tmp/users1.sql", "Table structure for table `users`")
+		assert.NoError(err)
+		if !stringFound {
+			stringFound, err = fileutil.FgrepStringInFile("tmp/users1.sql", "Name: users; Type: TABLE")
+			assert.NoError(err)
+		}
+		assert.True(stringFound)
+
+		// Flush needs to be complete before purge or may conflict with mutagen on windows
+		err = app.MutagenSyncFlush()
+		assert.NoError(err)
+		err = fileutil.PurgeDirectory("tmp")
+		assert.NoError(err)
+
+		// Export to an ungzipped file and validate
+		err = app.ExportDB("tmp/users2.sql", false, "db")
+		assert.NoError(err)
+
+		// Validate contents
+		stringFound, err = fileutil.FgrepStringInFile("tmp/users2.sql", "Table structure for table `users`")
+		assert.NoError(err)
+		if !stringFound {
+			stringFound, err = fileutil.FgrepStringInFile("tmp/users2.sql", "Name: users; Type: TABLE")
+			assert.NoError(err)
+		}
+		assert.True(stringFound)
+
+		err = app.MutagenSyncFlush()
+		assert.NoError(err)
+
+		err = fileutil.PurgeDirectory("tmp")
+		assert.NoError(err)
+
+		// Capture to stdout without gzip compression
+		stdout := util.CaptureStdOut()
+		err = app.ExportDB("", false, "db")
+		assert.NoError(err)
+		o := stdout()
+		assert.Regexp(regexp.MustCompile("CREATE TABLE.*users"), o)
+
+		// Export an alternate database
+		importPath = filepath.Join(testDir, "testdata", t.Name(), dbType, "users.sql")
+		err = app.ImportDB(importPath, "", false, false, "anotherdb")
+		require.NoError(t, err)
+		err = app.ExportDB("tmp/anotherdb.sql.gz", true, "anotherdb")
+		assert.NoError(err)
+		importPath = "tmp/anotherdb.sql.gz"
+		err = app.ImportDB(importPath, "", false, false, "thirddb")
+		assert.NoError(err)
+
+		c := map[string]string{
+			nodeps.MariaDB:  fmt.Sprintf(`echo "SELECT COUNT(*) FROM users;" | mysql -N thirddb`),
+			nodeps.Postgres: fmt.Sprintf(`echo "SELECT COUNT(*) FROM users;" | psql -U db -t -q thirddb`),
+		}
+		out, stderr, err := app.Exec(&ddevapp.ExecOpts{
+			Service: "db",
+			Cmd:     c[dbType],
+		})
+		assert.NoError(err, "stdout=%s stderr=%s", out, stderr)
+		out = strings.Trim(out, "\n")
+		out = strings.Trim(out, " ")
+		assert.Equal("2", out)
+	}
 
 	runTime()
 }
