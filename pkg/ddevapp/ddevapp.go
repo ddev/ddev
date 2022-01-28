@@ -575,9 +575,9 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 
 		// If there is no import path, we're getting it from stdin
 		if imPath == "" && extPath == "" {
-			inContainerCommand = [][]string{{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && (echo '%s' | psql -U db -d postgres) && psql -U db -v ON_ERROR_STOP=1 -d %s`, preImportSQL, targetDB)}}
+			inContainerCommand = [][]string{{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && (echo '%s' | psql -d postgres) && psql -v ON_ERROR_STOP=1 -d %s`, preImportSQL, targetDB)}}
 		} else { // otherwise getting it from mounted file
-			inContainerCommand = [][]string{{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && (echo "%s" | psql -q -U db -d postgres -v ON_ERROR_STOP=1) && pv %s/*.*sql | psql -q -U db -v ON_ERROR_STOP=1 %s >/dev/null`, preImportSQL, insideContainerImportPath, targetDB)}}
+			inContainerCommand = [][]string{{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && (echo "%s" | psql -q -d postgres -v ON_ERROR_STOP=1) && pv %s/*.*sql | psql -q -v ON_ERROR_STOP=1 %s >/dev/null`, preImportSQL, insideContainerImportPath, targetDB)}}
 		}
 	}
 	stdout, stderr, err := app.Exec(&ExecOpts{
@@ -1848,7 +1848,7 @@ func getBackupCommand(app *DdevApp, targetFile string) string {
 	case app.Database.Type == nodeps.MySQL:
 		c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | gzip > "%s"`, path.Base(targetFile), targetFile)
 	case app.Database.Type == nodeps.Postgres:
-		c = fmt.Sprintf("rm -rf /var/tmp/pgbackup && pg_basebackup -U db -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && tar -czf %s -C /var/tmp/pgbackup/ .", path.Base(targetFile), targetFile)
+		c = fmt.Sprintf("rm -rf /var/tmp/pgbackup && pg_basebackup -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && tar -czf %s -C /var/tmp/pgbackup/ .", path.Base(targetFile), targetFile)
 	}
 	return c
 }

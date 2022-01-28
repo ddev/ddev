@@ -1139,7 +1139,7 @@ func TestDdevImportDB(t *testing.T) {
 		require.NoError(t, err)
 
 		c[nodeps.MariaDB] = "mysql -N -e 'DROP DATABASE IF EXISTS test;'"
-		c[nodeps.Postgres] = fmt.Sprintf(`echo "SELECT 'DROP DATABASE test' WHERE EXISTS (SELECT FROM pg_database WHERE datname = 'test')\gexec" | psql -U db -v ON_ERROR_STOP=1 -d postgres`)
+		c[nodeps.Postgres] = fmt.Sprintf(`echo "SELECT 'DROP DATABASE test' WHERE EXISTS (SELECT FROM pg_database WHERE datname = 'test')\gexec" | psql -v ON_ERROR_STOP=1 -d postgres`)
 		out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
 			Cmd:     c[dbType],
@@ -1161,7 +1161,7 @@ func TestDdevImportDB(t *testing.T) {
 			}
 
 			c[nodeps.MariaDB] = `mysql -N -e 'SHOW TABLES;' | cat`
-			c[nodeps.Postgres] = `set -eu -o pipefail; psql -t -U db -v ON_ERROR_STOP=1 db -c '\dt' |awk -F' *\| *' '{ if (NF>2) print $2 }' `
+			c[nodeps.Postgres] = `set -eu -o pipefail; psql -t -v ON_ERROR_STOP=1 db -c '\dt' |awk -F' *\| *' '{ if (NF>2) print $2 }' `
 			// There should be exactly the one "users" table for each of these files
 			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
@@ -1171,7 +1171,7 @@ func TestDdevImportDB(t *testing.T) {
 			assert.Equal("users\n", out, "Failed to find users table for file %s, stdout='%s', stderr='%s'", file, out, stderr)
 
 			c[nodeps.MariaDB] = `mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql)$"`
-			c[nodeps.Postgres] = `psql -t -U db -c "SELECT datname FROM pg_database;" | egrep -v "template?|postgres"`
+			c[nodeps.Postgres] = `psql -t -c "SELECT datname FROM pg_database;" | egrep -v "template?|postgres"`
 
 			// Verify that no extra database was created
 			out, stderr, err = app.Exec(&ddevapp.ExecOpts{
@@ -1227,7 +1227,7 @@ func TestDdevImportDB(t *testing.T) {
 			assert.NoError(err)
 
 			c[nodeps.MariaDB] = fmt.Sprintf(`mysql -N %s -e "SHOW DATABASES LIKE '%s'; SELECT COUNT(*) from stdintable"`, db, db)
-			c[nodeps.Postgres] = fmt.Sprintf(`psql -t -U db -d %s -c "SELECT datname FROM pg_database WHERE datname='%s' ;" && psql -t -U db -d %s -c "SELECT COUNT(*) from stdintable"`, db, db, db)
+			c[nodeps.Postgres] = fmt.Sprintf(`psql -t -d %s -c "SELECT datname FROM pg_database WHERE datname='%s' ;" && psql -t -d %s -c "SELECT COUNT(*) from stdintable"`, db, db, db)
 
 			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
@@ -1244,7 +1244,7 @@ func TestDdevImportDB(t *testing.T) {
 			err = app.ImportDB(path, "", false, false, db)
 			assert.NoError(err)
 			c[nodeps.MariaDB] = fmt.Sprintf(`echo "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db)
-			c[nodeps.Postgres] = fmt.Sprintf(`bash -c "echo '\dt' | psql -t -U db -d %s | awk 'NF > 1'"`, db)
+			c[nodeps.Postgres] = fmt.Sprintf(`bash -c "echo '\dt' | psql -t -d %s | awk 'NF > 1'"`, db)
 			out, stderr, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "db",
 				Cmd:     c[dbType],
@@ -1296,7 +1296,7 @@ func TestDdevImportDB(t *testing.T) {
 	// Make sure database "test" does not exist initially
 	dbType := nodeps.MariaDB
 	c[nodeps.MariaDB] = "mysql -N -e 'DROP DATABASE IF EXISTS test;'"
-	c[nodeps.Postgres] = fmt.Sprintf(`echo "SELECT 'DROP DATABASE test' WHERE EXISTS (SELECT FROM pg_database WHERE datname = 'test')\gexec" | psql -U db -v ON_ERROR_STOP=1 -d postgres`)
+	c[nodeps.Postgres] = fmt.Sprintf(`echo "SELECT 'DROP DATABASE test' WHERE EXISTS (SELECT FROM pg_database WHERE datname = 'test')\gexec" | psql -v ON_ERROR_STOP=1 -d postgres`)
 	out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
 		Cmd:     c[dbType],
@@ -1533,7 +1533,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		c := map[string]string{
 			nodeps.MySQL:    fmt.Sprintf(`echo "DELETE FROM users;" | mysql`),
 			nodeps.MariaDB:  fmt.Sprintf(`echo "DELETE FROM users;" | mysql`),
-			nodeps.Postgres: fmt.Sprintf(`echo "DELETE FROM users;" | psql -U db`),
+			nodeps.Postgres: fmt.Sprintf(`echo "DELETE FROM users;" | psql`),
 		}
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
@@ -1561,7 +1561,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		c = map[string]string{
 			nodeps.MySQL:    `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
 			nodeps.MariaDB:  `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
-			nodeps.Postgres: `echo "SELECT COUNT(*) FROM users;" | psql -U db -t`,
+			nodeps.Postgres: `echo "SELECT COUNT(*) FROM users;" | psql -t`,
 		}
 		out, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
@@ -1707,7 +1707,7 @@ func TestDdevExportDB(t *testing.T) {
 
 		c := map[string]string{
 			nodeps.MariaDB:  fmt.Sprintf(`echo "SELECT COUNT(*) FROM users;" | mysql -N thirddb`),
-			nodeps.Postgres: fmt.Sprintf(`echo "SELECT COUNT(*) FROM users;" | psql -U db -t -q thirddb`),
+			nodeps.Postgres: fmt.Sprintf(`echo "SELECT COUNT(*) FROM users;" | psql -t -q thirddb`),
 		}
 		out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "db",

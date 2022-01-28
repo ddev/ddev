@@ -58,6 +58,10 @@ services:
       - IS_DDEV_PROJECT=true
       - LINES
       - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-db/mysql_history
+      - PGDATABASE=db
+      - PGHOST=localhost
+      - PGPASSWORD=db
+      - PGUSER=db
       - POSTGRES_PASSWORD=db
       - POSTGRES_USER=db
       - POSTGRES_DB=db
@@ -178,6 +182,10 @@ services:
     - IS_DDEV_PROJECT=true
     - LINES
     - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-web/mysql_history
+    - PGDATABASE=db
+    - PGHOST=db
+    - PGPASSWORD=db
+    - PGUSER=db
     - PHP_IDE_CONFIG=serverName=${DDEV_SITENAME}.${DDEV_TLD}
     - SSH_AUTH_SOCK=/home/.ssh-agent/socket
     - TZ={{ .Timezone }}
