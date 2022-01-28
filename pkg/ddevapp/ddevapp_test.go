@@ -3962,6 +3962,7 @@ func TestCustomCerts(t *testing.T) {
 // in the web container and on the host.
 func TestEnvironmentVariables(t *testing.T) {
 	assert := asrt.New(t)
+
 	origDir, _ := os.Getwd()
 	pwd, _ := os.Getwd()
 	customCmd := filepath.Join(pwd, "testdata", t.Name(), "showhostenvvar")
@@ -4044,7 +4045,8 @@ func TestEnvironmentVariables(t *testing.T) {
 		envVal, err := exec.RunHostCommand(DdevBin, "showhostenvvar", k)
 		assert.NoError(err, "could not run %s %s %s, result=%s", DdevBin, "showhostenvvar", k, envVal)
 		envVal = strings.Trim(envVal, "\r\n")
-		assert.Equal(v, envVal, "expected envvar $%s to equal '%s', but it was '%s'", k, v, envVal)
+		lines := strings.Split(envVal, "\n")
+		assert.Equal(v, lines[0], "expected envvar $%s to equal '%s', but it was '%s'", k, v, envVal)
 	}
 
 }
