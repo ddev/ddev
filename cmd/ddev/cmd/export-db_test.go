@@ -17,22 +17,26 @@ import (
 func TestCmdExportDB(t *testing.T) {
 	assert := asrt.New(t)
 
-	testDir, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 	site := TestSites[0]
-	cleanup := site.Chdir()
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
 
 	app, err := ddevapp.NewApp(site.Dir, false)
 	assert.NoError(err)
 
-	defer func() {
+	t.Cleanup(func() {
 		// Make sure all databases are back to default empty
-		_ = app.Stop(true, false)
-		_ = app.Start()
-		cleanup()
-	}()
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = app.Start()
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
 
 	// Read in a database
-	inputFileName := filepath.Join(testDir, "testdata", t.Name(), "users.sql")
+	inputFileName := filepath.Join(origDir, "testdata", t.Name(), "users.sql")
 	_ = os.MkdirAll("tmp", 0755)
 	// Run the import-db command with stdin coming from users.sql
 	command := exec.Command(DdevBin, "import-db", "-f="+inputFileName)
@@ -72,7 +76,7 @@ func TestCmdExportDB(t *testing.T) {
 
 	// Work with a non-default database named "nondefault"
 	// Read in a database
-	inputFileName = filepath.Join(testDir, "testdata", t.Name(), "nondefault.sql")
+	inputFileName = filepath.Join(origDir, "testdata", t.Name(), "nondefault.sql")
 	// Run the import-db command with stdin coming from users.sql
 	command = exec.Command(DdevBin, "import-db", site.Name, "-d=nondefault", "-f="+inputFileName)
 	importDBOutput, err = command.CombinedOutput()
@@ -88,7 +92,7 @@ func TestCmdExportDB(t *testing.T) {
 	command = exec.Command(DdevBin, "export-db", site.Name, "-d=nondefault", "-f="+outputFileName, "--gzip=false")
 	byteout, err = command.CombinedOutput()
 	assert.NoError(err, "export-db failure output=%s", string(byteout))
-	assert.Contains(string(byteout), fmt.Sprintf("Wrote database dump from %s database 'nondefault' to file %s in plain text format", site.Name, outputFileName))
+	assert.Contains(string(byteout), fmt.Sprintf("Wrote database dump from project '%s' database '%s' to file %s in plain text format", site.Name, "nondefault", outputFileName))
 	assert.FileExists(outputFileName)
 	assert.True(fileutil.FgrepStringInFile(outputFileName, "INSERT INTO `nondefault_table` VALUES (0,'13751eca-19cf-41c2-90d4-9363f3a07c45','en'),"))
 
