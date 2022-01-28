@@ -1832,9 +1832,7 @@ func getBackupCommand(app *DdevApp, targetFile string) string {
 	case app.Database.Type == nodeps.MariaDB && nodeps.ArrayContainsString(oldMariaVersions, app.Database.Version):
 		fallthrough
 	case app.Database.Type == nodeps.MySQL:
-		if nodeps.ArrayContainsString(oldMariaVersions, app.Database.Version) {
-			c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | gzip > "%s"`, path.Base(targetFile), targetFile)
-		}
+		c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | gzip > "%s"`, path.Base(targetFile), targetFile)
 	case app.Database.Type == nodeps.Postgres:
 		c = fmt.Sprintf("rm -rf /var/tmp/pgbackup && pg_basebackup -U db -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && tar -czf %s -C /var/tmp/pgbackup/ .", path.Base(targetFile), targetFile)
 	}

@@ -1531,6 +1531,7 @@ func TestDdevAllDatabases(t *testing.T) {
 
 		// Delete the user in the database so we can later verify snapshot restore
 		c := map[string]string{
+			nodeps.MySQL:    fmt.Sprintf(`echo "DELETE FROM users;" | mysql`),
 			nodeps.MariaDB:  fmt.Sprintf(`echo "DELETE FROM users;" | mysql`),
 			nodeps.Postgres: fmt.Sprintf(`echo "DELETE FROM users;" | psql -U db`),
 		}
@@ -1558,6 +1559,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		}
 
 		c = map[string]string{
+			nodeps.MySQL:    `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
 			nodeps.MariaDB:  `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
 			nodeps.Postgres: `echo "SELECT COUNT(*) FROM users;" | psql -U db -t`,
 		}
