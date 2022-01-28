@@ -54,8 +54,7 @@ ENV CAROOT /mnt/ddev-global-cache/mkcert
 ENV PHP_DEFAULT_VERSION="7.4"
 
 RUN wget -q -O - https://packages.blackfire.io/gpg.key | apt-key add -
-RUN echo "deb http://packages.blackfire.io/debian any ma
-in" > /etc/apt/sources.list.d/blackfire.list
+RUN echo "deb http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
 RUN apt-get update
 
 SHELL ["/bin/bash", "-c"]

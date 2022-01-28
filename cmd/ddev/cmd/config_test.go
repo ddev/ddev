@@ -363,39 +363,44 @@ func TestCmdDisasterConfig(t *testing.T) {
 	var err error
 	assert := asrt.New(t)
 
-	testDir, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 	// Make sure we're not allowed to config in home directory.
 	home, _ := os.UserHomeDir()
 	err = os.Chdir(home)
 	assert.NoError(err)
-	out, err := exec.RunCommand(DdevBin, []string{"config", "--project-type=php"})
+	out, err := exec.RunHostCommand(DdevBin, "config", "--project-type=php")
 	assert.Error(err)
 	assert.Contains(out, "not useful in")
-	_ = out
-
-	err = os.Chdir(testDir)
-	assert.NoError(err)
 
 	// Create a temporary directory and switch to it.
-	tmpdir := testcommon.CreateTmpDir(t.Name())
-	defer testcommon.CleanupDir(tmpdir)
-	defer testcommon.Chdir(tmpdir)()
-
-	// Create a project
-	_, err = exec.RunCommand(DdevBin, []string{"config", "--project-type=php"})
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	err = os.Chdir(tmpDir)
 	assert.NoError(err)
+	// Create a project
+	_, err = exec.RunHostCommand(DdevBin, "config", "--project-type=php", "--project-name="+t.Name())
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		_, err = exec.RunHostCommand(DdevBin, "delete", "-Oy", t.Name())
+		assert.NoError(err)
+		err = os.RemoveAll(tmpDir)
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+
 	subdirName := t.Name() + fileutil.RandomFilenameBase()
-	subdir := filepath.Join(tmpdir, subdirName)
+	subdir := filepath.Join(tmpDir, subdirName)
 	err = os.Mkdir(subdir, 0777)
 	assert.NoError(err)
 	err = os.Chdir(subdir)
 	assert.NoError(err)
 
 	// Make sure that ddev config in a subdir gives a warning
-	out, err = exec.RunCommand(DdevBin, []string{"config", "--project-type=php"})
+	out, err = exec.RunHostCommand(DdevBin, "config", "--project-type=php")
 	assert.NoError(err)
 	assert.Contains(out, "possible you wanted to")
-	assert.Contains(out, fmt.Sprintf("parent directory %s?", tmpdir))
+	assert.Contains(out, fmt.Sprintf("parent directory %s?", tmpDir))
 	assert.FileExists(filepath.Join(subdir, ".ddev/config.yaml"))
 }
 

@@ -418,15 +418,21 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	if pathErr != nil {
 		util.Failed("Failed to get absolute path to Docroot %s: %v", app.Docroot, pathErr)
 	}
-	if projectTypeArg == "" || projectTypeArg == detectedApptype { // Found an app, matches passed-in or no apptype passed
+
+	switch {
+	case (app.Type == "" || app.Type == nodeps.AppTypePHP) && (projectTypeArg == "" || projectTypeArg == detectedApptype): // Found an app, matches passed-in or no apptype passed
 		projectTypeArg = detectedApptype
+		app.Type = projectTypeArg
 		util.Success("Found a %s codebase at %s", detectedApptype, fullPath)
-	} else if projectTypeArg != "" { // apptype was passed, but we found no app at all
+	case projectTypeArg != "": // apptype was passed, but we found no app at all
+		app.Type = projectTypeArg
 		util.Warning("You have specified a project type of %s but no project of that type is found in %s", projectTypeArg, fullPath)
-	} else if projectTypeArg != "" && detectedApptype != projectTypeArg { // apptype was passed, app was found, but not the same type
+	case projectTypeArg != "" && detectedApptype != projectTypeArg: // apptype was passed, app was found, but not the same type
+		app.Type = projectTypeArg
 		util.Warning("You have specified a project type of %s but a project of type %s was discovered in %s", projectTypeArg, detectedApptype, fullPath)
+	case app.Type != "" && detectedApptype != app.Type: // apptype was not passed, but we found an app of a different type
+		util.Warning("A project of type %s was found in %s, but the project is configured with type=%s", detectedApptype, fullPath, app.Type)
 	}
-	app.Type = projectTypeArg
 
 	// App overrides are done after app type is detected, but
 	// before user-defined flags are set.

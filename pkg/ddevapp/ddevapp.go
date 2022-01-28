@@ -835,7 +835,7 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 			}
 		}
 
-		output.UserOut.Printf("=== Running task: %s, output below", a.GetDescription())
+		output.UserOut.Debugf("=== Running task: %s, output below", a.GetDescription())
 
 		err := a.Execute()
 

@@ -1180,7 +1180,7 @@ func TestDdevImportDB(t *testing.T) {
 			})
 			assert.NoError(err)
 			out = strings.Trim(out, " \n")
-			assert.Equal("db", out, "found extra database, out=%s, stderr=%s", out, stderr)
+			assert.Equal("db", out, "found extra database, dbType=%s dbVersion=%s out=%s, stderr=%s", dbType, app.Database.Version, out, stderr)
 		}
 
 		// Test that a settings file has correct hash_salt format
