@@ -420,13 +420,17 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 	}
 	var extPathPrompt bool
 	dbPath, err := os.MkdirTemp(filepath.Dir(app.ConfigPath), ".importdb")
+	if err != nil {
+		return err
+	}
+	err = os.Chmod(dbPath, 0777)
+	if err != nil {
+		return err
+	}
 
 	defer func() {
 		_ = os.RemoveAll(dbPath)
 	}()
-	if err != nil {
-		return err
-	}
 
 	err = app.ProcessHooks("pre-import-db")
 	if err != nil {
