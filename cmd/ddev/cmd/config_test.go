@@ -54,30 +54,42 @@ func TestCmdConfigHooks(t *testing.T) {
 func TestConfigDescribeLocation(t *testing.T) {
 	assert := asrt.New(t)
 
+	origDir, _ := os.Getwd()
 	// Create a temporary directory and switch to it.
-	tmpdir := testcommon.CreateTmpDir("config-show-location")
-	defer testcommon.CleanupDir(tmpdir)
-	defer testcommon.Chdir(tmpdir)()
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	err := os.Chdir(tmpDir)
+	assert.NoError(err)
 
-	// Create a config
-	args := []string{"config", "--docroot=."}
-	out, err := exec.RunCommand(DdevBin, args)
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		out, err := exec.RunHostCommand(DdevBin, "delete", "-Oy", t.Name())
+		assert.NoError(err, "output=%s", out)
+		err = os.RemoveAll(tmpDir)
+		assert.NoError(err)
+
+	})
+	out, err := exec.RunHostCommand(DdevBin, "config", "--docroot=.", "--project-name="+t.Name())
 	assert.NoError(err)
 	assert.Contains(string(out), "Found a php codebase")
 
 	// Now see if we can detect it
-	args = []string{"config", "--show-config-location"}
-	out, err = exec.RunCommand(DdevBin, args)
+	out, err = exec.RunHostCommand(DdevBin, "config", "--show-config-location")
 	assert.NoError(err)
-	assert.Contains(string(out), tmpdir)
+	assert.Contains(string(out), tmpDir)
 
 	// Now try it in a directory that doesn't have a config
-	tmpdir = testcommon.CreateTmpDir("config_show_location")
-	defer testcommon.CleanupDir(tmpdir)
-	defer testcommon.Chdir(tmpdir)()
+	tmpDir = testcommon.CreateTmpDir(t.Name())
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = os.RemoveAll(tmpDir)
+		assert.NoError(err)
+	})
+	err = os.Chdir(tmpDir)
+	assert.NoError(err)
 
-	args = []string{"config", "--show-config-location"}
-	out, err = exec.RunCommand(DdevBin, args)
+	out, err = exec.RunHostCommand(DdevBin, "config", "--show-config-location")
 	assert.Error(err)
 	assert.Contains(string(out), "No project configuration currently exists")
 }
@@ -119,25 +131,35 @@ func TestConfigWithSitenameFlagDetectsDocroot(t *testing.T) {
 // TestConfigSetValues sets all available configuration values using command flags, then confirms that the
 // values have been correctly written to the config file.
 func TestConfigSetValues(t *testing.T) {
-	var err error
 	assert := asrt.New(t)
 
+	origDir, _ := os.Getwd()
+
 	// Create a temporary directory and switch to it.
-	tmpdir := testcommon.CreateTmpDir(t.Name())
-	defer testcommon.CleanupDir(tmpdir)
-	defer testcommon.Chdir(tmpdir)()
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	err := os.Chdir(tmpDir)
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		out, err := exec.RunHostCommand(DdevBin, "delete", "-Oy", t.Name())
+		assert.NoError(err, "output=%s", out)
+		err = os.RemoveAll(tmpDir)
+		assert.NoError(err)
+	})
 
 	// Create an existing docroot
 	docroot := "web"
-	if err = os.MkdirAll(filepath.Join(tmpdir, docroot), 0755); err != nil {
-		t.Errorf("Could not create docroot %s in %s", docroot, tmpdir)
+	if err = os.MkdirAll(filepath.Join(tmpDir, docroot), 0755); err != nil {
+		t.Errorf("Could not create docroot %s in %s", docroot, tmpDir)
 	}
 
-	err = os.Chdir(tmpdir)
+	err = os.Chdir(tmpDir)
 	assert.NoError(err)
 
 	// Build config args
-	projectName := "my-project-name"
+	projectName := t.Name()
 	projectType := nodeps.AppTypeTYPO3
 	phpVersion := nodeps.PHP71
 	httpPort := "81"
@@ -205,10 +227,10 @@ func TestConfigSetValues(t *testing.T) {
 		"--timezone", timezone,
 	}
 
-	out, err := exec.RunCommand(DdevBin, args)
+	out, err := exec.RunHostCommand(DdevBin, args...)
 	assert.NoError(err, "error running ddev %v: %v, output=%s", args, err, out)
 
-	configFile := filepath.Join(tmpdir, ".ddev", "config.yaml")
+	configFile := filepath.Join(tmpDir, ".ddev", "config.yaml")
 	configContents, err := os.ReadFile(configFile)
 	if err != nil {
 		t.Errorf("Unable to read %s: %v", configFile, err)
@@ -259,7 +281,7 @@ func TestConfigSetValues(t *testing.T) {
 		"--dba-working-dir-default",
 	}
 
-	_, err = exec.RunCommand(DdevBin, args)
+	_, err = exec.RunHostCommand(DdevBin, args...)
 	assert.NoError(err)
 
 	configContents, err = os.ReadFile(configFile)
@@ -281,7 +303,7 @@ func TestConfigSetValues(t *testing.T) {
 		"--dba-working-dir", dbaWorkingDir,
 	}
 
-	_, err = exec.RunCommand(DdevBin, args)
+	_, err = exec.RunHostCommand(DdevBin, args...)
 	assert.NoError(err)
 
 	args = []string{
@@ -290,7 +312,7 @@ func TestConfigSetValues(t *testing.T) {
 		"--working-dir-defaults",
 	}
 
-	_, err = exec.RunCommand(DdevBin, args)
+	_, err = exec.RunHostCommand(DdevBin, args...)
 	assert.NoError(err)
 
 	configContents, err = os.ReadFile(configFile)
