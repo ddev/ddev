@@ -306,7 +306,7 @@ func TestMain(m *testing.M) {
 		_, err = exec.RunHostCommand("sh", "-c", fmt.Sprintf("%s debug download-images >/dev/null", DdevBin))
 		if err != nil {
 			testRun = -1
-			log.Errorf("TestMain startup: failed to download-images, site %s in dir %s: %v", TestSites[i].Name, TestSites[i].Dir, err)
+			log.Warnf("TestMain startup: failed to ddev debug download-images, site %s in dir %s: %v", TestSites[i].Name, TestSites[i].Dir, err)
 			continue
 		}
 

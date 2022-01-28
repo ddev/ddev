@@ -507,6 +507,11 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 			return err
 		}
 		uid, _, _ := util.GetContainerUIDGid()
+		// for postgres, must be written with postgres user
+		if app.Database.Type == nodeps.Postgres {
+			uid = "999"
+		}
+
 		insideContainerImportPath, _, err = dockerutil.Exec(dbContainerName, "mktemp -d", uid)
 		if err != nil {
 			return err
@@ -542,11 +547,11 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 
 		// Case for reading from file
 		inContainerCommand = append(inContainerCommand, []string{"mysql", "-uroot", "-proot", "-e", preImportSQL})
-		inContainerCommand = append(inContainerCommand, []string{"bash", "-c", fmt.Sprintf(`pv %s/*.*sql |  perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, insideContainerImportPath, "`", targetDB)})
+		inContainerCommand = append(inContainerCommand, []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && pv %s/*.*sql |  perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, insideContainerImportPath, "`", targetDB)})
 
 		// Alternate case where we are reading from stdin
 		if imPath == "" && extPath == "" {
-			inContainerCommand = [][]string{{"bash", "-c", fmt.Sprintf(`mysql -uroot -proot -e "%s" && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, "`", targetDB)}}
+			inContainerCommand = [][]string{{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && mysql -uroot -proot -e "%s" && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, "`", targetDB)}}
 		}
 
 	case nodeps.Postgres:
@@ -566,9 +571,9 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 
 		// If there is no import path, we're getting it from stdin
 		if imPath == "" && extPath == "" {
-			inContainerCommand = [][]string{{"bash", "-c", fmt.Sprintf(`(echo '%s' | psql -U db -d postgres) && psql -U db -v ON_ERROR_STOP=1 -d %s`, preImportSQL, targetDB)}}
+			inContainerCommand = [][]string{{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && (echo '%s' | psql -U db -d postgres) && psql -U db -v ON_ERROR_STOP=1 -d %s`, preImportSQL, targetDB)}}
 		} else { // otherwise getting it from mounted file
-			inContainerCommand = [][]string{{"bash", "-c", fmt.Sprintf(`(echo "%s" | psql -q -U db -d postgres -v ON_ERROR_STOP=1) && pv %s/*.*sql | psql -q -U db -v ON_ERROR_STOP=1 %s >/dev/null`, preImportSQL, insideContainerImportPath, targetDB)}}
+			inContainerCommand = [][]string{{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && (echo "%s" | psql -q -U db -d postgres -v ON_ERROR_STOP=1) && pv %s/*.*sql | psql -q -U db -v ON_ERROR_STOP=1 %s >/dev/null`, preImportSQL, insideContainerImportPath, targetDB)}}
 		}
 	}
 	stdout, stderr, err := app.Exec(&ExecOpts{
@@ -1992,6 +1997,10 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	// With bind mounts, they'll already be there in the /mnt/ddev_config/db_snapshots folder
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
 		uid, _, _ := util.GetContainerUIDGid()
+		// for postgres, must be written with postgres user
+		if app.Database.Type == nodeps.Postgres {
+			uid = "999"
+		}
 
 		// If the snapshot is an old-style directory-based snapshot, then we have to copy into a subdirectory
 		// named for the snapshot
