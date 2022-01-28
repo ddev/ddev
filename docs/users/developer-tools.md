@@ -111,6 +111,8 @@ The port referenced is unique per running project, and randomly chosen from avai
 
 You can force this port to be the same on every `ddev start` by setting `host_db_port` in the project .ddev/config.yaml. For example, `host_db_port: "49156"` or `ddev config --host-db-port=49156`. This value needs to be different on each running DDEV project, and unless it is set, the database port will change on every `ddev start`.
 
+You can use this port with various tools that need a direct port, like `mysql` or `psql` clients, but it's usually easiest to use `ddev mysql`, `ddev psql`, `ddev sequelace`, `ddev tableplus`, etc, which set everything up for you.
+
 ### Using Drush 8 installed Installation on the Host Computer
 
 **Warning:** Using drush on the host is discouraged, and you'll have some trouble with it. It's also mostly irrelevant for Drupal8, as you should be using composer-installed project-level drush.

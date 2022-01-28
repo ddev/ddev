@@ -10,7 +10,7 @@ Each of these commands has full help. For example, `ddev start -h` or `ddev help
 * `ddev start` and `ddev stop` start and stop the containers that comprise a project. `ddev restart` just does a stop and a start. `ddev poweroff` stops all ddev-related containers and projects.
 * `ddev describe` or `ddev describe <projectname>` gives you full details about the project, what ports it uses, how to access them, etc. (Change the format with `ddev config global --table-style=bright` or `bold` or `default`)
 * `ddev list` shows running projects. (Change the format with `ddev config global --table-style=bright` or `bold` or `default`)
-* `ddev mysql` gives direct access to the mysql client
+* `ddev mysql` gives direct access to the mysql client and `ddev psql` to the PostgreSQL `psql` client.
 * `ddev sequelpro`, `ddev sequelace`, and `ddev tableplus` (macOS only, if the app is installed) give access to the Sequel Pro, Sequel Ace, or TablePlus database browser GUIs.
 * `ddev heidisql` (Windows/WSL2 only, if installed) gives access to the HeidiSQL database browser GUI.
 * `ddev import-db` and `ddev export-db` let you import or export a sql or compressed sql file.
