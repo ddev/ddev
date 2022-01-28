@@ -1036,10 +1036,15 @@ func (app *DdevApp) Start() error {
 	// The db_snapshots subdirectory may be created on docker-compose up, so
 	// we need to precreate it so permissions are correct (and not root:root)
 	if !fileutil.IsDirectory(app.GetConfigPath("db_snapshots")) {
-		err = os.MkdirAll(app.GetConfigPath("db_snapshots"), 0755)
+		err = os.MkdirAll(app.GetConfigPath("db_snapshots"), 0777)
 		if err != nil {
 			return err
 		}
+	}
+	// db_snapshots gets mounted into container, may have different user/group, so need 777
+	err = os.Chmod(app.GetConfigPath("db_snapshots"), 0777)
+	if err != nil {
+		return err
 	}
 
 	_, _, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "up", "--build", "-d")
