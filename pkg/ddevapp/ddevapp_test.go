@@ -3733,45 +3733,69 @@ func TestHostDBPort(t *testing.T) {
 		err = os.RemoveAll(showportPath)
 		assert.NoError(err)
 	})
+	clientTool := ""
 
 	// Make sure that everything works with and without
 	// an explicitly specified hostDBPort
-	for _, hostDBPort := range []string{"", "9998"} {
-		app.HostDBPort = hostDBPort
-
-		err = app.Start()
-		require.NoError(t, err)
-
-		desc, err := app.Describe(false)
-		assert.NoError(err)
-
-		dockerIP, err := dockerutil.GetDockerIP()
-		assert.NoError(err)
-		dbinfo := desc["dbinfo"].(map[string]interface{})
-		dbPort := dbinfo["published_port"].(int)
-		dbPortStr := strconv.Itoa(dbPort)
-
-		if app.HostDBPort != "" {
-			assert.EqualValues(app.HostDBPort, dbPortStr)
+	for _, dbType := range []string{nodeps.MariaDB, nodeps.Postgres} {
+		switch dbType {
+		case nodeps.MariaDB:
+			clientTool = "mysql"
+			app.Database = ddevapp.DatabaseDesc{Type: dbType, Version: nodeps.MariaDBDefaultVersion}
+		case nodeps.Postgres:
+			clientTool = "psql"
+			app.Database = ddevapp.DatabaseDesc{Type: dbType, Version: nodeps.PostgresDefaultVersion}
 		}
 
-		if !util.IsCommandAvailable("mysql") {
-			t.Log("Skipping mysql check because mysql tool not available")
-		} else {
-			// Running mysql against the container ensures that we can get there via the values
-			// in ddev describe
-			out, err := exec.RunHostCommand("mysql", "--user=db", "--password=db", "--host="+dockerIP, fmt.Sprintf("--port=%d", dbPort), "--database=db", `--execute=SELECT 1;`)
-			assert.NoError(err, "Failed to run mysql: %v", out)
-			out = strings.Replace(out, "\r", "", -1)
-			assert.Contains(out, "1\n1\n")
-		}
+		for _, hostDBPort := range []string{"", "9998"} {
+			app.HostDBPort = hostDBPort
+			err = app.Stop(true, false)
+			require.NoError(t, err)
+			err = app.WriteConfig()
+			require.NoError(t, err)
+			err = app.Start()
+			require.NoError(t, err)
 
-		// Running the test host custom command "showport" ensures that the DDEV_HOST_DB_PORT
-		// is getting in there available to host custom commands.
-		_, _ = exec.RunHostCommand(DdevBin)
-		out, err := exec.RunHostCommand(DdevBin, "showport")
-		assert.NoError(err)
-		assert.EqualValues("DDEV_HOST_DB_PORT="+dbPortStr, strings.Trim(out, "\r\n"))
+			desc, err := app.Describe(false)
+			assert.NoError(err)
+
+			dockerIP, err := dockerutil.GetDockerIP()
+			assert.NoError(err)
+			dbinfo := desc["dbinfo"].(map[string]interface{})
+			dbPort := dbinfo["published_port"].(int)
+			dbPortStr := strconv.Itoa(dbPort)
+
+			if app.HostDBPort != "" {
+				assert.EqualValues(app.HostDBPort, dbPortStr)
+			}
+
+			if !util.IsCommandAvailable(clientTool) {
+				t.Logf("Skipping %s check because %s tool not available", clientTool, clientTool)
+			} else {
+				// Running mysql or psql against the container ensures that we can get there via the values
+				// in ddev describe
+				c := []string{"-N", "--user=db", "--password=db", "--host=" + dockerIP, fmt.Sprintf("--port=%d", dbPort), "--database=db", `--execute=SELECT 1;`}
+				if dbType == nodeps.Postgres {
+					_ = os.Setenv("PGPASSWORD", "db")
+					c = []string{"-U", "db", "-t", "--host=" + dockerIP, fmt.Sprintf("--port=%d", dbPort), "--dbname=db", "-c", `SELECT 1;`}
+				}
+
+				out, err := exec.RunHostCommand(clientTool, c...)
+				assert.NoError(err, "Failed to run %s %v: err=%v, out=%v", clientTool, c, err, out)
+				out = strings.ReplaceAll(out, "\r", "")
+				out = strings.ReplaceAll(out, " ", "")
+				lines := strings.Split(out, "\n")
+				assert.Equal("1", lines[0])
+			}
+
+			// Running the test host custom command "showport" ensures that the DDEV_HOST_DB_PORT
+			// is getting in there available to host custom commands.
+			_, _ = exec.RunHostCommand(DdevBin)
+			out, err := exec.RunHostCommand(DdevBin, "showport")
+			assert.NoError(err)
+			lines := strings.Split(out, "\n")
+			assert.EqualValues("DDEV_HOST_DB_PORT="+dbPortStr, strings.Trim(lines[0], "\r\n"), "dbType=%s, out=%s, err=%v", dbType, out, err)
+		}
 	}
 }
 
