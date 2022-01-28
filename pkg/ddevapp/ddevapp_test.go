@@ -2562,7 +2562,7 @@ func TestDdevExec(t *testing.T) {
 		},
 	})
 	assert.NoError(err)
-	assert.Contains(stdout, "phpstatus.php", "stdout=%s, stderr=%s", stdout, stderr)
+	assert.True(strings.HasPrefix(stdout, "html\n"), "stdout=%s, stderr=%s", stdout, stderr)
 	assert.Contains(stdout, "bin\netc\ngames", "stdout=%s, stderr=%s", stdout, stderr)
 
 	runTime()
