@@ -14,7 +14,7 @@ if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
 fi
 
 sudo apt-get -qq update
-sudo rm -f /usr/local/bin/jq && sudo apt-get -qq install -y mariadb-client postgresql-client zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev
+sudo rm -f /usr/local/bin/jq && sudo apt-get -qq install -y mysql-client postgresql-client zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev
 
 curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-arm64.zip && sudo unzip -o -d /usr/local/bin /tmp/ngrok.zip
 
