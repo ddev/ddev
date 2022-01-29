@@ -399,7 +399,7 @@ func TestDdevStart(t *testing.T) {
 		assert.NoError(err)
 
 		dockerIP, _ := dockerutil.GetDockerIP()
-		out, err := exec.RunHostCommand("mysql", "--user=db", "--password=db", "--port="+strconv.Itoa(dbPort), "--database=db", "--host="+dockerIP, "-e", "SELECT 1;")
+		out, err := exec.RunHostCommand("mysql", "--user=db", "--port="+strconv.Itoa(dbPort), "--database=db", "--host="+dockerIP, "-e", "SELECT 1;")
 		assert.NoError(err)
 		assert.Contains(out, "1")
 	} else {
@@ -3774,14 +3774,14 @@ func TestHostDBPort(t *testing.T) {
 			} else {
 				// Running mysql or psql against the container ensures that we can get there via the values
 				// in ddev describe
-				c := []string{"-N", "--user=db", "--password=db", "--host=" + dockerIP, fmt.Sprintf("--port=%d", dbPort), "--database=db", `--execute=SELECT 1;`}
+				c := fmt.Sprintf(
+					"export MYSQL_PWD=db; mysql -N --user=db --host=%s --port=%d --database=db -e 'SELECT 1;'", dockerIP, dbPort)
 				if dbType == nodeps.Postgres {
-					_ = os.Setenv("PGPASSWORD", "db")
-					c = []string{"-U", "db", "-t", "--host=" + dockerIP, fmt.Sprintf("--port=%d", dbPort), "--dbname=db", "-c", `SELECT 1;`}
+					c = fmt.Sprintf("export PGPASSWORD=db; psql -U db -t --host=%s --port=%d --dbname=db -c 'SELECT 1;'", dockerIP, dbPort)
 				}
 
-				out, err := exec.RunHostCommand(clientTool, c...)
-				assert.NoError(err, "Failed to run %s %v: err=%v, out=%v", clientTool, c, err, out)
+				out, err := exec.RunHostCommand("bash", "-c", c)
+				assert.NoError(err, "Failed to run%v: err=%v, out=%v", c, err, out)
 				out = strings.ReplaceAll(out, "\r", "")
 				out = strings.ReplaceAll(out, " ", "")
 				lines := strings.Split(out, "\n")
