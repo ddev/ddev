@@ -25,10 +25,10 @@ fi
 case $os in
 darwin)
     brew uninstall mutagen-io/mutagen/mutagen-beta mutagen-io/mutagen/mutagen || true
-    for item in drud/ddev/ddev golang golangci-lint libpq mariadb-client mkcert mkdocs; do
+    for item in drud/ddev/ddev golang golangci-lint libpq mkcert mkdocs; do
         brew upgrade $item || brew install $item || true
     done
-    brew link --force libpq mariadb-client
+    brew link --force libpq
     ;;
 windows)
     (yes | choco upgrade -y golang nodejs markdownlint-cli mkcert mkdocs postgresql) || true
@@ -39,7 +39,7 @@ linux)
     # homebrew is only on amd64
     if [ "$(arch)" = "x86_64" ]; then
       brew uninstall mutagen-beta mutagen || true
-      for item in drud/ddev/ddev golang mariadb-client mkcert mkdocs postgresql-client; do
+      for item in drud/ddev/ddev golang mkcert mkdocs postgresql-client; do
         brew upgrade $item || brew install $item || true
       done
     fi
