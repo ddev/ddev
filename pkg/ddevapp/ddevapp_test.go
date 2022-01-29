@@ -3807,6 +3807,8 @@ func TestPortSpecifications(t *testing.T) {
 	assert.NoError(err)
 	err = nospecApp.WriteConfig()
 	require.NoError(t, err)
+	err = globalconfig.ReadGlobalConfig()
+	require.NoError(t, err)
 	// Since host ports were not explicitly set in nospecApp, they shouldn't be in globalconfig.
 	require.Empty(t, globalconfig.DdevGlobalConfig.ProjectList[nospecApp.Name].UsedHostPorts)
 
