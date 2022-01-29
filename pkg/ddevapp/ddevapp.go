@@ -826,6 +826,13 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
+	// This is done early here so users won't see gitignored contents of .ddev for too long
+	// It also gets done by `ddev config`
+	err = PrepDdevDirectory(filepath.Dir(app.ConfigPath))
+	if err != nil {
+		util.Warning("Unable to PrepDdevDirectory: %v", err)
+	}
+
 	// The .ddev directory may still need to be populated, especially in tests
 	err = PopulateExamplesCommandsHomeadditions(app.Name)
 	if err != nil {
