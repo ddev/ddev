@@ -394,18 +394,6 @@ func TestDdevStart(t *testing.T) {
 		assert.True(check, "Container check on %s failed", containerType)
 	}
 
-	if util.IsCommandAvailable("mysql") {
-		dbPort, err := app.GetPublishedPort("db")
-		assert.NoError(err)
-
-		dockerIP, _ := dockerutil.GetDockerIP()
-		out, err := exec.RunHostCommand("mysql", "--user=db", "--port="+strconv.Itoa(dbPort), "--database=db", "--host="+dockerIP, "-e", "SELECT 1;")
-		assert.NoError(err)
-		assert.Contains(out, "1")
-	} else {
-		fmt.Print("TestDdevStart skipping check for local mysql connection because mysql command not in path")
-	}
-
 	err = app.Stop(true, false)
 	assert.NoError(err)
 
