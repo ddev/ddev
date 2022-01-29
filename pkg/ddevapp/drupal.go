@@ -49,7 +49,7 @@ func NewDrupalSettings(app *DdevApp) *DrupalSettings {
 		DatabasePassword: "db",
 		DatabaseHost:     "db",
 		DatabaseDriver:   "mysql",
-		DatabasePort:     GetPort(app, "db"),
+		DatabasePort:     GetInternalPort(app, "db"),
 		DatabasePrefix:   "",
 		HashSalt:         util.RandString(64),
 		Signature:        DdevFileSignature,
