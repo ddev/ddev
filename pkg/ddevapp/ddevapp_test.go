@@ -1747,6 +1747,9 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
+		err = app.Stop(true, false)
+		require.NoError(t, err)
+
 		// TestPkgPHP uses mostly stuff from Drupal6, but we'll set the type to php
 		if site.Name == "TestPkgPHP" {
 			app.Type = "php"
