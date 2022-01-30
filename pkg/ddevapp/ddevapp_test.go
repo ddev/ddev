@@ -3721,6 +3721,9 @@ func TestHostDBPort(t *testing.T) {
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
+		app.HostDBPort = ""
+		err = app.WriteConfig()
+		assert.NoError(err)
 		err = os.RemoveAll(showportPath)
 		assert.NoError(err)
 	})
@@ -3766,7 +3769,7 @@ func TestHostDBPort(t *testing.T) {
 				// Running mysql or psql against the container ensures that we can get there via the values
 				// in ddev describe
 				c := fmt.Sprintf(
-					"export MYSQL_PWD=db; mysql -N --user=db --password=db --host=%s --port=%d --database=db -e 'SELECT 1;'", dockerIP, dbPort)
+					"export MYSQL_PWD=db; mysql -N --user=db --host=%s --port=%d --database=db -e 'SELECT 1;'", dockerIP, dbPort)
 				if dbType == nodeps.Postgres {
 					c = fmt.Sprintf("export PGPASSWORD=db; psql -U db -t --host=%s --port=%d --dbname=db -c 'SELECT 1;'", dockerIP, dbPort)
 				}
