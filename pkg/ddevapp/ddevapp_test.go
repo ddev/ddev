@@ -71,8 +71,8 @@ var (
 		// 2: drupal7
 		{
 			Name:                          "TestPkgDrupal7", // Drupal D7
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-7.61.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-7.61/",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-7.87.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-7.87/",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.59.files.tar.gz",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.59-db.tar.gz",
 			FullSiteTarballURL:            "",
