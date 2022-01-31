@@ -50,6 +50,7 @@ We love to hear from our users and help them be successful with ddev. Support op
 * [ddev Documentation](https://ddev.readthedocs.io) and [faq](https://ddev.readthedocs.io/en/stable/users/faq/)
 * [ddev StackOverflow](https://stackoverflow.com/questions/tagged/ddev) for support and frequently asked questions. We respond quite quickly here and the results provide quite a library of user-curated solutions.
 * [ddev issue queue](https://github.com/drud/ddev/issues) for bugs and feature requests
+* [ddev Discord server](https://discord.gg/rAjrCcU6) for interactive, immediate community support.
 * The [gitter drud/ddev channel](https://gitter.im/drud/ddev) (it's easy to log in many different ways)
 * The `#ddev` channels in [Drupal Slack](https://drupal.org/slack), [TYPO3 Slack](https://my.typo3.org/index.php?id=35) for interactive, immediate community support.
 * [ddev-contrib](https://github.com/drud/ddev-contrib) repo provides a number of vetted user-contributed recipes for extending and using ddev. Your contributions are welcome.
