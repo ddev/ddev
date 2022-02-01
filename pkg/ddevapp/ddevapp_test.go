@@ -74,7 +74,7 @@ var (
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-7.87.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-7.87/",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.59.files.tar.gz",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.59-db.tar.gz",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.87-db.tar.gz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
 			Type:                          nodeps.AppTypeDrupal7,
