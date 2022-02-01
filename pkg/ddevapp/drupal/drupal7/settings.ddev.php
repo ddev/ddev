@@ -23,7 +23,7 @@ $databases['default']['default'] = array(
   'username' => "{{ $config.DatabaseUsername }}",
   'password' => "{{ $config.DatabasePassword }}",
   'host' => $host,
-  'driver' => $driver",
+  'driver' => $driver,
   'port' => $port,
   'prefix' => "{{ $config.DatabasePrefix }}",
 );
