@@ -538,7 +538,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 	// and in https://github.com/drud/ddev/issues/2787
 	// The backtick after USE is inserted via fmt.Sprintf argument because it seems there's
 	// no way to escape a backtick in a string literal.
-	inContainerCommand := [][]string{}
+	inContainerCommand := []string{}
 	preImportSQL := ""
 	switch app.Database.Type {
 	case nodeps.MySQL:
@@ -550,12 +550,11 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		}
 
 		// Case for reading from file
-		inContainerCommand = append(inContainerCommand, []string{"mysql", "-uroot", "-proot", "-e", preImportSQL})
-		inContainerCommand = append(inContainerCommand, []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && pv %s/*.*sql |  perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, insideContainerImportPath, "`", targetDB)})
+		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && mysql -uroot -proot -e "%s" && pv %s/*.*sql |  perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, insideContainerImportPath, "`", targetDB)}
 
 		// Alternate case where we are reading from stdin
 		if imPath == "" && extPath == "" {
-			inContainerCommand = [][]string{{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && mysql -uroot -proot -e "%s" && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, "`", targetDB)}}
+			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && mysql -uroot -proot -e "%s" && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, "`", targetDB)}
 		}
 
 	case nodeps.Postgres:
@@ -575,9 +574,9 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 
 		// If there is no import path, we're getting it from stdin
 		if imPath == "" && extPath == "" {
-			inContainerCommand = [][]string{{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && (echo '%s' | psql -d postgres) && psql -v ON_ERROR_STOP=1 -d %s`, preImportSQL, targetDB)}}
+			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && (echo '%s' | psql -d postgres) && psql -v ON_ERROR_STOP=1 -d %s`, preImportSQL, targetDB)}
 		} else { // otherwise getting it from mounted file
-			inContainerCommand = [][]string{{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && (echo "%s" | psql -q -d postgres -v ON_ERROR_STOP=1) && pv %s/*.*sql | psql -q -v ON_ERROR_STOP=1 %s >/dev/null`, preImportSQL, insideContainerImportPath, targetDB)}}
+			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && (echo "%s" | psql -q -d postgres -v ON_ERROR_STOP=1) && pv %s/*.*sql | psql -q -v ON_ERROR_STOP=1 %s >/dev/null`, preImportSQL, insideContainerImportPath, targetDB)}
 		}
 	}
 	stdout, stderr, err := app.Exec(&ExecOpts{
@@ -661,7 +660,7 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool, targetDB string) error {
 
 	opts := &ExecOpts{
 		Service:   "db",
-		RawCmd:    [][]string{exportCmd},
+		RawCmd:    exportCmd,
 		NoCapture: true,
 	}
 	if outFile != "" {
@@ -1236,7 +1235,7 @@ type ExecOpts struct {
 	// Cmd is the string to execute via bash/sh
 	Cmd string
 	// RawCmd is the array to execute if not using
-	RawCmd [][]string
+	RawCmd []string
 	// Nocapture if true causes use of ComposeNoCapture, so the stdout and stderr go right to stdout/stderr
 	NoCapture bool
 	// Tty if true causes a tty to be allocated
@@ -1301,7 +1300,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 			shell = "sh"
 		}
 		errcheck := "set -eu"
-		opts.RawCmd = append(opts.RawCmd, []string{shell, "-c", errcheck + ` && ( ` + opts.Cmd + `)`})
+		opts.RawCmd = []string{shell, "-c", errcheck + ` && ( ` + opts.Cmd + `)`}
 	}
 	files := []string{app.DockerComposeFullRenderedYAMLPath()}
 	if err != nil {
@@ -1319,18 +1318,16 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 
 	var stdoutResult, stderrResult string
 	var outRes, errRes string
-	for _, c := range opts.RawCmd {
-		r := append(baseComposeExecCmd, c...)
-		if opts.NoCapture || opts.Tty {
-			err = dockerutil.ComposeWithStreams(files, os.Stdin, stdout, stderr, r...)
-		} else {
-			outRes, errRes, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, r...)
-			stdoutResult = stdoutResult + outRes
-			stderrResult = stderrResult + errRes
-		}
-		if err != nil {
-			return stdoutResult, stderrResult, err
-		}
+	r := append(baseComposeExecCmd, opts.RawCmd...)
+	if opts.NoCapture || opts.Tty {
+		err = dockerutil.ComposeWithStreams(files, os.Stdin, stdout, stderr, r...)
+	} else {
+		outRes, errRes, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, r...)
+		stdoutResult = outRes
+		stderrResult = errRes
+	}
+	if err != nil {
+		return stdoutResult, stderrResult, err
 	}
 	hookErr := app.ProcessHooks("post-exec")
 	if hookErr != nil {
