@@ -909,6 +909,11 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
+	err = app.GeneratePostgresConfig()
+	if err != nil {
+		return err
+	}
+
 	err = app.PullContainerImages()
 	if err != nil {
 		util.Warning("Unable to pull docker images: %v", err)
@@ -955,12 +960,16 @@ func (app *DdevApp) Start() error {
 		return fmt.Errorf("failed to RunSimpleContainer to chown volumes: %v, output=%s", err, out)
 	}
 
-	// Chown the postgres volume; this shouldn't have to be a separate stanze, but the
+	// Chown the postgres volume; this shouldn't have to be a separate stanza, but the
 	// uid is 999 instead of current user
 	if app.Database.Type == nodeps.Postgres {
 		_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/postgresql/data", "999:999")}, []string{}, []string{}, []string{app.GetPostgresVolumeName() + ":/var/lib/postgresql/data"}, "", true, false, nil)
 		if err != nil {
 			return fmt.Errorf("failed to RunSimpleContainer to chown postgres volume: %v, output=%s", err, out)
+		}
+		err = dockerutil.CopyIntoVolume(app.GetConfigPath("postgres/postgresql.conf"), app.GetPostgresVolumeName(), "", "999", "", false)
+		if err != nil {
+			return fmt.Errorf("failed to copy postgres config to volume: %v", err)
 		}
 	}
 
@@ -1219,6 +1228,49 @@ func (app *DdevApp) GenerateWebserverConfig() error {
 		content := string(c)
 		docroot := path.Join("/var/www/html", app.Docroot)
 		err = fileutil.TemplateStringToFile(content, map[string]interface{}{"Docroot": docroot}, configPath)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (app *DdevApp) GeneratePostgresConfig() error {
+	if app.Database.Type != nodeps.Postgres {
+		return nil
+	}
+	// Prevent running as root for most cases
+	// We really don't want ~/.ddev to have root ownership, breaks things.
+	if os.Geteuid() == 0 {
+		output.UserOut.Warning("not generating postgres config files because running with root privileges")
+		return nil
+	}
+
+	var items = map[string]string{
+		"postgresql.conf": app.GetConfigPath(filepath.Join("postgres", "postgresql.conf")),
+	}
+	for _, configPath := range items {
+		err := os.MkdirAll(filepath.Dir(configPath), 0755)
+		if err != nil {
+			return err
+		}
+
+		if fileutil.FileExists(configPath) {
+			sigExists, err := fileutil.FgrepStringInFile(configPath, DdevFileSignature)
+			if err != nil {
+				return err
+			}
+			// If the signature doesn't exist, they have taken over the file, so return
+			if !sigExists {
+				return nil
+			}
+		}
+
+		c, err := bundledAssets.ReadFile(path.Join("postgres", app.Database.Version, "postgresql.conf"))
+		if err != nil {
+			return err
+		}
+		err = fileutil.TemplateStringToFile(string(c), nil, configPath)
 		if err != nil {
 			return err
 		}
