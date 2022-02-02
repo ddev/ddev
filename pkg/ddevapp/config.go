@@ -819,13 +819,11 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 
 	// Add .pgpass to homedir on postgres
 	extraDBContent := ""
-	extraDBPackages := []string{}
 	if app.Database.Type == nodeps.Postgres {
 		extraDBContent = fmt.Sprintf(`ENV PATH $PATH:/usr/lib/postgresql/$PG_MAJOR/bin
 RUN echo "*:*:db:db:db" > ~postgres/.pgpass && chown postgres:postgres ~postgres/.pgpass && chmod 600 ~postgres/.pgpass && chmod 777 /var/tmp && echo "restore_command = 'true'" >> /var/lib/postgresql/recovery.conf`)
-		extraDBPackages = append(app.DBImageExtraPackages, "less", "procps", "pv", "vim")
 	}
-	err = WriteBuildDockerfile(app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build/Dockerfile"), extraDBPackages, "", extraDBContent)
+	err = WriteBuildDockerfile(app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build/Dockerfile"), app.DBImageExtraPackages, "", extraDBContent)
 
 	if err != nil {
 		return "", err
@@ -886,6 +884,11 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 		contents = contents + `
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
 	}
+	// Packages we'd always like to have in each container, but don't error out if we don't get
+	// them, for example if no internet.
+	contents = contents + `
+RUN (apt-get update || true) && ( DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests less procps pv vim || true)
+`
 
 	// For webimage, update to latest composer.
 	if strings.Contains(fullpath, "webimageBuild") {
