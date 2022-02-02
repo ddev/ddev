@@ -821,7 +821,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	extraDBContent := ""
 	if app.Database.Type == nodeps.Postgres {
 		extraDBContent = fmt.Sprintf(`ENV PATH $PATH:/usr/lib/postgresql/$PG_MAJOR/bin
-RUN echo "*:*:db:db:db" > ~postgres/.pgpass && chown postgres:postgres ~postgres/.pgpass && chmod 600 ~postgres/.pgpass && chmod 777 /var/tmp && echo "restore_command = 'true'" >> /var/lib/postgresql/recovery.conf`)
+RUN echo "*:*:db:db:db" > ~postgres/.pgpass && chown postgres:postgres ~postgres/.pgpass && chmod 600 ~postgres/.pgpass && chmod 777 /var/tmp && ln -sf /mnt/ddev_config/postgres/postgresql.conf /etc/postgresql && echo "restore_command = 'true'" >> /var/lib/postgresql/recovery.conf`)
 	}
 	err = WriteBuildDockerfile(app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build/Dockerfile"), app.DBImageExtraPackages, "", extraDBContent)
 

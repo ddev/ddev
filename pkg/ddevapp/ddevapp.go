@@ -967,10 +967,6 @@ func (app *DdevApp) Start() error {
 		if err != nil {
 			return fmt.Errorf("failed to RunSimpleContainer to chown postgres volume: %v, output=%s", err, out)
 		}
-		err = dockerutil.CopyIntoVolume(app.GetConfigPath("postgres/postgresql.conf"), app.GetPostgresVolumeName(), "", "999", "", false)
-		if err != nil {
-			return fmt.Errorf("failed to copy postgres config to volume: %v", err)
-		}
 	}
 
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
