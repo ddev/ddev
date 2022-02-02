@@ -34,7 +34,7 @@ How can I show my local project to someone else?
 : It's often the case that we want a customer or coworker to be able to view our local environment, even if they're on a different machine, network, etc. There are [several ways to do this](topics/sharing.md). `ddev share` is one of the ways - it provides a link that anyone can view and so they can interact with your local project while you allow it. See `ddev share -h` for more information. It does require an account on [ngrok.com](https://ngrok.com).
 
 Can I use additional databases with DDEV?
-: Yes, you can create additional databases and manually do whatever you need on them. They are automatically created if you use `ddev import-db` with `--target-db`, for example `ddev import-db --target-db=extradb --src=.tarballs/extradb.sql.gz`. You can use `ddev mysql` for random queries, or also use the mysql client within `ddev ssh` or `ddev ssh -s db` as well.
+: Yes, you can create additional databases and manually do whatever you need on them. They are automatically created if you use `ddev import-db` with `--target-db`, for example `ddev import-db --target-db=extradb --src=.tarballs/extradb.sql.gz`. You can use `ddev mysql` or `ddev psql` for random queries, or also use the mysql/psql clients within `ddev ssh` or `ddev ssh -s db` as well.
 
 <a name="projects-communicate-with-each-other"></a>
 Can different projects communicate with each other?
@@ -49,7 +49,7 @@ Can different projects communicate with each other?
     ```
 
 How do I make DDEV match my production webserver environment?
-: You can change the PHP major version and choose between nginx+fpm (default) and apache+fpm and choose the MariaDB or MySQL version add [extra services like solr and memcached](extend/additional-services.md). You will not be able to make every detail match your production server, but with database server type and version, PHP version and webserver type you'll be close.
+: You can change the PHP major version and choose between nginx+fpm (default) and apache+fpm and choose the MariaDB/MySQL/Postgresql version add [extra services like solr and memcached](extend/additional-services.md). You will not be able to make every detail match your production server, but with database server type and version, PHP version and webserver type you'll be close.
 
 How do I completely destroy a project?
 : Use `ddev delete <project>` to destroy a project. By default, a `ddev snapshot` of your database is taken, but you can skip this using `ddev delete --omit-snapshot` or `ddev delete --omit-snapshot -y`, see `ddev delete -h` for options. It's up to you to then delete the code directory.
