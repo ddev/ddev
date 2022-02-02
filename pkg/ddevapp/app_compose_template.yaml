@@ -67,7 +67,7 @@ services:
       - POSTGRES_USER=db
       - POSTGRES_DB=db
       - TZ={{ .Timezone }}
-    command: "$DDEV_SNAPSHOT_RESTORE_COMMAND"
+    command: ${DDEV_DB_CONTAINER_COMMAND}
     healthcheck:
       {{ if eq .DBType "postgres" }}
       test: ["pg_isready"]

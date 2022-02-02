@@ -20,3 +20,6 @@ const (
 	Postgres11 = "11"
 	Postgres10 = "10"
 )
+
+// PostgresConfigFile is in-container location of postgres config
+const PostgresConfigFile = "/etc/postgresql/postgresql.conf"

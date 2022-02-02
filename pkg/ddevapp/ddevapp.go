@@ -1647,11 +1647,14 @@ func (app *DdevApp) DockerEnv() {
 		"IS_WSL2":                    isWSL2,
 	}
 
-	// Set the mariadb_local command to empty to prevent docker-compose from complaining normally.
-	// It's used for special startup on restoring to a snapshot.
-	if len(os.Getenv("DDEV_SNAPSHOT_RESTORE_COMMAND")) == 0 {
-		err := os.Setenv("DDEV_SNAPSHOT_RESTORE_COMMAND", "")
-		util.CheckErr(err)
+	// Set the DDEV_DB_CONTAINER_COMMAND command to empty to prevent docker-compose from complaining normally.
+	// It's used for special startup on restoring to a snapshot or for postgres.
+	if len(os.Getenv("DDEV_DB_CONTAINER_COMMAND")) == 0 {
+		v := ""
+		if app.Database.Type == nodeps.Postgres { // config_file spec for postgres
+			v = "-c config_file=/etc/postgresql/postgresql.conf"
+		}
+		envVars["DDEV_DB_CONTAINER_COMMAND"] = v
 	}
 
 	// Find out terminal dimensions
@@ -2077,11 +2080,11 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		if v < 12 {
 			targetConfName = "recovery.conf"
 		}
-		restoreCmd = fmt.Sprintf(`bash -c 'chmod 700 /var/lib/postgresql/data && rm -rf /var/lib/postgresql/data/* && tar -C /var/lib/postgresql/data -zxf /mnt/snapshots/%s && touch /var/lib/postgresql/data/recovery.signal && cat /var/lib/postgresql/recovery.conf >>/var/lib/postgresql/data/%s && postgres'`, snapshotName, targetConfName)
+		restoreCmd = fmt.Sprintf(`bash -c 'chmod 700 /var/lib/postgresql/data && rm -rf /var/lib/postgresql/data/* && tar -C /var/lib/postgresql/data -zxf /mnt/snapshots/%s && touch /var/lib/postgresql/data/recovery.signal && cat /var/lib/postgresql/recovery.conf >>/var/lib/postgresql/data/%s && postgres -c config_file=%s'`, snapshotName, targetConfName, nodeps.PostgresConfigFile)
 	}
-	_ = os.Setenv("DDEV_SNAPSHOT_RESTORE_COMMAND", restoreCmd)
+	_ = os.Setenv("DDEV_DB_CONTAINER_COMMAND", restoreCmd)
 	// nolint: errcheck
-	defer os.Unsetenv("DDEV_SNAPSHOT_RESTORE_COMMAND")
+	defer os.Unsetenv("DDEV_DB_CONTAINER_COMMAND")
 	err = app.Start()
 	if err != nil {
 		return fmt.Errorf("failed to start project for RestoreSnapshot: %v", err)
