@@ -795,6 +795,56 @@ func TestPHPOverrides(t *testing.T) {
 
 }
 
+// TestPostgresConfigOverride makes sure that overriding Postgres config works
+func TestPostgresConfigOverride(t *testing.T) {
+	assert := asrt.New(t)
+	origDir, _ := os.Getwd()
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	err := os.Chdir(tmpDir)
+	require.NoError(t, err)
+
+	app, err := NewApp(tmpDir, false)
+	require.NoError(t, err)
+	app.Name = t.Name()
+	app.Database = DatabaseDesc{Type: nodeps.Postgres, Version: nodeps.PostgresDefaultVersion}
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		_ = os.RemoveAll(tmpDir)
+	})
+
+	err = app.Start()
+	require.NoError(t, err)
+
+	out, stderr, err := app.Exec(&ExecOpts{
+		Service: "db",
+		Cmd:     `psql -t -c "SELECT setting FROM pg_settings WHERE name='max_connections'"`,
+	})
+	assert.NoError(err)
+	assert.Equal(" 100\n\n", out, "out: %s, stderr: %s", out, stderr)
+
+	cfg, err := fileutil.ReadFileIntoString(app.GetConfigPath("postgres/postgresql.conf"))
+	require.NoError(t, err)
+	cfg = strings.ReplaceAll(cfg, "#ddev-generated", "#")
+	cfg = strings.ReplaceAll(cfg, `max_connections = 100`, `max_connections = 200`)
+	err = fileutil.TemplateStringToFile(cfg, nil, app.GetConfigPath("postgres/postgresql.conf"))
+	require.NoError(t, err)
+	err = app.Restart()
+	require.NoError(t, err)
+	out, stderr, err = app.Exec(&ExecOpts{
+		Service: "db",
+		Cmd:     `psql -t -c "SELECT setting FROM pg_settings WHERE name='max_connections'"`,
+	})
+	assert.NoError(err)
+	assert.Equal(" 200\n\n", out, "out: %s, stderr: %s", out, stderr)
+
+}
+
 // TestExtraPackages tests to make sure that *extra_packages config.yaml directives
 // work (and are overridden by *-build/Dockerfile).
 func TestExtraPackages(t *testing.T) {
