@@ -387,6 +387,7 @@ proto
 provided
 provider
 ps
+psql
 public
 quickstart
 rc
