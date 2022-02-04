@@ -1510,7 +1510,10 @@ func TestDdevAllDatabases(t *testing.T) {
 
 		snapshotName := dbType + "_" + dbVersion + "_" + fileutil.RandomFilenameBase()
 		fullSnapshotName, err := app.Snapshot(snapshotName)
-		assert.NoError(err, "could not create snapshot %s for %s: %v output=%v", snapshotName, dbTypeVersion, err, fullSnapshotName)
+		if err != nil {
+			assert.NoError(err, "could not create snapshot %s for %s: %v output=%v", snapshotName, dbTypeVersion, err, fullSnapshotName)
+			continue
+		}
 
 		fi, err := os.Stat(app.GetConfigPath(filepath.Join("db_snapshots", fullSnapshotName)))
 		require.NoError(t, err)

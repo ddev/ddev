@@ -1887,7 +1887,7 @@ func getBackupCommand(app *DdevApp, targetFile string) string {
 
 	c := fmt.Sprintf(`mariabackup --backup --stream=mbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | gzip > "%s"`, path.Base(targetFile), targetFile)
 
-	oldMariaVersions := []string{"5.5", "10.0", "10.1"}
+	oldMariaVersions := []string{"5.5", "10.0"}
 
 	switch {
 	// Old mariadb versions don't have mariabackup, use xtrabackup for them as well as MySQL
