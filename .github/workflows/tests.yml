@@ -50,11 +50,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: GOTEST_SHORT setup - use "true" except for testfullsitesetup
-        run: |
-          if [ "${{ matrix.tests }}" != "testfullsitesetup" ]; then
-            echo "GOTEST_SHORT=true" >> $GITHUB_ENV
-          fi
+#      - name: GOTEST_SHORT setup - use "true" except for testfullsitesetup
+#        run: |
+#          if [ "${{ matrix.tests }}" != "testfullsitesetup" ]; then
+#            echo "GOTEST_SHORT=true" >> $GITHUB_ENV
+#          fi
 
       - name: Install Docker and deps (Linux)
         if: matrix.os == 'ubuntu-20.04'
