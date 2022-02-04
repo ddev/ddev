@@ -10,6 +10,7 @@ var ValidPostgresVersions = map[string]bool{
 	Postgres12: true,
 	Postgres11: true,
 	Postgres10: true,
+	Postgres9:  true,
 }
 
 // Postgres Versions
@@ -19,6 +20,7 @@ const (
 	Postgres12 = "12"
 	Postgres11 = "11"
 	Postgres10 = "10"
+	Postgres9  = "9"
 )
 
 // PostgresConfigDir is in-container location of postgres config

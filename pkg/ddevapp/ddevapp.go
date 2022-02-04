@@ -1652,7 +1652,7 @@ func (app *DdevApp) DockerEnv() {
 	if len(os.Getenv("DDEV_DB_CONTAINER_COMMAND")) == 0 {
 		v := ""
 		if app.Database.Type == nodeps.Postgres { // config_file spec for postgres
-			v = "-c config_file=/etc/postgresql/postgresql.conf"
+			v = fmt.Sprintf("-c config_file=%s/postgresql.conf -c hba_file=%s/pg_hba.conf", nodeps.PostgresConfigDir, nodeps.PostgresConfigDir)
 		}
 		envVars["DDEV_DB_CONTAINER_COMMAND"] = v
 	}
@@ -2080,7 +2080,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		if v < 12 {
 			targetConfName = "recovery.conf"
 		}
-		restoreCmd = fmt.Sprintf(`bash -c 'chmod 700 /var/lib/postgresql/data && rm -rf /var/lib/postgresql/data/* && tar -C /var/lib/postgresql/data -zxf /mnt/snapshots/%s && touch /var/lib/postgresql/data/recovery.signal && cat /var/lib/postgresql/recovery.conf >>/etc/postgresql/%s && postgres -c config_file=%s/postgresql.conf'`, snapshotName, targetConfName, nodeps.PostgresConfigDir)
+		restoreCmd = fmt.Sprintf(`bash -c 'chmod 700 /var/lib/postgresql/data && rm -rf /var/lib/postgresql/data/* && tar -C /var/lib/postgresql/data -zxf /mnt/snapshots/%s && touch /var/lib/postgresql/data/recovery.signal && cat /var/lib/postgresql/recovery.conf >>%s/%s && postgres -c config_file=%s/postgresql.conf -c hba_file=%s/pg_hba.conf'`, snapshotName, nodeps.PostgresConfigDir, targetConfName, nodeps.PostgresConfigDir, nodeps.PostgresConfigDir)
 	}
 	_ = os.Setenv("DDEV_DB_CONTAINER_COMMAND", restoreCmd)
 	// nolint: errcheck
