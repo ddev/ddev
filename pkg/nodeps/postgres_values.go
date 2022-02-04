@@ -21,5 +21,5 @@ const (
 	Postgres10 = "10"
 )
 
-// PostgresConfigFile is in-container location of postgres config
-const PostgresConfigFile = "/etc/postgresql/postgresql.conf"
+// PostgresConfigDir is in-container location of postgres config
+const PostgresConfigDir = "/etc/postgresql"
