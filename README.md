@@ -50,14 +50,13 @@ We love to hear from our users and help them be successful with ddev. Support op
 * [ddev Documentation](https://ddev.readthedocs.io) and [faq](https://ddev.readthedocs.io/en/stable/users/faq/)
 * [ddev StackOverflow](https://stackoverflow.com/questions/tagged/ddev) for support and frequently asked questions. We respond quite quickly here and the results provide quite a library of user-curated solutions.
 * [ddev issue queue](https://github.com/drud/ddev/issues) for bugs and feature requests
-* The [gitter drud/ddev channel](https://gitter.im/drud/ddev) (it's easy to log in many different ways)
-* The `#ddev` channels in [Drupal Slack](https://drupal.org/slack), [TYPO3 Slack](https://my.typo3.org/index.php?id=35) for interactive, immediate community support.
+* [ddev Discord server](https://discord.gg/hCZFfAMc5k) for interactive, immediate community support.
 * [ddev-contrib](https://github.com/drud/ddev-contrib) repo provides a number of vetted user-contributed recipes for extending and using ddev. Your contributions are welcome.
 * [awesome-ddev](https://github.com/drud/awesome-ddev) repo has loads of external resources, blog posts, recipes, screencasts, and the like. Your contributions are welcome.
 * [Twitter with tag #ddev](https://twitter.com/search?q=%23ddev&src=typd&f=live) will get to us, but it's not as good for interactive support, but we'll answer anywhere.
 
 ## Additional Information
 
-* **Contributing** See the "How can I contribute" question in the [FAQ](https://ddev.readthedocs.io/en/stable/users/faq/).
+* **Contributing** See the "How can I contribute" question in the [FAQ](https://ddev.readthedocs.io/en/stable/users/faq/) and [Contributing.md](CONTRIBUTING.md).
 * **Version History:** See DDEV's [version history](https://ddev.readthedocs.io/en/latest/users/topics/version-history/) to browse through all the features that have been added.
 * **Roadmap:** Take a look at the [milestones](https://github.com/drud/ddev/milestones) in the [ddev issue queue](https://github.com/drud/ddev/issues) to get an understanding of what's prioritized and what's next. We love your input! Make requests in the issue queue (if your request doesn't exist yet).
