@@ -137,7 +137,7 @@ func IsValidDatabaseVersion(dbType string, dbVersion string) bool {
 }
 
 // GetValidDatabaseVersions returns a slice of valid versions with the format
-// mariadb:10.5 or mysql:5.7
+// mariadb:10.5/mysql:5.7/postgres:14
 func GetValidDatabaseVersions() []string {
 	combos := []string{}
 	for _, v := range GetValidMariaDBVersions() {
@@ -146,6 +146,10 @@ func GetValidDatabaseVersions() []string {
 	for _, v := range GetValidMySQLVersions() {
 		combos = append(combos, MySQL+":"+v)
 	}
+	for _, v := range GetValidPostgresVersions() {
+		combos = append(combos, Postgres+":"+v)
+	}
+
 	return combos
 }
 
