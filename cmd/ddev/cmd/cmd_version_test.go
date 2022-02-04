@@ -25,14 +25,14 @@ func TestCmdVersion(t *testing.T) {
 	raw, ok := versionData["raw"].(map[string]interface{})
 	require.True(t, ok, "raw section wasn't found in versioninfo %v", out)
 
-	assert.Equal(version.DdevVersion, raw["DDEV version"])
+	assert.Equal(version.DdevVersion, raw["ddev_version"])
 	assert.Equal(version.WebImg+":"+version.WebTag, raw["web"])
 	assert.Equal(version.GetDBImage(nodeps.MariaDB), raw["db"])
 	assert.Equal(version.GetDBAImage(), raw["dba"])
 	dockerVersion, _ := version.GetDockerVersion()
 	assert.Equal(dockerVersion, raw["docker"])
 	composeVersion, _ := version.GetDockerComposeVersion()
-	assert.Equal(composeVersion, raw["docker-compose"])
+	assert.Equal(composeVersion, raw["docker_compose"])
 
 	assert.Contains(versionData["msg"], version.DdevVersion)
 	assert.Contains(versionData["msg"], version.WebImg)
