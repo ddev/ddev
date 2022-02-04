@@ -93,28 +93,28 @@ func GetVersionInfo() map[string]string {
 	var err error
 	versionInfo := make(map[string]string)
 
-	versionInfo["DDEV version"] = DdevVersion
+	versionInfo["ddev_version"] = DdevVersion
 	versionInfo["web"] = GetWebImage()
 	versionInfo["db"] = GetDBImage(nodeps.MariaDB)
 	versionInfo["dba"] = GetDBAImage()
 	versionInfo["router"] = RouterImage + ":" + RouterTag
-	versionInfo["ddev-ssh-agent"] = SSHAuthImage + ":" + SSHAuthTag
-	versionInfo["build info"] = BUILDINFO
+	versionInfo["ddev_ssh_agent"] = SSHAuthImage + ":" + SSHAuthTag
+	versionInfo["build_info"] = BUILDINFO
 	versionInfo["os"] = runtime.GOOS
 	versionInfo["architecture"] = runtime.GOARCH
 	if versionInfo["docker"], err = GetDockerVersion(); err != nil {
 		versionInfo["docker"] = fmt.Sprintf("failed to GetDockerVersion(): %v", err)
 	}
-	if versionInfo["docker-platform"], err = GetDockerPlatform(); err != nil {
-		versionInfo["docker-platform"] = fmt.Sprintf("failed to GetDockerPlatform(): %v", err)
+	if versionInfo["docker_platform"], err = GetDockerPlatform(); err != nil {
+		versionInfo["docker_platform"] = fmt.Sprintf("failed to GetDockerPlatform(): %v", err)
 	}
-	if versionInfo["docker-compose"], err = GetDockerComposeVersion(); err != nil {
-		versionInfo["docker-compose"] = fmt.Sprintf("failed to GetDockerComposeVersion(): %v", err)
+	if versionInfo["docker_compose"], err = GetDockerComposeVersion(); err != nil {
+		versionInfo["docker_compose"] = fmt.Sprintf("failed to GetDockerComposeVersion(): %v", err)
 	}
 	versionInfo["mutagen"] = RequiredMutagenVersion
 
 	if runtime.GOOS == "windows" {
-		versionInfo["docker type"] = "Docker Desktop For Windows"
+		versionInfo["docker_type"] = "Docker Desktop For Windows"
 	}
 
 	return versionInfo

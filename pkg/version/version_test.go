@@ -26,7 +26,7 @@ func TestGetVersionInfo(t *testing.T) {
 
 	v := GetVersionInfo()
 
-	assert.Equal(DdevVersion, v["DDEV version"])
+	assert.Equal(DdevVersion, v["ddev_version"])
 	assert.Contains(v["web"], WebImg)
 	assert.Contains(v["web"], WebTag)
 	assert.Contains(v["db"], DBImg)
@@ -34,9 +34,9 @@ func TestGetVersionInfo(t *testing.T) {
 	assert.Contains(v["dba"], DBAImg)
 	assert.Contains(v["dba"], DBATag)
 	assert.Equal(runtime.GOOS, v["os"])
-	assert.Equal(BUILDINFO, v["build info"])
-	assert.NotEmpty(v["docker-compose"])
-	assert.NotEmpty(v["docker-platform"])
+	assert.Equal(BUILDINFO, v["build_info"])
+	assert.NotEmpty(v["docker_compose"])
+	assert.NotEmpty(v["docker_platform"])
 
 	assert.NotEmpty(v["docker"])
 }
