@@ -369,6 +369,7 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 		tmpDir := testcommon.CreateTmpDir(t.Name() + testName)
 
 		err := os.Chdir(tmpDir)
+		require.NoError(t, err)
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
@@ -478,11 +479,11 @@ func TestConfigCommandDocrootDetectionIndexVerification(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
 
-	origDir, err := os.Getwd()
+	origDir, _ := os.Getwd()
 	testDir := testcommon.CreateTmpDir("TestConfigCommand_testDocrootIndex")
 
 	// Create a document root folder.
-	err = os.MkdirAll(filepath.Join(testDir, filepath.Join("web")), 0755)
+	err := os.MkdirAll(filepath.Join(testDir, filepath.Join("web")), 0755)
 	if err != nil {
 		t.Errorf("Could not create %s directory under %s", "web", testDir)
 	}
