@@ -1252,6 +1252,10 @@ func (app *DdevApp) GeneratePostgresConfig() error {
 		}
 
 		if fileutil.FileExists(configPath) {
+			err = os.Chmod(configPath, 0666)
+			if err != nil {
+				return err
+			}
 			sigExists, err := fileutil.FgrepStringInFile(configPath, DdevFileSignature)
 			if err != nil {
 				return err
@@ -1267,6 +1271,10 @@ func (app *DdevApp) GeneratePostgresConfig() error {
 			return err
 		}
 		err = fileutil.TemplateStringToFile(string(c), nil, configPath)
+		if err != nil {
+			return err
+		}
+		err = os.Chmod(configPath, 0666)
 		if err != nil {
 			return err
 		}
