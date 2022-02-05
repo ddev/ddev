@@ -167,7 +167,7 @@ func init() {
 }
 
 func instrumentationNotSetUpWarning() {
-	if version.SegmentKey == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
+	if !output.JSONOutput && version.SegmentKey == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
 		output.UserOut.Warning("Instrumentation is opted in, but SegmentKey is not available.")
 	}
 }
