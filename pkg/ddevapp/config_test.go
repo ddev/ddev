@@ -31,18 +31,18 @@ func TestNewConfig(t *testing.T) {
 	// Create a temporary directory and change to it for the duration of this test.
 	testDir := testcommon.CreateTmpDir(t.Name())
 
-	pwd, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 
 	// Load a new Config
 	app, err := NewApp(testDir, true)
 	assert.NoError(err)
 
 	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
 		err = os.RemoveAll(testDir)
-		assert.NoError(err)
-		err = os.Chdir(pwd)
 		assert.NoError(err)
 	})
 
@@ -68,14 +68,14 @@ func TestNewConfig(t *testing.T) {
 func TestDisasterConfig(t *testing.T) {
 	assert := asrt.New(t)
 
-	pwd, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 
 	// Make sure we're not allowed to config in home directory.
 	tmpDir, _ := os.UserHomeDir()
 	_, err := NewApp(tmpDir, false)
 	assert.Error(err)
 	assert.Contains(err.Error(), "ddev config is not useful")
-	_ = os.Chdir(pwd)
+	_ = os.Chdir(origDir)
 
 	// Create a temporary directory and change to it for the duration of this test.
 	tmpDir = testcommon.CreateTmpDir(t.Name())
@@ -87,7 +87,7 @@ func TestDisasterConfig(t *testing.T) {
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		err = os.Chdir(pwd)
+		err = os.Chdir(origDir)
 		assert.NoError(err)
 		_ = os.RemoveAll(tmpDir)
 	})
@@ -125,11 +125,18 @@ func TestAllowedAppTypes(t *testing.T) {
 // TestPrepDirectory ensures the configuration directory can be created with the correct permissions.
 func TestPrepDirectory(t *testing.T) {
 	assert := asrt.New(t)
+	origDir, _ := os.Getwd()
 	// Create a temporary directory and change to it for the duration of this test.
 	testDir := testcommon.CreateTmpDir("TestPrepDirectory")
-	defer testcommon.CleanupDir(testDir)
-	defer testcommon.Chdir(testDir)()
+	err := os.Chdir(testDir)
+	require.NoError(t, err)
 
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = os.RemoveAll(testDir)
+		assert.NoError(err)
+	})
 	app, err := NewApp(testDir, true)
 	assert.NoError(err)
 
@@ -145,11 +152,20 @@ func TestPrepDirectory(t *testing.T) {
 // TestHostName tests that the TestSite.Hostname() field returns the hostname as expected.
 func TestHostName(t *testing.T) {
 	assert := asrt.New(t)
+	origDir, _ := os.Getwd()
 	testDir := testcommon.CreateTmpDir("TestHostName")
-	defer testcommon.CleanupDir(testDir)
-	defer testcommon.Chdir(testDir)()
+	err := os.Chdir(testDir)
+	require.NoError(t, err)
 	app, err := NewApp(testDir, true)
 	assert.NoError(err)
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.RemoveAll(testDir)
+		assert.NoError(err)
+	})
 	app.Name = util.RandString(32)
 
 	assert.Equal(app.GetHostname(), strings.ToLower(app.Name+"."+app.ProjectTLD))
@@ -159,10 +175,8 @@ func TestHostName(t *testing.T) {
 func TestWriteDockerComposeYaml(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
-	pwd, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 	testDir := testcommon.CreateTmpDir(t.Name())
-	defer testcommon.CleanupDir(testDir)
-	defer testcommon.Chdir(testDir)()
 
 	app, err := NewApp(testDir, true)
 	assert.NoError(err)
@@ -170,7 +184,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		err = os.Chdir(pwd)
+		err = os.Chdir(origDir)
 		assert.NoError(err)
 		_ = os.RemoveAll(testDir)
 	})
@@ -203,7 +217,7 @@ func TestWriteDockerComposeYaml(t *testing.T) {
 func TestConfigCommand(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
-	pwd, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 
 	const apptypePos = 0
 	const phpVersionPos = 1
@@ -230,7 +244,7 @@ func TestConfigCommand(t *testing.T) {
 		t.Cleanup(func() {
 			err = app.Stop(true, false)
 			assert.NoError(err)
-			err = os.Chdir(pwd)
+			err = os.Chdir(origDir)
 			assert.NoError(err)
 			err = os.RemoveAll(testDir)
 			assert.NoError(err)
@@ -283,7 +297,7 @@ func TestConfigCommand(t *testing.T) {
 func TestConfigCommandInteractiveCreateDocrootDenied(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
-
+	origDir, _ := os.Getwd()
 	noninteractiveEnv := "DDEV_NONINTERACTIVE"
 	// nolint: errcheck
 	defer os.Setenv(noninteractiveEnv, os.Getenv(noninteractiveEnv))
@@ -298,15 +312,22 @@ func TestConfigCommandInteractiveCreateDocrootDenied(t *testing.T) {
 
 	for testName := range testMatrix {
 		testDir := testcommon.CreateTmpDir(t.Name() + testName)
-
-		// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-		defer testcommon.CleanupDir(testDir)
-		defer testcommon.Chdir(testDir)()
+		err = os.Chdir(testDir)
+		require.NoError(t, err)
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
 		app, err := NewApp(testDir, true)
-		assert.NoError(err)
+		require.NoError(t, err)
+
+		t.Cleanup(func() {
+			err = app.Stop(true, false)
+			assert.NoError(err)
+			err = os.Chdir(origDir)
+			assert.NoError(err)
+			err = os.RemoveAll(testDir)
+			assert.NoError(err)
+		})
 
 		// Randomize some values to use for Stdin during testing.
 		name := uuid.New().String()
@@ -335,25 +356,33 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
 
+	origDir, _ := os.Getwd()
 	const apptypePos = 0
 	const phpVersionPos = 1
 	testMatrix := map[string][]string{
 		"drupal6phpversion": {nodeps.AppTypeDrupal6, nodeps.PHP56},
 		"drupal7phpversion": {nodeps.AppTypeDrupal7, nodeps.PHPDefault},
-		"drupal8phpversion": {nodeps.AppTypeDrupal9, nodeps.PHPDefault},
+		"drupal8phpversion": {nodeps.AppTypeDrupal8, nodeps.PHPDefault},
 	}
 
 	for testName, testValues := range testMatrix {
-		testDir := testcommon.CreateTmpDir(t.Name() + testName)
+		tmpDir := testcommon.CreateTmpDir(t.Name() + testName)
 
-		// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-		defer testcommon.CleanupDir(testDir)
-		defer testcommon.Chdir(testDir)()
+		err := os.Chdir(tmpDir)
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
-		app, err := NewApp(testDir, true)
+		app, err := NewApp(tmpDir, true)
 		assert.NoError(err)
+
+		t.Cleanup(func() {
+			err = app.Stop(true, false)
+			assert.NoError(err)
+			err = os.Chdir(origDir)
+			assert.NoError(err)
+			err = os.RemoveAll(tmpDir)
+			assert.NoError(err)
+		})
 
 		// Randomize some values to use for Stdin during testing.
 		name := uuid.New().String()
@@ -380,7 +409,7 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 		assert.Equal(nonexistentDocroot, app.Docroot)
 		assert.EqualValues(testValues[phpVersionPos], app.PHPVersion)
 
-		err = PrepDdevDirectory(testDir)
+		err = PrepDdevDirectory(tmpDir)
 		assert.NoError(err)
 	}
 	util.Success("Finished %s", t.Name())
@@ -390,28 +419,33 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 func TestConfigCommandDocrootDetection(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
+	origDir, _ := os.Getwd()
 
 	testMatrix := AvailableDocrootLocations()
 	for index, testDocrootName := range testMatrix {
-		testDir := testcommon.CreateTmpDir(fmt.Sprintf("TestConfigCommand_%v", index))
-
-		// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-		defer testcommon.CleanupDir(testDir)
-		defer testcommon.Chdir(testDir)()
+		tmpDir := testcommon.CreateTmpDir(fmt.Sprintf("TestConfigCommand_%v", index))
 
 		// Create a document root folder.
-		err := os.MkdirAll(filepath.Join(testDir, filepath.Join(testDocrootName)), 0755)
+		err := os.MkdirAll(filepath.Join(tmpDir, filepath.Join(testDocrootName)), 0755)
 		if err != nil {
-			t.Errorf("Could not create %s directory under %s", testDocrootName, testDir)
+			t.Errorf("Could not create %s directory under %s", testDocrootName, tmpDir)
 		}
-		_, err = os.OpenFile(filepath.Join(testDir, filepath.Join(testDocrootName), "index.php"), os.O_RDONLY|os.O_CREATE, 0664)
+		_, err = os.OpenFile(filepath.Join(tmpDir, filepath.Join(testDocrootName), "index.php"), os.O_RDONLY|os.O_CREATE, 0664)
 		assert.NoError(err)
 
 		// Create the ddevapp we'll use for testing.
 		// This will not return an error, since there is no existing configuration.
-		app, err := NewApp(testDir, true)
+		app, err := NewApp(tmpDir, true)
 		assert.NoError(err)
 
+		t.Cleanup(func() {
+			err = os.Chdir(origDir)
+			assert.NoError(err)
+			err = app.Stop(true, false)
+			assert.NoError(err)
+			err = os.RemoveAll(tmpDir)
+			assert.NoError(err)
+		})
 		// Randomize some values to use for Stdin during testing.
 		name := strings.ToLower(util.RandString(16))
 
@@ -432,7 +466,7 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 		assert.Equal(name, app.Name)
 		assert.Equal(nodeps.AppTypeDrupal8, app.Type)
 		assert.Equal(testDocrootName, app.Docroot)
-		err = PrepDdevDirectory(testDir)
+		err = PrepDdevDirectory(tmpDir)
 		assert.NoError(err)
 	}
 }
@@ -444,14 +478,11 @@ func TestConfigCommandDocrootDetectionIndexVerification(t *testing.T) {
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
 
+	origDir, err := os.Getwd()
 	testDir := testcommon.CreateTmpDir("TestConfigCommand_testDocrootIndex")
 
-	// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-	defer testcommon.CleanupDir(testDir)
-	defer testcommon.Chdir(testDir)()
-
 	// Create a document root folder.
-	err := os.MkdirAll(filepath.Join(testDir, filepath.Join("web")), 0755)
+	err = os.MkdirAll(filepath.Join(testDir, filepath.Join("web")), 0755)
 	if err != nil {
 		t.Errorf("Could not create %s directory under %s", "web", testDir)
 	}
@@ -467,6 +498,14 @@ func TestConfigCommandDocrootDetectionIndexVerification(t *testing.T) {
 	app, err := NewApp(testDir, true)
 	assert.NoError(err)
 
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.RemoveAll(testDir)
+		assert.NoError(err)
+	})
 	// Randomize some values to use for Stdin during testing.
 	name := strings.ToLower(util.RandString(16))
 
@@ -503,9 +542,8 @@ func TestReadConfig(t *testing.T) {
 	}
 
 	_, err := app.ReadConfig(false)
-	if err != nil {
-		t.Fatalf("Unable to c.ReadConfig(), err: %v", err)
-	}
+	d, _ := os.Getwd()
+	require.NoError(t, err, "Unable to c.ReadConfig() in %s, err: %v", d, err)
 
 	// Values not defined in file, we should still have default values
 	assert.Equal(app.Name, "TestRead")
@@ -748,52 +786,59 @@ func TestPHPOverrides(t *testing.T) {
 	}
 
 	assert := asrt.New(t)
+	origDir, _ := os.Getwd()
 	app := &DdevApp{}
-	tDir, err := os.Getwd()
-	require.NoError(t, err)
 
 	site := TestSites[0]
-	switchDir := site.Chdir()
-	defer switchDir()
 
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = app.Stop(true, false)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
-
-	// Copy test overrides into the project .ddev directory
-	err = fileutil.CopyDir(filepath.Join(tDir, "testdata/TestPHPOverrides/.ddev/php"), filepath.Join(site.Dir, ".ddev/php"))
-	assert.NoError(err)
-	err = fileutil.CopyFile(filepath.Join(tDir, "testdata/TestPHPOverrides/phpinfo.php"), filepath.Join(site.Dir, site.Docroot, "phpinfo.php"))
-	assert.NoError(err)
 
 	testcommon.ClearDockerEnv()
 	err = app.Init(site.Dir)
 	assert.NoError(err)
-	_ = app.Stop(true, false)
+	err = app.Stop(true, false)
+	require.NoError(t, err)
+
+	// Copy test overrides into the project .ddev directory
+	err = fileutil.CopyDir(filepath.Join(origDir, "testdata/"+t.Name()+"/.ddev/php"), filepath.Join(site.Dir, ".ddev/php"))
+	assert.NoError(err)
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata/"+t.Name()+"/phpinfo.php"), filepath.Join(app.AppRoot, app.Docroot, "phpinfo.php"))
+	assert.NoError(err)
 
 	// And when we're done, we have to clean those out again.
 	t.Cleanup(func() {
 		runTime()
-		_ = app.Stop(true, false)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
 
-		err = os.RemoveAll(filepath.Join(site.Dir, ".ddev/php"))
+		err = os.RemoveAll(filepath.Join(app.AppRoot, ".ddev/php"))
 		if err != nil {
 			t.Logf("failed to remove .ddev/php: %v", err)
 		}
-		err = os.RemoveAll(filepath.Join(site.Dir, "phpinfo.php"))
+		err = os.RemoveAll(filepath.Join(app.AppRoot, app.Docroot, "phpinfo.php"))
 		if err != nil {
 			t.Logf("failed to remove phpinfo.php: %v", err)
 		}
 	})
 
 	startErr := app.StartAndWait(5)
+	assert.NoError(startErr)
 	if startErr != nil {
 		logs, _ := GetErrLogsFromApp(app, startErr)
-		t.Logf("failed app.StartAndWait(): %v", startErr)
 		t.Fatalf("============== logs from app.StartAndWait() ==============\n%s\n", logs)
 	}
 
 	_, _ = testcommon.EnsureLocalHTTPContent(t, "http://"+app.GetHostname()+"/phpinfo.php", `max_input_time</td><td class="v">999`, 60)
-	err = app.Stop(true, false)
-	assert.NoError(err)
 
 }
 
