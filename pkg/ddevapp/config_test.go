@@ -326,6 +326,7 @@ func TestConfigCommandInteractiveCreateDocrootDenied(t *testing.T) {
 
 		err = PrepDdevDirectory(testDir)
 		assert.NoError(err)
+		util.Success("Finished %s", t.Name())
 	}
 }
 
@@ -339,7 +340,7 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 	testMatrix := map[string][]string{
 		"drupal6phpversion": {nodeps.AppTypeDrupal6, nodeps.PHP56},
 		"drupal7phpversion": {nodeps.AppTypeDrupal7, nodeps.PHPDefault},
-		"drupal8phpversion": {nodeps.AppTypeDrupal8, nodeps.PHPDefault},
+		"drupal8phpversion": {nodeps.AppTypeDrupal9, nodeps.PHPDefault},
 	}
 
 	for testName, testValues := range testMatrix {
@@ -382,6 +383,7 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 		err = PrepDdevDirectory(testDir)
 		assert.NoError(err)
 	}
+	util.Success("Finished %s", t.Name())
 }
 
 // TestConfigCommandDocrootDetection asserts the default docroot is detected.
