@@ -1412,6 +1412,9 @@ func TestDdevAllDatabases(t *testing.T) {
 	err := app.Init(site.Dir)
 	assert.NoError(err)
 
+	err = app.Stop(true, false)
+	require.NoError(t, err)
+
 	// Make sure there isn't an old db laying around
 	_ = dockerutil.RemoveVolume(app.Name + "-mariadb")
 	t.Cleanup(func() {
