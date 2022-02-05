@@ -2082,13 +2082,14 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 
 	restoreCmd := "restore_snapshot " + snapshotName
 	if app.Database.Type == nodeps.Postgres {
-		targetConfName := "postgresql.conf"
+		confdDir := path.Join(nodeps.PostgresConfigDir, "conf.d")
+		targetConfName := path.Join(confdDir, "recovery.conf")
 		v, _ := strconv.Atoi(app.Database.Version)
 		// Before postgres v12 the recovery info went into its own file
 		if v < 12 {
-			targetConfName = "recovery.conf"
+			targetConfName = path.Join(nodeps.PostgresConfigDir, "recovery.conf")
 		}
-		restoreCmd = fmt.Sprintf(`bash -c 'chmod 700 /var/lib/postgresql/data && rm -rf /var/lib/postgresql/data/* && tar -C /var/lib/postgresql/data -zxf /mnt/snapshots/%s && touch /var/lib/postgresql/data/recovery.signal && cat /var/lib/postgresql/recovery.conf >>%s/%s && postgres -c config_file=%s/postgresql.conf -c hba_file=%s/pg_hba.conf'`, snapshotName, nodeps.PostgresConfigDir, targetConfName, nodeps.PostgresConfigDir, nodeps.PostgresConfigDir)
+		restoreCmd = fmt.Sprintf(`bash -c 'chmod 700 /var/lib/postgresql/data && mkdir -p %s && rm -rf /var/lib/postgresql/data/* && tar -C /var/lib/postgresql/data -zxf /mnt/snapshots/%s && touch /var/lib/postgresql/data/recovery.signal && cat /var/lib/postgresql/recovery.conf >>%s && postgres -c config_file=%s/postgresql.conf -c hba_file=%s/pg_hba.conf'`, confdDir, snapshotName, targetConfName, nodeps.PostgresConfigDir, nodeps.PostgresConfigDir)
 	}
 	_ = os.Setenv("DDEV_DB_CONTAINER_COMMAND", restoreCmd)
 	// nolint: errcheck
