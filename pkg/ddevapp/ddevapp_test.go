@@ -2288,11 +2288,17 @@ func TestDdevImportFilesDir(t *testing.T) {
 
 		testcommon.ClearDockerEnv()
 		err = app.Init(site.Dir)
-		assert.NoError(err)
+		if err != nil {
+			assert.NoError(err, "failed app.Init for %s, continuing", site.Name)
+			continue
+		}
 
 		// Function under test
 		err = app.ImportFiles(importDir, "")
-		assert.NoError(err, "Importing a directory returned an error:", err)
+		if err != nil {
+			assert.NoError(err, "failed importing files directory %s for site %s: %v", importDir, site.Name, err)
+			continue
+		}
 
 		// Confirm contents of destination dir after import
 		absUploadDir := app.GetHostUploadDirFullPath()

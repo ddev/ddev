@@ -408,7 +408,7 @@ func (app *DdevApp) ValidateConfig() error {
 
 	// validate PHP version
 	if !nodeps.IsValidPHPVersion(app.PHPVersion) {
-		return fmt.Errorf("unsupported PHP version: %s, ddev (%s) only supports the following versions: %v", app.PHPVersion, runtime.GOARCH, nodeps.GetValidPHPVersions()).(invalidPHPVersion)
+		return fmt.Errorf("unsupported PHP version: %s, ddev only supports the following versions: %v", app.PHPVersion, nodeps.GetValidPHPVersions()).(invalidPHPVersion)
 	}
 
 	// validate webserver type
