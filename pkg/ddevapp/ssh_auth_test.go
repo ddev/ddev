@@ -22,7 +22,7 @@ import (
 // TestSSHAuth tests basic ssh authentication
 func TestSSHAuth(t *testing.T) {
 	assert := asrt.New(t)
-	testDir, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
 
 	runTime := util.TimeTrack(time.Now(), t.Name())
@@ -37,32 +37,29 @@ func TestSSHAuth(t *testing.T) {
 		}
 	}
 
-	switchDir := site.Chdir()
 	testcommon.ClearDockerEnv()
 
 	err := app.Init(site.Dir)
-	if err != nil {
-		if app.SiteStatus() != ddevapp.SiteRunning {
-			t.Fatalf("app.Init() failed on site %s in dir %s, err=%v", site.Name, site.Dir, err)
-		}
-	}
-	destDdev := filepath.Join(app.AppRoot, ".ddev")
-	srcDdev := filepath.Join(testDir, "testdata", t.Name(), ".ddev")
-	err = fileutil.CopyDir(filepath.Join(srcDdev, ".ssh"), filepath.Join(destDdev, ".ssh"))
+	require.NoError(t, err, "app.Init() failed on site %s in dir %s, err=%v", site.Name, site.Dir, err)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		_ = os.RemoveAll(app.GetConfigPath(".ssh"))
+		_ = os.RemoveAll(app.GetConfigPath("docker-compose.sshserver.yaml"))
+	})
+	srcDdev := filepath.Join(origDir, "testdata", t.Name(), ".ddev")
+	err = fileutil.CopyDir(filepath.Join(srcDdev, ".ssh"), app.GetConfigPath(".ssh"))
 	require.NoError(t, err)
-	err = os.Chmod(filepath.Join(destDdev, ".ssh"), 0700)
+	err = os.Chmod(app.GetConfigPath(".ssh"), 0700)
 	require.NoError(t, err)
-	err = os.Chmod(filepath.Join(destDdev, ".ssh", "authorized_keys"), 0600)
+	err = os.Chmod(app.GetConfigPath(".ssh/authorized_keys"), 0600)
 	require.NoError(t, err)
-	err = os.Chmod(filepath.Join(destDdev, ".ssh", "id_rsa"), 0600)
+	err = os.Chmod(app.GetConfigPath(".ssh/id_rsa"), 0600)
 	require.NoError(t, err)
-	err = fileutil.CopyFile(filepath.Join(srcDdev, "docker-compose.sshserver.yaml"), filepath.Join(destDdev, "docker-compose.sshserver.yaml"))
+	err = fileutil.CopyFile(filepath.Join(srcDdev, "docker-compose.sshserver.yaml"), app.GetConfigPath("docker-compose.sshserver.yaml"))
 	require.NoError(t, err)
-
-	//nolint: errcheck
-	defer fileutil.PurgeDirectory(filepath.Join(destDdev, ".ssh"))
-	//nolint: errcheck
-	defer os.Remove(filepath.Join(destDdev, "docker-compose.sshserver.yaml"))
 
 	// Start with the testsite stopped (and everything stopped)
 	err = app.Stop(true, false)
@@ -90,7 +87,7 @@ func TestSSHAuth(t *testing.T) {
 	// Add password/key to auth. This is an unfortunate perversion of using docker run directly, copied from
 	// ddev auth ssh command, and with an expect script to provide the passphrase.
 	uidStr, _, username := util.GetContainerUIDGid()
-	sshKeyPath := filepath.Join(destDdev, ".ssh")
+	sshKeyPath := app.GetConfigPath(".ssh")
 	sshKeyPath = dockerutil.MassageWindowsHostMountpoint(sshKeyPath)
 
 	err = exec.RunInteractiveCommand("docker", []string{"run", "-t", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "-v", sshKeyPath + ":/home/" + username + "/.ssh", "-u", uidStr, version.SSHAuthImage + ":" + version.SSHAuthTag + "-built", "//test.expect.passphrase"})
@@ -125,7 +122,6 @@ func TestSSHAuth(t *testing.T) {
 	assert.NoError(err)
 
 	runTime()
-	switchDir()
 }
 
 // TestSshAuthConfigOverride tests that the ~/.ddev/.ssh-auth-compose-compose.yaml can be overridden
@@ -160,8 +156,7 @@ func TestSshAuthConfigOverride(t *testing.T) {
 		err = os.Chdir(pwd)
 		assert.NoError(err)
 		_ = os.RemoveAll(testDir)
-		err = os.Remove(overrideYaml)
-		assert.NoError(err)
+		_ = os.Remove(overrideYaml)
 	})
 
 	err = app.Start()
