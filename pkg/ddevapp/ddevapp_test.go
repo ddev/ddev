@@ -717,15 +717,6 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	origDir, _ := os.Getwd()
 
-	phpVersions := nodeps.ValidPHPVersions
-
-	// Most of the time there's no reason to do all versions of PHP
-	if os.Getenv("GOTEST_SHORT") != "" {
-		for _, k := range []string{"5.6", "7.0", "7.1", "7.2", "7.3"} {
-			delete(phpVersions, k)
-		}
-	}
-
 	app := &ddevapp.DdevApp{}
 	testcommon.ClearDockerEnv()
 
@@ -760,14 +751,15 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	phpKeys := make([]string, 0, len(phpVersions))
-	for k := range phpVersions {
-		phpKeys = append(phpKeys, k)
+	// Most of the time there's no reason to do all versions of PHP
+	phpKeys := []string{}
+	exclusions := []string{"5.6", "7.0", "7.1", "7.2"}
+	for k := range nodeps.ValidPHPVersions {
+		if os.Getenv("GOTEST_SHORT") != "" && !nodeps.ArrayContainsString(exclusions, k) {
+			phpKeys = append(phpKeys, k)
+		}
 	}
-	// Reverse sort to start with more recent php first
-	sort.Slice(phpKeys, func(a, b int) bool {
-		return phpKeys[b] < phpKeys[a]
-	})
+	sort.Strings(phpKeys)
 
 	for _, v := range phpKeys {
 		app.PHPVersion = v
@@ -865,10 +857,12 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 // TestDdevXhprofEnabled tests running with xhprof_enabled = true, etc.
 func TestDdevXhprofEnabled(t *testing.T) {
-	assert := asrt.New(t)
+	if nodeps.IsMacM1() {
+		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+	}
 
+	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
-	phpVersions := nodeps.ValidPHPVersions
 
 	testcommon.ClearDockerEnv()
 
@@ -886,12 +880,12 @@ func TestDdevXhprofEnabled(t *testing.T) {
 
 	// Does not work with php5.6 anyway (SEGV), for resource conservation
 	// skip older unsupported versions
-	for _, k := range []string{"5.6", "7.0", "7.1", "7.2"} {
-		delete(phpVersions, k)
-	}
-	phpKeys := make([]string, 0, len(phpVersions))
-	for k := range phpVersions {
-		phpKeys = append(phpKeys, k)
+	phpKeys := []string{}
+	exclusions := []string{"5.6", "7.0", "7.1"}
+	for k := range nodeps.ValidPHPVersions {
+		if !nodeps.ArrayContainsString(exclusions, k) {
+			phpKeys = append(phpKeys, k)
+		}
 	}
 	sort.Strings(phpKeys)
 
@@ -1049,10 +1043,16 @@ func TestGetApps(t *testing.T) {
 		app := &ddevapp.DdevApp{}
 
 		err := app.Init(site.Dir)
-		assert.NoError(err)
+		if err != nil {
+			assert.NoError(err, "unable to app.Init %s: %v", app.Name, err)
+			continue
+		}
 
 		err = app.Start()
-		assert.NoError(err)
+		if err != nil {
+			assert.NoError(err, "unable to app.start %s: %v", app.Name, err)
+			continue
+		}
 	}
 
 	apps := ddevapp.GetActiveProjects()
@@ -1074,10 +1074,16 @@ func TestGetApps(t *testing.T) {
 		app := &ddevapp.DdevApp{}
 
 		err := app.Init(site.Dir)
-		assert.NoError(err)
+		if err != nil {
+			assert.NoError(err, "unable to app.Init %s: %v", app.Name, err)
+			continue
+		}
 
 		err = app.Stop(true, false)
-		assert.NoError(err)
+		if err != nil {
+			assert.NoError(err, "unable to app.Stop %s: %v", app.Name, err)
+			continue
+		}
 	}
 }
 
