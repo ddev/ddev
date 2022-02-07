@@ -206,16 +206,14 @@ var (
 		// 11: php
 		{
 			Name:                          "TestPkgPHP",
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-6.38.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-6.38/",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6.38_db.tar.gz",
+			SourceURL:                     "https://github.com/drud/ddev-test-php-repo/archive/refs/tags/v1.1.0.tar.gz",
+			ArchiveInternalExtractionPath: "ddev-test-php-repo-1.1.0/",
 			FullSiteTarballURL:            "",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6_files.tar.gz",
+			FilesTarballURL:               "",
 			Docroot:                       "",
-			Type:                          nodeps.AppTypeDrupal6,
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/CHANGELOG.txt", Expect: "Drupal 6.38, 2016-02-24"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/2", Expect: "This is a story. The story is somewhat shaky"},
-			FilesImageURI:                 "/sites/default/files/garland_logo.jpg",
+			Type:                          nodeps.AppTypePHP,
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "This is a simple readme."},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/index.php", Expect: "This program makes use of the Zend Scripting Language Engine"},
 		},
 		// 12: drupal10
 		{
