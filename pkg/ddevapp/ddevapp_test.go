@@ -1817,9 +1817,15 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		if site.DBTarURL != "" {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
-			require.NoError(t, err)
+			if err != nil {
+				assert.NoError(err)
+				continue
+			}
 			err = app.ImportDB(cachedArchive, "", false, false, "db")
-			assert.NoError(err, "failed to import-db with dbtarball %s, app.Type=%s, database=%s", site.DBTarURL, app.Type, app.Database.Type+":"+app.Database.Version)
+			if err != nil {
+				assert.NoError(err, "failed to import-db with dbtarball %s, app.Type=%s, database=%s", site.DBTarURL, app.Type, app.Database.Type+":"+app.Database.Version)
+				continue
+			}
 		}
 
 		startErr := app.StartAndWait(2)
