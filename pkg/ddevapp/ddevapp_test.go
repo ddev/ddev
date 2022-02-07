@@ -294,9 +294,21 @@ func TestMain(m *testing.M) {
 			log.Errorf("TestMain startup: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 			continue
 		}
+		err = ddevapp.PrepDdevDirectory(app.AppRoot)
+		if err != nil {
+			testRun = -1
+			log.Errorf("TestMain startup: ddevapp.PrepDdevDirectory() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
+			continue
+		}
 		// Use ddev binary here because just app.WriteConfig() doesn't
 		// populate the project .ddev
-		_, err = exec.RunHostCommand(DdevBin, "config", "--auto")
+		err = ddevapp.PopulateExamplesCommandsHomeadditions(app.Name)
+		if err != nil {
+			testRun = -1
+			log.Errorf("TestMain startup: ddevapp.PopulateExamplesCommandsHomeadditions() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
+			continue
+		}
+		err = app.WriteConfig()
 		if err != nil {
 			testRun = -1
 			log.Errorf("TestMain startup: app.WriteConfig() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
@@ -305,9 +317,7 @@ func TestMain(m *testing.M) {
 		// Pre-download any images we may need, just to get them out of the way so they don't clutter tests
 		_, err = exec.RunHostCommand("sh", "-c", fmt.Sprintf("%s debug download-images >/dev/null", DdevBin))
 		if err != nil {
-			testRun = -1
 			log.Warnf("TestMain startup: failed to ddev debug download-images, site %s in dir %s: %v", TestSites[i].Name, TestSites[i].Dir, err)
-			continue
 		}
 
 		for _, volume := range []string{app.Name + "-mariadb"} {
