@@ -2368,6 +2368,7 @@ func TestDdevImportFiles(t *testing.T) {
 			continue
 		}
 
+		t.Logf("== BEGIN TestDdevImportFiles for %s\n", site.Name)
 		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 		testcommon.ClearDockerEnv()
@@ -2386,7 +2387,7 @@ func TestDdevImportFiles(t *testing.T) {
 
 		if site.FilesTarballURL != "" && app.GetUploadDir() != "" {
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
-			require.NoError(t, err)
+			assert.NoError(err)
 			err = app.ImportFiles(tarballPath, "")
 			if err != nil {
 				assert.NoError(err, "failed importing files tarball %s for site %s: %v", tarballPath, site.Name, err)
@@ -2396,7 +2397,7 @@ func TestDdevImportFiles(t *testing.T) {
 
 		if site.FilesZipballURL != "" {
 			_, zipballPath, err := testcommon.GetCachedArchive(site.Name, "local-zipballs-files", "", site.FilesZipballURL)
-			require.NoError(t, err)
+			assert.NoError(err)
 			err = app.ImportFiles(zipballPath, "")
 			if err != nil {
 				assert.NoError(err)
