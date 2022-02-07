@@ -156,7 +156,7 @@ func TestLetsEncrypt(t *testing.T) {
 // with ~/.ddev/router-compose.*.yaml
 func TestRouterConfigOverride(t *testing.T) {
 	assert := asrt.New(t)
-	pwd, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 	testDir := testcommon.CreateTmpDir(t.Name())
 	_ = os.Chdir(testDir)
 	overrideYaml := filepath.Join(globalconfig.GetGlobalDdevDir(), "router-compose.override.yaml")
@@ -167,7 +167,7 @@ func TestRouterConfigOverride(t *testing.T) {
 	assert.NoError(err)
 	err = app.WriteConfig()
 	assert.NoError(err)
-	err = fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "router-compose.override.yaml"), overrideYaml)
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), "router-compose.override.yaml"), overrideYaml)
 	assert.NoError(err)
 
 	answer := fileutil.RandomFilenameBase()
@@ -176,11 +176,10 @@ func TestRouterConfigOverride(t *testing.T) {
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		err = os.Chdir(pwd)
+		err = os.Chdir(origDir)
 		assert.NoError(err)
 		_ = os.RemoveAll(testDir)
-		err = os.Remove(overrideYaml)
-		assert.NoError(err)
+		_ = os.Remove(overrideYaml)
 	})
 
 	err = app.Start()

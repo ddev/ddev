@@ -96,7 +96,10 @@ func TestWriteDrushConfig(t *testing.T) {
 		testcommon.ClearDockerEnv()
 
 		err := app.Init(site.Dir)
-		assert.NoError(err)
+		if err != nil {
+			assert.NoError(err, "failed init of %s: %v", site.Name, err)
+			continue
+		}
 
 		_, err = app.CreateSettingsFile()
 		assert.NoError(err)
