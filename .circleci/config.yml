@@ -11,13 +11,13 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-homebrew-v28
+        - linux-homebrew-v29
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: NORMAL Circle VM setup
         no_output_timeout: "40m"
     - save_cache:
-        key: linux-homebrew-v28
+        key: linux-homebrew-v29
         paths:
           - /home/linuxbrew
     - run:
@@ -64,16 +64,16 @@ jobs:
     - run: 'mkdir -p ~/.ngrok2 && echo "authtoken: ${NGROK_TOKEN}" >~/.ngrok2/ngrok.yml'
     - restore_cache:
         keys:
-        - linux-homebrew-v28
+        - linux-homebrew-v29
     - restore_cache:
         keys:
-          - linux-testcache-v25
+          - linux-testcache-v26
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup
         no_output_timeout: "40m"
     - save_cache:
-        key: linux-homebrew-v28
+        key: linux-homebrew-v29
         paths:
           - /home/linuxbrew
     - run: echo "$(docker --version) $(docker-compose --version)"
@@ -84,7 +84,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-testcache-v25
+        key: linux-testcache-v26
         paths:
         - /home/circleci/.ddev/testcache
 
