@@ -21,21 +21,45 @@ DDEV by default uses ports 80 and 443 on your system when projects are running. 
 
 ## Installation
 
-### Docker Installation
+### Prerequisite
 
 Docker or an alternative is required before anything will work with DDEV. This is pretty easy on most environments; see the [docker_installation](users/docker_installation.md) page to help sort out the details, especially on Windows and Linux. It is not required to install docker-compose because DDEV uses its own private version.
 
-### Homebrew - macOS/Linux
+### macOS (Homebrew)
 
-For macOS (both amd64 and arm64) and Linux users, we recommend installing and upgrading via [Homebrew](https://brew.sh/) (macOS) or [Homebrew on Linux](https://docs.brew.sh/Homebrew-on-Linux) (Linux): `brew install drud/ddev/ddev`.
+For macOS (both amd64 and arm64) users, we recommend installing and upgrading via [Homebrew](https://brew.sh/): `brew install drud/ddev/ddev`.
 
-As a one-time initialization, run `mkcert -install`. Linux users may have to take additional actions as discussed below in [Linux `mkcert -install` additional instructions](#Linux-mkcert--install-additional-instructions).
+As a one-time initialization, run `mkcert -install`.
 
 Later, to upgrade to a newer version of DDEV-Local, run `brew upgrade ddev`.
 
 To install the latest unreleased DDEV version, `brew unlink ddev && brew install drud/ddev/ddev --HEAD`.
 
-### Installation or Upgrade - Windows (WSL2)
+### Linux (Arch)
+
+We currently maintain a package on [Arch Linux (AUR)](https://aur.archlinux.org/packages/ddev-bin/).
+
+As a one-time initialization, run `mkcert -install`, which may require your sudo password. See below for additional information.
+
+### Linux, macOS and Windows WSL2 (install script)
+
+_NOTE: macOS users that have installed via Homebrew or Arch Linux users that have installed via the package manager above do not need the install script._
+
+Linux, macOS and Windows WSL2 (see below) users can use this line of code to your terminal to download, verify, and install (or upgrade) ddev using our [install script](https://github.com/drud/ddev/blob/master/scripts/install_ddev.sh). Note that this works with both amd64 and arm64 architectures, including Surface Pro X with WSL2 and 64-bit Raspberry Pi OS. It also works with the new macOS Apple Silicon M1 machines.
+
+```
+curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh
+```
+
+The installation script can also take a version argument in order to install a specific version or a prerelease version. For example,
+
+```
+curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh v1.17.0-alpha2
+```
+
+Later, to upgrade DDEV to the latest version, just run `ddev poweroff` and run the script again.
+
+### Windows (WSL2)
 
 **This is the recommended installation method for all Windows users that are on Windows 10 2004 or higher**. If you don't have this version yet, or if you don't want to use WSL2, please follow the legacy instructions for Windows below.
 
@@ -75,29 +99,13 @@ That's it! You have now installed DDEV on WSL2. If you're using WSL2 for DDEV (r
 
 Note that nfs-mount-enabled (and running NFS) are not required on WSL2 because it's perhaps faster without NFS.
 
-### Installation or Upgrade - Windows (legacy)
+### Windows (legacy)
 
 * If you use [chocolatey](https://chocolatey.org/) (recommended), then you can just `choco install ddev git` from an administrative shell. Upgrades are just `ddev poweroff && choco upgrade ddev`.
 * A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you.  Open a new git-bash or PowerShell or cmd window and start using ddev.
 * Most people interact with ddev on Windows using git-bash, part of the [Windows git suite](https://git-scm.com/download/win). Although ddev does work with cmd and PowerShell, it's more at home in bash. You can install it with chocolatey using `choco install -y git`.
 
-### Installation/Upgrade Script - Linux and macOS (ARM/ARM64 and AMD64 architectures)
-
-Windows WSL2, Linux and macOS users can use this line of code to your terminal to download, verify, and install (or upgrade) ddev using our [install script](https://github.com/drud/ddev/blob/master/scripts/install_ddev.sh). Note that this works with both amd64 and arm64 architectures, including Surface Pro X with WSL2 and 64-bit Raspberry Pi OS. It also works with the new macOS Apple Silicon M1 machines.
-
-```
-curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh
-```
-
-The installation script can also take a version argument in order to install a specific version or a prerelease version. For example,
-
-```
-curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh v1.17.0-alpha2
-```
-
-Later, to upgrade DDEV to the latest version, just run `ddev poweroff` and run the script again.
-
-### Manual Installation or Upgrade - Linux and macOS
+### Linux and macOS (manual)
 
 You can also easily perform the installation or upgrade manually if preferred. DDEV is just a single executable, no special installation is actually required, so for all operating systems, the installation is just copying DDEV into place where it's in the system path.
 
@@ -106,14 +114,6 @@ You can also easily perform the installation or upgrade manually if preferred. D
 * Move ddev to /usr/local/bin: `mv ddev /usr/local/bin/` (may require sudo), or another directory in your `$PATH` as preferred.
 * Run `ddev` to test your installation. You should see DDEV's command usage output.
 * As a one-time initialization, run `mkcert -install`, which may require your sudo password. Linux users may have to take additional actions as discussed below in [Linux `mkcert -install` additional instructions](#Linux-mkcert--install-additional-instructions). If you don't have mkcert installed, you can install it from <https://github.com/FiloSottile/mkcert/releases>. Download the version for the correct architecture and `sudo mv <downloaded_file> /usr/local/bin/mkcert && sudo chmod +x /usr/local/bin/mkcert`.
-
-### Installation via package managers - Linux
-
-The preferred Linux package manager is [Homebrew](http://brew.sh/) : `brew install drud/ddev/ddev`
-
-We also currently maintain a package on [Arch Linux (AUR)](https://aur.archlinux.org/packages/ddev-bin/)
-
-As a one-time initialization, run `mkcert -install`, which may require your sudo password. See below for additional information.
 
 ### Linux `mkcert -install` additional instructions
 
@@ -130,7 +130,7 @@ On variants of Linux you may be prompted for additional package installation to 
 
   (Note the prompt `Installing to the system store is not yet supported on this Linux`, which can be a simple result of not having /usr/sbin in the path so that `/usr/sbin/update-ca-certificates` can be found.)
 
-### Windows and Firefox `mkcert -install` additional instructions
+### Windows `mkcert -install` additional instructions
 
 The `mkcert -install` step on Windows does not work for the Firefox browser.
 You need to add the created root certificate authority to the security
@@ -139,6 +139,9 @@ configuration by your self:
 * Run `mkcert -install` (you can use the shortcut from the start menu for that)
 * Run `mkcert -CAROOT` to see the local folder used for the newly created root
   certificate authority
+  
+### Firefox additional instructions
+
 * Open the Firefox Preferences
 * Enter `certificates` into the search box on the top
 * Click  `View Certificates...`
