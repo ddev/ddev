@@ -14,6 +14,9 @@ import (
 )
 
 func TestComposerCmd(t *testing.T) {
+	if dockerutil.IsColima() {
+		t.Skip("Skipping test on Colima because of odd unable to delete vendor error")
+	}
 	assert := asrt.New(t)
 
 	origDir, err := os.Getwd()
