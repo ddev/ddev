@@ -2186,6 +2186,8 @@ func TestWriteableFilesDirectory(t *testing.T) {
 		err = app.Stop(true, false)
 		assert.NoError(err)
 	})
+	err = os.Chdir(site.Dir)
+	require.NoError(t, err)
 
 	// Not all the example projects have an upload dir, so create it just in case
 	err = os.MkdirAll(app.GetHostUploadDirFullPath(), 0777)
