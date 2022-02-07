@@ -209,7 +209,7 @@ var (
 			SourceURL:                     "https://github.com/drud/ddev-test-php-repo/archive/refs/tags/v1.1.0.tar.gz",
 			ArchiveInternalExtractionPath: "ddev-test-php-repo-1.1.0/",
 			FullSiteTarballURL:            "",
-			FilesTarballURL:               "",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6_files.tar.gz",
 			Docroot:                       "",
 			Type:                          nodeps.AppTypePHP,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "This is a simple readme."},
@@ -1775,8 +1775,10 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		// TestPkgPHP uses mostly stuff from Drupal6, but we'll set the type to php
 		if site.Name == "TestPkgPHP" {
-			app.Type = "php"
-			app.UploadDir = "sites/default/files"
+			app.Type = nodeps.AppTypePHP
+			app.UploadDir = "files"
+			err = os.MkdirAll(app.GetHostUploadDirFullPath(), 0755)
+			assert.NoError(err)
 		}
 
 		// Get files before start, as syncing can start immediately.
@@ -1859,12 +1861,15 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetWebContainerDirectHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 
 		// Project type 'php' should fail ImportFiles if no upload_dir is provided
-		if app.Type == "php" {
+		if app.Type == nodeps.AppTypePHP {
 			app.UploadDir = ""
 			err = app.WriteConfig()
 			assert.NoError(err)
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
-			require.NoError(t, err)
+			if err != nil {
+				assert.NoError(err, "GetCachedArchive failed on project %s", site.Name)
+				continue
+			}
 			err = app.ImportFiles(tarballPath, "")
 			assert.Error(err)
 			assert.Contains(err.Error(), "No upload_dir is set")
@@ -2363,8 +2368,8 @@ func TestDdevImportFiles(t *testing.T) {
 	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
-		if site.FilesTarballURL == "" && site.FilesZipballURL == "" && site.FullSiteTarballURL == "" {
-			t.Logf("== SKIP TestDdevImportFiles for %s (FilesTarballURL and FilesZipballURL are not provided)\n", site.Name)
+		if site.Type == "php" || (site.FilesTarballURL == "" && site.FilesZipballURL == "" && site.FullSiteTarballURL == "") {
+			t.Logf("== SKIP TestDdevImportFiles for %s (FilesTarballURL and FilesZipballURL are not provided) or type php\n", site.Name)
 			continue
 		}
 
