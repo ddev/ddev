@@ -2156,14 +2156,20 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 // and files created in container are correct user on host.
 func TestWriteableFilesDirectory(t *testing.T) {
 	assert := asrt.New(t)
+	origDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
 	site := TestSites[0]
-	switchDir := site.Chdir()
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s TestWritableFilesDirectory", site.Name))
 
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
 	assert.NoError(err)
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
 
 	// Not all the example projects have an upload dir, so create it just in case
 	err = os.MkdirAll(app.GetHostUploadDirFullPath(), 0777)
@@ -2261,12 +2267,12 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	assert.NoError(err)
 
 	runTime()
-	switchDir()
 }
 
 // TestDdevImportFilesDir tests that "ddev import-files" can successfully import non-archive directories
 func TestDdevImportFilesDir(t *testing.T) {
 	assert := asrt.New(t)
+	origDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
 
 	// Create a dummy directory to test non-archive imports
@@ -2287,8 +2293,6 @@ func TestDdevImportFilesDir(t *testing.T) {
 			t.Logf("== SKIP TestDdevImportFilesDir for %s (FilesTarballURL and FilesZipballURL are not provided)\n", site.Name)
 			continue
 		}
-
-		switchDir := site.Chdir()
 		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 		t.Logf("== BEGIN TestDdevImportFilesDir for %s\n", site.Name)
 
@@ -2299,7 +2303,19 @@ func TestDdevImportFilesDir(t *testing.T) {
 			continue
 		}
 
+		t.Cleanup(func() {
+			err = os.Chdir(origDir)
+			assert.NoError(err)
+			err = app.Stop(true, false)
+			assert.NoError(err)
+		})
+		err = os.Chdir(site.Dir)
+		require.NoError(t, err)
+
 		// Function under test
+		if app.GetUploadDir() == "" {
+			continue
+		}
 		err = app.ImportFiles(importDir, "")
 		if err != nil {
 			assert.NoError(err, "failed importing files directory %s for site %s: %v", importDir, site.Name, err)
@@ -2321,12 +2337,12 @@ func TestDdevImportFilesDir(t *testing.T) {
 		}
 
 		runTime()
-		switchDir()
 	}
 }
 
 // TestDdevImportFiles tests the functionality that is called when "ddev import-files" is executed
 func TestDdevImportFiles(t *testing.T) {
+	origDir, _ := os.Getwd()
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
@@ -2336,33 +2352,53 @@ func TestDdevImportFiles(t *testing.T) {
 			continue
 		}
 
-		switchDir := site.Chdir()
 		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
 		assert.NoError(err)
+		t.Cleanup(func() {
+			err = os.Chdir(origDir)
+			assert.NoError(err)
+			err = app.Stop(true, false)
+			assert.NoError(err)
+		})
+		err = os.Chdir(site.Dir)
+		require.NoError(t, err)
+
 		app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-files": {{"exec-host": "touch hello-post-import-files-" + app.Name}}, "pre-import-files": {{"exec-host": "touch hello-pre-import-files-" + app.Name}}}
 
 		if site.FilesTarballURL != "" {
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
 			require.NoError(t, err)
 			err = app.ImportFiles(tarballPath, "")
-			assert.NoError(err)
+			if err != nil {
+				assert.NoError(err, "failed importing files tarball %s for site %s: %v", tarballPath, site.Name, err)
+				continue
+			}
 		}
 
 		if site.FilesZipballURL != "" {
 			_, zipballPath, err := testcommon.GetCachedArchive(site.Name, "local-zipballs-files", "", site.FilesZipballURL)
 			require.NoError(t, err)
 			err = app.ImportFiles(zipballPath, "")
-			assert.NoError(err)
+			if err != nil {
+				assert.NoError(err)
+				continue
+			}
 		}
 
 		if site.FullSiteTarballURL != "" && site.FullSiteArchiveExtPath != "" {
 			_, siteTarPath, err := testcommon.GetCachedArchive(site.Name, "local-site-tar", "", site.FullSiteTarballURL)
-			require.NoError(t, err)
+			if err != nil {
+				assert.NoError(err)
+				continue
+			}
 			err = app.ImportFiles(siteTarPath, site.FullSiteArchiveExtPath)
-			assert.NoError(err)
+			if err != nil {
+				assert.NoError(err)
+				continue
+			}
 		}
 		assert.FileExists("hello-pre-import-files-" + app.Name)
 		assert.FileExists("hello-post-import-files-" + app.Name)
@@ -2372,7 +2408,6 @@ func TestDdevImportFiles(t *testing.T) {
 		assert.NoError(err)
 
 		runTime()
-		switchDir()
 	}
 }
 
