@@ -2386,7 +2386,7 @@ func TestDdevImportFiles(t *testing.T) {
 
 		app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-files": {{"exec-host": "touch hello-post-import-files-" + app.Name}}, "pre-import-files": {{"exec-host": "touch hello-pre-import-files-" + app.Name}}}
 
-		if site.FilesTarballURL != "" {
+		if site.FilesTarballURL != "" && app.GetUploadDir() != "" {
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
 			require.NoError(t, err)
 			err = app.ImportFiles(tarballPath, "")
