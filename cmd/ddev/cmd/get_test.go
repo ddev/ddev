@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/globalconfig"
@@ -20,17 +21,23 @@ func TestCmdGet(t *testing.T) {
 	site := TestSites[0]
 	err := os.Chdir(site.Dir)
 	require.NoError(t, err)
+	app, err := ddevapp.GetActiveApp("")
+	require.NoError(t, err)
+
 	t.Cleanup(func() {
 		_, err = exec.RunHostCommand(DdevBin, "service", "disable", "memcached")
 		assert.NoError(err)
+		_, err = exec.RunHostCommand(DdevBin, "service", "disable", "example")
+		assert.NoError(err)
+
+		_ = os.RemoveAll(app.GetConfigPath(fmt.Sprintf("docker-compose.%s.yaml", "memcached")))
+		_ = os.RemoveAll(app.GetConfigPath(fmt.Sprintf("docker-compose.%s.yaml", "example")))
+
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 		err = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
 		assert.NoError(err)
 	})
-
-	app, err := ddevapp.GetActiveApp("")
-	require.NoError(t, err)
 
 	tarballFile := filepath.Join(origDir, "testdata", t.Name(), "ddev-memcached.tar.gz")
 	for _, arg := range []string{
