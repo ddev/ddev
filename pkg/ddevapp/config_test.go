@@ -504,8 +504,7 @@ func TestConfigCommandDocrootDetectionIndexVerification(t *testing.T) {
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		err = os.RemoveAll(testDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
 	})
 	// Randomize some values to use for Stdin during testing.
 	name := strings.ToLower(util.RandString(16))
