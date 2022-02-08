@@ -167,8 +167,8 @@ func init() {
 }
 
 func instrumentationNotSetUpWarning() {
-	if version.SegmentKey == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
-		output.UserOut.Warning("Instrumentation is opted in, but SegmentKey is not available.")
+	if !output.JSONOutput && version.SegmentKey == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
+		output.UserOut.Warning("Instrumentation is opted in, but SegmentKey is not available. This usually means you have a locally-built ddev binary or one from a PR build. It's not an error. Please report it if you're using an official release build.")
 	}
 }
 
