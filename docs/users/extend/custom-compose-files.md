@@ -47,7 +47,6 @@ services:
   - VIRTUAL_HOST=$DDEV_HOSTNAME
   - HTTP_EXPOSE=9998:9999
   - HTTPS_EXPOSE=9999:9999
-  networks: [default, ddev_default]
 ```
 
 ### Confirming docker-compose configurations
