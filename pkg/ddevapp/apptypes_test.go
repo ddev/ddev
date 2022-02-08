@@ -59,6 +59,7 @@ func TestApptypeDetection(t *testing.T) {
 // config is not included in the config.yaml.
 func TestPostConfigAction(t *testing.T) {
 	assert := asrt.New(t)
+	origDir, _ := os.Getwd()
 
 	appTypes := map[string]string{
 		nodeps.AppTypeDrupal6:   nodeps.PHP56,
@@ -78,6 +79,8 @@ func TestPostConfigAction(t *testing.T) {
 		assert.NoError(err)
 
 		t.Cleanup(func() {
+			err = os.Chdir(origDir)
+			assert.NoError(err)
 			err = app.Stop(true, false)
 			assert.NoError(err)
 			err = os.RemoveAll(testDir)

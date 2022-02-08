@@ -21,15 +21,23 @@ func TestLocalfilePull(t *testing.T) {
 	assert := asrt.New(t)
 	var err error
 
-	testDir, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 
-	siteDir := testcommon.CreateTmpDir(t.Name())
+	tmpDir := testcommon.CreateTmpDir(t.Name())
 
-	err = os.Chdir(siteDir)
-	assert.NoError(err)
+	err = os.Chdir(tmpDir)
+	require.NoError(t, err)
 
-	app, err := NewApp(siteDir, true)
-	assert.NoError(err)
+	app, err := NewApp(tmpDir, true)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+
+		_ = os.Chdir(origDir)
+		_ = os.RemoveAll(tmpDir)
+	})
+
 	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal9
 	app.Docroot = "web"
@@ -47,21 +55,13 @@ func TestLocalfilePull(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	t.Cleanup(func() {
-		err = app.Stop(true, false)
-		assert.NoError(err)
-
-		_ = os.Chdir(testDir)
-		_ = os.RemoveAll(siteDir)
-	})
-
 	err = PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
 	// Build our localfile.yaml from the example file
 	s, err := os.ReadFile(app.GetConfigPath("providers/localfile.yaml.example"))
 	require.NoError(t, err)
-	x := strings.Replace(string(s), "~/Dropbox", path.Join(dockerutil.MassageWindowsHostMountpoint(testDir), "testdata", t.Name()), -1)
+	x := strings.Replace(string(s), "~/Dropbox", path.Join(dockerutil.MassageWindowsHostMountpoint(origDir), "testdata", t.Name()), -1)
 	appRoot := dockerutil.MassageWindowsHostMountpoint(app.AppRoot)
 	x = strings.Replace(x, "/full/path/to/project/root", appRoot, -1)
 	err = os.WriteFile(app.GetConfigPath("providers/localfile.yaml"), []byte(x), 0666)

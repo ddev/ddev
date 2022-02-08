@@ -4,7 +4,7 @@ DDEV provides lots and lots of flexibility for you in managing your databases be
 
 Remember, you can run `ddev [command] --help` for more info on many of the topics below.
 
-**Many database backends**: You can use a vast array of different database types, including MariaDB from 5.5 through 10.6 and MySQL from 5.5 through 8.0 ([docs](../extend/database_types.md#database-server-types)). Note that if you want to _change_ database type, especially to downgrade, you need to export your database and then `ddev delete` the project (to kill off the existing database), make the change to a new db type, start again, and import.
+**Many database backends**: You can use a vast array of different database types, including MariaDB (5.5-10.6) and MySQL (5.5-8.0) Postgresql (9-14), see ([docs](../extend/database_types.md#database-server-types)). Note that if you want to _change_ database type, you need to export your database and then `ddev delete` the project (to kill off the existing database), make the change to a new db type, start again, and import.
 
 **Default database**: DDEV creates a default database named `db` and default permissions for the `db` user with password `db`, and it's on the (inside Docker) hostname `db`.
 
@@ -14,15 +14,17 @@ Remember, you can run `ddev [command] --help` for more info on many of the topic
 
 **Database snapshots**: With _snapshots_ you can easily save the entire status of all of your databases. It's great for when you're working incrementally on migrations or updates and want to save state so you can start right back where you were.
 
-I like to name my snapshots so I can find them later, so `ddev snapshot --name=two-dbs` would make a snapshot named `two-dbs` in the `.ddev/db_snapshots` directory. It includes the entire state of the db server, so in the case of our two databases above, both databases and the system level `mysql` database will all be snapshotted. Then if you want to delete everything with `ddev delete -O` (omitting the snapshot since we have one already), and then `ddev start` again, we can `ddev restore-snapshot two-dbs` and we'll be right back where we were.
+I like to name my snapshots so I can find them later, so `ddev snapshot --name=two-dbs` would make a snapshot named `two-dbs` in the `.ddev/db_snapshots` directory. It includes the entire state of the db server, so in the case of our two databases above, both databases and the system level `mysql` or `postgres` database will all be snapshotted. Then if you want to delete everything with `ddev delete -O` (omitting the snapshot since we have one already), and then `ddev start` again, we can `ddev restore-snapshot two-dbs` and we'll be right back where we were.
 
 Don't forget about `ddev snapshot restore --latest` and that `ddev snapshot restore` will interactively let you choose among snapshots.
 
-**ddev mysql**: `ddev mysql` gives you direct access to the mysql client in the db container. I like to use it for lots of things because I like the command line. I might just `ddev mysql` and give an interactive command like `DROP DATABASE backend;`. Or `SHOW TABLES;`. You can also do things like ``echo "SHOW TABLES;" | ddev mysql or `ddev mysql -uroot -proot` `` to get root privileges.
+**ddev mysql** and **ddev psql**: `ddev mysql` gives you direct access to the mysql client in the db container. I like to use it for lots of things because I like the command line. I might just `ddev mysql` and give an interactive command like `DROP DATABASE backend;`. Or `SHOW TABLES;`. You can also do things like ``echo "SHOW TABLES;" | ddev mysql or `ddev mysql -uroot -proot` `` to get root privileges.
 
-**mysql client in containers**: Both the web and db containers have the mysql client all set up and configured, so you can just `ddev ssh` or `ddev ssh -s db` and then use `mysql` however you choose to.
+**mysql/psql clients in containers**: Both the web and db containers have the mysql/psql clients all set up and configured, so you can just `ddev ssh` or `ddev ssh -s db` and then use `mysql` or `psql` however you choose to.
 
 **mysqldump**: The web and db containers also have `mysqldump` so you can use it any way you want inside there. I like to `ddev ssh` (into the web container) and then `mkdir /var/www/html/.tarballs` and `mysqldump db >/var/www/html/.tarballs/db.sql` or `mysqldump db | gzip >/var/www/html/.tarballs/db.sql.gz` (Because /var/www/html is mounted into the container from your project root, the .tarballs folder will also show up in the root of the project on the host.)
+
+**pgdump and related commands**: The postgres db container has all the normal `pg` commands like `pgdump`.
 
 **Other database explorers**: There are lots of alternatives for GUI database explorers:
 
@@ -30,7 +32,7 @@ Don't forget about `ddev snapshot restore --latest` and that `ddev snapshot rest
 * `ddev describe` tells you the URL for the built-in PHPMyAdmin database browser (Hint: It's `http://<yourproject>.ddev.site:8036`).
 * PHPStorm (and all JetBrains tools) have a nice database browser:
     * Choose a static `host_db_port` for your project. For example `host_db_port: 59002` (each project's db port should be different if you're running more than one project at a time). (`ddev start` to make it take effect)
-    * Use the "database" tool to create a source from "localhost", with type "mysql" and the port you chose, credentials username: db and password: db
+    * Use the "database" tool to create a source from "localhost", with the proper type "mysql" or "postgresql" and the port you chose, credentials username: db and password: db
     * Explore away!
 * There's a sample custom command that will run the free [mysqlworkbench](https://dev.mysql.com/downloads/workbench/) GUI database explorer on macOS, Windows or Linux. You just have to:
     * `cp ~.ddev/commands/host/mysqlworkbench.example ~.ddev/commands/host/mysqlworkbench`

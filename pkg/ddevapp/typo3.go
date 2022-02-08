@@ -2,58 +2,16 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
 	"os"
 	"path/filepath"
+	"text/template"
 
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 )
-
-const typo3AdditionalConfigTemplate = `<?php
-
-/**
- * ` + DdevFileSignature + `: Automatically generated TYPO3 AdditionalConfiguration.php file.
- * ddev manages this file and may delete or overwrite the file unless this comment is removed.
- * It is recommended that you leave this file alone.
- */
-
-if (getenv('IS_DDEV_PROJECT') == 'true') {
-    $GLOBALS['TYPO3_CONF_VARS'] = array_replace_recursive(
-        $GLOBALS['TYPO3_CONF_VARS'],
-        [
-            'DB' => [
-                'Connections' => [
-                    'Default' => [
-                        'dbname' => 'db',
-                        'host' => '{{ .DBHostname }}',
-                        'password' => 'db',
-                        'port' => '3306',
-                        'user' => 'db',
-                    ],
-                ],
-            ],
-            // This GFX configuration allows processing by installed ImageMagick 6
-            'GFX' => [
-                'processor' => 'ImageMagick',
-                'processor_path' => '/usr/bin/',
-                'processor_path_lzw' => '/usr/bin/',
-            ],
-            // This mail configuration sends all emails to mailhog
-            'MAIL' => [
-                'transport' => 'smtp',
-                'transport_smtp_server' => 'localhost:1025',
-            ],
-            'SYS' => [
-                'trustedHostsPattern' => '.*.*',
-                'devIPmask' => '*',
-                'displayErrors' => 1,
-            ],
-        ]
-    );
-}
-`
 
 // createTypo3SettingsFile creates the app's LocalConfiguration.php and
 // AdditionalConfiguration.php, adding things like database host, name, and
@@ -108,9 +66,34 @@ func writeTypo3SettingsFile(app *DdevApp) error {
 			return err
 		}
 	}
+	dbDriver := "pdo_mysql"
+	if app.Database.Type == nodeps.Postgres {
+		dbDriver = "pdo_pgsql"
+	}
+	settings := map[string]interface{}{"DBHostname": "db", "DBDriver": dbDriver, "DBPort": GetInternalPort(app, "db")}
 
-	templateVars := map[string]interface{}{"DBHostname": "db"}
-	err := fileutil.TemplateStringToFile(typo3AdditionalConfigTemplate, templateVars, filePath)
+	// Ensure target directory exists and is writable
+	if err := os.Chmod(dir, 0755); os.IsNotExist(err) {
+		if err = os.MkdirAll(dir, 0755); err != nil {
+			return err
+		}
+	} else if err != nil {
+		return err
+	}
+
+	f, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+
+	t, err := template.New("AdditionalConfiguration.php").ParseFS(bundledAssets, "typo3/AdditionalConfiguration.php")
+	if err != nil {
+		return err
+	}
+
+	if err = t.Execute(f, settings); err != nil {
+		return err
+	}
 	if err != nil {
 		return err
 	}

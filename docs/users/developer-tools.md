@@ -8,7 +8,8 @@ Run `ddev describe` to see the project information and services available for yo
 
 Hundreds of useful developer tools are included inside the containers. Any of these tools can be used via `ddev exec` or `ddev ssh`. A short listing is:
 
-* MySQL Client (mysql) - Command-line interface for interacting with MySQL/MariaDB.
+* MySQL client (`mysql`) - Command-line interface for interacting with MySQL/MariaDB.
+* Postgresql client (`psql`) - Command-line tool for Postgresql.
 * [Drush](http://www.drush.org) - Command-line shell and Unix scripting interface for Drupal.
 * [PHIVE](https://phar.io/) - Command line tool for "PHAR Installation and Verification Environment"
 * [WP-CLI](http://wp-cli.org/) - Command-line tools for managing WordPress installations, available both as "wp" and as "wp-cli".
@@ -110,6 +111,8 @@ If you need to connect to the database of your project from the host machine, ru
 The port referenced is unique per running project, and randomly chosen from available ports on your system when you run `ddev start`.
 
 You can force this port to be the same on every `ddev start` by setting `host_db_port` in the project .ddev/config.yaml. For example, `host_db_port: "49156"` or `ddev config --host-db-port=49156`. This value needs to be different on each running DDEV project, and unless it is set, the database port will change on every `ddev start`.
+
+You can use this port with various tools that need a direct port, like `mysql` or `psql` clients, but it's usually easiest to use `ddev mysql`, `ddev psql`, `ddev sequelace`, `ddev tableplus`, etc, which set everything up for you.
 
 ### Using Drush 8 installed Installation on the Host Computer
 

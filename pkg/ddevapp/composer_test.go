@@ -49,6 +49,8 @@ func TestComposer(t *testing.T) {
 	// Make sure we get rid of this for other uses
 
 	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
 		app.Hooks = nil
 		app.ComposerVersion = ""
 		_ = app.WriteConfig()

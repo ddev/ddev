@@ -71,6 +71,7 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     imagemagick \
     mariadb-client \
     msmtp \
+    postgresql-client \
     nginx \
     nodejs \
     php-uploadprogress \

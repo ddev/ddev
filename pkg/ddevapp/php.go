@@ -23,10 +23,10 @@ func getPHPUploadDir(app *DdevApp) string {
 	return app.UploadDir
 }
 
-// phpImportFilesAction defines the Drupal workflow for importing project files.
+// phpImportFilesAction defines the workflow for importing project files.
 func phpImportFilesAction(app *DdevApp, importPath, extPath string) error {
 	if app.UploadDir == "" {
-		return errors.Errorf("No upload_dir is set for this project")
+		return errors.Errorf("No upload_dir is set for this (php-generic) project")
 	}
 	destPath := app.GetHostUploadDirFullPath()
 

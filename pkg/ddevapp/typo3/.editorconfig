@@ -1,0 +1,56 @@
+# EditorConfig is awesome: http://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# TS/JS-Files
+[*.{ts,js}]
+indent_size = 2
+
+# JSON-Files
+[*.json]
+indent_style = tab
+
+# ReST-Files
+[*.rst]
+indent_size = 4
+max_line_length = 80
+
+# YAML-Files
+[*.{yaml,yml}]
+indent_size = 2
+
+# NEON-Files
+[*.neon]
+indent_size = 2
+indent_style = tab
+
+# package.json
+[package.json]
+indent_size = 2
+
+# TypoScript
+[*.{typoscript,tsconfig}]
+indent_size = 2
+
+# XLF-Files
+[*.xlf]
+indent_style = tab
+
+# SQL-Files
+[*.sql]
+indent_style = tab
+indent_size = 2
+
+# .htaccess
+[{_.htaccess,.htaccess}]
+indent_style = tab

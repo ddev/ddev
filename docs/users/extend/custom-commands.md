@@ -181,6 +181,13 @@ If your host command should only run if a particular file exists, add the `HostB
 Usage: `## HostBinaryExists: <path/to/file>`
 Example: `## HostBinaryExists: /Applications/Sequel ace.app`
 
+#### DBTypes
+
+if your command should only be available for a particular database type, add the `DBTypes` annotation. Multiple types are separated by a comma. Valid types the available database types.
+
+Usage: `## DBTypes: <type>`
+Example: `## DBTypes: postgres`
+
 ### Known Windows OS issues
 
 * **Line Endings**: If you are editing a custom command which will run in a container, it must have LF line endings (not traditional Windows CRLF line endings). Remember that a custom command in a container is a script that must execute in a Linux environment.

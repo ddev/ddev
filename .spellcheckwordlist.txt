@@ -363,10 +363,14 @@ php
 phpMyAdmin
 phpinfo
 phpmyadmin
+pg_dump
+pgsql
 pid
 plugin
 posix
 postfix
+postgres
+postgresql
 poweroff
 powershell
 pre
@@ -383,6 +387,7 @@ proto
 provided
 provider
 ps
+psql
 public
 quickstart
 rc

@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"sort"
 	"strconv"
@@ -70,10 +71,10 @@ var (
 		// 2: drupal7
 		{
 			Name:                          "TestPkgDrupal7", // Drupal D7
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-7.61.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-7.61/",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-7.87.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-7.87/",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.59.files.tar.gz",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.59-db.tar.gz",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.87-db.tar.gz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
 			Type:                          nodeps.AppTypeDrupal7,
@@ -205,16 +206,14 @@ var (
 		// 11: php
 		{
 			Name:                          "TestPkgPHP",
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-6.38.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-6.38/",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6.38_db.tar.gz",
+			SourceURL:                     "https://github.com/drud/ddev-test-php-repo/archive/refs/tags/v1.1.0.tar.gz",
+			ArchiveInternalExtractionPath: "ddev-test-php-repo-1.1.0/",
 			FullSiteTarballURL:            "",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6_files.tar.gz",
 			Docroot:                       "",
-			Type:                          nodeps.AppTypeDrupal6,
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/CHANGELOG.txt", Expect: "Drupal 6.38, 2016-02-24"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/2", Expect: "This is a story. The story is somewhat shaky"},
-			FilesImageURI:                 "/sites/default/files/garland_logo.jpg",
+			Type:                          nodeps.AppTypePHP,
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "This is a simple readme."},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/index.php", Expect: "This program makes use of the Zend Scripting Language Engine"},
 		},
 		// 12: drupal10
 		{
@@ -293,9 +292,21 @@ func TestMain(m *testing.M) {
 			log.Errorf("TestMain startup: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 			continue
 		}
+		err = ddevapp.PrepDdevDirectory(app.AppRoot)
+		if err != nil {
+			testRun = -1
+			log.Errorf("TestMain startup: ddevapp.PrepDdevDirectory() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
+			continue
+		}
 		// Use ddev binary here because just app.WriteConfig() doesn't
 		// populate the project .ddev
-		_, err = exec.RunHostCommand(DdevBin, "config", "--auto")
+		err = ddevapp.PopulateExamplesCommandsHomeadditions(app.Name)
+		if err != nil {
+			testRun = -1
+			log.Errorf("TestMain startup: ddevapp.PopulateExamplesCommandsHomeadditions() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
+			continue
+		}
+		err = app.WriteConfig()
 		if err != nil {
 			testRun = -1
 			log.Errorf("TestMain startup: app.WriteConfig() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
@@ -304,9 +315,7 @@ func TestMain(m *testing.M) {
 		// Pre-download any images we may need, just to get them out of the way so they don't clutter tests
 		_, err = exec.RunHostCommand("sh", "-c", fmt.Sprintf("%s debug download-images >/dev/null", DdevBin))
 		if err != nil {
-			testRun = -1
-			log.Errorf("TestMain startup: failed to download-images, site %s in dir %s: %v", TestSites[i].Name, TestSites[i].Dir, err)
-			continue
+			log.Warnf("TestMain startup: failed to ddev debug download-images, site %s in dir %s: %v", TestSites[i].Name, TestSites[i].Dir, err)
 		}
 
 		for _, volume := range []string{app.Name + "-mariadb"} {
@@ -391,18 +400,6 @@ func TestDdevStart(t *testing.T) {
 		check, err := testcommon.ContainerCheck(containerName, "running")
 		assert.NoError(err)
 		assert.True(check, "Container check on %s failed", containerType)
-	}
-
-	if util.IsCommandAvailable("mysql") {
-		dbPort, err := app.GetPublishedPort("db")
-		assert.NoError(err)
-
-		dockerIP, _ := dockerutil.GetDockerIP()
-		out, err := exec.RunHostCommand("mysql", "--user=db", "--password=db", "--port="+strconv.Itoa(dbPort), "--database=db", "--host="+dockerIP, "-e", "SELECT 1;")
-		assert.NoError(err)
-		assert.Contains(out, "1")
-	} else {
-		fmt.Print("TestDdevStart skipping check for local mysql connection because mysql command not in path")
 	}
 
 	err = app.Stop(true, false)
@@ -728,15 +725,6 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	origDir, _ := os.Getwd()
 
-	phpVersions := nodeps.ValidPHPVersions
-
-	// Most of the time there's no reason to do all versions of PHP
-	if os.Getenv("GOTEST_SHORT") != "" {
-		for _, k := range []string{"5.6", "7.0", "7.1", "7.2", "7.3"} {
-			delete(phpVersions, k)
-		}
-	}
-
 	app := &ddevapp.DdevApp{}
 	testcommon.ClearDockerEnv()
 
@@ -771,14 +759,15 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	phpKeys := make([]string, 0, len(phpVersions))
-	for k := range phpVersions {
-		phpKeys = append(phpKeys, k)
+	// Most of the time there's no reason to do all versions of PHP
+	phpKeys := []string{}
+	exclusions := []string{"5.6", "7.0", "7.1", "7.2"}
+	for k := range nodeps.ValidPHPVersions {
+		if os.Getenv("GOTEST_SHORT") != "" && !nodeps.ArrayContainsString(exclusions, k) {
+			phpKeys = append(phpKeys, k)
+		}
 	}
-	// Reverse sort to start with more recent php first
-	sort.Slice(phpKeys, func(a, b int) bool {
-		return phpKeys[b] < phpKeys[a]
-	})
+	sort.Strings(phpKeys)
 
 	for _, v := range phpKeys {
 		app.PHPVersion = v
@@ -876,10 +865,12 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 // TestDdevXhprofEnabled tests running with xhprof_enabled = true, etc.
 func TestDdevXhprofEnabled(t *testing.T) {
-	assert := asrt.New(t)
+	if nodeps.IsMacM1() {
+		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+	}
 
+	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
-	phpVersions := nodeps.ValidPHPVersions
 
 	testcommon.ClearDockerEnv()
 
@@ -897,12 +888,12 @@ func TestDdevXhprofEnabled(t *testing.T) {
 
 	// Does not work with php5.6 anyway (SEGV), for resource conservation
 	// skip older unsupported versions
-	for _, k := range []string{"5.6", "7.0", "7.1", "7.2"} {
-		delete(phpVersions, k)
-	}
-	phpKeys := make([]string, 0, len(phpVersions))
-	for k := range phpVersions {
-		phpKeys = append(phpKeys, k)
+	phpKeys := []string{}
+	exclusions := []string{"5.6", "7.0", "7.1"}
+	for k := range nodeps.ValidPHPVersions {
+		if !nodeps.ArrayContainsString(exclusions, k) {
+			phpKeys = append(phpKeys, k)
+		}
 	}
 	sort.Strings(phpKeys)
 
@@ -1060,10 +1051,16 @@ func TestGetApps(t *testing.T) {
 		app := &ddevapp.DdevApp{}
 
 		err := app.Init(site.Dir)
-		assert.NoError(err)
+		if err != nil {
+			assert.NoError(err, "unable to app.Init %s: %v", app.Name, err)
+			continue
+		}
 
 		err = app.Start()
-		assert.NoError(err)
+		if err != nil {
+			assert.NoError(err, "unable to app.start %s: %v", app.Name, err)
+			continue
+		}
 	}
 
 	apps := ddevapp.GetActiveProjects()
@@ -1085,10 +1082,16 @@ func TestGetApps(t *testing.T) {
 		app := &ddevapp.DdevApp{}
 
 		err := app.Init(site.Dir)
-		assert.NoError(err)
+		if err != nil {
+			assert.NoError(err, "unable to app.Init %s: %v", app.Name, err)
+			continue
+		}
 
 		err = app.Stop(true, false)
-		assert.NoError(err)
+		if err != nil {
+			assert.NoError(err, "unable to app.Stop %s: %v", app.Name, err)
+			continue
+		}
 	}
 }
 
@@ -1106,46 +1109,81 @@ func TestDdevImportDB(t *testing.T) {
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
 	assert.NoError(err)
-	err = app.Start()
-	assert.NoError(err)
-	defer func() {
+
+	t.Cleanup(func() {
 		app.Hooks = nil
-		_ = app.WriteConfig()
-		_ = app.Stop(true, false)
-	}()
-
-	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Service: "db",
-		Cmd:     "mysql -N -e 'DROP DATABASE IF EXISTS test;'",
+		app.Database.Type = nodeps.MariaDB
+		app.Database.Version = nodeps.MariaDBDefaultVersion
+		err = app.WriteConfig()
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
 	})
-	assert.NoError(err)
 
-	app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-db": {{"exec-host": "touch hello-post-import-db-" + app.Name}}, "pre-import-db": {{"exec-host": "touch hello-pre-import-db-" + app.Name}}}
+	c := make(map[string]string)
 
-	// Test simple db loads.
-	for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.mysql.gz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.mysql.tar.gz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip", "users_with_USE_statement.sql"} {
-		path := filepath.Join(testDir, "testdata", t.Name(), file)
-		err = app.ImportDB(path, "", false, false, "db")
-		assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
-		if err != nil {
-			continue
+	for _, dbType := range []string{nodeps.MariaDB, nodeps.Postgres} {
+		err = app.Stop(true, false)
+		require.NoError(t, err)
+
+		//for _, dbType := range []string{nodeps.Postgres} {
+		app.Database = ddevapp.DatabaseDesc{
+			Type:    dbType,
+			Version: nodeps.MariaDBDefaultVersion,
 		}
-
-		// There should be exactly the one "users" table for each of these files
-		out, _, err := app.Exec(&ddevapp.ExecOpts{
-			Service: "db",
-			Cmd:     "mysql -N -e 'SHOW TABLES;' | cat",
-		})
+		if dbType == nodeps.Postgres {
+			app.Database.Version = nodeps.PostgresDefaultVersion
+		}
+		err = app.WriteConfig()
 		assert.NoError(err)
-		assert.Equal("users\n", out)
 
-		// Verify that no extra database was created
-		out, _, err = app.Exec(&ddevapp.ExecOpts{
+		err = app.Start()
+		require.NoError(t, err)
+
+		c[nodeps.MariaDB] = "mysql -N -e 'DROP DATABASE IF EXISTS test;'"
+		c[nodeps.Postgres] = fmt.Sprintf(`echo "SELECT 'DROP DATABASE test' WHERE EXISTS (SELECT FROM pg_database WHERE datname = 'test')\gexec" | psql -v ON_ERROR_STOP=1 -d postgres`)
+		out, stderr, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
-			Cmd:     `mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql)$"`,
+			Cmd:     c[dbType],
 		})
-		assert.NoError(err)
-		assert.Equal("db\n", out)
+		assert.NoError(err, "out=%s, stderr=%s", out, stderr)
+
+		app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-db": {{"exec-host": "touch hello-post-import-db-" + app.Name}}, "pre-import-db": {{"exec-host": "touch hello-pre-import-db-" + app.Name}}}
+
+		// Test simple db loads.
+		for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.mysql.gz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.mysql.tar.gz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip", "users_with_USE_statement.sql"} {
+			path := filepath.Join(testDir, "testdata", t.Name(), dbType, file)
+			if !fileutil.FileExists(path) {
+				continue
+			}
+			err = app.ImportDB(path, "", false, false, "db")
+			assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
+			if err != nil {
+				continue
+			}
+
+			c[nodeps.MariaDB] = `mysql -N -e 'SHOW TABLES;' | cat`
+			c[nodeps.Postgres] = `set -eu -o pipefail; psql -t -v ON_ERROR_STOP=1 db -c '\dt' |awk -F' *\| *' '{ if (NF>2) print $2 }' `
+			// There should be exactly the one "users" table for each of these files
+			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     c[dbType],
+			})
+			assert.NoError(err)
+			assert.Equal("users\n", out, "Failed to find users table for file %s, stdout='%s', stderr='%s'", file, out, stderr)
+
+			c[nodeps.MariaDB] = `mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql)$"`
+			c[nodeps.Postgres] = `psql -t -c "SELECT datname FROM pg_database;" | egrep -v "template?|postgres"`
+
+			// Verify that no extra database was created
+			out, stderr, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     c[dbType],
+			})
+			assert.NoError(err)
+			out = strings.Trim(out, " \n")
+			assert.Equal("db", out, "found extra database, dbType=%s dbVersion=%s out=%s, stderr=%s", dbType, app.Database.Version, out, stderr)
+		}
 
 		// Test that a settings file has correct hash_salt format
 		switch app.Type {
@@ -1153,7 +1191,7 @@ func TestDdevImportDB(t *testing.T) {
 			drupalHashSalt, err := fileutil.FgrepStringInFile(app.SiteDdevSettingsFile, "$drupal_hash_salt")
 			assert.NoError(err)
 			assert.True(drupalHashSalt)
-		case nodeps.AppTypeDrupal8:
+		case nodeps.AppTypeDrupal9:
 			settingsHashSalt, err := fileutil.FgrepStringInFile(app.SiteDdevSettingsFile, "settings['hash_salt']")
 			assert.NoError(err)
 			assert.True(settingsHashSalt)
@@ -1162,13 +1200,115 @@ func TestDdevImportDB(t *testing.T) {
 			assert.NoError(err)
 			assert.True(hasAuthSalt)
 		}
+		err = app.Stop(true, false)
+		require.NoError(t, err)
 	}
 
+	for _, dbType := range []string{nodeps.MariaDB, nodeps.Postgres} {
+		err = app.Stop(true, false)
+		app.Database = ddevapp.DatabaseDesc{Type: dbType, Version: nodeps.MariaDBDefaultVersion}
+		if dbType == nodeps.Postgres {
+			app.Database.Version = nodeps.PostgresDefaultVersion
+		}
+		err = app.WriteConfig()
+		require.NoError(t, err)
+		err = app.Start()
+		require.NoError(t, err)
+
+		for _, db := range []string{"db", "extradb"} {
+			// Import from stdin, make sure that works
+			inputFile := filepath.Join(testDir, "testdata", t.Name(), dbType, "stdintable.sql")
+			f, err := os.Open(inputFile)
+			require.NoError(t, err)
+			// nolint: errcheck
+			defer f.Close()
+			savedStdin := os.Stdin
+			os.Stdin = f
+			err = app.ImportDB("", "", false, false, db)
+			os.Stdin = savedStdin
+			assert.NoError(err)
+
+			c[nodeps.MariaDB] = fmt.Sprintf(`mysql -N %s -e "SHOW DATABASES LIKE '%s'; SELECT COUNT(*) from stdintable"`, db, db)
+			c[nodeps.Postgres] = fmt.Sprintf(`psql -t -d %s -c "SELECT datname FROM pg_database WHERE datname='%s' ;" && psql -t -d %s -c "SELECT COUNT(*) from stdintable"`, db, db, db)
+
+			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     c[dbType],
+			})
+			assert.NoError(err, "db=%s dbType=%s stdout=%s, stderr=%s", db, dbType, out, stderr)
+			out = strings.ReplaceAll(out, "\n", "")
+			out = strings.ReplaceAll(out, " ", "")
+			out = strings.Trim(out, " \n")
+			assert.Equal(fmt.Sprintf("%s2", db), out)
+
+			// Import 2-user users.sql into users table
+			path := filepath.Join(testDir, "testdata", t.Name(), dbType, "users.sql")
+			err = app.ImportDB(path, "", false, false, db)
+			assert.NoError(err)
+			c[nodeps.MariaDB] = fmt.Sprintf(`echo "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db)
+			c[nodeps.Postgres] = fmt.Sprintf(`bash -c "echo '\dt' | psql -t -d %s | awk 'NF > 1'"`, db)
+			out, stderr, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     c[dbType],
+			})
+			assert.NoError(err, "db=%s, dbType=%s, out=%s, stderr=%s", db, dbType, out, stderr)
+			out = strings.Trim(out, "\n")
+			lines := strings.Split(out, "\n")
+			assert.Len(lines, 1)
+
+			// Import 1-user sql (users_just_one table) and make sure only one table is left there
+			path = filepath.Join(testDir, "testdata", t.Name(), dbType, "oneuser.sql")
+			err = app.ImportDB(path, "", false, false, db)
+			assert.NoError(err)
+			out, _, err = app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     c[dbType],
+			})
+			assert.NoError(err)
+			out = strings.Trim(out, "\n")
+			lines = strings.Split(out, "\n")
+			assert.Len(lines, 1)
+			assert.Contains(out, "users_just_one")
+
+			// This import-on-top-of-existing-file can't work on postgres
+			if dbType != nodeps.Postgres {
+				// Import 2-user users.sql again, but with nodrop=true
+				// We should end up with 2 tables now
+				path = filepath.Join(testDir, "testdata", t.Name(), dbType, "users.sql")
+				err = app.ImportDB(path, "", false, true, db)
+				assert.NoError(err)
+				out, _, err = app.Exec(&ddevapp.ExecOpts{
+					Service: "db",
+					Cmd:     c[dbType],
+				})
+				assert.NoError(err)
+				out = strings.Trim(out, "\n")
+				lines = strings.Split(out, "\n")
+				assert.Len(lines, 2)
+			}
+		}
+	}
+	app.Database = ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}
+	err = app.WriteConfig()
+	require.NoError(t, err)
+	err = app.Start()
+	require.NoError(t, err)
+
 	// Test database that has SQL DDL in the content to make sure nothing gets corrupted.
+	// Make sure database "test" does not exist initially
+	dbType := nodeps.MariaDB
+	c[nodeps.MariaDB] = "mysql -N -e 'DROP DATABASE IF EXISTS test;'"
+	c[nodeps.Postgres] = fmt.Sprintf(`echo "SELECT 'DROP DATABASE test' WHERE EXISTS (SELECT FROM pg_database WHERE datname = 'test')\gexec" | psql -v ON_ERROR_STOP=1 -d postgres`)
+	out, stderr, err := app.Exec(&ddevapp.ExecOpts{
+		Service: "db",
+		Cmd:     c[dbType],
+	})
+	assert.NoError(err, "out=%s, stderr=%s", out, stderr)
+
 	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: "mysql -N -e 'DROP TABLE IF EXISTS wp_posts;'"})
 	require.NoError(t, err)
 	file := "posts_with_ddl_content.sql"
-	path := filepath.Join(testDir, "testdata", t.Name(), file)
+	path := filepath.Join(testDir, "testdata", t.Name(), "mariadb", file)
 	err = app.ImportDB(path, "", false, false, "db")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
 	checkImportDbImports(t, app)
@@ -1191,11 +1331,11 @@ func TestDdevImportDB(t *testing.T) {
 
 	// Verify that the count of tables is exactly what it should be, that nothing was lost in the
 	// import due to embedded DDL statements.
-	out, _, err := app.Exec(&ddevapp.ExecOpts{
+	out, stderr, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
 		Cmd:     `mysql -N -e 'SELECT COUNT(*) FROM wp_posts;'`,
 	})
-	assert.NoError(err)
+	assert.NoError(err, "out=%s, stderr=%s", out, stderr)
 	assert.Equal("180\n", out)
 
 	// Now check standard archive imports
@@ -1239,62 +1379,6 @@ func TestDdevImportDB(t *testing.T) {
 
 	app.Hooks = nil
 
-	for _, db := range []string{"db", "extradb"} {
-
-		// Import from stdin, make sure that works
-		inputFile := filepath.Join(testDir, "testdata", t.Name(), "stdintable.sql")
-		f, err := os.Open(inputFile)
-		require.NoError(t, err)
-		// nolint: errcheck
-		defer f.Close()
-		savedStdin := os.Stdin
-		os.Stdin = f
-		err = app.ImportDB("", "", false, false, db)
-		os.Stdin = savedStdin
-		assert.NoError(err)
-		out, _, err := app.Exec(&ddevapp.ExecOpts{
-			Service: "db",
-			Cmd:     fmt.Sprintf(`echo "SHOW DATABASES LIKE '%s'; SELECT COUNT(*) FROM stdintable;" | mysql -N %s`, db, db),
-		})
-		assert.NoError(err)
-		assert.Equal(out, fmt.Sprintf("%s\n2\n", db))
-
-		// Import 2-user users.sql into users table
-		path := filepath.Join(testDir, "testdata", t.Name(), "users.sql")
-		err = app.ImportDB(path, "", false, false, db)
-		assert.NoError(err)
-		out, stderr, err := app.Exec(&ddevapp.ExecOpts{
-			Service: "db",
-			Cmd:     fmt.Sprintf(`echo "SELECT COUNT(*) AS TOTALNUMBEROFTABLES FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db),
-		})
-		assert.NoError(err, "exec failed: %v", stderr)
-		assert.Equal("1\n", out)
-
-		// Import 1-user sql and make sure only one row is left there
-		path = filepath.Join(testDir, "testdata", t.Name(), "oneuser.sql")
-		err = app.ImportDB(path, "", false, false, db)
-		assert.NoError(err)
-
-		out, _, err = app.Exec(&ddevapp.ExecOpts{
-			Service: "db",
-			Cmd:     fmt.Sprintf(`echo "SELECT COUNT(*) AS TOTALNUMBEROFTABLES FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db),
-		})
-		assert.NoError(err)
-		assert.Equal("1\n", out)
-
-		// Import 2-user users.sql again, but with nodrop=true
-		// We should end up with 2 tables now
-		path = filepath.Join(testDir, "testdata", t.Name(), "users.sql")
-		err = app.ImportDB(path, "", false, true, db)
-		assert.NoError(err)
-		out, _, err = app.Exec(&ddevapp.ExecOpts{
-			Service: "db",
-			Cmd:     fmt.Sprintf(`echo "SELECT COUNT(*) AS TOTALNUMBEROFTABLES FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db),
-		})
-		assert.NoError(err)
-		assert.Equal("2\n", out)
-
-	}
 	runTime()
 	switchDir()
 }
@@ -1310,14 +1394,13 @@ func checkImportDbImports(t *testing.T, app *ddevapp.DdevApp) {
 	assert.NoError(err)
 	assert.Equal("wp_posts\n", out)
 
-	// Verify that no extra database was created (this one has a CREATE DATABASE statement)
+	// Verify that no additional database was created (this one has a CREATE DATABASE statement)
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
 		Cmd:     `mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql)$"`,
 	})
 	assert.NoError(err)
 	assert.Equal("db\n", out)
-
 }
 
 // TestDdevAllDatabases tests db import/export/snapshot/restore/start with supported database versions
@@ -1325,10 +1408,11 @@ func TestDdevAllDatabases(t *testing.T) {
 	assert := asrt.New(t)
 
 	dbVersions := nodeps.GetValidDatabaseVersions()
-
+	// Bug: postgres 9 doesn't work with snapshot restore
+	dbVersions = nodeps.RemoveItemFromSlice(dbVersions, "postgres:9")
 	//Use a smaller list if GOTEST_SHORT
 	if os.Getenv("GOTEST_SHORT") != "" {
-		dbVersions = []string{"mariadb:10.2", "mariadb:10.3", "mysql:8.0", "mysql:5.7"}
+		dbVersions = []string{"postgres:14", "mariadb:10.2", "mariadb:10.3", "mysql:8.0", "mysql:5.7"}
 		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
 	}
 
@@ -1341,6 +1425,9 @@ func TestDdevAllDatabases(t *testing.T) {
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
 	assert.NoError(err)
+
+	err = app.Stop(true, false)
+	require.NoError(t, err)
 
 	// Make sure there isn't an old db laying around
 	_ = dockerutil.RemoveVolume(app.Name + "-mariadb")
@@ -1375,24 +1462,29 @@ func TestDdevAllDatabases(t *testing.T) {
 
 		startErr := app.Start()
 		if startErr != nil {
-			appLogs, err := ddevapp.GetErrLogsFromApp(app, startErr)
-			assert.NoError(err)
+			assert.NoError(startErr, "failed to start %s:%s", dbType, dbVersion)
 			err = app.Stop(true, false)
 			assert.NoError(err)
-			t.Logf("Continuing/skippping %s due to app.Start() failure %v; logs:\n=====\n%s\n=====\n", dbVersion, startErr, appLogs)
+			t.Logf("Continuing/skippping %s due to app.Start() failure %v", dbVersion, startErr)
 			continue
 		}
 
-		// Make sure the version of db running matches expected
-		containerDBVersion, _, _ := app.Exec(&ddevapp.ExecOpts{
-			Service: "db",
-			Cmd:     "cat /var/lib/mysql/db_mariadb_version.txt",
-		})
-		assert.Equal(dbType+"_"+dbVersion, strings.Trim(containerDBVersion, "\n\r "))
+		// The db_mariadb_version.txt file does not exist on postgres
+		if dbType != nodeps.Postgres {
+			// Make sure the version of db running matches expected
+			containerDBVersion, _, _ := app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     "cat /var/lib/mysql/db_mariadb_version.txt",
+			})
+			assert.Equal(dbType+"_"+dbVersion, strings.Trim(containerDBVersion, "\n\r "))
+		}
 
-		importPath := filepath.Join(origDir, "testdata", t.Name(), "users.sql")
+		importPath := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
 		err = app.ImportDB(importPath, "", false, false, "db")
-		assert.NoError(err, "failed to import %v", importPath)
+		if err != nil {
+			assert.NoError(err, "failed to import %s on %s:%s", importPath, dbType, dbVersion)
+			continue
+		}
 
 		_ = os.Mkdir("tmp", 0777)
 		err = fileutil.PurgeDirectory("tmp")
@@ -1405,7 +1497,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		// Validate contents
 		err = archive.Ungzip("tmp/users1.sql.gz", "tmp")
 		assert.NoError(err)
-		stringFound, err := fileutil.FgrepStringInFile("tmp/users1.sql", "Table structure for table `users`")
+		stringFound, err := fileutil.GrepStringInFile("tmp/users1.sql", "CREATE TABLE.*users")
 		assert.NoError(err)
 		assert.True(stringFound)
 
@@ -1422,7 +1514,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		assert.NoError(err)
 
 		// Validate contents
-		stringFound, err = fileutil.FgrepStringInFile("tmp/users2.sql", "Table structure for table `users`")
+		stringFound, err = fileutil.GrepStringInFile("tmp/users2.sql", "CREATE TABLE.*users")
 		assert.NoError(err)
 		assert.True(stringFound)
 
@@ -1434,11 +1526,14 @@ func TestDdevAllDatabases(t *testing.T) {
 		err = app.ExportDB("", false, "db")
 		assert.NoError(err)
 		out := stdout()
-		assert.Contains(out, "Table structure for table `users`")
+		assert.Regexp(regexp.MustCompilePOSIX("CREATE TABLE.*users"), out)
 
 		snapshotName := dbType + "_" + dbVersion + "_" + fileutil.RandomFilenameBase()
 		fullSnapshotName, err := app.Snapshot(snapshotName)
-		assert.NoError(err, "could not create snapshot %s for %s: %v output=%v", snapshotName, dbTypeVersion, err, fullSnapshotName)
+		if err != nil {
+			assert.NoError(err, "could not create snapshot %s for %s: %v output=%v", snapshotName, dbTypeVersion, err, fullSnapshotName)
+			continue
+		}
 
 		fi, err := os.Stat(app.GetConfigPath(filepath.Join("db_snapshots", fullSnapshotName)))
 		require.NoError(t, err)
@@ -1446,9 +1541,14 @@ func TestDdevAllDatabases(t *testing.T) {
 		assert.Greater(fi.Size(), int64(1000), "snapshot %s for %s may be empty: %v", fi.Name(), dbTypeVersion, fi)
 
 		// Delete the user in the database so we can later verify snapshot restore
+		c := map[string]string{
+			nodeps.MySQL:    fmt.Sprintf(`echo "DELETE FROM users;" | mysql`),
+			nodeps.MariaDB:  fmt.Sprintf(`echo "DELETE FROM users;" | mysql`),
+			nodeps.Postgres: fmt.Sprintf(`echo "DELETE FROM users;" | psql`),
+		}
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
-			Cmd:     `echo "DELETE FROM users;" | mysql`,
+			Cmd:     c[dbType],
 		})
 		assert.NoError(err)
 
@@ -1458,20 +1558,29 @@ func TestDdevAllDatabases(t *testing.T) {
 			_ = app.Stop(true, false)
 			continue
 		}
-		// Make sure the version of db running matches expected
-		containerDBVersion, _, err = app.Exec(&ddevapp.ExecOpts{
-			Service: "db",
-			Cmd:     "cat /var/lib/mysql/db_mariadb_version.txt",
-		})
-		assert.NoError(err)
-		assert.Equal(dbType+"_"+dbVersion, strings.Trim(containerDBVersion, "\n\r "))
 
+		if dbType != nodeps.Postgres {
+			// Make sure the version of db running matches expected
+			containerDBVersion, _, err := app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     "cat /var/lib/mysql/db_mariadb_version.txt",
+			})
+			assert.NoError(err)
+			assert.Equal(dbType+"_"+dbVersion, strings.Trim(containerDBVersion, "\n\r "))
+		}
+
+		c = map[string]string{
+			nodeps.MySQL:    `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
+			nodeps.MariaDB:  `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
+			nodeps.Postgres: `echo "SELECT COUNT(*) FROM users;" | psql -t`,
+		}
 		out, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
-			Cmd:     `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
+			Cmd:     c[dbType],
 		})
 		assert.NoError(err)
-		assert.Equal("2\n", out)
+		out = strings.Trim(out, "\n\r ")
+		assert.Equal("2", out)
 
 		_ = app.Stop(true, false)
 	}
@@ -1493,97 +1602,133 @@ func TestDdevExportDB(t *testing.T) {
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
 	assert.NoError(err)
-	err = app.Start()
-	assert.NoError(err)
-	//nolint: errcheck
-	defer app.Stop(true, false)
-	importPath := filepath.Join(testDir, "testdata", t.Name(), "users.sql")
-	err = app.ImportDB(importPath, "", false, false, "db")
-	require.NoError(t, err)
 
-	_ = os.Mkdir("tmp", 0777)
-	// Most likely reason for failure is it exists, so let that go
-	err = fileutil.PurgeDirectory("tmp")
-	assert.NoError(err)
-
-	// Test that we can export-db to a plain file. This should be larger than
-	// the gzipped file we'll do next.
-	err = app.ExportDB("tmp/users1.sql", false, "db")
-	assert.NoError(err)
-
-	// The users1.sql should be something over 2K
-	// and should finish with "Dump completed on"
-	f, err := os.Stat("tmp/users1.sql")
-	assert.NoError(err)
-	assert.Greater(f.Size(), int64(2000))
-	l, err := readLastLine("tmp/users1.sql")
-	assert.NoError(err)
-	assert.Contains(l, "-- Dump completed on")
-
-	// Now rename our (larger) users1.sql to users1.sql.gz
-	// so we can overwrite it and come out with a totally valid new file.
-	err = os.Rename("tmp/users1.sql", "tmp/users1.sql.gz")
-	assert.NoError(err)
-
-	// Test that we can export-db to an existing gzipped file
-	err = app.ExportDB("tmp/users1.sql.gz", true, "db")
-	assert.NoError(err)
-
-	// The new gzipped file should be less than 1K
-	f, err = os.Stat("tmp/users1.sql.gz")
-	assert.NoError(err)
-	assert.Less(f.Size(), int64(1000))
-
-	// Validate contents
-	err = archive.Ungzip("tmp/users1.sql.gz", "tmp")
-	assert.NoError(err)
-	stringFound, err := fileutil.FgrepStringInFile("tmp/users1.sql", "Table structure for table `users`")
-	assert.NoError(err)
-	assert.True(stringFound)
-
-	// Flush needs to be complete before purge or may conflict with mutagen on windows
-	err = app.MutagenSyncFlush()
-	assert.NoError(err)
-	err = fileutil.PurgeDirectory("tmp")
-	assert.NoError(err)
-
-	// Export to an ungzipped file and validate
-	err = app.ExportDB("tmp/users2.sql", false, "db")
-	assert.NoError(err)
-
-	// Validate contents
-	stringFound, err = fileutil.FgrepStringInFile("tmp/users2.sql", "Table structure for table `users`")
-	assert.NoError(err)
-	assert.True(stringFound)
-
-	err = app.MutagenSyncFlush()
-	assert.NoError(err)
-
-	err = fileutil.PurgeDirectory("tmp")
-	assert.NoError(err)
-
-	// Capture to stdout without gzip compression
-	stdout := util.CaptureStdOut()
-	err = app.ExportDB("", false, "db")
-	assert.NoError(err)
-	output := stdout()
-	assert.Contains(output, "Table structure for table `users`")
-
-	// Export an alternate database
-	importPath = filepath.Join(testDir, "testdata", t.Name(), "users.sql")
-	err = app.ImportDB(importPath, "", false, false, "anotherdb")
-	require.NoError(t, err)
-	err = app.ExportDB("tmp/anotherdb.sql.gz", true, "anotherdb")
-	assert.NoError(err)
-	importPath = "tmp/anotherdb.sql.gz"
-	err = app.ImportDB(importPath, "", false, false, "thirddb")
-	assert.NoError(err)
-	out, _, err := app.Exec(&ddevapp.ExecOpts{
-		Service: "db",
-		Cmd:     fmt.Sprintf(`echo "SELECT COUNT(*) FROM users;" | mysql -N thirddb`),
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		app.Database = ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}
+		err = app.WriteConfig()
+		assert.NoError(err)
 	})
-	assert.NoError(err)
-	assert.Equal("2\n", out)
+
+	for _, dbType := range []string{nodeps.MariaDB, nodeps.Postgres} {
+		err = app.Stop(true, false)
+		require.NoError(t, err)
+		app.Database = ddevapp.DatabaseDesc{
+			Type:    dbType,
+			Version: nodeps.MariaDBDefaultVersion,
+		}
+		if dbType == nodeps.Postgres {
+			app.Database.Version = nodeps.PostgresDefaultVersion
+		}
+		err = app.WriteConfig()
+		require.NoError(t, err)
+		err = app.Start()
+		require.NoError(t, err)
+
+		importPath := filepath.Join(testDir, "testdata", t.Name(), dbType, "users.sql")
+		err = app.ImportDB(importPath, "", false, false, "db")
+		require.NoError(t, err)
+
+		_ = os.Mkdir("tmp", 0777)
+		// Most likely reason for failure is it exists, so let that go
+		err = fileutil.PurgeDirectory("tmp")
+		assert.NoError(err)
+
+		// Test that we can export-db to a plain file. This should be larger than
+		// the gzipped file we'll do next.
+		err = app.ExportDB("tmp/users1.sql", false, "db")
+		assert.NoError(err)
+
+		// The users1.sql should be something over 2K
+		// and should finish with "Dump completed on"
+		f, err := os.Stat("tmp/users1.sql")
+		assert.NoError(err)
+		assert.Greater(f.Size(), int64(2000))
+		l, err := readLastLine("tmp/users1.sql")
+		assert.NoError(err)
+		assert.Contains(l, "ump complete")
+
+		// Now rename our (larger) users1.sql to users1.sql.gz
+		// so we can overwrite it and come out with a totally valid new file.
+		err = os.Rename("tmp/users1.sql", "tmp/users1.sql.gz")
+		assert.NoError(err)
+
+		// Test that we can export-db to an existing gzipped file
+		err = app.ExportDB("tmp/users1.sql.gz", true, "db")
+		assert.NoError(err)
+
+		// The new gzipped file should be less than 1K
+		f, err = os.Stat("tmp/users1.sql.gz")
+		assert.NoError(err)
+		assert.Less(f.Size(), int64(1500))
+
+		// Validate contents
+		err = archive.Ungzip("tmp/users1.sql.gz", "tmp")
+		assert.NoError(err)
+		stringFound, err := fileutil.FgrepStringInFile("tmp/users1.sql", "Table structure for table `users`")
+		assert.NoError(err)
+		if !stringFound {
+			stringFound, err = fileutil.FgrepStringInFile("tmp/users1.sql", "Name: users; Type: TABLE")
+			assert.NoError(err)
+		}
+		assert.True(stringFound)
+
+		// Flush needs to be complete before purge or may conflict with mutagen on windows
+		err = app.MutagenSyncFlush()
+		assert.NoError(err)
+		err = fileutil.PurgeDirectory("tmp")
+		assert.NoError(err)
+
+		// Export to an ungzipped file and validate
+		err = app.ExportDB("tmp/users2.sql", false, "db")
+		assert.NoError(err)
+
+		// Validate contents
+		stringFound, err = fileutil.FgrepStringInFile("tmp/users2.sql", "Table structure for table `users`")
+		assert.NoError(err)
+		if !stringFound {
+			stringFound, err = fileutil.FgrepStringInFile("tmp/users2.sql", "Name: users; Type: TABLE")
+			assert.NoError(err)
+		}
+		assert.True(stringFound)
+
+		err = app.MutagenSyncFlush()
+		assert.NoError(err)
+
+		err = fileutil.PurgeDirectory("tmp")
+		assert.NoError(err)
+
+		// Capture to stdout without gzip compression
+		stdout := util.CaptureStdOut()
+		err = app.ExportDB("", false, "db")
+		assert.NoError(err)
+		o := stdout()
+		assert.Regexp(regexp.MustCompile("CREATE TABLE.*users"), o)
+
+		// Export an alternate database
+		importPath = filepath.Join(testDir, "testdata", t.Name(), dbType, "users.sql")
+		err = app.ImportDB(importPath, "", false, false, "anotherdb")
+		require.NoError(t, err)
+		err = app.ExportDB("tmp/anotherdb.sql.gz", true, "anotherdb")
+		assert.NoError(err)
+		importPath = "tmp/anotherdb.sql.gz"
+		err = app.ImportDB(importPath, "", false, false, "thirddb")
+		assert.NoError(err)
+
+		c := map[string]string{
+			nodeps.MariaDB:  fmt.Sprintf(`echo "SELECT COUNT(*) FROM users;" | mysql -N thirddb`),
+			nodeps.Postgres: fmt.Sprintf(`echo "SELECT COUNT(*) FROM users;" | psql -t -q thirddb`),
+		}
+		out, stderr, err := app.Exec(&ddevapp.ExecOpts{
+			Service: "db",
+			Cmd:     c[dbType],
+		})
+		assert.NoError(err, "stdout=%s stderr=%s", out, stderr)
+		out = strings.Trim(out, "\n")
+		out = strings.Trim(out, " ")
+		assert.Equal("2", out)
+	}
 
 	runTime()
 }
@@ -1625,10 +1770,15 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
+		err = app.Stop(true, false)
+		require.NoError(t, err)
+
 		// TestPkgPHP uses mostly stuff from Drupal6, but we'll set the type to php
 		if site.Name == "TestPkgPHP" {
-			app.Type = "php"
-			app.UploadDir = "sites/default/files"
+			app.Type = nodeps.AppTypePHP
+			app.UploadDir = "files"
+			err = os.MkdirAll(app.GetHostUploadDirFullPath(), 0755)
+			assert.NoError(err)
 		}
 
 		// Get files before start, as syncing can start immediately.
@@ -1667,9 +1817,15 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		if site.DBTarURL != "" {
 			_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
-			require.NoError(t, err)
+			if err != nil {
+				assert.NoError(err)
+				continue
+			}
 			err = app.ImportDB(cachedArchive, "", false, false, "db")
-			assert.NoError(err, "failed to import-db with dbtarball %s, app.Type=%s, database=%s", site.DBTarURL, app.Type, app.Database.Type+":"+app.Database.Version)
+			if err != nil {
+				assert.NoError(err, "failed to import-db with dbtarball %s, app.Type=%s, database=%s", site.DBTarURL, app.Type, app.Database.Type+":"+app.Database.Version)
+				continue
+			}
 		}
 
 		startErr := app.StartAndWait(2)
@@ -1705,12 +1861,15 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetWebContainerDirectHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 
 		// Project type 'php' should fail ImportFiles if no upload_dir is provided
-		if app.Type == "php" {
+		if app.Type == nodeps.AppTypePHP {
 			app.UploadDir = ""
 			err = app.WriteConfig()
 			assert.NoError(err)
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
-			require.NoError(t, err)
+			if err != nil {
+				assert.NoError(err, "GetCachedArchive failed on project %s", site.Name)
+				continue
+			}
 			err = app.ImportFiles(tarballPath, "")
 			assert.Error(err)
 			assert.Contains(err.Error(), "No upload_dir is set")
@@ -2016,14 +2175,22 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 // and files created in container are correct user on host.
 func TestWriteableFilesDirectory(t *testing.T) {
 	assert := asrt.New(t)
+	origDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
 	site := TestSites[0]
-	switchDir := site.Chdir()
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s TestWritableFilesDirectory", site.Name))
 
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
 	assert.NoError(err)
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	})
+	err = os.Chdir(site.Dir)
+	require.NoError(t, err)
 
 	// Not all the example projects have an upload dir, so create it just in case
 	err = os.MkdirAll(app.GetHostUploadDirFullPath(), 0777)
@@ -2121,12 +2288,12 @@ func TestWriteableFilesDirectory(t *testing.T) {
 	assert.NoError(err)
 
 	runTime()
-	switchDir()
 }
 
 // TestDdevImportFilesDir tests that "ddev import-files" can successfully import non-archive directories
 func TestDdevImportFilesDir(t *testing.T) {
 	assert := asrt.New(t)
+	origDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
 
 	// Create a dummy directory to test non-archive imports
@@ -2147,18 +2314,34 @@ func TestDdevImportFilesDir(t *testing.T) {
 			t.Logf("== SKIP TestDdevImportFilesDir for %s (FilesTarballURL and FilesZipballURL are not provided)\n", site.Name)
 			continue
 		}
-
-		switchDir := site.Chdir()
 		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 		t.Logf("== BEGIN TestDdevImportFilesDir for %s\n", site.Name)
 
 		testcommon.ClearDockerEnv()
 		err = app.Init(site.Dir)
-		assert.NoError(err)
+		if err != nil {
+			assert.NoError(err, "failed app.Init for %s, continuing", site.Name)
+			continue
+		}
+
+		t.Cleanup(func() {
+			err = os.Chdir(origDir)
+			assert.NoError(err)
+			err = app.Stop(true, false)
+			assert.NoError(err)
+		})
+		err = os.Chdir(site.Dir)
+		require.NoError(t, err)
 
 		// Function under test
+		if app.GetUploadDir() == "" {
+			continue
+		}
 		err = app.ImportFiles(importDir, "")
-		assert.NoError(err, "Importing a directory returned an error:", err)
+		if err != nil {
+			assert.NoError(err, "failed importing files directory %s for site %s: %v", importDir, site.Name, err)
+			continue
+		}
 
 		// Confirm contents of destination dir after import
 		absUploadDir := app.GetHostUploadDirFullPath()
@@ -2175,48 +2358,69 @@ func TestDdevImportFilesDir(t *testing.T) {
 		}
 
 		runTime()
-		switchDir()
 	}
 }
 
 // TestDdevImportFiles tests the functionality that is called when "ddev import-files" is executed
 func TestDdevImportFiles(t *testing.T) {
+	origDir, _ := os.Getwd()
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
 	for _, site := range TestSites {
-		if site.FilesTarballURL == "" && site.FilesZipballURL == "" && site.FullSiteTarballURL == "" {
-			t.Logf("== SKIP TestDdevImportFiles for %s (FilesTarballURL and FilesZipballURL are not provided)\n", site.Name)
+		if site.Type == "php" || (site.FilesTarballURL == "" && site.FilesZipballURL == "" && site.FullSiteTarballURL == "") {
+			t.Logf("== SKIP TestDdevImportFiles for %s (FilesTarballURL and FilesZipballURL are not provided) or type php\n", site.Name)
 			continue
 		}
 
-		switchDir := site.Chdir()
+		t.Logf("== BEGIN TestDdevImportFiles for %s\n", site.Name)
 		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
 		assert.NoError(err)
+		t.Cleanup(func() {
+			err = os.Chdir(origDir)
+			assert.NoError(err)
+			err = app.Stop(true, false)
+			assert.NoError(err)
+		})
+		err = os.Chdir(site.Dir)
+		require.NoError(t, err)
+
 		app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-files": {{"exec-host": "touch hello-post-import-files-" + app.Name}}, "pre-import-files": {{"exec-host": "touch hello-pre-import-files-" + app.Name}}}
 
-		if site.FilesTarballURL != "" {
+		if site.FilesTarballURL != "" && app.GetUploadDir() != "" {
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
-			require.NoError(t, err)
-			err = app.ImportFiles(tarballPath, "")
 			assert.NoError(err)
+			err = app.ImportFiles(tarballPath, "")
+			if err != nil {
+				assert.NoError(err, "failed importing files tarball %s for site %s: %v", tarballPath, site.Name, err)
+				continue
+			}
 		}
 
 		if site.FilesZipballURL != "" {
 			_, zipballPath, err := testcommon.GetCachedArchive(site.Name, "local-zipballs-files", "", site.FilesZipballURL)
-			require.NoError(t, err)
-			err = app.ImportFiles(zipballPath, "")
 			assert.NoError(err)
+			err = app.ImportFiles(zipballPath, "")
+			if err != nil {
+				assert.NoError(err)
+				continue
+			}
 		}
 
 		if site.FullSiteTarballURL != "" && site.FullSiteArchiveExtPath != "" {
 			_, siteTarPath, err := testcommon.GetCachedArchive(site.Name, "local-site-tar", "", site.FullSiteTarballURL)
-			require.NoError(t, err)
+			if err != nil {
+				assert.NoError(err)
+				continue
+			}
 			err = app.ImportFiles(siteTarPath, site.FullSiteArchiveExtPath)
-			assert.NoError(err)
+			if err != nil {
+				assert.NoError(err)
+				continue
+			}
 		}
 		assert.FileExists("hello-pre-import-files-" + app.Name)
 		assert.FileExists("hello-post-import-files-" + app.Name)
@@ -2226,7 +2430,6 @@ func TestDdevImportFiles(t *testing.T) {
 		assert.NoError(err)
 
 		runTime()
-		switchDir()
 	}
 }
 
@@ -2412,6 +2615,13 @@ func TestDdevExec(t *testing.T) {
 	assert.Error(err)
 	assert.Contains(err.Error(), "does not exist")
 	assert.Contains(err.Error(), "state=doesnotexist")
+
+	// Test use of RawCmd, should see the single quotes in there
+	stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+		RawCmd: []string{"bash", "-c", `echo '"hi there"'`},
+	})
+	assert.NoError(err)
+	assert.Contains(stdout, `"hi there"`, "stdout=%s, stderr=%s", stdout, stderr)
 
 	runTime()
 	switchDir()
@@ -3578,48 +3788,75 @@ func TestHostDBPort(t *testing.T) {
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
+		app.HostDBPort = ""
+		err = app.WriteConfig()
+		assert.NoError(err)
 		err = os.RemoveAll(showportPath)
 		assert.NoError(err)
 	})
+	clientTool := ""
 
 	// Make sure that everything works with and without
 	// an explicitly specified hostDBPort
-	for _, hostDBPort := range []string{"", "9998"} {
-		app.HostDBPort = hostDBPort
-
-		err = app.Start()
-		require.NoError(t, err)
-
-		desc, err := app.Describe(false)
-		assert.NoError(err)
-
-		dockerIP, err := dockerutil.GetDockerIP()
-		assert.NoError(err)
-		dbinfo := desc["dbinfo"].(map[string]interface{})
-		dbPort := dbinfo["published_port"].(int)
-		dbPortStr := strconv.Itoa(dbPort)
-
-		if app.HostDBPort != "" {
-			assert.EqualValues(app.HostDBPort, dbPortStr)
+	for _, dbType := range []string{nodeps.MariaDB, nodeps.Postgres} {
+		switch dbType {
+		case nodeps.MariaDB:
+			clientTool = "mysql"
+			app.Database = ddevapp.DatabaseDesc{Type: dbType, Version: nodeps.MariaDBDefaultVersion}
+		case nodeps.Postgres:
+			clientTool = "psql"
+			app.Database = ddevapp.DatabaseDesc{Type: dbType, Version: nodeps.PostgresDefaultVersion}
 		}
 
-		if !util.IsCommandAvailable("mysql") {
-			t.Log("Skipping mysql check because mysql tool not available")
-		} else {
-			// Running mysql against the container ensures that we can get there via the values
-			// in ddev describe
-			out, err := exec.RunHostCommand("mysql", "--user=db", "--password=db", "--host="+dockerIP, fmt.Sprintf("--port=%d", dbPort), "--database=db", `--execute=SELECT 1;`)
-			assert.NoError(err, "Failed to run mysql: %v", out)
-			out = strings.Replace(out, "\r", "", -1)
-			assert.Contains(out, "1\n1\n")
-		}
+		for _, hostDBPort := range []string{"", "9998"} {
+			app.HostDBPort = hostDBPort
+			err = app.Stop(true, false)
+			require.NoError(t, err)
+			err = app.WriteConfig()
+			require.NoError(t, err)
+			err = app.Start()
+			require.NoError(t, err)
 
-		// Running the test host custom command "showport" ensures that the DDEV_HOST_DB_PORT
-		// is getting in there available to host custom commands.
-		_, _ = exec.RunHostCommand(DdevBin)
-		out, err := exec.RunHostCommand(DdevBin, "showport")
-		assert.NoError(err)
-		assert.EqualValues("DDEV_HOST_DB_PORT="+dbPortStr, strings.Trim(out, "\r\n"))
+			desc, err := app.Describe(false)
+			assert.NoError(err)
+
+			dockerIP, err := dockerutil.GetDockerIP()
+			assert.NoError(err)
+			dbinfo := desc["dbinfo"].(map[string]interface{})
+			dbPort := dbinfo["published_port"].(int)
+			dbPortStr := strconv.Itoa(dbPort)
+
+			if app.HostDBPort != "" {
+				assert.EqualValues(app.HostDBPort, dbPortStr)
+			}
+
+			if !util.IsCommandAvailable(clientTool) {
+				t.Logf("Skipping %s check because %s tool not available", clientTool, clientTool)
+			} else {
+				// Running mysql or psql against the container ensures that we can get there via the values
+				// in ddev describe
+				c := fmt.Sprintf(
+					"export MYSQL_PWD=db; mysql -N --user=db --host=%s --port=%d --database=db -e 'SELECT 1;'", dockerIP, dbPort)
+				if dbType == nodeps.Postgres {
+					c = fmt.Sprintf("export PGPASSWORD=db; psql -U db -t --host=%s --port=%d --dbname=db -c 'SELECT 1;'", dockerIP, dbPort)
+				}
+
+				out, err := exec.RunHostCommand("bash", "-c", c)
+				assert.NoError(err, "Failed to run%v: err=%v, out=%v", c, err, out)
+				out = strings.ReplaceAll(out, "\r", "")
+				out = strings.ReplaceAll(out, " ", "")
+				lines := strings.Split(out, "\n")
+				assert.Equal("1", lines[0])
+			}
+
+			// Running the test host custom command "showport" ensures that the DDEV_HOST_DB_PORT
+			// is getting in there available to host custom commands.
+			_, _ = exec.RunHostCommand(DdevBin)
+			out, err := exec.RunHostCommand(DdevBin, "showport")
+			assert.NoError(err)
+			lines := strings.Split(out, "\n")
+			assert.EqualValues("DDEV_HOST_DB_PORT="+dbPortStr, strings.Trim(lines[0], "\r\n"), "dbType=%s, out=%s, err=%v", dbType, out, err)
+		}
 	}
 }
 
@@ -3642,6 +3879,8 @@ func TestPortSpecifications(t *testing.T) {
 	err := nospecApp.Init(site0.Dir)
 	assert.NoError(err)
 	err = nospecApp.WriteConfig()
+	require.NoError(t, err)
+	err = globalconfig.ReadGlobalConfig()
 	require.NoError(t, err)
 	// Since host ports were not explicitly set in nospecApp, they shouldn't be in globalconfig.
 	require.Empty(t, globalconfig.DdevGlobalConfig.ProjectList[nospecApp.Name].UsedHostPorts)
@@ -3786,6 +4025,7 @@ func TestCustomCerts(t *testing.T) {
 // in the web container and on the host.
 func TestEnvironmentVariables(t *testing.T) {
 	assert := asrt.New(t)
+
 	origDir, _ := os.Getwd()
 	pwd, _ := os.Getwd()
 	customCmd := filepath.Join(pwd, "testdata", t.Name(), "showhostenvvar")
@@ -3868,7 +4108,8 @@ func TestEnvironmentVariables(t *testing.T) {
 		envVal, err := exec.RunHostCommand(DdevBin, "showhostenvvar", k)
 		assert.NoError(err, "could not run %s %s %s, result=%s", DdevBin, "showhostenvvar", k, envVal)
 		envVal = strings.Trim(envVal, "\r\n")
-		assert.Equal(v, envVal, "expected envvar $%s to equal '%s', but it was '%s'", k, v, envVal)
+		lines := strings.Split(envVal, "\n")
+		assert.Equal(v, lines[0], "expected envvar $%s to equal '%s', but it was '%s'", k, v, envVal)
 	}
 
 }

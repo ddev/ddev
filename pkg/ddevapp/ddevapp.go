@@ -241,7 +241,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			dbinfo["host"] = "db"
 			dbPublicPort, err := app.GetPublishedPort("db")
 			util.CheckErr(err)
-			dbinfo["dbPort"] = GetPort("db")
+			dbinfo["dbPort"] = GetInternalPort(app, "db")
 			util.CheckErr(err)
 			dbinfo["published_port"] = dbPublicPort
 			dbinfo["database_type"] = "mariadb" // default
@@ -359,7 +359,7 @@ func (app *DdevApp) GetPublishedPort(serviceName string) (int, error) {
 		return -1, fmt.Errorf("failed to find container of type %s: %v", serviceName, err)
 	}
 
-	privatePort, _ := strconv.ParseInt(GetPort(serviceName), 10, 16)
+	privatePort, _ := strconv.ParseInt(GetInternalPort(app, serviceName), 10, 16)
 
 	publishedPort := dockerutil.GetPublishedPort(privatePort, *container)
 	return publishedPort, nil
@@ -414,18 +414,23 @@ func (app *DdevApp) GetWebserverType() string {
 func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDrop bool, targetDB string) error {
 	app.DockerEnv()
 	dockerutil.CheckAvailableSpace()
+
 	if targetDB == "" {
 		targetDB = "db"
 	}
 	var extPathPrompt bool
 	dbPath, err := os.MkdirTemp(filepath.Dir(app.ConfigPath), ".importdb")
+	if err != nil {
+		return err
+	}
+	err = os.Chmod(dbPath, 0777)
+	if err != nil {
+		return err
+	}
 
 	defer func() {
 		_ = os.RemoveAll(dbPath)
 	}()
-	if err != nil {
-		return err
-	}
 
 	err = app.ProcessHooks("pre-import-db")
 	if err != nil {
@@ -440,7 +445,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		if extPath == "" {
 			extPathPrompt = true
 		}
-		output.UserOut.Println("Provide the path to the database you wish to import.")
+		output.UserOut.Println("Provide the path to the database you want to import.")
 		fmt.Print("Pull path: ")
 
 		imPath = util.GetInput("")
@@ -506,6 +511,11 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 			return err
 		}
 		uid, _, _ := util.GetContainerUIDGid()
+		// for postgres, must be written with postgres user
+		if app.Database.Type == nodeps.Postgres {
+			uid = "999"
+		}
+
 		insideContainerImportPath, _, err = dockerutil.Exec(dbContainerName, "mktemp -d", uid)
 		if err != nil {
 			return err
@@ -518,11 +528,6 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		}
 	}
 
-	preImportSQL := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s; GRANT ALL ON %s.* TO 'db'@'%%';", targetDB, targetDB)
-	if !noDrop {
-		preImportSQL = fmt.Sprintf("DROP DATABASE IF EXISTS %s; ", targetDB) + preImportSQL
-	}
-
 	err = app.MutagenSyncFlush()
 	if err != nil {
 		return err
@@ -533,44 +538,82 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 	// and in https://github.com/drud/ddev/issues/2787
 	// The backtick after USE is inserted via fmt.Sprintf argument because it seems there's
 	// no way to escape a backtick in a string literal.
-	inContainerCommand := fmt.Sprintf(`mysql -uroot -proot -e "%s" && pv %s/*.*sql | perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, insideContainerImportPath, "`", targetDB)
+	inContainerCommand := []string{}
+	preImportSQL := ""
+	switch app.Database.Type {
+	case nodeps.MySQL:
+		fallthrough
+	case nodeps.MariaDB:
+		preImportSQL = fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s; GRANT ALL ON %s.* TO 'db'@'%%';", targetDB, targetDB)
+		if !noDrop {
+			preImportSQL = fmt.Sprintf("DROP DATABASE IF EXISTS %s; ", targetDB) + preImportSQL
+		}
 
-	// Handle the case where we are reading from stdin
-	if imPath == "" && extPath == "" {
-		inContainerCommand = fmt.Sprintf(`mysql -uroot -proot -e "%s" && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, "`", targetDB)
+		// Case for reading from file
+		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && mysql -uroot -proot -e "%s" && pv %s/*.*sql |  perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, insideContainerImportPath, "`", targetDB)}
+
+		// Alternate case where we are reading from stdin
+		if imPath == "" && extPath == "" {
+			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && mysql -uroot -proot -e "%s" && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, "`", targetDB)}
+		}
+
+	case nodeps.Postgres:
+		preImportSQL = ""
+		if !noDrop { // Normal case, drop and recreate database
+			preImportSQL = preImportSQL + fmt.Sprintf(`
+				DROP DATABASE IF EXISTS %s;
+				CREATE DATABASE %s;
+			`, targetDB, targetDB)
+		} else { // Leave database alone, but create if not exists
+			preImportSQL = preImportSQL + fmt.Sprintf(`
+				SELECT 'CREATE DATABASE %s' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '%s')\gexec
+			`, targetDB, targetDB)
+		}
+		preImportSQL = preImportSQL + fmt.Sprintf(`
+			GRANT ALL PRIVILEGES ON DATABASE %s TO db;`, targetDB)
+
+		// If there is no import path, we're getting it from stdin
+		if imPath == "" && extPath == "" {
+			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && (echo '%s' | psql -d postgres) && psql -v ON_ERROR_STOP=1 -d %s`, preImportSQL, targetDB)}
+		} else { // otherwise getting it from mounted file
+			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && (echo "%s" | psql -q -d postgres -v ON_ERROR_STOP=1) && pv %s/*.*sql | psql -q -v ON_ERROR_STOP=1 %s >/dev/null`, preImportSQL, insideContainerImportPath, targetDB)}
+		}
 	}
-	_, _, err = app.Exec(&ExecOpts{
+	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     inContainerCommand,
+		RawCmd:  inContainerCommand,
 		Tty:     progress && isatty.IsTerminal(os.Stdin.Fd()),
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to import database: %v\nstdout: %s\nstderr: %s", err, stdout, stderr)
 	}
 
-	rowsImported := 0
-	for i := 0; i < 10; i++ {
+	// Wait for import to really complete
+	if app.Database.Type != nodeps.Postgres {
+		rowsImported := 0
+		for i := 0; i < 10; i++ {
 
-		stdout, _, err := app.Exec(&ExecOpts{
-			Cmd:     `mysqladmin -uroot -proot extended -r 2>/dev/null | awk -F'|' '/Innodb_rows_inserted/ {print $3}'`,
-			Service: "db",
-		})
-		if err != nil {
-			util.Warning("mysqladmin command failed: %v", err)
-		}
-		stdout = strings.Trim(stdout, "\r\n\t ")
-		newRowsImported, err := strconv.Atoi(stdout)
-		if err != nil {
-			util.Warning("Error converting '%s' to int", stdout)
-			break
-		}
-		// See if mysqld is still importing. If it is, sleep and try again
-		if newRowsImported == rowsImported {
-			break
-		} else {
-			rowsImported = newRowsImported
-			time.Sleep(time.Millisecond * 500)
+			stdout, _, err := app.Exec(&ExecOpts{
+				Cmd:     `mysqladmin -uroot -proot extended -r 2>/dev/null | awk -F'|' '/Innodb_rows_inserted/ {print $3}'`,
+				Service: "db",
+			})
+			if err != nil {
+				util.Warning("mysqladmin command failed: %v", err)
+			}
+			stdout = strings.Trim(stdout, "\r\n\t ")
+			newRowsImported, err := strconv.Atoi(stdout)
+			if err != nil {
+				util.Warning("Error converting '%s' to int", stdout)
+				break
+			}
+			// See if mysqld is still importing. If it is, sleep and try again
+			if newRowsImported == rowsImported {
+				break
+			} else {
+				rowsImported = newRowsImported
+				time.Sleep(time.Millisecond * 500)
+			}
 		}
 	}
 
@@ -602,16 +645,23 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 // targetDB is the db name if not default "db"
 func (app *DdevApp) ExportDB(outFile string, gzip bool, targetDB string) error {
 	app.DockerEnv()
+	exportCmd := []string{"mysqldump"}
+	if app.Database.Type == "postgres" {
+		exportCmd = []string{"pg_dump", "-U", "db"}
+	}
 	if targetDB == "" {
 		targetDB = "db"
 	}
+	exportCmd = append(exportCmd, targetDB)
+
+	if gzip {
+		exportCmd = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; %s | gzip`, strings.Join(exportCmd, " "))}
+	}
+
 	opts := &ExecOpts{
 		Service:   "db",
-		Cmd:       "mysqldump " + targetDB,
+		RawCmd:    exportCmd,
 		NoCapture: true,
-	}
-	if gzip {
-		opts.Cmd = fmt.Sprintf("mysqldump %s | gzip", targetDB)
 	}
 	if outFile != "" {
 		f, err := os.OpenFile(outFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
@@ -623,14 +673,13 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool, targetDB string) error {
 			_ = f.Close()
 		}()
 	}
-
-	_, _, err := app.Exec(opts)
+	stdout, stderr, err := app.Exec(opts)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to export db: %v\nstdout: %s\nstderr: %s", err, stdout, stderr)
 	}
 
-	confMsg := "Wrote database dump from " + app.Name + " database '" + targetDB + "'"
+	confMsg := "Wrote database dump from project '" + app.Name + "' database '" + targetDB + "'"
 	if outFile != "" {
 		confMsg = confMsg + " to file " + outFile
 	} else {
@@ -785,7 +834,7 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 			}
 		}
 
-		output.UserOut.Printf("=== Running task: %s, output below", a.GetDescription())
+		output.UserOut.Debugf("=== Running task: %s, output below", a.GetDescription())
 
 		err := a.Execute()
 
@@ -860,9 +909,14 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	err = app.PullContainerImages()
+	err = app.GeneratePostgresConfig()
 	if err != nil {
 		return err
+	}
+
+	err = app.PullContainerImages()
+	if err != nil {
+		util.Warning("Unable to pull docker images: %v", err)
 	}
 
 	dockerutil.CheckAvailableSpace()
@@ -901,9 +955,18 @@ func (app *DdevApp) Start() error {
 		}
 	}
 
-	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.Name + "-mariadb:/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, nil)
+	_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.GetMariaDBVolumeName() + ":/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, nil)
 	if err != nil {
 		return fmt.Errorf("failed to RunSimpleContainer to chown volumes: %v, output=%s", err, out)
+	}
+
+	// Chown the postgres volume; this shouldn't have to be a separate stanza, but the
+	// uid is 999 instead of current user
+	if app.Database.Type == nodeps.Postgres {
+		_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/postgresql/data", "999:999")}, []string{}, []string{}, []string{app.GetPostgresVolumeName() + ":/var/lib/postgresql/data"}, "", true, false, nil)
+		if err != nil {
+			return fmt.Errorf("failed to RunSimpleContainer to chown postgres volume: %v, output=%s", err, out)
+		}
 	}
 
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
@@ -977,10 +1040,15 @@ func (app *DdevApp) Start() error {
 	// The db_snapshots subdirectory may be created on docker-compose up, so
 	// we need to precreate it so permissions are correct (and not root:root)
 	if !fileutil.IsDirectory(app.GetConfigPath("db_snapshots")) {
-		err = os.MkdirAll(app.GetConfigPath("db_snapshots"), 0755)
+		err = os.MkdirAll(app.GetConfigPath("db_snapshots"), 0777)
 		if err != nil {
 			return err
 		}
+	}
+	// db_snapshots gets mounted into container, may have different user/group, so need 777
+	err = os.Chmod(app.GetConfigPath("db_snapshots"), 0777)
+	if err != nil {
+		return err
 	}
 
 	_, _, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "up", "--build", "-d")
@@ -1163,14 +1231,67 @@ func (app *DdevApp) GenerateWebserverConfig() error {
 	return nil
 }
 
+func (app *DdevApp) GeneratePostgresConfig() error {
+	if app.Database.Type != nodeps.Postgres {
+		return nil
+	}
+	// Prevent running as root for most cases
+	// We really don't want ~/.ddev to have root ownership, breaks things.
+	if os.Geteuid() == 0 {
+		output.UserOut.Warning("not generating postgres config files because running with root privileges")
+		return nil
+	}
+
+	var items = map[string]string{
+		"postgresql.conf": app.GetConfigPath(filepath.Join("postgres", "postgresql.conf")),
+	}
+	for _, configPath := range items {
+		err := os.MkdirAll(filepath.Dir(configPath), 0755)
+		if err != nil {
+			return err
+		}
+
+		if fileutil.FileExists(configPath) {
+			err = os.Chmod(configPath, 0666)
+			if err != nil {
+				return err
+			}
+			sigExists, err := fileutil.FgrepStringInFile(configPath, DdevFileSignature)
+			if err != nil {
+				return err
+			}
+			// If the signature doesn't exist, they have taken over the file, so return
+			if !sigExists {
+				return nil
+			}
+		}
+
+		c, err := bundledAssets.ReadFile(path.Join("postgres", app.Database.Version, "postgresql.conf"))
+		if err != nil {
+			return err
+		}
+		err = fileutil.TemplateStringToFile(string(c), nil, configPath)
+		if err != nil {
+			return err
+		}
+		err = os.Chmod(configPath, 0666)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // ExecOpts contains options for running a command inside a container
 type ExecOpts struct {
 	// Service is the service, as in 'web', 'db', 'dba'
 	Service string
 	// Dir is the full path to the working directory inside the container
 	Dir string
-	// Cmd is the string to execute
+	// Cmd is the string to execute via bash/sh
 	Cmd string
+	// RawCmd is the array to execute if not using
+	RawCmd []string
 	// Nocapture if true causes use of ComposeNoCapture, so the stdout and stderr go right to stdout/stderr
 	NoCapture bool
 	// Tty if true causes a tty to be allocated
@@ -1190,6 +1311,10 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("app.Exec %v", opts))
 	defer runTime()
 
+	if opts.Cmd == "" && len(opts.RawCmd) == 0 {
+		return "", "", fmt.Errorf("no command provided")
+	}
+
 	if opts.Service == "" {
 		opts.Service = "web"
 	}
@@ -1207,35 +1332,32 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		return "", "", fmt.Errorf("failed to process pre-exec hooks: %v", err)
 	}
 
-	args := []string{"exec"}
+	baseComposeExecCmd := []string{"exec"}
 	if opts.Dir != "" {
-		args = append(args, "-w", opts.Dir)
+		baseComposeExecCmd = append(baseComposeExecCmd, "-w", opts.Dir)
 	}
 
 	if !isatty.IsTerminal(os.Stdin.Fd()) || !opts.Tty {
-		args = append(args, "-T")
+		baseComposeExecCmd = append(baseComposeExecCmd, "-T")
 	}
 
-	args = append(args, opts.Service)
-
-	if opts.Cmd == "" {
-		return "", "", fmt.Errorf("no command provided")
-	}
+	baseComposeExecCmd = append(baseComposeExecCmd, opts.Service)
 
 	// Cases to handle
 	// - Free form, all unquoted. Like `ls -l -a`
 	// - Quoted to delay pipes and other features to container, like `"ls -l -a | grep junk"`
 	// Note that a set quoted on the host in ddev e will come through as a single arg
 
-	// Use bash for our containers, sh for 3rd-party containers
-	// that may not have bash.
-	shell := "bash"
-	if !nodeps.ArrayContainsString([]string{"web", "db", "dba"}, opts.Service) {
-		shell = "sh"
+	if len(opts.RawCmd) == 0 { // Use opts.Cmd and prepend with bash
+		// Use bash for our containers, sh for 3rd-party containers
+		// that may not have bash.
+		shell := "bash"
+		if !nodeps.ArrayContainsString([]string{"web", "db", "dba"}, opts.Service) {
+			shell = "sh"
+		}
+		errcheck := "set -eu"
+		opts.RawCmd = []string{shell, "-c", errcheck + ` && ( ` + opts.Cmd + `)`}
 	}
-	errcheck := "set -eu"
-	args = append(args, shell, "-c", errcheck+` && ( `+opts.Cmd+`)`)
-
 	files := []string{app.DockerComposeFullRenderedYAMLPath()}
 	if err != nil {
 		return "", "", err
@@ -1251,17 +1373,22 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	}
 
 	var stdoutResult, stderrResult string
+	var outRes, errRes string
+	r := append(baseComposeExecCmd, opts.RawCmd...)
 	if opts.NoCapture || opts.Tty {
-		err = dockerutil.ComposeWithStreams(files, os.Stdin, stdout, stderr, args...)
+		err = dockerutil.ComposeWithStreams(files, os.Stdin, stdout, stderr, r...)
 	} else {
-		stdoutResult, stderrResult, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, args...)
+		outRes, errRes, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, r...)
+		stdoutResult = outRes
+		stderrResult = errRes
 	}
-
+	if err != nil {
+		return stdoutResult, stderrResult, err
+	}
 	hookErr := app.ProcessHooks("post-exec")
 	if hookErr != nil {
 		return stdoutResult, stderrResult, fmt.Errorf("failed to process post-exec hooks: %v", hookErr)
 	}
-
 	return stdoutResult, stderrResult, err
 }
 
@@ -1528,11 +1655,14 @@ func (app *DdevApp) DockerEnv() {
 		"IS_WSL2":                    isWSL2,
 	}
 
-	// Set the mariadb_local command to empty to prevent docker-compose from complaining normally.
-	// It's used for special startup on restoring to a snapshot.
-	if len(os.Getenv("DDEV_MARIADB_LOCAL_COMMAND")) == 0 {
-		err := os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "")
-		util.CheckErr(err)
+	// Set the DDEV_DB_CONTAINER_COMMAND command to empty to prevent docker-compose from complaining normally.
+	// It's used for special startup on restoring to a snapshot or for postgres.
+	if len(os.Getenv("DDEV_DB_CONTAINER_COMMAND")) == 0 {
+		v := ""
+		if app.Database.Type == nodeps.Postgres { // config_file spec for postgres
+			v = fmt.Sprintf("-c config_file=%s/postgresql.conf -c hba_file=%s/pg_hba.conf", nodeps.PostgresConfigDir, nodeps.PostgresConfigDir)
+		}
+		envVars["DDEV_DB_CONTAINER_COMMAND"] = v
 	}
 
 	// Find out terminal dimensions
@@ -1706,16 +1836,11 @@ func (app *DdevApp) Snapshot(baseSnapshotName string) (string, error) {
 	}
 
 	util.Success("Creating database snapshot %s", snapshotName)
-	streamTool := "mbstream"
 
-	// mbstream/mariadbackup don't make their appearance in mariadb until 10.2
-	streamtoolVersions := []string{"mysql:5.5", "mysql:5.6", "mysql:5.7", "mysql:8.0", "mariadb:5.5", "mariadb:10.0", "mariadb:10.1"}
-	if nodeps.ArrayContainsString(streamtoolVersions, app.Database.Type+":"+app.Database.Version) {
-		streamTool = "xbstream"
-	}
+	c := getBackupCommand(app, path.Join(containerSnapshotDir, snapshotName))
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "db",
-		Cmd:     fmt.Sprintf(`set -eu -o pipefail; $(/backuptool.sh) --backup --stream=%s --user=root --password=root --socket=/var/tmp/mysql.sock  2>/var/log/mariadbackup_backup_%s.log | gzip >"%s/%s"`, streamTool, snapshotName, containerSnapshotDir, snapshotName),
+		Cmd:     fmt.Sprintf(`set -eu -o pipefail; %s `, c),
 	})
 
 	if err != nil {
@@ -1743,6 +1868,9 @@ func (app *DdevApp) Snapshot(baseSnapshotName string) (string, error) {
 		// mounted into the db container (/mnt/ddev_config/db_snapshots)
 		c := fmt.Sprintf("cp -r %s/%s /mnt/ddev_config/db_snapshots", containerSnapshotDir, snapshotName)
 		uid, _, _ := util.GetContainerUIDGid()
+		if app.Database.Type == nodeps.Postgres {
+			uid = "999"
+		}
 		stdout, stderr, err = dockerutil.Exec(dbContainer.ID, c, uid)
 		if err != nil {
 			return "", fmt.Errorf("failed to '%s': %v, stdout=%s, stderr=%s", c, err, stdout, stderr)
@@ -1760,6 +1888,25 @@ func (app *DdevApp) Snapshot(baseSnapshotName string) (string, error) {
 	}
 
 	return snapshotName, nil
+}
+
+// getBackupCommand returns the command to dump the entire db system for the various databases
+func getBackupCommand(app *DdevApp, targetFile string) string {
+
+	c := fmt.Sprintf(`mariabackup --backup --stream=mbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | gzip > "%s"`, path.Base(targetFile), targetFile)
+
+	oldMariaVersions := []string{"5.5", "10.0"}
+
+	switch {
+	// Old mariadb versions don't have mariabackup, use xtrabackup for them as well as MySQL
+	case app.Database.Type == nodeps.MariaDB && nodeps.ArrayContainsString(oldMariaVersions, app.Database.Version):
+		fallthrough
+	case app.Database.Type == nodeps.MySQL:
+		c = fmt.Sprintf(`xtrabackup --backup --stream=xbstream --user=root --password=root --socket=/var/tmp/mysql.sock  2>/tmp/snapshot_%s.log | gzip > "%s"`, path.Base(targetFile), targetFile)
+	case app.Database.Type == nodeps.Postgres:
+		c = fmt.Sprintf("rm -rf /var/tmp/pgbackup && pg_basebackup -D /var/tmp/pgbackup 2>/tmp/snapshot_%s.log && tar -czf %s -C /var/tmp/pgbackup/ .", path.Base(targetFile), targetFile)
+	}
+	return c
 }
 
 // DeleteSnapshot removes the snapshot directory inside a project
@@ -1889,7 +2036,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 			return fmt.Errorf("unable to determine database type/version from snapshot name %s", snapshotName)
 		}
 		snapshotDBVersion = parts[len(parts)-1]
-		if !(strings.HasPrefix(snapshotDBVersion, "mariadb_") || strings.HasPrefix(snapshotDBVersion, "mysql_")) {
+		if !(strings.HasPrefix(snapshotDBVersion, "mariadb_") || strings.HasPrefix(snapshotDBVersion, "mysql_") || strings.HasPrefix(snapshotDBVersion, "postgres_")) {
 			return fmt.Errorf("unable to determine database type/version from snapshot name %s", snapshotName)
 		}
 	}
@@ -1898,6 +2045,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("snapshot '%s' is a DB server '%s' snapshot and is not compatible with the configured ddev DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the ddev DB version", snapshotName, snapshotDBVersion, currentDBVersion)
 	}
 
+	// For mariadb/mysql restart container and wait for restore
 	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SitePaused {
 		util.Success("Stopping db container for snapshot restore of '%s'...", snapshotName)
 		dbContainer, err := GetContainer(app, "db")
@@ -1914,6 +2062,10 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	// With bind mounts, they'll already be there in the /mnt/ddev_config/db_snapshots folder
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
 		uid, _, _ := util.GetContainerUIDGid()
+		// for postgres, must be written with postgres user
+		if app.Database.Type == nodeps.Postgres {
+			uid = "999"
+		}
 
 		// If the snapshot is an old-style directory-based snapshot, then we have to copy into a subdirectory
 		// named for the snapshot
@@ -1927,33 +2079,49 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 			return err
 		}
 	}
-	_ = os.Setenv("DDEV_MARIADB_LOCAL_COMMAND", "restore_snapshot "+snapshotName)
+
+	restoreCmd := "restore_snapshot " + snapshotName
+	if app.Database.Type == nodeps.Postgres {
+		confdDir := path.Join(nodeps.PostgresConfigDir, "conf.d")
+		targetConfName := path.Join(confdDir, "recovery.conf")
+		v, _ := strconv.Atoi(app.Database.Version)
+		// Before postgres v12 the recovery info went into its own file
+		if v < 12 {
+			targetConfName = path.Join(nodeps.PostgresConfigDir, "recovery.conf")
+		}
+		restoreCmd = fmt.Sprintf(`bash -c 'chmod 700 /var/lib/postgresql/data && mkdir -p %s && rm -rf /var/lib/postgresql/data/* && tar -C /var/lib/postgresql/data -zxf /mnt/snapshots/%s && touch /var/lib/postgresql/data/recovery.signal && cat /var/lib/postgresql/recovery.conf >>%s && postgres -c config_file=%s/postgresql.conf -c hba_file=%s/pg_hba.conf'`, confdDir, snapshotName, targetConfName, nodeps.PostgresConfigDir, nodeps.PostgresConfigDir)
+	}
+	_ = os.Setenv("DDEV_DB_CONTAINER_COMMAND", restoreCmd)
 	// nolint: errcheck
-	defer os.Unsetenv("DDEV_MARIADB_LOCAL_COMMAND")
+	defer os.Unsetenv("DDEV_DB_CONTAINER_COMMAND")
 	err = app.Start()
 	if err != nil {
 		return fmt.Errorf("failed to start project for RestoreSnapshot: %v", err)
 	}
 
-	output.UserOut.Printf("Waiting for snapshot restore to complete...\nYou can also follow the restore progress in another terminal window with `ddev logs -s db -f %s`", app.Name)
-	// Now it's up, but we need to find out when it finishes loading.
-	for {
-		// We used to use killall -1 mysqld here
-		// also used to use "pidof mysqld", but apparently the
-		// server may not quite be ready when its pid appears
-		out, _, err := app.Exec(&ExecOpts{
-			Cmd:     `(echo "SHOW VARIABLES like 'v%';" | mysql 2>/dev/null) || true`,
-			Service: "db",
-			Tty:     false,
-		})
-		if err != nil {
-			return err
+	// On mysql/mariadb the snapshot restore doesn't actually complete right away after
+	// the mariabackup/xtrabackup returns.
+	if app.Database.Type != nodeps.Postgres {
+		output.UserOut.Printf("Waiting for snapshot restore to complete...\nYou can also follow the restore progress in another terminal window with `ddev logs -s db -f %s`", app.Name)
+		// Now it's up, but we need to find out when it finishes loading.
+		for {
+			// We used to use killall -1 mysqld here
+			// also used to use "pidof mysqld", but apparently the
+			// server may not quite be ready when its pid appears
+			out, _, err := app.Exec(&ExecOpts{
+				Cmd:     `(echo "SHOW VARIABLES like 'v%';" | mysql 2>/dev/null) || true`,
+				Service: "db",
+				Tty:     false,
+			})
+			if err != nil {
+				return err
+			}
+			if out != "" {
+				break
+			}
+			time.Sleep(1 * time.Second)
+			fmt.Print(".")
 		}
-		if out != "" {
-			break
-		}
-		time.Sleep(1 * time.Second)
-		fmt.Print(".")
 	}
 	util.Success("\nRestored database snapshot %s", snapshotName)
 	err = app.ProcessHooks("post-restore-snapshot")
@@ -2039,7 +2207,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 			util.Warning("could not WriteGlobalConfig: %v", err)
 		}
 
-		vols := []string{app.Name + "-mariadb", GetMutagenVolumeName(app)}
+		vols := []string{app.GetMariaDBVolumeName(), app.GetPostgresVolumeName(), GetMutagenVolumeName(app)}
 		if globalconfig.DdevGlobalConfig.NoBindMounts {
 			vols = append(vols, app.Name+"-ddev-config")
 		}
@@ -2498,6 +2666,12 @@ func (app *DdevApp) GetNFSMountVolumeName() string {
 // For historical reasons this isn't lowercased.
 func (app *DdevApp) GetMariaDBVolumeName() string {
 	return app.Name + "-mariadb"
+}
+
+// GetPostgresVolumeName returns the docker volume name of the Postgres/database volume
+// For historical reasons this isn't lowercased.
+func (app *DdevApp) GetPostgresVolumeName() string {
+	return app.Name + "-postgres"
 }
 
 // StartAppIfNotRunning is intended to replace much-duplicated code in the commands.

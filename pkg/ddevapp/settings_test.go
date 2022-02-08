@@ -16,7 +16,6 @@ import (
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 type settingsLocations struct {
@@ -88,15 +87,27 @@ func TestWriteSettings(t *testing.T) {
 func TestWriteDrushConfig(t *testing.T) {
 	assert := asrt.New(t)
 	app := &DdevApp{}
+	origDir, _ := os.Getwd()
 
 	for _, site := range TestSites {
-		switchDir := site.Chdir()
 		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s WriteDrushrc", site.Name))
 
 		testcommon.ClearDockerEnv()
 
+		if !nodeps.ArrayContainsString([]string{"drupal7", "drupal8", "drupal9", "drupal10", "backdrop"}, site.Type) {
+			continue
+		}
 		err := app.Init(site.Dir)
-		assert.NoError(err)
+		if err != nil {
+			assert.NoError(err, "failed init of %s: %v", site.Name, err)
+			continue
+		}
+		t.Cleanup(func() {
+			err = os.Chdir(origDir)
+			assert.NoError(err)
+			err = app.Stop(true, false)
+			assert.NoError(err)
+		})
 
 		_, err = app.CreateSettingsFile()
 		assert.NoError(err)
@@ -113,17 +124,22 @@ func TestWriteDrushConfig(t *testing.T) {
 
 		switch app.Type {
 		case nodeps.AppTypeDrupal6, nodeps.AppTypeDrupal7, nodeps.AppTypeBackdrop:
-			require.True(t, fileutil.FileExists(drushFilePath))
+			if !fileutil.FileExists(drushFilePath) {
+				assert.True(fileutil.FileExists(drushFilePath))
+				continue
+			}
 			optionFound, err := fileutil.FgrepStringInFile(drushFilePath, "options")
 			assert.NoError(err)
 			assert.True(optionFound)
 
 		default:
-			assert.False(fileutil.FileExists(drushFilePath), "Drush settings file (%s) should not exist but it does (app.Type=%s)", drushFilePath, app.Type)
+			if fileutil.FileExists(drushFilePath) {
+				assert.False(fileutil.FileExists(drushFilePath), "Drush settings file (%s) should not exist but it does (app.Type=%s)", drushFilePath, app.Type)
+				continue
+			}
 		}
 
 		runTime()
-		switchDir()
 	}
 }
 

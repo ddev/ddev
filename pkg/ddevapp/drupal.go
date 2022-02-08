@@ -49,7 +49,7 @@ func NewDrupalSettings(app *DdevApp) *DrupalSettings {
 		DatabasePassword: "db",
 		DatabaseHost:     "db",
 		DatabaseDriver:   "mysql",
-		DatabasePort:     GetPort("db"),
+		DatabasePort:     GetInternalPort(app, "db"),
 		DatabasePrefix:   "",
 		HashSalt:         util.RandString(64),
 		Signature:        DdevFileSignature,
@@ -62,6 +62,9 @@ func NewDrupalSettings(app *DdevApp) *DrupalSettings {
 	}
 	if app.Type == "drupal6" {
 		settings.DatabaseDriver = "mysqli"
+	}
+	if app.Database.Type == nodeps.Postgres {
+		settings.DatabaseDriver = "pgsql"
 	}
 	return settings
 }

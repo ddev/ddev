@@ -5,8 +5,9 @@ set -eu -o pipefail
 # colima has golang as dependency, so is going to install go anyway.
 # So we have to get rid of it somehow.
 brew uninstall go@1.15 || true
-brew update && brew install colima docker docker-compose golang mkcert mysql-client
-brew link --force mysql-client
+brew unlink postgresql || true
+brew update && brew install colima docker docker-compose golang libpq mkcert mysql-client
+brew link --force libpq mysql-client
 
 # This command allows adding CA (in mkcert, etc) without the popup trust prompt
 # Mentioned in https://github.com/actions/virtual-environments/issues/4519#issuecomment-970202641

@@ -41,7 +41,7 @@ var DockerComposeFileFormatVersion = "3.6"
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20220117_no_volume_copy" // Note that this can be overridden by make
+var WebTag = "20220124_postgres" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"
@@ -135,7 +135,16 @@ func GetDBImage(dbType string, dbVersion ...string) string {
 	if len(dbVersion) > 0 {
 		v = dbVersion[0]
 	}
-	return fmt.Sprintf("%s-%s-%s:%s", DBImg, dbType, v, BaseDBTag)
+	switch dbType {
+	case nodeps.Postgres:
+		return fmt.Sprintf("%s:%s", dbType, v)
+	case nodeps.MySQL:
+		fallthrough
+	case nodeps.MariaDB:
+		fallthrough
+	default:
+		return fmt.Sprintf("%s-%s-%s:%s", DBImg, dbType, v, BaseDBTag)
+	}
 }
 
 // GetDBAImage returns the correctly formatted dba image:tag reference

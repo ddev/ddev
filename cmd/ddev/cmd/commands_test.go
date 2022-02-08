@@ -359,3 +359,44 @@ func TestMysqlCommand(t *testing.T) {
 column_stats
 columns_priv`)
 }
+
+// TestPsqlCommand tests `ddev psql``
+func TestPsqlCommand(t *testing.T) {
+	assert := asrt.New(t)
+
+	origDir, _ := os.Getwd()
+
+	// Create a temporary directory and switch to it.
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	err := os.Chdir(tmpDir)
+	require.NoError(t, err)
+
+	app, err := ddevapp.NewApp(tmpDir, false)
+	require.NoError(t, err)
+	app.Database = ddevapp.DatabaseDesc{Type: nodeps.Postgres, Version: nodeps.PostgresDefaultVersion}
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = os.RemoveAll(tmpDir)
+		assert.NoError(err)
+	})
+
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	// This populates the project's
+	// .ddev/.global_commands which otherwise doesn't get done until ddev start
+	// This matters when --no-bind-mount=true
+	_, err = exec.RunHostCommand("ddev")
+	assert.NoError(err)
+
+	err = app.Start()
+	require.NoError(t, err)
+
+	// Test ddev psql with \l
+	out, err := exec.RunHostCommand("bash", "-c", fmt.Sprintf(`echo '\l' | %s psql -t`, DdevBin))
+	assert.NoError(err, "out=%s", out)
+	assert.Contains(out, `db        | db    | UTF8`)
+}

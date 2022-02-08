@@ -408,7 +408,7 @@ func (app *DdevApp) ValidateConfig() error {
 
 	// validate PHP version
 	if !nodeps.IsValidPHPVersion(app.PHPVersion) {
-		return fmt.Errorf("unsupported PHP version: %s, ddev (%s) only supports the following versions: %v", app.PHPVersion, runtime.GOARCH, nodeps.GetValidPHPVersions()).(invalidPHPVersion)
+		return fmt.Errorf("unsupported PHP version: %s, ddev only supports the following versions: %v", app.PHPVersion, nodeps.GetValidPHPVersions()).(invalidPHPVersion)
 	}
 
 	// validate webserver type
@@ -421,7 +421,7 @@ func (app *DdevApp) ValidateConfig() error {
 	}
 
 	if !nodeps.IsValidDatabaseVersion(app.Database.Type, app.Database.Version) {
-		return fmt.Errorf("unsupported database type/version: %s:%s, ddev %s only supports the following database types and versions: mariadb: %v, mysql: %v", app.Database.Type, app.Database.Version, runtime.GOARCH, nodeps.GetValidMariaDBVersions(), nodeps.GetValidMySQLVersions())
+		return fmt.Errorf("unsupported database type/version: %s:%s, ddev %s only supports the following database types and versions: mariadb: %v, mysql: %v, postgres: %v", app.Database.Type, app.Database.Version, runtime.GOARCH, nodeps.GetValidMariaDBVersions(), nodeps.GetValidMySQLVersions(), nodeps.GetValidPostgresVersions())
 	}
 
 	// golang on windows is not able to time.LoadLocation unless
@@ -435,6 +435,10 @@ func (app *DdevApp) ValidateConfig() error {
 			return fmt.Errorf("invalid timezone %s: %v", app.Timezone, err)
 		}
 	}
+
+	//if app.Database.Type == nodeps.Postgres && (nodeps.ArrayContainsString([]string{"wordpress", "magento", "magento2"}, app.Type)) {
+	//	return fmt.Errorf("project type %s does not support postgres database", app.Type)
+	//}
 
 	return nil
 }
@@ -626,6 +630,9 @@ type composeYAMLVars struct {
 	AppType                   string
 	MailhogPort               string
 	HostMailhogPort           string
+	DBType                    string
+	DBVersion                 string
+	DBMountDir                string
 	DBAPort                   string
 	DBPort                    string
 	HostPHPMyAdminPort        string
@@ -646,6 +653,7 @@ type composeYAMLVars struct {
 	OmitSSHAgent              bool
 	BindAllInterfaces         bool
 	MariaDBVolumeName         string
+	PostgresVolumeName        string
 	MutagenEnabled            bool
 	MutagenVolumeName         string
 	NFSMountEnabled           bool
@@ -704,10 +712,13 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		Name:                      app.Name,
 		Plugin:                    "ddev",
 		AppType:                   app.Type,
-		MailhogPort:               GetPort("mailhog"),
+		MailhogPort:               GetInternalPort(app, "mailhog"),
 		HostMailhogPort:           app.HostMailhogPort,
-		DBAPort:                   GetPort("dba"),
-		DBPort:                    GetPort("db"),
+		DBType:                    app.Database.Type,
+		DBVersion:                 app.Database.Version,
+		DBMountDir:                "/var/lib/mysql",
+		DBAPort:                   GetInternalPort(app, "dba"),
+		DBPort:                    GetInternalPort(app, "db"),
 		HostPHPMyAdminPort:        app.HostPHPMyAdminPort,
 		DdevGenerated:             DdevFileSignature,
 		HostDockerInternalIP:      hostDockerInternalIP,
@@ -743,6 +754,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		DBAWorkingDir:         app.GetWorkingDir("dba", ""),
 		WebEnvironment:        webEnvironment,
 		MariaDBVolumeName:     app.GetMariaDBVolumeName(),
+		PostgresVolumeName:    app.GetPostgresVolumeName(),
 		NFSMountVolumeName:    app.GetNFSMountVolumeName(),
 		NoBindMounts:          globalconfig.DdevGlobalConfig.NoBindMounts,
 		Docroot:               app.GetDocroot(),
@@ -761,6 +773,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		templateVars.ContainerUploadDir = ""
 	}
 
+	if app.Database.Type == nodeps.Postgres {
+		templateVars.DBMountDir = "/var/lib/postgresql/data"
+	}
 	if app.NFSMountEnabled || app.NFSMountEnabledGlobal {
 		templateVars.MountType = "volume"
 		templateVars.WebMount = "nfsmount"
@@ -795,19 +810,32 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		return "", err
 	}
 
-	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build/Dockerfile"), app.WebImageExtraPackages, app.ComposerVersion)
+	_, _, userName := util.GetContainerUIDGid()
+	extraWebContent := fmt.Sprintf("RUN chmod 600 ~%s/.pgpass ~%s/.my.cnf", userName, userName)
+	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build/Dockerfile"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
 	if err != nil {
 		return "", err
 	}
 
-	err = WriteBuildDockerfile(app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build/Dockerfile"), app.DBImageExtraPackages, "")
+	// Add .pgpass to homedir on postgres
+	extraDBContent := ""
+	if app.Database.Type == nodeps.Postgres {
+		extraDBContent = `
+ENV PATH $PATH:/usr/lib/postgresql/$PG_MAJOR/bin
+RUN mkdir -p /etc/postgresql/conf.d && chmod 777 /etc/postgresql/conf.d
+RUN echo "*:*:db:db:db" > ~postgres/.pgpass && chown postgres:postgres ~postgres/.pgpass && chmod 600 ~postgres/.pgpass && chmod 777 /var/tmp && ln -sf /mnt/ddev_config/postgres/postgresql.conf /etc/postgresql && echo "restore_command = 'true'" >> /var/lib/postgresql/recovery.conf
+RUN printf "# TYPE DATABASE USER CIDR-ADDRESS  METHOD \nhost  all  all 0.0.0.0/0 md5\nlocal all all trust\nhost    replication    db             0.0.0.0/0  trust\nhost replication all 0.0.0.0/0 trust\nlocal replication all trust\nlocal replication all peer\n" >/etc/postgresql/pg_hba.conf
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests less procps pv vim
+`
+	}
+	err = WriteBuildDockerfile(app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build/Dockerfile"), app.DBImageExtraPackages, "", extraDBContent)
 
 	if err != nil {
 		return "", err
 	}
 
 	// SSH agent just needs extra to add the official related user, nothing else
-	err = WriteBuildDockerfile(filepath.Join(globalconfig.GetGlobalDdevDir(), ".sshimageBuild/Dockerfile"), "", nil, "")
+	err = WriteBuildDockerfile(filepath.Join(globalconfig.GetGlobalDdevDir(), ".sshimageBuild/Dockerfile"), "", nil, "", "")
 	if err != nil {
 		return "", err
 	}
@@ -832,7 +860,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 // WriteBuildDockerfile writes a Dockerfile to be used in the
 // docker-compose 'build'
 // It may include the contents of .ddev/<container>-build
-func WriteBuildDockerfile(fullpath string, userDockerfile string, extraPackages []string, composerVersion string) error {
+func WriteBuildDockerfile(fullpath string, userDockerfile string, extraPackages []string, composerVersion string, extraContent string) error {
 	// Start with user-built dockerfile if there is one.
 	err := os.MkdirAll(filepath.Dir(fullpath), 0755)
 	if err != nil {
@@ -886,6 +914,8 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg:
 RUN export XDEBUG_MODE=off && ( composer self-update %s || composer self-update %s || true )
 `, composerSelfUpdateArg, composerSelfUpdateArg)
 	}
+
+	contents = contents + extraContent
 	return WriteImageDockerfile(fullpath, []byte(contents))
 }
 
@@ -1045,7 +1075,7 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
-	err := CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen", "nginx_full/nginx-site.conf", "sequelpro.spf", "xhprof", "**/README.*")
+	err := CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen", "nginx_full/nginx-site.conf", "postgres", "sequelpro.spf", "xhprof", "**/README.*")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}
