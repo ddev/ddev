@@ -58,9 +58,9 @@ To start it from git-bash on Windows you can use `echo "wsl.exe -u root service 
 
 ### Linux Installation: Docker
 
-* __Please don't forget that Linux installation absolutely requires post-install steps (below).__
+* **Please don't forget that Linux installation absolutely requires post-install steps (below).**
 
-* __Please don't use `sudo` with docker. If you're needing it, you haven't finished the installation. Don't use `sudo` with ddev, except the rare case where you need the `ddev hostname` command.__
+* **Please don't use `sudo` with docker. If you're needing it, you haven't finished the installation. Don't use `sudo` with ddev, except the rare case where you need the `ddev hostname` command.**
 
 Docker installation on Linux depends on what flavor you're using. Where possible the Ubuntu/Deb/yum repository is the preferred technique.
 

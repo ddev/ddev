@@ -71,7 +71,7 @@ We'll walk through these in more detail. You may prefer other techniques of inst
 
 That's it! You have now installed DDEV on WSL2. If you're using WSL2 for DDEV (recommended), remember to run all `ddev` commands inside the WSL2 distro.
 
-**Make sure you put your projects in the Linux filesystem (e.g. /home/<your_username>), _not_ in the Windows filesystem (/mnt/c), because you'll get vastly superior performance on the Linux filesystem.**
+**Make sure you put your projects in the Linux filesystem (e.g. /home/<your_username>), not in the Windows filesystem (/mnt/c), because you'll get vastly superior performance on the Linux filesystem.**
 
 Note that nfs-mount-enabled (and running NFS) are not required on WSL2 because it's perhaps faster without NFS.
 
