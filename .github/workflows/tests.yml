@@ -23,7 +23,7 @@ env:
   BUILDKIT_PROGRESS: plain
   DOCKER_CLI_EXPERIMENTAL: enabled
   DDEV_DEBUG: true
-
+  DDEV_GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
 
 jobs:
   tests:
