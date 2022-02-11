@@ -301,7 +301,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) jus
 ```bash
 mkdir my-laravel-app
 cd my-laravel-app
-ddev config --project-type=laravel --php-version=8.0 --docroot=public --create-docroot
+ddev config --project-type=laravel --docroot=public --create-docroot
 ddev start
 ddev composer create --prefer-dist laravel/laravel
 ddev exec "cat .env.example | sed  -E 's/DB_(HOST|DATABASE|USERNAME|PASSWORD)=(.*)/DB_\1=db/g' > .env"
@@ -316,7 +316,7 @@ Note that the git URL shown below is an example only, you'll need to use your ow
 ```bash
 git clone https://github.com/example/example-site
 cd example-site
-ddev config --project-type=laravel --php-version=8.0
+ddev config --project-type=laravel
 ddev start
 ddev composer install
 ddev exec "cat .env.example | sed  -E 's/DB_(HOST|DATABASE|USERNAME|PASSWORD)=(.*)/DB_\1=db/g' > .env"
