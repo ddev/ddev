@@ -27,8 +27,7 @@ Example: "ddev snapshot restore d8git_20180717203845"`,
 				util.Failed("Failed to get latest snapshot of project %s: %v", app.GetName(), err)
 			}
 		} else {
-			if len(args) != 1 {
-
+			if len(args) != 1 { // If the name of the snapshot isn't provided, do prompted restore
 				snapshots, err := app.ListSnapshots()
 				if err != nil {
 					util.Failed("Cannot list snapshots of project %s: %v", app.GetName(), err)
@@ -53,10 +52,12 @@ Example: "ddev snapshot restore d8git_20180717203845"`,
 				if err != nil {
 					util.Failed("Prompt failed %v", err)
 				}
-			} else {
+			} else { // Snapshot name was given on command-line, use it.
 				snapshotName = args[0]
 			}
 		}
+
+		// Normalize the snapshot name
 
 		if err := app.RestoreSnapshot(snapshotName); err != nil {
 			util.Failed("Failed to restore snapshot %s for project %s: %v", snapshotName, app.GetName(), err)

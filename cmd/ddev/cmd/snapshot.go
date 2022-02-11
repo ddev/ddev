@@ -64,6 +64,9 @@ func listAppSnapshots(app *ddevapp.DdevApp) {
 }
 
 func createAppSnapshot(app *ddevapp.DdevApp) {
+	if strings.Contains(snapshotName, "-") {
+		util.Failed("Snapshot name may not contain a hyphen ('-').")
+	}
 	if snapshotNameOutput, err := app.Snapshot(snapshotName); err != nil {
 		util.Failed("Failed to snapshot %s: %v", app.GetName(), err)
 	} else {
