@@ -172,9 +172,9 @@ Download, inspect, make executable, and run the [macos_ddev_nfs_setup.sh](https:
 If your DDEV-Local projects are set up outside your home directory, you'll need to edit /etc/exports to add a line for that share as well.
 `sudo vi /etc/exports` and copy the line the script has just created (`/System/Volumes/Data/Users/username -alldirs -mapall=<your_user_id>:20 localhost`), editing it with the additional path, e.g: `/Volumes/SomeExternalDrive -alldirs -mapall=<your_uid>:20 localhost`.
 
-__Warning:__ You may need to temporarily give your terminal "Full disk access" before you (or the script provided) can edit /etc/exports. The basic idea is that in the System Preferences -> Security and Privacy -> Privacy you need to give "Full Disk Access" permissions to your terminal app. Note that the "Full Disk Access" privilege is only needed when the /etc/exports file is being edited by you, usually a one-time event. (Note that in more recent versions of macOS a prompt will do this automatically and temporarily for you.)
+**Warning:** You may need to temporarily give your terminal "Full disk access" before you (or the script provided) can edit /etc/exports. The basic idea is that in the System Preferences -> Security and Privacy -> Privacy you need to give "Full Disk Access" permissions to your terminal app. Note that the "Full Disk Access" privilege is only needed when the /etc/exports file is being edited by you, usually a one-time event. (Note that in more recent versions of macOS a prompt will do this automatically and temporarily for you.)
 
-__Warning:__ If the projects are in a subdirectory of the ~/Documents directory or on an external drive, it is necessary to grant the "Full Disk Access" permission to the `/sbin/nfsd` binary. Full details are [below](#upgrading-catalina).
+**Warning:** If the projects are in a subdirectory of the ~/Documents directory or on an external drive, it is necessary to grant the "Full Disk Access" permission to the `/sbin/nfsd` binary. Full details are [below](#upgrading-catalina).
 
 ### Windows NFS Setup
 
