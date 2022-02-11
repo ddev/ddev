@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"path/filepath"
 )
@@ -43,5 +44,10 @@ func laravelPostStartAction(app *DdevApp) error {
 		envSettingsWarning(WarnTypeAbsent)
 	}
 
+	return nil
+}
+
+func laravelConfigOverrideAction(app *DdevApp) error {
+	app.PHPVersion = nodeps.PHP80
 	return nil
 }
