@@ -27,6 +27,7 @@ defaults:
 
 env:
   DDEV_DEBUG: true
+  DDEV_GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
 
 jobs:
   tests:

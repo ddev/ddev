@@ -10,6 +10,7 @@ import (
 	"github.com/google/go-github/github"
 	"github.com/otiai10/copy"
 	"github.com/spf13/cobra"
+	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v2"
 	"os"
 	"path/filepath"
@@ -74,6 +75,17 @@ ddev get /path/to/tarball.tar.gz`,
 			repo := parts[1]
 			client := github.NewClient(nil)
 			ctx := context.Background()
+
+			// Use authenticated client for higher rate limit, normally only needed for tests
+			githubToken := os.Getenv("DDEV_GITHUB_TOKEN")
+			if githubToken != "" {
+				ts := oauth2.StaticTokenSource(
+					&oauth2.Token{AccessToken: githubToken},
+				)
+				tc := oauth2.NewClient(ctx, ts)
+				client = github.NewClient(tc)
+			}
+
 			releases, _, err := client.Repositories.ListReleases(ctx, owner, repo, &github.ListOptions{})
 			if err != nil {
 				util.Failed("Unable to get releases for %v: %v", repo, err)
