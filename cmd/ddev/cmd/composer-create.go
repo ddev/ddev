@@ -102,11 +102,10 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		composerCmd = append(composerCmd, osargs...)
 		composerCmd = append(composerCmd, containerInstallPath)
 
-		composerCmdString := strings.TrimSpace(strings.Join(composerCmd, " "))
-		output.UserOut.Printf("Executing composer command: %s\n", composerCmdString)
+		output.UserOut.Printf("Executing composer command: %v\n", composerCmd)
 		stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
-			Cmd:     composerCmdString,
+			RawCmd:  composerCmd,
 			Dir:     "/var/www/html",
 			Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 		})

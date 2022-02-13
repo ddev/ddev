@@ -6,7 +6,6 @@ import (
 	"github.com/mattn/go-isatty"
 	"os"
 	"runtime"
-	"strings"
 )
 
 // Composer runs composer commands in the web container, managing pre- and post- hooks
@@ -20,7 +19,7 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "web",
 		Dir:     "/var/www/html",
-		Cmd:     fmt.Sprintf("composer %s", strings.Join(args, " ")),
+		RawCmd:  append([]string{"composer"}, args...),
 		Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 	})
 	if err != nil {
