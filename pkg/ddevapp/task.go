@@ -24,10 +24,10 @@ type Task interface {
 // ExecTask is the struct that defines "exec" tasks for hooks, commands
 // to be run in containers.
 type ExecTask struct {
-	service  string   // Name of service, defaults to web
-	raw_exec []string // Use raw_exec if configured instead of exec
-	exec     string   // Actual command to be executed.
-	app      *DdevApp
+	service string   // Name of service, defaults to web
+	rawExec []string // Use rawExec if configured instead of exec
+	exec    string   // Actual command to be executed.
+	app     *DdevApp
 }
 
 // ExecHostTask is the struct that defines "exec-host" tasks for hooks,
@@ -49,7 +49,7 @@ func (c ExecTask) Execute() error {
 	opts := &ExecOpts{
 		Service:   c.service,
 		Cmd:       c.exec,
-		RawCmd:    c.raw_exec,
+		RawCmd:    c.rawExec,
 		Tty:       isatty.IsTerminal(os.Stdin.Fd()),
 		NoCapture: true,
 	}
@@ -126,7 +126,7 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 				raw[i] = v[i].(string)
 			}
 
-			t := ExecTask{app: app, raw_exec: raw}
+			t := ExecTask{app: app, rawExec: raw}
 			if t.service, ok = ytask["service"].(string); !ok {
 				t.service = nodeps.WebContainer
 			}
