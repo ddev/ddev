@@ -686,6 +686,8 @@ To run privileged commands, sudo can be passed into `ddev exec`. For example, to
 
 Commands can also be executed using the shorter `ddev . <cmd>` alias.
 
+Normally, `ddev exec` commands are executed in the container using bash, which means that environment variables and redirection and pipes can be used. For example, a complex command like `ddev exec 'ls -l ${DDEV_FILES_DIR} | grep x >/tmp/junk.out'` will be interpreted by bash and will work. However, there are cases where bash introduces too much complexity and it's best to just run the command directly. In those cases, something like `ddev exec --raw ls -l "dir1" "dir2"` may be useful. with `--raw` the ls command is executed directly instead of the full command being interpreted by bash. But you cannot use environment variables, pipes, redirection, etc.
+
 ### SSH Into Containers
 
 The `ddev ssh` command will open an interactive bash or sh shell session to the container for a ddev service. The web service is connected to by default. The session can be ended by typing `exit`. To connect to another service, use the `--service` flag to specify the service you want to connect to. For example, to connect to the database container, you would run `ddev ssh --service db`. To specify the destination directory, use the `--dir` flag. For example, to connect to the database container and be placed into the `/home` directory, you would run `ddev ssh --service db --dir /home`.
