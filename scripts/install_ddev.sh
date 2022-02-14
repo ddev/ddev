@@ -98,12 +98,19 @@ VERSION=$LATEST_VERSION
 if [ $# -ge 1 ]; then
   VERSION=$1
 fi
-RELEASE_BASE_URL="https://github.com/${GITHUB_USERNAME}/ddev/releases/download/$VERSION"
 
-rv=$(semver_compare "${VERSION}" "v1.10.0")
-if [[ ${rv} -lt 0 ]]; then
-  printf "${RED}Sorry, this installer does not support specifying versions of ddev prior to v1.10.0${RESET}\n"
-  exit 1
+if [ "$VERSION" == 'HEAD' ]; then
+  RELEASE_BASE_URL="https://nightly.link/drud/ddev/workflows/master-build/master"
+else
+  RELEASE_BASE_URL="https://github.com/${GITHUB_USERNAME}/ddev/releases/download/$VERSION"
+fi
+
+if [ "$VERSION" != 'HEAD' ]; then
+  rv=$(semver_compare "${VERSION}" "v1.10.0")
+  if [[ ${rv} -lt 0 ]]; then
+    printf "${RED}Sorry, this installer does not support specifying versions of ddev prior to v1.10.0${RESET}\n"
+    exit 1
+  fi
 fi
 
 if [[ "$OS" == "Darwin" ]]; then
@@ -117,28 +124,37 @@ else
     exit 1
 fi
 
-USE_ARCH=$(semver_compare "${VERSION}" "v1.16.0-alpha4")
+if [ "$VERSION" == 'HEAD' ]; then
+  FILEBASE="${FILEBASE//-/_}"
+  USE_ARCH=1
+else
+  USE_ARCH=$(semver_compare "${VERSION}" "v1.16.0-alpha4")
+fi
 # Versions after v1.16.0-alpha4 need the architecture in the filename
 if [ "${USE_ARCH}" == 1 ]; then
   FILEBASE="${FILEBASE}-${ARCH}"
 fi
 
-
 if ! docker --version >/dev/null 2>&1; then
     printf "${YELLOW}Docker is required for ddev. Please see https://ddev.readthedocs.io/en/stable/#docker-installation.${RESET}\n"
 fi
 
-TARBALL="$FILEBASE.$VERSION.tar.gz"
-SHAFILE="$TARBALL.sha256.txt"
+if [ "$VERSION" == 'HEAD' ]; then 
+  TARBALL="$FILEBASE.zip"
+else
+  TARBALL="$FILEBASE.$VERSION.tar.gz"
+  SHAFILE="$TARBALL.sha256.txt"
+fi
 
 curl -fsSL "$RELEASE_BASE_URL/$TARBALL" -o "${TMPDIR}/${TARBALL}" || (printf "${RED}Failed downloading $RELEASE_BASE_URL/$TARBALL${RESET}\n" && exit 108)
-curl -fsSL "$RELEASE_BASE_URL/$SHAFILE" -o "${TMPDIR}/${SHAFILE}" || (printf "${RED}Failed downloading $RELEASE_BASE_URL/$SHAFILE${RESET}\n" && exit 109)
+if [ "$VERSION" != 'HEAD' ]; then
+  curl -fsSL "$RELEASE_BASE_URL/$SHAFILE" -o "${TMPDIR}/${SHAFILE}" || (printf "${RED}Failed downloading $RELEASE_BASE_URL/$SHAFILE${RESET}\n" && exit 109)
+fi
 curl -fsSL "https://raw.githubusercontent.com/${GITHUB_USERNAME}/ddev/master/scripts/macos_ddev_nfs_setup.sh" -o "${TMPDIR}/macos_ddev_nfs_setup.sh" || (printf "${RED}Failed downloading "https://raw.githubusercontent.com/${GITHUB_USERNAME}/ddev/master/scripts/macos_ddev_nfs_setup.sh"${RESET}\n" && exit 110)
 
 cd $TMPDIR
 $SHACMD -c "$SHAFILE"
 tar -xzf $TARBALL
-
 
 printf "${GREEN}Download verified. Ready to place ddev and mkcert in your /usr/local/bin.${RESET}\n"
 
