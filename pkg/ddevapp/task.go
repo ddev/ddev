@@ -24,9 +24,10 @@ type Task interface {
 // ExecTask is the struct that defines "exec" tasks for hooks, commands
 // to be run in containers.
 type ExecTask struct {
-	service string
-	exec    string
-	app     *DdevApp
+	service  string   // Name of service, defaults to web
+	raw_exec []string // Use raw_exec if configured instead of exec
+	exec     string   // Actual command to be executed.
+	app      *DdevApp
 }
 
 // ExecHostTask is the struct that defines "exec-host" tasks for hooks,
@@ -45,12 +46,14 @@ type ComposerTask struct {
 
 // Execute executes an ExecTask
 func (c ExecTask) Execute() error {
-	_, _, err := c.app.Exec(&ExecOpts{
+	opts := &ExecOpts{
 		Service:   c.service,
 		Cmd:       c.exec,
+		RawCmd:    c.raw_exec,
 		Tty:       isatty.IsTerminal(os.Stdin.Fd()),
 		NoCapture: true,
-	})
+	}
+	_, _, err := c.app.Exec(opts)
 
 	return err
 }
@@ -116,6 +119,21 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 			return t
 		}
 		util.Warning("Invalid exec-host value, not executing it: %v", e)
+	} else if e, ok = ytask["raw_exec"]; ok {
+		if v, ok := e.([]interface{}); ok {
+			raw := make([]string, len(v))
+			for i := range v {
+				raw[i] = v[i].(string)
+			}
+
+			t := ExecTask{app: app, raw_exec: raw}
+			if t.service, ok = ytask["service"].(string); !ok {
+				t.service = nodeps.WebContainer
+			}
+			return t
+		}
+		util.Warning("Invalid exec_raw value, not executing it: %v", e)
+
 	} else if e, ok = ytask["exec"]; ok {
 		if v, ok := e.(string); ok {
 			t := ExecTask{app: app, exec: v}
@@ -125,7 +143,6 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 			return t
 		}
 		util.Warning("Invalid exec value, not executing it: %v", e)
-
 	} else if e, ok = ytask["composer"]; ok {
 		if v, ok := e.(string); ok {
 			t := ComposerTask{app: app, exec: v}
