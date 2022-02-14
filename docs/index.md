@@ -94,6 +94,10 @@ The installation script can also take a version argument in order to install a s
 ```
 curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh v1.17.0-alpha2
 ```
+or 
+```
+curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh HEAD
+```
 
 Later, to upgrade DDEV to the latest version, just run `ddev poweroff` and run the script again.
 
