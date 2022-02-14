@@ -53,9 +53,12 @@ ddev exec --raw -- ls -lR`,
 		}
 
 		// If they've chosen raw, use the actual passed values
-		if useRaw, _ := cmd.Flags().GetBool("raw"); useRaw {
-			opts.RawCmd = args
+		if cmd.Flag("raw").Changed {
+			if useRaw, _ := cmd.Flags().GetBool("raw"); useRaw {
+				opts.RawCmd = args
+			}
 		}
+
 		_, _, err = app.Exec(opts)
 
 		if err != nil {
