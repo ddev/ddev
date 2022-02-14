@@ -65,7 +65,7 @@
             "hostname": "0.0.0.0",
             "port": 9003,
             "pathMappings": {
-                "/var/www/html": "${workspaceRoot}"
+                "/var/www/html": "${workspaceRoot}/../d9simple"
             }
         }
     ]

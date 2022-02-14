@@ -956,13 +956,6 @@ func GetHostDockerInternalIP() (string, error) {
 	hostDockerInternal := ""
 
 	switch {
-	// TODO: Remove this stanza when experimentalNetwork: true is no longer
-	// required on Gitpod - then it behaves as normal linux
-	case nodeps.IsGitpod():
-		addrs, err := net.LookupHost(os.Getenv("HOSTNAME"))
-		if err == nil && len(addrs) > 0 {
-			hostDockerInternal = addrs[0]
-		}
 	case IsColima():
 		// Lima just specifies this as a named explicit IP address at this time
 		// see https://github.com/lima-vm/lima/blob/master/docs/network.md#host-ip-19216852
