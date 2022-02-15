@@ -276,7 +276,7 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name string, service strin
 			osArgs = os.Args[2:]
 		}
 		_, _, err := app.Exec(&ddevapp.ExecOpts{
-			Cmd:       fullPath + " " + strings.Join(osArgs, " "),
+			RawCmd:    append([]string{fullPath}, osArgs...),
 			Service:   s,
 			Dir:       app.GetWorkingDir(s, ""),
 			Tty:       isatty.IsTerminal(os.Stdin.Fd()),
