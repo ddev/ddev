@@ -132,6 +132,14 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					projectTypes = val
 				}
 
+				// Default is to exec with bash interpretation (not raw)
+				execRaw := false
+				if val, ok := directives["ExecRaw"]; ok {
+					if val == "true" {
+						execRaw = true
+					}
+				}
+
 				// If ProjectTypes is specified and we aren't of that type, skip
 				if projectTypes != "" && !strings.Contains(projectTypes, app.Type) {
 					continue
@@ -206,7 +214,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				if service == "host" {
 					commandToAdd.Run = makeHostCmd(app, onHostFullPath, commandName)
 				} else {
-					commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, service)
+					commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, service, execRaw)
 				}
 
 				// Add the command and mark as added
@@ -257,7 +265,7 @@ func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Comman
 }
 
 // makeContainerCmd creates the command which will app.Exec to a container command
-func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name string, service string) func(*cobra.Command, []string) {
+func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name, service string, execRaw bool) func(*cobra.Command, []string) {
 	s := service
 	if s[0:1] == "." {
 		s = s[1:]
@@ -275,13 +283,18 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name string, service strin
 		if len(os.Args) > 2 {
 			osArgs = os.Args[2:]
 		}
-		_, _, err := app.Exec(&ddevapp.ExecOpts{
-			RawCmd:    append([]string{fullPath}, osArgs...),
+
+		opts := &ddevapp.ExecOpts{
+			Cmd:       fullPath + " " + strings.Join(osArgs, " "),
 			Service:   s,
 			Dir:       app.GetWorkingDir(s, ""),
 			Tty:       isatty.IsTerminal(os.Stdin.Fd()),
 			NoCapture: true,
-		})
+		}
+		if execRaw {
+			opts.RawCmd = append([]string{fullPath}, osArgs...)
+		}
+		_, _, err := app.Exec(opts)
 
 		if err != nil {
 			util.Failed("Failed to run %s %v: %v", name, strings.Join(osArgs, " "), err)

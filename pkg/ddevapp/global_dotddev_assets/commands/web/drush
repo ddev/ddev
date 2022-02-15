@@ -5,6 +5,7 @@
 ## Usage: drush [flags] [args]
 ## Example: "ddev drush uli" or "ddev drush sql-cli" or "ddev drush --version"
 ## ProjectTypes: drupal7,drupal8,drupal9,backdrop
+## ExecRaw: true
 
 if ! command -v drush >/dev/null; then
   echo "drush is not available. You may need to 'ddev composer require drush/drush'"

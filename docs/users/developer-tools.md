@@ -64,13 +64,7 @@ You generally don't have to worry about any of this, but it does keep things cle
 
 #### Limitations with `ddev composer`
 
-* Using `ddev composer --version` or `ddev composer -V` will not work, since `ddev` tries to utilize the command for itself. Use `ddev exec composer --version` instead.
-* Quotes, "@" signs and asterisks can cause troubles, since they get eaten up by the bash on the host. In such cases use double quotes, e.g.:
-    * `ddev composer require "'drupal/core:9.0.0 as 8.9.0'" --no-update`
-    * `ddev composer config repositories.local path "'packages/*'"`
-    * `ddev composer require "my-company/my-sitepackage:@dev" --no-update`
-
-If you encounter any other scenario, consider using `ddev ssh` and run composer inside the container as outlined above.
+* Using `ddev composer --version` or `ddev composer -V` will not work, since `ddev` tries to utilize the command for itself. Use `ddev composer -- --version` instead.
 
 ### Email Capture and Review
 

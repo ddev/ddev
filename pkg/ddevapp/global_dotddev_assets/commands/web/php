@@ -3,5 +3,6 @@
 ## Description: Run php inside the web container
 ## Usage: php [flags] [args]
 ## Example: "ddev php --version"
+## ExecRaw: true
 
 php "$@"

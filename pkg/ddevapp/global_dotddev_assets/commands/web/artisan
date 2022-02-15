@@ -5,6 +5,7 @@
 ## Usage: artisan [flags] [args]
 ## Example: "ddev artisan list" or "ddev artisan cache:clear"
 ## ProjectTypes: laravel
+## ExecRaw: true
 
 php ./artisan "$@"
 

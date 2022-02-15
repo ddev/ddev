@@ -4,6 +4,7 @@
 ## Description: Enable or disable xdebug
 ## Usage: xdebug on|off|enable|disable|true|false|status
 ## Example: "ddev xdebug" (default is "on"), "ddev xdebug off", "ddev xdebug on", "ddev xdebug status"
+## Execraw: false
 
 if [ $# -eq 0 ] ; then
   enable_xdebug

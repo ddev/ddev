@@ -4,6 +4,7 @@
 ## Description: Enable or disable xhprof
 ## Usage: xhprof on|off|enable|disable|true|false|status
 ## Example: "ddev xhprof" (default is "on"), "ddev xhprof off", "ddev xhprof on", "ddev xhprof status"
+## ExecRaw: false
 
 if [ $# -eq 0 ]; then
   enable_xhprof
