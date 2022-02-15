@@ -2555,6 +2555,13 @@ func TestDdevExec(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(out, "/usr/local")
 
+	// Try out a rawExec example
+	out, _, err = app.Exec(&ddevapp.ExecOpts{
+		RawCmd: []string{"ls", "/usr/local"},
+	})
+	assert.NoError(err)
+	assert.True(strings.HasPrefix(out, "bin\netc\n"))
+
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
 		Cmd:     "mysql -e 'DROP DATABASE db;'",

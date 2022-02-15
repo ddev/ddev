@@ -61,6 +61,11 @@ func TestCmdExec(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(out, "/var")
 
+	// Test with raw cmd
+	out, err = exec.RunHostCommand(DdevBin, "exec", "--raw", "--", "ls", "/usr/local")
+	assert.NoError(err)
+	assert.Contains(out, "bin\netc\ngames\ninclude\nlib\nman\nsbin\nshare\nsrc\n")
+
 	// Test sudo
 	out, err = exec.RunHostCommand(DdevBin, "exec", "sudo", "whoami")
 	assert.NoError(err)
