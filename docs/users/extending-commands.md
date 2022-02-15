@@ -80,7 +80,7 @@ Advanced usages may require running commands directly with explicit arguments. T
 hooks:
   post-start:
   - exec: 
-    raw_exec: [ls, -lR, /var/www/html]
+    exec_raw: [ls, -lR, /var/www/html]
 ```
 
 ### `exec-host`: Execute a shell command on the host system

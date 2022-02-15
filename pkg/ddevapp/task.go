@@ -24,7 +24,7 @@ type Task interface {
 // to be run in containers.
 type ExecTask struct {
 	service string   // Name of service, defaults to web
-	rawExec []string // Use rawExec if configured instead of exec
+	execRaw []string // Use execRaw if configured instead of exec
 	exec    string   // Actual command to be executed.
 	app     *DdevApp
 }
@@ -48,7 +48,7 @@ func (c ExecTask) Execute() error {
 	opts := &ExecOpts{
 		Service:   c.service,
 		Cmd:       c.exec,
-		RawCmd:    c.rawExec,
+		RawCmd:    c.execRaw,
 		Tty:       isatty.IsTerminal(os.Stdin.Fd()),
 		NoCapture: true,
 	}
@@ -59,7 +59,12 @@ func (c ExecTask) Execute() error {
 
 // GetDescription returns a human-readable description of the task
 func (c ExecTask) GetDescription() string {
-	return fmt.Sprintf("Exec command '%s' in container/service '%s'", c.exec, c.service)
+	s := c.exec
+	if c.execRaw != nil {
+		s = fmt.Sprintf("%v (raw)", c.execRaw)
+	}
+
+	return fmt.Sprintf("Exec command '%s' in container/service '%s'", s, c.service)
 }
 
 // GetDescription returns a human-readable description of the task
@@ -118,10 +123,10 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 		}
 		util.Warning("Invalid exec-host value, not executing it: %v", e)
 	} else if e, ok = ytask["composer"]; ok {
-		if v, ok := ytask["raw_exec"]; ok {
+		if v, ok := ytask["exec_raw"]; ok {
 			raw, err := util.InterfaceSliceToStringSlice(v.([]interface{}))
 			if err != nil {
-				util.Warning("Invalid raw_exec value, not executing it: %v", e)
+				util.Warning("Invalid exec_raw value, not executing it: %v", e)
 				return nil
 			}
 
@@ -129,15 +134,15 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 			return t
 		}
 		util.Warning("Invalid composer value, not executing it: %v", e)
-	} else if e, ok = ytask["raw_exec"]; ok {
-		if v, ok := e.([]interface{}); ok {
-			raw, err := util.InterfaceSliceToStringSlice(v)
-			if err != nil {
-				util.Warning("Invalid raw_exec value, not executing it: %v", e)
+	} else if e, ok = ytask["exec_raw"]; ok {
+		if v, ok := ytask["exec_raw"]; ok {
+			raw, ok := v.([]string)
+			if !ok {
+				util.Warning("Invalid exec_raw value, not executing it: %v", e)
 				return nil
 			}
 
-			t := ExecTask{app: app, rawExec: raw}
+			t := ExecTask{app: app, execRaw: raw}
 			if t.service, ok = ytask["service"].(string); !ok {
 				t.service = nodeps.WebContainer
 			}

@@ -2555,7 +2555,7 @@ func TestDdevExec(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(out, "/usr/local")
 
-	// Try out a rawExec example
+	// Try out a execRaw example
 	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		RawCmd: []string{"ls", "/usr/local"},
 	})
@@ -2721,6 +2721,7 @@ func TestProcessHooks(t *testing.T) {
 			{"exec": "echo MYSQL_USER=${MYSQL_USER}", "service": "db"},
 			{"exec": "echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt"},
 			{"exec": "touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt"},
+			{"exec": "", "exec_raw": []string{"ls", "/usr/local"}},
 		},
 	}
 
@@ -2742,8 +2743,11 @@ func TestProcessHooks(t *testing.T) {
 	assert.Contains(userOut, "Exec command 'echo something' on the host")
 	assert.Contains(userOut, "Exec command 'echo MYSQL_USER=${MYSQL_USER}' in container/service 'db'")
 	assert.Contains(out, "MYSQL_USER=db")
+	assert.Contains(out, "bin\netc\ngames\ninclude\nlib\nman\nsbin\nshare\nsrc\n")
 	assert.Contains(userOut, "Exec command 'echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt' in container/service 'web'")
 	assert.Contains(userOut, "Exec command 'touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt' in container/service 'web',")
+	assert.Contains(userOut, "Exec command '[ls /usr/local] (raw)")
+	assert.NotContains(userOut, "Task failed")
 	assert.FileExists(filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooks%s.txt", app.RouterHTTPSPort)))
 	assert.FileExists(filepath.Join(app.AppRoot, "touch_works_after_and.txt"))
 
