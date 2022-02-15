@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"runtime"
-	"strings"
 
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
@@ -40,8 +39,8 @@ type ExecHostTask struct {
 // ComposerTask is the struct that defines "composer" tasks for hooks, commands
 // to be run in containers.
 type ComposerTask struct {
-	exec string
-	app  *DdevApp
+	rawExec []string
+	app     *DdevApp
 }
 
 // Execute executes an ExecTask
@@ -98,15 +97,14 @@ func (c ExecHostTask) Execute() error {
 // Execute (ComposerTask) runs a composer command in the web container
 // and returns stdout, stderr, err
 func (c ComposerTask) Execute() error {
-	components := strings.Split(c.exec, " ")
-	_, _, err := c.app.Composer(components[0:])
+	_, _, err := c.app.Composer(c.rawExec)
 
 	return err
 }
 
 // GetDescription returns a human-readable description of the task
 func (c ComposerTask) GetDescription() string {
-	return fmt.Sprintf("Composer command '%s' in web container", c.exec)
+	return fmt.Sprintf("Composer command '%v' in web container", c.rawExec)
 }
 
 // NewTask is the factory method to create whatever kind of task
@@ -119,11 +117,24 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 			return t
 		}
 		util.Warning("Invalid exec-host value, not executing it: %v", e)
+	} else if e, ok = ytask["composer"]; ok {
+		if v, ok := ytask["raw_exec"]; ok {
+			raw, err := util.InterfaceSliceToStringSlice(v.([]interface{}))
+			if err != nil {
+				util.Warning("Invalid raw_exec value, not executing it: %v", e)
+				return nil
+			}
+
+			t := ComposerTask{app: app, rawExec: raw}
+			return t
+		}
+		util.Warning("Invalid composer value, not executing it: %v", e)
 	} else if e, ok = ytask["raw_exec"]; ok {
 		if v, ok := e.([]interface{}); ok {
-			raw := make([]string, len(v))
-			for i := range v {
-				raw[i] = v[i].(string)
+			raw, err := util.InterfaceSliceToStringSlice(v)
+			if err != nil {
+				util.Warning("Invalid raw_exec value, not executing it: %v", e)
+				return nil
 			}
 
 			t := ExecTask{app: app, rawExec: raw}
@@ -143,12 +154,6 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 			return t
 		}
 		util.Warning("Invalid exec value, not executing it: %v", e)
-	} else if e, ok = ytask["composer"]; ok {
-		if v, ok := e.(string); ok {
-			t := ComposerTask{app: app, exec: v}
-			return t
-		}
-		util.Warning("Invalid composer value, not executing it: %v", e)
 	}
 	return nil
 }
