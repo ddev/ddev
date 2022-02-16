@@ -6,6 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"testing"
@@ -32,9 +33,17 @@ func TestProcessHooks(t *testing.T) {
 		assert.NoError(err)
 		err = os.RemoveAll(app.GetConfigPath("config.hooks.yaml"))
 		assert.NoError(err)
+		err = os.RemoveAll(filepath.Join(app.AppRoot, "composer.json"))
+		assert.NoError(err)
+
 	})
 	err = app.Start()
 	assert.NoError(err)
+
+	// create a composer.json just so we can do actions on it.
+	fName := filepath.Join(app.AppRoot, "composer.json")
+	err = os.WriteFile(fName, []byte("{}"), 0644)
+	require.NoError(t, err)
 
 	type taskExpectation struct {
 		task             string
@@ -50,6 +59,8 @@ func TestProcessHooks(t *testing.T) {
 		{"exec: \"echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt\"", "", "Running task: Exec command 'echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt'"},
 		{"exec: \"touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt\"", "", "Running task: Exec command 'touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt'"},
 		{"exec:\n    exec_raw: [ls, /usr/local]", "bin\netc\ngames\ninclude\nlib\nman\nsbin\nshare\nsrc\n", "Exec command '[ls /usr/local] (raw)'"},
+		{"composer: install", "", "Running task: Composer command '[install]' in web container"},
+		{"composer:\n    exec_raw: [list, --raw]", "Shows a short information about Composer", "Running task: Composer command '[list --raw]' in web container"},
 	}
 	for _, task := range tasks {
 		fName := app.GetConfigPath("config.hooks.yaml")
@@ -80,7 +91,7 @@ func TestProcessHooks(t *testing.T) {
 	assert.FileExists(filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooks%s.txt", app.RouterHTTPSPort)))
 	assert.FileExists(filepath.Join(app.AppRoot, "touch_works_after_and.txt"))
 
-	//// Attempt processing hooks with a guaranteed failure
+	// Attempt processing hooks with a guaranteed failure
 	app.Hooks = map[string][]ddevapp.YAMLTask{
 		"hook-test": {
 			{"exec": "ls /does-not-exist"},
