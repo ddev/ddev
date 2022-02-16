@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strings"
 
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
@@ -39,7 +40,7 @@ type ExecHostTask struct {
 // ComposerTask is the struct that defines "composer" tasks for hooks, commands
 // to be run in containers.
 type ComposerTask struct {
-	rawExec []string
+	execRaw []string
 	app     *DdevApp
 }
 
@@ -102,14 +103,14 @@ func (c ExecHostTask) Execute() error {
 // Execute (ComposerTask) runs a composer command in the web container
 // and returns stdout, stderr, err
 func (c ComposerTask) Execute() error {
-	_, _, err := c.app.Composer(c.rawExec)
+	_, _, err := c.app.Composer(c.execRaw)
 
 	return err
 }
 
 // GetDescription returns a human-readable description of the task
 func (c ComposerTask) GetDescription() string {
-	return fmt.Sprintf("Composer command '%v' in web container", c.rawExec)
+	return fmt.Sprintf("Composer command '%v' in web container", c.execRaw)
 }
 
 // NewTask is the factory method to create whatever kind of task
@@ -123,6 +124,13 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 		}
 		util.Warning("Invalid exec-host value, not executing it: %v", e)
 	} else if e, ok = ytask["composer"]; ok {
+		// Handle the old-style `composer: install`
+		if v, ok := e.(string); ok {
+			t := ComposerTask{app: app, execRaw: strings.Split(v, " ")}
+			return t
+		}
+
+		// Handle the new-style `composer: [install]`
 		if v, ok := ytask["exec_raw"]; ok {
 			raw, err := util.InterfaceSliceToStringSlice(v.([]interface{}))
 			if err != nil {
@@ -130,11 +138,19 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 				return nil
 			}
 
-			t := ComposerTask{app: app, rawExec: raw}
+			t := ComposerTask{app: app, execRaw: raw}
 			return t
 		}
 		util.Warning("Invalid composer value, not executing it: %v", e)
 	} else if e, ok = ytask["exec"]; ok {
+		if v, ok := e.(string); ok {
+			t := ExecTask{app: app, exec: v}
+			if t.service, ok = ytask["service"].(string); !ok {
+				t.service = nodeps.WebContainer
+			}
+			return t
+		}
+
 		if v, ok := ytask["exec_raw"]; ok {
 			raw, err := util.InterfaceSliceToStringSlice(v.([]interface{}))
 			if err != nil {
