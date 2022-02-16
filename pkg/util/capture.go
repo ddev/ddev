@@ -77,7 +77,9 @@ func CaptureOutputToFile() (func() string, error) {
 		os.Stdout = oldStdout // restoring the real stdout
 		os.Stderr = oldStderr
 		out, _ := os.ReadFile(f.Name())
-		_ = os.RemoveAll(f.Name())
+		defer func() {
+			_ = os.RemoveAll(f.Name())
+		}()
 		return string(out)
 	}, nil
 }
