@@ -304,3 +304,16 @@ func Killall(processName string) {
 		_, _ = exec.RunHostCommand("killall", processName)
 	}
 }
+
+//InterfaceSliceToStringSlice converts a slice of interfaces to a slice of strings
+func InterfaceSliceToStringSlice(v []interface{}) ([]string, error) {
+	raw := make([]string, len(v))
+	for i := range v {
+		if s, ok := v[i].(string); ok {
+			raw[i] = s
+		} else {
+			return nil, fmt.Errorf("%v is not a string", v[i])
+		}
+	}
+	return raw, nil
+}

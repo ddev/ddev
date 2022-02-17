@@ -7,5 +7,6 @@
 ## Usage: typo3cms [args]
 ## Example: "ddev typo3cms cache:flush" or "ddev typo3cms database:export"
 ## ProjectTypes: typo3
+## ExecRaw: true
 
 typo3cms "$@"

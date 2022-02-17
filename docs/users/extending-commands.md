@@ -74,6 +74,15 @@ hooks:
 
 (Note that this could probably be done more efficiently in a .ddev/web-build/Dockerfile as explained in [Customizing Images](extend/customizing-images.md).)
 
+Advanced usages may require running commands directly with explicit arguments. This approach is useful when bash interpretation is not required (no environment variables, no redirection, etc.)
+
+```yaml
+hooks:
+  post-start:
+  - exec: 
+    exec_raw: [ls, -lR, /var/www/html]
+```
+
 ### `exec-host`: Execute a shell command on the host system
 
 Value: string providing the command to run. Commands requiring user interaction are not supported.

@@ -5,6 +5,7 @@
 ## Usage: magento [flags] [args]
 ## Example: "ddev magento list" or "ddev magento maintenance:enable" or "ddev magento sampledata:reset"
 ## ProjectTypes: magento2
+## ExecRaw: true
 
 if ! command -v magento >/dev/null; then
   echo 'magento is not available in your in-container $PATH'

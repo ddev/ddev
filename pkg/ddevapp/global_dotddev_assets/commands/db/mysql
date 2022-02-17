@@ -6,5 +6,6 @@
 ## Example: "ddev mysql" or "ddev mysql -uroot -proot" or "echo 'SHOW TABLES;' | ddev mysql"
 ## `ddev mysql --database=mysql -uroot -proot` gets you to the 'mysql' database with root privileges
 ## DBTypes: mysql,mariadb
+## ExecRaw: true
 
-mysql -udb -pdb $@
+mysql -udb -pdb "$@"

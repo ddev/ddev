@@ -24,8 +24,9 @@ type Task interface {
 // ExecTask is the struct that defines "exec" tasks for hooks, commands
 // to be run in containers.
 type ExecTask struct {
-	service string
-	exec    string
+	service string   // Name of service, defaults to web
+	execRaw []string // Use execRaw if configured instead of exec
+	exec    string   // Actual command to be executed.
 	app     *DdevApp
 }
 
@@ -39,25 +40,32 @@ type ExecHostTask struct {
 // ComposerTask is the struct that defines "composer" tasks for hooks, commands
 // to be run in containers.
 type ComposerTask struct {
-	exec string
-	app  *DdevApp
+	execRaw []string
+	app     *DdevApp
 }
 
 // Execute executes an ExecTask
 func (c ExecTask) Execute() error {
-	_, _, err := c.app.Exec(&ExecOpts{
+	opts := &ExecOpts{
 		Service:   c.service,
 		Cmd:       c.exec,
+		RawCmd:    c.execRaw,
 		Tty:       isatty.IsTerminal(os.Stdin.Fd()),
 		NoCapture: true,
-	})
+	}
+	_, _, err := c.app.Exec(opts)
 
 	return err
 }
 
 // GetDescription returns a human-readable description of the task
 func (c ExecTask) GetDescription() string {
-	return fmt.Sprintf("Exec command '%s' in container/service '%s'", c.exec, c.service)
+	s := c.exec
+	if c.execRaw != nil {
+		s = fmt.Sprintf("%v (raw)", c.execRaw)
+	}
+
+	return fmt.Sprintf("Exec command '%s' in container/service '%s'", s, c.service)
 }
 
 // GetDescription returns a human-readable description of the task
@@ -95,15 +103,14 @@ func (c ExecHostTask) Execute() error {
 // Execute (ComposerTask) runs a composer command in the web container
 // and returns stdout, stderr, err
 func (c ComposerTask) Execute() error {
-	components := strings.Split(c.exec, " ")
-	_, _, err := c.app.Composer(components[0:])
+	_, _, err := c.app.Composer(c.execRaw)
 
 	return err
 }
 
 // GetDescription returns a human-readable description of the task
 func (c ComposerTask) GetDescription() string {
-	return fmt.Sprintf("Composer command '%s' in web container", c.exec)
+	return fmt.Sprintf("Composer command '%v' in web container", c.execRaw)
 }
 
 // NewTask is the factory method to create whatever kind of task
@@ -116,6 +123,49 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 			return t
 		}
 		util.Warning("Invalid exec-host value, not executing it: %v", e)
+	} else if e, ok = ytask["composer"]; ok {
+		// Handle the old-style `composer: install`
+		if v, ok := e.(string); ok {
+			t := ComposerTask{app: app, execRaw: strings.Split(v, " ")}
+			return t
+		}
+
+		// Handle the new-style `composer: [install]`
+		if v, ok := ytask["exec_raw"]; ok {
+			raw, err := util.InterfaceSliceToStringSlice(v.([]interface{}))
+			if err != nil {
+				util.Warning("Invalid composer/exec_raw value, not executing it: %v", e)
+				return nil
+			}
+
+			t := ComposerTask{app: app, execRaw: raw}
+			return t
+		}
+		util.Warning("Invalid composer value, not executing it: %v", e)
+	} else if e, ok = ytask["exec"]; ok {
+		if v, ok := e.(string); ok {
+			t := ExecTask{app: app, exec: v}
+			if t.service, ok = ytask["service"].(string); !ok {
+				t.service = nodeps.WebContainer
+			}
+			return t
+		}
+
+		if v, ok := ytask["exec_raw"]; ok {
+			raw, err := util.InterfaceSliceToStringSlice(v.([]interface{}))
+			if err != nil {
+				util.Warning("Invalid exec/exec_raw value, not executing it: %v", e)
+				return nil
+			}
+
+			t := ExecTask{app: app, execRaw: raw}
+			if t.service, ok = ytask["service"].(string); !ok {
+				t.service = nodeps.WebContainer
+			}
+			return t
+		}
+		util.Warning("Invalid exec_raw value, not executing it: %v", e)
+
 	} else if e, ok = ytask["exec"]; ok {
 		if v, ok := e.(string); ok {
 			t := ExecTask{app: app, exec: v}
@@ -125,13 +175,6 @@ func NewTask(app *DdevApp, ytask YAMLTask) Task {
 			return t
 		}
 		util.Warning("Invalid exec value, not executing it: %v", e)
-
-	} else if e, ok = ytask["composer"]; ok {
-		if v, ok := e.(string); ok {
-			t := ComposerTask{app: app, exec: v}
-			return t
-		}
-		util.Warning("Invalid composer value, not executing it: %v", e)
 	}
 	return nil
 }

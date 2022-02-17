@@ -2555,6 +2555,13 @@ func TestDdevExec(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(out, "/usr/local")
 
+	// Try out a execRaw example
+	out, _, err = app.Exec(&ddevapp.ExecOpts{
+		RawCmd: []string{"ls", "/usr/local"},
+	})
+	assert.NoError(err)
+	assert.True(strings.HasPrefix(out, "bin\netc\n"))
+
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Service: "db",
 		Cmd:     "mysql -e 'DROP DATABASE db;'",
@@ -2680,88 +2687,6 @@ func TestDdevLogs(t *testing.T) {
 
 	runTime()
 	switchDir()
-}
-
-// TestProcessHooks tests execution of commands defined in config.yaml
-func TestProcessHooks(t *testing.T) {
-	assert := asrt.New(t)
-
-	site := TestSites[0]
-	switchDir := site.Chdir()
-
-	runTime := util.TimeTrack(time.Now(), t.Name())
-
-	testcommon.ClearDockerEnv()
-	app, err := ddevapp.NewApp(site.Dir, true)
-	assert.NoError(err)
-	t.Cleanup(func() {
-		err = app.Stop(true, false)
-		assert.NoError(err)
-		app.Hooks = nil
-		err = app.WriteConfig()
-		assert.NoError(err)
-		switchDir()
-	})
-	err = app.Start()
-	assert.NoError(err)
-
-	// Note that any ExecHost commands must be able to run on Windows.
-	// echo and pwd are things that work pretty much the same in both places.
-	app.Hooks = map[string][]ddevapp.YAMLTask{
-		"hook-test": {
-			{"exec": "ls /usr/local/bin/composer"},
-			{"exec-host": "echo something"},
-			{"exec": "echo MYSQL_USER=${MYSQL_USER}", "service": "db"},
-			{"exec": "echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt"},
-			{"exec": "touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt"},
-		},
-	}
-
-	captureOutputFunc, err := util.CaptureOutputToFile()
-	assert.NoError(err)
-	userOutFunc := util.CaptureUserOut()
-
-	err = app.ProcessHooks("hook-test")
-	assert.NoError(err)
-	out := captureOutputFunc()
-
-	err = app.MutagenSyncFlush()
-	assert.NoError(err)
-
-	userOut := userOutFunc()
-
-	assert.Contains(userOut, "Executing hook-test hook")
-	assert.Contains(userOut, "Exec command 'ls /usr/local/bin/composer' in container/service 'web'")
-	assert.Contains(userOut, "Exec command 'echo something' on the host")
-	assert.Contains(userOut, "Exec command 'echo MYSQL_USER=${MYSQL_USER}' in container/service 'db'")
-	assert.Contains(out, "MYSQL_USER=db")
-	assert.Contains(userOut, "Exec command 'echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt' in container/service 'web'")
-	assert.Contains(userOut, "Exec command 'touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt' in container/service 'web',")
-	assert.FileExists(filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooks%s.txt", app.RouterHTTPSPort)))
-	assert.FileExists(filepath.Join(app.AppRoot, "touch_works_after_and.txt"))
-
-	// Attempt processing hooks with a guaranteed failure
-	app.Hooks = map[string][]ddevapp.YAMLTask{
-		"hook-test": {
-			{"exec": "ls /does-not-exist"},
-		},
-	}
-	// With default setting, ProcessHooks should succeed
-	err = app.ProcessHooks("hook-test")
-	assert.NoError(err)
-	// With FailOnHookFail or FailOnHookFailGlobal or both, it should fail.
-	app.FailOnHookFail = true
-	err = app.ProcessHooks("hook-test")
-	assert.Error(err)
-	app.FailOnHookFail = false
-	app.FailOnHookFailGlobal = true
-	err = app.ProcessHooks("hook-test")
-	assert.Error(err)
-	app.FailOnHookFail = true
-	err = app.ProcessHooks("hook-test")
-	assert.Error(err)
-
-	runTime()
 }
 
 // TestDdevPause tests the functionality that is called when "ddev pause" is executed
