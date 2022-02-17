@@ -6,7 +6,7 @@ Docker Desktop for Mac can be installed via Homebrew (`brew install  homebrew/ca
 
 ### macOS Installation: Colima
 
-[Colima](https://github.com/abiosoft/colima) is a new open-source project that bundles the container management tool [lima](https://github.com/lima-vm/lima) with a docker (linux) back-end. This is similar to what Docker Desktop actually does, but Colima and Lima are entirely open-source and just focused on running containers. They work on both `amd64` and `arm64` (M1) macs. Colima does not require installation of Docker Desktop, or does it require paying a licensing fee to Docker, Inc.
+[Colima](https://github.com/abiosoft/colima) is an open-source project that bundles the container management tool [lima](https://github.com/lima-vm/lima) with a docker (linux) back-end. This is similar to what Docker Desktop actually does, but Colima and Lima are entirely open-source and just focused on running containers. They work on both `amd64` and `arm64` (M1) macs. Colima does not require installation of Docker Desktop, or does it require paying a license fee to Docker, Inc.
 
 Reasons to use Colima include:
 
@@ -15,11 +15,11 @@ Reasons to use Colima include:
 * Preferring a CLI-focused approach to Docker Desktop's GUI focus.
 
 * Install colima with `brew install colima` using homebrew or see the other [installation options](https://github.com/abiosoft/colima/blob/main/INSTALL.md).
-* Start colima: `colima start --cpu 4 --memory 4` will set up a colima instance with 4 CPUs and 4GB of memory allocated. Your needs may vary. After the first start you can just use `colima start`
+* Start colima: `colima start --cpu 4 --memory 4 --port-interface 127.0.0.1` will set up a colima instance with 4 CPUs and 4GB of memory allocated. Your needs may vary. After the first start you can just use `colima start --port-interface 127.0.0.1`. (The `--port-interface` line makes colima not allow connections on network interfaces other than localhost).
 * `colima status` will show colima's status.
 * After a computer restart you'll need to `colima start` again.
 * If you don't have Docker Desktop installed, you'll need the docker client, `brew install docker`.
-* Colima activates its own docker context in order to not conflict with Docker Desktop, so if you `docker context ls` you'll see a list of available contexts with currently active context indicated with an "\*" (which will be "colima" after you've started colima). You can change to the default with `docker context use default`.
+* Colima activates its own docker context in order to not conflict with Docker Desktop, so if you `docker context ls` you'll see a list of available contexts with currently active context indicated with an "\*" (which will be "colima" after you've started colima). You can change to the default (Docker Desktop) with `docker context use default` or change back with `docker context use colima`.
 * For webserver performance and predictability mutagen is recommended, `ddev config global --mutagen-enabled`. See [Performance docs](performance.md#using-mutagen). Since the file mounting technique on lima/colima is immature (sshfs) you may want to just use no-bind-mounts, `ddev config global --no-bind-mounts` (which also implies mutagen).
 
 DDEV has extensive automated test coverage for colima on macOS, but of course colima is new and this integration is new, so please share your results and open issues or [contact us](../index.md#support-and-user-contributed-documentation) for help.
