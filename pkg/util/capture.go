@@ -2,6 +2,7 @@ package util
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/drud/ddev/pkg/output"
 	"io"
 	"os"
@@ -76,7 +77,10 @@ func CaptureOutputToFile() (func() string, error) {
 		_ = f.Close()
 		os.Stdout = oldStdout // restoring the real stdout
 		os.Stderr = oldStderr
-		out, _ := os.ReadFile(f.Name())
+		out, err := os.ReadFile(f.Name())
+		if err != nil {
+			out = []byte(fmt.Sprintf("failed to read file: %v", err))
+		}
 		defer func() {
 			_ = os.RemoveAll(f.Name())
 		}()
