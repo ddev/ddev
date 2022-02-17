@@ -94,7 +94,7 @@ func GetDockerClient() *docker.Client {
 	if dockerHost == "" {
 		contextInfo, err := exec2.RunHostCommand("docker", "context", "inspect", "-f", `{{ .Name }} {{ .Endpoints.docker.Host }}`)
 		if err != nil {
-			util.Warning("unable to run docker context inspect: %v", err)
+			util.Failed("unable to run 'docker context inspect' - please make sure docker client is in path and up-to-date: %v", err)
 		} else {
 			contextInfo = strings.Trim(contextInfo, " \r\n")
 			parts := strings.SplitN(contextInfo, " ", 2)
