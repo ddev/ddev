@@ -136,6 +136,11 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 		globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion = val
 		dirty = true
 	}
+	if cmd.Flag("project-tdl").Changed {
+		val, _ := cmd.Flags().GetString("project-tld")
+		globalconfig.DdevGlobalConfig.ProjectTldGlobal = val
+		dirty = true
+	}
 
 	if cmd.Flag("use-docker-compose-from-path").Changed {
 		val, _ := cmd.Flags().GetBool("use-docker-compose-from-path")
@@ -179,6 +184,7 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 	output.UserOut.Printf("required-docker-compose-version=%v", globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion)
 	output.UserOut.Printf("use-docker-compose-from-path=%v", globalconfig.DdevGlobalConfig.UseDockerComposeFromPath)
 	output.UserOut.Printf("no-bind-mounts=%v", globalconfig.DdevGlobalConfig.NoBindMounts)
+	output.UserOut.Printf("project-tdl=%v", globalconfig.DdevGlobalConfig.ProjectTldGlobal)
 }
 
 func init() {
@@ -198,6 +204,7 @@ func init() {
 	configGlobalCommand.Flags().Bool("mutagen-enabled", false, "If true, web container will use mutagen caching/asynchronous updates.")
 	configGlobalCommand.Flags().String("table-style", "", "Table style for list and describe, see ~/.ddev/global_config.yaml for values")
 	configGlobalCommand.Flags().String("required-docker-compose-version", "", "Override default docker-compose version")
+	configGlobalCommand.Flags().String("project-tld", "", "Override default project tld")
 	configGlobalCommand.Flags().Bool("use-docker-compose-from-path", true, "If true, use docker-compose from path instead of private ~/.ddev/bin/docker-compose")
 	configGlobalCommand.Flags().Bool("no-bind-mounts", true, "If true, don't use bind-mounts - useful for environments like remote docker where bind-mounts are impossible")
 

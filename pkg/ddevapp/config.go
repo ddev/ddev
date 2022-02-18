@@ -96,7 +96,11 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	if nodeps.IsGitpod() {
 		app.OmitContainersGlobal = append(app.OmitContainersGlobal, "ddev-router")
 	}
-	app.ProjectTLD = nodeps.DdevDefaultTLD
+
+	app.ProjectTLD = globalconfig.DdevGlobalConfig.ProjectTldGlobal
+	if globalconfig.DdevGlobalConfig.ProjectTldGlobal == "" {
+		app.ProjectTLD = nodeps.DdevDefaultTLD
+	}
 	app.UseDNSWhenPossible = true
 
 	app.WebImage = version.GetWebImage()
@@ -165,7 +169,7 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.PHPMyAdminHTTPSPort == nodeps.DdevDefaultPHPMyAdminHTTPSPort {
 		appcopy.PHPMyAdminHTTPSPort = ""
 	}
-	if appcopy.ProjectTLD == nodeps.DdevDefaultTLD {
+	if appcopy.ProjectTLD == nodeps.DdevDefaultTLD || appcopy.ProjectTLD == globalconfig.DdevGlobalConfig.ProjectTldGlobal {
 		appcopy.ProjectTLD = ""
 	}
 

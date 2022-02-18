@@ -59,6 +59,7 @@ type GlobalConfig struct {
 	NoBindMounts                 bool                    `yaml:"no_bind_mounts"`
 	MkcertCARoot                 string                  `yaml:"mkcert_caroot"`
 	ProjectList                  map[string]*ProjectInfo `yaml:"project_info"`
+	ProjectTldGlobal             string                  `yaml:"project_tld"`
 }
 
 // GetGlobalConfigPath gets the path to global config file
@@ -175,6 +176,7 @@ func ReadGlobalConfig() error {
 	if nodeps.NoBindMountsDefault == true {
 		DdevGlobalConfig.NoBindMounts = true
 	}
+
 	err = ValidateGlobalConfig()
 	if err != nil {
 		return err
