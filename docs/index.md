@@ -4,7 +4,7 @@
 
 ## System Requirements
 
-* [Docker Desktop](https://www.docker.com/products/docker-desktop), `docker-ce` or a Docker alternative like Colima. Installing or upgrading docker-compose is not required as DDEV uses its own private docker-compose version. See [Docker Installation](users/docker_installation.md).
+* Colima (macOS), `docker-ce` (Linux/WSL2) or [Docker Desktop](https://www.docker.com/products/docker-desktop) or a related docker back-end are required. Installing or upgrading docker-compose is not required as DDEV uses its own private docker-compose version. See [Docker Installation](users/docker_installation.md).
 * OS Support
     * macOS Catalina and higher (macOS 10.15 and higher); it should run anywhere docker runs (Current Docker Desktop has deprecated macOS 10.14 and below, but Docker Desktop versions prior to  can still work with DDEV-Local on High Sierra. You can look through the [Docker Desktop for Mac Release Notes](https://docs.docker.com/desktop/mac/release-notes/) for older versions.)
     * Linux: Most Linux distributions which can run Docker-ce are fine. This includes at least Ubuntu 18.04+ (20.04 is recommended), Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
@@ -33,7 +33,7 @@ As a one-time initialization, run `mkcert -install`.
 
 Later, to upgrade to a newer version of DDEV-Local, run `brew upgrade ddev`.
 
-To install the latest unreleased DDEV version, `brew unlink ddev && brew install drud/ddev/ddev --HEAD`.
+To install DDEV prereleases, subscribe to the "edge" channel with `brew install drud/ddev-edge/ddev` and to install the latest unreleased DDEV version, `brew unlink ddev && brew install drud/ddev/ddev --HEAD`.
 
 ### Linux (Arch)
 
@@ -43,9 +43,9 @@ As a one-time initialization, run `mkcert -install`, which may require your sudo
 
 ### Linux, macOS and Windows WSL2 (install script)
 
-_NOTE: macOS users that have installed via Homebrew or Arch Linux users that have installed via the package manager above do not need the install script._
+**NOTE: macOS users that have installed via Homebrew or Arch Linux users that have installed via the package manager above do not need the install script.**
 
-Linux, macOS and Windows WSL2 (see below) users can use this line of code to your terminal to download, verify, and install (or upgrade) ddev using our [install script](https://github.com/drud/ddev/blob/master/scripts/install_ddev.sh). Note that this works with both amd64 and arm64 architectures, including Surface Pro X with WSL2 and 64-bit Raspberry Pi OS. It also works with the new macOS Apple Silicon M1 machines.
+Linux, macOS and Windows WSL2 (see below) users can use this line of code to your terminal to download, verify, and install (or upgrade) ddev using the [install_ddev.sh script](https://github.com/drud/ddev/blob/master/scripts/install_ddev.sh). Note that this works with both amd64 and arm64 architectures, including Surface Pro X with WSL2 and 64-bit Raspberry Pi OS. It also works with macOS Apple Silicon M1 machines.
 
 ```
 curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh
@@ -57,13 +57,13 @@ The installation script can also take a version argument in order to install a s
 curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh v1.19.0-alpha5
 ```
 
-To upgrade DDEV to the latest version, just run the script again.
+To upgrade DDEV to the latest stable version, just run the script again.
 
 ### Windows (WSL2)
 
-**This is the recommended installation method for all Windows users that are on Windows 10 2004 or higher**. If you don't have this version yet, or if you don't want to use WSL2, please follow the legacy instructions for Windows below.
+**This is the recommended installation method for all Windows users**.
 
-**All Windows 10 editions (including Windows 10 Home) support WSL2**. Docker Toolbox support for DDEV has been removed. If you're already familiar with DDEV on Windows, you might have been using NFS for better filesystem performance. **You won't need NFS anymore once you switch to WSL2**, since it provides awesome filesystem performance out of the box.
+**All Windows 10 editions (including Windows 10 Home) support WSL2**. If you're already familiar with DDEV on Windows, you might have been using NFS for better filesystem performance. **You won't need NFS anymore once you switch to WSL2**, since it provides awesome filesystem performance out of the box.
 
 The WSL2 install process involves:
 
@@ -97,13 +97,16 @@ That's it! You have now installed DDEV on WSL2. If you're using WSL2 for DDEV (r
 
 **Make sure you put your projects in the Linux filesystem (e.g. /home/<your_username>), not in the Windows filesystem (/mnt/c), because you'll get vastly superior performance on the Linux filesystem.**
 
-Note that nfs-mount-enabled (and running NFS) are not required on WSL2 because it's perhaps faster without NFS.
+Note that mutagen-enabled or nfs-mount-enabled (and running NFS) are not required on WSL2 because it's so fast even without these options.
 
 ### Windows (traditional/legacy)
+
+DDEV does work fine on the Windows side, although it's quite a bit slower by default, but good results have been reported by users who enabled mutagen, `ddev config global --mutagen-enabled`.
 
 * If you use [chocolatey](https://chocolatey.org/) (recommended), then you can just `choco install ddev git` from an administrative shell. Upgrades are just `ddev poweroff && choco upgrade ddev`.
 * A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you.  Open a new git-bash or PowerShell or cmd window and start using ddev.
 * Most people interact with ddev on Windows using git-bash, part of the [Windows git suite](https://git-scm.com/download/win). Although ddev does work with cmd and PowerShell, it's more at home in bash. You can install it with chocolatey using `choco install -y git`.
+* For performance, many users enable mutagen, `ddev config global --mutagen-enabled` (global) or `ddev config --mutagen-enabled` just for one project.
 
 ### Linux and macOS (manual)
 
@@ -139,10 +142,7 @@ configuration by your self:
 * Run `mkcert -install` (you can use the shortcut from the start menu for that)
 * Run `mkcert -CAROOT` to see the local folder used for the newly created root
   certificate authority
-  
-### Firefox additional instructions
-
-* Open the Firefox Preferences
+* Open Firefox Preferences
 * Enter `certificates` into the search box on the top
 * Click  `View Certificates...`
 * Select the tab `Authorities`
