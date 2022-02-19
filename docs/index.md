@@ -35,9 +35,11 @@ Later, to upgrade to a newer version of DDEV-Local, run `brew upgrade ddev`.
 
 To install DDEV prereleases, subscribe to the "edge" channel with `brew install drud/ddev-edge/ddev` and to install the latest unreleased DDEV version, `brew unlink ddev && brew install drud/ddev/ddev --HEAD`.
 
-### Linux (Arch)
+### Linux (Arch-based systems such as EndeavourOS or Manjaro)
 
 We maintain a package on [Arch Linux (AUR)](https://aur.archlinux.org/packages/ddev-bin/).
+
+**NOTE: Package installation on Arch-based systems is preferable to the install script below.**
 
 As a one-time initialization, run `mkcert -install`, which may require your sudo password. See below for additional information.
 
@@ -94,14 +96,14 @@ We'll walk through these in more detail. You may prefer other techniques of inst
 17. `sudo apt-get update && sudo apt-get install -y xdg-utils` to install the xdg-utils package that allows `ddev launch` to work.
 
 That's it! You have now installed DDEV on WSL2. If you're using WSL2 for DDEV (recommended), remember to run all `ddev` commands inside the WSL2 distro.
-
+Follow the instructions in `Linux, macOS and Windows WSL2 (install script)` above.
 **Make sure you put your projects in the Linux filesystem (e.g. /home/<your_username>), not in the Windows filesystem (/mnt/c), because you'll get vastly superior performance on the Linux filesystem.**
 
 Note that mutagen-enabled or nfs-mount-enabled (and running NFS) are not required on WSL2 because it's so fast even without these options.
 
 ### Windows (traditional/legacy)
 
-DDEV does work fine on the Windows side, although it's quite a bit slower by default, but good results have been reported by users who enabled mutagen, `ddev config global --mutagen-enabled`.
+DDEV does work fine on the Windows side, although it's quite a bit slower than WSL2 by default, but good results have been reported by users who enabled mutagen, `ddev config global --mutagen-enabled`.
 
 * If you use [chocolatey](https://chocolatey.org/) (recommended), then you can just `choco install ddev git` from an administrative shell. Upgrades are just `ddev poweroff && choco upgrade ddev`.
 * A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you.  Open a new git-bash or PowerShell or cmd window and start using ddev.
@@ -142,7 +144,7 @@ configuration by your self:
 * Run `mkcert -install` (you can use the shortcut from the start menu for that)
 * Run `mkcert -CAROOT` to see the local folder used for the newly created root
   certificate authority
-* Open Firefox Preferences
+* Open Firefox Preferences (about:preferences#privacy)
 * Enter `certificates` into the search box on the top
 * Click  `View Certificates...`
 * Select the tab `Authorities`
