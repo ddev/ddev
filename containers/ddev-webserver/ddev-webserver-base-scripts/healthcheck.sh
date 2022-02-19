@@ -29,7 +29,7 @@ else
 fi
 
 if ls /var/www/html >/dev/null; then
-    htmlstatus="true"
+    htmlaccess="true"
     printf "/var/www/html: OK "
 else
     printf "/var/www/html: FAILED"
