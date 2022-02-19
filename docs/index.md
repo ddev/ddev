@@ -21,7 +21,7 @@ DDEV by default uses ports 80 and 443 on your system when projects are running. 
 
 ## Installation
 
-### Prerequisite
+### Docker or Colima Prerequisite
 
 Docker or an alternative is required before anything will work with DDEV. This is pretty easy on most environments; see the [docker_installation](users/docker_installation.md) page to help sort out the details, especially on Windows and Linux. It is not required to install docker-compose because DDEV uses its own private version.
 
@@ -37,7 +37,7 @@ To install the latest unreleased DDEV version, `brew unlink ddev && brew install
 
 ### Linux (Arch)
 
-We currently maintain a package on [Arch Linux (AUR)](https://aur.archlinux.org/packages/ddev-bin/).
+We maintain a package on [Arch Linux (AUR)](https://aur.archlinux.org/packages/ddev-bin/).
 
 As a one-time initialization, run `mkcert -install`, which may require your sudo password. See below for additional information.
 
@@ -54,10 +54,10 @@ curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev
 The installation script can also take a version argument in order to install a specific version or a prerelease version. For example,
 
 ```
-curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh v1.17.0-alpha2
+curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh v1.19.0-alpha5
 ```
 
-Later, to upgrade DDEV to the latest version, just run `ddev poweroff` and run the script again.
+To upgrade DDEV to the latest version, just run the script again.
 
 ### Windows (WSL2)
 
@@ -99,7 +99,7 @@ That's it! You have now installed DDEV on WSL2. If you're using WSL2 for DDEV (r
 
 Note that nfs-mount-enabled (and running NFS) are not required on WSL2 because it's perhaps faster without NFS.
 
-### Windows (legacy)
+### Windows (traditional/legacy)
 
 * If you use [chocolatey](https://chocolatey.org/) (recommended), then you can just `choco install ddev git` from an administrative shell. Upgrades are just `ddev poweroff && choco upgrade ddev`.
 * A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you.  Open a new git-bash or PowerShell or cmd window and start using ddev.
@@ -130,7 +130,7 @@ On variants of Linux you may be prompted for additional package installation to 
 
   (Note the prompt `Installing to the system store is not yet supported on this Linux`, which can be a simple result of not having /usr/sbin in the path so that `/usr/sbin/update-ca-certificates` can be found.)
 
-### Windows `mkcert -install` additional instructions
+### Windows/Firefox additional instructions
 
 The `mkcert -install` step on Windows does not work for the Firefox browser.
 You need to add the created root certificate authority to the security
