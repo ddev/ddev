@@ -6,6 +6,5 @@ type invalidAppType error
 type invalidPHPVersion error
 type invalidWebserverType error
 type invalidProvider error
-type invalidNodeJSVersion error
 type InvalidOmitContainers error
 type webContainerExists error
