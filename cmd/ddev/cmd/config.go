@@ -311,6 +311,7 @@ func init() {
 	ConfigCommand.Flags().Bool("auto", true, `Automatically run config without prompting.`)
 	ConfigCommand.Flags().Bool("bind-all-interfaces", false, `Bind host ports on all interfaces, not just on localhost network interface`)
 	ConfigCommand.Flags().String("database", "", fmt.Sprintf(`Specify the database type:version to use. Defaults to mariadb:%s`, nodeps.MariaDBDefaultVersion))
+	ConfigCommand.Flags().String("nodejs-version", "", fmt.Sprintf(`Specify the nodejs version to use if you don't want the default NodeJS %s`, nodeps.NodeJSDefault))
 	RootCmd.AddCommand(ConfigCommand)
 
 	// Add hidden pantheon subcommand for people who have it in their fingers
@@ -568,6 +569,13 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.ComposerVersion, err = cmd.Flags().GetString("composer-version")
 		if err != nil {
 			util.Failed("Incorrect composer-version: %v", err)
+		}
+	}
+
+	if cmd.Flag("nodejs-version").Changed {
+		app.NodeJSVersion, err = cmd.Flags().GetString("nodejs-version")
+		if err != nil {
+			util.Failed("Incorrect nodejs-version: %v", err)
 		}
 	}
 

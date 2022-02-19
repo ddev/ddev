@@ -74,6 +74,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.Type = nodeps.AppTypePHP
 	app.PHPVersion = nodeps.PHPDefault
 	app.ComposerVersion = nodeps.ComposerDefault
+	app.NodeJSVersion = nodeps.NodeJSDefault
 	app.WebserverType = nodeps.WebserverDefault
 	app.NFSMountEnabled = nodeps.NFSMountEnabledDefault
 	app.NFSMountEnabledGlobal = globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal
@@ -414,6 +415,10 @@ func (app *DdevApp) ValidateConfig() error {
 	// validate webserver type
 	if !nodeps.IsValidWebserverType(app.WebserverType) {
 		return fmt.Errorf("unsupported webserver type: %s, ddev (%s) only supports the following webserver types: %s", app.WebserverType, runtime.GOARCH, nodeps.GetValidWebserverTypes()).(invalidWebserverType)
+	}
+
+	if !nodeps.IsValidNodeVersion(app.NodeJSVersion) {
+		return fmt.Errorf("unsupported NodeJS version: '%s', ddev only supports the following node versions: %s", app.NodeJSVersion, nodeps.GetValidNodeVersions())
 	}
 
 	if !nodeps.IsValidOmitContainers(app.OmitContainers) {
@@ -812,6 +817,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 
 	_, _, userName := util.GetContainerUIDGid()
 	extraWebContent := fmt.Sprintf("RUN chmod 600 ~%s/.pgpass ~%s/.my.cnf", userName, userName)
+	if app.NodeJSVersion != nodeps.NodeJSDefault {
+		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN (apt-get remove -y nodejs || true) && (apt purge nodejs || true) && curl -sSL --fail https://deb.nodesource.com/setup_%s.x | bash - && apt-get install nodejs && npm config set unsafe-perm true && npm install --global gulp-cli yarn", app.NodeJSVersion)
+	}
 	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build/Dockerfile"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
 	if err != nil {
 		return "", err
