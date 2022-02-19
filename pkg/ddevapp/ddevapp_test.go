@@ -1522,11 +1522,14 @@ func TestDdevAllDatabases(t *testing.T) {
 		assert.NoError(err)
 
 		// Capture to stdout without gzip compression
-		stdout := util.CaptureStdOut()
-		err = app.ExportDB("", false, "db")
-		assert.NoError(err)
-		out := stdout()
-		assert.Regexp(regexp.MustCompilePOSIX("CREATE TABLE.*users"), out)
+		// CaptureStdOut() doesn't work on Windows.
+		if runtime.GOOS != "windows" {
+			stdout := util.CaptureStdOut()
+			err = app.ExportDB("", false, "db")
+			assert.NoError(err)
+			out := stdout()
+			assert.Regexp(regexp.MustCompilePOSIX("CREATE TABLE.*users"), out)
+		}
 
 		snapshotName := dbType + "_" + dbVersion + "_" + fileutil.RandomFilenameBase()
 		fullSnapshotName, err := app.Snapshot(snapshotName)
@@ -1574,7 +1577,7 @@ func TestDdevAllDatabases(t *testing.T) {
 			nodeps.MariaDB:  `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
 			nodeps.Postgres: `echo "SELECT COUNT(*) FROM users;" | psql -t`,
 		}
-		out, _, err = app.Exec(&ddevapp.ExecOpts{
+		out, _, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "db",
 			Cmd:     c[dbType],
 		})
