@@ -99,7 +99,7 @@ if [ $# -ge 1 ]; then
   VERSION=$1
 fi
 
-if [ "$VERSION" == 'HEAD' ]; then
+if [ "$VERSION" = 'HEAD' ]; then
   RELEASE_BASE_URL="https://nightly.link/drud/ddev/workflows/master-build/master"
 else
   RELEASE_BASE_URL="https://github.com/${GITHUB_USERNAME}/ddev/releases/download/$VERSION"
