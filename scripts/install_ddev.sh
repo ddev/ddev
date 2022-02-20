@@ -153,7 +153,9 @@ fi
 curl -fsSL "https://raw.githubusercontent.com/${GITHUB_USERNAME}/ddev/master/scripts/macos_ddev_nfs_setup.sh" -o "${TMPDIR}/macos_ddev_nfs_setup.sh" || (printf "${RED}Failed downloading "https://raw.githubusercontent.com/${GITHUB_USERNAME}/ddev/master/scripts/macos_ddev_nfs_setup.sh"${RESET}\n" && exit 110)
 
 cd $TMPDIR
-$SHACMD -c "$SHAFILE"
+if [ ${VERSION} != "HEAD" ]; then
+  $SHACMD -c "$SHAFILE"
+fi
 tar -xzf $TARBALL
 
 printf "${GREEN}Download verified. Ready to place ddev and mkcert in your /usr/local/bin.${RESET}\n"
