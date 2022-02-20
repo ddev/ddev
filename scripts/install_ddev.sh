@@ -125,7 +125,7 @@ else
 fi
 
 if [ "$VERSION" == 'HEAD' ]; then
-  FILEBASE="${FILEBASE//-/_}"
+  FILEBASE="${FILEBASE//_/-}"
   USE_ARCH=1
 else
   USE_ARCH=$(semver_compare "${VERSION}" "v1.16.0-alpha4")
