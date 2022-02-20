@@ -32,7 +32,7 @@ var drupalBackdropSettingsLocations = map[string]settingsLocations{
 }
 
 // TestWriteSettings tests writing app settings (like Drupal
-// settings.php/settings.local.php
+// settings.php/settings.ddev.php
 func TestWriteSettings(t *testing.T) {
 	assert := asrt.New(t)
 
@@ -74,8 +74,7 @@ func TestWriteSettings(t *testing.T) {
 		signatureFound, err := fileutil.FgrepStringInFile(expectedSettingsFile, DdevFileSignature)
 		assert.NoError(err)
 		assert.True(signatureFound, "Failed to find %s in %s", DdevFileSignature, expectedSettingsFile)
-		err = os.Remove(expectedSettingsFile)
-		assert.NoError(err)
+		_ = os.Remove(expectedSettingsFile)
 	}
 
 	err = os.RemoveAll(dir)
