@@ -124,7 +124,7 @@ else
     exit 1
 fi
 
-if [ "$VERSION" == 'HEAD' ]; then
+if [ "$VERSION" = 'HEAD' ]; then
   FILEBASE="${FILEBASE//_/-}"
   USE_ARCH=1
 else
