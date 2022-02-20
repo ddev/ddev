@@ -139,7 +139,7 @@ if ! docker --version >/dev/null 2>&1; then
     printf "${YELLOW}Docker is required for ddev. Please see https://ddev.readthedocs.io/en/stable/#docker-installation.${RESET}\n"
 fi
 
-if [ "$VERSION" == 'HEAD' ]; then 
+if [ "$VERSION" = 'HEAD' ]; then 
   TARBALL="$FILEBASE.zip"
 else
   TARBALL="$FILEBASE.$VERSION.tar.gz"
