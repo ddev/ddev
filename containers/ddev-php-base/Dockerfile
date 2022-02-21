@@ -70,15 +70,17 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     file \
     ghostscript \
     imagemagick \
+    jq \
     mariadb-client \
     msmtp \
-    postgresql-client \
     nginx \
     nodejs \
     php-uploadprogress \
+    postgresql-client \
     sqlite3
 
 RUN npm config set unsafe-perm true && npm install --global gulp-cli yarn
+RUN set -eu -o pipefail && LATEST=$(curl --silent "https://api.github.com/repos/nvm-sh/nvm/releases/latest" | jq -r .tag_name) && curl -sL https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST}/install.sh -o /usr/local/bin/install_nvm.sh && chmod +x /usr/local/bin/install_nvm.sh
 
 # The number of permutations of php packages available on each architecture because
 # too much to handle, so has been codified here instead of in obscure logic
@@ -130,4 +132,3 @@ COPY --from=ddev-php-base / /
 EXPOSE 8080 8585
 CMD ["/usr/sbin/php-fpm", "-F"]
 #END ddev-php-prod
-
