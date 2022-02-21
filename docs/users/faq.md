@@ -12,7 +12,7 @@ How does my project connect to the database?
 How can I troubleshoot what's going wrong?
 : See the [troubleshooting](troubleshooting.md), [Docker troubleshooting](docker_installation.md#troubleshooting) and [Xdebug troubleshooting](step-debugging.md#troubleshooting-xdebug) sections of the docs.
 
-Do I need to install PHP or Composer or Nginx on my computer?
+Do I need to install PHP or Composer or Nginx or nodejs/npm on my computer?
 : Absolutely *not*. All of these tools live inside DDEV's docker containers, so you need only Docker and DDEV. This is especially handy for Windows users where there's a bit more friction installing those tools.
 
 How do I get support?

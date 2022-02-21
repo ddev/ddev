@@ -344,11 +344,14 @@ nfsd
 nfsmount
 nginx
 ngrok
+node
+nodejs
 noerrors
 nolock
 not
 npm
 nssm
+nvm
 of
 on
 one
