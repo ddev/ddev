@@ -156,7 +156,11 @@ cd $TMPDIR
 if [ ${VERSION} != "HEAD" ]; then
   $SHACMD -c "$SHAFILE"
 fi
-tar -xzf $TARBALL
+if [ ${VERSION} != "HEAD" ]; then
+  tar -xzf ${TARBALL}
+else 
+  unzip ${TARBALL}
+ fi
 
 printf "${GREEN}Download verified. Ready to place ddev and mkcert in your /usr/local/bin.${RESET}\n"
 
