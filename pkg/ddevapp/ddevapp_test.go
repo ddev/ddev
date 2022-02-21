@@ -1652,9 +1652,10 @@ func TestDdevExportDB(t *testing.T) {
 		assert.NoError(err)
 		assert.Contains(l, "ump complete")
 
-		// Now rename our (larger) users1.sql to users1.sql.gz
+		// Now copy our (larger) users1.sql to users1.sql.gz
 		// so we can overwrite it and come out with a totally valid new file.
-		err = os.Rename("tmp/users1.sql", "tmp/users1.sql.gz")
+		// Copy is used here instead of mv/rename because of Windows issues.
+		err = fileutil.CopyFile("tmp/users1.sql", "tmp/users1.sql.gz")
 		assert.NoError(err)
 
 		// Test that we can export-db to an existing gzipped file
