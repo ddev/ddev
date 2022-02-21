@@ -32,7 +32,7 @@ var drupalBackdropSettingsLocations = map[string]settingsLocations{
 }
 
 // TestWriteSettings tests writing app settings (like Drupal
-// settings.php/settings.local.php
+// settings.php/settings.ddev.php
 func TestWriteSettings(t *testing.T) {
 	assert := asrt.New(t)
 
@@ -45,25 +45,31 @@ func TestWriteSettings(t *testing.T) {
 		nodeps.AppTypeWordPress: "wp-config-ddev.php",
 		nodeps.AppTypeTYPO3:     "typo3conf/AdditionalConfiguration.php",
 	}
-	dir := testcommon.CreateTmpDir(t.Name())
+	testDir := testcommon.CreateTmpDir(t.Name())
 
-	app, err := NewApp(dir, true)
+	app, err := NewApp(testDir, true)
 	assert.NoError(err)
 
-	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "sites", "default"), 0777)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
+	})
+
+	err = os.MkdirAll(filepath.Join(testDir, app.Docroot, "sites", "default"), 0777)
 	assert.NoError(err)
 
-	err = os.MkdirAll(filepath.Join(dir, app.Docroot, "typo3conf"), 0777)
+	err = os.MkdirAll(filepath.Join(testDir, app.Docroot, "typo3conf"), 0777)
 	assert.NoError(err)
 
 	// TYPO3 wants LocalConfiguration.php to exist in the repo ahead of time.
-	err = os.WriteFile(filepath.Join(dir, app.Docroot, "typo3conf", "LocalConfiguration.php"), []byte("<?php\n"), 0644)
+	err = os.WriteFile(filepath.Join(testDir, app.Docroot, "typo3conf", "LocalConfiguration.php"), []byte("<?php\n"), 0644)
 	assert.NoError(err)
 
 	for apptype, settingsRelativePath := range expectations {
 		app.Type = apptype
 
-		expectedSettingsFile := filepath.Join(dir, settingsRelativePath)
+		expectedSettingsFile := filepath.Join(testDir, settingsRelativePath)
 		_, err = os.Stat(expectedSettingsFile)
 		assert.True(os.IsNotExist(err))
 		createdFile, err := app.CreateSettingsFile()
@@ -74,12 +80,9 @@ func TestWriteSettings(t *testing.T) {
 		signatureFound, err := fileutil.FgrepStringInFile(expectedSettingsFile, DdevFileSignature)
 		assert.NoError(err)
 		assert.True(signatureFound, "Failed to find %s in %s", DdevFileSignature, expectedSettingsFile)
-		err = os.Remove(expectedSettingsFile)
-		assert.NoError(err)
+		_ = os.Remove(expectedSettingsFile)
 	}
 
-	err = os.RemoveAll(dir)
-	assert.NoError(err)
 	println("") // Just lets Goland find the PASS when done.
 }
 

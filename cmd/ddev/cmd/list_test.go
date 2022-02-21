@@ -49,7 +49,7 @@ func TestCmdList(t *testing.T) {
 	assert.NoError(err, "error running ddev list -j: %v, output=%s", jsonOut)
 
 	siteList := getTestingSitesFromList(t, jsonOut)
-	assert.Equal(len(TestSites), len(siteList))
+	assert.Equal(len(TestSites), len(siteList), "didn't find expected number of sites in list: %v", siteList)
 
 	for _, v := range TestSites {
 		app, err := ddevapp.GetActiveApp(v.Name)
