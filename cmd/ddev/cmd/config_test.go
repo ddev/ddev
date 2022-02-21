@@ -403,12 +403,13 @@ func TestCmdDisasterConfig(t *testing.T) {
 	assert.NoError(err)
 
 	t.Cleanup(func() {
-		_, err = exec.RunHostCommand(DdevBin, "delete", "-Oy", t.Name())
-		assert.NoError(err)
-		err = os.RemoveAll(tmpDir)
-		assert.NoError(err)
 		err = os.Chdir(origDir)
 		assert.NoError(err)
+		_, err = exec.RunHostCommand(DdevBin, "delete", "-Oy", t.Name())
+		assert.NoError(err)
+		_, err = exec.RunHostCommand(DdevBin, "delete", "-Oy", t.Name()+"_subdir")
+		assert.Error(err)
+		_ = os.RemoveAll(tmpDir)
 	})
 
 	subdirName := t.Name() + fileutil.RandomFilenameBase()
@@ -418,12 +419,12 @@ func TestCmdDisasterConfig(t *testing.T) {
 	err = os.Chdir(subdir)
 	assert.NoError(err)
 
-	// Make sure that ddev config in a subdir gives a warning
-	out, err = exec.RunHostCommand(DdevBin, "config", "--project-type=php")
-	assert.NoError(err)
+	// Make sure that ddev config in a subdir gives an error
+	out, err = exec.RunHostCommand(DdevBin, "config", "--project-type=php", "--project-name="+t.Name()+"_subdir")
+	assert.Error(err)
 	assert.Contains(out, "possible you wanted to")
 	assert.Contains(out, fmt.Sprintf("parent directory %s?", tmpDir))
-	assert.FileExists(filepath.Join(subdir, ".ddev/config.yaml"))
+	assert.NoFileExists(filepath.Join(subdir, ".ddev/config.yaml"))
 }
 
 // TestConfigDatabaseVersion checks to make sure that both
