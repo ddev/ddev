@@ -31,6 +31,11 @@ var DebugDownloadImagesCmd = &cobra.Command{
 			util.Warning("Unable to download mutagen: %v", err)
 		}
 
+		app.DockerEnv()
+		err = app.WriteDockerComposeYAML()
+		if err != nil {
+			util.Failed("Unable to WriteDockerComposeYAML(): %v", err)
+		}
 		err = app.PullContainerImages()
 		if err != nil {
 			util.Failed("Failed to debug download-images: %v", err)

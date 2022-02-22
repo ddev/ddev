@@ -1138,31 +1138,50 @@ func (app *DdevApp) Restart() error {
 	return err
 }
 
-// PullContainerImages pulls the main images with full output, since docker-compose up won't show enough output
+// PullContainerImages configured docker images with full output, since docker-compose up doesn't have nice output
 func (app *DdevApp) PullContainerImages() error {
-	containerImages := map[string]string{
-		"db":             app.GetDBImage(),
-		"dba":            version.GetDBAImage(),
-		"ddev-ssh-agent": version.GetSSHAuthImage(),
-		"web":            app.WebImage,
-		"ddev-router":    version.GetRouterImage(),
-		"busybox":        version.BusyboxImage,
+	images, err := app.FindAllImages()
+	if err != nil {
+		return err
 	}
 
-	omitted := app.GetOmittedContainers()
-	for containerName, imageName := range containerImages {
-		if !nodeps.ArrayContainsString(omitted, containerName) {
-			err := dockerutil.Pull(imageName)
-			if err != nil {
-				return err
-			}
-			if globalconfig.DdevDebug {
-				output.UserOut.Printf("Pulling image for %s: %s", containerName, imageName)
-			}
+	images = append(images, version.GetRouterImage(), version.GetSSHAuthImage())
+	for _, i := range images {
+		err := dockerutil.Pull(i)
+		if err != nil {
+			return err
+		}
+		if globalconfig.DdevDebug {
+			output.UserOut.Printf("Pulling image for %s", i)
 		}
 	}
 
 	return nil
+}
+
+// FindAllImages returns an array of image tags for all containers in the compose file
+func (app *DdevApp) FindAllImages() ([]string, error) {
+	var images []string
+	if app.ComposeYaml == nil {
+		return images, nil
+	}
+	if y, ok := app.ComposeYaml["services"]; ok {
+		for _, v := range y.(map[interface{}]interface{}) {
+			if i, ok := v.(map[interface{}]interface{})["image"]; ok {
+				if strings.HasSuffix(i.(string), "-built") {
+					// This technique is hacky and won't work completely correctly where project name has a hyphen in it.
+					// But the pull will still work out later in the docker-compose up
+					parts := strings.Split(i.(string), "-")
+					parts = parts[:len(parts)-2]
+					i = strings.Join(parts, "-")
+				}
+				images = append(images, i.(string))
+
+			}
+		}
+	}
+
+	return images, nil
 }
 
 // CheckExistingAppInApproot looks to see if we already have a project in this approot with different name

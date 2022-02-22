@@ -31,12 +31,12 @@ func TestDebugDownloadImages(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	_, err = exec.RunHostCommand(DdevBin, "config", "--project-name", t.Name())
-	assert.NoError(err)
+	out, err := exec.RunHostCommand(DdevBin, "config", "--project-name", t.Name())
+	require.NoError(t, err, "Failed to run ddev config: %s", out)
 
 	_ = os.Setenv("DDEV_DEBUG", "true")
-	out, err := exec.RunHostCommand(DdevBin, "debug", "download-images")
-	assert.NoError(err)
+	out, err = exec.RunHostCommand(DdevBin, "debug", "download-images")
+	require.NoError(t, err, "Failed to run ddev debug download-images: %s", out)
 	assert.Contains(out, "ddev-webserver")
 	assert.Contains(out, "ddev-router")
 	assert.Contains(out, "Successfully downloaded ddev images")
