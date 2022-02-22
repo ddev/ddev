@@ -1161,19 +1161,25 @@ func (app *DdevApp) PullContainerImages() error {
 // FindAllImages returns an array of image tags for all containers in the compose file
 func (app *DdevApp) FindAllImages() ([]string, error) {
 	var images []string
-	y := app.ComposeYaml["services"]
-	for _, v := range y.(map[interface{}]interface{}) {
-		if i, ok := v.(map[interface{}]interface{})["image"]; ok {
-			if strings.HasSuffix(i.(string), "-built") {
-				// This technique is hacky and won't work completely correctly where project name has a hyphen in it.
-				// But the pull will still work out later in the docker-compose up
-				parts := strings.Split(i.(string), "-")
-				parts = parts[:len(parts)-2]
-				i = strings.Join(parts, "-")
+	if app.ComposeYaml == nil {
+		return images, nil
+	}
+	if y, ok := app.ComposeYaml["services"]; ok {
+		for _, v := range y.(map[interface{}]interface{}) {
+			if i, ok := v.(map[interface{}]interface{})["image"]; ok {
+				if strings.HasSuffix(i.(string), "-built") {
+					// This technique is hacky and won't work completely correctly where project name has a hyphen in it.
+					// But the pull will still work out later in the docker-compose up
+					parts := strings.Split(i.(string), "-")
+					parts = parts[:len(parts)-2]
+					i = strings.Join(parts, "-")
+				}
+				images = append(images, i.(string))
+
 			}
-			images = append(images, i.(string))
 		}
 	}
+
 	return images, nil
 }
 
