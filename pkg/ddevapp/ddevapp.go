@@ -1138,13 +1138,14 @@ func (app *DdevApp) Restart() error {
 	return err
 }
 
-// PullContainerImages pulls the main images with full output, since docker-compose up won't show enough output
+// PullContainerImages configured docker images with full output, since docker-compose up doesn't have nice output
 func (app *DdevApp) PullContainerImages() error {
 	images, err := app.FindAllImages()
 	if err != nil {
 		return err
 	}
 
+	images = append(images, version.GetRouterImage(), version.GetSSHAuthImage())
 	for _, i := range images {
 		err := dockerutil.Pull(i)
 		if err != nil {
