@@ -1,0 +1,112 @@
+package ddevapp
+
+import (
+	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/util"
+	"gopkg.in/yaml.v2"
+	"os"
+	//compose_cli "github.com/compose-spec/compose-go/cli"
+	//compose_types "github.com/compose-spec/compose-go/types"
+)
+
+// WriteDockerComposeYAML writes a .ddev-docker-compose-base.yaml and related to the .ddev directory.
+// It then uses `docker-compose convert` to get a canonical version of the full compose file.
+// It then makes a couple of fixups to the canonical version (networks and approot bind points) by
+// marshalling the canonical version to YAML and then unmarshalling it back into a canonical version.
+func (app *DdevApp) WriteDockerComposeYAML() error {
+	var err error
+
+	f, err := os.Create(app.DockerComposeYAMLPath())
+	if err != nil {
+		return err
+	}
+	defer util.CheckClose(f)
+
+	rendered, err := app.RenderComposeYAML()
+	if err != nil {
+		return err
+	}
+	_, err = f.WriteString(rendered)
+	if err != nil {
+		return err
+	}
+
+	files, err := app.ComposeFiles()
+	if err != nil {
+		return err
+	}
+	fullContents, _, err := dockerutil.ComposeCmd(files, "convert")
+	if err != nil {
+		return err
+	}
+
+	app.ComposeYaml, err = fixupComposeYaml(fullContents, app)
+	if err != nil {
+		return err
+	}
+	fullHandle, err := os.Create(app.DockerComposeFullRenderedYAMLPath())
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err = fullHandle.Close()
+		if err != nil {
+			util.Warning("Error closing %s: %v", fullHandle.Name(), err)
+		}
+	}()
+	fullContentsByles, err := yaml.Marshal(app.ComposeYaml)
+	if err != nil {
+		return err
+	}
+
+	_, err = fullHandle.Write(fullContentsByles)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// fixupComposeYaml makes minor changes to the `docker-compose convert` output
+// to make sure extra services are always compatible with ddev.
+func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, error) {
+	tempMap := make(map[string]interface{})
+	err := yaml.Unmarshal([]byte(yamlStr), &tempMap)
+	if err != nil {
+		return nil, err
+	}
+
+	// Find any services that have bind-mount to AppRoot and make them relative
+	// for https://youtrack.jetbrains.com/issue/WI-61976 - PhpStorm
+	// This is an ugly an shortsighted approach, but otherwise we'd have to parse the yaml.
+	// Note that this issue with docker-compose config was fixed in docker-compose 2.0.0RC4
+	// so it's in Docker Desktop 4.1.0.
+	// https://github.com/docker/compose/issues/8503#issuecomment-930969241
+
+	for _, service := range tempMap["services"].(map[interface{}]interface{}) {
+		if service == nil {
+			continue
+		}
+		serviceMap := service.(map[interface{}]interface{})
+
+		// Find any services that have bind-mount to app.AppRoot and make them relative
+		if serviceMap["volumes"] != nil {
+			volumes := serviceMap["volumes"].([]interface{})
+			for _, volume := range volumes {
+				volumeMap := volume.(map[interface{}]interface{})
+				if volumeMap["source"] != nil {
+					if volumeMap["source"].(string) == app.AppRoot {
+						volumeMap["source"] = "../"
+					}
+				}
+			}
+		}
+		// Make sure all services have our networks stanza
+		serviceMap["networks"] = map[interface{}]interface{}{
+			"ddev_default": nil,
+			"default":      nil,
+		}
+	}
+
+	return tempMap, nil
+}
