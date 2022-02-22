@@ -418,7 +418,7 @@ func (app *DdevApp) ValidateConfig() error {
 	}
 
 	if !nodeps.IsValidNodeVersion(app.NodeJSVersion) {
-		return fmt.Errorf("unsupported system Node.js version: '%s'; for the system Node.js version ddev only supports %s. However, you can use 'ddev nvm' at runtime to use any supported vrsion", app.NodeJSVersion, nodeps.GetValidNodeVersions())
+		return fmt.Errorf("unsupported system Node.js version: '%s'; for the system Node.js version ddev only supports %s. However, you can use 'ddev nvm install' at runtime to use any supported version", app.NodeJSVersion, nodeps.GetValidNodeVersions())
 	}
 
 	if !nodeps.IsValidOmitContainers(app.OmitContainers) {
