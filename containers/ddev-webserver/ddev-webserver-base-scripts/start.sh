@@ -80,7 +80,7 @@ sudo mkdir -p ${TERMINUS_CACHE_DIR}
 
 sudo mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory,nvm_dir}/${HOSTNAME}
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ /var/lib/php
-sudo ln -s /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ${NVM_DIR}
+sudo ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ${NVM_DIR}
 install_nvm.sh
 
 # /mnt/ddev_config/.homeadditions may be either
