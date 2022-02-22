@@ -718,8 +718,8 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	// If you get golang listening, then enter the web container and try to connect to the port golang
 	// is listening on, it can't connect. However, if you use netcat to listen on the wsl2 side and then
 	// connect to it from inside the container, it connects fine.
-	if nodeps.IsWSL2() {
-		t.Skip("Skipping on WSL2 because this test doesn't work although manual testing works")
+	if nodeps.IsWSL2() || dockerutil.IsColima() {
+		t.Skip("Skipping on WSL2/Colima because this test doesn't work although manual testing works")
 	}
 	assert := asrt.New(t)
 
@@ -865,7 +865,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 // TestDdevXhprofEnabled tests running with xhprof_enabled = true, etc.
 func TestDdevXhprofEnabled(t *testing.T) {
-	if nodeps.IsMacM1() {
+	if nodeps.IsMacM1() || dockerutil.IsColima() {
 		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
 	}
 
