@@ -96,7 +96,7 @@ func init() {
 		nodeps.AppTypeMagento2: {
 			settingsCreator: createMagento2SettingsFile, uploadDir: getMagento2UploadDir, hookDefaultComments: nil, apptypeSettingsPaths: setMagento2SiteSettingsPaths, appTypeDetect: isMagento2App, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: nil, importFilesAction: magentoImportFilesAction,
 		},
-		nodeps.AppTypeLaravel:   {appTypeDetect: isLaravelApp, postStartAction: laravelPostStartAction},
+		nodeps.AppTypeLaravel:   {appTypeDetect: isLaravelApp, postStartAction: laravelPostStartAction, configOverrideAction: laravelConfigOverrideAction},
 		nodeps.AppTypeShopware6: {appTypeDetect: isShopware6App, apptypeSettingsPaths: setShopware6SiteSettingsPaths, uploadDir: getShopwareUploadDir, configOverrideAction: nil, postStartAction: shopware6PostStartAction, importFilesAction: shopware6ImportFilesAction},
 	}
 }
