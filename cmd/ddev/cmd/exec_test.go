@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/drud/ddev/pkg/exec"
@@ -64,7 +65,8 @@ func TestCmdExec(t *testing.T) {
 	// Test with raw cmd
 	out, err = exec.RunHostCommand(DdevBin, "exec", "--raw", "--", "ls", "/usr/local")
 	assert.NoError(err)
-	assert.Contains(out, "bin\netc\ngames\ninclude\nlib\nman\nsbin\nshare\nsrc\n")
+
+	assert.True(strings.HasPrefix(out, "bin\netc\ngames"), "expected '%v' to start with 'bin\\netc\\games\\include'", out)
 
 	// Test sudo
 	out, err = exec.RunHostCommand(DdevBin, "exec", "sudo", "whoami")

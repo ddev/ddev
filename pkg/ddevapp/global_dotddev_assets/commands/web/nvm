@@ -1,0 +1,9 @@
+#!/bin/bash -i
+
+#ddev-generated
+## Description: Run nvm inside the web container
+## Usage: nvm [flags] [args]
+## Example: "ddev nvm install 6"
+## ExecRaw: true
+
+nvm "$@"

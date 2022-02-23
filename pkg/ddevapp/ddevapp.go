@@ -128,6 +128,7 @@ type DdevApp struct {
 	ComposerVersion           string                 `yaml:"composer_version"`
 	DisableSettingsManagement bool                   `yaml:"disable_settings_management,omitempty"`
 	WebEnvironment            []string               `yaml:"web_environment"`
+	NodeJSVersion             string                 `yaml:"nodejs_version"`
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
@@ -208,6 +209,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["primary_url"] = app.GetPrimaryURL()
 	appDesc["type"] = app.GetType()
 	appDesc["mutagen_enabled"] = app.IsMutagenEnabled()
+	appDesc["nodejs_version"] = app.NodeJSVersion
 	if app.IsMutagenEnabled() {
 		appDesc["mutagen_status"], _, _, err = app.MutagenStatus()
 		if err != nil {

@@ -78,8 +78,10 @@ ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/
 # Make sure the TERMINUS_CACHE_DIR (/mnt/ddev-global-cache/terminus/cache) exists
 sudo mkdir -p ${TERMINUS_CACHE_DIR}
 
-sudo mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory}/${HOSTNAME}
+sudo mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory,nvm_dir}/${HOSTNAME}
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ /var/lib/php
+sudo ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ${NVM_DIR}
+install_nvm.sh
 
 # /mnt/ddev_config/.homeadditions may be either
 # a bind-mount, or a volume mount, but we don't care,

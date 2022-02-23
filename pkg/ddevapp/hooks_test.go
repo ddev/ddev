@@ -64,7 +64,7 @@ func TestProcessHooks(t *testing.T) {
 		{"exec: echo MYSQL_PWD=${MYSQL_PWD:-}\n    service: db", "MYSQL_PWD=db\n", "Running task: Exec command 'echo MYSQL_PWD=${MYSQL_PWD:-}' in container/service 'db'"},
 		{"exec: \"echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt\"", "", "Running task: Exec command 'echo TestProcessHooks > /var/www/html/TestProcessHooks${DDEV_ROUTER_HTTPS_PORT}.txt'"},
 		{"exec: \"touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt\"", "", "Running task: Exec command 'touch /var/tmp/TestProcessHooks && touch /var/www/html/touch_works_after_and.txt'"},
-		{"exec:\n    exec_raw: [ls, /usr/local]", "bin\netc\ngames\ninclude\nlib\nman\nsbin\nshare\nsrc\n", "Exec command '[ls /usr/local] (raw)'"},
+		{"exec:\n    exec_raw: [ls, /usr/local]", "bin\netc\ngames\n", "Exec command '[ls /usr/local] (raw)'"},
 	}
 	for _, task := range tasks {
 		fName := app.GetConfigPath("config.hooks.yaml")

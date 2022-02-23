@@ -53,6 +53,11 @@ const ConfigInstructions = `
 # It can be set to any existing specific composer version.
 # After first project 'ddev start' this will not be updated until it changes
 
+# nodejs_version: "16"
+# change from the default system Node.js version to another supported version, like 12, 14, 17.
+# Note that you can use 'ddev nvm' or nvm inside the web container to provide nearly any
+# Node.js version, including v6, etc.
+
 # additional_hostnames:
 #  - somename
 #  - someothername

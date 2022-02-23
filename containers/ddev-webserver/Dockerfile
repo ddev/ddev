@@ -3,7 +3,7 @@
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV-Local)
-FROM drud/ddev-php-base:v1.19.0-alpha3 as ddev-webserver-base
+FROM drud/ddev-php-base:v1.19.0-alpha6 as ddev-webserver-base
 
 ENV BACKDROP_DRUSH_VERSION=1.4.0
 ENV MKCERT_VERSION=v1.4.6
@@ -160,17 +160,16 @@ ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
 ENV CAROOT /mnt/ddev-global-cache/mkcert
-
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_CACHE_DIR=/mnt/ddev-global-cache/composer
 ENV COMPOSER_PROCESS_TIMEOUT=2000
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm
 ENV MH_SMTP_BIND_ADDR 127.0.0.1:1025
-
 ENV BASH_ENV /etc/bash.nointeractive.bashrc
 ENV LANG=C.UTF-8
 ENV XHPROF_OUTPUT_DIR=/tmp/xhprof
+ENV NVM_DIR=/usr/local/nvm
 
 COPY --from=ddev-webserver-dev-base / /
 EXPOSE 80 8025
@@ -276,7 +275,7 @@ ENV COMPOSER_PROCESS_TIMEOUT=2000
 ENV DEBIAN_FRONTEND noninteractive
 ENV LANG=C.UTF-8
 ENV TERM xterm
-
+ENV NVM_DIR=/usr/local/nvm
 ENV BASH_ENV /etc/bash.nointeractive.bashrc
 
 COPY --from=ddev-webserver-prod-base / /

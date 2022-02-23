@@ -25,7 +25,12 @@ Each of these commands has full help. For example, `ddev start -h` or `ddev help
 * `ddev drush` (Drupal and Backdrop only) gives direct access to the drush CLI
 * `ddev artisan` (Laravel only) gives direct access to the Laravel artisan CLI
 * `ddev magento` (Magento2 only) gives access to the magento CLI
+* `ddev yarn` gives direct access to the yarn CLI
 * `ddev config global --simple-formatting` tells ddev to not try to make a fancy table in `ddev describe` and `ddev list`
+
+## Node.js, npm, nvm, and yarn
+
+`nodejs`, `npm`, `nvm` and `yarn` are preinstalled in the web container. You can configure the default value of the installed nodejs version with the `nodejs_version` option in `.ddev/config.yaml` or with `ddev config --nodejs_version`. You can also override that with any value using the built-in `nvm` in the web container or with `ddev nvm`, for example `ddev nvm install 6`. There is also a `ddev yarn` command.
 
 ## Partial Bundled Tools List
 
@@ -33,7 +38,7 @@ In addition to the *commands* listed above, there are loads and loads of tools i
 
 * `ddev describe` tells how to access **MailHog**, which captures email in your development environment.
 * `ddev describe` tells how to use the built-in **phpMyAdmin** and `ddev launch -p` gives direct access to it.
-* Composer, git, node, npm, and dozens of other tools are installed in the web container, and you can access them via `ddev ssh` or `ddev exec`. Composer v2 is the default. To use composer v1, `ddev config --composer-version=1`.
+* Composer, git, node, npm, nvm, and dozens of other tools are installed in the web container, and you can access them via `ddev ssh` or `ddev exec`. Composer v2 is the default. To use composer v1, `ddev config --composer-version=1`.
 * `ddev logs` gets you webserver logs; `ddev logs -s db` gets dbserver logs.
 * `sqlite3` and the `mysql` and `psql` clients are inside the web container (and `mysql` or `psql` client is also in the db container).
 

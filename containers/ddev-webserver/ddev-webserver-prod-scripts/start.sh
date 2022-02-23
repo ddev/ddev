@@ -75,7 +75,10 @@ disable_xhprof
 
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
-mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory}/${HOSTNAME}
+sudo mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory,nvm_dir}/${HOSTNAME}
+sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ /var/lib/php
+sudo ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ${NVM_DIR}
+install_nvm.sh
 
 # This will need to be done by a separate container with privileges
 # chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/

@@ -4,5 +4,5 @@
 ## Usage: yarn [flags] [args]
 ## Example: "ddev yarn install" or "ddev yarn add learna" or "ddev yarn --cwd web/core add learna"
 
-ddev exec yarn "$@"
+ddev exec --raw bash -ic "yarn '$@'"
 ddev mutagen sync 2>/dev/null

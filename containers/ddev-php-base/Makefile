@@ -34,7 +34,8 @@ images: $(DEFAULT_IMAGES)
 
 $(DEFAULT_IMAGES):
 	set -eu -o pipefail; \
-	DOCKER_BUILDKIT=1 docker buildx build $(BUILDPUSHARG) --platform linux/amd64,linux/arm64 --label com.ddev.buildhost=${shell hostname} --label com.ddev.githash=--target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
+	 DOCKER_BUILDKIT=1 docker buildx build -o type=docker --label com.ddev.buildhost=${shell hostname} --target=$@  -t $(DOCKER_ORG)/$@:$(VERSION) $(DOCKER_ARGS) .
+
 
 push:
 	set -eu -o pipefail; \

@@ -40,20 +40,35 @@ An example web image `.ddev/web-build/Dockerfile` might be:
 ```dockerfile
 ARG BASE_IMAGE
 FROM $BASE_IMAGE
-RUN npm install --global gulp-cli
-ADD README.txt /
+
+RUN npm install -g gatsby-cli
 ```
 
-Another example would be changing the installed nodejs version to a preferred version, for example nodejs 12:
+Another example would be installing phpcs globally (see [Stack Overflow answer](https://stackoverflow.com/questions/61870801/add-global-phpcs-and-drupal-coder-to-ddev-in-custom-dockerfile/61870802#61870802)):
 
 ```dockerfile
 ARG BASE_IMAGE
 FROM $BASE_IMAGE
-# Install whatever nodejs version you want
-ENV NODE_VERSION=12
-RUN sudo apt-get remove -y nodejs
-RUN curl -sSL --fail https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests nodejs
+
+ENV COMPOSER_HOME=/usr/local/composer
+
+# We try to avoid when possible relying on composer to download global, so in PHPCS case we can use the phar.
+RUN curl -L https://squizlabs.github.io/PHP_CodeSniffer/phpcs.phar -o /usr/local/bin/phpcs && chmod +x /usr/local/bin/phpcs
+RUN curl -L https://squizlabs.github.io/PHP_CodeSniffer/phpcbf.phar -o /usr/local/bin/phpcbf && chmod +x /usr/local/bin/phpcbf
+
+# If however we need to download a package, we use `cgr` for that.
+RUN composer global require consolidation/cgr
+RUN $COMPOSER_HOME/vendor/bin/cgr drupal/coder:^8.3.1
+RUN $COMPOSER_HOME/vendor/bin/cgr dealerdirect/phpcodesniffer-composer-installer
+
+# Register Drupal's code sniffer rules.
+RUN phpcs --config-set installed_paths $COMPOSER_HOME/global/drupal/coder/vendor/drupal/coder/coder_sniffer --verbose
+# Make Codesniffer config file writable for ordinary users in container.
+RUN chmod 666 /usr/local/bin/CodeSniffer.conf
+# Make COMPOSER_HOME writable if regular users need to use it.
+RUN chmod -R ugo+rw $COMPOSER_HOME
+# Now turn it off, because ordinary users will want to be using the default
+ENV COMPOSER_HOME=""
 ```
 
 **Remember that the Dockerfile is building a docker image that will be used later with ddev.** At the time the Dockerfile is executing, your code is not mounted and the container is not running, it's just being built. So for example, an `npm install` in /var/www/html will not do anything useful because the code is not there at image building time.

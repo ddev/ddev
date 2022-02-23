@@ -43,6 +43,7 @@ ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3 php7.4 php8.0 php8.1"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 ENV YQ_VERSION=v4.7.1
 ENV DRUSH_VERSION=8.4.8
+ENV NODE_LTS=16
 # composer normally screams about running as root, we don't need that.
 ENV COMPOSER_ALLOW_SUPERUSER 1
 ENV COMPOSER_PROCESS_TIMEOUT 2000
@@ -61,7 +62,7 @@ RUN wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key &&
 
 RUN wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
     echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list && apt-get update
-RUN curl -sSL --fail https://deb.nodesource.com/setup_16.x | bash -
+RUN curl -sSL --fail https://deb.nodesource.com/setup_${NODE_LTS}.x | bash -
 
 RUN apt-get -qq update
 RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
@@ -69,15 +70,17 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     file \
     ghostscript \
     imagemagick \
+    jq \
     mariadb-client \
     msmtp \
-    postgresql-client \
     nginx \
     nodejs \
     php-uploadprogress \
+    postgresql-client \
     sqlite3
 
 RUN npm config set unsafe-perm true && npm install --global gulp-cli yarn
+RUN set -eu -o pipefail && LATEST=$(curl --silent "https://api.github.com/repos/nvm-sh/nvm/releases/latest" | jq -r .tag_name) && curl -sL https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST}/install.sh -o /usr/local/bin/install_nvm.sh && chmod +x /usr/local/bin/install_nvm.sh
 
 # The number of permutations of php packages available on each architecture because
 # too much to handle, so has been codified here instead of in obscure logic
@@ -129,4 +132,3 @@ COPY --from=ddev-php-base / /
 EXPOSE 8080 8585
 CMD ["/usr/sbin/php-fpm", "-F"]
 #END ddev-php-prod
-

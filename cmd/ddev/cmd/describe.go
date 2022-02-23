@@ -159,6 +159,9 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 				if desc["mutagen_enabled"].(bool) {
 					extraInfo = append(extraInfo, fmt.Sprintf("Mutagen enabled (%s)", ddevapp.FormatSiteStatus(desc["mutagen_status"].(string))))
 				}
+				if v, ok := desc["nodejs_version"].(string); ok {
+					extraInfo = append(extraInfo, fmt.Sprintf("NodeJS:%s", v))
+				}
 			}
 
 			// Get extra info for db container
