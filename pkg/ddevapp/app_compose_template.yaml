@@ -88,6 +88,7 @@ services:
         uid: '{{ .UID }}'
         gid: '{{ .GID }}'
     image: ${DDEV_WEBIMAGE}-${DDEV_SITENAME}-built
+    networks: ["default", "ddev_default"]
     cap_add:
       - SYS_PTRACE
     working_dir: "{{ .WebWorkingDir }}"
