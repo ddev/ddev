@@ -13,7 +13,6 @@ services:
         uid: '{{ .UID }}'
         gid: {{ if ne .DBType "postgres" }} {{ .GID }} {{ else }} "999" {{ end }}
     image: ${DDEV_DBIMAGE}-${DDEV_SITENAME}-built
-    networks: ["default", "ddev_default"]
     stop_grace_period: 60s
     working_dir: "{{ .DBWorkingDir }}"
     volumes:
@@ -89,7 +88,6 @@ services:
         uid: '{{ .UID }}'
         gid: '{{ .GID }}'
     image: ${DDEV_WEBIMAGE}-${DDEV_SITENAME}-built
-    networks: ["default", "ddev_default"]
     cap_add:
       - SYS_PTRACE
     working_dir: "{{ .WebWorkingDir }}"
@@ -217,7 +215,6 @@ services:
   dba:
     container_name: ddev-${DDEV_SITENAME}-dba
     image: $DDEV_DBAIMAGE
-    networks: ["default", "ddev_default"]
     working_dir: "{{ .DBAWorkingDir }}"
     restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
     labels:

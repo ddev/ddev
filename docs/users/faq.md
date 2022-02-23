@@ -38,7 +38,7 @@ Can I use additional databases with DDEV?
 
 <a name="projects-communicate-with-each-other"></a>
 Can different projects communicate with each other?
-: Yes, this is commonly required for situations like Drupal migrations. For the web container to access the db container of another project, use `ddev-<projectname>-db` as the hostname of the other project. For example, in project1, use `mysql -h ddev-project2-db` to access the db server of project2. For HTTP/S communication you can 1) access the web container of project2 directly with the hostname `ddev-<project2>-web` and port 80 or 443: `curl https://ddev-project2-web` or 2) Add a .ddev/docker-compose.communicate.yaml which will allow you to access the other project via the official FQDN. (In v1.19+ third-party services may need `networks: [default, ddev_default]`.)
+: Yes, this is commonly required for situations like Drupal migrations. For the web container to access the db container of another project, use `ddev-<projectname>-db` as the hostname of the other project. For example, in project1, use `mysql -h ddev-project2-db` to access the db server of project2. For HTTP/S communication you can 1) access the web container of project2 directly with the hostname `ddev-<project2>-web` and port 80 or 443: `curl https://ddev-project2-web` or 2) Add a .ddev/docker-compose.communicate.yaml which will allow you to access the other project via the official FQDN.
 
     ```yaml
       version: '3.6'

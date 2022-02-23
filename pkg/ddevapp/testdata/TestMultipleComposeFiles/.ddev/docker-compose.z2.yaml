@@ -7,7 +7,6 @@ services:
 
   dummy2:
     image: busybox:stable
-    networks: [default, ddev_default]
     container_name: dummy2
     environment:
     - HTTP_EXPOSE=9201
