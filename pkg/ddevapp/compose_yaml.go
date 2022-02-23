@@ -54,12 +54,12 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 			util.Warning("Error closing %s: %v", fullHandle.Name(), err)
 		}
 	}()
-	fullContentsByles, err := yaml.Marshal(app.ComposeYaml)
+	fullContentsBytes, err := yaml.Marshal(app.ComposeYaml)
 	if err != nil {
 		return err
 	}
 
-	_, err = fullHandle.Write(fullContentsByles)
+	_, err = fullHandle.Write(fullContentsBytes)
 	if err != nil {
 		return err
 	}
