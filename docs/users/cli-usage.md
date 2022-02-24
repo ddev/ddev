@@ -172,6 +172,8 @@ Quickstart instructions regarding database imports can be found under [Database 
 
 #### Drupal 9 Composer Setup Example
 
+NB: `ddev composer create "drupal/recommended-project"` will, by default, set the webroot to `web`. If you set a different value in the `ddev config` command, Drush won't be able to find the database, and the install commands will fail.
+
 ```bash
 mkdir my-drupal9-site
 cd my-drupal9-site
