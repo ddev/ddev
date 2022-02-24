@@ -1110,6 +1110,7 @@ func TestDdevImportDB(t *testing.T) {
 	assert.NoError(err)
 
 	t.Cleanup(func() {
+		runTime()
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 		app.Hooks = nil
@@ -1127,7 +1128,6 @@ func TestDdevImportDB(t *testing.T) {
 		err = app.Stop(true, false)
 		require.NoError(t, err)
 
-		//for _, dbType := range []string{nodeps.Postgres} {
 		app.Database = ddevapp.DatabaseDesc{
 			Type:    dbType,
 			Version: nodeps.MariaDBDefaultVersion,
@@ -1378,9 +1378,6 @@ func TestDdevImportDB(t *testing.T) {
 		_ = os.RemoveAll("hello-post-import-db-" + app.Name)
 	}
 
-	app.Hooks = nil
-
-	runTime()
 }
 
 func checkImportDbImports(t *testing.T, app *ddevapp.DdevApp) {
