@@ -1099,11 +1099,10 @@ func TestGetApps(t *testing.T) {
 func TestDdevImportDB(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
-	testDir, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 
 	site := TestSites[0]
 
-	switchDir := site.Chdir()
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	testcommon.ClearDockerEnv()
@@ -1111,6 +1110,8 @@ func TestDdevImportDB(t *testing.T) {
 	assert.NoError(err)
 
 	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
 		app.Hooks = nil
 		app.Database.Type = nodeps.MariaDB
 		app.Database.Version = nodeps.MariaDBDefaultVersion
@@ -1152,7 +1153,7 @@ func TestDdevImportDB(t *testing.T) {
 
 		// Test simple db loads.
 		for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.mysql.gz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.mysql.tar.gz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip", "users_with_USE_statement.sql"} {
-			path := filepath.Join(testDir, "testdata", t.Name(), dbType, file)
+			path := filepath.Join(origDir, "testdata", t.Name(), dbType, file)
 			if !fileutil.FileExists(path) {
 				continue
 			}
@@ -1162,7 +1163,7 @@ func TestDdevImportDB(t *testing.T) {
 				continue
 			}
 
-			c[nodeps.MariaDB] = `mysql -N -e 'SHOW TABLES;' | cat`
+			c[nodeps.MariaDB] = `set -eu -o pipefail; mysql -N -e 'SHOW TABLES;' | cat`
 			c[nodeps.Postgres] = `set -eu -o pipefail; psql -t -v ON_ERROR_STOP=1 db -c '\dt' |awk -F' *\| *' '{ if (NF>2) print $2 }' `
 			// There should be exactly the one "users" table for each of these files
 			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
@@ -1172,8 +1173,8 @@ func TestDdevImportDB(t *testing.T) {
 			assert.NoError(err)
 			assert.Equal("users\n", out, "Failed to find users table for file %s, stdout='%s', stderr='%s'", file, out, stderr)
 
-			c[nodeps.MariaDB] = `mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql)$"`
-			c[nodeps.Postgres] = `psql -t -c "SELECT datname FROM pg_database;" | egrep -v "template?|postgres"`
+			c[nodeps.MariaDB] = `set -eu -o pipefail; mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql)$"`
+			c[nodeps.Postgres] = `set -eu -o pipefail; psql -t -c "SELECT datname FROM pg_database;" | egrep -v "template?|postgres"`
 
 			// Verify that no extra database was created
 			out, stderr, err = app.Exec(&ddevapp.ExecOpts{
@@ -1217,7 +1218,7 @@ func TestDdevImportDB(t *testing.T) {
 
 		for _, db := range []string{"db", "extradb"} {
 			// Import from stdin, make sure that works
-			inputFile := filepath.Join(testDir, "testdata", t.Name(), dbType, "stdintable.sql")
+			inputFile := filepath.Join(origDir, "testdata", t.Name(), dbType, "stdintable.sql")
 			f, err := os.Open(inputFile)
 			require.NoError(t, err)
 			// nolint: errcheck
@@ -1242,7 +1243,7 @@ func TestDdevImportDB(t *testing.T) {
 			assert.Equal(fmt.Sprintf("%s2", db), out)
 
 			// Import 2-user users.sql into users table
-			path := filepath.Join(testDir, "testdata", t.Name(), dbType, "users.sql")
+			path := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
 			err = app.ImportDB(path, "", false, false, db)
 			assert.NoError(err)
 			c[nodeps.MariaDB] = fmt.Sprintf(`echo "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db)
@@ -1257,7 +1258,7 @@ func TestDdevImportDB(t *testing.T) {
 			assert.Len(lines, 1)
 
 			// Import 1-user sql (users_just_one table) and make sure only one table is left there
-			path = filepath.Join(testDir, "testdata", t.Name(), dbType, "oneuser.sql")
+			path = filepath.Join(origDir, "testdata", t.Name(), dbType, "oneuser.sql")
 			err = app.ImportDB(path, "", false, false, db)
 			assert.NoError(err)
 			out, _, err = app.Exec(&ddevapp.ExecOpts{
@@ -1274,7 +1275,7 @@ func TestDdevImportDB(t *testing.T) {
 			if dbType != nodeps.Postgres {
 				// Import 2-user users.sql again, but with nodrop=true
 				// We should end up with 2 tables now
-				path = filepath.Join(testDir, "testdata", t.Name(), dbType, "users.sql")
+				path = filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
 				err = app.ImportDB(path, "", false, true, db)
 				assert.NoError(err)
 				out, _, err = app.Exec(&ddevapp.ExecOpts{
@@ -1308,7 +1309,7 @@ func TestDdevImportDB(t *testing.T) {
 	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: "mysql -N -e 'DROP TABLE IF EXISTS wp_posts;'"})
 	require.NoError(t, err)
 	file := "posts_with_ddl_content.sql"
-	path := filepath.Join(testDir, "testdata", t.Name(), "mariadb", file)
+	path := filepath.Join(origDir, "testdata", t.Name(), "mariadb", file)
 	err = app.ImportDB(path, "", false, false, "db")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
 	checkImportDbImports(t, app)
@@ -1380,7 +1381,6 @@ func TestDdevImportDB(t *testing.T) {
 	app.Hooks = nil
 
 	runTime()
-	switchDir()
 }
 
 func checkImportDbImports(t *testing.T, app *ddevapp.DdevApp) {
@@ -1408,7 +1408,7 @@ func TestDdevAllDatabases(t *testing.T) {
 	assert := asrt.New(t)
 
 	dbVersions := nodeps.GetValidDatabaseVersions()
-	// Bug: postgres 9 doesn't work with snapshot restore
+	// Bug: postgres 9 doesn't work with snapshot restore, see https://github.com/drud/ddev/issues/3583
 	dbVersions = nodeps.RemoveItemFromSlice(dbVersions, "postgres:9")
 	//Use a smaller list if GOTEST_SHORT
 	if os.Getenv("GOTEST_SHORT") != "" {
@@ -1587,7 +1587,8 @@ func TestDdevAllDatabases(t *testing.T) {
 		out = strings.Trim(out, "\n\r ")
 		assert.Equal("2", out)
 
-		_ = app.Stop(true, false)
+		err = app.Stop(true, false)
+		assert.NoError(err)
 	}
 	runTime()
 }
