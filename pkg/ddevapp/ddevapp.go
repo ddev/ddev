@@ -1171,11 +1171,10 @@ func (app *DdevApp) FindAllImages() ([]string, error) {
 		for _, v := range y.(map[interface{}]interface{}) {
 			if i, ok := v.(map[interface{}]interface{})["image"]; ok {
 				if strings.HasSuffix(i.(string), "-built") {
-					// This technique is hacky and won't work completely correctly where project name has a hyphen in it.
-					// But the pull will still work out later in the docker-compose up
-					parts := strings.Split(i.(string), "-")
-					parts = parts[:len(parts)-2]
-					i = strings.Join(parts, "-")
+					i = strings.TrimSuffix(i.(string), "-built")
+					if strings.HasSuffix(i.(string), "-"+app.Name) {
+						i = strings.TrimSuffix(i.(string), "-"+app.Name)
+					}
 				}
 				images = append(images, i.(string))
 
