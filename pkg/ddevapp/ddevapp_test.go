@@ -1111,15 +1111,16 @@ func TestDdevImportDB(t *testing.T) {
 
 	t.Cleanup(func() {
 		runTime()
-		err = os.Chdir(origDir)
+		err = app.Stop(true, false)
 		assert.NoError(err)
 		app.Hooks = nil
 		app.Database.Type = nodeps.MariaDB
 		app.Database.Version = nodeps.MariaDBDefaultVersion
 		err = app.WriteConfig()
 		assert.NoError(err)
-		err = app.Stop(true, false)
-		assert.NoError(err)
+		_ = os.Remove(filepath.Join(app.AppRoot, "hello-pre-import-db-"+app.Name))
+		_ = os.Remove(filepath.Join(app.AppRoot, "hello-post-import-db-"+app.Name))
+
 	})
 
 	c := make(map[string]string)
@@ -1343,14 +1344,17 @@ func TestDdevImportDB(t *testing.T) {
 	if site.DBTarURL != "" {
 		_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
 		require.NoError(t, err)
+		_ = os.Remove(filepath.Join(app.AppRoot, "hello-pre-import-db-"+app.Name))
+		_ = os.Remove(filepath.Join(app.AppRoot, "hello-post-import-db-"+app.Name))
+		assert.NoFileExists(filepath.Join(app.AppRoot, "hello-pre-import-db-"+app.Name))
+		assert.NoFileExists(filepath.Join(app.AppRoot, "hello-post-import-db-"+app.Name))
+
 		err = app.ImportDB(cachedArchive, "", false, false, "db")
 		assert.NoError(err)
-		assert.FileExists("hello-pre-import-db-" + app.Name)
-		assert.FileExists("hello-post-import-db-" + app.Name)
-		err = os.Remove("hello-pre-import-db-" + app.Name)
-		assert.NoError(err)
-		err = os.Remove("hello-post-import-db-" + app.Name)
-		assert.NoError(err)
+		assert.FileExists(filepath.Join(app.AppRoot, "hello-pre-import-db-"+app.Name))
+		assert.FileExists(filepath.Join(app.AppRoot, "hello-post-import-db-"+app.Name))
+		_ = os.Remove(filepath.Join(app.AppRoot, "hello-pre-import-db-"+app.Name))
+		_ = os.Remove(filepath.Join(app.AppRoot, "hello-post-import-db-"+app.Name))
 	}
 
 	if site.DBZipURL != "" {
@@ -1359,11 +1363,6 @@ func TestDdevImportDB(t *testing.T) {
 		require.NoError(t, err)
 		err = app.ImportDB(cachedArchive, "", false, false, "db")
 		assert.NoError(err)
-
-		assert.FileExists("hello-pre-import-db-" + app.Name)
-		assert.FileExists("hello-post-import-db-" + app.Name)
-		_ = os.RemoveAll("hello-pre-import-db-" + app.Name)
-		_ = os.RemoveAll("hello-post-import-db-" + app.Name)
 	}
 
 	if site.FullSiteTarballURL != "" {
@@ -1372,10 +1371,6 @@ func TestDdevImportDB(t *testing.T) {
 
 		err = app.ImportDB(cachedArchive, "data.sql", false, false, "db")
 		assert.NoError(err, "Failed to find data.sql at root of tarball %s", cachedArchive)
-		assert.FileExists("hello-pre-import-db-" + app.Name)
-		assert.FileExists("hello-post-import-db-" + app.Name)
-		_ = os.RemoveAll("hello-pre-import-db-" + app.Name)
-		_ = os.RemoveAll("hello-post-import-db-" + app.Name)
 	}
 
 }
