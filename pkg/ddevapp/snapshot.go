@@ -22,9 +22,9 @@ import (
 // DeleteSnapshot removes the snapshot tarball or directory inside a project
 func (app *DdevApp) DeleteSnapshot(snapshotName string) error {
 	var err error
-	err = app.ProcessHooks("pre-delete-snapshotFullPath")
+	err = app.ProcessHooks("pre-delete-snapshot")
 	if err != nil {
-		return fmt.Errorf("failed to process pre-delete-snapshotFullPath hooks: %v", err)
+		return fmt.Errorf("failed to process pre-delete-snapshot hooks: %v", err)
 	}
 
 	snapshotFullName, err := GetSnapshotFileFromName(snapshotName, app)
@@ -36,16 +36,16 @@ func (app *DdevApp) DeleteSnapshot(snapshotName string) error {
 	hostSnapshot := app.GetConfigPath(snapshotFullPath)
 
 	if !fileutil.FileExists(hostSnapshot) {
-		return fmt.Errorf("no snapshotFullPath '%s' currently exists in project '%s'", snapshotName, app.Name)
+		return fmt.Errorf("no snapshot '%s' currently exists in project '%s'", snapshotName, app.Name)
 	}
 	if err = os.RemoveAll(hostSnapshot); err != nil {
-		return fmt.Errorf("failed to remove snapshotFullPath '%s': %v", hostSnapshot, err)
+		return fmt.Errorf("failed to remove snapshot '%s': %v", hostSnapshot, err)
 	}
 
-	util.Success("Deleted database snapshotFullPath '%s'", snapshotName)
-	err = app.ProcessHooks("post-delete-snapshotFullPath")
+	util.Success("Deleted database snapshot '%s'", snapshotName)
+	err = app.ProcessHooks("post-delete-snapshot")
 	if err != nil {
-		return fmt.Errorf("failed to process post-delete-snapshotFullPath hooks: %v", err)
+		return fmt.Errorf("failed to process post-delete-snapshot hooks: %v", err)
 	}
 
 	return nil
