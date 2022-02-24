@@ -14,7 +14,6 @@ services:
   memcached:
     container_name: ddev-${DDEV_SITENAME}-memcached
     image: memcached:1.6
-    networks: [default, ddev_default]
     restart: "no"
     # memcached is available at this port inside the container.
     expose:

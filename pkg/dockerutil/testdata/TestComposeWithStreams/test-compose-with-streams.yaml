@@ -22,7 +22,6 @@ services:
       LINES: '25'
       VIRTUAL_HOST: junk.ddev.site
     image: TEST-COMPOSE-WITH-STREAMS-IMAGE
-    networks: [default, ddev_default]
     user: "33:33"
     labels:
       com.ddev.app-type: php

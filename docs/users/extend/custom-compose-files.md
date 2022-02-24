@@ -37,7 +37,6 @@ version: '3.6'
 services:
   someservice:
   container_name: "ddev-${DDEV_SITENAME}-someservice"
-  networks: [default, ddev_default]
   labels:
     com.ddev.site-name: ${DDEV_SITENAME}
     com.ddev.approot: ${DDEV_APPROOT}
@@ -70,7 +69,6 @@ When defining additional services for your project, we recommended you follow th
 * Exposing ports for service: you can expose the port for a service to be accessible as `projectname.ddev.site:portNum` while your project is running. This is achieved by the following configurations for the container(s) being added:
 
     * Define only the internal port in the `expose` section for docker-compose; use `ports:` only if the port will be bound directly to localhost, as may be required for non-http services.
-    * Add a `networks:` stanza: `networks: [default, ddev_default]`
 
     * To expose a web interface to be accessible over HTTP, define the following environment variables in the `environment` section for docker-compose:
 
