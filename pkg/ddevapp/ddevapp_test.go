@@ -3426,6 +3426,8 @@ func TestHostDBPort(t *testing.T) {
 		err = app.Stop(true, false)
 		assert.NoError(err)
 		app.HostDBPort = ""
+		app.Database.Type = nodeps.MariaDB
+		app.Database.Version = nodeps.MariaDBDefaultVersion
 		err = app.WriteConfig()
 		assert.NoError(err)
 		err = os.RemoveAll(showportPath)

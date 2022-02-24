@@ -161,6 +161,8 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 	require.NoError(t, err)
 	app.Hooks = map[string][]ddevapp.YAMLTask{"post-snapshot": {{"exec-host": "touch hello-post-snapshot-" + app.Name}}, "pre-snapshot": {{"exec-host": "touch hello-pre-snapshot-" + app.Name}}}
 
+	err = app.Stop(true, false)
+	assert.NoError(err)
 	err = app.Start()
 	require.NoError(t, err)
 
