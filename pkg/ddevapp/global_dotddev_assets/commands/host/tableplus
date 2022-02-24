@@ -10,7 +10,12 @@
 ## HostBinaryExists: /Applications/TablePlus.app
 
 set -x
-query="mysql://root:root@127.0.0.1:${DDEV_HOST_DB_PORT}/db"
+dbtype=${DDEV_DBIMAGE%:*}
+driver=mysql
+if [[ $dbtype == "postgres" ]]; then
+    driver=$dbtype
+fi
+query="${driver}://db:db@127.0.0.1:${DDEV_HOST_DB_PORT}/db"
 
 open "$query" -a "/Applications/TablePlus.app/Contents/MacOS/TablePlus"
 
