@@ -1,6 +1,7 @@
 #!/bin/bash
 
-## mysql health check for docker
+## postgres healthcheck
+##dev-generated
 
 set -eo pipefail
 sleeptime=59
@@ -15,23 +16,9 @@ if [ -f /tmp/healthy ]; then
     sleep ${sleeptime}
 fi
 
-# If /tmp/initializing, it means we're loading the default starter database
-if [ -f /tmp/initializing ]; then
-  printf "initializing"
-  exit 1
-fi
-
-# If mariabackup or xtrabackup is running (and not initializing)
-# It means snapshot restore is in progress
-if killall -0 mariabackup 2>/dev/null || killall -0 xtrabackup 2>/dev/null ; then
-  printf "currently restoring snapshot"
-  touch /tmp/healthy
-  exit 0
-fi
-
 # If we can now access the server, we're healthy and ready
-if  mysql --host=127.0.0.1 -udb -pdb --database=db -e "SHOW DATABASES LIKE 'db';" >/dev/null;  then
-    printf "healthy"
+if  pg_isready >/dev/null;  then
+    printf "pg_isready: healthy"
     touch /tmp/healthy
     exit 0
 fi
