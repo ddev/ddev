@@ -23,7 +23,7 @@ var deleteAllImages bool
 var DeleteImagesCmd = &cobra.Command{
 	Use:   "images",
 	Short: "Deletes ddev docker images not in use by current ddev version",
-	Long: "with --all it deletes all ddev docker images"
+	Long:  "with --all it deletes all ddev docker images",
 	Example: `ddev delete images
 ddev delete images -y
 ddev delete images --all`,
@@ -60,6 +60,7 @@ ddev delete images --all`,
 						}
 					}
 				}
+			}
 			util.Success("All ddev images discovered were deleted.")
 			os.Exit(0)
 		}
