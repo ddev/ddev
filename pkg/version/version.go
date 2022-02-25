@@ -47,7 +47,7 @@ var WebTag = "20220219_nodejs_version" // Note that this can be overridden by ma
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20220102_gzip_snapshots"
+var BaseDBTag = "20220223_improve_db_healthcheck"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"

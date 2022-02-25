@@ -781,12 +781,20 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if app.Database.Type == nodeps.Postgres {
 		extraDBContent = `
 ENV PATH $PATH:/usr/lib/postgresql/$PG_MAJOR/bin
+ADD postgres_healthcheck.sh /
+RUN chmod +x /postgres_healthcheck.sh
 RUN mkdir -p /etc/postgresql/conf.d && chmod 777 /etc/postgresql/conf.d
 RUN echo "*:*:db:db:db" > ~postgres/.pgpass && chown postgres:postgres ~postgres/.pgpass && chmod 600 ~postgres/.pgpass && chmod 777 /var/tmp && ln -sf /mnt/ddev_config/postgres/postgresql.conf /etc/postgresql && echo "restore_command = 'true'" >> /var/lib/postgresql/recovery.conf
 RUN printf "# TYPE DATABASE USER CIDR-ADDRESS  METHOD \nhost  all  all 0.0.0.0/0 md5\nlocal all all trust\nhost    replication    db             0.0.0.0/0  trust\nhost replication all 0.0.0.0/0 trust\nlocal replication all trust\nlocal replication all peer\n" >/etc/postgresql/pg_hba.conf
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests less procps pv vim
 `
+
+		err = CopyEmbedAssets(bundledAssets, "healthcheck", app.GetConfigPath("db-build"))
+		if err != nil {
+			return "", err
+		}
 	}
+
 	err = WriteBuildDockerfile(app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build/Dockerfile"), app.DBImageExtraPackages, "", extraDBContent)
 
 	if err != nil {
@@ -1034,7 +1042,7 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
-	err := CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen", "nginx_full/nginx-site.conf", "postgres", "sequelpro.spf", "xhprof", "**/README.*")
+	err := CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db-build/postgres_healthcheck.sh", "db_snapshots", "import-db", "import.yaml", "mutagen", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "sequelpro.spf", "xhprof", "**/README.*")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}

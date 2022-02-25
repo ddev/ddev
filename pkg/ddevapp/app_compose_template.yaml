@@ -69,7 +69,7 @@ services:
     command: ${DDEV_DB_CONTAINER_COMMAND}
     healthcheck:
       {{ if eq .DBType "postgres" }}
-      test: ["pg_isready"]
+      test: ["CMD-SHELL", "/postgres_healthcheck.sh"]
       {{ end }}
       interval: 1s
       retries: 120
