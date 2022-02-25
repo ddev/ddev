@@ -54,10 +54,11 @@ ddev delete images --all`,
 			for _, image := range images {
 				for _, tag := range image.RepoTags {
 					if strings.HasPrefix(tag, "drud/ddev-") {
-						dockerRemoveImage(tag)
+						if err = dockerutil.RemoveImage(tag); err != nil {
+							util.Warning("Failed to remove %s: %v", tag, err)
+						}
 					}
 				}
-			}
 			util.Success("All ddev images discovered were deleted.")
 			os.Exit(0)
 		}
@@ -88,35 +89,37 @@ ddev delete images --all`,
 			for _, tag := range image.RepoTags {
 				// If a webimage, but doesn't match our webimage, delete it
 				if strings.HasPrefix(tag, version.WebImg) && !strings.HasPrefix(tag, webimg) && !strings.HasPrefix(tag, webimg+"-built") {
-					dockerRemoveImage(tag)
+					if err = dockerutil.RemoveImage(tag); err != nil {
+						util.Warning("Failed to remove %s: %v", tag, err)
+					}
 				}
 				if strings.HasPrefix(tag, "drud/ddev-dbserver") && !strings.HasSuffix(tag, keepDBImageTag) && !strings.HasSuffix(tag, keepDBImageTag+"-built") {
-					dockerRemoveImage(tag)
+					if err = dockerutil.RemoveImage(tag); err != nil {
+						util.Warning("Failed to remove %s: %v", tag, err)
+					}
 				}
 				// If a dbaimage, but doesn't match our dbaimage, delete it
 				if strings.HasPrefix(tag, version.DBAImg) && !strings.HasPrefix(tag, dbaimage) {
-					dockerRemoveImage(tag)
+					if err = dockerutil.RemoveImage(tag); err != nil {
+						util.Warning("Failed to remove %s: %v", tag, err)
+					}
 				}
 				// If a routerImage, but doesn't match our routerimage, delete it
 				if strings.HasPrefix(tag, version.RouterImage) && !strings.HasPrefix(tag, routerimage) {
-					dockerRemoveImage(tag)
+					if err = dockerutil.RemoveImage(tag); err != nil {
+						util.Warning("Failed to remove %s: %v", tag, err)
+					}
 				}
 				// If a sshAgentImage, but doesn't match our sshAgentImage, delete it
 				if strings.HasPrefix(tag, version.SSHAuthImage) && !strings.HasPrefix(tag, sshimage) && !strings.HasPrefix(tag, sshimage+"-built") {
-					dockerRemoveImage(tag)
+					if err = dockerutil.RemoveImage(tag); err != nil {
+						util.Warning("Failed to remove %s: %v", tag, err)
+					}
 				}
 			}
 		}
 		util.Success("Any non-current images discovered were deleted.")
 	},
-}
-
-// dockerRemoveImage Deletes an images by its tag
-func dockerRemoveImage(tag string) {
-	err := dockerutil.RemoveImage(tag)
-	if err != nil {
-		util.Warning("Unable to remove %s: %v", tag, err)
-	}
 }
 
 func init() {
