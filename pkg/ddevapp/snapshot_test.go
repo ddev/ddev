@@ -279,6 +279,8 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 		dbVersion := parts[1]
 		app.Database.Type = dbType
 		app.Database.Version = dbVersion
+		err = app.WriteConfig()
+		assert.NoError(err)
 
 		err = app.Start()
 		assert.NoError(err)
@@ -291,7 +293,7 @@ func TestDdevRestoreSnapshot(t *testing.T) {
 
 		err = app.RestoreSnapshot(dirSnapshot)
 		if err != nil {
-			assert.NoError(err, "Failed to restore snapshot '%s': %v, continuing", dirSnapshot, err)
+			assert.NoError(err, "Failed to restore dirSnapshot '%s': %v, continuing", dirSnapshot, err)
 			continue
 		}
 
