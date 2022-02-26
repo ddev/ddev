@@ -8,7 +8,7 @@ This is based on the wonderful [article](https://susi.dev/fully-integrate-ddev-a
 
 #### Requirements
 
-- PhpStorm 2021.2 or higher
+- PhpStorm 2021.3 or higher
 - You may need to add the `PHP Docker` plugin.
 - As of version v1.18.2, DDEV is bundled with its own docker-compose binary, using Compose V2 by default. Enable _Use Compose V2_ in PHPStorm _Settings/Preferences | Build, Execution, Deployment | Docker | Tools_, in case you have an up to date docker-compose binary installed (Check with `docker-compose version` > 2.0). Otherwise, you can also set the bundled docker-compose binary as _Docker Compose executable_ which you can be found in `~/.ddev/bin`. In this case, you do not need to select the _Use Compose V2_ Checkbox.
 - Any OS platform, but if you're using Windows PhpStorm with WSL2 the path mappings are slightly more complex. WSL2 instructions are provided where necessary.
