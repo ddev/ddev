@@ -52,7 +52,7 @@ func NewDrupalSettings(app *DdevApp) *DrupalSettings {
 		DatabasePort:     GetInternalPort(app, "db"),
 		DatabasePrefix:   "",
 		HashSalt:         util.RandString(64),
-		Signature:        DdevFileSignature,
+		Signature:        nodeps.DdevFileSignature,
 		SitePath:         path.Join("sites", "default"),
 		SiteSettings:     "settings.php",
 		SiteSettingsDdev: "settings.ddev.php",
@@ -162,7 +162,7 @@ func createDrupalSettingsPHP(app *DdevApp) (string, error) {
 func writeDrupalSettingsDdevPhp(settings *DrupalSettings, filePath string, app *DdevApp) error {
 	if fileutil.FileExists(filePath) {
 		// Check if the file is managed by ddev.
-		signatureFound, err := fileutil.FgrepStringInFile(filePath, DdevFileSignature)
+		signatureFound, err := fileutil.FgrepStringInFile(filePath, nodeps.DdevFileSignature)
 		if err != nil {
 			return err
 		}
@@ -206,7 +206,7 @@ func writeDrupalSettingsDdevPhp(settings *DrupalSettings, filePath string, app *
 func WriteDrushrc(app *DdevApp, filePath string) error {
 	if fileutil.FileExists(filePath) {
 		// Check if the file is managed by ddev.
-		signatureFound, err := fileutil.FgrepStringInFile(filePath, DdevFileSignature)
+		signatureFound, err := fileutil.FgrepStringInFile(filePath, nodeps.DdevFileSignature)
 		if err != nil {
 			return err
 		}
@@ -223,7 +223,7 @@ func WriteDrushrc(app *DdevApp, filePath string) error {
 
 /**
  * @file
- * ` + DdevFileSignature + `: Automatically generated drushrc.php file (for Drush 8)
+ * ` + nodeps.DdevFileSignature + `: Automatically generated drushrc.php file (for Drush 8)
  * ddev manages this file and may delete or overwrite the file unless this comment is removed.
  * Remove this comment if you don't want ddev to manage this file.
  */

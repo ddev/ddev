@@ -1,5 +1,6 @@
 #!/bin/bash
 
+#ddev-generated
 # Please run this script with "bash test_ddev.sh"
 # You can copy and paste it (make a file named test_ddev.sh)
 # Or use curl or wget to download the *raw* version.
@@ -9,7 +10,6 @@
 # `ddev config global --nfs-mount-enabled=false`
 
 PROJECT_NAME=tryddevproject-${RANDOM}
-export DDEV_DEBUG=true
 
 function cleanup {
   printf "\nPlease delete this project after debugging with 'ddev delete -Oy ${PROJECT_NAME}'\n"

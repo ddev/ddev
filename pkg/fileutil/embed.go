@@ -1,8 +1,8 @@
-package ddevapp
+package fileutil
 
 import (
 	"embed"
-	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"os"
 	"path"
 	"path/filepath"
@@ -24,7 +24,7 @@ func CopyEmbedAssets(fsys embed.FS, sourceDir string, targetDir string) error {
 		} else {
 			localPath := filepath.Join(targetDir, d.Name())
 
-			sigFound, err := fileutil.FgrepStringInFile(localPath, DdevFileSignature)
+			sigFound, err := FgrepStringInFile(localPath, nodeps.DdevFileSignature)
 			if sigFound || err != nil {
 				content, err := fsys.ReadFile(sourcePath)
 				if err != nil {

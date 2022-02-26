@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"os"
 	"path"
 	"path/filepath"
@@ -45,7 +46,7 @@ func NewBackdropSettings(app *DdevApp) *BackdropSettings {
 		DatabasePort:     GetInternalPort(app, "db"),
 		DatabasePrefix:   "",
 		HashSalt:         util.RandString(64),
-		Signature:        DdevFileSignature,
+		Signature:        nodeps.DdevFileSignature,
 		SiteSettings:     "settings.php",
 		SiteSettingsDdev: "settings.ddev.php",
 		DockerIP:         dockerIP,
@@ -93,7 +94,7 @@ func createBackdropSettingsFile(app *DdevApp) (string, error) {
 func writeBackdropSettingsDdevPHP(settings *BackdropSettings, filePath string, app *DdevApp) error {
 	if fileutil.FileExists(filePath) {
 		// Check if the file is managed by ddev.
-		signatureFound, err := fileutil.FgrepStringInFile(filePath, DdevFileSignature)
+		signatureFound, err := fileutil.FgrepStringInFile(filePath, nodeps.DdevFileSignature)
 		if err != nil {
 			return err
 		}

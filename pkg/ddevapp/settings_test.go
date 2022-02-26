@@ -77,9 +77,9 @@ func TestWriteSettings(t *testing.T) {
 		assert.EqualValues(expectedSettingsFile, createdFile)
 		_, err = os.Stat(expectedSettingsFile)
 		assert.NoError(err)
-		signatureFound, err := fileutil.FgrepStringInFile(expectedSettingsFile, DdevFileSignature)
+		signatureFound, err := fileutil.FgrepStringInFile(expectedSettingsFile, nodeps.DdevFileSignature)
 		assert.NoError(err)
-		assert.True(signatureFound, "Failed to find %s in %s", DdevFileSignature, expectedSettingsFile)
+		assert.True(signatureFound, "Failed to find %s in %s", nodeps.DdevFileSignature, expectedSettingsFile)
 		_ = os.Remove(expectedSettingsFile)
 	}
 
@@ -350,7 +350,7 @@ func TestDrupalBackdropOverwriteDdevSettings(t *testing.T) {
 		expectedSettingsDdevLocation := filepath.Join(dir, relativeSettingsDdevLocation)
 
 		// Ensure that a settings.ddev.php file exists, WITH the #ddev-generated signature
-		originalContents := "not empty " + DdevFileSignature
+		originalContents := "not empty " + nodeps.DdevFileSignature
 		settingsFile, err := os.Create(expectedSettingsDdevLocation)
 		assert.NoError(err)
 		_, err = settingsFile.Write([]byte(originalContents))
