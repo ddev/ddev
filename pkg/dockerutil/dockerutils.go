@@ -120,16 +120,15 @@ func GetDockerContext() (string, string, error) {
 	contextInfo, err := ddevexec.RunHostCommand("docker", "context", "inspect", "-f", `{{ .Name }} {{ .Endpoints.docker.Host }}`)
 	if err != nil {
 		return "", "", fmt.Errorf("unable to run 'docker context inspect' - please make sure docker client is in path and up-to-date: %v", err)
-	} else {
-		contextInfo = strings.Trim(contextInfo, " \r\n")
-		parts := strings.SplitN(contextInfo, " ", 2)
-		if len(parts) != 2 {
-			return "", "", fmt.Errorf("unable to run split docker context info %s: %v", contextInfo, err)
-		}
-		context = parts[0]
-		dockerHost = parts[1]
-		util.Debug("Using docker context %s (%v)", context, dockerHost)
 	}
+	contextInfo = strings.Trim(contextInfo, " \r\n")
+	parts := strings.SplitN(contextInfo, " ", 2)
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("unable to run split docker context info %s: %v", contextInfo, err)
+	}
+	context = parts[0]
+	dockerHost = parts[1]
+	util.Debug("Using docker context %s (%v)", context, dockerHost)
 	return context, dockerHost, nil
 }
 
