@@ -1099,11 +1099,10 @@ func TestGetApps(t *testing.T) {
 func TestDdevImportDB(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
-	testDir, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 
 	site := TestSites[0]
 
-	switchDir := site.Chdir()
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	testcommon.ClearDockerEnv()
@@ -1111,13 +1110,17 @@ func TestDdevImportDB(t *testing.T) {
 	assert.NoError(err)
 
 	t.Cleanup(func() {
+		runTime()
+		err = app.Stop(true, false)
+		assert.NoError(err)
 		app.Hooks = nil
 		app.Database.Type = nodeps.MariaDB
 		app.Database.Version = nodeps.MariaDBDefaultVersion
 		err = app.WriteConfig()
 		assert.NoError(err)
-		err = app.Stop(true, false)
-		assert.NoError(err)
+		_ = os.Remove(filepath.Join(app.AppRoot, "hello-pre-import-db-"+app.Name))
+		_ = os.Remove(filepath.Join(app.AppRoot, "hello-post-import-db-"+app.Name))
+
 	})
 
 	c := make(map[string]string)
@@ -1126,7 +1129,6 @@ func TestDdevImportDB(t *testing.T) {
 		err = app.Stop(true, false)
 		require.NoError(t, err)
 
-		//for _, dbType := range []string{nodeps.Postgres} {
 		app.Database = ddevapp.DatabaseDesc{
 			Type:    dbType,
 			Version: nodeps.MariaDBDefaultVersion,
@@ -1152,7 +1154,7 @@ func TestDdevImportDB(t *testing.T) {
 
 		// Test simple db loads.
 		for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.mysql.gz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.mysql.tar.gz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip", "users_with_USE_statement.sql"} {
-			path := filepath.Join(testDir, "testdata", t.Name(), dbType, file)
+			path := filepath.Join(origDir, "testdata", t.Name(), dbType, file)
 			if !fileutil.FileExists(path) {
 				continue
 			}
@@ -1162,7 +1164,7 @@ func TestDdevImportDB(t *testing.T) {
 				continue
 			}
 
-			c[nodeps.MariaDB] = `mysql -N -e 'SHOW TABLES;' | cat`
+			c[nodeps.MariaDB] = `set -eu -o pipefail; mysql -N -e 'SHOW TABLES;' | cat`
 			c[nodeps.Postgres] = `set -eu -o pipefail; psql -t -v ON_ERROR_STOP=1 db -c '\dt' |awk -F' *\| *' '{ if (NF>2) print $2 }' `
 			// There should be exactly the one "users" table for each of these files
 			out, stderr, err := app.Exec(&ddevapp.ExecOpts{
@@ -1172,8 +1174,8 @@ func TestDdevImportDB(t *testing.T) {
 			assert.NoError(err)
 			assert.Equal("users\n", out, "Failed to find users table for file %s, stdout='%s', stderr='%s'", file, out, stderr)
 
-			c[nodeps.MariaDB] = `mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql)$"`
-			c[nodeps.Postgres] = `psql -t -c "SELECT datname FROM pg_database;" | egrep -v "template?|postgres"`
+			c[nodeps.MariaDB] = `set -eu -o pipefail; mysql -N -e 'SHOW DATABASES;' | egrep -v "^(information_schema|performance_schema|mysql)$"`
+			c[nodeps.Postgres] = `set -eu -o pipefail; psql -t -c "SELECT datname FROM pg_database;" | egrep -v "template?|postgres"`
 
 			// Verify that no extra database was created
 			out, stderr, err = app.Exec(&ddevapp.ExecOpts{
@@ -1217,7 +1219,7 @@ func TestDdevImportDB(t *testing.T) {
 
 		for _, db := range []string{"db", "extradb"} {
 			// Import from stdin, make sure that works
-			inputFile := filepath.Join(testDir, "testdata", t.Name(), dbType, "stdintable.sql")
+			inputFile := filepath.Join(origDir, "testdata", t.Name(), dbType, "stdintable.sql")
 			f, err := os.Open(inputFile)
 			require.NoError(t, err)
 			// nolint: errcheck
@@ -1242,7 +1244,7 @@ func TestDdevImportDB(t *testing.T) {
 			assert.Equal(fmt.Sprintf("%s2", db), out)
 
 			// Import 2-user users.sql into users table
-			path := filepath.Join(testDir, "testdata", t.Name(), dbType, "users.sql")
+			path := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
 			err = app.ImportDB(path, "", false, false, db)
 			assert.NoError(err)
 			c[nodeps.MariaDB] = fmt.Sprintf(`echo "SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '%s';" | mysql -N %s`, db, db)
@@ -1257,7 +1259,7 @@ func TestDdevImportDB(t *testing.T) {
 			assert.Len(lines, 1)
 
 			// Import 1-user sql (users_just_one table) and make sure only one table is left there
-			path = filepath.Join(testDir, "testdata", t.Name(), dbType, "oneuser.sql")
+			path = filepath.Join(origDir, "testdata", t.Name(), dbType, "oneuser.sql")
 			err = app.ImportDB(path, "", false, false, db)
 			assert.NoError(err)
 			out, _, err = app.Exec(&ddevapp.ExecOpts{
@@ -1274,7 +1276,7 @@ func TestDdevImportDB(t *testing.T) {
 			if dbType != nodeps.Postgres {
 				// Import 2-user users.sql again, but with nodrop=true
 				// We should end up with 2 tables now
-				path = filepath.Join(testDir, "testdata", t.Name(), dbType, "users.sql")
+				path = filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
 				err = app.ImportDB(path, "", false, true, db)
 				assert.NoError(err)
 				out, _, err = app.Exec(&ddevapp.ExecOpts{
@@ -1308,7 +1310,7 @@ func TestDdevImportDB(t *testing.T) {
 	_, _, err = app.Exec(&ddevapp.ExecOpts{Service: "db", Cmd: "mysql -N -e 'DROP TABLE IF EXISTS wp_posts;'"})
 	require.NoError(t, err)
 	file := "posts_with_ddl_content.sql"
-	path := filepath.Join(testDir, "testdata", t.Name(), "mariadb", file)
+	path := filepath.Join(origDir, "testdata", t.Name(), "mariadb", file)
 	err = app.ImportDB(path, "", false, false, "db")
 	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
 	checkImportDbImports(t, app)
@@ -1342,14 +1344,17 @@ func TestDdevImportDB(t *testing.T) {
 	if site.DBTarURL != "" {
 		_, cachedArchive, err := testcommon.GetCachedArchive(site.Name, site.Name+"_siteTarArchive", "", site.DBTarURL)
 		require.NoError(t, err)
+		_ = os.Remove(filepath.Join(app.AppRoot, "hello-pre-import-db-"+app.Name))
+		_ = os.Remove(filepath.Join(app.AppRoot, "hello-post-import-db-"+app.Name))
+		assert.NoFileExists(filepath.Join(app.AppRoot, "hello-pre-import-db-"+app.Name))
+		assert.NoFileExists(filepath.Join(app.AppRoot, "hello-post-import-db-"+app.Name))
+
 		err = app.ImportDB(cachedArchive, "", false, false, "db")
 		assert.NoError(err)
-		assert.FileExists("hello-pre-import-db-" + app.Name)
-		assert.FileExists("hello-post-import-db-" + app.Name)
-		err = os.Remove("hello-pre-import-db-" + app.Name)
-		assert.NoError(err)
-		err = os.Remove("hello-post-import-db-" + app.Name)
-		assert.NoError(err)
+		assert.FileExists(filepath.Join(app.AppRoot, "hello-pre-import-db-"+app.Name))
+		assert.FileExists(filepath.Join(app.AppRoot, "hello-post-import-db-"+app.Name))
+		_ = os.Remove(filepath.Join(app.AppRoot, "hello-pre-import-db-"+app.Name))
+		_ = os.Remove(filepath.Join(app.AppRoot, "hello-post-import-db-"+app.Name))
 	}
 
 	if site.DBZipURL != "" {
@@ -1358,11 +1363,6 @@ func TestDdevImportDB(t *testing.T) {
 		require.NoError(t, err)
 		err = app.ImportDB(cachedArchive, "", false, false, "db")
 		assert.NoError(err)
-
-		assert.FileExists("hello-pre-import-db-" + app.Name)
-		assert.FileExists("hello-post-import-db-" + app.Name)
-		_ = os.RemoveAll("hello-pre-import-db-" + app.Name)
-		_ = os.RemoveAll("hello-post-import-db-" + app.Name)
 	}
 
 	if site.FullSiteTarballURL != "" {
@@ -1371,16 +1371,8 @@ func TestDdevImportDB(t *testing.T) {
 
 		err = app.ImportDB(cachedArchive, "data.sql", false, false, "db")
 		assert.NoError(err, "Failed to find data.sql at root of tarball %s", cachedArchive)
-		assert.FileExists("hello-pre-import-db-" + app.Name)
-		assert.FileExists("hello-post-import-db-" + app.Name)
-		_ = os.RemoveAll("hello-pre-import-db-" + app.Name)
-		_ = os.RemoveAll("hello-post-import-db-" + app.Name)
 	}
 
-	app.Hooks = nil
-
-	runTime()
-	switchDir()
 }
 
 func checkImportDbImports(t *testing.T, app *ddevapp.DdevApp) {
@@ -1408,7 +1400,7 @@ func TestDdevAllDatabases(t *testing.T) {
 	assert := asrt.New(t)
 
 	dbVersions := nodeps.GetValidDatabaseVersions()
-	// Bug: postgres 9 doesn't work with snapshot restore
+	// Bug: postgres 9 doesn't work with snapshot restore, see https://github.com/drud/ddev/issues/3583
 	dbVersions = nodeps.RemoveItemFromSlice(dbVersions, "postgres:9")
 	//Use a smaller list if GOTEST_SHORT
 	if os.Getenv("GOTEST_SHORT") != "" {
@@ -1465,7 +1457,7 @@ func TestDdevAllDatabases(t *testing.T) {
 			assert.NoError(startErr, "failed to start %s:%s", dbType, dbVersion)
 			err = app.Stop(true, false)
 			assert.NoError(err)
-			t.Logf("Continuing/skippping %s due to app.Start() failure %v", dbVersion, startErr)
+			t.Errorf("Continuing/skippping %s due to app.Start() failure %v", dbVersion, startErr)
 			continue
 		}
 
@@ -1538,7 +1530,9 @@ func TestDdevAllDatabases(t *testing.T) {
 			continue
 		}
 
-		fi, err := os.Stat(app.GetConfigPath(filepath.Join("db_snapshots", fullSnapshotName)))
+		snapshotPath, err := ddevapp.GetSnapshotFileFromName(fullSnapshotName, app)
+		assert.NoError(err)
+		fi, err := os.Stat(app.GetConfigPath(filepath.Join("db_snapshots", snapshotPath)))
 		require.NoError(t, err)
 		// make sure there's something in the snapshot
 		assert.Greater(fi.Size(), int64(1000), "snapshot %s for %s may be empty: %v", fi.Name(), dbTypeVersion, fi)
@@ -1585,7 +1579,8 @@ func TestDdevAllDatabases(t *testing.T) {
 		out = strings.Trim(out, "\n\r ")
 		assert.Equal("2", out)
 
-		_ = app.Stop(true, false)
+		err = app.Stop(true, false)
+		assert.NoError(err)
 	}
 	runTime()
 }
@@ -1886,293 +1881,6 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		switchDir()
 	}
 	fmt.Print()
-}
-
-// TestDdevSnapshotCleanup tests creating a snapshot and deleting it.
-func TestDdevSnapshotCleanup(t *testing.T) {
-	assert := asrt.New(t)
-	app := &ddevapp.DdevApp{}
-	site := TestSites[0]
-	switchDir := site.Chdir()
-	defer switchDir()
-
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("TestDdevSnapshotCleanup"))
-
-	testcommon.ClearDockerEnv()
-	err := app.Init(site.Dir)
-	assert.NoError(err)
-
-	t.Cleanup(func() {
-		err = app.Stop(true, false)
-		assert.NoError(err)
-		err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
-		assert.NoError(err)
-	})
-
-	err = app.Start()
-	assert.NoError(err)
-
-	// Make a snapshot of d7 tester test 1
-	snapshotName, err := app.Snapshot(t.Name() + "_1")
-	assert.NoError(err)
-
-	err = app.Init(site.Dir)
-	require.NoError(t, err)
-
-	err = app.Start()
-	require.NoError(t, err)
-
-	err = app.DeleteSnapshot(snapshotName)
-	assert.NoError(err)
-
-	// Snapshot data should be deleted
-	err = app.DeleteSnapshot(snapshotName)
-	assert.Error(err)
-
-	runTime()
-}
-
-// TestGetLatestSnapshot tests if the latest snapshot of a project is returned correctly.
-func TestGetLatestSnapshot(t *testing.T) {
-	assert := asrt.New(t)
-	app := &ddevapp.DdevApp{}
-	site := TestSites[0]
-	origDir, _ := os.Getwd()
-	err := os.Chdir(site.Dir)
-	assert.NoError(err)
-
-	runTime := util.TimeTrack(time.Now(), t.Name())
-
-	testcommon.ClearDockerEnv()
-	err = app.Init(site.Dir)
-	assert.NoError(err)
-
-	t.Cleanup(func() {
-		err = app.Stop(true, false)
-		assert.NoError(err)
-		err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
-		assert.NoError(err)
-		err = os.Chdir(origDir)
-		assert.NoError(err)
-	})
-
-	err = app.Start()
-	assert.NoError(err)
-
-	snapshots := []string{t.Name() + "_1", t.Name() + "_2", t.Name() + "_3"}
-	// Make three snapshots and compare the last
-	s1Name, err := app.Snapshot(snapshots[0])
-	assert.NoError(err)
-	s2Name, err := app.Snapshot(snapshots[1])
-	assert.NoError(err)
-	s3Name, err := app.Snapshot(snapshots[2]) // last = latest
-	assert.NoError(err)
-
-	latestSnapshot, err := app.GetLatestSnapshot()
-	assert.NoError(err)
-	assert.Equal(s3Name, latestSnapshot)
-
-	// delete snapshot 3
-	err = app.DeleteSnapshot(s3Name)
-	assert.NoError(err)
-	latestSnapshot, err = app.GetLatestSnapshot()
-	assert.NoError(err)
-	assert.Equal(s2Name, latestSnapshot, "%s should be latest snapshot", snapshots[1])
-
-	// delete snapshot 2
-	err = app.DeleteSnapshot(s2Name)
-	assert.NoError(err)
-	latestSnapshot, err = app.GetLatestSnapshot()
-	assert.NoError(err)
-	assert.Equal(s1Name, latestSnapshot, "%s should now be latest snapshot", s1Name)
-
-	// delete snapshot 1 (should be last)
-	err = app.DeleteSnapshot(s1Name)
-	assert.NoError(err)
-	latestSnapshot, _ = app.GetLatestSnapshot()
-	assert.Equal("", latestSnapshot)
-
-	runTime()
-}
-
-// TestDdevRestoreSnapshot tests creating a snapshot and reverting to it.
-func TestDdevRestoreSnapshot(t *testing.T) {
-	assert := asrt.New(t)
-
-	runTime := util.TimeTrack(time.Now(), t.Name())
-	origDir, _ := os.Getwd()
-	site := TestSites[0]
-
-	d7testerTest1Dump, err := filepath.Abs(filepath.Join("testdata", t.Name(), "restore_snapshot", "d7tester_test_1.sql.gz"))
-	assert.NoError(err)
-	d7testerTest2Dump, err := filepath.Abs(filepath.Join("testdata", t.Name(), "restore_snapshot", "d7tester_test_2.sql.gz"))
-	assert.NoError(err)
-
-	testcommon.ClearDockerEnv()
-
-	app, err := ddevapp.NewApp(site.Dir, false)
-	require.NoError(t, err)
-
-	t.Cleanup(func() {
-		err = app.Stop(true, false)
-		assert.NoError(err)
-
-		app.Hooks = nil
-		app.Database.Type = nodeps.MariaDB
-		app.Database.Version = nodeps.MariaDBDefaultVersion
-		err = app.WriteConfig()
-		assert.NoError(err)
-		err = os.Chdir(origDir)
-		assert.NoError(err)
-		err = os.RemoveAll(app.GetConfigPath("db_snapshots"))
-		assert.NoError(err)
-		testcommon.ClearDockerEnv()
-	})
-
-	err = os.Chdir(app.AppRoot)
-	require.NoError(t, err)
-	app.Hooks = map[string][]ddevapp.YAMLTask{"post-snapshot": {{"exec-host": "touch hello-post-snapshot-" + app.Name}}, "pre-snapshot": {{"exec-host": "touch hello-pre-snapshot-" + app.Name}}}
-
-	err = app.Start()
-	require.NoError(t, err)
-
-	err = app.ImportDB(d7testerTest1Dump, "", false, false, "db")
-	require.NoError(t, err, "Failed to app.ImportDB path: %s err: %v", d7testerTest1Dump, err)
-
-	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
-		Service: "db",
-		Cmd:     `echo "SELECT title FROM node WHERE nid=1;" | mysql -N`,
-	})
-	assert.NoError(err)
-	assert.Contains(stdout, "d7 tester test 1 has 1 node")
-
-	// Make a snapshot of d7 tester test 1
-	tester1Snapshot, err := app.Snapshot("d7testerTest1")
-	assert.NoError(err)
-
-	assert.Contains(tester1Snapshot, "d7testerTest1")
-	latest, err := app.GetLatestSnapshot()
-	assert.NoError(err)
-	assert.Equal(tester1Snapshot, latest)
-
-	assert.FileExists("hello-pre-snapshot-" + app.Name)
-	assert.FileExists("hello-post-snapshot-" + app.Name)
-	err = os.Remove("hello-pre-snapshot-" + app.Name)
-	assert.NoError(err)
-	err = os.Remove("hello-post-snapshot-" + app.Name)
-	assert.NoError(err)
-
-	// Make sure duplicate snapshot name gives an error
-	_, err = app.Snapshot("d7testerTest1")
-	assert.Error(err)
-
-	err = app.ImportDB(d7testerTest2Dump, "", false, false, "db")
-	assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", d7testerTest2Dump, err)
-
-	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
-		Service: "db",
-		Cmd:     `echo "SELECT title FROM node WHERE nid=1;" | mysql -N`,
-	})
-	assert.NoError(err)
-	assert.Contains(stdout, "d7 tester test 2 has 2 nodes")
-
-	tester2Snapshot, err := app.Snapshot("d7testerTest2")
-	assert.NoError(err)
-	assert.Contains(tester2Snapshot, "d7testerTest2")
-	latest, err = app.GetLatestSnapshot()
-	assert.Equal(tester2Snapshot, latest)
-
-	app.Hooks = map[string][]ddevapp.YAMLTask{"post-restore-snapshot": {{"exec-host": "touch hello-post-restore-snapshot-" + app.Name}}, "pre-restore-snapshot": {{"exec-host": "touch hello-pre-restore-snapshot-" + app.Name}}}
-
-	err = app.MutagenSyncFlush()
-	require.NoError(t, err)
-	// Sleep to let sync happen if needed (M1 failure)
-	time.Sleep(2 * time.Second)
-
-	err = app.RestoreSnapshot(tester1Snapshot)
-	assert.NoError(err)
-
-	assert.FileExists("hello-pre-restore-snapshot-" + app.Name)
-	assert.FileExists("hello-post-restore-snapshot-" + app.Name)
-	err = os.Remove("hello-pre-restore-snapshot-" + app.Name)
-	assert.NoError(err)
-	err = os.Remove("hello-post-restore-snapshot-" + app.Name)
-	assert.NoError(err)
-
-	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
-		Service: "db",
-		Cmd:     `echo "SELECT title FROM node WHERE nid=1;" | mysql -N`,
-	})
-	assert.NoError(err)
-	assert.Contains(stdout, "d7 tester test 1 has 1 node")
-
-	err = app.RestoreSnapshot(tester2Snapshot)
-	assert.NoError(err)
-
-	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
-		Service: "db",
-		Cmd:     `echo "SELECT title FROM node WHERE nid=1;" | mysql -N`,
-	})
-	assert.NoError(err)
-	assert.Contains(stdout, "d7 tester test 2 has 2 nodes")
-
-	// Attempt a restore with a pre-mariadb_10.2 snapshot. It should fail and give a link.
-	oldSnapshotTarball, err := filepath.Abs(filepath.Join(origDir, "testdata", t.Name(), "restore_snapshot", "d7tester_test_1.snapshot_mariadb_10_1.tgz"))
-	assert.NoError(err)
-
-	err = archive.Untar(oldSnapshotTarball, app.GetConfigPath("db_snapshots"), "")
-	assert.NoError(err)
-
-	err = app.RestoreSnapshot("d7tester_test_1.snapshot_mariadb_10.1")
-	assert.Error(err)
-	assert.Contains(err.Error(), "is not compatible")
-
-	// Make sure that we can use old-style directory-based snapshots
-	for dbDesc, dirSnapshot := range map[string]string{
-		"mariadb:10.3": "mariadb10.3-users",
-		"mysql:5.7":    "mysql5.7-users",
-	} {
-		oldSnapshotTarball, err = filepath.Abs(filepath.Join(origDir, "testdata", t.Name(), dirSnapshot+".tgz"))
-		assert.NoError(err)
-		fullsnapshotDir := filepath.Join(app.GetConfigPath("db_snapshots"), dirSnapshot)
-		err = os.MkdirAll(fullsnapshotDir, 0755)
-		require.NoError(t, err)
-		err = archive.Untar(oldSnapshotTarball, fullsnapshotDir, "")
-		assert.NoError(err)
-
-		err = app.Stop(true, false)
-		assert.NoError(err)
-
-		parts := strings.Split(dbDesc, ":")
-		require.Equal(t, 2, len(parts))
-		dbType := parts[0]
-		dbVersion := parts[1]
-		app.Database.Type = dbType
-		app.Database.Version = dbVersion
-
-		err = app.Start()
-		assert.NoError(err)
-
-		_, _, err = app.Exec(&ddevapp.ExecOpts{
-			Service: "db",
-			Cmd:     `echo "DROP TABLE IF EXISTS users;" | mysql`,
-		})
-		assert.NoError(err)
-
-		err = app.RestoreSnapshot(dirSnapshot)
-		if err != nil {
-			t.Logf("Failed to restore snapshot %s: %v, continuing", dirSnapshot, err)
-			continue
-		}
-
-		stdout, _, err = app.Exec(&ddevapp.ExecOpts{
-			Service: "db",
-			Cmd:     `echo "SELECT COUNT(*) FROM users;" | mysql -N`,
-		})
-		assert.NoError(err)
-		assert.Equal(stdout, "2\n")
-	}
-	runTime()
 }
 
 // TestWriteableFilesDirectory tests to make sure that files created on host are writable on container
@@ -3718,6 +3426,8 @@ func TestHostDBPort(t *testing.T) {
 		err = app.Stop(true, false)
 		assert.NoError(err)
 		app.HostDBPort = ""
+		app.Database.Type = nodeps.MariaDB
+		app.Database.Version = nodeps.MariaDBDefaultVersion
 		err = app.WriteConfig()
 		assert.NoError(err)
 		err = os.RemoveAll(showportPath)
