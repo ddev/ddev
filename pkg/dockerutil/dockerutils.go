@@ -1111,11 +1111,18 @@ func Exec(containerID string, command string, uid string) (string, string, error
 
 // CheckAvailableSpace outputs a warning if docker space is low
 func CheckAvailableSpace() {
-	_, out, _ := RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", `df -h / | awk '/overlay/ {print $5;}'`}, []string{}, []string{}, []string{}, "", true, false, nil)
+	_, out, _ := RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", `df / | awk '/overlay/ {print $4, $5;}'`}, []string{}, []string{}, []string{}, "", true, false, nil)
 	out = strings.Trim(out, "% \r\n")
-	spacePercent, _ := strconv.Atoi(out)
-	if (100 - spacePercent) < nodeps.MinimumDockerSpaceWarning {
-		util.Error("Your docker installation has less than %d%% available space (%d%% used). Please increase disk image size.", nodeps.MinimumDockerSpaceWarning, spacePercent)
+	parts := strings.Split(out, " ")
+	if len(parts) != 2 {
+		util.Warning("Unable to determine docker space usage: %s", out)
+		return
+	}
+	spacePercent, _ := strconv.Atoi(parts[1])
+	spaceAbsolute, _ := strconv.Atoi(parts[0])
+
+	if spaceAbsolute < nodeps.MinimumDockerSpaceWarning {
+		util.Error("Your docker installation has only %d available disk space, less than %d warning level (%d%% used). Please increase disk image size.", spaceAbsolute, nodeps.MinimumDockerSpaceWarning, spacePercent)
 	}
 }
 

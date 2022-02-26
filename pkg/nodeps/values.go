@@ -103,7 +103,7 @@ const (
 	// DdevDefaultTLD is the top-level-domain used by default, can be overridden
 	DdevDefaultTLD                  = "ddev.site"
 	InternetDetectionTimeoutDefault = 750
-	MinimumDockerSpaceWarning       = 15
+	MinimumDockerSpaceWarning       = 5000 * 1024 // 5GB
 )
 
 // IsValidPHPVersion is a helper function to determine if a PHP version is valid, returning
