@@ -53,6 +53,10 @@ fi
 
 echo "======= Docker Info ========="
 
+if ddev debug dockercheck -h| grep dockercheck >/dev/null; then
+  ddev debug dockercheck 2>/dev/null
+fi
+
 echo "Docker disk space:" && docker run --rm busybox:stable df -h / && echo
 ddev poweroff
 echo "Existing docker containers: " && docker ps -a
