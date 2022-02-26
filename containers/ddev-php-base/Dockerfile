@@ -85,21 +85,21 @@ RUN set -eu -o pipefail && LATEST=$(curl --silent "https://api.github.com/repos/
 
 # The number of permutations of php packages available on each architecture because
 # too much to handle, so has been codified here instead of in obscure logic
-ENV php56_amd64="apcu bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring mcrypt memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
-ENV php56_arm64="apcu bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring mcrypt mysql opcache pgsql readline soap sqlite3 uploadprogress xdebug xml xhprof xmlrpc zip"
+ENV php56_amd64="apcu bcmath bz2 curl cli common fpm gd gmagick imagick intl json ldap mbstring mcrypt memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
+ENV php56_arm64="apcu bcmath bz2 curl cli common fpm gd gmagick imagick intl json ldap mbstring mcrypt mysql opcache pgsql readline soap sqlite3 uploadprogress xdebug xml xhprof xmlrpc zip"
 ENV php70_amd64="apcu apcu-bc bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring mcrypt memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
 ENV php70_arm64=$php70_amd64
 ENV php71_amd64=$php70_amd64
 ENV php71_arm64=$php70_arm64
-ENV php72_amd64="apcu apcu-bc bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
+ENV php72_amd64="apcu apcu-bc bcmath bz2 curl cli common fpm gd gmagick imagick intl json ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
 ENV php72_arm64=$php72_amd64
 ENV php73_amd64=$php72_amd64
 ENV php73_arm64=$php72_arm64
-ENV php74_amd64="apcu apcu-bc bcmath bz2 curl cli common fpm gd imagick intl json ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
+ENV php74_amd64="apcu apcu-bc bcmath bz2 curl cli common fpm gd gmagick imagick intl json ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
 ENV php74_arm64=$php74_amd64
 
 # As of php8.0 json is now part of core package and xmlrpc has been removed from PECL
-ENV php80_amd64="apcu bcmath bz2 curl cli common fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
+ENV php80_amd64="apcu bcmath bz2 curl cli common fpm gd gmagick imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
 ENV php80_arm64=$php80_amd64
 
 ENV php81_amd64=$php80_amd64
