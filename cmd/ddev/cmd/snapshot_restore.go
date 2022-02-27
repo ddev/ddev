@@ -21,6 +21,9 @@ Example: "ddev snapshot restore d8git_20180717203845"`,
 		if err != nil {
 			util.Failed("Failed to find active project: %v", err)
 		}
+		if app.Database.Type == nodeps.Postgres && app.Database.Version == nodeps.Postgres9 {
+			util.Failed("Snapshots are not supported for postgres:9")
+		}
 
 		if snapshotRestoreLatest {
 			if snapshotName, err = app.GetLatestSnapshot(); err != nil {

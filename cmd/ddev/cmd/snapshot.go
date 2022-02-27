@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 	"strings"
@@ -38,7 +39,9 @@ ddev snapshot --all`,
 		}
 
 		for _, app := range apps {
-
+			if app.Database.Type == nodeps.Postgres && app.Database.Version == nodeps.Postgres9 {
+				util.Failed("Snapshots are not supported for postgres:9")
+			}
 			switch {
 			case snapshotList:
 				listAppSnapshots(app)
