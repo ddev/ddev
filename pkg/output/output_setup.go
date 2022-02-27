@@ -3,6 +3,7 @@ package output
 import (
 	log "github.com/sirupsen/logrus"
 	"os"
+	"io"
 )
 
 var (
@@ -14,6 +15,8 @@ var (
 	UserOutFormatter = new(TextFormatter)
 	// JSONOutput is a bool telling whether we're outputting in json. Set by command-line args.
 	JSONOutput = false
+	// NoOutput is a bool telling whether we want to supress any output. Set by command-line args.
+	NoOutput = false
 )
 
 // LogSetUp sets up UserOut and log loggers as needed by ddev
@@ -41,6 +44,10 @@ func LogSetUp() {
 		logLevel = log.DebugLevel
 	}
 	log.SetLevel(logLevel)
+
+	if NoOutput {
+		UserErr.Out = io.Discard
+	}
 }
 
 // ErrorWriter allows writing stderr

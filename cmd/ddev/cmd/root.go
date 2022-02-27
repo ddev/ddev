@@ -146,6 +146,7 @@ func Execute() {
 
 func init() {
 	RootCmd.PersistentFlags().BoolVarP(&output.JSONOutput, "json-output", "j", false, "If true, user-oriented output will be in JSON format.")
+	RootCmd.PersistentFlags().BoolVarP(&output.NoOutput, "no-output", "n", false, "If true, error messages output will be suppressed.")
 
 	output.LogSetUp()
 
