@@ -251,7 +251,7 @@ func (p *Provider) UploadDB() error {
 	}
 	err = p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.DBPushCommand.Command)
 	if err != nil {
-		util.Failed("Failed to exec %s on %s: %v", p.DBPushCommand.Command, s, err)
+		return fmt.Errorf("Failed to exec %s on %s: %v", p.DBPushCommand.Command, s, err)
 	}
 	return nil
 }
@@ -272,7 +272,7 @@ func (p *Provider) UploadFiles() error {
 	}
 	err := p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.FilesPushCommand.Command)
 	if err != nil {
-		util.Failed("Failed to exec %s on %s: %v", p.FilesPushCommand.Command, s, err)
+		return fmt.Errorf("Failed to exec %s on %s: %v", p.FilesPushCommand.Command, s, err)
 	}
 	return nil
 }
@@ -308,7 +308,7 @@ func (p *Provider) getFilesBackup() (filename string, error error) {
 
 	err := p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.FilesPullCommand.Command)
 	if err != nil {
-		util.Failed("Failed to exec %s on %s: %v", p.FilesPullCommand.Command, s, err)
+		return "", fmt.Errorf("Failed to exec %s on %s: %v", p.FilesPullCommand.Command, s, err)
 	}
 
 	return filepath.Join(p.getDownloadDir(), "files"), nil
