@@ -1,0 +1,1 @@
+../cmd/ddev/cmd/scripts/test_ddev.sh
