@@ -348,7 +348,7 @@ func drupal6ConfigOverrideAction(app *DdevApp) error {
 
 // drupal10ConfigOverrideAction overrides php_version for D10, requires PHP8.0
 func drupal10ConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP80
+	app.PHPVersion = nodeps.PHP81
 	return nil
 }
 
