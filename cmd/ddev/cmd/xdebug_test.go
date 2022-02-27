@@ -41,10 +41,10 @@ func TestCmdXdebug(t *testing.T) {
 		require.NoError(t, err)
 
 		_, err = exec.RunCommand(DdevBin, []string{"start", "-y"})
-		assert.NoError(err)
+		assert.NoError(err, "failed ddev start with php=%v: %v", phpVersion, err)
 
 		out, err := exec.RunCommand(DdevBin, []string{"xdebug", "status"})
-		assert.NoError(err)
+		assert.NoError(err, "failed ddev xdebug status with php=%v: %v", phpVersion, err)
 		assert.Contains(string(out), "xdebug disabled")
 
 		out, err = exec.RunCommand(DdevBin, []string{"xdebug", "on"})
@@ -62,5 +62,8 @@ func TestCmdXdebug(t *testing.T) {
 		out, err = exec.RunCommand(DdevBin, []string{"xdebug", "status"})
 		assert.NoError(err)
 		assert.Contains(string(out), "xdebug disabled")
+
+		_, err = exec.RunCommand(DdevBin, []string{"stop"})
+		assert.NoError(err, "failed ddev stop with php=%v: %v", phpVersion, err)
 	}
 }
