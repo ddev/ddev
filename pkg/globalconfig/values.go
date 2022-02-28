@@ -9,6 +9,8 @@ const (
 	DdevRouterContainer   = "ddev-router"
 )
 
+const DdevGithubOrg = "drud"
+
 // ValidOmitContainers is the valid omit's that can be done in for a project
 var ValidOmitContainers = map[string]bool{
 	DdevRouterContainer:   true,
