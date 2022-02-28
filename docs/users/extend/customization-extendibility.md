@@ -4,7 +4,7 @@ ddev provides several ways in which the environment for a project using ddev can
 
 ### Changing PHP version
 
-The project's `.ddev/config.yaml` file defines the PHP version to use. This can be changed, and the php_version can be set there to `5.6`, `7.0`, `7.1`, `7.2`,  `7.3`, `7.4` or `8.0`. The current default is php 7.4.
+The project's `.ddev/config.yaml` file defines the PHP version to use. This can be changed, and the php_version can be set there to `5.6`, `7.0`, `7.1`, `7.2`,  `7.3`, `7.4`, `8.0` or `8.1`. The current default is php 7.4.
 
 #### Older versions of PHP
 
@@ -22,7 +22,7 @@ A collection of vetted service configurations is available in the [Additional Se
 
 If you need to create a service configuration for your project, see [Defining an additional service with Docker Compose](custom-compose-files.md)
 
-## Providing custom environment variables to a container
+### Providing custom environment variables to a container
 
 Custom environment variables may be set in the project config.yaml or the ~/.ddev/global_config.yaml with the `web_environment` key, for example
 
@@ -33,6 +33,14 @@ web_environment:
 ```
 
 You can also use `ddev config global --web-environment="SOMEENV=someval"` or `ddev config --web-environment="SOMEENV=someval"` for the same purpose. The command just sets the values in the configuration files.
+
+#### Altering the in-container $PATH
+
+Because many things touch the `$PATH` environment variable, it's slightly harder to change it, but it's easy: Add a script to `<project>/.ddev/homeadditions/.bashrc.d/` or (global) `~/.ddev/homeadditions/.bashrc.d/` that adds to the `$PATH` variable. For example, if your project vendor directory is not in the expected place (`/var/www/html/vendor/bin`) you can add a `<project>/.ddev/homeadditions/.bashrc.d/path.sh` with contents:
+
+```bash
+export PATH=$PATH:/var/www/html/somewhereelse/vendor/bin
+```
 
 ### Providing custom nginx configuration
 
