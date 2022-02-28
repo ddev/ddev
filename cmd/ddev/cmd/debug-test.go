@@ -12,7 +12,7 @@ import (
 // DebugTestCmdCmd implements the ddev debug test command
 var DebugTestCmdCmd = &cobra.Command{
 	Use:     "test",
-	Short:   "Run diagnostics on ddev using the test_ddev.sh script",
+	Short:   "Run diagnostics on ddev using the embedded test_ddev.sh script",
 	Example: "ddev debug test",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 0 {
@@ -33,7 +33,7 @@ var DebugTestCmdCmd = &cobra.Command{
 		util.Success("Running %s %v", bashPath, c)
 		err = exec.RunInteractiveCommand(bashPath, c)
 		if err != nil {
-			util.Failed("Failed running test_ddev.sh: %v\n. You can run it manually with `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/scripts/test_ddev.sh && bash test_ddev.sh`", err)
+			util.Failed("Failed running test_ddev.sh: %v\n. You can run it manually with `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/cmd/ddev/cmd/scripts/test_ddev.sh && bash test_ddev.sh`", err)
 		}
 	},
 }
