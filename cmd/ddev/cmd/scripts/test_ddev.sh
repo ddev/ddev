@@ -57,7 +57,7 @@ if ddev debug dockercheck -h| grep dockercheck >/dev/null; then
   ddev debug dockercheck 2>/dev/null
 fi
 
-echo "Docker disk space:" && docker run --rm busybox:stable df -h / && echo
+echo "Docker disk space:" && docker run --rm busybox:stable df -h // && echo
 ddev poweroff
 echo "Existing docker containers: " && docker ps -a
 mkdir -p ~/tmp/${PROJECT_NAME} && cd ~/tmp/${PROJECT_NAME}
@@ -65,7 +65,7 @@ printf "<?php\nprint 'ddev is working. You will want to delete this project with
 ddev config --project-type=php
 trap cleanup EXIT
 
-echo y | ddev start || ( \
+ddev start -y || ( \
   set +x && \
   ddev list && \
   printf "========= web container healthcheck ======\n" && \

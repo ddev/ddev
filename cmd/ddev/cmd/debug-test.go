@@ -1,12 +1,13 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 	"os"
-	"path/filepath"
+	"path"
 )
 
 // DebugTestCmdCmd implements the ddev debug test command
@@ -24,12 +25,8 @@ var DebugTestCmdCmd = &cobra.Command{
 		if err != nil {
 			util.Failed("Failed to copy test_ddev.sh to %s: %v", tmpDir, err)
 		}
-
-		path := os.Getenv("PATH")
-		_ = path
-		dDebug := os.Getenv("DDEV_DEBUG")
-		_ = dDebug
-		c := []string{"-c", filepath.Join(tmpDir, "test_ddev.sh")}
+		p := dockerutil.MassageWindowsHostMountpoint(tmpDir)
+		c := []string{"-c", path.Join(p, "test_ddev.sh")}
 		util.Success("Running %s %v", bashPath, c)
 		err = exec.RunInteractiveCommand(bashPath, c)
 		if err != nil {

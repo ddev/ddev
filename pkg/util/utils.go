@@ -201,7 +201,7 @@ func FindBashPath() string {
 	if runtime.GOOS != "windows" {
 		return "bash"
 	}
-	windowsBashPath, err := osexec.LookPath(`C:\Program ProjectFiles\Git\bin\bash.exe`)
+	windowsBashPath, err := osexec.LookPath(`C:\Program Files\Git\bin\bash.exe`)
 	if err != nil {
 		// This one could come back with the WSL bash, in which case we may have some trouble.
 		windowsBashPath, err = osexec.LookPath("bash.exe")
