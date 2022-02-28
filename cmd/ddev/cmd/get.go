@@ -56,7 +56,7 @@ ddev get --list --all
 				util.Failed("Failed to list available add-ons: %v", err)
 			}
 			if len(repos) == 0 {
-				util.Warning("No ddev add-ons found with topics 'ddev-get'.")
+				util.Warning("No ddev add-ons found with GitHub topic 'ddev-get'.")
 				return
 			}
 			out := renderRepositoryList(repos)
@@ -82,12 +82,15 @@ ddev get --list --all
 		parts := strings.Split(sourceRepoArg, "/")
 		tarballURL := ""
 		var cleanup func()
-
+		argType := ""
+		owner := ""
+		repo := ""
 		switch {
 		// If the provided sourceRepoArg is a directory, then we will use that as the source
 		case fileutil.IsDirectory(sourceRepoArg):
 			// Use the directory as the source
 			extractedDir = sourceRepoArg
+			argType = "directory"
 
 		// if sourceRepoArg is a tarball on local filesystem, we can use that
 		case fileutil.FileExists(sourceRepoArg) && (strings.HasSuffix(filepath.Base(sourceRepoArg), "tar.gz") || strings.HasSuffix(filepath.Base(sourceRepoArg), "tar") || strings.HasSuffix(filepath.Base(sourceRepoArg), "tgz")):
@@ -96,12 +99,13 @@ ddev get --list --all
 			if err != nil {
 				util.Failed("Unable to extract %s: %v", sourceRepoArg, err)
 			}
+			argType = "tarball"
 			defer cleanup()
 
 		// If the provided sourceRepoArg is a github sourceRepoArg, then we will use that as the source
 		case len(parts) == 2: // github.com/owner/sourceRepoArg
-			owner := parts[0]
-			repo := parts[1]
+			owner = parts[0]
+			repo = parts[1]
 			ctx := context.Background()
 
 			client := getGithubClient(ctx)
@@ -113,6 +117,7 @@ ddev get --list --all
 				util.Failed("No releases found for %v", repo)
 			}
 			tarballURL = releases[0].GetTarballURL()
+			argType = "github"
 			fallthrough
 
 		// Otherwise, use the provided source as a URL to a tarball
@@ -153,6 +158,7 @@ ddev get --list --all
 			if err != nil {
 				util.Failed("Unable to copy %v to %v: %v", src, dest, err)
 			}
+			util.Success("Installed file %s", dest)
 		}
 		globalDotDdev := filepath.Join(globalconfig.GetGlobalDdevDir())
 		for _, file := range s.GlobalFiles {
@@ -162,6 +168,7 @@ ddev get --list --all
 			if err != nil {
 				util.Failed("Unable to copy %v to %v: %v", src, dest, err)
 			}
+			util.Success("Installed file %s", dest)
 		}
 		origDir, _ := os.Getwd()
 
@@ -177,9 +184,12 @@ ddev get --list --all
 			if err != nil {
 				util.Failed("Unable to run action %v: %v, output=%s", action, err, out)
 			}
+			util.Success("Executed post-install action %v.", action)
 		}
-
 		util.Success("Downloaded add-on %s, use `ddev restart` to enable.", sourceRepoArg)
+		if argType == "github" {
+			util.Success("For more information about this add-on visit the source repo at https://github.com/%v/%v", owner, repo)
+		}
 	},
 }
 
