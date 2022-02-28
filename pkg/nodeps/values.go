@@ -40,6 +40,10 @@ var ValidOmitContainers = map[string]bool{
 	DBAContainer:          true,
 }
 
+// DdevFileSignature is the text we use to detect whether a settings file is managed by us.
+// If this string is found, we assume we can replace/update the file.
+const DdevFileSignature = "#ddev-generated"
+
 // WebserverDefault is the default webserver type, overridden by $DDEV_WEBSERVER_TYPE
 var WebserverDefault = WebserverNginxFPM
 
@@ -103,7 +107,7 @@ const (
 	// DdevDefaultTLD is the top-level-domain used by default, can be overridden
 	DdevDefaultTLD                  = "ddev.site"
 	InternetDetectionTimeoutDefault = 750
-	MinimumDockerSpaceWarning       = 15
+	MinimumDockerSpaceWarning       = 5000 * 1024 // 5GB
 )
 
 // IsValidPHPVersion is a helper function to determine if a PHP version is valid, returning

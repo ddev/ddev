@@ -510,14 +510,14 @@ func (app *DdevApp) CheckCustomConfig() {
 		customConfig = true
 	}
 	nginxFullConfigPath := app.GetConfigPath("nginx_full/nginx-site.conf")
-	sigFound, _ := fileutil.FgrepStringInFile(nginxFullConfigPath, DdevFileSignature)
+	sigFound, _ := fileutil.FgrepStringInFile(nginxFullConfigPath, nodeps.DdevFileSignature)
 	if !sigFound && app.WebserverType == nodeps.WebserverNginxFPM {
 		util.Warning("Using custom nginx configuration in %s", nginxFullConfigPath)
 		customConfig = true
 	}
 
 	apacheFullConfigPath := app.GetConfigPath("apache/apache-site.conf")
-	sigFound, _ = fileutil.FgrepStringInFile(apacheFullConfigPath, DdevFileSignature)
+	sigFound, _ = fileutil.FgrepStringInFile(apacheFullConfigPath, nodeps.DdevFileSignature)
 	if !sigFound && app.WebserverType != nodeps.WebserverNginxFPM {
 		util.Warning("Using custom apache configuration in %s", apacheFullConfigPath)
 		customConfig = true
@@ -569,7 +569,7 @@ func (app *DdevApp) FixObsolete() {
 	// Remove old in-project commands (which have been moved to global)
 	for _, command := range []string{"db/mysql", "host/launch", "web/xdebug"} {
 		cmdPath := app.GetConfigPath(filepath.Join("commands", command))
-		signatureFound, err := fileutil.FgrepStringInFile(cmdPath, DdevFileSignature)
+		signatureFound, err := fileutil.FgrepStringInFile(cmdPath, nodeps.DdevFileSignature)
 		if err == nil && signatureFound {
 			err = os.Remove(cmdPath)
 			if err != nil {
@@ -675,7 +675,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		DBAPort:                   GetInternalPort(app, "dba"),
 		DBPort:                    GetInternalPort(app, "db"),
 		HostPHPMyAdminPort:        app.HostPHPMyAdminPort,
-		DdevGenerated:             DdevFileSignature,
+		DdevGenerated:             nodeps.DdevFileSignature,
 		HostDockerInternalIP:      hostDockerInternalIP,
 		ComposeVersion:            version.DockerComposeFileFormatVersion,
 		DisableSettingsManagement: app.DisableSettingsManagement,
@@ -789,7 +789,7 @@ RUN printf "# TYPE DATABASE USER CIDR-ADDRESS  METHOD \nhost  all  all 0.0.0.0/0
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests less procps pv vim
 `
 
-		err = CopyEmbedAssets(bundledAssets, "healthcheck", app.GetConfigPath("db-build"))
+		err = fileutil.CopyEmbedAssets(bundledAssets, "healthcheck", app.GetConfigPath("db-build"))
 		if err != nil {
 			return "", err
 		}

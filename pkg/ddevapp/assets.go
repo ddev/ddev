@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"embed"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 )
 
@@ -24,11 +25,11 @@ func PopulateExamplesCommandsHomeadditions(appName string) error {
 		return nil
 	}
 
-	err = CopyEmbedAssets(bundledAssets, "dotddev_assets", app.GetConfigPath(""))
+	err = fileutil.CopyEmbedAssets(bundledAssets, "dotddev_assets", app.GetConfigPath(""))
 	if err != nil {
 		return err
 	}
-	err = CopyEmbedAssets(bundledAssets, "global_dotddev_assets", globalconfig.GetGlobalDdevDir())
+	err = fileutil.CopyEmbedAssets(bundledAssets, "global_dotddev_assets", globalconfig.GetGlobalDdevDir())
 	if err != nil {
 		return err
 	}

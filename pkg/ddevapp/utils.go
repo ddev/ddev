@@ -208,7 +208,7 @@ func CreateGitIgnore(targetDir string, ignores ...string) error {
 	gitIgnoreFilePath := filepath.Join(targetDir, ".gitignore")
 
 	if fileutil.FileExists(gitIgnoreFilePath) {
-		sigFound, err := fileutil.FgrepStringInFile(gitIgnoreFilePath, DdevFileSignature)
+		sigFound, err := fileutil.FgrepStringInFile(gitIgnoreFilePath, nodeps.DdevFileSignature)
 		if err != nil {
 			return err
 		}
@@ -231,7 +231,7 @@ func CreateGitIgnore(targetDir string, ignores ...string) error {
 
 	generatedIgnores := []string{}
 	for _, p := range ignores {
-		sigFound, err := fileutil.FgrepStringInFile(p, DdevFileSignature)
+		sigFound, err := fileutil.FgrepStringInFile(p, nodeps.DdevFileSignature)
 		if sigFound || err != nil {
 			generatedIgnores = append(generatedIgnores, p)
 		}
@@ -249,7 +249,7 @@ func CreateGitIgnore(targetDir string, ignores ...string) error {
 	defer util.CheckClose(file)
 
 	parms := ignoreTemplateContents{
-		Signature:    DdevFileSignature,
+		Signature:    nodeps.DdevFileSignature,
 		IgnoredItems: generatedIgnores,
 	}
 

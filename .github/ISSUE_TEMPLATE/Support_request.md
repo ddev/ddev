@@ -13,7 +13,7 @@ assignees: ''
 If you're having trouble with ddev,
 
 1. Please use the latest stable version of DDEV-Local before reporting. Upgrading is easy.
-2. Please run a quick diagnostic and post the results as a new gist on gist.github.com (or on another pastebin-type site if you prefer). You can download [test_ddev.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/test_ddev.sh) and run it per the instructions at the top. That will help so we don't have to ask so many questions... And it it works, it probably means there's something wrong with your project, not ddev. Put the link to the gist here.
+2. Please run a quick diagnostic and post the results as a new gist on gist.github.com (or on another pastebin-type site if you prefer). Just run `ddev debug test` and post the results as a gist on https://gist.github.com. That will help so we don't have to ask so many questions... And if it works, it probably means there's something wrong with your project, not ddev. Put the link to the gist here, thanks. (If you don't yet have the `ddev debug test` command, you can download [test_ddev.sh](https://raw.githubusercontent.com/drud/ddev/master/cmd/ddev/cmd/scripts/test_ddev.sh) and run it with the instructions at the top.
 -->
 
 **Describe the Problem**

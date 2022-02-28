@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"os"
 	"path/filepath"
@@ -55,7 +56,7 @@ func NewWordpressConfig(app *DdevApp, absPath string) *WordpressConfig {
 		NonceSalt:        util.RandString(64),
 		SecureAuthKey:    util.RandString(64),
 		SecureAuthSalt:   util.RandString(64),
-		Signature:        DdevFileSignature,
+		Signature:        nodeps.DdevFileSignature,
 		SiteSettings:     "wp-config.php",
 		SiteSettingsDdev: "wp-config-ddev.php",
 		AbsPath:          absPath,
@@ -124,7 +125,7 @@ func createWordpressSettingsFile(app *DdevApp) (string, error) {
 	// Check if an existing WordPress settings file exists
 	if fileutil.FileExists(app.SiteSettingsPath) {
 		// Check if existing WordPress settings file is ddev-managed
-		sigExists, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, DdevFileSignature)
+		sigExists, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, nodeps.DdevFileSignature)
 		if err != nil {
 			return "", err
 		}
@@ -194,7 +195,7 @@ func writeWordpressSettingsFile(wordpressConfig *WordpressConfig, filePath strin
 func writeWordpressDdevSettingsFile(config *WordpressConfig, filePath string) error {
 	if fileutil.FileExists(filePath) {
 		// Check if the file is managed by ddev.
-		signatureFound, err := fileutil.FgrepStringInFile(filePath, DdevFileSignature)
+		signatureFound, err := fileutil.FgrepStringInFile(filePath, nodeps.DdevFileSignature)
 		if err != nil {
 			return err
 		}

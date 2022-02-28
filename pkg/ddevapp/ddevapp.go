@@ -56,10 +56,6 @@ const SiteConfigMissing = ".ddev/config.yaml missing"
 // SitePaused defines the string used to denote when a site is in the paused (docker stopped) state.
 const SitePaused = "paused"
 
-// DdevFileSignature is the text we use to detect whether a settings file is managed by us.
-// If this string is found, we assume we can replace/update the file.
-const DdevFileSignature = "#ddev-generated"
-
 // DatabaseDefault is the default database/version
 var DatabaseDefault = DatabaseDesc{nodeps.MariaDB, nodeps.MariaDBDefaultVersion}
 
@@ -1221,7 +1217,7 @@ func (app *DdevApp) GenerateWebserverConfig() error {
 		}
 
 		if fileutil.FileExists(configPath) {
-			sigExists, err := fileutil.FgrepStringInFile(configPath, DdevFileSignature)
+			sigExists, err := fileutil.FgrepStringInFile(configPath, nodeps.DdevFileSignature)
 			if err != nil {
 				return err
 			}
@@ -1274,7 +1270,7 @@ func (app *DdevApp) GeneratePostgresConfig() error {
 			if err != nil {
 				return err
 			}
-			sigExists, err := fileutil.FgrepStringInFile(configPath, DdevFileSignature)
+			sigExists, err := fileutil.FgrepStringInFile(configPath, nodeps.DdevFileSignature)
 			if err != nil {
 				return err
 			}
@@ -1806,7 +1802,7 @@ func (app *DdevApp) DetermineSettingsPathLocation() (string, error) {
 		}
 
 		// If the file does exist, check for a signature indicating it's managed by ddev.
-		signatureFound, err := fileutil.FgrepStringInFile(loc, DdevFileSignature)
+		signatureFound, err := fileutil.FgrepStringInFile(loc, nodeps.DdevFileSignature)
 		util.CheckErr(err) // Really can't happen as we already checked for the file existence
 
 		// If the signature was found, it's safe to use.

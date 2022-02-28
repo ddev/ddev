@@ -25,7 +25,7 @@ func createTypo3SettingsFile(app *DdevApp) (string, error) {
 	// Check if the file already exists.
 	if fileutil.FileExists(app.SiteDdevSettingsFile) {
 		// Check if the file is managed by ddev.
-		signatureFound, err := fileutil.FgrepStringInFile(app.SiteDdevSettingsFile, DdevFileSignature)
+		signatureFound, err := fileutil.FgrepStringInFile(app.SiteDdevSettingsFile, nodeps.DdevFileSignature)
 		if err != nil {
 			return "", err
 		}

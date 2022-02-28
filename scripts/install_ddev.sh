@@ -1,5 +1,6 @@
 #!/bin/bash
 
+#ddev-generated
 # Script to download and install DDEV-Local, https://github.com/drud/ddev
 # Usage: install_ddev.sh or install_ddev.sh <version>
 

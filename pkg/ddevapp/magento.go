@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"os"
@@ -33,7 +34,7 @@ func createMagentoSettingsFile(app *DdevApp) (string, error) {
 
 	if fileutil.FileExists(app.SiteSettingsPath) {
 		// Check if the file is managed by ddev.
-		signatureFound, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, DdevFileSignature)
+		signatureFound, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, nodeps.DdevFileSignature)
 		if err != nil {
 			return "", err
 		}
@@ -133,7 +134,7 @@ func createMagento2SettingsFile(app *DdevApp) (string, error) {
 
 	if fileutil.FileExists(app.SiteSettingsPath) {
 		// Check if the file is managed by ddev.
-		signatureFound, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, DdevFileSignature)
+		signatureFound, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, nodeps.DdevFileSignature)
 		if err != nil {
 			return "", err
 		}

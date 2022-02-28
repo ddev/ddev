@@ -9,6 +9,7 @@ import (
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
@@ -421,7 +422,7 @@ func (app *DdevApp) GenerateMutagenYml() error {
 		return nil
 	}
 	mutagenYmlPath := GetMutagenConfigFilePath(app)
-	if sigExists, err := fileutil.FgrepStringInFile(mutagenYmlPath, DdevFileSignature); err == nil && !sigExists {
+	if sigExists, err := fileutil.FgrepStringInFile(mutagenYmlPath, nodeps.DdevFileSignature); err == nil && !sigExists {
 		// If the signature doesn't exist, they have taken over the file, so return
 		return nil
 	}

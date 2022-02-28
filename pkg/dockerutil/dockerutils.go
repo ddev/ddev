@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	exec2 "github.com/drud/ddev/pkg/exec"
+	ddevexec "github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"io"
@@ -79,35 +79,24 @@ func RemoveNetwork(netName string) error {
 	return err
 }
 
-var dockerHost string
+var DockerHost string
+var DockerContext string
 
 // GetDockerClient returns a docker client respecting the current docker context
 // but DOCKER_HOST gets priority
 func GetDockerClient() *docker.Client {
 	var err error
 
-	// This is a cheap way of using docker contexts by running `docker context inspect`
-	// I would wish for something far better, but trying to transplant the code from
-	// docker/cli did not succeed. rfay 2021-12-16
-	// `docker context inspect` will already respect $DOCKER_CONTEXT so we don't have to do that.
-	// This section is skipped anyway if $DOCKER_HOST is set
-	if dockerHost == "" {
-		contextInfo, err := exec2.RunHostCommand("docker", "context", "inspect", "-f", `{{ .Name }} {{ .Endpoints.docker.Host }}`)
+	// This section is skipped if $DOCKER_HOST is set
+	if DockerHost == "" {
+		DockerContext, DockerHost, err = GetDockerContext()
 		if err != nil {
-			util.Failed("unable to run 'docker context inspect' - please make sure docker client is in path and up-to-date: %v", err)
-		} else {
-			contextInfo = strings.Trim(contextInfo, " \r\n")
-			parts := strings.SplitN(contextInfo, " ", 2)
-			if len(parts) != 2 {
-				util.Warning("unable to run split docker context info %s: %v", contextInfo, err)
-			}
-			dockerHost = parts[1]
-			util.Debug("Using docker context %s (%v)", parts[0], dockerHost)
+			util.Failed("Unable to get docker context: %v", err)
 		}
 	}
-	// Respect DOCKER_HOST in case it's set
+	// Respect DOCKER_HOST in case it's set, otherwise use host we got from context
 	if os.Getenv("DOCKER_HOST") == "" {
-		_ = os.Setenv("DOCKER_HOST", dockerHost)
+		_ = os.Setenv("DOCKER_HOST", DockerHost)
 	}
 	client, err := docker.NewClientFromEnv()
 	if err != nil {
@@ -117,6 +106,30 @@ func GetDockerClient() *docker.Client {
 	}
 
 	return client
+}
+
+// GetDockerContext() returns the currently set docker context, host, and error
+func GetDockerContext() (string, string, error) {
+	context := ""
+	dockerHost := ""
+
+	// This is a cheap way of using docker contexts by running `docker context inspect`
+	// I would wish for something far better, but trying to transplant the code from
+	// docker/cli did not succeed. rfay 2021-12-16
+	// `docker context inspect` will already respect $DOCKER_CONTEXT so we don't have to do that.
+	contextInfo, err := ddevexec.RunHostCommand("docker", "context", "inspect", "-f", `{{ .Name }} {{ .Endpoints.docker.Host }}`)
+	if err != nil {
+		return "", "", fmt.Errorf("unable to run 'docker context inspect' - please make sure docker client is in path and up-to-date: %v", err)
+	}
+	contextInfo = strings.Trim(contextInfo, " \r\n")
+	parts := strings.SplitN(contextInfo, " ", 2)
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("unable to run split docker context info %s: %v", contextInfo, err)
+	}
+	context = parts[0]
+	dockerHost = parts[1]
+	util.Debug("Using docker context %s (%v)", context, dockerHost)
+	return context, dockerHost, nil
 }
 
 // InspectContainer returns the full result of inspection
@@ -1097,11 +1110,18 @@ func Exec(containerID string, command string, uid string) (string, string, error
 
 // CheckAvailableSpace outputs a warning if docker space is low
 func CheckAvailableSpace() {
-	_, out, _ := RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", `df -h / | awk '/overlay/ {print $5;}'`}, []string{}, []string{}, []string{}, "", true, false, nil)
+	_, out, _ := RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", `df / | awk '/overlay/ {print $4, $5;}'`}, []string{}, []string{}, []string{}, "", true, false, nil)
 	out = strings.Trim(out, "% \r\n")
-	spacePercent, _ := strconv.Atoi(out)
-	if (100 - spacePercent) < nodeps.MinimumDockerSpaceWarning {
-		util.Error("Your docker installation has less than %d%% available space (%d%% used). Please increase disk image size.", nodeps.MinimumDockerSpaceWarning, spacePercent)
+	parts := strings.Split(out, " ")
+	if len(parts) != 2 {
+		util.Warning("Unable to determine docker space usage: %s", out)
+		return
+	}
+	spacePercent, _ := strconv.Atoi(parts[1])
+	spaceAbsolute, _ := strconv.Atoi(parts[0])
+
+	if spaceAbsolute < nodeps.MinimumDockerSpaceWarning {
+		util.Error("Your docker installation has only %d available disk space, less than %d warning level (%d%% used). Please increase disk image size.", spaceAbsolute, nodeps.MinimumDockerSpaceWarning, spacePercent)
 	}
 }
 
