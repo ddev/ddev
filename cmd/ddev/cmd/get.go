@@ -217,17 +217,19 @@ func renderRepositoryList(repos []github.Repository) string {
 		}
 		return false
 	})
+	t.AppendHeader(table.Row{"Add-on", "Description"})
+
 	for _, repo := range repos {
-		n := repo.GetFullName()
+		d := repo.GetDescription()
 		if repo.GetOwner().GetLogin() == globalconfig.DdevGithubOrg {
-			n = "*" + n
+			d = d + "*"
 		}
-		t.AppendRow([]interface{}{n, text.WrapSoft(repo.GetDescription(), 50)})
+		t.AppendRow([]interface{}{repo.GetFullName(), text.WrapSoft(d, 50)})
 	}
 
 	t.Render()
 
-	return out.String() + "Add-ons marked with '*' are official, maintained ddev add-ons."
+	return out.String() + "Add-ons marked with '*' are official, maintained DDEV add-ons."
 }
 
 func init() {
