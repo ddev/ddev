@@ -42,7 +42,7 @@ func TestCmdGet(t *testing.T) {
 	// Make sure get --list works first
 	out, err := exec.RunHostCommand(DdevBin, "get", "--list")
 	assert.NoError(err, "failed ddev get --list: %v (%s)", err, out)
-	assert.Contains(out, "*drud/ddev-memcached")
+	assert.Contains(out, "drud/ddev-memcached")
 
 	tarballFile := filepath.Join(origDir, "testdata", t.Name(), "ddev-memcached.tar.gz")
 
