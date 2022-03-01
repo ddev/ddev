@@ -41,13 +41,13 @@ var DockerComposeFileFormatVersion = "3.6"
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20220227_change_path_environment" // Note that this can be overridden by make
+var WebTag = "v1.19.0-rc1" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20220223_improve_db_healthcheck"
+var BaseDBTag = "v1.19.0"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"
@@ -59,13 +59,13 @@ var DBATag = "5" // Note that this can be overridden by make
 var RouterImage = "drud/ddev-router"
 
 // RouterTag defines the tag used for the router.
-var RouterTag = "20211128__docker-compose-networking" // Note that this can be overridden by make
+var RouterTag = "v1.19.0" // Note that this can be overridden by make
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "drud/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "v1.18.0"
+var SSHAuthTag = "v1.19.0"
 
 // Busybox is used a couple of places for a quick-pull
 var BusyboxImage = "busybox:stable"
