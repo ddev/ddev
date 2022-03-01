@@ -186,7 +186,7 @@ func (app *DdevApp) Push(provider *Provider, skipDbArg bool, skipFilesArg bool) 
 			return err
 		}
 
-		output.UserOut.Printf("ProjectFiles uploaded")
+		output.UserOut.Printf("Files uploaded")
 	}
 	err = app.ProcessHooks("post-push")
 	if err != nil {

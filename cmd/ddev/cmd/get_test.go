@@ -39,7 +39,14 @@ func TestCmdGet(t *testing.T) {
 		assert.NoError(err)
 	})
 
+	// Make sure get --list works first
+	out, err := exec.RunHostCommand(DdevBin, "get", "--list")
+	assert.NoError(err, "failed ddev get --list: %v (%s)", err, out)
+	assert.Contains(out, "drud/ddev-memcached")
+
 	tarballFile := filepath.Join(origDir, "testdata", t.Name(), "ddev-memcached.tar.gz")
+
+	// Test with many input styles
 	for _, arg := range []string{
 		"drud/ddev-memcached",
 		"https://github.com/drud/ddev-memcached/archive/refs/tags/v1.1.1.tar.gz",
@@ -50,6 +57,7 @@ func TestCmdGet(t *testing.T) {
 		assert.FileExists(app.GetConfigPath("docker-compose.memcached.yaml"))
 	}
 
+	// Test with a directory-path input
 	exampleDir := filepath.Join(origDir, "testdata", t.Name(), "example-repo")
 	_, err = exec.RunHostCommand(DdevBin, "get", exampleDir)
 	assert.NoError(err)
