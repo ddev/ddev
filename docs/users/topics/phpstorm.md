@@ -8,9 +8,11 @@ This is based on the wonderful [article](https://susi.dev/fully-integrate-ddev-a
 
 #### Requirements
 
-- PhpStorm 2021.2 or higher
+- PhpStorm 2021.3 or higher
 - You may need to add the `PHP Docker` plugin.
-- docker-compose v1. Due to a [bug or two in PhpStorm](https://youtrack.jetbrains.com/issue/WI-61205), it can't properly interpret docker-compose v2 output as of Sept 2021.  If this is still a problem, you can `ddev config global --required-docker-compose-version=v1.29.2` to globally require docker-compose v1.
+- You need to enable Compose V2 Support in PHPStorm. This can be done in `Settings/Preferences | Build, Execution, Deployment | Docker | Tools` by either
+   1. set the bundled docker-compose binary as **Docker Compose executable** which can be found in `~/.ddev/bin`.
+   2. (Suggested for WSL) enabling **Use Compose V2** in PHPStorm and your Docker installation.
 - Any OS platform, but if you're using Windows PhpStorm with WSL2 the path mappings are slightly more complex. WSL2 instructions are provided where necessary.
 
 #### Setup Technique
