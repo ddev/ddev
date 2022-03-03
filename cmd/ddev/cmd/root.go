@@ -202,7 +202,7 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 
 		okPoweroff := util.Confirm("It looks like you have a new DDEV version. During an upgrade it's important to `ddev poweroff`. May I do `ddev poweroff` before continuing? This does no harm and loses no data.")
 		if okPoweroff {
-			powerOff()
+			ddevapp.PowerOff()
 		}
 		return nil
 	}
