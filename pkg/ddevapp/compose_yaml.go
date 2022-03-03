@@ -93,7 +93,7 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 		// Find any services that have bind-mount to app.AppRoot and make them relative
 		if serviceMap["volumes"] != nil {
 			volumes := serviceMap["volumes"].([]interface{})
-			for _, volume := range volumes {
+			for k, volume := range volumes {
 				// With docker-compose v1, the volume might not be a map, it might be
 				// old-style "/Users/rfay/workspace/d9/.ddev:/mnt/ddev_config:ro"
 				if volumeMap, ok := volume.(map[interface{}]interface{}); ok {
@@ -105,7 +105,7 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 				} else if volumeMap, ok := volume.(string); ok {
 					parts := strings.SplitN(volumeMap, ":", 2)
 					if parts[0] == app.AppRoot && len(parts) >= 2 {
-						volumeMap = "../" + ":" + parts[1]
+						volumes[k] = "../" + parts[1]
 					}
 				}
 			}
