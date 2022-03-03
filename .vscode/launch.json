@@ -37,7 +37,7 @@
             "args": ["list"],
             "showLog": true
         },
-{
+        {
             "name": "pkg-level test",
             "type": "go",
             "request": "launch",
@@ -47,6 +47,17 @@
             "host": "127.0.0.1",
             "program": "${workspaceRoot}/pkg/plugins/platform",
             "env": {"DDEV_DEBUG": true},
+            "args": [],
+            "showLog": true
+        },
+        {
+            "name": "TestComposeV1",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "remotePath": "",
+            "program": "${workspaceRoot}/pkg/ddevapp",
+            "env": {"GOTEST_SHORT": "true"},
             "args": [],
             "showLog": true
         },
