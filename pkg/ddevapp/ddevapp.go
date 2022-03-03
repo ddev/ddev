@@ -2050,7 +2050,7 @@ func deleteServiceVolumes(app *DdevApp) {
 				if err != nil {
 					util.Warning("could not remove volume %s: %v", volName, err)
 				} else {
-					util.Success("Deleting third-party persistent volume %s for service %s...", volName, s)
+					util.Success("Deleting third-party persistent volume %s", volName)
 				}
 			}
 		}
