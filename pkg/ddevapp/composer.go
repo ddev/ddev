@@ -2,10 +2,11 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/mattn/go-isatty"
 	"os"
 	"runtime"
+
+	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/mattn/go-isatty"
 )
 
 // Composer runs composer commands in the web container, managing pre- and post- hooks
@@ -18,7 +19,7 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "web",
-		Dir:     "/var/www/html",
+		Dir:     app.GetComposerRootDir(),
 		RawCmd:  append([]string{"composer"}, args...),
 		Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 	})

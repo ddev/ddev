@@ -19,7 +19,6 @@ import (
 	"github.com/mattn/go-isatty"
 	"github.com/otiai10/copy"
 	"github.com/pkg/errors"
-	osexec "os/exec"
 
 	"path"
 	"time"
@@ -101,6 +100,7 @@ type DdevApp struct {
 	Hooks                 map[string][]YAMLTask `yaml:"hooks,omitempty"`
 	UploadDir             string                `yaml:"upload_dir,omitempty"`
 	WorkingDir            map[string]string     `yaml:"working_dir,omitempty"`
+	ComposerRootDir       string                `yaml:"composer_root_dir,omitempty"`
 	OmitContainers        []string              `yaml:"omit_containers,omitempty,flow"`
 	OmitContainersGlobal  []string              `yaml:"-"`
 	HostDBPort            string                `yaml:"host_db_port,omitempty"`
@@ -2479,6 +2479,20 @@ func (app *DdevApp) GetWorkingDir(service string, dir string) string {
 
 	// The next highest preference is for app type defaults
 	return app.DefaultWorkingDirMap()[service]
+}
+
+// GetComposerRootDir will determine the composer root directory where all
+// Composer related commands will be executed.
+func (app *DdevApp) GetComposerRootDir() string {
+	// Defaults to default working dir
+	composerRootDir := app.DefaultWorkingDirMap()["web"]
+
+	// The highest preference has the directory defined in config.yaml
+	if app.ComposerRootDir != "" {
+		return composerRootDir + app.ComposerRootDir
+	}
+
+	return composerRootDir
 }
 
 // GetNFSMountVolumeName returns the docker volume name of the nfs mount volume

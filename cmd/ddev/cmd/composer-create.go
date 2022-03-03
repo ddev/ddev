@@ -2,14 +2,15 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/mattn/go-isatty"
 	"os"
 	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/mattn/go-isatty"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/output"
@@ -122,7 +123,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
 			Cmd:     fmt.Sprintf(`rsync -a "%s/" /var/www/html/`, containerInstallPath),
-			Dir:     "/var/www/html",
+			Dir:     app.GetComposerRootDir(),
 		})
 
 		if err != nil {

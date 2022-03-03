@@ -80,6 +80,11 @@ const ConfigInstructions = `
 # These values specify the destination directory for ddev ssh and the
 # directory in which commands passed into ddev exec are run.
 
+# composer_root_dir: app
+# would set the composer root directory to sub directory "app". All composer
+# related commands will then be executed in this directory instead of project
+# root directory. The default is "/var/www/html".
+
 # omit_containers: [db, dba, ddev-ssh-agent]
 # Currently only these containers are supported. Some containers can also be
 # omitted globally in the ~/.ddev/global_config.yaml. Note that if you omit
