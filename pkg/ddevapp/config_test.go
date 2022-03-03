@@ -628,13 +628,17 @@ func TestConfigValidate(t *testing.T) {
 	app.AdditionalHostnames = []string{"good", "b@d"}
 	err = app.ValidateConfig()
 	assert.Error(err)
-	assert.Contains(err.Error(), "invalid hostname")
+	if err != nil {
+		assert.Contains(err.Error(), "invalid hostname")
+	}
 
 	app.AdditionalHostnames = []string{}
 	app.AdditionalFQDNs = []string{"good.com", "b@d.com"}
 	err = app.ValidateConfig()
 	assert.Error(err)
-	assert.Contains(err.Error(), "invalid hostname")
+	if err != nil {
+		assert.Contains(err.Error(), "invalid hostname")
+	}
 
 	app.AdditionalFQDNs = []string{}
 	// Timezone validation isn't possible on Windows.

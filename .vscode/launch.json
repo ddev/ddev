@@ -56,7 +56,7 @@
             "request": "launch",
             "mode": "test",
             "remotePath": "",
-            "program": "${workspaceRoot}/pkg/ddevapp",
+            "program": "${workspaceRoot}/pkg/ddevapp/compose_test.go",
             "env": {"GOTEST_SHORT": "true"},
             "args": [],
             "showLog": true
