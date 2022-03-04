@@ -78,7 +78,7 @@ ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/
 sudo mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory,nvm_dir}/${HOSTNAME}
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ /var/lib/php
 sudo ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ${NVM_DIR}
-install_nvm.sh
+if [ ! -f /usr/local/nvm/nvm.sh ]; then (install_nvm.sh || true); fi
 
 # This will need to be done by a separate container with privileges
 # chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/
