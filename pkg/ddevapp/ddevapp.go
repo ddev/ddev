@@ -2491,7 +2491,7 @@ func (app *DdevApp) GetComposerRootDir() string {
 	if app.ComposerRootDir != "" {
 		composerRootDir = strings.TrimSuffix(path.Join(composerRootDir, app.ComposerRootDir), "/")
 
-		output.UserOut.Printf("Using '%s' as composer root directory", composerRootDir)
+		util.Warning("Using '%s' as composer root directory", composerRootDir)
 	}
 
 	return composerRootDir
