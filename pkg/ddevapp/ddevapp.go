@@ -2485,11 +2485,12 @@ func (app *DdevApp) GetWorkingDir(service string, dir string) string {
 // Composer related commands will be executed.
 func (app *DdevApp) GetComposerRootDir() string {
 	// Defaults to default working dir
-	composerRootDir := app.DefaultWorkingDirMap()["web"]
+	composerRootDir := strings.TrimSuffix(app.DefaultWorkingDirMap()["web"], "/")
 
 	// The highest preference has the directory defined in config.yaml
 	if app.ComposerRootDir != "" {
-		composerRootDir = composerRootDir + app.ComposerRootDir
+		composerRootDir = strings.TrimSuffix(path.Join(composerRootDir, app.ComposerRootDir), "/")
+
 		output.UserOut.Printf("Using '%s' as composer root directory", composerRootDir)
 	}
 
