@@ -186,9 +186,9 @@ ddev get --list --all
 			}
 			util.Success("Executed post-install action %v.", action)
 		}
-		util.Success("Downloaded add-on %s, use `ddev restart` to enable.", sourceRepoArg)
+		output.UserOut.Printf("Downloaded add-on %s, use `ddev restart` to enable.", sourceRepoArg)
 		if argType == "github" {
-			util.Success("For more information about this add-on visit the source repo at https://github.com/%v/%v", owner, repo)
+			util.Success("For more information about this add-on visit the source repo at\nhttps://github.com/%v/%v\nPlease file issues and create pull requests there to improve it.", owner, repo)
 		}
 	},
 }
