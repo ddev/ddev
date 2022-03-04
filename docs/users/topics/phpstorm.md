@@ -88,7 +88,7 @@ Debugging should be working! You can step through your code, set breakpoints, vi
 
 #### PHPStorm inside WSL2 in Linux
 
-1. On Windows 11 or Windows 10 Insider Builds you don't need to install an X11 server, because WSLg comes with that these days. On older Windows 10, Install X410 from the Microsoft Store, launch it, configure in the system tray with “Windowed Apps”, “Allow public access”, “DPI Scaling”→”High quality”. Obviously you can use another X11 server, but this is the one I’ve used.
+1. On Windows 11 you don't need to install an X11 server, because WSLg comes with that these days. On older Windows 10, Install X410 from the Microsoft Store, launch it, configure in the system tray with “Windowed Apps”, “Allow public access”, “DPI Scaling”→”High quality”. Obviously you can use another X11 server, but this is the one I’ve used.
 2. Temporarily disable your Windows firewall. You can re-enable it after you get everything working.
 3. If you're on older Windows 10, in the WSL2 terminal `export DISPLAY=$(awk '/^nameserver/ {print $2; exit;}' </etc/resolv.conf):0.0` (You’ll want to add this to your .profile in WSL2). This sets the X11 DISPLAY variable to point to your Windows host side. On Windows 11 this "just works" and you don't need to do anything here.
 4. On Windows 11, `sudo apt-get update && sudo apt-get install xdg-utils`. On older Windows 10, `sudo apt-get update && sudo apt-get install libatk1.0 libatk-bridge2.0 libxtst6 libxi6 libpangocairo-1.0 libcups2 libnss3 xdg-utils x11-apps`

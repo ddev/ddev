@@ -1,7 +1,7 @@
 ## Frequently-Asked Questions (FAQ)
 
 What operating systems will DDEV-Local work with?
-: DDEV-Local works nearly anywhere Docker will run, including macOS, Windows 10 Pro/Enterprise,  Windows 10 Home, and every Linux variant we've ever tried. It also runs in many Linux-like environments, for example ChromeOS (in Linux machine) and Windows 10's WSL2. In general, DDEV works the same on each of these platforms, as all the important work is done inside identical Docker containers.
+: DDEV-Local works nearly anywhere Docker will run, including macOS, Windows 10/11 Pro/Enterprise,  Windows 10/11 Home, and every Linux variant we've ever tried. It also runs in many Linux-like environments, for example ChromeOS (in Linux machine) and Windows 10/11's WSL2. In general, DDEV works the same on each of these platforms, as all the important work is done inside identical Docker containers.
 
 Do I lose my data when I do a `ddev poweroff` or `ddev stop` or `ddev restart`?
 : No, you don't lose data in your database or code with any of these commands. Your database is safely stored on a docker volume.

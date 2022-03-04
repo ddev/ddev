@@ -32,7 +32,11 @@ function docker_desktop_version {
 
 echo -n "OS Information: " && uname -a
 echo "User information: $(id -a)"
-ddev version
+echo "DDEV version: $(ddev version)"
+
+echo "======= DDEV global info ========="
+ddev config global | (grep -v "^web-environment" || true)
+printf "\n======= DOCKER info =========\n"
 echo -n "docker location: " && ls -l "$(which docker)"
 if [ ${OSTYPE%-*} != "linux" ]; then
   echo -n "Docker Desktop Version: " && docker_desktop_version && echo
@@ -75,7 +79,14 @@ ddev start -y || ( \
   ddev logs >logs.txt && \
   printf "Start failed. Please provide this output and the contents of ~/tmp/${PROJECT_NAME}/logs.txt in a new gist at gist.github.com\n" && \
   exit 1 )
-set -x && curl -I ${PROJECT_NAME}.ddev.site && set +x
+set -x
+curl --fail -I ${PROJECT_NAME}.ddev.site
+if [ $? -ne 0 ]; then
+  set +x
+  echo "Unable to curl the requested project Please provide this output in a new gist at gist.github.com."
+  exit 1
+fi
+set +x
 echo "Thanks for running the diagnostic. It was successful."
 echo "Please provide the output of this script in a new gist at gist.github.com"
 echo "Running ddev launch in 5 seconds" && sleep 5

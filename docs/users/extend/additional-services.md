@@ -12,21 +12,37 @@ For example,
 
 ```bash
 $ ddev get --list
-┌─────────────────────────┬───────────────────────────────────────────────┐
-│ *drud/ddev-beanstalkd   │ beanstalkd for ddev                           │
-├─────────────────────────┼───────────────────────────────────────────────┤
-│ *drud/ddev-memcached    │ Install memcached as an extra service in ddev │
-├─────────────────────────┼───────────────────────────────────────────────┤
-│ *drud/ddev-drupal9-solr │ Drupal 9 Apache Solr installation for DDEV    │
-└─────────────────────────┴───────────────────────────────────────────────┘
-Add-ons marked with '*' are official, maintained ddev add-ons.
+┌────────────────────────┬────────────────────────────────────────────────┐
+│ ADD-ON                 │ DESCRIPTION                                    │
+├────────────────────────┼────────────────────────────────────────────────┤
+│ drud/ddev-memcached    │ Install memcached as an extra service in ddev* │
+├────────────────────────┼────────────────────────────────────────────────┤
+│ drud/ddev-beanstalkd   │ beanstalkd for ddev*                           │
+├────────────────────────┼────────────────────────────────────────────────┤
+│ drud/ddev-drupal9-solr │ Drupal 9 Apache Solr installation for DDEV*    │
+├────────────────────────┼────────────────────────────────────────────────┤
+│ drud/ddev-redis        │ redis service for ddev*                        │
+└────────────────────────┴────────────────────────────────────────────────┘
+Add-ons marked with '*' are official, maintained DDEV add-ons.
 ```
 
-Here are some of the add-ons that are currently supported:
+Here are some of the add-ons that are officially supported:
 
 * [Apache Solr for Drupal 9](https://github.com/drud/ddev-drupal9-solr): `ddev get drud/ddev-drupal9-solr`.
 * [Memcached](https://github.com/drud/ddev-memcached): `ddev get drud/ddev-memcached`.
 * [Beanstalkd](https://github.com/drud/ddev-beanstalkd): `ddev get drud/ddev-beanstalkd`.
+* [Redis](https://github.com/drud/ddev-redis): `ddev get drud/ddev-redis`.
+
+## Creating an additional service for `ddev get`
+
+Anyone can create an add-on for `ddev get`:
+
+1. Click "Use this template" on [ddev-addon-template](https://github.com/drud/ddev-addon-template).
+2. Create a new repository
+3. Test it and preferably make sure it has valid tests in `tests.bats`.
+4. When it's working and tested, create a release.
+5. Add the label `ddev-get` and a good short description to the repository on GitHub.
+6. When you're ready for the add-on to become official, open an issue in the [DDEV issue queue](https://github.com/drud/ddev/issues/new) requesting upgrade to official. You'll be expected to maintain it of course, and subscribe to all activity and be responsive to questions.
 
 ## Additional services in ddev-contrib (MongoDB, Elasticsearch, etc)
 
