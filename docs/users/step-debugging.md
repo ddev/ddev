@@ -4,14 +4,14 @@ Every ddev project is automatically configured with xdebug so that popular IDEs 
 
 xdebug is a server-side tool: It is installed automatically on the container and you do *not* need to install or configure it on your workstation.
 
-All IDEs basically work the same: They listen on a port and react when they're contacted there. IDEs other than those listed here work fine, if they listen on the default xdebug port 9003.
+All IDEs basically work the same: They listen on a port and react when they're contacted there. IDEs other than those listed here work fine, if they listen on the default xdebug port 9003. (This was port 9000 through DDEV v1.18, changed to 9003 in v1.19+)
 
 **Key facts:**
 
 * Enable xdebug by running `ddev xdebug` or `ddev xdebug on` in your project directory. It will remain enabled until you start or restart the project.
 * Disable xdebug for better performance when not debugging with `ddev xdebug off`
 * `ddev xdebug status` will show current status.
-* The debug server port on the IDE must be set to port 9003, which is the default and is probably already set in most popular IDEs. (If you need to change the xdebug port due to a port conflict on your host computer, you can do it with a PHP override, explained below.)
+* The debug server port on the IDE must be set to port 9003 (port 9000 before v1.19), which is the default and is probably already set in most popular IDEs. (If you need to change the xdebug port due to a port conflict on your host computer, you can do it with a PHP override, explained below.)
 
 For more background on XDebug see [XDebug documentation](https://xdebug.org/docs/remote). The intention here is that one won't have to understand XDebug to do debugging.
 
@@ -130,8 +130,9 @@ NOTE: If you are using a PHP version below PHP7.2, you will be using Xdebug vers
 
 ### Troubleshooting Xdebug
 
-The basic thing to understand about xdebug is that it's a network protocol. Your IDE (like PhpStorm) will listen on the xdebug port (9003 by default). Then if xdebug is enabled in the ddev web container with `ddev xdebug on`, then php inside the container will try to open a TCP connection to the IDE. Docker's networking places the host-side listening IDE at `host.docker.internal:9003`. So you have to make sure that the network connection is clear and can be made and everything should work. Here are basic steps to take to sort out any difficulty:
+The basic thing to understand about xdebug is that it's a network protocol. Your IDE (like PhpStorm) will listen on the xdebug port (9003 by default in v1.19+, previously 9000). Then if xdebug is enabled in the ddev web container with `ddev xdebug on`, then php inside the container will try to open a TCP connection to the IDE. Docker's networking places the host-side listening IDE at `host.docker.internal:9003`. So you have to make sure that the network connection is clear and can be made and everything should work. Here are basic steps to take to sort out any difficulty:
 
+* Remember that the port in play is port 9003 for DDEV v1.19+, but before that it was port 9000.
 * Reboot your computer.
 * Temporarily disable any *firewall* or *VPN* if you're having trouble. Xdebug is a network protocol, and the php process inside the web container must be able to establish a TCP connection to the listening IDE (PhpStorm, for example).
 * Use `ddev xdebug on` to enable xdebug when you want it, and `ddev xdebug off` when you're done with it.
