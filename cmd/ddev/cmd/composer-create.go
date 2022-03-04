@@ -29,8 +29,8 @@ var ComposerCreateCmd = &cobra.Command{
 	Short: "Executes 'composer create-project' within the web container with the arguments and flags provided",
 	Long: `Directs basic invocations of 'composer create-project' within the context of the
 web container. Projects will be installed to a temporary directory and moved to
-the project root directory after installation. Any existing files in the
-project root will be deleted when creating a project.`,
+the composer root directory after installation. Any existing files in the
+composer root will be deleted when creating a project.`,
 	Example: `ddev composer create drupal/recommended-project
 ddev composer create -y drupal/recommended-project
 ddev composer create "typo3/cms-base-distribution:^10"
