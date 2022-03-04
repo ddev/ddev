@@ -14,12 +14,12 @@ import (
 func (app *DdevApp) Composer(args []string) (string, string, error) {
 	err := app.ProcessHooks("pre-composer")
 	if err != nil {
-		return "", "", fmt.Errorf("Failed to process pre-composer hooks: %v", err)
+		return "", "", fmt.Errorf("failed to process pre-composer hooks: %v", err)
 	}
 
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "web",
-		Dir:     app.GetComposerRootDir(),
+		Dir:     app.GetComposerRootDir(true),
 		RawCmd:  append([]string{"composer"}, args...),
 		Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 	})
@@ -36,7 +36,7 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 	}
 	err = app.ProcessHooks("post-composer")
 	if err != nil {
-		return "", "", fmt.Errorf("Failed to process post-composer hooks: %v", err)
+		return "", "", fmt.Errorf("failed to process post-composer hooks: %v", err)
 	}
 	return stdout, stderr, nil
 }

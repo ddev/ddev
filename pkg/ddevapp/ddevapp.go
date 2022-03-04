@@ -2483,15 +2483,28 @@ func (app *DdevApp) GetWorkingDir(service string, dir string) string {
 
 // GetComposerRootDir will determine the composer root directory where all
 // Composer related commands will be executed.
-func (app *DdevApp) GetComposerRootDir() string {
-	// Defaults to default working dir
-	composerRootDir := strings.TrimSuffix(app.DefaultWorkingDirMap()["web"], "/")
+func (app *DdevApp) GetComposerRootDir(showWarning bool) string {
+	// Default is the default working directory, does not take a user configured
+	// working direcotry into account because this would be breaking.
+	composerRootDir := path.Clean(app.DefaultWorkingDirMap()["web"])
 
-	// The highest preference has the directory defined in config.yaml
+	// The highest preference has the directory defined in config.yaml, so
+	// override the default again with the user configured value.
 	if app.ComposerRootDir != "" {
-		composerRootDir = strings.TrimSuffix(path.Join(composerRootDir, app.ComposerRootDir), "/")
+		if path.IsAbs(app.ComposerRootDir) {
+			// Use an absolute path as is, just clean it.
+			composerRootDir = path.Clean(app.ComposerRootDir)
+		} else {
+			// Relative paths will always be relative to the current configured
+			// working direcotry.
+			composerRootDir = path.Clean(path.Join(app.GetWorkingDir("web", ""), path.Clean(app.ComposerRootDir)))
+		}
 
-		util.Warning("Using '%s' as composer root directory", composerRootDir)
+		if showWarning {
+			// Let the user know we are not using the default composer root
+			// directory to avoid confusion.
+			util.Warning("Using '%s' as composer root directory", composerRootDir)
+		}
 	}
 
 	return composerRootDir

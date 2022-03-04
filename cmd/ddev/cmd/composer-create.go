@@ -61,28 +61,30 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			}
 		}
 
+		composerRoot := app.GetComposerRootDir(false)
+
 		// Make the user confirm that existing contents will be deleted
-		util.Warning("Warning: MOST EXISTING CONTENT in the project root (%s) will be deleted by the composer create-project operation. .git and .ddev will be preserved.", app.AppRoot)
+		util.Warning("Warning: MOST EXISTING CONTENT in the composer root (%s) will be deleted by the composer create-project operation. Only .ddev, .git and .tarballs will be preserved.", composerRoot)
 		if !composerCreateYesFlag {
 			if !util.Confirm("Would you like to continue?") {
 				util.Failed("create-project cancelled")
 			}
 		}
 
-		// Remove most contents of project root
-		util.Warning("Removing any existing files in project root")
-		objs, err := fileutil.ListFilesInDir(app.AppRoot)
+		// Remove most contents of composer root
+		util.Warning("Removing any existing files in composer root")
+		objs, err := fileutil.ListFilesInDir(composerRoot)
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
 		}
 
 		for _, o := range objs {
-			// Preserve .ddev, .git. .tarballs
+			// Preserve .ddev, .git, .tarballs
 			if o == ".ddev" || o == ".git" || o == ".tarballs" {
 				continue
 			}
 
-			if err = os.RemoveAll(filepath.Join(app.AppRoot, o)); err != nil {
+			if err = os.RemoveAll(filepath.Join(composerRoot, o)); err != nil {
 				util.Failed("Failed to create project: %v", err)
 			}
 		}
@@ -107,7 +109,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
 			RawCmd:  composerCmd,
-			Dir:     "/var/www/html",
+			Dir:     containerInstallPath,
 			Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 		})
 		if err != nil {
@@ -122,19 +124,21 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
-			Cmd:     fmt.Sprintf(`rsync -a "%s/" "%s/"`, containerInstallPath, app.GetComposerRootDir()),
-			Dir:     app.GetComposerRootDir(),
+			Cmd:     fmt.Sprintf(`rsync -a "%s/" "%s/"`, containerInstallPath, composerRoot),
+			Dir:     composerRoot,
 		})
 
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
 		}
+
 		// Do a spare restart, which will create any needed settings files
 		// and also restart mutagen
 		err = app.Restart()
 		if err != nil {
 			util.Warning("Failed to restart project after composer create: %v", err)
 		}
+
 		if runtime.GOOS == "windows" {
 			fileutil.ReplaceSimulatedLinks(app.AppRoot)
 		}
