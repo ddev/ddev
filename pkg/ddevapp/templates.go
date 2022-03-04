@@ -83,7 +83,7 @@ const ConfigInstructions = `
 # composer_root_dir: app
 # would set the composer root directory to sub directory "app". All composer
 # related commands will then be executed in this directory instead of project
-# root directory. The default is "/var/www/html".
+# root directory. By default composer commands are executed in "/var/www/html".
 
 # omit_containers: [db, dba, ddev-ssh-agent]
 # Currently only these containers are supported. Some containers can also be
