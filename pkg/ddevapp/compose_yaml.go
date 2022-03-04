@@ -5,6 +5,7 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"gopkg.in/yaml.v2"
 	"os"
+	"strings"
 	//compose_cli "github.com/compose-spec/compose-go/cli"
 	//compose_types "github.com/compose-spec/compose-go/types"
 )
@@ -35,7 +36,7 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	if err != nil {
 		return err
 	}
-	fullContents, _, err := dockerutil.ComposeCmd(files, "convert")
+	fullContents, _, err := dockerutil.ComposeCmd(files, "config")
 	if err != nil {
 		return err
 	}
@@ -67,7 +68,7 @@ func (app *DdevApp) WriteDockerComposeYAML() error {
 	return nil
 }
 
-// fixupComposeYaml makes minor changes to the `docker-compose convert` output
+// fixupComposeYaml makes minor changes to the `docker-compose config` output
 // to make sure extra services are always compatible with ddev.
 func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, error) {
 	tempMap := make(map[string]interface{})
@@ -92,11 +93,19 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 		// Find any services that have bind-mount to app.AppRoot and make them relative
 		if serviceMap["volumes"] != nil {
 			volumes := serviceMap["volumes"].([]interface{})
-			for _, volume := range volumes {
-				volumeMap := volume.(map[interface{}]interface{})
-				if volumeMap["source"] != nil {
-					if volumeMap["source"].(string) == app.AppRoot {
-						volumeMap["source"] = "../"
+			for k, volume := range volumes {
+				// With docker-compose v1, the volume might not be a map, it might be
+				// old-style "/Users/rfay/workspace/d9/.ddev:/mnt/ddev_config:ro"
+				if volumeMap, ok := volume.(map[interface{}]interface{}); ok {
+					if volumeMap["source"] != nil {
+						if volumeMap["source"].(string) == app.AppRoot {
+							volumeMap["source"] = "../"
+						}
+					}
+				} else if volumeMap, ok := volume.(string); ok {
+					parts := strings.SplitN(volumeMap, ":", 2)
+					if parts[0] == app.AppRoot && len(parts) >= 2 {
+						volumes[k] = "../" + parts[1]
 					}
 				}
 			}

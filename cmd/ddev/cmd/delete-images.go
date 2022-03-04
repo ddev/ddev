@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/ddevapp"
 	"os"
 	"sort"
 	"strings"
@@ -36,7 +37,7 @@ ddev delete images --all`,
 			}
 		}
 		util.Success("Powering off ddev to avoid conflicts")
-		powerOff()
+		ddevapp.PowerOff()
 
 		client := dockerutil.GetDockerClient()
 

@@ -858,6 +858,7 @@ func (app *DdevApp) Start() error {
 	var err error
 
 	app.DockerEnv()
+	dockerutil.EnsureDdevNetwork()
 	volumesNeeded := []string{"ddev-global-cache", "ddev-" + app.Name + "-snapshots"}
 	for _, v := range volumesNeeded {
 		_, err = dockerutil.CreateVolume(v, "local", nil)
@@ -2050,7 +2051,7 @@ func deleteServiceVolumes(app *DdevApp) {
 				if err != nil {
 					util.Warning("could not remove volume %s: %v", volName, err)
 				} else {
-					util.Success("Deleting third-party persistent volume %s for service %s...", volName, s)
+					util.Success("Deleting third-party persistent volume %s", volName)
 				}
 			}
 		}
