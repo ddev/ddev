@@ -9,7 +9,7 @@
     * macOS Catalina and higher (macOS 10.15 and higher); it should run anywhere docker runs (Current Docker Desktop has deprecated macOS 10.14 and below, but Docker Desktop versions prior to  can still work with DDEV-Local on High Sierra. You can look through the [Docker Desktop for Mac Release Notes](https://docs.docker.com/desktop/mac/release-notes/) for older versions.)
     * Linux: Most Linux distributions which can run Docker-ce are fine. This includes at least Ubuntu 18.04+ (20.04 is recommended), Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
     * Windows 10/11 (all editions) with WSL2 (version [1903.1049, 1909.1049](https://devblogs.microsoft.com/commandline/wsl-2-support-is-coming-to-windows-10-versions-1903-and-1909/), 2004 or later)
-    * (Non-WSL2) Windows 10 Home, Pro, or Enterprise with [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop)
+    * (Non-WSL2) Windows 10/11 Home, Pro, or Enterprise with [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop)
 * Architecture Support
     * AMD64 is supported on Windows 10/11 (with either traditional Windows or WSL2), macOS, and Linux.
     * ARM64 machines are currently supported on Linux and in WSL2 in Windows ARM64 computers.
@@ -65,7 +65,7 @@ To upgrade DDEV to the latest stable version, just run the script again.
 
 **This is the recommended installation method for all Windows users**.
 
-**All Windows 10 editions (including Windows 10 Home) support WSL2**. If you're already familiar with DDEV on Windows, you might have been using NFS for better filesystem performance. **You won't need NFS anymore once you switch to WSL2**, since it provides awesome filesystem performance out of the box.
+**All Windows 10/11 editions (including Windows 10 Home) support WSL2**. If you're already familiar with DDEV on Windows, you might have been using NFS for better filesystem performance. **You won't need NFS anymore once you switch to WSL2**, since it provides awesome filesystem performance out of the box.
 
 The WSL2 install process involves:
 

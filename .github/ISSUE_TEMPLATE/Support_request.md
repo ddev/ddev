@@ -39,7 +39,7 @@ If applicable, add screenshots to help explain your problem.
 This is only necessary if you did *not* run the script above.. which we'd appreciate it if you'd run.
 -->
 
-- Host computer OS and Version: [e.g. Windows 10, macOS Big Sur, Linux (distro), WSL2 (distro)]
+- Host computer OS and Version: [e.g. Windows 10/11, macOS Big Sur, Linux (distro), WSL2 (distro)]
 - Docker Desktop version if on macOS or Windows (from "About Docker Desktop")
 - ddev version information (use `ddev version`)
 - config.yaml contents for the misbehaving project
