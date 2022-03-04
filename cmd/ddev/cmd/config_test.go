@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"testing"
+
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
-	"testing"
 
 	"os"
 	"path/filepath"
@@ -187,6 +188,7 @@ func TestConfigSetValues(t *testing.T) {
 	webWorkingDir := "/custom/web/dir"
 	dbWorkingDir := "/custom/db/dir"
 	dbaWorkingDir := "/custom/dba/dir"
+	composerRootDir := "custom-dir"
 	phpMyAdminPort := "5000"
 	mailhogPort := "5001"
 	projectTLD := "nowhere.example.com"
@@ -214,6 +216,7 @@ func TestConfigSetValues(t *testing.T) {
 		"--web-working-dir", webWorkingDir,
 		"--db-working-dir", dbWorkingDir,
 		"--dba-working-dir", dbaWorkingDir,
+		"--composer-root-dir", composerRootDir,
 		"--omit-containers", omitContainers,
 		"--host-db-port", hostDBPort,
 		"--host-webserver-port", hostWebserverPort,
@@ -262,6 +265,7 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(webWorkingDir, app.WorkingDir["web"])
 	assert.Equal(dbWorkingDir, app.WorkingDir["db"])
 	assert.Equal(dbaWorkingDir, app.WorkingDir["dba"])
+	assert.Equal(composerRootDir, app.ComposerRootDir)
 	assert.Equal(webimageExtraPackagesSlice, app.WebImageExtraPackages)
 	assert.Equal(dbimageExtraPackagesSlice, app.DBImageExtraPackages)
 	assert.Equal(phpMyAdminPort, app.PHPMyAdminPort)
@@ -273,7 +277,7 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(webEnv, app.WebEnvironment[0])
 	assert.Equal(nodejsVersion, app.NodeJSVersion)
 
-	// Test that container images and working dirs can be unset with default flags
+	// Test that container images, working dirs and composer root dir can be unset with default flags
 	args = []string{
 		"config",
 		"--web-image-default",
@@ -282,6 +286,7 @@ func TestConfigSetValues(t *testing.T) {
 		"--web-working-dir-default",
 		"--db-working-dir-default",
 		"--dba-working-dir-default",
+		"--composer-root-dir-default",
 	}
 
 	_, err = exec.RunHostCommand(DdevBin, args...)
@@ -296,14 +301,16 @@ func TestConfigSetValues(t *testing.T) {
 
 	assert.Equal(app.WebImage, "")
 	assert.Equal(len(app.WorkingDir), 0)
+	assert.Equal(len(app.ComposerRootDir), 0)
 
-	// Test that all container images and working dirs can each be unset with single default images flag
+	// Test that all container images, working dirs and composer root dir can each be unset with single default images flag
 	args = []string{
 		"config",
 		"--web-image", webImage,
 		"--web-working-dir", webWorkingDir,
 		"--db-working-dir", dbWorkingDir,
 		"--dba-working-dir", dbaWorkingDir,
+		"--composer-root-dir", composerRootDir,
 	}
 
 	_, err = exec.RunHostCommand(DdevBin, args...)
