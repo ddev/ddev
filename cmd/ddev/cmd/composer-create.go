@@ -118,11 +118,11 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			fmt.Println(strings.TrimSpace(stdout))
 		}
 
-		output.UserOut.Printf("Moving installation to project root")
+		output.UserOut.Printf("Moving installation to composer root")
 
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
-			Cmd:     fmt.Sprintf(`rsync -a "%s/" /var/www/html/`, containerInstallPath),
+			Cmd:     fmt.Sprintf(`rsync -a "%s/" "%s/"`, containerInstallPath, app.GetComposerRootDir()),
 			Dir:     app.GetComposerRootDir(),
 		})
 
