@@ -9,7 +9,6 @@
 ## OSTypes: darwin
 ## HostBinaryExists: /Applications/TablePlus.app
 
-set -x
 dbtype=${DDEV_DBIMAGE%:*}
 driver=mysql
 if [[ $dbtype == "postgres" ]]; then
@@ -17,5 +16,6 @@ if [[ $dbtype == "postgres" ]]; then
 fi
 query="${driver}://db:db@127.0.0.1:${DDEV_HOST_DB_PORT}/db"
 
+set -x
 open "$query" -a "/Applications/TablePlus.app/Contents/MacOS/TablePlus"
 

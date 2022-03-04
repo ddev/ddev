@@ -7,8 +7,8 @@
 ## OSTypes: darwin
 ## HostBinaryExists: /Applications/Sequel ace.app
 
-set -x
 query="mysql://root:root@127.0.0.1:${DDEV_HOST_DB_PORT}/db"
 
+set -x
 open "$query" -a "/Applications/Sequel Ace.app/Contents/MacOS/Sequel Ace"
 
