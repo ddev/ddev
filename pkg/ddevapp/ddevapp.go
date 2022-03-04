@@ -2489,7 +2489,8 @@ func (app *DdevApp) GetComposerRootDir() string {
 
 	// The highest preference has the directory defined in config.yaml
 	if app.ComposerRootDir != "" {
-		return composerRootDir + app.ComposerRootDir
+		composerRootDir = composerRootDir + app.ComposerRootDir
+		output.UserOut.Printf("Using '%s' as composer root directory", composerRootDir)
 	}
 
 	return composerRootDir
