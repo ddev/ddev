@@ -35,7 +35,7 @@ var ServiceDisable = &cobra.Command{
 		}
 
 		if !fileutil.FileExists(app.GetConfigPath(fName)) {
-			util.Failed("Service %s does not currently exist in .ddev directory", serviceName)
+			util.Failed("No file named %s was found in %s", fName, app.GetConfigPath(""))
 		}
 		err = os.Remove(app.GetConfigPath(disabledServicesDir + "/" + fName))
 		if err != nil /*&& err != os.PathError*/ {
