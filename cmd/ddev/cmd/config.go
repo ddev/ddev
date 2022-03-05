@@ -24,10 +24,10 @@ var (
 	// docrootRelPathArg is the relative path to the docroot where index.php is.
 	docrootRelPathArg string
 
-	// composerRootRelPathArg allows a user to define the working directory for the web service
+	// composerRootRelPathArg allows a user to define the composer root directory for the web service.
 	composerRootRelPathArg string
 
-	// composerRootRelPathDefaultArg allows a user to unset a web service working directory override
+	// composerRootRelPathDefaultArg allows a user to unset a web service composer root directory override.
 	composerRootRelPathDefaultArg bool
 
 	// projectNameArg is the name of the site.
