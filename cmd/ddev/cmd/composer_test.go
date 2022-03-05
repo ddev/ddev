@@ -23,7 +23,7 @@ func TestComposerCmd(t *testing.T) {
 	origDir, err := os.Getwd()
 	assert.NoError(err)
 
-	for _, composerRoot := range []string{"", "app"} {
+	for _, composerRoot := range []string{"", "composer-root"} {
 		tmpDir := testcommon.CreateTmpDir(t.Name())
 		err = os.Chdir(tmpDir)
 		assert.NoError(err)
@@ -32,7 +32,7 @@ func TestComposerCmd(t *testing.T) {
 		arguments := []string{"config", "--project-type", "php"}
 
 		if composerRoot != "" {
-			arguments = append(arguments, "--composer-root-dir", composerRoot)
+			arguments = append(arguments, "--composer-root", composerRoot)
 		}
 
 		// Basic config
