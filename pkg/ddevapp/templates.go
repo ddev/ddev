@@ -11,11 +11,6 @@ const ConfigInstructions = `
 
 # docroot: <relative_path> # Relative path to the directory containing index.php.
 
-# composer_root: <relative_path>
-# Relative path to the composer root directory from the project root. This is
-# the directory which contains the composer.json and where all Composer related
-# commands are executed.
-
 # php_version: "7.4"  # PHP version to use, "5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0", "8.1"
 
 # You can explicitly specify the webimage but this
@@ -50,6 +45,11 @@ const ConfigInstructions = `
 # it can be set to any valid timezone,
 # see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 # For example Europe/Dublin or MST7MDT
+
+# composer_root: <relative_path>
+# Relative path to the composer root directory from the project root. This is
+# the directory which contains the composer.json and where all Composer related
+# commands are executed.
 
 # composer_version: "2"
 # if composer_version:"2" it will use the most recent composer v2

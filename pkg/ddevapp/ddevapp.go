@@ -70,7 +70,6 @@ type DdevApp struct {
 	Name                  string                `yaml:"name"`
 	Type                  string                `yaml:"type"`
 	Docroot               string                `yaml:"docroot"`
-	ComposerRoot          string                `yaml:"composer_root,omitempty"`
 	PHPVersion            string                `yaml:"php_version"`
 	WebserverType         string                `yaml:"webserver_type"`
 	WebImage              string                `yaml:"webimage,omitempty"`
@@ -120,6 +119,7 @@ type DdevApp struct {
 	MkcertEnabled             bool                   `yaml:"-"`
 	NgrokArgs                 string                 `yaml:"ngrok_args,omitempty"`
 	Timezone                  string                 `yaml:"timezone,omitempty"`
+	ComposerRoot              string                 `yaml:"composer_root,omitempty"`
 	ComposerVersion           string                 `yaml:"composer_version"`
 	DisableSettingsManagement bool                   `yaml:"disable_settings_management,omitempty"`
 	WebEnvironment            []string               `yaml:"web_environment"`
@@ -391,13 +391,15 @@ func (app DdevApp) GetDocroot() string {
 // If showWarning set to true, a warning containing the composer root will be
 // shown to the user to avoid confusion.
 func (app *DdevApp) GetComposerRoot(inContainer, showWarning bool) string {
-	absComposerRoot := ""
+	basePath := ""
 
 	if inContainer {
-		absComposerRoot = path.Join(app.DefaultWorkingDirMap()["web"], app.ComposerRoot)
+		basePath = app.DefaultWorkingDirMap()["web"]
 	} else {
-		absComposerRoot = path.Join(app.AppRoot, app.ComposerRoot)
+		basePath = app.AppRoot
 	}
+
+	absComposerRoot := path.Join(basePath, app.ComposerRoot)
 
 	// If requested, let the user know we are not using the default composer
 	// root directory to avoid confusion.
