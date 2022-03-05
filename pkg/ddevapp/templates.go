@@ -11,6 +11,11 @@ const ConfigInstructions = `
 
 # docroot: <relative_path> # Relative path to the directory containing index.php.
 
+# composer_root: <relative_path>
+# Relative path to the composer root directory from the project root. This is
+# the directory which contains the composer.json and where all Composer related
+# commands are executed.
+
 # php_version: "7.4"  # PHP version to use, "5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0", "8.1"
 
 # You can explicitly specify the webimage but this
@@ -79,15 +84,6 @@ const ConfigInstructions = `
 # would set the default working directory for the web and db services.
 # These values specify the destination directory for ddev ssh and the
 # directory in which commands passed into ddev exec are run.
-
-# composer_root_dir: custom-dir
-# would set the composer root directory to the "custom-dir" folder relative to
-# the web working directory in the web container which defaults to "/var/www/html",
-# see also "working_dir" above. Can also be set to an absolute path in the web
-# container. All composer related commands will run in this directory, defaults to
-# "/var/www/html".
-# If the web working directory is modified and the composer root shall also
-# respect it, set it to "./".
 
 # omit_containers: [db, dba, ddev-ssh-agent]
 # Currently only these containers are supported. Some containers can also be

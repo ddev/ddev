@@ -61,7 +61,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			}
 		}
 
-		composerRoot := app.GetComposerRootDir(false)
+		composerRoot := app.GetComposerRoot(false, false)
 
 		// Make the user confirm that existing contents will be deleted
 		util.Warning("Warning: MOST EXISTING CONTENT in the composer root (%s) will be deleted by the composer create-project operation. Only .ddev, .git and .tarballs will be preserved.", composerRoot)
@@ -122,10 +122,12 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 		output.UserOut.Printf("Moving installation to composer root")
 
+		containerComposerRoot := app.GetComposerRoot(true, false)
+
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
-			Cmd:     fmt.Sprintf(`rsync -a "%s/" "%s/"`, containerInstallPath, composerRoot),
-			Dir:     composerRoot,
+			Cmd:     fmt.Sprintf(`rsync -a "%s/" "%s/"`, containerInstallPath, containerComposerRoot),
+			Dir:     containerComposerRoot,
 		})
 
 		if err != nil {

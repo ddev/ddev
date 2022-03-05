@@ -24,6 +24,12 @@ var (
 	// docrootRelPathArg is the relative path to the docroot where index.php is.
 	docrootRelPathArg string
 
+	// composerRootRelPathArg allows a user to define the working directory for the web service
+	composerRootRelPathArg string
+
+	// composerRootRelPathDefaultArg allows a user to unset a web service working directory override
+	composerRootRelPathDefaultArg bool
+
 	// projectNameArg is the name of the site.
 	projectNameArg string
 
@@ -101,12 +107,6 @@ var (
 
 	// workingDirDefaultsArg allows a user to unset all service working directory overrides
 	workingDirDefaultsArg bool
-
-	// webWorkingDirArg allows a user to define the working directory for the web service
-	composerRootDirArg string
-
-	// webWorkingDirDefaultArg allows a user to unset a web service working directory override
-	composerRootDirDefaultArg bool
 
 	// omitContainersArg allows user to determine value of omit_containers
 	omitContainersArg string
@@ -235,6 +235,8 @@ func init() {
 
 	ConfigCommand.Flags().StringVar(&projectNameArg, "project-name", "", projectNameUsage)
 	ConfigCommand.Flags().StringVar(&docrootRelPathArg, "docroot", "", "Provide the relative docroot of the project, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory")
+	ConfigCommand.Flags().StringVar(&composerRootArg, "composer-root", "", "Overrides the default composer root directory for the web service")
+	ConfigCommand.Flags().BoolVar(&composerRootDefaultArg, "composer-root-default", false, "Unsets a web service composer root directory override")
 	ConfigCommand.Flags().StringVar(&projectTypeArg, "project-type", "", projectTypeUsage)
 	ConfigCommand.Flags().StringVar(&phpVersionArg, "php-version", "", "The version of PHP that will be enabled in the web container")
 	ConfigCommand.Flags().StringVar(&httpPortArg, "http-port", "", "The router HTTP port for this project")
@@ -263,8 +265,6 @@ func init() {
 	ConfigCommand.Flags().BoolVar(&dbWorkingDirDefaultArg, "db-working-dir-default", false, "Unsets a db service working directory override")
 	ConfigCommand.Flags().BoolVar(&dbaWorkingDirDefaultArg, "dba-working-dir-default", false, "Unsets a dba service working directory override")
 	ConfigCommand.Flags().BoolVar(&workingDirDefaultsArg, "working-dir-defaults", false, "Unsets all service working directory overrides")
-	ConfigCommand.Flags().StringVar(&composerRootDirArg, "composer-root-dir", "", "Overrides the default composer root directory for the web service")
-	ConfigCommand.Flags().BoolVar(&composerRootDirDefaultArg, "composer-root-dir-default", false, "Unsets a web service composer root directory override")
 	ConfigCommand.Flags().BoolVar(&mutagenEnabled, "mutagen-enabled", false, "enable mutagen asynchronous update of project in web container")
 
 	ConfigCommand.Flags().BoolVar(&nfsMountEnabled, "nfs-mount-enabled", false, "enable NFS mounting of project in container")

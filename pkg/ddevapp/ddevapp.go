@@ -70,6 +70,7 @@ type DdevApp struct {
 	Name                  string                `yaml:"name"`
 	Type                  string                `yaml:"type"`
 	Docroot               string                `yaml:"docroot"`
+	ComposerRoot          string                `yaml:"composer_root,omitempty"`
 	PHPVersion            string                `yaml:"php_version"`
 	WebserverType         string                `yaml:"webserver_type"`
 	WebImage              string                `yaml:"webimage,omitempty"`
@@ -100,7 +101,6 @@ type DdevApp struct {
 	Hooks                 map[string][]YAMLTask `yaml:"hooks,omitempty"`
 	UploadDir             string                `yaml:"upload_dir,omitempty"`
 	WorkingDir            map[string]string     `yaml:"working_dir,omitempty"`
-	ComposerRootDir       string                `yaml:"composer_root_dir,omitempty"`
 	OmitContainers        []string              `yaml:"omit_containers,omitempty,flow"`
 	OmitContainersGlobal  []string              `yaml:"-"`
 	HostDBPort            string                `yaml:"host_db_port,omitempty"`
@@ -382,6 +382,30 @@ func (app *DdevApp) AppConfDir() string {
 // GetDocroot returns the docroot path for ddev app
 func (app DdevApp) GetDocroot() string {
 	return app.Docroot
+}
+
+// GetComposerRoot will determine the absolute composer root directory where
+// all Composer related commands will be executed.
+// If inContainer set to true, the absolute path in the container will be
+// returned, else the absolute path on the host.
+// If showWarning set to true, a warning containing the composer root will be
+// shown to the user to avoid confusion.
+func (app *DdevApp) GetComposerRoot(inContainer, showWarning bool) string {
+	absComposerRoot := ""
+
+	if inContainer {
+		absComposerRoot = path.Join(app.DefaultWorkingDirMap()["web"], app.ComposerRoot)
+	} else {
+		absComposerRoot = path.Join(app.AppRoot, app.ComposerRoot)
+	}
+
+	// If requested, let the user know we are not using the default composer
+	// root directory to avoid confusion.
+	if app.ComposerRoot != "" && showWarning {
+		util.Warning("Using '%s' as composer root directory", absComposerRoot)
+	}
+
+	return absComposerRoot
 }
 
 // GetName returns the app's name
@@ -2479,35 +2503,6 @@ func (app *DdevApp) GetWorkingDir(service string, dir string) string {
 
 	// The next highest preference is for app type defaults
 	return app.DefaultWorkingDirMap()[service]
-}
-
-// GetComposerRootDir will determine the composer root directory where all
-// Composer related commands will be executed.
-func (app *DdevApp) GetComposerRootDir(showWarning bool) string {
-	// Default is the default working directory, does not take a user configured
-	// working direcotry into account because this would be breaking.
-	composerRootDir := path.Clean(app.DefaultWorkingDirMap()["web"])
-
-	// The highest preference has the directory defined in config.yaml, so
-	// override the default again with the user configured value.
-	if app.ComposerRootDir != "" {
-		if path.IsAbs(app.ComposerRootDir) {
-			// Use an absolute path as is, just clean it.
-			composerRootDir = path.Clean(app.ComposerRootDir)
-		} else {
-			// Relative paths will always be relative to the current configured
-			// working direcotry.
-			composerRootDir = path.Clean(path.Join(app.GetWorkingDir("web", ""), path.Clean(app.ComposerRootDir)))
-		}
-
-		if showWarning {
-			// Let the user know we are not using the default composer root
-			// directory to avoid confusion.
-			util.Warning("Using '%s' as composer root directory", composerRootDir)
-		}
-	}
-
-	return composerRootDir
 }
 
 // GetNFSMountVolumeName returns the docker volume name of the nfs mount volume

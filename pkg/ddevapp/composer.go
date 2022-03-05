@@ -19,7 +19,7 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "web",
-		Dir:     app.GetComposerRootDir(true),
+		Dir:     app.GetComposerRoot(true, true),
 		RawCmd:  append([]string{"composer"}, args...),
 		Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 	})
@@ -38,5 +38,6 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 	if err != nil {
 		return "", "", fmt.Errorf("failed to process post-composer hooks: %v", err)
 	}
+
 	return stdout, stderr, nil
 }
