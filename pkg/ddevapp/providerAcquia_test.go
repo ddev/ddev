@@ -22,10 +22,10 @@ import (
  * A valid site (with backups) must be present which matches the test site and environment name
  * defined in the constants below.
  */
-const acquiaPullTestSite = "eeamoreno.dev"
-const acquiaPushTestSite = "eeamoreno.stg"
+const acquiaPullTestSite = "ddevdemo.dev"
+const acquiaPushTestSite = "ddevdemo.test"
 
-const acquiaPullSiteURL = "http://eeamorenodev.prod.acquia-sites.com/"
+const acquiaPullSiteURL = "http://ddevdemodev.prod.acquia-sites.com/"
 const acquiaSiteExpectation = "Super easy vegetarian pasta"
 
 // TestAcquiaPull ensures we can pull backups from Acquia
