@@ -33,6 +33,8 @@ func TestComposerCmd(t *testing.T) {
 
 		if composerRoot != "" {
 			arguments = append(arguments, "--composer-root", composerRoot)
+			err = os.Mkdir(composerRoot, 0777)
+			assert.NoError(err)
 		}
 
 		// Basic config
