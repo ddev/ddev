@@ -109,7 +109,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
 			RawCmd:  composerCmd,
-			Dir:     containerInstallPath,
+			Dir:     "/var/www/html",
 			Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 		})
 		if err != nil {
@@ -122,12 +122,10 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 		output.UserOut.Printf("Moving installation to composer root")
 
-		containerComposerRoot := app.GetComposerRoot(true, false)
-
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
-			Cmd:     fmt.Sprintf(`rsync -a "%s/" "%s/"`, containerInstallPath, containerComposerRoot),
-			Dir:     containerComposerRoot,
+			Cmd:     fmt.Sprintf(`rsync -a "%s/" "%s/"`, containerInstallPath, app.GetComposerRoot(true, false)),
+			Dir:     "/var/www/html",
 		})
 
 		if err != nil {
