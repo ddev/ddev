@@ -160,6 +160,7 @@ func TestConfigSetValues(t *testing.T) {
 	assert.NoError(err)
 
 	// Build config args
+	composerRootDir := "composer-root"
 	projectName := t.Name()
 	projectType := nodeps.AppTypeTYPO3
 	phpVersion := nodeps.PHP71
@@ -188,7 +189,6 @@ func TestConfigSetValues(t *testing.T) {
 	webWorkingDir := "/custom/web/dir"
 	dbWorkingDir := "/custom/db/dir"
 	dbaWorkingDir := "/custom/dba/dir"
-	composerRootDir := "custom-dir"
 	phpMyAdminPort := "5000"
 	mailhogPort := "5001"
 	projectTLD := "nowhere.example.com"
@@ -201,6 +201,7 @@ func TestConfigSetValues(t *testing.T) {
 		"config",
 		"--project-name", projectName,
 		"--docroot", docroot,
+		"--composer-root", composerRootDir,
 		"--project-type", projectType,
 		"--php-version", phpVersion,
 		"--composer-version", composerVersion,
@@ -216,7 +217,6 @@ func TestConfigSetValues(t *testing.T) {
 		"--web-working-dir", webWorkingDir,
 		"--db-working-dir", dbWorkingDir,
 		"--dba-working-dir", dbaWorkingDir,
-		"--composer-root-dir", composerRootDir,
 		"--omit-containers", omitContainers,
 		"--host-db-port", hostDBPort,
 		"--host-webserver-port", hostWebserverPort,
@@ -248,6 +248,7 @@ func TestConfigSetValues(t *testing.T) {
 
 	assert.Equal(projectName, app.Name)
 	assert.Equal(docroot, app.Docroot)
+	assert.Equal(composerRootDir, app.ComposerRoot)
 	assert.Equal(projectType, app.Type)
 	assert.Equal(phpVersion, app.PHPVersion)
 	assert.Equal(composerVersion, app.ComposerVersion)
@@ -265,7 +266,6 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(webWorkingDir, app.WorkingDir["web"])
 	assert.Equal(dbWorkingDir, app.WorkingDir["db"])
 	assert.Equal(dbaWorkingDir, app.WorkingDir["dba"])
-	assert.Equal(composerRootDir, app.ComposerRootDir)
 	assert.Equal(webimageExtraPackagesSlice, app.WebImageExtraPackages)
 	assert.Equal(dbimageExtraPackagesSlice, app.DBImageExtraPackages)
 	assert.Equal(phpMyAdminPort, app.PHPMyAdminPort)
@@ -280,13 +280,13 @@ func TestConfigSetValues(t *testing.T) {
 	// Test that container images, working dirs and composer root dir can be unset with default flags
 	args = []string{
 		"config",
+		"--composer-root-default",
 		"--web-image-default",
 		"--db-image-default",
 		"--dba-image-default",
 		"--web-working-dir-default",
 		"--db-working-dir-default",
 		"--dba-working-dir-default",
-		"--composer-root-dir-default",
 	}
 
 	_, err = exec.RunHostCommand(DdevBin, args...)
@@ -299,18 +299,17 @@ func TestConfigSetValues(t *testing.T) {
 	err = yaml.Unmarshal(configContents, app)
 	assert.NoError(err, "Could not unmarshal %s: %v", configFile, err)
 
+	assert.Equal(app.ComposerRoot, "")
 	assert.Equal(app.WebImage, "")
 	assert.Equal(len(app.WorkingDir), 0)
-	assert.Equal(len(app.ComposerRootDir), 0)
 
-	// Test that all container images, working dirs and composer root dir can each be unset with single default images flag
+	// Test that all container images and working dirs can each be unset with single default images flag
 	args = []string{
 		"config",
 		"--web-image", webImage,
 		"--web-working-dir", webWorkingDir,
 		"--db-working-dir", dbWorkingDir,
 		"--dba-working-dir", dbaWorkingDir,
-		"--composer-root-dir", composerRootDir,
 	}
 
 	_, err = exec.RunHostCommand(DdevBin, args...)
