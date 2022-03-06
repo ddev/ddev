@@ -1,6 +1,6 @@
 name: Tests
 on:
-  pull_request:
+  pull_request_target:
     paths:
       - "go.*"
       - "pkg/**"
@@ -23,7 +23,7 @@ env:
   BUILDKIT_PROGRESS: plain
   DOCKER_CLI_EXPERIMENTAL: enabled
   DDEV_DEBUG: true
-  DDEV_GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
+  DDEV_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   tests:
