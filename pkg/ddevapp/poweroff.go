@@ -14,7 +14,7 @@ func PowerOff() {
 	}
 
 	// Remove any custom certs that may have been added
-	_, _, err = dockerutil.RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", "rm -f /mnt/ddev-global-cache/custom_certs/*"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-global-cache"}, "", true, false, nil)
+	_, _, err = dockerutil.RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "rm -f /mnt/ddev-global-cache/custom_certs/*"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-global-cache"}, "", true, false, nil)
 	if err != nil {
 		util.Warning("Failed removing custom certs: %v", err)
 	}
