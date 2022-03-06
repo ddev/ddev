@@ -96,8 +96,8 @@ func CreateAppTable(out *bytes.Buffer) table.Writer {
 
 		t.SetColumnConfigs([]table.ColumnConfig{
 			{
-				Name:     "Name",
-				WidthMax: nameWidth,
+				Name: "Name",
+				//WidthMax: nameWidth,
 			},
 			{
 				Name:     "Type",
@@ -108,8 +108,8 @@ func CreateAppTable(out *bytes.Buffer) table.Writer {
 				WidthMax: locationWidth,
 			},
 			{
-				Name:     "URL",
-				WidthMax: urlWidth,
+				Name: "URL",
+				//WidthMax: urlWidth,
 			},
 			{
 				Name:     "Status",

@@ -82,8 +82,8 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 				WidthMax: 10,
 			},
 			{
-				Name:     "URL/Port",
-				WidthMax: int(urlPortWidth),
+				Name: "URL/Port",
+				//WidthMax: int(urlPortWidth),
 			},
 			{
 				Name:     "Info",
