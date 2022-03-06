@@ -1,6 +1,6 @@
 name: Colima tests
 on:
-  pull_request:
+  pull_request_target:
     paths:
       - "go.*"
       - "pkg/**"
@@ -27,7 +27,7 @@ defaults:
 
 env:
   DDEV_DEBUG: true
-  DDEV_GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
+  DDEV_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   tests:
