@@ -23,7 +23,7 @@ jobs:
       SegmentKey: ${{ secrets.SEGMENTKEY }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0
@@ -65,7 +65,7 @@ jobs:
       AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
       SegmentKey: ${{ secrets.SEGMENTKEY }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Build and sign windows binaries and installer
@@ -104,7 +104,7 @@ jobs:
         run: |
           brew install coreutils gnu-getopt jq
           pip3 install yq
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0
@@ -155,7 +155,7 @@ jobs:
       CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0

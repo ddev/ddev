@@ -53,7 +53,7 @@ jobs:
       DDEV_TEST_USE_MUTAGEN: "true"
       GOTEST_SHORT: "true"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Homebrew cache/restore
         uses: actions/cache@v2
