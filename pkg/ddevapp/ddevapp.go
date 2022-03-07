@@ -911,11 +911,6 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
-	err = app.PullContainerImages()
-	if err != nil {
-		util.Warning("Unable to pull docker images: %v", err)
-	}
-
 	dockerutil.CheckAvailableSpace()
 
 	// Copy any homeadditions content into .ddev/.homeadditions
@@ -1018,6 +1013,12 @@ func (app *DdevApp) Start() error {
 	err = app.WriteDockerComposeYAML()
 	if err != nil {
 		return err
+	}
+
+	// This needs to be done after WriteDockerComposeYAML() to get the right images
+	err = app.PullContainerImages()
+	if err != nil {
+		util.Warning("Unable to pull docker images: %v", err)
 	}
 
 	err = app.CheckAddonIncompatibilities()
