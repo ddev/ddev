@@ -33,7 +33,7 @@ jobs:
         containers: [dbserver, webserver, others]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install Docker and deps (Linux)
         if: matrix.os == 'ubuntu-20.04'

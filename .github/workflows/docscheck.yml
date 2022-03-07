@@ -25,7 +25,7 @@ jobs:
     name: Docs check (spellcheck, markdownlint)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
       - uses: rojopolis/spellcheck-github-actions@0.22.1
         name: Spellcheck
       - name: Run markdownlint on docs
