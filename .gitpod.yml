@@ -1,13 +1,13 @@
 image: drud/ddev-gitpod-base:latest
 tasks:
   - name: build-run
-#    init: |
-#      # Compile ddev
-#      make
-#      cd /tmp && ddev config --auto
-#      ddev debug download-images
-#      ddev delete -Oy tmp
-#      mkcert -install
+    init: |
+      # Compile ddev
+      make
+      cd /tmp && ddev config --auto
+      ddev debug download-images
+      ddev delete -Oy tmp
+      mkcert -install
     command: |
       export DDEV_NONINTERACTIVE=true
       DDEV_REPO=${DDEV_REPO:-https://github.com/drud/d9simple}
