@@ -859,6 +859,7 @@ func (app *DdevApp) Start() error {
 
 	app.DockerEnv()
 	dockerutil.EnsureDdevNetwork()
+
 	volumesNeeded := []string{"ddev-global-cache", "ddev-" + app.Name + "-snapshots"}
 	for _, v := range volumesNeeded {
 		_, err = dockerutil.CreateVolume(v, "local", nil)
@@ -909,6 +910,11 @@ func (app *DdevApp) Start() error {
 	err = app.GeneratePostgresConfig()
 	if err != nil {
 		return err
+	}
+
+	err = app.PullBaseContainerImages()
+	if err != nil {
+		util.Warning("Unable to pull docker images: %v", err)
 	}
 
 	dockerutil.CheckAvailableSpace()
@@ -1144,6 +1150,30 @@ func (app *DdevApp) PullContainerImages() error {
 	}
 
 	images = append(images, version.GetRouterImage(), version.GetSSHAuthImage())
+	for _, i := range images {
+		err := dockerutil.Pull(i)
+		if err != nil {
+			return err
+		}
+		if globalconfig.DdevDebug {
+			output.UserOut.Printf("Pulling image for %s", i)
+		}
+	}
+
+	return nil
+}
+
+// PullCBaseontainerImages pulls only the fundamentally needed images so they can be available early
+// We always need web image and busybox just for housekeeping.
+func (app *DdevApp) PullBaseContainerImages() error {
+	images := []string{version.GetWebImage(), version.BusyboxImage}
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), SSHAuthName) {
+		images = append(images, version.GetSSHAuthImage())
+	}
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), RouterProjectName) {
+		images = append(images, version.GetRouterImage())
+	}
+
 	for _, i := range images {
 		err := dockerutil.Pull(i)
 		if err != nil {
