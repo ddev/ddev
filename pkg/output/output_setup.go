@@ -31,14 +31,15 @@ func LogSetUp() {
 	}
 
 	UserOutFormatter.DisableTimestamp = true
-	// Always use log.DebugLevel for UserOut
-	UserOut.Level = log.DebugLevel // UserOut will by default always output
-
-	// But we use custom DDEV_DEBUG-settable loglevel for log
+	// Use default log.InfoLevel for UserOut
+	UserOut.Level = log.InfoLevel // UserOut will by default always output
 	logLevel := log.InfoLevel
+
+	// But we use custom DDEV_DEBUG-settable loglevel for log; export DDEV_DEBUG=true
 	ddevDebug := os.Getenv("DDEV_DEBUG")
 	if ddevDebug != "" {
 		logLevel = log.DebugLevel
+		UserOut.Level = log.DebugLevel
 	}
 	log.SetLevel(logLevel)
 }

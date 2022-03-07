@@ -813,7 +813,7 @@ func (app *DdevApp) ComposeFiles() ([]string, error) {
 // ProcessHooks executes Tasks defined in Hooks
 func (app *DdevApp) ProcessHooks(hookName string) error {
 	if cmds := app.Hooks[hookName]; len(cmds) > 0 {
-		output.UserOut.Printf("Executing %s hook...", hookName)
+		output.UserOut.Debugf("Executing %s hook...", hookName)
 	}
 
 	for _, c := range app.Hooks[hookName] {
