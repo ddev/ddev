@@ -82,6 +82,9 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
 
 RUN npm config set unsafe-perm true && npm install --global gulp-cli yarn
 RUN set -eu -o pipefail && LATEST=$(curl --silent "https://api.github.com/repos/nvm-sh/nvm/releases/latest" | jq -r .tag_name) && curl -sL https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST}/install.sh -o /usr/local/bin/install_nvm.sh && chmod +x /usr/local/bin/install_nvm.sh
+# Do an initial nvm install and set up the /usr/local/nvm pointer to it.
+# The symlink must be writeable so it can be changed by unprivileged hardened startup.
+RUN NVM_DIR=/usr/local/nvm_build /usr/local/bin/install_nvm.sh && ln -sf /usr/local/nvm_build /usr/local/nvm && chmod 777 /usr/local/nvm
 
 # The number of permutations of php packages available on each architecture because
 # too much to handle, so has been codified here instead of in obscure logic
