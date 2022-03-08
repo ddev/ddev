@@ -1485,7 +1485,6 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 	}
 	args = append(args, shell, "-c", opts.Cmd)
 
-	util.Debug("ExecWithTty: docker-compose %v", args)
 	return dockerutil.ComposeWithStreams([]string{app.DockerComposeFullRenderedYAMLPath()}, os.Stdin, os.Stdout, os.Stderr, args...)
 }
 
