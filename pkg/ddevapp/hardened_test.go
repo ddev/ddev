@@ -3,7 +3,6 @@ package ddevapp_test
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/testcommon"
@@ -11,7 +10,6 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
-	"path"
 	"path/filepath"
 	"testing"
 	"time"
@@ -22,15 +20,18 @@ func TestHardenedStart(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
-	// Make sure this leaves us in the original test directory
 	origDir, _ := os.Getwd()
 
 	site := TestSites[0]
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+	if app.IsMutagenEnabled() {
+		t.Skip("Skipping test because mutagen is enabled")
+	}
 
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStart", site.Name))
 
-	_, err := exec.RunHostCommand(DdevBin, "poweroff")
-	require.NoError(t, err)
+	ddevapp.PowerOff()
 
 	t.Cleanup(func() {
 		runTime()
@@ -45,6 +46,7 @@ func TestHardenedStart(t *testing.T) {
 		globalconfig.DdevGlobalConfig.UseHardenedImages = false
 		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		require.NoError(t, err)
+		ddevapp.PowerOff()
 	})
 
 	err = globalconfig.ReadGlobalConfig()
@@ -52,8 +54,6 @@ func TestHardenedStart(t *testing.T) {
 	globalconfig.DdevGlobalConfig.UseHardenedImages = true
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
-	err = app.Init(site.Dir)
-	assert.NoError(err)
 
 	// Create the simplest possible php file
 	err = fileutil.TemplateStringToFile("<?php\necho \"hi there\";\n", nil, filepath.Join(app.AppRoot, "test.php"))
@@ -62,7 +62,7 @@ func TestHardenedStart(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	testURL := path.Join(app.GetPrimaryURL(), "test.php")
+	testURL := app.GetPrimaryURL() + "/test.php"
 	out, resp, err := testcommon.GetLocalHTTPResponse(t, testURL)
 	assert.NoError(err, "Error getting response from %s: %v, out=%s, resp=%v", testURL, err, out, resp)
 }

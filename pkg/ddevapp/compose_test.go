@@ -3,7 +3,6 @@ package ddevapp_test
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
@@ -29,12 +28,11 @@ func TestComposeV1(t *testing.T) {
 
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStart", site.Name))
 
-	_, err := exec.RunHostCommand(DdevBin, "poweroff")
-	require.NoError(t, err)
+	ddevapp.PowerOff()
 
 	t.Cleanup(func() {
 		runTime()
-		err = os.Chdir(origDir)
+		err := os.Chdir(origDir)
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
@@ -45,7 +43,7 @@ func TestComposeV1(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	err = globalconfig.ReadGlobalConfig()
+	err := globalconfig.ReadGlobalConfig()
 	require.NoError(t, err)
 	globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion = "v1.29.2"
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)

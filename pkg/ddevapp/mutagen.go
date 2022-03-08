@@ -38,7 +38,10 @@ func SetMutagenVolumeOwnership(app *DdevApp) error {
 			Dir: "/tmp",
 			Cmd: fmt.Sprintf("sudo chown -R %s:%s /tmp/project_mutagen", uidStr, gidStr),
 		})
-	util.Debug("done chowning mutagen docker volume")
+	if err != nil {
+		util.Warning("Failed to chown mutagen volume: %v", err)
+	}
+	util.Debug("done chowning mutagen docker volume; result=%v", err)
 	return err
 }
 
