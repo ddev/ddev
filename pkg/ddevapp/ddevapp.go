@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"golang.org/x/term"
 	"gopkg.in/yaml.v2"
 	"net"
 	"os"
@@ -1453,6 +1454,14 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 	}
 
 	args := []string{"exec"}
+
+	// In the case where this is being used without an available tty,
+	// make sure we use the -T to turn off tty to avoid panic in docker-compose v2.2.3
+	// see https://stackoverflow.com/questions/70855915/fix-panic-provided-file-is-not-a-console-from-docker-compose-in-github-action
+	if !term.IsTerminal(int(os.Stdin.Fd())) {
+		args = append(args, "-T")
+	}
+
 	if opts.Dir != "" {
 		args = append(args, "-w", opts.Dir)
 	}
@@ -1476,12 +1485,8 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 	}
 	args = append(args, shell, "-c", opts.Cmd)
 
-	files, err := app.ComposeFiles()
-	if err != nil {
-		return err
-	}
-
-	return dockerutil.ComposeWithStreams(files, os.Stdin, os.Stdout, os.Stderr, args...)
+	util.Debug("ExecWithTty: docker-compose %v", args)
+	return dockerutil.ComposeWithStreams([]string{app.DockerComposeFullRenderedYAMLPath()}, os.Stdin, os.Stdout, os.Stderr, args...)
 }
 
 func (app *DdevApp) ExecOnHostOrService(service string, cmd string) error {
