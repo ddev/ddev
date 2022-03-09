@@ -19,6 +19,7 @@ import (
 	"github.com/mattn/go-isatty"
 	"github.com/otiai10/copy"
 	"github.com/pkg/errors"
+	osexec "os/exec"
 
 	"path"
 	"time"
