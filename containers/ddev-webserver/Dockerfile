@@ -169,7 +169,6 @@ ENV MH_SMTP_BIND_ADDR 127.0.0.1:1025
 ENV BASH_ENV /etc/bash.nointeractive.bashrc
 ENV LANG=C.UTF-8
 ENV XHPROF_OUTPUT_DIR=/tmp/xhprof
-ENV NVM_DIR=/usr/local/nvm
 
 COPY --from=ddev-webserver-dev-base / /
 EXPOSE 80 8025
@@ -260,9 +259,6 @@ HEALTHCHECK --interval=1s --retries=10 --timeout=120s --start-period=10s CMD ["/
 CMD ["/start.sh"]
 RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
 
-# We need a /usr/local/nvm symlink that the start.sh can change without sudo
-RUN mkdir /tmp/junk-nvm && ln -sf /usr/local/nvm/junk-nvm /usr/local/nvm && chmod 777 /usr/local/nvm
-
 #END ddev-webserver-prod-base
 
 ### ---------------------------ddev-webserver-prod--------------------------------------
@@ -279,7 +275,6 @@ ENV COMPOSER_PROCESS_TIMEOUT=2000
 ENV DEBIAN_FRONTEND noninteractive
 ENV LANG=C.UTF-8
 ENV TERM xterm
-ENV NVM_DIR=/usr/local/nvm
 ENV BASH_ENV /etc/bash.nointeractive.bashrc
 
 COPY --from=ddev-webserver-prod-base / /
