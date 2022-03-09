@@ -76,8 +76,8 @@ disable_xhprof
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
 mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory,nvm_dir}/${HOSTNAME}
-ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ${NVM_DIR}
-if [ ! -f ${NVM_DIR}/nvm.sh ]; then (install_nvm.sh || true); fi
+ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ${NVM_DIR:-${HOME}/.nvm}
+if [ ! -f ${NVM_DIR:-${HOME}/.nvm}/nvm.sh ]; then (install_nvm.sh || true); fi
 
 # chown of ddev-global-cache must be done with privileged container in app.Start()
 # chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/
