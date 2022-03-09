@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
 	"os"
 	"strings"
+
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 
 	"path/filepath"
 
@@ -22,6 +23,12 @@ var (
 
 	// docrootRelPathArg is the relative path to the docroot where index.php is.
 	docrootRelPathArg string
+
+	// composerRootRelPathArg allows a user to define the composer root directory for the web service.
+	composerRootRelPathArg string
+
+	// composerRootRelPathDefaultArg allows a user to unset a web service composer root directory override.
+	composerRootRelPathDefaultArg bool
 
 	// projectNameArg is the name of the site.
 	projectNameArg string
@@ -228,6 +235,8 @@ func init() {
 
 	ConfigCommand.Flags().StringVar(&projectNameArg, "project-name", "", projectNameUsage)
 	ConfigCommand.Flags().StringVar(&docrootRelPathArg, "docroot", "", "Provide the relative docroot of the project, like 'docroot' or 'htdocs' or 'web', defaults to empty, the current directory")
+	ConfigCommand.Flags().StringVar(&composerRootRelPathArg, "composer-root", "", "Overrides the default composer root directory for the web service")
+	ConfigCommand.Flags().BoolVar(&composerRootRelPathDefaultArg, "composer-root-default", false, "Unsets a web service composer root directory override")
 	ConfigCommand.Flags().StringVar(&projectTypeArg, "project-type", "", projectTypeUsage)
 	ConfigCommand.Flags().StringVar(&phpVersionArg, "php-version", "", "The version of PHP that will be enabled in the web container")
 	ConfigCommand.Flags().StringVar(&httpPortArg, "http-port", "", "The router HTTP port for this project")
@@ -407,6 +416,15 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		}
 	} else if !cmd.Flags().Changed("docroot") {
 		app.Docroot = ddevapp.DiscoverDefaultDocroot(app)
+	}
+
+	// Set composer root directory overrides
+	if composerRootRelPathArg != "" {
+		app.ComposerRoot = composerRootRelPathArg
+	}
+
+	if composerRootRelPathDefaultArg {
+		app.ComposerRoot = ""
 	}
 
 	if projectTypeArg != "" && !ddevapp.IsValidAppType(projectTypeArg) {

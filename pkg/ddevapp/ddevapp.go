@@ -120,6 +120,7 @@ type DdevApp struct {
 	MkcertEnabled             bool                   `yaml:"-"`
 	NgrokArgs                 string                 `yaml:"ngrok_args,omitempty"`
 	Timezone                  string                 `yaml:"timezone,omitempty"`
+	ComposerRoot              string                 `yaml:"composer_root,omitempty"`
 	ComposerVersion           string                 `yaml:"composer_version"`
 	DisableSettingsManagement bool                   `yaml:"disable_settings_management,omitempty"`
 	WebEnvironment            []string               `yaml:"web_environment"`
@@ -382,6 +383,32 @@ func (app *DdevApp) AppConfDir() string {
 // GetDocroot returns the docroot path for ddev app
 func (app DdevApp) GetDocroot() string {
 	return app.Docroot
+}
+
+// GetComposerRoot will determine the absolute composer root directory where
+// all Composer related commands will be executed.
+// If inContainer set to true, the absolute path in the container will be
+// returned, else the absolute path on the host.
+// If showWarning set to true, a warning containing the composer root will be
+// shown to the user to avoid confusion.
+func (app *DdevApp) GetComposerRoot(inContainer, showWarning bool) string {
+	basePath := ""
+
+	if inContainer {
+		basePath = app.DefaultWorkingDirMap()["web"]
+	} else {
+		basePath = app.AppRoot
+	}
+
+	absComposerRoot := path.Join(basePath, app.ComposerRoot)
+
+	// If requested, let the user know we are not using the default composer
+	// root directory to avoid confusion.
+	if app.ComposerRoot != "" && showWarning {
+		util.Warning("Using '%s' as composer root directory", absComposerRoot)
+	}
+
+	return absComposerRoot
 }
 
 // GetName returns the app's name

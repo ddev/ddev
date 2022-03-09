@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"testing"
+
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
-	"testing"
 
 	"os"
 	"path/filepath"
@@ -169,6 +170,7 @@ func TestConfigSetValues(t *testing.T) {
 	hostHTTPSPort := "60003"
 	xdebugEnabled := true
 	noProjectMount := true
+	composerRoot := "composer-root"
 	composerVersion := "2.0.0-RC2"
 	additionalHostnamesSlice := []string{"abc", "123", "xyz"}
 	additionalHostnames := strings.Join(additionalHostnamesSlice, ",")
@@ -201,6 +203,7 @@ func TestConfigSetValues(t *testing.T) {
 		"--docroot", docroot,
 		"--project-type", projectType,
 		"--php-version", phpVersion,
+		"--composer-root", composerRoot,
 		"--composer-version", composerVersion,
 		"--http-port", httpPort,
 		"--https-port", httpsPort,
@@ -247,6 +250,7 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(docroot, app.Docroot)
 	assert.Equal(projectType, app.Type)
 	assert.Equal(phpVersion, app.PHPVersion)
+	assert.Equal(composerRoot, app.ComposerRoot)
 	assert.Equal(composerVersion, app.ComposerVersion)
 	assert.Equal(httpPort, app.RouterHTTPPort)
 	assert.Equal(httpsPort, app.RouterHTTPSPort)
@@ -273,9 +277,10 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(webEnv, app.WebEnvironment[0])
 	assert.Equal(nodejsVersion, app.NodeJSVersion)
 
-	// Test that container images and working dirs can be unset with default flags
+	// Test that container images, working dirs and composer root dir can be unset with default flags
 	args = []string{
 		"config",
+		"--composer-root-default",
 		"--web-image-default",
 		"--db-image-default",
 		"--dba-image-default",
@@ -294,6 +299,7 @@ func TestConfigSetValues(t *testing.T) {
 	err = yaml.Unmarshal(configContents, app)
 	assert.NoError(err, "Could not unmarshal %s: %v", configFile, err)
 
+	assert.Equal(app.ComposerRoot, "")
 	assert.Equal(app.WebImage, "")
 	assert.Equal(len(app.WorkingDir), 0)
 

@@ -2,14 +2,15 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/mattn/go-isatty"
 	"os"
 	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/mattn/go-isatty"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/output"
@@ -28,8 +29,8 @@ var ComposerCreateCmd = &cobra.Command{
 	Short: "Executes 'composer create-project' within the web container with the arguments and flags provided",
 	Long: `Directs basic invocations of 'composer create-project' within the context of the
 web container. Projects will be installed to a temporary directory and moved to
-the project root directory after installation. Any existing files in the
-project root will be deleted when creating a project.`,
+the composer root directory after installation. Any existing files in the
+composer root will be deleted when creating a project.`,
 	Example: `ddev composer create drupal/recommended-project
 ddev composer create -y drupal/recommended-project
 ddev composer create "typo3/cms-base-distribution:^10"
@@ -60,28 +61,30 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			}
 		}
 
+		composerRoot := app.GetComposerRoot(false, false)
+
 		// Make the user confirm that existing contents will be deleted
-		util.Warning("Warning: MOST EXISTING CONTENT in the project root (%s) will be deleted by the composer create-project operation. .git and .ddev will be preserved.", app.AppRoot)
+		util.Warning("Warning: MOST EXISTING CONTENT in the composer root (%s) will be deleted by the composer create-project operation. Only .ddev, .git and .tarballs will be preserved.", composerRoot)
 		if !composerCreateYesFlag {
 			if !util.Confirm("Would you like to continue?") {
 				util.Failed("create-project cancelled")
 			}
 		}
 
-		// Remove most contents of project root
-		util.Warning("Removing any existing files in project root")
-		objs, err := fileutil.ListFilesInDir(app.AppRoot)
+		// Remove most contents of composer root
+		util.Warning("Removing any existing files in composer root")
+		objs, err := fileutil.ListFilesInDir(composerRoot)
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
 		}
 
 		for _, o := range objs {
-			// Preserve .ddev, .git. .tarballs
+			// Preserve .ddev, .git, .tarballs
 			if o == ".ddev" || o == ".git" || o == ".tarballs" {
 				continue
 			}
 
-			if err = os.RemoveAll(filepath.Join(app.AppRoot, o)); err != nil {
+			if err = os.RemoveAll(filepath.Join(composerRoot, o)); err != nil {
 				util.Failed("Failed to create project: %v", err)
 			}
 		}
@@ -117,23 +120,25 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			fmt.Println(strings.TrimSpace(stdout))
 		}
 
-		output.UserOut.Printf("Moving installation to project root")
+		output.UserOut.Printf("Moving installation to composer root")
 
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
-			Cmd:     fmt.Sprintf(`rsync -a "%s/" /var/www/html/`, containerInstallPath),
+			Cmd:     fmt.Sprintf(`rsync -a "%s/" "%s/"`, containerInstallPath, app.GetComposerRoot(true, false)),
 			Dir:     "/var/www/html",
 		})
 
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
 		}
+
 		// Do a spare restart, which will create any needed settings files
 		// and also restart mutagen
 		err = app.Restart()
 		if err != nil {
 			util.Warning("Failed to restart project after composer create: %v", err)
 		}
+
 		if runtime.GOOS == "windows" {
 			fileutil.ReplaceSimulatedLinks(app.AppRoot)
 		}

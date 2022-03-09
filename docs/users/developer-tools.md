@@ -42,7 +42,7 @@ To execute a fully-featured `composer create-project` command, you can execute t
 
 DDEV-Local uses composer version 2 by default. If you want to roll back to version 1, `ddev config --composer-version=1 && ddev start`
 
-If your composer.json is not in the project root, you'll need to provide the `-d` argument expressing the **in-container** path to the directory where the composer.json is, for example, `ddev composer install -d /var/www/html/path/to/dir`.
+**composer.json Location**: The most common situation is for the composer.json to be in the project root, but if your composer.json is not in the project root, use the `composer_root` option in `.ddev/config.yaml` or `ddev config --composer-root <dir>`. The `composer_root` value is the *relative* path from the project root to the directory where the composer.json file is. So if the composer.json is `docroot/composer.json`, the `composer_root` value should be `docroot`.
 
 Note: if you run `ddev composer global require`, (or run `composer global require` inside the web container) the global packages will be installed in the in-container user's home directory ( ~/.composer) and will disappear on the next container restart, requiring rerun of the command. You may need an additional step of synchronizing created composer configuration and installed packages with the DDEV's [homeadditions folder](extend/in-container-configuration.md) on the host.
 

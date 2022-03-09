@@ -2,10 +2,11 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/mattn/go-isatty"
 	"os"
 	"runtime"
+
+	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/mattn/go-isatty"
 )
 
 // Composer runs composer commands in the web container, managing pre- and post- hooks
@@ -13,12 +14,12 @@ import (
 func (app *DdevApp) Composer(args []string) (string, string, error) {
 	err := app.ProcessHooks("pre-composer")
 	if err != nil {
-		return "", "", fmt.Errorf("Failed to process pre-composer hooks: %v", err)
+		return "", "", fmt.Errorf("failed to process pre-composer hooks: %v", err)
 	}
 
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "web",
-		Dir:     "/var/www/html",
+		Dir:     app.GetComposerRoot(true, true),
 		RawCmd:  append([]string{"composer"}, args...),
 		Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 	})
@@ -35,7 +36,8 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 	}
 	err = app.ProcessHooks("post-composer")
 	if err != nil {
-		return "", "", fmt.Errorf("Failed to process post-composer hooks: %v", err)
+		return "", "", fmt.Errorf("failed to process post-composer hooks: %v", err)
 	}
+
 	return stdout, stderr, nil
 }

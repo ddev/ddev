@@ -46,6 +46,11 @@ const ConfigInstructions = `
 # see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 # For example Europe/Dublin or MST7MDT
 
+# composer_root: <relative_path>
+# Relative path to the composer root directory from the project root. This is
+# the directory which contains the composer.json and where all Composer related
+# commands are executed.
+
 # composer_version: "2"
 # if composer_version:"2" it will use the most recent composer v2
 # It can also be set to "1", to get most recent composer v1
