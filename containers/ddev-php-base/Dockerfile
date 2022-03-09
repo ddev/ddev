@@ -81,6 +81,8 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     sqlite3
 
 RUN npm config set unsafe-perm true && npm install --global gulp-cli yarn
+# Normal user needs to be able to write to php sessions
+RUN chmod 777 /var/lib/php/sessions
 RUN set -eu -o pipefail && LATEST=$(curl --silent "https://api.github.com/repos/nvm-sh/nvm/releases/latest" | jq -r .tag_name) && curl -sL https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST}/install.sh -o /usr/local/bin/install_nvm.sh && chmod +x /usr/local/bin/install_nvm.sh
 # Do an initial nvm install and set up the /usr/local/nvm pointer to it.
 # The symlink must be writeable so it can be changed by unprivileged hardened startup.
