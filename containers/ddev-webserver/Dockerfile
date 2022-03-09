@@ -259,6 +259,10 @@ RUN chmod ugo+w /etc/ssl/certs /usr/local/share/ca-certificates
 HEALTHCHECK --interval=1s --retries=10 --timeout=120s --start-period=10s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
 RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
+
+# We need a /usr/local/nvm symlink that the start.sh can change without sudo
+RUN mkdir /tmp/junk-nvm && ln -sf /usr/local/nvm/junk-nvm /usr/local/nvm && chmod 777 /usr/local/nvm
+
 #END ddev-webserver-prod-base
 
 ### ---------------------------ddev-webserver-prod--------------------------------------
