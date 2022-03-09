@@ -84,9 +84,9 @@ RUN npm config set unsafe-perm true && npm install --global gulp-cli yarn
 # Normal user needs to be able to write to php sessions
 RUN chmod 777 /var/lib/php/sessions
 RUN set -eu -o pipefail && LATEST=$(curl --silent "https://api.github.com/repos/nvm-sh/nvm/releases/latest" | jq -r .tag_name) && curl -sL https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST}/install.sh -o /usr/local/bin/install_nvm.sh && chmod +x /usr/local/bin/install_nvm.sh
-# Do an initial nvm install and set up the /usr/local/nvm pointer to it.
-# The symlink must be writeable so it can be changed by unprivileged hardened startup.
-RUN export NVM_DIR=/usr/local/nvm_build && mkdir ${NVM_DIR} && chmod 777 ${NVM_DIR} && /usr/local/bin/install_nvm.sh && ln -sf /usr/local/nvm_build /usr/local/nvm && chmod 777 /usr/local/nvm
+
+# This dummy symlink must be writeable so it can be changed by unprivileged hardened startup.
+RUN ln -sf /tmp/dummy-link /usr/local/nvm && chmod 777 /usr/local/nvm
 
 # The number of permutations of php packages available on each architecture because
 # too much to handle, so has been codified here instead of in obscure logic
