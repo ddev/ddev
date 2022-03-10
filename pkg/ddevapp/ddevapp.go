@@ -885,6 +885,9 @@ func (app *DdevApp) GetDBImage() string {
 func (app *DdevApp) Start() error {
 	var err error
 
+	if app.IsMutagenEnabled() && globalconfig.DdevGlobalConfig.UseHardenedImages {
+		return fmt.Errorf("mutagen-enabled is not compatible with use-hardened-images")
+	}
 	app.DockerEnv()
 	dockerutil.EnsureDdevNetwork()
 
@@ -1083,6 +1086,7 @@ func (app *DdevApp) Start() error {
 		return err
 	}
 
+	util.Debug("Executing docker-compose -f %s up --build -d", app.DockerComposeFullRenderedYAMLPath())
 	_, _, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "up", "--build", "-d")
 	if err != nil {
 		return err

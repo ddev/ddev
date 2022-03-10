@@ -3,7 +3,7 @@
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV-Local)
-FROM drud/ddev-php-base:v1.19.0 as ddev-webserver-base
+FROM drud/ddev-php-base:v1.19.0-1 as ddev-webserver-base
 
 ENV BACKDROP_DRUSH_VERSION=1.4.0
 ENV MKCERT_VERSION=v1.4.6
@@ -169,7 +169,6 @@ ENV MH_SMTP_BIND_ADDR 127.0.0.1:1025
 ENV BASH_ENV /etc/bash.nointeractive.bashrc
 ENV LANG=C.UTF-8
 ENV XHPROF_OUTPUT_DIR=/tmp/xhprof
-ENV NVM_DIR=/usr/local/nvm
 
 COPY --from=ddev-webserver-dev-base / /
 EXPOSE 80 8025
@@ -259,6 +258,7 @@ RUN chmod ugo+w /etc/ssl/certs /usr/local/share/ca-certificates
 HEALTHCHECK --interval=1s --retries=10 --timeout=120s --start-period=10s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
 RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
+
 #END ddev-webserver-prod-base
 
 ### ---------------------------ddev-webserver-prod--------------------------------------
@@ -275,7 +275,6 @@ ENV COMPOSER_PROCESS_TIMEOUT=2000
 ENV DEBIAN_FRONTEND noninteractive
 ENV LANG=C.UTF-8
 ENV TERM xterm
-ENV NVM_DIR=/usr/local/nvm
 ENV BASH_ENV /etc/bash.nointeractive.bashrc
 
 COPY --from=ddev-webserver-prod-base / /
