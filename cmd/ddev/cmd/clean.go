@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/output"
@@ -13,14 +14,26 @@ import (
 )
 
 var CleanCmd = &cobra.Command{
-	Use:     "clean",
-	Short:   "Removes items ddev has created",
-	Long:    "Removes downloads and snapshots from projects and removes images",
-	Example: "ddev clean",
+	Use:   "clean [projectname ...]",
+	Short: "Removes items ddev has created",
+	Long: `Stops all running projects and then removes downloads and snapshots
+for the selected projects. Then clean will remove ddev images.
+
+Warning - This command will permanently delete your snapshots and you will lose
+your database data in these snapshots.
+
+Additional commands that can help clean up resources:
+  ddev delete --omit-snapshot
+  docker rmi -f $(docker images -q)
+  docker system prune --volumes
+	`,
+	Example: `ddev clean
+	ddev clean project1 project2
+	ddev clean --all`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		util.Success("Powering off ddev to avoid conflicts")
-		// ddevapp.PowerOff()
+		ddevapp.PowerOff()
 
 		util.Warning("Warning - Snapshots for the following project(s) will be permanently deleted")
 
@@ -74,14 +87,13 @@ var CleanCmd = &cobra.Command{
 			if err != nil {
 				util.Failed("Failed to delete image tag", err)
 			}
+			util.Success("Finished cleaning ddev projects")
 		}
-
-		util.Success("Finished cleaning ddev projects")
 	},
 }
 
 func init() {
 	CleanCmd.Flags().BoolP("all", "a", false, "Clean all ddev projects")
-	CleanCmd.Flags().Bool("dry-run", false, "Do a dry run to see what will be removed")
+	CleanCmd.Flags().Bool("dry-run", false, "Run the clean command without deleting")
 	RootCmd.AddCommand(CleanCmd)
 }
