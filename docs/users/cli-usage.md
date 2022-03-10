@@ -177,8 +177,9 @@ mkdir my-drupal9-site
 cd my-drupal9-site
 ddev config --project-type=drupal9 --docroot=web --create-docroot
 ddev start
-ddev composer create "drupal/recommended-project"
-ddev composer require drush/drush
+ddev composer create "drupal/recommended-project" --no-install
+ddev composer require drush/drush --no-install
+ddev composer install
 ddev drush site:install -y
 ddev drush uli
 ddev launch
@@ -221,7 +222,8 @@ mkdir my-typo3-site
 cd my-typo3-site
 ddev config --project-type=typo3 --docroot=public --create-docroot
 ddev start
-ddev composer create "typo3/cms-base-distribution"
+ddev composer create "typo3/cms-base-distribution" --no-install
+ddev composer install
 ddev exec touch public/FIRST_INSTALL
 ddev launch
 ```
