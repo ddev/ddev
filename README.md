@@ -60,3 +60,13 @@ We love to hear from our users and help them be successful with ddev. Support op
 * **Contributing** See the "How can I contribute" question in the [FAQ](https://ddev.readthedocs.io/en/stable/users/faq/) and [Contributing.md](CONTRIBUTING.md).
 * **Version History:** See DDEV's [version history](https://ddev.readthedocs.io/en/latest/users/topics/version-history/) to browse through all the features that have been added.
 * **Roadmap:** Take a look at the [milestones](https://github.com/drud/ddev/milestones) in the [ddev issue queue](https://github.com/drud/ddev/issues) to get an understanding of what's prioritized and what's next. We love your input! Make requests in the issue queue (if your request doesn't exist yet).
+
+## Wonderful Sponsors
+
+[<img src="https://platform.sh/logos/redesign/Platformsh_logo_black.svg" alt="Platform.sh" width="200">](platform.sh)
+[<img src="images/agaric-logo-stacked.svg" alt="Agaric" width="50"/>](https://agaric.coop/)
+[<img src="images/b13-logo.png" width="50" />](https://b13.com/) [<img src="images/gizra-logo.png" width="50" />](https://gizra.com/)
+[<img src="images/oliver-wand.jpeg" width="50" />](https://github.com/wandoliver)
+[<img src="images/centarro-logo.png" width="50" />](https://www.centarro.io/)
+[<img src="images/drupaleasy-logo.png" width="50" />](https://www.drupaleasy.com/) [<img src="images/redfin-logo.png" width="50" />](https://redfinsolutions.com/)
+[<img src="images/macstadium-logo.png" alt="MacStadium" width="100"/>](https://www.macstadium.com)
