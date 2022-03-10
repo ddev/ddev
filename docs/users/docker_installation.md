@@ -46,15 +46,22 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o 
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 sudo apt-get update && sudo apt-get install docker-ce docker-ce-cli containerd.io
 sudo groupadd docker && sudo usermod -aG docker $USER
+
 ```
 
-* You have to start docker-ce yourself on login, or use a script to do it, etc.
-To start it from git-bash on Windows you can use `echo "wsl.exe -u root service docker status > /dev/null || wsl.exe -u root service docker start > /dev/null" > ~/.bashrc`.
-* **Chocolatey:** We recommend using [Chocolatey](https://chocolatey.org/install) for installing required Windows apps like mkcert. In an administrative PowerShell, `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))`
+* You have to start docker-ce yourself on login, or use a script to do it. To have it start on entry to git-bash, a startup line to your (windows-side) `~/.bashrc` with:
+
+  ```bash
+  echo "wsl.exe -u root service docker status > /dev/null || wsl.exe -u root service docker start > /dev/null" >> ~/.bashrc
+  ```
+
+  You can then `source ~/.bashrc` to start immediately, or it should start the next time you open git-bash.
+* [Install mkcert](https://github.com/FiloSottile/mkcert#windows) on the Windows side; this may be easiest with [Chocolatey](https://chocolatey.org/install): In an administrative PowerShell, `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))`
 * In an administrative PowerShell: `choco install -y mkcert`
 * In an administrative PowerShell, run `mkcert -install` and answer the prompt allowing the installation of the Certificate Authority.
 * In an administrative PowerShell, run the command `setx CAROOT "$(mkcert -CAROOT)"; If ($Env:WSLENV -notlike "*CAROOT/up:*") { setx WSLENV "CAROOT/up:$Env:WSLENV" }`. This will set WSL2 to use the Certificate Authority installed on the Windows side.
 * Double-check in Ubuntu (or your distro): `echo $CAROOT` should show something like `/mnt/c/Users/<you>/AppData/Local/mkcert`
+* Inside your WSL2 distro, `mkcert -install`..
 
 ### Linux Installation: Docker
 

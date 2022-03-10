@@ -155,9 +155,16 @@ jobs:
       CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
 
     steps:
+      # The upload-artifacts section often fails. This may give us a recovery technique
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 45
+        with:
+          limit-access-to-actor: true
+
       - uses: actions/checkout@v3
         with:
-          # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0
       - name: Restore build-most builds
         uses: actions/cache@v2
