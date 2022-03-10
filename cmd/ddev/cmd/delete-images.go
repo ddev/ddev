@@ -50,17 +50,9 @@ ddev delete images --all`,
 
 		// The user can select to delete all ddev images.
 		if deleteAllImages {
-			// Attempt to find ddev images by tag, searching for "drud/ddev-".
-			// Some ddev images will not be found by this tag, future work will
-			// be done to improve finding database images.
-			for _, image := range images {
-				for _, tag := range image.RepoTags {
-					if strings.HasPrefix(tag, "drud/ddev-") {
-						if err = dockerutil.RemoveImage(tag); err != nil {
-							util.Warning("Failed to remove %s: %v", tag, err)
-						}
-					}
-				}
+			err := deleteDdevImages(images)
+			if err != nil {
+				util.Failed("Failed to delete image tag", err)
 			}
 			util.Success("All ddev images discovered were deleted.")
 			os.Exit(0)
@@ -129,4 +121,22 @@ func init() {
 	DeleteImagesCmd.Flags().BoolVarP(&deleteImagesNocConfirm, "yes", "y", false, "Yes - skip confirmation prompt")
 	DeleteImagesCmd.Flags().BoolVarP(&deleteAllImages, "all", "a", false, "If set, deletes all Docker images created by ddev.")
 	DeleteCmd.AddCommand(DeleteImagesCmd)
+}
+
+// deleteDdevImages removes Docker images prefixed with ddev-
+func deleteDdevImages(images []docker.APIImages) error {
+
+	// Attempt to find ddev images by tag, searching for "drud/ddev-".
+	// Some ddev images will not be found by this tag, future work will
+	// be done to improve finding database images.
+	for _, image := range images {
+		for _, tag := range image.RepoTags {
+			if strings.HasPrefix(tag, "drud/ddev-") {
+				if err := dockerutil.RemoveImage(tag); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
 }

@@ -1,13 +1,12 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/spf13/cobra"
@@ -21,36 +20,27 @@ var CleanCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		util.Success("Powering off ddev to avoid conflicts")
-		powerOff()
+		// ddevapp.PowerOff()
 
-		util.Success("Gathering ddev items to be cleaned")
-		// Display a list of ddev projects that will be removed
-		projectList := globalconfig.GetGlobalProjectList()
-		fmt.Println("Snapshots and downloads from the following project will be removed")
-		for appRoot := range projectList {
-			fmt.Printf("\t Project %s will be cleaned \n", appRoot)
+		util.Warning("Warning - Snapshots for the following project(s) will be permanently deleted")
+
+		cleanAll, _ := cmd.Flags().GetBool("all")
+		projects, err := getRequestedProjects(args, cleanAll)
+		if err != nil {
+			util.Failed("Failed to get project(s): %v", err)
 		}
 
-		// Create a list of ddev images
-		client := dockerutil.GetDockerClient()
-		imagesToRemove, _ := client.ListImages(docker.ListImagesOptions{
-			All: true,
-		})
-
-		// Provide space between sections for readability
-		fmt.Println(" ")
-		fmt.Println("The following ddev images will be removed")
-		for _, image := range imagesToRemove {
-			for _, tag := range image.RepoTags {
-				if strings.HasPrefix(tag, "drud/ddev-") {
-					fmt.Printf("\t %s \n", tag)
-				}
+		// Show the user how many snapshots per project that will be deleted
+		for _, project := range projects {
+			snapshots, err := project.ListSnapshots()
+			if err != nil {
+				util.Failed("Failed to get project %s snapshots: %v", project.Name, err)
 			}
-		}
-		// Show the user a list of everything and ask to confirm
-		if !util.Confirm("Confirm removal of the listed items?") {
-			util.Warning("Program terminated")
-			os.Exit(1)
+			if len(snapshots) > 0 {
+				output.UserOut.Printf("%v Snapshots for project %s will be deleted", len(snapshots), project.Name)
+			} else {
+				output.UserOut.Printf("No snapshots found for project %s", project.Name)
+			}
 		}
 
 		dryRun, _ := cmd.Flags().GetBool("dry-run")
@@ -59,18 +49,30 @@ var CleanCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		ddevDir := globalconfig.GetGlobalDdevDir()
-		_ = os.RemoveAll(filepath.Join(ddevDir, "cleantest"))
-		// range projectList and remove them like this
-		// _ = os.RemoveAll(filepath.Join(ddevDir, "testcache"))
-		// _ = os.RemoveAll(filepath.Join(ddevDir, "bin"))
+		if util.Confirm("Confirm removal of the listed items?") {
+			ddevDir := globalconfig.GetGlobalDdevDir()
+			_ = os.RemoveAll(filepath.Join(ddevDir, "testcache"))
+			_ = os.RemoveAll(filepath.Join(ddevDir, "bin"))
+			_ = os.RemoveAll(filepath.Join(ddevDir, "downloads"))
 
-		// Delete the images in the list
-		for _, image := range imagesToRemove {
-			for _, tag := range image.RepoTags {
-				if strings.HasPrefix(tag, "drud/ddev-") {
-					_ = dockerutil.RemoveImage(tag)
-				}
+			output.UserOut.Print("Deleting snapshots and downloads for selected projects...")
+			for _, project := range projects {
+				// Delete snapshots and downloads for each project
+				_ = os.RemoveAll(filepath.Join(project.AppRoot, ".ddev", "downloads"))
+				_ = os.RemoveAll(filepath.Join(project.AppRoot, ".ddev", "db_snapshots"))
+			}
+
+			output.UserOut.Print("Deleting images that ddev created...")
+			client := dockerutil.GetDockerClient()
+			images, err := client.ListImages(docker.ListImagesOptions{
+				All: true,
+			})
+			if err != nil {
+				util.Failed("Failed to list images: %v", err)
+			}
+			err = deleteDdevImages(images)
+			if err != nil {
+				util.Failed("Failed to delete image tag", err)
 			}
 		}
 
@@ -79,6 +81,7 @@ var CleanCmd = &cobra.Command{
 }
 
 func init() {
+	CleanCmd.Flags().BoolP("all", "a", false, "Clean all ddev projects")
 	CleanCmd.Flags().Bool("dry-run", false, "Do a dry run to see what will be removed")
 	RootCmd.AddCommand(CleanCmd)
 }
