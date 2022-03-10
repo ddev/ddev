@@ -62,6 +62,7 @@ Lando
 Laravel
 Let's
 Lima
+Localdev
 MAMP
 Magento
 Magento's
@@ -304,6 +305,7 @@ linux
 list
 live
 local
+localdev
 localhost
 localpath
 logs
