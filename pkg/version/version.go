@@ -81,7 +81,7 @@ var DockerComposeVersion = ""
 
 // This is var instead of const so it can be changed in test, but should not otherwise be touched.
 // Otherwise we can't test if the version on the machine is equal to version required
-var RequiredDockerComposeVersion = "v2.2.3"
+var RequiredDockerComposeVersion = "v2.3.3"
 
 // MutagenVersion is filled with the version we find for mutagen in use
 var MutagenVersion = ""
@@ -253,8 +253,8 @@ func GetLiveDockerComposeVersion() (string, error) {
 	}
 	v := strings.Trim(string(out), "\r\n")
 
-	// docker-compose v1 returns a version without the prefix "v", so add it.
-	if strings.HasPrefix(v, "1") {
+	// docker-compose v1 and v2.3.3 return a version without the prefix "v", so add it.
+	if !strings.HasPrefix(v, "v") {
 		v = "v" + v
 	}
 
