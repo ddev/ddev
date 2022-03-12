@@ -192,7 +192,6 @@ Note that the git URL shown below is an example only, you'll need to use your ow
 ```bash
 git clone https://github.com/example/example-site
 cd example-site
-# add `--docroot=web` to the `ddev config` command below if appropriate
 ddev config --project-type=drupal9
 ddev composer install
 ddev launch
