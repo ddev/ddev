@@ -116,7 +116,7 @@ func TestComposerVersion(t *testing.T) {
 		_ = os.RemoveAll(testDir)
 	})
 
-	// Make sure base version (default) is composer v1
+	// Make sure base version (default) is composer v2
 	err = app.Start()
 	require.NoError(t, err)
 	stdout, _, err := app.Exec(&ddevapp.ExecOpts{Cmd: "composer --version"})
@@ -125,7 +125,7 @@ func TestComposerVersion(t *testing.T) {
 
 	// Make sure it does the right thing with latest 2.x
 	app.ComposerVersion = "1"
-	err = app.Start()
+	err = app.Restart()
 	require.NoError(t, err)
 	stdout, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: "composer --version"})
 	assert.NoError(err)
@@ -133,7 +133,7 @@ func TestComposerVersion(t *testing.T) {
 
 	// With version "2" we should be back to latest v2
 	app.ComposerVersion = "2"
-	err = app.Start()
+	err = app.Restart()
 	require.NoError(t, err)
 	stdout, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: "composer --version"})
 	assert.NoError(err)
@@ -141,7 +141,7 @@ func TestComposerVersion(t *testing.T) {
 
 	// With explicit version, we should get that version
 	app.ComposerVersion = "2.0.1"
-	err = app.Start()
+	err = app.Restart()
 	require.NoError(t, err)
 	stdout, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: "composer --version"})
 	assert.NoError(err)

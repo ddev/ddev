@@ -892,7 +892,6 @@ func TestPostgresConfigOverride(t *testing.T) {
 	})
 	assert.NoError(err)
 	assert.Equal(" 200\n\n", out, "out: %s, stderr: %s", out, stderr)
-
 }
 
 // TestExtraPackages tests to make sure that *extra_packages config.yaml directives
