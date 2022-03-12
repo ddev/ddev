@@ -802,7 +802,7 @@ RUN printf "# TYPE DATABASE USER CIDR-ADDRESS  METHOD \nhost  all  all 0.0.0.0/0
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests less procps pv vim
 `
 
-		err = fileutil.CopyEmbedAssets(bundledAssets, "healthcheck", app.GetConfigPath(".dbiamgeBuild"))
+		err = fileutil.CopyEmbedAssets(bundledAssets, "healthcheck", app.GetConfigPath(".dbimageBuild"))
 		if err != nil {
 			return "", err
 		}
