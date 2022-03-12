@@ -953,7 +953,7 @@ func TestExtraPackages(t *testing.T) {
 	// Now add the packages and start again, they should be in there
 	app.WebImageExtraPackages = []string{"php" + app.PHPVersion + "-" + addedPackage}
 	app.DBImageExtraPackages = []string{"ncdu"}
-	err = app.Start()
+	err = app.Restart()
 	require.NoError(t, err)
 
 	stdout, stderr, err := app.Exec(&ExecOpts{
