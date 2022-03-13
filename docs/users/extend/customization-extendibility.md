@@ -32,7 +32,7 @@ web_environment:
 - SOMEOTHERENV=someotherval
 ```
 
-You can also use `ddev config global --web-environment="SOMEENV=someval"` or `ddev config --web-environment="SOMEENV=someval"` for the same purpose. The command just sets the values in the configuration files.
+You can also use `ddev config global --web-environment="SOMEENV=someval"` or `ddev config --web-environment="SOMEENV=someval"` for the same purpose. The command just sets the values in the configuration files. (Using this command overwrites all the web_environment values, so if you need to add additional values to those that are already configured, edit the `config.yaml` or `global_config.yaml`.)
 
 #### Altering the in-container $PATH
 
