@@ -2,6 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
@@ -13,8 +17,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/segmentio/analytics-go.v3"
-	"os"
-	"path/filepath"
 
 	"time"
 )
@@ -139,7 +141,33 @@ func Execute() {
 	// bind flags to viper config values...allows override by flag
 	viper.AutomaticEnv() // read in environment variables that match
 
-	if err := RootCmd.Execute(); err != nil {
+	RootCmd.SilenceErrors = true
+	err := (error)(nil)
+
+	if err = RootCmd.Execute(); err == nil {
+		return
+	}
+
+	if !strings.Contains(err.Error(), "unknown command") {
+		os.Exit(-1)
+	}
+
+	// Try to run the command in the web container directly
+	args := os.Args[1:]
+	RootCmd.SetArgs(append([]string{"exec"}, args...))
+
+	if err = RootCmd.Execute(); err == nil {
+		return
+	}
+
+	if strings.Contains(err.Error(), "command not found") {
+		// Run the inital command again without surpressing errors
+		RootCmd.SilenceErrors = false
+		RootCmd.SetArgs(args)
+		if err = RootCmd.Execute(); err == nil {
+			// Should never happen
+			os.Exit(-2)
+		}
 		os.Exit(-1)
 	}
 }
