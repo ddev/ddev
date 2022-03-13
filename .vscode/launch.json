@@ -46,7 +46,7 @@
             "program": "${workspaceRoot}/cmd/ddev",
             "cwd": "${workspaceRoot}",
             "env": {"DDEV_DEBUG": "true"},
-            "args": ["clean", "test-project"],
+            "args": ["clean", "-a"],
             "showLog": true
         },
         {

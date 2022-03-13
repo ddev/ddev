@@ -5,11 +5,9 @@ import (
 	"path/filepath"
 
 	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
-	docker "github.com/fsouza/go-dockerclient"
 	"github.com/spf13/cobra"
 )
 
@@ -19,8 +17,7 @@ var CleanCmd = &cobra.Command{
 	Long: `Stops all running projects and then removes downloads and snapshots
 for the selected projects. Then clean will remove ddev images.
 
-Warning - This command will permanently delete your snapshots and you will lose
-your database data in these snapshots.
+Warning - This command will permanently delete your snapshots for the named project[s].
 
 Additional commands that can help clean up resources:
   ddev delete --omit-snapshot
@@ -32,12 +29,17 @@ Additional commands that can help clean up resources:
 	ddev clean --all`,
 	Run: func(cmd *cobra.Command, args []string) {
 
+		// Make sure the user provides a project or flag
+		cleanAll, _ := cmd.Flags().GetBool("all")
+		if len(args) == 0 && !cleanAll {
+			util.Failed("No project provided. See ddev clean --help for options")
+		}
+
 		util.Success("Powering off ddev to avoid conflicts")
 		ddevapp.PowerOff()
 
-		util.Warning("Warning - Snapshots for the following project(s) will be permanently deleted")
+		util.Warning("Warning - Snapshots for the following project[s] will be permanently deleted")
 
-		cleanAll, _ := cmd.Flags().GetBool("all")
 		projects, err := getRequestedProjects(args, cleanAll)
 		if err != nil {
 			util.Failed("Failed to get project(s): %v", err)
@@ -62,28 +64,21 @@ Additional commands that can help clean up resources:
 			os.Exit(1)
 		}
 
-		if util.Confirm("Confirm removal of the listed items?") {
-			ddevDir := globalconfig.GetGlobalDdevDir()
-			_ = os.RemoveAll(filepath.Join(ddevDir, "testcache"))
-			_ = os.RemoveAll(filepath.Join(ddevDir, "bin"))
-			_ = os.RemoveAll(filepath.Join(ddevDir, "downloads"))
+		confirm := util.Prompt("Are you sure you want to continue? Y/N", "N")
+		if confirm == "Y" {
+			globalDdevDir := globalconfig.GetGlobalDdevDir()
+			_ = os.RemoveAll(filepath.Join(globalDdevDir, "testcache"))
+			_ = os.RemoveAll(filepath.Join(globalDdevDir, "bin"))
 
 			output.UserOut.Print("Deleting snapshots and downloads for selected projects...")
 			for _, project := range projects {
 				// Delete snapshots and downloads for each project
-				_ = os.RemoveAll(filepath.Join(project.AppRoot, ".ddev", "downloads"))
-				_ = os.RemoveAll(filepath.Join(project.AppRoot, ".ddev", "db_snapshots"))
+				_ = os.RemoveAll(project.GetConfigPath(".downloads"))
+				_ = os.RemoveAll(project.GetConfigPath("db_snapshots"))
 			}
 
-			output.UserOut.Print("Deleting images that ddev created...")
-			client := dockerutil.GetDockerClient()
-			images, err := client.ListImages(docker.ListImagesOptions{
-				All: true,
-			})
-			if err != nil {
-				util.Failed("Failed to list images: %v", err)
-			}
-			err = deleteDdevImages(images)
+			output.UserOut.Print("Deleting Docker images that ddev created...")
+			err = deleteDdevImages(true)
 			if err != nil {
 				util.Failed("Failed to delete image tag", err)
 			}

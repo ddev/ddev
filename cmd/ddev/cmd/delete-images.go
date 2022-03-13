@@ -1,10 +1,12 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/ddevapp"
 	"os"
 	"sort"
 	"strings"
+	"time"
+
+	"github.com/drud/ddev/pkg/ddevapp"
 
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/nodeps"
@@ -39,6 +41,16 @@ ddev delete images --all`,
 		util.Success("Powering off ddev to avoid conflicts")
 		ddevapp.PowerOff()
 
+		// The user can select to delete all ddev images.
+		if deleteAllImages {
+			err := deleteDdevImages(deleteAllImages)
+			if err != nil {
+				util.Failed("Failed to delete image tag", err)
+			}
+			util.Success("All ddev images discovered were deleted.")
+			os.Exit(0)
+		}
+
 		client := dockerutil.GetDockerClient()
 
 		images, err := client.ListImages(docker.ListImagesOptions{
@@ -46,16 +58,6 @@ ddev delete images --all`,
 		})
 		if err != nil {
 			util.Failed("Failed to list images: %v", err)
-		}
-
-		// The user can select to delete all ddev images.
-		if deleteAllImages {
-			err := deleteDdevImages(images)
-			if err != nil {
-				util.Failed("Failed to delete image tag", err)
-			}
-			util.Success("All ddev images discovered were deleted.")
-			os.Exit(0)
 		}
 
 		// Sort so that images that have -built on the end
@@ -124,18 +126,32 @@ func init() {
 }
 
 // deleteDdevImages removes Docker images prefixed with ddev-
-func deleteDdevImages(images []docker.APIImages) error {
+func deleteDdevImages(deleteAll bool) error {
 
+	client := dockerutil.GetDockerClient()
+	images, err := client.ListImages(docker.ListImagesOptions{
+		All: true,
+	})
+	if err != nil {
+		return err
+	}
+
+	yearPast := time.Now().AddDate(-1, 0, 0)
 	// Attempt to find ddev images by tag, searching for "drud/ddev-".
 	// Some ddev images will not be found by this tag, future work will
 	// be done to improve finding database images.
 	for _, image := range images {
 		for _, tag := range image.RepoTags {
+
 			if strings.HasPrefix(tag, "drud/ddev-") {
-				if err := dockerutil.RemoveImage(tag); err != nil {
-					return err
+				// if not deleteAll, then delete old images
+				if deleteAll || image.Created < yearPast.Unix() {
+					if err := dockerutil.RemoveImage(tag); err != nil {
+						return err
+					}
 				}
 			}
+
 		}
 	}
 	return nil
