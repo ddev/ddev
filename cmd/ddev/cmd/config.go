@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/drud/ddev/pkg/globalconfig"
@@ -247,6 +248,7 @@ func init() {
 	ConfigCommand.Flags().StringVar(&additionalFQDNsArg, "additional-fqdns", "", "A comma-delimited list of FQDNs for the project")
 	ConfigCommand.Flags().StringVar(&omitContainersArg, "omit-containers", "", "A comma-delimited list of container types that should not be started when the project is started")
 	ConfigCommand.Flags().StringVar(&webEnvironmentLocal, "web-environment", "", `Set the environment variables in the web container: --web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`)
+	ConfigCommand.Flags().StringVar(&webEnvironmentLocal, "web-environment-add", "", `Append environment variables to the web container: --web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`)
 	ConfigCommand.Flags().BoolVar(&createDocroot, "create-docroot", false, "Prompts ddev to create the docroot if it doesn't exist")
 	ConfigCommand.Flags().BoolVar(&showConfigLocation, "show-config-location", false, "Output the location of the config.yaml file if it exists, or error that it doesn't exist.")
 	ConfigCommand.Flags().StringVar(&uploadDirArg, "upload-dir", "", "Sets the project's upload directory, the destination directory of the import-files command.")
@@ -541,6 +543,25 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 			app.WebEnvironment = []string{}
 		} else {
 			app.WebEnvironment = strings.Split(env, ",")
+		}
+	}
+
+	if cmd.Flag("web-environment-add").Changed {
+		env := strings.Replace(webEnvironmentLocal, " ", "", -1)
+		if env != "" {
+			envspl := strings.Split(env, ",")
+			conc := append(app.WebEnvironment, envspl...)
+			// Convert to a hashmap to remove duplicate values.
+			hashmap := make(map[string]string)
+			for i := 0; i < len(conc); i++ {
+				hashmap[conc[i]] = conc[i]
+			}
+			keys := []string{}
+			for key, _ := range hashmap {
+				keys = append(keys, key)
+			}
+			app.WebEnvironment = keys
+			sort.Strings(app.WebEnvironment)
 		}
 	}
 
