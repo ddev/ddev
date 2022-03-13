@@ -29,9 +29,6 @@ func TestCmdXdebug(t *testing.T) {
 		assert.NoError(err)
 		_, err = exec.RunCommand(DdevBin, []string{"xdebug", "off"})
 		assert.NoError(err)
-		_, err = exec.RunCommand(DdevBin, []string{"stop"})
-		assert.NoError(err)
-
 		err := os.Chdir(pwd)
 		assert.NoError(err)
 	})
