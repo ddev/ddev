@@ -36,7 +36,7 @@ func TestNodeJSVersions(t *testing.T) {
 
 	for _, v := range nodeps.GetValidNodeVersions() {
 		app.NodeJSVersion = v
-		err = app.Start()
+		err = app.Restart()
 		assert.NoError(err)
 		out, _, err := app.Exec(&ddevapp.ExecOpts{
 			Cmd: "node --version",
