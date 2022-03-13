@@ -14,7 +14,9 @@ import (
 func TestCmdXdebug(t *testing.T) {
 	assert := asrt.New(t)
 
-	phpVersions := nodeps.ValidPHPVersions
+	// TestDdevXdebugEnabled has already tested enough versions, so limit it here.
+	// and this is a pretty limited test, doesn't do much but turn on and off
+	phpVersions := []string{nodeps.PHP80, nodeps.PHP81}
 
 	pwd, _ := os.Getwd()
 	v := TestSites[0]
@@ -27,6 +29,9 @@ func TestCmdXdebug(t *testing.T) {
 		assert.NoError(err)
 		_, err = exec.RunCommand(DdevBin, []string{"xdebug", "off"})
 		assert.NoError(err)
+		_, err = exec.RunCommand(DdevBin, []string{"stop"})
+		assert.NoError(err)
+
 		err := os.Chdir(pwd)
 		assert.NoError(err)
 	})
@@ -35,7 +40,7 @@ func TestCmdXdebug(t *testing.T) {
 	_, err = exec.RunCommand(DdevBin, []string{"config", "--composer-version=2"})
 	assert.NoError(err)
 
-	for phpVersion := range phpVersions {
+	for _, phpVersion := range phpVersions {
 		t.Logf("Testing xdebug command in php%s", phpVersion)
 		_, err := exec.RunCommand(DdevBin, []string{"config", "--php-version", phpVersion})
 		require.NoError(t, err)
