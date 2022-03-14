@@ -557,7 +557,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 				hashmap[conc[i]] = conc[i]
 			}
 			keys := []string{}
-			for key, _ := range hashmap {
+			for key := range hashmap {
 				keys = append(keys, key)
 			}
 			app.WebEnvironment = keys
