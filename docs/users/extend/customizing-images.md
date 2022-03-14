@@ -79,4 +79,4 @@ It can be complicated to figure out what's going on when building a Dockerfile, 
 
 1. Use `ddev ssh` first of all to pioneer the steps you want to take. You can just do all the things you need to do there, and see if it works. If doing something that affects PHP you may need to `sudo killall -USR2 php-fpm` for it to take effect.
 2. Put the steps you pioneered into `.ddev/web-build/Dockerfile` as above.
-3. If you can't figure out what's failing or why, then `cd .ddev && docker-compose -f .ddev-docker-compose-full.yaml build --no-cache` to see what's happening during the build.
+3. If you can't figure out what's failing or why, then `cd .ddev && ~/.ddev/bin/docker-compose -f .ddev-docker-compose-full.yaml build web --no-cache --progress=plain` to see what's happening during the Dockerfile build.
