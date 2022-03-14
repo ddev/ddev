@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
@@ -112,4 +114,17 @@ func TestCmdExec(t *testing.T) {
 	content, err := os.ReadFile(filepath.Join(site.Dir, filename))
 	assert.NoError(err)
 	assert.Equal("This file was piped into ddev exec", string(content))
+
+	// Make sure that redirection of output from ddev exec works
+	bashPath := util.FindBashPath()
+	f, err := os.CreateTemp("", "")
+	err = f.Close()
+	assert.NoError(err)
+	defer os.Remove(f.Name()) // nolint: errcheck
+
+	_, err = exec.RunHostCommand(bashPath, "-c", fmt.Sprintf("%s exec ls -l /usr/local/bin/composer >%s", DdevBin, f.Name()))
+
+	out, err = fileutil.ReadFileIntoString(f.Name())
+	assert.NoError(err)
+	assert.Contains(out, "/usr/local/bin/composer")
 }
