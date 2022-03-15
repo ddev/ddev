@@ -19,6 +19,9 @@
       "pattern": "^https://nssm.cc/"
     },
     {
+      "pattern": "^https://www.php.net/manual/"
+    },
+    {
       "pattern": "^https://www.cyberciti.biz/"
     }
   ],
