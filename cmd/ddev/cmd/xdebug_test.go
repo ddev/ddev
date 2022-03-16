@@ -47,7 +47,7 @@ func TestCmdXdebug(t *testing.T) {
 		_, err := exec.RunHostCommand(DdevBin, "config", "--php-version", phpVersion)
 		require.NoError(t, err)
 
-		_, err = exec.RunHostCommand(DdevBin, "start", "-y")
+		_, err = exec.RunHostCommand(DdevBin, "restart")
 		assert.NoError(err, "failed ddev start with php=%v: %v", phpVersion, err)
 
 		out, err := exec.RunHostCommand(DdevBin, "xdebug", "status")
