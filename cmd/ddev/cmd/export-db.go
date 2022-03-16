@@ -16,7 +16,7 @@ var ExportDBCmd = &cobra.Command{
 	Use:   "export-db [project]",
 	Short: "Dump a database to a file or to stdout",
 	Long:  `Dump a database to a file or to stdout`,
-	Example: `ddev export-db --file=/tmp/db.sql.gz'
+	Example: `ddev export-db --file=/tmp/db.sql.gz
 ddev export-db -f /tmp/db.sql.gz
 ddev export-db --gzip=false --file /tmp/db.sql
 ddev export-db > /tmp/db.sql.gz
