@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"github.com/drud/ddev/pkg/globalconfig"
 	"os"
 	"os/exec"
 	"strings"
@@ -53,6 +54,9 @@ func RunInteractiveCommand(command string, args []string) error {
 // RunHostCommand executes a command on the host and returns the
 // combined stdout/stderr results and error
 func RunHostCommand(command string, args ...string) (string, error) {
+	if globalconfig.DdevVerbose {
+		output.UserOut.Printf("RunHostCommand: " + command + " " + strings.Join(args, " "))
+	}
 	o, err := exec.Command(command, args...).CombinedOutput()
 	return string(o), err
 }
