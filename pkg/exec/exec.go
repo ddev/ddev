@@ -58,5 +58,9 @@ func RunHostCommand(command string, args ...string) (string, error) {
 		output.UserOut.Printf("RunHostCommand: " + command + " " + strings.Join(args, " "))
 	}
 	o, err := exec.Command(command, args...).CombinedOutput()
+	if globalconfig.DdevVerbose {
+		output.UserOut.Printf("RunHostCommand returned. output=%v err=%v", string(o), err)
+	}
+
 	return string(o), err
 }
