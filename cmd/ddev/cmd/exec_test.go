@@ -3,6 +3,9 @@ package cmd
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
@@ -101,9 +104,11 @@ func TestCmdExec(t *testing.T) {
 
 	assert.FileExists(filepath.Join(site.Dir, "TestCmdExec-touch-separate-args.txt"))
 
+	bashPath := util.FindBashPath()
 	// Make sure we can pipe things into ddev exec and have them work in stdin inside container
 	filename := t.Name() + "_junk.txt"
-	_, err = exec.RunHostCommand("sh", "-c", fmt.Sprintf("printf 'This file was piped into ddev exec' | %s exec 'cat >/var/www/html/%s'", DdevBin, filename))
+	ddevBinForBash := dockerutil.MassageWindowsHostMountpoint(DdevBin)
+	_, err = exec.RunHostCommand(bashPath, "-c", fmt.Sprintf(`printf "This file was piped into ddev exec" | %s exec "cat >/var/www/html/%s"`, ddevBinForBash, filename))
 	assert.NoError(err)
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
@@ -112,4 +117,17 @@ func TestCmdExec(t *testing.T) {
 	content, err := os.ReadFile(filepath.Join(site.Dir, filename))
 	assert.NoError(err)
 	assert.Equal("This file was piped into ddev exec", string(content))
+
+	// Make sure that redirection of output from ddev exec works
+	f, err := os.CreateTemp("", "")
+	err = f.Close()
+	assert.NoError(err)
+	defer os.Remove(f.Name()) // nolint: errcheck
+
+	bashTempName := dockerutil.MassageWindowsHostMountpoint(f.Name())
+	_, err = exec.RunHostCommand(bashPath, "-c", fmt.Sprintf("%s exec ls -l //usr/local/bin/composer >%s", ddevBinForBash, bashTempName))
+
+	out, err = fileutil.ReadFileIntoString(f.Name())
+	assert.NoError(err)
+	assert.Contains(out, "/usr/local/bin/composer")
 }

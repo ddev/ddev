@@ -1,12 +1,14 @@
 package ddevapp_test
 
 import (
+	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"os"
 	"strings"
 	"testing"
@@ -34,9 +36,18 @@ func TestNodeJSVersions(t *testing.T) {
 		assert.NoError(err)
 	})
 
+	err = app.Start()
+	require.NoError(t, err)
+	// As of v1.19.0, the nvm_dir doesn't get cleaned up on delete,
+	//so on a machine where this test has run before this will fail, as nvm has been set up
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: fmt.Sprintf("rm -rf /mnt/ddev-global-cache/nvm_dir/%s-web", site.Name),
+	})
+	assert.NoError(err)
+
 	for _, v := range nodeps.GetValidNodeVersions() {
 		app.NodeJSVersion = v
-		err = app.Start()
+		err = app.Restart()
 		assert.NoError(err)
 		out, _, err := app.Exec(&ddevapp.ExecOpts{
 			Cmd: "node --version",

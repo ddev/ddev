@@ -202,10 +202,10 @@ For example, if your Dockerfile were
 ```dockerfile
 ARG BASE_IMAGE
 FROM $BASE_IMAGE
-RUN npm install --global gulp-cli
+RUN npm install --global forever
 ```
 
-You could test it with `ddev ssh`, `sudo -s` and then `npm install --global gulp-cli`
+You could test it with `ddev ssh`, `sudo -s` and then `npm install --global forever`
 
 The error messages you get will be more informative than messages that come when the Dockerfile is processed.
 

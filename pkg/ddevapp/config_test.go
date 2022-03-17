@@ -892,7 +892,6 @@ func TestPostgresConfigOverride(t *testing.T) {
 	})
 	assert.NoError(err)
 	assert.Equal(" 200\n\n", out, "out: %s, stderr: %s", out, stderr)
-
 }
 
 // TestExtraPackages tests to make sure that *extra_packages config.yaml directives
@@ -954,7 +953,7 @@ func TestExtraPackages(t *testing.T) {
 	// Now add the packages and start again, they should be in there
 	app.WebImageExtraPackages = []string{"php" + app.PHPVersion + "-" + addedPackage}
 	app.DBImageExtraPackages = []string{"ncdu"}
-	err = app.Start()
+	err = app.Restart()
 	require.NoError(t, err)
 
 	stdout, stderr, err := app.Exec(&ExecOpts{

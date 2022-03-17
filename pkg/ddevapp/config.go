@@ -7,6 +7,7 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
+	copy2 "github.com/otiai10/copy"
 	"os"
 	"path/filepath"
 	"sort"
@@ -216,7 +217,8 @@ func (app *DdevApp) WriteConfig() error {
 # or packages or anything else to your webimage
 ARG BASE_IMAGE
 FROM $BASE_IMAGE
-RUN npm install --global gulp-cli
+
+RUN npm install --global forever
 `)
 
 	err = WriteImageDockerfile(app.GetConfigPath("web-build")+"/Dockerfile.example", contents)
@@ -698,10 +700,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		Username:              username,
 		UID:                   uid,
 		GID:                   gid,
-		WebBuildContext:       "./web-build",
-		DBBuildContext:        "./db-build",
-		WebBuildDockerfile:    "../.webimageBuild/Dockerfile",
-		DBBuildDockerfile:     "../.dbimageBuild/Dockerfile",
+		WebBuildContext:       "./.webimageBuild",
+		DBBuildContext:        "./.dbimageBuild",
 		AutoRestartContainers: globalconfig.DdevGlobalConfig.AutoRestartContainers,
 		FailOnHookFail:        app.FailOnHookFail || app.FailOnHookFailGlobal,
 		WebWorkingDir:         app.GetWorkingDir("web", ""),
@@ -772,7 +772,19 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if app.NodeJSVersion != nodeps.NodeJSDefault {
 		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN (apt-get remove -y nodejs || true) && (apt purge nodejs || true) && curl -sSL --fail https://deb.nodesource.com/setup_%s.x | bash - && apt-get install nodejs && npm config set unsafe-perm true && npm install --global gulp-cli yarn", app.NodeJSVersion)
 	}
+
+	// Assets in the web-build directory copied to .webimageBuild so .webimageBuild can be "context"
+	err = copy2.Copy(app.GetConfigPath("web-build/"), app.GetConfigPath(".webimageBuild/"))
+	if err != nil {
+		return "", err
+	}
 	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build/Dockerfile"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
+	if err != nil {
+		return "", err
+	}
+
+	// Assets in the db-build directory copied to .dbimageBuild so .dbimageBuild can be "context"
+	err = copy2.Copy(app.GetConfigPath("db-build/"), app.GetConfigPath(".dbimageBuild/"))
 	if err != nil {
 		return "", err
 	}
@@ -790,7 +802,7 @@ RUN printf "# TYPE DATABASE USER CIDR-ADDRESS  METHOD \nhost  all  all 0.0.0.0/0
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests less procps pv vim
 `
 
-		err = fileutil.CopyEmbedAssets(bundledAssets, "healthcheck", app.GetConfigPath("db-build"))
+		err = fileutil.CopyEmbedAssets(bundledAssets, "healthcheck", app.GetConfigPath(".dbimageBuild"))
 		if err != nil {
 			return "", err
 		}
@@ -1043,7 +1055,7 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
-	err := CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db-build/postgres_healthcheck.sh", "db_snapshots", "import-db", "import.yaml", "mutagen", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "sequelpro.spf", "xhprof", "**/README.*")
+	err := CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "sequelpro.spf", "xhprof", "**/README.*")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}
