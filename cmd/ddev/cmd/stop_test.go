@@ -21,6 +21,10 @@ import (
 func TestCmdStop(t *testing.T) {
 	assert := asrt.New(t)
 
+	t.Cleanup(func() {
+		err := addSites()
+		assert.NoError(err)
+	})
 	// Make sure we have running sites.
 	err := addSites()
 	require.NoError(t, err)
