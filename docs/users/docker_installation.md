@@ -74,7 +74,7 @@ Docker installation on Linux depends on what flavor you're using. Where possible
 * [Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
 * [CentOS](https://docs.docker.com/install/linux/docker-ce/centos/)
 * [Debian](https://docs.docker.com/install/linux/docker-ce/debian/)
-* [Fedora](https://docs.docker.com/install/linux/docker-ce/fedora/). Recent versions of Fedora (32, 33+) require a [different approach, installing the original CGroups](https://fedoramagazine.org/docker-and-fedora-32/). In addition, you must [disable SELinux](https://www.cyberciti.biz/faq/disable-selinux-on-centos-7-rhel-7-fedora-linux/).
+* [Fedora](https://docs.docker.com/install/linux/docker-ce/fedora/)
 * [binaries](https://docs.docker.com/install/linux/docker-ce/binaries/)
 
 #### Linux Post-installation steps (required)
