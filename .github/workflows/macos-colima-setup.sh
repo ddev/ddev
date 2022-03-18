@@ -5,7 +5,7 @@ set -eu -o pipefail
 # colima has golang as dependency, so is going to install go anyway.
 # So we have to get rid of it somehow.
 brew uninstall go@1.15 || true
-brew unlink postgresql || true
+brew uninstall postgresql || true
 brew update && brew install colima docker docker-compose golang libpq mkcert mysql-client
 brew link --force libpq mysql-client
 
