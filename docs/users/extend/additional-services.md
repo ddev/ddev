@@ -10,28 +10,23 @@ You can see available supported and tested add-ons with the command `ddev get --
 
 For example,
 
-```bash
-$ ddev get --list
-┌────────────────────────┬────────────────────────────────────────────────┐
-│ ADD-ON                 │ DESCRIPTION                                    │
-├────────────────────────┼────────────────────────────────────────────────┤
-│ drud/ddev-memcached    │ Install memcached as an extra service in ddev* │
-├────────────────────────┼────────────────────────────────────────────────┤
-│ drud/ddev-beanstalkd   │ beanstalkd for ddev*                           │
-├────────────────────────┼────────────────────────────────────────────────┤
-│ drud/ddev-drupal9-solr │ Drupal 9 Apache Solr installation for DDEV*    │
-├────────────────────────┼────────────────────────────────────────────────┤
-│ drud/ddev-redis        │ redis service for ddev*                        │
-└────────────────────────┴────────────────────────────────────────────────┘
+```
+ ADD-ON                   DESCRIPTION
+ drud/ddev-memcached      Install memcached as an extra service in ddev*
+ drud/ddev-beanstalkd     beanstalkd for ddev*
+ drud/ddev-drupal9-solr   Drupal 9 Apache Solr installation for DDEV*
+ drud/ddev-elasticsearch  Elasticsearch add-on for DDEV*
+ drud/ddev-redis          redis service for ddev*
 Add-ons marked with '*' are official, maintained DDEV add-ons.
 ```
 
 Here are some of the add-ons that are officially supported:
 
+* [Redis](https://github.com/drud/ddev-redis): `ddev get drud/ddev-redis`.
+* [Elasticsearch](https://github.com/drud/ddev-elasticsearch): `ddev get drud/ddev-elasticsearch`.
 * [Apache Solr for Drupal 9](https://github.com/drud/ddev-drupal9-solr): `ddev get drud/ddev-drupal9-solr`.
 * [Memcached](https://github.com/drud/ddev-memcached): `ddev get drud/ddev-memcached`.
 * [Beanstalkd](https://github.com/drud/ddev-beanstalkd): `ddev get drud/ddev-beanstalkd`.
-* [Redis](https://github.com/drud/ddev-redis): `ddev get drud/ddev-redis`.
 
 ## Creating an additional service for `ddev get`
 
@@ -50,7 +45,6 @@ Commonly used services will be migrated from the ddev-contrib repository to indi
  [ddev-contrib](https://github.com/drud/ddev-contrib) repository has a wealth of additional examples and instructions:
 
 * **ElasticHQ**:See [ElasticHQ](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/elastichq).
-* **Elasticsearch**: See [Elasticsearch](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/elasticsearch).
 * **Headless Chrome**: See [Headless Chrome for Behat Testing](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/headless-chrome)
 * **MongoDB**: See [MongoDB](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/mongodb).
 * **Old PHP Versions to Run Old Sites**: See [Old PHP Versions](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/old_php)
