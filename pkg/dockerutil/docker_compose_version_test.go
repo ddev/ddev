@@ -105,4 +105,5 @@ func TestDockerComposeDownload(t *testing.T) {
 		parsedFoundVersion = "v" + parsedFoundVersion
 	}
 	assert.Equal(parsedFoundVersion, activeVersion)
+	t.Logf("parsedFoundVersion=%s activeVersion=%s", parsedFoundVersion, activeVersion)
 }

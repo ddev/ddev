@@ -103,6 +103,8 @@ jobs:
             docker pull $image
           done >/dev/null
 
+      - name: "show versions"
+        run: "set -x && ddev version && docker version && docker-compose version && go version"
 
       - name: time make "${{ matrix.tests }}"
         run: |

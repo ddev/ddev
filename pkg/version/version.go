@@ -236,18 +236,16 @@ func GetLiveDockerComposeVersion() (string, error) {
 		return DockerComposeVersion, nil
 	}
 
-	path, err := globalconfig.GetDockerComposePath()
+	composePath, err := globalconfig.GetDockerComposePath()
 	if err != nil {
 		return "", err
 	}
 
-	DockerComposePath := path
-
-	if !fileutil.FileExists(DockerComposePath) {
+	if !fileutil.FileExists(composePath) {
 		DockerComposeVersion = ""
 		return DockerComposeVersion, nil
 	}
-	out, err := exec.Command(DockerComposePath, "version", "--short").Output()
+	out, err := exec.Command(composePath, "version", "--short").Output()
 	if err != nil {
 		return "", err
 	}
