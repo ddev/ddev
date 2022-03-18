@@ -34,6 +34,25 @@ web_environment:
 
 You can also use `ddev config global --web-environment="SOMEENV=someval"` or `ddev config --web-environment="SOMEENV=someval"` for the same purpose. The command just sets the values in the configuration files. (Using this command overwrites all the web_environment values, so if you need to add additional values to those that are already configured, edit the `config.yaml` or `global_config.yaml`.)
 
+The docker-compose web environment can also provide env file support. To enable this you would create a new docker-compose yaml partial, for example `.ddev/docker-compose.env-file.yaml` with contents:
+
+```
+services:
+  web:
+    env_file:
+      - ../.env
+
+```
+
+You would create the `.env` file in the project root and provide globals within it as such:
+
+```
+SOMEENV='someval'
+SOMEOTHERENV='someotherval'
+```
+
+The globals from the env file would be available on the next ddev start. It is important to note that typically the .env file should *not* be placed under source control, especially if it contains private API keys or passwords.
+
 #### Altering the in-container $PATH
 
 Because many things touch the `$PATH` environment variable, it's slightly harder to change it, but it's easy: Add a script to `<project>/.ddev/homeadditions/.bashrc.d/` or (global) `~/.ddev/homeadditions/.bashrc.d/` that adds to the `$PATH` variable. For example, if your project vendor directory is not in the expected place (`/var/www/html/vendor/bin`) you can add a `<project>/.ddev/homeadditions/.bashrc.d/path.sh` with contents:
