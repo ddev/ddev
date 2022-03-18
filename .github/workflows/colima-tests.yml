@@ -58,7 +58,7 @@ jobs:
       - name: Homebrew cache/restore
         uses: actions/cache@v2
         env:
-          cache-name: cache-homebrew-cache
+          cache-name: cache-homebrew-cache-1
         with:
           path: ~/Library/Caches/Homebrew
           key: ${{ runner.os }}-build-${{ env.cache-name }}
@@ -68,13 +68,20 @@ jobs:
       - name: Lima cache/restore
         uses: actions/cache@v2
         env:
-          cache-name: cache-lima
+          cache-name: cache-lima-1
         with:
           # npm cache files are stored in `~/.npm` on Linux/macOS
           path: ~/.lima
           key: ${{ runner.os }}-build-${{ env.cache-name }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
 
       - name: Install Colima and deps (macOS)
         if: matrix.os == 'macos-11'
@@ -96,12 +103,6 @@ jobs:
             docker pull $image
           done >/dev/null
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
 
       - name: time make "${{ matrix.tests }}"
         run: |
