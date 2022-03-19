@@ -62,35 +62,36 @@ Additional commands that can help clean up resources:
 		dryRun, _ := cmd.Flags().GetBool("dry-run")
 		if dryRun {
 			util.Warning("Dry run terminated without removing items")
-			os.Exit(1)
+			return
 		}
 
 		confirm := util.Prompt("Are you sure you want to continue? y/n", "n")
-		if strings.ToLower(confirm) == "y" {
-			globalDdevDir := globalconfig.GetGlobalDdevDir()
-			_ = os.RemoveAll(filepath.Join(globalDdevDir, "testcache"))
-			_ = os.RemoveAll(filepath.Join(globalDdevDir, "bin"))
-
-			output.UserOut.Print("Deleting snapshots and downloads for selected projects...")
-			for _, project := range projects {
-				// Delete snapshots and downloads for each project
-				err = os.RemoveAll(project.GetConfigPath(".downloads"))
-				if err != nil {
-					util.Warning("There was an error removing .downloads for project %v", project)
-				}
-				err = os.RemoveAll(project.GetConfigPath("db_snapshots"))
-				if err != nil {
-					util.Warning("There was an error removing db_snapshots for project %v", project)
-				}
-			}
-
-			output.UserOut.Print("Deleting Docker images that ddev created...")
-			err = deleteDdevImages(cleanAll)
-			if err != nil {
-				util.Failed("Failed to delete image tag", err)
-			}
-			util.Success("Finished cleaning ddev projects")
+		if strings.ToLower(confirm) != "y" {
+			return
 		}
+		globalDdevDir := globalconfig.GetGlobalDdevDir()
+		_ = os.RemoveAll(filepath.Join(globalDdevDir, "testcache"))
+		_ = os.RemoveAll(filepath.Join(globalDdevDir, "bin"))
+
+		output.UserOut.Print("Deleting snapshots and downloads for selected projects...")
+		for _, project := range projects {
+			// Delete snapshots and downloads for each project
+			err = os.RemoveAll(project.GetConfigPath(".downloads"))
+			if err != nil {
+				util.Warning("There was an error removing .downloads for project %v", project)
+			}
+			err = os.RemoveAll(project.GetConfigPath("db_snapshots"))
+			if err != nil {
+				util.Warning("There was an error removing db_snapshots for project %v", project)
+			}
+		}
+
+		output.UserOut.Print("Deleting Docker images that ddev created...")
+		err = deleteDdevImages(true)
+		if err != nil {
+			util.Failed("Failed to delete image tag", err)
+		}
+		util.Success("Finished cleaning ddev projects")
 	},
 }
 
