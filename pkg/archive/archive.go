@@ -154,7 +154,7 @@ func UnXz(source string, destDirectory string) error {
 	return nil
 }
 
-// Untar accepts a tar, tar.gz, tar.bz2 file and extracts the contents to the provided destination path.
+// Untar accepts a tar, tar.gz, tar.bz2, tar.xz file and extracts the contents to the provided destination path.
 // extractionDir is the path at which extraction should start; nothing will be extracted except the contents of
 // extractionDir. If extranctionDir is empty, the entire tarball is extracted.
 func Untar(source string, dest string, extractionDir string) error {
