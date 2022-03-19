@@ -685,7 +685,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 
 // ExportDB exports the db, with optional output to a file, default gzip
 // targetDB is the db name if not default "db"
-func (app *DdevApp) ExportDB(outFile string, gzip bool, targetDB string) error {
+func (app *DdevApp) ExportDB(outFile string, compressionType string, targetDB string) error {
 	app.DockerEnv()
 	exportCmd := []string{"mysqldump"}
 	if app.Database.Type == "postgres" {
@@ -696,8 +696,8 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool, targetDB string) error {
 	}
 	exportCmd = append(exportCmd, targetDB)
 
-	if gzip {
-		exportCmd = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; %s | gzip`, strings.Join(exportCmd, " "))}
+	if compressionType != "" {
+		exportCmd = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; %s | %s`, strings.Join(exportCmd, " "), compressionType)}
 	}
 
 	opts := &ExecOpts{
@@ -727,8 +727,8 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool, targetDB string) error {
 	} else {
 		confMsg = confMsg + " to stdout"
 	}
-	if gzip {
-		confMsg = confMsg + " in gzip format"
+	if compressionType != "" {
+		confMsg = fmt.Sprintf("%s in %s format", confMsg, compressionType)
 	} else {
 		confMsg = confMsg + " in plain text format"
 	}

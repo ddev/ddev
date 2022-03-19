@@ -236,7 +236,7 @@ func (p *Provider) UploadDB() error {
 		return nil
 	}
 
-	err := p.app.ExportDB(p.app.GetConfigPath(".downloads/db.sql.gz"), true, "")
+	err := p.app.ExportDB(p.app.GetConfigPath(".downloads/db.sql.gz"), "gzip", "")
 	if err != nil {
 		return err
 	}
