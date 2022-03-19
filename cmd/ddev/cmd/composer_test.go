@@ -65,7 +65,6 @@ func TestComposerCmd(t *testing.T) {
 		// These two often fail on Windows with NFS, also Colima
 		// It appears to be something about composer itself?
 
-		//if !(dockerutil.IsColima() || (runtime.GOOS == "windows" && (app.NFSMountEnabled || app.NFSMountEnabledGlobal))) {
 		// ddev composer create --prefer-dist --no-interaction --no-dev psr/log:1.1.0
 		args := []string{"composer", "create", "--prefer-dist", "--no-interaction", "--no-dev", "--no-install", "psr/log:1.1.0"}
 		out, err = exec.RunHostCommand(DdevBin, args...)
@@ -91,7 +90,6 @@ func TestComposerCmd(t *testing.T) {
 		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
 		assert.Contains(out, "Created project in ")
 		assert.FileExists(filepath.Join(tmpDir, composerRoot, "Psr/Log/LogLevel.php"))
-		//}
 
 		// Test a composer require, with passthrough args
 		args = []string{"composer", "require", "sebastian/version", "--no-plugins", "--ansi"}
