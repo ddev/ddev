@@ -179,6 +179,13 @@ func Untar(source string, dest string, extractionDir string) error {
 		defer util.CheckClose(gf)
 		tf = tar.NewReader(gf)
 
+	case strings.HasSuffix(source, "xz"):
+		gf, err := xz.NewReader(f)
+		if err != nil {
+			return err
+		}
+		tf = tar.NewReader(gf)
+
 	case strings.HasSuffix(source, "bz2"):
 		br := bufio.NewReader(f)
 		gf := bzip2.NewReader(br)

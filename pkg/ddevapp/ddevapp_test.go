@@ -1153,13 +1153,14 @@ func TestDdevImportDB(t *testing.T) {
 		app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-db": {{"exec-host": "touch hello-post-import-db-" + app.Name}}, "pre-import-db": {{"exec-host": "touch hello-pre-import-db-" + app.Name}}}
 
 		// Test simple db loads.
-		for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.sql.bz2", "users.mysql.gz", "users.mysql.gz2", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.mysql.tar.gz", "users.sql.tar.bz2", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip", "users_with_USE_statement.sql"} {
-			path := filepath.Join(origDir, "testdata", t.Name(), dbType, file)
-			if !fileutil.FileExists(path) {
+		for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.sql.bz2", "users.sql.xz", "users.mysql.gz", "users.mysql.bz2", "users.mysql.xz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.sql.tar.bz2", "users.sql.tar.xz", "users.mysql.tar.gz", "users.mysql.tar.xz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip", "users_with_USE_statement.sql"} {
+			p := filepath.Join(origDir, "testdata", t.Name(), dbType, file)
+			if !fileutil.FileExists(p) {
+				t.Logf("skipping %s because it does not exist", p)
 				continue
 			}
-			err = app.ImportDB(path, "", false, false, "db")
-			assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
+			err = app.ImportDB(p, "", false, false, "db")
+			assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", p, err)
 			if err != nil {
 				continue
 			}
@@ -1184,7 +1185,7 @@ func TestDdevImportDB(t *testing.T) {
 			})
 			assert.NoError(err)
 			out = strings.Trim(out, " \n")
-			assert.Equal("db", out, "found extra database, dbType=%s dbVersion=%s out=%s, stderr=%s", dbType, app.Database.Version, out, stderr)
+			assert.Equal("db", out, "found extra database, file=%s dbType=%s dbVersion=%s out=%s, stderr=%s", file, dbType, app.Database.Version, out, stderr)
 		}
 
 		// Test that a settings file has correct hash_salt format
