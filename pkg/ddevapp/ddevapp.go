@@ -511,6 +511,8 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 			fallthrough
 		case strings.HasSuffix(importPath, "tar.gz"):
 			fallthrough
+		case strings.HasSuffix(importPath, "tar.bz2"):
+			fallthrough
 		case strings.HasSuffix(importPath, "tgz"):
 			err := archive.Untar(importPath, dbPath, extPath)
 			if err != nil {

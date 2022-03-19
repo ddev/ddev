@@ -109,7 +109,7 @@ func UnBzip2(source string, destDirectory string) error {
 	return nil
 }
 
-// Untar accepts a tar or tar.gz file and extracts the contents to the provided destination path.
+// Untar accepts a tar, tar.gz, tar.bz2 file and extracts the contents to the provided destination path.
 // extractionDir is the path at which extraction should start; nothing will be extracted except the contents of
 // extractionDir. If extranctionDir is empty, the entire tarball is extracted.
 func Untar(source string, dest string, extractionDir string) error {
@@ -125,16 +125,24 @@ func Untar(source string, dest string, extractionDir string) error {
 		return err
 	}
 
-	if strings.HasSuffix(source, "gz") {
+	switch {
+	case strings.HasSuffix(source, "gz"):
 		gf, err := gzip.NewReader(f)
 		if err != nil {
 			return err
 		}
-
 		defer util.CheckClose(gf)
-
 		tf = tar.NewReader(gf)
-	} else {
+
+	case strings.HasSuffix(source, "bz2"):
+		br := bufio.NewReader(f)
+		gf := bzip2.NewReader(br)
+		if err != nil {
+			return err
+		}
+		tf = tar.NewReader(gf)
+
+	default:
 		tf = tar.NewReader(f)
 	}
 
