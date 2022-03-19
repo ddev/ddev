@@ -147,7 +147,7 @@ ddev get --list --all
 			if err != nil {
 				util.Failed("Unable to run action %v: %v, output=%s", action, err, out)
 			}
-			util.Success("%v\n%s", action, out)
+			output.UserOut.Printf("Executed pre-install action %v, output=%s.", action, out)
 		}
 
 		for _, file := range s.ProjectFiles {
@@ -158,7 +158,7 @@ ddev get --list --all
 			if err != nil {
 				util.Failed("Unable to copy %v to %v: %v", src, dest, err)
 			}
-			util.Success("Installed file %s", dest)
+			output.UserOut.Printf("Installed file %s", dest)
 		}
 		globalDotDdev := filepath.Join(globalconfig.GetGlobalDdevDir())
 		for _, file := range s.GlobalFiles {
@@ -168,7 +168,7 @@ ddev get --list --all
 			if err != nil {
 				util.Failed("Unable to copy %v to %v: %v", src, dest, err)
 			}
-			util.Success("Installed file %s", dest)
+			output.UserOut.Printf("Installed file %s", dest)
 		}
 		origDir, _ := os.Getwd()
 
@@ -184,11 +184,11 @@ ddev get --list --all
 			if err != nil {
 				util.Failed("Unable to run action %v: %v, output=%s", action, err, out)
 			}
-			util.Success("Executed post-install action %v.", action)
+			output.UserOut.Printf("Executed post-install action %v.", action)
 		}
-		output.UserOut.Printf("Downloaded add-on %s, use `ddev restart` to enable.", sourceRepoArg)
+		util.Success("Downloaded add-on %s, use `ddev restart` to enable.", sourceRepoArg)
 		if argType == "github" {
-			util.Success("For more information about this add-on visit the source repo at\nhttps://github.com/%v/%v\nPlease file issues and create pull requests there to improve it.", owner, repo)
+			util.Success("Please read instructions for this addon at the source repo at\nhttps://github.com/%v/%v\nPlease file issues and create pull requests there to improve it.", owner, repo)
 		}
 	},
 }
