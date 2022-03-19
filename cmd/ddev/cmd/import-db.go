@@ -27,7 +27,8 @@ Also note the related "ddev mysql" command`,
 	Example: `ddev import-db
 ddev import-db --src=.tarballs/junk.sql
 ddev import-db --src=.tarballs/junk.sql.gz
-ddev import-db --target-db=newdb --src=.tarballs/junk.sql.gz
+ddev import-db --target-db=newdb --src=.tarballs/db.sql.gz
+ddev import-db --src=.tarballs/db.sql.bz2
 ddev import-db <db.sql
 ddev import-db someproject <db.sql
 gzip -dc db.sql.gz | ddev import-db`,

@@ -3,6 +3,8 @@ package archive
 import (
 	"archive/tar"
 	"archive/zip"
+	"bufio"
+	"compress/bzip2"
 	"compress/gzip"
 	"fmt"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -64,7 +66,47 @@ func Ungzip(source string, destDirectory string) error {
 	}
 
 	return nil
+}
 
+// UnBzip2 accepts a bzip2-compressed file and uncompresses it to the provided destination directory.
+func UnBzip2(source string, destDirectory string) error {
+	f, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if e := f.Close(); e != nil {
+			err = e
+		}
+	}()
+	br := bufio.NewReader(f)
+
+	gf := bzip2.NewReader(br)
+
+	fname := strings.TrimSuffix(filepath.Base(f.Name()), ".bz2")
+	exFile, err := os.Create(filepath.Join(destDirectory, fname))
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if e := exFile.Close(); e != nil {
+			err = e
+		}
+	}()
+
+	_, err = io.Copy(exFile, gf)
+	if err != nil {
+		return err
+	}
+
+	err = exFile.Sync()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Untar accepts a tar or tar.gz file and extracts the contents to the provided destination path.

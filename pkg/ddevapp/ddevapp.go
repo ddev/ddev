@@ -483,6 +483,8 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 				fmt.Print("Archive extraction path:")
 
 				extPath = util.GetInput("")
+			} else {
+				return fmt.Errorf("Unable to validate import asset %s: %s", imPath, err)
 			}
 		}
 
@@ -490,7 +492,13 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		case strings.HasSuffix(importPath, "sql.gz") || strings.HasSuffix(importPath, "mysql.gz"):
 			err = archive.Ungzip(importPath, dbPath)
 			if err != nil {
-				return fmt.Errorf("failed to extract provided archive: %v", err)
+				return fmt.Errorf("failed to extract provided file: %v", err)
+			}
+
+		case strings.HasSuffix(importPath, "sql.bz2") || strings.HasSuffix(importPath, "mysql.bz2"):
+			err = archive.UnBzip2(importPath, dbPath)
+			if err != nil {
+				return fmt.Errorf("failed to extract file archive: %v", err)
 			}
 
 		case strings.HasSuffix(importPath, "zip"):
