@@ -1484,7 +1484,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		assert.NoError(err)
 
 		// Test that we can export-db to a gzipped file
-		err = app.ExportDB("tmp/users1.sql.gz", true, "db")
+		err = app.ExportDB("tmp/users1.sql.gz", "gzip", "db")
 		assert.NoError(err)
 
 		// Validate contents
@@ -1500,7 +1500,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		assert.NoError(err)
 
 		// Export to an ungzipped file and validate
-		err = app.ExportDB("tmp/users2.sql", false, "db")
+		err = app.ExportDB("tmp/users2.sql", "", "db")
 		assert.NoError(err)
 
 		err = app.MutagenSyncFlush()
@@ -1518,7 +1518,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		// CaptureStdOut() doesn't work on Windows.
 		if runtime.GOOS != "windows" {
 			stdout := util.CaptureStdOut()
-			err = app.ExportDB("", false, "db")
+			err = app.ExportDB("", "", "db")
 			assert.NoError(err)
 			out := stdout()
 			assert.Regexp(regexp.MustCompilePOSIX("CREATE TABLE.*users"), out)
@@ -1636,7 +1636,7 @@ func TestDdevExportDB(t *testing.T) {
 
 		// Test that we can export-db to a plain file. This should be larger than
 		// the gzipped file we'll do next.
-		err = app.ExportDB("tmp/users1.sql", false, "db")
+		err = app.ExportDB("tmp/users1.sql", "", "db")
 		assert.NoError(err)
 
 		// The users1.sql should be something over 2K
@@ -1655,7 +1655,7 @@ func TestDdevExportDB(t *testing.T) {
 		assert.NoError(err)
 
 		// Test that we can export-db to an existing gzipped file
-		err = app.ExportDB("tmp/users1.sql.gz", true, "db")
+		err = app.ExportDB("tmp/users1.sql.gz", "gzip", "db")
 		assert.NoError(err)
 
 		// The new gzipped file should be less than 1K
@@ -1681,7 +1681,7 @@ func TestDdevExportDB(t *testing.T) {
 		assert.NoError(err)
 
 		// Export to an ungzipped file and validate
-		err = app.ExportDB("tmp/users2.sql", false, "db")
+		err = app.ExportDB("tmp/users2.sql", "", "db")
 		assert.NoError(err)
 
 		// Validate contents
@@ -1701,7 +1701,7 @@ func TestDdevExportDB(t *testing.T) {
 
 		// Capture to stdout without gzip compression
 		stdout := util.CaptureStdOut()
-		err = app.ExportDB("", false, "db")
+		err = app.ExportDB("", "", "db")
 		assert.NoError(err)
 		o := stdout()
 		assert.Regexp(regexp.MustCompile("CREATE TABLE.*users"), o)
@@ -1710,7 +1710,7 @@ func TestDdevExportDB(t *testing.T) {
 		importPath = filepath.Join(testDir, "testdata", t.Name(), dbType, "users.sql")
 		err = app.ImportDB(importPath, "", false, false, "anotherdb")
 		require.NoError(t, err)
-		err = app.ExportDB("tmp/anotherdb.sql.gz", true, "anotherdb")
+		err = app.ExportDB("tmp/anotherdb.sql.gz", "gzip", "anotherdb")
 		assert.NoError(err)
 		importPath = "tmp/anotherdb.sql.gz"
 		err = app.ImportDB(importPath, "", false, false, "thirddb")
