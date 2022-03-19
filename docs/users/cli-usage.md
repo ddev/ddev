@@ -278,11 +278,7 @@ Normal details of a composer build for Magento 2 are on [Magento 2 site](https:/
 ```bash
 mkdir ddev-magento2 && cd ddev-magento2
 ddev config --project-type=magento2 --docroot=pub --create-docroot
-```
-
-Copy [docker-compose.elasticsearch.yaml](https://raw.githubusercontent.com/drud/ddev-contrib/master/docker-compose-services/elasticsearch/docker-compose.elasticsearch.yaml) to local `.ddev` directory.
-
-```bash
+ddev get drud/ddev-elasticsearch
 ddev start
 ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition
 ddev magento setup:install --base-url='${DDEV_PRIMARY_URL}' --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db --elasticsearch-host=elasticsearch --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com --admin-user=admin --admin-password=admin123 --language=en_US
