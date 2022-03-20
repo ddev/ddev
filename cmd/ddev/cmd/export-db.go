@@ -8,7 +8,9 @@ import (
 )
 
 var outFileName string
-var gzipOption bool
+var doGzip bool
+var doBzip2 bool
+var doXz bool
 var exportTargetDB string
 
 // ExportDBCmd is the `ddev export-db` command.
@@ -36,10 +38,25 @@ ddev export-db someproject --gzip=false --file=/tmp/someproject.sql `,
 		app := projects[0]
 
 		if app.SiteStatus() != ddevapp.SiteRunning {
-			util.Failed("ddev can't export-db until the project is started, please use ddev start.")
+			err = app.Start()
+			if err != nil {
+				util.Failed("Failed to start app %s to import-db: %v", app.Name, err)
+			}
 		}
 
-		err = app.ExportDB(outFileName, gzipOption, exportTargetDB)
+		compressionType := ""
+		if doGzip {
+			compressionType = "gzip"
+		}
+		if doBzip2 {
+			compressionType = "bzip2"
+		}
+		// xz wins over bzip2/gzip
+		if doXz {
+			compressionType = "xz"
+		}
+
+		err = app.ExportDB(outFileName, compressionType, exportTargetDB)
 		if err != nil {
 			util.Failed("Failed to export database for %s: %v", app.GetName(), err)
 		}
@@ -48,7 +65,9 @@ ddev export-db someproject --gzip=false --file=/tmp/someproject.sql `,
 
 func init() {
 	ExportDBCmd.Flags().StringVarP(&outFileName, "file", "f", "", "Provide the path to output the dump")
-	ExportDBCmd.Flags().BoolVarP(&gzipOption, "gzip", "z", true, "If provided asset is an archive, provide the path to extract within the archive.")
+	ExportDBCmd.Flags().BoolVarP(&doGzip, "gzip", "z", true, "Use gzip compression")
+	ExportDBCmd.Flags().BoolVarP(&doXz, "xz", "", false, "Use xz compression")
+	ExportDBCmd.Flags().BoolVarP(&doBzip2, "bzip2", "", false, "Use bzip2 compression")
 	ExportDBCmd.Flags().StringVarP(&exportTargetDB, "target-db", "d", "db", "If provided, target-db is alternate database to export")
 	RootCmd.AddCommand(ExportDBCmd)
 }

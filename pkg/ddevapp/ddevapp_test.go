@@ -1153,13 +1153,14 @@ func TestDdevImportDB(t *testing.T) {
 		app.Hooks = map[string][]ddevapp.YAMLTask{"post-import-db": {{"exec-host": "touch hello-post-import-db-" + app.Name}}, "pre-import-db": {{"exec-host": "touch hello-pre-import-db-" + app.Name}}}
 
 		// Test simple db loads.
-		for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.mysql.gz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.mysql.tar.gz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip", "users_with_USE_statement.sql"} {
-			path := filepath.Join(origDir, "testdata", t.Name(), dbType, file)
-			if !fileutil.FileExists(path) {
+		for _, file := range []string{"users.sql", "users.mysql", "users.sql.gz", "users.sql.bz2", "users.sql.xz", "users.mysql.gz", "users.mysql.bz2", "users.mysql.xz", "users.sql.tar", "users.mysql.tar", "users.sql.tar.gz", "users.sql.tar.bz2", "users.sql.tar.xz", "users.mysql.tar.gz", "users.mysql.tar.xz", "users.sql.tgz", "users.mysql.tgz", "users.sql.zip", "users.mysql.zip", "users_with_USE_statement.sql"} {
+			p := filepath.Join(origDir, "testdata", t.Name(), dbType, file)
+			if !fileutil.FileExists(p) {
+				t.Logf("skipping %s because it does not exist", p)
 				continue
 			}
-			err = app.ImportDB(path, "", false, false, "db")
-			assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", path, err)
+			err = app.ImportDB(p, "", false, false, "db")
+			assert.NoError(err, "Failed to app.ImportDB path: %s err: %v", p, err)
 			if err != nil {
 				continue
 			}
@@ -1184,7 +1185,7 @@ func TestDdevImportDB(t *testing.T) {
 			})
 			assert.NoError(err)
 			out = strings.Trim(out, " \n")
-			assert.Equal("db", out, "found extra database, dbType=%s dbVersion=%s out=%s, stderr=%s", dbType, app.Database.Version, out, stderr)
+			assert.Equal("db", out, "found extra database, file=%s dbType=%s dbVersion=%s out=%s, stderr=%s", file, dbType, app.Database.Version, out, stderr)
 		}
 
 		// Test that a settings file has correct hash_salt format
@@ -1483,7 +1484,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		assert.NoError(err)
 
 		// Test that we can export-db to a gzipped file
-		err = app.ExportDB("tmp/users1.sql.gz", true, "db")
+		err = app.ExportDB("tmp/users1.sql.gz", "gzip", "db")
 		assert.NoError(err)
 
 		// Validate contents
@@ -1499,7 +1500,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		assert.NoError(err)
 
 		// Export to an ungzipped file and validate
-		err = app.ExportDB("tmp/users2.sql", false, "db")
+		err = app.ExportDB("tmp/users2.sql", "", "db")
 		assert.NoError(err)
 
 		err = app.MutagenSyncFlush()
@@ -1517,7 +1518,7 @@ func TestDdevAllDatabases(t *testing.T) {
 		// CaptureStdOut() doesn't work on Windows.
 		if runtime.GOOS != "windows" {
 			stdout := util.CaptureStdOut()
-			err = app.ExportDB("", false, "db")
+			err = app.ExportDB("", "", "db")
 			assert.NoError(err)
 			out := stdout()
 			assert.Regexp(regexp.MustCompilePOSIX("CREATE TABLE.*users"), out)
@@ -1635,7 +1636,7 @@ func TestDdevExportDB(t *testing.T) {
 
 		// Test that we can export-db to a plain file. This should be larger than
 		// the gzipped file we'll do next.
-		err = app.ExportDB("tmp/users1.sql", false, "db")
+		err = app.ExportDB("tmp/users1.sql", "", "db")
 		assert.NoError(err)
 
 		// The users1.sql should be something over 2K
@@ -1654,7 +1655,7 @@ func TestDdevExportDB(t *testing.T) {
 		assert.NoError(err)
 
 		// Test that we can export-db to an existing gzipped file
-		err = app.ExportDB("tmp/users1.sql.gz", true, "db")
+		err = app.ExportDB("tmp/users1.sql.gz", "gzip", "db")
 		assert.NoError(err)
 
 		// The new gzipped file should be less than 1K
@@ -1673,6 +1674,36 @@ func TestDdevExportDB(t *testing.T) {
 		}
 		assert.True(stringFound)
 
+		// Simple export-and-validate to various types of compression
+		cTypes := map[string]string{
+			"gzip":  "gz",
+			"bzip2": "bz2",
+			"xz":    "xz",
+		}
+		for cType, ext := range cTypes {
+			err = app.ExportDB("tmp/users1.sql."+ext, cType, "db")
+			assert.NoError(err)
+			switch cType {
+			case "gzip":
+				err = archive.Ungzip("tmp/users1.sql."+ext, "tmp")
+				assert.NoError(err)
+			case "bzip2":
+				err = archive.UnBzip2("tmp/users1.sql."+ext, "tmp")
+				assert.NoError(err)
+			case "xz":
+				err = archive.UnXz("tmp/users1.sql."+ext, "tmp")
+				assert.NoError(err)
+			}
+
+			stringFound, err = fileutil.FgrepStringInFile("tmp/users1.sql", "Table structure for table `users`")
+			assert.NoError(err)
+			if !stringFound {
+				stringFound, err = fileutil.FgrepStringInFile("tmp/users1.sql", "Name: users; Type: TABLE")
+				assert.NoError(err)
+			}
+			assert.True(stringFound, "expected info not found %s (%s)", cType, "tmp/users1.sql")
+		}
+
 		// Flush needs to be complete before purge or may conflict with mutagen on windows
 		err = app.MutagenSyncFlush()
 		assert.NoError(err)
@@ -1680,7 +1711,7 @@ func TestDdevExportDB(t *testing.T) {
 		assert.NoError(err)
 
 		// Export to an ungzipped file and validate
-		err = app.ExportDB("tmp/users2.sql", false, "db")
+		err = app.ExportDB("tmp/users2.sql", "", "db")
 		assert.NoError(err)
 
 		// Validate contents
@@ -1700,7 +1731,7 @@ func TestDdevExportDB(t *testing.T) {
 
 		// Capture to stdout without gzip compression
 		stdout := util.CaptureStdOut()
-		err = app.ExportDB("", false, "db")
+		err = app.ExportDB("", "", "db")
 		assert.NoError(err)
 		o := stdout()
 		assert.Regexp(regexp.MustCompile("CREATE TABLE.*users"), o)
@@ -1709,7 +1740,7 @@ func TestDdevExportDB(t *testing.T) {
 		importPath = filepath.Join(testDir, "testdata", t.Name(), dbType, "users.sql")
 		err = app.ImportDB(importPath, "", false, false, "anotherdb")
 		require.NoError(t, err)
-		err = app.ExportDB("tmp/anotherdb.sql.gz", true, "anotherdb")
+		err = app.ExportDB("tmp/anotherdb.sql.gz", "gzip", "anotherdb")
 		assert.NoError(err)
 		importPath = "tmp/anotherdb.sql.gz"
 		err = app.ImportDB(importPath, "", false, false, "thirddb")
@@ -2134,6 +2165,20 @@ func TestDdevImportFiles(t *testing.T) {
 				continue
 			}
 		}
+
+		// Import trivial archive with various types of archive/compression and verify that files arrive
+		extensions := []string{"tgz", "zip", "tar.xz", "tar.bz2", "tar.gz"}
+		for _, ext := range extensions {
+			tarballPath := filepath.Join(origDir, "testdata", t.Name(), "files."+ext)
+			_ = os.RemoveAll(filepath.Join(app.GetHostUploadDirFullPath(), "files."+ext+".txt"))
+			err = app.ImportFiles(tarballPath, "")
+			if err != nil {
+				assert.NoError(err)
+				continue
+			}
+			assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), ext+".txt"))
+		}
+
 		assert.FileExists("hello-pre-import-files-" + app.Name)
 		assert.FileExists("hello-post-import-files-" + app.Name)
 		err = os.Remove("hello-pre-import-files-" + app.Name)

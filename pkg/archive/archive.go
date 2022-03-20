@@ -3,6 +3,8 @@ package archive
 import (
 	"archive/tar"
 	"archive/zip"
+	"bufio"
+	"compress/bzip2"
 	"compress/gzip"
 	"fmt"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -15,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/drud/ddev/pkg/util"
+	"github.com/ulikunitz/xz"
 )
 
 // Ungzip accepts a gzipped file and uncompresses it to the provided destination directory.
@@ -64,10 +67,94 @@ func Ungzip(source string, destDirectory string) error {
 	}
 
 	return nil
-
 }
 
-// Untar accepts a tar or tar.gz file and extracts the contents to the provided destination path.
+// UnBzip2 accepts a bzip2-compressed file and uncompresses it to the provided destination directory.
+func UnBzip2(source string, destDirectory string) error {
+	f, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if e := f.Close(); e != nil {
+			err = e
+		}
+	}()
+	br := bufio.NewReader(f)
+
+	gf := bzip2.NewReader(br)
+
+	fname := strings.TrimSuffix(filepath.Base(f.Name()), ".bz2")
+	exFile, err := os.Create(filepath.Join(destDirectory, fname))
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if e := exFile.Close(); e != nil {
+			err = e
+		}
+	}()
+
+	_, err = io.Copy(exFile, gf)
+	if err != nil {
+		return err
+	}
+
+	err = exFile.Sync()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// UnXz accepts an xz-compressed file and uncompresses it to the provided destination directory.
+func UnXz(source string, destDirectory string) error {
+	f, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if e := f.Close(); e != nil {
+			err = e
+		}
+	}()
+	br := bufio.NewReader(f)
+
+	gf, err := xz.NewReader(br)
+	if err != nil {
+		return err
+	}
+
+	fname := strings.TrimSuffix(filepath.Base(f.Name()), ".xz")
+	exFile, err := os.Create(filepath.Join(destDirectory, fname))
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if e := exFile.Close(); e != nil {
+			err = e
+		}
+	}()
+
+	_, err = io.Copy(exFile, gf)
+	if err != nil {
+		return err
+	}
+
+	err = exFile.Sync()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Untar accepts a tar, tar.gz, tar.bz2, tar.xz file and extracts the contents to the provided destination path.
 // extractionDir is the path at which extraction should start; nothing will be extracted except the contents of
 // extractionDir. If extranctionDir is empty, the entire tarball is extracted.
 func Untar(source string, dest string, extractionDir string) error {
@@ -83,16 +170,31 @@ func Untar(source string, dest string, extractionDir string) error {
 		return err
 	}
 
-	if strings.HasSuffix(source, "gz") {
+	switch {
+	case strings.HasSuffix(source, "gz"):
 		gf, err := gzip.NewReader(f)
 		if err != nil {
 			return err
 		}
-
 		defer util.CheckClose(gf)
-
 		tf = tar.NewReader(gf)
-	} else {
+
+	case strings.HasSuffix(source, "xz"):
+		gf, err := xz.NewReader(f)
+		if err != nil {
+			return err
+		}
+		tf = tar.NewReader(gf)
+
+	case strings.HasSuffix(source, "bz2"):
+		br := bufio.NewReader(f)
+		gf := bzip2.NewReader(br)
+		if err != nil {
+			return err
+		}
+		tf = tar.NewReader(gf)
+
+	default:
 		tf = tar.NewReader(f)
 	}
 

@@ -19,7 +19,7 @@ var ImportDBCmd = &cobra.Command{
 	Args:  cobra.RangeArgs(0, 1),
 	Short: "Import a sql file into the project.",
 	Long: `Import a sql file into the project.
-The database dump file can be provided as a SQL dump in a .sql, .sql.gz, .mysql, .mysql.gz, .zip, .tgz, or .tar.gz
+The database dump file can be provided as a SQL dump in a .sql, .sql.gz, sql.bz2, sql.xz, .mysql, .mysql.gz, .zip, .tgz, or .tar.gz
 format. For the zip and tar formats, the path to a .sql file within the archive
 can be provided if it is not located at the top level of the archive. An optional target database
 can also be provided; the default is the default database named "db".
@@ -27,7 +27,9 @@ Also note the related "ddev mysql" command`,
 	Example: `ddev import-db
 ddev import-db --src=.tarballs/junk.sql
 ddev import-db --src=.tarballs/junk.sql.gz
-ddev import-db --target-db=newdb --src=.tarballs/junk.sql.gz
+ddev import-db --target-db=newdb --src=.tarballs/db.sql.gz
+ddev import-db --src=.tarballs/db.sql.bz2
+ddev import-db --src=.tarballs/db.sql.xz
 ddev import-db <db.sql
 ddev import-db someproject <db.sql
 gzip -dc db.sql.gz | ddev import-db`,

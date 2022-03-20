@@ -483,6 +483,8 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 				fmt.Print("Archive extraction path:")
 
 				extPath = util.GetInput("")
+			} else {
+				return fmt.Errorf("Unable to validate import asset %s: %s", imPath, err)
 			}
 		}
 
@@ -490,7 +492,19 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		case strings.HasSuffix(importPath, "sql.gz") || strings.HasSuffix(importPath, "mysql.gz"):
 			err = archive.Ungzip(importPath, dbPath)
 			if err != nil {
-				return fmt.Errorf("failed to extract provided archive: %v", err)
+				return fmt.Errorf("failed to extract provided file: %v", err)
+			}
+
+		case strings.HasSuffix(importPath, "sql.bz2") || strings.HasSuffix(importPath, "mysql.bz2"):
+			err = archive.UnBzip2(importPath, dbPath)
+			if err != nil {
+				return fmt.Errorf("failed to extract file: %v", err)
+			}
+
+		case strings.HasSuffix(importPath, "sql.xz") || strings.HasSuffix(importPath, "mysql.xz"):
+			err = archive.UnXz(importPath, dbPath)
+			if err != nil {
+				return fmt.Errorf("failed to extract file: %v", err)
 			}
 
 		case strings.HasSuffix(importPath, "zip"):
@@ -502,6 +516,10 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		case strings.HasSuffix(importPath, "tar"):
 			fallthrough
 		case strings.HasSuffix(importPath, "tar.gz"):
+			fallthrough
+		case strings.HasSuffix(importPath, "tar.bz2"):
+			fallthrough
+		case strings.HasSuffix(importPath, "tar.xz"):
 			fallthrough
 		case strings.HasSuffix(importPath, "tgz"):
 			err := archive.Untar(importPath, dbPath, extPath)
@@ -667,7 +685,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 
 // ExportDB exports the db, with optional output to a file, default gzip
 // targetDB is the db name if not default "db"
-func (app *DdevApp) ExportDB(outFile string, gzip bool, targetDB string) error {
+func (app *DdevApp) ExportDB(outFile string, compressionType string, targetDB string) error {
 	app.DockerEnv()
 	exportCmd := []string{"mysqldump"}
 	if app.Database.Type == "postgres" {
@@ -678,8 +696,8 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool, targetDB string) error {
 	}
 	exportCmd = append(exportCmd, targetDB)
 
-	if gzip {
-		exportCmd = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; %s | gzip`, strings.Join(exportCmd, " "))}
+	if compressionType != "" {
+		exportCmd = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail; %s | %s`, strings.Join(exportCmd, " "), compressionType)}
 	}
 
 	opts := &ExecOpts{
@@ -709,8 +727,8 @@ func (app *DdevApp) ExportDB(outFile string, gzip bool, targetDB string) error {
 	} else {
 		confMsg = confMsg + " to stdout"
 	}
-	if gzip {
-		confMsg = confMsg + " in gzip format"
+	if compressionType != "" {
+		confMsg = fmt.Sprintf("%s in %s format", confMsg, compressionType)
 	} else {
 		confMsg = confMsg + " in plain text format"
 	}

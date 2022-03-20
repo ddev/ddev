@@ -16,12 +16,15 @@ var extPath string
 
 // ImportFileCmd represents the `ddev import-db` command.
 var ImportFileCmd = &cobra.Command{
-	Use:     "import-files",
-	Example: `ddev import-files --src=/path/to/files.tar.gz`,
-	Short:   "Pull the uploaded files directory of an existing project to the default public upload directory of your project.",
+	Use: "import-files",
+	Example: `ddev import-files --src=/path/to/files.tar.gz
+ddev import-files --src=/path/to/dir
+ddev import-files --src=/path/to/files.tar.xz
+ddev import-files --src=/path/to/files.tar.bz2`,
+	Short: "Pull the uploaded files directory of an existing project to the default public upload directory of your project.",
 	Long: `Pull the uploaded files directory of an existing project to the default
 public upload directory of your project. The files can be provided as a
-directory path or an archive in .tar, .tar.gz, .tgz, or .zip format. For the
+directory path or an archive in .tar, .tar.gz, .tar.xz, .tar.bz2, .tgz, or .zip format. For the
 .zip and tar formats, the path to a directory within the archive can be
 provided if it is not located at the top-level of the archive. If the
 destination directory exists, it will be replaced with the assets being
