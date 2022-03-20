@@ -1674,6 +1674,36 @@ func TestDdevExportDB(t *testing.T) {
 		}
 		assert.True(stringFound)
 
+		// Simple export-and-validate to various types of compression
+		cTypes := map[string]string{
+			"gzip":  "gz",
+			"bzip2": "bz2",
+			"xz":    "xz",
+		}
+		for cType, ext := range cTypes {
+			err = app.ExportDB("tmp/users1.sql."+ext, cType, "db")
+			assert.NoError(err)
+			switch cType {
+			case "gzip":
+				err = archive.Ungzip("tmp/users1.sql."+ext, "tmp")
+				assert.NoError(err)
+			case "bzip2":
+				err = archive.UnBzip2("tmp/users1.sql."+ext, "tmp")
+				assert.NoError(err)
+			case "xz":
+				err = archive.UnXz("tmp/users1.sql."+ext, "tmp")
+				assert.NoError(err)
+			}
+
+			stringFound, err = fileutil.FgrepStringInFile("tmp/users1.sql", "Table structure for table `users`")
+			assert.NoError(err)
+			if !stringFound {
+				stringFound, err = fileutil.FgrepStringInFile("tmp/users1.sql", "Name: users; Type: TABLE")
+				assert.NoError(err)
+			}
+			assert.True(stringFound, "expected info not found %s (%s)", cType, "tmp/users1.sql")
+		}
+
 		// Flush needs to be complete before purge or may conflict with mutagen on windows
 		err = app.MutagenSyncFlush()
 		assert.NoError(err)
