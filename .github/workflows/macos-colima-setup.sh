@@ -6,8 +6,10 @@ set -eu -o pipefail
 # So we have to get rid of it somehow.
 brew uninstall go@1.15 || true
 brew uninstall postgresql || true
-brew update && brew install colima docker docker-compose golang libpq mkcert mysql-client
+brew update && brew install docker docker-compose golang libpq mkcert mysql-client
 brew link --force libpq mysql-client
+
+brew install --HEAD --fetch-head colima
 
 # This command allows adding CA (in mkcert, etc) without the popup trust prompt
 # Mentioned in https://github.com/actions/virtual-environments/issues/4519#issuecomment-970202641
