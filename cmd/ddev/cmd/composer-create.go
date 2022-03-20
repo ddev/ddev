@@ -124,7 +124,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 		rsyncArgs := "-rltgopD" // Same as -a
 		if runtime.GOOS == "windows" {
-			rsyncArgs = "-rltgoD" // on windows can't do perms
+			rsyncArgs = "-rltD" // on windows can't do perms, owner, group
 		}
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
