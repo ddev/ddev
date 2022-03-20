@@ -122,9 +122,13 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 		output.UserOut.Printf("Moving installation to composer root")
 
+		rsyncArgs := "-rltgopD" // Same as -a
+		if runtime.GOOS == "windows" {
+			rsyncArgs = "-rlD" // on windows can't do perms, owner, group, times
+		}
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Service: "web",
-			Cmd:     fmt.Sprintf(`rsync -a "%s/" "%s/"`, containerInstallPath, app.GetComposerRoot(true, false)),
+			Cmd:     fmt.Sprintf(`rsync %s "%s/" "%s/"`, rsyncArgs, containerInstallPath, app.GetComposerRoot(true, false)),
 			Dir:     "/var/www/html",
 		})
 

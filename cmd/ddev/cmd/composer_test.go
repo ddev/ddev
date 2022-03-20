@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -65,26 +65,34 @@ func TestComposerCmd(t *testing.T) {
 		// These two often fail on Windows with NFS, also Colima
 		// It appears to be something about composer itself?
 
-		if !(dockerutil.IsColima() || (runtime.GOOS == "windows" && (app.NFSMountEnabled || app.NFSMountEnabledGlobal))) {
-			// ddev composer create --prefer-dist --no-interaction --no-dev psr/log:1.1.0
-			args := []string{"composer", "create", "--prefer-dist", "--no-interaction", "--no-dev", "psr/log:1.1.0"}
-			out, err = exec.RunHostCommand(DdevBin, args...)
-			assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
-			assert.Contains(out, "Created project in ")
-			assert.FileExists(filepath.Join(tmpDir, composerRoot, "Psr/Log/LogLevel.php"))
+		// ddev composer create --prefer-dist --no-interaction --no-dev psr/log:1.1.0
+		args := []string{"composer", "create", "--prefer-dist", "--no-interaction", "--no-dev", "--no-install", "psr/log:1.1.0"}
+		out, err = exec.RunHostCommand(DdevBin, args...)
+		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
+		assert.Contains(out, "Created project in ")
+		assert.FileExists(filepath.Join(tmpDir, composerRoot, "composer.json"))
 
-			err = app.StartAndWait(5)
-			assert.NoError(err)
-			// ddev composer create --prefer-dist --no-dev --no-install psr/log:1.1.0
-			args = []string{"composer", "create", "--prefer-dist", "--no-dev", "--no-install", "psr/log:1.1.0"}
-			out, err = exec.RunHostCommand(DdevBin, args...)
-			assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
-			assert.Contains(out, "Created project in ")
-			assert.FileExists(filepath.Join(tmpDir, composerRoot, "Psr/Log/LogLevel.php"))
-		}
+		args = []string{"composer", "config", "--append", "--", "allow-plugins", "true"}
+		_, err = exec.RunHostCommand(DdevBin, args...)
+		assert.NoError(err)
+
+		args = []string{"composer", "install"}
+		_, err = exec.RunHostCommand(DdevBin, args...)
+		assert.NoError(err)
+
+		assert.FileExists(filepath.Join(tmpDir, composerRoot, "Psr/Log/LogLevel.php"))
+
+		err = app.StartAndWait(5)
+		require.NoError(t, err)
+		// ddev composer create --prefer-dist --no-dev --no-install psr/log:1.1.0
+		args = []string{"composer", "create", "--prefer-dist", "--no-dev", "--no-install", "psr/log:1.1.0"}
+		out, err = exec.RunHostCommand(DdevBin, args...)
+		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
+		assert.Contains(out, "Created project in ")
+		assert.FileExists(filepath.Join(tmpDir, composerRoot, "Psr/Log/LogLevel.php"))
 
 		// Test a composer require, with passthrough args
-		args := []string{"composer", "require", "sebastian/version", "--no-plugins", "--ansi"}
+		args = []string{"composer", "require", "sebastian/version", "--no-plugins", "--ansi"}
 		out, err = exec.RunHostCommand(DdevBin, args...)
 		assert.NoError(err, "failed to run %v: err=%v, output=\n=====\n%s\n=====\n", args, err, out)
 		assert.Contains(out, "Generating autoload files")
