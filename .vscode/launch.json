@@ -38,6 +38,30 @@
             "showLog": true
         },
         {
+            "name": "debug ddev clean",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "remotePath": "",
+            "program": "${workspaceRoot}/cmd/ddev",
+            "cwd": "${workspaceRoot}",
+            "env": {"DDEV_DEBUG": "true"},
+            "args": ["clean", "-a"],
+            "showLog": true
+        },
+        {
+            "name": "debug ddev delete images",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "remotePath": "",
+            "program": "${workspaceRoot}/cmd/ddev",
+            "cwd": "${workspaceRoot}",
+            "env": {"DDEV_DEBUG": "true"},
+            "args": ["delete", "images", "-y", "-a"],
+            "showLog": true
+        },
+        {
             "name": "pkg-level test",
             "type": "go",
             "request": "launch",
