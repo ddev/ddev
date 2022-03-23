@@ -11,18 +11,28 @@ You can see available supported and tested add-ons with the command `ddev get --
 For example,
 
 ```
- ADD-ON                   DESCRIPTION
- drud/ddev-memcached      Install memcached as an extra service in ddev*
- drud/ddev-beanstalkd     beanstalkd for ddev*
- drud/ddev-drupal9-solr   Drupal 9 Apache Solr installation for DDEV*
- drud/ddev-elasticsearch  Elasticsearch add-on for DDEV*
- drud/ddev-redis          redis service for ddev*
-Add-ons marked with '*' are official, maintained DDEV add-ons.
+ddev get --list
+┌───────────────────────────┬──────────────────────────────────────────────────┐
+│ ADD-ON                    │ DESCRIPTION                                      │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-memcached       │ Install memcached as an extra service in ddev*   │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-beanstalkd      │ beanstalkd for ddev*                             │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-drupal9-solr    │ Drupal 9 Apache Solr installation for DDEV*      │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-elasticsearch   │ Elasticsearch add-on for DDEV*                   │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-redis-commander │ Redis commander for use with ddev redis service* │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-redis           │ redis service for ddev*                          │
+└───────────────────────────┴──────────────────────────────────────────────────┘
 ```
 
 Here are some of the add-ons that are officially supported:
 
 * [Redis](https://github.com/drud/ddev-redis): `ddev get drud/ddev-redis`.
+* [Redis Commander](https://github.com/drud/ddev-redis-commander): `ddev get drud/ddev-redis-commander`.
 * [Elasticsearch](https://github.com/drud/ddev-elasticsearch): `ddev get drud/ddev-elasticsearch`.
 * [Apache Solr for Drupal 9](https://github.com/drud/ddev-drupal9-solr): `ddev get drud/ddev-drupal9-solr`.
 * [Memcached](https://github.com/drud/ddev-memcached): `ddev get drud/ddev-memcached`.
@@ -30,7 +40,7 @@ Here are some of the add-ons that are officially supported:
 
 ## Creating an additional service for `ddev get`
 
-Anyone can create an add-on for `ddev get`:
+Anyone can create an add-on for `ddev get` (see [screencast](https://www.youtube.com/watch?v=fPVGpKGr0f4) and instructions in [ddev-addon-template](https://github.com/drud/ddev-addon-template)):
 
 1. Click "Use this template" on [ddev-addon-template](https://github.com/drud/ddev-addon-template).
 2. Create a new repository
@@ -49,7 +59,6 @@ Commonly used services will be migrated from the ddev-contrib repository to indi
 * **MongoDB**: See [MongoDB](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/mongodb).
 * **Old PHP Versions to Run Old Sites**: See [Old PHP Versions](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/old_php)
 * **RabbitMQ**: See [RabbitMQ](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/rabbitmq)
-* **Redis Commander**: See [redis commander](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/redis-commander)
 * **TYPO3 Solr Integration**: See [TYPO3 Solr](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/typo3-solr)
 
 Your PRs to integrate other services are welcome at [ddev-contrib](https://github.com/drud/ddev-contrib).
