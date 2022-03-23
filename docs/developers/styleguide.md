@@ -16,3 +16,15 @@ pixel density displays. Many applications support @2x annotations in the image p
 image for the display in use.
 
 Currently there is no prepared version for dark backgrounds of the word/figurative mark.
+
+## Color Plate
+
+| DDEV Blue  | DDEV Black |
+|------------|------------|
+| `#02a8e2`  | `#1e2127`  |
+
+## Use of the word mark DDEV
+
+The product DDEV is always referenced in capital letters.
+
+When referring to the binary ddev, lowercase letters are preferred.
