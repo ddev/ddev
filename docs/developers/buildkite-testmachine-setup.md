@@ -35,14 +35,14 @@ Set up Windows to automatically start WSL2 buildkite-agent: Use task scheduler t
 1. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com.
 2. Change the name of the machine to something in keeping with current style. Maybe `testbot-macstadium-macos-3`.
 3. Install [Homebrew](https://brew.sh/) `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
-4. Install golang/git/docker with brew install buildkite/buildkite/buildkite-agent homebrew/cask/iterm2 homebrew/cask/google-chrome  homebrew/cask/docker homebrew/cask/nosleep golang git mariadb jq p7zip bats-core composer drud/ddev/ddev netcat mkcert homebrew/cask/ngrok`
+4. Install golang/git/docker with brew install buildkite/buildkite/buildkite-agent  nosleep golang git mariadb jq p7zip bats-core composer drud/ddev/ddev netcat mkcert ngrok && brew install --cask iterm2 google-chrome  docker nosleep ngrok`
 5. `mkcert -install`
 6. Run Docker manually and go through its configuration routine.
 7. Run iTerm. On Mojave and higher it may prompt for requiring full disk access permissions, follow through with that.
 8. Set up nfsd by running `macos_ddev_nfs_setup.sh`
-9. Edit the buildkite-agent.cfg in /usr/local/etc/buildkite-agent.cfg to add
+9. Edit the buildkite-agent.cfg in `/usr/local/etc/buildkite-agent.cfg` or `/opt/homebrew/etc/buildkite-agent/buildkite-agent.cfg` to add
     * the agent token
-    * Tags, like `"os=macos,architecture=amd64,osvariant=bigsur,dockertype=dockerformac"`
+    * Tags, like `"os=macos,architecture=arm64,osvariant=monterrey,dockertype=dockerformac"`
     * `build-path="~/tmp/buildkite-agent/builds"`
 10. The buildkite/hooks/environment file must be updated to contain the docker pull credentials:
 ```bash
