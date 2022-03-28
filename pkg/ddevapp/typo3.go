@@ -66,7 +66,7 @@ func writeTypo3SettingsFile(app *DdevApp) error {
 			return err
 		}
 	}
-	dbDriver := "pdo_mysql"
+	dbDriver := "mysqli" // mysqli is the driver used in default LocalConfiguration.php
 	if app.Database.Type == nodeps.Postgres {
 		dbDriver = "pdo_pgsql"
 	}
