@@ -111,7 +111,11 @@ ddev get --list --all
 			client := getGithubClient(ctx)
 			releases, resp, err := client.Repositories.ListReleases(ctx, owner, repo, &github.ListOptions{})
 			if err != nil {
-				util.Failed("Unable to get releases for %v: %v\nresp.Rate=%v", repo, err, resp.Rate)
+				var rate github.Rate
+				if resp != nil {
+					rate = resp.Rate
+				}
+				util.Failed("Unable to get releases for %v: %v\nresp.Rate=%v", repo, err, rate)
 			}
 			if len(releases) == 0 {
 				util.Failed("No releases found for %v", repo)
