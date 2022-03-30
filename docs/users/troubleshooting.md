@@ -44,9 +44,8 @@ This means there is another webserver listening on the named port(s) and ddev ca
 
 To resolve this conflict, choose one of two methods:
 
-1. If you are using another local development environment (MAMP, WAMP, lando, etc.) that uses these ports, consider stopping it.
-2. Fix port conflicts by configuring your project to use different ports.
-3. Fix port conflicts by stopping the competing application.
+1. Fix port conflicts by configuring your project to use different ports.
+2. Fix port conflicts by stopping the competing application.
 
 ### Method 1: Fix port conflicts by configuring your project to use different ports
 
@@ -75,7 +74,7 @@ phpmyadmin_port: 8302
 
 ### Method 2: Fix port conflicts by stopping the competing application
 
-Alternatively, stop the other application.
+Alternatively, if you are using another application or local development environment (MAMP, WAMP, lando, etc.) that uses these ports, consider stopping it.
 
 Probably the most common conflicting application is Apache running locally. It can often be stopped gracefully (but temporarily) with:
 
