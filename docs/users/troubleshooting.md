@@ -42,12 +42,13 @@ This means there is another webserver listening on the named port(s) and ddev ca
 
 (In some cases the conflict could be over port 8036 (phpMyAdmin) or port 8025 (MailHog)).
 
-To resolve this conflict, choose one of two methods:
+To resolve this conflict, choose one of three methods:
 
-1. Fix port conflicts by configuring your project to use different ports.
-2. Fix port conflicts by stopping the competing application.
+1. If you are using another local development environment (MAMP, WAMP, lando, etc.) that uses these ports, consider stopping it.
+2. Fix port conflicts by configuring your project to use different ports.
+3. Fix port conflicts by stopping the competing application.
 
-### Method 1: Fix port conflicts by configuring your project to use different ports
+### Method 2: Fix port conflicts by configuring your project to use different ports
 
 To configure a project to use non-conflicting ports, edit the project's .ddev/config.yaml to add entries like `router_http_port: 8000` and `router_https_port: 8443` depending on your needs. Then use `ddev start` again.
 
@@ -72,9 +73,9 @@ If the conflict is over port 8036, it's normally about phpMyAdmin, and you can a
 phpmyadmin_port: 8302
 ```
 
-### Method 2: Fix port conflicts by stopping the competing application
+### Method 3: Fix port conflicts by stopping the competing application
 
-Alternatively, if you are using another application or local development environment (MAMP, WAMP, lando, etc.) that uses these ports, consider stopping it.
+Alternatively, stop the other application.
 
 Probably the most common conflicting application is Apache running locally. It can often be stopped gracefully (but temporarily) with:
 
