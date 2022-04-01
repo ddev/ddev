@@ -13,4 +13,4 @@ if ! command -v bin/magento >/dev/null; then
   exit 1
 fi
 
-bin/magento "$@"
+bin/magento $*
