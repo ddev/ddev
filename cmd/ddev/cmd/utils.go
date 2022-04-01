@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 )
 
 // getRequestedProjects will collect and return the requested projects from command line arguments and flags.
@@ -59,4 +60,28 @@ func getRequestedProjects(names []string, all bool) ([]*ddevapp.DdevApp, error) 
 	}
 
 	return requestedProjects, nil
+}
+
+// commandRequiresDocker are commands that can be run without a Docker runtime.
+func commandRequiresDocker(commands []string) bool {
+
+	// List of commands that do not rely on Docker running.
+	allowedCommands := []string{
+		"version",
+		"-v",
+		"--version",
+		"--help",
+		"-h",
+		"get",
+		"hostname",
+		"list",
+		"config",
+	}
+	for _, command := range commands {
+		// If an allowed command, return false that Docker is not required.
+		if nodeps.ArrayContainsString(allowedCommands, command) {
+			return false
+		}
+	}
+	return true
 }

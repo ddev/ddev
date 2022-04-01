@@ -159,6 +159,20 @@ func init() {
 			util.Warning("populateExamplesAndCommands() failed: %v", err)
 		}
 
+		// Determine if Docker is running and if the command requires Docker.
+		// This helps to prevent a user from seeing the Cobra error: "Error: unknown command "<custom command>" for ddev"
+		// Determine if Docker is running by getting the version.
+		_, err = version.GetDockerVersion()
+		if err != nil {
+
+			// We don't use the first arg from the command line.
+			commands := os.Args[1:]
+			if commandRequiresDocker(commands) {
+				util.Failed("Could not connect to Docker. Please ensure Docker is installed and running.")
+			}
+
+		}
+
 		err = addCustomCommands(RootCmd)
 		if err != nil {
 			util.Warning("Adding custom/shell commands failed: %v", err)
