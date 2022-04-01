@@ -137,7 +137,7 @@ func TestComposerVersion(t *testing.T) {
 	require.NoError(t, err)
 	stdout, _, err = app.Exec(&ddevapp.ExecOpts{Cmd: "composer --version"})
 	assert.NoError(err)
-	assert.True(strings.HasPrefix(stdout, "Composer 2") || strings.HasPrefix(stdout, "Composer version 2"), "composer version not the expected composer 2: %v", stdout)
+	assert.True(strings.HasPrefix(stdout, "Composer 2") || strings.HasPrefix(stdout, "Composer version 2"), "composer version doesn't start with the expected value: %v", stdout)
 
 	// With explicit version, we should get that version
 	app.ComposerVersion = "2.0.1"
