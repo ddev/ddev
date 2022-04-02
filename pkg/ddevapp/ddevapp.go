@@ -1854,8 +1854,7 @@ func (app *DdevApp) WaitByLabels(labels map[string]string) error {
 	waitTime := containerWaitTimeout
 	err := dockerutil.ContainersWait(waitTime, labels)
 	if err != nil {
-		// TODO: Improve this error message
-		return fmt.Errorf("container failed to become healthy: err=%v", err)
+		return fmt.Errorf("container(s) failed to become healthy after %d seconds. This may be just a problem with the healthcheck and not a functional problem. %v", waitTime, err)
 	}
 	return nil
 }

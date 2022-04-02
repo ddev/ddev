@@ -312,7 +312,18 @@ func ContainersWait(waittime int, labels map[string]string) error {
 	for {
 		select {
 		case <-timeoutChan:
-			return fmt.Errorf("health check timed out: labels %v timed out without becoming healthy, status=%v", labels, status)
+			desc := ""
+			containers, err := FindContainersByLabels(labels)
+			if err == nil && containers != nil {
+				for _, c := range containers {
+					health, _ := GetContainerHealth(&c)
+					if health != "healthy" {
+						n := strings.TrimPrefix(c.Names[0], "/")
+						desc = desc + fmt.Sprintf(" %s:%s - more info with `docker inspect --format \"{{json .State.Health }}\" %s`", n, health, n)
+					}
+				}
+			}
+			return fmt.Errorf("health check timed out: labels %v timed out without becoming healthy, status=%v, detail=%s ", labels, status, desc)
 
 		case <-tickChan.C:
 			containers, err := FindContainersByLabels(labels)
