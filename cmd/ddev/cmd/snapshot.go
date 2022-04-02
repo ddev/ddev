@@ -48,6 +48,9 @@ ddev snapshot --all`,
 			case snapshotCleanup:
 				deleteAppSnapshot(app)
 			default:
+				if app.SiteStatus() != "running" {
+					continue
+				}
 				createAppSnapshot(app)
 			}
 		}
