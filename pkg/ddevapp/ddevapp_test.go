@@ -1476,7 +1476,7 @@ func TestDdevAllDatabases(t *testing.T) {
 				Service: "db",
 				Cmd:     `mysql -n -e "SELECT @@character_set_database;"`,
 			})
-			assert.Equal("utf8mb4", strings.Trim(charSet, "\n\r "))
+			assert.Equal("@@character_set_database\nutf8mb4", strings.Trim(charSet, "\n\r "))
 		}
 
 		importPath := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
