@@ -145,9 +145,17 @@ func Execute() {
 }
 
 func init() {
+
 	RootCmd.PersistentFlags().BoolVarP(&output.JSONOutput, "json-output", "j", false, "If true, user-oriented output will be in JSON format.")
 
 	output.LogSetUp()
+
+	// Determine if Docker is running by getting the version.
+	// This helps to prevent a user from seeing the Cobra error: "Error: unknown command "<custom command>" for ddev"
+	_, err := version.GetDockerVersion()
+	if err != nil {
+		util.Failed("Could not connect to a docker provider. Please start or install a docker provider.\nFor installation help go to: https://ddev.readthedocs.io/en/latest/users/docker_installation/")
+	}
 
 	// Populate custom/script commands so they're visible
 	// We really don't want ~/.ddev or .ddev/homeadditions or .ddev/.globalcommands to have root ownership, breaks things.
