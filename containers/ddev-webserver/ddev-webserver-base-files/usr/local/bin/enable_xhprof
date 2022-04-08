@@ -5,5 +5,5 @@ mkdir -p ${XHPROF_OUTPUT_DIR}
 phpenmod xhprof
 killall -USR2 php-fpm 2>/dev/null || true
 echo "Enabled xhprof.
-After each web request you can see all runs, most recent first, at
+After each web request or CLI process you can see all runs, most recent first, at
 ${DDEV_PRIMARY_URL}/xhprof"
