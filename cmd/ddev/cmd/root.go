@@ -154,7 +154,7 @@ func init() {
 	// This helps to prevent a user from seeing the Cobra error: "Error: unknown command "<custom command>" for ddev"
 	_, err := version.GetDockerVersion()
 	if err != nil {
-		util.Failed("Could not connect to Docker. Please ensure Docker is installed and running.")
+		util.Failed("Could not connect to a docker provider. Please start or install a docker provider.\nFor installation help go to: https://ddev.readthedocs.io/en/latest/users/docker_installation/")
 	}
 
 	// Populate custom/script commands so they're visible
