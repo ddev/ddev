@@ -50,6 +50,9 @@ var (
 	// xdebugEnabledArg allows a user to enable XDebug from a command flag.
 	xdebugEnabledArg bool
 
+	// xdebugAutostartArg allows a user to enable auto starting of XDebug debugging sessions from a command flag.
+	xdebugAutostartArg bool
+
 	// noProjectMountArg allows a user to skip the project mount from a command flag.
 	noProjectMountArg bool
 
@@ -243,7 +246,8 @@ func init() {
 	ConfigCommand.Flags().StringVar(&phpVersionArg, "php-version", "", "The version of PHP that will be enabled in the web container")
 	ConfigCommand.Flags().StringVar(&httpPortArg, "http-port", "", "The router HTTP port for this project")
 	ConfigCommand.Flags().StringVar(&httpsPortArg, "https-port", "", "The router HTTPS port for this project")
-	ConfigCommand.Flags().BoolVar(&xdebugEnabledArg, "xdebug-enabled", false, "Whether or not XDebug is enabled in the web container")
+	ConfigCommand.Flags().BoolVar(&xdebugEnabledArg, "xdebug-enabled", true, "Whether or not XDebug is enabled in the web container")
+	ConfigCommand.Flags().BoolVar(&xdebugAutostartArg, "xdebug-autostart", true, "Whether or not XDebug should automatically start a debugging session in the web container")
 	ConfigCommand.Flags().BoolVar(&noProjectMountArg, "no-project-mount", false, "Whether or not to skip mounting project code into the web container")
 	ConfigCommand.Flags().StringVar(&additionalHostnamesArg, "additional-hostnames", "", "A comma-delimited list of hostnames for the project")
 	ConfigCommand.Flags().StringVar(&additionalFQDNsArg, "additional-fqdns", "", "A comma-delimited list of FQDNs for the project")
@@ -503,9 +507,12 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 		app.FailOnHookFail = failOnHookFail
 	}
 
-	// This bool flag is false by default, so only use the value if the flag was explicitly set.
 	if cmd.Flag("xdebug-enabled").Changed {
 		app.XdebugEnabled = xdebugEnabledArg
+	}
+
+	if cmd.Flag("xdebug-autostart").Changed {
+		app.XdebugAutostart = xdebugAutostartArg
 	}
 
 	// This bool flag is false by default, so only use the value if the flag was explicitly set.

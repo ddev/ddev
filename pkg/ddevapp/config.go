@@ -89,6 +89,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.PHPMyAdminHTTPSPort = nodeps.DdevDefaultPHPMyAdminHTTPSPort
 	app.MailhogPort = nodeps.DdevDefaultMailhogPort
 	app.MailhogHTTPSPort = nodeps.DdevDefaultMailhogHTTPSPort
+	app.XdebugEnabled = nodeps.XdebugEnabled
 
 	// Provide a default app name based on directory name
 	app.Name = filepath.Base(app.AppRoot)

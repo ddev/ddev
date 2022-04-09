@@ -63,11 +63,18 @@ if [ "$DDEV_WEBSERVER_TYPE" = "apache-fpm" ] ; then
     a2dissite 000-default
 fi
 
-# Disable xdebug by default. Users can enable with /usr/local/bin/enable_xdebug
+# Enable xdebug by default. Users can disable with /usr/local/bin/disable_xdebug
 if [ "$DDEV_XDEBUG_ENABLED" = "true" ]; then
   enable_xdebug
 else
   disable_xdebug
+fi
+
+# Disable xdebug autostart by default. Users can enable with /usr/local/bin/disable_xdebug_trigger
+if [ "$DDEV_XDEBUG_AUTOSTART" = "true" ]; then
+  disable_xdebug_trigger
+else
+  enable_xdebug_trigger
 fi
 
 # Enable assertions by default.

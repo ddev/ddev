@@ -65,6 +65,9 @@ var SimpleFormatting = false
 // FailOnHookFailDefault is the default value for app.FailOnHookFail
 var FailOnHookFailDefault = false
 
+// Enable Xdebug by default
+var XdebugEnabled = true
+
 // ValidWebserverTypes should be updated whenever supported webserver types are added or
 // removed, and should be used to ensure user-supplied values are valid.
 var ValidWebserverTypes = map[string]bool{

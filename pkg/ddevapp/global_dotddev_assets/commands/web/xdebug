@@ -17,15 +17,24 @@ case $1 in
     on|true|enable)
 	enable_xdebug
 	;;
+	autostart)
+  enable_xdebug
+  enable_xdebug_autostart
+	;;
+	trigger)
+  enable_xdebug
+  disable_xdebug_autostart
+  ;;
 	off|false|disable)
 	disable_xdebug
 	;;
 	status)
   case ${xdebug_version} in
   v3*)
-    status=$(php -r 'echo ini_get("xdebug.mode");' 2>/dev/null)
-    if [[ "${status}" =~ .*"debug".* ]]; then
-      result="xdebug enabled"
+    status=$(php -r 'echo extension_loaded("xdebug");' 2>/dev/null)
+    if [[ "${status}" = "1" ]]; then
+      mode=$(php -r 'echo ini_get("xdebug.mode");' 2>/dev/null)
+      result="xdebug enabled (${mode})"
     else
       result="xdebug disabled"
     fi
