@@ -34,7 +34,8 @@ case $1 in
     status=$(php -r 'echo extension_loaded("xdebug");' 2>/dev/null)
     if [[ "${status}" = "1" ]]; then
       mode=$(php -r 'echo ini_get("xdebug.mode");' 2>/dev/null)
-      result="xdebug enabled (${mode})"
+      autostart=$(php -r 'echo ini_get("xdebug.start_with_request") === "1" ? " with autostart" : "";' 2>/dev/null)
+      result="xdebug enabled${autostart} (${mode})"
     else
       result="xdebug disabled"
     fi
