@@ -42,7 +42,7 @@ jobs:
       - name: Install build tools
         run: ./.github/workflows/linux-build-setup.sh
 
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v3
         with:
           go-version: 1.*
       
