@@ -3,7 +3,9 @@ package cmd
 import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 // For single remove only: remove db and related data
@@ -51,6 +53,39 @@ ddev stop --remove-data`,
 			util.Failed("Illegal option combination: --snapshot and --omit-snapshot:")
 		}
 
+		selectFlag, err := cmd.Flags().GetBool("select")
+
+		if err != nil {
+			util.Failed(err.Error())
+		}
+
+		if selectFlag {
+			activeProjects := ddevapp.GetActiveProjects()
+
+			if len(activeProjects) == 0 {
+				util.Warning("No project is currently running")
+				os.Exit(0)
+			}
+
+			activeProjectNames := ddevapp.ExtractProjectNames(activeProjects)
+
+			prompt := promptui.Select{
+				Label: "Running projects",
+				Items: activeProjectNames,
+				Templates: &promptui.SelectTemplates{
+					Label: "{{ . | cyan }}:",
+				},
+			}
+
+			_, projectName, err := prompt.Run()
+
+			if err != nil {
+				util.Failed(err.Error())
+			}
+
+			args = append(args, projectName)
+		}
+
 		projects, err := getRequestedProjects(args, stopAll)
 		if err != nil {
 			util.Failed("Failed to get project(s): %v", err)
@@ -89,6 +124,7 @@ func init() {
 	DdevStopCmd.Flags().BoolVarP(&removeData, "remove-data", "R", false, "Remove stored project data (MySQL, logs, etc.)")
 	DdevStopCmd.Flags().BoolVarP(&createSnapshot, "snapshot", "S", false, "Create database snapshot")
 	DdevStopCmd.Flags().BoolVarP(&omitSnapshot, "omit-snapshot", "O", false, "Omit/skip database snapshot")
+	DdevStopCmd.Flags().BoolP("select", "s", false, "Interactively select a project to stop")
 
 	DdevStopCmd.Flags().BoolVarP(&stopAll, "all", "a", false, "Stop and remove all running or container-stopped projects and remove from global projects list")
 	DdevStopCmd.Flags().BoolVarP(&stopSSHAgent, "stop-ssh-agent", "", false, "Stop the ddev-ssh-agent container")

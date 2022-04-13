@@ -364,3 +364,32 @@ func GetProjects(activeOnly bool) ([]*DdevApp, error) {
 
 	return appSlice, nil
 }
+
+// GetInactiveProjects returns projects that are currently running
+func GetInactiveProjects() ([]*DdevApp, error) {
+	var inactiveApps []*DdevApp
+
+	apps, err := GetProjects(false)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, app := range apps {
+		if app.SiteStatus() != SiteRunning {
+			inactiveApps = append(inactiveApps, app)
+		}
+	}
+
+	return inactiveApps, nil
+}
+
+// ExtractProjectNames returns a list of names by a bunch of projects
+func ExtractProjectNames(apps []*DdevApp) []string {
+	var names []string
+	for _, app := range apps {
+		names = append(names, app.Name)
+	}
+
+	return names
+}
