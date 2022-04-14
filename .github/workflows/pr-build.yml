@@ -20,6 +20,9 @@ env:
   DDEV_DEBUG: true
 
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build DDEV executables

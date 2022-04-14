@@ -23,6 +23,9 @@ env:
   DOCKER_ORG: drud
   TAG: "${{ github.event.inputs.tag }}"
 
+permissions:
+  contents: read
+
 jobs:
   push-tagged-image:
     name: "push tagged image"
