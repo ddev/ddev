@@ -18,8 +18,8 @@ import (
 // DeleteImagesCmd implements the ddev delete images command
 var DeleteImagesCmd = &cobra.Command{
 	Use:   "images",
-	Short: "Deletes ddev docker images not in use by current ddev version",
-	Long:  "with --all it deletes all ddev docker images",
+	Short: "Deletes drud/ddev-* docker images not in use by current ddev version",
+	Long:  "with --all it deletes all drud/ddev-* docker images",
 	Example: `ddev delete images
 ddev delete images -y
 ddev delete images --all`,
