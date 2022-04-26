@@ -246,6 +246,12 @@ networks:
   ddev_default:
     name: ddev_default
     external: true
+  {{if .IsGitpod}}{{/* see https://github.com/drud/ddev/issues/3766 */}}
+  default:
+    driver_opts:
+      com.docker.network.driver.mtu: 1440
+  {{end}}
+
 volumes:
   {{if and (not .OmitDB) (ne .DBType "postgres") }}
   database:
