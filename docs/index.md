@@ -21,7 +21,7 @@ DDEV by default uses ports 80 and 443 on your system when projects are running. 
 
 ## Installation
 
-### Docker or Colima Prerequisite
+### Docker Desktop/CE or Colima Prerequisite
 
 Docker or an alternative is required before anything will work with DDEV. This is pretty easy on most environments; see the [docker_installation](users/docker_installation.md) page to help sort out the details, especially on Windows and Linux. It is not required to install docker-compose because DDEV uses its own private version.
 
