@@ -232,14 +232,15 @@ ddev launch
 
 To connect to the database within the database container directly, please see the [developer tools page](developer-tools.md#using-development-tools-on-the-host-machine).
 
-To get started using ddev with a TYPO3 project, clone the project's repository and checkout its directory.
-
 #### TYPO3 Git Clone Example
 
 ```bash
 git clone https://github.com/example/example-site
 cd example-site
+# adapt docroot= as needed
+ddev config --project-type=typo3 --docroot=public
 ddev composer install
+ddev launch
 ```
 
 ### Backdrop Quickstart
