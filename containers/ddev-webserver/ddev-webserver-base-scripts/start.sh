@@ -47,7 +47,7 @@ if [ "$DDEV_PROJECT_TYPE" = "backdrop" ] ; then
     mkdir -p ~/.drush/commands && ln -s /var/tmp/backdrop_drush_commands ~/.drush/commands/backdrop
 fi
 
-if [ "${DDEV_PROJECT_TYPE}" = "drupal6" ] || [ "${DDEV_PROJECT_TYPE}" = "drupal7" ] ; then
+if [ "${DDEV_PROJECT_TYPE}" = "drupal6" ] || [ "${DDEV_PROJECT_TYPE}" = "drupal7" ] || [ "${DDEV_PROJECT_TYPE}" = "backdrop" ]; then
   ln -sf /usr/local/bin/drush8 /usr/local/bin/drush
 fi
 
