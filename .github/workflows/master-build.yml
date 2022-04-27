@@ -34,7 +34,7 @@ jobs:
       - name: Install build tools
         run: ./.github/workflows/linux-build-setup.sh
 
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v3
         with:
           go-version: 1.*
       
@@ -108,7 +108,7 @@ jobs:
         with:
           # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v3
         with:
           go-version: 1.*
 

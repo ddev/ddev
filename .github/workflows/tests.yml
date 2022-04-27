@@ -64,7 +64,7 @@ jobs:
       #        if: matrix.os == 'macos-latest'
       #        run: ./.github/workflows/macos-setup.sh
 
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v3
         if: matrix.os == 'ubuntu-20.04'
         with:
           go-version: 1.*
