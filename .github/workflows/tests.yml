@@ -80,7 +80,7 @@ jobs:
           make ${{ matrix.tests }}
 
       - name: Store test results
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ddev-test-results-${{ matrix.webserver }}
           path: /tmp/testresults/
