@@ -8,8 +8,8 @@ brew uninstall go@1.15 || true
 brew unlink go || true
 brew uninstall go@1.17 || true
 brew uninstall postgresql || true
-brew update && brew install colima docker docker-compose libpq mkcert mysql-client
-brew link --force golang libpq mysql-client
+brew update && brew install colima docker docker-compose go libpq mkcert mysql-client
+brew link --force go libpq mysql-client
 
 # This command allows adding CA (in mkcert, etc) without the popup trust prompt
 # Mentioned in https://github.com/actions/virtual-environments/issues/4519#issuecomment-970202641
