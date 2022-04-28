@@ -1,5 +1,0 @@
-name: mariawithemptymysql
-type: php
-docroot: ""
-mysql_version: ""
-mariadb_version: "10.3"

@@ -1,1 +1,3 @@
-mariadb_version: 10.6
+database:
+  type: "mariadb"
+  version: "10.6"
