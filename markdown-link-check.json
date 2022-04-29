@@ -22,6 +22,9 @@
       "pattern": "^https://www.php.net/manual/"
     },
     {
+      "pattern": "^https://(docs|guides).github.com/"
+    },
+    {
       "pattern": "^https://www.cyberciti.biz/"
     }
   ],
