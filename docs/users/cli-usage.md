@@ -228,17 +228,12 @@ ddev exec touch public/FIRST_INSTALL
 ddev launch
 ```
 
-**On TYPO3 versions < 9 an install may fail if you use the https URL to install because the allowed proxy is not configured yet ("Trusted hosts pattern mismatch"). Please use "http" instead of "https" for the URL while doing the install.**
-
-To connect to the database within the database container directly, please see the [developer tools page](developer-tools.md#using-development-tools-on-the-host-machine).
-
 #### TYPO3 Git Clone Example
 
 ```bash
 git clone https://github.com/example/example-site
 cd example-site
-# adapt docroot= as needed
-ddev config --project-type=typo3 --docroot=public
+ddev config
 ddev composer install
 ddev launch
 ```
