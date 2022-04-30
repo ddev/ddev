@@ -233,8 +233,7 @@ ddev launch
 ```bash
 git clone https://github.com/example/example-site
 cd example-site
-# adapt docroot= as needed
-ddev config --project-type=typo3 --docroot=public
+ddev config
 ddev composer install
 ddev launch
 ```
