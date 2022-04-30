@@ -7,6 +7,7 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
 	"github.com/spf13/cobra"
+	"sort"
 	"strings"
 )
 
@@ -55,6 +56,28 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 			globalconfig.DdevGlobalConfig.WebEnvironment = []string{}
 		} else {
 			globalconfig.DdevGlobalConfig.WebEnvironment = strings.Split(env, ",")
+		}
+		dirty = true
+	}
+
+	if cmd.Flag("web-environment-add").Changed {
+		env := strings.Replace(webEnvironmentGlobal, " ", "", -1)
+		if env == "" {
+			globalconfig.DdevGlobalConfig.WebEnvironment = []string{}
+		} else {
+			envspl := strings.Split(env, ",")
+			conc := append(globalconfig.DdevGlobalConfig.WebEnvironment, envspl...)
+			// Convert to a hashmap to remove duplicate values.
+			hashmap := make(map[string]string)
+			for i := 0; i < len(conc); i++ {
+				hashmap[conc[i]] = conc[i]
+			}
+			keys := []string{}
+			for key := range hashmap {
+				keys = append(keys, key)
+			}
+			globalconfig.DdevGlobalConfig.WebEnvironment = keys
+			sort.Strings(globalconfig.DdevGlobalConfig.WebEnvironment)
 		}
 		dirty = true
 	}
@@ -184,6 +207,7 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 func init() {
 	configGlobalCommand.Flags().StringVarP(&omitContainers, "omit-containers", "", "", "For example, --omit-containers=dba,ddev-ssh-agent")
 	configGlobalCommand.Flags().StringVarP(&webEnvironmentGlobal, "web-environment", "", "", `Set the environment variables in the web container: --web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`)
+	configGlobalCommand.Flags().StringVarP(&webEnvironmentGlobal, "web-environment-add", "", "", `Append environment variables to the web container: --web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`)
 	configGlobalCommand.Flags().Bool("nfs-mount-enabled", false, "Enable NFS mounting on all projects globally")
 	configGlobalCommand.Flags().BoolVarP(&instrumentationOptIn, "instrumentation-opt-in", "", false, "instrumentation-opt-in=true")
 	configGlobalCommand.Flags().Bool("router-bind-all-interfaces", false, "router-bind-all-interfaces=true")
