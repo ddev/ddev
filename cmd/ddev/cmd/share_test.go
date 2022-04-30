@@ -35,7 +35,7 @@ func TestShareCmd(t *testing.T) {
 	defer site.Chdir()()
 
 	// Configure ddev/ngrok to use json output to stdout
-	cmd := exec.Command(DdevBin, "config", "--ngrok-args", "-log stdout -log-format=json")
+	cmd := exec.Command(DdevBin, "config", "--ngrok-args", "--log stdout --log-format=json")
 	err := cmd.Start()
 	require.NoError(t, err)
 	err = cmd.Wait()
