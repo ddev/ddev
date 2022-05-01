@@ -14,27 +14,29 @@ import (
 
 // WordpressConfig encapsulates all the configurations for a WordPress site.
 type WordpressConfig struct {
-	WPGeneric        bool
-	DeployName       string
-	DeployURL        string
-	DatabaseName     string
-	DatabaseUsername string
-	DatabasePassword string
-	DatabaseHost     string
-	AuthKey          string
-	SecureAuthKey    string
-	LoggedInKey      string
-	NonceKey         string
-	AuthSalt         string
-	SecureAuthSalt   string
-	LoggedInSalt     string
-	NonceSalt        string
-	Docroot          string
-	TablePrefix      string
-	Signature        string
-	SiteSettings     string
-	SiteSettingsDdev string
-	AbsPath          string
+	WPGeneric          bool
+	DeployName         string
+	DeployURL          string
+	DatabaseName       string
+	DatabaseUsername   string
+	DatabasePassword   string
+	DatabaseHost       string
+	AuthKey            string
+	SecureAuthKey      string
+	LoggedInKey        string
+	NonceKey           string
+	AuthSalt           string
+	SecureAuthSalt     string
+	LoggedInSalt       string
+	NonceSalt          string
+	Docroot            string
+	TablePrefix        string
+	Signature          string
+	SiteSettings       string
+	SiteSettingsDdev   string
+	AbsPath            string
+	DbCharset          string
+	DbCollate          string
 }
 
 // NewWordpressConfig produces a WordpressConfig object with defaults.
@@ -60,6 +62,8 @@ func NewWordpressConfig(app *DdevApp, absPath string) *WordpressConfig {
 		SiteSettings:     "wp-config.php",
 		SiteSettingsDdev: "wp-config-ddev.php",
 		AbsPath:          absPath,
+		DbCharset:		  "utf8",
+		DbCollate:		  "",
 	}
 }
 

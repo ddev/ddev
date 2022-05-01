@@ -7,6 +7,12 @@
  * @package ddevapp
  */
 
+ /** Database charset to use in creating database tables. */
+define( 'DB_CHARSET', '{{ $config.DbCharset }}' );
+
+/** The database collate type. Don't change this if in doubt. */
+define( 'DB_COLLATE', '{{ $config.DbCollate }}' );
+
 /** Authentication Unique Keys and Salts. */
 define( 'AUTH_KEY', '{{ $config.AuthKey }}' );
 define( 'SECURE_AUTH_KEY', '{{ $config.SecureAuthKey }}' );
