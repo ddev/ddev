@@ -18,12 +18,6 @@ if ( getenv( 'IS_DDEV_PROJECT' ) == 'true' ) {
 
 	/** MySQL hostname */
 	defined( 'DB_HOST' ) || define( 'DB_HOST', '{{ $config.DatabaseHost }}' );
-	
-	/** Database charset to use in creating database tables. */
-	define( 'DB_CHARSET', 'utf8' );
-
-	/** The database collate type. Don't change this if in doubt. */
-	define( 'DB_COLLATE', '' );
 
 	/** WP_HOME URL */
 	defined( 'WP_HOME' ) || define( 'WP_HOME', '{{ $config.DeployURL }}' );
