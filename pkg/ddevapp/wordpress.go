@@ -62,8 +62,8 @@ func NewWordpressConfig(app *DdevApp, absPath string) *WordpressConfig {
 		SiteSettings:     "wp-config.php",
 		SiteSettingsDdev: "wp-config-ddev.php",
 		AbsPath:          absPath,
-		DbCharset:		  "utf8",
-		DbCollate:		  "",
+		DbCharset:        "utf8",
+		DbCollate:        "",
 	}
 }
 
