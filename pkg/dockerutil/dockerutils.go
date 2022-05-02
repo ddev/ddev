@@ -1214,6 +1214,7 @@ func dockerComposeDownloadLink() (string, error) {
 //   https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Windows-x86_64.exe
 func dockerComposeDownloadLinkV1() (string, error) {
 	arch := runtime.GOARCH
+	//nolint:staticcheck
 	goos := strings.Title(runtime.GOOS)
 
 	switch arch {

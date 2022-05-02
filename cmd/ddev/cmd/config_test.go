@@ -333,6 +333,45 @@ func TestConfigSetValues(t *testing.T) {
 
 	assert.Equal(app.WebImage, "")
 	assert.Equal(len(app.WorkingDir), 0)
+
+	// Test that variables can be appended to the web environment
+	args = []string{
+		"config",
+		"--web-environment-add", webEnv,
+	}
+
+	_, err = exec.RunHostCommand(DdevBin, args...)
+	assert.NoError(err)
+
+	configContents, err = os.ReadFile(configFile)
+	assert.NoError(err, "Unable to read %s: %v", configFile, err)
+
+	app = &ddevapp.DdevApp{}
+	err = yaml.Unmarshal(configContents, app)
+	assert.NoError(err, "Could not unmarshal %s: %v", configFile, err)
+
+	assert.Equal(1, len(app.WebEnvironment))
+	assert.Equal([]string{webEnv}, app.WebEnvironment)
+
+	args = []string{
+		"config",
+		"--web-environment-add", "FOO=bar, BAR=baz",
+	}
+
+	_, err = exec.RunHostCommand(DdevBin, args...)
+	assert.NoError(err)
+
+	configContents, err = os.ReadFile(configFile)
+	assert.NoError(err, "Unable to read %s: %v", configFile, err)
+
+	app = &ddevapp.DdevApp{}
+	err = yaml.Unmarshal(configContents, app)
+	assert.NoError(err, "Could not unmarshal %s: %v", configFile, err)
+
+	assert.Equal(3, len(app.WebEnvironment))
+	assert.Equal("BAR=baz", app.WebEnvironment[0])
+	assert.Equal("FOO=bar", app.WebEnvironment[1])
+	assert.Equal(webEnv, app.WebEnvironment[2])
 }
 
 // TestConfigInvalidProjectname tests to make sure that invalid projectnames

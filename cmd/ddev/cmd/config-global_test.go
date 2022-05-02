@@ -75,4 +75,10 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.True(globalconfig.DdevGlobalConfig.DisableHTTP2)
 	assert.True(globalconfig.DdevGlobalConfig.SimpleFormatting)
 	assert.Equal("bright", globalconfig.DdevGlobalConfig.TableStyle)
+
+	// Test that variables can be appended to the web environment
+	args = []string{"config", "global", `--web-environment-add="FOO=bar"`}
+	out, err = exec.RunCommand(DdevBin, args)
+	assert.NoError(err)
+	assert.Contains(string(out), "web-environment=[\"FOO=bar\",\"SOMEENV=some+val\"]")
 }

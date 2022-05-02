@@ -128,8 +128,8 @@ When changes are made to an image, they have to be temporarily pushed to a tag t
 
 ## Pull Request Pro Tips
 
-* **[Fork](http://guides.github.com/activities/forking/) the repository** and clone it locally. Connect your local to the original ‘upstream’ repository by adding it as a remote. - Pull in changes from ‘upstream’ often so that you stay up to date so that when you submit your pull request, merge conflicts - will be less likely. See more detailed instructions [here](https://help.github.com/articles/syncing-a-fork).
-* **Create a [branch](http://guides.github.com/introduction/flow/)** for your edits.
+* **[Fork](https://docs.github.com/en/get-started/quickstart/contributing-to-projects) the repository** and clone it locally. Connect your local to the original ‘upstream’ repository by adding it as a remote. - Pull in changes from ‘upstream’ often so that you stay up to date so that when you submit your pull request, merge conflicts - will be less likely. See more detailed instructions [here](https://help.github.com/articles/syncing-a-fork).
+* **Create a [branch](https://docs.github.com/en/get-started/quickstart/github-flow)** for your edits.
 * **Be clear** about what problem is occurring and how someone can recreate that problem or why your feature will help. Then be equally as clear about the steps you took to make your changes.
 * **It’s best to test**. Run your changes against any existing tests if they exist and create new ones when needed. Whether tests exist or not, make sure your changes don’t break the existing project.
 

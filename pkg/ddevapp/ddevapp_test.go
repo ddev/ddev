@@ -1470,6 +1470,13 @@ func TestDdevAllDatabases(t *testing.T) {
 				Cmd:     "cat /var/lib/mysql/db_mariadb_version.txt",
 			})
 			assert.Equal(dbType+"_"+dbVersion, strings.Trim(containerDBVersion, "\n\r "))
+
+			// Make sure default charset is utf8mb4
+			charSet, _, _ := app.Exec(&ddevapp.ExecOpts{
+				Service: "db",
+				Cmd:     `mysql -n -e "SELECT @@character_set_database;"`,
+			})
+			assert.Equal("@@character_set_database\nutf8mb4", strings.Trim(charSet, "\n\r "))
 		}
 
 		importPath := filepath.Join(origDir, "testdata", t.Name(), dbType, "users.sql")
