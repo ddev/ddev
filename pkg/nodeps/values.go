@@ -72,7 +72,7 @@ var ValidWebserverTypes = map[string]bool{
 	WebserverApacheFPM: true,
 }
 
-var ValidNodeJSVersions = []string{"12", "14", "16", "17"}
+var ValidNodeJSVersions = []string{"12", "14", "16", "17", "18"}
 
 // App types
 const (
