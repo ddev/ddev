@@ -67,10 +67,40 @@ func listAppSnapshots(app *ddevapp.DdevApp) {
 }
 
 func createAppSnapshot(app *ddevapp.DdevApp) {
+
+	// If the database is omitted, do not snapshot
+	omittedContainers := app.GetOmittedContainers()
+	if nodeps.ArrayContainsString(omittedContainers, "db") {
+		util.Warning("Database is omitted for project %s, skipping snapshot", app.GetName())
+		return
+	}
+
+	appStatus := app.SiteStatus()
+	// If the app is not running, then start it to create a snapshot.
+	if appStatus != ddevapp.SiteRunning {
+		util.Warning("Project %s is %s, starting it to create a snapshot", app.GetName(), appStatus)
+		if err := app.Start(); err != nil {
+			util.Failed("Failed to start %s: %v", app.GetName(), err)
+		}
+	}
+	// If there is an error from Snapshot, show a warning message
+	// allow the command to continue, there may be other snapshots needed
 	if snapshotNameOutput, err := app.Snapshot(snapshotName); err != nil {
-		util.Failed("Failed to snapshot %s: %v", app.GetName(), err)
+		errorMsg := util.ColorizeText("Failed to snapshot %s: %v", "red")
+		util.Warning(errorMsg, app.GetName(), err)
 	} else {
 		util.Success("Created database snapshot %s", snapshotNameOutput)
+	}
+	// Return the app to its previous state, stopped or paused.
+	if appStatus == ddevapp.SiteStopped {
+		if err := app.Stop(false, false); err != nil {
+			util.Failed("Failed to stop %s: %v", app.GetName(), err)
+		}
+	}
+	if appStatus == ddevapp.SitePaused {
+		if err := app.Pause(); err != nil {
+			util.Failed("Failed to pause %s: %v", app.GetName(), err)
+		}
 	}
 }
 
@@ -107,7 +137,7 @@ func deleteAppSnapshot(app *ddevapp.DdevApp) {
 }
 
 func init() {
-	DdevSnapshotCommand.Flags().BoolVarP(&snapshotAll, "all", "a", false, "Snapshot all running projects")
+	DdevSnapshotCommand.Flags().BoolVarP(&snapshotAll, "all", "a", false, "Snapshot all projects. Will start the project if it is stopped or paused")
 	DdevSnapshotCommand.Flags().BoolVarP(&snapshotList, "list", "l", false, "List snapshots")
 	DdevSnapshotCommand.Flags().BoolVarP(&snapshotCleanup, "cleanup", "C", false, "Cleanup snapshots")
 	DdevSnapshotCommand.Flags().BoolVarP(&snapshotCleanupNoConfirm, "yes", "y", false, "Yes - skip confirmation prompt")
