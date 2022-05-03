@@ -44,7 +44,8 @@ class Ddev < Formula
   depends_on "nss" => :run
   depends_on "go" => :build
   depends_on "make" => :build
-
+  depends_on "docker" => :build
+  
   bottle do
     root_url "https://github.com/${GITHUB_USERNAME}/${PROJECT_NAME}/releases/download/${VERSION_NUMBER}/"
     sha256 cellar: :any_skip_relocation, x86_64_linux: "${LINUX_BOTTLE_SHA}"
