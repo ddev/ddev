@@ -1,4 +1,6 @@
 name: callme10.0
 type: php
 docroot: ""
-mariadb_version: "10.0"
+database:
+  type: "mariadb"
+  version: "10.0"

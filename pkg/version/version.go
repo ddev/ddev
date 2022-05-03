@@ -47,7 +47,7 @@ var WebTag = "20220227_backdrop_drush" // Note that this can be overridden by ma
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.19.1-1"
+var BaseDBTag = "20220428_mariadb_10.7"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"

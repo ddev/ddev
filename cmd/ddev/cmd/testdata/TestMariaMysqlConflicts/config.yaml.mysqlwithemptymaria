@@ -1,5 +1,0 @@
-name: mysqlwithemptymaria
-type: php
-docroot: ""
-mysql_version: "8.0"
-mariadb_version: ""

@@ -1,4 +1,0 @@
-name: mysql8only
-type: php
-docroot: ""
-mysql_version: "8.0"
