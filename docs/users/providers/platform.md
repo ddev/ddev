@@ -13,7 +13,7 @@ ddev's Platform.sh integration pulls database and files from an existing Platfor
 
    ```yaml
    web_environment:
-   - PLATFORMSH_CLI_TOKEN=abcdeyourtoken`
+   - PLATFORMSH_CLI_TOKEN=abcdeyourtoken
    ```
 
 3. `ddev restart`
