@@ -89,9 +89,11 @@ func GetDockerClient() *docker.Client {
 
 	// This section is skipped if $DOCKER_HOST is set
 	if DockerHost == "" {
-		DockerContext, DockerHost, err = GetDockerContext()
-		if err != nil {
-			util.Failed("Unable to get docker context: %v", err)
+		if len(os.Args) > 1 && os.Args[1] != "--version" && os.Args[1] != "version" && os.Args[1] != "help" {
+			DockerContext, DockerHost, err = GetDockerContext()
+			if err != nil {
+				util.Failed("Unable to get docker context: %v", err)
+			}
 		}
 	}
 	// Respect DOCKER_HOST in case it's set, otherwise use host we got from context
