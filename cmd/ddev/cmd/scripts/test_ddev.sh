@@ -80,7 +80,7 @@ ddev start -y || ( \
   printf "Start failed. Please provide this output and the contents of ~/tmp/${PROJECT_NAME}/logs.txt in a new gist at gist.github.com\n" && \
   exit 1 )
 set -x
-curl --fail -I ${PROJECT_NAME}.ddev.site
+curl --fail -I http://${PROJECT_NAME}.ddev.site
 if [ $? -ne 0 ]; then
   set +x
   echo "Unable to curl the requested project Please provide this output in a new gist at gist.github.com."
