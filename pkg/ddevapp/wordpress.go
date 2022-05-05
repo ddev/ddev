@@ -35,6 +35,8 @@ type WordpressConfig struct {
 	SiteSettings     string
 	SiteSettingsDdev string
 	AbsPath          string
+	DbCharset        string
+	DbCollate        string
 }
 
 // NewWordpressConfig produces a WordpressConfig object with defaults.
@@ -60,6 +62,8 @@ func NewWordpressConfig(app *DdevApp, absPath string) *WordpressConfig {
 		SiteSettings:     "wp-config.php",
 		SiteSettingsDdev: "wp-config-ddev.php",
 		AbsPath:          absPath,
+		DbCharset:        "utf8",
+		DbCollate:        "",
 	}
 }
 
