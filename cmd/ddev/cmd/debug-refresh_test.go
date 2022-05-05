@@ -43,6 +43,10 @@ RUN shuf -i 0-99999 -n1 > /random.txt
 `)
 	require.NoError(t, err)
 
+	// This is normally done in root's init() - probably shouldn't be.
+	err = ddevapp.PopulateExamplesCommandsHomeadditions("")
+	require.NoError(t, err)
+
 	err = app.Start()
 	require.NoError(t, err)
 
