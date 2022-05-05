@@ -1,6 +1,6 @@
 name: Colima tests
 on:
-  pull_request_target:
+  pull_request:
     paths:
       - "go.*"
       - "pkg/**"
@@ -58,7 +58,7 @@ jobs:
       - name: Homebrew cache/restore
         uses: actions/cache@v3
         env:
-          cache-name: cache-homebrew-cache-2
+          cache-name: cache-homebrew-cache-3
         with:
           path: ~/Library/Caches/Homebrew
           key: ${{ runner.os }}-build-${{ env.cache-name }}
