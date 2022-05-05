@@ -27,6 +27,12 @@ var DebugRefreshCmd = &cobra.Command{
 			util.Failed("Failed to get project: %v", err)
 		}
 
+		if app.SiteStatus() != ddevapp.SiteRunning {
+			if err = app.Start(); err != nil {
+				util.Failed("Failed to start %s: %v", app.Name, err)
+			}
+		}
+
 		app.DockerEnv()
 		if err = app.WriteDockerComposeYAML(); err != nil {
 			util.Failed("Failed to get compose-config: %v", err)
@@ -38,6 +44,11 @@ var DebugRefreshCmd = &cobra.Command{
 		if err != nil {
 			util.Failed("Failed to execute docker-compose -f %s build --no-cache: %v", err)
 		}
+		err = app.Restart()
+		if err != nil {
+			util.Failed("Failed to restart project: %v", err)
+		}
+
 		util.Success("Refreshed docker cache for project %s", app.Name)
 	},
 }
