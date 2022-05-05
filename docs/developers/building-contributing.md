@@ -12,11 +12,15 @@ And of course you can just see the latest build in action by visiting ddev on [g
 
 Each build of a PR has artifacts created in github, so you can click the details of the [PR Build](https://github.com/drud/ddev/actions/workflows/pr-build.yml) test, choose the PR you want to work with, and download the artifacts you need there.
 
-After you download and unzip the appropriate binary, you can place it in your $PATH. The easiest way to do this if you're using homebrew is `brew unlink ddev` and then `unzip ddev.zip && chmod +x ddev && mv ddev /usr/local/bin/ddev`. After you're done, you can remove the downloaded binary and `brew link ddev`.
+After you download and unzip the appropriate binary, you can place it in your $PATH. The easiest way to do this if you're using homebrew is `brew unlink ddev` and then `unzip ddev.zip && chmod +x ddev && mv ddev /usr/local/bin/ddev`. 
+
+You can verify that the replacement worked via `ddev -v`. The output should be something like `ddev version v1.19.1-42-g5334d3c1` (instead of the regular `ddev version v1.19.1`).
 
 (On macOS Big Sur these downloaded binaries are not signed, so you will want to `xattr -r -d com.apple.quarantine /path/to/ddev` in order to use them. The binaries on the master branch and the final binaries in any release are signed, of course.)
 
 You do not typically have to install anything else other than the downloaded binary; when you run it it will access any docker images that it needs.
+
+After you're done, you can remove the downloaded binary and `brew link ddev`.
 
 ## Open in Gitpod
 
