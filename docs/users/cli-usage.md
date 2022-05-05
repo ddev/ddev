@@ -84,15 +84,14 @@ ddev start
 
 ddev wp core download
 
+# finish the installation in your browser:
+
+ddev launch
+
 # optional: you can use the following installation command 
-# or finish the installation in the browser (see next step, run ddev launch)
 # (we need to use single quotes to get the primary site URL from .ddev/config.yaml as variable)
 
 ddev wp core install --url='$DDEV_PRIMARY_URL' --title='New-WordPress' --admin_user=admin --admin_email=admin@example.com --prompt=admin_password
-
-# open the website (https://my-wp-site.ddev.site) in your browser:
-
-ddev launch
 
 # open WordPress admin dashboard in your browser:
 
