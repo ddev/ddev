@@ -7,12 +7,6 @@
       "pattern": "^https://www.drupal.org/slack"
     },
     {
-      "pattern": "^https://github.com/%27"
-    },
-    {
-      "pattern": "^https://github.com/drud/ddev-gitpod-launcher/%27"
-    },
-    {
       "pattern": "^https://www.drupal.org/(u|project)"
     },
     {
@@ -22,15 +16,18 @@
       "pattern": "^https://www.php.net/manual/"
     },
     {
-      "pattern": "^https://(docs|guides|help).github.com/"
-    },
-    {
-      "pattern": "^https://www.drupaleasy.com/blogs/ultimike/2019/06/sharing-your-ddev-local-site-public-url-using-ddev-share-and-ngrok"
-    },
-    {
       "pattern": "^https://www.cyberciti.biz/"
     }
   ],
+  "httpHeaders": [
+    {
+      "urls": ["https://github.com/", "https://guides.github.com/", "https://help.github.com/", "https://docs.github.com/"],
+      "headers": {
+        "Accept-Encoding": "zstd, br, gzip, deflate"
+      }
+    }
+  ],
+
   "timeout": "20s",
   "retryOn429": true,
   "retryCount": 5,
