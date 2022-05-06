@@ -63,7 +63,7 @@ We love to hear from our users and help them be successful with ddev. Support op
 
 ## Wonderful Sponsors
 
-[<img src="images/Platformsh_logo_black.svg" alt="Platform.sh" width="200">](platform.sh)
+[<img src="images/Platformsh_logo_black.svg" alt="Platform.sh" width="200">](https://platform.sh)
 [<img src="images/tag1-logo.svg" alt="Tag1" width="80">](https://tag1.com)
 [<img src="images/agaric-logo-stacked.svg" alt="Agaric" width="50"/>](https://agaric.coop/)
 [<img src="images/b13-logo.png" width="50" />](https://b13.com/) [<img src="images/gizra-logo.png" width="50" />](https://gizra.com/)

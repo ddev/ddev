@@ -2,6 +2,7 @@
 
 ## GitHub Actions Required Secrets
 
+<!-- markdown-link-check-disable-next-line -->
 The following "Repository secret" environment variables must be added to <https://github.com/drud/ddev/settings/secrets/actions>
 
 * AUR_SSH_PRIVATE_KEY: The private ssh key for the ddev-releaser user. This must be processed into a single line, for example, `perl -p -e 's/\n/<SPLIT>/' ~/.ssh/id_rsa_ddev_releaser| pbcopy`.
@@ -24,21 +25,29 @@ The following "Repository secret" environment variables must be added to <https:
 
 ## Creating a release (almost everything is now automated)
 
-1. Create tagged images. `git fetch upstream && git checkout upstream/master && cd containers` and `for item in *; do pushd $item; make push VERSION=<release_version> DOCKER_ARGS=--no-cache ; popd; done`
-2. Update the default container versions in `pkg/version/version.go` and create a pull request
-3. Create a release for the new version using the GitHub UI. It should be "prerelease" if it's an edge release.
-4. Use the "Auto-generate release notes" option to get the commit list, then edit to add all the other necessary info.
-5. Verify that homebrew (linux and macOS) and Chocolatey and AUR are working correctly with the right versions
+### Prerelease tasks
+
+* Make sure the version-history.md file is up to date.
+* Make sure the docker images are all tagged and pushed.
+* Make sure the pkg/version/version.go is all set to point to the new images (and tests have been run)
+
+### Actual release creation
+
+1. Create a release for the new version using the GitHub UI. It should be "prerelease" if it's an edge release.
+2. Use the "Auto-generate release notes" option to get the commit list, then edit to add all the other necessary info.
+3. Verify that homebrew (linux and macOS) and Chocolatey and AUR are working correctly with the right versions
 
 ## Pushing docker images with the GitHub Actions workflow
 
 The easiest way to push docker images is to use the GitHub Actions workflow, especially if the code for the image is already in the ddev repo.
 
+<!-- markdown-link-check-disable-next-line -->
 You can push an image at <https://github.com/drud/ddev/actions/workflows/push-tagged-image.yml>
 
-If you need to push from a forked PR, you'll have to do this from your fork (for example, <https://github.com/drud/rfay/actions/workflows/push-tagged-image.yml>), and you'll have to specify the branch on the fork. This requires that the DOCKERHUB_TOKEN and DOCKERHUB_USERNAME secrets be set on the forked PR, for example <https://github.com/rfay/ddev/settings/secrets/actions>.
+<!-- markdown-link-check-disable-next-line -->
+If you need to push from a forked PR, you'll have to do this from your fork (for example, <https://github.com/drud/rfay/actions/workflows/push-tagged-image.yml>), and you'll have to specify the branch on the fork. This requires that the DOCKERHUB_TOKEN and DOCKERHUB_USERNAME secrets be set on the forked PR, for example `https://github.com/rfay/ddev/settings/secrets/actions`.
 
-* Visit <https://github.com/drud/ddev/actions/workflows/push-tagged-image.yml>
+* Visit `https://github.com/drud/ddev/actions/workflows/push-tagged-image.yml`
 * Click the "Push tagged image" workflow on the left side of the page.
 * Click the "Run workflow" button in the blue section above the workflow runs.
 * Choose the branch to build from (usually master)
@@ -60,7 +69,7 @@ It's more error-prone, but images can be pushed from the command-line.
 
 Sadly, there are no arm64 Docker images for mysql:5.7 and mysql:8.0, so we have a whole process to maintain our own for ddev.
 
-We maintain [drud/mysql](https://github.com/drud/mysql) and [drud/xtrabackup-builder](https://github.com/drud/xtrabackup-builder) for this reason.
+We maintain [drud/mysql-arm64-images](https://github.com/drud/mysql-arm64-images) and [drud/xtrabackup-build](https://github.com/drud/xtrabackup-build) for this reason.
 
 * drud/mysql:5.7 usees Ubuntu 18.04 as the base image, and Ubuntu 18.04 arm64 has mysql-server 5.7 in it, so we can install.
 * drud/mysql:8.0 uses Ubuntu 20.04 as the base image, and Ubuntu 20.04 arm64 has mysql-server 8.0 in it, so we can install it from packages.

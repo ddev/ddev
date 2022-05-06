@@ -19,9 +19,9 @@ For each IDE the link to their documentation is provided, and the skeleton steps
 
 ### Setup for Various IDEs
 
-* [PhpStorm](#phpstorm)
-* [Visual Studio Code (vscode)](#vscode)
-* [Atom](#atom)
+* [PhpStorm](#phpstorm-debugging-setup)
+* [Visual Studio Code (vscode)](#visual-studio-code-vscode-debugging-setup)
+* [Atom](#atom-debugging-setup)
 
 <a name="phpstorm"></a>
 

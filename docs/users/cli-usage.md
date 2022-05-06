@@ -264,7 +264,7 @@ You may want the [Magento 1 Sample Data](https://github.com/Vinai/compressed-mag
 * Extract the download, for example `tar -zxf ~/Downloads/compressed-magento-sample-data-1.9.1.0.tgz --strip-components=1`
 * Import the example database "magento_sample_data_for_1.9.1.0.sql" with `ddev import-db --src=magento_sample_data_for_1.9.1.0.sql` to database **before** running OpenMage install.
 
-Note that OpenMage is a huge codebase and using `mutagen_enabled: true` is recommended for performance on macOS and traditional Windows, see [docs](performance.md/#using-mutagen).
+Note that OpenMage is a huge codebase and using `mutagen_enabled: true` is recommended for performance on macOS and traditional Windows, see [docs](performance.md#using-mutagen).
 
 ### Magento 2 Quickstart
 
@@ -287,7 +287,7 @@ Of course, change the admin name and related information is needed.
 
 You may want to add the [Magento 2 Sample Data](https://devdocs.magento.com/guides/v2.4/install-gde/install/sample-data-after-composer.html) with `ddev magento sampledata:deploy && ddev magento setup:upgrade`.
 
-Note that Magento 2 is a huge codebase and using `mutagen_enabled: true` is recommended for performance on macOS and traditional Windows, see [docs](performance.md/#using-mutagen).
+Note that Magento 2 is a huge codebase and using `mutagen_enabled: true` is recommended for performance on macOS and traditional Windows, see [docs](performance.md#using-mutagen).
 
 ### Laravel Quickstart
 
