@@ -22,7 +22,7 @@ The following "Repository secret" environment variables must be added to <https:
 
 * SegmentKey: The key that enabled the Segment reporting
 
-## Creating a release (almost everything should be automated)
+## Creating a release (almost everything is now automated)
 
 1. Create tagged images. `git fetch upstream && git checkout upstream/master && cd containers` and `for item in *; do pushd $item; make push VERSION=<release_version> DOCKER_ARGS=--no-cache ; popd; done`
 2. Update the default container versions in `pkg/version/version.go` and create a pull request
@@ -69,25 +69,18 @@ We maintain [drud/mysql](https://github.com/drud/mysql) and [drud/xtrabackup-bui
 * To build drud/mysql (both 5.7 and 8.0) arm64 images, follow the instructions on [drud/mysql-arm64-images](https://github.com/drud/mysql-arm64-images) After the various files are updated, you can just push a new release and the proper images will be pushed.
 * After building a new set of drud/mysql images, you'll need to push `drud/ddev-dbserver` with new tags. Make sure to update the [drud/ddev-dbserver Makefile](https://github.com/drud/ddev/blob/master/containers/ddev-dbserver/Makefile) to set the explicit version of the upstream mysql:8.0 (for example, 8.0.29, if you've succeed in getting 8.0.29 for percona-xtrabackup and mysql:8.0).
 
-## Actual release builds
+## Actual release docker image updates
+
+I don't actually build every image for every point release. If there have been no changes to ddev-router or ddev-ssh-agent, for example, I only usually push those (and update pkg/version/version.go) on major releases.
+
+But here are the steps for building:
 
 1. The drud/ddev-php-base image must be updated as necessary with a new tag before pushing `ddev-webserver`. You can do this using the [process above](#pushing-docker-images-with-the-github-actions-workflow)
 2. The drud/ddev-webserver Dockerfile must `FROM drud/ddev-php-base:<tag>` before building/pushing `ddev-webserver`. But then it can be pushed using either the Github Actions or the manual technique.
 
-3.
-
-* Choose "Push tagged image" in the "Workflows" section on the left side.
-* Click "Run workflow" in the blue section at the top of "workflow runs".
-* Choose the branch to run from (normally "master").
-* The image should be "ddev-php-base"
-
-The build takes something over an hour.
-
-## Building ARM64 versions of drud/mysql and drud/xtrabackup-builder
-
-* Version requirements (xtrabackup has to be up-to-date with current mysql:8.0)
-
-*
+3. If you're bumping ddev-dbserver 8.0 minor release, follow the upstream instructions [here](#maintaining-ddev-dbserver-mysql57-and-mysql80-arm64-images).
+4. Push images using the [process above](#pushing-docker-images-with-the-github-actions-workflow).
+5. Update pkg/version/version.go with the correct versions for the new images, and run a full test run.
 
 ## Manually updating homebrew formulas
 
