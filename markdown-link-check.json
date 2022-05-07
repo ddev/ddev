@@ -16,6 +16,9 @@
       "pattern": "^https://www.php.net/manual/"
     },
     {
+      "pattern": "^https://www.drupaleasy.com/blogs/ultimike/2019/06/sharing-your-ddev-local-site-public-url-using-ddev-share-and-ngrok"
+    },
+    {
       "pattern": "^https://www.cyberciti.biz/"
     }
   ],

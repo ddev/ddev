@@ -98,7 +98,7 @@ const ConfigInstructions = `
 
 # mutagen_enabled: false
 # Experimental performance improvement using mutagen asynchronous updates.
-# See https://ddev.readthedocs.io/en/latest/users/performance#using-mutagen
+# See https://ddev.readthedocs.io/en/latest/users/performance/#using-mutagen
 
 # fail_on_hook_fail: False
 # Decide whether 'ddev start' should be interrupted by a failing hook
