@@ -103,7 +103,7 @@ Take a look at the [v1.20 milestone](https://github.com/drud/ddev/milestone/54) 
 ### v1.9 (released 2019-06-26)
 
 - [x] [Contrib-pointers for additional Services and techniques](https://github.com/drud/ddev/issues/1474): We want to make another place for the outstanding content and pointers and applications that our users are developing. This will probably be a contrib repository for ddev.
-- [x] [NFS Setup Security Review](#1474): More docs and improved NFS setup scripts so people can think clearly and plan carefully for how they're using NFS with ddev.
+- [x] [NFS Setup Security Review](https://github.com/drud/ddev/issues/1474): More docs and improved NFS setup scripts so people can think clearly and plan carefully for how they're using NFS with ddev.
 - [x] [Use DNS to provide name resolution when internet available](https://github.com/drud/ddev/issues/416)
 - [x] [Manage ddev project list in ~/.ddev/global_config.yaml](https://github.com/drud/ddev/issues/642): Since the beginning of ddev `ddev list` and everything that depended on it couldn't work if the project was shut down. This should fix that.
 - [x] [Allow specifying a target container for hook execution](https://github.com/drud/ddev/issues/1038)
