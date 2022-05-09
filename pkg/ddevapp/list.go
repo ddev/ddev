@@ -15,7 +15,8 @@ import (
 // activeOnly if true only shows projects that are currently docker containers
 // continuous if true keeps requesting and outputting continuously
 // continuousSleepTime is the time between reports
-func List(activeOnly bool, continuous bool, continuousSleepTime int) {
+// truncate if true will truncate lines to fit the terminal width
+func List(activeOnly bool, continuous bool, continuousSleepTime int, truncate bool) {
 	runTime := util.TimeTrack(time.Now(), "ddev list")
 	defer runTime()
 
@@ -31,7 +32,7 @@ func List(activeOnly bool, continuous bool, continuousSleepTime int) {
 		if len(apps) < 1 {
 			output.UserOut.WithField("raw", appDescs).Println("No ddev projects were found.")
 		} else {
-			t := CreateAppTable(&out)
+			t := CreateAppTable(&out, truncate)
 			for _, app := range apps {
 				desc, err := app.Describe(true)
 				if err != nil {
@@ -71,7 +72,7 @@ func List(activeOnly bool, continuous bool, continuousSleepTime int) {
 }
 
 // CreateAppTable will create a new app table for describe and list output
-func CreateAppTable(out *bytes.Buffer) table.Writer {
+func CreateAppTable(out *bytes.Buffer, truncate bool) table.Writer {
 	t := table.NewWriter()
 	t.AppendHeader(table.Row{"Name", "Type", "Location", "URL", "Status"})
 	termWidth, _ := nodeps.GetTerminalWidthHeight()
@@ -92,7 +93,9 @@ func CreateAppTable(out *bytes.Buffer) table.Writer {
 	t.SortBy([]table.SortBy{{Name: "Name"}})
 
 	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
-		t.SetAllowedRowLength(termWidth)
+		if truncate {
+			t.SetAllowedRowLength(termWidth)
+		}
 
 		t.SetColumnConfigs([]table.ColumnConfig{
 			{
