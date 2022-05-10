@@ -38,8 +38,7 @@ You can also enable mutagen globally (recommended) with `ddev config global --mu
 
 Note that the nfs-mount-enabled feature is automatically turned off if you're using mutagen.
 
-You can run mutagen on all your projects, there's no limit. To configure it globally, `ddev config global --mutagen-enabled`.
-> You can not disable mutagen for a specific project if it's enabled globally.
+You can run mutagen on all your projects, there's no limit. To configure it globally, `ddev config global --mutagen-enabled`, but you cannot disable mutagen on individual projects if it's enabled globally (the global configuration wins).
 
 ### Caveats about Mutagen Integration
 
