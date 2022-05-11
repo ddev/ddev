@@ -185,6 +185,11 @@ func TestCustomCommands(t *testing.T) {
 	app.Type = nodeps.AppTypePHP
 	err = app.WriteConfig()
 	assert.NoError(err)
+	// Drush may still be installed in /usr/local/bin, get rid of it
+	_, _, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: "rm -f /usr/local/bin/drush",
+	})
+	assert.NoError(err)
 
 	// Make sure that all the official ddev-provided custom commands are usable by just checking help
 	for _, c := range []string{"launch", "mysql", "php", "xdebug"} {
