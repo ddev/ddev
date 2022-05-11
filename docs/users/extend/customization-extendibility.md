@@ -32,7 +32,7 @@ web_environment:
 - SOMEOTHERENV=someotherval
 ```
 
-You can also use `ddev config global --web-environment="SOMEENV=someval"` or `ddev config --web-environment="SOMEENV=someval"` for the same purpose. The command just sets the values in the configuration files. (Using this command overwrites all the web_environment values, so if you need to add additional values to those that are already configured, use `--web-environment-add`, or edit `config.yaml` or `global_config.yaml`.)
+You can also use `ddev config global --web-environment-add="SOMEENV=someval"` or `ddev config --web-environment-add="SOMEENV=someval"` for the same purpose. The command just sets the values in the configuration files. (The `--web-environment` option is also available, but it overwrites existing contents. Alternately, edit `.ddev/config.yaml` or `~/.ddev/global_config.yaml`.)
 
 The docker-compose web environment can also provide env file support. To enable this you would create a new docker-compose yaml partial, for example `.ddev/docker-compose.env-file.yaml` with contents:
 
