@@ -20,7 +20,6 @@ sync:
       - "/.ddev/db_snapshots"
       - "/.ddev/.importdb*"
       - ".DS_Store"
-      - ".idea"
       {{ if .UploadDir }}
       - "/{{ .UploadDir }}"
       {{ end }}
