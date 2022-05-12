@@ -579,6 +579,17 @@ func (app *DdevApp) FixObsolete() {
 			}
 		}
 	}
+
+	// Remove old global commands
+	for _, command := range []string{"host/yarn"} {
+		cmdPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/", command)
+		if _, err := os.Stat(cmdPath); err == nil {
+			err1 := os.Remove(cmdPath)
+			if err1 != nil {
+				util.Warning("attempted to remove %s but failed, you may want to remove it manually: %v", cmdPath, err)
+			}
+		}
+	}
 }
 
 type composeYAMLVars struct {
