@@ -146,9 +146,6 @@ jobs:
           key: ${{ github.sha }}-${{ github.ref }}-notarize-macos
 
   artifacts:
-    permissions:
-      actions: write  # for skx/github-action-publish-binaries to attach binaries to release artifacts
-      contents: read  # for actions/checkout to fetch code
     name: Upload artifacts
     runs-on: ubuntu-20.04
     needs: [build-most, sign-windows, notarize-macos]
