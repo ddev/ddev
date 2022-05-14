@@ -22,6 +22,9 @@ env:
   # key is updated, see https://github.com/docker-library/mysql/issues/801
   DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION: "90"
 
+permissions:
+  contents: read
+
 jobs:
   container-build-and-test:
     name: ${{ matrix.os }} - Test container ${{ matrix.containers }}
