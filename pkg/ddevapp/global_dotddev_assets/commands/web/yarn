@@ -1,8 +1,9 @@
 #!/bin/bash
+
 #ddev-generated
 ## Description: Run yarn inside the web container in the root of the project (Use --cwd for another directory)
 ## Usage: yarn [flags] [args]
 ## Example: "ddev yarn install" or "ddev yarn add learna" or "ddev yarn --cwd web/core add learna"
+## ExecRaw: true
 
-ddev exec --raw bash -ic "yarn '$@'"
-ddev mutagen sync 2>/dev/null
+yarn "$@"

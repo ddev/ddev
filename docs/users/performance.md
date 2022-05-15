@@ -65,9 +65,11 @@ In general, it's best practice on most projects to do significant git operations
 ddev mutagen sync || true
 ```
 
-### Syncing after yarn actions
+### Syncing after yarn, npm, pnpm actions
 
-Yarn actions can also set off massive filesystem changes. The `ddev yarn` command mitigates this problem by doing a mutagen sync after taking the action. So you can use `ddev yarn install` instead of using yarn directly, and it will take care of this for you. Alternately, you can just `ddev mutagen sync` after doing any similar action that has large filesystem consequences.
+Actions by those programs can also set off massive filesystem changes. 
+
+You should run `ddev mutagen sync` in order to get things into sync, or simply wait.
 
 <a name="mutagen-config"></a>
 
