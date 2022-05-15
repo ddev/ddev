@@ -373,6 +373,7 @@ pg_dump
 pgsql
 pid
 plugin
+pnpm
 posix
 postfix
 postgres
