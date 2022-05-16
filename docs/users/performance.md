@@ -67,7 +67,7 @@ ddev mutagen sync || true
 
 ### Syncing after yarn, npm, pnpm actions
 
-Actions by those programs can also set off massive filesystem changes. 
+Actions by those programs can also set off massive filesystem changes.
 
 You should run `ddev mutagen sync` in order to get things into sync, or simply wait.
 
