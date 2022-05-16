@@ -14,7 +14,7 @@ Reasons to use Colima include:
 * Working for an organization that due to its size requires a paid Docker plan to use Docker Desktop, and wanting to avoid that cost and business relationship.
 * Preferring a CLI-focused approach to Docker Desktop's GUI focus.
 
-* Install colima with `brew install colima` using homebrew or see the other [installation options](https://github.com/abiosoft/colima/blob/main/INSTALL.md).
+* Install colima with `brew install colima` using homebrew or see the other [installation options](https://github.com/abiosoft/colima/blob/main/docs/INSTALL.md).
 * If you don't have Docker Desktop installed, you'll need the docker client, `brew install docker`.
 * Start colima: `colima start --cpu 4 --memory 4` will set up a colima instance with 4 CPUs and 4GB of memory allocated. Your needs may vary. After the first start you can just use `colima start`.
 * `colima status` will show colima's status.
