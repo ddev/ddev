@@ -14,9 +14,9 @@ Docker Desktop for Mac has a number of settings that you'll want to pay attentio
 
 ### Introduction
 
-The Mutagen asynchronous update feature introduced in v1.18 offers advanced performance experiences for most projects. It's now the preferred way to get great webserving performance on macOS. Unlike the NFS feature, it requires no pre-configuration or installation. **You do not need to install mutagen.** It can also be significantly faster than NFS and massively faster than plain vanilla Docker or Colima.
+The Mutagen asynchronous update feature introduced in v1.18 offers advanced performance experiences for most projects. It's now the preferred way to get great webserving performance on macOS and Windows. Unlike the NFS feature, it requires no pre-configuration or installation. **You do not need to (and should not) install mutagen.** It can also be significantly faster than NFS and massively faster than plain vanilla Docker or Colima.
 
-Mutagen can offer massive webserver performance speedups on macOS and traditional Windows; it's not particularly useful on Linux or Windows WSL2, as it adds complexity but doesn't add significant performance.
+Mutagen can offer massive webserver performance speedups on macOS and traditional Windows; it works fine (and has automated tests) on Linux or Windows WSL2, but the speedup you see may not be worth turning it on, since Linux/WSL2 are already so fast.
 
 Docker bind-mounts (the traditional approach to getting your code into the DDEV web container) can be slow on macOS and Windows, even with NFS.  The reason is that every file access has to be checked against the file on the host, and Docker's setup to do this on macOS and Windows offers is not very performant. (On Linux and Linux-like systems, Docker provides native file-access performance.)
 
@@ -124,6 +124,17 @@ For example, if you want the `stored-binaries` subdirectory of the project to be
 * Consider `ddev stop` before massive file change operations (like moving a directory, etc.)
 * If you get in real trouble, `ddev stop`, reset your files with git, and then `ddev mutagen reset` to throw away the docker volume (which may already have incorrect files on it.)
 * If you're having trouble, we really want to hear from you to learn and try to sort it out. See the [Support channels](https://ddev.readthedocs.io/en/latest/#support-and-user-contributed-documentation).
+
+#### Advanced Mutagen Troubleshooting
+
+Most people get all the information they need about mutagen by running `ddev mutagen monitor` to see the results. However, Mutagen has full logging. Here's how to run it:
+
+* `killall mutagen`
+* `export MUTAGEN_LOG_LEVEL=debug` or `export MUTAGEN_LOG_LEVEL=trace`
+* `~/.ddev/bin/mutagen daemon run`
+* Work with your project various actions and watch the output.
+
+When you're done, you can `ddev poweroff` and `<ctrl-c>` the running mutagen daemon to get back to normal.
 
 ### Mutagen Strategies and Design Considerations
 
