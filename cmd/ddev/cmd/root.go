@@ -46,7 +46,7 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 			return
 		}
 
-		err := dockerutil.CheckDockerVersion(version.DockerVersionConstraint)
+		err := dockerutil.CheckDockerVersion(dockerutil.DockerVersionConstraint)
 		if err != nil {
 			if err.Error() == "no docker" {
 				if os.Args[1] != "version" {
@@ -152,7 +152,7 @@ func init() {
 
 	// Determine if Docker is running by getting the version.
 	// This helps to prevent a user from seeing the Cobra error: "Error: unknown command "<custom command>" for ddev"
-	_, err := version.GetDockerVersion()
+	_, err := dockerutil.GetDockerVersion()
 	if err != nil && len(os.Args) > 1 && os.Args[1] != "--version" && os.Args[1] != "help" {
 		util.Failed("Could not connect to a docker provider. Please start or install a docker provider.\nFor installation help go to: https://ddev.readthedocs.io/en/latest/users/docker_installation/")
 	}

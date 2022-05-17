@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/denisbrodbeck/machineid"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
@@ -43,7 +44,7 @@ func SetInstrumentationBaseTags() {
 	defer runTime()
 
 	if globalconfig.DdevGlobalConfig.InstrumentationOptIn {
-		dockerVersion, _ := version.GetDockerVersion()
+		dockerVersion, _ := dockerutil.GetDockerVersion()
 		dockerPlaform, _ := version.GetDockerPlatform()
 		timezone, _ := time.Now().In(time.Local).Zone()
 		lang := os.Getenv("LANG")

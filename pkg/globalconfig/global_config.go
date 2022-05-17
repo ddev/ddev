@@ -556,3 +556,26 @@ func IsInternetActive() bool {
 
 	return active
 }
+
+// DockerComposeVersion is filled with the version we find for docker-compose
+var DockerComposeVersion = ""
+
+// This is var instead of const so it can be changed in test, but should not otherwise be touched.
+// Otherwise we can't test if the version on the machine is equal to version required
+var RequiredDockerComposeVersion = "v2.3.3"
+
+// GetRequiredDockerComposeVersion returns the version of docker-compose we need
+// based on the compiled version, or overrides in globalconfig, like
+// required_docker_compose_version and use_docker_compose_from_path
+// In the case of UseDockerComposeFromPath there is no required version, so this
+// will return empty string.
+func GetRequiredDockerComposeVersion() string {
+	v := RequiredDockerComposeVersion
+	switch {
+	case DdevGlobalConfig.UseDockerComposeFromPath:
+		v = ""
+	case DdevGlobalConfig.RequiredDockerComposeVersion != "":
+		v = DdevGlobalConfig.RequiredDockerComposeVersion
+	}
+	return v
+}
