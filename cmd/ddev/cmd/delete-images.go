@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/version_constants"
 	"os"
 	"sort"
 	"strings"
@@ -10,7 +11,6 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/version"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/spf13/cobra"
 )
@@ -93,12 +93,12 @@ func deleteDdevImages(deleteAll bool) error {
 		return images[i].RepoTags[0] > images[j].RepoTags[0]
 	})
 
-	webimg := version.GetWebImage()
-	dbaimage := version.GetDBAImage()
-	routerimage := version.RouterImage + ":" + version.RouterTag
-	sshimage := version.SSHAuthImage + ":" + version.SSHAuthTag
+	webimg := version_constants.GetWebImage()
+	dbaimage := version_constants.GetDBAImage()
+	routerimage := version_constants.RouterImage + ":" + version_constants.RouterTag
+	sshimage := version_constants.SSHAuthImage + ":" + version_constants.SSHAuthTag
 
-	nameAry := strings.Split(version.GetDBImage(nodeps.MariaDB), ":")
+	nameAry := strings.Split(version_constants.GetDBImage(nodeps.MariaDB), ":")
 	keepDBImageTag := "notagfound"
 	if len(nameAry) > 1 {
 		keepDBImageTag = nameAry[1]
@@ -109,7 +109,7 @@ func deleteDdevImages(deleteAll bool) error {
 	for _, image := range images {
 		for _, tag := range image.RepoTags {
 			// If a webimage, but doesn't match our webimage, delete it
-			if strings.HasPrefix(tag, version.WebImg) && !strings.HasPrefix(tag, webimg) && !strings.HasPrefix(tag, webimg+"-built") {
+			if strings.HasPrefix(tag, version_constants.WebImg) && !strings.HasPrefix(tag, webimg) && !strings.HasPrefix(tag, webimg+"-built") {
 				if err = dockerutil.RemoveImage(tag); err != nil {
 					return err
 				}
@@ -120,19 +120,19 @@ func deleteDdevImages(deleteAll bool) error {
 				}
 			}
 			// If a dbaimage, but doesn't match our dbaimage, delete it
-			if strings.HasPrefix(tag, version.DBAImg) && !strings.HasPrefix(tag, dbaimage) {
+			if strings.HasPrefix(tag, version_constants.DBAImg) && !strings.HasPrefix(tag, dbaimage) {
 				if err = dockerutil.RemoveImage(tag); err != nil {
 					return err
 				}
 			}
 			// If a routerImage, but doesn't match our routerimage, delete it
-			if strings.HasPrefix(tag, version.RouterImage) && !strings.HasPrefix(tag, routerimage) {
+			if strings.HasPrefix(tag, version_constants.RouterImage) && !strings.HasPrefix(tag, routerimage) {
 				if err = dockerutil.RemoveImage(tag); err != nil {
 					return err
 				}
 			}
 			// If a sshAgentImage, but doesn't match our sshAgentImage, delete it
-			if strings.HasPrefix(tag, version.SSHAuthImage) && !strings.HasPrefix(tag, sshimage) && !strings.HasPrefix(tag, sshimage+"-built") {
+			if strings.HasPrefix(tag, version_constants.SSHAuthImage) && !strings.HasPrefix(tag, sshimage) && !strings.HasPrefix(tag, sshimage+"-built") {
 				if err = dockerutil.RemoveImage(tag); err != nil {
 					return err
 				}

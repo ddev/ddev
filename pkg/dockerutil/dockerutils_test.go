@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/version_constants"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path"
@@ -18,7 +19,6 @@ import (
 	. "github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/version"
 	"github.com/fsouza/go-dockerclient"
 	asrt "github.com/stretchr/testify/assert"
 )
@@ -36,15 +36,15 @@ func testMain(m *testing.M) int {
 
 	// prep docker container for docker util tests
 	client := GetDockerClient()
-	imageExists, err := ImageExistsLocally(version.WebImg + ":" + version.WebTag)
+	imageExists, err := ImageExistsLocally(version_constants.WebImg + ":" + version_constants.WebTag)
 	if err != nil {
-		logOutput.Errorf("Failed to check for local image %s: %v", version.WebImg+":"+version.WebTag, err)
+		logOutput.Errorf("Failed to check for local image %s: %v", version_constants.WebImg+":"+version_constants.WebTag, err)
 		return 6
 	}
 	if !imageExists {
 		err := client.PullImage(docker.PullImageOptions{
-			Repository: version.WebImg,
-			Tag:        version.WebTag,
+			Repository: version_constants.WebImg,
+			Tag:        version_constants.WebTag,
 		}, docker.AuthConfiguration{})
 		if err != nil {
 			logOutput.Errorf("failed to pull test image: %v", err)
@@ -65,7 +65,7 @@ func testMain(m *testing.M) int {
 	container, err := client.CreateContainer(docker.CreateContainerOptions{
 		Name: testContainerName,
 		Config: &docker.Config{
-			Image: version.WebImg + ":" + version.WebTag,
+			Image: version_constants.WebImg + ":" + version_constants.WebTag,
 			Labels: map[string]string{
 				"com.docker.compose.service": "web",
 				"com.ddev.site-name":         testContainerName,
@@ -172,7 +172,7 @@ func TestContainerWait(t *testing.T) {
 	// and note that it exited.
 	labels = map[string]string{"test": "quickexit"}
 	_ = RemoveContainersByLabels(labels)
-	cID, _, err := RunSimpleContainer(version.BusyboxImage, t.Name()+util.RandString(5), []string{"ls"}, nil, nil, nil, "0", false, true, labels)
+	cID, _, err := RunSimpleContainer(version_constants.BusyboxImage, t.Name()+util.RandString(5), []string{"ls"}, nil, nil, nil, "0", false, true, labels)
 	t.Cleanup(func() {
 		_ = RemoveContainer(cID, 0)
 	})
@@ -186,7 +186,7 @@ func TestContainerWait(t *testing.T) {
 	// it should be found as good immediately
 	labels = map[string]string{"test": "nohealthcheck"}
 	_ = RemoveContainersByLabels(labels)
-	cID, _, err = RunSimpleContainer(version.BusyboxImage, t.Name()+util.RandString(5), []string{"sleep", "60"}, nil, nil, nil, "0", false, true, labels)
+	cID, _, err = RunSimpleContainer(version_constants.BusyboxImage, t.Name()+util.RandString(5), []string{"sleep", "60"}, nil, nil, nil, "0", false, true, labels)
 	t.Cleanup(func() {
 		_ = RemoveContainer(cID, 0)
 	})
@@ -195,7 +195,7 @@ func TestContainerWait(t *testing.T) {
 	assert.NoError(err)
 	_ = RemoveContainer(cID, 0)
 
-	ddevWebserver := version.WebImg + ":" + version.WebTag
+	ddevWebserver := version_constants.WebImg + ":" + version_constants.WebTag
 	// If we run a container that *does* have a healthcheck but it's unhealthy
 	// then ContainerWait shouldn't return until specified wait, and should fail
 	// Use ddev-webserver for this; it won't have good health on normal run
@@ -271,7 +271,7 @@ func TestComposeWithStreams(t *testing.T) {
 	assert.NoError(err)
 	realComposeFile := filepath.Join(tmp, "replaced-compose-with-streams.yaml")
 
-	err = fileutil.ReplaceStringInFile("TEST-COMPOSE-WITH-STREAMS-IMAGE", version.WebImg+":"+version.WebTag, composeBase, realComposeFile)
+	err = fileutil.ReplaceStringInFile("TEST-COMPOSE-WITH-STREAMS-IMAGE", version_constants.WebImg+":"+version_constants.WebTag, composeBase, realComposeFile)
 	assert.NoError(err)
 
 	composeFiles := []string{realComposeFile}
@@ -326,7 +326,7 @@ func TestGetAppContainers(t *testing.T) {
 	assert := asrt.New(t)
 	containers, err := GetAppContainers(testContainerName)
 	assert.NoError(err)
-	assert.Contains(containers[0].Image, version.WebImg)
+	assert.Contains(containers[0].Image, version_constants.WebImg)
 }
 
 // TestFindContainerByName does a simple test of FindContainerByName()
@@ -348,7 +348,7 @@ func TestFindContainerByName(t *testing.T) {
 	}
 
 	// Run a container, don't remove it.
-	cID, _, err := RunSimpleContainer(version.BusyboxImage, containerName, []string{"//tempmount/sleepALittle.sh"}, nil, nil, []string{testdata + "://tempmount"}, "25", false, false, nil)
+	cID, _, err := RunSimpleContainer(version_constants.BusyboxImage, containerName, []string{"//tempmount/sleepALittle.sh"}, nil, nil, []string{testdata + "://tempmount"}, "25", false, false, nil)
 	assert.NoError(err)
 
 	defer func() {
@@ -449,7 +449,7 @@ func TestDockerExec(t *testing.T) {
 	assert := asrt.New(t)
 	client := GetDockerClient()
 
-	id, _, err := RunSimpleContainer(version.BusyboxImage, "", []string{"tail", "-f", "/dev/null"}, nil, nil, nil, "0", false, true, nil)
+	id, _, err := RunSimpleContainer(version_constants.BusyboxImage, "", []string{"tail", "-f", "/dev/null"}, nil, nil, nil, "0", false, true, nil)
 	assert.NoError(err)
 
 	t.Cleanup(func() {
@@ -543,7 +543,7 @@ func TestCopyIntoVolume(t *testing.T) {
 
 	// Make sure that the content is the same, and that .test.sh is executable
 	// On Windows the upload can result in losing executable bit
-	_, out, err := RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R .test.sh * && ./.test.sh"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil)
+	_, out, err := RunSimpleContainer(version_constants.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + " && ls -R .test.sh * && ./.test.sh"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil)
 	assert.NoError(err)
 	assert.Equal(`.test.sh
 root.txt
@@ -555,7 +555,7 @@ hi this is a test file
 
 	err = CopyIntoVolume(filepath.Join(pwd, "testdata", t.Name()), t.Name(), "somesubdir", "501", "", true)
 	assert.NoError(err)
-	_, out, err = RunSimpleContainer(version.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + "/somesubdir  && pwd && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "0", true, false, nil)
+	_, out, err = RunSimpleContainer(version_constants.BusyboxImage, "", []string{"sh", "-c", "cd /mnt/" + t.Name() + "/somesubdir  && pwd && ls -R"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "0", true, false, nil)
 	assert.NoError(err)
 	assert.Equal(`/mnt/TestCopyIntoVolume/somesubdir
 .:
@@ -571,7 +571,7 @@ subdir1.txt
 	assert.NoError(err)
 
 	// Make sure that the content is the same, and that .test.sh is executable
-	_, out, err = RunSimpleContainer(version.BusyboxImage, "", []string{"cat", "/mnt/" + t.Name() + "/root.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil)
+	_, out, err = RunSimpleContainer(version_constants.BusyboxImage, "", []string{"cat", "/mnt/" + t.Name() + "/root.txt"}, nil, nil, []string{t.Name() + ":/mnt/" + t.Name()}, "25", true, false, nil)
 	assert.NoError(err)
 	assert.Equal("root.txt here\n", out)
 

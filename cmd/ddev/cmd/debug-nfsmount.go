@@ -7,7 +7,7 @@ import (
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/version"
+	"github.com/drud/ddev/pkg/version_constants"
 	"github.com/spf13/cobra"
 	"path/filepath"
 	"runtime"
@@ -62,7 +62,7 @@ var DebugNFSMountCmd = &cobra.Command{
 		_ = volume
 		uidStr, _, _ := util.GetContainerUIDGid()
 
-		_, out, err := dockerutil.RunSimpleContainer(version.GetWebImage(), containerName, []string{"sh", "-c", "findmnt -T /nfsmount && ls -d /nfsmount/.ddev"}, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, uidStr, true, false, nil)
+		_, out, err := dockerutil.RunSimpleContainer(version_constants.GetWebImage(), containerName, []string{"sh", "-c", "findmnt -T /nfsmount && ls -d /nfsmount/.ddev"}, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, uidStr, true, false, nil)
 		if err != nil {
 			util.Warning("NFS does not seem to be set up yet, see debugging instructions at https://ddev.readthedocs.io/en/stable/users/performance/#debugging-ddev-start-failures-with-nfs_mount_enabled-true")
 			util.Failed("Details: error=%v\noutput=%v", err, out)

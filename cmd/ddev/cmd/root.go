@@ -8,7 +8,7 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/updatecheck"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/version"
+	"github.com/drud/ddev/pkg/version_constants"
 	"github.com/rogpeppe/go-internal/semver"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -33,7 +33,7 @@ var RootCmd = &cobra.Command{
 	Long: `Create and maintain a local web development environment.
 Docs: https://ddev.readthedocs.io
 Support: https://ddev.readthedocs.io/en/stable/#support`,
-	Version: version.DdevVersion,
+	Version: version_constants.DdevVersion,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		command := os.Args[1]
 
@@ -73,7 +73,7 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 				return // Do not continue as we'll end up with github api violations.
 			}
 
-			updateNeeded, updateVersion, updateURL, err := updatecheck.AvailableUpdates("drud", "ddev", version.DdevVersion)
+			updateNeeded, updateVersion, updateURL, err := updatecheck.AvailableUpdates("drud", "ddev", version_constants.DdevVersion)
 
 			if err != nil {
 				util.Warning("Could not check for updates. This is most often caused by a networking issue.")
@@ -113,7 +113,7 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 			event = fullCommand[1]
 		}
 
-		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && version.SegmentKey != "" && globalconfig.IsInternetActive() && len(fullCommand) > 1 {
+		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && version_constants.SegmentKey != "" && globalconfig.IsInternetActive() && len(fullCommand) > 1 {
 			runTime := util.TimeTrack(time.Now(), "Instrumentation")
 			// Try to get default instrumentationApp from current directory if not already set
 			if instrumentationApp == nil {
@@ -176,7 +176,7 @@ func init() {
 }
 
 func instrumentationNotSetUpWarning() {
-	if !output.JSONOutput && version.SegmentKey == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
+	if !output.JSONOutput && version_constants.SegmentKey == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
 		output.UserOut.Warning("Instrumentation is opted in, but SegmentKey is not available. This usually means you have a locally-built ddev binary or one from a PR build. It's not an error. Please report it if you're using an official release build.")
 	}
 }
@@ -185,11 +185,11 @@ func instrumentationNotSetUpWarning() {
 // from the last saved version. If it is, prompt to request anon ddev usage stats
 // and update the info.
 func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
-	if !output.JSONOutput && semver.Compare(version.DdevVersion, globalconfig.DdevGlobalConfig.LastStartedVersion) > 0 && globalconfig.DdevGlobalConfig.InstrumentationOptIn == false && !globalconfig.DdevNoInstrumentation && !skipConfirmation {
+	if !output.JSONOutput && semver.Compare(version_constants.DdevVersion, globalconfig.DdevGlobalConfig.LastStartedVersion) > 0 && globalconfig.DdevGlobalConfig.InstrumentationOptIn == false && !globalconfig.DdevNoInstrumentation && !skipConfirmation {
 		allowStats := util.Confirm("It looks like you have a new ddev release.\nMay we send anonymous ddev usage statistics and errors?\nTo know what we will see please take a look at\nhttps://ddev.readthedocs.io/en/stable/users/cli-usage/#opt-in-usage-information\nPermission to beam up?")
 		if allowStats {
 			globalconfig.DdevGlobalConfig.InstrumentationOptIn = true
-			client, _ := analytics.NewWithConfig(version.SegmentKey, analytics.Config{
+			client, _ := analytics.NewWithConfig(version_constants.SegmentKey, analytics.Config{
 				Logger: &ddevapp.SegmentNoopLogger{},
 			})
 			defer func() {
@@ -202,8 +202,8 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 			}
 		}
 	}
-	if globalconfig.DdevGlobalConfig.LastStartedVersion != version.DdevVersion && !skipConfirmation {
-		globalconfig.DdevGlobalConfig.LastStartedVersion = version.DdevVersion
+	if globalconfig.DdevGlobalConfig.LastStartedVersion != version_constants.DdevVersion && !skipConfirmation {
+		globalconfig.DdevGlobalConfig.LastStartedVersion = version_constants.DdevVersion
 		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		if err != nil {
 			return err

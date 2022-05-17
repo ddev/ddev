@@ -13,6 +13,7 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
+	"github.com/drud/ddev/pkg/version_constants"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/pkg/errors"
 	"os"
@@ -321,7 +322,7 @@ func DownloadMutagen() error {
 	flavor := runtime.GOOS + "_" + runtime.GOARCH
 	globalMutagenDir := filepath.Dir(globalconfig.GetMutagenPath())
 	destFile := filepath.Join(globalMutagenDir, "mutagen.tgz")
-	mutagenURL := fmt.Sprintf("https://github.com/mutagen-io/mutagen/releases/download/v%s/mutagen_%s_v%s.tar.gz", version.RequiredMutagenVersion, flavor, version.RequiredMutagenVersion)
+	mutagenURL := fmt.Sprintf("https://github.com/mutagen-io/mutagen/releases/download/v%s/mutagen_%s_v%s.tar.gz", version_constants.RequiredMutagenVersion, flavor, version_constants.RequiredMutagenVersion)
 	output.UserOut.Printf("Downloading %s ...", mutagenURL)
 
 	// Remove the existing file. This may help on macOS to prevent the Gatekeeper's
@@ -370,7 +371,7 @@ func DownloadMutagenIfNeeded(app *DdevApp) error {
 		return nil
 	}
 	curVersion, err := version.GetLiveMutagenVersion()
-	if err != nil || curVersion != version.RequiredMutagenVersion {
+	if err != nil || curVersion != version_constants.RequiredMutagenVersion {
 		err = DownloadMutagen()
 		if err != nil {
 			return err

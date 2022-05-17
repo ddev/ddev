@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
+	"github.com/drud/ddev/pkg/version_constants"
 	"net"
 	"net/url"
 	"os"
@@ -16,10 +17,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/version"
-
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 
 	"github.com/drud/ddev/pkg/archive"
@@ -384,8 +383,8 @@ func TestDdevStart(t *testing.T) {
 	})
 
 	// Make sure the -built docker image exists before stop
-	webBuilt := version.GetWebImage() + "-" + site.Name + "-built"
-	dbBuilt := version.GetWebImage() + "-" + site.Name + "-built"
+	webBuilt := version_constants.GetWebImage() + "-" + site.Name + "-built"
+	dbBuilt := version_constants.GetWebImage() + "-" + site.Name + "-built"
 	exists, err := dockerutil.ImageExistsLocally(webBuilt)
 	assert.NoError(err)
 	assert.True(exists)

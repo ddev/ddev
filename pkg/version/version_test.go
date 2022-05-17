@@ -3,6 +3,7 @@ package version
 import (
 	exec2 "github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/version_constants"
 	"github.com/stretchr/testify/require"
 	"os"
 	"runtime"
@@ -26,15 +27,15 @@ func TestGetVersionInfo(t *testing.T) {
 
 	v := GetVersionInfo()
 
-	assert.Equal(DdevVersion, v["DDEV version"])
-	assert.Contains(v["web"], WebImg)
-	assert.Contains(v["web"], WebTag)
-	assert.Contains(v["db"], DBImg)
+	assert.Equal(version_constants.DdevVersion, v["DDEV version"])
+	assert.Contains(v["web"], version_constants.WebImg)
+	assert.Contains(v["web"], version_constants.WebTag)
+	assert.Contains(v["db"], version_constants.DBImg)
 	assert.Contains(v["db"], nodeps.MariaDBDefaultVersion)
-	assert.Contains(v["dba"], DBAImg)
-	assert.Contains(v["dba"], DBATag)
+	assert.Contains(v["dba"], version_constants.DBAImg)
+	assert.Contains(v["dba"], version_constants.DBATag)
 	assert.Equal(runtime.GOOS, v["os"])
-	assert.Equal(BUILDINFO, v["build info"])
+	assert.Equal(version_constants.BUILDINFO, v["build info"])
 	assert.NotEmpty(v["docker-compose"])
 	assert.NotEmpty(v["docker-platform"])
 
