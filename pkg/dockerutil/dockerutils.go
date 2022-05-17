@@ -1420,10 +1420,9 @@ func GetDockerVersion() (string, error) {
 	if DockerVersion != "" {
 		return DockerVersion, nil
 	}
-	var client *docker.Client
-	var err error
-	if client, err = docker.NewClientFromEnv(); err != nil {
-		return "", err
+	client := GetDockerClient()
+	if client == nil {
+		return "", fmt.Errorf("Unable to get docker version: docker client is nil")
 	}
 
 	v, err := client.Version()
