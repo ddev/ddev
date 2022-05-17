@@ -85,7 +85,6 @@ var DockerContext string
 func GetDockerClient() *docker.Client {
 	var err error
 
-	util.Debug("GetDockerClient: DockerHost='%s'", DockerHost)
 	// This section is skipped if $DOCKER_HOST is set
 	if DockerHost == "" {
 		if len(os.Args) == 1 || (len(os.Args) > 1 && os.Args[1] != "--version") {
@@ -107,7 +106,6 @@ func GetDockerClient() *docker.Client {
 		// Use os.Exit instead of util.Failed() to avoid import cycle with util.
 		os.Exit(100)
 	}
-	util.Debug("GetDockerClient: returning client")
 	return client
 }
 
