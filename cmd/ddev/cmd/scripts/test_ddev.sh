@@ -41,7 +41,7 @@ echo -n "docker location: " && ls -l "$(which docker)"
 if [ ${OSTYPE%-*} != "linux" ]; then
   echo -n "Docker Desktop Version: " && docker_desktop_version && echo
 fi
-
+echo "docker version: " && docker version
 echo "======= Mutagen Info ========="
 if [ -f ~/.ddev/bin/mutagen ]; then
   echo "Mutagen is installed in ddev, version=$(~/.ddev/bin/mutagen version)"
@@ -65,7 +65,13 @@ echo "Docker disk space:" && docker run --rm busybox:stable df -h // && echo
 ddev poweroff
 echo "Existing docker containers: " && docker ps -a
 mkdir -p ~/tmp/${PROJECT_NAME} && cd ~/tmp/${PROJECT_NAME}
-printf "<?php\nprint 'ddev is working. You will want to delete this project with \"ddev delete -Oy ${PROJECT_NAME}\"';\n" >index.php
+cat <<END >index.php
+<?php
+  mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+  \$mysqli = new mysqli('db', 'db', 'db', 'db');
+  printf("Success accessing database... %s\n", \$mysqli->host_info);
+  print 'ddev is working. You will want to delete this project with "ddev delete -Oy ${PROJECT_NAME}"';
+END
 ddev config --project-type=php
 trap cleanup EXIT
 
@@ -86,6 +92,14 @@ if [ $? -ne 0 ]; then
   echo "Unable to curl the requested project Please provide this output in a new gist at gist.github.com."
   exit 1
 fi
+
+curl --fail http://${PROJECT_NAME}.ddev.site
+if [ $? -ne 0 ]; then
+  set +x
+  echo "Unable to curl the requested project Please provide this output in a new gist at gist.github.com."
+  exit 1
+fi
+
 set +x
 echo "Thanks for running the diagnostic. It was successful."
 echo "Please provide the output of this script in a new gist at gist.github.com"
