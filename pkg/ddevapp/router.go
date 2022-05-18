@@ -6,7 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/netutil"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/version_constants"
+	"github.com/drud/ddev/pkg/versionconstants"
 	"html/template"
 	"os"
 	"path"
@@ -116,8 +116,8 @@ func generateRouterCompose() (string, error) {
 	dockerIP, _ := dockerutil.GetDockerIP()
 
 	templateVars := map[string]interface{}{
-		"router_image":               version_constants.RouterImage,
-		"router_tag":                 version_constants.RouterTag,
+		"router_image":               versionconstants.RouterImage,
+		"router_tag":                 versionconstants.RouterTag,
 		"ports":                      exposedPorts,
 		"router_bind_all_interfaces": globalconfig.DdevGlobalConfig.RouterBindAllInterfaces,
 		"compose_version":            dockerutil.DockerComposeFileFormatVersion,

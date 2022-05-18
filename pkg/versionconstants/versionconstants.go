@@ -1,4 +1,4 @@
-package version_constants
+package versionconstants
 
 import (
 	"fmt"

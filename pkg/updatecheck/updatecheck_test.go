@@ -2,7 +2,7 @@ package updatecheck
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/version_constants"
+	"github.com/drud/ddev/pkg/versionconstants"
 	"path/filepath"
 	"testing"
 
@@ -78,7 +78,7 @@ func TestAvailableUpdates(t *testing.T) {
 	}{
 		{"0.0.0", true},
 		{"v0.1.1", true},
-		{version_constants.DdevVersion, false},
+		{versionconstants.DdevVersion, false},
 		{"v999999.999999.999999", false},
 	}
 

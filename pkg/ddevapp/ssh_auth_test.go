@@ -8,7 +8,7 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/version_constants"
+	"github.com/drud/ddev/pkg/versionconstants"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
@@ -90,7 +90,7 @@ func TestSSHAuth(t *testing.T) {
 	sshKeyPath := app.GetConfigPath(".ssh")
 	sshKeyPath = dockerutil.MassageWindowsHostMountpoint(sshKeyPath)
 
-	err = exec.RunInteractiveCommand("docker", []string{"run", "-t", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "-v", sshKeyPath + ":/home/" + username + "/.ssh", "-u", uidStr, version_constants.SSHAuthImage + ":" + version_constants.SSHAuthTag + "-built", "//test.expect.passphrase"})
+	err = exec.RunInteractiveCommand("docker", []string{"run", "-t", "--rm", "--volumes-from=" + ddevapp.SSHAuthName, "-v", sshKeyPath + ":/home/" + username + "/.ssh", "-u", uidStr, versionconstants.SSHAuthImage + ":" + versionconstants.SSHAuthTag + "-built", "//test.expect.passphrase"})
 	require.NoError(t, err)
 
 	// Try ssh, should succeed

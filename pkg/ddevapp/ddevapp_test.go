@@ -3,7 +3,7 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
-	"github.com/drud/ddev/pkg/version_constants"
+	"github.com/drud/ddev/pkg/versionconstants"
 	"net"
 	"net/url"
 	"os"
@@ -383,8 +383,8 @@ func TestDdevStart(t *testing.T) {
 	})
 
 	// Make sure the -built docker image exists before stop
-	webBuilt := version_constants.GetWebImage() + "-" + site.Name + "-built"
-	dbBuilt := version_constants.GetWebImage() + "-" + site.Name + "-built"
+	webBuilt := versionconstants.GetWebImage() + "-" + site.Name + "-built"
+	dbBuilt := versionconstants.GetWebImage() + "-" + site.Name + "-built"
 	exists, err := dockerutil.ImageExistsLocally(webBuilt)
 	assert.NoError(err)
 	assert.True(exists)

@@ -6,7 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/version_constants"
+	"github.com/drud/ddev/pkg/versionconstants"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
@@ -47,8 +47,8 @@ func TestNewConfig(t *testing.T) {
 	})
 
 	// Ensure the config uses specified defaults.
-	assert.Equal(app.GetDBImage(), version_constants.GetDBImage(nodeps.MariaDB))
-	assert.Equal(app.WebImage, version_constants.GetWebImage())
+	assert.Equal(app.GetDBImage(), versionconstants.GetDBImage(nodeps.MariaDB))
+	assert.Equal(app.WebImage, versionconstants.GetWebImage())
 	app.Name = util.RandString(32)
 	app.Type = nodeps.AppTypeDrupal8
 

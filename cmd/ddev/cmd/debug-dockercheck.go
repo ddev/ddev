@@ -6,7 +6,7 @@ import (
 	exec2 "github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
-	"github.com/drud/ddev/pkg/version_constants"
+	"github.com/drud/ddev/pkg/versionconstants"
 	"github.com/spf13/cobra"
 	"os"
 	"os/exec"
@@ -72,14 +72,14 @@ var DebugDockercheckCmd = &cobra.Command{
 		}
 
 		uid, _, _ := util.GetContainerUIDGid()
-		_, _, err = dockerutil.RunSimpleContainer(version_constants.GetWebImage(), "", []string{"ls", "/mnt/ddev-global-cache"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-globa-cache"}, uid, true, false, nil)
+		_, _, err = dockerutil.RunSimpleContainer(versionconstants.GetWebImage(), "", []string{"ls", "/mnt/ddev-global-cache"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-globa-cache"}, uid, true, false, nil)
 		if err != nil {
 			util.Warning("Unable to run simple container: %v", err)
 		} else {
 			util.Success("Able to run simple container that mounts a volume.")
 		}
 
-		_, _, err = dockerutil.RunSimpleContainer(version_constants.GetWebImage(), "", []string{"curl", "-sLI", "https://google.com"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-globa-cache"}, uid, true, false, nil)
+		_, _, err = dockerutil.RunSimpleContainer(versionconstants.GetWebImage(), "", []string{"curl", "-sLI", "https://google.com"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-globa-cache"}, uid, true, false, nil)
 		if err != nil {
 			util.Warning("Unable to run use internet inside container, many things will fail: %v", err)
 		} else {

@@ -6,7 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/version_constants"
+	"github.com/drud/ddev/pkg/versionconstants"
 	"github.com/fsouza/go-dockerclient"
 	"os/exec"
 	"runtime"
@@ -20,13 +20,13 @@ func GetVersionInfo() map[string]string {
 	var err error
 	versionInfo := make(map[string]string)
 
-	versionInfo["DDEV version"] = version_constants.DdevVersion
-	versionInfo["web"] = version_constants.GetWebImage()
-	versionInfo["db"] = version_constants.GetDBImage(nodeps.MariaDB)
-	versionInfo["dba"] = version_constants.GetDBAImage()
-	versionInfo["router"] = version_constants.RouterImage + ":" + version_constants.RouterTag
-	versionInfo["ddev-ssh-agent"] = version_constants.SSHAuthImage + ":" + version_constants.SSHAuthTag
-	versionInfo["build info"] = version_constants.BUILDINFO
+	versionInfo["DDEV version"] = versionconstants.DdevVersion
+	versionInfo["web"] = versionconstants.GetWebImage()
+	versionInfo["db"] = versionconstants.GetDBImage(nodeps.MariaDB)
+	versionInfo["dba"] = versionconstants.GetDBAImage()
+	versionInfo["router"] = versionconstants.RouterImage + ":" + versionconstants.RouterTag
+	versionInfo["ddev-ssh-agent"] = versionconstants.SSHAuthImage + ":" + versionconstants.SSHAuthTag
+	versionInfo["build info"] = versionconstants.BUILDINFO
 	versionInfo["os"] = runtime.GOOS
 	versionInfo["architecture"] = runtime.GOARCH
 	if versionInfo["docker"], err = dockerutil.GetDockerVersion(); err != nil {
@@ -38,7 +38,7 @@ func GetVersionInfo() map[string]string {
 	if versionInfo["docker-compose"], err = dockerutil.GetDockerComposeVersion(); err != nil {
 		versionInfo["docker-compose"] = fmt.Sprintf("failed to GetDockerComposeVersion(): %v", err)
 	}
-	versionInfo["mutagen"] = version_constants.RequiredMutagenVersion
+	versionInfo["mutagen"] = versionconstants.RequiredMutagenVersion
 
 	if runtime.GOOS == "windows" {
 		versionInfo["docker type"] = "Docker Desktop For Windows"
@@ -66,15 +66,15 @@ func GetDockerPlatform() (string, error) {
 
 // GetLiveMutagenVersion runs `mutagen version` and caches result
 func GetLiveMutagenVersion() (string, error) {
-	if version_constants.MutagenVersion != "" {
-		return version_constants.MutagenVersion, nil
+	if versionconstants.MutagenVersion != "" {
+		return versionconstants.MutagenVersion, nil
 	}
 
 	mutagenPath := globalconfig.GetMutagenPath()
 
 	if !fileutil.FileExists(mutagenPath) {
-		version_constants.MutagenVersion = ""
-		return version_constants.MutagenVersion, nil
+		versionconstants.MutagenVersion = ""
+		return versionconstants.MutagenVersion, nil
 	}
 	out, err := exec.Command(mutagenPath, "version").Output()
 	if err != nil {
@@ -82,6 +82,6 @@ func GetLiveMutagenVersion() (string, error) {
 	}
 
 	v := string(out)
-	version_constants.MutagenVersion = strings.TrimSpace(v)
-	return version_constants.MutagenVersion, nil
+	versionconstants.MutagenVersion = strings.TrimSpace(v)
+	return versionconstants.MutagenVersion, nil
 }

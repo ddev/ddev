@@ -6,7 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/version_constants"
+	"github.com/drud/ddev/pkg/versionconstants"
 	"github.com/fsouza/go-dockerclient"
 	"html/template"
 	"os"
@@ -104,8 +104,8 @@ func (app *DdevApp) CreateSSHAuthComposeFile() (string, error) {
 	app.DockerEnv()
 
 	templateVars := map[string]interface{}{
-		"ssh_auth_image":        version_constants.SSHAuthImage,
-		"ssh_auth_tag":          version_constants.SSHAuthTag,
+		"ssh_auth_image":        versionconstants.SSHAuthImage,
+		"ssh_auth_tag":          versionconstants.SSHAuthTag,
 		"compose_version":       dockerutil.DockerComposeFileFormatVersion,
 		"AutoRestartContainers": globalconfig.DdevGlobalConfig.AutoRestartContainers,
 		"Username":              username,

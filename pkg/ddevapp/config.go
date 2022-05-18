@@ -7,7 +7,7 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/version_constants"
+	"github.com/drud/ddev/pkg/versionconstants"
 	copy2 "github.com/otiai10/copy"
 	"os"
 	"path/filepath"
@@ -101,7 +101,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.ProjectTLD = nodeps.DdevDefaultTLD
 	app.UseDNSWhenPossible = true
 
-	app.WebImage = version_constants.GetWebImage()
+	app.WebImage = versionconstants.GetWebImage()
 
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
@@ -152,7 +152,7 @@ func (app *DdevApp) WriteConfig() error {
 	appcopy := *app
 
 	// Only set the images on write if non-default values have been specified.
-	if appcopy.WebImage == version_constants.GetWebImage() {
+	if appcopy.WebImage == versionconstants.GetWebImage() {
 		appcopy.WebImage = ""
 	}
 	if appcopy.MailhogPort == nodeps.DdevDefaultMailhogPort {
