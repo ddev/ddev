@@ -19,7 +19,7 @@ sudo security authorizationdb write com.apple.trust-settings.admin allow
 
 # Github actions macOS runners have 14BG RAM so might as well use it.
 # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
-colima start --cpu 3 --memory 6
+colima start 9p --cpu 3 --memory 6 --mount-type 9p
 
 # I haven't been able to get mkcert-trusted certs in there, not sure why
 # You can't answer the security prompt, but that's what the
