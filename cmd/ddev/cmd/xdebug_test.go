@@ -59,7 +59,7 @@ func TestCmdXdebug(t *testing.T) {
 
 		out, err := exec.RunHostCommand(DdevBin, "xdebug", "status")
 		assert.NoError(err, "failed ddev xdebug status with php=%v: %v", phpVersion, err)
-		assert.Contains(string(out), "xdebug disabled")
+		assert.Contains(string(out), "xdebug enabled")
 
 		out, err = exec.RunHostCommand(DdevBin, "xdebug", "on")
 		assert.NoError(err)
