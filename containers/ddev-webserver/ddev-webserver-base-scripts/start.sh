@@ -72,9 +72,9 @@ fi
 
 # Disable xdebug autostart by default. Users can enable with /usr/local/bin/disable_xdebug_trigger
 if [ "$DDEV_XDEBUG_AUTOSTART" = "true" ]; then
-  disable_xdebug_trigger
+  enable_xdebug_autostart
 else
-  enable_xdebug_trigger
+  disable_xdebug_autostart
 fi
 
 # Enable assertions by default.
