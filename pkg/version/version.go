@@ -81,7 +81,7 @@ var DockerComposeVersion = ""
 
 // This is var instead of const so it can be changed in test, but should not otherwise be touched.
 // Otherwise we can't test if the version on the machine is equal to version required
-var RequiredDockerComposeVersion = "v2.3.3"
+var RequiredDockerComposeVersion = "v2.5.1"
 
 // MutagenVersion is filled with the version we find for mutagen in use
 var MutagenVersion = ""
