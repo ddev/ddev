@@ -1281,7 +1281,7 @@ func IsColima() bool {
 		util.Warning("IsColima(): Unable to get docker info, err=%v", err)
 		return false
 	}
-	if info.Name == "colima" {
+	if strings.HasPrefix(info.Name, "colima") {
 		return true
 	}
 	return false
