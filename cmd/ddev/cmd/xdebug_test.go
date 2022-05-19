@@ -69,6 +69,22 @@ func TestCmdXdebug(t *testing.T) {
 		assert.NoError(err)
 		assert.Contains(string(out), "xdebug enabled")
 
+		out, err = exec.RunHostCommand(DdevBin, "xdebug", "autostart")
+		assert.NoError(err)
+		assert.Contains(string(out), "Enabled xdebug autostart mode")
+
+		out, err = exec.RunHostCommand(DdevBin, "xdebug", "status")
+		assert.NoError(err)
+		assert.Contains(string(out), "xdebug enabled with autostart (debug,develop)")
+
+		out, err = exec.RunHostCommand(DdevBin, "xdebug", "trigger")
+		assert.NoError(err)
+		assert.Contains(string(out), "Disabled xdebug autostart mode")
+
+		out, err = exec.RunHostCommand(DdevBin, "xdebug", "status")
+		assert.NoError(err)
+		assert.Contains(string(out), "xdebug enabled (develop,debug,profile,trace,coverage)")
+
 		out, err = exec.RunHostCommand(DdevBin, "xdebug", "off")
 		assert.NoError(err)
 		assert.Contains(string(out), "Disabled xdebug")
