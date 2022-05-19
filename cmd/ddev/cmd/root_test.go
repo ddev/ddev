@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 	"os"
 	"runtime"
@@ -154,6 +156,11 @@ func TestGetActiveAppRoot(t *testing.T) {
 	assert.NoError(err)
 	assert.Equal(TestSites[0].Dir, appRoot)
 
+	// Make sure that shell commands show in regular `ddev` output - launch should show
+	b := util.FindBashPath()
+	_, err = exec.RunHostCommand(b, "-c", fmt.Sprintf("%s | grep launch", DdevBin))
+	assert.NoError(err)
+
 	// And we should be able to stop it and find it as well
 	app, err := ddevapp.GetActiveApp("")
 	err = app.Stop(false, true)
@@ -170,7 +177,6 @@ func TestGetActiveAppRoot(t *testing.T) {
 	appRoot, err = ddevapp.GetActiveAppRoot(app.Name)
 	assert.NoError(err)
 	assert.Equal(TestSites[0].Dir, appRoot)
-
 }
 
 // TestCreateGlobalDdevDir checks to make sure that ddev will create a ~/.ddev (and updatecheck)
