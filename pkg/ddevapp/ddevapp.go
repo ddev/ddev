@@ -1718,8 +1718,10 @@ func (app *DdevApp) DockerEnv() {
 	envVars := map[string]string{
 		// Without COMPOSE_DOCKER_CLI_BUILD=0, docker-compose makes all kinds of mess
 		// of output. BUILDKIT_PROGRESS doesn't help either.
-		"COMPOSE_DOCKER_CLI_BUILD":      "0",
-		"COMPOSE_PROJECT_NAME":          "ddev-" + app.Name,
+		"COMPOSE_DOCKER_CLI_BUILD": "0",
+		// The compose project name can no longer contain dots
+		// https://github.com/compose-spec/compose-go/pull/197
+		"COMPOSE_PROJECT_NAME":          "ddev-" + strings.Replace(app.Name, `.`, "", -1),
 		"COMPOSE_CONVERT_WINDOWS_PATHS": "true",
 		"DDEV_SITENAME":                 app.Name,
 		"DDEV_TLD":                      app.ProjectTLD,
