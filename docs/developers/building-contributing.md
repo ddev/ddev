@@ -63,16 +63,14 @@ If you're doing a docs-only PR that does not require full testing, please add "[
 
 If you make changes to a docker image (like ddev-webserver), it won't have any effect unless you:
 
-* You can build an image with a specific tag by going to the image directory (like containers/ddev-webserver) by just doing `make container VERSION=<branchname>` in the containers/ddev-webserver directory.
-* Push a container to hub.docker.com. Push with the tag that matches your branch. Pushing to drud/ddev-webserver repo is easy to accomplish with `make push VERSION=<branchname>` **in the container directory**. You might have to use other techniques to push to another repo (`docker push`)
+* Push an image with a specific tag by going to the image directory (like containers/ddev-webserver) by just doing `make container VERSION=<branchname>` in the containers/ddev-webserver directory.
+* Multi-arch images require you to have a buildx builder, so `docker buildx create --name ddev-builder-multi --use`
+* You can't push until you `docker login`.
+* Push a container to hub.docker.com. Push with the tag that matches your branch. Pushing to `<yourorg>/ddev-webserver` repo is easy to accomplish with `make push DOCKER_ORG=<yourorg> VERSION=<branchname>` **in the container directory**. You might have to use other techniques to push to another repo. 
 * Update pkg/version/version.go with the WebImg and WebTag that relate to the docker image you pushed.
-
-## Pushing Docker Images
 
 ### Local builds and pushes
 
-* For push, most of the images (except ddev-dbserver) will work with just `make push VERSION=<version>`
-* `ddev-dbserver` requires `make PUSH=true VERSION=<version>`
 * If you just want to work locally and do a quick build for your own architecture, you can:
     * `make VERSION=<version>`
     * for `ddev-dbserver`: `make mariadb_10.3_both VERSION=<version>` etc.
