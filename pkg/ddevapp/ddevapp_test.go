@@ -140,21 +140,25 @@ var (
 		},
 		// 7: magento2
 		// Note that testpkgmagento2 code is enormous and makes this really, really slow.
+		// Create a project named testpkgmagento2 and use the magento2 quickstart
+		// Look at app/env.php and login at the key given by "backend->frontname" with the admin
+		// credentials in the quickstart.
+		// Create a product named Unicycle with a picture called randy_4th_of_july_unicycle.jpg
 		{
 			Name: "testpkgmagento2",
-			// echo "This is a junk" >pub/junk.txt && tar -czf .tarballs/testpkgmagento2_code_no_media.magento2.4_try_4.tgz --exclude=.ddev --exclude=var --exclude=pub/media --exclude=.tarballs --exclude=app/etc/env.php .
-			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/testpkgmagento2_code_no_media.magento2.4_try_4.tgz",
+			// echo "This is a junk" >pub/junk.txt && tar -czf .tarballs/testpkgmagento2_code_no_media.magento2.4.4.tgz --exclude=.ddev --exclude=var --exclude=pub/media --exclude=.tarballs --exclude=app/etc/env.php .
+			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/testpkgmagento2_code_no_media.magento2.4.4.tgz",
 			ArchiveInternalExtractionPath: "",
-			// ddev export-db --gzip=false --file=.tarballs/db.sql && tar -czf .tarballs/testpkgmagento2.magento2.4.db_try_4.tgz -C .tarballs db.sql
-			DBTarURL: "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/testpkgmagento2.magento2.4.db_try_4.tgz",
-			// tar -czf .tarballs/testpkgmagento2_files.magento2.4_try_4.tgz -C pub/media .
-			FilesTarballURL:           "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/testpkgmagento2_files.magento2.4_try_4.tgz",
+			// ddev export-db --gzip=false --file=.tarballs/db.sql && tar -czf .tarballs/testpkgmagento2.magento2.4.4.db.tgz -C .tarballs db.sql
+			DBTarURL: "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/testpkgmagento2.magento2.4.4.db.tgz",
+			// tar -czf .tarballs/testpkgmagento2_files.magento2.4.4.tgz -C pub/media .
+			FilesTarballURL:           "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/testpkgmagento2_files.magento2.4.4.tgz",
 			FullSiteTarballURL:        "",
 			Docroot:                   "pub",
 			Type:                      nodeps.AppTypeMagento2,
 			Safe200URIWithExpectation: testcommon.URIWithExpect{URI: "/junk.txt", Expect: `This is a junk`},
 			DynamicURI:                testcommon.URIWithExpect{URI: "/index.php/unicycle.html", Expect: "Unicycle"},
-			FilesImageURI:             "/media/catalog/product/r/a/randy_4th_of_july_unicycle.jpg",
+			FilesImageURI:             "/media/catalog/product/r/a/randy_4th_of_july_unicycle_1.jpg",
 		},
 		// 8: drupal9
 		{

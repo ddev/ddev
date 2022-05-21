@@ -166,3 +166,9 @@ func createMagento2SettingsFile(app *DdevApp) (string, error) {
 func setMagento2SiteSettingsPaths(app *DdevApp) {
 	app.SiteSettingsPath = filepath.Join(app.AppRoot, app.Docroot, "..", "app", "etc", "env.php")
 }
+
+// Latest magento2 requires php8.1
+func magento2ConfigOverrideAction(app *DdevApp) error {
+	app.PHPVersion = nodeps.PHP81
+	return nil
+}

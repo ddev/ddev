@@ -70,6 +70,7 @@ func TestPostConfigAction(t *testing.T) {
 		nodeps.AppTypeWordPress: nodeps.PHPDefault,
 		nodeps.AppTypeBackdrop:  nodeps.PHPDefault,
 		nodeps.AppTypeMagento:   nodeps.PHPDefault,
+		nodeps.AppTypeMagento2:  nodeps.PHP81,
 		nodeps.AppTypeLaravel:   nodeps.PHP80,
 	}
 
