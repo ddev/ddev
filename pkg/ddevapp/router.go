@@ -6,6 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/netutil"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/versionconstants"
 	"html/template"
 	"os"
 	"path"
@@ -15,7 +16,6 @@ import (
 
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/version"
 	"github.com/fsouza/go-dockerclient"
 )
 
@@ -116,11 +116,11 @@ func generateRouterCompose() (string, error) {
 	dockerIP, _ := dockerutil.GetDockerIP()
 
 	templateVars := map[string]interface{}{
-		"router_image":               version.RouterImage,
-		"router_tag":                 version.RouterTag,
+		"router_image":               versionconstants.RouterImage,
+		"router_tag":                 versionconstants.RouterTag,
 		"ports":                      exposedPorts,
 		"router_bind_all_interfaces": globalconfig.DdevGlobalConfig.RouterBindAllInterfaces,
-		"compose_version":            version.DockerComposeFileFormatVersion,
+		"compose_version":            dockerutil.DockerComposeFileFormatVersion,
 		"dockerIP":                   dockerIP,
 		"disable_http2":              globalconfig.DdevGlobalConfig.DisableHTTP2,
 		"letsencrypt":                globalconfig.DdevGlobalConfig.UseLetsEncrypt,

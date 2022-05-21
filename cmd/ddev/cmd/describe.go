@@ -10,7 +10,6 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/styles"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/version"
 	"sort"
 	"strings"
 
@@ -91,7 +90,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			},
 		})
 	}
-	dockerEnv := fmt.Sprintf("docker %s", version.DockerVersion)
+	dockerEnv := fmt.Sprintf("docker %s", dockerutil.DockerVersion)
 	if dockerutil.IsColima() {
 		dockerEnv = "Colima"
 	}

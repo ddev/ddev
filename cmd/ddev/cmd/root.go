@@ -8,7 +8,7 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/updatecheck"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/version"
+	"github.com/drud/ddev/pkg/versionconstants"
 	"github.com/rogpeppe/go-internal/semver"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -33,7 +33,7 @@ var RootCmd = &cobra.Command{
 	Long: `Create and maintain a local web development environment.
 Docs: https://ddev.readthedocs.io
 Support: https://ddev.readthedocs.io/en/stable/#support`,
-	Version: version.DdevVersion,
+	Version: versionconstants.DdevVersion,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		command := os.Args[1]
 
@@ -46,7 +46,7 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 			return
 		}
 
-		err := dockerutil.CheckDockerVersion(version.DockerVersionConstraint)
+		err := dockerutil.CheckDockerVersion(dockerutil.DockerVersionConstraint)
 		if err != nil {
 			if err.Error() == "no docker" {
 				if os.Args[1] != "version" {
@@ -73,7 +73,7 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 				return // Do not continue as we'll end up with github api violations.
 			}
 
-			updateNeeded, updateVersion, updateURL, err := updatecheck.AvailableUpdates("drud", "ddev", version.DdevVersion)
+			updateNeeded, updateVersion, updateURL, err := updatecheck.AvailableUpdates("drud", "ddev", versionconstants.DdevVersion)
 
 			if err != nil {
 				util.Warning("Could not check for updates. This is most often caused by a networking issue.")
@@ -113,7 +113,7 @@ Support: https://ddev.readthedocs.io/en/stable/#support`,
 			event = fullCommand[1]
 		}
 
-		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && version.SegmentKey != "" && globalconfig.IsInternetActive() && len(fullCommand) > 1 {
+		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && versionconstants.SegmentKey != "" && globalconfig.IsInternetActive() && len(fullCommand) > 1 {
 			runTime := util.TimeTrack(time.Now(), "Instrumentation")
 			// Try to get default instrumentationApp from current directory if not already set
 			if instrumentationApp == nil {
@@ -152,8 +152,9 @@ func init() {
 
 	// Determine if Docker is running by getting the version.
 	// This helps to prevent a user from seeing the Cobra error: "Error: unknown command "<custom command>" for ddev"
-	_, err := version.GetDockerVersion()
-	if err != nil && len(os.Args) > 1 && os.Args[1] != "--version" && os.Args[1] != "help" {
+	_, err := dockerutil.GetDockerVersion()
+	// ddev --version may be called without docker available.
+	if err != nil && len(os.Args) > 1 && os.Args[1] != "--version" {
 		util.Failed("Could not connect to a docker provider. Please start or install a docker provider.\nFor installation help go to: https://ddev.readthedocs.io/en/latest/users/docker_installation/")
 	}
 
@@ -175,7 +176,7 @@ func init() {
 }
 
 func instrumentationNotSetUpWarning() {
-	if !output.JSONOutput && version.SegmentKey == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
+	if !output.JSONOutput && versionconstants.SegmentKey == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
 		output.UserOut.Warning("Instrumentation is opted in, but SegmentKey is not available. This usually means you have a locally-built ddev binary or one from a PR build. It's not an error. Please report it if you're using an official release build.")
 	}
 }
@@ -184,11 +185,11 @@ func instrumentationNotSetUpWarning() {
 // from the last saved version. If it is, prompt to request anon ddev usage stats
 // and update the info.
 func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
-	if !output.JSONOutput && semver.Compare(version.DdevVersion, globalconfig.DdevGlobalConfig.LastStartedVersion) > 0 && globalconfig.DdevGlobalConfig.InstrumentationOptIn == false && !globalconfig.DdevNoInstrumentation && !skipConfirmation {
+	if !output.JSONOutput && semver.Compare(versionconstants.DdevVersion, globalconfig.DdevGlobalConfig.LastStartedVersion) > 0 && globalconfig.DdevGlobalConfig.InstrumentationOptIn == false && !globalconfig.DdevNoInstrumentation && !skipConfirmation {
 		allowStats := util.Confirm("It looks like you have a new ddev release.\nMay we send anonymous ddev usage statistics and errors?\nTo know what we will see please take a look at\nhttps://ddev.readthedocs.io/en/stable/users/cli-usage/#opt-in-usage-information\nPermission to beam up?")
 		if allowStats {
 			globalconfig.DdevGlobalConfig.InstrumentationOptIn = true
-			client, _ := analytics.NewWithConfig(version.SegmentKey, analytics.Config{
+			client, _ := analytics.NewWithConfig(versionconstants.SegmentKey, analytics.Config{
 				Logger: &ddevapp.SegmentNoopLogger{},
 			})
 			defer func() {
@@ -201,8 +202,8 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 			}
 		}
 	}
-	if globalconfig.DdevGlobalConfig.LastStartedVersion != version.DdevVersion && !skipConfirmation {
-		globalconfig.DdevGlobalConfig.LastStartedVersion = version.DdevVersion
+	if globalconfig.DdevGlobalConfig.LastStartedVersion != versionconstants.DdevVersion && !skipConfirmation {
+		globalconfig.DdevGlobalConfig.LastStartedVersion = versionconstants.DdevVersion
 		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		if err != nil {
 			return err

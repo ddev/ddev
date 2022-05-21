@@ -5,7 +5,6 @@ import (
 	exec2 "github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/drud/ddev/pkg/version"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -33,7 +32,7 @@ func TestDockerComposeDownload(t *testing.T) {
 	tmpHome := testcommon.CreateTmpDir(t.Name() + "tempHome")
 	// Unusual case where we need to alter the RequiredDockerComposeVersion
 	// just so we can make sure the one in PATH is different.
-	origRequiredComposeVersion := version.RequiredDockerComposeVersion
+	origRequiredComposeVersion := globalconfig.RequiredDockerComposeVersion
 
 	// Change the homedir temporarily
 	_ = os.Setenv("HOME", tmpHome)
@@ -53,18 +52,18 @@ func TestDockerComposeDownload(t *testing.T) {
 		err = os.RemoveAll(tmpHome)
 		assert.NoError(err)
 		_ = os.Setenv("HOME", origHome)
-		version.RequiredDockerComposeVersion = origRequiredComposeVersion
+		globalconfig.RequiredDockerComposeVersion = origRequiredComposeVersion
 	})
 
 	// Download the normal required version specified in code
-	version.DockerComposeVersion = ""
+	globalconfig.DockerComposeVersion = ""
 
 	downloaded, err := dockerutil.DownloadDockerComposeIfNeeded()
 	assert.NoError(err)
 	assert.True(downloaded)
-	v, err := version.GetLiveDockerComposeVersion()
+	v, err := dockerutil.GetLiveDockerComposeVersion()
 	assert.NoError(err)
-	assert.Equal(version.GetRequiredDockerComposeVersion(), v)
+	assert.Equal(globalconfig.GetRequiredDockerComposeVersion(), v)
 
 	// Make sure it doesn't download a second time
 	downloaded, err = dockerutil.DownloadDockerComposeIfNeeded()
@@ -72,7 +71,7 @@ func TestDockerComposeDownload(t *testing.T) {
 	assert.False(downloaded)
 
 	for _, v := range []string{"v2.0.1", "v1.29.0"} {
-		version.DockerComposeVersion = ""
+		globalconfig.DockerComposeVersion = ""
 		// Skip v1 tests on arm64, as they aren't provided
 		if strings.HasPrefix(v, "v1") && runtime.GOARCH == "arm64" {
 			continue
@@ -83,18 +82,18 @@ func TestDockerComposeDownload(t *testing.T) {
 		assert.True(downloaded)
 		// We have to reset version.DockerComposeVersion so it will actually check
 		// instead of using cached value.
-		version.DockerComposeVersion = ""
-		activeVersion, err := version.GetLiveDockerComposeVersion()
+		globalconfig.DockerComposeVersion = ""
+		activeVersion, err := dockerutil.GetLiveDockerComposeVersion()
 		assert.NoError(err)
-		assert.Equal(version.GetRequiredDockerComposeVersion(), activeVersion)
+		assert.Equal(globalconfig.GetRequiredDockerComposeVersion(), activeVersion)
 	}
 
 	// Test using docker-compose from path.
 	// Make sure our Required/Expected DockerComposeVersion is not something we'd find on the machine
-	version.DockerComposeVersion = ""
-	version.RequiredDockerComposeVersion = "v2.1.0"
+	globalconfig.DockerComposeVersion = ""
+	globalconfig.RequiredDockerComposeVersion = "v2.1.0"
 	globalconfig.DdevGlobalConfig.UseDockerComposeFromPath = true
-	activeVersion, err := version.GetLiveDockerComposeVersion()
+	activeVersion, err := dockerutil.GetLiveDockerComposeVersion()
 	assert.NoError(err)
 	path, err := exec.LookPath("docker-compose")
 	assert.NoError(err)

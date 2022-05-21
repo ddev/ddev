@@ -6,11 +6,13 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/denisbrodbeck/machineid"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/version"
+	"github.com/drud/ddev/pkg/versionconstants"
 	"gopkg.in/segmentio/analytics-go.v3"
 	"os"
 	"runtime"
@@ -43,7 +45,7 @@ func SetInstrumentationBaseTags() {
 	defer runTime()
 
 	if globalconfig.DdevGlobalConfig.InstrumentationOptIn {
-		dockerVersion, _ := version.GetDockerVersion()
+		dockerVersion, _ := dockerutil.GetDockerVersion()
 		dockerPlaform, _ := version.GetDockerPlatform()
 		timezone, _ := time.Now().In(time.Local).Zone()
 		lang := os.Getenv("LANG")
@@ -59,7 +61,7 @@ func SetInstrumentationBaseTags() {
 		nodeps.InstrumentationTags["dockerVersion"] = dockerVersion
 		nodeps.InstrumentationTags["dockerPlatform"] = dockerPlaform
 		nodeps.InstrumentationTags["dockerToolbox"] = strconv.FormatBool(false)
-		nodeps.InstrumentationTags["version"] = version.DdevVersion
+		nodeps.InstrumentationTags["version"] = versionconstants.DdevVersion
 		nodeps.InstrumentationTags["ServerHash"] = GetInstrumentationUser()
 		nodeps.InstrumentationTags["timezone"] = timezone
 		nodeps.InstrumentationTags["language"] = lang
@@ -99,7 +101,7 @@ func SegmentUser(client analytics.Client, hashedID string) error {
 	lang := os.Getenv("LANG")
 	err := client.Enqueue(analytics.Identify{
 		UserId:  hashedID,
-		Context: &analytics.Context{App: analytics.AppInfo{Name: "ddev", Version: version.DdevVersion}, OS: analytics.OSInfo{Name: runtime.GOOS}, Locale: lang, Timezone: timezone},
+		Context: &analytics.Context{App: analytics.AppInfo{Name: "ddev", Version: versionconstants.DdevVersion}, OS: analytics.OSInfo{Name: runtime.GOOS}, Locale: lang, Timezone: timezone},
 		Traits:  analytics.Traits{"instrumentation_user": globalconfig.DdevGlobalConfig.InstrumentationUser},
 	})
 
@@ -128,7 +130,7 @@ func SegmentEvent(client analytics.Client, hashedID string, event string) error 
 		UserId:     hashedID,
 		Event:      event,
 		Properties: properties,
-		Context:    &analytics.Context{App: analytics.AppInfo{Name: "ddev", Version: version.DdevVersion}, OS: analytics.OSInfo{Name: runtime.GOOS}, Locale: lang, Timezone: timezone},
+		Context:    &analytics.Context{App: analytics.AppInfo{Name: "ddev", Version: versionconstants.DdevVersion}, OS: analytics.OSInfo{Name: runtime.GOOS}, Locale: lang, Timezone: timezone},
 	})
 
 	return err
@@ -140,7 +142,7 @@ func SendInstrumentationEvents(event string) {
 	defer runTime()
 
 	if globalconfig.DdevGlobalConfig.InstrumentationOptIn && globalconfig.IsInternetActive() {
-		client, _ := analytics.NewWithConfig(version.SegmentKey, analytics.Config{
+		client, _ := analytics.NewWithConfig(versionconstants.SegmentKey, analytics.Config{
 			Logger: &SegmentNoopLogger{},
 		})
 

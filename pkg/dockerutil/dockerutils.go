@@ -7,6 +7,7 @@ import (
 	ddevexec "github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/versionconstants"
 	"io"
 	"log"
 	"net"
@@ -23,8 +24,6 @@ import (
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/version"
-
 	"net/url"
 
 	"github.com/Masterminds/semver/v3"
@@ -89,15 +88,16 @@ func GetDockerClient() *docker.Client {
 
 	// This section is skipped if $DOCKER_HOST is set
 	if DockerHost == "" {
-		if len(os.Args) > 1 && os.Args[1] != "--version" && os.Args[1] != "help" {
-			DockerContext, DockerHost, err = GetDockerContext()
-			if err != nil {
-				util.Failed("Unable to get docker context: %v", err)
-			}
+		DockerContext, DockerHost, err = GetDockerContext()
+		// ddev --version may be called without docker client or context available, ignore err
+		if err != nil && len(os.Args) > 1 && os.Args[1] != "--version" {
+			util.Failed("Unable to get docker context: %v", err)
 		}
+		util.Debug("GetDockerClient: DockerContext=%s, DockerHost=%s", DockerContext, DockerHost)
 	}
 	// Respect DOCKER_HOST in case it's set, otherwise use host we got from context
 	if os.Getenv("DOCKER_HOST") == "" {
+		util.Debug("GetDockerClient: Setting DOCKER_HOST to '%s'", DockerHost)
 		_ = os.Setenv("DOCKER_HOST", DockerHost)
 	}
 	client, err := docker.NewClientFromEnv()
@@ -106,7 +106,6 @@ func GetDockerClient() *docker.Client {
 		// Use os.Exit instead of util.Failed() to avoid import cycle with util.
 		os.Exit(100)
 	}
-
 	return client
 }
 
@@ -124,6 +123,7 @@ func GetDockerContext() (string, string, error) {
 		return "", "", fmt.Errorf("unable to run 'docker context inspect' - please make sure docker client is in path and up-to-date: %v", err)
 	}
 	contextInfo = strings.Trim(contextInfo, " \r\n")
+	util.Debug("GetDockerContext: contextInfo='%s'", contextInfo)
 	parts := strings.SplitN(contextInfo, " ", 2)
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("unable to run split docker context info %s: %v", contextInfo, err)
@@ -592,7 +592,7 @@ func CheckDockerVersion(versionConstraint string) error {
 	runTime := util.TimeTrack(time.Now(), "CheckDockerVersion()")
 	defer runTime()
 
-	currentVersion, err := version.GetDockerVersion()
+	currentVersion, err := GetDockerVersion()
 	if err != nil {
 		return fmt.Errorf("no docker")
 	}
@@ -629,9 +629,9 @@ func CheckDockerCompose() error {
 	runTime := util.TimeTrack(time.Now(), "CheckDockerComposeVersion()")
 	defer runTime()
 
-	versionConstraint := version.DockerComposeVersionConstraint
+	versionConstraint := DockerComposeVersionConstraint
 
-	v, err := version.GetDockerComposeVersion()
+	v, err := GetDockerComposeVersion()
 	if err != nil {
 		return err
 	}
@@ -1054,7 +1054,7 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 	containerName := "CopyIntoVolume_" + nodeps.RandomString(12)
 
 	track := util.TimeTrack(time.Now(), "CopyIntoVolume "+sourcePath+" "+volumeName)
-	containerID, _, err := RunSimpleContainer(version.GetWebImage(), containerName, []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && tail -f /dev/null"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, nil)
+	containerID, _, err := RunSimpleContainer(versionconstants.GetWebImage(), containerName, []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && tail -f /dev/null"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, nil)
 	if err != nil {
 		return err
 	}
@@ -1123,7 +1123,7 @@ func Exec(containerID string, command string, uid string) (string, string, error
 
 // CheckAvailableSpace outputs a warning if docker space is low
 func CheckAvailableSpace() {
-	_, out, _ := RunSimpleContainer(version.GetWebImage(), "", []string{"sh", "-c", `df / | awk '!/Mounted/ {print $4, $5;}'`}, []string{}, []string{}, []string{}, "", true, false, nil)
+	_, out, _ := RunSimpleContainer(versionconstants.GetWebImage(), "", []string{"sh", "-c", `df / | awk '!/Mounted/ {print $4, $5;}'`}, []string{}, []string{}, []string{}, "", true, false, nil)
 	out = strings.Trim(out, "% \r\n")
 	parts := strings.Split(out, " ")
 	if len(parts) != 2 {
@@ -1142,13 +1142,13 @@ func CheckAvailableSpace() {
 // if it's either not yet installed or has the wrong version.
 // Returns downloaded bool (true if it did the download) and err
 func DownloadDockerComposeIfNeeded() (bool, error) {
-	requiredVersion := version.GetRequiredDockerComposeVersion()
+	requiredVersion := globalconfig.GetRequiredDockerComposeVersion()
 	var err error
 	if requiredVersion == "" {
 		util.Debug("globalconfig use_docker_compose_from_path is set, so not downloading")
 		return false, nil
 	}
-	curVersion, err := version.GetLiveDockerComposeVersion()
+	curVersion, err := GetLiveDockerComposeVersion()
 	if err != nil || curVersion != requiredVersion {
 		err = DownloadDockerCompose()
 		if err == nil {
@@ -1184,7 +1184,7 @@ func DownloadDockerCompose() error {
 	output.UserOut.Printf("Download complete.")
 
 	// Remove the cached DockerComposeVersion
-	version.DockerComposeVersion = ""
+	globalconfig.DockerComposeVersion = ""
 
 	err = os.Chmod(destFile, 0755)
 	if err != nil {
@@ -1195,7 +1195,7 @@ func DownloadDockerCompose() error {
 }
 
 func dockerComposeDownloadLink() (string, error) {
-	v := version.GetRequiredDockerComposeVersion()
+	v := globalconfig.GetRequiredDockerComposeVersion()
 	if len(v) < 3 {
 		return "", fmt.Errorf("required docker-compose version is invalid: %v", v)
 	}
@@ -1226,7 +1226,7 @@ func dockerComposeDownloadLinkV1() (string, error) {
 		return "", fmt.Errorf("Only amd64 architecture is supported for docker-compose v1, not %s", arch)
 	}
 	// docker-compose v1 does not use the 'v', so strip it.
-	v := version.GetRequiredDockerComposeVersion()[1:]
+	v := globalconfig.GetRequiredDockerComposeVersion()[1:]
 	flavor := goos + "-" + arch
 	ComposeURL := fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/docker-compose-%s", v, flavor)
 	if runtime.GOOS == "windows" {
@@ -1252,7 +1252,7 @@ func dockerComposeDownloadLinkV2() (string, error) {
 		return "", fmt.Errorf("Only arm64 and amd64 architectures are supported for docker-compose v2, not %s", arch)
 	}
 	flavor := runtime.GOOS + "-" + arch
-	ComposeURL := fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/docker-compose-%s", version.GetRequiredDockerComposeVersion(), flavor)
+	ComposeURL := fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/docker-compose-%s", globalconfig.GetRequiredDockerComposeVersion(), flavor)
 	if runtime.GOOS == "windows" {
 		ComposeURL = ComposeURL + ".exe"
 	}
@@ -1404,4 +1404,82 @@ func CopyFromContainer(containerName string, containerPath string, hostPath stri
 	util.Success("Copied %s:%s to %s in %v", containerName, containerPath, hostPath, time.Since(startTime))
 
 	return nil
+}
+
+// DockerVersionConstraint is the current minimum version of docker required for ddev.
+// See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
+// for examples defining version constraints.
+// REMEMBER TO CHANGE docs/index.md if you touch this!
+// The constraint MUST HAVE a -pre of some kind on it for successful comparison.
+// See https://github.com/drud/ddev/pull/738.. and regression https://github.com/drud/ddev/issues/1431
+var DockerVersionConstraint = ">= 19.03.9-alpha1"
+
+// DockerVersion is cached version of docker
+var DockerVersion = ""
+
+// GetDockerVersion gets the cached or api-sourced version of docker engine
+func GetDockerVersion() (string, error) {
+	if DockerVersion != "" {
+		return DockerVersion, nil
+	}
+	client := GetDockerClient()
+	if client == nil {
+		return "", fmt.Errorf("Unable to get docker version: docker client is nil")
+	}
+
+	v, err := client.Version()
+	if err != nil {
+		return "", err
+	}
+	DockerVersion = v.Get("Version")
+
+	return DockerVersion, nil
+}
+
+// DockerComposeVersionConstraint is the versions allowed for ddev
+// REMEMBER TO CHANGE docs/index.md if you touch this!
+// The constraint MUST HAVE a -pre of some kind on it for successful comparison.
+// See https://github.com/drud/ddev/pull/738.. and regression https://github.com/drud/ddev/issues/1431
+var DockerComposeVersionConstraint = ">= 1.25.0-alpha1 < 2.0.0-alpha1 || >= v2.0.0-rc.2"
+
+// DockerComposeFileFormatVersion is the compose version to be used
+var DockerComposeFileFormatVersion = "3.6"
+
+// GetDockerComposeVersion runs docker-compose -v to get the current version
+func GetDockerComposeVersion() (string, error) {
+	if globalconfig.DockerComposeVersion != "" {
+		return globalconfig.DockerComposeVersion, nil
+	}
+
+	return GetLiveDockerComposeVersion()
+}
+
+// GetLiveDockerComposeVersion runs `docker-compose --version` and caches result
+func GetLiveDockerComposeVersion() (string, error) {
+	if globalconfig.DockerComposeVersion != "" {
+		return globalconfig.DockerComposeVersion, nil
+	}
+
+	composePath, err := globalconfig.GetDockerComposePath()
+	if err != nil {
+		return "", err
+	}
+
+	if !fileutil.FileExists(composePath) {
+		globalconfig.DockerComposeVersion = ""
+		return globalconfig.DockerComposeVersion, nil
+	}
+	out, err := exec.Command(composePath, "version", "--short").Output()
+	if err != nil {
+		return "", err
+	}
+	v := strings.Trim(string(out), "\r\n")
+
+	// docker-compose v1 and v2.3.3 return a version without the prefix "v", so add it.
+	if !strings.HasPrefix(v, "v") {
+		v = "v" + v
+	}
+
+	globalconfig.DockerComposeVersion = v
+	return globalconfig.DockerComposeVersion, nil
 }

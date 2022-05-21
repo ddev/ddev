@@ -36,10 +36,10 @@ VERSION_VARIABLES ?= DdevVersion SegmentKey
 
 # These variables will be used as the default unless overridden by the make
 DdevVersion ?= $(VERSION)
-# WebTag ?= $(VERSION)  # WebTag is normally specified in version.go, sometimes overridden (night-build.mak)
-# DBTag ?=  $(VERSION)  # DBTag is normally specified in version.go, sometimes overridden (night-build.mak)
-# RouterTag ?= $(VERSION) #RouterTag is normally specified in version.go, sometimes overridden (night-build.mak)
-# DBATag ?= $(VERSION) #DBATag is normally specified in version.go, sometimes overridden (night-build.mak)
+# WebTag ?= $(VERSION)  # WebTag is normally specified in version_constants.go, sometimes overridden (night-build.mak)
+# DBTag ?=  $(VERSION)  # DBTag is normally specified in version_constants.go, sometimes overridden (night-build.mak)
+# RouterTag ?= $(VERSION) #RouterTag is normally specified in version_constants.go, sometimes overridden (night-build.mak)
+# DBATag ?= $(VERSION) #DBATag is normally specified in version_constants.go, sometimes overridden (night-build.mak)
 
 # VERSION can be set by
   # Default: git tag
@@ -57,7 +57,7 @@ GITHUB_ORG := drud
 
 BUILD_OS = $(shell go env GOHOSTOS)
 BUILD_ARCH = $(shell go env GOHOSTARCH)
-VERSION_LDFLAGS=$(foreach v,$(VERSION_VARIABLES),-X '$(PKG)/pkg/version.$(v)=$($(v))')
+VERSION_LDFLAGS=$(foreach v,$(VERSION_VARIABLES),-X '$(PKG)/pkg/versionconstants.$(v)=$($(v))')
 LDFLAGS=-extldflags -static $(VERSION_LDFLAGS)
 DEFAULT_BUILD=$(shell go env GOHOSTOS)_$(shell go env GOHOSTARCH)
 
