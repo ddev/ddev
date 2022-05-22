@@ -3,6 +3,7 @@ package util
 import (
 	"errors"
 	"fmt"
+	"golang.org/x/term"
 	"io"
 	"net/http"
 	"os"
@@ -16,6 +17,9 @@ import (
 
 // DownloadFile retrieves a file.
 func DownloadFile(destPath string, url string, progressBar bool) (err error) {
+	if output.JSONOutput || !term.IsTerminal(int(os.Stdin.Fd())) {
+		progressBar = false
+	}
 	// Create the file
 	out, err := os.Create(destPath)
 	if err != nil {
