@@ -144,7 +144,8 @@ services:
 
     {{ if not .OmitDB }}
     depends_on:
-      - db
+      - db:
+          condition: service_healthy
     {{ end }}
 
     ports:
