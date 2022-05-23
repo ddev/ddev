@@ -422,7 +422,7 @@ func (app *DdevApp) GenerateMutagenYml() error {
 	// Prevent running as root for most cases
 	// We really don't want ~/.ddev to have root ownership, breaks things.
 	if os.Geteuid() == 0 {
-		output.UserOut.Warning("not generating mutagen config file because running with root privileges")
+		util.Warning("not generating mutagen config file because running with root privileges")
 		return nil
 	}
 	mutagenYmlPath := GetMutagenConfigFilePath(app)

@@ -52,7 +52,7 @@ to allow ddev to modify your hosts file. If you are connected to the internet an
 		// If requested, remove all inactive host names and exit
 		if removeInactive {
 			if len(args) > 0 {
-				output.UserOut.Fatal("Invalid arguments supplied. 'ddev hostname --remove-all' accepts no arguments.")
+				util.Failed("Invalid arguments supplied. 'ddev hostname --remove-all' accepts no arguments.")
 			}
 
 			util.Warning("Attempting to remove inactive hostnames which use TLD %s", nodeps.DdevDefaultTLD)
@@ -63,7 +63,7 @@ to allow ddev to modify your hosts file. If you are connected to the internet an
 
 		// If operating on one host name, two arguments are required
 		if len(args) != 2 {
-			output.UserOut.Fatal("Invalid arguments supplied. Please use 'ddev hostname [hostname] [ip]'")
+			util.Failed("Invalid arguments supplied. Please use 'ddev hostname [hostname] [ip]'")
 		}
 
 		hostname, ip := args[0], args[1]
