@@ -5,6 +5,7 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
@@ -15,6 +16,9 @@ import (
 
 // TestCmdSSH runs `ddev ssh` on basic apps, including with a dot and a dash in them
 func TestCmdSSH(t *testing.T) {
+	if nodeps.IsMacM1() {
+		t.Skip("Skipping TestCmdSSH on Mac M1 because of useless Docker Desktop failures to connect")
+	}
 	assert := asrt.New(t)
 
 	// Create a temporary directory and change to it for the duration of this test.
