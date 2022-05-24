@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Masterminds/semver/v3"
 
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
@@ -22,15 +21,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	. "github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/google/uuid"
+	"github.com/Masterminds/semver/v3"
 	asrt "github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // isSemver returns true if a string is a semantic version.
