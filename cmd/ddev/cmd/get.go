@@ -8,7 +8,6 @@ import (
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/styles"
 	"github.com/drud/ddev/pkg/util"
@@ -203,10 +202,7 @@ func renderRepositoryList(repos []github.Repository) string {
 	t := table.NewWriter()
 	t.SetOutputMirror(&out)
 	styles.SetGlobalTableStyle(t)
-	tWidth, _ := nodeps.GetTerminalWidthHeight()
-	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
-		t.SetAllowedRowLength(tWidth)
-	}
+	//tWidth, _ := nodeps.GetTerminalWidthHeight()
 	t.SetColumnConfigs([]table.ColumnConfig{
 		{
 			Name: "Service",

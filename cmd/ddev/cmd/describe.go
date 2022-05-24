@@ -74,7 +74,6 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 	}
 	util.Debug("detected terminal width=%v urlPortWidth=%v infoWidth=%v", tWidth, urlPortWidth, infoWidth)
 	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
-		t.SetAllowedRowLength(tWidth)
 		t.SetColumnConfigs([]table.ColumnConfig{
 			{
 				Name:     "Service",
