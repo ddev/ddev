@@ -124,7 +124,7 @@ server {
 
         {{/* jonaseberle/github-action-setup-ddev version */}}
         {{ range $containerNetwork := $container.Networks }}
-            {{ if (and (ne $containerNetwork.Name "ingress") (or (eq $containerNetwork.Name $containerNetwork.Name) (eq $containerNetwork.Name "host"))) }}
+            {{ if eq $containerNetwork.Name "ddev_default" }}
                 {{/* If only 1 port exposed, use that */}}
                 {{ if eq $addrLen 1 }}
                     {{ $address := index $container.Addresses 0 }}
