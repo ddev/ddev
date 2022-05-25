@@ -1280,7 +1280,7 @@ func (app *DdevApp) GenerateWebserverConfig() error {
 	// Prevent running as root for most cases
 	// We really don't want ~/.ddev to have root ownership, breaks things.
 	if os.Geteuid() == 0 {
-		output.UserOut.Warning("not generating webserver config files because running with root privileges")
+		util.Warning("not generating webserver config files because running with root privileges")
 		return nil
 	}
 
@@ -1334,7 +1334,7 @@ func (app *DdevApp) GeneratePostgresConfig() error {
 	// Prevent running as root for most cases
 	// We really don't want ~/.ddev to have root ownership, breaks things.
 	if os.Geteuid() == 0 {
-		output.UserOut.Warning("not generating postgres config files because running with root privileges")
+		util.Warning("not generating postgres config files because running with root privileges")
 		return nil
 	}
 

@@ -161,7 +161,7 @@ func init() {
 	// Populate custom/script commands so they're visible
 	// We really don't want ~/.ddev or .ddev/homeadditions or .ddev/.globalcommands to have root ownership, breaks things.
 	if os.Geteuid() == 0 {
-		output.UserOut.Warning("Not populating custom commands or hostadditions because running with root privileges")
+		util.Warning("Not populating custom commands or hostadditions because running with root privileges")
 	} else {
 		err := ddevapp.PopulateExamplesCommandsHomeadditions("")
 		if err != nil {
@@ -177,7 +177,7 @@ func init() {
 
 func instrumentationNotSetUpWarning() {
 	if !output.JSONOutput && versionconstants.SegmentKey == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
-		output.UserOut.Warning("Instrumentation is opted in, but SegmentKey is not available. This usually means you have a locally-built ddev binary or one from a PR build. It's not an error. Please report it if you're using an official release build.")
+		util.Warning("Instrumentation is opted in, but SegmentKey is not available. This usually means you have a locally-built ddev binary or one from a PR build. It's not an error. Please report it if you're using an official release build.")
 	}
 }
 

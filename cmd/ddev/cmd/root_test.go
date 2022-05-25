@@ -112,7 +112,7 @@ func TestMain(m *testing.M) {
 	err = addSites()
 	if err != nil {
 		removeSites()
-		output.UserOut.Fatalf("addSites() failed: %v", err)
+		util.Failed("addSites() failed: %v", err)
 	}
 
 	log.Debugln("Running tests.")
