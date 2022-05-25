@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
@@ -17,6 +18,13 @@ import (
 func TestComposerCmd(t *testing.T) {
 	if dockerutil.IsColima() {
 		t.Skip("Skipping test on Colima because of odd unable to delete vendor error")
+	}
+	// 2022-05-24: I've spent lots of time debugging intermittent `composer create` failures when NFS
+	// is enabled, both on macOS and Windows. As far as I can tell, it only happens in this test, I've
+	// never recreated manually. I do see https://github.com/composer/composer/issues/9627 which seemed
+	// to deal with similar issues in vagrant context, and has a hack now embedded into composer.
+	if nodeps.NFSMountEnabledDefault {
+		t.Skip("Composer has strange behavior in NFS context, so skipping")
 	}
 	assert := asrt.New(t)
 
