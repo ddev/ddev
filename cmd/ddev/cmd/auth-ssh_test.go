@@ -4,6 +4,7 @@ import (
 	"github.com/drud/ddev/cmd/ddev/cmd"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -17,6 +18,10 @@ import (
 
 // TestCmdAuthSSH runs `ddev auth ssh` and checks that it actually worked out.
 func TestCmdAuthSSH(t *testing.T) {
+	if nodeps.IsMacM1() {
+		t.Skip("Skipping TestCmdAuthSSH on Mac M1 because of useless Docker Desktop failures to connect")
+	}
+
 	assert := asrt.New(t)
 	if !util.IsCommandAvailable("expect") {
 		t.Skip("Skipping TestCmdAuthSSH because expect scripting tool is not available")
