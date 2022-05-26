@@ -591,7 +591,7 @@ func TestGetDockerIP(t *testing.T) {
 		"unix:///var/run/docker.sock": "127.0.0.1",
 		"unix:///Users/rfay/.docker/run/docker.sock": "127.0.0.1",
 		"unix:///Users/rfay/.colima/docker.sock":     "127.0.0.1",
-		"tcp://ddev.com:2375":                        "35.202.87.134",
+		"tcp://185.199.110.153:2375":                 "185.199.110.153",
 	}
 
 	for k, v := range expectations {
