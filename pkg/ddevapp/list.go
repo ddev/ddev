@@ -92,7 +92,6 @@ func CreateAppTable(out *bytes.Buffer) table.Writer {
 	t.SortBy([]table.SortBy{{Name: "Name"}})
 
 	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
-		t.SetAllowedRowLength(termWidth)
 
 		t.SetColumnConfigs([]table.ColumnConfig{
 			{
@@ -104,8 +103,8 @@ func CreateAppTable(out *bytes.Buffer) table.Writer {
 				WidthMax: int(typeWidth),
 			},
 			{
-				Name:     "Location",
-				WidthMax: locationWidth,
+				Name: "Location",
+				//WidthMax: locationWidth,
 			},
 			{
 				Name: "URL",
