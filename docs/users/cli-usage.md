@@ -196,6 +196,23 @@ ddev composer install
 ddev launch
 ```
 
+### Drupal 10 Quickstart
+
+#### Drupal 10 Composer Setup Example
+
+```bash
+mkdir my-drupal10-site
+cd my-drupal10-site
+ddev config --project-type=drupal10 --docroot=web --create-docroot
+ddev start
+ddev composer create --no-install drupal/recommended-project:^10@alpha
+ddev composer require drush/drush --no-install
+ddev composer install
+ddev drush site:install -y
+ddev drush uli
+ddev launch
+```
+
 ### Drupal 6/7 Quickstart
 
 Beginning to use ddev with a Drupal 6 or 7 project is as simple as cloning the project's repository and checking out its directory.
