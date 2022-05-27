@@ -4,6 +4,8 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/manifoldco/promptui"
+	"os"
 	"strings"
 
 	"github.com/drud/ddev/pkg/dockerutil"
@@ -42,6 +44,47 @@ ddev start --all`,
 			util.Failed(err.Error())
 		}
 
+		selectFlag, err := cmd.Flags().GetBool("select")
+
+		if err != nil {
+			util.Failed(err.Error())
+		}
+
+		if selectFlag {
+			inactiveProjects, err := ddevapp.GetInactiveProjects()
+
+			if err != nil {
+				util.Failed(err.Error())
+			}
+
+			if len(inactiveProjects) == 0 {
+				util.Warning("No project to start available")
+				os.Exit(0)
+			}
+
+			inactiveProjectNames := ddevapp.ExtractProjectNames(inactiveProjects)
+
+			prompt := promptui.Select{
+				Label: "Projects",
+				Items: inactiveProjectNames,
+				Templates: &promptui.SelectTemplates{
+					Label: "{{ . | cyan }}:",
+				},
+				StartInSearchMode: true,
+				Searcher: func(input string, idx int) bool {
+					return strings.Contains(inactiveProjectNames[idx], input)
+				},
+			}
+
+			_, projectName, err := prompt.Run()
+
+			if err != nil {
+				util.Failed(err.Error())
+			}
+
+			args = append(args, projectName)
+		}
+
 		projects, err := getRequestedProjects(args, startAll)
 		if err != nil {
 			util.Failed("Failed to get project(s): %v", err)
@@ -74,5 +117,6 @@ ddev start --all`,
 func init() {
 	StartCmd.Flags().BoolVarP(&startAll, "all", "a", false, "Start all projects")
 	StartCmd.Flags().BoolP("skip-confirmation", "y", false, "Skip any confirmation steps")
+	StartCmd.Flags().BoolP("select", "s", false, "Interactively select a project to start")
 	RootCmd.AddCommand(StartCmd)
 }
