@@ -199,7 +199,7 @@ ddev launch
 ### Drupal 10 Quickstart
 
 #### Drupal 10 Composer Setup Example
-
+Drupal 10 is not yet released, but lots of people want to test and contribute to it, and it's easy to set it up in DDEV:
 ```bash
 mkdir my-drupal10-site
 cd my-drupal10-site
@@ -212,7 +212,7 @@ ddev drush site:install -y
 ddev drush uli
 ddev launch
 ```
-
+Note that as Drupal 10 moves from alpha to beta and then release, you'll want to change the tag from `^10@alpha` to `^10@beta` and then `^10`.
 ### Drupal 6/7 Quickstart
 
 Beginning to use ddev with a Drupal 6 or 7 project is as simple as cloning the project's repository and checking out its directory.
