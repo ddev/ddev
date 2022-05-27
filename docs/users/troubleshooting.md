@@ -177,7 +177,7 @@ For ddev-router and ddev-ssh-agent, `docker logs ddev-router` and `docker logs d
   
 Run `ddev debug router-nginx-config` to print the Nginx configuration of the currently running ddev-router.
 
-## `ddev start` fails with "Failed to start [project name]: No such container: ddev-router"  
+## `ddev start` fails with "Failed to start [project name]: No such container: ddev-router"
 
 Deleting the images and re-pulling them generally solves this problem.  
   
@@ -200,8 +200,6 @@ The best approach for any significant Dockerfile is to `ddev ssh` and `sudo -s` 
 For example, if your Dockerfile were
 
 ```dockerfile
-ARG BASE_IMAGE
-FROM $BASE_IMAGE
 RUN npm install --global forever
 ```
 

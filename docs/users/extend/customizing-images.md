@@ -31,6 +31,8 @@ To test that a package will do what you want, you can `ddev ssh` and then `sudo 
 
 For more complex requirements, you can add .ddev/web-build/Dockerfile or .ddev/db-build/Dockerfile.
 
+These files' content will be appended to ddev's own Dockerfile.
+
 Examples of possible Dockerfiles are given in `.ddev/web-build/Dockerfile.example` and `.ddev/db-build/Dockerfile.example` (These examples are created in your project when you `ddev config` the project.)
 
 You can use the .ddev/*-build/ directory as the Docker "context" directory as well. So for example if a file named README.txt exists in .ddev/web-build, you can use `ADD README.txt /` in the Dockerfile.
@@ -38,18 +40,12 @@ You can use the .ddev/*-build/ directory as the Docker "context" directory as we
 An example web image `.ddev/web-build/Dockerfile` might be:
 
 ```dockerfile
-ARG BASE_IMAGE
-FROM $BASE_IMAGE
-
 RUN npm install -g gatsby-cli
 ```
 
 Another example would be installing phpcs globally (see [Stack Overflow answer](https://stackoverflow.com/questions/61870801/add-global-phpcs-and-drupal-coder-to-ddev-in-custom-dockerfile/61870802#61870802)):
 
 ```dockerfile
-ARG BASE_IMAGE
-FROM $BASE_IMAGE
-
 ENV COMPOSER_HOME=/usr/local/composer
 
 # We try to avoid when possible relying on composer to download global, so in PHPCS case we can use the phar.

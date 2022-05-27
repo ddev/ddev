@@ -215,10 +215,9 @@ func (app *DdevApp) WriteConfig() error {
 	contents := []byte(`
 # You can copy this Dockerfile.example to Dockerfile to add configuration
 # or packages or anything else to your webimage
-ARG BASE_IMAGE
-FROM $BASE_IMAGE
-
+# These additions will be appended last to ddev's own Dockerfile
 RUN npm install --global forever
+RUN echo "Built from $BASE_IMAGE" > /tmp/built-from.txt
 `)
 
 	err = WriteImageDockerfile(app.GetConfigPath("web-build")+"/Dockerfile.example", contents)
@@ -228,9 +227,7 @@ RUN npm install --global forever
 	contents = []byte(`
 # You can copy this Dockerfile.example to Dockerfile to add configuration
 # or packages or anything else to your dbimage
-ARG BASE_IMAGE
-FROM $BASE_IMAGE
-RUN echo "Built from ` + app.GetDBImage() + `" >/var/tmp/built-from.txt
+RUN echo "Built from $BASE_IMAGE" > /tmp/built-from.txt
 `)
 
 	err = WriteImageDockerfile(app.GetConfigPath("db-build")+"/Dockerfile.example", contents)
@@ -865,13 +862,6 @@ func WriteBuildDockerfile(fullpath string, userDockerfile string, extraPackages 
 ARG BASE_IMAGE
 FROM $BASE_IMAGE
 `
-	// If there is a user dockerfile, start with its contents
-	if userDockerfile != "" && fileutil.FileExists(userDockerfile) {
-		contents, err = fileutil.ReadFileIntoString(userDockerfile)
-		if err != nil {
-			return err
-		}
-	}
 	contents = contents + `
 ARG username
 ARG uid
@@ -909,6 +899,26 @@ RUN export XDEBUG_MODE=off && ( composer self-update %s || composer self-update 
 	}
 
 	contents = contents + extraContent
+
+	// If there is a user dockerfile, appends its contents
+	if userDockerfile != "" && fileutil.FileExists(userDockerfile) {
+		var userContents string
+
+		userContents, err = fileutil.ReadFileIntoString(userDockerfile)
+		if err != nil {
+			return err
+		}
+
+		// Backward compatible fix, remove unncessary BASE_IMAGE references
+		re, err := regexp.Compile(`ARG BASE_IMAGE.*\n|FROM \$BASE_IMAGE.*\n`)
+		if err != nil {
+			return err
+		}
+
+		userContents = re.ReplaceAllString(userContents, "")
+		contents = contents + "\n" + userContents
+	}
+
 	return WriteImageDockerfile(fullpath, []byte(contents))
 }
 
