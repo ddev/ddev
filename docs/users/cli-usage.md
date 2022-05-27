@@ -199,7 +199,7 @@ ddev launch
 ### Drupal 10 Quickstart
 
 #### Drupal 10 Composer Setup Example
-Drupal 10 is not yet released, but lots of people want to test and contribute to it, and it's easy to set it up in DDEV:
+[Drupal 10](https://www.drupal.org/about/10) is not yet released, but lots of people want to test and contribute to it. It's easy to set it up in DDEV:
 ```bash
 mkdir my-drupal10-site
 cd my-drupal10-site
