@@ -26,8 +26,8 @@ func LogSetUp() {
 		UserOut.Formatter = UserOutFormatter
 		UserErr.Formatter = UserOutFormatter
 	} else {
-		UserOut.Formatter = &JSONFormatter{}
-		UserErr.Formatter = &JSONFormatter{}
+		UserOut.Formatter = &log.JSONFormatter{}
+		UserErr.Formatter = &log.JSONFormatter{}
 	}
 
 	UserOutFormatter.DisableTimestamp = true
