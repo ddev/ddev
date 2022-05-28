@@ -57,6 +57,9 @@ const SiteConfigMissing = ".ddev/config.yaml missing"
 // SitePaused defines the string used to denote when a site is in the paused (docker stopped) state.
 const SitePaused = "paused"
 
+// SiteUnhealthy is the status for a project whose services are not all running
+const SiteUnhealthy = "unhealthy"
+
 // DatabaseDefault is the default database/version
 var DatabaseDefault = DatabaseDesc{nodeps.MariaDB, nodeps.MariaDBDefaultVersion}
 
@@ -193,9 +196,11 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 
 	shortRoot := RenderHomeRootedDir(app.GetAppRoot())
 	appDesc := make(map[string]interface{})
+	status, statusDesc := app.SiteStatus()
 
 	appDesc["name"] = app.GetName()
-	appDesc["status"] = app.SiteStatus()
+	appDesc["status"] = status
+	appDesc["status_desc"] = statusDesc
 	appDesc["approot"] = app.GetAppRoot()
 	appDesc["docroot"] = app.GetDocroot()
 	appDesc["shortroot"] = shortRoot
@@ -230,7 +235,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["database_version"] = app.Database.Version
 
 	// Only show extended status for running sites.
-	if app.SiteStatus() == SiteRunning {
+	if status == SiteRunning {
 		if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 			dbinfo := make(map[string]interface{})
 			dbinfo["username"] = "db"
@@ -739,30 +744,26 @@ func (app *DdevApp) ExportDB(outFile string, compressionType string, targetDB st
 }
 
 // SiteStatus returns the current status of an application determined from web and db service health.
-func (app *DdevApp) SiteStatus() string {
-	var siteStatus string
-	statuses := map[string]string{"web": ""}
-
-	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
-		statuses["db"] = ""
-	}
-
+func (app *DdevApp) SiteStatus() (string, string) {
 	if !fileutil.FileExists(app.GetAppRoot()) {
-		siteStatus = fmt.Sprintf(`%s: %v; Please "ddev stop --unlist %s"`, SiteDirMissing, app.GetAppRoot(), app.Name)
-		return siteStatus
+		return SiteDirMissing, fmt.Sprintf(`%s: %v; Please "ddev stop --unlist %s"`, SiteDirMissing, app.GetAppRoot(), app.Name)
 	}
 
 	_, err := CheckForConf(app.GetAppRoot())
 	if err != nil {
-		siteStatus = fmt.Sprintf("%s", SiteConfigMissing)
-		return siteStatus
+		return SiteConfigMissing, fmt.Sprintf("%s", SiteConfigMissing)
+	}
+
+	statuses := map[string]string{"web": ""}
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+		statuses["db"] = ""
 	}
 
 	for service := range statuses {
 		container, err := app.FindContainerByType(service)
 		if err != nil {
 			util.Error("app.FindContainerByType(%v) failed", service)
-			return ""
+			return "", ""
 		}
 		if container == nil {
 			statuses[service] = SiteStopped
@@ -782,14 +783,51 @@ func (app *DdevApp) SiteStatus() string {
 		}
 	}
 
-	// Base the siteStatus on web container. Then override it if others are not the same.
-	siteStatus = statuses["web"]
+	siteStatusDesc := ""
 	for serviceName, status := range statuses {
-		if status != siteStatus {
-			siteStatus = siteStatus + "\n" + serviceName + ": " + status
+		if status != statuses["web"] {
+			siteStatusDesc += serviceName + ": " + status + "\n"
 		}
 	}
-	return siteStatus
+
+	// Base the siteStatus on web container. Then override it if others are not the same.
+	if siteStatusDesc == "" {
+		return app.determineStatus(statuses), statuses["web"]
+	}
+
+	return app.determineStatus(statuses), siteStatusDesc
+}
+
+// Return one of the Site* statuses to describe the overall status of the project
+func (app *DdevApp) determineStatus(statuses map[string]string) string {
+	hasCommonStatus, commonStatus := app.getCommonStatus(statuses)
+
+	if hasCommonStatus {
+		return commonStatus
+	}
+
+	for status := range statuses {
+		if status == SiteStarting {
+			return SiteStarting
+		}
+	}
+
+	return SiteUnhealthy
+}
+
+// Check whether a common status applies to all services
+func (app *DdevApp) getCommonStatus(statuses map[string]string) (bool, string) {
+	commonStatus := ""
+
+	for _, status := range statuses {
+		if commonStatus != "" && status != commonStatus {
+			return false, ""
+		}
+
+		commonStatus = status
+	}
+
+	return true, commonStatus
 }
 
 // ImportFiles takes a source directory or archive and copies to the uploaded files directory of a given app.
@@ -1788,7 +1826,8 @@ func (app *DdevApp) DockerEnv() {
 func (app *DdevApp) Pause() error {
 	app.DockerEnv()
 
-	if app.SiteStatus() == SiteStopped {
+	status, _ := app.SiteStatus()
+	if status == SiteStopped {
 		return nil
 	}
 
@@ -2041,9 +2080,10 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	if err != nil {
 		return fmt.Errorf("failed to process pre-stop hooks: %v", err)
 	}
+	status, _ := app.SiteStatus()
 
 	if createSnapshot == true {
-		if app.SiteStatus() != SiteRunning {
+		if status != SiteRunning {
 			util.Warning("Must start non-running project to do database snapshot")
 			err = app.Start()
 			if err != nil {
@@ -2062,7 +2102,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		util.Warning("Unable to SyncAndterminateMutagenSession: %v", err)
 	}
 
-	if app.SiteStatus() == SiteRunning {
+	if status == SiteRunning {
 		err = app.Pause()
 		if err != nil {
 			util.Warning("Failed to pause containers for %s: %v", app.GetName(), err)
@@ -2555,7 +2595,8 @@ func (app *DdevApp) GetPostgresVolumeName() string {
 // StartAppIfNotRunning is intended to replace much-duplicated code in the commands.
 func (app *DdevApp) StartAppIfNotRunning() error {
 	var err error
-	if app.SiteStatus() != SiteRunning {
+	status, _ := app.SiteStatus()
+	if status != SiteRunning {
 		err = app.Start()
 	}
 

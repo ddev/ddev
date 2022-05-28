@@ -65,7 +65,7 @@ func RenderHomeRootedDir(path string) string {
 
 // RenderAppRow will add an application row to an existing table for describe and list output.
 func RenderAppRow(t table.Writer, row map[string]interface{}) {
-	status := fmt.Sprint(row["status"])
+	status := fmt.Sprint(row["status_desc"])
 	urls := ""
 	mutagenStatus := ""
 	if row["status"] == SiteRunning {
@@ -309,7 +309,8 @@ func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, error) {
 
 // CheckForMissingProjectFiles returns an error if the project's configuration or project root cannot be found
 func CheckForMissingProjectFiles(project *DdevApp) error {
-	if strings.Contains(project.SiteStatus(), SiteConfigMissing) || strings.Contains(project.SiteStatus(), SiteDirMissing) {
+	status, _ := project.SiteStatus()
+	if status == SiteConfigMissing || status == SiteDirMissing {
 		return fmt.Errorf("ddev can no longer find your project files at %s. If you would like to continue using ddev to manage this project please restore your files to that directory. If you would like to make ddev forget this project, you may run 'ddev stop --unlist %s'", project.GetAppRoot(), project.GetName())
 	}
 
@@ -351,7 +352,8 @@ func GetProjects(activeOnly bool) ([]*DdevApp, error) {
 			continue
 		}
 
-		if !activeOnly || (app.SiteStatus() != SiteStopped && app.SiteStatus() != SiteConfigMissing && app.SiteStatus() != SiteDirMissing) {
+		status, _ := app.SiteStatus()
+		if !activeOnly || (status != SiteStopped && status != SiteConfigMissing && status != SiteDirMissing) {
 			apps[app.Name] = app
 		}
 	}

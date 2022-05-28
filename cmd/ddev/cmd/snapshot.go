@@ -75,7 +75,7 @@ func createAppSnapshot(app *ddevapp.DdevApp) {
 		return
 	}
 
-	appStatus := app.SiteStatus()
+	appStatus, _ := app.SiteStatus()
 	// If the app is not running, then start it to create a snapshot.
 	if appStatus != ddevapp.SiteRunning {
 		util.Warning("Project %s is %s, starting it to create a snapshot", app.GetName(), appStatus)

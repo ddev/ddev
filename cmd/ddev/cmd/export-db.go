@@ -36,8 +36,8 @@ ddev export-db someproject --gzip=false --file=/tmp/someproject.sql `,
 		}
 
 		app := projects[0]
-
-		if app.SiteStatus() != ddevapp.SiteRunning {
+		status, _ := app.SiteStatus()
+		if status != ddevapp.SiteRunning {
 			err = app.Start()
 			if err != nil {
 				util.Failed("Failed to start app %s to import-db: %v", app.Name, err)

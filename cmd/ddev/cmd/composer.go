@@ -26,7 +26,8 @@ ddev composer create drupal/recommended-project`,
 			util.Failed(err.Error())
 		}
 
-		if app.SiteStatus() != ddevapp.SiteRunning {
+		status, _ := app.SiteStatus()
+		if status != ddevapp.SiteRunning {
 			if err = app.Start(); err != nil {
 				util.Failed("Failed to start %s: %v", app.Name, err)
 			}

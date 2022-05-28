@@ -96,7 +96,8 @@ ddev stop --remove-data`,
 
 		// Iterate through the list of projects built above, removing each one.
 		for _, project := range projects {
-			if project.SiteStatus() == ddevapp.SiteStopped {
+			status, _ := project.SiteStatus()
+			if status == ddevapp.SiteStopped {
 				util.Success("Project %s is already stopped.", project.GetName())
 			}
 

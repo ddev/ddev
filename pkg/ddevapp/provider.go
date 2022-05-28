@@ -64,7 +64,8 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 		return fmt.Errorf("Failed to process pre-pull hooks: %v", err)
 	}
 
-	if app.SiteStatus() != SiteRunning {
+	status, _ := app.SiteStatus()
+	if status != SiteRunning {
 		util.Warning("Project is not currently running. Starting project before performing pull.")
 		err = app.Start()
 		if err != nil {
@@ -149,7 +150,8 @@ func (app *DdevApp) Push(provider *Provider, skipDbArg bool, skipFilesArg bool) 
 		return fmt.Errorf("Failed to process pre-push hooks: %v", err)
 	}
 
-	if app.SiteStatus() != SiteRunning {
+	status, _ := app.SiteStatus()
+	if status != SiteRunning {
 		util.Warning("Project is not currently running. Starting project before performing push.")
 		err = app.Start()
 		if err != nil {

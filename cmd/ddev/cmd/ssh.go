@@ -1,10 +1,8 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/nodeps"
-	"strings"
-
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -30,12 +28,9 @@ ddev ssh -d /var/www/html`,
 		app := projects[0]
 		instrumentationApp = app
 
-		if strings.Contains(app.SiteStatus(), ddevapp.SiteStopped) {
+		status, _ := app.SiteStatus()
+		if status != ddevapp.SiteRunning {
 			util.Failed("Project is not currently running. Try 'ddev start'.")
-		}
-
-		if strings.Contains(app.SiteStatus(), ddevapp.SitePaused) {
-			util.Failed("Project is stopped. Run 'ddev start' to start the environment.")
 		}
 
 		app.DockerEnv()
