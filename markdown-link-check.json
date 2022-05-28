@@ -7,7 +7,7 @@
       "pattern": "^https://www.drupal.org/slack"
     },
     {
-      "pattern": "^https://www.drupal.org/(u|project)"
+      "pattern": "^https://www.drupal.org/(u|project|about)"
     },
     {
       "pattern": "^https://nssm.cc/"
