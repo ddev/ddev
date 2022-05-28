@@ -378,7 +378,8 @@ func GetInactiveProjects() ([]*DdevApp, error) {
 	}
 
 	for _, app := range apps {
-		if app.SiteStatus() != SiteRunning {
+		status, _ := app.SiteStatus()
+		if status != SiteRunning {
 			inactiveApps = append(inactiveApps, app)
 		}
 	}
