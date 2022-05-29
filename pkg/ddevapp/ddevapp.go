@@ -547,7 +547,10 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 	// default insideContainerImportPath is the one mounted from .ddev directory
 	insideContainerImportPath := path.Join("/mnt/ddev_config/", filepath.Base(dbPath))
 	// But if we don't have bind mounts, we have to copy dump into the container
-	if globalconfig.DdevGlobalConfig.NoBindMounts {
+	// But do it on Windows as well. On Docker Desktop 4.8.2+(?) there seems to be a buffer
+	// overflow bug in pv, where it outputs all kinds of nonsense when reading a file on a
+	// mounted directory (/mnt/ddev_config).
+	if globalconfig.DdevGlobalConfig.NoBindMounts || runtime.GOOS == "windows" {
 		dbContainerName := GetContainerName(app, "db")
 		if err != nil {
 			return err
