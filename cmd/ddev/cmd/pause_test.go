@@ -53,7 +53,7 @@ func TestCmdPauseContainers(t *testing.T) {
 	apps = ddevapp.GetActiveProjects()
 	for _, app := range apps {
 		status, statusDesc := app.SiteStatus()
-		assert.Equal(ddevapp.SitePaused, status, "All sites should be stopped, but %s status description is: %s", app.GetName(), statusDesc)
+		assert.Equal(ddevapp.SitePaused, status, "All sites should be stopped, but project=%s status=%s, statusDesc=%s", app.GetName(), status, statusDesc)
 		assert.Equal(ddevapp.SitePaused, statusDesc, "Status description should be \"stopped\", but %s status description is: %s", app.GetName(), statusDesc)
 	}
 
