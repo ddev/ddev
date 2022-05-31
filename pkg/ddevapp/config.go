@@ -859,6 +859,7 @@ func WriteBuildDockerfile(fullpath string, userDockerfilePath string, extraPacka
 
 	// Normal starting content is just the arg and base image
 	contents := `
+### DDEV-injected base Dockerfile contents
 ARG BASE_IMAGE
 FROM $BASE_IMAGE
 `
@@ -900,7 +901,7 @@ RUN export XDEBUG_MODE=off && ( composer self-update %s || composer self-update 
 
 	contents = contents + extraContent
 
-	// If there are user dockerfiles, appends its contents
+	// If there are user dockerfiles, appends their contents
 	if userDockerfilePath != "" {
 		files, err := filepath.Glob(userDockerfilePath + "/Dockerfile*")
 		if err != nil {
@@ -918,14 +919,14 @@ RUN export XDEBUG_MODE=off && ( composer self-update %s || composer self-update 
 				return err
 			}
 
-			// Backward compatible fix, remove unncessary BASE_IMAGE references
+			// Backward compatible fix, remove unnecessary BASE_IMAGE references
 			re, err := regexp.Compile(`ARG BASE_IMAGE.*\n|FROM \$BASE_IMAGE.*\n`)
 			if err != nil {
 				return err
 			}
 
 			userContents = re.ReplaceAllString(userContents, "")
-			contents = contents + "\n" + userContents
+			contents = contents + "\n\n### From user file " + file + ":\n" + userContents
 		}
 	}
 
