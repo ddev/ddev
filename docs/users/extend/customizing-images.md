@@ -40,7 +40,7 @@ These files' content will be appended to ddev's own Dockerfile for each image.
 
 Examples of possible Dockerfiles are given in `.ddev/web-build/Dockerfile.example` and `.ddev/db-build/Dockerfile.example` (these examples are created in your project when you `ddev config` the project).
 
-You can use the .ddev/\*-build/ directory as the Docker "context" directory as well. So for example if a file named README.txt exists in .ddev/web-build, you can use `ADD README.txt /` in the Dockerfile.
+You can use the `.ddev/*-build` directory as the Docker "context" directory as well. So for example if a file named README.txt exists in `.ddev/web-build`, you can use `ADD README.txt /` in the Dockerfile.
 
 An example web image `.ddev/web-build/Dockerfile` might be:
 
