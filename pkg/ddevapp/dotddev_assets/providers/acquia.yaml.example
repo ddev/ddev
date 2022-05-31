@@ -41,8 +41,8 @@ db_pull_command:
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
-    pushd /var/www/html/.ddev/.downloads >/dev/null
-    drush @${project_id} sql-dump -n --alias-path=~/.drush --extra-dump=--no-tablespaces --gzip >db.sql.gz
+    acli pull:db --on-demand --no-import -- @${project_id}
+    mv /tmp/*.sql.gz /var/www/html/.ddev/.downloads/db.sql.gz
 
 files_pull_command:
   command: |
