@@ -31,8 +31,8 @@ To test that a package will do what you want, you can `ddev ssh` and then `sudo 
 
 For more complex requirements, you can add:
 
-* `.ddev/web-build/Dockerfile` 
-* `.ddev/web-build/Dockerfile.*` 
+* `.ddev/web-build/Dockerfile`
+* `.ddev/web-build/Dockerfile.*`
 * `.ddev/db-build/Dockerfile`
 * `.ddev/db-build/Dockerfile.*`
 

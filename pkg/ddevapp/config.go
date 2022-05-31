@@ -921,7 +921,7 @@ RUN export XDEBUG_MODE=off && ( composer self-update %s || composer self-update 
 		for _, file := range files {
 			// We already have the main file, and it's not in the list anyway, so skip when we hit it.
 			// We'll skip the example file
-			if file == userDockerfilePath + "/Dockerfile.example" {
+			if file == userDockerfilePath+"/Dockerfile.example" {
 				continue
 			}
 			orderedFiles = append(orderedFiles, file)
