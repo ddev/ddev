@@ -1113,6 +1113,8 @@ RUN touch /var/tmp/`+"added-by-"+item+".txt"))
 		err = WriteImageDockerfile(app.GetConfigPath(item+"-build/Dockerfile.test1"), []byte(`
 RUN touch /var/tmp/`+"added-by-"+item+"-test1.txt"))
 		assert.NoError(err)
+
+		// The ARG BASE_IMAGE and FROM $BASE_IMAGE are left in here to test legacy behavior
 		err = WriteImageDockerfile(app.GetConfigPath(item+"-build/Dockerfile.test2"), []byte(`
 ARG BASE_IMAGE
 FROM $BASE_IMAGE
