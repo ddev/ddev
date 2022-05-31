@@ -34,8 +34,9 @@ func TestCmdStart(t *testing.T) {
 	// Confirm all sites are running.
 	apps := ddevapp.GetActiveProjects()
 	for _, app := range apps {
-		status, _ := app.SiteStatus()
-		assert.True(status == ddevapp.SiteRunning, "All sites should be running, but %s status: %s", app.GetName(), status)
+		status, statusDesc := app.SiteStatus()
+		assert.Equal(ddevapp.SiteRunning, status, "All sites should be running, but %s status description is: %s", app.GetName(), statusDesc)
+		assert.Equal(ddevapp.SiteRunning, statusDesc, "The status description should be \"running\", but %s status description is: %s", app.GetName(), statusDesc)
 	}
 
 	// Pause all sites.
@@ -54,8 +55,9 @@ func TestCmdStart(t *testing.T) {
 
 	// Confirm all sites are running
 	for _, app := range apps {
-		status, _ := app.SiteStatus()
-		assert.True(status == ddevapp.SiteRunning, "All sites should be running, but %s status: %s", app.GetName(), status)
+		status, statusDesc := app.SiteStatus()
+		assert.Equal(ddevapp.SiteRunning, status, "All sites should be running, but %s status description is: %s", app.GetName(), statusDesc)
+		assert.Equal(ddevapp.SiteRunning, statusDesc, "The status description should be \"running\", but %s status description is: %s", app.GetName(), statusDesc)
 	}
 }
 

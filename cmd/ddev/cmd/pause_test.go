@@ -52,8 +52,9 @@ func TestCmdPauseContainers(t *testing.T) {
 	// Confirm all sites are stopped.
 	apps = ddevapp.GetActiveProjects()
 	for _, app := range apps {
-		status, _ := app.SiteStatus()
-		assert.True(status == ddevapp.SitePaused, "All sites should be stopped, but %s status: %s", app.GetName(), status)
+		status, statusDesc := app.SiteStatus()
+		assert.Equal(ddevapp.SitePaused, status, "All sites should be stopped, but %s status description is: %s", app.GetName(), statusDesc)
+		assert.Equal(ddevapp.SitePaused, statusDesc, "Status description should be \"stopped\", but %s status description is: %s", app.GetName(), statusDesc)
 	}
 
 	// Now put the sites back together so other tests can use them.
