@@ -902,32 +902,17 @@ RUN export XDEBUG_MODE=off && ( composer self-update %s || composer self-update 
 
 	// If there are user dockerfiles, appends its contents
 	if userDockerfilePath != "" {
-		main, err := filepath.Glob(userDockerfilePath + "/Dockerfile")
+		files, err := filepath.Glob(userDockerfilePath + "/Dockerfile*")
 		if err != nil {
 			return err
-		}
-
-		files, err := filepath.Glob(userDockerfilePath + "/Dockerfile.*")
-		if err != nil {
-			return err
-		}
-		orderedFiles := make([]string, 0)
-
-		// Make sure the main file goes first
-		if len(main) == 1 {
-			orderedFiles = append(orderedFiles, main[0])
 		}
 
 		for _, file := range files {
-			// We already have the main file, and it's not in the list anyway, so skip when we hit it.
 			// We'll skip the example file
 			if file == userDockerfilePath+"/Dockerfile.example" {
 				continue
 			}
-			orderedFiles = append(orderedFiles, file)
-		}
 
-		for _, file := range orderedFiles {
 			userContents, err := fileutil.ReadFileIntoString(file)
 			if err != nil {
 				return err
