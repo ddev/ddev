@@ -788,7 +788,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build/Dockerfile"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
+	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
 	if err != nil {
 		return "", err
 	}
@@ -818,7 +818,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg:
 		}
 	}
 
-	err = WriteBuildDockerfile(app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build/Dockerfile"), app.DBImageExtraPackages, "", extraDBContent)
+	err = WriteBuildDockerfile(app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build"), app.DBImageExtraPackages, "", extraDBContent)
 
 	if err != nil {
 		return "", err
@@ -850,7 +850,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg:
 // WriteBuildDockerfile writes a Dockerfile to be used in the
 // docker-compose 'build'
 // It may include the contents of .ddev/<container>-build
-func WriteBuildDockerfile(fullpath string, userDockerfile string, extraPackages []string, composerVersion string, extraContent string) error {
+func WriteBuildDockerfile(fullpath string, userDockerfilePath string, extraPackages []string, composerVersion string, extraContent string) error {
 	// Start with user-built dockerfile if there is one.
 	err := os.MkdirAll(filepath.Dir(fullpath), 0755)
 	if err != nil {
@@ -900,23 +900,48 @@ RUN export XDEBUG_MODE=off && ( composer self-update %s || composer self-update 
 
 	contents = contents + extraContent
 
-	// If there is a user dockerfile, appends its contents
-	if userDockerfile != "" && fileutil.FileExists(userDockerfile) {
-		var userContents string
-
-		userContents, err = fileutil.ReadFileIntoString(userDockerfile)
+	// If there are user dockerfiles, appends its contents
+	if userDockerfilePath != "" {
+		main, err := filepath.Glob(userDockerfilePath + "/Dockerfile")
 		if err != nil {
 			return err
 		}
 
-		// Backward compatible fix, remove unncessary BASE_IMAGE references
-		re, err := regexp.Compile(`ARG BASE_IMAGE.*\n|FROM \$BASE_IMAGE.*\n`)
+		files, err := filepath.Glob(userDockerfilePath + "/Dockerfile.*")
 		if err != nil {
 			return err
 		}
+		orderedFiles := make([]string, 0)
 
-		userContents = re.ReplaceAllString(userContents, "")
-		contents = contents + "\n" + userContents
+		// Make sure the main file goes first
+		if len(main) == 1 {
+			orderedFiles = append(orderedFiles, main[0])
+		}
+
+		for _, file := range files {
+			// We already have the main file, and it's not in the list anyway, so skip when we hit it.
+			// We'll skip the example file
+			if file == userDockerfilePath + "/Dockerfile.example" {
+				continue
+			}
+			orderedFiles = append(orderedFiles, file)
+		}
+
+		for _, file := range orderedFiles {
+			userContents, err := fileutil.ReadFileIntoString(file)
+			if err != nil {
+				return err
+			}
+
+			// Backward compatible fix, remove unncessary BASE_IMAGE references
+			re, err := regexp.Compile(`ARG BASE_IMAGE.*\n|FROM \$BASE_IMAGE.*\n`)
+			if err != nil {
+				return err
+			}
+
+			userContents = re.ReplaceAllString(userContents, "")
+			contents = contents + "\n" + userContents
+		}
 	}
 
 	return WriteImageDockerfile(fullpath, []byte(contents))
