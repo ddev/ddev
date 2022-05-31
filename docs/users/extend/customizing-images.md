@@ -29,13 +29,18 @@ To test that a package will do what you want, you can `ddev ssh` and then `sudo 
 
 ### Adding extra Dockerfiles for webimage and dbimage
 
-For more complex requirements, you can add .ddev/web-build/Dockerfile or .ddev/db-build/Dockerfile.
+For more complex requirements, you can add:
 
-These files' content will be appended to ddev's own Dockerfile.
+* `.ddev/web-build/Dockerfile` 
+* `.ddev/web-build/Dockerfile.*` 
+* `.ddev/db-build/Dockerfile`
+* `.ddev/db-build/Dockerfile.*`
 
-Examples of possible Dockerfiles are given in `.ddev/web-build/Dockerfile.example` and `.ddev/db-build/Dockerfile.example` (These examples are created in your project when you `ddev config` the project.)
+These files' content will be appended to ddev's own Dockerfile for each image.
 
-You can use the .ddev/*-build/ directory as the Docker "context" directory as well. So for example if a file named README.txt exists in .ddev/web-build, you can use `ADD README.txt /` in the Dockerfile.
+Examples of possible Dockerfiles are given in `.ddev/web-build/Dockerfile.example` and `.ddev/db-build/Dockerfile.example` (these examples are created in your project when you `ddev config` the project).
+
+You can use the .ddev/\*-build/ directory as the Docker "context" directory as well. So for example if a file named README.txt exists in .ddev/web-build, you can use `ADD README.txt /` in the Dockerfile.
 
 An example web image `.ddev/web-build/Dockerfile` might be:
 
