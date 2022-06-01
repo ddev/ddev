@@ -17,13 +17,13 @@ var SegmentKey = ""
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "v1.19.2" // Note that this can be overridden by make
+var WebTag = "v1.19.3" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.19.2"
+var BaseDBTag = "v1.19.3"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"
