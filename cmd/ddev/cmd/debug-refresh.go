@@ -27,7 +27,8 @@ var DebugRefreshCmd = &cobra.Command{
 			util.Failed("Failed to get project: %v", err)
 		}
 
-		if app.SiteStatus() != ddevapp.SiteRunning {
+		status, _ := app.SiteStatus()
+		if status != ddevapp.SiteRunning {
 			if err = app.Start(); err != nil {
 				util.Failed("Failed to start %s: %v", app.Name, err)
 			}

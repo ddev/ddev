@@ -346,7 +346,8 @@ func TestMain(m *testing.M) {
 			log.Fatalf("TestMain shutdown: app.Init() failed on site %s in dir %s, err=%v", TestSites[i].Name, TestSites[i].Dir, err)
 		}
 
-		if app.SiteStatus() != ddevapp.SiteStopped {
+		status, _ := app.SiteStatus()
+		if status != ddevapp.SiteStopped {
 			err = app.Stop(true, false)
 			if err != nil {
 				log.Fatalf("TestMain shutdown: app.Stop() failed on site %s, err=%v", TestSites[i].Name, err)
@@ -2633,7 +2634,8 @@ func TestDdevDescribeMissingDirectory(t *testing.T) {
 
 	desc, err := app.Describe(false)
 	assert.NoError(err)
-	assert.Contains(desc["status"], ddevapp.SiteDirMissing, "Status did not include the phrase '%s' when describing a site with missing directories.", ddevapp.SiteDirMissing)
+	assert.Equal(ddevapp.SiteDirMissing, desc["status"])
+	assert.Contains(desc["status_desc"], ddevapp.SiteDirMissing, "Status did not include the phrase '%s' when describing a site with missing directories.", ddevapp.SiteDirMissing)
 	// Move the site directory back to its original location.
 	err = os.Rename(siteCopyDest, site.Dir)
 	assert.NoError(err)
@@ -2654,7 +2656,8 @@ func TestRouterPortsCheck(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
-		if app.SiteStatus() == ddevapp.SiteRunning || app.SiteStatus() == ddevapp.SitePaused {
+		status, _ := app.SiteStatus()
+		if status == ddevapp.SiteRunning || status == ddevapp.SitePaused {
 			err = app.Stop(true, false)
 			assert.NoError(err)
 		}
@@ -2793,7 +2796,8 @@ func TestGetAppsEmpty(t *testing.T) {
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
-		if app.SiteStatus() != ddevapp.SiteStopped {
+		status, _ := app.SiteStatus()
+		if status != ddevapp.SiteStopped {
 			err = app.Stop(true, false)
 			assert.NoError(err)
 		}

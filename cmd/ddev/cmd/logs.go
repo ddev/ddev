@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"strings"
-
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
@@ -33,8 +31,9 @@ ddev logs -s db [projectname]`,
 			util.Failed("GetRequestedProjects() failed:  %v", err)
 		}
 		project := projects[0]
+		status, _ := project.SiteStatus()
 
-		if strings.Contains(project.SiteStatus(), ddevapp.SiteStopped) {
+		if status != ddevapp.SiteRunning {
 			util.Failed("Project is not currently running. Try 'ddev start'.")
 		}
 

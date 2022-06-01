@@ -35,12 +35,9 @@ ddev exec --raw -- ls -lR`,
 			util.Failed("Failed to exec command: %v", err)
 		}
 
-		if strings.Contains(app.SiteStatus(), ddevapp.SiteStopped) {
+		status, _ := app.SiteStatus()
+		if status != ddevapp.SiteRunning {
 			util.Failed("Project is not currently running. Try 'ddev start'.")
-		}
-
-		if strings.Contains(app.SiteStatus(), ddevapp.SitePaused) {
-			util.Failed("Project is paused. Run 'ddev start' to start it.")
 		}
 
 		app.DockerEnv()

@@ -44,8 +44,9 @@ gzip -dc db.sql.gz | ddev import-db`,
 		}
 
 		app := projects[0]
+		status, _ := app.SiteStatus()
 
-		if app.SiteStatus() != ddevapp.SiteRunning {
+		if status != ddevapp.SiteRunning {
 			err = app.Start()
 			if err != nil {
 				util.Failed("Failed to start app %s to import-db: %v", app.Name, err)

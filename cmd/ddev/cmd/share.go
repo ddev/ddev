@@ -27,7 +27,8 @@ ddev share myproject`,
 		}
 		app := apps[0]
 
-		if app.SiteStatus() != ddevapp.SiteRunning {
+		status, _ := app.SiteStatus()
+		if status != ddevapp.SiteRunning {
 			util.Failed("Project is not yet running. Use 'ddev start' first.")
 		}
 

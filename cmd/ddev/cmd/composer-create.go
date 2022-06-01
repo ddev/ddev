@@ -54,7 +54,8 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		}
 
 		// Ensure project is running
-		if app.SiteStatus() != ddevapp.SiteRunning {
+		status, _ := app.SiteStatus()
+		if status != ddevapp.SiteRunning {
 			err = app.Start()
 			if err != nil {
 				util.Failed("Failed to start app %s to run create-project: %v", app.Name, err)

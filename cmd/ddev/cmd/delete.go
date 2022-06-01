@@ -54,7 +54,8 @@ ddev delete --all`,
 
 			// We do the snapshot UNLESS omit-snapshot is set; the project may have to be
 			// started to do the snapshot.
-			if project.SiteStatus() != ddevapp.SiteRunning && !omitSnapshot {
+			status, _ := project.SiteStatus()
+			if status != ddevapp.SiteRunning && !omitSnapshot {
 				util.Warning("project must be started to do the snapshot")
 				err = project.Start()
 				if err != nil {

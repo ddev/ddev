@@ -169,8 +169,10 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		return fmt.Errorf("snapshot '%s' is a DB server '%s' snapshot and is not compatible with the configured ddev DB server version (%s).  Please restore it using the DB version it was created with, and then you can try upgrading the ddev DB version", snapshotName, snapshotDBVersion, currentDBVersion)
 	}
 
+	status, _ := app.SiteStatus()
+
 	// For mariadb/mysql restart container and wait for restore
-	if app.SiteStatus() == SiteRunning || app.SiteStatus() == SitePaused {
+	if status == SiteRunning || status == SitePaused {
 		util.Success("Stopping db container for snapshot restore of '%s'...", snapshotFile)
 		dbContainer, err := GetContainer(app, "db")
 		if err != nil || dbContainer == nil {

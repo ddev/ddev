@@ -79,7 +79,7 @@ func SyncAndTerminateMutagenSession(app *DdevApp) error {
 	}
 	syncName := MutagenSyncName(app.Name)
 
-	projStatus := app.SiteStatus()
+	projStatus, _ := app.SiteStatus()
 
 	if !MutagenSyncExists(app) {
 		return nil

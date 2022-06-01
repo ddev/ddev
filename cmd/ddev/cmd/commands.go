@@ -235,7 +235,8 @@ func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Comman
 	}
 
 	return func(cmd *cobra.Command, cobraArgs []string) {
-		if app.SiteStatus() != ddevapp.SiteRunning {
+		status, _ := app.SiteStatus()
+		if status != ddevapp.SiteRunning {
 			err := app.Start()
 			if err != nil {
 				util.Failed("Failed to start project for custom command: %v", err)
@@ -271,7 +272,8 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name, service string, exec
 		s = s[1:]
 	}
 	return func(cmd *cobra.Command, args []string) {
-		if app.SiteStatus() != ddevapp.SiteRunning {
+		status, _ := app.SiteStatus()
+		if status != ddevapp.SiteRunning {
 			err := app.Start()
 			if err != nil {
 				util.Failed("Failed to start project for custom command: %v", err)
