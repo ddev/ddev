@@ -13,9 +13,9 @@ import (
 var DdevShareCommand = &cobra.Command{
 	Use:   "share [project]",
 	Short: "Share project on the internet via ngrok.",
-	Long:  `Use "ddev share" or add on extra ngrok commands, like "ddev share --subdomain some-subdomain". Although a few ngrok commands are supported directly, any ngrok flag can be added in the ngrok_args section of .ddev/config.yaml. Requires a free or paid account on ngrok.com; use the "ngrok authtoken" command to set up ngrok.`,
+	Long:  `Use "ddev share" or add on extra ngrok commands, like "ddev share --basic-auth username:pass1234". Although a few ngrok commands are supported directly, any ngrok flag can be added in the ngrok_args section of .ddev/config.yaml. Requires a free or paid account on ngrok.com; use the "ngrok authtoken" command to set up ngrok.`,
 	Example: `ddev share
-ddev share --subdomain some-subdomain
+ddev share --basic-auth username:pass1234
 ddev share myproject`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) > 1 {
