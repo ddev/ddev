@@ -1108,6 +1108,18 @@ ARG BASE_IMAGE
 FROM $BASE_IMAGE
 RUN touch /var/tmp/`+"added-by-"+item+".txt"))
 		assert.NoError(err)
+		// Add also Dockerfile.* alternatives
+		// Last one includes previously recommended ARG/FROM that needs to be removed
+		err = WriteImageDockerfile(app.GetConfigPath(item+"-build/Dockerfile.test1"), []byte(`
+RUN touch /var/tmp/`+"added-by-"+item+"-test1.txt"))
+		assert.NoError(err)
+
+		// The ARG BASE_IMAGE and FROM $BASE_IMAGE are left in here to test legacy behavior
+		err = WriteImageDockerfile(app.GetConfigPath(item+"-build/Dockerfile.test2"), []byte(`
+ARG BASE_IMAGE
+FROM $BASE_IMAGE
+RUN touch /var/tmp/`+"added-by-"+item+"-test2.txt"))
+		assert.NoError(err)
 	}
 	// Start and make sure that the packages don't exist already
 	err = app.Start()
@@ -1118,6 +1130,16 @@ RUN touch /var/tmp/`+"added-by-"+item+".txt"))
 		_, _, err = app.Exec(&ExecOpts{
 			Service: item,
 			Cmd:     "ls /var/tmp/added-by-" + item + ".txt",
+		})
+		assert.NoError(err)
+		_, _, err = app.Exec(&ExecOpts{
+			Service: item,
+			Cmd:     "ls /var/tmp/added-by-" + item + "-test1.txt",
+		})
+		assert.NoError(err)
+		_, _, err = app.Exec(&ExecOpts{
+			Service: item,
+			Cmd:     "ls /var/tmp/added-by-" + item + "-test2.txt",
 		})
 		assert.NoError(err)
 	}
