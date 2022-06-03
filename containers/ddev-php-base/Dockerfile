@@ -42,7 +42,7 @@ ENV DDEV_PHP_VERSION=$PHP_DEFAULT_VERSION
 ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3 php7.4 php8.0 php8.1"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 ENV YQ_VERSION=v4.7.1
-ENV DRUSH_VERSION=8.4.10
+ENV DRUSH_VERSION=8.4.8
 ENV NODE_LTS=16
 # composer normally screams about running as root, we don't need that.
 ENV COMPOSER_ALLOW_SUPERUSER 1
