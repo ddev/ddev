@@ -1,0 +1,13 @@
+name: Cancel Previous Workflow
+on:
+  workflow_run:
+    workflows: ["Tests", "PR Build", "Colima tests", "Container tests", "Check docs", "golangci-lint", "Master branch build/release (signed)"]
+    types:
+    - requested
+jobs:
+  cancel:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: styfle/cancel-workflow-action@0.9.1
+      with:
+        workflow_id: ${{ github.event.workflow.id }}
