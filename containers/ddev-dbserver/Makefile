@@ -20,6 +20,9 @@ TEST_TARGETS=$(shell if [ "$(CURRENT_ARCH)" = "amd64" ] ; then \
 container: build
 build: $(BUILD_TARGETS)
 
+mariadb_5.5: mariadb_5.5_amd64
+mariadb_10.0: mariadb_10.0_amd64
+mariadb_10.1: mariadb_10.1_both
 mariadb_10.2: mariadb_10.2_both
 mariadb_10.3: mariadb_10.3_both
 mariadb_10.4: mariadb_10.4_both
