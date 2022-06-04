@@ -14,9 +14,6 @@ env:
   DOCKER_CLI_EXPERIMENTAL: enabled
   DDEV_DEBUG: true
 
-permissions:
-  contents: read
-
 jobs:
   build-most:
     name: Build DDEV executables except Windows
