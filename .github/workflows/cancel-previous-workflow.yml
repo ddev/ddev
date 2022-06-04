@@ -1,7 +1,7 @@
 name: Cancel Previous Workflow
 on:
   workflow_run:
-    workflows: ["Tests", "PR Build", "Colima tests", "Container tests", "Check docs", "golangci-lint", "Master branch build/release (signed)"]
+    workflows: ["Tests", "PR Build", "Colima tests", "Container tests", "Check docs", "golangci-lint", "Master branch build/release (signed)", "CodeQL"]
     types:
     - requested
 jobs:
