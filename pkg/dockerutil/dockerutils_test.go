@@ -193,7 +193,6 @@ func TestContainerWait(t *testing.T) {
 	require.NoError(t, err)
 	_, err = ContainerWait(5, labels)
 	assert.NoError(err)
-	_ = RemoveContainer(cID, 0)
 
 	ddevWebserver := versionconstants.WebImg + ":" + versionconstants.WebTag
 	// If we run a container that *does* have a healthcheck but it's unhealthy
@@ -223,11 +222,9 @@ func TestContainerWait(t *testing.T) {
 	_, err = ContainerWait(3, labels)
 	assert.Error(err)
 	assert.Contains(err.Error(), "timed out without becoming healthy")
-	// Try it again, wait 10s for health; on macOS it usually takes about 2s for ddev-webserver to become healthy
-	_, err = ContainerWait(20, labels)
+	// Try it again, wait 60s for health; on macOS it usually takes about 2s for ddev-webserver to become healthy
+	_, err = ContainerWait(60, labels)
 	assert.NoError(err)
-	_ = RemoveContainer(cID, 0)
-
 }
 
 // TestComposeCmd tests execution of docker-compose commands.
