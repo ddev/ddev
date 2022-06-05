@@ -1,4 +1,4 @@
-name: Cancel Previous Workflow
+name: Cancel Redundant Workflow
 on:
   workflow_run:
     workflows: ["Tests", "PR Build", "Colima tests", "Container tests", "Check docs", "golangci-lint", "Master branch build/release (signed)", "CodeQL"]

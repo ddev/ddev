@@ -2,7 +2,7 @@
 
 ## Testing latest commits
 
-You can download the latest artifacts from the master branch from [link](https://nightly.link/drud/ddev/workflows/master-build/master). On macOS and Linux you can `brew unlink ddev && brew install drud/ddev/ddev --HEAD --fetch-HEAD` to get the latest commit of ddev, even if it's not yet in a release. 
+You can download the latest artifacts from the master branch from [link](https://nightly.link/drud/ddev/workflows/master-build/master). On macOS and Linux you can `brew unlink ddev && brew install drud/ddev/ddev --HEAD --fetch-HEAD` to get the latest commit of ddev, even if it's not yet in a release.
 
 To download the latest version, you can visit the [master-build](https://github.com/drud/ddev/actions/workflows/master-build.yml) workflow and choose the latest item (or the one that matches a commit you want to test). You'll see the artifacts for each OS there on the bottom of the page.
 
@@ -12,7 +12,7 @@ And of course you can just see the latest build in action by visiting ddev on [g
 
 Each build of a PR has artifacts created in github, so you can click the details of the [PR Build](https://github.com/drud/ddev/actions/workflows/pr-build.yml) test, choose the PR you want to work with, and download the artifacts you need there.
 
-After you download and unzip the appropriate binary, you can place it in your $PATH. The easiest way to do this if you're using homebrew is `brew unlink ddev` and then `unzip ddev.zip && chmod +x ddev && mv ddev /usr/local/bin/ddev`. 
+After you download and unzip the appropriate binary, you can place it in your $PATH. The easiest way to do this if you're using homebrew is `brew unlink ddev` and then `unzip ddev.zip && chmod +x ddev && mv ddev /usr/local/bin/ddev`.
 
 You can verify that the replacement worked via `ddev -v`. The output should be something like `ddev version v1.19.1-42-g5334d3c1` (instead of the regular `ddev version v1.19.1`).
 
@@ -66,22 +66,30 @@ If you make changes to a docker image (like ddev-webserver), it won't have any e
 * Push an image with a specific tag by going to the image directory (like containers/ddev-webserver) by just doing `make container VERSION=<branchname>` in the containers/ddev-webserver directory.
 * Multi-arch images require you to have a buildx builder, so `docker buildx create --name ddev-builder-multi --use`
 * You can't push until you `docker login`.
-* Push a container to hub.docker.com. Push with the tag that matches your branch. Pushing to `<yourorg>/ddev-webserver` repo is easy to accomplish with `make push DOCKER_ORG=<yourorg> VERSION=<branchname>` **in the container directory**. You might have to use other techniques to push to another repo. 
+* Push a container to hub.docker.com. Push with the tag that matches your branch. Pushing to `<yourorg>/ddev-webserver` repo is easy to accomplish with `make push DOCKER_ORG=<yourorg> VERSION=<branchname>` **in the container directory**. You might have to use other techniques to push to another repo.
 * Update pkg/version/version.go with the WebImg and WebTag that relate to the docker image you pushed.
 
 ### Local builds and pushes
 
 * If you just want to work locally and do a quick build for your own architecture, you can:
     * `make VERSION=<version>`
-    * for `ddev-dbserver`: `make mariadb_10.3_both VERSION=<version>` etc.
+    * for `ddev-dbserver`: `make mariadb_10.3 VERSION=<version>` etc.
 
 ### Pushes using GitHub Actions
 
 To manually push using GitHub Actions,
 
+#### For most images
+
 * Visit [Actions->Push Tagged Image](https://github.com/drud/ddev/actions/workflows/push-tagged-image.yml)
 * Click "Run workflow" in the blue band near the top.
 * Choose the branch, usually `master` and then the image to be pushed, `ddev-webserver`, `ddev-dbserver`, etc. Also you can use `all` to build and push all of them. Include a tag for the pushed image and GitHub will do all the work.
+
+#### For ddev-dbserver
+
+* Visit [Actions->Push Tagged db Image](https://github.com/drud/ddev/actions/workflows/push-tagged-dbimage.yml)
+* Click "Run workflow" in the blue band near the top.
+* Choose the branch, usually `master`. Include a tag for the pushed image and GitHub will do all the work.
 
 ## Building
 

@@ -1,0 +1,55 @@
+name: Push tagged db image
+defaults:
+  run:
+    shell: bash
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Base tag for pushed dbimage (v1.19.4 for example)'
+        required: true
+        default: ""
+      debug_enabled:
+        description: 'Enable debug mode'
+        required: false
+        default: false
+env:
+  REGISTRY: docker.io
+  DOCKER_ORG: drud
+  TAG: "${{ github.event.inputs.tag }}"
+
+permissions:
+  contents: read
+
+jobs:
+  push-tagged-dbimage:
+    name: "push tagged dbimage"
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        dbtype: [mariadb_5.5, mariadb_10.0, mariadb_10.1, mariadb_10.2, mariadb_10.3, mariadb_10.4, mariadb_10.5, mariadb_10.6, mariadb_10.7, mysql_5.5, mysql_5.6, mysql_5.7, mysql_8.0]
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Login to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      with:
+        limit-access-to-actor: true
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+    - name: Push ${{  matrix.dbtype }}:${{ github.event.inputs.tag }}
+      run: |
+        cd "containers/ddev-dbserver"
+        make ${{ matrix.dbtype }} PUSH=true VERSION="${TAG}"
+
