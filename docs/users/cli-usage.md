@@ -692,7 +692,7 @@ All snapshots of a project can be removed with `ddev snapshot --cleanup`. A sing
 To see all existing snapshots of a project use `ddev snapshot --list`.
 All existing snapshots of all projects can be listed by adding the `--all` option to the command (`ddev snapshot --list --all`).
 
-Note that with very large snapshots or perhaps with slower systems, the default timeout to wait for the snapshot restore to commplete may not be adequate. In these cases you can increase the timeout by setting `default_container_timeout` to a higher value. Also, if it does time out on you, that doesn't mean it has actually failed. You can watch the snapshot restore complete with `ddev logs -s db`.
+Note that with very large snapshots or perhaps with slower systems, the default timeout to wait for the snapshot restore to complete may not be adequate. In these cases you can increase the timeout by setting `default_container_timeout` to a higher value. Also, if it does time out on you, that doesn't mean it has actually failed. You can watch the snapshot restore complete with `ddev logs -s db`.
 
 ## Interacting with your project
 
