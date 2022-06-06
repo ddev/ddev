@@ -91,7 +91,8 @@ func StartDdevRouter() error {
 
 	// ensure we have a happy router
 	label := map[string]string{"com.docker.compose.service": "ddev-router"}
-	logOutput, err := dockerutil.ContainerWait(containerWaitTimeout, label)
+	routerWaitTimeout := 60
+	logOutput, err := dockerutil.ContainerWait(routerWaitTimeout, label)
 	if err != nil {
 		return fmt.Errorf("ddev-router failed to become ready; debug with 'docker logs ddev-router'; logOutput=%s, err=%v", logOutput, err)
 	}

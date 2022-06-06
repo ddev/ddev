@@ -1299,6 +1299,33 @@ func (app *DdevApp) FindAllImages() ([]string, error) {
 	return images, nil
 }
 
+// FindMaxTimeout looks through all services and returns the max timeout found
+// Defaults to 120s
+func (app *DdevApp) FindMaxTimeout() int {
+	const defaultTimeout = 120
+	maxTimeout := defaultTimeout
+	if app.ComposeYaml == nil {
+		return defaultTimeout
+	}
+	if y, ok := app.ComposeYaml["services"]; ok {
+		for _, v := range y.(map[interface{}]interface{}) {
+			if i, ok := v.(map[interface{}]interface{})["healthcheck"]; ok {
+				if timeout, ok := i.(map[interface{}]interface{})["timeout"]; ok {
+					duration, err := time.ParseDuration(timeout.(string))
+					if err != nil {
+						continue
+					}
+					t := int(duration.Seconds())
+					if t > maxTimeout {
+						maxTimeout = t
+					}
+				}
+			}
+		}
+	}
+	return maxTimeout
+}
+
 // CheckExistingAppInApproot looks to see if we already have a project in this approot with different name
 func (app *DdevApp) CheckExistingAppInApproot() error {
 	pList := globalconfig.GetGlobalProjectList()
@@ -1864,7 +1891,7 @@ func (app *DdevApp) WaitForServices() error {
 	labels := map[string]string{
 		"com.ddev.site-name": app.GetName(),
 	}
-	waitTime := containerWaitTimeout
+	waitTime := app.FindMaxTimeout()
 	_, err := dockerutil.ContainerWait(waitTime, labels)
 	if err != nil {
 		return fmt.Errorf("timed out waiting for containers (%v) to start: err=%v", requiredContainers, err)
@@ -1879,7 +1906,7 @@ func (app *DdevApp) Wait(requiredContainers []string) error {
 			"com.ddev.site-name":         app.GetName(),
 			"com.docker.compose.service": containerType,
 		}
-		waitTime := containerWaitTimeout
+		waitTime := app.FindMaxTimeout()
 		logOutput, err := dockerutil.ContainerWait(waitTime, labels)
 		if err != nil {
 			return fmt.Errorf("%s container failed: log=%s, err=%v", containerType, logOutput, err)
@@ -1892,7 +1919,7 @@ func (app *DdevApp) Wait(requiredContainers []string) error {
 // WaitByLabels waits for containers found by list of labels to be
 // ready
 func (app *DdevApp) WaitByLabels(labels map[string]string) error {
-	waitTime := containerWaitTimeout
+	waitTime := app.FindMaxTimeout()
 	err := dockerutil.ContainersWait(waitTime, labels)
 	if err != nil {
 		return fmt.Errorf("container(s) failed to become healthy after %d seconds. This may be just a problem with the healthcheck and not a functional problem. %v", waitTime, err)
