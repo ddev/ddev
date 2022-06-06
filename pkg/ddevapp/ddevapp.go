@@ -125,7 +125,7 @@ type DdevApp struct {
 	DisableSettingsManagement bool                   `yaml:"disable_settings_management,omitempty"`
 	WebEnvironment            []string               `yaml:"web_environment"`
 	NodeJSVersion             string                 `yaml:"nodejs_version"`
-	DefaultContainerTimeout   int                    `yaml:"default_container_timeout"`
+	DefaultContainerTimeout   string                 `yaml:"default_container_timeout,omitempty"`
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
@@ -1289,7 +1289,6 @@ func (app *DdevApp) FindAllImages() ([]string, error) {
 					}
 				}
 				images = append(images, i.(string))
-
 			}
 		}
 	}
@@ -1298,11 +1297,12 @@ func (app *DdevApp) FindAllImages() ([]string, error) {
 }
 
 // FindMaxTimeout looks through all services and returns the max timeout found
-// Defaults to 120s
+// Defaults to 120
 func (app *DdevApp) FindMaxTimeout() int {
-	maxTimeout := app.DefaultContainerTimeout
+	const defaultContainerTimeout = 120
+	maxTimeout := defaultContainerTimeout
 	if app.ComposeYaml == nil {
-		return app.DefaultContainerTimeout
+		return defaultContainerTimeout
 	}
 	if y, ok := app.ComposeYaml["services"]; ok {
 		for _, v := range y.(map[interface{}]interface{}) {

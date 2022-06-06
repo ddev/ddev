@@ -628,7 +628,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	}
 
 	if cmd.Flag("default-container-timeout").Changed {
-		app.DefaultContainerTimeout, _ = cmd.Flags().GetInt("default-container-timeout")
+		app.DefaultContainerTimeout, _ = cmd.Flags().GetString("default-container-timeout")
 	}
 
 	if cmd.Flag("database").Changed {
