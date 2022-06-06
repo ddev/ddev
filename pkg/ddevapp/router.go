@@ -91,7 +91,13 @@ func StartDdevRouter() error {
 
 	// ensure we have a happy router
 	label := map[string]string{"com.docker.compose.service": "ddev-router"}
+	// Normally the router comes right up, but when
+	// it has to do let's encrypt updates, it can take
+	// some time.
 	routerWaitTimeout := 60
+	if globalconfig.DdevGlobalConfig.UseLetsEncrypt {
+		routerWaitTimeout = 180
+	}
 	logOutput, err := dockerutil.ContainerWait(routerWaitTimeout, label)
 	if err != nil {
 		return fmt.Errorf("ddev-router failed to become ready; debug with 'docker logs ddev-router'; logOutput=%s, err=%v", logOutput, err)
