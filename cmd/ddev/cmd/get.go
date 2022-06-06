@@ -25,11 +25,12 @@ import (
 )
 
 type installDesc struct {
-	Name               string   `yaml:"name"`
-	ProjectFiles       []string `yaml:"project_files"`
-	GlobalFiles        []string `yaml:"global_files,omitempty"`
-	PreInstallActions  []string `yaml:"pre_install_actions,omitempty"`
-	PostInstallActions []string `yaml:"post_install_actions,omitempty"`
+	Name               string            `yaml:"name"`
+	ProjectFiles       []string          `yaml:"project_files"`
+	GlobalFiles        []string          `yaml:"global_files,omitempty"`
+	PreInstallActions  []string          `yaml:"pre_install_actions,omitempty"`
+	PostInstallActions []string          `yaml:"post_install_actions,omitempty"`
+	YamlReadFiles      map[string]string `yaml:"yaml_read_files"`
 }
 
 // Get implements the ddev get command
@@ -145,6 +146,25 @@ ddev get --list --all
 			util.Failed("Unable to parse %v: %v", yamlFile, err)
 		}
 
+		yamlMap := make(map[string]map[interface{}]interface{})
+		for name, f := range s.YamlReadFiles {
+			f := os.ExpandEnv(string(f))
+			src := filepath.Join(extractedDir, f)
+
+			contents, err := os.ReadFile(src)
+			if err != nil {
+				util.Failed("unable to read file %s (%v)", src, err)
+			}
+			c := os.ExpandEnv(string(contents))
+			contents = []byte(c)
+
+			itemMap := make(map[interface{}]interface{})
+			err = yaml.Unmarshal(contents, &itemMap)
+			if err != nil {
+				util.Failed("unable to unmarshal %s: %v", contents, err)
+			}
+			yamlMap[name] = itemMap
+		}
 		for _, action := range s.PreInstallActions {
 			action := os.ExpandEnv(action)
 			out, err := exec.RunHostCommand(bash, "-c", action)
@@ -201,6 +221,7 @@ ddev get --list --all
 		if argType == "github" {
 			util.Success("Please read instructions for this addon at the source repo at\nhttps://github.com/%v/%v\nPlease file issues and create pull requests there to improve it.", owner, repo)
 		}
+
 	},
 }
 
