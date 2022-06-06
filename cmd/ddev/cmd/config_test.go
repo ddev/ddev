@@ -197,7 +197,7 @@ func TestConfigSetValues(t *testing.T) {
 	timezone := "America/Chicago"
 	webEnv := "SOMEENV=some+val"
 	nodejsVersion := "14"
-	defaultContainerTimeout := 100
+	defaultContainerTimeout := 300
 
 	args := []string{
 		"config",
@@ -279,7 +279,7 @@ func TestConfigSetValues(t *testing.T) {
 	require.NotEmpty(t, app.WebEnvironment)
 	assert.Equal(webEnv, app.WebEnvironment[0])
 	assert.Equal(nodejsVersion, app.NodeJSVersion)
-	assert.Equal(defaultContainerTimeout, app.DefaultContainerTimeout)
+	assert.Equal(strconv.Itoa(defaultContainerTimeout), app.DefaultContainerTimeout)
 
 	// Test that container images, working dirs and composer root dir can be unset with default flags
 	args = []string{

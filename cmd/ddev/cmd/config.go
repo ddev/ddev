@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/drud/ddev/pkg/globalconfig"
@@ -628,7 +629,11 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	}
 
 	if cmd.Flag("default-container-timeout").Changed {
-		app.DefaultContainerTimeout, _ = cmd.Flags().GetString("default-container-timeout")
+		t, _ := cmd.Flags().GetInt("default-container-timeout")
+		app.DefaultContainerTimeout = strconv.Itoa(t)
+		if app.DefaultContainerTimeout == "" {
+			app.DefaultContainerTimeout = nodeps.DefaultDefaultContainerTimeout
+		}
 	}
 
 	if cmd.Flag("database").Changed {
