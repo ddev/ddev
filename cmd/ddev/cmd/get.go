@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/Masterminds/sprig/v3"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -21,7 +22,9 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
+	"text/template"
 )
 
 type installDesc struct {
@@ -146,7 +149,7 @@ ddev get --list --all
 			util.Failed("Unable to parse %v: %v", yamlFile, err)
 		}
 
-		yamlMap := make(map[string]map[interface{}]interface{})
+		yamlMap := make(map[interface{}]interface{})
 		for name, f := range s.YamlReadFiles {
 			f := os.ExpandEnv(string(f))
 			src := filepath.Join(extractedDir, f)
@@ -165,8 +168,22 @@ ddev get --list --all
 			}
 			yamlMap[name] = itemMap
 		}
+
+		templateVars := traverseYaml("", yamlMap)
 		for _, action := range s.PreInstallActions {
 			action := os.ExpandEnv(action)
+			t, err := template.New("preInstall").Funcs(sprig.TxtFuncMap()).Parse(action)
+			if err != nil {
+				util.Failed("could not parse action '%s': %v", action, err)
+			}
+
+			var doc bytes.Buffer
+			err = t.Execute(&doc, templateVars)
+			if err != nil {
+				util.Failed("could not parse/execute action '%s': %v", action, err)
+			}
+			action = doc.String()
+
 			out, err := exec.RunHostCommand(bash, "-c", action)
 			if err != nil {
 				util.Failed("Unable to run action %v: %v, output=%s", action, err, out)
@@ -303,4 +320,39 @@ func listAvailable(officialOnly bool) ([]github.Repository, error) {
 		return nil, fmt.Errorf("No add-ons found")
 	}
 	return repos.Repositories, err
+}
+
+func traverseYaml(level string, topm map[interface{}]interface{}) map[string]string {
+	res := map[string]string{}
+
+	for yk, v := range topm {
+		switch v.(type) {
+		case string:
+			res[keyName(level, yk.(string))] = v.(string)
+		case int:
+			res[keyName(level, yk.(string))] = strconv.Itoa(v.(int))
+		case map[interface{}]interface{}:
+			m := traverseYaml(keyName(level, yk.(string)), v.(map[interface{}]interface{}))
+			// Merge returned map with the one we're keeping
+			for k, v := range m {
+				res[k] = v
+			}
+		case []interface{}:
+			for i, e := range v.([]interface{}) {
+				res[keyName(level+"."+yk.(string), strconv.Itoa(i))] = e.(string)
+			}
+		case bool:
+			res[keyName(level, yk.(string))] = strconv.FormatBool(v.(bool))
+		default:
+			util.Warning("Unhandled yaml type for %s: %T", keyName(level, yk.(string)), v)
+		}
+	}
+	return res
+}
+
+func keyName(level string, val string) string {
+	if level != "" {
+		return level + "." + val
+	}
+	return val
 }
