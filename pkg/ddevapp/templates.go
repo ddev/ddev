@@ -179,6 +179,10 @@ const ConfigInstructions = `
 # will be available on the local network if the host firewall
 # allows it.
 
+# default_container_timeout: 120
+# The default time that ddev waits for all containers to become ready can be increased from
+# the default 120. This helps in importing huge databases, for example.
+
 # Many ddev commands can be extended to run tasks before or after the
 # ddev command is executed, for example "post-start", "post-import-db",
 # "pre-composer", "post-composer"

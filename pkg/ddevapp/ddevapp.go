@@ -36,9 +36,6 @@ import (
 	docker "github.com/fsouza/go-dockerclient"
 )
 
-// containerWaitTimeout is the max time we wait for all containers to become ready.
-var containerWaitTimeout = 61
-
 // SiteRunning defines the string used to denote running sites.
 const SiteRunning = "running"
 
@@ -128,6 +125,7 @@ type DdevApp struct {
 	DisableSettingsManagement bool                   `yaml:"disable_settings_management,omitempty"`
 	WebEnvironment            []string               `yaml:"web_environment"`
 	NodeJSVersion             string                 `yaml:"nodejs_version"`
+	DefaultContainerTimeout   int                    `yaml:"default_container_timeout"`
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
@@ -1302,10 +1300,10 @@ func (app *DdevApp) FindAllImages() ([]string, error) {
 // FindMaxTimeout looks through all services and returns the max timeout found
 // Defaults to 120s
 func (app *DdevApp) FindMaxTimeout() int {
-	const defaultTimeout = 120
-	maxTimeout := defaultTimeout
+	const defaultContainerTimeout = 120
+	maxTimeout := defaultContainerTimeout
 	if app.ComposeYaml == nil {
-		return defaultTimeout
+		return defaultContainerTimeout
 	}
 	if y, ok := app.ComposeYaml["services"]; ok {
 		for _, v := range y.(map[interface{}]interface{}) {

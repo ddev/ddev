@@ -645,6 +645,7 @@ type composeYAMLVars struct {
 	HostUploadDir             string
 	GitDirMount               bool
 	IsGitpod                  bool
+	DefaultContainerTimeout   int
 }
 
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
@@ -726,6 +727,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		ContainerUploadDir:    app.GetContainerUploadDirFullPath(),
 		GitDirMount:           false,
 		IsGitpod:              nodeps.IsGitpod(),
+		// Default max time we wait for containers to be healthy
+		DefaultContainerTimeout: app.DefaultContainerTimeout,
 	}
 	// We don't want to bind-mount git dir if it doesn't exist
 	if fileutil.IsDirectory(filepath.Join(app.AppRoot, ".git")) {

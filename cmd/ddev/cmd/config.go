@@ -323,6 +323,7 @@ func init() {
 	ConfigCommand.Flags().Bool("bind-all-interfaces", false, `Bind host ports on all interfaces, not just on localhost network interface`)
 	ConfigCommand.Flags().String("database", "", fmt.Sprintf(`Specify the database type:version to use. Defaults to mariadb:%s`, nodeps.MariaDBDefaultVersion))
 	ConfigCommand.Flags().String("nodejs-version", "", fmt.Sprintf(`Specify the nodejs version to use if you don't want the default NodeJS %s`, nodeps.NodeJSDefault))
+	ConfigCommand.Flags().Int("default-container-timeout", 120, `default time in seconds that ddev waits for all containers to become ready on start`)
 	RootCmd.AddCommand(ConfigCommand)
 
 	// Add hidden pantheon subcommand for people who have it in their fingers
@@ -624,6 +625,10 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	if cmd.Flag("bind-all-interfaces").Changed {
 		app.BindAllInterfaces, _ = cmd.Flags().GetBool("bind-all-interfaces")
+	}
+
+	if cmd.Flag("default-container-timeout").Changed {
+		app.DefaultContainerTimeout, _ = cmd.Flags().GetInt("default-container-timeout")
 	}
 
 	if cmd.Flag("database").Changed {
