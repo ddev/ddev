@@ -1792,6 +1792,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_PROJECT":                  app.Name,
 		"DDEV_WEBIMAGE":                 app.WebImage,
 		"DDEV_APPROOT":                  app.AppRoot,
+		"DDEV_DATABASE":                 app.Database.Type + ":" + app.Database.Version,
 		"DDEV_FILES_DIR":                app.GetContainerUploadDirFullPath(),
 
 		"DDEV_HOST_DB_PORT":          dbPortStr,
@@ -1813,6 +1814,8 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_XDEBUG_ENABLED":        strconv.FormatBool(app.XdebugEnabled),
 		"DDEV_PRIMARY_URL":           app.GetPrimaryURL(),
 		"DOCKER_SCAN_SUGGEST":        "false",
+		"GOOS":                       runtime.GOOS,
+		"GOARCH":                     runtime.GOARCH,
 		"IS_DDEV_PROJECT":            "true",
 		"IS_GITPOD":                  isGitpod,
 		"IS_WSL2":                    isWSL2,

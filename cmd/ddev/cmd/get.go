@@ -146,14 +146,18 @@ ddev get --list --all
 		}
 
 		for _, action := range s.PreInstallActions {
+			action := os.ExpandEnv(action)
 			out, err := exec.RunHostCommand(bash, "-c", action)
 			if err != nil {
 				util.Failed("Unable to run action %v: %v, output=%s", action, err, out)
 			}
-			output.UserOut.Printf("Executed pre-install action %v, output=%s.", action, out)
+			if !strings.Contains(action, `#ddev-nodisplay`) {
+				output.UserOut.Printf("Executed pre-install action %v, output=%s.", action, out)
+			}
 		}
 
 		for _, file := range s.ProjectFiles {
+			file := os.ExpandEnv(file)
 			src := filepath.Join(extractedDir, file)
 			dest := app.GetConfigPath(file)
 
@@ -165,6 +169,7 @@ ddev get --list --all
 		}
 		globalDotDdev := filepath.Join(globalconfig.GetGlobalDdevDir())
 		for _, file := range s.GlobalFiles {
+			file := os.ExpandEnv(file)
 			src := filepath.Join(extractedDir, file)
 			dest := filepath.Join(globalDotDdev, file)
 			err = copy.Copy(src, dest)
@@ -183,11 +188,14 @@ ddev get --list --all
 		}
 
 		for _, action := range s.PostInstallActions {
+			action := os.ExpandEnv(action)
 			out, err := exec.RunHostCommand(bash, "-c", action)
 			if err != nil {
 				util.Failed("Unable to run action %v: %v, output=%s", action, err, out)
 			}
-			output.UserOut.Printf("Executed post-install action %v.", action)
+			if !strings.Contains(action, `#ddev-nodisplay`) {
+				output.UserOut.Printf("Executed post-install action %v.", action)
+			}
 		}
 		util.Success("Downloaded add-on %s, use `ddev restart` to enable.", sourceRepoArg)
 		if argType == "github" {
