@@ -251,7 +251,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 			fmt.Print(".")
 		}
 	}
-	util.Success("\nDatabase snapshot %s was restored in %v", snapshotName, time.Since(start))
+	util.Success("\nDatabase snapshot %s was restored in %vs", snapshotName, int(time.Since(start).Seconds()))
 	err = app.ProcessHooks("post-restore-snapshot")
 	if err != nil {
 		return fmt.Errorf("failed to process post-restore-snapshot hooks: %v", err)
