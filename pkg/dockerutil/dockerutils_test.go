@@ -223,8 +223,8 @@ func TestContainerWait(t *testing.T) {
 	assert.Error(err)
 	assert.Contains(err.Error(), "timed out without becoming healthy")
 	// Try it again, wait 60s for health; on macOS it usually takes about 2s for ddev-webserver to become healthy
-	_, err = ContainerWait(60, labels)
-	assert.NoError(err)
+	out, err := ContainerWait(60, labels)
+	assert.NoError(err, "output=%s", out)
 }
 
 // TestComposeCmd tests execution of docker-compose commands.
