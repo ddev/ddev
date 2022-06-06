@@ -780,7 +780,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	extraWebContent := fmt.Sprintf("\nRUN chmod 600 ~%s/.pgpass ~%s/.my.cnf", userName, userName)
 	extraWebContent = extraWebContent + fmt.Sprintf("\nENV NVM_DIR=/home/%s/.nvm", userName)
 	if app.NodeJSVersion != nodeps.NodeJSDefault {
-		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN (apt-get remove -y nodejs || true) && (apt purge nodejs || true) && curl -sSL --fail https://deb.nodesource.com/setup_%s.x | bash - && apt-get install nodejs && npm config set unsafe-perm true && npm install --global gulp-cli yarn", app.NodeJSVersion)
+		extraWebContent = extraWebContent + "\nRUN (apt-get remove -y nodejs || true) && (apt purge nodejs || true)"
+		// Download of setup_*.sh seems to fail a LOT, probably a problem on their end. So try it twice
+		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN curl -sSL --fail https://deb.nodesource.com/setup_%s.x >/tmp/setup_node.sh ||  curl -sSL --fail https://deb.nodesource.com/setup_%s.sh >/tmp/setup_node.sh", app.NodeJSVersion, app.NodeJSVersion)
+		extraWebContent = extraWebContent + "\nRUN bash /tmp/setup_node.sh && apt-get install nodejs && npm config set unsafe-perm true && npm install --global gulp-cli yarn"
 	}
 
 	// Assets in the web-build directory copied to .webimageBuild so .webimageBuild can be "context"

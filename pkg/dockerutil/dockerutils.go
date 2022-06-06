@@ -261,15 +261,16 @@ func NetExists(client *docker.Client, name string) bool {
 // Returns logoutput, error, returns error if not "healthy"
 func ContainerWait(waittime int, labels map[string]string) (string, error) {
 
-	timeoutChan := time.After(time.Duration(waittime) * time.Second)
+	timeoutChan := time.NewTimer(time.Duration(waittime) * time.Second)
 	tickChan := time.NewTicker(500 * time.Millisecond)
 	defer tickChan.Stop()
+	defer timeoutChan.Stop()
 
 	status := ""
 
 	for {
 		select {
-		case <-timeoutChan:
+		case <-timeoutChan.C:
 			return "", fmt.Errorf("health check timed out: labels %v timed out without becoming healthy, status=%v", labels, status)
 
 		case <-tickChan.C:
