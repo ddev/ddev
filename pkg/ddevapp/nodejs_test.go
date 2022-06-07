@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/testcommon"
@@ -17,6 +18,9 @@ import (
 
 // TestNodeJSVersions whether we can configure nodejs versions
 func TestNodeJSVersions(t *testing.T) {
+	if dockerutil.IsColima() {
+		t.Skip("Skipping on Colima, it just has too many problems there")
+	}
 	assert := asrt.New(t)
 
 	site := TestSites[0]
