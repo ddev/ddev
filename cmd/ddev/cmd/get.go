@@ -149,7 +149,7 @@ ddev get --list --all
 			util.Failed("Unable to parse %v: %v", yamlFile, err)
 		}
 
-		yamlMap := make(map[interface{}]interface{})
+		yamlMap := make(map[string]interface{})
 		for name, f := range s.YamlReadFiles {
 			f := os.ExpandEnv(string(f))
 			src := filepath.Join(extractedDir, f)
@@ -161,7 +161,7 @@ ddev get --list --all
 			c := os.ExpandEnv(string(contents))
 			contents = []byte(c)
 
-			itemMap := make(map[interface{}]interface{})
+			itemMap := make(map[string]interface{})
 			err = yaml.Unmarshal(contents, &itemMap)
 			if err != nil {
 				util.Failed("unable to unmarshal %s: %v", contents, err)
@@ -169,7 +169,8 @@ ddev get --list --all
 			yamlMap[name] = itemMap
 		}
 
-		templateVars := traverseYaml("", yamlMap)
+		//templateVars := traverseYaml("", yamlMap)
+		dict := yamlToDict(yamlMap)
 		for _, action := range s.PreInstallActions {
 			action := os.ExpandEnv(action)
 			t, err := template.New("preInstall").Funcs(sprig.TxtFuncMap()).Parse(action)
@@ -178,7 +179,7 @@ ddev get --list --all
 			}
 
 			var doc bytes.Buffer
-			err = t.Execute(&doc, templateVars)
+			err = t.Execute(&doc, dict)
 			if err != nil {
 				util.Failed("could not parse/execute action '%s': %v", action, err)
 			}
@@ -355,4 +356,45 @@ func keyName(level string, val string) string {
 		return level + "." + val
 	}
 	return val
+}
+
+func yamlToDict(topm interface{}) map[string]interface{} {
+	res := make(map[string]interface{})
+
+	switch topm.(type) {
+	case map[interface{}]interface{}:
+		for yk, v := range topm.(map[interface{}]interface{}) {
+			ys := yk.(string)
+			switch v.(type) {
+			case string:
+				res[ys] = v
+			case map[interface{}]interface{}:
+				res[ys] = yamlToDict(v)
+			case map[string]interface{}:
+				res[ys] = yamlToDict(v)
+			case interface{}:
+				res[ys] = v
+			default:
+				fmt.Print("don't know")
+			}
+		}
+	case map[string]interface{}:
+		for yk, v := range topm.(map[string]interface{}) {
+			switch v.(type) {
+			case string:
+				res[yk] = v
+			case map[interface{}]interface{}:
+				res[yk] = yamlToDict(v)
+			case map[string]interface{}:
+				res[yk] = yamlToDict(v)
+			case interface{}:
+				res[yk] = v
+			default:
+				fmt.Print("don't know")
+			}
+		}
+	default:
+		fmt.Sprintf("not sure")
+	}
+	return res
 }
