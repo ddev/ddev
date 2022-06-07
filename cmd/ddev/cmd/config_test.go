@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/drud/ddev/pkg/fileutil"
@@ -196,6 +197,7 @@ func TestConfigSetValues(t *testing.T) {
 	timezone := "America/Chicago"
 	webEnv := "SOMEENV=some+val"
 	nodejsVersion := "14"
+	defaultContainerTimeout := 300
 
 	args := []string{
 		"config",
@@ -228,6 +230,7 @@ func TestConfigSetValues(t *testing.T) {
 		"--project-tld", projectTLD,
 		"--web-environment", webEnv,
 		"--nodejs-version", nodejsVersion,
+		"--default-container-timeout", strconv.FormatInt(int64(defaultContainerTimeout), 10),
 		fmt.Sprintf("--use-dns-when-possible=%t", useDNSWhenPossible),
 		"--timezone", timezone,
 	}
@@ -276,6 +279,7 @@ func TestConfigSetValues(t *testing.T) {
 	require.NotEmpty(t, app.WebEnvironment)
 	assert.Equal(webEnv, app.WebEnvironment[0])
 	assert.Equal(nodejsVersion, app.NodeJSVersion)
+	assert.Equal(strconv.Itoa(defaultContainerTimeout), app.DefaultContainerTimeout)
 
 	// Test that container images, working dirs and composer root dir can be unset with default flags
 	args = []string{

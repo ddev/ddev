@@ -170,10 +170,12 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 	}
 
 	status, _ := app.SiteStatus()
+	start := time.Now()
 
 	// For mariadb/mysql restart container and wait for restore
 	if status == SiteRunning || status == SitePaused {
 		util.Success("Stopping db container for snapshot restore of '%s'...", snapshotFile)
+		util.Success("With large snapshots this may take a long time.\nThis will normally time out after %d seconds (max of all container timeouts)\nbut you can increase it by changing default_container_timeout.", app.FindMaxTimeout())
 		dbContainer, err := GetContainer(app, "db")
 		if err != nil || dbContainer == nil {
 			return fmt.Errorf("no container found for db; err=%v", err)
@@ -249,7 +251,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 			fmt.Print(".")
 		}
 	}
-	util.Success("\nRestored database snapshot %s", snapshotName)
+	util.Success("\nDatabase snapshot %s was restored in %vs", snapshotName, int(time.Since(start).Seconds()))
 	err = app.ProcessHooks("post-restore-snapshot")
 	if err != nil {
 		return fmt.Errorf("failed to process post-restore-snapshot hooks: %v", err)

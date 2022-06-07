@@ -131,7 +131,7 @@ We welcome your [suggestions](https://github.com/drud/ddev/issues/new) based on 
 
 The most common cause of the database container not coming up is a damaged database, so the mariadb server daemon is unable to start. This is typically caused by an unexpected docker event like system shutdown or docker exit which doesn't give the db container time to clean up and close connections. See [issue](https://github.com/drud/ddev/issues/748). In general, the easiest fix is to destroy and reload the database from either a database dump or a ddev snapshot. Otherwise, that issue has more ambitious approaches that may be taken if you have neither. But the easiest approach is this, which *will destroy and then reload your project database*:
 
-1. `ddev stop --remove-data --omit-snapshot`
+1. `ddev delete --omit-snapshot <projectname>`
 2. `mv .ddev .ddev.bak` This renames the directory with config.yaml and any custom nginx/php/mariadb config you may have added.
 3. `ddev config`
 4. `ddev start`

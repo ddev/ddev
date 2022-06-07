@@ -124,6 +124,10 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	if app.Database.Type == "" {
 		app.Database = DatabaseDefault
 	}
+	if app.DefaultContainerTimeout == "" {
+		app.DefaultContainerTimeout = nodeps.DefaultDefaultContainerTimeout
+	}
+
 	app.SetApptypeSettingsPaths()
 
 	// Rendered yaml is not there until after ddev config or ddev start
@@ -169,6 +173,9 @@ func (app *DdevApp) WriteConfig() error {
 	}
 	if appcopy.ProjectTLD == nodeps.DdevDefaultTLD {
 		appcopy.ProjectTLD = ""
+	}
+	if appcopy.DefaultContainerTimeout == nodeps.DefaultDefaultContainerTimeout {
+		appcopy.DefaultContainerTimeout = ""
 	}
 
 	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't
@@ -645,6 +652,7 @@ type composeYAMLVars struct {
 	HostUploadDir             string
 	GitDirMount               bool
 	IsGitpod                  bool
+	DefaultContainerTimeout   string
 }
 
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
@@ -726,6 +734,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		ContainerUploadDir:    app.GetContainerUploadDirFullPath(),
 		GitDirMount:           false,
 		IsGitpod:              nodeps.IsGitpod(),
+		// Default max time we wait for containers to be healthy
+		DefaultContainerTimeout: app.DefaultContainerTimeout,
 	}
 	// We don't want to bind-mount git dir if it doesn't exist
 	if fileutil.IsDirectory(filepath.Join(app.AppRoot, ".git")) {

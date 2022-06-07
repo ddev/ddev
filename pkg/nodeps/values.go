@@ -106,6 +106,7 @@ const (
 	DdevDefaultMailhogHTTPSPort = "8026"
 	// DdevDefaultTLD is the top-level-domain used by default, can be overridden
 	DdevDefaultTLD                  = "ddev.site"
+	DefaultDefaultContainerTimeout  = "120"
 	InternetDetectionTimeoutDefault = 750
 	MinimumDockerSpaceWarning       = 5000000 // 5GB in KB (to compare against df reporting in KB)
 )

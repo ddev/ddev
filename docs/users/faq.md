@@ -106,7 +106,7 @@ How can I install a specific version of DDEV?
     3. If you want the very latest, unreleased version of ddev, use `brew unlink ddev && brew install drud/ddev/ddev --HEAD`.
 
 How can I back up or restore all databases of all projects?
-: You can back up all projects that show in `ddev list` with `ddev start -a && ddev snapshot -a` but most people don't have enough memory to run all their projects at once. If you have `jq` on your system (`brew install jq`) then you can snapshot them one at a time with `for proj in $(ddev list -j  | jq -r '.raw[].name'); do ddev start $proj; ddev snapshot $proj; ddev stop $proj; done`. You can restore the latest snapshot in all projects listed by `ddev list` with `for dir in $(ddev list -j  | jq -r '.raw[].approot'); do pushd "$dir" && ddev snapshot restore --latest && ddev stop && popd; done`
+: You can back up all projects that show in `ddev list` with `ddev snapshot -a`. This only snapshots projects that are shown in `ddev list` though, so if you have other projects that aren't shown, you'd need to start them so they'd be registered in `ddev list`.
 
 How can I contribute financially to the DDEV project?
 : Thanks for asking! Contributions can be done via [GitHub Sponsors](https://github.com/sponsors/rfay). They go to the [Localdev Foundation](https://localdev.foundation) and are used for infrastructure and supporting development.

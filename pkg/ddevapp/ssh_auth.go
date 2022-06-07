@@ -61,7 +61,8 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 
 	// ensure we have a happy sshAuth
 	label := map[string]string{"com.docker.compose.project": SSHAuthName}
-	_, err = dockerutil.ContainerWait(containerWaitTimeout, label)
+	sshWaitTimeout := 60
+	_, err = dockerutil.ContainerWait(sshWaitTimeout, label)
 	if err != nil {
 		return fmt.Errorf("ddev-ssh-agent failed to become ready; debug with 'docker logs ddev-ssh-agent'; error: %v", err)
 	}
