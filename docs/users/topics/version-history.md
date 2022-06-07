@@ -46,7 +46,7 @@ Take a look at the [v1.20 milestone](https://github.com/drud/ddev/milestone/54) 
 
 - [x] Support Shopware 6
 - [x] Remove support for docker toolbox on Win10 Home (in favor of new docker desktop)
-- [x] Remove apache-cgi webserver_type
+- [x] Remove `apache-cgi` webserver_type
 - [x] Per-project-type commands like `ddev drush`, `ddev typo3`
 - [x] Build hardened ddev with hardened images for open-source production hosting
 
@@ -170,7 +170,7 @@ Take a look at the [v1.20 milestone](https://github.com/drud/ddev/milestone/54) 
 
 ### v1.2 (released 2018-09-11)
 
-- Experimental Apache support has been added, but it doesn't yet work on Windows. You can now run with apache-with-php-fpm (apache-fpm) or apache-with-cgi (apache-cgi). Just change your .ddev/config.yaml to use `webserver_type: apache-fpm` or `webserver_type: apache-cgi`. (#1007)
+- Experimental Apache support has been added, but it doesn't yet work on Windows. You can now run with apache-with-php-fpm (apache-fpm) or `apache-with-cgi` (`apache-cgi`). Just change your .ddev/config.yaml to use `webserver_type: apache-fpm` or `webserver_type: apache-cgi`. (#1007)
 - `ddev config` now has additional config flags:  --php-version, --http-port,  --https-port, --xdebug-enabled,  --additional-hostnames, --additional-fqdns to allow command-line configuration instead of direct editing of the .ddev/config.yaml file. (#1092)
 - The upload directory (Drupal public files directory, etc.) can now be specified in config.yaml. (#1093)
 

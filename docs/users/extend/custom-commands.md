@@ -35,7 +35,7 @@ In addition to commands that run in the standard ddev containers like "web" and 
     - ".:/mnt/ddev_config"
 ```
 
-For example, to add a "solrtail" command that runs in a solr service, add `.ddev/commands/solr/solrtail` with:
+For example, to add a `solrtail` command that runs in a solr service, add `.ddev/commands/solr/solrtail` with:
 
 ```bash
 #!/bin/bash
@@ -60,37 +60,37 @@ There are many examples of [global](https://github.com/drud/ddev/tree/master/pkg
 
 A number of environment variables are provided to the script. These are generally supported, but please avoid using undocumented environment variables. Useful variables for host scripts are:
 
-* DDEV_APPROOT: file system location of the project on the host
-* DDEV_DOCROOT: Relative path from approot to docroot
-* DDEV_HOSTNAME: Comma-separated list of FQDN hostnames
-* DDEV_HOST_DB_PORT: Localhost port of the database server
-* DDEV_HOST_HTTPS_PORT: Localhost port for https on webserver
-* DDEV_HOST_WEBSERVER_PORT: Localhost port of the webserver
-* DDEV_PHP_VERSION
-* DDEV_PRIMARY_URL: Primary URL for the project
-* DDEV_PROJECT: Project name, like "d8composer"
-* DDEV_PROJECT_TYPE: drupal8, typo3, backdrop, wordpress, etc.
-* DDEV_ROUTER_HTTP_PORT: Router port for http
-* DDEV_ROUTER_HTTPS_PORT: Router port for https
-* DDEV_SITENAME: Project name, like "d8composer".
-* DDEV_TLD: Top-level domain of project, like "ddev.site"
-* DDEV_WEBSERVER_TYPE: nginx-fpm, apache-fpm
+* `DDEV_APPROOT`: file system location of the project on the host
+* `DDEV_DOCROOT`: Relative path from approot to docroot
+* `DDEV_HOSTNAME`: Comma-separated list of FQDN hostnames
+* `DDEV_HOST_DB_PORT`: Localhost port of the database server
+* `DDEV_HOST_HTTPS_PORT`: Localhost port for https on webserver
+* `DDEV_HOST_WEBSERVER_PORT`: Localhost port of the webserver
+* `DDEV_PHP_VERSION`: PHP version running
+* `DDEV_PRIMARY_URL`: Primary URL for the project
+* `DDEV_PROJECT`: Project name, like "d8composer"
+* `DDEV_PROJECT_TYPE`: drupal8, typo3, backdrop, wordpress, etc.
+* `DDEV_ROUTER_HTTP_PORT`: Router port for http
+* `DDEV_ROUTER_HTTPS_PORT`: Router port for https
+* `DDEV_SITENAME`: Project name, like "d8composer".
+* `DDEV_TLD`: Top-level domain of project, like "ddev.site"
+* `DDEV_WEBSERVER_TYPE`: nginx-fpm, apache-fpm
 
 Useful variables for container scripts are:
 
-* DDEV_DOCROOT: Relative path from approot to docroot
-* DDEV_FILES_DIR: Directory of user-uploaded files
-* DDEV_HOSTNAME: Comma-separated list of FQDN hostnames
-* DDEV_PHP_VERSION
-* DDEV_PRIMARY_URL: Primary URL for the project
-* DDEV_PROJECT: Project name, like "d8composer"
-* DDEV_PROJECT_TYPE: drupal8, typo3, backdrop, wordpress, etc.
-* DDEV_ROUTER_HTTP_PORT: Router port for http
-* DDEV_ROUTER_HTTPS_PORT: Router port for https
-* DDEV_SITENAME: Project name, like "d8composer".
-* DDEV_TLD: Top-level domain of project, like "ddev.site"
-* DDEV_WEBSERVER_TYPE: nginx-fpm, apache-fpm
-* IS_DDEV_PROJECT: if set to "true" it means that php is running under DDEV
+* `DDEV_DOCROOT`: Relative path from approot to docroot
+* `DDEV_FILES_DIR`: Directory of user-uploaded files
+* `DDEV_HOSTNAME`: Comma-separated list of FQDN hostnames
+* `DDEV_PHP_VERSION`: PHP version running
+* `DDEV_PRIMARY_URL`: Primary URL for the project
+* `DDEV_PROJECT`: Project name, like "d8composer"
+* `DDEV_PROJECT_TYPE`: drupal8, typo3, backdrop, wordpress, etc.
+* `DDEV_ROUTER_HTTP_PORT`: Router port for http
+* `DDEV_ROUTER_HTTPS_PORT`: Router port for https
+* `DDEV_SITENAME`: Project name, like "d8composer".
+* `DDEV_TLD`: Top-level domain of project, like "ddev.site"
+* `DDEV_WEBSERVER_TYPE`: nginx-fpm, apache-fpm
+* `IS_DDEV_PROJECT`: if set to "true" it means that php is running under DDEV
 
 ### Annotations supported
 
@@ -156,14 +156,14 @@ The following fields can be used for a flag definition:
 * `NoOptDefVal`: default value, if the flag is on the command line without any options
 * `Annotations`: used by cobra.Command bash autocomplete code see <https://github.com/spf13/cobra/blob/master/bash_completions.md>
 
-#### ProjectTypes
+#### `ProjectTypes`
 
 If your command should only be visible for a particular project type, `ProjectTypes` will allow you to define the supported types. This is especially useful for global custom commands. See <https://ddev.readthedocs.io/en/stable/users/cli-usage/#quickstart-guides> for more information about the supported project types. Multiple types are separated by a comma.
 
 Usage: `## ProjectTypes: <list-of-project-types>`
 Example: `## ProjectTypes: drupal7,drupal8,drupal9,backdrop`
 
-#### OSTypes (host commands only)
+#### `OSTypes` (host commands only)
 
 If your host command should only run on one or more operating systems, add the `OSTypes` annotation. Multiple types are separated by a comma. Valid types are:
 
@@ -174,14 +174,14 @@ If your host command should only run on one or more operating systems, add the `
 Usage: `## OSTypes: <list-of-os-types>`
 Example: `## OSTypes: darwin,linux`
 
-#### HostBinaryExists (host commands only)
+#### `HostBinaryExists` (host commands only)
 
 If your host command should only run if a particular file exists, add the `HostBinaryExists` annotation.
 
 Usage: `## HostBinaryExists: <path/to/file>`
 Example: `## HostBinaryExists: /Applications/Sequel ace.app`
 
-#### DBTypes
+#### `DBTypes`
 
 if your command should only be available for a particular database type, add the `DBTypes` annotation. Multiple types are separated by a comma. Valid types the available database types.
 

@@ -10,7 +10,7 @@ ddev also provides the `push` command to push database and files to upstream. Th
 
 Each provider recipe is a yaml file that can be named any way you want to name it. The examples are mostly named after the hosting providers, but they could be named "upstream.yaml" or "live.yaml", so you could `ddev pull upstream` or `ddev pull live`. If you wanted different upstream environments to pull from, you could name one "prod" and one "dev" and `ddev pull prod` and `ddev pull dev`.
 
-[Example recipes](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/) are provided for [Acquia](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/acquia.yaml.example), [Local files](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/localfile.yaml.example) (like Dropbox, for example),  [Pantheon.io](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/pantheon.yaml.example), [Platform.sh](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/platform.yaml.example), and [rsync](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/rsync.yaml.example). We know that you'll find improvements to these examples and will have lots to contribute for other hosting providers, and we look forward to your contributions as PRs here or in [ddev-contrib](https://github.com/drud/ddev-contrib).
+[Example recipes](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/) are provided for [Acquia](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/acquia.yaml.example), [Local files](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/localfile.yaml.example) (like Dropbox, for example),  [Pantheon.io](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/pantheon.yaml.example), [Platform.sh](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/platform.yaml.example), and [rsync](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/rsync.yaml.example). We know that you'll find improvements to these examples and will have lots to contribute for other hosting providers, and we look forward to your contributions as pull requests here or in [ddev-contrib](https://github.com/drud/ddev-contrib).
 
 Each provider recipe is a file named `<provider>.yaml` and consists of several mostly-optional stanzas:
 
@@ -27,7 +27,7 @@ The [environment variables provided to custom commands](../extend/custom-command
 ### Example Integrations and Hints
 
 * All of the [supplied integrations](https://github.com/drud/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers) are really just examples of what you can do.
-* You can name a provider anything you want. For example, an Acquia integration doesn't have to be named "acquia", it can be named "upstream", for example. This is a great technique for [downloading a particulr multisite](https://stackoverflow.com/a/68553116/215713)
+* You can name a provider anything you want. For example, an Acquia integration doesn't have to be named "acquia", it can be named "upstream", for example. This is a great technique for [downloading a particular multisite](https://stackoverflow.com/a/68553116/215713)
 
 ### Provider Debugging
 

@@ -40,9 +40,9 @@ Here are some of the add-ons that are officially supported:
 
 ## Creating an additional service for `ddev get`
 
-Anyone can create an add-on for `ddev get` (see [screencast](https://www.youtube.com/watch?v=fPVGpKGr0f4) and instructions in [ddev-addon-template](https://github.com/drud/ddev-addon-template)):
+Anyone can create an add-on for `ddev get` (see [screencast](https://www.youtube.com/watch?v=fPVGpKGr0f4) and instructions in [`ddev-addon-template`](https://github.com/drud/ddev-addon-template)):
 
-1. Click "Use this template" on [ddev-addon-template](https://github.com/drud/ddev-addon-template).
+1. Click "Use this template" on [`ddev-addon-template`](https://github.com/drud/ddev-addon-template).
 2. Create a new repository
 3. Test it and preferably make sure it has valid tests in `tests.bats`.
 4. When it's working and tested, create a release.
@@ -61,4 +61,4 @@ Commonly used services will be migrated from the ddev-contrib repository to indi
 * **RabbitMQ**: See [RabbitMQ](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/rabbitmq)
 * **TYPO3 Solr Integration**: See [TYPO3 Solr](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/typo3-solr)
 
-Your PRs to integrate other services are welcome at [ddev-contrib](https://github.com/drud/ddev-contrib).
+Your pull requests to integrate other services are welcome at [ddev-contrib](https://github.com/drud/ddev-contrib).

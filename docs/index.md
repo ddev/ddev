@@ -17,7 +17,7 @@
 
 ## Using DDEV alongside other development environments
 
-DDEV by default uses ports 80 and 443 on your system when projects are running. If you are using another local development environment you can either stop the other environment or configure DDEV to use different ports. See [troubleshooting](users/troubleshooting.md#unable-listen) for more detailed problemsolving.
+DDEV by default uses ports 80 and 443 on your system when projects are running. If you are using another local development environment you can either stop the other environment or configure DDEV to use different ports. See [troubleshooting](users/troubleshooting.md#unable-listen) for more detailed problem-solving.
 
 ## Installation
 
@@ -35,9 +35,9 @@ Later, to upgrade to a newer version of DDEV-Local, run `brew upgrade ddev`.
 
 To install DDEV prereleases, subscribe to the "edge" channel with `brew install drud/ddev-edge/ddev` and to install the latest unreleased DDEV version, `brew unlink ddev && brew install drud/ddev/ddev --HEAD`.
 
-### Linux (Arch-based systems such as EndeavourOS or Manjaro)
+### Linux (Arch-based systems such as `EndeavourOS` or `Manjaro`)
 
-We maintain a package on [Arch Linux (AUR)](https://aur.archlinux.org/packages/ddev-bin/).
+We maintain a package on [Arch Linux (`AUR`)](https://aur.archlinux.org/packages/ddev-bin/).
 
 **NOTE: Package installation on Arch-based systems is preferable to the install script below.**
 
@@ -93,11 +93,11 @@ We'll walk through these in more detail. You may prefer other techniques of inst
 14. Install Homebrew: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` (See [brew.sh](https://brew.sh/).)
 15. Add brew to your path as prompted:, `echo 'eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)' >> ~/.profile && source ~/.profile`
 16. `brew install gcc && brew install drud/ddev/ddev`
-17. `sudo apt-get update && sudo apt-get install -y xdg-utils` to install the xdg-utils package that allows `ddev launch` to work.
+17. `sudo apt-get update && sudo apt-get install -y xdg-utils` to install the `xdg-utils` package that allows `ddev launch` to work.
 
 That's it! You have now installed DDEV on WSL2. If you're using WSL2 for DDEV (recommended), remember to run all `ddev` commands inside the WSL2 distro.
 Follow the instructions in `Linux, macOS and Windows WSL2 (install script)` above.
-**Make sure you put your projects in the Linux filesystem (e.g. /home/<your_username>), not in the Windows filesystem (/mnt/c), because you'll get vastly superior performance on the Linux filesystem.**
+**Make sure you put your projects in the Linux filesystem (e.g. /home/<your_username>), not in the Windows filesystem (`/mnt/c`), because you'll get vastly superior performance on the Linux filesystem.**
 
 Note that mutagen-enabled or nfs-mount-enabled (and running NFS) are not required on WSL2 because it's so fast even without these options.
 
@@ -124,14 +124,14 @@ You can also easily perform the installation or upgrade manually if preferred. D
 
 The `mkcert -install` step on Linux may provide you with additional instructions.
 
-On variants of Linux you may be prompted for additional package installation to get certutil installed, but you can follow the instructions given by mkcert:
+On variants of Linux you may be prompted for additional package installation to get `certutil` installed, but you can follow the instructions given by mkcert:
 
   > $ mkcert -install
   > Created a new local CA at "/home/username/.local/share/mkcert" 
   > Installing to the system store is not yet supported on this Linux  but Firefox and/or Chrome/Chromium will still work.
-  > You can also manually install the root certificate at "/home/username/.local/share/mkcert/rootCA.pem".
-  > Warning: "certutil" is not available, so the CA can't be automatically installed in Firefox and/or Chrome/Chromium! ⚠️
-  > Install "certutil" with "apt install libnss3-tools" or "yum install nss-tools" and re-run "mkcert -install" 
+  > You can also manually install the root certificate at `/home/username/.local/share/mkcert/rootCA.pem`.
+  > Warning: `certutil` is not available, so the CA can't be automatically installed in Firefox and/or Chrome/Chromium! ⚠️
+  > Install `certutil` with `apt install libnss3-tools` or `yum install nss-tools` and re-run `mkcert -install` 
 
   (Note the prompt `Installing to the system store is not yet supported on this Linux`, which can be a simple result of not having /usr/sbin in the path so that `/usr/sbin/update-ca-certificates` can be found.)
 

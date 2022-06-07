@@ -8,7 +8,7 @@ DDEV looks for the `homeadditions` directory either in `~/.ddev/homeadditions` (
 
 Usage examples:
 
-* If you use git inside the container, you may want to copy your ~/.gitconfig into ~/.ddev/homeadditions or the project's .ddev/homeadditions so that use of git inside the container will use your regular username and email, etc.
+* If you use git inside the container, you may want to copy your `~/.gitconfig` into `~/.ddev/homeadditions` or the project's `.ddev/homeadditions` so that use of git inside the container will use your regular username and email, etc.
 * If you need to add a script or other executable component into the project (or global configuration), you can put it in the project or global `.ddev/homeadditions/bin` directory and `~/bin/<script` will be created inside the container. This is useful for adding a script to a project or to every project, or for overriding standard scripts, as ~/bin is first in the $PATH in the web container.
 * If you use private password-protected composer repositories with satis, for example, and use a global auth.json, you might want to `cp ~/.composer/auth.json into .ddev/homeadditions/.composer/auth.json`, but be careful that you exclude it from checking using a .gitignore or equivalent.
 * Some people have specific configuration needs for their .ssh/config. If you provide your own .ssh/config though, please make sure it includes these lines:
