@@ -22,7 +22,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 	"text/template"
 )
@@ -152,25 +151,18 @@ ddev get --list --all
 		yamlMap := make(map[string]interface{})
 		for name, f := range s.YamlReadFiles {
 			f := os.ExpandEnv(string(f))
-			src := filepath.Join(extractedDir, f)
+			fullpath := filepath.Join(app.GetAppRoot(), f)
 
-			contents, err := os.ReadFile(src)
+			yamlMap[name], err = util.YamlFileToMap(fullpath)
 			if err != nil {
-				util.Failed("unable to read file %s (%v)", src, err)
+				util.Failed("unable to import yaml file %s: %v", fullpath, err)
 			}
-			c := os.ExpandEnv(string(contents))
-			contents = []byte(c)
-
-			itemMap := make(map[string]interface{})
-			err = yaml.Unmarshal(contents, &itemMap)
-			if err != nil {
-				util.Failed("unable to unmarshal %s: %v", contents, err)
-			}
-			yamlMap[name] = itemMap
 		}
 
-		//templateVars := traverseYaml("", yamlMap)
-		dict := yamlToDict(yamlMap)
+		dict, err := util.YamlToDict(yamlMap)
+		if err != nil {
+			util.Failed("Unable to YamlToDict: %v", err)
+		}
 		for _, action := range s.PreInstallActions {
 			action := os.ExpandEnv(action)
 			t, err := template.New("preInstall").Funcs(sprig.TxtFuncMap()).Parse(action)
@@ -321,80 +313,4 @@ func listAvailable(officialOnly bool) ([]github.Repository, error) {
 		return nil, fmt.Errorf("No add-ons found")
 	}
 	return repos.Repositories, err
-}
-
-func traverseYaml(level string, topm map[interface{}]interface{}) map[string]string {
-	res := map[string]string{}
-
-	for yk, v := range topm {
-		switch v.(type) {
-		case string:
-			res[keyName(level, yk.(string))] = v.(string)
-		case int:
-			res[keyName(level, yk.(string))] = strconv.Itoa(v.(int))
-		case map[interface{}]interface{}:
-			m := traverseYaml(keyName(level, yk.(string)), v.(map[interface{}]interface{}))
-			// Merge returned map with the one we're keeping
-			for k, v := range m {
-				res[k] = v
-			}
-		case []interface{}:
-			for i, e := range v.([]interface{}) {
-				res[keyName(level+"."+yk.(string), strconv.Itoa(i))] = e.(string)
-			}
-		case bool:
-			res[keyName(level, yk.(string))] = strconv.FormatBool(v.(bool))
-		default:
-			util.Warning("Unhandled yaml type for %s: %T", keyName(level, yk.(string)), v)
-		}
-	}
-	return res
-}
-
-func keyName(level string, val string) string {
-	if level != "" {
-		return level + "." + val
-	}
-	return val
-}
-
-func yamlToDict(topm interface{}) map[string]interface{} {
-	res := make(map[string]interface{})
-
-	switch topm.(type) {
-	case map[interface{}]interface{}:
-		for yk, v := range topm.(map[interface{}]interface{}) {
-			ys := yk.(string)
-			switch v.(type) {
-			case string:
-				res[ys] = v
-			case map[interface{}]interface{}:
-				res[ys] = yamlToDict(v)
-			case map[string]interface{}:
-				res[ys] = yamlToDict(v)
-			case interface{}:
-				res[ys] = v
-			default:
-				util.Warning("yamlToDict: type %T not handled (%v)", yk, yk)
-			}
-		}
-	case map[string]interface{}:
-		for yk, v := range topm.(map[string]interface{}) {
-			switch v.(type) {
-			case string:
-				res[yk] = v
-			case map[interface{}]interface{}:
-				res[yk] = yamlToDict(v)
-			case map[string]interface{}:
-				res[yk] = yamlToDict(v)
-			case interface{}:
-				res[yk] = v
-			default:
-				util.Warning("yamlToDict: type %T not handled (%v)", yk, yk)
-			}
-		}
-	default:
-		util.Warning("yamlToDict: type %T not handled (%v)", topm, topm)
-	}
-	return res
 }
