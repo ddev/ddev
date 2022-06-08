@@ -375,7 +375,7 @@ func yamlToDict(topm interface{}) map[string]interface{} {
 			case interface{}:
 				res[ys] = v
 			default:
-				fmt.Print("don't know")
+				util.Warning("yamlToDict: type %T not handled (%v)", yk, yk)
 			}
 		}
 	case map[string]interface{}:
@@ -390,11 +390,11 @@ func yamlToDict(topm interface{}) map[string]interface{} {
 			case interface{}:
 				res[yk] = v
 			default:
-				fmt.Print("don't know")
+				util.Warning("yamlToDict: type %T not handled (%v)", yk, yk)
 			}
 		}
 	default:
-		fmt.Sprintf("not sure")
+		util.Warning("yamlToDict: type %T not handled (%v)", topm, topm)
 	}
 	return res
 }
