@@ -19,14 +19,15 @@ import (
 var DdevBin = "ddev"
 var TestSites = []TestSite{
 	{
-		Name:                          "",
-		SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
-		ArchiveInternalExtractionPath: "wordpress-0.4.0/",
-		FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
-		DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
-		Docroot:                       "htdocs",
+		SourceURL:                     "https://wordpress.org/wordpress-5.8.2.tar.gz",
+		ArchiveInternalExtractionPath: "wordpress/",
+		FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/wordpress5.8.2_files.tar.gz",
+		DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/wordpress5.8.2_db.sql.tar.gz",
+		Docroot:                       "",
 		Type:                          nodeps.AppTypeWordPress,
-		Safe200URIWithExpectation:     URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
+		FilesImageURI:                 "/wp-content/uploads/2021/12/DSCF0436-randy-and-nancy-with-traditional-wedding-out-fit-2048x1536.jpg",
+		Name:                          "TestCmdWordpress",
+		HTTPProbeURI:                  "wp-admin/setup-config.php",
 	},
 }
 
