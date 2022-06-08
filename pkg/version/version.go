@@ -20,6 +20,13 @@ func GetVersionInfo() map[string]string {
 	var err error
 	versionInfo := make(map[string]string)
 
+	versionInfo["DDEV version"] = versionconstants.DdevVersion
+	versionInfo["web"] = versionconstants.GetWebImage()
+	versionInfo["db"] = versionconstants.GetDBImage(nodeps.MariaDB)
+	versionInfo["dba"] = versionconstants.GetDBAImage()
+	versionInfo["router"] = versionconstants.RouterImage + ":" + versionconstants.RouterTag
+	versionInfo["ddev-ssh-agent"] = versionconstants.SSHAuthImage + ":" + versionconstants.SSHAuthTag
+	versionInfo["build info"] = versionconstants.BUILDINFO
 	versionInfo["os"] = runtime.GOOS
 	versionInfo["architecture"] = runtime.GOARCH
 	if versionInfo["docker"], err = dockerutil.GetDockerVersion(); err != nil {
