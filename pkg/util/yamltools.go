@@ -6,6 +6,7 @@ import (
 	"os"
 )
 
+// YamlFileToMap() reads the named file into a map[string]interface{}
 func YamlFileToMap(fname string) (map[string]interface{}, error) {
 	file, err2 := os.ReadFile(fname)
 	contents, err := file, err2
