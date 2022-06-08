@@ -1,11 +1,11 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/ddevapp"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
@@ -36,15 +36,12 @@ Additional commands that can help clean up resources:
 			util.Failed("No project provided. See ddev clean --help for usage")
 		}
 
-		util.Success("Powering off ddev to avoid conflicts")
-		ddevapp.PowerOff()
-
-		util.Warning("Warning - Snapshots for the following project[s] will be permanently deleted")
-
 		projects, err := getRequestedProjects(args, cleanAll)
 		if err != nil {
-			util.Failed("Failed to get project(s): %v", err)
+			util.Failed("Failed to get project(s) '%v': %v", args, err)
 		}
+
+		util.Warning("Warning - Snapshots for the following project[s] will be permanently deleted")
 
 		// Show the user how many snapshots per project that will be deleted
 		for _, project := range projects {
@@ -69,6 +66,10 @@ Additional commands that can help clean up resources:
 		if strings.ToLower(confirm) != "y" {
 			return
 		}
+
+		util.Success("Powering off ddev to avoid conflicts.")
+		ddevapp.PowerOff()
+
 		globalDdevDir := globalconfig.GetGlobalDdevDir()
 		_ = os.RemoveAll(filepath.Join(globalDdevDir, "testcache"))
 		_ = os.RemoveAll(filepath.Join(globalDdevDir, "bin"))
