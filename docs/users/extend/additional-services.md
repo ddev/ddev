@@ -1,4 +1,4 @@
-## Additional Service Configurations for ddev
+## Additional Service Configurations and Add-ons for ddev
 
 DDEV-Local projects can be extended to provide additional add-ons, including services. This is achieved by adding docker-compose files to a project's .ddev directory that defines the added add-on(s).
 
@@ -15,19 +15,24 @@ ddev get --list
 ┌───────────────────────────┬──────────────────────────────────────────────────┐
 │ ADD-ON                    │ DESCRIPTION                                      │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-memcached       │ Install memcached as an extra service in ddev*   │
+│ drud/ddev-elasticsearch   │ Elasticsearch add-on for DDEV*                   │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-varnish         │ Varnish reverse proxy add-on for ddev*           │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-redis           │ redis service for ddev*                          │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
 │ drud/ddev-beanstalkd      │ beanstalkd for ddev*                             │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-drupal9-solr    │ Drupal 9 Apache Solr installation for DDEV*      │
-├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-elasticsearch   │ Elasticsearch add-on for DDEV*                   │
-├───────────────────────────┼──────────────────────────────────────────────────┤
 │ drud/ddev-redis-commander │ Redis commander for use with ddev redis service* │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-redis           │ redis service for ddev*                          │
-└───────────────────────────┴──────────────────────────────────────────────────┘
-```
+│ drud/ddev-mongo           │ mongodb addon for ddev*                          │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-drupal9-solr    │ Drupal 9 Apache Solr installation for DDEV*      │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-pdfreactor      │ PDFreactor service for ddev*                     │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-memcached       │ Install memcached as an extra service in ddev*   │
+└───────────────────────────┴──────────────────────────────────────────────────┘```
 
 Here are some of the add-ons that are officially supported:
 
@@ -36,6 +41,9 @@ Here are some of the add-ons that are officially supported:
 * [Elasticsearch](https://github.com/drud/ddev-elasticsearch): `ddev get drud/ddev-elasticsearch`.
 * [Apache Solr for Drupal 9](https://github.com/drud/ddev-drupal9-solr): `ddev get drud/ddev-drupal9-solr`.
 * [Memcached](https://github.com/drud/ddev-memcached): `ddev get drud/ddev-memcached`.
+* [Varnish](https://github.com/drud/ddev-varnish): `ddev get drud/ddev-varnish`.
+* [Mongo](https://github.com/drud/ddev-mongo): `ddev get drud/ddev-mongo`.
+* [PDFReactor](https://github.com/drud/ddev-pdfreactor): `ddev get drud/ddev-pdfreactor`
 * [Beanstalkd](https://github.com/drud/ddev-beanstalkd): `ddev get drud/ddev-beanstalkd`.
 
 ## Creating an additional service for `ddev get`
