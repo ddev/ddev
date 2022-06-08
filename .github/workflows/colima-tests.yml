@@ -45,7 +45,7 @@ jobs:
         tests: [ test ]
         os: [ macos-11 ]
         no-bind-mounts: ['false']
-      fail-fast: false
+      fail-fast: true
 
     runs-on: ${{ matrix.os }}
 

@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
@@ -1040,6 +1041,9 @@ func TestTimezoneConfig(t *testing.T) {
 
 // TestComposerVersionConfig tests to make sure setting composer version takes effect in the container.
 func TestComposerVersionConfig(t *testing.T) {
+	if nodeps.IsMacM1() || dockerutil.IsColima() {
+		t.Skip("Skipping on Mac M1 and Colima, just lots of failed network connections")
+	}
 	assert := asrt.New(t)
 	app := &DdevApp{}
 	testVersion := "2.0.0-RC2"
