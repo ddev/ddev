@@ -4,14 +4,14 @@
 # See https://docs.platform.sh/configuration/app.html
 
 # The name of this app. Must be unique within a project.
-name: 'app'
+name: 'junker99'
 
 # The runtime the application uses.
-type: 'php:7.4'
+type: 'php:8.1'
 
 runtime:
   extensions:
-    - redis
+    - redis99
 
 # The relationships of the application with services or other applications.
 #
@@ -86,7 +86,7 @@ web:
             # The folder from which to serve static assets, for this location.
             #
             # This is a filesystem path, relative to the application root.
-            root: 'web'
+            root: 'web99'
 
             # How long to allow static assets from this location to be cached.
             #

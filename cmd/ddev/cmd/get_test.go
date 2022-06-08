@@ -5,9 +5,11 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/globalconfig"
+	copy2 "github.com/otiai10/copy"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	asrt "github.com/stretchr/testify/assert"
@@ -64,4 +66,51 @@ func TestCmdGet(t *testing.T) {
 	assert.FileExists(app.GetConfigPath("i-have-been-touched"))
 	assert.FileExists(app.GetConfigPath("docker-compose.example.yaml"))
 	assert.FileExists(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
+}
+
+// TestCmdGetComplex tests advanced usages
+func TestCmdGetComplex(t *testing.T) {
+	assert := asrt.New(t)
+
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+	app, err := ddevapp.GetActiveApp("")
+	require.NoError(t, err)
+
+	err = copy2.Copy(filepath.Join(origDir, "testdata", t.Name(), "project"), app.GetAppRoot())
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		for _, f := range []string{".platform", ".platform.app.yaml"} {
+			err = os.RemoveAll(filepath.Join(app.GetAppRoot(), f))
+		}
+		err = os.RemoveAll(fmt.Sprintf("junk_%s_%s.txt", runtime.GOOS, runtime.GOARCH))
+		assert.NoError(err)
+
+		_ = app.Stop(true, false)
+	})
+
+	out, err := exec.RunHostCommand(DdevBin, "get", filepath.Join(origDir, "testdata", t.Name(), "recipe"))
+	require.NoError(t, err, "out=%s", out)
+
+	// Make sure that `#ddev-nodisplay` quieted the output of ddev debug capabilities
+	assert.NotContains(out, "ddev debug capabilities")
+	assert.NotContains(out, "This add-on requires DDEV")
+
+	app, err = ddevapp.GetActiveApp("")
+	require.NoError(t, err)
+
+	// Make sure that all the interpolations we wrote via go templates got in there
+	assert.Equal("web99", app.Docroot)
+	assert.Equal("mariadb", app.Database.Type)
+	assert.Equal("10.7", app.Database.Version)
+	assert.Equal("8.1", app.PHPVersion)
+
+	// Make sure that environment variable interpolation happened. If it did, we'll have the one file
+	// we're looking for.
+	assert.FileExists(app.GetConfigPath(fmt.Sprintf("junk_%s_%s.txt", runtime.GOOS, runtime.GOARCH)))
 }
