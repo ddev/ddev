@@ -363,6 +363,8 @@ mkcert
 mkdir
 mnt
 modify
+mongo
+mongodb
 more
 mountaddr
 mountproto
@@ -403,6 +405,7 @@ or
 oriented
 output
 pause
+pdfreactor
 pecl
 performant
 pgdump
