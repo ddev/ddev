@@ -1,0 +1,32 @@
+name: sample_get
+
+yaml_read_files:
+  platformapp: .platform.app.yaml
+  services: .platform/services.yaml
+
+pre_install_actions:
+#- |
+#  #ddev-nodisplay
+#  if ! ( ddev debug capabilities 2>/dev/null | grep multiple-dockerfiles >/dev/null 2>&1 ) ; then
+#    echo "This add-on requires DDEV v1.19.3 or higher, please upgrade." && exit 2
+#  fi
+
+- |
+  cat <<EOF >.ddev/config.platform.yaml
+  xphp_version: {{ .platformapp.type }}
+  xdatabase: {{ .services.db.type }}
+  webloc: {{ dig "web" "locations" "/" "root" "notfound" .platformapp }}
+  zdatabase: {{ dig  "db" "type"  "notfound" .services }}
+  EOF
+  
+
+#  docroot: {{ dig .platformapp "web" "locations" "/" "root" }}
+
+project_files:
+- junk_${GOOS}_${GOARCH}.txt
+
+
+global_files:
+
+post_install_actions:
+
