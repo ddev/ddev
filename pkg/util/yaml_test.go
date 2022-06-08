@@ -45,3 +45,23 @@ func TestYamlFileToMap(t *testing.T) {
 	assert.Equal("web", slashloc["root"])
 
 }
+
+func TestYamlToDict(t *testing.T) {
+	assert := asrt.New(t)
+	f := "testdata/TestYamlToDict/app.yaml"
+	m, err := util.YamlFileToMap(f)
+	require.NoError(t, err)
+
+	// Start with a top level "base"
+	base := make(map[string]interface{})
+	// Add dict into it as next layer
+	base["dict"], err = util.YamlToDict(m)
+	require.NoError(t, err)
+
+	d, ok := base["dict"].(map[string]interface{})
+	require.True(t, ok)
+
+	name, ok := d["name"].(string)
+	require.True(t, ok)
+	assert.Equal("app", name)
+}
