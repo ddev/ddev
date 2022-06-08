@@ -12,21 +12,23 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"runtime"
 	"testing"
 )
 
 var DdevBin = "ddev"
 var TestSites = []TestSite{
 	{
-		Name:                          "",
-		SourceURL:                     "https://github.com/drud/wordpress/archive/v0.4.0.tar.gz",
-		ArchiveInternalExtractionPath: "wordpress-0.4.0/",
-		FilesTarballURL:               "https://github.com/drud/wordpress/releases/download/v0.4.0/files.tar.gz",
-		DBTarURL:                      "https://github.com/drud/wordpress/releases/download/v0.4.0/db.tar.gz",
-		Docroot:                       "htdocs",
+		SourceURL:                     "https://wordpress.org/wordpress-5.8.2.tar.gz",
+		ArchiveInternalExtractionPath: "wordpress/",
+		FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/wordpress5.8.2_files.tar.gz",
+		DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/wordpress5.8.2_db.sql.tar.gz",
+		Docroot:                       "",
 		Type:                          nodeps.AppTypeWordPress,
 		Safe200URIWithExpectation:     URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
+		DynamicURI:                    URIWithExpect{URI: "/", Expect: "this post has a photo"},
+		FilesImageURI:                 "/wp-content/uploads/2021/12/DSCF0436-randy-and-nancy-with-traditional-wedding-out-fit-2048x1536.jpg",
+		Name:                          "TestCmdWordpress",
+		HTTPProbeURI:                  "wp-admin/setup-config.php",
 	},
 }
 
@@ -136,9 +138,9 @@ func TestValidTestSite(t *testing.T) {
 
 // TestGetLocalHTTPResponse() brings up a project and hits a URL to get the response
 func TestGetLocalHTTPResponse(t *testing.T) {
-	if runtime.GOOS == "windows" || nodeps.IsMacM1() || dockerutil.IsColima() {
-		t.Skip("Skipping on Windows/Mac M1/Colima as we always seem to have port conflicts")
-	}
+	//if runtime.GOOS == "windows" || nodeps.IsMacM1() || dockerutil.IsColima() {
+	//	t.Skip("Skipping on Windows/Mac M1/Colima as we always seem to have port conflicts")
+	//}
 	// We have to get globalconfig read so CA is known and installed.
 	err := globalconfig.ReadGlobalConfig()
 	require.NoError(t, err)
