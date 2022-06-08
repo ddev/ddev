@@ -33,9 +33,9 @@ nav:
   - 'Home': 'index.md'
   - 'Installing ddev':
     - 'Installing Docker': 'users/docker_installation.md'
-    - 'Adding Shell Completion (bash, zsh, etc.)': 'users/shell-completion.md'
     - 'Working in Special Environments': 'users/special-environments.md'
     - 'Improving Performance': 'users/performance.md'
+    - 'Adding Shell Completion (bash, zsh, etc.)': 'users/shell-completion.md'
     - 'Uninstalling ddev': 'users/uninstall.md'
   - 'ddev Basics':
     - 'How DDEV Works': 'users/topics/how_ddev_works.md'
