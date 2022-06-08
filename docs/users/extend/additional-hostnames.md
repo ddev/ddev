@@ -30,9 +30,9 @@ additional_fqdns:
 - anothersite.example.com
 ```
 
-This configuration would result in working FQDNs of somename.ddev.site, example.com, somesite.example.com, and anothersite.example.com.
+This configuration would result in working FQDNs of `somename.ddev.site`, `example.com`, `somesite.example.com`, and `anothersite.example.com`.
 
-**Note**: If you see ddev-router status become unhealthy in `ddev list`, it's most often a result of trying to use conflicting FQDNs in more than one project. "example.com" can only be assigned to one project, or it will break ddev-router.
+**Note**: If you see `ddev-router` status become unhealthy in `ddev list`, it's most often a result of trying to use conflicting FQDNs in more than one project. `example.com` can only be assigned to one project, or it will break `ddev-router`.
 
 **Warning**: this may not work predictably on all systems. There are operating systems and machines where /etc/hosts may not be the first or only resolution technique, especially if the additional_fqdn you use is also in DNS.
 

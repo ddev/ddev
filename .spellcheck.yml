@@ -2,6 +2,7 @@ matrix:
 - name: Markdown
   aspell:
     lang: en
+    ignore-case: true
   dictionary:
     wordlists:
     - .spellcheckwordlist.txt
@@ -17,6 +18,6 @@ matrix:
       - pre
   - pyspelling.filters.url:
   sources:
-  - 'docs/users/*.md'
-  - 'index.md'
+  - 'docs/**/*.md|!docs/developers/*|!docs/users/topics/version-history.md'
+  - 'docs/index.md'
   default_encoding: utf-8

@@ -112,11 +112,11 @@ An example file in .ddev/php/my-php.ini might look like this:
 max_execution_time = 240;
 ```
 
-### Providing custom mysql/MariaDB configuration (my.cnf)
+### Providing custom mysql/MariaDB configuration (`my.cnf`)
 
-You can provide additional MySQL configuration for a project by creating a directory called `.ddev/mysql/` and adding any number of MySQL configuration files (these must have the suffix ".cnf"). These files will be automatically included when MySQL is started. Make sure that the section header is included in the file
+You can provide additional MySQL configuration for a project by creating a directory called `.ddev/mysql/` and adding any number of MySQL configuration files (these must have the suffix `.cnf`). These files will be automatically included when MySQL is started. Make sure that the section header is included in the file
 
-An example file in .ddev/mysql/no_utf8mb4.cnf might be:
+An example file in `.ddev/mysql/no_utf8mb4.cnf` might be:
 
 ```
 [mysqld]
@@ -129,9 +129,9 @@ To load the new configuration, run `ddev restart`.
 
 ### Providing custom Postgresql configuration
 
-If you are using Postgresql, a default posgrexsql.conf is provided in `.ddev/postgres/postgresql.conf`. If you need to alter it, remove the `#ddev-generated` line and `ddev restart`.
+If you are using Postgresql, a default `posgresql.conf` is provided in `.ddev/postgres/postgresql.conf`. If you need to alter it, remove the `#ddev-generated` line and `ddev restart`.
 
-### Extending config.yaml with custom config.\*.yaml files
+### Extending config.yaml with custom `config.\*.yaml` files
 
 You may add additional config.\*.yaml files to organize additional commands as you see fit for your project and team.
 
