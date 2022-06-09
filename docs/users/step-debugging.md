@@ -21,7 +21,6 @@ For each IDE the link to their documentation is provided, and the skeleton steps
 
 * [PhpStorm](#phpstorm-debugging-setup)
 * [Visual Studio Code (vscode)](#visual-studio-code-vscode-debugging-setup)
-* [Atom](#atom-debugging-setup)
 
 <a name="phpstorm"></a>
 
@@ -69,38 +68,6 @@ If you need to debug command-line PHP processes, especially code that is outside
 
 However, if you have not yet used PhpStorm with xdebug for a regular web request, do that to automatically create the PhpStorm "server" with the same name as your primary URL (see "Languages and Frameworks" -> "PHP" -> "Servers"). The key job of the "server" is to map filesystem locations on the workstation (your computer) to filesystem locations on the remote server (in this case the ddev-webserver container). Often, PhpStorm has automatically set up a mapping that doesn't include the entire project (so the vendor directory is not mapped, for example). So map the top-level directory of your project to /var/www/html in the container, as in this image:
 ![PhpStorm mapping](images/PHPStormServerMapping.png)
-
-<a name="atom"></a>
-
-### Atom Debugging Setup
-
-[Atom](https://atom.io/) is an extensible developers' editor promoted by GitHub. The available extensions include [php-debug](https://atom.io/packages/php-debug) which you can use to conduct PHP debugging with the Xdebug PHP extension. This project is currently an alpha release.
-
-1. Under Preferences->+Install install the php-debug add-on:
-![php-debug installation](images/atom_php_debug_install.png)
-2. Add configuration to the Atom config.cson by choosing "Config..." under the "Atom" menu. A "php-debug" stanza must be added, with file mappings that relate to your project. Additionally, you will need to disable the debugger that comes with the `atom-ide-ui` package. (Example [config.cson snippet](snippets/atom_config_cson_snippet.txt)
-![Atom cson config](images/atom_cson_config.png)
-3. Restart Atom to ensure new settings are loaded.
-4. Open a project/folder and open a PHP file you'd like to debug.
-5. Set a breakpoint. (Right-click->PHP Debug->Toggle breakpoint)
-6. Open the debug view and enable debugging by choosing Packages->PHP-Debug->Toggle Debugging. You should see "Listening on address:port 127.0.0.1:9003".
-7. Visit a page that should trigger your breakpoint.
-
-An example configuration:
-
-```
-  "atom-ide-ui":
-    "atom-ide-debugger": {}
-    use:
-      "atom-ide-debugger": "never"
-  "php-debug":
-    PathMaps: [
-      "remotepath;localpath"
-      "/var/www/html;/Users/rfay/workspace/d8git"
-    ]
-```
-
-<a name="vscode"></a>
 
 ### Visual Studio Code (vscode) Debugging Setup
 
