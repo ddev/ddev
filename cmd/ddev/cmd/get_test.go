@@ -88,18 +88,25 @@ func TestCmdGetComplex(t *testing.T) {
 		for _, f := range []string{".platform", ".platform.app.yaml"} {
 			err = os.RemoveAll(filepath.Join(app.GetAppRoot(), f))
 		}
-		err = os.RemoveAll(fmt.Sprintf("junk_%s_%s.txt", runtime.GOOS, runtime.GOARCH))
+		for _, f := range []string{fmt.Sprintf("junk_%s_%s.txt", runtime.GOOS, runtime.GOARCH), "config.platformsh.yaml"} {
+			err = os.RemoveAll(app.GetConfigPath(f))
+			assert.NoError(err)
+		}
+		// We have to completely kill off app because the install.yaml + config.platformsh.yaml got us a completely different
+		// database.
+		err = app.Stop(true, false)
 		assert.NoError(err)
-
-		_ = app.Stop(true, false)
+		app, err = ddevapp.NewApp(app.AppRoot, true)
+		assert.NoError(err)
+		err = app.Start()
+		assert.NoError(err)
 	})
 
 	out, err := exec.RunHostCommand(DdevBin, "get", filepath.Join(origDir, "testdata", t.Name(), "recipe"))
 	require.NoError(t, err, "out=%s", out)
 
 	// Make sure that `#ddev-nodisplay` quieted the output of ddev debug capabilities
-	assert.NotContains(out, "ddev debug capabilities")
-	assert.NotContains(out, "This add-on requires DDEV")
+	assert.NotContains(out, "This action should not have any output")
 
 	app, err = ddevapp.GetActiveApp("")
 	require.NoError(t, err)

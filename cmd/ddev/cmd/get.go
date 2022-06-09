@@ -164,25 +164,9 @@ ddev get --list --all
 			util.Failed("Unable to YamlToDict: %v", err)
 		}
 		for _, action := range s.PreInstallActions {
-			action := os.ExpandEnv(action)
-			t, err := template.New("preInstall").Funcs(sprig.TxtFuncMap()).Parse(action)
+			err = processAction(action, dict, bash)
 			if err != nil {
-				util.Failed("could not parse action '%s': %v", action, err)
-			}
-
-			var doc bytes.Buffer
-			err = t.Execute(&doc, dict)
-			if err != nil {
-				util.Failed("could not parse/execute action '%s': %v", action, err)
-			}
-			action = doc.String()
-
-			out, err := exec.RunHostCommand(bash, "-c", action)
-			if err != nil {
-				util.Failed("Unable to run action %v: %v, output=%s", action, err, out)
-			}
-			if !strings.Contains(action, `#ddev-nodisplay`) {
-				output.UserOut.Printf("Executed pre-install action %v, output=%s.", action, out)
+				util.Failed("could not process pre-install action '%s': %v", action, err)
 			}
 		}
 
@@ -218,21 +202,44 @@ ddev get --list --all
 		}
 
 		for _, action := range s.PostInstallActions {
-			action := os.ExpandEnv(action)
-			out, err := exec.RunHostCommand(bash, "-c", action)
+			err = processAction(action, dict, bash)
 			if err != nil {
-				util.Failed("Unable to run action %v: %v, output=%s", action, err, out)
-			}
-			if !strings.Contains(action, `#ddev-nodisplay`) {
-				output.UserOut.Printf("Executed post-install action %v.", action)
+				util.Failed("could not process post-install action '%s': %v", action, err)
 			}
 		}
+
 		util.Success("Downloaded add-on %s, use `ddev restart` to enable.", sourceRepoArg)
 		if argType == "github" {
 			util.Success("Please read instructions for this addon at the source repo at\nhttps://github.com/%v/%v\nPlease file issues and create pull requests there to improve it.", owner, repo)
 		}
 
 	},
+}
+
+// processAction takes a line from yaml exec section and executes it.
+func processAction(action string, dict map[string]interface{}, bashPath string) error {
+	t, err := template.New("preInstall").Funcs(sprig.TxtFuncMap()).Parse(action)
+	if err != nil {
+		return fmt.Errorf("could not parse action '%s': %v", action, err)
+	}
+
+	var doc bytes.Buffer
+	err = t.Execute(&doc, dict)
+	if err != nil {
+		return fmt.Errorf("could not parse/execute action '%s': %v", action, err)
+	}
+	action = doc.String()
+	// Expand any remaining environment variables.
+	action = os.ExpandEnv(action)
+
+	out, err := exec.RunHostCommand(bashPath, "-c", action)
+	if err != nil {
+		return fmt.Errorf("Unable to run action %v: %v, output=%s", action, err, out)
+	}
+	if !strings.Contains(action, `#ddev-nodisplay`) {
+		output.UserOut.Printf("Executed pre-install action %v, output=%s.", action, out)
+	}
+	return nil
 }
 
 func renderRepositoryList(repos []github.Repository) string {

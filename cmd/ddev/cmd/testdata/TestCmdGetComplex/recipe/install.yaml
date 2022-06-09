@@ -7,8 +7,12 @@ yaml_read_files:
 pre_install_actions:
 - |
   #ddev-nodisplay
-  if ! ( ddev debug capabilities 2>/dev/null | grep ddev-get-yaml-interpolation >/dev/null 2>&1 ) ; then
-    echo "This add-on requires DDEV v1.19.4 or higher, please upgrade." && exit 2
+  echo "This action should not have any output"
+- |
+  {{ $ddev := (env "DDEV_BINARY_FULLPATH") }}
+  {{ if not $ddev }} {{ $ddev = `ddev` }} {{end}}
+  if ! ( which {{ $ddev }} && {{ $ddev }} debug capabilities 2>/dev/null | grep ddev-get-yaml-interpolation >/dev/null 2>&1 ) ; then
+    echo "This add-on requires DDEV v1.19.3-10 or higher, please upgrade." && exit 2
   fi
 - |
   cat <<EOF >.ddev/config.platformsh.yaml
