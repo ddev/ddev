@@ -47,7 +47,7 @@ release:
     name: ddev
   prerelease: auto
   extra_files:
-  - glob: ./archives/completion-scripts/*
+  - glob: ./artifacts/completion-scripts/*
 
 checksum:
   name_template: 'checksums.txt'
