@@ -120,8 +120,8 @@ nfpms:
 #  - rpm
 
   # Packages your package depends on.
-  dependencies:
-  - mkcert
+#  dependencies:
+#  - mkcert
 
   # Packages your package recommends installing.
 #  recommends:
