@@ -41,6 +41,14 @@ builds:
       - bash -c 'if [ "{{.Target}}" = "{{ .Runtime.Goos }}_{{ .Runtime.Goarch }}" ]; then {{.Path}} ; fi'
 #      - bash -c 'rm -rf artifacts/completions_*'
 
+release:
+  github:
+    owner: rfay
+    name: ddev
+  prerelease: auto
+  extra_files:
+  - completion-scripts
+
 checksum:
   name_template: 'checksums.txt'
 
