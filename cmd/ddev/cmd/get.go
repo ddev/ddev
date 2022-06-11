@@ -310,7 +310,11 @@ func listAvailable(officialOnly bool) ([]github.Repository, error) {
 
 	repos, resp, err := client.Search.Repositories(context.Background(), q, nil)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to get list of available services: %v\nresp.Rate=%v", err, resp.Rate)
+		msg := fmt.Sprintf("Unable to get list of available services: %v", err)
+		if resp != nil {
+			msg = msg + fmt.Sprintf(" rateinfo=%v", resp.Rate)
+		}
+		return nil, fmt.Errorf(msg)
 	}
 	out := ""
 	for _, r := range repos.Repositories {

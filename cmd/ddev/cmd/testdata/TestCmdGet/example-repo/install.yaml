@@ -1,7 +1,7 @@
 name: example
 
 pre_install_actions:
-- touch ${DDEV_APPROOT}/.ddev/i-have-been-touched
+- touch .ddev/i-have-been-touched
 
 # files and directories listed here are copied into .ddev
 project_files:

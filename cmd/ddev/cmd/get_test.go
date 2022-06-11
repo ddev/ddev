@@ -61,8 +61,8 @@ func TestCmdGet(t *testing.T) {
 
 	// Test with a directory-path input
 	exampleDir := filepath.Join(origDir, "testdata", t.Name(), "example-repo")
-	_, err = exec.RunHostCommand(DdevBin, "get", exampleDir)
-	assert.NoError(err)
+	out, err = exec.RunHostCommand(DdevBin, "get", exampleDir)
+	assert.NoError(err, "output=%s", out)
 	assert.FileExists(app.GetConfigPath("i-have-been-touched"))
 	assert.FileExists(app.GetConfigPath("docker-compose.example.yaml"))
 	assert.FileExists(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
