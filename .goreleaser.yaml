@@ -8,16 +8,13 @@ builds:
     main: ./cmd/ddev
     env:
       - CGO_ENABLED=0
-    goos:
-      - darwin
-      - linux
-      - windows
-    goarch:
-    - arm64
-    - amd64
-    ignore:
-    - goos: windows
-      goarch: arm64
+    targets:
+    - darwin_arm64
+    - darwin_amd64
+    - linux_arm64
+    - linux_amd64
+    - windows_amd64
+
     ldflags:
       - -extldflags -static
       - -s -w -X github.com/drud/ddev/pkg/versionconstants.DdevVersion={{.Version}} -X github.com/drud/ddev/pkg/versionconstants.SegmentKey={{.Env.SegmentKey}}
