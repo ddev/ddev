@@ -9,8 +9,8 @@ builds:
     env:
       - CGO_ENABLED=0
     goos:
-#      - darwin
-#      - linux
+      - darwin
+      - linux
       - windows
     goarch:
     - arm64
@@ -23,7 +23,11 @@ builds:
       - -s -w -X github.com/drud/ddev/pkg/versionconstants.DdevVersion={{.Version}} -X github.com/drud/ddev/pkg/versionconstants.SegmentKey={{.Env.SegmentKey}}
     hooks:
       post:
-      - bash -c "./winpkg/scripts/build-installer.sh $(dirname {{.Path}}) {{.Version}}"
+      - bash -c 'if [ "{{.Target}}" = "windows_amd64_v1" ]; then ./winpkg/scripts/build-installer.sh $(dirname {{.Path}}) {{.Version}}; fi'
+      #todo: sign binaries
+      #todo: sign installer
+      #todo: build choco package
+      #todo: push choco package
 
   - id: completions
     main: ./cmd/ddev_gen_autocomplete
