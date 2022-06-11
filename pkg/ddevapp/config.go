@@ -864,8 +864,14 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg:
 // docker-compose 'build'
 // It may include the contents of .ddev/<container>-build
 func WriteBuildDockerfile(fullpath string, userDockerfilePath string, extraPackages []string, composerVersion string, extraContent string) error {
+
+	// We must start with a clean base directory
+	err := os.RemoveAll(filepath.Dir(fullpath))
+	if err != nil {
+		return fmt.Errorf("unable to clean up directory %s, you may want to delete it manually: %v", filepath.Dir(fullpath), err)
+	}
 	// Start with user-built dockerfile if there is one.
-	err := os.MkdirAll(filepath.Dir(fullpath), 0755)
+	err = os.MkdirAll(filepath.Dir(fullpath), 0755)
 	if err != nil {
 		return err
 	}
