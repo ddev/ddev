@@ -10,7 +10,7 @@ if [ $1 = "" ]; then
   echo "first arg must be the NSIS_HOME"
   echo "For example nsis_setup.sh /usr/share/nsis"
   echo "For example nsis_setup.sh /usr/local/share/nsis"
-  echo "For example, nsis_setup.sh /opt/homebrew/Cellar/makensis/3.07/share/nsis"
+  echo "For example, nsis_setup.sh /opt/homebrew/Cellar/makensis/3.08/share/nsis"
   exit 1
 fi
 NSIS_HOME=$1

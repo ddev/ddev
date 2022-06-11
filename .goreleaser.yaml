@@ -9,9 +9,9 @@ builds:
     env:
       - CGO_ENABLED=0
     goos:
-      - darwin
+#      - darwin
+#      - linux
       - windows
-      - linux
     goarch:
     - arm64
     - amd64
@@ -21,14 +21,17 @@ builds:
     ldflags:
       - -extldflags -static
       - -s -w -X github.com/drud/ddev/pkg/versionconstants.DdevVersion={{.Version}} -X github.com/drud/ddev/pkg/versionconstants.SegmentKey={{.Env.SegmentKey}}
+    hooks:
+      post:
+      - ./winpkg/scripts/build-installer.sh $(dirname {{.Path}}) {{.Version}}
 
   - id: completions
     main: ./cmd/ddev_gen_autocomplete
     binary: ddev_gen_autocomplete
     goos:
+    - linux
     - darwin
     - windows
-    - linux
     goarch:
     - arm64
     - amd64
@@ -37,8 +40,8 @@ builds:
       goarch: arm64
     hooks:
       post:
-      # This is awkward and fragile; haven't figured out how to get the path with templating
-      - bash -c 'if [ "{{ .Os }}_{{ .Arch }}" = "{{ .Runtime.Goos }}_{{ .Runtime.Goarch }}" ]; then artifacts/completions_{{.Os}}_{{.Arch}}/ddev_gen_autocomplete ; fi'
+      # Create completions and then delete the creator binary
+      - bash -c 'if [ "{{ .Os }}_{{ .Arch }}" = "{{ .Runtime.Goos }}_{{ .Runtime.Goarch }}" ]; then {{.Path}} ; fi'
       - bash -c 'rm -rf artifacts/completions_*'
 
 checksum:

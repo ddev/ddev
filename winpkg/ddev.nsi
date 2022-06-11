@@ -118,7 +118,7 @@
  *
  * Has to be done before including headers
  */
-OutFile "..\.gotmp\bin\windows_amd64\ddev_windows_installer.${PRODUCT_VERSION}.exe"
+OutFile "${TARGET}\ddev_windows_installer.${PRODUCT_VERSION}.exe"
 Unicode true
 SetCompressor /SOLID lzma
 
@@ -225,7 +225,7 @@ Caption "${PRODUCT_NAME_FULL} ${PRODUCT_VERSION} $InstallerModeCaption"
 !define MUI_PAGE_HEADER_SUBTEXT "Please review the license terms before installing sudo."
 !define MUI_PAGE_CUSTOMFUNCTION_PRE sudoLicPre
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE sudoLicLeave
-!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_amd64\sudo_license.txt"
+!insertmacro MUI_PAGE_LICENSE "${TARGET}\sudo_license.txt"
 
 ; Components page
 !ifdef DOCKER_NSH
@@ -241,7 +241,7 @@ Var MkcertSetup
 !define MUI_PAGE_HEADER_SUBTEXT "Please review the license terms before installing mkcert."
 !define MUI_PAGE_CUSTOMFUNCTION_PRE mkcertLicPre
 !define MUI_PAGE_CUSTOMFUNCTION_LEAVE mkcertLicLeave
-!insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_amd64\mkcert_license.txt"
+!insertmacro MUI_PAGE_LICENSE "${TARGET}\mkcert_license.txt"
 
 ; License page WinNFSd
 !define MUI_PAGE_HEADER_TEXT "License Agreement for WinNFSd"
@@ -363,7 +363,7 @@ SectionGroup /e "${PRODUCT_NAME_FULL}"
     SetOverwrite on
     
     ; Copy files
-    File "..\.gotmp\bin\windows_amd64\ddev.exe"
+    File "${TARGET}\ddev.exe"
     File /oname=license.txt "..\LICENSE"
 
     ; Install icons
@@ -471,7 +471,7 @@ Section "${GSUDO_NAME}" SecSudo
   SetOverwrite try
 
   ; Copy files
-  File "..\.gotmp\bin\windows_amd64\sudo_license.txt"
+  File "${TARGET}\sudo_license.txt"
 
   ; Set URL and temporary file name
   !define GSUDO_DEST "$INSTDIR\${GSUDO_SETUP}"
@@ -507,8 +507,8 @@ SectionGroup /e "mkcert"
       SetOverwrite try
 
       ; Copy files
-      File "..\.gotmp\bin\windows_amd64\mkcert.exe"
-      File "..\.gotmp\bin\windows_amd64\mkcert_license.txt"
+      File "${TARGET}\mkcert.exe"
+      File "${TARGET}\mkcert_license.txt"
 
       ; Install icons
       SetOutPath "$INSTDIR\Icons"
