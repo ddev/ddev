@@ -53,7 +53,7 @@ snapshot:
 
 # Release requires a tag to exist, builds all architectures
 release:
-	goreleaser build --rm-dist -f .goreleaser-build.yaml
+	goreleaser release --rm-dist -f .goreleaser-build.yaml
 
 
 #todo
