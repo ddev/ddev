@@ -41,7 +41,7 @@ builds:
     hooks:
       post:
       # Create completions and then delete the creator binary
-      - bash -c 'if [ "{{ .Os }}_{{ .Arch }}" = "{{ .Runtime.Goos }}_{{ .Runtime.Goarch }}" ]; then {{.Path}} ; fi'
+      - bash -c 'if [ "{{.Target}}" = "{{ .Runtime.Goos }}_{{ .Runtime.Goarch }}" ]; then {{.Path}} ; fi'
       - bash -c 'rm -rf artifacts/completions_*'
 
 checksum:
