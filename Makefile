@@ -30,23 +30,7 @@ PKG := github.com/drud/ddev
 # Top-level directories to build
 SRC_DIRS := cmd pkg
 
-# Version variables to replace in build
-VERSION_VARIABLES ?= DdevVersion SegmentKey
 
-# These variables will be used as the default unless overridden by the make
-DdevVersion ?= $(VERSION)
-# WebTag ?= $(VERSION)  # WebTag is normally specified in version_constants.go, sometimes overridden (night-build.mak)
-# DBTag ?=  $(VERSION)  # DBTag is normally specified in version_constants.go, sometimes overridden (night-build.mak)
-# RouterTag ?= $(VERSION) #RouterTag is normally specified in version_constants.go, sometimes overridden (night-build.mak)
-# DBATag ?= $(VERSION) #DBATag is normally specified in version_constants.go, sometimes overridden (night-build.mak)
-
-# VERSION can be set by
-  # Default: git tag
-  # make command line: make VERSION=0.9.0
-# It can also be explicitly set in the Makefile as commented out below.
-
-# This version-strategy uses git tags to set the version string
-# VERSION can be overridden on make commandline: make VERSION=0.9.1 push
 VERSION := $(shell git describe --tags --always --dirty)
 # Some things insist on having the version without the leading 'v', so provide a
 # $(NO_V_VERSION) without it.
@@ -56,35 +40,24 @@ GITHUB_ORG := drud
 
 BUILD_OS = $(shell go env GOHOSTOS)
 BUILD_ARCH = $(shell go env GOHOSTARCH)
-VERSION_LDFLAGS=$(foreach v,$(VERSION_VARIABLES),-X '$(PKG)/pkg/versionconstants.$(v)=$($(v))')
-LDFLAGS=-extldflags -static $(VERSION_LDFLAGS)
 DEFAULT_BUILD=$(shell go env GOHOSTOS)_$(shell go env GOHOSTARCH)
 
-build: $(DEFAULT_BUILD)
+build:
+	@rm -rf .gotmp # make sure legacy .gotmp is gone
+	goreleaser build --snapshot --skip-validate --rm-dist --single-target
+
+all:
+	goreleaser build --snapshot --rm-dist
+
+release:
+	goreleaser build --rm-dist
 
 
-# Provide shorthand targets
-linux_amd64: $(GOTMP)/bin/linux_amd64/ddev
-linux_arm64: $(GOTMP)/bin/linux_arm64/ddev
-linux_arm: $(GOTMP)/bin/linux_arm/ddev
-darwin_amd64: $(GOTMP)/bin/darwin_amd64/ddev
-darwin_arm64: $(GOTMP)/bin/darwin_arm64/ddev
-windows_amd64: windows_install
-windows_arm64: $(GOTMP)/bin/windows_arm64/ddev.exe
-
-TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe
-$(TARGETS): $(GOFILES)
-	@echo "building $@ from $(SRC_AND_UNDER)";
-	@#echo "LDFLAGS=$(LDFLAGS)";
-	@rm -f $@
-	@export TARGET=$(word 3, $(subst /, ,$@)) && \
-	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" CGO_ENABLED=0 GOPATH="$(PWD)/$(GOTMP)" GOCACHE="$(PWD)/$(GOTMP)/.cache" && \
-	mkdir -p $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
-	chmod 777 $(GOTMP)/{.cache,pkg,src,bin/$$TARGET} && \
-	go build -o $(GOTMP)/bin/$$TARGET -installsuffix static -ldflags " $(LDFLAGS) " $(SRC_AND_UNDER)
-	$( shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi )
-	@echo $(VERSION) >VERSION.txt
-
+#todo
+# - build all if not specific singletarget, bhow?
+# - only skip validate on dirty
+# - Build other things like the completions generator and completions themselves
+# - Build windows installer (separate build I guess)
 
 TEST_TIMEOUT=4h
 BUILD_ARCH = $(shell go env GOARCH)
@@ -249,11 +222,8 @@ golangci-lint:
 version:
 	@echo VERSION:$(VERSION)
 
-clean: bin-clean
-
-bin-clean:
-	@rm -rf bin
-	$(shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP) && rm -rf $(GOTMP); fi )
+clean:
+	@rm -rf artifacts
 
 # print-ANYVAR prints the expanded variable
 print-%: ; @echo $* = $($*)

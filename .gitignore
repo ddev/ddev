@@ -1,5 +1,5 @@
 # Temporary build-tools artifacts to be ignored
-/.gotmp/
+/artifacts/
 /VERSION.txt
 .docker_image
 /dictionary.dic
