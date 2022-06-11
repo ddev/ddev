@@ -43,17 +43,17 @@ BUILD_ARCH = $(shell go env GOHOSTARCH)
 DEFAULT_BUILD=$(shell go env GOHOSTOS)_$(shell go env GOHOSTARCH)
 
 build:
-	goreleaser build --snapshot --skip-validate --rm-dist --single-target
+	goreleaser build --snapshot --skip-validate --rm-dist --single-target -f .goreleaser-build.yaml
 
 windows:
-	goreleaser build --snapshot --skip-validate --rm-dist
+	goreleaser build --snapshot --skip-validate --rm-dist -f .goreleaser-build.yaml
 # Snapshot builds all architectures without a tag or validation
 snapshot:
-	goreleaser build --snapshot --rm-dist
+	goreleaser build --snapshot --rm-dist -f .goreleaser-build.yaml
 
 # Release requires a tag to exist, builds all architectures
 release:
-	goreleaser build --rm-dist
+	goreleaser build --rm-dist -f .goreleaser-build.yaml
 
 
 #todo

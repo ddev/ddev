@@ -1,6 +1,5 @@
 project_name: ddev
 
-before:
 dist: artifacts
 
 builds:
