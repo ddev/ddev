@@ -43,7 +43,6 @@ BUILD_ARCH = $(shell go env GOHOSTARCH)
 DEFAULT_BUILD=$(shell go env GOHOSTOS)_$(shell go env GOHOSTARCH)
 
 build:
-	@rm -rf .gotmp # make sure legacy .gotmp is gone
 	goreleaser build --snapshot --skip-validate --rm-dist --single-target
 
 all:

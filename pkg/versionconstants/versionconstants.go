@@ -6,8 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 )
 
-// DdevVersion is the current version of ddev, by default the git committish (should be current git tag)
-var DdevVersion = "v0.0.0-overridden-by-make" // Note that this is overridden by make
+var DdevVersion = "dev" // Note that this is overridden by make
 
 // SegmentKey is the ddev-specific key for Segment service
 // Compiled with link-time variables

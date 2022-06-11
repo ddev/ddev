@@ -21,12 +21,11 @@ builds:
 #    - -installsuffix static
     ldflags:
       - -extldflags -static
-      - -s -w -X version.DdevVersion={{.Version}} -X version.SegmentKey={{.Env.SegmentKey}}
+      - -s -w -X github.com/drud/ddev/pkg/versionconstants.DdevVersion={{.Version}} -X github.com/drud/ddev/pkg/versionconstants.SegmentKey={{.Env.SegmentKey}}
 
 checksum:
   name_template: 'checksums.txt'
-snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+
 changelog:
   sort: asc
   filters:
