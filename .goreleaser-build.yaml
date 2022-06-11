@@ -28,16 +28,13 @@ builds:
   - id: completions
     main: ./cmd/ddev_gen_autocomplete
     binary: ddev_gen_autocomplete
-    goos:
-    - linux
-    - darwin
-    - windows
-    goarch:
-    - arm64
-    - amd64
-    ignore:
-    - goos: windows
-      goarch: arm64
+    targets:
+    - darwin_arm64
+    - darwin_amd64
+    - linux_arm64
+    - linux_amd64
+    - windows_amd64
+
     hooks:
       post:
       # Create completions and then delete the creator binary
