@@ -23,7 +23,7 @@ builds:
       - -s -w -X github.com/drud/ddev/pkg/versionconstants.DdevVersion={{.Version}} -X github.com/drud/ddev/pkg/versionconstants.SegmentKey={{.Env.SegmentKey}}
     hooks:
       post:
-      - ./winpkg/scripts/build-installer.sh $(dirname {{.Path}}) {{.Version}}
+      - bash -c "./winpkg/scripts/build-installer.sh $(dirname {{.Path}}) {{.Version}}"
 
   - id: completions
     main: ./cmd/ddev_gen_autocomplete
