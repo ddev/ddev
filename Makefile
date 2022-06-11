@@ -45,16 +45,16 @@ DEFAULT_BUILD=$(shell go env GOHOSTOS)_$(shell go env GOHOSTARCH)
 build:
 	goreleaser build --snapshot --skip-validate --rm-dist --single-target
 
-all:
+# Snapshot builds all architectures without a tag or validation
+snapshot:
 	goreleaser build --snapshot --rm-dist
 
+# Release requires a tag to exist, builds all architectures
 release:
 	goreleaser build --rm-dist
 
 
 #todo
-# - build all if not specific singletarget, bhow?
-# - only skip validate on dirty
 # - Build other things like the completions generator and completions themselves
 # - Build windows installer (separate build I guess)
 

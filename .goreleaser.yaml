@@ -4,7 +4,8 @@ before:
 dist: artifacts
 
 builds:
-  - main: ./cmd/ddev
+  - id: ddev
+    main: ./cmd/ddev
     env:
       - CGO_ENABLED=0
     goos:
@@ -17,11 +18,28 @@ builds:
     ignore:
     - goos: windows
       goarch: arm64
-    flags:
-#    - -installsuffix static
     ldflags:
       - -extldflags -static
       - -s -w -X github.com/drud/ddev/pkg/versionconstants.DdevVersion={{.Version}} -X github.com/drud/ddev/pkg/versionconstants.SegmentKey={{.Env.SegmentKey}}
+
+  - id: completions
+    main: ./cmd/ddev_gen_autocomplete
+    binary: ddev_gen_autocomplete
+    goos:
+    - darwin
+    - windows
+    - linux
+    goarch:
+    - arm64
+    - amd64
+    ignore:
+    - goos: windows
+      goarch: arm64
+    hooks:
+      post:
+      # This is awkward and fragile; haven't figured out how to get the path with templating
+      - bash -c 'if [ "{{ .Os }}_{{ .Arch }}" = "{{ .Runtime.Goos }}_{{ .Runtime.Goarch }}" ]; then artifacts/completions_{{.Os}}_{{.Arch}}/ddev_gen_autocomplete ; fi'
+      - bash -c 'rm -rf artifacts/completions_*'
 
 checksum:
   name_template: 'checksums.txt'
