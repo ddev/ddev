@@ -824,14 +824,18 @@ RUN echo "*:*:db:db:db" > ~postgres/.pgpass && chown postgres:postgres ~postgres
 RUN printf "# TYPE DATABASE USER CIDR-ADDRESS  METHOD \nhost  all  all 0.0.0.0/0 md5\nlocal all all trust\nhost    replication    db             0.0.0.0/0  trust\nhost replication all 0.0.0.0/0 trust\nlocal replication all trust\nlocal replication all peer\n" >/etc/postgresql/pg_hba.conf
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests bzip2 less procps pv vim
 `
+	}
 
+	err = WriteBuildDockerfile(app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build"), app.DBImageExtraPackages, "", extraDBContent)
+
+	// CopyEmbedAssets of postgres healthcheck has to be done after we WriteBuildDockerfile
+	// because that deletes the .dbimageBuild directory
+	if app.Database.Type == nodeps.Postgres {
 		err = fileutil.CopyEmbedAssets(bundledAssets, "healthcheck", app.GetConfigPath(".dbimageBuild"))
 		if err != nil {
 			return "", err
 		}
 	}
-
-	err = WriteBuildDockerfile(app.GetConfigPath(".dbimageBuild/Dockerfile"), app.GetConfigPath("db-build"), app.DBImageExtraPackages, "", extraDBContent)
 
 	if err != nil {
 		return "", err
