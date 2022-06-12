@@ -969,7 +969,7 @@ func TestDdevXdebugIsEnabledInTriggerMode(t *testing.T) {
 			time.Sleep(time.Second)
 			t.Logf("Curling to port 9003 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
 			// Curl to the project's index.php or anything else
-			req, err := testcommon.BuildLocalRequestFromUrl(app.GetWebContainerDirectHTTPURL())
+			req, err := testcommon.BuildLocalRequestFromURL(app.GetWebContainerDirectHTTPURL())
 			assert.NoError(err)
 			req.Header.Set("Cookie", "XDEBUG_SESSION=start")
 			out, resp, err := testcommon.ExecuteRequest(req, 12)

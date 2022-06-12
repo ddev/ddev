@@ -321,13 +321,13 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 // GetLocalHTTPResponse takes a URL and optional timeout in seconds,
 // hits the local docker for it, returns result
 // Returns error (with the body) if not 200 status code.
-func GetLocalHTTPResponse(rawUrl string, timeoutSecsAry ...int) (string, *http.Response, error) {
+func GetLocalHTTPResponse(rawURL string, timeoutSecsAry ...int) (string, *http.Response, error) {
 	timeoutSecs := 60
 	if len(timeoutSecsAry) > 0 {
 		timeoutSecs = timeoutSecsAry[0]
 	}
 
-	req, err := BuildLocalRequestFromUrl(rawUrl)
+	req, err := BuildLocalRequestFromURL(rawURL)
 	if err != nil {
 		return "", nil, err
 	}
@@ -335,10 +335,10 @@ func GetLocalHTTPResponse(rawUrl string, timeoutSecsAry ...int) (string, *http.R
 	return ExecuteRequest(req, timeoutSecs)
 }
 
-func BuildLocalRequestFromUrl(rawUrl string) (*http.Request, error) {
-	u, err := url.Parse(rawUrl)
+func BuildLocalRequestFromURL(rawURL string) (*http.Request, error) {
+	u, err := url.Parse(rawURL)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse url %s: %v", rawUrl, err)
+		return nil, fmt.Errorf("failed to parse url %s: %v", rawURL, err)
 	}
 	port := u.Port()
 
