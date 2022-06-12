@@ -763,38 +763,24 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
-	// Most of the time there's no reason to do all versions of PHP
-	phpKeys := []string{}
-	exclusions := []string{"5.6", "7.0", "7.1", "7.2"}
-	for k := range nodeps.ValidPHPVersions {
-		if os.Getenv("GOTEST_SHORT") != "" && !nodeps.ArrayContainsString(exclusions, k) {
-			phpKeys = append(phpKeys, k)
-		}
-	}
-	sort.Strings(phpKeys)
-
-	for _, v := range phpKeys {
+	for _, v := range getPhpVersionsToTest() {
 		app.PHPVersion = v
 		t.Logf("Beginning XDebug checks with XDebug php%s\n", v)
 
 		err = app.Restart()
 		require.NoError(t, err)
 
+		// Run with xdebug enabled
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
+			Cmd: "enable_autostart",
+		})
+		assert.NoError(err)
 		opts := &ddevapp.ExecOpts{
 			Service: "web",
 			Cmd:     "php --ri xdebug",
 		}
+
 		stdout, _, err := app.Exec(opts)
-		assert.Error(err)
-		assert.Contains(stdout, "Extension 'xdebug' not present")
-
-		// Run with xdebug enabled
-		_, _, err = app.Exec(&ddevapp.ExecOpts{
-			Cmd: "enable_xdebug",
-		})
-		assert.NoError(err)
-
-		stdout, _, err = app.Exec(opts)
 		assert.NoError(err)
 
 		if err != nil {
@@ -822,7 +808,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			time.Sleep(time.Second)
 			t.Logf("Curling to port 9003 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
 			// Curl to the project's index.php or anything else
-			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL(), 12)
+			out, resp, err := testcommon.GetLocalHTTPResponse(app.GetWebContainerDirectHTTPURL(), 12)
 			if err != nil {
 				t.Logf("time=%v got resp %v output %s: %v", time.Now(), resp, out, err)
 				if resp != nil {
@@ -865,6 +851,155 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		}
 	}
 	runTime()
+}
+
+// TestDdevXdebugIsEnabledInTriggerMode tests running with a trigger (default)
+func TestDdevXdebugIsEnabledInTriggerMode(t *testing.T) {
+	// 2021-02: I've been unable to make this test work on WSL2, even though it's easy to demonstrate
+	// that it works using PhpStorm, etc. The go listener here doesn't seem to listen on all interfaces.
+	// If you get golang listening, then enter the web container and try to connect to the port golang
+	// is listening on, it can't connect. However, if you use netcat to listen on the wsl2 side and then
+	// connect to it from inside the container, it connects fine.
+	if nodeps.IsWSL2() || dockerutil.IsColima() {
+		t.Skip("Skipping on WSL2/Colima because this test doesn't work although manual testing works")
+	}
+	assert := asrt.New(t)
+
+	origDir, _ := os.Getwd()
+
+	app := &ddevapp.DdevApp{}
+	testcommon.ClearDockerEnv()
+
+	// On macOS we want to just listen on localhost port, to not trigger
+	// firewall block. On other systems, just listen on all interfaces
+	listenPort := ":9003"
+	if runtime.GOOS == "darwin" {
+		listenPort = "127.0.0.1:9003"
+	}
+
+	projDir := testcommon.CreateTmpDir(t.Name())
+	app, err := ddevapp.NewApp(projDir, false)
+	require.NoError(t, err)
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	// Create the simplest possible php file
+	err = fileutil.TemplateStringToFile("<?php\necho \"hi there\";\n", nil, filepath.Join(app.AppRoot, "index.php"))
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err := os.Chdir(origDir)
+		assert.NoError(err)
+		err = os.RemoveAll(projDir)
+		assert.NoError(err)
+	})
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", app.Name, t.Name()))
+
+	_ = os.Chdir(app.AppRoot)
+
+	testcommon.ClearDockerEnv()
+
+	for _, v := range getPhpVersionsToTest() {
+		app.PHPVersion = v
+		t.Logf("Beginning XDebug checks with XDebug php%s\n", v)
+
+		err = app.Restart()
+		require.NoError(t, err)
+
+		opts := &ddevapp.ExecOpts{
+			Service: "web",
+			Cmd:     "php --ri xdebug",
+		}
+		stdout, _, err := app.Exec(opts)
+		assert.Contains(stdout, "xdebug.mode")
+
+		// PHP 7.2 through 8.1 gets xdebug 3.0+
+		if nodeps.ArrayContainsString([]string{nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80, nodeps.PHP81}, app.PHPVersion) {
+			assert.Contains(stdout, "xdebug.mode => debug,profile,trace => debug,profile,trace", "xdebug debugging is not enabled for %s", v)
+			assert.Contains(stdout, "xdebug.client_host => host.docker.internal => host.docker.internal")
+		} else {
+			assert.Contains(stdout, "xdebug support => enabled", "xdebug is not enabled for %s", v)
+			assert.Contains(stdout, "xdebug.remote_host => host.docker.internal => host.docker.internal")
+		}
+
+		// Start a listener on port 9003 of localhost (where PHPStorm or whatever would listen)
+		listener, err := net.Listen("tcp", listenPort)
+		require.NoError(t, err)
+		time.Sleep(time.Second * 1)
+
+		acceptListenDone := make(chan bool, 1)
+		defer close(acceptListenDone)
+
+		// Accept is blocking, no way to timeout, so use
+		// goroutine instead.
+		go func() {
+			t.Logf("Attempting accept of port 9003 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
+
+			// Accept the listen on 9003 coming in from in-container php-xdebug
+			conn, err := listener.Accept()
+			assert.NoError(err)
+			if err == nil {
+				t.Logf("Completed accept of port 9003 with xdebug enabled, PHP version=%s, time=%v\n", v, time.Now())
+			} else {
+				t.Logf("Failed accept on port 9003, err=%v", err)
+				acceptListenDone <- true
+				return
+			}
+			// Grab the Xdebug connection start and look in it for "Xdebug"
+			b := make([]byte, 650)
+			_, err = bufio.NewReader(conn).Read(b)
+			assert.NoError(err)
+			lineString := string(b)
+			assert.Contains(lineString, "Xdebug")
+			assert.Contains(lineString, `xdebug:language_version="`+v)
+			acceptListenDone <- true
+		}()
+
+		go func() {
+			time.Sleep(time.Second)
+			t.Logf("Curling to port 9003 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
+			// Curl to the project's index.php or anything else
+			req, err := testcommon.BuildLocalRequestFromUrl(app.GetWebContainerDirectHTTPURL())
+			assert.NoError(err)
+			req.Header.Set("Cookie", "XDEBUG_SESSION=start")
+			out, resp, err := testcommon.ExecuteRequest(req, 12)
+
+			if err != nil {
+				t.Logf("time=%v got resp %v output %s: %v", time.Now(), resp, out, err)
+				if resp != nil {
+					t.Logf("resp code=%v", resp.StatusCode)
+				}
+			}
+		}()
+
+		select {
+		case <-acceptListenDone:
+			fmt.Printf("Read from acceptListenDone at %v\n", time.Now())
+		case <-time.After(time.Second * 11):
+			t.Fatalf("Timed out waiting for accept/listen at %v, PHP version %v\n", time.Now(), v)
+		}
+	}
+	runTime()
+}
+
+func getPhpVersionsToTest() []string {
+	// Most of the time there's no reason to do all versions of PHP
+	exclusions := []string{"5.6", "7.0", "7.1", "7.2"}
+
+	var phpKeys []string
+	for k := range nodeps.ValidPHPVersions {
+		if os.Getenv("GOTEST_SHORT") != "" && nodeps.ArrayContainsString(exclusions, k) {
+			continue
+		}
+
+		phpKeys = append(phpKeys, k)
+	}
+
+	sort.Strings(phpKeys)
+
+	return phpKeys
 }
 
 // TestDdevXhprofEnabled tests running with xhprof_enabled = true, etc.
@@ -954,12 +1089,12 @@ func TestDdevXhprofEnabled(t *testing.T) {
 			assert.Contains(stdout, "xhprof.output_dir", "xhprof is not enabled for %s", v)
 
 			// Dummy hit to avoid M1 "connection reset by peer"
-			_, _, _ = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), 1)
-			out, _, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL(), 1)
+			_, _, _ = testcommon.GetLocalHTTPResponse(app.GetPrimaryURL(), 1)
+			out, _, err := testcommon.GetLocalHTTPResponse(app.GetPrimaryURL(), 1)
 			assert.NoError(err, "Failed to get base URL webserver_type=%s, php_version=%s", webserverKey, v)
 			assert.Contains(out, "module_xhprof")
 
-			out, _, err = testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL()+"/xhprof/", 1)
+			out, _, err = testcommon.GetLocalHTTPResponse(app.GetPrimaryURL()+"/xhprof/", 1)
 			assert.NoError(err)
 			// Output should contain at least one run
 			assert.Contains(out, ".ddev.xhprof</a><small>")
@@ -1884,7 +2019,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		// Test dynamic php + database content.
 		rawurl := app.GetPrimaryURL() + site.DynamicURI.URI
-		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 120)
+		body, resp, err := testcommon.GetLocalHTTPResponse(rawurl, 120)
 		assert.NoError(err, "GetLocalHTTPResponse returned err on project=%s rawurl %s, resp=%v: %v", site.Name, rawurl, resp, err)
 		if err != nil && strings.Contains(err.Error(), "container ") {
 			logs, err := ddevapp.GetErrLogsFromApp(app, err)
@@ -1895,7 +2030,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		// Load an image from the files section
 		if site.FilesImageURI != "" {
-			_, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetPrimaryURL()+site.FilesImageURI)
+			_, resp, err := testcommon.GetLocalHTTPResponse(app.GetPrimaryURL() + site.FilesImageURI)
 			assert.NoError(err, "failed ImageURI response on project %s", site.Name)
 			if err != nil && resp != nil {
 				assert.Equal("image/jpeg", resp.Header["Content-Type"][0])
@@ -2964,8 +3099,8 @@ func TestHttpsRedirection(t *testing.T) {
 				reqURL := parts.scheme + "://" + strings.ToLower(app.GetHostname()) + parts.uri
 				//t.Logf("TestHttpsRedirection trying URL %s with webserver_type=%s", reqURL, webserverType)
 				// Add extra hit to avoid occasional nil result
-				_, _, _ = testcommon.GetLocalHTTPResponse(t, reqURL, 60)
-				out, resp, err := testcommon.GetLocalHTTPResponse(t, reqURL, 60)
+				_, _, _ = testcommon.GetLocalHTTPResponse(reqURL, 60)
+				out, resp, err := testcommon.GetLocalHTTPResponse(reqURL, 60)
 
 				require.NotNil(t, resp, "resp was nil for projectType=%s webserver_type=%s url=%s, err=%v, out='%s'", projectType, webserverType, reqURL, err, out)
 				if resp != nil {
@@ -3160,7 +3295,7 @@ func TestWebserverType(t *testing.T) {
 				assert.NoError(getLogsErr)
 				t.Fatalf("app.StartAndWait failure for WebserverType=%s; site.Name=%s; err=%v, logs:\n=====\n%s\n=====\n", app.WebserverType, site.Name, startErr, appLogs)
 			}
-			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL()+"/servertype.php")
+			out, resp, err := testcommon.GetLocalHTTPResponse(app.GetWebContainerDirectHTTPURL() + "/servertype.php")
 			require.NoError(t, err)
 
 			expectedServerType := "Apache/2"
@@ -3269,7 +3404,7 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 			if parts.Host != "localhost" {
 				// Dummy attempt to get webserver "warmed up" before real try.
 				// Forced by M1 constant EOFs
-				_, _, _ = testcommon.GetLocalHTTPResponse(t, site.Safe200URIWithExpectation.URI, 60)
+				_, _, _ = testcommon.GetLocalHTTPResponse(site.Safe200URIWithExpectation.URI, 60)
 				_, _ = testcommon.EnsureLocalHTTPContent(t, item+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect, 60)
 			}
 

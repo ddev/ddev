@@ -321,22 +321,31 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 // GetLocalHTTPResponse takes a URL and optional timeout in seconds,
 // hits the local docker for it, returns result
 // Returns error (with the body) if not 200 status code.
-func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (string, *http.Response, error) {
-	var timeoutSecs = 60
+func GetLocalHTTPResponse(rawUrl string, timeoutSecsAry ...int) (string, *http.Response, error) {
+	timeoutSecs := 60
 	if len(timeoutSecsAry) > 0 {
 		timeoutSecs = timeoutSecsAry[0]
 	}
-	timeoutTime := time.Duration(timeoutSecs) * time.Second
-	assert := asrt.New(t)
 
-	u, err := url.Parse(rawurl)
+	req, err := BuildLocalRequestFromUrl(rawUrl)
 	if err != nil {
-		t.Fatalf("Failed to parse url %s: %v", rawurl, err)
+		return "", nil, err
+	}
+
+	return ExecuteRequest(req, timeoutSecs)
+}
+
+func BuildLocalRequestFromUrl(rawUrl string) (*http.Request, error) {
+	u, err := url.Parse(rawUrl)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse url %s: %v", rawUrl, err)
 	}
 	port := u.Port()
 
 	dockerIP, err := dockerutil.GetDockerIP()
-	assert.NoError(err)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get docker ip: %v", err)
+	}
 
 	fakeHost := u.Hostname()
 	// Add the port if there is one.
@@ -346,10 +355,22 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (s
 	}
 	localAddress := u.String()
 
+	req, err := http.NewRequest("GET", localAddress, nil)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to NewRequest GET %s: %v", localAddress, err)
+	}
+
+	req.Host = fakeHost
+
+	return req, nil
+}
+
+func ExecuteRequest(req *http.Request, timeout int) (string, *http.Response, error) {
 	// use ServerName: fakeHost to verify basic usage of certificate.
 	// This technique is from https://stackoverflow.com/a/47169975/215713
 	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{ServerName: fakeHost},
+		TLSClientConfig: &tls.Config{ServerName: req.Host},
 	}
 
 	// Do not follow redirects, https://stackoverflow.com/a/38150816/215713
@@ -358,15 +379,8 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (s
 			return http.ErrUseLastResponse
 		},
 		Transport: transport,
-		Timeout:   timeoutTime,
+		Timeout:   time.Duration(timeout) * time.Second,
 	}
-
-	req, err := http.NewRequest("GET", localAddress, nil)
-
-	if err != nil {
-		return "", nil, fmt.Errorf("Failed to NewRequest GET %s: %v", localAddress, err)
-	}
-	req.Host = fakeHost
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -394,14 +408,14 @@ func EnsureLocalHTTPContent(t *testing.T, rawurl string, expectedContent string,
 	}
 	assert := asrt.New(t)
 
-	body, resp, err := GetLocalHTTPResponse(t, rawurl, httpTimeout)
+	body, resp, err := GetLocalHTTPResponse(rawurl, httpTimeout)
 	// We see intermittent php-fpm SIGBUS failures, only on macOS.
 	// That results in a 502/503. If we get a 502/503 on macOS, try again.
 	// It seems to be a 502 with nginx-fpm and a 503 with apache-fpm
 	if runtime.GOOS == "darwin" && resp != nil && (resp.StatusCode >= 500) {
 		t.Logf("Received %d error on macOS, retrying GetLocalHTTPResponse", resp.StatusCode)
 		time.Sleep(time.Second)
-		body, resp, err = GetLocalHTTPResponse(t, rawurl, httpTimeout)
+		body, resp, err = GetLocalHTTPResponse(rawurl, httpTimeout)
 	}
 	assert.NoError(err, "GetLocalHTTPResponse returned err on rawurl %s, resp=%v, body=%v: %v", rawurl, resp, body, err)
 	assert.Contains(body, expectedContent, "request %s got resp=%v, body:\n========\n%s\n==========\n", rawurl, resp, body)
