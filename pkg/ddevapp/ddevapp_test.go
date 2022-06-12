@@ -725,6 +725,9 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	if nodeps.IsWSL2() || dockerutil.IsColima() {
 		t.Skip("Skipping on WSL2/Colima because this test doesn't work although manual testing works")
 	}
+	if nodeps.MutagenEnabledDefault && runtime.GOOS == "windows" {
+		t.Skip("Skipping windows mutagen because it fails so often and takes so long")
+	}
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
