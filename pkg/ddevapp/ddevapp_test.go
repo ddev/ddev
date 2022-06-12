@@ -760,8 +760,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		assert.NoError(err)
 		err = os.RemoveAll(projDir)
 		assert.NoError(err)
-		err = listener.Close()
-		assert.NoError(err)
+		_ = listener.Close()
 	})
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", app.Name, t.Name()))
 
@@ -904,8 +903,7 @@ func TestDdevXdebugIsEnabledInTriggerMode(t *testing.T) {
 		assert.NoError(err)
 		err = os.RemoveAll(projDir)
 		assert.NoError(err)
-		err = listener.Close()
-		assert.NoError(err)
+		_ = listener.Close()
 	})
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", app.Name, t.Name()))
 
