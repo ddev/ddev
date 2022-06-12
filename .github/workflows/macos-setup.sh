@@ -13,6 +13,10 @@ docker buildx version
 docker-machine create --driver virtualbox default
 docker-machine env default
 
+if ! command -v gotestsum; then
+  GOBIN=/usr/local/bin go install gotest.tools/gotestsum@latest
+fi
+
 # Install other dependencies
 brew install make mysql mkcert
 

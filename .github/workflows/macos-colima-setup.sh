@@ -13,6 +13,10 @@ brew uninstall postgresql || true
 brew install colima docker docker-compose go libpq mkcert mysql-client
 brew link --force go libpq mysql-client
 
+if ! command -v gotestsum; then
+  GOBIN=/usr/local/bin go install gotest.tools/gotestsum@latest
+fi
+
 # This command allows adding CA (in mkcert, etc) without the popup trust prompt
 # Mentioned in https://github.com/actions/virtual-environments/issues/4519#issuecomment-970202641
 sudo security authorizationdb write com.apple.trust-settings.admin allow
