@@ -82,7 +82,7 @@ BUILDKITE_ANALYTICS_OUTPUT=~/tmp/ddevtest
 rm -f ${BUILDKITE_ANALYTICS_OUTPUT}/junit.*.xml
 
 echo "--- Running tests..."
-make test
+make test TESTARGS="-failfast"
 RV=$?
 
 echo "test.sh completed with status=$RV"
