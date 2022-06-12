@@ -23,7 +23,7 @@ NSSM_VERSION=2.24-101-g897c7ad
 MKCERT_VERSION=v1.4.6
 
 GOTESTSUM ?= GOTESTSUM_FORMAT=$(GOTESTSUM_FORMAT) gotestsum --junitfile ~/tmp/ddevtest/junit.$@.xml
-GOTESTSUM_FORMAT ?= testname
+GOTESTSUM_FORMAT ?= standard-verbose
 TESTTMP=/tmp/testresults
 
 # This repo's root import path (under GOPATH).
