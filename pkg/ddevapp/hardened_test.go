@@ -68,6 +68,6 @@ func TestHardenedStart(t *testing.T) {
 	require.NoError(t, err)
 
 	testURL := app.GetPrimaryURL() + "/test.php"
-	out, resp, err := testcommon.GetLocalHTTPResponse(t, testURL)
+	out, resp, err := testcommon.GetLocalHTTPResponse(testURL)
 	assert.NoError(err, "Error getting response from %s: %v, out=%s, resp=%v", testURL, err, out, resp)
 }

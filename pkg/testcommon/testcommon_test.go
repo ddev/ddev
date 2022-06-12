@@ -194,15 +194,15 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 		safeURL := app.GetHTTPURL() + site.Safe200URIWithExpectation.URI
 
 		// Extra dummy GetLocalHTTPResponse is for mac M1 to try to prime it.
-		_, _, _ = GetLocalHTTPResponse(t, safeURL, 60)
-		out, _, err := GetLocalHTTPResponse(t, safeURL, 60)
+		_, _, _ = GetLocalHTTPResponse(safeURL, 60)
+		out, _, err := GetLocalHTTPResponse(safeURL, 60)
 		assert.NoError(err)
 		assert.Contains(out, site.Safe200URIWithExpectation.Expect)
 
 		// Skip the https version if we don't have mkcert working
 		if globalconfig.GetCAROOT() != "" {
 			safeURL = app.GetHTTPSURL() + site.Safe200URIWithExpectation.URI
-			out, _, err = GetLocalHTTPResponse(t, safeURL, 60)
+			out, _, err = GetLocalHTTPResponse(safeURL, 60)
 			assert.NoError(err)
 			assert.Contains(out, site.Safe200URIWithExpectation.Expect)
 			// This does the same thing as previous, but worth exercising it here.
