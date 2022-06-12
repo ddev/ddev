@@ -763,6 +763,11 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
+	// Start a listener on port 9003 of localhost (where PHPStorm or whatever would listen)
+	listener, err := net.Listen("tcp", listenPort)
+	require.NoError(t, err)
+	time.Sleep(time.Second * 1)
+
 	for _, v := range getPhpVersionsToTest() {
 		app.PHPVersion = v
 		t.Logf("Beginning XDebug checks with XDebug php%s\n", v)
@@ -772,7 +777,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 		// Run with xdebug enabled
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
-			Cmd: "enable_autostart",
+			Cmd: "enable_xdebug_autostart",
 		})
 		assert.NoError(err)
 		opts := &ddevapp.ExecOpts{
@@ -787,39 +792,24 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			t.Errorf("Aborting xdebug check for php%s: %v", v, err)
 			continue
 		}
+
 		// PHP 7.2 through 8.1 gets xdebug 3.0+
 		if nodeps.ArrayContainsString([]string{nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80, nodeps.PHP81}, app.PHPVersion) {
-			assert.Contains(stdout, "xdebug.mode => debug,develop => debug,develop", "xdebug is not enabled for %s", v)
+			assert.Contains(stdout, "xdebug.mode => debug,develop => debug,develop", "xdebug debugging is not enabled for %s", v)
 			assert.Contains(stdout, "xdebug.client_host => host.docker.internal => host.docker.internal")
+			assert.Contains(stdout, "xdebug.start_with_request => yes")
 		} else {
 			assert.Contains(stdout, "xdebug support => enabled", "xdebug is not enabled for %s", v)
 			assert.Contains(stdout, "xdebug.remote_host => host.docker.internal => host.docker.internal")
+			assert.Contains(stdout, "xdebug.remote_autostart => On")
+			assert.Contains(stdout, "xdebug.remote_enable => On")
 		}
-
-		// Start a listener on port 9003 of localhost (where PHPStorm or whatever would listen)
-		listener, err := net.Listen("tcp", listenPort)
-		require.NoError(t, err)
-		time.Sleep(time.Second * 1)
 
 		acceptListenDone := make(chan bool, 1)
 		defer close(acceptListenDone)
 
-		go func() {
-			time.Sleep(time.Second)
-			t.Logf("Curling to port 9003 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
-			// Curl to the project's index.php or anything else
-			out, resp, err := testcommon.GetLocalHTTPResponse(app.GetWebContainerDirectHTTPURL(), 12)
-			if err != nil {
-				t.Logf("time=%v got resp %v output %s: %v", time.Now(), resp, out, err)
-				if resp != nil {
-					t.Logf("resp code=%v", resp.StatusCode)
-				}
-			}
-		}()
-
 		// Accept is blocking, no way to timeout, so use
 		// goroutine instead.
-
 		go func() {
 			t.Logf("Attempting accept of port 9003 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
 
@@ -843,6 +833,19 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			acceptListenDone <- true
 		}()
 
+		go func() {
+			time.Sleep(time.Second)
+			t.Logf("Curling to port 9003 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
+			// Curl to the project's index.php or anything else
+			out, resp, err := testcommon.GetLocalHTTPResponse(app.GetWebContainerDirectHTTPURL(), 12)
+			if err != nil {
+				t.Logf("time=%v got resp %v output %s: %v", time.Now(), resp, out, err)
+				if resp != nil {
+					t.Logf("resp code=%v", resp.StatusCode)
+				}
+			}
+		}()
+
 		select {
 		case <-acceptListenDone:
 			fmt.Printf("Read from acceptListenDone at %v\n", time.Now())
@@ -850,6 +853,8 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			t.Fatalf("Timed out waiting for accept/listen at %v, PHP version %v\n", time.Now(), v)
 		}
 	}
+
+	_ = listener.Close()
 	runTime()
 }
 
@@ -901,6 +906,11 @@ func TestDdevXdebugIsEnabledInTriggerMode(t *testing.T) {
 
 	testcommon.ClearDockerEnv()
 
+	// Start a listener on port 9003 of localhost (where PHPStorm or whatever would listen)
+	listener, err := net.Listen("tcp", listenPort)
+	require.NoError(t, err)
+	time.Sleep(time.Second * 1)
+
 	for _, v := range getPhpVersionsToTest() {
 		app.PHPVersion = v
 		t.Logf("Beginning XDebug checks with XDebug php%s\n", v)
@@ -913,21 +923,19 @@ func TestDdevXdebugIsEnabledInTriggerMode(t *testing.T) {
 			Cmd:     "php --ri xdebug",
 		}
 		stdout, _, err := app.Exec(opts)
-		assert.Contains(stdout, "xdebug.mode")
+		assert.NoError(err)
 
 		// PHP 7.2 through 8.1 gets xdebug 3.0+
 		if nodeps.ArrayContainsString([]string{nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80, nodeps.PHP81}, app.PHPVersion) {
 			assert.Contains(stdout, "xdebug.mode => debug,profile,trace => debug,profile,trace", "xdebug debugging is not enabled for %s", v)
 			assert.Contains(stdout, "xdebug.client_host => host.docker.internal => host.docker.internal")
+			assert.Contains(stdout, "xdebug.start_with_request => trigger")
 		} else {
 			assert.Contains(stdout, "xdebug support => enabled", "xdebug is not enabled for %s", v)
 			assert.Contains(stdout, "xdebug.remote_host => host.docker.internal => host.docker.internal")
+			assert.Contains(stdout, "xdebug.remote_autostart => Off")
+			assert.Contains(stdout, "xdebug.remote_enable => On")
 		}
-
-		// Start a listener on port 9003 of localhost (where PHPStorm or whatever would listen)
-		listener, err := net.Listen("tcp", listenPort)
-		require.NoError(t, err)
-		time.Sleep(time.Second * 1)
 
 		acceptListenDone := make(chan bool, 1)
 		defer close(acceptListenDone)
@@ -981,25 +989,9 @@ func TestDdevXdebugIsEnabledInTriggerMode(t *testing.T) {
 			t.Fatalf("Timed out waiting for accept/listen at %v, PHP version %v\n", time.Now(), v)
 		}
 	}
+
+	_ = listener.Close()
 	runTime()
-}
-
-func getPhpVersionsToTest() []string {
-	// Most of the time there's no reason to do all versions of PHP
-	exclusions := []string{"5.6", "7.0", "7.1", "7.2"}
-
-	var phpKeys []string
-	for k := range nodeps.ValidPHPVersions {
-		if os.Getenv("GOTEST_SHORT") != "" && nodeps.ArrayContainsString(exclusions, k) {
-			continue
-		}
-
-		phpKeys = append(phpKeys, k)
-	}
-
-	sort.Strings(phpKeys)
-
-	return phpKeys
 }
 
 // TestDdevXhprofEnabled tests running with xhprof_enabled = true, etc.
@@ -3970,4 +3962,22 @@ func constructContainerName(containerType string, app *ddevapp.DdevApp) (string,
 func removeAllErrCheck(path string, assert *asrt.Assertions) {
 	err := os.RemoveAll(path)
 	assert.NoError(err)
+}
+
+func getPhpVersionsToTest() []string {
+	// Most of the time there's no reason to do all versions of PHP
+	exclusions := []string{"5.6", "7.0", "7.1", "7.2"}
+
+	var phpKeys []string
+	for k := range nodeps.ValidPHPVersions {
+		if os.Getenv("GOTEST_SHORT") != "" && nodeps.ArrayContainsString(exclusions, k) {
+			continue
+		}
+
+		phpKeys = append(phpKeys, k)
+	}
+
+	sort.Strings(phpKeys)
+
+	return phpKeys
 }
