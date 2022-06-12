@@ -22,8 +22,6 @@ WINNFSD_VERSION=2.4.0
 NSSM_VERSION=2.24-101-g897c7ad
 MKCERT_VERSION=v1.4.6
 
-GOTESTSUM ?= GOTESTSUM_FORMAT=$(GOTESTSUM_FORMAT) gotestsum --junitfile ~/tmp/ddevtest/junit.$@.xml
-GOTESTSUM_FORMAT ?= standard-verbose
 TESTTMP=/tmp/testresults
 
 # This repo's root import path (under GOPATH).
@@ -107,23 +105,22 @@ test: testpkg testcmd
 testcmd: $(DEFAULT_BUILD) setup
 	@echo LDFLAGS=$(LDFLAGS)
 	@echo DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH)
-	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); $(GOTESTSUM) ./cmd/... -- -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) "  $(TESTARGS)
+	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./cmd/... $(TESTARGS)
 
 testpkg: testnotddevapp testddevapp
 
 testddevapp: $(DEFAULT_BUILD) setup
-	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); $(GOTESTSUM) ./pkg/ddevapp -- -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) "  $(TESTARGS)
+	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/ddevapp $(TESTARGS)
 
 testnotddevapp: $(DEFAULT_BUILD) setup
-	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); $(GOTESTSUM) $(shell find ./pkg -maxdepth 1 -type d ! -name ddevapp ! -name pkg) -- $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) "  $(TESTARGS)
+	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " $(shell find ./pkg -maxdepth 1 -type d ! -name ddevapp ! -name pkg) $(TESTARGS)
 
 testfullsitesetup: $(DEFAULT_BUILD) setup
-	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); $(GOTESTSUM) ./pkg/ddevapp -run TestDdevFullSiteSetup -- -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) "  $(TESTARGS)
+	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/ddevapp -run TestDdevFullSiteSetup $(TESTARGS)
 
 setup:
 	@mkdir -p $(GOTMP)/{src,pkg/mod/cache,.cache}
 	@mkdir -p $(TESTTMP)
-	@mkdir -p ~/tmp/ddevtest && rm -f ~/tmp/ddevtest/*.xml
 
 # Required static analysis targets used in circleci - these cause fail if they don't work
 staticrequired: setup golangci-lint markdownlint mkdocs pyspelling

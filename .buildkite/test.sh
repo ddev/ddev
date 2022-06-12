@@ -78,35 +78,10 @@ if command -v brew >/dev/null; then
   mkdir -p "$(brew --prefix)/etc/my.cnf.d"
 fi
 
-BUILDKITE_ANALYTICS_OUTPUT=~/tmp/ddevtest
-rm -f ${BUILDKITE_ANALYTICS_OUTPUT}/junit.*.xml
-
 echo "--- Running tests..."
 make test TESTARGS="-failfast"
 RV=$?
-
 echo "test.sh completed with status=$RV"
 ddev poweroff || true
-
-set +x
-if [ ! -z "${BUILDKITE_ANALYTICS_TOKEN}" ]; then
-  for item in ${BUILDKITE_ANALYTICS_OUTPUT}/junit.*.xml; do
-    curl \
-    -X POST \
-    --fail-with-body \
-    -H "Authorization: Token token=\"$BUILDKITE_ANALYTICS_TOKEN\"" \
-    -F "data=@${item}" \
-    -F "format=junit" \
-    -F "run_env[CI]=buildkite" \
-    -F "run_env[key]=$BUILDKITE_BUILD_ID" \
-    -F "run_env[number]=$BUILDKITE_BUILD_NUMBER" \
-    -F "run_env[job_id]=$BUILDKITE_JOB_ID" \
-    -F "run_env[branch]=$BUILDKITE_BRANCH" \
-    -F "run_env[commit_sha]=$BUILDKITE_COMMIT" \
-    -F "run_env[message]=$BUILDKITE_MESSAGE" \
-    -F "run_env[url]=$BUILDKITE_BUILD_URL" \
-    https://analytics-api.buildkite.com/v1/uploads
-  done
-fi
 
 exit $RV

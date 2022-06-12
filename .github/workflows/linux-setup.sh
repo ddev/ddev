@@ -15,10 +15,6 @@ fi
 sudo apt-get update -qq
 sudo apt-get install -qq zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev postgresql-client
 
-if ! command -v gotestsum; then
-  GOBIN=/usr/local/bin go install gotest.tools/gotestsum@latest
-fi
-
 curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip && sudo unzip -o -d /usr/local/bin /tmp/ngrok.zip
 
 if [ ! -d /home/linuxbrew/.linuxbrew/bin ] ; then
