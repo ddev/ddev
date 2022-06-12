@@ -749,6 +749,10 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	err = fileutil.TemplateStringToFile("<?php\necho \"hi there\";\n", nil, filepath.Join(app.AppRoot, "index.php"))
 	require.NoError(t, err)
 
+	// Start a listener on port 9003 of localhost (where PHPStorm or whatever would listen)
+	listener, err := net.Listen("tcp", listenPort)
+	require.NoError(t, err)
+	time.Sleep(time.Second * 1)
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
@@ -756,17 +760,14 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		assert.NoError(err)
 		err = os.RemoveAll(projDir)
 		assert.NoError(err)
+		err = listener.Close()
+		assert.NoError(err)
 	})
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", app.Name, t.Name()))
 
 	_ = os.Chdir(app.AppRoot)
 
 	testcommon.ClearDockerEnv()
-
-	// Start a listener on port 9003 of localhost (where PHPStorm or whatever would listen)
-	listener, err := net.Listen("tcp", listenPort)
-	require.NoError(t, err)
-	time.Sleep(time.Second * 1)
 
 	for _, v := range getPhpVersionsToTest() {
 		app.PHPVersion = v
@@ -892,6 +893,10 @@ func TestDdevXdebugIsEnabledInTriggerMode(t *testing.T) {
 	err = fileutil.TemplateStringToFile("<?php\necho \"hi there\";\n", nil, filepath.Join(app.AppRoot, "index.php"))
 	require.NoError(t, err)
 
+	// Start a listener on port 9003 of localhost (where PHPStorm or whatever would listen)
+	listener, err := net.Listen("tcp", listenPort)
+	require.NoError(t, err)
+	time.Sleep(time.Second * 1)
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
@@ -899,17 +904,14 @@ func TestDdevXdebugIsEnabledInTriggerMode(t *testing.T) {
 		assert.NoError(err)
 		err = os.RemoveAll(projDir)
 		assert.NoError(err)
+		err = listener.Close()
+		assert.NoError(err)
 	})
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", app.Name, t.Name()))
 
 	_ = os.Chdir(app.AppRoot)
 
 	testcommon.ClearDockerEnv()
-
-	// Start a listener on port 9003 of localhost (where PHPStorm or whatever would listen)
-	listener, err := net.Listen("tcp", listenPort)
-	require.NoError(t, err)
-	time.Sleep(time.Second * 1)
 
 	for _, v := range getPhpVersionsToTest() {
 		app.PHPVersion = v
@@ -990,7 +992,6 @@ func TestDdevXdebugIsEnabledInTriggerMode(t *testing.T) {
 		}
 	}
 
-	_ = listener.Close()
 	runTime()
 }
 
