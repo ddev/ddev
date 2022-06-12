@@ -50,6 +50,7 @@ esac
 if ! command -v gotestsum; then
   GOBIN=/usr/local/bin go install gotest.tools/gotestsum@latest
 fi
+gotestsum --version
 
 (yes | ddev delete images >/dev/null) || true
 
