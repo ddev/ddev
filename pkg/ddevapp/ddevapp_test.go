@@ -805,46 +805,11 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			assert.Contains(stdout, "xdebug.remote_enable => On")
 		}
 
-		acceptListenDone := make(chan bool, 1)
-		defer close(acceptListenDone)
-
 		// Accept is blocking, no way to timeout, so use
 		// goroutine instead.
-		go func() {
-			t.Logf("Attempting accept of port 9003 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
-
-			// Accept the listen on 9003 coming in from in-container php-xdebug
-			conn, err := listener.Accept()
-			assert.NoError(err)
-			if err == nil {
-				t.Logf("Completed accept of port 9003 with xdebug enabled, PHP version=%s, time=%v\n", v, time.Now())
-			} else {
-				t.Logf("Failed accept on port 9003, err=%v", err)
-				acceptListenDone <- true
-				return
-			}
-			// Grab the Xdebug connection start and look in it for "Xdebug"
-			b := make([]byte, 650)
-			_, err = bufio.NewReader(conn).Read(b)
-			assert.NoError(err)
-			lineString := string(b)
-			assert.Contains(lineString, "Xdebug")
-			assert.Contains(lineString, `xdebug:language_version="`+v)
-			acceptListenDone <- true
-		}()
-
-		go func() {
-			time.Sleep(time.Second)
-			t.Logf("Curling to port 9003 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
-			// Curl to the project's index.php or anything else
-			out, resp, err := testcommon.GetLocalHTTPResponse(app.GetWebContainerDirectHTTPURL(), 12)
-			if err != nil {
-				t.Logf("time=%v got resp %v output %s: %v", time.Now(), resp, out, err)
-				if resp != nil {
-					t.Logf("resp code=%v", resp.StatusCode)
-				}
-			}
-		}()
+		acceptListenDone := make(chan bool, 1)
+		go listenForXDebugConnection(t, v, listener, assert, acceptListenDone)
+		go triggerXDebugByHttpRequest(t, app.GetWebContainerDirectHTTPURL(), false, acceptListenDone, 3)
 
 		select {
 		case <-acceptListenDone:
@@ -937,50 +902,11 @@ func TestDdevXdebugIsEnabledInTriggerMode(t *testing.T) {
 			assert.Contains(stdout, "xdebug.remote_enable => On")
 		}
 
-		acceptListenDone := make(chan bool, 1)
-		defer close(acceptListenDone)
-
 		// Accept is blocking, no way to timeout, so use
 		// goroutine instead.
-		go func() {
-			t.Logf("Attempting accept of port 9003 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
-
-			// Accept the listen on 9003 coming in from in-container php-xdebug
-			conn, err := listener.Accept()
-			assert.NoError(err)
-			if err == nil {
-				t.Logf("Completed accept of port 9003 with xdebug enabled, PHP version=%s, time=%v\n", v, time.Now())
-			} else {
-				t.Logf("Failed accept on port 9003, err=%v", err)
-				acceptListenDone <- true
-				return
-			}
-			// Grab the Xdebug connection start and look in it for "Xdebug"
-			b := make([]byte, 650)
-			_, err = bufio.NewReader(conn).Read(b)
-			assert.NoError(err)
-			lineString := string(b)
-			assert.Contains(lineString, "Xdebug")
-			assert.Contains(lineString, `xdebug:language_version="`+v)
-			acceptListenDone <- true
-		}()
-
-		go func() {
-			time.Sleep(time.Second)
-			t.Logf("Curling to port 9003 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
-			// Curl to the project's index.php or anything else
-			req, err := testcommon.BuildLocalRequestFromURL(app.GetWebContainerDirectHTTPURL())
-			assert.NoError(err)
-			req.Header.Set("Cookie", "XDEBUG_SESSION=start")
-			out, resp, err := testcommon.ExecuteRequest(req, 12)
-
-			if err != nil {
-				t.Logf("time=%v got resp %v output %s: %v", time.Now(), resp, out, err)
-				if resp != nil {
-					t.Logf("resp code=%v", resp.StatusCode)
-				}
-			}
-		}()
+		acceptListenDone := make(chan bool, 1)
+		go listenForXDebugConnection(t, v, listener, assert, acceptListenDone)
+		go triggerXDebugByHttpRequest(t, app.GetWebContainerDirectHTTPURL(), true, acceptListenDone, 3)
 
 		select {
 		case <-acceptListenDone:
@@ -3979,4 +3905,67 @@ func getPhpVersionsToTest() []string {
 	sort.Strings(phpKeys)
 
 	return phpKeys
+}
+
+func listenForXDebugConnection(t *testing.T, v string, listener net.Listener, assert *asrt.Assertions, acceptListenDone chan<- bool) {
+	t.Logf("Attempting accept of port 9003 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
+
+	// Accept the listen on 9003 coming in from in-container php-xdebug
+	conn, err := listener.Accept()
+	assert.NoError(err)
+
+	t.Logf("Completed accept of port 9003 with xdebug enabled, PHP version=%s, time=%v\n", v, time.Now())
+
+	assertIsXDebugConnection(conn, assert, v)
+	acceptListenDone <- true
+	close(acceptListenDone)
+}
+
+func assertIsXDebugConnection(conn net.Conn, assert *asrt.Assertions, v string) {
+	// Grab the Xdebug connection start and look in it for "Xdebug"
+	b := make([]byte, 650)
+	_, err := bufio.NewReader(conn).Read(b)
+	assert.NoError(err)
+	lineString := string(b)
+	assert.Contains(lineString, "Xdebug")
+	assert.Contains(lineString, `xdebug:language_version="`+v)
+}
+
+func triggerXDebugByHttpRequest(t *testing.T, url string, withXdebugCookie bool, acceptListenDone <-chan bool, retries int8) {
+	time.Sleep(time.Second)
+	t.Logf("Curling %s with xdebug enabled, time=%v", url, time.Now())
+
+	req, err := testcommon.BuildLocalRequestFromURL(url)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if withXdebugCookie {
+		req.Header.Set("Cookie", "XDEBUG_SESSION=start")
+	}
+
+	out, resp, err := testcommon.ExecuteRequest(req, 12)
+
+	if err != nil {
+		t.Logf("Curl to %s failed, remainingRetries=%d, time=%v got resp %v output %s: %v", url, retries, time.Now(), resp, out, err)
+		if resp != nil {
+			t.Logf("resp code=%v", resp.StatusCode)
+		}
+	} else {
+		t.Logf("Curling %s succeeded time=%v", url, time.Now())
+	}
+
+	time.Sleep(200 * time.Millisecond)
+
+	select {
+	case <-acceptListenDone:
+		return
+	default:
+		if retries > 0 {
+			t.Log("XDebug is not triggered, retrying...")
+			retries--
+			triggerXDebugByHttpRequest(t, url, withXdebugCookie, acceptListenDone, retries)
+		}
+	}
 }
