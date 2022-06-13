@@ -9,6 +9,7 @@ import (
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/styles"
 	"github.com/drud/ddev/pkg/util"
@@ -174,12 +175,20 @@ ddev get --list --all
 			file := os.ExpandEnv(file)
 			src := filepath.Join(extractedDir, file)
 			dest := app.GetConfigPath(file)
-
-			err = copy.Copy(src, dest)
+			sigFound, err := fileutil.FgrepStringInFile(dest, nodeps.DdevFileSignature)
 			if err != nil {
-				util.Failed("Unable to copy %v to %v: %v", src, dest, err)
+				util.Failed("unable to check for #ddev-generated in file %s: %v", dest, err)
 			}
-			output.UserOut.Printf("Installed file %s", dest)
+
+			if sigFound {
+				err = copy.Copy(src, dest)
+				if err != nil {
+					util.Failed("Unable to copy %v to %v: %v", src, dest, err)
+				}
+				output.UserOut.Printf("Installed file %s", dest)
+			} else {
+				util.Warning("NOT overwriting file %s. The #ddev-generated signature was not found in the file, so it will not be overwritten. You can just remove the file and use ddev get again if you want it to be replaced.", dest)
+			}
 		}
 		globalDotDdev := filepath.Join(globalconfig.GetGlobalDdevDir())
 		for _, file := range s.GlobalFiles {
