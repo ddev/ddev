@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	copy2 "github.com/otiai10/copy"
 	"github.com/stretchr/testify/require"
@@ -61,11 +62,25 @@ func TestCmdGet(t *testing.T) {
 
 	// Test with a directory-path input
 	exampleDir := filepath.Join(origDir, "testdata", t.Name(), "example-repo")
+	err = fileutil.AppendStringToFile(app.GetConfigPath("file-with-no-ddev-generated.txt"), "no signature here")
+	require.NoError(t, err)
+	err = fileutil.AppendStringToFile(filepath.Join(globalconfig.GetGlobalDdevDir(), "file-with-no-ddev-generated.txt"), "no signature here")
+	require.NoError(t, err)
+
 	out, err = exec.RunHostCommand(DdevBin, "get", exampleDir)
 	assert.NoError(err, "output=%s", out)
 	assert.FileExists(app.GetConfigPath("i-have-been-touched"))
 	assert.FileExists(app.GetConfigPath("docker-compose.example.yaml"))
+	exists, err := fileutil.FgrepStringInFile(app.GetConfigPath("file-with-no-ddev-generated.txt"), "installation should result in a warning")
+	require.NoError(t, err)
+
+	assert.False(exists, "the file with no ddev-generated.txt should not have been replaced")
 	assert.FileExists(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
+	assert.FileExists(filepath.Join(globalconfig.GetGlobalDdevDir(), "extras/junk1.txt"))
+	exists, err = fileutil.FgrepStringInFile(filepath.Join(globalconfig.GetGlobalDdevDir(), "file-with-no-ddev-generated.txt"), "installation should result in a warning")
+	require.NoError(t, err)
+	assert.False(exists, "the file with no ddev-generated.txt should not have been replaced")
+
 }
 
 // TestCmdGetComplex tests advanced usages

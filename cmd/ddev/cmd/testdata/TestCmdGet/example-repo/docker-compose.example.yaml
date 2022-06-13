@@ -1,12 +1,4 @@
-# DDEV-Local memcached recipe file.
-#
-# To use this in your own project:
-# 1. Copy this file to your project's ".ddev" directory.
-# 2. Launch "ddev start".
-# 3. Configure the project to look for memcached at hostname "memcached" and
-#    port 11211.
-# 4. Optional: adjust the 'command' line below to change CLI flags sent to
-#    memcached.
+#ddev-generated
 
 version: '3.6'
 

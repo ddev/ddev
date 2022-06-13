@@ -177,7 +177,7 @@ func PurgeDirectory(path string) error {
 func FgrepStringInFile(fullPath string, needle string) (bool, error) {
 	fullFileBytes, err := os.ReadFile(fullPath)
 	if err != nil {
-		return false, fmt.Errorf("failed to open file %s, err:%v ", fullPath, err)
+		return false, err
 	}
 	fullFileString := string(fullFileBytes)
 	return strings.Contains(fullFileString, needle), nil

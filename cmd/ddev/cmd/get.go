@@ -79,6 +79,10 @@ ddev get --list --all
 			util.Failed("No project(s) found")
 		}
 		app := apps[0]
+		err = os.Chdir(app.AppRoot)
+		if err != nil {
+			util.Failed("Unable to change directory to project root %s: %v", app.AppRoot, err)
+		}
 		app.DockerEnv()
 		sourceRepoArg := args[0]
 		extractedDir := ""
@@ -176,11 +180,12 @@ ddev get --list --all
 			src := filepath.Join(extractedDir, file)
 			dest := app.GetConfigPath(file)
 			sigFound, err := fileutil.FgrepStringInFile(dest, nodeps.DdevFileSignature)
-			if err != nil {
+			if err != nil && !os.IsNotExist(err) {
 				util.Failed("unable to check for #ddev-generated in file %s: %v", dest, err)
 			}
 
-			if sigFound {
+			// If the file existed and had #ddev-generated OR if it did not exist, copy it in.
+			if sigFound || os.IsNotExist(err) {
 				err = copy.Copy(src, dest)
 				if err != nil {
 					util.Failed("Unable to copy %v to %v: %v", src, dest, err)
@@ -195,10 +200,22 @@ ddev get --list --all
 			file := os.ExpandEnv(file)
 			src := filepath.Join(extractedDir, file)
 			dest := filepath.Join(globalDotDdev, file)
-			err = copy.Copy(src, dest)
-			if err != nil {
-				util.Failed("Unable to copy %v to %v: %v", src, dest, err)
+			sigFound, err := fileutil.FgrepStringInFile(dest, nodeps.DdevFileSignature)
+			if err != nil && !os.IsNotExist(err) {
+				util.Failed("unable to check for #ddev-generated in file %s: %v", dest, err)
 			}
+
+			// If the file existed and had #ddev-generated OR if it did not exist, copy it in.
+			if sigFound || os.IsNotExist(err) {
+				err = copy.Copy(src, dest)
+				if err != nil {
+					util.Failed("Unable to copy %v to %v: %v", src, dest, err)
+				}
+				output.UserOut.Printf("Installed file %s", dest)
+			} else {
+				util.Warning("NOT overwriting file %s. The #ddev-generated signature was not found in the file, so it will not be overwritten. You can just remove the file and use ddev get again if you want it to be replaced.", dest)
+			}
+
 			output.UserOut.Printf("Installed file %s", dest)
 		}
 		origDir, _ := os.Getwd()

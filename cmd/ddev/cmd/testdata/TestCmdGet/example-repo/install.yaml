@@ -6,10 +6,12 @@ pre_install_actions:
 # files and directories listed here are copied into .ddev
 project_files:
 - docker-compose.example.yaml
+- file-with-no-ddev-generated.txt
 
 # files and directories listed here are copied into global .ddev directory
 global_files:
 - extras
+- file-with-no-ddev-generated.txt
 
 post_install_actions:
 - touch ~/.ddev/commands/web/global-touched
