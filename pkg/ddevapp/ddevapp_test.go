@@ -749,6 +749,9 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	err = fileutil.TemplateStringToFile("<?php\necho \"hi there\";\n", nil, filepath.Join(app.AppRoot, "index.php"))
 	require.NoError(t, err)
 
+	// Add logging for xdebug to get more information in case of a failure
+	createXDebugLogConfiguration(app, assert)
+
 	// Start a listener on port 9003 of localhost (where PHPStorm or whatever would listen)
 	listener, err := net.Listen("tcp", listenPort)
 	require.NoError(t, err)
@@ -813,13 +816,17 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 		select {
 		case <-acceptListenDone:
-			fmt.Printf("Read from acceptListenDone at %v\n", time.Now())
+			t.Logf("Read from acceptListenDone at %v\n", time.Now())
 		case <-time.After(time.Second * 11):
+			stdout, _, _ := app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				Cmd:     "cat /tmp/xdebug.log",
+			})
+			t.Log(stdout)
 			t.Fatalf("Timed out waiting for accept/listen at %v, PHP version %v\n", time.Now(), v)
 		}
 	}
 
-	_ = listener.Close()
 	runTime()
 }
 
@@ -856,6 +863,9 @@ func TestDdevXdebugIsEnabledInTriggerMode(t *testing.T) {
 	// Create the simplest possible php file
 	err = fileutil.TemplateStringToFile("<?php\necho \"hi there\";\n", nil, filepath.Join(app.AppRoot, "index.php"))
 	require.NoError(t, err)
+
+	// Add logging for xdebug to get more information in case of a failure
+	createXDebugLogConfiguration(app, assert)
 
 	// Start a listener on port 9003 of localhost (where PHPStorm or whatever would listen)
 	listener, err := net.Listen("tcp", listenPort)
@@ -910,13 +920,26 @@ func TestDdevXdebugIsEnabledInTriggerMode(t *testing.T) {
 
 		select {
 		case <-acceptListenDone:
-			fmt.Printf("Read from acceptListenDone at %v\n", time.Now())
+			t.Logf("Read from acceptListenDone at %v\n", time.Now())
 		case <-time.After(time.Second * 11):
+			stdout, _, _ := app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				Cmd:     "cat /tmp/xdebug.log",
+			})
+			t.Log(stdout)
 			t.Fatalf("Timed out waiting for accept/listen at %v, PHP version %v\n", time.Now(), v)
 		}
 	}
 
 	runTime()
+}
+
+func createXDebugLogConfiguration(app *ddevapp.DdevApp, assert *asrt.Assertions) {
+	configPath := app.GetConfigPath("php/")
+	err := os.MkdirAll(configPath, 0755)
+	assert.NoError(err)
+	err = fileutil.TemplateStringToFile("xdebug.log = /tmp/xdebug.log\n", nil, filepath.Join(configPath, "xdebug_more.ini"))
+	assert.NoError(err)
 }
 
 // TestDdevXhprofEnabled tests running with xhprof_enabled = true, etc.
