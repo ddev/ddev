@@ -1,9 +1,5 @@
 name: sample_get
 
-yaml_read_files:
-  platformapp: .platform.app.yaml
-  services: .platform/services.yaml
-
 pre_install_actions:
 - |
   #ddev-nodisplay
@@ -41,3 +37,6 @@ global_files:
 
 post_install_actions:
 
+yaml_read_files:
+  platformapp: .platform.app.yaml
+  services: .platform/services.yaml
