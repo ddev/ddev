@@ -809,7 +809,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		// goroutine instead.
 		acceptListenDone := make(chan bool, 1)
 		go listenForXDebugConnection(t, v, listener, assert, acceptListenDone)
-		go triggerXDebugByHttpRequest(t, app.GetWebContainerDirectHTTPURL(), false, acceptListenDone, 3)
+		go triggerXDebugByHTTPRequest(t, app.GetWebContainerDirectHTTPURL(), false, acceptListenDone, 3)
 
 		select {
 		case <-acceptListenDone:
@@ -906,7 +906,7 @@ func TestDdevXdebugIsEnabledInTriggerMode(t *testing.T) {
 		// goroutine instead.
 		acceptListenDone := make(chan bool, 1)
 		go listenForXDebugConnection(t, v, listener, assert, acceptListenDone)
-		go triggerXDebugByHttpRequest(t, app.GetWebContainerDirectHTTPURL(), true, acceptListenDone, 3)
+		go triggerXDebugByHTTPRequest(t, app.GetWebContainerDirectHTTPURL(), true, acceptListenDone, 3)
 
 		select {
 		case <-acceptListenDone:
@@ -3931,7 +3931,7 @@ func assertIsXDebugConnection(conn net.Conn, assert *asrt.Assertions, v string) 
 	assert.Contains(lineString, `xdebug:language_version="`+v)
 }
 
-func triggerXDebugByHttpRequest(t *testing.T, url string, withXdebugCookie bool, acceptListenDone <-chan bool, retries int8) {
+func triggerXDebugByHTTPRequest(t *testing.T, url string, withXdebugCookie bool, acceptListenDone <-chan bool, retries int8) {
 	time.Sleep(time.Second)
 	t.Logf("Curling %s with xdebug enabled, time=%v", url, time.Now())
 
@@ -3965,7 +3965,7 @@ func triggerXDebugByHttpRequest(t *testing.T, url string, withXdebugCookie bool,
 		if retries > 0 {
 			t.Log("XDebug is not triggered, retrying...")
 			retries--
-			triggerXDebugByHttpRequest(t, url, withXdebugCookie, acceptListenDone, retries)
+			triggerXDebugByHTTPRequest(t, url, withXdebugCookie, acceptListenDone, retries)
 		}
 	}
 }
