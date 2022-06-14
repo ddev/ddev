@@ -62,9 +62,9 @@ func TestCmdGet(t *testing.T) {
 
 	// Test with a directory-path input
 	exampleDir := filepath.Join(origDir, "testdata", t.Name(), "example-repo")
-	err = fileutil.AppendStringToFile(app.GetConfigPath("file-with-no-ddev-generated.txt"), "no signature here")
+	err = fileutil.TemplateStringToFile("no signature here", nil, app.GetConfigPath("file-with-no-ddev-generated.txt"))
 	require.NoError(t, err)
-	err = fileutil.AppendStringToFile(filepath.Join(globalconfig.GetGlobalDdevDir(), "file-with-no-ddev-generated.txt"), "no signature here")
+	err = fileutil.TemplateStringToFile("no signature here", nil, filepath.Join(globalconfig.GetGlobalDdevDir(), "file-with-no-ddev-generated.txt"))
 	require.NoError(t, err)
 
 	out, err = exec.RunHostCommand(DdevBin, "get", exampleDir)
@@ -73,14 +73,18 @@ func TestCmdGet(t *testing.T) {
 	assert.FileExists(app.GetConfigPath("docker-compose.example.yaml"))
 	exists, err := fileutil.FgrepStringInFile(app.GetConfigPath("file-with-no-ddev-generated.txt"), "installation should result in a warning")
 	require.NoError(t, err)
-	assert.True(exists, "the file with no ddev-generated.txt should not have been replaced")
+	assert.False(exists, "the file with no ddev-generated.txt should not have been replaced")
 
 	assert.FileExists(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
 	assert.FileExists(filepath.Join(globalconfig.GetGlobalDdevDir(), "globalextras/okfile.txt"))
+
 	exists, err = fileutil.FgrepStringInFile(filepath.Join(globalconfig.GetGlobalDdevDir(), "file-with-no-ddev-generated.txt"), "installation should result in a warning")
 	require.NoError(t, err)
-	assert.Contains(out, "warning")
-	assert.True(exists, "the file with no ddev-generated.txt should not have been replaced")
+	assert.False(exists, "the file with no ddev-generated.txt should not have been replaced")
+
+	assert.Contains(out, fmt.Sprintf("NOT overwriting file/directory %s", app.GetConfigPath("file-with-no-ddev-generated.txt")))
+	assert.Contains(out, fmt.Sprintf("NOT overwriting file/directory %s", filepath.Join(globalconfig.GetGlobalDdevDir(), "file-with-no-ddev-generated.txt")))
+	assert.Contains(out, fmt.Sprintf("NOT overwriting file/directory %s", filepath.Join(globalconfig.GetGlobalDdevDir(), "globalextras")))
 
 }
 
