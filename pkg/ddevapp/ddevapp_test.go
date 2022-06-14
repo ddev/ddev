@@ -796,6 +796,14 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			continue
 		}
 
+		// Make sure that we have a valid and ping-able host.docker.internal
+		out, _, err := app.Exec(&ddevapp.ExecOpts{
+			Cmd: `ping -c1 host.docker.internal`,
+		})
+		assert.NoError(err)
+		assert.Contains(out, "64 bytes from")
+		t.Logf("host.docker.internal ping info=%s", out)
+
 		// PHP 7.2 through 8.1 gets xdebug 3.0+
 		if nodeps.ArrayContainsString([]string{nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80, nodeps.PHP81}, app.PHPVersion) {
 			assert.Contains(stdout, "xdebug.mode => debug,develop => debug,develop", "xdebug debugging is not enabled for %s", v)
