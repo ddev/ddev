@@ -135,6 +135,7 @@ about
 acquia
 acli
 add
+addon
 addr
 all
 alldirs
@@ -520,6 +521,8 @@ tableplus
 tasklist
 tcp
 tcpview
+template
+templated
 test
 testddev
 tgz

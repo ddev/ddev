@@ -62,10 +62,10 @@ Anyone can create an add-on for `ddev get` (see [screencast](https://www.youtube
 
 The install.yaml is a simple yaml file with a few main sections:
 
-* `pre_install_actions` is an array of bash statements or scripts that will be executed before `project_files` are installed. The actions are executed in the context of the target project's `.ddev` directory. (#todo: validate)
+* `pre_install_actions` is an array of bash statements or scripts that will be executed before `project_files` are installed. The actions are executed in the context of the target project's root directory.
 * `project_files` is an array of files or directories to be copied from the add-on into the target project's .ddev directory.
 * `global_files` is an array of files or directories to be copied from the add-on into the target system's global .ddev directory (`~/.ddev/`).
-* `post_install_actions` is an array of bash statements or scripts that will be executed after `project_files` and `global_files` are installed. The actions are executed in the context of the target project's `.ddev` directory. (#todo: validate).
+* `post_install_actions` is an array of bash statements or scripts that will be executed after `project_files` and `global_files` are installed. The actions are executed in the context of the target project's root directory.
 * `yaml_read_files` is a map of `name: file` of yaml files that will be read from the target project's root directory. The contents of these yaml files may be used as templated actions within `pre_install_actions` and `post_install_actions`.
 
 You can see a simple install.yaml in [ddev-addon-template's install.yaml](https://github.com/drud/ddev-addon-template/blob/main/install.yaml).
