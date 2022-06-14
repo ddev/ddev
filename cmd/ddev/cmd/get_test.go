@@ -73,13 +73,14 @@ func TestCmdGet(t *testing.T) {
 	assert.FileExists(app.GetConfigPath("docker-compose.example.yaml"))
 	exists, err := fileutil.FgrepStringInFile(app.GetConfigPath("file-with-no-ddev-generated.txt"), "installation should result in a warning")
 	require.NoError(t, err)
+	assert.True(exists, "the file with no ddev-generated.txt should not have been replaced")
 
-	assert.False(exists, "the file with no ddev-generated.txt should not have been replaced")
 	assert.FileExists(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
-	assert.FileExists(filepath.Join(globalconfig.GetGlobalDdevDir(), "extras/junk1.txt"))
+	assert.FileExists(filepath.Join(globalconfig.GetGlobalDdevDir(), "globalextras/okfile.txt"))
 	exists, err = fileutil.FgrepStringInFile(filepath.Join(globalconfig.GetGlobalDdevDir(), "file-with-no-ddev-generated.txt"), "installation should result in a warning")
 	require.NoError(t, err)
-	assert.False(exists, "the file with no ddev-generated.txt should not have been replaced")
+	assert.Contains(out, "warning")
+	assert.True(exists, "the file with no ddev-generated.txt should not have been replaced")
 
 }
 

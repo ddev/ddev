@@ -448,26 +448,34 @@ func CheckSignatureOrNoFile(path string, signature string) error {
 			return err
 		}
 		// We found the file and it has the signature in it.
-		if found {
-			return nil
+		if !found {
+			return fmt.Errorf("signature was not found in file %s", path)
 		}
+		return nil
 
 	case IsDirectory(path):
 		err = filepath.WalkDir(path, func(path string, info fs.DirEntry, err error) error {
 			if err != nil {
 				return err
 			}
-			if !info.IsDir() {
-				found, err := FgrepStringInFile(info.Name(), signature)
-				// It's unlikely that we'll get an error, but report it if we do.
-				if err != nil {
-					return err
-				}
-				// We have the file and it does not have the signature in it.
-				// that means it's not safe to overwrite it.
-				if !found {
-					return fmt.Errorf("signature not found in file %s", info.Name())
-				}
+			// If a directory, nothing to do, continue traversing
+			if info.IsDir() {
+				return nil
+			}
+			// If file doesn't exist, nothing to do, continue traversing
+			if !FileExists(path) {
+				return nil
+			}
+			// Now check to see if file has signature.
+			found, err := FgrepStringInFile(path, signature)
+			// It's unlikely that we'll get an error, but report it if we do.
+			if err != nil {
+				return err
+			}
+			// We have the file and it does not have the signature in it.
+			// that means it's not safe to overwrite it.
+			if !found {
+				return fmt.Errorf("signature was not found in file %s", path)
 			}
 			return nil
 		})
