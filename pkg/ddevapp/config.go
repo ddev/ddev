@@ -796,18 +796,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		extraWebContent = extraWebContent + "\nRUN bash /tmp/setup_node.sh && apt-get install nodejs && npm config set unsafe-perm true && npm install --global gulp-cli yarn"
 	}
 
-	// Assets in the web-build directory copied to .webimageBuild so .webimageBuild can be "context"
-	err = copy2.Copy(app.GetConfigPath("web-build/"), app.GetConfigPath(".webimageBuild/"))
-	if err != nil {
-		return "", err
-	}
 	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
-	if err != nil {
-		return "", err
-	}
-
-	// Assets in the db-build directory copied to .dbimageBuild so .dbimageBuild can be "context"
-	err = copy2.Copy(app.GetConfigPath("db-build/"), app.GetConfigPath(".dbimageBuild/"))
 	if err != nil {
 		return "", err
 	}
@@ -953,6 +942,14 @@ RUN export XDEBUG_MODE=off && ( composer self-update %s || composer self-update 
 		}
 	}
 
+	// Assets in the web-build directory copied to .webimageBuild so .webimageBuild can be "context"
+	// This actually copies the Dockerfile, but it is then immediately overwritten by WriteImageDockerfile()
+	if userDockerfilePath != "" {
+		err = copy2.Copy(userDockerfilePath, filepath.Dir(fullpath))
+		if err != nil {
+			return err
+		}
+	}
 	return WriteImageDockerfile(fullpath, []byte(contents))
 }
 
