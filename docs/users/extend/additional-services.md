@@ -77,11 +77,13 @@ Simple environment variables will be replaced in the `install.yaml` both as part
 ### Template action replacements (advanced)
 
 A number of additional replacements can be made using go template replacement techniques, using the format `{{ .some-gotemplate-action }}`. These are mostly for use of yaml information pulled into `yaml_read_files`. A map of values from each yaml file is placed in a map headed by the name of the yaml file. For example, if a yaml file named `example_yaml.yaml:
+
 ```yaml
 value1: xxx
 ```
 
 is referenced using
+
 ```yaml
 yaml_read_files: 
  example: example_yaml.yaml

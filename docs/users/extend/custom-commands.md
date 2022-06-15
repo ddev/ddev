@@ -78,7 +78,6 @@ A number of environment variables are provided to the script. These are generall
 * `DDEV_WEBSERVER_TYPE`: nginx-fpm, apache-fpm`
 * `GOARCH`: architecture: "arm64", "amd64"
 * `GOOS`: operating system: "windows", "darwin", "linux"
-* 
 
 Useful variables for container scripts are:
 
