@@ -224,7 +224,7 @@ func (app *DdevApp) WriteConfig() error {
 # or packages or anything else to your webimage
 # These additions will be appended last to ddev's own Dockerfile
 RUN npm install --global forever
-RUN echo "Built from $BASE_IMAGE" > /tmp/built-from.txt
+RUN echo "Built on $(date)" > /build-date.txt
 `)
 
 	err = WriteImageDockerfile(app.GetConfigPath("web-build")+"/Dockerfile.example", contents)
@@ -234,7 +234,7 @@ RUN echo "Built from $BASE_IMAGE" > /tmp/built-from.txt
 	contents = []byte(`
 # You can copy this Dockerfile.example to Dockerfile to add configuration
 # or packages or anything else to your dbimage
-RUN echo "Built from $BASE_IMAGE" > /tmp/built-from.txt
+RUN echo "Built on $(date)" > /build-date.txt
 `)
 
 	err = WriteImageDockerfile(app.GetConfigPath("db-build")+"/Dockerfile.example", contents)
