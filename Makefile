@@ -22,7 +22,6 @@ WINNFSD_VERSION=2.4.0
 NSSM_VERSION=2.24-101-g897c7ad
 MKCERT_VERSION=v1.4.6
 
-GOTESTSUM_FORMAT ?= short-verbose
 TESTTMP=/tmp/testresults
 
 # This repo's root import path (under GOPATH).

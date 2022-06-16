@@ -79,7 +79,7 @@ if command -v brew >/dev/null; then
 fi
 
 echo "--- Running tests..."
-make test
+make test TESTARGS="-failfast"
 RV=$?
 echo "test.sh completed with status=$RV"
 ddev poweroff || true
