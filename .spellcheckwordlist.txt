@@ -165,6 +165,8 @@ beanstalkd
 belonging
 behat
 blackfire
+bookmarklet
+bookmarklets
 bool
 breakpoint
 browser
