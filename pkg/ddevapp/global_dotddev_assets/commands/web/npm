@@ -1,0 +1,8 @@
+#!/bin/bash
+#ddev-generated
+## Description: Run npm inside the web container
+## Usage: npm [flags] [args]
+## Example: "ddev npm install" or "ddev npm update"
+## ExecRaw: true
+
+npm "$@"
