@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/Masterminds/sprig/v3"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/styles"
 	"github.com/drud/ddev/pkg/util"
@@ -22,14 +24,16 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"text/template"
 )
 
 type installDesc struct {
-	Name               string   `yaml:"name"`
-	ProjectFiles       []string `yaml:"project_files"`
-	GlobalFiles        []string `yaml:"global_files,omitempty"`
-	PreInstallActions  []string `yaml:"pre_install_actions,omitempty"`
-	PostInstallActions []string `yaml:"post_install_actions,omitempty"`
+	Name               string            `yaml:"name"`
+	ProjectFiles       []string          `yaml:"project_files"`
+	GlobalFiles        []string          `yaml:"global_files,omitempty"`
+	PreInstallActions  []string          `yaml:"pre_install_actions,omitempty"`
+	PostInstallActions []string          `yaml:"post_install_actions,omitempty"`
+	YamlReadFiles      map[string]string `yaml:"yaml_read_files"`
 }
 
 // Get implements the ddev get command
@@ -75,6 +79,10 @@ ddev get --list --all
 			util.Failed("No project(s) found")
 		}
 		app := apps[0]
+		err = os.Chdir(app.AppRoot)
+		if err != nil {
+			util.Failed("Unable to change directory to project root %s: %v", app.AppRoot, err)
+		}
 		app.DockerEnv()
 		sourceRepoArg := args[0]
 		extractedDir := ""
@@ -145,33 +153,58 @@ ddev get --list --all
 			util.Failed("Unable to parse %v: %v", yamlFile, err)
 		}
 
-		for _, action := range s.PreInstallActions {
-			out, err := exec.RunHostCommand(bash, "-c", action)
+		yamlMap := make(map[string]interface{})
+		for name, f := range s.YamlReadFiles {
+			f := os.ExpandEnv(string(f))
+			fullpath := filepath.Join(app.GetAppRoot(), f)
+
+			yamlMap[name], err = util.YamlFileToMap(fullpath)
 			if err != nil {
-				util.Failed("Unable to run action %v: %v, output=%s", action, err, out)
+				util.Failed("unable to import yaml file %s: %v", fullpath, err)
 			}
-			output.UserOut.Printf("Executed pre-install action %v, output=%s.", action, out)
+		}
+
+		dict, err := util.YamlToDict(yamlMap)
+		if err != nil {
+			util.Failed("Unable to YamlToDict: %v", err)
+		}
+		for _, action := range s.PreInstallActions {
+			err = processAction(action, dict, bash)
+			if err != nil {
+				util.Failed("could not process pre-install action '%s': %v", action, err)
+			}
 		}
 
 		for _, file := range s.ProjectFiles {
+			file := os.ExpandEnv(file)
 			src := filepath.Join(extractedDir, file)
 			dest := app.GetConfigPath(file)
-
-			err = copy.Copy(src, dest)
-			if err != nil {
-				util.Failed("Unable to copy %v to %v: %v", src, dest, err)
+			if err = fileutil.CheckSignatureOrNoFile(dest, nodeps.DdevFileSignature); err == nil {
+				err = copy.Copy(src, dest)
+				if err != nil {
+					util.Failed("Unable to copy %v to %v: %v", src, dest, err)
+				}
+				output.UserOut.Printf("Installed file %s", dest)
+			} else {
+				util.Warning("NOT overwriting file/directory %s. The #ddev-generated signature was not found in the file, so it will not be overwritten. You can just remove the file and use ddev get again if you want it to be replaced: %v", dest, err)
 			}
-			output.UserOut.Printf("Installed file %s", dest)
 		}
 		globalDotDdev := filepath.Join(globalconfig.GetGlobalDdevDir())
 		for _, file := range s.GlobalFiles {
+			file := os.ExpandEnv(file)
 			src := filepath.Join(extractedDir, file)
 			dest := filepath.Join(globalDotDdev, file)
-			err = copy.Copy(src, dest)
-			if err != nil {
-				util.Failed("Unable to copy %v to %v: %v", src, dest, err)
+
+			// If the file existed and had #ddev-generated OR if it did not exist, copy it in.
+			if err = fileutil.CheckSignatureOrNoFile(dest, nodeps.DdevFileSignature); err == nil {
+				err = copy.Copy(src, dest)
+				if err != nil {
+					util.Failed("Unable to copy %v to %v: %v", src, dest, err)
+				}
+				output.UserOut.Printf("Installed file %s", dest)
+			} else {
+				util.Warning("NOT overwriting file/directory %s. The #ddev-generated signature was not found in the file, so it will not be overwritten. You can just remove the file and use ddev get again if you want it to be replaced: %v", dest, err)
 			}
-			output.UserOut.Printf("Installed file %s", dest)
 		}
 		origDir, _ := os.Getwd()
 
@@ -183,17 +216,44 @@ ddev get --list --all
 		}
 
 		for _, action := range s.PostInstallActions {
-			out, err := exec.RunHostCommand(bash, "-c", action)
+			err = processAction(action, dict, bash)
 			if err != nil {
-				util.Failed("Unable to run action %v: %v, output=%s", action, err, out)
+				util.Failed("could not process post-install action '%s': %v", action, err)
 			}
-			output.UserOut.Printf("Executed post-install action %v.", action)
 		}
+
 		util.Success("Downloaded add-on %s, use `ddev restart` to enable.", sourceRepoArg)
 		if argType == "github" {
 			util.Success("Please read instructions for this addon at the source repo at\nhttps://github.com/%v/%v\nPlease file issues and create pull requests there to improve it.", owner, repo)
 		}
+
 	},
+}
+
+// processAction takes a line from yaml exec section and executes it.
+func processAction(action string, dict map[string]interface{}, bashPath string) error {
+	t, err := template.New("preInstall").Funcs(sprig.TxtFuncMap()).Parse(action)
+	if err != nil {
+		return fmt.Errorf("could not parse action '%s': %v", action, err)
+	}
+
+	var doc bytes.Buffer
+	err = t.Execute(&doc, dict)
+	if err != nil {
+		return fmt.Errorf("could not parse/execute action '%s': %v", action, err)
+	}
+	action = doc.String()
+	// Expand any remaining environment variables.
+	action = os.ExpandEnv(action)
+
+	out, err := exec.RunHostCommand(bashPath, "-c", action)
+	if err != nil {
+		return fmt.Errorf("Unable to run action %v: %v, output=%s", action, err, out)
+	}
+	if !strings.Contains(action, `#ddev-nodisplay`) {
+		output.UserOut.Printf("Executed pre-install action %v, output=%s.", action, out)
+	}
+	return nil
 }
 
 func renderRepositoryList(repos []github.Repository) string {
@@ -264,7 +324,11 @@ func listAvailable(officialOnly bool) ([]github.Repository, error) {
 
 	repos, resp, err := client.Search.Repositories(context.Background(), q, nil)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to get list of available services: %v\nresp.Rate=%v", err, resp.Rate)
+		msg := fmt.Sprintf("Unable to get list of available services: %v", err)
+		if resp != nil {
+			msg = msg + fmt.Sprintf(" rateinfo=%v", resp.Rate)
+		}
+		return nil, fmt.Errorf(msg)
 	}
 	out := ""
 	for _, r := range repos.Repositories {

@@ -3,7 +3,13 @@ SHELL ["/bin/bash", "-c"]
 
 USER root
 
-RUN apt-get update >/dev/null && sudo apt-get install -y autojump file mysql-client netcat nodejs telnet xdg-utils >/dev/null
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+
+RUN apt-get update >/dev/null && sudo apt-get install -y aspell autojump file mysql-client netcat nodejs python3-pip telnet xdg-utils >/dev/null
+
+RUN pip3 install mkdocs pyspelling pymdown-extensions
+RUN npm install -g markdownlint-cli
+RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin v1.46.2
 
 RUN rm -rf /usr/local/go && curl -sL -o /tmp/go.tar.gz https://go.dev/dl/go1.17.8.linux-amd64.tar.gz && tar -C /usr/local -xzf /tmp/go.tar.gz && rm /tmp/go.tar.gz && ln -s /usr/local/go/bin/go /usr/local/bin/go
 

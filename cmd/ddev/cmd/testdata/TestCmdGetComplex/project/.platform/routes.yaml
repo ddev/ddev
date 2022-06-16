@@ -1,0 +1,17 @@
+# The routes of the project.
+#
+# Each route describes how an incoming URL is going
+# to be processed by Platform.sh.
+
+"https://{default}/":
+    type: upstream
+    upstream: "app:http"
+    cache:
+      enabled: true
+
+      # Base the cache on the session cookie and custom Drupal cookies. Ignore all other cookies.
+      cookies: ['/^SS?ESS/', '/^Drupal.visitor/']
+
+"https://www.{default}/":
+    type: redirect
+    to: "https://{default}/"

@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"io/fs"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -177,7 +178,7 @@ func PurgeDirectory(path string) error {
 func FgrepStringInFile(fullPath string, needle string) (bool, error) {
 	fullFileBytes, err := os.ReadFile(fullPath)
 	if err != nil {
-		return false, fmt.Errorf("failed to open file %s, err:%v ", fullPath, err)
+		return false, err
 	}
 	fullFileString := string(fullFileBytes)
 	return strings.Contains(fullFileString, needle), nil
@@ -429,4 +430,55 @@ func TemplateStringToFile(content string, vars map[string]interface{}, targetFil
 		return nil
 	}
 	return nil
+}
+
+// CheckSignatureOrNoFile checks to make sure that a file or directory either doesn't exist
+// or has #ddev-generated in its contents (so it can be overwritten)
+// returns nil if overwrite is OK (if sig found or no file existing)
+func CheckSignatureOrNoFile(path string, signature string) error {
+	var err error
+	switch {
+	case !FileExists(path):
+		return nil
+
+	case FileExists(path) && !IsDirectory(path):
+		found, err := FgrepStringInFile(path, signature)
+		// It's unlikely that we'll get an error, but report it if we do.
+		if err != nil {
+			return err
+		}
+		// We found the file and it has the signature in it.
+		if !found {
+			return fmt.Errorf("signature was not found in file %s", path)
+		}
+		return nil
+
+	case IsDirectory(path):
+		err = filepath.WalkDir(path, func(path string, info fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			// If a directory, nothing to do, continue traversing
+			if info.IsDir() {
+				return nil
+			}
+			// If file doesn't exist, nothing to do, continue traversing
+			if !FileExists(path) {
+				return nil
+			}
+			// Now check to see if file has signature.
+			found, err := FgrepStringInFile(path, signature)
+			// It's unlikely that we'll get an error, but report it if we do.
+			if err != nil {
+				return err
+			}
+			// We have the file and it does not have the signature in it.
+			// that means it's not safe to overwrite it.
+			if !found {
+				return fmt.Errorf("signature was not found in file %s", path)
+			}
+			return nil
+		})
+	}
+	return err
 }

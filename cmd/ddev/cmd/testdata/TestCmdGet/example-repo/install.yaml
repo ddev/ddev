@@ -1,15 +1,18 @@
 name: example
 
 pre_install_actions:
-- touch ${DDEV_APPROOT}/.ddev/i-have-been-touched
+- touch .ddev/i-have-been-touched
 
 # files and directories listed here are copied into .ddev
 project_files:
 - docker-compose.example.yaml
+- file-with-no-ddev-generated.txt
+- projectextras
 
 # files and directories listed here are copied into global .ddev directory
 global_files:
-- extras
+- globalextras
+- file-with-no-ddev-generated.txt
 
 post_install_actions:
 - touch ~/.ddev/commands/web/global-touched

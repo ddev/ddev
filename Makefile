@@ -166,7 +166,7 @@ markdown-link-check:
 		echo "Not running markdown-link-check because it's not installed"; \
 	fi
 
-# Best to install pyspelling locally with "pip3 install pyspelling pymdown-extensions"
+# Best to install pyspelling locally with "sudo -H pip3 install pyspelling pymdown-extensions". Also requries aspell, `sudo apt-get install aspell"
 pyspelling:
 	@echo "pyspelling: "
 	@CMD="pyspelling --config .spellcheck.yml"; \

@@ -135,6 +135,7 @@ about
 acquia
 acli
 add
+addon
 addr
 all
 alldirs
@@ -363,6 +364,8 @@ mkcert
 mkdir
 mnt
 modify
+mongo
+mongodb
 more
 mountaddr
 mountproto
@@ -403,6 +406,7 @@ or
 oriented
 output
 pause
+pdfreactor
 pecl
 performant
 pgdump
@@ -517,6 +521,8 @@ tableplus
 tasklist
 tcp
 tcpview
+template
+templated
 test
 testddev
 tgz
