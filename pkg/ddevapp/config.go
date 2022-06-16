@@ -220,6 +220,7 @@ func (app *DdevApp) WriteConfig() error {
 
 	// Write example Dockerfiles into build directories
 	contents := []byte(`
+#ddev-generated
 # You can copy this Dockerfile.example to Dockerfile to add configuration
 # or packages or anything else to your webimage
 # These additions will be appended last to ddev's own Dockerfile
@@ -232,6 +233,7 @@ RUN echo "Built on $(date)" > /build-date.txt
 		return err
 	}
 	contents = []byte(`
+#ddev-generated
 # You can copy this Dockerfile.example to Dockerfile to add configuration
 # or packages or anything else to your dbimage
 RUN echo "Built on $(date)" > /build-date.txt
