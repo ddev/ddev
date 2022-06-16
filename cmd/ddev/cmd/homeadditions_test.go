@@ -112,7 +112,7 @@ func TestHomeadditions(t *testing.T) {
 		assert.Contains(stdout, fmt.Sprintf("this is .%sscript.sh", script))
 	}
 	for _, f := range []string{"realglobaltarget.txt", "realprojecttarget.txt"} {
-		stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+		_, _, err = app.Exec(&ddevapp.ExecOpts{
 			Cmd: `ls ~/` + f,
 		})
 		assert.NoError(err)
