@@ -71,6 +71,18 @@ func TestHomeadditions(t *testing.T) {
 		_ = os.Setenv("USERPROFILE", origHome)
 	})
 
+	// Before we can symlink global, need to make sure anything is already gone
+	err = os.RemoveAll(filepath.Join(tmpHomeGlobalHomeadditionsDir, "realglobaltarget.txt"))
+	assert.NoError(err)
+	err = os.RemoveAll(filepath.Join(projectHomeadditionsDir, "realprojecttarget.txt"))
+	assert.NoError(err)
+
+	// symlink the project file
+	err = os.Symlink(filepath.Join(origDir, "testdata", t.Name(), "project/realprojecttarget.txt"), filepath.Join(projectHomeadditionsDir, "realprojecttarget.txt"))
+	require.NoError(t, err)
+	// symlink the global file
+	err = os.Symlink(filepath.Join(origDir, "testdata", t.Name(), "global/realglobaltarget.txt"), filepath.Join(tmpHomeGlobalHomeadditionsDir, "realglobaltarget.txt"))
+	require.NoError(t, err)
 	// Run ddev start make sure homeadditions example files get populated
 	_, err = exec.RunHostCommand(DdevBin, "start")
 	assert.NoError(err)
@@ -98,5 +110,11 @@ func TestHomeadditions(t *testing.T) {
 		})
 		assert.NoError(err)
 		assert.Contains(stdout, fmt.Sprintf("this is .%sscript.sh", script))
+	}
+	for _, f := range []string{"realglobaltarget.txt", "realprojecttarget.txt"} {
+		stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+			Cmd: `ls ~/` + f,
+		})
+		assert.NoError(err)
 	}
 }

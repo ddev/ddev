@@ -1012,14 +1012,14 @@ func (app *DdevApp) Start() error {
 	}
 	globalHomeadditionsPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "homeadditions")
 	if fileutil.IsDirectory(globalHomeadditionsPath) {
-		err = copy.Copy(globalHomeadditionsPath, tmpHomeadditionsPath)
+		err = copy.Copy(globalHomeadditionsPath, tmpHomeadditionsPath, copy.Options{OnSymlink: func(string) copy.SymlinkAction { return copy.Deep }})
 		if err != nil {
 			return err
 		}
 	}
 	projectHomeAdditionsPath := app.GetConfigPath("homeadditions")
 	if fileutil.IsDirectory(projectHomeAdditionsPath) {
-		err = copy.Copy(projectHomeAdditionsPath, tmpHomeadditionsPath)
+		err = copy.Copy(projectHomeAdditionsPath, tmpHomeadditionsPath, copy.Options{OnSymlink: func(string) copy.SymlinkAction { return copy.Deep }})
 		if err != nil {
 			return err
 		}

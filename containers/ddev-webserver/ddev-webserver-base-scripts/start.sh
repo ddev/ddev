@@ -88,7 +88,7 @@ if [ ! -f ${NVM_DIR:-${HOME}/.nvm}/nvm.sh ]; then (install_nvm.sh || true); fi
 # should all be set up with both global and local
 # either way.
 if [ -d /mnt/ddev_config/.homeadditions ]; then
-    cp -rL /mnt/ddev_config/.homeadditions/. ~/
+    cp -r /mnt/ddev_config/.homeadditions/. ~/
 fi
 
 # It's possible CAROOT does not exist or is not writeable (if host-side mkcert -install not run yet)
