@@ -1099,22 +1099,26 @@ func TestCustomBuildDockerfiles(t *testing.T) {
 	err = app.Stop(true, false)
 	assert.NoError(err)
 
-	defer func() {
-		_ = os.RemoveAll(app.GetConfigPath("web-build"))
-		_ = os.RemoveAll(app.GetConfigPath("db-build"))
-		_ = app.Stop(true, false)
-	}()
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.RemoveAll(app.GetConfigPath("web-build"))
+		assert.NoError(err)
+		err = os.RemoveAll(app.GetConfigPath("db-build"))
+		assert.NoError(err)
+	})
 
 	// Create simple dockerfiles that just touch /var/tmp/added-by-<container>txt
 	for _, item := range []string{"web", "db"} {
+		err = fileutil.TemplateStringToFile("junkfile", nil, app.GetConfigPath(fmt.Sprintf("%s-build/junkfile", item)))
+		assert.NoError(err)
 		err = WriteImageDockerfile(app.GetConfigPath(item+"-build/Dockerfile"), []byte(`
-ARG BASE_IMAGE
-FROM $BASE_IMAGE
 RUN touch /var/tmp/`+"added-by-"+item+".txt"))
 		assert.NoError(err)
 		// Add also Dockerfile.* alternatives
 		// Last one includes previously recommended ARG/FROM that needs to be removed
 		err = WriteImageDockerfile(app.GetConfigPath(item+"-build/Dockerfile.test1"), []byte(`
+ADD junkfile /
 RUN touch /var/tmp/`+"added-by-"+item+"-test1.txt"))
 		assert.NoError(err)
 
@@ -1131,6 +1135,11 @@ RUN touch /var/tmp/`+"added-by-"+item+"-test2.txt"))
 
 	// Make sure that the expected in-container file has been created
 	for _, item := range []string{"web", "db"} {
+		_, _, err = app.Exec(&ExecOpts{
+			Service: item,
+			Cmd:     "ls /junkfile",
+		})
+		assert.NoError(err)
 		_, _, err = app.Exec(&ExecOpts{
 			Service: item,
 			Cmd:     "ls /var/tmp/added-by-" + item + ".txt",
