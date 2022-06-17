@@ -1,0 +1,1 @@
+This a global realtarget file. Even though we symlink it it should get in there as a file.
