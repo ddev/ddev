@@ -101,6 +101,9 @@ RUN phpdismod xdebug && curl -sSL --fail --output /usr/local/bin/phive "https://
 RUN set -o pipefail && curl -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod 777 /usr/local/bin/terminus
 RUN set -o pipefail && curl -sSL https://github.com/platformsh/platformsh-cli/releases/download/$(curl --silent "https://api.github.com/repos/platformsh/platformsh-cli/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/platform.phar --output /usr/local/bin/platform && chmod 777 /usr/local/bin/platform
 
+RUN mkdir -p "/opt/phpstorm-coverage" && \
+    chmod a+rw "/opt/phpstorm-coverage"
+
 # TODO: v1.18.0 had numerous problems, see https://github.com/acquia/cli/issues/508#issuecomment-967185296
 # and https://github.com/acquia/cli/issues/721 and https://github.com/acquia/cli/issues/722
 # When things sort out, additional work will be required in acquia.yaml.example to make it work
