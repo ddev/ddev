@@ -72,7 +72,7 @@ You can see a simple install.yaml in [ddev-addon-template's install.yaml](https:
 
 ### Environment variable replacements
 
-Simple environment variables will be replaced in the `install.yaml` both as part of filenames and as used in the various actions. This can include environment variables in the context of where ddev is being run, as well as the standard [environment variables](custom-commands.md#environment-variables-provided) provided to custom host commands, like `DDEV_APPROOT`, `DDEV_DOCROOT`, etc. For example, if a file in `project_files` is listed as `somefile.${DDEV_PROJECT}.txt` with a project named `d10`, the file named `somefile.d10.txt` will be copied from the add-on into the project.
+Simple environment variables will be replaced in `install.yaml` as part of filenames. This can include environment variables in the context of where ddev is being run, as well as the standard [environment variables](custom-commands.md#environment-variables-provided) provided to custom host commands, like `DDEV_APPROOT`, `DDEV_DOCROOT`, etc. For example, if a file in `project_files` is listed as `somefile.${DDEV_PROJECT}.txt` with a project named `d10`, the file named `somefile.d10.txt` will be copied from the add-on into the project.
 
 ### Template action replacements (advanced)
 

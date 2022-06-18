@@ -243,8 +243,6 @@ func processAction(action string, dict map[string]interface{}, bashPath string) 
 		return fmt.Errorf("could not parse/execute action '%s': %v", action, err)
 	}
 	action = doc.String()
-	// Expand any remaining environment variables.
-	action = os.ExpandEnv(action)
 
 	out, err := exec.RunHostCommand(bashPath, "-c", action)
 	if err != nil {
