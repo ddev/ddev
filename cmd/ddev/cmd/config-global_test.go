@@ -50,7 +50,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	args := []string{"config", "global"}
 	out, err := exec.RunCommand(DdevBin, args)
 	assert.NoError(err)
-	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[]\nweb-environment=[]\nmutagen-enabled=false\nnfs-mount-enabled=false\nrouter-bind-all-interfaces=false\ninternet-detection-timeout-ms=750\ndisable-http2=false\nuse-letsencrypt=false\nletsencrypt-email=\ntable-style=default\nsimple-formatting=false\nauto-restart-containers=false\nuse-hardened-images=false\nfail-on-hook-fail=false\nrequired-docker-compose-version=\nuse-docker-compose-from-path=false")
+	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[]\nweb-environment=[]\nmutagen-enabled=false\nnfs-mount-enabled=false\nrouter-bind-all-interfaces=false\ninternet-detection-timeout-ms=3000\ndisable-http2=false\nuse-letsencrypt=false\nletsencrypt-email=\ntable-style=default\nsimple-formatting=false\nauto-restart-containers=false\nuse-hardened-images=false\nfail-on-hook-fail=false\nrequired-docker-compose-version=\nuse-docker-compose-from-path=false")
 
 	// Update a config
 	// Don't include no-bind-mounts because global testing

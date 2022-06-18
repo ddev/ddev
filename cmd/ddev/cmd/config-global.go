@@ -211,7 +211,7 @@ func init() {
 	configGlobalCommand.Flags().Bool("nfs-mount-enabled", false, "Enable NFS mounting on all projects globally")
 	configGlobalCommand.Flags().BoolVarP(&instrumentationOptIn, "instrumentation-opt-in", "", false, "instrumentation-opt-in=true")
 	configGlobalCommand.Flags().Bool("router-bind-all-interfaces", false, "router-bind-all-interfaces=true")
-	configGlobalCommand.Flags().Int("internet-detection-timeout-ms", 750, "Increase timeout when checking internet timeout, in milliseconds")
+	configGlobalCommand.Flags().Int("internet-detection-timeout-ms", 3000, "Increase timeout when checking internet timeout, in milliseconds")
 	configGlobalCommand.Flags().Bool("disable-http2", false, "Optionally disable http2 in ddev-router, 'ddev global --disable-http2' or `ddev global --disable-http2=false'")
 	configGlobalCommand.Flags().Bool("use-letsencrypt", false, "Enables experimental Let's Encrypt integration, 'ddev global --use-letsencrypt' or `ddev global --use-letsencrypt=false'")
 	configGlobalCommand.Flags().String("letsencrypt-email", "", "Email associated with Let's Encrypt, `ddev global --letsencrypt-email=me@example.com'")
