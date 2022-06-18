@@ -159,7 +159,7 @@ func TestIsInternetActiveTimeout(t *testing.T) {
 	internetActiveResetVariables()
 
 	globalconfig.IsInternetActiveNetResolver = internetActiveNetResolverStub{
-		sleepTime: 1000 * time.Millisecond,
+		sleepTime: 4000 * time.Millisecond,
 	}
 
 	asrt.False(t, globalconfig.IsInternetActive())
