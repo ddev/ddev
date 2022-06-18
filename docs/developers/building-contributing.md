@@ -35,14 +35,14 @@ A dummy project for gitpod is provided by default in /workspace/d9simple. You ca
 
 ## Making changes to ddev images
 
-If you need to make a change to one of the ddev images, you can make the change but then it has to be built with a specific tag, and the tag has to be updated in pkg/version/version.go. So for example, make a change to containers/ddev-webserver/Dockerfile, then built it:
+If you need to make a change to one of the ddev images, you can make the change, but then it has to be built with a specific tag, and the tag has to be updated in `pkg/versionconstants/versionconstants.go`. So for example, make a change to containers/ddev-webserver/Dockerfile, then built it:
 
 ```bash
 cd containers/ddev-webserver
 make VERSION=20210424_fix_dockerfile
 ```
 
-Then edit pkg/version/version.go to set `var WebTag = "20210424_fix_dockerfile"` and
+Then edit `pkg/versionconstants/versionconstants.go` to set `var WebTag = "20210424_fix_dockerfile"` and
 
 ```bash
 cd /workspace/ddev
@@ -67,7 +67,7 @@ If you make changes to a docker image (like ddev-webserver), it won't have any e
 * Multi-arch images require you to have a buildx builder, so `docker buildx create --name ddev-builder-multi --use`
 * You can't push until you `docker login`.
 * Push a container to hub.docker.com. Push with the tag that matches your branch. Pushing to `<yourorg>/ddev-webserver` repo is easy to accomplish with `make push DOCKER_ORG=<yourorg> VERSION=<branchname>` **in the container directory**. You might have to use other techniques to push to another repo.
-* Update pkg/version/version.go with the WebImg and WebTag that relate to the docker image you pushed.
+* Update `pkg/versionconstants/versionconstants.go` with the WebImg and WebTag that relate to the docker image you pushed.
 
 ### Local builds and pushes
 
@@ -134,7 +134,7 @@ The Docker images that DDEV uses are included in the containers/ directory:
 * containers/ddev-router: The router image
 * containers/ddev-ssh-agent
 
-When changes are made to an image, they have to be temporarily pushed to a tag that is preferably the same as the branch name of the PR, and the tag updated in pkg/version/version.go. Just ask if you need a container pushed to support a PR.
+When changes are made to an image, they have to be temporarily pushed to a tag that is preferably the same as the branch name of the PR, and the tag updated in `pkg/versionconstants/versionconstants.go`. Just ask if you need a container pushed to support a PR.
 
 ## Pull Request Pro Tips
 
