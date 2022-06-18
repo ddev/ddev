@@ -13,8 +13,6 @@ func YamlFileToMap(fname string) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to read file %s (%v)", fname, err)
 	}
-	c := os.ExpandEnv(string(contents))
-	contents = []byte(c)
 
 	itemMap := make(map[string]interface{})
 	err = yaml.Unmarshal(contents, &itemMap)
