@@ -42,6 +42,7 @@ services:
       com.ddev.approot: $DDEV_APPROOT
     environment:
       - COLUMNS
+      - DDEV_DATABASE
       - DDEV_HOSTNAME
       - DDEV_PHP_VERSION
       - DDEV_PRIMARY_URL
@@ -52,6 +53,8 @@ services:
       - DDEV_SITENAME
       - DDEV_TLD
       - DOCKER_IP={{ .DockerIP }}
+      - GOARCH
+      - GOOS
       - HOST_DOCKER_INTERNAL_IP={{ .HostDockerInternalIP }}
       - IS_DDEV_PROJECT=true
       - LINES
@@ -157,6 +160,7 @@ services:
     environment:
     - COLUMNS
     - DOCROOT=${DDEV_DOCROOT}
+    - DDEV_DATABASE
     - DDEV_DOCROOT
     - DDEV_HOSTNAME
     - DDEV_PHP_VERSION
@@ -176,6 +180,8 @@ services:
     {{ end }}
     - DRUSH_ALLOW_XDEBUG=1
     - DOCKER_IP={{ .DockerIP }}
+    - GOARCH
+    - GOOS
     - HOST_DOCKER_INTERNAL_IP={{ .HostDockerInternalIP }}
     # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.site:<port>
     # To expose a container port to a different host port, define the port as hostPort:containerPort
