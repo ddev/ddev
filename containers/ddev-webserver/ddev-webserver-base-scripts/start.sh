@@ -70,13 +70,6 @@ else
   disable_xdebug
 fi
 
-# Disable xdebug autostart by default. Users can enable with /usr/local/bin/disable_xdebug_trigger
-if [ "$DDEV_XDEBUG_AUTOSTART" = "true" ]; then
-  enable_xdebug_autostart
-else
-  disable_xdebug_autostart
-fi
-
 # Enable assertions by default.
 phpenmod assert
 
