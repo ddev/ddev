@@ -102,7 +102,7 @@ xdebug is a server-side tool: It is installed automatically on the container and
 configure it on your workstation.
 
 The basic thing to understand about xdebug is that it's a network protocol. Your IDE (like PhpStorm) will listen on the
-xdebug port (9003 by default in v1.19+, previously 9000). Then if a xdebug session is started, php inside the container
+xdebug port (9003 by default in v1.19+, previously 9000). When an xdebug session is started, php inside the container
 will try to open a TCP connection to the IDE. When starting the session via a browser xdebug will try to connect back to
 client, otherwise `host.docker.internal:9003` will be used to connect, which is provided by docker. So you have to make
 sure that the network connection is clear and can be made and everything should work.
