@@ -230,8 +230,9 @@ ddev get --list --all
 	},
 }
 
-// processAction takes a line from yaml exec section and executes it.
+// processAction takes a stanza from yaml exec section and executes it.
 func processAction(action string, dict map[string]interface{}, bashPath string) error {
+	action = "set -eu -o pipefail\n" + action
 	t, err := template.New("preInstall").Funcs(sprig.TxtFuncMap()).Parse(action)
 	if err != nil {
 		return fmt.Errorf("could not parse action '%s': %v", action, err)
