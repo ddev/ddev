@@ -81,7 +81,7 @@ The intention here is that one won't have to understand XDebug to do debugging.
 
 By default, ddev is set up to contact the default port, port 9003 on your IDE. However, if you have something else
 listening on that port or your IDE does not yet default to 9003, you'll need to change the port. (PhpStorm and vscode
-have switch to supporting 9003 instead of 9000 for some time now.)
+have switched to supporting 9003 instead of 9000 for some time now.)
 
 * To override the port, add an override file in the project's `.ddev/php` directory. For example, a file
   `.ddev/php/xdebug_client_port.ini` would change to use the traditional old port 9000:
