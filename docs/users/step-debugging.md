@@ -72,7 +72,7 @@ Please note: When using PHPStorm you should first [debug a website](#Debug a web
   return to the default with `ddev xdebug trigger`
 * You can disable xdebug with `ddev xdebug off` or setting `xdebug_enabled: false` in your `.ddev/config.yml`
 * `ddev xdebug status` will show you the current xdebug configuration
-* If xdebug is disabled in your configuration, you can enable it for a already running container with `ddev xdebug on`
+* If xdebug is disabled in your configuration, you can enable it for a already-running project with `ddev xdebug on`
 
 For more background on XDebug see the [XDebug documentation](https://xdebug.org/docs/remote).
 The intention here is that one won't have to understand XDebug to do debugging.
