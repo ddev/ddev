@@ -14,7 +14,7 @@ var DdevVersion = "v0.0.0-overridden-by-make" // Note that this is overridden by
 var SegmentKey = ""
 
 // WebImg defines the default web image used for applications.
-var WebImg = "niconator/ddev-webserver"
+var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag
 var WebTag = "20220619_add_phpstorm_coverage_directory" // Note that this can be overridden by make
