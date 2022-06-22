@@ -14,7 +14,7 @@ Remember, you can run `ddev [command] --help` for more info on many of the topic
 
 **Database snapshots**: With _snapshots_ you can easily save the entire status of all of your databases. It's great for when you're working incrementally on migrations or updates and want to save state so you can start right back where you were.
 
-I like to name my snapshots so I can find them later, so `ddev snapshot --name=two-dbs` would make a snapshot named `two-dbs` in the `.ddev/db_snapshots` directory. It includes the entire state of the db server, so in the case of our two databases above, both databases and the system level `mysql` or `postgres` database will all be snapshotted. Then if you want to delete everything with `ddev delete -O` (omitting the snapshot since we have one already), and then `ddev start` again, we can `ddev restore-snapshot two-dbs` and we'll be right back where we were.
+I like to name my snapshots so I can find them later, so `ddev snapshot --name=two-dbs` would make a snapshot named `two-dbs` in the `.ddev/db_snapshots` directory. It includes the entire state of the db server, so in the case of our two databases above, both databases and the system level `mysql` or `postgres` database will all be snapshotted. Then if you want to delete everything with `ddev delete -O` (omitting the snapshot since we have one already), and then `ddev start` again, we can `ddev snapshot restore two-dbs` and we'll be right back where we were.
 
 Don't forget about `ddev snapshot restore --latest` and that `ddev snapshot restore` will interactively let you choose among snapshots.
 
