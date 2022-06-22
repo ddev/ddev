@@ -8,14 +8,6 @@ if [ -z ${BUILDKITE_AGENT_TOKEN:-""} ]; then
   exit 101
 fi
 
-# Update kernel for WSL2
-cd /tmp && curl -O -sSL https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi && start wsl_update_x64.msi
-
-# Wait for user to install the kernel
-sleep 10
-
-wsl --set-default-version 2
-
 mkcert -install
 
 # Set *global* line endings (not user) because the buildkite-agent may not be running as testbot user
@@ -31,7 +23,7 @@ NO_V_VERSION=${LATEST_VERSION#v}
 URL="https://github.com/buildkite/agent/releases/download/$LATEST_VERSION/buildkite-agent-windows-amd64-${NO_V_VERSION}.zip"
 mkdir -p /c/buildkite-agent/bin && cd /tmp && curl -L -O $URL
 cd /c/buildkite-agent && unzip /tmp/buildkite-agent-windows-amd64-${NO_V_VERSION}.zip
-perl -pi.bak -e 's/# tags="key1=val2,key2=val2"/tags="os=windows,osvariant=windows10pro,dockertype=dockerforwindows"/' /c/buildkite-agent/buildkite-agent.cfg
+perl -pi.bak -e 's/# tags="key1=val2,key2=val2"/tags="os=windows,architecture=amd64,osvariant=windows10pro,dockertype=dockerforwindows"/' /c/buildkite-agent/buildkite-agent.cfg
 perl -pi.bak -e 's/^build-path=.*$/build-path=C:\\Users\\testbot\\tmp\\buildkite/' /c/buildkite-agent/buildkite-agent.cfg
 perl -pi.bak -e 's/^build-path=.*$/build-path=C:\\Users\\testbot\\tmp\\buildkite/' /c/buildkite-agent/buildkite-agent.cfg
 perl -pi.bak -e "s/^token=.*\$/token=${BUILDKITE_AGENT_TOKEN}/" /c/buildkite-agent/buildkite-agent.cfg
@@ -50,5 +42,3 @@ nssm.exe status buildkite-agent || true
 winpty docker run -it --rm -p 80 busybox:stable ls
 
 bash "/c/Program Files/ddev/windows_ddev_nfs_setup.sh"
-
-bash "scripts/windows_postinstall.sh"

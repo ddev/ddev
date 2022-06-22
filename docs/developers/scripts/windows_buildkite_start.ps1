@@ -15,8 +15,4 @@ reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUn
 
 cmd /c "setx /M PATH ""C:\Program Files\Git\bin;%PATH%"""
 
-# Install WSL2 and VirtualMachinePlatform
-dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
-dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all
-
 
