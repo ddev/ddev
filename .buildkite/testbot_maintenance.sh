@@ -6,6 +6,9 @@ os=$(go env GOOS)
 
 rm -rf ~/.ddev/Test* ~/.ddev/global_config.yaml ~/.ddev/homeadditions ~/.ddev/commands ~/.ddev/bin/docker-comnpose* ~/tmp/ddevtest
 
+# Latest git won't let you do much in a non-safe directory
+git config --global --add safe.directory '*' || true
+
 # Install ngrok if it's not there.
 if ! command -v ngrok >/dev/null; then
     case $os in
