@@ -24,7 +24,6 @@ fi
 # Upgrade various items on various operating systems
 case $os in
 darwin)
-    brew uninstall mutagen-io/mutagen/mutagen-beta mutagen-io/mutagen/mutagen || true
     for item in drud/ddev/ddev golang golangci-lint libpq mkcert mkdocs; do
         brew upgrade $item || brew install $item || true
     done
@@ -32,13 +31,11 @@ darwin)
     ;;
 windows)
     (yes | choco upgrade -y golang nodejs markdownlint-cli mkcert mkdocs postgresql) || true
-    (yes | choco uninstall -y mutagen) || true
     ;;
 # linux is currently WSL2
 linux)
     # homebrew is only on amd64
     if [ "$(arch)" = "x86_64" ]; then
-      brew uninstall mutagen-beta mutagen || true
       for item in drud/ddev/ddev golang mkcert mkdocs postgresql-client; do
         brew upgrade $item || brew install $item || true
       done

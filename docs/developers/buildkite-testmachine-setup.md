@@ -8,7 +8,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 2. In admin PowerShell, `wsl --install`
 3. In admin PowerShell, `Set-ExecutionPolicy -Scope "CurrentUser" -ExecutionPolicy "RemoteSigned"`
 4. In admin PowerShell, download and run [windows_buildkite_start.ps1](scripts/windows_buildkite_start.ps1) (Use `curl <url> -O windows_buildkite_start.ps1`)
-5. After restart, in administrative git-bash window, `Rename-Computer <testbot-win10(home|pro)-<description>-1` and then `export BUILDKITE_AGENT_TOKEN=<token>`
+5. After restart, in **administrative** git-bash window, `Rename-Computer <testbot-win10(home|pro)-<description>-1` and then `export BUILDKITE_AGENT_TOKEN=<token>`
 6. Now download and run [windows_buildkite-testmachine_setup.sh](scripts/windows_buildkite_setup.sh)
 7. Download and run [windows_postinstall.sh](scripts/windows_postinstall.sh)
 8. Launch Docker. It may require you to take further actions.
@@ -17,17 +17,17 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 11. If a laptop, set the "lid closing" setting in settings to do nothing.
 12. Set the "Sleep after time" setting in settings to never.
 13. Install [winaero tweaker](https://winaero.com/request.php?1796) and "Enable user autologin checkbox". Set up the machine to [automatically log in on boot](https://www.cnet.com/how-to/automatically-log-in-to-your-windows-10-pc/).  Then run netplwiz, provide the password for the main user, uncheck the "require a password to log in".
-14. The buildkite/hooks/environment file must be updated to contain the docker pull credentials:
+14. The buildkite/hooks/environment.bat file must be updated to contain the docker pull credentials:
 ```bash
-   #!/bin/bash
-   export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
-   export DOCKERHUB_PULL_PASSWORD=xxx
-   set -e
+@echo off
+set DOCKERHUB_PULL_USERNAME=druddockerpullaccount
+set DOCKERHUB_PULL_PASSWORD=
 ```
 15. Set the buildkite-agent service to run as the testbot user and use delayed start: Choose "Automatic, delayed start" and on the "Log On" tab in the services widget it must be set up to log in as the testbot user, so it inherits environment variables and home directory (and can access NFS, has testbot git config, etc).
 16. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`
 17. Run .buildkite/sanetestbot.sh to check your work.
 18. Reboot the machine and do a test run. (On windows the machine name only takes effect on reboot.
+19. Verify that go, ddev, git-bash are in the path
 
 ## Additional Windows setup for WSL2 testing
 
@@ -40,11 +40,12 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 Set up Windows to automatically start WSL2 buildkite-agent: Use task scheduler to create a simple task that runs `C:\Windows\System32\wsl.exe -d Ubuntu buildkite-agent start` at login.
 7. Install homebrew, `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 8. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`
-9. The buildkite/hooks/environment.bat file must be updated to contain the docker pull credentials:
+9. The buildkite/hooks/environment file must be updated to contain the docker pull credentials:
 ```bash
-@echo off
-set DOCKERHUB_PULL_USERNAME=druddockerpullaccount
-set DOCKERHUB_PULL_PASSWORD=
+   #!/bin/bash
+   export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
+   export DOCKERHUB_PULL_PASSWORD=xxx
+   set -e
 ```
 
 ## macOS Test Agent Setup (works for M1 as well)
