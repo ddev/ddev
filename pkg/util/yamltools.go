@@ -38,6 +38,8 @@ func YamlToDict(topm interface{}) (map[string]interface{}, error) {
 				res[ys], err = YamlToDict(v)
 			case map[string]interface{}:
 				res[ys], err = YamlToDict(v)
+			case []interface{}:
+				res[ys] = v
 			case interface{}:
 				res[ys] = v
 			default:

@@ -163,6 +163,12 @@ ddev get --list --all
 				util.Failed("unable to import yaml file %s: %v", fullpath, err)
 			}
 		}
+		for k, v := range map[string]string{"DdevGlobalConfig": globalconfig.GetGlobalConfigPath(), "DdevProjectConfig": app.GetConfigPath("config.yaml")} {
+			yamlMap[k], err = util.YamlFileToMap(v)
+			if err != nil {
+				util.Failed("unable to read file %s", v)
+			}
+		}
 
 		dict, err := util.YamlToDict(yamlMap)
 		if err != nil {
@@ -230,9 +236,10 @@ ddev get --list --all
 	},
 }
 
-// processAction takes a line from yaml exec section and executes it.
+// processAction takes a stanza from yaml exec section and executes it.
 func processAction(action string, dict map[string]interface{}, bashPath string) error {
-	t, err := template.New("preInstall").Funcs(sprig.TxtFuncMap()).Parse(action)
+	action = "set -eu -o pipefail\n" + action
+	t, err := template.New("processAction").Funcs(sprig.TxtFuncMap()).Parse(action)
 	if err != nil {
 		return fmt.Errorf("could not parse action '%s': %v", action, err)
 	}
@@ -248,8 +255,11 @@ func processAction(action string, dict map[string]interface{}, bashPath string) 
 	if err != nil {
 		return fmt.Errorf("Unable to run action %v: %v, output=%s", action, err, out)
 	}
+	if len(out) > 0 {
+		output.UserOut.Print(out)
+	}
 	if !strings.Contains(action, `#ddev-nodisplay`) {
-		output.UserOut.Printf("Executed pre-install action %v, output=%s.", action, out)
+		output.UserOut.Printf("Executed action '%v', output='%s'", action, out)
 	}
 	return nil
 }

@@ -124,9 +124,6 @@ func TestCmdGetComplex(t *testing.T) {
 	out, err := exec.RunHostCommand(DdevBin, "get", filepath.Join(origDir, "testdata", t.Name(), "recipe"))
 	require.NoError(t, err, "out=%s", out)
 
-	// Make sure that `#ddev-nodisplay` quieted the output of ddev debug capabilities
-	assert.NotContains(out, "This action should not have any output")
-
 	app, err = ddevapp.GetActiveApp("")
 	require.NoError(t, err)
 
