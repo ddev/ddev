@@ -35,7 +35,7 @@ echo ""
 
 ddev poweroff || true
 
-echo "\n\n== Setting up nfs... You may be asked for your sudo password and for permission to administer your computer..."
+printf "\n\n== Setting up nfs... You may be asked for your sudo password and for permission to administer your computer..."
 # Share home directory. If the projects are elsewhere the /etc/exports will need
 # to be adapted.
 SHAREDIR=${HOME}
