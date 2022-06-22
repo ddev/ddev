@@ -24,10 +24,11 @@ set DOCKERHUB_PULL_USERNAME=druddockerpullaccount
 set DOCKERHUB_PULL_PASSWORD=
 ```
 15. Set the buildkite-agent service to run as the testbot user and use delayed start: Choose "Automatic, delayed start" and on the "Log On" tab in the services widget it must be set up to log in as the testbot user, so it inherits environment variables and home directory (and can access NFS, has testbot git config, etc).
-16. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`
-17. Run .buildkite/sanetestbot.sh to check your work.
-18. Reboot the machine and do a test run. (On windows the machine name only takes effect on reboot.
-19. Verify that go, ddev, git-bash are in the path
+16. `git config --global --add safe.directory '*'`
+17. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`
+18. Run .buildkite/sanetestbot.sh to check your work.
+19. Reboot the machine and do a test run. (On windows the machine name only takes effect on reboot.
+20. Verify that go, ddev, git-bash are in the path
 
 ## Additional Windows setup for WSL2 testing
 
@@ -40,7 +41,8 @@ set DOCKERHUB_PULL_PASSWORD=
 Set up Windows to automatically start WSL2 buildkite-agent: Use task scheduler to create a simple task that runs `C:\Windows\System32\wsl.exe -d Ubuntu buildkite-agent start` at login.
 7. Install homebrew, `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 8. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`
-9. The buildkite/hooks/environment file must be updated to contain the docker pull credentials:
+9. 16. `git config --global --add safe.directory '*'`
+10. The buildkite/hooks/environment file must be updated to contain the docker pull credentials:
 ```bash
    #!/bin/bash
    export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
@@ -59,11 +61,12 @@ Set up Windows to automatically start WSL2 buildkite-agent: Use task scheduler t
 7. Run Docker manually and go through its configuration routine.
 8. Run iTerm. On Mojave and higher it may prompt for requiring full disk access permissions, follow through with that.
 9. Set up nfsd by running `macos_ddev_nfs_setup.sh`
-10. Edit the buildkite-agent.cfg in `/usr/local/etc/buildkite-agent/buildkite-agent.cfg` or `/opt/homebrew/etc/buildkite-agent/buildkite-agent.cfg` to add
+10. `git config --global --add safe.directory '*'`
+11. Edit the buildkite-agent.cfg in `/usr/local/etc/buildkite-agent/buildkite-agent.cfg` or `/opt/homebrew/etc/buildkite-agent/buildkite-agent.cfg` to add
     * the agent token
     * Tags, like `"os=macos,architecture=arm64,osvariant=monterrey,dockertype=dockerformac"`
     * `build-path="~/tmp/buildkite-agent/builds"`
-11. The buildkite/hooks/environment file must be updated to contain the docker pull credentials:
+12. The buildkite/hooks/environment file must be updated to contain the docker pull credentials:
 ```bash
    #!/bin/bash
    export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
