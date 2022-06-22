@@ -29,6 +29,7 @@ set DOCKERHUB_PULL_PASSWORD=
 18. Run .buildkite/sanetestbot.sh to check your work.
 19. Reboot the machine and do a test run. (On windows the machine name only takes effect on reboot.
 20. Verify that go, ddev, git-bash are in the path
+21. In "Advanced Windows Update Settings" enable "Receive updates for other Microsoft products" to make sure you get WSL2 kernel upgrades. Make sure to run Windows update to get latest kernel.
 
 ## Additional Windows setup for WSL2 testing
 
