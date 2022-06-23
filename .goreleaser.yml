@@ -44,6 +44,7 @@ brews:
     owner: rfay
     name: homebrew-ddev-edge
   description: DDEV
+  folder: Formula
   homepage: https://ddev.com
   license: "Apache 2"
   dependencies:
