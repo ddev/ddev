@@ -51,6 +51,13 @@ brews:
   - name: mkcert
   custom_block: |
     head "https://github.com/drud/ddev.git", branch: "master"
+    depends_on "go" => :build
+    depends_on "make" => :build
+
+  install: |
+    system "make", "VERSION=v#{version}", "COMMIT=v#{version}"
+    bin.install "ddev"
+    
   test: |
     system "#{bin}/ddev --version"
 
@@ -61,7 +68,6 @@ nfpms:
   formats:
   - deb
   - rpm
-  - apk
 
 archives:
 - id: ddev
@@ -70,7 +76,6 @@ archives:
   # Default is empty, which includes all builds.
   builds:
   - ddev
-#  - default
 
   # Archive format. Valid options are `tar.gz`, `tar.xz`, `tar`, `gz`, `zip` and `binary`.
   # If format is `binary`, no archives are created and the binaries are instead
