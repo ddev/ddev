@@ -51,6 +51,9 @@ brews:
   - name: mkcert
   custom_block: |
     head "https://github.com/drud/ddev.git", branch: "master"
+  test: |
+    system "#{bin}/ddev --version"
+
 
 nfpms:
 - maintainer: Randy Fay
