@@ -42,10 +42,12 @@ release:
 brews:
 - tap:
     owner: rfay
-    name: homebrew-ddev-edge
+    name: ddev-edge
   description: DDEV
   homepage: https://ddev.com
   license: "Apache 2"
+  dependencies:
+  - name: mkcert
 
 nfpms:
 - maintainer: Randy Fay
