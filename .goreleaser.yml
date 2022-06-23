@@ -27,7 +27,7 @@ builds:
   goamd64:
   - v1
   prebuilt:
-    path: .gotmp/bin/{{.Os}}_{{.Arch}}/ddev_windows_installer.v1.19.3-32-gc0ec496a{{.Ext}}
+    path: .gotmp/bin/windows_amd64/ddev_windows_installer.exe
   binary: ddev-windows-installer
 
 checksum:
