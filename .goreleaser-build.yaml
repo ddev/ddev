@@ -1,7 +1,5 @@
 project_name: ddev
 
-dist: artifacts
-
 builds:
   - id: ddev
     main: ./cmd/ddev
@@ -18,9 +16,10 @@ builds:
       - -extldflags -static
       - -s -w -X github.com/drud/ddev/pkg/versionconstants.DdevVersion={{.Version}} -X github.com/drud/ddev/pkg/versionconstants.SegmentKey={{.Env.SegmentKey}}
     hooks:
-      post:
-      - bash -c 'if [ "{{.Target}}" = "windows_amd64_v1" ]; then ./winpkg/scripts/build-installer.sh $(dirname {{.Path}}) {{.Version}}; fi'
+#      post:
+#      - bash -c 'if [ "{{.Target}}" = "windows_amd64_v1" ]; then ./winpkg/scripts/build-installer.sh $(dirname {{.Path}}) {{.Version}}; fi'
       #todo: sign binaries
+      #todo: build windows installer
       #todo: sign installer
       #todo: build choco package
       #todo: push choco package
