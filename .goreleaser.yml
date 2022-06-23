@@ -89,7 +89,7 @@ archives:
   #   - `{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}{{ with .Mips }}_{{ . }}{{ end }}{{ if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}`
   # - if format is `binary`:
   #   - `{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}{{ with .Mips }}_{{ . }}{{ end }}{{ if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}`
-  name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  name_template: "{{ .ProjectName }}_{{ .Os }}-{{ .Arch }}.v{{ .Version }}"
 
   # Replacements for GOOS and GOARCH in the archive name.
   # Keys should be valid GOOSs or GOARCHs.
