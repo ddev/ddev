@@ -213,6 +213,7 @@ ddev composer install
 ddev drush site:install -y
 ddev drush uli
 ddev launch
+```
 
 Note that as Drupal 10 moves from alpha to beta and then release, you'll want to change the tag from `^10@alpha` to `^10@beta` and then `^10`.
 
