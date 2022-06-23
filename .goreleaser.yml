@@ -54,10 +54,10 @@ brews:
     depends_on "go" => :build
     depends_on "make" => :build
 
-  install: |
-    system "make", "VERSION=v#{version}", "COMMIT=v#{version}"
-    bin.install "ddev"
-    
+#  install: |
+#    system "make", "VERSION=v#{version}", "COMMIT=v#{version}"
+#    system "cp", ".gotmp/bin/darwin_arm64/ddev", "#{bin}/ddev"
+
   test: |
     system "#{bin}/ddev --version"
 
