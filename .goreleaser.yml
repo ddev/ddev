@@ -49,6 +49,8 @@ brews:
   license: "Apache 2"
   dependencies:
   - name: mkcert
+  custom_block: |
+    head "https://github.com/drud/ddev.git", branch: "master"
 
 nfpms:
 - maintainer: Randy Fay
