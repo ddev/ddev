@@ -42,7 +42,7 @@ release:
 brews:
 - tap:
     owner: rfay
-    name: ddev-edge
+    name: homebrew-ddev-edge
   description: DDEV
   homepage: https://ddev.com
   license: "Apache 2"
