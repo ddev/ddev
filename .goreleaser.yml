@@ -1,5 +1,6 @@
 builds:
-- builder: prebuilt
+- id: ddev
+  builder: prebuilt
   goos:
   - linux
   - windows
@@ -16,15 +17,21 @@ builds:
     path: .gotmp/bin/{{.Os}}_{{.Arch}}/ddev{{.Ext}}
   binary: ddev
 
+- id: ddev-windows-installer
+  builder: prebuilt
+
+  goos:
+  - windows
+  goarch:
+  - amd64
+  goamd64:
+  - v1
+  prebuilt:
+    path: .gotmp/bin/{{.Os}}_{{.Arch}}/ddev_windows_installer.v1.19.3-32-gc0ec496a{{.Ext}}
+  binary: ddev-windows-installer
+
 checksum:
   name_template: "checksums.txt"
-
-changelog:
-  sort: asc
-  filters:
-    exclude:
-    - "^docs:"
-    - "^test:"
 
 release:
   prerelease: auto
@@ -44,3 +51,160 @@ nfpms:
   - deb
   - rpm
   - apk
+
+archives:
+-
+  id: ddev
+
+  # Builds reference which build instances should be archived in this archive.
+  # Default is empty, which includes all builds.
+  builds:
+  - ddev
+#  - default
+
+  # Archive format. Valid options are `tar.gz`, `tar.xz`, `tar`, `gz`, `zip` and `binary`.
+  # If format is `binary`, no archives are created and the binaries are instead
+  # uploaded directly.
+  # Default is `tar.gz`.
+  format: tar.gz
+
+  # Archive name template.
+  # Defaults:
+  # - if format is `tar.gz`, `tar.xz`, `gz` or `zip`:
+  #   - `{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}{{ with .Mips }}_{{ . }}{{ end }}{{ if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}`
+  # - if format is `binary`:
+  #   - `{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}{{ with .Mips }}_{{ . }}{{ end }}{{ if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}`
+  name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+  # Replacements for GOOS and GOARCH in the archive name.
+  # Keys should be valid GOOSs or GOARCHs.
+  # Values are the respective replacements.
+  # Default is empty.
+  #  replacements:
+  #    amd64: 64-bit
+  #    386: 32-bit
+  #    darwin: macOS
+  #    linux: Tux
+
+  # Set to true, if you want all files in the archive to be in a single directory.
+  # If set to true and you extract the archive 'goreleaser_Linux_arm64.tar.gz',
+  # you get a folder 'goreleaser_Linux_arm64'.
+  # If set to false, all files are extracted separately.
+  # You can also set it to a custom folder name (templating is supported).
+  # Default is false.
+  #  wrap_in_directory: true
+
+  # Can be used to change the archive formats for specific GOOSs.
+  # Most common use case is to archive as zip on Windows.
+  # Default is empty.
+  format_overrides:
+  - goos: windows
+    format: zip
+
+  # Additional files/template/globs you want to add to the archive.
+  # Defaults are any files matching `LICENSE*`, `README*`, `CHANGELOG*`,
+  #  `license*`, `readme*` and `changelog*`.
+  files:
+  - LICENSE
+#  - README_{{.Os}}.md
+#  - CHANGELOG.md
+#  - docs/*
+#  - design/*.png
+#  - templates/**/*
+  # a more complete example, check the globbing deep dive below
+#  - src: '*.md'
+#    dst: docs
+    # Strip parent folders when adding files to the archive.
+    # Default: false
+#    strip_parent: true
+    # File info.
+    # Not all fields are supported by all formats available formats.
+    # Defaults to the file info of the actual file if not provided.
+#    info:
+#      owner: root
+#      group: root
+#      mode: 0644
+#      # format is `time.RFC3339Nano`
+#      mtime: 2008-01-02T15:04:05Z
+
+  # Disables the binary count check.
+  # Default: false
+  allow_different_binary_count: false
+
+-
+  id: ddev_windows_installer
+
+  # Builds reference which build instances should be archived in this archive.
+  # Default is empty, which includes all builds.
+  builds:
+  - ddev_windows_installer
+  #  - default
+
+  # Archive format. Valid options are `tar.gz`, `tar.xz`, `tar`, `gz`, `zip` and `binary`.
+  # If format is `binary`, no archives are created and the binaries are instead
+  # uploaded directly.
+  # Default is `tar.gz`.
+  format: binary
+
+  # Archive name template.
+  # Defaults:
+  # - if format is `tar.gz`, `tar.xz`, `gz` or `zip`:
+  #   - `{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}{{ with .Mips }}_{{ . }}{{ end }}{{ if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}`
+  # - if format is `binary`:
+  #   - `{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}{{ with .Mips }}_{{ . }}{{ end }}{{ if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}`
+#  name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+  # Replacements for GOOS and GOARCH in the archive name.
+  # Keys should be valid GOOSs or GOARCHs.
+  # Values are the respective replacements.
+  # Default is empty.
+  #  replacements:
+  #    amd64: 64-bit
+  #    386: 32-bit
+  #    darwin: macOS
+  #    linux: Tux
+
+  # Set to true, if you want all files in the archive to be in a single directory.
+  # If set to true and you extract the archive 'goreleaser_Linux_arm64.tar.gz',
+  # you get a folder 'goreleaser_Linux_arm64'.
+  # If set to false, all files are extracted separately.
+  # You can also set it to a custom folder name (templating is supported).
+  # Default is false.
+  #  wrap_in_directory: true
+
+  # Can be used to change the archive formats for specific GOOSs.
+  # Most common use case is to archive as zip on Windows.
+  # Default is empty.
+#  format_overrides:
+#  - goos: windows
+#    format: zip
+
+  # Additional files/template/globs you want to add to the archive.
+  # Defaults are any files matching `LICENSE*`, `README*`, `CHANGELOG*`,
+  #  `license*`, `readme*` and `changelog*`.
+#  files:
+#  - LICENSE
+    #  - README_{{.Os}}.md
+    #  - CHANGELOG.md
+    #  - docs/*
+    #  - design/*.png
+    #  - templates/**/*
+    # a more complete example, check the globbing deep dive below
+    #  - src: '*.md'
+    #    dst: docs
+    # Strip parent folders when adding files to the archive.
+    # Default: false
+    #    strip_parent: true
+    # File info.
+    # Not all fields are supported by all formats available formats.
+  # Defaults to the file info of the actual file if not provided.
+  #    info:
+  #      owner: root
+  #      group: root
+  #      mode: 0644
+  #      # format is `time.RFC3339Nano`
+  #      mtime: 2008-01-02T15:04:05Z
+
+  # Disables the binary count check.
+  # Default: false
+  allow_different_binary_count: false
