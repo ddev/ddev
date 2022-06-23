@@ -95,8 +95,8 @@ archives:
   # Keys should be valid GOOSs or GOARCHs.
   # Values are the respective replacements.
   # Default is empty.
-  #  replacements:
-  #    amd64: 64-bit
+  replacements:
+    darwin: macos
   #    386: 32-bit
   #    darwin: macOS
   #    linux: Tux
