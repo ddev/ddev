@@ -1,0 +1,46 @@
+builds:
+- builder: prebuilt
+  goos:
+  - linux
+  - windows
+  - darwin
+  goarch:
+  - amd64
+  - arm64
+  goamd64:
+    - v1
+  ignore:
+    - goos: windows
+      goarch: arm64
+  prebuilt:
+    path: .gotmp/bin/{{.Os}}_{{.Arch}}/ddev{{.Ext}}
+  binary: ddev
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - "^docs:"
+    - "^test:"
+
+release:
+  prerelease: auto
+
+brews:
+- tap:
+    owner: rfay
+    name: homebrew-ddev-edge
+  description: DDEV
+  homepage: https://ddev.com
+  license: "Apache 2"
+
+nfpms:
+- maintainer: Randy Fay
+  license: "Apache 2"
+  formats:
+  - deb
+  - rpm
+  - apk
