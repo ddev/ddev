@@ -58,7 +58,7 @@ archives:
   builds:
   - completions
   format: binary
-  name_template: completions.tar.gz
+  name_template: ddev_shell_completion_scripts.v{{.Version}}.tar.gz
 #  files:
 #    - .gotmp/bin/completions.tar.gz
 
