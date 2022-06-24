@@ -246,5 +246,6 @@ aurs:
     name: Randy Fay
     email: randy@randyfay.com
 
-#  # Default depends on the client.
-#  url_template: "http://github.mycompany.com/foo/bar/releases/{{ .Tag }}/{{ .ArtifactName }}"
+
+furies:
+- account: rfay
