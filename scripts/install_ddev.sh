@@ -108,10 +108,10 @@ if [[ ${rv} -lt 0 ]]; then
 fi
 
 if [[ "$OS" == "Darwin" ]]; then
-    SHACMD="shasum -a 256"
+    SHACMD="shasum -a 256 --ignore-missing"
     FILEBASE="ddev_macos"
 elif [[ "$OS" == "Linux" ]]; then
-    SHACMD="sha256sum"
+    SHACMD="sha256sum --ignore-missing"
     FILEBASE="ddev_linux"
 else
     printf "${RED}Sorry, this installer does not support your platform at this time.${RESET}\n"
@@ -130,7 +130,11 @@ if ! docker --version >/dev/null 2>&1; then
 fi
 
 TARBALL="$FILEBASE.$VERSION.tar.gz"
-SHAFILE="$TARBALL.sha256.txt"
+OLD_CHECKSUM=$(semver_compare "${VERSION}" "v1.19.3")
+SHAFILE=checksums.txt
+if [ ${OLD_CHECKSUM} != 1 ]; then
+  SHAFILE="$TARBALL.sha256.txt"
+fi
 
 curl -fsSL "$RELEASE_BASE_URL/$TARBALL" -o "${TMPDIR}/${TARBALL}" || (printf "${RED}Failed downloading $RELEASE_BASE_URL/$TARBALL${RESET}\n" && exit 108)
 curl -fsSL "$RELEASE_BASE_URL/$SHAFILE" -o "${TMPDIR}/${SHAFILE}" || (printf "${RED}Failed downloading $RELEASE_BASE_URL/$SHAFILE${RESET}\n" && exit 109)
