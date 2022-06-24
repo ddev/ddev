@@ -39,6 +39,38 @@ builds:
     path: .gotmp/bin/windows_amd64/ddev_windows_installer.exe
   binary: ddev-windows-installer.exe
 
+
+archives:
+- id: ddev
+  builds:
+  - ddev
+  format: tar.gz
+  name_template: "{{ .ProjectName }}_{{ .Os }}-{{ .Arch }}.v{{ .Version }}"
+  replacements:
+    darwin: macos
+  format_overrides:
+  - goos: windows
+    format: zip
+  files:
+  - LICENSE
+
+- id: completions
+  builds:
+  - completions
+  format: binary
+#  files:
+#    - .gotmp/bin/completions.tar.gz
+
+- id: ddev-windows-installer
+  builds:
+  - ddev-windows-installer
+  format: binary
+#  files:
+#  - none*
+#  files:
+#  - LICENSE
+
+
 checksum:
   name_template: "checksums.txt"
 
@@ -82,35 +114,5 @@ nfpms:
   - rpm
 
 
-archives:
-- id: ddev
-  builds:
-  - ddev
-  format: tar.gz
-  name_template: "{{ .ProjectName }}_{{ .Os }}-{{ .Arch }}.v{{ .Version }}"
-  replacements:
-    darwin: macos
-  format_overrides:
-  - goos: windows
-    format: zip
-  files:
-  - LICENSE
-
-- id: completions
-  builds:
-  - completions
-  format: tar.gz
-#  files:
-#    - .gotmp/bin/completions.tar.gz
-
-
-- id: ddev_windows_installer
-  builds:
-  - ddev_windows_installer
-  format: tar.gz
-#  files:
-#  - none*
-#  files:
-#  - LICENSE
 
 
