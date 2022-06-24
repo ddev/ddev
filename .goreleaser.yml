@@ -177,10 +177,18 @@ brews:
     depends_on "go" => :build
     depends_on "make" => :build
   install: |
-    bin.install "ddev"
-    bash_completion.install "ddev_bash_completion.sh" => "ddev"
-    zsh_completion.install "ddev_zsh_completion.sh" => "ddev"
-    fish_completion.install "ddev_fish_completion.sh" => "ddev"
+    if build.head?
+        os = OS.mac? ? "darwin" : "linux"
+        arch = Hardware::CPU.arm? ? "arm64" : "amd64"
+        system "mkdir", "-p", "#{bin}"
+        system "make", "VERSION=v#{version}", "COMMIT=v#{version}"
+        system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev", "#{bin}/ddev"
+    else
+        bin.install "ddev"
+        bash_completion.install "ddev_bash_completion.sh" => "ddev"
+        zsh_completion.install "ddev_zsh_completion.sh" => "ddev"
+        fish_completion.install "ddev_fish_completion.sh" => "ddev"
+    end
 
 #  install: |
 #    system "make", "VERSION=v#{version}", "COMMIT=v#{version}"
