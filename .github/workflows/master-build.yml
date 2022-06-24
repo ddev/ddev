@@ -39,7 +39,7 @@ jobs:
           go-version: 1.*
       
       - name: Build DDEV executables
-        run: make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64
+        run: make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 completions mkcert
 
       - name: "Verify that SegmentKey is working (Linux amd64)"
         run: |
@@ -199,55 +199,67 @@ jobs:
       - name: Generate artifacts
         run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
 
-      - name: Upload all artifacts
-        uses: actions/upload-artifact@v3
+      - name: goreleaser
+        uses: goreleaser/goreleaser-action@v3
+        if: startsWith( github.ref, 'refs/tags/v1')
         with:
-          name: all-ddev-executables
-          path: ${{ github.workspace }}/artifacts/*
-      - name: Upload macos-amd64 binary
-        uses: actions/upload-artifact@v3
-        with:
-          name: ddev-macos-amd64
-          path: .gotmp/bin/darwin_amd64/ddev
-      - name: Upload macos-arm64 binary
-        uses: actions/upload-artifact@v3
-        with:
-          name: ddev-macos-arm64
-          path: .gotmp/bin/darwin_arm64/ddev
-      - name: Upload linux-arm64 binary
-        uses: actions/upload-artifact@v3
-        with:
-          name: ddev-linux-arm64
-          path: .gotmp/bin/linux_arm64/ddev
-      - name: Upload inux_amd644 binary
-        uses: actions/upload-artifact@v3
-        with:
-          name: ddev-linux-amd64
-          path: .gotmp/bin/linux_amd64/ddev
-      - name: Upload windows_amd64 installer
-        uses: actions/upload-artifact@v3
-        with:
-          name: ddev-windows-amd64-installer
-          path: .gotmp/bin/windows_amd64/ddev_windows_installer*.exe
+          # either 'goreleaser' (default) or 'goreleaser-pro'
+          distribution: goreleaser-pro
+          version: latest
+          args: release --rm-dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
+          GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
+
+#      - name: Upload all artifacts
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: all-ddev-executables
+#          path: ${{ github.workspace }}/artifacts/*
+#      - name: Upload macos-amd64 binary
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: ddev-macos-amd64
+#          path: .gotmp/bin/darwin_amd64/ddev
+#      - name: Upload macos-arm64 binary
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: ddev-macos-arm64
+#          path: .gotmp/bin/darwin_arm64/ddev
+#      - name: Upload linux-arm64 binary
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: ddev-linux-arm64
+#          path: .gotmp/bin/linux_arm64/ddev
+#      - name: Upload inux_amd644 binary
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: ddev-linux-amd64
+#          path: .gotmp/bin/linux_amd64/ddev
+#      - name: Upload windows_amd64 installer
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: ddev-windows-amd64-installer
+#          path: .gotmp/bin/windows_amd64/ddev_windows_installer*.exe
       - name: Show github.ref
         run: echo ${{ github.ref }}
-      - name: "Upload release artifacts to github release"
-        if: startsWith( github.ref, 'refs/tags/v1')
-        uses: skx/github-action-publish-binaries@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          args: ${{ github.workspace }}/artifacts/*
+#      - name: "Upload release artifacts to github release"
+#        if: startsWith( github.ref, 'refs/tags/v1')
+#        uses: skx/github-action-publish-binaries@master
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        with:
+#          args: ${{ github.workspace }}/artifacts/*
 
-      - name: "Bump homebrew edge release"
-        if: env.DDEV_GITHUB_TOKEN != '' && startsWith( github.ref, 'refs/tags/v1')
-        run: |
-          bash -x .ci-scripts/bump_homebrew.sh ${HOMEBREW_EDGE_REPOSITORY} ddev ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts ${DDEV_MAIN_REPO_ORGNAME}
-
-      - name: "Bump homebrew main release if necessary"
-        if: env.DDEV_GITHUB_TOKEN != '' && startsWith( github.ref, 'refs/tags/v1') && !contains( github.ref, '-')
-        run: |
-          bash -x .ci-scripts/bump_homebrew.sh ${HOMEBREW_STABLE_REPOSITORY} ddev ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts ${DDEV_MAIN_REPO_ORGNAME}
+#      - name: "Bump homebrew edge release"
+#        if: env.DDEV_GITHUB_TOKEN != '' && startsWith( github.ref, 'refs/tags/v1')
+#        run: |
+#          bash -x .ci-scripts/bump_homebrew.sh ${HOMEBREW_EDGE_REPOSITORY} ddev ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts ${DDEV_MAIN_REPO_ORGNAME}
+#
+#      - name: "Bump homebrew main release if necessary"
+#        if: env.DDEV_GITHUB_TOKEN != '' && startsWith( github.ref, 'refs/tags/v1') && !contains( github.ref, '-')
+#        run: |
+#          bash -x .ci-scripts/bump_homebrew.sh ${HOMEBREW_STABLE_REPOSITORY} ddev ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts ${DDEV_MAIN_REPO_ORGNAME}
 
       - name: "Push AUR ddev-edge-bin"
         if: env.AUR_SSH_PRIVATE_KEY != '' && startsWith( github.ref, 'refs/tags/v1')
