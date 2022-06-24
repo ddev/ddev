@@ -71,6 +71,7 @@ darwin_amd64: $(GOTMP)/bin/darwin_amd64/ddev
 darwin_arm64: $(GOTMP)/bin/darwin_arm64/ddev
 windows_amd64: windows_install
 windows_arm64: $(GOTMP)/bin/windows_arm64/ddev.exe
+completions: $(GOTMP)/bin/completions.tar.gz
 
 TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe
 $(TARGETS): $(GOFILES)
@@ -85,6 +86,9 @@ $(TARGETS): $(GOFILES)
 	$( shell if [ -d $(GOTMP) ]; then chmod -R u+w $(GOTMP); fi )
 	@echo $(VERSION) >VERSION.txt
 
+$(GOTMP)/bin/completions.tar.gz: build
+	$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/ddev_gen_autocomplete
+	tar -C $(GOTMP)/bin/completions -cf $(GOTMP)/bin/completions.tar.gz .
 
 TEST_TIMEOUT=4h
 BUILD_ARCH = $(shell go env GOARCH)
