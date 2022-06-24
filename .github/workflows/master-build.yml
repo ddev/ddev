@@ -203,8 +203,8 @@ jobs:
         if: steps.notarizedmac.outputs.cache-hit != 'true'
         run: exit 1
 
-      - name: Generate artifacts
-        run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
+#      - name: Generate artifacts
+#        run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
 
       - name: goreleaser
         uses: goreleaser/goreleaser-action@v3
