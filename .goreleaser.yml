@@ -210,7 +210,7 @@ snapshot:
 
 
 aurs:
-- name: ${{ Env.DDEV_AUR_REPO }}
+- name: ${{ .Env.DDEV_AUR_REPO }}
 
   # artifact ids.
   ids:
