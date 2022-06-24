@@ -58,6 +58,7 @@ archives:
   builds:
   - completions
   format: binary
+  name_template: completions.tar.gz
 #  files:
 #    - .gotmp/bin/completions.tar.gz
 
@@ -65,6 +66,8 @@ archives:
   builds:
   - ddev-windows-installer
   format: binary
+  name_template: "ddev_windows_installer.v{{.Version}}"
+
 #  files:
 #  - none*
 #  files:
@@ -113,6 +116,5 @@ nfpms:
   - deb
   - rpm
 
-
-
-
+snapshot:
+  name_template: '{{ .Version }}-{{.ShortCommit}}'
