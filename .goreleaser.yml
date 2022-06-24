@@ -221,7 +221,7 @@ aurs:
   description: "DDEV-Local: a local web development environment"
 
   maintainers:
-  - 'Randy Fay <randy@randyfay.com>'
+  - 'Randy Fay <randy at randyfay.com>'
 
   license: "Apache 2"
   private_key: '{{ .Env.AUR_SSH_PRIVATE_KEY }}'
@@ -236,7 +236,7 @@ aurs:
   # everything else your package needs.
   package: |-
     # bin
-    install -Dm755 "./mybin" "${pkgdir}/usr/bin/ddev"
+    install -Dm755 "./ddev" "${pkgdir}/usr/bin/ddev"
     install -Dm644 "./LICENSE" "${pkgdir}/usr/share/licenses/ddev/LICENSE"
     
     # completions
