@@ -1,5 +1,6 @@
 builds:
 - id: ddev
+  # Requires make  darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64 mkcert
   builder: prebuilt
   goos:
   - linux
@@ -17,7 +18,27 @@ builds:
     path: .gotmp/bin/{{.Os}}_{{.Arch}}/ddev{{.Ext}}
   binary: ddev
 
-- id: completions
+- id: mkcert
+  # requires make completions
+  builder: prebuilt
+  goos:
+  - linux
+  - darwin
+  - windows
+  goarch:
+  - arm64
+  - amd64
+  goamd64:
+  - v1
+  ignore:
+  - goos: windows
+    goarch: arm64
+  prebuilt:
+    path: .gotmp/bin/{{.Os}}_{{.Arch}}/mkcert{{.Ext}}
+  binary: mkcert
+
+- id: completions-tarball
+  # requires make completions
   builder: prebuilt
   goos:
   - linux
@@ -26,6 +47,54 @@ builds:
   prebuilt:
     path: .gotmp/bin/completions.tar.gz
   binary: completions.tar.gz
+
+- id: ddev_bash_completion.sh
+  # requires make completions
+  builder: prebuilt
+  goos:
+  - linux
+  - darwin
+  - windows
+  goarch:
+  - arm64
+  - amd64
+  goamd64:
+  - v1
+  prebuilt:
+    path: .gotmp/bin/completions/ddev_bash_completion.sh
+  binary: ddev_bash_completion.sh
+
+- id: ddev_zsh_completion.sh
+  # requires make completions
+  builder: prebuilt
+  goos:
+  - linux
+  - darwin
+  - windows
+  goarch:
+  - arm64
+  - amd64
+  goamd64:
+  - v1
+  prebuilt:
+    path: .gotmp/bin/completions/ddev_zsh_completion.sh
+  binary: ddev_zsh_completion.sh
+
+- id: ddev_fish_completion.sh
+  # requires make completions
+  builder: prebuilt
+  goos:
+  - linux
+  - darwin
+  - windows
+  goarch:
+  - arm64
+  - amd64
+  goamd64:
+  - v1
+  prebuilt:
+    path: .gotmp/bin/completions/ddev_fish_completion.sh
+  binary: ddev_fish_completion.sh
 
 - id: ddev-windows-installer
   builder: prebuilt
@@ -44,6 +113,10 @@ archives:
 - id: ddev
   builds:
   - ddev
+  - mkcert
+  - ddev_bash_completion.sh
+  - ddev_zsh_completion.sh
+  - ddev_fish_completion.sh
   format: tar.gz
   name_template: "{{ .ProjectName }}_{{ .Os }}-{{ .Arch }}.v{{ .Version }}"
   replacements:
@@ -51,10 +124,13 @@ archives:
   format_overrides:
   - goos: windows
     format: zip
+  wrap_in_directory: false
   files:
   - LICENSE
+  - .gotmp/bin/{{.Os}}_{{.Arch}}/mkcert*
+  allow_different_binary_count: true
 
-- id: completions
+- id: completions-tarball
   builds:
   - completions
   format: binary

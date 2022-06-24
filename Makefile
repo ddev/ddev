@@ -10,7 +10,7 @@ GOTMP=.gotmp
 SHELL = /bin/bash
 PWD = $(shell pwd)
 GOFILES = $(shell find $(SRC_DIRS) -type f)
-.PHONY: darwin_amd64 darwin_arm64 darwin_amd64_notarized darwin_arm64_notarized darwin_arm64_signed darwin_amd64_signed linux_amd64 linux_arm64 linux_arm windows_amd64 windows_arm64
+.PHONY: darwin_amd64 darwin_arm64 darwin_amd64_notarized darwin_arm64_notarized darwin_arm64_signed darwin_amd64_signed linux_amd64 linux_arm64 linux_arm windows_amd64 windows_arm64 setup
 
 # Expands SRC_DIRS into the common golang ./dir/... format for "all below"
 SRC_AND_UNDER = $(patsubst %,./%/...,$(SRC_DIRS))
@@ -74,7 +74,7 @@ windows_arm64: $(GOTMP)/bin/windows_arm64/ddev.exe
 completions: $(GOTMP)/bin/completions.tar.gz
 
 TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe
-$(TARGETS): $(GOFILES)
+$(TARGETS): mkcert $(GOFILES)
 	@echo "building $@ from $(SRC_AND_UNDER)";
 	@#echo "LDFLAGS=$(LDFLAGS)";
 	@rm -f $@
@@ -89,6 +89,13 @@ $(TARGETS): $(GOFILES)
 $(GOTMP)/bin/completions.tar.gz: build
 	$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/ddev_gen_autocomplete
 	tar -C $(GOTMP)/bin/completions -cf $(GOTMP)/bin/completions.tar.gz .
+
+mkcert: $(GOTMP)/bin/darwin_arm64/mkcert $(GOTMP)/bin/darwin_amd64/mkcert $(GOTMP)/bin/linux_arm64/mkcert $(GOTMP)/bin/linux_amd64/mkcert
+
+$(GOTMP)/bin/darwin_arm64/mkcert $(GOTMP)/bin/darwin_amd64/mkcert $(GOTMP)/bin/linux_arm64/mkcert $(GOTMP)/bin/linux_amd64/mkcert:
+	@export TARGET=$(word 3, $(subst /, ,$@)) && \
+	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" && \
+	curl -sL --fail -o $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert https://github.com/drud/mkcert/releases/download/$(MKCERT_VERSION)/mkcert-$(MKCERT_VERSION)-$${GOOS}-$${GOARCH} && chmod +x $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert
 
 TEST_TIMEOUT=4h
 BUILD_ARCH = $(shell go env GOARCH)
@@ -123,7 +130,7 @@ testfullsitesetup: $(DEFAULT_BUILD) setup
 	export PATH="$(DDEV_PATH):$$PATH" DDEV_NO_INSTRUMENTATION=true CGO_ENABLED=0 DDEV_BINARY_FULLPATH=$(DDEV_BINARY_FULLPATH); go test $(USEMODVENDOR) -p 1 -timeout $(TEST_TIMEOUT) -v -installsuffix static -ldflags " $(LDFLAGS) " ./pkg/ddevapp -run TestDdevFullSiteSetup $(TESTARGS)
 
 setup:
-	@mkdir -p $(GOTMP)/{src,pkg/mod/cache,.cache}
+	@mkdir -p $(GOTMP)/{bin/linux_arm64,bin/linux_amd64,bin/darwin_arm64,bin/darwin_amd64,bin/windows_amd64,src,pkg/mod/cache,.cache}
 	@mkdir -p $(TESTTMP)
 
 # Required static analysis targets used in circleci - these cause fail if they don't work

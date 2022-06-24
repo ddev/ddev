@@ -65,7 +65,7 @@ popd >/dev/null
 
 # Generate macOS-arm64 tarball/zipball
 pushd $BASE_DIR/.gotmp/bin/darwin_arm64 >/dev/null
-curl -sSL -o mkcert https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-darwin-amd64 && chmod +x mkcert
+curl -sSL -o mkcert https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-darwin-arm64 && chmod +x mkcert
 tar -czf $ARTIFACTS/ddev_macos-arm64.$VERSION.tar.gz ddev *completion*.sh mkcert
 popd >/dev/null
 
