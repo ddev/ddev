@@ -1,7 +1,7 @@
 ## Step-debugging with ddev and xdebug
 
 Every ddev project is automatically configured with xdebug so that popular IDEs can do step-debugging of PHP code
-without any server side configuration. Check the [configuration](#Configuration) section for details how you can
+without any server side configuration. Check the [configuration](#configuration) section for details how you can
 change the xdebug configuration for your ddev project.
 
 ### Enable debugging in your IDE
@@ -11,9 +11,9 @@ change the xdebug configuration for your ddev project.
 1. Toggle the Start Listen PHP Debug Connections button start listening php debug connections on the PhpStorm toolbar.
    ![Start listening to debugging connections](images/ps_quick_start_zero_debug_stop_listening_debug_connections_toolbar.png)
 2. Set a breakpoint
-3. When you start debugging a [website](#Debug a website) or [CLI application](#Debug a CLI application) PhpStorm might
-   ask you for a path mapping. The default will work for single files, but to debug complex applications, go 
-   to `File | Settings | PHP | Servers` and map your project directory to `/var/www/html`.
+3. When you start debugging a [website](#debug-a-website) or [CLI application](#debug-a-command-line-application)
+   PhpStorm might ask you for a path mapping. The default will work for single files, but to debug complex applications,
+   go to `File | Settings | PHP | Servers` and map your project directory to `/var/www/html`.
    ![PhpStorm mapping](images/PHPStormServerMapping.png)
 
 Note that if you are using PhpStorm inside WSL2 (or perhaps other Linux configurations),
@@ -40,7 +40,7 @@ you have WSL2 enabled and a PHP project.
 ### Debug a website
 
 To control xdebug behavior from the browser, you can set a cookie parameter. You can use one of the
-[available browser debugging extensions](#Available browser debugging extensions). Alternatively you can debug every
+[available browser debugging extensions](#available-browser-debugging-extensions). Alternatively you can debug every
 request by executing `ddev xdebug autostart`.
 
 Activate the debugging extension in your browser:
@@ -56,13 +56,14 @@ Activate the debugging extension in your browser:
 ### Debug a command line application
 
 To start a step debug session for a PHP script on the command line, prefix your command line
-with `php -dxdebug.start_with_request=yes {path_to_your_script}` when executing the script inside the ddev container or with `ddev exec`.
+with `php -dxdebug.start_with_request=yes {path_to_your_script}` when executing the script inside the ddev container or
+with `ddev exec`.
 
 Alternatively you can run `ddev xdebug autostart` and just execute the script as usual.
 
 Your IDE may offer you additional ways to debug for example unit tests.
 
-Please note: When using PHPStorm you should first [debug a website](#Debug a website) and configure a path mapping.
+Please note: When using PHPStorm you should first [debug a website](#debug-a-website) and configure a path mapping.
 
 ### Configuration
 
@@ -70,7 +71,8 @@ Please note: When using PHPStorm you should first [debug a website](#Debug a web
 
 * You can let xdebug start a debugging session for every web request with `ddev xdebug autostart` and
   return to the default behavior (only starting when a cookie is set) with `ddev xdebug trigger`
-* You can completely disable xdebug with `ddev xdebug off` or setting `xdebug_enabled: false` in your `.ddev/config.yml`. In general, having xdebug on but not in use does not have a significant performance cost.
+* You can completely disable xdebug with `ddev xdebug off` or setting `xdebug_enabled: false` in your `.ddev/config.yml`
+  . In general, having xdebug on but not in use does not have a significant performance cost.
 * `ddev xdebug status` will show you the current xdebug configuration
 * If xdebug is disabled in your configuration, you can enable it for a already-running project with `ddev xdebug on`
 
@@ -104,8 +106,8 @@ configure it on your workstation.
 The basic thing to understand about xdebug is that it's a network protocol. Your IDE (like PhpStorm) will listen on the
 xdebug port (9003 by default in v1.19+, previously 9000). When an xdebug session is started, php inside the container
 will try to open a TCP connection to the IDE. When starting the session via a browser xdebug will try to connect back to
-client, otherwise `host.docker.internal:9003` will be used to connect, which is provided by DDEV or Docker Desktop. So you have to make
-sure that the network connection is clear and can be made and everything should work.
+client, otherwise `host.docker.internal:9003` will be used to connect, which is provided by DDEV or Docker Desktop. So
+you have to make sure that the network connection is clear and can be made and everything should work.
 
 All IDEs basically work the same: They listen on a port and react when they're contacted there. IDEs other than those
 listed here work fine, if they listen on the default xdebug port 9003. (This was port 9000 through DDEV v1.18, changed
@@ -134,7 +136,7 @@ Here are basic steps to take to sort out any difficulty:
   like vscode, stop the debugger from listening.
 * `ddev ssh`: Can `telnet host.docker.internal 9003` connect? If it does, you have something else running on port 9003.
   On the host, use `sudo lsof -i :9003 -sTCP:LISTEN` to find out what is there and stop it,
-  or [change the xdebug port and configure PhpStorm to use the new one](#using-xdebug-on-a-port-other-than-the-default)
+  or [change the xdebug port and configure PhpStorm to use the new one](#using-xdebug-on-a-port-other-than-the-default-9003-rare)
   . Don't continue debugging until your telnet command does not connect. (Note that on Windows WSL2 you may have to look
   for listeners both inside WSL2 and on the Windows side.)
 * Now click the listen button on PhpStorm to start it listening for connections.
