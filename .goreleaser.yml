@@ -225,7 +225,7 @@ aurs:
 
   license: "Apache 2"
   private_key: '{{ .Env.AUR_SSH_PRIVATE_KEY }}'
-  git_url: 'ssh://aur@aur.archlinux.org/{{.Env.DDEV_AUR_REPO}}-bin.git'
+  git_url: 'ssh://aur@aur.archlinux.org/{{.Env.DDEV_AUR_REPO}}.git'
 
   # Custom package instructions.
   #
