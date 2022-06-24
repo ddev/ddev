@@ -71,7 +71,7 @@ jobs:
       - name: Build and sign windows binaries and installer
         shell: bash
         run: |
-          if [ "${DDEV_WINDOWS_SIGN}" != "true" ]; then echo "DDEV_WINDOWS_SIGN is not true, exiting" && exit 1; fi
+          if [ "${DDEV_WINDOWS_SIGN}" != "true" ]; then echo "Warning: DDEV_WINDOWS_SIGN is not true"; fi
           make windows_install
       - name: Show github.ref
         run: echo ${{ github.ref }}
