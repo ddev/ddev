@@ -58,6 +58,13 @@ jobs:
           path: .gotmp/bin
           key: ${{ github.sha }}-${{ github.ref }}-build-most
 
+  # This Windows self-hosted runner has to be set up with gnu tar and zstd.exe, or
+  # this step will fail to properly create the cache.
+  # Make sure gnu tar is the tar used here. System PATH should have C:\program files\gnu\usr\bin near top
+  # Get zstd.exe from https://github.com/facebook/zstd/releases - I put it into C:\program files\gnu\usr\bin
+  # so it would be in PATH
+  # See https://github.com/actions/cache/issues/580
+  # Run the Windows action with debug enabled to be able to see which tar is in use, etc.
   sign-windows:
     name: Build and Sign Windows binaries
     runs-on: [ self-hosted, windows-signer ]
