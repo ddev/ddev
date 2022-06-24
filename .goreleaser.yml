@@ -218,7 +218,7 @@ aurs:
 
   homepage: "https://ddev.com/"
 
-  description: "Local docker-based development environment."
+  description: "DDEV-Local: a local web development environment"
 
   maintainers:
   - 'Randy Fay <randy@randyfay.com>'
