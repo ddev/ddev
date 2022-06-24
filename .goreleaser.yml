@@ -227,13 +227,6 @@ aurs:
   private_key: '{{ .Env.AUR_SSH_PRIVATE_KEY }}'
   git_url: 'ssh://aur@aur.archlinux.org/{{.Env.DDEV_AUR_REPO}}.git'
 
-  # Custom package instructions.
-  #
-  # Defaults to `install -Dm755 "./PROJECT_NAME" "${pkgdir}/usr/bin/PROJECT_NAME",
-  # which is not always correct.
-  #
-  # We recommend you override this, installing the binary, license and
-  # everything else your package needs.
   package: |-
     # bin
     install -Dm755 "./ddev" "${pkgdir}/usr/bin/ddev"
