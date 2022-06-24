@@ -236,9 +236,9 @@ aurs:
     mkdir -p "${pkgdir}/usr/share/bash-completion/completions/"
     mkdir -p "${pkgdir}/usr/share/zsh/site-functions/"
     mkdir -p "${pkgdir}/usr/share/fish/vendor_completions.d/"
-    install -Dm644 "./src/ddev_bash_completions.sh" "${pkgdir}/usr/share/bash-completion/completions/ddev"
-    install -Dm644 "./src/ddev_zsh_completions.sh" "${pkgdir}/usr/share/zsh/site-functions/_ddev"
-    install -Dm644 "./src/ddev_fish_completions.sh" "${pkgdir}/usr/share/fish/vendor_completions.d/ddev.fish"
+    install -Dm644 "./src/ddev_bash_completion.sh" "${pkgdir}/usr/share/bash-completion/completions/ddev"
+    install -Dm644 "./src/ddev_zsh_completion.sh" "${pkgdir}/usr/share/zsh/site-functions/_ddev"
+    install -Dm644 "./src/ddev_fish_completion.sh" "${pkgdir}/usr/share/fish/vendor_completions.d/ddev.fish"
 
   # Git author used to commit to the repository.
   # Defaults are shown below.
