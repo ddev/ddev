@@ -176,6 +176,11 @@ brews:
     head "https://github.com/drud/ddev.git", branch: "master"
     depends_on "go" => :build
     depends_on "make" => :build
+  install: |
+    bin.install "ddev"
+    bash_completion.install "ddev_bash_completion.sh" => "ddev"
+    zsh_completion.install "ddev_zsh_completion.sh" => "ddev"
+    fish_completion.install "ddev_fish_completion.sh" => "ddev"
 
 #  install: |
 #    system "make", "VERSION=v#{version}", "COMMIT=v#{version}"
