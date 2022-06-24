@@ -206,6 +206,7 @@ jobs:
 #      - name: Generate artifacts
 #        run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
 
+      # Goreleaser does GitHub release artifacts, homebrew, AUR
       - name: goreleaser
         uses: goreleaser/goreleaser-action@v3
         if: startsWith( github.ref, 'refs/tags/v1')
@@ -268,17 +269,17 @@ jobs:
 #        run: |
 #          bash -x .ci-scripts/bump_homebrew.sh ${HOMEBREW_STABLE_REPOSITORY} ddev ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts ${DDEV_MAIN_REPO_ORGNAME}
 
-      - name: "Push AUR ddev-edge-bin"
-        if: env.AUR_SSH_PRIVATE_KEY != '' && startsWith( github.ref, 'refs/tags/v1')
-        run: |
-          echo GITHUB_REF=${GITHUB_REF}
-          .ci-scripts/bump_aur.sh ddev-edge-bin ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts
-
-      - name: "Push AUR ddev-bin if necessary"
-        if: env.AUR_SSH_PRIVATE_KEY != '' &&  startsWith( github.ref, 'refs/tags/v1') && !contains( github.ref, '-')
-        run: |
-          echo GITHUB_REF=${GITHUB_REF}
-          .ci-scripts/bump_aur.sh ddev-bin "${GITHUB_REF##*/}" ${{ github.workspace }}/artifacts
+#      - name: "Push AUR ddev-edge-bin"
+#        if: env.AUR_SSH_PRIVATE_KEY != '' && startsWith( github.ref, 'refs/tags/v1')
+#        run: |
+#          echo GITHUB_REF=${GITHUB_REF}
+#          .ci-scripts/bump_aur.sh ddev-edge-bin ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts
+#
+#      - name: "Push AUR ddev-bin if necessary"
+#        if: env.AUR_SSH_PRIVATE_KEY != '' &&  startsWith( github.ref, 'refs/tags/v1') && !contains( github.ref, '-')
+#        run: |
+#          echo GITHUB_REF=${GITHUB_REF}
+#          .ci-scripts/bump_aur.sh ddev-bin "${GITHUB_REF##*/}" ${{ github.workspace }}/artifacts
 
       - name: Chocolatey windows release
         if: env.CHOCOLATEY_API_KEY != '' && startsWith( github.ref, 'refs/tags/v1')

@@ -207,3 +207,51 @@ nfpms:
 
 snapshot:
   name_template: '{{ .Version }}-{{.ShortCommit}}'
+
+
+aurs:
+- name: ${{ Env.DDEV_AUR_REPO }}
+
+  # artifact ids.
+  ids:
+  - ddev
+
+  homepage: "https://ddev.com/"
+
+  description: "Local docker-based development environment."
+
+  maintainers:
+  - 'Randy Fay <randy@randyfay.com>'
+
+  license: "Apache 2"
+  private_key: '{{ .Env.AUR_SSH_PRIVATE_KEY }}'
+  git_url: 'ssh://aur@aur.archlinux.org/ddev-bin.git'
+
+  # Custom package instructions.
+  #
+  # Defaults to `install -Dm755 "./PROJECT_NAME" "${pkgdir}/usr/bin/PROJECT_NAME",
+  # which is not always correct.
+  #
+  # We recommend you override this, installing the binary, license and
+  # everything else your package needs.
+  package: |-
+    # bin
+    install -Dm755 "./mybin" "${pkgdir}/usr/bin/ddev"
+    install -Dm644 "./LICENSE" "${pkgdir}/usr/share/licenses/ddev/LICENSE"
+    
+    # completions
+    mkdir -p "${pkgdir}/usr/share/bash-completion/completions/"
+    mkdir -p "${pkgdir}/usr/share/zsh/site-functions/"
+    mkdir -p "${pkgdir}/usr/share/fish/vendor_completions.d/"
+    install -Dm644 "./completions/ddev_bash_completions.sh" "${pkgdir}/usr/share/bash-completion/completions/ddev"
+    install -Dm644 "./completions/ddev_zsh_completions.sh" "${pkgdir}/usr/share/zsh/site-functions/_ddev"
+    install -Dm644 "./completions/ddev_fish_completions.sh" "${pkgdir}/usr/share/fish/vendor_completions.d/ddev.fish"
+
+  # Git author used to commit to the repository.
+  # Defaults are shown below.
+  commit_author:
+    name: Randy Fay
+    email: randy@randyfay.com
+
+#  # Default depends on the client.
+#  url_template: "http://github.mycompany.com/foo/bar/releases/{{ .Tag }}/{{ .ArtifactName }}"
