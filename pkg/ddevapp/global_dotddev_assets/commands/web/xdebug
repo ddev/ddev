@@ -2,8 +2,8 @@
 
 ## #ddev-generated
 ## Description: Enable or disable xdebug
-## Usage: xdebug on|off|enable|disable|true|false|status
-## Example: "ddev xdebug" (default is "on"), "ddev xdebug off", "ddev xdebug on", "ddev xdebug status"
+## Usage: xdebug on|off|enable|disable|true|false|status|autostart|trigger
+## Example: "ddev xdebug" (default is "on"), "ddev xdebug off", "ddev xdebug on", "ddev xdebug status", "ddev xdebug autostart", "ddev xdebug trigger"
 ## Execraw: false
 
 if [ $# -eq 0 ] ; then
