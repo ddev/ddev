@@ -12,7 +12,7 @@ change the xdebug configuration for your ddev project.
    ![Start listening to debugging connections](images/ps_quick_start_zero_debug_stop_listening_debug_connections_toolbar.png)
 2. Set a breakpoint
 3. When you start debugging a [website](#Debug a website) or [CLI application](#Debug a CLI application) PhpStorm might
-   ask you for a path mapping. The default will work for single files, but to debug complex application you have to got
+   ask you for a path mapping. The default will work for single files, but to debug complex applications, go 
    to `File | Settings | PHP | Servers` and map your project directory to `/var/www/html`.
    ![PhpStorm mapping](images/PHPStormServerMapping.png)
 
@@ -39,7 +39,7 @@ you have WSL2 enabled and a PHP project.
 
 ### Debug a website
 
-To start and stop Xdebug from the browser, you need to set a cookie parameter. You can use one of the
+To control xdebug behavior from the browser, you can set a cookie parameter. You can use one of the
 [available browser debugging extensions](#Available browser debugging extensions). Alternatively you can debug every
 request by executing `ddev xdebug autostart`.
 
@@ -55,8 +55,8 @@ Activate the debugging extension in your browser:
 
 ### Debug a command line application
 
-To start a step debug session for a PHP script on the command line prefix your command line
-with `php -dxdebug.start_with_request=yes {path_to_your_script}` when executing the script inside the ddev container.
+To start a step debug session for a PHP script on the command line, prefix your command line
+with `php -dxdebug.start_with_request=yes {path_to_your_script}` when executing the script inside the ddev container or with `ddev exec`.
 
 Alternatively you can run `ddev xdebug autostart` and just execute the script as usual.
 
@@ -68,16 +68,16 @@ Please note: When using PHPStorm you should first [debug a website](#Debug a web
 
 **Key facts:**
 
-* You can let xdebug start a debugging session for every request with `ddev xdebug autostart` and
-  return to the default with `ddev xdebug trigger`
-* You can disable xdebug with `ddev xdebug off` or setting `xdebug_enabled: false` in your `.ddev/config.yml`
+* You can let xdebug start a debugging session for every web request with `ddev xdebug autostart` and
+  return to the default behavior (only starting when a cookie is set) with `ddev xdebug trigger`
+* You can completely disable xdebug with `ddev xdebug off` or setting `xdebug_enabled: false` in your `.ddev/config.yml`. In general, having xdebug on but not in use does not have a significant performance cost.
 * `ddev xdebug status` will show you the current xdebug configuration
 * If xdebug is disabled in your configuration, you can enable it for a already-running project with `ddev xdebug on`
 
 For more background on XDebug see the [XDebug documentation](https://xdebug.org/docs/remote).
 The intention here is that one won't have to understand XDebug to do debugging.
 
-#### Using Xdebug on a port other than the default
+#### Using Xdebug on a port other than the default 9003 (rare)
 
 By default, ddev is set up to contact the default port, port 9003 on your IDE. However, if you have something else
 listening on that port or your IDE does not yet default to 9003, you'll need to change the port. (PhpStorm and vscode
@@ -104,7 +104,7 @@ configure it on your workstation.
 The basic thing to understand about xdebug is that it's a network protocol. Your IDE (like PhpStorm) will listen on the
 xdebug port (9003 by default in v1.19+, previously 9000). When an xdebug session is started, php inside the container
 will try to open a TCP connection to the IDE. When starting the session via a browser xdebug will try to connect back to
-client, otherwise `host.docker.internal:9003` will be used to connect, which is provided by docker. So you have to make
+client, otherwise `host.docker.internal:9003` will be used to connect, which is provided by DDEV or Docker Desktop. So you have to make
 sure that the network connection is clear and can be made and everything should work.
 
 All IDEs basically work the same: They listen on a port and react when they're contacted there. IDEs other than those
