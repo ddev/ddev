@@ -65,6 +65,8 @@ sudo groupadd docker && sudo usermod -aG docker $USER
 
 ### Linux Installation: Docker
 
+* **Although Docker Desktop for Linux has been released in 2022, it does not seem to be as robust or reliable as the traditional docker-ce installation described below.**
+
 * **Please don't forget that Linux installation absolutely requires post-install steps (below).**
 
 * **Please don't use `sudo` with docker. If you're needing it, you haven't finished the installation. Don't use `sudo` with ddev, except the rare case where you need the `ddev hostname` command.**

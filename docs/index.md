@@ -43,9 +43,33 @@ We maintain a package on [Arch Linux (`AUR`)](https://aur.archlinux.org/packages
 
 As a one-time initialization, run `mkcert -install`, which may require your sudo password. See below for additional information.
 
-### Linux, macOS and Windows WSL2 (install script)
+### Linux with apt or yum
 
-**NOTE: macOS users that have installed via Homebrew or Arch Linux users that have installed via the package manager above do not need the install script.**
+DDEV has Debian and RPM packages.
+
+* Debian/Ubuntu and derivative distros - Install the ddev apt repositories with:
+```bash
+echo "deb https://drud.fury.site/apt/ * *" | sudo tee -a /etc/apt/sources.list.d/ddev.list
+curl https://apt.fury.io/drud/gpg.key | sudo apt-key add -
+sudo apt update && sudo apt install ddev
+ ```
+In the future you can update as usual, with `sudo apt update && sudo apt upgrade`.__
+
+* Yum/RPM (Fedora, RedHat, etc.):
+```bash
+echo '[ddev]
+name=DDEV Repo
+baseurl=https://yum.fury.io/drud/
+enabled=1
+gpgcheck=0' | tee -a /etc/yum.repos.d/ddev.repo
+
+dnf install --refresh ddev
+```
+In the future you can update as usual, with `sudo dnf upgrade ddev`
+
+### Linux, macOS and Windows WSL2 (using install_ddev.sh)
+
+**NOTE: macOS users that have installed via Homebrew and Linux users that have installed via the package manager above do not need the install script.**
 
 Linux, macOS and Windows WSL2 (see below) users can use this line of code to your terminal to download, verify, and install (or upgrade) ddev using the [install_ddev.sh script](https://github.com/drud/ddev/blob/master/scripts/install_ddev.sh). Note that this works with both amd64 and arm64 architectures, including Surface Pro X with WSL2 and 64-bit Raspberry Pi OS. It also works with macOS Apple Silicon M1 machines.
 
