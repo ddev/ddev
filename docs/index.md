@@ -48,24 +48,28 @@ As a one-time initialization, run `mkcert -install`, which may require your sudo
 DDEV has Debian and RPM packages.
 
 * Debian/Ubuntu and derivative distros - Install the ddev apt repositories with:
-```bash
-echo "deb https://drud.fury.site/apt/ * *" | sudo tee -a /etc/apt/sources.list.d/ddev.list
-curl https://apt.fury.io/drud/gpg.key | sudo apt-key add -
-sudo apt update && sudo apt install ddev
- ```
-In the future you can update as usual, with `sudo apt update && sudo apt upgrade`.__
+
+  ```bash
+  echo "deb https://drud.fury.site/apt/ * *" | sudo tee -a /etc/apt/sources.list.d/ddev.list
+  curl https://apt.fury.io/drud/gpg.key | sudo apt-key add -
+  sudo apt update && sudo apt install ddev
+   ```
+  
+  In the future you can update as usual, with `sudo apt update && sudo apt upgrade`.
 
 * Yum/RPM (Fedora, RedHat, etc.):
-```bash
-echo '[ddev]
-name=DDEV Repo
-baseurl=https://yum.fury.io/drud/
-enabled=1
-gpgcheck=0' | tee -a /etc/yum.repos.d/ddev.repo
 
-dnf install --refresh ddev
-```
-In the future you can update as usual, with `sudo dnf upgrade ddev`
+  ```bash
+  echo '[ddev]
+  name=DDEV Repo
+  baseurl=https://yum.fury.io/drud/
+  enabled=1
+  gpgcheck=0' | sudo tee -a /etc/yum.repos.d/ddev.repo
+  
+  sudo dnf install --refresh ddev
+  ```
+  
+  In the future you can update as usual, with `sudo dnf upgrade ddev`
 
 ### Linux, macOS and Windows WSL2 (using install_ddev.sh)
 
