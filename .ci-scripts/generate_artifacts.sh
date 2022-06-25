@@ -48,40 +48,37 @@ fi
 # Generate macOS-amd64 tarball/zipball
 pushd $BASE_DIR/.gotmp/bin/darwin_amd64 >/dev/null
 curl -sSL -o mkcert https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-darwin-amd64 && chmod +x mkcert
-tar -czf $ARTIFACTS/ddev_macos-amd64.$VERSION.tar.gz ddev *completion*.sh mkcert
+tar -czf $ARTIFACTS/ddev_macos-amd64.$VERSION.tar.gz ddev  mkcert
 popd >/dev/null
 
 # Generate macOS-arm64 tarball/zipball
 pushd $BASE_DIR/.gotmp/bin/darwin_arm64 >/dev/null
 curl -sSL -o mkcert https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-darwin-arm64 && chmod +x mkcert
-tar -czf $ARTIFACTS/ddev_macos-arm64.$VERSION.tar.gz ddev *completion*.sh mkcert
+tar -czf $ARTIFACTS/ddev_macos-arm64.$VERSION.tar.gz ddev  mkcert
 popd >/dev/null
 
 # Generate linux-amd64 tarball/zipball
 pushd $BASE_DIR/.gotmp/bin/linux_amd64 >/dev/null
 curl -sSL -o mkcert https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-amd64 && chmod +x mkcert
-tar -czf $ARTIFACTS/ddev_linux-amd64.$VERSION.tar.gz ddev *completion*.sh mkcert
+tar -czf $ARTIFACTS/ddev_linux-amd64.$VERSION.tar.gz ddev  mkcert
 popd >/dev/null
 
 # Generate linux-arm64 tarball/zipball
 pushd $BASE_DIR/.gotmp/bin/linux_arm64 >/dev/null
 curl -sSL -o mkcert https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-arm64 && chmod +x mkcert
-tar -czf $ARTIFACTS/ddev_linux-arm64.$VERSION.tar.gz ddev *completion*.sh mkcert
+tar -czf $ARTIFACTS/ddev_linux-arm64.$VERSION.tar.gz ddev  mkcert
 popd >/dev/null
 
 # Generate linux-arm tarball/zipball
 pushd $BASE_DIR/.gotmp/bin/linux_arm >/dev/null
 curl -sSL -o mkcert https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-arm && chmod +x mkcert
-tar -czf $ARTIFACTS/ddev_linux-arm.$VERSION.tar.gz ddev *completion*.sh
+tar -czf $ARTIFACTS/ddev_linux-arm.$VERSION.tar.gz ddev 
 popd >/dev/null
 
 # generate windows-amd64 tarball/zipball
 pushd $BASE_DIR/.gotmp/bin/windows_amd64 >/dev/null
 curl -sSL -o mkcert.exe https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-windows-amd64.exe
-tar -czf $ARTIFACTS/ddev_windows-amd64.$VERSION.tar.gz ddev.exe *completion*.sh mkcert.exe
-if [ -d chocolatey ]; then
-  tar -czf $ARTIFACTS/ddev_chocolatey_amd64-.$VERSION.tar.gz chocolatey
-fi
+tar -czf $ARTIFACTS/ddev_windows-amd64.$VERSION.tar.gz ddev.exe  mkcert.exe
 popd >/dev/null
 
 
