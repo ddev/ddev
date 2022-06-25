@@ -204,6 +204,13 @@ nfpms:
   formats:
   - deb
   - rpm
+  overrides:
+    deb:
+      dependencies:
+      - libnss3-tools
+    rpm:
+      dependencies:
+      - nss-tools
 
 snapshot:
   name_template: '{{ .Version }}-{{.ShortCommit}}'
