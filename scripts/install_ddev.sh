@@ -147,10 +147,13 @@ tar -xzf $TARBALL
 
 printf "${GREEN}Download verified. Ready to place ddev and mkcert in your /usr/local/bin.${RESET}\n"
 
+if command -v brew >/dev/null ; then
+  echo "Attempting to unlink any homebrew-installed ddev with 'brew unlink ddev'"
+  brew unlink ddev >/dev/null
+fi
 if [ -L /usr/local/bin/ddev ] ; then
-    printf "${RED}ddev already exists as a link in /usr/local/bin. Was it installed with homebrew?${RESET}\n"
+    printf "${RED}ddev already exists as a link in /usr/local/bin/ddev. Was it installed with homebrew?${RESET}\n"
     printf "${RED}Cowardly refusing to install over existing symlink${RESET}\n"
-    printf "${RED}Use 'brew unlink ddev' to remove the symlink. Or use 'brew upgrade drud/ddev/ddev' to upgrade.${RESET}\n"
     exit 101
 fi
 
