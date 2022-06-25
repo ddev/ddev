@@ -6,7 +6,7 @@
 
 * Colima (macOS), `docker-ce` (Linux/WSL2) or [Docker Desktop](https://www.docker.com/products/docker-desktop) or a related docker back-end are required. Installing or upgrading docker-compose is not required as DDEV uses its own private docker-compose version. See [Docker Installation](users/docker_installation.md).
 * OS Support
-    * macOS Catalina and higher (macOS 10.15 and higher); it should run anywhere docker runs (Current Docker Desktop has deprecated macOS 10.14 and below, but Docker Desktop versions prior to  can still work with DDEV-Local on High Sierra. You can look through the [Docker Desktop for Mac Release Notes](https://docs.docker.com/desktop/mac/release-notes/) for older versions.)
+    * macOS Catalina and higher (macOS 10.15 and higher); it should run anywhere docker runs (Current Docker Desktop has deprecated macOS 10.14 and below, but Docker Desktop versions prior to  can still work with DDEV-Local on High Sierra. You can look through the [Docker Desktop for Mac Release Notes](https://docs.docker.com/desktop/mac/release-notes/) for older versions. In addition, Colima supports older versions.)
     * Linux: Most Linux distributions which can run Docker-ce are fine. This includes at least Ubuntu 18.04+ (20.04 is recommended), Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
     * Windows 10/11 (all editions) with WSL2 (version [1903.1049, 1909.1049](https://devblogs.microsoft.com/commandline/wsl-2-support-is-coming-to-windows-10-versions-1903-and-1909/), 2004 or later)
     * (Non-WSL2) Windows 10/11 Home, Pro, or Enterprise with [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop)

@@ -1,3 +1,4 @@
+##### BUILDS ######
 builds:
 - id: ddev
   # Requires make  darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64 mkcert
@@ -108,7 +109,7 @@ builds:
     path: .gotmp/bin/windows_amd64/ddev_windows_installer.exe
   binary: ddev-windows-installer.exe
 
-
+###### Archives ######
 archives:
 - id: ddev
   builds:
@@ -135,8 +136,6 @@ archives:
   - completions
   format: binary
   name_template: ddev_shell_completion_scripts.v{{.Version}}.tar.gz
-#  files:
-#    - .gotmp/bin/completions.tar.gz
 
 - id: ddev-windows-installer
   builds:
@@ -144,19 +143,15 @@ archives:
   format: binary
   name_template: "ddev_windows_installer.v{{.Version}}"
 
-#  files:
-#  - none*
-#  files:
-#  - LICENSE
-
-
 checksum:
   name_template: "checksums.txt"
 
+
+#### RELEASE ####
 release:
   prerelease: auto
   github:
-    owner: rfay
+    owner: {{ Env.GITHUB_REPOSITORY_OWNER }}
     name: ddev
 
 brews:
@@ -165,11 +160,13 @@ brews:
   - ddev
   tap:
     owner: rfay
-    name: homebrew-ddev-edge
+    name: homebrew-ddev
   description: DDEV
   folder: Formula
   homepage: https://ddev.com
   license: "Apache 2"
+  # ddev brew will only be uploaded on non-prerelease
+  skip_upload: auto
   dependencies:
   - name: mkcert
   custom_block: |
@@ -190,13 +187,44 @@ brews:
         fish_completion.install "ddev_fish_completion.sh" => "ddev"
     end
 
-#  install: |
-#    system "make", "VERSION=v#{version}", "COMMIT=v#{version}"
-#    system "cp", ".gotmp/bin/darwin_arm64/ddev", "#{bin}/ddev"
-
   test: |
     system "#{bin}/ddev --version"
 
+- name: ddev-edge
+  ids:
+  - ddev
+  tap:
+    owner: rfay
+    name: homebrew-ddev-edge
+  description: DDEV
+  folder: Formula
+  homepage: https://ddev.com
+  license: "Apache 2"
+  # ddev-edge brew will always be uploaded
+  skip_upload: "false"
+  dependencies:
+  - name: mkcert
+  custom_block: |
+    head "https://github.com/drud/ddev.git", branch: "master"
+    depends_on "go" => :build
+    depends_on "make" => :build
+  install: |
+    if build.head?
+        os = OS.mac? ? "darwin" : "linux"
+        arch = Hardware::CPU.arm? ? "arm64" : "amd64"
+        system "mkdir", "-p", "#{bin}"
+        system "make", "VERSION=v#{version}", "COMMIT=v#{version}"
+        system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev", "#{bin}/ddev"
+    else
+        bin.install "ddev"
+        bash_completion.install "ddev_bash_completion.sh" => "ddev"
+        zsh_completion.install "ddev_zsh_completion.sh" => "ddev"
+        fish_completion.install "ddev_fish_completion.sh" => "ddev"
+    end
+
+  test: |
+    system "#{bin}/ddev --version"
+    
 
 nfpms:
 - maintainer: Randy Fay
