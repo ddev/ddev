@@ -13,7 +13,7 @@ env:
   BUILDKIT_PROGRESS: plain
   DOCKER_CLI_EXPERIMENTAL: enabled
   DDEV_DEBUG: true
-  DDEV_AUR_REPO: ddev
+  DDEV_AUR_REPO: ddev-edge
 
 jobs:
   build-most:
@@ -208,10 +208,10 @@ jobs:
 #        run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
 
       - name: set conditional environments
-        # Use ddev-bin (default) unless not running with repo owner = drud
+        # Use ddev-edge (default) unless running with repo owner = drud
         run: |
-          echo "DDEV_AUR_REPO=ddev-edge >$GITHUB_ENV
-        if: github.repository_owner != "drud"
+          echo "DDEV_AUR_REPO=ddev" >$GITHUB_ENV
+        if: env.GITHUB_REPOSITORY_OWNER == 'drud'
 
     # Goreleaser does GitHub release artifacts, homebrew, AUR
       - name: goreleaser
