@@ -151,7 +151,7 @@ checksum:
 release:
   prerelease: auto
   github:
-    owner: {{ Env.GITHUB_REPOSITORY_OWNER }}
+    owner: "{{ Env.GITHUB_REPOSITORY_OWNER }}"
     name: ddev
 
 brews:
@@ -159,11 +159,11 @@ brews:
   ids:
   - ddev
   tap:
-    owner: rfay
+    owner: "{{  Env.GITHUB_REPOSITORY_OWNER }}"
     name: homebrew-ddev
   description: DDEV
   folder: Formula
-  homepage: https://ddev.com
+  homepage: https://github.com/drud/ddev
   license: "Apache 2"
   # ddev brew will only be uploaded on non-prerelease
   skip_upload: auto
@@ -194,11 +194,11 @@ brews:
   ids:
   - ddev
   tap:
-    owner: rfay
+    owner: "{{  Env.GITHUB_REPOSITORY_OWNER }}"
     name: homebrew-ddev-edge
   description: DDEV
   folder: Formula
-  homepage: https://ddev.com
+  homepage: https://github.com/drud/ddev
   license: "Apache 2"
   # ddev-edge brew will always be uploaded
   skip_upload: "false"
@@ -248,7 +248,7 @@ aurs:
 - name: "ddev"
   ids:
   - ddev
-  homepage: "https://ddev.com/"
+  homepage: "https://github.com/drud/ddev"
   description: "DDEV-Local: a local web development environment"
   maintainers:
   - 'Randy Fay <randy at randyfay.com>'
@@ -280,13 +280,13 @@ aurs:
 - name: "ddev-edge"
   ids:
   - ddev
-  homepage: "https://ddev.com/"
+  homepage: "https://github.com/drud/ddev"
   description: "DDEV-Local: a local web development environment (edge)"
   maintainers:
   - 'Randy Fay <randy at randyfay.com>'
   license: "Apache 2"
   # Always upload, even on prerelease
-  skip_upload: false
+  skip_upload: "false"
   private_key: '{{ .Env.AUR_SSH_PRIVATE_KEY }}'
   git_url: 'ssh://aur@aur.archlinux.org/ddev-edge-bin.git'
 
