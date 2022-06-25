@@ -194,7 +194,7 @@ brews:
   ids:
   - ddev
   tap:
-    owner: "{{  .Env.GITHUB_REPOSITORY_OWNER }}"
+    owner: "{{ .Env.GITHUB_REPOSITORY_OWNER }}"
     name: homebrew-ddev-edge
   description: DDEV
   folder: Formula
