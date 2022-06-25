@@ -69,12 +69,6 @@ curl -sSL -o mkcert https://github.com/drud/mkcert/releases/download/${MKCERT_VE
 tar -czf $ARTIFACTS/ddev_linux-arm64.$VERSION.tar.gz ddev  mkcert
 popd >/dev/null
 
-# Generate linux-arm tarball/zipball
-pushd $BASE_DIR/.gotmp/bin/linux_arm >/dev/null
-curl -sSL -o mkcert https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-arm && chmod +x mkcert
-tar -czf $ARTIFACTS/ddev_linux-arm.$VERSION.tar.gz ddev 
-popd >/dev/null
-
 # generate windows-amd64 tarball/zipball
 pushd $BASE_DIR/.gotmp/bin/windows_amd64 >/dev/null
 curl -sSL -o mkcert.exe https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-windows-amd64.exe
