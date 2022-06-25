@@ -13,7 +13,7 @@ env:
   BUILDKIT_PROGRESS: plain
   DOCKER_CLI_EXPERIMENTAL: enabled
   DDEV_DEBUG: true
-  DDEV_AUR_REPO: ddev-edge
+  GITHUB_REPOSITORY_OWNER: ${{ secrets.GITHUB_REPOSITORY_OWNER }}
 
 jobs:
   build-most:
@@ -70,7 +70,6 @@ jobs:
     name: Build and Sign Windows binaries
     runs-on: [ self-hosted, windows-signer ]
     env:
-      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
       SegmentKey: ${{ secrets.SEGMENTKEY }}
     steps:
       - uses: actions/checkout@v3
@@ -204,16 +203,7 @@ jobs:
         if: steps.notarizedmac.outputs.cache-hit != 'true'
         run: exit 1
 
-#      - name: Generate artifacts
-#        run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
-
-      - name: set conditional environments
-        # Use ddev-edge (default) unless running with repo owner = drud
-        run: |
-          echo "DDEV_AUR_REPO=ddev" >$GITHUB_ENV
-        if: env.GITHUB_REPOSITORY_OWNER == 'drud'
-
-    # Goreleaser does GitHub release artifacts, homebrew, AUR
+      # Goreleaser does GitHub release artifacts, homebrew, AUR, deb/rpm
       - name: goreleaser
         uses: goreleaser/goreleaser-action@v3
         if: startsWith( github.ref, 'refs/tags/v1')
@@ -226,69 +216,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
           FURY_TOKEN: ${{ secrets.FURY_TOKEN }}
-          GITHUB_REPOSITORY_OWNER: ${{ secrets.GITHUB_REPOSITORY_OWNER }}
 
-#      - name: Upload all artifacts
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: all-ddev-executables
-#          path: ${{ github.workspace }}/artifacts/*
-#      - name: Upload macos-amd64 binary
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: ddev-macos-amd64
-#          path: .gotmp/bin/darwin_amd64/ddev
-#      - name: Upload macos-arm64 binary
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: ddev-macos-arm64
-#          path: .gotmp/bin/darwin_arm64/ddev
-#      - name: Upload linux-arm64 binary
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: ddev-linux-arm64
-#          path: .gotmp/bin/linux_arm64/ddev
-#      - name: Upload inux_amd644 binary
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: ddev-linux-amd64
-#          path: .gotmp/bin/linux_amd64/ddev
-#      - name: Upload windows_amd64 installer
-#        uses: actions/upload-artifact@v3
-#        with:
-#          name: ddev-windows-amd64-installer
-#          path: .gotmp/bin/windows_amd64/ddev_windows_installer*.exe
+
       - name: Show github.ref
         run: echo ${{ github.ref }}
-#      - name: "Upload release artifacts to github release"
-#        if: startsWith( github.ref, 'refs/tags/v1')
-#        uses: skx/github-action-publish-binaries@master
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        with:
-#          args: ${{ github.workspace }}/artifacts/*
-
-#      - name: "Bump homebrew edge release"
-#        if: env.DDEV_GITHUB_TOKEN != '' && startsWith( github.ref, 'refs/tags/v1')
-#        run: |
-#          bash -x .ci-scripts/bump_homebrew.sh ${HOMEBREW_EDGE_REPOSITORY} ddev ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts ${DDEV_MAIN_REPO_ORGNAME}
-#
-#      - name: "Bump homebrew main release if necessary"
-#        if: env.DDEV_GITHUB_TOKEN != '' && startsWith( github.ref, 'refs/tags/v1') && !contains( github.ref, '-')
-#        run: |
-#          bash -x .ci-scripts/bump_homebrew.sh ${HOMEBREW_STABLE_REPOSITORY} ddev ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts ${DDEV_MAIN_REPO_ORGNAME}
-
-#      - name: "Push AUR ddev-edge-bin"
-#        if: env.AUR_SSH_PRIVATE_KEY != '' && startsWith( github.ref, 'refs/tags/v1')
-#        run: |
-#          echo GITHUB_REF=${GITHUB_REF}
-#          .ci-scripts/bump_aur.sh ddev-edge-bin ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts
-#
-#      - name: "Push AUR ddev-bin if necessary"
-#        if: env.AUR_SSH_PRIVATE_KEY != '' &&  startsWith( github.ref, 'refs/tags/v1') && !contains( github.ref, '-')
-#        run: |
-#          echo GITHUB_REF=${GITHUB_REF}
-#          .ci-scripts/bump_aur.sh ddev-bin "${GITHUB_REF##*/}" ${{ github.workspace }}/artifacts
 
       - name: Chocolatey windows release
         if: env.CHOCOLATEY_API_KEY != '' && startsWith( github.ref, 'refs/tags/v1')

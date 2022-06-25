@@ -245,22 +245,18 @@ snapshot:
 
 
 aurs:
-- name: "{{ .Env.DDEV_AUR_REPO }}"
-
-  # artifact ids.
+- name: "ddev"
   ids:
   - ddev
-
   homepage: "https://ddev.com/"
-
   description: "DDEV-Local: a local web development environment"
-
   maintainers:
   - 'Randy Fay <randy at randyfay.com>'
-
   license: "Apache 2"
+  # main ddev repo will only be uploaded on non-prerelease
+  skip_upload: auto
   private_key: '{{ .Env.AUR_SSH_PRIVATE_KEY }}'
-  git_url: 'ssh://aur@aur.archlinux.org/{{.Env.DDEV_AUR_REPO}}-bin.git'
+  git_url: 'ssh://aur@aur.archlinux.org/ddev-bin.git'
 
   package: |-
     # bin
@@ -281,6 +277,37 @@ aurs:
     name: Randy Fay
     email: randy@randyfay.com
 
+- name: "ddev-edge"
+  ids:
+  - ddev
+  homepage: "https://ddev.com/"
+  description: "DDEV-Local: a local web development environment (edge)"
+  maintainers:
+  - 'Randy Fay <randy at randyfay.com>'
+  license: "Apache 2"
+  # Always upload, even on prerelease
+  skip_upload: false
+  private_key: '{{ .Env.AUR_SSH_PRIVATE_KEY }}'
+  git_url: 'ssh://aur@aur.archlinux.org/ddev-edge-bin.git'
+
+  package: |-
+    # bin
+    install -Dm755 "./ddev" "${pkgdir}/usr/bin/ddev"
+    install -Dm644 "./LICENSE" "${pkgdir}/usr/share/licenses/ddev/LICENSE"
+    
+    # completions
+    mkdir -p "${pkgdir}/usr/share/bash-completion/completions/"
+    mkdir -p "${pkgdir}/usr/share/zsh/site-functions/"
+    mkdir -p "${pkgdir}/usr/share/fish/vendor_completions.d/"
+    install -Dm644 "./ddev_bash_completion.sh" "${pkgdir}/usr/share/bash-completion/completions/ddev"
+    install -Dm644 "./ddev_zsh_completion.sh" "${pkgdir}/usr/share/zsh/site-functions/_ddev"
+    install -Dm644 "./ddev_fish_completion.sh" "${pkgdir}/usr/share/fish/vendor_completions.d/ddev.fish"
+
+  # Git author used to commit to the repository.
+  # Defaults are shown below.
+  commit_author:
+    name: Randy Fay
+    email: randy@randyfay.com
 
 furies:
 - account: drud
