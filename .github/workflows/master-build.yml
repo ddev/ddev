@@ -225,6 +225,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
+          FURY_TOKEN: ${{ secrets.FURY_TOKEN }}
 
 #      - name: Upload all artifacts
 #        uses: actions/upload-artifact@v3
