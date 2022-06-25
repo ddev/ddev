@@ -151,7 +151,7 @@ checksum:
 release:
   prerelease: auto
   github:
-    owner: "{{ .Env.GITHUB_REPOSITORY_OWNER }}"
+    owner: rfay
     name: ddev
 
 brews:
