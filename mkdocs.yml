@@ -79,10 +79,11 @@ plugins:
     minify_html: true
 - git-revision-date-localized:
     enable_creation_date: true
-- git-committers:
-    repository: https://github.com/drud/ddev
-    token: !ENV GH_TOKEN
-#- git-authors
+# readthedocs doesn't seem to expose GH_TOKEN even when set.
+#- git-committers:
+#    repository: https://github.com/drud/ddev
+#    token: !ENV GH_TOKEN
+- git-authors
 
 
 # Customization
