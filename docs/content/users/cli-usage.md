@@ -46,7 +46,7 @@ In addition to the *commands* listed above, there are loads and loads of tools i
 
 Here are quickstart instructions for generic projects, WordPress, Drupal, TYPO3, Backdrop, Magento,Laravel, and Shopware.
 
-**Prerequisites:** Before you start, follow the [installation instructions](../index.md#installation). Make sure to [check the system requirements](../index.md#system-requirements), you will need *docker*  to use ddev.
+**Prerequisites:** Before you start, follow the [installation instructions](index.md#installation). Make sure to [check the system requirements](index.md#system-requirements), you will need *docker*  to use ddev.
 
 === "Any (generic)"
 
@@ -98,7 +98,9 @@ Here are quickstart instructions for generic projects, WordPress, Drupal, TYPO3,
         ```
 
     === "roots/bedrock"
-    
+        
+        roots/bedrock is a modern composer-based installation if WordPress:
+
         ```bash
         mkdir my-wp-bedrock-site
         cd my-wp-bedrock-site

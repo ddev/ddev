@@ -29,7 +29,7 @@ var ComposerCreateCmd = &cobra.Command{
 	Short: "Executes 'composer create-project' within the web container with the arguments and flags provided",
 	Long: `Directs basic invocations of 'composer create-project' within the context of the
 web container. Projects will be installed to a temporary directory and moved to
-the composer root directory after installation. Any existing files in the
+the composer root directory after install. Any existing files in the
 composer root will be deleted when creating a project.`,
 	Example: `ddev composer create drupal/recommended-project
 ddev composer create -y drupal/recommended-project
@@ -121,7 +121,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			fmt.Println(strings.TrimSpace(stdout))
 		}
 
-		output.UserOut.Printf("Moving installation to composer root")
+		output.UserOut.Printf("Moving install to composer root")
 
 		rsyncArgs := "-rltgopD" // Same as -a
 		if runtime.GOOS == "windows" {

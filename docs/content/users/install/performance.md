@@ -1,6 +1,6 @@
-## Performance
+# Performance
 
-Every developer wants both fast startup of the environment and quick response to web page requests. DDEV-Local is always focused on improving this. However, both Docker Desktop for Windows and Docker Desktop for Mac have significant performance problems with mounted filesystems (like the mounted project where code can be edited either inside the container or on the host).
+Every developer wants both fast startup of the environment and quick response to web page requests. DDEV-Local is always focused on improving this. However, both Docker Desktop on macOS and Windows has significant performance problems with mounted filesystems (like the mounted project where code can be edited either inside the container or on the host).
 
 ## Freeing Up System Resources
 
@@ -10,11 +10,9 @@ Every project you run uses system resources, and may compete for those resources
 
 Docker Desktop for Mac has a number of settings that you'll want to pay attention to. Under "Advanced" in the "Resources" section in "Preferences", you can adjust the amount of memory, disk, and CPUs allocated to Docker. While the defaults work well for a small project or two, you may want to adjust these upward based on your experience. The default memory allocation is 2GB, but many people raise it to 4-5GB or even higher. The disk allocation almost always needs to be raised to accommodate increased downloaded images. Your experience will determine what to do with CPUs.
 
-## Using Mutagen
+## Mutagen
 
-### Introduction
-
-The Mutagen asynchronous update feature introduced in v1.18 offers advanced performance experiences for most projects. It's now the preferred way to get great webserving performance on macOS and Windows. Unlike the NFS feature, it requires no pre-configuration or installation. **You do not need to (and should not) install mutagen.** It can also be significantly faster than NFS and massively faster than plain vanilla Docker or Colima.
+The Mutagen asynchronous update feature introduced in offers advanced performance experiences and is recommended for most projects. It's now the preferred way to get great webserving performance on macOS and Windows. Unlike the NFS feature, it requires no pre-configuration or installation. **You do not need to (and should not) install mutagen.** It can also be significantly faster than NFS and massively faster than plain vanilla Docker or Colima. In addition, it makes filesystem watchers (fsnotify/inotify) work correctly.
 
 Mutagen can offer massive webserver performance speedups on macOS and traditional Windows; it works fine (and has automated tests) on Linux or Windows WSL2, but the speedup you see may not be worth turning it on, since Linux/WSL2 are already so fast.
 
@@ -28,7 +26,9 @@ If you trouble with the Mutagen feature, please try to recreate it and report vi
 
 ### Enabling Mutagen
 
-**You do not need to separately install mutagen. It's better if you don't have it installed. DDEV does the installation and upgrades when needed.**
+!!! warning "Do not separately install mutagen"
+
+    Do not separately install the mutagen binary. It's better if you don't have it installed. DDEV does the installation and upgrades when needed.
 
 To begin using Mutagen, just `ddev stop` and then `ddev config --mutagen-enabled` and start the project again. If the mutagen binary needs to be downloaded, it will be downloaded automatically.
 
@@ -42,12 +42,14 @@ You can run mutagen on all your projects, there's no limit. To configure it glob
 
 ### Caveats about Mutagen Integration
 
+Most people have an excellent experience with Mutagen, but it's good to understand how it works anad what the trade-offs are:
+
 * **Not for every project**: Mutagen is not the right choice for every project. If filesystem consistency is your highest priority (as opposed to performance) then there are reasons to be cautious, although people have had excellent experiences: there haven't been major issues reported, but two-way sync is a very difficult computational problem, and problems may surface.
 * **Only one mutagen version on machine please**: DDEV installs its own mutagen. **You do not need to install mutagen.** Multiple mutagen versions can't coexist on one machine, so please stop any running mutagen. On macOS, `killall mutagen`. If you absolutely have to have mutagen installed via homebrew or another technique (for another project) make sure it's the same version as you get with `ddev version`.
 * **Works everywhere, best on macOS**: This is mostly for macOS users. WSL2 is already the preferred environment for Windows users, but if you're still using traditional Windows this makes a huge difference. Although DDEV with mutagen is fully supported and tested on traditional Windows and Linux/WSL2, enabling mutagen on Linux/WSL2 may not be your first choice, since it adds some complexity and very little performance.
 * **Increased disk usage**: Mutagen integration ends up at least doubling the size of your project code disk usage, because the code exists both on your computer and also inside a docker volume. (As of v1.19+, this does *not* include your file upload directory, so normally it's not too intrusive.) So take care that you have enough overall disk space, and also (on macOS) that you have enough file space set up in Docker Desktop. For projects before v1.19, if you have a large amount of data like user-generated content that does not need syncing (i.e. `fileadmin` for TYPO3 or `sites/default/files` for Drupal), you can exclude specific directories from getting synced and use regular docker mount for them instead. See [below for Advanced Mutagen configuration options](#advanced-mutagen-configuration-options). As of v1.19, this is handled automatically and these files are not mutagen-synced.
 * If your project is likely to change the same file on both the host and inside the container, you may be at risk for conflicts.
-* **Massive changes** to either the host or the container are the most likely to introduce issues. This integration has been tested extensively with major changes introduced by `ddev composer` and `ddev composer create` but be aware of this issue. Changing git branches or a script that deletes huge sections of the synced data are related behaviors that should raise caution. If you `ddev stop` and then change a git branch and then `ddev start` you are almost certain to get misbehavior, because mutagen didn't know you made those changes while it wasn't running, so tries to merge the results. If you have to do this, do a `ddev mutagen reset` before restarting the project, so that only the host side will have contents.
+* **Massive changes** to either the host or the container are the most likely to introduce issues. This integration has been tested extensively with major changes introduced by `ddev composer` and `ddev composer create` but be aware of this issue. Changing git branches, `npm install`, `yarn install`, or a script that deletes huge sections of the synced data are related behaviors that should raise caution. If you `ddev stop` and then change a git branch and then `ddev start` you are almost certain to get misbehavior, because mutagen didn't know you made those changes while it wasn't running, so tries to merge the results. If you have to do this, do a `ddev mutagen reset` before restarting the project, so that only the host side will have contents.
 * **Mutagen is asynchronous**: If you make a massive change on either the host or inside the container, you may not see the results for a little while. In studying situations like this, use `ddev mutagen monitor` to watch what's going on on your computer.
 * **`ddev mutagen sync`**: You can cause an explicit sync with `ddev mutagen sync` and see syncing status with `ddev mutagen status`. Note that both `ddev start` and `ddev stop` automatically force a mutagen sync.
 * **Composer**: If you do composer actions inside the container (with `ddev ssh`) you'll probably want to do a `ddev mutagen sync` to make sure they get synced as soon as possible, although most people won't ever notice the difference and mutagen will get it synced soon enough.
@@ -72,7 +74,6 @@ Actions by those programs can also set off massive filesystem changes.
 You should run `ddev mutagen sync` in order to get things into sync, or simply wait.
 
 <a name="mutagen-config"></a>
-
 ### Advanced Mutagen configuration options
 
 The Mutagen project provides extensive configuration options that are [documented on the mutagen.io site](https://mutagen.io/documentation/introduction/configuration).
@@ -162,6 +163,7 @@ Mutagen does not guarantee interoperability between different mutagen versions, 
 
 You'll want your system version of mutagen to be the same as the one provided with DDEV if you're using mutagen for anything else, see the [Mutagen installation instructions](https://mutagen.io/documentation/introduction/installation) and install the required version.
 
+
 ## Using NFS to Mount the Project into the Web Container
 
 NFS (Network File System) is a classic, mature Unix technique to mount a filesystem from one device to another. It provides significantly improved webserver performance on macOS and Windows. DDEV-Local supports this technique, but it **does require a small amount of pre-configuration on your host computer.** DDEV-Local doesn't make changes to your computer's configuration without your involvement and approval, so this is  done with a setup script that you run and that asks you for your `sudo` password.
@@ -178,24 +180,25 @@ Note that you can use the NFS setup described for each operating system below (a
 
 Note that NFS does not really add to performance on Linux, so it is not recommended.
 
-### macOS NFS Setup
+=== "macOS NFS Setup"
 
-Download, inspect, make executable, and run the [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh) script. Use `curl -O https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh && chmod +x macos_ddev_nfs_setup.sh && ./macos_ddev_nfs_setup.sh`. This stops running ddev projects, adds your home directory to the /etc/exports config file that nfsd uses, and enables nfsd to run on your computer. This is a one-time setup. Note that this shares your home directory via NFS to any NFS client on your computer, so it's critical to consider security issues; It's easy to make the shares in /etc/exports more limited as well, as long as they don't overlap (NFS doesn't allow overlapping exports).
+    Download, inspect, make executable, and run the [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh) script. Use `curl -O https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh && chmod +x macos_ddev_nfs_setup.sh && ./macos_ddev_nfs_setup.sh`. This stops running ddev projects, adds your home directory to the /etc/exports config file that nfsd uses, and enables nfsd to run on your computer. This is a one-time setup. Note that this shares your home directory via NFS to any NFS client on your computer, so it's critical to consider security issues; It's easy to make the shares in /etc/exports more limited as well, as long as they don't overlap (NFS doesn't allow overlapping exports).
+    
+    If your DDEV-Local projects are set up outside your home directory, you'll need to edit /etc/exports to add a line for that share as well.
+    `sudo vi /etc/exports` and copy the line the script has just created (`/System/Volumes/Data/Users/username -alldirs -mapall=<your_user_id>:20 localhost`), editing it with the additional path, e.g: `/Volumes/SomeExternalDrive -alldirs -mapall=<your_uid>:20 localhost`.
+    
+    !!!warning "macOS and the Documents directory"
+    
+        If your projects are in a subdirectory of the ~/Documents directory or on an external drive, it may necessary to grant the "Full Disk Access" permission to the `/sbin/nfsd` binary. Full details are [below](#macos-full-disk-access-for-special-directories).
 
-If your DDEV-Local projects are set up outside your home directory, you'll need to edit /etc/exports to add a line for that share as well.
-`sudo vi /etc/exports` and copy the line the script has just created (`/System/Volumes/Data/Users/username -alldirs -mapall=<your_user_id>:20 localhost`), editing it with the additional path, e.g: `/Volumes/SomeExternalDrive -alldirs -mapall=<your_uid>:20 localhost`.
+=== "Windows NFS Setup"
 
-**Warning:** You may need to temporarily give your terminal "Full disk access" before you (or the script provided) can edit /etc/exports. The basic idea is that in the System Preferences -> Security and Privacy -> Privacy you need to give "Full Disk Access" permissions to your terminal app. Note that the "Full Disk Access" privilege is only needed when the /etc/exports file is being edited by you, usually a one-time event. (Note that in more recent versions of macOS a prompt will do this automatically and temporarily for you.)
-
-**Warning:** If the projects are in a subdirectory of the ~/Documents directory or on an external drive, it may necessary to grant the "Full Disk Access" permission to the `/sbin/nfsd` binary. Full details are [below](#macos-full-disk-access-for-special-directories).
-
-### Windows NFS Setup
-
-The executable components required for Windows NFS (winnfsd and nssm) are packaged with the ddev_windows_installer in each release, so if you've used the windows installer, they're available already.  To enable winnfsd as a service, please download, inspect and run the script "windows_ddev_nfs_setup.sh" installed by the installer in \Program Files\ddev\windows_ddev_nfs_setup.sh (or download from [windows_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/windows_ddev_nfs_setup.sh)) in a git-bash session on windows. If your DDEV-Local projects are set up outside your home directory, you'll need to edit the ~/.ddev/nfs_exports.txt created by the script and then restart the service with `sudo nssm restart nfsd`.
-
-**Firewall issues**: On Windows 10/11 you will likely run afoul of the Windows Defender Firewall, and it will be necessary to allow `winnfsd` to bypass it. If you're getting a timeout with no information after `ddev start`, try going to "Windows Defender Firewall" -> "Allow an app or feature through Windows Defender Firewall", "Change Settings", "Allow another app". Then choose C:\Program Files\ddev\winnfsd.exe, assuming that's where  winnfsd is installed.
-
-Also see the debugging section below, and the special Windows debugging section.
+    The executable components required for Windows NFS (winnfsd and nssm) are packaged with the DDEV Windows Installer in each release, so if you've used the windows installer, they're available already.  To enable winnfsd as a service, please download, inspect and run the script "windows_ddev_nfs_setup.sh" installed by the installer in `C:\Program Files\ddev\windows_ddev_nfs_setup.sh` (or download from [windows_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/windows_ddev_nfs_setup.sh)) in a git-bash session on windows. If your DDEV-Local projects are set up outside your home directory, you'll need to edit the ~/.ddev/nfs_exports.txt created by the script and then restart the service with `sudo nssm restart nfsd`.
+    
+    !!!warning Firewall Issues
+        On Windows 10/11 you will likely run afoul of the Windows Defender Firewall, and it will be necessary to allow `winnfsd` to bypass it. If you're getting a timeout with no information after `ddev start`, try going to "Windows Defender Firewall" -> "Allow an app or feature through Windows Defender Firewall", "Change Settings", "Allow another app". Then choose C:\Program Files\ddev\winnfsd.exe, assuming that's where  winnfsd is installed.
+    
+    Also see the debugging section below, and the special Windows debugging section.
 
 ### Debugging `ddev start` failures with `nfs_mount_enabled: true`
 
@@ -216,13 +219,11 @@ Tools to debug and solve permission problems:
 * Restart the server (`sudo nfsd restart` on macOS, `sudo nssm restart nfsd` on Windows).
 * `showmount -e` on macOS will show the shared mounts.
 
-<a name="upgrading-catalina"></a>
+#### macOS Full Disk Access for Special Directories
 
-### macOS Full Disk Access for Special Directories
-
-* If you are on macOS, and your projects are in a subdirectory of the ~/Documents or ~/Desktop directories or on an external drive, you must grant "Full Disk Access" privilege to /sbin/nfsd in the Privacy settings in the System Preferences. On the "Full disk access" section, click the "+" and add `/sbin/nfsd` as shown here: ![screenshot](images/sbin_nfsd_selection.png)
+* If you are on macOS, and your projects are in a subdirectory of the ~/Documents or ~/Desktop directories or on an external drive, you must grant "Full Disk Access" privilege to /sbin/nfsd in the Privacy settings in the System Preferences. On the "Full disk access" section, click the "+" and add `/sbin/nfsd` as shown here: ![screenshot](../images/sbin_nfsd_selection.png)
 You should then see nfsd in the list as shown:
-![screenshot](images/nfsd_full_disk_access.png).
+![screenshot](../images/nfsd_full_disk_access.png).
 * `sudo nfsd restart`
 * Use `ddev debug nfsmount` in a project directory to make sure it gives successful output like
 
@@ -234,7 +235,7 @@ You should then see nfsd in the list as shown:
     /nfsmount/.ddev
     ```
 
-### macOS-specific NFS debugging
+#### macOS-specific NFS debugging
 
 * Please temporarily disable any firewall or VPN.
 * Use `showmount -e` to find out what is exported via NFS. If you don't see a parent of your project directory in there, then NFS can't work.
@@ -250,7 +251,7 @@ nfs.server.verbose = 3
 
 * Run Console.app and put "nfsd" in the search box at the top. `sudo nfsd restart` and read the messages carefully. Attempt to `ddev debug nfsmount` the problematic project directory.
 
-### Windows-specific NFS debugging
+#### Windows-specific NFS debugging
 
 * Please temporarily disable any firewall or VPN.
 
@@ -261,6 +262,6 @@ nfs.server.verbose = 3
 3. In another window, in a ddev project directory, `ddev debug nfsmount` to see if it can mount successfully. (The project need not be started.). `ddev debug nfsmount` is successful, then everything is probably going to work.
 4. After verifying that ~/.ddev/nfs_exports.txt has a line that includes your project directories, `sudo nssm start nfsd` and `nssm status nfsd`. The status command should show SERVICE_RUNNING.
 5. These [nssm](https://nssm.cc/) commands may be useful: `nssm help`, `sudo nssm start nfsd`, `sudo nssm stop nfsd`, `nssm status nfsd`, `sudo nssm edit nfsd` (pops up a window that may be hidden), and `sudo nssm remove nfsd` (also pops up a window, doesn't work predictably if you haven't already stopped the service).
-6. nssm logs failures and what it's doing to the system event log. Run "Event Viewer" and filter events as in the image below: ![Windows Event Viewer](images/windows_event_viewer.png).
+6. nssm logs failures and what it's doing to the system event log. Run "Event Viewer" and filter events as in the image below: ![Windows Event Viewer](../images/windows_event_viewer.png).
 7. Please make sure you have excluded winnfsd from the Windows Defender Firewall, as described in the installation instructions above.
 8. On Windows 10/11 Pro you can "Turn Windows features on or off" and enable "Services for NFS"-> "Client for NFS". The `showmount -e` command will then show available exports on the current machine. This can help find out if a conflicting server is running or exactly what the problem with exports may be.

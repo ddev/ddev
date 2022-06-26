@@ -4,7 +4,7 @@
 ##
 ## 1) Run "kbox create" to create 2 drupal7 sites and one drupal8 site,
 ## naming them d7perf, kickperf, d8perf respectively.
-## 2) Overwrite contents of kickperf/code with a commerce_kickstart installation.
+## 2) Overwrite contents of kickperf/code with a commerce_kickstart install.
 ## 3) Run "kbox poweroff" to stop all running containers.
 ## 4) Run this script above the 3 site directories.
 

@@ -1,6 +1,6 @@
 ## Troubleshooting
 
-Things might go wrong! Besides the suggestions on this page don't forget about [Stack Overflow](https://stackoverflow.com/tags/ddev) and [the ddev issue queue](https://github.com/drud/ddev/issues) and [other support options](../index.md#support). And see [Docker troubleshooting suggestions](docker_installation.md#troubleshooting).
+Things might go wrong! Besides the suggestions on this page don't forget about [Stack Overflow](https://stackoverflow.com/tags/ddev) and [the ddev issue queue](https://github.com/drud/ddev/issues) and [other support options](index.md#support). And see [Docker troubleshooting suggestions](install/docker-installation.md#troubleshooting).
 
 ## General Troubleshooting Strategies
 
@@ -10,7 +10,7 @@ Things might go wrong! Besides the suggestions on this page don't forget about [
 * `ddev debug dockercheck` in DDEV v1.19+ will help sort out Docker problems, as will `ddev debug test`, also in v1.19+.
 * On macOS and traditional Windows, please check to make sure that Docker Desktop is not out of disk space. In Settings (or Preferences)->Resources->Disk image size there should be lots of space left; I never let it go over 80% because the number reported here is not reliable. If it says zero used, something is wrong.
 * If you have customizations (PHP overrides, nginx or Apache overrides, MySQL/Postgresql overrides, custom services, config.yaml changes) please back them out while troubleshooting. It's important to have the simplest possible environment while troubleshooting.
-* Restart Docker. Consider a Docker factory reset in serious cases (this will destroy any databases you've loaded). See [Docker Troubleshooting](docker_installation.md#troubleshooting) for more.
+* Restart Docker. Consider a Docker factory reset in serious cases (this will destroy any databases you've loaded). See [Docker Troubleshooting](install/docker-installation.md#troubleshooting) for more.
 * Try the simplest possible ddev project to try to get it to work (just as `ddev debug test` does).
 
   ```bash
@@ -151,7 +151,7 @@ If you get a 404 with "No input file specified" (nginx) or a 403 with "Forbidden
 
 * Misconfigured docroot: If the docroot isn't where the webserver thinks it is, then the webserver won't find the index.php. Look at your .ddev/config.yaml to verify it has a docroot that will lead to the index.php. It should be a relative path from the project root to the directory where the index.php is.
 * Missing index.php: There may not be an index.php or index.html in your project.
-* Docker not mounting your code: If you `ddev ssh` and `ls` and there's nothing there, Docker may not be mounting your code. See [docker installation](docker_installation.md) for testing docker install. Docker, the drive or directory where your project is must be shared.
+* Docker not mounting your code: If you `ddev ssh` and `ls` and there's nothing there, Docker may not be mounting your code. See [docker installation](install/docker-installation.md) for testing docker install. Docker, the drive or directory where your project is must be shared.
 
 ## `ddev start` fails and logs contain "failed (28: No space left on device)" - Docker File Space
 

@@ -10,19 +10,19 @@ How does my project connect to the database?
 : `ddev describe` gives full details of how to connect to the database. *Inside* the container the hostname is 'db' (**NOT** 127.0.0.1). User/password/database are all 'db'. For connection from the *host*, see `ddev describe`.
 
 How can I troubleshoot what's going wrong?
-: See the [troubleshooting](troubleshooting.md), [Docker troubleshooting](docker_installation.md#troubleshooting) and [Xdebug troubleshooting](step-debugging.md#troubleshooting-xdebug) sections of the docs.
+: See the [troubleshooting](troubleshooting.md), [Docker troubleshooting](install/docker-installation.md#troubleshooting) and [Xdebug troubleshooting](step-debugging.md#troubleshooting-xdebug) sections of the docs.
 
 Do I need to install PHP or Composer or Nginx or nodejs/npm on my computer?
 : Absolutely *not*. All of these tools live inside DDEV's docker containers, so you need only Docker and DDEV. This is especially handy for Windows users where there's a bit more friction installing those tools.
 
 How do I get support?
-: See the (many) [support options](../index.md#support), including [Discord](https://discord.gg/kDvSFBSZfs), Stack Overflow and others.
+: See the (many) [support options](index.md#support), including [Discord](https://discord.gg/kDvSFBSZfs), Stack Overflow and others.
 
 How can I get the best performance?
-: Docker's normal mounting can be slow, especially on macOS. See the [Performance](performance.md) section for speed-up options including Mutagen and NFS mounting.
+: Docker's normal mounting can be slow, especially on macOS. See the [Performance](install/performance.md) section for speed-up options including Mutagen and NFS mounting.
 
 How can I check that Docker is working?
-: The Docker Installation docs have a [full Docker troubleshooting section](docker_installation.md#troubleshooting), including a single `docker run` command that will verify whether everything is set up.
+: The Docker Installation docs have a [full Docker troubleshooting section](install/docker-installation.md#troubleshooting), including a single `docker run` command that will verify whether everything is set up.
 
 Can I run DDEV and also other Docker or non-Docker development environments at the same time?
 : Yes, you can, as long as they're configured with different ports. But it's easiest to shut down one before using the other. For example, if you use Lando for one project, do a `lando poweroff` before using DDEV, and then do a `ddev poweroff` before using Lando again. If you run nginx or apache locally, just stop them before using DDEV. More information is in the [troubleshooting](troubleshooting.md) section.
@@ -96,7 +96,7 @@ Why do I see nginx headers when I'm configured to use `webserver_type: apache-fp
 : Apache runs in the web container but when you use the `http://*.ddev.site` URL, it goes through ddev-router, which is an nginx reverse proxy, and that's why you see the nginx headers. But rest assured you are using Apache. More detail in [Stack Overflow answer](https://stackoverflow.com/a/52780601/215713)
 
 Why does `ddev start` fail with "error while mounting volume, Permission denied"?
-: This almost always means that you have NFS enabled in your project, but NFS isn't working on your machine. Start by completely turning NFS off for your projects with `ddev config --nfs-mount-enabled=false && ddev config global --nfs-mount-enabled=false`. Then later, [go get NFS working](performance.md#using-nfs-to-mount-the-project-into-the-web-container). NFS can be a big performance help on macOS and traditional Windows, and not needed on Linux or Windows WSL2.
+: This almost always means that you have NFS enabled in your project, but NFS isn't working on your machine. Start by completely turning NFS off for your projects with `ddev config --nfs-mount-enabled=false && ddev config global --nfs-mount-enabled=false`. Then later, [go get NFS working](install/performance.md#using-nfs-to-mount-the-project-into-the-web-container). NFS can be a big performance help on macOS and traditional Windows, and not needed on Linux or Windows WSL2.
 
 How can I install a specific version of DDEV?
 : If you want to use a different version of DDEV, you easily get a different version. If you're using homebrew, `brew unlink ddev` first, to get rid of the version you have there. Then use one of these options:

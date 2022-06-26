@@ -4,7 +4,7 @@
 
 ## System Requirements
 
-* Colima (macOS), `docker-ce` (Linux/WSL2) or [Docker Desktop](https://www.docker.com/products/docker-desktop) or a related docker back-end are required. Installing or upgrading docker-compose is not required as DDEV uses its own private docker-compose version. See [Docker Installation](users/docker_installation.md).
+* Colima (macOS), `docker-ce` (Linux/WSL2) or [Docker Desktop](https://www.docker.com/products/docker-desktop) or a related docker back-end are required. Installing or upgrading docker-compose is not required as DDEV uses its own private docker-compose version. See [Docker Installation](install/docker-installation.md).
 * OS Support
     * macOS Catalina and higher (macOS 10.15 and higher); it should run anywhere docker runs (Current Docker Desktop has deprecated macOS 10.14 and below, but Docker Desktop versions prior to  can still work with DDEV-Local on High Sierra. You can look through the [Docker Desktop for Mac Release Notes](https://docs.docker.com/desktop/mac/release-notes/) for older versions. In addition, Colima supports older versions.)
     * Linux: Most Linux distributions which can run Docker-ce are fine. This includes at least Ubuntu 18.04+ (20.04 is recommended), Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
@@ -17,13 +17,13 @@
 
 ## Using DDEV alongside other development environments
 
-DDEV by default uses ports 80 and 443 on your system when projects are running. If you are using another local development environment you can either stop the other environment or configure DDEV to use different ports. See [troubleshooting](users/troubleshooting.md#unable-listen) for more detailed problem-solving.
+DDEV by default uses ports 80 and 443 on your system when projects are running. If you are using another local development environment you can either stop the other environment or configure DDEV to use different ports. See [troubleshooting](troubleshooting.md#unable-listen) for more detailed problem-solving.
 
 ## Installation
 
 ### Docker Desktop/CE or Colima Prerequisite
 
-Docker or an alternative is required before anything will work with DDEV. This is pretty easy on most environments; see the [docker_installation](users/docker_installation.md) page to help sort out the details, especially on Windows and Linux. It is not required to install docker-compose because DDEV uses its own private version.
+Docker or an alternative is required before anything will work with DDEV. This is pretty easy on most environments; see the [docker_installation](install/docker-installation.md) page to help sort out the details, especially on Windows and Linux. It is not required to install docker-compose because DDEV uses its own private version.
 
 ### macOS (Homebrew)
 
@@ -184,7 +184,7 @@ You should now see your CA under `mkcert development CA`.
 
 ### Uninstallation
 
-For instructions to uninstall DDEV-Local see [Uninstallation](users/uninstall.md).
+For instructions to uninstall DDEV-Local see [Uninstallation](install/uninstall.md).
 
 <a name="support"></a>
 
@@ -193,7 +193,7 @@ For instructions to uninstall DDEV-Local see [Uninstallation](users/uninstall.md
 We love to hear from our users and help them be successful with DDEV. Support options include:
 
 * Lots of built-in help: `ddev help` and `ddev help <command>`. You'll find examples and explanations.
-* [DDEV Documentation](users/faq.md)
+* [DDEV Documentation](faq.md)
 * [DDEV Stack Overflow](https://stackoverflow.com/questions/tagged/ddev) for support and frequently asked questions. We respond quite quickly here and the results provide quite a library of user-curated solutions.
 * [DDEV issue queue](https://github.com/drud/ddev/issues) for bugs and feature requests
 * Interactive community support on [Discord](https://discord.gg/hCZFfAMc5k) for everybody, plus sub-channels for CMS-specific questions and answers.

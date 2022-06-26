@@ -14,7 +14,7 @@ extra_css:
 site_author: Localdev Foundation
 site_description: >-
   Do local website development on your computer or in the cloud with DDEV.
-docs_dir: docs/content
+docs_dir: docs/content/users
 
 # Configuration
 theme:
@@ -35,8 +35,8 @@ theme:
   - content.code.annotate
   - content.tabs.link
   - content.tooltips
-  # - header.autohide
-  # - navigation.expand
+  - header.autohide
+  - navigation.expand
   - navigation.indexes
   - navigation.instant
   - navigation.prune
@@ -138,46 +138,46 @@ markdown_extensions:
 
 nav:
   - 'Home': 'index.md'
-  - 'Installation':
-    - 'Installing Docker': 'users/docker_installation.md'
-    - 'Working in Special Environments': 'users/special-environments.md'
-    - 'Improving Performance': 'users/performance.md'
-    - 'Adding Shell Completion (bash, zsh, etc.)': 'users/shell-completion.md'
-    - 'Uninstalling ddev': 'users/uninstall.md'
+  - 'Install':
+    - 'install/docker-installation.md'
+    - 'install/performance.md'
+    - 'install/shell-completion.md'
+    - 'install/special-environments.md'
+    - 'install/uninstall.md'
   - 'ddev Basics':
-    - 'How DDEV Works': 'users/topics/how_ddev_works.md'
-    - 'Using the CLI': 'users/cli-usage.md'
-    - 'Adding ddev Hooks': 'users/extending-commands.md'
-    - 'Using Developer Tools with ddev': 'users/developer-tools.md'
-    - 'Step-Debugging PHP': 'users/step-debugging.md'
-    - 'Profiling with Blackfire': 'users/blackfire-profiling.md'
-    - 'Profiling with xhprof': 'users/xhprof-profiling.md'
-    - 'Profiling with Xdebug': 'users/xdebug-profiling.md'
-    - 'Troubleshooting': 'users/troubleshooting.md'
-    - 'Frequently-Asked Questions (FAQ)': 'users/faq.md'
-    - 'Configuring ddev': 'users/extend/config_yaml.md'
-    - 'Choosing Database Server Types': 'users/extend/database_types.md'
-    - 'Adding Additional Hostnames': 'users/extend/additional-hostnames.md'
-    - 'Alternate Uses of ddev': 'users/alternate-uses.md'
+    - 'How DDEV Works': 'topics/how_ddev_works.md'
+    - 'Using the CLI': 'cli-usage.md'
+    - 'Adding ddev Hooks': 'extending-commands.md'
+    - 'Using Developer Tools with ddev': 'developer-tools.md'
+    - 'Step-Debugging PHP': 'step-debugging.md'
+    - 'Profiling with Blackfire': 'blackfire-profiling.md'
+    - 'Profiling with xhprof': 'xhprof-profiling.md'
+    - 'Profiling with Xdebug': 'xdebug-profiling.md'
+    - 'Troubleshooting': 'troubleshooting.md'
+    - 'Frequently-Asked Questions (FAQ)': 'faq.md'
+    - 'Configuring ddev': 'extend/config_yaml.md'
+    - 'Choosing Database Server Types': 'extend/database_types.md'
+    - 'Adding Additional Hostnames': 'extend/additional-hostnames.md'
+    - 'Alternate Uses of ddev': 'alternate-uses.md'
   - 'Extending ddev':
-    - 'Extending and Customizing Environments': 'users/extend/customization-extendibility.md'
-    - 'Adding Additional Services': 'users/extend/additional-services.md'
-    - 'Defining Custom Services': 'users/extend/custom-compose-files.md'
-    - 'Customizing Docker Images': 'users/extend/customizing-images.md'
-    - 'Adding Custom Commands': 'users/extend/custom-commands.md'
-    - 'Configuring Containers': 'users/extend/in-container-configuration.md'
-    - 'Adding Custom TLS Certificates': 'users/extend/custom-tls-certificates.md'
+    - 'Extending and Customizing Environments': 'extend/customization-extendibility.md'
+    - 'Adding Additional Services': 'extend/additional-services.md'
+    - 'Defining Custom Services': 'extend/custom-compose-files.md'
+    - 'Customizing Docker Images': 'extend/customizing-images.md'
+    - 'Adding Custom Commands': 'extend/custom-commands.md'
+    - 'Configuring Containers': 'extend/in-container-configuration.md'
+    - 'Adding Custom TLS Certificates': 'extend/custom-tls-certificates.md'
   - 'Integrating with Hosting Providers':
-    - 'Introduction': 'users/providers/provider-introduction.md'
-    - 'Acquia': 'users/providers/acquia.md'
-    - 'Pantheon': 'users/providers/pantheon.md'
-    - 'Platform.sh': 'users/providers/platform.md'
+    - 'Introduction': 'providers/provider-introduction.md'
+    - 'Acquia': 'providers/acquia.md'
+    - 'Pantheon': 'providers/pantheon.md'
+    - 'Platform.sh': 'providers/platform.md'
   - 'Specific Guides':
-      - 'Configuring a CMS': 'users/topics/cms_specific_help.md'
-      - 'Managing Databases': 'users/topics/database_management.md'
-      - 'Using Gitpod.io': 'users/topics/gitpod.md'
-      - 'Integrating with PhpStorm': 'users/topics/phpstorm.md'
-      - 'Sharing Your Project': 'users/topics/sharing.md'
-      - 'Configuring Web Servers': 'users/topics/webserver.md'
-      - "Understanding the .ddev Directory": 'users/topics/whats_in_ddev_dir.md'
-      - 'Version History': 'users/topics/version-history.md'
+      - 'Configuring a CMS': 'topics/cms_specific_help.md'
+      - 'Managing Databases': 'topics/database_management.md'
+      - 'Using Gitpod.io': 'topics/gitpod.md'
+      - 'Integrating with PhpStorm': 'topics/phpstorm.md'
+      - 'Sharing Your Project': 'topics/sharing.md'
+      - 'Configuring Web Servers': 'topics/webserver.md'
+      - "Understanding the .ddev Directory": 'topics/whats_in_ddev_dir.md'
+      - 'Version History': 'topics/version-history.md'

@@ -1,6 +1,5 @@
-## Special Environments
 
-### Mac M1 Apple Silicon and Docker Desktop
+## Mac M1 Apple Silicon and Docker Desktop
 
 The Apple Mac M1 with its arm64 architecture has arrived to great acclaim. People love it.
 

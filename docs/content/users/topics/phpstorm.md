@@ -65,7 +65,7 @@ We’ll walk through both of these approaches.
 
 #### Basics
 
-- Start with a working DDEV-Local/WSL2 setup as described in the [docs](../../index.md#installation-or-upgrade-windows-wsl2). Until that’s all working it doesn’t help to go farther.
+- Start with a working DDEV-Local/WSL2 setup as described in the [docs](../index.md#installation-or-upgrade-windows-wsl2). Until that’s all working it doesn’t help to go farther.
 
 - If you haven’t used Xdebug with DDEV-Local and PHPStorm before, you’ll want to read the [step debugging instructions](../step-debugging.md).
 

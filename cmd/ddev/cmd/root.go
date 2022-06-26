@@ -155,7 +155,7 @@ func init() {
 	_, err := dockerutil.GetDockerVersion()
 	// ddev --version may be called without docker available.
 	if err != nil && len(os.Args) > 1 && os.Args[1] != "--version" {
-		util.Failed("Could not connect to a docker provider. Please start or install a docker provider.\nFor installation help go to: https://ddev.readthedocs.io/en/latest/users/docker_installation/")
+		util.Failed("Could not connect to a docker provider. Please start or install a docker provider.\nFor install help go to: https://ddev.readthedocs.io/en/latest/users/docker_installation/")
 	}
 
 	// Populate custom/script commands so they're visible
