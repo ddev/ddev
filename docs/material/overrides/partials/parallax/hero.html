@@ -1,0 +1,49 @@
+{#-
+  This file was automatically generated - do not edit
+-#}
+<section class="mdx-parallax__group" data-md-color-scheme="slate">
+  {% for layer in [
+    { "depth": 8, "position": "70%", "image": "1-landscape" },
+    { "depth": 5, "position": "25%", "image": "2-plateau" },
+    { "depth": 4, "position": "20%", "image": "3-astronaut-1" },
+    { "depth": 3, "position": "30%", "image": "4-astronaut-2" },
+    { "depth": 2, "position": "40%", "image": "5-plants-1" },
+    { "depth": 1, "position": "50%", "image": "6-plants-2" },
+  ] %}
+    {% set image = "overrides/assets/images/layers/" ~ layer["image"] %}
+    {% set style = "style=\"" ~ [
+      "--md-parallax-depth: " ~ layer["depth"],
+      "--md-image-position: " ~ layer["position"]
+    ] | join(";") ~ "\"" %}
+    <picture class="mdx-parallax__layer" {{ style }}>
+      {% for type in ["avif", "webp"] %}
+        <source type="image/{{ type }}" srcset="{{ image ~    '.' ~ type }} 1280w, {{ image ~ '@2x.' ~ type }} 1920w, {{ image ~ '@3x.' ~ type }} 2560w, {{ image ~ '@4x.' ~ type }} 3840w">
+      {% endfor %}
+      <img srcset="{{ image ~    '.png' }} 1280w, {{ image ~ '@2x.png' }} 1920w, {{ image ~ '@3x.png' }} 2560w, {{ image ~ '@4x.png' }} 3840w" src="{{ image ~ '.png' }}" alt="" class="mdx-parallax__image">
+    </picture>
+  {% endfor %}
+  <div class="mdx-parallax__layer mdx-parallax__blend"></div>
+  <div class="mdx-hero" data-mdx-component="hero">
+    <div class="mdx-hero__scrollwrap md-grid">
+      {% include "partials/tabs.html" %}
+      <div class="mdx-hero__inner">
+        <div class="mdx-hero__teaser md-typeset">
+          <h1>Documentation that simply works</h1>
+          <p>{{ config.site_description }}.</p>
+          <a href="getting-started/" class="md-button">
+            Get started
+          </a>
+          <a href="#everything-you-would-expect" class="md-button md-button--secondary">
+            Learn more
+          </a>
+          <a href="https://christinedonath.com" class="mdx-hero__attribution" tabindex="-1">
+            <strong>© Christine Donath</strong>
+          </a>
+        </div>
+        <div class="mdx-hero__more">
+          {% include ".icons/material/arrow-down.svg" %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

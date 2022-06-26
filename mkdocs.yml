@@ -1,37 +1,147 @@
+
+# Project information
 site_name: DDEV-Local Documentation
+site_url: https://github.com/drud/ddev
 repo_url: https://github.com/drud/ddev
-repo_name: GitHub
-edit_uri: blob/master/docs/
+repo_name: drud/ddev
+edit_uri: blob/master/docs/content
 copyright: Localdev Foundation
-theme:
-  name: 'material'
-  palette:
-    primary: 'light-blue'
 extra_javascript:
-  - 'assets/jquery-3.5.1.min.js'
-  - 'assets/extra.js'
+- 'assets/jquery-3.5.1.min.js'
+- 'assets/extra.js'
 extra_css:
-  - 'assets/extra.css'
-markdown_extensions:
-    - toc:
-        permalink: true
-    - admonition
-    - def_list
-    - mdx_truly_sane_lists:
-        nested_indent: 2
-        truly_sane: true
-    - nl2br
-    - pymdownx.details
-    - pymdownx.superfences
-    - meta
+- 'assets/extra.css'
+site_author: Localdev Foundation
+site_description: >-
+  Do local website development on your computer or in the cloud with DDEV.
+docs_dir: docs/content
+
+# Configuration
+theme:
+  name: null
+  custom_dir: !ENV [THEME_DIR, "docs/material"]
+
+  # Static files
+  static_templates:
+  - 404.html
+
+  # Don't include MkDocs' JavaScript
+  include_search_page: false
+  search_index_only: true
+
+  # Default values, taken from mkdocs_theme.yml
+  language: en
+  features:
+  - content.code.annotate
+  # - content.tabs.link
+  - content.tooltips
+  # - header.autohide
+  # - navigation.expand
+  - navigation.indexes
+  # - navigation.instant
+  # - navigation.prune
+  - navigation.sections
+  - navigation.tabs
+  # - navigation.tabs.sticky
+  - navigation.top
+  - navigation.tracking
+  - search.highlight
+  - search.share
+  - search.suggest
+  - toc.follow
+  # - toc.integrate
+  palette:
+  - scheme: default
+    primary: indigo
+    accent: indigo
+    toggle:
+      icon: material/brightness-7
+      name: Switch to dark mode
+  - scheme: slate
+    primary: indigo
+    accent: indigo
+    toggle:
+      icon: material/brightness-4
+      name: Switch to light mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+  favicon: assets/favicon.png
+  icon:
+    logo: logo
+
+# Plugins
 plugins:
-    - search
-    - git-revision-date-localized:
-        type: timeago
-        locale: en
+- search
+- redirects:
+    redirect_maps:
+- minify:
+    minify_html: true
+- git-revision-date-localized:
+    enable_creation_date: true
+- git-committers:
+    repository: https://github.com/drud/ddev
+    token: !ENV GH_TOKEN
+#- git-authors
+
+
+# Customization
+extra:
+  social:
+  - icon: fontawesome/brands/github
+    link: https://github.com/drud/ddev
+  - icon: fontawesome/brands/discord
+    link: https://discord.gg/hCZFfAMc5k
+  - icon: fontawesome/brands/stack-overflow
+    link: https://stackoverflow.com/tags/ddev
+  - icon: fontawesome/brands/twitter
+    link: https://twitter.com/search?q=%23ddev&src=unknown&f=live
+  generator: false
+
+# Extensions
+markdown_extensions:
+- abbr
+- admonition
+- attr_list
+- def_list
+- footnotes
+- meta
+- md_in_html
+- toc:
+    permalink: true
+- pymdownx.arithmatex:
+    generic: true
+- pymdownx.betterem:
+    smart_enable: all
+- pymdownx.caret
+- pymdownx.details
+- pymdownx.emoji:
+    emoji_generator: !!python/name:materialx.emoji.to_svg
+    emoji_index: !!python/name:materialx.emoji.twemoji
+- pymdownx.highlight:
+    anchor_linenums: true
+- pymdownx.inlinehilite
+- pymdownx.keys
+- pymdownx.magiclink:
+    repo_url_shorthand: true
+    user: squidfunk
+    repo: mkdocs-material
+- pymdownx.mark
+- pymdownx.smartsymbols
+- pymdownx.superfences:
+    custom_fences:
+    - name: mermaid
+      class: mermaid
+      format: !!python/name:pymdownx.superfences.fence_code_format
+- pymdownx.tabbed:
+    alternate_style: true
+- pymdownx.tasklist:
+    custom_checkbox: true
+- pymdownx.tilde
+
 nav:
   - 'Home': 'index.md'
-  - 'Installing ddev':
+  - 'Installation':
     - 'Installing Docker': 'users/docker_installation.md'
     - 'Working in Special Environments': 'users/special-environments.md'
     - 'Improving Performance': 'users/performance.md'

@@ -22,4 +22,4 @@ There are a number of situations where a particular approach to a ddev solution 
 
 If you’re able to patch the bug or add the feature yourself – fantastic, make a pull request with the code! Once you’ve submitted a pull request the maintainer(s) can compare your branch to the existing one and decide whether or not to incorporate (pull in) your changes.
 
-Refer to [Building, Testing, and Contributing](docs/developers/building-contributing.md) for help with how to build and test the project.
+Refer to [Building, Testing, and Contributing](docs/content/developers/building-contributing.md) for help with how to build and test the project.
