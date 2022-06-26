@@ -17,7 +17,6 @@ on:
       - ".markdownlintrc"
       - "mkdocs.yml"
       - ".readthedocs.yml"
-      - "requirements.txt"
       - ".github/workflows/**"
       - "markdown-link-check.json"
 jobs:
@@ -46,5 +45,5 @@ jobs:
       - name: Test mkdocs
         run: |
           sudo pip3 install setuptools
-          sudo pip3 install -r requirements.txt
+          sudo pip3 install -r docs/mkdocs-pip3-requirements
           mkdocs -q build -d /tmp/mkdocsbuild

@@ -19,7 +19,7 @@ docs_dir: docs/content
 # Configuration
 theme:
   name: null
-  custom_dir: !ENV [THEME_DIR, "docs/material"]
+  custom_dir: docs/material
 
   # Static files
   static_templates:

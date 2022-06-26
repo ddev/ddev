@@ -149,7 +149,7 @@ markdownlint:
 		echo "Skipping markdownlint as not installed"; \
 	fi
 
-# Best to install mkdocs locally with "sudo pip3 install -r requirements.txt"
+# Best to install mkdocs locally with "sudo pip3 install -r docs/mkdocs-pip-requirements"
 mkdocs:
 	@echo "mkdocs: "
 	@CMD="mkdocs -q build -d /tmp/mkdocsbuild"; \
