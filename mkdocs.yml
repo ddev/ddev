@@ -33,23 +33,23 @@ theme:
   language: en
   features:
   - content.code.annotate
-  # - content.tabs.link
+  - content.tabs.link
   - content.tooltips
   # - header.autohide
   # - navigation.expand
   - navigation.indexes
-  # - navigation.instant
-  # - navigation.prune
+  - navigation.instant
+  - navigation.prune
   - navigation.sections
   - navigation.tabs
-  # - navigation.tabs.sticky
+  - navigation.tabs.sticky
   - navigation.top
   - navigation.tracking
   - search.highlight
   - search.share
   - search.suggest
   - toc.follow
-  # - toc.integrate
+  - toc.integrate
   palette:
   - scheme: default
     primary: indigo
