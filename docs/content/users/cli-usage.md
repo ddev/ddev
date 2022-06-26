@@ -44,7 +44,7 @@ In addition to the *commands* listed above, there are loads and loads of tools i
 
 ## Quickstart Guides
 
-Here are quickstart instructions for generic PHP, WordPress, Drupal 6, Drupal 7, Drupal 8, TYPO3, Backdrop, Magento, Magento 2, Laravel, and Shopware 6.
+Here are quickstart instructions for generic projects, WordPress, Drupal, TYPO3, Backdrop, Magento,Laravel, and Shopware.
 
 **Prerequisites:** Before you start, follow the [installation instructions](../index.md#installation). Make sure to [check the system requirements](../index.md#system-requirements), you will need *docker*  to use ddev.
 
@@ -251,18 +251,6 @@ Here are quickstart instructions for generic PHP, WordPress, Drupal 6, Drupal 7,
         ddev launch
         ```
 
-=== "Backdrop"
-
-    To get started with Backdrop, clone the project repository and navigate to the project directory.
-    
-    ```bash
-    git clone https://github.com/example/example-site
-    cd example-site
-    ddev config
-    ddev start
-    ddev launch
-    ```
-
 === "OpenMage/Magento 1"
 
     1. Download OpenMage from [release page](https://github.com/OpenMage/magento-lts/releases).
@@ -373,6 +361,19 @@ Here are quickstart instructions for generic PHP, WordPress, Drupal 6, Drupal 7,
     Now log into the admin site (/admin) using the web browser. The default credentials are username=admin, password=shopware. You can use the web UI to install sample data or accomplish many other tasks.
     
     For more advanced tasks like adding elasticsearch, building and watching storefront and administration, see [susi.dev](https://susi.dev/ddev-shopware-6).
+
+
+=== "Backdrop"
+
+    To get started with Backdrop, clone the project repository and navigate to the project directory.
+    
+    ```bash
+    git clone https://github.com/example/example-site
+    cd example-site
+    ddev config
+    ddev start
+    ddev launch
+    ```
 
 ### Database Imports
 
