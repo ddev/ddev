@@ -8,9 +8,9 @@ A DDEV-Local installation consists of:
 * The docker images and containers created.
 * Any entries in /etc/hosts
 
-Please make backups of your databases before deleting projects or uninstalling. You can do this with `ddev snapshot` or `ddev export-db`. 
+Please make backups of your databases before deleting projects or uninstalling. You can do this with `ddev snapshot` or `ddev export-db`.
 
-You can use `ddev clean` to uninstall the vast majority of things DDEV has touched. For example, `ddev clean <project>` or `ddev clean --all`. 
+You can use `ddev clean` to uninstall the vast majority of things DDEV has touched. For example, `ddev clean <project>` or `ddev clean --all`.
 
 To uninstall just a project: `ddev delete <project>`. This removes any hostnames in `/etc/hosts` and removes your database. If you don't want it to make a database backup/snapshot on the way down: `ddev delete --omit-snapshot <project>`
 

@@ -134,6 +134,7 @@ Use `ddev logs -s db` to see what's wrong.
 The most common cause of the database container not coming up is changing the database type or version in the project configuration, so the database server daemon is unable to start using an existing configuration that is for a different type or version.
 
 To solve this:
+
 * Change the configuration in `.ddev/config.yaml` back to the original configuration.
 * Export the database with `ddev export-db`.
 * Delete the project with `ddev delete` (or stop the project and remove the database volume using `docker volume rm <project>-mariadb` or `docker volume rm <project>-postgres`).
@@ -266,7 +267,7 @@ Symbolic links are widely used but have specific limitations in many environment
 * **Symlinks to absolute paths**: If you have an absolute symlink to something like `/Users/xxx/somefile.txt` on the host, it will not be resolvable inside the container because `/Users` is not mounted there. Note that some tools, especially on Magento 2, may create symlinks to rooted paths, with targets like `/var/www/html/path/to/something`. These basically can't make it to the host, so may create errors.
 * **Windows restrictions on symlinks**: Inside the Docker container on Windows you may not be able to even create a symlink that goes outside the container.
 * **Mutagen restrictions on Windows symlinks**: On macOS and Linux (including WSL2) the default `.ddev/mutagen/mutagen.yml` chooses the `posix-raw` type of symlink handling (See [mutagen docs](https://mutagen.io/documentation/synchronization/symbolic-links)). This basically means that any symlink created will try to sync, regardless of whether it's valid in the other environment. However, Mutagen does not support posix-raw on traditional Windows, so ddev uses the `portable` symlink mode. So on Windows with Mutagen... symlinks have to be strictly limited to relative links that are inside the mutagen section of the project.
- 
+
 ### Delete and re-download docker images
   
 In just a few unusual cases, the actual downloaded docker images have somehow corrupted. In that case we can delete all images and they'll be re-downloaded or rebuilt. This does no harm, as everything is just rebuilt, but a `ddev start` make take extra time the first time while it downloads needed resources:

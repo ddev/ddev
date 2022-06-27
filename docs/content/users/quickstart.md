@@ -1,4 +1,4 @@
-# Get Started!
+# Get Started
 
 Once you have DDEV installed, getting a project going is just these steps:
 
@@ -327,7 +327,6 @@ Here's a quickstart instructions for a number of different environments:
     
     For more advanced tasks like adding elasticsearch, building and watching storefront and administration, see [susi.dev](https://susi.dev/ddev-shopware-6).
 
-
 === "Backdrop"
 
     To get started with Backdrop, clone the project repository and navigate to the project directory.
@@ -354,7 +353,6 @@ It is also possible to use phpMyAdmin for database imports, but that approach is
 
 !!! note "Backdrop configuration"
         In addition to importing a Backdrop database, you will need to extract a copy of your Backdrop project's configuration into the local `active` directory. The location for this directory can vary depending on the contents of your Backdrop `settings.php` file, but the default location is `[docroot]/files/config_[random letters and numbers]/active`. Please refer to the [Backdrop documentation](https://docs.backdropcms.org/) for more information on moving your Backdrop site into the DDEV environment.
-
 
 ### Configuration files
 

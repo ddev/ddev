@@ -10,7 +10,7 @@ Type `ddev` or `ddev -h`in a terminal window to see the available ddev commands.
 * `ddev ssh` takes you into the web container.
 * `ddev exec <command>` lets you execute any command inside the web container.
 * `ddev stop` stops a project and removes its memory usage (but does not throw away any data).
-* `ddev poweroff` stops all resources that DDEV is using. 
+* `ddev poweroff` stops all resources that DDEV is using.
 * `ddev delete` will destroy the database and DDEV's knowledge of the project, but does nothing to your code.
 
 ## Lots of other commands
@@ -19,7 +19,7 @@ Type `ddev` or `ddev -h`in a terminal window to see the available ddev commands.
 * `ddev sequelpro`, `ddev sequelace`, and `ddev tableplus` (macOS only, if the app is installed) give access to the Sequel Pro, Sequel Ace, or TablePlus database browser GUIs.
 * `ddev heidisql` (Windows/WSL2 only, if installed) gives access to the HeidiSQL database browser GUI.
 * `ddev import-db` and `ddev export-db` let you import or export a sql or compressed sql file.
-* `ddev composer` lets you run composer (inside the container), for example `ddev composer install` will do a full composer install for you without even needing composer on your computer. See [developer tools](developer-tools.md#ddev-and-composer). 
+* `ddev composer` lets you run composer (inside the container), for example `ddev composer install` will do a full composer install for you without even needing composer on your computer. See [developer tools](developer-tools.md#ddev-and-composer).
 * `ddev snapshot` makes a very fast snapshot of your database that can be easily and quickly restored with `ddev snapshot restore`.
 * `ddev share` requires ngrok and at least a free account on [ngrok.com](https://ngrok.com) so you can let someone in the next office or on the other side of the planet see your project and what you're working on. `ddev share -h` gives more info about how to set up ngrok.
 * `ddev xdebug` enables xdebug, `ddev xdebug off` disables it, `ddev xdebug status` shows status
@@ -39,7 +39,7 @@ In addition to the *commands* listed above, there are loads and loads of tools i
 
 * `ddev describe` tells how to access **MailHog**, which captures email in your development environment.
 * `ddev describe` tells how to use the built-in **phpMyAdmin** and `ddev launch -p` gives direct access to it.
-* Composer, git, node, npm, nvm, and dozens of other tools are installed in the web container, and you can access them via `ddev ssh` or `ddev exec`. 
+* Composer, git, node, npm, nvm, and dozens of other tools are installed in the web container, and you can access them via `ddev ssh` or `ddev exec`.
 * `ddev logs` gets you webserver logs; `ddev logs -s db` gets dbserver logs.
 * `sqlite3` and the `mysql` and `psql` clients are inside the web container (and `mysql` or `psql` client is also in the db container).
 
@@ -139,4 +139,3 @@ To remove a project's containers run `ddev stop` in the working directory of the
 `ddev stop` is *not* destructive. It removes the docker containers but does not remove the database for the project, and does nothing to your codebase. This allows you to have many configured projects with databases loaded without wasting docker containers on unused projects. **`ddev stop` does not affect the project code base and files.**
 
 To remove the imported database for a project, use the flag `--remove-data`, as in `ddev stop --remove-data`. This command will destroy both the containers and the imported database contents.
-

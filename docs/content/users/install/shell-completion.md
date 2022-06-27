@@ -4,7 +4,6 @@ Most people like to have shell completion on the command line. In other words, w
 
 Shells like bash and zsh need help to do this though, they have to know what the options are. DDEV-Local provides the necessary hint scripts, and if you use homebrew, they get installed automatically. But if you use oh-my-zsh, for example, you may have to manually install the hint script.
 
-
 === "Bash with Homebrew"
     The easiest way to use bash completion on either macOS or Linux is to install with homebrew. `brew install bash-completion`. When you install it though, it will warn you with something like this, which may vary on your system.
 
@@ -21,7 +20,6 @@ Shells like bash and zsh need help to do this though, they have to know what the
 
 === "Bash without Homebrew"
     The completion script is exactly the same, it's just that you have to install it yourself. Each system may have a slightly different technique, and you'll need to figure it out. On Debian/Ubuntu, you would use [these instructions](https://www.cyberciti.biz/faq/add-bash-auto-completion-in-ubuntu-linux/) to enable bash-completion, and then `sudo mkdir -p /etc/bash_completion.d && sudo cp ddev_bash_completion.sh /etc/bash_completion.d`. This deploys the ddev_bash_completion.sh script where it needs to be. Again, every Linux distro has a different technique, and you may have to figure yours out.
-
 
 === "Zsh Completion with Homebrew"
 

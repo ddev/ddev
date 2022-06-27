@@ -1,5 +1,6 @@
 
 <a name="opt-in-usage-information"></a>
+
 # Opt-In Usage Information
 
 When you start ddev for the first time (or install a new release) you'll be asked to decide whether to opt-in to send usage and error information to the developers. You can change this at any time by editing the `~/.ddev/global_config.yaml` file and setting `instrumentation_opt_in: true` or `instrumentation_opt_in: false`.

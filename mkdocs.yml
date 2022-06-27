@@ -180,7 +180,6 @@ nav:
   - 'Guides':
       - topics/cms_specific_help.md
       - topics/database_management.md
-      - topics/gitpod.md
       - topics/phpstorm.md
       - topics/sharing.md
       - topics/webserver.md

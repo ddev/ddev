@@ -74,6 +74,7 @@ Actions by those programs can also set off massive filesystem changes.
 You should run `ddev mutagen sync` in order to get things into sync, or simply wait.
 
 <a name="mutagen-config"></a>
+
 ### Advanced Mutagen configuration options
 
 The Mutagen project provides extensive configuration options that are [documented on the mutagen.io site](https://mutagen.io/documentation/introduction/configuration).
@@ -162,7 +163,6 @@ DDEV requires and provides a specific version of Mutagen, which you can see with
 Mutagen does not guarantee interoperability between different mutagen versions, so you may have trouble if you have another version of mutagen installed. You can find out what version of mutagen you may have installed outside of DDEV with `mutagen version`.
 
 You'll want your system version of mutagen to be the same as the one provided with DDEV if you're using mutagen for anything else, see the [Mutagen installation instructions](https://mutagen.io/documentation/introduction/installation) and install the required version.
-
 
 ## Using NFS to Mount the Project into the Web Container
 

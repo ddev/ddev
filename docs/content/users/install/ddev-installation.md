@@ -1,6 +1,6 @@
 # DDEV Installation
 
-Docker or an alternative is required before anything will work with DDEV. This is pretty easy on most environments; see the [docker installation](docker-installation.md) page to help sort out the details. 
+Docker or an alternative is required before anything will work with DDEV. This is pretty easy on most environments; see the [docker installation](docker-installation.md) page to help sort out the details.
 
 === "macOS (Homebrew)"
 
@@ -139,5 +139,3 @@ Docker or an alternative is required before anything will work with DDEV. This i
     * Move ddev to /usr/local/bin: `mv ddev /usr/local/bin/` (may require sudo), or another directory in your `$PATH` as preferred.
     * Run `ddev` to test your installation. You should see DDEV's command usage output.
     * As a one-time initialization, run `mkcert -install`, which may require your sudo password. Linux users may have to take additional actions as discussed below in [Linux `mkcert -install` additional instructions](#linux-mkcert--install-additional-instructions). If you don't have mkcert installed, you can install it from <https://github.com/FiloSottile/mkcert/releases>. Download the version for the correct architecture and `sudo mv <downloaded_file> /usr/local/bin/mkcert && sudo chmod +x /usr/local/bin/mkcert`.
-
-
