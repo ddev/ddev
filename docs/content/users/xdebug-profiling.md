@@ -1,8 +1,8 @@
-## Profiling with xdebug
+# Xdebug Profiling
 
 Although DDEV has more sophisticated profiling capabilities with [xhprof](xhprof-profiling.md) and [blackfire.io](blackfire-profiling.md) it also has  built-in support for [xdebug profiling](https://xdebug.org/).
 
-### Basic usage
+## Basic usage
 
 * Create the directory `.ddev/xdebug`, which is where the output files will be dumped.
 * Switch XDebug to profiling mode by adding this in `.ddev/php/xdebug.ini`
@@ -19,7 +19,7 @@ Although DDEV has more sophisticated profiling capabilities with [xhprof](xhprof
 * Analyze it with any call graph viewer, for example [kcachegrind](https://kcachegrind.github.io/html/Home.html).
 * When you're done, execute `ddev xdebug off` to avoid generating unneeded profile files.
 
-### Information Links
+## Information Links
 
 * [xdebug profiling docs](https://xdebug.org/docs/profiler)
 * [kcachegrind](https://kcachegrind.github.io/html/Home.html)

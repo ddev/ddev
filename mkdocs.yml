@@ -146,14 +146,16 @@ nav:
     - install/shell-completion.md
     - install/uninstall.md
   - 'ddev Basics':
-    - 'How DDEV Works': 'topics/how_ddev_works.md'
-    - 'Using the CLI': 'cli-usage.md'
-    - 'Adding ddev Hooks': 'extending-commands.md'
-    - 'Using Developer Tools with ddev': 'developer-tools.md'
-    - 'Step-Debugging PHP': 'step-debugging.md'
-    - 'Profiling with Blackfire': 'blackfire-profiling.md'
-    - 'Profiling with xhprof': 'xhprof-profiling.md'
-    - 'Profiling with Xdebug': 'xdebug-profiling.md'
+    - topics/how_ddev_works.md
+    - cli-usage.md
+    - extending-commands.md
+    - developer-tools.md
+  - 'Debugging and Profiling':
+    - step-debugging.md
+    - 'Profiling':
+      - blackfire-profiling.md
+      - xhprof-profiling.md
+      - xdebug-profiling.md
     - 'Troubleshooting': 'troubleshooting.md'
     - 'Frequently-Asked Questions (FAQ)': 'faq.md'
     - 'Configuring ddev': 'extend/config_yaml.md'

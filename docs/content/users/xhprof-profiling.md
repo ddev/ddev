@@ -1,8 +1,8 @@
-## Profiling with xhprof
+# xhprof Profiling
 
 DDEV-Local has built-in support for [xhprof](https://www.php.net/manual/en/book.xhprof.php). The official PECL xhprof extension does not support PHP5.6, but only PHP 7.\* and PHP 8.\*.
 
-### Basic xhprof Usage
+## Basic xhprof Usage
 
 * Enable xhprof with `ddev xhprof on` (or `ddev xhprof` or `ddev xhprof enable`) and see status with `ddev xhprof status`
 * `ddev xhprof on` will show you the URL you can use to see the xhprof analysis,  `https://<projectname>.ddev.site/xhprof` shows recent runs. It's often useful to just have a tab or window open with this URL and refresh it as needed.
@@ -14,7 +14,7 @@ DDEV-Local has built-in support for [xhprof](https://www.php.net/manual/en/book.
 
 For a tutorial on how to study the various xhprof reports, see the section "How to use XHPROF UI" in [A Guide to Profiling with XHPROF](https://inviqa.com/blog/profiling-xhprof). It takes a little time to get your eyes used to the reporting. (You do not need to do any of the installation described in that article, of course.)
 
-### Advanced xhprof configuration
+## Advanced xhprof configuration
 
 You can change the contents of the xhprof_prepend function - it's in `.ddev/xhprof/xhprof_prepend.php`.
 
@@ -22,7 +22,7 @@ For example, you may want to add a link to the profile run to the bottom of the 
 
 For another example, if you want to exclude the memory profiling so there are less columns to study, change `xhprof_enable(XHPROF_FLAGS_CPU + XHPROF_FLAGS_MEMORY);` to just `xhprof_enable(XHPROF_FLAGS_CPU);` in `.ddev/xhprof/xhprof_prepend.php` and remote the `#ddev-generated` at the top of the file. See the docs on [xhprof_enable()](https://www.php.net/manual/en/function.xhprof-enable.php).
 
-### Information Links
+## Information Links
 
 * [php.net xhprof](https://www.php.net/manual/en/book.xhprof.php)
 * [Old facebook xhprof docs](http://web.archive.org/web/20110514095512/http://mirror.facebook.net/facebook/xhprof/doc.html)

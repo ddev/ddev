@@ -1,8 +1,8 @@
-## Profiling with Blackfire.io
+# Blackfire.io
 
 DDEV-Local has built-in [blackfire.io](https://blackfire.io) integration.
 
-### Basic Blackfire Usage (Using Browser Plugin)
+## Basic Blackfire Usage (Using Browser Plugin)
 
 1. Create an account on [blackfire.io](https://blackfire.io)
 2. Install the Chrome or Firefox [browser plugin](https://blackfire.io/docs/profiling-cookbooks/profiling-http-via-browser).
@@ -12,7 +12,7 @@ DDEV-Local has built-in [blackfire.io](https://blackfire.io) integration.
 6. `ddev blackfire on` to enable, `ddev blackfire off` to disable, `ddev blackfire status` to see status.
 7. With Blackfire enabled, you can use the [browser extension](https://blackfire.io/docs/profiling-cookbooks/profiling-http-via-browser).
 
-### Profiling with the Blackfire CLI
+## Profiling with the Blackfire CLI
 
 The Blackfire CLI is built into the web container, so no installation needs to take place.
 
@@ -33,7 +33,7 @@ The Blackfire CLI is built into the web container, so no installation needs to t
 3. `ddev blackfire on`
 4. Click the "blackfire" browser extension to profile
 
-#### Examples of using the Blackfire CLI
+## Examples of using the Blackfire CLI
 
 * `ddev blackfire on` and `ddev blackfire off`
 * `ddev exec blackfire curl https://<yoursite>.ddev.site`

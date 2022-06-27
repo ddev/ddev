@@ -1,4 +1,4 @@
-## Step-debugging with ddev and xdebug
+# Step-debugging with Xdebug
 
 Every ddev project is automatically configured with xdebug so that popular IDEs can do step-debugging of PHP code. It is disabled by default for performance reasons, so you'll need to enable it in your config.yaml.
 
@@ -17,20 +17,20 @@ For more background on XDebug see [XDebug documentation](https://xdebug.org/docs
 
 For each IDE the link to their documentation is provided, and the skeleton steps required are listed here.
 
-### Setup for Various IDEs
+## Setup for Various IDEs
 
 * [PhpStorm](#phpstorm-debugging-setup)
 * [Visual Studio Code (vscode)](#visual-studio-code-vscode-debugging-setup)
 
 <a name="phpstorm"></a>
 
-### PhpStorm Debugging Setup
+## PhpStorm Debugging Setup
 
 [PhpStorm](https://www.jetbrains.com/phpstorm/download) is a leading PHP development IDE with extensive built-in debugging support. It provides two different ways to do debugging. One requires very little effort in the PhpStorm IDE (they call it zero-configuration debugging) and the other requires you to set up a "run configuration", and is basically identical to the Netbeans or Eclipse setup.
 
 **If you are using PhpStorm inside WSL2 (or perhaps other Linux configurations), under `Help→ Edit Custom VM Options`, add an additional line: `-Djava.net.preferIPv4Stack=true` This makes PhpStorm listen for Xdebug using IPV4; the Linux version of PhpStorm seems to default to using only IPV6.**
 
-#### PhpStorm Zero-Configuration Debugging
+### PhpStorm Zero-Configuration Debugging
 
 PhpStorm [zero-configuration debugging](https://confluence.jetbrains.com/display/PhpStorm/Zero-configuration+Web+Application+Debugging+with+Xdebug+and+PhpStorm) will automatically detect a connection and offer to create a "server", a file mapping from your workstation to the container. This means you only have to:
 
@@ -45,7 +45,7 @@ Note when using this recommended option:
 1. Please use the latest DDEV version.
 2. Under Run >> Edit Configurations, check that there are no "Servers" already defined. PhpStorm will create a new "Server" (file mapping) for you as discussed above, but only if you don't already have one. You can delete all servers and have PhpStorm create a new one, or you can create/edit an existing server as discussed below.
 
-#### PhpStorm "Run/Debug configuration" Debugging
+### PhpStorm "Run/Debug configuration" Debugging
 
 PhpStorm [run/debug configurations](https://www.jetbrains.com/help/phpstorm/creating-and-editing-run-debug-configurations.html) require slightly more up-front work but can offer more flexibility and may be easier for some people.
 
@@ -62,14 +62,14 @@ Server creation:
 
 ![PhpStorm server creation](images/phpstorm_config_server_config.png)
 
-#### PhpStorm and Command-Line Debugging
+### PhpStorm and Command-Line Debugging
 
 If you need to debug command-line PHP processes, especially code that is outside the docroot, the environment variable PHP_IDE_CONFIG is already set inside the web container, so you don't have to do much more.
 
 However, if you have not yet used PhpStorm with xdebug for a regular web request, do that to automatically create the PhpStorm "server" with the same name as your primary URL (see "Languages and Frameworks" -> "PHP" -> "Servers"). The key job of the "server" is to map filesystem locations on the workstation (your computer) to filesystem locations on the remote server (in this case the ddev-webserver container). Often, PhpStorm has automatically set up a mapping that doesn't include the entire project (so the vendor directory is not mapped, for example). So map the top-level directory of your project to /var/www/html in the container, as in this image:
 ![PhpStorm mapping](images/PHPStormServerMapping.png)
 
-### Visual Studio Code (vscode) Debugging Setup
+## Visual Studio Code (vscode) Debugging Setup
 
 1. Install the [php-debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension.
 2. Update the project's [launch.json] (in `.vscode/launch.json`)  to add "Listen for xdebug" (see [config snippet](snippets/launch.json)).  For more on launch.json, see [vscode docs](https://code.visualstudio.com/docs/editor/debugging#_launch-configurations).
@@ -80,7 +80,7 @@ However, if you have not yet used PhpStorm with xdebug for a regular web request
 
 Note that if you're using vscode on Windows with WSL2, you'll want the "PHP Debug" extension enabled in your distro (for example, Ubuntu). You'll also need the "Remote - WSL" extension enabled. vscode will suggest both of these to you if you have WSL2 enabled and a PHP project.
 
-### Using Xdebug on a Port Other than the Default
+## Using Xdebug on a Port Other than the Default 9003
 
 By default, ddev is set up to contact the default port, port 9003 on your IDE. However, if you have something else listening on that port or your IDE does not yet default to 9003, you'll need to change the port. (PhpStorm and vscode have switch to supporting 9003 instead of 9000 for some time now.)
 
@@ -95,7 +95,7 @@ xdebug.client_port=9000
 
 NOTE: If you are using a PHP version below PHP7.2, you will be using Xdebug version 2.x, instead of 3.x. In that case the port config should be `xdebug.remote_port` instead.
 
-### Troubleshooting Xdebug
+## Troubleshooting Xdebug
 
 The basic thing to understand about xdebug is that it's a network protocol. Your IDE (like PhpStorm) will listen on the xdebug port (9003 by default in v1.19+, previously 9000). Then if xdebug is enabled in the ddev web container with `ddev xdebug on`, then php inside the container will try to open a TCP connection to the IDE. Docker's networking places the host-side listening IDE at `host.docker.internal:9003`. So you have to make sure that the network connection is clear and can be made and everything should work. Here are basic steps to take to sort out any difficulty:
 
