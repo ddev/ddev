@@ -1,48 +1,49 @@
-## DDEV-Local Command-Line Usage
+# Using the `ddev` command
 
-Type `ddev` or `ddev -h`in a terminal window to see the available ddev commands. There are commands to configure a project, start, stop, describe, etc. Each command also has help. For example, `ddev stop -h` shows that `ddev rm` is an alias, and shows all the many flags that can be used with `ddev stop`.
+Type `ddev` or `ddev -h`in a terminal window to see the available ddev commands. There are commands to configure a project, start, stop, describe, etc. Each command also has help using `ddev help <command>` or `ddev command -h`. For example, `ddev help snapshot` will show help and examples for the snapshot command.
 
-## Favorite Commands
+* `ddev config` configures a project's type and docroot.
+* `ddev start` starts up a project.
+* `ddev launch` opens a web browser showing the project.
+* `ddev list` shows current projects and their state.
+* `ddev describe` gives all the info about the current project.
+* `ddev ssh` takes you into the web container.
+* `ddev exec <command>` lets you execute any command inside the web container.
+* `ddev stop` stops a project and removes its memory usage (but does not throw away any data).
+* `ddev poweroff` stops all resources that DDEV is using. 
+* `ddev delete` will destroy the database and DDEV's knowledge of the project, but does nothing to your code.
 
-Each of these commands has full help. For example, `ddev start -h` or `ddev help start`. Just typing `ddev` will get you a list of available commands.
+## Lots of other commands
 
-* `ddev config` configures a project for ddev, creating a .ddev directory according to your responses. It should be executed in the project (repository) root.
-* `ddev start` and `ddev stop` start and stop the containers that comprise a project. `ddev restart` just does a stop and a start. `ddev poweroff` stops all ddev-related containers and projects.
-* `ddev describe` or `ddev describe <projectname>` gives you full details about the project, what ports it uses, how to access them, etc. (Change the format with `ddev config global --table-style=bright` or `bold` or `default`)
-* `ddev list` shows running projects. (Change the format with `ddev config global --table-style=bright` or `bold` or `default`)
 * `ddev mysql` gives direct access to the mysql client and `ddev psql` to the PostgreSQL `psql` client.
 * `ddev sequelpro`, `ddev sequelace`, and `ddev tableplus` (macOS only, if the app is installed) give access to the Sequel Pro, Sequel Ace, or TablePlus database browser GUIs.
 * `ddev heidisql` (Windows/WSL2 only, if installed) gives access to the HeidiSQL database browser GUI.
 * `ddev import-db` and `ddev export-db` let you import or export a sql or compressed sql file.
-* `ddev composer` lets you run composer (inside the container), for example `ddev composer install` will do a full composer install for you without even needing composer on your computer. See [developer tools](developer-tools.md#ddev-and-composer). Composer version 2 is the default, but you can also configure composer version 1.
+* `ddev composer` lets you run composer (inside the container), for example `ddev composer install` will do a full composer install for you without even needing composer on your computer. See [developer tools](developer-tools.md#ddev-and-composer). 
 * `ddev snapshot` makes a very fast snapshot of your database that can be easily and quickly restored with `ddev snapshot restore`.
 * `ddev share` requires ngrok and at least a free account on [ngrok.com](https://ngrok.com) so you can let someone in the next office or on the other side of the planet see your project and what you're working on. `ddev share -h` gives more info about how to set up ngrok.
-* `ddev ssh` opens a bash session in the web container (or other container).
-* `ddev launch` or `ddev launch some/uri` will launch a browser with the current project's URL (or a full URL to `/some/uri`). `ddev launch -p` will launch the phpMyAdmin UI, and `ddev launch -m` will launch the MailHog UI.
-* `ddev delete` is the same as `ddev stop --remove-data` and will delete a project's database and ddev's record of the project's existence. It doesn't touch your project or code. `ddev delete -O` will omit the snapshot creation step that would otherwise take place, and `ddev delete images` gets rid of spare Docker images you may have on your machine.
 * `ddev xdebug` enables xdebug, `ddev xdebug off` disables it, `ddev xdebug status` shows status
 * `ddev xhprof` enables xhprof, `ddev xhprof off` disables it, `ddev xhprof status` shows status
 * `ddev drush` (Drupal and Backdrop only) gives direct access to the drush CLI
 * `ddev artisan` (Laravel only) gives direct access to the Laravel artisan CLI
 * `ddev magento` (Magento2 only) gives access to the magento CLI
-* `ddev yarn` gives direct access to the yarn CLI
-* `ddev config global --simple-formatting` tells ddev to not try to make a fancy table in `ddev describe` and `ddev list`
+* `ddev yarn` and `ddev npm` give direct access to the yarn/npm CLIs
 
 ## Node.js, npm, nvm, and yarn
 
 `nodejs`, `npm`, `nvm` and `yarn` are preinstalled in the web container. You can configure the default value of the installed nodejs version with the `nodejs_version` option in `.ddev/config.yaml` or with `ddev config --nodejs_version`. You can also override that with any value using the built-in `nvm` in the web container or with `ddev nvm`, for example `ddev nvm install 6`. There is also a `ddev yarn` command.
 
-## Partial Bundled Tools List
+## More bundled tools
 
 In addition to the *commands* listed above, there are loads and loads of tools included inside the containers:
 
 * `ddev describe` tells how to access **MailHog**, which captures email in your development environment.
 * `ddev describe` tells how to use the built-in **phpMyAdmin** and `ddev launch -p` gives direct access to it.
-* Composer, git, node, npm, nvm, and dozens of other tools are installed in the web container, and you can access them via `ddev ssh` or `ddev exec`. Composer v2 is the default. To use composer v1, `ddev config --composer-version=1`.
+* Composer, git, node, npm, nvm, and dozens of other tools are installed in the web container, and you can access them via `ddev ssh` or `ddev exec`. 
 * `ddev logs` gets you webserver logs; `ddev logs -s db` gets dbserver logs.
 * `sqlite3` and the `mysql` and `psql` clients are inside the web container (and `mysql` or `psql` client is also in the db container).
 
-### Exporting a Database
+## Exporting a Database
 
 You can export a database with `ddev export-db`, which outputs to stdout or with options to a file:
 
@@ -52,7 +53,7 @@ ddev export-db --gzip=false --file=/tmp/db.sql
 ddev export-db >/tmp/db.sql.gz
 ```
 
-### Importing static file assets
+## `ddev import-files`
 
 To import static file assets for a project, such as uploaded images and documents, use the command `ddev import-files`. This command will prompt you to specify the location of your import asset, then import the assets into the project's upload directory. To define a custom upload directory, set the `upload_dir` key in your project's `config.yaml`. If no custom upload directory is defined, the default will be used:
 
@@ -71,33 +72,15 @@ Import path:
 Successfully imported files for drupal8
 ```
 
-#### Supported archive types for file import
+`ddev import-files` supports the following file types:  `.tar`, `.tar.gz`, `.tar.xz`, `.tar.bz2`, `.tgz`, or `.zip`.
 
-Static asset import supports the following file types:
-
-* A directory containing static assets
-* (Gzipped) Tarball Archive (.tar, .tar.gz, .tgz)
-* Zip Archive (.zip)
-
-If a Tarball Archive or Zip Archive is provided for the import, you will be provided an additional prompt, allowing you to specify a path within the archive to use for the import asset. In the following example, the assets we want to import reside at "web/sites/default/files":
-
-```bash
-ddev import-files
-Provide the path to the directory or archive you wish to import. Please note, if the destination directory exists, it will be replaced with the import assets specified here.
-Import path:
-~/Downloads/site-backup.tar.gz
-You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents
-Archive extraction path:
-web/sites/default/files
-Successfully imported files for drupal8
-
-```
-
-#### Non-interactive usage for ddev import-files
+It can also import directory containing static assets.
 
 If you want to use import-files without answering prompts, you can use the `--src` flag to provide the path to the import asset. If you are importing an archive, and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag. Example:
 
 `ddev import-files --src=/tmp/files.tgz`
+
+See `ddev help import-files` for more examples.
 
 ## Snapshotting and restoring a database
 
@@ -145,7 +128,7 @@ The `ddev ssh` command will open an interactive bash or sh shell session to the 
 
 If you want to use your personal ssh keys within the web container, that's possible. Use `ddev auth ssh` to add the keys from your ~/.ssh directory and provide a passphrase, and then those keys will be usable from within the web container. You generally only have to `ddev auth ssh` one time per computer reboot. This is a very popular approach for accessing private composer repositories, or for using drush aliases against remote servers.
 
-### Log Access
+### `ddev logs`
 
 The `ddev logs` command allows you to easily view error logs from the web container (both nginx/apache and php-fpm logs are concatenated). To follow the log (watch the lines in real time), run `ddev logs -f`. When you are done, press CTRL+C to exit from the log trail. Similarly, `ddev logs -s db` will show logs from a running or stopped db container.
 
@@ -157,46 +140,3 @@ To remove a project's containers run `ddev stop` in the working directory of the
 
 To remove the imported database for a project, use the flag `--remove-data`, as in `ddev stop --remove-data`. This command will destroy both the containers and the imported database contents.
 
-## DDEV Command Auto-Completion
-
-Bash auto-completion is available for ddev. Bash auto-completion is included in the homebrew install on macOS and Linux. For other platforms, download the [latest ddev release](https://github.com/drud/ddev/releases) tarball and locate `ddev_bash_completion.sh` inside it. This can be installed wherever your bash_completions.d is. For example, `cp ddev_bash_completion.sh /etc/bash_completion.d/ddev`.
-
-<a name="opt-in-usage-information"></a>
-
-## Opt-In Usage Information
-
-When you start ddev for the first time (or install a new release) you'll be asked to decide whether to opt-in to send usage and error information to the developers. You can change this at any time by editing the `~/.ddev/global_config.yaml` file and setting `instrumentation_opt_in: true` or `instrumentation_opt_in: false`.
-
-If you do choose to send the diagnostics it helps us tremendously in our effort to improve this tool. What information gets sent? Here's an example of what we might see:
-
-![usage_stats](images/usage_stats.png)
-
-Of course if you have any reservations about this, please just opt-out (`ddev config global --instrumentation-opt-in=false`). If you have any problems or concerns with it, we'd like to know.
-
-## Using DDEV offline, and top-level-domain options
-
-DDEV-Local attempts to make offline use work as well as possible, and you really shouldn't have to do anything to make it work:
-
-* It doesn't attempt instrumentation or update reporting if offline
-* It uses /etc/hosts entries instead of DNS resolution if DNS resolution fails
-
-However, it does not (yet) attempt to prevent docker pulls if a new docker image is required, so you'll want to make sure that you try a `ddev start` before going offline to make sure everything has been pulled.
-
-If you have a project running when you're online (using DNS for name resolution) and you then go offline, you'll want to do a `ddev restart` to get the hostname added into /etc/hosts for name resolution.
-
-You have general options as well:
-
-In `.ddev/config.yaml` `use_dns_when_possible: false` will make ddev never try to use DNS for resolution, instead adding hostnames to /etc/hosts. You can also use `ddev config --use-dns-when-possible=false` to set this configuration option.
-In `.ddev/config.yaml` `project_tld: example.com` (or any other domain) can set ddev to use a project that could never be looked up in DNS. You can also use `ddev config --project-tld=example.com`
-
-You can also set up a local DNS server like dnsmasq (Linux and macOS, `brew install dnsmasq`) or ([unbound](https://github.com/NLnetLabs/unbound) or many others on Windows) in your own host environment that serves the project_tld that you choose, and DNS resolution will work just fine. You'll likely want a wildcard A record pointing to 127.0.0.1 (on most ddev installations). If you use dnsmasq you must configure it to allow DNS rebinding.
-
-If you're using a browser on Windows, accessing a DDEV project in WSL2, Windows will attempt to resolve the site name via DNS. If you do not have an internet connection, this will fail. To resolve this, update your `C:\Windows\System32\drivers\etc\hosts` file.
-
-```
-127.0.0.1 example.ddev.site
-```
-
-* Note: You must have administrative privileges to save this file.
-
-* See [Windows Hosts File limited to 10 hosts per IP address line](https://ddev.readthedocs.io/en/stable/users/troubleshooting/#windows-hosts-file-limited-to-10-hosts-per-ip-address-line) for additional troubleshooting.

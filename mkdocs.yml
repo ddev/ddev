@@ -136,8 +136,8 @@ markdown_extensions:
 - pymdownx.tilde
 
 nav:
-  - index.md
-  - 'Getting started':
+  - 'Start!':
+    - index.md
     - "Installing":
       - install/index.md
       - install/docker-installation.md
@@ -186,3 +186,6 @@ nav:
       - topics/webserver.md
       - topics/whats_in_ddev_dir.md
       - 'Version History': 'topics/version-history.md'
+  - 'Details':
+      - details/offline-usage.md
+      - details/opting-in.md

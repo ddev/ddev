@@ -1,4 +1,4 @@
-## Frequently-Asked Questions (FAQ)
+# Frequently-Asked Questions (FAQ)
 
 What operating systems will DDEV-Local work with?
 : DDEV-Local works nearly anywhere Docker will run, including macOS, Windows 10/11 Pro/Enterprise,  Windows 10/11 Home, and every Linux variant we've ever tried. It also runs in many Linux-like environments, for example ChromeOS (in Linux machine) and Windows 10/11's WSL2. In general, DDEV works the same on each of these platforms, as all the important work is done inside identical Docker containers.
