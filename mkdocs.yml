@@ -138,13 +138,15 @@ markdown_extensions:
 
 nav:
   - index.md
-  - 'Install':
-    - install/index.md
-    - install/docker-installation.md
-    - install/ddev-installation.md
-    - install/performance.md
-    - install/shell-completion.md
-    - install/uninstall.md
+  - 'Getting started':
+    - "Installing":
+      - install/index.md
+      - install/docker-installation.md
+      - install/ddev-installation.md
+      - install/performance.md
+      - install/shell-completion.md
+      - install/uninstall.md
+    - quickstart.md
   - 'Basics':
     - topics/how_ddev_works.md
     - cli-usage.md
@@ -154,34 +156,34 @@ nav:
     - developer-tools.md
     - alternate-uses.md
   - 'Configuration':
-      - 'Choosing Database Server Types': 'extend/database_types.md'
-      - 'Adding Additional Hostnames': 'extend/additional-hostnames.md'
-      - extend/config_yaml.md
-  - 'Debugging and Profiling':
+      - extend/database_types.md
+      - extend/additional-hostnames.md
+      - configuration/config_yaml.md
+  - 'Extending':
+    - extend/customization-extendibility.md
+    - extend/additional-services.md
+    - extend/custom-compose-files.md
+    - extend/customizing-images.md
+    - extend/custom-commands.md
+    - extend/in-container-configuration.md
+    - extend/custom-tls-certificates.md
+  - 'Debugging & Profiling':
       - step-debugging.md
       - 'Profiling':
           - blackfire-profiling.md
           - xhprof-profiling.md
           - xdebug-profiling.md
-  - 'Extending ddev':
-    - 'Extending and Customizing Environments': 'extend/customization-extendibility.md'
-    - 'Adding Additional Services': 'extend/additional-services.md'
-    - 'Defining Custom Services': 'extend/custom-compose-files.md'
-    - 'Customizing Docker Images': 'extend/customizing-images.md'
-    - 'Adding Custom Commands': 'extend/custom-commands.md'
-    - 'Configuring Containers': 'extend/in-container-configuration.md'
-    - 'Adding Custom TLS Certificates': 'extend/custom-tls-certificates.md'
-  - 'Integrating with Hosting Providers':
-    - 'Introduction': 'providers/provider-introduction.md'
-    - 'Acquia': 'providers/acquia.md'
-    - 'Pantheon': 'providers/pantheon.md'
-    - 'Platform.sh': 'providers/platform.md'
-  - 'Specific Guides':
-      - 'Configuring a CMS': 'topics/cms_specific_help.md'
-      - 'Managing Databases': 'topics/database_management.md'
-      - 'Using Gitpod.io': 'topics/gitpod.md'
-      - 'Integrating with PhpStorm': 'topics/phpstorm.md'
-      - 'Sharing Your Project': 'topics/sharing.md'
-      - 'Configuring Web Servers': 'topics/webserver.md'
-      - "Understanding the .ddev Directory": 'topics/whats_in_ddev_dir.md'
+  - 'Hosting integration':
+    - providers/index.md
+    - providers/acquia.md
+    - providers/pantheon.md
+    - providers/platform.md
+  - 'Guides':
+      - topics/cms_specific_help.md
+      - topics/database_management.md
+      - topics/gitpod.md
+      - topics/phpstorm.md
+      - topics/sharing.md
+      - topics/webserver.md
+      - topics/whats_in_ddev_dir.md
       - 'Version History': 'topics/version-history.md'

@@ -4,7 +4,7 @@ It can be a little confusing trying to understand all the things that are in the
 
 * `apache` directory: Apache configuration for those using `webserver_type: apache-fpm`. There are docs and the default configuration in there. See [apache customization docs](../extend/customization-extendibility.md#providing-custom-apache-configuration).
 * `commands` subdirectories: Contains DDEV shell commands (both built-in and custom) that can run on the host or inside any container. See [docs](../extend/custom-commands.md).
-* `config.yaml` file: This is the basic configuration file for the project. Take a look at the comments below for suggestions about things you can do, or look in [docs](../extend/config_yaml.md)).
+* `config.yaml` file: This is the basic configuration file for the project. Take a look at the comments below for suggestions about things you can do, or look in [docs](../configuration/config_yaml.md)).
 * `config.*.yaml` files: You can add configuration here that overrides the  config in the `config.yaml`. This is nice for situations where one developer's project needs one-off configuration. For example, you could turn on or off `nfs-mount-enabled` or `mutagen-enabled` or use a different database type. By default, these are gitignored, so will not get checked in. See [docs](../extend/customization-extendibility.md#extending-configyaml-with-custom-configyaml-files)
 * `db-build` directory: Can be used to provide a custom Dockerfile for the database container.
 * `db_snapshots` directory: This is where snapshots go when you `ddev snapshot`. If you don't need these backups, you can delete anything there at any time. See [snapshot docs](../cli-usage.md#snapshotting-and-restoring-a-database).
@@ -15,7 +15,7 @@ It can be a little confusing trying to understand all the things that are in the
 * `nginx` directory: (deprecated) can be used for add-on nginx snippets.
 * `nginx_full` directory: Contains the nginx configuration used by the web container, which can be customized following the instructions there. See [providing custom nginx configuration](../extend/customization-extendibility.md#providing-custom-nginx-configuration).
 * `postgres` directory: contains `postgres/postgresql.conf` which can be edited if needed (and remove the `#ddev-generated` line at the top to take it over.)
-* `providers` directory: Contains examples and implementations showing ways to configure DDEV so `ddev pull` can work. You can use `ddev pull` with hosting providers like Acquia or Platform.sh or Pantheon and also can use it with local files or custom database/files sources. See [providers docs](../providers/provider-introduction.md)
+* `providers` directory: Contains examples and implementations showing ways to configure DDEV so `ddev pull` can work. You can use `ddev pull` with hosting providers like Acquia or Platform.sh or Pantheon and also can use it with local files or custom database/files sources. See [providers docs](../providers/index.md)
 * `web-build` directory: You can add a custom Dockerfile that adds things into the docker image used for your web container. See [Customizing images](../extend/customizing-images.md).
 * `xhprof` directory: Contains the `xhprof_prepend.php` file that can be used to customize xhprof behavior for different types of website. See [xhprof profiling](../xhprof-profiling.md).
 

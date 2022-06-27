@@ -1,4 +1,4 @@
-## Introduction to Hosting Provider Integration
+# Hosting Provider Integration
 
 DDEV offers hosting provider integration and sample integrations for Pantheon.io, Platform.sh and Acquia hosting, along with other examples.
 
@@ -24,12 +24,12 @@ Each provider recipe is a file named `<provider>.yaml` and consists of several m
 
 The [environment variables provided to custom commands](../extend/custom-commands.md#environment-variables-provided) are also available for use in these recipes.
 
-### Example Integrations and Hints
+## Example Integrations and Hints
 
 * All of the [supplied integrations](https://github.com/drud/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers) are really just examples of what you can do.
 * You can name a provider anything you want. For example, an Acquia integration doesn't have to be named "acquia", it can be named "upstream", for example. This is a great technique for [downloading a particular multisite](https://stackoverflow.com/a/68553116/215713)
 
-### Provider Debugging
+## Provider Debugging
 
 You can uncomment the `set -x` in each stanza to see more of what's going on. It really helps. Watch it as you do a `ddev pull <whatever>`.
 

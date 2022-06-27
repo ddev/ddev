@@ -32,6 +32,10 @@ DDEV works great on macOS, Windows WSL2, traditional Windows, and Linux. It work
     * RAM: 8GB
     * Storage: 256GB
 
+=== "Gitpod.io"
+
+    With gitpod.io all you need is a browser and an internet connection. You don't have to install anything at all. You can use any kind of computer that has a browser, or tablet, or whatever you like.
+
 !!!note "Using DDEV alongside other development environments"
 
     DDEV by default uses ports 80 and 443 on your system when projects are running. If you are using another local development environment (like Lando or Docksal or a native setup) you can either stop the other environment or configure DDEV to use different ports. See [troubleshooting](troubleshooting.md#unable-listen) for more detailed problem-solving. It's easiest just to stop the other environment when you want to use DDEV, and stop DDEV when you want to use the other environment.
