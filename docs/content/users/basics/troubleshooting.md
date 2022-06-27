@@ -222,7 +222,7 @@ While ddev can create a webserver and a docker network infrastructure for a proj
 * DDEV assumes that hostnames can be resolved within 3 seconds. That assumption is not valid on all networks or computers, so you can increase the amount of time it waits for resolution with `ddev config global --internet-detection-timeout-ms=5000` for example.
 * If DDEV detects that it can't look up one of the hostnames assigned to your project for that or other reasons, it will try to add that to the hosts file on your computer, but of course that requires administrative privileges (sudo or Windows UAC)
     * This technique may not work on Windows WSL2, see below.
-    * Only 10 hosts are valid on a line on traditional Windows, see [below](#windows-hosts-file-limited); beyond that hostnames are ignored.
+    * Only 10 hosts are valid on a line on traditional Windows, see [below](#windows-hosts-file-limited-to-10-hosts-per-ip-address-line); beyond that hostnames are ignored.
 
 ## Windows WSL2 name resolution on non-ddev.site hostnames or when not internet-connected
 
@@ -243,8 +243,6 @@ In this case, you can
 2. Most computers can use most relaxed DNS resolution if they are not on corporate intranets that have non-internet DNS. So for example, the computer can be set to use 8.8.8.8 (Google) or 1.1.1.1 (Cloudflare) for DNS name resolution.
 3. If you have control of the router, you can usually change its DHCP settings to choose a DNS server to a public, relaxed DNS server as in #2.
 4. You can live with ddev trying to edit the /etc/hosts file, which it only has to do when a new name is added to a project.
-
-<a name="windows-hosts-file-limited"></a>
 
 ## Windows Hosts File limited to 10 hosts per IP address line
 

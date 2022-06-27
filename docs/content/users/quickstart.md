@@ -339,7 +339,7 @@ Here's a quickstart instructions for a number of different environments:
     ddev launch
     ```
 
-### Configuration files
+## Configuration files
 
 **Note:** If you're providing the settings.php or wp-config.php and DDEV is creating the settings.ddev.php (or wp-config-local.php, AdditionalConfig.php, or similar), the main settings file must explicitly include the appropriate DDEV-generated settings file.  Any changes you need should be included somewhere that loads after DDEV's settings file, for example in Drupal's settings.php *after* settings.ddev.php is included. (see "Adding Configuration" below).
 
@@ -377,7 +377,7 @@ How do you know if DDEV manages a settings file? You will see the following comm
 
 ```
 
-#### Adding configuration
+### Adding configuration
 
 **Drupal and Backdrop**:  In settings.php, enable loading settings.local.php after settings.ddev.php is included (create a new one if it doesn't already exist), and make changes there (wrapping with `if (getenv('IS_DDEV_PROJECT') == 'true')` as needed).
 

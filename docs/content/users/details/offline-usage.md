@@ -23,6 +23,7 @@ If you're using a browser on Windows, accessing a DDEV project in WSL2, Windows 
 ```
 
 !!!note "Administrative privileges required"
+
     You must have administrative privileges to save the Windows hosts file.
 
-* See [Windows Hosts File limited to 10 hosts per IP address line](../../troubleshooting/#windows-hosts-file-limited) for additional troubleshooting.
+* See [Windows Hosts File limited to 10 hosts per IP address line](../basics/troubleshooting.md#windows-hosts-file-limited-to-10-hosts-per-ip-address-line).
