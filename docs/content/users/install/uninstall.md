@@ -1,4 +1,4 @@
-# Uninstalling DDEV-Local or Removing Extra Components
+# Uninstalling DDEV
 
 A DDEV-Local installation consists of:
 

@@ -1,4 +1,4 @@
-# Shell Completion/Autocompletion
+# Shell Completion & Autocomplete
 
 Most people like to have shell completion on the command line. In other words, when you're typing a command, you can hit `<TAB>` and the shell will show you what the options are. For example, if you type `ddev <TAB>`, you'll see all the possible commands. `ddev debug <TAB>` will show you the options for the command. And `ddev list -<TAB>` will show you all the flags available for `ddev list`.
 

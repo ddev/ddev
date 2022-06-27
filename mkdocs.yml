@@ -6,11 +6,11 @@ repo_url: https://github.com/drud/ddev
 repo_name: drud/ddev
 edit_uri: blob/master/docs/content
 copyright: Localdev Foundation
-extra_javascript:
-- 'assets/jquery-3.5.1.min.js'
-- 'assets/extra.js'
-extra_css:
-- 'assets/extra.css'
+#extra_javascript:
+#- 'assets/jquery-3.5.1.min.js'
+#- 'assets/extra.js'
+#extra_css:
+#- 'assets/extra.css'
 site_author: Localdev Foundation
 site_description: >-
   Do local website development on your computer or in the cloud with DDEV.
@@ -140,7 +140,6 @@ nav:
   - index.md
   - 'Install':
     - install/index.md
-    - install/ddev-installation.md
     - install/docker-installation.md
     - install/ddev-installation.md
     - install/performance.md
