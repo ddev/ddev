@@ -10,4 +10,4 @@ jobs:
     steps:
     - uses: styfle/cancel-workflow-action@0.10.0
       with:
-        workflow_id: ${{ github.event.workflow.id }}
+        workflow_id: all
