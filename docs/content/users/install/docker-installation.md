@@ -72,6 +72,9 @@
     !!! warning "Don't use `sudo` with the docker command"
         Please don't use `sudo` with docker. If you're needing it, you haven't finished the installation. Don't use `sudo` with ddev, except the rare case where you need the `ddev hostname` command.
 
+    !!!warning "Docker Desktop for Linux is not yet mature enough to use"
+        The release of Docker Desktop for Linux in 2022 was welcomed by many, but the system does not yet seem stable enough for predictable use, and has some of the problems of Docker Desktop on other platforms. We recommend that you stay with the traditional docker-ce installation described here.
+
     Docker installation on Linux depends on what flavor you're using. Where possible the Ubuntu/Deb/yum repository is the preferred technique.
 
     * [Ubuntu](https://docs.docker.com/install/linux/docker-ce/ubuntu/)

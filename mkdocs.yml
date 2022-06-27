@@ -137,13 +137,15 @@ markdown_extensions:
 - pymdownx.tilde
 
 nav:
-  - 'Home': 'index.md'
+  - index.md
   - 'Install':
-    - 'install/docker-installation.md'
-    - 'install/performance.md'
-    - 'install/shell-completion.md'
-    - 'install/special-environments.md'
-    - 'install/uninstall.md'
+    - install/index.md
+    - install/ddev-installation.md
+    - install/docker-installation.md
+    - install/ddev-installation.md
+    - install/performance.md
+    - install/shell-completion.md
+    - install/uninstall.md
   - 'ddev Basics':
     - 'How DDEV Works': 'topics/how_ddev_works.md'
     - 'Using the CLI': 'cli-usage.md'

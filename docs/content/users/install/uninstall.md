@@ -1,4 +1,4 @@
-## Uninstalling DDEV-Local or Removing Extra Components
+# Uninstalling DDEV-Local or Removing Extra Components
 
 A DDEV-Local installation consists of:
 
@@ -8,9 +8,11 @@ A DDEV-Local installation consists of:
 * The docker images and containers created.
 * Any entries in /etc/hosts
 
-To uninstall a project: `ddev delete <project>`
+Please make backups of your databases before deleting projects or uninstalling. You can do this with `ddev snapshot` or `ddev export-db`. 
 
-If you don't want it to make a database backup/snapshot on the way down: `ddev delete --omit-snapshot <project>`
+You can use `ddev clean` to uninstall the vast majority of things DDEV has touched. For example, `ddev clean <project>` or `ddev clean --all`. 
+
+To uninstall just a project: `ddev delete <project>`. This removes any hostnames in `/etc/hosts` and removes your database. If you don't want it to make a database backup/snapshot on the way down: `ddev delete --omit-snapshot <project>`
 
 To remove all /etc/hosts entries owned by ddev: `ddev hostname --remove-inactive`
 

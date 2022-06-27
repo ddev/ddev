@@ -1410,7 +1410,7 @@ func CopyFromContainer(containerName string, containerPath string, hostPath stri
 // DockerVersionConstraint is the current minimum version of docker required for ddev.
 // See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
 // for examples defining version constraints.
-// REMEMBER TO CHANGE docs/index.md if you touch this!
+// REMEMBER TO CHANGE docs/ddev-installation.md if you touch this!
 // The constraint MUST HAVE a -pre of some kind on it for successful comparison.
 // See https://github.com/drud/ddev/pull/738.. and regression https://github.com/drud/ddev/issues/1431
 var DockerVersionConstraint = ">= 19.03.9-alpha1"
@@ -1438,7 +1438,7 @@ func GetDockerVersion() (string, error) {
 }
 
 // DockerComposeVersionConstraint is the versions allowed for ddev
-// REMEMBER TO CHANGE docs/index.md if you touch this!
+// REMEMBER TO CHANGE docs/ddev-installation.md if you touch this!
 // The constraint MUST HAVE a -pre of some kind on it for successful comparison.
 // See https://github.com/drud/ddev/pull/738.. and regression https://github.com/drud/ddev/issues/1431
 var DockerComposeVersionConstraint = ">= 1.25.0-alpha1 < 2.0.0-alpha1 || >= v2.0.0-rc.2"

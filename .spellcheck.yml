@@ -19,5 +19,4 @@ matrix:
   - pyspelling.filters.url:
   sources:
   - 'docs/**/*.md|!docs/developers/*|!docs/users/topics/version-history.md'
-  - 'docs/index.md'
   default_encoding: utf-8
