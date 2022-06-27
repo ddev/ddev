@@ -1,4 +1,4 @@
-# Using DDEV offline, and top-level-domain options
+# Using DDEV offline
 
 DDEV-Local attempts to make offline use work as well as possible, and you really shouldn't have to do anything to make it work:
 

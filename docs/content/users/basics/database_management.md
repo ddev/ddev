@@ -1,8 +1,25 @@
-## Database Management
+# Database Management
 
 DDEV provides lots and lots of flexibility for you in managing your databases between your local development, staging and production environments. Most people know about `ddev import-db` and `ddev export-db` but those tools now have more flexibility and there are plenty of other adaptable ways to work with your databases.
 
 Remember, you can run `ddev [command] --help` for more info on many of the topics below.
+
+## Database Imports
+
+Import a database with just one command; There is support for several file formats, including: **.sql, sql.gz, mysql, mysql.gz, tar, tar.gz, and zip**.
+
+Here's an example of a database import using ddev:
+
+```bash
+ddev import-db --src=dumpfile.sql.gz
+```
+
+You can also:
+
+* Use `ddev mysql` or `ddev psql` or the `mysql` and `psql` commands inside the web and db containers.
+* Use phpMyAdmin for database imports, but that approach is much slower.
+
+## Discussion
 
 **Many database backends**: You can use a vast array of different database types, including MariaDB (5.5-10.7) and MySQL (5.5-8.0) Postgresql (9-14), see ([docs](../extend/database_types.md#database-server-types)). Note that if you want to _change_ database type, you need to export your database and then `ddev delete` the project (to kill off the existing database), make the change to a new db type, start again, and import.
 

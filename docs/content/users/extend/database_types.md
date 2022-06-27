@@ -1,4 +1,4 @@
-## Database Server Types
+# Database Server Types
 
 DDEV-Local supports most versions of MariaDB, MySQL, and Postgresql database servers.
 
@@ -12,7 +12,7 @@ database:
   version: 10.6
 ```
 
-### Caveats
+## Caveats
 
 * If you change the database type or version in an existing project, the existing database will not be compatible with your change, so you'll want to use `ddev export-db` to save a dump first.
 * When you change database type, destroy the existing database using `ddev delete --omit-snapshot` before changing, then after `ddev start` use `ddev import-db` to import the db you exported.

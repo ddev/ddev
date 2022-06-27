@@ -1,16 +1,16 @@
-## Alternate Uses for DDEV-Local
+# Alternate Uses for DDEV
 
-### Continuous Integration (CI) for a project
+## Continuous Integration (CI) for a project
 
 Although it has not a primary goal of DDEV-Local, a number of people have found it easy to use DDEV-Local on a CI system like GitHub Actions or TravisCI or CircleCI to test out their projects. Instead of setting up a hosting environment for testing, they just start the project using DDEV and run their tests.
 
 Examples of this approach are shown in [Codeception tests in Travis CI with DDEV and Selenium](https://dev.to/tomasnorre/codeception-tests-in-travis-ci-with-ddev-and-selenium-1607) and [GitHub Action Setup Ddev](https://github.com/jonaseberle/github-action-setup-ddev)
 
-### Integration of DDEV-Local Docker Images Into Other Projects
+## Integration of DDEV-Local Docker Images Into Other Projects
 
 It is possible to use DDEV-Local Docker images outside the context of the DDEV-Local environment. People have used the ddev-webserver image for running tests in PhpStorm, for example.
 
-### Casual Project Webhosting on the Internet (including Let's Encrypt)
+## Casual Project Webhosting on the Internet (including Let's Encrypt)
 
 An experimental feature of DDEV-local is simplified small-project hosting on the internet. One can run DDEV-Local on an internet server and point their DNS to it and use it as a regular (though limited) hosting environment.
 
@@ -30,7 +30,7 @@ This may be completely appropriate for small or abandoned sites that have specia
 
 You may have to restart ddev with `ddev poweroff && ddev start --all` if Let's Encrypt has failed due to port 80 not being open or the DNS name not yet resolving. (Use `docker logs ddev-router` to see Let's Encrypt activity.)
 
-#### Additional Server Setup
+### Additional Server Setup
 
 * Depending on how you're using this, you may want to set up automated database and files backups (preferably offsite) as on all production systems. Many CMSs have modules/plugins to allow this, or you can use `ddev export-db` or `ddev snapshot` as you see fit and do the backup on the host.
 * You may want to allow your host system to send email (for notifications from the host itself). On Debian/Ubuntu `sudo apt-get install postfix`. Typically you'll need to set up reverse DNS for your system, and perhaps an SPF record in order for other systems to accept the email.

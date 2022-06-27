@@ -7,7 +7,7 @@ The easiest way to think about how DDEV works is to think of it as a set of litt
 * The optional `dba` container runs PhpMyAdmin for projects with MySQL or MariaDB.
 * Additional add-on services may be there for a given project, for example `solr` or `elasticsearch` or `memcached`.
 
-Although it's not common usage, different projects can communicate with each other as described in the [FAQ](../faq.md#projects-communicate-with-each-other)
+Although it's not common usage, different projects can communicate with each other as described in the [FAQ](faq.md#projects-communicate-with-each-other)
 
 Now for the two oddball containers, which are global (there is only one of each).
 
@@ -16,4 +16,4 @@ Now for the two oddball containers, which are global (there is only one of each)
 
 Here's a basic diagram of how it works inside the docker network:
 
-![DDEV Docker Network Architecture](images/DDEV Container Architecture.svg)
+![DDEV Docker Network Architecture](../topics/images/DDEV%20Container%20Architecture.svg)

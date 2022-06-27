@@ -1,20 +1,20 @@
-## Extending and Customizing Environments
+# Extending and Customizing Environments
 
 ddev provides several ways in which the environment for a project using ddev can be customized and extended.
 
-### Changing PHP version
+## Changing PHP version
 
 The project's `.ddev/config.yaml` file defines the PHP version to use. This can be changed, and the php_version can be set there to `5.6`, `7.0`, `7.1`, `7.2`,  `7.3`, `7.4`, `8.0` or `8.1`. The current default is php 7.4.
 
-#### Older versions of PHP
+### Older versions of PHP
 
 [Support for older versions of PHP is available on ddev-contrib](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/old_php) via [custom Docker compose files](custom-compose-files.md).
 
-### Changing webserver type
+## Changing webserver type
 
 DDEV-Local supports nginx with php-fpm by default ("nginx-fpm") and also apache2 with php-fpm ("apache-fpm"). These can be changed using the "webserver_type" value in .ddev/config.yaml, for example `webserver_type: apache-fpm`.
 
-### Adding services to a project
+## Adding services to a project
 
 For most standard web applications, ddev provides everything you need to successfully provision and develop a web application on your local machine out of the box. More complex and sophisticated web applications, however, often require integration with services beyond the standard requirements of a web and database server. Examples of these additional services are Apache Solr, Redis, Varnish, etc. While ddev likely won't ever provide all of these additional services out of the box, it is designed to provide simple ways for the environment to be customized and extended to meet the needs of your project.
 
@@ -22,7 +22,7 @@ A collection of vetted service configurations is available in the [Additional Se
 
 If you need to create a service configuration for your project, see [Defining an additional service with Docker Compose](custom-compose-files.md)
 
-### Providing custom environment variables to a container
+## Providing custom environment variables to a container
 
 Custom environment variables may be set in the project config.yaml or the ~/.ddev/global_config.yaml with the `web_environment` key, for example
 
@@ -53,7 +53,7 @@ SOMEOTHERENV='someotherval'
 
 The globals from the env file would be available on the next ddev start. It is important to note that typically the .env file should *not* be placed under source control, especially if it contains private API keys or passwords.
 
-#### Altering the in-container $PATH
+### Altering the in-container $PATH
 
 Because many things touch the `$PATH` environment variable, it's slightly harder to change it, but it's easy: Add a script to `<project>/.ddev/homeadditions/.bashrc.d/` or (global) `~/.ddev/homeadditions/.bashrc.d/` that adds to the `$PATH` variable. For example, if your project vendor directory is not in the expected place (`/var/www/html/vendor/bin`) you can add a `<project>/.ddev/homeadditions/.bashrc.d/path.sh` with contents:
 
@@ -61,13 +61,13 @@ Because many things touch the `$PATH` environment variable, it's slightly harder
 export PATH=$PATH:/var/www/html/somewhereelse/vendor/bin
 ```
 
-### Providing custom nginx configuration
+## Custom nginx configuration
 
 When you `ddev start` using the `nginx-fpm` webserver_type, ddev creates a configuration customized to your project type in `.ddev/nginx_full/nginx-site.conf`. You can edit and override the configuration by removing the `#ddev-generated` line and doing whatever you need with it. After each change, `ddev start`.
 
 You can also have more than one config file in the `.ddev/nginx_full` directory, they will all get loaded when ddev starts. This can be used for serving multiple docroots (advanced, below), or for any other technique.
 
-#### Troubleshooting nginx configuration
+### Troubleshooting nginx configuration
 
 * Any errors in your configuration may cause the web container to fail and try to restart, so if you see that behavior, use `ddev logs` to diagnose it.
 * You can `ddev exec nginx -t` to test whether your configuration is valid. (Or `ddev ssh` and run `nginx -t`)
@@ -75,17 +75,17 @@ You can also have more than one config file in the `.ddev/nginx_full` directory,
 * The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the healthcheck script to work.
 * **IMPORTANT**: Changes to configuration take place on a `ddev start`, when the container is rebuilt for another reason, or when the nginx server receives the reload signal.
 
-#### Multiple docroots in nginx (advanced)
+### Multiple docroots in nginx (advanced)
 
-It's easiest to have different webservers in different ddev projects and different ddev projects can [easily communicate with each other](../faq.md), but some sites require more than one docroot for a single project codebase. Sometimes this is because there's an API built in the same codebase but using different code, or different code for different languages, etc.
+It's easiest to have different webservers in different ddev projects and different ddev projects can [easily communicate with each other](../basics/faq.md), but some sites require more than one docroot for a single project codebase. Sometimes this is because there's an API built in the same codebase but using different code, or different code for different languages, etc.
 
 The generated `.ddev/nginx_full/seconddocroot.conf.example` demonstrates how to do this. You can create as many of these as you want, change the `servername` and the `root` and customize as you see fit.
 
-#### Nginx snippets (deprecated)
+### Nginx snippets
 
 To add an nginx snippet to the default config, add an nginx config file as `.ddev/nginx/<something>.conf`. This feature will be disabled in the future.
 
-### Providing custom apache configuration
+## Custom apache configuration
 
 If you're using `webserver_type: apache-fpm` in your .ddev/config.yaml, you can override the default site configuration by editing or replacing the ddev-provided `.ddev/apache/apache-site.conf` configuration.
 
@@ -112,7 +112,7 @@ An example file in .ddev/php/my-php.ini might look like this:
 max_execution_time = 240;
 ```
 
-### Providing custom mysql/MariaDB configuration (`my.cnf`)
+### Custom mysql/MariaDB configuration (`my.cnf`)
 
 You can provide additional MySQL configuration for a project by creating a directory called `.ddev/mysql/` and adding any number of MySQL configuration files (these must have the suffix `.cnf`). These files will be automatically included when MySQL is started. Make sure that the section header is included in the file
 
@@ -127,11 +127,11 @@ innodb_large_prefix=false
 
 To load the new configuration, run `ddev restart`.
 
-### Providing custom Postgresql configuration
+## Custom Postgresql configuration
 
 If you are using Postgresql, a default `posgresql.conf` is provided in `.ddev/postgres/postgresql.conf`. If you need to alter it, remove the `#ddev-generated` line and `ddev restart`.
 
-### Extending config.yaml with custom `config.\*.yaml` files
+## Extending config.yaml with custom `config.\*.yaml` files
 
 You may add additional config.\*.yaml files to organize additional commands as you see fit for your project and team.
 

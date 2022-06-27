@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Things might go wrong! Besides the suggestions on this page don't forget about [Stack Overflow](https://stackoverflow.com/tags/ddev) and [the ddev issue queue](https://github.com/drud/ddev/issues) and [other support options](index.md#support). And see [Docker troubleshooting suggestions](install/docker-installation.md#troubleshooting).
+Things might go wrong! Besides the suggestions on this page don't forget about [Stack Overflow](https://stackoverflow.com/tags/ddev) and [the ddev issue queue](https://github.com/drud/ddev/issues) and [other support options](../index.md#support). And see [Docker troubleshooting suggestions](../install/docker-installation.md#troubleshooting).
 
 ## General Troubleshooting Strategies
 
@@ -10,7 +10,7 @@ Things might go wrong! Besides the suggestions on this page don't forget about [
 * `ddev debug dockercheck` will help sort out Docker problems, as will `ddev debug test`.
 * On macOS and traditional Windows, please check to make sure that Docker Desktop is not out of disk space. In Settings (or Preferences)->Resources->Disk image size there should be lots of space left; I never let it go over 80% because the number reported here is not reliable. If it says zero used, something is wrong.
 * If you have customizations (PHP overrides, nginx or Apache overrides, MySQL/Postgresql overrides, custom services, config.yaml changes) please back them out while troubleshooting. It's important to have the simplest possible environment while troubleshooting.
-* Restart Docker. Consider a Docker factory reset in serious cases (this will destroy any databases you've loaded). See [Docker Troubleshooting](install/docker-installation.md#troubleshooting) for more.
+* Restart Docker. Consider a Docker factory reset in serious cases (this will destroy any databases you've loaded). See [Docker Troubleshooting](../install/docker-installation.md#troubleshooting) for more.
 * Try the simplest possible ddev project to try to get it to work (just as `ddev debug test` does).
 
   ```bash
@@ -160,7 +160,7 @@ If you get a 404 with "No input file specified" (nginx) or a 403 with "Forbidden
 
 If `ddev start` fails, it's most often because the web container or db container fails to start. In this case the error message from `ddev start` says something like "Failed to start <project>: db container failed: log=, err=container exited, please use 'ddev logs -s db' to find out why it failed". You can`ddev logs -s db` to find out what happened.
 
-If you see any variant of "no space left on device" in the logs when using Docker Desktop, it means that you have to increase or clean up Docker's file space. To increase the allocated space, go to "Resources" in Docker's Preferences as shown in ![Docker disk space](images/docker_disk_space.png)
+If you see any variant of "no space left on device" in the logs when using Docker Desktop, it means that you have to increase or clean up Docker's file space. To increase the allocated space, go to "Resources" in Docker's Preferences as shown in ![Docker disk space](../images/docker_disk_space.png)
 
 If you see "no space left on device" on Linux, it most likely means your filesystem is full.
 

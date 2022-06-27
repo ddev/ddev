@@ -7,28 +7,32 @@ DDEV works great on macOS, Windows WSL2, traditional Windows, and Linux. It work
 ## System Requirements
 
 === "macOS"
-    *DDEV runs natively on arm64 (Mac M1) systems as well as amd64 machines.
+
+    * DDEV runs natively on arm64 (Mac M1) systems as well as amd64 machines.
     * RAM: 8GB
-    *Storage: 256GB
+    * Storage: 256GB
     * Colima or Docker Desktop is required.
-    *Docker Desktop requires macOS Catalina (macOS 10.15) or higher.
+    * Docker Desktop requires macOS Catalina (macOS 10.15) or higher.
     * Colima can even run on older systems.
     * DDEV should run anywhere Docker Desktop or Colima runs.
 
 === "Windows WSL2"
-    *RAM: 8GB
+
+    * RAM: 8GB
     * Storage: 256GB
-    *Systems that can run Docker Desktop on the Windows side or docker-ce inside WSL2 do fine.
+    * Systems that can run Docker Desktop on the Windows side or docker-ce inside WSL2 do fine.
     * The preferred distro is Ubuntu or an Ubuntu-derived distro, but people use lots of different distros.
 
 === "Traditional Windows"
-    *Any recent edition of Windows Home, Pro, and several others.
+
+    * Any recent edition of Windows Home, Pro, and several others.
     * RAM: 8GB
-    *Storage: 256GB
+    * Storage: 256GB
     * Docker Desktop using the WSL2 back-end
 
 === "Linux"
-    *Most distros and most versions work fine.
+
+    * Most distros and most versions work fine.
     * RAM: 8GB
     * Storage: 256GB
 
@@ -45,7 +49,7 @@ DDEV works great on macOS, Windows WSL2, traditional Windows, and Linux. It work
 We love to hear from our users and help them be successful with DDEV. Support options include:
 
 * Lots of built-in help: `ddev help` and `ddev help <command>`. You'll find examples and explanations.
-* [DDEV Documentation](faq.md)
+* [DDEV Documentation](basics/faq.md)
 * [DDEV Stack Overflow](https://stackoverflow.com/questions/tagged/ddev) for support and frequently asked questions. We respond quite quickly here and the results provide quite a library of user-curated solutions.
 * [DDEV issue queue](https://github.com/drud/ddev/issues) for bugs and feature requests
 * Interactive community support on [Discord](https://discord.gg/hCZFfAMc5k) for everybody, plus sub-channels for CMS-specific questions and answers.

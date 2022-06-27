@@ -1,11 +1,11 @@
-## Customizing Docker Images
+# Customizing Docker Images
 
 It's common to have a requirement for the web or db images which is not bundled in them by default. There are two easy ways to extend these docker images:
 
 * `webimage_extra_packages` and `dbimage_extra_packages` in .ddev/config.yaml
 * An add-on Dockerfile in your project's `.ddev/web-build` or `.ddev/db-build`
 
-### Adding extra Debian packages with webimage_extra_packages and dbimage_extra_packages
+## Adding extra Debian packages with webimage_extra_packages and dbimage_extra_packages
 
 You can add extra Debian packages if that's all that is needed with lines like this in `.ddev/config.yaml`:
 
@@ -17,7 +17,7 @@ dbimage_extra_packages: [telnet, netcat]
 
 Then the additional packages will be built into the containers during `ddev start`
 
-### How to figure out what packages you need
+## How to figure out what packages you need
 
 The web container is a Debian image, and its PHP distributions are packaged (thank you!) by [`deb.sury.org`](https://deb.sury.org/).
 
@@ -27,7 +27,7 @@ If you need a package that is *not* a PHP package, you can view and search stand
 
 To test that a package will do what you want, you can `ddev ssh` and then `sudo apt-get update && sudo apt-get install <package>` to verify that you can install it and you get what you need. A php extension may require `killall -USR2 php-fpm` to take effect. After you've tried that, you can add the package to `webimage_extra_packages`.
 
-### Adding extra Dockerfiles for webimage and dbimage
+## Adding extra Dockerfiles for webimage and dbimage
 
 For more complex requirements, you can add:
 
@@ -74,10 +74,10 @@ ENV COMPOSER_HOME=""
 
 **Remember that the Dockerfile is building a docker image that will be used later with ddev.** At the time the Dockerfile is executing, your code is not mounted and the container is not running, it's just being built. So for example, an `npm install` in /var/www/html will not do anything useful because the code is not there at image building time.
 
-#### Debugging the Dockerfile build
+### Debugging the Dockerfile build
 
 It can be complicated to figure out what's going on when building a Dockerfile, and even more complicated when you're seeing it go by as part of `ddev start`.
 
 1. Use `ddev ssh` first of all to pioneer the steps you want to take. You can just do all the things you need to do there, and see if it works. If doing something that affects PHP you may need to `sudo killall -USR2 php-fpm` for it to take effect.
 2. Put the steps you pioneered into `.ddev/web-build/Dockerfile` as above.
-3. If you can't figure out what's failing or why, then `cd .ddev && ~/.ddev/bin/docker-compose -f .ddev-docker-compose-full.yaml build web --no-cache --progress=plain` to see what's happening during the Dockerfile build.
+3. If you can't figure out what's failing or why, then `~/.ddev/bin/docker-compose -f .ddev/.ddev-docker-compose-full.yaml build web --no-cache --progress=plain` to see what's happening during the Dockerfile build.

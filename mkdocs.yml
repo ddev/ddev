@@ -147,17 +147,17 @@ nav:
       - install/uninstall.md
     - quickstart.md
   - 'Basics':
-    - topics/how_ddev_works.md
-    - cli-usage.md
-    - extending-commands.md
-    - troubleshooting.md
-    - faq.md
-    - developer-tools.md
-    - alternate-uses.md
+    - basics/how_ddev_works.md
+    - basics/cli-usage.md
+    - basics/database_management.md
+    - basics/troubleshooting.md
+    - basics/faq.md
+    - basics/developer-tools.md
   - 'Configuration':
-      - extend/database_types.md
-      - extend/additional-hostnames.md
-      - configuration/config_yaml.md
+    - extend/database_types.md
+    - configuration/hooks.md
+    - extend/additional-hostnames.md
+    - configuration/config_yaml.md
   - 'Extending':
     - extend/customization-extendibility.md
     - extend/additional-services.md
@@ -179,7 +179,6 @@ nav:
     - providers/platform.md
   - 'Guides':
       - topics/cms_specific_help.md
-      - topics/database_management.md
       - topics/phpstorm.md
       - topics/sharing.md
       - topics/webserver.md
@@ -188,3 +187,4 @@ nav:
   - 'Details':
       - details/offline-usage.md
       - details/opting-in.md
+      - details/alternate-uses.md

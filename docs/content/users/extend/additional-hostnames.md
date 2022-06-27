@@ -1,4 +1,4 @@
-## Additional Project Hostnames
+# Additional Project Hostnames
 
 Add additional hostnames to a project in the project's .ddev/config.yaml:
 
@@ -32,8 +32,14 @@ additional_fqdns:
 
 This configuration would result in working FQDNs of `somename.ddev.site`, `example.com`, `somesite.example.com`, and `anothersite.example.com`.
 
-**Note**: If you see `ddev-router` status become unhealthy in `ddev list`, it's most often a result of trying to use conflicting FQDNs in more than one project. `example.com` can only be assigned to one project, or it will break `ddev-router`.
+!!!warning "Don't use the same `additional_fqdns` or `additional_hostnames` in two different projects."
 
-**Warning**: this may not work predictably on all systems. There are operating systems and machines where /etc/hosts may not be the first or only resolution technique, especially if the additional_fqdn you use is also in DNS.
+    If you see `ddev-router` status become unhealthy in `ddev list`, it's most often a result of trying to use conflicting FQDNs in more than one project. `example.com` can only be assigned to one project, or it will break `ddev-router`.
 
-**Warning**: if you use an additional_fqdn that exists on the internet (like `www.google.com`), your hosts file will override access to the original (internet) site, and you'll be sad and confused that you can't get to it.
+!!!warning "May not work predictably everywhere"
+
+    This may not work predictably on all systems. There are operating systems and machines where /etc/hosts may not be the first or only resolution technique, especially if the additional_fqdn you use is also in DNS.
+
+!!!warning "Don't override a real domain name!"
+
+    If you use an additional_fqdn that exists on the internet (like `www.google.com`), your hosts file will override access to the original (internet) site, and you'll be sad and confused that you can't get to it.

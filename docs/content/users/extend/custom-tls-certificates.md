@@ -1,4 +1,4 @@
-## Custom TLS Certificates
+# Custom TLS Certificates
 
 It is possible to use "real" TLS certificates that have been issued by a CA other than the local-development-oriented mkcert command.
 

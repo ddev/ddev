@@ -1,3 +1,4 @@
+# Hooks
 
 Most ddev commands provide hooks to run tasks before or after the main command executes. To automate setup tasks specific to your project, define them in the project's `config.yaml` file.
 
@@ -72,7 +73,7 @@ hooks:
   - exec: sudo echo alias ll=\"ls -lhA\" >> ~/.bashrc
 ```
 
-(Note that this could probably be done more efficiently in a .ddev/web-build/Dockerfile as explained in [Customizing Images](extend/customizing-images.md).)
+(Note that this could probably be done more efficiently in a .ddev/web-build/Dockerfile as explained in [Customizing Images](../extend/customizing-images.md).)
 
 Advanced usages may require running commands directly with explicit arguments. This approach is useful when bash interpretation is not required (no environment variables, no redirection, etc.)
 

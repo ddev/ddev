@@ -111,7 +111,7 @@ In your *project directory* run `docker run --rm -t -p 80:80 -p 443:443 -v "//$P
 
 If that fails (if you get an error, or you don't see the contents of your project directory and your home directory) you'll need to troubleshoot:
 
-* "port is already allocated": See [troubleshooting](../troubleshooting.md).
+* "port is already allocated": See [troubleshooting](../basics/troubleshooting.md).
 * `invalid mount config for type "bind": bind mount source path does not exist: <some path>` means the filesystem isn't successfully shared into the docker container.
 * "The path ... is not shared and is not known to Docker": Visit docker's preferences/settings->File sharing and share the appropriate path or drive.
 * `Error response from daemon: Get https://registry-1.docker.io/v2/` - Docker may not be running (restart it) or you may not have any access to the internet.
@@ -132,7 +132,7 @@ You can use remote docker instances, whether on the internet or inside your netw
 * Make sure you can access the remote machine using `docker ps`.
 * Bind-mounts cannot work on a remote docker setup, so you must use `ddev config global --no-bind-mounts`. This will cause ddev to push needed information to and from the remote docker instance when needed. This also automatically turns on mutagen caching.
 * You may want to use a FQDN other than `*.ddev.site` because the ddev site will *not* be at `127.0.0.1`. For example, `ddev config --fqdns=debian-11` and then use `https://debian-11` to access the site.
-* If the docker host is reachable on the internet, you can actually enable real https for it using Let's Encrypt as described in [Casual Webhosting](../alternate-uses.md#casual-project-webhosting-on-the-internet-including-lets-encrypt). Just make sure that port 2375 is not available on the internet.
+* If the docker host is reachable on the internet, you can actually enable real https for it using Let's Encrypt as described in [Casual Webhosting](../details/alternate-uses.md#casual-project-webhosting-on-the-internet-including-lets-encrypt). Just make sure that port 2375 is not available on the internet.
 
 ### Rancher Desktop on macOS
 

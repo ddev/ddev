@@ -1,4 +1,4 @@
-# Get Started
+# Try it
 
 Once you have DDEV installed, getting a project going is just these steps:
 
@@ -338,21 +338,6 @@ Here's a quickstart instructions for a number of different environments:
     ddev start
     ddev launch
     ```
-
-## Database Imports
-
-Import a database with just one command; There is support for several file formats, including: **.sql, sql.gz, mysql, mysql.gz, tar, tar.gz, and zip**.
-
-Here's an example of a database import using ddev:
-
-```bash
-ddev import-db --src=dumpfile.sql.gz
-```
-
-It is also possible to use phpMyAdmin for database imports, but that approach is much slower. Also, the web and db containers container the `mysql` or `psql` client, which can be used for imports, and the `ddev mysql` and `ddev psql` command can be used in the same way you might use `mysql` or `psql` on a server.
-
-!!! note "Backdrop configuration"
-        In addition to importing a Backdrop database, you will need to extract a copy of your Backdrop project's configuration into the local `active` directory. The location for this directory can vary depending on the contents of your Backdrop `settings.php` file, but the default location is `[docroot]/files/config_[random letters and numbers]/active`. Please refer to the [Backdrop documentation](https://docs.backdropcms.org/) for more information on moving your Backdrop site into the DDEV environment.
 
 ### Configuration files
 

@@ -1,4 +1,4 @@
-## In-Container home directory and shell configuration
+# In-Container home directory and shell configuration
 
 Custom shell configuration (bash or your preferred shell), your usual git configuration, a composer auth.json and more can be achieved within your containers.  Place all your dotfiles in your global`~/.ddev/homeadditions` or your project's `.ddev/homeadditions` directory and DDEV will use these in your project's web containers.  (Note that there is also a hidden/transient `.ddev/.homeadditions`; this is used for processing global homeadditions and should be ignored.)
 

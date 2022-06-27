@@ -1,4 +1,4 @@
-## Additional Service Configurations and Add-ons for ddev
+# Additional Service Configurations and Add-ons for ddev
 
 DDEV-Local projects can be extended to provide additional add-ons, including services. This is achieved by adding docker-compose files to a project's `.ddev` directory that defines the added add-on(s).
 
