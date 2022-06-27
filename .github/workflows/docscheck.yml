@@ -30,7 +30,7 @@ jobs:
         uses: docker://avtodev/markdown-lint:v1
         with:
           config: '.markdownlintrc'
-          args: '*.md docs/*.md docs/users'
+          args: '*.md docs/content/users'
       #    - name: Debugging with tmate
       #      uses: mxschmitt/action-tmate@v3.1
       - name: "Check links in markdown"

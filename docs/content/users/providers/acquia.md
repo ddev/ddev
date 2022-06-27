@@ -1,10 +1,10 @@
-## Acquia Hosting Provider Integration
+# Acquia Integration
 
 ddev provides integration with the [Acquia Cloud Platform](https://www.acquia.com/choosing-right-acquia-cloud-platform), which allows Acquia users to quickly download and provision a project from Acquia in a local ddev-managed environment.
 
 ddev's Acquia integration pulls database and files from an existing project into your local system so you can develop locally.
 
-### Acquia Quickstart
+## Acquia Quickstart
 
 1. Get your Acquia API token from your Account Settings->API Tokens.
 2. Make sure your ssh key is authorized on your Acquia account at Account Settings->SSH Keys
@@ -26,6 +26,6 @@ ddev's Acquia integration pulls database and files from an existing project into
 9. Use `ddev pull acquia` to pull the project database and files.
 10. Optionally use `ddev push acquia` to push local files and database to Acquia. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
 
-### Usage
+## Usage
 
 `ddev pull acquia` will connect to the Acquia Cloud Platform to download database and files. To skip downloading and importing either file or database assets, use the `--skip-files` and `--skip-db` flags.

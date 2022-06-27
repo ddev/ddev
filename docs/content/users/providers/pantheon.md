@@ -1,10 +1,10 @@
-## Pantheon Hosting Provider Integration
+# Pantheon Integration
 
 ddev provides configurable integration with the [Pantheon Website Management Platform](https://pantheon.io/), which allows Pantheon users to quickly download and provision a project from Pantheon in a local ddev-managed environment.
 
 ddev's Pantheon integration pulls an existing backup from an existing Pantheon site/environment into your local system. Of course that means you must already have a Pantheon site with a backup in order to use it.
 
-### Pantheon Quickstart
+## Pantheon Quickstart
 
 If you have ddev installed, and have an active Pantheon account with an active site, you can follow this guide to spin up a Pantheon project locally.
 

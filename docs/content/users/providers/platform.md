@@ -1,10 +1,10 @@
-## Platform.sh Hosting Provider Integration
+# Platform.sh Integration
 
 ddev provides integration with the [Platform.sh Website Management Platform](https://platform.sh/), which allows Platform.sh users to quickly download and provision a project from Platform.sh in a local ddev-managed environment.
 
 ddev's Platform.sh integration pulls database and files from an existing Platform.sh site/environment into your local system so you can develop locally.
 
-### Platform.sh Quickstart
+## Platform.sh Quickstart
 
 1. Check out the site from platform.sh and then configure it with `ddev config`. You'll want to use `ddev start` and make sure the basic functionality is working.
 2. Obtain and configure an API token.
@@ -22,6 +22,6 @@ ddev's Platform.sh integration pulls database and files from an existing Platfor
 6. Run `ddev pull platform`. After you agree to the prompt, the current upstream database and files will be downloaded.
 7. Optionally use `ddev push platform` to push local files and database to Platform.sh. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
 
-### Usage
+## Usage
 
 `ddev pull platform` will connect to Platform.sh to download database and files. To skip downloading and importing either file or database assets, use the `--skip-files` and `--skip-db` flags.
