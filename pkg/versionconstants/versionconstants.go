@@ -2,6 +2,7 @@ package versionconstants
 
 import (
 	"fmt"
+
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 )
@@ -32,10 +33,10 @@ var DBAImg = "phpmyadmin"
 var DBATag = "5" // Note that this can be overridden by make
 
 // RouterImage defines the image used for the router.
-var RouterImage = "drud/ddev-router"
+var RouterImage = "gilbertsoft/ddev-router"
 
 // RouterTag defines the tag used for the router.
-var RouterTag = "v1.19.3" // Note that this can be overridden by make
+var RouterTag = "ipv6" // Note that this can be overridden by make
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "drud/ddev-ssh-agent"

@@ -175,6 +175,7 @@ server {
         server {
             server_name {{ $host }};
             listen {{ $listen_port }} {{ $default_server }};
+            listen [::]:{{ $listen_port }} {{ $default_server }};
             access_log /var/log/nginx/access.log vhost;
 
             location @brokenupstream {
@@ -188,6 +189,9 @@ server {
             allow 10.0.0.0/8;
             allow 192.168.0.0/16;
             allow 172.16.0.0/12;
+            allow 169.254.0.0/16;
+            allow ::1;
+            allow fe80::/10;
             deny all;
             {{ end }}
 
@@ -246,6 +250,7 @@ server {
         server {
             server_name {{ $host }};
             listen {{ $listen_port }} ssl {{ $.Env.HTTP2 }} {{ $default_server }};
+            listen [::]:{{ $listen_port }} ssl {{ $.Env.HTTP2 }} {{ $default_server }};
             access_log /var/log/nginx/access.log vhost;
 
             location @brokenupstream {
@@ -259,6 +264,9 @@ server {
             allow 10.0.0.0/8;
             allow 192.168.0.0/16;
             allow 172.16.0.0/12;
+            allow 169.254.0.0/16;
+            allow ::1;
+            allow fe80::/10;
             deny all;
             {{ end }}
 
