@@ -33,3 +33,4 @@ RUN for item in golang.org/x/tools/gopls@latest github.com/go-delve/delve/cmd/dl
     done
 RUN cp ~/go/bin/dlv ~/go/bin/dlv-dap
 
+RUN pip3 install -r docs/mkdocs-pip-requirements
