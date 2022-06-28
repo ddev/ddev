@@ -46,6 +46,10 @@ ddev restart --all`,
 			if globalconfig.GetCAROOT() == "" || ddevapp.IsRouterDisabled(app) {
 				urlList = httpURLs
 			}
+			err = populateCustomCommandFiles(app)
+			if err != nil {
+				util.Warning("Failed to populate custom command files: %v", err)
+			}
 
 			util.Success("Your project can be reached at %s", strings.Join(urlList, " "))
 		}

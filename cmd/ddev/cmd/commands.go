@@ -19,18 +19,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// addCustomCommands looks for custom command scripts in
-// ~/.ddev/commands/<servicename> etc. and
-// .ddev/commands/<servicename> and .ddev/commands/host
-// and if it finds them adds them to Cobra's commands.
-func addCustomCommands(rootCmd *cobra.Command) error {
-	app, err := ddevapp.GetActiveApp("")
-	if err != nil {
-		return nil
-	}
+// populateCustomCommandFiles sets up the needed directories and files
+func populateCustomCommandFiles(app *ddevapp.DdevApp) error {
 
 	sourceGlobalCommandPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands")
-	err = os.MkdirAll(sourceGlobalCommandPath, 0755)
+	err := os.MkdirAll(sourceGlobalCommandPath, 0755)
 	if err != nil {
 		return nil
 	}
@@ -52,6 +45,22 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 	if !fileutil.FileExists(projectCommandPath) || !fileutil.IsDirectory(projectCommandPath) {
 		return nil
 	}
+	return nil
+}
+
+// addCustomCommands looks for custom command scripts in
+// ~/.ddev/commands/<servicename> etc. and
+// .ddev/commands/<servicename> and .ddev/commands/host
+// and if it finds them adds them to Cobra's commands.
+func addCustomCommands(rootCmd *cobra.Command) error {
+	app, err := ddevapp.GetActiveApp("")
+	if err != nil {
+		return nil
+	}
+
+	projectCommandPath := app.GetConfigPath("commands")
+	// Make sure our target global command directory is empty
+	copiedGlobalCommandPath := app.GetConfigPath(".global_commands")
 
 	commandsAdded := map[string]int{}
 	for _, commandSet := range []string{projectCommandPath, copiedGlobalCommandPath} {
