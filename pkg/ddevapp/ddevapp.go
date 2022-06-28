@@ -965,6 +965,11 @@ func (app *DdevApp) Start() error {
 		util.Warning("Unable to PrepDdevDirectory: %v", err)
 	}
 
+	err = PopulateCustomCommandFiles(app)
+	if err != nil {
+		util.Warning("Failed to populate custom command files: %v", err)
+	}
+
 	// The .ddev directory may still need to be populated, especially in tests
 	err = PopulateExamplesCommandsHomeadditions(app.Name)
 	if err != nil {

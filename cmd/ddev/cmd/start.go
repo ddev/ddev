@@ -109,11 +109,6 @@ ddev start --all`,
 			if !nodeps.IsGitpod() && (globalconfig.GetCAROOT() == "" || ddevapp.IsRouterDisabled(project)) {
 				httpsURLs = httpURLs
 			}
-			err = populateCustomCommandFiles(project)
-			if err != nil {
-				util.Warning("Failed to populate custom command files: %v", err)
-			}
-
 			util.Success("Project can be reached at %s", strings.Join(httpsURLs, " "))
 		}
 	},
