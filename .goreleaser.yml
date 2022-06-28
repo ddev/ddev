@@ -236,9 +236,11 @@ nfpms:
     deb:
       dependencies:
       - libnss3-tools
+      - xdg-utils
     rpm:
       dependencies:
       - nss-tools
+      - xdg-utils
 
 snapshot:
   name_template: '{{ .Version }}-{{.ShortCommit}}'
