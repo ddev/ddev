@@ -101,7 +101,8 @@ func TestCustomCommands(t *testing.T) {
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 
-	_, _ = exec.RunHostCommand(DdevBin, "debug", "fix-commands")
+	_, err = exec.RunHostCommand(DdevBin, "debug", "fix-commands")
+	require.NoError(t, err)
 	out, err := exec.RunHostCommand(DdevBin)
 	assert.NoError(err)
 	assert.Contains(out, "mysql client in db container")
