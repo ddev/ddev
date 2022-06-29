@@ -136,9 +136,9 @@ markdown_extensions:
 - pymdownx.tilde
 
 nav:
-  - 'Start!':
+  - "Start!":
     - index.md
-    - "Installing":
+    - 'Installing':
       - users/install/index.md
       - users/install/docker-installation.md
       - users/install/ddev-installation.md
