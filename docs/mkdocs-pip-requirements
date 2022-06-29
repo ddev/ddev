@@ -16,7 +16,7 @@ mkdocs==1.3.0
 mkdocs-git-authors-plugin>=0.6.4
 mkdocs-git-committers-plugin-2>=0.4.1
 mkdocs-git-revision-date-localized-plugin>=0.9
-git+https://rfay:${DDEV_GITHUB_TOKEN}@github.com/squidfunk/mkdocs-material-insiders.git@8.3.8-insiders-4.19.1
+git+https://rfay:${MKDOCS_MATERIAL_TOKEN}@github.com/squidfunk/mkdocs-material-insiders.git@8.3.8-insiders-4.19.1
 
 mkdocs-material-extensions>=1.0.3
 mkdocs-minify-plugin==0.4.1
