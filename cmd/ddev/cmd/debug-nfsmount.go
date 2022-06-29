@@ -64,7 +64,7 @@ var DebugNFSMountCmd = &cobra.Command{
 
 		_, out, err := dockerutil.RunSimpleContainer(versionconstants.GetWebImage(), containerName, []string{"sh", "-c", "findmnt -T /nfsmount && ls -d /nfsmount/.ddev"}, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, uidStr, true, false, nil)
 		if err != nil {
-			util.Warning("NFS does not seem to be set up yet, see debugging instructions at https://ddev.readthedocs.io/en/stable/users/performance/#debugging-ddev-start-failures-with-nfs_mount_enabled-true")
+			util.Warning("NFS does not seem to be set up yet, see debugging instructions at https://ddev.readthedocs.io/en/stable/users/install/performance/#debugging-ddev-start-failures-with-nfs_mount_enabled-true")
 			util.Failed("Details: error=%v\noutput=%v", err, out)
 		}
 		output.UserOut.Printf(strings.TrimSpace(out))

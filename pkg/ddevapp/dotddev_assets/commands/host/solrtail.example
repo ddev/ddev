@@ -6,6 +6,6 @@
 ## Example: ddev solrtail
 
 # This can't work unless you have a solr service,
-# See https://ddev.readthedocs.io/en/stable/users/extend/additional-services/#apache-solr
+# See https://ddev.readthedocs.io/en/stable/users/extend/additional-services/
 
 ddev exec -s solr tail -40lf /opt/solr/server/logs/solr.log

@@ -22,7 +22,7 @@ import (
 var (
 	updateInterval     = time.Hour * 24 * 7 // One week interval between updates
 	serviceType        string
-	updateDocURL       = "https://ddev.readthedocs.io/en/stable/#installation"
+	updateDocURL       = "https://ddev.readthedocs.io/en/stable/users/install/"
 	instrumentationApp *ddevapp.DdevApp
 )
 
@@ -32,7 +32,7 @@ var RootCmd = &cobra.Command{
 	Short: "DDEV-Local local development environment",
 	Long: `Create and maintain a local web development environment.
 Docs: https://ddev.readthedocs.io
-Support: https://ddev.readthedocs.io/en/stable/#support`,
+Support: https://ddev.readthedocs.io/en/stable/users/support`,
 	Version: versionconstants.DdevVersion,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		command := os.Args[1]
@@ -155,7 +155,7 @@ func init() {
 	_, err := dockerutil.GetDockerVersion()
 	// ddev --version may be called without docker available.
 	if err != nil && len(os.Args) > 1 && os.Args[1] != "--version" {
-		util.Failed("Could not connect to a docker provider. Please start or install a docker provider.\nFor install help go to: https://ddev.readthedocs.io/en/latest/users/docker_installation/")
+		util.Failed("Could not connect to a docker provider. Please start or install a docker provider.\nFor install help go to: https://ddev.readthedocs.io/en/latest/users/install/")
 	}
 
 	// Populate custom/script commands so they're visible

@@ -13,6 +13,8 @@ Here's a quickstart instructions for a number of different environments:
 
 === "Any (generic)"
 
+    ## Any PHP or HTML/JS environment
+
     DDEV works happily with most any PHP or static HTML/js project, although it has special additional support for several CMSs. But you don't need special support if you already know how to configure your project.
     
     1. Create a directory (`mkdir my-new-project`) or clone your project (`git clone <your_project>`)
@@ -25,6 +27,8 @@ Here's a quickstart instructions for a number of different environments:
     6. Visit the project and continue on.
 
 === "WordPress"
+
+    ## WordPress
 
     There are several easy ways to use DDEV with WordPress:
 
@@ -130,6 +134,8 @@ Here's a quickstart instructions for a number of different environments:
 
 === "Drupal"
 
+    ## Drupal
+
     === "Drupal 9 Composer"
         ```bash
         mkdir my-drupal9-site
@@ -193,6 +199,8 @@ Here's a quickstart instructions for a number of different environments:
 
 === "TYPO3"
 
+    ## TYPO3
+
     === "Composer build"
         
         ```bash
@@ -218,6 +226,8 @@ Here's a quickstart instructions for a number of different environments:
 
 === "OpenMage/Magento 1"
 
+    ## OpenMage/Magento 1
+
     1. Download OpenMage from [release page](https://github.com/OpenMage/magento-lts/releases).
     2. Make a directory for it, for example `mkdir ~/workspace/OpenMage` and change to the new directory `cd ~/workspace/OpenMage`.
     3. `ddev config` and accept the defaults.
@@ -234,6 +244,8 @@ Here's a quickstart instructions for a number of different environments:
     Note that OpenMage is a huge codebase and using `mutagen_enabled: true` is recommended for performance on macOS and traditional Windows, see [docs](install/performance.md#using-mutagen).
 
 === "Magento 2"
+
+    ## Magento 2
 
     Normal details of a composer build for Magento 2 are on [Magento 2 site](https://devdocs.magento.com/guides/v2.4/install-gde/composer.html) You must have a public and private key to install from Magento's repository; when prompted for "username" and "password" in the composer create it's asking for your public and private keys.
     
@@ -259,6 +271,8 @@ Here's a quickstart instructions for a number of different environments:
     Note that Magento 2 is a huge codebase and using `mutagen_enabled: true` is recommended for performance on macOS and traditional Windows, see [docs](install/performance.md#using-mutagen).
 
 === "Laravel"
+
+    ## Laravel
 
     Get started with Laravel projects on ddev either using a new or existing composer project or by cloning a git repository.
     The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) just as it can for Laravel.
@@ -310,6 +324,8 @@ Here's a quickstart instructions for a number of different environments:
 
 === "Shopware 6"
 
+    ## Shopware 6
+
     You can set up a Shopware 6 environment many ways, but this shows you one recommended technique:
     
     ```bash
@@ -328,6 +344,8 @@ Here's a quickstart instructions for a number of different environments:
     For more advanced tasks like adding elasticsearch, building and watching storefront and administration, see [susi.dev](https://susi.dev/ddev-shopware-6).
 
 === "Backdrop"
+
+    ## Backdrop
 
     To get started with Backdrop, clone the project repository and navigate to the project directory.
     

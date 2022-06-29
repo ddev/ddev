@@ -181,11 +181,11 @@ nav:
     - users/providers/pantheon.md
     - users/providers/platform.md
   - 'Guides':
-      - users/topics/cms_specific_help.md
       - users/topics/phpstorm.md
       - users/topics/sharing.md
       - users/topics/webserver.md
       - users/topics/whats_in_ddev_dir.md
+      - users/topics/cms_specific_help.md
   - 'Details':
       - users/details/offline-usage.md
       - users/details/opting-in.md
