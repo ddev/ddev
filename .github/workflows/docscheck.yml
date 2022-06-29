@@ -44,5 +44,5 @@ jobs:
       - name: Test mkdocs
         run: |
           sudo pip3 install setuptools
-          sudo pip3 install -r docs/mkdocs-pip3-requirements
+          sudo pip3 install -r docs/mkdocs-pip-requirements
           mkdocs -q build -d /tmp/mkdocsbuild
