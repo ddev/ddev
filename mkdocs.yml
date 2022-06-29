@@ -77,7 +77,7 @@ plugins:
 - minify:
     minify_html: true
 - git-revision-date-localized:
-    enable_creation_date: true
+#    enable_creation_date: true
 # readthedocs doesn't seem to expose GH_TOKEN even when set.
 - git-committers:
     repository: https://github.com/drud/ddev
@@ -115,9 +115,9 @@ markdown_extensions:
     smart_enable: all
 - pymdownx.caret
 - pymdownx.details
-#- pymdownx.emoji:
-#    emoji_generator: !!python/name:materialx.emoji.to_svg
-#    emoji_index: !!python/name:materialx.emoji.twemoji
+- pymdownx.emoji:
+    emoji_generator: !!python/name:materialx.emoji.to_svg
+    emoji_index: !!python/name:materialx.emoji.twemoji
 - pymdownx.highlight:
     anchor_linenums: true
 - pymdownx.inlinehilite
