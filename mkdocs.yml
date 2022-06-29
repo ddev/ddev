@@ -51,8 +51,8 @@ theme:
   - toc.integrate
   palette:
   - scheme: default
-    primary: indigo
-    accent: indigo
+    primary: light-blue
+#    accent: indigo
     toggle:
       icon: material/brightness-7
       name: Switch to dark mode
