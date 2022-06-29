@@ -10,13 +10,13 @@ How does my project connect to the database?
 : `ddev describe` gives full details of how to connect to the database. *Inside* the container the hostname is 'db' (**NOT** 127.0.0.1). User/password/database are all 'db'. For connection from the *host*, see `ddev describe`.
 
 How can I troubleshoot what's going wrong?
-: See the [troubleshooting](troubleshooting.md), [Docker troubleshooting](../install/docker-installation.md#troubleshooting) and [Xdebug troubleshooting](../debugging-profiling/step-debugging.md#troubleshooting-xdebug) sections of the docs.
+: See the [troubleshooting](troubleshooting.md), [Docker troubleshooting](../install/docker-installation.md#testing-and-troubleshooting-your-docker-installation) and [Xdebug troubleshooting](../debugging-profiling/step-debugging.md#troubleshooting-xdebug) sections of the docs.
 
 Do I need to install PHP or Composer or Nginx or nodejs/npm on my computer?
 : Absolutely *not*. All of these tools live inside DDEV's docker containers, so you need only Docker and DDEV. This is especially handy for Windows users where there's a bit more friction installing those tools.
 
 How do I get support?
-: See the (many) [support options](../index.md#support), including [Discord](https://discord.gg/kDvSFBSZfs), Stack Overflow and others.
+: See the (many) [support options](../support.md), including [Discord](https://discord.gg/kDvSFBSZfs), Stack Overflow and others.
 
 How can I get the best performance?
 : Docker's normal mounting can be slow, especially on macOS. See the [Performance](../install/performance.md) section for speed-up options including Mutagen and NFS mounting.

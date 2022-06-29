@@ -24,7 +24,7 @@ This is based on the wonderful [article](https://susi.dev/fully-integrate-ddev-a
     1. Use the "+" to select "From Docker, Vagrant, VM..."
     2. Choose "Docker Compose"
     3. Create a server; the default name is "docker", but since the "server" for each project will be different, name it for the project, for example "DDEV d9". Choose "Docker for Windows" or "Docker for Mac"
-    4. In the "Path mappings" of the "Server" you may have to map the local paths (which on WSL2 means /home/...) to the in-container paths, especially if you have mutagen enabled. So "Virtual Machine Path" would be "/var/www/html" and "Local path" would be something like /Users/rfay/workspace/d9 (on macOS) or \\wsl$\Ubuntu\home\rfay\workspace\d9 on Windows using WSL2.
+    4. In the "Path mappings" of the "Server" you may have to map the local paths (which on WSL2 means /home/...) to the in-container paths, especially if you have mutagen enabled. So "Virtual Machine Path" would be "/var/www/html" and "Local path" would be something like `/Users/rfay/workspace/d9` (on macOS) or `\\wsl$\Ubuntu\home\rfay\workspace\d9` on Windows using WSL2.
     5. Now back in the "Configure Remote PHP Interpreter" for "Configuration files" use `.ddev/.ddev-docker-compose-full.yaml`. On macOS, you may need to use `<cmd><shift>.`, (Command+Shift+Dot) to show hidden dotfiles.
     6. Service: web
     7. Add an environment variable `COMPOSE_PROJECT_NAME=ddev-<projectname>`. In this case, it's `ddev-d9`. (Note that DDEV project names that contain dots do not currently work due to a [PhpStorm bug](https://youtrack.jetbrains.com/issue/WI-63293). You'll need to rename your project to get these instructions to work.)
@@ -65,7 +65,7 @@ We’ll walk through both of these approaches.
 
 #### Basics
 
-- Start with a working DDEV-Local/WSL2 setup as described in the [docs](../index.md#installation-or-upgrade-windows-wsl2). Until that’s all working it doesn’t help to go farther.
+- Start with a working DDEV/WSL2 setup as described in the [docs](../install/ddev-installation.md). Until that’s all working it doesn’t help to go farther.
 
 - If you haven’t used Xdebug with DDEV-Local and PHPStorm before, you’ll want to read the [step debugging instructions](../debugging-profiling/step-debugging.md).
 

@@ -28,7 +28,7 @@ Instructions for Mutagen and NFS are below.
     
     Another major advantage of Mutagen over NFS is that it supports filesystem notifications, so file-watchers on both the host and inside the container will be notified when changes occur. This is a great advantage for many development tools, which had to poll for changes in the past, but now will be notified via normal inotify/fsnotify techniques.
     
-    If you trouble with the Mutagen feature, please try to recreate it and report via one of the [support channels](../index.md#support-and-user-contributed-documentation).
+    If you trouble with the Mutagen feature, please try to recreate it and report via one of the [support channels](../support.md).
 
     ### Enabling Mutagen
 

@@ -79,10 +79,10 @@ plugins:
 - git-revision-date-localized:
     enable_creation_date: true
 # readthedocs doesn't seem to expose GH_TOKEN even when set.
-#- git-committers:
-#    repository: https://github.com/drud/ddev
-#    token: !ENV GH_TOKEN
-- git-authors
+- git-committers:
+    repository: https://github.com/drud/ddev
+    token: !ENV GH_TOKEN
+#- git-authors
 
 
 # Customization
@@ -137,7 +137,7 @@ markdown_extensions:
 
 nav:
   - 'Start!':
-    - users/index.md
+    - index.md
     - "Installing":
       - users/install/index.md
       - users/install/docker-installation.md
