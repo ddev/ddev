@@ -160,6 +160,7 @@ nav:
     - configuration/hooks.md
     - extend/additional-hostnames.md
     - configuration/config_yaml.md
+    - configuration/experimental.md
   - 'Extending':
     - extend/customization-extendibility.md
     - extend/additional-services.md
