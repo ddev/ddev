@@ -1,4 +1,4 @@
-## How DDEV Works
+# How DDEV Works
 
 The easiest way to think about how DDEV works is to think of it as a set of little networked computers (docker containers). You can think of them as being in a different network world than your workstation computer, but reachable from there.
 

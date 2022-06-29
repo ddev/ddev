@@ -144,15 +144,17 @@ nav:
       - install/ddev-installation.md
       - install/performance.md
       - install/shell-completion.md
-      - install/uninstall.md
     - quickstart.md
+    - support.md
   - 'Basics':
-    - basics/how_ddev_works.md
+    - basics/index.md
+    - basics/how-ddev-works.md
     - basics/cli-usage.md
     - basics/database_management.md
     - basics/troubleshooting.md
     - basics/faq.md
     - basics/developer-tools.md
+    - basics/uninstall.md
   - 'Configuration':
     - extend/database_types.md
     - configuration/hooks.md
