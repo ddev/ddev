@@ -4,7 +4,7 @@ Every developer wants both fast startup of the environment and quick response to
 
 Folks are usually happy with webserving performance right away on Linux, which includes Windows WSL2 and Gitpod.io, so there's not usually anything to do.
 
-On macOS and traditional Windows, the Docker environment has performance problems getting files synced between the host and the container, and that causes slowdowns in webserving. 
+On macOS and traditional Windows, the Docker environment has performance problems getting files synced between the host and the container, and that causes slowdowns in webserving.
 
 Currently, most people are using Mutagen on macOS. It's fast, requires no installation or configuration (besides turning it on with `ddev config --mutagen-enabled`), and although there are caveats below it has worked really, really well.
 
@@ -16,7 +16,7 @@ Instructions for Mutagen and NFS are below.
 
     ## Mutagen
 
-    ;TLDR: If you're on macOS or Windows just enable mutagen. `ddev config global --mutagen-enabled`. You'll be glad you did.
+    **;TLDR:** If you're on macOS or Windows just enable mutagen. `ddev config global --mutagen-enabled`. You'll be glad you did.
 
     The Mutagen asynchronous caching feature offers advanced performance experiences and is recommended for most projects. It's now the preferred way to get great webserving performance on macOS and Windows. Unlike the NFS feature, it requires no pre-configuration or installation. **You do not need to (and should not) install mutagen.** It can also be significantly faster than NFS and massively faster than plain vanilla Docker or Colima. In addition, it makes filesystem watchers (fsnotify/inotify) work correctly.
     

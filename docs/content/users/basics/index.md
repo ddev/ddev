@@ -8,4 +8,4 @@ Learn
 * [Troubleshooting](troubleshooting.md)
 * [Frequently-Asked Questions](faq.md)
 * [Built-in Developer Tools](developer-tools.md)
-* [Uninstalling DDEV]()
+* [Uninstalling DDEV](uninstall.md)

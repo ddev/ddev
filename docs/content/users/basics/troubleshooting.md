@@ -28,7 +28,6 @@ Things might go wrong! Besides the suggestions on this page don't forget about [
 
     DDEV by default uses ports 80 and 443 on your system when projects are running. If you are using another local development environment (like Lando or Docksal or a native setup) you can either stop the other environment or configure DDEV to use different ports. See [troubleshooting](troubleshooting.md#unable-listen) for more detailed problem-solving. It's easiest just to stop the other environment when you want to use DDEV, and stop DDEV when you want to use the other environment.
 
-
 <a name="unable-listen"></a>
 
 ## Webserver ports are already occupied by another webserver
