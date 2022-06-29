@@ -35,7 +35,7 @@ For each IDE the link to their documentation is provided, and the skeleton steps
 PhpStorm [zero-configuration debugging](https://confluence.jetbrains.com/display/PhpStorm/Zero-configuration+Web+Application+Debugging+with+Xdebug+and+PhpStorm) will automatically detect a connection and offer to create a "server", a file mapping from your workstation to the container. This means you only have to:
 
 1. Toggle the “Start Listening for PHP Debug Connections” button:
-  ![Start listening for debug connections button](images/phpstorm_listen_for_debug_connections.png)
+  ![Start listening for debug connections button](../images/phpstorm_listen_for_debug_connections.png)
 2. Set a breakpoint.
 3. Visit a page that should stop in the breakpoint you set.
 4. PhpStorm will ask you what mapping to use, so it can figure out how to map the path inside the container to the path on your workstation. The first time you do this with a project, PhpStorm will pop up a "server" dialog box to set the mapping. The default will work, but it's best to click the checkbox to map the whole project directory to /var/www/html.
@@ -56,23 +56,23 @@ PhpStorm [run/debug configurations](https://www.jetbrains.com/help/phpstorm/crea
 5. Set an appropriate breakpoint.
 6. Start debugging by clicking the "debug" button, which will launch a page in your browser.
 
-![PhpStorm debug start](images/phpstorm_config_debug_button.png)
+![PhpStorm debug start](../images/phpstorm_config_debug_button.png)
 
 Server creation:
 
-![PhpStorm server creation](images/phpstorm_config_server_config.png)
+![PhpStorm server creation](../images/phpstorm_config_server_config.png)
 
 ### PhpStorm and Command-Line Debugging
 
 If you need to debug command-line PHP processes, especially code that is outside the docroot, the environment variable PHP_IDE_CONFIG is already set inside the web container, so you don't have to do much more.
 
 However, if you have not yet used PhpStorm with xdebug for a regular web request, do that to automatically create the PhpStorm "server" with the same name as your primary URL (see "Languages and Frameworks" -> "PHP" -> "Servers"). The key job of the "server" is to map filesystem locations on the workstation (your computer) to filesystem locations on the remote server (in this case the ddev-webserver container). Often, PhpStorm has automatically set up a mapping that doesn't include the entire project (so the vendor directory is not mapped, for example). So map the top-level directory of your project to /var/www/html in the container, as in this image:
-![PhpStorm mapping](images/PHPStormServerMapping.png)
+![PhpStorm mapping](../images/PHPStormServerMapping.png)
 
 ## Visual Studio Code (vscode) Debugging Setup
 
 1. Install the [php-debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension.
-2. Update the project's [launch.json] (in `.vscode/launch.json`)  to add "Listen for xdebug" (see [config snippet](snippets/launch.json)).  For more on launch.json, see [vscode docs](https://code.visualstudio.com/docs/editor/debugging#_launch-configurations).
+2. Update the project's [launch.json] (in `.vscode/launch.json`)  to add "Listen for xdebug" (see [config snippet](../snippets/launch.json)).  For more on launch.json, see [vscode docs](https://code.visualstudio.com/docs/editor/debugging#_launch-configurations).
 3. Set a breakpoint in your index.php. If it isn't solid red, restart.
 4. In the menu, choose Run->Start Debugging.You may have to select "Listen for XDebug" by the green arrowhead at the top left. The bottom pane of vscode should now be orange (live) and should say "Listen for XDebug".
 5. Enable XDebug with `ddev xdebug on`

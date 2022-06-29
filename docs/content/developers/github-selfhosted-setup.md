@@ -20,21 +20,3 @@ We are using GitHub Self-Hosted Agents for Windows and macOS testing. The build 
 14. Run .buildkite/sanetestbot.sh to check your work.
 15. Reboot the machine and do a test run. (On windows the machine name only takes effect on reboot.)
 
-## macOS GitHub Self-Hosted Runner Setup
-
-1. Create the user "testbot" on the machine. The password should be the password of testbot@drud.com.
-2. Change the name of the machine to something in keeping with current style. Maybe `testbot-macstadium-macos-3`.
-3. Install [Homebrew](https://brew.sh/) `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
-4. Install golang/git/docker with `brew install homebrew/cask/iterm2 homebrew/cask/google-chrome homebrew/cask/docker drud/ddev/ddev homebrew/cask/nosleep buildkite/buildkite/buildkite-agent golang git mariadb jq p7zip bats-core composer netcat mkcert homebrew/cask/ngrok`
-5. `mkcert -install`
-6. Run Docker manually and go through its configuration routine.
-7. Run iTerm. On Mojave and higher it may prompt for requiring full disk access permissions, follow through with that.
-8. Set up nfsd by running `macos_ddev_nfs_setup.sh`
-9. Enable nosleep using its shortcut in the Mac status bar.
-10. In nosleep Preferences, enable "Never sleep on AC Adapter", "Never sleep on Battery", and "Start nosleep utility on system startup".
-11. Set up Mac to [automatically log in on boot](https://support.apple.com/en-us/HT201476).
-12. Install the github self-hosted runner software using the "Add New" instructions on <https://github.com/organizations/drud/settings/actions>
-13. Set the runner to run as a service per [docs](https://docs.github.com/en/free-pro-team@latest/actions/hosting-your-own-runners/configuring-the-self-hosted-runner-application-as-a-service) with `./svc.sh install && ./svc.sh start`
-14. Try checking out ddev and running .buildkite/sanetestbot.sh to check your work.
-15. Log into Chrome with the user testbot@drud.com and enable Chrome Remote Desktop.
-16. Set the timezone properly (US MT)

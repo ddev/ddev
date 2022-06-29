@@ -1,4 +1,4 @@
-# DDEV-Local Release Management and Docker Images
+# DDEV Release Management and Docker Images
 
 ## GitHub Actions Required Secrets
 

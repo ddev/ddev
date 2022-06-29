@@ -13,7 +13,7 @@ copyright: Localdev Foundation
 site_author: Localdev Foundation
 site_description: >-
   Do local website development on your computer or in the cloud with DDEV.
-docs_dir: docs/content/users
+docs_dir: docs/content
 
 # Configuration
 theme:
@@ -137,57 +137,65 @@ markdown_extensions:
 
 nav:
   - 'Start!':
-    - index.md
+    - users/index.md
     - "Installing":
-      - install/index.md
-      - install/docker-installation.md
-      - install/ddev-installation.md
-      - install/performance.md
-      - install/shell-completion.md
-    - quickstart.md
-    - support.md
+      - users/install/index.md
+      - users/install/docker-installation.md
+      - users/install/ddev-installation.md
+      - users/install/performance.md
+      - users/install/shell-completion.md
+    - users/quickstart.md
+    - users/support.md
   - 'Basics':
-    - basics/index.md
-    - basics/how-ddev-works.md
-    - basics/cli-usage.md
-    - basics/database_management.md
-    - basics/troubleshooting.md
-    - basics/faq.md
-    - basics/developer-tools.md
-    - basics/uninstall.md
+    - users/basics/index.md
+    - users/basics/how-ddev-works.md
+    - users/basics/cli-usage.md
+    - users/basics/database_management.md
+    - users/basics/troubleshooting.md
+    - users/basics/faq.md
+    - users/basics/developer-tools.md
+    - users/basics/uninstall.md
   - 'Configuration':
-    - extend/database_types.md
-    - configuration/hooks.md
-    - extend/additional-hostnames.md
-    - configuration/config_yaml.md
-    - configuration/experimental.md
+    - users/extend/database_types.md
+    - users/configuration/hooks.md
+    - users/extend/additional-hostnames.md
+    - users/configuration/config_yaml.md
+    - users/configuration/experimental.md
   - 'Extending':
-    - extend/customization-extendibility.md
-    - extend/additional-services.md
-    - extend/custom-compose-files.md
-    - extend/customizing-images.md
-    - extend/custom-commands.md
-    - extend/in-container-configuration.md
-    - extend/custom-tls-certificates.md
+    - users/extend/customization-extendibility.md
+    - users/extend/additional-services.md
+    - users/extend/custom-compose-files.md
+    - users/extend/customizing-images.md
+    - users/extend/custom-commands.md
+    - users/extend/in-container-configuration.md
+    - users/extend/custom-tls-certificates.md
   - 'Debugging & Profiling':
-      - step-debugging.md
+      - users/debugging-profiling/step-debugging.md
       - 'Profiling':
-          - blackfire-profiling.md
-          - xhprof-profiling.md
-          - xdebug-profiling.md
+          - users/debugging-profiling/blackfire-profiling.md
+          - users/debugging-profiling/xhprof-profiling.md
+          - users/debugging-profiling/xdebug-profiling.md
   - 'Hosting integration':
-    - providers/index.md
-    - providers/acquia.md
-    - providers/pantheon.md
-    - providers/platform.md
+    - users/providers/index.md
+    - users/providers/acquia.md
+    - users/providers/pantheon.md
+    - users/providers/platform.md
   - 'Guides':
-      - topics/cms_specific_help.md
-      - topics/phpstorm.md
-      - topics/sharing.md
-      - topics/webserver.md
-      - topics/whats_in_ddev_dir.md
-      - 'Version History': 'topics/version-history.md'
+      - users/topics/cms_specific_help.md
+      - users/topics/phpstorm.md
+      - users/topics/sharing.md
+      - users/topics/webserver.md
+      - users/topics/whats_in_ddev_dir.md
   - 'Details':
-      - details/offline-usage.md
-      - details/opting-in.md
-      - details/alternate-uses.md
+      - users/details/offline-usage.md
+      - users/details/opting-in.md
+      - users/details/alternate-uses.md
+  - 'Developers':
+      - developers/index.md
+      - developers/building-contributing.md
+      - developers/buildkite-testmachine-setup.md
+      - developers/github-selfhosted-setup.md
+      - developers/project-types.md
+      - developers/release-management.md
+      - developers/styleguide.md
+      - developers/testing-docs.md
