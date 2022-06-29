@@ -120,8 +120,7 @@ services:
         target: /tmp/project_mutagen
         volume:
           nocopy: true
-      # Use a traditional mount for .ddev and don't let mutagen mess with it.
-      - ".:/var/www/html/.ddev"
+
       {{ end }}
       {{ if .NoBindMounts }}
       - "ddev-config:/mnt/ddev_config"

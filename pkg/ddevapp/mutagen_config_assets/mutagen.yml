@@ -17,7 +17,8 @@ sync:
       - "/.git"
 
       - "/.tarballs"
-      - "/.ddev"
+      - "/.ddev/db_snapshots"
+      - "/.ddev/.importdb*"
       - ".DS_Store"
       - ".idea"
       {{ if .UploadDir }}
