@@ -38,10 +38,12 @@ var RouterImage = "drud/ddev-router"
 var RouterTag = "v1.19.3" // Note that this can be overridden by make
 
 // SSHAuthImage is image for agent
+//var SSHAuthImage = "drud/ddev-ssh-agent"
 var SSHAuthImage = "drud/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "v1.19.0"
+//var SSHAuthTag = "v1.19.0"
+var SSHAuthTag = "20220628_mikebarkas_sshagent"
 
 // Busybox is used a couple of places for a quick-pull
 var BusyboxImage = "busybox:stable"
