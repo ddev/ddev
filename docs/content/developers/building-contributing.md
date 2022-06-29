@@ -67,13 +67,29 @@ If you make changes to a docker image (like ddev-webserver), it won't have any e
 * Multi-arch images require you to have a buildx builder, so `docker buildx create --name ddev-builder-multi --use`
 * You can't push until you `docker login`.
 * Push a container to hub.docker.com. Push with the tag that matches your branch. Pushing to `<yourorg>/ddev-webserver` repo is easy to accomplish with `make push DOCKER_ORG=<yourorg> VERSION=<branchname>` **in the container directory**. You might have to use other techniques to push to another repo.
-* Update `pkg/versionconstants/versionconstants.go` with the WebImg and WebTag that relate to the docker image you pushed.
+* Update `pkg/versionconstants/versionconstants.go` with the `WebImg` and `WebTag` that relate to the docker image you pushed.
 
 ### Local builds and pushes
+
+To use `buildx` successfully you have to have the [`buildx` docker plugin](https://docs.docker.com/buildx/working-with-buildx/) which is in many environments by default.
+
+To build multi-platform images you must `docker buildx create --use` as a one-time initialization.
 
 * If you just want to work locally and do a quick build for your own architecture, you can:
     * `make VERSION=<version>`
     * for `ddev-dbserver`: `make mariadb_10.3 VERSION=<version>` etc.
+
+* To push manually:
+```markdown
+cd containers/ddev-webserver
+make push VERSION=<tag> 
+```
+
+If you're pushing to a repo other than the one wired into the Makefile (like `drud/ddev-webserver`) then
+```
+cd containers/ddev-webserver
+make push VERSION=<tag> DOCKER_REPO=your/dockerrepo
+```
 
 ### Pushes using GitHub Actions
 
@@ -93,7 +109,7 @@ To manually push using GitHub Actions,
 
 ## Building
 
-Build the project with `make` and your resulting executable will end up in .gotmp/bin/ddev (for Linux) or .gotmp/bin/windows_amd64/ddev.exe (for Windows) or .gotmp/bin/darwin/ddev (for macOS).
+Build the project with `make` and your resulting executable will end up in `.gotmp/bin/linux_amd64/ddev` or `.gotmp/bin/linux_arm64/ddev` (for Linux) or `.gotmp/bin/windows_amd64/ddev.exe` (for Windows) or `.gotmp/bin/darwin_amd64/ddev` or `.gotmp/bin/darwin_arm64/ddev` (for macOS).
 
 Build/test/check static analysis with
 
@@ -117,7 +133,7 @@ To see which DDEV commands the tests are executing, set the environment variable
 
 Use GOTEST_SHORT=true to run just one CMS in each test, or GOTEST_SHORT=<integer> to run exactly one project type from the list of project types in the [TestSites array](https://github.com/drud/ddev/blob/a4ab2827d8b6e706b2420700045d889a3a69f3f2/pkg/ddevapp/ddevapp_test.go#L43). For example, GOTEST_SHORT=5 will run many tests only against TYPO3.
 
-To run a test (in the cmd package) against a individually compiled ddev binary set the DDEV_BINARY_FULLPATH environment variable, for example DDEV_BINARY_FULLPATH=$PWD/.gotmp/bin/linux_amd64/ddev make testcmd`.
+To run a test (in the cmd package) against a individually compiled ddev binary set the DDEV_BINARY_FULLPATH environment variable, for example `DDEV_BINARY_FULLPATH=$PWD/.gotmp/bin/linux_amd64/ddev make testcmd`.
 
 ## Automated testing
 

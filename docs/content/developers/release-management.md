@@ -5,23 +5,23 @@
 <!-- markdown-link-check-disable-next-line -->
 The following "Repository secret" environment variables must be added to <https://github.com/drud/ddev/settings/secrets/actions>
 
-* AUR_SSH_PRIVATE_KEY: The private ssh key for the ddev-releaser user. This must be processed into a single line, for example, `perl -p -e 's/\n/<SPLIT>/' ~/.ssh/id_rsa_ddev_releaser| pbcopy`.
+* `AUR_SSH_PRIVATE_KEY`: The private ssh key for the ddev-releaser user. This must be processed into a single line, for example, `perl -p -e 's/\n/<SPLIT>/' ~/.ssh/id_rsa_ddev_releaser| pbcopy`.
 
-* CHOCOLATEY_API_KEY: API key for chocolatey.
+* `CHOCOLATEY_API_KEY`: API key for chocolatey.
 
-* DDEV_GITHUB_TOKEN: The GitHub token that gives access to create releases and push to the homebrew repositories.
+* `DDEV_GITHUB_TOKEN`: The GitHub token that gives access to create releases and push to the homebrew repositories.
 
-* DDEV_MACOS_APP_PASSWORD: The password used for notarization, see [signing_tools](https://github.com/drud/signing_tools)
+* `DDEV_MACOS_APP_PASSWORD`: The password used for notarization, see [signing_tools](https://github.com/drud/signing_tools)
 
-* DDEV_MACOS_SIGNING_PASSWORD: The password the access the signing key on macOS, see [signing_tools](https://github.com/drud/signing_tools)
+* `DDEV_MACOS_SIGNING_PASSWORD`: The password the access the signing key on macOS, see [signing_tools](https://github.com/drud/signing_tools)
 
-* DDEV_WINDOWS_SIGNING_PASSWORD: The windows signing password.
+* `DDEV_WINDOWS_SIGNING_PASSWORD`: The windows signing password.
 
-* HOMEBREW_EDGE_REPOSITORY: The name of the GitHub repo used for the edge channel on homebrew, drud/homebrew-ddev-ege
+* `HOMEBREW_EDGE_REPOSITORY`: The name of the GitHub repo used for the edge channel on homebrew, drud/homebrew-ddev-ege
 
-* HOMEBREW_STABLE_REPOSITORY: The name of the GitHub repo used for the stable channel on homebrew/ drud/homebrew-ddev
+* `HOMEBREW_STABLE_REPOSITORY`: The name of the GitHub repo used for the stable channel on homebrew/ drud/homebrew-ddev
 
-* SegmentKey: The key that enabled the Segment reporting
+* `SegmentKey`: The key that enabled the Segment reporting
 
 ## Creating a release (almost everything is now automated)
 
@@ -71,7 +71,7 @@ Sadly, there are no arm64 Docker images for mysql:5.7 and mysql:8.0, so we have 
 
 We maintain [drud/mysql-arm64-images](https://github.com/drud/mysql-arm64-images) and [drud/xtrabackup-build](https://github.com/drud/xtrabackup-build) for this reason.
 
-* drud/mysql:5.7 usees Ubuntu 18.04 as the base image, and Ubuntu 18.04 arm64 has mysql-server 5.7 in it, so we can install.
+* drud/mysql:5.7 uses Ubuntu 18.04 as the base image, and Ubuntu 18.04 arm64 has mysql-server 5.7 in it, so we can install.
 * drud/mysql:8.0 uses Ubuntu 20.04 as the base image, and Ubuntu 20.04 arm64 has mysql-server 8.0 in it, so we can install it from packages.
 * Unfortunately, the `ddev snapshot` feature depends on xtrabackup 8.0 being installed for mysql:8.0. And there are no arm64 packages or binaries provided by percona for xtrabackup. So we build it from source with [drud/xtrabackup-build](https://github.com/drud/xtrabackup-build). BUT... xtrabackup's development cycle lags behind mysql:8.0's development cycle, so you can't build a usable drud/mysql:8.0 image until there's an xtrabackup version released. Also unfortunately, when Ubuntu bumps mysql-server-8.0 to a new version, there's no way to use the old one. So the only time that you can maintain drud/mysql:8.0 is when Ubuntu 20.04 has the same version that's released for percona-xtrabackup. (In the case at this writeup, I was finally able to build percona-xtrabackup 8.0.28... and the same day Ubuntu bumped its packages to 8.0.29, meaning that it was unusable.)
 * To build percona-xtrabackup, follow the instructions on [drud/xtrabackup-build](https://github.com/drud/xtrabackup-build). You just create a release with the release of Percona xtrabackup, for example `8.0.29-21`. When that succeeds, then there is an upstream xtrabackup to be used in the drud/mysql:8.0 build.

@@ -9,7 +9,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 3. In admin PowerShell, `Set-ExecutionPolicy -Scope "CurrentUser" -ExecutionPolicy "RemoteSigned"`
 4. In admin PowerShell, download and run [windows_buildkite_start.ps1](scripts/windows_buildkite_start.ps1) (Use `curl <url> -O windows_buildkite_start.ps1`)
 5. After restart, in **administrative** git-bash window, `Rename-Computer <testbot-win10(home|pro)-<description>-1` and then `export BUILDKITE_AGENT_TOKEN=<token>`
-6. Now download and run [windows_buildkite-testmachine_setup.sh](scripts/windows_buildkite_setup.sh)
+6. Now download and run [`windows_buildkite-testmachine_setup.sh`](scripts/windows_buildkite_setup.sh)
 7. Download and run [windows_postinstall.sh](scripts/windows_postinstall.sh)
 8. Launch Docker. It may require you to take further actions.
 9. Log into Chrome with the user ddevtestbot@gmail.com and enable Chrome Remote Desktop.
@@ -28,7 +28,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 15. Set the buildkite-agent service to run as the testbot user and use delayed start: Choose "Automatic, delayed start" and on the "Log On" tab in the services widget it must be set up to log in as the testbot user, so it inherits environment variables and home directory (and can access NFS, has testbot git config, etc).
 16. `git config --global --add safe.directory '*'`
 17. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`
-18. Run .buildkite/sanetestbot.sh to check your work.
+18. Run `.buildkite/sanetestbot.sh` to check your work.
 19. Reboot the machine and do a test run. (On windows the machine name only takes effect on reboot.
 20. Verify that go, ddev, git-bash are in the path
 21. In "Advanced Windows Update Settings" enable "Receive updates for other Microsoft products" to make sure you get WSL2 kernel upgrades. Make sure to run Windows update to get latest kernel.
@@ -85,7 +85,7 @@ Set up Windows to automatically start WSL2 buildkite-agent: Use task scheduler t
 16. In nosleep Preferences, enable "Never sleep on AC Adapter", "Never sleep on Battery", and "Start nosleep utility on system startup".
 17. `sudo chown testbot /usr/local/bin`
 18. Set up Mac to [automatically log in on boot](https://support.apple.com/en-us/HT201476).
-19. Try checking out ddev and running .buildkite/sanetestbot.sh to check your work.
+19. Try checking out ddev and running `.buildkite/sanetestbot.sh` to check your work.
 20. Log into Chrome with the user ddevtestbot@gmail.com and enable Chrome Remote Desktop.
 21. Set the timezone properly (US MT)
 22. Start the agent with `brew services start buildkite-agent`
