@@ -80,12 +80,14 @@ To build multi-platform images you must `docker buildx create --use` as a one-ti
     * for `ddev-dbserver`: `make mariadb_10.3 VERSION=<version>` etc.
 
 * To push manually:
+
 ```markdown
 cd containers/ddev-webserver
 make push VERSION=<tag> 
 ```
 
 If you're pushing to a repo other than the one wired into the Makefile (like `drud/ddev-webserver`) then
+
 ```
 cd containers/ddev-webserver
 make push VERSION=<tag> DOCKER_REPO=your/dockerrepo
