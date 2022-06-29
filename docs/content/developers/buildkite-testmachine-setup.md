@@ -18,11 +18,13 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 12. Set the "Sleep after time" setting in settings to never.
 13. Install [winaero tweaker](https://winaero.com/request.php?1796) and "Enable user autologin checkbox". Set up the machine to [automatically log in on boot](https://www.cnet.com/how-to/automatically-log-in-to-your-windows-10-pc/).  Then run netplwiz, provide the password for the main user, uncheck the "require a password to log in".
 14. The buildkite/hooks/environment.bat file must be updated to contain the docker pull credentials:
-```bash
-@echo off
-set DOCKERHUB_PULL_USERNAME=druddockerpullaccount
-set DOCKERHUB_PULL_PASSWORD=
-```
+
+    ```bash
+    @echo off
+    set DOCKERHUB_PULL_USERNAME=druddockerpullaccount
+    set DOCKERHUB_PULL_PASSWORD=
+    ```
+
 15. Set the buildkite-agent service to run as the testbot user and use delayed start: Choose "Automatic, delayed start" and on the "Log On" tab in the services widget it must be set up to log in as the testbot user, so it inherits environment variables and home directory (and can access NFS, has testbot git config, etc).
 16. `git config --global --add safe.directory '*'`
 17. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`
@@ -42,14 +44,15 @@ set DOCKERHUB_PULL_PASSWORD=
 Set up Windows to automatically start WSL2 buildkite-agent: Use task scheduler to create a simple task that runs `C:\Windows\System32\wsl.exe -d Ubuntu buildkite-agent start` at login.
 7. Install homebrew, `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 8. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`
-9. 16. `git config --global --add safe.directory '*'`
+9. `git config --global --add safe.directory '*'`
 10. The buildkite/hooks/environment file must be updated to contain the docker pull credentials:
-```bash
-   #!/bin/bash
-   export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
-   export DOCKERHUB_PULL_PASSWORD=xxx
-   set -e
-```
+
+    ```bash
+       #!/bin/bash
+       export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
+       export DOCKERHUB_PULL_PASSWORD=xxx
+       set -e
+    ```
 
 ## macOS Test Agent Setup (works for M1 as well)
 
@@ -67,20 +70,22 @@ Set up Windows to automatically start WSL2 buildkite-agent: Use task scheduler t
     * the agent token
     * Tags, like `"os=macos,architecture=arm64,osvariant=monterrey,dockertype=dockerformac"`
     * `build-path="~/tmp/buildkite-agent/builds"`
-12. The buildkite/hooks/environment file must be updated to contain the docker pull credentials:
-```bash
-   #!/bin/bash
-   export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
-   export DOCKERHUB_PULL_PASSWORD=xxx
-   set -e
-```
-11. `brew services start buildkite-agent`
-12. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`
-13. Enable nosleep using its shortcut in the Mac status bar.
-14. In nosleep Preferences, enable "Never sleep on AC Adapter", "Never sleep on Battery", and "Start nosleep utility on system startup".
-15. `sudo chown testbot /usr/local/bin`
-16. Set up Mac to [automatically log in on boot](https://support.apple.com/en-us/HT201476).
-17. Try checking out ddev and running .buildkite/sanetestbot.sh to check your work.
-18. Log into Chrome with the user ddevtestbot@gmail.com and enable Chrome Remote Desktop.
-19. Set the timezone properly (US MT)
-20. Start the agent with `brew services start buildkite-agent`
+12. The buildkite/hooks/environment file must be updated to contain the docker pull credentials
+
+    ```bash
+       #!/bin/bash
+       export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
+       export DOCKERHUB_PULL_PASSWORD=xxx
+       set -e
+    ```
+
+13. `brew services start buildkite-agent`
+14. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`
+15. Enable nosleep using its shortcut in the Mac status bar.
+16. In nosleep Preferences, enable "Never sleep on AC Adapter", "Never sleep on Battery", and "Start nosleep utility on system startup".
+17. `sudo chown testbot /usr/local/bin`
+18. Set up Mac to [automatically log in on boot](https://support.apple.com/en-us/HT201476).
+19. Try checking out ddev and running .buildkite/sanetestbot.sh to check your work.
+20. Log into Chrome with the user ddevtestbot@gmail.com and enable Chrome Remote Desktop.
+21. Set the timezone properly (US MT)
+22. Start the agent with `brew services start buildkite-agent`

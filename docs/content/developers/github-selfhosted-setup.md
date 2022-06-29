@@ -19,4 +19,3 @@ We are using GitHub Self-Hosted Agents for Windows and macOS testing. The build 
 13. Install the github self-hosted runner software using the "Add New" instructions on <https://github.com/organizations/drud/settings/actions>. When it asks if you want it as a service... you do.
 14. Run .buildkite/sanetestbot.sh to check your work.
 15. Reboot the machine and do a test run. (On windows the machine name only takes effect on reboot.)
-
