@@ -42,8 +42,6 @@ jobs:
 #          file-path: 'README.md', 'CONTRIBUTING.md'
           config-file: 'markdown-link-check.json'
       - name: Test mkdocs
-        # We can't install mkdocs-material-insiders from a forked repo
-        if: github.event.pull_request.head.repo.full_name == github.repository
         run: |
           sudo pip3 install setuptools
           sudo pip3 install -r docs/mkdocs-pip-requirements
