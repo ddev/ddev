@@ -8,4 +8,4 @@ dt {
   font-weight: bold;
 }
 
-.md-typeset :is(.admonition,details) { font-size: .64rem;}
+.md-typeset :is(.admonition,details) { font-size: .70rem;}
