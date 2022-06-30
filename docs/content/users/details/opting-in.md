@@ -1,4 +1,3 @@
-
 <a name="opt-in-usage-information"></a>
 
 # Opt-In Usage Information

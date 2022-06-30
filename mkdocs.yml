@@ -8,8 +8,8 @@ copyright: Localdev Foundation
 #extra_javascript:
 #- 'assets/jquery-3.5.1.min.js'
 #- 'assets/extra.js'
-#extra_css:
-#- 'assets/extra.css'
+extra_css:
+- 'assets/extra.css'
 site_author: Localdev Foundation
 site_description: >-
   Do local website development on your computer or in the cloud with DDEV.

@@ -1,4 +1,4 @@
-# Blackfire.io
+# Blackfire.io Profiling
 
 DDEV-Local has built-in [blackfire.io](https://blackfire.io) integration.
 

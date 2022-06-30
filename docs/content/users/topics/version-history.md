@@ -1,12 +1,12 @@
-## DDEV Version History
+# DDEV Version History
 
 This version history has been driven by what we hear from our wonderful community of users. If you have lobbying for a favorite item or think things should be re-prioritized, just lobby in the [issue queue](https://github.com/drud/ddev/issues). We listen. Or talk to us in any of the [support locations](https://ddev.readthedocs.io/en/stable/#support).
 
-### Coming... v1.20
+## Coming... v1.20
 
 Take a look at the [v1.20 milestone](https://github.com/drud/ddev/milestone/54) to see what's currently slated. Comment there on your favorites, or lobby for other things to be added.
 
-### v1.19 (Released 2022-03)
+## v1.19 (Released 2022-03)
 
 - [x] `ddev get` and `ddev get --list` allow quick installation of maintained, tested add-ons.
 - [x] Postgresql support alongside MariaDB and MySQL.
@@ -15,7 +15,7 @@ Take a look at the [v1.20 milestone](https://github.com/drud/ddev/milestone/54) 
 - [x] New `ddev service enable`, `ddev service disable`, `ddev php`, `ddev debug test`, `ddev debug dockercheck` commands.
 - [x] Support for remote docker instances.
 
-### v1.18 (Released 2021-09-28) and v1.18.2 (2021-12-08)
+## v1.18 (Released 2021-09-28) and v1.18.2 (2021-12-08)
 
 - [x] gitpod.io support
 - [x] Integrated docker-compose so docker updates don't break things.
@@ -28,7 +28,7 @@ Take a look at the [v1.20 milestone](https://github.com/drud/ddev/milestone/54) 
 - [x] Base image for the ddev-webserver is now Debian 11 Bullseye
 - [x] mysql5.7 and mysql8.0 support on arm64 (mac M1) machines.
 
-### v1.17 (Released 2021-04-07)
+## v1.17 (Released 2021-04-07)
 
 - [x] Composer v2 is now the default composer version
 - [x] Brand new provider integration system, with user-configurable and extensible techniques, Acquia, Platform.sh, DDEV-Live, Pantheon.io integration
@@ -42,7 +42,7 @@ Take a look at the [v1.20 milestone](https://github.com/drud/ddev/milestone/54) 
 - [x] The MariaDB default for new projects is 10.3
 - [x] New docs theme
 
-### v1.16 (Released 2020-11-12)
+## v1.16 (Released 2020-11-12)
 
 - [x] Support Shopware 6
 - [x] Remove support for docker toolbox on Win10 Home (in favor of new docker desktop)
@@ -50,7 +50,7 @@ Take a look at the [v1.20 milestone](https://github.com/drud/ddev/milestone/54) 
 - [x] Per-project-type commands like `ddev drush`, `ddev typo3`
 - [x] Build hardened ddev with hardened images for open-source production hosting
 
-### v1.15 (Released 2020-07-08)
+## v1.15 (Released 2020-07-08)
 
 - [x] Laravel support
 - [x] Global custom commands
@@ -61,7 +61,7 @@ Take a look at the [v1.20 milestone](https://github.com/drud/ddev/milestone/54) 
 - [x] MariaDB 10.5 support
 - [x] Remove obsolete support for drud-aws.
 
-### v1.14 (Released 2020-04-21)
+## v1.14 (Released 2020-04-21)
 
 - [x] Drupal 9 support
 - [x] Global NFS configuration
@@ -70,7 +70,7 @@ Take a look at the [v1.20 milestone](https://github.com/drud/ddev/milestone/54) 
 - [x] Competitive analysis with similar products both within the spaces we usually work and outside them.
 - [x] GUI evaluations
 
-### v1.13 (Released 2020-02-04)
+## v1.13 (Released 2020-02-04)
 
 - [x] Updated support of pantheon via terminus instead of undocumented API
 - [x] Support for Magento and Magento 2, #1802
@@ -78,18 +78,18 @@ Take a look at the [v1.20 milestone](https://github.com/drud/ddev/milestone/54) 
 - [ ] Develop an advisory board of interested users to determine product focus
 - [x] Review/experimentation with GUI options [#2110](https://github.com/drud/ddev/issues/2110)
 
-### v1.12 (Released 2019-12-04)
+## v1.12 (Released 2019-12-04)
 
 - [x] Support for multiple versions of Oracle MySQL as well as MariaDB
 - [x] Improved WordPress support (several open WordPress bugs)
 - [x] Custom command improvements
 
-### v1.11 (Released 2019-09-19)
+## v1.11 (Released 2019-09-19)
 
 - [x] PHP 7.4 support
 - [x] [Allow omitting the db container](https://github.com/drud/ddev/issues/1490)
 
-### v1.10 (released 2019-08-02)
+## v1.10 (released 2019-08-02)
 
 - [x] Improved instrumentation with [segment](https://segment.com/): @unn is advocating for segment as better than Sentry (or in addition to Sentry). Statistics: Monthly active users, Conversion ratio. [#1640](https://github.com/drud/ddev/issues/1640)
 - [x] [Add custom ddev commands](https://github.com/drud/ddev/issues/1372) - See [docksal's approach](https://docs.docksal.io/fin/custom-commands/)
@@ -100,7 +100,7 @@ Take a look at the [v1.20 milestone](https://github.com/drud/ddev/milestone/54) 
 - [x] Make sure exposed ports are not exposed on local subnet, #1662
 - [x] [Rework containers to provide a "real" user inside container](https://github.com/drud/ddev/issues/1403)
 
-### v1.9 (released 2019-06-26)
+## v1.9 (released 2019-06-26)
 
 - [x] [Contrib-pointers for additional Services and techniques](https://github.com/drud/ddev/issues/1474): We want to make another place for the outstanding content and pointers and applications that our users are developing. This will probably be a contrib repository for ddev.
 - [x] [NFS Setup Security Review](https://github.com/drud/ddev/issues/1474): More docs and improved NFS setup scripts so people can think clearly and plan carefully for how they're using NFS with ddev.
@@ -110,7 +110,7 @@ Take a look at the [v1.20 milestone](https://github.com/drud/ddev/milestone/54) 
 - [x] [Support ngrok to allow web access remotely](https://github.com/drud/ddev/issues/375)
 - [x] [Hook system overhaul](https://github.com/drud/ddev/issues/1372)
 
-### v1.8 (released 2019-05-14)
+## v1.8 (released 2019-05-14)
 
 - **Browsers and host OSs now trust ddev sites over https**. You do have to take the one-time action to install the CA keys into your operating system and browsers: `mkcert -install`. If you use one of the package installation methods or the Windows installer, you should already have mkcert. Otherwise, see the [mkcert](https://github.com/FiloSottile/mkcert) page for installation options.  (Even curl and operating system tools generally trust the mkcert certs, and curl within the container also trusts them.)
 - **Dynamic container updates**: If you need extra Debian packages in your web or db container (or need to make more sophisticated adjustments) you no longer have to wait for them, or install them every time you start a project.  You can add [`webimage_extra_packages`](https://ddev.readthedocs.io/en/latest/users/extend/customizing-images/#adding-extra-debian-packages-with-webimage_extra_packages-and-dbimage_extra_packages) to your config.yaml or  [build a free-form Dockerfile](https://ddev.readthedocs.io/en/latest/users/extend/customizing-images/#adding-extra-dockerfiles-for-webimage-and-dbimage) (Dockerfile.example provided in your .ddev folder)
@@ -118,7 +118,7 @@ Take a look at the [v1.20 milestone](https://github.com/drud/ddev/milestone/54) 
 - **`ddev exec` and exec hooks now interpret commands using bash**. This means you can have a hook like "sudo apt-get update && sudo apt-get install -y some-package" without putting "bash -c" in front of it. And you can `ddev exec "sudo apt-get update && sudo apt-get upgrade -y some-package"` as well, no bash -c required.
 - **`ddev exec` can now work with interactive situations**. So for example, you can `ddev exec mysql` and interact with the mysql program directly.  Or `ddev exec bash`, which is the same as `ddev ssh`.
 
-### v1.7 (released 2019-03-28)
+## v1.7 (released 2019-03-28)
 
 - config.*.yaml overrides: local configuration files can be used to override a team-standard checked-in .ddev/config.yaml. See [docs](https://ddev.readthedocs.io/en/latest/users/extend/customization-extendibility/#extending-configyaml-with-custom-configyaml-files).  #1504 and #1410.
 - Optional static bind ports for db and webserver containers. Those who want the dbserver or webserver bound port to be static within a project can use `host_db_port` or `host_webserver_port` to specify it: #1502, #1491, #941
@@ -128,20 +128,20 @@ Take a look at the [v1.20 milestone](https://github.com/drud/ddev/milestone/54) 
 - Fix regression in v1.5.0 where mariadb_version = 10.1 did not properly set the container version to the 10.1 container version.
 - The ddev-dbserver images now use the official MariaDB docker image (which uses Debian) as a base, instead of building a custom Alpine image. This *should* be invisible to all users, but we love to hear feedback.
 
-### v1.6 (released 2019-02-11)
+## v1.6 (released 2019-02-11)
 
 - ddev now supports NFS mounting into the container on all platforms.  This provides nearly the speed increase of the experimental webcache feature, but with far greater reliability, and it works on all platforms. In addition, it seems to solve perpetual symlink problems that Windows users had. It does require some configuration on the host side, so [please read the docs](https://ddev.readthedocs.io/en/latest/users/performance/#using-nfs-to-mount-the-project-into-the-container)
 - Chocolatey installs on Windows: [Chocolatey](https://chocolatey.org/) is a leading package manager for Windows, and it makes so many packages so easy to install. On our Windows testbots we use choco to install all the key items that a testbot needs with `choco install -y git mysql-cli golang make docker-desktop nssm GoogleChrome zip jq composer cmder netcat ddev`, note that ddev is in there now :).
 - The ddev-dbserver container has been updated so that triggers work, for those of you who use triggers.
 - Root/sudo usage of ddev is prevented  (#1407). We found that people kept getting themselves in trouble by trying to use sudo and then they would have files that could not be accessed by an ordinary user.
 
-### v1.5 (released 2018-12-18)
+## v1.5 (released 2018-12-18)
 
 - The newly released PHP 7.3 is now supported, `php_version: 7.3` or `ddev config --php-version=7.3`. As noted above, php-memcached is not yet available for 7.3.
 - For macOS users, a new *experimental* webcaching strategy makes webserving way faster on large projects like TYPO3 or Drupal 8. `webcache_enabled: true` in the config.yaml will start a caching container so that actual webserving happens on a much faster filesystem. This is experimental and has some risks, we want to know your experience. It takes longer to do a `ddev start` because your entire project has to be pushed into the container, but after that hitting a page is way, way more satisfying.  Note that `.git` directories are not copied into the webcache, git won't work inside the web container. It just seemed too risky to combine 2-way file synchronization with your precious git repository, so do git operations on the host. Note that if you have a lot of files or big files in your repo, they have to be pushed into the container, and that can take time. I have had to clean up my .ddev/db_snapshots directory rather than wait for the `docker cp` to happen forever. A big shout out to Drud team member @cweagans for the original [docker-bg-sync](https://github.com/cweagans/docker-bg-sync) that we forked and used to implement this! Thanks!
 - Important Windows symlink support in `ddev composer` (<https://github.com/drud/ddev/pull/1323>). On the CIFS filesystem used by Docker-for-Windows, real Linux/Mac symlinks are *supported* but cannot be created, so composer operations inside the container in some cases create simulated symlinks, which are actually just files with XSym content; these work fine inside the container… but they're not real symlinks and sometimes cause some issues. We've added a cleanup step after `ddev composer` that converts those XSym files into real symlinks. It only works on Docker for Windows, and it only works if you have "Developer mode" enabled on your Windows 10/11 Pro host. More info is in the [docs](https://ddev.readthedocs.io/en/latest/users/developer-tools/#ddev-and-composer)
 
-### v1.4 (released 2018-11-15)
+## v1.4 (released 2018-11-15)
 
 - The `ddev composer` command now provides in-container composer commands for nearly anything you'd want to do with composer. We found that lots of people, and especially Windows users, were having trouble with fairly difficult workarounds to use composer. However this has value to most ddev users:
     - The composer and php version used are the exact version configured for your project.
@@ -153,7 +153,7 @@ Take a look at the [v1.20 milestone](https://github.com/drud/ddev/milestone/54) 
 - Configurable working and destination directories. You can now specify the container directory you land in with `ddev ssh`, `ddev exec`, and exec hooks in config.yaml  (#1214). This also means that TYPO3 users will land in the project root by default; Drupal/Backdrop users land in the project root by default.
 - [`ddev export-db`](https://ddev.readthedocs.io/en/stable/users/cli-usage/#exporting-a-database) makes textual exports of the database easier; Don't forget about `ddev snapshot` as well.
 
-### v1.3 (released 2018-10-11)
+## v1.3 (released 2018-10-11)
 
 - Apache support now works on Windows and has full test coverage and is no longer experimental. It seems to work quite well.
 - MariaDB is upgraded from 10.1 to 10.2. MariaDB 10.2 has a number of advantages including more flexible key lengths. (This does mean that pre-v1.1.0 databases which were bind-mounted in ~/.ddev can no longer be migrated to docker volumes with this release, see caveats above. Also, snapshots from previous releases cannot be restored with this release, in caveats above.)
@@ -168,13 +168,13 @@ Take a look at the [v1.20 milestone](https://github.com/drud/ddev/milestone/54) 
 - `ddev pull` now adds flags so you can skip downloading either files or db. See `ddev help pull`.
 - A number of bugfixes, docs fixes, and significant automated testing improvements.
 
-### v1.2 (released 2018-09-11)
+## v1.2 (released 2018-09-11)
 
 - Experimental Apache support has been added, but it doesn't yet work on Windows. You can now run with apache-with-php-fpm (apache-fpm) or `apache-with-cgi` (`apache-cgi`). Just change your .ddev/config.yaml to use `webserver_type: apache-fpm` or `webserver_type: apache-cgi`. (#1007)
 - `ddev config` now has additional config flags:  --php-version, --http-port,  --https-port, --xdebug-enabled,  --additional-hostnames, --additional-fqdns to allow command-line configuration instead of direct editing of the .ddev/config.yaml file. (#1092)
 - The upload directory (Drupal public files directory, etc.) can now be specified in config.yaml. (#1093)
 
-### v1.1 (released 2018-08-15)
+## v1.1 (released 2018-08-15)
 
 - ddev now requires docker 18.06; a serious docker bug in 18.03 caused lots and lots of crashes, so we moved it up to 18.06.
 - You can now remove hostnames that ddev has added to /etc/hosts.
@@ -189,7 +189,7 @@ Take a look at the [v1.20 milestone](https://github.com/drud/ddev/milestone/54) 
 - ddev now has integration with the Drud hosting service, so `ddev config drud-s3` works for users of the Drud hosting service.
 - Php-redis was added to web container.
 
-### v1.0 (released 2018-07-19)
+## v1.0 (released 2018-07-19)
 
 - Improvements of settings file management for Drupal and Backdrop (more below) (#468)
 - Support for fully qualified domain names (FQDNs) (#868) - You can now add to your .ddev/config.yaml `additional_fqdns: ["mysite.example.com"]` and your site will be available at `http://mysite.example.com` after restart. More in [the docs](https://ddev.readthedocs.io/en/latest/users/extend/additional-hostnames/)

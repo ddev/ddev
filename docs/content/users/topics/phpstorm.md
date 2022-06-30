@@ -1,12 +1,12 @@
-## PhpStorm Configuration and Integration
+# PhpStorm Configuration and Integration
 
-### Full Integration with Docker, DDEV, and PhpStorm
+## Full Integration with Docker, DDEV, and PhpStorm
 
 This explores how to add full PhpStorm integration with a DDEV project, including composer and phpunit. It works on all OS platforms, including macOS and WSL2.
 
 This is based on the wonderful [article](https://susi.dev/fully-integrate-ddev-and-phpstorm-including-unit-tests-with-coverage-update-2021) by [Susanne Moog](https://github.com/susannemoog), and couldn't have been done without it, but since PhpStorm has fixed some things and DDEV has worked around others, this is far easier now. It works on macOS, Linux, Windows with WSL2 and Windows traditional. You'll end up with PhpStorm actually using the PHP interpreter inside the ddev-webserver container of your project, and able to use composer and phpunit inside there as well.
 
-#### Requirements
+### Requirements
 
 - PhpStorm 2021.3 or higher
 - You may need to add the `PHP Docker` plugin.
@@ -15,7 +15,7 @@ This is based on the wonderful [article](https://susi.dev/fully-integrate-ddev-a
    2. (Suggested for WSL) enabling **Use Compose V2** in PHPStorm and your Docker installation.
 - Any OS platform, but if you're using Windows PhpStorm with WSL2 the path mappings are slightly more complex. WSL2 instructions are provided where necessary.
 
-#### Setup Technique
+### Setup Technique
 
 1. Open a DDEV project. In this example, the project name is "d9" and the site is "d9.ddev.site".
     - If you're on Windows, running PhpStorm on the Windows side but  using WSL2 for your DDEV project, open the project as a WSL2 project. In other words, in the "Open" dialog, browse to `\\wsl$\Ubuntu\home\rfay\workspace\d9` (in this example). (If you're running PhpStorm inside WSL2, there are no special instructions.)
@@ -53,7 +53,7 @@ Notes:
 - This was developed with input from many others in [https://github.com/drud/ddev/issues/3130](https://github.com/drud/ddev/issues/3130)
 - ([`@eojthebrave`](https://www.drupal.org/u/eojthebrave)) has a great explanation of the whole thing, including Chromedriver and focused on Drupal in the excellent [Drupalize.me](http://drupalize.me) article [Debug any of Drupal's PHPUnit tests in PhpStorm with a DDEV-Local Environment](https://drupalize.me/blog/debug-any-drupals-phpunit-tests-phpstorm-ddev-local-environment)
 
-### PhpStorm Basic Setup on Windows WSL2
+## PhpStorm Basic Setup on Windows WSL2
 
 It is possible right now to use PHPStorm with DDEV-Local on WSL2 in at least two different ways:
 
@@ -63,7 +63,7 @@ We’ll walk through both of these approaches.
 
 (JetBrains is really working to catch up with the slick WSL2 support of vscode. A third option is the [Projector](https://lp.jetbrains.com/projector/) app, which runs PhpStorm on WSL2 (or anywhere else) but displays it in a browser.)
 
-#### Basics
+### Basics
 
 - Start with a working DDEV/WSL2 setup as described in the [docs](../install/ddev-installation.md). Until that’s all working it doesn’t help to go farther.
 
@@ -71,7 +71,7 @@ We’ll walk through both of these approaches.
 
 - For good performance, you want your project to be in `/home` inside WSL2, which is on the Linux filesystem. Although you can certainly keep your project on the Windows filesystem and access it in WSL2 via /mnt/c, the performance is even worse than native Windows. It does work though, but don't do it. You'll be miserable.
 
-#### PhpStorm Running On Windows Side
+### PhpStorm Running On Windows Side
 
 1. Your working project should be on the /home partition, so you’ll open it using Windows PHPStorm as `\\wsl$\Ubuntu\home\<username>\...\<projectdir>`.
 2. On some systems and some projects it may take a very long time for PHPStorm to index the files. At one point I got frustrated and moved to a faster computer.

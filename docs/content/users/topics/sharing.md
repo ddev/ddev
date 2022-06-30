@@ -1,4 +1,4 @@
-## Sharing your project with others
+# Sharing your project with others
 
 Even though DDEV is intended for local development on a single machine, not as a public server, there are a number of reasons you might want to expose your work in progress more broadly:
 
@@ -12,18 +12,18 @@ There are at least three different ways to share a running DDEV-Local project ou
 * Local name resolution and sharing the project on the local network
 * Sharing just the http port of the local machine on the local network
 
-### Using `ddev share` to share project (easiest)
+## Using `ddev share` to share project (easiest)
 
 `ddev share` proxies the project via [ngrok](https://ngrok.com), and it's by far the easiest way to solve the problem of sharing your project with others on your team or around the world. It's built into ddev and "just works" for most people, but it does require a free or paid account on [ngrok.com](https://ngrok.com). All you do is run `ddev share` and then give the resultant URL to your collaborator or use it on your mobile device. [Read the basic how-to from DrupalEasy](https://www.drupaleasy.com/blogs/ultimike/2019/06/sharing-your-ddev-local-site-public-url-using-ddev-share-and-ngrok) or run `ddev share -h` for more.
 
 There are CMSs that make this a little harder, especially WordPress and Magento 2. Both of those only respond to a single base URL, and that URL is coded into the database, so it makes this a little harder. For both of these I recommend paying ngrok the $5/month for  a [basic plan](https://ngrok.com/pricing) so you can use a stable subdomain with ngrok.</p>
 
-#### Setting up a stable subdomain with ngrok
+### Setting up a stable subdomain with ngrok
 
 1. Get a paid token with at least the basic plan, and configure it. It will be in ~/.ngrok2/ngrok.yml as authtoken.
 2. Configure ngrok_args to use a stable subdomain. In `.ddev/config.yaml`, `ngrok_args: --subdomain wp23` will result in ngrok always using "wp23.ngrok.io" as the URL, so it's not changing on you all the time.
 
-#### WordPress: Change the URL with wp search-replace
+### WordPress: Change the URL with wp search-replace
 
 WordPress only has the one base URL, but the wp command is built into DDEV-Local's web container.
 
@@ -35,7 +35,7 @@ This set of steps assumes an ngrok subdomain of "wp23" and a starting URL of `ht
 * `ddev wp search-replace https://wordpress.ddev.site https://wp23.ngrok.io` (assuming your project is configured for `https://wordpress.ddev.site` and your `ngrok_args` are configured for the wp23 subdomain)
 * Now `ddev share`
 
-#### Magento2: Change the URL with magento tool
+### Magento2: Change the URL with magento tool
 
 This set of steps assumes an ngrok subdomain "mg2"
 
@@ -56,7 +56,7 @@ Another solution is to **not** use `*.ddev.site` as your project URLs, but to us
 * Make sure your firewall allows access from your local network to the main interface you're using. In the example here you should be able to ping 192.168.5.101 and `curl http://192.168.5.101` and get an answer in each case.
 * If you're using WordPress or Magento 2 you'll need to change the base URL as described in the `ddev share` instructions above.
 
-### Exposing just a port from the host and providing a direct URL
+## Exposing just a port from the host and providing a direct URL
 
 DDEV's web container also exposes an HTTP port directly (in addition to the normal routing by name and via ddev_router). You can expose this port and it may be a useful approach in some situations.
 

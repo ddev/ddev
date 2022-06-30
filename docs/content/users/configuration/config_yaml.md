@@ -1,4 +1,4 @@
-## .ddev/config.yaml options
+# .ddev/config.yaml options
 
 Each project has a (hidden) directory named .ddev, and
 the .ddev/config.yaml is the primary configuration for the project.
