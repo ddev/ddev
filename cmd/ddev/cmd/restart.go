@@ -46,7 +46,6 @@ ddev restart --all`,
 			if globalconfig.GetCAROOT() == "" || ddevapp.IsRouterDisabled(app) {
 				urlList = httpURLs
 			}
-
 			util.Success("Your project can be reached at %s", strings.Join(urlList, " "))
 		}
 	},

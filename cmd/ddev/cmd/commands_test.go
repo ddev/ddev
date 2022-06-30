@@ -101,6 +101,8 @@ func TestCustomCommands(t *testing.T) {
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 
+	_, err = exec.RunHostCommand(DdevBin, "debug", "fix-commands")
+	require.NoError(t, err)
 	out, err := exec.RunHostCommand(DdevBin)
 	assert.NoError(err)
 	assert.Contains(out, "mysql client in db container")
@@ -127,6 +129,7 @@ func TestCustomCommands(t *testing.T) {
 	// Now copy a project commands and global commands and make sure they show up and execute properly
 	err = fileutil.CopyDir(filepath.Join(testdataCustomCommandsDir, "project_commands"), projectCommandsDir)
 	assert.NoError(err)
+	_, _ = exec.RunHostCommand(DdevBin, "debug", "fix-commands")
 
 	// Must sync our added in-container commands before using them.
 	err = app.MutagenSyncFlush()

@@ -3556,7 +3556,7 @@ func TestHostDBPort(t *testing.T) {
 
 			// Running the test host custom command "showport" ensures that the DDEV_HOST_DB_PORT
 			// is getting in there available to host custom commands.
-			_, _ = exec.RunHostCommand(DdevBin)
+			_, _ = exec.RunHostCommand(DdevBin, "debug", "fix-commands")
 			out, err := exec.RunHostCommand(DdevBin, "showport")
 			assert.NoError(err)
 			lines := strings.Split(out, "\n")
