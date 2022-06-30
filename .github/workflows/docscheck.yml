@@ -3,9 +3,6 @@ defaults:
   run:
     shell: bash
 
-env:
-  DDEV_GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
-
 on:
   push:
     branches:
