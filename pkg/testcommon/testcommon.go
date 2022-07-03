@@ -299,7 +299,11 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 	}
 
 	output.UserOut.Printf("Downloaded %s into %s", sourceURL, archiveFullPath)
-
+	
+	err = os.RemoveAll(extractPath)
+	if err != nil {
+		return extractPath, "", fmt.Errorf("failed to remove %s: %v", extractPath, err)
+	}
 	if filepath.Ext(archiveFullPath) == ".zip" {
 		err = archive.Unzip(archiveFullPath, extractPath, internalExtractionPath)
 	} else {
