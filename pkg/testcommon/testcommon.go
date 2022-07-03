@@ -124,6 +124,11 @@ func (site *TestSite) Prepare() error {
 	err = app.ConfigFileOverrideAction()
 	util.CheckErr(err)
 
+	err = os.MkdirAll(filepath.Join(app.AppRoot, app.Docroot, app.GetUploadDir()), 0777)
+	if err != nil {
+		return fmt.Errorf("Failed to create upload dir for test site: %v", err)
+	}
+
 	err = app.WriteConfig()
 	if err != nil {
 		return errors.Errorf("Failed to write site config for site %s, dir %s, err: %v", app.Name, app.GetAppRoot(), err)
@@ -295,6 +300,10 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 
 	output.UserOut.Printf("Downloaded %s into %s", sourceURL, archiveFullPath)
 
+	err = os.RemoveAll(extractPath)
+	if err != nil {
+		return extractPath, "", fmt.Errorf("failed to remove %s: %v", extractPath, err)
+	}
 	if filepath.Ext(archiveFullPath) == ".zip" {
 		err = archive.Unzip(archiveFullPath, extractPath, internalExtractionPath)
 	} else {

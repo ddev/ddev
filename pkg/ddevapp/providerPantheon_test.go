@@ -190,6 +190,14 @@ func TestPantheonPush(t *testing.T) {
 	err = PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
+	tval := nodeps.RandomString(10)
+	err = os.MkdirAll(filepath.Join(app.AppRoot, app.Docroot, "sites/default/files"), 0777)
+	require.NoError(t, err)
+	fName := tval + ".txt"
+	fContent := []byte(tval)
+	err = os.WriteFile(filepath.Join(app.AppRoot, app.Docroot, "sites/default/files", fName), fContent, 0644)
+	require.NoError(t, err)
+
 	// Build our pantheon.yaml from the example file
 	s, err := os.ReadFile(app.GetConfigPath("providers/pantheon.yaml.example"))
 	require.NoError(t, err)
@@ -202,6 +210,12 @@ func TestPantheonPush(t *testing.T) {
 	provider, err := app.GetProvider("pantheon")
 	require.NoError(t, err)
 	err = app.Start()
+	require.NoError(t, err)
+
+	// Since allow-plugins isn't there and you can't even set it with composer...
+	_, _, err = app.Exec(&ExecOpts{
+		Cmd: `composer config --no-plugins allow-plugins true`,
+	})
 	require.NoError(t, err)
 
 	// Make sure we have drush
@@ -219,15 +233,10 @@ func TestPantheonPush(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create database and files entries that we can verify after push
-	tval := nodeps.RandomString(10)
 	_, _, err = app.Exec(&ExecOpts{
 		Cmd: fmt.Sprintf(`mysql -e 'CREATE TABLE IF NOT EXISTS %s ( title VARCHAR(255) NOT NULL ); INSERT INTO %s VALUES("%s");'`, t.Name(), t.Name(), tval),
 	})
 	require.NoError(t, err)
-	fName := tval + ".txt"
-	fContent := []byte(tval)
-	err = os.WriteFile(filepath.Join(app.AppRoot, "sites/default/files", fName), fContent, 0644)
-	assert.NoError(err)
 
 	err = app.Push(provider, false, false)
 	require.NoError(t, err)

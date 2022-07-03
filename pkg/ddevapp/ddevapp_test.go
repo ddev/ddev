@@ -163,8 +163,8 @@ var (
 		// 8: drupal9
 		{
 			Name:                          "TestPkgDrupal9",
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-9.1.4.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-9.1.4/",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-9.4.1.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-9.4.1/",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d9_umami_files.tgz",
 			FilesZipballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d9_umami_files.zip",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d9_umami_sql.tar.gz",
@@ -172,7 +172,7 @@ var (
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeDrupal9,
 			Docroot:                       "",
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "Drupal is an open source content management platform"},
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Drupal is an open source content management platform"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/node/1", Expect: "Deep mediterranean quiche"},
 			FilesImageURI:                 "/sites/default/files/mediterranean-quiche-umami.jpg",
 		},
