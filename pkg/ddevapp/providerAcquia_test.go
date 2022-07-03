@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -223,8 +224,16 @@ func TestAcquiaPush(t *testing.T) {
 
 	fName := tval + ".txt"
 	fContent := []byte(tval)
-	err = os.WriteFile(filepath.Join(d9code.Dir, "sites/default/files", fName), fContent, 0644)
+	err = os.WriteFile(filepath.Join(app.AppRoot, app.Docroot, "sites/default/files", fName), fContent, 0644)
 	assert.NoError(err)
+	err = app.MutagenSyncFlush()
+	require.NoError(t, err)
+
+	// Make sure that the file we created exists in the container
+	_, _, err = app.Exec(&ExecOpts{
+		Cmd: fmt.Sprintf("ls %s", path.Join("/var/www/html", app.Docroot, "sites/default/files", fName)),
+	})
+	require.NoError(t, err)
 
 	// Build our PUSH acquia.yaml from the example file
 	s, err := os.ReadFile(app.GetConfigPath("providers/acquia.yaml.example"))
