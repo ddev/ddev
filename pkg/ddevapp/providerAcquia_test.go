@@ -194,6 +194,15 @@ func TestAcquiaPush(t *testing.T) {
 	err = PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
+	// Create the uploaddir and a file; it won't have existed in our download
+	tval := nodeps.RandomString(10)
+	fName := tval + ".txt"
+	fContent := []byte(tval)
+	err = os.MkdirAll(filepath.Join(app.AppRoot, app.Docroot, "sites/default/files"), 0777)
+	require.NoError(t, err)
+	err = os.WriteFile(filepath.Join(app.AppRoot, app.Docroot, "sites/default/files", fName), fContent, 0644)
+	require.NoError(t, err)
+
 	err = app.Start()
 	require.NoError(t, err)
 
@@ -215,18 +224,10 @@ func TestAcquiaPush(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create database and files entries that we can verify after push
-	tval := nodeps.RandomString(10)
 	writeQuery := fmt.Sprintf(`mysql -e 'CREATE TABLE IF NOT EXISTS %s ( title VARCHAR(255) NOT NULL ); INSERT INTO %s VALUES("%s");'`, t.Name(), t.Name(), tval)
 	_, _, err = app.Exec(&ExecOpts{
 		Cmd: writeQuery,
 	})
-	require.NoError(t, err)
-
-	fName := tval + ".txt"
-	fContent := []byte(tval)
-	err = os.WriteFile(filepath.Join(app.AppRoot, app.Docroot, "sites/default/files", fName), fContent, 0644)
-	assert.NoError(err)
-	err = app.MutagenSyncFlush()
 	require.NoError(t, err)
 
 	// Make sure that the file we created exists in the container
