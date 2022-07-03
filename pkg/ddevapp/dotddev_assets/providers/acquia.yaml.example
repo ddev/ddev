@@ -33,15 +33,16 @@ auth_command:
     if [ -z "${ACQUIA_API_KEY:-}" ] || [ -z "${ACQUIA_API_SECRET:-}" ]; then echo "Please make sure you have set ACQUIA_API_KEY and ACQUIA_API_SECRET in ~/.ddev/global_config.yaml" && exit 1; fi
     if ! command -v drush >/dev/null ; then echo "Please make sure your project contains drush, ddev composer require drush/drush" && exit 1; fi
     ssh-add -l >/dev/null || ( echo "Please 'ddev auth ssh' before running this command." && exit 1 )
-    acli auth:login -n --key="${ACQUIA_API_KEY}" --secret="${ACQUIA_API_SECRET}"
-    acli remote:aliases:download -n >/dev/null
+
+    acli -n auth:login -n --key="${ACQUIA_API_KEY}" --secret="${ACQUIA_API_SECRET}"
+    acli -n remote:aliases:download --all --destination-dir $HOME/.drush -n >/dev/null
 
 db_pull_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
-    acli pull:db --on-demand --no-import -- @${project_id}
+    acli -n pull:db --on-demand --no-import -- @${project_id}
     mv /tmp/*.sql.gz /var/www/html/.ddev/.downloads/db.sql.gz
 
 files_pull_command:
@@ -61,10 +62,10 @@ db_push_command:
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     cd /var/www/html/.ddev/.downloads
     drush rsync -y --alias-path=~/.drush ./db.sql.gz @${project_id}:/tmp/db.${TIMESTAMP}.sql.gz
-    acli remote:ssh -n ${project_id} -- "cd /tmp && gunzip db.${TIMESTAMP}.sql.gz"
-    acli remote:drush -n ${project_id} -- "sql-cli </tmp/db.${TIMESTAMP}.sql"
-    acli remote:drush -n ${project_id} -- cr
-    acli remote:ssh -n ${project_id} -- "rm /tmp/db.${TIMESTAMP}.*"
+    acli -n remote:ssh -n ${project_id} -- "cd /tmp && gunzip db.${TIMESTAMP}.sql.gz"
+    acli -n remote:drush -n ${project_id} -- "sql-cli </tmp/db.${TIMESTAMP}.sql"
+    acli -n remote:drush -n ${project_id} -- cr
+    acli -n remote:ssh -n ${project_id} -- "rm /tmp/db.${TIMESTAMP}.*"
 
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
 files_push_command:
