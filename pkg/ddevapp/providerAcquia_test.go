@@ -67,6 +67,7 @@ func TestAcquiaPull(t *testing.T) {
 
 	app, err := NewApp(siteDir, true)
 	assert.NoError(err)
+	app.PHPVersion = "8.0"
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
