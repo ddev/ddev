@@ -213,9 +213,8 @@ func TestPantheonPush(t *testing.T) {
 	require.NoError(t, err)
 
 	// Since allow-plugins isn't there and you can't even set it with composer...
-	// set it with jq.
 	_, _, err = app.Exec(&ExecOpts{
-		Cmd: `jq -r <composer.json '.config."allow-plugins"=true' >composer.json.plugins && mv composer.json.plugins composer.json`,
+		Cmd: `composer config --no-plugins allow-plugins true`,
 	})
 	require.NoError(t, err)
 
