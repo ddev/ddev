@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/fileutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -126,10 +127,10 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 	}
 
 	// Create the upload dir so that mounts will happen with mutagen.
-	if app.GetHostUploadDirFullPath() != "" {
+	if app.IsMutagenEnabled() && app.GetHostUploadDirFullPath() != "" && !fileutil.FileExists(app.GetHostUploadDirFullPath()) {
 		err = os.MkdirAll(app.GetHostUploadDirFullPath(), 0755)
 		if err != nil {
-			return "", fmt.Errorf("Unable to create upload directory: %v", err)
+			util.Warning("Unable to create upload directory %s: %v", app.GetHostUploadDirFullPath(), err)
 		}
 	}
 
