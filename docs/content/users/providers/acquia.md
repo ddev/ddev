@@ -18,7 +18,7 @@ ddev's Acquia integration pulls database and files from an existing project into
    ```
 
 5. Copy .ddev/providers/acquia.yaml.example to .ddev/providers/acquia.yaml.
-6. Update the project_id corresponding to the environment you want to work with.
+6. Update the project_id and database corresponding to the environment you want to work with.
    - If you have acli install, you can use the following command: `acli remote:aliases:list`
    - Or, on the Acquia Cloud Platform navigate to the environments page, click on the header and look for the "SSH URL" line. E.g. `project1.dev@cool-projects.acquia-sites.com` would have a project ID of `project1.dev`
 7. Your project must include drush; `ddev composer require drush/drush` if it isn't there already.

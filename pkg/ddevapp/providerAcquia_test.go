@@ -24,6 +24,7 @@ import (
  * defined in the constants below.
  */
 const acquiaPullTestSite = "ddevdemo.dev"
+const acquiaPullDatabase = "ddevdemo"
 const acquiaPushTestSite = "ddevdemo.test"
 
 const acquiaPullSiteURL = "http://ddevdemodev.prod.acquia-sites.com/"
@@ -106,7 +107,11 @@ func TestAcquiaPull(t *testing.T) {
 	// Build our acquia.yaml from the example file
 	s, err := os.ReadFile(app.GetConfigPath("providers/acquia.yaml.example"))
 	require.NoError(t, err)
+
+	// Replace the project_id and database_name
 	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: %s\n#project_id:", acquiaPullTestSite), -1)
+	x = strings.Replace(x, "database_name: ", fmt.Sprintf("database_name: %s\n#database_name:", acquiaPullDatabase), -1)
+
 	err = os.WriteFile(app.GetConfigPath("providers/acquia.yaml"), []byte(x), 0666)
 	assert.NoError(err)
 	err = app.WriteConfig()

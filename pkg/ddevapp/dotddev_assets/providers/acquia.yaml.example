@@ -13,7 +13,7 @@
 #    - ACQUIA_API_SECRET=xxxxx
 #    ```
 # 5. Copy .ddev/providers/acquia.yaml.example to .ddev/providers/acquia.yaml.
-# 6. Update the project_id corresponding to the environment you want to work with.
+# 6. Update the project_id and database corresponding to the environment you want to work with.
 #   - If have acli install, you can use the following command: `acli remote:aliases:list`
 #   - Or, on the Acquia Cloud Platform navigate to the environments page, click on the header and look for the "SSH URL" line. Eg. `project1.dev@cool-projects.acquia-sites.com` would have a project ID of `project1.dev`
 # 7. Your project must include drush; `ddev composer require drush/drush` if it isn't there already.
@@ -26,7 +26,8 @@
 
 environment_variables:
   project_id: yourproject.dev
-
+  database_name: yourproject
+  
 auth_command:
   command: |
     set -eu -o pipefail
@@ -39,11 +40,16 @@ auth_command:
 
 db_pull_command:
   command: |
-    # set -x   # You can enable bash debugging output by uncommenting
+    #set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
+    # If no database_name is configured, infer it from project_id
+    if [ -z "${database_name:-}" ]; then database_name=${project_id%%.*}; fi
+    acli api:environments:database-backup-list ${project_id} ${database_name} --limit=1
+    backup_id="$(acli api:environments:database-backup-list ${project_id} ${database_name} --limit=1 | jq -r .[].id)"
+    backup_url=$(acli api:environments:database-backup-download ${project_id} ${database_name} ${backup_id} | jq -r .url)
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
-    acli -n pull:db --on-demand --no-import -- @${project_id}
-    mv /tmp/*.sql.gz /var/www/html/.ddev/.downloads/db.sql.gz
+    echo "Downloading backup $backup_id"
+    curl -o /var/www/html/.ddev/.downloads/db.sql.gz ${backup_url}
 
 files_pull_command:
   command: |
