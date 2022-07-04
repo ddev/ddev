@@ -1,0 +1,94 @@
+#!/bin/bash
+
+## Description: Apply DDEV settings to a Laravel project
+## Usage: laravel
+## Usage: laravel -m
+## Usage: laravel -k
+## Example: "ddev laravel"
+## Example: To quick-start a Laravel project: "ddev laravel"
+## Example: To quick-start a Laravel project and migrate the database: "ddev laravel -m"
+## Example: To quick-start a Laravel project and generate a new key: "ddev laravel -k"
+## ProjectTypes: laravel
+
+# Set DDEV environmental variables
+set | grep DDEV > /dev/null
+DB_TYPE=
+DB_CONNECTION=
+DB_PORT=
+
+# Set DB_PORT based on database type default ports
+db_port_lookup() {
+    declare -A DB_PORT_LOOKUP
+    DB_PORT_LOOKUP['postgres']=5432
+    DB_PORT_LOOKUP['mariadb']=3306
+    DB_PORT_LOOKUP['mysql']=3306
+    DB_PORT="${DB_PORT_LOOKUP[${1}]}"
+}
+
+set_database_variables() {
+    # Read the ddev database type and guess default settings
+    readarray -d : -t database <<< "$DDEV_DBIMAGE"
+    DB_TYPE=database[0]
+    db_port_lookup "${DB_TYPE[0]}"
+    laravel_connection_lookup "${DB_TYPE[0]}"
+}
+
+# Setup steps required for Laravel project
+if [ "${DDEV_PROJECT_TYPE}" == "laravel" ]; then
+    # Set DB_CONNECTION based on database type, translated to Laravel connection driver
+    laravel_connection_lookup() {
+        declare -A DB_CONNECTION_LOOKUP
+        DB_CONNECTION_LOOKUP['postgres']="pgsql"
+        DB_CONNECTION_LOOKUP['mariadb']="mysql"
+        DB_CONNECTION_LOOKUP['mysql']="mysql"
+        DB_CONNECTION="${DB_CONNECTION_LOOKUP[${1}]}"
+    }
+
+    # Generate a key for encryption. All Laravel projects must have this set.
+    generate_key() {
+        ddev exec php artisan key:generate
+    }
+
+    CONFIG_FILE=.env
+    WORKING_COPY=.env.ddev
+
+    # First, make sure the project has a valid $CONFIG_FILE
+    if [ ! -f "$CONFIG_FILE" ]; then
+        cat .env.example > $CONFIG_FILE
+
+        # If the project does NOT have a .env, it will need the key set
+        generate_key
+    fi
+
+    # Work on the backup copy
+    cat $CONFIG_FILE > $WORKING_COPY
+
+    # Next, set the .env file to use DDEV settings such as URL & database settings
+    cat $WORKING_COPY \
+        | sed  -E "s/APP_URL=(.*)/APP_URL=https:\/\/${DDEV_HOSTNAME}/g" \
+        | sed  -E "s/DB_HOST=(.*)/DB_HOST=ddev-${DDEV_SITENAME}-db/g" \
+        | sed  -E 's/DB_(DATABASE|USERNAME|PASSWORD)=(.*)/DB_\1=db/g' \
+        | sed  -E "s/DB_PORT=(.*)/DB_PORT=${DB_PORT}/g" \
+        | sed  -E "s/DB_CONNECTION=(.*)/DB_CONNECTION=${DB_CONNECTION}/g" \
+        > $CONFIG_FILE
+
+    while getopts mk flag
+        do
+            case "${flag}" in
+                m)
+                    # User has asked for the database to be migrated
+                    ddev exec php artisan migrate
+                ;;
+                k)
+                    # User has asked for a key to be generated
+                    generate_key
+                ;;
+                *)
+                    echo "${flag} is an invalid flag."
+            esac
+    done
+
+    echo "Your Laravel project has been configured. Visit $DDEV_PRIMARY_URL."
+
+    exit 0
+fi
