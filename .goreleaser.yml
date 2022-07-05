@@ -190,7 +190,7 @@ brews:
   test: |
     system "#{bin}/ddev --version"
 
-- name: ddev-edge
+- name: ddev
   ids:
   - ddev
   tap:
