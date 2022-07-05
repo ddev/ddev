@@ -137,7 +137,7 @@ Note that this is done automatically by the release build, on a dedicated Window
 
 ### Basic instructions
 
-1. Install the suggested [Windows SDK 10](https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk)
+1. Install the suggested [Windows SDK](https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/)
 2. Install [Visual Studio Community 2015](https://msdn.microsoft.com/en-us/library/mt613162.aspx)
 3. Run the [Developer Command Prompt](https://docs.microsoft.com/en-us/visualstudio/ide/reference/command-prompt-powershell?view=vs-2019)
 4. The keyfob and Safenet Authentication Client must be installed. The best documentation for the Safenet software is at <https://support.globalsign.com/ssl/ssl-certificates-installation/safenet-drivers>.

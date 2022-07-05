@@ -14,6 +14,7 @@ env:
   DOCKER_CLI_EXPERIMENTAL: enabled
   DDEV_DEBUG: true
   GITHUB_REPOSITORY_OWNER: ${{ secrets.GITHUB_REPOSITORY_OWNER }}
+  DDEV_WINDOWS_SIGN: ${{ secrets.DDEV_WINDOWS_SIGN }}
 
 jobs:
   build-most:
@@ -37,7 +38,7 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.*
-      
+
       - name: Build DDEV executables
         run: make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 completions mkcert
 
