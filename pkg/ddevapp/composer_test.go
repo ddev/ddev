@@ -66,6 +66,7 @@ func TestComposer(t *testing.T) {
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 
+	_, _, err = app.Composer([]string{"config", "--no-plugins", "allow-plugins", "true"})
 	_, _, err = app.Composer([]string{"install", "--no-progress", "--no-interaction"})
 	assert.NoError(err)
 	err = app.MutagenSyncFlush()
