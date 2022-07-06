@@ -147,7 +147,7 @@ tar -xzf $TARBALL
 
 printf "${GREEN}Download verified. Ready to place ddev and mkcert in your /usr/local/bin.${RESET}\n"
 
-if command -v brew >/dev/null && brew info ddev >/dev/null ; then
+if command -v brew >/dev/null && brew info ddev >/dev/null 2>/dev/null ; then
   echo "Attempting to unlink any homebrew-installed ddev with 'brew unlink ddev'"
   brew unlink ddev >/dev/null 2>&1 || true
 fi
