@@ -43,7 +43,7 @@ We maintain a package on [Arch Linux (`AUR`)](https://aur.archlinux.org/packages
 
 As a one-time initialization, run `mkcert -install`, which may require your sudo password. See below for additional information.
 
-### Linux with apt or yum
+### Linux (including WSL2) with apt or yum
 
 DDEV has Debian and RPM packages.
 
