@@ -13,13 +13,14 @@ env:
   BUILDKIT_PROGRESS: plain
   DOCKER_CLI_EXPERIMENTAL: enabled
   DDEV_DEBUG: true
+  GITHUB_REPOSITORY_OWNER: ${{ secrets.GITHUB_REPOSITORY_OWNER }}
+  DDEV_WINDOWS_SIGN: ${{ secrets.DDEV_WINDOWS_SIGN }}
 
 jobs:
   build-most:
     name: Build DDEV executables except Windows
     runs-on: ubuntu-20.04
     env:
-      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
       SegmentKey: ${{ secrets.SEGMENTKEY }}
 
     steps:
@@ -37,9 +38,9 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: 1.*
-      
+
       - name: Build DDEV executables
-        run: make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64
+        run: make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 completions mkcert
 
       - name: "Verify that SegmentKey is working (Linux amd64)"
         run: |
@@ -58,11 +59,17 @@ jobs:
           path: .gotmp/bin
           key: ${{ github.sha }}-${{ github.ref }}-build-most
 
+  # This Windows self-hosted runner has to be set up with gnu tar and zstd.exe, or
+  # this step will fail to properly create the cache.
+  # Make sure gnu tar is the tar used here. System PATH should have C:\program files\gnu\usr\bin near top
+  # Get zstd.exe from https://github.com/facebook/zstd/releases - I put it into C:\program files\gnu\usr\bin
+  # so it would be in PATH
+  # See https://github.com/actions/cache/issues/580
+  # Run the Windows action with debug enabled to be able to see which tar is in use, etc.
   sign-windows:
     name: Build and Sign Windows binaries
     runs-on: [ self-hosted, windows-signer ]
     env:
-      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
       SegmentKey: ${{ secrets.SEGMENTKEY }}
     steps:
       - uses: actions/checkout@v3
@@ -71,7 +78,7 @@ jobs:
       - name: Build and sign windows binaries and installer
         shell: bash
         run: |
-          if [ "${DDEV_WINDOWS_SIGN}" != "true" ]; then echo "DDEV_WINDOWS_SIGN is not true, exiting" && exit 1; fi
+          if [ "${DDEV_WINDOWS_SIGN}" != "true" ]; then echo "Warning: DDEV_WINDOWS_SIGN is not true"; fi
           make windows_install
       - name: Show github.ref
         run: echo ${{ github.ref }}
@@ -196,70 +203,23 @@ jobs:
         if: steps.notarizedmac.outputs.cache-hit != 'true'
         run: exit 1
 
-      - name: Generate artifacts
-        run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
+      # Goreleaser does GitHub release artifacts, homebrew, AUR, deb/rpm
+      - name: goreleaser
+        uses: goreleaser/goreleaser-action@v3
+        if: startsWith( github.ref, 'refs/tags/v1')
+        with:
+          # either 'goreleaser' (default) or 'goreleaser-pro'
+          distribution: goreleaser-pro
+          version: latest
+          args: release --rm-dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
+          GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
+          FURY_TOKEN: ${{ secrets.FURY_TOKEN }}
 
-      - name: Upload all artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: all-ddev-executables
-          path: ${{ github.workspace }}/artifacts/*
-      - name: Upload macos-amd64 binary
-        uses: actions/upload-artifact@v3
-        with:
-          name: ddev-macos-amd64
-          path: .gotmp/bin/darwin_amd64/ddev
-      - name: Upload macos-arm64 binary
-        uses: actions/upload-artifact@v3
-        with:
-          name: ddev-macos-arm64
-          path: .gotmp/bin/darwin_arm64/ddev
-      - name: Upload linux-arm64 binary
-        uses: actions/upload-artifact@v3
-        with:
-          name: ddev-linux-arm64
-          path: .gotmp/bin/linux_arm64/ddev
-      - name: Upload inux_amd644 binary
-        uses: actions/upload-artifact@v3
-        with:
-          name: ddev-linux-amd64
-          path: .gotmp/bin/linux_amd64/ddev
-      - name: Upload windows_amd64 installer
-        uses: actions/upload-artifact@v3
-        with:
-          name: ddev-windows-amd64-installer
-          path: .gotmp/bin/windows_amd64/ddev_windows_installer*.exe
+
       - name: Show github.ref
         run: echo ${{ github.ref }}
-      - name: "Upload release artifacts to github release"
-        if: startsWith( github.ref, 'refs/tags/v1')
-        uses: skx/github-action-publish-binaries@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          args: ${{ github.workspace }}/artifacts/*
-
-      - name: "Bump homebrew edge release"
-        if: env.DDEV_GITHUB_TOKEN != '' && startsWith( github.ref, 'refs/tags/v1')
-        run: |
-          bash -x .ci-scripts/bump_homebrew.sh ${HOMEBREW_EDGE_REPOSITORY} ddev ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts ${DDEV_MAIN_REPO_ORGNAME}
-
-      - name: "Bump homebrew main release if necessary"
-        if: env.DDEV_GITHUB_TOKEN != '' && startsWith( github.ref, 'refs/tags/v1') && !contains( github.ref, '-')
-        run: |
-          bash -x .ci-scripts/bump_homebrew.sh ${HOMEBREW_STABLE_REPOSITORY} ddev ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts ${DDEV_MAIN_REPO_ORGNAME}
-
-      - name: "Push AUR ddev-edge-bin"
-        if: env.AUR_SSH_PRIVATE_KEY != '' && startsWith( github.ref, 'refs/tags/v1')
-        run: |
-          echo GITHUB_REF=${GITHUB_REF}
-          .ci-scripts/bump_aur.sh ddev-edge-bin ${GITHUB_REF##*/} ${{ github.workspace }}/artifacts
-
-      - name: "Push AUR ddev-bin if necessary"
-        if: env.AUR_SSH_PRIVATE_KEY != '' &&  startsWith( github.ref, 'refs/tags/v1') && !contains( github.ref, '-')
-        run: |
-          echo GITHUB_REF=${GITHUB_REF}
-          .ci-scripts/bump_aur.sh ddev-bin "${GITHUB_REF##*/}" ${{ github.workspace }}/artifacts
 
       - name: Chocolatey windows release
         if: env.CHOCOLATEY_API_KEY != '' && startsWith( github.ref, 'refs/tags/v1')

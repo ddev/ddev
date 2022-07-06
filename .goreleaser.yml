@@ -1,0 +1,315 @@
+##### BUILDS ######
+builds:
+- id: ddev
+  # Requires make  darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64 mkcert
+  builder: prebuilt
+  goos:
+  - linux
+  - windows
+  - darwin
+  goarch:
+  - amd64
+  - arm64
+  goamd64:
+    - v1
+  ignore:
+    - goos: windows
+      goarch: arm64
+  prebuilt:
+    path: .gotmp/bin/{{.Os}}_{{.Arch}}/ddev{{.Ext}}
+  binary: ddev
+
+- id: mkcert
+  # requires make completions
+  builder: prebuilt
+  goos:
+  - linux
+  - darwin
+  - windows
+  goarch:
+  - arm64
+  - amd64
+  goamd64:
+  - v1
+  ignore:
+  - goos: windows
+    goarch: arm64
+  prebuilt:
+    path: .gotmp/bin/{{.Os}}_{{.Arch}}/mkcert{{.Ext}}
+  binary: mkcert
+
+- id: completions-tarball
+  # requires make completions
+  builder: prebuilt
+  goos:
+  - linux
+  goarch:
+  - arm64
+  prebuilt:
+    path: .gotmp/bin/completions.tar.gz
+  binary: completions.tar.gz
+
+- id: ddev_bash_completion.sh
+  # requires make completions
+  builder: prebuilt
+  goos:
+  - linux
+  - darwin
+  - windows
+  goarch:
+  - arm64
+  - amd64
+  goamd64:
+  - v1
+  prebuilt:
+    path: .gotmp/bin/completions/ddev_bash_completion.sh
+  binary: ddev_bash_completion.sh
+
+- id: ddev_zsh_completion.sh
+  # requires make completions
+  builder: prebuilt
+  goos:
+  - linux
+  - darwin
+  - windows
+  goarch:
+  - arm64
+  - amd64
+  goamd64:
+  - v1
+  prebuilt:
+    path: .gotmp/bin/completions/ddev_zsh_completion.sh
+  binary: ddev_zsh_completion.sh
+
+- id: ddev_fish_completion.sh
+  # requires make completions
+  builder: prebuilt
+  goos:
+  - linux
+  - darwin
+  - windows
+  goarch:
+  - arm64
+  - amd64
+  goamd64:
+  - v1
+  prebuilt:
+    path: .gotmp/bin/completions/ddev_fish_completion.sh
+  binary: ddev_fish_completion.sh
+
+- id: ddev-windows-installer
+  builder: prebuilt
+  goos:
+  - windows
+  goarch:
+  - amd64
+  goamd64:
+  - v1
+  prebuilt:
+    path: .gotmp/bin/windows_amd64/ddev_windows_installer.exe
+  binary: ddev-windows-installer.exe
+
+###### Archives ######
+archives:
+- id: ddev
+  builds:
+  - ddev
+  - mkcert
+  - ddev_bash_completion.sh
+  - ddev_zsh_completion.sh
+  - ddev_fish_completion.sh
+  format: tar.gz
+  name_template: "{{ .ProjectName }}_{{ .Os }}-{{ .Arch }}.v{{ .Version }}"
+  replacements:
+    darwin: macos
+  format_overrides:
+  - goos: windows
+    format: zip
+  wrap_in_directory: false
+  files:
+  - LICENSE
+  - .gotmp/bin/{{.Os}}_{{.Arch}}/mkcert*
+  allow_different_binary_count: true
+
+- id: completions-tarball
+  builds:
+  - completions
+  format: binary
+  name_template: ddev_shell_completion_scripts.v{{.Version}}.tar.gz
+
+- id: ddev-windows-installer
+  builds:
+  - ddev-windows-installer
+  format: binary
+  name_template: "ddev_windows_installer.v{{.Version}}"
+
+checksum:
+  name_template: "checksums.txt"
+
+
+#### RELEASE ####
+release:
+  prerelease: auto
+  github:
+    owner: "{{ .Env.GITHUB_REPOSITORY_OWNER }}"
+    name: ddev
+
+brews:
+- name: ddev
+  ids:
+  - ddev
+  tap:
+    owner: "{{ .Env.GITHUB_REPOSITORY_OWNER }}"
+    name: homebrew-ddev
+  description: DDEV
+  folder: Formula
+  homepage: https://github.com/drud/ddev
+  license: "Apache 2"
+  # ddev brew will only be uploaded on non-prerelease
+  skip_upload: auto
+  dependencies:
+  - name: mkcert
+  custom_block: |
+    head "https://github.com/drud/ddev.git", branch: "master"
+    depends_on "go" => :build
+    depends_on "make" => :build
+  install: |
+    if build.head?
+        os = OS.mac? ? "darwin" : "linux"
+        arch = Hardware::CPU.arm? ? "arm64" : "amd64"
+        system "mkdir", "-p", "#{bin}"
+        system "make", "VERSION=v#{version}", "COMMIT=v#{version}"
+        system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev", "#{bin}/ddev"
+    else
+        bin.install "ddev"
+        bash_completion.install "ddev_bash_completion.sh" => "ddev"
+        zsh_completion.install "ddev_zsh_completion.sh" => "ddev"
+        fish_completion.install "ddev_fish_completion.sh" => "ddev"
+    end
+
+  test: |
+    system "#{bin}/ddev --version"
+
+- name: ddev
+  ids:
+  - ddev
+  tap:
+    owner: "{{ .Env.GITHUB_REPOSITORY_OWNER }}"
+    name: homebrew-ddev-edge
+  description: DDEV
+  folder: Formula
+  homepage: https://github.com/drud/ddev
+  license: "Apache 2"
+  # ddev-edge brew will always be uploaded
+  skip_upload: "false"
+  dependencies:
+  - name: mkcert
+  custom_block: |
+    head "https://github.com/drud/ddev.git", branch: "master"
+    depends_on "go" => :build
+    depends_on "make" => :build
+  install: |
+    if build.head?
+        os = OS.mac? ? "darwin" : "linux"
+        arch = Hardware::CPU.arm? ? "arm64" : "amd64"
+        system "mkdir", "-p", "#{bin}"
+        system "make", "VERSION=v#{version}", "COMMIT=v#{version}"
+        system "cp", ".gotmp/bin/" + os + "_" + arch + "/ddev", "#{bin}/ddev"
+    else
+        bin.install "ddev"
+        bash_completion.install "ddev_bash_completion.sh" => "ddev"
+        zsh_completion.install "ddev_zsh_completion.sh" => "ddev"
+        fish_completion.install "ddev_fish_completion.sh" => "ddev"
+    end
+
+  test: |
+    system "#{bin}/ddev --version"
+    
+
+nfpms:
+- maintainer: Randy Fay
+  license: "Apache 2"
+  formats:
+  - deb
+  - rpm
+  overrides:
+    deb:
+      dependencies:
+      - libnss3-tools
+      - xdg-utils
+    rpm:
+      dependencies:
+      - nss-tools
+      - xdg-utils
+
+snapshot:
+  name_template: '{{ .Version }}-{{.ShortCommit}}'
+
+
+aurs:
+- name: "ddev"
+  ids:
+  - ddev
+  homepage: "https://github.com/drud/ddev"
+  description: "DDEV-Local: a local web development environment"
+  maintainers:
+  - 'Randy Fay <randy at randyfay.com>'
+  license: "Apache 2"
+  # main ddev repo will only be uploaded on non-prerelease
+  skip_upload: auto
+  private_key: '{{ .Env.AUR_SSH_PRIVATE_KEY }}'
+  git_url: 'ssh://aur@aur.archlinux.org/ddev-bin.git'
+
+  package: |-
+    # bin
+    install -Dm755 "./ddev" "${pkgdir}/usr/bin/ddev"
+    install -Dm644 "./LICENSE" "${pkgdir}/usr/share/licenses/ddev/LICENSE"
+    
+    # completions
+    mkdir -p "${pkgdir}/usr/share/bash-completion/completions/"
+    mkdir -p "${pkgdir}/usr/share/zsh/site-functions/"
+    mkdir -p "${pkgdir}/usr/share/fish/vendor_completions.d/"
+    install -Dm644 "./ddev_bash_completion.sh" "${pkgdir}/usr/share/bash-completion/completions/ddev"
+    install -Dm644 "./ddev_zsh_completion.sh" "${pkgdir}/usr/share/zsh/site-functions/_ddev"
+    install -Dm644 "./ddev_fish_completion.sh" "${pkgdir}/usr/share/fish/vendor_completions.d/ddev.fish"
+
+  # Git author used to commit to the repository.
+  # Defaults are shown below.
+  commit_author:
+    name: Randy Fay
+    email: randy@randyfay.com
+
+- name: "ddev-edge"
+  ids:
+  - ddev
+  homepage: "https://github.com/drud/ddev"
+  description: "DDEV-Local: a local web development environment (edge)"
+  maintainers:
+  - 'Randy Fay <randy at randyfay.com>'
+  license: "Apache 2"
+  # Always upload, even on prerelease
+  skip_upload: "false"
+  private_key: '{{ .Env.AUR_SSH_PRIVATE_KEY }}'
+  git_url: 'ssh://aur@aur.archlinux.org/ddev-edge-bin.git'
+
+  package: |-
+    # bin
+    install -Dm755 "./ddev" "${pkgdir}/usr/bin/ddev"
+    install -Dm644 "./LICENSE" "${pkgdir}/usr/share/licenses/ddev/LICENSE"
+    
+    # completions
+    mkdir -p "${pkgdir}/usr/share/bash-completion/completions/"
+    mkdir -p "${pkgdir}/usr/share/zsh/site-functions/"
+    mkdir -p "${pkgdir}/usr/share/fish/vendor_completions.d/"
+    install -Dm644 "./ddev_bash_completion.sh" "${pkgdir}/usr/share/bash-completion/completions/ddev"
+    install -Dm644 "./ddev_zsh_completion.sh" "${pkgdir}/usr/share/zsh/site-functions/_ddev"
+    install -Dm644 "./ddev_fish_completion.sh" "${pkgdir}/usr/share/fish/vendor_completions.d/ddev.fish"
+
+  # Git author used to commit to the repository.
+  # Defaults are shown below.
+  commit_author:
+    name: Randy Fay
+    email: randy@randyfay.com
+
+furies:
+- account: drud

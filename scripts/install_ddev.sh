@@ -8,7 +8,7 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-GITHUB_USERNAME=drud
+GITHUB_OWNER=${GITHUB_OWNER:-drud}
 ARTIFACTS="ddev mkcert macos_ddev_nfs_setup.sh"
 TMPDIR=/tmp
 
@@ -91,7 +91,7 @@ case ${unamearch} in
   ;;
 esac
 
-LATEST_RELEASE=$(curl -fsSL -H 'Accept: application/json' https://github.com/${GITHUB_USERNAME}/ddev/releases/latest || (printf "${RED}Failed to get find latest release${RESET}\n" >/dev/stderr && exit 107))
+LATEST_RELEASE=$(curl -fsSL -H 'Accept: application/json' https://github.com/${GITHUB_OWNER}/ddev/releases/latest || (printf "${RED}Failed to get find latest release${RESET}\n" >/dev/stderr && exit 107))
 # The releases are returned in the format {"id":3622206,"tag_name":"hello-1.0.0.11",...}, we have to extract the tag_name.
 LATEST_VERSION=$(echo $LATEST_RELEASE | sed -e 's/.*"tag_name":"\([^"]*\)".*/\1/')
 
@@ -99,7 +99,7 @@ VERSION=$LATEST_VERSION
 if [ $# -ge 1 ]; then
   VERSION=$1
 fi
-RELEASE_BASE_URL="https://github.com/${GITHUB_USERNAME}/ddev/releases/download/$VERSION"
+RELEASE_BASE_URL="https://github.com/${GITHUB_OWNER}/ddev/releases/download/$VERSION"
 
 rv=$(semver_compare "${VERSION}" "v1.10.0")
 if [[ ${rv} -lt 0 ]]; then
@@ -108,10 +108,10 @@ if [[ ${rv} -lt 0 ]]; then
 fi
 
 if [[ "$OS" == "Darwin" ]]; then
-    SHACMD="shasum -a 256"
+    SHACMD="shasum -a 256 --ignore-missing"
     FILEBASE="ddev_macos"
 elif [[ "$OS" == "Linux" ]]; then
-    SHACMD="sha256sum"
+    SHACMD="sha256sum --ignore-missing"
     FILEBASE="ddev_linux"
 else
     printf "${RED}Sorry, this installer does not support your platform at this time.${RESET}\n"
@@ -130,11 +130,15 @@ if ! docker --version >/dev/null 2>&1; then
 fi
 
 TARBALL="$FILEBASE.$VERSION.tar.gz"
-SHAFILE="$TARBALL.sha256.txt"
+OLD_CHECKSUM=$(semver_compare "${VERSION}" "v1.19.3")
+SHAFILE=checksums.txt
+if [ ${OLD_CHECKSUM} != 1 ]; then
+  SHAFILE="$TARBALL.sha256.txt"
+fi
 
 curl -fsSL "$RELEASE_BASE_URL/$TARBALL" -o "${TMPDIR}/${TARBALL}" || (printf "${RED}Failed downloading $RELEASE_BASE_URL/$TARBALL${RESET}\n" && exit 108)
 curl -fsSL "$RELEASE_BASE_URL/$SHAFILE" -o "${TMPDIR}/${SHAFILE}" || (printf "${RED}Failed downloading $RELEASE_BASE_URL/$SHAFILE${RESET}\n" && exit 109)
-curl -fsSL "https://raw.githubusercontent.com/${GITHUB_USERNAME}/ddev/master/scripts/macos_ddev_nfs_setup.sh" -o "${TMPDIR}/macos_ddev_nfs_setup.sh" || (printf "${RED}Failed downloading "https://raw.githubusercontent.com/${GITHUB_USERNAME}/ddev/master/scripts/macos_ddev_nfs_setup.sh"${RESET}\n" && exit 110)
+curl -fsSL "https://raw.githubusercontent.com/${GITHUB_OWNER}/ddev/master/scripts/macos_ddev_nfs_setup.sh" -o "${TMPDIR}/macos_ddev_nfs_setup.sh" || (printf "${RED}Failed downloading "https://raw.githubusercontent.com/${GITHUB_OWNER}/ddev/master/scripts/macos_ddev_nfs_setup.sh"${RESET}\n" && exit 110)
 
 cd $TMPDIR
 $SHACMD -c "$SHAFILE"
@@ -143,10 +147,13 @@ tar -xzf $TARBALL
 
 printf "${GREEN}Download verified. Ready to place ddev and mkcert in your /usr/local/bin.${RESET}\n"
 
+if command -v brew >/dev/null && brew info ddev >/dev/null 2>/dev/null ; then
+  echo "Attempting to unlink any homebrew-installed ddev with 'brew unlink ddev'"
+  brew unlink ddev >/dev/null 2>&1 || true
+fi
 if [ -L /usr/local/bin/ddev ] ; then
-    printf "${RED}ddev already exists as a link in /usr/local/bin. Was it installed with homebrew?${RESET}\n"
+    printf "${RED}ddev already exists as a link in /usr/local/bin/ddev. Was it installed with homebrew?${RESET}\n"
     printf "${RED}Cowardly refusing to install over existing symlink${RESET}\n"
-    printf "${RED}Use 'brew unlink ddev' to remove the symlink. Or use 'brew upgrade drud/ddev/ddev' to upgrade.${RESET}\n"
     exit 101
 fi
 

@@ -118,7 +118,7 @@
  *
  * Has to be done before including headers
  */
-OutFile "..\.gotmp\bin\windows_amd64\ddev_windows_installer.${PRODUCT_VERSION}.exe"
+OutFile "..\.gotmp\bin\windows_amd64\ddev_windows_installer.exe"
 Unicode true
 SetCompressor /SOLID lzma
 

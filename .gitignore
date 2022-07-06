@@ -4,3 +4,4 @@
 .docker_image
 /dictionary.dic
 /.idea
+/dist

@@ -6,7 +6,7 @@
 
 * Colima (macOS), `docker-ce` (Linux/WSL2) or [Docker Desktop](https://www.docker.com/products/docker-desktop) or a related docker back-end are required. Installing or upgrading docker-compose is not required as DDEV uses its own private docker-compose version. See [Docker Installation](users/docker_installation.md).
 * OS Support
-    * macOS Catalina and higher (macOS 10.15 and higher); it should run anywhere docker runs (Current Docker Desktop has deprecated macOS 10.14 and below, but Docker Desktop versions prior to  can still work with DDEV-Local on High Sierra. You can look through the [Docker Desktop for Mac Release Notes](https://docs.docker.com/desktop/mac/release-notes/) for older versions.)
+    * macOS Catalina and higher (macOS 10.15 and higher); it should run anywhere docker runs (Current Docker Desktop has deprecated macOS 10.14 and below, but Docker Desktop versions prior to  can still work with DDEV-Local on High Sierra. You can look through the [Docker Desktop for Mac Release Notes](https://docs.docker.com/desktop/mac/release-notes/) for older versions. In addition, Colima supports older versions.)
     * Linux: Most Linux distributions which can run Docker-ce are fine. This includes at least Ubuntu 18.04+ (20.04 is recommended), Debian Jessie+, Fedora 25+. Make sure to follow the docker-ce [post-install steps](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user)
     * Windows 10/11 (all editions) with WSL2 (version [1903.1049, 1909.1049](https://devblogs.microsoft.com/commandline/wsl-2-support-is-coming-to-windows-10-versions-1903-and-1909/), 2004 or later)
     * (Non-WSL2) Windows 10/11 Home, Pro, or Enterprise with [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop)
@@ -43,9 +43,36 @@ We maintain a package on [Arch Linux (`AUR`)](https://aur.archlinux.org/packages
 
 As a one-time initialization, run `mkcert -install`, which may require your sudo password. See below for additional information.
 
-### Linux, macOS and Windows WSL2 (install script)
+### Linux (including WSL2) with apt or yum
 
-**NOTE: macOS users that have installed via Homebrew or Arch Linux users that have installed via the package manager above do not need the install script.**
+DDEV has Debian and RPM packages.
+
+* Debian/Ubuntu and derivative distros - Install the ddev apt repositories with:
+
+```bash
+echo "deb [trusted=yes] https://apt.fury.io/drud/ /" | sudo tee -a /etc/apt/sources.list.d/ddev.list
+sudo apt update && sudo apt install ddev
+```
+  
+  In the future you can update as usual, with `sudo apt update && sudo apt upgrade`. (Signed repo support will be added in the near future.)
+
+* Yum/RPM (Fedora, RedHat, etc.):
+
+```bash
+echo '[ddev]
+name=DDEV Repo
+baseurl=https://yum.fury.io/drud/
+enabled=1
+gpgcheck=0' | sudo tee -a /etc/yum.repos.d/ddev.repo
+  
+sudo dnf install --refresh ddev
+  ```
+  
+  In the future you can update as usual, with `sudo dnf upgrade ddev`. (Signed repo support will be added in the near future.)
+
+### Linux, macOS and Windows WSL2 (using install_ddev.sh)
+
+**NOTE: macOS users that have installed via Homebrew and Linux users that have installed via the package manager above do not need the install script.**
 
 Linux, macOS and Windows WSL2 (see below) users can use this line of code to your terminal to download, verify, and install (or upgrade) ddev using the [install_ddev.sh script](https://github.com/drud/ddev/blob/master/scripts/install_ddev.sh). Note that this works with both amd64 and arm64 architectures, including Surface Pro X with WSL2 and 64-bit Raspberry Pi OS. It also works with macOS Apple Silicon M1 machines.
 
