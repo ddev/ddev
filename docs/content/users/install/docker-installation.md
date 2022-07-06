@@ -2,7 +2,7 @@
 
 === "macOS: Docker Desktop"
 
-    Docker Desktop for Mac can be installed via Homebrew (`brew install  homebrew/cask/docker`) or can be downloaded from [desktop.docker.com](https://www.docker.com/products/docker-desktop).
+    Docker Desktop for Mac can be installed via Homebrew (`brew install  homebrew/cask/docker`) or can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop).
 
 === "macOS: Colima"
 
@@ -29,7 +29,7 @@
 
 === "Windows: Docker Desktop"
 
-    Docker Desktop for Windows can be downloaded via [Chocolatey](https://chocolatey.org/install) with `choco install docker-desktop` or it can be downloaded from [download.docker.com](https://www.docker.com/products/docker-desktop).
+    Docker Desktop for Windows can be downloaded via [Chocolatey](https://chocolatey.org/install) with `choco install docker-desktop` or it can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop).
 
 === "Windows WSL2: Docker-ce installed"
 
