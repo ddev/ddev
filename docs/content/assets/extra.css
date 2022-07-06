@@ -8,5 +8,11 @@ dt {
   font-weight: bold;
 }
 
-.md-typeset :is(.admonition,details) { font-size: .70rem;}
-.tabbed-content { background-color: aliceblue }
+.md-typeset :is(.admonition,details) {
+  font-size: .70rem;
+  background-color: inherit;
+}
+.md-typeset .tabbed-content {
+  background-color: aliceblue;
+  padding: 10px;
+}
