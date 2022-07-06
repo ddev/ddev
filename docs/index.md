@@ -49,23 +49,23 @@ DDEV has Debian and RPM packages.
 
 * Debian/Ubuntu and derivative distros - Install the ddev apt repositories with:
 
-  ```bash
-  echo "deb [trusted=yes] https://apt.fury.io/drud/ /" | sudo tee -a /etc/apt/sources.list.d/ddev.list
-  sudo apt update && sudo apt install ddev
-   ```
+```bash
+echo "deb [trusted=yes] https://apt.fury.io/drud/ /" | sudo tee -a /etc/apt/sources.list.d/ddev.list
+sudo apt update && sudo apt install ddev
+```
   
   In the future you can update as usual, with `sudo apt update && sudo apt upgrade`. (Signed repo support will be added in the near future.)
 
 * Yum/RPM (Fedora, RedHat, etc.):
 
-  ```bash
-  echo '[ddev]
-  name=DDEV Repo
-  baseurl=https://yum.fury.io/drud/
-  enabled=1
-  gpgcheck=0' | sudo tee -a /etc/yum.repos.d/ddev.repo
+```bash
+echo '[ddev]
+name=DDEV Repo
+baseurl=https://yum.fury.io/drud/
+enabled=1
+gpgcheck=0' | sudo tee -a /etc/yum.repos.d/ddev.repo
   
-  sudo dnf install --refresh ddev
+sudo dnf install --refresh ddev
   ```
   
   In the future you can update as usual, with `sudo dnf upgrade ddev`. (Signed repo support will be added in the near future.)
