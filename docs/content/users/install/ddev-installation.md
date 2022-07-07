@@ -31,6 +31,33 @@ Docker or an alternative is required before anything will work with DDEV. This i
 
     To upgrade DDEV to the latest stable version, just run the script again.
 
+=== "Linux apt/yum"
+
+    DDEV has Debian and RPM packages that work with both apt and yum repositories, and on most any variant that usees those, including Windows WSL2.
+
+    * Debian/Ubuntu and derivative distros - Install the ddev apt repositories with:
+
+    ```bash
+    echo "deb [trusted=yes] https://apt.fury.io/drud/ /" | sudo tee -a /etc/apt/sources.list.d/ddev.list
+    sudo apt update && sudo apt install ddev
+    ```
+  
+    In the future you can update as usual, with `sudo apt update && sudo apt upgrade`. (Signed repo support will be added in the near future.)
+
+    * Yum/RPM (Fedora, RedHat, etc.):
+
+    ```bash
+    echo '[ddev]
+    name=DDEV Repo
+    baseurl=https://yum.fury.io/drud/
+    enabled=1
+    gpgcheck=0' | sudo tee -a /etc/yum.repos.d/ddev.repo
+      
+    sudo dnf install --refresh ddev
+    ```
+  
+    In the future you can update as usual, with `sudo dnf upgrade ddev`. (Signed repo support will be added in the near future.)
+
 === "Linux (Homebrew)"
 
     For Linux amd64 users, [Homebrew](https://brew.sh/) packages are available: `brew install drud/ddev/ddev`.
