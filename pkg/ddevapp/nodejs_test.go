@@ -63,10 +63,10 @@ func TestNodeJSVersions(t *testing.T) {
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd: `bash -ic "nvm install 6 && node --version"`,
 	})
-	assert.NoError(err)
+	require.NoError(t, err)
 	assert.Contains(out, "Now using node v6")
 
 	out, err = exec.RunHostCommand(DdevBin, "nvm", "install", "8")
-	assert.NoError(err)
+	require.NoError(t, err)
 	assert.Contains(out, "Now using node v8")
 }
