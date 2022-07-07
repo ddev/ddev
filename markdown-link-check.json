@@ -20,6 +20,9 @@
     },
     {
       "pattern": "^https://www.cyberciti.biz/"
+    },
+    {
+      "pattern": "^https://nightly.link/drud/ddev/workflows/master-build/master"
     }
   ],
   "httpHeaders": [
