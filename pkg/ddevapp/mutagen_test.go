@@ -75,6 +75,9 @@ func TestMutagenSimple(t *testing.T) {
 	})
 	assert.Contains(stderr, "cannot access '/var/www/html/vendor'")
 
+	_, _, err = app.Composer([]string{"config", "--no-plugins", "allow-plugins", "true"})
+	require.NoError(t, err)
+
 	// Now composer install again and make sure all the stuff comes back
 	stdout, stderr, err := app.Composer([]string{"install", "--no-progress", "--no-interaction"})
 	assert.NoError(err)

@@ -66,10 +66,12 @@ func TestComposer(t *testing.T) {
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 
+	_, _, err = app.Composer([]string{"config", "--no-plugins", "allow-plugins", "true"})
+	require.NoError(t, err)
 	_, _, err = app.Composer([]string{"install", "--no-progress", "--no-interaction"})
-	assert.NoError(err)
+	require.NoError(t, err)
 	err = app.MutagenSyncFlush()
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd: "ls -l vendor/bin/var-dump-server | awk '{print $1}'",
