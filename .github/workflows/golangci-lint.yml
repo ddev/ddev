@@ -46,4 +46,4 @@ jobs:
         # only-new-issues: true
 
         # Optional: if set to true then the action will use pre-installed Go
-        # skip-go-installation: true
+        # skip-go-install: true

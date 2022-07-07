@@ -1,0 +1,37 @@
+{#-
+  This file was automatically generated - do not edit
+-#}
+{% set class = "md-tabs__link" %}
+{% if nav_item.active %}
+  {% set class = class ~ " md-tabs__link--active" %}
+{% endif %}
+{% macro render_content(nav_item, title) %}
+  {% if title and nav_item.is_index %}
+    {% if "icon" in meta[nav_item.url] %}
+      {% include ".icons/" ~ meta[nav_item.url]["icon"] ~ ".svg" %}
+    {% endif %}
+  {% endif %}
+  {{ title or nav_item.title }}
+{% endmacro %}
+{% macro render(nav_item, title) %}
+  {% if nav_item.children %}
+    {% set title = title | d(nav_item.title) %}
+    {% set first = nav_item.children | first %}
+    {% if first.children %}
+      {{ render(first, title) }}
+    {% else %}
+      <li class="md-tabs__item">
+        <a href="{{ first.url | url }}" class="{{ class }}">
+          {{ render_content(first, title) }}
+        </a>
+      </li>
+    {% endif %}
+  {% else %}
+    <li class="md-tabs__item">
+      <a href="{{ nav_item.url | url }}" class="{{ class }}">
+        {{ render_content(nav_item) }}
+      </a>
+    </li>
+  {% endif %}
+{% endmacro %}
+{{ render(nav_item) }}

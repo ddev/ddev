@@ -2374,7 +2374,7 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 		if len(hostsLine.Hosts) >= 10 {
 			util.Error("You have more than 9 entries in your (windows) hostsfile entry for %s", dockerIP)
 			util.Error("Please use `ddev hostname --remove-inactive` or edit the hosts file manually")
-			util.Error("Please see %s for more information", "https://ddev.readthedocs.io/en/stable/users/troubleshooting/#windows-hosts-file-limited")
+			util.Error("Please see %s for more information", "https://ddev.readthedocs.io/en/stable/users/basics/troubleshooting/#windows-hosts-file-limited-to-10-hosts-per-ip-address-line")
 		}
 	}
 

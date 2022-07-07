@@ -18,6 +18,5 @@ matrix:
       - pre
   - pyspelling.filters.url:
   sources:
-  - 'docs/**/*.md|!docs/developers/*|!docs/users/topics/version-history.md'
-  - 'docs/index.md'
+  - 'docs/**/*.md|!docs/content/developers/*|!docs/content/users/topics/version-history.md'
   default_encoding: utf-8

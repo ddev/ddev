@@ -11,13 +11,11 @@ on:
   pull_request:
     paths:
       - "docs/**"
-      - "index.md"
       - ".spellcheckwordlist.txt"
       - ".spellcheck.yml"
       - ".markdownlintrc"
       - "mkdocs.yml"
       - ".readthedocs.yml"
-      - "requirements.txt"
       - ".github/workflows/**"
       - "markdown-link-check.json"
 jobs:
@@ -32,7 +30,7 @@ jobs:
         uses: docker://avtodev/markdown-lint:v1
         with:
           config: '.markdownlintrc'
-          args: '*.md docs/*.md docs/users'
+          args: '*.md docs/content'
       #    - name: Debugging with tmate
       #      uses: mxschmitt/action-tmate@v3.1
       - name: "Check links in markdown"
@@ -46,5 +44,5 @@ jobs:
       - name: Test mkdocs
         run: |
           sudo pip3 install setuptools
-          sudo pip3 install -r requirements.txt
+          sudo pip3 install -r docs/mkdocs-pip-requirements
           mkdocs -q build -d /tmp/mkdocsbuild

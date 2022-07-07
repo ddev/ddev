@@ -80,7 +80,7 @@ func StartDdevRouter() error {
 	}
 	err = CheckRouterPorts()
 	if err != nil {
-		return fmt.Errorf("Unable to listen on required ports, %v,\nTroubleshooting suggestions at https://ddev.readthedocs.io/en/stable/users/troubleshooting/#unable-listen", err)
+		return fmt.Errorf("Unable to listen on required ports, %v,\nTroubleshooting suggestions at https://ddev.readthedocs.io/en/stable/users/basics/troubleshooting/#unable-listen", err)
 	}
 
 	// run docker-compose up -d against the ddev-router full compose file

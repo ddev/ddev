@@ -77,7 +77,7 @@ class Ddev < Formula
             Make sure to do a 'mkcert -install' if you haven't done it before, it may require your sudo password.
       #{"      "}
             ddev requires docker or colima.
-            See https://ddev.readthedocs.io/en/latest/users/docker_installation/
+            See https://ddev.readthedocs.io/en/latest/users/install/docker_installation/
     EOS
   end
 

@@ -97,7 +97,7 @@ const ConfigInstructions = `
 # See https://ddev.readthedocs.io/en/stable/users/performance/#using-nfs-to-mount-the-project-into-the-container
 
 # mutagen_enabled: false
-# Experimental performance improvement using mutagen asynchronous updates.
+# Performance improvement using mutagen asynchronous updates.
 # See https://ddev.readthedocs.io/en/latest/users/performance/#using-mutagen
 
 # fail_on_hook_fail: False
@@ -186,7 +186,7 @@ const ConfigInstructions = `
 # Many ddev commands can be extended to run tasks before or after the
 # ddev command is executed, for example "post-start", "post-import-db",
 # "pre-composer", "post-composer"
-# See https://ddev.readthedocs.io/en/stable/users/extending-commands/ for more
+# See https://ddev.readthedocs.io/en/stable/users/extend/custom-commands/ for more
 # information on the commands that can be extended and the tasks you can define
 # for them. Example:
 #hooks:

@@ -1,76 +1,199 @@
+# Project information
 site_name: DDEV-Local Documentation
+site_url: https://github.com/drud/ddev
 repo_url: https://github.com/drud/ddev
-repo_name: GitHub
-edit_uri: blob/master/docs/
+repo_name: drud/ddev
+edit_uri: blob/master/docs/content
 copyright: Localdev Foundation
-theme:
-  name: 'material'
-  palette:
-    primary: 'light-blue'
-extra_javascript:
-  - 'assets/jquery-3.5.1.min.js'
-  - 'assets/extra.js'
+#extra_javascript:
+#- 'assets/jquery-3.5.1.min.js'
+#- 'assets/extra.js'
 extra_css:
-  - 'assets/extra.css'
-markdown_extensions:
-    - toc:
-        permalink: true
-    - admonition
-    - def_list
-    - mdx_truly_sane_lists:
-        nested_indent: 2
-        truly_sane: true
-    - nl2br
-    - pymdownx.details
-    - pymdownx.superfences
-    - meta
+- 'assets/extra.css'
+site_author: Localdev Foundation
+site_description: >-
+  Do local website development on your computer or in the cloud with DDEV.
+docs_dir: docs/content
+
+# Configuration
+theme:
+  name: null
+  custom_dir: docs/material
+
+  # Static files
+  static_templates:
+  - 404.html
+
+  # Don't include MkDocs' JavaScript
+  include_search_page: false
+  search_index_only: true
+
+  # Default values, taken from mkdocs_theme.yml
+  language: en
+  features:
+  - content.code.annotate
+  - content.tabs.link
+  - content.tooltips
+  - header.autohide
+  - navigation.expand
+  - navigation.indexes
+  - navigation.instant
+  - navigation.prune
+  - navigation.sections
+  - navigation.tabs
+  - navigation.tabs.sticky
+  - navigation.top
+  - navigation.tracking
+  - search.highlight
+  - search.share
+  - search.suggest
+  - toc.follow
+  - toc.integrate
+  palette:
+  - scheme: default
+    primary: light-blue
+    accent: indigo
+#    toggle:
+#      icon: material/brightness-7
+#      name: Switch to dark mode
+#  - scheme: slate
+#    primary: indigo
+#    accent: indigo
+#    toggle:
+#      icon: material/brightness-4
+#      name: Switch to light mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+  favicon: assets/images/favicon.png
+  icon:
+    logo: logo
+
+# Plugins
 plugins:
-    - search
-    - git-revision-date-localized:
-        type: timeago
-        locale: en
+- search
+- redirects:
+    redirect_maps:
+- minify:
+    minify_html: true
+- git-revision-date-localized:
+#    enable_creation_date: true
+#- git-committers:
+#    repository: https://github.com/drud/ddev
+#    token: !ENV GH_TOKEN
+
+
+# Customization
+extra:
+  social:
+  - icon: fontawesome/brands/github
+    link: https://github.com/drud/ddev
+  - icon: fontawesome/brands/discord
+    link: https://discord.gg/hCZFfAMc5k
+  - icon: fontawesome/brands/stack-overflow
+    link: https://stackoverflow.com/tags/ddev
+  - icon: fontawesome/brands/twitter
+    link: https://twitter.com/search?q=%23ddev&src=unknown&f=live
+  generator: false
+
+# Extensions
+markdown_extensions:
+- abbr
+- admonition
+- attr_list
+- def_list
+- footnotes
+- meta
+- md_in_html
+- toc:
+    permalink: true
+- pymdownx.arithmatex:
+    generic: true
+- pymdownx.betterem:
+    smart_enable: all
+- pymdownx.caret
+- pymdownx.details
+#- pymdownx.emoji:
+#    emoji_generator: !!python/name:materialx.emoji.to_svg
+#    emoji_index: !!python/name:materialx.emoji.twemoji
+- pymdownx.highlight:
+    anchor_linenums: true
+- pymdownx.inlinehilite
+- pymdownx.keys
+- pymdownx.magiclink:
+    repo_url_shorthand: true
+    user: drud
+    repo: ddev
+- pymdownx.mark
+- pymdownx.smartsymbols
+- pymdownx.superfences:
+- pymdownx.tabbed:
+    alternate_style: true
+- pymdownx.tasklist:
+    custom_checkbox: true
+- pymdownx.tilde
+
 nav:
-  - 'Home': 'index.md'
-  - 'Installing ddev':
-    - 'Installing Docker': 'users/docker_installation.md'
-    - 'Working in Special Environments': 'users/special-environments.md'
-    - 'Improving Performance': 'users/performance.md'
-    - 'Adding Shell Completion (bash, zsh, etc.)': 'users/shell-completion.md'
-    - 'Uninstalling ddev': 'users/uninstall.md'
-  - 'ddev Basics':
-    - 'How DDEV Works': 'users/topics/how_ddev_works.md'
-    - 'Using the CLI': 'users/cli-usage.md'
-    - 'Adding ddev Hooks': 'users/extending-commands.md'
-    - 'Using Developer Tools with ddev': 'users/developer-tools.md'
-    - 'Step-Debugging PHP': 'users/step-debugging.md'
-    - 'Profiling with Blackfire': 'users/blackfire-profiling.md'
-    - 'Profiling with xhprof': 'users/xhprof-profiling.md'
-    - 'Profiling with Xdebug': 'users/xdebug-profiling.md'
-    - 'Troubleshooting': 'users/troubleshooting.md'
-    - 'Frequently-Asked Questions (FAQ)': 'users/faq.md'
-    - 'Configuring ddev': 'users/extend/config_yaml.md'
-    - 'Choosing Database Server Types': 'users/extend/database_types.md'
-    - 'Adding Additional Hostnames': 'users/extend/additional-hostnames.md'
-    - 'Alternate Uses of ddev': 'users/alternate-uses.md'
-  - 'Extending ddev':
-    - 'Extending and Customizing Environments': 'users/extend/customization-extendibility.md'
-    - 'Adding Additional Services': 'users/extend/additional-services.md'
-    - 'Defining Custom Services': 'users/extend/custom-compose-files.md'
-    - 'Customizing Docker Images': 'users/extend/customizing-images.md'
-    - 'Adding Custom Commands': 'users/extend/custom-commands.md'
-    - 'Configuring Containers': 'users/extend/in-container-configuration.md'
-    - 'Adding Custom TLS Certificates': 'users/extend/custom-tls-certificates.md'
-  - 'Integrating with Hosting Providers':
-    - 'Introduction': 'users/providers/provider-introduction.md'
-    - 'Acquia': 'users/providers/acquia.md'
-    - 'Pantheon': 'users/providers/pantheon.md'
-    - 'Platform.sh': 'users/providers/platform.md'
-  - 'Specific Guides':
-      - 'Configuring a CMS': 'users/topics/cms_specific_help.md'
-      - 'Managing Databases': 'users/topics/database_management.md'
-      - 'Using Gitpod.io': 'users/topics/gitpod.md'
-      - 'Integrating with PhpStorm': 'users/topics/phpstorm.md'
-      - 'Sharing Your Project': 'users/topics/sharing.md'
-      - 'Configuring Web Servers': 'users/topics/webserver.md'
-      - "Understanding the .ddev Directory": 'users/topics/whats_in_ddev_dir.md'
-      - 'Version History': 'users/topics/version-history.md'
+  - "Start!":
+    - index.md
+    - 'Installing':
+      - users/install/index.md
+      - users/install/docker-installation.md
+      - users/install/ddev-installation.md
+      - users/install/performance.md
+      - users/install/shell-completion.md
+    - users/quickstart.md
+    - users/support.md
+  - 'Basics':
+    - users/basics/index.md
+    - users/basics/how-ddev-works.md
+    - users/basics/cli-usage.md
+    - users/basics/database_management.md
+    - users/basics/troubleshooting.md
+    - users/basics/faq.md
+    - users/basics/developer-tools.md
+    - users/basics/uninstall.md
+  - 'Configuration':
+    - users/extend/database_types.md
+    - users/configuration/hooks.md
+    - users/extend/additional-hostnames.md
+    - users/configuration/config_yaml.md
+    - users/configuration/experimental.md
+  - 'Extending':
+    - users/extend/customization-extendibility.md
+    - users/extend/additional-services.md
+    - users/extend/custom-compose-files.md
+    - users/extend/customizing-images.md
+    - users/extend/custom-commands.md
+    - users/extend/in-container-configuration.md
+    - users/extend/custom-tls-certificates.md
+  - 'Debugging & Profiling':
+      - users/debugging-profiling/step-debugging.md
+      - 'Profiling':
+          - users/debugging-profiling/blackfire-profiling.md
+          - users/debugging-profiling/xhprof-profiling.md
+          - users/debugging-profiling/xdebug-profiling.md
+  - 'Hosting integration':
+    - users/providers/index.md
+    - users/providers/acquia.md
+    - users/providers/pantheon.md
+    - users/providers/platform.md
+  - 'Guides':
+      - users/topics/phpstorm.md
+      - users/topics/sharing.md
+      - users/topics/webserver.md
+      - users/topics/whats_in_ddev_dir.md
+      - users/topics/cms_specific_help.md
+  - 'Details':
+      - users/details/offline-usage.md
+      - users/details/opting-in.md
+      - users/details/alternate-uses.md
+  - 'Developers':
+      - developers/index.md
+      - developers/building-contributing.md
+      - developers/buildkite-testmachine-setup.md
+      - developers/github-selfhosted-setup.md
+      - developers/project-types.md
+      - developers/release-management.md
+      - developers/styleguide.md
+      - developers/testing-docs.md

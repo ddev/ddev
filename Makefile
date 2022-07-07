@@ -141,7 +141,7 @@ staticrequired: setup golangci-lint markdownlint mkdocs pyspelling
 # Best to install markdownlint-cli locally with "npm install -g markdownlint-cli"
 markdownlint:
 	@echo "markdownlint: "
-	@CMD="markdownlint *.md docs/*.md docs/users 2>&1"; \
+	@CMD="markdownlint *.md docs/content 2>&1"; \
 	set -eu -o pipefail; \
 	if command -v markdownlint >/dev/null 2>&1 ; then \
 		$$CMD; \
@@ -149,7 +149,7 @@ markdownlint:
 		echo "Skipping markdownlint as not installed"; \
 	fi
 
-# Best to install mkdocs locally with "sudo pip3 install -r requirements.txt"
+# Best to install mkdocs locally with "sudo pip3 install -r docs/mkdocs-pip-requirements"
 mkdocs:
 	@echo "mkdocs: "
 	@CMD="mkdocs -q build -d /tmp/mkdocsbuild"; \

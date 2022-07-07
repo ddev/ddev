@@ -30,7 +30,7 @@ func envSettingsWarning(status int) {
 	util.Warning(message)
 	util.Warning("You can do it with this one-liner:")
 	util.Warning("ddev exec \"cat %v | sed  -E 's/DB_(HOST|DATABASE|USERNAME|PASSWORD)=(.*)/DB_\\1=db/g' > .env\"", srcFile)
-	util.Warning("Read more on https://ddev.readthedocs.io/en/stable/users/cli-usage/#laravel-quickstart")
+	util.Warning("Read more on https://ddev.readthedocs.io/en/stable/users/quickstart/#laravel")
 }
 
 func laravelPostStartAction(app *DdevApp) error {

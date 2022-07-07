@@ -61,7 +61,7 @@ echo "== Setting up nfs..."
 # You may need to adapt it to be less restrictive in your environment,
 # or of course just use the firewall to restrict access.
 # You are welcome to edit and limit it to the addresses you prefer.
-# Please see https://ddev.readthedocs.io/en/stable/users/performance/#debianubuntu-linux-nfs-setup
+# Please see https://ddev.readthedocs.io/en/stable/users/install/performance/
 # for more information.
 FILE=/etc/exports
 LINE="${HOME} ${primary_ip}(rw,sync,no_subtree_check)"
