@@ -17,10 +17,6 @@ The following "Repository secret" environment variables must be added to <https:
 
 * `DDEV_WINDOWS_SIGNING_PASSWORD`: The windows signing password.
 
-* `HOMEBREW_EDGE_REPOSITORY`: The name of the GitHub repo used for the edge channel on homebrew, drud/homebrew-ddev-ege
-
-* `HOMEBREW_STABLE_REPOSITORY`: The name of the GitHub repo used for the stable channel on homebrew/ drud/homebrew-ddev
-
 * `SegmentKey`: The key that enabled the Segment reporting
 
 ## Creating a release (almost everything is now automated)
