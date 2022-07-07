@@ -202,7 +202,7 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 			}
 		}
 	}
-	if globalconfig.DdevGlobalConfig.LastStartedVersion != versionconstants.DdevVersion && !skipConfirmation {
+	if globalconfig.DdevGlobalConfig.LastStartedVersion != "v0.0" && globalconfig.DdevGlobalConfig.LastStartedVersion != versionconstants.DdevVersion && !skipConfirmation {
 		globalconfig.DdevGlobalConfig.LastStartedVersion = versionconstants.DdevVersion
 		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		if err != nil {
