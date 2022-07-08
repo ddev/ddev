@@ -42,6 +42,10 @@ jobs:
 #          file-path: 'README.md', 'CONTRIBUTING.md'
           config-file: 'markdown-link-check.json'
       - name: Test mkdocs
+        env:
+          MKDOCS_GITHUB_USER: ${{ secrets.MKDOCS_GITHUB_USER }}
+          MKDOCS_GITHUB_TOKEN: ${{ secrets.MKDOCS_GITHUB_TOKEN }}
+        if: env.MKDOCS_GITHUB_TOKEN != ''
         run: |
           sudo pip3 install setuptools
           sudo pip3 install -r docs/mkdocs-pip-requirements
