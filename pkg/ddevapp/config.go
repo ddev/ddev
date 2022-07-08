@@ -872,11 +872,17 @@ func WriteBuildDockerfile(fullpath string, userDockerfilePath string, extraPacka
 	}
 
 	// Normal starting content is just the arg and base image
+	// The proxy stuff may be removable when https://github.com/docker/compose/issues/9034 is resolved
 	contents := `
 ### DDEV-injected base Dockerfile contents
 ARG BASE_IMAGE
 FROM $BASE_IMAGE
-`
+` + fmt.Sprintf(`
+ENV http_proxy "%s"
+ENV HTTP_PROXY "%s"
+ENV NO_PROXY "%s"
+`, os.Getenv("http_proxy"), os.Getenv("HTTP_PROXY"), os.Getenv("NO_PROXY"))
+
 	contents = contents + `
 ARG username
 ARG uid
