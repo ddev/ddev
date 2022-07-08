@@ -2,7 +2,7 @@
 
 ## Testing latest commits
 
-You can download the latest artifacts from the master branch from [link](https://nightly.link/drud/ddev/workflows/master-build/master). On macOS and Linux you can `brew unlink ddev && brew install drud/ddev/ddev --HEAD --fetch-HEAD` to get the latest commit of ddev, even if it's not yet in a release.
+You can download the latest artifacts from the master branch from [link](https://nightly.link/drud/ddev/workflows/master-build/master). On macOS and Linux you can `brew unlink ddev && brew install drud/ddev/ddev --HEAD --fetch-HEAD` to get the latest commit of ddev, even if it's not yet in a release. If you are using WSL2, you will also need to install build tools with the following command: `sudo apt install build-essential gcc`.
 
 To download the latest version, you can visit the [master-build](https://github.com/drud/ddev/actions/workflows/master-build.yml) workflow and choose the latest item (or the one that matches a commit you want to test). You'll see the artifacts for each OS there on the bottom of the page.
 
