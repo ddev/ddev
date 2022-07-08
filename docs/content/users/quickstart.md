@@ -1,4 +1,4 @@
-# Quickstart with many CMSs
+# Quickstart for many CMSs
 
 Once you have DDEV installed, getting a project going is just these steps:
 
