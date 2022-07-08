@@ -71,7 +71,6 @@ theme:
 
 # Plugins
 plugins:
-- search
 - redirects:
     redirect_maps:
 - minify:
