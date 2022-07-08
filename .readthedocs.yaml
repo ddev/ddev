@@ -17,6 +17,4 @@ build:
 python:
   install:
     - requirements: docs/mkdocs-pip-requirements
-    - method: pip
-      path: .
   system_packages: true
