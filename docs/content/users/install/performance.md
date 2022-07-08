@@ -32,8 +32,8 @@ Instructions for Mutagen and NFS are below.
 
     ### Enabling Mutagen
 
-    !!! warning "Do not separately install mutagen"
-    
+    !!!warning "Do not separately install mutagen"
+
         Do not separately install the mutagen binary. It's better if you don't have it installed. DDEV does the installation and upgrades when needed.
 
     To begin using Mutagen, just `ddev stop` and then `ddev config --mutagen-enabled` and start the project again. If the mutagen binary needs to be downloaded, it will be downloaded automatically.
@@ -48,7 +48,7 @@ Instructions for Mutagen and NFS are below.
 
     ### Caveats about Mutagen Integration
 
-    Most people have an excellent experience with Mutagen, but it's good to understand how it works anad what the trade-offs are:
+    Most people have an excellent experience with Mutagen, but it's good to understand how it works and what the trade-offs are:
 
     * **Not for every project**: Mutagen is not the right choice for every project. If filesystem consistency is your highest priority (as opposed to performance) then there are reasons to be cautious, although people have had excellent experiences: there haven't been major issues reported, but two-way sync is a very difficult computational problem, and problems may surface.
     * **Only one mutagen version on machine please**: DDEV installs its own mutagen. **You do not need to install mutagen.** Multiple mutagen versions can't coexist on one machine, so please stop any running mutagen. On macOS, `killall mutagen`. If you absolutely have to have mutagen installed via homebrew or another technique (for another project) make sure it's the same version as you get with `ddev version`.
@@ -60,8 +60,8 @@ Instructions for Mutagen and NFS are below.
     * **`ddev mutagen sync`**: You can cause an explicit sync with `ddev mutagen sync` and see syncing status with `ddev mutagen status`. Note that both `ddev start` and `ddev stop` automatically force a mutagen sync.
     * **Composer**: If you do composer actions inside the container (with `ddev ssh`) you'll probably want to do a `ddev mutagen sync` to make sure they get synced as soon as possible, although most people won't ever notice the difference and mutagen will get it synced soon enough.
     * **Big git operations** (like switching branches) are best done on the host side, rather than inside the container, and you may want to do an explicit `ddev mutagen sync` command after doing something like that. Do them with the project running, rather than when it is stopped.
-    * **Project with users who don't want mutagen**: If you share a project with some users (perhaps on macOS) that want mutagen and other users (perhaps on WSL2) that don't want or need it, then don't check in the `mutagen_enabled: true` in the .ddev/config.yaml. Instead, you can either use global mutagen configuration or add a not-checked-in project-level `.ddev/config.mutagen.yaml` that just has `mutagen_enabled: true` in it. Then only users that have that will have mutagen enabled.
-    * **Mutagen restrictions on Windows symlinks**: On macOS and Linux (including WSL2) the default .ddev/mutagen/mutagen.yml chooses the `posix-raw` type of symlink handling (See [mutagen docs](https://mutagen.io/documentation/synchronization/symbolic-links)). This basically means that any symlink created will try to sync, regardless of whether it's valid in the other environment. However, Mutagen does not support posix-raw on traditional Windows, so ddev uses the `portable` symlink mode. So on Windows with Mutagen... symlinks have to be strictly limited to relative links that are inside the mutagen section of the project.
+    * **Project with users who don't want mutagen**: If you share a project with some users (perhaps on macOS) that want mutagen and other users (perhaps on WSL2) that don't want or need it, then don't check in the `mutagen_enabled: true` in the `.ddev/config.yaml`. Instead, you can either use global mutagen configuration or add a not-checked-in project-level `.ddev/config.mutagen.yaml` that just has `mutagen_enabled: true` in it. Then only users that have that will have mutagen enabled.
+    * **Mutagen restrictions on Windows symlinks**: On macOS and Linux (including WSL2) the default `.ddev/mutagen/mutagen.yml` chooses the `posix-raw` type of symlink handling (See [mutagen docs](https://mutagen.io/documentation/synchronization/symbolic-links)). This basically means that any symlink created will try to sync, regardless of whether it's valid in the other environment. However, Mutagen does not support posix-raw on traditional Windows, so ddev uses the `portable` symlink mode. So on Windows with Mutagen symlinks have to be strictly limited to relative links that are inside the mutagen section of the project.
     * **Backups!!!**: Keep backups.
 
     ### Syncing after `git checkout`
@@ -85,11 +85,11 @@ Instructions for Mutagen and NFS are below.
     
     The Mutagen project provides extensive configuration options that are [documented on the mutagen.io site](https://mutagen.io/documentation/introduction/configuration).
     
-    Each project by default already has a .ddev/mutagen/mutagen.yml file with basic defaults which you can override if you remove the `#ddev-generated` line at the beginning of the file.
+    Each project by default already has a `.ddev/mutagen/mutagen.yml` file with basic defaults which you can override if you remove the `#ddev-generated` line at the beginning of the file.
     
-    Remember if you edit the .ddev/mutagen/mutagen.yml file:
+    Remember if you edit the `.ddev/mutagen/mutagen.yml` file:
 
-    * Remove the #ddev-generated line
+    * Remove the `#ddev-generated` line
     * Execute a `ddev mutagen reset` to avoid the situation where the docker volume still has files from an older configuration.
 
     The most likely thing you'll want to do is to exclude a path from mutagen syncing, which you can do in the `paths:` section of the `ignore:` stanza in the `.ddev/mutagen/mutagen.yml`.
@@ -98,7 +98,7 @@ Instructions for Mutagen and NFS are below.
 
     For example, if you want the `stored-binaries` subdirectory of the project to be available inside the container, but do not need mutagen to be syncing it, you can use normal docker bind-mounting for that subdirectory with this procedure:
 
-    1. Take over the .ddev/mutagen/mutagen.yml by removing the `#ddev-generated` line
+    1. Take over the `.ddev/mutagen/mutagen.yml` by removing the `#ddev-generated` line
     2. Add `/stored-binaries` to the excluded paths:
 
     ```yaml
@@ -167,7 +167,7 @@ Instructions for Mutagen and NFS are below.
 
     Mutagen does not guarantee interoperability between different mutagen versions, so you may have trouble if you have another version of mutagen installed. You can find out what version of mutagen you may have installed outside of DDEV with `mutagen version`.
 
-    You'll want your system version of mutagen to be the same as the one provided with DDEV if you're using mutagen for anything else, see the [Mutagen installation instructions](https://mutagen.io/documentation/introduction/installation) and install the required version.
+    You'll want your system version of mutagen to be the same as the one provided with DDEV. If you're using mutagen for anything else, see the [Mutagen installation instructions](https://mutagen.io/documentation/introduction/installation) and install the required version.
 
 === "NFS"
 
@@ -183,27 +183,57 @@ Instructions for Mutagen and NFS are below.
     4. Enable NFS mounting globally with `ddev config global --nfs-mount-enabled`  (You can also configure NFS mounting on a per-project basis with `ddev config --nfs-mount-enabled` in the project directory, but this is unusual. If nfs mounting is turned on globally it overrides any local project settings for NFS.)
     5. `ddev start` your project and make sure it works OK. Use `ddev describe` to verify that NFS mounting is being used. The NFS status is near the top of the output of `ddev describe`.
 
-    Note that you can use the NFS setup described for each operating system below (and the scripts provided) or you can set up NFS any way that works for you. For example, if you're already using NFS with vagrant on macOS, and you already have a number of exports, the default export here (your home directory) won't work, because you'll have overlaps in your /etc/exports. Or on Windows, you may want to use an NFS server other than Winnfsd, for example the [Allegro NFS Server](https://nfsforwindows.com). The setups provided below and the scripts provided below are only intended to get you started if you don't already use NFS.
+    Note that you can use the NFS setup described for each operating system below (and the scripts provided) or you can set up NFS any way that works for you. For example, if you're already using NFS with vagrant on macOS, and you already have a number of exports, the default export here (your home directory) won't work, because you'll have overlaps in your `/etc/exports`. Or on Windows, you may want to use an NFS server other than [Winnfsd](https://github.com/winnfsd/winnfsd), for example the [Allegro NFS Server](https://nfsforwindows.com). The setups provided below and the scripts provided below are only intended to get you started if you don't already use NFS.
 
     Note that NFS does not really add to performance on Linux, so it is not recommended.
 
     === "macOS NFS Setup"
     
-        Download, inspect, make executable, and run the [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh) script. Use `curl -O https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh && chmod +x macos_ddev_nfs_setup.sh && ./macos_ddev_nfs_setup.sh`. This stops running ddev projects, adds your home directory to the /etc/exports config file that nfsd uses, and enables nfsd to run on your computer. This is a one-time setup. Note that this shares your home directory via NFS to any NFS client on your computer, so it's critical to consider security issues; It's easy to make the shares in /etc/exports more limited as well, as long as they don't overlap (NFS doesn't allow overlapping exports).
+        Download, inspect, make executable, and run the [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh) script. Use `curl -O https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh && chmod +x macos_ddev_nfs_setup.sh && ./macos_ddev_nfs_setup.sh`. This stops running ddev projects, adds your home directory to the `/etc/exports` config file that nfsd uses, and enables nfsd to run on your computer. This is a one-time setup. Note that this shares your home directory via NFS to any NFS client on your computer, so it's critical to consider security issues; It's easy to make the shares in `/etc/exports` more limited as well, as long as they don't overlap (NFS doesn't allow overlapping exports).
         
-        If your DDEV-Local projects are set up outside your home directory, you'll need to edit /etc/exports to add a line for that share as well.
+        If your DDEV-Local projects are set up outside your home directory, you'll need to edit `/etc/exports` to add a line for that share as well.
         `sudo vi /etc/exports` and copy the line the script has just created (`/System/Volumes/Data/Users/username -alldirs -mapall=<your_user_id>:20 localhost`), editing it with the additional path, e.g: `/Volumes/SomeExternalDrive -alldirs -mapall=<your_uid>:20 localhost`.
         
         !!!warning "macOS and the Documents directory"
-        
-            If your projects are in a subdirectory of the ~/Documents directory or on an external drive, it may necessary to grant the "Full Disk Access" permission to the `/sbin/nfsd` binary. Full details are [below](#macos-full-disk-access-for-special-directories).
+            If your projects are in a subdirectory of the `~/Documents` directory or on an external drive, it may necessary to grant the "Full Disk Access" permission to the `/sbin/nfsd` binary. Full details are [below](#macos-full-disk-access-for-special-directories).
+
+        #### macOS Full Disk Access for Special Directories
+
+        * If you are on macOS, and your projects are in a subdirectory of the `~/Documents` or `~/Desktop` directories or on an external drive, you must grant "Full Disk Access" privilege to /sbin/nfsd in the Privacy settings in the System Preferences. On the "Full disk access" section, click the "+" and add `/sbin/nfsd` as shown here: ![screenshot](../images/sbin_nfsd_selection.png)
+        You should then see nfsd in the list as shown:
+        ![screenshot](../images/nfsd_full_disk_access.png).
+        * `sudo nfsd restart`
+        * Use `ddev debug nfsmount` in a project directory to make sure it gives successful output like
+
+        #### macOS-specific NFS debugging
+
+        * Please temporarily disable any firewall or VPN.
+        * Use `showmount -e` to find out what is exported via NFS. If you don't see a parent of your project directory in there, then NFS can't work.
+        * If nothing is showing, use `nfsd checkexports` and read carefully for errors
+        * Use `ps -ef | grep nfsd` to make sure nfsd is running
+        * Restart nfsd with `sudo nfsd restart`
+        * Add the following to your /etc/nfs.conf:
+
+        ```conf
+        nfs.server.mount.require_resv_port = 0
+        nfs.server.verbose = 3
+        ```
+
+        * Run Console.app and put "nfsd" in the search box at the top. `sudo nfsd restart` and read the messages carefully. Attempt to `ddev debug nfsmount` the problematic project directory.
+
+        ```bash
+        $ ddev debug nfsmount
+        Successfully accessed NFS mount of /Users/rfay/workspace/d8composer
+        TARGET    SOURCE                                                FSTYPE OPTIONS
+        /nfsmount :/System/Volumes/Data/Users/rfay/workspace/d8composer nfs    rw,relatime,vers=3,rsize=65536,wsize=65536,namlen=255,hard,nolock,proto=tcp,timeo=600,retrans=2,sec=sys,mountaddr=192.168.65.2,mountvers=3,mountproto=tcp,local_lock=all,addr=192.168.65.2
+        /nfsmount/.ddev
+        ```
 
     === "Windows NFS Setup"
     
         The executable components required for Windows NFS (winnfsd and nssm) are packaged with the DDEV Windows Installer in each release, so if you've used the windows installer, they're available already.  To enable winnfsd as a service, please download, inspect and run the script "windows_ddev_nfs_setup.sh" installed by the installer in `C:\Program Files\ddev\windows_ddev_nfs_setup.sh` (or download from [windows_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/windows_ddev_nfs_setup.sh)) in a git-bash session on windows. If your DDEV-Local projects are set up outside your home directory, you'll need to edit the ~/.ddev/nfs_exports.txt created by the script and then restart the service with `sudo nssm restart nfsd`.
         
         !!!warning "Firewall Issues"
-
             On Windows 10/11 you will likely run afoul of the Windows Defender Firewall, and it will be necessary to allow `winnfsd` to bypass it. If you're getting a timeout with no information after `ddev start`, try going to "Windows Defender Firewall" -> "Allow an app or feature through Windows Defender Firewall", "Change Settings", "Allow another app". Then choose C:\Program Files\ddev\winnfsd.exe, assuming that's where  winnfsd is installed.
 
         ### Debugging `ddev start` failures with `nfs_mount_enabled: true`
@@ -221,41 +251,9 @@ Instructions for Mutagen and NFS are below.
 
         * Try `ddev debug nfsmount` in a project directory to see if basic NFS mounting is working. If that works, it's likely that everything else will.
         * When debugging, please do `ddev restart` in between each change. Otherwise, you can have stale mounts inside the container and you'll miss any benefit you may find in the debugging process.
-        * Inspect the /etc/exports (or `~/.ddev/nfs_exports.txt` on Windows).
+        * Inspect the `/etc/exports` (or `~/.ddev/nfs_exports.txt` on Windows).
         * Restart the server (`sudo nfsd restart` on macOS, `sudo nssm restart nfsd` on Windows).
         * `showmount -e` on macOS will show the shared mounts.
-
-        #### macOS Full Disk Access for Special Directories
-
-        * If you are on macOS, and your projects are in a subdirectory of the ~/Documents or ~/Desktop directories or on an external drive, you must grant "Full Disk Access" privilege to /sbin/nfsd in the Privacy settings in the System Preferences. On the "Full disk access" section, click the "+" and add `/sbin/nfsd` as shown here: ![screenshot](../images/sbin_nfsd_selection.png)
-        You should then see nfsd in the list as shown:
-        ![screenshot](../images/nfsd_full_disk_access.png).
-        * `sudo nfsd restart`
-        * Use `ddev debug nfsmount` in a project directory to make sure it gives successful output like
-
-    ```
-    $ ddev debug nfsmount
-    Successfully accessed NFS mount of /Users/rfay/workspace/d8composer
-    TARGET    SOURCE                                                FSTYPE OPTIONS
-    /nfsmount :/System/Volumes/Data/Users/rfay/workspace/d8composer nfs    rw,relatime,vers=3,rsize=65536,wsize=65536,namlen=255,hard,nolock,proto=tcp,timeo=600,retrans=2,sec=sys,mountaddr=192.168.65.2,mountvers=3,mountproto=tcp,local_lock=all,addr=192.168.65.2
-    /nfsmount/.ddev
-    ```
-
-        #### macOS-specific NFS debugging
-
-        * Please temporarily disable any firewall or VPN.
-        * Use `showmount -e` to find out what is exported via NFS. If you don't see a parent of your project directory in there, then NFS can't work.
-        * If nothing is showing, use `nfsd checkexports` and read carefully for errors
-        * Use `ps -ef | grep nfsd` to make sure nfsd is running
-        * Restart nfsd with `sudo nfsd restart`
-        * Add the following to your /etc/nfs.conf:
-
-        ```conf
-        nfs.server.mount.require_resv_port = 0
-        nfs.server.verbose = 3
-        ```
-
-        * Run Console.app and put "nfsd" in the search box at the top. `sudo nfsd restart` and read the messages carefully. Attempt to `ddev debug nfsmount` the problematic project directory.
 
         #### Windows-specific NFS debugging
 

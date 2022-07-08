@@ -7,12 +7,14 @@ Shells like bash and zsh need help to do this though, they have to know what the
 === "Bash with Homebrew"
     The easiest way to use bash completion on either macOS or Linux is to install with homebrew. `brew install bash-completion`. When you install it though, it will warn you with something like this, which may vary on your system.
 
-    Add the following line to your ~/.bash_profile:
+    Add the following line to your `~/.bash_profile`:
 
     ```bash
-         [[ -r "/usr/local/etc/profile.d/bash_completion.sh" ]] && . "/usr/local/etc/profile.d/bash_completion.sh"
+    [[ -r "/usr/local/etc/profile.d/bash_completion.sh" ]] && . "/usr/local/etc/profile.d/bash_completion.sh"
     ```
-    !!!note "You do have to add the include to your `.bash_profile` or `.profile` or nothing will work. Use `source ~/.bash_profile` or `source ~/.profile` to make it take effect immediately.
+
+    !!!note "Bash profile"
+        You do have to add the include to your `.bash_profile` or `.profile` or nothing will work. Use `source ~/.bash_profile` or `source ~/.profile` to make it take effect immediately.
 
     * Link completions with `brew completions link`.
 
@@ -26,21 +28,25 @@ Shells like bash and zsh need help to do this though, they have to know what the
     This works exactly the same as bash completion. `brew install zsh-completions`. You'll get instructions something like this:
 
     ```bash
-      if type brew &>/dev/null; then
+    if type brew &>/dev/null; then
         FPATH=$(brew --prefix)/share/zsh-completions:$FPATH
     
         autoload -Uz compinit
         compinit
-      fi
+    fi
+    ```
     
     You may also need to force rebuild `zcompdump`:
-    
-      rm -f ~/.zcompdump; compinit
+
+    ```bash
+    rm -f ~/.zcompdump; compinit
+    ```
     
     Additionally, if you receive "zsh compinit: insecure directories" warnings when attempting
     to load these completions, you may need to run this:
-    
-      chmod go-w '/usr/local/share'
+
+    ```bash
+    chmod go-w '/usr/local/share'
     ```
     
     So follow those instructions and your zsh should be set up.
@@ -49,15 +55,15 @@ Shells like bash and zsh need help to do this though, they have to know what the
 
     If you installed zsh with homebrew, ddev's completions will be automatically installed when you `brew install drud/ddev/ddev`.
     
-    Otherwise, Oh-My-Zsh may be set up very differently in different places, so as a power zsh user you'll need to put ddev_bash_completion.sh (see tar archive download above) where it belongs. `echo $fpath` will show you the places that it's most likely to belong. An obvious choice is ~/.oh-my-zsh/completions if that exists, so you can `mkdir -p ~/.oh-my-zsh/completions && cp ddev_zsh_completion.sh ~/.oh-my-zsh/completions/_ddev` and then `autoload -Uz compinit && compinit`.
+    Otherwise, Oh-My-Zsh may be set up very differently in different places, so as a power zsh user you'll need to put ddev_bash_completion.sh (see tar archive download above) where it belongs. `echo $fpath` will show you the places that it's most likely to belong. An obvious choice is `~/.oh-my-zsh/completions` if that exists, so you can `mkdir -p ~/.oh-my-zsh/completions && cp ddev_zsh_completion.sh ~/.oh-my-zsh/completions/_ddev` and then `autoload -Uz compinit && compinit`.
 
 === "Fish"
 
-    The fish shell's completions are also supported and are automatically installed into /usr/local/share/fish/vendor_completions.d when you install ddev via Homebrew.  If you have installed fish without homebrew, you can extract the fish completions from the ddev_shell_completion_scripts tarball that is included with each release.
+    The fish shell's completions are also supported and are automatically installed into `/usr/local/share/fish/vendor_completions.d/` when you install ddev via Homebrew.  If you have installed fish without homebrew, you can extract the fish completions from the ddev_shell_completion_scripts tarball that is included with each release.
 
 === "Git-bash"
 
-    Completions in git-bash are sourced from at least ~/bash_completion.d so you can use `mkdir -p ~/bash_completion.d && tar -C ~/.bash_completion.d -zxf /z/Downloads/ddev_shell_completion_scripts.v1.15.0-rc3.tar.gz ddev_bash_completion.sh && mv ~/bash_completion.d/ddev_bash_completion.sh ~/bash_completion.d/ddev.bash` to extract the bash completions and put them where they belong.
+    Completions in git-bash are sourced from at least `~/bash_completion.d` so you can use `mkdir -p ~/bash_completion.d && tar -C ~/.bash_completion.d -zxf /z/Downloads/ddev_shell_completion_scripts.v1.15.0-rc3.tar.gz ddev_bash_completion.sh && mv ~/bash_completion.d/ddev_bash_completion.sh ~/bash_completion.d/ddev.bash` to extract the bash completions and put them where they belong.
 
 === "PowerShell"
 
@@ -65,6 +71,6 @@ Shells like bash and zsh need help to do this though, they have to know what the
 
 ## tar Archive of Completion Scripts for Manual Deployment
 
-Although most people will use techniques like homebrew for installation, a tar archive of the shell completion scripts is available in each release, called "ddev_shell_completion_scripts.\<version\>.tar.gz". If you need to manually install, you can download and untar the scripts, then copy them as needed to where they have to go. For example, `sudo cp ddev_bash_completion.sh /etc/bash_completion.d/ddev`.
+Although most people will use techniques like homebrew for installation, a tar archive of the shell completion scripts is available in each release, called `ddev_shell_completion_scripts.<version>.tar.gz`. If you need to manually install, you can download and untar the scripts, then copy them as needed to where they have to go. For example, `sudo cp ddev_bash_completion.sh /etc/bash_completion.d/ddev`.
 
 Note that scripts for the fish shell and Windows PowerShell are also provided, but no instructions are given here for deploying them.

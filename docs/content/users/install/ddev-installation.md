@@ -33,7 +33,7 @@ Docker or an alternative is required before anything will work with DDEV. This i
 
 === "Linux apt/yum"
 
-    DDEV has Debian and RPM packages that work with both apt and yum repositories, and on most any variant that usees those, including Windows WSL2.
+    DDEV has Debian and RPM packages that work with both apt and yum repositories, and on most any variant that uses those, including Windows WSL2.
 
     * Debian/Ubuntu and derivative distros - Install the ddev apt repositories with:
 
@@ -99,16 +99,16 @@ Docker or an alternative is required before anything will work with DDEV. This i
     12. Open the WSL2 terminal, for example `Ubuntu` from the Windows start menu.
     13. Install `ddev` with `curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh`
     14. `sudo apt-get update && sudo apt-get install -y certutil xdg-utils` to install the `xdg-utils` package that allows `ddev launch` to work.
-    15 In WSL2 run `mkcert -install`.
+    15. In WSL2 run `mkcert -install`.
 
     That's it! You have now installed DDEV on WSL2. If you're using WSL2 for DDEV (recommended), remember to run all `ddev` commands inside the WSL2 distro.
-    Follow the instructions in `Linux, macOS and Windows WSL2 (install script)` above.
+    Follow the instructions in the `Linux apt/yum` section.
 
     !!!warning "Projects go in /home, not on the Windows filesystem"
-        Make sure you put your projects in the Linux filesystem (e.g. /home/<your_username>), **not** in the Windows filesystem (`/mnt/c`), because you'll get vastly superior performance on the Linux filesystem. You will be very unhappy if you put your project in `/mnt/c`.
+        Make sure you put your projects in the Linux filesystem (e.g. `/home/<your_username>`), **not** in the Windows filesystem (`/mnt/c`), because you'll get vastly superior performance on the Linux filesystem. You will be very unhappy if you put your project in `/mnt/c`.
 
-    !!note 
-        Whenhe prompt `Installing to the system store is not yet supported on this Linux`, which can be a simple result of not having /usr/sbin in the path so that `/usr/sbin/update-ca-certificates` can be found.)
+    !!!note "Path to certificates"
+        Note the prompt `Installing to the system store is not yet supported on this Linux`, which can be a simple result of not having `/usr/sbin` in the path so that `/usr/sbin/update-ca-certificates` can be found.)
 
 === "Traditional Windows"
 
@@ -119,7 +119,7 @@ Docker or an alternative is required before anything will work with DDEV. This i
     * Most people interact with ddev on Windows using git-bash, part of the [Windows git suite](https://git-scm.com/download/win). Although ddev does work with cmd and PowerShell, it's more at home in bash. You can install it with chocolatey using `choco install -y git`.
     * For performance, many users enable mutagen, `ddev config global --mutagen-enabled` (global) or `ddev config --mutagen-enabled` just for one project.
 
-    !!!note Windows Firefox trusted CA
+    !!!note "Windows Firefox trusted CA"
 
         The `mkcert -install` step on Windows does not work for the Firefox browser.
         You need to add the created root certificate authority to the security
@@ -152,10 +152,13 @@ Docker or an alternative is required before anything will work with DDEV. This i
 
     It can be complicated to get private databases and files into Gitpod, so in addition to the launchers, The [`git` provider example](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/git.yaml.example) shows how you can pull database and files without complex setup or permissions. This was created explicitly for Gitpod integration, because in Gitpod you typically already have access to private git repositories, which are a fine place to put a starter database and files. Although [ddev-gitpod-launcher](https://drud.github.io/ddev-gitpod-launcher/) and the web extension provide the capability, you may want to integrate a git provider for each project (or, of course, one of the [other providers](https://github.com/drud/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers)).
 
-=== "Arch-derived Linux"
-    For Arch-based systems including Arch Linux, `EndeavourOS` and `Manjaro` We maintain a package on [Arch Linux (`AUR`)](https://aur.archlinux.org/packages/ddev-bin/).
+=== "Arch-based Linux"
+    For Arch-based systems including `Arch Linux`, `EndeavourOS` and `Manjaro` we maintain a [ddev-bin](https://aur.archlinux.org/packages/ddev-bin/) package in AUR.
 
     As a one-time initialization, run `mkcert -install`.
+
+    !!!note "Edge channel is available"
+        To install DDEV prereleases, use a [ddev-edge-bin](https://aur.archlinux.org/packages/ddev-edge-bin/) package in AUR.
 
 === "Manual"
 
@@ -165,4 +168,4 @@ Docker or an alternative is required before anything will work with DDEV. This i
     * Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for your architecture.
     * Move ddev to /usr/local/bin: `mv ddev /usr/local/bin/` (may require sudo), or another directory in your `$PATH` as preferred.
     * Run `ddev` to test your installation. You should see DDEV's command usage output.
-    * As a one-time initialization, run `mkcert -install`, which may require your sudo password. Linux users may have to take additional actions as discussed below in [Linux `mkcert -install` additional instructions](#linux-mkcert--install-additional-instructions). If you don't have mkcert installed, you can install it from <https://github.com/FiloSottile/mkcert/releases>. Download the version for the correct architecture and `sudo mv <downloaded_file> /usr/local/bin/mkcert && sudo chmod +x /usr/local/bin/mkcert`.
+    * As a one-time initialization, run `mkcert -install`, which may require your sudo password. If you don't have mkcert installed, you can install it from <https://github.com/FiloSottile/mkcert/releases>. Download the version for the correct architecture and `sudo mv <downloaded_file> /usr/local/bin/mkcert && sudo chmod +x /usr/local/bin/mkcert`.
