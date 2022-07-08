@@ -15,7 +15,7 @@ on:
       - ".spellcheck.yml"
       - ".markdownlintrc"
       - "mkdocs.yml"
-      - ".readthedocs.yml"
+      - ".readthedocs.yaml"
       - ".github/workflows/**"
       - "markdown-link-check.json"
 jobs:
