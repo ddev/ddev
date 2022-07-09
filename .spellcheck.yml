@@ -11,6 +11,7 @@ matrix:
   - pyspelling.filters.markdown:
       markdown_extensions:
       - pymdownx.superfences:
+          disable_indented_code_blocks: true
   - pyspelling.filters.html:
       comments: false
       ignores:
