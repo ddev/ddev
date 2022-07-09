@@ -14,14 +14,15 @@
     * Working for an organization that due to its size requires a paid Docker plan to use Docker Desktop, and wanting to avoid that cost and business relationship.
     * Preferring a CLI-focused approach to Docker Desktop's GUI focus.
 
-    1. Install colima with `brew install colima` using homebrew or see the other [installation options](https://github.com/abiosoft/colima/blob/main/docs/INSTALL.md).
-    2. Configure your system to use mutagen, which is nearly essential for Colima. `ddev config global --mutagen-enabled`.
     !!!tip "Install the docker client if you need it"
         If you don't have the `docker` client installed, you'll need to install it. (If `docker help` returns an error, you don't have it.) Use `brew install docker` to install it.
 
-    3.  Start colima: `colima start --cpu 4 --memory 4` will set up a colima instance with 4 CPUs and 4GB of memory allocated. Your needs may vary. After the first start you can just use `colima start`. Use `colima start -e` to edit the configuration file.
-    4.  `colima status` will show colima's status.
-    5.  After a computer restart you'll need to `colima start` again. This will eventually be automated in later versions of colima.
+    1. Install colima with `brew install colima` using homebrew or see the other [installation options](https://github.com/abiosoft/colima/blob/main/docs/INSTALL.md).
+    2. Configure your system to use mutagen, which is nearly essential for Colima. `ddev config global --mutagen-enabled`.
+    3. Start colima: `colima start --cpu 4 --memory 4` will set up a colima instance with 4 CPUs and 4GB of memory allocated. Your needs may vary. After the first start you can just use `colima start`. Use `colima start -e` to edit the configuration file.
+    4. `colima status` will show colima's status.
+    5. After a computer restart you'll need to `colima start` again. This will eventually be automated in later versions of colima.
+
     !!!warning "Docker contexts let the docker client point at the right docker server"
         Colima activates its own docker context in order to not conflict with Docker Desktop, so if you `docker context ls` you'll see a list of available contexts with currently active context indicated with an "\*" (which will be "colima" after you've started colima). You can change to the default (Docker Desktop) with `docker context use default` or change back with `docker context use colima`. This means you can actually run Docker Desktop and Colima at the same time... but be careful which context you're pointing at.
 
@@ -35,7 +36,7 @@
 
     Although the traditional approach on Windows/WSL2 has been to use Docker Desktop, a number of people have moved away from using Docker Desktop and just installing the Docker-provided open-source `docker-ce` package inside WSL2. This uses entirely open-source software and does not require a license fee to Docker, Inc.
 
-    Most of the installation is the same as [on Linux](#linux-installation-docker), but it can be summarized as:
+    Most of the installation is the same as on Linux, but it can be summarized as:
 
     * If you don't already have WSL2, install it with `wsl --install`, which will likely require a reboot.
     * `wsl --set-default-version 2`
@@ -50,13 +51,15 @@
     sudo apt-get update && sudo apt-get install docker-ce docker-ce-cli containerd.io
     sudo groupadd docker && sudo usermod -aG docker $USER
     ```
+
     * You have to start docker-ce yourself on login, or use a script to do it. To have it start on entry to git-bash, a startup line to your (windows-side) `~/.bashrc` with:
 
-      ```bash
-      echo "wsl.exe -u root service docker status > /dev/null || wsl.exe -u root service docker start > /dev/null" >> ~/.bashrc
-      ```
+    ```bash
+    echo "wsl.exe -u root service docker status > /dev/null || wsl.exe -u root service docker start > /dev/null" >> ~/.bashrc
+    ```
 
     You can then `source ~/.bashrc` to start immediately, or it should start the next time you open git-bash.
+
     * [Install mkcert](https://github.com/FiloSottile/mkcert#windows) on the Windows side; this may be easiest with [Chocolatey](https://chocolatey.org/install): In an administrative PowerShell, `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))`
     * In an administrative PowerShell: `choco install -y mkcert`
     * In an administrative PowerShell, run `mkcert -install` and answer the prompt allowing the installation of the Certificate Authority.
@@ -66,10 +69,10 @@
 
 === "Linux"
 
-    !!! warning "Don't forget the Docker-ce post-install steps"
+    !!!warning "Don't forget the Docker-ce post-install steps"
         Please don't forget that Linux installation absolutely requires post-install steps (below).
     
-    !!! warning "Don't use `sudo` with the docker command"
+    !!!warning "Don't use `sudo` with the docker command"
         Please don't use `sudo` with docker. If you're needing it, you haven't finished the installation. Don't use `sudo` with ddev, except the rare case where you need the `ddev hostname` command.
 
     !!!warning "Docker Desktop for Linux is not yet mature enough to use"
@@ -83,14 +86,14 @@
     * [Fedora](https://docs.docker.com/install/linux/docker-ce/fedora/)
     * [binaries](https://docs.docker.com/install/linux/docker-ce/binaries/)
 
-    !!! note "One-time post-installation step"
-      Required post-installation steps: See [Docker's post-installation steps](https://docs.docker.com/engine/install/linux-postinstall//). You need to add your linux user to the "docker" group and configure the docker daemon to start on boot.
-      ```bash
-      sudo groupadd docker
-      sudo usermod -aG docker $USER
-      ```
+    !!!note "One-time post-installation step"
+        Required post-installation steps: See [Docker's post-installation steps](https://docs.docker.com/engine/install/linux-postinstall/). You need to add your linux user to the "docker" group and configure the docker daemon to start on boot.
+        ```bash
+        sudo groupadd docker
+        sudo usermod -aG docker $USER
+        ```
 
-    On systems that do not include systemd or equivalent (mostly if installing inside WSL2) you'll need to manually start docker with `service docker start` or the equivalent in your distro. You can add this into your .profile or equivalent.
+    On systems that do not include systemd or equivalent (mostly if installing inside WSL2) you'll need to manually start docker with `service docker start` or the equivalent in your distro. You can add this into your `~/.profile` or equivalent.
 
 === "Gitpod.io"
 
@@ -100,7 +103,7 @@
 
 ## Testing and Troubleshooting Your Docker Installation
 
-Docker needs to be able to a few things for ddev to work:
+Docker needs to be able to do a few things for ddev to work:
 
 * Mount the project code directory from the host into the container; the project code directory is usually somewhere in a subdirectory of your home directory.
 * Access TCP ports on the host to serve HTTP and HTTPS. These are ports 80 and 443 by default, but they can be changed on a per-project basis.

@@ -15,7 +15,7 @@ Here's a quickstart instructions for a number of different environments:
 
     ## Any PHP or HTML/JS environment
 
-    DDEV works happily with most any PHP or static HTML/js project, although it has special additional support for several CMSs. But you don't need special support if you already know how to configure your project.
+    DDEV works happily with most any PHP or static HTML/JS project, although it has special additional support for several CMSs. But you don't need special support if you already know how to configure your project.
     
     1. Create a directory (`mkdir my-new-project`) or clone your project (`git clone <your_project>`)
     2. Change to the new directory (`cd my-new-project`)
@@ -130,7 +130,7 @@ Here's a quickstart instructions for a number of different environments:
         
         Now start your project with `ddev start`
         
-        Quickstart instructions regarding database imports can be found under [Database Imports](#database-imports).
+        Quickstart instructions regarding database imports can be found under [Importing a database](#importing-a-database).
 
 === "Drupal"
 
@@ -183,7 +183,7 @@ Here's a quickstart instructions for a number of different environments:
         
         (Drupal 7 doesn't know how to redirect from the front page to the /install.php if the database is not set up but the settings files *are* set up, so launching with /install.php gets you started with an installation. You can also `drush site-install`, `ddev exec drush site-install --yes`)
         
-        Quickstart instructions for database imports can be found under [Database Imports](#database-imports).
+        Quickstart instructions for database imports can be found under [Importing a database](#importing-a-database).
 
     === "Git clone"
     
@@ -359,30 +359,32 @@ Here's a quickstart instructions for a number of different environments:
 
 ## Configuration files
 
-**Note:** If you're providing the settings.php or wp-config.php and DDEV is creating the settings.ddev.php (or wp-config-local.php, AdditionalConfig.php, or similar), the main settings file must explicitly include the appropriate DDEV-generated settings file.  Any changes you need should be included somewhere that loads after DDEV's settings file, for example in Drupal's settings.php *after* settings.ddev.php is included. (see "Adding Configuration" below).
+**Note:** If you're providing the `settings.php` or `wp-config.php` and DDEV is creating the `settings.ddev.php` (or `wp-config-local.php`, `AdditionalConfig.php`, or similar), the main settings file must explicitly include the appropriate DDEV-generated settings file.  Any changes you need should be included somewhere that loads after DDEV's settings file, for example in Drupal's `settings.php` *after* `settings.ddev.php` is included. (see [Adding Configuration](#adding-configuration) below).
 
-**Note:** If you do *not* want DDEV-Local to create or manage settings files, set `disable_settings_management: true` in your .ddev/config.yaml or `ddev config --disable-settings-management` and you will be the only one that edits or updates settings files.
+!!!note "Turning off settings management completely"
+
+    If you do *not* want DDEV-Local to create or manage settings files, set `disable_settings_management: true` in your `.ddev/config.yaml` or `ddev config --disable-settings-management` and you will be the only one that edits or updates settings files.
 
 The `ddev config` command attempts to create a CMS-specific settings file with DDEV credentials pre-populated.
 
-For **Drupal** and **Backdrop**, DDEV settings are written to a DDEV-managed file, settings.ddev.php. The `ddev config` command will ensure that these settings are included in your settings.php through the following steps:
+For **Drupal** and **Backdrop**, DDEV settings are written to a DDEV-managed file, settings.ddev.php. The `ddev config` command will ensure that these settings are included in your `settings.php` through the following steps:
 
-* Write DDEV settings to settings.ddev.php
-* If no settings.php file exists, create one that includes settings.ddev.php
-* If a settings.php file already exists, ensure that it includes settings.ddev.php, modifying settings.php to write the include if necessary.
+* Write DDEV settings to `settings.ddev.php`
+* If no `settings.php` file exists, create one that includes `settings.ddev.php`
+* If a `settings.php` file already exists, ensure that it includes `settings.ddev.php`, modifying `settings.php` to write the include if necessary.
 
 For **Magento 1**, DDEV settings go into `app/etc/local.xml`
 
 In **Magento 2**, DDEV settings go into `app/etc/env.php`
 
-For **TYPO3**, DDEV settings are written to AdditionalConfiguration.php.  If AdditionalConfiguration.php exists and is not managed by DDEV, it will not be modified.
+For **TYPO3**, DDEV settings are written to `AdditionalConfiguration.php`. If `AdditionalConfiguration.php` exists and is not managed by DDEV, it will not be modified.
 
-For **WordPress**, DDEV settings are written to a DDEV-managed file, wp-config-ddev.php. The `ddev config` command will attempt to write settings through the following steps:
+For **WordPress**, DDEV settings are written to a DDEV-managed file, `wp-config-ddev.php`. The `ddev config` command will attempt to write settings through the following steps:
 
-* Write DDEV settings to wp-config-ddev.php
-* If no wp-config.php exists, create one that include wp-config-ddev.php
-* If a DDEV-managed wp-config.php exists, create one that includes wp-config.php
-* If a user-managed wp-config.php exists, instruct the user on how to modify it to include DDEV settings
+* Write DDEV settings to `wp-config-ddev.php`
+* If no `wp-config.php` exists, create one that include `wp-config-ddev.php`
+* If a DDEV-managed `wp-config.php` exists, create one that includes `wp-config.php`
+* If a user-managed `wp-config.php` exists, instruct the user on how to modify it to include DDEV settings
 
 How do you know if DDEV manages a settings file? You will see the following comment. Remove the comment and DDEV will not attempt to overwrite it!  If you are letting DDEV create its settings file, it is recommended that you leave this comment so DDEV can continue to manage it, and make any needed changes in another settings file.
 
@@ -397,9 +399,9 @@ How do you know if DDEV manages a settings file? You will see the following comm
 
 ### Adding configuration
 
-**Drupal and Backdrop**:  In settings.php, enable loading settings.local.php after settings.ddev.php is included (create a new one if it doesn't already exist), and make changes there (wrapping with `if (getenv('IS_DDEV_PROJECT') == 'true')` as needed).
+**Drupal and Backdrop**:  In `settings.php`, enable loading `settings.local.php` after `settings.ddev.php` is included (create a new one if it doesn't already exist), and make changes there (wrapping with `if (getenv('IS_DDEV_PROJECT') == 'true')` as needed).
 
-**WordPress**:  Load a wp-config-local.php after wp-config-ddev.php, and make changes there (wrapping with `if (getenv('IS_DDEV_PROJECT') == 'true')` as needed).
+**WordPress**:  Load a `wp-config-local.php` after `wp-config-ddev.php`, and make changes there (wrapping with `if (getenv('IS_DDEV_PROJECT') == 'true')` as needed).
 
 ## Listing project information
 
@@ -503,7 +505,7 @@ Database import supports the following file types:
 * Zip Archive (.zip)
 * stdin
 
-If a Tarball Archive or Zip Archive is provided for the import, you will be provided an additional prompt, allowing you to specify a path within the archive to use for the import asset. The specified path should provide a Raw SQL Dump (.sql). In the following example, the database we want to import is named data.sql and resides at the top-level of the archive:
+If a Tarball Archive or Zip Archive is provided for the import, you will be provided an additional prompt, allowing you to specify a path within the archive to use for the import asset. The specified path should provide a Raw SQL Dump (.sql). In the following example, the database we want to import is named `data.sql` and resides at the top-level of the archive:
 
 ```bash
 ddev import-db
