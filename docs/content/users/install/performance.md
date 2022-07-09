@@ -236,7 +236,7 @@ Instructions for Mutagen and NFS are below.
         !!!warning "Firewall Issues"
             On Windows 10/11 you will likely run afoul of the Windows Defender Firewall, and it will be necessary to allow `winnfsd` to bypass it. If you're getting a timeout with no information after `ddev start`, try going to "Windows Defender Firewall" -> "Allow an app or feature through Windows Defender Firewall", "Change Settings", "Allow another app". Then choose C:\Program Files\ddev\winnfsd.exe, assuming that's where  winnfsd is installed.
 
-        ### Debugging `ddev start` failures with `nfs_mount_enabled: true`
+        #### Debugging `ddev start` failures with `nfs_mount_enabled: true`
 
         There are a number of reasons that the NFS mount can fail on `ddev start`:
 
