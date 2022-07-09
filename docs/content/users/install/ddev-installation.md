@@ -152,7 +152,7 @@ Docker or an alternative is required before anything will work with DDEV. This i
 
     It can be complicated to get private databases and files into Gitpod, so in addition to the launchers, The [`git` provider example](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/git.yaml.example) shows how you can pull database and files without complex setup or permissions. This was created explicitly for Gitpod integration, because in Gitpod you typically already have access to private git repositories, which are a fine place to put a starter database and files. Although [ddev-gitpod-launcher](https://drud.github.io/ddev-gitpod-launcher/) and the web extension provide the capability, you may want to integrate a git provider for each project (or, of course, one of the [other providers](https://github.com/drud/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers)).
 
-=== "Arch-based Linux"
+=== "Arch Linux"
     For Arch-based systems including `Arch Linux`, `EndeavourOS` and `Manjaro` we maintain a [ddev-bin](https://aur.archlinux.org/packages/ddev-bin/) package in AUR.
 
     As a one-time initialization, run `mkcert -install`.
