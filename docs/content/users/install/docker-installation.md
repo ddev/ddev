@@ -88,11 +88,10 @@
 
     !!!note "One-time post-installation step"
         Required post-installation steps: See [Docker's post-installation steps](https://docs.docker.com/engine/install/linux-postinstall/). You need to add your linux user to the "docker" group and configure the docker daemon to start on boot.
-
-    ```bash
-    sudo groupadd docker
-    sudo usermod -aG docker $USER
-    ```
+        ```bash
+        sudo groupadd docker
+        sudo usermod -aG docker $USER
+        ```
 
     On systems that do not include systemd or equivalent (mostly if installing inside WSL2) you'll need to manually start docker with `service docker start` or the equivalent in your distro. You can add this into your `~/.profile` or equivalent.
 
