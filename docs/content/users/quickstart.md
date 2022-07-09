@@ -361,7 +361,9 @@ Here's a quickstart instructions for a number of different environments:
 
 **Note:** If you're providing the `settings.php` or `wp-config.php` and DDEV is creating the `settings.ddev.php` (or `wp-config-local.php`, `AdditionalConfig.php`, or similar), the main settings file must explicitly include the appropriate DDEV-generated settings file.  Any changes you need should be included somewhere that loads after DDEV's settings file, for example in Drupal's `settings.php` *after* `settings.ddev.php` is included. (see [Adding Configuration](#adding-configuration) below).
 
-**Note:** If you do *not* want DDEV-Local to create or manage settings files, set `disable_settings_management: true` in your `.ddev/config.yaml` or `ddev config --disable-settings-management` and you will be the only one that edits or updates settings files.
+!!!note "Turning off settings management completely"
+
+    If you do *not* want DDEV-Local to create or manage settings files, set `disable_settings_management: true` in your `.ddev/config.yaml` or `ddev config --disable-settings-management` and you will be the only one that edits or updates settings files.
 
 The `ddev config` command attempts to create a CMS-specific settings file with DDEV credentials pre-populated.
 
