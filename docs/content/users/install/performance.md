@@ -16,7 +16,7 @@ Instructions for Mutagen and NFS are below.
 
     ## Mutagen
 
-    **;TLDR:** If you're on macOS or Windows just enable mutagen. `ddev config global --mutagen-enabled`. You'll be glad you did.
+    **TL;DR:** If you're on macOS or Windows just enable mutagen. `ddev config global --mutagen-enabled`. You'll be glad you did.
 
     The Mutagen asynchronous caching feature offers advanced performance experiences and is recommended for most projects. It's now the preferred way to get great webserving performance on macOS and Windows. Unlike the NFS feature, it requires no pre-configuration or installation. **You do not need to (and should not) install mutagen.** It can also be significantly faster than NFS and massively faster than plain vanilla Docker or Colima. In addition, it makes filesystem watchers (fsnotify/inotify) work correctly.
     
