@@ -6,8 +6,8 @@ repo_url: https://github.com/drud/ddev
 repo_name: drud/ddev
 edit_uri: blob/master/docs/content
 copyright: Localdev Foundation
-#extra_javascript:
-#- 'assets/jquery-3.5.1.min.js'
+extra_javascript:
+- 'assets/jquery-3.5.1.min.js'
 #- 'assets/extra.js'
 extra_css:
 - 'assets/extra.css'
