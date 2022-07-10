@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
 site_name: DDEV Docs
-# todo: Make sure to set this to the correct one
-site_url: https://test-ddev.readthedocs.io/en/latest/
+# todo: Make sure to set this to the correct one; otherwise it breaks 404 page
+site_url: https://ddev.readthedocs.io/en/latest/
 repo_url: https://github.com/drud/ddev
 repo_name: drud/ddev
 edit_uri: blob/master/docs/content

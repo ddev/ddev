@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - 20220710_mkdocs_material
-      - main
+      - master
 jobs:
   docs-deploy:
     runs-on: ubuntu-latest
