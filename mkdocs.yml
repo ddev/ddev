@@ -34,7 +34,8 @@ theme:
   - toc.integrate
 
   favicon: favicon.png
-  logo: /Logo_w_text.svg
+  # readthedocs doesn't seem to do logo css right
+#  logo: /Logo_w_text.svg
 
 # Plugins
 plugins:
