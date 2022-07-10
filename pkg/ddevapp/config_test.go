@@ -3,12 +3,6 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/versionconstants"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -17,6 +11,13 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/versionconstants"
+	"github.com/stretchr/testify/require"
 
 	. "github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -1341,4 +1342,81 @@ func TestDatabaseConfigUpgrade(t *testing.T) {
 		assert.Empty(app.MySQLVersion)
 		assert.Empty(app.MariaDBVersion)
 	}
+}
+
+// TestConfigMergeItems verifies that config overrides for web_environment
+// override and do not clobber settings from config.yaml.
+func TestConfigMergeItems(t *testing.T) {
+	assert := asrt.New(t)
+	pwd, _ := os.Getwd()
+
+	projDir, err := filepath.Abs(testcommon.CreateTmpDir(t.Name()))
+	require.NoError(t, err)
+
+	err = fileutil.CopyDir("./testdata/TestConfigMergeItems/.ddev", filepath.Join(projDir, ".ddev"))
+	require.NoError(t, err)
+
+	app, err := NewApp(projDir, true)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = os.Chdir(pwd)
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.RemoveAll(projDir)
+		assert.NoError(err)
+	})
+	err = os.Chdir(app.AppRoot)
+	assert.NoError(err)
+
+	// make test results a bit clearer with our
+	// own matcher.
+	assertHasKey := func(expected bool, match string) {
+		test := assert.True
+		if !expected {
+			test = assert.False
+		}
+
+		for _, val := range app.WebEnvironment {
+			if val == match {
+				test(true, match)
+				return
+			}
+		}
+		test(false, match)
+	}
+
+	// check the config file w/o overrides
+	_, err = app.ReadConfig(false)
+	assert.NoError(err)
+	assert.IsType([]string{}, app.WebEnvironment)
+
+	assertHasKey(true, `LARRY=curly`)
+	assertHasKey(true, `MOE=standard`)
+	assertHasKey(true, `CURLEY=bald`)
+	assertHasKey(false, `LARRY=balding`)
+
+	// reset WE
+	app.WebEnvironment = []string{}
+
+	// Use the override this time
+	_, err = app.ReadConfig(true)
+	assert.NoError(err)
+	assert.IsType([]string{}, app.WebEnvironment)
+
+	// key should change
+	assertHasKey(false, `LARRY=curly`)
+	assertHasKey(false, `MOE=standard`)
+
+	// key should change
+	assertHasKey(true, `MOE=hair-piece`)
+	assertHasKey(true, `LARRY=balding`)
+
+	// old key should still be present
+	assertHasKey(true, `CURLEY=bald`)
+
+	// New key should appear.
+	assertHasKey(true, `SHEMP=fake`)
+
 }
