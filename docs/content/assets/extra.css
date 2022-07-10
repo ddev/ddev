@@ -16,3 +16,8 @@ dt {
   background-color: aliceblue;
   padding: 10px;
 }
+
+/* only required if we have our svg logo out there */
+/*.md-logo {*/
+/*  filter:invert(40%)*/
+/*}*/

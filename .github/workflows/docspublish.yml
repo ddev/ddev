@@ -1,0 +1,20 @@
+name: docspublish
+on:
+  push:
+    branches:
+      - 20220710_mkdocs_material
+      - master
+jobs:
+  docs-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.x
+      - run: pip install -r docs/mkdocs-pip-requirements
+      - run: mkdocs build
+      - run: ls -l .nojekyll || true
+      - run: mkdocs gh-deploy --force --no-history

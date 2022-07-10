@@ -235,7 +235,7 @@ On Windows WSL2, there is a hosts file inside the WSL2 instance (`/etc/hosts`), 
 However, if the project uses non-ddev.site hostnames, or if not connected to the Internet, or if use_dns_when_possible is false in the .ddev/config.yaml, a Windows-side browser will be unable to look up project hostnames, and you'll get complaints from the browser like "<url> server IP address could not be found" or "We can’t connect to the server at <url>".  In this case, you can:
 
 1. Add the needed hostname(s) manually to the Windows hosts file. This can easily be done with the *Windows* version of ddev.exe with `sudo ddev hostname <hostname> 127.0.0.1` on *Windows* in PowerShell or Cmd or git-bash.
-2. Or run a browser within WSL2 (currently requires an X11 server like X410, but Microsoft plans to provide natively)
+2. Or run a browser within WSL2. On Windows 11 this is built-in, but in Windows 10 may require an X11 server like X410.
 
 ## DNS Rebinding Prohibited
 

@@ -16,7 +16,7 @@ mkdocs==1.3.0
 mkdocs-git-authors-plugin>=0.6.4
 mkdocs-git-committers-plugin-2>=0.4.1
 mkdocs-git-revision-date-localized-plugin>=0.9
-git+https://${MKDOCS_GITHUB_USER}:${MKDOCS_GITHUB_TOKEN}@github.com/squidfunk/mkdocs-material-insiders.git@8.3.9-insiders-4.20.0
+mkdocs-material==8.3.9
 mkdocs-material-extensions>=1.0.3
 mkdocs-minify-plugin==0.4.1
 mkdocs-redirects>=1.0.4
