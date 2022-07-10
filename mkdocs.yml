@@ -1,5 +1,5 @@
-# Project information
-site_name: DDEV-Local Documentation
+# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
+site_name: DDEV Docs
 site_url: https://github.com/drud/ddev
 repo_url: https://github.com/drud/ddev
 repo_name: drud/ddev
@@ -17,54 +17,12 @@ docs_dir: docs/content
 
 # Configuration
 theme:
-  name: null
-  custom_dir: docs/material
-
-  # Static files
-  static_templates:
-  - 404.html
-
-  # Don't include MkDocs' JavaScript
-  include_search_page: false
-  search_index_only: true
-
-  # Default values, taken from mkdocs_theme.yml
-  language: en
-  features:
-  - content.code.annotate
-  - content.tabs.link
-  - content.tooltips
-  - header.autohide
-  - navigation.expand
-  - navigation.indexes
-  - navigation.instant
-  - navigation.prune
-  - navigation.sections
-  - navigation.tabs
-  - navigation.tabs.sticky
-  - navigation.top
-  - navigation.tracking
-  - search.highlight
-  - search.share
-  - search.suggest
-  - toc.follow
-  - toc.integrate
+  name: material
   palette:
   - scheme: default
     primary: light-blue
     accent: indigo
-#    toggle:
-#      icon: material/brightness-7
-#      name: Switch to dark mode
-#  - scheme: slate
-#    primary: indigo
-#    accent: indigo
-#    toggle:
-#      icon: material/brightness-4
-#      name: Switch to light mode
-  font:
-    text: Roboto
-    code: Roboto Mono
+
   favicon: assets/images/favicon.png
   icon:
     logo: logo
