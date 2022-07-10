@@ -17,8 +17,6 @@ docs_dir: docs/content
 # Configuration
 theme:
   name: material
-  static_templates:
-  - 404.html
   palette:
   - scheme: default
     primary: light-blue
