@@ -1,0 +1,5 @@
+webimage: config.yaml
+web_environment:
+  - LARRY=curly
+  - MOE=standard
+  - CURLEY=bald

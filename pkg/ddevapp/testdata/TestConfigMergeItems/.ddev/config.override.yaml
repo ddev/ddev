@@ -1,0 +1,4 @@
+web_environment:
+  - SHEMP=fake
+  - LARRY=balding
+  - MOE=hair-piece
