@@ -1,5 +1,6 @@
 # yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
 site_name: DDEV Docs
+site_url: https://test-ddev.readthedocs.io/
 repo_url: https://github.com/drud/ddev
 repo_name: drud/ddev
 edit_uri: blob/master/docs/content
