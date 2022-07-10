@@ -34,7 +34,7 @@ theme:
   - toc.integrate
 
   favicon: favicon.png
-  logo: /developers/logos/SVG/Logo_w_text.svg
+  logo: /Logo_w_text.svg
 
 # Plugins
 plugins:
