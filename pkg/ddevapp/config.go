@@ -333,21 +333,19 @@ func (app *DdevApp) LoadConfigYamlFile(filePath string) error {
 
 // mergeConfigToApp does an unmarshall with merging
 func (app *DdevApp) mergeConfigToApp(source []byte) error {
-	newApp := DdevApp{}
-	newApp = *app
 	result := []string{}
 
 	// save away the old web environment
-	oldEnv := newApp.WebEnvironment
+	oldEnv := app.WebEnvironment
 
 	// get the new one. Note that we will replace
 	// anything else from the upstream config for any
 	// key except for web_environment.
-	err := yaml.Unmarshal(source, &newApp)
+	err := yaml.Unmarshal(source, app)
 	if err != nil {
 		return err
 	}
-	newEnv := newApp.WebEnvironment
+	newEnv := app.WebEnvironment
 
 	// ENV=value or ENV=
 	re, err := regexp.Compile(`^([^=]+)=(\S*)`)
@@ -392,8 +390,6 @@ func (app *DdevApp) mergeConfigToApp(source []byte) error {
 			result = append(result, newItem)
 		}
 	}
-	newApp.WebEnvironment = result
-	*app = newApp
 	return nil
 }
 
