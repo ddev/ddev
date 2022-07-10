@@ -33,9 +33,8 @@ theme:
   - toc.follow
   - toc.integrate
 
-  favicon: assets/images/favicon.png
-  icon:
-    logo: logo
+  favicon: favicon.png
+  logo: /developers/logos/SVG/Logo_w_text.svg
 
 # Plugins
 plugins:

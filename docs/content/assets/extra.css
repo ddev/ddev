@@ -16,3 +16,7 @@ dt {
   background-color: aliceblue;
   padding: 10px;
 }
+
+.md-logo {
+  filter:invert(40%)
+}
