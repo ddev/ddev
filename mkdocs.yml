@@ -54,17 +54,17 @@ plugins:
 
 
 # Customization
-#extra:
-#  social:
-#  - icon: fontawesome/brands/github
-#    link: https://github.com/drud/ddev
-#  - icon: fontawesome/brands/discord
-#    link: https://discord.gg/hCZFfAMc5k
-#  - icon: fontawesome/brands/stack-overflow
-#    link: https://stackoverflow.com/tags/ddev
-#  - icon: fontawesome/brands/twitter
-#    link: https://twitter.com/search?q=%23ddev&src=unknown&f=live
-#  generator: false
+extra:
+  social:
+  - icon: fontawesome/brands/github
+    link: https://github.com/drud/ddev
+  - icon: fontawesome/brands/discord
+    link: https://discord.gg/hCZFfAMc5k
+  - icon: fontawesome/brands/stack-overflow
+    link: https://stackoverflow.com/tags/ddev
+  - icon: fontawesome/brands/twitter
+    link: https://twitter.com/search?q=%23ddev&src=unknown&f=live
+  generator: false
 
 # Extensions
 markdown_extensions:
