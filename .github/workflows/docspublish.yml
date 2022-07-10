@@ -15,4 +15,6 @@ jobs:
         with:
           python-version: 3.x
       - run: pip install -r docs/mkdocs-pip-requirements
-      - run: mkdocs gh-deploy --force
+      - run: mkdocs build
+      - run: ls -l .nojekyll || true
+      - run: mkdocs gh-deploy --force --no-history
