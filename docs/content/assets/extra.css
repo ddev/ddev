@@ -17,6 +17,7 @@ dt {
   padding: 10px;
 }
 
-.md-logo {
-  filter:invert(40%)
-}
+/* only required if we have our svg logo out there */
+/*.md-logo {*/
+/*  filter:invert(40%)*/
+/*}*/
