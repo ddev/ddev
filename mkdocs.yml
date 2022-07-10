@@ -22,6 +22,17 @@ theme:
   - scheme: default
     primary: light-blue
     accent: indigo
+  features:
+  - navigation.expand
+  - navigation.indexes
+  - navigation.instant
+  - navigation.sections
+  - navigation.tabs
+  - navigation.tabs.sticky
+  - navigation.top
+  - navigation.tracking
+  - toc.follow
+  - toc.integrate
 
   favicon: assets/images/favicon.png
   icon:
