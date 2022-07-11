@@ -304,7 +304,7 @@ func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 		}
 
 		for _, item := range configOverrides {
-			err = app.LoadConfigYamlFile(item)
+			err = app.LoadConfigAndMerge(item)
 			if err != nil {
 				return []string{}, fmt.Errorf("unable to load config file %s: %v", item, err)
 			}
@@ -316,6 +316,27 @@ func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 
 // LoadConfigYamlFile loads one config.yaml into app, overriding what might be there.
 func (app *DdevApp) LoadConfigYamlFile(filePath string) error {
+	source, err := os.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("could not find an active ddev configuration at %s have you run 'ddev config'? %v", app.ConfigPath, err)
+	}
+
+	// validate extend command keys
+	err = validateHookYAML(source)
+	if err != nil {
+		return fmt.Errorf("invalid configuration in %s: %v", app.ConfigPath, err)
+	}
+
+	// ReadConfig config values from file.
+	err = yaml.Unmarshal(source, app)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// LoadConfigYamlFile loads one config.yaml into app, overriding what might be there.
+func (app *DdevApp) LoadConfigAndMerge(filePath string) error {
 	source, err := os.ReadFile(filePath)
 	if err != nil {
 		return fmt.Errorf("could not find an active ddev configuration at %s have you run 'ddev config'? %v", app.ConfigPath, err)
