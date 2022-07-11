@@ -1366,8 +1366,6 @@ func TestMergeStringList(t *testing.T) {
 	assertSimpleMatch(true, "somename-new", app.AdditionalHostnames)
 	// do not want the delete instruction added to the list
 	assertSimpleMatch(false, "!someothername", app.AdditionalHostnames)
-	// and if deleted worked, this key should also be absent
-	assertSimpleMatch(false, "someothername", app.AdditionalHostnames)
 
 }
 
