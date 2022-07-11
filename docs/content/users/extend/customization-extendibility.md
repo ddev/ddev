@@ -147,3 +147,11 @@ config.\*.yaml is by default omitted from git by the .ddev/.gitignore file.
 Extra config.\*.yaml files are loaded in lexicographic order, so "config.a.yaml" will be overridden by "config.b.yaml".
 
 Teams may choose to use "config.local.yaml" or "config.override.yaml" for all local non-committed config changes, for example.
+
+config.\*.yaml update configuration according to
+these rules:
+
+1. Simple fields like `router_http_port` or `webserver_type` are overwritten.
+2. Lists of strings like `additional_hostnames` or `additional_fqdns` are merged.
+3. The list of environment variables in `web_environment` are "smart merged": if you add the same environment variable with a different value, the value in the override file will replace the value from config.yaml.
+4. Hook specifications in the `hooks` variable are also merged.
