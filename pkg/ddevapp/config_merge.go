@@ -13,7 +13,10 @@ import (
 func (app *DdevApp) mergeConfigToApp(source []byte) error {
 	// save away state before merges.
 	unmergedApp := &DdevApp{}
-	mergo.Merge(unmergedApp, app)
+	err := mergo.Merge(unmergedApp, app)
+	if err != nil {
+		return err
+	}
 
 	type mergeData struct {
 		newData interface{}
@@ -23,7 +26,7 @@ func (app *DdevApp) mergeConfigToApp(source []byte) error {
 	// get the updated settings. Note that we will replace
 	// anything else from the upstream config for any
 	// key except for web_environment.
-	err := yaml.Unmarshal(source, app)
+	err = yaml.Unmarshal(source, app)
 	if err != nil {
 		return err
 	}
