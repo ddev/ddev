@@ -4,11 +4,13 @@ import (
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/util"
+	copy2 "github.com/otiai10/copy"
 	"os"
 	"path/filepath"
 )
 
-// PopulateCustomCommandFiles sets up the needed directories and files
+// PopulateCustomCommandFiles sets up the custom command files in the project
+// directories where they need to go.
 func PopulateCustomCommandFiles(app *DdevApp) error {
 
 	sourceGlobalCommandPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands")
@@ -20,13 +22,20 @@ func PopulateCustomCommandFiles(app *DdevApp) error {
 	projectCommandPath := app.GetConfigPath("commands")
 	// Make sure our target global command directory is empty
 	copiedGlobalCommandPath := app.GetConfigPath(".global_commands")
-	err = os.RemoveAll(copiedGlobalCommandPath)
+	err = os.MkdirAll(copiedGlobalCommandPath, 0755)
+	if err != nil {
+		util.Error("Unable to create directory %s: %v", copiedGlobalCommandPath, err)
+		return nil
+	}
+
+	// Make sure it's empty
+	err = fileutil.PurgeDirectory(copiedGlobalCommandPath)
 	if err != nil {
 		util.Error("Unable to remove %s: %v", copiedGlobalCommandPath, err)
 		return nil
 	}
 
-	err = fileutil.CopyDir(sourceGlobalCommandPath, copiedGlobalCommandPath)
+	err = copy2.Copy(sourceGlobalCommandPath, copiedGlobalCommandPath)
 	if err != nil {
 		return err
 	}
