@@ -2,99 +2,18 @@ package ddevapp
 
 import (
 	"errors"
+	"log"
 	"regexp"
 
+	"github.com/imdario/mergo"
 	"gopkg.in/yaml.v2"
 )
-
-func deepCopyDdevApp(app *DdevApp) *DdevApp {
-	newApp := DdevApp{}
-
-	sliceCopy := func(slice []string) []string {
-		newSlice := []string{}
-		newSlice = append(newSlice, slice...)
-		return newSlice
-	}
-
-	newApp.AppRoot = app.AppRoot
-	newApp.BindAllInterfaces = app.BindAllInterfaces
-	newApp.ComposerRoot = app.ComposerRoot
-	newApp.ComposerVersion = app.ComposerVersion
-	newApp.ConfigPath = app.ConfigPath
-	newApp.DataDir = app.DataDir
-	newApp.DBAImage = app.DBAImage
-	newApp.DBImage = app.DBImage
-	newApp.DefaultContainerTimeout = app.DefaultContainerTimeout
-	newApp.DisableSettingsManagement = app.DisableSettingsManagement
-	newApp.Docroot = app.Docroot
-	newApp.FailOnHookFail = app.FailOnHookFail
-	newApp.FailOnHookFailGlobal = app.FailOnHookFailGlobal
-	newApp.HostDBPort = app.HostDBPort
-	newApp.HostHTTPSPort = app.HostHTTPSPort
-	newApp.HostMailhogPort = app.HostMailhogPort
-	newApp.HostPHPMyAdminPort = app.HostPHPMyAdminPort
-	newApp.HostWebserverPort = app.HostWebserverPort
-	newApp.MailhogHTTPSPort = app.MailhogHTTPSPort
-	newApp.MailhogPort = app.MailhogPort
-	newApp.MariaDBVersion = app.MariaDBVersion
-	newApp.MkcertEnabled = app.MkcertEnabled
-	newApp.MutagenEnabled = app.MutagenEnabled
-	newApp.MutagenEnabledGlobal = app.MutagenEnabledGlobal
-	newApp.MySQLVersion = app.MySQLVersion
-	newApp.Name = app.Name
-	newApp.NFSMountEnabled = app.NFSMountEnabled
-	newApp.NFSMountEnabledGlobal = app.NFSMountEnabledGlobal
-	newApp.NgrokArgs = app.NgrokArgs
-	newApp.NodeJSVersion = app.NodeJSVersion
-	newApp.NoProjectMount = app.NoProjectMount
-	newApp.PHPMyAdminHTTPSPort = app.PHPMyAdminHTTPSPort
-	newApp.PHPMyAdminPort = app.PHPMyAdminPort
-	newApp.PHPVersion = app.PHPVersion
-	newApp.ProjectTLD = app.ProjectTLD
-	newApp.RouterHTTPPort = app.RouterHTTPPort
-	newApp.RouterHTTPSPort = app.RouterHTTPSPort
-	newApp.SiteDdevSettingsFile = app.SiteDdevSettingsFile
-	newApp.SiteSettingsPath = app.SiteSettingsPath
-	newApp.Timezone = app.Timezone
-	newApp.Type = app.Type
-	newApp.UploadDir = app.UploadDir
-	newApp.UseDNSWhenPossible = app.UseDNSWhenPossible
-	newApp.WebImage = app.WebImage
-	newApp.WebserverType = app.WebserverType
-	newApp.XdebugEnabled = app.XdebugEnabled
-	newApp.AdditionalFQDNs = sliceCopy(app.AdditionalFQDNs)
-	newApp.AdditionalHostnames = sliceCopy(app.AdditionalHostnames)
-	newApp.DBImageExtraPackages = sliceCopy(app.DBImageExtraPackages)
-	newApp.OmitContainers = sliceCopy(app.OmitContainers)
-	newApp.OmitContainersGlobal = sliceCopy(app.OmitContainersGlobal)
-	newApp.WebEnvironment = sliceCopy(app.WebEnvironment)
-	newApp.WebImageExtraPackages = sliceCopy(app.WebImageExtraPackages)
-
-	//May need a func as well:
-	newApp.Database = app.Database
-
-	hookMap := map[string][]YAMLTask{}
-	for key, list := range app.Hooks {
-		hookMap[key] = list
-	}
-	newApp.Hooks = hookMap
-
-	wdMap := map[string]string{}
-	for key, wd := range app.WorkingDir {
-		wdMap[key] = wd
-	}
-	newApp.WorkingDir = wdMap
-
-	return &newApp
-}
 
 // mergeConfigToApp does an unmarshall with merging
 func (app *DdevApp) mergeConfigToApp(source []byte) error {
 	// save away state before merges.
-	unmergedApp := deepCopyDdevApp(app)
-	if unmergedApp == nil {
-		return errors.New("remarshalling failed")
-	}
+	unmergedApp := &DdevApp{}
+	mergo.Merge(unmergedApp, app)
 
 	type mergeData struct {
 		newData interface{}
@@ -150,55 +69,29 @@ func (app *DdevApp) mergeConfigToApp(source []byte) error {
 
 // merge an arbitrary string list.
 func (app *DdevApp) mergeStringList(ptr interface{}, oldList []string) error {
-	// first pass: merge w/o replacement.
 	results := []string{}
+	results = append(results, oldList...)
+
 	newList, ok := ptr.(*[]string)
 	if !ok {
 		return errors.New("unexpected type for DdevApp item")
 	}
 
-	re, err := regexp.Compile(`^\s*(!*)\s*(\S+)\s*$`)
-	if err != nil {
-		// this is from the code, if it ain't right, well, that ain't right.
-		panic(err)
-	}
+	re, _ := regexp.Compile(`^\s*(!*)\s*(\S+)\s*$`)
 
-	// add new to the results, dropping any delete instructions.
-	processDeletes := false
+	// support for a future delete syntax. This stiff runs, but
+	// is not yet used
 	for _, inItem := range *newList {
 		matches := re.FindStringSubmatch(inItem)
 		if matches != nil {
 			if matches[1] != "!" {
 				results = append(results, matches[2])
-			} else {
-				processDeletes = true
 			}
+		} else {
+			log.Println("found an invalid string")
 		}
 	}
 
-	// add any non-matching oldItems for the merge.
-	for _, oldItem := range oldList {
-		remove := false
-		for _, newItem := range *newList {
-			if processDeletes {
-				// check for delete instructions
-				matches := re.FindStringSubmatch(newItem)
-				if matches != nil {
-					newKey := matches[2]
-					if newKey == oldItem {
-						if matches[1] == "!" {
-							// keep the item
-							remove = true
-						}
-					}
-				}
-
-			}
-		}
-		if !remove {
-			results = append(results, oldItem)
-		}
-	}
 	// save back the merged results
 	*newList = results
 	return nil
