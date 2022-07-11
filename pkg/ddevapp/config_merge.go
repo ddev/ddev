@@ -39,6 +39,22 @@ func (app *DdevApp) mergeConfigToApp(source []byte) error {
 			&app.AdditionalHostnames,
 			unmergedApp.AdditionalHostnames,
 		},
+		"additional_fqdns": {
+			&app.AdditionalFQDNs,
+			unmergedApp.AdditionalFQDNs,
+		},
+		"dbimage_extra_packages": {
+			&app.DBImageExtraPackages,
+			unmergedApp.DBImageExtraPackages,
+		},
+		"omit_containers": {
+			&app.OmitContainers,
+			unmergedApp.OmitContainers,
+		},
+		"webimage_extra_packages": {
+			&app.WebImageExtraPackages,
+			unmergedApp.WebImageExtraPackages,
+		},
 		"hooks": {
 			&app.Hooks,
 			unmergedApp.Hooks,
@@ -50,13 +66,13 @@ func (app *DdevApp) mergeConfigToApp(source []byte) error {
 		switch item {
 		case "web_environment":
 			err = app.mergeWebEnvironment(data.newData, data.oldData.([]string))
-		case "additional_hostnames":
-			// default case is a simple string list merge
-			err = app.mergeStringList(data.newData, data.oldData.([]string))
 		case "hooks":
 			// merge w/o replacement
 			oldHookData := data.oldData.(map[string][]YAMLTask)
 			err = app.mergeHooks(data.newData, oldHookData)
+		default:
+			// default case is a simple string list merge
+			err = app.mergeStringList(data.newData, data.oldData.([]string))
 		}
 
 		if err != nil {

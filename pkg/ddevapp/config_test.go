@@ -1345,8 +1345,8 @@ func TestDatabaseConfigUpgrade(t *testing.T) {
 	}
 }
 
-// TestMergeStringList verifies that string merges update w/o clobber
-func TestMergeStringList(t *testing.T) {
+// TestConfigMergeStringList verifies that string merges update w/o clobber
+func TestConfigMergeStringList(t *testing.T) {
 	assert := asrt.New(t)
 	pwd, _ := os.Getwd()
 
