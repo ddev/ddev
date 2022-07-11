@@ -2,3 +2,15 @@ web_environment:
   - SHEMP=fake
   - LARRY=balding
   - MOE=hair-piece
+additional_hostnames:
+ # add a hostname
+ - somename-new
+ # remove a hostname
+ - "!someothername"
+<<<<<<< HEAD
+
+hooks:
+  post-start:
+    - exec: "simple random expression"
+=======
+>>>>>>> 210f1c49 (string lists can be merged and items deleted)
