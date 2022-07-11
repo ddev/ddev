@@ -3,3 +3,12 @@ web_environment:
   - LARRY=curly
   - MOE=standard
   - CURLEY=bald
+additional_hostnames:
+ - somename
+ - someothername
+hooks:
+  post-start:
+    - exec: "simple web command"
+    - exec-host: "simple host command"
+  post-import-db:
+    - exec: "drush uli"

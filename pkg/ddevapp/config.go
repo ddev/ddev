@@ -331,68 +331,6 @@ func (app *DdevApp) LoadConfigYamlFile(filePath string) error {
 	return app.mergeConfigToApp(source)
 }
 
-// mergeConfigToApp does an unmarshall with merging
-func (app *DdevApp) mergeConfigToApp(source []byte) error {
-	result := []string{}
-
-	// save away the old web environment
-	oldEnv := app.WebEnvironment
-
-	// get the new one. Note that we will replace
-	// anything else from the upstream config for any
-	// key except for web_environment.
-	err := yaml.Unmarshal(source, app)
-	if err != nil {
-		return err
-	}
-	newEnv := app.WebEnvironment
-
-	// ENV=value or ENV=
-	re, err := regexp.Compile(`^([^=]+)=(\S*)`)
-	if err != nil {
-		return nil
-	}
-
-	// start by walking the old env. replace any
-	// changed strings, keep any unchanged.
-	for _, oldItem := range oldEnv {
-
-		// check new for any matches
-		matches := re.FindStringSubmatch(oldItem)
-		if matches == nil {
-			// does not look like an env string
-			continue
-		}
-		key := matches[1]
-
-		// does new have this key?
-		// if so, replace it
-		for _, newItem := range newEnv {
-			matches = re.FindStringSubmatch(newItem)
-			if matches != nil && key == matches[1] {
-				oldItem = newItem // match overrides
-			}
-		}
-		// winner added to result list
-		result = append(result, oldItem)
-	}
-
-	// Now add any non-matched new keys into the results
-	// since new wins, we find exact matches or nothing.
-	for _, newItem := range newEnv {
-		found := false
-		for _, rsltItem := range result {
-			if rsltItem == newItem {
-				found = true
-			}
-		}
-		if !found {
-			result = append(result, newItem)
-		}
-	}
-	return nil
-}
-
 // WarnIfConfigReplace just messages user about whether config is being replaced or created
 func (app *DdevApp) WarnIfConfigReplace() {
 	if app.ConfigExists() {

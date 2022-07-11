@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/globalconfig"
@@ -1319,9 +1320,60 @@ func TestDatabaseConfigUpgrade(t *testing.T) {
 	}
 }
 
-// TestConfigMergeItems verifies that config overrides for web_environment
+// TestMergeStringList verifies that string merges update w/o clobber
+func TestMergeStringList(t *testing.T) {
+	assert := asrt.New(t)
+	pwd, _ := os.Getwd()
+
+	projDir, err := filepath.Abs(testcommon.CreateTmpDir(t.Name()))
+	require.NoError(t, err)
+
+	err = fileutil.CopyDir("./testdata/TestConfigMergeItems/.ddev", filepath.Join(projDir, ".ddev"))
+	require.NoError(t, err)
+
+	app, err := NewApp(projDir, true)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = os.Chdir(pwd)
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.RemoveAll(projDir)
+		assert.NoError(err)
+	})
+	err = os.Chdir(app.AppRoot)
+	assert.NoError(err)
+
+	// test matches allowing for delete syntax (a prefixed !)
+	assertSimpleMatch := func(expected bool, match string, setting []string) {
+		test := assert.True
+		if !expected {
+			test = assert.False
+		}
+
+		for _, val := range setting {
+			if val == match {
+				test(true, match)
+				return
+			}
+		}
+		test(false, match)
+	}
+	// no clobber of old setting
+	assertSimpleMatch(true, "somename", app.AdditionalHostnames)
+	// successful merge
+	assertSimpleMatch(true, "somename-new", app.AdditionalHostnames)
+	// do not want the delete instruction added to the list
+	assertSimpleMatch(false, "!someothername", app.AdditionalHostnames)
+	// and if deleted worked, this key should also be absent
+	assertSimpleMatch(false, "someothername", app.AdditionalHostnames)
+
+}
+
+// TestConfigMergeEnvItems verifies that config overrides for web_environment
 // override and do not clobber settings from config.yaml.
-func TestConfigMergeItems(t *testing.T) {
+func TestConfigMergeEnvItems(t *testing.T) {
 	assert := asrt.New(t)
 	pwd, _ := os.Getwd()
 
@@ -1393,5 +1445,96 @@ func TestConfigMergeItems(t *testing.T) {
 
 	// New key should appear.
 	assertHasKey(true, `SHEMP=fake`)
+
+}
+
+func TestConfigHooksMerge(t *testing.T) {
+	assert := asrt.New(t)
+	pwd, _ := os.Getwd()
+
+	projDir, err := filepath.Abs(testcommon.CreateTmpDir(t.Name()))
+	require.NoError(t, err)
+
+	err = fileutil.CopyDir("./testdata/TestConfigMergeItems/.ddev", filepath.Join(projDir, ".ddev"))
+	require.NoError(t, err)
+
+	app, err := NewApp(projDir, true)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = os.Chdir(pwd)
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.RemoveAll(projDir)
+		assert.NoError(err)
+	})
+	err = os.Chdir(app.AppRoot)
+	assert.NoError(err)
+
+	// some helpers
+	getHookTasks := func(hooks map[string][]ddevapp.YAMLTask, hook string) []ddevapp.YAMLTask {
+		tasks, ok := hooks[hook]
+		if !ok {
+			return nil
+		}
+		return tasks
+	}
+
+	// the fields we want are private!
+	hasTask := func(hooks map[string][]ddevapp.YAMLTask, hook, taskKey, desc string) bool {
+		tasks := getHookTasks(hooks, hook)
+		if tasks == nil {
+			return false
+		}
+		found := false
+		for _, task := range tasks {
+			taskDesc := ""
+			taskInterface, ok := task[taskKey]
+			if !ok {
+				// we guessed the key wrong
+				continue
+			}
+
+			taskDesc, ok = taskInterface.(string)
+			if !ok {
+				// we expected the command to be a string, but WTF?
+				continue
+			}
+
+			//t.Logf("key %s as %s", taskKey, taskDesc)
+
+			if taskDesc == desc {
+				found = true
+			}
+
+		}
+		return found
+	}
+
+	assertTask := func(expected bool, hook, taskKey, desc string) {
+		tasks := getHookTasks(app.Hooks, hook)
+		if tasks == nil {
+			if expected {
+				t.Errorf("did not found tasks for %s", hook)
+			} else {
+				return
+			}
+		} else {
+			found := hasTask(app.Hooks, hook, taskKey, desc)
+			if found != expected {
+				msg := "Expected "
+				if !expected {
+					msg = "Did not expect "
+				}
+				t.Errorf("%s Hook %s with %s", msg, hook, desc)
+			}
+		}
+	}
+
+	assertTask(true, "post-start", "exec", "simple random expression")
+	assertTask(true, "post-start", "exec-host", "simple host command")
+	assertTask(true, "post-start", "exec", "simple web command")
+	assertTask(true, "post-import-db", "exec", "drush uli")
 
 }
