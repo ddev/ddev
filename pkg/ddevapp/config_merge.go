@@ -7,15 +7,106 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+func deepCopyDdevApp(app *DdevApp) *DdevApp {
+	newApp := DdevApp{}
+
+	sliceCopy := func(slice []string) []string {
+		newSlice := []string{}
+		newSlice = append(newSlice, slice...)
+		return newSlice
+	}
+
+	newApp.AppRoot = app.AppRoot
+	newApp.BindAllInterfaces = app.BindAllInterfaces
+	newApp.ComposerRoot = app.ComposerRoot
+	newApp.ComposerVersion = app.ComposerVersion
+	newApp.ConfigPath = app.ConfigPath
+	newApp.DataDir = app.DataDir
+	newApp.DBAImage = app.DBAImage
+	newApp.DBImage = app.DBImage
+	newApp.DefaultContainerTimeout = app.DefaultContainerTimeout
+	newApp.DisableSettingsManagement = app.DisableSettingsManagement
+	newApp.Docroot = app.Docroot
+	newApp.FailOnHookFail = app.FailOnHookFail
+	newApp.FailOnHookFailGlobal = app.FailOnHookFailGlobal
+	newApp.HostDBPort = app.HostDBPort
+	newApp.HostHTTPSPort = app.HostHTTPSPort
+	newApp.HostMailhogPort = app.HostMailhogPort
+	newApp.HostPHPMyAdminPort = app.HostPHPMyAdminPort
+	newApp.HostWebserverPort = app.HostWebserverPort
+	newApp.MailhogHTTPSPort = app.MailhogHTTPSPort
+	newApp.MailhogPort = app.MailhogPort
+	newApp.MariaDBVersion = app.MariaDBVersion
+	newApp.MkcertEnabled = app.MkcertEnabled
+	newApp.MutagenEnabled = app.MutagenEnabled
+	newApp.MutagenEnabledGlobal = app.MutagenEnabledGlobal
+	newApp.MySQLVersion = app.MySQLVersion
+	newApp.Name = app.Name
+	newApp.NFSMountEnabled = app.NFSMountEnabled
+	newApp.NFSMountEnabledGlobal = app.NFSMountEnabledGlobal
+	newApp.NgrokArgs = app.NgrokArgs
+	newApp.NodeJSVersion = app.NodeJSVersion
+	newApp.NoProjectMount = app.NoProjectMount
+	newApp.PHPMyAdminHTTPSPort = app.PHPMyAdminHTTPSPort
+	newApp.PHPMyAdminPort = app.PHPMyAdminPort
+	newApp.PHPVersion = app.PHPVersion
+	newApp.ProjectTLD = app.ProjectTLD
+	newApp.RouterHTTPPort = app.RouterHTTPPort
+	newApp.RouterHTTPSPort = app.RouterHTTPSPort
+	newApp.SiteDdevSettingsFile = app.SiteDdevSettingsFile
+	newApp.SiteSettingsPath = app.SiteSettingsPath
+	newApp.Timezone = app.Timezone
+	newApp.Type = app.Type
+	newApp.UploadDir = app.UploadDir
+	newApp.UseDNSWhenPossible = app.UseDNSWhenPossible
+	newApp.WebImage = app.WebImage
+	newApp.WebserverType = app.WebserverType
+	newApp.XdebugEnabled = app.XdebugEnabled
+	newApp.AdditionalFQDNs = sliceCopy(app.AdditionalFQDNs)
+	newApp.AdditionalHostnames = sliceCopy(app.AdditionalHostnames)
+	newApp.DBImageExtraPackages = sliceCopy(app.DBImageExtraPackages)
+	newApp.OmitContainers = sliceCopy(app.OmitContainers)
+	newApp.OmitContainersGlobal = sliceCopy(app.OmitContainersGlobal)
+	newApp.WebEnvironment = sliceCopy(app.WebEnvironment)
+	newApp.WebImageExtraPackages = sliceCopy(app.WebImageExtraPackages)
+
+	//May need a func as well:
+	newApp.Database = app.Database
+
+	hookMap := map[string][]YAMLTask{}
+	for key, list := range app.Hooks {
+		hookMap[key] = list
+	}
+	newApp.Hooks = hookMap
+
+	wdMap := map[string]string{}
+	for key, wd := range app.WorkingDir {
+		wdMap[key] = wd
+	}
+	newApp.WorkingDir = wdMap
+
+	return &newApp
+}
+
 // mergeConfigToApp does an unmarshall with merging
 func (app *DdevApp) mergeConfigToApp(source []byte) error {
 	// save away state before merges.
-	unmergedApp := DdevApp{}
-	unmergedApp = *app
+	unmergedApp := deepCopyDdevApp(app)
+	if unmergedApp == nil {
+		return errors.New("remarshalling failed")
+	}
 
 	type mergeData struct {
 		newData interface{}
 		oldData interface{}
+	}
+
+	// get the updated settings. Note that we will replace
+	// anything else from the upstream config for any
+	// key except for web_environment.
+	err := yaml.Unmarshal(source, app)
+	if err != nil {
+		return err
 	}
 
 	// add merges here.  Default strategy is to clobber old
@@ -33,14 +124,6 @@ func (app *DdevApp) mergeConfigToApp(source []byte) error {
 			&app.Hooks,
 			unmergedApp.Hooks,
 		},
-	}
-
-	// get the updated settings. Note that we will replace
-	// anything else from the upstream config for any
-	// key except for web_environment.
-	err := yaml.Unmarshal(source, app)
-	if err != nil {
-		return err
 	}
 
 	// loop over the items we know how to merge.
@@ -175,24 +258,37 @@ func (app *DdevApp) mergeWebEnvironment(ptr interface{}, oldEnv []string) error 
 }
 
 func (app *DdevApp) mergeHooks(ptr interface{}, oldHooks map[string][]YAMLTask) error {
-
+	mergedHooks := map[string][]YAMLTask{}
 	// new hooks will contain at least the contents of the new
 	newHooks := ptr.(*map[string][]YAMLTask)
 
+	// check to see if there is anything to merge.
+	if len(oldHooks) == 0 && len(*newHooks) == 0 {
+		// not an error, but return early.
+		return nil
+	}
+
 	// We add any hook used in old but not in new, and merge anything that is
 	// shared.
-	for key, items := range oldHooks {
-		ytaskList, found := (*newHooks)[key]
-		if !found {
-			// add it to newHooks
-			(*newHooks)[key] = items
-		} else {
-			// no replacement, so just create a joint list
-			items = append(items, ytaskList...)
-			(*newHooks)[key] = items
+	if len(oldHooks) > 0 {
+		for key, items := range oldHooks {
+			ytaskList, found := (*newHooks)[key]
+			if !found {
+				// add it to newHooks
+				mergedHooks[key] = items
+			} else {
+				// no replacement, so just create a joint list
+				items = append(items, ytaskList...)
+				mergedHooks[key] = items
+			}
+		}
+	} else if len(*newHooks) > 0 {
+		// nothing in old hooks, load in new hooks
+		for key, items := range *newHooks {
+			mergedHooks[key] = items
 		}
 	}
 
-	app.Hooks = *newHooks
+	app.Hooks = mergedHooks
 	return nil
 }
