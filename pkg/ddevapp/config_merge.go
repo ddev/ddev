@@ -98,7 +98,7 @@ func (app *DdevApp) mergeStringList(ptr interface{}, oldList []string) error {
 
 	re, _ := regexp.Compile(`^\s*(!*)\s*(\S+)\s*$`)
 
-	// support for a future delete syntax. This stiff runs, but
+	// support for a future delete syntax. This stuff runs, but
 	// is not yet used
 	for _, inItem := range *newList {
 		matches := re.FindStringSubmatch(inItem)
