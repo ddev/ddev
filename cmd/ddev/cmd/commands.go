@@ -31,7 +31,10 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 	projectCommandPath := app.GetConfigPath("commands")
 	// Make sure our target global command directory is empty
 	copiedGlobalCommandPath := app.GetConfigPath(".global_commands")
-
+	err = os.MkdirAll(copiedGlobalCommandPath, 0755)
+	if err != nil {
+		return err
+	}
 	commandsAdded := map[string]int{}
 	for _, commandSet := range []string{projectCommandPath, copiedGlobalCommandPath} {
 		commandDirs, err := fileutil.ListFilesInDirFullPath(commandSet)
