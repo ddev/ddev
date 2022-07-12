@@ -27,7 +27,7 @@
 environment_variables:
   project_id: yourproject.dev
   database_name: yourproject
-  
+
 auth_command:
   command: |
     set -eu -o pipefail
@@ -44,11 +44,11 @@ db_pull_command:
     set -eu -o pipefail
     # If no database_name is configured, infer it from project_id
     if [ -z "${database_name:-}" ]; then database_name=${project_id%%.*}; fi
-    acli api:environments:database-backup-list ${project_id} ${database_name} --limit=1
-    backup_id="$(acli api:environments:database-backup-list ${project_id} ${database_name} --limit=1 | jq -r .[].id)"
-    backup_url=$(acli api:environments:database-backup-download ${project_id} ${database_name} ${backup_id} | jq -r .url)
+    backup_time=$(acli -n api:environments:database-backup-list ${project_id} ${database_name} --limit=1 | jq -r .[].completed_at)
+    backup_id="$(acli -n api:environments:database-backup-list ${project_id} ${database_name} --limit=1 | jq -r .[].id)"
+    backup_url=$(acli -n api:environments:database-backup-download ${project_id} ${database_name} ${backup_id} | jq -r .url)
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
-    echo "Downloading backup $backup_id"
+    echo "Downloading backup $backup_id from $backup_time"
     curl -o /var/www/html/.ddev/.downloads/db.sql.gz ${backup_url}
 
 files_pull_command:
