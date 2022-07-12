@@ -1105,6 +1105,13 @@ func (app *DdevApp) Start() error {
 			}
 		}
 	}
+
+	// Settings files + upload_dir have to be created before WriteDockerComposeYaml()
+	// so we know if there is an upload_dir available to mount in the mutagen case.
+	if _, err = app.CreateSettingsFile(); err != nil {
+		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
+	}
+
 	// WriteConfig .ddev-docker-compose-*.yaml
 	err = app.WriteDockerComposeYAML()
 	if err != nil {
@@ -1204,10 +1211,6 @@ func (app *DdevApp) Start() error {
 	err = app.WaitByLabels(map[string]string{"com.ddev.site-name": app.GetName()})
 	if err != nil {
 		return err
-	}
-
-	if _, err = app.CreateSettingsFile(); err != nil {
-		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 
 	err = app.PostStartAction()
@@ -2713,8 +2716,8 @@ func (app *DdevApp) GetHostUploadDirFullPath() string {
 
 // GetContainerUploadDirFullPath returns the full path to the upload directory in container or "" if there is none
 func (app *DdevApp) GetContainerUploadDirFullPath() string {
-	if app.GetUploadDir() != "" {
-		return path.Join("/var/www/html", app.Docroot, app.GetUploadDir())
+	if d := app.GetUploadDir(); d != "" {
+		return path.Join("/var/www/html", app.Docroot, d)
 	}
 	return ""
 }

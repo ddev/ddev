@@ -127,6 +127,9 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 	}
 
 	// Create the upload dir so that mounts will happen with mutagen.
+	// We only need to do this if mutagen is enabled,
+	// and we only need to do it if an upload_dir is configured either
+	// via project-type defaults or explicit settings of upload_dir
 	if app.IsMutagenEnabled() && app.GetHostUploadDirFullPath() != "" && !fileutil.FileExists(app.GetHostUploadDirFullPath()) {
 		err = os.MkdirAll(app.GetHostUploadDirFullPath(), 0755)
 		if err != nil {
