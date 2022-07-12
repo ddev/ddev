@@ -36,7 +36,7 @@ For more complex requirements, you can add:
 * `.ddev/db-build/Dockerfile`
 * `.ddev/db-build/Dockerfile.*`
 
-These files' content will be appended to ddev's own Dockerfile for each image.
+These files' content will be inserted into the constructed Dockerfile for each image. They are inserted *before* most of the rest of the things that are done to build the image, and are done in alpha order, so `Dockerfile` is inserted first, followed by `Dockerfile.*` in alpha order. You can examine the resultant Dockerfile (which should not be changed as it is generated) at `.ddev/.webimageBuild/Dockerfile` and you can force a rebuild with `ddev debug refresh`.
 
 Examples of possible Dockerfiles are given in `.ddev/web-build/Dockerfile.example` and `.ddev/db-build/Dockerfile.example` (these examples are created in your project when you `ddev config` the project).
 
