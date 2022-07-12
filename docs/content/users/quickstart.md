@@ -334,7 +334,7 @@ Here's a quickstart instructions for a number of different environments:
     ddev config --project-type=shopware6 --docroot=public
     ddev start
     ddev composer install
-    ddev exec bin/console system:setup --no-interaction --database-url=mysql://db:db@db:3306/db --app-url='${DDEV_PRIMARY_URL}'
+    ddev exec bin/console system:setup --database-url=mysql://db:db@db:3306/db --app-url='${DDEV_PRIMARY_URL}'
     ddev exec bin/console system:install --create-database --basic-setup
     ddev launch /admin
     ```
