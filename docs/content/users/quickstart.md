@@ -284,6 +284,7 @@ Here's a quickstart instructions for a number of different environments:
     ddev start
     ddev composer create --prefer-dist laravel/laravel
     ddev exec "cat .env.example | sed  -E 's/DB_(HOST|DATABASE|USERNAME|PASSWORD)=(.*)/DB_\1=db/g' > .env"
+    ddev exec 'sed -i "s#APP_URL=.*#APP_URL=${DDEV_PRIMARY_URL}#g" .env'
     ddev exec "php artisan key:generate"
     ddev launch
     ```
