@@ -2,7 +2,6 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/fileutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -113,28 +112,9 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 
 	app.SetApptypeSettingsPaths()
 
-	if app.DisableSettingsManagement {
+	if app.DisableSettingsManagement && app.Type != nodeps.AppTypePHP {
 		util.Warning("Not creating CMS settings files because disable_settings_management=true")
 		return "", nil
-	}
-
-	// If neither settings file options are set, then don't continue. Return
-	// a nil error because this should not halt execution if the apptype
-	// does not have a settings definition.
-	if app.SiteDdevSettingsFile == "" && app.SiteSettingsPath == "" {
-		util.Warning("Project type has no settings paths configured, so not creating settings file.")
-		return "", nil
-	}
-
-	// Create the upload dir so that mounts will happen with mutagen.
-	// We only need to do this if mutagen is enabled,
-	// and we only need to do it if an upload_dir is configured either
-	// via project-type defaults or explicit settings of upload_dir
-	if app.IsMutagenEnabled() && app.GetHostUploadDirFullPath() != "" && !fileutil.FileExists(app.GetHostUploadDirFullPath()) {
-		err = os.MkdirAll(app.GetHostUploadDirFullPath(), 0755)
-		if err != nil {
-			util.Warning("Unable to create upload directory %s: %v", app.GetHostUploadDirFullPath(), err)
-		}
 	}
 
 	// Drupal and WordPress love to change settings files to be unwriteable.

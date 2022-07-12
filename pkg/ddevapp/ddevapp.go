@@ -1106,11 +1106,7 @@ func (app *DdevApp) Start() error {
 		}
 	}
 
-	// Settings files + upload_dir have to be created before WriteDockerComposeYaml()
-	// so we know if there is an upload_dir available to mount in the mutagen case.
-	if _, err = app.CreateSettingsFile(); err != nil {
-		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
-	}
+	app.CreateUploadDirIfNecessary()
 
 	// WriteConfig .ddev-docker-compose-*.yaml
 	err = app.WriteDockerComposeYAML()
@@ -1211,6 +1207,10 @@ func (app *DdevApp) Start() error {
 	err = app.WaitByLabels(map[string]string{"com.ddev.site-name": app.GetName()})
 	if err != nil {
 		return err
+	}
+
+	if _, err = app.CreateSettingsFile(); err != nil {
+		return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
 	}
 
 	err = app.PostStartAction()
@@ -2708,8 +2708,8 @@ func FormatSiteStatus(status string) string {
 
 // GetHostUploadDirFullPath returns the full path to the upload directory on the host or "" if there is none
 func (app *DdevApp) GetHostUploadDirFullPath() string {
-	if app.GetUploadDir() != "" {
-		return path.Join(app.AppRoot, app.Docroot, app.GetUploadDir())
+	if d := app.GetUploadDir(); d != "" {
+		return path.Join(app.AppRoot, app.Docroot, d)
 	}
 	return ""
 }
@@ -2720,4 +2720,18 @@ func (app *DdevApp) GetContainerUploadDirFullPath() string {
 		return path.Join("/var/www/html", app.Docroot, d)
 	}
 	return ""
+}
+
+// CreateUploadDirIfNecessary creates the upload dir if it doesn't exist, so we can properly
+// set up bind-mounts when doing mutagen.
+// There is no need to do it if mutagen is not enabled, and
+// we'll just respect a symlink if it exists, and the user has to figure out the right
+// thing to do wrt mutagen
+func (app *DdevApp) CreateUploadDirIfNecessary() {
+	if d := app.GetHostUploadDirFullPath(); d != "" && app.IsMutagenEnabled() && !fileutil.FileExists(d) {
+		err := os.MkdirAll(app.GetHostUploadDirFullPath(), 0755)
+		if err != nil {
+			util.Warning("Unable to create upload directory %s: %v", app.GetHostUploadDirFullPath(), err)
+		}
+	}
 }
