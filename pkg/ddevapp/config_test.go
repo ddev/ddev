@@ -1369,7 +1369,7 @@ func TestConfigMergeStringList(t *testing.T) {
 		test(false, match)
 	}
 	// no clobber of old setting
-	assertSimpleMatch(true, "somename2", app.AdditionalHostnames)
+	assertSimpleMatch(true, "somename", app.AdditionalHostnames)
 	// successful merge
 	assertSimpleMatch(true, "somename-new", app.AdditionalHostnames)
 }
