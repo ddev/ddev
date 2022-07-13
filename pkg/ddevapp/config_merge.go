@@ -40,7 +40,6 @@ func (app *DdevApp) mergeConfigToApp(configPath string) error {
 	newConfig.AppRoot = app.AppRoot
 	newConfig.Type = app.Type
 	newConfig.Docroot = app.Docroot
-	newConfig.Database = app.Database
 
 	err = newConfig.ValidateConfig()
 	if err != nil {
