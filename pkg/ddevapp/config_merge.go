@@ -2,87 +2,53 @@ package ddevapp
 
 import (
 	"errors"
-	"log"
-	"regexp"
-
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/imdario/mergo"
-	"gopkg.in/yaml.v2"
+	"log"
+	"os"
+	"path/filepath"
+	"regexp"
 )
 
-// mergeConfigToApp does an unmarshall with merging
-func (app *DdevApp) mergeConfigToApp(source []byte) error {
-	// save away state before merges.
-	unmergedApp := &DdevApp{}
-	err := mergo.Merge(unmergedApp, app)
+// mergeConfigToApp takes the provided yaml `config.*.yaml` and merges
+// it into "app"
+func (app *DdevApp) mergeConfigToApp(configPath string) error {
+
+	// Moving the config.*.yaml file to a tmp dir is a hack, perhaps temporary,
+	// to avoid refactoring NewApp() so it (optionally?) takes a file instead of a dir.
+	// If this experiment works out, we may want to rework NewApp() to (optionally?) take a specific file instead of dir
+	tmpDir, err := os.MkdirTemp("", "")
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(filepath.Join(tmpDir, ".ddev"), 0755)
+	if err != nil {
+		return err
+	}
+	err = fileutil.CopyFile(configPath, filepath.Join(tmpDir, ".ddev", "config.yaml"))
 	if err != nil {
 		return err
 	}
 
-	type mergeData struct {
-		newData interface{}
-		oldData interface{}
-	}
-
-	// get the updated settings. Note that we will replace
-	// anything else from the upstream config for any
-	// key except for web_environment.
-	err = yaml.Unmarshal(source, app)
+	newConfig, err := NewApp(tmpDir, false)
 	if err != nil {
 		return err
 	}
 
-	// Make sure the mergeable items are valid
+	// These items can't be overridden
+	newConfig.Name = app.Name
+	newConfig.AppRoot = app.AppRoot
+	newConfig.Type = app.Type
+	newConfig.Docroot = app.Docroot
+	newConfig.Database = app.Database
 
-	// add merges here.  Default strategy is to clobber old
-	// keys.
-	mergeableItems := map[string]mergeData{
-		"web_environment": {
-			&app.WebEnvironment,
-			unmergedApp.WebEnvironment,
-		},
-		"additional_hostnames": {
-			&app.AdditionalHostnames,
-			unmergedApp.AdditionalHostnames,
-		},
-		"additional_fqdns": {
-			&app.AdditionalFQDNs,
-			unmergedApp.AdditionalFQDNs,
-		},
-		"dbimage_extra_packages": {
-			&app.DBImageExtraPackages,
-			unmergedApp.DBImageExtraPackages,
-		},
-		"omit_containers": {
-			&app.OmitContainers,
-			unmergedApp.OmitContainers,
-		},
-		"webimage_extra_packages": {
-			&app.WebImageExtraPackages,
-			unmergedApp.WebImageExtraPackages,
-		},
-		"hooks": {
-			&app.Hooks,
-			unmergedApp.Hooks,
-		},
+	err = newConfig.ValidateConfig()
+	if err != nil {
+		return err
 	}
-
-	// loop over the items we know how to merge.
-	for item, data := range mergeableItems {
-		switch item {
-		case "web_environment":
-			err = app.mergeWebEnvironment(data.newData, data.oldData.([]string))
-		case "hooks":
-			// merge w/o replacement
-			oldHookData := data.oldData.(map[string][]YAMLTask)
-			err = app.mergeHooks(data.newData, oldHookData)
-		default:
-			// default case is a simple string list merge
-			err = app.mergeStringList(data.newData, data.oldData.([]string))
-		}
-
-		if err != nil {
-			return err
-		}
+	err = mergo.Merge(app, newConfig, mergo.WithAppendSlice, mergo.WithOverride)
+	if err != nil {
+		return err
 	}
 
 	return nil
