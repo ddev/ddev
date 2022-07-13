@@ -1105,6 +1105,9 @@ func (app *DdevApp) Start() error {
 			}
 		}
 	}
+
+	app.CreateUploadDirIfNecessary()
+
 	// WriteConfig .ddev-docker-compose-*.yaml
 	err = app.WriteDockerComposeYAML()
 	if err != nil {
@@ -2705,16 +2708,30 @@ func FormatSiteStatus(status string) string {
 
 // GetHostUploadDirFullPath returns the full path to the upload directory on the host or "" if there is none
 func (app *DdevApp) GetHostUploadDirFullPath() string {
-	if app.GetUploadDir() != "" {
-		return path.Join(app.AppRoot, app.Docroot, app.GetUploadDir())
+	if d := app.GetUploadDir(); d != "" {
+		return path.Join(app.AppRoot, app.Docroot, d)
 	}
 	return ""
 }
 
 // GetContainerUploadDirFullPath returns the full path to the upload directory in container or "" if there is none
 func (app *DdevApp) GetContainerUploadDirFullPath() string {
-	if app.GetUploadDir() != "" {
-		return path.Join("/var/www/html", app.Docroot, app.GetUploadDir())
+	if d := app.GetUploadDir(); d != "" {
+		return path.Join("/var/www/html", app.Docroot, d)
 	}
 	return ""
+}
+
+// CreateUploadDirIfNecessary creates the upload dir if it doesn't exist, so we can properly
+// set up bind-mounts when doing mutagen.
+// There is no need to do it if mutagen is not enabled, and
+// we'll just respect a symlink if it exists, and the user has to figure out the right
+// thing to do wrt mutagen
+func (app *DdevApp) CreateUploadDirIfNecessary() {
+	if d := app.GetHostUploadDirFullPath(); d != "" && app.IsMutagenEnabled() && !fileutil.FileExists(d) {
+		err := os.MkdirAll(app.GetHostUploadDirFullPath(), 0755)
+		if err != nil {
+			util.Warning("Unable to create upload directory %s: %v", app.GetHostUploadDirFullPath(), err)
+		}
+	}
 }

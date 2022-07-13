@@ -112,25 +112,9 @@ func (app *DdevApp) CreateSettingsFile() (string, error) {
 
 	app.SetApptypeSettingsPaths()
 
-	if app.DisableSettingsManagement {
+	if app.DisableSettingsManagement && app.Type != nodeps.AppTypePHP {
 		util.Warning("Not creating CMS settings files because disable_settings_management=true")
 		return "", nil
-	}
-
-	// If neither settings file options are set, then don't continue. Return
-	// a nil error because this should not halt execution if the apptype
-	// does not have a settings definition.
-	if app.SiteDdevSettingsFile == "" && app.SiteSettingsPath == "" {
-		util.Warning("Project type has no settings paths configured, so not creating settings file.")
-		return "", nil
-	}
-
-	// Create the upload dir so that mounts will happen with mutagen.
-	if app.GetHostUploadDirFullPath() != "" {
-		err = os.MkdirAll(app.GetHostUploadDirFullPath(), 0755)
-		if err != nil {
-			return "", fmt.Errorf("Unable to create upload directory: %v", err)
-		}
 	}
 
 	// Drupal and WordPress love to change settings files to be unwriteable.
