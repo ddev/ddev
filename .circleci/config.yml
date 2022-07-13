@@ -514,7 +514,13 @@ workflows:
 #    - lx_amd64_container_test
 #    - staticrequired
     - lx_amd64_fpm_test
+      branches:
+        ignore:
+          - gh-pages
     - lx_arm64_fpm_test
+      branches:
+        ignore:
+          - gh-pages
 #    - lx_arm64_container_test
 #        requires:
 #        - build
