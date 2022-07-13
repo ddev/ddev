@@ -28,6 +28,35 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
+// setupTestTempDir creates the test directory and related objects.
+func setupTestTempDir(t *testing.T) (*DdevApp, *asrt.Assertions) {
+	assert := asrt.New(t)
+	pwd, _ := os.Getwd()
+
+	projDir, err := filepath.Abs(testcommon.CreateTmpDir(t.Name()))
+	require.NoError(t, err)
+
+	testData := "./testdata/" + t.Name() + "/.ddev"
+	err = fileutil.CopyDir(testData, filepath.Join(projDir, ".ddev"))
+	require.NoError(t, err)
+
+	app, err := NewApp(projDir, true)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = os.Chdir(pwd)
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.RemoveAll(projDir)
+		assert.NoError(err)
+	})
+	err = os.Chdir(app.AppRoot)
+	assert.NoError(err)
+
+	return app, assert
+}
+
 // TestNewConfig tests functionality around creating a new config, writing it to disk, and reading the resulting config.
 func TestNewConfig(t *testing.T) {
 	assert := asrt.New(t)
@@ -1347,28 +1376,7 @@ func TestDatabaseConfigUpgrade(t *testing.T) {
 
 // TestConfigMergeStringList verifies that string merges update w/o clobber
 func TestConfigMergeStringList(t *testing.T) {
-	assert := asrt.New(t)
-	pwd, _ := os.Getwd()
-
-	projDir, err := filepath.Abs(testcommon.CreateTmpDir(t.Name()))
-	require.NoError(t, err)
-
-	err = fileutil.CopyDir("./testdata/TestConfigMergeItems/.ddev", filepath.Join(projDir, ".ddev"))
-	require.NoError(t, err)
-
-	app, err := NewApp(projDir, true)
-	require.NoError(t, err)
-
-	t.Cleanup(func() {
-		err = os.Chdir(pwd)
-		assert.NoError(err)
-		err = app.Stop(true, false)
-		assert.NoError(err)
-		err = os.RemoveAll(projDir)
-		assert.NoError(err)
-	})
-	err = os.Chdir(app.AppRoot)
-	assert.NoError(err)
+	app, assert := setupTestTempDir(t)
 
 	// test matches allowing for delete syntax (a prefixed !)
 	assertSimpleMatch := func(expected bool, match string, setting []string) {
@@ -1386,39 +1394,15 @@ func TestConfigMergeStringList(t *testing.T) {
 		test(false, match)
 	}
 	// no clobber of old setting
-	assertSimpleMatch(true, "somename", app.AdditionalHostnames)
+	assertSimpleMatch(true, "somename2", app.AdditionalHostnames)
 	// successful merge
 	assertSimpleMatch(true, "somename-new", app.AdditionalHostnames)
-	// do not want the delete instruction added to the list
-	assertSimpleMatch(false, "!someothername", app.AdditionalHostnames)
-
 }
 
 // TestConfigMergeEnvItems verifies that config overrides for web_environment
 // override and do not clobber settings from config.yaml.
 func TestConfigMergeEnvItems(t *testing.T) {
-	assert := asrt.New(t)
-	pwd, _ := os.Getwd()
-
-	projDir, err := filepath.Abs(testcommon.CreateTmpDir(t.Name()))
-	require.NoError(t, err)
-
-	err = fileutil.CopyDir("./testdata/TestConfigMergeItems/.ddev", filepath.Join(projDir, ".ddev"))
-	require.NoError(t, err)
-
-	app, err := NewApp(projDir, true)
-	require.NoError(t, err)
-
-	t.Cleanup(func() {
-		err = os.Chdir(pwd)
-		assert.NoError(err)
-		err = app.Stop(true, false)
-		assert.NoError(err)
-		err = os.RemoveAll(projDir)
-		assert.NoError(err)
-	})
-	err = os.Chdir(app.AppRoot)
-	assert.NoError(err)
+	app, assert := setupTestTempDir(t)
 
 	// make test results a bit clearer with our
 	// own matcher.
@@ -1438,7 +1422,7 @@ func TestConfigMergeEnvItems(t *testing.T) {
 	}
 
 	// check the config file w/o overrides
-	_, err = app.ReadConfig(false)
+	_, err := app.ReadConfig(false)
 	assert.NoError(err)
 	assert.IsType([]string{}, app.WebEnvironment)
 
@@ -1472,28 +1456,7 @@ func TestConfigMergeEnvItems(t *testing.T) {
 }
 
 func TestConfigHooksMerge(t *testing.T) {
-	assert := asrt.New(t)
-	pwd, _ := os.Getwd()
-
-	projDir, err := filepath.Abs(testcommon.CreateTmpDir(t.Name()))
-	require.NoError(t, err)
-
-	err = fileutil.CopyDir("./testdata/TestConfigMergeItems/.ddev", filepath.Join(projDir, ".ddev"))
-	require.NoError(t, err)
-
-	app, err := NewApp(projDir, true)
-	require.NoError(t, err)
-
-	t.Cleanup(func() {
-		err = os.Chdir(pwd)
-		assert.NoError(err)
-		err = app.Stop(true, false)
-		assert.NoError(err)
-		err = os.RemoveAll(projDir)
-		assert.NoError(err)
-	})
-	err = os.Chdir(app.AppRoot)
-	assert.NoError(err)
+	app, _ := setupTestTempDir(t)
 
 	// some helpers
 	getHookTasks := func(hooks map[string][]ddevapp.YAMLTask, hook string) []ddevapp.YAMLTask {
