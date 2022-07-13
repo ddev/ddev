@@ -36,7 +36,7 @@ func setupTestTempDir(t *testing.T) (*DdevApp, *asrt.Assertions) {
 	projDir, err := filepath.Abs(testcommon.CreateTmpDir(t.Name()))
 	require.NoError(t, err)
 
-	testData := "./testdata/" + t.Name() + "/.ddev"
+	testData := filepath.Join("./testdata/", t.Name(), "/.ddev")
 	err = fileutil.CopyDir(testData, filepath.Join(projDir, ".ddev"))
 	require.NoError(t, err)
 
@@ -1379,55 +1379,23 @@ func TestConfigMergeStringList(t *testing.T) {
 func TestConfigMergeEnvItems(t *testing.T) {
 	app, assert := setupTestTempDir(t)
 
-	// make test results a bit clearer with our
-	// own matcher.
-	assertHasKey := func(expected bool, match string) {
-		test := assert.True
-		if !expected {
-			test = assert.False
-		}
+	// check the config file w/o overrides
+	noOverridesApp, err := ddevapp.NewApp(app.AppRoot, false)
+	require.NoError(t, err)
+	assert.IsType([]string{}, noOverridesApp.WebEnvironment)
 
-		for _, val := range app.WebEnvironment {
-			if val == match {
-				test(true, match)
-				return
-			}
-		}
-		test(false, match)
+	// The app loaded without overrides should get the original values expected here
+	for _, v := range []string{`LARRY=curly`, `MOE=standard`, `CURLEY=bald`} {
+		assert.Contains(noOverridesApp.WebEnvironment, v, "the app without overrides should have had %v but it didn't, webEnvironment=%v", v, noOverridesApp.WebEnvironment)
 	}
 
-	// check the config file w/o overrides
-	_, err := app.ReadConfig(false)
-	assert.NoError(err)
-	assert.IsType([]string{}, app.WebEnvironment)
+	// With overrides we should have different values with the config.override.yaml values added
+	withOverridesApp, err := ddevapp.NewApp(app.AppRoot, true)
+	require.NoError(t, err)
 
-	assertHasKey(true, `LARRY=curly`)
-	assertHasKey(true, `MOE=standard`)
-	assertHasKey(true, `CURLEY=bald`)
-	assertHasKey(false, `LARRY=balding`)
-
-	// reset WE
-	app.WebEnvironment = []string{}
-
-	// Use the override this time
-	_, err = app.ReadConfig(true)
-	assert.NoError(err)
-	assert.IsType([]string{}, app.WebEnvironment)
-
-	// key should change
-	assertHasKey(false, `LARRY=curly`)
-	assertHasKey(false, `MOE=standard`)
-
-	// key should change
-	assertHasKey(true, `MOE=hair-piece`)
-	assertHasKey(true, `LARRY=balding`)
-
-	// old key should still be present
-	assertHasKey(true, `CURLEY=bald`)
-
-	// New key should appear.
-	assertHasKey(true, `SHEMP=fake`)
-
+	for _, v := range []string{`LARRY=balding`, `LARRY=curly`, `MOE=standard`, `MOE=hair-piece`, `CURLEY=bald`, `SHEMP=fake`} {
+		assert.Contains(withOverridesApp.WebEnvironment, v, "the app without overrides should have had %v but it didn't, webEnvironment=%v", v, noOverridesApp.WebEnvironment)
+	}
 }
 
 func TestConfigHooksMerge(t *testing.T) {
