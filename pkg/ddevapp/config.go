@@ -288,7 +288,7 @@ func (app *DdevApp) UpdateGlobalProjectList() error {
 // It does not attempt to set default values; that's NewApp's job.
 func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 
-	// Load config.yaml
+	// Load base .ddev/config.yaml - original config
 	err := app.LoadConfigYamlFile(app.ConfigPath)
 	if err != nil {
 		return []string{}, fmt.Errorf("unable to load config file %s: %v", app.ConfigPath, err)
@@ -335,21 +335,10 @@ func (app *DdevApp) LoadConfigYamlFile(filePath string) error {
 	return nil
 }
 
-// LoadConfigYamlFile loads one config.yaml into app, overriding what might be there.
-func (app *DdevApp) LoadConfigAndMerge(filePath string) error {
-	source, err := os.ReadFile(filePath)
-	if err != nil {
-		return fmt.Errorf("could not find an active ddev configuration at %s have you run 'ddev config'? %v", app.ConfigPath, err)
-	}
+// LoadConfigAndMerge loads one config.yaml into app, overriding what might be there.
+func (app *DdevApp) LoadConfigAndMerge(configPath string) error {
 
-	// validate extend command keys
-	err = validateHookYAML(source)
-	if err != nil {
-		return fmt.Errorf("invalid configuration in %s: %v", app.ConfigPath, err)
-	}
-
-	// ReadConfig config values from file.
-	return app.mergeConfigToApp(source)
+	return app.mergeConfigToApp(configPath)
 }
 
 // WarnIfConfigReplace just messages user about whether config is being replaced or created
