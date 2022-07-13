@@ -886,7 +886,7 @@ FROM $BASE_IMAGE
 		v := os.Getenv(proxyVar)
 		if v != "" {
 			useProxy = true
-			contents = contents + fmt.Sprintf("ENV %s %s", proxyVar, v)
+			contents = contents + fmt.Sprintf("\nENV %s %s\n", proxyVar, v)
 		}
 	}
 	if useProxy {
