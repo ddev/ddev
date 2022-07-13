@@ -1,0 +1,10 @@
+web_environment:
+  - SHEMP=fake
+  - LARRY=balding
+  - MOE=hair-piece
+additional_hostnames:
+ # add a hostname
+ - somename-new
+hooks:
+  post-start:
+    - exec: "simple random expression"

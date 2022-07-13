@@ -31,6 +31,8 @@ func (app *DdevApp) mergeConfigToApp(source []byte) error {
 		return err
 	}
 
+	// Make sure the mergeable items are valid
+
 	// add merges here.  Default strategy is to clobber old
 	// keys.
 	mergeableItems := map[string]mergeData{

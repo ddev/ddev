@@ -5,8 +5,6 @@ web_environment:
 additional_hostnames:
  # add a hostname
  - somename-new
- # remove a hostname
- - "!someothername"
 hooks:
   post-start:
     - exec: "simple random expression"
