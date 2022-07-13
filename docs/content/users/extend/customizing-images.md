@@ -74,6 +74,10 @@ ENV COMPOSER_HOME=""
 
 **Remember that the Dockerfile is building a docker image that will be used later with ddev.** At the time the Dockerfile is executing, your code is not mounted and the container is not running, it's just being built. So for example, an `npm install` in /var/www/html will not do anything useful because the code is not there at image building time.
 
+## HTTP proxy support inside containers and during build
+
+DDEV will automatically recognize systems that have the environment variables HTTP_PROXY, HTTPS_PROXY, and NO_PROXY set to configure proxy behavior. It will then configure generated images to include those values and set them up to be able to use the proxy during build time and at run time.
+
 ### Debugging the Dockerfile build
 
 It can be complicated to figure out what's going on when building a Dockerfile, and even more complicated when you're seeing it go by as part of `ddev start`.
