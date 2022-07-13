@@ -879,6 +879,21 @@ func WriteBuildDockerfile(fullpath string, userDockerfilePath string, extraPacka
 ARG BASE_IMAGE
 FROM $BASE_IMAGE
 `
+	// Provide proxy handling inside container if necessary
+	proxyVars := []string{"HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY"}
+	useProxy := false
+	for _, proxyVar := range proxyVars {
+		v := os.Getenv(proxyVar)
+		if v != "" {
+			useProxy = true
+			contents = contents + fmt.Sprintf("ENV %s %s", proxyVar, v)
+		}
+	}
+	if useProxy {
+		contents = contents + `
+RUN if [ ! -z "${HTTP_PROXY}" ]; then printf "Acquire {\nHTTP::proxy \"$HTTP_PROXY\";\nHTTPS::proxy \"$HTTPS_PROXY\";\n}\n"  > /etc/apt/apt.conf.d/proxy.conf ; fi`
+	}
+
 	contents = contents + `
 ARG username
 ARG uid
