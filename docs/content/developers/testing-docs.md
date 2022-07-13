@@ -4,4 +4,4 @@ You can see what the docs will look like after you've edited them by running `ma
 
 It's easiest to [install mkdocs locally](https://www.mkdocs.org/user-guide/installation/) with `pip3 install mkdocs` and `pip3 install -r docs/mkdocs-pip-requirements`, but if mkdocs isn't installed, `make mkdocs-serve` will run a docker command to serve them on `http://localhost:8000`.
 
-If you don't have `make` on your system, you can easily install it, but you can also just run the docker command that `make mkdocs-serve` runs. `docker run -it -p 8000:8000 -v "$${PWD}:/docs" -e "ADD_MODULES=mkdocs-material mdx_truly_sane_lists mkdocs-git-revision-date-localized-plugin" -e "LIVE_RELOAD_SUPPORT=true"  -e "FAST_MODE=true" -e "DOCS_DIRECTORY=./docs" polinux/mkdocs;`
+If you don't have `make` on your system, you can easily install it, but you can also just run the docker command that `make mkdocs-serve` runs. `docker run -it -p 8000:8000 -v "${PWD}:/docs" -e "ADD_MODULES=mkdocs-material mdx_truly_sane_lists mkdocs-git-revision-date-localized-plugin" -e "LIVE_RELOAD_SUPPORT=true"  -e "FAST_MODE=true" -e "DOCS_DIRECTORY=./docs" polinux/mkdocs;`
