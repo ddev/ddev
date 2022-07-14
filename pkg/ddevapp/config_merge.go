@@ -2,11 +2,8 @@ package ddevapp
 
 import (
 	"errors"
-	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/imdario/mergo"
 	"log"
-	"os"
-	"path/filepath"
 	"regexp"
 )
 
@@ -14,23 +11,7 @@ import (
 // it into "app"
 func (app *DdevApp) mergeAdditionalConfigIntoApp(configPath string) error {
 
-	// Moving the config.*.yaml file to a tmp dir is a hack, perhaps temporary,
-	// to avoid refactoring NewApp() so it (optionally?) takes a file instead of a dir.
-	// If this experiment works out, we may want to rework NewApp() to (optionally?) take a specific file instead of dir
-	tmpDir, err := os.MkdirTemp("", "")
-	if err != nil {
-		return err
-	}
-	err = os.MkdirAll(filepath.Join(tmpDir, ".ddev"), 0755)
-	if err != nil {
-		return err
-	}
-	err = fileutil.CopyFile(configPath, filepath.Join(tmpDir, ".ddev", "config.yaml"))
-	if err != nil {
-		return err
-	}
-
-	newConfig, err := NewApp(tmpDir, false)
+	newConfig, err := NewAppFromConfigFileOnly(app.AppRoot, configPath)
 	if err != nil {
 		return err
 	}

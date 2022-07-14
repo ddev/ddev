@@ -51,8 +51,19 @@ func init() {
 
 }
 
-// NewApp creates a new DdevApp struct with defaults set and overridden by any existing config.yml.
+// NewAppFromConfigFileOnly takes the approot and does not assume config.yaml filename
+func NewAppFromConfigFileOnly(appRoot string, configFile string) (*DdevApp, error) {
+	return NewAppGeneric(appRoot, configFile, false)
+}
+
+// NewApp creates a new DdevApp struct based on a directory and its config.yaml
 func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
+	return NewAppGeneric(appRoot, "config.yaml", includeOverrides)
+}
+
+// NewAppGeneric creates a new DdevApp struct with defaults set and overridden by any existing config.yml.
+// It can operate on a single file or on a directory with the single file.
+func NewAppGeneric(appRoot string, configFile string, includeOverrides bool) (*DdevApp, error) {
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("ddevapp.NewApp(%s)", appRoot))
 	defer runTime()
 
@@ -72,7 +83,8 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	if !fileutil.FileExists(app.AppRoot) {
 		return app, fmt.Errorf("project root %s does not exist", app.AppRoot)
 	}
-	app.ConfigPath = app.GetConfigPath("config.yaml")
+
+	app.ConfigPath = app.GetConfigPath(configFile)
 	app.Type = nodeps.AppTypePHP
 	app.PHPVersion = nodeps.PHPDefault
 	app.ComposerVersion = nodeps.ComposerDefault
@@ -304,7 +316,7 @@ func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 		}
 
 		for _, item := range configOverrides {
-			err = app.mergeAdditionalConfigIntoApp(item)
+			err = app.mergeAdditionalConfigIntoApp(filepath.Base(item))
 
 			if err != nil {
 				return []string{}, fmt.Errorf("unable to load config file %s: %v", item, err)
@@ -334,12 +346,6 @@ func (app *DdevApp) LoadConfigYamlFile(filePath string) error {
 		return err
 	}
 	return nil
-}
-
-// LoadConfigAndMerge loads one config.yaml into app, overriding what might be there.
-func (app *DdevApp) LoadConfigAndMerge(configPath string) error {
-
-	return app.mergeAdditionalConfigIntoApp(configPath)
 }
 
 // WarnIfConfigReplace just messages user about whether config is being replaced or created
