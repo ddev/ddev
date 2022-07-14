@@ -732,7 +732,7 @@ func TestWriteConfig(t *testing.T) {
 	assert.Equal("drupal9", app.Type)
 
 	// However, if we ReadConfig() without includeOverrides, we should get "php" as the type
-	_, err = app.ReadConfig(false)
+	app, err = NewApp(projDir, false)
 	assert.NoError(err)
 	assert.Equal("php", app.Type)
 
@@ -1232,7 +1232,7 @@ func TestConfigLoadingOrder(t *testing.T) {
 		assert.NoError(err)
 		err = os.Symlink(item, linkedMatch)
 		assert.NoError(err)
-		_, err = app.ReadConfig(true)
+		app, err = NewApp(app.AppRoot, true)
 		assert.NoError(err)
 		assert.Equal(filepath.Base(item), app.WebImage)
 		err = os.Remove(linkedMatch)
@@ -1249,16 +1249,15 @@ func TestConfigLoadingOrder(t *testing.T) {
 		assert.NoError(err)
 		err = os.Symlink(item, linkedMatch)
 		assert.NoError(err)
-		_, err = app.ReadConfig(true)
+		app, err = NewApp(app.AppRoot, true)
 		assert.Equal(filepath.Base(item), app.WebImage)
 	}
 
-	// Now we still have all those linked overrides, but do a ReadConfig() without allowing them
+	// Now we still have all those linked overrides, but do a NewApp() without allowing them
 	// and verify that they don't get loaded
-	_, err = app.ReadConfig(false)
+	app, err = NewApp(app.AppRoot, false)
 	assert.NoError(err)
 	assert.Equal("config.yaml", app.WebImage)
-
 }
 
 // TestPkgConfigDatabaseDBVersion tests config for database

@@ -10,9 +10,9 @@ import (
 	"regexp"
 )
 
-// mergeConfigToApp takes the provided yaml `config.*.yaml` and merges
+// mergeAdditionalConfigIntoApp takes the provided yaml `config.*.yaml` and merges
 // it into "app"
-func (app *DdevApp) mergeConfigToApp(configPath string) error {
+func (app *DdevApp) mergeAdditionalConfigIntoApp(configPath string) error {
 
 	// Moving the config.*.yaml file to a tmp dir is a hack, perhaps temporary,
 	// to avoid refactoring NewApp() so it (optionally?) takes a file instead of a dir.
@@ -38,8 +38,7 @@ func (app *DdevApp) mergeConfigToApp(configPath string) error {
 	// These items can't be overridden
 	newConfig.Name = app.Name
 	newConfig.AppRoot = app.AppRoot
-	newConfig.Type = app.Type
-	newConfig.Docroot = app.Docroot
+	//newConfig.Docroot = app.Docroot
 
 	err = newConfig.ValidateConfig()
 	if err != nil {
