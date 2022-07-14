@@ -1373,7 +1373,7 @@ func TestDatabaseConfigUpgrade(t *testing.T) {
 	}
 }
 
-// TestConfigMergeStringList verifies that string merges update w/o clobber
+// TestConfigMergeStringList verifies that scalar string merges update w/o clobber
 func TestConfigMergeStringList(t *testing.T) {
 	app, assert := setupTestTempDir(t)
 
@@ -1398,8 +1398,8 @@ func TestConfigMergeStringList(t *testing.T) {
 	assertSimpleMatch(true, "somename-new", app.AdditionalHostnames)
 }
 
-// TestConfigMergeEnvItems verifies that config overrides for web_environment
-// override and do not clobber settings from config.yaml.
+// TestConfigMergeEnvItems verifies that config overrides web_environment
+// and do not destroy (but may update) config.yaml stuff
 func TestConfigMergeEnvItems(t *testing.T) {
 	app, assert := setupTestTempDir(t)
 
@@ -1433,6 +1433,7 @@ func TestConfigMergeEnvItems(t *testing.T) {
 	)
 }
 
+// TestConfigHooksMerge makes sure that hooks get merged with additional config.*.yaml
 func TestConfigHooksMerge(t *testing.T) {
 	app, _ := setupTestTempDir(t)
 
