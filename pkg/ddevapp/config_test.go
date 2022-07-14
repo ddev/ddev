@@ -1384,7 +1384,7 @@ func TestConfigMergeEnvItems(t *testing.T) {
 	assert.IsType([]string{}, noOverridesApp.WebEnvironment)
 
 	// The app loaded without overrides should get the original values expected here
-	for _, v := range []string{`LARRY=curly`, `MOE=standard`, `CURLEY=bald`} {
+	for _, v := range []string{`LARRY=l`, `MOE=m`, `CURLEY=c`} {
 		assert.Contains(noOverridesApp.WebEnvironment, v, "the app without overrides should have had %v but it didn't, webEnvironment=%v", v, noOverridesApp.WebEnvironment)
 	}
 
@@ -1392,9 +1392,20 @@ func TestConfigMergeEnvItems(t *testing.T) {
 	withOverridesApp, err := ddevapp.NewApp(app.AppRoot, true)
 	require.NoError(t, err)
 
-	for _, v := range []string{`LARRY=balding`, `LARRY=curly`, `MOE=standard`, `MOE=hair-piece`, `CURLEY=bald`, `SHEMP=fake`} {
+	for _, v := range []string{`LARRY=l`, `LARRY=lz`, `MOE=m`, `MOE=mz`, `CURLEY=c`, `SHEMP=s`} {
 		assert.Contains(withOverridesApp.WebEnvironment, v, "the app without overrides should have had %v but it didn't, webEnvironment=%v", v, noOverridesApp.WebEnvironment)
 	}
+
+	assert.Less(
+		nodeps.PosString(withOverridesApp.WebEnvironment, `LARRY=l`),
+		nodeps.PosString(withOverridesApp.WebEnvironment, `LARRY=lz`),
+		"LARRY=lz should come after LARRY=l",
+	)
+	assert.Less(
+		nodeps.PosString(withOverridesApp.WebEnvironment, `MOE=m`),
+		nodeps.PosString(withOverridesApp.WebEnvironment, `MOE=mz`),
+		"MOE=mz should come after MOE=m",
+	)
 }
 
 func TestConfigHooksMerge(t *testing.T) {
