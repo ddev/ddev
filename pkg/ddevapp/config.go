@@ -304,7 +304,8 @@ func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 		}
 
 		for _, item := range configOverrides {
-			err = app.LoadConfigAndMerge(item)
+			err = app.mergeAdditionalConfigIntoApp(item)
+
 			if err != nil {
 				return []string{}, fmt.Errorf("unable to load config file %s: %v", item, err)
 			}
@@ -338,7 +339,7 @@ func (app *DdevApp) LoadConfigYamlFile(filePath string) error {
 // LoadConfigAndMerge loads one config.yaml into app, overriding what might be there.
 func (app *DdevApp) LoadConfigAndMerge(configPath string) error {
 
-	return app.mergeConfigToApp(configPath)
+	return app.mergeAdditionalConfigIntoApp(configPath)
 }
 
 // WarnIfConfigReplace just messages user about whether config is being replaced or created
