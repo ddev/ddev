@@ -1,8 +1,8 @@
 webimage: config.yaml
 web_environment:
-  - LARRY=curly
-  - MOE=standard
-  - CURLEY=bald
+  - LARRY=l
+  - MOE=m
+  - CURLEY=c
 additional_hostnames:
  - somename
  - someothername
