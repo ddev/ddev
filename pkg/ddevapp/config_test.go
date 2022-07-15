@@ -1128,6 +1128,20 @@ ARG BASE_IMAGE
 FROM $BASE_IMAGE
 RUN touch /var/tmp/`+"added-by-"+item+"-test2.txt"))
 		assert.NoError(err)
+
+		// Testing pre.Dockerfile.*
+		err = WriteImageDockerfile(app.GetConfigPath(item+"-build/pre.Dockerfile.test3"), []byte(`
+RUN touch /var/tmp/`+"added-by-"+item+"-test3.txt"))
+		assert.NoError(err)
+
+		// Testing that pre comes before post, we create a file on pre and remove
+		// it on post
+		err = WriteImageDockerfile(app.GetConfigPath(item+"-build/pre.Dockerfile.test4"), []byte(`
+RUN touch /var/tmp/`+"added-by-"+item+"-test4.txt"))
+		assert.NoError(err)
+		err = WriteImageDockerfile(app.GetConfigPath(item+"-build/Dockerfile.test4"), []byte(`
+RUN rm /var/tmp/`+"added-by-"+item+"-test4.txt"))
+		assert.NoError(err)
 	}
 	// Start and make sure that the packages don't exist already
 	err = app.Start()
@@ -1155,6 +1169,16 @@ RUN touch /var/tmp/`+"added-by-"+item+"-test2.txt"))
 			Cmd:     "ls /var/tmp/added-by-" + item + "-test2.txt",
 		})
 		assert.NoError(err)
+		_, _, err = app.Exec(&ExecOpts{
+			Service: item,
+			Cmd:     "ls /var/tmp/added-by-" + item + "-test3.txt",
+		})
+		assert.NoError(err)
+		_, _, err = app.Exec(&ExecOpts{
+			Service: item,
+			Cmd:     "ls /var/tmp/added-by-" + item + "-test4.txt",
+		})
+		assert.Error(err)
 	}
 
 	err = app.Stop(true, false)
