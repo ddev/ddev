@@ -31,8 +31,11 @@ function docker_desktop_version {
 }
 
 echo -n "OS Information: " && uname -a
+command -v sw_vers >/dev/null && sw_vers
+
 echo "User information: $(id -a)"
 echo "DDEV version: $(ddev version)"
+echo "PROXY settings: HTTP_PROXY='${HTTP_PROXY:-}' HTTPS_PROXY='${HTTPS_PROXY:-}' http_proxy='${http_proxy:-}' NO_PROXY='${NO_PROXY:-}'"
 
 echo "======= DDEV global info ========="
 ddev config global | (grep -v "^web-environment" || true)
@@ -70,28 +73,56 @@ cat <<END >index.php
   mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
   \$mysqli = new mysqli('db', 'db', 'db', 'db');
   printf("Success accessing database... %s\n", \$mysqli->host_info);
-  print 'ddev is working. You will want to delete this project with "ddev delete -Oy ${PROJECT_NAME}"';
+  print "ddev is working. You will want to delete this project with 'ddev delete -Oy ${PROJECT_NAME}\n";
 END
 ddev config --project-type=php
 trap cleanup EXIT
 
+# This is a potential experiment to force failure when needed
+#echo '
+#services:
+#  web:
+#    healthcheck:
+#      test: "false"
+#      timeout: 15s
+#      retries: 2
+#      start_period: 30s
+#' >.ddev/docker-compose.failhealth.yaml
+
 ddev start -y || ( \
   set +x && \
   ddev list && \
+  ddev describe && \
+  printf "============= ddev-${PROJECT_NAME}-web healtcheck run =========\n" && \
+  docker exec ddev-${PROJECT_NAME}-web bash -x 'rm -f /tmp/healthy && /healthcheck.sh' && \
   printf "========= web container healthcheck ======\n" && \
   docker inspect --format "{{json .State.Health }}" ddev-${PROJECT_NAME}-web && \
   printf "============= ddev-router healthcheck =========\n" && \
   docker inspect --format "{{json .State.Health }}" ddev-router && \
-  ddev logs >logs.txt && \
-  printf "Start failed. Please provide this output and the contents of ~/tmp/${PROJECT_NAME}/logs.txt in a new gist at gist.github.com\n" && \
+  printf "============= Global ddev homeadditions =========\n" && \
+  ls -lR ~/.ddev/homeadditions/
+  printf "============= ddev logs =========\n" && \
+  ddev logs | tail -20l && \
+  printf "Start failed. Please provide this output in a new gist at gist.github.com\n" && \
   exit 1 )
-set -x
+
+echo "======== Curl of site from inside container:"
+ddev exec curl --fail -I http://127.0.0.1
+
+echo "======== Curl of site from outside:"
 curl --fail -I http://${PROJECT_NAME}.ddev.site
 if [ $? -ne 0 ]; then
   set +x
   echo "Unable to curl the requested project Please provide this output in a new gist at gist.github.com."
   exit 1
 fi
+
+echo "======== Project ownership on host:"
+ls -ld ~/tmp/${PROJECT_NAME}
+echo "======== Project ownership in container:"
+ddev exec ls -ld /var/www/html
+echo "======== In-container filesystem:"
+ddev exec df -T /var/www/html
 
 curl --fail http://${PROJECT_NAME}.ddev.site
 if [ $? -ne 0 ]; then
@@ -100,8 +131,11 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-set +x
 echo "Thanks for running the diagnostic. It was successful."
 echo "Please provide the output of this script in a new gist at gist.github.com"
 echo "Running ddev launch in 5 seconds" && sleep 5
 ddev launch
+
+echo "If you're brave and you have jq you can delete all tryddevproject instances with this one-liner:"
+echo '    ddev delete -Oy $(ddev list -j |jq -r .raw[].name | grep tryddevproject)'
+echo "In the future ddev debug test will also provide this option."
