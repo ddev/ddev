@@ -5,7 +5,7 @@ defaults:
     shell: bash
 on:
   push:
-    branches: [ master, main ]
+    branches: [ master, main, 20220714_publish_binaries_on_master_workflow ]
   release:
     types: [ created ]
 
@@ -198,6 +198,42 @@ jobs:
       - name: test that notarizedmac was loaded
         if: steps.notarizedmac.outputs.cache-hit != 'true'
         run: exit 1
+
+      # Do artifacts for upload to workflow URL
+      - name: Generate artifacts
+        run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
+
+      - name: Upload all artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: all-ddev-executables
+          path: ${{ github.workspace }}/artifacts/*
+      - name: Upload macos-amd64 binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: ddev-macos-amd64
+          path: .gotmp/bin/darwin_amd64/ddev
+      - name: Upload macos-arm64 binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: ddev-macos-arm64
+          path: .gotmp/bin/darwin_arm64/ddev
+      - name: Upload linux-arm64 binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: ddev-linux-arm64
+          path: .gotmp/bin/linux_arm64/ddev
+      - name: Upload inux_amd644 binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: ddev-linux-amd64
+          path: .gotmp/bin/linux_amd64/ddev
+      - name: Upload windows_amd64 installer
+        uses: actions/upload-artifact@v3
+        with:
+          name: ddev-windows-amd64-installer
+          path: .gotmp/bin/windows_amd64/ddev_windows_installer*.exe
+
 
       # Goreleaser does GitHub release artifacts, homebrew, AUR, deb/rpm
       - name: goreleaser
