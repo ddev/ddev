@@ -36,7 +36,7 @@ For more complex requirements, you can add:
 * `.ddev/db-build/Dockerfile`
 * `.ddev/db-build/Dockerfile.*`
 
-These files' content will be inserted into the constructed Dockerfile for each image. They are inserted *after* most of the rest of the things that are done to build the image, and are done in alpha order, so `Dockerfile` is inserted first, followed by `Dockerfile.*` in alpha order. 
+These files' content will be inserted into the constructed Dockerfile for each image. They are inserted *after* most of the rest of the things that are done to build the image, and are done in alpha order, so `Dockerfile` is inserted first, followed by `Dockerfile.*` in alpha order.
 
 For certain use cases, you might need to add stuff very early on the Dockerfile (i.e. proxy settings, SSL termination, etc.) you can also create:
 
