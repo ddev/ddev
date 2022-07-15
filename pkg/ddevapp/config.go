@@ -904,7 +904,7 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 
 	if extraPackages != nil {
 		contents = contents + `
-### from webimage_extra_packages or dbimage_extra_packages
+### DDEV-injected from webimage_extra_packages or dbimage_extra_packages
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
 	}
 
@@ -929,11 +929,17 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg:
 		// Try composer self-update twice because of troubles with composer downloads
 		// breaking testing.
 		contents = contents + fmt.Sprintf(`
+### DDEV-injected composer update
 RUN export XDEBUG_MODE=off && ( composer self-update %s || composer self-update %s || true )
 `, composerSelfUpdateArg, composerSelfUpdateArg)
 	}
 
-	contents = contents + extraContent
+	if extraContent != "" {
+		contents = contents + fmt.Sprintf(`
+### DDEV-injected extra content
+%s
+`, extraContent)
+	}
 
 	// If there are user dockerfiles, appends their contents
 	if userDockerfilePath != "" {
