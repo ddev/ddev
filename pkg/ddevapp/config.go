@@ -885,7 +885,7 @@ ARG uid
 ARG gid
 RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' --uid $uid "$username" || useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' "$username" || useradd  -l -m -s "/bin/bash" --gid "$gid" --comment '' "$username")
 `
-	// If there are user dockerfiles, insert their contents
+	// If there are user pre.Dockerfile* files, insert their contents
 	if userDockerfilePath != "" {
 		files, err := filepath.Glob(userDockerfilePath + "/pre.Dockerfile*")
 		if err != nil {
@@ -898,14 +898,14 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 				return err
 			}
 
-			contents = contents + "\n\n### From user file " + file + ":\n" + userContents
+			contents = contents + "\n\n### From user Dockerfile " + file + ":\n" + userContents
 		}
 	}
 
 	if extraPackages != nil {
 		contents = contents + `
 ### DDEV-injected from webimage_extra_packages or dbimage_extra_packages
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
+RUN apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
 	}
 
 	// For webimage, update to latest composer.
@@ -949,7 +949,7 @@ RUN export XDEBUG_MODE=off && ( composer self-update %s || composer self-update 
 		}
 
 		for _, file := range files {
-			// We'll skip the example file
+			// Skip the example file
 			if file == userDockerfilePath+"/Dockerfile.example" {
 				continue
 			}
@@ -966,7 +966,7 @@ RUN export XDEBUG_MODE=off && ( composer self-update %s || composer self-update 
 			}
 
 			userContents = re.ReplaceAllString(userContents, "")
-			contents = contents + "\n\n### From user file " + file + ":\n" + userContents
+			contents = contents + "\n\n### From user Dockerfile " + file + ":\n" + userContents
 		}
 	}
 
