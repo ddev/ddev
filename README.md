@@ -34,7 +34,7 @@ Just running `ddev` will show you all the commands.
 
 ## Contributing
 
-See the "How can I contribute" question in the [FAQ](https://ddev.readthedocs.io/en/stable/users/basics/faq/) and [Contributing.md](CONTRIBUTING.md).
+See the "How can I contribute" question in the [FAQ](https://ddev.readthedocs.io/en/latest/users/basics/faq/) and [Contributing.md](CONTRIBUTING.md).
 
 ## Wonderful Sponsors
 
