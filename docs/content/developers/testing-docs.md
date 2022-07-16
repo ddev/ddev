@@ -5,7 +5,7 @@ When you are going to make any changes to the documentation it is recommended th
 
 ## Fork / clone the DDEV repository
 
-To start making changes you need to get a local copy of the DDEV documentation, we recommend you to [fork the DDEV repository](https://github.com/drud/ddev/fork) as that's where the documentation lives.
+To start making changes you'll need a local copy of the DDEV documentation, so [fork the DDEV repository](https://github.com/drud/ddev/fork) as that's where the documentation lives.
 After forking the repository you can clone it to your local machine.
 
 ## Make your changes
