@@ -5,7 +5,7 @@ defaults:
     shell: bash
 on:
   push:
-    branches: [ master, main, 20220714_publish_binaries_on_master_workflow ]
+    branches: [ master, main ]
   release:
     types: [ created ]
 
