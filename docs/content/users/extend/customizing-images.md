@@ -36,7 +36,7 @@ For more complex requirements, you can add:
 * `.ddev/db-build/Dockerfile`
 * `.ddev/db-build/Dockerfile.*`
 
-These files' content will be appended to ddev's own Dockerfile for each image.
+These files' content will be inserted into the constructed Dockerfile for each image. They are inserted *before* most of the rest of the things that are done to build the image, and are done in alpha order, so `Dockerfile` is inserted first, followed by `Dockerfile.*` in alpha order. You can examine the resultant Dockerfile (which should not be changed as it is generated) at `.ddev/.webimageBuild/Dockerfile` and you can force a rebuild with `ddev debug refresh`.
 
 Examples of possible Dockerfiles are given in `.ddev/web-build/Dockerfile.example` and `.ddev/db-build/Dockerfile.example` (these examples are created in your project when you `ddev config` the project).
 
@@ -73,6 +73,10 @@ ENV COMPOSER_HOME=""
 ```
 
 **Remember that the Dockerfile is building a docker image that will be used later with ddev.** At the time the Dockerfile is executing, your code is not mounted and the container is not running, it's just being built. So for example, an `npm install` in /var/www/html will not do anything useful because the code is not there at image building time.
+
+## HTTP proxy support inside containers and during build
+
+DDEV will automatically recognize systems that have the environment variables HTTP_PROXY, HTTPS_PROXY, and NO_PROXY set to configure proxy behavior. It will then configure generated images to include those values and set them up to be able to use the proxy during build time and at run time.
 
 ### Debugging the Dockerfile build
 
