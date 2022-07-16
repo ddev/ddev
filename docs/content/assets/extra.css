@@ -1,23 +1,70 @@
+/* variables */
+:root {
+    /* #4051b5 (indigo primary) in decimal RGB */
+    --custom-bg-color: rgba(64, 81, 181, .1);
+}
+
 /* table does not need a scrollbar, see https://github.com/drud/ddev/pull/3290#issuecomment-942888867
  */
 .md-typeset__table {
-  padding-right: 0;
+    padding-right: 0;
 }
 
 dt {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .md-typeset :is(.admonition,details) {
-  font-size: .70rem;
-  background-color: inherit;
+    font-size: .70rem;
+    background-color: inherit;
 }
+
 .md-typeset .tabbed-content {
-  background-color: aliceblue;
-  padding: 10px;
+    background-color: var(--custom-bg-color);
+    padding: 10px;
 }
 
 /* only required if we have our svg logo out there */
 /*.md-logo {*/
 /*  filter:invert(40%)*/
 /*}*/
+
+/* typography */
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4,
+.md-typeset h5,
+.md-typeset h6 {
+    font-weight: 700;
+    margin-bottom: .5em;
+    color: var(--md-primary-fg-color);
+}
+
+.md-content {
+    max-width: 130ch;
+}
+
+/* blockquote */
+[dir=ltr] .md-typeset blockquote {
+    border-left-color: var(--md-primary-fg-color);
+    background: var(--custom-bg-color);
+    padding: .6rem 1rem;
+}
+
+[dir=ltr] .md-typeset blockquote strong {
+    color: var(--md-primary-fg-color);
+}
+
+[dir=ltr] .md-typeset blockquote p:first-child {
+    margin-top: 0;
+}
+
+[dir=ltr] .md-typeset blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+/* tabs */
+.md-typeset .tabbed-labels label {
+    font-size: 16px;
+}
