@@ -22,7 +22,7 @@ theme:
   name: material
   palette:
   - scheme: default
-    primary: light-blue
+    primary: indigo
     accent: indigo
   features:
 #  - content.tabs.link
