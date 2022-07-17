@@ -65,13 +65,13 @@ func TestPostConfigAction(t *testing.T) {
 		nodeps.AppTypeDrupal6:   nodeps.PHP56,
 		nodeps.AppTypeDrupal7:   nodeps.PHPDefault,
 		nodeps.AppTypeDrupal8:   nodeps.PHPDefault,
-		nodeps.AppTypeDrupal9:   nodeps.PHP80,
+		nodeps.AppTypeDrupal9:   nodeps.PHPDefault,
 		nodeps.AppTypeDrupal10:  nodeps.PHP81,
 		nodeps.AppTypeWordPress: nodeps.PHPDefault,
 		nodeps.AppTypeBackdrop:  nodeps.PHPDefault,
 		nodeps.AppTypeMagento:   nodeps.PHPDefault,
 		nodeps.AppTypeMagento2:  nodeps.PHP81,
-		nodeps.AppTypeLaravel:   nodeps.PHP80,
+		nodeps.AppTypeLaravel:   nodeps.PHPDefault,
 	}
 
 	for appType, expectedPHPVersion := range appTypes {
