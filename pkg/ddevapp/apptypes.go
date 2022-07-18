@@ -70,10 +70,10 @@ func init() {
 			settingsCreator: createDrupalSettingsPHP, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal6Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal6App, postImportDBAction: nil, configOverrideAction: drupal6ConfigOverrideAction, postConfigAction: nil, postStartAction: drupal6PostStartAction, importFilesAction: drupalImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
 		},
 		nodeps.AppTypeDrupal7: {
-			settingsCreator: createDrupalSettingsPHP, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal7Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal7App, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: drupal7PostStartAction, importFilesAction: drupalImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
+			settingsCreator: createDrupalSettingsPHP, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal7Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal7App, postImportDBAction: nil, configOverrideAction: drupal7ConfigOverrideAction, postConfigAction: nil, postStartAction: drupal7PostStartAction, importFilesAction: drupalImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
 		},
 		nodeps.AppTypeDrupal8: {
-			settingsCreator: createDrupalSettingsPHP, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal8Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal8App, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: drupal8PostStartAction, importFilesAction: drupalImportFilesAction,
+			settingsCreator: createDrupalSettingsPHP, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal8Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal8App, postImportDBAction: nil, configOverrideAction: drupal8ConfigOverrideAction, postConfigAction: nil, postStartAction: drupal8PostStartAction, importFilesAction: drupalImportFilesAction,
 		},
 		nodeps.AppTypeDrupal9: {
 			settingsCreator: createDrupalSettingsPHP, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal8Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal9App, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: drupal8PostStartAction, importFilesAction: drupalImportFilesAction,
@@ -91,7 +91,7 @@ func init() {
 			settingsCreator: createBackdropSettingsFile, uploadDir: getBackdropUploadDir, hookDefaultComments: getBackdropHooks, apptypeSettingsPaths: setBackdropSiteSettingsPaths, appTypeDetect: isBackdropApp, postImportDBAction: backdropPostImportDBAction, configOverrideAction: nil, postConfigAction: nil, postStartAction: backdropPostStartAction, importFilesAction: backdropImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
 		},
 		nodeps.AppTypeMagento: {
-			settingsCreator: createMagentoSettingsFile, uploadDir: getMagentoUploadDir, hookDefaultComments: nil, apptypeSettingsPaths: setMagentoSiteSettingsPaths, appTypeDetect: isMagentoApp, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: nil, importFilesAction: magentoImportFilesAction,
+			settingsCreator: createMagentoSettingsFile, uploadDir: getMagentoUploadDir, hookDefaultComments: nil, apptypeSettingsPaths: setMagentoSiteSettingsPaths, appTypeDetect: isMagentoApp, postImportDBAction: nil, configOverrideAction: magentoConfigOverrideAction, postConfigAction: nil, postStartAction: nil, importFilesAction: magentoImportFilesAction,
 		},
 		nodeps.AppTypeMagento2: {
 			settingsCreator: createMagento2SettingsFile, uploadDir: getMagento2UploadDir, hookDefaultComments: nil, apptypeSettingsPaths: setMagento2SiteSettingsPaths, appTypeDetect: isMagento2App, postImportDBAction: nil, configOverrideAction: magento2ConfigOverrideAction, postConfigAction: nil, postStartAction: nil, importFilesAction: magentoImportFilesAction,

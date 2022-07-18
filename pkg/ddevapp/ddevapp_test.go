@@ -41,7 +41,7 @@ var (
 		// 0: wordpress
 		{
 			Name:                          "TestPkgWordpress",
-			SourceURL:                     "https://wordpress.org/wordpress-5.8.2.tar.gz",
+			SourceURL:                     "https://wordpress.org/wordpress-6.0.1.tar.gz",
 			ArchiveInternalExtractionPath: "wordpress/",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/wordpress5.8.2_files.tar.gz",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/wordpress5.8.2_db.sql.tar.gz",
@@ -54,8 +54,8 @@ var (
 		// 1: drupal8
 		{
 			Name:                          "TestPkgDrupal8",
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.9.13.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-8.9.13/",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.9.20.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-8.9.20/",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d8_umami.files.tar.gz",
 			FilesZipballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d8_umami.files.zip",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d8_umami.sql.tar.gz",
@@ -70,8 +70,8 @@ var (
 		// 2: drupal7
 		{
 			Name:                          "TestPkgDrupal7", // Drupal D7
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-7.87.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-7.87/",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-7.90.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-7.90/",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.59.files.tar.gz",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.87-db.tar.gz",
 			FullSiteTarballURL:            "",
@@ -99,8 +99,8 @@ var (
 		// 4: backdrop
 		{
 			Name:                          "TestPkgBackdrop",
-			SourceURL:                     "https://github.com/backdrop/backdrop/archive/1.11.0.tar.gz",
-			ArchiveInternalExtractionPath: "backdrop-1.11.0/",
+			SourceURL:                     "https://github.com/backdrop/backdrop/archive/1.22.0.tar.gz",
+			ArchiveInternalExtractionPath: "backdrop-1.22.0/",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/backdrop_db.11.0.tar.gz",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/backdrop_files.11.0.tar.gz",
 			FullSiteTarballURL:            "",
@@ -163,8 +163,8 @@ var (
 		// 8: drupal9
 		{
 			Name:                          "TestPkgDrupal9",
-			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-9.4.1.tar.gz",
-			ArchiveInternalExtractionPath: "drupal-9.4.1/",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-9.4.2.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-9.4.2/",
 			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d9_umami_files.tgz",
 			FilesZipballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d9_umami_files.zip",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d9_umami_sql.tar.gz",
@@ -221,15 +221,16 @@ var (
 		// 12: drupal10
 		{
 			Name:                          "TestPkgDrupal10",
-			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d10_code.tgz",
-			ArchiveInternalExtractionPath: "",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d10_files.tgz",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d10.sql.tar.gz",
+			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-10.0.0-alpha6.tar.gz",
+			ArchiveInternalExtractionPath: "drupal-10.0.0-alpha6",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal10-files.tgz",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal10-alpha6.sql.tar.gz",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeDrupal10,
 			Docroot:                       "",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.md", Expect: "Drupal is an open source content management platform"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Welcome to d10"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "This is a test page"},
+			FilesImageURI:                 "/sites/default/files/2022-07/Logo.png",
 		},
 	}
 
@@ -1799,9 +1800,9 @@ func readLastLine(fileName string) (string, error) {
 // TestDdevFullSiteSetup tests a full import-db and import-files and then looks to see if
 // we have a spot-test success hit on a URL
 func TestDdevFullSiteSetup(t *testing.T) {
-	if nodeps.IsMacM1() {
-		t.Skip("Skipping on Mac M1, it just has too many connection failed problems")
-	}
+	//if nodeps.IsMacM1() {
+	//	t.Skip("Skipping on Mac M1, it just has too many connection failed problems")
+	//}
 
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
