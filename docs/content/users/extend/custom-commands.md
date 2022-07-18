@@ -161,7 +161,7 @@ The following fields can be used for a flag definition:
 
 ### "`ProjectTypes`" annotation
 
-If your command should only be visible for a particular project type, `ProjectTypes` will allow you to define the supported types. This is especially useful for global custom commands. See <https://ddev.readthedocs.io/en/stable/users/cli-usage/#quickstart-guides> for more information about the supported project types. Multiple types are separated by a comma.
+If your command should only be visible for a particular project type, `ProjectTypes` will allow you to define the supported types. This is especially useful for global custom commands. See [Quickstart for many CMSs](../../users/quickstart.md) for more information about the supported project types. Multiple types are separated by a comma.
 
 Usage: `## ProjectTypes: <list-of-project-types>`
 Example: `## ProjectTypes: drupal7,drupal8,drupal9,backdrop`
