@@ -19,4 +19,4 @@ var DebugCapabilitiesCmd = &cobra.Command{
 func init() {
 	DebugCmd.AddCommand(DebugCapabilitiesCmd)
 }
-}
+
