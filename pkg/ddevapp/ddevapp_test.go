@@ -113,16 +113,16 @@ var (
 		// 5: typo3
 		{
 			Name:                          "TestPkgTypo3",
-			SourceURL:                     "https://github.com/drud/typo3-v9-test/archive/v0.2.2.tar.gz",
-			ArchiveInternalExtractionPath: "typo3-v9-test-0.2.2/",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/typo3_v9.5_introduction_db.tar.gz",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/typo3_v9.5_introduction_files.tar.gz",
+			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/typo3v11_source.tgz",
+			ArchiveInternalExtractionPath: "",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/typo3v11_db.sql.tar.gz",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/typo3v11_fileadmin.tgz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "public",
 			Type:                          nodeps.AppTypeTYPO3,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "junk readme simply for reading"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/index.php?id=65", Expect: "Boxed Content"},
-			FilesImageURI:                 "/fileadmin/introduction/images/streets/nikita-maru-70928.jpg",
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "This is test text for TestDdevFullSiteSetup"},
+			FilesImageURI:                 "/fileadmin/user_upload/Logo.png",
 		},
 		// 6: magento1
 		{
