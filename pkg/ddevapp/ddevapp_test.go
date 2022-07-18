@@ -195,18 +195,19 @@ var (
 		},
 		// 10: shopware6
 		{
-			Name:                          "testpkgshopware6",
+			Name: "testpkgshopware6",
+			// tar -czf .tarballs/shopware6_code.tgz --exclude=public/media .
 			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_code.tgz",
 			ArchiveInternalExtractionPath: "",
-			// cd public/fileadmin && tar -czf ../../.tarballs/shopware
+			// cd public/media && tar -czf ../../.tarballs/shopware6_files.tgz
 			FilesTarballURL:           "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_files.tgz",
-			DBTarURL:                  "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_db.tgz",
+			DBTarURL:                  "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_db.sql.tar.gz",
 			FullSiteTarballURL:        "",
 			Type:                      nodeps.AppTypeShopware6,
 			Docroot:                   "public",
 			Safe200URIWithExpectation: testcommon.URIWithExpect{URI: "/maintenance.html", Expect: "Our website is currently undergoing maintenance"},
-			DynamicURI:                testcommon.URIWithExpect{URI: "/Main-product-with-properties/SWDEMO10007.1", Expect: "Main product with properties"},
-			FilesImageURI:             "/media/2f/b0/e2/1603218072/hemd_600x600.jpg",
+			DynamicURI:                testcommon.URIWithExpect{URI: "/", Expect: "0180 - 000000"},
+			FilesImageURI:             "/media//05/23/ee/1658172194/shirt_red_600x600.jpg",
 		},
 		// 11: php
 		{
