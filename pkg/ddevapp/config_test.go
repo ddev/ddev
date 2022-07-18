@@ -362,9 +362,9 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 	const apptypePos = 0
 	const phpVersionPos = 1
 	testMatrix := map[string][]string{
-		"drupal6phpversion": {nodeps.AppTypeDrupal6, nodeps.PHP56},
-		"drupal7phpversion": {nodeps.AppTypeDrupal7, nodeps.PHPDefault},
-		"drupal8phpversion": {nodeps.AppTypeDrupal8, nodeps.PHPDefault},
+		"drupal6phpversion":  {nodeps.AppTypeDrupal6, nodeps.PHP56},
+		"drupal7phpversion":  {nodeps.AppTypeDrupal7, nodeps.PHPDefault},
+		"drupal10phpversion": {nodeps.AppTypeDrupal10, nodeps.PHP81},
 	}
 
 	for testName, testValues := range testMatrix {
@@ -410,7 +410,7 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 		assert.Equal(name, app.Name)
 		assert.Equal(testValues[apptypePos], app.Type)
 		assert.Equal(nonexistentDocroot, app.Docroot)
-		assert.EqualValues(testValues[phpVersionPos], app.PHPVersion)
+		assert.Equal(testValues[phpVersionPos], app.PHPVersion, "expected php%v for apptype %s", testValues[phpVersionPos], app.Type)
 
 		err = PrepDdevDirectory(tmpDir)
 		assert.NoError(err)
