@@ -346,11 +346,6 @@ func drupal6ConfigOverrideAction(app *DdevApp) error {
 	return nil
 }
 
-func drupal7ConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP74
-	return nil
-}
-
 func drupal8ConfigOverrideAction(app *DdevApp) error {
 	app.PHPVersion = nodeps.PHP74
 	return nil
