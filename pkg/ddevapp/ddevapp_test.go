@@ -112,7 +112,8 @@ var (
 		},
 		// 5: typo3
 		{
-			Name:                          "TestPkgTypo3",
+			Name: "TestPkgTypo3",
+			// tar -czf .tarballs/typo3v11_source.tgz --exclude=var --exclude=public/fileadmin .
 			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/typo3v11_source.tgz",
 			ArchiveInternalExtractionPath: "",
 			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/typo3v11_db.sql.tar.gz",
@@ -197,14 +198,15 @@ var (
 			Name:                          "testpkgshopware6",
 			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_code.tgz",
 			ArchiveInternalExtractionPath: "",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_files.tgz",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_db.tgz",
-			FullSiteTarballURL:            "",
-			Type:                          nodeps.AppTypeShopware6,
-			Docroot:                       "public",
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/maintenance.html", Expect: "Our website is currently undergoing maintenance"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/Main-product-with-properties/SWDEMO10007.1", Expect: "Main product with properties"},
-			FilesImageURI:                 "/media/2f/b0/e2/1603218072/hemd_600x600.jpg",
+			// cd public/fileadmin && tar -czf ../../.tarballs/shopware
+			FilesTarballURL:           "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_files.tgz",
+			DBTarURL:                  "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_db.tgz",
+			FullSiteTarballURL:        "",
+			Type:                      nodeps.AppTypeShopware6,
+			Docroot:                   "public",
+			Safe200URIWithExpectation: testcommon.URIWithExpect{URI: "/maintenance.html", Expect: "Our website is currently undergoing maintenance"},
+			DynamicURI:                testcommon.URIWithExpect{URI: "/Main-product-with-properties/SWDEMO10007.1", Expect: "Main product with properties"},
+			FilesImageURI:             "/media/2f/b0/e2/1603218072/hemd_600x600.jpg",
 		},
 		// 11: php
 		{
