@@ -28,6 +28,14 @@
         Colima activates its own docker context in order to not conflict with Docker Desktop, so if you `docker context ls` you'll see a list of available contexts with currently active context indicated with an "\*" (which will be "colima" after you've started colima). You can change to the default (Docker Desktop) with `docker context use default` or change back with `docker context use colima`. This means you can actually run Docker Desktop and Colima at the same time... but be careful which context you're pointing at.
 
     DDEV has extensive automated test coverage for colima on macOS, but of course Colima is young, so please share your results and open issues or [contact us](../support.md) for help.
+
+    ### Moving projects from Docker Desktop to Colima
+
+    To move project databases from Docker Desktop to Colima:
+
+    1. Make sure all your projects are listed in `ddev list`
+    2. In Docker Desktop, `ddev snapshot --all`
+    3. After starting Colima, start each project as needed and `ddev snapshot restore --latest`
     
     ## Docker Desktop for Mac
 
