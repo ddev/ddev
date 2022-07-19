@@ -11,13 +11,13 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-homebrew-v29
+        - linux-homebrew-v30
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: NORMAL Circle VM setup
         no_output_timeout: "40m"
     - save_cache:
-        key: linux-homebrew-v29
+        key: linux-homebrew-v30
         paths:
           - /home/linuxbrew
     - run:
@@ -64,16 +64,16 @@ jobs:
     - run: 'mkdir -p ~/.ngrok2 && echo "authtoken: ${NGROK_TOKEN}" >~/.ngrok2/ngrok.yml'
     - restore_cache:
         keys:
-        - linux-homebrew-v29
+        - linux-homebrew-v30
     - restore_cache:
         keys:
-          - linux-testcache-v26
+          - linux-testcache-v27
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup
         no_output_timeout: "40m"
     - save_cache:
-        key: linux-homebrew-v29
+        key: linux-homebrew-v30
         paths:
           - /home/linuxbrew
     - run: echo "$(docker --version) $(docker-compose --version)"
@@ -84,7 +84,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-testcache-v26
+        key: linux-testcache-v27
         paths:
         - /home/circleci/.ddev/testcache
 
@@ -135,7 +135,7 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - macos-v25
+        - macos-v26
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
@@ -146,7 +146,7 @@ jobs:
         name: ddev tests
         no_output_timeout: "40m"
     - save_cache:
-        key: macos-v25
+        key: macos-v26
         paths:
         - /home/circleci/.ddev/testcache
     - store_test_results:
@@ -165,7 +165,7 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - macos-v25
+        - macos-v26
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
@@ -178,7 +178,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: macos-v25
+        key: macos-v26
         paths:
         - /home/circleci/.ddev/testcache
 
@@ -195,7 +195,7 @@ jobs:
         at: ~/
     - restore_cache:
         keys:
-        - macos-v25
+        - macos-v26
     # Run the built-in ddev tests with the executables just built.
     - run:
         command: ./.circleci/macos_circle_vm_setup.sh
@@ -207,7 +207,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: macos-v25
+        key: macos-v26
         paths:
         - /home/circleci/.ddev/testcache
 
@@ -224,7 +224,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v26
+        - linux-homebrew-v30
     - attach_workspace:
         at: ~/
     - run:
@@ -241,7 +241,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: homebrew-linux-v26
+        key: linux-homebrew-v30
         paths:
         - /home/linuxbrew
         - /home/circleci/.ddev/testcache
@@ -259,7 +259,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v26
+        - linux-homebrew-v30
     - attach_workspace:
         at: ~/
     - run:
@@ -278,7 +278,7 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: homebrew-linux-v26
+        key: linux-homebrew-v30
         paths:
         - /home/linuxbrew
         - /home/circleci/.ddev/testcache
@@ -293,7 +293,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v26
+        - linux-homebrew-v30
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup
@@ -315,7 +315,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v26
+        - linux-homebrew-v30
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup
@@ -339,7 +339,7 @@ jobs:
         name: linux container test
 
     - save_cache:
-        key: homebrew-linux-v26
+        key: linux-homebrew-v30
         paths:
         - /home/linuxbrew
         - /home/circleci/.ddev/testcache
@@ -406,7 +406,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - homebrew-linux-v26
+        - linux-homebrew-v30
     - attach_workspace:
         at: ~/
     - run:
@@ -414,7 +414,7 @@ jobs:
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
     - save_cache:
-        key: homebrew-linux-v26
+        key: linux-homebrew-v30
         paths:
         - /home/linuxbrew
         - /home/circleci/.ddev/testcache
