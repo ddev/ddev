@@ -5,17 +5,18 @@ USER root
 
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 
-RUN apt-get update >/dev/null && sudo apt-get install -y aspell autojump file mysql-client netcat nodejs python3-pip telnet xdg-utils >/dev/null
+RUN curl https://apt.fury.io/drud/gpg.key | sudo apt-key add -
+RUN echo "deb https://apt.fury.io/drud/ * *" | sudo tee -a /etc/apt/sources.list.d/ddev.list
+
+RUN apt-get update >/dev/null && sudo apt-get install -y aspell autojump ddev file mysql-client netcat nodejs python3-pip telnet xdg-utils >/dev/null
 
 RUN pip3 install mkdocs pyspelling pymdown-extensions
 RUN npm install -g markdownlint-cli
 RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b /usr/local/bin v1.46.2
 
-RUN rm -rf /usr/local/go && curl -sL -o /tmp/go.tar.gz https://go.dev/dl/go1.17.8.linux-amd64.tar.gz && tar -C /usr/local -xzf /tmp/go.tar.gz && rm /tmp/go.tar.gz && ln -s /usr/local/go/bin/go /usr/local/bin/go
+RUN rm -rf /usr/local/go && curl -sL -o /tmp/go.tar.gz https://go.dev/dl/go1.18.4.linux-amd64.tar.gz && tar -C /usr/local -xzf /tmp/go.tar.gz && rm /tmp/go.tar.gz && ln -s /usr/local/go/bin/go /usr/local/bin/go
 
 USER gitpod
-
-RUN curl -sL -o /tmp/install_ddev.sh https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash /tmp/install_ddev.sh
 
 RUN echo 'if [ -r "/home/linuxbrew/.linuxbrew/etc/profile.d/bash_completion.sh" ]; then . "/home/linuxbrew/.linuxbrew/etc/profile.d/bash_completion.sh"; fi' >>~/.bashrc
 
