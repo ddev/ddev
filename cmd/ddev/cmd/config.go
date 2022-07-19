@@ -157,7 +157,7 @@ var providerName = nodeps.ProviderDefault
 var extraFlagsHandlingFunc func(cmd *cobra.Command, args []string, app *ddevapp.DdevApp) error
 
 // ConfigCommand represents the `ddev config` command
-var ConfigCommand *cobra.Command = &cobra.Command{
+var ConfigCommand = &cobra.Command{
 	Use:     "config [provider or 'global']",
 	Short:   "Create or modify a ddev project configuration in the current directory",
 	Example: `"ddev config" or "ddev config --docroot=web  --project-type=drupal8"`,
