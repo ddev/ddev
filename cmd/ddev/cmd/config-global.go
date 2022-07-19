@@ -20,7 +20,7 @@ var (
 )
 
 // configGlobalCommand is the the `ddev config global` command
-var configGlobalCommand *cobra.Command = &cobra.Command{
+var configGlobalCommand = &cobra.Command{
 	Use:     "global [flags]",
 	Short:   "Change global configuration",
 	Example: "ddev config global --instrumentation-opt-in=false\nddev config global --omit-containers=dba,ddev-ssh-agent",
