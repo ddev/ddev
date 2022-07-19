@@ -11,6 +11,8 @@ const ConfigInstructions = `
 
 # docroot: <relative_path> # Relative path to the directory containing index.php.
 
+# node_cmd: <cmd> # Node command to use for starting a node application for node projects
+
 # php_version: "7.4"  # PHP version to use, "5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0", "8.1"
 
 # You can explicitly specify the webimage but this

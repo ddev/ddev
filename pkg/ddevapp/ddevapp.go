@@ -71,6 +71,7 @@ type DdevApp struct {
 	Name                  string                `yaml:"name"`
 	Type                  string                `yaml:"type"`
 	Docroot               string                `yaml:"docroot"`
+	NodeCMD               string                `yaml:"node_cmd"`
 	PHPVersion            string                `yaml:"php_version"`
 	WebserverType         string                `yaml:"webserver_type"`
 	WebImage              string                `yaml:"webimage,omitempty"`
@@ -265,6 +266,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["router_status"] = routerStatus
 	appDesc["router_status_log"] = logOutput
 	appDesc["ssh_agent_status"] = GetSSHAuthStatus()
+	appDesc["node_cmd"] = app.NodeCMD
 	appDesc["php_version"] = app.GetPhpVersion()
 	appDesc["webserver_type"] = app.GetWebserverType()
 
@@ -1814,6 +1816,8 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_HOSTNAME":              app.HostName(),
 		"DDEV_UID":                   uidStr,
 		"DDEV_GID":                   gidStr,
+		"DDEV_WORKING_DIR":           app.WorkingDir["web"],
+		"DDEV_NODE_CMD":              app.NodeCMD,
 		"DDEV_PHP_VERSION":           app.PHPVersion,
 		"DDEV_WEBSERVER_TYPE":        app.WebserverType,
 		"DDEV_PROJECT_TYPE":          app.Type,

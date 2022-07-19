@@ -38,6 +38,9 @@ var (
 	// projectTypeArg is the ddev app type, like drupal7/drupal8/wordpress.
 	projectTypeArg string
 
+	// nodeCmdArg is the node command that will be started for node projects.
+	nodeCmdArg string
+
 	// phpVersionArg overrides the default version of PHP to be used in the web container, like 5.6/7.0/7.1/7.2/7.3/7.4/8.0.
 	phpVersionArg string
 
@@ -240,6 +243,7 @@ func init() {
 	ConfigCommand.Flags().StringVar(&composerRootRelPathArg, "composer-root", "", "Overrides the default composer root directory for the web service")
 	ConfigCommand.Flags().BoolVar(&composerRootRelPathDefaultArg, "composer-root-default", false, "Unsets a web service composer root directory override")
 	ConfigCommand.Flags().StringVar(&projectTypeArg, "project-type", "", projectTypeUsage)
+	ConfigCommand.Flags().StringVar(&nodeCmdArg, "node-cmd", "", "The command that will be used to start the node server")
 	ConfigCommand.Flags().StringVar(&phpVersionArg, "php-version", "", "The version of PHP that will be enabled in the web container")
 	ConfigCommand.Flags().StringVar(&httpPortArg, "http-port", "", "The router HTTP port for this project")
 	ConfigCommand.Flags().StringVar(&httpsPortArg, "https-port", "", "The router HTTPS port for this project")
@@ -463,6 +467,10 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	if err != nil {
 		util.Failed("failed to run ConfigFileOverrideAction: %v", err)
 	}
+
+    if nodeCmdArg != "" {
+        app.NodeCMD = nodeCmdArg
+    }
 
 	if phpVersionArg != "" {
 		app.PHPVersion = phpVersionArg
