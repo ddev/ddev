@@ -50,6 +50,8 @@ Docker or an alternative is required before anything will work with DDEV. This i
   
     In the future you can update as usual, with `sudo apt update && sudo apt upgrade`.
 
+    If you previously used `install_ddev.sh` to install DDEV, you can just `sudo rm /usr/local/bin/ddev` to remove the previous version. If you previously used homebrew to install DDEV, you can just `brew unlink ddev` to get rid of the homebrew version.
+
     ### Yum/RPM packages for Fedora, RedHat, etc.
 
     ```bash
