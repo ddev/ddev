@@ -320,4 +320,4 @@ aurs:
     email: randy@randyfay.com
 
 furies:
-- account: drud
+- account: "{{ .Env.FURY_ACCOUNT }}"
