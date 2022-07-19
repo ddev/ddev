@@ -5,7 +5,7 @@ defaults:
     shell: bash
 on:
   push:
-    branches: [ master, main, 20220714_publish_binaries_on_master_workflow ]
+    branches: [ master, main ]
   release:
     types: [ created ]
 
@@ -199,6 +199,21 @@ jobs:
         if: steps.notarizedmac.outputs.cache-hit != 'true'
         run: exit 1
 
+      # Goreleaser does GitHub release artifacts, homebrew, AUR, deb/rpm
+      - name: goreleaser
+        uses: goreleaser/goreleaser-action@v3
+        if: startsWith( github.ref, 'refs/tags/v1')
+        with:
+          # either 'goreleaser' (default) or 'goreleaser-pro'
+          distribution: goreleaser-pro
+          version: latest
+          args: release --rm-dist
+        env:
+          GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
+          GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
+          FURY_TOKEN: ${{ secrets.FURY_TOKEN }}
+          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+
       # Do artifacts for upload to workflow URL
       - name: Generate artifacts
         run: ./.ci-scripts/generate_artifacts.sh ${{ github.workspace }}/artifacts
@@ -233,23 +248,6 @@ jobs:
         with:
           name: ddev-windows-amd64-installer
           path: .gotmp/bin/windows_amd64/ddev_windows_installer*.exe
-
-
-      # Goreleaser does GitHub release artifacts, homebrew, AUR, deb/rpm
-      - name: goreleaser
-        uses: goreleaser/goreleaser-action@v3
-        if: startsWith( github.ref, 'refs/tags/v1')
-        with:
-          # either 'goreleaser' (default) or 'goreleaser-pro'
-          distribution: goreleaser-pro
-          version: latest
-          args: release --rm-dist
-        env:
-          GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
-          GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
-          FURY_TOKEN: ${{ secrets.FURY_TOKEN }}
-          AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-
 
       - name: Show github.ref
         run: echo ${{ github.ref }}

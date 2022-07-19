@@ -1,18 +1,19 @@
 # Docker Installation
 
-=== "macOS: Docker Desktop"
+=== "macOS"
 
-    Docker Desktop for Mac can be installed via Homebrew (`brew install  homebrew/cask/docker`) or can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop).
+    The two easy docker providers for macOS are Colima and Docker Desktop for Mac. You only need one of them.
 
-=== "macOS: Colima"
+    ## Colima
 
-    [Colima](https://github.com/abiosoft/colima) is an open-source project that bundles the container management tool [lima](https://github.com/lima-vm/lima) with a docker (linux) back-end. This is similar to what Docker Desktop actually does, but Colima and Lima are entirely open-source and just focused on running containers. They work on both `amd64` and `arm64` (M1) macs. Colima does not require installation of Docker Desktop, or does it require paying a license fee to Docker, Inc.
+    [Colima](https://github.com/abiosoft/colima) the preferred docker provider for macOS. Colima is an open-source project that bundles the container management tool [lima](https://github.com/lima-vm/lima) with a docker (linux) back-end. This is similar to what Docker Desktop actually does, but Colima and Lima are entirely open-source and just focused on running containers. They work on both `amd64` and `arm64` (M1) macs. Colima does not require installation of Docker Desktop, or does it require paying a license fee to Docker, Inc., and it seems to be the most stable alternative at this time.
     
     Reasons to use Colima include:
 
     * Preferring to use open-source software (Docker Desktop, unlike Docker, is proprietary software).
     * Working for an organization that due to its size requires a paid Docker plan to use Docker Desktop, and wanting to avoid that cost and business relationship.
     * Preferring a CLI-focused approach to Docker Desktop's GUI focus.
+    * Stability
 
     !!!tip "Install the docker client if you need it"
         If you don't have the `docker` client installed, you'll need to install it. (If `docker help` returns an error, you don't have it.) Use `brew install docker` to install it.
@@ -28,11 +29,27 @@
 
     DDEV has extensive automated test coverage for colima on macOS, but of course Colima is young, so please share your results and open issues or [contact us](../support.md) for help.
 
-=== "Windows: Docker Desktop"
+    ### Moving projects from Docker Desktop to Colima
 
-    Docker Desktop for Windows can be downloaded via [Chocolatey](https://chocolatey.org/install) with `choco install docker-desktop` or it can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop).
+    To move project databases from Docker Desktop to Colima:
 
-=== "Windows WSL2: Docker-ce installed"
+    1. Make sure all your projects are listed in `ddev list`
+    2. In Docker Desktop, `ddev snapshot --all`
+    3. After starting Colima, start each project as needed and `ddev snapshot restore --latest`
+    
+    ## Docker Desktop for Mac
+
+    Docker Desktop for Mac can be installed via Homebrew (`brew install  homebrew/cask/docker`) or can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop). It has long been supported by DDEV and has extensive automated testing.
+
+=== "Windows"
+
+    On Windows, you can install Docker Desktop, which works with both traditional Windows and WSL2, or if you're working inside WSL2 (recommended) you can just install docker engine (docker-ce) inside WSL2.
+
+    ## Docker Desktop for Windows
+
+    Docker Desktop for Windows can be downloaded via [Chocolatey](https://chocolatey.org/install) with `choco install docker-desktop` or it can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop). It has extensive automated testing with DDEV, and works with DDEV both on traditional Windows and in WSL2.
+
+    ## Windows WSL2: Docker-ce installed inside WSL2"
 
     Although the traditional approach on Windows/WSL2 has been to use Docker Desktop, a number of people have moved away from using Docker Desktop and just installing the Docker-provided open-source `docker-ce` package inside WSL2. This uses entirely open-source software and does not require a license fee to Docker, Inc.
 

@@ -1,6 +1,6 @@
 # Controlling CMS Settings Files in DDEV
 
-One DDEV feature that lots of people love is its creation and management of CMS-specific settings files. This makes starting and installing a new project a breeze, and is a fantastic time-saver for many users. People can follow one of the many DDEV-Local [Quickstart Guides](https://ddev.readthedocs.io/en/stable/users/cli-usage/#quickstart-guides) and have a project up and installed in no time. To make this happen, DDEV-Local does a quite a bit of settings management for explicitly supported CMSs. DDEV will:
+One DDEV feature that lots of people love is its creation and management of CMS-specific settings files. This makes starting and installing a new project a breeze, and is a fantastic time-saver for many users. People can follow one of the many DDEV-Local [Quickstart Guides](../../users/quickstart.md) and have a project up and installed in no time. To make this happen, DDEV-Local does a quite a bit of settings management for explicitly supported CMSs. DDEV will:
 
 * Create a main settings file if none exists (like Drupal's settings.php).
 * Create a specialty config file with DDEV-specific settings (like `AdditionalSettings.php` for TYPO3 or settings.ddev.php for Drupal).

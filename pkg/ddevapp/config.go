@@ -879,61 +879,33 @@ func WriteBuildDockerfile(fullpath string, userDockerfilePath string, extraPacka
 ARG BASE_IMAGE
 FROM $BASE_IMAGE
 `
-	// Provide proxy handling inside container if necessary
-	proxyVars := []string{"HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY"}
-	useProxy := false
-	for _, proxyVar := range proxyVars {
-		v := os.Getenv(proxyVar)
-		if v != "" {
-			useProxy = true
-			contents = contents + fmt.Sprintf("\nENV %s %s\n", proxyVar, v)
-		}
-	}
-	if useProxy {
-		contents = contents + `
-RUN if [ ! -z "${HTTP_PROXY}" ]; then printf "Acquire {\nHTTP::proxy \"$HTTP_PROXY\";\nHTTPS::proxy \"$HTTPS_PROXY\";\n}\n"  > /etc/apt/apt.conf.d/proxy.conf ; fi`
-	}
-
 	contents = contents + `
 ARG username
 ARG uid
 ARG gid
 RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' --uid $uid "$username" || useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' "$username" || useradd  -l -m -s "/bin/bash" --gid "$gid" --comment '' "$username")
 `
-	// If there are user dockerfiles, insert their contents
+	// If there are user pre.Dockerfile* files, insert their contents
 	if userDockerfilePath != "" {
-		files, err := filepath.Glob(userDockerfilePath + "/Dockerfile*")
+		files, err := filepath.Glob(userDockerfilePath + "/pre.Dockerfile*")
 		if err != nil {
 			return err
 		}
 
 		for _, file := range files {
-			// We'll skip the example file
-			if file == userDockerfilePath+"/Dockerfile.example" {
-				continue
-			}
-
 			userContents, err := fileutil.ReadFileIntoString(file)
 			if err != nil {
 				return err
 			}
 
-			// Backward compatible fix, remove unnecessary BASE_IMAGE references
-			re, err := regexp.Compile(`ARG BASE_IMAGE.*\n|FROM \$BASE_IMAGE.*\n`)
-			if err != nil {
-				return err
-			}
-
-			userContents = re.ReplaceAllString(userContents, "")
-			contents = contents + "\n\n### From user file " + file + ":\n" + userContents
+			contents = contents + "\n\n### From user Dockerfile " + file + ":\n" + userContents
 		}
 	}
 
 	if extraPackages != nil {
-
 		contents = contents + `
-### from webimage_extra_packages or dbimage_extra_packages
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
+### DDEV-injected from webimage_extra_packages or dbimage_extra_packages
+RUN apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
 	}
 
 	// For webimage, update to latest composer.
@@ -957,11 +929,46 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg:
 		// Try composer self-update twice because of troubles with composer downloads
 		// breaking testing.
 		contents = contents + fmt.Sprintf(`
+### DDEV-injected composer update
 RUN export XDEBUG_MODE=off && ( composer self-update %s || composer self-update %s || true )
 `, composerSelfUpdateArg, composerSelfUpdateArg)
 	}
 
-	contents = contents + extraContent
+	if extraContent != "" {
+		contents = contents + fmt.Sprintf(`
+### DDEV-injected extra content
+%s
+`, extraContent)
+	}
+
+	// If there are user dockerfiles, appends their contents
+	if userDockerfilePath != "" {
+		files, err := filepath.Glob(userDockerfilePath + "/Dockerfile*")
+		if err != nil {
+			return err
+		}
+
+		for _, file := range files {
+			// Skip the example file
+			if file == userDockerfilePath+"/Dockerfile.example" {
+				continue
+			}
+
+			userContents, err := fileutil.ReadFileIntoString(file)
+			if err != nil {
+				return err
+			}
+
+			// Backward compatible fix, remove unnecessary BASE_IMAGE references
+			re, err := regexp.Compile(`ARG BASE_IMAGE.*\n|FROM \$BASE_IMAGE.*\n`)
+			if err != nil {
+				return err
+			}
+
+			userContents = re.ReplaceAllString(userContents, "")
+			contents = contents + "\n\n### From user Dockerfile " + file + ":\n" + userContents
+		}
+	}
 
 	// Assets in the web-build directory copied to .webimageBuild so .webimageBuild can be "context"
 	// This actually copies the Dockerfile, but it is then immediately overwritten by WriteImageDockerfile()

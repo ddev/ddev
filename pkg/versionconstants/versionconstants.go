@@ -23,7 +23,7 @@ var WebTag = "20220719_node_supervisor" // Note that this can be overridden by m
 var DBImg = "drud/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.19.3"
+var BaseDBTag = "v1.19.5"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"
@@ -35,7 +35,7 @@ var DBATag = "5" // Note that this can be overridden by make
 var RouterImage = "drud/ddev-router"
 
 // RouterTag defines the tag used for the router.
-var RouterTag = "v1.19.3" // Note that this can be overridden by make
+var RouterTag = "v1.19.5" // Note that this can be overridden by make
 
 // SSHAuthImage is image for agent
 //var SSHAuthImage = "drud/ddev-ssh-agent"
@@ -43,7 +43,7 @@ var SSHAuthImage = "drud/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
 //var SSHAuthTag = "v1.19.0"
-var SSHAuthTag = "20220628_mikebarkas_sshagent"
+var SSHAuthTag = "v1.19.5"
 
 // Busybox is used a couple of places for a quick-pull
 var BusyboxImage = "busybox:stable"
