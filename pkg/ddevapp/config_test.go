@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
 
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
@@ -25,7 +26,6 @@ import (
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/google/uuid"
-	"github.com/Masterminds/semver/v3"
 	asrt "github.com/stretchr/testify/assert"
 )
 
