@@ -191,6 +191,12 @@ if your command should only be available for a particular database type, add the
 Usage: `## DBTypes: <type>`
 Example: `## DBTypes: postgres`
 
+### "`HostWorkingDir`" annotation (Container commands only)
+
+If your container command should run from the directory you are running the command in the host, add the `HostWorkingDir` annotation.
+
+Example: `## HostWorkingDir: true`
+
 ## Known Windows OS issues
 
 * **Line Endings**: If you are editing a custom command which will run in a container, it must have LF line endings (not traditional Windows CRLF line endings). Remember that a custom command in a container is a script that must execute in a Linux environment.

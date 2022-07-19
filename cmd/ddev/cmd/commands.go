@@ -193,9 +193,10 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					continue
 				}
 
-				// Default is to exec with bash interpretation (not raw)
+				// Execute the command matching the host working directory relative
+				// to the app root.
 				relative := false
-				if val, ok := directives["WorkingDirRelative"]; ok {
+				if val, ok := directives["HostWorkingDir"]; ok {
 					if val == "true" {
 						relative = true
 					}
@@ -284,8 +285,8 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name, service string, exec
 			NoCapture: true,
 		}
 		if relative {
-			wd := app.GetRelativeWorkingDirectory()
-			if wd != `` {
+			wd, err := app.GetRelativeWorkingDirectory()
+			if err == nil {
 				opts.Dir = opts.Dir + wd
 			}
 		}

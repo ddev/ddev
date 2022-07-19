@@ -391,19 +391,19 @@ func (app DdevApp) GetDocroot() string {
 }
 
 // GetAppRoot return the full path from root to the app directory
-func (app *DdevApp) GetRelativeWorkingDirectory() string {
+func (app *DdevApp) GetRelativeWorkingDirectory() (string, error) {
 	re, err := regexp.Compile(app.AppRoot + `/`)
 
 	if err != nil {
-		return ``
+		return ``, err
 	}
 
 	pwd, err := os.Getwd()
 	if err != nil {
-		return ``
+		return ``, err
 	}
 
-	return re.ReplaceAllString(pwd, "")
+	return re.ReplaceAllString(pwd, ""), nil
 }
 
 // GetComposerRoot will determine the absolute composer root directory where

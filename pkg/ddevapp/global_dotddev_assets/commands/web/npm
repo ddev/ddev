@@ -4,5 +4,6 @@
 ## Usage: npm [flags] [args]
 ## Example: "ddev npm install" or "ddev npm update"
 ## ExecRaw: true
+## HostWorkingDir: true
 
 npm "$@"
