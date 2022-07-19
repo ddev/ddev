@@ -37,7 +37,7 @@ jobs:
         with:
           use-quiet-mode: 'yes'
           folder-path: 'docs/'
-          file-path: 'README.md', 'CONTRIBUTING.md'
+          file-path: "README.md"
           config-file: 'markdown-link-check.json'
       - name: Test mkdocs
         env:
