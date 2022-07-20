@@ -51,19 +51,8 @@ func init() {
 
 }
 
-// NewAppFromConfigFileOnly takes the approot and does not assume config.yaml filename
-func NewAppFromConfigFileOnly(appRoot string, configFile string) (*DdevApp, error) {
-	return NewAppGeneric(appRoot, configFile, false)
-}
-
-// NewApp creates a new DdevApp struct based on a directory and its config.yaml
+// NewApp creates a new DdevApp struct with defaults set and overridden by any existing config.yml.
 func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
-	return NewAppGeneric(appRoot, "config.yaml", includeOverrides)
-}
-
-// NewAppGeneric creates a new DdevApp struct with defaults set and overridden by any existing config.yml.
-// It can operate on a single file or on a directory with the single file.
-func NewAppGeneric(appRoot string, configFile string, includeOverrides bool) (*DdevApp, error) {
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("ddevapp.NewApp(%s)", appRoot))
 	defer runTime()
 
@@ -83,8 +72,7 @@ func NewAppGeneric(appRoot string, configFile string, includeOverrides bool) (*D
 	if !fileutil.FileExists(app.AppRoot) {
 		return app, fmt.Errorf("project root %s does not exist", app.AppRoot)
 	}
-
-	app.ConfigPath = app.GetConfigPath(configFile)
+	app.ConfigPath = app.GetConfigPath("config.yaml")
 	app.Type = nodeps.AppTypePHP
 	app.PHPVersion = nodeps.PHPDefault
 	app.ComposerVersion = nodeps.ComposerDefault
