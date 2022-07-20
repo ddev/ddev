@@ -57,8 +57,6 @@ It's easiest to do this using gitpod (see above) because gitpod already has `doc
 
 When preparing your pull request, please use a branch name like "2020_<your_username>_short_description" so that it's easy to track to you.
 
-If you're doing a docs-only PR that does not require full testing, please add "[skip ci][ci skip]" to your commit messages; it saves a lot of testing resources.
-
 ## Docker Image changes
 
 If you make changes to a docker image (like ddev-webserver), it won't have any effect unless you:
@@ -76,8 +74,8 @@ To use `buildx` successfully you have to have the [`buildx` docker plugin](https
 To build multi-platform images you must `docker buildx create --use` as a one-time initialization.
 
 * If you just want to work locally and do a quick build for your own architecture, you can:
-    * `make VERSION=<version>`
-    * for `ddev-dbserver`: `make mariadb_10.3 VERSION=<version>` etc.
+  * `make VERSION=<version>`
+  * for `ddev-dbserver`: `make mariadb_10.3 VERSION=<version>` etc.
 
 * To push manually:
 
