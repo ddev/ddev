@@ -154,6 +154,9 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 // when they try ddev composer create-project
 var ComposerCreateProjectCmd = &cobra.Command{
 	Use: "create-project",
+	FParseErrWhitelist: cobra.FParseErrWhitelist{
+		UnknownFlags: true,
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		util.Failed(`'ddev composer create-project' is unsupported. Please use 'ddev composer create'
 for basic project creation or 'ddev ssh' into the web container and execute
