@@ -316,7 +316,7 @@ func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 		}
 
 		for _, item := range configOverrides {
-			err = app.mergeAdditionalConfigIntoApp(filepath.Base(item))
+			err = app.mergeAdditionalConfigIntoApp(item)
 
 			if err != nil {
 				return []string{}, fmt.Errorf("unable to load config file %s: %v", item, err)

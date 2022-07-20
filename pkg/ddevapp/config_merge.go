@@ -1,6 +1,7 @@
 package ddevapp
 
 import (
+	"fmt"
 	"github.com/imdario/mergo"
 )
 
@@ -8,23 +9,20 @@ import (
 // it into "app"
 func (app *DdevApp) mergeAdditionalConfigIntoApp(configPath string) error {
 
-	newConfig, err := NewAppFromConfigFileOnly(app.AppRoot, configPath)
+	newConfig := DdevApp{}
+	err := newConfig.LoadConfigYamlFile(configPath)
 	if err != nil {
 		return err
 	}
 
-	// These items can't be overridden
-	newConfig.Name = app.Name
-	newConfig.AppRoot = app.AppRoot
-	//newConfig.Docroot = app.Docroot
-
-	err = newConfig.ValidateConfig()
-	if err != nil {
-		return err
-	}
 	err = mergo.Merge(app, newConfig, mergo.WithAppendSlice, mergo.WithOverride)
 	if err != nil {
 		return err
+	}
+
+	err = app.ValidateConfig()
+	if err != nil {
+		return fmt.Errorf("project config with file %s cannot be validated: %v", configPath, err)
 	}
 
 	return nil
