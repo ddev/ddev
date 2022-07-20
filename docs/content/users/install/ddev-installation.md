@@ -98,7 +98,7 @@ Docker or an alternative is required before anything will work with DDEV. This i
     10. Check that docker is working inside Ubuntu (or your distro): `docker ps`
     11. Optional: If you prefer to use the *traditional Windows* ddev instead of working inside WSL2, install it with `choco install -y ddev`. The Windows ddev works fine with the WSL2-based Docker engine. However, the WSL2 ddev setup is vastly preferable and at least 10 times as fast. Support for the traditional Windows approach will eventually be dropped.
     12. Open the WSL2 terminal, for example `Ubuntu` from the Windows start menu.
-    13. Install `ddev` with `curl -LsS https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | sudo bash`
+    13. Install `ddev` with `curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | sudo bash`
     14. `sudo apt-get update && sudo apt-get install -y certutil xdg-utils` to install the `xdg-utils` package that allows `ddev launch` to work.
     15. In WSL2 run `mkcert -install`.
 
