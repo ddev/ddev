@@ -436,7 +436,7 @@ func (app *DdevApp) ValidateConfig() error {
 	}
 
 	if !nodeps.IsValidDatabaseVersion(app.Database.Type, app.Database.Version) {
-		return fmt.Errorf("unsupported database type/version: %s:%s, ddev %s only supports the following database types and versions: mariadb: %v, mysql: %v, postgres: %v", app.Database.Type, app.Database.Version, runtime.GOARCH, nodeps.GetValidMariaDBVersions(), nodeps.GetValidMySQLVersions(), nodeps.GetValidPostgresVersions())
+		return fmt.Errorf("unsupported database type/version: '%s:%s', ddev %s only supports the following database types and versions: mariadb: %v, mysql: %v, postgres: %v", app.Database.Type, app.Database.Version, runtime.GOARCH, nodeps.GetValidMariaDBVersions(), nodeps.GetValidMySQLVersions(), nodeps.GetValidPostgresVersions())
 	}
 
 	// golang on windows is not able to time.LoadLocation unless

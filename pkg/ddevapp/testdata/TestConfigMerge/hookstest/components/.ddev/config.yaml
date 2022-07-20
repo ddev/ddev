@@ -1,0 +1,6 @@
+# Simplest
+name: TestConfigMerget1
+
+hooks:
+  post-start:
+  - exec: "echo base post-start"
