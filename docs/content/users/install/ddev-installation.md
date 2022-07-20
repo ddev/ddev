@@ -19,7 +19,7 @@ Docker or an alternative is required before anything will work with DDEV. This i
     Use this line on your terminal to download, verify, and install (or upgrade) ddev using the [install_ddev.sh script](https://github.com/drud/ddev/blob/master/scripts/install_ddev.sh). Note that this works with both amd64 and arm64 architectures, including Surface Pro X with WSL2 and 64-bit Raspberry Pi OS. It also works with macOS Apple Silicon M1 machines.
 
     ```
-    curl -LsS https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash
+    curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash
     ```
 
     The installation script can also take a version argument in order to install a specific version or a prerelease version. For example,
