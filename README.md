@@ -10,7 +10,7 @@ ddev is an open source tool that makes it simple to get local PHP development en
 ## Get Started
 
 1. **Check [System Requirements](https://ddev.readthedocs.io/):** DDEV runs the same on macOS (M1 and amd64), Windows 10/11, WSL2, Linux, and Gitpod.io.
-2. **Install [docker/colima and DDEV](https://ddev.readthedocs.io/latest/users/install/)**.
+2. **Install [docker/colima and DDEV](https://ddev.readthedocs.io/en/latest/users/install/)**.
 3. **Try a [CMS Quick Start Guide](https://ddev.readthedocs.io/en/latest/users/quickstart/)**.
 
 Having trouble? This community has [great support](https://ddev.readthedocs.io/en/latest/users/support).
