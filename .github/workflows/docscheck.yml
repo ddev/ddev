@@ -7,7 +7,6 @@ on:
   push:
     branches:
       - master
-      - main
   pull_request:
     paths:
       - "docs/**"
@@ -37,9 +36,8 @@ jobs:
         uses: gaurav-nelson/github-action-markdown-link-check@1.0.13
         with:
           use-quiet-mode: 'yes'
-#          use-verbose-mode: 'yes'
           folder-path: 'docs/'
-          file-path: 'README.md', 'CONTRIBUTING.md'
+          file-path: "README.md"
           config-file: 'markdown-link-check.json'
       - name: Test mkdocs
         env:
