@@ -5,7 +5,8 @@ export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 
 echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} in ${PWD} with golang=$(go version | awk '{print $3}') docker-desktop=$(scripts/docker-desktop-version.sh) docker=$(docker --version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}'))"
 
-export GOTEST_SHORT=1
+# GOTEST_SHORT=8 means drupal9
+export GOTEST_SHORT=8
 export DDEV_NONINTERACTIVE=true
 export DDEV_DEBUG=true
 

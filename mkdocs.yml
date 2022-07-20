@@ -24,15 +24,16 @@ theme:
     primary: light-blue
     accent: indigo
   features:
+#  - content.tabs.link
   - navigation.expand
   - navigation.indexes
   - navigation.instant
   - navigation.sections
   - navigation.tabs
-  - navigation.tabs.sticky
+#  - navigation.tabs.sticky
   - navigation.top
-  - navigation.tracking
-  - toc.follow
+#  - navigation.tracking
+#  - toc.follow
   - toc.integrate
 
   favicon: favicon.png

@@ -8,6 +8,7 @@ DDEV works great on macOS, Windows WSL2, traditional Windows, Linux and Gitpod.i
 
 === "macOS"
 
+    ### macOS
     * DDEV runs natively on arm64 (Mac M1) systems as well as amd64 machines.
     * RAM: 8GB
     * Storage: 256GB
@@ -18,12 +19,16 @@ DDEV works great on macOS, Windows WSL2, traditional Windows, Linux and Gitpod.i
 
 === "Windows WSL2"
 
+    ### Windows WSL2
+
     * RAM: 8GB
     * Storage: 256GB
     * Systems that can run Docker Desktop on the Windows side or docker-ce inside WSL2 do fine.
     * The preferred distro is Ubuntu or an Ubuntu-derived distro, but people use lots of different distros.
 
 === "Traditional Windows"
+
+    ### Traditional Windows
 
     * Any recent edition of Windows Home, Pro, and several others.
     * RAM: 8GB
@@ -32,10 +37,14 @@ DDEV works great on macOS, Windows WSL2, traditional Windows, Linux and Gitpod.i
 
 === "Linux"
 
+    ### Linux
+
     * Most distros and most versions work fine.
     * RAM: 8GB
     * Storage: 256GB
 
 === "Gitpod.io"
+
+    ### Gitpod.io
 
     With gitpod.io all you need is a browser and an internet connection. You don't have to install anything at all. You can use any kind of computer that has a browser, or tablet, or whatever you like.

@@ -64,14 +64,14 @@ func TestPostConfigAction(t *testing.T) {
 	appTypes := map[string]string{
 		nodeps.AppTypeDrupal6:   nodeps.PHP56,
 		nodeps.AppTypeDrupal7:   nodeps.PHPDefault,
-		nodeps.AppTypeDrupal8:   nodeps.PHPDefault,
-		nodeps.AppTypeDrupal9:   nodeps.PHP80,
+		nodeps.AppTypeDrupal8:   nodeps.PHP74,
+		nodeps.AppTypeDrupal9:   nodeps.PHPDefault,
 		nodeps.AppTypeDrupal10:  nodeps.PHP81,
 		nodeps.AppTypeWordPress: nodeps.PHPDefault,
 		nodeps.AppTypeBackdrop:  nodeps.PHPDefault,
-		nodeps.AppTypeMagento:   nodeps.PHPDefault,
+		nodeps.AppTypeMagento:   nodeps.PHP74,
 		nodeps.AppTypeMagento2:  nodeps.PHP81,
-		nodeps.AppTypeLaravel:   nodeps.PHP80,
+		nodeps.AppTypeLaravel:   nodeps.PHPDefault,
 	}
 
 	for appType, expectedPHPVersion := range appTypes {
@@ -102,7 +102,7 @@ func TestPostConfigAction(t *testing.T) {
 		assert.NoError(err)
 
 		// With a basic new app, the expectedPHPVersion should be the default
-		assert.EqualValues(app.PHPVersion, expectedPHPVersion)
+		assert.EqualValues(expectedPHPVersion, app.PHPVersion, "expected PHP version %s but got %s for apptype=%s", expectedPHPVersion, app.PHPVersion, appType)
 
 		newVersion := "19.0-" + appType
 		app.PHPVersion = newVersion
