@@ -37,7 +37,7 @@ jobs:
     strategy:
       matrix:
         webserver: [apache-fpm, nginx-fpm]
-        tests: [test]
+        tests: ['test TESTARGS="-failfast"']
         os: [ ubuntu-20.04 ]
         mutagen: ['false', 'true']
         no-bind-mounts: ['true', 'false']
@@ -65,7 +65,6 @@ jobs:
 
       - name: DDEV tests
         run: |
-          echo "$(docker --version) $(docker-compose --version)"
           echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN}"
           make ${{ matrix.tests }}
 

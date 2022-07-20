@@ -346,11 +346,16 @@ func drupal6ConfigOverrideAction(app *DdevApp) error {
 	return nil
 }
 
-// drupal0ConfigOverrideAction overrides php_version for D10, requires PHP8.0
-func drupal9ConfigOverrideAction(app *DdevApp) error {
-	app.PHPVersion = nodeps.PHP80
+func drupal8ConfigOverrideAction(app *DdevApp) error {
+	app.PHPVersion = nodeps.PHP74
 	return nil
 }
+
+// drupal0ConfigOverrideAction overrides php_version for D10, requires PHP8.0
+//func drupal9ConfigOverrideAction(app *DdevApp) error {
+//	app.PHPVersion = nodeps.PHP80
+//	return nil
+//}
 
 // drupal10ConfigOverrideAction overrides php_version for D10, requires PHP8.0
 func drupal10ConfigOverrideAction(app *DdevApp) error {
