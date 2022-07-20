@@ -25,7 +25,7 @@ Docker or an alternative is required before anything will work with DDEV. This i
     The installation script can also take a version argument in order to install a specific version or a prerelease version. For example,
 
     ```
-    curl -LsS https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash -s v1.19.2
+    curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash -s v1.19.2
     ```
 
     To upgrade DDEV to the latest stable version, just run the script again.
