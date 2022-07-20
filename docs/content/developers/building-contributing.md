@@ -74,8 +74,8 @@ To use `buildx` successfully you have to have the [`buildx` docker plugin](https
 To build multi-platform images you must `docker buildx create --use` as a one-time initialization.
 
 * If you just want to work locally and do a quick build for your own architecture, you can:
-  * `make VERSION=<version>`
-  * for `ddev-dbserver`: `make mariadb_10.3 VERSION=<version>` etc.
+    * `make VERSION=<version>`
+    * for `ddev-dbserver`: `make mariadb_10.3 VERSION=<version>` etc.
 
 * To push manually:
 
