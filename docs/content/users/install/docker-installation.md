@@ -2,9 +2,11 @@
 
 === "macOS"
 
+    ## macOS
+
     The two easy docker providers for macOS are Colima and Docker Desktop for Mac. You only need one of them.
 
-    ## Colima
+    ### Colima
 
     [Colima](https://github.com/abiosoft/colima) the preferred docker provider for macOS. Colima is an open-source project that bundles the container management tool [lima](https://github.com/lima-vm/lima) with a docker (linux) back-end. This is similar to what Docker Desktop actually does, but Colima and Lima are entirely open-source and just focused on running containers. They work on both `amd64` and `arm64` (M1) macs. Colima does not require installation of Docker Desktop, or does it require paying a license fee to Docker, Inc., and it seems to be the most stable alternative at this time.
     
@@ -29,7 +31,7 @@
 
     DDEV has extensive automated test coverage for colima on macOS, but of course Colima is young, so please share your results and open issues or [contact us](../support.md) for help.
 
-    ### Moving projects from Docker Desktop to Colima
+    #### Moving projects from Docker Desktop to Colima
 
     To move project databases from Docker Desktop to Colima:
 
@@ -37,19 +39,21 @@
     2. In Docker Desktop, `ddev snapshot --all`
     3. After starting Colima, start each project as needed and `ddev snapshot restore --latest`
     
-    ## Docker Desktop for Mac
+    ### Docker Desktop for Mac
 
     Docker Desktop for Mac can be installed via Homebrew (`brew install  homebrew/cask/docker`) or can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop). It has long been supported by DDEV and has extensive automated testing.
 
 === "Windows"
 
+    ## Windows
+
     On Windows, you can install Docker Desktop, which works with both traditional Windows and WSL2, or if you're working inside WSL2 (recommended) you can just install docker engine (docker-ce) inside WSL2.
 
-    ## Docker Desktop for Windows
+    ### Docker Desktop for Windows
 
     Docker Desktop for Windows can be downloaded via [Chocolatey](https://chocolatey.org/install) with `choco install docker-desktop` or it can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop). It has extensive automated testing with DDEV, and works with DDEV both on traditional Windows and in WSL2.
 
-    ## Windows WSL2: Docker-ce installed inside WSL2"
+    ### Windows WSL2: Docker-ce installed inside WSL2"
 
     Although the traditional approach on Windows/WSL2 has been to use Docker Desktop, a number of people have moved away from using Docker Desktop and just installing the Docker-provided open-source `docker-ce` package inside WSL2. This uses entirely open-source software and does not require a license fee to Docker, Inc.
 
@@ -86,6 +90,8 @@
 
 === "Linux"
 
+    ## Linux
+
     !!!warning "Don't forget the Docker-ce post-install steps"
         Please don't forget that Linux installation absolutely requires post-install steps (below).
     
@@ -113,6 +119,8 @@
     On systems that do not include systemd or equivalent (mostly if installing inside WSL2) you'll need to manually start docker with `service docker start` or the equivalent in your distro. You can add this into your `~/.profile` or equivalent.
 
 === "Gitpod.io"
+
+    ## Gitpod.io
 
     With gitpod.io you don't have to install anything at all. Docker is all set up for you. 
 

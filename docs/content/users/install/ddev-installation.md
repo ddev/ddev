@@ -4,7 +4,9 @@ Docker or an alternative is required before anything will work with DDEV. This i
 
 === "macOS"
 
-    ## Homebrew
+    ## macOS
+
+    ### Homebrew
 
     For macOS (both amd64 and arm64) users, [Homebrew](https://brew.sh/) is the easiest way to install and maintain DDEV: `brew install drud/ddev/ddev`.
     
@@ -12,7 +14,7 @@ Docker or an alternative is required before anything will work with DDEV. This i
     
     Later, to upgrade to a newer version of DDEV-Local, run `brew upgrade ddev`.
 
-    ## install_ddev.sh install script
+    ### install_ddev.sh install script
 
     On macOS, Linux and Windows WSL2 you can use the install_ddev.sh script
 
@@ -32,7 +34,9 @@ Docker or an alternative is required before anything will work with DDEV. This i
 
 === "Linux"
 
-    ## Apt packages for Debian-based systems
+    ## Linux
+
+    ### Apt packages for Debian-based systems
 
     DDEV has Debian and RPM packages that work with both apt and yum repositories, and on most any variant that uses those, including Windows WSL2.
 
@@ -46,7 +50,7 @@ Docker or an alternative is required before anything will work with DDEV. This i
   
     In the future you can update as usual, with `sudo apt update && sudo apt upgrade`.
 
-    ## Yum/RPM packages for Fedora, RedHat, etc.
+    ### Yum/RPM packages for Fedora, RedHat, etc.
 
     ```bash
     echo '[ddev]
@@ -60,17 +64,19 @@ Docker or an alternative is required before anything will work with DDEV. This i
   
     In the future you can update as usual, with `sudo dnf upgrade ddev`. (Signed repo support will be added in the near future.)
 
-    ## Arch systems
+    ### Arch systems
 
     For Arch-based systems including `Arch Linux`, `EndeavourOS` and `Manjaro` we maintain the [ddev-bin](https://aur.archlinux.org/packages/ddev-bin/) package in AUR.
 
     As a one-time initialization, run `mkcert -install`.
 
-    ## Alternate installation approaches: homebrew and install_ddev.sh script
+    ### Alternate installation approaches: homebrew and install_ddev.sh script
 
-    You can also use the homebrew and install_ddev.sh script techniques exactly as described in the macOS section.
+    You can also use the [homebrew](#homebrew) and [install_ddev.sh script](install-ddev) techniques exactly on macOS.
 
 === "Windows WSL2"
+
+    ## Windows WSL2
 
     **This is the recommended installation method for all Windows users**.
 
@@ -113,6 +119,8 @@ Docker or an alternative is required before anything will work with DDEV. This i
 
 === "Traditional Windows"
 
+    ## Traditional Windows
+
     DDEV does work fine on the Windows side, although it's quite a bit slower than WSL2 by default, but good results have been reported by users who enabled mutagen, `ddev config global --mutagen-enabled`.
 
     * If you use [chocolatey](https://chocolatey.org/) (recommended), then you can just `choco install ddev git` from an administrative shell. Upgrades are just `ddev poweroff && choco upgrade ddev`.
@@ -142,6 +150,8 @@ Docker or an alternative is required before anything will work with DDEV. This i
 
 === "Gitpod.io"
 
+    ## Gitpod.io
+
     DDEV is fully supported in Gitpod.io, and there are many ways to use it. You don't have to install *anything* to use it, not Docker, and not DDEV, it's all done for you.
 
     1. Just [open any repository](https://www.gitpod.io/docs/getting-started) using gitpod and `brew install drud/ddev/ddev` and use ddev as you would normally use it.
@@ -154,6 +164,8 @@ Docker or an alternative is required before anything will work with DDEV. This i
     It can be complicated to get private databases and files into Gitpod, so in addition to the launchers, The [`git` provider example](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/git.yaml.example) shows how you can pull database and files without complex setup or permissions. This was created explicitly for Gitpod integration, because in Gitpod you typically already have access to private git repositories, which are a fine place to put a starter database and files. Although [ddev-gitpod-launcher](https://drud.github.io/ddev-gitpod-launcher/) and the web extension provide the capability, you may want to integrate a git provider for each project (or, of course, one of the [other providers](https://github.com/drud/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers)).
 
 === "Manual"
+
+    ## Manual installation
 
     You can also easily perform the installation or upgrade manually if preferred. DDEV is just a single executable, no special installation is actually required, so for all operating systems, the installation is just copying DDEV into place where it's in the system path.
 
