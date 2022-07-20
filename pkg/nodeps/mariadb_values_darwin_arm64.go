@@ -26,5 +26,5 @@ const (
 	MariaDB105 = "10.5"
 	MariaDB106 = "10.6"
 	MariaDB107 = "10.7"
-	MariaDB108 = "18.0"
+	MariaDB108 = "10.8"
 )
