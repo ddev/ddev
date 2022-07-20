@@ -1,10 +1,7 @@
 package ddevapp
 
 import (
-	"errors"
 	"github.com/imdario/mergo"
-	"log"
-	"regexp"
 )
 
 // mergeAdditionalConfigIntoApp takes the provided yaml `config.*.yaml` and merges
@@ -30,124 +27,5 @@ func (app *DdevApp) mergeAdditionalConfigIntoApp(configPath string) error {
 		return err
 	}
 
-	return nil
-}
-
-// merge an arbitrary string list.
-func (app *DdevApp) mergeStringList(ptr interface{}, oldList []string) error {
-	results := []string{}
-	results = append(results, oldList...)
-
-	newList, ok := ptr.(*[]string)
-	if !ok {
-		return errors.New("unexpected type for DdevApp item")
-	}
-
-	re, _ := regexp.Compile(`^\s*(!*)\s*(\S+)\s*$`)
-
-	// support for a future delete syntax. This stuff runs, but
-	// is not yet used
-	for _, inItem := range *newList {
-		matches := re.FindStringSubmatch(inItem)
-		if matches != nil {
-			if matches[1] != "!" {
-				results = append(results, matches[2])
-			}
-		} else {
-			log.Println("found an invalid string")
-		}
-	}
-
-	// save back the merged results
-	*newList = results
-	return nil
-}
-
-// merge the web_environment string list.
-func (app *DdevApp) mergeWebEnvironment(ptr interface{}, oldEnv []string) error {
-
-	result := []string{}
-	newEnv := app.WebEnvironment
-
-	// ENV=value or ENV=
-	re, err := regexp.Compile(`^([^=]+)=(\S*)`)
-	if err != nil {
-		return nil
-	}
-
-	// start by walking the old env. replace any
-	// changed strings, keep any unchanged.
-	for _, oldItem := range oldEnv {
-
-		// check new for any matches
-		matches := re.FindStringSubmatch(oldItem)
-		if matches == nil {
-			// does not look like an env string
-			continue
-		}
-		key := matches[1]
-
-		// does new have this key?
-		// if so, replace it
-		for _, newItem := range newEnv {
-			matches = re.FindStringSubmatch(newItem)
-			if matches != nil && key == matches[1] {
-				oldItem = newItem // match overrides
-			}
-		}
-		// winner added to result list
-		result = append(result, oldItem)
-	}
-
-	// Now add any non-matched new keys into the results
-	// since new wins, we find exact matches or nothing.
-	for _, newItem := range newEnv {
-		found := false
-		for _, rsltItem := range result {
-			if rsltItem == newItem {
-				found = true
-			}
-		}
-		if !found {
-			result = append(result, newItem)
-		}
-	}
-	app.WebEnvironment = result
-	return nil
-}
-
-func (app *DdevApp) mergeHooks(ptr interface{}, oldHooks map[string][]YAMLTask) error {
-	mergedHooks := map[string][]YAMLTask{}
-	// new hooks will contain at least the contents of the new
-	newHooks := ptr.(*map[string][]YAMLTask)
-
-	// check to see if there is anything to merge.
-	if len(oldHooks) == 0 && len(*newHooks) == 0 {
-		// not an error, but return early.
-		return nil
-	}
-
-	// We add any hook used in old but not in new, and merge anything that is
-	// shared.
-	if len(oldHooks) > 0 {
-		for key, items := range oldHooks {
-			ytaskList, found := (*newHooks)[key]
-			if !found {
-				// add it to newHooks
-				mergedHooks[key] = items
-			} else {
-				// no replacement, so just create a joint list
-				items = append(items, ytaskList...)
-				mergedHooks[key] = items
-			}
-		}
-	} else if len(*newHooks) > 0 {
-		// nothing in old hooks, load in new hooks
-		for key, items := range *newHooks {
-			mergedHooks[key] = items
-		}
-	}
-
-	app.Hooks = mergedHooks
 	return nil
 }
