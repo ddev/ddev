@@ -1,0 +1,8 @@
+
+# Use some non-default settings to make sure they get through
+database:
+  type: mariadb
+  version: 10.5
+php_version: 5.6
+webserver_type: apache-fpm
+nfs_mount_enabled: false

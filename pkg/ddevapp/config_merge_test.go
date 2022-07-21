@@ -17,7 +17,7 @@ func TestConfigMerge(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Each item here has a set of config.*.yaml to be composed, and a config.yaml that should reflect the result
-	for _, c := range []string{"envtest", "hookstest", "scalartest"} {
+	for _, c := range []string{"envtest", "hookstest", "overridetest", "scalartest"} {
 		composedApp := SetupTestTempDir(t, filepath.Join(c, "components"))
 		expectedApp := SetupTestTempDir(t, filepath.Join(c, "expected"))
 		composedApp.Name = ""
