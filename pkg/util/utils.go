@@ -331,5 +331,8 @@ func SliceToUniqueSlice(inSlice *[]string) []string {
 		newSlice = append(newSlice, s)
 		mapStore[s] = true
 	}
+	if len(newSlice) == 0 {
+		return nil
+	}
 	return newSlice
 }

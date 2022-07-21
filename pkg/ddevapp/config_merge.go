@@ -22,7 +22,7 @@ func (app *DdevApp) mergeAdditionalConfigIntoApp(configPath string) error {
 	}
 
 	// Make sure we don't have absolutely identical items in our resultant arrays
-	for _, arr := range []*[]string{&app.WebImageExtraPackages, &app.DBImageExtraPackages} {
+	for _, arr := range []*[]string{&app.WebImageExtraPackages, &app.DBImageExtraPackages, &app.AdditionalHostnames, &app.AdditionalFQDNs, &app.OmitContainers} {
 		*arr = util.SliceToUniqueSlice(arr)
 	}
 
@@ -51,6 +51,9 @@ func EnvToUniqueEnv(inSlice *[]string) []string {
 	}
 	for k, v := range mapStore {
 		newSlice = append(newSlice, fmt.Sprintf("%s=%v", k, v))
+	}
+	if len(newSlice) == 0 {
+		return nil
 	}
 	return newSlice
 }

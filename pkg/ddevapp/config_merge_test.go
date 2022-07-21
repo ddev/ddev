@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
+	"sort"
 	"testing"
 )
 
@@ -26,6 +27,10 @@ func TestConfigMerge(t *testing.T) {
 		expectedApp.Name = ""
 		expectedApp.AppRoot = ""
 		expectedApp.ConfigPath = ""
+		// We don't know in advance the ordering of the WebEnvironment for testing purposes,
+		// and it doesn't matter in reality, so sort both for testing before comparison
+		sort.Strings(expectedApp.WebEnvironment)
+		sort.Strings(composedApp.WebEnvironment)
 
 		assert.Equal(expectedApp, composedApp, "%s failed", c)
 	}
