@@ -11,10 +11,10 @@ builds:
   - amd64
   - arm64
   goamd64:
-    - v1
+  - v1
   ignore:
-    - goos: windows
-      goarch: arm64
+  - goos: windows
+    goarch: arm64
   prebuilt:
     path: .gotmp/bin/{{.Os}}_{{.Arch}}/ddev{{.Ext}}
   binary: ddev
@@ -61,6 +61,9 @@ builds:
   - amd64
   goamd64:
   - v1
+  ignore:
+  - goos: windows
+    goarch: arm64
   prebuilt:
     path: .gotmp/bin/completions/ddev_bash_completion.sh
   binary: ddev_bash_completion.sh
@@ -77,6 +80,9 @@ builds:
   - amd64
   goamd64:
   - v1
+  ignore:
+  - goos: windows
+    goarch: arm64
   prebuilt:
     path: .gotmp/bin/completions/ddev_zsh_completion.sh
   binary: ddev_zsh_completion.sh
@@ -93,6 +99,9 @@ builds:
   - amd64
   goamd64:
   - v1
+  ignore:
+  - goos: windows
+    goarch: arm64
   prebuilt:
     path: .gotmp/bin/completions/ddev_fish_completion.sh
   binary: ddev_fish_completion.sh
@@ -107,7 +116,7 @@ builds:
   - v1
   prebuilt:
     path: .gotmp/bin/windows_amd64/ddev_windows_installer.exe
-  binary: ddev-windows-installer.exe
+  binary: ddev-windows-installer
 
 ###### Archives ######
 archives:
@@ -128,12 +137,11 @@ archives:
   wrap_in_directory: false
   files:
   - LICENSE
-  - .gotmp/bin/{{.Os}}_{{.Arch}}/mkcert*
   allow_different_binary_count: true
 
 - id: completions-tarball
   builds:
-  - completions
+  - completions-tarball
   format: binary
   name_template: ddev_shell_completion_scripts.v{{.Version}}.tar.gz
 
@@ -237,6 +245,8 @@ nfpms:
       dependencies:
       - libnss3-tools
       - xdg-utils
+      replaces:
+      - mkcert
     rpm:
       dependencies:
       - nss-tools
@@ -312,4 +322,4 @@ aurs:
     email: randy@randyfay.com
 
 furies:
-- account: drud
+- account: "{{ .Env.FURY_ACCOUNT }}"
