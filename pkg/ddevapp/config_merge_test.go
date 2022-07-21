@@ -3,7 +3,6 @@ package ddevapp_test
 import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -82,20 +81,10 @@ func TestConfigMergeEnvItems(t *testing.T) {
 	withOverridesApp, err := ddevapp.NewApp(app.AppRoot, true)
 	require.NoError(t, err)
 
-	for _, v := range []string{`LARRY=l`, `LARRY=lz`, `MOE=m`, `MOE=mz`, `CURLEY=c`, `SHEMP=s`} {
+	for _, v := range []string{`LARRY=lz`, `MOE=mz`, `CURLEY=c`, `SHEMP=s`} {
 		assert.Contains(withOverridesApp.WebEnvironment, v, "the app without overrides should have had %v but it didn't, webEnvironment=%v", v, noOverridesApp.WebEnvironment)
 	}
 
-	assert.Less(
-		nodeps.PosString(withOverridesApp.WebEnvironment, `LARRY=l`),
-		nodeps.PosString(withOverridesApp.WebEnvironment, `LARRY=lz`),
-		"LARRY=lz should come after LARRY=l",
-	)
-	assert.Less(
-		nodeps.PosString(withOverridesApp.WebEnvironment, `MOE=m`),
-		nodeps.PosString(withOverridesApp.WebEnvironment, `MOE=mz`),
-		"MOE=mz should come after MOE=m",
-	)
 }
 
 // TestConfigHooksMerge makes sure that hooks get merged with additional config.*.yaml

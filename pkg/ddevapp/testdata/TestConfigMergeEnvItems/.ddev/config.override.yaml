@@ -1,7 +1,7 @@
 web_environment:
-  - SHEMP=s
   - LARRY=lz
   - MOE=mz
+  - SHEMP=s
 additional_hostnames:
  # add a hostname
  - somename-new
