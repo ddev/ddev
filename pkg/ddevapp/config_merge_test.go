@@ -185,3 +185,21 @@ func SetupTestTempDir(t *testing.T, subDir string) *ddevapp.DdevApp {
 
 	return app
 }
+
+// TestEnvToUniqueEnv tests EnvToUniqueEnv
+func TestEnvToUniqueEnv(t *testing.T) {
+	assert := asrt.New(t)
+
+	testBedSources := [][]string{
+		{"ONE=one", "ONE=two", "ONE=three", "TWO=two", "TWO=three", "TWO=four"},
+	}
+
+	testBedExpectations := [][]string{
+		{"ONE=three", "TWO=four"},
+	}
+
+	for i := 0; i < len(testBedSources); i++ {
+		res := ddevapp.EnvToUniqueEnv(&testBedSources[i])
+		assert.Equal(testBedExpectations[i], res)
+	}
+}
