@@ -159,3 +159,23 @@ func TestConfirm(t *testing.T) {
 	assert.True(resp)
 	assert.Contains(getOutput(), text)
 }
+
+// TestSliceToUniqueSlice tests SliceToUniqueSlice
+func TestSliceToUniqueSlice(t *testing.T) {
+	assert := asrt.New(t)
+
+	testBedSources := [][]string{
+		{"1", "2", "3", "2", "3", "1"},
+		{"99", "98", "97", "99", "98", "97", "1", "2", "3"},
+	}
+
+	testBedExpectations := [][]string{
+		{"1", "2", "3"},
+		{"99", "98", "97", "1", "2", "3"},
+	}
+
+	for i := 0; i < len(testBedSources); i++ {
+		res := util.SliceToUniqueSlice(&testBedSources[i])
+		assert.Equal(testBedExpectations[i], res)
+	}
+}
