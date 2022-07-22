@@ -3,18 +3,19 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
-	"github.com/Masterminds/sprig/v3"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/versionconstants"
-	copy2 "github.com/otiai10/copy"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"text/template"
 	"time"
+
+	"github.com/Masterminds/sprig/v3"
+	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/versionconstants"
+	copy2 "github.com/otiai10/copy"
 
 	"regexp"
 
@@ -287,7 +288,7 @@ func (app *DdevApp) UpdateGlobalProjectList() error {
 // It does not attempt to set default values; that's NewApp's job.
 func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 
-	// Load config.yaml
+	// Load base .ddev/config.yaml - original config
 	err := app.LoadConfigYamlFile(app.ConfigPath)
 	if err != nil {
 		return []string{}, fmt.Errorf("unable to load config file %s: %v", app.ConfigPath, err)
@@ -303,7 +304,8 @@ func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 		}
 
 		for _, item := range configOverrides {
-			err = app.LoadConfigYamlFile(item)
+			err = app.mergeAdditionalConfigIntoApp(item)
+
 			if err != nil {
 				return []string{}, fmt.Errorf("unable to load config file %s: %v", item, err)
 			}
@@ -434,7 +436,7 @@ func (app *DdevApp) ValidateConfig() error {
 	}
 
 	if !nodeps.IsValidDatabaseVersion(app.Database.Type, app.Database.Version) {
-		return fmt.Errorf("unsupported database type/version: %s:%s, ddev %s only supports the following database types and versions: mariadb: %v, mysql: %v, postgres: %v", app.Database.Type, app.Database.Version, runtime.GOARCH, nodeps.GetValidMariaDBVersions(), nodeps.GetValidMySQLVersions(), nodeps.GetValidPostgresVersions())
+		return fmt.Errorf("unsupported database type/version: '%s:%s', ddev %s only supports the following database types and versions: mariadb: %v, mysql: %v, postgres: %v", app.Database.Type, app.Database.Version, runtime.GOARCH, nodeps.GetValidMariaDBVersions(), nodeps.GetValidMySQLVersions(), nodeps.GetValidPostgresVersions())
 	}
 
 	// golang on windows is not able to time.LoadLocation unless

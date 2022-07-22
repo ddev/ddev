@@ -1,0 +1,5 @@
+web_environment:
+- LAST=last_1
+- LAST2=last_2
+# This one should win
+- ORIG_TO_BE_OVERWRITTEN=last

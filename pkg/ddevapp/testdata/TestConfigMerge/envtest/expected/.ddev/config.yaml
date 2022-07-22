@@ -1,0 +1,6 @@
+name: TestConfigMerget1
+web_environment:
+  - LAST=last_1
+  - LAST2=last_2
+  - ORIG1=orig1
+  - ORIG_TO_BE_OVERWRITTEN=last
