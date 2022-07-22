@@ -194,6 +194,7 @@ func TestEnvToUniqueEnv(t *testing.T) {
 
 	for i := 0; i < len(testBedSources); i++ {
 		res := ddevapp.EnvToUniqueEnv(&testBedSources[i])
+		sort.Strings(res)
 		assert.Equal(testBedExpectations[i], res)
 	}
 }
