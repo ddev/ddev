@@ -21,13 +21,13 @@ Docker or an alternative is required before anything will work with DDEV. This i
     Use this line on your terminal to download, verify, and install (or upgrade) ddev using the [install_ddev.sh script](https://github.com/drud/ddev/blob/master/scripts/install_ddev.sh). Note that this works with both amd64 and arm64 architectures, including Surface Pro X with WSL2 and 64-bit Raspberry Pi OS. It also works with macOS Apple Silicon M1 machines.
 
     ```
-    curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh
+    curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash
     ```
 
     The installation script can also take a version argument in order to install a specific version or a prerelease version. For example,
 
     ```
-    curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh v1.19.2
+    curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash -s v1.19.2
     ```
 
     To upgrade DDEV to the latest stable version, just run the script again.
@@ -106,7 +106,7 @@ Docker or an alternative is required before anything will work with DDEV. This i
     10. Check that docker is working inside Ubuntu (or your distro): `docker ps`
     11. Optional: If you prefer to use the *traditional Windows* ddev instead of working inside WSL2, install it with `choco install -y ddev`. The Windows ddev works fine with the WSL2-based Docker engine. However, the WSL2 ddev setup is vastly preferable and at least 10 times as fast. Support for the traditional Windows approach will eventually be dropped.
     12. Open the WSL2 terminal, for example `Ubuntu` from the Windows start menu.
-    13. Install `ddev` with `curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh`
+    13. Install `ddev` with `curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash`
     14. `sudo apt-get update && sudo apt-get install -y certutil xdg-utils` to install the `xdg-utils` package that allows `ddev launch` to work.
     15. In WSL2 run `mkcert -install`.
 

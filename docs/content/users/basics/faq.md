@@ -102,7 +102,7 @@ How can I install a specific version of DDEV?
 : If you want to use a different version of DDEV, you easily get a different version. If you're using homebrew, `brew unlink ddev` first, to get rid of the version you have there. Then use one of these options:
 
     1. Download the version you want from the [releases page](https://github.com/drud/ddev/releases) and place it somewhere in your `$PATH`.
-    2. Use the [install_ddev.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh) script with the version number argument. For example, if you want v1.18.3-alpha1, use `curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh v1.18.3-alpha1`
+    2. Use the [install_ddev.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh) script with the version number argument. For example, if you want v1.18.3-alpha1, use `curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash -s v1.18.3-alpha1`
     3. If you want the very latest, unreleased version of ddev, use `brew unlink ddev && brew install drud/ddev/ddev --HEAD`.
 
 How can I back up or restore all databases of all projects?
