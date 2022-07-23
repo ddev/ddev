@@ -287,7 +287,7 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name, service string, exec
 		if relative {
 			wd, err := app.GetRelativeWorkingDirectory()
 			if err == nil {
-				opts.Dir = opts.Dir + wd
+				opts.Dir = path.Join(opts.Dir, wd)
 			}
 		}
 
