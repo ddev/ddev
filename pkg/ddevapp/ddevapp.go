@@ -398,7 +398,7 @@ func (app *DdevApp) GetComposerRoot(inContainer, showWarning bool) string {
 	basePath := ""
 
 	if inContainer {
-		basePath = app.DefaultWorkingDirMap()["web"]
+		basePath = "/var/www/html"
 	} else {
 		basePath = app.AppRoot
 	}
