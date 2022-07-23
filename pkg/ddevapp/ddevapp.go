@@ -390,7 +390,7 @@ func (app DdevApp) GetDocroot() string {
 	return app.Docroot
 }
 
-// GetAppRoot return the full path from root to the app directory
+// GetRelativeWorkingDirectory returns the relative working directory relative to project root
 func (app *DdevApp) GetRelativeWorkingDirectory() (string, error) {
 	re, err := regexp.Compile(app.AppRoot + `/`)
 
