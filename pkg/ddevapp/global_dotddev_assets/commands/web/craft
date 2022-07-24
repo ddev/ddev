@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#ddev-generated
+## Description: Run Craft CMS commands inside the web container
+## Usage: craft [flags] [args]
+## Example: "ddev craft db/backup" or "craft db/backup ./my-backups" (see https://craftcms.com/docs/4.x/console-commands.html)
+## ProjectTypes: craftcms
+## ExecRaw: true
+
+php ./craft "$@"
