@@ -912,27 +912,31 @@ RUN apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y 
 
 	// For webimage, update to latest composer.
 	if strings.Contains(fullpath, "webimageBuild") {
-		// If composerVersion is set,
-		// run composer self-update to the version (or --1 or --2)
-		// defaults to "2" even if ""
+		// Version to run composer self-update to the version
 		var composerSelfUpdateArg string
-		switch composerVersion {
-		case "1":
-			composerSelfUpdateArg = "--1"
-		case "":
-			fallthrough
-		case "2":
-			composerSelfUpdateArg = "--2"
-		default:
-			composerSelfUpdateArg = composerVersion
-		}
+
+		// Remove leading and trailing spaces
+		composerSelfUpdateArg = strings.TrimSpace(composerVersion)
 
 		// Composer v2 is default
+		if composerSelfUpdateArg == "" {
+			composerSelfUpdateArg = "2"
+		}
+
+		// Major and minor versions have to be provided as option so add '--' prefix.
+		// E.g. a major version can be 1 or 2, a minor version 2.2 or 2.1 etc.
+		if strings.Count(composerVersion, ".") < 2 {
+			composerSelfUpdateArg = "--" + composerSelfUpdateArg
+		}
+
 		// Try composer self-update twice because of troubles with composer downloads
 		// breaking testing.
+		// First of all Composer is updated to latest stable release to ensure
+		// new options of the self-update command can be used properly e.g.
+		// selecting a branch instead of a major version only.
 		contents = contents + fmt.Sprintf(`
 ### DDEV-injected composer update
-RUN export XDEBUG_MODE=off && ( composer self-update %s || composer self-update %s || true )
+RUN export XDEBUG_MODE=off; composer self-update --stable || composer self-update --stable || true; composer self-update %s || composer self-update %s || true
 `, composerSelfUpdateArg, composerSelfUpdateArg)
 	}
 

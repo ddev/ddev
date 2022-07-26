@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
+
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/globalconfig"
@@ -26,6 +28,12 @@ import (
 	"github.com/google/uuid"
 	asrt "github.com/stretchr/testify/assert"
 )
+
+// isSemver returns true if a string is a semantic version.
+func isSemver(s string) bool {
+	_, err := semver.NewVersion(s)
+	return err == nil
+}
 
 // TestNewConfig tests functionality around creating a new config, writing it to disk, and reading the resulting config.
 func TestNewConfig(t *testing.T) {
@@ -1048,7 +1056,6 @@ func TestComposerVersionConfig(t *testing.T) {
 	}
 	assert := asrt.New(t)
 	app := &DdevApp{}
-	testVersion := "2.0.0-RC2"
 
 	site := TestSites[0]
 	switchDir := site.Chdir()
@@ -1069,17 +1076,31 @@ func TestComposerVersionConfig(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	app.ComposerVersion = testVersion
-	err = app.Start()
-	assert.NoError(err)
+	for _, testVersion := range []string{"2.0.0-RC2", "2", "2.2", "1", "stable", "preview", "snapshot"} {
+		app.ComposerVersion = testVersion
+		err = app.Start()
+		assert.NoError(err)
 
-	// Without timezone set, we should find Etc/UTC
-	stdout, _, err := app.Exec(&ExecOpts{
-		Service: "web",
-		Cmd:     "composer --version | awk '{print $3;}'",
-	})
-	assert.NoError(err)
-	assert.Equal(testVersion, strings.Trim(stdout, "\r\n"))
+		// Without timezone set, we should find Etc/UTC
+		stdout, _, err := app.Exec(&ExecOpts{
+			Service: "web",
+			Cmd:     "composer --version | awk '{print $3;}'",
+		})
+		assert.NoError(err)
+
+		// Ignore the non semantic versions for the moment e.g. stable or preview
+		// TODO: figure out a way to test version key words
+		if isSemver(testVersion) {
+			if strings.Count(testVersion, ".") < 2 {
+				assert.Contains(strings.TrimSpace(stdout), testVersion)
+			} else {
+				assert.Equal(testVersion, strings.TrimSpace(stdout))
+			}
+		}
+
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	}
 
 	runTime()
 }
