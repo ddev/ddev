@@ -212,7 +212,7 @@ Here's a quickstart instructions for a number of different environments:
         ddev launch
         ```
 
-    === "TYPO3"
+=== "TYPO3"
 
     ## TYPO3
 
