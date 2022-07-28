@@ -58,7 +58,7 @@ a2enmod access_compat alias auth_basic authn_core authn_file authz_core authz_ho
 a2enconf charset localized-error-pages other-vhosts-access-log security serve-cgi-bin
 
 if [ "$DDEV_WEBSERVER_TYPE" = "apache-fpm" ] ; then
-    a2enmod proxy_fcgi 
+    a2enmod proxy_fcgi
     a2enconf php${DDEV_PHP_VERSION}-fpm
     a2dissite 000-default
 fi
@@ -78,11 +78,14 @@ ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/
 # Make sure the TERMINUS_CACHE_DIR (/mnt/ddev-global-cache/terminus/cache) exists
 sudo mkdir -p ${TERMINUS_CACHE_DIR}
 
+set -x
 sudo mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory,nvm_dir,npm/${HOSTNAME},yarn/${HOSTNAME}}
-yarn config set cache-folder/m nt/ddev-global-config/yarn/${HOSTNAME}
-npm config set cache /mnt/ddev-global-config/npm/${HOSTNAME}
-
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ /var/lib/php
+yarn config set cache-folder /mnt/ddev-global-cache/yarn/${HOSTNAME}
+npm config set cache /mnt/ddev-global-cache/npm/${HOSTNAME}
+
+set +x
+
 ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ${NVM_DIR:-${HOME}/.nvm}
 if [ ! -f ${NVM_DIR:-${HOME}/.nvm}/nvm.sh ]; then (install_nvm.sh || true); fi
 
