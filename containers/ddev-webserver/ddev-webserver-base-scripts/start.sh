@@ -78,7 +78,10 @@ ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/
 # Make sure the TERMINUS_CACHE_DIR (/mnt/ddev-global-cache/terminus/cache) exists
 sudo mkdir -p ${TERMINUS_CACHE_DIR}
 
-sudo mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory,nvm_dir}/${HOSTNAME}
+sudo mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory,nvm_dir,npm/${HOSTNAME},yarn/${HOSTNAME}}
+yarn config set cache-folder/m nt/ddev-global-config/yarn/${HOSTNAME}
+npm config set cache /mnt/ddev-global-config/npm/${HOSTNAME}
+
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ /var/lib/php
 ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ${NVM_DIR:-${HOME}/.nvm}
 if [ ! -f ${NVM_DIR:-${HOME}/.nvm}/nvm.sh ]; then (install_nvm.sh || true); fi
