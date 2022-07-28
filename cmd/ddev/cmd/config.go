@@ -157,7 +157,7 @@ var providerName = nodeps.ProviderDefault
 var extraFlagsHandlingFunc func(cmd *cobra.Command, args []string, app *ddevapp.DdevApp) error
 
 // ConfigCommand represents the `ddev config` command
-var ConfigCommand *cobra.Command = &cobra.Command{
+var ConfigCommand = &cobra.Command{
 	Use:     "config [provider or 'global']",
 	Short:   "Create or modify a ddev project configuration in the current directory",
 	Example: `"ddev config" or "ddev config --docroot=web  --project-type=drupal8"`,
@@ -318,7 +318,7 @@ func init() {
 
 	ConfigCommand.Flags().Bool("disable-settings-management", false, "Prevent ddev from creating or updating CMS settings files")
 
-	ConfigCommand.Flags().String("composer-version", "", `Specify override for composer version in web container. This may be "", "1", "2", or a specific version.`)
+	ConfigCommand.Flags().String("composer-version", "", `Specify override for composer version in web container. This may be "", "1", "2", "2.2", "stable", "preview", "snapshot" or a specific version.`)
 
 	ConfigCommand.Flags().Bool("auto", true, `Automatically run config without prompting.`)
 	ConfigCommand.Flags().Bool("bind-all-interfaces", false, `Bind host ports on all interfaces, not just on localhost network interface`)

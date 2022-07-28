@@ -317,3 +317,22 @@ func InterfaceSliceToStringSlice(v []interface{}) ([]string, error) {
 	}
 	return raw, nil
 }
+
+// SliceToUniqueSlice processes a slice of string to make sure there are no duplicates
+func SliceToUniqueSlice(inSlice *[]string) []string {
+	mapStore := map[string]bool{}
+	newSlice := []string{}
+
+	for _, s := range *inSlice {
+		// If we already found the value in our map, don't process into newSlice
+		if _, ok := mapStore[s]; ok {
+			continue
+		}
+		newSlice = append(newSlice, s)
+		mapStore[s] = true
+	}
+	if len(newSlice) == 0 {
+		return nil
+	}
+	return newSlice
+}

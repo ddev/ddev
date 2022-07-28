@@ -3,12 +3,6 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/versionconstants"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -18,6 +12,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
+
+	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/versionconstants"
+	"github.com/stretchr/testify/require"
+
 	. "github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/testcommon"
@@ -25,6 +28,12 @@ import (
 	"github.com/google/uuid"
 	asrt "github.com/stretchr/testify/assert"
 )
+
+// isSemver returns true if a string is a semantic version.
+func isSemver(s string) bool {
+	_, err := semver.NewVersion(s)
+	return err == nil
+}
 
 // TestNewConfig tests functionality around creating a new config, writing it to disk, and reading the resulting config.
 func TestNewConfig(t *testing.T) {
@@ -223,9 +232,10 @@ func TestConfigCommand(t *testing.T) {
 	const apptypePos = 0
 	const phpVersionPos = 1
 	testMatrix := map[string][]string{
-		"drupal6phpversion": {nodeps.AppTypeDrupal6, nodeps.PHP56},
-		"drupal7phpversion": {nodeps.AppTypeDrupal7, nodeps.PHPDefault},
-		"drupal8phpversion": {nodeps.AppTypeDrupal8, nodeps.PHPDefault},
+		"magentophpversion":  {nodeps.AppTypeMagento, nodeps.PHP74},
+		"drupal7phpversion":  {nodeps.AppTypeDrupal7, nodeps.PHPDefault},
+		"drupal9phpversion":  {nodeps.AppTypeDrupal9, nodeps.PHPDefault},
+		"drupal10phpversion": {nodeps.AppTypeDrupal10, nodeps.PHP81},
 	}
 
 	for testName, testValues := range testMatrix {
@@ -288,7 +298,7 @@ func TestConfigCommand(t *testing.T) {
 		assert.Equal(name, app.Name)
 		assert.Equal(testValues[apptypePos], app.Type)
 		assert.Equal("docroot", app.Docroot)
-		assert.EqualValues(testValues[phpVersionPos], app.PHPVersion, "PHP value incorrect for app %v", app)
+		assert.EqualValues(testValues[phpVersionPos], app.PHPVersion, "PHP value incorrect for apptype %v (expected %s got %s) (%v)", app.Type, testValues[phpVersionPos], app.PHPVersion, app)
 		err = PrepDdevDirectory(testDir)
 		assert.NoError(err)
 	}
@@ -361,9 +371,9 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 	const apptypePos = 0
 	const phpVersionPos = 1
 	testMatrix := map[string][]string{
-		"drupal6phpversion": {nodeps.AppTypeDrupal6, nodeps.PHP56},
-		"drupal7phpversion": {nodeps.AppTypeDrupal7, nodeps.PHPDefault},
-		"drupal8phpversion": {nodeps.AppTypeDrupal8, nodeps.PHPDefault},
+		"drupal6phpversion":  {nodeps.AppTypeDrupal6, nodeps.PHP56},
+		"drupal7phpversion":  {nodeps.AppTypeDrupal7, nodeps.PHPDefault},
+		"drupal10phpversion": {nodeps.AppTypeDrupal10, nodeps.PHP81},
 	}
 
 	for testName, testValues := range testMatrix {
@@ -409,7 +419,7 @@ func TestConfigCommandCreateDocrootAllowed(t *testing.T) {
 		assert.Equal(name, app.Name)
 		assert.Equal(testValues[apptypePos], app.Type)
 		assert.Equal(nonexistentDocroot, app.Docroot)
-		assert.EqualValues(testValues[phpVersionPos], app.PHPVersion)
+		assert.Equal(testValues[phpVersionPos], app.PHPVersion, "expected php%v for apptype %s", testValues[phpVersionPos], app.Type)
 
 		err = PrepDdevDirectory(tmpDir)
 		assert.NoError(err)
@@ -701,7 +711,7 @@ func TestWriteConfig(t *testing.T) {
 	assert.Equal("drupal9", app.Type)
 
 	// However, if we ReadConfig() without includeOverrides, we should get "php" as the type
-	_, err = app.ReadConfig(false)
+	app, err = NewApp(projDir, false)
 	assert.NoError(err)
 	assert.Equal("php", app.Type)
 
@@ -1046,7 +1056,6 @@ func TestComposerVersionConfig(t *testing.T) {
 	}
 	assert := asrt.New(t)
 	app := &DdevApp{}
-	testVersion := "2.0.0-RC2"
 
 	site := TestSites[0]
 	switchDir := site.Chdir()
@@ -1067,17 +1076,31 @@ func TestComposerVersionConfig(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	app.ComposerVersion = testVersion
-	err = app.Start()
-	assert.NoError(err)
+	for _, testVersion := range []string{"2.0.0-RC2", "2", "2.2", "1", "stable", "preview", "snapshot"} {
+		app.ComposerVersion = testVersion
+		err = app.Start()
+		assert.NoError(err)
 
-	// Without timezone set, we should find Etc/UTC
-	stdout, _, err := app.Exec(&ExecOpts{
-		Service: "web",
-		Cmd:     "composer --version | awk '{print $3;}'",
-	})
-	assert.NoError(err)
-	assert.Equal(testVersion, strings.Trim(stdout, "\r\n"))
+		// Without timezone set, we should find Etc/UTC
+		stdout, _, err := app.Exec(&ExecOpts{
+			Service: "web",
+			Cmd:     "composer --version | awk '{print $3;}'",
+		})
+		assert.NoError(err)
+
+		// Ignore the non semantic versions for the moment e.g. stable or preview
+		// TODO: figure out a way to test version key words
+		if isSemver(testVersion) {
+			if strings.Count(testVersion, ".") < 2 {
+				assert.Contains(strings.TrimSpace(stdout), testVersion)
+			} else {
+				assert.Equal(testVersion, strings.TrimSpace(stdout))
+			}
+		}
+
+		err = app.Stop(true, false)
+		assert.NoError(err)
+	}
 
 	runTime()
 }
@@ -1225,7 +1248,7 @@ func TestConfigLoadingOrder(t *testing.T) {
 		assert.NoError(err)
 		err = os.Symlink(item, linkedMatch)
 		assert.NoError(err)
-		_, err = app.ReadConfig(true)
+		app, err = NewApp(app.AppRoot, true)
 		assert.NoError(err)
 		assert.Equal(filepath.Base(item), app.WebImage)
 		err = os.Remove(linkedMatch)
@@ -1242,16 +1265,15 @@ func TestConfigLoadingOrder(t *testing.T) {
 		assert.NoError(err)
 		err = os.Symlink(item, linkedMatch)
 		assert.NoError(err)
-		_, err = app.ReadConfig(true)
+		app, err = NewApp(app.AppRoot, true)
 		assert.Equal(filepath.Base(item), app.WebImage)
 	}
 
-	// Now we still have all those linked overrides, but do a ReadConfig() without allowing them
+	// Now we still have all those linked overrides, but do a NewApp() without allowing them
 	// and verify that they don't get loaded
-	_, err = app.ReadConfig(false)
+	app, err = NewApp(app.AppRoot, false)
 	assert.NoError(err)
 	assert.Equal("config.yaml", app.WebImage)
-
 }
 
 // TestPkgConfigDatabaseDBVersion tests config for database

@@ -1,0 +1,7 @@
+
+database:
+  type: mariadb
+  version: 10.4
+php_version: 8.0
+mutagen_enabled: false
+webserver_type: apache-fpm

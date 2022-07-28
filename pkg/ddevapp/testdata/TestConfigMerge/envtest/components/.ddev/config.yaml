@@ -1,0 +1,6 @@
+# Simplest
+name: TestConfigMerget1
+
+web_environment:
+- ORIG1=orig1
+- ORIG_TO_BE_OVERWRITTEN=orig

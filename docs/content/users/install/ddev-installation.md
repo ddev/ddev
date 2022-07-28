@@ -2,49 +2,57 @@
 
 Docker or an alternative is required before anything will work with DDEV. This is pretty easy on most environments; see the [docker installation](docker-installation.md) page to help sort out the details.
 
-=== "macOS (Homebrew)"
+=== "macOS"
 
-    For macOS (both amd64 and arm64) users, we recommend installing and upgrading via [Homebrew](https://brew.sh/): `brew install drud/ddev/ddev`.
+    ## macOS
+
+    ### Homebrew
+
+    For macOS (both amd64 and arm64) users, [Homebrew](https://brew.sh/) is the easiest way to install and maintain DDEV: `brew install drud/ddev/ddev`.
     
     As a one-time initialization, run `mkcert -install`.
     
     Later, to upgrade to a newer version of DDEV-Local, run `brew upgrade ddev`.
-    
-    !!!note "Edge channel is available"
-        To install DDEV prereleases, subscribe to the "edge" channel with `brew install drud/ddev-edge/ddev` and to install the latest unreleased DDEV version, `brew unlink ddev && brew install drud/ddev/ddev --HEAD`.
 
-=== "Install script"
+    ### install_ddev.sh install script
 
-    On Linux, macOS and Windows WSL2 you can use the install_ddev.sh script
+    On macOS, Linux and Windows WSL2 you can use the install_ddev.sh script
 
     Use this line on your terminal to download, verify, and install (or upgrade) ddev using the [install_ddev.sh script](https://github.com/drud/ddev/blob/master/scripts/install_ddev.sh). Note that this works with both amd64 and arm64 architectures, including Surface Pro X with WSL2 and 64-bit Raspberry Pi OS. It also works with macOS Apple Silicon M1 machines.
 
     ```
-    curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh
+    curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash
     ```
 
     The installation script can also take a version argument in order to install a specific version or a prerelease version. For example,
 
     ```
-    curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh v1.19.2
+    curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash -s v1.19.2
     ```
 
     To upgrade DDEV to the latest stable version, just run the script again.
 
-=== "Linux apt/yum"
+=== "Linux"
+
+    ## Linux
+
+    ### Apt packages for Debian-based systems
 
     DDEV has Debian and RPM packages that work with both apt and yum repositories, and on most any variant that uses those, including Windows WSL2.
 
     * Debian/Ubuntu and derivative distros - Install the ddev apt repositories with:
 
     ```bash
-    echo "deb [trusted=yes] https://apt.fury.io/drud/ /" | sudo tee -a /etc/apt/sources.list.d/ddev.list
-    sudo apt update && sudo apt install ddev
+    curl https://apt.fury.io/drud/gpg.key | sudo apt-key add -
+    echo "deb https://apt.fury.io/drud/ * *" | sudo tee -a /etc/apt/sources.list.d/ddev.list
+    sudo apt update && sudo apt install -y ddev
     ```
   
-    In the future you can update as usual, with `sudo apt update && sudo apt upgrade`. (Signed repo support will be added in the near future.)
+    In the future you can update as usual, with `sudo apt update && sudo apt upgrade`.
 
-    * Yum/RPM (Fedora, RedHat, etc.):
+    If you previously used `install_ddev.sh` to install DDEV, you can just `sudo rm -f /usr/local/bin/ddev /usr/local/bin/mkcert /usr/local/bin/*ddev_nfs_setup.sh` to remove the previous version. If you previously used homebrew to install DDEV, you can just `brew unlink ddev` to get rid of the homebrew version.
+
+    ### Yum/RPM packages for Fedora, RedHat, etc.
 
     ```bash
     echo '[ddev]
@@ -58,18 +66,19 @@ Docker or an alternative is required before anything will work with DDEV. This i
   
     In the future you can update as usual, with `sudo dnf upgrade ddev`. (Signed repo support will be added in the near future.)
 
-=== "Linux (Homebrew)"
+    ### Arch systems
 
-    For Linux amd64 users, [Homebrew](https://brew.sh/) packages are available: `brew install drud/ddev/ddev`.
-    
+    For Arch-based systems including `Arch Linux`, `EndeavourOS` and `Manjaro` we maintain the [ddev-bin](https://aur.archlinux.org/packages/ddev-bin/) package in AUR.
+
     As a one-time initialization, run `mkcert -install`.
-    
-    Later, to upgrade to a newer version of DDEV-Local, run `brew upgrade ddev`.
-    
-    !!!note "Edge channel is available"
-        To install DDEV prereleases, subscribe to the "edge" channel with `brew install drud/ddev-edge/ddev` and to install the latest unreleased DDEV version, `brew unlink ddev && brew install drud/ddev/ddev --HEAD`.
+
+    ### Alternate installation approaches: homebrew and install_ddev.sh script
+
+    You can also use the [homebrew](#homebrew) and [install_ddev.sh script](install-ddev) techniques exactly on macOS.
 
 === "Windows WSL2"
+
+    ## Windows WSL2
 
     **This is the recommended installation method for all Windows users**.
 
@@ -97,7 +106,7 @@ Docker or an alternative is required before anything will work with DDEV. This i
     10. Check that docker is working inside Ubuntu (or your distro): `docker ps`
     11. Optional: If you prefer to use the *traditional Windows* ddev instead of working inside WSL2, install it with `choco install -y ddev`. The Windows ddev works fine with the WSL2-based Docker engine. However, the WSL2 ddev setup is vastly preferable and at least 10 times as fast. Support for the traditional Windows approach will eventually be dropped.
     12. Open the WSL2 terminal, for example `Ubuntu` from the Windows start menu.
-    13. Install `ddev` with `curl -LO https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh && bash install_ddev.sh`
+    13. Install `ddev` with `curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash`
     14. `sudo apt-get update && sudo apt-get install -y certutil xdg-utils` to install the `xdg-utils` package that allows `ddev launch` to work.
     15. In WSL2 run `mkcert -install`.
 
@@ -111,6 +120,8 @@ Docker or an alternative is required before anything will work with DDEV. This i
         Note the prompt `Installing to the system store is not yet supported on this Linux`, which can be a simple result of not having `/usr/sbin` in the path so that `/usr/sbin/update-ca-certificates` can be found.)
 
 === "Traditional Windows"
+
+    ## Traditional Windows
 
     DDEV does work fine on the Windows side, although it's quite a bit slower than WSL2 by default, but good results have been reported by users who enabled mutagen, `ddev config global --mutagen-enabled`.
 
@@ -141,6 +152,8 @@ Docker or an alternative is required before anything will work with DDEV. This i
 
 === "Gitpod.io"
 
+    ## Gitpod.io
+
     DDEV is fully supported in Gitpod.io, and there are many ways to use it. You don't have to install *anything* to use it, not Docker, and not DDEV, it's all done for you.
 
     1. Just [open any repository](https://www.gitpod.io/docs/getting-started) using gitpod and `brew install drud/ddev/ddev` and use ddev as you would normally use it.
@@ -152,15 +165,9 @@ Docker or an alternative is required before anything will work with DDEV. This i
 
     It can be complicated to get private databases and files into Gitpod, so in addition to the launchers, The [`git` provider example](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/git.yaml.example) shows how you can pull database and files without complex setup or permissions. This was created explicitly for Gitpod integration, because in Gitpod you typically already have access to private git repositories, which are a fine place to put a starter database and files. Although [ddev-gitpod-launcher](https://drud.github.io/ddev-gitpod-launcher/) and the web extension provide the capability, you may want to integrate a git provider for each project (or, of course, one of the [other providers](https://github.com/drud/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers)).
 
-=== "Arch Linux"
-    For Arch-based systems including `Arch Linux`, `EndeavourOS` and `Manjaro` we maintain the [ddev-bin](https://aur.archlinux.org/packages/ddev-bin/) package in AUR.
-
-    As a one-time initialization, run `mkcert -install`.
-
-    !!!note "Edge channel is available"
-        To install DDEV prereleases, use a [ddev-edge-bin](https://aur.archlinux.org/packages/ddev-edge-bin/) package in AUR.
-
 === "Manual"
+
+    ## Manual installation
 
     You can also easily perform the installation or upgrade manually if preferred. DDEV is just a single executable, no special installation is actually required, so for all operating systems, the installation is just copying DDEV into place where it's in the system path.
 

@@ -398,7 +398,7 @@ func (app *DdevApp) GetComposerRoot(inContainer, showWarning bool) string {
 	basePath := ""
 
 	if inContainer {
-		basePath = app.DefaultWorkingDirMap()["web"]
+		basePath = "/var/www/html"
 	} else {
 		basePath = app.AppRoot
 	}
@@ -1788,7 +1788,8 @@ func (app *DdevApp) DockerEnv() {
 	envVars := map[string]string{
 		// Without COMPOSE_DOCKER_CLI_BUILD=0, docker-compose makes all kinds of mess
 		// of output. BUILDKIT_PROGRESS doesn't help either.
-		"COMPOSE_DOCKER_CLI_BUILD": "0",
+		"COMPOSE_DOCKER_CLI_BUILD":       "0",
+		"COMPOSER_EXIT_ON_PATCH_FAILURE": "1",
 		// The compose project name can no longer contain dots
 		// https://github.com/compose-spec/compose-go/pull/197
 		"COMPOSE_PROJECT_NAME":          "ddev-" + strings.Replace(app.Name, `.`, "", -1),

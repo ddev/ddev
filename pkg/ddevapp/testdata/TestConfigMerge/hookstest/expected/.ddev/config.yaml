@@ -1,0 +1,6 @@
+hooks:
+  pre-start:
+    - exec-host: "echo last pre-start"
+  post-start:
+    - exec: "echo base post-start"
+    - exec: "echo last post-start"

@@ -1,0 +1,2 @@
+webimage_extra_packages: [php7.4-tidy]
+nfs_mount_enabled: true

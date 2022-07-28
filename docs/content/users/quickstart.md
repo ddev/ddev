@@ -34,6 +34,8 @@ Here's a quickstart instructions for a number of different environments:
 
     === "wp-cli"
 
+        ### wp-cli
+
         DDEV has built-in support for [WP-CLI](https://wp-cli.org/), the command-line interface for WordPress.
         
         ```bash
@@ -66,6 +68,8 @@ Here's a quickstart instructions for a number of different environments:
 
     === "roots/bedrock"
         
+        ### roots/bedrock
+
         roots/bedrock is a modern composer-based installation if WordPress:
 
         ```bash
@@ -94,6 +98,8 @@ Here's a quickstart instructions for a number of different environments:
 
     === "git clone"
     
+        ### git clone
+
         To get started using DDEV with an existing WordPress project, clone the project's repository. Note that the git URL shown here is just an example.
         
         ```bash
@@ -137,6 +143,9 @@ Here's a quickstart instructions for a number of different environments:
     ## Drupal
 
     === "Drupal 9 Composer"
+
+        ### Drupal 9 composer build
+
         ```bash
         mkdir my-drupal9-site
         cd my-drupal9-site
@@ -150,7 +159,9 @@ Here's a quickstart instructions for a number of different environments:
         ddev launch
         ```
 
-    === "Drupal 10"
+        === "Drupal 10"
+
+        ### Drupal 10 composer build
     
         [Drupal 10](https://www.drupal.org/about/10) is not yet released, but lots of people want to test and contribute to it. It's easy to set it up in DDEV:
         
@@ -169,7 +180,9 @@ Here's a quickstart instructions for a number of different environments:
         
         Note that as Drupal 10 moves from alpha to beta and then release, you'll want to change the tag from `^10@alpha` to `^10@beta` and then `^10`.
 
-    === "Drupal 6/7"
+        === "Drupal 6/7"
+
+        ### Drupal 6/7 install
     
         Using DDEV with a Drupal 6 or 7 project is as simple as cloning the project's repository and checking out its directory.
         
@@ -185,7 +198,9 @@ Here's a quickstart instructions for a number of different environments:
         
         Quickstart instructions for database imports can be found under [Importing a database](#importing-a-database).
 
-    === "Git clone"
+        === "Git clone"
+
+        ### Git clone build
     
         Note that the git URL shown below is an example only, you'll need to use your own project.
         
@@ -202,6 +217,8 @@ Here's a quickstart instructions for a number of different environments:
     ## TYPO3
 
     === "Composer build"
+    
+        ### TYPO3 composer build
         
         ```bash
         mkdir my-typo3-site
@@ -215,6 +232,8 @@ Here's a quickstart instructions for a number of different environments:
         ```
 
     === "Git clone"
+        
+        ### TYPO3 git clone
     
         ```bash
         git clone https://github.com/example/example-site

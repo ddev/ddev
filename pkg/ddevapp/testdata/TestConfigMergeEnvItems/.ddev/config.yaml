@@ -1,0 +1,14 @@
+webimage: config.yaml
+web_environment:
+  - CURLEY=c
+  - LARRY=l
+  - MOE=m
+additional_hostnames:
+ - somename
+ - someothername
+hooks:
+  post-start:
+    - exec: "simple web command"
+    - exec-host: "simple host command"
+  post-import-db:
+    - exec: "drush uli"

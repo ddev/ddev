@@ -42,7 +42,7 @@ var (
 )
 
 // StyleMap give the list of available styles
-var StyleMap map[string]table.Style = map[string]table.Style{
+var StyleMap = map[string]table.Style{
 	"default": DdevDefaultStyle,
 	"bold":    DdevStyleBold,
 	"bright":  DdevStyleColoredBright,

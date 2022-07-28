@@ -5,7 +5,7 @@ set -o errexit
 # Basic tools
 
 set -x
-export GO_VERSION=1.17.2
+export GO_VERSION=1.18.4
 
 if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
   set +x
@@ -61,4 +61,4 @@ docker info
 docker version
 docker-compose version
 lsb_release -a
-docker buildx create --name ddev-builder-multi --use  
+docker buildx create --name ddev-builder-multi --use

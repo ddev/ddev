@@ -1,4 +1,4 @@
-image: drud/ddev-gitpod-base:20220715
+image: drud/ddev-gitpod-base:20220718
 tasks:
   - name: build-run
     init: |
@@ -27,7 +27,7 @@ tasks:
         ddev import-db --src=/tmp/${DDEV_ARTIFACTS##*/}/db.sql.gz
         ddev import-files --src=/tmp/${DDEV_ARTIFACTS##*/}/files.tgz
       fi
-      gp await-port 8080 && sleep 1 && gp preview $(gp url 8080)
+      gp ports await 8080 && sleep 1 && gp preview $(gp url 8080)
 
 vscode:
   extensions:

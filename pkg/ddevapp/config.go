@@ -3,18 +3,19 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
-	"github.com/Masterminds/sprig/v3"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/versionconstants"
-	copy2 "github.com/otiai10/copy"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"text/template"
 	"time"
+
+	"github.com/Masterminds/sprig/v3"
+	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/versionconstants"
+	copy2 "github.com/otiai10/copy"
 
 	"regexp"
 
@@ -287,7 +288,7 @@ func (app *DdevApp) UpdateGlobalProjectList() error {
 // It does not attempt to set default values; that's NewApp's job.
 func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 
-	// Load config.yaml
+	// Load base .ddev/config.yaml - original config
 	err := app.LoadConfigYamlFile(app.ConfigPath)
 	if err != nil {
 		return []string{}, fmt.Errorf("unable to load config file %s: %v", app.ConfigPath, err)
@@ -303,7 +304,8 @@ func (app *DdevApp) ReadConfig(includeOverrides bool) ([]string, error) {
 		}
 
 		for _, item := range configOverrides {
-			err = app.LoadConfigYamlFile(item)
+			err = app.mergeAdditionalConfigIntoApp(item)
+
 			if err != nil {
 				return []string{}, fmt.Errorf("unable to load config file %s: %v", item, err)
 			}
@@ -434,7 +436,7 @@ func (app *DdevApp) ValidateConfig() error {
 	}
 
 	if !nodeps.IsValidDatabaseVersion(app.Database.Type, app.Database.Version) {
-		return fmt.Errorf("unsupported database type/version: %s:%s, ddev %s only supports the following database types and versions: mariadb: %v, mysql: %v, postgres: %v", app.Database.Type, app.Database.Version, runtime.GOARCH, nodeps.GetValidMariaDBVersions(), nodeps.GetValidMySQLVersions(), nodeps.GetValidPostgresVersions())
+		return fmt.Errorf("unsupported database type/version: '%s:%s', ddev %s only supports the following database types and versions: mariadb: %v, mysql: %v, postgres: %v", app.Database.Type, app.Database.Version, runtime.GOARCH, nodeps.GetValidMariaDBVersions(), nodeps.GetValidMySQLVersions(), nodeps.GetValidPostgresVersions())
 	}
 
 	// golang on windows is not able to time.LoadLocation unless
@@ -910,27 +912,31 @@ RUN apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y 
 
 	// For webimage, update to latest composer.
 	if strings.Contains(fullpath, "webimageBuild") {
-		// If composerVersion is set,
-		// run composer self-update to the version (or --1 or --2)
-		// defaults to "2" even if ""
+		// Version to run composer self-update to the version
 		var composerSelfUpdateArg string
-		switch composerVersion {
-		case "1":
-			composerSelfUpdateArg = "--1"
-		case "":
-			fallthrough
-		case "2":
-			composerSelfUpdateArg = "--2"
-		default:
-			composerSelfUpdateArg = composerVersion
-		}
+
+		// Remove leading and trailing spaces
+		composerSelfUpdateArg = strings.TrimSpace(composerVersion)
 
 		// Composer v2 is default
+		if composerSelfUpdateArg == "" {
+			composerSelfUpdateArg = "2"
+		}
+
+		// Major and minor versions have to be provided as option so add '--' prefix.
+		// E.g. a major version can be 1 or 2, a minor version 2.2 or 2.1 etc.
+		if strings.Count(composerVersion, ".") < 2 {
+			composerSelfUpdateArg = "--" + composerSelfUpdateArg
+		}
+
 		// Try composer self-update twice because of troubles with composer downloads
 		// breaking testing.
+		// First of all Composer is updated to latest stable release to ensure
+		// new options of the self-update command can be used properly e.g.
+		// selecting a branch instead of a major version only.
 		contents = contents + fmt.Sprintf(`
 ### DDEV-injected composer update
-RUN export XDEBUG_MODE=off && ( composer self-update %s || composer self-update %s || true )
+RUN export XDEBUG_MODE=off; composer self-update --stable || composer self-update --stable || true; composer self-update %s || composer self-update %s || true
 `, composerSelfUpdateArg, composerSelfUpdateArg)
 	}
 
@@ -1137,7 +1143,7 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
-	err := CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "sequelpro.spf", "xhprof", "**/README.*")
+	err := CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".importdb*", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "sequelpro.spf", "xhprof", "**/README.*")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}

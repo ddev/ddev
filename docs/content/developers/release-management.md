@@ -17,7 +17,11 @@ The following "Repository secret" environment variables must be added to <https:
 
 * `DDEV_WINDOWS_SIGNING_PASSWORD`: The windows signing password.
 
-* `SegmentKey`: The key that enabled the Segment reporting
+* `SegmentKey`: The key that enabled the Segment reporting.
+
+* `FURY_ACCOUNT`: The account at fury.io to push the packages to.
+
+* `FURY_TOKEN`: The push token assigned to the fury account above.
 
 ## Creating a release (almost everything is now automated)
 

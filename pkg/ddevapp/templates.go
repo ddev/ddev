@@ -52,11 +52,14 @@ const ConfigInstructions = `
 # commands are executed.
 
 # composer_version: "2"
-# if composer_version:"2" it will use the most recent composer v2
-# It can also be set to "1", to get most recent composer v1
-# or "" for the default v2 created at release time.
-# It can be set to any existing specific composer version.
-# After first project 'ddev start' this will not be updated until it changes
+# You can set it to "" or "2" (default) for Composer v2 or "1" for Composer v1
+# to use the latest major version available at the time your container is built.
+# It is also possible to select a minor version for example "2.2" which will
+# install the latest release of that branch. Alternatively, an explicit Composer
+# version may be specified, for example "1.0.22". Finally, it is also possible
+# to use one of the key words "stable", "preview" or "snapshot" see Composer
+# documentation.
+# To reinstall Composer after the image was built, run "ddev debug refresh".
 
 # nodejs_version: "16"
 # change from the default system Node.js version to another supported version, like 12, 14, 17, 18.

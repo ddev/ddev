@@ -47,8 +47,8 @@ jobs:
 
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.*
-      
+          go-version: '>=1.18.0'
+
       - name: Build DDEV executables
         run: make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_install
 
