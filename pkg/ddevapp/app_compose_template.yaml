@@ -193,6 +193,7 @@ services:
     - LINES
     - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-web/mysql_history
     - MYSQL_PWD=db
+    - NODE_EXTRA_CA_CERTS=/mnt/ddev-global-cache/mkcert/rootCA.pem
     - PGDATABASE=db
     - PGHOST=db
     - PGPASSWORD=db
