@@ -6,7 +6,7 @@
 |-----------------------------------------|------------------------------------------------|
 | ![Figurative Mark](logos/1x/Logo.png) | ![Figurative Mark](logos/1x/Logo_w_text.png) |
 
-You can find a set of DDEV logos [here](logos).
+You can find a set of DDEV logos [here](https://github.com/drud/ddev/tree/master/docs/content/developers/logos).
 
 If possible, use the SVG version of the logo, as a vector graphic is independent of the resolution and gives the best
 results regardless of the pixel density of the display.
