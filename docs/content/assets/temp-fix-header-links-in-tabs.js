@@ -2,22 +2,23 @@
 window.addEventListener('hashchange', function () {
     // Get current hash
     let currentHash = window.location.href.split('#')[1];
-    // if (!currentHash) return
+    if (!currentHash) return
 
     // Get element associated with hash
     let hashElement = document.getElementById(currentHash);
-    // if (!hashElement) return
+    if (!hashElement) return
 
     // Detect if element is located in a tab
     let parentElement = hashElement.closest('.tabbed-block');
-    // if (!parentElement) return
+    if (!parentElement) return
 
     // Get all tab labels
     let allTabs = hashElement.closest('.tabbed-set').querySelector('.tabbed-labels').children;
+    if (!allTabs) return
 
     // get index of tab to click on
     let index = [...parentElement.parentNode.children].indexOf(parentElement)
-    // if (!index) return
+    if (!index) return
 
     // Simulate mouse click click on our tab label
     allTabs[index].click();
