@@ -657,6 +657,9 @@ type composeYAMLVars struct {
 	GitDirMount               bool
 	IsGitpod                  bool
 	DefaultContainerTimeout   string
+	WebExtraHTTPPorts         string
+	WebExtraHTTPSPorts        string
+	WebExtraExposedPorts      string
 }
 
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
@@ -750,6 +753,22 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if app.GetHostUploadDirFullPath() == "" || !fileutil.FileExists(app.GetHostUploadDirFullPath()) {
 		templateVars.HostUploadDir = ""
 		templateVars.ContainerUploadDir = ""
+	}
+
+	webimageExtraHTTPPorts := []string{}
+	webimageExtraHTTPSPorts := []string{}
+	exposedPorts := []int{}
+	for _, a := range app.WebExtraExposedPorts {
+		webimageExtraHTTPPorts = append(webimageExtraHTTPPorts, fmt.Sprintf("%d:%d", a.HTTPPort, a.WebContainerPort))
+		webimageExtraHTTPSPorts = append(webimageExtraHTTPSPorts, fmt.Sprintf("%d:%d", a.HTTPSPort, a.WebContainerPort))
+		exposedPorts = append(exposedPorts, a.WebContainerPort)
+	}
+	templateVars.WebExtraHTTPPorts = strings.Join(webimageExtraHTTPPorts, ",")
+	templateVars.WebExtraHTTPSPorts = strings.Join(webimageExtraHTTPSPorts, ",")
+	if len(exposedPorts) != 0 {
+		templateVars.WebExtraExposedPorts = "expose:\n    - "
+		// Odd way to join ints into a string from https://stackoverflow.com/a/37533144/215713
+		templateVars.WebExtraExposedPorts = templateVars.WebExtraExposedPorts + strings.Trim(strings.Join(strings.Fields(fmt.Sprint(exposedPorts)), "    - "), "[]")
 	}
 
 	if app.Database.Type == nodeps.Postgres {

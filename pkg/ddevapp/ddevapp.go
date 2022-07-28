@@ -65,6 +65,17 @@ type DatabaseDesc struct {
 	Version string `yaml:"version"`
 }
 
+type WebExposedPort struct {
+	WebContainerPort int `yaml:"container_port"`
+	HTTPPort         int `yaml:"http_port"`
+	HTTPSPort        int `yaml:"https_port"`
+}
+
+type WebExtraDaemon struct {
+	Command   string `yaml:"command"`
+	Directory string `yaml:"directory"`
+}
+
 // DdevApp is the struct that represents a ddev app, mostly its config
 // from config.yaml.
 type DdevApp struct {
@@ -126,6 +137,8 @@ type DdevApp struct {
 	WebEnvironment            []string               `yaml:"web_environment"`
 	NodeJSVersion             string                 `yaml:"nodejs_version"`
 	DefaultContainerTimeout   string                 `yaml:"default_container_timeout,omitempty"`
+	WebExtraExposedPorts      []WebExposedPort       `yaml:"web_extra_exposed_ports,omitempty"`
+	WebExtraDaemons           []WebExtraDaemon       `yaml:"web_extra_daemons,omitempty"`
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
