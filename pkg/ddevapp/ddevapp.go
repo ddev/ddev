@@ -2138,6 +2138,25 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		util.Warning("Unable to SyncAndterminateMutagenSession: %v", err)
 	}
 
+	// If project is running, clean up ddev-global-cache
+	if status == SiteRunning && removeData {
+		_, _, err = app.Exec(&ExecOpts{
+			Cmd: "rm -rf /mnt/ddev-global-cache/{bashhistory,npm,nvm_dir,yarn}/${HOSTNAME}",
+		})
+		if err != nil {
+			util.Warning("Unable to clean up ddev-global-cache: %v", err)
+		}
+		if nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+			_, _, err = app.Exec(&ExecOpts{
+				Cmd:     "rm -rf /mnt/ddev-global-cache/mysqlhistory/${HOSTNAME}",
+				Service: "db",
+			})
+			if err != nil {
+				util.Warning("Unable to clean up ddev-global-cache: %v", err)
+			}
+		}
+	}
+
 	if status == SiteRunning {
 		err = app.Pause()
 		if err != nil {
