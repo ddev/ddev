@@ -2141,14 +2141,14 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	// If project is running, clean up ddev-global-cache
 	if status == SiteRunning && removeData {
 		_, _, err = app.Exec(&ExecOpts{
-			Cmd: "rm -rf /mnt/ddev-global-cache/{bashhistory,npm,nvm_dir,yarn}/${HOSTNAME}",
+			Cmd: "rm -rf /mnt/ddev-global-cache/*/${HOSTNAME}",
 		})
 		if err != nil {
 			util.Warning("Unable to clean up ddev-global-cache: %v", err)
 		}
 		if nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 			_, _, err = app.Exec(&ExecOpts{
-				Cmd:     "rm -rf /mnt/ddev-global-cache/mysqlhistory/${HOSTNAME}",
+				Cmd:     "rm -rf /mnt/ddev-global-cache/*/${HOSTNAME}",
 				Service: "db",
 			})
 			if err != nil {
