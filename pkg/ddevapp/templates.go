@@ -187,7 +187,7 @@ const ConfigInstructions = `
 # the default 120. This helps in importing huge databases, for example.
 
 # web_extra_exposed_ports:
-# - 
+# -
 #    container_port: 3000
 #    https_port: 3000
 #    http_port: 2999
