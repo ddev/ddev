@@ -68,6 +68,7 @@ services:
       - POSTGRES_USER=db
       - POSTGRES_DB=db
       - TZ={{ .Timezone }}
+      - USER={{ .Username }}
     command: ${DDEV_DB_CONTAINER_COMMAND}
     healthcheck:
       {{ if eq .DBType "postgres" }}
@@ -201,6 +202,7 @@ services:
     - PHP_IDE_CONFIG=serverName=${DDEV_SITENAME}.${DDEV_TLD}
     - SSH_AUTH_SOCK=/home/.ssh-agent/socket
     - TZ={{ .Timezone }}
+    - USER={{ .Username }}
     - VIRTUAL_HOST=${DDEV_HOSTNAME}
     {{ range $env := .WebEnvironment }}- "{{ $env }}"
     {{ end }}

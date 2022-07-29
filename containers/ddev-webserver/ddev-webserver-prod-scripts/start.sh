@@ -58,7 +58,7 @@ a2enmod access_compat alias auth_basic authn_core authn_file authz_core authz_ho
 a2enconf charset localized-error-pages other-vhosts-access-log security serve-cgi-bin
 
 if [ "$DDEV_WEBSERVER_TYPE" = "apache-fpm" ] ; then
-    a2enmod proxy_fcgi 
+    a2enmod proxy_fcgi
     a2enconf php${DDEV_PHP_VERSION}-fpm
     a2dissite 000-default
 fi
@@ -75,9 +75,12 @@ disable_xhprof
 
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
-mkdir -p /mnt/ddev-global-cache/{bashhistory,mysqlhistory,nvm_dir}/${HOSTNAME}
+mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},nvm_dir/${HOSTNAME},npm/${HOSTNAME} yarn/${HOSTNAME}}
 ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ${NVM_DIR:-${HOME}/.nvm}
 if [ ! -f ${NVM_DIR:-${HOME}/.nvm}/nvm.sh ]; then (install_nvm.sh || true); fi
+
+yarn config set cache-folder /mnt/ddev-global-cache/yarn/${HOSTNAME}
+npm config set cache /mnt/ddev-global-cache/npm/${HOSTNAME}
 
 # chown of ddev-global-cache must be done with privileged container in app.Start()
 # chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/
