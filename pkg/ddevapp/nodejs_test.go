@@ -1,7 +1,6 @@
 package ddevapp_test
 
 import (
-	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
@@ -42,12 +41,6 @@ func TestNodeJSVersions(t *testing.T) {
 
 	err = app.Start()
 	require.NoError(t, err)
-	// As of v1.19.0, the nvm_dir doesn't get cleaned up on delete,
-	//so on a machine where this test has run before this will fail, as nvm has been set up
-	_, _, err = app.Exec(&ddevapp.ExecOpts{
-		Cmd: fmt.Sprintf("rm -rf /mnt/ddev-global-cache/nvm_dir/%s-web", site.Name),
-	})
-	assert.NoError(err)
 
 	for _, v := range nodeps.GetValidNodeVersions() {
 		app.NodeJSVersion = v
