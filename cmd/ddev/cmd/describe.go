@@ -175,6 +175,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 		}
 
 		if !ddevapp.IsRouterDisabled(app) {
+			// MailHog stanza
 			mailhogURL := ""
 			if _, ok := desc["mailhog_url"]; ok {
 				mailhogURL = desc["mailhog_url"].(string)
@@ -182,8 +183,9 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			if _, ok := desc["mailhog_https_url"]; ok {
 				mailhogURL = desc["mailhog_https_url"].(string)
 			}
-
 			t.AppendRow(table.Row{"Mailhog", "", fmt.Sprintf("MailHog: %s\n`ddev launch -m`", mailhogURL)})
+
+			// All URLs stanza
 			_, _, urls := app.GetAllURLs()
 			s := strings.Join(urls, ", ")
 			urlString := text.WrapSoft(s, int(urlPortWidth))
