@@ -22,6 +22,19 @@ A collection of vetted service configurations is available in the [Additional Se
 
 If you need to create a service configuration for your project, see [Defining an additional service with Docker Compose](custom-compose-files.md)
 
+## Using nodejs with DDEV
+
+There are many, many ways to deploy nodejs in any project, so DDEV tries to let you set up any possiblity you can come up with.
+
+* You can choose the nodejs version you want to use in `.ddev/config.yaml` with `nodejs_version`
+* `ddev nvm` gives you the full capabilities of nvm.
+* `ddev npm` and `ddev yarn` provide shortcuts to the npm and yarn commands inside the container, and their caches are persistent.
+* You can run nodejs daemons using [Running extra daemons](#running-extra-daemons-in-the-web-container).
+* You can expose nodejs ports via ddev-router by using [Exposing extra ports](#exposing-extra-ports-via-ddev-router).
+* You can just manually run particular nodejs scripts as needed using `ddev exec <script>` or `ddev exec nodejs <script>`.
+
+Please share your techniques using the many ways to share. Best are [ddev-get add-ons](additional-services.md#additional-service-configurations-and-add-ons-for-ddev), but [Stack Overflow](https://stackoverflow.com/tags/ddev) and [ddev-contrib](https://github.com/drud/ddev-contrib) are others.
+
 ## Running extra daemons in the web container
 
 If you need extra daemons to start up automatically inside the web container, you can easily add them using `web_extra_daemons` in `.ddev/config.yaml`.
