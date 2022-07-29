@@ -24,7 +24,7 @@ If you need to create a service configuration for your project, see [Defining an
 
 ## Running extra daemons in the web container
 
-If you need extra daemons to start up automatically inside the web container, you can easily add them using `web_extra_daemons` in `.ddev/config.yaml`. 
+If you need extra daemons to start up automatically inside the web container, you can easily add them using `web_extra_daemons` in `.ddev/config.yaml`.
 
 You might be running node daemons that serve a particular purpose (like browsersync) or daemons like a cron daemon, etc.
 
@@ -39,7 +39,6 @@ web_extra_daemons:
     command: "node_modules/.bin/http-server /var/www/html/sub -p 3000"
     directory: /var/www/html
 ```
-
 
 ## Exposing extra ports via ddev-router
 
