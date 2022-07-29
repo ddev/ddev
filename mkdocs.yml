@@ -9,6 +9,7 @@ copyright: Localdev Foundation
 extra_javascript:
 - 'assets/jquery-3.5.1.min.js'
 #- 'assets/extra.js'
+- 'assets/temp-fix-header-links-in-tabs.js'
 extra_css:
 - 'assets/extra.css'
 site_author: Localdev Foundation
