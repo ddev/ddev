@@ -766,7 +766,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if len(exposedPorts) != 0 {
 		templateVars.WebExtraHTTPPorts = "," + strings.Join(webimageExtraHTTPPorts, ",")
 		templateVars.WebExtraHTTPSPorts = "," + strings.Join(webimageExtraHTTPSPorts, ",")
-		
+
 		templateVars.WebExtraExposedPorts = "expose:\n    - "
 		// Odd way to join ints into a string from https://stackoverflow.com/a/37533144/215713
 		templateVars.WebExtraExposedPorts = templateVars.WebExtraExposedPorts + strings.Trim(strings.Join(strings.Fields(fmt.Sprint(exposedPorts)), "\n    - "), "[]")
