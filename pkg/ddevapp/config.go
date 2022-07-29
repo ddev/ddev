@@ -799,6 +799,18 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	// our extra stuff like usernames, etc.
 	// The db-build and web-build directories are used for context
 	// so must exist. They usually do.
+
+	for _, d := range []string{".webimageBuild", ".dbimageBuild"} {
+		err = os.MkdirAll(app.GetConfigPath(d), 0755)
+		if err != nil {
+			return "", err
+		}
+		// We must start with a clean base directory
+		err := fileutil.PurgeDirectory(app.GetConfigPath(d))
+		if err != nil {
+			util.Warning("unable to clean up directory %s, you may want to delete it manually: %v", d, err)
+		}
+	}
 	err = os.MkdirAll(app.GetConfigPath("db-build"), 0755)
 	if err != nil {
 		return "", err
@@ -818,6 +830,25 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		// Download of setup_*.sh seems to fail a LOT, probably a problem on their end. So try it twice
 		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN curl -sSL --fail https://deb.nodesource.com/setup_%s.x >/tmp/setup_node.sh ||  curl -sSL --fail https://deb.nodesource.com/setup_%s.sh >/tmp/setup_node.sh", app.NodeJSVersion, app.NodeJSVersion)
 		extraWebContent = extraWebContent + "\nRUN bash /tmp/setup_node.sh && apt-get install nodejs && npm config set unsafe-perm true && npm install --global gulp-cli yarn"
+	}
+
+	// Add supervisord config for WebExtraDaemons
+	for _, appStart := range app.WebExtraDaemons {
+		supervisorConf := fmt.Sprintf(`
+[program:%s]
+command=%s
+directory=%s
+autorestart=true
+startretries=10
+stdout_logfile=/proc/self/fd/2
+stdout_logfile_maxbytes=0
+redirect_stderr=true
+`, appStart.Name, appStart.Command, appStart.Directory)
+		err = os.WriteFile(app.GetConfigPath(fmt.Sprintf(".webimageBuild/%s.conf", appStart.Name)), []byte(supervisorConf), 0755)
+		if err != nil {
+			return "", fmt.Errorf("failed to write .webimageBuild/%s.conf: %v", appStart.Name, err)
+		}
+		extraWebContent = extraWebContent + fmt.Sprintf("\nADD %s.conf /etc/supervisor/conf.d\n", appStart.Name)
 	}
 
 	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
@@ -882,13 +913,8 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg:
 // It may include the contents of .ddev/<container>-build
 func WriteBuildDockerfile(fullpath string, userDockerfilePath string, extraPackages []string, composerVersion string, extraContent string) error {
 
-	// We must start with a clean base directory
-	err := os.RemoveAll(filepath.Dir(fullpath))
-	if err != nil {
-		return fmt.Errorf("unable to clean up directory %s, you may want to delete it manually: %v", filepath.Dir(fullpath), err)
-	}
 	// Start with user-built dockerfile if there is one.
-	err = os.MkdirAll(filepath.Dir(fullpath), 0755)
+	err := os.MkdirAll(filepath.Dir(fullpath), 0755)
 	if err != nil {
 		return err
 	}

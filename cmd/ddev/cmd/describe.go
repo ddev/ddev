@@ -185,6 +185,11 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			}
 			t.AppendRow(table.Row{"Mailhog", "", fmt.Sprintf("MailHog: %s\n`ddev launch -m`", mailhogURL)})
 
+			//WebExtraExposedPorts stanza
+			for _, extraPort := range app.WebExtraExposedPorts {
+				t.AppendRow(table.Row{extraPort.Name, "", fmt.Sprintf("InDocker: localhost:%d https://%s:%d http://%s:%d", extraPort.WebContainerPort, app.GetHostname(), extraPort.HTTPSPort, app.GetHostname(), extraPort.HTTPPort)})
+			}
+
 			// All URLs stanza
 			_, _, urls := app.GetAllURLs()
 			s := strings.Join(urls, ", ")

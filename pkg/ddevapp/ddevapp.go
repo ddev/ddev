@@ -73,6 +73,7 @@ type WebExposedPort struct {
 }
 
 type WebExtraDaemon struct {
+	Name      string `yaml:"name"`
 	Command   string `yaml:"command"`
 	Directory string `yaml:"directory"`
 }
@@ -2308,11 +2309,6 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 
 		httpsURLs = append(httpsURLs, "https://"+name+httpsPort)
 		httpURLs = append(httpURLs, "http://"+name+httpPort)
-
-		for _, extraPort := range app.WebExtraExposedPorts {
-			httpsURLs = append(httpsURLs, fmt.Sprintf("https://%s:%d", name, extraPort.HTTPSPort))
-			httpURLs = append(httpURLs, fmt.Sprintf("http://%s:%d", name, extraPort.HTTPPort))
-		}
 	}
 
 	if !IsRouterDisabled(app) {
