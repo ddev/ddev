@@ -35,6 +35,7 @@ web_extra_exposed_ports:
 ```
 
 The configuration below would expose a nodejs server running in the web container on port 3000 as `https://<project>.ddev.site:4000` and a "something" server running in the web container on port 4000 as `https://<project>.ddev.site:4000`:
+
 ```yaml
 web_extra_exposed_ports:
   - name: nodejs
@@ -46,6 +47,7 @@ web_extra_exposed_ports:
     https_port: 4000
     http_port: 3999
 ```
+
 ## Providing custom environment variables to a container
 
 Custom environment variables may be set in the project config.yaml or the ~/.ddev/global_config.yaml with the `web_environment` key, for example
