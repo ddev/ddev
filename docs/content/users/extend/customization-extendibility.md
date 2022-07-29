@@ -22,6 +22,25 @@ A collection of vetted service configurations is available in the [Additional Se
 
 If you need to create a service configuration for your project, see [Defining an additional service with Docker Compose](custom-compose-files.md)
 
+## Running extra daemons in the web container
+
+If you need extra daemons to start up automatically inside the web container, you can easily add them using `web_extra_daemons` in `.ddev/config.yaml`. 
+
+You might be running node daemons that serve a particular purpose (like browsersync) or daemons like a cron daemon, etc.
+
+For example, you could use this configuration to run two instances of the nodejs http-server serving different directories:
+
+```yaml
+web_extra_daemons:
+  - name: "http-1"
+    command: "node_modules/.bin/http-server -p 3000"
+    directory: /var/www/html
+  - name: "http-2"
+    command: "node_modules/.bin/http-server /var/www/html/sub -p 3000"
+    directory: /var/www/html
+```
+
+
 ## Exposing extra ports via ddev-router
 
 If your web container has additional HTTP servers running inside it on different ports, those can be exposed using `web_extra_exposed_ports` in `.ddev/config.yaml`. For example, this configuration would expose a `node-vite` HTTP server running on port 3000 inside the web container via ddev-router to ports 9998 (http) and 9999 (https), so it could be accessed via `https://<project>.ddev.site:9999`:
