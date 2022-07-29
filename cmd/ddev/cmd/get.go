@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/Masterminds/sprig/v3"
 	"github.com/drud/ddev/pkg/archive"
+	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
@@ -142,6 +143,15 @@ ddev get --list --all
 			}
 			defer cleanup()
 		}
+
+		// Automatically start, as we don't want to be taking actions with mutagen off, for example.
+		if status, _ := app.SiteStatus(); status != ddevapp.SiteRunning {
+			err = app.Start()
+			if err != nil {
+				util.Failed("Failed to start app %s to ddev-get: %v", app.Name, err)
+			}
+		}
+
 		yamlFile := filepath.Join(extractedDir, "install.yaml")
 		yamlContent, err := fileutil.ReadFileIntoString(yamlFile)
 		if err != nil {
