@@ -22,6 +22,30 @@ A collection of vetted service configurations is available in the [Additional Se
 
 If you need to create a service configuration for your project, see [Defining an additional service with Docker Compose](custom-compose-files.md)
 
+## Exposing extra ports via ddev-router
+
+If your web container has additional HTTP servers running inside it on different ports, those can be exposed using `web_extra_exposed_ports` in `.ddev/config.yaml`. For example, this configuration would expose a `node-vite` HTTP server running on port 3000 inside the web container via ddev-router to ports 9998 (http) and 9999 (https), so it could be accessed via `https://<project>.ddev.site:9999`:
+
+```yaml
+web_extra_exposed_ports:
+  - name: node-vite
+    container_port: 3000
+    http_port: 9998
+    https_port: 9999
+```
+
+The configuration below would expose a nodejs server running in the web container on port 3000 as `https://<project>.ddev.site:4000` and a "something" server running in the web container on port 4000 as `https://<project>.ddev.site:4000`:
+```yaml
+web_extra_exposed_ports:
+  - name: nodejs
+    container_port: 3000
+    http_port: 2999
+    https_port: 3000
+  - name: something
+    container_port: 4000
+    https_port: 4000
+    http_port: 3999
+```
 ## Providing custom environment variables to a container
 
 Custom environment variables may be set in the project config.yaml or the ~/.ddev/global_config.yaml with the `web_environment` key, for example

@@ -250,15 +250,17 @@ func determineRouterPorts() []string {
 				exposePorts = append(exposePorts, ports...)
 			}
 
-			for _, exposePort := range exposePorts {
+			for _, exposePortPair := range exposePorts {
 				// ports defined as hostPort:containerPort allow for router to configure upstreams
 				// for containerPort, with server listening on hostPort. exposed ports for router
 				// should be hostPort:hostPort so router can determine what port a request came from
 				// and route the request to the correct upstream
-				if strings.Contains(exposePort, ":") {
-					ports := strings.Split(exposePort, ":")
-					exposePort = ports[0]
+				exposePort := ""
+				ports := []string{""}
+				if strings.Contains(exposePortPair, ":") {
+					ports = strings.Split(exposePortPair, ":")
 				}
+				exposePort = ports[0]
 
 				var match bool
 				for _, routerPort := range routerPorts {
