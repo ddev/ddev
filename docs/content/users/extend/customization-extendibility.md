@@ -24,7 +24,7 @@ If you need to create a service configuration for your project, see [Defining an
 
 ## Using nodejs with DDEV
 
-There are many, many ways to deploy nodejs in any project, so DDEV tries to let you set up any possiblity you can come up with.
+There are many, many ways to deploy nodejs in any project, so DDEV tries to let you set up any possibility you can come up with.
 
 * You can choose the nodejs version you want to use in `.ddev/config.yaml` with `nodejs_version`
 * `ddev nvm` gives you the full capabilities of nvm.
@@ -39,7 +39,7 @@ Please share your techniques using the many ways to share. Best are [ddev-get ad
 
 If you need extra daemons to start up automatically inside the web container, you can easily add them using `web_extra_daemons` in `.ddev/config.yaml`.
 
-You might be running node daemons that serve a particular purpose (like browsersync) or daemons like a cron daemon, etc.
+You might be running node daemons that serve a particular purpose (like `browsersync`) or daemons like a `cron` daemon, etc.
 
 For example, you could use this configuration to run two instances of the nodejs http-server serving different directories:
 

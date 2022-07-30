@@ -173,6 +173,7 @@ blackfire
 bool
 breakpoint
 browser
+browsersync
 bugfix
 bugfixes
 buildkite
