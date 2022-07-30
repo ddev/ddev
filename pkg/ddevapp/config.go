@@ -836,10 +836,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	for _, appStart := range app.WebExtraDaemons {
 		supervisorConf := fmt.Sprintf(`
 [program:%s]
-command=%s
+command=bash -c "%s || sleep 2"
 directory=%s
 autorestart=true
-startretries=10
+startretries=15
 stdout_logfile=/proc/self/fd/2
 stdout_logfile_maxbytes=0
 redirect_stderr=true

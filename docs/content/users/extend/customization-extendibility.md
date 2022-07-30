@@ -74,7 +74,7 @@ web_extra_daemons:
 ```
 
 * `directory` should be the absolute path inside the container to the directory where the daemon should run.
-* `command` must be a simple binary with its arguments. `bash` features like `cd` or `&&` don't work; bash isn't used in evaluating the command. If the program to be run is not in the `ddev-webserver` `$PATH` then it should have the absolute in-container path to the program to be run, like `/var/www/html/node_modules/.bin/http-server`.
+* `command` is best as a simple binary with its arguments, but `bash` features like `cd` or `&&` do work. If the program to be run is not in the `ddev-webserver` `$PATH` then it should have the absolute in-container path to the program to be run, like `/var/www/html/node_modules/.bin/http-server`.
 * `web_extra_daemons` is a shortcut for adding a configuration to `supervisord`, which organizes daemons inside the web container. If the default settings are inadequate for your use, you can write a [complete config file for your daemon](#explicit-supervisord-configuration-for-additional-daemons).
 * Your daemon is expected to run in the foreground, not to daemonize itself, `supervisord` will take care of that.
 * To see the results of the attempt to start your daemon, see `ddev logs` or `docker logs ddev-<project>-web`.
