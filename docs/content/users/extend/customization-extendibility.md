@@ -267,4 +267,4 @@ And create a `.ddev/web-build/Dockerfile.<daemonname>` to install the config fil
 ADD daemonname.conf /etc/supervisor/conf.d
 ```
 
-Full details for advanced configuration possibilities are in [supervisor docs](http://supervisord.org/configuration.html).
+Full details for advanced configuration possibilities are in [supervisor docs](http://supervisord.org/configuration.html#program-x-section-settings).
