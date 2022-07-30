@@ -137,7 +137,16 @@ func CreateMutagenSync(app *DdevApp) error {
 		return err
 	}
 	if container == nil {
-		return errors.Errorf("web container not found")
+		return fmt.Errorf("web container for %s not found", app.Name)
+	}
+	if container.State != "running" {
+		// TODO: Improve or debug this temporary debug usage
+		util.Warning("web container is not running, logs follow")
+		logsErr := app.Logs("web", false, false, "100")
+		if logsErr != nil {
+			util.Warning("error from getting logs: %v", logsErr)
+		}
+		return fmt.Errorf("Cannot start mutagen sync because web container is not running: %v", container)
 	}
 
 	args := []string{"sync", "create", app.AppRoot, fmt.Sprintf("docker://%s/var/www/html", container.ID), "--no-global-configuration", "--name", syncName}
