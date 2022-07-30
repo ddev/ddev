@@ -18,8 +18,11 @@ import (
 func TestExtraPortExpose(t *testing.T) {
 	assert := asrt.New(t)
 
-	testDir := TestSites[0].Dir
-	app, err := NewApp(testDir, true)
+	site := TestSites[0]
+
+	testcommon.ClearDockerEnv()
+	app := new(DdevApp)
+	err := app.Init(site.Dir)
 	assert.NoError(err)
 
 	t.Cleanup(func() {
@@ -43,7 +46,7 @@ func TestExtraPortExpose(t *testing.T) {
 		{Name: "FirstDaemon", Command: "php -S 0.0.0.0:3000", Directory: "/var/www/html"},
 		{Name: "SecondDaemon", Command: "php -S 0.0.0.0:4000", Directory: "/var/www/html/sub"},
 	}
-	err = app.Start()
+	err = app.Restart()
 	require.NoError(t, err)
 
 	// Careful with portsToTest because https ports won't work on github actions Colima tests (although they work fine on normal mac)

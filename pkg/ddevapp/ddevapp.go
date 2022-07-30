@@ -19,7 +19,6 @@ import (
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-isatty"
 	"github.com/otiai10/copy"
-	"github.com/pkg/errors"
 	osexec "os/exec"
 
 	"path"
@@ -1197,7 +1196,7 @@ func (app *DdevApp) Start() error {
 		}
 		err = CreateMutagenSync(app)
 		if err != nil {
-			return errors.Errorf("Failed to create mutagen sync session %s. You may be able to resolve this problem 'ddev mutagen reset' (err=%v)", MutagenSyncName(app.Name), err)
+			return fmt.Errorf("Failed to create mutagen sync session '%s'. You may be able to resolve this problem 'ddev mutagen reset' (err=%v)", MutagenSyncName(app.Name), err)
 		}
 		mStatus, _, _, err := app.MutagenStatus()
 		if err != nil {
