@@ -37,6 +37,26 @@ Please share your techniques using the many ways to share. Best are [ddev-get ad
 
 ## Running extra daemons in the web container
 
+You can run processes inside the web container a number of ways. 
+
+1. You can manually execute them when you need them, with `ddev exec`, for example.
+2. You can run them with a post-start hook.
+3. You can run them automatically using `web_extra_daemons`.
+
+### Running extra daemons with post-start hook
+
+Needed daemons can be run either with a `post-start` `exec` hook or they can be automatically started using supervisord.
+
+A simple `post-start` exec hook in `.ddev/config.yaml` might look like:
+
+```yaml
+hooks:
+  post-start:
+    - exec: "nohup /var/www/html/frontend/node_modules/.bin/vite &"
+```
+
+### Running extra daemons using `web_extra_daemons`
+
 If you need extra daemons to start up automatically inside the web container, you can easily add them using `web_extra_daemons` in `.ddev/config.yaml`.
 
 You might be running node daemons that serve a particular purpose (like `browsersync`) or daemons like a `cron` daemon, etc.
