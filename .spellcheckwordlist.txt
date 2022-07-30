@@ -538,6 +538,7 @@ subdirectory
 subdirectories
 subfield
 sudo
+supervisord
 sur
 susi
 svg
