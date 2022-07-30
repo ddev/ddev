@@ -37,7 +37,7 @@ Please share your techniques using the many ways to share. Best are [ddev-get ad
 
 ## Running extra daemons in the web container
 
-You can run processes inside the web container a number of ways. 
+You can run processes inside the web container a number of ways.
 
 1. You can manually execute them when you need them, with `ddev exec`, for example.
 2. You can run them with a post-start hook.
@@ -248,7 +248,7 @@ these rules:
 
 Although most extra daemons (like nodejs daemons, etc) can be configured easily using [web_extra_daemons](#running-extra-daemons-in-the-web-container), there may be situations where you want complete control of the `supervisord` configuration.
 
-In these case you can create a `.ddev/web-build/<daemonname>.conf` with configuration like 
+In these case you can create a `.ddev/web-build/<daemonname>.conf` with configuration like
 
 ```
 [program:daemonname]
