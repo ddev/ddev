@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"fmt"
 	. "github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/testcommon"
@@ -46,8 +47,11 @@ func TestExtraPortExpose(t *testing.T) {
 		{Name: "FirstDaemon", Command: "php -S 0.0.0.0:3000", Directory: "/var/www/html"},
 		{Name: "SecondDaemon", Command: "php -S 0.0.0.0:4000", Directory: "/var/www/html/sub"},
 	}
-	err = app.Restart()
-	require.NoError(t, err)
+	err = app.Start()
+	if err != nil {
+		logs, logErr := exec.RunCommand("docker", []string{"logs", "ddev-" + app.Name + "-web"})
+		t.Fatalf("app failed to start: %v, logErr=%v logs=%v", err, logErr, logs)
+	}
 
 	// Careful with portsToTest because https ports won't work on github actions Colima tests (although they work fine on normal mac)
 	portsToTest := []string{"3000", "4000"}
