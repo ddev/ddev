@@ -52,7 +52,7 @@ A simple `post-start` exec hook in `.ddev/config.yaml` might look like:
 ```yaml
 hooks:
   post-start:
-    - exec: "nohup /var/www/html/frontend/node_modules/.bin/vite &"
+    - exec: "nohup php --docroot=/var/www/html/something -S 0.0.0.0:6666 &"
 ```
 
 ### Running extra daemons using `web_extra_daemons`
