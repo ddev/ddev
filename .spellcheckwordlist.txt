@@ -214,6 +214,7 @@ cron
 cson
 current
 customizations
+daemonize
 data
 database
 db
