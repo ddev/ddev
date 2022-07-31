@@ -833,11 +833,15 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	}
 
 	// Add supervisord config for WebExtraDaemons
+	var supervisorGroup []string
 	for _, appStart := range app.WebExtraDaemons {
+		supervisorGroup = append(supervisorGroup, appStart.Name)
 		supervisorConf := fmt.Sprintf(`
 [program:%s]
+group=webextradaemons
 command=bash -c "%s || sleep 2"
 directory=%s
+autostart=false
 autorestart=true
 startretries=15
 stdout_logfile=/proc/self/fd/2
@@ -849,6 +853,13 @@ redirect_stderr=true
 			return "", fmt.Errorf("failed to write .webimageBuild/%s.conf: %v", appStart.Name, err)
 		}
 		extraWebContent = extraWebContent + fmt.Sprintf("\nADD %s.conf /etc/supervisor/conf.d\n", appStart.Name)
+	}
+	if len(supervisorGroup) > 0 {
+		err = os.WriteFile(app.GetConfigPath(".webimageBuild/webextradaemons.conf"), []byte("[group:webextradaemons]\nprograms="+strings.Join(supervisorGroup, ",")), 0755)
+		if err != nil {
+			return "", fmt.Errorf("failed to write .webimageBuild/webextradaemons.conf: %v", err)
+		}
+		extraWebContent = extraWebContent + "\nADD webextradaemons.conf /etc/supervisor/conf.d\n"
 	}
 
 	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)

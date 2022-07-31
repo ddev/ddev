@@ -1211,6 +1211,18 @@ func (app *DdevApp) Start() error {
 		}
 	}
 
+	// WebExtraDaemons have to be started after mutagen sync is done, because so often
+	// they depend on code being synced into the container/volume
+	if len(app.WebExtraDaemons) > 0 {
+		util.Debug("Starting web_extra_daaemons")
+		stdout, stderr, err := app.Exec(&ExecOpts{
+			Cmd: `supervisorctl start webextradaemons:*`,
+		})
+		if err != nil {
+			util.Warning("Unable to start web_extra_daemons using supervisorctl, stdout=%s, stderr=%s: %v", stdout, stderr, err)
+		}
+	}
+
 	if !IsRouterDisabled(app) {
 		err = StartDdevRouter()
 		if err != nil {
