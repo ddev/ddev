@@ -1214,6 +1214,10 @@ func (app *DdevApp) Start() error {
 	// WebExtraDaemons have to be started after mutagen sync is done, because so often
 	// they depend on code being synced into the container/volume
 	if len(app.WebExtraDaemons) > 0 {
+		err = app.Wait([]string{"web"})
+		if err != nil {
+			util.Warning("Failed waiting for web container to become ready: %v", err)
+		}
 		util.Debug("Starting web_extra_daaemons")
 		stdout, stderr, err := app.Exec(&ExecOpts{
 			Cmd: `supervisorctl start webextradaemons:*`,
