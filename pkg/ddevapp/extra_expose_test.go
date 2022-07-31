@@ -12,7 +12,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 )
 
 // TestExtraPortExpose tests exposing additional ports with web_extra_exposed_ports.
@@ -61,11 +60,6 @@ func TestExtraPortExpose(t *testing.T) {
 		portsToTest = []string{"2999", "3999"}
 	}
 
-	// If mutagen is enabled, it may take some time for the "sub" directory to exist inside
-	// the container. Wait a bit.
-	if app.IsMutagenEnabled() {
-		time.Sleep(time.Second * 5)
-	}
 	for i, p := range portsToTest {
 		url := fmt.Sprintf("%s:%s/testfile.html", app.GetPrimaryURL(), p)
 		out, resp, err := testcommon.GetLocalHTTPResponse(t, url)
