@@ -80,8 +80,8 @@ const ConfigInstructions = `
 
 # upload_dir: custom/upload/dir
 # would set the destination path for ddev import-files to <docroot>/custom/upload/dir
-# in combination with mutagen: this results in a docker volume (type: bind)
-# See https://ddev.readthedocs.io/en/stable/users/install/performance/#mutagen-and-ddev-settings
+# When mutagen is enabled this path is bind-mounted so that all the files
+# in the upload_dir don't have to be synced into mutagen
 
 # working_dir:
 #   web: /var/www/html

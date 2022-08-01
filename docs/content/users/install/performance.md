@@ -46,15 +46,11 @@ Instructions for Mutagen and NFS are below.
 
     You can run mutagen on all your projects, there's no limit. To configure it globally, `ddev config global --mutagen-enabled`, but you cannot disable mutagen on individual projects if it's enabled globally (the global configuration wins).
 
-    ### Mutagen and DDEV Settings
+    ### Mutagen and upload_dir (`sites/default/files`, `fileadmin`, etc)
 
-    The folder set under `upload_dir` in `.ddev/config.yaml`, in combination with mutagen, results in a volume (type: bind) in `.ddev/.ddev-docker-compose-full.yaml`.
+    When mutagen is enabled, DDEV attempts to exclude from syncing the `upload_dir` (user-generated files) in project types that a default `upload_dir` or where `upload_dir` is explicitly set in `.ddev/config.yaml`. It does this by using a bind-mount in the generated `docker-compose` configuration and excluding the directory from syncing in the `.ddev/mutagen/mutagen.yml`. In most cases you need not take any action to get this behavior.
 
-    A volume would create a folder wich do not exists from here, this could result in problems if this folder should be a symlink in production context.
-
-    E.g. a local TYPO3 installation with secured-web will link the `public/fileadmin` to `private/fileadmin`. The allready created folder from volume will prevent this symlink to be created.
-
-    Setting the `upload_dir` to `../private/fileadmin` fix this issue, cause the volume now targets to an existing folder instead of a not existing symlink location.
+    If you have a nonstandard location for user-generated files, like `private/fileadmin` with the deprecated typo3-secure-web` approach, you should override the project defaults by setting `upload_dir` in `.ddev/config.yaml` to point to the correct directory so mutagen can be set up to sync correctly.
 
     ### Caveats about Mutagen Integration
 
