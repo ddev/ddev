@@ -413,7 +413,7 @@ func TestNpmYarnCommands(t *testing.T) {
 
 	site := TestSites[0]
 
-	packageJson := `
+	packageJSON := `
 	{
 	  "name": "junk",
 	  "version": "1.0.0",
@@ -453,8 +453,8 @@ func TestNpmYarnCommands(t *testing.T) {
 		require.NoError(t, err)
 		err = os.Chdir(workDir)
 		require.NoError(t, err)
-		packageJsonFile := filepath.Join(workDir, "package.json")
-		err = os.WriteFile(packageJsonFile, []byte(packageJson), 0755)
+		packageJSONFile := filepath.Join(workDir, "package.json")
+		err = os.WriteFile(packageJSONFile, []byte(packageJSON), 0755)
 		require.NoError(t, err)
 		out, err := exec.RunHostCommand(DdevBin, "npm", "install")
 		assert.NoError(err)
@@ -463,7 +463,7 @@ func TestNpmYarnCommands(t *testing.T) {
 		assert.NoError(err)
 		assert.Contains(out, "success Saved lockfile")
 
-		err = os.RemoveAll(packageJsonFile)
+		err = os.RemoveAll(packageJSONFile)
 		assert.NoError(err)
 		_ = os.RemoveAll(filepath.Join(workDir, "package-lock.json"))
 	}

@@ -76,6 +76,7 @@ func TestGetRelativeWorkingDirectory(t *testing.T) {
 	err := app.Init(site.Dir)
 	require.NoError(t, err)
 	err = os.MkdirAll(filepath.Join(app.AppRoot, "one", "two", "three", "four"), 0755)
+	require.NoError(t, err)
 
 	testCases := []string{filepath.Join("one"), filepath.Join("one", "two"), filepath.Join("one", "two", "three"), filepath.Join("one", "two", "three", "four")}
 	for _, c := range testCases {
