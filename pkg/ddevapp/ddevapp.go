@@ -25,8 +25,6 @@ import (
 	"path"
 	"time"
 
-	"regexp"
-
 	"github.com/drud/ddev/pkg/appimport"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/ddevhosts"
@@ -388,22 +386,6 @@ func (app *DdevApp) AppConfDir() string {
 // GetDocroot returns the docroot path for ddev app
 func (app DdevApp) GetDocroot() string {
 	return app.Docroot
-}
-
-// GetRelativeWorkingDirectory returns the relative working directory relative to project root
-func (app *DdevApp) GetRelativeWorkingDirectory() (string, error) {
-	re, err := regexp.Compile(app.AppRoot + `/`)
-
-	if err != nil {
-		return ``, err
-	}
-
-	pwd, err := os.Getwd()
-	if err != nil {
-		return ``, err
-	}
-
-	return re.ReplaceAllString(pwd, ""), nil
 }
 
 // GetComposerRoot will determine the absolute composer root directory where
