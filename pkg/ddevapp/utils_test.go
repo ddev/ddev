@@ -83,7 +83,6 @@ func TestGetRelativeWorkingDirectory(t *testing.T) {
 		err = os.Chdir(filepath.Join(app.AppRoot, c))
 		require.NoError(t, err)
 		relDir := app.GetRelativeWorkingDirectory()
-		relDir = filepath.ToSlash(relDir)
-		assert.Equal(c, relDir)
+		assert.Equal(filepath.ToSlash(c), filepath.ToSlash(relDir))
 	}
 }
