@@ -46,6 +46,16 @@ Instructions for Mutagen and NFS are below.
 
     You can run mutagen on all your projects, there's no limit. To configure it globally, `ddev config global --mutagen-enabled`, but you cannot disable mutagen on individual projects if it's enabled globally (the global configuration wins).
 
+    ### Mutagen and DDEV Settings
+
+    The folder set under `upload_dir` in `.ddev/config.yaml`, in combination with mutagen, results in a volume (type: bind) in `.ddev/.ddev-docker-compose-full.yaml`.
+
+    A volume would create a folder wich do not exists from here, this could result in problems if this folder should be a symlink in production context.
+
+    E.g. a local TYPO3 installation with secured-web will link the `public/fileadmin` to `private/fileadmin`. The allready created folder from volume will prevent this symlink to be created.
+
+    Setting the `upload_dir` to `../private/fileadmin` fix this issue, cause the volume now targets to an existing folder instead of a not existing symlink location.
+
     ### Caveats about Mutagen Integration
 
     Most people have an excellent experience with Mutagen, but it's good to understand how it works and what the trade-offs are:
