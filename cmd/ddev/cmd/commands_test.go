@@ -403,3 +403,69 @@ func TestPsqlCommand(t *testing.T) {
 	assert.NoError(err, "out=%s", out)
 	assert.Contains(out, `db        | db    | UTF8`)
 }
+
+// TestNpmYarnCommands tests that the `ddev npm` and yarn commands behaves and install run in
+// expected relative directory.
+func TestNpmYarnCommands(t *testing.T) {
+	assert := asrt.New(t)
+
+	origDir, _ := os.Getwd()
+
+	site := TestSites[0]
+
+	packageJson := `
+	{
+	  "name": "junk",
+	  "version": "1.0.0",
+	  "description": "",
+	  "main": "index.js",
+	  "devDependencies": {},
+	  "scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	  },
+	  "author": "",
+	  "license": "ISC"
+	}
+	`
+
+	app, err := ddevapp.NewApp(site.Dir, false)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = os.RemoveAll(filepath.Join(app.AppRoot, "one"))
+		assert.NoError(err)
+		err = os.RemoveAll(filepath.Join(app.AppRoot, "package.json"))
+		assert.NoError(err)
+		_ = os.RemoveAll(filepath.Join(app.AppRoot, "package-lock.json"))
+	})
+
+	err = app.Start()
+	require.NoError(t, err)
+
+	testDirs := []string{"", "one", "one/two", "one/two/three"}
+	for _, d := range testDirs {
+		workDir := filepath.Join(app.AppRoot, d)
+		err = os.MkdirAll(workDir, 0755)
+		require.NoError(t, err)
+		err = os.Chdir(workDir)
+		require.NoError(t, err)
+		packageJsonFile := filepath.Join(workDir, "package.json")
+		err = os.WriteFile(packageJsonFile, []byte(packageJson), 0755)
+		require.NoError(t, err)
+		out, err := exec.RunHostCommand(DdevBin, "npm", "install")
+		assert.NoError(err)
+		assert.Contains(out, "audited 1 package")
+		out, err = exec.RunHostCommand(DdevBin, "yarn", "install")
+		assert.NoError(err)
+		assert.Contains(out, "success Saved lockfile")
+
+		err = os.RemoveAll(packageJsonFile)
+		assert.NoError(err)
+		_ = os.RemoveAll(filepath.Join(workDir, "package-lock.json"))
+	}
+
+}

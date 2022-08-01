@@ -285,10 +285,7 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name, service string, exec
 			NoCapture: true,
 		}
 		if relative {
-			wd := app.GetRelativeWorkingDirectory()
-			if err == nil {
-				opts.Dir = path.Join(opts.Dir, wd)
-			}
+			opts.Dir = path.Join(opts.Dir, app.GetRelativeWorkingDirectory())
 		}
 
 		if execRaw {
