@@ -213,7 +213,7 @@ jobs:
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
           # Only publish to fury if full release, not prerelease
           # Empty FURY_ACCOUNT means skip that step in goreleaser
-          FURY_ACCOUNT: ${{ github.event.release.released && secrets.FURY_ACCOUNT }}
+          FURY_ACCOUNT: {{ if not (contains "-" .github.ref) }}{{.secrets.FURY_ACCOUNT}}{{end}}
           FURY_TOKEN: ${{ secrets.FURY_TOKEN }}
           AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
           AUR_STABLE_GIT_URL: ${{ secrets.AUR_STABLE_GIT_URL }}
