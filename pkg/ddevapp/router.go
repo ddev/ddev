@@ -12,6 +12,7 @@ import (
 	"path"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/drud/ddev/pkg/dockerutil"
@@ -256,9 +257,18 @@ func determineRouterPorts() []string {
 				// should be hostPort:hostPort so router can determine what port a request came from
 				// and route the request to the correct upstream
 				exposePort := ""
-				ports := []string{""}
+				var ports []string
+
+				// Make sure that we are fully numeric in the port pair, and not empty, or ignore
+				_, err = strconv.Atoi(strings.ReplaceAll(exposePortPair, ":", ""))
+				if err != nil {
+					continue
+				}
 				if strings.Contains(exposePortPair, ":") {
 					ports = strings.Split(exposePortPair, ":")
+				} else {
+					// HTTP_EXPOSE and HTTPS_EXPOSE can be a single port, meaning port:port
+					ports = []string{exposePortPair, exposePortPair}
 				}
 				exposePort = ports[0]
 
