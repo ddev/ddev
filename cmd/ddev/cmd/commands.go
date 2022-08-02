@@ -193,10 +193,19 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					continue
 				}
 
+				// Execute the command matching the host working directory relative
+				// to the app root.
+				relative := false
+				if val, ok := directives["HostWorkingDir"]; ok {
+					if val == "true" {
+						relative = true
+					}
+				}
+
 				if service == "host" {
 					commandToAdd.Run = makeHostCmd(app, onHostFullPath, commandName)
 				} else {
-					commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, service, execRaw)
+					commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, service, execRaw, relative)
 				}
 
 				// Add the command and mark as added
@@ -248,7 +257,7 @@ func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Comman
 }
 
 // makeContainerCmd creates the command which will app.Exec to a container command
-func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name, service string, execRaw bool) func(*cobra.Command, []string) {
+func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name, service string, execRaw bool, relative bool) func(*cobra.Command, []string) {
 	s := service
 	if s[0:1] == "." {
 		s = s[1:]
@@ -275,6 +284,10 @@ func makeContainerCmd(app *ddevapp.DdevApp, fullPath, name, service string, exec
 			Tty:       isatty.IsTerminal(os.Stdin.Fd()),
 			NoCapture: true,
 		}
+		if relative {
+			opts.Dir = path.Join(opts.Dir, app.GetRelativeWorkingDirectory())
+		}
+
 		if execRaw {
 			opts.RawCmd = append([]string{fullPath}, osArgs...)
 		}
