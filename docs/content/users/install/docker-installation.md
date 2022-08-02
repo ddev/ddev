@@ -53,7 +53,7 @@
 
     Docker Desktop for Windows can be downloaded via [Chocolatey](https://chocolatey.org/install) with `choco install docker-desktop` or it can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop). It has extensive automated testing with DDEV, and works with DDEV both on traditional Windows and in WSL2.
 
-    ### Windows WSL2: Docker-ce installed inside WSL2"
+    ### Windows WSL2: Docker-ce installed inside WSL2
 
     Although the traditional approach on Windows/WSL2 has been to use Docker Desktop, a number of people have moved away from using Docker Desktop and just installing the Docker-provided open-source `docker-ce` package inside WSL2. This uses entirely open-source software and does not require a license fee to Docker, Inc.
 
