@@ -456,6 +456,8 @@ func TestNpmYarnCommands(t *testing.T) {
 		packageJSONFile := filepath.Join(workDir, "package.json")
 		err = os.WriteFile(packageJSONFile, []byte(packageJSON), 0755)
 		require.NoError(t, err)
+		err = app.MutagenSyncFlush()
+		require.NoError(t, err)
 		out, err := exec.RunHostCommand(DdevBin, "npm", "install")
 		assert.NoError(err)
 		assert.Contains(out, "audited 1 package")
@@ -466,6 +468,8 @@ func TestNpmYarnCommands(t *testing.T) {
 		err = os.RemoveAll(packageJSONFile)
 		assert.NoError(err)
 		_ = os.RemoveAll(filepath.Join(workDir, "package-lock.json"))
+		err = app.MutagenSyncFlush()
+		require.NoError(t, err)
 	}
 
 }
