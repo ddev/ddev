@@ -46,6 +46,12 @@ Instructions for Mutagen and NFS are below.
 
     You can run mutagen on all your projects, there's no limit. To configure it globally, `ddev config global --mutagen-enabled`, but you cannot disable mutagen on individual projects if it's enabled globally (the global configuration wins).
 
+    ### Mutagen and upload_dir (`sites/default/files`, `fileadmin`, etc)
+
+    When mutagen is enabled, DDEV attempts to exclude from syncing the `upload_dir` (user-generated files) in project types that a default `upload_dir` or where `upload_dir` is explicitly set in `.ddev/config.yaml`. It does this by using a bind-mount in the generated `docker-compose` configuration and excluding the directory from syncing in the `.ddev/mutagen/mutagen.yml`. In most cases you need not take any action to get this behavior.
+
+    If you have a nonstandard location for user-generated files, like `private/fileadmin` with the deprecated typo3-secure-web` approach, you should override the project defaults by setting `upload_dir` in `.ddev/config.yaml` to point to the correct directory so mutagen can be set up to sync correctly.
+
     ### Caveats about Mutagen Integration
 
     Most people have an excellent experience with Mutagen, but it's good to understand how it works and what the trade-offs are:
