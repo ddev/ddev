@@ -188,6 +188,21 @@ const ConfigInstructions = `
 # The default time that ddev waits for all containers to become ready can be increased from
 # the default 120. This helps in importing huge databases, for example.
 
+# web_extra_exposed_ports:
+# -
+#    container_port: 3000
+#    https_port: 3000
+#    http_port: 2999
+# Allows a set of extra ports to be exposed via ddev-router
+# The port behavior on the ddev-webserver must be arranged separately
+# For example, with a web app on port 3000 inside the container, this config would
+# expose that web app on https://<project>.ddev.site:9999 and http://<project>.ddev.site:9998
+# web_extra_exposed_ports:
+#  - container_port: 3000
+#    http_port: 9998
+#    https_port: 9999
+
+
 # Many ddev commands can be extended to run tasks before or after the
 # ddev command is executed, for example "post-start", "post-import-db",
 # "pre-composer", "post-composer"

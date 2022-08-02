@@ -1,3 +1,4 @@
+
 # Additional Service Configurations and Add-ons for ddev
 
 DDEV-Local projects can be extended to provide additional add-ons, including services. This is achieved by adding docker-compose files to a project's `.ddev` directory that defines the added add-on(s).
@@ -98,9 +99,7 @@ More exotic template-based replacements can be seen in advanced test [example](h
 Commonly used services will be migrated from the ddev-contrib repository to individual, tested, supported repositories, but
  [ddev-contrib](https://github.com/drud/ddev-contrib) repository has a wealth of additional examples and instructions:
 
-* **ElasticHQ**:See [ElasticHQ](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/elastichq).
 * **Headless Chrome**: See [Headless Chrome for Behat Testing](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/headless-chrome)
-* **MongoDB**: See [MongoDB](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/mongodb).
 * **Old PHP Versions to Run Old Sites**: See [Old PHP Versions](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/old_php)
 * **RabbitMQ**: See [RabbitMQ](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/rabbitmq)
 * **TYPO3 Solr Integration**: See [TYPO3 Solr](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/typo3-solr)

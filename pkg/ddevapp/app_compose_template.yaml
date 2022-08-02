@@ -94,6 +94,9 @@ services:
     cap_add:
       - SYS_PTRACE
     working_dir: "{{ .WebWorkingDir }}"
+
+    {{ .WebExtraExposedPorts }}
+
     volumes:
       {{ if and (not .MutagenEnabled) (not .NoProjectMount) }}
       - type: {{ .MountType }}
@@ -186,10 +189,10 @@ services:
     - HOST_DOCKER_INTERNAL_IP={{ .HostDockerInternalIP }}
     # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.site:<port>
     # To expose a container port to a different host port, define the port as hostPort:containerPort
-    - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80,${DDEV_MAILHOG_PORT}:{{ .MailhogPort }}
+    - HTTP_EXPOSE=${DDEV_ROUTER_HTTP_PORT}:80,${DDEV_MAILHOG_PORT}:{{ .MailhogPort }}{{ .WebExtraHTTPPorts }}
     # You can optionally expose an HTTPS port option for any ports defined in HTTP_EXPOSE.
     # To expose an HTTPS port, define the port as securePort:containerPort.
-    - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80,${DDEV_MAILHOG_HTTPS_PORT}:{{ .MailhogPort }}
+    - HTTPS_EXPOSE=${DDEV_ROUTER_HTTPS_PORT}:80,${DDEV_MAILHOG_HTTPS_PORT}:{{ .MailhogPort }}{{ .WebExtraHTTPSPorts }}
     - IS_DDEV_PROJECT=true
     - LINES
     - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-web/mysql_history

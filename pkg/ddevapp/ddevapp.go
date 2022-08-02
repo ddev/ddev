@@ -19,7 +19,6 @@ import (
 	"github.com/lextoumbourou/goodhosts"
 	"github.com/mattn/go-isatty"
 	"github.com/otiai10/copy"
-	"github.com/pkg/errors"
 	osexec "os/exec"
 
 	"path"
@@ -63,6 +62,19 @@ var DatabaseDefault = DatabaseDesc{nodeps.MariaDB, nodeps.MariaDBDefaultVersion}
 type DatabaseDesc struct {
 	Type    string `yaml:"type"`
 	Version string `yaml:"version"`
+}
+
+type WebExposedPort struct {
+	Name             string `yaml:"name"`
+	WebContainerPort int    `yaml:"container_port"`
+	HTTPPort         int    `yaml:"http_port"`
+	HTTPSPort        int    `yaml:"https_port"`
+}
+
+type WebExtraDaemon struct {
+	Name      string `yaml:"name"`
+	Command   string `yaml:"command"`
+	Directory string `yaml:"directory"`
 }
 
 // DdevApp is the struct that represents a ddev app, mostly its config
@@ -126,6 +138,8 @@ type DdevApp struct {
 	WebEnvironment            []string               `yaml:"web_environment"`
 	NodeJSVersion             string                 `yaml:"nodejs_version"`
 	DefaultContainerTimeout   string                 `yaml:"default_container_timeout,omitempty"`
+	WebExtraExposedPorts      []WebExposedPort       `yaml:"web_extra_exposed_ports,omitempty"`
+	WebExtraDaemons           []WebExtraDaemon       `yaml:"web_extra_daemons,omitempty"`
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
@@ -1182,7 +1196,7 @@ func (app *DdevApp) Start() error {
 		}
 		err = CreateMutagenSync(app)
 		if err != nil {
-			return errors.Errorf("Failed to create mutagen sync session %s. You may be able to resolve this problem 'ddev mutagen reset' (err=%v)", MutagenSyncName(app.Name), err)
+			return fmt.Errorf("Failed to create mutagen sync session '%s'. You may be able to resolve this problem 'ddev mutagen reset' (err=%v)", MutagenSyncName(app.Name), err)
 		}
 		mStatus, _, _, err := app.MutagenStatus()
 		if err != nil {
@@ -1194,6 +1208,22 @@ func (app *DdevApp) Start() error {
 			util.Success("Mutagen sync flush completed in %s.\nFor details on sync status 'ddev mutagen status %s --verbose'", dur, MutagenSyncName(app.Name))
 		} else {
 			util.Error("Mutagen sync completed with problems in %s.\nFor details on sync status 'ddev mutagen status %s --verbose'", dur, MutagenSyncName(app.Name))
+		}
+	}
+
+	// WebExtraDaemons have to be started after mutagen sync is done, because so often
+	// they depend on code being synced into the container/volume
+	if len(app.WebExtraDaemons) > 0 {
+		err = app.Wait([]string{"web"})
+		if err != nil {
+			util.Warning("Failed waiting for web container to become ready: %v", err)
+		}
+		util.Debug("Starting web_extra_daaemons")
+		stdout, stderr, err := app.Exec(&ExecOpts{
+			Cmd: `supervisorctl start webextradaemons:*`,
+		})
+		if err != nil {
+			util.Warning("Unable to start web_extra_daemons using supervisorctl, stdout=%s, stderr=%s: %v", stdout, stderr, err)
 		}
 	}
 

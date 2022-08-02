@@ -173,6 +173,7 @@ blackfire
 bool
 breakpoint
 browser
+browsersync
 bugfix
 bugfixes
 buildkite
@@ -213,6 +214,7 @@ cron
 cson
 current
 customizations
+daemonize
 data
 database
 db
@@ -538,6 +540,7 @@ subdirectory
 subdirectories
 subfield
 sudo
+supervisord
 sur
 susi
 svg
