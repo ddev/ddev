@@ -44,9 +44,9 @@ func TestPlatformPull(t *testing.T) {
 
 	require.True(t, isPullSiteValid(platformPullSiteURL, platformSiteExpectation), "platformPullSiteURL %s isn't working right", platformPullSiteURL)
 
-	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
+	globalWebEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
 
-	testDir, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 
 	siteDir := testcommon.CreateTmpDir(t.Name())
 
@@ -57,6 +57,7 @@ func TestPlatformPull(t *testing.T) {
 	assert.NoError(err)
 	app, err := NewApp(siteDir, true)
 	assert.NoError(err)
+	webEnvSave := app.WebEnvironment
 	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal9
 	err = app.Stop(true, false)
@@ -71,14 +72,17 @@ func TestPlatformPull(t *testing.T) {
 	testcommon.ClearDockerEnv()
 
 	t.Cleanup(func() {
-		globalconfig.DdevGlobalConfig.WebEnvironment = webEnvSave
+		globalconfig.DdevGlobalConfig.WebEnvironment = globalWebEnvSave
 		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		assert.NoError(err)
+		app.WebEnvironment = webEnvSave
+		err = app.WriteConfig()
 		assert.NoError(err)
 
 		err = app.Stop(true, false)
 		assert.NoError(err)
 
-		_ = os.Chdir(testDir)
+		_ = os.Chdir(origDir)
 		err = os.RemoveAll(siteDir)
 		assert.NoError(err)
 	})
@@ -86,13 +90,11 @@ func TestPlatformPull(t *testing.T) {
 	err = PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
-	// Build our platform.yaml from the example file
-	s, err := os.ReadFile(app.GetConfigPath("providers/platform.yaml.example"))
-	require.NoError(t, err)
-	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: "+platformTestSiteID+"\n#project_id:"), 1)
-	x = strings.Replace(x, "environment:", fmt.Sprintf("environment: %s\nenvironment:", platformPullTestSiteEnvironment), 1)
-	err = os.WriteFile(app.GetConfigPath("providers/platform.yaml"), []byte(x), 0666)
-	assert.NoError(err)
+	app.WebEnvironment = []string{
+		"PLATFORM_PROJECT=" + platformTestSiteID,
+		"PLATFORM_ENVIRONMENT=" + platformPullTestSiteEnvironment,
+	}
+	app.Docroot = "web"
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
@@ -154,23 +156,18 @@ func TestPlatformPush(t *testing.T) {
 	app.Hooks = map[string][]YAMLTask{"post-push": {{"exec-host": "touch hello-post-push-" + app.Name}}, "pre-push": {{"exec-host": "touch hello-pre-push-" + app.Name}}}
 	_ = app.Stop(true, false)
 
+	app.WebEnvironment = []string{
+		"PLATFORM_PROJECT=" + platformTestSiteID,
+		"PLATFORM_ENVIRONMENT=" + platformPushTestSiteEnvironment,
+	}
+	app.Docroot = "web"
+
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
 	testcommon.ClearDockerEnv()
 
 	err = PopulateExamplesCommandsHomeadditions(app.Name)
-	require.NoError(t, err)
-
-	// Build our platform.yaml from the example file
-	s, err := os.ReadFile(app.GetConfigPath("providers/platform.yaml.example"))
-	require.NoError(t, err)
-	x := strings.Replace(string(s), "project_id:", fmt.Sprintf("project_id: %s\n#project_id:", platformTestSiteID), -1)
-	x = strings.Replace(x, " environment:", fmt.Sprintf(" environment: %s\n#environment:", platformPushTestSiteEnvironment), 1)
-
-	err = os.WriteFile(app.GetConfigPath("providers/platform.yaml"), []byte(x), 0666)
-	assert.NoError(err)
-	err = app.WriteConfig()
 	require.NoError(t, err)
 
 	provider, err := app.GetProvider("platform")
@@ -186,7 +183,7 @@ func TestPlatformPush(t *testing.T) {
 	require.NoError(t, err)
 	fName := tval + ".txt"
 	fContent := []byte(tval)
-	err = os.WriteFile(filepath.Join(siteDir, "sites/default/files", fName), fContent, 0644)
+	err = os.WriteFile(filepath.Join(siteDir, "web/sites/default/files", fName), fContent, 0644)
 	assert.NoError(err)
 
 	err = app.Push(provider, false, false)

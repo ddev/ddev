@@ -1,0 +1,69 @@
+#ddev-generated
+# Example Platform.sh provider configuration.
+
+# Consider using `ddev get platformsh/ddev-platformsh` (https://github.com/platformsh/ddev-platformsh) for more
+# complete platform integration.
+
+# To use this configuration,
+
+# 1. Check out the site from platform.sh and then configure it with `ddev config`. You'll want to use `ddev start` and make sure the basic functionality is working.
+# 2. Obtain and configure an API token.
+#    a. Login to the Platform.sh Dashboard and go to Account->API Tokens to create an API token for ddev to use.
+#    b. Add the API token to the `web_environment` section in your global ddev configuration at ~/.ddev/global_config.yaml:
+#    ```yaml
+#    web_environment:
+#    - PLATFORMSH_CLI_TOKEN=abcdeyourtoken
+#    ```
+# 3. Add PLATFORM_PROJECT and PLATFORM_ENVIRONMENT variables to your project `.ddev/config.yaml` or a `.ddev/config.platform.yaml`
+#    ```yaml
+#    web_environment:
+#    - PLATFORM_PROJECT=nf4amudfn23biyourproject
+#    - PLATFORM_ENVIRONMENT=main
+# 4. `ddev restart`
+# 5. Run `ddev pull platform`. After you agree to the prompt, the current upstream database and files will be downloaded.
+# 6. Optionally use `ddev push platform` to push local files and database to platform.sh. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
+
+# If you need to change this `platform.yaml` recipe, you can change it to suit your needs, but remember to remove the "ddev-generated" line from the top.
+
+# Debugging: Use `ddev exec platform` to see what platform.sh knows about
+# your configuration and whether it's working correctly.
+
+auth_command:
+  command: |
+    set -eu -o pipefail
+    if [ -z "${PLATFORMSH_CLI_TOKEN:-}" ]; then echo "Please make sure you have set PLATFORMSH_CLI_TOKEN in ~/.ddev/global_config.yaml" && exit 1; fi
+
+db_pull_command:
+  command: |
+    #set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
+    platform db:dump --yes --gzip --file=/var/www/html/.ddev/.downloads/db.sql.gz --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}"
+
+files_import_command:
+  command: |
+    #set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    # Use $PLATFORM_MOUNTS if it exists to get list of mounts to download, otherwise just web/sites/default/files (drupal)
+    declare -a mounts=(${PLATFORM_MOUNTS:-/web/sites/default/files})
+    platform mount:download --all --yes --quiet --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}"  --target=/var/www/html
+
+
+# push is a dangerous command. If not absolutely needed it's better to delete these lines.
+db_push_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
+    pushd /var/www/html/.ddev/.downloads >/dev/null;
+    gzip -dc db.sql.gz | platform db:sql --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}"
+
+# push is a dangerous command. If not absolutely needed it's better to delete these lines.
+# TODO: This is a naive, Drupal-centric push, which needs adjustment for the mount to be pushed.
+files_push_command:
+  command: |
+    # set -x   # You can enable bash debugging output by uncommenting
+    set -eu -o pipefail
+    ls "${DDEV_FILES_DIR}" >/dev/null # This just refreshes stale NFS if possible
+    platform mount:upload --yes --quiet --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}" --source="${DDEV_FILES_DIR}" --mount=web/sites/default/files
+
