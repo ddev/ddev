@@ -1,5 +1,4 @@
-// Fires whenever the hash changes
-window.addEventListener('hashchange', function () {
+const fixTabs = () => {
     // Get current hash
     let currentHash = window.location.href.split('#')[1];
     if (!currentHash) return
@@ -43,4 +42,10 @@ window.addEventListener('hashchange', function () {
 
     // scroll to hash
     hashElement.scrollIntoView();
-}, false);
+};
+
+// Fires after initial page load
+window.addEventListener('load', fixTabs, false);
+
+// Fires whenever the hash changes
+window.addEventListener('hashchange', fixTabs, false);
