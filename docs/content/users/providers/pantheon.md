@@ -31,8 +31,10 @@ If you have ddev installed, and have an active Pantheon account with an active s
 
 8. In your **project's** .ddev/providers directory, copy pantheon.yaml.example to pantheon.yaml (_Note that this refers to your project .ddev folder and not the global .ddev folder_).  Edit the `project` environment variable under `environment_variables`. It will be in the format `<projectname>.<environment>`, for example `yourprojectname.dev` or (in cases of ambiguity) `<project_uuid>.<environment>`, for example `009a2cda-2c22-4eee-8f9d-96f017321555.dev`.  
 
-9. `ddev restart`
+9. If using Colima, may need to set an explicit nameserver in `~/.colima/default/colima.yaml` like `1.1.1.1`. If this configuration is changed, may also need to [restart colima](https://ddev.readthedocs.io/en/stable/users/install/docker-installation/).
 
-10. Run `ddev pull pantheon`. The ddev environment  download the Pantheon database and files, and import the database and files into the ddev environment. You should now be able to access the project locally.
+10. `ddev restart`
 
-11. Optionally use `ddev push pantheon` to push local files and database to Pantheon. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
+11. Run `ddev pull pantheon`. The ddev environment  download the Pantheon database and files, and import the database and files into the ddev environment. You should now be able to access the project locally.
+
+12. Optionally use `ddev push pantheon` to push local files and database to Pantheon. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.

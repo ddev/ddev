@@ -22,9 +22,10 @@
 
     1. Install colima with `brew install colima` using homebrew or see the other [installation options](https://github.com/abiosoft/colima/blob/main/docs/INSTALL.md).
     2. Configure your system to use mutagen, which is nearly essential for Colima. `ddev config global --mutagen-enabled`.
-    3. Start colima: `colima start --cpu 4 --memory 4` will set up a colima instance with 4 CPUs and 4GB of memory allocated. Your needs may vary. After the first start you can just use `colima start`. Use `colima start -e` to edit the configuration file.
-    4. `colima status` will show colima's status.
-    5. After a computer restart you'll need to `colima start` again. This will eventually be automated in later versions of colima.
+    3. If integrating with [Pantheon](https://ddev.readthedocs.io/en/stable/users/providers/pantheon/), may need to set an explicit nameserver in `~/.colima/default/colima.yaml` like `1.1.1.1`.
+    4. Start colima: `colima start --cpu 4 --memory 4` will set up a colima instance with 4 CPUs and 4GB of memory allocated. Your needs may vary. After the first start you can just use `colima start`. Use `colima start -e` to edit the configuration file.
+    5. `colima status` will show colima's status.
+    6. After a computer restart you'll need to `colima start` again. This will eventually be automated in later versions of colima.
 
     !!!warning "Docker contexts let the docker client point at the right docker server"
         Colima activates its own docker context in order to not conflict with Docker Desktop, so if you `docker context ls` you'll see a list of available contexts with currently active context indicated with an "\*" (which will be "colima" after you've started colima). You can change to the default (Docker Desktop) with `docker context use default` or change back with `docker context use colima`. This means you can actually run Docker Desktop and Colima at the same time... but be careful which context you're pointing at.
