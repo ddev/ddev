@@ -2,11 +2,16 @@
 
 This version history has been driven by what we hear from our wonderful community of users. If you have lobbying for a favorite item or think things should be re-prioritized, just lobby in the [issue queue](https://github.com/drud/ddev/issues). We listen. Or talk to us in any of the [support locations](https://ddev.readthedocs.io/en/stable/#support).
 
-## Coming... v1.20
+## v1.20 (Released 2022-08)
 
-Take a look at the [v1.20 milestone](https://github.com/drud/ddev/milestone/54) to see what's currently slated. Comment there on your favorites, or lobby for other things to be added.
+- [x] Improved nodejs support**. You can now run a nodejs daemon with simple config.yaml support (web_extra_daemons) and if it listens on a port you can expose it via ddev-router with `web_extra_exposed_ports`.  (Both of these features can be used for daemons other than nodejs daemons.)
+- [x] Default PHP version for new projects is now 8.0; the default database version is now MariaDB 10.4.
+- [x] `config.*.yaml` are now *merged* instead of just overwriting other values. For example, if config.yaml has hooks, and config.something.yaml has hooks, the values will be merged, getting all of the hooks. Scalar values (like php_version, for example) still are overwritten by the last value loaded.
+- [x] `ddev craft` command is now included for projects of type `php`.
+- [x] `ddev npm` and `ddev yarn` use the relative path in the project for execution inside the container.
+- [x]  [platform.sh](http://platform.sh) provider integration has been updated so it doesn’t require any editing of files at all, just setting a couple of environment variables. This is the future for all of the provider integrations; there’s no reason why files should have to be modified.
 
-## v1.19 (Released 2022-03)
+## v1.19.0-v1.19.5 (Released 2022-03 through 2022-07)
 
 - [x] `ddev get` and `ddev get --list` allow quick installation of maintained, tested add-ons.
 - [x] Postgresql support alongside MariaDB and MySQL.
@@ -14,6 +19,18 @@ Take a look at the [v1.20 milestone](https://github.com/drud/ddev/milestone/54) 
 - [x] Database snapshots are now gzipped, resulting in perhaps 20x size difference. A snapshot that used to use 207MB on disk is now 5MB.
 - [x] New `ddev service enable`, `ddev service disable`, `ddev php`, `ddev debug test`, `ddev debug dockercheck` commands.
 - [x] Support for remote docker instances.
+- [x] `import-db`, `export-db`, and `import-files` now accept xz and bzip2 compression, thanks to [weareb13](https://twitter.com/weareb13) for sponsoring this feature.
+- [x] `ddev clean` will clean up project usage like snapshots and old images thanks to @mikebarkas
+- [x] mariadb:10.7 and 10.8.
+- [x]  `ddev debug refresh` command to clear Docker's cache for composer-not-updating or related build issues.
+- [x] nodejs 18 is now supported in nodejs_version.
+- [x] `ddev snapshot --all` can now snapshot running and non-running projects
+- [x] `ddev config --web-environment-add` and `ddev config global --web-environment-add` now allow *adding* to existing environment variables, instead of just replacing them.
+- [x] Interactive project selection on `ddev start -s`  and `ddev stop -s` - you can choose which project you want to start or stop from the listed projects.
+- [x] Multiple Dockerfiles: The .ddev/web-build and .ddev/db-build directories can now contain multiple Dockerfiles named Dockerfile, `Dockerfile.<anything>`.
+- [x] pre-Dockerfiles: v1.19.3 added `.ddev/web-build/Dockerfile.*` but there are some things people have to do in a build before anything else, like adding proxy information or installing a CA.
+- [x] Container Wait Timeout is improved so a long `ddev snapshot restore` doesn't tell you it timed out.
+- [x] `ddev npm` command`
 
 ## v1.18 (Released 2021-09-28) and v1.18.2 (2021-12-08)
 
