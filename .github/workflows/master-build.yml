@@ -214,6 +214,8 @@ jobs:
           FURY_ACCOUNT: ${{ secrets.FURY_ACCOUNT }}
           FURY_TOKEN: ${{ secrets.FURY_TOKEN }}
           AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          AUR_STABLE_GIT_URL: ${{ secrets.AUR_STABLE_GIT_URL }}
+          AUR_EDGE_GIT_URL: ${{ secrets.AUR_EDGE_GIT_URL }}
 
       # Do artifacts for upload to workflow URL
       - name: Generate artifacts

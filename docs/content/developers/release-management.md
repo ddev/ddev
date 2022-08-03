@@ -23,6 +23,10 @@ The following "Repository secret" environment variables must be added to <https:
 
 * `FURY_TOKEN`: The push token assigned to the fury account above.
 
+* `AUR_STABLE_GIT_URL`: The git URL for AUR stable (normally `ddev-bin`), for example `ssh://aur@aur.archlinux.org/ddev-bin.git`
+
+* `AURU_EDGE_GIT_URL`: The git URL for AUR edge (normally `ddev-edge-bin`), for example `ssh://aur@aur.archlinux.org/ddev-edge-bin.git`
+
 ## Creating a release (almost everything is now automated)
 
 ### Prerelease tasks
