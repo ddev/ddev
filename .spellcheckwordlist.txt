@@ -442,6 +442,7 @@ pg_dump
 pgsql
 phpcs
 pid
+platformsh
 plugin
 png
 pnpm
@@ -511,6 +512,7 @@ service
 services
 session
 several
+sh
 share
 shell
 shopware
