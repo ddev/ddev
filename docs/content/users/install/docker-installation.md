@@ -23,7 +23,7 @@
     1. Install colima with `brew install colima` using homebrew or see the other [installation options](https://github.com/abiosoft/colima/blob/main/docs/INSTALL.md).
     2. Configure your system to use mutagen, which is nearly essential for Colima. `ddev config global --mutagen-enabled`.
     3. Start colima: `colima start --cpu 4 --memory 4 --dns=1.1.1.1` will set up a colima instance with 4 CPUs and 4GB of memory allocated and using DNS server 1.1.1.1 (Cloudflare). Your needs may vary. After the first start you can just use `colima start`. Use `colima start -e` to edit the configuration file. (Configuring the DNS server is critical if you're using Pantheon or other tenants of `storage.googleapis.com`.)
-    5. `colima status` will show colima's status.
+    4. `colima status` will show colima's status.
     6. After a computer restart you'll need to `colima start` again. This will eventually be automated in later versions of colima.
 
     !!!warning "Docker contexts let the docker client point at the right docker server"
