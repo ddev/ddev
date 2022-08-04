@@ -31,7 +31,7 @@ If you have ddev installed, and have an active Pantheon account with an active s
 
 8. In your **project's** .ddev/providers directory, copy pantheon.yaml.example to pantheon.yaml (_Note that this refers to your project .ddev folder and not the global .ddev folder_).  Edit the `project` environment variable under `environment_variables`. It will be in the format `<projectname>.<environment>`, for example `yourprojectname.dev` or (in cases of ambiguity) `<project_uuid>.<environment>`, for example `009a2cda-2c22-4eee-8f9d-96f017321555.dev`.  
 
-9. If using Colima, may need to set an explicit nameserver in `~/.colima/default/colima.yaml` like `1.1.1.1`. If this configuration is changed, may also need to [restart colima](https://ddev.readthedocs.io/en/stable/users/install/docker-installation/).
+9. If using Colima, may need to set an explicit nameserver in `~/.colima/default/colima.yaml` like `1.1.1.1`. If this configuration is changed, may also need to restart Colima.
 
 10. `ddev restart`
 
