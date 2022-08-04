@@ -78,6 +78,7 @@ Misconfigured
 MyDevSite
 MySQL
 MySite
+Nameserver
 NFS
 Netbeans
 Nginx
