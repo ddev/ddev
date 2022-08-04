@@ -105,6 +105,8 @@ web_extra_exposed_ports:
     http_port: 3999
 ```
 
+**Please make sure you fill in all three fields, even if you don't intend to use the `https_port`.** If you don't add `https_port`, then it will be a default `0` and the `ddev-router` will fail to start.
+
 ## Providing custom environment variables to a container
 
 Custom environment variables may be set in the project config.yaml or the ~/.ddev/global_config.yaml with the `web_environment` key, for example
