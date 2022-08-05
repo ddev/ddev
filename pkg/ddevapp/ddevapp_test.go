@@ -3763,6 +3763,7 @@ func TestEnvironmentVariables(t *testing.T) {
 		"DDEV_ROUTER_HTTPS_PORT": app.RouterHTTPSPort,
 		"DDEV_SITENAME":          app.Name,
 		"DDEV_TLD":               app.ProjectTLD,
+		"DDEV_VERSION":           versionconstants.DdevVersion,
 		"DDEV_WEBSERVER_TYPE":    app.WebserverType,
 	}
 
