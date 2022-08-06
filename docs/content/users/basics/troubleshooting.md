@@ -235,7 +235,7 @@ While ddev can create a webserver and a docker network infrastructure for a proj
     * This technique may not work on Windows WSL2, see below.
     * Only 10 hosts are valid on a line on traditional Windows, see [below](#windows-hosts-file-limited-to-10-hosts-per-ip-address-line); beyond that hostnames are ignored.
 
-## Windows WSL2 name resolution on non-ddev.site hostnames or when not internet-connected
+### Windows WSL2 name resolution on non-ddev.site hostnames or when not internet-connected
 
 On Windows WSL2, there is a hosts file inside the WSL2 instance (`/etc/hosts`), and there is also one on the Windows side (`C:\Windows\system32\drivers\etc\hosts`). Many people use a browser on the Windows side, which has no idea about hostnames that may be set up in the WSL2 /etc/hosts file. So a WSL2 project which uses `*.ddev.site` works fine when accessed by a browser on the Windows side, as long as internet connectivity is available (DNS lookups of `*.ddev.site` succeed).
 
@@ -244,7 +244,7 @@ However, if the project uses non-ddev.site hostnames, or if not connected to the
 1. Add the needed hostname(s) manually to the Windows hosts file. This can easily be done with the *Windows* version of ddev.exe with `sudo ddev hostname <hostname> 127.0.0.1` on *Windows* in PowerShell or Cmd or git-bash.
 2. Or run a browser within WSL2. On Windows 11 this is built-in, but in Windows 10 may require an X11 server like X410.
 
-## DNS Rebinding Prohibited
+### DNS Rebinding Prohibited ("Cannot resolve" or "unknown host" or "No address associated with hostname")
 
 Some DNS servers prevent the use of DNS records that resolve to `localhost` (127.0.0.1) because in uncontrolled environments this may be used as a form of attack called [DNS Rebinding](https://en.wikipedia.org/wiki/DNS_rebinding). Since \*.ddev.site resolves to 127.0.0.1, they may refuse to resolve, and your browser may be unable to look up a hostname, and give you messages like "<url> server IP address could not be found" or "We can’t connect to the server at <url>".
   
