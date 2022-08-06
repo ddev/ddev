@@ -130,13 +130,13 @@ com.docker.backend.exe        5760 Services                   0      9,536 K
 
 The resulting output displays which command is running and its pid. Choose the appropriate method to stop the other server.
 
-You may be able to find out what is using a port using `curl` also. On linux, macOS, or in git-bash on Windows, `curl -I localhost` or `curl -I -k https://localhost:443`. The result may give you a hint about what application is at fault. 
+You may be able to find out what is using a port using `curl` also. On linux, macOS, or in git-bash on Windows, `curl -I localhost` or `curl -I -k https://localhost:443`. The result may give you a hint about what application is at fault.
 
 We welcome your [suggestions](https://github.com/drud/ddev/issues/new) based on other issues you've run into and your troubleshooting technique.
 
 ### Debugging port issues on WSL2
 
-On WSL2 it's harder to debug this because the port may be occupied either on the traditional Windows side, so you may have to debug it both inside your WSL2 distro and on Windows, perhaps using both the Windows techniques shown above and the Linux techniques shown above. The ports are shared between Windows and WSL2 so can be broken on either side. 
+On WSL2 it's harder to debug this because the port may be occupied either on the traditional Windows side, so you may have to debug it both inside your WSL2 distro and on Windows, perhaps using both the Windows techniques shown above and the Linux techniques shown above. The ports are shared between Windows and WSL2 so can be broken on either side.
 
 ## Database container fails to start
 
@@ -248,7 +248,7 @@ However, if the project uses non-ddev.site hostnames, or if not connected to the
 
 Some DNS servers prevent the use of DNS records that resolve to `localhost` (127.0.0.1) because in uncontrolled environments this may be used as a form of attack called [DNS Rebinding](https://en.wikipedia.org/wiki/DNS_rebinding). Since \*.ddev.site resolves to 127.0.0.1, they may refuse to resolve, and your browser may be unable to look up a hostname, and give you messages like "<url> server IP address could not be found" or "We can’t connect to the server at <url>".
   
-You can tell if this is your problem by `ping dkkd.ddev.site`. If you get "No address associated with hostname" or something of that type, it means that your computer can't look up `*.ddev.site`. 
+You can tell if this is your problem by `ping dkkd.ddev.site`. If you get "No address associated with hostname" or something of that type, it means that your computer can't look up `*.ddev.site`.
 
 In this case, you can
 
