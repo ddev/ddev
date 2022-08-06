@@ -159,7 +159,7 @@ Here's a quickstart instructions for a number of different environments:
         ddev launch
         ```
 
-        === "Drupal 10"
+    === "Drupal 10"
 
         ### Drupal 10 composer build
     
@@ -180,7 +180,7 @@ Here's a quickstart instructions for a number of different environments:
         
         Note that as Drupal 10 moves from alpha to beta and then release, you'll want to change the tag from `^10@alpha` to `^10@beta` and then `^10`.
 
-        === "Drupal 6/7"
+    === "Drupal 6/7"
 
         ### Drupal 6/7 install
     
@@ -198,7 +198,7 @@ Here's a quickstart instructions for a number of different environments:
         
         Quickstart instructions for database imports can be found under [Importing a database](#importing-a-database).
 
-        === "Git clone"
+    === "Git clone"
 
         ### Git clone build
     
