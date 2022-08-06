@@ -103,6 +103,7 @@ or `sudo launchctl stop homebrew.mxcl.nginx`
 * apache (often named "httpd") (many environments): `sudo apachectl stop` or on Ubuntu `sudo service apache2 stop`
 * vpnkit (macOS): You likely have a docker container bound to port 80, do you have containers up for Lando or another docker-based development environment? If so, stop the other environment.
 * Lando: If you have previously used Lando try running `lando poweroff`
+* IIS on Windows (can affect WSL2). You'll have to disable it in the Windows settings.
 
 To dig deeper, you can use a number of tools to find out what process is listening.
 
@@ -129,7 +130,13 @@ com.docker.backend.exe        5760 Services                   0      9,536 K
 
 The resulting output displays which command is running and its pid. Choose the appropriate method to stop the other server.
 
+You may be able to find out what is using a port using `curl` also. On linux, macOS, or in git-bash on Windows, `curl -I localhost` or `curl -I -k https://localhost:443`. The result may give you a hint about what application is at fault.
+
 We welcome your [suggestions](https://github.com/drud/ddev/issues/new) based on other issues you've run into and your troubleshooting technique.
+
+### Debugging port issues on WSL2
+
+On WSL2 it's harder to debug this because the port may be occupied either on the traditional Windows side, so you may have to debug it both inside your WSL2 distro and on Windows, perhaps using both the Windows techniques shown above and the Linux techniques shown above. The ports are shared between Windows and WSL2 so can be broken on either side.
 
 ## Database container fails to start
 
@@ -228,7 +235,7 @@ While ddev can create a webserver and a docker network infrastructure for a proj
     * This technique may not work on Windows WSL2, see below.
     * Only 10 hosts are valid on a line on traditional Windows, see [below](#windows-hosts-file-limited-to-10-hosts-per-ip-address-line); beyond that hostnames are ignored.
 
-## Windows WSL2 name resolution on non-ddev.site hostnames or when not internet-connected
+### Windows WSL2 name resolution on non-ddev.site hostnames or when not internet-connected
 
 On Windows WSL2, there is a hosts file inside the WSL2 instance (`/etc/hosts`), and there is also one on the Windows side (`C:\Windows\system32\drivers\etc\hosts`). Many people use a browser on the Windows side, which has no idea about hostnames that may be set up in the WSL2 /etc/hosts file. So a WSL2 project which uses `*.ddev.site` works fine when accessed by a browser on the Windows side, as long as internet connectivity is available (DNS lookups of `*.ddev.site` succeed).
 
@@ -237,13 +244,15 @@ However, if the project uses non-ddev.site hostnames, or if not connected to the
 1. Add the needed hostname(s) manually to the Windows hosts file. This can easily be done with the *Windows* version of ddev.exe with `sudo ddev hostname <hostname> 127.0.0.1` on *Windows* in PowerShell or Cmd or git-bash.
 2. Or run a browser within WSL2. On Windows 11 this is built-in, but in Windows 10 may require an X11 server like X410.
 
-## DNS Rebinding Prohibited
+### DNS Rebinding Prohibited ("Cannot resolve" or "unknown host" or "No address associated with hostname")
 
 Some DNS servers prevent the use of DNS records that resolve to `localhost` (127.0.0.1) because in uncontrolled environments this may be used as a form of attack called [DNS Rebinding](https://en.wikipedia.org/wiki/DNS_rebinding). Since \*.ddev.site resolves to 127.0.0.1, they may refuse to resolve, and your browser may be unable to look up a hostname, and give you messages like "<url> server IP address could not be found" or "We can’t connect to the server at <url>".
+  
+You can tell if this is your problem by `ping dkkd.ddev.site`. If you get "No address associated with hostname" or something of that type, it means that your computer can't look up `*.ddev.site`.
 
 In this case, you can
 
-1. Reconfigure the DNS server to allow DNS Rebinding. Many Fritzbox routers have added default DNS Rebinding disallowal, and they can be reconfigured to allow it, see [issue](https://github.com/drud/ddev/issues/2409#issuecomment-686718237). If you have the local dnsmasq DNS server it may also be configured to disallow DNS rebinding, but it's a simple change to a configuration directive to allow it.
+1. Reconfigure your router to allow DNS Rebinding. Many Fritzbox routers have added default DNS Rebinding disallowal, and they can be reconfigured to allow it, see [issue](https://github.com/drud/ddev/issues/2409#issuecomment-686718237). If you have the local dnsmasq DNS server it may also be configured to disallow DNS rebinding, but it's a simple change to a configuration directive to allow it.
 2. Most computers can use most relaxed DNS resolution if they are not on corporate intranets that have non-internet DNS. So for example, the computer can be set to use 8.8.8.8 (Google) or 1.1.1.1 (Cloudflare) for DNS name resolution.
 3. If you have control of the router, you can usually change its DHCP settings to choose a DNS server to a public, relaxed DNS server as in #2.
 4. You can live with ddev trying to edit the /etc/hosts file, which it only has to do when a new name is added to a project.
