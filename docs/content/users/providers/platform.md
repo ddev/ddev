@@ -24,7 +24,7 @@ ddev's Platform.sh integration pulls database and files from an existing Platfor
    web_environment:
    - PLATFORM_PROJECT=nf4amudfn23biyourproject
    - PLATFORM_ENVIRONMENT=main
-   ```
+ ```
 
 You can also do this with `ddev config --web-environment-add="PLATFORM_PROJECT=nf4amudfn23bi,PLATFORM_ENVIRONMENT=main"`
 4. `ddev restart`
