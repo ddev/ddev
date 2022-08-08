@@ -561,7 +561,7 @@ func TestConfigDatabaseVersion(t *testing.T) {
 	}
 }
 
-//TestConfigGitignore checks that our gitignore is ignoring the right things.
+// TestConfigGitignore checks that our gitignore is ignoring the right things.
 func TestConfigGitignore(t *testing.T) {
 	assert := asrt.New(t)
 

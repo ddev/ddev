@@ -524,7 +524,7 @@ var IsInternetActiveNetResolver interface {
 	LookupHost(ctx context.Context, host string) (addrs []string, err error)
 } = net.DefaultResolver
 
-//IsInternetActive checks to see if we have a viable
+// IsInternetActive checks to see if we have a viable
 // internet connection. It just tries a quick DNS query.
 // This requires that the named record be query-able.
 // This check will only be made once per command run.

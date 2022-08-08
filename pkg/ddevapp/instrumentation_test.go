@@ -12,9 +12,9 @@ import (
 	"time"
 )
 
-//TestSetInstrumentationAppTags checks to see that tags are properly set
-//and tries to make sure no leakage happens with URLs or other
-//tags that we don't want to see.
+// TestSetInstrumentationAppTags checks to see that tags are properly set
+// and tries to make sure no leakage happens with URLs or other
+// tags that we don't want to see.
 func TestSetInstrumentationAppTags(t *testing.T) {
 	assert := asrt.New(t)
 

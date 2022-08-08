@@ -45,7 +45,7 @@ func RemoveItemFromSlice(slice []string, item string) []string {
 }
 
 // From https://www.calhoun.io/creating-random-strings-in-go/
-//nolint: revive
+// nolint: revive
 var seededRand *rand.Rand = rand.New(
 	rand.NewSource(time.Now().UnixNano()))
 

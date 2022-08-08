@@ -69,7 +69,7 @@ func shopware6ImportFilesAction(app *DdevApp, importPath, extPath string) error 
 }
 
 // getShopwareUploadDir will return a custom upload dir if defined,
-//returning a default path if not; this is relative to the docroot
+// returning a default path if not; this is relative to the docroot
 func getShopwareUploadDir(app *DdevApp) string {
 	if app.UploadDir == "" {
 		return "media"

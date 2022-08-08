@@ -305,7 +305,7 @@ func Killall(processName string) {
 	}
 }
 
-//InterfaceSliceToStringSlice converts a slice of interfaces to a slice of strings
+// InterfaceSliceToStringSlice converts a slice of interfaces to a slice of strings
 func InterfaceSliceToStringSlice(v []interface{}) ([]string, error) {
 	raw := make([]string, len(v))
 	for i := range v {

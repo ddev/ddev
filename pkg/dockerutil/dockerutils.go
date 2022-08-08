@@ -1212,9 +1212,10 @@ func dockerComposeDownloadLink() (string, error) {
 }
 
 // dockerComposeDownloadLinkV1 downlods compose v1 downloads like
-//   https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Darwin-x86_64
-//   https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
-//   https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Windows-x86_64.exe
+//
+//	https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Darwin-x86_64
+//	https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
+//	https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Windows-x86_64.exe
 func dockerComposeDownloadLinkV1() (string, error) {
 	arch := runtime.GOARCH
 	//nolint:staticcheck
