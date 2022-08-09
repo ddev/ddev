@@ -97,7 +97,9 @@ jobs:
           ddev config global --instrumentation-opt-in=false
 
       - name: Cache signed binaries
-        uses: actions/cache@v3
+        # It seems past 3.0.5 they're using zstdmt which is not available on Windows
+        # See https://github.com/actions/cache/issues/891
+        uses: actions/cache@v3.0.5
         with:
           path: .gotmp/bin/windows_amd64
           key: ${{ github.sha }}-${{ github.ref }}-signed-windows-binaries
