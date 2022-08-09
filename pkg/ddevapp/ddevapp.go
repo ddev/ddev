@@ -1211,13 +1211,19 @@ func (app *DdevApp) Start() error {
 		}
 	}
 
+	// Wait for web/db containers to become healthy
+	dependers := []string{"web"}
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+		dependers = append(dependers, "db")
+	}
+	err = app.Wait(dependers)
+	if err != nil {
+		util.Warning("Failed waiting for web/db containers to become ready: %v", err)
+	}
+
 	// WebExtraDaemons have to be started after mutagen sync is done, because so often
 	// they depend on code being synced into the container/volume
 	if len(app.WebExtraDaemons) > 0 {
-		err = app.Wait([]string{"web"})
-		if err != nil {
-			util.Warning("Failed waiting for web container to become ready: %v", err)
-		}
 		util.Debug("Starting web_extra_daaemons")
 		stdout, stderr, err := app.Exec(&ExecOpts{
 			Cmd: `supervisorctl start webextradaemons:*`,
@@ -1962,7 +1968,7 @@ func (app *DdevApp) WaitByLabels(labels map[string]string) error {
 	waitTime := app.FindMaxTimeout()
 	err := dockerutil.ContainersWait(waitTime, labels)
 	if err != nil {
-		return fmt.Errorf("container(s) failed to become healthy after %d seconds. This may be just a problem with the healthcheck and not a functional problem. %v", waitTime, err)
+		return fmt.Errorf("container(s) failed to become healthy before their configured timeout or in %d seconds. This may be just a problem with the healthcheck and not a functional problem. (%v)", waitTime, err)
 	}
 	return nil
 }

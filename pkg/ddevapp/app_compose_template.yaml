@@ -149,12 +149,6 @@ services:
     user: '$DDEV_UID:$DDEV_GID'
     hostname: {{ .Name }}-web
 
-    {{ if not .OmitDB }}
-    depends_on:
-      db:
-        condition: service_healthy
-    {{ end }}
-
     ports:
       - "{{ .DockerIP }}:$DDEV_HOST_WEBSERVER_PORT:80"
       - "{{ .DockerIP }}:$DDEV_HOST_HTTPS_PORT:443"
