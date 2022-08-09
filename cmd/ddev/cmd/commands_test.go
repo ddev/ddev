@@ -319,7 +319,7 @@ func TestLaunchCommand(t *testing.T) {
 	}
 }
 
-// TestMysqlCommand tests `ddev mysql``
+// TestMysqlCommand tests `ddev mysql“
 func TestMysqlCommand(t *testing.T) {
 	assert := asrt.New(t)
 
@@ -363,7 +363,7 @@ column_stats
 columns_priv`)
 }
 
-// TestPsqlCommand tests `ddev psql``
+// TestPsqlCommand tests `ddev psql“
 func TestPsqlCommand(t *testing.T) {
 	assert := asrt.New(t)
 

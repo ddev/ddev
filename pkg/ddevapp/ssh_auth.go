@@ -25,7 +25,7 @@ func SSHAuthComposeYAMLPath() string {
 }
 
 // FullRenderedSSHAuthComposeYAMLPath returns the filepath to the rendered
-//.ssh-auth-compose-full.yaml file.
+// .ssh-auth-compose-full.yaml file.
 func FullRenderedSSHAuthComposeYAMLPath() string {
 	globalDir := globalconfig.GetGlobalDdevDir()
 	dest := path.Join(globalDir, ".ssh-auth-compose-full.yaml")

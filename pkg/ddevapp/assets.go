@@ -6,8 +6,9 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 )
 
-//The bundled assets for the project .ddev directory are in directory dotddev_assets
+// The bundled assets for the project .ddev directory are in directory dotddev_assets
 // And the global .ddev assets are in directory global_dotddev_assets
+//
 //go:embed dotddev_assets/* dotddev_assets/commands/.gitattributes global_dotddev_assets/* global_dotddev_assets/.gitignore global_dotddev_assets/commands/.gitattributes app_compose_template.yaml router_compose_template.yaml ssh_auth_compose_template.yaml drupal/* magento/* wordpress/* typo3/* postgres/* healthcheck/*
 var bundledAssets embed.FS
 

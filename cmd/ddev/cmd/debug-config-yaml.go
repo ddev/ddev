@@ -56,7 +56,9 @@ var DebugConfigYamlCmd = &cobra.Command{
 }
 
 // isZero() takes a reflect value and determines whether it's zero/nil
-//  from https://stackoverflow.com/a/23555352/215713
+//
+//	from https://stackoverflow.com/a/23555352/215713
+//
 // When this needs to get promoted for other uses it should be promoted.
 func isZero(v reflect.Value) bool {
 	switch v.Kind() {

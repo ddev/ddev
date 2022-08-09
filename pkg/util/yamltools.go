@@ -22,7 +22,7 @@ func YamlFileToMap(fname string) (map[string]interface{}, error) {
 	return itemMap, nil
 }
 
-//YamlToDict turns random yaml-based interface into a map[string]interface{}
+// YamlToDict turns random yaml-based interface into a map[string]interface{}
 func YamlToDict(topm interface{}) (map[string]interface{}, error) {
 	res := make(map[string]interface{})
 	var err error
