@@ -78,9 +78,8 @@ ddev debug migrate-database mariadb:10.7`,
 			}
 			util.Success("database was converted to %s", newDBVersionType)
 			return
-		} else {
-			util.Failed("Invalid target source database type (%s) or target database type (%s)", existingDBType, newDBVersionType)
 		}
+		util.Failed("Invalid target source database type (%s) or target database type (%s)", existingDBType, newDBVersionType)
 	},
 }
 
