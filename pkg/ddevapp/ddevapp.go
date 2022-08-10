@@ -959,6 +959,12 @@ func (app *DdevApp) Start() error {
 	app.DockerEnv()
 	dockerutil.EnsureDdevNetwork()
 
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+		if dbType, err := app.GetExistingDBType(); err != nil || dbType != app.Database.Type+":"+app.Database.Version {
+			return fmt.Errorf("Unable to start project %s because the configured database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s', see docs at %s", app.Name, dbType, dbType, "https://ddev.readthedocs.io/en/latest/users/extend/database_types/")
+		}
+	}
+
 	volumesNeeded := []string{"ddev-global-cache", "ddev-" + app.Name + "-snapshots"}
 	for _, v := range volumesNeeded {
 		_, err = dockerutil.CreateVolume(v, "local", nil)
