@@ -1430,6 +1430,11 @@ func TestDdevAllDatabases(t *testing.T) {
 	err = app.Stop(true, false)
 	require.NoError(t, err)
 
+	// Existing DB type in volume should be empty
+	dbType, err := app.GetExistingDBType()
+	assert.NoError(err)
+	assert.Equal("", strings.Trim(dbType, " \n\r\t"))
+
 	// Make sure there isn't an old db laying around
 	_ = dockerutil.RemoveVolume(app.Name + "-mariadb")
 	t.Cleanup(func() {
@@ -1469,6 +1474,10 @@ func TestDdevAllDatabases(t *testing.T) {
 			t.Errorf("Continuing/skippping %s due to app.Start() failure %v", dbVersion, startErr)
 			continue
 		}
+
+		inVolumeDBType, err := app.GetExistingDBType()
+		assert.NoError(err)
+		assert.Equal(dbTypeVersion, inVolumeDBType)
 
 		// The db_mariadb_version.txt file does not exist on postgres
 		if dbType != nodeps.Postgres {
