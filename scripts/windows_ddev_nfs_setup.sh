@@ -48,7 +48,8 @@ else
 # Additional lines can be added for additional directories or drives.
 ${HOMEDRIVE}${HOMEPATH} > ${HOME}" >"$HOME/.ddev/nfs_exports.txt"
 fi
-sudo nssm install nfsd "${winnfsd}" -id ${DDEV_WINDOWS_UID} ${DDEV_WINDOWS_GID} -addr $nfs_addr -log off -pathFile "\"$HOMEDRIVE$HOMEPATH\.ddev\nfs_exports.txt\""
+exports=$(cygpath  "$HOMEDRIVE$HOMEPATH\.ddev\nfs_exports.txt")
+sudo nssm install nfsd "${winnfsd}" -id ${DDEV_WINDOWS_UID} ${DDEV_WINDOWS_GID} -addr $nfs_addr -log off -pathFile "${exports}"
 sudo nssm start nfsd || true
 sleep 2
 nssm status nfsd
