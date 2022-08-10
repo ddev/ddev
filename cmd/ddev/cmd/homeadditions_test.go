@@ -94,6 +94,10 @@ func TestHomeadditions(t *testing.T) {
 
 	app, err := ddevapp.GetActiveApp(site.Name)
 	require.NoError(t, err)
+
+	err = app.Start()
+	require.NoError(t, err)
+
 	// Make sure that even though there was a global and a project-level .myscript.sh
 	// the project-level one should win.
 	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
