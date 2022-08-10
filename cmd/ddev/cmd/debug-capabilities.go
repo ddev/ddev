@@ -22,6 +22,7 @@ var DebugCapabilitiesCmd = &cobra.Command{
 			"exposed-ports-configuration",
 			"daemon-run-configuration",
 			"get-volume-db-version",
+			"migrate-database",
 		}
 		output.UserOut.WithField("raw", capabilities).Print(strings.Join(capabilities, "\n"))
 	},
