@@ -154,7 +154,7 @@ func init() {
 	// This helps to prevent a user from seeing the Cobra error: "Error: unknown command "<custom command>" for ddev"
 	_, err := dockerutil.GetDockerVersion()
 	// ddev --version may be called without docker available.
-	if err != nil && len(os.Args) > 1 && os.Args[1] != "--version" && os.Args[1] != "config" {
+	if err != nil && len(os.Args) > 1 && os.Args[1] != "--version" && os.Args[1] != "config" || os.Args[1] != "debug" {
 		util.Failed("Could not connect to a docker provider. Please start or install a docker provider.\nFor install help go to: https://ddev.readthedocs.io/en/latest/users/install/")
 	}
 
