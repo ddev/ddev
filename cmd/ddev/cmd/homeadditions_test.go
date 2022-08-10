@@ -98,6 +98,13 @@ func TestHomeadditions(t *testing.T) {
 	// the project-level one should win.
 	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
+		Cmd:     "ls -al ~/",
+	})
+	assert.NoError(err)
+	t.Logf("Results of ls -al in homedir: %v", stdout)
+
+	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+		Service: "web",
 		Cmd:     "~/.myscript.sh",
 	})
 	assert.NoError(err)
