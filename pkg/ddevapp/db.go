@@ -13,16 +13,7 @@ import (
 // GetExistingDBType returns type/version like mariadb:10.4 or postgres:13 or "" if no existing volume
 // This has to make a docker container run so is fairly costly.
 func (app *DdevApp) GetExistingDBType() (string, error) {
-
-	volName := app.GetMariaDBVolumeName()
-	if !dockerutil.VolumeExists(volName) {
-		volName = app.GetPostgresVolumeName()
-		if !dockerutil.VolumeExists(volName) {
-			//output.UserOut.Printf("No database volume currently exists for project %s, one will be created when needed", app.Name)
-			return "", nil
-		}
-	}
-	_, out, err := dockerutil.RunSimpleContainer(versionconstants.GetWebImage(), "", []string{"sh", "-c", "cat /var/tmp/db_mariadb_version.txt || cat /var/tmp/PG_VERSION"}, []string{}, []string{}, []string{volName + ":/var/tmp"}, "", true, false, nil)
+	_, out, err := dockerutil.RunSimpleContainer(versionconstants.GetWebImage(), "", []string{"sh", "-c", "( test -f /var/tmp/mysql/db_mariadb_version.txt && cat /var/tmp/mysql/db_mariadb_version.txt ) || ( test -f /var/tmp/postgres/PG_VERSION && cat /var/tmp/postgres/PG_VERSION) || true"}, []string{}, []string{}, []string{app.GetMariaDBVolumeName() + ":/var/tmp/mysql", app.GetPostgresVolumeName() + ":/var/tmp/postgres"}, "", true, false, nil)
 
 	if err != nil {
 		util.Failed("failed to RunSimpleContainer to inspect database version/type: %v, output=%s", err, out)
@@ -31,6 +22,10 @@ func (app *DdevApp) GetExistingDBType() (string, error) {
 	dbType := ""
 	dbVersion := ""
 	out = strings.Trim(out, " \n\r\t")
+	// If it was empty, OK to return nothing found, even though the volume was there
+	if out == "" {
+		return "", nil
+	}
 	if _, err := strconv.Atoi(out); err == nil {
 		dbType = nodeps.Postgres
 		dbVersion = out
