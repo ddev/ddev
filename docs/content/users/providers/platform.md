@@ -28,10 +28,13 @@ web_environment:
   - PLATFORM_PROJECT=nf4amudfn23biyourproject
   - PLATFORM_ENVIRONMENT=main
 ```
+or with
+```bash
+ddev config --web-environment-add="PLATFORM_PROJECT=nf4amudfn23bi,PLATFORM_ENVIRONMENT=main"
+```
 
-You can also do this with `ddev config --web-environment-add="PLATFORM_PROJECT=nf4amudfn23bi,PLATFORM_ENVIRONMENT=main"`  
-4. `ddev restart`  
-5. Run `ddev pull platform`. After you agree to the prompt, the current upstream database and files will be downloaded.  
+4. `ddev restart`
+5. Run `ddev pull platform`. After you agree to the prompt, the current upstream database and files will be downloaded.
 6. Optionally use `ddev push platform` to push local files and database to platform.sh. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
 
 ## Usage
