@@ -1128,6 +1128,10 @@ func TestDdevImportDB(t *testing.T) {
 		assert.NoError(err)
 		_ = os.Remove(filepath.Join(app.AppRoot, "hello-pre-import-db-"+app.Name))
 		_ = os.Remove(filepath.Join(app.AppRoot, "hello-post-import-db-"+app.Name))
+		for _, dbType := range []string{nodeps.Postgres, nodeps.MariaDB} {
+			err = dockerutil.RemoveVolume(app.Name + "-" + dbType)
+			require.NoError(t, err)
+		}
 
 	})
 
@@ -1298,6 +1302,13 @@ func TestDdevImportDB(t *testing.T) {
 				assert.Len(lines, 2)
 			}
 		}
+	}
+
+	err = app.Stop(true, false)
+	require.NoError(t, err)
+	for _, dbType := range []string{nodeps.Postgres, nodeps.MariaDB} {
+		err = dockerutil.RemoveVolume(app.Name + "-" + dbType)
+		assert.NoError(err)
 	}
 	app.Database = ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}
 	err = app.WriteConfig()
