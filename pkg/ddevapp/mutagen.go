@@ -149,7 +149,7 @@ func CreateMutagenSync(app *DdevApp) error {
 		return fmt.Errorf("Cannot start mutagen sync because web container is not running: %v", container)
 	}
 
-	args := []string{"sync", "create", app.AppRoot, fmt.Sprintf("docker://%s/var/www/html", container.ID), "--no-global-configuration", "--name", syncName}
+	args := []string{"sync", "create", app.AppRoot, fmt.Sprintf("docker:/%s/var/www/html", container.Names[0]), "--no-global-configuration", "--name", syncName}
 	if configFile != "" {
 		args = append(args, fmt.Sprintf(`--configuration-file=%s`, configFile))
 	}
