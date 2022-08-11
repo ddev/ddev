@@ -439,12 +439,13 @@ func (app *DdevApp) ValidateConfig() error {
 		return fmt.Errorf("unsupported database type/version: '%s:%s', ddev %s only supports the following database types and versions: mariadb: %v, mysql: %v, postgres: %v", app.Database.Type, app.Database.Version, runtime.GOARCH, nodeps.GetValidMariaDBVersions(), nodeps.GetValidMySQLVersions(), nodeps.GetValidPostgresVersions())
 	}
 
+	// This check is too intensive for app.Init() and ddevapp.GetActiveApp(), slows things down dramatically
 	// If the database already exists in volume and is not of this type, then throw an error
-	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
-		if dbType, err := app.GetExistingDBType(); err != nil || (dbType != "" && dbType != app.Database.Type+":"+app.Database.Version) {
-			return fmt.Errorf("Unable to configure project %s with database type %s because that database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s', see docs at %s", app.Name, dbType, dbType, dbType, "https://ddev.readthedocs.io/en/latest/users/extend/database_types/")
-		}
-	}
+	//if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+	//	if dbType, err := app.GetExistingDBType(); err != nil || (dbType != "" && dbType != app.Database.Type+":"+app.Database.Version) {
+	//		return fmt.Errorf("Unable to configure project %s with database type %s because that database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s', see docs at %s", app.Name, dbType, dbType, dbType, "https://ddev.readthedocs.io/en/latest/users/extend/database_types/")
+	//	}
+	//}
 
 	// golang on windows is not able to time.LoadLocation unless
 	// go is installed... so skip validation on Windows
