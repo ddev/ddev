@@ -20,7 +20,10 @@ var DebugCapabilitiesCmd = &cobra.Command{
 			"user-env-var",
 			"npm-yarn-caching",
 			"exposed-ports-configuration",
-			"daemon-run-configuration"}
+			"daemon-run-configuration",
+			"get-volume-db-version",
+			"migrate-database",
+		}
 		output.UserOut.WithField("raw", capabilities).Print(strings.Join(capabilities, "\n"))
 	},
 }
