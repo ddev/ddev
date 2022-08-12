@@ -45,6 +45,7 @@ if [ ${OSTYPE%-*} != "linux" ]; then
   echo -n "Docker Desktop Version: " && docker_desktop_version && echo
 fi
 echo "docker version: " && docker version
+echo "DOCKER_DEFAULT_PLATFORM=${DOCKER_DEFAULT_PLATFORM:-notset}"
 echo "======= Mutagen Info ========="
 if [ -f ~/.ddev/bin/mutagen ]; then
   echo "Mutagen is installed in ddev, version=$(~/.ddev/bin/mutagen version)"
@@ -67,15 +68,18 @@ fi
 echo "Docker disk space:" && docker run --rm busybox:stable df -h // && echo
 ddev poweroff
 echo "Existing docker containers: " && docker ps -a
-mkdir -p ~/tmp/${PROJECT_NAME} && cd ~/tmp/${PROJECT_NAME}
-cat <<END >index.php
+
+PROJECT_DIR=../${PROJECT_NAME}
+mkdir -p "${PROJECT_DIR}/web" && cd "${PROJECT_DIR}"
+
+cat <<END >web/index.php
 <?php
   mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
   \$mysqli = new mysqli('db', 'db', 'db', 'db');
   printf("Success accessing database... %s\n", \$mysqli->host_info);
   print "ddev is working. You will want to delete this project with 'ddev delete -Oy ${PROJECT_NAME}\n";
 END
-ddev config --project-type=php
+ddev config --project-type=php --docroot=web
 trap cleanup EXIT
 
 # This is a potential experiment to force failure when needed
@@ -103,6 +107,8 @@ ddev start -y || ( \
   ls -lR ~/.ddev/homeadditions/
   printf "============= ddev logs =========\n" && \
   ddev logs | tail -20l && \
+  printf "============= contents of /mnt/ddev_config  =========\n" && \
+  docker exec -it ddev-d9-db ls -l /mnt/ddev_config && \
   printf "Start failed. Please provide this output in a new gist at gist.github.com\n" && \
   exit 1 )
 
