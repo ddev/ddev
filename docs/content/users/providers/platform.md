@@ -21,21 +21,25 @@ web_environment:
 ## Platform.sh per Project Configuration
 
 1. Check out the site from platform.sh and then configure it with `ddev config`. You'll want to use `ddev start` and make sure the basic functionality is working.
-2. Add PLATFORM_PROJECT and PLATFORM_ENVIRONMENT variables to your project `.ddev/config.yaml` or a `.ddev/config.*.yaml`:
+2. Add PLATFORM_PROJECT and PLATFORM_ENVIRONMENT variables to your project.
 
-```yaml
-web_environment:
-  - PLATFORM_PROJECT=nf4amudfn23biyourproject
-  - PLATFORM_ENVIRONMENT=main
-```
-or with
-```bash
-ddev config --web-environment-add="PLATFORM_PROJECT=nf4amudfn23bi,PLATFORM_ENVIRONMENT=main"
-```
+    * Either in `.ddev/config.yaml` or a `.ddev/config.*.yaml` file:
 
-4. `ddev restart`
-5. Run `ddev pull platform`. After you agree to the prompt, the current upstream database and files will be downloaded.
-6. Optionally use `ddev push platform` to push local files and database to platform.sh. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
+        ```yaml
+        web_environment:
+          - PLATFORM_PROJECT=nf4amudfn23biyourproject
+          - PLATFORM_ENVIRONMENT=main
+        ```
+
+    * Or with a command from your terminal:
+
+        ```bash
+        ddev config --web-environment-add="PLATFORM_PROJECT=nf4amudfn23bi,PLATFORM_ENVIRONMENT=main"
+         ```
+
+3. `ddev restart`
+4. Run `ddev pull platform`. After you agree to the prompt, the current upstream database and files will be downloaded.
+5. Optionally use `ddev push platform` to push local files and database to platform.sh. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
 
 ## Usage
 
