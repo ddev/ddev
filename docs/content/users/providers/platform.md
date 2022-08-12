@@ -35,7 +35,7 @@ web_environment:
 
         ```bash
         ddev config --web-environment-add="PLATFORM_PROJECT=nf4amudfn23bi,PLATFORM_ENVIRONMENT=main"
-         ```
+        ```
 
 3. `ddev restart`
 4. Run `ddev pull platform`. After you agree to the prompt, the current upstream database and files will be downloaded.
