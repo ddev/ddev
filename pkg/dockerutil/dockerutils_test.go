@@ -5,14 +5,14 @@ import (
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/versionconstants"
+	logOutput "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
+	"log"
 	"os"
 	"path"
 	"runtime"
 	"strings"
 	"testing"
-
-	logOutput "github.com/sirupsen/logrus"
 
 	"path/filepath"
 
@@ -99,11 +99,11 @@ func testMain(m *testing.M) int {
 			logOutput.Errorf("-- FAIL: dockerutils_test failed to remove test container: %v", err)
 		}
 	}()
-	_, err = ContainerWait(30, map[string]string{"com.ddev.site-name": testContainerName})
+	_, err = ContainerWait(60, map[string]string{"com.ddev.site-name": testContainerName})
 	if err != nil {
-		logout, _ := exec.RunCommand("docker", []string{"logs", container.Name})
-		inspectOut, _ := exec.RunCommandPipe("sh", []string{"-c", fmt.Sprintf("docker inspect %s|jq -r '.[0].State.Health.Log'", container.Name)})
-		_ = fmt.Errorf("FAIL: dockerutils_test failed to ContainerWait for container: %v, logs\n========= container logs ======\n%s\n======= end logs =======\n==== health log =====\ninspectOut\n%s\n========", err, logout, inspectOut)
+		logout, _ := exec.RunHostCommand("docker", "logs", container.Name)
+		inspectOut, _ := exec.RunHostCommand("sh", "-c", fmt.Sprintf("docker inspect %s|jq -r '.[0].State.Health.Log'", container.Name))
+		log.Printf("FAIL: dockerutils_test failed to ContainerWait for container: %v, logs\n========= container logs ======\n%s\n======= end logs =======\n==== health log =====\ninspectOut\n%s\n========", err, logout, inspectOut)
 		return 4
 	}
 	exitStatus := m.Run()
