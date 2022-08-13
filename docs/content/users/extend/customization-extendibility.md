@@ -247,17 +247,19 @@ these rules:
 4. Hook specifications in the `hooks` variable are also merged.
 
 If you need to *override* existing values, set `override_config: true` in the `config.*.yaml` where the override behavior should take place. Since `config.*.yaml` files are normally *merged* into the configuration, some things can't be overridden normally. For example, if you have 'nfs_mount_enabled: true'' you can't override it with a merge and you can't erase existing hooks or all environment variables. However, with "override_config: true" in a particular config.*.yaml file, 'nfs_mount_enabled: false' can override the existing values, and
+
 ```yaml
 hooks:
   post_start: []
 ```
+
 or
 
 ```yaml
 additional_hostnames: []
 ```
 
-can have their intended affect. 
+can have their intended affect.
 
 'override_config' affects only behavior of the `config.*.yaml` file it exists in.
 
