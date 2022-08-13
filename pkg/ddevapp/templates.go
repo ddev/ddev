@@ -215,6 +215,22 @@ const ConfigInstructions = `
 #  command: "/var/www/html/node_modules/.bin/http-server /var/www/html/sub -p 3000"
 #  directory: /var/www/html
 
+# override_config: false
+# By default, config.*.yaml files are *merged* into the configuration
+# But this means that some things can't be overridden
+# For example, if you have 'nfs_mount_enabled: true'' you can't override it with a merge
+# and you can't erase existing hooks or all environment variables.
+# However, with "override_config: true" in a particular config.*.yaml file, 
+# 'nfs_mount_enabled: false' can override the existing values, and 
+# hooks:
+#   post_start: []
+# or 
+# web_environment: []
+# or 
+# additional_hostnames: []
+# can have their intended affect. 'override_config' affects only behavior of the
+# config.*.yaml file it exists in.
+
 # Many ddev commands can be extended to run tasks before or after the
 # ddev command is executed, for example "post-start", "post-import-db",
 # "pre-composer", "post-composer"

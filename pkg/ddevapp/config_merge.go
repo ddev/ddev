@@ -16,10 +16,22 @@ func (app *DdevApp) mergeAdditionalConfigIntoApp(configPath string) error {
 		return err
 	}
 
-	err = mergo.Merge(app, newConfig, mergo.WithAppendSlice, mergo.WithOverride)
-	if err != nil {
-		return err
+	// If override_config is set in the config.*.yaml, then just load it on top of app
+	// Otherwise (the normal default case) merge.
+	if newConfig.OverrideConfig {
+		err = app.LoadConfigYamlFile(configPath)
+		if err != nil {
+			return err
+		}
+	} else {
+		err = mergo.Merge(app, newConfig, mergo.WithAppendSlice, mergo.WithOverride)
+		if err != nil {
+			return err
+		}
 	}
+
+	// We don't need this set; it's only a flag to determine behavior above
+	app.OverrideConfig = false
 
 	// Make sure we don't have absolutely identical items in our resultant arrays
 	for _, arr := range []*[]string{&app.WebImageExtraPackages, &app.DBImageExtraPackages, &app.AdditionalHostnames, &app.AdditionalFQDNs, &app.OmitContainers} {
