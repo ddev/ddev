@@ -246,9 +246,17 @@ these rules:
 3. The list of environment variables in `web_environment` are "smart merged": if you add the same environment variable with a different value, the value in the override file will replace the value from config.yaml.
 4. Hook specifications in the `hooks` variable are also merged.
 
-If you need to *override* existing values, set `override_config: true` in the `config.*.yaml` where the override behavior should take place. Since `config.*.yaml` files are normally *merged* into the configuration, some things can't be overridden normally. For example, if you have 'nfs_mount_enabled: true'' you can't override it with a merge and you can't erase existing hooks or all environment variables. However, with "override_config: true" in a particular config.*.yaml file, 'nfs_mount_enabled: false' can override the existing values, and
+If you need to *override* existing values, set `override_config: true` in the `config.*.yaml` where the override behavior should take place. Since `config.*.yaml` files are normally *merged* into the configuration, some things can't be overridden normally. For example, if you have 'nfs_mount_enabled: true'' you can't override it with a merge and you can't erase existing hooks or all environment variables. However, with "override_config: true" in a particular config.*.yaml file,
 
 ```yaml
+override_config: true
+nfs_mount_enabled: false
+```
+
+can override the existing values, and
+
+```yaml
+override_config: true
 hooks:
   post_start: []
 ```
@@ -256,6 +264,7 @@ hooks:
 or
 
 ```yaml
+override_config: true
 additional_hostnames: []
 ```
 
