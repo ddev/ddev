@@ -143,7 +143,7 @@ Note that this is done automatically by the release build, on a dedicated Window
 
 1. Install the suggested [Windows SDK](https://developer.microsoft.com/en-us/windows/downloads/windows-sdk/). Only the signing component is required.
 2. Add the path of the kit binaries to the Windows system PATH, `C:/Program Files (x86)/Windows Kits/10/bin/10.0.22621.0/x64/`.
-3. The keyfob and Safenet Authentication Client must be installed. The best documentation for the Safenet software is at <https://support.globalsign.com/ssl/ssl-certificates-installation/safenet-drivers>.
+3. The keyfob and Safenet Authentication Client must be installed. The best documentation for the Safenet software is at <https://support.globalsign.com/ssl/ssl-certificates-installation/safenet-drivers>. You must configure the advanced client settings to "Enable single logon" or it will require the password on each run.
 4. After `make windows_install` the `ddev-windows-installer.exe` will be in `.ddev/bin/windows_amd64/ddev_windows_installer.exe` and you can sign it with `signtool sign ddev-windows-installer.exe`.
 5. If you need to install the github self-hosted Windows runner, do it with [technique](https://github.com/drud/ddev/settings/actions/runners)
 
