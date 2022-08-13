@@ -145,6 +145,7 @@ Note that this is done automatically by the release build, on a dedicated Window
 2. Add the path of the kit binaries to the Windows system PATH, `C:/Program Files (x86)/Windows Kits/10/bin/10.0.22621.0/x64/`.
 3. The keyfob and Safenet Authentication Client must be installed. The best documentation for the Safenet software is at <https://support.globalsign.com/ssl/ssl-certificates-installation/safenet-drivers>. You must configure the advanced client settings to "Enable single logon" or it will require the password on each run.
 4. After `make windows_install` the `ddev-windows-installer.exe` will be in `.ddev/bin/windows_amd64/ddev_windows_installer.exe` and you can sign it with `signtool sign ddev-windows-installer.exe`.
-5. If you need to install the github self-hosted Windows runner, do it with [technique](https://github.com/drud/ddev/settings/actions/runners)
+5. If you need to install the GitHub self-hosted Windows runner, do it with the instructions in project settings->Actions->Runners
+6. Currently the `actions/cache` runner does not work out of the box on Windows, so you have to install tar and zstd as described in [issue](https://github.com/actions/cache/issues/580#issuecomment-1165839728).
 
 I do not believe that we should use this keyfob high-security approach to signing on the next go-around with the certs. It is way too difficult to manage, and the Safenet software is atrocious.
