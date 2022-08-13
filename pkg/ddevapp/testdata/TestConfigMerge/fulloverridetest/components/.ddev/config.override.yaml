@@ -1,0 +1,3 @@
+override_config: true
+nfs_mount_enabled: false
+additional_hostnames: [overrideone, overridetwo]
