@@ -306,4 +306,6 @@ volumes:
   {{ if and .MutagenEnabled (not .NoProjectMount) }}
   project_mutagen:
     name: {{ .MutagenVolumeName }}
+    external: true
+
   {{ end }}{{/* end if and .MutagenEnabled (not .NoProjectMount) */}}

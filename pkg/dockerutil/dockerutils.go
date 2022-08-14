@@ -978,10 +978,20 @@ func VolumeExists(volumeName string) bool {
 	return true
 }
 
-// CreateVolume creates a docker volume
-func CreateVolume(volumeName string, driver string, driverOpts map[string]string) (volume *docker.Volume, err error) {
+// VolumeLabels returns map of labels found on volume.
+func VolumeLabels(volumeName string) map[string]string {
 	client := GetDockerClient()
-	volume, err = client.CreateVolume(docker.CreateVolumeOptions{Name: volumeName, Driver: driver, DriverOpts: driverOpts})
+	v, err := client.InspectVolume(volumeName)
+	if err != nil {
+		return nil
+	}
+	return v.Labels
+}
+
+// CreateVolume creates a docker volume
+func CreateVolume(volumeName string, driver string, driverOpts map[string]string, labels map[string]string) (volume *docker.Volume, err error) {
+	client := GetDockerClient()
+	volume, err = client.CreateVolume(docker.CreateVolumeOptions{Name: volumeName, Labels: labels, Driver: driver, DriverOpts: driverOpts})
 	return volume, err
 }
 

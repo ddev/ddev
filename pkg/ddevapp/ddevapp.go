@@ -975,8 +975,11 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	volumesNeeded := []string{"ddev-global-cache", "ddev-" + app.Name + "-snapshots"}
+	if app.IsMutagenEnabled() {
+		volumesNeeded = append(volumesNeeded, GetMutagenVolumeName(app))
+	}
 	for _, v := range volumesNeeded {
-		_, err = dockerutil.CreateVolume(v, "local", nil)
+		_, err = dockerutil.CreateVolume(v, "local", nil, map[string]string{"com.ddev.volume-signature": GetVolumeSignature(app)})
 		if err != nil {
 			return fmt.Errorf("unable to create docker volume %s: %v", v, err)
 		}
@@ -1203,13 +1206,12 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		if err != nil {
 			return err
 		}
-		_ = TerminateMutagenSync(app)
 
 		err = SetMutagenVolumeOwnership(app)
 		if err != nil {
 			return err
 		}
-		err = CreateMutagenSync(app)
+		err = CreateOrResumeMutagenSync(app)
 		if err != nil {
 			return fmt.Errorf("Failed to create mutagen sync session '%s'. You may be able to resolve this problem 'ddev mutagen reset' (err=%v)", MutagenSyncName(app.Name), err)
 		}
@@ -1924,7 +1926,7 @@ func (app *DdevApp) Pause() error {
 		return err
 	}
 
-	_ = SyncAndTerminateMutagenSession(app)
+	_ = SyncAndPauseMutagenSession(app)
 
 	if _, _, err := dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "stop"); err != nil {
 		return err
@@ -2185,7 +2187,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 	}
 
-	err = SyncAndTerminateMutagenSession(app)
+	err = SyncAndPauseMutagenSession(app)
 	if err != nil {
 		util.Warning("Unable to SyncAndterminateMutagenSession: %v", err)
 	}
@@ -2806,4 +2808,10 @@ func (app *DdevApp) CreateUploadDirIfNecessary() {
 			util.Warning("Unable to create upload directory %s: %v", app.GetHostUploadDirFullPath(), err)
 		}
 	}
+}
+
+// Get a volume signature to be applied especially to mutagen volume
+func GetVolumeSignature(app *DdevApp) string {
+	now := time.Now()
+	return fmt.Sprintf("%s-%d", dockerutil.DockerContext, now.Unix())
 }
