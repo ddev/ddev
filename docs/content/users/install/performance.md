@@ -45,6 +45,16 @@ Instructions for Mutagen and NFS are below.
     Note that the nfs-mount-enabled feature is automatically turned off if you're using mutagen.
 
     You can run mutagen on all your projects, there's no limit. To configure it globally, `ddev config global --mutagen-enabled`, but you cannot disable mutagen on individual projects if it's enabled globally (the global configuration wins).
+    
+    ### Windows Mutagen and executable files
+    
+    Mutagen on Windows does not currently set files in your project properly as executable, so commands like `ddev exec drush` or `ddev craft` will likely fail. This is pretty easy to work around with a post-start hook that sets the appropriate directories as executable, for example:
+    
+    ```yaml
+    hooks:
+      post-start:
+      - exec: "chmod +x /var/www/html/vendor/bin/* /var/www/html/node_modules/.bin/*"
+    ```
 
     ### Mutagen and upload_dir (`sites/default/files`, `fileadmin`, etc)
 
