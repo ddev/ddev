@@ -107,7 +107,7 @@ func SyncAndPauseMutagenSession(app *DdevApp) error {
 
 	// We don't want to flush if the web container isn't running
 	// because mutagen flush will hang forever - disconnected
-	if projStatus == SiteRunning && !strings.Contains(shortResult, "[Paused]") && !strings.Contains(longResult, "Connection state: Disconnected") {
+	if projStatus == SiteRunning && !strings.Contains(shortResult, "[Paused]") /* && !strings.Contains(longResult, "Connection state: Disconnected") */ {
 		err := app.MutagenSyncFlush()
 		if err != nil {
 			util.Error("Error on 'mutagen sync flush %s': %v", syncName, err)
@@ -311,40 +311,73 @@ func mutagenSyncSessionExists(app *DdevApp) (bool, error) {
 
 // MutagenStatus checks to see if there is an error case in mutagen
 // We don't want to do a flush yet in that case.
-// Note that the available statuses are at https://github.com/mutagen-io/mutagen/blob/94b9862a06ab44970c7149aa0000628a6adf54d5/pkg/synchronization/state.go#L9
+// Note that the available statuses are at https://github.com/mutagen-io/mutagen/blob/master/pkg/synchronization/state.go#L9
 // in func (s Status) Description()
-func (app *DdevApp) MutagenStatus() (status string, shortResult string, longResult string, err error) {
+// Can return any of those or "nosession" if we didn't find a session at all
+func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResult map[string]interface{}, err error) {
 	syncName := MutagenSyncName(app.Name)
 
-	longResult, err = exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list", syncName)
-	shortResult = parseMutagenStatusLine(longResult)
+	fullJSONResult, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list", "--template", `{{ json .}}`, syncName)
 	if err != nil {
-		// In the odd case where somebody enabled mutagen when it wasn't actually running
-		// show a simpler result
-		mounted, err := IsMutagenVolumeMounted(app)
-		if !mounted {
-			return "not enabled", "", "", nil
-		}
-		return "failing", shortResult, longResult, err
+		return "nosession", fullJSONResult, nil, err
 	}
-	if shortResult == "[Paused]" {
-		return "paused", shortResult, longResult, nil
+	sessionMap := make([]map[string]interface{}, 2)
+	err = json.Unmarshal([]byte(fullJSONResult), &sessionMap)
+	if err != nil {
+		return "nosession", fullJSONResult, nil, err
+	}
+	if len(sessionMap) != 1 {
+		return "", "", nil, fmt.Errorf("mutagen sessions may be in invalid state, please `ddev mutagen reset`")
+	}
+	mapRes := sessionMap[0]
+
+	var ok bool
+	mutagenStatus := ""
+	if mutagenStatus, ok = mapRes["status"].(string); !ok {
+		return "failing", mutagenStatus, mapRes, fmt.Errorf("mutagen sessions may be in invalid state, please `ddev mutagen reset`")
+	}
+	// In the odd case where somebody enabled mutagen when it wasn't actually running
+	// show a simpler result
+	mounted, err := IsMutagenVolumeMounted(app)
+	if !mounted {
+		return "not enabled", "", mapRes, nil
+	}
+
+	problems := false
+	if _, ok := mapRes["alpha"].(map[string]interface{})["scanProblems"].([]interface{}); ok {
+		problems = true
+	}
+	if _, ok := mapRes["beta"].(map[string]interface{})["scanProblems"].([]interface{}); ok {
+		problems = true
 	}
 
 	// We're going to assume that if it's applying changes things are still OK,
 	// even though there may be a whole list of problems.
-	if strings.Contains(shortResult, "Applying changes") || strings.Contains(shortResult, "Staging files on") || strings.Contains(shortResult, "Reconciling changes") || strings.Contains(shortResult, "Scanning files") || strings.Contains(shortResult, "Watching for changes") || strings.Contains(shortResult, "Saving archive") {
-		rv := "ok"
-		if strings.Contains(longResult, "problems:") {
-			rv = "problems"
+	// States from json are in https://github.com/mutagen-io/mutagen/blob/bc07f2f0f3f0aba0aff0514bd4739d75444091fe/pkg/synchronization/state.go#L47-L79
+	switch mutagenStatus {
+	case "paused":
+		return "paused", shortResult, mapRes, nil
+	case "transitioning":
+		fallthrough
+	case "staging-alpha":
+		fallthrough
+	case "staging-beta":
+		fallthrough
+	case "reconciling":
+		fallthrough
+	case "scanning":
+		fallthrough
+	case "saving":
+		fallthrough
+	case "watching":
+		if !problems {
+			status = "ok"
+		} else {
+			status = "problems"
 		}
-		return rv, shortResult, longResult, nil
+		return status, shortResult, mapRes, nil
 	}
-	if strings.Contains(longResult, "problems") || strings.Contains(longResult, "Conflicts") || strings.Contains(longResult, "error") || strings.Contains(shortResult, "Halted") || strings.Contains(shortResult, "Waiting 5 seconds for rescan") || strings.Contains(longResult, "raw POSIX symbolic links not supported") {
-		util.Error("mutagen sync session '%s' is not working correctly: %s", syncName, longResult)
-		return "failing", shortResult, longResult, nil
-	}
-	return "ok", shortResult, longResult, nil
+	return "failing", shortResult, mapRes, nil
 }
 
 // parseMutagenStatusLine takes the full mutagen sync list output and
@@ -590,3 +623,8 @@ func GetMutagenVolumeLabel(app *DdevApp) string {
 	}
 	return ""
 }
+
+//func CheckMutagenVolumeSyncCompatibility(app *DdevApp) {
+//	labels := GetMutagenVolumeLabel(app)
+//
+//}
