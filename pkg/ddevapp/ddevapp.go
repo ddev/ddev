@@ -2225,6 +2225,10 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 
 	// Remove data/database/projectInfo/hostname if we need to.
 	if removeData {
+		err = TerminateMutagenSync(app)
+		if err != nil {
+			util.Warning("unable to terminate mutagen session %s: %v", MutagenSyncName(app.Name), err)
+		}
 		if err = app.RemoveHostsEntries(); err != nil {
 			return fmt.Errorf("failed to remove hosts entries: %v", err)
 		}
