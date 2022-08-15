@@ -987,7 +987,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		volumesNeeded = append(volumesNeeded, GetMutagenVolumeName(app))
 	}
 	for _, v := range volumesNeeded {
-		_, err = dockerutil.CreateVolume(v, "local", nil, map[string]string{"com.ddev.volume-signature": GetDefaultVolumeSignature(app)})
+		_, err = dockerutil.CreateVolume(v, "local", nil, map[string]string{mutagenSignatureLabelName: GetDefaultVolumeSignature(app)})
 		if err != nil {
 			return fmt.Errorf("unable to create docker volume %s: %v", v, err)
 		}

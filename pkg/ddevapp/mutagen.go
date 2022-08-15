@@ -27,6 +27,8 @@ import (
 	"unicode"
 )
 
+const mutagenSignatureLabelName = `com.ddev.volume-signature`
+
 // SetMutagenVolumeOwnership chowns the volume in use to the current user.
 // The mutagen volume is mounted both in /var/www (where it gets used) and
 // also on /tmp/project_mutagen (where it can be chowned without accidentally hitting
@@ -172,7 +174,7 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		}
 	} else { //
 		//TODO: Consider using a function to specify the docker beta
-		args := []string{"sync", "create", app.AppRoot, fmt.Sprintf("docker:/%s/var/www/html", container.Names[0]), "--no-global-configuration", "--name", syncName, "--label", "com.ddev.volume-signature=" + GetMutagenVolumeLabel(app)}
+		args := []string{"sync", "create", app.AppRoot, fmt.Sprintf("docker:/%s/var/www/html", container.Names[0]), "--no-global-configuration", "--name", syncName, "--label", mutagenSignatureLabelName + "=" + GetMutagenVolumeLabel(app)}
 		if configFile != "" {
 			args = append(args, fmt.Sprintf(`--configuration-file=%s`, configFile))
 		}
@@ -620,7 +622,7 @@ func (app *DdevApp) IsMutagenEnabled() bool {
 func GetMutagenVolumeLabel(app *DdevApp) string {
 	labels := dockerutil.VolumeLabels(GetMutagenVolumeName(app))
 	if labels != nil {
-		if l, ok := labels["com.ddev.volume-signature"]; ok {
+		if l, ok := labels[mutagenSignatureLabelName]; ok {
 			return l
 		}
 	}
@@ -661,7 +663,7 @@ func GetMutagenSyncLabel(app *DdevApp) string {
 	if status == "nosession" || err != nil {
 		return ""
 	}
-	if label, ok := mapResult["labels"].(map[string]interface{})["com.ddev.volume-signature"].(string); ok {
+	if label, ok := mapResult["labels"].(map[string]interface{})[mutagenSignatureLabelName].(string); ok {
 		return label
 	}
 	return ""
