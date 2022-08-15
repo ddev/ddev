@@ -109,7 +109,7 @@ func SyncAndPauseMutagenSession(app *DdevApp) error {
 
 	// We don't want to flush if the web container isn't running
 	// because mutagen flush will hang forever - disconnected
-	if projStatus == SiteRunning && !strings.Contains(shortResult, "[Paused]") /* && !strings.Contains(longResult, "Connection state: Disconnected") */ {
+	if projStatus == SiteRunning && (mutagenStatus == "ok" || mutagenStatus == "problems") {
 		err := app.MutagenSyncFlush()
 		if err != nil {
 			util.Error("Error on 'mutagen sync flush %s': %v", syncName, err)

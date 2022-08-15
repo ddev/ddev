@@ -107,7 +107,7 @@ Instructions for Mutagen and NFS are below.
     Remember if you edit the `.ddev/mutagen/mutagen.yml` file:
 
     * Remove the `#ddev-generated` line
-    * Execute a `ddev mutagen reset` to avoid the situation where the docker volume still has files from an older configuration.
+    * Execute a `ddev mutagen reset` to avoid the situation where the docker volume and mutagen session still have files from an older configuration.
 
     The most likely thing you'll want to do is to exclude a path from mutagen syncing, which you can do in the `paths:` section of the `ignore:` stanza in the `.ddev/mutagen/mutagen.yml`.
 
