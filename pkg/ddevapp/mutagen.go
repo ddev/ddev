@@ -331,6 +331,9 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 	}
 	mapRes := sessionMap[0]
 
+	if paused, ok := mapRes["paused"].(bool); ok && paused == true {
+		return "paused", "paused", mapRes, nil
+	}
 	var ok bool
 	mutagenStatus := ""
 	if mutagenStatus, ok = mapRes["status"].(string); !ok {
