@@ -29,7 +29,7 @@ func TestCmdVersion(t *testing.T) {
 
 	assert.Equal(versionconstants.DdevVersion, raw["DDEV version"])
 	assert.Equal(versionconstants.WebImg+":"+versionconstants.WebTag, raw["web"])
-	assert.Equal(versionconstants.GetDBImage(nodeps.MariaDB), raw["db"])
+	assert.Equal(versionconstants.GetDBImage(nodeps.MariaDB, ""), raw["db"])
 	assert.Equal(versionconstants.GetDBAImage(), raw["dba"])
 	dockerVersion, _ := dockerutil.GetDockerVersion()
 	assert.Equal(dockerVersion, raw["docker"])

@@ -1013,12 +1013,15 @@ func GetHostDockerInternalIP() (string, error) {
 // RemoveImage removes an image with force
 func RemoveImage(tag string) error {
 	client := GetDockerClient()
-	err := client.RemoveImageExtended(tag, docker.RemoveImageOptions{Force: true})
-
+	_, err := client.InspectImage(tag)
 	if err == nil {
-		util.Success("Deleted docker image %s", tag)
-	} else {
-		util.Warning("Unable to delete %s: %v", tag, err)
+		err := client.RemoveImageExtended(tag, docker.RemoveImageOptions{Force: true})
+
+		if err == nil {
+			util.Success("Deleted docker image %s", tag)
+		} else {
+			util.Warning("Unable to delete %s: %v", tag, err)
+		}
 	}
 	return nil
 }
