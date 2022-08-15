@@ -979,7 +979,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		volumesNeeded = append(volumesNeeded, GetMutagenVolumeName(app))
 	}
 	for _, v := range volumesNeeded {
-		_, err = dockerutil.CreateVolume(v, "local", nil, map[string]string{"com.ddev.volume-signature": GetVolumeSignature(app)})
+		_, err = dockerutil.CreateVolume(v, "local", nil, map[string]string{"com.ddev.volume-signature": GetDefaultVolumeSignature(app)})
 		if err != nil {
 			return fmt.Errorf("unable to create docker volume %s: %v", v, err)
 		}
@@ -2810,8 +2810,8 @@ func (app *DdevApp) CreateUploadDirIfNecessary() {
 	}
 }
 
-// Get a volume signature to be applied especially to mutagen volume
-func GetVolumeSignature(app *DdevApp) string {
+// GetDefaultVolumeSignature gets a new volume signature to be applied especially to mutagen volume
+func GetDefaultVolumeSignature(app *DdevApp) string {
 	now := time.Now()
 	return fmt.Sprintf("%s-%d", dockerutil.DockerContext, now.Unix())
 }

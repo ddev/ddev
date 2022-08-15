@@ -327,6 +327,9 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, longResu
 		}
 		return "failing", shortResult, longResult, err
 	}
+	if shortResult == "[Paused]" {
+		return "paused", shortResult, longResult, nil
+	}
 
 	// We're going to assume that if it's applying changes things are still OK,
 	// even though there may be a whole list of problems.
