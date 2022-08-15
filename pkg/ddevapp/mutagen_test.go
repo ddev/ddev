@@ -79,7 +79,7 @@ func TestMutagenSimple(t *testing.T) {
 	require.NoError(t, err)
 
 	// Now composer install again and make sure all the stuff comes back
-	stdout, stderr, err := app.Composer([]string{"install", "--no-progress", "--no-interaction"})
+	stdout, _, err := app.Composer([]string{"install", "--no-progress", "--no-interaction"})
 	require.NoError(t, err, "stderr=%s, err=%v", stdout, err)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: "ls -l vendor/bin/var-dump-server >/dev/null",
