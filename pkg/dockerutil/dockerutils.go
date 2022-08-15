@@ -953,9 +953,11 @@ func MassageWindowsNFSMount(mountPoint string) string {
 // RemoveVolume removes named volume. Does not throw error if the volume did not exist.
 func RemoveVolume(volumeName string) error {
 	client := GetDockerClient()
-	err := client.RemoveVolumeWithOptions(docker.RemoveVolumeOptions{Name: volumeName})
-	if err != nil && err.Error() != "" && err.Error() != "no such volume" {
-		return err
+	if _, err := client.InspectVolume(volumeName); err == nil {
+		err := client.RemoveVolumeWithOptions(docker.RemoveVolumeOptions{Name: volumeName})
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -1015,10 +1017,10 @@ func RemoveImage(tag string) error {
 	client := GetDockerClient()
 	_, err := client.InspectImage(tag)
 	if err == nil {
-		err := client.RemoveImageExtended(tag, docker.RemoveImageOptions{Force: true})
+		err = client.RemoveImageExtended(tag, docker.RemoveImageOptions{Force: true})
 
 		if err == nil {
-			util.Success("Deleted docker image %s", tag)
+			util.Debug("Deleted docker image %s", tag)
 		} else {
 			util.Warning("Unable to delete %s: %v", tag, err)
 		}
