@@ -624,7 +624,42 @@ func GetMutagenVolumeLabel(app *DdevApp) string {
 	return ""
 }
 
-//func CheckMutagenVolumeSyncCompatibility(app *DdevApp) {
-//	labels := GetMutagenVolumeLabel(app)
-//
-//}
+// CheckMutagenVolumeSyncCompatibility checks to see if the mutagen label and volume label
+// are the same.
+// Returns true if they're the same, false if they're different
+// If either is empty, then return false. Terminate mutagen session if it has no label.
+func CheckMutagenVolumeSyncCompatibility(app *DdevApp) bool {
+	mutagenLabel := GetMutagenSyncLabel(app)
+	volumeLabel := GetMutagenVolumeLabel(app)
+
+	if mutagenLabel == "" {
+		util.Debug("mutagen sync session has empty label, terminating")
+		err := TerminateMutagenSync(app)
+		if err != nil {
+			util.Debug("failed to terminate mutagen sync session: %v", err)
+		}
+		return false
+	}
+	if volumeLabel == "" {
+		return false
+	}
+
+	if mutagenLabel != volumeLabel {
+		util.Debug("mutagen sync label (%s) not same as volume label (%s)", mutagenLabel, volumeLabel)
+		return false
+	}
+	return true
+}
+
+// GetMutagenSyncLabel gets the com.ddev.volume-signature label from an existing sync session
+func GetMutagenSyncLabel(app *DdevApp) string {
+	status, _, mapResult, err := app.MutagenStatus()
+
+	if status == "nosession" || err != nil {
+		return ""
+	}
+	if label, ok := mapResult["labels"].(map[string]interface{})["com.ddev.volume-signature"].(string); ok {
+		return label
+	}
+	return ""
+}

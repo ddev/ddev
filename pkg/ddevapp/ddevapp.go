@@ -974,6 +974,14 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
+	if app.IsMutagenEnabled() && !CheckMutagenVolumeSyncCompatibility(app) {
+		util.Debug("Attempting to remove docker volume %s", GetMutagenVolumeName(app))
+		err = dockerutil.RemoveVolume(GetMutagenVolumeName(app))
+		if err != nil {
+			util.Failed("Mutagen docker volume is from another docker context, please `ddev mutagen reset`")
+		}
+	}
+
 	volumesNeeded := []string{"ddev-global-cache", "ddev-" + app.Name + "-snapshots"}
 	if app.IsMutagenEnabled() {
 		volumesNeeded = append(volumesNeeded, GetMutagenVolumeName(app))
