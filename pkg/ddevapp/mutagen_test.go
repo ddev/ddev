@@ -99,7 +99,11 @@ func TestMutagenSimple(t *testing.T) {
 	ddevapp.StopMutagenDaemon()
 	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
 		// Verify that the mutagen daemon stopped/died
-		time.Sleep(time.Second * 1)
+		sleepWait := time.Second * 1
+		if runtime.GOOS == "linux" {
+			sleepWait = time.Second * 5
+		}
+		time.Sleep(sleepWait)
 		_, err := exec.RunHostCommand("pkill", "-HUP", "mutagen")
 		assert.Error(err)
 	}
