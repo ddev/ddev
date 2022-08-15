@@ -347,6 +347,9 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 	if !mounted {
 		return "not enabled", "", mapRes, nil
 	}
+	if err != nil {
+		return "", "", nil, err
+	}
 
 	problems := false
 	if _, ok := mapRes["alpha"].(map[string]interface{})["scanProblems"].([]interface{}); ok {
@@ -383,22 +386,6 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 		return status, shortResult, mapRes, nil
 	}
 	return "failing", shortResult, mapRes, nil
-}
-
-// parseMutagenStatusLine takes the full mutagen sync list output and
-// return just the right of the Status: line
-func parseMutagenStatusLine(fullStatus string) string {
-	statusLineLoc := strings.LastIndex(fullStatus, "\nStatus:")
-	statusLine := fullStatus[statusLineLoc+1:]
-	statusLineEnd := strings.Index(statusLine, "\n")
-	if statusLineEnd != -1 {
-		statusLine = statusLine[:statusLineEnd]
-	}
-	pieces := strings.Split(statusLine, ":")
-	if len(pieces) < 2 {
-		return ""
-	}
-	return strings.Trim(pieces[1], " \n\r")
 }
 
 // MutagenSyncFlush performs a mutagen sync flush, waits for result, and checks for errors
