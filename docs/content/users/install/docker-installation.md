@@ -8,7 +8,7 @@
 
     ### Colima
 
-    [Colima](https://github.com/abiosoft/colima) the preferred docker provider for macOS. Colima is an open-source project that bundles the container management tool [lima](https://github.com/lima-vm/lima) with a docker (linux) back-end. This is similar to what Docker Desktop actually does, but Colima and Lima are entirely open-source and just focused on running containers. They work on both `amd64` and `arm64` (M1) macs. Colima does not require installation of Docker Desktop, or does it require paying a license fee to Docker, Inc., and it seems to be the most stable alternative at this time.
+    [Colima](https://github.com/abiosoft/colima) is the preferred docker provider for macOS. Colima is an open-source project that bundles the container management tool [lima](https://github.com/lima-vm/lima) with a docker (linux) back-end. This is similar to what Docker Desktop actually does, but Colima and Lima are entirely open-source and just focused on running containers. They work on both `amd64` and `arm64` (M1) macs. Colima does not require installation of Docker Desktop, or does it require paying a license fee to Docker, Inc., and it seems to be the most stable alternative at this time.
     
     Reasons to use Colima include:
 
@@ -18,10 +18,10 @@
     * Stability
 
     !!!tip "Install the docker client if you need it"
-        If you don't have the `docker` client installed, you'll need to install it. (If `docker help` returns an error, you don't have it.) Use `brew install docker` to install it.
+        If you don't have the `docker` client installed, you'll need to install it. It is not provided with colima. (If `docker help` returns an error, you don't have it.) Use `brew install docker` to install it.
 
     1. Install colima with `brew install colima` using homebrew or see the other [installation options](https://github.com/abiosoft/colima/blob/main/docs/INSTALL.md).
-    2. After installing DDEV configure your system to use mutagen, which is nearly essential for Colima, by running `ddev config global --mutagen-enabled`.
+    2. After installing DDEV configure your system to use mutagen, which is essential for DDEV with Colima, by running `ddev config global --mutagen-enabled`.
     3. Start colima: `colima start --cpu 4 --memory 4 --dns=1.1.1.1` will set up a colima instance with 4 CPUs and 4GB of memory allocated and using DNS server 1.1.1.1 (Cloudflare). Your needs may vary. After the first start you can just use `colima start`. Use `colima start -e` to edit the configuration file. (Configuring the DNS server is critical if you're using Pantheon or other tenants of `storage.googleapis.com`.)
     4. `colima status` will show colima's status.
     5. After a computer restart you'll need to `colima start` again. This will eventually be automated in later versions of colima.
