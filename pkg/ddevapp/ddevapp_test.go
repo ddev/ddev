@@ -1128,6 +1128,10 @@ func TestDdevImportDB(t *testing.T) {
 		assert.NoError(err)
 		_ = os.Remove(filepath.Join(app.AppRoot, "hello-pre-import-db-"+app.Name))
 		_ = os.Remove(filepath.Join(app.AppRoot, "hello-post-import-db-"+app.Name))
+		for _, dbType := range []string{nodeps.Postgres, nodeps.MariaDB} {
+			err = dockerutil.RemoveVolume(app.Name + "-" + dbType)
+			require.NoError(t, err)
+		}
 
 	})
 
@@ -1299,6 +1303,13 @@ func TestDdevImportDB(t *testing.T) {
 			}
 		}
 	}
+
+	err = app.Stop(true, false)
+	require.NoError(t, err)
+	for _, dbType := range []string{nodeps.Postgres, nodeps.MariaDB} {
+		err = dockerutil.RemoveVolume(app.Name + "-" + dbType)
+		assert.NoError(err)
+	}
 	app.Database = ddevapp.DatabaseDesc{Type: nodeps.MariaDB, Version: nodeps.MariaDBDefaultVersion}
 	err = app.WriteConfig()
 	require.NoError(t, err)
@@ -1413,7 +1424,7 @@ func TestDdevAllDatabases(t *testing.T) {
 	dbVersions = nodeps.RemoveItemFromSlice(dbVersions, "postgres:9")
 	//Use a smaller list if GOTEST_SHORT
 	if os.Getenv("GOTEST_SHORT") != "" {
-		dbVersions = []string{"postgres:14", "mariadb:10.2", "mariadb:10.3", "mysql:8.0", "mysql:5.7"}
+		dbVersions = []string{"postgres:14", "mariadb:10.3", "mariadb:10.4", "mysql:8.0", "mysql:5.7"}
 		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
 	}
 
@@ -1429,6 +1440,11 @@ func TestDdevAllDatabases(t *testing.T) {
 
 	err = app.Stop(true, false)
 	require.NoError(t, err)
+
+	// Existing DB type in volume should be empty
+	dbType, err := app.GetExistingDBType()
+	assert.NoError(err)
+	assert.Equal("", strings.Trim(dbType, " \n\r\t"))
 
 	// Make sure there isn't an old db laying around
 	_ = dockerutil.RemoveVolume(app.Name + "-mariadb")
@@ -1469,6 +1485,10 @@ func TestDdevAllDatabases(t *testing.T) {
 			t.Errorf("Continuing/skippping %s due to app.Start() failure %v", dbVersion, startErr)
 			continue
 		}
+
+		inVolumeDBType, err := app.GetExistingDBType()
+		assert.NoError(err)
+		assert.Equal(dbTypeVersion, inVolumeDBType)
 
 		// The db_mariadb_version.txt file does not exist on postgres
 		if dbType != nodeps.Postgres {

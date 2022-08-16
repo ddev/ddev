@@ -17,7 +17,7 @@ var SegmentKey = ""
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "v1.20.0" // Note that this can be overridden by make
+var WebTag = "20220808_yarn_crash" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"
@@ -54,7 +54,7 @@ var BUILDINFO = "BUILDINFO should have new info"
 // MutagenVersion is filled with the version we find for mutagen in use
 var MutagenVersion = ""
 
-const RequiredMutagenVersion = "0.15.0"
+const RequiredMutagenVersion = "0.15.1"
 
 // GetWebImage returns the correctly formatted web image:tag reference
 func GetWebImage() string {
@@ -66,10 +66,13 @@ func GetWebImage() string {
 }
 
 // GetDBImage returns the correctly formatted db image:tag reference
-func GetDBImage(dbType string, dbVersion ...string) string {
+func GetDBImage(dbType string, dbVersion string) string {
 	v := nodeps.MariaDBDefaultVersion
-	if len(dbVersion) > 0 {
-		v = dbVersion[0]
+	if dbVersion != "" {
+		v = dbVersion
+	}
+	if dbType == "" {
+		dbType = nodeps.MariaDB
 	}
 	switch dbType {
 	case nodeps.Postgres:

@@ -84,7 +84,7 @@ func TestHomeadditions(t *testing.T) {
 	err = os.Symlink(filepath.Join(origDir, "testdata", t.Name(), "global/realglobaltarget.txt"), filepath.Join(tmpHomeGlobalHomeadditionsDir, "realglobaltarget.txt"))
 	require.NoError(t, err)
 	// Run ddev start make sure homeadditions example files get populated
-	_, err = exec.RunHostCommand(DdevBin, "start")
+	_, err = exec.RunHostCommand(DdevBin, "restart")
 	assert.NoError(err)
 
 	for _, f := range []string{"bash_aliases.example", "README.txt"} {
@@ -94,8 +94,10 @@ func TestHomeadditions(t *testing.T) {
 
 	app, err := ddevapp.GetActiveApp(site.Name)
 	require.NoError(t, err)
+
 	// Make sure that even though there was a global and a project-level .myscript.sh
 	// the project-level one should win.
+
 	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
 		Service: "web",
 		Cmd:     "~/.myscript.sh",

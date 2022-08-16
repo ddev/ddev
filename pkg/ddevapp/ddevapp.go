@@ -756,6 +756,7 @@ func (app *DdevApp) ExportDB(outFile string, compressionType string, targetDB st
 }
 
 // SiteStatus returns the current status of an application determined from web and db service health.
+// returns status, statusDescription
 func (app *DdevApp) SiteStatus() (string, string) {
 	if !fileutil.FileExists(app.GetAppRoot()) {
 		return SiteDirMissing, fmt.Sprintf(`%s: %v; Please "ddev stop --unlist %s"`, SiteDirMissing, app.GetAppRoot(), app.Name)
@@ -958,6 +959,13 @@ func (app *DdevApp) Start() error {
 	}
 	app.DockerEnv()
 	dockerutil.EnsureDdevNetwork()
+
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+		// OK to start if dbType is empty (nonexistent) or if it matches
+		if dbType, err := app.GetExistingDBType(); err != nil || (dbType != "" && dbType != app.Database.Type+":"+app.Database.Version) {
+			return fmt.Errorf("Unable to start project %s because the configured database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s' and then you might want to try 'ddev debug migrate-database %s', see docs at %s", app.Name, dbType, dbType, app.Database.Type+":"+app.Database.Version, "https://ddev.readthedocs.io/en/latest/users/extend/database_types/")
+		}
+	}
 
 	volumesNeeded := []string{"ddev-global-cache", "ddev-" + app.Name + "-snapshots"}
 	for _, v := range volumesNeeded {
@@ -1211,13 +1219,19 @@ func (app *DdevApp) Start() error {
 		}
 	}
 
+	// Wait for web/db containers to become healthy
+	dependers := []string{"web"}
+	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
+		dependers = append(dependers, "db")
+	}
+	err = app.Wait(dependers)
+	if err != nil {
+		util.Warning("Failed waiting for web/db containers to become ready: %v", err)
+	}
+
 	// WebExtraDaemons have to be started after mutagen sync is done, because so often
 	// they depend on code being synced into the container/volume
 	if len(app.WebExtraDaemons) > 0 {
-		err = app.Wait([]string{"web"})
-		if err != nil {
-			util.Warning("Failed waiting for web container to become ready: %v", err)
-		}
 		util.Debug("Starting web_extra_daaemons")
 		stdout, stderr, err := app.Exec(&ExecOpts{
 			Cmd: `supervisorctl start webextradaemons:*`,
@@ -1962,7 +1976,7 @@ func (app *DdevApp) WaitByLabels(labels map[string]string) error {
 	waitTime := app.FindMaxTimeout()
 	err := dockerutil.ContainersWait(waitTime, labels)
 	if err != nil {
-		return fmt.Errorf("container(s) failed to become healthy after %d seconds. This may be just a problem with the healthcheck and not a functional problem. %v", waitTime, err)
+		return fmt.Errorf("container(s) failed to become healthy before their configured timeout or in %d seconds. This may be just a problem with the healthcheck and not a functional problem. (%v)", waitTime, err)
 	}
 	return nil
 }

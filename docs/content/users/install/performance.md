@@ -45,12 +45,22 @@ Instructions for Mutagen and NFS are below.
     Note that the nfs-mount-enabled feature is automatically turned off if you're using mutagen.
 
     You can run mutagen on all your projects, there's no limit. To configure it globally, `ddev config global --mutagen-enabled`, but you cannot disable mutagen on individual projects if it's enabled globally (the global configuration wins).
+    
+    ### Windows Mutagen and executable files
+    
+    Mutagen on Windows does not currently set files in your project properly as executable, so commands like `ddev exec drush` or `ddev craft` will likely fail. This is pretty easy to work around with a post-start hook that sets the appropriate directories as executable, for example:
+    
+    ```yaml
+    hooks:
+      post-start:
+      - exec: "chmod +x /var/www/html/vendor/bin/* /var/www/html/node_modules/.bin/*"
+    ```
 
     ### Mutagen and upload_dir (`sites/default/files`, `fileadmin`, etc)
 
     When mutagen is enabled, DDEV attempts to exclude from syncing the `upload_dir` (user-generated files) in project types that a default `upload_dir` or where `upload_dir` is explicitly set in `.ddev/config.yaml`. It does this by using a bind-mount in the generated `docker-compose` configuration and excluding the directory from syncing in the `.ddev/mutagen/mutagen.yml`. In most cases you need not take any action to get this behavior.
 
-    If you have a nonstandard location for user-generated files, like `private/fileadmin` with the deprecated typo3-secure-web` approach, you should override the project defaults by setting `upload_dir` in `.ddev/config.yaml` to point to the correct directory so mutagen can be set up to sync correctly.
+    If you have a nonstandard location for user-generated files, like `private/fileadmin` with the deprecated `typo3-secure-web` approach, you should override the project defaults by setting `upload_dir` in `.ddev/config.yaml` to point to the correct directory so mutagen can be set up to sync correctly.
 
     ### Caveats about Mutagen Integration
 

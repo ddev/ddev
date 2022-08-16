@@ -57,7 +57,7 @@ func TestNewConfig(t *testing.T) {
 	})
 
 	// Ensure the config uses specified defaults.
-	assert.Equal(app.GetDBImage(), versionconstants.GetDBImage(nodeps.MariaDB))
+	assert.Equal(app.GetDBImage(), versionconstants.GetDBImage(nodeps.MariaDB, ""))
 	assert.Equal(app.WebImage, versionconstants.GetWebImage())
 	app.Name = util.RandString(32)
 	app.Type = nodeps.AppTypeDrupal8
