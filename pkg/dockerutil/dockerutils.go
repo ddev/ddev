@@ -979,13 +979,13 @@ func VolumeExists(volumeName string) bool {
 }
 
 // VolumeLabels returns map of labels found on volume.
-func VolumeLabels(volumeName string) map[string]string {
+func VolumeLabels(volumeName string) (map[string]string, error) {
 	client := GetDockerClient()
 	v, err := client.InspectVolume(volumeName)
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("volume %s not found", volumeName)
 	}
-	return v.Labels
+	return v.Labels, nil
 }
 
 // CreateVolume creates a docker volume

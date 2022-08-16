@@ -978,7 +978,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		util.Debug("Attempting to remove docker volume %s", GetMutagenVolumeName(app))
 		err = dockerutil.RemoveVolume(GetMutagenVolumeName(app))
 		if err != nil {
-			util.Failed("Mutagen docker volume is from another docker context, please `ddev mutagen reset`")
+			return fmt.Errorf("Mutagen docker volume is from another docker context, please `ddev mutagen reset`")
 		}
 	}
 
