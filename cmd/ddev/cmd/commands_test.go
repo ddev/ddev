@@ -62,7 +62,9 @@ func TestCustomCommands(t *testing.T) {
 
 	origType := app.Type
 	t.Cleanup(func() {
-		// Stop the mutagen daemon runnning in the bogus homedir
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		// Stop the mutagen daemon running in the bogus homedir
 		ddevapp.StopMutagenDaemon()
 		err = os.Chdir(origDir)
 		assert.NoError(err)
