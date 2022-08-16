@@ -79,9 +79,8 @@ func TestMutagenSimple(t *testing.T) {
 	require.NoError(t, err)
 
 	// Now composer install again and make sure all the stuff comes back
-	stdout, stderr, err := app.Composer([]string{"install", "--no-progress", "--no-interaction"})
-	assert.NoError(err)
-	t.Logf("composer install output: \nstdout: %s\n\nstderr: %s\n", stdout, stderr)
+	stdout, _, err := app.Composer([]string{"install", "--no-progress", "--no-interaction"})
+	require.NoError(t, err, "stderr=%s, err=%v", stdout, err)
 	_, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: "ls -l vendor/bin/var-dump-server >/dev/null",
 	})
@@ -99,9 +98,14 @@ func TestMutagenSimple(t *testing.T) {
 	// Make sure we can stop the daemon
 	ddevapp.StopMutagenDaemon()
 	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
-		out, err := exec.RunHostCommand("bash", "-c", "ps -ef | grep mutagen")
-		assert.NoError(err)
-		t.Logf("mutagen processes after StopMutagenDaemon: \n=====\n%s====\n", out)
+		// Verify that the mutagen daemon stopped/died
+		sleepWait := time.Second * 1
+		if runtime.GOOS == "linux" {
+			sleepWait = time.Second * 5
+		}
+		time.Sleep(sleepWait)
+		_, err := exec.RunHostCommand("pkill", "-HUP", "mutagen")
+		assert.Error(err)
 	}
 
 	out, err = exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list")

@@ -66,10 +66,13 @@ func GetWebImage() string {
 }
 
 // GetDBImage returns the correctly formatted db image:tag reference
-func GetDBImage(dbType string, dbVersion ...string) string {
+func GetDBImage(dbType string, dbVersion string) string {
 	v := nodeps.MariaDBDefaultVersion
-	if len(dbVersion) > 0 {
-		v = dbVersion[0]
+	if dbVersion != "" {
+		v = dbVersion
+	}
+	if dbType == "" {
+		dbType = nodeps.MariaDB
 	}
 	switch dbType {
 	case nodeps.Postgres:

@@ -98,7 +98,7 @@ func deleteDdevImages(deleteAll bool) error {
 	routerimage := versionconstants.RouterImage + ":" + versionconstants.RouterTag
 	sshimage := versionconstants.SSHAuthImage + ":" + versionconstants.SSHAuthTag
 
-	nameAry := strings.Split(versionconstants.GetDBImage(nodeps.MariaDB), ":")
+	nameAry := strings.Split(versionconstants.GetDBImage(nodeps.MariaDB, ""), ":")
 	keepDBImageTag := "notagfound"
 	if len(nameAry) > 1 {
 		keepDBImageTag = nameAry[1]
