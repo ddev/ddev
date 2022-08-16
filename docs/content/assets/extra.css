@@ -103,3 +103,16 @@ dt {
 .md-typeset .tabbed-labels label {
     font-size: 0.75rem;
 }
+
+.md-typeset .tabbed-button {
+    width: 30px;
+    height: 100%;
+    border-radius: unset!important;
+}
+
+.md-typeset .tabbed-button:after {
+    -webkit-mask-size: cover;
+    mask-size: cover;
+    mask-position: center;
+    -webkit-mask-position: center;
+}
