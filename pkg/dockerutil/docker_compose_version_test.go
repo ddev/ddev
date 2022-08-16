@@ -70,7 +70,7 @@ func TestDockerComposeDownload(t *testing.T) {
 	assert.NoError(err)
 	assert.False(downloaded)
 
-	for _, v := range []string{"v2.0.1", "v1.29.0"} {
+	for _, v := range []string{"v2.0.1", "v2.8.0"} {
 		globalconfig.DockerComposeVersion = ""
 		// Skip v1 tests on arm64, as they aren't provided
 		if strings.HasPrefix(v, "v1") && runtime.GOARCH == "arm64" {
