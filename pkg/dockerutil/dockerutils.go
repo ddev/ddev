@@ -1208,38 +1208,10 @@ func dockerComposeDownloadLink() (string, error) {
 	baseVersion := v[1:2]
 
 	switch baseVersion {
-	case "1":
-		return dockerComposeDownloadLinkV1()
 	case "2":
 		return dockerComposeDownloadLinkV2()
 	}
 	return "", fmt.Errorf("Invalid docker-compose base version %s", v)
-}
-
-// dockerComposeDownloadLinkV1 downlods compose v1 downloads like
-//
-//	https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Darwin-x86_64
-//	https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
-//	https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Windows-x86_64.exe
-func dockerComposeDownloadLinkV1() (string, error) {
-	arch := runtime.GOARCH
-	//nolint:staticcheck
-	goos := strings.Title(runtime.GOOS)
-
-	switch arch {
-	case "amd64":
-		arch = "x86_64"
-	default:
-		return "", fmt.Errorf("Only amd64 architecture is supported for docker-compose v1, not %s", arch)
-	}
-	// docker-compose v1 does not use the 'v', so strip it.
-	v := globalconfig.GetRequiredDockerComposeVersion()[1:]
-	flavor := goos + "-" + arch
-	ComposeURL := fmt.Sprintf("https://github.com/docker/compose/releases/download/%s/docker-compose-%s", v, flavor)
-	if runtime.GOOS == "windows" {
-		ComposeURL = ComposeURL + ".exe"
-	}
-	return ComposeURL, nil
 }
 
 // dockerComposeDownloadLinkV2 downlods compose v1 downloads like
