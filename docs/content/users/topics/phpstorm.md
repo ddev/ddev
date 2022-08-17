@@ -2,51 +2,47 @@
 
 ## Full Integration with Docker, DDEV, and PhpStorm
 
-This explores how to add full PhpStorm integration with a DDEV project, including composer and phpunit. It works on all OS platforms, including macOS and WSL2.
-
-This is based on the wonderful [article](https://susi.dev/fully-integrate-ddev-and-phpstorm-including-unit-tests-with-coverage-update-2021) by [Susanne Moog](https://github.com/susannemoog), and couldn't have been done without it, but since PhpStorm has fixed some things and DDEV has worked around others, this is far easier now. It works on macOS, Linux, Windows with WSL2 and Windows traditional. You'll end up with PhpStorm actually using the PHP interpreter inside the ddev-webserver container of your project, and able to use composer and phpunit inside there as well.
+For full integration of PhpStorm and DDEV, it's easiest to use the [DDEV Integration Plugin](https://plugins.jetbrains.com/plugin/18813-ddev-integration) or in `Preferences -> Plugins -> Marketplace` search for `DDEV`. That does almost all of what is discussed here automatically, and works on all platforms.
 
 ### Requirements
 
-- PhpStorm 2021.3 or higher
-- You may need to add the `PHP Docker` plugin.
-- You need to enable Compose V2 Support in PHPStorm. This can be done in `Settings/Preferences | Build, Execution, Deployment | Docker | Tools` by either
-   1. set the bundled docker-compose binary as **Docker Compose executable** which can be found in `~/.ddev/bin`.
-   2. (Suggested for WSL) enabling **Use Compose V2** in PHPStorm and your Docker installation.
-- Any OS platform, but if you're using Windows PhpStorm with WSL2 the path mappings are slightly more complex. WSL2 instructions are provided where necessary.
+- PhpStorm 2022.2 or higher.
+- DDEV v1.20.1 or higher
 
 ### Setup Technique
 
-1. Open a DDEV project. In this example, the project name is "d9" and the site is "d9.ddev.site".
+1. Preferably, install the [DDEV Integration Plugin](https://plugins.jetbrains.com/plugin/18813-ddev-integration) so you don't have to do much of this.
+2. Start your project with `ddev start`
+3. Open the DDEV project. In this example, the project name is "d9" and the site is "d9.ddev.site".
     - If you're on Windows, running PhpStorm on the Windows side but  using WSL2 for your DDEV project, open the project as a WSL2 project. In other words, in the "Open" dialog, browse to `\\wsl$\Ubuntu\home\rfay\workspace\d9` (in this example). (If you're running PhpStorm inside WSL2, there are no special instructions.)
-2. Set up your project to do normal Xdebug, as described in the [Step Debugging section](../debugging-profiling/step-debugging.md). This will result in a PhpStorm "Server" with the proper name, normally the same as the FQDN of the project. In this example, "d9.ddev.site". (All you have to do here is click the little telephone to "Start listening for PHP Debug Connections", then `ddev xdebug on`, then visit a web page and choose the correct mapping from host to server. )
-3. Under File→Settings→PHP (Windows) or Preferences→PHP (macOS), click the "..." to the right of "CLI Interpreter"
+4. Under `Build, Execution, Deployment -> Docker`, set the correct Docker provider, for example "Colima" or "Docker for Mac".
+5. Set up your project to do normal Xdebug, as described in the [Step Debugging section](../debugging-profiling/step-debugging.md). This will result in a PhpStorm "Server" with the proper name, normally the same as the FQDN of the project. In this example, "d9.ddev.site". (All you have to do here is click the little telephone to "Start listening for PHP Debug Connections", then `ddev xdebug on`, then visit a web page and choose the correct mapping from host to server. ) (The plugin does this automatically, so you can skip this step.)
+6. Under File→Settings→PHP (Windows) or Preferences→PHP (macOS), click the "..." to the right of "CLI Interpreter". (The plugin will already have set this up with a CLI interpreter named `DDEV`.)
     1. Use the "+" to select "From Docker, Vagrant, VM..."
     2. Choose "Docker Compose"
-    3. Create a server; the default name is "docker", but since the "server" for each project will be different, name it for the project, for example "DDEV d9". Choose "Docker for Windows" or "Docker for Mac"
-    4. In the "Path mappings" of the "Server" you may have to map the local paths (which on WSL2 means /home/...) to the in-container paths, especially if you have mutagen enabled. So "Virtual Machine Path" would be "/var/www/html" and "Local path" would be something like `/Users/rfay/workspace/d9` (on macOS) or `\\wsl$\Ubuntu\home\rfay\workspace\d9` on Windows using WSL2.
-    5. Now back in the "Configure Remote PHP Interpreter" for "Configuration files" use `.ddev/.ddev-docker-compose-full.yaml`. On macOS, you may need to use `<cmd><shift>.`, (Command+Shift+Dot) to show hidden dotfiles.
-    6. Service: web
-    7. Add an environment variable `COMPOSE_PROJECT_NAME=ddev-<projectname>`. In this case, it's `ddev-d9`. (Note that DDEV project names that contain dots do not currently work due to a [PhpStorm bug](https://youtrack.jetbrains.com/issue/WI-63293). You'll need to rename your project to get these instructions to work.)
-    8. In the CLI interpreter "Lifecycle" select "Connect to existing container"
-    9. In the PHP Interpreter path, you can just put `php` if you're using the default PHP version (currently 7.4). Due to a [PhpStorm bug](https://youtrack.jetbrains.com/issue/WI-62463) you'll want to put the full name of the binary, like `php8.0` if you're not using the default version.
-    10. Here's an example filled out ![example configuration](images/cli_interpreter.png)
-4. In the main PHP setup dialog, add an entry to the path mappings, as it doesn't correctly derive the full path mapping. Add an entry that maps your project location to /var/www/html. So in this example, the Local Path is /Users/rfay/workspace/d9 and the Remote Path is /var/www/html. ![example mapping](images/mapping.png)
-5. Configure composer under PHP→Composer.
+    3. Create a "server"; Choose the appropriate docker provider configured above under `Build, Execution, Deployment -> Docker`.
+    4. In the "Path mappings" of the "Server" you may have to map the local paths (which on WSL2 means /home/...) to the in-container paths, especially if you have mutagen enabled. So "Virtual Machine Path" would be "/var/www/html" and "Local path" would be something like `/Users/rfay/workspace/d9` (on macOS) or `\\wsl$\Ubuntu\home\rfay\workspace\d9` on Windows using WSL2. (The plugin will already have done this for you.)
+    5. Now back in the "Configure Remote PHP Interpreter" for "Configuration files" use `.ddev/.ddev-docker-compose-full.yaml`. On macOS, you may need to use `<cmd><shift>.`, (Command+Shift+Dot) to show hidden dotfiles. (The plugin will have done this for you.)
+    6. Service: web (Plugin will have done this.)
+    7. Add an environment variable `COMPOSE_PROJECT_NAME=ddev-<projectname>`. In this case, it's `ddev-d9`. (Note that DDEV project names that contain dots do not currently work due to a [PhpStorm bug](https://youtrack.jetbrains.com/issue/WI-63293). You'll need to rename your project to get these instructions to work.) (Plugin will have done this.)
+    8. In the CLI interpreter "Lifecycle" select "Connect to existing container" (Plugin will have done this.)
+    9. Here's an example filled out ![example configuration](images/cli_interpreter.png)
+7. In the main PHP setup dialog, add an entry to the path mappings, as it doesn't correctly derive the full path mapping. Add an entry that maps your project location to /var/www/html. So in this example, the Local Path is /Users/rfay/workspace/d9 and the Remote Path is /var/www/html. ![example mapping](images/mapping.png) (Plugin will have done this)
+8. Configure composer under PHP→Composer. (Plugin will have done this)
     - Use "remote interpreter"
     - CLI Interpreter will be "web"
-6. Under "Test Frameworks" click the "+" to add phpunit
+9. Under "Test Frameworks" click the "+" to add phpunit (Assumes phpunit is already installed)
     - PHPUnit by remote interpreter
-    - Interpreter "web"
+    - Interpreter "DDEV"
     - Choose "Path to phpunit.phar" and use /var/www/html/vendor/bin/phpunit (or wherever your phpunit is inside the container). You need phpunit properly composer-installed for your CMS. For example, for Drupal 9, `ddev composer require --dev --with-all-dependencies drupal/core-dev:^9`  and `ddev composer require --dev phpspec/prophecy-phpunit:^2`
     - Default configuration file: /var/www/html/web/core/phpunit.xml or wherever yours is inside the container.
    ![Example config](images/phpunit_setup.png)
-7. Open Run/Debug configurations and use the "+" to add a phpunit configuration. Give it a name
+10. Open Run/Debug configurations and use the "+" to add a phpunit configuration. Give it a name
     - Test scope (as you wish, by directory or class or whatever)
     - Interpreter: "web" (the one we set up)
    ![Run-debug configuration](images/run_debug_config.png)
-8. Enable Xdebug if you want to debug tests. `ddev xdebug on`
-9. Run the runner that you created. ![Example phpunit run](images/example_phpunit_run.png)
+11. Enable Xdebug if you want to debug tests. `ddev xdebug on`
+12. Run the runner that you created. ![Example phpunit run](images/example_phpunit_run.png)
 
 Notes:
 
@@ -61,7 +57,7 @@ It is possible right now to use PHPStorm with DDEV-Local on WSL2 in at least two
 2. Enabling X11 on Windows and running PHPStorm inside WSL2 as a Linux app. PHPStorm works fine this way, but it’s yet another complexity to manage and requires enabling X11 (easy) on your Windows system.
 We’ll walk through both of these approaches.
 
-(JetBrains is really working to catch up with the slick WSL2 support of vscode. A third option is the [Projector](https://lp.jetbrains.com/projector/) app, which runs PhpStorm on WSL2 (or anywhere else) but displays it in a browser.)
+(JetBrains is really working to catch up with the slick WSL2 support of vscode. A third option is [Jetbrains Gateway](https://www.jetbrains.com/remote-development/gateway/), which runs PhpStorm on WSL2 (or anywhere else) but displays it in a in your Gateway app.)
 
 ### Basics
 
@@ -69,22 +65,24 @@ We’ll walk through both of these approaches.
 
 - If you haven’t used Xdebug with DDEV-Local and PHPStorm before, you’ll want to read the [step debugging instructions](../debugging-profiling/step-debugging.md).
 
-- For good performance, you want your project to be in `/home` inside WSL2, which is on the Linux filesystem. Although you can certainly keep your project on the Windows filesystem and access it in WSL2 via /mnt/c, the performance is even worse than native Windows. It does work though, but don't do it. You'll be miserable.
+- For usable performance, your project should be in `/home` inside WSL2, which is on the Linux filesystem. Although you could keep your project on the Windows filesystem and access it in WSL2 via /mnt/c, the performance is even worse than native Windows. It does work though, but don't do it. You'll be miserable.
 
-### PhpStorm Running On Windows Side
+### PhpStorm Running On Windows Side and Using Docker Desktop
 
-1. Your working project should be on the /home partition, so you’ll open it using Windows PHPStorm as `\\wsl$\Ubuntu\home\<username>\...\<projectdir>`.
-2. On some systems and some projects it may take a very long time for PHPStorm to index the files. At one point I got frustrated and moved to a faster computer.
+With the [DDEV Integration Plugin](https://plugins.jetbrains.com/plugin/18813-ddev-integration) almost everything is already done for you, so use it. Create your project inside WSL2 (on the /home partition) and get it started first.
+
+1. Your working project will be on the /home partition, so you’ll open it using Windows PHPStorm as `\\wsl$\Ubuntu\home\<username>\...\<projectdir>`.
+2. On some systems and some projects it may take a very long time for PHPStorm to index the files.
 3. File changes are noticed only by polling, and PHPStorm will complain about this in the lower right, “External file changes sync may be slow”.
 4. Turn off your Windows firewall temporarily. When you have everything working you can turn it back on again.
 Use `ddev start` and `ddev xdebug on`
 5. Click the Xdebug listen button on PHPStorm (the little phone icon) to make it start listening.
 6. Set a breakpoint on or near the first line of your index.php
-7. Visit the project with a web browser or curl. You should get a popup asking for mapping of the host-side files to the in-container files. You’ll want to make sure that `/home/<you>/.../<yourproject>` gets mapped to `/var/www/html`
+7. Visit the project with a web browser or curl. You should get a popup asking for mapping of the host-side files to the in-container files. You’ll want to make sure that `/home/<you>/.../<yourproject>` gets mapped to `/var/www/html`.
 
-Debugging should be working! You can step through your code, set breakpoints, view variables, etc.
+Debugging should be working. You can step through your code, set breakpoints, view variables, etc.
 
-(Nice to have) I set the PHPStorm terminal path (Settings→Tools→Terminal→Shell Path) to C:\Windows\System32\wsl.exe. That way when I use the terminal Window in WSL2 it’s using the wonderful bash shell in WSL2.
+(Nice to have) I set the PHPStorm terminal path (Settings→Tools→Terminal→Shell Path) to C:\Windows\System32\wsl.exe. That way when you use the terminal Window in WSL2 it’s using the bash shell in WSL2.
 
 #### PHPStorm inside WSL2 in Linux
 
