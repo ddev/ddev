@@ -328,7 +328,7 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 	if err != nil {
 		return "nosession", fullJSONResult, nil, err
 	}
-	if len(sessionMap) != 1 {
+	if len(sessionMap) < 1 {
 		return "", "", nil, fmt.Errorf("mutagen sessions may be in invalid state, please `ddev mutagen reset`")
 	}
 	mapRes := sessionMap[0]
