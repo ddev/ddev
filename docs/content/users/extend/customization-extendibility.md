@@ -221,9 +221,9 @@ To load the new configuration, run `ddev restart`.
 
 If you are using Postgresql, a default `posgresql.conf` is provided in `.ddev/postgres/postgresql.conf`. If you need to alter it, remove the `#ddev-generated` line and `ddev restart`.
 
-## Extending config.yaml with custom `config.\*.yaml` files
+## Extending config.yaml with custom `config.*.yaml` files
 
-You may add additional config.\*.yaml files to organize additional commands as you see fit for your project and team.
+You may add additional `config.*.yaml` files to organize additional commands as you see fit for your project and team.
 
 For example, many teams commit their config.yaml and share it throughout the team, but some team members may require overrides to the checked-in version that are custom to their environment and should not be checked in. For example, a team member may want to use a router_http_port other than the team default due to a conflict in their development environment. In this case they could add the file .ddev/config.ports.yaml with the contents:
 
@@ -232,19 +232,47 @@ For example, many teams commit their config.yaml and share it throughout the tea
 router_http_port: 8080
 ```
 
-config.\*.yaml is by default omitted from git by the .ddev/.gitignore file. You can commit it by using `git add -f .ddev/config.<something>.yaml`.
+`config.*.yaml` is by default omitted from git by the `.ddev/.gitignore` file. You can commit it by using `git add -f .ddev/config.<something>.yaml`.
 
-Extra config.\*.yaml files are loaded in lexicographic order, so "config.a.yaml" will be overridden by "config.b.yaml".
+Extra `config.*.yaml` files are loaded in lexicographic order, so "config.a.yaml" will be overridden by "config.b.yaml".
 
 Teams may choose to use "config.local.yaml" or "config.override.yaml" for all local non-committed config changes, for example.
 
-config.\*.yaml update configuration according to
+`config.*.yaml` update configuration according to
 these rules:
 
 1. Simple fields like `router_http_port` or `webserver_type` are overwritten.
 2. Lists of strings like `additional_hostnames` or `additional_fqdns` are merged.
 3. The list of environment variables in `web_environment` are "smart merged": if you add the same environment variable with a different value, the value in the override file will replace the value from config.yaml.
 4. Hook specifications in the `hooks` variable are also merged.
+
+If you need to *override* existing values, set `override_config: true` in the `config.*.yaml` where the override behavior should take place. Since `config.*.yaml` files are normally *merged* into the configuration, some things can't be overridden normally. For example, if you have 'nfs_mount_enabled: true'' you can't override it with a merge and you can't erase existing hooks or all environment variables. However, with "override_config: true" in a particular config.*.yaml file,
+
+```yaml
+override_config: true
+nfs_mount_enabled: false
+```
+
+can override the existing values, and
+
+```yaml
+override_config: true
+hooks:
+  post_start: []
+```
+
+or
+
+```yaml
+override_config: true
+additional_hostnames: []
+```
+
+can have their intended affect.
+
+'override_config' affects only behavior of the `config.*.yaml` file it exists in.
+
+To experiment with the behavior of a set of `config.*.yaml` files use the `ddev debug configyaml` file; it's especially valuable with the `yq` command, for example `ddev debug configyaml | yq`.
 
 ## Explicit supervisord configuration for additional daemons
 

@@ -140,6 +140,7 @@ type DdevApp struct {
 	DefaultContainerTimeout   string                 `yaml:"default_container_timeout,omitempty"`
 	WebExtraExposedPorts      []WebExposedPort       `yaml:"web_extra_exposed_ports,omitempty"`
 	WebExtraDaemons           []WebExtraDaemon       `yaml:"web_extra_daemons,omitempty"`
+	OverrideConfig            bool                   `yaml:"override_config,omitempty"`
 	ComposeYaml               map[string]interface{} `yaml:"-"`
 }
 
