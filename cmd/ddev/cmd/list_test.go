@@ -2,19 +2,18 @@ package cmd
 
 import (
 	"bufio"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/stretchr/testify/require"
 	"os"
+	oexec "os/exec"
 	"runtime"
 	"strings"
 	"testing"
 	"time"
 
-	oexec "os/exec"
-
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/globalconfig"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestCmdList runs the binary with "ddev list" and checks the results
@@ -151,11 +150,7 @@ func TestCmdListContinuous(t *testing.T) {
 
 	assert := asrt.New(t)
 
-	oldDdevDebug := os.Getenv("DDEV_DEBUG")
-	_ = os.Setenv("DDEV_DEBUG", "")
-	t.Cleanup(func() {
-		_ = os.Setenv("DDEV_DEBUG", oldDdevDebug)
-	})
+	t.Setenv("DDEV_DEBUG", "")
 	// Execute "ddev list --continuous"
 	cmd := oexec.Command(DdevBin, "list", "-j", "--continuous")
 	stdout, err := cmd.StdoutPipe()

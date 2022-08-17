@@ -1,17 +1,18 @@
 package dockerutil_test
 
 import (
+	"os"
+	"os/exec"
+	"runtime"
+	"strings"
+	"testing"
+
 	"github.com/drud/ddev/pkg/dockerutil"
 	exec2 "github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"os/exec"
-	"runtime"
-	"strings"
-	"testing"
 )
 
 var DdevBin = "ddev"
@@ -25,18 +26,14 @@ func TestDockerComposeDownload(t *testing.T) {
 		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
 	}
 
-	origHome := os.Getenv("HOME")
-	if runtime.GOOS == "windows" {
-		origHome = os.Getenv("USERPROFILE")
-	}
 	tmpHome := testcommon.CreateTmpDir(t.Name() + "tempHome")
 	// Unusual case where we need to alter the RequiredDockerComposeVersion
 	// just so we can make sure the one in PATH is different.
 	origRequiredComposeVersion := globalconfig.RequiredDockerComposeVersion
 
 	// Change the homedir temporarily
-	_ = os.Setenv("HOME", tmpHome)
-	_ = os.Setenv("USERPROFILE", tmpHome)
+	t.Setenv("HOME", tmpHome)
+	t.Setenv("USERPROFILE", tmpHome)
 
 	// Make sure we have the .ddev/bin dir we need to verify against
 	//err = fileutil.CopyDir(filepath.Join(origHome, ".ddev/bin"), filepath.Join(tmpHome, ".ddev/bin"))
@@ -51,7 +48,6 @@ func TestDockerComposeDownload(t *testing.T) {
 
 		err = os.RemoveAll(tmpHome)
 		assert.NoError(err)
-		_ = os.Setenv("HOME", origHome)
 		globalconfig.RequiredDockerComposeVersion = origRequiredComposeVersion
 	})
 

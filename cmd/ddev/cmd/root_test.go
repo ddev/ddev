@@ -2,28 +2,28 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	osexec "os/exec"
+	"path/filepath"
+	"runtime"
+	"strconv"
+	"strings"
+	"testing"
+
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
-	"os"
-	"runtime"
-	"strconv"
-	"strings"
-	"testing"
 
 	"github.com/drud/ddev/pkg/testcommon"
 	log "github.com/sirupsen/logrus"
-
-	"path/filepath"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/output"
 	asrt "github.com/stretchr/testify/assert"
-	osexec "os/exec"
 )
 
 var (
@@ -191,11 +191,6 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	tmpDir := testcommon.CreateTmpDir("globalDdevCheck")
 	_ = TestSites[0].Chdir()
 
-	origHome := os.Getenv("HOME")
-	if runtime.GOOS == "windows" {
-		origHome = os.Getenv("USERPROFILE")
-	}
-
 	t.Cleanup(
 		func() {
 			_, err := exec.RunHostCommand(DdevBin, "poweroff")
@@ -204,9 +199,6 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 			assert.NoError(err)
 			err = os.RemoveAll(tmpDir)
 			assert.NoError(err)
-
-			_ = os.Setenv("HOME", origHome)
-			_ = os.Setenv("USERPROFILE", origHome)
 
 			// Because the start will have done a poweroff (new version),
 			// make sure sites are running again.
@@ -226,8 +218,8 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	assert.True(os.IsNotExist(err))
 
 	// Change the homedir temporarily
-	_ = os.Setenv("HOME", tmpDir)
-	_ = os.Setenv("USERPROFILE", tmpDir)
+	t.Setenv("HOME", tmpDir)
+	t.Setenv("USERPROFILE", tmpDir)
 
 	// The .update file is only created by ddev start
 	_, err = exec.RunHostCommand(DdevBin, "start", "-y")
@@ -268,8 +260,8 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	assert.GreaterOrEqual(activeCount, 2)
 
 	// Change the homedir temporarily
-	_ = os.Setenv("HOME", tmpHome)
-	_ = os.Setenv("USERPROFILE", tmpHome)
+	t.Setenv("HOME", tmpHome)
+	t.Setenv("USERPROFILE", tmpHome)
 
 	// Make sure we have the .ddev/bin dir we need
 	err = fileutil.CopyDir(filepath.Join(origHome, ".ddev/bin"), filepath.Join(tmpHome, ".ddev/bin"))
@@ -291,9 +283,6 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 
 			err = os.RemoveAll(tmpHome)
 			assert.NoError(err)
-
-			_ = os.Setenv("HOME", origHome)
-			_ = os.Setenv("USERPROFILE", origHome)
 
 			err = os.Chdir(tmpJunkProject)
 			assert.NoError(err)

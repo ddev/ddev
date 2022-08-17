@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/globalconfig"
 	"os"
 	osexec "os/exec"
 	"path/filepath"
@@ -14,6 +13,7 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
@@ -34,7 +34,6 @@ func TestCustomCommands(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		origHome = os.Getenv("USERPROFILE")
 	}
-	origDebug := os.Getenv("DDEV_DEBUG")
 
 	site := TestSites[0]
 	err = os.Chdir(site.Dir)
@@ -51,9 +50,9 @@ func TestCustomCommands(t *testing.T) {
 	tmpHome := testcommon.CreateTmpDir(t.Name() + "-tempHome")
 
 	// Change the homedir temporarily
-	_ = os.Setenv("HOME", tmpHome)
-	_ = os.Setenv("USERPROFILE", tmpHome)
-	_ = os.Setenv("DDEV_DEBUG", "")
+	t.Setenv("HOME", tmpHome)
+	t.Setenv("USERPROFILE", tmpHome)
+	t.Setenv("DDEV_DEBUG", "")
 
 	// Make sure we have the .ddev/bin dir we need
 	err = fileutil.CopyDir(filepath.Join(origHome, ".ddev/bin"), filepath.Join(tmpHome, ".ddev/bin"))
@@ -72,9 +71,6 @@ func TestCustomCommands(t *testing.T) {
 		err = app.WriteConfig()
 		assert.NoError(err)
 		_ = os.RemoveAll(tmpHome)
-		_ = os.Setenv("HOME", origHome)
-		_ = os.Setenv("USERPROFILE", origHome)
-		_ = os.Setenv("DDEV_DEBUG", origDebug)
 		err = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", "commands"))
 		assert.NoError(err)
 		err = fileutil.PurgeDirectory(filepath.Join(site.Dir, ".ddev", ".global_commands"))
@@ -278,7 +274,7 @@ func TestLaunchCommand(t *testing.T) {
 	err := os.Chdir(tmpdir)
 	assert.NoError(err)
 
-	_ = os.Setenv("DDEV_DEBUG", "true")
+	t.Setenv("DDEV_DEBUG", "true")
 	app, err := ddevapp.NewApp(tmpdir, false)
 	require.NoError(t, err)
 	err = app.WriteConfig()

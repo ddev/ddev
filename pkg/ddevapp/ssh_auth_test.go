@@ -1,6 +1,12 @@
 package ddevapp_test
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
@@ -10,11 +16,6 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/versionconstants"
 	"github.com/stretchr/testify/require"
-	"os"
-	"path/filepath"
-	"strings"
-	"testing"
-	"time"
 
 	asrt "github.com/stretchr/testify/assert"
 )
@@ -147,7 +148,7 @@ func TestSshAuthConfigOverride(t *testing.T) {
 	assert.NoError(err)
 
 	answer := fileutil.RandomFilenameBase()
-	_ = os.Setenv("ANSWER", answer)
+	t.Setenv("ANSWER", answer)
 	assert.NoError(err)
 	assert.NoError(err)
 	t.Cleanup(func() {
