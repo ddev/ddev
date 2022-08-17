@@ -679,3 +679,11 @@ func GetMutagenSyncLabel(app *DdevApp) (string, error) {
 	}
 	return "", fmt.Errorf("sync session label not found for sync session %s", MutagenSyncName(app.Name))
 }
+
+// TerminateAllMutagenSync terminates all sessions that match our signature label
+func TerminateAllMutagenSync() {
+	out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "terminate", "--label-selector="+mutagenSignatureLabelName)
+	if err != nil {
+		util.Warning("could not terminate all mutagen sessions, output=%s, err=%v", out, err)
+	}
+}
