@@ -352,10 +352,13 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 	}
 
 	problems := false
-	if _, ok := mapRes["alpha"].(map[string]interface{})["scanProblems"].([]interface{}); ok {
+	if _, ok := mapRes["alpha"].(map[string]interface{})["scanProblems"]; ok {
 		problems = true
 	}
-	if _, ok := mapRes["beta"].(map[string]interface{})["scanProblems"].([]interface{}); ok {
+	if _, ok := mapRes["beta"].(map[string]interface{})["scanProblems"]; ok {
+		problems = true
+	}
+	if _, ok := mapRes["conflicts"]; ok {
 		problems = true
 	}
 
