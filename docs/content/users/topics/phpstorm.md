@@ -88,10 +88,13 @@ Set the PHPStorm terminal path (Settings→Tools→Terminal→Shell Path) to `C:
 2. Temporarily disable your Windows firewall. You can re-enable it after you get everything working.
 3. If you're on older Windows 10, in the WSL2 terminal `export DISPLAY=$(awk '/^nameserver/ {print $2; exit;}' </etc/resolv.conf):0.0` (You’ll want to add this to your .profile in WSL2). This sets the X11 DISPLAY variable to point to your Windows host side. On Windows 11 this "just works" and you don't need to do anything here.
 4. Install the DDEV apt repository with
+
+    ```bash
+    curl https://apt.fury.io/drud/gpg.key | sudo apt-key add -
+    echo "deb https://apt.fury.io/drud/ * *" | sudo tee -a /etc/apt/sources.list.d/ddev.list
+    sudo apt update && sudo apt install -y ddev
     ```
-   curl https://apt.fury.io/drud/gpg.key | sudo apt-key add -
-   echo "deb https://apt.fury.io/drud/ * *" | sudo tee -a /etc/apt/sources.list.d/ddev.list
-   ````
+
 5. On Windows 11, `sudo apt-get update && sudo apt-get install ddev`. On older Windows 10, `sudo apt-get update && sudo apt-get install ddev libatk1.0 libatk-bridge2.0 libxtst6 libxi6 libpangocairo-1.0 libcups2 libnss3 xdg-utils x11-apps`
 6. On older Windows 10, run `xeyes` – you should see the classic X11 play app “xeyes” on the screen. <ctrl-c> to exit. This is just a test to make sure X11 is working.
 7. Download and untar PHPStorm for Linux from [Jetbrains](https://www.jetbrains.com/phpstorm/download/#section=linux) – you need the Linux app.

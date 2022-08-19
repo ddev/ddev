@@ -106,7 +106,14 @@ Docker or an alternative is required before anything will work with DDEV. This i
     10. Check that docker is working inside Ubuntu (or your distro): `docker ps`
     11. Optional: If you prefer to use the *traditional Windows* ddev instead of working inside WSL2, install it with `choco install -y ddev`. The Windows ddev works fine with the WSL2-based Docker engine. However, the WSL2 ddev setup is vastly preferable and at least 10 times as fast. Support for the traditional Windows approach will eventually be dropped.
     12. Open the WSL2 terminal, for example `Ubuntu` from the Windows start menu.
-    13. Install `ddev` with `curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash`
+    13. Install DDEV using
+
+        ```bash
+        curl https://apt.fury.io/drud/gpg.key | sudo apt-key add -
+        echo "deb https://apt.fury.io/drud/ * *" | sudo tee -a /etc/apt/sources.list.d/ddev.list
+        sudo apt update && sudo apt install -y ddev
+        ```
+
     14. In WSL2 run `mkcert -install`.
 
     That's it! You have now installed DDEV on WSL2. If you're using WSL2 for DDEV (recommended), remember to run all `ddev` commands inside the WSL2 distro.
