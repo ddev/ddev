@@ -10,7 +10,7 @@ function enable {
   if [ -z ${BLACKFIRE_SERVER_ID} ] || [ -z ${BLACKFIRE_SERVER_TOKEN} ]; then
     echo "BLACKFIRE_SERVER_ID and BLACKFIRE_SERVER_TOKEN environment variables must be set" >&2
     echo "See docs for how to set in global or project config" >&2
-    echo "For example, ddev config global --web-environment=BLACKFIRE_SERVER_ID=<id>,BLACKFIRE_SERVER_TOKEN=<token>"
+    echo "For example, ddev config global --web-environment-add=BLACKFIRE_SERVER_ID=<id>,BLACKFIRE_SERVER_TOKEN=<token>"
     exit 1
   fi
   phpdismod xhprof xdebug
