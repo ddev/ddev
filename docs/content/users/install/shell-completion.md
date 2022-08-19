@@ -21,7 +21,19 @@ Shells like bash and zsh need help to do this though, they have to know what the
     If you're installing DDEV via homebrew, each new release will automatically get a refreshed completions script.
 
 === "Bash without Homebrew"
-    The completion script is exactly the same, it's just that you have to install it yourself. Each system may have a slightly different technique, and you'll need to figure it out. On Debian/Ubuntu, you would use [these instructions](https://www.cyberciti.biz/faq/add-bash-auto-completion-in-ubuntu-linux/) to enable bash-completion, and then `sudo mkdir -p /etc/bash_completion.d && sudo cp ddev_bash_completion.sh /etc/bash_completion.d`. This deploys the ddev_bash_completion.sh script where it needs to be. Again, every Linux distro has a different technique, and you may have to figure yours out.
+
+    The completion script is exactly the same, it's just that you have to (possibly download) and install it yourself. Each system may have a slightly different technique, and you'll need to figure it out. On Debian/Ubuntu, you would use [these instructions](https://www.cyberciti.biz/faq/add-bash-auto-completion-in-ubuntu-linux/) to enable bash-completion:
+      
+     1. Download the completion files and extract them with 
+         ```bash
+         VERSION=v1.21.1
+         curl -sSLf https://github.com/drud/ddev/releases/download/${VERSION}/ddev_shell_completion_scripts.${VERSION}.tar.gz
+         tar -zxf ddev_shell_completion_scripts.${VERSION}.tar.gz
+         ```
+     2. Then `sudo mkdir -p /etc/bash_completion.d && sudo cp ddev_bash_completion.sh /etc/bash_completion.d`. This deploys the ddev_bash_completion.sh script where it needs to be. Again, every Linux distro has a different technique, and you may have to figure yours out.
+
+
+     If you installed DDEV using `apt install` then the `ddev_bash_completion.sh` file is already available in `/usr/bin/ddev_bash_completion.sh`. In a future DDEV version this will be automatically installed into `/etc/bash_completion.d`.
 
 === "Zsh Completion with Homebrew"
 
