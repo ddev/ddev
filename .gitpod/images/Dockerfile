@@ -8,7 +8,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 RUN curl https://apt.fury.io/drud/gpg.key | sudo apt-key add -
 RUN echo "deb https://apt.fury.io/drud/ * *" | sudo tee -a /etc/apt/sources.list.d/ddev.list
 
-RUN apt-get update >/dev/null && sudo apt-get install -y aspell autojump ddev file mysql-client netcat nodejs python3-pip telnet xdg-utils >/dev/null
+RUN apt-get update >/dev/null && sudo apt-get install -y aspell autojump ddev file mysql-client netcat nodejs python3-pip telnet >/dev/null
 
 RUN pip3 install mkdocs pyspelling pymdown-extensions
 RUN npm install -g markdownlint-cli

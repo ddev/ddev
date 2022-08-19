@@ -87,15 +87,20 @@ Set the PHPStorm terminal path (Settings→Tools→Terminal→Shell Path) to `C:
 1. On Windows 11 you don't need to install an X11 server, because [WSLg](https://github.com/microsoft/wslg) is included by default. On older Windows 10, Install X410 from the Microsoft Store, launch it, configure in the system tray with “Windowed Apps”, “Allow public access”, “DPI Scaling”→”High quality”. Obviously you can any other X11 server, but this is the one I’ve used.
 2. Temporarily disable your Windows firewall. You can re-enable it after you get everything working.
 3. If you're on older Windows 10, in the WSL2 terminal `export DISPLAY=$(awk '/^nameserver/ {print $2; exit;}' </etc/resolv.conf):0.0` (You’ll want to add this to your .profile in WSL2). This sets the X11 DISPLAY variable to point to your Windows host side. On Windows 11 this "just works" and you don't need to do anything here.
-4. On Windows 11, `sudo apt-get update && sudo apt-get install xdg-utils`. On older Windows 10, `sudo apt-get update && sudo apt-get install libatk1.0 libatk-bridge2.0 libxtst6 libxi6 libpangocairo-1.0 libcups2 libnss3 xdg-utils x11-apps`
-5. On older Windows 10, run `xeyes` – you should see the classic X11 play app “xeyes” on the screen. <ctrl-c> to exit. This is just a test to make sure X11 is working.
-6. Download and untar PHPStorm for Linux from [Jetbrains](https://www.jetbrains.com/phpstorm/download/#section=linux) – you need the Linux app.
-7. Run `bin/phpstorm.sh &`
-8. In PHPStorm, under Help→ Edit Custom VM Options, add an additional line: `-Djava.net.preferIPv4Stack=true` This makes PHPStorm listen for Xdebug using IPV4; for some reason the Linux version of PHPStorm defaults to using only IPV6, and Docker Desktop doesn't support IPV6.
-9. Restart PHPStorm (`File→Exit` and then `bin/phpstorm.sh &` again.
-10. Use `ddev start` and `ddev xdebug` on
+4. Install the DDEV apt repository with
+    ```
+   curl https://apt.fury.io/drud/gpg.key | sudo apt-key add -
+   echo "deb https://apt.fury.io/drud/ * *" | sudo tee -a /etc/apt/sources.list.d/ddev.list
+   ````
+5. On Windows 11, `sudo apt-get update && sudo apt-get install ddev`. On older Windows 10, `sudo apt-get update && sudo apt-get install ddev libatk1.0 libatk-bridge2.0 libxtst6 libxi6 libpangocairo-1.0 libcups2 libnss3 xdg-utils x11-apps`
+6. On older Windows 10, run `xeyes` – you should see the classic X11 play app “xeyes” on the screen. <ctrl-c> to exit. This is just a test to make sure X11 is working.
+7. Download and untar PHPStorm for Linux from [Jetbrains](https://www.jetbrains.com/phpstorm/download/#section=linux) – you need the Linux app.
+8. Run `bin/phpstorm.sh &`
+9. In PHPStorm, under Help→ Edit Custom VM Options, add an additional line: `-Djava.net.preferIPv4Stack=true` This makes PHPStorm listen for Xdebug using IPV4; for some reason the Linux version of PHPStorm defaults to using only IPV6, and Docker Desktop doesn't support IPV6.
+10. Restart PHPStorm (`File→Exit` and then `bin/phpstorm.sh &` again.
+11. Use `ddev start` and `ddev xdebug` on
 Click the Xdebug listen button in PHPStorm (the little phone icon) to make it start listening.
-11. Set a breakpoint on or near the first line of your index.php
-12. Visit the project with a web browser or curl. You should get a popup asking for mapping of the host-side files to the in-container files. You’ll want to make sure that `/home/<you>/.../<yourproject>` gets mapped to `/var/www/html`.
+12. Set a breakpoint on or near the first line of your index.php
+13. Visit the project with a web browser or curl. You should get a popup asking for mapping of the host-side files to the in-container files. You’ll want to make sure that `/home/<you>/.../<yourproject>` gets mapped to `/var/www/html`.
 
 Debugging should be working! You can step through your code, set breakpoints, view variables, etc.
