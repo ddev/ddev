@@ -53,9 +53,9 @@ It is possible to use PHPStorm with DDEV on WSL2 in at least three different way
 
 1. Run  PhPStorm in Windows as usual, opening the project on the WSL2 filesystem at `\\wsl$\<distro>`  (for example, `\\wsl$\Ubuntu`). PHPStorm is slow to index files and is slow to respond to file changes in this mode.
 2. Enabling X11 on Windows and running PHPStorm inside WSL2 as a Linux app. PHPStorm works fine this way, but it’s yet another complexity to manage and requires enabling X11 (easy) on your Windows system.
-3. [Jetbrains Gateway](https://www.jetbrains.com/remote-development/gateway/) runs PhpStorm on WSL2 (or anywhere else) but displays it in a in your Gateway app.)
+3. [Jetbrains Gateway](https://www.jetbrains.com/remote-development/gateway/) runs PhpStorm on WSL2 (or anywhere else) but displays it in a in your Gateway app.) It requires configuring sshd in WSL2 and either auto-starting it with `/etc/wsl.conf` (Windows 11) or manually starting it.
 
-We’ll walk through each of these approaches.
+We’ll walk through the first two of these approaches.
 
 ### Basics
 
@@ -99,5 +99,3 @@ Click the Xdebug listen button in PHPStorm (the little phone icon) to make it st
 12. Visit the project with a web browser or curl. You should get a popup asking for mapping of the host-side files to the in-container files. You’ll want to make sure that `/home/<you>/.../<yourproject>` gets mapped to `/var/www/html`.
 
 Debugging should be working! You can step through your code, set breakpoints, view variables, etc.
-
-### Jetbrains Gateway
