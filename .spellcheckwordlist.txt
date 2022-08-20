@@ -531,6 +531,7 @@ sql
 sqlite
 src
 ssh
+sshd
 sshfs
 ssl
 stable
