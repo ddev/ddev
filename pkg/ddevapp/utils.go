@@ -86,7 +86,7 @@ func RenderAppRow(t table.Writer, row map[string]interface{}) {
 	status = FormatSiteStatus(status)
 
 	t.AppendRow(table.Row{
-		row["name"], row["type"], row["shortroot"], urls, status,
+		row["name"], status, row["type"], row["shortroot"], urls,
 	})
 
 }
