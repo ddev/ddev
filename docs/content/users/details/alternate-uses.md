@@ -27,11 +27,13 @@ This may be completely appropriate for small or abandoned sites that have specia
 7. Use `ddev config global --router-bind-all-interfaces --omit-containers=dba,ddev-ssh-agent --use-hardened-images --use-letsencrypt --letsencrypt-email=you@example.com` to tell DDEV to listen to all network interfaces (not just localhost), not provide phpMyAdmin or ddev-ssh-agent, use the hardened images, and turn on Let's Encrypt.
 8. Create your DDEV-Local project as you normally would, but `ddev config --additional-fqdns=<internet_fqdn`. If your website responds to multiple hostnames (for example, with "www" and without it) then you'll need to add each hostname.
 9. You will probably want redirect from http to https, so if you're using `nginx-fpm`, add a `.ddev/nginx/redirect.conf` with
+
     ```
     if ($http_x_forwarded_proto = "http") {
       return 301 https://$host$request_uri;
     }
     ```
+
 10. `ddev start` and visit your site. Clear your cache (on some CMSs).
 
 You may have to restart ddev with `ddev poweroff && ddev start --all` if Let's Encrypt has failed due to port 80 not being open or the DNS name not yet resolving. (Use `docker logs ddev-router` to see Let's Encrypt activity.)
