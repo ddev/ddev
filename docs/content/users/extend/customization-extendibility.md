@@ -173,7 +173,15 @@ The generated `.ddev/nginx_full/seconddocroot.conf.example` demonstrates how to 
 
 ### Nginx snippets
 
-To add an nginx snippet to the default config, add an nginx config file as `.ddev/nginx/<something>.conf`. This feature will be disabled in the future.
+To add an nginx snippet to the default config, add an nginx config file as `.ddev/nginx/<something>.conf`. 
+
+For example, to make all `http` URLs redirect to their `https` equivalents you might add a file `.ddev/nginx/redirect.conf` with this stanza:
+
+```
+    if ($http_x_forwarded_proto = "http") {
+      return 301 https://$host$request_uri;
+    }
+```
 
 ## Custom apache configuration
 
