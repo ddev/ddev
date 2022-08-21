@@ -85,7 +85,7 @@ func TestListWithoutDir(t *testing.T) {
 	// This could be done otherwise, but we'd have to go find the site in the
 	// array first.
 	out := bytes.Buffer{}
-	table := ddevapp.CreateAppTable(&out)
+	table := ddevapp.CreateAppTable(&out, true)
 	for _, site := range apps {
 		desc, err := site.Describe(false)
 		if err != nil {
@@ -104,5 +104,5 @@ func TestListWithoutDir(t *testing.T) {
 // TestDdevList tests the ddevapp.List() functionality
 // It's only here for profiling at this point.
 func TestDdevList(t *testing.T) {
-	ddevapp.List(true, false, 1)
+	ddevapp.List(true, false, true, 1)
 }
