@@ -538,8 +538,10 @@ func IsInternetActive() bool {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	randomURL := nodeps.RandomString(10) + ".ddev.site"
-	addrs, err := IsInternetActiveNetResolver.LookupHost(ctx, randomURL)
+	// Using a random URL is more conclusive, but it's more intrusive because
+	// DNS may take some time, and it's really annoying.
+	testURL := "test.ddev.site"
+	addrs, err := IsInternetActiveNetResolver.LookupHost(ctx, testURL)
 
 	// Internet is active (active == true) if both err and ctx.Err() were nil
 	active := err == nil && ctx.Err() == nil
@@ -547,7 +549,7 @@ func IsInternetActive() bool {
 		if active == false {
 			output.UserErr.Println("Internet connection not detected, DNS may not work, see https://ddev.readthedocs.io/en/stable/users/basics/faq/ for info.")
 		}
-		output.UserErr.Printf("IsInternetActive DEBUG: err=%v ctx.Err()=%v addrs=%v IsInternetactive==%v, randomURL=%v internet_detection_timeout_ms=%dms\n", err, ctx.Err(), addrs, active, randomURL, DdevGlobalConfig.InternetDetectionTimeout)
+		output.UserErr.Printf("IsInternetActive DEBUG: err=%v ctx.Err()=%v addrs=%v IsInternetactive==%v, testURL=%v internet_detection_timeout_ms=%dms\n", err, ctx.Err(), addrs, active, testURL, DdevGlobalConfig.InternetDetectionTimeout)
 	}
 
 	// remember the result to not call this twice
