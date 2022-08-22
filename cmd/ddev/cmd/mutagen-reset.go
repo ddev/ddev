@@ -36,7 +36,7 @@ var MutagenResetCmd = &cobra.Command{
 		if err != nil {
 			// if the mutagen session just did not exist, continue on
 			if !strings.Contains(err.Error(), "does not exist") {
-				util.Failed("Failed to flush mutagen: %v", err)
+				util.Warning("Could not flush mutagen: %v", err)
 			}
 		}
 
