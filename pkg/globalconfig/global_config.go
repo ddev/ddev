@@ -82,7 +82,7 @@ func GetMutagenPath() string {
 
 // GetMutagenDataDirectory gets the full path to the MUTAGEN_DATA_DIRECTORY
 func GetMutagenDataDirectory() string {
-	return filepath.Join(GetGlobalDdevDir(), "mutagen_data_directory")
+	return GetGlobalDdevDir() + "_" + "mutagen_data_directory"
 }
 
 // GetDockerComposePath gets the full path to the docker-compose binary
