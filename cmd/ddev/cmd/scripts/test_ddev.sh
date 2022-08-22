@@ -77,7 +77,7 @@ cat <<END >web/index.php
   mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
   \$mysqli = new mysqli('db', 'db', 'db', 'db');
   printf("Success accessing database... %s\n", \$mysqli->host_info);
-  print "ddev is working. You will want to delete this project with 'ddev delete -Oy ${PROJECT_NAME}\n";
+  print "ddev is working. You will want to delete this project with 'ddev delete -Oy ${PROJECT_NAME}'\n";
 END
 ddev config --project-type=php --docroot=web
 trap cleanup EXIT
