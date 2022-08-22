@@ -24,7 +24,7 @@ Each provider recipe is a file named `<provider>.yaml` and consists of several m
 
 The [environment variables provided to custom commands](../extend/custom-commands.md#environment-variables-provided) are also available for use in these recipes.
 
-There are [hooks](../configuration/hooks.md) available to execute commands before and after each pull or push: `pre-pull`, `post-pull`, `pre-push`, `post-push`. These could be for example a `ddev snapshot` to backup the database before a pull or a specific task to clear/warmup caches of your application.
+There are [hooks](../configuration/hooks.md) available to execute commands before and after each pull or push: `pre-pull`, `post-pull`, `pre-push`, `post-push`. These could be for example a `ddev snapshot` to backup the database before a pull or a specific task to clear/warm-up caches of your application.
 
 ## Example Integrations and Hints
 
