@@ -74,7 +74,7 @@ func List(activeOnly bool, continuous bool, wrapTableText bool, continuousSleepT
 // CreateAppTable will create a new app table for describe and list output
 func CreateAppTable(out *bytes.Buffer, wrapTableText bool) table.Writer {
 	t := table.NewWriter()
-	t.AppendHeader(table.Row{"Name", "Status", "Type", "Location", "URL"})
+	t.AppendHeader(table.Row{"Name", "Status", "Location", "URL", "Type"})
 	termWidth, _ := nodeps.GetTerminalWidthHeight()
 	usableWidth := termWidth - 15
 	statusWidth := 7 // Maybe just "running"
@@ -87,12 +87,12 @@ func CreateAppTable(out *bytes.Buffer, wrapTableText bool) table.Writer {
 		locationWidth = locationWidth + (termWidth-80)/2
 		statusWidth = statusWidth + (termWidth-80)/3
 	}
-	totUsedWidth := nameWidth + typeWidth + locationWidth + urlWidth + statusWidth
+	totUsedWidth := nameWidth + statusWidth + locationWidth + urlWidth + typeWidth
 	if !wrapTableText {
 		t.SetAllowedRowLength(termWidth)
 	}
 
-	util.Debug("detected terminal width=%v usableWidth=%d statusWidth=%d nameWidth=%d typeWIdth=%d locationWidth=%d urlWidth=%d totUsedWidth=%d", termWidth, usableWidth, statusWidth, nameWidth, typeWidth, locationWidth, urlWidth, totUsedWidth)
+	util.Debug("detected terminal width=%v usableWidth=%d statusWidth=%d nameWidth=%d locationWidth=%d urlWidth=%d typeWidth=%d totUsedWidth=%d", termWidth, usableWidth, statusWidth, nameWidth, locationWidth, urlWidth, typeWidth, totUsedWidth)
 	t.SortBy([]table.SortBy{{Name: "Name"}})
 
 	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
@@ -107,16 +107,16 @@ func CreateAppTable(out *bytes.Buffer, wrapTableText bool) table.Writer {
 				WidthMax: statusWidth,
 			},
 			{
-				Name:     "Type",
-				WidthMax: int(typeWidth),
-			},
-			{
 				Name: "Location",
 				//WidthMax: locationWidth,
 			},
 			{
 				Name: "URL",
 				//WidthMax: urlWidth,
+			},
+			{
+				Name:     "Type",
+				WidthMax: int(typeWidth),
 			},
 		})
 	}
