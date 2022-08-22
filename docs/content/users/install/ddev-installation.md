@@ -48,7 +48,7 @@ Docker or an alternative is required before anything will work with DDEV. This i
     sudo apt update && sudo apt install -y ddev
     ```
   
-    In the future you can update as usual, with `sudo apt update && sudo apt upgrade`.
+    To update use the normal update commands `sudo apt update && sudo apt upgrade`.
 
     If you previously used `install_ddev.sh` to install DDEV, you can just `sudo rm -f /usr/local/bin/ddev /usr/local/bin/mkcert /usr/local/bin/*ddev_nfs_setup.sh` to remove the previous version. If you previously used homebrew to install DDEV, you can just `brew unlink ddev` to get rid of the homebrew version.
 
@@ -106,9 +106,15 @@ Docker or an alternative is required before anything will work with DDEV. This i
     10. Check that docker is working inside Ubuntu (or your distro): `docker ps`
     11. Optional: If you prefer to use the *traditional Windows* ddev instead of working inside WSL2, install it with `choco install -y ddev`. The Windows ddev works fine with the WSL2-based Docker engine. However, the WSL2 ddev setup is vastly preferable and at least 10 times as fast. Support for the traditional Windows approach will eventually be dropped.
     12. Open the WSL2 terminal, for example `Ubuntu` from the Windows start menu.
-    13. Install `ddev` with `curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash`
-    14. `sudo apt-get update && sudo apt-get install -y certutil xdg-utils` to install the `xdg-utils` package that allows `ddev launch` to work.
-    15. In WSL2 run `mkcert -install`.
+    13. Install DDEV using
+
+        ```bash
+        curl https://apt.fury.io/drud/gpg.key | sudo apt-key add -
+        echo "deb https://apt.fury.io/drud/ * *" | sudo tee -a /etc/apt/sources.list.d/ddev.list
+        sudo apt update && sudo apt install -y ddev
+        ```
+
+    14. In WSL2 run `mkcert -install`.
 
     That's it! You have now installed DDEV on WSL2. If you're using WSL2 for DDEV (recommended), remember to run all `ddev` commands inside the WSL2 distro.
     Follow the instructions in the `Linux apt/yum` section.
@@ -157,7 +163,6 @@ Docker or an alternative is required before anything will work with DDEV. This i
     DDEV is fully supported in Gitpod.io, and there are many ways to use it. You don't have to install *anything* to use it, not Docker, and not DDEV, it's all done for you.
 
     1. Just [open any repository](https://www.gitpod.io/docs/getting-started) using gitpod and `brew install drud/ddev/ddev` and use ddev as you would normally use it.
-        * To use `ddev launch` you'll need to `sudo apt-get update && sudo apt-get install -y xdg-utils`.
         * You can just install your web app there, or import a database.
         * You may want to implement one of the `ddev pull` provider integrations to pull from a hosting provider or an upstream source.
     2. Use [ddev-gitpod-launcher](https://drud.github.io/ddev-gitpod-launcher/) form to launch a repository. See the actual instructions on the [repository](https://github.com/drud/ddev-gitpod-launcher). You just click the button and it opens a fully-set-up environment. If a companion artifacts repository with the suffix `-artifacts` is available, then the `db.sql.gz` and `files.tgz` from it will be automatically loaded.

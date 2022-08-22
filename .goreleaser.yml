@@ -240,6 +240,19 @@ nfpms:
   formats:
   - deb
   - rpm
+  contents:
+  - src: .gotmp/bin/completions/ddev_bash_completion.sh
+    dst: /usr/share/bash-completion/completions/ddev
+    file_info:
+      mode: 0644
+  - src: .gotmp/bin/completions/ddev_fish_completion.sh
+    dst: /usr/share/fish/completions/ddev.fish
+    file_info:
+      mode: 0644
+  - src: .gotmp/bin/completions/ddev_zsh_completion.sh
+    dst:  /usr/share/zsh/vendor-completions/_ddev
+    file_info:
+      mode: 0644
   overrides:
     deb:
       dependencies:
