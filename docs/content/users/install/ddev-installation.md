@@ -48,7 +48,7 @@ Docker or an alternative is required before anything will work with DDEV. This i
     sudo apt update && sudo apt install -y ddev
     ```
   
-    In the future you can update as usual, with `sudo apt update && sudo apt upgrade`.
+    To update use the normal update commands `sudo apt update && sudo apt upgrade`.
 
     If you previously used `install_ddev.sh` to install DDEV, you can just `sudo rm -f /usr/local/bin/ddev /usr/local/bin/mkcert /usr/local/bin/*ddev_nfs_setup.sh` to remove the previous version. If you previously used homebrew to install DDEV, you can just `brew unlink ddev` to get rid of the homebrew version.
 
