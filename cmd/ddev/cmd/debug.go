@@ -7,8 +7,13 @@ import (
 
 // DebugCmd is the top-level "ddev debug" command
 var DebugCmd = &cobra.Command{
-	Use:   "debug [command]",
-	Short: "A collection of debugging commands",
+	Use:     "debug [command]",
+	Short:   "A collection of debugging commands",
+	Aliases: []string{"d", "dbg"},
+	Example: `ddev debug
+ddev debug mutagen sync list
+ddev d mutagen sync list
+ddev d capabilities`,
 	Run: func(cmd *cobra.Command, args []string) {
 		err := cmd.Usage()
 		util.CheckErr(err)
