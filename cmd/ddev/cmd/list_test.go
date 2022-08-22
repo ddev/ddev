@@ -41,7 +41,7 @@ func TestCmdList(t *testing.T) {
 	assert.NoError(err)
 
 	// Execute "ddev list" and harvest plain text output.
-	out, err := exec.RunHostCommand(DdevBin, "list")
+	out, err := exec.RunHostCommand(DdevBin, "list", "-W")
 	assert.NoError(err, "error running ddev list: %v output=%s", out)
 
 	// Execute "ddev list -j" and harvest the json output
@@ -92,7 +92,7 @@ func TestCmdList(t *testing.T) {
 
 	// Execute "ddev list" and harvest json output.
 	// Now there should be one less active project in list
-	jsonOut, err = exec.RunHostCommand(DdevBin, "list", "-jA")
+	jsonOut, err = exec.RunHostCommand(DdevBin, "list", "-jA", "-W")
 	assert.NoError(err, "error running ddev list: %v output=%s", err, jsonOut)
 
 	siteList = getTestingSitesFromList(t, jsonOut)
