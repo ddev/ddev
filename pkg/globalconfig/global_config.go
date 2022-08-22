@@ -80,6 +80,11 @@ func GetMutagenPath() string {
 	return filepath.Join(GetDDEVBinDir(), mutagenBinary)
 }
 
+// GetMutagenDataDirectory gets the full path to the MUTAGEN_DATA_DIRECTORY
+func GetMutagenDataDirectory() string {
+	return filepath.Join(GetGlobalDdevDir(), "mutagen_data_directory")
+}
+
 // GetDockerComposePath gets the full path to the docker-compose binary
 // Normally this is the one that has been downloaded to ~/.ddev/bin, but if
 // UseDockerComposeFromPath, then it will be whatever if found in $PATH

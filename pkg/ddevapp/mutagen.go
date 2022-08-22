@@ -136,7 +136,6 @@ func GetMutagenConfigFile(app *DdevApp) string {
 
 // CreateOrResumeMutagenSync creates or resumes a sync session
 // It detects problems with the sync and errors if there are problems
-// and returns the output of `mutagen sync list <syncname>` along with error info
 func CreateOrResumeMutagenSync(app *DdevApp) error {
 	syncName := MutagenSyncName(app.Name)
 	configFile := GetMutagenConfigFile(app)
@@ -161,7 +160,6 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		return fmt.Errorf("Cannot start mutagen sync because web container is not running: %v", container)
 	}
 
-	//TODO: Detect if an appropriate mutagen sync session exists
 	sessionExists, err := mutagenSyncSessionExists(app)
 	if err != nil {
 		return err
@@ -281,24 +279,20 @@ func ResumeMutagenSync(app *DdevApp) error {
 // if it finds one with invalid label, it destroys the existing session.
 func mutagenSyncSessionExists(app *DdevApp) (bool, error) {
 	syncName := MutagenSyncName(app.Name)
-	res, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list", "--template", "{{ json . }}", syncName)
+	res, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list", "--template", "{{ json (index . 0) }}", syncName)
 	if err != nil {
 		if strings.Contains(res, "did not match any sessions") {
 			return false, nil
 		}
 		return false, err
 	}
-	sessionMap := make([]map[string]interface{}, 2)
-	err = json.Unmarshal([]byte(res), &sessionMap)
+	session := make(map[string]interface{})
+	err = json.Unmarshal([]byte(res), &session)
 	if err != nil {
 		return false, err
 	}
-	if len(sessionMap) != 1 {
-		return false, fmt.Errorf("mutagen sessions may be in invalid state, please `ddev mutagen reset`")
-	}
 
 	// Find out if mutagen session labels has label we found in docker volume
-	session := sessionMap[0]
 
 	if l, ok := session["labels"].(map[string]interface{}); ok {
 		vLabel, vLabelErr := GetMutagenVolumeLabel(app)
@@ -319,50 +313,46 @@ func mutagenSyncSessionExists(app *DdevApp) (bool, error) {
 func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResult map[string]interface{}, err error) {
 	syncName := MutagenSyncName(app.Name)
 
-	fullJSONResult, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list", "--template", `{{ json .}}`, syncName)
+	fullJSONResult, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list", "--template", `{{ json (index . 0) }}`, syncName)
 	if err != nil {
 		return "nosession", fullJSONResult, nil, err
 	}
-	sessionMap := make([]map[string]interface{}, 2)
-	err = json.Unmarshal([]byte(fullJSONResult), &sessionMap)
+	session := make(map[string]interface{})
+	err = json.Unmarshal([]byte(fullJSONResult), &session)
 	if err != nil {
 		return "nosession", fullJSONResult, nil, err
 	}
-	if len(sessionMap) < 1 {
-		return "", "", nil, fmt.Errorf("mutagen sessions may be in invalid state, please `ddev mutagen reset`")
-	}
-	mapRes := sessionMap[0]
 
-	if paused, ok := mapRes["paused"].(bool); ok && paused == true {
-		return "paused", "paused", mapRes, nil
+	if paused, ok := session["paused"].(bool); ok && paused == true {
+		return "paused", "paused", session, nil
 	}
 	var ok bool
 	mutagenStatus := ""
-	if mutagenStatus, ok = mapRes["status"].(string); !ok {
-		return "failing", mutagenStatus, mapRes, fmt.Errorf("mutagen sessions may be in invalid state, please `ddev mutagen reset`")
+	if mutagenStatus, ok = session["status"].(string); !ok {
+		return "failing", mutagenStatus, session, fmt.Errorf("mutagen sessions may be in invalid state, please `ddev mutagen reset`")
 	}
 	// In the odd case where somebody enabled mutagen when it wasn't actually running
 	// show a simpler result
 	mounted, err := IsMutagenVolumeMounted(app)
 	if !mounted {
-		return "not enabled", "", mapRes, nil
+		return "not enabled", "", session, nil
 	}
 	if err != nil {
 		return "", "", nil, err
 	}
 
 	problems := false
-	if alpha, ok := mapRes["alpha"].(map[string]interface{}); ok {
+	if alpha, ok := session["alpha"].(map[string]interface{}); ok {
 		if _, ok = alpha["scanProblems"]; ok {
 			problems = true
 		}
 	}
-	if beta, ok := mapRes["beta"].(map[string]interface{}); ok {
+	if beta, ok := session["beta"].(map[string]interface{}); ok {
 		if _, ok = beta["scanProblems"]; ok {
 			problems = true
 		}
 	}
-	if _, ok := mapRes["conflicts"]; ok {
+	if _, ok := session["conflicts"]; ok {
 		problems = true
 	}
 
@@ -371,7 +361,7 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 	// States from json are in https://github.com/mutagen-io/mutagen/blob/bc07f2f0f3f0aba0aff0514bd4739d75444091fe/pkg/synchronization/state.go#L47-L79
 	switch mutagenStatus {
 	case "paused":
-		return "paused", shortResult, mapRes, nil
+		return "paused", shortResult, session, nil
 	case "transitioning":
 		fallthrough
 	case "staging-alpha":
@@ -390,9 +380,9 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 		} else {
 			status = "problems"
 		}
-		return status, shortResult, mapRes, nil
+		return status, shortResult, session, nil
 	}
-	return "failing", shortResult, mapRes, nil
+	return "failing", shortResult, session, nil
 }
 
 // MutagenSyncFlush performs a mutagen sync flush, waits for result, and checks for errors
@@ -489,6 +479,10 @@ func StopMutagenDaemon() {
 func DownloadMutagenIfNeeded(app *DdevApp) error {
 	if !app.IsMutagenEnabled() {
 		return nil
+	}
+	err := os.MkdirAll(globalconfig.GetMutagenDataDirectory(), 0755)
+	if err != nil {
+		return err
 	}
 	curVersion, err := version.GetLiveMutagenVersion()
 	if err != nil || curVersion != versionconstants.RequiredMutagenVersion {
