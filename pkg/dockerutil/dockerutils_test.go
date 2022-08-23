@@ -2,6 +2,7 @@ package dockerutil_test
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"log"
 	"os"
 	"path"
@@ -317,8 +318,14 @@ func TestComposeWithStreams(t *testing.T) {
 func TestCheckCompose(t *testing.T) {
 	assert := asrt.New(t)
 
-	err := CheckDockerCompose()
-	assert.NoError(err)
+	composeErr := CheckDockerCompose()
+	if composeErr != nil {
+		out, err := exec.RunHostCommand(DdevBin, "config", "global")
+		require.NoError(t, err)
+		ddevVersion, err := exec.RunHostCommand(DdevBin, "version")
+		require.NoError(t, err)
+		assert.NoError(composeErr, "RequiredDockerComposeVersion=%s global config=%s ddevVersion=%s", globalconfig.RequiredDockerComposeVersion, out, ddevVersion)
+	}
 }
 
 // TestGetAppContainers looks for container with sitename dockerutils-test
