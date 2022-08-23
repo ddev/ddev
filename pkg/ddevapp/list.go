@@ -14,8 +14,9 @@ import (
 // List provides the functionality for `ddev list`
 // activeOnly if true only shows projects that are currently docker containers
 // continuous if true keeps requesting and outputting continuously
+// wrapTableText if true the text is wrapped instead of truncated to fit the row length
 // continuousSleepTime is the time between reports
-func List(activeOnly bool, continuous bool, continuousSleepTime int) {
+func List(activeOnly bool, continuous bool, wrapTableText bool, continuousSleepTime int) {
 	runTime := util.TimeTrack(time.Now(), "ddev list")
 	defer runTime()
 
@@ -31,7 +32,7 @@ func List(activeOnly bool, continuous bool, continuousSleepTime int) {
 		if len(apps) < 1 {
 			output.UserOut.WithField("raw", appDescs).Println("No ddev projects were found.")
 		} else {
-			t := CreateAppTable(&out)
+			t := CreateAppTable(&out, wrapTableText)
 			for _, app := range apps {
 				desc, err := app.Describe(true)
 				if err != nil {
@@ -71,14 +72,14 @@ func List(activeOnly bool, continuous bool, continuousSleepTime int) {
 }
 
 // CreateAppTable will create a new app table for describe and list output
-func CreateAppTable(out *bytes.Buffer) table.Writer {
+func CreateAppTable(out *bytes.Buffer, wrapTableText bool) table.Writer {
 	t := table.NewWriter()
-	t.AppendHeader(table.Row{"Name", "Type", "Location", "URL", "Status"})
+	t.AppendHeader(table.Row{"Name", "Status", "Location", "URL", "Type"})
 	termWidth, _ := nodeps.GetTerminalWidthHeight()
 	usableWidth := termWidth - 15
 	statusWidth := 7 // Maybe just "running"
 	nameWidth := 10
-	typeWidth := 7 // drupal7
+	typeWidth := 9 // drupal7, magento2 or wordpress
 	locationWidth := 20
 	urlWidth := 20
 	if termWidth > 80 {
@@ -86,9 +87,12 @@ func CreateAppTable(out *bytes.Buffer) table.Writer {
 		locationWidth = locationWidth + (termWidth-80)/2
 		statusWidth = statusWidth + (termWidth-80)/3
 	}
-	totUsedWidth := nameWidth + typeWidth + locationWidth + urlWidth + statusWidth
+	totUsedWidth := nameWidth + statusWidth + locationWidth + urlWidth + typeWidth
+	if !wrapTableText {
+		t.SetAllowedRowLength(termWidth)
+	}
 
-	util.Debug("detected terminal width=%v usableWidth=%d statusWidth=%d nameWidth=%d typeWIdth=%d locationWidth=%d urlWidth=%d totUsedWidth=%d", termWidth, usableWidth, statusWidth, nameWidth, typeWidth, locationWidth, urlWidth, totUsedWidth)
+	util.Debug("detected terminal width=%v usableWidth=%d statusWidth=%d nameWidth=%d locationWidth=%d urlWidth=%d typeWidth=%d totUsedWidth=%d", termWidth, usableWidth, statusWidth, nameWidth, locationWidth, urlWidth, typeWidth, totUsedWidth)
 	t.SortBy([]table.SortBy{{Name: "Name"}})
 
 	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
@@ -99,8 +103,8 @@ func CreateAppTable(out *bytes.Buffer) table.Writer {
 				//WidthMax: nameWidth,
 			},
 			{
-				Name:     "Type",
-				WidthMax: int(typeWidth),
+				Name:     "Status",
+				WidthMax: statusWidth,
 			},
 			{
 				Name: "Location",
@@ -111,8 +115,8 @@ func CreateAppTable(out *bytes.Buffer) table.Writer {
 				//WidthMax: urlWidth,
 			},
 			{
-				Name:     "Status",
-				WidthMax: statusWidth,
+				Name:     "Type",
+				WidthMax: int(typeWidth),
 			},
 		})
 	}
