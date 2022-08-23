@@ -237,6 +237,9 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	origDir, _ := os.Getwd()
 
 	tmpHome := testcommon.CreateTmpDir(t.Name())
+	t.Cleanup(func() {
+		assert.NoError(os.RemoveAll(tmpHome))
+	})
 	err = os.Chdir(TestSites[0].Dir)
 	assert.NoError(err)
 
@@ -252,8 +255,23 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	assert.NoError(err)
 	_, err = exec.RunHostCommand(DdevBin, "config", "--auto")
 	assert.NoError(err)
-	_, _ = exec.RunHostCommand(DdevBin, "start", "-y")
+	_, err = exec.RunHostCommand(DdevBin, "start", "-y")
 	assert.NoError(err)
+	t.Cleanup(func() {
+		err = os.Chdir(tmpJunkProject)
+		assert.NoError(err)
+		_, _ = exec.RunHostCommand(DdevBin, "delete", "-Oy")
+
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		_ = os.RemoveAll(tmpJunkProject)
+
+		// Because the start has done a poweroff (new ddev version),
+		// make sure sites are running again.
+		for _, site := range TestSites {
+			_, _ = exec.RunCommand(DdevBin, []string{"start", "-y", site.Name})
+		}
+	})
 
 	apps := ddevapp.GetActiveProjects()
 	activeCount := len(apps)
@@ -269,35 +287,6 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 
 	// docker-compose v2 is dependent on the ~/.docker directory
 	_ = fileutil.CopyDir(filepath.Join(origHome, ".docker"), filepath.Join(tmpHome, ".docker"))
-
-	t.Cleanup(
-		func() {
-			_, err := exec.RunHostCommand(DdevBin, "poweroff")
-			assert.NoError(err)
-
-			_, err = os.Stat(globalconfig.GetMutagenPath())
-			if err == nil {
-				out, err := exec.RunHostCommand(DdevBin, "debug", "mutagen", "daemon", "stop")
-				assert.NoError(err, "mutagen daemon stop returned %s", string(out))
-			}
-
-			err = os.RemoveAll(tmpHome)
-			assert.NoError(err)
-
-			err = os.Chdir(tmpJunkProject)
-			assert.NoError(err)
-			_, _ = exec.RunHostCommand(DdevBin, "delete", "-Oy")
-
-			err = os.Chdir(origDir)
-			assert.NoError(err)
-			_ = os.RemoveAll(tmpJunkProject)
-
-			// Because the start has done a poweroff (new ddev version),
-			// make sure sites are running again.
-			for _, site := range TestSites {
-				_, _ = exec.RunCommand(DdevBin, []string{"start", "-y", site.Name})
-			}
-		})
 
 	app, err := ddevapp.GetActiveApp("")
 	require.NoError(t, err)
@@ -317,6 +306,16 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(out, "ddev-ssh-agent container has been removed")
 	assert.Contains(out, "ssh-agent container is running")
+	t.Cleanup(func() {
+		_, err := exec.RunHostCommand(DdevBin, "poweroff")
+		assert.NoError(err)
+
+		_, err = os.Stat(globalconfig.GetMutagenPath())
+		if err == nil {
+			out, err := exec.RunHostCommand(DdevBin, "debug", "mutagen", "daemon", "stop")
+			assert.NoError(err, "mutagen daemon stop returned %s", string(out))
+		}
+	})
 
 	apps = ddevapp.GetActiveProjects()
 	activeCount = len(apps)
