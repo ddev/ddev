@@ -2,28 +2,28 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	osexec "os/exec"
+	"path/filepath"
+	"runtime"
+	"strconv"
+	"strings"
+	"testing"
+
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
-	"os"
-	"runtime"
-	"strconv"
-	"strings"
-	"testing"
 
 	"github.com/drud/ddev/pkg/testcommon"
 	log "github.com/sirupsen/logrus"
-
-	"path/filepath"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/output"
 	asrt "github.com/stretchr/testify/assert"
-	osexec "os/exec"
 )
 
 var (
@@ -191,11 +191,6 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	tmpDir := testcommon.CreateTmpDir("globalDdevCheck")
 	_ = TestSites[0].Chdir()
 
-	origHome := os.Getenv("HOME")
-	if runtime.GOOS == "windows" {
-		origHome = os.Getenv("USERPROFILE")
-	}
-
 	t.Cleanup(
 		func() {
 			_, err := exec.RunHostCommand(DdevBin, "poweroff")
@@ -204,9 +199,6 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 			assert.NoError(err)
 			err = os.RemoveAll(tmpDir)
 			assert.NoError(err)
-
-			_ = os.Setenv("HOME", origHome)
-			_ = os.Setenv("USERPROFILE", origHome)
 
 			// Because the start will have done a poweroff (new version),
 			// make sure sites are running again.
@@ -226,8 +218,8 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	assert.True(os.IsNotExist(err))
 
 	// Change the homedir temporarily
-	_ = os.Setenv("HOME", tmpDir)
-	_ = os.Setenv("USERPROFILE", tmpDir)
+	t.Setenv("HOME", tmpDir)
+	t.Setenv("USERPROFILE", tmpDir)
 
 	// The .update file is only created by ddev start
 	_, err = exec.RunHostCommand(DdevBin, "start", "-y")
@@ -245,6 +237,9 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	origDir, _ := os.Getwd()
 
 	tmpHome := testcommon.CreateTmpDir(t.Name())
+	t.Cleanup(func() {
+		assert.NoError(os.RemoveAll(tmpHome))
+	})
 	err = os.Chdir(TestSites[0].Dir)
 	assert.NoError(err)
 
@@ -255,21 +250,35 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 
 	// Create an extra junk project to make sure it gets shut down on our start
 	junkName := t.Name() + "-tmpjunkproject"
-	tmpJunkProject := testcommon.CreateTmpDir(junkName)
-	err = os.Chdir(tmpJunkProject)
+	tmpJunkProjectDir := testcommon.CreateTmpDir(junkName)
+	err = os.Chdir(tmpJunkProjectDir)
 	assert.NoError(err)
-	_, err = exec.RunHostCommand(DdevBin, "config", "--auto")
+	out, err := exec.RunHostCommand(DdevBin, "config", "--project-name", junkName)
+	assert.NoError(err, "out=%s", out)
+	_, err = exec.RunHostCommand(DdevBin, "start", "-y")
 	assert.NoError(err)
-	_, _ = exec.RunHostCommand(DdevBin, "start", "-y")
-	assert.NoError(err)
+	t.Cleanup(func() {
+		_, err = exec.RunHostCommand(DdevBin, "delete", "-Oy", junkName)
+		assert.NoError(err)
+
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		_ = os.RemoveAll(tmpJunkProjectDir)
+
+		// Because the start has done a poweroff (new ddev version),
+		// make sure sites are running again.
+		for _, site := range TestSites {
+			_, _ = exec.RunCommand(DdevBin, []string{"start", "-y", site.Name})
+		}
+	})
 
 	apps := ddevapp.GetActiveProjects()
 	activeCount := len(apps)
 	assert.GreaterOrEqual(activeCount, 2)
 
 	// Change the homedir temporarily
-	_ = os.Setenv("HOME", tmpHome)
-	_ = os.Setenv("USERPROFILE", tmpHome)
+	t.Setenv("HOME", tmpHome)
+	t.Setenv("USERPROFILE", tmpHome)
 
 	// Make sure we have the .ddev/bin dir we need
 	err = fileutil.CopyDir(filepath.Join(origHome, ".ddev/bin"), filepath.Join(tmpHome, ".ddev/bin"))
@@ -277,38 +286,6 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 
 	// docker-compose v2 is dependent on the ~/.docker directory
 	_ = fileutil.CopyDir(filepath.Join(origHome, ".docker"), filepath.Join(tmpHome, ".docker"))
-
-	t.Cleanup(
-		func() {
-			_, err := exec.RunHostCommand(DdevBin, "poweroff")
-			assert.NoError(err)
-
-			_, err = os.Stat(globalconfig.GetMutagenPath())
-			if err == nil {
-				out, err := exec.RunHostCommand(DdevBin, "debug", "mutagen", "daemon", "stop")
-				assert.NoError(err, "mutagen daemon stop returned %s", string(out))
-			}
-
-			err = os.RemoveAll(tmpHome)
-			assert.NoError(err)
-
-			_ = os.Setenv("HOME", origHome)
-			_ = os.Setenv("USERPROFILE", origHome)
-
-			err = os.Chdir(tmpJunkProject)
-			assert.NoError(err)
-			_, _ = exec.RunHostCommand(DdevBin, "delete", "-Oy")
-
-			err = os.Chdir(origDir)
-			assert.NoError(err)
-			_ = os.RemoveAll(tmpJunkProject)
-
-			// Because the start has done a poweroff (new ddev version),
-			// make sure sites are running again.
-			for _, site := range TestSites {
-				_, _ = exec.RunCommand(DdevBin, []string{"start", "-y", site.Name})
-			}
-		})
 
 	app, err := ddevapp.GetActiveApp("")
 	require.NoError(t, err)
@@ -324,10 +301,20 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	// Make sure we have starting version that is not v0.0
 	err = fileutil.AppendStringToFile(filepath.Join(globalconfig.GetGlobalDdevDir(), "global_config.yaml"), "last_started_version: v0.1")
 	require.NoError(t, err)
-	out, err := exec.RunHostCommand(DdevBin, "start")
+	out, err = exec.RunHostCommand(DdevBin, "start")
 	assert.NoError(err)
 	assert.Contains(out, "ddev-ssh-agent container has been removed")
 	assert.Contains(out, "ssh-agent container is running")
+	t.Cleanup(func() {
+		_, err := exec.RunHostCommand(DdevBin, "poweroff")
+		assert.NoError(err)
+
+		_, err = os.Stat(globalconfig.GetMutagenPath())
+		if err == nil {
+			out, err := exec.RunHostCommand(DdevBin, "debug", "mutagen", "daemon", "stop")
+			assert.NoError(err, "mutagen daemon stop returned %s", string(out))
+		}
+	})
 
 	apps = ddevapp.GetActiveProjects()
 	activeCount = len(apps)

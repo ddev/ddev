@@ -2,19 +2,19 @@ package dockerutil_test
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"path"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"testing"
+
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/versionconstants"
 	logOutput "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
-	"log"
-	"os"
-	"path"
-	"runtime"
-	"strings"
-	"testing"
-
-	"path/filepath"
 
 	. "github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -582,10 +582,6 @@ subdir1.txt
 func TestGetDockerIP(t *testing.T) {
 	assert := asrt.New(t)
 
-	origDOCKERHOST := os.Getenv("DOCKER_HOST")
-	t.Cleanup(func() {
-		_ = os.Setenv("DOCKER_HOST", origDOCKERHOST)
-	})
 	expectations := map[string]string{
 		"":                            "127.0.0.1",
 		"unix:///var/run/docker.sock": "127.0.0.1",
@@ -595,7 +591,7 @@ func TestGetDockerIP(t *testing.T) {
 	}
 
 	for k, v := range expectations {
-		_ = os.Setenv("DOCKER_HOST", k)
+		t.Setenv("DOCKER_HOST", k)
 		// DockerIP is cached, so we have to reset it to check
 		DockerIP = ""
 		result, err := GetDockerIP()

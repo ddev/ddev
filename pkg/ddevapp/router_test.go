@@ -1,12 +1,6 @@
 package ddevapp_test
 
 import (
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/netutil"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -14,9 +8,15 @@ import (
 	"testing"
 
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/netutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestPortOverride makes sure that the router_http_port and router_https_port
@@ -171,7 +171,7 @@ func TestRouterConfigOverride(t *testing.T) {
 	assert.NoError(err)
 
 	answer := fileutil.RandomFilenameBase()
-	os.Setenv("ANSWER", answer)
+	t.Setenv("ANSWER", answer)
 	assert.NoError(err)
 	t.Cleanup(func() {
 		err = app.Stop(true, false)

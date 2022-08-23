@@ -2,6 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"testing"
+
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -10,10 +14,6 @@ import (
 	"github.com/drud/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"path/filepath"
-	"runtime"
-	"testing"
 )
 
 // TestHomeadditions makes sure that extra files added to
@@ -28,13 +28,9 @@ func TestHomeadditions(t *testing.T) {
 	testdata := filepath.Join(origDir, "testdata", t.Name())
 
 	tmpHome := testcommon.CreateTmpDir(t.Name() + "tempHome")
-	origHome := os.Getenv("HOME")
-	if runtime.GOOS == "windows" {
-		origHome = os.Getenv("USERPROFILE")
-	}
 	// Change the homedir temporarily
-	_ = os.Setenv("HOME", tmpHome)
-	_ = os.Setenv("USERPROFILE", tmpHome)
+	t.Setenv("HOME", tmpHome)
+	t.Setenv("USERPROFILE", tmpHome)
 
 	site := TestSites[0]
 	projectHomeadditionsDir := filepath.Join(site.Dir, ".ddev", "homeadditions")
@@ -67,8 +63,6 @@ func TestHomeadditions(t *testing.T) {
 		assert.NoError(err)
 		err = os.RemoveAll(tmpHome)
 		assert.NoError(err)
-		_ = os.Setenv("HOME", origHome)
-		_ = os.Setenv("USERPROFILE", origHome)
 	})
 
 	// Before we can symlink global, need to make sure anything is already gone

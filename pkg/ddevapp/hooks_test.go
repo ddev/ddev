@@ -2,15 +2,16 @@ package ddevapp_test
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
+
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"path/filepath"
-	"testing"
-	"time"
 )
 
 // TestProcessHooks tests execution of commands defined in config.yaml
@@ -19,9 +20,8 @@ func TestProcessHooks(t *testing.T) {
 
 	site := TestSites[0]
 	origDir, _ := os.Getwd()
-	oldDdevDebug := os.Getenv("DDEV_DEBUG")
 	// We don't get the expected task debug output without DDEV_DEBUG
-	_ = os.Setenv("DDEV_DEBUG", "true")
+	t.Setenv("DDEV_DEBUG", "true")
 	runTime := util.TimeTrack(time.Now(), t.Name())
 
 	testcommon.ClearDockerEnv()
@@ -37,7 +37,6 @@ func TestProcessHooks(t *testing.T) {
 		assert.NoError(err)
 		err = os.RemoveAll(filepath.Join(app.AppRoot, "composer.json"))
 		assert.NoError(err)
-		_ = os.Setenv("DDEV_DEBUG", oldDdevDebug)
 	})
 	err = app.Start()
 	assert.NoError(err)
