@@ -596,6 +596,15 @@ func (app *DdevApp) FixObsolete() {
 		}
 	}
 
+	// Remove old provider/*.example as we migrate to not needing them.
+	for _, providerFile := range []string{"platform.yaml.example"} {
+		providerFilePath := app.GetConfigPath(filepath.Join("providers", providerFile))
+		err := os.Remove(providerFilePath)
+		if err != nil {
+			util.Warning("attempted to remove %s but failed, you may want to remove it manually: %v", providerFilePath, err)
+		}
+	}
+
 	// Remove old global commands
 	for _, command := range []string{"host/yarn"} {
 		cmdPath := filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/", command)
