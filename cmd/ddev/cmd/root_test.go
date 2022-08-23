@@ -250,21 +250,20 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 
 	// Create an extra junk project to make sure it gets shut down on our start
 	junkName := t.Name() + "-tmpjunkproject"
-	tmpJunkProject := testcommon.CreateTmpDir(junkName)
-	err = os.Chdir(tmpJunkProject)
+	tmpJunkProjectDir := testcommon.CreateTmpDir(junkName)
+	err = os.Chdir(tmpJunkProjectDir)
 	assert.NoError(err)
-	_, err = exec.RunHostCommand(DdevBin, "config", "--auto")
-	assert.NoError(err)
+	out, err := exec.RunHostCommand(DdevBin, "config", "--project-name", junkName)
+	assert.NoError(err, "out=%s", out)
 	_, err = exec.RunHostCommand(DdevBin, "start", "-y")
 	assert.NoError(err)
 	t.Cleanup(func() {
-		err = os.Chdir(tmpJunkProject)
+		_, err = exec.RunHostCommand(DdevBin, "delete", "-Oy", junkName)
 		assert.NoError(err)
-		_, _ = exec.RunHostCommand(DdevBin, "delete", "-Oy")
 
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		_ = os.RemoveAll(tmpJunkProject)
+		_ = os.RemoveAll(tmpJunkProjectDir)
 
 		// Because the start has done a poweroff (new ddev version),
 		// make sure sites are running again.
@@ -302,7 +301,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	// Make sure we have starting version that is not v0.0
 	err = fileutil.AppendStringToFile(filepath.Join(globalconfig.GetGlobalDdevDir(), "global_config.yaml"), "last_started_version: v0.1")
 	require.NoError(t, err)
-	out, err := exec.RunHostCommand(DdevBin, "start")
+	out, err = exec.RunHostCommand(DdevBin, "start")
 	assert.NoError(err)
 	assert.Contains(out, "ddev-ssh-agent container has been removed")
 	assert.Contains(out, "ssh-agent container is running")
