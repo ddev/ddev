@@ -600,8 +600,8 @@ func (app *DdevApp) FixObsolete() {
 	for _, providerFile := range []string{"platform.yaml.example"} {
 		providerFilePath := app.GetConfigPath(filepath.Join("providers", providerFile))
 		err := os.Remove(providerFilePath)
-		if err != nil {
-			util.Warning("attempted to remove %s but failed, you may want to remove it manually: %v", providerFilePath, err)
+		if err == nil {
+			util.Success("Removed obsolete file %s", providerFilePath)
 		}
 	}
 
