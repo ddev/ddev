@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/util"
@@ -89,6 +90,7 @@ func testMain(m *testing.M) int {
 		logOutput.Errorf("failed to create/start docker container: %v", err)
 		return 1
 	}
+	log.Printf("StartContainer() at %v", time.Now())
 	err = client.StartContainer(container.ID, nil)
 	if err != nil {
 		logOutput.Errorf("-- FAIL: dockerutils_test failed to StartContainer: %v", err)
@@ -100,7 +102,10 @@ func testMain(m *testing.M) int {
 			logOutput.Errorf("-- FAIL: dockerutils_test failed to remove test container: %v", err)
 		}
 	}()
-	_, err = ContainerWait(60, map[string]string{"com.ddev.site-name": testContainerName})
+	log.Printf("ContainerWait at %v", time.Now())
+	out, err := ContainerWait(60, map[string]string{"com.ddev.site-name": testContainerName})
+	log.Printf("ContainerWait returrned at %v out=%s err=%v", time.Now(), out, err)
+
 	if err != nil {
 		logout, _ := exec.RunHostCommand("docker", "logs", container.Name)
 		inspectOut, _ := exec.RunHostCommand("sh", "-c", fmt.Sprintf("docker inspect %s|jq -r '.[0].State.Health.Log'", container.Name))
@@ -144,9 +149,6 @@ func TestGetContainerHealth(t *testing.T) {
 
 // TestContainerWait tests the error cases for the container check wait loop.
 func TestContainerWait(t *testing.T) {
-	if IsColima() {
-		t.Skip("Skipping on colima because of so many odd failures")
-	}
 	assert := asrt.New(t)
 
 	labels := map[string]string{
