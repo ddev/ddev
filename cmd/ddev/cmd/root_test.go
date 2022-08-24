@@ -323,7 +323,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	err = fileutil.AppendStringToFile(filepath.Join(globalconfig.GetGlobalDdevDir(), "global_config.yaml"), "last_started_version: v0.1")
 	require.NoError(t, err)
 	out, err = exec.RunHostCommand(DdevBin, "start")
-	assert.NoError(err)
+	require.NoError(t, err, "start failed, out='%s', err=%v", out, err)
 	assert.Contains(out, "ddev-ssh-agent container has been removed")
 	assert.Contains(out, "ssh-agent container is running")
 	t.Cleanup(func() {

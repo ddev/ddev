@@ -99,10 +99,10 @@ func TestCustomCommands(t *testing.T) {
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 
-	_, err = exec.RunHostCommand(DdevBin, "debug", "fix-commands")
-	require.NoError(t, err)
-	out, err := exec.RunHostCommand(DdevBin)
-	assert.NoError(err)
+	out, err := exec.RunHostCommand(DdevBin, "debug", "fix-commands")
+	require.NoError(t, err, "failed to run ddev debug fix-commands, out='%s', err=%v", out, err)
+	out, err = exec.RunHostCommand(DdevBin)
+	require.NoError(t, err, "failed to run ddev command, output='%s', err=%v", out, err)
 	assert.Contains(out, "mysql client in db container")
 
 	// Test the `ddev mysql` command with stdin
