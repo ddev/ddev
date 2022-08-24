@@ -267,8 +267,6 @@ func ContainerWait(waittime int, labels map[string]string) (string, error) {
 	defer tickChan.Stop()
 	defer timeoutChan.Stop()
 
-	//TODO: Remove this debug output
-	fmt.Printf("ContainerWait waiting up to %v\n", durationWait)
 	status := ""
 
 	for {
