@@ -10,7 +10,7 @@ Type `ddev` or `ddev -h`in a terminal window to see the available ddev commands.
 * `ddev ssh` takes you into the web container.
 * `ddev exec <command>` lets you execute any command inside the web container.
 * `ddev stop` stops a project and removes its memory usage (but does not throw away any data).
-* `ddev poweroff` stops all resources that DDEV is using.
+* `ddev poweroff` stops all resources that DDEV is using, including mutagen session if mutagen is enabled.
 * `ddev delete` will destroy the database and DDEV's knowledge of the project, but does nothing to your code.
 
 ## Lots of other commands
