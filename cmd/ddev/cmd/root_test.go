@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/mitchellh/go-homedir"
 	"os"
 	osexec "os/exec"
 	"path/filepath"
@@ -188,8 +189,10 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
-	tmpDir := testcommon.CreateTmpDir("globalDdevCheck")
-	_ = TestSites[0].Chdir()
+	origHomeDir, err := homedir.Dir()
+	require.NoError(t, err)
+
+	tmpHomeDir := testcommon.CreateTmpDir("globalDdevCheck")
 
 	t.Cleanup(
 		func() {
@@ -197,7 +200,7 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 			assert.NoError(err)
 			err = os.Chdir(origDir)
 			assert.NoError(err)
-			err = os.RemoveAll(tmpDir)
+			err = os.RemoveAll(tmpHomeDir)
 			assert.NoError(err)
 
 			// Because the start will have done a poweroff (new version),
@@ -207,23 +210,38 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 			}
 		})
 
-	// Make sure that the tmpDir/.ddev and tmpDir/.ddev/.update don't exist before we run ddev.
-	_, err := os.Stat(filepath.Join(tmpDir, ".ddev"))
-	assert.Error(err)
-	assert.True(os.IsNotExist(err))
-
-	tmpUpdateFilePath := filepath.Join(tmpDir, ".ddev", ".update")
-	_, err = os.Stat(tmpUpdateFilePath)
-	assert.Error(err)
-	assert.True(os.IsNotExist(err))
+	err = os.Chdir(TestSites[0].Dir)
+	require.NoError(t, err)
 
 	// Change the homedir temporarily
-	t.Setenv("HOME", tmpDir)
-	t.Setenv("USERPROFILE", tmpDir)
+	t.Setenv("HOME", tmpHomeDir)
+	t.Setenv("USERPROFILE", tmpHomeDir)
+
+	// Make sure that the tmpDir/.ddev and tmpDir/.ddev/.update don't exist before we run ddev.
+	_, err = os.Stat(filepath.Join(tmpHomeDir, ".ddev"))
+	require.Error(t, err)
+	assert.True(os.IsNotExist(err))
+
+	out, err := exec.RunHostCommand(DdevBin, "config", "--auto")
+	require.NoError(t, err, "failed to ddev config --auto, out=%v, err=%v", out, err)
+
+	// Now global .ddev should exist
+	_, err = os.Stat(filepath.Join(tmpHomeDir, ".ddev"))
+	require.NoError(t, err)
+
+	// Make sure we have the .ddev/bin dir we need for docker-compose and mutagen
+	err = fileutil.CopyDir(filepath.Join(origHomeDir, ".ddev/bin"), filepath.Join(tmpHomeDir, ".ddev/bin"))
+	require.NoError(t, err)
+
+	// Make sure that tmpHomeDir/.ddev/.update don't exist before we run ddev start
+	tmpUpdateFilePath := filepath.Join(tmpHomeDir, ".ddev", ".update")
+	_, err = os.Stat(tmpUpdateFilePath)
+	require.Error(t, err)
+	assert.True(os.IsNotExist(err))
 
 	// The .update file is only created by ddev start
-	_, err = exec.RunHostCommand(DdevBin, "start", "-y")
-	assert.NoError(err)
+	out, err = exec.RunHostCommand(DdevBin, "start", "-y")
+	assert.NoError(err, "failed to start, out=%v, err=%v", out, err)
 
 	_, err = os.Stat(tmpUpdateFilePath)
 	assert.NoError(err)
@@ -250,6 +268,8 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 
 	// Create an extra junk project to make sure it gets shut down on our start
 	junkName := t.Name() + "-tmpjunkproject"
+	_, _ = exec.RunHostCommand(DdevBin, "delete", "-Oy", junkName)
+
 	tmpJunkProjectDir := testcommon.CreateTmpDir(junkName)
 	err = os.Chdir(tmpJunkProjectDir)
 	assert.NoError(err)

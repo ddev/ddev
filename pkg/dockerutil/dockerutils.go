@@ -630,6 +630,10 @@ func CheckDockerCompose() error {
 	runTime := util.TimeTrack(time.Now(), "CheckDockerComposeVersion()")
 	defer runTime()
 
+	_, err := DownloadDockerComposeIfNeeded()
+	if err != nil {
+		return err
+	}
 	versionConstraint := DockerComposeVersionConstraint
 
 	v, err := GetDockerComposeVersion()
@@ -1446,7 +1450,7 @@ func GetLiveDockerComposeVersion() (string, error) {
 
 	if !fileutil.FileExists(composePath) {
 		globalconfig.DockerComposeVersion = ""
-		return globalconfig.DockerComposeVersion, nil
+		return globalconfig.DockerComposeVersion, fmt.Errorf("docker-compose does not exist at %s", composePath)
 	}
 	out, err := exec.Command(composePath, "version", "--short").Output()
 	if err != nil {
