@@ -38,16 +38,13 @@ func testMain(m *testing.M) int {
 
 	// prep docker container for docker util tests
 	client := GetDockerClient()
-	imageExists, err := ImageExistsLocally(versionconstants.WebImg + ":" + versionconstants.WebTag)
+	imageExists, err := ImageExistsLocally(versionconstants.GetWebImage())
 	if err != nil {
-		logOutput.Errorf("Failed to check for local image %s: %v", versionconstants.WebImg+":"+versionconstants.WebTag, err)
+		logOutput.Errorf("Failed to check for local image %s: %v", versionconstants.GetWebImage(), err)
 		return 6
 	}
 	if !imageExists {
-		err := client.PullImage(docker.PullImageOptions{
-			Repository: versionconstants.WebImg,
-			Tag:        versionconstants.WebTag,
-		}, docker.AuthConfiguration{})
+		err := Pull(versionconstants.GetWebImage())
 		if err != nil {
 			logOutput.Errorf("failed to pull test image: %v", err)
 			return 7
@@ -104,7 +101,7 @@ func testMain(m *testing.M) int {
 	}()
 	log.Printf("ContainerWait at %v", time.Now())
 	out, err := ContainerWait(60, map[string]string{"com.ddev.site-name": testContainerName})
-	log.Printf("ContainerWait returrned at %v out=%s err=%v", time.Now(), out, err)
+	log.Printf("ContainerWait returrned at %v out='%s' err='%v'", time.Now(), out, err)
 
 	if err != nil {
 		logout, _ := exec.RunHostCommand("docker", "logs", container.Name)
