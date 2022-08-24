@@ -104,7 +104,7 @@ func testMain(m *testing.M) int {
 	if err != nil {
 		logout, _ := exec.RunHostCommand("docker", "logs", container.Name)
 		inspectOut, _ := exec.RunHostCommand("sh", "-c", fmt.Sprintf("docker inspect %s|jq -r '.[0].State.Health.Log'", container.Name))
-		log.Printf("FAIL: dockerutils_test failed to ContainerWait for container: %v, logs\n========= container logs ======\n%s\n======= end logs =======\n==== health log =====\ninspectOut\n%s\n========", err, logout, inspectOut)
+		log.Printf("FAIL: dockerutils_test testMain failed to ContainerWait for container: %v, logs\n========= container logs ======\n%s\n======= end logs =======\n==== health log =====\ninspectOut\n%s\n========", err, logout, inspectOut)
 		return 4
 	}
 	exitStatus := m.Run()
@@ -285,11 +285,11 @@ func TestComposeWithStreams(t *testing.T) {
 	_, _, err = ComposeCmd(composeFiles, "up", "-d")
 	require.NoError(t, err)
 
-	_, err = ContainerWait(30, map[string]string{"com.ddev.site-name": t.Name()})
+	_, err = ContainerWait(60, map[string]string{"com.ddev.site-name": t.Name()})
 	if err != nil {
 		logout, _ := exec.RunCommand("docker", []string{"logs", t.Name()})
 		inspectOut, _ := exec.RunCommandPipe("sh", []string{"-c", fmt.Sprintf("docker inspect %s|jq -r '.[0].State.Health.Log'", t.Name())})
-		t.Fatalf("FAIL: dockerutils_test failed to ContainerWait for container: %v, logs\n========= container logs ======\n%s\n======= end logs =======\n==== health log =====\ninspectOut\n%s\n========", err, logout, inspectOut)
+		t.Fatalf("FAIL: TestComposeWithStreams failed to ContainerWait for container: %v, logs\n========= container logs ======\n%s\n======= end logs =======\n==== health log =====\ninspectOut\n%s\n========", err, logout, inspectOut)
 	}
 
 	// Point stdout to os.Stdout and do simple ps -ef in web container
