@@ -35,6 +35,7 @@ func testMain(m *testing.M) int {
 	EnsureDdevNetwork()
 
 	_ = os.Setenv("DDEV_NONINTERACTIVE", "true")
+	_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", globalconfig.GetMutagenDataDirectory())
 
 	// prep docker container for docker util tests
 	client := GetDockerClient()

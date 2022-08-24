@@ -466,9 +466,10 @@ func DownloadMutagen() error {
 // But no problem if there wasn't one
 func StopMutagenDaemon() {
 	if fileutil.FileExists(globalconfig.GetMutagenPath()) {
+		mutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
 		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "stop")
 		if err != nil && !strings.Contains(out, "unable to connect to daemon") {
-			util.Warning("Unable to stop mutagen daemon: %v", err)
+			util.Warning("Unable to stop mutagen daemon: %v; MUTAGEN_DATA_DIRECTORY=%s", err, mutagenDataDirectory)
 		}
 		util.Success("Stopped mutagen daemon")
 	}
