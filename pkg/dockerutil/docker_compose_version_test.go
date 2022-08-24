@@ -1,9 +1,9 @@
 package dockerutil_test
 
 import (
+	"github.com/drud/ddev/pkg/ddevapp"
 	"os"
 	"os/exec"
-	"runtime"
 	"strings"
 	"testing"
 
@@ -35,20 +35,18 @@ func TestDockerComposeDownload(t *testing.T) {
 	t.Setenv("HOME", tmpHome)
 	t.Setenv("USERPROFILE", tmpHome)
 
-	// Make sure we have the .ddev/bin dir we need to verify against
-	//err = fileutil.CopyDir(filepath.Join(origHome, ".ddev/bin"), filepath.Join(tmpHome, ".ddev/bin"))
-	//require.NoError(t, err)
-
 	t.Cleanup(func() {
 		_, err := os.Stat(globalconfig.GetMutagenPath())
 		if err == nil {
-			out, err := exec2.RunHostCommand(DdevBin, "debug", "mutagen", "daemon", "stop")
-			assert.NoError(err, "mutagen daemon stop returned %s", string(out))
+			ddevapp.StopMutagenDaemon()
 		}
 
 		err = os.RemoveAll(tmpHome)
 		assert.NoError(err)
 		globalconfig.RequiredDockerComposeVersion = origRequiredComposeVersion
+		// Reset the cached DockerComposeVersion so it doesn't come into play again
+		globalconfig.DockerComposeVersion = ""
+		globalconfig.DdevGlobalConfig.UseDockerComposeFromPath = false
 	})
 
 	// Download the normal required version specified in code
@@ -66,12 +64,8 @@ func TestDockerComposeDownload(t *testing.T) {
 	assert.NoError(err)
 	assert.False(downloaded)
 
-	for _, v := range []string{"v2.0.1", "v2.8.0"} {
+	for _, v := range []string{"v2.5.1", "v2.8.0"} {
 		globalconfig.DockerComposeVersion = ""
-		// Skip v1 tests on arm64, as they aren't provided
-		if strings.HasPrefix(v, "v1") && runtime.GOARCH == "arm64" {
-			continue
-		}
 		globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion = v
 		downloaded, err = dockerutil.DownloadDockerComposeIfNeeded()
 		require.NoError(t, err)
@@ -87,7 +81,7 @@ func TestDockerComposeDownload(t *testing.T) {
 	// Test using docker-compose from path.
 	// Make sure our Required/Expected DockerComposeVersion is not something we'd find on the machine
 	globalconfig.DockerComposeVersion = ""
-	globalconfig.RequiredDockerComposeVersion = "v2.1.0"
+	globalconfig.RequiredDockerComposeVersion = "v2.5.1"
 	globalconfig.DdevGlobalConfig.UseDockerComposeFromPath = true
 	activeVersion, err := dockerutil.GetLiveDockerComposeVersion()
 	assert.NoError(err)

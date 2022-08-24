@@ -318,6 +318,7 @@ func TestComposeWithStreams(t *testing.T) {
 func TestCheckCompose(t *testing.T) {
 	assert := asrt.New(t)
 
+	globalconfig.DockerComposeVersion = ""
 	composeErr := CheckDockerCompose()
 	if composeErr != nil {
 		out, err := exec.RunHostCommand(DdevBin, "config", "global")
