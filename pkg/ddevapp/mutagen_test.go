@@ -24,6 +24,9 @@ func TestMutagenSimple(t *testing.T) {
 	}
 	assert := asrt.New(t)
 
+	// Make sure there's not an existing mutagen running, perhaps in wrong directory
+	_, _ = exec.RunHostCommand("pkill", "mutagen")
+
 	// Make sure this leaves us in the original test directory
 	origDir, _ := os.Getwd()
 
