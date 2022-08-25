@@ -145,7 +145,7 @@ RUN chmod -f ugo+rwx /usr/local/bin /usr/local/bin/*
 
 RUN chmod ugo+w /etc/ssl/certs /usr/local/share/ca-certificates
 
-HEALTHCHECK --interval=1s --retries=10 --timeout=120s --start-period=10s CMD ["/healthcheck.sh"]
+HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
 RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/* /tmp/ddev
 #END ddev-webserver-dev-base
@@ -172,7 +172,7 @@ ENV XHPROF_OUTPUT_DIR=/tmp/xhprof
 
 COPY --from=ddev-webserver-dev-base / /
 EXPOSE 80 8025
-HEALTHCHECK --interval=1s --retries=10 --timeout=120s --start-period=10s CMD ["/healthcheck.sh"]
+HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
 #END ddev-webserver
 
@@ -255,7 +255,7 @@ RUN /sbin/mkhomedir_helper www-data
 
 RUN chmod ugo+w /etc/ssl/certs /usr/local/share/ca-certificates
 
-HEALTHCHECK --interval=1s --retries=10 --timeout=120s --start-period=10s CMD ["/healthcheck.sh"]
+HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
 RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
 
@@ -278,6 +278,6 @@ ENV TERM xterm
 ENV BASH_ENV /etc/bash.nointeractive.bashrc
 
 COPY --from=ddev-webserver-prod-base / /
-HEALTHCHECK --interval=1s --retries=10 --timeout=120s --start-period=10s CMD ["/healthcheck.sh"]
+HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
 #END ddev-webserver-prod

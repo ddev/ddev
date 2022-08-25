@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/util"
@@ -37,16 +38,13 @@ func testMain(m *testing.M) int {
 
 	// prep docker container for docker util tests
 	client := GetDockerClient()
-	imageExists, err := ImageExistsLocally(versionconstants.WebImg + ":" + versionconstants.WebTag)
+	imageExists, err := ImageExistsLocally(versionconstants.GetWebImage())
 	if err != nil {
-		logOutput.Errorf("Failed to check for local image %s: %v", versionconstants.WebImg+":"+versionconstants.WebTag, err)
+		logOutput.Errorf("Failed to check for local image %s: %v", versionconstants.GetWebImage(), err)
 		return 6
 	}
 	if !imageExists {
-		err := client.PullImage(docker.PullImageOptions{
-			Repository: versionconstants.WebImg,
-			Tag:        versionconstants.WebTag,
-		}, docker.AuthConfiguration{})
+		err := Pull(versionconstants.GetWebImage())
 		if err != nil {
 			logOutput.Errorf("failed to pull test image: %v", err)
 			return 7
@@ -89,6 +87,7 @@ func testMain(m *testing.M) int {
 		logOutput.Errorf("failed to create/start docker container: %v", err)
 		return 1
 	}
+	log.Printf("StartContainer() at %v", time.Now())
 	err = client.StartContainer(container.ID, nil)
 	if err != nil {
 		logOutput.Errorf("-- FAIL: dockerutils_test failed to StartContainer: %v", err)
@@ -100,11 +99,14 @@ func testMain(m *testing.M) int {
 			logOutput.Errorf("-- FAIL: dockerutils_test failed to remove test container: %v", err)
 		}
 	}()
-	_, err = ContainerWait(60, map[string]string{"com.ddev.site-name": testContainerName})
+	log.Printf("ContainerWait at %v", time.Now())
+	out, err := ContainerWait(60, map[string]string{"com.ddev.site-name": testContainerName})
+	log.Printf("ContainerWait returrned at %v out='%s' err='%v'", time.Now(), out, err)
+
 	if err != nil {
 		logout, _ := exec.RunHostCommand("docker", "logs", container.Name)
 		inspectOut, _ := exec.RunHostCommand("sh", "-c", fmt.Sprintf("docker inspect %s|jq -r '.[0].State.Health.Log'", container.Name))
-		log.Printf("FAIL: dockerutils_test failed to ContainerWait for container: %v, logs\n========= container logs ======\n%s\n======= end logs =======\n==== health log =====\ninspectOut\n%s\n========", err, logout, inspectOut)
+		log.Printf("FAIL: dockerutils_test testMain failed to ContainerWait for container: %v, logs\n========= container logs ======\n%s\n======= end logs =======\n==== health log =====\ninspectOut\n%s\n========", err, logout, inspectOut)
 		return 4
 	}
 	exitStatus := m.Run()
@@ -144,9 +146,6 @@ func TestGetContainerHealth(t *testing.T) {
 
 // TestContainerWait tests the error cases for the container check wait loop.
 func TestContainerWait(t *testing.T) {
-	if IsColima() {
-		t.Skip("Skipping on colima because of so many odd failures")
-	}
 	assert := asrt.New(t)
 
 	labels := map[string]string{
@@ -285,11 +284,11 @@ func TestComposeWithStreams(t *testing.T) {
 	_, _, err = ComposeCmd(composeFiles, "up", "-d")
 	require.NoError(t, err)
 
-	_, err = ContainerWait(30, map[string]string{"com.ddev.site-name": t.Name()})
+	_, err = ContainerWait(60, map[string]string{"com.ddev.site-name": t.Name()})
 	if err != nil {
 		logout, _ := exec.RunCommand("docker", []string{"logs", t.Name()})
 		inspectOut, _ := exec.RunCommandPipe("sh", []string{"-c", fmt.Sprintf("docker inspect %s|jq -r '.[0].State.Health.Log'", t.Name())})
-		t.Fatalf("FAIL: dockerutils_test failed to ContainerWait for container: %v, logs\n========= container logs ======\n%s\n======= end logs =======\n==== health log =====\ninspectOut\n%s\n========", err, logout, inspectOut)
+		t.Fatalf("FAIL: TestComposeWithStreams failed to ContainerWait for container: %v, logs\n========= container logs ======\n%s\n======= end logs =======\n==== health log =====\ninspectOut\n%s\n========", err, logout, inspectOut)
 	}
 
 	// Point stdout to os.Stdout and do simple ps -ef in web container
