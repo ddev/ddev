@@ -983,7 +983,7 @@ func VolumeLabels(volumeName string) (map[string]string, error) {
 	client := GetDockerClient()
 	v, err := client.InspectVolume(volumeName)
 	if err != nil {
-		return nil, fmt.Errorf("volume %s not found", volumeName)
+		return nil, err
 	}
 	return v.Labels, nil
 }

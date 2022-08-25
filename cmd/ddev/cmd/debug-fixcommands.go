@@ -20,11 +20,11 @@ var DebugFixCommandsCmd = &cobra.Command{
 		if err != nil {
 			util.Warning("Failed to populate custom command files: %v", err)
 		}
-		// If no-bind-mounts we have to do a start to push it back in there again.
+		// If no-bind-mounts we have to do a start to push the commands back in there again.
 		if globalconfig.DdevGlobalConfig.NoBindMounts {
 			err = app.Start()
 			if err != nil {
-				util.Failed("Failed to restart: %v")
+				util.Failed("Failed to restart with NoBindMounts set: %v", err)
 			}
 		}
 	},

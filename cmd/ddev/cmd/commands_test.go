@@ -31,6 +31,15 @@ func TestCustomCommands(t *testing.T) {
 	origHome, err := os.UserHomeDir()
 	require.NoError(t, err)
 
+	// Before changing HOME, make sure that mutagen is already running if we're using it,
+	// so we don't accidentally start it in the wrong directory
+	err = globalconfig.ReadGlobalConfig()
+	require.NoError(t, err)
+	if globalconfig.DdevGlobalConfig.MutagenEnabledGlobal {
+		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "start")
+		require.NoError(t, err, "unable to run mutagen daemon start, out='%s', err=%v", out, err)
+	}
+
 	if runtime.GOOS == "windows" {
 		origHome = os.Getenv("USERPROFILE")
 	}

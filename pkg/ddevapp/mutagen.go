@@ -631,33 +631,41 @@ func GetMutagenVolumeLabel(app *DdevApp) (string, error) {
 
 // CheckMutagenVolumeSyncCompatibility checks to see if the mutagen label and volume label
 // are the same.
-// Returns true if they're the same, false if they're different
-// If either is empty, then return false. Terminate mutagen session if it has no label.
-func CheckMutagenVolumeSyncCompatibility(app *DdevApp) bool {
+// Compatible if:
+//   - No volume (or no volume and no mutagen sync session)
+//   - Volume and mutagen sync exist and Volume label matches mutagen label
+//
+// Not compatible if
+//   - Volume and mutagen sync exist and have different labels
+//   - Volume exists (with label) but there's no mutagen sync session matching it. In this case we'd want
+//     to start from scratch with a new volume and sync, so we get authoritative files from alpha (host)
+//   - Volume has a label that is not based on this docker context.
+//
+// Return ok, info, where ok true if compatible, info gives reasoning
+func CheckMutagenVolumeSyncCompatibility(app *DdevApp) (bool, string) {
 	mutagenLabel, mutagenSyncLabelErr := GetMutagenSyncLabel(app)
 	volumeLabel, volumeLabelErr := GetMutagenVolumeLabel(app)
 
-	switch {
-	// If both are errors, we don't have either session or label,
-	// so we are compatible.
-	case mutagenSyncLabelErr != nil && volumeLabelErr != nil:
-		return true
+	util.Debug("CheckMutagenVolumeSyncCompatibility: mutagenLabel='%s', volumeLabel='%s', mutagenSyncLabelErr='%v', volumeLabelErr='%v'", mutagenLabel, volumeLabel, mutagenSyncLabelErr, volumeLabelErr)
 
-	// If there are legitimate session + volume and labels match, we're good to continue.
-	case mutagenSyncLabelErr == nil && volumeLabelErr == nil && mutagenLabel != "" && mutagenLabel == volumeLabel:
-		return true
-
-	// If we have a legitimate label (meaning real session) with no label
-	// then it's a holdover from earlier ddev version, kill it.
-	case mutagenSyncLabelErr == nil && mutagenLabel == "":
-		util.Debug("mutagen sync session has empty label, terminating")
-		err := TerminateMutagenSync(app)
-		if err != nil {
-			util.Debug("failed to terminate mutagen sync session: %v", err)
-		}
+	currentDockerContext, _, err := dockerutil.GetDockerContext()
+	if err != nil {
+		util.Warning("unable to get docker context: %v", err)
 	}
 
-	return false
+	switch {
+	// If there is no volume, everything is fine, proceed.
+	case volumeLabelErr != nil && errors.Is(docker.ErrNoSuchVolume, volumeLabelErr):
+		return true, "no docker volume yet created, so compatible"
+	// If the labels do not have the current context as first part of label, we have trouble.
+	case !strings.HasPrefix(volumeLabel, currentDockerContext) || !strings.HasPrefix(mutagenLabel, currentDockerContext):
+		return false, fmt.Sprintf("volume label '%s' does not match current docker context (%s)", volumeLabel, currentDockerContext)
+	// if we have labels for both and they match, it's all fine.
+	case mutagenSyncLabelErr == nil && volumeLabelErr == nil && mutagenLabel != "" && mutagenLabel == volumeLabel:
+		return true, fmt.Sprintf("volume and mutagen sync session have the same label: %s", volumeLabel)
+	}
+
+	return false, fmt.Sprintf("CheckMutagenVolumeSyncCompatibility: currentDockerContext=%s mutagenLabel='%s', volumeLabel='%s', mutagenSyncLabelErr='%v', volumeLabelErr='%v'", currentDockerContext, mutagenLabel, volumeLabel, mutagenSyncLabelErr, volumeLabelErr)
 }
 
 // GetMutagenSyncLabel gets the com.ddev.volume-signature label from an existing sync session
