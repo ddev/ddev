@@ -136,8 +136,8 @@ Instructions for Mutagen and NFS are below.
     ### Troubleshooting Mutagen Sync Issues
 
     * Please make sure that DDEV projects work *without* mutagen before troubleshooting mutagen. `ddev config --mutagen-enabled=false && ddev restart`.
-    * `ddev poweroff` stops all registered mutagen sessions. You can also kill the mutagen daemon with `MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory ~/.ddev/bin/mutagen daemon stop`. After doing that you should not see any mutagen processes running when you use `ps -ef |grep mutagen`.
-    * DDEV's mutagen daemon keeps its data in a DDEV-only MUTAGEN_DATA_DIRECTORY, `~/.ddev_mutagen_data_directory`.
+    * As of DDEV v1.21.2, `ddev poweroff` stops all registered mutagen sessions. You can also kill the mutagen daemon with `MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory ~/.ddev/bin/mutagen daemon stop`. After doing that you should not see any mutagen processes running when you use `ps -ef |grep mutagen`.
+    * As of DDEV v1.21.2, DDEV's mutagen daemon keeps its data in a DDEV-only MUTAGEN_DATA_DIRECTORY, `~/.ddev_mutagen_data_directory`.
     * DDEV's mutagen is installed in `~/.ddev/bin/mutagen`. You can use all the features of mutagen with `export MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory` and you can use all features of mutagen, including `~/.ddev/bin/mutagen sync list` and `~/.ddev/bin/mutagen daemon stop`.
         You can run the script [diagnose_mutagen.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/diagnose_mutagen.sh) to gather some information about the setup of mutagen. Please report its output when creating an issue or otherwise seeking support.
     * Try `ddev poweroff` or `~/.ddev/bin/mutagen daemon stop && ~/.ddev/bin/mutagen daemon start` to restart the mutagen daemon if you suspect it's hanging.
