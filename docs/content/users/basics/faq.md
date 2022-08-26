@@ -102,8 +102,9 @@ How can I install a specific version of DDEV?
 : If you want to use a different version of DDEV, you easily get a different version. If you're using homebrew, `brew unlink ddev` first, to get rid of the version you have there. Then use one of these options:
 
     1. Download the version you want from the [releases page](https://github.com/drud/ddev/releases) and place it somewhere in your `$PATH`.
-    2. Use the [install_ddev.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh) script with the version number argument. For example, if you want v1.18.3-alpha1, use `curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash -s v1.18.3-alpha1`
-    3. If you want the very latest, unreleased version of ddev, use `brew unlink ddev && brew install drud/ddev/ddev --HEAD`.
+    2. Use the [install_ddev.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh) script with the version number argument. For example, if you want v1.18.3-alpha1, use `curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash -s v1.18.3-alpha1`.
+    3. On Debian/Ubuntu/WSL2 with DDEV installed via apt, you can `sudo apt update && sudo apt install ddev=<version>`, for example `sudo apt install ddev=1.21.1`.
+    4. If you want the very latest, unreleased version of ddev, use `brew unlink ddev && brew install drud/ddev/ddev --HEAD`.
 
 How can I back up or restore all databases of all projects?
 : You can back up all projects that show in `ddev list` with `ddev snapshot -a`. This only snapshots projects that are shown in `ddev list` though, so if you have other projects that aren't shown, you'd need to start them so they'd be registered in `ddev list`.
