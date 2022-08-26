@@ -1852,6 +1852,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_PROJECT":                  app.Name,
 		"DDEV_WEBIMAGE":                 app.WebImage,
 		"DDEV_APPROOT":                  app.AppRoot,
+		"DDEV_COMPOSER_ROOT":            app.GetComposerRoot(true, false),
 		"DDEV_DATABASE":                 app.Database.Type + ":" + app.Database.Version,
 		"DDEV_FILES_DIR":                app.GetContainerUploadDirFullPath(),
 

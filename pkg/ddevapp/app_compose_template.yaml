@@ -159,6 +159,7 @@ services:
     environment:
     - COLUMNS
     - DOCROOT=${DDEV_DOCROOT}
+    - DDEV_COMPOSER_ROOT
     - DDEV_DATABASE
     - DDEV_DOCROOT
     - DDEV_HOSTNAME
