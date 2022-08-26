@@ -4,13 +4,7 @@
 # directory where you're having trouble and provide its
 # output in a gist at gist.github.com with any issue you open about mutagen.
 
-if command -v mutagen >/dev/null ; then
-  echo "mutagen additionally installed in PATH at $(command -v mutagen), version $(mutagen version)"
-fi
-if killall -0 mutagen 2>/dev/null; then
-  echo "mutagen is running on this system:"
-  ps -ef | grep mutagen
-fi
+export MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory
 
 ddev list
 ddev describe
