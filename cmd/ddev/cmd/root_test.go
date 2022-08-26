@@ -331,7 +331,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 		assert.NoError(err)
 
 		_, err = os.Stat(globalconfig.GetMutagenPath())
-		if err == nil && (app.MutagenEnabled || app.MutagenEnabledGlobal) {
+		if err == nil && app.IsMutagenEnabled() {
 			ddevapp.StopMutagenDaemon()
 		}
 	})

@@ -134,6 +134,22 @@ func GetDockerContext() (string, string, error) {
 	return context, dockerHost, nil
 }
 
+// GetDockerHostID returns DOCKER_HOST but with all special characters removed
+// It stands in for docker context, but docker context name is not a reliable indicator
+func GetDockerHostID() string {
+	_, host, err := GetDockerContext()
+	if err != nil {
+		util.Warning("Unable to GetDockerContext: %v", err)
+	}
+	// Convert DOCKER_HOST to alphanumeric
+	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
+	if err != nil {
+		log.Fatal(err)
+	}
+	alphaOnly := reg.ReplaceAllString(host, "-")
+	return alphaOnly
+}
+
 // InspectContainer returns the full result of inspection
 func InspectContainer(name string) (*docker.Container, error) {
 	client, err := docker.NewClientFromEnv()
