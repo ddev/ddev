@@ -279,29 +279,34 @@ func TestCustomCommands(t *testing.T) {
 func TestLaunchCommand(t *testing.T) {
 	assert := asrt.New(t)
 
-	pwd, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 	// Create a temporary directory and switch to it.
-	tmpdir := testcommon.CreateTmpDir(t.Name())
-	err := os.Chdir(tmpdir)
+	testDir := testcommon.CreateTmpDir(t.Name())
+	err := os.Chdir(testDir)
 	assert.NoError(err)
 
 	t.Setenv("DDEV_DEBUG", "true")
-	app, err := ddevapp.NewApp(tmpdir, false)
+	app, err := ddevapp.NewApp(testDir, false)
 	require.NoError(t, err)
 	err = app.WriteConfig()
 	require.NoError(t, err)
 	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		err = os.Chdir(pwd)
-		assert.NoError(err)
-		err = os.RemoveAll(tmpdir)
+		// On windows, give it a moment to give up all resources and avoid failure on RemoveAll()
+		if runtime.GOOS == "windows" {
+			time.Sleep(time.Second * 2)
+		}
+		err = os.RemoveAll(testDir)
 		assert.NoError(err)
 	})
 
 	// This only tests the https port changes, but that might be enough
 	app.RouterHTTPSPort = "8443"
-	_ = app.WriteConfig()
+	err = app.WriteConfig()
+	assert.NoError(err)
 	err = app.Start()
 	require.NoError(t, err)
 
