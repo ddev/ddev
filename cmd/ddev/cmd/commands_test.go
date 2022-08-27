@@ -71,12 +71,12 @@ func TestCustomCommands(t *testing.T) {
 
 	origType := app.Type
 	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
 		// Stop the mutagen daemon running in the bogus homedir
 		ddevapp.StopMutagenDaemon()
-		err = os.Chdir(origDir)
-		assert.NoError(err)
 		runTime()
 		app.Type = origType
 		err = app.WriteConfig()
@@ -295,12 +295,7 @@ func TestLaunchCommand(t *testing.T) {
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		// On windows, give it a moment to give up all resources and avoid failure on RemoveAll()
-		if runtime.GOOS == "windows" {
-			time.Sleep(time.Second * 2)
-		}
-		err = os.RemoveAll(testDir)
-		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
 	})
 
 	// This only tests the https port changes, but that might be enough

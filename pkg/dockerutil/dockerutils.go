@@ -1208,11 +1208,7 @@ func DownloadDockerCompose() error {
 	}
 	output.UserOut.Printf("Downloading %s ...", composeURL)
 
-	path, err := globalconfig.GetDockerComposePath()
-	if err != nil {
-		return err
-	}
-	_ = os.Remove(path)
+	_ = os.Remove(destFile)
 
 	_ = os.MkdirAll(globalBinDir, 0777)
 	err = util.DownloadFile(destFile, composeURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"))
