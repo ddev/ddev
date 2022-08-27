@@ -17,7 +17,7 @@ var SegmentKey = ""
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20220824_containerwait_fail" // Note that this can be overridden by make
+var WebTag = "20220826_path_adjusted_for_composer_root" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"
