@@ -6,6 +6,10 @@
 if (-not(wsl -l -v)) {
     throw "WSL2 does not seem to be installed yet; please install it with 'wsl --install'"
 }
+# Make sure it's an ubuntu release
+if (-not( wsl -e grep ^NAME=.Ubuntu //etc/os-release)) {
+    throw "Your installed WSL2 distro does not seem to be Ubuntu. You can certainly use DDEV with WSL2 in another distro, but this script is oriented to Ubuntu."
+}
 # Install Chocolatey if needed
 if (-not(Get-Command choco 2>&1 >$null))
 {
@@ -26,7 +30,7 @@ setx CAROOT "$(mkcert -CAROOT)"; If ($Env:WSLENV -notlike "*CAROOT/up:*") { setx
 
 wsl -u root bash -c "curl -sL https://apt.fury.io/drud/gpg.key | apt-key add -"
 wsl -u root bash -c "echo 'deb https://apt.fury.io/drud/ * *' > /etc/apt/sources.list.d/ddev.list"
-wsl -u root bash -c "apt update >/dev/null && sudo apt install -y ddev"
+wsl -u root bash -c "apt-get update >/dev/null && sudo apt-get install -y ddev"
 
 wsl bash -c 'echo $CAROOT'
 wsl -u root mkcert -install
