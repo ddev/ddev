@@ -101,7 +101,9 @@ Why does `ddev start` fail with "error while mounting volume, Permission denied"
 How can I update/upgrade DDEV?
 : DDEV is easiest to think of as a single binary, and it can be installed many ways, so can be upgraded many ways depending on your operating system and environment. Mostly upgrading is the same as installing, see [DDEV Installation](../install/ddev-installation.md).
      * If you're on macOS you likely installed DDEV with homebrew, so try `brew update && brew upgrade ddev`.
+<!-- markdownlint-disable-next-line -->
      * If you're on Linux including WSL2 and using Debian/Ubuntu and use the recommended `apt install` technique, you can `sudo apt update && sudo apt upgrade ddev` as you would do with any other package on your system.
+<!-- markdownlint-disable-next-line -->
      * If you're on Linux including WSL2 and you installed using homebrew, you can `brew update && brew upgrade ddev`.
      * On macOS or Linux (including WSL2) if you installed using the [install_ddev.sh script](https://github.com/drud/ddev/blob/master/scripts/install_ddev.sh) you can just run it again:
 <!-- markdownlint-disable -->
