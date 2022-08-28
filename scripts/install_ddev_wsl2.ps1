@@ -30,6 +30,6 @@ wsl -u root bash -c "apt update >/dev/null && sudo apt install -y ddev"
 
 wsl bash -c 'echo $CAROOT'
 wsl -u root mkcert -install
-if (-not(wsl docker ps)) {
+if (-not(wsl -e docker ps)) {
     throw "docker does not seem to be working inside the WSL2 distro yet"
 }
