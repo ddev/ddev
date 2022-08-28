@@ -2,6 +2,8 @@
 
 The easiest way to think about how DDEV works is to think of it as a set of little networked computers (docker containers). You can think of them as being in a different network world than your workstation computer, but reachable from there.
 
+When you install or upgrade DDEV you're mostly installing a single binary, named `ddev`. When you use it, it downloads the Docker images it needs, and then starts them based on your project's needs.
+
 * The `ddev-webserver` container (one per project) runs `nginx` or `apache` and `php-fpm` for a single site, so it does all the basic work of a PHP-interpreting webserver.
 * The `ddev-dbserver` container (one per project) handles MariaDB/MySQL/Postgresql database management. It can be reached from the webserver by the hostname `db` or with the more explicit name `ddev-<projectname>-db`.
 * The optional `dba` container runs PhpMyAdmin for projects with MySQL or MariaDB.
