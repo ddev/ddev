@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
@@ -34,12 +36,20 @@ var MutagenStatusCmd = &cobra.Command{
 			util.Warning("Mutagen is not enabled on project %s", app.Name)
 			return
 		}
-		status, shortResult, longResult, _ := app.MutagenStatus()
+		status, shortResult, _, err := app.MutagenStatus()
 
+		if err != nil {
+			util.Failed("unable to get mutagen status for project %s, output='%s': %v", app.Name, shortResult, err)
+		}
 		ok := "Mutagen: " + status
 		resultOut := shortResult
 		if verbose {
-			resultOut = "\n" + longResult
+			fullResult, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list", "-l", ddevapp.MutagenSyncName(app.Name))
+			if err != nil {
+				util.Failed("unable to get mutagen status for project %s, output='%s': %v", app.Name, fullResult, err)
+			}
+
+			resultOut = "\n" + fullResult
 		}
 		output.UserOut.Printf("%s: %s", ok, resultOut)
 	},

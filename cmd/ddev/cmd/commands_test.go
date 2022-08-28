@@ -31,6 +31,15 @@ func TestCustomCommands(t *testing.T) {
 	origHome, err := os.UserHomeDir()
 	require.NoError(t, err)
 
+	// Before changing HOME, make sure that mutagen is already running if we're using it,
+	// so we don't accidentally start it in the wrong directory
+	err = globalconfig.ReadGlobalConfig()
+	require.NoError(t, err)
+	if globalconfig.DdevGlobalConfig.MutagenEnabledGlobal {
+		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "start")
+		require.NoError(t, err, "unable to run mutagen daemon start, out='%s', err=%v", out, err)
+	}
+
 	if runtime.GOOS == "windows" {
 		origHome = os.Getenv("USERPROFILE")
 	}
@@ -62,10 +71,12 @@ func TestCustomCommands(t *testing.T) {
 
 	origType := app.Type
 	t.Cleanup(func() {
-		// Stop the mutagen daemon runnning in the bogus homedir
-		ddevapp.StopMutagenDaemon()
 		err = os.Chdir(origDir)
 		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		// Stop the mutagen daemon running in the bogus homedir
+		ddevapp.StopMutagenDaemon()
 		runTime()
 		app.Type = origType
 		err = app.WriteConfig()
@@ -97,10 +108,10 @@ func TestCustomCommands(t *testing.T) {
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 
-	_, err = exec.RunHostCommand(DdevBin, "debug", "fix-commands")
-	require.NoError(t, err)
-	out, err := exec.RunHostCommand(DdevBin)
-	assert.NoError(err)
+	out, err := exec.RunHostCommand(DdevBin, "debug", "fix-commands")
+	require.NoError(t, err, "failed to run ddev debug fix-commands, out='%s', err=%v", out, err)
+	out, err = exec.RunHostCommand(DdevBin)
+	require.NoError(t, err, "failed to run ddev command, output='%s', err=%v", out, err)
 	assert.Contains(out, "mysql client in db container")
 
 	// Test the `ddev mysql` command with stdin
@@ -268,29 +279,29 @@ func TestCustomCommands(t *testing.T) {
 func TestLaunchCommand(t *testing.T) {
 	assert := asrt.New(t)
 
-	pwd, _ := os.Getwd()
+	origDir, _ := os.Getwd()
 	// Create a temporary directory and switch to it.
-	tmpdir := testcommon.CreateTmpDir(t.Name())
-	err := os.Chdir(tmpdir)
+	testDir := testcommon.CreateTmpDir(t.Name())
+	err := os.Chdir(testDir)
 	assert.NoError(err)
 
 	t.Setenv("DDEV_DEBUG", "true")
-	app, err := ddevapp.NewApp(tmpdir, false)
+	app, err := ddevapp.NewApp(testDir, false)
 	require.NoError(t, err)
 	err = app.WriteConfig()
 	require.NoError(t, err)
 	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		err = os.Chdir(pwd)
-		assert.NoError(err)
-		err = os.RemoveAll(tmpdir)
-		assert.NoError(err)
+		_ = os.RemoveAll(testDir)
 	})
 
 	// This only tests the https port changes, but that might be enough
 	app.RouterHTTPSPort = "8443"
-	_ = app.WriteConfig()
+	err = app.WriteConfig()
+	assert.NoError(err)
 	err = app.Start()
 	require.NoError(t, err)
 

@@ -19,9 +19,10 @@ var wrapListTableText bool
 
 // ListCmd represents the list command
 var ListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List projects",
-	Long:  `List projects. Shows all projects by default, shows active projects only with --active-only`,
+	Use:     "list",
+	Short:   "List projects",
+	Long:    `List projects. Shows all projects by default, shows active projects only with --active-only`,
+	Aliases: []string{"l", "ls"},
 	Example: `ddev list
 ddev list --active-only
 ddev list -A`,

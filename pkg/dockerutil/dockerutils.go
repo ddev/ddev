@@ -134,6 +134,22 @@ func GetDockerContext() (string, string, error) {
 	return context, dockerHost, nil
 }
 
+// GetDockerHostID returns DOCKER_HOST but with all special characters removed
+// It stands in for docker context, but docker context name is not a reliable indicator
+func GetDockerHostID() string {
+	_, host, err := GetDockerContext()
+	if err != nil {
+		util.Warning("Unable to GetDockerContext: %v", err)
+	}
+	// Convert DOCKER_HOST to alphanumeric
+	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
+	if err != nil {
+		log.Fatal(err)
+	}
+	alphaOnly := reg.ReplaceAllString(host, "-")
+	return alphaOnly
+}
+
 // InspectContainer returns the full result of inspection
 func InspectContainer(name string) (*docker.Container, error) {
 	client, err := docker.NewClientFromEnv()
@@ -978,10 +994,20 @@ func VolumeExists(volumeName string) bool {
 	return true
 }
 
-// CreateVolume creates a docker volume
-func CreateVolume(volumeName string, driver string, driverOpts map[string]string) (volume *docker.Volume, err error) {
+// VolumeLabels returns map of labels found on volume.
+func VolumeLabels(volumeName string) (map[string]string, error) {
 	client := GetDockerClient()
-	volume, err = client.CreateVolume(docker.CreateVolumeOptions{Name: volumeName, Driver: driver, DriverOpts: driverOpts})
+	v, err := client.InspectVolume(volumeName)
+	if err != nil {
+		return nil, err
+	}
+	return v.Labels, nil
+}
+
+// CreateVolume creates a docker volume
+func CreateVolume(volumeName string, driver string, driverOpts map[string]string, labels map[string]string) (volume *docker.Volume, err error) {
+	client := GetDockerClient()
+	volume, err = client.CreateVolume(docker.CreateVolumeOptions{Name: volumeName, Labels: labels, Driver: driver, DriverOpts: driverOpts})
 	return volume, err
 }
 
@@ -1182,11 +1208,7 @@ func DownloadDockerCompose() error {
 	}
 	output.UserOut.Printf("Downloading %s ...", composeURL)
 
-	path, err := globalconfig.GetDockerComposePath()
-	if err != nil {
-		return err
-	}
-	_ = os.Remove(path)
+	_ = os.Remove(destFile)
 
 	_ = os.MkdirAll(globalBinDir, 0777)
 	err = util.DownloadFile(destFile, composeURL, "true" != os.Getenv("DDEV_NONINTERACTIVE"))

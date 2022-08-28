@@ -27,6 +27,8 @@ func PowerOff() {
 		util.Success("Project %s has been stopped.", app.GetName())
 	}
 
+	TerminateAllMutagenSync()
+
 	if err := RemoveSSHAgentContainer(); err != nil {
 		util.Error("Failed to remove ddev-ssh-agent: %v", err)
 	}

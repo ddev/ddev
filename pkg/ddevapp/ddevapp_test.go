@@ -257,6 +257,7 @@ func TestMain(m *testing.M) {
 	// Avoid having sudo try to add to /etc/hosts.
 	// This is normally done by Testsite.Prepare()
 	_ = os.Setenv("DDEV_NONINTERACTIVE", "true")
+	_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", globalconfig.GetMutagenDataDirectory())
 
 	// If GOTEST_SHORT is an integer, then use it as index for a single usage
 	// in the array. Any value can be used, it will default to just using the

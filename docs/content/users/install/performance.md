@@ -68,7 +68,6 @@ Instructions for Mutagen and NFS are below.
 
     * **Not for every project**: Mutagen is not the right choice for every project. If filesystem consistency is your highest priority (as opposed to performance) then there are reasons to be cautious, although people have had excellent experiences: there haven't been major issues reported, but two-way sync is a very difficult computational problem, and problems may surface.
     * **Don't change or remove files when DDEV is stopped**: If you change files (checking out a different branch, or removing a file) while DDEV is stopped, mutagen has no way to know you meant to do that. So when you start again, it will get the files that are stored and bring them back to the host.
-    * **Only one mutagen version on machine please**: DDEV installs its own mutagen. **You do not need to install mutagen.** Multiple mutagen versions can't coexist on one machine, so please stop any running mutagen. On macOS, `killall mutagen`. If you absolutely have to have mutagen installed via homebrew or another technique (for another project) make sure it's the same version as you get with `ddev version`.
     * **Works everywhere, most useful on macOS and traditional Windows**: This is mostly for macOS and traditional Windows users. WSL2 is already the preferred environment for Windows users, but if you're still using traditional Windows this makes a huge difference. Although DDEV with mutagen is fully supported and tested on traditional Windows and Linux/WSL2, enabling mutagen on Linux/WSL2 may not be your first choice, since it adds some complexity and very little performance.
     * **Increased disk usage**: Mutagen integration increases the size of your project code disk usage, because the code exists both on your computer and also inside a docker volume. (As of v1.19+, this does *not* include your file upload directory, so normally it's not too intrusive.) So take care that you have enough overall disk space, and also (on macOS) that you have enough file space set up in Docker Desktop. For projects before v1.19, if you have a large amount of data like user-generated content that does not need syncing (i.e. `fileadmin` for TYPO3 or `sites/default/files` for Drupal), you can exclude specific directories from getting synced and use regular docker mount for them instead. See [below for Advanced Mutagen configuration options](#advanced-mutagen-configuration-options). As of v1.19, this is handled automatically and these files are not mutagen-synced.
     * If your project is likely to change the same file on both the host and inside the container, you may be at risk for conflicts.
@@ -107,7 +106,7 @@ Instructions for Mutagen and NFS are below.
     Remember if you edit the `.ddev/mutagen/mutagen.yml` file:
 
     * Remove the `#ddev-generated` line
-    * Execute a `ddev mutagen reset` to avoid the situation where the docker volume still has files from an older configuration.
+    * Execute a `ddev mutagen reset` to avoid the situation where the docker volume and mutagen session still have files from an older configuration.
 
     The most likely thing you'll want to do is to exclude a path from mutagen syncing, which you can do in the `paths:` section of the `ignore:` stanza in the `.ddev/mutagen/mutagen.yml`.
 
@@ -137,23 +136,25 @@ Instructions for Mutagen and NFS are below.
     ### Troubleshooting Mutagen Sync Issues
 
     * Please make sure that DDEV projects work *without* mutagen before troubleshooting mutagen. `ddev config --mutagen-enabled=false && ddev restart`.
-    * DDEV's mutagen may not be compatible with an existing mutagen on your system. Please make sure that any mutagen installs you have are not running, or stop them. You may want to `brew uninstall mutagen-io/mutagen/mutagen mutagen-io/mutagen/mutagen-beta` to get rid of brew-installed versions.
-    * DDEV's mutagen is installed in `~/.ddev/bin/mutagen`. You can use all the features of mutagen by running that, including `~/.ddev/bin/mutagen sync list` and `~/.ddev/bin/mutagen daemon stop`.
+    * As of DDEV v1.21.2, `ddev poweroff` stops all registered mutagen sessions. You can also kill the mutagen daemon with `MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory ~/.ddev/bin/mutagen daemon stop`. After doing that you should not see any mutagen processes running when you use `ps -ef |grep mutagen`.
+    * As of DDEV v1.21.2, DDEV's mutagen daemon keeps its data in a DDEV-only MUTAGEN_DATA_DIRECTORY, `~/.ddev_mutagen_data_directory`.
+    * DDEV's mutagen is installed in `~/.ddev/bin/mutagen`. You can use all the features of mutagen with `export MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory` and you can use all features of mutagen, including `~/.ddev/bin/mutagen sync list` and `~/.ddev/bin/mutagen daemon stop`.
         You can run the script [diagnose_mutagen.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/diagnose_mutagen.sh) to gather some information about the setup of mutagen. Please report its output when creating an issue or otherwise seeking support.
-    * Try `~/.ddev/bin/mutagen daemon stop && ~/.ddev/bin/mutagen daemon start` to restart the mutagen daemon if you suspect it's hanging.
-    * Use `ddev mutagen reset` if you suspect trouble (and always after changing the `.ddev/mutagen/mutagen.yml`. This restarts everything from scratch, including the docker volume that's used to store your project inside the container.)
+    * Try `ddev poweroff` or `~/.ddev/bin/mutagen daemon stop && ~/.ddev/bin/mutagen daemon start` to restart the mutagen daemon if you suspect it's hanging.
+    * Use `ddev mutagen reset` if you suspect trouble (and always after changing the `.ddev/mutagen/mutagen.yml`. This restarts the project mutagen data (docker volume and mutagen session) from scratch.
     * `ddev mutagen monitor` can help watch mutagen behavior. It's the same as `~/.ddev/bin/mutagen sync monitor <syncname>`
     * `ddev debug mutagen` will let you run any mutagen command using the binary in `~/.ddev/bin/mutagen`.
     * If you're working on the host and expecting things to show up immediately inside the container, you can learn a lot by running `ddev mutagen monitor` in a separate window as you work. You'll see when mutagen responds to your changes and get an idea about how much delay there is.
     * Consider `ddev stop` before massive file change operations (like moving a directory, etc.)
     * If you get in real trouble, `ddev stop`, reset your files with git, and then `ddev mutagen reset` to throw away the docker volume (which may already have incorrect files on it.)
-    * If you're having trouble, we really want to hear from you to learn and try to sort it out. See the [Support channels](../support.md).
+    * If you're having trouble, we'd love to hear from you to learn and try to sort it out. See the [Support channels](../support.md).
 
     #### Advanced Mutagen Troubleshooting
 
     Most people get all the information they need about mutagen by running `ddev mutagen monitor` to see the results. However, Mutagen has full logging. Here's how to run it:
 
     * `killall mutagen`
+    * `export MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory`
     * `export MUTAGEN_LOG_LEVEL=debug` or `export MUTAGEN_LOG_LEVEL=trace`
     * `~/.ddev/bin/mutagen daemon run`
     * Work with your project various actions and watch the output.

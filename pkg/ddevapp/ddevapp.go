@@ -974,9 +974,27 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
+	if app.IsMutagenEnabled() {
+		if ok, info := CheckMutagenVolumeSyncCompatibility(app); !ok {
+			util.Warning("mutagen sync session and docker volume are incompatible: '%s', Removing docker volume %s", info, GetMutagenVolumeName(app))
+			removeVolumeErr := dockerutil.RemoveVolume(GetMutagenVolumeName(app))
+			if removeVolumeErr != nil {
+				return fmt.Errorf(`Unable to remove mismatched mutagen docker volume '%s'. Please use 'ddev mutagen reset': %v`, GetMutagenVolumeName(app), removeVolumeErr)
+			}
+		}
+		// Make sure the mutagen sync volume exists. It's compatible if we found it above
+		// so we can keep it in that case.
+		if !dockerutil.VolumeExists(GetMutagenVolumeName(app)) {
+			_, err = dockerutil.CreateVolume(GetMutagenVolumeName(app), "local", nil, map[string]string{mutagenSignatureLabelName: GetDefaultVolumeSignature(app)})
+			if err != nil {
+				return fmt.Errorf("Unable to create new mutagen docker volume %s: %v", GetMutagenVolumeName(app), err)
+			}
+		}
+	}
+
 	volumesNeeded := []string{"ddev-global-cache", "ddev-" + app.Name + "-snapshots"}
 	for _, v := range volumesNeeded {
-		_, err = dockerutil.CreateVolume(v, "local", nil)
+		_, err = dockerutil.CreateVolume(v, "local", nil, nil)
 		if err != nil {
 			return fmt.Errorf("unable to create docker volume %s: %v", v, err)
 		}
@@ -1203,13 +1221,12 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		if err != nil {
 			return err
 		}
-		_ = TerminateMutagenSync(app)
 
 		err = SetMutagenVolumeOwnership(app)
 		if err != nil {
 			return err
 		}
-		err = CreateMutagenSync(app)
+		err = CreateOrResumeMutagenSync(app)
 		if err != nil {
 			return fmt.Errorf("Failed to create mutagen sync session '%s'. You may be able to resolve this problem 'ddev mutagen reset' (err=%v)", MutagenSyncName(app.Name), err)
 		}
@@ -1925,7 +1942,7 @@ func (app *DdevApp) Pause() error {
 		return err
 	}
 
-	_ = SyncAndTerminateMutagenSession(app)
+	_ = SyncAndPauseMutagenSession(app)
 
 	if _, _, err := dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "stop"); err != nil {
 		return err
@@ -2186,7 +2203,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		}
 	}
 
-	err = SyncAndTerminateMutagenSession(app)
+	err = SyncAndPauseMutagenSession(app)
 	if err != nil {
 		util.Warning("Unable to SyncAndterminateMutagenSession: %v", err)
 	}
@@ -2224,6 +2241,10 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 
 	// Remove data/database/projectInfo/hostname if we need to.
 	if removeData {
+		err = TerminateMutagenSync(app)
+		if err != nil {
+			util.Warning("unable to terminate mutagen session %s: %v", MutagenSyncName(app.Name), err)
+		}
 		if err = app.RemoveHostsEntries(); err != nil {
 			return fmt.Errorf("failed to remove hosts entries: %v", err)
 		}
@@ -2807,4 +2828,10 @@ func (app *DdevApp) CreateUploadDirIfNecessary() {
 			util.Warning("Unable to create upload directory %s: %v", app.GetHostUploadDirFullPath(), err)
 		}
 	}
+}
+
+// GetDefaultVolumeSignature gets a new volume signature to be applied especially to mutagen volume
+func GetDefaultVolumeSignature(app *DdevApp) string {
+	now := time.Now()
+	return fmt.Sprintf("%s-%d", dockerutil.GetDockerHostID(), now.Unix())
 }

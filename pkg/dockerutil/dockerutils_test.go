@@ -35,6 +35,7 @@ func testMain(m *testing.M) int {
 	EnsureDdevNetwork()
 
 	_ = os.Setenv("DDEV_NONINTERACTIVE", "true")
+	_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", globalconfig.GetMutagenDataDirectory())
 
 	// prep docker container for docker util tests
 	client := GetDockerClient()
@@ -483,7 +484,7 @@ func TestCreateVolume(t *testing.T) {
 	// Make sure there's no existing volume.
 	//nolint: errcheck
 	RemoveVolume("junker99")
-	volume, err := CreateVolume("junker99", "local", map[string]string{})
+	volume, err := CreateVolume("junker99", "local", map[string]string{}, nil)
 	require.NoError(t, err)
 
 	//nolint: errcheck
@@ -508,12 +509,8 @@ func TestRemoveVolume(t *testing.T) {
 	if runtime.GOOS == "darwin" && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", source)) {
 		source = filepath.Join("/System/Volumes/Data", source)
 	}
-	volume, err := CreateVolume(
-		testVolume,
-		"local",
-		map[string]string{"type": "nfs", "o": "addr=host.docker.internal,hard,nolock,rw",
-			"device": ":" + MassageWindowsNFSMount(source)},
-	)
+	volume, err := CreateVolume(testVolume, "local", map[string]string{"type": "nfs", "o": "addr=host.docker.internal,hard,nolock,rw",
+		"device": ":" + MassageWindowsNFSMount(source)}, nil)
 	assert.NoError(err)
 
 	volumes, err := client.ListVolumes(docker.ListVolumesOptions{Filters: map[string][]string{"name": {testVolume}}})

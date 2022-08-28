@@ -176,7 +176,6 @@ Docker or an alternative is required before anything will work with DDEV. This i
 
     You can also easily perform the installation or upgrade manually if preferred. DDEV is just a single executable, no special installation is actually required, so for all operating systems, the installation is just copying DDEV into place where it's in the system path.
 
-    * `ddev poweroff` if upgrading
     * Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for your architecture.
     * Move ddev to /usr/local/bin: `mv ddev /usr/local/bin/` (may require sudo), or another directory in your `$PATH` as preferred.
     * Run `ddev` to test your installation. You should see DDEV's command usage output.

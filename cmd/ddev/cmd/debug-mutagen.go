@@ -17,6 +17,7 @@ var DebugMutagenCmd = &cobra.Command{
 	Example: `ddev debug mutagen sync list
 ddev debug mutagen daemon stop
 ddev debug mutagen
+ddev d mutagen sync list
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		mutagenPath := globalconfig.GetMutagenPath()

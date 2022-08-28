@@ -77,6 +77,7 @@ func TestMain(m *testing.M) {
 
 	// We don't want the tests reporting to Segment.
 	_ = os.Setenv("DDEV_NO_INSTRUMENTATION", "true")
+	_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", globalconfig.GetMutagenDataDirectory())
 
 	// If GOTEST_SHORT is an integer, then use it as index for a single usage
 	// in the array. Any value can be used, it will default to just using the
@@ -322,7 +323,7 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 	err = fileutil.AppendStringToFile(filepath.Join(globalconfig.GetGlobalDdevDir(), "global_config.yaml"), "last_started_version: v0.1")
 	require.NoError(t, err)
 	out, err = exec.RunHostCommand(DdevBin, "start")
-	assert.NoError(err)
+	require.NoError(t, err, "start failed, out='%s', err=%v", out, err)
 	assert.Contains(out, "ddev-ssh-agent container has been removed")
 	assert.Contains(out, "ssh-agent container is running")
 	t.Cleanup(func() {
@@ -330,9 +331,8 @@ func TestPoweroffOnNewVersion(t *testing.T) {
 		assert.NoError(err)
 
 		_, err = os.Stat(globalconfig.GetMutagenPath())
-		if err == nil {
-			out, err := exec.RunHostCommand(DdevBin, "debug", "mutagen", "daemon", "stop")
-			assert.NoError(err, "mutagen daemon stop returned %s", string(out))
+		if err == nil && app.IsMutagenEnabled() {
+			ddevapp.StopMutagenDaemon()
 		}
 	})
 

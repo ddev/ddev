@@ -20,11 +20,12 @@ import (
 // TestMutagenSimple tests basic mutagen functionality
 func TestMutagenSimple(t *testing.T) {
 	if runtime.GOOS == "windows" {
-		t.Skip("TestMutagenSimple one takes way too long on Windows, skipping")
+		t.Skip("TestMutagenSimple takes way too long on Windows, skipping")
 	}
 	assert := asrt.New(t)
 
-	mutagenPath := globalconfig.GetMutagenPath()
+	// Make sure there's not an existing mutagen running, perhaps in wrong directory
+	_, _ = exec.RunHostCommand("pkill", "mutagen")
 
 	// Make sure this leaves us in the original test directory
 	origDir, _ := os.Getwd()
@@ -51,6 +52,8 @@ func TestMutagenSimple(t *testing.T) {
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
+		err = ddevapp.TerminateMutagenSync(app)
+		assert.NoError(err)
 		assert.False(dockerutil.VolumeExists(ddevapp.GetMutagenVolumeName(app)))
 	})
 	err = app.Start()
@@ -62,8 +65,9 @@ func TestMutagenSimple(t *testing.T) {
 	assert.True(desc["mutagen_enabled"].(bool))
 
 	// Make sure the sync is there
-	out, err := exec.RunHostCommand(mutagenPath, "sync", "list", ddevapp.MutagenSyncName(app.Name))
-	assert.NoError(err, "output=%s", out)
+	status, short, long, err := app.MutagenStatus()
+	assert.NoError(err, "could not run mutagen sync list: status=%s short=%s, long=%s, err=%v", status, short, long, err)
+	assert.Equal("ok", status, "wrong status: status=%s short=%s, long=%s", status, short, long)
 
 	// Remove the vendor directory and sync
 	err = os.RemoveAll(filepath.Join(app.AppRoot, "vendor"))
@@ -90,10 +94,11 @@ func TestMutagenSimple(t *testing.T) {
 	assert.NoError(err)
 	assert.FileExists(filepath.Join(app.AppRoot, "vendor/bin/var-dump-server"))
 
-	// Stop app, should result in no more mutagen sync
+	// Stop app, should result in paused sync
 	err = app.Stop(false, false)
-	out, err = exec.RunHostCommand(mutagenPath, "sync", "list", ddevapp.MutagenSyncName(app.Name))
-	assert.Error(err, "output=%s", out)
+	status, short, long, err = app.MutagenStatus()
+	assert.NoError(err, "could not run mutagen sync list: status=%s short=%s, long=%s, err=%v", status, short, long, err)
+	assert.Equal("paused", status, "wrong status: status=%s short=%s, long=%s", status, short, long)
 
 	// Make sure we can stop the daemon
 	ddevapp.StopMutagenDaemon()
@@ -108,8 +113,9 @@ func TestMutagenSimple(t *testing.T) {
 		assert.Error(err)
 	}
 
-	out, err = exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list")
-	assert.NoError(err)
+	mutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
+	out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list")
+	assert.NoError(err, "mutagen sync list failed with MUTAGEN_DATA_DIRECTORY=%s: out=%s: %v", mutagenDataDirectory, out, err)
 	assert.Contains(out, "Started Mutagen daemon in background")
 	if !strings.Contains(out, "Started Mutagen daemon in background") && (runtime.GOOS == "darwin" || runtime.GOOS == "linux") {
 		out, err := exec.RunHostCommand("bash", "-c", "ps -ef | grep mutagen")
@@ -122,13 +128,15 @@ func TestMutagenSimple(t *testing.T) {
 
 	// Make sure sync is down on pause also
 	err = app.Pause()
-	out, err = exec.RunHostCommand(mutagenPath, "sync", "list", ddevapp.MutagenSyncName(app.Name))
-	assert.Error(err, "output=%s", out)
+	status, short, long, err = app.MutagenStatus()
+	assert.NoError(err, "could not run mutagen sync list: status=%s short=%s, long=%s, err=%v", status, short, long, err)
+	assert.Equal("paused", status, "wrong status: status=%s short=%s, long=%s", status, short, long)
 
 	// And that it's re-established when we start again
 	err = app.Start()
-	out, err = exec.RunHostCommand(mutagenPath, "sync", "list", ddevapp.MutagenSyncName(app.Name))
-	assert.NoError(err, "could not run mutagen sync list: output=%s", out)
+	status, short, long, err = app.MutagenStatus()
+	assert.NoError(err, "could not run mutagen sync list: status=%s short=%s, long=%s, err=%v", status, short, long, err)
+	assert.Equal("ok", status, "wrong status: status=%s short=%s, long=%s", status, short, long)
 
 	runTime()
 }

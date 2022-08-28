@@ -73,6 +73,7 @@ Additional commands that can help clean up resources:
 		globalDdevDir := globalconfig.GetGlobalDdevDir()
 		_ = os.RemoveAll(filepath.Join(globalDdevDir, "testcache"))
 		_ = os.RemoveAll(filepath.Join(globalDdevDir, "bin"))
+		_ = os.RemoveAll(globalconfig.GetMutagenDataDirectory())
 
 		output.UserOut.Print("Deleting snapshots and downloads for selected projects...")
 		for _, project := range projects {
