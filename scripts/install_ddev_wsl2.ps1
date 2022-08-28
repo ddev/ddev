@@ -1,6 +1,12 @@
+# This PowerShell script tries to do almost all the things required to set up
+# an Ubuntu WSL2 instance for use with DDEV.
+# It requires that an Ubuntu wsl2 distro be installed already, preferably with `wsl --install`, but it can also be
+# done manually.
+# It requires that Docker Desktop is installed and running, and that it has integration enabled with the Ubuntu
+# distro, which is the default behavior.
+# Run this in an administrative PowerShell window.
 
 #Requires -RunAsAdministrator
-
 
 # Make sure wsl is installed and working
 if (-not(wsl -l -v)) {
@@ -35,5 +41,5 @@ wsl -u root bash -c "apt-get update >/dev/null && sudo apt-get install -y ddev"
 wsl bash -c 'echo $CAROOT'
 wsl -u root mkcert -install
 if (-not(wsl -e docker ps)) {
-    throw "docker does not seem to be working inside the WSL2 distro yet"
+    throw "docker does not seem to be working inside the WSL2 distro yet. Check Resources->WSL Integration in Docker Desktop"
 }
