@@ -97,7 +97,10 @@ Why do I see nginx headers when I'm configured to use `webserver_type: apache-fp
 
 Why does `ddev start` fail with "error while mounting volume, Permission denied"?
 : This almost always means that you have NFS enabled in your project, but NFS isn't working on your machine. Start by completely turning NFS off for your projects with `ddev config --nfs-mount-enabled=false && ddev config global --nfs-mount-enabled=false`. Then later, [go get NFS working](../install/performance.md#using-nfs-to-mount-the-project-into-the-web-container). NFS can be a big performance help on macOS and traditional Windows, and not needed on Linux or Windows WSL2.
-
+    
+How can I update DDEV?
+: It depends on how you installed DDEV. If you installed it with brew try `brew upgrade ddev`.
+    
 How can I install a specific version of DDEV?
 : If you want to use a different version of DDEV, you easily get a different version. If you're using homebrew, `brew unlink ddev` first, to get rid of the version you have there. Then use one of these options:
 
@@ -105,6 +108,7 @@ How can I install a specific version of DDEV?
     2. Use the [install_ddev.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh) script with the version number argument. For example, if you want v1.18.3-alpha1, use `curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash -s v1.18.3-alpha1`.
     3. On Debian/Ubuntu/WSL2 with DDEV installed via apt, you can `sudo apt update && sudo apt install ddev=<version>`, for example `sudo apt install ddev=1.21.1`.
     4. If you want the very latest, unreleased version of ddev, use `brew unlink ddev && brew install drud/ddev/ddev --HEAD`.
+
 
 How can I back up or restore all databases of all projects?
 : You can back up all projects that show in `ddev list` with `ddev snapshot -a`. This only snapshots projects that are shown in `ddev list` though, so if you have other projects that aren't shown, you'd need to start them so they'd be registered in `ddev list`.
