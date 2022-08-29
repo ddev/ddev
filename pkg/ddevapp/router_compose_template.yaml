@@ -1,4 +1,3 @@
-version: '{{ .compose_version }}'
 services:
   ddev-router:
     image: {{ .router_image }}:{{ .router_tag }}

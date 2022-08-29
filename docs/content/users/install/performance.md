@@ -126,7 +126,6 @@ Instructions for Mutagen and NFS are below.
     3. Add a `.ddev/docker-compose.bindmount.yaml` something like this:
 
     ```yaml
-    version: "3.6"
     services:
       web:
         volumes:

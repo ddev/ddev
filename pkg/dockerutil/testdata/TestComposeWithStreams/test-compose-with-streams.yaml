@@ -35,5 +35,3 @@ services:
       retries: 25
       start_period: 20s
       timeout: 120s
-
-version: '3.6'

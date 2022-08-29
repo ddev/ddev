@@ -1,7 +1,5 @@
 #ddev-generated
 
-version: '3.6'
-
 services:
   memcached:
     container_name: ddev-${DDEV_SITENAME}-memcached

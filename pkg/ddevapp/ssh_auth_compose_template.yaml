@@ -1,4 +1,3 @@
-version: '{{ .compose_version }}'
 volumes:
   dot_ssh:
     name: "ddev-ssh-agent_dot_ssh"

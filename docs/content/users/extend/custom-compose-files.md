@@ -21,8 +21,6 @@ To add custom configuration or additional services to your project, create docke
 * Expose an additional port 9999 to host port 9999, in a file perhaps called `docker-compose.ports.yaml`:
 
 ```yaml
-version: '3.6'
-
 services:
   someservice:
     ports:
@@ -32,8 +30,6 @@ services:
 That approach usually isn't sustainable because two projects might want to use the same port, so we *expose* the additional port (to the docker network) and then use the ddev-router to bind it to the host. This works only for services with an http API, but results in having both http and https ports (9998 and 9999).
 
 ```yaml
-version: '3.6'
-
 services:
     someservice:
         container_name: "ddev-${DDEV_SITENAME}-someservice"

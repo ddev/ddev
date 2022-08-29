@@ -1449,9 +1449,6 @@ func GetDockerVersion() (string, error) {
 // See https://github.com/drud/ddev/pull/738.. and regression https://github.com/drud/ddev/issues/1431
 var DockerComposeVersionConstraint = ">= 2.5.1"
 
-// DockerComposeFileFormatVersion is the compose version to be used
-var DockerComposeFileFormatVersion = "3.6"
-
 // GetDockerComposeVersion runs docker-compose -v to get the current version
 func GetDockerComposeVersion() (string, error) {
 	if globalconfig.DockerComposeVersion != "" {
