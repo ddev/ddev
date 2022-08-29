@@ -976,7 +976,11 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	if app.IsMutagenEnabled() {
 		if ok, info := CheckMutagenVolumeSyncCompatibility(app); !ok {
-			util.Warning("mutagen sync session and docker volume are incompatible: '%s', Removing docker volume %s", info, GetMutagenVolumeName(app))
+			util.Warning("mutagen sync session and docker volume are incompatible: '%s', Removing mutagen sync session '%s' and docker volume %s", info, MutagenSyncName(app.Name), GetMutagenVolumeName(app))
+			terminateErr := TerminateMutagenSync(app)
+			if terminateErr != nil {
+				util.Warning("Unable to terminate mutagen sync %s: %v", MutagenSyncName(app.Name), err)
+			}
 			removeVolumeErr := dockerutil.RemoveVolume(GetMutagenVolumeName(app))
 			if removeVolumeErr != nil {
 				return fmt.Errorf(`Unable to remove mismatched mutagen docker volume '%s'. Please use 'ddev mutagen reset': %v`, GetMutagenVolumeName(app), removeVolumeErr)
