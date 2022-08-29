@@ -686,3 +686,9 @@ func TerminateAllMutagenSync() {
 		util.Warning("could not terminate all mutagen sessions (mutagen sync terminate -a), output=%s, err=%v", out, err)
 	}
 }
+
+// GetDefaultMutagenVolumeSignature gets a new volume signature to be applied to mutagen volume
+func GetDefaultMutagenVolumeSignature(app *DdevApp) string {
+	now := time.Now()
+	return fmt.Sprintf("%s-%s", dockerutil.GetDockerHostID(), now.Format("20060102150405"))
+}
