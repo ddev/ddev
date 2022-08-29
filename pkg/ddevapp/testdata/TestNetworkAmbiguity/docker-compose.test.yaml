@@ -1,4 +1,3 @@
-version: "3.6"
 services:
   test:
     container_name: ddev-${DDEV_SITENAME}-test

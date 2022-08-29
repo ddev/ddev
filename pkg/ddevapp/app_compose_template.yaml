@@ -1,5 +1,4 @@
 name: ${COMPOSE_PROJECT_NAME}
-version: '{{ .ComposeVersion }}'
   {{ .DdevGenerated }}
 services:
   {{ if not .OmitDB }}
