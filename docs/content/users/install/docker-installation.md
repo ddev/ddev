@@ -62,6 +62,7 @@
 
     Most of the installation is the same as on Linux, but it can be summarized as:
 
+    * If you already have Docker Desktop installed, make sure to disable its integration with the WSL2 distro you're working with. In Resources->WSL Integration, turn off integration with the default distro and with your particular distro.
     * If you don't already have WSL2, install it with `wsl --install`, which will likely require a reboot.
     * `wsl --set-default-version 2`
     * Install a distro. Ubuntu 20.04 is recommended, `wsl -s Ubuntu-20.04`.
