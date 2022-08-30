@@ -19,7 +19,7 @@ func PowerOff() {
 		util.Warning("Failed removing custom certs: %v", err)
 	}
 
-	// Iterate through the list of apps built above, removing each one.
+	// Iterate through the list of apps built above, stopping each one.
 	for _, app := range apps {
 		if err := app.Stop(false, false); err != nil {
 			util.Failed("Failed to stop project %s: \n%v", app.GetName(), err)
@@ -27,7 +27,7 @@ func PowerOff() {
 		util.Success("Project %s has been stopped.", app.GetName())
 	}
 
-	TerminateAllMutagenSync()
+	StopMutagenDaemon()
 
 	if err := RemoveSSHAgentContainer(); err != nil {
 		util.Error("Failed to remove ddev-ssh-agent: %v", err)

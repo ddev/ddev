@@ -649,8 +649,6 @@ func CheckMutagenVolumeSyncCompatibility(app *DdevApp) (bool, string) {
 	volumeLabel, volumeLabelErr := GetMutagenVolumeLabel(app)
 	dockerHostID := dockerutil.GetDockerHostID()
 
-	util.Warning("CheckMutagenVolumeSyncCompatibility: mutagenLabel='%s', volumeLabel='%s', mutagenSyncLabelErr='%v', volumeLabelErr='%v' dockerHostID=%s", mutagenLabel, volumeLabel, mutagenSyncLabelErr, volumeLabelErr, dockerHostID)
-
 	switch {
 	// If there is no volume, everything is fine, proceed.
 	case volumeLabelErr != nil && errors.Is(docker.ErrNoSuchVolume, volumeLabelErr):
@@ -681,10 +679,16 @@ func GetMutagenSyncLabel(app *DdevApp) (string, error) {
 	return "", fmt.Errorf("sync session label not found for sync session %s", MutagenSyncName(app.Name))
 }
 
-// TerminateAllMutagenSync terminates all sessions that match our signature label
+// TerminateAllMutagenSync terminates all sync sessions
 func TerminateAllMutagenSync() {
-	out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "terminate", "--label-selector="+mutagenSignatureLabelName)
+	out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "terminate", "-a")
 	if err != nil {
-		util.Warning("could not terminate all mutagen sessions, output=%s, err=%v", out, err)
+		util.Warning("could not terminate all mutagen sessions (mutagen sync terminate -a), output=%s, err=%v", out, err)
 	}
+}
+
+// GetDefaultMutagenVolumeSignature gets a new volume signature to be applied to mutagen volume
+func GetDefaultMutagenVolumeSignature(app *DdevApp) string {
+	now := time.Now()
+	return fmt.Sprintf("%s-%s", dockerutil.GetDockerHostID(), now.Format("20060102150405"))
 }

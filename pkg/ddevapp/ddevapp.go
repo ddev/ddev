@@ -976,7 +976,11 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	if app.IsMutagenEnabled() {
 		if ok, info := CheckMutagenVolumeSyncCompatibility(app); !ok {
-			util.Warning("mutagen sync session and docker volume are incompatible: '%s', Removing docker volume %s", info, GetMutagenVolumeName(app))
+			util.Warning("mutagen sync session and docker volume are incompatible: '%s', Removing mutagen sync session '%s' and docker volume %s", info, MutagenSyncName(app.Name), GetMutagenVolumeName(app))
+			terminateErr := TerminateMutagenSync(app)
+			if terminateErr != nil {
+				util.Warning("Unable to terminate mutagen sync %s: %v", MutagenSyncName(app.Name), err)
+			}
 			removeVolumeErr := dockerutil.RemoveVolume(GetMutagenVolumeName(app))
 			if removeVolumeErr != nil {
 				return fmt.Errorf(`Unable to remove mismatched mutagen docker volume '%s'. Please use 'ddev mutagen reset': %v`, GetMutagenVolumeName(app), removeVolumeErr)
@@ -985,7 +989,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		// Make sure the mutagen sync volume exists. It's compatible if we found it above
 		// so we can keep it in that case.
 		if !dockerutil.VolumeExists(GetMutagenVolumeName(app)) {
-			_, err = dockerutil.CreateVolume(GetMutagenVolumeName(app), "local", nil, map[string]string{mutagenSignatureLabelName: GetDefaultVolumeSignature(app)})
+			_, err = dockerutil.CreateVolume(GetMutagenVolumeName(app), "local", nil, map[string]string{mutagenSignatureLabelName: GetDefaultMutagenVolumeSignature(app)})
 			if err != nil {
 				return fmt.Errorf("Unable to create new mutagen docker volume %s: %v", GetMutagenVolumeName(app), err)
 			}
@@ -2828,10 +2832,4 @@ func (app *DdevApp) CreateUploadDirIfNecessary() {
 			util.Warning("Unable to create upload directory %s: %v", app.GetHostUploadDirFullPath(), err)
 		}
 	}
-}
-
-// GetDefaultVolumeSignature gets a new volume signature to be applied especially to mutagen volume
-func GetDefaultVolumeSignature(app *DdevApp) string {
-	now := time.Now()
-	return fmt.Sprintf("%s-%d", dockerutil.GetDockerHostID(), now.Unix())
 }
