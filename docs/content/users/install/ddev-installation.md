@@ -2,17 +2,29 @@
 
 Docker or an alternative is required before anything will work with DDEV. This is pretty easy on most environments; see the [docker installation](docker-installation.md) page to help sort out the details.
 
+It's easiest to think of DDEV installation or upgrade as the installation of a single binary, the "ddev" binary. When you use DDEV, additional docker images will be downloaded, etc. DDEV tries to make it so you can use the most common installation technique on your system, so homebrew on macOS, `apt` on Linux including WSL2, chocolatey or installer on traditional Windows, etc.
+
 === "macOS"
 
     ## macOS
 
     ### Homebrew
 
-    For macOS (both amd64 and arm64) users, [Homebrew](https://brew.sh/) is the easiest way to install and maintain DDEV: `brew install drud/ddev/ddev`.
+    For macOS (both amd64 and arm64) users, [Homebrew](https://brew.sh/) is the easiest way to install and upgrade DDEV: 
+
+    ```bash
+    brew install drud/ddev/ddev`
+    ```
+
+    ```bash
+    brew upgrade ddev`
+    ```
     
-    As a one-time initialization, run `mkcert -install`.
-    
-    Later, to upgrade to a newer version of DDEV-Local, run `brew upgrade ddev`.
+    As a one-time initialization, run 
+
+    ```bash
+    mkcert -install`
+    ```
 
     ### install_ddev.sh install script
 
@@ -27,7 +39,7 @@ Docker or an alternative is required before anything will work with DDEV. This i
     The installation script can also take a version argument in order to install a specific version or a prerelease version. For example,
 
     ```
-    curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash -s v1.19.2
+    curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash -s v1.19.5
     ```
 
     To upgrade DDEV to the latest stable version, just run the script again.
@@ -48,7 +60,11 @@ Docker or an alternative is required before anything will work with DDEV. This i
     sudo apt update && sudo apt install -y ddev
     ```
   
-    To update use the normal update commands `sudo apt update && sudo apt upgrade`.
+    To update use the normal update commands:
+
+    ```bash
+    sudo apt update && sudo apt upgrade`.
+    ```
 
     If you previously used `install_ddev.sh` to install DDEV, you can just `sudo rm -f /usr/local/bin/ddev /usr/local/bin/mkcert /usr/local/bin/*ddev_nfs_setup.sh` to remove the previous version. If you previously used homebrew to install DDEV, you can just `brew unlink ddev` to get rid of the homebrew version.
 
@@ -68,19 +84,23 @@ Docker or an alternative is required before anything will work with DDEV. This i
 
     ### Arch systems
 
-    For Arch-based systems including `Arch Linux`, `EndeavourOS` and `Manjaro` we maintain the [ddev-bin](https://aur.archlinux.org/packages/ddev-bin/) package in AUR.
+    For Arch-based systems including `Arch Linux`, `EndeavourOS` and `Manjaro` we maintain the [ddev-bin](https://aur.archlinux.org/packages/ddev-bin/) package in AUR. To install use `yay -S ddev` or whatever other AUR tool you use; to upgrade `yay -Syu ddev`.
 
     As a one-time initialization, run `mkcert -install`.
 
     ### Alternate installation approaches: homebrew and install_ddev.sh script
 
-    You can also use the [homebrew](#homebrew) and [install_ddev.sh script](install-ddev) techniques exactly on macOS.
+    You can also use the [homebrew](#homebrew) and [install_ddev.sh script](#install_ddev.sh-install-script) techniques exactly on macOS to install or upgrade DDEV on Linux.
 
 === "Windows WSL2"
 
     ## Windows WSL2
 
-    **This is the recommended installation method for all Windows users**.
+    Windows WSL2 is a fantastic way to run DDEV and your web components. It's Linux, which means a different experience for many Windows users. It's Ubuntu Linux by default as described here, so it's worth taking a little time to explore how Ubuntu and bash work, including standard system commands and installation and upgrade procedures.
+
+    **WSL2 is the recommended installation method for all Windows users**.
+
+     **Using WSL2 to install and run DDEV is not the same as using Docker Desktop's WSL2 engine, which itself runs in WSL2, but can serve applications running in both traditional WIndows and inside WSL2.**
 
     **All Windows 10/11 editions (including Windows 10 Home) support WSL2**. If you're already familiar with DDEV on Windows, you might have been using NFS for better filesystem performance. **You won't need NFS anymore once you switch to WSL2**, since it provides awesome filesystem performance out of the box.
 
@@ -117,7 +137,8 @@ Docker or an alternative is required before anything will work with DDEV. This i
     14. In WSL2 run `mkcert -install`.
 
     That's it! You have now installed DDEV on WSL2. If you're using WSL2 for DDEV (recommended), remember to run all `ddev` commands inside the WSL2 distro.
-    Follow the instructions in the `Linux apt/yum` section.
+    
+    To upgrade DDEV in WSL2 Ubuntu, use `apt upgrade ddev` as described in the [Linux installation section](#apt-packages-for-Debian-based-systems).
 
     !!!warning "Projects go in /home, not on the Windows filesystem"
         Make sure you put your projects in the Linux filesystem (e.g. `/home/<your_username>`), **not** in the Windows filesystem (`/mnt/c`), because you'll get vastly superior performance on the Linux filesystem. You will be very unhappy if you put your project in `/mnt/c`.
