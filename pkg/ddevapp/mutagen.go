@@ -313,14 +313,14 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 	syncName := MutagenSyncName(app.Name)
 
 	mutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
-	fullJSONResult, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list", "--template", `{{ json (index . 0) }}`, syncName)
+	fullJSONResult, err := exec.RunHostCommandSeparateStreams(globalconfig.GetMutagenPath(), "sync", "list", "--template", `{{ json (index . 0) }}`, syncName)
 	if err != nil {
 		return fmt.Sprintf("nosession for MUTAGEN_DATA_DIRECTORY=%s", mutagenDataDirectory), fullJSONResult, nil, err
 	}
 	session := make(map[string]interface{})
 	err = json.Unmarshal([]byte(fullJSONResult), &session)
 	if err != nil {
-		return fmt.Sprintf("nosession for MUTAGEN_DATA_DIRECTORY=%s; failed to unmarshall mutagen result", mutagenDataDirectory), fullJSONResult, nil, err
+		return fmt.Sprintf("nosession for MUTAGEN_DATA_DIRECTORY=%s; failed to unmarshall mutagen sync list results", mutagenDataDirectory), fullJSONResult, nil, err
 	}
 
 	if paused, ok := session["paused"].(bool); ok && paused == true {
