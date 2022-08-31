@@ -399,17 +399,21 @@ func (app *DdevApp) MutagenSyncFlush() error {
 		if !MutagenSyncExists(app) {
 			return errors.Errorf("Mutagen sync session '%s' does not exist", syncName)
 		}
-		status, _, _, err := app.MutagenStatus()
-		if err == nil && status != "paused" && status != "failing" {
-			out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "flush", syncName)
-			if err != nil {
-				return fmt.Errorf("mutagen sync flush %s failed, output=%s, err=%v", syncName, out, err)
+		if status, shortResult, _, err := app.MutagenStatus(); err == nil {
+			switch status {
+			case "paused":
+				fallthrough
+			case "failing":
+				util.Warning("mutagen sync session %s has status %s: shortResult='%v', err=%v", syncName, status, shortResult, err)
+			default:
+				out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "flush", syncName)
+				if err != nil {
+					return fmt.Errorf("mutagen sync flush %s failed, output=%s, err=%v", syncName, out, err)
+				}
 			}
-		} else {
-			util.Warning("app.MutagenStatus() returned %v", err)
 		}
 
-		status, _, _, err = app.MutagenStatus()
+		status, _, _, err := app.MutagenStatus()
 		if (status != "ok" && status != "problems" && status != "paused" && status != "failing") || err != nil {
 			return err
 		}
