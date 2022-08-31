@@ -975,18 +975,20 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	if app.IsMutagenEnabled() {
-		if ok, info := CheckMutagenVolumeSyncCompatibility(app); !ok {
-			util.Warning("mutagen sync session and docker volume are incompatible: '%s', Removing mutagen sync session '%s' and docker volume %s", info, MutagenSyncName(app.Name), GetMutagenVolumeName(app))
+		if ok, volumeExists, info := CheckMutagenVolumeSyncCompatibility(app); !ok {
+			util.Debug("mutagen sync session and docker volume are in incompatible status: '%s', Removing mutagen sync session '%s' and docker volume %s", info, MutagenSyncName(app.Name), GetMutagenVolumeName(app))
 			terminateErr := TerminateMutagenSync(app)
 			if terminateErr != nil {
 				util.Warning("Unable to terminate mutagen sync %s: %v", MutagenSyncName(app.Name), err)
 			}
-			removeVolumeErr := dockerutil.RemoveVolume(GetMutagenVolumeName(app))
-			if removeVolumeErr != nil {
-				return fmt.Errorf(`Unable to remove mismatched mutagen docker volume '%s'. Please use 'ddev mutagen reset': %v`, GetMutagenVolumeName(app), removeVolumeErr)
+			if volumeExists {
+				removeVolumeErr := dockerutil.RemoveVolume(GetMutagenVolumeName(app))
+				if removeVolumeErr != nil {
+					return fmt.Errorf(`Unable to remove mismatched mutagen docker volume '%s'. Please use 'ddev mutagen reset': %v`, GetMutagenVolumeName(app), removeVolumeErr)
+				}
 			}
 		}
-		// Make sure the mutagen sync volume exists. It's compatible if we found it above
+		// Check again to make sure the mutagen docker volume exists. It's compatible if we found it above
 		// so we can keep it in that case.
 		if !dockerutil.VolumeExists(GetMutagenVolumeName(app)) {
 			_, err = dockerutil.CreateVolume(GetMutagenVolumeName(app), "local", nil, map[string]string{mutagenSignatureLabelName: GetDefaultMutagenVolumeSignature(app)})
@@ -1321,9 +1323,7 @@ func (app *DdevApp) PullContainerImages() error {
 		if err != nil {
 			return err
 		}
-		if globalconfig.DdevDebug {
-			output.UserOut.Printf("Pulling image for %s", i)
-		}
+		util.Debug("Pulling image for %s", i)
 	}
 
 	return nil
@@ -1345,9 +1345,7 @@ func (app *DdevApp) PullBaseContainerImages() error {
 		if err != nil {
 			return err
 		}
-		if globalconfig.DdevDebug {
-			output.UserOut.Printf("Pulling image for %s", i)
-		}
+		util.Debug("Pulling image for %s", i)
 	}
 
 	return nil
