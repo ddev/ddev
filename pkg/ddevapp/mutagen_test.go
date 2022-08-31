@@ -48,6 +48,7 @@ func TestMutagenSimple(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
+		runTime()
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 		err = app.Stop(true, false)
@@ -136,5 +137,18 @@ func TestMutagenSimple(t *testing.T) {
 	assert.NoError(err, "could not run mutagen sync list: status=%s short=%s, long=%s, err=%v", status, short, long, err)
 	assert.Equal("ok", status, "wrong status: status=%s short=%s, long=%s", status, short, long)
 
-	runTime()
+	// Make sure mutagen daemon gets stopped on poweoff
+	ddevapp.PowerOff()
+	if runtime.GOOS == "darwin" || runtime.GOOS == "linux" {
+		// Verify that the mutagen daemon stopped/died
+		sleepWait := time.Second * 1
+		if runtime.GOOS == "linux" {
+			sleepWait = time.Second * 5
+		}
+		time.Sleep(sleepWait)
+		// pkill -HUP just checks for process existence.
+		_, err := exec.RunHostCommand("pkill", "-HUP", "mutagen")
+		assert.Error(err)
+	}
+
 }
