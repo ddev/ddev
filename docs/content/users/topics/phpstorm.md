@@ -2,7 +2,11 @@
 
 ## Full Integration with Docker, DDEV, and PhpStorm
 
-For full integration of PhpStorm and DDEV, it's easiest to use the [DDEV Integration Plugin](https://plugins.jetbrains.com/plugin/18813-ddev-integration) or in `Preferences -> Plugins -> Marketplace` search for `DDEV`. That does almost all of what is discussed here automatically, and works on all platforms. The only thing it doesn't currently do is set up `phpunit`.
+For full integration of PhpStorm and DDEV, it's easiest to use the [DDEV Integration Plugin](https://plugins.jetbrains.com/plugin/18813-ddev-integration) or in `Preferences -> Plugins -> Marketplace` search for `DDEV`. That does almost all of what is discussed here automatically, and works on all platforms. The only thing it doesn't currently do is set up `phpunit`, and it doesn't point docker-compose correctly.
+
+For any setup, including the [DDEV Integration Plugin](https://plugins.jetbrains.com/plugin/18813-ddev-integration):
+
+1. In Preferences->Build, Execution, Deployment->Docker->Tools, set the docker-compose executable to DDEV's private docker-compose, `<your-home-directory>/.ddev/bin/docker-compose`. If you're using WSL2 and running PhpStorm on the Windows side, PhpStorm can't use docker-compose from WSL2, so at least configure Docker Desktop in Settings->General to "Use Docker Compose V2" and use a recent version of Docker Desktop.
 
 ### Requirements
 
