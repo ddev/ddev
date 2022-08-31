@@ -336,9 +336,9 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 	var ok bool
 	if shortResult, ok = session["status"].(string); !ok {
 		return "failing", shortResult, session, fmt.Errorf("mutagen sessions may be in invalid state, please `ddev mutagen reset`")
-	} else {
-		shortResult = session["status"].(string)
 	}
+	shortResult = session["status"].(string)
+
 	// In the odd case where somebody enabled mutagen when it wasn't actually running
 	// show a simpler result
 	mounted, err := IsMutagenVolumeMounted(app)
