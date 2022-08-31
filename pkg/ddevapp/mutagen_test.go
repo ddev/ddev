@@ -52,8 +52,6 @@ func TestMutagenSimple(t *testing.T) {
 		assert.NoError(err)
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		err = ddevapp.TerminateMutagenSync(app)
-		assert.NoError(err)
 		assert.False(dockerutil.VolumeExists(ddevapp.GetMutagenVolumeName(app)))
 	})
 	err = app.Start()

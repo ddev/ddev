@@ -281,8 +281,11 @@ func mutagenSyncSessionExists(app *DdevApp) (bool, error) {
 	syncName := MutagenSyncName(app.Name)
 	res, err := exec.RunHostCommandSeparateStreams(globalconfig.GetMutagenPath(), "sync", "list", "--template", "{{ json (index . 0) }}", syncName)
 	if err != nil {
-		if strings.Contains(res, "did not match any sessions") {
-			return false, nil
+		if exitError, ok := err.(*osexec.ExitError); ok {
+			// If we got an error, but it's that there were no sessions, return false, no err
+			if strings.Contains(string(exitError.Stderr), "did not match any sessions") {
+				return false, nil
+			}
 		}
 		return false, err
 	}
@@ -315,7 +318,11 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 	mutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
 	fullJSONResult, err := exec.RunHostCommandSeparateStreams(globalconfig.GetMutagenPath(), "sync", "list", "--template", `{{ json (index . 0) }}`, syncName)
 	if err != nil {
-		return fmt.Sprintf("nosession for MUTAGEN_DATA_DIRECTORY=%s", mutagenDataDirectory), fullJSONResult, nil, err
+		stderr := ""
+		if exitError, ok := err.(*osexec.ExitError); ok {
+			stderr = string(exitError.Stderr)
+		}
+		return fmt.Sprintf("nosession for MUTAGEN_DATA_DIRECTORY=%s", mutagenDataDirectory), fullJSONResult, nil, fmt.Errorf("failed to mutagen sync list %s: stderr='%s', err=%v", syncName, stderr, err)
 	}
 	session := make(map[string]interface{})
 	err = json.Unmarshal([]byte(fullJSONResult), &session)
