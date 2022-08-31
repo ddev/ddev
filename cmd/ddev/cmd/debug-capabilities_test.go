@@ -18,7 +18,7 @@ func TestDebugCapabilitiesCmd(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(out, "multiple-dockerfiles")
 
-	out, err = exec.RunHostCommand(DdevBin, "debug", "-j", "capabilities")
+	out, err = exec.RunHostCommandSeparateStreams(DdevBin, "debug", "-j", "capabilities")
 	assert.NoError(err)
 
 	jsonCapabilities := make(map[string]interface{})

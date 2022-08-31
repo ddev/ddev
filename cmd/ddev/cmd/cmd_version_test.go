@@ -19,7 +19,7 @@ func TestCmdVersion(t *testing.T) {
 	versionData := make(map[string]interface{})
 
 	args := []string{"version", "--json-output"}
-	out, err := exec.RunCommand(DdevBin, args)
+	out, err := exec.RunHostCommandSeparateStreams(DdevBin, args...)
 	assert.NoError(err)
 	err = json.Unmarshal([]byte(out), &versionData)
 	require.NoError(t, err, "failed to unmarshall version output '%v'", out)
