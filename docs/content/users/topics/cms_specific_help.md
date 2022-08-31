@@ -20,6 +20,11 @@ This really helps new users and people who are kicking the tires on a CMS. Plus 
 ### Drupal Specifics
 
 * **Settings Files**: By default, DDEV will create settings files for your project that make it "just work" out of the box. It creates a `sites/default/settings.ddev.php` and adds an include in `sites/default/settings.php` to bring that in. There are guards to prevent the `settings.ddev.php` from being active when the project is not running under DDEV, but it still should not be checked in and is gitignored.
+* **Twig Debugging**: With the default Drupal configuration, it's very difficult to debug Twig templates; you need to use `development.services.yml` instead of `services.yml`. Add this line in your `settings.php` or `settings.local.php`. See discussion at [drupal.org](https://www.drupal.org/forum/support/module-development-and-code-questions/2019-09-02/ddev-twig-debugging) and of course the Drupal documentation.
+
+```php
+$settings['container_yamls'][] = DRUPAL_ROOT . '/sites/development.services.yml';
+```
 
 ### TYPO3 Specifics
 
