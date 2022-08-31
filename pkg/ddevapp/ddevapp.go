@@ -1243,9 +1243,9 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 		dur := util.FormatDuration(mutagenDuration())
 		if mStatus == "ok" {
-			util.Success("Mutagen sync flush completed in %s.\nFor details on sync status 'ddev mutagen status %s -l'", dur, MutagenSyncName(app.Name))
+			util.Success("Mutagen sync flush completed in %s.\nFor details on sync status 'ddev mutagen st %s -l'", dur, MutagenSyncName(app.Name))
 		} else {
-			util.Error("Mutagen sync completed with problems in %s.\nFor details on sync status 'ddev mutagen status %s -l'", dur, MutagenSyncName(app.Name))
+			util.Error("Mutagen sync completed with problems in %s.\nFor details on sync status 'ddev mutagen st %s -l'", dur, MutagenSyncName(app.Name))
 		}
 	}
 

@@ -13,6 +13,7 @@ import (
 var MutagenStatusCmd = &cobra.Command{
 	Use:     "status",
 	Short:   "Shows mutagen sync status",
+	Aliases: []string{"st"},
 	Example: `"ddev mutagen status", "ddev mutagen status <projectname>"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		projectName := ""
