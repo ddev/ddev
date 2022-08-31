@@ -4,10 +4,7 @@
       "pattern": "^https*://127.0.0.1"
     },
     {
-      "pattern": "^https://www.drupal.org/slack"
-    },
-    {
-      "pattern": "^https://www.drupal.org/(u|project|about)"
+      "pattern": "^https://www.drupal.org/(u|project|about|forum|slack)"
     },
     {
       "pattern": "^https://nssm.cc/"
