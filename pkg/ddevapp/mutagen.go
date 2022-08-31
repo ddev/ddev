@@ -279,7 +279,7 @@ func ResumeMutagenSync(app *DdevApp) error {
 // if it finds one with invalid label, it destroys the existing session.
 func mutagenSyncSessionExists(app *DdevApp) (bool, error) {
 	syncName := MutagenSyncName(app.Name)
-	res, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list", "--template", "{{ json (index . 0) }}", syncName)
+	res, err := exec.RunHostCommandSeparateStreams(globalconfig.GetMutagenPath(), "sync", "list", "--template", "{{ json (index . 0) }}", syncName)
 	if err != nil {
 		if strings.Contains(res, "did not match any sessions") {
 			return false, nil
@@ -289,7 +289,7 @@ func mutagenSyncSessionExists(app *DdevApp) (bool, error) {
 	session := make(map[string]interface{})
 	err = json.Unmarshal([]byte(res), &session)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("failed to unmarshall mutagen sync list results '%v': %v", res, err)
 	}
 
 	// Find out if mutagen session labels has label we found in docker volume
@@ -320,7 +320,7 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 	session := make(map[string]interface{})
 	err = json.Unmarshal([]byte(fullJSONResult), &session)
 	if err != nil {
-		return fmt.Sprintf("nosession for MUTAGEN_DATA_DIRECTORY=%s; failed to unmarshall mutagen sync list results", mutagenDataDirectory), fullJSONResult, nil, err
+		return fmt.Sprintf("nosession for MUTAGEN_DATA_DIRECTORY=%s; failed to unmarshall mutagen sync list results '%v'", mutagenDataDirectory, fullJSONResult), fullJSONResult, nil, err
 	}
 
 	if paused, ok := session["paused"].(bool); ok && paused == true {

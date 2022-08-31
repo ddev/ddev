@@ -23,7 +23,7 @@ func TestDebugCapabilitiesCmd(t *testing.T) {
 
 	jsonCapabilities := make(map[string]interface{})
 	err = json.Unmarshal([]byte(out), &jsonCapabilities)
-	require.NoError(t, err)
+	require.NoError(t, err, "failed to unmarshall json capabilities '%v', out")
 	caps, ok := jsonCapabilities["raw"]
 	require.True(t, ok, "raw section wasn't found in jsonCapabilities: %v", out)
 	sArr := []string{}
