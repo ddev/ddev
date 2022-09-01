@@ -79,7 +79,7 @@ var DebugDockercheckCmd = &cobra.Command{
 			util.Success("Able to run simple container that mounts a volume.")
 		}
 
-		_, _, err = dockerutil.RunSimpleContainer(versionconstants.GetWebImage(), "", []string{"curl", "-sLI", "https://google.com"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-globa-cache"}, uid, true, false, nil)
+		_, _, err = dockerutil.RunSimpleContainer(versionconstants.GetWebImage(), "", []string{"curl", "-sfLI", "https://google.com"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-globa-cache"}, uid, true, false, nil)
 		if err != nil {
 			util.Warning("Unable to run use internet inside container, many things will fail: %v", err)
 		} else {
