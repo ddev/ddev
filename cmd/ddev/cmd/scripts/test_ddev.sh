@@ -49,14 +49,7 @@ echo "DOCKER_DEFAULT_PLATFORM=${DOCKER_DEFAULT_PLATFORM:-notset}"
 echo "======= Mutagen Info ========="
 if [ -f ~/.ddev/bin/mutagen ]; then
   echo "Mutagen is installed in ddev, version=$(~/.ddev/bin/mutagen version)"
-  ~/.ddev/bin/mutagen sync list
-fi
-if command -v mutagen >/dev/null ; then
-  echo "mutagen additionally installed in PATH at $(command -v mutagen), version $(mutagen version)"
-fi
-if killall -0 mutagen 2>/dev/null; then
-  echo "mutagen is running on this system:"
-  ps -ef | grep mutagen
+  MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory/ ~/.ddev/bin/mutagen sync list -l
 fi
 
 echo "======= Docker Info ========="
@@ -124,7 +117,7 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "======== Project ownership on host:"
-ls -ld ~/tmp/${PROJECT_NAME}
+ls -ld ${PROJECT_DIR}
 echo "======== Project ownership in container:"
 ddev exec ls -ld /var/www/html
 echo "======== In-container filesystem:"
