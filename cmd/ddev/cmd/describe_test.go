@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/stretchr/testify/require"
 	"runtime"
@@ -207,7 +208,7 @@ func unmarshalJSONLogs(in string) ([]log.Fields, error) {
 			data := make(log.Fields, 4)
 			err := json.Unmarshal([]byte(logLine), &data)
 			if err != nil {
-				return []log.Fields{}, err
+				return []log.Fields{}, fmt.Errorf("failed to unmarshall logLine='%v'", logLine)
 			}
 			logData = append(logData, data)
 		}

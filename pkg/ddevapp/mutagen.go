@@ -279,17 +279,20 @@ func ResumeMutagenSync(app *DdevApp) error {
 // if it finds one with invalid label, it destroys the existing session.
 func mutagenSyncSessionExists(app *DdevApp) (bool, error) {
 	syncName := MutagenSyncName(app.Name)
-	res, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list", "--template", "{{ json (index . 0) }}", syncName)
+	res, err := exec.RunHostCommandSeparateStreams(globalconfig.GetMutagenPath(), "sync", "list", "--template", "{{ json (index . 0) }}", syncName)
 	if err != nil {
-		if strings.Contains(res, "did not match any sessions") {
-			return false, nil
+		if exitError, ok := err.(*osexec.ExitError); ok {
+			// If we got an error, but it's that there were no sessions, return false, no err
+			if strings.Contains(string(exitError.Stderr), "did not match any sessions") {
+				return false, nil
+			}
 		}
 		return false, err
 	}
 	session := make(map[string]interface{})
 	err = json.Unmarshal([]byte(res), &session)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("failed to unmarshall mutagen sync list results '%v': %v", res, err)
 	}
 
 	// Find out if mutagen session labels has label we found in docker volume
@@ -313,24 +316,29 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 	syncName := MutagenSyncName(app.Name)
 
 	mutagenDataDirectory := os.Getenv("MUTAGEN_DATA_DIRECTORY")
-	fullJSONResult, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list", "--template", `{{ json (index . 0) }}`, syncName)
+	fullJSONResult, err := exec.RunHostCommandSeparateStreams(globalconfig.GetMutagenPath(), "sync", "list", "--template", `{{ json (index . 0) }}`, syncName)
 	if err != nil {
-		return fmt.Sprintf("nosession for MUTAGEN_DATA_DIRECTORY=%s", mutagenDataDirectory), fullJSONResult, nil, err
+		stderr := ""
+		if exitError, ok := err.(*osexec.ExitError); ok {
+			stderr = string(exitError.Stderr)
+		}
+		return fmt.Sprintf("nosession for MUTAGEN_DATA_DIRECTORY=%s", mutagenDataDirectory), fullJSONResult, nil, fmt.Errorf("failed to mutagen sync list %s: stderr='%s', err=%v", syncName, stderr, err)
 	}
 	session := make(map[string]interface{})
 	err = json.Unmarshal([]byte(fullJSONResult), &session)
 	if err != nil {
-		return fmt.Sprintf("nosession for MUTAGEN_DATA_DIRECTORY=%s; failed to unmarshall mutagen result", mutagenDataDirectory), fullJSONResult, nil, err
+		return fmt.Sprintf("nosession for MUTAGEN_DATA_DIRECTORY=%s; failed to unmarshall mutagen sync list results '%v'", mutagenDataDirectory, fullJSONResult), fullJSONResult, nil, err
 	}
 
 	if paused, ok := session["paused"].(bool); ok && paused == true {
 		return "paused", "paused", session, nil
 	}
 	var ok bool
-	mutagenStatus := ""
-	if mutagenStatus, ok = session["status"].(string); !ok {
-		return "failing", mutagenStatus, session, fmt.Errorf("mutagen sessions may be in invalid state, please `ddev mutagen reset`")
+	if shortResult, ok = session["status"].(string); !ok {
+		return "failing", shortResult, session, fmt.Errorf("mutagen sessions may be in invalid state, please `ddev mutagen reset`")
 	}
+	shortResult = session["status"].(string)
+
 	// In the odd case where somebody enabled mutagen when it wasn't actually running
 	// show a simpler result
 	mounted, err := IsMutagenVolumeMounted(app)
@@ -359,12 +367,14 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 	// We're going to assume that if it's applying changes things are still OK,
 	// even though there may be a whole list of problems.
 	// States from json are in https://github.com/mutagen-io/mutagen/blob/bc07f2f0f3f0aba0aff0514bd4739d75444091fe/pkg/synchronization/state.go#L47-L79
-	switch mutagenStatus {
+	switch shortResult {
 	case "paused":
 		return "paused", shortResult, session, nil
 	case "transitioning":
 		fallthrough
 	case "staging-alpha":
+		fallthrough
+	case "connecting-beta":
 		fallthrough
 	case "staging-beta":
 		fallthrough
@@ -392,17 +402,22 @@ func (app *DdevApp) MutagenSyncFlush() error {
 		if !MutagenSyncExists(app) {
 			return errors.Errorf("Mutagen sync session '%s' does not exist", syncName)
 		}
-		status, _, _, err := app.MutagenStatus()
-		if err == nil && status != "paused" && status != "failing" {
-			out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "flush", syncName)
-			if err != nil {
-				return fmt.Errorf("mutagen sync flush %s failed, output=%s, err=%v", syncName, out, err)
+		if status, shortResult, session, err := app.MutagenStatus(); err == nil {
+			switch status {
+			case "paused":
+				util.Debug("mutagen sync %s is paused, so not flushing", syncName)
+				return nil
+			case "failing":
+				util.Warning("mutagen sync session %s has status '%s': shortResult='%v', err=%v, session contents='%v'", syncName, status, shortResult, err, session)
+			default:
+				out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "flush", syncName)
+				if err != nil {
+					return fmt.Errorf("mutagen sync flush %s failed, output=%s, err=%v", syncName, out, err)
+				}
 			}
-		} else {
-			util.Warning("app.MutagenStatus() returned %v", err)
 		}
 
-		status, _, _, err = app.MutagenStatus()
+		status, _, _, err := app.MutagenStatus()
 		if (status != "ok" && status != "problems" && status != "paused" && status != "failing") || err != nil {
 			return err
 		}
@@ -644,24 +659,36 @@ func GetMutagenVolumeLabel(app *DdevApp) (string, error) {
 //   - Volume has a label that is not based on this docker context.
 //
 // Return ok, info, where ok true if compatible, info gives reasoning
-func CheckMutagenVolumeSyncCompatibility(app *DdevApp) (bool, string) {
-	mutagenLabel, mutagenSyncLabelErr := GetMutagenSyncLabel(app)
+func CheckMutagenVolumeSyncCompatibility(app *DdevApp) (ok bool, volumeExists bool, info string) {
+	mutagenSyncExists := MutagenSyncExists(app)
 	volumeLabel, volumeLabelErr := GetMutagenVolumeLabel(app)
 	dockerHostID := dockerutil.GetDockerHostID()
+	mutagenLabel := ""
+	var mutagenSyncLabelErr error
 
+	volumeExists = !(volumeLabelErr != nil && errors.Is(docker.ErrNoSuchVolume, volumeLabelErr))
+
+	if mutagenSyncExists {
+		mutagenLabel, mutagenSyncLabelErr = GetMutagenSyncLabel(app)
+		if mutagenSyncLabelErr != nil {
+			util.Warning("mutagen sync %s exists but unable to get label: %v", app.Name, mutagenSyncLabelErr)
+		}
+	}
 	switch {
 	// If there is no volume, everything is fine, proceed.
-	case volumeLabelErr != nil && errors.Is(docker.ErrNoSuchVolume, volumeLabelErr):
-		return true, "no docker volume yet created, so compatible"
+	case !volumeExists:
+		return true, volumeExists, "no docker volume exists, so compatible"
+	case mutagenSyncLabelErr != nil:
+		return false, volumeExists, "mutagen sync session exists but does not have label"
 	// If the labels do not have the current context as first part of label, we have trouble.
 	case !strings.HasPrefix(volumeLabel, dockerHostID) || !strings.HasPrefix(mutagenLabel, dockerHostID):
-		return false, fmt.Sprintf("volume label '%s' or sync label '%s' does not start with current dockerHostID (%s)", volumeLabel, mutagenLabel, dockerHostID)
+		return false, volumeExists, fmt.Sprintf("volume label '%s' or sync label '%s' does not start with current dockerHostID (%s)", volumeLabel, mutagenLabel, dockerHostID)
 	// if we have labels for both and they match, it's all fine.
-	case mutagenSyncLabelErr == nil && volumeLabelErr == nil && mutagenLabel != "" && mutagenLabel == volumeLabel:
-		return true, fmt.Sprintf("volume and mutagen sync session have the same label: %s", volumeLabel)
+	case mutagenLabel == volumeLabel:
+		return true, volumeExists, fmt.Sprintf("volume and mutagen sync session have the same label: %s", volumeLabel)
 	}
 
-	return false, fmt.Sprintf("CheckMutagenVolumeSyncCompatibility: currentDockerContext=%s mutagenLabel='%s', volumeLabel='%s', mutagenSyncLabelErr='%v', volumeLabelErr='%v'", dockerutil.DockerContext, mutagenLabel, volumeLabel, mutagenSyncLabelErr, volumeLabelErr)
+	return false, volumeExists, fmt.Sprintf("CheckMutagenVolumeSyncCompatibility: currentDockerContext=%s mutagenLabel='%s', volumeLabel='%s', mutagenSyncLabelErr='%v', volumeLabelErr='%v'", dockerutil.DockerContext, mutagenLabel, volumeLabel, mutagenSyncLabelErr, volumeLabelErr)
 }
 
 // GetMutagenSyncLabel gets the com.ddev.volume-signature label from an existing sync session

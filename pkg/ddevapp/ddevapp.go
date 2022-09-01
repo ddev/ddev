@@ -975,18 +975,20 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	if app.IsMutagenEnabled() {
-		if ok, info := CheckMutagenVolumeSyncCompatibility(app); !ok {
-			util.Warning("mutagen sync session and docker volume are incompatible: '%s', Removing mutagen sync session '%s' and docker volume %s", info, MutagenSyncName(app.Name), GetMutagenVolumeName(app))
+		if ok, volumeExists, info := CheckMutagenVolumeSyncCompatibility(app); !ok {
+			util.Debug("mutagen sync session and docker volume are in incompatible status: '%s', Removing mutagen sync session '%s' and docker volume %s", info, MutagenSyncName(app.Name), GetMutagenVolumeName(app))
 			terminateErr := TerminateMutagenSync(app)
 			if terminateErr != nil {
 				util.Warning("Unable to terminate mutagen sync %s: %v", MutagenSyncName(app.Name), err)
 			}
-			removeVolumeErr := dockerutil.RemoveVolume(GetMutagenVolumeName(app))
-			if removeVolumeErr != nil {
-				return fmt.Errorf(`Unable to remove mismatched mutagen docker volume '%s'. Please use 'ddev mutagen reset': %v`, GetMutagenVolumeName(app), removeVolumeErr)
+			if volumeExists {
+				removeVolumeErr := dockerutil.RemoveVolume(GetMutagenVolumeName(app))
+				if removeVolumeErr != nil {
+					return fmt.Errorf(`Unable to remove mismatched mutagen docker volume '%s'. Please use 'ddev mutagen reset': %v`, GetMutagenVolumeName(app), removeVolumeErr)
+				}
 			}
 		}
-		// Make sure the mutagen sync volume exists. It's compatible if we found it above
+		// Check again to make sure the mutagen docker volume exists. It's compatible if we found it above
 		// so we can keep it in that case.
 		if !dockerutil.VolumeExists(GetMutagenVolumeName(app)) {
 			_, err = dockerutil.CreateVolume(GetMutagenVolumeName(app), "local", nil, map[string]string{mutagenSignatureLabelName: GetDefaultMutagenVolumeSignature(app)})
@@ -1232,7 +1234,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 		err = CreateOrResumeMutagenSync(app)
 		if err != nil {
-			return fmt.Errorf("Failed to create mutagen sync session '%s'. You may be able to resolve this problem 'ddev mutagen reset' (err=%v)", MutagenSyncName(app.Name), err)
+			return fmt.Errorf("Failed to create mutagen sync session '%s'. You may be able to resolve this problem using 'ddev mutagen reset' (err=%v)", MutagenSyncName(app.Name), err)
 		}
 		mStatus, _, _, err := app.MutagenStatus()
 		if err != nil {
@@ -1241,9 +1243,9 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 		dur := util.FormatDuration(mutagenDuration())
 		if mStatus == "ok" {
-			util.Success("Mutagen sync flush completed in %s.\nFor details on sync status 'ddev mutagen status %s --verbose'", dur, MutagenSyncName(app.Name))
+			util.Success("Mutagen sync flush completed in %s.\nFor details on sync status 'ddev mutagen st %s -l'", dur, MutagenSyncName(app.Name))
 		} else {
-			util.Error("Mutagen sync completed with problems in %s.\nFor details on sync status 'ddev mutagen status %s --verbose'", dur, MutagenSyncName(app.Name))
+			util.Error("Mutagen sync completed with problems in %s.\nFor details on sync status 'ddev mutagen st %s -l'", dur, MutagenSyncName(app.Name))
 		}
 	}
 
@@ -1321,9 +1323,7 @@ func (app *DdevApp) PullContainerImages() error {
 		if err != nil {
 			return err
 		}
-		if globalconfig.DdevDebug {
-			output.UserOut.Printf("Pulling image for %s", i)
-		}
+		util.Debug("Pulling image for %s", i)
 	}
 
 	return nil
@@ -1345,9 +1345,7 @@ func (app *DdevApp) PullBaseContainerImages() error {
 		if err != nil {
 			return err
 		}
-		if globalconfig.DdevDebug {
-			output.UserOut.Printf("Pulling image for %s", i)
-		}
+		util.Debug("Pulling image for %s", i)
 	}
 
 	return nil

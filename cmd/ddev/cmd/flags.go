@@ -324,7 +324,7 @@ func (f *Flags) LoadFromJSON(data string) error {
 	// Import the JSON to the FlagsDefinition structure and return in case of
 	// error
 	if err = json.Unmarshal([]byte(data), &defs); err != nil {
-		return err
+		return fmt.Errorf("failed to json-unmarshall flags '%v': %v", data, err)
 	}
 
 	// Validate the user provided flags and return in case of error

@@ -66,3 +66,19 @@ func RunHostCommand(command string, args ...string) (string, error) {
 
 	return string(o), err
 }
+
+// RunHostCommandSeparateStreams executes a command on the host and returns the
+// stdout and error
+func RunHostCommandSeparateStreams(command string, args ...string) (string, error) {
+	if globalconfig.DdevVerbose {
+		output.UserOut.Printf("RunHostCommandSeparateStreams: " + command + " " + strings.Join(args, " "))
+	}
+	c := exec.Command(command, args...)
+	c.Stdin = os.Stdin
+	o, err := c.Output()
+	if globalconfig.DdevVerbose {
+		output.UserOut.Printf("RunHostCommandSeparateStreams returned. stdout=%v, err=%v", string(o), err)
+	}
+
+	return string(o), err
+}

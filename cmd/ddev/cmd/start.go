@@ -100,7 +100,8 @@ ddev start --all`,
 
 			output.UserOut.Printf("Starting %s...", project.GetName())
 			if err := project.Start(); err != nil {
-				util.Failed("Failed to start %s: %v", project.GetName(), err)
+				util.Error("Failed to start %s: %v", project.GetName(), err)
+				_ = project.Stop(false, false)
 				continue
 			}
 

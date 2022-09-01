@@ -18,12 +18,12 @@ func TestDebugCapabilitiesCmd(t *testing.T) {
 	assert.NoError(err)
 	assert.Contains(out, "multiple-dockerfiles")
 
-	out, err = exec.RunHostCommand(DdevBin, "debug", "-j", "capabilities")
+	out, err = exec.RunHostCommandSeparateStreams(DdevBin, "debug", "-j", "capabilities")
 	assert.NoError(err)
 
 	jsonCapabilities := make(map[string]interface{})
 	err = json.Unmarshal([]byte(out), &jsonCapabilities)
-	require.NoError(t, err)
+	require.NoError(t, err, "failed to unmarshall json capabilities '%v', out")
 	caps, ok := jsonCapabilities["raw"]
 	require.True(t, ok, "raw section wasn't found in jsonCapabilities: %v", out)
 	sArr := []string{}
