@@ -209,10 +209,12 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 
 		// If they have a new version (but not first-timer) then prompt to poweroff
 		if globalconfig.DdevGlobalConfig.LastStartedVersion != "v0.0" {
-			okPoweroff := util.Confirm("It looks like you have a new DDEV version. During an upgrade it's important to `ddev poweroff`. May I do `ddev poweroff` before continuing? This does no harm and loses no data.")
-			if globalconfig.DdevGlobalConfig.MutagenEnabledGlobal && fileutil.IsDirectory(filepath.Join(homedir.Dir(), ".mutagen")) {
-				output.UserOut.Print("Note that the global ~/.mutagen folder is no longer used by DDEV so you can delete it if you don't use it for other things")
+			output.UserOut.Print("Congratulations, you seem to have a new DDEV version.")
+			home, _ := homedir.Dir()
+			if globalconfig.DdevGlobalConfig.MutagenEnabledGlobal && fileutil.IsDirectory(filepath.Join(home, ".mutagen")) {
+				output.UserOut.Print("Please note that the global ~/.mutagen folder is no longer used by DDEV so you can delete it if it's no longer used by other applications")
 			}
+			okPoweroff := util.Confirm("It looks like you have a new DDEV version. During an upgrade it's important to `ddev poweroff`. May I do `ddev poweroff` before continuing? This does no harm and loses no data.")
 			if okPoweroff {
 				ddevapp.PowerOff()
 			}
