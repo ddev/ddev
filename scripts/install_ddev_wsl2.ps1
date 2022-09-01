@@ -5,6 +5,9 @@
 # It requires that Docker Desktop is installed and running, and that it has integration enabled with the Ubuntu
 # distro, which is the default behavior.
 # Run this in an administrative PowerShell window.
+# You can download, inspect, and run this, or run it directly with
+# Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
+# iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2.ps1'))
 
 #Requires -RunAsAdministrator
 
