@@ -29,7 +29,7 @@ if (-not(Get-Command docker 2>&1 ) -Or -Not(docker ps ) ) {
 
 $ErrorActionPreference = "Stop"
 # Install needed choco items
-choco install -y gsudo mkcert
+choco install -y ddev gsudo mkcert
 
 mkcert -install
 setx CAROOT "$(mkcert -CAROOT)"; If ($Env:WSLENV -notlike "*CAROOT/up:*") { setx WSLENV "CAROOT/up:$Env:WSLENV" }
