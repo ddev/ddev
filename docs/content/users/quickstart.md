@@ -558,3 +558,4 @@ ddev import-db <mydb.sql
 * Use `ddev import-db --target-db <some_database>` to import to a non-default database (other than the default "db" database). This will create the database if it doesn't exist already.
 * Use `ddev import-db --no-drop` to import without first emptying the database.
 * If a database already exists and the import does not specify dropping tables, the contents of the imported dumpfile will be *added* to the database. Most full database dumps do a table drop and create before loading, but if yours does not, you can drop all tables with `ddev stop --remove-data` before importing.
+* If imports are stalling or failing, make sure you have plenty of unused space (See [#3360](https://github.com/drud/ddev/issues/3360)). DDEV has no problems importing large databases (2G+), but importing requires lots of space. DDEV will show a warning on startup if unused space is getting low.
