@@ -446,7 +446,11 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	case (app.Type == "" || app.Type == nodeps.AppTypePHP) && (projectTypeArg == "" || projectTypeArg == detectedApptype): // Found an app, matches passed-in or no apptype passed
 		projectTypeArg = detectedApptype
 		app.Type = projectTypeArg
-		util.Success("Found a %s codebase at %s", detectedApptype, fullPath)
+		if app.Type == nodeps.AppTypePHP {
+			util.Success("Configuring unrecognized codebase as project type 'php' at %s", fullPath)
+		} else {
+			util.Success("Configuring a %s codebase with docroot '%s' at %s", detectedApptype, app.Docroot, fullPath)
+		}
 	case projectTypeArg != "": // apptype was passed, but we found no app at all
 		app.Type = projectTypeArg
 		util.Warning("You have specified a project type of %s but no project of that type is found in %s", projectTypeArg, fullPath)

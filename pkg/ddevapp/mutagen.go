@@ -397,7 +397,8 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 
 // MutagenSyncFlush performs a mutagen sync flush, waits for result, and checks for errors
 func (app *DdevApp) MutagenSyncFlush() error {
-	if app.IsMutagenEnabled() {
+	status, _ := app.SiteStatus()
+	if status == SiteRunning && app.IsMutagenEnabled() {
 		syncName := MutagenSyncName(app.Name)
 		if !MutagenSyncExists(app) {
 			return errors.Errorf("Mutagen sync session '%s' does not exist", syncName)

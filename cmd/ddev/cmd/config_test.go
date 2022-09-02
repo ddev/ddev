@@ -73,7 +73,7 @@ func TestConfigDescribeLocation(t *testing.T) {
 	})
 	out, err := exec.RunHostCommand(DdevBin, "config", "--docroot=.", "--project-name="+t.Name())
 	assert.NoError(err)
-	assert.Contains(string(out), "Found a php codebase")
+	assert.Contains(string(out), "Configuring unrecognized codebase as project type 'php'")
 
 	// Now see if we can detect it
 	out, err = exec.RunHostCommand(DdevBin, "config", "--show-config-location")
@@ -127,7 +127,7 @@ func TestConfigWithSitenameFlagDetectsDocroot(t *testing.T) {
 	defer func() {
 		_, _ = exec.RunCommand(DdevBin, []string{"delete", "-Oy", "config-with-sitename"})
 	}()
-	assert.Contains(string(out), "Found a drupal6 codebase", nodeps.AppTypeDrupal6)
+	assert.Contains(string(out), "Configuring a drupal6 codebase with docroot", nodeps.AppTypeDrupal6)
 }
 
 // TestConfigSetValues sets all available configuration values using command flags, then confirms that the
