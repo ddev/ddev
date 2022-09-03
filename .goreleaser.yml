@@ -237,6 +237,9 @@ brews:
 nfpms:
 - maintainer: Randy Fay
   license: "Apache 2"
+  homepage: https://github.com/drud/ddev
+  description: |
+    DDEV is an open source tool that makes it simple to get local website development environments up and running in minutes.
   formats:
   - deb
   - rpm
@@ -253,6 +256,9 @@ nfpms:
     dst:  /usr/share/zsh/vendor-completions/_ddev
     file_info:
       mode: 0644
+  suggests:
+    - bash-completion
+    - zsh-completions
   overrides:
     deb:
       dependencies:
