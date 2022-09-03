@@ -55,12 +55,12 @@ The easiest way to push Docker images is to use the GitHub Actions workflow, esp
 
 ### Prerelease tasks
 
-- [ ] Push the new version of drud/ddev-php-base
-- [ ] Update drud/ddev-webserver to use the new version of drud/ddev-php-base and push it with the proper tag
-- [ ] Make sure the version-history.md file is up to date.
-- [ ] Make sure the docker images for the new tag are all tagged and pushed.
-- [ ] Make sure the pkg/version/version.go is all set to point to the new images (and tests have been run)
-- [ ] Make sure you're about to create the right release tag.
+1. Push the new version of drud/ddev-php-base
+2. Update drud/ddev-webserver to use the new version of drud/ddev-php-base and push it with the proper tag
+3. Make sure the version-history.md file is up to date.
+4. Make sure the docker images for the new tag are all tagged and pushed.
+5. Make sure the pkg/version/version.go is all set to point to the new images (and tests have been run)
+6. Make sure you're about to create the right release tag.
 
 ### Actual release creation
 
