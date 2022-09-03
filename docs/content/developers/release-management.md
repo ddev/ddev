@@ -15,6 +15,7 @@
 * Apple signing and notarization requires two acces to the Localdev Foundation group on `https://developer.apple.com`. It's easy enough to add additional people.
 * Windows signging is an awkward process that requires a dongle. When the current signing certificate expires we definitely want the simpler approach.
 * Discord
+* Docker
 
 ### Actual secrets required
 
