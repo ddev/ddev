@@ -22,9 +22,12 @@
 
     1. Install colima with `brew install colima` using homebrew or see the other [installation options](https://github.com/abiosoft/colima/blob/main/docs/INSTALL.md).
     2. After installing DDEV configure your system to use mutagen, which is essential for DDEV with Colima, by running `ddev config global --mutagen-enabled`.
-    3. Start colima: `colima start --cpu 4 --memory 4 --dns=1.1.1.1` will set up a colima instance with 4 CPUs and 4GB of memory allocated and using DNS server 1.1.1.1 (Cloudflare). Your needs may vary. After the first start you can just use `colima start`. Use `colima start -e` to edit the configuration file. (Configuring the DNS server is critical if you're using Pantheon or other tenants of `storage.googleapis.com`.)
+    3. Start colima: `colima start --cpu 4 --memory 6 --disk 100 --dns=1.1.1.1` will set up a colima instance with 4 CPUs and 4GB of memory allocated and using DNS server 1.1.1.1 (Cloudflare). Your needs may vary. After the first start you can just use `colima start`. Use `colima start -e` to edit the configuration file. (Configuring the DNS server is critical if you're using Pantheon or other tenants of `storage.googleapis.com`.)
     4. `colima status` will show colima's status.
     5. After a computer restart you'll need to `colima start` again. This will eventually be automated in later versions of colima.
+    
+    !!!tip "Colima disk and memory allocation"
+        The suggested initial disk allocation for Colima above is quite large, but Colima currently has no way to increase the disk allocation. However, you can use `ddev clean` to reduce disk usage, and `docker rm -f $(docker ps -aq) && docker rmi -f $(docker images -q)` to kill off all disk images. If you do have to rebuild your colima from scratch, you'd use the technique described below for migrating from Docker Desktop.
 
     !!!warning "Docker contexts let the docker client point at the right docker server"
         Colima activates its own docker context in order to not conflict with Docker Desktop, so if you `docker context ls` you'll see a list of available contexts with currently active context indicated with an "\*" (which will be "colima" after you've started colima). You can change to the default (Docker Desktop) with `docker context use default` or change back with `docker context use colima`. This means you can actually run Docker Desktop and Colima at the same time... but be careful which context you're pointing at.
