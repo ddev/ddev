@@ -1,6 +1,22 @@
 # Release Management & Docker Images
 
+## Release process and tools
+
+* [Goreleaser Pro](https://goreleaser.com/pro/) is used to do the actual releasing using [.goreleaser.yml](https://github.com/drud/ddev/blob/master/.goreleaser.yml). Goreleaser Pro is a licensed product that requires a license key, which is in the GitHub Workflow configuration and is available in LastPass to DDEV maintainers who need it.
+* The [Master Build/Release Github Action](https://github.com/drud/ddev/blob/master/.github/workflows/master-build.yml) does the actual running of the goreleaser actions and provides the needed secrets.
+
 ## GitHub Actions Required Secrets
+
+### How to add new people to these accounts
+
+* AUR is Arch Linux User Repository. `ddev-bin` is at `https://aur.archlinux.org/packages/ddev-bin`. The current maintainer of this is @cweagans, who can add co-maintainers.
+* The [chocolatey](https://community.chocolatey.org/packages/ddev/) package. Additional maintainers can be added at [link](https://community.chocolatey.org/packages/ddev/1.21.1/ManagePackageOwners); they could then create tokens to push it.
+* GitHub requires write access to this repository, either via permissions on the repository or on the org.
+* Apple signing and notarization requires two acces to the Localdev Foundation group on `https://developer.apple.com`. It's easy enough to add additional people.
+* Windows signging is an awkward process that requires a dongle. When the current signing certificate expires we definitely want the simpler approach.
+* Discord
+
+### Actual secrets required
 
 <!-- markdown-link-check-disable-next-line -->
 The following “Repository secret” environment variables must be added to <https://github.com/drud/ddev/settings/secrets/actions>:
@@ -36,6 +52,25 @@ The following “Repository secret” environment variables must be added to <ht
 ## Pushing Docker Images with the GitHub Actions Workflow
 
 The easiest way to push Docker images is to use the GitHub Actions workflow, especially if the code for the image is already in the [drud/ddev](https://github.com/drud/ddev) repository.
+
+### Prerelease tasks
+
+- [ ] Push the new version of drud/ddev-php-base
+- [ ] Update drud/ddev-webserver to use the new version of drud/ddev-php-base and push it with the proper tag
+- [ ] Make sure the version-history.md file is up to date.
+- [ ] Make sure the docker images for the new tag are all tagged and pushed.
+- [ ] Make sure the pkg/version/version.go is all set to point to the new images (and tests have been run)
+- [ ] Make sure you're about to create the right release tag.
+
+### Actual release creation
+
+1. Create a release for the new version using the GitHub UI. It should be "prerelease" if it's an edge release. Use the right tag!
+2. Use the "Auto-generate release notes" option to get the commit list, then edit to add all the other necessary info.
+3. Verify that homebrew (linux and macOS) and Chocolatey and AUR are working correctly with the right versions
+
+## Pushing docker images with the GitHub Actions workflow
+
+The easiest way to push docker images is to use the GitHub Actions workflow, especially if the code for the image is already in the ddev repo.
 
 <!-- markdown-link-check-disable-next-line -->
 You can push an image at <https://github.com/drud/ddev/actions/workflows/push-tagged-image.yml>
