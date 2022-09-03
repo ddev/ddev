@@ -720,3 +720,11 @@ func GetDefaultMutagenVolumeSignature(app *DdevApp) string {
 	now := time.Now()
 	return fmt.Sprintf("%s-%s", dockerutil.GetDockerHostID(), now.Format("20060102150405"))
 }
+
+// CheckMutagenUploadDir just tells people if they are using mutagen without upload_dir
+func CheckMutagenUploadDir(app *DdevApp) {
+	if app.IsMutagenEnabled() && app.GetUploadDir() == "" {
+		util.Warning("You have mutagen enabled and your '%s' project type doesn't have an upload_dir set.", app.Type)
+		util.Warning("For faster startup and less disk usage,\nset upload_dir to where your user-generated files are stored.")
+	}
+}
