@@ -239,7 +239,7 @@ nfpms:
   license: "Apache 2"
   homepage: https://github.com/drud/ddev
   description: |
-    DDEV is an open source tool that makes it simple to get local website development environments up and running in minutes.
+    Open-source local web development tool
   formats:
   - deb
   - rpm
