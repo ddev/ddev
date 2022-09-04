@@ -220,7 +220,7 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err)
 	}
 
-	// Drupal types should only be available for type drupal*
+	// Drupal commands should only be available for type drupal
 	app.Type = nodeps.AppTypeDrupal9
 	_ = app.WriteConfig()
 	_, _ = exec.RunHostCommand(DdevBin)
@@ -232,7 +232,7 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err)
 	}
 
-	// Laravel types should only be available for type laravel
+	// Laravel commands should only be available for type laravel
 	app.Type = nodeps.AppTypeLaravel
 	_ = app.WriteConfig()
 	_, _ = exec.RunHostCommand(DdevBin)
@@ -243,7 +243,7 @@ func TestCustomCommands(t *testing.T) {
 		assert.NoError(err)
 	}
 
-	// WordPress types should only be available for type drupal*
+	// WordPress commands should only be available for type wordpress
 	app.Type = nodeps.AppTypeWordPress
 	_ = app.WriteConfig()
 	_, _ = exec.RunHostCommand(DdevBin)
@@ -252,6 +252,17 @@ func TestCustomCommands(t *testing.T) {
 	for _, c := range []string{"wp"} {
 		_, err = exec.RunHostCommand(DdevBin, c, "-h")
 		assert.NoError(err, "expected to find command %s for app.Type=%s", c, app.Type)
+	}
+
+	// Craft CMS commands should only be available for type craftcms
+	app.Type = nodeps.AppTypeCraftCms
+	_ = app.WriteConfig()
+	_, _ = exec.RunHostCommand(DdevBin)
+	err = app.MutagenSyncFlush()
+	assert.NoError(err)
+	for _, c := range []string{"craft"} {
+		_, err = exec.RunHostCommand(DdevBin, c, "-h")
+		assert.NoError(err)
 	}
 
 	// Make sure that the non-command stuff we installed has been copied into projectGlobalCommandsCopy
