@@ -98,6 +98,9 @@ func init() {
 		},
 		nodeps.AppTypeLaravel:   {appTypeDetect: isLaravelApp, postStartAction: laravelPostStartAction, configOverrideAction: nil},
 		nodeps.AppTypeShopware6: {appTypeDetect: isShopware6App, apptypeSettingsPaths: setShopware6SiteSettingsPaths, uploadDir: getShopwareUploadDir, configOverrideAction: nil, postStartAction: shopware6PostStartAction, importFilesAction: shopware6ImportFilesAction},
+		nodeps.AppTypeCraftCms: {
+			appTypeDetect: isCraftCmsApp, configOverrideAction: craftCmsConfigOverrideAction, postConfigAction: craftCmsPostConfigAction, postStartAction: craftCmsPostStartAction,
+		},
 	}
 }
 

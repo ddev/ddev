@@ -89,6 +89,7 @@ const (
 	AppTypeMagento2  = "magento2"
 	AppTypeLaravel   = "laravel"
 	AppTypeShopware6 = "shopware6"
+	AppTypeCraftCms  = "craftcms"
 )
 
 // Ports and other defaults

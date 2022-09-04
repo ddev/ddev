@@ -72,6 +72,7 @@ func TestPostConfigAction(t *testing.T) {
 		nodeps.AppTypeMagento:   nodeps.PHP74,
 		nodeps.AppTypeMagento2:  nodeps.PHP81,
 		nodeps.AppTypeLaravel:   nodeps.PHPDefault,
+		nodeps.AppTypeCraftCms:  nodeps.PHPDefault,
 	}
 
 	for appType, expectedPHPVersion := range appTypes {
