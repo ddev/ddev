@@ -342,41 +342,6 @@ Here's a quickstart instructions for a number of different environments:
     This way we only need to change the value of `DB_CONNECTION` to `ddev` in the `.env` to work with the `db` service.
     This is very handy if you have a local database installed and you want to switch between the connections faster by changing only one variable in `.env`
 
-=== "Shopware 6"
-
-    ## Shopware 6
-
-    You can set up a Shopware 6 environment many ways, but this shows you one recommended technique:
-    
-    ```bash
-    git clone --branch=6.4 https://github.com/shopware/production my-shopware6
-    cd my-shopware6
-    ddev config --project-type=shopware6 --docroot=public
-    ddev start
-    ddev composer install
-    ddev exec bin/console system:setup --database-url=mysql://db:db@db:3306/db --app-url='${DDEV_PRIMARY_URL}'
-    ddev exec bin/console system:install --create-database --basic-setup
-    ddev launch /admin
-    ```
-    
-    Now log into the admin site (/admin) using the web browser. The default credentials are username=admin, password=shopware. You can use the web UI to install sample data or accomplish many other tasks.
-    
-    For more advanced tasks like adding elasticsearch, building and watching storefront and administration, see [susi.dev](https://susi.dev/ddev-shopware-6).
-
-=== "Backdrop"
-
-    ## Backdrop
-
-    To get started with Backdrop, clone the project repository and navigate to the project directory.
-    
-    ```bash
-    git clone https://github.com/example/example-site
-    cd example-site
-    ddev config
-    ddev start
-    ddev launch
-    ```
-
 === "Craft CMS"
 
     ## Craft CMS
@@ -425,6 +390,42 @@ Here's a quickstart instructions for a number of different environments:
         ddev craft setup
         ddev launch
         ```
+
+=== "Shopware 6"
+
+    ## Shopware 6
+
+    You can set up a Shopware 6 environment many ways, but this shows you one recommended technique:
+    
+    ```bash
+    git clone --branch=6.4 https://github.com/shopware/production my-shopware6
+    cd my-shopware6
+    ddev config --project-type=shopware6 --docroot=public
+    ddev start
+    ddev composer install
+    ddev exec bin/console system:setup --database-url=mysql://db:db@db:3306/db --app-url='${DDEV_PRIMARY_URL}'
+    ddev exec bin/console system:install --create-database --basic-setup
+    ddev launch /admin
+    ```
+    
+    Now log into the admin site (/admin) using the web browser. The default credentials are username=admin, password=shopware. You can use the web UI to install sample data or accomplish many other tasks.
+    
+    For more advanced tasks like adding elasticsearch, building and watching storefront and administration, see [susi.dev](https://susi.dev/ddev-shopware-6).
+
+=== "Backdrop"
+
+    ## Backdrop
+
+    To get started with Backdrop, clone the project repository and navigate to the project directory.
+    
+    ```bash
+    git clone https://github.com/example/example-site
+    cd example-site
+    ddev config
+    ddev start
+    ddev launch
+    ```
+
 
 ## Configuration files
 
