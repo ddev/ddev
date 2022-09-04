@@ -369,8 +369,10 @@ Here's a quickstart instructions for a number of different environments:
         ```bash
         git clone https://github.com/example/example-site path/to/my-project
         cd path/to/my-project
-        ddev config
+        ddev config --project-type=craftcms
+        ddev start
         ddev composer install
+        ddev import-db
         ddev launch
         ```
         
