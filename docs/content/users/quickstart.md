@@ -342,6 +342,62 @@ Here's a quickstart instructions for a number of different environments:
     This way we only need to change the value of `DB_CONNECTION` to `ddev` in the `.env` to work with the `db` service.
     This is very handy if you have a local database installed and you want to switch between the connections faster by changing only one variable in `.env`
 
+=== "Craft CMS"
+
+    ## Craft CMS
+
+    [Craft CMS](https://craftcms.com) can be downloaded with [Composer](https://craftcms.com/docs/4.x/installation.html#downloading-with-composer) or by [manually downloading](https://craftcms.com/docs/4.x/installation.html#downloading-an-archive-file-manually) a zip or tar.gz archive. 
+    
+    === "Composer build"
+    
+        ### Craft composer build
+        
+        Use this to create a new Craft CMS project from the official [Craft starter project](https://github.com/craftcms/craft) or a third-party starter project.
+        
+        ```bash
+        composer create-project craftcms/craft path/to/my-project --no-install --no-scripts
+        cd path/to/my-project
+        ddev config --project-type=craftcms
+        ddev start
+        ddev composer install
+        ddev craft setup/welcome
+        ddev launch
+        ```
+        
+    === "Git clone"
+    
+        ### Craft git clone
+        
+        Use this to migrate an existing Craft CMS project from a GitHub repository.
+        
+        ```bash
+        git clone https://github.com/example/example-site path/to/my-project
+        cd path/to/my-project
+        ddev config --project-type=craftcms
+        ddev start
+        ddev composer install
+        ddev import-db
+        ddev launch
+        ```
+        
+    === "Manual download"
+    
+        ### Craft manual download
+        
+        Use this to create a new Craft CMS project without using Composer.
+        
+        ```bash
+        mkdir path/to/my-project
+        cd path/to/my-project
+        curl -LO https://craftcms.com/latest-v4.zip
+        unzip latest-v4.zip
+        rm latest-v4.zip
+        ddev config --project-type=craftcms
+        ddev start
+        ddev craft setup/welcome
+        ddev launch
+        ```
+
 === "Shopware 6"
 
     ## Shopware 6
