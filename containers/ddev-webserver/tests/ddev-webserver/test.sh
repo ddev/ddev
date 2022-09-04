@@ -90,7 +90,7 @@ for PHP_VERSION in 5.6 7.0 7.1 7.2 7.3 7.4 8.0; do
     done
 done
 
-for project_type in backdrop drupal6 drupal7 drupal8 drupal9 laravel magento magento2 typo3 wordpress default; do
+for project_type in backdrop craftcms drupal6 drupal7 drupal8 drupal9 laravel magento magento2 typo3 wordpress default; do
 	export PHP_VERSION="7.4"
     export project_type
 	if [ "$project_type" == "drupal6" ]; then
