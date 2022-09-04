@@ -353,12 +353,12 @@ Here's a quickstart instructions for a number of different environments:
         ### Craft composer build
         
         ```bash
-        mkdir path/to/my-project
+        composer create-project craftcms/craft path/to/my-project --no-install --no-scripts
         cd path/to/my-project
         ddev config --project-type=craftcms
         ddev start
-        ddev composer create-project craftcms/craft .
-        ddev craft setup
+        ddev composer install
+        ddev craft setup/welcome
         ddev launch
         ```
         
