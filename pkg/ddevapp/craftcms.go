@@ -25,7 +25,7 @@ func craftCmsPostConfigAction(app *DdevApp) error {
 	var envFilePath string
 	var err error
 	envFilePath = filepath.Join(app.AppRoot, ".env")
-	// If the .env file doesn't exist, try to create it by copuing .env.example to .env
+	// If the .env file doesn't exist, try to create it by copying .env.example to .env
 	if !fileutil.FileExists(envFilePath) {
 		var exampleEnvFilePath = filepath.Join(app.AppRoot, ".env.example")
 		if fileutil.FileExists(exampleEnvFilePath) {
