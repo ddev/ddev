@@ -62,8 +62,12 @@ func craftCmsPostConfigAction(app *DdevApp) error {
 		envFileContents += "\nDEFAULT_SITE_URL="
 	}
 	envFileContents = siteUrlRegEx.ReplaceAllString(envFileContents, siteUrlReplace)
-	// Set the MailHog-related .env variables (https://ddev.readthedocs.io/en/latest/users/basics/developer-tools/#email-capture-and-review-mailhog)
-	envFileContents += "\nMAILHOG_SMTP_HOSTNAME=localhost\nMAILHOG_SMTP_PORT=1025"
+	// Set the MailHog .env variables (https://ddev.readthedocs.io/en/latest/users/basics/developer-tools/#email-capture-and-review-mailhog)
+	var mailhogRegEx *regexp.Regexp
+	mailhogRegEx = regexp.MustCompile(`(MAILHOG_SMTP_HOSTNAME|MAILHOG_SMTP_PORT)=(.*)`)
+	if !mailhogRegEx.MatchString(envFileContents) {
+	    envFileContents += "\nMAILHOG_SMTP_HOSTNAME=localhost\nMAILHOG_SMTP_PORT=1025"
+	}
 	// Write the modified .env file out
 	var f *os.File
 	f, err = os.Create(".env")
