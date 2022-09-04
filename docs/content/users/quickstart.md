@@ -388,7 +388,7 @@ Here's a quickstart instructions for a number of different environments:
         rm latest-v4.zip
         ddev config --project-type=craftcms
         ddev start
-        ddev craft setup
+        ddev craft setup/welcome
         ddev launch
         ```
 
