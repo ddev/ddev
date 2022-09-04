@@ -352,6 +352,8 @@ Here's a quickstart instructions for a number of different environments:
     
         ### Craft composer build
         
+        Use this to create a new Craft CMS project from the official [Craft starter project](https://github.com/craftcms/craft) or a third-party starter project.
+        
         ```bash
         composer create-project craftcms/craft path/to/my-project --no-install --no-scripts
         cd path/to/my-project
@@ -366,6 +368,8 @@ Here's a quickstart instructions for a number of different environments:
     
         ### Craft git clone
         
+        Use this to migrate an existing Craft CMS project from a GitHub repository.
+        
         ```bash
         git clone https://github.com/example/example-site path/to/my-project
         cd path/to/my-project
@@ -379,6 +383,8 @@ Here's a quickstart instructions for a number of different environments:
     === "Manual download"
     
         ### Craft manual download
+        
+        Use this to create a new Craft CMS project without using Composer.
         
         ```bash
         mkdir path/to/my-project
