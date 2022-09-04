@@ -377,6 +377,55 @@ Here's a quickstart instructions for a number of different environments:
     ddev launch
     ```
 
+=== "Craft CMS"
+
+    ## Craft CMS
+
+    Craft CMS can be downloaded with [Composer](https://craftcms.com/docs/4.x/installation.html#downloading-with-composer) or by [manually downloading](https://craftcms.com/docs/4.x/installation.html#downloading-an-archive-file-manually) a zip or tar.gz archive. 
+    
+    === "Composer build"
+    
+        ### Craft composer build
+        
+        ```bash
+        mkdir path/to/my-project
+        cd path/to/my-project
+        ddev config --project-type=craftcms
+        ddev start
+        ddev composer create-project craftcms/craft .
+        ddev craft setup
+        ddev launch
+        ```
+        
+    === "Git clone"
+    
+        ### Craft git clone
+        
+        ```bash
+        git clone https://github.com/example/example-site path/to/my-project
+        cd path/to/my-project
+        ddev config
+        ddev composer install
+        ddev launch
+        ```
+        
+    === "Manual download"
+    
+        ### Craft manual download
+        
+        ```bash
+        mkdir path/to/my-project
+        cd path/to/my-project
+        curl -LO https://craftcms.com/latest-v4.zip
+        unzip latest-v4.zip
+        rm latest-v4.zip
+        ddev config --project-type=craftcms
+        ddev start
+        ddev composer create-project craftcms/craft .
+        ddev craft setup
+        ddev launch
+        ```
+
 ## Configuration files
 
 **Note:** If you're providing the `settings.php` or `wp-config.php` and DDEV is creating the `settings.ddev.php` (or `wp-config-local.php`, `AdditionalConfig.php`, or similar), the main settings file must explicitly include the appropriate DDEV-generated settings file.  Any changes you need should be included somewhere that loads after DDEV's settings file, for example in Drupal's `settings.php` *after* `settings.ddev.php` is included. (see [Adding Configuration](#adding-configuration) below).
