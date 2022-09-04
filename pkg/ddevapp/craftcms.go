@@ -80,14 +80,14 @@ func craftCmsPostConfigAction(app *DdevApp) error {
 
 	var composerDefaultFilePath string
 	composerDefaultFilePath = filepath.Join(app.AppRoot, "composer.json.default")
-	// If composer.json.default exists, copy it to composer.json
+	// If composer.json.default exists, rename it to composer.json
 	if fileutil.FileExists(composerDefaultFilePath) {
 		var composerFilePath string
 		composerFilePath = filepath.Join(app.AppRoot, "composer.json")
-		util.Warning("Copying composer.json.default to composer.json")
-		err = fileutil.CopyFile(composerDefaultFilePath, composerFilePath)
+		util.Warning("Renaming composer.json.default to composer.json")
+		err = os.Rename(composerDefaultFilePath, composerFilePath)
 		if err != nil {
-			util.Error("Error copying composer.json.default to composer.json")
+			util.Error("Error renaming composer.json.default to composer.json")
 			return err
 		}
 	}
