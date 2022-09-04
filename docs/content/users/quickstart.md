@@ -346,7 +346,7 @@ Here's a quickstart instructions for a number of different environments:
 
     ## Craft CMS
 
-    Craft CMS can be downloaded with [Composer](https://craftcms.com/docs/4.x/installation.html#downloading-with-composer) or by [manually downloading](https://craftcms.com/docs/4.x/installation.html#downloading-an-archive-file-manually) a zip or tar.gz archive. 
+    [Craft CMS](https://craftcms.com) can be downloaded with [Composer](https://craftcms.com/docs/4.x/installation.html#downloading-with-composer) or by [manually downloading](https://craftcms.com/docs/4.x/installation.html#downloading-an-archive-file-manually) a zip or tar.gz archive. 
     
     === "Composer build"
     
@@ -386,7 +386,6 @@ Here's a quickstart instructions for a number of different environments:
         rm latest-v4.zip
         ddev config --project-type=craftcms
         ddev start
-        ddev composer create-project craftcms/craft .
         ddev craft setup
         ddev launch
         ```
