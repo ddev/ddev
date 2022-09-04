@@ -368,7 +368,7 @@ Here's a quickstart instructions for a number of different environments:
     
         ### Craft git clone
         
-        Use this to migrate an existing Craft CMS project from a GitHub repository.
+        Use this to migrate an existing Craft CMS project from a git repository and import a database dump.
         
         ```bash
         git clone https://github.com/example/example-site path/to/my-project
