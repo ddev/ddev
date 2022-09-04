@@ -355,7 +355,7 @@ Here's a quickstart instructions for a number of different environments:
         Use this to create a new Craft CMS project from the official [Craft starter project](https://github.com/craftcms/craft) or a third-party starter project.
         
         ```bash
-        composer create-project craftcms/craft path/to/my-project --no-install --no-scripts
+        composer create-project craftcms/craft path/to/my-project --no-install
         cd path/to/my-project
         ddev config --project-type=craftcms
         ddev start
