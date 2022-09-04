@@ -23,7 +23,7 @@ func craftCmsConfigOverrideAction(app *DdevApp) error {
 // Set up the .env file for ddev
 func craftCmsPostConfigAction(app *DdevApp) error {
 	var err error
-	
+
 	var envFilePath string
 	envFilePath = filepath.Join(app.AppRoot, ".env")
 	// If the .env file doesn't exist, try to create it by copying .env.example to .env
@@ -53,14 +53,14 @@ func craftCmsPostConfigAction(app *DdevApp) error {
 	dbRegEx = regexp.MustCompile(`DB_(SERVER|DATABASE|USER|PASSWORD)=(.*)`)
 	envFileContents = dbRegEx.ReplaceAllString(envFileContents, `DB_$1=db`)
 	// Set the default site URL
-	var siteUrlRegEx *regexp.Regexp
-	var siteUrlReplace string
-	siteUrlRegEx = regexp.MustCompile(`(DEFAULT_SITE_URL|SITE_URL)=(.*)`)
-	siteUrlReplace = fmt.Sprintf("$1=%sddev.site", app.GetHTTPSURL())
-	if !siteUrlRegEx.MatchString(envFileContents) {
+	var siteURLRegEx *regexp.Regexp
+	var siteURLReplace string
+	siteURLRegEx = regexp.MustCompile(`(DEFAULT_SITE_URL|SITE_URL)=(.*)`)
+	siteURLReplace = fmt.Sprintf("$1=%sddev.site", app.GetHTTPSURL())
+	if !siteURLRegEx.MatchString(envFileContents) {
 		envFileContents += "\nDEFAULT_SITE_URL="
 	}
-	envFileContents = siteUrlRegEx.ReplaceAllString(envFileContents, siteUrlReplace)
+	envFileContents = siteURLRegEx.ReplaceAllString(envFileContents, siteURLReplace)
 	// Set the MailHog .env variables (https://ddev.readthedocs.io/en/latest/users/basics/developer-tools/#email-capture-and-review-mailhog)
 	var mailhogRegEx *regexp.Regexp
 	mailhogRegEx = regexp.MustCompile(`(MAILHOG_SMTP_HOSTNAME|MAILHOG_SMTP_PORT)=(.*)`)
@@ -89,7 +89,7 @@ func craftCmsPostConfigAction(app *DdevApp) error {
 			return err
 		}
 	}
-	
+
 	return nil
 }
 
