@@ -64,9 +64,6 @@ var appTypeMatrix map[string]AppTypeFuncs
 
 func init() {
 	appTypeMatrix = map[string]AppTypeFuncs{
-		nodeps.AppTypePHP: {
-			uploadDir: getPHPUploadDir, postStartAction: phpPostStartAction, importFilesAction: phpImportFilesAction,
-		},
 		nodeps.AppTypeBackdrop: {
 			settingsCreator: createBackdropSettingsFile, uploadDir: getBackdropUploadDir, hookDefaultComments: getBackdropHooks, apptypeSettingsPaths: setBackdropSiteSettingsPaths, appTypeDetect: isBackdropApp, postImportDBAction: backdropPostImportDBAction, configOverrideAction: nil, postConfigAction: nil, postStartAction: backdropPostStartAction, importFilesAction: backdropImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
 		},
@@ -96,6 +93,9 @@ func init() {
 		},
 		nodeps.AppTypeMagento2: {
 			settingsCreator: createMagento2SettingsFile, uploadDir: getMagento2UploadDir, hookDefaultComments: nil, apptypeSettingsPaths: setMagento2SiteSettingsPaths, appTypeDetect: isMagento2App, postImportDBAction: nil, configOverrideAction: magento2ConfigOverrideAction, postConfigAction: nil, postStartAction: nil, importFilesAction: magentoImportFilesAction,
+		},
+		nodeps.AppTypePHP: {
+			uploadDir: getPHPUploadDir, postStartAction: phpPostStartAction, importFilesAction: phpImportFilesAction,
 		},
 		nodeps.AppTypeShopware6: {
 			appTypeDetect: isShopware6App, apptypeSettingsPaths: setShopware6SiteSettingsPaths, uploadDir: getShopwareUploadDir, configOverrideAction: nil, postStartAction: shopware6PostStartAction, importFilesAction: shopware6ImportFilesAction,
