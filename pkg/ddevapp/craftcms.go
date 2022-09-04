@@ -40,8 +40,6 @@ func craftCmsPostConfigAction(app *DdevApp) error {
 			util.Warning("No .env.example nor .env file exists, you'll need to create your own .env file")
 			return nil
 		}
-	} else {
-		util.Warning(".env file present")
 	}
 	// Read in the .env file
 	var envFileContents string
