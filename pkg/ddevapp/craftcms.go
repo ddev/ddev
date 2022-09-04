@@ -64,11 +64,15 @@ func craftCmsPostConfigAction(app *DdevApp) error {
 	var mailhogRegEx *regexp.Regexp
 	mailhogRegEx = regexp.MustCompile(`(MAILHOG_SMTP_HOSTNAME|MAILHOG_SMTP_PORT)=(.*)`)
 	if !mailhogRegEx.MatchString(envFileContents) {
-	    envFileContents += "\nMAILHOG_SMTP_HOSTNAME=localhost\nMAILHOG_SMTP_PORT=1025"
+		envFileContents += "\nMAILHOG_SMTP_HOSTNAME=localhost\nMAILHOG_SMTP_PORT=1025"
 	}
 	// Write the modified .env file out
 	var f *os.File
 	f, err = os.Create(".env")
+	if err != nil {
+		util.Error("Error creating .env file")
+		return err
+	}
 	_, err = f.WriteString(envFileContents)
 	if err != nil {
 		util.Error("Error writing .env file")

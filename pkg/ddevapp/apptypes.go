@@ -2,12 +2,12 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/util"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/util"
 )
 
 type settingsCreator func(*DdevApp) (string, error)
@@ -85,7 +85,7 @@ func init() {
 		nodeps.AppTypeDrupal10: {
 			settingsCreator: createDrupalSettingsPHP, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal8Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal10App, postImportDBAction: nil, configOverrideAction: drupal10ConfigOverrideAction, postConfigAction: nil, postStartAction: drupal8PostStartAction, importFilesAction: drupalImportFilesAction,
 		},
-		nodeps.AppTypeLaravel:   {
+		nodeps.AppTypeLaravel: {
 			appTypeDetect: isLaravelApp, postStartAction: laravelPostStartAction, configOverrideAction: nil,
 		},
 		nodeps.AppTypeMagento: {
