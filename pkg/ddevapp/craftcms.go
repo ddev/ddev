@@ -22,8 +22,9 @@ func craftCmsConfigOverrideAction(app *DdevApp) error {
 
 // Set up the .env file for ddev
 func craftCmsPostConfigAction(app *DdevApp) error {
-	var envFilePath string
 	var err error
+	
+	var envFilePath string
 	envFilePath = filepath.Join(app.AppRoot, ".env")
 	// If the .env file doesn't exist, try to create it by copying .env.example to .env
 	if !fileutil.FileExists(envFilePath) {
@@ -77,6 +78,20 @@ func craftCmsPostConfigAction(app *DdevApp) error {
 		return err
 	}
 
+	var composerDefaultFilePath string
+	composerDefaultFilePath = filepath.Join(app.AppRoot, "composer.json.default")
+	// If composer.json.default exists, copy it to composer.json
+	if fileutil.FileExists(composerDefaultFilePath) {
+		var composerFilePath string
+		composerFilePath = filepath.Join(app.AppRoot, "composer.json")
+		util.Warning("Copying composer.json.default to composer.json")
+		err = fileutil.CopyFile(composerDefaultFilePath, composerFilePath)
+		if err != nil {
+			util.Error("Error copying composer.json.default to composer.json")
+			return err
+		}
+	}
+	
 	return nil
 }
 
