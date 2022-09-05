@@ -238,10 +238,10 @@ var (
 		// 13: craftcms
 		{
 			Name:                          "TestPkgCraftCms",
-			SourceURL:                     "https://download.craftcdn.com/craft/4.0/Craft-4.0.5.2.tar.gz",
-			ArchiveInternalExtractionPath: "craftcms-v4",
-			FilesTarballURL:               "https://github.com/khalwat/ddev/files/9487715/craftcms-files.tar.gz",
-			DBTarURL:                      "https://github.com/khalwat/ddev/files/9487728/craftcms-db.sql.tar.gz",
+			SourceURL:                     "https://github.com/khalwat/ddev/files/9488101/craftcms-4.2.3.tar.gz",
+			ArchiveInternalExtractionPath: "craftcms-4.2.3",
+			FilesTarballURL:               "https://github.com/khalwat/ddev/files/9488129/craftcms-4.3.2-files.tar.gz",
+			DBTarURL:                      "https://github.com/khalwat/ddev/files/9488132/craftcms-4.3.2-db.sql.tar.gz",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeCraftCms,
 			Docroot:                       "web",
