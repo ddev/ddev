@@ -238,7 +238,7 @@ var (
 		// 13: craftcms
 		{
 			Name:                          "TestPkgCraftCms",
-			SourceURL:                     "https://craftcms.com/latest-v4.zip",
+			SourceURL:                     "https://download.craftcdn.com/craft/4.0/Craft-4.0.5.2.tar.gz",
 			ArchiveInternalExtractionPath: "craftcms-v4",
 			FilesTarballURL:               "https://github.com/khalwat/ddev/files/9487715/craftcms-files.tar.gz",
 			DBTarURL:                      "https://github.com/khalwat/ddev/files/9487728/craftcms-db.sql.tar.gz",
