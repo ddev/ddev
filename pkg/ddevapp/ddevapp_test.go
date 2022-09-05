@@ -235,6 +235,20 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "This is a test page"},
 			FilesImageURI:                 "/sites/default/files/2022-07/Logo.png",
 		},
+		// 13: craftcms
+		{
+			Name:                          "TestPkgCraftCms",
+			SourceURL:                     "https://craftcms.com/latest-v4.zip",
+			ArchiveInternalExtractionPath: "craftcms-v4",
+			FilesTarballURL:               "https://github.com/khalwat/ddev/files/9487715/craftcms-files.tar.gz",
+			DBTarURL:                      "https://github.com/khalwat/ddev/files/9487728/craftcms-db.sql.tar.gz",
+			FullSiteTarballURL:            "",
+			Type:                          nodeps.AppTypeCraftCms,
+			Docroot:                       "web",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/test.html", Expect: "Thanks for testing Craft CMS"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Thanks for installing Craft CMS"},
+			FilesImageURI:                 "/happybrad.jpg",
+		},
 	}
 
 	FullTestSites = TestSites
