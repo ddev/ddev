@@ -240,14 +240,14 @@ var (
 			Name:                          "TestPkgCraftCms",
 			SourceURL:                     "https://craftcms.com/latest-v4.zip",
 			ArchiveInternalExtractionPath: "craftcms-v4",
-			FilesTarballURL:               "",
-			DBTarURL:                      ".../craftcms-v4.2.3.sql.tar.gz",
+			FilesTarballURL:               "https://github.com/khalwat/ddev/files/9487715/craftcms-files.tar.gz",
+			DBTarURL:                      "https://github.com/khalwat/ddev/files/9487728/craftcms-db.sql.tar.gz",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeCraftCms,
 			Docroot:                       "web",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/test.html", Expect: "Thanks for testing Craft CMS"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Thanks for installing Craft CMS"},
-			FilesImageURI:                 "/assets/craft-logo.svg",
+			FilesImageURI:                 "/happybrad.jpg",
 		},
 	}
 
