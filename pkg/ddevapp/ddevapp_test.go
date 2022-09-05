@@ -239,7 +239,7 @@ var (
 		{
 			Name:                          "TestPkgCraftCms",
 			SourceURL:                     "https://github.com/khalwat/ddev/files/9491277/craftcms-4.2.3.zip",
-			ArchiveInternalExtractionPath: "craftcms-4.2.3/",
+			ArchiveInternalExtractionPath: "",
 			FilesTarballURL:               "https://github.com/khalwat/ddev/files/9491209/craftcms-4.2.3-files.tar.gz",
 			DBTarURL:                      "https://github.com/khalwat/ddev/files/9491210/craftcms-4.2.3-db.tar.gz",
 			FullSiteTarballURL:            "",
