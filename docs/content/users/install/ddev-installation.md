@@ -10,20 +10,20 @@ It's easiest to think of DDEV installation or upgrade as the installation of a s
 
     ### Homebrew
 
-    For macOS (both amd64 and arm64) users, [Homebrew](https://brew.sh/) is the easiest way to install and upgrade DDEV: 
+    For macOS (both amd64 and arm64) users, [Homebrew](https://brew.sh/) is the easiest way to install and upgrade DDEV:
 
     ```bash
-    brew install drud/ddev/ddev`
+    brew install drud/ddev/ddev
     ```
 
     ```bash
-    brew upgrade ddev`
+    brew upgrade ddev
     ```
-    
-    As a one-time initialization, run 
+
+    As a one-time initialization, run
 
     ```bash
-    mkcert -install`
+    mkcert -install
     ```
 
     ### install_ddev.sh install script
@@ -59,11 +59,11 @@ It's easiest to think of DDEV installation or upgrade as the installation of a s
     echo "deb https://apt.fury.io/drud/ * *" | sudo tee -a /etc/apt/sources.list.d/ddev.list
     sudo apt update && sudo apt install -y ddev
     ```
-  
+
     To update use the normal update commands:
 
     ```bash
-    sudo apt update && sudo apt upgrade`.
+    sudo apt update && sudo apt upgrade
     ```
 
     If you previously used `install_ddev.sh` to install DDEV, you can just `sudo rm -f /usr/local/bin/ddev /usr/local/bin/mkcert /usr/local/bin/*ddev_nfs_setup.sh` to remove the previous version. If you previously used homebrew to install DDEV, you can just `brew unlink ddev` to get rid of the homebrew version.
@@ -76,10 +76,10 @@ It's easiest to think of DDEV installation or upgrade as the installation of a s
     baseurl=https://yum.fury.io/drud/
     enabled=1
     gpgcheck=0' | sudo tee -a /etc/yum.repos.d/ddev.repo
-      
+
     sudo dnf install --refresh ddev
     ```
-  
+
     In the future you can update as usual, with `sudo dnf upgrade ddev`. (Signed repo support will be added in the near future.)
 
     ### Arch systems
@@ -137,7 +137,7 @@ It's easiest to think of DDEV installation or upgrade as the installation of a s
     14. In WSL2 run `mkcert -install`.
 
     That's it! You have now installed DDEV on WSL2. If you're using WSL2 for DDEV (recommended), remember to run all `ddev` commands inside the WSL2 distro.
-    
+
     To upgrade DDEV in WSL2 Ubuntu, use `apt upgrade ddev` as described in the [Linux installation section](#apt-packages-for-Debian-based-systems).
 
     !!!warning "Projects go in /home, not on the Windows filesystem"
