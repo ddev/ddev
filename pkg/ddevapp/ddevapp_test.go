@@ -240,11 +240,14 @@ var (
 			Name:                          "TestPkgCraftCms",
 			SourceURL:                     "https://github.com/khalwat/ddev/files/9496403/craftcms-4.2.3.zip",
 			ArchiveInternalExtractionPath: "craftcms-4.2.3/",
+			FilesZipballURL:               "https://github.com/khalwat/ddev/files/9496398/craftcms-4.2.3-files.zip",
 			DBZipURL:                      "https://github.com/khalwat/ddev/files/9496399/craftcms-4.2.3-db.sql.zip",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeCraftCms,
 			Docroot:                       "web",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/test.html", Expect: "Thanks for testing Craft CMS"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Thanks for installing Craft CMS"},
+			FilesImageURI:                 "/happy-brad.jpg",
 		},
 	}
 
