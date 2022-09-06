@@ -396,9 +396,9 @@ Here's a quickstart instructions for a number of different environments:
         ddev launch
         ```
 
-    === "Existing projects"
+    === Existing projects
     
-        ### Craft git clone
+        ### Git clone
         
         Use this to migrate an existing Craft CMS project from a git repository and import a database dump.
         
