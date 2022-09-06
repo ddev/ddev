@@ -2,14 +2,15 @@ package ddevapp_test
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/stretchr/testify/require"
 
 	. "github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/testcommon"
@@ -31,14 +32,9 @@ const pantheonSiteExpectation = "DDEV DRUPAL8 TEST SITE"
 // TestPantheonPull ensures we can pull from pantheon.
 func TestPantheonPull(t *testing.T) {
 	token := ""
-	sshkey := ""
 	if token = os.Getenv("DDEV_PANTHEON_API_TOKEN"); token == "" {
 		t.Skipf("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping %v", t.Name())
 	}
-	if sshkey = os.Getenv("DDEV_PANTHEON_SSH_KEY"); sshkey == "" {
-		t.Skipf("No DDEV_PANTHEON_SSH_KEY env var has been set. Skipping %v", t.Name())
-	}
-	sshkey = strings.Replace(sshkey, "<SPLIT>", "\n", -1)
 
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
@@ -55,9 +51,6 @@ func TestPantheonPull(t *testing.T) {
 	err = os.MkdirAll(filepath.Join(siteDir, "sites/default"), 0777)
 	require.NoError(t, err)
 	err = os.Chdir(siteDir)
-	require.NoError(t, err)
-
-	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
 	require.NoError(t, err)
 
 	app, err := NewApp(siteDir, true)
@@ -131,14 +124,9 @@ func TestPantheonPull(t *testing.T) {
 // TestPantheonPush ensures we can push to pantheon for a configured environment.
 func TestPantheonPush(t *testing.T) {
 	token := ""
-	sshkey := ""
 	if token = os.Getenv("DDEV_PANTHEON_API_TOKEN"); token == "" {
 		t.Skipf("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping %v", t.Name())
 	}
-	if sshkey = os.Getenv("DDEV_PANTHEON_SSH_KEY"); sshkey == "" {
-		t.Skipf("No DDEV_PANTHEON_SSH_KEY env var has been set. Skipping %v", t.Name())
-	}
-	sshkey = strings.Replace(sshkey, "<SPLIT>", "\n", -1)
 
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
@@ -161,9 +149,6 @@ func TestPantheonPush(t *testing.T) {
 	_ = app.Stop(true, false)
 
 	err = os.Chdir(d9code.Dir)
-	require.NoError(t, err)
-
-	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
@@ -264,17 +249,4 @@ func TestPantheonPush(t *testing.T) {
 	assert.NoError(err)
 	err = os.Remove("hello-post-push-" + app.Name)
 	assert.NoError(err)
-}
-
-// setupSSHKey takes a privatekey string and turns it into a file and then does `ddev auth ssh`
-func setupSSHKey(t *testing.T, privateKey string, expectScriptDir string) error {
-	// Provide an ssh key for `ddev auth ssh`
-	err := os.Mkdir("sshtest", 0755)
-	require.NoError(t, err)
-	err = os.WriteFile(filepath.Join("sshtest", "id_rsa_test"), []byte(privateKey), 0600)
-	require.NoError(t, err)
-	out, err := exec.RunHostCommand("expect", filepath.Join(expectScriptDir, "ddevauthssh.expect"), DdevBin, "./sshtest")
-	require.NoError(t, err)
-	require.Contains(t, string(out), "Identity added:")
-	return nil
 }
