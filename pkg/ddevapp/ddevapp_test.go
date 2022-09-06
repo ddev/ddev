@@ -240,7 +240,7 @@ var (
 			Name:                          "TestPkgCraftCms",
 			SourceURL:                     "https://github.com/khalwat/ddev/files/9497111/cms-4.2.3.zip",
 			ArchiveInternalExtractionPath: "cms-4.2.3/",
-			FilesTarballURL:               "https://github.com/drud/ddev/files/9501127/craftcms-4.2.3-files.tar.gz",
+			FilesTarballURL:               "https://github.com/drud/ddev/files/9501156/craftcms-4.2.3-files.tar.gz",
 			DBTarURL:                      "https://github.com/drud/ddev/files/9501131/craftcms-4.2.3-db.sql.tar.gz",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeCraftCms,
