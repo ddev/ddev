@@ -527,6 +527,7 @@ sitepackage
 snapshot
 snapshotted
 snapshotting
+socio
 solr
 somefile
 sql
