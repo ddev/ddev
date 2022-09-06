@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
 	"os"
@@ -18,6 +19,58 @@ func isCraftCmsApp(app *DdevApp) bool {
 func craftCmsConfigOverrideAction(app *DdevApp) error {
 	if app.Docroot == "" {
 		app.Docroot = "web"
+	}
+
+	return nil
+}
+
+// Returns the upload directory for importing files, if not already set
+func getCraftCmsUploadDir(app *DdevApp) string {
+	app.UploadDir = ""
+
+	return app.UploadDir
+}
+
+// craftCmsImportFilesAction defines the workflow for importing project files.
+func craftCmsImportFilesAction(app *DdevApp, importPath, extPath string) error {
+	destPath := app.GetHostUploadDirFullPath()
+
+	// parent of destination dir should exist
+	if !fileutil.FileExists(filepath.Dir(destPath)) {
+		return fmt.Errorf("unable to import to %s: parent directory does not exist", destPath)
+	}
+
+	// parent of destination dir should be writable.
+	if err := os.Chmod(filepath.Dir(destPath), 0755); err != nil {
+		return err
+	}
+
+	// If the destination path exists, remove it as was warned
+	if fileutil.FileExists(destPath) {
+		if err := os.RemoveAll(destPath); err != nil {
+			return fmt.Errorf("failed to cleanup %s before import: %v", destPath, err)
+		}
+	}
+
+	if isTar(importPath) {
+		if err := archive.Untar(importPath, destPath, extPath); err != nil {
+			return fmt.Errorf("failed to extract provided archive: %v", err)
+		}
+
+		return nil
+	}
+
+	if isZip(importPath) {
+		if err := archive.Unzip(importPath, destPath, extPath); err != nil {
+			return fmt.Errorf("failed to extract provided archive: %v", err)
+		}
+
+		return nil
+	}
+
+	//nolint: revive
+	if err := fileutil.CopyDir(importPath, destPath); err != nil {
+		return err
 	}
 
 	return nil
