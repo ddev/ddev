@@ -48,6 +48,6 @@ body:
       description: |
         Links? References? Screenshots? Anything that will give us more context about your issue!
 
-        💡 Attach images or log files by clicking this area to highlight it and dragging files over it.
+        💡 Attach images or log files by clicking this area to highlight it and dragging files in.
     validations:
       required: false
