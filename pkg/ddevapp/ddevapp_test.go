@@ -247,7 +247,7 @@ var (
 			Docroot:                       "web",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/test.html", Expect: "Thanks for testing Craft CMS"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Thanks for installing Craft CMS"},
-			FilesImageURI:                 "/happy-brad.jpg",
+			FilesImageURI:                 "/files/happy-brad.jpg",
 		},
 	}
 

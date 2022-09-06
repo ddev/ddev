@@ -5,6 +5,7 @@ import (
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/pkg/errors"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -26,13 +27,16 @@ func craftCmsConfigOverrideAction(app *DdevApp) error {
 
 // Returns the upload directory for importing files, if not already set
 func getCraftCmsUploadDir(app *DdevApp) string {
-	app.UploadDir = ""
+	app.UploadDir = "files"
 
 	return app.UploadDir
 }
 
 // craftCmsImportFilesAction defines the workflow for importing project files.
 func craftCmsImportFilesAction(app *DdevApp, importPath, extPath string) error {
+	if app.UploadDir == "" {
+		return errors.Errorf("No upload_dir is set for this (php-generic) project")
+	}
 	destPath := app.GetHostUploadDirFullPath()
 
 	// parent of destination dir should exist
