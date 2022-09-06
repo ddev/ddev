@@ -238,9 +238,9 @@ var (
 		// 13: craftcms
 		{
 			Name:                          "TestPkgCraftCms",
-			SourceURL:                     "https://github.com/khalwat/ddev/files/9496403/craftcms-4.2.3.zip",
+			SourceURL:                     "https://github.com/khalwat/ddev/files/9497111/cms-4.2.3.zip",
 			ArchiveInternalExtractionPath: "craftcms-4.2.3/",
-			FilesZipballURL:               "https://github.com/khalwat/ddev/files/9496398/craftcms-4.2.3-files.zip",
+			FilesZipballURL:               "https://github.com/khalwat/ddev/files/9497148/craftcms-4.2.3-files.zip",
 			DBZipURL:                      "https://github.com/khalwat/ddev/files/9496399/craftcms-4.2.3-db.sql.zip",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeCraftCms,
