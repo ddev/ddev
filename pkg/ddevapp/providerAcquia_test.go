@@ -2,10 +2,6 @@ package ddevapp_test
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"os"
@@ -13,6 +9,11 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/stretchr/testify/require"
 
 	. "github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/testcommon"
@@ -298,4 +299,17 @@ func isPullSiteValid(siteURL string, siteExpectation string) bool {
 		return false
 	}
 	return strings.Contains(string(body), siteExpectation)
+}
+
+// setupSSHKey takes a privatekey string and turns it into a file and then does `ddev auth ssh`
+func setupSSHKey(t *testing.T, privateKey string, expectScriptDir string) error {
+	// Provide an ssh key for `ddev auth ssh`
+	err := os.Mkdir("sshtest", 0755)
+	require.NoError(t, err)
+	err = os.WriteFile(filepath.Join("sshtest", "id_rsa_test"), []byte(privateKey), 0600)
+	require.NoError(t, err)
+	out, err := exec.RunHostCommand("expect", filepath.Join(expectScriptDir, "ddevauthssh.expect"), DdevBin, "./sshtest")
+	require.NoError(t, err)
+	require.Contains(t, string(out), "Identity added:")
+	return nil
 }
