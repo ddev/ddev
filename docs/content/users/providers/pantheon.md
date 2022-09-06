@@ -17,22 +17,22 @@ If you have ddev installed, and have an active Pantheon account with an active s
    - TERMINUS_MACHINE_TOKEN=abcdeyourtoken
    ```
 
-1. Choose a Pantheon site and environment you want to use with ddev. You can usually use the site name, but in some environments you may need the site ID, which is the long 3rd component of your site dashboard URL. So if the site dashboard is at `https://dashboard.pantheon.io/sites/009a2cda-2c22-4eee-8f9d-96f017321555#dev/`, the site ID is `009a2cda-2c22-4eee-8f9d-96f017321555`.
+2. Choose a Pantheon site and environment you want to use with ddev. You can usually use the site name, but in some environments you may need the site ID, which is the long 3rd component of your site dashboard URL. So if the site dashboard is at `https://dashboard.pantheon.io/sites/009a2cda-2c22-4eee-8f9d-96f017321555#dev/`, the site ID is `009a2cda-2c22-4eee-8f9d-96f017321555`.
 
-1. On the pantheon dashboard for the site, make sure that at least one backup has been created. (When you need to refresh what you pull, create a new backup.)
+3. On the pantheon dashboard for the site, make sure that at least one backup has been created. (When you need to refresh what you pull, create a new backup.)
 
-1. Check out the project codebase from Pantheon. Enable the "Git Connection Mode" and use `git clone` to check out the code locally.
+4. Check out the project codebase from Pantheon. Enable the "Git Connection Mode" and use `git clone` to check out the code locally.
 
-1. Configure the local checkout for ddev using `ddev config`
+5. Configure the local checkout for ddev using `ddev config`
 
-1. If using Drupal 8+, verify that drush is installed in your project, `ddev composer require drush/drush`. If using Drupal 6 or 7, drush8 is already provided in the web container's /usr/local/bin/drush, so you can skip this step.
+6. If using Drupal 8+, verify that drush is installed in your project, `ddev composer require drush/drush`. If using Drupal 6 or 7, drush8 is already provided in the web container's /usr/local/bin/drush, so you can skip this step.
 
-1. In your **project's** .ddev/providers directory, copy pantheon.yaml.example to pantheon.yaml (_Note that this refers to your project .ddev folder and not the global .ddev folder_).  Edit the `project` environment variable under `environment_variables`. It will be in the format `<projectname>.<environment>`, for example `yourprojectname.dev` or (in cases of ambiguity) `<project_uuid>.<environment>`, for example `009a2cda-2c22-4eee-8f9d-96f017321555.dev`.
+7. In your **project's** .ddev/providers directory, copy pantheon.yaml.example to pantheon.yaml (_Note that this refers to your project .ddev folder and not the global .ddev folder_).  Edit the `project` environment variable under `environment_variables`. It will be in the format `<projectname>.<environment>`, for example `yourprojectname.dev` or (in cases of ambiguity) `<project_uuid>.<environment>`, for example `009a2cda-2c22-4eee-8f9d-96f017321555.dev`.
 
-1. If using Colima, may need to set an explicit nameserver in `~/.colima/default/colima.yaml` like `1.1.1.1`. If this configuration is changed, may also need to restart Colima.
+8. If using Colima, may need to set an explicit nameserver in `~/.colima/default/colima.yaml` like `1.1.1.1`. If this configuration is changed, may also need to restart Colima.
 
-1. `ddev restart`
+9. `ddev restart`
 
-1. Run `ddev pull pantheon`. The ddev environment  download the Pantheon database and files, and import the database and files into the ddev environment. You should now be able to access the project locally.
+10. Run `ddev pull pantheon`. The ddev environment  download the Pantheon database and files, and import the database and files into the ddev environment. You should now be able to access the project locally.
 
-1. Optionally use `ddev push pantheon` to push local files and database to Pantheon. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
+11. Optionally use `ddev push pantheon` to push local files and database to Pantheon. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
