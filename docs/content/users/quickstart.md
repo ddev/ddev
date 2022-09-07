@@ -408,7 +408,7 @@ Here's a quickstart instructions for a number of different environments:
         ddev config --project-type=craftcms
         ddev start
         ddev composer install
-        ddev import-db
+        ddev import-db --src=/path/to/db.sql.gz
         ddev launch
         ```
 
