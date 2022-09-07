@@ -34,7 +34,7 @@ func getCraftCmsUploadDir(app *DdevApp) string {
 	return app.UploadDir
 }
 
-// craftCmsImportFilesAction defines the workflow for importing project files.
+// craftCmsImportFilesAction defines the workflow for importing project files
 func craftCmsImportFilesAction(app *DdevApp, importPath, extPath string) error {
 	if app.UploadDir == "" {
 		return errors.Errorf("No upload_dir is set for this (craftcms) project")
