@@ -515,6 +515,7 @@ service
 services
 session
 several
+sexualized
 sh
 share
 shell
@@ -526,6 +527,7 @@ sitepackage
 snapshot
 snapshotted
 snapshotting
+socio
 solr
 somefile
 sql
