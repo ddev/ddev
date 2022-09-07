@@ -88,8 +88,9 @@ func craftCmsPostConfigAction(app *DdevApp) error {
 	// If the .env file doesn't exist, try to create it by copying .env.example to .env
 	if !fileutil.FileExists(envFilePath) {
 		var exampleEnvFilePaths = []string{".env.example", ".env.example.dev"}
-		for _, path := range exampleEnvFilePaths {
-			var exampleEnvFilePath = filepath.Join(app.AppRoot, path)
+		for _, exampleEnvFilePath := range exampleEnvFilePaths {
+			exampleEnvFilePath = filepath.Join(app.AppRoot, exampleEnvFilePath)
+			util.Warning(exampleEnvFilePath)
 			if fileutil.FileExists(exampleEnvFilePath) {
 				util.Warning(fmt.Sprintf("Copying %s to .env", exampleEnvFilePath))
 				err = fileutil.CopyFile(exampleEnvFilePath, envFilePath)
