@@ -27,7 +27,9 @@ func craftCmsConfigOverrideAction(app *DdevApp) error {
 
 // Returns the upload directory for importing files, if not already set
 func getCraftCmsUploadDir(app *DdevApp) string {
-	app.UploadDir = "files"
+	if app.UploadDir == "" {
+		return "files"
+	}
 
 	return app.UploadDir
 }
@@ -35,7 +37,7 @@ func getCraftCmsUploadDir(app *DdevApp) string {
 // craftCmsImportFilesAction defines the workflow for importing project files.
 func craftCmsImportFilesAction(app *DdevApp, importPath, extPath string) error {
 	if app.UploadDir == "" {
-		return errors.Errorf("No upload_dir is set for this (php-generic) project")
+		return errors.Errorf("No upload_dir is set for this (craftcms) project")
 	}
 	destPath := app.GetHostUploadDirFullPath()
 
