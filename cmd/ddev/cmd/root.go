@@ -212,9 +212,9 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 			output.UserOut.Print("Congratulations, you seem to have a new DDEV version.")
 			home, _ := homedir.Dir()
 			if globalconfig.DdevGlobalConfig.MutagenEnabledGlobal && fileutil.IsDirectory(filepath.Join(home, ".mutagen")) {
-				output.UserOut.Print("Please note that the global ~/.mutagen folder is no longer used by DDEV so you can delete it if it's no longer used by other applications")
+				output.UserOut.Print("Please note that the global ~/.mutagen folder is no longer used by DDEV. Delete the folder if it is no longer used by any other application.")
 			}
-			okPoweroff := util.Confirm("It looks like you have a new DDEV version. During an upgrade it's important to `ddev poweroff`. May I do `ddev poweroff` before continuing? This does no harm and loses no data.")
+			okPoweroff := util.Confirm("During an upgrade DDEV has to be shut down. May I do a `ddev poweroff` to be on the safe side before continuing? This causes no harm or data loss.")
 			if okPoweroff {
 				ddevapp.PowerOff()
 			}
