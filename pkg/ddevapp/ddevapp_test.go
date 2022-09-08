@@ -247,10 +247,10 @@ var (
 		// be a `.tar.gz` file, `.zip` will NOT work) and add to `DBTarURL`.
 		{
 			Name:                          "TestPkgCraftCms",
-			SourceURL:                     "https://github.com/khalwat/ddev/files/9497111/cms-4.2.3.zip",
+			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/craft-cms-4.2.3.zip",
 			ArchiveInternalExtractionPath: "cms-4.2.3/",
-			FilesTarballURL:               "https://github.com/drud/ddev/files/9501156/craftcms-4.2.3-files.tar.gz",
-			DBTarURL:                      "https://github.com/drud/ddev/files/9501131/craftcms-4.2.3-db.sql.tar.gz",
+			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/craftcms-4.2.3-files.tar.gz",
+			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/craftcms-4.2.3-db.sql.tar.gz",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeCraftCms,
 			Docroot:                       "web",
