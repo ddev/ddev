@@ -236,6 +236,15 @@ var (
 			FilesImageURI:                 "/sites/default/files/2022-07/Logo.png",
 		},
 		// 13: craftcms
+        // Don’t use the official source file at https://craftcms.com/latest-v4.zip, as the version
+        // changes over time meaning that it will get out of sync with the database. Instead, create
+        // a project named `testpkgcraftcms` and follow the instructions in the Craft CMS quickstart
+        // guide, ensuring that the page at `https://testpkgcraftcms.site.dev` works and displays the
+        // text “Thanks for installing Craft CMS”. Since Craft’s public web folder doesn’t contain any
+        // static HTML files, you'll need to add one at `web/test.html` that contains the text “Thanks
+        // for testing Craft CMS”. Zip it up (as a `.zip` or `.tar.gz` file) in a folder and add the
+        // folder name to `ArchiveInternalExtractionPath`. Export the database, compress the file (must
+        // be a `.tar.gz` file, `.zip` will NOT work) and add to `DBTarURL`.
 		{
 			Name:                          "TestPkgCraftCms",
 			SourceURL:                     "https://github.com/khalwat/ddev/files/9497111/cms-4.2.3.zip",
