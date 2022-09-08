@@ -139,6 +139,9 @@ github.com/inconshreveable/mousetrap
 ## explicit; go 1.16
 github.com/jedib0t/go-pretty/v6/table
 github.com/jedib0t/go-pretty/v6/text
+# github.com/joho/godotenv v1.4.0
+## explicit; go 1.12
+github.com/joho/godotenv
 # github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a
 ## explicit
 github.com/juju/ansiterm
