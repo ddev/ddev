@@ -8,11 +8,11 @@ at `fb6822d0003d1c0a795e183f5d257c2540fa74a4`.
 [![Pulls](https://img.shields.io/docker/pulls/nardeas/ssh-agent.svg)](https://img.shields.io/docker/pulls/nardeas/ssh-agent.svg?style=flat-square)
 [![Size](https://images.microbadger.com/badges/image/nardeas/ssh-agent.svg)](https://microbadger.com/images/nardeas/ssh-agent "Get your own image badge on microbadger.com")
 
-Lets you store your SSH authentication keys in a dockerized ssh-agent that can provide the SSH authentication socket for other containers. Works in OSX and Linux environments.
+Lets you store your SSH authentication keys in a dockerized ssh-agent that can provide the SSH authentication socket for other containers. Works in macOS and Linux environments.
 
 ## Why?
 
-On OSX you cannot simply forward your authentication socket to a Docker container to be able to e.g clone private repositories that you have access to. You don't want to copy your private key to all containers either. The solution is to add your keys only once to a long-lived ssh-agent container that can be used by other containers and stopped when not needed anymore.
+On macOS you cannot simply forward your authentication socket to a Docker container to be able to e.g clone private repositories that you have access to. You don't want to copy your private key to all containers either. The solution is to add your keys only once to a long-lived ssh-agent container that can be used by other containers and stopped when not needed anymore.
 
 ## hub.docker.com
 
