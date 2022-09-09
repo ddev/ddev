@@ -3,8 +3,12 @@
 #ddev-generated
 ## Description: Run Craft CMS command inside the web container
 ## Usage: craft [flags] [args]
-## Example: "ddev craft db/backup" or "craft db/backup ./my-backups" (see https://craftcms.com/docs/4.x/console-commands.html)
-## ProjectTypes: php
+## Example: "ddev craft db/backup" or "ddev craft db/backup ./my-backups" (see https://craftcms.com/docs/4.x/console-commands.html)
+## ProjectTypes: craftcms,php
 ## ExecRaw: true
 
-php ./craft "$@"
+if grep -q "type: php" ./.ddev/config.yaml; then
+    echo "The craft command is only available in the craftcms project type. You can update this in your project's config file, followed by restarting the DDEV project."
+else
+    php ./craft "$@"
+fi
