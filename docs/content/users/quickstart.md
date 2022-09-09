@@ -383,6 +383,10 @@ Here's a quickstart instructions for a number of different environments:
 
     DDEV will automatically setup your `.env` so it will work properly for local development, so the default settings displayed in the `ddev craft setup/welcome` command can be used. Change them only if you need to override a particular setting.
 
+    If you have an existing Craft CMS DDEV project, you'll need to change the `type:` to `craftcms` in your project's `.ddev/config.yaml` and then do `ddev restart` to be able to use the `ddev craft` command.
+
+    If you have Craft CMS installed in a sub-directory in your project, you can add a `CRAFT_CMD_ROOT` environment variable to your `.env` file to specify a path relative to your project root where Craft CMS is installed. This defaults to `./`, the project root directory.
+
     === Existing projects
     
         ### Git clone
