@@ -89,7 +89,7 @@ I don't actually build every image for every point release. If there have been n
 But here are the steps for building:
 
 1. The drud/ddev-php-base image must be updated as necessary with a new tag before pushing `ddev-webserver`. You can do this using the [process above](#pushing-docker-images-with-the-github-actions-workflow)
-2. The drud/ddev-webserver Dockerfile must `FROM drud/ddev-php-base:<tag>` before building/pushing `ddev-webserver`. But then it can be pushed using either the Github Actions or the manual technique.
+2. The drud/ddev-webserver Dockerfile must `FROM drud/ddev-php-base:<tag>` before building/pushing `ddev-webserver`. But then it can be pushed using either the GitHub Actions or the manual technique.
 
 3. If you're bumping ddev-dbserver 8.0 minor release, follow the upstream instructions [here](#maintaining-ddev-dbserver-mysql57-and-mysql80-arm64-images).
 4. Push images using the [process above](#pushing-docker-images-with-the-github-actions-workflow).
