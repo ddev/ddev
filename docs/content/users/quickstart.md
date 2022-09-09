@@ -352,7 +352,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     cd my-shopware6
     ddev config --project-type=shopware6 --docroot=public
     ddev start
-    ddev composer install
+    ddev composer install --no-scripts
     ddev exec bin/console system:setup --database-url=mysql://db:db@db:3306/db --app-url='${DDEV_PRIMARY_URL}'
     ddev exec bin/console system:install --create-database --basic-setup
     ddev launch /admin

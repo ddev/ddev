@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/util"
 	"os"
 	"path/filepath"
 )
@@ -80,37 +79,21 @@ func getShopwareUploadDir(app *DdevApp) string {
 
 // shopware6PostStartAction checks to see if the .env file is set up
 func shopware6PostStartAction(app *DdevApp) error {
-	envFile := filepath.Join(app.AppRoot, ".env")
-	var addOnConfig string
-	expectedDatabaseURL := `DATABASE_URL="mysql://db:db@db:3306/db"`
-	expectedPrimaryURL := fmt.Sprintf(`APP_URL="%s"`, app.GetPrimaryURL())
-	expectedMailerURL := `MAILER_URL="smtp://localhost:1025?encryption=&auth_mode="`
+	envContents := map[string]string{}
+	envContents, err := ReadEnvFile(app)
 
-	if fileutil.FileExists(envFile) {
-		isConfiguredDbConnection, _ := fileutil.FgrepStringInFile(app.SiteSettingsPath, expectedDatabaseURL)
-		isAppURLCorrect, _ := fileutil.FgrepStringInFile(app.SiteSettingsPath, expectedPrimaryURL)
-		isMailhogConfigCorrect, _ := fileutil.FgrepStringInFile(envFile, expectedMailerURL)
-
-		if !isConfiguredDbConnection {
-			addOnConfig = addOnConfig + expectedDatabaseURL + "\n"
-		}
-		if !isAppURLCorrect {
-			addOnConfig = addOnConfig + expectedPrimaryURL + "\n"
-		}
-		if !isMailhogConfigCorrect {
-			addOnConfig = addOnConfig + expectedMailerURL + "\n"
-		}
-		if addOnConfig != "" {
-			addOnConfig = "# =================\n# Configuration added by ddev\n" + addOnConfig
-			err := fileutil.AppendStringToFile(envFile, addOnConfig)
-			if err != nil {
-				return err
-			}
-			util.Warning("ddev configuration added to %s", envFile)
-		}
-	} else {
-		util.Warning("the .env file has not yet been created (%s)", envFile)
+	// If the .env file doesn't exist, we just continue and create it.
+	if err != nil && !os.IsNotExist(err) {
+		return err
 	}
+	envContents["DATABASE_URL"] = "mysql://db:db@db:3306/db"
+	envContents["APP_URL"] = app.GetPrimaryURL()
+	envContents["MAILER_URL"] = `smtp://localhost:1025?encryption=&auth_mode=`
 
+	err = WriteEnvFile(app, envContents)
+
+	if err != nil {
+		return err
+	}
 	return nil
 }

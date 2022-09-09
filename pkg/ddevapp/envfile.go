@@ -11,7 +11,7 @@ func ReadEnvFile(app *DdevApp) (map[string]string, error) {
 	envFileContents, err := godotenv.Read(filepath.Join(app.AppRoot, ".env"))
 
 	if err != nil {
-		return nil, err
+		return envFileContents, err
 	}
 	return envFileContents, nil
 }
