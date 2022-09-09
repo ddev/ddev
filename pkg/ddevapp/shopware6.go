@@ -80,7 +80,6 @@ func getShopwareUploadDir(app *DdevApp) string {
 
 // shopware6PostStartAction checks to see if the .env file is set up
 func shopware6PostStartAction(app *DdevApp) error {
-	envContents := map[string]string{}
 	envContents, err := ReadEnvFile(app)
 
 	// If the .env file doesn't exist, we just continue and create it.
