@@ -47,7 +47,7 @@ Don't forget about `ddev snapshot restore --latest` and that `ddev snapshot rest
 
 * macOS users love `ddev sequelpro`, which launches the free Sequelpro database browser. However, it's gotten little love in recent years, so DDEV now supports TablePlus and SequelAce if they're installed. `ddev tableplus` and `ddev sequelace`.
 * `ddev describe` tells you the URL for the built-in PHPMyAdmin database browser (Hint: It's `http://<yourproject>.ddev.site:8036`).
-* PHPStorm (and all JetBrains tools) have a nice database browser:
+* PhpStorm (and all JetBrains tools) have a nice database browser:
     * Choose a static `host_db_port` for your project. For example `host_db_port: 59002` (each project's db port should be different if you're running more than one project at a time). (`ddev start` to make it take effect)
     * Use the "database" tool to create a source from "localhost", with the proper type "mysql" or "postgresql" and the port you chose, credentials username: db and password: db
     * Explore away!
