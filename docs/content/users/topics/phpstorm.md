@@ -57,7 +57,7 @@ It is possible to use PhpStorm with DDEV on WSL2 in at least three different way
 
 1. Run  PhPStorm in Windows as usual, opening the project on the WSL2 filesystem at `\\wsl$\<distro>`  (for example, `\\wsl$\Ubuntu`). PhpStorm is slow to index files and is slow to respond to file changes in this mode.
 2. Enabling X11 on Windows and running PhpStorm inside WSL2 as a Linux app. PhpStorm works fine this way, but it’s yet another complexity to manage and requires enabling X11 (easy) on your Windows system.
-3. [Jetbrains Gateway](https://www.jetbrains.com/remote-development/gateway/) runs PhpStorm on WSL2 (or anywhere else) but displays it in a in your Gateway app.) It requires configuring sshd in WSL2 and either auto-starting it with `/etc/wsl.conf` (Windows 11) or manually starting it.
+3. [JetBrains Gateway](https://www.jetbrains.com/remote-development/gateway/) runs PhpStorm on WSL2 (or anywhere else) but displays it in a in your Gateway app.) It requires configuring sshd in WSL2 and either auto-starting it with `/etc/wsl.conf` (Windows 11) or manually starting it.
 
 We’ll walk through the first two of these approaches.
 
@@ -101,7 +101,7 @@ Set the PhpStorm terminal path (Settings→Tools→Terminal→Shell Path) to `C:
 
 5. On Windows 11, `sudo apt-get update && sudo apt-get install ddev`. On older Windows 10, `sudo apt-get update && sudo apt-get install ddev libatk1.0 libatk-bridge2.0 libxtst6 libxi6 libpangocairo-1.0 libcups2 libnss3 xdg-utils x11-apps`
 6. On older Windows 10, run `xeyes` – you should see the classic X11 play app “xeyes” on the screen. <ctrl-c> to exit. This is just a test to make sure X11 is working.
-7. Download and untar PhpStorm for Linux from [Jetbrains](https://www.jetbrains.com/phpstorm/download/#section=linux) – you need the Linux app.
+7. Download and untar PhpStorm for Linux from [JetBrains](https://www.jetbrains.com/phpstorm/download/#section=linux) – you need the Linux app.
 8. Run `bin/phpstorm.sh &`
 9. In PhpStorm, under Help→ Edit Custom VM Options, add an additional line: `-Djava.net.preferIPv4Stack=true` This makes PhpStorm listen for Xdebug using IPV4; for some reason the Linux version of PhpStorm defaults to using only IPV6, and Docker Desktop doesn't support IPV6.
 10. Restart PhpStorm (`File→Exit` and then `bin/phpstorm.sh &` again.
