@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/util"
 	"os"
 	"path/filepath"
 )
@@ -87,8 +88,13 @@ func shopware6PostStartAction(app *DdevApp) error {
 		return err
 	}
 	envContents["DATABASE_URL"] = "mysql://db:db@db:3306/db"
-	envContents["APP_URL"] = app.GetPrimaryURL()
-	envContents["MAILER_URL"] = `smtp://localhost:1025?encryption=&auth_mode=`
+	if _, ok := envContents["APP_URL"]; !ok {
+		util.Success("Updating .env APP_URL=%s", app.GetPrimaryURL())
+		envContents["APP_URL"] = app.GetPrimaryURL()
+	}
+	if _, ok := envContents["MAILER_URL"]; !ok {
+		envContents["MAILER_URL"] = `smtp://localhost:1025?encryption=&auth_mode=`
+	}
 
 	err = WriteEnvFile(app, envContents)
 
