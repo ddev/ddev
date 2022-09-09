@@ -21,6 +21,10 @@ func isLaravelApp(app *DdevApp) bool {
 }
 
 func laravelPostStartAction(app *DdevApp) error {
+	// We won't touch env if disable_settings_management: true
+	if app.DisableSettingsManagement {
+		return nil
+	}
 	envContents, err := ReadEnvFile(app)
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("Unable to read .env file: %v", err)

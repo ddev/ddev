@@ -80,6 +80,9 @@ func getShopwareUploadDir(app *DdevApp) string {
 
 // shopware6PostStartAction checks to see if the .env file is set up
 func shopware6PostStartAction(app *DdevApp) error {
+	if app.DisableSettingsManagement {
+		return nil
+	}
 	envContents, err := ReadEnvFile(app)
 
 	// If the .env file doesn't exist, it needs to be created by system:setup
