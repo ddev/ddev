@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	. "github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/testcommon"
@@ -126,6 +127,27 @@ func TestPantheonPull(t *testing.T) {
 	assert.NoError(err)
 	err = os.Remove("hello-post-pull-" + app.Name)
 	assert.NoError(err)
+
+	// Pantheon freezes inactive sites, so why not do a commit when we run to prevent that?
+	_, _, day := time.Now().Date()
+	if day == 9 {
+
+		out, err = exec.RunHostCommand("git", "clone", "ssh://codeserver.dev.009a2cda-2c22-4eee-8f9d-96f017321627@codeserver.dev.009a2cda-2c22-4eee-8f9d-96f017321627.drush.in:2222/~/repository.git", "ddev-test-site-do-not-delete")
+		if err != nil {
+			t.Logf("Failed to make git clone; out=%s, err=%v", out, err)
+		}
+		_ = os.Chdir("ddev-test-site-do-not-delete")
+
+		out, err = exec.RunHostCommand("git", "commit", "--allow-empty", "-m", "Dummy commmit to keep pantheon alive")
+		if err != nil {
+			t.Logf("Failed to make git commit; out=%s, err=%v", out, err)
+		}
+		out, err = exec.RunHostCommand("git", "push")
+		if err != nil {
+			t.Logf("Failed to make git push; out=%s, err=%v", out, err)
+		}
+	}
+
 }
 
 // TestPantheonPush ensures we can push to pantheon for a configured environment.
@@ -273,7 +295,12 @@ func setupSSHKey(t *testing.T, privateKey string, expectScriptDir string) error 
 	require.NoError(t, err)
 	err = os.WriteFile(filepath.Join("sshtest", "id_rsa_test"), []byte(privateKey), 0600)
 	require.NoError(t, err)
-	out, err := exec.RunHostCommand("expect", filepath.Join(expectScriptDir, "ddevauthssh.expect"), DdevBin, "./sshtest")
+	// ssh-add the key for later pull/push
+	out, err := exec.RunHostCommand("ssh", "add", "./sshtest/id_rsa_test")
+	if err != nil {
+		t.Logf("Failed to ssh add; out=%s, err=%v", out, err)
+	}
+	out, err = exec.RunHostCommand("expect", filepath.Join(expectScriptDir, "ddevauthssh.expect"), DdevBin, "./sshtest")
 	require.NoError(t, err)
 	require.Contains(t, string(out), "Identity added:")
 	return nil
