@@ -1208,6 +1208,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	if app.IsMutagenEnabled() {
+		CheckMutagenUploadDir(app)
 		// Must wait for web container to be healthy before fiddling with mutagen
 		err = app.Wait([]string{"web"})
 		if err != nil {

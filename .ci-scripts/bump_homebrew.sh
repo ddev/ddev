@@ -68,7 +68,7 @@ class Ddev < Formula
       system ".gotmp/bin/linux_amd64/ddev_gen_autocomplete"
     end
     bash_completion.install ".gotmp/bin/ddev_bash_completion.sh" => "ddev"
-    zsh_completion.install ".gotmp/bin/ddev_zsh_completion.sh" => "ddev"
+    zsh_completion.install ".gotmp/bin/ddev_zsh_completion.sh" => "_ddev"
     fish_completion.install ".gotmp/bin/ddev_fish_completion.sh" => "ddev"
   end
 
