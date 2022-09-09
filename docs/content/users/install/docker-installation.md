@@ -117,7 +117,7 @@
     * [binaries](https://docs.docker.com/install/linux/docker-ce/binaries/)
 
     !!!note "One-time post-installation step"
-        Required post-installation steps: See [Docker's post-installation steps](https://docs.docker.com/engine/install/linux-postinstall/). You need to add your linux user to the "docker" group and configure the Docker daemon to start on boot.
+        Required post-installation steps: See [Docker's post-installation steps](https://docs.docker.com/engine/install/linux-postinstall/). You need to add your Linux user to the "docker" group and configure the Docker daemon to start on boot.
         ```bash
         sudo groupadd docker
         sudo usermod -aG docker $USER

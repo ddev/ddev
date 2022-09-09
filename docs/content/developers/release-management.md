@@ -39,7 +39,7 @@ The following "Repository secret" environment variables must be added to <https:
 
 1. Create a release for the new version using the GitHub UI. It should be "prerelease" if it's an edge release.
 2. Use the "Auto-generate release notes" option to get the commit list, then edit to add all the other necessary info.
-3. Verify that Homebrew (linux and macOS) and Chocolatey and AUR are working correctly with the right versions
+3. Verify that Homebrew (Linux and macOS) and Chocolatey and AUR are working correctly with the right versions
 
 ## Pushing Docker images with the GitHub Actions workflow
 

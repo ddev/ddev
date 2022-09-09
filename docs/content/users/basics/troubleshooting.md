@@ -130,7 +130,7 @@ com.docker.backend.exe        5760 Services                   0      9,536 K
 
 The resulting output displays which command is running and its pid. Choose the appropriate method to stop the other server.
 
-You may be able to find out what is using a port using `curl` also. On linux, macOS, or in git-bash on Windows, `curl -I localhost` or `curl -I -k https://localhost:443`. The result may give you a hint about what application is at fault.
+You may be able to find out what is using a port using `curl` also. On Linux, macOS, or in git-bash on Windows, `curl -I localhost` or `curl -I -k https://localhost:443`. The result may give you a hint about what application is at fault.
 
 We welcome your [suggestions](https://github.com/drud/ddev/issues/new) based on other issues you've run into and your troubleshooting technique.
 

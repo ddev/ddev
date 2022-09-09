@@ -103,8 +103,8 @@ Set the PhpStorm terminal path (Settings→Tools→Terminal→Shell Path) to `C:
 6. On older Windows 10, run `xeyes` – you should see the classic X11 play app “xeyes” on the screen. <ctrl-c> to exit. This is just a test to make sure X11 is working.
 7. Download and untar PhpStorm for Linux from [JetBrains](https://www.jetbrains.com/phpstorm/download/#section=linux) – you need the Linux app.
 8. Run `bin/phpstorm.sh &`
-9. In PhpStorm, under Help→ Edit Custom VM Options, add an additional line: `-Djava.net.preferIPv4Stack=true` This makes PhpStorm listen for Xdebug using IPV4; for some reason the Linux version of PhpStorm defaults to using only IPV6, and Docker Desktop doesn't support IPV6.
-10. Restart PhpStorm (`File→Exit` and then `bin/phpstorm.sh &` again.
+9. In PhpStorm, under Help → Edit Custom VM Options, add an additional line: `-Djava.net.preferIPv4Stack=true` This makes PhpStorm listen for Xdebug using IPV4; for some reason the Linux version of PhpStorm defaults to using only IPV6, and Docker Desktop doesn't support IPV6.
+10. Restart PhpStorm (`File → Exit` and then `bin/phpstorm.sh &` again.
 11. Use `ddev start` and `ddev xdebug` on
 Click the Xdebug listen button in PhpStorm (the little phone icon) to make it start listening.
 12. Set a breakpoint on or near the first line of your index.php
