@@ -12,7 +12,7 @@ Alternateively, you can see the latest build in action by visiting DDEV on [Gitp
 
 Each build of a PR has artifacts created in GitHub, so you can click the details of the [PR Build](https://github.com/drud/ddev/actions/workflows/pr-build.yml) test, choose the PR you want to work with, and download the artifacts you need.
 
-After you download and unzip the appropriate binary, you can place it in your `$PATH`. The easiest way to do this if you’re using homebrew is `brew unlink ddev` and then `unzip ddev.zip && chmod +x ddev && mv ddev /usr/local/bin/ddev`.
+After you download and unzip the appropriate binary, you can place it in your `$PATH`. The easiest way to do this if you’re using Homebrew is `brew unlink ddev` and then `unzip ddev.zip && chmod +x ddev && mv ddev /usr/local/bin/ddev`.
 
 Verify the replacement worked via `ddev -v`. The output should be something like `ddev version v1.19.1-42-g5334d3c1`, instead of the regular `ddev version v1.19.1`.
 

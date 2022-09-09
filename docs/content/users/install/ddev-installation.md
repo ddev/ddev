@@ -2,7 +2,7 @@
 
 Docker or an alternative is required before anything will work with DDEV. This is pretty easy on most environments; see the [Docker installation](docker-installation.md) page to help sort out the details.
 
-It's easiest to think of DDEV installation or upgrade as the installation of a single binary, the "ddev" binary. When you use DDEV, additional Docker images will be downloaded, etc. DDEV tries to make it so you can use the most common installation technique on your system, so homebrew on macOS, `apt` on Linux including WSL2, chocolatey or installer on traditional Windows, etc.
+It's easiest to think of DDEV installation or upgrade as the installation of a single binary, the "ddev" binary. When you use DDEV, additional Docker images will be downloaded, etc. DDEV tries to make it so you can use the most common installation technique on your system, so Homebrew on macOS, `apt` on Linux including WSL2, chocolatey or installer on traditional Windows, etc.
 
 === "macOS"
 
@@ -66,7 +66,7 @@ It's easiest to think of DDEV installation or upgrade as the installation of a s
     sudo apt update && sudo apt upgrade
     ```
 
-    If you previously used `install_ddev.sh` to install DDEV, you can just `sudo rm -f /usr/local/bin/ddev /usr/local/bin/mkcert /usr/local/bin/*ddev_nfs_setup.sh` to remove the previous version. If you previously used homebrew to install DDEV, you can just `brew unlink ddev` to get rid of the homebrew version.
+    If you previously used `install_ddev.sh` to install DDEV, you can just `sudo rm -f /usr/local/bin/ddev /usr/local/bin/mkcert /usr/local/bin/*ddev_nfs_setup.sh` to remove the previous version. If you previously used Homebrew to install DDEV, you can just `brew unlink ddev` to get rid of the Homebrew version.
 
     ### Yum/RPM packages for Fedora, RedHat, etc.
 
@@ -88,9 +88,9 @@ It's easiest to think of DDEV installation or upgrade as the installation of a s
 
     As a one-time initialization, run `mkcert -install`.
 
-    ### Alternate installation approaches: homebrew and install_ddev.sh script
+    ### Alternate installation approaches: Homebrew and install_ddev.sh script
 
-    You can also use the [homebrew](#homebrew) and [install_ddev.sh script](#install_ddev.sh-install-script) techniques exactly on macOS to install or upgrade DDEV on Linux.
+    You can also use the [Homebrew](#homebrew) and [install_ddev.sh script](#install_ddev.sh-install-script) techniques exactly on macOS to install or upgrade DDEV on Linux.
 
 === "Windows WSL2"
 

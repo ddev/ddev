@@ -99,11 +99,11 @@ Why does `ddev start` fail with "error while mounting volume, Permission denied"
 
 How can I update/upgrade DDEV?
 : DDEV is easiest to think of as a single binary, and it can be installed many ways, so can be upgraded many ways depending on your operating system and environment. Mostly upgrading is the same as installing, see [DDEV Installation](../install/ddev-installation.md).
-     * If you're on macOS you likely installed DDEV with homebrew, so try `brew update && brew upgrade ddev`.
+     * If you're on macOS you likely installed DDEV with Homebrew, so try `brew update && brew upgrade ddev`.
 <!-- markdownlint-disable-next-line -->
      * If you're on Linux including WSL2 and using Debian/Ubuntu and use the recommended `apt install` technique, you can `sudo apt update && sudo apt upgrade ddev` as you would do with any other package on your system.
 <!-- markdownlint-disable-next-line -->
-     * If you're on Linux including WSL2 and you installed using homebrew, you can `brew update && brew upgrade ddev`.
+     * If you're on Linux including WSL2 and you installed using Homebrew, you can `brew update && brew upgrade ddev`.
      * On macOS or Linux (including WSL2) if you installed using the [install_ddev.sh script](https://github.com/drud/ddev/blob/master/scripts/install_ddev.sh) you can just run it again:
 <!-- markdownlint-disable -->
           ```
@@ -114,7 +114,7 @@ How can I update/upgrade DDEV?
      * On Arch-Linux based systems, use the standard upgrade techniques, for example `yay -Syu`.
 
 How can I install a specific version of DDEV?
-: If you want to use a different version of DDEV, you easily get a different version. If you're using homebrew, `brew unlink ddev` first, to get rid of the version you have there. Then use one of these options:
+: If you want to use a different version of DDEV, you easily get a different version. If you're using Homebrew, `brew unlink ddev` first, to get rid of the version you have there. Then use one of these options:
 
     1. Download the version you want from the [releases page](https://github.com/drud/ddev/releases) and place it somewhere in your `$PATH`.
     2. Use the [install_ddev.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh) script with the version number argument. For example, if you want v1.18.3-alpha1, use `curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash -s v1.18.3-alpha1`.

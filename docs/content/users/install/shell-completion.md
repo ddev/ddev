@@ -2,10 +2,10 @@
 
 Most people like to have shell completion on the command line. In other words, when you're typing a command, you can hit `<TAB>` and the shell will show you what the options are. For example, if you type `ddev <TAB>`, you'll see all the possible commands. `ddev debug <TAB>` will show you the options for the command. And `ddev list -<TAB>` will show you all the flags available for `ddev list`.
 
-Shells like bash and zsh need help to do this though, they have to know what the options are. DDEV provides the necessary hint scripts, and if you use homebrew, they get installed automatically. But if you use oh-my-zsh, for example, you may have to manually install the hint script.
+Shells like bash and zsh need help to do this though, they have to know what the options are. DDEV provides the necessary hint scripts, and if you use Homebrew, they get installed automatically. But if you use oh-my-zsh, for example, you may have to manually install the hint script.
 
 === "macOS Bash with Homebrew"
-    The easiest way to use bash completion on macOS is install it with homebrew. `brew install bash-completion`. When you install it though, it will warn you with something like this, which may vary on your system.
+    The easiest way to use bash completion on macOS is install it with Homebrew. `brew install bash-completion`. When you install it though, it will warn you with something like this, which may vary on your system.
 
     Add the following line to your `~/.bash_profile`:
 
@@ -18,7 +18,7 @@ Shells like bash and zsh need help to do this though, they have to know what the
 
     * Link completions with `brew completions link`.
 
-    When you install DDEV via homebrew, each new release will automatically get a refreshed completions script.
+    When you install DDEV via Homebrew, each new release will automatically get a refreshed completions script.
 
 === "Bash/Zsh/Fish on Linux"
 
@@ -38,13 +38,13 @@ Shells like bash and zsh need help to do this though, they have to know what the
 
 === "Oh-My-Zsh"
 
-    If you installed zsh with homebrew, ddev's completions will be automatically installed when you `brew install drud/ddev/ddev`.
+    If you installed zsh with Homebrew, DDEV's completions will be automatically installed when you `brew install drud/ddev/ddev`.
     
     Otherwise, Oh-My-Zsh may be set up very differently in different places, so as a power zsh user you'll need to put ddev_bash_completion.sh (see tar archive download above) where it belongs. `echo $fpath` will show you the places that it's most likely to belong. An obvious choice is `~/.oh-my-zsh/completions` if that exists, so you can `mkdir -p ~/.oh-my-zsh/completions && cp ddev_zsh_completion.sh ~/.oh-my-zsh/completions/_ddev` and then `autoload -Uz compinit && compinit`.
 
 === "Fish"
 
-    The fish shell's completions are also supported and are automatically installed into `/usr/local/share/fish/vendor_completions.d/` when you install ddev via Homebrew.  If you have installed fish without homebrew, you can extract the fish completions from the ddev_shell_completion_scripts tarball that is included with each release.
+    The fish shell's completions are also supported and are automatically installed into `/usr/local/share/fish/vendor_completions.d/` when you install ddev via Homebrew.  If you have installed fish without Homebrew, you can extract the fish completions from the ddev_shell_completion_scripts tarball that is included with each release.
 
 === "Git-bash"
 
@@ -56,6 +56,6 @@ Shells like bash and zsh need help to do this though, they have to know what the
 
 ## tar Archive of Completion Scripts for Manual Deployment
 
-Although most people will use techniques like homebrew for installation, a tar archive of the shell completion scripts is available in each release, called `ddev_shell_completion_scripts.<version>.tar.gz`. If you need to manually install, you can download and untar the scripts, then copy them as needed to where they have to go. For example, `sudo cp ddev_bash_completion.sh /etc/bash_completion.d/ddev`.
+Although most people will use techniques like Homebrew for installation, a tar archive of the shell completion scripts is available in each release, called `ddev_shell_completion_scripts.<version>.tar.gz`. If you need to manually install, you can download and untar the scripts, then copy them as needed to where they have to go. For example, `sudo cp ddev_bash_completion.sh /etc/bash_completion.d/ddev`.
 
 Note that scripts for the fish shell and Windows PowerShell are also provided, but no instructions are given here for deploying them.

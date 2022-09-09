@@ -9,7 +9,7 @@ The following "Repository secret" environment variables must be added to <https:
 
 * `CHOCOLATEY_API_KEY`: API key for chocolatey.
 
-* `DDEV_GITHUB_TOKEN`: The GitHub token that gives access to create releases and push to the homebrew repositories.
+* `DDEV_GITHUB_TOKEN`: The GitHub token that gives access to create releases and push to the Homebrew repositories.
 
 * `DDEV_MACOS_APP_PASSWORD`: The password used for notarization, see [signing_tools](https://github.com/drud/signing_tools)
 
@@ -39,7 +39,7 @@ The following "Repository secret" environment variables must be added to <https:
 
 1. Create a release for the new version using the GitHub UI. It should be "prerelease" if it's an edge release.
 2. Use the "Auto-generate release notes" option to get the commit list, then edit to add all the other necessary info.
-3. Verify that homebrew (linux and macOS) and Chocolatey and AUR are working correctly with the right versions
+3. Verify that Homebrew (linux and macOS) and Chocolatey and AUR are working correctly with the right versions
 
 ## Pushing Docker images with the GitHub Actions workflow
 
@@ -95,11 +95,11 @@ But here are the steps for building:
 4. Push images using the [process above](#pushing-docker-images-with-the-github-actions-workflow).
 5. Update pkg/version/version.go with the correct versions for the new images, and run a full test run.
 
-## Manually updating homebrew formulas
+## Manually updating Homebrew formulas
 
 Homebrew formulas are normally updated just fine by the release process, so nothing needs to be done.
 
-If you have to temporarily update the homebrew formulas, you can do that with a commit to <https://github.com/drud/homebrew-ddev> and <https://github.com/drud/homebrew-ddev-edge>. The bottles and checksums for macOS (high sierra) and x86_64_linux are built and pushed to the release page automatically by the release build process (see [bump_homebrew.sh](https://github.com/drud/ddev/blob/master/.ci-scripts/bump_homebrew.sh). Test `brew upgrade ddev` both on macOS and Linux and make sure DDEV is the right version and behaves well.
+If you have to temporarily update the Homebrew formulas, you can do that with a commit to <https://github.com/drud/homebrew-ddev> and <https://github.com/drud/homebrew-ddev-edge>. The bottles and checksums for macOS (high sierra) and x86_64_linux are built and pushed to the release page automatically by the release build process (see [bump_homebrew.sh](https://github.com/drud/ddev/blob/master/.ci-scripts/bump_homebrew.sh). Test `brew upgrade ddev` both on macOS and Linux and make sure DDEV is the right version and behaves well.
 
 ## Manually updating Chocolatey
 
