@@ -1,19 +1,19 @@
 # Step-debugging with Xdebug
 
-Every DDEV project is automatically configured with xdebug so that popular IDEs can do step-debugging of PHP code. It is disabled by default for performance reasons, so you'll need to enable it in your config.yaml.
+Every DDEV project is automatically configured with Xdebug so that popular IDEs can do step-debugging of PHP code. It is disabled by default for performance reasons, so you'll need to enable it in your config.yaml.
 
-xdebug is a server-side tool: It is installed automatically on the container and you do *not* need to install or configure it on your workstation.
+Xdebug is a server-side tool: It is installed automatically on the container and you do *not* need to install or configure it on your workstation.
 
-All IDEs basically work the same: They listen on a port and react when they're contacted there. IDEs other than those listed here work fine, if they listen on the default xdebug port 9003. (This was port 9000 through DDEV v1.18, changed to 9003 in v1.19+)
+All IDEs basically work the same: They listen on a port and react when they're contacted there. IDEs other than those listed here work fine, if they listen on the default Xdebug port 9003. (This was port 9000 through DDEV v1.18, changed to 9003 in v1.19+)
 
 **Key facts:**
 
-* Enable xdebug by running `ddev xdebug` or `ddev xdebug on` in your project directory. It will remain enabled until you start or restart the project.
-* Disable xdebug for better performance when not debugging with `ddev xdebug off`
+* Enable Xdebug by running `ddev xdebug` or `ddev xdebug on` in your project directory. It will remain enabled until you start or restart the project.
+* Disable Xdebug for better performance when not debugging with `ddev xdebug off`
 * `ddev xdebug status` will show current status.
-* The debug server port on the IDE must be set to port 9003 (port 9000 before v1.19), which is the default and is probably already set in most popular IDEs. (If you need to change the xdebug port due to a port conflict on your host computer, you can do it with a PHP override, explained below.)
+* The debug server port on the IDE must be set to port 9003 (port 9000 before v1.19), which is the default and is probably already set in most popular IDEs. (If you need to change the Xdebug port due to a port conflict on your host computer, you can do it with a PHP override, explained below.)
 
-For more background on XDebug see [XDebug documentation](https://xdebug.org/docs/remote). The intention here is that one won't have to understand XDebug to do debugging.
+For more background on Xdebug see [Xdebug documentation](https://xdebug.org/docs/remote). The intention here is that one won't have to understand Xdebug to do debugging.
 
 For each IDE the link to their documentation is provided, and the skeleton steps required are listed here.
 
@@ -66,7 +66,7 @@ Server creation:
 
 If you need to debug command-line PHP processes, especially code that is outside the docroot, the environment variable PHP_IDE_CONFIG is already set inside the web container, so you don't have to do much more.
 
-However, if you have not yet used PhpStorm with xdebug for a regular web request, do that to automatically create the PhpStorm "server" with the same name as your primary URL (see "Languages and Frameworks" -> "PHP" -> "Servers"). The key job of the "server" is to map filesystem locations on the workstation (your computer) to filesystem locations on the remote server (in this case the ddev-webserver container). Often, PhpStorm has automatically set up a mapping that doesn't include the entire project (so the vendor directory is not mapped, for example). So map the top-level directory of your project to /var/www/html in the container, as in this image:
+However, if you have not yet used PhpStorm with Xdebug for a regular web request, do that to automatically create the PhpStorm "server" with the same name as your primary URL (see "Languages and Frameworks" -> "PHP" -> "Servers"). The key job of the "server" is to map filesystem locations on the workstation (your computer) to filesystem locations on the remote server (in this case the ddev-webserver container). Often, PhpStorm has automatically set up a mapping that doesn't include the entire project (so the vendor directory is not mapped, for example). So map the top-level directory of your project to /var/www/html in the container, as in this image:
 ![PhpStorm mapping](../images/PHPStormServerMapping.png)
 
 ## Visual Studio Code (vscode) Debugging Setup
@@ -74,8 +74,8 @@ However, if you have not yet used PhpStorm with xdebug for a regular web request
 1. Install the [php-debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension.
 2. Update the project's [launch.json] (in `.vscode/launch.json`)  to add "Listen for xdebug" (see [config snippet](../snippets/launch.json)).  For more on launch.json, see [vscode docs](https://code.visualstudio.com/docs/editor/debugging#_launch-configurations).
 3. Set a breakpoint in your index.php. If it isn't solid red, restart.
-4. In the menu, choose Run->Start Debugging.You may have to select "Listen for XDebug" by the green arrowhead at the top left. The bottom pane of vscode should now be orange (live) and should say "Listen for XDebug".
-5. Enable XDebug with `ddev xdebug on`
+4. In the menu, choose Run->Start Debugging.You may have to select "Listen for Xdebug" by the green arrowhead at the top left. The bottom pane of vscode should now be orange (live) and should say "Listen for Xdebug".
+5. Enable Xdebug with `ddev xdebug on`
 6. In a browser, visit your project, you should hit the breakpoint.
 
 Note that if you're using vscode on Windows with WSL2, you'll want the "PHP Debug" extension enabled in your distro (for example, Ubuntu). You'll also need the "Remote - WSL" extension enabled. vscode will suggest both of these to you if you have WSL2 enabled and a PHP project.
@@ -97,16 +97,16 @@ NOTE: If you are using a PHP version below PHP7.2, you will be using Xdebug vers
 
 ## Troubleshooting Xdebug
 
-The basic thing to understand about xdebug is that it's a network protocol. Your IDE (like PhpStorm) will listen on the xdebug port (9003 by default in v1.19+, previously 9000). Then if xdebug is enabled in the DDEV web container with `ddev xdebug on`, then php inside the container will try to open a TCP connection to the IDE. Docker's networking places the host-side listening IDE at `host.docker.internal:9003`. So you have to make sure that the network connection is clear and can be made and everything should work. Here are basic steps to take to sort out any difficulty:
+The basic thing to understand about Xdebug is that it's a network protocol. Your IDE (like PhpStorm) will listen on the Xdebug port (9003 by default in v1.19+, previously 9000). Then if Xdebug is enabled in the DDEV web container with `ddev xdebug on`, then php inside the container will try to open a TCP connection to the IDE. Docker's networking places the host-side listening IDE at `host.docker.internal:9003`. So you have to make sure that the network connection is clear and can be made and everything should work. Here are basic steps to take to sort out any difficulty:
 
 * Remember that the port in play is port 9003 for DDEV v1.19+, but before that it was port 9000.
 * Reboot your computer.
 * Temporarily disable any *firewall* or *VPN* if you're having trouble. Xdebug is a network protocol, and the php process inside the web container must be able to establish a TCP connection to the listening IDE (PhpStorm, for example).
-* Use `ddev xdebug on` to enable xdebug when you want it, and `ddev xdebug off` when you're done with it.
+* Use `ddev xdebug on` to enable Xdebug when you want it, and `ddev xdebug off` when you're done with it.
 * Set a breakpoint at the first executable line of your index.php.
 * Tell your IDE to start listening. (PhpStorm: Click the telephone button, vscode: run the debugger.)
 * Use `curl` or a browser to create a web request. For example, `curl https://d9.ddev.site`
-* If the IDE doesn't respond, take a look at `ddev logs`. If you see a message like ""PHP message: Xdebug: [Step Debug] Could not connect to debugging client. Tried: host.docker.internal:9003 (through xdebug.client_host/xdebug.client_port)" then php/xdebug (inside the container) is not able to make a connection to port 9003.
+* If the IDE doesn't respond, take a look at `ddev logs`. If you see a message like ""PHP message: Xdebug: [Step Debug] Could not connect to debugging client. Tried: host.docker.internal:9003 (through xdebug.client_host/xdebug.client_port)" then PHP/Xdebug (inside the container) is not able to make a connection to port 9003.
 * `ddev ssh` into the web container. Can you `telnet host.docker.internal 9003` and have it connect? If you can't, you might have an over-aggressive firewall. Disable it, or add a rule that would allow the connection to pass through. For example, on Debian/ Ubuntu that would be `sudo ufw allow 9003/tcp`.
 * In PhpStorm, disable the "listen for connections" button so it won't listen. Or just exit PhpStorm. With another IDE like vscode, stop the debugger from listening.
 * `ddev ssh`: Can `telnet host.docker.internal 9003` connect? If it does, you have something else running on port 9003. On the host, use `sudo lsof -i :9003 -sTCP:LISTEN` to find out what is there and stop it. Don't continue debugging until your telnet command does not connect. (Note that on Windows WSL2 you may have to look for listeners both inside WSL2 and on the Windows side.)

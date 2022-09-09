@@ -22,7 +22,7 @@ Type `ddev` or `ddev -h`in a terminal window to see the available DDEV commands.
 * `ddev composer` lets you run composer (inside the container), for example `ddev composer install` will do a full composer install for you without even needing composer on your computer. See [developer tools](developer-tools.md#ddev-and-composer).
 * `ddev snapshot` makes a very fast snapshot of your database that can be easily and quickly restored with `ddev snapshot restore`.
 * `ddev share` requires ngrok and at least a free account on [ngrok.com](https://ngrok.com) so you can let someone in the next office or on the other side of the planet see your project and what you're working on. `ddev share -h` gives more info about how to set up ngrok.
-* `ddev xdebug` enables xdebug, `ddev xdebug off` disables it, `ddev xdebug status` shows status
+* `ddev xdebug` enables Xdebug, `ddev xdebug off` disables it, `ddev xdebug status` shows status
 * `ddev xhprof` enables xhprof, `ddev xhprof off` disables it, `ddev xhprof status` shows status
 * `ddev drush` (Drupal and Backdrop only) gives direct access to the drush CLI
 * `ddev artisan` (Laravel only) gives direct access to the Laravel artisan CLI
