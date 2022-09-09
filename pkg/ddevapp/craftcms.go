@@ -87,10 +87,14 @@ func craftCmsPostConfigAction(app *DdevApp) error {
 
 // Set up the .env file for ddev
 func craftCmsPostStartAction(app *DdevApp) error {
+	// If settings management is disabled, do nothing
+	if app.DisableSettingsManagement {
+		return nil
+	}
+	// If the .env file doesn't exist, try to create it by copying .env.example to .env
 	var err error
 	var envFilePath string
 	envFilePath = filepath.Join(app.AppRoot, ".env")
-	// If the .env file doesn't exist, try to create it by copying .env.example to .env
 	if !fileutil.FileExists(envFilePath) {
 		var exampleEnvFilePaths = []string{".env.example", ".env.example.dev"}
 		for _, envFileName := range exampleEnvFilePaths {
