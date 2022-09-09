@@ -80,18 +80,23 @@ func craftCmsImportFilesAction(app *DdevApp, importPath, extPath string) error {
 	return nil
 }
 
-// Set up the .env file for ddev
+// Currently a placeholder, for possible future expansion
 func craftCmsPostConfigAction(app *DdevApp) error {
+	return nil
+}
+
+// Set up the .env file for ddev
+func craftCmsPostStartAction(app *DdevApp) error {
 	var err error
 	var envFilePath string
 	envFilePath = filepath.Join(app.AppRoot, ".env")
 	// If the .env file doesn't exist, try to create it by copying .env.example to .env
 	if !fileutil.FileExists(envFilePath) {
 		var exampleEnvFilePaths = []string{".env.example", ".env.example.dev"}
-		for _, exampleEnvFilePath := range exampleEnvFilePaths {
-			exampleEnvFilePath = filepath.Join(app.AppRoot, exampleEnvFilePath)
+		for _, envFileName := range exampleEnvFilePaths {
+			var exampleEnvFilePath = filepath.Join(app.AppRoot, envFileName)
 			if fileutil.FileExists(exampleEnvFilePath) {
-				util.Warning(fmt.Sprintf("Copying %s to .env", exampleEnvFilePath))
+				util.Warning(fmt.Sprintf("Copying %s to .env", envFileName))
 				err = fileutil.CopyFile(exampleEnvFilePath, envFilePath)
 				if err != nil {
 					util.Error(fmt.Sprintf("Error copying %s to .env", exampleEnvFilePath))
@@ -120,8 +125,8 @@ func craftCmsPostConfigAction(app *DdevApp) error {
 	// Set the primary site URL
 	var siteURLRegEx *regexp.Regexp
 	var siteURLReplace string
-	siteURLRegEx = regexp.MustCompile(`(PRIMARY_SITE_URL|SITE_URL)=(.*)`)
-	siteURLReplace = fmt.Sprintf("$1=%sddev.site", app.GetHTTPSURL())
+	siteURLRegEx = regexp.MustCompile(`PRIMARY_SITE_URL=(.*)`)
+	siteURLReplace = fmt.Sprintf("PRIMARY_SITE_URL=%s", app.GetHTTPSURL())
 	if !siteURLRegEx.MatchString(envFileContents) {
 		envFileContents += "\nPRIMARY_SITE_URL="
 	}
@@ -161,10 +166,5 @@ func craftCmsPostConfigAction(app *DdevApp) error {
 		}
 	}
 
-	return nil
-}
-
-// Currently a placeholder, for possible future expansion
-func craftCmsPostStartAction(app *DdevApp) error {
 	return nil
 }

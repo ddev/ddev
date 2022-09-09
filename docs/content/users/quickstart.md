@@ -346,37 +346,22 @@ Here's a quickstart instructions for a number of different environments:
 
     ## Craft CMS
 
-    [Craft CMS](https://craftcms.com) can be downloaded with [Composer](https://craftcms.com/docs/4.x/installation.html#downloading-with-composer), by cloning a [Craft starter project](https://github.com/craftcms/craft) or by [manually downloading](https://craftcms.com/docs/4.x/installation.html#downloading-an-archive-file-manually) a zipped archive. 
+    [Craft CMS](https://craftcms.com) can be downloaded with [Composer](https://craftcms.com/docs/4.x/installation.html#downloading-with-composer), or by [manually downloading](https://craftcms.com/docs/4.x/installation.html#downloading-an-archive-file-manually) a zipped archive. 
     
     === "New projects"
     
-        ### Composer build
+        ### Composer project
         
         Use this to create a new Craft CMS project from the official [Craft starter project](https://github.com/craftcms/craft) or a third-party starter project using Composer.
         
         ```bash
         mkdir path/to/my-project
         cd path/to/my-project
-        composer create craftcms/craft . --no-install --no-scripts
         ddev config --project-type=craftcms
+        ddev composer create -y --no-scripts --no-install craftcms/craft
         ddev start
         ddev composer install
-        ddev craft setup
-        ddev launch
-        ```
-        
-        ### Git clone
-        
-        Use this to create a new Craft CMS project from the official [Craft starter project](https://github.com/craftcms/craft) or a third-party starter project using Git.
-        
-        ```bash
-        mkdir path/to/my-project
-        cd path/to/my-project
-        git clone https://github.com/craftcms/craft . && rm -rf .git*
-        ddev config --project-type=craftcms
-        ddev start
-        ddev composer install
-        ddev craft setup
+        ddev craft setup/welcome
         ddev launch
         ```
 
@@ -392,9 +377,11 @@ Here's a quickstart instructions for a number of different environments:
         ddev config --project-type=craftcms
         ddev start
         ddev composer install
-        ddev craft setup
+        ddev craft setup/welcome
         ddev launch
         ```
+
+    DDEV will automatically setup your `.env` so it will work properly for local development, so the default settings displayed in the `ddev craft setup/welcome` command can be used. Change them only if you need to override a particular setting.
 
     === Existing projects
     
