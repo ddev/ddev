@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"fmt"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"os"
 	"path/filepath"
 )
@@ -34,12 +35,18 @@ func laravelPostStartAction(app *DdevApp) error {
 			return err
 		}
 	}
+	port := "3306"
+	dbConnection := "mysql"
+	if app.Database.Type == nodeps.Postgres {
+		dbConnection = "pgsql"
+		port = "5432"
+	}
 	envContents["DB_HOST"] = "db"
-	envContents["DB_PORT"] = "3306"
+	envContents["DB_PORT"] = port
 	envContents["DB_DATABASE"] = "db"
 	envContents["DB_USERNAME"] = "db"
 	envContents["DB_PASSWORD"] = "db"
-	envContents["DB_CONNECTION"] = "ddev"
+	envContents["DB_CONNECTION"] = dbConnection
 	err = WriteEnvFile(app, envContents)
 	if err != nil {
 		return err
