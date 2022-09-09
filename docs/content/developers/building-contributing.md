@@ -6,7 +6,7 @@ You can download the latest artifacts from the master branch from [link](https:/
 
 To download the latest version, you can visit the [master-build](https://github.com/drud/ddev/actions/workflows/master-build.yml) workflow and choose the latest item (or the one that matches a commit you want to test). You'll see the artifacts for each OS there on the bottom of the page.
 
-And of course you can just see the latest build in action by visiting DDEV on [gitpod](https://gitpod.io/#https://github.com/drud/ddev).
+And of course you can just see the latest build in action by visiting DDEV on [Gitpod](https://gitpod.io/#https://github.com/drud/ddev).
 
 ## Testing a PR
 
@@ -31,7 +31,7 @@ To just open and work on DDEV you can use the button below.
 
 If you want to run a web project in there, you can just check it out into `/workspace/<yourproject>` and use it as usual. The things you're familiar with work as expected, except that `ddev-router` does not run, and
 
-A dummy project for gitpod is provided by default in /workspace/d9simple. You can just `ddev poweroff` and use your own.
+A dummy project for Gitpod is provided by default in /workspace/d9simple. You can just `ddev poweroff` and use your own.
 
 ## Making changes to DDEV images
 
@@ -51,7 +51,7 @@ make
 
 `ddev version` should show you that you are using the correct webtag, and `ddev start` will show it.
 
-It's easiest to do this using gitpod (see above) because gitpod already has `docker buildx` all set up for you and the built DDEV binary is in the $PATH.
+It's easiest to do this using Gitpod (see above) because Gitpod already has `docker buildx` all set up for you and the built DDEV binary is in the $PATH.
 
 ## Pull Requests and PR Preparation
 

@@ -125,11 +125,11 @@
 
     On systems that do not include systemd or equivalent (mostly if installing inside WSL2) you'll need to manually start Docker with `service docker start` or the equivalent in your distro. You can add this into your `~/.profile` or equivalent.
 
-=== "Gitpod.io"
+=== "Gitpod"
 
-    ## Gitpod.io
+    ## Gitpod
 
-    With gitpod.io you don't have to install anything at all. Docker is all set up for you. 
+    With [Gitpod](https://www.gitpod.io) you don't have to install anything at all. Docker is all set up for you. 
 
 <a name="troubleshooting"></a>
 

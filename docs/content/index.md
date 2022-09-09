@@ -43,8 +43,8 @@ DDEV works great on macOS, Windows WSL2, traditional Windows, Linux and Gitpod.i
     * RAM: 8GB
     * Storage: 256GB
 
-=== "Gitpod.io"
+=== "Gitpod"
 
-    ### Gitpod.io
+    ### Gitpod
 
-    With gitpod.io all you need is a browser and an internet connection. You don't have to install anything at all. You can use any kind of computer that has a browser, or tablet, or whatever you like.
+    With [Gitpod](https://www.gitpod.io) all you need is a browser and an internet connection. You don't have to install anything at all. You can use any kind of computer that has a browser, or tablet, or whatever you like.

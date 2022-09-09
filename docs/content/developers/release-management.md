@@ -105,7 +105,7 @@ If you have to temporarily update the homebrew formulas, you can do that with a 
 
 Normallly the release process does OK with pushing to Chocolatey, but at times a failure can happen and it's not worth doing the whole release process again.
 
-* Open up gitpod, <https://gitpod.io/#https://github.com/drud/ddev> and
+* Open up Gitpod, <https://gitpod.io/#https://github.com/drud/ddev> and
 
 ```bash
 cd /workspace/ddev
