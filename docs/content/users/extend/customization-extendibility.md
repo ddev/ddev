@@ -225,9 +225,9 @@ innodb_large_prefix=false
 
 To load the new configuration, run `ddev restart`.
 
-## Custom Postgresql configuration
+## Custom PostgreSQL configuration
 
-If you are using Postgresql, a default `posgresql.conf` is provided in `.ddev/postgres/postgresql.conf`. If you need to alter it, remove the `#ddev-generated` line and `ddev restart`.
+If you are using PostgreSQL, a default `posgresql.conf` is provided in `.ddev/postgres/postgresql.conf`. If you need to alter it, remove the `#ddev-generated` line and `ddev restart`.
 
 ## Extending config.yaml with custom `config.*.yaml` files
 

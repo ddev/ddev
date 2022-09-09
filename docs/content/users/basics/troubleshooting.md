@@ -9,7 +9,7 @@ Things might go wrong! Besides the suggestions on this page don't forget about [
 * If you have any proxies set up in Docker's settings, temporarily remove them.
 * `ddev debug dockercheck` will help sort out Docker problems, as will `ddev debug test`.
 * On macOS and traditional Windows, please check to make sure that Docker Desktop is not out of disk space. In Settings (or Preferences)->Resources->Disk image size there should be lots of space left; I never let it go over 80% because the number reported here is not reliable. If it says zero used, something is wrong.
-* If you have customizations (PHP overrides, nginx or Apache overrides, MySQL/Postgresql overrides, custom services, config.yaml changes) please back them out while troubleshooting. It's important to have the simplest possible environment while troubleshooting.
+* If you have customizations (PHP overrides, nginx or Apache overrides, MySQL/PostgreSQL overrides, custom services, config.yaml changes) please back them out while troubleshooting. It's important to have the simplest possible environment while troubleshooting.
 * Restart Docker. Consider a Docker factory reset in serious cases (this will destroy any databases you've loaded). See [Docker Troubleshooting](../install/docker-installation.md#troubleshooting) for more.
 * Try the simplest possible DDEV project to try to get it to work (just as `ddev debug test` does).
 

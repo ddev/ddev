@@ -48,7 +48,7 @@ Can different projects communicate with each other?
     ```
 
 How do I make DDEV match my production webserver environment?
-: You can change the PHP major version and choose between nginx+fpm (default) and apache+fpm and choose the MariaDB/MySQL/Postgresql version add [extra services like solr and memcached](../extend/additional-services.md). You will not be able to make every detail match your production server, but with database server type and version, PHP version and webserver type you'll be close.
+: You can change the PHP major version and choose between nginx+fpm (default) and apache+fpm and choose the MariaDB/MySQL/PostgreSQL version add [extra services like solr and memcached](../extend/additional-services.md). You will not be able to make every detail match your production server, but with database server type and version, PHP version and webserver type you'll be close.
 
 How do I completely destroy a project?
 : Use `ddev delete <project>` to destroy a project. By default, a `ddev snapshot` of your database is taken, but you can skip this using `ddev delete --omit-snapshot` or `ddev delete --omit-snapshot -y`, see `ddev delete -h` for options. It's up to you to then delete the code directory.

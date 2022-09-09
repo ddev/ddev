@@ -7,7 +7,7 @@ Run `ddev describe` to see the project information and services available for yo
 Hundreds of useful developer tools are included inside the containers. Any of these tools can be used via `ddev exec` or `ddev ssh`. A short listing is:
 
 * MySQL client (`mysql`) - Command-line interface for interacting with MySQL/MariaDB.
-* Postgresql client (`psql`) - Command-line tool for Postgresql.
+* PostgreSQL client (`psql`) - Command-line tool for PostgreSQL.
 * [Drush](http://www.drush.org) - Command-line shell and Unix scripting interface for Drupal.
 * [PHIVE](https://phar.io/) - Command line tool for "PHAR Installation and Verification Environment"
 * [WP-CLI](http://wp-cli.org/) - Command-line tools for managing WordPress installations, available both as "wp" and as "wp-cli".

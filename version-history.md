@@ -14,7 +14,7 @@ This version history has been driven by what we hear from our wonderful communit
 ## v1.19.0-v1.19.5 (Released 2022-03 through 2022-07)
 
 - [x] `ddev get` and `ddev get --list` allow quick installation of maintained, tested add-ons.
-- [x] Postgresql support alongside MariaDB and MySQL.
+- [x] PostgreSQL support alongside MariaDB and MySQL.
 - [x] Run on any platform without Docker Desktop. Colima support for macOS and Docker-inside-WSL2 for Windows.
 - [x] Database snapshots are now gzipped, resulting in perhaps 20x size difference. A snapshot that used to use 207MB on disk is now 5MB.
 - [x] New `ddev service enable`, `ddev service disable`, `ddev php`, `ddev debug test`, `ddev debug dockercheck` commands.
