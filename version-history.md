@@ -15,10 +15,10 @@ This version history has been driven by what we hear from our wonderful communit
 
 - [x] `ddev get` and `ddev get --list` allow quick installation of maintained, tested add-ons.
 - [x] Postgresql support alongside MariaDB and MySQL.
-- [x] Run on any platform without Docker Desktop. Colima support for macOS and docker-inside-WSL2 for Windows.
+- [x] Run on any platform without Docker Desktop. Colima support for macOS and Docker-inside-WSL2 for Windows.
 - [x] Database snapshots are now gzipped, resulting in perhaps 20x size difference. A snapshot that used to use 207MB on disk is now 5MB.
 - [x] New `ddev service enable`, `ddev service disable`, `ddev php`, `ddev debug test`, `ddev debug dockercheck` commands.
-- [x] Support for remote docker instances.
+- [x] Support for remote Docker instances.
 - [x] `import-db`, `export-db`, and `import-files` now accept xz and bzip2 compression, thanks to [weareb13](https://twitter.com/weareb13) for sponsoring this feature.
 - [x] `ddev clean` will clean up project usage like snapshots and old images thanks to @mikebarkas
 - [x] mariadb:10.7 and 10.8.
@@ -35,7 +35,7 @@ This version history has been driven by what we hear from our wonderful communit
 ## v1.18 (Released 2021-09-28) and v1.18.2 (2021-12-08)
 
 - [x] gitpod.io support
-- [x] Integrated docker-compose so docker updates don't break things.
+- [x] Integrated docker-compose so Docker updates don't break things.
 - [x] Mutagen support results in a huge speedup for macOS and traditional Windows users
 - [x] Support docker-compose v1 and v2
 - [x] Support MariaDB 10.6
@@ -62,7 +62,7 @@ This version history has been driven by what we hear from our wonderful communit
 ## v1.16 (Released 2020-11-12)
 
 - [x] Support Shopware 6
-- [x] Remove support for docker toolbox on Win10 Home (in favor of new docker desktop)
+- [x] Remove support for Docker Toolbox on Win10 Home (in favor of new Docker Desktop)
 - [x] Remove `apache-cgi` webserver_type
 - [x] Per-project-type commands like `ddev drush`, `ddev typo3`
 - [x] Build hardened ddev with hardened images for open-source production hosting
@@ -143,7 +143,7 @@ This version history has been driven by what we hear from our wonderful communit
 - Previous versions of Docker for Mac supported operating systems back to El Capitan, but Docker-for-Mac has dropped support for anything before macOS Sierra 10.12, so ddev also has to drop support for everything before Sierra.
 - The default PHP version changes to 7.2. This affects new Drupal 8 and Drupal 7 projects, as well as projects of type "php".
 - Fix regression in v1.5.0 where mariadb_version = 10.1 did not properly set the container version to the 10.1 container version.
-- The ddev-dbserver images now use the official MariaDB docker image (which uses Debian) as a base, instead of building a custom Alpine image. This *should* be invisible to all users, but we love to hear feedback.
+- The ddev-dbserver images now use the official MariaDB Docker image (which uses Debian) as a base, instead of building a custom Alpine image. This *should* be invisible to all users, but we love to hear feedback.
 
 ## v1.6 (released 2019-02-11)
 
@@ -173,7 +173,7 @@ This version history has been driven by what we hear from our wonderful communit
 ## v1.3 (released 2018-10-11)
 
 - Apache support now works on Windows and has full test coverage and is no longer experimental. It seems to work quite well.
-- MariaDB is upgraded from 10.1 to 10.2. MariaDB 10.2 has a number of advantages including more flexible key lengths. (This does mean that pre-v1.1.0 databases which were bind-mounted in ~/.ddev can no longer be migrated to docker volumes with this release, see caveats above. Also, snapshots from previous releases cannot be restored with this release, in caveats above.)
+- MariaDB is upgraded from 10.1 to 10.2. MariaDB 10.2 has a number of advantages including more flexible key lengths. (This does mean that pre-v1.1.0 databases which were bind-mounted in ~/.ddev can no longer be migrated to Docker volumes with this release, see caveats above. Also, snapshots from previous releases cannot be restored with this release, in caveats above.)
 - Automatic generation of WordPress wp-config.php has been improved and extra guidance provided for WordPress projects. (#1156)
 - The webserver container logs format is improved and all key logs are now provided in `ddev logs`.
 - The webserver container now gives significantly more information in its healthcheck information (use `docker inspect --format='{{json .State.Health }}' ddev-<project>-web`). It also exits when one of its components is unhealthy, so that we all don't spend time debugging a broken container or broken add-on configuration.
@@ -193,12 +193,12 @@ This version history has been driven by what we hear from our wonderful communit
 
 ## v1.1 (released 2018-08-15)
 
-- ddev now requires docker 18.06; a serious docker bug in 18.03 caused lots and lots of crashes, so we moved it up to 18.06.
+- DDEV now requires Docker 18.06; a serious Docker bug in 18.03 caused lots and lots of crashes, so we moved it up to 18.06.
 - You can now remove hostnames that ddev has added to /etc/hosts.
     - `ddev remove --remove-data` removes the hostname(s) associated with the project
     - `sudo ddev hostname --remove-inactive` will remove from /etc/hosts all hostnames that are not currently active in a ddev project.
 - The docker-compose version has been updated to 3.6, so any customized docker-compose.*.yaml files in your project must be updated to read `version: '3.6'`
-- The project database is now stored in a docker volume instead of in the `~/.ddev/<project>/mysql` directory.  This means that on your first `ddev start` it will be migrated from the ~/.ddev file into a docker volume. The old `~/.ddev/<project>/mysql` will be renamed to `~/.ddev/<project>/mysql.bak`.
+- The project database is now stored in a Docker volume instead of in the `~/.ddev/<project>/mysql` directory.  This means that on your first `ddev start` it will be migrated from the ~/.ddev file into a Docker volume. The old `~/.ddev/<project>/mysql` will be renamed to `~/.ddev/<project>/mysql.bak`.
 - Database snapshotting is now available. At any time you can create a snapshot (in mariabackup format) using `ddev snapshot` or `ddev snapshot --name <somename>`. That db snapshot can easily be restored later with `ddev restore-snapshot <somename>`. These are stored in the project's .ddev/db_snapshots directory.
 - `ddev remove --remove-data` now creates a snapshot by default.
 - For Drupal users, drush now works on the host for many commands (after you've done a `ddev config` and `ddev start`). So, for example, you can run `drush sql-cli` or `drush cr` on the *host* when you need it, rather than using `ddev exec` or `ddev ssh` to do it in the web container. This assumes you have drush available on the host of course.
@@ -211,4 +211,4 @@ This version history has been driven by what we hear from our wonderful communit
 - Improvements of settings file management for Drupal and Backdrop (more below) (#468)
 - Support for fully qualified domain names (FQDNs) (#868) - You can now add to your .ddev/config.yaml `additional_fqdns: ["mysite.example.com"]` and your site will be available at `http://mysite.example.com` after restart. More in [the docs](https://ddev.readthedocs.io/en/latest/users/extend/additional-hostnames/)
 - Start, stop, and remove multiple (or all) projects at once (#952). You can `ddev rm project1 project2 project3` or `ddev rm --all`; it works with `ddev stop` as well, and with `ddev start` for running or stopped projects.
-- Much better resilience when a project is running and the host is rebooted or docker is restarted, etc. This used to result in database corruption regularly on nontrivial databases, and seems to be much improved.
+- Much better resilience when a project is running and the host is rebooted or Docker is restarted, etc. This used to result in database corruption regularly on nontrivial databases, and seems to be much improved.

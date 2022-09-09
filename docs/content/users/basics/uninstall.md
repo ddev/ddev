@@ -5,7 +5,7 @@ A DDEV installation consists of:
 * The binary itself (self-contained)
 * The .ddev folder in a project
 * The ~/.ddev folder where various global items are stored.
-* The docker images and containers created.
+* The Docker images and containers created.
 * Any entries in /etc/hosts
 
 Please make backups of your databases before deleting projects or uninstalling. You can do this with `ddev snapshot` or `ddev export-db`.
@@ -18,15 +18,15 @@ To remove all /etc/hosts entries owned by ddev: `ddev hostname --remove-inactive
 
 To remove the global .ddev directory: `rm -r ~/.ddev`
 
-If you installed docker just for DDEV and want to uninstall it with all containers and images, just uninstall it for your version of Docker.
+If you installed Docker just for DDEV and want to uninstall it with all containers and images, just uninstall it for your version of Docker.
 
 Otherwise:
 
 * Remove Docker images from before the current DDEV release with `ddev delete images`.
-* To remove all DDEV docker containers that might still exist: `docker rm $(docker ps -a | awk '/ddev/ { print $1 }')`
-* To remove all DDEV docker images that might exist: `docker rmi $(docker images | awk '/ddev/ {print $3}')`
+* To remove all DDEV Docker containers that might still exist: `docker rm $(docker ps -a | awk '/ddev/ { print $1 }')`
+* To remove all DDEV Docker images that might exist: `docker rmi $(docker images | awk '/ddev/ {print $3}')`
 * To remove all Docker images of any type (does no harm, they'll just be re-downloaded): `docker rmi -f $(docker images -q)`
-* To remove any docker volumes: `docker volume rm $(docker volume ls | awk '/ddev|-mariadb/ { print $2 }')`
+* To remove any Docker volumes: `docker volume rm $(docker volume ls | awk '/ddev|-mariadb/ { print $2 }')`
 
 To remove the `ddev` binary:
 

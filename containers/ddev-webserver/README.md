@@ -15,7 +15,7 @@ This is a Dockerfile to build a container image for DDEV’s web container.
 * npm
 * yarn
 
-## Building and pushing to dockerhub
+## Building and pushing to Docker Hub
 
 ```
 make container

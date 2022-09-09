@@ -27,7 +27,7 @@ services:
     - "9999:9999"
 ```
 
-That approach usually isn't sustainable because two projects might want to use the same port, so we *expose* the additional port (to the docker network) and then use the ddev-router to bind it to the host. This works only for services with an http API, but results in having both http and https ports (9998 and 9999).
+That approach usually isn't sustainable because two projects might want to use the same port, so we *expose* the additional port (to the Docker network) and then use the ddev-router to bind it to the host. This works only for services with an http API, but results in having both http and https ports (9998 and 9999).
 
 ```yaml
 services:

@@ -5,7 +5,7 @@ DDEV attempts to make offline use work as well as possible, and you really shoul
 * It doesn't attempt instrumentation or update reporting if offline
 * It uses /etc/hosts entries instead of DNS resolution if DNS resolution fails
 
-However, it does not (yet) attempt to prevent docker pulls if a new docker image is required, so you'll want to make sure that you try a `ddev start` before going offline to make sure everything has been pulled.
+However, it does not (yet) attempt to prevent Docker pulls if a new Docker image is required, so you'll want to make sure that you try a `ddev start` before going offline to make sure everything has been pulled.
 
 If you have a project running when you're online (using DNS for name resolution) and you then go offline, you'll want to do a `ddev restart` to get the hostname added into /etc/hosts for name resolution.
 

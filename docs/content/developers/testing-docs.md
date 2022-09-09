@@ -23,8 +23,8 @@ Now that you've got a local copy you can make your changes;
 You should see how your changes look before making a pull request, you can do so by running `make mkdocs-serve`.
 It will launch a webserver on port 8000 so you can see what the docs will look like when they land on readthedocs.io.
 > **Please note:** <br>
-> While it's easiest to [install mkdocs locally](https://www.mkdocs.org/user-guide/installation/) it is not required, `make mkdocs-serve` will look for MkDocs but when it is not found it will run a docker command to serve the documentation on `http://localhost:8000`.<br><br>
-> If you don't have `make` on your system, you can easily install it, but alternatively you can also just run the docker command that `make mkdocs-serve` runs:
+> While it's easiest to [install mkdocs locally](https://www.mkdocs.org/user-guide/installation/) it is not required, `make mkdocs-serve` will look for MkDocs but when it is not found it will run a Docker command to serve the documentation on `http://localhost:8000`.<br><br>
+> If you don't have `make` on your system, you can easily install it, but alternatively you can also just run the Docker command that `make mkdocs-serve` runs:
 >
 > ```
 > docker run -it -p 8000:8000 -v "${PWD}:/docs" -e "ADD_MODULES=mkdocs-material mkdocs-redirects mkdocs-minify-plugin mdx_truly_sane_lists mkdocs-git-revision-date-localized-plugin" -e "LIVE_RELOAD_SUPPORT=true" -e "FAST_MODE=true" -e "DOCS_DIRECTORY=./docs" polinux/mkdocs;

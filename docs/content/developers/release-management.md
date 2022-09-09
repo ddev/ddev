@@ -32,7 +32,7 @@ The following "Repository secret" environment variables must be added to <https:
 ### Prerelease tasks
 
 * Make sure the version-history.md file is up to date.
-* Make sure the docker images are all tagged and pushed.
+* Make sure the Docker images are all tagged and pushed.
 * Make sure the pkg/version/version.go is all set to point to the new images (and tests have been run)
 
 ### Actual release creation
@@ -41,9 +41,9 @@ The following "Repository secret" environment variables must be added to <https:
 2. Use the "Auto-generate release notes" option to get the commit list, then edit to add all the other necessary info.
 3. Verify that homebrew (linux and macOS) and Chocolatey and AUR are working correctly with the right versions
 
-## Pushing docker images with the GitHub Actions workflow
+## Pushing Docker images with the GitHub Actions workflow
 
-The easiest way to push docker images is to use the GitHub Actions workflow, especially if the code for the image is already in the [drud/ddev](https://github.com/drud/ddev) repo.
+The easiest way to push Docker images is to use the GitHub Actions workflow, especially if the code for the image is already in the [drud/ddev](https://github.com/drud/ddev) repo.
 
 <!-- markdown-link-check-disable-next-line -->
 You can push an image at <https://github.com/drud/ddev/actions/workflows/push-tagged-image.yml>
@@ -59,7 +59,7 @@ If you need to push from a forked PR, you'll have to do this from your fork (for
 
 * Enter the tag that will be used in pkg/version/version.go.
 
-## Pushing docker images manually
+## Pushing Docker images manually
 
 It's more error-prone, but images can be pushed from the command-line.
 
@@ -82,7 +82,7 @@ We maintain [drud/mysql-arm64-images](https://github.com/drud/mysql-arm64-images
 * To build drud/mysql (both 5.7 and 8.0) arm64 images, follow the instructions on [drud/mysql-arm64-images](https://github.com/drud/mysql-arm64-images) After the various files are updated, you can just push a new release and the proper images will be pushed.
 * After building a new set of drud/mysql images, you'll need to push `drud/ddev-dbserver` with new tags. Make sure to update the [drud/ddev-dbserver Makefile](https://github.com/drud/ddev/blob/master/containers/ddev-dbserver/Makefile) to set the explicit version of the upstream mysql:8.0 (for example, 8.0.29, if you've succeed in getting 8.0.29 for percona-xtrabackup and mysql:8.0).
 
-## Actual release docker image updates
+## Actual release Docker image updates
 
 I don't actually build every image for every point release. If there have been no changes to ddev-router or ddev-ssh-agent, for example, I only usually push those (and update pkg/version/version.go) on major releases.
 

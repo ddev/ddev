@@ -23,7 +23,7 @@ For any setup, including the [DDEV Integration Plugin](https://plugins.jetbrains
 5. Under File→Settings→PHP (Windows) or Preferences→PHP (macOS), click the "..." to the right of "CLI Interpreter".
     1. Use the "+" to select "From Docker, Vagrant, VM..."
     2. Choose "Docker Compose"
-    3. Create a "server"; Choose the appropriate docker provider configured above under `Build, Execution, Deployment -> Docker`.
+    3. Create a "server"; Choose the appropriate Docker provider configured above under `Build, Execution, Deployment -> Docker`.
     4. In the "Path mappings" of the "Server" you may have to map the local paths (which on WSL2 means /home/...) to the in-container paths, especially if you have mutagen enabled. So "Virtual Machine Path" would be "/var/www/html" and "Local path" would be something like `/Users/rfay/workspace/d9` (on macOS) or `\\wsl$\Ubuntu\home\rfay\workspace\d9` on Windows using WSL2.
     5. Now back in the "Configure Remote PHP Interpreter" for "Configuration files" use `.ddev/.ddev-docker-compose-full.yaml`. On macOS, you may need to use `<cmd><shift>.`, (Command+Shift+Dot) to show hidden dotfiles.
     6. Service: `web`.

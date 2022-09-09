@@ -18,7 +18,7 @@ You can verify that the replacement worked via `ddev -v`. The output should be s
 
 (On macOS Big Sur these downloaded binaries are not signed, so you will want to `xattr -r -d com.apple.quarantine /path/to/ddev` in order to use them. The binaries on the master branch and the final binaries in any release are signed, of course.)
 
-You do not typically have to install anything else other than the downloaded binary; when you run it it will access any docker images that it needs.
+You do not typically have to install anything else other than the downloaded binary; when you run it it will access any Docker images that it needs.
 
 After you're done, you can remove the downloaded binary and `brew link ddev`.
 
@@ -59,17 +59,17 @@ When preparing your pull request, please use a branch name like "2020_<your_user
 
 ## Docker Image changes
 
-If you make changes to a docker image (like ddev-webserver), it won't have any effect unless you:
+If you make changes to a Docker image (like ddev-webserver), it won't have any effect unless you:
 
 * Push an image with a specific tag by going to the image directory (like containers/ddev-webserver) by just doing `make container VERSION=<branchname>` in the containers/ddev-webserver directory.
 * Multi-arch images require you to have a buildx builder, so `docker buildx create --name ddev-builder-multi --use`
 * You can't push until you `docker login`.
 * Push a container to hub.docker.com. Push with the tag that matches your branch. Pushing to `<yourorg>/ddev-webserver` repo is easy to accomplish with `make push DOCKER_ORG=<yourorg> VERSION=<branchname>` **in the container directory**. You might have to use other techniques to push to another repo.
-* Update `pkg/versionconstants/versionconstants.go` with the `WebImg` and `WebTag` that relate to the docker image you pushed.
+* Update `pkg/versionconstants/versionconstants.go` with the `WebImg` and `WebTag` that relate to the Docker image you pushed.
 
 ### Local builds and pushes
 
-To use `buildx` successfully you have to have the [`buildx` docker plugin](https://docs.docker.com/buildx/working-with-buildx/) which is in many environments by default.
+To use `buildx` successfully you have to have the [`buildx` Docker plugin](https://docs.docker.com/buildx/working-with-buildx/) which is in many environments by default.
 
 To build multi-platform images you must `docker buildx create --use` as a one-time initialization.
 

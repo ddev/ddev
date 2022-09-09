@@ -4,11 +4,11 @@
 
     ## macOS
 
-    The two easy docker providers for macOS are Colima and Docker Desktop for Mac. You only need one of them.
+    The two easy Docker providers for macOS are Colima and Docker Desktop for Mac. You only need one of them.
 
     ### Colima
 
-    [Colima](https://github.com/abiosoft/colima) is the preferred docker provider for macOS. Colima is an open-source project that bundles the container management tool [lima](https://github.com/lima-vm/lima) with a docker (linux) back-end. This is similar to what Docker Desktop actually does, but Colima and Lima are entirely open-source and just focused on running containers. They work on both `amd64` and `arm64` (M1) macs. Colima does not require installation of Docker Desktop, or does it require paying a license fee to Docker, Inc., and it seems to be the most stable alternative at this time.
+    [Colima](https://github.com/abiosoft/colima) is the preferred Docker provider for macOS. Colima is an open-source project that bundles the container management tool [lima](https://github.com/lima-vm/lima) with a Docker (Linux) back-end. This is similar to what Docker Desktop actually does, but Colima and Lima are entirely open-source and just focused on running containers. They work on both `amd64` and `arm64` (M1) macs. Colima does not require installation of Docker Desktop, or does it require paying a license fee to Docker, Inc., and it seems to be the most stable alternative at this time.
     
     Reasons to use Colima include:
 
@@ -17,7 +17,7 @@
     * Preferring a CLI-focused approach to Docker Desktop's GUI focus.
     * Stability
 
-    !!!tip "Install the docker client if you need it"
+    !!!tip "Install the Docker client if you need it"
         If you don't have the `docker` client installed, you'll need to install it. It is not provided with colima. (If `docker help` returns an error, you don't have it.) Use `brew install docker` to install it.
 
     1. Install colima with `brew install colima` using homebrew or see the other [installation options](https://github.com/abiosoft/colima/blob/main/docs/INSTALL.md).
@@ -29,8 +29,8 @@
     !!!tip "Colima disk and memory allocation"
         The suggested initial disk allocation for Colima above is quite large, but Colima currently has no way to increase the disk allocation. However, you can use `ddev clean` to reduce disk usage, and `docker rm -f $(docker ps -aq) && docker rmi -f $(docker images -q)` to kill off all disk images. If you do have to rebuild your colima from scratch, you'd use the technique described below for migrating from Docker Desktop.
 
-    !!!warning "Docker contexts let the docker client point at the right docker server"
-        Colima activates its own docker context in order to not conflict with Docker Desktop, so if you `docker context ls` you'll see a list of available contexts with currently active context indicated with an "\*" (which will be "colima" after you've started colima). You can change to the default (Docker Desktop) with `docker context use default` or change back with `docker context use colima`. This means you can actually run Docker Desktop and Colima at the same time... but be careful which context you're pointing at.
+    !!!warning "Docker contexts let the Docker client point at the right Docker server"
+        Colima activates its own Docker context in order to not conflict with Docker Desktop, so if you `docker context ls` you'll see a list of available contexts with currently active context indicated with an "\*" (which will be "colima" after you've started colima). You can change to the default (Docker Desktop) with `docker context use default` or change back with `docker context use colima`. This means you can actually run Docker Desktop and Colima at the same time... but be careful which context you're pointing at.
     !!!warning "Colima can only work in your home directory without further configuration"
         Colima by default mounts only your home directory, so it's easiest to use it a subdirectory of your home directory. See the `~/.colima/default/colima.yaml for more information, or see [colima.yaml doc](https://github.com/abiosoft/colima/blob/fc948f8f055600986f87e29e3e632daf56ac8774/embedded/defaults/colima.yaml#L130-L143).
 
@@ -53,7 +53,7 @@
 
     ## Windows
 
-    On Windows, you can install Docker Desktop, which works with both traditional Windows and WSL2, or if you're working inside WSL2 (recommended) you can just install docker engine (docker-ce) inside WSL2.
+    On Windows, you can install Docker Desktop, which works with both traditional Windows and WSL2, or if you're working inside WSL2 (recommended) you can just install Docker Engine (docker-ce) inside WSL2.
 
     ### Docker Desktop for Windows
 
@@ -102,8 +102,8 @@
     !!!warning "Don't forget the Docker-ce post-install steps"
         Please don't forget that Linux installation absolutely requires post-install steps (below).
     
-    !!!warning "Don't use `sudo` with the docker command"
-        Please don't use `sudo` with docker. If you're needing it, you haven't finished the installation. Don't use `sudo` with `ddev`, except the rare case where you need the `ddev hostname` command.
+    !!!warning "Don't use `sudo` with the `docker` command"
+        Please don't use `sudo` with `docker`. If you're needing it, you haven't finished the installation. Don't use `sudo` with `ddev`, except the rare case where you need the `ddev hostname` command.
 
     !!!warning "Docker Desktop for Linux is not yet mature enough to use"
         The release of Docker Desktop for Linux in 2022 was welcomed by many, but the system does not yet seem stable enough for predictable use, and has some of the problems of Docker Desktop on other platforms. We recommend that you stay with the traditional docker-ce installation described here.
@@ -117,13 +117,13 @@
     * [binaries](https://docs.docker.com/install/linux/docker-ce/binaries/)
 
     !!!note "One-time post-installation step"
-        Required post-installation steps: See [Docker's post-installation steps](https://docs.docker.com/engine/install/linux-postinstall/). You need to add your linux user to the "docker" group and configure the docker daemon to start on boot.
+        Required post-installation steps: See [Docker's post-installation steps](https://docs.docker.com/engine/install/linux-postinstall/). You need to add your linux user to the "docker" group and configure the Docker daemon to start on boot.
         ```bash
         sudo groupadd docker
         sudo usermod -aG docker $USER
         ```
 
-    On systems that do not include systemd or equivalent (mostly if installing inside WSL2) you'll need to manually start docker with `service docker start` or the equivalent in your distro. You can add this into your `~/.profile` or equivalent.
+    On systems that do not include systemd or equivalent (mostly if installing inside WSL2) you'll need to manually start Docker with `service docker start` or the equivalent in your distro. You can add this into your `~/.profile` or equivalent.
 
 === "Gitpod.io"
 
@@ -140,14 +140,14 @@ Docker needs to be able to do a few things for DDEV to work:
 * Mount the project code directory from the host into the container; the project code directory is usually somewhere in a subdirectory of your home directory.
 * Access TCP ports on the host to serve HTTP and HTTPS. These are ports 80 and 443 by default, but they can be changed on a per-project basis.
 
-We can use a single docker command to make sure that docker is set up to do what we want:
+We can use a single Docker command to make sure that Docker is set up to do what we want:
 
 In your *project directory* run `docker run --rm -t -p 80:80 -p 443:443 -v "//$PWD:/tmp/projdir" busybox sh -c "echo ---- Project Directory && ls /tmp/projdir"` - you should see the files in your project directory displayed. (On Windows, make sure you run this using git-bash.)
 
 If that fails (if you get an error, or you don't see the contents of your project directory and your home directory) you'll need to troubleshoot:
 
 * "port is already allocated": See [troubleshooting](../basics/troubleshooting.md).
-* `invalid mount config for type "bind": bind mount source path does not exist: <some path>` means the filesystem isn't successfully shared into the docker container.
-* "The path ... is not shared and is not known to Docker": Visit docker's preferences/settings->File sharing and share the appropriate path or drive.
+* `invalid mount config for type "bind": bind mount source path does not exist: <some path>` means the filesystem isn't successfully shared into the Docker container.
+* "The path ... is not shared and is not known to Docker": Visit Docker's preferences/settings->File sharing and share the appropriate path or drive.
 * `Error response from daemon: Get https://registry-1.docker.io/v2/` - Docker may not be running (restart it) or you may not have any access to the internet.
 * "403 authentication required" when trying to `ddev start`: Try `docker logout` and do it again. Docker authentication is *not* required for any normal DDEV action.

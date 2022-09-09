@@ -4,7 +4,7 @@ What operating systems will DDEV work with?
 : DDEV works nearly anywhere Docker will run, including macOS, Windows 10/11 Pro/Enterprise,  Windows 10/11 Home, and every Linux variant we've ever tried. It also runs in many Linux-like environments, for example ChromeOS (in Linux machine) and Windows 10/11's WSL2. In general, DDEV works the same on each of these platforms, as all the important work is done inside identical Docker containers.
 
 Do I lose my data when I do a `ddev poweroff` or `ddev stop` or `ddev restart`?
-: No, you don't lose data in your database or code with any of these commands. Your database is safely stored on a docker volume.
+: No, you don't lose data in your database or code with any of these commands. Your database is safely stored on a Docker volume.
 
 How does my project connect to the database?
 : `ddev describe` gives full details of how to connect to the database. *Inside* the container the hostname is 'db' (**NOT** 127.0.0.1). User/password/database are all 'db'. For connection from the *host*, see `ddev describe`.
@@ -13,7 +13,7 @@ How can I troubleshoot what's going wrong?
 : See the [troubleshooting](troubleshooting.md), [Docker troubleshooting](../install/docker-installation.md#testing-and-troubleshooting-your-docker-installation) and [Xdebug troubleshooting](../debugging-profiling/step-debugging.md#troubleshooting-xdebug) sections of the docs.
 
 Do I need to install PHP or Composer or Nginx or nodejs/npm on my computer?
-: Absolutely *not*. All of these tools live inside DDEV's docker containers, so you need only Docker and DDEV. This is especially handy for Windows users where there's a bit more friction installing those tools.
+: Absolutely *not*. All of these tools live inside DDEV's Docker containers, so you need only Docker and DDEV. This is especially handy for Windows users where there's a bit more friction installing those tools.
 
 How do I get support?
 : See the (many) [support options](../support.md), including [Discord](https://discord.gg/kDvSFBSZfs), Stack Overflow and others.

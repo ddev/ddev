@@ -69,7 +69,7 @@ Instructions for Mutagen and NFS are below.
     * **Not for every project**: Mutagen is not the right choice for every project. If filesystem consistency is your highest priority (as opposed to performance) then there are reasons to be cautious, although people have had excellent experiences: there haven't been major issues reported, but two-way sync is a very difficult computational problem, and problems may surface.
     * **Don't change or remove files when DDEV is stopped**: If you change files (checking out a different branch, or removing a file) while DDEV is stopped, mutagen has no way to know you meant to do that. So when you start again, it will get the files that are stored and bring them back to the host.
     * **Works everywhere, most useful on macOS and traditional Windows**: This is mostly for macOS and traditional Windows users. WSL2 is already the preferred environment for Windows users, but if you're still using traditional Windows this makes a huge difference. Although DDEV with mutagen is fully supported and tested on traditional Windows and Linux/WSL2, enabling mutagen on Linux/WSL2 may not be your first choice, since it adds some complexity and very little performance.
-    * **Increased disk usage**: Mutagen integration increases the size of your project code disk usage, because the code exists both on your computer and also inside a docker volume. (As of v1.19+, this does *not* include your file upload directory, so normally it's not too intrusive.) So take care that you have enough overall disk space, and also (on macOS) that you have enough file space set up in Docker Desktop. For projects before v1.19, if you have a large amount of data like user-generated content that does not need syncing (i.e. `fileadmin` for TYPO3 or `sites/default/files` for Drupal), you can exclude specific directories from getting synced and use regular docker mount for them instead. See [below for Advanced Mutagen configuration options](#advanced-mutagen-configuration-options). As of v1.19, this is handled automatically and these files are not mutagen-synced.
+    * **Increased disk usage**: Mutagen integration increases the size of your project code disk usage, because the code exists both on your computer and also inside a Docker volume. (As of v1.19+, this does *not* include your file upload directory, so normally it's not too intrusive.) So take care that you have enough overall disk space, and also (on macOS) that you have enough file space set up in Docker Desktop. For projects before v1.19, if you have a large amount of data like user-generated content that does not need syncing (i.e. `fileadmin` for TYPO3 or `sites/default/files` for Drupal), you can exclude specific directories from getting synced and use regular Docker mount for them instead. See [below for Advanced Mutagen configuration options](#advanced-mutagen-configuration-options). As of v1.19, this is handled automatically and these files are not mutagen-synced.
     * If your project is likely to change the same file on both the host and inside the container, you may be at risk for conflicts.
     * **Massive changes** to either the host or the container are the most likely to introduce issues. This integration has been tested extensively with major changes introduced by `ddev composer` and `ddev composer create` but be aware of this issue. Changing git branches, `npm install`, `yarn install`, or a script that deletes huge sections of the synced data are related behaviors that should raise caution. If you `ddev stop` and then change a git branch and then `ddev start` you are almost certain to get misbehavior, because mutagen didn't know you made those changes while it wasn't running, so tries to merge the results. If you have to do this, do a `ddev mutagen reset` before restarting the project, so that only the host side will have contents.
     * **Mutagen is asynchronous**: If you make a massive change on either the host or inside the container, you may not see the results for a little while. In studying situations like this, use `ddev mutagen monitor` to watch what's going on on your computer.
@@ -112,7 +112,7 @@ Instructions for Mutagen and NFS are below.
 
     It is possible to exclude mutagen syncing from a path and then bind-mount something from the host or a different volume on that path with a `docker-compose.*.yaml` file. So if you have an extremely heavyweight subdirectory in your project (lots of fonts or user-generated content for example), you could exclude that subdirectory in the .ddev/mutagen/mutagen.yml and then add a docker-compose.exclude.yaml.
 
-    For example, if you want the `stored-binaries` subdirectory of the project to be available inside the container, but do not need mutagen to be syncing it, you can use normal docker bind-mounting for that subdirectory with this procedure:
+    For example, if you want the `stored-binaries` subdirectory of the project to be available inside the container, but do not need mutagen to be syncing it, you can use normal Docker bind-mounting for that subdirectory with this procedure:
 
     1. Take over the `.ddev/mutagen/mutagen.yml` by removing the `#ddev-generated` line
     2. Add `/stored-binaries` to the excluded paths:
@@ -149,12 +149,12 @@ Instructions for Mutagen and NFS are below.
 
     * You can run the script [diagnose_mutagen.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/diagnose_mutagen.sh) to gather some information about the setup of mutagen. Please report its output when creating an issue or otherwise seeking support.
     * Try `ddev poweroff` or `~/.ddev/bin/mutagen daemon stop && ~/.ddev/bin/mutagen daemon start` to restart the mutagen daemon if you suspect it's hanging.
-    * Use `ddev mutagen reset` if you suspect trouble (and always after changing the `.ddev/mutagen/mutagen.yml`. This restarts the project mutagen data (docker volume and mutagen session) from scratch.
+    * Use `ddev mutagen reset` if you suspect trouble (and always after changing the `.ddev/mutagen/mutagen.yml`. This restarts the project mutagen data (Docker volume and mutagen session) from scratch.
     * `ddev mutagen monitor` can help watch mutagen behavior. It's the same as `~/.ddev/bin/mutagen sync monitor <syncname>`
     * `ddev debug mutagen` will let you run any mutagen command using the binary in `~/.ddev/bin/mutagen`.
     * If you're working on the host and expecting things to show up immediately inside the container, you can learn a lot by running `ddev mutagen monitor` in a separate window as you work. You'll see when mutagen responds to your changes and get an idea about how much delay there is.
     * Consider `ddev stop` before massive file change operations (like moving a directory, etc.)
-    * If you get in real trouble, `ddev stop`, reset your files with git, and then `ddev mutagen reset` to throw away the docker volume (which may already have incorrect files on it.)
+    * If you get in real trouble, `ddev stop`, reset your files with git, and then `ddev mutagen reset` to throw away the Docker volume (which may already have incorrect files on it.)
     * If you're having trouble, we'd love to hear from you to learn and try to sort it out. See the [Support channels](../support.md).
 
     #### Advanced Mutagen Troubleshooting
@@ -173,7 +173,7 @@ Instructions for Mutagen and NFS are below.
 
     Mutagen provides enormous speed boosts in everyday usage, but of course it's trying desperately under the hood to keep everything that changes in the container updated in the host, and vice versa.
     
-    DDEV mounts a fast Docker volume onto `/var/www/html` inside the web container and then delegates to the mutagen daemon (on the host) the job of keeping all the contents of the project on the host in sync with the contents of the docker volume.
+    DDEV mounts a fast Docker volume onto `/var/www/html` inside the web container and then delegates to the mutagen daemon (on the host) the job of keeping all the contents of the project on the host in sync with the contents of the Docker volume.
     
     The strategy in the DDEV integration is to try to make sure that at key points everything is completely in sync (consistent). Consistency is a really high priority for this integration.
     

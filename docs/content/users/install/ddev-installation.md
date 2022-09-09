@@ -1,8 +1,8 @@
 # DDEV Installation
 
-Docker or an alternative is required before anything will work with DDEV. This is pretty easy on most environments; see the [docker installation](docker-installation.md) page to help sort out the details.
+Docker or an alternative is required before anything will work with DDEV. This is pretty easy on most environments; see the [Docker installation](docker-installation.md) page to help sort out the details.
 
-It's easiest to think of DDEV installation or upgrade as the installation of a single binary, the "ddev" binary. When you use DDEV, additional docker images will be downloaded, etc. DDEV tries to make it so you can use the most common installation technique on your system, so homebrew on macOS, `apt` on Linux including WSL2, chocolatey or installer on traditional Windows, etc.
+It's easiest to think of DDEV installation or upgrade as the installation of a single binary, the "ddev" binary. When you use DDEV, additional Docker images will be downloaded, etc. DDEV tries to make it so you can use the most common installation technique on your system, so homebrew on macOS, `apt` on Linux including WSL2, chocolatey or installer on traditional Windows, etc.
 
 === "macOS"
 
@@ -123,7 +123,7 @@ It's easiest to think of DDEV installation or upgrade as the installation of a s
     7. Go to Docker Desktop settings > Resources > WSL integration > enable integration for your distro (now `docker` commands will be available from within your WSL2 distro).
     8. Double-check in PowerShell: `wsl -l -v` should show three distros, and your Ubuntu should be the default. All three should be WSL version 2.
     9. Double-check in Ubuntu (or your distro): `echo $CAROOT` should show something like `/mnt/c/Users/<you>/AppData/Local/mkcert`
-    10. Check that docker is working inside Ubuntu (or your distro): `docker ps`
+    10. Check that Docker is working inside Ubuntu (or your distro): `docker ps`
     11. Optional: If you prefer to use the *traditional Windows* DDEV instead of working inside WSL2, install it with `choco install -y ddev`. The Windows DDEV works fine with the WSL2-based Docker engine. However, the WSL2 DDEV setup is vastly preferable and at least 10 times as fast. Support for the traditional Windows approach will eventually be dropped.
     12. Open the WSL2 terminal, for example `Ubuntu` from the Windows start menu.
     13. Install DDEV using

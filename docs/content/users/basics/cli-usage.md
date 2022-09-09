@@ -84,7 +84,7 @@ See `ddev help import-files` for more examples.
 
 ## Snapshotting and restoring a database
 
-The project database is stored in a docker volume, but can be snapshotted (and later restored) with the `ddev snapshot` command. A snapshot is automatically taken when you do a `ddev stop --remove-data`. For example:
+The project database is stored in a Docker volume, but can be snapshotted (and later restored) with the `ddev snapshot` command. A snapshot is automatically taken when you do a `ddev stop --remove-data`. For example:
 
 ```bash
 ddev snapshot
@@ -136,6 +136,6 @@ The `ddev logs` command allows you to easily view error logs from the web contai
 
 To remove a project's containers run `ddev stop` in the working directory of the project. To remove any running project's containers, providing the project name as an argument, e.g. `ddev stop <projectname>`.
 
-`ddev stop` is *not* destructive. It removes the docker containers but does not remove the database for the project, and does nothing to your codebase. This allows you to have many configured projects with databases loaded without wasting docker containers on unused projects. **`ddev stop` does not affect the project code base and files.**
+`ddev stop` is *not* destructive. It removes the Docker containers but does not remove the database for the project, and does nothing to your codebase. This allows you to have many configured projects with databases loaded without wasting Docker containers on unused projects. **`ddev stop` does not affect the project code base and files.**
 
 To remove the imported database for a project, use the flag `--remove-data`, as in `ddev stop --remove-data`. This command will destroy both the containers and the imported database contents.

@@ -101,7 +101,7 @@ Here are some of the other common processes that could be using ports 80/443 and
 or `sudo launchctl stop homebrew.mxcl.nginx`
 * nginx (Ubuntu): `sudo service nginx stop`
 * apache (often named "httpd") (many environments): `sudo apachectl stop` or on Ubuntu `sudo service apache2 stop`
-* vpnkit (macOS): You likely have a docker container bound to port 80, do you have containers up for Lando or another docker-based development environment? If so, stop the other environment.
+* vpnkit (macOS): You likely have a Docker container bound to port 80, do you have containers up for Lando or another Docker-based development environment? If so, stop the other environment.
 * Lando: If you have previously used Lando try running `lando poweroff`
 * IIS on Windows (can affect WSL2). You'll have to disable it in the Windows settings.
 
@@ -227,7 +227,7 @@ You can also see the full Docker build using `~/.ddev/bin/docker-compose -f .dde
 
 Most people use \*.ddev.site URLs for most projects, and that works great most of the time, but requires internet access. "\*.ddev.site" is a wildcard DNS entry that always returns the IP address 127.0.0.1 (localhost). However, if you're not connected to the internet, or if various other name resolution issues (below) fail, this name resolution won't work.
 
-While DDEV can create a webserver and a docker network infrastructure for a project, it doesn't have control of your computer's name resolution, so its backup technique to make a hostname resolvable by the browser is to add an entry to the hosts file (/etc/hosts on Linux and macOS, C:\Windows\system32\drivers\etc\hosts on traditional Windows).
+While DDEV can create a webserver and a Docker network infrastructure for a project, it doesn't have control of your computer's name resolution, so its backup technique to make a hostname resolvable by the browser is to add an entry to the hosts file (/etc/hosts on Linux and macOS, C:\Windows\system32\drivers\etc\hosts on traditional Windows).
 
 * If you're not connected to the internet, your browser will not be able to look up \*.ddev.site hostnames. DDEV works fine offline, but for your browser to look up names they'll have to be resolved in a different way.
 * DDEV assumes that hostnames can be resolved within 3 seconds. That assumption is not valid on all networks or computers, so you can increase the amount of time it waits for resolution with `ddev config global --internet-detection-timeout-ms=5000` for example.
@@ -279,12 +279,12 @@ Symbolic links are widely used but have specific limitations in many environment
 * **Windows restrictions on symlinks**: Inside the Docker container on Windows you may not be able to even create a symlink that goes outside the container.
 * **Mutagen restrictions on Windows symlinks**: On macOS and Linux (including WSL2) the default `.ddev/mutagen/mutagen.yml` chooses the `posix-raw` type of symlink handling (See [mutagen docs](https://mutagen.io/documentation/synchronization/symbolic-links)). This basically means that any symlink created will try to sync, regardless of whether it's valid in the other environment. However, Mutagen does not support posix-raw on traditional Windows, so DDEV uses the `portable` symlink mode. So on Windows with Mutagen... symlinks have to be strictly limited to relative links that are inside the mutagen section of the project.
 
-### Delete and re-download docker images
+### Delete and re-download Docker images
   
-In just a few unusual cases, the actual downloaded docker images have somehow corrupted. In that case we can delete all images and they'll be re-downloaded or rebuilt. This does no harm, as everything is just rebuilt, but a `ddev start` make take extra time the first time while it downloads needed resources:
+In just a few unusual cases, the actual downloaded Docker images have somehow corrupted. In that case we can delete all images and they'll be re-downloaded or rebuilt. This does no harm, as everything is just rebuilt, but a `ddev start` make take extra time the first time while it downloads needed resources:
 
 ```bash
 ddev poweroff
-docker rm -f $(docker ps -aq) # stop any other random containers that may be running
-docker rmi -f $(docker images -q) # You might have to repeat this a time or two to get rid of all images
+docker rm -f $(docker ps -aq) # Stop any other random containers that may be running
+docker rmi -f $(docker images -q) # You might have to repeat this to get rid of all images
 ```

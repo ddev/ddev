@@ -17,7 +17,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 11. If a laptop, set the "lid closing" setting in settings to do nothing.
 12. Set the "Sleep after time" setting in settings to never.
 13. Install [winaero tweaker](https://winaero.com/request.php?1796) and "Enable user autologin checkbox". Set up the machine to [automatically log in on boot](https://www.cnet.com/how-to/automatically-log-in-to-your-windows-10-pc/).  Then run netplwiz, provide the password for the main user, uncheck the "require a password to log in".
-14. The buildkite/hooks/environment.bat file must be updated to contain the docker pull credentials:
+14. The buildkite/hooks/environment.bat file must be updated to contain the Docker pull credentials:
 
     ```bash
     @echo off
@@ -45,7 +45,7 @@ Set up Windows to automatically start WSL2 buildkite-agent: Use task scheduler t
 7. Install homebrew, `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 8. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`
 9. `git config --global --add safe.directory '*'`
-10. The buildkite/hooks/environment file must be updated to contain the docker pull credentials:
+10. The buildkite/hooks/environment file must be updated to contain the Docker pull credentials:
 
     ```bash
        #!/bin/bash
@@ -70,7 +70,7 @@ Set up Windows to automatically start WSL2 buildkite-agent: Use task scheduler t
     * the agent token
     * Tags, like `"os=macos,architecture=arm64,osvariant=monterrey,dockertype=dockerformac"`
     * `build-path="~/tmp/buildkite-agent/builds"`
-12. The buildkite/hooks/environment file must be updated to contain the docker pull credentials
+12. The buildkite/hooks/environment file must be updated to contain the Docker pull credentials
 
     ```bash
        #!/bin/bash

@@ -55,8 +55,8 @@ log_errors = On
 * To make DDEV start sites on system boot, you'll want to set up a systemd unit on systemd systems like Debian/Ubuntu and Fedora. For example, a file named /etc/systemd/system/ddev.service containing:
 
 ```
-# Start DDEV when system starts (after docker)
-# Stop DDEV when docker shuts down
+# Start DDEV when system starts (after Docker)
+# Stop DDEV when Docker shuts down
 # Start with `sudo systemctl start ddev`
 # Enable on boot with `sudo systemctl enable ddev`
 # Make sure to edit the User= for your user and the
@@ -88,12 +88,12 @@ display_startup_errors = Off
 
 Caveats:
 
-* It's unknown how much traffic a given server and docker setup can sustain, or what the results will be if the traffic is more than the server can handle.
+* It's unknown how much traffic a given server and Docker setup can sustain, or what the results will be if the traffic is more than the server can handle.
 * DDEV does not provide outgoing SMTP mailhandling service, and the development-focused MailHog feature is disabled if you're using `use_hardened_images`. You can provide SMTP service a number of ways, but the recommended way is to enable SMTP mailsending in your application and leverage a third-party transactional email service such as SendGrid, Mandrill, or Mailgun. This is the best way to make sure your mail actually gets delivered.
 * You may need an external cron trigger for some types of CMS.
 * Debugging Let's Encrypt failures requires viewing the ddev-router logs with `docker logs ddev-router`
 * A malicious attack on a website hosted with `use_hardened_images` will likely not be able to do anything significant to the host, but it can certainly change your code, which is mounted on the host.
 
-When using `use_hardened_images` docker runs the webimage as an unprivileged user, and the container does not have sudo. However, any docker server hosted on the internet is a potential vulnerability. Keep your packages up-to-date. Make sure that your firewall does not allow access to ports other than (normally) 22, 80, and 443.
+When using `use_hardened_images` Docker runs the webimage as an unprivileged user, and the container does not have sudo. However, any Docker server hosted on the internet is a potential vulnerability. Keep your packages up-to-date. Make sure that your firewall does not allow access to ports other than (normally) 22, 80, and 443.
 
 There are no warranties implied or expressed.

@@ -16,7 +16,7 @@ It can be a little confusing trying to understand all the things that are in the
 * `nginx_full` directory: Contains the nginx configuration used by the web container, which can be customized following the instructions there. See [providing custom nginx configuration](../extend/customization-extendibility.md#providing-custom-nginx-configuration).
 * `postgres` directory: contains `postgres/postgresql.conf` which can be edited if needed (and remove the `#ddev-generated` line at the top to take it over.)
 * `providers` directory: Contains examples and implementations showing ways to configure DDEV so `ddev pull` can work. You can use `ddev pull` with hosting providers like Acquia or Platform.sh or Pantheon and also can use it with local files or custom database/files sources. See [providers docs](../providers/index.md)
-* `web-build` directory: You can add a custom Dockerfile that adds things into the docker image used for your web container. See [Customizing images](../extend/customizing-images.md).
+* `web-build` directory: You can add a custom Dockerfile that adds things into the Docker image used for your web container. See [Customizing images](../extend/customizing-images.md).
 * `xhprof` directory: Contains the `xhprof_prepend.php` file that can be used to customize xhprof behavior for different types of website. See [xhprof profiling](../debugging-profiling/xhprof-profiling.md).
 
 ## Things not to look at or mess with :)

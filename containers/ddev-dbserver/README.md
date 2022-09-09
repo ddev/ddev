@@ -1,6 +1,6 @@
 # ddev-dbserver for ddev
 
-This docker image builds database server images (MariaDB and MySQL) for DDEV.
+This Docker image builds database server images (MariaDB and MySQL) for DDEV.
 
 ```
 make container

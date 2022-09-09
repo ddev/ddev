@@ -12,7 +12,7 @@ Lets you store your SSH authentication keys in a dockerized ssh-agent that can p
 
 ## Why?
 
-On OSX you cannot simply forward your authentication socket to a docker container to be able to e.g clone private repositories that you have access to. You don't want to copy your private key to all containers either. The solution is to add your keys only once to a long-lived ssh-agent container that can be used by other containers and stopped when not needed anymore.
+On OSX you cannot simply forward your authentication socket to a Docker container to be able to e.g clone private repositories that you have access to. You don't want to copy your private key to all containers either. The solution is to add your keys only once to a long-lived ssh-agent container that can be used by other containers and stopped when not needed anymore.
 
 ## hub.docker.com
 
