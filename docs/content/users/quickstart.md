@@ -355,8 +355,8 @@ Here's a quickstart instructions for a number of different environments:
         Use this to create a new Craft CMS project from the official [Craft starter project](https://github.com/craftcms/craft) or a third-party starter project using Composer.
         
         ```bash
-        mkdir path/to/my-project
-        cd path/to/my-project
+        mkdir my-craft-project
+        cd my-craft-project
         ddev config --project-type=craftcms
         ddev composer create -y --no-scripts --no-install craftcms/craft
         ddev start
@@ -370,8 +370,8 @@ Here's a quickstart instructions for a number of different environments:
         Use this to create a new Craft CMS project using a zipped archive.
         
         ```bash
-        mkdir path/to/my-project
-        cd path/to/my-project
+        mkdir my-craft-project
+        cd my-craft-project
         curl -LO https://craftcms.com/latest-v4.zip
         unzip latest-v4.zip && rm latest-v4.zip
         ddev config --project-type=craftcms
@@ -390,8 +390,8 @@ Here's a quickstart instructions for a number of different environments:
         Use this to migrate an existing Craft CMS project from a git repository and import a database dump.
         
         ```bash
-        git clone https://github.com/example/example-site path/to/my-project
-        cd path/to/my-project
+        git clone https://github.com/example/example-site my-craft-project
+        cd my-craft-project
         ddev config --project-type=craftcms
         ddev start
         ddev composer install
