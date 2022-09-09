@@ -28,4 +28,4 @@ For another example, if you want to exclude the memory profiling so there are le
 * [Old facebook xhprof docs](http://web.archive.org/web/20110514095512/http://mirror.facebook.net/facebook/xhprof/doc.html)
 * [rfay screencast on xhprof and blackfire.io](https://www.youtube.com/watch?v=6h2QMAtRjTA)
 * [pecl.php.net docs](https://pecl.php.net/package/xhprof)
-* [Upstream github repo `lonngxhinH/xhprof`](https://github.com/longxinH/xhprof)
+* [Upstream GitHub repo `lonngxhinH/xhprof`](https://github.com/longxinH/xhprof)
