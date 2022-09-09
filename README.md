@@ -5,11 +5,11 @@
 
 ![DDEV logo](images/ddev_logo.png)
 
-ddev is an open source tool that makes it simple to get local PHP development environments up and running in minutes. It's powerful and flexible as a result of its per-project environment configurations, which can be extended, version controlled, and shared. In short, DDEV aims to allow development teams to use Docker in their workflow without the complexities of bespoke configuration.
+DDEV is an open source tool that makes it simple to get local PHP development environments up and running in minutes. It’s powerful and flexible as a result of its per-project environment configurations, which can be extended, version controlled, and shared. In short, DDEV aims to allow development teams to use Docker in their workflow without the complexities of bespoke configuration.
 
 ## Get Started
 
-1. **Check [System Requirements](https://ddev.readthedocs.io/):** DDEV runs the same on macOS (M1 and amd64), Windows 10/11, WSL2, Linux, and Gitpod.io.
+1. **Check [System Requirements](https://ddev.readthedocs.io/):** DDEV runs the same on macOS (M1 and amd64), Windows 10/11, WSL2, Linux, and [Gitpod](https://www.gitpod.io).
 2. **Install [docker/colima and DDEV](https://ddev.readthedocs.io/en/latest/users/install/)**.
 3. **Try a [CMS Quick Start Guide](https://ddev.readthedocs.io/en/latest/users/quickstart/)**.
 
@@ -18,10 +18,10 @@ Having trouble? This community has [great support](https://ddev.readthedocs.io/e
 ## Partial Feature List
 
 * Quickly create multiple local web development environments based on code repositories.
-* Import a database for a project you're working on.
-* Import upload files to match the project (e.g. Drupal sites/default/files or WordPress wp-content/uploads).
-* Customizable integration with hosting platforms like Platform.sh, Pantheon, Acquia and others.
-* Run commands within the docker environment using `ddev exec`.
+* Import a database for a project you’re working on.
+* Import upload files to match the project (e.g. Drupal sites/default/files or WordPress `wp-content/uploads`).
+* Customizable integration with hosting platforms like [Platform.sh](https://platform.sh), [Pantheon](https://pantheon.io), [Acquia](https://www.acquia.com) and others.
+* Run commands within the Docker environment using `ddev exec`.
 * View logs from the web and db containers.
 * Use `ddev ssh` to explore the linux environment inside the container.
 * List running projects with `ddev list`.
@@ -30,11 +30,11 @@ Having trouble? This community has [great support](https://ddev.readthedocs.io/e
 * Create custom commands as simple shell scripts.
 * Trusted HTTPS support.
 
-Just running `ddev` will show you all the commands.
+Running `ddev` will show you all the [commands](https://ddev.readthedocs.io/en/stable/users/basics/cli-usage/).
 
 ## Contributing
 
-See the "How can I contribute" question in the [FAQ](https://ddev.readthedocs.io/en/latest/users/basics/faq/) and [Contributing.md](CONTRIBUTING.md).
+See the "How can I contribute to DDEV?" question in the [FAQ](https://ddev.readthedocs.io/en/latest/users/basics/faq/), and the [Contributing](CONTRIBUTING.md) page.
 
 ## Wonderful Sponsors
 
