@@ -26,7 +26,7 @@ Commands
 Completely
 Create
 DDEV's
-DDEV-Local
+DDEV
 DHCP
 DNS
 Docker

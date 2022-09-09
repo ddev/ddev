@@ -103,7 +103,7 @@
         Please don't forget that Linux installation absolutely requires post-install steps (below).
     
     !!!warning "Don't use `sudo` with the docker command"
-        Please don't use `sudo` with docker. If you're needing it, you haven't finished the installation. Don't use `sudo` with ddev, except the rare case where you need the `ddev hostname` command.
+        Please don't use `sudo` with docker. If you're needing it, you haven't finished the installation. Don't use `sudo` with `ddev`, except the rare case where you need the `ddev hostname` command.
 
     !!!warning "Docker Desktop for Linux is not yet mature enough to use"
         The release of Docker Desktop for Linux in 2022 was welcomed by many, but the system does not yet seem stable enough for predictable use, and has some of the problems of Docker Desktop on other platforms. We recommend that you stay with the traditional docker-ce installation described here.
@@ -135,7 +135,7 @@
 
 ## Testing and Troubleshooting Your Docker Installation
 
-Docker needs to be able to do a few things for ddev to work:
+Docker needs to be able to do a few things for DDEV to work:
 
 * Mount the project code directory from the host into the container; the project code directory is usually somewhere in a subdirectory of your home directory.
 * Access TCP ports on the host to serve HTTP and HTTPS. These are ports 80 and 443 by default, but they can be changed on a per-project basis.
@@ -150,4 +150,4 @@ If that fails (if you get an error, or you don't see the contents of your projec
 * `invalid mount config for type "bind": bind mount source path does not exist: <some path>` means the filesystem isn't successfully shared into the docker container.
 * "The path ... is not shared and is not known to Docker": Visit docker's preferences/settings->File sharing and share the appropriate path or drive.
 * `Error response from daemon: Get https://registry-1.docker.io/v2/` - Docker may not be running (restart it) or you may not have any access to the internet.
-* "403 authentication required" when trying to `ddev start`: Try `docker logout` and do it again. Docker authentication is *not* required for any normal ddev action.
+* "403 authentication required" when trying to `ddev start`: Try `docker logout` and do it again. Docker authentication is *not* required for any normal DDEV action.

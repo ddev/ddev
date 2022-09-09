@@ -2,7 +2,7 @@
 
 Most people like to have shell completion on the command line. In other words, when you're typing a command, you can hit `<TAB>` and the shell will show you what the options are. For example, if you type `ddev <TAB>`, you'll see all the possible commands. `ddev debug <TAB>` will show you the options for the command. And `ddev list -<TAB>` will show you all the flags available for `ddev list`.
 
-Shells like bash and zsh need help to do this though, they have to know what the options are. DDEV-Local provides the necessary hint scripts, and if you use homebrew, they get installed automatically. But if you use oh-my-zsh, for example, you may have to manually install the hint script.
+Shells like bash and zsh need help to do this though, they have to know what the options are. DDEV provides the necessary hint scripts, and if you use homebrew, they get installed automatically. But if you use oh-my-zsh, for example, you may have to manually install the hint script.
 
 === "macOS Bash with Homebrew"
     The easiest way to use bash completion on macOS is install it with homebrew. `brew install bash-completion`. When you install it though, it will warn you with something like this, which may vary on your system.

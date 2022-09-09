@@ -8,7 +8,7 @@ Remember, you can run `ddev [command] --help` for more info on many of the topic
 
 Import a database with just one command; There is support for several file formats, including: **.sql, sql.gz, mysql, mysql.gz, tar, tar.gz, and zip**.
 
-Here's an example of a database import using ddev:
+Here's an example of a database import using DDEV:
 
 ```bash
 ddev import-db --src=dumpfile.sql.gz
@@ -45,7 +45,7 @@ Don't forget about `ddev snapshot restore --latest` and that `ddev snapshot rest
 
 **Other database explorers**: There are lots of alternatives for GUI database explorers:
 
-* macOS users love `ddev sequelpro`, which launches the free Sequelpro database browser. However, it's gotten little love in recent years, so ddev now supports TablePlus and SequelAce if they're installed. `ddev tableplus` and `ddev sequelace`.
+* macOS users love `ddev sequelpro`, which launches the free Sequelpro database browser. However, it's gotten little love in recent years, so DDEV now supports TablePlus and SequelAce if they're installed. `ddev tableplus` and `ddev sequelace`.
 * `ddev describe` tells you the URL for the built-in PHPMyAdmin database browser (Hint: It's `http://<yourproject>.ddev.site:8036`).
 * PHPStorm (and all JetBrains tools) have a nice database browser:
     * Choose a static `host_db_port` for your project. For example `host_db_port: 59002` (each project's db port should be different if you're running more than one project at a time). (`ddev start` to make it take effect)

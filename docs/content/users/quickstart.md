@@ -112,7 +112,7 @@ Here's a quickstart instructions for a number of different environments:
         
         ```php
         An existing user-managed wp-config.php file has been detected!
-        Project ddev settings have been written to:
+        Project DDEV settings have been written to:
         
         /Users/rfay/workspace/bedrock/web/wp-config-ddev.php
         
@@ -120,7 +120,7 @@ Here's a quickstart instructions for a number of different environments:
         add the following snippet to your wp-config.php, near the bottom of the file
         and before the include of wp-settings.php:
         
-        // Include for ddev-managed settings in wp-config-ddev.php.
+        // Include for DDEV-managed settings in wp-config-ddev.php.
         $ddev_settings = dirname(__FILE__) . '/wp-config-ddev.php';
         if (is_readable($ddev_settings) && !defined('DB_USER')) {
           require_once($ddev_settings);
@@ -383,7 +383,7 @@ Here's a quickstart instructions for a number of different environments:
 
 !!!note "Turning off settings management completely"
 
-    If you do *not* want DDEV-Local to create or manage settings files, set `disable_settings_management: true` in your `.ddev/config.yaml` or `ddev config --disable-settings-management` and you will be the only one that edits or updates settings files.
+    If you do *not* want DDEV to create or manage settings files, set `disable_settings_management: true` in your `.ddev/config.yaml` or `ddev config --disable-settings-management` and you will be the only one that edits or updates settings files.
 
 The `ddev config` command attempts to create a CMS-specific settings file with DDEV credentials pre-populated.
 
@@ -488,9 +488,9 @@ DDEV ROUTER STATUS: healthy
 ssh-auth status: healthy
 ```
 
-## Removing projects from DDEV-Local
+## Removing projects from DDEV
 
-To remove a project from DDEV-Local's listing you can use the destructive option (deletes database, removes item from ddev's list, removes hostname entry in hosts file):
+To remove a project from DDEV’s listing you can use the destructive option (deletes database, removes item from DDEV’s list, removes hostname entry in hosts file):
 
 `ddev delete <projectname>`
 or
@@ -500,7 +500,7 @@ Or if you just don't want it to show up in `ddev list` any more, use `ddev stop 
 
 ## Importing assets for an existing project
 
-An important aspect of local web development is the ability to have a precise recreation of the project you are working on locally, including up-to-date database contents and static assets such as uploaded images and files. ddev provides functionality to help with importing assets to your local environment with two commands.
+An important aspect of local web development is the ability to have a precise recreation of the project you are working on locally, including up-to-date database contents and static assets such as uploaded images and files. DDEV provides functionality to help with importing assets to your local environment with two commands.
 
 ### Importing a database
 

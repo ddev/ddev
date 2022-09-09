@@ -1,6 +1,6 @@
 # Custom (Shell) Commands
 
-It's quite easy to add custom commands to ddev; they can execute either on the host or in the various containers. The basic idea is to add a bash script to either the specific project in `.ddev/commands/host` or `.ddev/commands/<containername>` or globally for every project in `~/.ddev/commands`
+It's quite easy to add custom commands to DDEV; they can execute either on the host or in the various containers. The basic idea is to add a bash script to either the specific project in `.ddev/commands/host` or `.ddev/commands/<containername>` or globally for every project in `~/.ddev/commands`
 
 There are example commands provided in `ddev/commands/*/*.example` that can just be copied or moved (or symlinked) and used as commands. For example, [.ddev/commands/host/mysqlworkbench.example](https://github.com/drud/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/host/mysqlworkbench.example) can be used to add a "ddev mysqlworkbench" command, just change it from "mysqlworkbench.example" to "mysqlworkbench".  If you're on macOS or Linux (or some configurations of Windows) you can just `cd .ddev/commands/host && ln -s mysqlworkbench.example mysqlworkbench`. Also, a new `ddev mysql` command has been added using this technique (as a db container command). Also see the  [ddev mysql command](https://github.com/drud/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/db/mysql).
 
@@ -26,9 +26,9 @@ open -a PhpStorm.app ${DDEV_APPROOT}
 
 ## Container commands
 
-To provide a command which will execute in a container, add a bash script to `.ddev/commands/<container_name>`, for example, `.ddev/commands/web/mycommand`. The bash script will be executed inside the named container. For example, see the [several standard ddev script-based web container commands](https://github.com/drud/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/web),
+To provide a command which will execute in a container, add a bash script to `.ddev/commands/<container_name>`, for example, `.ddev/commands/web/mycommand`. The bash script will be executed inside the named container. For example, see the [several standard DDEV script-based web container commands](https://github.com/drud/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/web),
 
-In addition to commands that run in the standard ddev containers like "web" and "db", you can run commands in custom containers, just using the service name, like `.ddev/commands/solr/<command>`. Note, however, that your service must mount /mnt/ddev_config as the web and db containers do, so the `volumes` section of `docker-compose.<servicename>.yaml` needs:
+In addition to commands that run in the standard DDEV containers like "web" and "db", you can run commands in custom containers, just using the service name, like `.ddev/commands/solr/<command>`. Note, however, that your service must mount /mnt/ddev_config as the web and db containers do, so the `volumes` section of `docker-compose.<servicename>.yaml` needs:
 
 ```
     volumes:
@@ -200,4 +200,4 @@ Example: `## HostWorkingDir: true`
 ## Known Windows OS issues
 
 * **Line Endings**: If you are editing a custom command which will run in a container, it must have LF line endings (not traditional Windows CRLF line endings). Remember that a custom command in a container is a script that must execute in a Linux environment.
-* If ddev can't find "bash" to execute it, then the commands can't be used. If you are running inside git-bash in most any terminal, this shouldn't be an issue, and ddev should be able to find git-bash if it's in `C:\Program Files\Git\bin` as well. But if neither of those is true, add the directory of bash.exe to your PATH environment variable.
+* If DDEV can't find "bash" to execute it, then the commands can't be used. If you are running inside git-bash in most any terminal, this shouldn't be an issue, and DDEV should be able to find git-bash if it's in `C:\Program Files\Git\bin` as well. But if neither of those is true, add the directory of bash.exe to your PATH environment variable.

@@ -46,7 +46,7 @@ cat >PKGBUILD <<END
 pkgname="${AUR_REPO}"
 pkgver=$(echo ${VERSION_NUMBER} | tr '-' '_')
 pkgrel=1
-pkgdesc='DDEV-Local: a local PHP development environment system${EDGE_DESCRIPTION}'
+pkgdesc='DDEV: a local PHP development environment system${EDGE_DESCRIPTION}'
 arch=('x86_64')
 url='https://github.com/drud/ddev'
 license=('Apache')

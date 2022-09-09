@@ -38,7 +38,7 @@ To execute a fully-featured `composer create-project` command, you can execute t
 
 `ddev exec composer create-project ...`
 
-DDEV-Local uses composer version 2 by default. If you want to roll back to version 1, `ddev config --composer-version=1 && ddev start`
+DDEV uses composer version 2 by default. If you want to roll back to version 1, `ddev config --composer-version=1 && ddev start`
 
 **composer.json Location**: The most common situation is for the composer.json to be in the project root, but if your composer.json is not in the project root, use the `composer_root` option in `.ddev/config.yaml` or `ddev config --composer-root <dir>`. The `composer_root` value is the *relative* path from the project root to the directory where the composer.json file is. So if the composer.json is `docroot/composer.json`, the `composer_root` value should be `docroot`.
 
@@ -53,7 +53,7 @@ Both composer and some configurations of Docker Desktop for Windows introduce qu
 You generally don't have to worry about any of this, but it does keep things cleaner. Mostly just a few of the more complex TYPO3 projects have been affected.
 
 * On some older configurations of Docker Desktop for Windows, symlinks are created in the container as "simulated symlinks", or XSym files. These are special text files that behave as symlinks inside the container (on CIFS filesystem), but appear as simple text files on the Windows host. (on the CIFS filesystem used by Docker for Windows inside the container there is no capability to create real symlinks, even though Windows now has this capability.)
-* DDEV-Local attempts to clean up for this situation. Since Windows 10/11+ (in developer mode) can create real symlinks, DDEV-Local scans your repository after a `ddev composer` command and attempts to convert XSym files into real symlinks. On older versions of Windows 10, it can only do this if your Windows 10 workstation is set to "Developer Mode".
+* DDEV attempts to clean up for this situation. Since Windows 10/11+ (in developer mode) can create real symlinks, DDEV scans your repository after a `ddev composer` command and attempts to convert XSym files into real symlinks. On older versions of Windows 10, it can only do this if your Windows 10 workstation is set to "Developer Mode".
 * On Windows 10/11+, to set your computer to developer mode, search for "developer" in settings. Screenshots are below.
 
 ![finding developer mode](../images/developer_mode_1.png)
@@ -86,7 +86,7 @@ MAIL_ENCRYPTION=null
 
 ## Using Development Tools on the Host Machine
 
-It is possible in many cases to use development tools installed on your host machine on a project provisioned by ddev. Tools that interact with files and require no database connection, such as Git or Composer, can be run from the host machine against the code base for a ddev project with no additional configuration necessary.
+It is possible in many cases to use development tools installed on your host machine on a project provisioned by DDEV. Tools that interact with files and require no database connection, such as Git or Composer, can be run from the host machine against the code base for a DDEV project with no additional configuration necessary.
 
 ### Database Connections from the Host
 
@@ -102,7 +102,7 @@ You can use this port with various tools that need a direct port, like `mysql` o
 
 **Warning:** Using drush on the host is discouraged, and you'll have some trouble with it. It's also mostly irrelevant for Drupal8, as you should be using composer-installed project-level drush.
 
-If you have PHP and Drush installed on your host system and the environment variable IS_DDEV_PROJECT=true, you can use drush to interact with a ddev project. On the host system the extra include host-side configuration for the database and port are derived in the settings.ddev.php file to allow drush to access the database server. This may not work for all drush commands because of course the actual webserver environment is not available.
+If you have PHP and Drush installed on your host system and the environment variable IS_DDEV_PROJECT=true, you can use drush to interact with a DDEV project. On the host system the extra include host-side configuration for the database and port are derived in the settings.ddev.php file to allow drush to access the database server. This may not work for all drush commands because of course the actual webserver environment is not available.
 
 Note that on Drupal 8+ if you want to use `drush uli` on the host (or other drush commands that require a default URI), you'll need to set DRUSH_OPTIONS_URI on the host. For example, `export DRUSH_OPTIONS_URI=https://mysite.ddev.site`.
 

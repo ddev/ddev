@@ -34,8 +34,7 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
 
 ### ---------------------------ddev-php-base--------------------------------------
 ### Build ddev-php-base, which is the base for ddev-php-prod and ddev-webserver-*
-### This combines the packages and features of DDEV-Local's ddev-webserver and
-### DDEV-Live's PHP image
+### This combines the packages and features of DDEV’s ddev-webserver and PHP image
 FROM base AS ddev-php-base
 ARG PHP_DEFAULT_VERSION="7.4"
 ENV DDEV_PHP_VERSION=$PHP_DEFAULT_VERSION

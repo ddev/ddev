@@ -1,6 +1,6 @@
 # Extending and Customizing Environments
 
-ddev provides several ways in which the environment for a project using ddev can be customized and extended.
+ddev provides several ways in which the environment for a project using DDEV can be customized and extended.
 
 ## Changing PHP version
 
@@ -12,11 +12,11 @@ The project's `.ddev/config.yaml` file defines the PHP version to use. This can 
 
 ## Changing webserver type
 
-DDEV-Local supports nginx with php-fpm by default ("nginx-fpm") and also apache2 with php-fpm ("apache-fpm"). These can be changed using the "webserver_type" value in .ddev/config.yaml, for example `webserver_type: apache-fpm`.
+DDEV supports nginx with php-fpm by default ("nginx-fpm") and also apache2 with php-fpm ("apache-fpm"). These can be changed using the "webserver_type" value in .ddev/config.yaml, for example `webserver_type: apache-fpm`.
 
 ## Adding services to a project
 
-For most standard web applications, ddev provides everything you need to successfully provision and develop a web application on your local machine out of the box. More complex and sophisticated web applications, however, often require integration with services beyond the standard requirements of a web and database server. Examples of these additional services are Apache Solr, Redis, Varnish, etc. While ddev likely won't ever provide all of these additional services out of the box, it is designed to provide simple ways for the environment to be customized and extended to meet the needs of your project.
+For most standard web applications, DDEV provides everything you need to successfully provision and develop a web application on your local machine out of the box. More complex and sophisticated web applications, however, often require integration with services beyond the standard requirements of a web and database server. Examples of these additional services are Apache Solr, Redis, Varnish, etc. While DDEV likely won't ever provide all of these additional services out of the box, it is designed to provide simple ways for the environment to be customized and extended to meet the needs of your project.
 
 A collection of vetted service configurations is available in the [Additional Services Documentation](additional-services.md).
 
@@ -136,7 +136,7 @@ SOMEENV='someval'
 SOMEOTHERENV='someotherval'
 ```
 
-The globals from the env file would be available on the next ddev start. It is important to note that typically the .env file should *not* be placed under source control, especially if it contains private API keys or passwords.
+The globals from the env file would be available on the next DDEV start. It is important to note that typically the .env file should *not* be placed under source control, especially if it contains private API keys or passwords.
 
 ### Altering the in-container $PATH
 
@@ -153,9 +153,9 @@ export PATH=$PATH:/var/www/html/somewhereelse/vendor/bin
 
 ## Custom nginx configuration
 
-When you `ddev start` using the `nginx-fpm` webserver_type, ddev creates a configuration customized to your project type in `.ddev/nginx_full/nginx-site.conf`. You can edit and override the configuration by removing the `#ddev-generated` line and doing whatever you need with it. After each change, `ddev start`.
+When you `ddev start` using the `nginx-fpm` webserver_type, DDEV creates a configuration customized to your project type in `.ddev/nginx_full/nginx-site.conf`. You can edit and override the configuration by removing the `#ddev-generated` line and doing whatever you need with it. After each change, `ddev start`.
 
-You can also have more than one config file in the `.ddev/nginx_full` directory, they will all get loaded when ddev starts. This can be used for serving multiple docroots (advanced, below), or for any other technique.
+You can also have more than one config file in the `.ddev/nginx_full` directory, they will all get loaded when DDEV starts. This can be used for serving multiple docroots (advanced, below), or for any other technique.
 
 ### Troubleshooting nginx configuration
 
@@ -167,7 +167,7 @@ You can also have more than one config file in the `.ddev/nginx_full` directory,
 
 ### Multiple docroots in nginx (advanced)
 
-It's easiest to have different webservers in different ddev projects and different ddev projects can [easily communicate with each other](../basics/faq.md), but some sites require more than one docroot for a single project codebase. Sometimes this is because there's an API built in the same codebase but using different code, or different code for different languages, etc.
+It's easiest to have different webservers in different DDEV projects and different DDEV projects can [easily communicate with each other](../basics/faq.md), but some sites require more than one docroot for a single project codebase. Sometimes this is because there's an API built in the same codebase but using different code, or different code for different languages, etc.
 
 The generated `.ddev/nginx_full/seconddocroot.conf.example` demonstrates how to do this. You can create as many of these as you want, change the `servername` and the `root` and customize as you see fit.
 

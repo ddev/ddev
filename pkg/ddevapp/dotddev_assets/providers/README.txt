@@ -5,7 +5,7 @@ Providers README
 
 ## Introduction to Hosting Provider Integration
 
-As of DDEV-Local v1.17, the hosting provider integration has been completely rewritten and reorganized, and integrations for Platform.sh and Acquia hosting have been added to the previous integration for Pantheon.io.
+As of DDEV v1.17, the hosting provider integration has been completely rewritten and reorganized, and integrations for Platform.sh and Acquia hosting have been added to the previous integration for Pantheon.io.
 
 The best part of this is you can change them and adapt them in any way you need to, they're all short scripted recipes. There are several example recipes created in the .ddev/providers directory of every project or see them in the code at https://github.com/drud/ddev/tree/master/cmd/ddev/cmd/dotddev_assets/providers.
 

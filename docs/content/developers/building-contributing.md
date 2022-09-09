@@ -2,11 +2,11 @@
 
 ## Testing latest commits
 
-You can download the latest artifacts from the master branch from [link](https://nightly.link/drud/ddev/workflows/master-build/master). On macOS and Linux you can `brew unlink ddev && brew install drud/ddev/ddev --HEAD --fetch-HEAD` to get the latest commit of ddev, even if it's not yet in a release. If you are using linux/WSL2, you will also likely need to install build-essential with the following command: `sudo apt install -y build-essential`.
+You can download the latest artifacts from the master branch from [link](https://nightly.link/drud/ddev/workflows/master-build/master). On macOS and Linux you can `brew unlink ddev && brew install drud/ddev/ddev --HEAD --fetch-HEAD` to get the latest commit of DDEV, even if it's not yet in a release. If you are using linux/WSL2, you will also likely need to install build-essential with the following command: `sudo apt install -y build-essential`.
 
 To download the latest version, you can visit the [master-build](https://github.com/drud/ddev/actions/workflows/master-build.yml) workflow and choose the latest item (or the one that matches a commit you want to test). You'll see the artifacts for each OS there on the bottom of the page.
 
-And of course you can just see the latest build in action by visiting ddev on [gitpod](https://gitpod.io/#https://github.com/drud/ddev).
+And of course you can just see the latest build in action by visiting DDEV on [gitpod](https://gitpod.io/#https://github.com/drud/ddev).
 
 ## Testing a PR
 
@@ -24,18 +24,18 @@ After you're done, you can remove the downloaded binary and `brew link ddev`.
 
 ## Open in Gitpod
 
-Gitpod.io provides a quick preconfigured ddev experience in the browser, so you can test your PR (or someone else's) easily and without setting up an environment. In any PR you can use the URL `https://gitpod.io/#https://github.com/drud/ddev/pulls/<YOURPR>` to open that PR and build it in Gitpod.
+Gitpod.io provides a quick preconfigured DDEV experience in the browser, so you can test your PR (or someone else's) easily and without setting up an environment. In any PR you can use the URL `https://gitpod.io/#https://github.com/drud/ddev/pulls/<YOURPR>` to open that PR and build it in Gitpod.
 
-To just open and work on ddev you can use the button below.
+To just open and work on DDEV you can use the button below.
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/drud/ddev)
 
 If you want to run a web project in there, you can just check it out into `/workspace/<yourproject>` and use it as usual. The things you're familiar with work as expected, except that `ddev-router` does not run, and
 
 A dummy project for gitpod is provided by default in /workspace/d9simple. You can just `ddev poweroff` and use your own.
 
-## Making changes to ddev images
+## Making changes to DDEV images
 
-If you need to make a change to one of the ddev images, you can make the change, but then it has to be built with a specific tag, and the tag has to be updated in `pkg/versionconstants/versionconstants.go`. So for example, make a change to containers/ddev-webserver/Dockerfile, then built it:
+If you need to make a change to one of the DDEV images, you can make the change, but then it has to be built with a specific tag, and the tag has to be updated in `pkg/versionconstants/versionconstants.go`. So for example, make a change to containers/ddev-webserver/Dockerfile, then built it:
 
 ```bash
 cd containers/ddev-webserver
@@ -51,7 +51,7 @@ make
 
 `ddev version` should show you that you are using the correct webtag, and `ddev start` will show it.
 
-It's easiest to do this using gitpod (see above) because gitpod already has `docker buildx` all set up for you and the built ddev is in the $PATH.
+It's easiest to do this using gitpod (see above) because gitpod already has `docker buildx` all set up for you and the built DDEV binary is in the $PATH.
 
 ## Pull Requests and PR Preparation
 
@@ -133,7 +133,7 @@ To see which DDEV commands the tests are executing, set the environment variable
 
 Use GOTEST_SHORT=true to run just one CMS in each test, or GOTEST_SHORT=<integer> to run exactly one project type from the list of project types in the [TestSites array](https://github.com/drud/ddev/blob/a4ab2827d8b6e706b2420700045d889a3a69f3f2/pkg/ddevapp/ddevapp_test.go#L43). For example, GOTEST_SHORT=5 will run many tests only against TYPO3.
 
-To run a test (in the cmd package) against a individually compiled ddev binary set the DDEV_BINARY_FULLPATH environment variable, for example `DDEV_BINARY_FULLPATH=$PWD/.gotmp/bin/linux_amd64/ddev make testcmd`.
+To run a test (in the cmd package) against a individually compiled DDEV binary set the DDEV_BINARY_FULLPATH environment variable, for example `DDEV_BINARY_FULLPATH=$PWD/.gotmp/bin/linux_amd64/ddev make testcmd`.
 
 ## Automated testing
 

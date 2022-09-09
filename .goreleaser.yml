@@ -280,7 +280,7 @@ aurs:
   ids:
   - ddev
   homepage: "https://github.com/drud/ddev"
-  description: "DDEV-Local: a local web development environment"
+  description: "DDEV: a local web development environment"
   maintainers:
   - 'Randy Fay <randy at randyfay.com>'
   license: "Apache 2"
@@ -313,7 +313,7 @@ aurs:
   ids:
   - ddev
   homepage: "https://github.com/drud/ddev"
-  description: "DDEV-Local: a local web development environment (edge)"
+  description: "DDEV: a local web development environment (edge)"
   maintainers:
   - 'Randy Fay <randy at randyfay.com>'
   license: "Apache 2"

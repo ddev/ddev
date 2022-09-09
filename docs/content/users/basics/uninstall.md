@@ -1,6 +1,6 @@
 # Uninstalling DDEV
 
-A DDEV-Local installation consists of:
+A DDEV installation consists of:
 
 * The binary itself (self-contained)
 * The .ddev folder in a project
@@ -18,18 +18,18 @@ To remove all /etc/hosts entries owned by ddev: `ddev hostname --remove-inactive
 
 To remove the global .ddev directory: `rm -r ~/.ddev`
 
-If you installed docker just for ddev and want to uninstall it with all containers and images, just uninstall it for your version of Docker.
+If you installed docker just for DDEV and want to uninstall it with all containers and images, just uninstall it for your version of Docker.
 
 Otherwise:
 
-* Remove Docker images from before the current ddev release with `ddev delete images`.
-* To remove all ddev docker containers that might still exist: `docker rm $(docker ps -a | awk '/ddev/ { print $1 }')`
-* To remove all ddev docker images that might exist: `docker rmi $(docker images | awk '/ddev/ {print $3}')`
+* Remove Docker images from before the current DDEV release with `ddev delete images`.
+* To remove all DDEV docker containers that might still exist: `docker rm $(docker ps -a | awk '/ddev/ { print $1 }')`
+* To remove all DDEV docker images that might exist: `docker rmi $(docker images | awk '/ddev/ {print $3}')`
 * To remove all Docker images of any type (does no harm, they'll just be re-downloaded): `docker rmi -f $(docker images -q)`
 * To remove any docker volumes: `docker volume rm $(docker volume ls | awk '/ddev|-mariadb/ { print $2 }')`
 
-To remove the ddev binary:
+To remove the `ddev` binary:
 
 * On macOS or Linux with Homebrew, `brew uninstall ddev`
 * For linux or other simple installs, just remove the binary, for example `sudo rm /usr/local/bin/ddev`
-* On Windows (if you used the ddev Windows installer) use the uninstall on the start menu or in the "Add or Remove Programs" section of Windows settings.
+* On Windows (if you used the DDEV Windows installer) use the uninstall on the start menu or in the "Add or Remove Programs" section of Windows settings.

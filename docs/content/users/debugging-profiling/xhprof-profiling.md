@@ -1,6 +1,6 @@
 # xhprof Profiling
 
-DDEV-Local has built-in support for [xhprof](https://www.php.net/manual/en/book.xhprof.php). The official PECL xhprof extension does not support PHP5.6, but only PHP 7.\* and PHP 8.\*.
+DDEV has built-in support for [xhprof](https://www.php.net/manual/en/book.xhprof.php). The official PECL xhprof extension does not support PHP5.6, but only PHP 7.\* and PHP 8.\*.
 
 ## Basic xhprof Usage
 

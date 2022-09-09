@@ -2,7 +2,7 @@
 
 Custom shell configuration (bash or your preferred shell), your usual git configuration, a composer auth.json and more can be achieved within your containers.  Place all your dotfiles in your global`~/.ddev/homeadditions` or your project's `.ddev/homeadditions` directory and DDEV will use these in your project's web containers.  (Note that there is also a hidden/transient `.ddev/.homeadditions`; this is used for processing global homeadditions and should be ignored.)
 
-On `ddev start`, ddev attempts to create a user inside the web and db containers with the same name and use id as the one you have on the host.
+On `ddev start`, DDEV attempts to create a user inside the web and db containers with the same name and use id as the one you have on the host.
 
 DDEV looks for the `homeadditions` directory either in `~/.ddev/homeadditions` (the global .ddev directory) or the `.ddev/homeadditions` directory of a particular project, and will copy their contents recursively into the in-container home directory during `ddev start`. (Note that project homeadditions contents override the global homeadditions.)
 

@@ -43,7 +43,7 @@ The following "Repository secret" environment variables must be added to <https:
 
 ## Pushing docker images with the GitHub Actions workflow
 
-The easiest way to push docker images is to use the GitHub Actions workflow, especially if the code for the image is already in the ddev repo.
+The easiest way to push docker images is to use the GitHub Actions workflow, especially if the code for the image is already in the [drud/ddev](https://github.com/drud/ddev) repo.
 
 <!-- markdown-link-check-disable-next-line -->
 You can push an image at <https://github.com/drud/ddev/actions/workflows/push-tagged-image.yml>
@@ -71,7 +71,7 @@ It's more error-prone, but images can be pushed from the command-line.
 
 ## Maintaining ddev-dbserver mysql:5.7 and mysql:8.0 ARM64 images
 
-Sadly, there are no arm64 Docker images for mysql:5.7 and mysql:8.0, so we have a whole process to maintain our own for ddev.
+Sadly, there are no arm64 Docker images for mysql:5.7 and mysql:8.0, so we have a whole process to maintain our own for DDEV.
 
 We maintain [drud/mysql-arm64-images](https://github.com/drud/mysql-arm64-images) and [drud/xtrabackup-build](https://github.com/drud/xtrabackup-build) for this reason.
 
@@ -99,7 +99,7 @@ But here are the steps for building:
 
 Homebrew formulas are normally updated just fine by the release process, so nothing needs to be done.
 
-If you have to temporarily update the homebrew formulas, you can do that with a commit to <https://github.com/drud/homebrew-ddev> and <https://github.com/drud/homebrew-ddev-edge>. The bottles and checksums for macOS (high sierra) and x86_64_linux are built and pushed to the release page automatically by the release build process (see [bump_homebrew.sh](https://github.com/drud/ddev/blob/master/.ci-scripts/bump_homebrew.sh). Test `brew upgrade ddev` both on macOS and Linux and make sure ddev is the right version and behaves well.
+If you have to temporarily update the homebrew formulas, you can do that with a commit to <https://github.com/drud/homebrew-ddev> and <https://github.com/drud/homebrew-ddev-edge>. The bottles and checksums for macOS (high sierra) and x86_64_linux are built and pushed to the release page automatically by the release build process (see [bump_homebrew.sh](https://github.com/drud/ddev/blob/master/.ci-scripts/bump_homebrew.sh). Test `brew upgrade ddev` both on macOS and Linux and make sure DDEV is the right version and behaves well.
 
 ## Manually updating Chocolatey
 
@@ -129,7 +129,7 @@ docker run --rm -v $PWD:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco p
 
 The AUR repository is normally updated just fine by the release process, so nothing needs to be done.
 
-However, you can manually publish the release to the ddev [AUR repository](https://aur.archlinux.org/packages/ddev-bin/). The README.md in the AUR git repo (`ssh://aur@aur.archlinux.org/ddev-bin.git` or `https://aur.archlinux.org/ddev-bin.git`) has instructions on how to update, including how to do it with a Docker container, so it doesn't have to be done on an ArchLinux or Manjaro VM.
+However, you can manually publish the release to the DDEV [AUR repository](https://aur.archlinux.org/packages/ddev-bin/). The README.md in the AUR git repo (`ssh://aur@aur.archlinux.org/ddev-bin.git` or `https://aur.archlinux.org/ddev-bin.git`) has instructions on how to update, including how to do it with a Docker container, so it doesn't have to be done on an ArchLinux or Manjaro VM.
 
 ## Manually Signing the Windows installer
 

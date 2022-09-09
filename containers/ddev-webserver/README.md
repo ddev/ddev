@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This is a Dockerfile to build a container image for ddev's web container.
+This is a Dockerfile to build a container image for DDEV’s web container.
 
 ## Developer Tools
 

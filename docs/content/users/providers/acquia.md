@@ -8,7 +8,7 @@ ddev's Acquia integration pulls database and files from an existing project into
 
 1. Get your Acquia API token from your Account Settings->API Tokens.
 2. Make sure your ssh key is authorized on your Acquia account at Account Settings->SSH Keys
-3. `ddev auth ssh` (this typically needs only be done once per ddev session, not every pull.)
+3. `ddev auth ssh` (this typically needs only be done once per DDEV session, not every pull.)
 4. Add / update the web_environment section in ~/.ddev/global_config.yaml with the API keys:
 
    ```yaml

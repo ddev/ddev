@@ -1,6 +1,6 @@
 # Hooks
 
-Most ddev commands provide hooks to run tasks before or after the main command executes. To automate setup tasks specific to your project, define them in the project's `config.yaml` file.
+Most DDEV commands provide hooks to run tasks before or after the main command executes. To automate setup tasks specific to your project, define them in the project's `config.yaml` file.
 
 To define command tasks in your configuration, specify the desired command hook as a subfield to `hooks`, then provide a list of tasks to run.
 
@@ -28,7 +28,7 @@ hooks:
 
 ## Supported Tasks
 
-ddev currently supports these tasks:
+DDEV currently supports these tasks:
 
 * `exec` to execute a command in any service/container
 * `exec-host` to execute a command on the host

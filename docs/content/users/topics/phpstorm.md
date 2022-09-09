@@ -65,7 +65,7 @@ We’ll walk through the first two of these approaches.
 
 - Start with a working DDEV/WSL2 setup as described in the [docs](../install/ddev-installation.md). Until that’s all working it doesn’t help to go farther.
 
-- If you haven’t used Xdebug with DDEV-Local and PHPStorm before, you’ll want to read the [step debugging instructions](../debugging-profiling/step-debugging.md).
+- If you haven’t used Xdebug with DDEV and PHPStorm before, you’ll want to read the [step debugging instructions](../debugging-profiling/step-debugging.md).
 
 - For usable performance, your project should be in `/home` inside WSL2, which is on the Linux filesystem. Although you could keep your project on the Windows filesystem and access it in WSL2 via /mnt/c, the performance is even worse than native Windows. It does work though, but don't do it. You'll be miserable.
 

@@ -1,7 +1,7 @@
 # Frequently-Asked Questions (FAQ)
 
-What operating systems will DDEV-Local work with?
-: DDEV-Local works nearly anywhere Docker will run, including macOS, Windows 10/11 Pro/Enterprise,  Windows 10/11 Home, and every Linux variant we've ever tried. It also runs in many Linux-like environments, for example ChromeOS (in Linux machine) and Windows 10/11's WSL2. In general, DDEV works the same on each of these platforms, as all the important work is done inside identical Docker containers.
+What operating systems will DDEV work with?
+: DDEV works nearly anywhere Docker will run, including macOS, Windows 10/11 Pro/Enterprise,  Windows 10/11 Home, and every Linux variant we've ever tried. It also runs in many Linux-like environments, for example ChromeOS (in Linux machine) and Windows 10/11's WSL2. In general, DDEV works the same on each of these platforms, as all the important work is done inside identical Docker containers.
 
 Do I lose my data when I do a `ddev poweroff` or `ddev stop` or `ddev restart`?
 : No, you don't lose data in your database or code with any of these commands. Your database is safely stored on a docker volume.
@@ -27,7 +27,7 @@ How can I check that Docker is working?
 Can I run DDEV and also other Docker or non-Docker development environments at the same time?
 : Yes, you can, as long as they're configured with different ports. But it's easiest to shut down one before using the other. For example, if you use Lando for one project, do a `lando poweroff` before using DDEV, and then do a `ddev poweroff` before using Lando again. If you run nginx or apache locally, just stop them before using DDEV. More information is in the [troubleshooting](troubleshooting.md) section.
 
-How can I contribute to DDEV-Local?
+How can I contribute to DDEV?
 : We love contributions of knowledge, support, docs, and code, and invite you to all of them. Make an issue or PR to the [main repo](https://github.com/drud/ddev). Add your external resource to [awesome-ddev](https://github.com/drud/awesome-ddev). Add your recipe or HOWTO to [ddev-contrib](https://github.com/drud/ddev-contrib). Help others in [Discord](https://discord.gg/kDvSFBSZfs) and [Stack Overflow](https://stackoverflow.com/tags/ddev). Follow the [governance issue](https://github.com/drud/ddev/issues/3268) to learn about financial support possibilities.
 
 How can I show my local project to someone else?
@@ -58,7 +58,7 @@ I don't like the settings files or gitignores that DDEV creates. What can I do?
 
     * Use project type "php" instead of the type of your CMS. "php" just means "Don't try to create settings files and such for me.". The "php" type works great for experienced developers.
 
-    * "Take over" the settings file or .gitignore by deleting the line "#ddev-generated" in it (and then check in the file). If that line is removed, ddev will not try to replace or change the file.
+    * "Take over" the settings file or .gitignore by deleting the line "#ddev-generated" in it (and then check in the file). If that line is removed, DDEV will not try to replace or change the file.
   
 How can I change the name of a project?
 : Use this process:
@@ -82,7 +82,7 @@ How can I move a project from one computer to another?
 How can I move a project from traditional Windows to WSL2?
 :  This is exactly the same as moving a project from one computer to another, see above. Make sure you move the project into a native filesystem in WSL2, most likely /home.
   
-DDEV-Local wants to add a hostname to /etc/hosts but I don't think it should need to.
+DDEV wants to add a hostname to /etc/hosts but I don't think it should need to.
 : If you see "The hostname <hostname> is not currently resolvable" and you *can* `ping <hostname>`, it may be that DNS resolution is slow. DDEV doesn't have any control of your computer's name resolution, so doesn't have any way to influence how your browser gets an IP address from a hostname. It knows you have to be connected to the Internet to do that, and uses a test DNS lookup of <somethingrandom>.ddev.site as a way to guess whether you're connected to the internet. If it is unable to do a name lookup, or if the hostname associated with your project is *not* \*.ddev.site, it will try to create entries in /etc/hosts, since it's assuming you can't look up your project's hostname(s) via DNS. If your internet (and name resolution) is actually working, but DNS is slow, just `ddev config global --internet-detection-timeout-ms=3000` to set the timeout to 3 seconds (or higher). See[issue link](https://github.com/drud/ddev/issues/2409#issuecomment-662448025) for more details. (If DNS rebinding is disallowed on your network/router, this won't be solvable without network/router changes. Help [here](https://github.com/drud/ddev/issues/2409#issuecomment-675083658) and [here](https://github.com/drud/ddev/issues/2409#issuecomment-686718237).) For more detailed troubleshooting information please see the [troubleshooting section](troubleshooting.md#ddev-starts-fine-but-my-browser-cant-access-the-url-url-server-ip-address-could-not-be-found-or-we-cant-connect-to-the-server-at-url).
 
 How can I configure a project with the defaults without hitting <RETURN> a bunch of times?

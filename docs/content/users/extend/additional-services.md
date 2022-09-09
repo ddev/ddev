@@ -1,7 +1,7 @@
 
-# Additional Service Configurations and Add-ons for ddev
+# Additional Service Configurations and Add-ons for DDEV
 
-DDEV-Local projects can be extended to provide additional add-ons, including services. This is achieved by adding docker-compose files to a project's `.ddev` directory that defines the added add-on(s).
+DDEV projects can be extended to provide additional add-ons, including services. This is achieved by adding docker-compose files to a project's `.ddev` directory that defines the added add-on(s).
 
 If you need a service not provided here, see [Defining an additional service with Docker Compose](custom-compose-files.md)
 
@@ -18,21 +18,21 @@ ddev get --list
 ├───────────────────────────┼──────────────────────────────────────────────────┤
 │ drud/ddev-elasticsearch   │ Elasticsearch add-on for DDEV*                   │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-varnish         │ Varnish reverse proxy add-on for ddev*           │
+│ drud/ddev-varnish         │ Varnish reverse proxy add-on for DDEV*           │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-redis           │ redis service for ddev*                          │
+│ drud/ddev-redis           │ redis service for DDEV*                          │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-beanstalkd      │ beanstalkd for ddev*                             │
+│ drud/ddev-beanstalkd      │ beanstalkd for DDEV*                             │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-redis-commander │ Redis commander for use with ddev redis service* │
+│ drud/ddev-redis-commander │ Redis commander for use with DDEV redis service* │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-mongo           │ mongodb addon for ddev*                          │
+│ drud/ddev-mongo           │ mongodb addon for DDEV*                          │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
 │ drud/ddev-drupal9-solr    │ Drupal 9 Apache Solr installation for DDEV*      │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-pdfreactor      │ PDFreactor service for ddev*                     │
+│ drud/ddev-pdfreactor      │ PDFreactor service for DDEV*                     │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-memcached       │ Install memcached as an extra service in ddev*   │
+│ drud/ddev-memcached       │ Install memcached as an extra service in DDEV*   │
 └───────────────────────────┴──────────────────────────────────────────────────┘
 ```
 
@@ -73,7 +73,7 @@ You can see a simple install.yaml in [ddev-addon-template's install.yaml](https:
 
 ### Environment variable replacements
 
-Simple environment variables will be replaced in `install.yaml` as part of filenames. This can include environment variables in the context of where ddev is being run, as well as the standard [environment variables](custom-commands.md#environment-variables-provided) provided to custom host commands, like `DDEV_APPROOT`, `DDEV_DOCROOT`, etc. For example, if a file in `project_files` is listed as `somefile.${DDEV_PROJECT}.txt` with a project named `d10`, the file named `somefile.d10.txt` will be copied from the add-on into the project.
+Simple environment variables will be replaced in `install.yaml` as part of filenames. This can include environment variables in the context of where DDEV is being run, as well as the standard [environment variables](custom-commands.md#environment-variables-provided) provided to custom host commands, like `DDEV_APPROOT`, `DDEV_DOCROOT`, etc. For example, if a file in `project_files` is listed as `somefile.${DDEV_PROJECT}.txt` with a project named `d10`, the file named `somefile.d10.txt` will be copied from the add-on into the project.
 
 ### Template action replacements (advanced)
 

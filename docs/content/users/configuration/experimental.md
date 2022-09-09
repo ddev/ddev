@@ -11,8 +11,8 @@ You can use remote docker instances, whether on the internet or inside your netw
 * If you do not have the docker client installed another way (like from Docker Desktop) then install it with `brew install docker` to get just the client.
 * Create a docker context that points to the remote docker instance. For example, if the remote hostname is `debian-11` then `docker context create debian-11 --docker host=tcp://debian-11:2375 && docker use debian-11`. Alternately, you can use the `DOCKER_HOST` environment variable, for example `export DOCKER_HOST=tcp://debian-11:2375`.
 * Make sure you can access the remote machine using `docker ps`.
-* Bind-mounts cannot work on a remote docker setup, so you must use `ddev config global --no-bind-mounts`. This will cause ddev to push needed information to and from the remote docker instance when needed. This also automatically turns on mutagen caching.
-* You may want to use a FQDN other than `*.ddev.site` because the ddev site will *not* be at `127.0.0.1`. For example, `ddev config --fqdns=debian-11` and then use `https://debian-11` to access the site.
+* Bind-mounts cannot work on a remote docker setup, so you must use `ddev config global --no-bind-mounts`. This will cause DDEV to push needed information to and from the remote docker instance when needed. This also automatically turns on mutagen caching.
+* You may want to use a FQDN other than `*.ddev.site` because the DDEV site will *not* be at `127.0.0.1`. For example, `ddev config --fqdns=debian-11` and then use `https://debian-11` to access the site.
 * If the docker host is reachable on the internet, you can actually enable real https for it using Let's Encrypt as described in [Casual Webhosting](../details/alternate-uses.md#casual-project-webhosting-on-the-internet-including-lets-encrypt). Just make sure that port 2375 is not available on the internet.
 
 ## Rancher Desktop on macOS

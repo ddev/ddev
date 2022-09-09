@@ -6,7 +6,7 @@ Even though DDEV is intended for local development on a single machine, not as a
 * Sharing on a local network so that everybody on the local network can see your project
 * Some CI applications
 
-There are at least three different ways to share a running DDEV-Local project outside the local developer machine:
+There are at least three different ways to share a running DDEV project outside the local developer machine:
 
 * `ddev share` (using ngrok to share over the internet)
 * Local name resolution and sharing the project on the local network
@@ -14,7 +14,7 @@ There are at least three different ways to share a running DDEV-Local project ou
 
 ## Using `ddev share` to share project (easiest)
 
-`ddev share` proxies the project via [ngrok](https://ngrok.com), and it's by far the easiest way to solve the problem of sharing your project with others on your team or around the world. It's built into ddev and "just works" for most people, but it does require a free or paid account on [ngrok.com](https://ngrok.com). All you do is run `ddev share` and then give the resultant URL to your collaborator or use it on your mobile device. [Read the basic how-to from DrupalEasy](https://www.drupaleasy.com/blogs/ultimike/2019/06/sharing-your-ddev-local-site-public-url-using-ddev-share-and-ngrok) or run `ddev share -h` for more.
+`ddev share` proxies the project via [ngrok](https://ngrok.com), and it's by far the easiest way to solve the problem of sharing your project with others on your team or around the world. It's built into DDEV and "just works" for most people, but it does require a free or paid account on [ngrok.com](https://ngrok.com). All you do is run `ddev share` and then give the resultant URL to your collaborator or use it on your mobile device. [Read the basic how-to from DrupalEasy](https://www.drupaleasy.com/blogs/ultimike/2019/06/sharing-your-ddev-local-site-public-url-using-ddev-share-and-ngrok) or run `ddev share -h` for more.
 
 There are CMSs that make this a little harder, especially WordPress and Magento 2. Both of those only respond to a single base URL, and that URL is coded into the database, so it makes this a little harder. For both of these I recommend paying ngrok the $5/month for  a [basic plan](https://ngrok.com/pricing) so you can use a stable subdomain with ngrok.</p>
 
@@ -25,7 +25,7 @@ There are CMSs that make this a little harder, especially WordPress and Magento 
 
 ### WordPress: Change the URL with wp search-replace
 
-WordPress only has the one base URL, but the wp command is built into DDEV-Local's web container.
+WordPress only has the one base URL, but the wp command is built into DDEV’s web container.
 
 This set of steps assumes an ngrok subdomain of "wp23" and a starting URL of `https://wordpress.ddev.site`.
 
@@ -48,7 +48,7 @@ This set of steps assumes an ngrok subdomain "mg2"
 
 ### Using nip.io and or your own name resolution and open up to the local network
 
-Another solution is to **not** use `*.ddev.site` as your project URLs, but to use DNS that you control (and that points to the host machine where your project lives). In general, you'll want to use http URLs with this approach, because it requires manual configuration of the client machine to get it to trust the development certificate that ddev uses (and configures with mkcert on the local machine).
+Another solution is to **not** use `*.ddev.site` as your project URLs, but to use DNS that you control (and that points to the host machine where your project lives). In general, you'll want to use http URLs with this approach, because it requires manual configuration of the client machine to get it to trust the development certificate that DDEV uses (and configures with mkcert on the local machine).
 
 * Use [nip.io](http://nip.io/) to point a domain name to your host.  If your computer's IP address is 192.168.5.101, you can use a domain name like `mysite.192.168.5.101.nip.io` and that domain name will point to your computer. Now add that as an additional_fqdn to your project, `ddev config --additional-fqdns=mysite.192.168.5.101.nip.io` and `ddev start`. Now people in your internal network should be able to `ping mysite.192.168.5.101.nip.io` if your firewall allows it. (Note that if you have other convenient ways to create a DNS entry for this, you can use those instead of using nip.io.)
 * Configure `~/.ddev/global_config.yaml` to bind to all ports: `ddev config global --router-bind-all-interfaces && ddev poweroff && ddev start`

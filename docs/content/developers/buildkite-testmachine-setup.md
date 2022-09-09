@@ -30,13 +30,13 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 17. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`
 18. Run `.buildkite/sanetestbot.sh` to check your work.
 19. Reboot the machine and do a test run. (On windows the machine name only takes effect on reboot.
-20. Verify that go, ddev, git-bash are in the path
+20. Verify that `go`, `ddev`, `git-bash` are in the path
 21. In "Advanced Windows Update Settings" enable "Receive updates for other Microsoft products" to make sure you get WSL2 kernel upgrades. Make sure to run Windows update to get latest kernel.
 
 ## Additional Windows setup for WSL2 testing
 
 1. Do not set up buildkite-agent on the Windows side, or disable it.
-2. Open WSL2 and check out ddev
+2. Open WSL2 and check out [drud/ddev](https://github.com/drud/ddev)
 3. [Install buildkite-agent in WSL2](https://buildkite.com/docs/agent/v3/ubuntu) and configure it. It needs the same changes as macOS, but tags `tags="os=wsl2,architecture=amd64,dockertype=dockerforwindows"` and build-path should be in `~/tmp/buildkite-agent`
 4. As root user, run `.github/workflows/linux-setup.sh`
 5. As root user, add sudo capability with `echo "ALL ALL=NOPASSWD: ALL" >/etc/sudoers.d/all && chmod 440 /etc/sudoers.d/all`
@@ -85,7 +85,7 @@ Set up Windows to automatically start WSL2 buildkite-agent: Use task scheduler t
 16. In nosleep Preferences, enable "Never sleep on AC Adapter", "Never sleep on Battery", and "Start nosleep utility on system startup".
 17. `sudo chown testbot /usr/local/bin`
 18. Set up Mac to [automatically log in on boot](https://support.apple.com/en-us/HT201476).
-19. Try checking out ddev and running `.buildkite/sanetestbot.sh` to check your work.
+19. Try checking out [drud/ddev](https://github.com/drud/ddev) and running `.buildkite/sanetestbot.sh` to check your work.
 20. Log into Chrome with the user ddevtestbot@gmail.com and enable Chrome Remote Desktop.
 21. Set the timezone properly (US MT)
 22. Start the agent with `brew services start buildkite-agent`

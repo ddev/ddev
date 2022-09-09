@@ -2,16 +2,16 @@
 
 Consider using `ddev get platformsh/ddev-platformsh` ([platformsh/ddev-platformsh](https://github.com/platformsh/ddev-platformsh) for more complete Platform.sh integration.
 
-ddev provides integration with the [Platform.sh Website Management Platform](https://platform.sh/), which allows Platform.sh users to quickly download and provision a project from Platform.sh in a local ddev-managed environment.
+DDEV provides integration with the [Platform.sh Website Management Platform](https://platform.sh/), which allows Platform.sh users to quickly download and provision a project from Platform.sh in a local DDEV-managed environment.
 
-ddev's Platform.sh integration pulls database and files from an existing Platform.sh site/environment into your local system so you can develop locally.
+DDEV's Platform.sh integration pulls database and files from an existing Platform.sh site/environment into your local system so you can develop locally.
 
 ## Platform.sh Global Configuration
 
 You need to obtain and configure an API token first. This is only needed once.
 
-1. Login to the Platform.sh Dashboard and go to Account->API Tokens to create an API token for ddev to use.
-2. Add the API token to the `web_environment` section in your global ddev configuration at ~/.ddev/global_config.yaml:
+1. Login to the Platform.sh Dashboard and go to Account->API Tokens to create an API token for DDEV to use.
+2. Add the API token to the `web_environment` section in your global DDEV configuration at ~/.ddev/global_config.yaml:
 
 ```yaml
 web_environment:

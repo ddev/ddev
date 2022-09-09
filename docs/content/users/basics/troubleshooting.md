@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Things might go wrong! Besides the suggestions on this page don't forget about [Stack Overflow](https://stackoverflow.com/tags/ddev) and [the ddev issue queue](https://github.com/drud/ddev/issues) and [other support options](../support.md). And see [Docker troubleshooting suggestions](../install/docker-installation.md#testing-and-troubleshooting-your-docker-installation).
+Things might go wrong! Besides the suggestions on this page don't forget about [Stack Overflow](https://stackoverflow.com/tags/ddev) and [the DDEV issue queue](https://github.com/drud/ddev/issues) and [other support options](../support.md). And see [Docker troubleshooting suggestions](../install/docker-installation.md#testing-and-troubleshooting-your-docker-installation).
 
 ## General Troubleshooting Strategies
 
@@ -11,7 +11,7 @@ Things might go wrong! Besides the suggestions on this page don't forget about [
 * On macOS and traditional Windows, please check to make sure that Docker Desktop is not out of disk space. In Settings (or Preferences)->Resources->Disk image size there should be lots of space left; I never let it go over 80% because the number reported here is not reliable. If it says zero used, something is wrong.
 * If you have customizations (PHP overrides, nginx or Apache overrides, MySQL/Postgresql overrides, custom services, config.yaml changes) please back them out while troubleshooting. It's important to have the simplest possible environment while troubleshooting.
 * Restart Docker. Consider a Docker factory reset in serious cases (this will destroy any databases you've loaded). See [Docker Troubleshooting](../install/docker-installation.md#troubleshooting) for more.
-* Try the simplest possible ddev project to try to get it to work (just as `ddev debug test` does).
+* Try the simplest possible DDEV project to try to get it to work (just as `ddev debug test` does).
 
   ```bash
   ddev poweroff
@@ -203,11 +203,11 @@ docker rm -f $(docker ps -aq)
 docker rmi -f $(docker images -q)
 ```
 
-You should then be able to start your ddev machine.
+You should then be able to start your DDEV machine.
 
 ## Trouble Building Dockerfiles
 
-The additional .ddev/web-build/Dockerfile capability in ddev is wonderful, but it can be hard to figure out what to put in there.
+The additional .ddev/web-build/Dockerfile capability in DDEV is wonderful, but it can be hard to figure out what to put in there.
 
 The best approach for any significant Dockerfile is to `ddev ssh` and `sudo -s` and then one at a time, do the things that you plan to do with a `RUN` command in the Dockerfile.
 
@@ -223,11 +223,11 @@ The error messages you get will be more informative than messages that come when
 
 You can also see the full Docker build using `~/.ddev/bin/docker-compose -f .ddev/.ddev-docker-compose-full.yaml build --no-cache --progress=plain`.
 
-## Ddev starts fine, but my browser can't access the URL "<url> server IP address could not be found" or "We can’t connect to the server at <url>"
+## DDEV starts fine, but my browser can't access the URL "<url> server IP address could not be found" or "We can’t connect to the server at <url>"
 
 Most people use \*.ddev.site URLs for most projects, and that works great most of the time, but requires internet access. "\*.ddev.site" is a wildcard DNS entry that always returns the IP address 127.0.0.1 (localhost). However, if you're not connected to the internet, or if various other name resolution issues (below) fail, this name resolution won't work.
 
-While ddev can create a webserver and a docker network infrastructure for a project, it doesn't have control of your computer's name resolution, so its backup technique to make a hostname resolvable by the browser is to add an entry to the hosts file (/etc/hosts on Linux and macOS, C:\Windows\system32\drivers\etc\hosts on traditional Windows).
+While DDEV can create a webserver and a docker network infrastructure for a project, it doesn't have control of your computer's name resolution, so its backup technique to make a hostname resolvable by the browser is to add an entry to the hosts file (/etc/hosts on Linux and macOS, C:\Windows\system32\drivers\etc\hosts on traditional Windows).
 
 * If you're not connected to the internet, your browser will not be able to look up \*.ddev.site hostnames. DDEV works fine offline, but for your browser to look up names they'll have to be resolved in a different way.
 * DDEV assumes that hostnames can be resolved within 3 seconds. That assumption is not valid on all networks or computers, so you can increase the amount of time it waits for resolution with `ddev config global --internet-detection-timeout-ms=5000` for example.
@@ -255,11 +255,11 @@ In this case, you can
 1. Reconfigure your router to allow DNS Rebinding. Many Fritzbox routers have added default DNS Rebinding disallowal, and they can be reconfigured to allow it, see [issue](https://github.com/drud/ddev/issues/2409#issuecomment-686718237). If you have the local dnsmasq DNS server it may also be configured to disallow DNS rebinding, but it's a simple change to a configuration directive to allow it.
 2. Most computers can use most relaxed DNS resolution if they are not on corporate intranets that have non-internet DNS. So for example, the computer can be set to use 8.8.8.8 (Google) or 1.1.1.1 (Cloudflare) for DNS name resolution.
 3. If you have control of the router, you can usually change its DHCP settings to choose a DNS server to a public, relaxed DNS server as in #2.
-4. You can live with ddev trying to edit the /etc/hosts file, which it only has to do when a new name is added to a project.
+4. You can live with DDEV trying to edit the /etc/hosts file, which it only has to do when a new name is added to a project.
 
 ## Windows Hosts File limited to 10 hosts per IP address line
 
-On Windows only, there is a limit to the number of hosts that can be placed in one line. But since all ddev hosts are typically on the same IP address (typically 127.0.0.1, localhost), they can really add up. As soon as you have more than 10 entries there, your browser won't be able to resolve the addresses beyond the 10th entry.
+On Windows only, there is a limit to the number of hosts that can be placed in one line. But since all DDEV hosts are typically on the same IP address (typically 127.0.0.1, localhost), they can really add up. As soon as you have more than 10 entries there, your browser won't be able to resolve the addresses beyond the 10th entry.
 
 There are two workarounds for this problem:
 
@@ -277,7 +277,7 @@ Symbolic links are widely used but have specific limitations in many environment
 * **Crossing mount boundaries**: Symlinks may not generally cross between network mounts. In other words, if you have a relative symlink in the root of your project directory on the host that points to `../somefile.txt`,  that symlink will not be valid inside the container where `../` is a completely different filesystem (and is not mounted typically).
 * **Symlinks to absolute paths**: If you have an absolute symlink to something like `/Users/xxx/somefile.txt` on the host, it will not be resolvable inside the container because `/Users` is not mounted there. Note that some tools, especially on Magento 2, may create symlinks to rooted paths, with targets like `/var/www/html/path/to/something`. These basically can't make it to the host, so may create errors.
 * **Windows restrictions on symlinks**: Inside the Docker container on Windows you may not be able to even create a symlink that goes outside the container.
-* **Mutagen restrictions on Windows symlinks**: On macOS and Linux (including WSL2) the default `.ddev/mutagen/mutagen.yml` chooses the `posix-raw` type of symlink handling (See [mutagen docs](https://mutagen.io/documentation/synchronization/symbolic-links)). This basically means that any symlink created will try to sync, regardless of whether it's valid in the other environment. However, Mutagen does not support posix-raw on traditional Windows, so ddev uses the `portable` symlink mode. So on Windows with Mutagen... symlinks have to be strictly limited to relative links that are inside the mutagen section of the project.
+* **Mutagen restrictions on Windows symlinks**: On macOS and Linux (including WSL2) the default `.ddev/mutagen/mutagen.yml` chooses the `posix-raw` type of symlink handling (See [mutagen docs](https://mutagen.io/documentation/synchronization/symbolic-links)). This basically means that any symlink created will try to sync, regardless of whether it's valid in the other environment. However, Mutagen does not support posix-raw on traditional Windows, so DDEV uses the `portable` symlink mode. So on Windows with Mutagen... symlinks have to be strictly limited to relative links that are inside the mutagen section of the project.
 
 ### Delete and re-download docker images
   

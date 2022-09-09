@@ -52,7 +52,7 @@ It's easiest to think of DDEV installation or upgrade as the installation of a s
 
     DDEV has Debian and RPM packages that work with both apt and yum repositories, and on most any variant that uses those, including Windows WSL2.
 
-    * Debian/Ubuntu and derivative distros - Install the ddev apt repositories with:
+    * Debian/Ubuntu and derivative distros - Install the DDEV apt repositories with:
 
     ```bash
     curl https://apt.fury.io/drud/gpg.key | sudo apt-key add -
@@ -124,7 +124,7 @@ It's easiest to think of DDEV installation or upgrade as the installation of a s
     8. Double-check in PowerShell: `wsl -l -v` should show three distros, and your Ubuntu should be the default. All three should be WSL version 2.
     9. Double-check in Ubuntu (or your distro): `echo $CAROOT` should show something like `/mnt/c/Users/<you>/AppData/Local/mkcert`
     10. Check that docker is working inside Ubuntu (or your distro): `docker ps`
-    11. Optional: If you prefer to use the *traditional Windows* ddev instead of working inside WSL2, install it with `choco install -y ddev`. The Windows ddev works fine with the WSL2-based Docker engine. However, the WSL2 ddev setup is vastly preferable and at least 10 times as fast. Support for the traditional Windows approach will eventually be dropped.
+    11. Optional: If you prefer to use the *traditional Windows* DDEV instead of working inside WSL2, install it with `choco install -y ddev`. The Windows DDEV works fine with the WSL2-based Docker engine. However, the WSL2 DDEV setup is vastly preferable and at least 10 times as fast. Support for the traditional Windows approach will eventually be dropped.
     12. Open the WSL2 terminal, for example `Ubuntu` from the Windows start menu.
     13. Install DDEV using
 
@@ -153,8 +153,8 @@ It's easiest to think of DDEV installation or upgrade as the installation of a s
     DDEV does work fine on the Windows side, although it's quite a bit slower than WSL2 by default, but good results have been reported by users who enabled mutagen, `ddev config global --mutagen-enabled`.
 
     * If you use [chocolatey](https://chocolatey.org/) (recommended), then you can just `choco install ddev git` from an administrative shell. Upgrades are just `ddev poweroff && choco upgrade ddev`.
-    * A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you.  Open a new git-bash or PowerShell or cmd window and start using ddev.
-    * Most people interact with ddev on Windows using git-bash, part of the [Windows git suite](https://git-scm.com/download/win). Although ddev does work with cmd and PowerShell, it's more at home in bash. You can install it with chocolatey using `choco install -y git`.
+    * A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you.  Open a new git-bash or PowerShell or cmd window and start using DDEV.
+    * Most people interact with DDEV on Windows using git-bash, part of the [Windows git suite](https://git-scm.com/download/win). Although DDEV does work with cmd and PowerShell, it's more at home in bash. You can install it with chocolatey using `choco install -y git`.
     * For performance, many users enable mutagen, `ddev config global --mutagen-enabled` (global) or `ddev config --mutagen-enabled` just for one project.
 
     !!!note "Windows Firefox trusted CA"
@@ -183,7 +183,7 @@ It's easiest to think of DDEV installation or upgrade as the installation of a s
 
     DDEV is fully supported in Gitpod.io, and there are many ways to use it. You don't have to install *anything* to use it, not Docker, and not DDEV, it's all done for you.
 
-    1. Just [open any repository](https://www.gitpod.io/docs/getting-started) using gitpod and `brew install drud/ddev/ddev` and use ddev as you would normally use it.
+    1. Just [open any repository](https://www.gitpod.io/docs/getting-started) using gitpod and `brew install drud/ddev/ddev` and use DDEV as you would normally use it.
         * You can just install your web app there, or import a database.
         * You may want to implement one of the `ddev pull` provider integrations to pull from a hosting provider or an upstream source.
     2. Use [ddev-gitpod-launcher](https://drud.github.io/ddev-gitpod-launcher/) form to launch a repository. See the actual instructions on the [repository](https://github.com/drud/ddev-gitpod-launcher). You just click the button and it opens a fully-set-up environment. If a companion artifacts repository with the suffix `-artifacts` is available, then the `db.sql.gz` and `files.tgz` from it will be automatically loaded.

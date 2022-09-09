@@ -25,4 +25,4 @@ Currently there is no prepared version for dark backgrounds of the word/figurati
 
 The product DDEV is always referenced in capital letters.
 
-When referring to the binary ddev, lowercase letters are preferred.
+When referring to the binary `ddev`, lowercase letters are preferred.
