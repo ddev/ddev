@@ -82,23 +82,16 @@ func getShopwareUploadDir(app *DdevApp) string {
 func shopware6PostStartAction(app *DdevApp) error {
 	envContents, err := ReadEnvFile(app)
 
-	// If the .env file doesn't exist, we just continue and create it.
-	if err != nil && !os.IsNotExist(err) {
-		return err
-	}
-	envContents["DATABASE_URL"] = "mysql://db:db@db:3306/db"
-	if _, ok := envContents["APP_URL"]; !ok {
-		util.Success("Updating .env APP_URL=%s", app.GetPrimaryURL())
-		envContents["APP_URL"] = app.GetPrimaryURL()
-	}
-	if _, ok := envContents["MAILER_URL"]; !ok {
+	// If the .env file doesn't exist, it needs to be created by system:setup
+	// so just let it wait
+	if err == nil {
+		util.Success("Setting .env MAILER_URL")
 		envContents["MAILER_URL"] = `smtp://localhost:1025?encryption=&auth_mode=`
+		err = WriteEnvFile(app, envContents)
+		if err != nil {
+			return err
+		}
 	}
 
-	err = WriteEnvFile(app, envContents)
-
-	if err != nil {
-		return err
-	}
 	return nil
 }
