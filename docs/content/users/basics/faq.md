@@ -110,7 +110,7 @@ How can I update/upgrade DDEV?
           curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash
           ```
 <!-- markdownlint-restore -->
-     * On traditional Windows, you likely installed with chocolatey or by downloading the installer package. You can upgrade with `choco upgrade ddev` or by visiting the [releases](https://github.com/drud/ddev/releases) page and downloading the installer. Both techniques will work.
+     * On traditional Windows, you likely installed with Chocolatey or by downloading the installer package. You can upgrade with `choco upgrade ddev` or by visiting the [releases](https://github.com/drud/ddev/releases) page and downloading the installer. Both techniques will work.
      * On Arch-Linux based systems, use the standard upgrade techniques, for example `yay -Syu`.
 
 How can I install a specific version of DDEV?

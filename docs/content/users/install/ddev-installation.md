@@ -2,7 +2,7 @@
 
 Docker or an alternative is required before anything will work with DDEV. This is pretty easy on most environments; see the [Docker installation](docker-installation.md) page to help sort out the details.
 
-It's easiest to think of DDEV installation or upgrade as the installation of a single binary, the "ddev" binary. When you use DDEV, additional Docker images will be downloaded, etc. DDEV tries to make it so you can use the most common installation technique on your system, so Homebrew on macOS, `apt` on Linux including WSL2, chocolatey or installer on traditional Windows, etc.
+It's easiest to think of DDEV installation or upgrade as the installation of a single binary, the "ddev" binary. When you use DDEV, additional Docker images will be downloaded, etc. DDEV tries to make it so you can use the most common installation technique on your system, so Homebrew on macOS, `apt` on Linux including WSL2, Chocolatey or installer on traditional Windows, etc.
 
 === "macOS"
 
@@ -152,9 +152,9 @@ It's easiest to think of DDEV installation or upgrade as the installation of a s
 
     DDEV does work fine on the Windows side, although it's quite a bit slower than WSL2 by default, but good results have been reported by users who enabled mutagen, `ddev config global --mutagen-enabled`.
 
-    * If you use [chocolatey](https://chocolatey.org/) (recommended), then you can just `choco install ddev git` from an administrative shell. Upgrades are just `ddev poweroff && choco upgrade ddev`.
+    * If you use [Chocolatey](https://chocolatey.org/) (recommended), then you can just `choco install ddev git` from an administrative shell. Upgrades are just `ddev poweroff && choco upgrade ddev`.
     * A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you.  Open a new git-bash or PowerShell or cmd window and start using DDEV.
-    * Most people interact with DDEV on Windows using git-bash, part of the [Windows git suite](https://git-scm.com/download/win). Although DDEV does work with cmd and PowerShell, it's more at home in bash. You can install it with chocolatey using `choco install -y git`.
+    * Most people interact with DDEV on Windows using git-bash, part of the [Windows git suite](https://git-scm.com/download/win). Although DDEV does work with cmd and PowerShell, it's more at home in bash. You can install it with Chocolatey using `choco install -y git`.
     * For performance, many users enable mutagen, `ddev config global --mutagen-enabled` (global) or `ddev config --mutagen-enabled` just for one project.
 
     !!!note "Windows Firefox trusted CA"
