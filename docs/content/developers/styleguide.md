@@ -21,7 +21,7 @@ Currently there is no prepared version for dark backgrounds of the word/figurati
 |------------|------------|
 | `#02a8e2`  | `#1e2127`  |
 
-## Use of the word mark DDEV
+## Use of the Word Mark DDEV
 
 The product DDEV is always referenced in capital letters.
 
