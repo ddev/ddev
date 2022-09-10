@@ -4,7 +4,10 @@
 ## Description: Run Craft CMS command inside the web container
 ## Usage: craft [flags] [args]
 ## Example: "ddev craft db/backup" or "craft db/backup ./my-backups" (see https://craftcms.com/docs/4.x/console-commands.html)
-## ProjectTypes: php
+## ProjectTypes: craftcms
 ## ExecRaw: true
 
+CRAFT_CMD_ROOT=${CRAFT_CMD_ROOT:="./"}
+
+cd "${CRAFT_CMD_ROOT}"
 php ./craft "$@"
