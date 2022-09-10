@@ -79,8 +79,8 @@ But here are the steps for building:
 
 1. The `drud/ddev-php-base` image must be updated as necessary with a new tag before pushing `ddev-webserver`. You can do this using the [process above](#pushing-docker-images-with-the-github-actions-workflow).
 2. The `drud/ddev-webserver` Dockerfile must `FROM drud/ddev-php-base:<tag>` before building/pushing `ddev-webserver`. But then it can be pushed using either the GitHub Actions or the manual technique.
-3. If you’re bumping `ddev-dbserver` 8.0 minor release, follow the [upstream instructions](#maintaining-ddev-dbserver-mysql57-and-mysql80-arm64-images).
-5. Update `pkg/version/version.go` with the correct versions for the new images, and run all the tests.
+3. If you’re bumping `ddev-dbserver` 8.0 minor release, follow the [upstream instructions](#maintaining-ddev-dbserver-mysql-57-80-arm64-images).
+4. Update `pkg/version/version.go` with the correct versions for the new images, and run all the tests.
 
 ## Manually Updating Homebrew Formulas
 
@@ -135,8 +135,5 @@ This is done automatically by the release build on a dedicated Windows test runn
 5. If you need to install the GitHub self-hosted Windows runner, do it with the instructions in project settings → Actions → Runners.
 6. Currently the `actions/cache` runner does not work out of the box on Windows, so you have to install tar and zstd as described in [this issue](https://github.com/actions/cache/issues/580#issuecomment-1165839728).
 
-
 !!!tip "We shouldn’t use this high-security keyfob approach to signing on the next go-around with the certs."
     It’s way too difficult to manage, and the Safenet software is atrocious.
-
-
