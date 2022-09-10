@@ -153,7 +153,7 @@ It's easiest to think of DDEV installation or upgrade as the installation of a s
     DDEV does work fine on the Windows side, although it's quite a bit slower than WSL2 by default, but good results have been reported by users who enabled mutagen, `ddev config global --mutagen-enabled`.
 
     * If you use [Chocolatey](https://chocolatey.org/) (recommended), then you can just `choco install ddev git` from an administrative shell. Upgrades are just `ddev poweroff && choco upgrade ddev`.
-    * A windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you.  Open a new git-bash or PowerShell or cmd window and start using DDEV.
+    * A Windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you.  Open a new git-bash or PowerShell or cmd window and start using DDEV.
     * Most people interact with DDEV on Windows using git-bash, part of the [Windows git suite](https://git-scm.com/download/win). Although DDEV does work with cmd and PowerShell, it's more at home in bash. You can install it with Chocolatey using `choco install -y git`.
     * For performance, many users enable mutagen, `ddev config global --mutagen-enabled` (global) or `ddev config --mutagen-enabled` just for one project.
 

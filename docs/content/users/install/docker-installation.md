@@ -80,7 +80,7 @@
     sudo groupadd docker && sudo usermod -aG docker $USER
     ```
 
-    * You have to start docker-ce yourself on login, or use a script to do it. To have it start on entry to git-bash, a startup line to your (windows-side) `~/.bashrc` with:
+    * You have to start docker-ce yourself on login, or use a script to do it. To have it start on entry to git-bash, a startup line to your (Windows-side) `~/.bashrc` with:
 
     ```bash
     echo "wsl.exe -u root service docker status > /dev/null || wsl.exe -u root service docker start > /dev/null" >> ~/.bashrc
