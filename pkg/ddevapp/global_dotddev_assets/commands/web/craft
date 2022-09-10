@@ -10,5 +10,8 @@
 if grep -q "type: php" ./.ddev/config.yaml; then
     echo "The craft command is only available in the craftcms project type. You can update this in your project's config file, followed by restarting the DDEV project."
 else
+    CRAFT_CMD_ROOT=${CRAFT_CMD_ROOT:="./"}
+    
+    cd "${CRAFT_CMD_ROOT}"
     php ./craft "$@"
 fi
