@@ -77,18 +77,19 @@ var ValidNodeJSVersions = []string{"14", "16", "18"}
 // App types
 const (
 	AppTypeBackdrop  = "backdrop"
+	AppTypeCraftCms  = "craftcms"
 	AppTypeDrupal6   = "drupal6"
 	AppTypeDrupal7   = "drupal7"
 	AppTypeDrupal8   = "drupal8"
 	AppTypeDrupal9   = "drupal9"
 	AppTypeDrupal10  = "drupal10"
-	AppTypePHP       = "php"
-	AppTypeTYPO3     = "typo3"
-	AppTypeWordPress = "wordpress"
+	AppTypeLaravel   = "laravel"
 	AppTypeMagento   = "magento"
 	AppTypeMagento2  = "magento2"
-	AppTypeLaravel   = "laravel"
+	AppTypePHP       = "php"
 	AppTypeShopware6 = "shopware6"
+	AppTypeTYPO3     = "typo3"
+	AppTypeWordPress = "wordpress"
 )
 
 // Ports and other defaults
