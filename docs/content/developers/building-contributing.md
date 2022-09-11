@@ -69,7 +69,7 @@ If you make changes to a Docker image (like `ddev-webserver`), it won’t have a
 * Push a container to hub.docker.com. Push with the tag that matches your branch. Pushing to `<yourorg>/ddev-webserver` repo is easy to accomplish with `make push DOCKER_ORG=<yourorg> VERSION=<branchname>` **in the container directory**. You might have to use other techniques to push to another repo.
 * Update `pkg/versionconstants/versionconstants.go` with the `WebImg` and `WebTag` that relate to the Docker image you pushed.
 
-### Local builds and pushes
+### Local Builds and Pushes
 
 To use `buildx` successfully you have to have the [`buildx` Docker plugin](https://docs.docker.com/buildx/working-with-buildx/), which is in many environments by default.
 
