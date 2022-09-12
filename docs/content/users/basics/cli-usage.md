@@ -29,7 +29,7 @@ Type `ddev` or `ddev -h`in a terminal window to see the available DDEV commands.
 * `ddev magento` (Magento2 only) gives access to the `magento` CLI.
 * `ddev yarn` and `ddev npm` give direct access to the `yarn`/`npm` CLIs.
 
-## Node.js, npm, nvm, and yarn
+## Node.js, npm, nvm, and Yarn
 
 `nodejs`, `npm`, `nvm` and `yarn` are preinstalled in the web container. You can configure the default value of the installed Node.js version with the `nodejs_version` option in `.ddev/config.yaml` or with `ddev config --nodejs_version`. You can also override that with any value using the built-in `nvm` in the web container or with `ddev nvm`, for example `ddev nvm install 6`. There is also a `ddev yarn` command.
 
