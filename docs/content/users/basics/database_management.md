@@ -53,6 +53,6 @@ Use `ddev snapshot restore` to interactively choose among snapshots, or append `
     * Choose a static `host_db_port` for your project. For example `host_db_port: 59002` (each project’s database port should be different if you’re running more than one project at a time). Use `ddev start` for it to take effect.
     * Use the “database” tool to create a source from “localhost”, with the proper type “mysql” or “postgresql” and the port you chose, username `db` + password `db`.
     * Explore away!
-* There’s a sample custom command that will run the free [mysqlworkbench](https://dev.mysql.com/downloads/workbench/) on macOS, Windows or Linux. To use it, run:
+* There’s a sample custom command that will run the free [MySQL Workbench](https://dev.mysql.com/downloads/workbench/) on macOS, Windows or Linux. To use it, run:
     - `cp ~.ddev/commands/host/mysqlworkbench.example ~.ddev/commands/host/mysqlworkbench`
     - `ddev mysqlworkbench`
