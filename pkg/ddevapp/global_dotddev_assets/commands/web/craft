@@ -13,5 +13,5 @@ else
     CRAFT_CMD_ROOT=${CRAFT_CMD_ROOT:="./"}
     
     cd "${CRAFT_CMD_ROOT}"
-    php ./craft "$@"
+    php craft "$@"
 fi
