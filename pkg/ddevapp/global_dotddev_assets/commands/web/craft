@@ -7,7 +7,7 @@
 ## ProjectTypes: craftcms,php
 ## ExecRaw: true
 
-if grep -q "type: php" ./.ddev/config.yaml; then
+if [ "${DDEV_PROJECT_TYPE}" != "craftcms" ]; then
     echo "The craft command is only available in the craftcms project type. You can update this in your project's config file, followed by restarting the DDEV project."
 else
     CRAFT_CMD_ROOT=${CRAFT_CMD_ROOT:="./"}
