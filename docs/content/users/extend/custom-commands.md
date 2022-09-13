@@ -213,5 +213,10 @@ Example: `## HostWorkingDir: true`
 
 ## Known Windows Issues
 
-* **Line Endings**: If you’re editing a custom command to be run in a container, it must have LF line endings and not traditional Windows CRLF line endings. Remember that a custom command in a container is a script that must execute in a Linux environment.
-* If DDEV can’t find `bash` to execute, the commands can’t be used. If you’re running inside git-bash in most any terminal, this shouldn’t be an issue, and DDEV should be able to find git-bash if it’s in `C:\Program Files\Git\bin` as well. But if neither of those is true, add the directory of `bash.exe` to your `PATH` environment variable.
+### Line Endings
+
+If you’re editing a custom command to be run in a container, it must have LF line endings and not traditional Windows CRLF line endings. Remember that a custom command in a container is a script that must execute in a Linux environment.
+
+### Bash
+
+Commands can’t be executed if DDEV can’t find `bash`. If you’re running inside git-bash in most any terminal, this shouldn’t be an issue, and DDEV should be able to find git-bash if it’s in `C:\Program Files\Git\bin` as well. But if neither of those is true, add the directory of `bash.exe` to your `PATH` environment variable.
