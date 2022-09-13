@@ -1,4 +1,4 @@
-# Defining Additional Services with `docker-compose.*.yaml`
+# Defining Additional Services with Docker Compose
 
 ## Prerequisite
 
