@@ -180,6 +180,11 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		if configFile != "" {
 			args = append(args, fmt.Sprintf(`--configuration-file=%s`, configFile))
 		}
+		// On Windows, permissions can't be inferred from what is on the host side, so just force 777 for
+		// most things
+		if runtime.GOOS == "windows" {
+			args = append(args, []string{"--permissions-mode=manual", "--default-file-mode-beta=0777", "--default-directory-mode-beta=0777"}...)
+		}
 		util.Debug("Creating mutagen sync: mutagen %v", args)
 		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), args...)
 		if err != nil {
