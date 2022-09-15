@@ -52,7 +52,7 @@ This part is not done for you by the integration plugin.
     ![Run-debug configuration](images/run_debug_config.png)
 3. Enable Xdebug if you want to debug tests with `ddev xdebug on`.
 4. Run the runner you created:
-    ![Example phpunit run](images/example_phpunit_run.png)
+    ![Example PHPUnit run](images/example_phpunit_run.png)
 
 ## PhpStorm Basic Setup on Windows WSL2
 
