@@ -402,7 +402,6 @@ For **WordPress**, DDEV settings are written to a DDEV-managed file, `wp-config-
 * If a DDEV-managed `wp-config.php` exists, create one that includes `wp-config.php`.
 * If a user-managed `wp-config.php` exists, instruct the user on how to modify it to include DDEV settings.
 
-
 You’ll know DDEV is managing a settings file when you see the comment below. Remove the comment and DDEV will not attempt to overwrite it! If you’re letting DDEV create its settings file, we recommended leaving this comment so DDEV can continue to manage it, and make any needed changes in another settings file.
 
 ```
@@ -419,7 +418,6 @@ If you’re providing the `settings.php` or `wp-config.php` and DDEV is creating
 !!!note "Completely Disabling Settings Management"
 
     If you do *not* want DDEV to create or manage settings files, set `disable_settings_management: true` in `.ddev/config.yaml` or run `ddev config --disable-settings-management`. Once you’ve done that, it’s solely up to you to manually edit those settings.
-
 
 ### Adding Configuration
 

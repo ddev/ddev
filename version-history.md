@@ -173,7 +173,7 @@ This version history has been driven by what we hear from our wonderful communit
 ## v1.3 (released 2018-10-11)
 
 - Apache support now works on Windows and has full test coverage and is no longer experimental. It seems to work quite well.
-- MariaDB is upgraded from 10.1 to 10.2. MariaDB 10.2 has a number of advantages including more flexible key lengths. (This does mean that pre-v1.1.0 databases which were bind-mounted in `~/.ddev `can no longer be migrated to Docker volumes with this release, see caveats above. Also, snapshots from previous releases cannot be restored with this release, in caveats above.)
+- MariaDB is upgraded from 10.1 to 10.2. MariaDB 10.2 has a number of advantages including more flexible key lengths. (This does mean that pre-v1.1.0 databases which were bind-mounted in `~/.ddev` can no longer be migrated to Docker volumes with this release, see caveats above. Also, snapshots from previous releases cannot be restored with this release, in caveats above.)
 - Automatic generation of WordPress `wp-config.php` has been improved and extra guidance provided for WordPress projects. (#1156)
 - The webserver container logs format is improved and all key logs are now provided in `ddev logs`.
 - The webserver container now gives significantly more information in its healthcheck information (use `docker inspect --format='{{json .State.Health }}' ddev-<project>-web`). It also exits when one of its components is unhealthy, so that we all don’t spend time debugging a broken container or broken add-on configuration.
