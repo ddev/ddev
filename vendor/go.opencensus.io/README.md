@@ -34,7 +34,7 @@ integration with your RPC framework:
 * [database/sql](https://godoc.org/github.com/opencensus-integrations/ocsql)
 * [Go kit](https://godoc.org/github.com/go-kit/kit/tracing/opencensus)
 * [Groupcache](https://godoc.org/github.com/orijtech/groupcache)
-* [Caddy webserver](https://godoc.org/github.com/orijtech/caddy)
+* [Caddy web server](https://godoc.org/github.com/orijtech/caddy)
 * [MongoDB](https://godoc.org/github.com/orijtech/mongo-go-driver)
 * [Redis gomodule/redigo](https://godoc.org/github.com/orijtech/redigo)
 * [Redis goredis/redis](https://godoc.org/github.com/orijtech/redis)

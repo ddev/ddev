@@ -161,7 +161,7 @@ Changes to `.ddev/nginx-site.conf` and `.ddev/apache/apache-site.conf` take effe
 
 If you get a 404 with “No input file specified” (nginx) or a 403 with “Forbidden” (Apache) when you visit your project, it usually means that no `index.php` or `index.html` is being found in the docroot. This can result from:
 
-* Misconfigured docroot: If the docroot isn’t where the webserver thinks it is, then the webserver won’t find `index.php`. Look at your `.ddev/config.yaml` to verify it has a docroot containing `index.php`. It should be a relative path.
+* Misconfigured docroot: If the docroot isn’t where the web server thinks it is, then the web server won’t find `index.php`. Look at your `.ddev/config.yaml` to verify it has a docroot containing `index.php`. It should be a relative path.
 * Missing `index.php`: There may not be an `index.php` or `index.html` in your project.
 
 ## `ddev start` Fails and Logs Contain "failed (28: No space left on device)" - Docker File Space

@@ -1,4 +1,4 @@
-# Docker ddev-webserver (webserver and php)
+# Docker ddev-webserver (Web Server and PHP)
 
 ## Introduction
 
