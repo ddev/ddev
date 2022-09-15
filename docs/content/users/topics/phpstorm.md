@@ -106,7 +106,7 @@ Set the PhpStorm terminal path (*Settings* → *Tools* → *Terminal* → *Shell
 6. On older Windows 10, run `xeyes`. You should see the classic X11 play app “xeyes” on the screen. <kbd>CTRL</kbd> + <kbd>C</kbd> to exit. This is just a test to make sure X11 is working.
 7. Download and untar PhpStorm for Linux from [JetBrains](https://www.jetbrains.com/phpstorm/download/#section=linux). You need the Linux app.
 8. Run `bin/phpstorm.sh &`.
-9. In PhpStorm, under *Help* → *Edit Custom VM Options*, add another line: `-Djava.net.preferIPv4Stack=true`. This makes PhpStorm listen for Xdebug using IPV4; for some reason the Linux version of PhpStorm defaults to using only IPv6, and Docker Desktop doesn’t support IPv6.
+9. In PhpStorm, under *Help* → *Edit Custom VM Options*, add another line: `-Djava.net.preferIPv4Stack=true`. This makes PhpStorm listen for Xdebug using IPv4; for some reason the Linux version of PhpStorm defaults to using only IPv6, and Docker Desktop doesn’t support IPv6.
 10. Restart PhpStorm with *File* → *Exit* and run `bin/phpstorm.sh &` again.
 11. Use `ddev start` and `ddev xdebug on`.
 12. Click the Xdebug listen button in PhpStorm (the little phone icon) to make it start listening.
