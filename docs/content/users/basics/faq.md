@@ -131,5 +131,13 @@ How can I install a specific version of DDEV?
 How can I back up or restore all databases of all projects?
 : You can back up all projects that show in `ddev list` with `ddev snapshot -a`. This only snapshots projects that are shown in `ddev list` though, so if you have other projects that aren’t shown, you’d need to start them so they’d be registered in `ddev list`.
 
+Why do you recommend Colima over Docker Desktop on macOS?
+: [Colima](https://github.com/abiosoft/colima) (with its bundled [Lima](https://github.com/lima-vm/lima)) is similar to what Docker Desktop provides, with a great DDEV experience on Intel and Apple Silicon machines. We specifically recommend Colima because of some important differences:
+
+    * It’s open source software with an MIT license, unlike Docker Desktop which is proprietary software. No license fee to Docker, Inc. and no paid Docker plan required for larger organizations.
+    * It’s CLI-focused, unlike Docker Desktop’s GUI.
+    * It’s focused directly on running containers.
+    * It’s fast and stable.
+
 How can I contribute financially to the DDEV project?
 : Thanks for asking! Contributions can be done via [GitHub Sponsors](https://github.com/sponsors/rfay). They go to the [Localdev Foundation](https://localdev.foundation) and are used for infrastructure and supporting development.

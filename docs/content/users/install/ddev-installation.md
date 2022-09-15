@@ -1,16 +1,14 @@
 # DDEV Installation
 
-Docker or an alternative is required before anything will work with DDEV. This is pretty easy on most environments; see the [Docker installation](docker-installation.md) page to help sort out the details.
+Once you’ve [installed Docker](docker-installation.md), you’re ready to install DDEV!
 
-It's easiest to think of DDEV installation or upgrade as the installation of a single binary, the "ddev" binary. When you use DDEV, additional Docker images will be downloaded, etc. DDEV tries to make it so you can use the most common installation technique on your system, so Homebrew on macOS, `apt` on Linux including WSL2, Chocolatey or installer on traditional Windows, etc.
+Installing and upgrading DDEV are nearly the same thing, because we’re upgrading the `ddev` binary that talks with Docker. You can update this file like other software on your system, whether it’s with a package manager or traditional installer.
 
 === "macOS"
 
-    ## macOS
+    ## Homebrew
 
-    ### Homebrew
-
-    For macOS (both amd64 and arm64) users, [Homebrew](https://brew.sh/) is the easiest way to install and upgrade DDEV:
+    [Homebrew](https://brew.sh/) is the easiest way to install and upgrade DDEV:
 
     ```bash
     brew install drud/ddev/ddev
@@ -26,33 +24,29 @@ It's easiest to think of DDEV installation or upgrade as the installation of a s
     mkcert -install
     ```
 
-    ### install_ddev.sh install script
+    ## Install Script
 
-    On macOS, Linux and Windows WSL2 you can use the install_ddev.sh script
+    !!!tip
+        The install script works on macOS, Linux, and Windows WSL2.
 
-    Use this line on your terminal to download, verify, and install (or upgrade) ddev using the [install_ddev.sh script](https://github.com/drud/ddev/blob/master/scripts/install_ddev.sh). Note that this works with both amd64 and arm64 architectures, including Surface Pro X with WSL2 and 64-bit Raspberry Pi OS. It also works with macOS Apple Silicon M1 machines.
+
+    Run the [install script](https://github.com/drud/ddev/blob/master/scripts/install_ddev.sh) to install or update DDEV. It downloads, verifies, and sets up the `ddev` binary:
 
     ```
     curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash
     ```
 
-    The installation script can also take a version argument in order to install a specific version or a prerelease version. For example,
+    You can include an `-s` argument to install a specific release or a prerelease version:
 
     ```
     curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash -s v1.19.5
     ```
 
-    To upgrade DDEV to the latest stable version, just run the script again.
-
 === "Linux"
 
-    ## Linux
+    ## Debian/Ubuntu
 
-    ### Apt packages for Debian-based systems
-
-    DDEV has Debian and RPM packages that work with both apt and yum repositories, and on most any variant that uses those, including Windows WSL2.
-
-    * Debian/Ubuntu and derivative distros - Install the DDEV apt repositories with:
+    DDEV’s Debian and RPM packages work with `apt` and `yum` repositories and most variants that use them, including Windows WSL2:
 
     ```bash
     curl https://apt.fury.io/drud/gpg.key | sudo apt-key add -
@@ -60,15 +54,22 @@ It's easiest to think of DDEV installation or upgrade as the installation of a s
     sudo apt update && sudo apt install -y ddev
     ```
 
-    To update use the normal update commands:
+    Update with your usual commands:
 
     ```bash
     sudo apt update && sudo apt upgrade
     ```
+    
+    !!!tip "Removing Previous Install Methods"
+        If you previously used DDEV’s [install script](#install-script), you can remove that version: 
 
-    If you previously used `install_ddev.sh` to install DDEV, you can just `sudo rm -f /usr/local/bin/ddev /usr/local/bin/mkcert /usr/local/bin/*ddev_nfs_setup.sh` to remove the previous version. If you previously used Homebrew to install DDEV, you can just `brew unlink ddev` to get rid of the Homebrew version.
+        ```
+        sudo rm -f /usr/local/bin/ddev /usr/local/bin/mkcert /usr/local/bin/*ddev_nfs_setup.sh
+        ```
+    
+        If you previously [installed DDEV with Homebrew](#homebrew), you can run `brew unlink ddev` to get rid of the Homebrew version.
 
-    ### Yum/RPM packages for Fedora, RedHat, etc.
+    ## Fedora, Red Hat, etc.
 
     ```bash
     echo '[ddev]
@@ -80,21 +81,19 @@ It's easiest to think of DDEV installation or upgrade as the installation of a s
     sudo dnf install --refresh ddev
     ```
 
-    In the future you can update as usual, with `sudo dnf upgrade ddev`. (Signed repo support will be added in the near future.)
+    In the future you can update as usual using `sudo dnf upgrade ddev`. (Signed repository support will be added in the near future.)
 
-    ### Arch systems
+    ## Arch Linux
 
     For Arch-based systems including `Arch Linux`, `EndeavourOS` and `Manjaro` we maintain the [ddev-bin](https://aur.archlinux.org/packages/ddev-bin/) package in AUR. To install use `yay -S ddev` or whatever other AUR tool you use; to upgrade `yay -Syu ddev`.
 
     As a one-time initialization, run `mkcert -install`.
 
-    ### Alternate installation approaches: Homebrew and install_ddev.sh script
+    ## Alternate Linux Install Methods
 
-    You can also use the [Homebrew](#homebrew) and [install_ddev.sh script](#install_ddev.sh-install-script) techniques exactly on macOS to install or upgrade DDEV on Linux.
+    You can also use two macOS install methods to install or update DDEV on Linux: [Homebrew](#homebrew) and the standalone [install script](#install-script).
 
 === "Windows WSL2"
-
-    ## Windows WSL2
 
     Windows WSL2 is a fantastic way to run DDEV and your web components. It's Linux, which means a different experience for many Windows users. It's Ubuntu Linux by default as described here, so it's worth taking a little time to explore how Ubuntu and bash work, including standard system commands and installation and upgrade procedures.
 
@@ -148,56 +147,54 @@ It's easiest to think of DDEV installation or upgrade as the installation of a s
 
 === "Traditional Windows"
 
-    ## Traditional Windows
+    DDEV does work fine on the Windows side, although it’s quite a bit slower than WSL2 by default. Good results have been reported by users who enabled Mutagen.
 
-    DDEV does work fine on the Windows side, although it's quite a bit slower than WSL2 by default, but good results have been reported by users who enabled mutagen, `ddev config global --mutagen-enabled`.
+    * If you use [Chocolatey](https://chocolatey.org/) (recommended), you can run `choco install ddev git` from an administrative shell. Upgrades are just `ddev poweroff && choco upgrade ddev`.
+    * A Windows installer is provided in each [DDEV release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you. Open a new git-bash or PowerShell or cmd window and start using DDEV.
+    * Most people interact with DDEV on Windows using git-bash, part of the [Windows Git suite](https://git-scm.com/download/win). Although DDEV does work with cmd and PowerShell, it's more at home in Bash. You can install it with Chocolatey using `choco install -y git`.
+    * For performance, many users enable Mutagen, `ddev config global --mutagen-enabled` (global) or `ddev config --mutagen-enabled` just for one project.
 
-    * If you use [Chocolatey](https://chocolatey.org/) (recommended), then you can just `choco install ddev git` from an administrative shell. Upgrades are just `ddev poweroff && choco upgrade ddev`.
-    * A Windows installer is provided in each [ddev release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you.  Open a new git-bash or PowerShell or cmd window and start using DDEV.
-    * Most people interact with DDEV on Windows using git-bash, part of the [Windows git suite](https://git-scm.com/download/win). Although DDEV does work with cmd and PowerShell, it's more at home in bash. You can install it with Chocolatey using `choco install -y git`.
-    * For performance, many users enable mutagen, `ddev config global --mutagen-enabled` (global) or `ddev config --mutagen-enabled` just for one project.
+    !!!note "Windows Firefox Trusted CA"
 
-    !!!note "Windows Firefox trusted CA"
+        The `mkcert -install` step on Windows isn’t enough for Firefox.
+        You need to add the created root certificate authority to the security configuration yourself:
 
-        The `mkcert -install` step on Windows does not work for the Firefox browser.
-        You need to add the created root certificate authority to the security
-        configuration by your self:
-
-        * Run `mkcert -install` (you can use the shortcut from the start menu for that)
-        * Run `mkcert -CAROOT` to see the local folder used for the newly created root
-          certificate authority
-        * Open Firefox Preferences (about:preferences#privacy)
-        * Enter `certificates` into the search box on the top
-        * Click `View Certificates...`
-        * Select the tab `Authorities`
-        * Click to `Import...`
-        * Go to the folder where your root certificate authority was stored
-        * Select the file `rootCA.pem`
-        * Click to `Open`
+        * Run `mkcert -install` (you can use the shortcut from the Start Menu for that)
+        * Run `mkcert -CAROOT` to see the local folder used for the newly-created root certificate authority
+        * Open Firefox Preferences (`about:preferences#privacy`)
+        * Enter “certificates” into the search box on the top
+        * Click *View Certificates...*
+        * Select *Authorities* tab
+        * Click to *Import...*
+        * Navigate to the folder where your root certificate authority was stored
+        * Select the `rootCA.pem` file
+        * Click to *Open*
 
         You should now see your CA under `mkcert development CA`.
 
-=== "Gitpod.io"
+=== "Gitpod"
 
-    ## Gitpod.io
+    DDEV is fully supported in [Gitpod](https://www.gitpod.io), where you don’t have to install anything at all.
 
-    DDEV is fully supported in Gitpod.io, and there are many ways to use it. You don't have to install *anything* to use it, not Docker, and not DDEV, it's all done for you.
+    Choose any of the following methods to launch your project:
 
-    1. Just [open any repository](https://www.gitpod.io/docs/getting-started) using Gitpod and `brew install drud/ddev/ddev` and use DDEV as you would normally use it.
-        * You can just install your web app there, or import a database.
+    1. [Open any repository](https://www.gitpod.io/docs/getting-started) using Gitpod, run `brew install drud/ddev/ddev`, and use DDEV!
+        * You can install your web app there, or import a database.
         * You may want to implement one of the `ddev pull` provider integrations to pull from a hosting provider or an upstream source.
-    2. Use [ddev-gitpod-launcher](https://drud.github.io/ddev-gitpod-launcher/) form to launch a repository. See the actual instructions on the [repository](https://github.com/drud/ddev-gitpod-launcher). You just click the button and it opens a fully-set-up environment. If a companion artifacts repository with the suffix `-artifacts` is available, then the `db.sql.gz` and `files.tgz` from it will be automatically loaded.
-    3. Save the following link, <a href="javascript: if %28 %2Fbitbucket%2F.test %28 window.location.host %29 %20 %29 %20%7B%20paths%3Dwindow.location.pathname.split %28 %22%2F%22 %29 %3B%20repo%3D%5Bwindow.location.origin%2C%20paths%5B1%5D%2C%20paths%5B2%5D%5D.join %28 %22%2F%22 %29 %20%7D%3B%20if %28 %2Fgithub.com%7Cgitlab.com%2F.test %28 window.location.host %29  %29 %20%7Brepo%20%3D%20window.location.href%7D%3B%20if%20 %28 repo %29 %20%7Bwindow.location.href%20%3D%20%22https%3A%2F%2Fgitpod.io%2F%23DDEV_REPO%3D%22%20%2B%20encodeURIComponent %28 repo %29 %20%2B%20%22%2CDDEV_ARTIFACTS%3D%22%20%2B%20encodeURIComponent %28 repo %29 %20%2B%20%22-artifacts%2Fhttps%3A%2F%2Fgithub.com%2Fdrud%2Fddev-gitpod-launcher%2F%22%7D%3B">GitHub -> ddev-gitpod</a>, to your bookmark bar; the "drag-and-drop" method is easiest. When you are on a git repository, click the new bookmark to open DDEV Gitpod. It does the same thing as the second option, but it works on non-chrome browsers and native browser keyboard shortcuts can be used.
+    2. Use the [ddev-gitpod-launcher](https://drud.github.io/ddev-gitpod-launcher/) form to launch a repository.  
+        You’ll provide a source repository and click a button to open a newly-established environment. You can specify a companion artifacts repository and automatically load `db.sql.gz` and `files.tgz` from it. (More details in the [repository’s README](https://github.com/drud/ddev-gitpod-launcher/blob/main/README.md).)
+    3. Save the following link to your bookmark bar: <a href="javascript: if %28 %2Fbitbucket%2F.test %28 window.location.host %29 %20 %29 %20%7B%20paths%3Dwindow.location.pathname.split %28 %22%2F%22 %29 %3B%20repo%3D%5Bwindow.location.origin%2C%20paths%5B1%5D%2C%20paths%5B2%5D%5D.join %28 %22%2F%22 %29 %20%7D%3B%20if %28 %2Fgithub.com%7Cgitlab.com%2F.test %28 window.location.host %29  %29 %20%7Brepo%20%3D%20window.location.href%7D%3B%20if%20 %28 repo %29 %20%7Bwindow.location.href%20%3D%20%22https%3A%2F%2Fgitpod.io%2F%23DDEV_REPO%3D%22%20%2B%20encodeURIComponent %28 repo %29 %20%2B%20%22%2CDDEV_ARTIFACTS%3D%22%20%2B%20encodeURIComponent %28 repo %29 %20%2B%20%22-artifacts%2Fhttps%3A%2F%2Fgithub.com%2Fdrud%2Fddev-gitpod-launcher%2F%22%7D%3B">Open in ddev-gitpod</a>.  
+        It’s easiest to drag the link into your bookmarks. When you’re on a Git repository, click the bookmark to open it with DDEV in Gitpod. It does the same thing as the second option, but it works on non-Chrome browsers and you can use native browser keyboard shortcuts.
 
-    It can be complicated to get private databases and files into Gitpod, so in addition to the launchers, The [`git` provider example](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/git.yaml.example) shows how you can pull database and files without complex setup or permissions. This was created explicitly for Gitpod integration, because in Gitpod you typically already have access to private git repositories, which are a fine place to put a starter database and files. Although [ddev-gitpod-launcher](https://drud.github.io/ddev-gitpod-launcher/) and the web extension provide the capability, you may want to integrate a git provider for each project (or, of course, one of the [other providers](https://github.com/drud/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers)).
+    It can be complicated to get private databases and files into Gitpod, so in addition to the launchers, the [`git` provider example](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/git.yaml.example) demonstrates pulling a database and files without complex setup or permissions. This was created explicitly for Gitpod integration, because in Gitpod you typically already have access to private Git repositories, which are a fine place to put a starter database and files. Although [ddev-gitpod-launcher](https://drud.github.io/ddev-gitpod-launcher/) and the web extension provide the capability, you may want to integrate a Git provider—or one of the [other providers](https://github.com/drud/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers)—for each project.
 
 === "Manual"
 
-    ## Manual installation
+    DDEV is a single executable, so installation on any OS is a matter of copying the a `ddev` binary for your architecture into the appropriate system path on your machine.
 
-    You can also easily perform the installation or upgrade manually if preferred. DDEV is just a single executable, no special installation is actually required, so for all operating systems, the installation is just copying DDEV into place where it's in the system path.
-
-    * Download and extract the latest [ddev release](https://github.com/drud/ddev/releases) for your architecture.
-    * Move ddev to /usr/local/bin: `mv ddev /usr/local/bin/` (may require sudo), or another directory in your `$PATH` as preferred.
-    * Run `ddev` to test your installation. You should see DDEV's command usage output.
-    * As a one-time initialization, run `mkcert -install`, which may require your sudo password. If you don't have mkcert installed, you can install it from <https://github.com/FiloSottile/mkcert/releases>. Download the version for the correct architecture and `sudo mv <downloaded_file> /usr/local/bin/mkcert && sudo chmod +x /usr/local/bin/mkcert`.
+    * Download and extract the latest [DDEV release](https://github.com/drud/ddev/releases) for your architecture.
+    * Move `ddev` to `/usr/local/bin` with `mv ddev /usr/local/bin/` (may require `sudo`), or another directory in your `$PATH` as preferred.
+    * Run `ddev` to test your installation. You should see DDEV’s command usage output.
+    * As a one-time initialization, run `mkcert -install`, which may require your `sudo` password.  
+    
+        If you don’t have `mkcert` installed, download the [latest release](https://github.com/FiloSottile/mkcert/releases) for your architecture and `sudo mv <downloaded_file> /usr/local/bin/mkcert && sudo chmod +x /usr/local/bin/mkcert`.
