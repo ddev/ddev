@@ -16,7 +16,7 @@ DDEV supports nginx with php-fpm by default (`nginx-fpm`), and Apache with php-f
 
 ## Adding Services to a Project
 
-DDEV provides everything you need to build a modern PHP application on your local machine. More complex web applications, however, often require integration with services beyond the usual requirements of a web and database server—mabye Apache Solr, Redis, Varnish, or many others. While DDEV likely won’t ever provide all of these additional services out of the box, it’s designed to provide simple ways to customize the environment and meet your project’s needs without reinventing the wheel.
+DDEV provides everything you need to build a modern PHP application on your local machine. More complex web applications, however, often require integration with services beyond the usual requirements of a web and database server—maybe Apache Solr, Redis, Varnish, or many others. While DDEV likely won’t ever provide all of these additional services out of the box, it’s designed to provide simple ways to customize the environment and meet your project’s needs without reinventing the wheel.
 
 A collection of vetted service configurations is available in the [Additional Services Documentation](additional-services.md).
 
