@@ -344,6 +344,67 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
 
     This is handy if you have a local databases installed and want to switch between the connections by changing only one variable in `.env`.
 
+=== "Craft CMS"
+
+    ## Craft CMS
+
+    [Craft CMS](https://craftcms.com) can be downloaded with [Composer](https://craftcms.com/docs/4.x/installation.html#downloading-with-composer), or by [manually downloading](https://craftcms.com/docs/4.x/installation.html#downloading-an-archive-file-manually) a zipped archive. 
+    
+    === "New projects"
+    
+        ### Composer project
+        
+        Use this to create a new Craft CMS project from the official [Craft starter project](https://github.com/craftcms/craft) or a third-party starter project using Composer.
+        
+        ```bash
+        mkdir my-craft-project
+        cd my-craft-project
+        ddev config --project-type=craftcms
+        ddev composer create -y --no-scripts --no-install craftcms/craft
+        ddev start
+        ddev composer install
+        ddev craft setup/welcome
+        ddev launch
+        ```
+
+        ### Manual download
+        
+        Use this to create a new Craft CMS project using a zipped archive.
+        
+        ```bash
+        mkdir my-craft-project
+        cd my-craft-project
+        curl -LO https://craftcms.com/latest-v4.zip
+        unzip latest-v4.zip && rm latest-v4.zip
+        ddev config --project-type=craftcms
+        ddev start
+        ddev composer install
+        ddev craft setup/welcome
+        ddev launch
+        ```
+
+    === "Existing projects"
+    
+        ### Git clone
+        
+        Use this to migrate an existing Craft CMS project from a git repository and import a database dump.
+        
+        ```bash
+        git clone https://github.com/example/example-site my-craft-project
+        cd my-craft-project
+        ddev config --project-type=craftcms
+        ddev start
+        ddev composer install
+        ddev import-db --src=/path/to/db.sql.gz
+        ddev launch
+        ```
+
+    DDEV will automatically setup your `.env` so it will work properly for local development, so the default settings displayed in the `ddev craft setup/welcome` command can be used. Change them only if you need to override a particular setting.
+
+    If you have an existing Craft CMS DDEV project, you'll need to change the `type:` to `craftcms` in your project's `.ddev/config.yaml` and then do `ddev restart` to be able to use the `ddev craft` command.
+
+    If you have Craft CMS installed in a sub-directory in your project, you can add a `CRAFT_CMD_ROOT` environment variable to your `.env` file to specify a path relative to your project root where Craft CMS is installed. This defaults to `./`, the project root directory.
+
 === "Shopware 6"
 
     ## Shopware 6

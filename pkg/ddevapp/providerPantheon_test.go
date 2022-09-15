@@ -2,18 +2,18 @@ package ddevapp_test
 
 import (
 	"fmt"
+	. "github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/testcommon"
+	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
-
-	. "github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/testcommon"
-	asrt "github.com/stretchr/testify/assert"
+	"time"
 )
 
 /**
@@ -27,6 +27,8 @@ const pantheonPullTestSite = "ddev-test-site-do-not-delete.dev"
 const pantheonPushTestSite = "ddev-pantheon-push.dev"
 const pantheonSiteURL = "https://dev-ddev-test-site-do-not-delete.pantheonsite.io/"
 const pantheonSiteExpectation = "DDEV DRUPAL8 TEST SITE"
+const pantheonPullGitURL = "ssh://codeserver.dev.009a2cda-2c22-4eee-8f9d-96f017321627@codeserver.dev.009a2cda-2c22-4eee-8f9d-96f017321627.drush.in:2222/~/repository.git"
+const pantheonPushGitURL = "ssh://codeserver.dev.d32c631e-c998-480f-93bc-7c36e6ae4142@codeserver.dev.d32c631e-c998-480f-93bc-7c36e6ae4142.drush.in:2222/~/repository.git"
 
 // TestPantheonPull ensures we can pull from pantheon.
 func TestPantheonPull(t *testing.T) {
@@ -277,4 +279,73 @@ func setupSSHKey(t *testing.T, privateKey string, expectScriptDir string) error 
 	require.NoError(t, err)
 	require.Contains(t, string(out), "Identity added:")
 	return nil
+}
+
+// Monthly do a push to pantheon repos to keep them active
+func TestPantheonDoMonthlyPush(t *testing.T) {
+	// Pantheon freezes inactive sites, so why not do a commit when we run to prevent that?
+	_, _, day := time.Now().Date()
+	if day != 10 {
+		t.Skipf("It's not the right day to do pantheon code push.")
+	}
+
+	assert := asrt.New(t)
+	token := ""
+	sshkey := ""
+
+	origDir, _ := os.Getwd()
+	if token = os.Getenv("DDEV_PANTHEON_API_TOKEN"); token == "" {
+		t.Skipf("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping %v", t.Name())
+	}
+	if sshkey = os.Getenv("DDEV_PANTHEON_SSH_KEY"); sshkey == "" {
+		t.Skipf("No DDEV_PANTHEON_SSH_KEY env var has been set. Skipping %v", t.Name())
+	}
+	sshkey = strings.Replace(sshkey, "<SPLIT>", "\n", -1)
+
+	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
+	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"TERMINUS_MACHINE_TOKEN=" + token}
+	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+	assert.NoError(err)
+
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	err = os.Chdir(tmpDir)
+	require.NoError(t, err)
+
+	_ = os.Mkdir("sshtest", 0755)
+	err = os.WriteFile(filepath.Join("sshtest", "id_rsa_test"), []byte(sshkey), 0600)
+	require.NoError(t, err)
+
+	// ssh-add the key for later pull/push
+	out, err := exec.RunHostCommand("ssh-add", "./sshtest/id_rsa_test")
+	if err != nil {
+		t.Logf("Failed to ssh add; out=%s, err=%v", out, err)
+	}
+
+	t.Cleanup(func() {
+		globalconfig.DdevGlobalConfig.WebEnvironment = webEnvSave
+		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		assert.NoError(err)
+
+		_ = os.Chdir(origDir)
+		err = os.RemoveAll(tmpDir)
+		assert.NoError(err)
+	})
+
+	for _, gitURL := range []string{pantheonPullGitURL, pantheonPushGitURL} {
+		err = os.Chdir(tmpDir)
+		require.NoError(t, err)
+
+		checkoutDir := "checkoutdir"
+		_ = os.RemoveAll(checkoutDir)
+		_ = os.Setenv("GIT_SSH_COMMAND", "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no")
+		out, err := exec.RunHostCommand("git", "clone", gitURL, checkoutDir)
+		assert.NoError(err, "Failed to git clone '%s'; out=%s, err=%v", gitURL, out, err)
+		_ = os.Chdir(checkoutDir)
+
+		out, err = exec.RunHostCommand("git", "commit", "--allow-empty", "-m", "Dummy commmit to keep pantheon alive")
+		assert.NoError(err, "Failed to make git commit; out=%s, err=%v", out, err)
+
+		out, err = exec.RunHostCommand("git", "push")
+		assert.NoError(err, "Failed to make git push; out=%s, err=%v", out, err)
+	}
 }

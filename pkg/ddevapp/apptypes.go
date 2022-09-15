@@ -2,13 +2,12 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/util"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
-
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/util"
 )
 
 type settingsCreator func(*DdevApp) (string, error)
@@ -65,7 +64,12 @@ var appTypeMatrix map[string]AppTypeFuncs
 
 func init() {
 	appTypeMatrix = map[string]AppTypeFuncs{
-		nodeps.AppTypePHP: {uploadDir: getPHPUploadDir, postStartAction: phpPostStartAction, importFilesAction: phpImportFilesAction},
+		nodeps.AppTypeBackdrop: {
+			settingsCreator: createBackdropSettingsFile, uploadDir: getBackdropUploadDir, hookDefaultComments: getBackdropHooks, apptypeSettingsPaths: setBackdropSiteSettingsPaths, appTypeDetect: isBackdropApp, postImportDBAction: backdropPostImportDBAction, configOverrideAction: nil, postConfigAction: nil, postStartAction: backdropPostStartAction, importFilesAction: backdropImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
+		},
+		nodeps.AppTypeCraftCms: {
+			uploadDir: getCraftCmsUploadDir, importFilesAction: craftCmsImportFilesAction, appTypeDetect: isCraftCmsApp, configOverrideAction: craftCmsConfigOverrideAction, postConfigAction: craftCmsPostConfigAction, postStartAction: craftCmsPostStartAction,
+		},
 		nodeps.AppTypeDrupal6: {
 			settingsCreator: createDrupalSettingsPHP, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal6Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal6App, postImportDBAction: nil, configOverrideAction: drupal6ConfigOverrideAction, postConfigAction: nil, postStartAction: drupal6PostStartAction, importFilesAction: drupalImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
 		},
@@ -81,14 +85,8 @@ func init() {
 		nodeps.AppTypeDrupal10: {
 			settingsCreator: createDrupalSettingsPHP, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal8Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal10App, postImportDBAction: nil, configOverrideAction: drupal10ConfigOverrideAction, postConfigAction: nil, postStartAction: drupal8PostStartAction, importFilesAction: drupalImportFilesAction,
 		},
-		nodeps.AppTypeWordPress: {
-			settingsCreator: createWordpressSettingsFile, uploadDir: getWordpressUploadDir, hookDefaultComments: getWordpressHooks, apptypeSettingsPaths: setWordpressSiteSettingsPaths, appTypeDetect: isWordpressApp, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: nil, importFilesAction: wordpressImportFilesAction,
-		},
-		nodeps.AppTypeTYPO3: {
-			settingsCreator: createTypo3SettingsFile, uploadDir: getTypo3UploadDir, hookDefaultComments: getTypo3Hooks, apptypeSettingsPaths: setTypo3SiteSettingsPaths, appTypeDetect: isTypo3App, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: nil, importFilesAction: typo3ImportFilesAction,
-		},
-		nodeps.AppTypeBackdrop: {
-			settingsCreator: createBackdropSettingsFile, uploadDir: getBackdropUploadDir, hookDefaultComments: getBackdropHooks, apptypeSettingsPaths: setBackdropSiteSettingsPaths, appTypeDetect: isBackdropApp, postImportDBAction: backdropPostImportDBAction, configOverrideAction: nil, postConfigAction: nil, postStartAction: backdropPostStartAction, importFilesAction: backdropImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
+		nodeps.AppTypeLaravel: {
+			appTypeDetect: isLaravelApp, postStartAction: laravelPostStartAction, configOverrideAction: nil,
 		},
 		nodeps.AppTypeMagento: {
 			settingsCreator: createMagentoSettingsFile, uploadDir: getMagentoUploadDir, hookDefaultComments: nil, apptypeSettingsPaths: setMagentoSiteSettingsPaths, appTypeDetect: isMagentoApp, postImportDBAction: nil, configOverrideAction: magentoConfigOverrideAction, postConfigAction: nil, postStartAction: nil, importFilesAction: magentoImportFilesAction,
@@ -96,8 +94,18 @@ func init() {
 		nodeps.AppTypeMagento2: {
 			settingsCreator: createMagento2SettingsFile, uploadDir: getMagento2UploadDir, hookDefaultComments: nil, apptypeSettingsPaths: setMagento2SiteSettingsPaths, appTypeDetect: isMagento2App, postImportDBAction: nil, configOverrideAction: magento2ConfigOverrideAction, postConfigAction: nil, postStartAction: nil, importFilesAction: magentoImportFilesAction,
 		},
-		nodeps.AppTypeLaravel:   {appTypeDetect: isLaravelApp, postStartAction: laravelPostStartAction, configOverrideAction: nil},
-		nodeps.AppTypeShopware6: {appTypeDetect: isShopware6App, apptypeSettingsPaths: setShopware6SiteSettingsPaths, uploadDir: getShopwareUploadDir, configOverrideAction: nil, postStartAction: shopware6PostStartAction, importFilesAction: shopware6ImportFilesAction},
+		nodeps.AppTypePHP: {
+			uploadDir: getPHPUploadDir, postStartAction: phpPostStartAction, importFilesAction: phpImportFilesAction,
+		},
+		nodeps.AppTypeShopware6: {
+			appTypeDetect: isShopware6App, apptypeSettingsPaths: setShopware6SiteSettingsPaths, uploadDir: getShopwareUploadDir, configOverrideAction: nil, postStartAction: shopware6PostStartAction, importFilesAction: shopware6ImportFilesAction,
+		},
+		nodeps.AppTypeTYPO3: {
+			settingsCreator: createTypo3SettingsFile, uploadDir: getTypo3UploadDir, hookDefaultComments: getTypo3Hooks, apptypeSettingsPaths: setTypo3SiteSettingsPaths, appTypeDetect: isTypo3App, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: nil, importFilesAction: typo3ImportFilesAction,
+		},
+		nodeps.AppTypeWordPress: {
+			settingsCreator: createWordpressSettingsFile, uploadDir: getWordpressUploadDir, hookDefaultComments: getWordpressHooks, apptypeSettingsPaths: setWordpressSiteSettingsPaths, appTypeDetect: isWordpressApp, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: nil, importFilesAction: wordpressImportFilesAction,
+		},
 	}
 }
 
