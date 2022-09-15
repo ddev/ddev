@@ -171,7 +171,7 @@ The following fields can be used for a flag definition:
 
 ### “ProjectTypes” Annotation
 
-If your command should only be visible for a specific project type, `ProjectTypes` will allow you to define the supported types. This is especially useful for global custom commands. See [Quickstart for many CMSs](../../users/quickstart.md) for more information about the supported project types. Multiple types are separated by a comma.
+If your command should only be visible for a specific project type, `ProjectTypes` will allow you to define the supported types. This is especially useful for global custom commands. See [Quickstart for many CMSes](../../users/quickstart.md) for more information about the supported project types. Multiple types are separated by a comma.
 
 Usage: `## ProjectTypes: <list-of-project-types>`
 
