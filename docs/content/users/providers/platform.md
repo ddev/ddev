@@ -3,7 +3,7 @@
 DDEV provides integration with the [Platform.sh Website Management Platform](https://platform.sh/), which allows Platform.sh users to quickly download and provision a project from Platform.sh in a local DDEV-managed environment.
 
 !!!tip
-    Consider using `ddev get platformsh/ddev-platformsh` ([platformsh/ddev-platformsh](https://github.com/platformsh/ddev-platformsh) for more complete Platform.sh integration.
+    Consider using `ddev get platformsh/ddev-platformsh` ([platformsh/ddev-platformsh](https://github.com/platformsh/ddev-platformsh)) for more complete Platform.sh integration.
 
 DDEV’s Platform.sh integration pulls database and files from an existing Platform.sh site/environment into your local system so you can develop locally.
 
