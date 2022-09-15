@@ -186,7 +186,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
     
     Consistency is a high priority for DDEV’s integration, which tries at key points to make sure everything is completely consistent and in sync.
     
-    The Mutagen deamon’s life cycle and sync sessions are something like this:
+    The Mutagen daemon’s life cycle and sync sessions are something like this:
 
     1. On `ddev start`, the Mutagen agent will be started if it’s not already running.
     2. If there’s already a sync session for the project, it’s stopped and recreated.
