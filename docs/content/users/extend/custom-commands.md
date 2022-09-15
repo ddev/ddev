@@ -70,7 +70,7 @@ A number of environment variables are provided to the script. These are generall
 * `DDEV_DOCROOT`: relative path from approot to docroot
 * `DDEV_HOSTNAME`: comma-separated list of FQDN hostnames
 * `DDEV_HOST_DB_PORT`: localhost port of the database server
-* `DDEV_HOST_HTTPS_PORT`: localhost port for https on web server
+* `DDEV_HOST_HTTPS_PORT`: localhost port for HTTPS on web server
 * `DDEV_HOST_WEBSERVER_PORT`: localhost port of the web server
 * `DDEV_PHP_VERSION`: current PHP version
 * `DDEV_PRIMARY_URL`: primary project URL
