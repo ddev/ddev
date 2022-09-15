@@ -12,7 +12,7 @@ CIFS
 CLI
 CMD
 CMS
-CMSs
+CMSes
 Colima
 CPUs
 CTRL
@@ -26,11 +26,14 @@ Commands
 Completely
 Create
 DDEV's
+DDEV’s
 DDEV
 DHCP
+DKIM
 DNS
 Docker
 Docker's
+Docker’s
 Dockerfile
 Dockerfiles
 Docs
@@ -58,6 +61,7 @@ HeidiSQL
 Homebrew
 IDE
 IDE's
+IDE’s
 IDEs
 IPv
 If
@@ -66,12 +70,16 @@ Kalabox
 Lando
 Laravel
 Let's
+Let’s
 Lima
 Localdev
 MAMP
 Magento
 Magento's
+Magento’s
 MailHog
+MailHog's
+MailHog’s
 Mailgun
 Manage
 MariaDB
@@ -95,6 +103,8 @@ PID
 PWD
 PartOf
 PathMaps
+phpMyAdmin's
+phpMyAdmin’s
 PhpStorm
 PowerShell
 Pull
@@ -173,6 +183,8 @@ beanstalkd
 belonging
 behat
 blackfire
+blackfire's
+blackfire’s
 bool
 breakpoint
 browser
@@ -198,6 +210,7 @@ cms
 codebase
 colima
 colima's
+colima’s
 collection
 command
 compinit
@@ -217,6 +230,8 @@ cron
 cson
 current
 customizations
+daemon's
+daemon’s
 daemonize
 data
 database
@@ -227,9 +242,11 @@ dbimage
 dbname
 dbpass
 dbserver
+DBTypes
 dbuser
 ddev
 ddev's
+ddev’s
 debian
 debug
 debugging
@@ -251,7 +268,7 @@ dnsmasq
 docker
 docker-ce
 dockerd
-docker's
+docker’s
 dockerfile
 dockerhub
 docksal
@@ -315,10 +332,12 @@ help
 homeadditions
 homebrew
 host
+HostBinaryExists
 hostenv
 hostfile
 hostname
 hostnames
+HostWorkingDir
 htaccess
 html
 http
@@ -430,6 +449,7 @@ one
 oneshot
 or
 oriented
+OSTypes
 output
 pause
 pdfreactor
@@ -469,6 +489,7 @@ projdir
 project
 projectname
 projects
+ProjectTypes
 proot
 proto
 provided
@@ -477,6 +498,7 @@ ps
 psql
 public
 quickstart
+quickstarts
 rabbitmq
 rc
 readme
@@ -566,6 +588,7 @@ tcp
 tcpview
 template
 templated
+templating
 test
 testbot
 testbots
@@ -630,6 +653,8 @@ wsl2
 wslg
 www
 xdebug
+xdebug's
+xdebug’s
 xtrabackup
 xeyes
 xhprof
