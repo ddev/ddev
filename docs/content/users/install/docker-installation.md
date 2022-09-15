@@ -73,12 +73,12 @@ You’ll need Docker on your system before you can [install DDEV](ddev-installat
         sudo apt-get update && sudo apt-get install docker-ce docker-ce-cli containerd.io
         sudo groupadd docker && sudo usermod -aG docker $USER
         ```
-    * You have to start `docker-ce` yourself on login, or use a script to automate it. To have it start on entry to git-bash, add a startup line to your (Windows-side) `~/.bashrc` with:
+    * You have to start `docker-ce` yourself on login, or use a script to automate it. To have it start on entry to Git Bash, add a startup line to your (Windows-side) `~/.bashrc` with:
         ```bash
         echo "wsl.exe -u root service docker status > /dev/null || wsl.exe -u root service docker start > /dev/null" >> ~/.bashrc
         ```
 
-        `source ~/.bashrc` to start immediately, or it should start with your next git-bash session.
+        `source ~/.bashrc` to start immediately, or it should start with your next Git Bash session.
 
     * [Install mkcert](https://github.com/FiloSottile/mkcert#windows) on the Windows side, which may be easiest with [Chocolatey](https://chocolatey.org/install): 
         * In an administrative PowerShell: 
@@ -131,7 +131,7 @@ Docker needs to be able to do a few things for DDEV to work:
 
 We can use a single Docker command to make sure Docker is set up to do what we want:
 
-In your *project directory* run the following (using git-bash if you’re on Windows!):
+In your *project directory* run the following (using Git Bash if you’re on Windows!):
 
 ```
 docker run --rm -t -p 80:80 -p 443:443 -v "//$PWD:/tmp/projdir" busybox sh -c "echo ---- Project Directory && ls /tmp/projdir"

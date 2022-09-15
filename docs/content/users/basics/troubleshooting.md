@@ -127,7 +127,7 @@ com.docker.backend.exe        5760 Services                   0      9,536 K
 
 The resulting output displays which command is running and its PID. Choose the appropriate method to stop the other server.
 
-You may also be able to find what’s using a port using `curl`. On Linux, macOS, or in git-bash on Windows, `curl -I localhost` or `curl -I -k https://localhost:443`. The result may give you a hint about which application is at fault.
+You may also be able to find what’s using a port using `curl`. On Linux, macOS, or in Git Bash on Windows, `curl -I localhost` or `curl -I -k https://localhost:443`. The result may give you a hint about which application is at fault.
 
 We welcome your [suggestions](https://github.com/drud/ddev/issues/new) based on other issues you’ve run into and your troubleshooting technique.
 
@@ -260,7 +260,7 @@ On Windows WSL2, there is a hosts file inside the WSL2 instance at `/etc/hosts`,
 
 However, if the project uses non-`ddev.site` hostnames, an internet connection is not available, or if `use_dns_when_possible` is `false` in `.ddev/config.yaml`, a Windows-side browser will be unable to look up project hostnames. You’ll get complaints from the browser like “[url] server IP address could not be found” or “We can’t connect to the server at [url]”. In this case, you can:
 
-1. Add the needed hostname(s) manually to the Windows hosts file. This can easily be done with the *Windows* version of `ddev.exe` by running `sudo ddev hostname <hostname> 127.0.0.1` on *Windows* in PowerShell or Cmd or git-bash.
+1. Add the needed hostname(s) manually to the Windows hosts file. This can easily be done with the *Windows* version of `ddev.exe` by running `sudo ddev hostname <hostname> 127.0.0.1` on *Windows* in PowerShell or Cmd or Git Bash.
 2. Or run a browser within WSL2. On Windows 11 this is built in, but in Windows 10 may require an X11 server like X410.
 
 ### DNS Rebinding Prohibited

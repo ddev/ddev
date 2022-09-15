@@ -124,7 +124,7 @@ However, you can manually publish the release to [the DDEV AUR repository](https
 
 This is done automatically by the release build on a dedicated Windows test runner (GitHub Actions runner) named `testbot-asus-win10pro`. You would need to do this process manually on that build machine or install the fob on another machine.
 
-**After rebooting this machine, sometimes an automated reboot, the password for the security fob has to be re-entered or Windows signing will fail. We do this by opening up `testbot-asus-win10pro` using Chrome Remote Desktop (or manually physically opening it), opening git-bash, and `cd ~/tmp && signtool sign gsudo.exe`. There happens to be a `gsudo.exe` there but it doesn’t matter what you sign—the idea is to pop up the GUI where you enter the password (which is in LastPass).**
+**After rebooting this machine, sometimes an automated reboot, the password for the security fob has to be re-entered or Windows signing will fail. We do this by opening up `testbot-asus-win10pro` using Chrome Remote Desktop (or manually physically opening it), opening Git Bash, and `cd ~/tmp && signtool sign gsudo.exe`. There happens to be a `gsudo.exe` there but it doesn’t matter what you sign—the idea is to pop up the GUI where you enter the password (which is in LastPass).**
 
 ### Basic Instructions
 

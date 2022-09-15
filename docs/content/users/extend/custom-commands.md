@@ -219,4 +219,4 @@ If you’re editing a custom command to be run in a container, it must have LF l
 
 ### Bash
 
-Commands can’t be executed if DDEV can’t find `bash`. If you’re running inside git-bash in most any terminal, this shouldn’t be an issue, and DDEV should be able to find git-bash if it’s in `C:\Program Files\Git\bin` as well. But if neither of those is true, add the directory of `bash.exe` to your `PATH` environment variable.
+Commands can’t be executed if DDEV can’t find `bash`. If you’re running inside Git Bash in most any terminal, this shouldn’t be an issue, and DDEV should be able to find `git-bash` if it’s in `C:\Program Files\Git\bin` as well. But if neither of those is true, add the directory of `bash.exe` to your `PATH` environment variable.

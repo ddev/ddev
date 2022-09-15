@@ -283,7 +283,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
         
         To enable `winnfsd` as a service, please download, inspect and run `windows_ddev_nfs_setup.sh` created by the installer at `C:\Program Files\ddev\windows_ddev_nfs_setup.sh`.
         
-        You can also download this [directly from the GitHub repository](https://raw.githubusercontent.com/drud/ddev/master/scripts/windows_ddev_nfs_setup.sh)) in a git-bash session on Windows. If your DDEV projects are set up outside your home directory, you’ll need to edit `~/.ddev/nfs_exports.txt` (created by the script) and restart the service with  
+        You can also download this [directly from the GitHub repository](https://raw.githubusercontent.com/drud/ddev/master/scripts/windows_ddev_nfs_setup.sh)) in a Git Bash session on Windows. If your DDEV projects are set up outside your home directory, you’ll need to edit `~/.ddev/nfs_exports.txt` (created by the script) and restart the service with  
         `sudo nssm restart nfsd`.
         
         !!!warning "Firewall Issues"

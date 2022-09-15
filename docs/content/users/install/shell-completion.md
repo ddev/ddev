@@ -48,7 +48,7 @@ Shells like bash and zsh need help to do this though, they have to know what the
 
 === "Git-bash"
 
-    Completions in git-bash are sourced from at least `~/bash_completion.d` so you can use `mkdir -p ~/bash_completion.d && tar -C ~/.bash_completion.d -zxf /z/Downloads/ddev_shell_completion_scripts.v1.15.0-rc3.tar.gz ddev_bash_completion.sh && mv ~/bash_completion.d/ddev_bash_completion.sh ~/bash_completion.d/ddev.bash` to extract the bash completions and put them where they belong.
+    Completions in Git Bash are sourced from at least `~/bash_completion.d` so you can use `mkdir -p ~/bash_completion.d && tar -C ~/.bash_completion.d -zxf /z/Downloads/ddev_shell_completion_scripts.v1.15.0-rc3.tar.gz ddev_bash_completion.sh && mv ~/bash_completion.d/ddev_bash_completion.sh ~/bash_completion.d/ddev.bash` to extract the bash completions and put them where they belong.
 
 === "PowerShell"
 
