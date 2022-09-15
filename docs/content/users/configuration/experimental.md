@@ -5,7 +5,7 @@
 You can use remote Docker instances, whether on the internet, inside your network, or running in a virtual machine.
 
 * On the remote machine, the Docker port must be exposed if it’s not already. See [instructions](https://gist.github.com/styblope/dc55e0ad2a9848f2cc3307d4819d819f) for how to do this on a systemd-based remote server. **Be aware that this has serious security implications and must not be done without taking those into consideration.** In fact, `dockerd` will complain:
-    
+
     > Binding to IP address without --tlsverify is insecure and gives root access on this machine to everyone who has access to your network.  host="tcp://0.0.0.0:2375".
 
 * If you do not already have the Docker client installed (like you would from Docker Desktop), install *just* the client with `brew install docker`.

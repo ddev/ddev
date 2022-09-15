@@ -34,15 +34,15 @@ database:
 
 Since the existing binary database may not be compatible with changes to your configuration, you need to check and/or migrate your database.
 
-* `ddev debug get-volume-db-version` will show the current binary database type.
-* `ddev debug check-db-match` will show if your configured project matches the binary database type.
-* `ddev debug migrate-database` allows an automated attempt at migrating your database to a different type/version.
-    * This only works with databases of type `mysql` or `mariadb`.
-    * It often can’t work to migrate *from* databases of type `mysql:8.0` because dumps of that type most often can’t be easily imported into all other database types.
-    * Examples: `ddev debug migrate-database mariadb:10.7`, `ddev debug migrate-database mysql:8.0`.
+- `ddev debug get-volume-db-version` will show the current binary database type.
+- `ddev debug check-db-match` will show if your configured project matches the binary database type.
+- `ddev debug migrate-database` allows an automated attempt at migrating your database to a different type/version.
+    - This only works with databases of type `mysql` or `mariadb`.
+    - It often can’t work to migrate *from* databases of type `mysql:8.0` because dumps of that type most often can’t be easily imported into all other database types.
+    - Examples: `ddev debug migrate-database mariadb:10.7`, `ddev debug migrate-database mysql:8.0`.
 
 ## Caveats
 
-* If you change the database type or version in an existing project, the existing database will not be compatible with your change, so you’ll want to use `ddev export-db` to save a dump first.
-* When you change database type, destroy the existing database using `ddev delete --omit-snapshot` before changing, then after `ddev start` use `ddev import-db` to import the dump you saved.
-* Snapshots are always per database type and database version. So if you have snapshots from MariaDB 10.2 and you switch to MariaDB 10.5, don’t expect to be able to restore the old snapshot.
+- If you change the database type or version in an existing project, the existing database will not be compatible with your change, so you’ll want to use `ddev export-db` to save a dump first.
+- When you change database type, destroy the existing database using `ddev delete --omit-snapshot` before changing, then after `ddev start` use `ddev import-db` to import the dump you saved.
+- Snapshots are always per database type and database version. So if you have snapshots from MariaDB 10.2 and you switch to MariaDB 10.5, don’t expect to be able to restore the old snapshot.

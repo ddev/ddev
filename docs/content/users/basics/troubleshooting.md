@@ -12,7 +12,7 @@ Things might go wrong! In addition to this page, consider checking [Stack Overfl
 * If you have customizations like PHP overrides, nginx or Apache overrides, MySQL/PostgreSQL overrides, custom services, or `config.yaml` changes, please back them out while troubleshooting. It’s important to have the simplest possible environment while troubleshooting.
 * Restart Docker. Consider a Docker factory reset in serious cases, which will destroy any databases you’ve loaded. See [Docker Troubleshooting](../install/docker-installation.md#troubleshooting) for more.
 * Try the simplest possible DDEV project (just as `ddev debug test` does):
-    
+
     ```bash
     ddev poweroff
     mkdir ~/tmp/testddev
@@ -179,7 +179,7 @@ A container fails to become ready when its health check is failing. This can hap
 !!!tip
     You may need to install [jq](https://stedolan.github.io/jq/download/) for these examples (`brew install jq`), or just remove the `| jq` from the command and read the raw JSON output.
 
-For the `web` container: 
+For the `web` container:
 
 ```
 docker inspect --format "{{json .State.Health }}" ddev-<projectname>-web | jq
@@ -191,7 +191,7 @@ For `ddev-router`:
 docker inspect --format "{{json .State.Health }}" ddev-router
 ```
 
-For `ddev-ssh-agent`: 
+For `ddev-ssh-agent`:
 
 ```
 docker inspect --format "{{json .State.Health }}" ddev-ssh-agent
@@ -252,7 +252,7 @@ While DDEV can create a web server and a Docker network infrastructure for a pro
 * DDEV assumes that hostnames can be resolved within 3 seconds. That assumption is not valid on all networks or computers, so you can increase the amount of time it waits for resolution. Increasing to 5 seconds, for example: `ddev config global --internet-detection-timeout-ms=5000`.
 * If DDEV detects that it can’t look up one of the hostnames assigned to your project for that or other reasons, it will try to add that to the hosts file on your computer, which requires administrative privileges (sudo or Windows UAC).
     * This technique may not work on Windows WSL2, see below.
-    * Only 10 hosts are valid on a line on traditional Windows, see [below](#windows-hosts-file-limited-to-10-hosts-per-ip-address-line); beyond that hostnames are ignored.
+    * Only 10 hosts are valid on a line on traditional Windows, see [below](#windows-hosts-file-limited-to-10-hosts-per-line); beyond that hostnames are ignored.
 
 ### Windows WSL2 Name Resolution on Non-`ddev.site` Hostnames or When Not Internet-Connected
 

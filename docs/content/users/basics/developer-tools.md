@@ -23,8 +23,8 @@ You can also add tools that are not provided by default using [`webimage_extra_p
 
 DDEV provides a built-in command to simplify use of PHP’s dependency manager, [Composer](https://getcomposer.org/), without requiring it to be installed on the host machine. Generally, executing any Composer command through DDEV is as simple as prepending the command with `ddev`. DDEV will execute the command at the project root in the web container, passing (almost) all arguments and flags to Composer. To execute Composer in other directories within the container, use `ddev ssh` or `ddev exec -d <dir>`. For example:
 
-- `ddev composer help` runs Composer’s help command to learn more about what’s available.
-- `ddev composer require <package>` tells Composer to require a specific PHP package for the current project.
+* `ddev composer help` runs Composer’s help command to learn more about what’s available.
+* `ddev composer require <package>` tells Composer to require a specific PHP package for the current project.
 
 Additionally, Composer can be used to initialize new projects with `ddev composer create`. This command supports limited argument and flag options, and will install a new project to the project root in `/var/www/html`. The package and version arguments are required:
 
@@ -44,7 +44,7 @@ DDEV uses Composer 2 by default. Use the `--composer-version` option to roll bac
 
 !!!tip "Careful with Global Requirements!"
     If you run `ddev composer global require` (or `composer global require` inside the web container), global packages will be installed at the home directory within the container (`~/.composer`) and will disappear when the container restarts—meaning you’ll need to re-run the command.
-    
+
     You may want to synchronize created Composer configuration and installed packages with the DDEV’s [`homeadditions` directory](../extend/in-container-configuration.md) on your host machine.
 
 <a name="windows-os-and-ddev-composer"></a>

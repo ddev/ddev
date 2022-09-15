@@ -29,16 +29,20 @@ Here’s how to try it for yourself:
 5. Configure your project with `ddev config`.
 6. Import your database and files using `ddev import-db` and `ddev import-files`.
 7. Tell DDEV to listen on all network interfaces, omit phpMyAdmin and its SSH agent, use hardened images, and enable Let’s Encrypt:  
+
     ```
     ddev config global --router-bind-all-interfaces --omit-containers=dba,ddev-ssh-agent --use-hardened-images --use-letsencrypt --letsencrypt-email=you@example.com`
     ```
+
 8. Create your DDEV project as you normally would, but `ddev config --additional-fqdns=<internet_fqdn>`. If your website responds to multiple hostnames (e.g., with and without `www`), you’ll need to add each hostname.
 9. Redirect HTTP to HTTPS. If you’re using `nginx-fpm`, for example, create `.ddev/nginx/redirect.conf`:
+
     ```
     if ($http_x_forwarded_proto = "http") {
       return 301 https://$host$request_uri;
     }
     ```
+
 10. `ddev start` and visit your site. With some CMSes, you may also need to clear your cache.
 
 You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s Encrypt has failed because port 80 is not open, or the DNS name is not yet resolving. (Use `docker logs ddev-router` to see Let’s Encrypt activity.)
@@ -48,6 +52,7 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
 * Depending on how you’re using this, you may want to set up automated database and file backups—ideally off-site—like you would on any production system. Many CMSes have modules/plugins to allow this, and you can use `ddev export-db` or `ddev snapshot` as you see fit and do the backup on the host.
 * You may want to allow your host system to send email. On Debian/Ubuntu `sudo apt-get install postfix`. Typically you’ll need to set up reverse DNS for your system, and perhaps SPF and/or DKIM records to for more reliable delivery to other mail systems.
 * You may want to generally tailor your PHP settings for hosting rather than local development. Error-reporting defaults in `php.ini`, for example, may be too verbose and expose to much information publicly. You may want something less:
+
     ```ini
     ; Error handling and logging ;
     error_reporting = E_ALL
@@ -55,7 +60,9 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
     display_startup_errors = On
     log_errors = On
     ```
+
 * To make DDEV start sites on system boot, you’ll want to set up a `systemd` unit on systems like Debian/Ubuntu and Fedora. For example, a file named `/etc/systemd/system/ddev.service` containing:
+
     ```
     # Start DDEV when system starts (after Docker)
     # Stop DDEV when Docker shuts down
@@ -79,8 +86,10 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
     [Install]
     WantedBy=multi-user.target
     ```
+
 * You’ll need to regularly renew the Let’s Encrypt certificates. This is often done on a system reboot, but that may not be soon enough. A cron with the command `docker exec ddev-router bash -c "certbot renew && nginx -s reload"` will do the renewals.
 * You’ll likely want to turn off PHP errors to screen in a `.ddev/php/noerrors.ini`:
+
     ```ini
     display_errors = Off
     display_startup_errors = Off

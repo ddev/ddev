@@ -54,11 +54,13 @@ When defining additional services for your project, we recommended following the
 
 * The container name should be `ddev-${DDEV_SITENAME}-<servicename>`.
 * Provide containers with required labels:
+
     ```yaml
         labels:
           com.ddev.site-name: ${DDEV_SITENAME}
           com.ddev.approot: ${DDEV_APPROOT}
     ```
+
 * Exposing ports for service: you can expose the port for a service to be accessible as `projectname.ddev.site:portNum` while your project is running. This is achieved by the following configurations for the container(s) being added:
 
     * Define only the internal port in the `expose` section for docker-compose; use `ports:` only if the port will be bound directly to `localhost`, as may be required for non-HTTP services.

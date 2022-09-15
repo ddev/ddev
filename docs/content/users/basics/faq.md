@@ -66,7 +66,7 @@ I don’t like the settings files or gitignores that DDEV creates. What can I do
   
 How can I change the name of a project?
 : Delete it and migrate it to a new project with your preferred name:  
-    
+
     1. Export the project’s database: `ddev export-db --file=/path/to/db.sql.gz`.
     2. Delete the project: `ddev delete <project>`. (By default this will make a snapshot for safety.)
     3. Rename the project: `ddev config --project-name=<new_name>`.
@@ -78,7 +78,7 @@ How can I move a project from one directory to another?
   
 How can I move a project from one computer to another?
 : Follow this procedure:  
-    
+
     1. `ddev start && ddev snapshot`.
     2. `ddev stop --unlist`.
     3. Move the project directory to another computer any way you want.
@@ -105,7 +105,7 @@ Why does `ddev start` fail with “error while mounting volume, Permission denie
 
 How can I update/upgrade DDEV?
 : DDEV is easiest to think of as a single binary, and it can be installed many ways, so can be upgraded many ways depending on your operating system and environment. Since upgrading is basically the same as installing, you can follow [DDEV Installation](../install/ddev-installation.md) to upgrade as well.
-    
+
     * On macOS you likely installed via Homebrew; run `brew update && brew upgrade ddev`.
     <!-- markdownlint-disable-next-line -->
     * On Linux + WSL2 using Debian/Ubuntu’s `apt install` technique, run `sudo apt update && sudo apt upgrade ddev` like any other package on your system.

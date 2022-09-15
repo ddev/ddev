@@ -103,7 +103,7 @@ List snapshots for an existing project with `ddev snapshot --list`. (Add the `--
 
 !!!tip
     The default 120-second timeout may be inadequate for restores with very large snapshots or slower systems. You can increase this timeout by setting `default_container_timeout` to a higher value.
-    
+
     A timeout doesn’t necessarily mean the restore failed; you can watch the snapshot restore complete with `ddev logs -s db`.
 
 ## Interacting with Your Project

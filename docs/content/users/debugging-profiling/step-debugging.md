@@ -87,6 +87,7 @@ However, if you’ve not yet used PhpStorm with Xdebug for a regular web request
 By default, DDEV is set up to contact the default port, port 9003 on your IDE. However, if you have something else listening on that port or your IDE does not yet default to 9003, you’ll need to change the port. (PhpStorm and VS Code have switch to supporting 9003 instead of 9000 for some time now.)
 
 * To override the port, add an override file in the project’s `.ddev/php directory`. For example, a file `.ddev/php/xdebug_client_port.ini` would change to use the legacy port 9000:
+
     ```ini
     [PHP]
     xdebug.client_port=9000
@@ -111,7 +112,7 @@ Here are basic steps to take to sort out any difficulty:
 * Tell your IDE to start listening. (PhpStorm: click the telephone button, VS Code: run the debugger.)
 * Use `curl` or a browser to create a web request. For example, `curl https://d9.ddev.site`.
 * If the IDE doesn’t respond, take a look at `ddev logs`. A message like this means Xdebug inside the container can’t make a connection to port 9003:  
-    
+
     > PHP message: Xdebug: [Step Debug] Could not connect to debugging client. Tried: host.docker.internal:9003 (through xdebug.client_host/xdebug.client_port)
 
 * `ddev ssh` into the web container. Can you run `telnet host.docker.internal 9003` and have it connect? If not, you might have an over-aggressive firewall. Disable it, or add a rule that would allow the connection to pass through. For example, on Debian/Ubuntu that would be `sudo ufw allow 9003/tcp`.

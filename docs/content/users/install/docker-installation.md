@@ -144,5 +144,5 @@ If you get an error or don’t see the contents of your project directory, you�
 * For a “port is already allocated” error, see the [Troubleshooting](../basics/troubleshooting.md#web-server-ports-already-occupied) page.
 * “invalid mount config for type "bind": bind mount source path does not exist: [some path]” means the filesystem isn’t successfully shared into the Docker container.
 * If you’re seeing “The path (...) is not shared and is not known to Docker”, find *File sharing* in your Docker settings make sure the appropriate path or drive is included.
-* “Error response from daemon: Get https://registry-1.docker.io/v2/” may mean Docker isn’t running or you don’t have internet access. Try starting or restarting Docker, and confirm you have a working internet connection.
+* “Error response from daemon: Get registry-1.docker.io/v2/” may mean Docker isn’t running or you don’t have internet access. Try starting or restarting Docker, and confirm you have a working internet connection.
 * If you’re seeing “403 authentication required” trying to `ddev start`, run `docker logout` and try again. Docker authentication is *not* required for any normal DDEV action.
