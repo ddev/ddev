@@ -975,6 +975,9 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	if app.IsMutagenEnabled() {
+		if app.GetUploadDir() == "" {
+			util.Warning("Mutagen is enabled but no upload_dir is specified, so you may be syncing many more files than necessary.")
+		}
 		if ok, volumeExists, info := CheckMutagenVolumeSyncCompatibility(app); !ok {
 			util.Debug("mutagen sync session and docker volume are in incompatible status: '%s', Removing mutagen sync session '%s' and docker volume %s", info, MutagenSyncName(app.Name), GetMutagenVolumeName(app))
 			terminateErr := TerminateMutagenSync(app)
