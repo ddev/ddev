@@ -215,6 +215,11 @@ services:
       com.ddev.platform: {{ .Plugin }}
       com.ddev.app-type: {{ .AppType }}
       com.ddev.approot: $DDEV_APPROOT
+#      traefik.http.routers.ddev-webserver.rule: Host(`d9.ddev.site`)
+      traefik.http.routers.ddev-webserver.rule: Host(`${DDEV_SITENAME}.${DDEV_TLD}`)
+      traefik.http.services.ddev-webserver.loadbalancer.server.port: 80
+      traefik.docker.network: ddev_default
+
       {{ if .HostDockerInternalIP }}
     extra_hosts: [ "host.docker.internal:{{ .HostDockerInternalIP }}" ]
       {{ end }}

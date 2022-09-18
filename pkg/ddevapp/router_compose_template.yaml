@@ -1,14 +1,21 @@
 services:
   ddev-router:
     image: {{ .router_image }}:{{ .router_tag }}
+    # traefik-specific
+    command: --api.insecure=true --providers.docker
     networks:
         - ddev_default
+    labels:
+      traefik.docker.network: ddev_default
     container_name: ddev-router
     ports:{{ $dockerIP := .dockerIP }}{{ if not .router_bind_all_interfaces }}{{ range $port := .ports }}
     - "{{ $dockerIP }}:{{ $port }}:{{ $port }}"{{ end }}{{ else }}{{ range $port := .ports }}
     - "{{ $port }}:{{ $port }}"{{ end }}{{ end }}
+    # If traefik
+    - 8080:8080
     volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
+      # Different for traefik
+      - /var/run/docker.sock:/var/run/docker.sock
       - ddev-global-cache:/mnt/ddev-global-cache:rw
       {{ if .letsencrypt }}
       - ddev-router-letsencrypt:/etc/letsencrypt:rw
