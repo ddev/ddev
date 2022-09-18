@@ -216,8 +216,8 @@ services:
       com.ddev.app-type: {{ .AppType }}
       com.ddev.approot: $DDEV_APPROOT
 #      traefik.http.routers.ddev-webserver.rule: Host(`d9.ddev.site`)
-      traefik.http.routers.ddev-webserver.rule: Host(`${DDEV_SITENAME}.${DDEV_TLD}`)
-      traefik.http.services.ddev-webserver.loadbalancer.server.port: 80
+      traefik.http.routers.{{ .Name }}.rule: Host(`${DDEV_SITENAME}.${DDEV_TLD}`)
+      traefik.http.services.{{ .Name }}.loadbalancer.server.port: 80
       traefik.docker.network: ddev_default
 
       {{ if .HostDockerInternalIP }}
