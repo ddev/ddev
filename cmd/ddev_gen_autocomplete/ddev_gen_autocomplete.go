@@ -1,11 +1,10 @@
 package main
 
 import (
-	"os"
-	"path/filepath"
-
 	"github.com/drud/ddev/cmd/ddev/cmd"
 	"github.com/drud/ddev/pkg/util"
+	"os"
+	"path/filepath"
 )
 
 var targetDir = ".gotmp/bin/completions"
@@ -30,5 +29,9 @@ func main() {
 	err = cmd.RootCmd.GenPowerShellCompletionFile(filepath.Join(targetDir, "ddev_powershell_completion.ps1"))
 	if err != nil {
 		util.Failed("could not generate ddev_powershell_completion.ps1: %v", err)
+	}
+	err = genFigSpecCompletionFile(filepath.Join(targetDir, "ddev_fig_spec.ts"))
+	if err != nil {
+		util.Failed("could not generate ddev_fig_spec.ts: %v", err)
 	}
 }
