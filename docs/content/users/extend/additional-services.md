@@ -94,6 +94,12 @@ then `value1` can be used throughout the `install.yaml` as `{{ example.value1 }}
 
 More exotic template-based replacements can be seen in advanced test [example](https://github.com/drud/ddev/blob/master/cmd/ddev/cmd/testdata/TestCmdGetComplex/recipe/install.yaml).
 
+Links on how to use templates:
+
+* [Official go template docs](https://pkg.go.dev/text/template)
+* [Lots of intro to golang templates](https://www.google.com/search?q=golang+templates+intro&oq=golang+templates+intro&aqs=chrome..69i57j0i546l4.3161j0j4&sourceid=chrome&ie=UTF-8)
+* [masterminds/sprig](http://masterminds.github.io/sprig/) extra functions.
+
 ## Additional services in ddev-contrib (MongoDB, Elasticsearch, etc)
 
 Commonly used services will be migrated from the ddev-contrib repository to individual, tested, supported repositories, but

@@ -109,6 +109,9 @@ To manually push using GitHub Actions,
 
 ## Building
 
+* You'll want both your fork/branch and the upstream as remotes in git, so that tags can be determined. For example, the upstream git remote can be `https://github.com/drud/ddev` and your fork's remote can be `git@github.com:<yourgithubuser>/ddev`. Without the upstream, git may not know about tags that it needs for tests to work.
+* To run tests, you'll want `~/tmp` to be allowed in docker. This is not normally an issue as the home directory is available by default in most docker providers.
+
 Build the project with `make` and your resulting executable will end up in `.gotmp/bin/linux_amd64/ddev` or `.gotmp/bin/linux_arm64/ddev` (for Linux) or `.gotmp/bin/windows_amd64/ddev.exe` (for Windows) or `.gotmp/bin/darwin_amd64/ddev` or `.gotmp/bin/darwin_arm64/ddev` (for macOS).
 
 Build/test/check static analysis with
@@ -131,9 +134,10 @@ Normal test invocation is just `make test`. Run a single test with an invocation
 
 To see which DDEV commands the tests are executing, set the environment variable DDEV_DEBUG=true.
 
-Use GOTEST_SHORT=true to run just one CMS in each test, or GOTEST_SHORT=<integer> to run exactly one project type from the list of project types in the [TestSites array](https://github.com/drud/ddev/blob/a4ab2827d8b6e706b2420700045d889a3a69f3f2/pkg/ddevapp/ddevapp_test.go#L43). For example, GOTEST_SHORT=5 will run many tests only against TYPO3.
+Use GOTEST_SHORT=true to run just one CMS in each test, or GOTEST_SHORT=<integer> to run exactly one project type from the list of project types in the [TestSites array](https://github.com/drud/ddev/blob/a4ab2827d8b6e706b2420700045d889a3a69f3f2/pkg/ddevapp/ddevapp_test.go#L43). For example, `GOTEST_SHORT=5 make testpkg TESTARGS="-run TestDdevFullSiteSetup"` will run only `TestDdevFullSiteSetup` only against TYPO3.
 
 To run a test (in the cmd package) against a individually compiled ddev binary set the DDEV_BINARY_FULLPATH environment variable, for example `DDEV_BINARY_FULLPATH=$PWD/.gotmp/bin/linux_amd64/ddev make testcmd`.
+ The easiest way to run tests is using GoLand (or vscode) with their built-in test runners and debuggers. You can step through a specific test; you can stop at the point before the failure and experiment with the site that the test has set up.
 
 ## Automated testing
 
@@ -145,6 +149,7 @@ The Buildkite automated tests require special access, which we typically grant t
 
 The Docker images that DDEV uses are included in the containers/ directory:
 
+* containers/ddev-php-base: The base build for ddev-webserver.
 * containers/ddev-webserver: Provides the web servers (the "web" container).
 * containers/ddev-dbserver: Provides the "db" container.
 * containers/ddev-router: The router image

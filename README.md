@@ -46,3 +46,5 @@ See the "How can I contribute" question in the [FAQ](https://ddev.readthedocs.io
 [<img src="images/centarro-logo.png" width="50" />](https://www.centarro.io/)
 [<img src="images/drupaleasy-logo.png" width="50" />](https://www.drupaleasy.com/) [<img src="images/redfin-logo.png" width="50" />](https://redfinsolutions.com/)
 [<img src="images/macstadium-logo.png" alt="MacStadium" width="100"/>](https://www.macstadium.com)
+[<img src="images/lullabot-lockup-logo.svg" alt="Lullabot" width="150"/>](https://www.lullabot.com)
+[<img src="images/craft-cms-logo.svg" alt="Craft CMS" width="150"/>](https://craftcms.com/)

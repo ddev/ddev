@@ -44,12 +44,11 @@ if ! docker ps >/dev/null 2>&1 ; then
   exit 1
 fi
 
-# Make sure we have a reasonable mutagen setup
-if command -v mutagen >/dev/null ; then
-  mutagen daemon stop || true
-fi
-if [ -f ~/.ddev/.mutagen/bin/mutagen ]; then
-  ~/.ddev/.mutagen/bin/mutagen daemon stop || true
+# Make sure we start with mutagen daemon off.
+unset MUTAGEN_DATA_DIRECTORY
+if [ -f ~/.ddev/bin/mutagen -o -f ~/.ddev/bin/mutagen.exe ]; then
+  MUTAGEN_DATA_DIRECTORY=~/.mutagen ~/.ddev/bin/mutagen daemon stop || true
+  MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory/ ~/.ddev/bin/mutagen daemon stop || true
 fi
 if command -v killall >/dev/null ; then
   killall mutagen || true

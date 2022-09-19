@@ -27,6 +27,7 @@ Type `ddev` or `ddev -h`in a terminal window to see the available ddev commands.
 * `ddev drush` (Drupal and Backdrop only) gives direct access to the drush CLI
 * `ddev artisan` (Laravel only) gives direct access to the Laravel artisan CLI
 * `ddev magento` (Magento2 only) gives access to the magento CLI
+* `ddev craft` (Craft CMS only) gives access to the craft CLI
 * `ddev yarn` and `ddev npm` give direct access to the yarn/npm CLIs
 
 ## Node.js, npm, nvm, and yarn
