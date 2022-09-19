@@ -7,6 +7,7 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/styles"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/versionconstants"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"time"
 )
@@ -48,7 +49,7 @@ func List(activeOnly bool, continuous bool, wrapTableText bool, continuousSleepT
 				extendedRouterStatus = "disabled"
 			}
 			t.AppendFooter(table.Row{
-				"Router", "", routerStatus},
+				"Router", "", routerStatus, versionconstants.GetRouterImage()},
 			)
 			t.Render()
 			output.UserOut.WithField("raw", appDescs).Print(out.String())

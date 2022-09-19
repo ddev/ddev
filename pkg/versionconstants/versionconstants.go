@@ -32,10 +32,12 @@ var DBAImg = "phpmyadmin"
 var DBATag = "5" // Note that this can be overridden by make
 
 // RouterImage defines the image used for the router.
-var RouterImage = "traefik"
+// Caution: This may be overridden in cmd/a.go's init() to get traefik version
+// TODO: Figure out how to do this override more cleanly
+var RouterImage = "drud/ddev-router"
 
 // RouterTag defines the tag used for the router.
-var RouterTag = "2.8" // Note that this can be overridden by make
+var RouterTag = "v1.20.0"
 
 // SSHAuthImage is image for agent
 // var SSHAuthImage = "drud/ddev-ssh-agent"

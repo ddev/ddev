@@ -114,6 +114,11 @@ func generateRouterCompose() (string, error) {
 	routerComposeBasePath := RouterComposeYAMLPath()
 	routerComposeFullPath := FullRenderedRouterComposeYAMLPath()
 
+	err := generateTraefikConfiguration()
+	if err != nil {
+		return "", err
+	}
+
 	var doc bytes.Buffer
 	f, ferr := os.Create(routerComposeBasePath)
 	if ferr != nil {
@@ -133,6 +138,7 @@ func generateRouterCompose() (string, error) {
 		"letsencrypt":                globalconfig.DdevGlobalConfig.UseLetsEncrypt,
 		"letsencrypt_email":          globalconfig.DdevGlobalConfig.LetsEncryptEmail,
 		"AutoRestartContainers":      globalconfig.DdevGlobalConfig.AutoRestartContainers,
+		"use_traefik":                globalconfig.DdevGlobalConfig.UseTraefik,
 	}
 
 	t, err := template.New("router_compose_template.yaml").ParseFS(bundledAssets, "router_compose_template.yaml")
@@ -169,6 +175,16 @@ func generateRouterCompose() (string, error) {
 	}
 
 	return routerComposeFullPath, nil
+}
+
+func generateTraefikConfiguration() error {
+	dir := filepath.Join(globalconfig.GetGlobalConfigPath(), "traefik_configuration")
+	err := os.MkdirAll(dir, 0755)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // FindDdevRouter uses FindContainerByLabels to get our router container and

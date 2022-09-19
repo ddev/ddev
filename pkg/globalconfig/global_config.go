@@ -60,6 +60,7 @@ type GlobalConfig struct {
 	ProjectTldGlobal             string                  `yaml:"project_tld"`
 	XdebugIDELocation            string                  `yaml:"xdebug_ide_location"`
 	NoBindMounts                 bool                    `yaml:"no_bind_mounts"`
+	UseTraefik                   bool                    `yaml:"use_traefik"`
 	ProjectList                  map[string]*ProjectInfo `yaml:"project_info"`
 }
 
