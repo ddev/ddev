@@ -1160,18 +1160,21 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 			if err != nil {
 				util.Failed("Failed to create tmpDir")
 			}
-			certsDir := filepath.Join(tmpDir, "certs")
-			configDir := filepath.Join(tmpDir, "config")
-			err = os.MkdirAll(certsDir, 0755)
+			sourceCertsPath := filepath.Join(tmpDir, "certs")
+			sourceConfigDir := filepath.Join(tmpDir, "config")
+			targetCertsPath := path.Join("/mnt/ddev-global-cache/traefik/certs")
+			//targetConfigDir := path.Join("/mnt/ddev-global-config/traefik/config")
+
+			err = os.MkdirAll(sourceCertsPath, 0755)
 			if err != nil {
 				util.Failed("Failed to create traefik certs dir: %v", err)
 			}
-			err = os.MkdirAll(configDir, 0755)
+			err = os.MkdirAll(sourceConfigDir, 0755)
 			if err != nil {
 				util.Failed("Failed to create traefik config dir: %v", err)
 			}
 
-			baseName := filepath.Join(certsDir, app.Name)
+			baseName := filepath.Join(sourceCertsPath, app.Name)
 			out, err := exec.RunHostCommand("mkcert", "--cert-file", baseName+".crt", "--key-file", baseName+".key", strings.Join(hostnames, " "), "*.ddev.site", "127.0.0.1", "localhost", "*.ddev.local", "ddev-router", "ddev-router.ddev", "ddev-router.ddev_default")
 			if err != nil {
 				util.Failed("failed to create certificates for app, check mkcert operation: %v", out)
@@ -1182,8 +1185,8 @@ tls:
   certificates:
     - certFile: %s
       keyFile: %s
-`, filepath.Join("../certs", app.Name+".crt"), filepath.Join("../certs", app.Name+".key"))
-			err = os.WriteFile(filepath.Join(configDir, "certificates.yaml"), []byte(traefikConfig), 0755)
+`, filepath.Join(targetCertsPath, app.Name+".crt"), filepath.Join(targetCertsPath, app.Name+".key"))
+			err = os.WriteFile(filepath.Join(sourceConfigDir, app.Name+".yaml"), []byte(traefikConfig), 0755)
 			if err != nil {
 				util.Failed("failed to write traefik config file: %v", err)
 			}
@@ -1191,7 +1194,7 @@ tls:
 			if err != nil {
 				util.Warning("failed to copy traefik into docker volume ddev-global-cache/traefik: %v", err)
 			} else {
-				util.Debug("Copied traefik certs in %s to ddev-global-cache/traefik", certsDir)
+				util.Debug("Copied traefik certs in %s to ddev-global-cache/traefik", sourceCertsPath)
 			}
 
 		}
