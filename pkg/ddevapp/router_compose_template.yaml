@@ -9,7 +9,7 @@ services:
       # TODO: These probably ant to be changed and want to be specified elsewhere
       - --entrypoints.web.address=:80
       - --entrypoints.web-secure.address=:443
-      - --providers.file.directory=/mnt/ddev-global-cache/traefik/
+      - --providers.file.directory=/mnt/ddev-global-cache/traefik/config
       - --providers.file.watch=true
     {{ end }}
 
