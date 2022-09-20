@@ -1175,7 +1175,9 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 			}
 
 			baseName := filepath.Join(sourceCertsPath, app.Name)
-			out, err := exec.RunHostCommand("mkcert", "--cert-file", baseName+".crt", "--key-file", baseName+".key", strings.Join(hostnames, " "), "*.ddev.site", "127.0.0.1", "localhost", "*.ddev.local", "ddev-router", "ddev-router.ddev", "ddev-router.ddev_default")
+			c := []string{"--cert-file", baseName + ".crt", "--key-file", baseName + ".key", "*.ddev.site", "127.0.0.1", "localhost", "*.ddev.local", "ddev-router", "ddev-router.ddev", "ddev-router.ddev_default"}
+			c = append(c, hostnames...)
+			out, err := exec.RunHostCommand("mkcert", c...)
 			if err != nil {
 				util.Failed("failed to create certificates for app, check mkcert operation: %v", out)
 			}
