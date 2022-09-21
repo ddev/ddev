@@ -6,7 +6,6 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
 	"net"
 	"os"
 	"os/exec"
@@ -187,7 +186,6 @@ func ReadGlobalConfig() error {
 	if nodeps.NoBindMountsDefault == true {
 		DdevGlobalConfig.NoBindMounts = true
 	}
-
 	err = ValidateGlobalConfig()
 	if err != nil {
 		return err
