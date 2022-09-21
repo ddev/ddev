@@ -39,7 +39,7 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
 FROM base AS ddev-php-base
 ARG PHP_DEFAULT_VERSION="7.4"
 ENV DDEV_PHP_VERSION=$PHP_DEFAULT_VERSION
-ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3 php7.4 php8.0 php8.1"
+ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3 php7.4 php8.0 php8.1 php8.2"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 ENV YQ_VERSION=v4.26.1
 ENV DRUSH_VERSION=8.4.8
@@ -106,6 +106,8 @@ ENV php80_arm64=$php80_amd64
 
 ENV php81_amd64=$php80_amd64
 ENV php81_arm64=$php81_amd64
+ENV php82_amd64=$php80_amd64
+ENV php82_arm64=$php81_amd64
 
 RUN for v in $PHP_VERSIONS; do \
     targetarch=${TARGETPLATFORM#linux/}; \
