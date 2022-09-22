@@ -544,7 +544,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	}
 
 	if cmd.Flag("web-environment").Changed {
-		env := strings.Trim()webEnvironmentLocal)
+		env := strings.Trim(webEnvironmentLocal)
 		if env == "" {
 			app.WebEnvironment = []string{}
 		} else {
