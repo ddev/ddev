@@ -51,7 +51,7 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 		dirty = true
 	}
 	if cmd.Flag("web-environment").Changed {
-		env := strings.Replace(webEnvironmentGlobal, " ", "", -1)
+		env := strings.Trim(webEnvironmentGlobal)
 		if env == "" {
 			globalconfig.DdevGlobalConfig.WebEnvironment = []string{}
 		} else {
@@ -61,7 +61,7 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 	}
 
 	if cmd.Flag("web-environment-add").Changed {
-		env := strings.Replace(webEnvironmentGlobal, " ", "", -1)
+		env := strings.Trim(webEnvironmentGlobal)
 		if env == "" {
 			globalconfig.DdevGlobalConfig.WebEnvironment = []string{}
 		} else {

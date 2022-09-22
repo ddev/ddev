@@ -544,7 +544,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	}
 
 	if cmd.Flag("web-environment").Changed {
-		env := strings.Replace(webEnvironmentLocal, " ", "", -1)
+		env := strings.Trim()webEnvironmentLocal)
 		if env == "" {
 			app.WebEnvironment = []string{}
 		} else {
@@ -553,7 +553,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	}
 
 	if cmd.Flag("web-environment-add").Changed {
-		env := strings.Replace(webEnvironmentLocal, " ", "", -1)
+		env := strings.Trim(webEnvironmentLocal)
 		if env != "" {
 			envspl := strings.Split(env, ",")
 			conc := append(app.WebEnvironment, envspl...)
