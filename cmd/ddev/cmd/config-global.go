@@ -159,7 +159,7 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 		globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion = val
 		dirty = true
 	}
-	if cmd.Flag("project-tdl").Changed {
+	if cmd.Flag("project-tld").Changed {
 		val, _ := cmd.Flags().GetString("project-tld")
 		globalconfig.DdevGlobalConfig.ProjectTldGlobal = val
 		dirty = true
@@ -207,7 +207,7 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 	output.UserOut.Printf("required-docker-compose-version=%v", globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion)
 	output.UserOut.Printf("use-docker-compose-from-path=%v", globalconfig.DdevGlobalConfig.UseDockerComposeFromPath)
 	output.UserOut.Printf("no-bind-mounts=%v", globalconfig.DdevGlobalConfig.NoBindMounts)
-	output.UserOut.Printf("project-tdl=%v", globalconfig.DdevGlobalConfig.ProjectTldGlobal)
+	output.UserOut.Printf("project-tld=%v", globalconfig.DdevGlobalConfig.ProjectTldGlobal)
 }
 
 func init() {
