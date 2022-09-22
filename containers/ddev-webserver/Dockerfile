@@ -51,7 +51,7 @@ RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/
 FROM ddev-webserver-base as ddev-webserver-dev-base
 ENV MAILHOG_VERSION="1.0.2"
 ENV CAROOT /mnt/ddev-global-cache/mkcert
-ENV PHP_DEFAULT_VERSION="7.4"
+ENV PHP_DEFAULT_VERSION="8.0"
 
 RUN wget -q -O - https://packages.blackfire.io/gpg.key | apt-key add -
 RUN echo "deb http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
@@ -155,7 +155,7 @@ RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/* /tmp/ddev
 ### But for historical reasons, it's just ddev-webserver
 ### Build ddev-webserver by turning ddev-webserver-dev-base into one layer
 FROM scratch as ddev-webserver
-ENV PHP_DEFAULT_VERSION="7.4"
+ENV PHP_DEFAULT_VERSION="8.0"
 ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
@@ -181,7 +181,7 @@ CMD ["/start.sh"]
 ### This image is aimed at actual hardened production environments
 FROM ddev-webserver-base as ddev-webserver-prod-base
 ENV CAROOT /mnt/ddev-global-cache/mkcert
-ENV PHP_DEFAULT_VERSION="7.4"
+ENV PHP_DEFAULT_VERSION="8.0"
 
 RUN wget -q -O - https://packages.blackfire.io/gpg.key | apt-key add -
 RUN echo "deb http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
@@ -265,7 +265,7 @@ RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
 ### Build ddev-webserver-prod, the hardened version of ddev-webserver-base
 ### (Withut dev features, single layer)
 FROM scratch as ddev-webserver-prod
-ENV PHP_DEFAULT_VERSION="7.4"
+ENV PHP_DEFAULT_VERSION="8.0"
 ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
 ENV CAROOT /mnt/ddev-global-cache/mkcert
