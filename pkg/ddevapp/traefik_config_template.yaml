@@ -1,5 +1,30 @@
 #ddev-generated
 
+http:
+  routers:
+    {{.App.Name}}-http:
+      rule: "Host(`{{.PrimaryHostname}}`)"
+      service: "ddev-{{.App.Name}}-web-http"
+      tls: false
+      entrypoints:
+        - web
+    {{.App.Name}}-https:
+      rule: "Host(`{{.PrimaryHostname}}`)"
+      service: "ddev-{{.App.Name}}-web-https"
+      tls: true
+      entrypoints:
+        - web-secure
+
+  services:
+    ddev-{{.App.Name}}-web-http:
+      loadbalancer:
+        servers:
+          - url: http://ddev-{{.App.Name}}-web
+    ddev-{{.App.Name}}-web-https:
+      loadbalancer:
+        servers:
+          - url: http://ddev-{{.App.Name}}-web
+
 tls:
   certificates:
     - certFile: {{ .TargetCertsPath }}/{{ .App.Name }}.crt
