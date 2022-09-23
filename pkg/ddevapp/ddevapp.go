@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"github.com/Masterminds/sprig/v3"
 	"github.com/drud/ddev/pkg/versionconstants"
 	"golang.org/x/term"
 	"gopkg.in/yaml.v2"
@@ -1200,12 +1201,10 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 			if err != nil {
 				util.Failed("failed to create traefik config file: %v", err)
 			}
-			t, err := template.New("traefik_config_template.yaml").ParseFS(bundledAssets, "traefik_config_template.yaml")
+			t, err := template.New("traefik_config_template.yaml").Funcs(sprig.TxtFuncMap()).ParseFS(bundledAssets, "traefik_config_template.yaml")
 			if err != nil {
 				return fmt.Errorf("could not create template from traefik_config_template.yaml: %v", err)
 			}
-
-			//t, err = template.New("traefik_config_template.yaml").ParseFS(bundledAssets, "ssh_auth_compose_template.yaml")
 
 			err = t.Execute(f, templateData)
 			if err != nil {

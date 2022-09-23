@@ -3,7 +3,7 @@
 http:
   routers:
     {{.App.Name}}-http:
-      rule: "Host(`{{.PrimaryHostname}}`)"
+      rule: "Host({{ range $i, $h := .Hostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})"
       service: "ddev-{{.App.Name}}-web-http"
       tls: false
       entrypoints:
