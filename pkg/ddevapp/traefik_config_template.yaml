@@ -9,7 +9,7 @@ http:
       entrypoints:
         - web
     {{.App.Name}}-https:
-      rule: "Host(`{{.PrimaryHostname}}`)"
+      rule: "Host({{ range $i, $h := .Hostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})"
       service: "ddev-{{.App.Name}}-web-https"
       tls: true
       entrypoints:

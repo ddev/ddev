@@ -1185,13 +1185,13 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 			type traefikData struct {
 				App             *DdevApp
-				Names           []string
+				Hostnames       []string
 				PrimaryHostname string
 				TargetCertsPath string
 			}
 			templateData := traefikData{
 				App:             app,
-				Names:           app.GetHostnames(),
+				Hostnames:       app.GetHostnames(),
 				PrimaryHostname: app.GetHostname(),
 				TargetCertsPath: targetCertsPath,
 			}
