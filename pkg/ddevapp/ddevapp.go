@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"text/template"
 
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
@@ -1182,16 +1183,33 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 				util.Failed("failed to create certificates for app, check mkcert operation: %v", out)
 			}
 
-			traefikConfig := fmt.Sprintf(`
-tls:
-  certificates:
-    - certFile: %s
-      keyFile: %s
-`, filepath.Join(targetCertsPath, app.Name+".crt"), filepath.Join(targetCertsPath, app.Name+".key"))
-			err = os.WriteFile(filepath.Join(sourceConfigDir, app.Name+".yaml"), []byte(traefikConfig), 0755)
-			if err != nil {
-				util.Failed("failed to write traefik config file: %v", err)
+			type traefikData struct {
+				App             *DdevApp
+				Names           []string
+				TargetCertsPath string
 			}
+			templateData := traefikData{
+				App:             app,
+				Names:           app.GetHostnames(),
+				TargetCertsPath: targetCertsPath,
+			}
+
+			f, err := os.Create(filepath.Join(sourceConfigDir, app.Name+".yaml"))
+			if err != nil {
+				util.Failed("failed to create traefik config file: %v", err)
+			}
+			t, err := template.New("traefik_config_template.yaml").ParseFS(bundledAssets, "traefik_config_template.yaml")
+			if err != nil {
+				return fmt.Errorf("could not create template from traefik_config_template.yaml: %v", err)
+			}
+
+			//t, err = template.New("traefik_config_template.yaml").ParseFS(bundledAssets, "ssh_auth_compose_template.yaml")
+
+			err = t.Execute(f, templateData)
+			if err != nil {
+				return fmt.Errorf("could not parse traefik_config_template.yaml with templatedate='%v':: %v", templateData, err)
+			}
+
 			err = dockerutil.CopyIntoVolume(tmpDir, "ddev-global-cache", "traefik", uid, "", false)
 			if err != nil {
 				util.Warning("failed to copy traefik into docker volume ddev-global-cache/traefik: %v", err)

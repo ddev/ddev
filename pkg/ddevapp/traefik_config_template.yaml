@@ -1,0 +1,6 @@
+#ddev-generated
+
+tls:
+  certificates:
+    - certFile: {{ .TargetCertsPath }}/{{ .App.Name }}.crt
+      keyFile: {{ .TargetCertsPath }}/{{ .App.Name }}.key

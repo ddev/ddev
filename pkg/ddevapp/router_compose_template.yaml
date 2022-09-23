@@ -5,7 +5,7 @@ services:
     command:
       - --api.insecure=true
       - --providers.docker=true
-      - --providers.docker.network=ddev_default
+      #- --providers.docker.network=ddev_default
       # TODO: These probably ant to be changed and want to be specified elsewhere
       - --entrypoints.web.address=:80
       - --entrypoints.web-secure.address=:443
@@ -29,8 +29,9 @@ services:
     - 9999:8080
     {{ end }}
     volumes:
-      # Different for traefik
-      - /var/run/docker.sock:/var/run/docker.sock
+      {{ if not .use_traefik }}
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      {{ end }}
       - ddev-global-cache:/mnt/ddev-global-cache:rw
       {{ if .letsencrypt }}
       - ddev-router-letsencrypt:/etc/letsencrypt:rw
