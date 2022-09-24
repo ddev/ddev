@@ -17,7 +17,9 @@ sudo apt-get install -qq zip jq expect nfs-kernel-server build-essential curl gi
 
 curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip && sudo unzip -o -d /usr/local/bin /tmp/ngrok.zip
 
-if [ ! -d /home/linuxbrew/.linuxbrew/bin ] ; then
+# TODO: We don't need this line, just for debugging
+ls -l /home/linuxbrew/.linuxbrew/bin || true
+if [ ! -f /home/linuxbrew/.linuxbrew/bin/brew ] ; then
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
 fi
 
