@@ -22,7 +22,9 @@ ls -l /home/linuxbrew/.linuxbrew/bin || true
 if [ ! -f /home/linuxbrew/.linuxbrew/bin/brew ] ; then
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
 fi
-
+export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
+ls -lL $(which brew)
+brew --version
 echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc
 
 # Without this .curlrc CircleCI linux image doesn't respect mkcert certs
