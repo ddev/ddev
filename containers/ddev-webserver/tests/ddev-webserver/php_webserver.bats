@@ -14,6 +14,7 @@
 }
 
 @test "enable and disable xdebug for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+    if [ "${PHP_VERSION}" = "8.2" ]; then skip "Skipping for PHP_VERSION=8.2 because no xdebug yet"; fi
     CURRENT_ARCH=$(../get_arch.sh)
 
     docker exec -t $CONTAINER_NAME enable_xdebug
@@ -93,8 +94,8 @@
     ;;
   8.2)
     # TODO: Update this list as more extensions become available
-    extensions="bcmath bz2 curl cli common fpm gd intl ldap mbstring mysql opcache pgsql readline soap sqlite3 xml zip"
-
+    # Still to come: apcu imagick memcached redis uploadprogress xdebug xhprof xmlrpc
+    extensions="bcmath bz2 curl gd intl json ldap mbstring mysqli pgsql readline soap sqlite3  xml zip"
   esac
 
   run docker exec -t $CONTAINER_NAME enable_xdebug
