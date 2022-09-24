@@ -26,11 +26,12 @@ which brew
 ls -lL "$(which brew)"
 brew --version || exit 2
 echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc
+tail ~/.bashrc
 
 # Without this .curlrc CircleCI linux image doesn't respect mkcert certs
 echo "capath=/etc/ssl/certs/" >>~/.curlrc
 
-. ~/.bashrc
+source ~/.bashrc
 
 brew tap drud/ddev >/dev/null
 for item in gcc@5 golang golangci-lint mkcert; do
@@ -39,7 +40,7 @@ done
 
 mkcert -install
 
-git clone --branch v1.2.1 https://github.com/bats-core/bats-core.git /tmp/bats-core && pushd /tmp/bats-core >/dev/null && sudo ./install.sh /usr/local
+git clone --branch v1.2.1 https://github.com/bats-core/bats-core.git /tmp/bats-core && pushd /tmp/bats-core >/dev/null && sudo ./install.sh /usr/local >/dev/null
 
 primary_ip=$(ip route get 1 | awk '{gsub("^.*src ",""); print $1; exit}')
 

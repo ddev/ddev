@@ -55,7 +55,9 @@ jobs:
 
       - name: Build and test container ${{ matrix.containers }}
         run: |
+          source ~/.bashrc
           docker version
+          mkcert --version
           set -eu -o pipefail
 
           if [[ "${{ matrix.containers }}" == "dbserver" ]]; then
