@@ -17,14 +17,14 @@ sudo apt-get install -qq zip jq expect nfs-kernel-server build-essential curl gi
 
 curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip && sudo unzip -o -d /usr/local/bin /tmp/ngrok.zip
 
-# TODO: We don't need this line, just for debugging
-ls -l /home/linuxbrew/.linuxbrew/bin || true
-if [ ! -f /home/linuxbrew/.linuxbrew/bin/brew ] ; then
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
+if [ ! -f /home/linuxbrew/.linuxbrew/Homebrew/bin/brew ] ; then
+  rm -rf /home/linuxbrew
+  sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
 fi
 export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
-ls -lL $(which brew)
-brew --version
+which brew
+ls -lL "$(which brew)"
+brew --version || exit 2
 echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc
 
 # Without this .curlrc CircleCI linux image doesn't respect mkcert certs
