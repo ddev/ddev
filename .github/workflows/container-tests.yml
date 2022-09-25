@@ -38,6 +38,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+
       - name: Install Docker and deps (Linux)
         if: matrix.os == 'ubuntu-20.04'
         run: ./.github/workflows/linux-setup.sh
@@ -48,7 +55,9 @@ jobs:
 
       - name: Build and test container ${{ matrix.containers }}
         run: |
+          source ~/.bashrc
           docker version
+          mkcert --version
           set -eu -o pipefail
 
           if [[ "${{ matrix.containers }}" == "dbserver" ]]; then

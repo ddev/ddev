@@ -14,6 +14,7 @@
 }
 
 @test "enable and disable xdebug for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+    if [ "${PHP_VERSION}" = "8.2" ]; then skip "Skipping for PHP_VERSION=8.2 because no xdebug yet"; fi
     CURRENT_ARCH=$(../get_arch.sh)
 
     docker exec -t $CONTAINER_NAME enable_xdebug
@@ -28,13 +29,9 @@
     curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xdebug.php | grep "Xdebug is disabled"
 }
 
-@test "verify that xdebug is enabled by default when the image is not run with start.sh php${PHP_VERSION}" {
-  CURRENT_ARCH=$(../get_arch.sh)
-
-  docker run  -e "DDEV_PHP_VERSION=${PHP_VERSION}" --rm $DOCKER_IMAGE bash -c 'php --version | grep "with Xdebug"'
-}
-
 @test "enable and disable xhprof for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
+    # TODO: Add back in.
+    if [ "${PHP_VERSION}" = "8.2" ]; then skip "xhprof not yet available for 8.2"; fi
     CURRENT_ARCH=$(../get_arch.sh)
 
     docker exec -t $CONTAINER_NAME enable_xhprof
@@ -43,12 +40,6 @@
     docker exec -t $CONTAINER_NAME disable_xhprof
     docker exec -t $CONTAINER_NAME php --re xhprof | grep "does not exist"
     curl -s 127.0.0.1:$HOST_HTTP_PORT/test/xhprof.php | grep "XHProf is disabled"
-}
-
-@test "verify that xhprof is enabled by default when the image is not run with start.sh php${PHP_VERSION}" {
-  CURRENT_ARCH=$(../get_arch.sh)
-
-  docker run  -e "DDEV_PHP_VERSION=${PHP_VERSION}" --rm $DOCKER_IMAGE bash -c 'php --re xhprof | grep -v "\"xhprof\" does not exist"'
 }
 
 @test "verify mailhog for ${WEBSERVER_TYPE} php${PHP_VERSION}" {
@@ -99,8 +90,12 @@
     extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring memcached mysqli pgsql readline redis soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
     ;;
   8.1)
+    extensions="apcu bcmath bz2 curl gd imagick intl json ldap mbstring memcached mysqli pgsql readline redis soap sqlite3 uploadprogress xhprof xml xmlrpc zip"
+    ;;
+  8.2)
     # TODO: Update this list as more extensions become available
-    extensions="apcu bcmath bz2 curl gd imagick intl ldap mbstring mysql opcache pgsql readline soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
+    # Still to come: apcu imagick memcached redis uploadprogress xdebug xhprof xmlrpc
+    extensions="bcmath bz2 curl gd intl json ldap mbstring mysqli pgsql readline soap sqlite3  xml zip"
   esac
 
   run docker exec -t $CONTAINER_NAME enable_xdebug

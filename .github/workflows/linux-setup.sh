@@ -12,21 +12,26 @@ if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
   set -x
 fi
 
-sudo apt-get update -qq
-sudo apt-get install -qq zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev postgresql-client
+sudo apt-get update -qq >/dev/null
+sudo apt-get install -qq zip jq expect nfs-kernel-server build-essential curl git libnss3-tools libcurl4-gnutls-dev postgresql-client >/dev/null
 
 curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip && sudo unzip -o -d /usr/local/bin /tmp/ngrok.zip
 
-if [ ! -d /home/linuxbrew/.linuxbrew/bin ] ; then
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
+if [ ! -f /home/linuxbrew/.linuxbrew/Homebrew/bin/brew ] ; then
+  rm -rf /home/linuxbrew
+  sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
 fi
-
+export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
+which brew
+ls -lL "$(which brew)"
+brew --version || exit 2
 echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc
+tail ~/.bashrc
 
 # Without this .curlrc CircleCI linux image doesn't respect mkcert certs
 echo "capath=/etc/ssl/certs/" >>~/.curlrc
 
-. ~/.bashrc
+source ~/.bashrc
 
 brew tap drud/ddev >/dev/null
 for item in gcc@5 golang golangci-lint mkcert; do
@@ -35,7 +40,7 @@ done
 
 mkcert -install
 
-git clone --branch v1.2.1 https://github.com/bats-core/bats-core.git /tmp/bats-core && pushd /tmp/bats-core >/dev/null && sudo ./install.sh /usr/local
+git clone --branch v1.2.1 https://github.com/bats-core/bats-core.git /tmp/bats-core && pushd /tmp/bats-core >/dev/null && sudo ./install.sh /usr/local >/dev/null
 
 primary_ip=$(ip route get 1 | awk '{gsub("^.*src ",""); print $1; exit}')
 
