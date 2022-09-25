@@ -53,7 +53,7 @@ jobs:
       GOTEST_SHORT: "8"
     steps:
       - uses: actions/checkout@v3
-
+      - run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
       - name: Install Docker and deps (Linux)
         if: matrix.os == 'ubuntu-20.04'
         run: ./.github/workflows/linux-setup.sh

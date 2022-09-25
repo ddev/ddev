@@ -6,6 +6,8 @@ set -o errexit
 
 set -x
 
+echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
+
 if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
   set +x
   echo "${DOCKERHUB_PULL_PASSWORD}" | docker login --username "${DOCKERHUB_PULL_USERNAME}" --password-stdin
@@ -22,11 +24,7 @@ if [ ! -f /home/linuxbrew/.linuxbrew/Homebrew/bin/brew ] ; then
   sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
 fi
 export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
-which brew
-ls -lL "$(which brew)"
-brew --version || exit 2
 echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc
-tail ~/.bashrc
 
 # Without this .curlrc CircleCI linux image doesn't respect mkcert certs
 echo "capath=/etc/ssl/certs/" >>~/.curlrc
