@@ -159,15 +159,8 @@ Instructions for Mutagen and NFS are below.
 
     #### Advanced Mutagen Troubleshooting
 
-    Most people get all the information they need about mutagen by running `ddev mutagen monitor` to see the results. However, Mutagen has full logging. Here's how to run it:
+    Most people get all the information they need about mutagen by running `ddev mutagen monitor` to see the results. However, Mutagen has full logging. You can run it with `ddev mutagen logs`.
 
-    * `killall mutagen`
-    * `export MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory`
-    * `export MUTAGEN_LOG_LEVEL=debug` or `export MUTAGEN_LOG_LEVEL=trace`
-    * `~/.ddev/bin/mutagen daemon run`
-    * Work with your project various actions and watch the output.
-
-    When you're done, you can `ddev poweroff` and `<ctrl-c>` the running mutagen daemon to get back to normal.
 
     ### Mutagen Strategies and Design Considerations
 
