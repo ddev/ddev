@@ -1134,12 +1134,19 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		if router == nil {
 			// Copy ca certs into ddev-global-cache/mkcert
 			if caRoot != "" {
-				uid, _, _ := util.GetContainerUIDGid()
-				err = dockerutil.CopyIntoVolume(caRoot, "ddev-global-cache", "mkcert", uid, "", false)
-				if err != nil {
-					util.Warning("failed to copy root CA into docker volume ddev-global-cache/mkcert: %v", err)
-				} else {
-					util.Success("Pushed mkcert rootca certs to ddev-global-cache/mkcert")
+				if !globalconfig.DdevGlobalConfig.UseTraefik {
+					uid, _, _ := util.GetContainerUIDGid()
+					err = dockerutil.CopyIntoVolume(caRoot, "ddev-global-cache", "mkcert", uid, "", false)
+					if err != nil {
+						util.Warning("failed to copy root CA into docker volume ddev-global-cache/mkcert: %v", err)
+					} else {
+						util.Success("Pushed mkcert rootca certs to ddev-global-cache/mkcert")
+					}
+				} else { // If using traefik we don't need the CA, just the certs and such
+					err = pushDefaultTraefikConfig()
+					if err != nil {
+						return err
+					}
 				}
 			}
 		}

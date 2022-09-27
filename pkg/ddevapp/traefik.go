@@ -6,6 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"os"
@@ -13,6 +14,113 @@ import (
 	"path/filepath"
 	"text/template"
 )
+
+func pushDefaultTraefikConfig() error {
+	globalTraefikDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
+	err := os.MkdirAll(globalTraefikDir, 0755)
+	if err != nil {
+		return fmt.Errorf("Failed to create global .ddev/traefik directory: %v", err)
+	}
+	sourceCertsPath := filepath.Join(globalTraefikDir, "certs")
+	sourceConfigDir := filepath.Join(globalTraefikDir, "config")
+	targetCertsPath := path.Join("/mnt/ddev-global-cache/traefik/certs")
+
+	err = os.MkdirAll(sourceCertsPath, 0755)
+	if err != nil {
+		return fmt.Errorf("Failed to create global traefik certs dir: %v", err)
+	}
+	err = os.MkdirAll(sourceConfigDir, 0755)
+	if err != nil {
+		return fmt.Errorf("Failed to create global traefik config dir: %v", err)
+	}
+
+	// Assume that the #ddev-generated exists in file unless it doesn't
+	sigExists := true
+	for _, pemFile := range []string{"default_cert.crt", "default_key.key"} {
+		origFile := filepath.Join(sourceCertsPath, pemFile)
+		if fileutil.FileExists(origFile) {
+			// Check to see if file has #ddev-generated in it, meaning we can recreate it.
+			sigExists, err = fileutil.FgrepStringInFile(origFile, nodeps.DdevFileSignature)
+			if err != nil {
+				return err
+			}
+			// If either of the files has #ddev-generated, we will respect both
+			if !sigExists {
+				break
+			}
+		}
+	}
+	if sigExists {
+		c := []string{"--cert-file", filepath.Join(sourceCertsPath, "default_cert.crt"), "--key-file", filepath.Join(sourceCertsPath, "default_key.key"), "*.ddev.site", "127.0.0.1", "localhost", "*.ddev.local", "ddev-router", "ddev-router.ddev", "ddev-router.ddev_default"}
+		out, err := exec.RunHostCommand("mkcert", c...)
+		if err != nil {
+			util.Failed("failed to create certificates for app, check mkcert operation: %v", out)
+		}
+
+		// Prepend #ddev-generated in generated crt and key files
+		for _, pemFile := range []string{"default_cert.crt", "default_key.key"} {
+			origFile := filepath.Join(sourceCertsPath, pemFile)
+
+			contents, err := fileutil.ReadFileIntoString(origFile)
+			if err != nil {
+				return fmt.Errorf("Failed to read file %v: %v", origFile, err)
+			}
+			contents = nodeps.DdevFileSignature + "\n" + contents
+			err = fileutil.TemplateStringToFile(contents, nil, origFile)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	type traefikData struct {
+		App             *DdevApp
+		Hostnames       []string
+		PrimaryHostname string
+		TargetCertsPath string
+	}
+	templateData := traefikData{
+		TargetCertsPath: targetCertsPath,
+	}
+
+	traefikYamlFile := filepath.Join(sourceConfigDir, "default_config.yaml")
+	sigExists = true
+	if fileutil.FileExists(traefikYamlFile) {
+		// Check to see if file has #ddev-generated in it, meaning we can recreate it.
+		sigExists, err = fileutil.FgrepStringInFile(traefikYamlFile, nodeps.DdevFileSignature)
+		if err != nil {
+			return err
+		}
+	}
+	if !sigExists {
+		util.Debug("Not creating %s because it exists and is managed by user", traefikYamlFile)
+	} else {
+		f, err := os.Create(traefikYamlFile)
+		if err != nil {
+			util.Failed("failed to create traefik config file: %v", err)
+		}
+		t, err := template.New("traefik_global_config_template.yaml").Funcs(sprig.TxtFuncMap()).ParseFS(bundledAssets, "traefik_global_config_template.yaml")
+		if err != nil {
+			return fmt.Errorf("could not create template from traefik_global_config_template.yaml: %v", err)
+		}
+
+		err = t.Execute(f, templateData)
+		if err != nil {
+			return fmt.Errorf("could not parse traefik_global_config_template.yaml with templatedate='%v':: %v", templateData, err)
+		}
+	}
+
+	uid, _, _ := util.GetContainerUIDGid()
+
+	err = dockerutil.CopyIntoVolume(globalTraefikDir, "ddev-global-cache", "traefik", uid, "", false)
+	if err != nil {
+		util.Warning("failed to copy global traefik config into docker volume ddev-global-cache/traefik: %v", err)
+	} else {
+		util.Debug("Copied global traefik config in %s to ddev-global-cache/traefik", sourceCertsPath)
+	}
+
+	return nil
+}
 
 // configureTraefik configures the dynamic configuration and creates cert+key
 // in .ddev/traefik
