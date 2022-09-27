@@ -17,7 +17,6 @@ import (
 // configureTraefik configures the dynamic configuration and creates cert+key
 // in .ddev/traefik
 func configureTraefik(app *DdevApp) error {
-
 	hostnames := app.GetHostnames()
 	projectTraefikDir := app.GetConfigPath("traefik")
 	err := os.MkdirAll(projectTraefikDir, 0755)

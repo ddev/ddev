@@ -2219,7 +2219,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	// If project is running, clean up ddev-global-cache
 	if status == SiteRunning && removeData {
 		_, _, err = app.Exec(&ExecOpts{
-			Cmd: "rm -rf /mnt/ddev-global-cache/*/${HOSTNAME}",
+			Cmd: fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/${HOSTNAME} /mnt/ddev-global-cache/traefik/*/%s.*", app.Name),
 		})
 		if err != nil {
 			util.Warning("Unable to clean up ddev-global-cache: %v", err)
