@@ -503,6 +503,16 @@ func StopMutagenDaemon() {
 	}
 }
 
+// StartMutagenDaemon will make sure the daemon is running
+func StartMutagenDaemon() {
+	if fileutil.FileExists(globalconfig.GetMutagenPath()) {
+		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "start")
+		if err != nil {
+			util.Warning("Failed to run mutagen daemon start: %v, out=%s", err, out)
+		}
+	}
+}
+
 // DownloadMutagenIfNeeded downloads the proper version of mutagen
 // if it's either not yet installed or has the wrong version.
 func DownloadMutagenIfNeeded(app *DdevApp) error {

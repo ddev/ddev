@@ -17,23 +17,6 @@ var MutagenLogsCmd = &cobra.Command{
 	Short:   "Show mutagen logs for debugging",
 	Example: `"ddev mutagen logs"`,
 	Run: func(cmd *cobra.Command, args []string) {
-		projectName := ""
-		if len(args) > 1 {
-			util.Failed("This command only takes one optional argument: project-name")
-		}
-
-		if len(args) == 1 {
-			projectName = args[0]
-		}
-
-		app, err := ddevapp.GetActiveApp(projectName)
-		if err != nil {
-			util.Failed("Failed to get active project: %v", err)
-		}
-		if !(app.IsMutagenEnabled()) {
-			util.Warning("Mutagen is not enabled on project %s", app.Name)
-			return
-		}
 
 		ddevapp.StopMutagenDaemon()
 		_ = os.Setenv("MUTAGEN_LOG_LEVEL", "trace")
@@ -46,7 +29,7 @@ var MutagenLogsCmd = &cobra.Command{
 			c := exec.Command(globalconfig.GetMutagenPath(), "daemon", "run")
 			c.Stdout = os.Stdout
 			c.Stderr = os.Stderr
-			err = c.Run()
+			err := c.Run()
 			if err != nil {
 				util.Warning("mutagen daemon run failed with %v", err)
 			}
@@ -54,11 +37,8 @@ var MutagenLogsCmd = &cobra.Command{
 		}()
 		<-done
 
-		util.Success("Completed mutagen logs, now resuming normal mutagen sync")
-		err = ddevapp.CreateOrResumeMutagenSync(app)
-		if err != nil {
-			util.Failed("Unable to resume mutagen sync: %v", err)
-		}
+		util.Success("Completed mutagen logs, now restarting normal mutagen daemon")
+		ddevapp.StartMutagenDaemon()
 	},
 }
 
