@@ -15,7 +15,7 @@ import (
 	"text/template"
 )
 
-func pushDefaultTraefikConfig() error {
+func pushGlobalTraefikConfig() error {
 	globalTraefikDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
 	err := os.MkdirAll(globalTraefikDir, 0755)
 	if err != nil {

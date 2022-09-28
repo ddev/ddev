@@ -1143,7 +1143,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 						util.Success("Pushed mkcert rootca certs to ddev-global-cache/mkcert")
 					}
 				} else { // If using traefik we don't need the CA, just the certs and such
-					err = pushDefaultTraefikConfig()
+					err = pushGlobalTraefikConfig()
 					if err != nil {
 						return err
 					}
