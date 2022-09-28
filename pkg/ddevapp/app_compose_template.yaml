@@ -203,6 +203,7 @@ services:
     - TZ={{ .Timezone }}
     - USER={{ .Username }}
     - VIRTUAL_HOST=${DDEV_HOSTNAME}
+    - YARN_CACHE_DIR=/mnt/ddev-global-cache/yarn/${DDEV_PROJECT}-web
     {{ range $env := .WebEnvironment }}- "{{ $env }}"
     {{ end }}
     labels:

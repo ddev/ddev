@@ -79,7 +79,6 @@ mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME
 ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ${NVM_DIR:-${HOME}/.nvm}
 if [ ! -f ${NVM_DIR:-${HOME}/.nvm}/nvm.sh ]; then (install_nvm.sh || true); fi
 
-yarn config set cache-folder /mnt/ddev-global-cache/yarn/${HOSTNAME}
 npm config set cache /mnt/ddev-global-cache/npm/${HOSTNAME}
 
 # chown of ddev-global-cache must be done with privileged container in app.Start()

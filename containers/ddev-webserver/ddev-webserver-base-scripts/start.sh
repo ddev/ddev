@@ -80,7 +80,6 @@ sudo mkdir -p ${TERMINUS_CACHE_DIR}
 
 sudo mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},nvm_dir/${HOSTNAME},npm/${HOSTNAME},yarn/${HOSTNAME}}
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ /var/lib/php
-yarn config set cache-folder /mnt/ddev-global-cache/yarn/${HOSTNAME} || yarn config set cacheFolder /mnt/ddev-global-cache/yarn/${HOSTNAME} || true
 npm config set cache /mnt/ddev-global-cache/npm/${HOSTNAME} || true
 
 ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ${NVM_DIR:-${HOME}/.nvm}
