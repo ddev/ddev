@@ -29,9 +29,9 @@ Gitpod.io provides a quick preconfigured ddev experience in the browser, so you 
 To just open and work on ddev you can use the button below.
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/drud/ddev)
 
-If you want to run a web project in there, you can just check it out into `/workspace/<yourproject>` and use it as usual. The things you're familiar with work as expected, except that `ddev-router` does not run, and
+If you want to run a web project in there, you can just check it out into `/workspace/<yourproject>` and use it as usual. The things you're familiar with work as expected, except that `ddev-router` does not run.
 
-A dummy project for gitpod is provided by default in /workspace/d9simple. You can just `ddev poweroff` and use your own.
+A dummy project for gitpod is provided by default in /workspace/d9simple. If you are testing your own project, you will need to delete it to free up reserved hoste ports by doing `ddev delete -Oy d9simple` and then you can `ddev start` your own.
 
 ## Making changes to ddev images
 
