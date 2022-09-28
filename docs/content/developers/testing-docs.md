@@ -7,9 +7,9 @@ When you are going to make any changes to the documentation it is recommended th
 
 On any page in the docs
 
-1. Click the pencil in the upper right. That will take you to the the right page on GitHub. 
-2. Click the pencil button on GitHub and follow the instructions to create your change. 
-3. Save your changes and follow the prompts to create a PR. 
+1. Click the pencil in the upper right. That will take you to the the right page on GitHub.
+2. Click the pencil button on GitHub and follow the instructions to create your change.
+3. Save your changes and follow the prompts to create a PR.
 4. In the checks on your PR, click the "details" link by "docs/readthedocs.org:ddev" to browse the docs build created by your PR.
 
 ## Fork / clone the DDEV repository
