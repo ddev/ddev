@@ -3,6 +3,15 @@
 This section is designed for people who want to contribute to the DDEV documentation.
 When you are going to make any changes to the documentation it is recommended that you test them locally to see what your changes look like.
 
+## Fix Docs Using Web Browser
+
+On any page in the docs
+
+1. Click the pencil in the upper right. That will take you to the the right page on GitHub. 
+2. Click the pencil button on GitHub and follow the instructions to create your change. 
+3. Save your changes and follow the prompts to create a PR. 
+4. In the checks on your PR, click the "details" link by "docs/readthedocs.org:ddev" to browse the docs build created by your PR.
+
 ## Fork / clone the DDEV repository
 
 To start making changes you'll need a local copy of the DDEV documentation, so [fork the DDEV repository](https://github.com/drud/ddev/fork) as that's where the documentation lives.
