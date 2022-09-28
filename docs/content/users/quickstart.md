@@ -341,7 +341,74 @@ Here's a quickstart instructions for a number of different environments:
     
     This way we only need to change the value of `DB_CONNECTION` to `ddev` in the `.env` to work with the `db` service.
     This is very handy if you have a local database installed and you want to switch between the connections faster by changing only one variable in `.env`
+    
+    ### Using Vite
+    The default Laravel vite template will not work with DDEV. To make DDEV and Vite play nicely a few additionaly steps are required.
 
+    #### Setup a Vite server
+    Install the ddev-viteserve addon.
+    ```bash
+    ddev get torenware/ddev-viteserve
+    ```
+    In `.ddev/.env` change `VITE_PROJECT_DIR=frontend` to `VITE_PROJECT_DIR=.`
+
+    Next add the following line to the post-install hook in your `.ddev/config.yaml`
+    ```bash
+    hooks:
+        post-start:
+            - exec: .ddev/commands/web/vite-serve
+    ```
+    This will spin up a vite development server on port `5173` whenever you `ddev restart`
+
+    Next expose your DDEV hostname by adding the following to your `.ddev/config.yaml`
+    ```bash
+    web_environment:
+        - VITE_APP_URL=${DDEV_HOSTNAME}
+    ```
+
+    #### Configuring Laravel
+    
+    The default `vite.config.js` will not yet work with our DDEV environment. Lets start by installing the vite and laravel-vite-plugin
+    ```
+    ddev npm i -D laravel-vite-plugin vite
+    ```
+    Then replace the default template with the following. _Note that this script uses the exposed VITE_APP_URL from earlier_
+    ```js
+    import laravel from 'laravel-vite-plugin';
+    import { defineConfig, loadEnv } from 'vite'
+    
+    export default defineConfig(({ command, mode }) => {
+        //Load the env variables that are prefixed with VITE_
+        const env = loadEnv(mode, process.cwd(), 'VITE_')
+        return {
+            server: {
+                hmr: {
+                protocol: 'wss',
+                host: env.VITE_APP_URL,
+                },
+            },
+            plugins: [
+                laravel({
+                    input: ['resources/css/app.css', 'resources/js/app.js'],
+                    refresh: true,
+                }),
+            ],
+        }
+    })
+    ```
+    You are free to add any plugins (like Vue) to the plugin array. **It is wise, however, to not make changes to the server properties as they often cause cors errors.**
+    
+    Finally add the following to the head of the`welcome.blade.php` file
+    ```php
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    ```
+
+    #### Finalize
+    To wrap things up run a `ddev restart`.
+
+    **Please note** that running npm run dev is **NOT** needed as this only runs the `vite` command which just attempts to run a local Vite server. The viteserve addon will handle the vite side of things for us. 
+
+    A simple way to test if vite is working propery is to make a change to `resources/js/app.js`. These changes should be made nearly instantly.
 === "Craft CMS"
 
     ## Craft CMS
