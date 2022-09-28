@@ -343,7 +343,7 @@ Here's a quickstart instructions for a number of different environments:
     This is very handy if you have a local database installed and you want to switch between the connections faster by changing only one variable in `.env`
     
     ### Using Vite
-    The default Laravel vite template will not work with DDEV. To make DDEV and Vite play nicely a few additionaly steps are required.
+    The default Laravel Vite template will not work with DDEV. To make DDEV and Vite play nicely a few additionaly steps are required.
 
     #### Setup a Vite server
     Install the ddev-viteserve addon.
@@ -358,7 +358,7 @@ Here's a quickstart instructions for a number of different environments:
         post-start:
             - exec: .ddev/commands/web/vite-serve
     ```
-    This will spin up a vite development server on port `5173` whenever you `ddev restart`
+    This will spin up a Vite development server on port `5173` whenever you `ddev restart`
 
     Next expose your DDEV hostname by adding the following to your `.ddev/config.yaml`
     ```bash
@@ -368,7 +368,7 @@ Here's a quickstart instructions for a number of different environments:
 
     #### Configuring Laravel
     
-    The default `vite.config.js` will not yet work with our DDEV environment. Lets start by installing the vite and laravel-vite-plugin
+    The default `vite.config.js` will not yet work with our DDEV environment. Lets start by installing the Vite and laravel-vite-plugin
     ```
     ddev npm i -D laravel-vite-plugin vite
     ```
@@ -406,9 +406,9 @@ Here's a quickstart instructions for a number of different environments:
     #### Finalize
     To wrap things up run a `ddev restart`.
 
-    **Please note** that running npm run dev is **NOT** needed as this only runs the `vite` command which just attempts to run a local Vite server. The viteserve addon will handle the vite side of things for us. 
+    **Please note** that running npm run dev is **NOT** needed as this only runs the `vite` command which just attempts to run a local Vite server. The viteserve addon will handle the Vite side of things for us. 
 
-    A simple way to test if vite is working propery is to make a change to `resources/js/app.js`. These changes should be made nearly instantly.
+    A simple way to test if Vite is working properly is to make a change to `resources/js/app.js`. These changes should be made nearly instantly.
 === "Craft CMS"
 
     ## Craft CMS
