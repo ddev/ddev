@@ -54,11 +54,8 @@ var MutagenLogsCmd = &cobra.Command{
 		}()
 		<-done
 
-		util.Success("Completed mutagen logs, now resuming normal mutagen sync")
-		err = ddevapp.CreateOrResumeMutagenSync(app)
-		if err != nil {
-			util.Failed("Unable to resume mutagen sync: %v", err)
-		}
+		util.Success("Completed mutagen logs, now restarting normal mutagen daemon")
+		ddevapp.StartMutagenDaemon()
 	},
 }
 
