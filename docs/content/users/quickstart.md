@@ -351,6 +351,8 @@ Here's a quickstart instructions for a number of different environments:
     ddev get torenware/ddev-viteserve
     ```
     In `.ddev/.env` change `VITE_PROJECT_DIR=frontend` to `VITE_PROJECT_DIR=.`
+    
+    In `.ddev/.env` add `VITE_JS_PACKAGE_MGR=npm`. This tells `ddev-viteserve` to use `npm` to manage packages, and helps keep dependencies in sync.
 
     Next add the following line to the post-install hook in your `.ddev/config.yaml`
     ```bash
