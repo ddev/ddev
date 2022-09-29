@@ -611,6 +611,8 @@ via
 vpnkit
 vscode
 vset
+vite
+viteserve
 web
 webenv
 webhosting
