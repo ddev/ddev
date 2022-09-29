@@ -63,7 +63,8 @@ ddev poweroff
 echo "Existing docker containers: " && docker ps -a
 
 PROJECT_DIR=../${PROJECT_NAME}
-mkdir -p "${PROJECT_DIR}/web" && cd "${PROJECT_DIR}"
+mkdir -p "${PROJECT_DIR}/web" || (echo "Unable to create test project at ${PROJECT_DIR}/web, please check ownership and permissions" && exit 2 )
+cd "${PROJECT_DIR}" || exit 3
 
 cat <<END >web/index.php
 <?php
