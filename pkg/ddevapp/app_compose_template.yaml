@@ -204,7 +204,6 @@ services:
     - TZ={{ .Timezone }}
     - USER={{ .Username }}
     - VIRTUAL_HOST=${DDEV_HOSTNAME}
-    - YARN_CACHE_FOLDER=/mnt/ddev-global-cache/yarn
     {{ range $env := .WebEnvironment }}- "{{ $env }}"
     {{ end }}
     labels:
