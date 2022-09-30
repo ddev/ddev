@@ -613,6 +613,8 @@ vpnkit
 vscode
 vset
 vite
+vite's
+vite's
 viteserve
 vue
 web
