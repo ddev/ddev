@@ -3,7 +3,7 @@
 log:
   level: DEBUG
 api:
-  insecure=true
+  insecure: true
 providers:
   file:
     directory: /mnt/ddev-global-cache/traefik/config

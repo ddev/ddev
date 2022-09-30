@@ -6,7 +6,7 @@ http:
     {{ if not $s.HTTPS }}
     {{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-http:
       rule: "Host({{ range $i, $h := $hostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})"
-      service: "{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-http"
+      service: "{{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-http"
       tls: false
       entrypoints:
         - http-{{$s.ExternalPort}}
@@ -14,7 +14,7 @@ http:
     {{$appname := .App.Name}}{{$hostnames := .Hostnames}}{{ range $s := .RoutingTable }}{{ if $s.HTTPS }}
     {{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-https:
       rule: "Host({{ range $i, $h := $hostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})"
-      service: "{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-https"
+      service: "{{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-https"
       tls: true
       entrypoints:
         - http-{{$s.ExternalPort}}
@@ -30,9 +30,9 @@ http:
 
   services:
     {{$appname := .App.Name}}{{ range $s := .RoutingTable }}{{ if $s.HTTPS }}
-    {{ $s.InternalServiceName }}-{{ $s.InternalServicePort }}-https:
+    {{$appname}}-{{ $s.InternalServiceName }}-{{ $s.InternalServicePort }}-https:
     {{ else }}
-    {{ $s.InternalServiceName }}-{{ $s.InternalServicePort }}-http:{{end}}
+    {{$appname}}-{{ $s.InternalServiceName }}-{{ $s.InternalServicePort }}-http:{{end}}
       loadbalancer:
         servers:
           - url: http://ddev-{{$appname}}-{{$s.InternalServiceName}}:{{$s.InternalServicePort}}
