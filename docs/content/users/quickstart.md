@@ -411,7 +411,7 @@ Here's a quickstart instructions for a number of different environments:
     !!!tip "No need for `npm run dev`!"
         You don’t need to use `npm run dev`, since this attempts to run a local Vite server with the `vite` command. The `ddev-viteserve` add-on takes care of that Vite server for us.
 
-    A simple way to test if Vite is working properly is to make a change to `resources/js/app.js`. These changes should be made nearly instantly.
+    You can confirm Vite’s working properly by making a quick change `resources/js/app.js` and seeing it reflected immediately.
 === "Craft CMS"
 
     ## Craft CMS
