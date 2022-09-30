@@ -398,7 +398,7 @@ Here's a quickstart instructions for a number of different environments:
         }
     })
     ```
-    You are free to add any plugins (like Vue) to the plugin array. **It is wise, however, to not make changes to the server properties as they often cause CORS errors.**
+    Add any plugins you need, like Vue, to the `plugins` array. **Careful with changes to server properties that often cause CORS errors!**
     
     Finally add the following to the head of the`welcome.blade.php` file
     ```php
