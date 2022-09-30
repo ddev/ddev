@@ -346,7 +346,7 @@ Here's a quickstart instructions for a number of different environments:
     The default Laravel Vite template doesn’t work with DDEV, so you’ll need to set up a Vite server and configure Laravel to use it.
 
     #### Setup a Vite server
-    Install the ddev-viteserve addon.
+    Install the [ddev-viteserve](https://github.com/torenware/ddev-viteserve) add-on.
     ```bash
     ddev get torenware/ddev-viteserve
     ```
