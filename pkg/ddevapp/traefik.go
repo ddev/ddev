@@ -21,6 +21,7 @@ type TraeficRouting struct {
 	ExternalPort        string
 	InternalServiceName string
 	InternalServicePort string
+	HTTPS               bool
 }
 
 func detectAppRouting(app *DdevApp) ([]TraeficRouting, error) {
@@ -41,7 +42,21 @@ func detectAppRouting(app *DdevApp) ([]TraeficRouting, error) {
 							util.Warning("Skipping bad HTTP_EXPOSE port pair spec %s for service %s", portPair, serviceName)
 							continue
 						}
-						table = append(table, TraeficRouting{ExternalPort: ports[0], InternalServiceName: serviceName.(string), InternalServicePort: ports[1]})
+						table = append(table, TraeficRouting{ExternalPort: ports[0], InternalServiceName: serviceName.(string), InternalServicePort: ports[1], HTTPS: false})
+					}
+				}
+				//TODO: Consolidate these two usages
+				if httpsExpose, ok := env["HTTPS_EXPOSE"].(string); ok {
+					fmt.Printf("HTTPS_EXPOSE=%v for %s\n", httpsExpose, serviceName)
+					portPairs := strings.Split(httpsExpose, ",")
+					for _, portPair := range portPairs {
+						// TODO: Implement VIRTUAL_HOST
+						ports := strings.Split(portPair, ":")
+						if len(ports) != 2 {
+							util.Warning("Skipping bad HTTPS_EXPOSE port pair spec %s for service %s", portPair, serviceName)
+							continue
+						}
+						table = append(table, TraeficRouting{ExternalPort: ports[0], InternalServiceName: serviceName.(string), InternalServicePort: ports[1], HTTPS: true})
 					}
 				}
 			}
@@ -57,7 +72,8 @@ func pushGlobalTraefikConfig() error {
 		return fmt.Errorf("Failed to create global .ddev/traefik directory: %v", err)
 	}
 	sourceCertsPath := filepath.Join(globalTraefikDir, "certs")
-	sourceConfigDir := globalTraefikDir
+	// SourceConfigDir for dynamic config
+	sourceConfigDir := filepath.Join(globalTraefikDir, "config")
 	targetCertsPath := path.Join("/mnt/ddev-global-cache/traefik/certs")
 
 	err = os.MkdirAll(sourceCertsPath, 0755)
@@ -150,6 +166,8 @@ func pushGlobalTraefikConfig() error {
 		}
 	}
 
+	// sourceConfigDir for static config
+	sourceConfigDir = globalTraefikDir
 	traefikYamlFile = filepath.Join(sourceConfigDir, "static_config.yaml")
 	sigExists = true
 	//TODO: Systematize this checking-for-signature, allow an arg to skip if empty

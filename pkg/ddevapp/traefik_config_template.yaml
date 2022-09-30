@@ -3,12 +3,22 @@
 http:
   routers:
     {{$appname := .App.Name}}{{$hostnames := .Hostnames}}{{ range $s := .RoutingTable }}
-    {{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}:
+    {{ if not $s.HTTPS }}
+    {{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-http:
       rule: "Host({{ range $i, $h := $hostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})"
-      service: "{{$s.InternalServiceName}}-{{$s.InternalServicePort}}"
+      service: "{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-http"
       tls: false
       entrypoints:
         - http-{{$s.ExternalPort}}
+    {{ end }}{{ end }}
+    {{$appname := .App.Name}}{{$hostnames := .Hostnames}}{{ range $s := .RoutingTable }}{{ if $s.HTTPS }}
+    {{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-https:
+      rule: "Host({{ range $i, $h := $hostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})"
+      service: "{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-https"
+      tls: true
+      entrypoints:
+        - http-{{$s.ExternalPort}}
+    {{ end }}
     {{ end }}
 
 #    {{.App.Name}}-https:
@@ -19,17 +29,18 @@ http:
 #        - web-secure
 
   services:
-    {{$appname := .App.Name}}
-    {{ range $s := .RoutingTable }}
-    {{ $s.InternalServiceName }}-{{ $s.InternalServicePort }}:
+    {{$appname := .App.Name}}{{ range $s := .RoutingTable }}{{ if $s.HTTPS }}
+    {{ $s.InternalServiceName }}-{{ $s.InternalServicePort }}-https:
+    {{ else }}
+    {{ $s.InternalServiceName }}-{{ $s.InternalServicePort }}-http:{{end}}
       loadbalancer:
         servers:
           - url: http://ddev-{{$appname}}-{{$s.InternalServiceName}}:{{$s.InternalServicePort}}
     {{ end }}
-    ddev-{{.App.Name}}-web-https:
-      loadbalancer:
-        servers:
-          - url: http://ddev-{{.App.Name}}-web
+#    ddev-{{.App.Name}}-web-https:
+#      loadbalancer:
+#        servers:
+#          - url: http://ddev-{{.App.Name}}-web
 
 tls:
   certificates:
