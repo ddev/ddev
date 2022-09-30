@@ -406,7 +406,7 @@ Here's a quickstart instructions for a number of different environments:
     ```
 
     #### Finalize
-    To wrap things up run a `ddev restart`.
+    Apply the server changes and Laravel configuration by running `ddev restart`.
 
     **Please note** that running npm run dev is **NOT** needed as this only runs the `vite` command which just attempts to run a local Vite server. The viteserve addon will handle the Vite side of things for us. 
 
