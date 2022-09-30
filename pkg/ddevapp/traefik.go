@@ -12,10 +12,46 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"text/template"
 )
 
+type TraeficRouting struct {
+	ExternalHostname    string
+	ExternalPort        string
+	InternalServiceName string
+	IntermalServicePort string
+}
+
+func detectRouting(app *DdevApp) ([]TraeficRouting, error) {
+	// app.ComposeYaml["services"];
+	table := []TraeficRouting{}
+	if services, ok := app.ComposeYaml["services"]; ok {
+
+		for serviceName, s := range services.(map[interface{}]interface{}) {
+			service := s.(map[interface{}]interface{})
+			if env, ok := service["environment"].(map[interface{}]interface{}); ok {
+				if httpExpose, ok := env["HTTP_EXPOSE"].(string); ok {
+					fmt.Printf("HTTP_EXPOSE=%v for %s", httpExpose, serviceName)
+					portPairs := strings.Split(httpExpose, ",")
+					for _, portPair := range portPairs {
+						// TODO: Implement VIRTUAL_HOST
+						ports := strings.Split(portPair, ":")
+						if len(ports) != 2 {
+							util.Warning("Skipping bad HTTP_EXPOSE port pair spec %s for service %s", portPair, serviceName)
+							continue
+						}
+						table = append(table, TraeficRouting{ExternalPort: ports[0], InternalServiceName: serviceName.(string), IntermalServicePort: ports[1]})
+					}
+
+				}
+			}
+		}
+	}
+	return table, nil
+}
 func pushGlobalTraefikConfig() error {
+
 	globalTraefikDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
 	err := os.MkdirAll(globalTraefikDir, 0755)
 	if err != nil {
@@ -125,9 +161,14 @@ func pushGlobalTraefikConfig() error {
 // configureTraefik configures the dynamic configuration and creates cert+key
 // in .ddev/traefik
 func configureTraefik(app *DdevApp) error {
+	routingTable, err := detectRouting(app)
+	if err != nil {
+		return err
+	}
+	_ = routingTable
 	hostnames := app.GetHostnames()
 	projectTraefikDir := app.GetConfigPath("traefik")
-	err := os.MkdirAll(projectTraefikDir, 0755)
+	err = os.MkdirAll(projectTraefikDir, 0755)
 	if err != nil {
 		return fmt.Errorf("Failed to create .ddev/traefik directory: %v", err)
 	}
