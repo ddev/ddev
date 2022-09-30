@@ -400,7 +400,7 @@ Here's a quickstart instructions for a number of different environments:
     ```
     Add any plugins you need, like Vue, to the `plugins` array. **Careful with changes to server properties that often cause CORS errors!**
     
-    Finally add the following to the head of the`welcome.blade.php` file
+    Finally, add the following to the head of the `welcome.blade.php` file:
     ```php
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     ```
