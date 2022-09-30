@@ -37,12 +37,13 @@ func dbTypeVersionFromString(in string) string {
 	idType := ""
 
 	postgresStyle := regexp.MustCompile(`^[0-9]+$`)
+	postgresV9Style := regexp.MustCompile(`^9\.?`)
 	oldStyle := regexp.MustCompile(`^[0-9]+\.[0-9]$`)
 	newStyleV119 := regexp.MustCompile(`^(mysql|mariadb)_[0-9]+\.[0-9]$`)
 
 	if newStyleV119.MatchString(in) {
 		idType = "current"
-	} else if postgresStyle.MatchString(in) {
+	} else if postgresStyle.MatchString(in) || postgresV9Style.MatchString(in) {
 		idType = "postgres"
 	} else if oldStyle.MatchString(in) {
 		idType = "old_pre_v1.19"
@@ -60,7 +61,8 @@ func dbTypeVersionFromString(in string) string {
 	// Postgres: value is an int
 	case "postgres":
 		dbType = nodeps.Postgres
-		dbVersion = in
+		parts := strings.Split(in, `.`)
+		dbVersion = parts[0]
 
 	case "old_pre_v1.19":
 		dbType = nodeps.MariaDB
