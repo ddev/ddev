@@ -23,7 +23,7 @@ type TraeficRouting struct {
 	InternalServicePort string
 }
 
-func detectRouting(app *DdevApp) ([]TraeficRouting, error) {
+func detectAppRouting(app *DdevApp) ([]TraeficRouting, error) {
 	// app.ComposeYaml["services"];
 	table := []TraeficRouting{}
 	if services, ok := app.ComposeYaml["services"]; ok {
@@ -51,14 +51,13 @@ func detectRouting(app *DdevApp) ([]TraeficRouting, error) {
 }
 
 func pushGlobalTraefikConfig() error {
-
 	globalTraefikDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
 	err := os.MkdirAll(globalTraefikDir, 0755)
 	if err != nil {
 		return fmt.Errorf("Failed to create global .ddev/traefik directory: %v", err)
 	}
 	sourceCertsPath := filepath.Join(globalTraefikDir, "certs")
-	sourceConfigDir := filepath.Join(globalTraefikDir, "config")
+	sourceConfigDir := globalTraefikDir
 	targetCertsPath := path.Join("/mnt/ddev-global-cache/traefik/certs")
 
 	err = os.MkdirAll(sourceCertsPath, 0755)
@@ -114,9 +113,11 @@ func pushGlobalTraefikConfig() error {
 		Hostnames       []string
 		PrimaryHostname string
 		TargetCertsPath string
+		RouterPorts     []string
 	}
 	templateData := traefikData{
 		TargetCertsPath: targetCertsPath,
+		RouterPorts:     determineRouterPorts(),
 	}
 
 	traefikYamlFile := filepath.Join(sourceConfigDir, "default_config.yaml")
@@ -193,7 +194,7 @@ func pushGlobalTraefikConfig() error {
 // configureTraefikForApp configures the dynamic configuration and creates cert+key
 // in .ddev/traefik
 func configureTraefikForApp(app *DdevApp) error {
-	routingTable, err := detectRouting(app)
+	routingTable, err := detectAppRouting(app)
 	if err != nil {
 		return err
 	}

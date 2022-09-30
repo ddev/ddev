@@ -5,10 +5,10 @@ http:
     {{$appname := .App.Name}}{{$hostnames := .Hostnames}}{{ range $s := .RoutingTable }}
     {{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}:
       rule: "Host({{ range $i, $h := $hostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})"
-      service: {{$s.InternalServiceName}}-{{$s.InternalServicePort}}"
+      service: "{{$s.InternalServiceName}}-{{$s.InternalServicePort}}"
       tls: false
       entrypoints:
-        - web
+        - http-{{$s.ExternalPort}}
     {{ end }}
 
 #    {{.App.Name}}-https:

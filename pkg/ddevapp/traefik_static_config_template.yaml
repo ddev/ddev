@@ -1,9 +1,18 @@
 #ddev-generated
 
+log:
+  level: DEBUG
+api:
+  insecure=true
+providers:
+  file:
+    directory: /mnt/ddev-global-cache/traefik/config
+    watch: true
+global:
+  sendanonymoususage: false
+
 entryPoints:
-  web:
-    address: ":80"
-
-  websecure:
-    address: ":443"
-
+  {{ range $port := .RouterPorts}}
+  http-{{$port}}:
+    address: ":{{$port}}"
+  {{ end }}

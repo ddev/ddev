@@ -1123,54 +1123,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// Fix any obsolete things like old shell commands, etc.
 	app.FixObsolete()
 
-	if !IsRouterDisabled(app) {
-		caRoot := globalconfig.GetCAROOT()
-		if caRoot == "" {
-			util.Warning("mkcert may not be properly installed, we suggest installing it for trusted https support, `brew install mkcert nss`, `choco install -y mkcert`, etc. and then `mkcert -install`")
-		}
-		router, _ := FindDdevRouter()
-		// If the router doesn't exist, go ahead and push mkcert root ca certs into the ddev-global-cache/mkcert
-		// This will often be redundant
-		if router == nil {
-			// Copy ca certs into ddev-global-cache/mkcert
-			if caRoot != "" {
-				if !globalconfig.DdevGlobalConfig.UseTraefik {
-					uid, _, _ := util.GetContainerUIDGid()
-					err = dockerutil.CopyIntoVolume(caRoot, "ddev-global-cache", "mkcert", uid, "", false)
-					if err != nil {
-						util.Warning("failed to copy root CA into docker volume ddev-global-cache/mkcert: %v", err)
-					} else {
-						util.Success("Pushed mkcert rootca certs to ddev-global-cache/mkcert")
-					}
-				} else { // If using traefik we don't need the CA, just the certs and such
-					err = pushGlobalTraefikConfig()
-					if err != nil {
-						return err
-					}
-				}
-			}
-		}
-
-		certPath := app.GetConfigPath("custom_certs")
-		uid, _, _ := util.GetContainerUIDGid()
-		if fileutil.FileExists(certPath) {
-			err = dockerutil.CopyIntoVolume(certPath, "ddev-global-cache", "custom_certs", uid, "", false)
-			if err != nil {
-				util.Warning("failed to copy custom certs into docker volume ddev-global-cache/custom_certs: %v", err)
-			} else {
-				util.Success("Copied custom certs in %s to ddev-global-cache/custom_certs", certPath)
-			}
-		}
-
-		// If TLS supported and using traefik, create cert/key and push into ddev-global-cache/traefik
-		if globalconfig.GetCAROOT() != "" && globalconfig.DdevGlobalConfig.UseTraefik {
-			err = configureTraefikForApp(app)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
 	app.CreateUploadDirIfNecessary()
 
 	// WriteConfig .ddev-docker-compose-*.yaml
@@ -1217,6 +1169,54 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	_, _, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "up", "--build", "-d")
 	if err != nil {
 		return err
+	}
+
+	if !IsRouterDisabled(app) {
+		caRoot := globalconfig.GetCAROOT()
+		if caRoot == "" {
+			util.Warning("mkcert may not be properly installed, we suggest installing it for trusted https support, `brew install mkcert nss`, `choco install -y mkcert`, etc. and then `mkcert -install`")
+		}
+		router, _ := FindDdevRouter()
+		// If the router doesn't exist, go ahead and push mkcert root ca certs into the ddev-global-cache/mkcert
+		// This will often be redundant
+		if router == nil {
+			// Copy ca certs into ddev-global-cache/mkcert
+			if caRoot != "" {
+				if !globalconfig.DdevGlobalConfig.UseTraefik {
+					uid, _, _ := util.GetContainerUIDGid()
+					err = dockerutil.CopyIntoVolume(caRoot, "ddev-global-cache", "mkcert", uid, "", false)
+					if err != nil {
+						util.Warning("failed to copy root CA into docker volume ddev-global-cache/mkcert: %v", err)
+					} else {
+						util.Success("Pushed mkcert rootca certs to ddev-global-cache/mkcert")
+					}
+				} else { // If using traefik we don't need the CA, just the certs and such
+					err = pushGlobalTraefikConfig()
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
+
+		certPath := app.GetConfigPath("custom_certs")
+		uid, _, _ := util.GetContainerUIDGid()
+		if fileutil.FileExists(certPath) {
+			err = dockerutil.CopyIntoVolume(certPath, "ddev-global-cache", "custom_certs", uid, "", false)
+			if err != nil {
+				util.Warning("failed to copy custom certs into docker volume ddev-global-cache/custom_certs: %v", err)
+			} else {
+				util.Success("Copied custom certs in %s to ddev-global-cache/custom_certs", certPath)
+			}
+		}
+
+		// If TLS supported and using traefik, create cert/key and push into ddev-global-cache/traefik
+		if globalconfig.GetCAROOT() != "" && globalconfig.DdevGlobalConfig.UseTraefik {
+			err = configureTraefikForApp(app)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	if app.IsMutagenEnabled() {

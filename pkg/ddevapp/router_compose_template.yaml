@@ -1,15 +1,13 @@
 services:
   ddev-router:
-    image: {{ .router_image }}:{{ .router_tag }}
-    {{ if .use_traefik }}
+    image: {{ .router_image }}:{{ .router_tag }}-built
+    {{ if not .use_traefik }}
+    build:
+    {{ else }}
+    build:
+      context: .
     command:
-      - --api.insecure=true
-      # TODO: These probably want to be changed and want to be specified elsewhere
-      - --entrypoints.web.address=:80
-      - --entrypoints.web-secure.address=:443
-      - --providers.file.directory=/mnt/ddev-global-cache/traefik/config
-      - --providers.file.watch=true
-      - --global.sendanonymoususage=false
+      - --configFile=/mnt/ddev-global-cache/traefik/static_config.yaml
     {{ end }}
 
     networks:
