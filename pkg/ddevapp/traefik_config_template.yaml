@@ -2,24 +2,30 @@
 
 http:
   routers:
-    {{.App.Name}}-http:
-      rule: "Host({{ range $i, $h := .Hostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})"
-      service: "ddev-{{.App.Name}}-web-http"
+    {{$appname := .App.Name}}{{$hostnames := .Hostnames}}{{ range $s := .RoutingTable }}
+    {{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}:
+      rule: "Host({{ range $i, $h := $hostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})"
+      service: {{$s.InternalServiceName}}-{{$s.InternalServicePort}}"
       tls: false
       entrypoints:
         - web
-    {{.App.Name}}-https:
-      rule: "Host({{ range $i, $h := .Hostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})"
-      service: "ddev-{{.App.Name}}-web-https"
-      tls: true
-      entrypoints:
-        - web-secure
+    {{ end }}
+
+#    {{.App.Name}}-https:
+#      rule: "Host({{ range $i, $h := .Hostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})"
+#      service: "ddev-{{.App.Name}}-web-https"
+#      tls: true
+#      entrypoints:
+#        - web-secure
 
   services:
-    ddev-{{.App.Name}}-web-http:
+    {{$appname := .App.Name}}
+    {{ range $s := .RoutingTable }}
+    {{ $s.InternalServiceName }}-{{ $s.InternalServicePort }}:
       loadbalancer:
         servers:
-          - url: http://ddev-{{.App.Name}}-web
+          - url: http://ddev-{{$appname}}-{{$s.InternalServiceName}}:{{$s.InternalServicePort}}
+    {{ end }}
     ddev-{{.App.Name}}-web-https:
       loadbalancer:
         servers:

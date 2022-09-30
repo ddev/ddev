@@ -20,7 +20,7 @@ type TraeficRouting struct {
 	ExternalHostname    string
 	ExternalPort        string
 	InternalServiceName string
-	IntermalServicePort string
+	InternalServicePort string
 }
 
 func detectRouting(app *DdevApp) ([]TraeficRouting, error) {
@@ -32,7 +32,7 @@ func detectRouting(app *DdevApp) ([]TraeficRouting, error) {
 			service := s.(map[interface{}]interface{})
 			if env, ok := service["environment"].(map[interface{}]interface{}); ok {
 				if httpExpose, ok := env["HTTP_EXPOSE"].(string); ok {
-					fmt.Printf("HTTP_EXPOSE=%v for %s", httpExpose, serviceName)
+					fmt.Printf("HTTP_EXPOSE=%v for %s\n", httpExpose, serviceName)
 					portPairs := strings.Split(httpExpose, ",")
 					for _, portPair := range portPairs {
 						// TODO: Implement VIRTUAL_HOST
@@ -41,15 +41,15 @@ func detectRouting(app *DdevApp) ([]TraeficRouting, error) {
 							util.Warning("Skipping bad HTTP_EXPOSE port pair spec %s for service %s", portPair, serviceName)
 							continue
 						}
-						table = append(table, TraeficRouting{ExternalPort: ports[0], InternalServiceName: serviceName.(string), IntermalServicePort: ports[1]})
+						table = append(table, TraeficRouting{ExternalPort: ports[0], InternalServiceName: serviceName.(string), InternalServicePort: ports[1]})
 					}
-
 				}
 			}
 		}
 	}
 	return table, nil
 }
+
 func pushGlobalTraefikConfig() error {
 
 	globalTraefikDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
@@ -121,7 +121,10 @@ func pushGlobalTraefikConfig() error {
 
 	traefikYamlFile := filepath.Join(sourceConfigDir, "default_config.yaml")
 	sigExists = true
-	if fileutil.FileExists(traefikYamlFile) {
+	//TODO: Systematize this checking-for-signature, allow an arg to skip if empty
+	fi, err := os.Stat(traefikYamlFile)
+	// Don't use simple fileutil.FileExists() because of the danger of an empty file
+	if err == nil && fi.Size() > 0 {
 		// Check to see if file has #ddev-generated in it, meaning we can recreate it.
 		sigExists, err = fileutil.FgrepStringInFile(traefikYamlFile, nodeps.DdevFileSignature)
 		if err != nil {
@@ -146,6 +149,35 @@ func pushGlobalTraefikConfig() error {
 		}
 	}
 
+	traefikYamlFile = filepath.Join(sourceConfigDir, "static_config.yaml")
+	sigExists = true
+	//TODO: Systematize this checking-for-signature, allow an arg to skip if empty
+	fi, err = os.Stat(traefikYamlFile)
+	// Don't use simple fileutil.FileExists() because of the danger of an empty file
+	if err == nil && fi.Size() > 0 {
+		// Check to see if file has #ddev-generated in it, meaning we can recreate it.
+		sigExists, err = fileutil.FgrepStringInFile(traefikYamlFile, nodeps.DdevFileSignature)
+		if err != nil {
+			return err
+		}
+	}
+	if !sigExists {
+		util.Debug("Not creating %s because it exists and is managed by user", traefikYamlFile)
+	} else {
+		f, err := os.Create(traefikYamlFile)
+		if err != nil {
+			util.Failed("failed to create traefik config file: %v", err)
+		}
+		t, err := template.New("traefik_static_config_template.yaml").Funcs(sprig.TxtFuncMap()).ParseFS(bundledAssets, "traefik_static_config_template.yaml")
+		if err != nil {
+			return fmt.Errorf("could not create template from traefik_static_config_template.yaml: %v", err)
+		}
+
+		err = t.Execute(f, templateData)
+		if err != nil {
+			return fmt.Errorf("could not parse traefik_global_config_template.yaml with templatedate='%v':: %v", templateData, err)
+		}
+	}
 	uid, _, _ := util.GetContainerUIDGid()
 
 	err = dockerutil.CopyIntoVolume(globalTraefikDir, "ddev-global-cache", "traefik", uid, "", false)
@@ -158,19 +190,18 @@ func pushGlobalTraefikConfig() error {
 	return nil
 }
 
-// configureTraefik configures the dynamic configuration and creates cert+key
+// configureTraefikForApp configures the dynamic configuration and creates cert+key
 // in .ddev/traefik
-func configureTraefik(app *DdevApp) error {
+func configureTraefikForApp(app *DdevApp) error {
 	routingTable, err := detectRouting(app)
 	if err != nil {
 		return err
 	}
-	_ = routingTable
 	hostnames := app.GetHostnames()
 	projectTraefikDir := app.GetConfigPath("traefik")
 	err = os.MkdirAll(projectTraefikDir, 0755)
 	if err != nil {
-		return fmt.Errorf("Failed to create .ddev/traefik directory: %v", err)
+		return fmt.Errorf("failed to create .ddev/traefik directory: %v", err)
 	}
 	sourceCertsPath := filepath.Join(projectTraefikDir, "certs")
 	sourceConfigDir := filepath.Join(projectTraefikDir, "config")
@@ -178,11 +209,11 @@ func configureTraefik(app *DdevApp) error {
 
 	err = os.MkdirAll(sourceCertsPath, 0755)
 	if err != nil {
-		return fmt.Errorf("Failed to create traefik certs dir: %v", err)
+		return fmt.Errorf("failed to create traefik certs dir: %v", err)
 	}
 	err = os.MkdirAll(sourceConfigDir, 0755)
 	if err != nil {
-		return fmt.Errorf("Failed to create traefik config dir: %v", err)
+		return fmt.Errorf("failed to create traefik config dir: %v", err)
 	}
 
 	baseName := filepath.Join(sourceCertsPath, app.Name)
@@ -216,7 +247,7 @@ func configureTraefik(app *DdevApp) error {
 
 			contents, err := fileutil.ReadFileIntoString(origFile)
 			if err != nil {
-				return fmt.Errorf("Failed to read file %v: %v", origFile, err)
+				return fmt.Errorf("failed to read file %v: %v", origFile, err)
 			}
 			contents = nodeps.DdevFileSignature + "\n" + contents
 			err = fileutil.TemplateStringToFile(contents, nil, origFile)
@@ -231,17 +262,21 @@ func configureTraefik(app *DdevApp) error {
 		Hostnames       []string
 		PrimaryHostname string
 		TargetCertsPath string
+		RoutingTable    []TraeficRouting
 	}
 	templateData := traefikData{
 		App:             app,
 		Hostnames:       app.GetHostnames(),
 		PrimaryHostname: app.GetHostname(),
 		TargetCertsPath: targetCertsPath,
+		RoutingTable:    routingTable,
 	}
 
 	traefikYamlFile := filepath.Join(sourceConfigDir, app.Name+".yaml")
 	sigExists = true
-	if fileutil.FileExists(traefikYamlFile) {
+	fi, err := os.Stat(traefikYamlFile)
+	// Don't use simple fileutil.FileExists() because of the danger of an empty file
+	if err == nil && fi.Size() > 0 {
 		// Check to see if file has #ddev-generated in it, meaning we can recreate it.
 		sigExists, err = fileutil.FgrepStringInFile(traefikYamlFile, nodeps.DdevFileSignature)
 		if err != nil {

@@ -1164,7 +1164,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 		// If TLS supported and using traefik, create cert/key and push into ddev-global-cache/traefik
 		if globalconfig.GetCAROOT() != "" && globalconfig.DdevGlobalConfig.UseTraefik {
-			err = configureTraefik(app)
+			err = configureTraefikForApp(app)
 			if err != nil {
 				return err
 			}
