@@ -343,7 +343,7 @@ Here's a quickstart instructions for a number of different environments:
     This is very handy if you have a local database installed and you want to switch between the connections faster by changing only one variable in `.env`
     
     ### Using Vite
-    The default Laravel Vite template will not work with DDEV. To make DDEV and Vite play nicely a few additional steps are required.
+    The default Laravel Vite template doesn’t work with DDEV, so you’ll need to set up a Vite server and configure Laravel to use it.
 
     #### Setup a Vite server
     Install the ddev-viteserve addon.
