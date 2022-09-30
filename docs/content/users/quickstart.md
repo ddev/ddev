@@ -408,7 +408,8 @@ Here's a quickstart instructions for a number of different environments:
     #### Finalize
     Apply the server changes and Laravel configuration by running `ddev restart`.
 
-    **Please note** that running npm run dev is **NOT** needed as this only runs the `vite` command which just attempts to run a local Vite server. The viteserve addon will handle the Vite side of things for us. 
+    !!!tip "No need for `npm run dev`!"
+        You don’t need to use `npm run dev`, since this attempts to run a local Vite server with the `vite` command. The `ddev-viteserve` add-on takes care of that Vite server for us.
 
     A simple way to test if Vite is working properly is to make a change to `resources/js/app.js`. These changes should be made nearly instantly.
 === "Craft CMS"
