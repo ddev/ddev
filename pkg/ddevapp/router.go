@@ -79,6 +79,13 @@ func StartDdevRouter() error {
 	if err != nil {
 		return err
 	}
+	if globalconfig.DdevGlobalConfig.UseTraefik {
+		err = pushGlobalTraefikConfig()
+		if err != nil {
+			return fmt.Errorf("failed to push global traefik config: %v", err)
+		}
+	}
+
 	err = CheckRouterPorts()
 	if err != nil {
 		return fmt.Errorf("Unable to listen on required ports, %v,\nTroubleshooting suggestions at https://ddev.readthedocs.io/en/stable/users/basics/troubleshooting/#unable-listen", err)
