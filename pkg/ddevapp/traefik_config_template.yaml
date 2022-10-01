@@ -21,13 +21,6 @@ http:
     {{ end }}
     {{ end }}
 
-#    {{.App.Name}}-https:
-#      rule: "Host({{ range $i, $h := .Hostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})"
-#      service: "ddev-{{.App.Name}}-web-https"
-#      tls: true
-#      entrypoints:
-#        - web-secure
-
   services:
     {{$appname := .App.Name}}{{ range $s := .RoutingTable }}{{ if $s.HTTPS }}
     {{$appname}}-{{ $s.InternalServiceName }}-{{ $s.InternalServicePort }}-https:
@@ -37,10 +30,6 @@ http:
         servers:
           - url: http://ddev-{{$appname}}-{{$s.InternalServiceName}}:{{$s.InternalServicePort}}
     {{ end }}
-#    ddev-{{.App.Name}}-web-https:
-#      loadbalancer:
-#        servers:
-#          - url: http://ddev-{{.App.Name}}-web
 
 tls:
   certificates:

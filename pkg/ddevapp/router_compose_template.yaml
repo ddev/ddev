@@ -21,9 +21,9 @@ services:
     - "{{ $dockerIP }}:{{ $port }}:{{ $port }}"{{ end }}{{ else }}{{ range $port := .ports }}
     - "{{ $port }}:{{ $port }}"{{ end }}{{ end }}
     {{ if .use_traefik }}
-    # Traefik exposes its dashboard on 8080 by default
+    # Traefik router; configured in static config as entrypoint
     # TODO: Make this configurable? Put it somewhere else?
-    - 9999:8080
+    - 9999:9999
     {{ end }}
     volumes:
       {{ if not .use_traefik }}

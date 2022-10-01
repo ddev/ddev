@@ -33,7 +33,7 @@ func detectAppRouting(app *DdevApp) ([]TraeficRouting, error) {
 			service := s.(map[interface{}]interface{})
 			if env, ok := service["environment"].(map[interface{}]interface{}); ok {
 				if httpExpose, ok := env["HTTP_EXPOSE"].(string); ok {
-					fmt.Printf("HTTP_EXPOSE=%v for %s\n", httpExpose, serviceName)
+					util.Debug("HTTP_EXPOSE=%v for %s\n", httpExpose, serviceName)
 					portPairs := strings.Split(httpExpose, ",")
 					for _, portPair := range portPairs {
 						// TODO: Implement VIRTUAL_HOST
@@ -47,7 +47,7 @@ func detectAppRouting(app *DdevApp) ([]TraeficRouting, error) {
 				}
 				//TODO: Consolidate these two usages
 				if httpsExpose, ok := env["HTTPS_EXPOSE"].(string); ok {
-					fmt.Printf("HTTPS_EXPOSE=%v for %s\n", httpsExpose, serviceName)
+					util.Debug("HTTPS_EXPOSE=%v for %s\n", httpsExpose, serviceName)
 					portPairs := strings.Split(httpsExpose, ",")
 					for _, portPair := range portPairs {
 						// TODO: Implement VIRTUAL_HOST
