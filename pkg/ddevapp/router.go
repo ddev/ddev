@@ -3,6 +3,8 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
+	"github.com/Masterminds/sprig/v3"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/netutil"
 	"github.com/drud/ddev/pkg/nodeps"
@@ -65,6 +67,10 @@ func StopRouterIfNoContainers() error {
 
 // StartDdevRouter ensures the router is running.
 func StartDdevRouter() error {
+	err := os.MkdirAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "router-build"), 0755)
+	if err != nil {
+		return err
+	}
 	// If the router is not healthy/running, we'll kill it so it
 	// starts over again.
 	router, err := FindDdevRouter()
@@ -76,6 +82,10 @@ func StartDdevRouter() error {
 	}
 
 	routerComposeFullPath, err := generateRouterCompose()
+	if err != nil {
+		return err
+	}
+	err = GenerateRouterDockerfile()
 	if err != nil {
 		return err
 	}
@@ -321,6 +331,47 @@ func CheckRouterPorts() error {
 		}
 		if netutil.IsPortActive(port) {
 			return fmt.Errorf("port %s is already in use", port)
+		}
+	}
+	return nil
+}
+
+func GenerateRouterDockerfile() error {
+
+	type routerData struct {
+		UseTraefik bool
+	}
+	templateData := routerData{
+		UseTraefik: globalconfig.DdevGlobalConfig.UseTraefik,
+	}
+
+	routerDockerfile := filepath.Join(globalconfig.GetGlobalDdevDir(), "router-build", "Dockerfile")
+	sigExists := true
+	//TODO: Systematize this checking-for-signature, allow an arg to skip if empty
+	fi, err := os.Stat(routerDockerfile)
+	// Don't use simple fileutil.FileExists() because of the danger of an empty file
+	if err == nil && fi.Size() > 0 {
+		// Check to see if file has #ddev-generated in it, meaning we can recreate it.
+		sigExists, err = fileutil.FgrepStringInFile(routerDockerfile, nodeps.DdevFileSignature)
+		if err != nil {
+			return err
+		}
+	}
+	if !sigExists {
+		util.Debug("Not creating %s because it exists and is managed by user", routerDockerfile)
+	} else {
+		f, err := os.Create(routerDockerfile)
+		if err != nil {
+			util.Failed("failed to create router Dockerfile: %v", err)
+		}
+		t, err := template.New("router_Dockerfile_template").Funcs(sprig.TxtFuncMap()).ParseFS(bundledAssets, "router_Dockerfile_template")
+		if err != nil {
+			return fmt.Errorf("could not create template from router_Dockerfile_template: %v", err)
+		}
+
+		err = t.Execute(f, templateData)
+		if err != nil {
+			return fmt.Errorf("could not parse router_Dockerfile_template with templatedate='%v':: %v", templateData, err)
 		}
 	}
 	return nil
