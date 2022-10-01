@@ -611,3 +611,13 @@ func GetRequiredDockerComposeVersion() string {
 	}
 	return v
 }
+
+// Return the traefik router URL
+func GetRouterURL() string {
+	routerURL := ""
+	// Until we figure out how to configure this, use static value
+	if DdevGlobalConfig.UseTraefik {
+		routerURL = "http://localhost:9999"
+	}
+	return routerURL
+}

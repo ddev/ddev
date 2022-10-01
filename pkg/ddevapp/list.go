@@ -49,7 +49,7 @@ func List(activeOnly bool, continuous bool, wrapTableText bool, continuousSleepT
 				extendedRouterStatus = "disabled"
 			}
 			t.AppendFooter(table.Row{
-				"Router", "", routerStatus, versionconstants.GetRouterImage()},
+				"Router", routerStatus, "~/.ddev", globalconfig.GetRouterURL(), versionconstants.GetRouterImage()},
 			)
 			t.Render()
 			output.UserOut.WithField("raw", appDescs).Print(out.String())
