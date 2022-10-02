@@ -8,10 +8,10 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/versionconstants"
 	"github.com/fsouza/go-dockerclient"
-	"html/template"
 	"os"
 	"path"
 	"path/filepath"
+	"text/template"
 )
 
 // SSHAuthName is the "machine name" of the ddev-ssh-agent docker-compose service
