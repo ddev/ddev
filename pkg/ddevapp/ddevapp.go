@@ -254,7 +254,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			dbinfo["host"] = "db"
 			dbPublicPort, err := app.GetPublishedPort("db")
 			util.CheckErr(err)
-			dbinfo["dbPort"] = GetInternalPort(app, "db")
+			dbinfo["dbPort"] = GetExposedPort(app, "db")
 			util.CheckErr(err)
 			dbinfo["published_port"] = dbPublicPort
 			dbinfo["database_type"] = "mariadb" // default
@@ -372,7 +372,7 @@ func (app *DdevApp) GetPublishedPort(serviceName string) (int, error) {
 		return -1, fmt.Errorf("failed to find container of type %s: %v", serviceName, err)
 	}
 
-	privatePort, _ := strconv.ParseInt(GetInternalPort(app, serviceName), 10, 16)
+	privatePort, _ := strconv.ParseInt(GetExposedPort(app, serviceName), 10, 16)
 
 	publishedPort := dockerutil.GetPublishedPort(privatePort, *container)
 	return publishedPort, nil
