@@ -725,7 +725,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		DBType:                    app.Database.Type,
 		DBVersion:                 app.Database.Version,
 		DBMountDir:                "/var/lib/mysql",
-		DBAPort:                   GetInternalPort(app, "dba"),
+		DBAPort:                   "80", // GetInternalPort("dba") returns the bound port, not the correct port
 		DBPort:                    GetInternalPort(app, "db"),
 		HostPHPMyAdminPort:        app.HostPHPMyAdminPort,
 		DdevGenerated:             nodeps.DdevFileSignature,
