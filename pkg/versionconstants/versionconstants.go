@@ -37,7 +37,7 @@ var DBATag = "5" // Note that this can be overridden by make
 var RouterImage = "drud/ddev-router"
 
 // RouterTag defines the tag used for the router.
-var RouterTag = "v1.20.0"
+var RouterTag = "20220918_traefik"
 
 // SSHAuthImage is image for agent
 // var SSHAuthImage = "drud/ddev-ssh-agent"
