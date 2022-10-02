@@ -5,9 +5,12 @@ import (
 	"github.com/drud/ddev/pkg/util"
 )
 
-// GetInternalPort returns the exposed port (as a string) for the given service.
+// GetInternalPort returns the bound port (as a string) for the given service.
 // This can be used to find a given port for docker-compose manifests,
 // or for automated testing.
+// WARNING: This isn't entirely correct, and it seems to be used wrongly
+// The name implies that it's the exposed port; the docs say it's the bound port
+// The "dba" container, for example, has an internal port of 80.
 func GetInternalPort(app *DdevApp, service string) string {
 	switch service {
 	case "db":
@@ -16,7 +19,7 @@ func GetInternalPort(app *DdevApp, service string) string {
 		}
 		return "3306"
 	case "dba":
-		return "80"
+		return "8036"
 	case "mailhog":
 		return "8025"
 	case "web":
