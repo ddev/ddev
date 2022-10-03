@@ -31,13 +31,13 @@ var DBAImg = "phpmyadmin"
 // DBATag defines the default phpmyadmin image tag used for applications.
 var DBATag = "5" // Note that this can be overridden by make
 
+const TraditionalRouterImage = "drud/ddev-router:20220918_traefik"
+const TraefikRouterImage = "traefik:v2.8"
+
 // RouterImage defines the image used for the router.
 // Caution: This may be overridden in cmd/a.go's init() to get traefik version
 // TODO: Figure out how to do this override more cleanly
-var RouterImage = "drud/ddev-router"
-
-// RouterTag defines the tag used for the router.
-var RouterTag = "20220918_traefik"
+var RouterImage = TraditionalRouterImage
 
 // SSHAuthImage is image for agent
 // var SSHAuthImage = "drud/ddev-ssh-agent"

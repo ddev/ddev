@@ -1,10 +1,10 @@
 services:
   ddev-router:
-    image: {{ .router_image }}:{{ .router_tag }}-built
+    image: {{ .router_image }}-built
     build:
       context: router-build
       args:
-        BASE_IMAGE: {{ .router_image }}:{{ .router_tag }}
+        BASE_IMAGE: {{ .router_image }}
 #        username: '{{ .Username }}'
 #        uid: '{{ .UID }}'
 #        gid: '{{ .GID }}'

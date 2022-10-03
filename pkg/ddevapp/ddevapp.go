@@ -221,6 +221,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["type"] = app.GetType()
 	appDesc["mutagen_enabled"] = app.IsMutagenEnabled()
 	appDesc["nodejs_version"] = app.NodeJSVersion
+	appDesc["use_traefik"] = globalconfig.DdevGlobalConfig.UseTraefik
 	if app.IsMutagenEnabled() {
 		appDesc["mutagen_status"], _, _, err = app.MutagenStatus()
 		if err != nil {
@@ -1184,14 +1185,12 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 			if router == nil {
 				// Copy ca certs into ddev-global-cache/mkcert
 				if caRoot != "" {
-					if !globalconfig.DdevGlobalConfig.UseTraefik {
-						uid, _, _ := util.GetContainerUIDGid()
-						err = dockerutil.CopyIntoVolume(caRoot, "ddev-global-cache", "mkcert", uid, "", false)
-						if err != nil {
-							util.Warning("failed to copy root CA into docker volume ddev-global-cache/mkcert: %v", err)
-						} else {
-							util.Success("Pushed mkcert rootca certs to ddev-global-cache/mkcert")
-						}
+					uid, _, _ := util.GetContainerUIDGid()
+					err = dockerutil.CopyIntoVolume(caRoot, "ddev-global-cache", "mkcert", uid, "", false)
+					if err != nil {
+						util.Warning("failed to copy root CA into docker volume ddev-global-cache/mkcert: %v", err)
+					} else {
+						util.Success("Pushed mkcert rootca certs to ddev-global-cache/mkcert")
 					}
 				}
 			}

@@ -25,8 +25,7 @@ func init() {
 	// This should be in versionconstants, but it's here because initialization
 	// of this type is consolidated here.
 	if globalconfig.DdevGlobalConfig.UseTraefik {
-		versionconstants.RouterImage = "traefik"
-		versionconstants.RouterTag = "v2.8"
+		versionconstants.RouterImage = "traefik:v2.8"
 	}
 
 }
