@@ -1019,7 +1019,18 @@ func CreateVolume(volumeName string, driver string, driverOpts map[string]string
 }
 
 // GetHostDockerInternalIP returns either "" (will use the hostname as is)
-// (for docker-for-mac and Win10 Docker-for-windows) or a usable IP address
+// (for Docker Desktop on macOS and Windows with WSL2) or a usable IP address
+// But there are many cases to handle
+// Linux classic installation
+// Gitpod (the Linux technique does not work during prebuild)
+// WSL2 with Docker-ce installed inside
+// WSL2 with PhpStorm or vscode running inside WSL2
+// And it matters whether they're running IDE inside. With docker-inside-wsl2, the bridge docker0 is what we want
+// It's also possible to run vscode Language Server inside the web container, in which case host.docker.internal
+// should actually be 127.0.0.1
+// Inside WSL2, the way to access an app like PhpStorm running on the Windows side is described
+// in https://learn.microsoft.com/en-us/windows/wsl/networking#accessing-windows-networking-apps-from-linux-host-ip
+// and it involves parsing /etc/resolv.conf.
 func GetHostDockerInternalIP() (string, error) {
 	hostDockerInternal := ""
 
