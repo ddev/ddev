@@ -37,11 +37,16 @@ jobs:
     strategy:
       matrix:
         include:
-          - webserver: "apache-fpm"
-          - mutagen: false
-          - mutagen: true
-          - no-bind-mounts: "true"
-          - use-traefik: true
+          - name: "apache-fpm"
+            webserver: "apache-fpm"
+          - name: "nginx-fpm"
+            mutagen: false
+          - name: "mutagen"
+            mutagen: true
+          - name: "no-bind-mounts"
+            no-bind-mounts: "true"
+          - name: "traefik"
+            use-traefik: true
       fail-fast: false
 
     runs-on: ubuntu-20.04
@@ -65,4 +70,4 @@ jobs:
       - name: DDEV tests
         run: |
           echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN} DDEV_TEST_USE_TRAEFIK=${DDEV_TEST_USE_TRAEFIK} DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE}"
-          make TESTARGS="-failfast"
+          make TESTARGS="-failfast" test
