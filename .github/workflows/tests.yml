@@ -48,7 +48,7 @@ jobs:
 
     env:
       DDEV_NONINTERACTIVE: "true"
-      GOTEST_SHORT: "8" // 8 is drupal9; means in TestFullSiteSetup we only use drupal9
+      GOTEST_SHORT: "8" # 8 is drupal9; means in TestFullSiteSetup we only use drupal9
       DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
       DDEV_TEST_USE_MUTAGEN: ${{ matrix.mutagen }}
       DDEV_TEST_NO_BIND_MOUNTS: ${{ matrix.no-bind-mounts }}
