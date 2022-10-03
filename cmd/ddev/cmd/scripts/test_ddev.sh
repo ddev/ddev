@@ -30,6 +30,11 @@ function docker_desktop_version {
   fi
 }
 
+if ! ddev describe >/dev/null 2>&1; then printf "Please try running this in an existing DDEV project directory.\nIt doesn't work in other directories.\n"; exit 2; fi
+PROJECT_DIR=../${PROJECT_NAME}
+mkdir -p "${PROJECT_DIR}/web" || (echo "Unable to create test project at ${PROJECT_DIR}/web, please check ownership and permissions" && exit 2 )
+cd "${PROJECT_DIR}" || exit 3
+
 echo -n "OS Information: " && uname -a
 command -v sw_vers >/dev/null && sw_vers
 
@@ -62,10 +67,6 @@ echo "Docker disk space:" && docker run --rm busybox:stable df -h // && echo
 ddev poweroff
 echo "Existing docker containers: " && docker ps -a
 
-PROJECT_DIR=../${PROJECT_NAME}
-mkdir -p "${PROJECT_DIR}/web" || (echo "Unable to create test project at ${PROJECT_DIR}/web, please check ownership and permissions" && exit 2 )
-cd "${PROJECT_DIR}" || exit 3
-
 cat <<END >web/index.php
 <?php
   mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
@@ -75,17 +76,6 @@ cat <<END >web/index.php
 END
 ddev config --project-type=php --docroot=web
 trap cleanup EXIT
-
-# This is a potential experiment to force failure when needed
-#echo '
-#services:
-#  web:
-#    healthcheck:
-#      test: "false"
-#      timeout: 15s
-#      retries: 2
-#      start_period: 30s
-#' >.ddev/docker-compose.failhealth.yaml
 
 ddev start -y || ( \
   set +x && \
