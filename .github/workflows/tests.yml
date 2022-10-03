@@ -40,7 +40,6 @@ jobs:
           - name: "apache-fpm"
             webserver: "apache-fpm"
           - name: "nginx-fpm"
-            mutagen: false
           - name: "mutagen"
             mutagen: true
           - name: "no-bind-mounts"
@@ -57,7 +56,7 @@ jobs:
       DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
       DDEV_TEST_USE_MUTAGEN: ${{ matrix.mutagen }}
       DDEV_TEST_NO_BIND_MOUNTS: ${{ matrix.no-bind-mounts }}
-      DDEV_TEST_USE_TRAEFIK: ${{ matrix.use_traefik }}
+      DDEV_TEST_USE_TRAEFIK: ${{ matrix.use-traefik }}
     steps:
       - uses: actions/checkout@v3
       - run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
@@ -69,5 +68,5 @@ jobs:
 
       - name: DDEV tests
         run: |
-          echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN} DDEV_TEST_USE_TRAEFIK=${DDEV_TEST_USE_TRAEFIK} DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE}"
+          echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN} DDEV_TEST_USE_TRAEFIK=${DDEV_TEST_USE_TRAEFIK} DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE} DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS}"
           make TESTARGS="-failfast" test
