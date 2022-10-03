@@ -38,14 +38,10 @@ jobs:
       matrix:
         include:
           - webserver: "apache-fpm"
-          - webserver: "nginx-fpm"
-            mutagen: false
-          - webserver: "nginx-fpm"
-            mutagen: true
-          - webserver: "nginx-fpm"
-            no-bind-mounts: "true"
-          - webserver: "nginx-fpm"
-            use-traefik: true
+          - mutagen: false
+          - mutagen: true
+          - no-bind-mounts: "true"
+          - use-traefik: true
       fail-fast: false
 
     runs-on: ubuntu-20.04
@@ -68,5 +64,5 @@ jobs:
 
       - name: DDEV tests
         run: |
-          echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN}"
-          make ${{ matrix.tests }}
+          echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN} DDEV_TEST_USE_TRAEFIK=${DDEV_TEST_USE_TRAEFIK} DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE}"
+          make TESTARGS="-failfast"
