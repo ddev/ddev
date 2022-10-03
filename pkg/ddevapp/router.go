@@ -141,7 +141,7 @@ func generateRouterCompose() (string, error) {
 	dockerIP, _ := dockerutil.GetDockerIP()
 
 	templateVars := map[string]interface{}{
-		"router_image":               versionconstants.RouterImage,
+		"router_image":               versionconstants.GetRouterImage(),
 		"ports":                      exposedPorts,
 		"router_bind_all_interfaces": globalconfig.DdevGlobalConfig.RouterBindAllInterfaces,
 		"dockerIP":                   dockerIP,

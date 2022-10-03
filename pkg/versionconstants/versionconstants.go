@@ -34,11 +34,6 @@ var DBATag = "5" // Note that this can be overridden by make
 const TraditionalRouterImage = "drud/ddev-router:20220918_traefik"
 const TraefikRouterImage = "traefik:v2.8"
 
-// RouterImage defines the image used for the router.
-// Caution: This may be overridden in cmd/a.go's init() to get traefik version
-// TODO: Figure out how to do this override more cleanly
-var RouterImage = TraditionalRouterImage
-
 // SSHAuthImage is image for agent
 // var SSHAuthImage = "drud/ddev-ssh-agent"
 var SSHAuthImage = "drud/ddev-ssh-agent"
@@ -98,7 +93,11 @@ func GetSSHAuthImage() string {
 	return fmt.Sprintf("%s:%s", SSHAuthImage, SSHAuthTag)
 }
 
-// GetRouterImage returns the correctly formatted router image:tag reference
+// GetRouterImage returns the router image:tag reference
 func GetRouterImage() string {
-	return fmt.Sprintf("%s:%s", RouterImage, RouterTag)
+	image := TraditionalRouterImage
+	if globalconfig.DdevGlobalConfig.UseTraefik {
+		image = TraefikRouterImage
+	}
+	return image
 }

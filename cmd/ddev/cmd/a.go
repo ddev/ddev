@@ -4,7 +4,6 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/versionconstants"
 	"os"
 )
 
@@ -21,11 +20,4 @@ func init() {
 	_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", globalconfig.GetMutagenDataDirectory())
 	// GetDockerClient should be called early to get DOCKER_HOST set
 	_ = dockerutil.GetDockerClient()
-
-	// This should be in versionconstants, but it's here because initialization
-	// of this type is consolidated here.
-	if globalconfig.DdevGlobalConfig.UseTraefik {
-		versionconstants.RouterImage = "traefik:v2.8"
-	}
-
 }
