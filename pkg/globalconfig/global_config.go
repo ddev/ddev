@@ -193,6 +193,11 @@ func ReadGlobalConfig() error {
 	if nodeps.NoBindMountsDefault == true {
 		DdevGlobalConfig.NoBindMounts = true
 	}
+	// For testing only, override UseTraefikDefault no matter what it's set to
+	if nodeps.UseTraefikDefault == true {
+		DdevGlobalConfig.UseTraefik = true
+	}
+
 	err = ValidateGlobalConfig()
 	if err != nil {
 		return err

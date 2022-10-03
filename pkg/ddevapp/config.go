@@ -48,6 +48,9 @@ func init() {
 	if os.Getenv("DDEV_TEST_NO_BIND_MOUNTS") == "true" {
 		nodeps.NoBindMountsDefault = true
 	}
+	if os.Getenv("DDEV_TEST_USE_TRAEFIK") == "true" {
+		nodeps.UseTraefikDefault = true
+	}
 
 }
 

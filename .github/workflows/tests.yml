@@ -36,32 +36,35 @@ jobs:
 
     strategy:
       matrix:
-        webserver: [apache-fpm, nginx-fpm]
-        tests: ['test TESTARGS="-failfast"']
-        os: [ ubuntu-20.04 ]
-        mutagen: ['false', 'true']
-        no-bind-mounts: ['true', 'false']
+        include:
+          - webserver: "apache-fpm"
+          - webserver: "nginx-fpm"
+            mutagen: false
+          - webserver: "nginx-fpm"
+            mutagen: true
+          - webserver: "nginx-fpm"
+            no-bind-mounts: "true"
+          - webserver: "nginx-fpm"
+            use-traefik: true
       fail-fast: false
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-20.04
 
     env:
-      DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
       DDEV_NONINTERACTIVE: "true"
+      GOTEST_SHORT: "8" // 8 is drupal9; means in TestFullSiteSetup we only use drupal9
+      DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
       DDEV_TEST_USE_MUTAGEN: ${{ matrix.mutagen }}
       DDEV_TEST_NO_BIND_MOUNTS: ${{ matrix.no-bind-mounts }}
-      GOTEST_SHORT: "8"
+      DDEV_TEST_USE_TRAEFIK: ${{ matrix.use_traefik }}
     steps:
       - uses: actions/checkout@v3
       - run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
       - name: Install Docker and deps (Linux)
-        if: matrix.os == 'ubuntu-20.04'
         run: ./.github/workflows/linux-setup.sh
-
       - uses: actions/setup-go@v3
-        if: matrix.os == 'ubuntu-20.04'
         with:
-          go-version: '>=1.18.0'
+          go-version: '>=1.19.0'
 
       - name: DDEV tests
         run: |
