@@ -57,4 +57,5 @@ func TestTraefikSimple(t *testing.T) {
 	_, _ = testcommon.EnsureLocalHTTPContent(t, httpURLs[0]+":8036", "phpMyAdmin")
 	_, _ = testcommon.EnsureLocalHTTPContent(t, httpsURLs[0]+":8037", "phpMyAdmin")
 
+	// TODO: Add wildcards tests like TestConfigValidate
 }
