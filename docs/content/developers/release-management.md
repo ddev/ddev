@@ -19,7 +19,7 @@ The following “Repository secret” environment variables must be added to <ht
 
 ## Creating a Release
 
-!!!tip "This is mostly automated now."
+!!!tip "This is completely automated now, so nothing needs to be done unless something goes wrong."
 
 ### Prerelease Tasks
 
@@ -41,7 +41,7 @@ The easiest way to push Docker images is to use the GitHub Actions workflow, esp
 You can push an image at <https://github.com/drud/ddev/actions/workflows/push-tagged-image.yml>
 
 <!-- markdown-link-check-disable-next-line -->
-If you need to push from a forked PR, you’ll have to do this from your fork (for example, <https://github.com/drud/rfay/actions/workflows/push-tagged-image.yml>), and you’ll have to specify the branch on the fork. This requires setting the `DOCKERHUB_TOKEN` and `DOCKERHUB_USERNAME` secrets on the forked PR, for example `https://github.com/rfay/ddev/settings/secrets/actions`.
+If you need to push from a forked PR, you’ll have to do this from your fork (for example, `https://github.com/drud/rfay/actions/workflows/push-tagged-image.yml`), and you’ll have to specify the branch on the fork. This requires setting the `DOCKERHUB_TOKEN` and `DOCKERHUB_USERNAME` secrets on the forked PR, for example `https://github.com/rfay/ddev/settings/secrets/actions`.
 
 * Visit `https://github.com/drud/ddev/actions/workflows/push-tagged-image.yml`.
 * Click the “Push tagged image” workflow on the left side of the page.
@@ -124,7 +124,7 @@ However, you can manually publish the release to [the DDEV AUR repository](https
 
 This is done automatically by the release build on a dedicated Windows test runner (GitHub Actions runner) named `testbot-asus-win10pro`. You would need to do this process manually on that build machine or install the fob on another machine.
 
-**After rebooting this machine, sometimes an automated reboot, the password for the security fob has to be re-entered or Windows signing will fail. We do this by opening up `testbot-asus-win10pro` using Chrome Remote Desktop (or manually physically opening it), opening Git Bash, and `cd ~/tmp && signtool sign gsudo.exe`. There happens to be a `gsudo.exe` there but it doesn’t matter what you sign—the idea is to pop up the GUI where you enter the password (which is in LastPass).**
+**After rebooting this machine, sometimes an automated reboot, the password for the security fob has to be re-entered or Windows signing will fail. We do this by opening up `tb-win11-06` using Chrome Remote Desktop (or manually physically opening it), opening Git Bash, and `cd ~/tmp && signtool sign gsudo.exe`. There happens to be a `gsudo.exe` there but it doesn’t matter what you sign—the idea is to pop up the GUI where you enter the password (which is in LastPass).**
 
 ### Basic Instructions
 

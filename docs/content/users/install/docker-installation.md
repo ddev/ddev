@@ -1,6 +1,6 @@
 # Docker Installation
 
-You’ll need Docker on your system before you can [install DDEV](ddev-installation.md).
+You’ll need a Docker provider on your system before you can [install DDEV](ddev-installation.md).
 
 === "macOS"
 
@@ -16,27 +16,25 @@ You’ll need Docker on your system before you can [install DDEV](ddev-installat
     1. Run `docker help` to make sure you’ve got the Docker client installed. If you get an error, install it with [Homebrew]() by running `brew install docker`.
     1. Install Colima with `brew install colima` or one of the other [installation options](https://github.com/abiosoft/colima/blob/main/docs/INSTALL.md).
     2. After [installing DDEV](ddev-installation.md), configure your system to use Mutagen—essential for DDEV with Colima—with `ddev config global --mutagen-enabled`.
-    3. Start Colima with 4 CPUs, 4GB memory, 100GB storage, and Cloudflare DNS, adjusting as needed:  
+    3. Start Colima with 4 CPUs, 6GB memory, 100GB storage, and Cloudflare DNS, adjusting as needed:  
     ```
     colima start --cpu 4 --memory 6 --disk 100 --dns=1.1.1.1
     ```
-    4. If you’re using Pantheon or other tenants of `storage.googleapis.com`, run `colima start -e` and configure the DNS server accordingly.
     
     After the initial run in step 4 above, you can just use `colima start` or use `colima start -e` to edit the configuration file. Run `colima status` at any time to check Colima’s status.
     
     When your computer restarts, you’ll need to `colima start` again. This will eventually be automated in later versions of Colima.
     
-    !!!tip "Colima disk and memory allocation"
+    !!!tip "Colima disk allocation"
         We recommend allocating lots of storage for Colima because there’s no way to increase the size later. You can reduce usage with `ddev clean`, and kill off disk images with `docker rm -f $(docker ps -aq) && docker rmi -f $(docker images -q)`. If you have to rebuild your Colima instance, use the technique described below for migrating from Docker Desktop.
 
     !!!warning "Docker contexts let the Docker client point at the right Docker server"
         Colima activates its own Docker context to prevent conflicts with Docker Desktop. If you run `docker context ls`, you’ll see a list of available contexts where the currently-active one is indicated with a `*`—which will be `colima` after you’ve started it. You can change to the default (Docker Desktop) with `docker context use default` or change back with `docker context use colima`. This means you can run Docker Desktop and Colima at the same time, but be mindful of which context you’re pointing at!
 
-    !!!warning "Colima can only work in your home directory without further configuration"
+    !!!warning "Colima can only work in your home directory unless you do further configuration"
         By default, Colima only mounts your home directory, so it’s easiest to use it in a subdirectory there. See the `~/.colima/default/colima.yaml` for more information, or notes in [colima.yaml](https://github.com/abiosoft/colima/blob/fc948f8f055600986f87e29e3e632daf56ac8774/embedded/defaults/colima.yaml#L130-L143).
 
 
-    While DDEV has extensive automated test coverage for Colima on macOS, Colima is young and we appreciate hearing about your experience whether it’s via [GitHub issues](https://github.com/drud/ddev/issues) or [contacting us](../support.md) for help.
 
     #### Migrating Projects from Docker Desktop to Colima
 

@@ -6,7 +6,7 @@ You can download the latest artifacts from the master branch from [link](https:/
 
 To download the latest version, you can visit the [master-build](https://github.com/drud/ddev/actions/workflows/master-build.yml) workflow and choose the latest item (or the one that matches a commit you want to test). The artifacts for each OS are at the bottom of the page.
 
-Alternateively, you can see the latest build in action by visiting DDEV on [Gitpod](https://gitpod.io/#https://github.com/drud/ddev).
+Alternately, you can see the latest build in action by visiting DDEV on [Gitpod](https://gitpod.io/#https://github.com/drud/ddev).
 
 ## Testing a PR
 
@@ -16,7 +16,7 @@ After you download and unzip the appropriate binary, you can place it in your `$
 
 Verify the replacement worked via `ddev -v`. The output should be something like `ddev version v1.19.1-42-g5334d3c1`, instead of the regular `ddev version v1.19.1`.
 
-(On macOS Big Sur these downloaded binaries are not signed, so you’ll want to `xattr -r -d com.apple.quarantine /path/to/ddev` in order to use them. The binaries on the master branch and the final binaries in any release *are* signed.)
+(On macOS these downloaded binaries are not signed, so you’ll want to `xattr -r -d com.apple.quarantine /path/to/ddev` in order to use them. The binaries on the master branch and the final binaries in any release *are* signed.)
 
 You do not typically have to install anything else other than the downloaded binary; when you run it it will access any Docker images that it needs.
 
@@ -57,13 +57,13 @@ It’s easiest to do this using Gitpod (see above) because Gitpod already has `d
 
 ## Pull Requests and PR Preparation
 
-When preparing your pull request, please use a branch name like `2022_<your_username>_short_description` so it’s easy to identify you as the author.
+When preparing your pull request, please use a branch name like `2022MMDD_<your_username>_short_description` (like `20230901_rfay_short_description`) so it’s easy to identify you as the author.
 
 ## Docker Image Changes
 
 If you make changes to a Docker image (like `ddev-webserver`), it won’t have any effect unless you:
 
-* Push an image with a specific tag by navigating to the image directory (like `containers/ddev-webserver`), and running `make container VERSION=<branchname>`.
+* Push an image with a specific tag by navigating to the image directory (like `containers/ddev-webserver`), and running `make push DOCKER_REPO=youruser/yourimage VERSION=<branchname>`. 
 * Multi-arch images require you to have a Buildx builder, so `docker buildx create --name ddev-builder-multi --use`.
 * You can’t push until you `docker login`.
 * Push a container to hub.docker.com. Push with the tag that matches your branch. Pushing to `<yourorg>/ddev-webserver` repo is easy to accomplish with `make push DOCKER_ORG=<yourorg> VERSION=<branchname>` **in the container directory**. You might have to use other techniques to push to another repo.

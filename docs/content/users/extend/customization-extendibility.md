@@ -4,7 +4,7 @@ DDEV provides several ways to customize and extend project environments.
 
 ## Changing PHP Version
 
-The project's `.ddev/config.yaml` file defines the PHP version to use. The `php_version` can be changed to `5.6`, `7.0`, `7.1`, `7.2`,  `7.3`, `7.4`, `8.0` or `8.1`. The current default is `7.4`.
+The project's `.ddev/config.yaml` file defines the PHP version to use. The `php_version` can be changed to `5.6`, `7.0`, `7.1`, `7.2`,  `7.3`, `7.4`, `8.0`, `8.1`, or `8.1`. The current default is `8.0`.
 
 ### Older Versions of PHP
 
@@ -169,7 +169,7 @@ You can also have more than one config file in the `.ddev/nginx_full` directory,
 * The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the health check script to work.
 
 !!!warning "Important!"
-    Changes to configuration take place on a `ddev start`, when the container is rebuilt for another reason, or when the nginx server receives the reload signal.
+    Changes to configuration take place on a `ddev restart`, when the container is rebuilt for another reason, or when the nginx server receives the reload signal.
 
 ### Multiple Docroots in nginx (Advanced)
 
@@ -201,7 +201,7 @@ If you’re using `webserver_type: apache-fpm` in your `.ddev/config.yaml`, you 
 * Any errors in your configuration may cause the `web` container to fail. If you see that behavior, use `ddev logs` to diagnose.
 
 !!!warning "Important!"
-    Changes to `.ddev/apache/apache-site.conf` take place on a `ddev start`. You can also `ddev exec apachectl -k graceful` to reload the Apache configuration.
+    Changes to `.ddev/apache/apache-site.conf` take place on a `ddev restart`. You can also `ddev exec apachectl -k graceful` to reload the Apache configuration.
 
 ## Custom PHP Configuration (`php.ini`)
 

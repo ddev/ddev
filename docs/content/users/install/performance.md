@@ -1,6 +1,6 @@
 # Performance
 
-DDEV is continually focused on quick project startup and fast responses to its web requests. DDEV’s performance is mostly an issue of how Docker runs on your host machine.
+DDEV is continually focused on quick project startup and fast responses to its web requests. DDEV’s performance is mostly an issue of how Docker runs on your workstation.
 
 On Linux, including Windows WSL2 and Gitpod, Docker is fast. Most people are happy with Linux performance and don’t need to change anything.
 
@@ -45,15 +45,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
     
     The `nfs-mount-enabled` feature is automatically turned off if you’re using Mutagen.
     
-    ### Windows Mutagen and Executable Files
     
-    Mutagen on Windows doesn’t properly set your project files as executable, so commands like `ddev exec drush` or `ddev craft` will likely fail. You can get around this using a post-start [hook](../configuration/hooks.md) to set the appropriate directories as executable:
-    
-    ```yaml
-    hooks:
-      post-start:
-      - exec: "chmod +x /var/www/html/vendor/bin/* /var/www/html/node_modules/.bin/*"
-    ```
 
     ### Mutagen and User-Generated Uploads
 
@@ -68,10 +60,10 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
     Mutagen has generally been great for those using it, but it’s good to be aware of its trade-offs:
 
     * **It’s not the right choice for every project.**  
-    If filesystem consistency—as opposed to performance—is your highest priority, then there are reasons to be cautious. Two-way sync is a very difficult computational problem, and problems *may* surface. (We haven’t seen any major issues yet!)
+    Filesystem consistency has been excellent with Mutagen, but performance is its specialty. If consistency is your highest priority, then there are reasons to be cautious. Two-way sync is a very difficult computational problem, and problems *may* surface.
     * **Avoid file changes when DDEV is stopped.**  
     If you change files—checking out a different branch, removing a file—while DDEV is stopped, Mutagen has no way to know about it. When you start again, it will get the files that are stored and bring them back to the host. If you *do* change files while DDEV is stopped, run `ddev mutagen reset` before restarting the project so Mutagen only starts with awareness of the host’s file contents.
-    * **It increases disk usage.**  
+    * **It modestly increases disk usage.**  
     Mutagen integration increases the size of your project code’s disk usage, because the code exists both on your computer *and* inside a Docker volume. (As of DDEV v1.19+, this does not include your file upload directory, so normally it’s not too intrusive.) Take care that you have enough overall disk space, and that on macOS you’ve allocated enough file space in Docker Desktop. For projects before DDEV v1.19, if you have a large amount of data like user-generated content that doesn’t need syncing (i.e. `fileadmin` for TYPO3 or `sites/default/files` for Drupal), you can [exclude specific directories from getting synced](#advanced-mutagen-configuration-options) and use a regular Docker mount for them instead. As of v1.19, this is handled automatically and these files are not Mutagen-synced.
     * **Beware simultaneous changes to the same file in both filesystems.**  
     As we pointed out above, any project likely to change the same file on the host *and* inside the container may encounter conflicts.
@@ -167,7 +159,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 
     #### Advanced Mutagen Troubleshooting
 
-    Most people get the insight they need running `ddev mutagen monitor` and watching the results, but you can also enable full logging:
+    Most people get the insight they need running `ddev mutagen status --verbose` and `ddev mutagen monitor` and watching the results, but you can also enable full logging:
 
     * `killall mutagen`
     * `export MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory`
@@ -189,20 +181,18 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
     The Mutagen daemon’s life cycle and sync sessions are something like this:
 
     1. On `ddev start`, the Mutagen agent will be started if it’s not already running.
-    2. If there’s already a sync session for the project, it’s stopped and recreated.
-    3. On `ddev stop` and `ddev pause`, the sync session is flushed to ensure consistency, then terminated.
+    2. If there’s already a sync session for the project, it’s resumed.
+    3. On `ddev stop` and `ddev pause`, the sync session is flushed to ensure consistency, then paused.
 
     A synchronous flush happens after any `ddev composer` command, since Composer may cause massive changes to the filesystem inside the container that need to be synced before operation continues.
     
     If you need to reset everything for a project, you can do it with `ddev mutagen reset`, which starts the Mutagen session from scratch and removes the Docker volume so it can be recreated from scratch.
 
-    ### Interaction with Other Usages of Mutagen
+    ### Safe to Use with Other Mutagen Installations
 
-    DDEV requires and provides a specific version of Mutagen, which you can see with `ddev version`.
+    DDEV requires and provides a specific version of Mutagen, which you can see with `ddev version`.  If another `mutagen` instance or daemon is installed on your workstation it doesn't matter, because DDEV's version runs separately and uses a different data directory.
 
-    Mutagen does not guarantee interoperability between different Mutagen versions, so you may have trouble if you have another version of Mutagen installed. You can find out what version of Mutagen you may have installed outside DDEV with `mutagen version`.
 
-    You’ll want your system’s Mutagen version to be the same as the one provided with DDEV. If you’re using Mutagen for anything else, follow Mutagen’s [installation instructions](https://mutagen.io/documentation/introduction/installation) to install the required version.
 
 === "NFS"
 
@@ -308,7 +298,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 
         #### Windows-specific NFS debugging
 
-        * Temporarily disable any firewall or VPN.
+        * Temporarily disable any firewall, VPN, or virus checker.
         * You can only have one NFS daemon running, so if another application has installed one, you’ll want to use that NFS daemon and reconfigure it to allow NFS mounts of your projects.
 
         1. Stop the running `winnfsd` service with `sudo nssm stop nfsd`.
@@ -327,4 +317,4 @@ Every project you run uses system resources, and may compete for those resources
 
 ## Docker Desktop for Mac Settings
 
-Open Docker Desktop’s *Preferences*, and visit *Resources* → *Advanced*. Here you can adjust the CPUs, memory, and disk allocated to Docker. The defaults work well for a small project or two, but you may want to adjust these upward based on your experience. The default memory allocation is 2GB, but many people raise it to 4-5GB or higher. The disk allocation almost always needs to be raised to accommodate increased downloaded images. Your experience will determine what to do with CPUs.
+Open Docker Desktop’s *Preferences*, and visit *Resources* → *Advanced*. Here you can adjust the CPUs, memory, and disk allocated to Docker. The defaults work well for a small project or two, but you may want to adjust these upward based on your experience. Most people raise the memory allocation to 6GB or higher. The disk allocation almost always needs to be raised to accommodate increased downloaded images. Your experience will determine what to do with CPUs.

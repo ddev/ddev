@@ -26,7 +26,6 @@ Commands
 Completely
 Create
 DDEV's
-DDEV’s
 DDEV
 DHCP
 DKIM

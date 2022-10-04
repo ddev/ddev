@@ -1,8 +1,8 @@
 # DDEV Installation
 
-Once you’ve [installed Docker](docker-installation.md), you’re ready to install DDEV!
+Once you’ve [installed a Docker provider](docker-installation.md), you’re ready to install DDEV!
 
-Installing and upgrading DDEV are nearly the same thing, because we’re upgrading the `ddev` binary that talks with Docker. You can update this file like other software on your system, whether it’s with a package manager or traditional installer.
+Installing and upgrading DDEV are nearly the same thing, because you're upgrading the `ddev` binary that talks with Docker. You can update this file like other software on your system, whether it’s with a package manager or traditional installer.
 
 === "macOS"
 
@@ -36,7 +36,7 @@ Installing and upgrading DDEV are nearly the same thing, because we’re upgradi
     curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash
     ```
 
-    You can include an `-s` argument to install a specific release or a prerelease version:
+    You can include a `-s <version>` argument to install a specific release or a prerelease version:
 
     ```
     curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash -s v1.19.5
@@ -91,7 +91,7 @@ Installing and upgrading DDEV are nearly the same thing, because we’re upgradi
 
     ## Alternate Linux Install Methods
 
-    You can also use two macOS install methods to install or update DDEV on Linux: [Homebrew](#homebrew) and the standalone [install script](#install-script).
+    You can also use two macOS install methods to install or update DDEV on Linux: [Homebrew](#homebrew) (on ARM64 computers) and the standalone [install script](#install-script).
 
 === "Windows WSL2"
 

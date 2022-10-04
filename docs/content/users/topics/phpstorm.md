@@ -91,7 +91,7 @@ Set the PhpStorm terminal path (*Settings* → *Tools* → *Terminal* → *Shell
 
 ### PhpStorm Inside WSL2 in Linux
 
-1. On Windows 11 you don’t need to install an X11 server, because [WSLg](https://github.com/microsoft/wslg) is included by default. On older Windows 10, Install X410 from the Microsoft Store, launch it, configure in the system tray with “Windowed Apps”, “Allow public access”, “DPI Scaling” → ”High quality”. You can any other X11 server, this is just the one we’ve used.
+1. On Windows 11 you don’t need to install an X11 server, because [WSLg](https://github.com/microsoft/wslg) is included by default. On older Windows 10, Install X410 from the Microsoft Store, launch it, configure in the system tray with “Windowed Apps”, “Allow public access”, “DPI Scaling” → ”High quality”. You can any other X11 server, this is just one possibility.
 2. Temporarily disable your Windows firewall. You can re-enable it after you get everything working.
 3. If you’re on older Windows 10, in the WSL2 terminal `export DISPLAY=$(awk '/^nameserver/ {print $2; exit;}' </etc/resolv.conf):0.0` (You’ll want to add this to your `.profile` in WSL2). This sets the X11 DISPLAY variable to point to your Windows host side. On Windows 11 this “just works” and you don’t need to do anything here.
 4. Install the DDEV apt repository:

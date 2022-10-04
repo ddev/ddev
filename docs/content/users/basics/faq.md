@@ -1,7 +1,7 @@
 # Frequently-Asked Questions (FAQ)
 
 What operating systems will DDEV work with?
-: DDEV works nearly anywhere Docker will run, including macOS, Windows 10/11 Pro/Enterprise, Windows 10/11 Home, and every Linux variant we’ve ever tried. It also runs in many Linux-like environments, like ChromeOS (in Linux machine) and Windows 10/11’s WSL2. DDEV works generally the same on each of these platforms since the important work is done inside identical Docker containers.
+: DDEV works nearly anywhere Docker will run, including macOS, Windows 10/11 Pro/Enterprise, Windows 10/11 Home, and every Linux variant we’ve ever tried. It also runs in many Linux-like environments, like ChromeOS (in Linux machine) and Windows 10/11’s WSL2. DDEV works the same on each of these platforms since the important work is done inside identical Docker containers.
 
 Do I lose my data when I do a `ddev poweroff` or `ddev stop` or `ddev restart`?
 : No, you don’t lose data in your database or code with any of these commands. Your database is safely stored on a Docker volume.
@@ -16,7 +16,7 @@ Do I need to install PHP, Composer, nginx, or Node.js/npm on my computer?
 : Absolutely *not*. All of these tools live inside DDEV’s Docker containers, so you need only Docker and DDEV. This is especially handy for Windows users where there’s more friction installing those tools.
 
 How do I get support?
-: See the (many) [support options](../support.md), including [Discord](https://discord.gg/kDvSFBSZfs), [Stack Overflow](https://stackoverflow.com/questions/tagged/ddev) and others.
+: See the (many) [support options](../support.md), including [Discord](https://discord.gg/kDvSFBSZfs), [Stack Overflow](https://stackoverflow.com/questions/tagged/ddev) and the [issue queue](https://github.com/drud/ddev/issues).
 
 How can I get the best performance?
 : Docker’s normal mounting can be slow, especially on macOS. See the [Performance](../install/performance.md) section for speed-up options including Mutagen and NFS mounting.
@@ -30,13 +30,13 @@ Can I run DDEV with other Docker or non-Docker development environments at the s
     For example, if you use Lando for one project, do a `lando poweroff` before using DDEV, and then do a `ddev poweroff` before using Lando again. If you run nginx or Apache locally, stop them before using DDEV. More information is in the [troubleshooting](troubleshooting.md) section.
 
 How can I contribute to DDEV?
-: We love and welcome contributions of knowledge, support, docs, and code. Make an issue or PR to the [main repo](https://github.com/drud/ddev). Add your external resource to [awesome-ddev](https://github.com/drud/awesome-ddev). Add your recipe or HOWTO to [ddev-contrib](https://github.com/drud/ddev-contrib). Help others in [Discord](https://discord.gg/kDvSFBSZfs) and [Stack Overflow](https://stackoverflow.com/tags/ddev). Follow the [governance issue](https://github.com/drud/ddev/issues/3268) to learn about financial support possibilities.
+: We love and welcome contributions of knowledge, support, docs, and code. Make an issue or PR to the [main repo](https://github.com/drud/ddev). Add your external resource to [awesome-ddev](https://github.com/drud/awesome-ddev). Add your recipe or HOWTO to [ddev-contrib](https://github.com/drud/ddev-contrib). Help others in [Discord](https://discord.gg/kDvSFBSZfs) and [Stack Overflow](https://stackoverflow.com/tags/ddev). Contribute financially via [GitHub Sponsors](https://github.com/sponsors/rfay). Get involved with DDEV governance and the [Advisory Group](https://github.com/drud/ddev/discussions/categories/ddev-advisory-group). 
 
 How can I show my local project to someone else?
 : We often want a customer or coworker to be able to view our local environment, even if they’re on a different machine or network. There are [several ways to do this](../topics/sharing.md). `ddev share` is one: it provides a link that anyone can view and so they can interact with your local project while you allow it. See `ddev share -h` for more information. It does require an account on [ngrok.com](https://ngrok.com).
 
 Can I use additional databases with DDEV?
-: Yes, you can create additional databases and manually do whatever you need on them. They are automatically created if you use `ddev import-db` with `--target-db`, for example `ddev import-db --target-db=extradb --src=.tarballs/extradb.sql.gz`. You can use `ddev mysql` or `ddev psql` for random queries, or also use the MySQL/PostgreSQL clients within `ddev ssh` or `ddev ssh -s db`.
+: Yes, you can create additional databases and manually do whatever you need on them. They are automatically created if you use `ddev import-db` with `--target-db`, for example `ddev import-db --target-db=extradb --src=.tarballs/extradb.sql.gz`. You can use `ddev mysql` or `ddev psql` for random queries, or also use the MySQL/PostgreSQL clients within `ddev ssh` or `ddev ssh -s db`. See the [database topic](database_management.md).
 
 <a name="projects-communicate-with-each-other"></a>
 Can different projects communicate with each other?
@@ -60,6 +60,7 @@ How do I completely destroy a project?
 I don’t like the settings files or gitignores that DDEV creates. What can I do?
 : You have a couple of options that work well for most people:
 
+    * Use the `disable_settings_management: true` option in the `.ddev/config.yaml`. This disables DDEV from updating CMS-related settings files.
     * Use the more generic “php” project type rather than a CMS-specific one. “php” just means “don’t try to create settings files and such for me.”. The “php” type works great for experienced developers.
 
     * Take over the settings file or `.gitignore` by deleting the line `#ddev-generated` in it, then check in the file. If that line is removed, DDEV will not try to replace or change the file.
@@ -101,7 +102,7 @@ Why do I see nginx headers when I’m configured to use `webserver_type: apache-
 : Apache runs in the web container, but when you use the `https://*.ddev.site` URL, it goes through `ddev-router`, which is an nginx reverse proxy, and that’s why you see the nginx headers even though your web container’s using Apache. Read more in [this Stack Overflow answer](https://stackoverflow.com/a/52780601/215713).
 
 Why does `ddev start` fail with “error while mounting volume, Permission denied”?
-: This almost always means NFS is enabled in your project, but NFS isn’t working on your machine. Start by completely turning NFS off for your projects with `ddev config --nfs-mount-enabled=false && ddev config global --nfs-mount-enabled=false`. Then later, [get NFS working](../install/performance.md#using-nfs-to-mount-the-project-into-the-web-container). NFS can be a big performance help on macOS and traditional Windows, and not needed on Linux or Windows WSL2.
+: This almost always means NFS is enabled in your project, but NFS isn’t working on your machine. Start by completely turning NFS off for your projects with `ddev config --nfs-mount-enabled=false && ddev config global --nfs-mount-enabled=false`. Then later, [get NFS working](../install/performance.md#using-nfs-to-mount-the-project-into-the-web-container). NFS can be a big performance help on macOS and traditional Windows, and not needed on Linux or Windows WSL2. Most people on macOS and Windows use Mutagen instead of NFS because of its vastly improved performance, so instead of trying to fix this you can disable NFS and enable Mutagen by running `ddev config --nfs-mount-enabled=false --mutagen-enabled`.
 
 How can I update/upgrade DDEV?
 : DDEV is easiest to think of as a single binary, and it can be installed many ways, so can be upgraded many ways depending on your operating system and environment. Since upgrading is basically the same as installing, you can follow [DDEV Installation](../install/ddev-installation.md) to upgrade as well.

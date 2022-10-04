@@ -11,11 +11,11 @@ Hundreds of useful developer tools are included inside the containers and can be
 * [Drush](http://www.drush.org) - Command-line shell and Unix scripting interface for Drupal.
 * [PHIVE](https://phar.io/) - Command line tool for “PHAR Installation and Verification Environment”.
 * [WP-CLI](http://wp-cli.org/) - Command-line tools for managing WordPress installations, available both as `wp` and as `wp-cli`.
-* `npm` and `yarn` (and the `ddev yarn` command will run Yarn for you, `ddev help yarn`).
+* `npm`, `nvm`, and `yarn` (these also have `ddev` shortcuts like `ddev npm`, `ddev nvm`, `ddev yarn`).
 * `node`
 * `sqlite3`
 
-These tools can be accessed for single commands using [`ddev exec <command>`](cli-usage.md#executing-commands-in-containers) or [`ddev ssh`](cli-usage.md#ssh-into-containers) for an interactive Bash or sh session.
+These tools can be accessed for single commands using [`ddev exec <command>`](cli-usage.md#executing-commands-in-containers) or [`ddev ssh`](cli-usage.md#ssh-into-containers) for an interactive `bash` or `sh` session.
 
 You can also add tools that are not provided by default using [`webimage_extra_packages` or a custom Dockerfile](../extend/customizing-images.md).
 
@@ -53,7 +53,7 @@ DDEV uses Composer 2 by default. Use the `--composer-version` option to roll bac
 
 DDEV attempts to help with Composer and some configurations of Docker Desktop for Windows that introduce complex filesystem workarounds.
 
-Aside from the occasional complicated TYPO3 project, you generally shouldn’t have to worry about any of this—it just keeps things cleaner:
+Use `ddev composer` (Composer inside the container) instead of using `composer` on the host side, because it uses the right version of PHP and all its extensions for your project:
 
 * On some older configurations of Docker Desktop for Windows, symlinks are created in the container as “simulated symlinks”, or XSym files. These special text files behave as symlinks inside the container (on CIFS filesystem), but appear as simple text files on the Windows host. (On the CIFS filesystem used by Docker for Windows, inside the container, there is no capability to create real symlinks even though Windows now has this capability.)
 * DDEV attempts to clean up for this situation. Since Windows 10/11+ (in developer mode) can create real symlinks, DDEV scans your repository after a `ddev composer` command and attempts to convert XSym files into real symlinks. On older versions of Windows 10, it can only do this if your Windows 10 workstation is set to “Developer Mode”.
@@ -61,7 +61,7 @@ Aside from the occasional complicated TYPO3 project, you generally shouldn’t h
     ![Finding developer mode](../images/developer_mode_1.png)  
     ![Setting developer mode](../images/developer_mode_2.png)
 
-### Limitations with `ddev composer`
+### Limitations of `ddev composer`
 
 * Using `ddev composer --version` or `ddev composer -V` will not work, since `ddev` tries to utilize the command for itself. Use `ddev composer -- --version` instead.
 
@@ -73,7 +73,7 @@ After your project is started, access the MailHog web interface at `https://mysi
 
 MailHog will **not** intercept emails if your application is configured to use SMTP or a third-party ESP integration.
 
-If you’re using SMTP for outgoing mail—with [Swift Mailer](https://www.drupal.org/project/swiftmailer) or [SMTP](https://www.drupal.org/project/smtp) modules, for example—update your application’s SMTP server configuration to use `localhost` and MailHog’s port `1025`.
+If you’re using SMTP for outgoing mail—with [Symfony Mailer](https://www.drupal.org/project/symfony_mailer) or [SMTP](https://www.drupal.org/project/smtp) modules, for example—update your application’s SMTP server configuration to use `localhost` and MailHog’s port `1025`.
 
 For Laravel projects, MailHog will capture Swift messages via SMTP. Update your `.env` to use Mailhog with the following settings:
 
@@ -92,13 +92,15 @@ It’s possible in many cases to use development tools installed on your host ma
 
 ### Database Connections from the Host
 
-If you need to connect to your project’s database from your host machine, run `ddev describe` to show the database connection information, like `Host: localhost:49156`.
+If you need to connect to your project’s database from your workstation, run `ddev describe` to show the database connection information, like `Host: localhost:49156`.
 
 Each project’s database port is unique, and randomly chosen from available ports on your system when you run `ddev start`.
 
 You can force this port to be the same on every `ddev start` by setting `host_db_port` in the project `.ddev/config.yaml`. For example, `host_db_port: "49156"` or `ddev config --host-db-port=49156`. This value needs to be different on each running DDEV project, and unless it is set, the database port will change on every `ddev start`.
 
 You can use this port with various tools that need a direct port, like `mysql` or `psql` clients, but it’s usually easiest to use `ddev mysql`, `ddev psql`, `ddev sequelace`, `ddev tableplus`, etc, which set everything up for you.
+
+(If you use PhpStorm and its integrated database browser, use the [DDEV Integration Plugin](https://plugins.jetbrains.com/plugin/18813-ddev-integration) to manage all of this for you.)
 
 ## Using Drush 8 Installation on Your Host Machine
 
@@ -111,7 +113,7 @@ On Drupal 8+, if you want to use `drush uli` on the host (or other Drush command
 
 ## DDEV and Terminus
 
-[Terminus](https://pantheon.io/docs/terminus/) is a command line tool providing advanced interaction with [Pantheon](https://pantheon.io/) services. As of version [1.13.0](https://github.com/drud/ddev/releases/tag/v1.13.0), Terminus is available inside the project’s container, allowing users to get information from, or issue commands to their Pantheon-hosted sites. This is an especially helpful feature for Windows users since Terminus is only officially supported on Unix-based systems.
+[Terminus](https://pantheon.io/docs/terminus/) is a command line tool providing advanced interaction with [Pantheon](https://pantheon.io/) services. `terminus` is available inside the project’s container, allowing users to get information from, or issue commands to their Pantheon-hosted sites. This is an especially helpful feature for Windows users since Terminus is only officially supported on Unix-based systems.
 
 To use Terminus, you’ll first need to:
 

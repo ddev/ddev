@@ -1,4 +1,4 @@
-# Custom Shell Commands
+# Custom Commands
 
 Custom commands can easily be added to DDEV, to be executed on the host or in containers.
 
@@ -8,7 +8,7 @@ Example commands in `ddev/commands/*/*.example` can be copied, moved, or symlink
 
 For example, [.ddev/commands/host/mysqlworkbench.example](https://github.com/drud/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/host/mysqlworkbench.example) can be used to add a `ddev mysqlworkbench` command. Rename it from `mysqlworkbench.example` to `mysqlworkbench`. If you’re on macOS or Linux (or some configurations of Windows) you can `cd .ddev/commands/host && ln -s mysqlworkbench.example mysqlworkbench`.
 
-A new `ddev mysql` command has been added as a `db` container command using this technique. See the [`ddev mysql` command](https://github.com/drud/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/db/mysql).
+The `ddev mysql` runs the `mysql` client inside the `db` container command using this technique. See the [`ddev mysql` command](https://github.com/drud/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/db/mysql).
 
 ## Notes for All Command Types
 
@@ -63,7 +63,7 @@ There are many examples of [global](https://github.com/drud/ddev/tree/master/pkg
 
 ## Environment Variables Provided
 
-A number of environment variables are provided to the script. These are generally supported, but please avoid using undocumented environment variables. Useful variables for host scripts are:
+A number of environment variables are provided to these command scripts. These are generally supported, but please avoid using undocumented environment variables. Useful variables for host scripts are:
 
 * `DDEV_APPROOT`: file system location of the project on the host
 * `DDEV_DATABASE`: database in use, in format `type:version` (example: `mariadb:10.5`)

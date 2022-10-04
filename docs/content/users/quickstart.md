@@ -1,6 +1,6 @@
 # CMS Quickstarts
 
-Once DDEV’s installed you can quickly spin up new projects:
+Once DDEV is installed, you can quickly spin up new projects:
 
 1. Clone or create the code for your project.
 2. `cd` into the project directory and run `ddev config` to initialize a DDEV project.  
@@ -28,7 +28,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     2. Change to the new directory (`cd my-new-project`).
     3. Run `ddev config` and set the project type and docroot, which are usually auto-detected, but may not be if there's no code in there yet.
     4. Run `ddev start`.
-    6. If you’re using Composer build, run `ddev composer install`.
+    6. If you’re using Composer, run `ddev composer install`.
     4. Configure any database settings; host='db', user='db', password='db', database='db'
     5. If needed, import a database with `ddev import-db --src=/path/to/db.sql.gz`.
     6. Visit the project in a browser, and then build things.
@@ -165,7 +165,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
 
         ### Drupal 10 via Composer
     
-        [Drupal 10](https://www.drupal.org/about/10) isn’t released yet, but many want to test and contribute to it.
+        [Drupal 10](https://www.drupal.org/about/10) is fully supported by DDEV.
         
         ```bash
         mkdir my-drupal10-site
@@ -181,7 +181,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         ```
 
         !!!tip
-            As Drupal 10 moves from alpha to beta and then release, you’ll want to change the tag from `^10@alpha` to `^10@beta` and then `^10` respectively.
+            As Drupal 10 moves from beta and to release, you’ll want to change the tag from `^10@beta` to `^10`.
 
     === "Drupal 6/7"
 
@@ -561,7 +561,10 @@ The first is destructive. It removes the project from DDEV’s list, deletes its
 or  
 `ddev delete --omit-snapshot <projectname>`
 
-The second way only removes the project from `ddev list` without deleting anything else.
+If you simply don’t want the project to show up in `ddev list` anymore, use this nondestructive command to unlist it until the next time you run `ddev start` or `ddev config`:
+
+```bash
+ddev stop --unlist <projectname>
 
 Use `ddev stop --unlist <projectname>` to unlist it until the next time you `ddev start` or `ddev config` the project.
 
@@ -587,7 +590,8 @@ Successfully imported database for drupal8
 Database imports can be any of the following file types:
 
 * Raw SQL Dump (.sql)
-* Gzipped SQL Dump (.sql.gz)
+* Gzipped SQL Dump (`.sql.gz`)
+* Xz'd SQL Dump (`.sql.xz`)
 * (Gzipped) Tarball Archive (.tar, .tar.gz, .tgz)
 * Zip Archive (.zip)
 * stdin
