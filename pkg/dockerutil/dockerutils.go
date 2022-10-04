@@ -1047,6 +1047,11 @@ func GetHostDockerInternalIP() (string, error) {
 		if err == nil && len(addrs) > 0 {
 			hostDockerInternal = addrs[0]
 		}
+		// That approach doesn't seem to work any more at all on gitpod
+		// However, docker0 is there and it's the IP address we want.
+		// So figure out how to get docker0, perhaps use ip tool like in the past.
+		// We may want to try the linux approach and then fall back to the ip ... of the past.
+		
 	case nodeps.IsWSL2() && IsDockerDesktop():
 		// If IDE is on Windows, return; we don't have to do anything.
 
