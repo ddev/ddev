@@ -186,8 +186,6 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 
     DDEV requires and provides a specific version of Mutagen, which you can see with `ddev version`.  If another `mutagen` instance or daemon is installed on your workstation it doesn't matter, because DDEV's version runs separately and uses a different data directory.
 
-
-
 === "NFS"
 
     ## NFS

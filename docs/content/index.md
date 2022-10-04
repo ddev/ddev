@@ -19,6 +19,7 @@ These environments can be extended, version controlled, and shared, so you can t
 
 === "Windows WSL2"
     ### Windows WSL2
+
     * RAM: 8GB
     * Storage: 256GB
     * [Docker Desktop](https://www.docker.com/products/docker-desktop/) on the Windows side or [Docker CE](https://docs.docker.com/engine/install/ubuntu/) inside WSL2

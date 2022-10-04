@@ -63,7 +63,7 @@ When preparing your pull request, please use a branch name like `2022MMDD_<your_
 
 If you make changes to a Docker image (like `ddev-webserver`), it won’t have any effect unless you:
 
-* Push an image with a specific tag by navigating to the image directory (like `containers/ddev-webserver`), and running `make push DOCKER_REPO=youruser/yourimage VERSION=<branchname>`. 
+* Push an image with a specific tag by navigating to the image directory (like `containers/ddev-webserver`), and running `make push DOCKER_REPO=youruser/yourimage VERSION=<branchname>`.
 * Multi-arch images require you to have a Buildx builder, so `docker buildx create --name ddev-builder-multi --use`.
 * You can’t push until you `docker login`.
 * Push a container to hub.docker.com. Push with the tag that matches your branch. Pushing to `<yourorg>/ddev-webserver` repo is easy to accomplish with `make push DOCKER_ORG=<yourorg> VERSION=<branchname>` **in the container directory**. You might have to use other techniques to push to another repo.

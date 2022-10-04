@@ -635,7 +635,7 @@ If you simply don’t want the project to show up in `ddev list` anymore, use th
 
 ```bash
 ddev stop --unlist <projectname>
-
+```
 
 ## Importing Assets for An Existing Project
 
