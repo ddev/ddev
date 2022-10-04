@@ -17,7 +17,7 @@ var SegmentKey = ""
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20220826_path_adjusted_for_composer_root" // Note that this can be overridden by make
+var WebTag = "20220928_fix_yarnrc_edit_problem" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"
@@ -54,7 +54,7 @@ var BUILDINFO = "BUILDINFO should have new info"
 // MutagenVersion is filled with the version we find for mutagen in use
 var MutagenVersion = ""
 
-const RequiredMutagenVersion = "0.15.1"
+const RequiredMutagenVersion = "0.16.0-beta1"
 
 // GetWebImage returns the correctly formatted web image:tag reference
 func GetWebImage() string {

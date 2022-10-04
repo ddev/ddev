@@ -4,13 +4,11 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/updatecheck"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/versionconstants"
-	"github.com/mitchellh/go-homedir"
 	"github.com/rogpeppe/go-internal/semver"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -209,12 +207,8 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 
 		// If they have a new version (but not first-timer) then prompt to poweroff
 		if globalconfig.DdevGlobalConfig.LastStartedVersion != "v0.0" {
-			output.UserOut.Print("Congratulations, you seem to have a new DDEV version.")
-			home, _ := homedir.Dir()
-			if globalconfig.DdevGlobalConfig.MutagenEnabledGlobal && fileutil.IsDirectory(filepath.Join(home, ".mutagen")) {
-				output.UserOut.Print("Please note that the global ~/.mutagen folder is no longer used by DDEV so you can delete it if it's no longer used by other applications.")
-			}
-			okPoweroff := util.Confirm("It looks like you have a new DDEV version. During an upgrade it's important to `ddev poweroff`. May I do `ddev poweroff` before continuing? This does no harm and loses no data.")
+			output.UserOut.Print("You seem to have a new DDEV version.")
+			okPoweroff := util.Confirm("During an upgrade it's important to `ddev poweroff`.\nMay I do `ddev poweroff` before continuing?\nThis does no harm and loses no data.")
 			if okPoweroff {
 				ddevapp.PowerOff()
 			}

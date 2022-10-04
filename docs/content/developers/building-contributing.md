@@ -31,7 +31,7 @@ To open and work on DDEV you can use the button below.
 
 If you want to run a web project, you can check it out into `/workspace/<yourproject>` and use it as usual. The things you’re familiar with work normally, except that `ddev-router` does not run.
 
-A dummy Gitpod project is provided by default in `/workspace/d9simple`. If you’d like, you can `ddev poweroff` and use your own.
+A Gitpod dummy project for is provided by default in `/workspace/d9simple`. If you’re testing your own project, you will need to delete it to free up reserved host ports by running `ddev delete -Oy d9simple`. Then you can run `ddev start` to work with your own.
 
 ## Making Changes to DDEV Images
 

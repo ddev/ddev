@@ -159,16 +159,8 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 
     #### Advanced Mutagen Troubleshooting
 
-    Most people get the insight they need running `ddev mutagen status --verbose` and `ddev mutagen monitor` and watching the results, but you can also enable full logging:
+    Most people get all the information they need about mutagen by running `ddev mutagen monitor` to see the results. However, Mutagen has full logging. You can run it with `ddev mutagen logs`.
 
-    * `killall mutagen`
-    * `export MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory`
-    * `export MUTAGEN_LOG_LEVEL=debug` or `export MUTAGEN_LOG_LEVEL=trace`
-    * `~/.ddev/bin/mutagen daemon run`
-    
-    Work with your project and watch the output.
-
-    When you’re done, run `ddev poweroff` and <kbd>CTRL</kbd> + <kbd>C</kbd> the running Mutagen daemon to get back to normal.
 
     ### Mutagen Strategies and Design Considerations
 

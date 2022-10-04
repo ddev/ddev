@@ -180,6 +180,11 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		if configFile != "" {
 			args = append(args, fmt.Sprintf(`--configuration-file=%s`, configFile))
 		}
+		// On Windows, permissions can't be inferred from what is on the host side, so just force 777 for
+		// most things
+		if runtime.GOOS == "windows" {
+			args = append(args, []string{"--permissions-mode=manual", "--default-file-mode-beta=0777", "--default-directory-mode-beta=0777"}...)
+		}
 		util.Debug("Creating mutagen sync: mutagen %v", args)
 		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), args...)
 		if err != nil {
@@ -490,6 +495,21 @@ func StopMutagenDaemon() {
 			util.Warning("Unable to stop mutagen daemon: %v; MUTAGEN_DATA_DIRECTORY=%s", err, mutagenDataDirectory)
 		}
 		util.Success("Stopped mutagen daemon")
+		// There may be an old mutagen daemon running against ~/.mutagen; try to stop it as well
+		out, err = exec.RunHostCommand("sh", "-c", fmt.Sprintf("MUTAGEN_DATA_DIRECTORY=~/.mutagen %s daemon  stop", globalconfig.GetMutagenPath()))
+		if err != nil && !strings.Contains(out, "unable to connect to daemon") {
+			util.Warning("Unable to stop old mutagen daemon: %v; MUTAGEN_DATA_DIRECTORY=~/.mutagen", err)
+		}
+	}
+}
+
+// StartMutagenDaemon will make sure the daemon is running
+func StartMutagenDaemon() {
+	if fileutil.FileExists(globalconfig.GetMutagenPath()) {
+		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "start")
+		if err != nil {
+			util.Warning("Failed to run mutagen daemon start: %v, out=%s", err, out)
+		}
 	}
 }
 

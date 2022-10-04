@@ -222,6 +222,7 @@ configured
 container
 containers
 contrib
+cors
 cp
 cr
 crlf
@@ -633,6 +634,11 @@ via
 vpnkit
 vscode
 vset
+vite
+vite's
+vite's
+viteserve
+vue
 web
 webenv
 webhosting

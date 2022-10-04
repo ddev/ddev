@@ -571,7 +571,7 @@ func (app *DdevApp) CheckCustomConfig() {
 		}
 	}
 	if customConfig {
-		util.Warning("Custom configuration takes effect when container is created,\nusually on start, use 'ddev restart' if you're not seeing it take effect.")
+		util.Warning("Custom configuration takes effect when the container is created.\nShould something go wrong and no effect be visible use 'ddev restart'.")
 	}
 
 }

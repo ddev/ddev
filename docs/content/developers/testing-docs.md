@@ -2,7 +2,7 @@
 
 This section is designed for people who want to contribute to the DDEV documentation.
 
-We recommend testing documentation changes locally so you can see your changes and confirm they look great.
+On any page in the docs
 
 ## Fork / Clone the DDEV Repository
 
