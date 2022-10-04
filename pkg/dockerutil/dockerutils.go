@@ -1040,9 +1040,20 @@ func GetHostDockerInternalIP() (string, error) {
 		// see https://github.com/lima-vm/lima/blob/master/docs/network.md#host-ip-19216852
 		hostDockerInternal = "192.168.5.2"
 
+	// The linux technique works for Gitpod, but only *after* prebuild, and many times
+	// everything is a new prebuild
 	case nodeps.IsGitpod():
+		addrs, err := net.LookupHost(os.Getenv("HOSTNAME"))
+		if err == nil && len(addrs) > 0 {
+			hostDockerInternal = addrs[0]
+		}
 	case nodeps.IsWSL2() && IsDockerDesktop():
+		// If IDE is on Windows, return; we don't have to do anything.
+
 	case nodeps.IsWSL2() && !IsDockerDesktop():
+		// If IDE is on Windows, we have to parse /etc/resolv.conf
+		// Else it will be fine, we can fallthrough to the linux version
+		fallthrough
 
 	// Docker on linux doesn't define host.docker.internal
 	// so we need to go get the bridge IP address
