@@ -75,12 +75,19 @@ disable_xhprof
 
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
-mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},nvm_dir/${HOSTNAME},npm/${HOSTNAME} yarn/${HOSTNAME}}
+mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},nvm_dir/${HOSTNAME},npm,yarn/classic,yarn/berry}
 ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ${NVM_DIR:-${HOME}/.nvm}
 if [ ! -f ${NVM_DIR:-${HOME}/.nvm}/nvm.sh ]; then (install_nvm.sh || true); fi
 
-yarn config set cache-folder /mnt/ddev-global-cache/yarn/${HOSTNAME}
-npm config set cache /mnt/ddev-global-cache/npm/${HOSTNAME}
+# The following ensures a persistent and shared "global" cache for
+# yarn1 (classic) and yarn2 (berry). In the case of yarn2, the global cache
+# will only be used if the project is configured to use it through it's own
+# enableGlobalCache configuration option. Assumes ~/.yarn/berry as the default
+# global folder.
+(cd && yarn config set cache-folder /mnt/ddev-global-cache/yarn/classic || true)
+# ensure default yarn2 global folder is there to symlink cache afterwards
+mkdir -p ~/.yarn/berry
+ln -sf /mnt/ddev-global-cache/yarn/berry ~/.yarn/berry/cache
 
 # chown of ddev-global-cache must be done with privileged container in app.Start()
 # chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/
