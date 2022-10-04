@@ -1,4 +1,4 @@
-# ddev-images
+# ddev-php-base
 
 This repository provides the build techniques for the webserving/php DDEV Docker images and provides the base for DDEV to build ddev-webserver images:
 
