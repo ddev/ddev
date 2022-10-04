@@ -19,7 +19,7 @@ hooks:
 * `pre-start`: Hooks into `ddev start`. Execute tasks before the project environment starts.
 
     !!!tip
-        Only `exec-host` tasks run well during `pre-start`. See [Supported Tasks](#supported-tasks) below.
+        Only `exec-host` tasks can run during `pre-start` because the containers are not yet running. See [Supported Tasks](#supported-tasks) below.
 
 * `post-start`: Execute tasks after the project environment has started.
 * `pre-import-db` and `post-import-db`: Execute tasks before or after database import.
@@ -29,7 +29,7 @@ hooks:
 * `post-stop`: Hooks into `ddev stop`. Execute tasks after the project environment stopped.
 
     !!!tip
-        Only `exec-host` tasks run well during `post-stop`. See [Supported Tasks](#supported-tasks) below.
+        Only `exec-host` tasks can run during `post-stop`. See [Supported Tasks](#supported-tasks) below.
 
 ## Supported Tasks
 
@@ -135,7 +135,7 @@ hooks:
     # Install Drupal after start if not installed already
     - exec: "(drush status bootstrap | grep -q Successful) || drush site-install -y --db-url=db:db@db/db"
     # Generate a one-time login link for the admin account
-    - exec: "drush uli 1"
+    - exec: "drush uli"
   post-import-db:
     # Set the project name
     - exec: "drush vset site_name MyDevSite"

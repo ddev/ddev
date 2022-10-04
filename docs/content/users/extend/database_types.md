@@ -2,7 +2,7 @@
 
 DDEV supports most versions of MariaDB, MySQL, and PostgreSQL database servers.
 
-The default database type is MariaDB, and the default version is currently 10.3, but you can use nearly any MariaDB versions 5.5-10.7, MySQL 5.5-8.0, and Postgres 9-14.
+The default database type is MariaDB, and the default version is currently 10.4, but you can use nearly any MariaDB versions 5.5-10.8, MySQL 5.5-8.0, and Postgres 9-14.
 
 You could set these using the `ddev config` command like this:
 
@@ -38,7 +38,7 @@ Since the existing binary database may not be compatible with changes to your co
 - `ddev debug check-db-match` will show if your configured project matches the binary database type.
 - `ddev debug migrate-database` allows an automated attempt at migrating your database to a different type/version.
     - This only works with databases of type `mysql` or `mariadb`.
-    - It often can’t work to migrate *from* databases of type `mysql:8.0` because dumps of that type most often can’t be easily imported into all other database types.
+    - MySQL 8.0 has diverged in syntax from most of its predecessors, including earlier MySQL and all MariaDB versions. As a result, you may not be able to migrated *from* databases of type `mysql:8.0` because dumps from MySQL 8.0 often have keywords or other features not supported elsewhere.
     - Examples: `ddev debug migrate-database mariadb:10.7`, `ddev debug migrate-database mysql:8.0`.
 
 ## Caveats

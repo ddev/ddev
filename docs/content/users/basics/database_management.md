@@ -23,7 +23,7 @@ You can also:
 
 ## Discussion
 
-**Many database backends**: You can use a vast array of different database types, including MariaDB (5.5–10.7) and MySQL (5.5–8.0) PostgreSQL (9–14), see ([docs](../extend/database_types.md#database-server-types)). Note that if you want to _change_ database type, you need to export your database and then `ddev delete` the project (to kill off the existing database), make the change to a new database type, start again, and import.
+**Many database backends**: You can use a vast array of different database types, including MariaDB (5.5–10.8) and MySQL (5.5–8.0) PostgreSQL (9–14), see ([docs](../extend/database_types.md#database-server-types)). Note that if you want to _change_ database type, you need to export your database and then `ddev delete` the project (to kill off the existing database), make the change to a new database type, start again, and import.
 
 **Default database**: DDEV creates a default database named `db` and default permissions for the `db` user with password `db`, and it’s on the (inside Docker) hostname `db`.
 
@@ -37,7 +37,7 @@ Snapshots can be named for easier reference later on. For example, `ddev snapsho
 
 Use `ddev snapshot restore` to interactively choose among snapshots, or append `--latest` to restore the most recent snapshot: `ddev snapshot restore --latest`.
 
-**ddev mysql** and **ddev psql**: `ddev mysql` gives you direct access to the MySQL and PostgreSQL clients in the database container, which can be useful for quickly running commands while you work. You might run `ddev mysql` to use interactive commands like `DROP DATABASE backend;` or `SHOW TABLES;`, or do things like `echo "SHOW TABLES;" | ddev mysql` or `ddev mysql -uroot -proot` to get root privileges.
+**ddev mysql** and **ddev psql**:  These commands give you direct access to the `mysql` and `psql` clients in the database container, which can be useful for quickly running commands while you work. You might run `ddev mysql` to use interactive commands like `DROP DATABASE backend;` or `SHOW TABLES;`, or do things like `echo "SHOW TABLES;" | ddev mysql` or `ddev mysql -uroot -proot` to get root privileges.
 
 **mysql/psql clients in containers**: The `web` and `db` containers are each ready with MySQL/PostgreSQL clients, so you can `ddev ssh` or `ddev ssh -s db` and use `mysql` or `psql`.
 
@@ -47,9 +47,9 @@ Use `ddev snapshot restore` to interactively choose among snapshots, or append `
 
 **Other database explorers**: There are lots of alternatives for GUI database explorers:
 
-* macOS users can use `ddev sequelpro` to launch the free [Sequel Pro](https://sequelpro.com) database browser, `ddev tableplus` to launch [TablePlus](https://tableplus.com), and `ddev sequelace` to launch [Sequel Ace](https://sequel-ace.com). (Each must be installed before running the command.)
+* macOS users can use `ddev sequelace` to launch the free [Sequel Ace](https://sequel-ace.com/) database browser, `ddev tableplus` to launch [TablePlus](https://tableplus.com), and the obsolete [Sequel Pro](https://sequelpro.com/) is also supported with `ddev sequelpro`. (Each must be installed before running the command.)
 * `ddev describe` displays the URL for the built-in phpMyAdmin GUI. (Something like `https://<yourproject>.ddev.site:8037`.)
-* PhpStorm (and all JetBrains tools) have a nice database browser:
+* PhpStorm (and all JetBrains tools) have a nice database browser. (If you use the [DDEV Integration plugin](https://plugins.jetbrains.com/plugin/18813-ddev-integration) this is all done for you.)
     * Choose a static `host_db_port` for your project. For example `host_db_port: 59002` (each project’s database port should be different if you’re running more than one project at a time). Use `ddev start` for it to take effect.
     * Use the “database” tool to create a source from “localhost”, with the proper type “mysql” or “postgresql” and the port you chose, username `db` + password `db`.
     * Explore away!

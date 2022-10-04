@@ -37,12 +37,12 @@ For more complex requirements, you can add:
 
 These files’ content will be inserted into the constructed Dockerfile for each image. They are inserted *after* most of the rest of the things that are done to build the image, and are done in alphabetical order, so `Dockerfile` is inserted first, followed by `Dockerfile.*` in alphabetical order.
 
-For certain use cases, you might need to add stuff very early on the Dockerfile like proxy settings or SSL termination. You can use `pre.` variants for this that are inserted *before* everything else:
+For certain use cases, you might need to add directives very early on the Dockerfile like proxy settings or SSL termination. You can use `pre.` variants for this that are inserted *before* everything else:
 
 * `.ddev/web-build/pre.Dockerfile.*`
 * `.ddev/db-build/pre.Dockerfile.*`
 
-Examine the resultant Dockerfile, which should not be changed as it is generated, at `.ddev/.webimageBuild/Dockerfile`. You can force a rebuild with `ddev debug refresh`.
+Examine the resultant generated Dockerfile (which you will never edit directly), at `.ddev/.webimageBuild/Dockerfile`. You can force a rebuild with `ddev debug refresh`.
 
 Examples of possible Dockerfiles are `.ddev/web-build/Dockerfile.example` and `.ddev/db-build/Dockerfile.example`, created in your project when you run `ddev config`.
 

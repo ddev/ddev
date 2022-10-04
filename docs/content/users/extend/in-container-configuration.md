@@ -9,7 +9,7 @@ Place all your dotfiles in your global`~/.ddev/homeadditions` or your project’
 
 On `ddev start`, DDEV attempts to create a user inside the `web` and `db` containers with the same name and user ID as the one you have on the host machine.
 
-DDEV looks for the `homeadditions` directory either in its global `~/.ddev/homeadditions` directory or the project-level `.ddev/homeadditions` directory, and will copy their contents recursively into the in-container home directory during `ddev start`. Project `homeadditions` contents override the global `homeadditions`.
+DDEV looks for the `homeadditions` directory both in the global `~/.ddev/homeadditions` directory and the project-level `.ddev/homeadditions` directory, and will copy their contents recursively into the in-container home directory during `ddev start`. Project `homeadditions` contents override the global `homeadditions`.
 
 Usage examples:
 
