@@ -32,7 +32,6 @@ DKIM
 DNS
 Docker
 Docker's
-Docker’s
 Dockerfile
 Dockerfiles
 Docs
@@ -60,7 +59,6 @@ HeidiSQL
 Homebrew
 IDE
 IDE's
-IDE’s
 IDEs
 IPv
 If
@@ -69,16 +67,13 @@ Kalabox
 Lando
 Laravel
 Let's
-Let’s
 Lima
 Localdev
 MAMP
 Magento
 Magento's
-Magento’s
 MailHog
 MailHog's
-MailHog’s
 Mailgun
 Manage
 MariaDB
@@ -103,7 +98,6 @@ PWD
 PartOf
 PathMaps
 phpMyAdmin's
-phpMyAdmin’s
 PhpStorm
 PowerShell
 Pull
@@ -183,7 +177,6 @@ belonging
 behat
 blackfire
 blackfire's
-blackfire’s
 bool
 breakpoint
 browser
@@ -209,7 +202,6 @@ cms
 codebase
 colima
 colima's
-colima’s
 collection
 command
 compinit
@@ -231,7 +223,6 @@ cson
 current
 customizations
 daemon's
-daemon’s
 daemonize
 data
 database
@@ -246,7 +237,6 @@ DBTypes
 dbuser
 ddev
 ddev's
-ddev’s
 debian
 debug
 debugging
@@ -268,7 +258,7 @@ dnsmasq
 docker
 docker-ce
 dockerd
-docker’s
+docker's
 dockerfile
 dockerhub
 docksal
@@ -574,6 +564,7 @@ supervisord
 sur
 susi
 svg
+symfony
 symlink
 symlinked
 symlinks
@@ -659,10 +650,10 @@ wslg
 www
 xdebug
 xdebug's
-xdebug’s
 xtrabackup
 xeyes
 xhprof
+xz'd
 yaml
 yml
 you
