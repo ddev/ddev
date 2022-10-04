@@ -37,7 +37,7 @@ DDEV currently supports these tasks:
 
 * `exec` to execute a command in any service/container.
 * `exec-host` to execute a command on the host.
-* `composer` to execute a composer command in the web container.
+* `composer` to execute a Composer command in the web container.
 
 ### `exec`: Execute a shell command in a container (defaults to web container)
 
@@ -94,17 +94,15 @@ hooks:
 
 Value: string providing the command to run. Commands requiring user interaction are not supported.
 
-Example: Run `composer install` from your system before starting the project (Composer must already be installed on the host machine):
-
 ```yaml
 hooks:
   pre-start:
-    - exec-host: "composer install"
+    - exec-host: "command to run"
 ```
 
-### `composer`: Execute a composer command in the web container
+### `composer`: Execute a Composer command in the web container
 
-Value: string providing the composer command to run.
+Value: string providing the Composer command to run.
 
 Example:
 
@@ -149,10 +147,9 @@ hooks:
 
 ```yaml
 hooks:
-  pre-start:
-    # Install Composer dependencies using composer on host system
-    - exec-host: "composer install"
   post-start:
+    # Install Composer dependencies from the web container
+    - composer: install
     # Install Drupal after start if not installed already
     - exec: "(drush status bootstrap | grep -q Successful) || drush site-install -y --db-url=mysql://db:db@db/db"
     # Generate a one-time login link for the admin account
