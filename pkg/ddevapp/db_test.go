@@ -10,6 +10,7 @@ func TestDBTypeVersionFromString(t *testing.T) {
 
 	expectations := map[string]string{
 		"9":            "postgres:9",
+		"9.6":          "postgres:9",
 		"10":           "postgres:10",
 		"11":           "postgres:11",
 		"12":           "postgres:12",
