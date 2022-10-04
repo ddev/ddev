@@ -212,7 +212,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
     !!!tip "Skip step 2 if you’re already using NFS!"
         If you’re already using NFS with Vagrant on macOS, for example, and you already have a number of exports, the default home directory export here won’t work—you’ll have overlaps in your `/etc/exports`. Or on Windows, you may want to use an NFS server other than [Winnfsd](https://github.com/winnfsd/winnfsd) like the [Allegro NFS Server](https://nfsforwindows.com).  
 
-        The recommendations and scripts below are for getting you started if you *don’t* already use NFS.
+        The recommendations and scripts below are for getting started if, like most people, you *don’t* already use NFS.
 
     === "macOS NFS Setup"
     
