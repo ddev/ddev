@@ -658,11 +658,11 @@ Successfully imported database for drupal8
 
 Database imports can be any of the following file types:
 
-* Raw SQL Dump (.sql)
+* Raw SQL Dump (`.sql`)
 * Gzipped SQL Dump (`.sql.gz`)
-* Xz'd SQL Dump (`.sql.xz`)
-* (Gzipped) Tarball Archive (.tar, .tar.gz, .tgz)
-* Zip Archive (.zip)
+* Xz’d SQL Dump (`.sql.xz`)
+* (Gzipped) Tarball Archive (`.tar`, `.tar.gz`, `.tgz`)
+* Zip Archive (`.zip`)
 * stdin
 
 If a Tarball Archive or Zip Archive is provided for the import, you’ll be prompted to specify a path within the archive to use for the import asset. The specified path should provide a raw SQL dump (`.sql`). In the following example, the database we want to import is named `data.sql` and resides at the top level of the archive:
