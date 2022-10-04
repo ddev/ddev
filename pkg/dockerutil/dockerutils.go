@@ -1040,10 +1040,14 @@ func GetHostDockerInternalIP() (string, error) {
 		// see https://github.com/lima-vm/lima/blob/master/docs/network.md#host-ip-19216852
 		hostDockerInternal = "192.168.5.2"
 
+	case nodeps.IsGitpod():
+	case nodeps.IsWSL2() && IsDockerDesktop():
+	case nodeps.IsWSL2() && !IsDockerDesktop():
+
 	// Docker on linux doesn't define host.docker.internal
 	// so we need to go get the bridge IP address
 	// Docker Desktop) defines host.docker.internal itself.
-	case runtime.GOOS == "linux" && !IsDockerDesktop():
+	case runtime.GOOS == "linux":
 		// look up info from the bridge network
 		client := GetDockerClient()
 		n, err := client.NetworkInfo("bridge")
