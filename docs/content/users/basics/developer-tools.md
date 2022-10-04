@@ -105,7 +105,7 @@ You can use this port with various tools that need a direct port, like `mysql` o
 ## Using Drush 8 Installation on Your Host Machine
 
 !!!warning
-    We don’t recommend using `drush` on your host machine. It’s also mostly irrelevant for Drupal 8, as you should be using Composer-installed, project-level `drush`.
+    We don’t recommend using `drush` on your host machine. It’s also mostly irrelevant for Drupal 9+, as you should be using Composer-installed, project-level `drush`.
 
 If you have PHP and Drush installed on your host system and the environment variable `IS_DDEV_PROJECT=true`, you can use Drush to interact with a DDEV project. On the host machine, extra host-side configuration for the database and port in `settings.ddev.php` allow Drush to access the database server. This may not work for all Drush commands because the actual web server environment is not available.
 
