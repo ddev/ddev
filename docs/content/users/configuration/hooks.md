@@ -94,7 +94,6 @@ hooks:
 
 Value: string providing the command to run. Commands requiring user interaction are not supported.
 
-Example: Run `composer install` from your system before starting the project (Composer must already be installed on the host machine):
 
 ```yaml
 hooks:
