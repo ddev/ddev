@@ -6,7 +6,9 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
 === "macOS"
 
-    ## Homebrew
+    ## macOS
+
+    ### Homebrew
 
     [Homebrew](https://brew.sh/) is the easiest way to install and upgrade DDEV:
 
@@ -24,7 +26,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     mkcert -install
     ```
 
-    ## Install Script
+    ### Install Script
 
     !!!tip
         The install script works on macOS, Linux, and Windows WSL2.
@@ -44,7 +46,9 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
 === "Linux"
 
-    ## Debian/Ubuntu
+    ## Linux
+
+    ### Debian/Ubuntu
 
     DDEV’s Debian and RPM packages work with `apt` and `yum` repositories and most variants that use them, including Windows WSL2:
 
@@ -61,7 +65,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     ```
     
     !!!tip "Removing Previous Install Methods"
-        If you previously used DDEV’s [install script](#install-script), you can remove that version: 
+        If you previously used DDEV’s [install script](#install-script), you can remove that version:
 
         ```
         sudo rm -f /usr/local/bin/ddev /usr/local/bin/mkcert /usr/local/bin/*ddev_nfs_setup.sh
@@ -69,7 +73,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     
         If you previously [installed DDEV with Homebrew](#homebrew), you can run `brew unlink ddev` to get rid of the Homebrew version.
 
-    ## Fedora, Red Hat, etc.
+    ### Fedora, Red Hat, etc.
 
     ```bash
     echo '[ddev]
@@ -83,25 +87,27 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     In the future you can update as usual using `sudo dnf upgrade ddev`. (Signed repository support will be added in the near future.)
 
-    ## Arch Linux
+    ### Arch Linux
 
     For Arch-based systems including `Arch Linux`, `EndeavourOS` and `Manjaro` we maintain the [ddev-bin](https://aur.archlinux.org/packages/ddev-bin/) package in AUR. To install use `yay -S ddev` or whatever other AUR tool you use; to upgrade `yay -Syu ddev`.
 
     As a one-time initialization, run `mkcert -install`.
 
-    ## Alternate Linux Install Methods
+    ### Alternate Linux Install Methods
 
     You can also use two macOS install methods to install or update DDEV on Linux: [Homebrew](#homebrew) (on ARM64 computers) and the standalone [install script](#install-script).
 
 === "Windows WSL2"
 
-    Windows WSL2 is a fantastic way to run DDEV and your web components. It's Linux, which means a different experience for many Windows users. It's Ubuntu Linux by default as described here, so it's worth taking a little time to explore how Ubuntu and bash work, including standard system commands and installation and upgrade procedures.
+    ## Windows WSL2
+
+    Windows WSL2 is a fantastic way to run DDEV and your web components. It’s Linux, which means a different experience for many Windows users. It’s Ubuntu Linux by default as described here, so it’s worth taking a little time to explore how Ubuntu and Bash work, including standard system commands and installation and upgrade procedures.
 
     **WSL2 is the recommended installation method for all Windows users**.
 
-     **Using WSL2 to install and run DDEV is not the same as using Docker Desktop's WSL2 engine, which itself runs in WSL2, but can serve applications running in both traditional WIndows and inside WSL2.**
+    **Using WSL2 to install and run DDEV is not the same as using Docker Desktop’s WSL2 engine, which itself runs in WSL2, but can serve applications running in both traditional WIndows and inside WSL2.**
 
-    **All Windows 10/11 editions (including Windows 10 Home) support WSL2**. If you're already familiar with DDEV on Windows, you might have been using NFS for better filesystem performance. **You won't need NFS anymore once you switch to WSL2**, since it provides awesome filesystem performance out of the box.
+    **All Windows 10/11 editions (including Windows 10 Home) support WSL2**. If you’re already familiar with DDEV on Windows, you might have been using NFS for better filesystem performance. **You won't need NFS anymore once you switch to WSL2**, since it provides awesome filesystem performance out of the box.
 
     The WSL2 install process involves:
 
@@ -111,15 +117,15 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     * Installing or upgrading to the latest Docker Desktop for Windows with WSL2 enabled.
     * Installing DDEV inside your distro.
 
-    We'll walk through these in more detail. You may prefer other techniques of installation or may not need some steps, but this is the full recipe:
+    We’ll walk through these in more detail. You may prefer other techniques of installation or may not need some steps, but this is the full recipe:
 
-    1. **Chocolatey:** We recommend using [Chocolatey](https://chocolatey.org/install) for installing required Windows apps like mkcert. In an administrative PowerShell, `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))`
+    1. **Chocolatey:** We recommend using [Chocolatey](https://chocolatey.org/install) for installing required Windows apps like `mkcert`. In an administrative PowerShell, `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))`
     2. In an administrative PowerShell: `choco install -y mkcert`
     3. In an administrative PowerShell, run `mkcert -install` and answer the prompt allowing the installation of the Certificate Authority.
     4. In an administrative PowerShell, run the command `setx CAROOT "$(mkcert -CAROOT)"; If ($Env:WSLENV -notlike "*CAROOT/up:*") { setx WSLENV "CAROOT/up:$Env:WSLENV" }`. This will set WSL2 to use the Certificate Authority installed on the Windows side.
     5. In administrative PowerShell, run the command `wsl --install`. This will install WSL2 and Ubuntu for you. Reboot when this is done.
     6. **Docker Desktop for Windows:** If you already have the latest Docker Desktop, configure it in the General Settings to use the WSL2-based engine. Otherwise install the latest Docker Desktop for Windows and select the WSL2-based engine (not legacy Hyper-V) when installing. Install via Chocolatey with `choco install docker-desktop` or it can be downloaded from [desktop.docker.com](https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe).  Start Docker. It may prompt you to log out and log in again, or reboot.
-    7. Go to Docker Desktop settings > Resources > WSL integration > enable integration for your distro (now `docker` commands will be available from within your WSL2 distro).
+    7. Go to Docker Desktop’s *Settings* → *Resources* → *WSL integration* → *enable integration for your distro*. Now `docker` commands will be available from within your WSL2 distro.
     8. Double-check in PowerShell: `wsl -l -v` should show three distros, and your Ubuntu should be the default. All three should be WSL version 2.
     9. Double-check in Ubuntu (or your distro): `echo $CAROOT` should show something like `/mnt/c/Users/<you>/AppData/Local/mkcert`
     10. Check that Docker is working inside Ubuntu (or your distro): `docker ps`
@@ -135,17 +141,19 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     14. In WSL2 run `mkcert -install`.
 
-    That's it! You have now installed DDEV on WSL2. If you're using WSL2 for DDEV (recommended), remember to run all `ddev` commands inside the WSL2 distro.
+    That’s it! You have now installed DDEV on WSL2. If you’re using WSL2 for DDEV (recommended), remember to run all `ddev` commands inside the WSL2 distro.
 
     To upgrade DDEV in WSL2 Ubuntu, use `apt upgrade ddev` as described in the [Linux installation section](#apt-packages-for-Debian-based-systems).
 
-    !!!warning "Projects go in /home, not on the Windows filesystem"
-        Make sure you put your projects in the Linux filesystem (e.g. `/home/<your_username>`), **not** in the Windows filesystem (`/mnt/c`), because you'll get vastly superior performance on the Linux filesystem. You will be very unhappy if you put your project in `/mnt/c`.
+    !!!warning "Projects go in `/home`, not on the Windows filesystem"
+        Make sure you put your projects in the Linux filesystem (e.g. `/home/<your_username>`), **not** in the Windows filesystem (`/mnt/c`), because you’ll get vastly superior performance on the Linux filesystem. You will be very unhappy if you put your project in `/mnt/c`.
 
     !!!note "Path to certificates"
         Note the prompt `Installing to the system store is not yet supported on this Linux`, which can be a simple result of not having `/usr/sbin` in the path so that `/usr/sbin/update-ca-certificates` can be found.)
 
 === "Traditional Windows"
+
+    ## Traditional Windows
 
     DDEV does work fine on the Windows side, although it’s quite a bit slower than WSL2 by default. Good results have been reported by users who enabled Mutagen.
 
@@ -174,6 +182,8 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
 === "Gitpod"
 
+    ## Gitpod
+
     DDEV is fully supported in [Gitpod](https://www.gitpod.io), where you don’t have to install anything at all.
 
     Choose any of the following methods to launch your project:
@@ -189,6 +199,8 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     It can be complicated to get private databases and files into Gitpod, so in addition to the launchers, the [`git` provider example](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/git.yaml.example) demonstrates pulling a database and files without complex setup or permissions. This was created explicitly for Gitpod integration, because in Gitpod you typically already have access to private Git repositories, which are a fine place to put a starter database and files. Although [ddev-gitpod-launcher](https://drud.github.io/ddev-gitpod-launcher/) and the web extension provide the capability, you may want to integrate a Git provider—or one of the [other providers](https://github.com/drud/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers)—for each project.
 
 === "Manual"
+
+    ## Manual
 
     DDEV is a single executable, so installation on any OS is a matter of copying the a `ddev` binary for your architecture into the appropriate system path on your machine.
 

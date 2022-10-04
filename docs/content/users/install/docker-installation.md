@@ -4,9 +4,11 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
 === "macOS"
 
+    ## macOS
+
     Install either [Colima](#colima) or [Docker Desktop](#docker-desktop-for-mac).
 
-    ## Colima
+    ### Colima
 
     We recommend [Colima](https://github.com/abiosoft/colima), a project that bundles a container management tool called [Lima](https://github.com/lima-vm/lima) with a Docker (Linux) backend.
 
@@ -35,7 +37,6 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         By default, Colima only mounts your home directory, so it’s easiest to use it in a subdirectory there. See the `~/.colima/default/colima.yaml` for more information, or notes in [colima.yaml](https://github.com/abiosoft/colima/blob/fc948f8f055600986f87e29e3e632daf56ac8774/embedded/defaults/colima.yaml#L130-L143).
 
 
-
     #### Migrating Projects from Docker Desktop to Colima
 
     Move your project databases from Docker Desktop to Colima:
@@ -44,11 +45,13 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     2. In Docker Desktop, `ddev snapshot --all`.
     3. After starting Colima, start each project and `ddev snapshot restore --latest`.
     
-    ## Docker Desktop for Mac
+    ### Docker Desktop for Mac
 
     Docker Desktop for Mac can be installed via Homebrew (`brew install homebrew/cask/docker`) or can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop). It has long been supported by DDEV and has extensive automated testing.
 
 === "Windows"
+
+    ## Windows
 
     If you’re working inside WSL2, which we recommend, you can [install Docker Engine (docker-ce) inside of it](#docker-ce-inside-windows-wsl2). Otherwise, you can [install Docker Desktop](#docker-desktop-for-windows), which works with both traditional Windows and WSL2.
 
@@ -89,11 +92,13 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         * Double-check in Ubuntu (or your distro): `echo $CAROOT` should show something like `/mnt/c/Users/<you>/AppData/Local/mkcert`.
         * Inside your WSL2 distro, `mkcert -install`.
 
-    ## Docker Desktop for Windows
+    ### Docker Desktop for Windows
 
     Docker Desktop for Windows can be downloaded via [Chocolatey](https://chocolatey.org/install) with `choco install docker-desktop` or it can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop). It has extensive automated testing with DDEV, and works with DDEV both on traditional Windows and in WSL2.
 
 === "Linux"
+
+    ## Linux
 
     !!!warning "Avoid Docker Desktop for Linux"
         The 2022 release of Docker Desktop for Linux doesn’t seem stable enough for regular use, and exhibits some problems Docker Desktop has on other platforms. We recommend staying with the traditional `docker-ce` installation described here.
@@ -115,6 +120,8 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     On systems without `systemd` or its equivalent—mostly if you’re installing inside WSL2—you’ll need to manually start Docker with `service docker start` or the equivalent in your distro. You can add this to your shell profile.
 
 === "Gitpod"
+
+    ## Gitpod
 
     With [Gitpod](https://www.gitpod.io) you don’t have to install anything at all. Docker is all set up for you. 
 

@@ -12,6 +12,8 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 
 === "Mutagen"
 
+    ## Mutagen
+
     If you’re on macOS or Windows, you can skip everything else here and enable Mutagen:
     
     ```
@@ -187,6 +189,8 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 
 
 === "NFS"
+
+    ## NFS
 
     ### Using NFS to Mount the Project into the Web Container
 
