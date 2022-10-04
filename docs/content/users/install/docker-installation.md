@@ -21,8 +21,8 @@
         If you don't have the `docker` client installed, you'll need to install it. It is not provided with colima. (If `docker help` returns an error, you don't have it.) Use `brew install docker` to install it.
 
     1. Install colima with `brew install colima` using homebrew or see the other [installation options](https://github.com/abiosoft/colima/blob/main/docs/INSTALL.md).
-    2. After installing DDEV configure your system to use mutagen, which is essential for DDEV with Colima, by running `ddev config global --mutagen-enabled`.
-    3. Start colima: `colima start --cpu 4 --memory 6 --disk 100 --dns=1.1.1.1` will set up a colima instance with 4 CPUs and 4GB of memory allocated and using DNS server 1.1.1.1 (Cloudflare). Your needs may vary. After the first start you can just use `colima start`. Use `colima start -e` to edit the configuration file. (Configuring the DNS server is critical if you're using Pantheon or other tenants of `storage.googleapis.com`.)
+    2. Start colima: `colima start --cpu 4 --memory 6 --disk 100 --dns=1.1.1.1` will set up a colima instance with 4 CPUs and 4GB of memory allocated and using DNS server 1.1.1.1 (Cloudflare). Your needs may vary. After the first start you can just use `colima start`. Use `colima start -e` to edit the configuration file. (Configuring the DNS server is critical if you're using Pantheon or other tenants of `storage.googleapis.com`.)
+    3. After installing DDEV configure your system to use mutagen, which is essential for DDEV with Colima, by running `ddev config global --mutagen-enabled`.
     4. `colima status` will show colima's status.
     5. After a computer restart you'll need to `colima start` again. This will eventually be automated in later versions of colima.
     
