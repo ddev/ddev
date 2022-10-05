@@ -1,8 +1,9 @@
 # Working on the Docs
 
-This section is designed for people who want to contribute to the DDEV documentation.
+This section is for people who want to contribute to the DDEV documentation.
 
-On any page in the docs
+!!!tip "No need to work locally!"
+    The documentation is built and checked automatically with various [GitHub Actions workflows](https://github.com/drud/ddev/actions). It may help to check your work locally, particularly for more involved PRs, but you can just as well make suggestions using GitHub in a browser.
 
 ## Fork / Clone the DDEV Repository
 
