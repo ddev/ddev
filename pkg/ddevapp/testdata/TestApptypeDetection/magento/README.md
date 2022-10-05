@@ -106,7 +106,7 @@ There are some new or changed translations, if you want add them to your locale 
 - `Mage_Xmlconnect`
 - `Phoenix_Moneybookers`
 
-## Development Environment with ddev
+## Development Environment with DDEV
 - Install [ddev](https://ddev.com/get-started/)
 - Clone the repository as described in Installation -> Using Git
 - Create a ddev config using ```$ ddev config``` the defaults should be good for you

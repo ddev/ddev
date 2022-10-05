@@ -1,81 +1,79 @@
 # Troubleshooting
 
-Things might go wrong! Besides the suggestions on this page don't forget about [Stack Overflow](https://stackoverflow.com/tags/ddev) and [the ddev issue queue](https://github.com/drud/ddev/issues) and [other support options](../support.md). And see [Docker troubleshooting suggestions](../install/docker-installation.md#testing-and-troubleshooting-your-docker-installation).
+Things might go wrong! In addition to this page, consider checking [Stack Overflow](https://stackoverflow.com/tags/ddev) and [the DDEV issue queue](https://github.com/drud/ddev/issues) and [other support options](../support.md), as well as [Docker troubleshooting suggestions](../install/docker-installation.md#testing-and-troubleshooting-your-docker-installation).
 
 ## General Troubleshooting Strategies
 
-* Please start with a `ddev poweroff` to make sure all containers can start fresh.
-* Temporarily turn off firewalls, VPNs, network proxies, and virus checkers while you're troubleshooting.
-* If you have any proxies set up in Docker's settings, temporarily remove them.
-* `ddev debug dockercheck` will help sort out Docker problems, as will `ddev debug test`.
-* On macOS and traditional Windows, please check to make sure that Docker Desktop is not out of disk space. In Settings (or Preferences)->Resources->Disk image size there should be lots of space left; I never let it go over 80% because the number reported here is not reliable. If it says zero used, something is wrong.
-* If you have customizations (PHP overrides, nginx or Apache overrides, MySQL/Postgresql overrides, custom services, config.yaml changes) please back them out while troubleshooting. It's important to have the simplest possible environment while troubleshooting.
-* Restart Docker. Consider a Docker factory reset in serious cases (this will destroy any databases you've loaded). See [Docker Troubleshooting](../install/docker-installation.md#troubleshooting) for more.
-* Try the simplest possible ddev project to try to get it to work (just as `ddev debug test` does).
+* Start with a `ddev poweroff` to make sure all containers can start fresh.
+* Temporarily disable firewalls, VPNs, network proxies, and virus checkers while you’re troubleshooting.
+* Temporarily disable any proxies you’ve established in Docker’s settings.
+* Use `ddev debug dockercheck` and `ddev debug test` to help sort out Docker problems.
+* On macOS, check to make sure Docker Desktop or Colima are not out of disk space. In *Settings* (or *Preferences*) → *Resources* → *Disk image size* there should be ample space left; try not to let usage exceed 80% because the reported number can be unreliable. If it says zero used, something is wrong.
+* If you have customizations like PHP overrides, nginx or Apache overrides, MySQL/PostgreSQL overrides, custom services, or `config.yaml` changes, please back them out while troubleshooting. It’s important to have the simplest possible environment while troubleshooting.
+* Restart Docker. Consider a Docker factory reset in serious cases, which will destroy any databases you’ve loaded. See [Docker Troubleshooting](../install/docker-installation.md#troubleshooting) for more.
+* Try the simplest possible DDEV project (just as `ddev debug test` does):
 
-  ```bash
-  ddev poweroff
-  mkdir ~/tmp/testddev
-  cd ~/tmp/testddev
-  ddev config --auto
-  printf "<?php\nphpinfo();\n" > index.php
-  ddev start
-  ```
+    ```bash
+    ddev poweroff
+    mkdir ~/tmp/testddev
+    cd ~/tmp/testddev
+    ddev config --auto
+    printf "<?php\nphpinfo();\n" > index.php
+    ddev start
+    ```
 
-  Does that start up OK? If so, maybe something is wrong with the more complicated project you're trying to start.
+    If that starts up fine, there may be an issue specifically with the project you’re trying to start.
 
-!!!note "Using DDEV with other development environments installed"
+!!!tip "Using DDEV with Other Development Environments"
 
-    DDEV by default uses ports 80 and 443 on your system when projects are running. If you are using another local development environment (like Lando or Docksal or a native setup) you can either stop the other environment or configure DDEV to use different ports. See [troubleshooting](troubleshooting.md#unable-listen) for more detailed problem-solving. It's easiest just to stop the other environment when you want to use DDEV, and stop DDEV when you want to use the other environment.
+    DDEV uses your system’s port 80 and 443 by default when projects are running. If you’re using another local development environment (like Lando or Docksal or a native setup), you can either stop the other environment or configure DDEV to use different ports. See [troubleshooting](troubleshooting.md#unable-listen) for more detailed problem-solving. It’s easiest to stop the other environment when you want to use DDEV, and stop DDEV when you want to use the other environment.
 
 <a name="unable-listen"></a>
 
-## Webserver ports are already occupied by another webserver
+## Web Server Ports Already Occupied
 
 DDEV may notify you about port conflicts with this message about port 80 or 443:
 
-```
-Failed to start yoursite: Unable to listen on required ports, localhost port 80 is in use
-```
+> Failed to start yoursite: Unable to listen on required ports, localhost port 80 is in use
 
-ddev sometimes also has this error message that will alert you to port conflicts:
+DDEV sometimes also has this error message that will alert you to port conflicts:
 
-`ERROR: for ddev-router Cannot start service ddev-router: Ports are not available: listen tcp 127.0.0.1:XX: bind: An attempt was made to access a socket in a way forbidden by its access permissions.`
+> ERROR: for ddev-router Cannot start service ddev-router: Ports are not available: listen tcp 127.0.0.1:XX: bind: An attempt was made to access a socket in a way forbidden by its access permissions.
 
-This means there is another webserver listening on the named port(s) and ddev cannot access the port. The most common conflicts are on ports 80 and 443.
+This means there’s another web server listening on the named port(s) and DDEV cannot access the port. The most common conflicts are on ports 80 and 443.
 
-(In some cases the conflict could be over port 8036 (phpMyAdmin) or port 8025 (MailHog)).
+In some cases, the conflict could be over phpMyAdmin’s port 8036 or MailHog’s port 8025.
 
 To resolve this conflict, choose one of three methods:
 
-1. If you are using another local development environment (MAMP, WAMP, lando, etc.) that uses these ports, consider stopping it.
+1. If you’re using another local development environment (MAMP, WAMP, Lando, etc.) that uses these ports, consider stopping it.
 2. Fix port conflicts by configuring your project to use different ports.
 3. Fix port conflicts by stopping the competing application.
 
 ### Method 1: Stop the conflicting application
-  
+
 Consider `lando poweroff` for Lando, or `fin system stop` for Docksal, or stop MAMP using GUI interface or [`stop.sh`](https://stackoverflow.com/a/17750194/215713).
 
 ### Method 2: Fix port conflicts by configuring your project to use different ports
 
-To configure a project to use non-conflicting ports, edit the project's .ddev/config.yaml to add entries like `router_http_port: 8000` and `router_https_port: 8443` depending on your needs. Then use `ddev start` again.
+To configure a project to use non-conflicting ports, edit the project’s `.ddev/config.yaml` to add entries like `router_http_port: 8000` and `router_https_port: 8443` depending on your needs. Then, use `ddev start` again.
 
-For example, if there was a port conflict with a local apache http on port 80 add the following to the config.yaml file.
+For example, if there was a port conflict with a local Apache HTTP on port 80, add the following to the `config.yaml` file:
 
 ```yaml
 router_http_port: 8080
 router_https_port: 8443
 ```
 
-Then run `ddev start`. This changes the project's http URL to `http://yoursite.ddev.site:8080` and the https URL to `https://yoursite.ddev.site:8443`.
+Then run `ddev start`. This changes the project’s HTTP URL to `http://yoursite.ddev.site:8080` and the HTTPS URL to `https://yoursite.ddev.site:8443`.
 
-If the conflict is over port 8025, it's normally a conflict over the default port for MailHog. You can add to your .ddev/config.yaml
+If the conflict is over port 8025, it’s normally a conflict over the default port for MailHog. You can add the following to `.ddev/config.yaml`:
 
 ```yaml
 mailhog_port: 8300
 ```
 
-If the conflict is over port 8036, it's normally about phpMyAdmin, and you can add to your .ddev/config.yaml
+If the conflict is over port 8036, it’s normally about phpMyAdmin, and you can add the following to `.ddev/config.yaml`:
 
 ```yaml
 phpmyadmin_port: 8302
@@ -97,17 +95,16 @@ Here are some of the other common processes that could be using ports 80/443 and
 
 * MAMP (macOS): Stop MAMP.
 * Apache: Temporarily stop with `sudo apachectl stop`, permanent stop depends on your environment.
-* nginx (macOS Homebrew): `sudo brew services stop nginx`
-or `sudo launchctl stop homebrew.mxcl.nginx`
-* nginx (Ubuntu): `sudo service nginx stop`
-* apache (often named "httpd") (many environments): `sudo apachectl stop` or on Ubuntu `sudo service apache2 stop`
-* vpnkit (macOS): You likely have a docker container bound to port 80, do you have containers up for Lando or another docker-based development environment? If so, stop the other environment.
-* Lando: If you have previously used Lando try running `lando poweroff`
-* IIS on Windows (can affect WSL2). You'll have to disable it in the Windows settings.
+* nginx (macOS Homebrew): `sudo brew services stop nginx` or `sudo launchctl stop homebrew.mxcl.nginx`.
+* nginx (Ubuntu): `sudo service nginx stop`.
+* Apache (many environments, often named “httpd”): `sudo apachectl stop` or on Ubuntu `sudo service apache2 stop`.
+* VPNKit (macOS): You likely have a Docker container bound to port 80. Do you have containers up for Lando or another Docker-based development environment? If so, stop the other environment.
+* Lando: If you’ve previously used Lando, try running `lando poweroff`.
+* IIS on Windows (can affect WSL2). You’ll have to disable it in the Windows settings.
 
 To dig deeper, you can use a number of tools to find out what process is listening.
 
-On macOS and Linux, try the lsof tool on ports 80 or 443 or whatever port you're having trouble with:
+On macOS and Linux, try the `lsof` tool on ports 80 or 443 or whatever port you’re having trouble with:
 
 ```
 $ sudo lsof -i :443 -sTCP:LISTEN
@@ -116,7 +113,7 @@ nginx   1608 www-data   46u  IPv4  13913      0t0  TCP *:http (LISTEN)
 nginx   5234     root   46u  IPv4  13913      0t0  TCP *:http (LISTEN)
 ```
 
-On Windows CMD, use [sysinternals tcpview](https://docs.microsoft.com/en-us/sysinternals/downloads/tcpview) or try using `netstat` and `tasklist` to find the pid:
+On Windows CMD, use [sysinternals tcpview](https://docs.microsoft.com/en-us/sysinternals/downloads/tcpview) or try using `netstat` and `tasklist` to find the process ID:
 
 ```
 > netstat -aon | findstr ":80.*LISTENING"
@@ -128,74 +125,89 @@ On Windows CMD, use [sysinternals tcpview](https://docs.microsoft.com/en-us/sysi
 com.docker.backend.exe        5760 Services                   0      9,536 K
 ```
 
-The resulting output displays which command is running and its pid. Choose the appropriate method to stop the other server.
+The resulting output displays which command is running and its PID. Choose the appropriate method to stop the other server.
 
-You may be able to find out what is using a port using `curl` also. On linux, macOS, or in git-bash on Windows, `curl -I localhost` or `curl -I -k https://localhost:443`. The result may give you a hint about what application is at fault.
+You may also be able to find what’s using a port using `curl`. On Linux, macOS, or in Git Bash on Windows, `curl -I localhost` or `curl -I -k https://localhost:443`. The result may give you a hint about which application is at fault.
 
-We welcome your [suggestions](https://github.com/drud/ddev/issues/new) based on other issues you've run into and your troubleshooting technique.
+We welcome your [suggestions](https://github.com/drud/ddev/issues/new) based on other issues you’ve run into and your troubleshooting technique.
 
-### Debugging port issues on WSL2
+### Debugging Port Issues on WSL2
 
-On WSL2 it's harder to debug this because the port may be occupied either on the traditional Windows side, so you may have to debug it both inside your WSL2 distro and on Windows, perhaps using both the Windows techniques shown above and the Linux techniques shown above. The ports are shared between Windows and WSL2 so can be broken on either side.
+On WSL2 it’s harder to debug this because the port may be occupied either on the traditional Windows side, or within your WSL2 distro. This means you may have to debug it in both places, perhaps using both the Windows techniques shown above and the Linux techniques shown above. The ports are shared between Windows and WSL2, so they can be broken on either side.
 
-## Database container fails to start
+## Database Container Fails to Start
 
-Use `ddev logs -s db` to see what's wrong.
+Use `ddev logs -s db` to see what’s wrong.
 
-The most common cause of the database container not coming up is changing the database type or version in the project configuration, so the database server daemon is unable to start using an existing configuration that is for a different type or version.
+The most common cause of the database container not coming up is changing the database type or version in the project configuration, so the database server daemon is unable to start using an existing configuration for a different type or version.
 
 To solve this:
 
 * Change the configuration in `.ddev/config.yaml` back to the original configuration.
 * Export the database with `ddev export-db`.
-* Delete the project with `ddev delete` (or stop the project and remove the database volume using `docker volume rm <project>-mariadb` or `docker volume rm <project>-postgres`).
-* Change the `.ddev/config.yaml` to use the new database type or version.
+* Delete the project with `ddev delete`, or stop the project and remove the database volume using `docker volume rm <project>-mariadb` or `docker volume rm <project>-postgres`.
+* Update `.ddev/config.yaml` to use the new database type or version.
 * Start the project and import the database from your export.
 
-## "web service unhealthy" or "web service starting" or exited
+## “web service unhealthy” or “web service starting” or Exited
 
-Use `ddev logs` to see what's wrong.
+Use `ddev logs` to see what’s wrong.
 
-The most common cause of the web container being unhealthy is a user-defined .ddev/nginx-full/nginx-site.conf or .ddev/apache/apache-site.conf - Please rename these to <xxx_site.conf> during testing. To figure out what's wrong with it after you've identified that as the problem, use `ddev logs` and review the error.
+The most common cause of the web container being unhealthy is a user-defined `.ddev/nginx-full/nginx-site.conf` or `.ddev/apache/apache-site.conf`. Please rename these to `<xxx_site.conf>` during testing. To figure out what’s wrong with it after you’ve identified that as the problem, use `ddev logs` and review the error.
 
-Changes to .ddev/nginx-site.conf and .ddev/apache/apache-site.conf take effect only when you do a `ddev restart` or the equivalent.
+Changes to `.ddev/nginx-site.conf` and `.ddev/apache/apache-site.conf` take effect only when you do a `ddev restart` or the equivalent.
 
-## No input file specified (404) or Forbidden (403)
+## No Input File Specified (404) or Forbidden (403)
 
-If you get a 404 with "No input file specified" (nginx) or a 403 with "Forbidden" (apache) when you visit your project it usually means that no index.php or index.html is being found in the docroot. This can result from:
+If you get a 404 with “No input file specified” (nginx) or a 403 with “Forbidden” (Apache) when you visit your project, it usually means that no `index.php` or `index.html` is being found in the docroot. This can result from:
 
-* Misconfigured docroot: If the docroot isn't where the webserver thinks it is, then the webserver won't find the index.php. Look at your .ddev/config.yaml to verify it has a docroot that will lead to the index.php. It should be a relative path from the project root to the directory where the index.php is.
-* Missing index.php: There may not be an index.php or index.html in your project.
+* Misconfigured docroot: If the docroot isn’t where the web server thinks it is, then the web server won’t find `index.php`. Look at your `.ddev/config.yaml` to verify it has a docroot containing `index.php`. It should be a relative path.
+* Missing `index.php`: There may not be an `index.php` or `index.html` in your project.
 
-## `ddev start` fails and logs contain "failed (28: No space left on device)" - Docker File Space
+## `ddev start` Fails and Logs Contain "failed (28: No space left on device)" - Docker File Space
 
-If `ddev start` fails, it's most often because the web container or db container fails to start. In this case the error message from `ddev start` says something like "Failed to start <project>: db container failed: log=, err=container exited, please use 'ddev logs -s db' to find out why it failed". You can`ddev logs -s db` to find out what happened.
+If `ddev start` fails, it’s most often because the `web` or `db` container fails to start. In this case, the error message from `ddev start` says something like “Failed to start <project>: db container failed: log=, err=container exited, please use 'ddev logs -s db' to find out why it failed”. You can`ddev logs -s db` to find out what happened.
 
-If you see any variant of "no space left on device" in the logs when using Docker Desktop, it means that you have to increase or clean up Docker's file space. To increase the allocated space, go to "Resources" in Docker's Preferences as shown in ![Docker disk space](../images/docker_disk_space.png)
+If you see any variant of “no space left on device” in the logs when using Docker Desktop, it means you have to increase or clean up Docker’s file space. Increase the “Disk image size” setting under “Resources” in Docker’s Preferences: ![Docker disk space](../images/docker_disk_space.png).
 
-If you see "no space left on device" on Linux, it most likely means your filesystem is full.
+If you see “no space left on device” on Linux, it most likely means your filesystem is full.
 
-## `ddev start` fails with "container failed to become ready"
+## `ddev start` Fails with "container failed to become ready"
 
-If a container fails to become ready, it means it's failing the healthcheck.  This can happen to any of the containers, but you can usually find out quickly what the issue is with a `docker inspect` command.
+A container fails to become ready when its health check is failing. This can happen to any of the containers, and you can usually find the issue with a `docker inspect` command.
 
-You may need to install [jq](https://stedolan.github.io/jq/download/) for these, `brew install jq`, or just remove the "| jq" from the command and read the raw json output.
+!!!tip
+    You may need to install [jq](https://stedolan.github.io/jq/download/) for these examples (`brew install jq`), or just remove the `| jq` from the command and read the raw JSON output.
 
-For the web container, `docker inspect --format "{{json .State.Health }}" ddev-<projectname>-web | jq`
-For ddev-router, `docker inspect --format "{{json .State.Health }}" ddev-router`
-For ddev-ssh-agent, `docker inspect --format "{{json .State.Health }}" ddev-ssh-agent`
+For the `web` container:
 
-Don't forget that `ddev logs` (for the web container) or `ddev logs -s db` (for the db container) are your friend.
+```
+docker inspect --format "{{json .State.Health }}" ddev-<projectname>-web | jq
+```
 
-For ddev-router and ddev-ssh-agent, `docker logs ddev-router` and `docker logs ddev-ssh-agent`.
-  
-Run `ddev debug router-nginx-config` to print the Nginx configuration of the currently running ddev-router.
+For `ddev-router`:
 
-## `ddev start` fails with "Failed to start [project name]: No such container: ddev-router"
+```
+docker inspect --format "{{json .State.Health }}" ddev-router
+```
 
-Deleting the images and re-pulling them generally solves this problem.  
-  
-Try running the following commands from the host machine.  
+For `ddev-ssh-agent`:
+
+```
+docker inspect --format "{{json .State.Health }}" ddev-ssh-agent
+```
+
+Don’t forget to check logs using `ddev logs` for the `web` container, and `ddev logs -s db` for the `db` container!
+
+For `ddev-router` and `ddev-ssh-agent`: `docker logs ddev-router` and `docker logs ddev-ssh-agent`.
+
+Run `ddev debug router-nginx-config` to print the nginx configuration of the currently running `ddev-router`.
+
+## `ddev start` Fails with "Failed to start [project name]: No such container: ddev-router"
+
+Deleting the images and re-pulling them generally solves this problem.
+
+Try running the following commands from the host machine:
 
 ```
 ddev poweroff
@@ -203,11 +215,11 @@ docker rm -f $(docker ps -aq)
 docker rmi -f $(docker images -q)
 ```
 
-You should then be able to start your ddev machine.
+You should then be able to start your DDEV machine.
 
 ## Trouble Building Dockerfiles
 
-The additional .ddev/web-build/Dockerfile capability in ddev is wonderful, but it can be hard to figure out what to put in there.
+The additional `.ddev/web-build/Dockerfile` capability in DDEV is wonderful, but it can be hard to figure out what to put in there.
 
 The best approach for any significant Dockerfile is to `ddev ssh` and `sudo -s` and then one at a time, do the things that you plan to do with a `RUN` command in the Dockerfile.
 
@@ -217,74 +229,87 @@ For example, if your Dockerfile were
 RUN npm install --global forever
 ```
 
-You could test it with `ddev ssh`, `sudo -s` and then `npm install --global forever`
+You could test it with `ddev ssh`, `sudo -s`, and then `npm install --global forever`.
 
 The error messages you get will be more informative than messages that come when the Dockerfile is processed.
 
 You can also see the full Docker build using `~/.ddev/bin/docker-compose -f .ddev/.ddev-docker-compose-full.yaml build --no-cache --progress=plain`.
 
-## Ddev starts fine, but my browser can't access the URL "<url> server IP address could not be found" or "We can’t connect to the server at <url>"
+## DDEV Starts but Browser Can’t Access URL
 
-Most people use \*.ddev.site URLs for most projects, and that works great most of the time, but requires internet access. "\*.ddev.site" is a wildcard DNS entry that always returns the IP address 127.0.0.1 (localhost). However, if you're not connected to the internet, or if various other name resolution issues (below) fail, this name resolution won't work.
+You may see one of two messages in your browser:
 
-While ddev can create a webserver and a docker network infrastructure for a project, it doesn't have control of your computer's name resolution, so its backup technique to make a hostname resolvable by the browser is to add an entry to the hosts file (/etc/hosts on Linux and macOS, C:\Windows\system32\drivers\etc\hosts on traditional Windows).
+* *[url] server IP address could not be found*
+* *We can’t connect to the server at [url]*
 
-* If you're not connected to the internet, your browser will not be able to look up \*.ddev.site hostnames. DDEV works fine offline, but for your browser to look up names they'll have to be resolved in a different way.
-* DDEV assumes that hostnames can be resolved within 3 seconds. That assumption is not valid on all networks or computers, so you can increase the amount of time it waits for resolution with `ddev config global --internet-detection-timeout-ms=5000` for example.
-* If DDEV detects that it can't look up one of the hostnames assigned to your project for that or other reasons, it will try to add that to the hosts file on your computer, but of course that requires administrative privileges (sudo or Windows UAC)
+Most people use `*.ddev.site` URLs, which work great most of the time but require internet access.
+
+`*.ddev.site` is a wildcard DNS entry that always returns the IP address 127.0.0.1 (localhost). If you’re not connected to the internet, however, or if various other name resolution issues fail, this name resolution won’t work.
+
+While DDEV can create a web server and a Docker network infrastructure for a project, it doesn’t have control of your computer’s name resolution, so its backup technique to make a hostname resolvable by the browser is to add an entry to the hosts file (`/etc/hosts` on Linux and macOS, `C:\Windows\system32\drivers\etc\hosts` on traditional Windows).
+
+* If you’re not connected to the internet, your browser will not be able to look up `*.ddev.site` hostnames. DDEV works fine offline, but for your browser to look up names they’ll have to be resolved in a different way.
+* DDEV assumes that hostnames can be resolved within 3 seconds. That assumption is not valid on all networks or computers, so you can increase the amount of time it waits for resolution. Increasing to 5 seconds, for example: `ddev config global --internet-detection-timeout-ms=5000`.
+* If DDEV detects that it can’t look up one of the hostnames assigned to your project for that or other reasons, it will try to add that to the hosts file on your computer, which requires administrative privileges (sudo or Windows UAC).
     * This technique may not work on Windows WSL2, see below.
-    * Only 10 hosts are valid on a line on traditional Windows, see [below](#windows-hosts-file-limited-to-10-hosts-per-ip-address-line); beyond that hostnames are ignored.
+    * Only 10 hosts are valid on a line on traditional Windows, see [below](#windows-hosts-file-limited-to-10-hosts-per-line); beyond that hostnames are ignored.
 
-### Windows WSL2 name resolution on non-ddev.site hostnames or when not internet-connected
+### Windows WSL2 Name Resolution on Non-`ddev.site` Hostnames or When Not Internet-Connected
 
-On Windows WSL2, there is a hosts file inside the WSL2 instance (`/etc/hosts`), and there is also one on the Windows side (`C:\Windows\system32\drivers\etc\hosts`). Many people use a browser on the Windows side, which has no idea about hostnames that may be set up in the WSL2 /etc/hosts file. So a WSL2 project which uses `*.ddev.site` works fine when accessed by a browser on the Windows side, as long as internet connectivity is available (DNS lookups of `*.ddev.site` succeed).
+On Windows WSL2, there is a hosts file inside the WSL2 instance at `/etc/hosts`, and another on the Windows side at `C:\Windows\system32\drivers\etc\hosts`. Many people use a browser on the Windows side, which has no idea about hostnames that may be set up in WSL2’s `/etc/hosts` file. So a WSL2 project which uses `*.ddev.site` works fine when accessed by a browser on the Windows side, as long as internet connectivity is available for `*.ddev.site` DNS lookups to succeed.
 
-However, if the project uses non-ddev.site hostnames, or if not connected to the Internet, or if use_dns_when_possible is false in the .ddev/config.yaml, a Windows-side browser will be unable to look up project hostnames, and you'll get complaints from the browser like "<url> server IP address could not be found" or "We can’t connect to the server at <url>".  In this case, you can:
+However, if the project uses non-`ddev.site` hostnames, an internet connection is not available, or if `use_dns_when_possible` is `false` in `.ddev/config.yaml`, a Windows-side browser will be unable to look up project hostnames. You’ll get complaints from the browser like “[url] server IP address could not be found” or “We can’t connect to the server at [url]”. In this case, you can:
 
-1. Add the needed hostname(s) manually to the Windows hosts file. This can easily be done with the *Windows* version of ddev.exe with `sudo ddev hostname <hostname> 127.0.0.1` on *Windows* in PowerShell or Cmd or git-bash.
-2. Or run a browser within WSL2. On Windows 11 this is built-in, but in Windows 10 may require an X11 server like X410.
+1. Add the needed hostname(s) manually to the Windows hosts file. This can easily be done with the *Windows* version of `ddev.exe` by running `sudo ddev hostname <hostname> 127.0.0.1` on *Windows* in PowerShell or Cmd or Git Bash.
+2. Or run a browser within WSL2. On Windows 11 this is built in, but in Windows 10 may require an X11 server like X410.
 
-### DNS Rebinding Prohibited ("Cannot resolve" or "unknown host" or "No address associated with hostname")
+### DNS Rebinding Prohibited
 
-Some DNS servers prevent the use of DNS records that resolve to `localhost` (127.0.0.1) because in uncontrolled environments this may be used as a form of attack called [DNS Rebinding](https://en.wikipedia.org/wiki/DNS_rebinding). Since \*.ddev.site resolves to 127.0.0.1, they may refuse to resolve, and your browser may be unable to look up a hostname, and give you messages like "<url> server IP address could not be found" or "We can’t connect to the server at <url>".
-  
-You can tell if this is your problem by `ping dkkd.ddev.site`. If you get "No address associated with hostname" or something of that type, it means that your computer can't look up `*.ddev.site`.
+You may see one of several messages:
 
-In this case, you can
+* *Cannot resolve*
+* *unknown host*
+* *No address associated with hostname*
 
-1. Reconfigure your router to allow DNS Rebinding. Many Fritzbox routers have added default DNS Rebinding disallowal, and they can be reconfigured to allow it, see [issue](https://github.com/drud/ddev/issues/2409#issuecomment-686718237). If you have the local dnsmasq DNS server it may also be configured to disallow DNS rebinding, but it's a simple change to a configuration directive to allow it.
+Some DNS servers prevent the use of DNS records that resolve to `localhost` (127.0.0.1) because in uncontrolled environments this may be used as a form of attack called [DNS Rebinding](https://en.wikipedia.org/wiki/DNS_rebinding). Since `*.ddev.site` resolves to 127.0.0.1, they may refuse to resolve, and your browser may be unable to look up a hostname, and give you messages like “<url> server IP address could not be found” or “We can’t connect to the server at <url>”.
+
+You verify this is your problem by running `ping dkkd.ddev.site`. If you get “No address associated with hostname” or something of that type, your computer is unable to look up `*.ddev.site`.
+
+In this case, you can take any one of the following approaches:
+
+1. Reconfigure your router to allow DNS Rebinding. Many Fritzbox routers have added default DNS Rebinding disallowal, and they can be reconfigured to allow it. See [issue](https://github.com/drud/ddev/issues/2409#issuecomment-686718237). If you have the local dnsmasq DNS server it may also be configured to disallow DNS rebinding, but it’s a simple change to a configuration directive to allow it.
 2. Most computers can use most relaxed DNS resolution if they are not on corporate intranets that have non-internet DNS. So for example, the computer can be set to use 8.8.8.8 (Google) or 1.1.1.1 (Cloudflare) for DNS name resolution.
-3. If you have control of the router, you can usually change its DHCP settings to choose a DNS server to a public, relaxed DNS server as in #2.
-4. You can live with ddev trying to edit the /etc/hosts file, which it only has to do when a new name is added to a project.
+3. If you have control of the router, you can usually change its DHCP settings to choose a public, relaxed DNS server as in #2.
+4. You can live with DDEV trying to edit the `/etc/hosts` file, which it only has to do when a new name is added to a project.
 
-## Windows Hosts File limited to 10 hosts per IP address line
+## Windows Hosts File Limited to 10 Hosts Per Line
 
-On Windows only, there is a limit to the number of hosts that can be placed in one line. But since all ddev hosts are typically on the same IP address (typically 127.0.0.1, localhost), they can really add up. As soon as you have more than 10 entries there, your browser won't be able to resolve the addresses beyond the 10th entry.
+On Windows only, there is a limit to the number of hosts that can be placed in one line. But since all DDEV hosts are typically on the same IP address (typically 127.0.0.1, localhost), they can add up. As soon as you have more than 10 entries there, your browser won’t be able to resolve the addresses beyond the 10th entry.
 
 There are two workarounds for this problem:
 
-1. Use `ddev stop --all` and `sudo ddev hostname --remove-inactive` to prune the number of hosts on that hosts-file line. When you start a project, the hostname(s) associated with that project will be added back again.
+1. Use `ddev stop --all` and `sudo ddev hostname --remove-inactive` to prune the number of hosts. When you start a project, its hostname(s) will be re-added again.
 2. Manually edit the hosts file (typically `C:\Windows\System32\drivers\etc\hosts`) and put some of your hosts on a separate line in the file.
 
 ## Windows WSL2 Network Issues
 
-If you're using a browser on Windows, accessing a project in WSL2, you can end up with very confusing results if your project is listening on a port inside WSL2, but a Windows process is listening on the port on Windows. The way to sort this out is to stop your project inside WSL2, verify that nothing is listening on the port there, and then study the port on the Windows side, by visiting it with a browser or using other tools as described above.
+If you’re using a browser on Windows, accessing a project in WSL2, you can end up with confusing results when your project is listening on a port inside WSL2 while a Windows process is listening on that same port. The way to sort this out is to stop your project inside WSL2, verify that nothing is listening on the port there, and then study the port on the Windows side by visiting it with a browser or using other tools as described above.
 
 ## Limitations on Symbolic Links (symlinks)
 
 Symbolic links are widely used but have specific limitations in many environments, not just in DDEV. Here are some of the ways those may affect you:
 
-* **Crossing mount boundaries**: Symlinks may not generally cross between network mounts. In other words, if you have a relative symlink in the root of your project directory on the host that points to `../somefile.txt`,  that symlink will not be valid inside the container where `../` is a completely different filesystem (and is not mounted typically).
-* **Symlinks to absolute paths**: If you have an absolute symlink to something like `/Users/xxx/somefile.txt` on the host, it will not be resolvable inside the container because `/Users` is not mounted there. Note that some tools, especially on Magento 2, may create symlinks to rooted paths, with targets like `/var/www/html/path/to/something`. These basically can't make it to the host, so may create errors.
-* **Windows restrictions on symlinks**: Inside the Docker container on Windows you may not be able to even create a symlink that goes outside the container.
-* **Mutagen restrictions on Windows symlinks**: On macOS and Linux (including WSL2) the default `.ddev/mutagen/mutagen.yml` chooses the `posix-raw` type of symlink handling (See [mutagen docs](https://mutagen.io/documentation/synchronization/symbolic-links)). This basically means that any symlink created will try to sync, regardless of whether it's valid in the other environment. However, Mutagen does not support posix-raw on traditional Windows, so ddev uses the `portable` symlink mode. So on Windows with Mutagen... symlinks have to be strictly limited to relative links that are inside the mutagen section of the project.
+* **Crossing mount boundaries**: Symlinks may not generally cross between network mounts. In other words, if you have a relative symlink in the root of your project directory on the host that points to `../somefile.txt`, that symlink will not be valid inside the container where `../` is a completely different filesystem (and is typically not mounted).
+* **Symlinks to absolute paths**: If you have an absolute symlink to something like `/Users/xxx/somefile.txt` on the host, it will not be resolvable inside the container because `/Users` is not mounted there. Some tools, especially on Magento 2, may create symlinks to rooted paths, with targets like `/var/www/html/path/to/something`. These basically can’t make it to the host and may create errors.
+* **Windows restrictions on symlinks**: Inside the Docker container on Windows, you may not be able to create a symlink that goes outside the container.
+* **Mutagen restrictions on Windows symlinks**: On macOS and Linux (including WSL2) the default `.ddev/mutagen/mutagen.yml` chooses the `posix-raw` type of symlink handling. (See [mutagen docs](https://mutagen.io/documentation/synchronization/symbolic-links)). This basically means that any symlink created will try to sync, regardless of whether it’s valid in the other environment. However, Mutagen does not support posix-raw on traditional Windows, so DDEV uses the `portable` symlink mode. So on Windows with Mutagen, symlinks have to be strictly limited to relative links that are inside the Mutagen section of the project.
 
-### Delete and re-download docker images
-  
-In just a few unusual cases, the actual downloaded docker images have somehow corrupted. In that case we can delete all images and they'll be re-downloaded or rebuilt. This does no harm, as everything is just rebuilt, but a `ddev start` make take extra time the first time while it downloads needed resources:
+### Delete and Re-Download Docker Images
+
+In a few unusual cases, the actual downloaded Docker images can somehow get corrupted. Deleting the images will force them to be re-downloaded or rebuilt. This does no harm, as everything is just rebuilt, but a `ddev start` will take longer while it downloads needed resources:
 
 ```bash
 ddev poweroff
-docker rm -f $(docker ps -aq) # stop any other random containers that may be running
-docker rmi -f $(docker images -q) # You might have to repeat this a time or two to get rid of all images
+docker rm -f $(docker ps -aq) # Stop any other random containers that may be running
+docker rmi -f $(docker images -q) # You might have to repeat this to get rid of all images
 ```

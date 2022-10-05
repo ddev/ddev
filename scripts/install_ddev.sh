@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #ddev-generated
-# Script to download and install DDEV-Local, https://github.com/drud/ddev
+# Script to download and install DDEV, https://github.com/drud/ddev
 # Usage: install_ddev.sh or install_ddev.sh <version>
 
 set -o errexit

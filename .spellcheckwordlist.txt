@@ -12,7 +12,7 @@ CIFS
 CLI
 CMD
 CMS
-CMSs
+CMSes
 Colima
 CPUs
 CTRL
@@ -26,8 +26,9 @@ Commands
 Completely
 Create
 DDEV's
-DDEV-Local
+DDEV
 DHCP
+DKIM
 DNS
 Docker
 Docker's
@@ -72,6 +73,7 @@ MAMP
 Magento
 Magento's
 MailHog
+MailHog's
 Mailgun
 Manage
 MariaDB
@@ -95,6 +97,7 @@ PID
 PWD
 PartOf
 PathMaps
+phpMyAdmin's
 PhpStorm
 PowerShell
 Pull
@@ -173,6 +176,7 @@ beanstalkd
 belonging
 behat
 blackfire
+blackfire's
 bool
 breakpoint
 browser
@@ -218,6 +222,7 @@ cron
 cson
 current
 customizations
+daemon's
 daemonize
 data
 database
@@ -228,6 +233,7 @@ dbimage
 dbname
 dbpass
 dbserver
+DBTypes
 dbuser
 ddev
 ddev's
@@ -316,10 +322,12 @@ help
 homeadditions
 homebrew
 host
+HostBinaryExists
 hostenv
 hostfile
 hostname
 hostnames
+HostWorkingDir
 htaccess
 html
 http
@@ -431,6 +439,7 @@ one
 oneshot
 or
 oriented
+OSTypes
 output
 pause
 pdfreactor
@@ -470,6 +479,7 @@ projdir
 project
 projectname
 projects
+ProjectTypes
 proot
 proto
 provided
@@ -478,6 +488,7 @@ ps
 psql
 public
 quickstart
+quickstarts
 rabbitmq
 rc
 readme
@@ -553,6 +564,7 @@ supervisord
 sur
 susi
 svg
+symfony
 symlink
 symlinked
 symlinks
@@ -567,6 +579,7 @@ tcp
 tcpview
 template
 templated
+templating
 test
 testbot
 testbots
@@ -636,9 +649,11 @@ wsl2
 wslg
 www
 xdebug
+xdebug's
 xtrabackup
 xeyes
 xhprof
+xz'd
 yaml
 yml
 you

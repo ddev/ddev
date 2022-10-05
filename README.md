@@ -1,40 +1,41 @@
-# ddev
+# DDEV
 
 [![CircleCI](https://circleci.com/gh/drud/ddev.svg?style=shield)](https://circleci.com/gh/drud/ddev) ![project is maintained](https://img.shields.io/maintenance/yes/2022.svg)
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/drud/ddev)
 
-![ddev logo](images/ddev_logo.png)
+![DDEV logo](images/ddev_logo.png)
 
-ddev is an open source tool that makes it simple to get local PHP development environments up and running in minutes. It's powerful and flexible as a result of its per-project environment configurations, which can be extended, version controlled, and shared. In short, ddev aims to allow development teams to use Docker in their workflow without the complexities of bespoke configuration.
+DDEV is an open source tool for running local PHP development environments in minutes. Its powerful, flexible per-project environment configurations can be extended, version controlled, and shared. DDEV allows development teams to adopt a consistent Docker workflow without the complexities of bespoke configuration.
 
 ## Get Started
 
-1. **Check [System Requirements](https://ddev.readthedocs.io/):** DDEV runs the same on macOS (M1 and amd64), Windows 10/11, WSL2, Linux, and Gitpod.io.
-2. **Install [docker/colima and DDEV](https://ddev.readthedocs.io/en/latest/users/install/)**.
+1. **Check [System Requirements](https://ddev.readthedocs.io/):** macOS (Intel and Apple Silicon), Windows 10/11, WSL2, Linux, and [Gitpod](https://www.gitpod.io).
+2. **Install [Docker/Colima and DDEV](https://ddev.readthedocs.io/en/latest/users/install/)**.
 3. **Try a [CMS Quick Start Guide](https://ddev.readthedocs.io/en/latest/users/quickstart/)**.
 
-Having trouble? This community has [great support](https://ddev.readthedocs.io/en/latest/users/support).
+If you need help, our friendly community provides [great support](https://ddev.readthedocs.io/en/latest/users/support).
 
-## Partial Feature List
+## Partial Features
 
-* Quickly create multiple local web development environments based on code repositories.
-* Import a database for a project you're working on.
-* Import upload files to match the project (e.g. Drupal sites/default/files or WordPress wp-content/uploads).
-* Customizable integration with hosting platforms like Platform.sh, Pantheon, Acquia and others.
-* Run commands within the docker environment using `ddev exec`.
-* View logs from the web and db containers.
-* Use `ddev ssh` to explore the linux environment inside the container.
+* Quickly create local web development environments based on code repositories, with minimal configuration.
+* Import a database to any of your local environments.
+* Import upload files to match the project (e.g. Drupal sites/default/files or WordPress `wp-content/uploads`).
+* Customizable integration with hosting platforms like [Platform.sh](https://platform.sh), [Pantheon](https://pantheon.io), [Acquia](https://www.acquia.com) and others.
+* Run commands within the Docker environment using `ddev exec`.
+* View logs from the web and database containers.
+* Use `ddev ssh` to explore the Linux environment inside the container.
 * List running projects with `ddev list`.
 * Snapshot databases with `ddev snapshot`.
-* Temporarily share your development website with other using `ddev share`.
+* Temporarily share your development website with others using `ddev share`.
 * Create custom commands as simple shell scripts.
-* Trusted HTTPS support.
+* Enjoy effortless, trusted HTTPS support.
+* Extend and customize environments as much (or as little!) as you need to.
 
-Just running `ddev` will show you all the commands.
+Run `ddev` to see all the [commands](https://ddev.readthedocs.io/en/stable/users/basics/cli-usage/).
 
 ## Contributing
 
-See the "How can I contribute" question in the [FAQ](https://ddev.readthedocs.io/en/latest/users/basics/faq/) and [Contributing.md](CONTRIBUTING.md).
+See “How can I contribute to DDEV?” in the [FAQ](https://ddev.readthedocs.io/en/latest/users/basics/faq/), and the [Contributing](CONTRIBUTING.md) page.
 
 ## Wonderful Sponsors
 

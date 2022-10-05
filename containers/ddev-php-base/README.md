@@ -1,8 +1,8 @@
-# ddev-images
+# ddev-php-base
 
-This repository provides the build techniques for the webserving/php DDEV-Live Docker images and provides the base for DDEV-Local to build ddev-webserver images:
+This repository provides the build techniques for the webserving/php DDEV Docker images and provides the base for DDEV to build ddev-webserver images:
 
-* *ddev-php-base* is the base for ddev-php-prod, and will be used by DDEV-Local to build ddev-webserver images.
+* *ddev-php-base* is the base for ddev-php-prod, and will be used by DDEV to build ddev-webserver images.
 
 ![Block Diagram](docs-pics/ddev-images-block-diagram.png)
 

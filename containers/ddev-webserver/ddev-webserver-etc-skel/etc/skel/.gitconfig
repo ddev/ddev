@@ -2,5 +2,5 @@
 	autocrlf = input
 
 [user]
-    name = DDEV-Local User
+    name = DDEV User
     email = nobody@example.com
