@@ -15,7 +15,6 @@ In `.ddev/config.yaml`, `use_dns_when_possible: false` will make DDEV never try 
 
 In `.ddev/config.yaml` `project_tld: example.com` (or any other domain) can set DDEV to use a project TLD that could never be looked up in DNS. You can also use `ddev config --project-tld=example.com`. This also works as a global option in `~/.ddev/global_config.yaml` or use `ddev config global --project-tld=example.com`.
 
-
 You can also set up a local DNS server like [dnsmasq](https://dnsmasq.org) (Linux and macOS, `brew install dnsmasq`) or ([unbound](https://github.com/NLnetLabs/unbound) or many others on Windows) in your own host environment that serves the project_tld that you choose, and DNS resolution will work fine. You’ll likely want a wildcard A record pointing to 127.0.0.1 on most DDEV installations. If you use dnsmasq, you must configure it to allow DNS rebinding.
 
 If you’re using a browser on Windows and accessing a DDEV project in WSL2, Windows will attempt to resolve the site name via DNS. This will fail if you don’t have an internet connection. To resolve this, update your `C:\Windows\System32\drivers\etc\hosts` file manually:
