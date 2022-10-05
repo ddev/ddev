@@ -10,28 +10,37 @@ Use `ddev get --list` to see available add-ons. To see all possible add-ons (not
 For example,
 
 ```
-ddev get --list
+→  ddev get --list
 ┌───────────────────────────┬──────────────────────────────────────────────────┐
 │ ADD-ON                    │ DESCRIPTION                                      │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-memcached       │ Install Memcached as an extra service in DDEV*   │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-beanstalkd      │ Beanstalkd for DDEV*                             │
+├───────────────────────────┼──────────────────────────────────────────────────┤
 │ drud/ddev-elasticsearch   │ Elasticsearch add-on for DDEV*                   │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-mongo           │ MongoDB add-on for DDEV*                         │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-pdfreactor      │ PDFreactor service for DDEV*                     │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-browsersync     │ Auto-refresh HTTPS page on changes with DDEV*    │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-drupal9-solr    │ Drupal 9 Apache Solr installation for DDEV*      │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
 │ drud/ddev-varnish         │ Varnish reverse proxy add-on for DDEV*           │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
 │ drud/ddev-redis           │ Redis service for DDEV*                          │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-beanstalkd      │ Beanstalkd for DDEV*                             │
+│ drud/ddev-adminer         │ Adminer service for DDEV*                        │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-cron            │ Schedule commands to execute within DDEV*        │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-proxy-support   │ Support HTTP/HTTPS proxies with DDEV*            │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
 │ drud/ddev-redis-commander │ Redis Commander for use with DDEV Redis service* │
-├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-mongo           │ MongoDB add-on for DDEV*                         │
-├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-drupal9-solr    │ Drupal 9 Apache Solr installation for DDEV*      │
-├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-pdfreactor      │ PDFreactor service for DDEV*                     │
-├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-memcached       │ Install Memcached as an extra service in DDEV*   │
 └───────────────────────────┴──────────────────────────────────────────────────┘
+Add-ons marked with '*' are official, maintained DDEV add-ons.
 ```
 
 !!!tip
