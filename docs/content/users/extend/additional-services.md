@@ -18,19 +18,19 @@ ddev get --list
 ├───────────────────────────┼──────────────────────────────────────────────────┤
 │ drud/ddev-varnish         │ Varnish reverse proxy add-on for DDEV*           │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-redis           │ redis service for DDEV*                          │
+│ drud/ddev-redis           │ Redis service for DDEV*                          │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-beanstalkd      │ beanstalkd for DDEV*                             │
+│ drud/ddev-beanstalkd      │ Beanstalkd for DDEV*                             │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-redis-commander │ Redis commander for use with DDEV redis service* │
+│ drud/ddev-redis-commander │ Redis Commander for use with DDEV Redis service* │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-mongo           │ mongodb addon for DDEV*                          │
+│ drud/ddev-mongo           │ MongoDB add-on for DDEV*                         │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
 │ drud/ddev-drupal9-solr    │ Drupal 9 Apache Solr installation for DDEV*      │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
 │ drud/ddev-pdfreactor      │ PDFreactor service for DDEV*                     │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-memcached       │ Install memcached as an extra service in DDEV*   │
+│ drud/ddev-memcached       │ Install Memcached as an extra service in DDEV*   │
 └───────────────────────────┴──────────────────────────────────────────────────┘
 ```
 
