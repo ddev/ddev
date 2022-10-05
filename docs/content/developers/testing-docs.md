@@ -3,7 +3,16 @@
 This section is for people who want to contribute to the DDEV documentation.
 
 !!!tip "No need to work locally!"
-    The documentation is built and checked automatically with various [GitHub Actions workflows](https://github.com/drud/ddev/actions). It may help to check your work locally, particularly for more involved PRs, but you can just as well make suggestions using GitHub in a browser.
+    The documentation is built and checked automatically with various [GitHub Actions workflows](https://github.com/drud/ddev/actions). It may help to check your work locally, particularly for more involved PRs, but you can just as well make suggestions using [GitHub in a browser](#fix-docs-using-web-browser).
+
+## Fix Docs Using Web Browser
+
+On any page in the docs:
+
+1. Click the pencil in the upper right. That will take you to the the right page on GitHub.
+2. Click the pencil button on GitHub and follow the instructions to create your change.
+3. Save your changes and follow the prompts to create a PR.
+4. In the checks on your PR, click the “details” link by `docs/readthedocs.org:ddev` to browse the docs build created by your PR.
 
 ## Fork / Clone the DDEV Repository
 
