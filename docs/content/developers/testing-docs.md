@@ -40,6 +40,26 @@ Run `make markdownlint` before you publish changes to quickly check your files f
 !!!warning "`markdownlint-cli` required!"
     The `make markdownlint` command requires you to have `markdownlint-cli` installed, which you can do by executing `npm install -g markdownlint-cli`
 
+## Check for Spelling Errors
+
+Run `make pyspelling` to check for spelling errors. Output will be brief if all goes well:
+
+```
+➜  make pyspelling
+pyspelling:
+Spelling check passed :)
+```
+
+If you’ve added a correctly-spelled word that gets flagged, like “Symfony” for example, you’ll need to add it to `.spellcheckwordlist.txt` in the [root of DDEV’s repository](https://github.com/drud/ddev/blob/master/.spellcheckwordlist.txt).
+
+!!!warning "`pyspelling` and `aspell` required!"
+    It’s probably best to install packages locally before attempting to run `make pyspelling`:
+
+    ```
+    sudo -H pip3 install pyspelling pymdown-extensions
+    sudo apt-get install aspell
+    ```
+
 ## Publish Changes
 
 If all looks good, it’s time to commit your changes and make a pull request back into the official DDEV repository.
