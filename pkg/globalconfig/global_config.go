@@ -6,7 +6,6 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
 	"net"
 	"os"
 	"os/exec"
@@ -216,6 +215,10 @@ func WriteGlobalConfig(config GlobalConfig) error {
 #
 # You can enable nfs mounting for all projects with
 # nfs_mount_enabled: true
+#
+# You can set the global project_tld. This way any project will use this tld. If not
+# set the local project_tld is used, or the default of ddev.
+# project_tld: ""
 #
 # You can inject environment variables into the web container with:
 # web_environment:
