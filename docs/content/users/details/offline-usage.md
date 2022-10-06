@@ -13,7 +13,7 @@ You have general options as well:
 
 In `.ddev/config.yaml`, `use_dns_when_possible: false` will make DDEV never try to use DNS for resolution, instead adding hostnames to `/etc/hosts`. You can also use `ddev config --use-dns-when-possible=false` to set this configuration option.
 
-In `.ddev/config.yaml` `project_tld: example.com` (or any other domain) can set DDEV to use a project TLD that could never be looked up in DNS. You can also use `ddev config --project-tld=example.com`. This also works as a global option in `~/.ddev/global_config.yaml` or use `ddev config global --project-tld=example.com`.
+In `.ddev/config.yaml`, you can use `project_tld: example.com` to have DDEV use a project TLD that won’t be looked up via DNS. You can do the equivalent with `ddev config --project-tld=example.com`. This also works as a global option in `~/.ddev/global_config.yaml` or running `ddev config global --project-tld=example.com`.
 
 You can also set up a local DNS server like [dnsmasq](https://dnsmasq.org) (Linux and macOS, `brew install dnsmasq`) or ([unbound](https://github.com/NLnetLabs/unbound) or many others on Windows) in your own host environment that serves the project_tld that you choose, and DNS resolution will work fine. You’ll likely want a wildcard A record pointing to 127.0.0.1 on most DDEV installations. If you use dnsmasq, you must configure it to allow DNS rebinding.
 
