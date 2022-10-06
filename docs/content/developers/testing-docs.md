@@ -1,8 +1,15 @@
 # Working on the Docs
 
-This section is designed for people who want to contribute to the DDEV documentation.
+This section is for people who want to contribute to the DDEV documentation.
 
-On any page in the docs
+## Fix Docs Using Web Browser
+
+The documentation is built and checked automatically with various [GitHub Actions workflows](https://github.com/drud/ddev/actions). While it may help to [check your work locally](#fork--clone-the-ddev-repository) for more involved PRs, you can more quickly make suggestions using [GitHub in a browser](#fix-docs-using-web-browser):
+
+1. Click the pencil in the upper right. That will take you to the the right page on GitHub.
+2. Click the pencil button on GitHub and follow the instructions to create your change.
+3. Save your changes and follow the prompts to create a PR.
+4. In the checks on your PR, click the “details” link by `docs/readthedocs.org:ddev` to browse the docs build created by your PR.
 
 ## Fork / Clone the DDEV Repository
 
@@ -39,6 +46,26 @@ Run `make markdownlint` before you publish changes to quickly check your files f
 
 !!!warning "`markdownlint-cli` required!"
     The `make markdownlint` command requires you to have `markdownlint-cli` installed, which you can do by executing `npm install -g markdownlint-cli`
+
+## Check for Spelling Errors
+
+Run `make pyspelling` to check for spelling errors. Output will be brief if all goes well:
+
+```
+➜  make pyspelling
+pyspelling:
+Spelling check passed :)
+```
+
+If you’ve added a correctly-spelled word that gets flagged, like “Symfony” for example, you’ll need to add it to `.spellcheckwordlist.txt` in the [root of DDEV’s repository](https://github.com/drud/ddev/blob/master/.spellcheckwordlist.txt).
+
+!!!warning "`pyspelling` and `aspell` required!"
+    It’s probably best to install packages locally before attempting to run `make pyspelling`:
+
+    ```
+    sudo -H pip3 install pyspelling pymdown-extensions
+    sudo apt-get install aspell
+    ```
 
 ## Publish Changes
 
