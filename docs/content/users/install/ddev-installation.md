@@ -95,7 +95,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ### Alternate Linux Install Methods
 
-    You can also use two macOS install methods to install or update DDEV on Linux: [Homebrew](#homebrew) (on ARM64 computers) and the standalone [install script](#install-script).
+    You can also use two macOS install methods to install or update DDEV on Linux: [Homebrew](#homebrew) (only on AMD64 computers) and the standalone [install script](#install-script).
 
 === "Windows WSL2"
 
