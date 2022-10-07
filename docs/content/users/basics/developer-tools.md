@@ -75,7 +75,7 @@ MailHog will **not** intercept emails if your application is configured to use S
 
 If you’re using SMTP for outgoing mail—with [Symfony Mailer](https://www.drupal.org/project/symfony_mailer) or [SMTP](https://www.drupal.org/project/smtp) modules, for example—update your application’s SMTP server configuration to use `localhost` and MailHog’s port `1025`.
 
-For Drupal 9 `settings.ddev.php` overrides the Symfony Mailer sendmail configuration to use MailHog.
+For Drupal 9+ `settings.ddev.php` overrides the Symfony Mailer sendmail configuration to use MailHog.
 
 For Laravel projects, MailHog will capture Swift messages via SMTP. Update your `.env` to use Mailhog with the following settings:
 
