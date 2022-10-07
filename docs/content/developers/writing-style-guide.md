@@ -30,7 +30,7 @@ Omit extraneous explanation or decorative language that doesn’t help the reade
 
 ### Avoid “Just” and “Easy”
 
-Try not to use language that may talk down to the reader. You may intend for “it’s easy” to be reassuring, but it’s a subjective judgment that can convince someone struggling that they’re doing it wrong. Things could instead be “straightforward” if they’re without nuance, “simple” if they don’t involve complex actions or concepts, or “quick” if they involve one or two steps that’d be fast even on someone’s worst day with the slowest-imagineable machine.
+Try not to use language that may talk down to the reader. You may intend for “it’s easy” to be reassuring, but it’s a subjective judgment that can convince someone struggling that they’re doing it wrong. Things could instead be “straightforward” if they’re without nuance, “simple” if they don’t involve complex actions or concepts, or “quick” if they involve one or two steps that’d be fast even on someone’s worst day with the slowest-imaginable machine.
 
 Similarly, “just do X” suggests that “X” should be easy or obvious. Most of the time “just” can be omitted and everyone wins.
 
