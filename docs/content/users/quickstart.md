@@ -224,9 +224,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         cd my-typo3-site
         ddev config --project-type=typo3 --docroot=public --create-docroot --php-version 8.1
         ddev start
-        ddev composer create "typo3/cms-base-distribution" --no-install
-        ddev composer install
-        ddev restart
+        ddev composer create "typo3/cms-base-distribution"
         ddev exec touch public/FIRST_INSTALL
         ddev launch
         ```
@@ -276,8 +274,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     ddev config --project-type=magento2 --php-version=8.1 --docroot=pub --create-docroot --disable-settings-management
     ddev get drud/ddev-elasticsearch
     ddev start
-    ddev composer create --no-install --repository=https://repo.magento.com/ magento/project-community-edition -y
-    ddev composer install
+    ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition -y
     rm -f app/etc/env.php
     # Change the base-url below to your project's URL
     ddev magento setup:install --base-url='https://ddev-magento2.ddev.site/' --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db --elasticsearch-host=elasticsearch --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com --admin-user=admin --admin-password=admin123 --language=en_US
