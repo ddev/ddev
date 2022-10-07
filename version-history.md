@@ -2,6 +2,11 @@
 
 This version history has been driven by what we hear from our wonderful community of users. If you have lobbying for a favorite item or think things should be re-prioritized, just lobby in the [issue queue](https://github.com/drud/ddev/issues). We listen. Or talk to us in any of the [support locations](https://ddev.readthedocs.io/en/stable/#support).
 
+## v1.21 (Released 2022-08)
+
+- [x] PHP 8.2
+- [x] Craft CMS explict project type
+
 ## v1.20 (Released 2022-08)
 
 - [x] Improved Node.js support**. You can now run a Node.js daemon with simple `config.yaml` support (`web_extra_daemons`) and if it listens on a port you can expose it via `ddev-router` with `web_extra_exposed_ports`. (Both of these features can be used for daemons other than nodejs daemons.)
