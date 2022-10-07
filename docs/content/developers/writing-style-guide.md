@@ -5,7 +5,7 @@ It’s a living statement of intent and a reference for all contributors.
 
 ## Voice and Tone
 
-We want to be clear and encouraging for everyone that bothers to read DDEV’s documentation, rewarding the time and attention they choose to give to it.
+In the spirit of the [Code of Conduct](../users/code-of-conduct.md), we want to be clear and encouraging for everyone that bothers to read DDEV’s documentation, rewarding the time and attention they choose to give to it.
 
 ### Beginner-Friendly, Expert-Compatible
 
