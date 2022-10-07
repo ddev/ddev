@@ -275,7 +275,7 @@ can override the existing values, and
 ```yaml
 override_config: true
 hooks:
-  post_start: []
+  post-start: []
 ```
 
 or
