@@ -520,6 +520,7 @@ scalable
 scp
 screencast
 screencasts
+sendmail
 sequelace
 sequelpro
 serverName

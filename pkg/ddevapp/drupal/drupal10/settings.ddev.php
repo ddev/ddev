@@ -45,3 +45,10 @@ $settings['class_loader_auto_detect'] = FALSE;
 if (empty($settings['config_sync_directory'])) {
   $settings['config_sync_directory'] = 'sites/default/files/sync';
 }
+
+// Override drupal/symfony_mailer default config to use Mailhog
+$config['symfony_mailer.mailer_transport.sendmail']['plugin'] = 'smtp';
+$config['symfony_mailer.mailer_transport.sendmail']['configuration']['user']='';
+$config['symfony_mailer.mailer_transport.sendmail']['configuration']['pass']='';
+$config['symfony_mailer.mailer_transport.sendmail']['configuration']['host']='localhost';
+$config['symfony_mailer.mailer_transport.sendmail']['configuration']['port']='1025';
