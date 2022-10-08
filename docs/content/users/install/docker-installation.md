@@ -64,7 +64,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     * If you already have Docker Desktop installed, make sure to disable its integration with your WSL2 distro. In *Resources* → *WSL Integration*, disable integration with the default distro and with your particular distro.
     * If you don’t already have WSL2, install it with `wsl --install`. This will likely require a reboot.
     * Run `wsl --set-default-version 2`.
-    * Install a distro. We recommend Ubuntu 20.04: `wsl --install Ubuntu-20.04`.
+    * If the `Ubuntu` distro is not already installed and the default distro (see `wsl -l -v`) then install it with `wsl --install Ubuntu`.
     * Install `docker-ce` in WSL2 using the normal Linux instructions. For Debian/Ubuntu, run the following inside the WSL2 distro:
         ```bash
         sudo apt-get remove docker docker-engine docker.io containerd runc
