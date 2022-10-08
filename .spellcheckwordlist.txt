@@ -141,7 +141,7 @@ about
 acquia
 acli
 add
-addon
+add-on
 addr
 all
 alldirs

@@ -79,7 +79,7 @@ The `install.yaml` is a simple YAML file with a few main sections:
 * `post_install_actions`: an array of Bash statements or scripts to be executed after `project_files` and `global_files` are installed. The actions are executed in the context of the target project’s root directory.
 * `yaml_read_files`: a map of `name: file` of YAML files to be read from the target project’s root directory. The contents of these YAML files may be used as templated actions within `pre_install_actions` and `post_install_actions`.
 
-You can see a simple `install.yaml` in [ddev-addon-template’s install.yaml](https://github.com/drud/ddev-addon-template/blob/main/install.yaml).
+You can see a simple `install.yaml` in [`ddev-addon-template`’s `install.yaml`](https://github.com/drud/ddev-addon-template/blob/main/install.yaml).
 
 ### Environment Variable Replacements
 

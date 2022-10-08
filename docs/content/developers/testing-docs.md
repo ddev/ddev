@@ -1,6 +1,6 @@
 # Working on the Docs
 
-This section is for people who want to contribute to the DDEV documentation.
+This page is about working with the DDEV documentation. See the [Writing Style Guide](writing-style-guide.md) for stylistic guidance.
 
 ## Fix Docs Using Web Browser
 
