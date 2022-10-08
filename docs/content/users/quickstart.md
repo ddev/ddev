@@ -226,7 +226,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         ddev start
         ddev composer create "typo3/cms-base-distribution" --no-install
         ddev composer install
-        ddev config --auto
+        ddev restart
         ddev exec touch public/FIRST_INSTALL
         ddev launch
         ```
