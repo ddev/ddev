@@ -240,7 +240,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         cd example-site
         ddev config --project-type=typo3 --docroot=public --create-docroot --php-version 8.1
         ddev composer install
-        ddev config --auto
+        ddev restart
         ddev exec touch public/FIRST_INSTALL
         ddev launch
         ```
