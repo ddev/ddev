@@ -92,7 +92,7 @@ It’s easy to get lost in documentation; don’t assume the reader is always fo
 | Write This 👍 | Not This ❌ |
 | -- | -- |
 | 1. In Docker Desktop, go to *Resources* → *Advanced* and set “Memory” to 6GB.<br>2. From your terminal, run `ddev restart`.<br>3. In your text editor, open `.ddev/config.yaml` and set `php_version: "8.1"`. | 1. Go to *Resources* → *Advanced* and set “Memory” to 6GB.<br>2. Run `ddev restart`.<br>3. Set `php_version: "8.1"`. |
-| Once you’ve [installed a Docker provider](docker-installation.md), you’re ready to install DDEV! | Docker or an alternative is required before anything will work with DDEV. This is pretty easy on most environments; see the [Docker Installation](../users/install/docker-installation.md) page to help sort out the details.
+| Once you’ve [installed a Docker provider](../users/install/docker-installation.md), you’re ready to install DDEV! | Docker or an alternative is required before anything will work with DDEV. This is pretty easy on most environments; see the [Docker Installation](../users/install/docker-installation.md) page to help sort out the details.
 
 ### Avoid Starting with Asides
 
