@@ -978,6 +978,9 @@ func RemoveVolume(volumeName string) error {
 	if _, err := client.InspectVolume(volumeName); err == nil {
 		err := client.RemoveVolumeWithOptions(docker.RemoveVolumeOptions{Name: volumeName})
 		if err != nil {
+			if err.Error() == "volume in use and cannot be removed" {
+				return fmt.Errorf("Docker volume '%s' is in use by a container and cannot be removed. Use 'docker rm -f $(docker ps -aq)' to stop all containers", volumeName)
+			}
 			return err
 		}
 	}
