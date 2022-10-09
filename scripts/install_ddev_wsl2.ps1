@@ -40,6 +40,8 @@ setx CAROOT "$(mkcert -CAROOT)"; If ($Env:WSLENV -notlike "*CAROOT/up:*") { setx
 wsl -u root bash -c "curl -sL https://apt.fury.io/drud/gpg.key | apt-key add -"
 wsl -u root bash -c "echo 'deb https://apt.fury.io/drud/ * *' > /etc/apt/sources.list.d/ddev.list"
 wsl -u root bash -c "apt-get update >/dev/null && sudo apt-get install -y ddev"
+wsl -u root bash -c "apt-get upgrade -y >/dev/null"
+
 
 wsl bash -c 'echo $CAROOT'
 wsl -u root mkcert -install
