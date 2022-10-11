@@ -1043,10 +1043,10 @@ func GetHostDockerInternalIP() (string, error) {
 	// The linux technique works for Gitpod, but only *after* prebuild, and many times
 	// everything is a new prebuild
 	case nodeps.IsGitpod():
-		addrs, err := net.LookupHost(os.Getenv("HOSTNAME"))
-		if err == nil && len(addrs) > 0 {
-			hostDockerInternal = addrs[0]
-		}
+		// addrs, err := net.LookupHost(os.Getenv("HOSTNAME"))
+		// if err == nil && len(addrs) > 0 {
+		// 	hostDockerInternal = addrs[0]
+		// }
 		// That approach doesn't seem to work any more at all on gitpod
 		// However, docker0 is there and it's the IP address we want.
 		// So figure out how to get docker0, perhaps use ip tool like in the past.
