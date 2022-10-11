@@ -153,9 +153,8 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         cd my-drupal9-site
         ddev config --project-type=drupal9 --docroot=web --create-docroot
         ddev start
-        ddev composer create "drupal/recommended-project" --no-install
-        ddev composer require drush/drush --no-install
-        ddev composer install
+        ddev composer create "drupal/recommended-project"
+        ddev composer require drush/drush
         ddev drush site:install -y
         ddev drush uli
         ddev launch
@@ -172,9 +171,8 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         cd my-drupal10-site
         ddev config --project-type=drupal10 --docroot=web --create-docroot
         ddev start
-        ddev composer create --no-install drupal/recommended-project:^10@alpha
-        ddev composer require drush/drush --no-install
-        ddev composer install
+        ddev composer create drupal/recommended-project:^10@alpha
+        ddev composer require drush/drush
         ddev drush site:install -y
         ddev drush uli
         ddev launch
@@ -450,7 +448,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         mkdir my-craft-project
         cd my-craft-project
         ddev config --project-type=craftcms --docroot=web --create-docroot
-		ddev start
+        ddev start
         ddev composer create -y --no-scripts --no-install craftcms/craft
         ddev craft install
         ddev launch
