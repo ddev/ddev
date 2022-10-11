@@ -231,12 +231,14 @@ for basic project creation or 'ddev ssh' into the web container and execute
 func init() {
 	ComposerCreateCmd.Flags().BoolVarP(&composerCreateYesFlag, "yes", "y", false, "Yes - skip confirmation prompt")
 	ComposerCreateCmd.InitDefaultHelpFlag()
-	ComposerCreateCmd.Flags().MarkHidden("help")
-	ComposerCreateCmd.SetHelpFunc(func(command *cobra.Command, strings []string) {
-		_ = command.Flags().MarkHidden("json-output")
-		// Double parent to prevent recursion
-		command.Parent().Parent().HelpFunc()(command, strings)
-	})
+	err := ComposerCreateProjectCmd.Flags().MarkHidden("help")
+	if err == nil {
+		ComposerCreateCmd.SetHelpFunc(func(command *cobra.Command, strings []string) {
+			_ = command.Flags().MarkHidden("json-output")
+			// Double parent to prevent recursion
+			command.Parent().Parent().HelpFunc()(command, strings)
+		})
+	}
 
 	ComposerCreateProjectCmd.InitDefaultHelpFlag()
 	err := ComposerCreateProjectCmd.Flags().MarkHidden("help")
