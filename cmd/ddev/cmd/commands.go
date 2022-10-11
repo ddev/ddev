@@ -191,6 +191,17 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				}
 
 				// Add the command and mark as added
+				// Hide -h because we are not parsing --help
+				// Also hide --json-output for the same reason
+				// @see https://github.com/spf13/cobra/issues/1328
+				commandToAdd.InitDefaultHelpFlag()
+				commandToAdd.Flags().MarkHidden("help")
+				commandToAdd.SetHelpFunc(func(command *cobra.Command, strings []string) {
+				   // Hide flag for this command
+				   command.Flags().MarkHidden("json-output")
+				   // Call parent help func
+			     command.Parent().HelpFunc()(command, strings)
+				})
 				rootCmd.AddCommand(commandToAdd)
 				commandsAdded[commandName] = 1
 			}

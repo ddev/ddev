@@ -11,6 +11,7 @@ import (
 
 // ComposerCmd handles ddev composer
 var ComposerCmd = &cobra.Command{
+	DisableFlagParsing: true,
 	Use:   "composer [command]",
 	Short: "Executes a composer command within the web container",
 	Long: `Executes a composer command at the composer root in the web container. Generally,
@@ -44,5 +45,4 @@ ddev composer create drupal/recommended-project`,
 
 func init() {
 	RootCmd.AddCommand(ComposerCmd)
-	ComposerCmd.Flags().SetInterspersed(false)
 }
