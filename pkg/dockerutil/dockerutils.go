@@ -1057,18 +1057,22 @@ func GetHostDockerInternalIP() (string, error) {
 	// so we need to go get the bridge IP address
 	// Docker Desktop) defines host.docker.internal itself.
 	case runtime.GOOS == "linux":
-		// TODO: Only skip this is docker version >= 20.10
-		// look up info from the bridge network
-		client := GetDockerClient()
-		n, err := client.NetworkInfo("bridge")
-		if err != nil {
-			return "", err
-		}
-		if len(n.IPAM.Config) > 0 {
-			if n.IPAM.Config[0].Gateway != "" {
-				hostDockerInternal = n.IPAM.Config[0].Gateway
-			} else {
-				util.Warning("Unable to determine host.docker.internal - no gateway")
+		// If docker 20.10+, host.docker.internal is already taken care of, otherwise
+		// inspect the bridge network to get it.
+		dockerVersion, _ := GetDockerVersion()
+		newer, _ := util.SemverValidate(">=20.10.0-alpha1", dockerVersion)
+		if !newer {
+			client := GetDockerClient()
+			n, err := client.NetworkInfo("bridge")
+			if err != nil {
+				return "", err
+			}
+			if len(n.IPAM.Config) > 0 {
+				if n.IPAM.Config[0].Gateway != "" {
+					hostDockerInternal = n.IPAM.Config[0].Gateway
+				} else {
+					util.Warning("Unable to determine host.docker.internal - no gateway")
+				}
 			}
 		}
 	}
