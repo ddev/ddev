@@ -169,6 +169,13 @@ The following fields can be used for a flag definition:
 * `NoOptDefVal`: default value, if the flag is on the command line without any options
 * `Annotations`: used by cobra.Command Bash autocomplete code (see <https://github.com/spf13/cobra/blob/master/bash_completions.md>)
 
+Command flags can also be disabled, meaning that you have full control over the 
+flags passed to the command without any validaton or requirement. This will 
+allow for things like `ddev platform --help` to work. To disable flags simply
+set the `## Flags` anotation to `false`.
+
+`## Flags: false`
+
 ### “ProjectTypes” Annotation
 
 If your command should only be visible for a specific project type, `ProjectTypes` will allow you to define the supported types. This is especially useful for global custom commands. See [Quickstart for many CMSes](../../users/quickstart.md) for more information about the supported project types. Multiple types are separated by a comma.
