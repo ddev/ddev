@@ -233,8 +233,7 @@ func init() {
 	ComposerCreateCmd.InitDefaultHelpFlag()
 	ComposerCreateCmd.Flags().MarkHidden("help")
 	ComposerCreateCmd.SetHelpFunc(func(command *cobra.Command, strings []string) {
-		if err := command.Flags().MarkHidden("json-output"); err != nil {
-		}
+		_ = command.Flags().MarkHidden("json-output")
 		// Double parent to prevent recursion
 		command.Parent().Parent().HelpFunc()(command, strings)
 	})
@@ -243,8 +242,7 @@ func init() {
 	err := ComposerCreateProjectCmd.Flags().MarkHidden("help")
 	if err == nil {
 		ComposerCreateProjectCmd.SetHelpFunc(func(command *cobra.Command, strings []string) {
-			if err := command.Flags().MarkHidden("json-output"); err != nil {
-			}
+			_ = command.Flags().MarkHidden("json-output")
 			// Double parent to prevent recursion
 			command.Parent().Parent().HelpFunc()(command, strings)
 		})
