@@ -3,7 +3,6 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
-	"github.com/Masterminds/semver/v3"
 	"os"
 	"path/filepath"
 	"sort"
@@ -712,15 +711,13 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	}
 
 	// Determine if Docker is new enough to use the ExtraHosts technique to add host.docker.internal
+	// TODO: Consolidate GetHostDockerInternalIP() logic with this logic
 	useDocker2010HostDockerInternal := false
-	constraint, constraintErr := semver.NewConstraint(`>=20.10.0-alpha1`)
-	dockerVersion, dockerVersionErr := dockerutil.GetDockerVersion()
-	dockerSemver, dockerSemverErr := semver.NewVersion(dockerVersion)
-	if runtime.GOOS == "linux" && !dockerutil.IsDockerDesktop() && constraintErr == nil && dockerVersionErr == nil && dockerSemverErr == nil {
-		match, _ := constraint.Validate(dockerSemver)
-		if match {
-			useDocker2010HostDockerInternal = true
-		}
+
+	dockerVersion, _ := dockerutil.GetDockerVersion()
+	newer, _ := util.SemverValidate(">=20.10.0-alpha1", dockerVersion)
+	if runtime.GOOS == "linux" && newer {
+		useDocker2010HostDockerInternal = true
 	}
 
 	templateVars := composeYAMLVars{

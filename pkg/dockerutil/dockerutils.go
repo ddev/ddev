@@ -1040,20 +1040,13 @@ func GetHostDockerInternalIP() (string, error) {
 		// see https://github.com/lima-vm/lima/blob/master/docs/network.md#host-ip-19216852
 		hostDockerInternal = "192.168.5.2"
 
-	// The linux technique works for Gitpod, but only *after* prebuild, and many times
-	// everything is a new prebuild
+	// Gitpod has docker 20.10+ so the docker-compose has already gotten the host-gateway
 	case nodeps.IsGitpod():
-		// addrs, err := net.LookupHost(os.Getenv("HOSTNAME"))
-		// if err == nil && len(addrs) > 0 {
-		// 	hostDockerInternal = addrs[0]
-		// }
-		// That approach doesn't seem to work any more at all on gitpod
-		// However, docker0 is there and it's the IP address we want.
-		// So figure out how to get docker0, perhaps use ip tool like in the past.
-		// We may want to try the linux approach and then fall back to the ip ... of the past.
+		break
 
 	case nodeps.IsWSL2() && IsDockerDesktop():
 		// If IDE is on Windows, return; we don't have to do anything.
+		break
 
 	case nodeps.IsWSL2() && !IsDockerDesktop():
 		// If IDE is on Windows, we have to parse /etc/resolv.conf
@@ -1066,18 +1059,18 @@ func GetHostDockerInternalIP() (string, error) {
 	case runtime.GOOS == "linux":
 		// TODO: Only skip this is docker version >= 20.10
 		// look up info from the bridge network
-		//client := GetDockerClient()
-		//n, err := client.NetworkInfo("bridge")
-		//if err != nil {
-		//	return "", err
-		//}
-		//if len(n.IPAM.Config) > 0 {
-		//	if n.IPAM.Config[0].Gateway != "" {
-		//		hostDockerInternal = n.IPAM.Config[0].Gateway
-		//	} else {
-		//		util.Warning("Unable to determine host.docker.internal - no gateway")
-		//	}
-		//}
+		client := GetDockerClient()
+		n, err := client.NetworkInfo("bridge")
+		if err != nil {
+			return "", err
+		}
+		if len(n.IPAM.Config) > 0 {
+			if n.IPAM.Config[0].Gateway != "" {
+				hostDockerInternal = n.IPAM.Config[0].Gateway
+			} else {
+				util.Warning("Unable to determine host.docker.internal - no gateway")
+			}
+		}
 	}
 
 	return hostDockerInternal, nil
