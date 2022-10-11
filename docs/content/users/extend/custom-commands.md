@@ -132,6 +132,12 @@ Example: `## Example: commandname\ncommandname -h`
 
 `Flags` should explain any available flags, including their shorthand when relevant, for the help message. It has to be encoded according the following definition:
 
+If no flags are specified, the command will have its flags parsing disabled. 
+Things like `--help` and `--version` will not work unless the command supports
+them.
+
+You can still do `ddev help <command>` to see the command's provided usage help.
+
 Usage: `## Flags: <json-definition>`
 
 This is the minimal usage of a flags definition:
@@ -168,13 +174,6 @@ The following fields can be used for a flag definition:
 * `DefValue`: default value for usage message
 * `NoOptDefVal`: default value, if the flag is on the command line without any options
 * `Annotations`: used by cobra.Command Bash autocomplete code (see <https://github.com/spf13/cobra/blob/master/bash_completions.md>)
-
-Command flags can also be disabled, meaning that you have full control over the 
-flags passed to the command without any validation or requirement. This will 
-allow for things like `ddev platform --help` to work. To disable flags simply
-set the `## Flags` annotation to `false`.
-
-`## Flags: false`
 
 ### “ProjectTypes” Annotation
 
