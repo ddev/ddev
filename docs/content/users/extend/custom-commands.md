@@ -170,9 +170,9 @@ The following fields can be used for a flag definition:
 * `Annotations`: used by cobra.Command Bash autocomplete code (see <https://github.com/spf13/cobra/blob/master/bash_completions.md>)
 
 Command flags can also be disabled, meaning that you have full control over the 
-flags passed to the command without any validaton or requirement. This will 
+flags passed to the command without any validation or requirement. This will 
 allow for things like `ddev platform --help` to work. To disable flags simply
-set the `## Flags` anotation to `false`.
+set the `## Flags` annotation to `false`.
 
 `## Flags: false`
 
