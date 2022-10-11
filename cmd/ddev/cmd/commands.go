@@ -182,9 +182,9 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 
 				// Initialize the new command
 				commandToAdd := &cobra.Command{
-					Use:     usage,
-					Short:   description + descSuffix,
-					Example: example,
+					Use:                usage,
+					Short:              description + descSuffix,
+					Example:            example,
 					DisableFlagParsing: disableFlags,
 					FParseErrWhitelist: cobra.FParseErrWhitelist{
 						UnknownFlags: true,
@@ -217,11 +217,13 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					// Also hide --json-output for the same reason
 					// @see https://github.com/spf13/cobra/issues/1328
 					commandToAdd.InitDefaultHelpFlag()
-					commandToAdd.Flags().MarkHidden("help")
-					commandToAdd.SetHelpFunc(func(command *cobra.Command, strings []string) {
-						command.Flags().MarkHidden("json-output")
-						command.Parent().HelpFunc()(command, strings)
-					})
+					err := commandToAdd.Flags().MarkHidden("help")
+					if err == nil {
+						commandToAdd.SetHelpFunc(func(command *cobra.Command, strings []string) {
+							command.Flags().MarkHidden("json-output")
+							command.Parent().HelpFunc()(command, strings)
+						})
+					}
 				}
 				rootCmd.AddCommand(commandToAdd)
 				commandsAdded[commandName] = 1
