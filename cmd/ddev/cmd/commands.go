@@ -99,16 +99,6 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					example = "  " + strings.ReplaceAll(val, `\n`, "\n  ")
 				}
 
-				// Init and import flags
-				var flags Flags
-				flags.Init(commandName, onHostFullPath)
-
-				if val, ok := directives["Flags"]; ok {
-					if err = flags.LoadFromJSON(val); err != nil {
-						util.Warning("Error '%s', command '%s' contains an invalid flags definition '%s', skipping add flags of %s", err, commandName, val, onHostFullPath)
-					}
-				}
-
 				// Import and handle ProjectTypes
 				if val, ok := directives["ProjectTypes"]; ok {
 					projectTypes = val
@@ -182,15 +172,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					Use:     usage,
 					Short:   description + descSuffix,
 					Example: example,
-					FParseErrWhitelist: cobra.FParseErrWhitelist{
-						UnknownFlags: true,
-					},
-				}
-
-				// Add flags to command
-				if err = flags.AssignToCommand(commandToAdd); err != nil {
-					util.Warning("Error '%s' in the flags definition for command '%s', skipping %s", err, commandName, onHostFullPath)
-					continue
+					DisableFlagParsing: true,
 				}
 
 				// Execute the command matching the host working directory relative
@@ -218,7 +200,8 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 	return nil
 }
 
-// makeHostCmd creates a command which will run on the host
+// makeHostCmd creates a command which will 
+run on the host
 func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Command, []string) {
 	var windowsBashPath = ""
 	if runtime.GOOS == "windows" {
