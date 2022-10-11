@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
+	"github.com/Masterminds/semver/v3"
 	"os"
 	"path/filepath"
 	"sort"
@@ -622,64 +623,65 @@ func (app *DdevApp) FixObsolete() {
 }
 
 type composeYAMLVars struct {
-	Name                      string
-	Plugin                    string
-	AppType                   string
-	MailhogPort               string
-	HostMailhogPort           string
-	DBType                    string
-	DBVersion                 string
-	DBMountDir                string
-	DBAPort                   string
-	DBPort                    string
-	HostPHPMyAdminPort        string
-	DdevGenerated             string
-	HostDockerInternalIP      string
-	DisableSettingsManagement bool
-	MountType                 string
-	WebMount                  string
-	WebBuildContext           string
-	DBBuildContext            string
-	WebBuildDockerfile        string
-	DBBuildDockerfile         string
-	SSHAgentBuildContext      string
-	OmitDB                    bool
-	OmitDBA                   bool
-	OmitRouter                bool
-	OmitSSHAgent              bool
-	BindAllInterfaces         bool
-	MariaDBVolumeName         string
-	PostgresVolumeName        string
-	MutagenEnabled            bool
-	MutagenVolumeName         string
-	NFSMountEnabled           bool
-	NFSSource                 string
-	NFSMountVolumeName        string
-	DockerIP                  string
-	IsWindowsFS               bool
-	NoProjectMount            bool
-	Hostnames                 []string
-	Timezone                  string
-	ComposerVersion           string
-	Username                  string
-	UID                       string
-	GID                       string
-	AutoRestartContainers     bool
-	FailOnHookFail            bool
-	WebWorkingDir             string
-	DBWorkingDir              string
-	DBAWorkingDir             string
-	WebEnvironment            []string
-	NoBindMounts              bool
-	Docroot                   string
-	ContainerUploadDir        string
-	HostUploadDir             string
-	GitDirMount               bool
-	IsGitpod                  bool
-	DefaultContainerTimeout   string
-	WebExtraHTTPPorts         string
-	WebExtraHTTPSPorts        string
-	WebExtraExposedPorts      string
+	Name                            string
+	Plugin                          string
+	AppType                         string
+	MailhogPort                     string
+	HostMailhogPort                 string
+	DBType                          string
+	DBVersion                       string
+	DBMountDir                      string
+	DBAPort                         string
+	DBPort                          string
+	HostPHPMyAdminPort              string
+	DdevGenerated                   string
+	HostDockerInternalIP            string
+	DisableSettingsManagement       bool
+	MountType                       string
+	WebMount                        string
+	WebBuildContext                 string
+	DBBuildContext                  string
+	WebBuildDockerfile              string
+	DBBuildDockerfile               string
+	SSHAgentBuildContext            string
+	OmitDB                          bool
+	OmitDBA                         bool
+	OmitRouter                      bool
+	OmitSSHAgent                    bool
+	BindAllInterfaces               bool
+	MariaDBVolumeName               string
+	PostgresVolumeName              string
+	MutagenEnabled                  bool
+	MutagenVolumeName               string
+	NFSMountEnabled                 bool
+	NFSSource                       string
+	NFSMountVolumeName              string
+	DockerIP                        string
+	IsWindowsFS                     bool
+	NoProjectMount                  bool
+	Hostnames                       []string
+	Timezone                        string
+	ComposerVersion                 string
+	Username                        string
+	UID                             string
+	GID                             string
+	AutoRestartContainers           bool
+	FailOnHookFail                  bool
+	WebWorkingDir                   string
+	DBWorkingDir                    string
+	DBAWorkingDir                   string
+	WebEnvironment                  []string
+	NoBindMounts                    bool
+	Docroot                         string
+	ContainerUploadDir              string
+	HostUploadDir                   string
+	GitDirMount                     bool
+	IsGitpod                        bool
+	DefaultContainerTimeout         string
+	UseHostDockerInternalExtraHosts bool
+	WebExtraHTTPPorts               string
+	WebExtraHTTPSPorts              string
+	WebExtraExposedPorts            string
 }
 
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
@@ -707,6 +709,18 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	_, err = app.GetProvider("")
 	if err != nil {
 		return "", err
+	}
+
+	// Determine if Docker is new enough to use the ExtraHosts technique to add host.docker.internal
+	useDocker2010HostDockerInternal := false
+	constraint, constraintErr := semver.NewConstraint(`>=20.10.0-alpha1`)
+	dockerVersion, dockerVersionErr := dockerutil.GetDockerVersion()
+	dockerSemver, dockerSemverErr := semver.NewVersion(dockerVersion)
+	if runtime.GOOS == "linux" && !dockerutil.IsDockerDesktop() && constraintErr == nil && dockerVersionErr == nil && dockerSemverErr == nil {
+		match, _ := constraint.Validate(dockerSemver)
+		if match {
+			useDocker2010HostDockerInternal = true
+		}
 	}
 
 	templateVars := composeYAMLVars{
@@ -761,7 +775,8 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		GitDirMount:           false,
 		IsGitpod:              nodeps.IsGitpod(),
 		// Default max time we wait for containers to be healthy
-		DefaultContainerTimeout: app.DefaultContainerTimeout,
+		DefaultContainerTimeout:         app.DefaultContainerTimeout,
+		UseHostDockerInternalExtraHosts: useDocker2010HostDockerInternal,
 	}
 	// We don't want to bind-mount git dir if it doesn't exist
 	if fileutil.IsDirectory(filepath.Join(app.AppRoot, ".git")) {

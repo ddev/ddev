@@ -90,6 +90,10 @@ services:
         uid: '{{ .UID }}'
         gid: '{{ .GID }}'
     image: ${DDEV_WEBIMAGE}-${DDEV_SITENAME}-built
+    {{ if .UseHostDockerInternalExtraHosts }}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    {{ endif }}
     networks: ["default", "ddev_default"]
     cap_add:
       - SYS_PTRACE
