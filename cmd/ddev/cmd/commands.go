@@ -220,7 +220,8 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					err := commandToAdd.Flags().MarkHidden("help")
 					if err == nil {
 						commandToAdd.SetHelpFunc(func(command *cobra.Command, strings []string) {
-							command.Flags().MarkHidden("json-output")
+							if err := command.Flags().MarkHidden("json-output"); err != nil {
+							}
 							command.Parent().HelpFunc()(command, strings)
 						})
 					}
