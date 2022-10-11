@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v4.2.0
+      - uses: actions/setup-python@v4.3.0
         with:
           python-version: 3.x
       - run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
