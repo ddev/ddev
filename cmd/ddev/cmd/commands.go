@@ -200,8 +200,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 	return nil
 }
 
-// makeHostCmd creates a command which will 
-run on the host
+// makeHostCmd creates a command which will run on the host
 func makeHostCmd(app *ddevapp.DdevApp, fullPath, name string) func(*cobra.Command, []string) {
 	var windowsBashPath = ""
 	if runtime.GOOS == "windows" {
