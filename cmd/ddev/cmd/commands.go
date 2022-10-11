@@ -99,6 +99,21 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					example = "  " + strings.ReplaceAll(val, `\n`, "\n  ")
 				}
 
+				// Init and import flags
+				var flags Flags
+				flags.Init(commandName, onHostFullPath)
+
+				var disableFlags bool
+				if val, ok := directives["Flags"]; ok {
+					if val == "false" {
+						disableFlags = true;
+					} else {
+						if err = flags.LoadFromJSON(val); err != nil {
+							util.Warning("Error '%s', command '%s' contains an invalid flags definition '%s', skipping add flags of %s", err, commandName, val, onHostFullPath)
+						}
+					}
+				}
+
 				// Import and handle ProjectTypes
 				if val, ok := directives["ProjectTypes"]; ok {
 					projectTypes = val
@@ -172,7 +187,16 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					Use:     usage,
 					Short:   description + descSuffix,
 					Example: example,
-					DisableFlagParsing: true,
+					DisableFlagParsing: disableFlags,
+					FParseErrWhitelist: cobra.FParseErrWhitelist{
+						UnknownFlags: true,
+					},
+				}
+
+				// Add flags to command
+				if err = flags.AssignToCommand(commandToAdd); err != nil {
+					util.Warning("Error '%s' in the flags definition for command '%s', skipping %s", err, commandName, onHostFullPath)
+					continue
 				}
 
 				// Execute the command matching the host working directory relative
@@ -190,18 +214,17 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, service, execRaw, relative)
 				}
 
-				// Add the command and mark as added
-				// Hide -h because we are not parsing --help
-				// Also hide --json-output for the same reason
-				// @see https://github.com/spf13/cobra/issues/1328
-				commandToAdd.InitDefaultHelpFlag()
-				commandToAdd.Flags().MarkHidden("help")
-				commandToAdd.SetHelpFunc(func(command *cobra.Command, strings []string) {
-					// Hide flag for this command
-					command.Flags().MarkHidden("json-output")
-					// Call parent help func
-					command.Parent().HelpFunc()(command, strings)
-				})
+				if disableFlags {
+					// Hide -h because we are disabling flags
+					// Also hide --json-output for the same reason
+					// @see https://github.com/spf13/cobra/issues/1328
+					commandToAdd.InitDefaultHelpFlag()
+					commandToAdd.Flags().MarkHidden("help")
+					commandToAdd.SetHelpFunc(func(command *cobra.Command, strings []string) {
+						command.Flags().MarkHidden("json-output")
+						command.Parent().HelpFunc()(command, strings)
+					})
+				}
 				rootCmd.AddCommand(commandToAdd)
 				commandsAdded[commandName] = 1
 			}

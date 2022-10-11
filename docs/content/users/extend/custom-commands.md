@@ -128,6 +128,47 @@ Usage: `## Example: <command-example>`
 
 Example: `## Example: commandname\ncommandname -h`
 
+### “Flags” Annotation
+
+`Flags` should explain any available flags, including their shorthand when relevant, for the help message. It has to be encoded according the following definition:
+
+Usage: `## Flags: <json-definition>`
+
+This is the minimal usage of a flags definition:
+
+Example: `## Flags: [{"Name":"flag","Usage":"sets the flag option"}]`
+
+Output:
+
+```bash
+Flags:
+  -h, --help          help for ddev
+  -f, --flag          sets the flag option
+```
+
+Multiple flags are separated by a comma:
+
+Example: `## Flags: [{"Name":"flag1","Shorthand":"f","Usage":"flag1 usage"},{"Name":"flag2","Usage":"flag2 usage"}]`
+
+Output:
+
+```bash
+Flags:
+  -h, --help          help for ddev
+  -f, --flag1         flag1 usage
+      --flag2         flag2 usage
+```
+
+The following fields can be used for a flag definition:
+
+* `Name`: the name as it appears on command line
+* `Shorthand`: one-letter abbreviated flag
+* `Usage`: help message
+* `Type`: possible values are `bool`, `string`, `int`, `uint` (defaults to `bool`)
+* `DefValue`: default value for usage message
+* `NoOptDefVal`: default value, if the flag is on the command line without any options
+* `Annotations`: used by cobra.Command Bash autocomplete code (see <https://github.com/spf13/cobra/blob/master/bash_completions.md>)
+
 ### “ProjectTypes” Annotation
 
 If your command should only be visible for a specific project type, `ProjectTypes` will allow you to define the supported types. This is especially useful for global custom commands. See [Quickstart for many CMSes](../../users/quickstart.md) for more information about the supported project types. Multiple types are separated by a comma.
