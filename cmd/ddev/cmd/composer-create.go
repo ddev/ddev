@@ -241,7 +241,7 @@ func init() {
 	}
 
 	ComposerCreateProjectCmd.InitDefaultHelpFlag()
-	err := ComposerCreateProjectCmd.Flags().MarkHidden("help")
+	err = ComposerCreateProjectCmd.Flags().MarkHidden("help")
 	if err == nil {
 		ComposerCreateProjectCmd.SetHelpFunc(func(command *cobra.Command, strings []string) {
 			_ = command.Flags().MarkHidden("json-output")
