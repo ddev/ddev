@@ -817,6 +817,9 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 		},
 	}
 
+	if runtime.GOOS == "linux" && !IsDockerDesktop() {
+		options.HostConfig.ExtraHosts = []string{"host.docker.internal:host-gateway"}
+	}
 	container, err := client.CreateContainer(options)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to create/start docker container (%v):%v", options, err)
