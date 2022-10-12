@@ -710,16 +710,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		return "", err
 	}
 
-	// Determine if Docker is new enough to use the ExtraHosts technique to add host.docker.internal
-	// TODO: Consolidate GetHostDockerInternalIP() logic with this logic
-	useDocker2010HostDockerInternal := false
-
-	dockerVersion, _ := dockerutil.GetDockerVersion()
-	newer, _ := util.SemverValidate(">=20.10.0-alpha1", dockerVersion)
-	if runtime.GOOS == "linux" && newer {
-		useDocker2010HostDockerInternal = true
-	}
-
 	templateVars := composeYAMLVars{
 		Name:                      app.Name,
 		Plugin:                    "ddev",
@@ -772,8 +762,10 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		GitDirMount:           false,
 		IsGitpod:              nodeps.IsGitpod(),
 		// Default max time we wait for containers to be healthy
-		DefaultContainerTimeout:         app.DefaultContainerTimeout,
-		UseHostDockerInternalExtraHosts: useDocker2010HostDockerInternal,
+		DefaultContainerTimeout: app.DefaultContainerTimeout,
+		// Only use the extra_hosts technique for linux and only if not WSL2
+		// If WSL2 we have to figure out other things, see GetHostDockerInternalIP()
+		UseHostDockerInternalExtraHosts: runtime.GOOS == "linux" && !nodeps.IsWSL2(),
 	}
 	// We don't want to bind-mount git dir if it doesn't exist
 	if fileutil.IsDirectory(filepath.Join(app.AppRoot, ".git")) {

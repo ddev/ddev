@@ -1057,24 +1057,9 @@ func GetHostDockerInternalIP() (string, error) {
 	// so we need to go get the bridge IP address
 	// Docker Desktop) defines host.docker.internal itself.
 	case runtime.GOOS == "linux":
-		// If docker 20.10+, host.docker.internal is already taken care of, otherwise
-		// inspect the bridge network to get it.
-		dockerVersion, _ := GetDockerVersion()
-		newer, _ := util.SemverValidate(">=20.10.0-alpha1", dockerVersion)
-		if !newer {
-			client := GetDockerClient()
-			n, err := client.NetworkInfo("bridge")
-			if err != nil {
-				return "", err
-			}
-			if len(n.IPAM.Config) > 0 {
-				if n.IPAM.Config[0].Gateway != "" {
-					hostDockerInternal = n.IPAM.Config[0].Gateway
-				} else {
-					util.Warning("Unable to determine host.docker.internal - no gateway")
-				}
-			}
-		}
+		// In docker 20.10+, host.docker.internal is already taken care of by extra_hosts in docker-compose
+		break
+
 	}
 
 	return hostDockerInternal, nil
@@ -1481,7 +1466,7 @@ func CopyFromContainer(containerName string, containerPath string, hostPath stri
 // REMEMBER TO CHANGE docs/ddev-installation.md if you touch this!
 // The constraint MUST HAVE a -pre of some kind on it for successful comparison.
 // See https://github.com/drud/ddev/pull/738.. and regression https://github.com/drud/ddev/issues/1431
-var DockerVersionConstraint = ">= 19.03.9-alpha1"
+var DockerVersionConstraint = ">= 20.10.0-alpha1"
 
 // DockerVersion is cached version of docker
 var DockerVersion = ""
