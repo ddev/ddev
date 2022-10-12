@@ -103,14 +103,11 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				var flags Flags
 				flags.Init(commandName, onHostFullPath)
 
-				disableFlags := true
 				if val, ok := directives["Flags"]; ok {
 					if err = flags.LoadFromJSON(val); err != nil {
 						util.Warning("Error '%s', command '%s' contains an invalid flags definition '%s', skipping add flags of %s", err, commandName, val, onHostFullPath)
-					} else {
-						disableFlags = false
-					}
 				}
+				disableFlags := !ok
 
 				// Import and handle ProjectTypes
 				if val, ok := directives["ProjectTypes"]; ok {
@@ -225,6 +222,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 						})
 					}
 				}
+				// Add the command and mark as added
 				rootCmd.AddCommand(commandToAdd)
 				commandsAdded[commandName] = 1
 			}
