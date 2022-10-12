@@ -44,13 +44,6 @@ ddev composer create drupal/recommended-project`,
 }
 
 func init() {
-	ComposerCmd.InitDefaultHelpFlag()
-	err := ComposerCmd.Flags().MarkHidden("help")
-	if err == nil {
-		ComposerCmd.SetHelpFunc(func(command *cobra.Command, strings []string) {
-			_ = command.Flags().MarkHidden("json-output")
-			command.Parent().HelpFunc()(command, strings)
-		})
-	}
 	RootCmd.AddCommand(ComposerCmd)
+	ComposerCmd.Flags().SetInterspersed(false)
 }

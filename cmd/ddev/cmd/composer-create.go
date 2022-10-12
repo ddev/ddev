@@ -22,9 +22,11 @@ var composerCreateYesFlag bool
 
 // ComposerCreateCmd handles ddev composer create
 var ComposerCreateCmd = &cobra.Command{
-	Use:                "create [args] [flags]",
-	DisableFlagParsing: true,
-	Short:              "Executes 'composer create-project' within the web container with the arguments and flags provided",
+	Use: "create [args] [flags]",
+	FParseErrWhitelist: cobra.FParseErrWhitelist{
+		UnknownFlags: true,
+	},
+	Short: "Executes 'composer create-project' within the web container with the arguments and flags provided",
 	Long: `Directs basic invocations of 'composer create-project' within the context of the
 web container. Projects will be installed to a temporary directory and moved to
 the composer root directory after install. Any existing files in the
@@ -220,6 +222,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 // when they try ddev composer create-project
 var ComposerCreateProjectCmd = &cobra.Command{
 	Use:                "create-project",
+	Short:              "Unsupported, use `ddev composer create` instead.",
 	DisableFlagParsing: true,
 	Run: func(cmd *cobra.Command, args []string) {
 		util.Failed(`'ddev composer create-project' is unsupported. Please use 'ddev composer create'
@@ -230,25 +233,6 @@ for basic project creation or 'ddev ssh' into the web container and execute
 
 func init() {
 	ComposerCreateCmd.Flags().BoolVarP(&composerCreateYesFlag, "yes", "y", false, "Yes - skip confirmation prompt")
-	ComposerCreateCmd.InitDefaultHelpFlag()
-	err := ComposerCreateCmd.Flags().MarkHidden("help")
-	if err == nil {
-		ComposerCreateCmd.SetHelpFunc(func(command *cobra.Command, strings []string) {
-			_ = command.Flags().MarkHidden("json-output")
-			// Double parent to prevent recursion
-			command.Parent().Parent().HelpFunc()(command, strings)
-		})
-	}
-
-	ComposerCreateProjectCmd.InitDefaultHelpFlag()
-	err = ComposerCreateProjectCmd.Flags().MarkHidden("help")
-	if err == nil {
-		ComposerCreateProjectCmd.SetHelpFunc(func(command *cobra.Command, strings []string) {
-			_ = command.Flags().MarkHidden("json-output")
-			// Double parent to prevent recursion
-			command.Parent().Parent().HelpFunc()(command, strings)
-		})
-	}
 	ComposerCmd.AddCommand(ComposerCreateProjectCmd)
 	ComposerCmd.AddCommand(ComposerCreateCmd)
 }
