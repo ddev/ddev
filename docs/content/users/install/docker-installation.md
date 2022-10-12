@@ -64,14 +64,14 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     * If you already have Docker Desktop installed, make sure to disable its integration with your WSL2 distro. In *Resources* → *WSL Integration*, disable integration with the default distro and with your particular distro.
     * If you don’t already have WSL2, install it with `wsl --install`. This will likely require a reboot.
     * Run `wsl --set-default-version 2`.
-    * Install a distro. We recommend Ubuntu 20.04: `wsl -s Ubuntu-20.04`.
+    * If the `Ubuntu` distro is not already installed and the default distro (see `wsl -l -v`) then install it with `wsl --install Ubuntu`.
     * Install `docker-ce` in WSL2 using the normal Linux instructions. For Debian/Ubuntu, run the following inside the WSL2 distro:
         ```bash
         sudo apt-get remove docker docker-engine docker.io containerd runc
         sudo apt-get update && sudo apt-get install ca-certificates curl gnupg lsb-release
         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
         echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/    linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-        sudo apt-get update && sudo apt-get install docker-ce docker-ce-cli containerd.io
+        sudo apt-get update && sudo apt-get -y install docker-ce docker-ce-cli containerd.io
         sudo groupadd docker && sudo usermod -aG docker $USER
         ```
     * You have to start `docker-ce` yourself on login, or use a script to automate it. To have it start on entry to Git Bash, add a startup line to your (Windows-side) `~/.bashrc` with:

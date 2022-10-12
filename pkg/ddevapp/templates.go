@@ -224,7 +224,7 @@ const ConfigInstructions = `
 # However, with "override_config: true" in a particular config.*.yaml file,
 # 'nfs_mount_enabled: false' can override the existing values, and
 # hooks:
-#   post_start: []
+#   post-start: []
 # or
 # web_environment: []
 # or

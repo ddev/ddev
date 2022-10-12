@@ -255,10 +255,11 @@ Use the installation through the browser.
         ```bash
         mkdir my-typo3-site
         cd my-typo3-site
-        ddev config --project-type=typo3 --docroot=public --create-docroot
+        ddev config --project-type=typo3 --docroot=public --create-docroot --php-version 8.1
         ddev start
         ddev composer create "typo3/cms-base-distribution" --no-install
         ddev composer install
+        ddev restart
         ddev exec touch public/FIRST_INSTALL
         ddev launch
         ```
@@ -270,8 +271,10 @@ Use the installation through the browser.
         ```bash
         git clone https://github.com/example/example-site
         cd example-site
-        ddev config
+        ddev config --project-type=typo3 --docroot=public --create-docroot --php-version 8.1
         ddev composer install
+        ddev restart
+        ddev exec touch public/FIRST_INSTALL
         ddev launch
         ```
 

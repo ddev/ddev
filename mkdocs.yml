@@ -165,5 +165,6 @@ nav:
       - developers/github-selfhosted-setup.md
       - developers/project-types.md
       - developers/release-management.md
-      - developers/styleguide.md
+      - developers/brand-guide.md
       - developers/testing-docs.md
+      - developers/writing-style-guide.md

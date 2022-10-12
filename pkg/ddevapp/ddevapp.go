@@ -984,7 +984,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 			if volumeExists {
 				removeVolumeErr := dockerutil.RemoveVolume(GetMutagenVolumeName(app))
 				if removeVolumeErr != nil {
-					return fmt.Errorf(`Unable to remove mismatched mutagen docker volume '%s'. Please use 'ddev mutagen reset': %v`, GetMutagenVolumeName(app), removeVolumeErr)
+					return fmt.Errorf(`Unable to remove mismatched mutagen docker volume '%s'. Please use 'ddev restart' or 'ddev mutagen reset': %v`, GetMutagenVolumeName(app), removeVolumeErr)
 				}
 			}
 		}
