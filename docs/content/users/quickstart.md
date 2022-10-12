@@ -33,6 +33,39 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     5. If needed, import a database with `ddev import-db --src=/path/to/db.sql.gz`.
     6. Visit the project in a browser, and then build things.
 
+=== "Moodle"
+
+    ## Moodle
+
+     ```bash
+     ddev config --create-docroot --docroot public --webserver-type apache-fpm
+     mkdir moodledata
+     mkdir .ddev/php
+     echo "max_input_vars = 5000;" > .ddev/php/custom.ini
+     ddev start
+     ddev exec composer create-project moodle/moodle public
+     ddev launch
+
+     ```   
+Use the installation through the browser.
+* choose the language
+* for the database driver choose MariaDB.
+* on the database credentials page fill host, name, user, and password with db.
+* finish the installation
+
+<div class="admonition attention">
+    <p class="first admonition-title">Attention</p>
+    <p class="last">
+        this will use PHP 8.0 which works fine as far as I can see. The PHP version could be changed in the first step by adding the argument --php-version 7.4
+    </p>
+</div>
+<div class="admonition note">
+    <p class="first admonition-title">Note</p>
+    <p class="last">
+       You will need a cron job to run periodically so don't forget to set it up.
+    </p>
+</div>
+
 === "WordPress"
 
     ## WordPress
