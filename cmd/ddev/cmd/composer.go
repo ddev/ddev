@@ -49,7 +49,9 @@ func init() {
 	originalHelpFunc := ComposerCmd.HelpFunc()
 	if err == nil {
 		ComposerCmd.SetHelpFunc(func(command *cobra.Command, strings []string) {
-			_ = command.Flags().MarkHidden("json-output")
+			if (command == ComposerCmd) {
+				_ = command.Flags().MarkHidden("json-output")
+			}
 			originalHelpFunc(command, strings)
 		})
 	}
