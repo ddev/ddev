@@ -8,6 +8,7 @@ import (
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/versionconstants"
+	"github.com/mitchellh/go-homedir"
 	"io"
 	"log"
 	"net"
@@ -137,16 +138,22 @@ func GetDockerContext() (string, string, error) {
 // GetDockerHostID returns DOCKER_HOST but with all special characters removed
 // It stands in for docker context, but docker context name is not a reliable indicator
 func GetDockerHostID() string {
-	_, host, err := GetDockerContext()
+	_, dockerHost, err := GetDockerContext()
 	if err != nil {
 		util.Warning("Unable to GetDockerContext: %v", err)
 	}
-	// Convert DOCKER_HOST to alphanumeric
+	// Make it shorter so we don't hit mutagen 63-char limit
+	dockerHost = strings.TrimPrefix(dockerHost, "unix://")
+	homeDir, _ := homedir.Dir()
+	dockerHost = strings.TrimPrefix(dockerHost, homeDir)
+	dockerHost = strings.TrimLeft(dockerHost, "/.")
+	dockerHost = strings.TrimSuffix(dockerHost, ".sock")
+	// Convert remaining descriptor to alphanumeric
 	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
 	if err != nil {
 		log.Fatal(err)
 	}
-	alphaOnly := reg.ReplaceAllString(host, "-")
+	alphaOnly := reg.ReplaceAllString(dockerHost, "-")
 	return alphaOnly
 }
 
