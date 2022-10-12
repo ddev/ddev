@@ -217,7 +217,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					// Also hide --json-output for the same reason
 					// @see https://github.com/spf13/cobra/issues/1328
 					commandToAdd.InitDefaultHelpFlag()
-					err := commandToAdd.Flags().MarkHidden("help")
+					err = commandToAdd.Flags().MarkHidden("help")
 					if err == nil {
 						commandToAdd.SetHelpFunc(func(command *cobra.Command, strings []string) {
 							_ = command.Flags().MarkHidden("json-output")
