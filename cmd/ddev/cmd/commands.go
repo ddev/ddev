@@ -217,10 +217,11 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					// @see https://github.com/spf13/cobra/issues/1328
 					commandToAdd.InitDefaultHelpFlag()
 					err = commandToAdd.Flags().MarkHidden("help")
+					originalHelpFunc := commandToAdd.HelpFunc()
 					if err == nil {
 						commandToAdd.SetHelpFunc(func(command *cobra.Command, strings []string) {
 							_ = command.Flags().MarkHidden("json-output")
-							command.Parent().HelpFunc()(command, strings)
+							originalHelpFunc(command, strings)
 						})
 					}
 				}
