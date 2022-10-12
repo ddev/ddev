@@ -351,3 +351,4 @@ func findDirectivesInScriptCommand(script string) map[string]string {
 
 	return directives
 }
+
