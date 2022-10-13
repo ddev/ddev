@@ -37,6 +37,28 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
 
     ## Moodle
 
+    ```bash
+    ddev config --create-docroot --docroot public --webserver-type apache-fpm
+    mkdir moodledata
+    mkdir .ddev/php
+    echo "max_input_vars = 5000;" > .ddev/php/custom.ini
+    ddev start
+    ddev exec composer create-project moodle/moodle public
+    ddev launch
+    ```
+
+    Complete installation in a web browser:
+
+    * Choose the language.
+    * For the database driver, choose MariaDB.
+    * On the database credentials page, enter `db` for host, name, user, and password.
+    * Finish the installation.
+
+    !!!tip
+        Moodle relies on a periodic cron job—don’t forget to set that up! See [drud/ddev-cron](https://github.com/drud/ddev-cron).
+
+    ## Moodle
+
      ```bash
      ddev config --create-docroot --docroot public --webserver-type apache-fpm
      mkdir moodledata
