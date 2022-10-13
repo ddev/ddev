@@ -100,11 +100,11 @@ const ConfigInstructions = `
 
 # nfs_mount_enabled: false
 # Great performance improvement but requires host configuration first.
-# See https://ddev.readthedocs.io/en/stable/users/performance/#using-nfs-to-mount-the-project-into-the-container
+# See https://ddev.readthedocs.io/en/latest/users/install/performance/#nfs
 
 # mutagen_enabled: false
 # Performance improvement using mutagen asynchronous updates.
-# See https://ddev.readthedocs.io/en/latest/users/performance/#using-mutagen
+# See https://ddev.readthedocs.io/en/latest/users/install/performance/#mutagen
 
 # fail_on_hook_fail: False
 # Decide whether 'ddev start' should be interrupted by a failing hook
