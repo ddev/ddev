@@ -1,3 +1,8 @@
+---
+hide:
+  - toc
+---
+
 # What’s in the `.ddev` Directory?
 
 It can be a little confusing trying to understand all the things that are in the project’s `.ddev` directory, this page offers a guided tour of its contents. You may have some directories or files that aren’t listed here, likely added by custom services. For example, if you see a `solr` directory, it probably pertains to a custom Solr [add-on service](../extend/additional-services.md)).

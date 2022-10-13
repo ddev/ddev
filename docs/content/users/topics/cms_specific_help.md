@@ -1,3 +1,8 @@
+---
+hide:
+  - toc
+---
+
 # Controlling CMS Settings Files in DDEV
 
 One DDEV feature that lots of people love is its creation and management of CMS-specific settings files. This makes starting and installing a new project a breeze, and is a fantastic time-saver for many users. People can follow one of the many DDEV [Quickstart Guides](../../users/quickstart.md) and have a project up and installed in no time. To make this happen, DDEV does a quite a bit of settings management for explicitly-supported CMSes. DDEV will:

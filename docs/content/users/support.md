@@ -1,3 +1,8 @@
+---
+hide:
+  - toc
+---
+
 # Support
 
 We love to hear from you and want you to be successful with DDEV!
