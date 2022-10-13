@@ -1,6 +1,7 @@
 ARG
 AdditionalConfig
 AdditionalConfiguration
+Adminer
 Apache
 Acquia
 Autocompletion
