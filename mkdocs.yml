@@ -110,11 +110,12 @@ nav:
       - users/install/index.md
       - users/install/docker-installation.md
       - users/install/ddev-installation.md
+    - 'Settling In':
       - users/install/performance.md
       - users/install/shell-completion.md
-    - users/quickstart.md
-    - users/support.md
-    - users/code-of-conduct.md
+      - users/quickstart.md
+      - users/support.md
+      - users/code-of-conduct.md
   - 'Basics':
     - users/basics/index.md
     - users/basics/how-ddev-works.md
