@@ -92,6 +92,11 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 		dirty = true
 	}
 
+	if cmd.Flag("xdebug-ide-location").Changed {
+		globalconfig.DdevGlobalConfig.XdebugIDELocation, _ = cmd.Flags().GetString("xdebug-ide-location")
+		dirty = true
+	}
+
 	if cmd.Flag("router-bind-all-interfaces").Changed {
 		globalconfig.DdevGlobalConfig.RouterBindAllInterfaces, _ = cmd.Flags().GetBool("router-bind-all-interfaces")
 		dirty = true
@@ -208,6 +213,7 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 	output.UserOut.Printf("use-docker-compose-from-path=%v", globalconfig.DdevGlobalConfig.UseDockerComposeFromPath)
 	output.UserOut.Printf("no-bind-mounts=%v", globalconfig.DdevGlobalConfig.NoBindMounts)
 	output.UserOut.Printf("project-tld=%v", globalconfig.DdevGlobalConfig.ProjectTldGlobal)
+	output.UserOut.Printf("xdebug-ide-location=%v", globalconfig.DdevGlobalConfig.XdebugIDELocation)
 }
 
 func init() {
@@ -231,6 +237,7 @@ func init() {
 	configGlobalCommand.Flags().String("project-tld", "", "Override default project tld")
 	configGlobalCommand.Flags().Bool("use-docker-compose-from-path", true, "If true, use docker-compose from path instead of private ~/.ddev/bin/docker-compose")
 	configGlobalCommand.Flags().Bool("no-bind-mounts", true, "If true, don't use bind-mounts - useful for environments like remote docker where bind-mounts are impossible")
+	configGlobalCommand.Flags().String("xdebug-ide-location", "", "For less usual IDE locations specify where the IDE is running for Xdebug to reach it")
 
 	ConfigCommand.AddCommand(configGlobalCommand)
 }
