@@ -46,17 +46,21 @@ Add-ons marked with '*' are official, maintained DDEV add-ons.
 !!!tip
     If you need a service not provided here, see [Defining an Additional Service with Docker Compose](custom-compose-files.md).
 
-Some of the officially-supported add-ons:
+Officially-supported add-ons:
 
-* [Redis](https://github.com/drud/ddev-redis): `ddev get drud/ddev-redis`.
-* [Redis Commander](https://github.com/drud/ddev-redis-commander): `ddev get drud/ddev-redis-commander`.
-* [elasticsearch](https://github.com/drud/ddev-elasticsearch): `ddev get drud/ddev-elasticsearch`.
+* [Adminer](https://github.com/drud/ddev-adminer): `ddev get drud/ddev-adminer`.
 * [Apache Solr for Drupal 9](https://github.com/drud/ddev-drupal9-solr): `ddev get drud/ddev-drupal9-solr`.
+* [Beanstalkd](https://github.com/drud/ddev-beanstalkd): `ddev get drud/ddev-beanstalkd`.
+* [Browsersync](https://github.com/drud/ddev-browsersync): `ddev get drud/ddev-browsersync`.
+* [cron](https://github.com/drud/ddev-cron): `ddev get drud/ddev-cron`.
+* [Elasticsearch](https://github.com/drud/ddev-elasticsearch): `ddev get drud/ddev-elasticsearch`.
 * [Memcached](https://github.com/drud/ddev-memcached): `ddev get drud/ddev-memcached`.
-* [Varnish](https://github.com/drud/ddev-varnish): `ddev get drud/ddev-varnish`.
 * [MongoDB](https://github.com/drud/ddev-mongo): `ddev get drud/ddev-mongo`.
 * [PDFreactor](https://github.com/drud/ddev-pdfreactor): `ddev get drud/ddev-pdfreactor`
-* [Beanstalkd](https://github.com/drud/ddev-beanstalkd): `ddev get drud/ddev-beanstalkd`.
+* [Proxy Support](https://github.com/drud/ddev-proxy-support): `ddev get drud/ddev-proxy-support`.
+* [Redis Commander](https://github.com/drud/ddev-redis-commander): `ddev get drud/ddev-redis-commander`.
+* [Redis](https://github.com/drud/ddev-redis): `ddev get drud/ddev-redis`.
+* [Varnish](https://github.com/drud/ddev-varnish): `ddev get drud/ddev-varnish`.
 
 ## Creating an Additional Service for `ddev get`
 
