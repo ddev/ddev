@@ -305,7 +305,7 @@ volumes:
     driver: local
     driver_opts:
       type: nfs
-      o: "addr={{ if .HostDockerInternalIP }}{{ .HostDockerInternalIP }}{{ else }}host.docker.internal{{end}},hard,nolock,rw"
+      o: "addr={{ if .NFSServerAddr }}{{ .NFSServerAddr }}{{ else }}host.docker.internal{{end}},hard,nolock,rw"
       device: ':{{ .NFSSource }}'
   {{ end }}{{/* end if and .NFSMountEnabled (not .NoProjectMount) */}}
   {{ if and .MutagenEnabled (not .NoProjectMount) }}

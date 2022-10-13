@@ -1068,6 +1068,57 @@ func GetHostDockerInternalIP() (string, error) {
 	return hostDockerInternal, nil
 }
 
+// GetNFSServerAddr gets the addrss that can be used for the NFS server.
+// It's almost the same as GetDockerHostInternalIP() but we have
+// to get the actual addr in the case of linux; still, linux rarely
+// is used with NFS.
+func GetNFSServerAddr() (string, error) {
+	nfsAddr := ""
+
+	switch {
+	case IsColima():
+		// Lima just specifies this as a named explicit IP address at this time
+		// see https://github.com/lima-vm/lima/blob/master/docs/network.md#host-ip-19216852
+		nfsAddr = "192.168.5.2"
+
+	// Gitpod has docker 20.10+ so the docker-compose has already gotten the host-gateway
+	// However, NFS will never be used on gitpod.
+	case nodeps.IsGitpod():
+		break
+
+	case nodeps.IsWSL2() && IsDockerDesktop():
+		// If IDE is on Windows, return; we don't have to do anything.
+		break
+
+	case nodeps.IsWSL2() && !IsDockerDesktop():
+		// If IDE is on Windows, we have to parse /etc/resolv.conf
+		// Else it will be fine, we can fallthrough to the linux version
+		nfsAddr = wsl2ResolvConfNameserver()
+
+	// Docker on linux doesn't define host.docker.internal
+	// so we need to go get the bridge IP address
+	// Docker Desktop) defines host.docker.internal itself.
+	case runtime.GOOS == "linux":
+		// look up info from the bridge network
+		// We can't use the docker host because that's for inside the container,
+		// and this is for setting up the network interface
+		client := GetDockerClient()
+		n, err := client.NetworkInfo("bridge")
+		if err != nil {
+			return "", err
+		}
+		if len(n.IPAM.Config) > 0 {
+			if n.IPAM.Config[0].Gateway != "" {
+				nfsAddr = n.IPAM.Config[0].Gateway
+			} else {
+				util.Warning("Unable to determine docker bridge gateway - no gateway")
+			}
+		}
+	}
+
+	return nfsAddr, nil
+}
+
 // wsl2ResolvConfNameserver parses /etc/resolv.conf to get the nameserver,
 // which is the only documented way to know how to connect to the host
 // to connect to PhpStorm or other IDE listening there. Or for other apps.
