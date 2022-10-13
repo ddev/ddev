@@ -33,60 +33,6 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     5. If needed, import a database with `ddev import-db --src=/path/to/db.sql.gz`.
     6. Visit the project in a browser, and then build things.
 
-=== "Moodle"
-
-    ## Moodle
-
-    ```bash
-    ddev config --create-docroot --docroot public --webserver-type apache-fpm
-    mkdir moodledata
-    mkdir .ddev/php
-    echo "max_input_vars = 5000;" > .ddev/php/custom.ini
-    ddev start
-    ddev exec composer create-project moodle/moodle public
-    ddev launch
-    ```
-
-    Complete installation in a web browser:
-
-    * Choose the language.
-    * For the database driver, choose MariaDB.
-    * On the database credentials page, enter `db` for host, name, user, and password.
-    * Finish the installation.
-
-    !!!tip
-        Moodle relies on a periodic cron job—don’t forget to set that up! See [drud/ddev-cron](https://github.com/drud/ddev-cron).
-
-    ## Moodle
-
-     ```bash
-     ddev config --create-docroot --docroot public --webserver-type apache-fpm
-     mkdir moodledata
-     mkdir .ddev/php
-     echo "max_input_vars = 5000;" > .ddev/php/custom.ini
-     ddev start
-     ddev exec composer create-project moodle/moodle public
-     ddev launch
-
-     ```   
-Use the installation through the browser.
-* choose the language
-* for the database driver choose MariaDB.
-* on the database credentials page fill host, name, user, and password with db.
-* finish the installation
-
-<div class="admonition attention">
-    <p class="first admonition-title">Attention</p>
-    <p class="last">
-        this will use PHP 8.0 which works fine as far as I can see. The PHP version could be changed in the first step by adding the argument --php-version 7.4
-    </p>
-</div>
-<div class="admonition note">
-    <p class="first admonition-title">Note</p>
-    <p class="last">
-       You will need a cron job to run periodically so don't forget to set it up.
-    </p>
-</div>
 
 === "WordPress"
 
@@ -346,6 +292,32 @@ Use the installation through the browser.
     You may want to add the [Magento 2 Sample Data](https://devdocs.magento.com/guides/v2.4/install-gde/install/sample-data-after-composer.html) with `ddev magento sampledata:deploy && ddev magento setup:upgrade`.
     
     Magento 2 is a huge codebase, and we recommend [using Mutagen for performance](install/performance.md#using-mutagen) on macOS and traditional Windows.
+
+=== "Moodle"
+
+## Moodle
+
+```bash
+ddev config --create-docroot --docroot public --webserver-type apache-fpm
+mkdir moodledata
+mkdir .ddev/php
+echo "max_input_vars = 5000;" > .ddev/php/custom.ini
+ddev start
+ddev exec composer create-project moodle/moodle public
+ddev launch
+```
+
+Complete installation in a web browser:
+
+* Choose the language.
+* For the database driver, choose MariaDB.
+* On the database credentials page, enter `db` for host, name, user, and password.
+* Finish the installation.
+
+!!!tip
+    Moodle relies on a periodic cron job—don’t forget to set that up! See [drud/ddev-cron](https://github.com/drud/ddev-cron).
+
+
 
 === "Laravel"
 
