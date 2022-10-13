@@ -203,8 +203,15 @@ See the [support options](../support.md), including [Discord](https://discord.gg
 
 ### How can I contribute to DDEV?
 
-We love and welcome contributions of knowledge, support, docs, and code. Make an issue or PR to the [main repo](https://github.com/drud/ddev). Add your external resource to [awesome-ddev](https://github.com/drud/awesome-ddev). Add your recipe or HOWTO to [ddev-contrib](https://github.com/drud/ddev-contrib). Help others in [Discord](https://discord.gg/kDvSFBSZfs) and [Stack Overflow](https://stackoverflow.com/tags/ddev). Contribute financially via [GitHub Sponsors](https://github.com/sponsors/rfay). Get involved with DDEV governance and the [Advisory Group](https://github.com/drud/ddev/discussions/categories/ddev-advisory-group).
+We love and welcome contributions of knowledge, support, docs, and code:
 
-### How can I contribute financially to the DDEV project?
+- Submit an issue or pull request to the [main repo](https://github.com/drud/ddev).
+- Add your external resource to [awesome-ddev](https://github.com/drud/awesome-ddev).
+- Add your recipe or HOWTO to [ddev-contrib](https://github.com/drud/ddev-contrib).
+- Help others in [Discord](https://discord.gg/kDvSFBSZfs) and on [Stack Overflow](https://stackoverflow.com/tags/ddev).
+- Contribute financially via [GitHub Sponsors](https://github.com/sponsors/rfay).
+- Get involved with DDEV governance and the [Advisory Group](https://github.com/drud/ddev/discussions/categories/ddev-advisory-group).
 
-Thanks for asking! Contributions can be done via [GitHub Sponsors](https://github.com/sponsors/rfay). They go to the [Localdev Foundation](https://localdev.foundation) and are used for infrastructure and supporting development.
+### How do financial contributions support DDEV?
+
+Thanks for asking! Contributions made via [GitHub Sponsors](https://github.com/sponsors/rfay) go to the [Localdev Foundation](https://localdev.foundation) and are used for infrastructure and supporting development.
