@@ -205,12 +205,12 @@ See the [support options](../support.md), including [Discord](https://discord.gg
 
 We love and welcome contributions of knowledge, support, docs, and code:
 
-- Submit an issue or pull request to the [main repo](https://github.com/drud/ddev).
-- Add your external resource to [awesome-ddev](https://github.com/drud/awesome-ddev).
-- Add your recipe or HOWTO to [ddev-contrib](https://github.com/drud/ddev-contrib).
-- Help others in [Discord](https://discord.gg/kDvSFBSZfs) and on [Stack Overflow](https://stackoverflow.com/tags/ddev).
-- Contribute financially via [GitHub Sponsors](https://github.com/sponsors/rfay).
-- Get involved with DDEV governance and the [Advisory Group](https://github.com/drud/ddev/discussions/categories/ddev-advisory-group).
+* Submit an issue or pull request to the [main repo](https://github.com/drud/ddev).
+* Add your external resource to [awesome-ddev](https://github.com/drud/awesome-ddev).
+* Add your recipe or HOWTO to [ddev-contrib](https://github.com/drud/ddev-contrib).
+* Help others in [Discord](https://discord.gg/kDvSFBSZfs) and on [Stack Overflow](https://stackoverflow.com/tags/ddev).
+* Contribute financially via [GitHub Sponsors](https://github.com/sponsors/rfay).
+* Get involved with DDEV governance and the [Advisory Group](https://github.com/drud/ddev/discussions/categories/ddev-advisory-group).
 
 ### How do financial contributions support DDEV?
 
