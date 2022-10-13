@@ -28,14 +28,14 @@ theme:
 #  - content.tabs.link
   - navigation.expand
   - navigation.indexes
-#  - navigation.instant
+  - navigation.instant
   - navigation.sections
   - navigation.tabs
 #  - navigation.tabs.sticky
   - navigation.top
-#  - navigation.tracking
+  - navigation.tracking
 #  - toc.follow
-  - toc.integrate
+#  - toc.integrate
 
   favicon: favicon.png
   # readthedocs doesn't seem to do logo css right
@@ -79,6 +79,7 @@ markdown_extensions:
 - md_in_html
 - toc:
     permalink: true
+    toc_depth: 2
 - pymdownx.arithmatex:
     generic: true
 - pymdownx.betterem:
