@@ -30,7 +30,7 @@ func TestCmdSnapshotRestore(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	err = app.Start()
+	err = app.Restart()
 	require.NoError(t, err)
 
 	// Ensure that a snapshot is created

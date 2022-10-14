@@ -8,7 +8,6 @@ import (
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/versionconstants"
-	"github.com/mitchellh/go-homedir"
 	"io"
 	"log"
 	"net"
@@ -144,10 +143,8 @@ func GetDockerHostID() string {
 	}
 	// Make it shorter so we don't hit mutagen 63-char limit
 	dockerHost = strings.TrimPrefix(dockerHost, "unix://")
-	homeDir, _ := homedir.Dir()
-	dockerHost = strings.TrimPrefix(dockerHost, homeDir)
-	dockerHost = strings.TrimLeft(dockerHost, "/.")
-	dockerHost = strings.TrimSuffix(dockerHost, ".sock")
+	dockerHost = strings.TrimSuffix(dockerHost, "docker.sock")
+	dockerHost = strings.Trim(dockerHost, "/.")
 	// Convert remaining descriptor to alphanumeric
 	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
 	if err != nil {
