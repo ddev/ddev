@@ -737,8 +737,7 @@ func TerminateAllMutagenSync() {
 
 // GetDefaultMutagenVolumeSignature gets a new volume signature to be applied to mutagen volume
 func GetDefaultMutagenVolumeSignature(app *DdevApp) string {
-	now := time.Now()
-	return fmt.Sprintf("%s-%s", dockerutil.GetDockerHostID(), now.Format("20060102150405"))
+	return fmt.Sprintf("%s-%v", dockerutil.GetDockerHostID(), time.Now().Unix())
 }
 
 // CheckMutagenUploadDir just tells people if they are using mutagen without upload_dir
