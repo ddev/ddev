@@ -10,6 +10,10 @@ The documentation is built and checked automatically with various [GitHub Action
 2. Click the pencil button on GitHub and follow the instructions to create your change.
 3. Save your changes and follow the prompts to create a PR.
 4. In the checks on your PR, click the “details” link by `docs/readthedocs.org:ddev` to browse the docs build created by your PR.
+5. Once the PR has run its checks, you'll see in the checks that there's a `docs/readthedocs.org:ddev` check with a link to the docs with your change in them. Follow the link to review what your change actually looks like:
+    <img width="861" alt="_docs__moodle_quickstart_by_ibrah3m_·_Pull_Request__4286_·_drud_ddev" src="https://user-images.githubusercontent.com/112444/196007331-7a1a3a0f-0fbe-41af-a50d-7f02b7d497f0.png">
+6. Take a look at the "Check docs" check to make sure that there were no linting or spellcheck errors.
+
 
 ## Fork / Clone the DDEV Repository
 
