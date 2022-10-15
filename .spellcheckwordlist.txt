@@ -665,3 +665,4 @@ zcompdump
 zsh
 zshrc
 zxf
+moodle
