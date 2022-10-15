@@ -33,7 +33,6 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     5. If needed, import a database with `ddev import-db --src=/path/to/db.sql.gz`.
     6. Visit the project in a browser, and then build things.
 
-
 === "WordPress"
 
     ## WordPress
@@ -316,8 +315,6 @@ Complete installation in a web browser:
 
 !!!tip
     Moodle relies on a periodic cron job—don’t forget to set that up! See [drud/ddev-cron](https://github.com/drud/ddev-cron).
-
-
 
 === "Laravel"
 
