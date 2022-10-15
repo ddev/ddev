@@ -14,7 +14,6 @@ The documentation is built and checked automatically with various [GitHub Action
     <img width="861" alt="_docs__moodle_quickstart_by_ibrah3m_·_Pull_Request__4286_·_drud_ddev" src="https://user-images.githubusercontent.com/112444/196007331-7a1a3a0f-0fbe-41af-a50d-7f02b7d497f0.png">
 6. Take a look at the "Check docs" check to make sure that there were no linting or spellcheck errors.
 
-
 ## Fork / Clone the DDEV Repository
 
 To start making changes you’ll need a local copy of the DDEV documentation, so [fork the DDEV repository](https://github.com/drud/ddev/fork) which includes the documentation.
