@@ -1,12 +1,17 @@
 package globalconfig
 
-import "os"
+import (
+	"github.com/drud/ddev/pkg/nodeps"
+	"os"
+)
 
 // Container types used with ddev (duplicated from ddevapp, avoiding cross-package cycles)
 const (
-	DdevSSHAgentContainer = "ddev-ssh-agent"
-	DBAContainer          = "dba"
-	DdevRouterContainer   = "ddev-router"
+	DdevSSHAgentContainer      = "ddev-ssh-agent"
+	DBAContainer               = "dba"
+	DdevRouterContainer        = "ddev-router"
+	XdebugIDELocationContainer = "container"
+	XdebugIDELocationWSL2      = "wsl2"
 )
 
 const DdevGithubOrg = "drud"
@@ -26,3 +31,13 @@ var DdevDebug = (os.Getenv("DDEV_DEBUG") == "true")
 
 // DdevVerbose is set to true if the env var is set
 var DdevVerbose = (os.Getenv("DDEV_VERBOSE") == "true")
+
+var ValidXdebugIDELocations = []string{XdebugIDELocationContainer, XdebugIDELocationWSL2, ""}
+
+// IsValidXdebugIDELocation limits the choices for XdebugIDELocation
+func IsValidXdebugIDELocation(loc string) bool {
+	if nodeps.ArrayContainsString(ValidXdebugIDELocations, loc) {
+		return true
+	}
+	return false
+}

@@ -128,7 +128,7 @@ func ValidateGlobalConfig() error {
 	}
 
 	if !IsValidXdebugIDELocation(DdevGlobalConfig.XdebugIDELocation) {
-		return fmt.Errorf(`xdebug_ide_location may be either "wsl2" or "container"`)
+		return fmt.Errorf(`xdebug_ide_location must be one of %v`, ValidXdebugIDELocations)
 	}
 	return nil
 }

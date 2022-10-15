@@ -1043,6 +1043,10 @@ func GetHostDockerInternalIP() (string, error) {
 		// see https://github.com/lima-vm/lima/blob/master/docs/network.md#host-ip-19216852
 		hostDockerInternal = "192.168.5.2"
 
+	case globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationContainer:
+		// If the IDE is actually listening inside container, then localhost/127.0.0.1 should work.
+		hostDockerInternal = "127.0.0.1"
+
 	// Gitpod has docker 20.10+ so the docker-compose has already gotten the host-gateway
 	case nodeps.IsGitpod():
 		break
@@ -1051,9 +1055,12 @@ func GetHostDockerInternalIP() (string, error) {
 		// If IDE is on Windows, return; we don't have to do anything.
 		break
 
+	case nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2:
+		// If IDE is inside WSL2 then the normal linux processing should work
+		break
+
 	case nodeps.IsWSL2() && !IsDockerDesktop():
 		// If IDE is on Windows, we have to parse /etc/resolv.conf
-		// Else it will be fine, we can fallthrough to the linux version
 		hostDockerInternal = wsl2ResolvConfNameserver()
 
 	// Docker on linux doesn't define host.docker.internal

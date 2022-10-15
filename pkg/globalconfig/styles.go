@@ -88,12 +88,3 @@ func ValidTableStyleList() []string {
 	}
 	return list
 }
-
-// Limit the choices for XdebugIDELocation
-func IsValidXdebugIDELocation(loc string) bool {
-	if loc == "container" || loc == "wsl2" || loc == "" {
-		return true
-	}
-
-	return false
-}
