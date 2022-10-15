@@ -110,7 +110,7 @@ nav:
       - users/install/index.md
       - users/install/docker-installation.md
       - users/install/ddev-installation.md
-    - 'Settling In':
+    - 'Getting Started':
       - users/install/performance.md
       - users/install/shell-completion.md
       - users/quickstart.md
