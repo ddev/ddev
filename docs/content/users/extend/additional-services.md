@@ -1,4 +1,3 @@
-
 # Additional Service Configurations & Add-ons
 
 DDEV projects can be extended to provide additional add-ons, including services. You can define these add-ons using docker-compose files in the project’s `.ddev` directory.
@@ -14,49 +13,53 @@ For example,
 ┌───────────────────────────┬──────────────────────────────────────────────────┐
 │ ADD-ON                    │ DESCRIPTION                                      │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-memcached       │ Install Memcached as an extra service in DDEV*   │
+│ drud/ddev-adminer         │ Adminer service for DDEV*                        │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
 │ drud/ddev-beanstalkd      │ Beanstalkd for DDEV*                             │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-browsersync     │ Auto-refresh HTTPS page on changes with DDEV*    │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-cron            │ Schedule commands to execute within DDEV*        │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-drupal9-solr    │ Drupal 9 Apache Solr installation for DDEV*      │
+├───────────────────────────┼──────────────────────────────────────────────────┤
 │ drud/ddev-elasticsearch   │ Elasticsearch add-on for DDEV*                   │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-memcached       │ Install Memcached as an extra service in DDEV*   │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
 │ drud/ddev-mongo           │ MongoDB add-on for DDEV*                         │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
 │ drud/ddev-pdfreactor      │ PDFreactor service for DDEV*                     │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-browsersync     │ Auto-refresh HTTPS page on changes with DDEV*    │
-├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-drupal9-solr    │ Drupal 9 Apache Solr installation for DDEV*      │
-├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-varnish         │ Varnish reverse proxy add-on for DDEV*           │
+│ drud/ddev-proxy-support   │ Support HTTP/HTTPS proxies with DDEV*            │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
 │ drud/ddev-redis           │ Redis service for DDEV*                          │
 ├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-adminer         │ Adminer service for DDEV*                        │
-├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-cron            │ Schedule commands to execute within DDEV*        │
-├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-proxy-support   │ Support HTTP/HTTPS proxies with DDEV*            │
-├───────────────────────────┼──────────────────────────────────────────────────┤
 │ drud/ddev-redis-commander │ Redis Commander for use with DDEV Redis service* │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-varnish         │ Varnish reverse proxy add-on for DDEV*           │
 └───────────────────────────┴──────────────────────────────────────────────────┘
 Add-ons marked with '*' are official, maintained DDEV add-ons.
 ```
 
 !!!tip
-    If you need a service not provided here, see [Defining an Additional Service with Docker Compose](custom-compose-files.md).
+If you need a service not provided here, see [Defining an Additional Service with Docker Compose](custom-compose-files.md).
 
-Some of the officially-supported add-ons:
+Officially-supported add-ons:
 
-* [Redis](https://github.com/drud/ddev-redis): `ddev get drud/ddev-redis`.
-* [Redis Commander](https://github.com/drud/ddev-redis-commander): `ddev get drud/ddev-redis-commander`.
-* [elasticsearch](https://github.com/drud/ddev-elasticsearch): `ddev get drud/ddev-elasticsearch`.
+* [Adminer](https://github.com/drud/ddev-adminer): `ddev get drud/ddev-adminer`.
 * [Apache Solr for Drupal 9](https://github.com/drud/ddev-drupal9-solr): `ddev get drud/ddev-drupal9-solr`.
+* [Beanstalkd](https://github.com/drud/ddev-beanstalkd): `ddev get drud/ddev-beanstalkd`.
+* [Browsersync](https://github.com/drud/ddev-browsersync): `ddev get drud/ddev-browsersync`.
+* [cron](https://github.com/drud/ddev-cron): `ddev get drud/ddev-cron`.
+* [Elasticsearch](https://github.com/drud/ddev-elasticsearch): `ddev get drud/ddev-elasticsearch`.
 * [Memcached](https://github.com/drud/ddev-memcached): `ddev get drud/ddev-memcached`.
-* [Varnish](https://github.com/drud/ddev-varnish): `ddev get drud/ddev-varnish`.
 * [MongoDB](https://github.com/drud/ddev-mongo): `ddev get drud/ddev-mongo`.
 * [PDFreactor](https://github.com/drud/ddev-pdfreactor): `ddev get drud/ddev-pdfreactor`
-* [Beanstalkd](https://github.com/drud/ddev-beanstalkd): `ddev get drud/ddev-beanstalkd`.
+* [Proxy Support](https://github.com/drud/ddev-proxy-support): `ddev get drud/ddev-proxy-support`.
+* [Redis Commander](https://github.com/drud/ddev-redis-commander): `ddev get drud/ddev-redis-commander`.
+* [Redis](https://github.com/drud/ddev-redis): `ddev get drud/ddev-redis`.
+* [Varnish](https://github.com/drud/ddev-varnish): `ddev get drud/ddev-varnish`.
 
 ## Creating an Additional Service for `ddev get`
 
@@ -96,8 +99,8 @@ value1: xxx
 is referenced using
 
 ```yaml
-yaml_read_files: 
- example: example_yaml.yaml
+yaml_read_files:
+  example: example_yaml.yaml
 ```
 
 then `value1` can be used throughout the `install.yaml` as `{{ example.value1 }}` and it will be replaced with the value `xxx`.
