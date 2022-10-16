@@ -1038,6 +1038,10 @@ func GetHostDockerInternalIP() (string, error) {
 	hostDockerInternal := ""
 
 	switch {
+	case nodeps.IsIPAddress(globalconfig.DdevGlobalConfig.XdebugIDELocation):
+		// If the IDE is actually listening inside container, then localhost/127.0.0.1 should work.
+		hostDockerInternal = globalconfig.DdevGlobalConfig.XdebugIDELocation
+
 	case globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationContainer:
 		// If the IDE is actually listening inside container, then localhost/127.0.0.1 should work.
 		hostDockerInternal = "127.0.0.1"

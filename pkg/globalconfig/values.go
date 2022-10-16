@@ -36,7 +36,10 @@ var ValidXdebugIDELocations = []string{XdebugIDELocationContainer, XdebugIDELoca
 
 // IsValidXdebugIDELocation limits the choices for XdebugIDELocation
 func IsValidXdebugIDELocation(loc string) bool {
-	if nodeps.ArrayContainsString(ValidXdebugIDELocations, loc) {
+	switch {
+	case nodeps.ArrayContainsString(ValidXdebugIDELocations, loc):
+		return true
+	case nodeps.IsIPAddress(loc):
 		return true
 	}
 	return false

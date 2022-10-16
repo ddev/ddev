@@ -3,6 +3,7 @@ package nodeps
 import (
 	"golang.org/x/term"
 	"math/rand"
+	"net"
 	"os"
 	"runtime"
 	"strconv"
@@ -113,4 +114,12 @@ func GetTerminalWidthHeight() (int, int) {
 		}
 	}
 	return 80, 24
+}
+
+// IsIPAddress returns true if ip is ipv4 or ipv6 address
+func IsIPAddress(ip string) bool {
+	if net.ParseIP(ip) != nil {
+		return true
+	}
+	return false
 }

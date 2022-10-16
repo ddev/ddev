@@ -128,7 +128,7 @@ func ValidateGlobalConfig() error {
 	}
 
 	if !IsValidXdebugIDELocation(DdevGlobalConfig.XdebugIDELocation) {
-		return fmt.Errorf(`xdebug_ide_location must be one of %v`, ValidXdebugIDELocations)
+		return fmt.Errorf(`xdebug_ide_location must be IP address or one of %v`, ValidXdebugIDELocations)
 	}
 	return nil
 }
