@@ -293,28 +293,26 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     Magento 2 is a huge codebase, and we recommend [using Mutagen for performance](install/performance.md#using-mutagen) on macOS and traditional Windows.
 
 === "Moodle"
+    ## Moodle
+    ```bash
+    ddev config --composer-root=public --create-docroot --docroot=public --webserver-type=apache-fpm
+    mkdir .ddev/php
+    echo "max_input_vars = 5000;" > .ddev/php/custom.ini
+    ddev start
+    ddev composer create moodle/moodle -y
+    ddev exec 'php public/admin/cli/install.php --agree-license  --non-interactive --lang=en --wwwroot=$DDEV_PRIMARY_URL  --dbtype=mariadb --dbhost=db  --dbname=db --dbuser=db --dbpass=db --adminpass=12345 --fullname=DDEVmoodleDemo --shortname=DDEVmoodleDemo'
+    ddev launch
+    ```
 
-## Moodle
+    Launch a web browser:
 
-```bash
-ddev config --create-docroot --docroot public --webserver-type apache-fpm
-mkdir moodledata
-mkdir .ddev/php
-echo "max_input_vars = 5000;" > .ddev/php/custom.ini
-ddev start
-ddev exec composer create-project moodle/moodle public
-ddev launch
-```
+    * The language will be english by default.
+    * For the database driver we used MariaDB.
+    * Login into your account using 'admin' and '12345'.
+    * Congrats!.
 
-Complete installation in a web browser:
-
-* Choose the language.
-* For the database driver, choose MariaDB.
-* On the database credentials page, enter `db` for host, name, user, and password.
-* Finish the installation.
-
-!!!tip
-    Moodle relies on a periodic cron job—don’t forget to set that up! See [drud/ddev-cron](https://github.com/drud/ddev-cron).
+    !!!tip
+        Moodle relies on a periodic cron job—don’t forget to set that up! See [drud/ddev-cron](https://github.com/drud/ddev-cron).
 
 === "Laravel"
 
