@@ -1038,14 +1038,14 @@ func GetHostDockerInternalIP() (string, error) {
 	hostDockerInternal := ""
 
 	switch {
+	case globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationContainer:
+		// If the IDE is actually listening inside container, then localhost/127.0.0.1 should work.
+		hostDockerInternal = "127.0.0.1"
+
 	case IsColima():
 		// Lima just specifies this as a named explicit IP address at this time
 		// see https://github.com/lima-vm/lima/blob/master/docs/network.md#host-ip-19216852
 		hostDockerInternal = "192.168.5.2"
-
-	case globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationContainer:
-		// If the IDE is actually listening inside container, then localhost/127.0.0.1 should work.
-		hostDockerInternal = "127.0.0.1"
 
 	// Gitpod has docker 20.10+ so the docker-compose has already gotten the host-gateway
 	case nodeps.IsGitpod():
@@ -1069,7 +1069,6 @@ func GetHostDockerInternalIP() (string, error) {
 	case runtime.GOOS == "linux":
 		// In docker 20.10+, host.docker.internal is already taken care of by extra_hosts in docker-compose
 		break
-
 	}
 
 	return hostDockerInternal, nil
