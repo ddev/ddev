@@ -56,10 +56,10 @@ type GlobalConfig struct {
 	SimpleFormatting             bool                    `yaml:"simple_formatting"`
 	RequiredDockerComposeVersion string                  `yaml:"required_docker_compose_version,omitempty"`
 	UseDockerComposeFromPath     bool                    `yaml:"use_docker_compose_from_path,omitempty"`
-	NoBindMounts                 bool                    `yaml:"no_bind_mounts"`
 	MkcertCARoot                 string                  `yaml:"mkcert_caroot"`
 	ProjectTldGlobal             string                  `yaml:"project_tld"`
 	XdebugIDELocation            string                  `yaml:"xdebug_ide_location"`
+	NoBindMounts                 bool                    `yaml:"no_bind_mounts"`
 	ProjectList                  map[string]*ProjectInfo `yaml:"project_info"`
 }
 
