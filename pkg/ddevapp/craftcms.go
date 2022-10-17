@@ -27,7 +27,9 @@ func craftCmsConfigOverrideAction(app *DdevApp) error {
 
 // Returns the upload directory for importing files, if not already set
 func getCraftCmsUploadDir(app *DdevApp) string {
-	app.UploadDir = "files"
+	if app.UploadDir == "" {
+		return "files"
+	}
 
 	return app.UploadDir
 }
