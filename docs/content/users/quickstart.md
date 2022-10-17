@@ -303,7 +303,6 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     ddev exec 'php public/admin/cli/install.php --agree-license  --non-interactive --lang=en --wwwroot=$DDEV_PRIMARY_URL  --dbtype=mariadb --dbhost=db  --dbname=db --dbuser=db --dbpass=db --adminpass=12345 --fullname=DDEVmoodleDemo --shortname=DDEVmoodleDemo'
     ddev launch
     ```
-
     Launch a web browser:
 
     * The language will be english by default.
