@@ -293,7 +293,9 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     Magento 2 is a huge codebase, and we recommend [using Mutagen for performance](install/performance.md#using-mutagen) on macOS and traditional Windows.
 
 === "Moodle"
+
     ## Moodle
+    
     ```bash
     ddev config --composer-root=public --create-docroot --docroot=public --webserver-type=apache-fpm
     mkdir .ddev/php
