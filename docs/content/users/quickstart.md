@@ -300,7 +300,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     echo "max_input_vars = 5000;" > .ddev/php/custom.ini
     ddev start
     ddev composer create moodle/moodle -y
-    ddev exec 'php public/admin/cli/install.php --agree-license  --non-interactive --lang=en --wwwroot=$DDEV_PRIMARY_URL  --dbtype=mariadb --dbhost=db  --dbname=db --dbuser=db --dbpass=db --adminpass=12345 --fullname=DDEVmoodleDemo --shortname=DDEVmoodleDemo'
+    ddev exec 'php public/admin/cli/install.php --agree-license  --non-interactive --lang=en --wwwroot=$DDEV_PRIMARY_URL  --dbtype=mariadb --dbhost=db  --dbname=db --     dbuser=db --dbpass=db --adminpass=12345 --fullname=DDEVmoodleDemo --shortname=DDEVmoodleDemo'
     ddev launch
     ```
     Launch a web browser:
