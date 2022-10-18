@@ -400,6 +400,7 @@ mkdocs
 mnt
 modify
 mongo
+moodle
 mongodb
 more
 mountaddr
@@ -667,3 +668,4 @@ zcompdump
 zsh
 zshrc
 zxf
+

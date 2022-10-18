@@ -292,6 +292,26 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     
     Magento 2 is a huge codebase, and we recommend [using Mutagen for performance](install/performance.md#using-mutagen) on macOS and traditional Windows.
 
+=== "Moodle"
+
+    ## Moodle
+    
+    ```bash
+    ddev config --composer-root=public --create-docroot --docroot=public --webserver-type=apache-fpm
+    ddev start
+    ddev composer create moodle/moodle -y
+    ddev exec 'php public/admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
+    ddev launch /login
+    ```
+    In the web browser:
+
+    * Login into your account using `admin` and `password`.
+
+    Visit the [Moodle Admin Quick Guide](https://docs.moodle.org/400/en/Admin_quick_guide) for more information.
+
+    !!!tip
+        Moodle relies on a periodic cron job—don’t forget to set that up! See [drud/ddev-cron](https://github.com/drud/ddev-cron).
+
 === "Laravel"
 
     ## Laravel
