@@ -5,9 +5,9 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"text/template"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/nodeps"
@@ -220,16 +220,23 @@ func isTypo3v12OrHigher(app *DdevApp) bool {
 
 	// We may have a TYPO3 version 11 or higher and therefor have to parse the
 	// class file to properly detect the version.
-	re := regexp.MustCompile(`const VERSION += +'(\d+)\.\d+\.\d+';`)
+	re := regexp.MustCompile(`const\s+VERSION\s*=\s*'([^']+)`)
 
-	version, err := strconv.Atoi(re.FindStringSubmatch(versionFile)[1])
+	matches := re.FindStringSubmatch(versionFile)
+
+	if len(matches) < 2 {
+		util.Warning("Unexpected Typo3Version class found: %v.", versionFile)
+		return false
+	}
+
+	version, err := semver.NewVersion(matches[1])
 	if err != nil {
 		// This case never should happen
 		util.Warning("Unexpected error while parsing TYPO3 version: %v.", err)
 		return false
 	}
 
-	util.Debug("Found TYPO3 version %d.", version)
+	util.Debug("Found TYPO3 version %v.", version.Original())
 
-	return version >= 12
+	return version.Major() >= 12
 }
