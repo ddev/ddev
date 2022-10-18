@@ -305,10 +305,8 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     ddev exec 'php public/admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
     ddev launch /login
     ```
-    Launch a web browser:
+    In the web browser:
 
-    * The language will be set to English.
-    * For the database driver we used MariaDB.
     * Login into your account using `admin` and `password`.
     * Visit the [Moodle Admin Quick Guide](https://docs.moodle.org/400/en/Admin_quick_guide) for more information.
 
