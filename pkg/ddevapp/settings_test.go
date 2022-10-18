@@ -1,20 +1,17 @@
 package ddevapp_test
 
 import (
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/util"
+	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
-
-	"os"
-
-	"fmt"
-
 	"time"
 
 	. "github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -57,6 +54,10 @@ func TestWriteSettings(t *testing.T) {
 	})
 
 	err = os.MkdirAll(filepath.Join(testDir, app.Docroot, "sites", "default"), 0777)
+	assert.NoError(err)
+
+	// Create expected folders for TYPO3.
+	err = os.MkdirAll(filepath.Join(testDir, app.Docroot, "typo3"), 0777)
 	assert.NoError(err)
 
 	err = os.MkdirAll(filepath.Join(testDir, app.Docroot, "typo3conf"), 0777)

@@ -11,7 +11,7 @@ const ConfigInstructions = `
 
 # docroot: <relative_path> # Relative path to the directory containing index.php.
 
-# php_version: "7.4"  # PHP version to use, "5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0", "8.1"
+# php_version: "7.4"  # PHP version to use, "5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0", "8.1", "8.2"
 
 # You can explicitly specify the webimage but this
 # is not recommended, as the images are often closely tied to ddev's' behavior,
@@ -54,11 +54,12 @@ const ConfigInstructions = `
 # composer_version: "2"
 # You can set it to "" or "2" (default) for Composer v2 or "1" for Composer v1
 # to use the latest major version available at the time your container is built.
-# It is also possible to select a minor version for example "2.2" which will
-# install the latest release of that branch. Alternatively, an explicit Composer
-# version may be specified, for example "1.0.22". Finally, it is also possible
-# to use one of the key words "stable", "preview" or "snapshot" see Composer
-# documentation.
+# It is also possible to use each other Composer version channel. This includes:
+#   - 2.2 (latest Composer LTS version)
+#   - stable
+#   - preview
+#   - snapshot
+# Alternatively, an explicit Composer version may be specified, for example "2.2.18".
 # To reinstall Composer after the image was built, run "ddev debug refresh".
 
 # nodejs_version: "16"
@@ -99,11 +100,11 @@ const ConfigInstructions = `
 
 # nfs_mount_enabled: false
 # Great performance improvement but requires host configuration first.
-# See https://ddev.readthedocs.io/en/stable/users/performance/#using-nfs-to-mount-the-project-into-the-container
+# See https://ddev.readthedocs.io/en/latest/users/install/performance/#nfs
 
 # mutagen_enabled: false
 # Performance improvement using mutagen asynchronous updates.
-# See https://ddev.readthedocs.io/en/latest/users/performance/#using-mutagen
+# See https://ddev.readthedocs.io/en/latest/users/install/performance/#mutagen
 
 # fail_on_hook_fail: False
 # Decide whether 'ddev start' should be interrupted by a failing hook
@@ -223,7 +224,7 @@ const ConfigInstructions = `
 # However, with "override_config: true" in a particular config.*.yaml file,
 # 'nfs_mount_enabled: false' can override the existing values, and
 # hooks:
-#   post_start: []
+#   post-start: []
 # or
 # web_environment: []
 # or

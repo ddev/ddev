@@ -108,6 +108,10 @@ ddev stop --remove-data`,
 			}
 			if unlist {
 				project.RemoveGlobalProjectInfo()
+				err = ddevapp.TerminateMutagenSync(project)
+				if err != nil {
+					util.Warning("Unable to terminate mutagen sync for project %s", project.Name)
+				}
 			}
 
 			util.Success("Project %s has been stopped.", project.GetName())

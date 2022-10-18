@@ -2,10 +2,12 @@
 
 # Opt-In Usage Information
 
-When you start ddev for the first time (or install a new release) you'll be asked to decide whether to opt-in to send usage and error information to the developers. You can change this at any time by editing the `~/.ddev/global_config.yaml` file and setting `instrumentation_opt_in: true` or `instrumentation_opt_in: false`.
+When you start DDEV for the first time or install a new release, you’ll be asked whether to send usage and error information to DDEV’s developers.
 
-If you do choose to send the diagnostics it helps us tremendously in our effort to improve this tool. What information gets sent? Here's an example of what we might see:
+Regardless of your choice, you can change this at any time by editing `~/.ddev/global_config.yaml` and setting `instrumentation_opt_in: true` or `instrumentation_opt_in: false`.
 
-![usage_stats](images/usage_stats.png)
+If you choose to share diagnostics, it helps us tremendously in our effort to improve the tool. Here’s an example of what we might see:
 
-Of course if you have any reservations about this, please just opt-out (`ddev config global --instrumentation-opt-in=false`). If you have any problems or concerns with it, we'd like to know.
+![Usage Stats](images/usage_stats.png)
+
+If you have any reservations about this, please opt out (`ddev config global --instrumentation-opt-in=false`). If you have any issues or concerns with it, we’d like to know.

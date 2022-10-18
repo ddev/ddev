@@ -7,7 +7,7 @@ This README describes how to change the configuration.
 ```text
 config/
 ├── bundles.php       # defines static symfony bundles - use plugins for dynamic bundles
-├── etc               # contains the configuration of the docker image
+├── etc               # contains the configuration of the Docker image
 ├── jwt               # secrets for generating jwt tokens - DO NOT COMMIT these secrets
 ├── packages/         # package configuration
 ├── services/         # additional service configuration files

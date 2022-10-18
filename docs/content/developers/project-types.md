@@ -11,7 +11,7 @@ To add a new project type:
     * `settingsCreator` is the function that will create a main settings file if none exists.
     * `uploadDir` returns the filepath of the user-uploaded files directory for the project type, like `sites/default/files` for Drupal or `pub/media` for magento2.
     * `hookDefaultComments` adds comments to config.yaml about hooks with an example for that project type. It's probably not useful at all.
-    * `apptypeSettingsPaths` returns the paths for the main settings file and the extra settings file that ddev may create (like settings.ddev.php for Drupal).
+    * `apptypeSettingsPaths` returns the paths for the main settings file and the extra settings file that DDEV may create (like settings.ddev.php for Drupal).
     * `appTypeDetect` is a function that determines whether the project is of the type you're implementing.
     * `postImportDBAction` can do something after db import. I don't see it implemented anywhere.
     * `configOverrideAction` can change default config for your project type. For example, magento2 now requires `php8.1`, so a `configOverrideAction` can change the php version.
@@ -24,4 +24,4 @@ To add a new project type:
     * Add your project to `TestSites` in ddevapp_test.go.
     * Create a DDEV project named `testpkg<projectype>` somewhere and get it going and working with a database and files you can export.
     * Export the database, files, and (optionally) code to tarballs or `.sql.gz`. Put them somewhere on the internet- they'll end up in `drud/ddev_test_tarballs` - I can give you permissions on that if you like. The magento2 project has descriptions explaining how each tarball gets created. Do that for yours as well.
-    * Run the test and get it working. I usually use the trick of setting `GOTEST_SHORT=<element_in_TestSites>`, like `GOTEST_SHORT=7`. Then set that environment variable in the Goland profile or your environment. `export GOTEST_SHORT=7 && make testpkg TEST_ARGS="-run TestDdevFullsiteSetup"`
+    * Run the test and get it working. I usually use the trick of setting `GOTEST_SHORT=<element_in_TestSites>`, like `GOTEST_SHORT=7`. Then set that environment variable in the GoLand profile or your environment. `export GOTEST_SHORT=7 && make testpkg TEST_ARGS="-run TestDdevFullsiteSetup"`

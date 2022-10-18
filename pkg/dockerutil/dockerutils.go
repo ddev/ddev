@@ -137,16 +137,20 @@ func GetDockerContext() (string, string, error) {
 // GetDockerHostID returns DOCKER_HOST but with all special characters removed
 // It stands in for docker context, but docker context name is not a reliable indicator
 func GetDockerHostID() string {
-	_, host, err := GetDockerContext()
+	_, dockerHost, err := GetDockerContext()
 	if err != nil {
 		util.Warning("Unable to GetDockerContext: %v", err)
 	}
-	// Convert DOCKER_HOST to alphanumeric
+	// Make it shorter so we don't hit mutagen 63-char limit
+	dockerHost = strings.TrimPrefix(dockerHost, "unix://")
+	dockerHost = strings.TrimSuffix(dockerHost, "docker.sock")
+	dockerHost = strings.Trim(dockerHost, "/.")
+	// Convert remaining descriptor to alphanumeric
 	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
 	if err != nil {
 		log.Fatal(err)
 	}
-	alphaOnly := reg.ReplaceAllString(host, "-")
+	alphaOnly := reg.ReplaceAllString(dockerHost, "-")
 	return alphaOnly
 }
 
@@ -978,6 +982,9 @@ func RemoveVolume(volumeName string) error {
 	if _, err := client.InspectVolume(volumeName); err == nil {
 		err := client.RemoveVolumeWithOptions(docker.RemoveVolumeOptions{Name: volumeName})
 		if err != nil {
+			if err.Error() == "volume in use and cannot be removed" {
+				return fmt.Errorf("Docker volume '%s' is in use by a container and cannot be removed. Use 'docker rm -f $(docker ps -aq)' to stop all containers", volumeName)
+			}
 			return err
 		}
 	}

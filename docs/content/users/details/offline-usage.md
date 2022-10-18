@@ -1,29 +1,30 @@
-# Using DDEV offline
+# Using DDEV Offline
 
-DDEV-Local attempts to make offline use work as well as possible, and you really shouldn't have to do anything to make it work:
+DDEV attempts to work smoothly offline, and you shouldn’t have to do anything to make it work:
 
-* It doesn't attempt instrumentation or update reporting if offline
-* It uses /etc/hosts entries instead of DNS resolution if DNS resolution fails
+* It doesn’t attempt instrumentation or update reporting if offline
+* It falls back to using `/etc/hosts` entries DNS resolution fails
 
-However, it does not (yet) attempt to prevent docker pulls if a new docker image is required, so you'll want to make sure that you try a `ddev start` before going offline to make sure everything has been pulled.
+However, it does not (yet) attempt to prevent Docker pulls if a new Docker image is required, so you’ll want to make sure that you try a `ddev start` before going offline to make sure everything has been pulled.
 
-If you have a project running when you're online (using DNS for name resolution) and you then go offline, you'll want to do a `ddev restart` to get the hostname added into /etc/hosts for name resolution.
+If you have a project running when you’re online (using DNS for name resolution) and you then go offline, you’ll want to do a `ddev restart` to get the hostname added into `/etc/hosts` for name resolution.
 
 You have general options as well:
 
-In `.ddev/config.yaml` `use_dns_when_possible: false` will make ddev never try to use DNS for resolution, instead adding hostnames to /etc/hosts. You can also use `ddev config --use-dns-when-possible=false` to set this configuration option.
-In `.ddev/config.yaml` `project_tld: example.com` (or any other domain) can set ddev to use a project that could never be looked up in DNS. You can also use `ddev config --project-tld=example.com`
+In `.ddev/config.yaml`, `use_dns_when_possible: false` will make DDEV never try to use DNS for resolution, instead adding hostnames to `/etc/hosts`. You can also use `ddev config --use-dns-when-possible=false` to set this configuration option.
 
-You can also set up a local DNS server like dnsmasq (Linux and macOS, `brew install dnsmasq`) or ([unbound](https://github.com/NLnetLabs/unbound) or many others on Windows) in your own host environment that serves the project_tld that you choose, and DNS resolution will work just fine. You'll likely want a wildcard A record pointing to 127.0.0.1 (on most ddev installations). If you use dnsmasq you must configure it to allow DNS rebinding.
+In `.ddev/config.yaml`, you can use `project_tld: example.com` to have DDEV use a project TLD that won’t be looked up via DNS. You can do the equivalent with `ddev config --project-tld=example.com`. This also works as a global option in `~/.ddev/global_config.yaml` or running `ddev config global --project-tld=example.com`.
 
-If you're using a browser on Windows, accessing a DDEV project in WSL2, Windows will attempt to resolve the site name via DNS. If you do not have an internet connection, this will fail. To resolve this, update your `C:\Windows\System32\drivers\etc\hosts` file.
+You can also set up a local DNS server like [dnsmasq](https://dnsmasq.org) (Linux and macOS, `brew install dnsmasq`) or ([unbound](https://github.com/NLnetLabs/unbound) or many others on Windows) in your own host environment that serves the project_tld that you choose, and DNS resolution will work fine. You’ll likely want a wildcard A record pointing to 127.0.0.1 on most DDEV installations. If you use dnsmasq, you must configure it to allow DNS rebinding.
+
+If you’re using a browser on Windows and accessing a DDEV project in WSL2, Windows will attempt to resolve the site name via DNS. This will fail if you don’t have an internet connection. To resolve this, update your `C:\Windows\System32\drivers\etc\hosts` file manually:
 
 ```
 127.0.0.1 example.ddev.site
 ```
 
-!!!note "Administrative privileges required"
+!!!note "Administrative Privileges Required"
 
     You must have administrative privileges to save the Windows hosts file.
 
-* See [Windows Hosts File limited to 10 hosts per IP address line](../basics/troubleshooting.md#windows-hosts-file-limited-to-10-hosts-per-ip-address-line).
+If you’re on Windows with a growing number of hostnames, be aware of [the 10-hosts-per-line limitation](../basics/troubleshooting.md#windows-hosts-file-limited-to-10-hosts-per-line).

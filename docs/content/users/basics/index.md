@@ -3,7 +3,7 @@
 Learn
 
 * [How DDEV works](how-ddev-works.md)
-* [Using the `ddev` command](cli-usage.md)
+* [Using the `ddev` Command](cli-usage.md)
 * [Database Management](database_management.md)
 * [Troubleshooting](troubleshooting.md)
 * [Frequently-Asked Questions](faq.md)

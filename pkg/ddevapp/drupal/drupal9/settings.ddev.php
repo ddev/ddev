@@ -45,3 +45,16 @@ $settings['class_loader_auto_detect'] = FALSE;
 if (empty($settings['config_sync_directory'])) {
   $settings['config_sync_directory'] = 'sites/default/files/sync';
 }
+
+// Override drupal/symfony_mailer default config to use Mailhog
+$config['symfony_mailer.mailer_transport.sendmail']['plugin'] = 'smtp';
+$config['symfony_mailer.mailer_transport.sendmail']['configuration']['user']='';
+$config['symfony_mailer.mailer_transport.sendmail']['configuration']['pass']='';
+$config['symfony_mailer.mailer_transport.sendmail']['configuration']['host']='localhost';
+$config['symfony_mailer.mailer_transport.sendmail']['configuration']['port']='1025';
+
+// Override drupal/swiftmailer default config to use Mailhog
+$config['swiftmailer.transport']['transport'] = 'smtp';
+$config['swiftmailer.transport']['smtp_host'] = '127.0.0.1';
+$config['swiftmailer.transport']['smtp_port'] = '1025';
+$config['swiftmailer.transport']['smtp_encryption'] = '0';

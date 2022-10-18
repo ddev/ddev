@@ -1,8 +1,8 @@
-# Docker ddev-webserver (webserver and php)
+# Docker ddev-webserver (Web Server and PHP)
 
 ## Introduction
 
-This is a Dockerfile to build a container image for ddev's web container.
+This is a Dockerfile to build a container image for DDEV’s web container.
 
 ## Developer Tools
 
@@ -15,7 +15,7 @@ This is a Dockerfile to build a container image for ddev's web container.
 * npm
 * yarn
 
-## Building and pushing to dockerhub
+## Building and pushing to Docker Hub
 
 ```
 make container

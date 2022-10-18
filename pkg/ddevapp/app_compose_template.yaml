@@ -194,6 +194,7 @@ services:
     - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-web/mysql_history
     - MYSQL_PWD=db
     - NODE_EXTRA_CA_CERTS=/mnt/ddev-global-cache/mkcert/rootCA.pem
+    - npm_config_cache=/mnt/ddev-global-cache/npm
     - PGDATABASE=db
     - PGHOST=db
     - PGPASSWORD=db

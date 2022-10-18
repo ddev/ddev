@@ -59,6 +59,7 @@ type GlobalConfig struct {
 	NoBindMounts                 bool                    `yaml:"no_bind_mounts"`
 	MkcertCARoot                 string                  `yaml:"mkcert_caroot"`
 	ProjectList                  map[string]*ProjectInfo `yaml:"project_info"`
+	ProjectTldGlobal             string                  `yaml:"project_tld"`
 }
 
 // GetGlobalConfigPath gets the path to global config file
@@ -215,6 +216,10 @@ func WriteGlobalConfig(config GlobalConfig) error {
 #
 # You can enable nfs mounting for all projects with
 # nfs_mount_enabled: true
+#
+# You can set the global project_tld. This way any project will use this tld. If not
+# set the local project_tld is used, or the default of ddev.
+# project_tld: ""
 #
 # You can inject environment variables into the web container with:
 # web_environment:

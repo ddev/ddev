@@ -99,7 +99,11 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	if nodeps.IsGitpod() {
 		app.OmitContainersGlobal = append(app.OmitContainersGlobal, "ddev-router")
 	}
-	app.ProjectTLD = nodeps.DdevDefaultTLD
+
+	app.ProjectTLD = globalconfig.DdevGlobalConfig.ProjectTldGlobal
+	if globalconfig.DdevGlobalConfig.ProjectTldGlobal == "" {
+		app.ProjectTLD = nodeps.DdevDefaultTLD
+	}
 	app.UseDNSWhenPossible = true
 
 	app.WebImage = versionconstants.GetWebImage()
@@ -172,7 +176,7 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.PHPMyAdminHTTPSPort == nodeps.DdevDefaultPHPMyAdminHTTPSPort {
 		appcopy.PHPMyAdminHTTPSPort = ""
 	}
-	if appcopy.ProjectTLD == nodeps.DdevDefaultTLD {
+	if appcopy.ProjectTLD == nodeps.DdevDefaultTLD || appcopy.ProjectTLD == globalconfig.DdevGlobalConfig.ProjectTldGlobal {
 		appcopy.ProjectTLD = ""
 	}
 	if appcopy.DefaultContainerTimeout == nodeps.DefaultDefaultContainerTimeout {
@@ -571,7 +575,7 @@ func (app *DdevApp) CheckCustomConfig() {
 		}
 	}
 	if customConfig {
-		util.Warning("Custom configuration takes effect when container is created,\nusually on start, use 'ddev restart' if you're not seeing it take effect.")
+		util.Warning("Custom configuration takes effect when the container is created.\nShould something go wrong and no effect be visible use 'ddev restart'.")
 	}
 
 }

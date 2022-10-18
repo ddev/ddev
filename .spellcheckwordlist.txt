@@ -1,6 +1,7 @@
 ARG
 AdditionalConfig
 AdditionalConfiguration
+Adminer
 Apache
 Acquia
 Autocompletion
@@ -12,7 +13,7 @@ CIFS
 CLI
 CMD
 CMS
-CMSs
+CMSes
 Colima
 CPUs
 CTRL
@@ -26,8 +27,9 @@ Commands
 Completely
 Create
 DDEV's
-DDEV-Local
+DDEV
 DHCP
+DKIM
 DNS
 Docker
 Docker's
@@ -72,6 +74,7 @@ MAMP
 Magento
 Magento's
 MailHog
+MailHog's
 Mailgun
 Manage
 MariaDB
@@ -95,6 +98,7 @@ PID
 PWD
 PartOf
 PathMaps
+phpMyAdmin's
 PhpStorm
 PowerShell
 Pull
@@ -138,7 +142,7 @@ about
 acquia
 acli
 add
-addon
+add-on
 addr
 all
 alldirs
@@ -173,6 +177,7 @@ beanstalkd
 belonging
 behat
 blackfire
+blackfire's
 bool
 breakpoint
 browser
@@ -210,6 +215,7 @@ configured
 container
 containers
 contrib
+cors
 cp
 cr
 crlf
@@ -217,6 +223,7 @@ cron
 cson
 current
 customizations
+daemon's
 daemonize
 data
 database
@@ -227,6 +234,7 @@ dbimage
 dbname
 dbpass
 dbserver
+DBTypes
 dbuser
 ddev
 ddev's
@@ -315,10 +323,12 @@ help
 homeadditions
 homebrew
 host
+HostBinaryExists
 hostenv
 hostfile
 hostname
 hostnames
+HostWorkingDir
 htaccess
 html
 http
@@ -390,6 +400,7 @@ mkdocs
 mnt
 modify
 mongo
+moodle
 mongodb
 more
 mountaddr
@@ -430,6 +441,7 @@ one
 oneshot
 or
 oriented
+OSTypes
 output
 pause
 pdfreactor
@@ -469,6 +481,7 @@ projdir
 project
 projectname
 projects
+ProjectTypes
 proot
 proto
 provided
@@ -477,6 +490,7 @@ ps
 psql
 public
 quickstart
+quickstarts
 rabbitmq
 rc
 readme
@@ -508,6 +522,7 @@ scalable
 scp
 screencast
 screencasts
+sendmail
 sequelace
 sequelpro
 serverName
@@ -552,6 +567,7 @@ supervisord
 sur
 susi
 svg
+symfony
 symlink
 symlinked
 symlinks
@@ -566,6 +582,7 @@ tcp
 tcpview
 template
 templated
+templating
 test
 testbot
 testbots
@@ -579,6 +596,7 @@ tls
 tlsverify
 tmp
 to
+toc
 transactional
 true
 txt
@@ -611,6 +629,11 @@ via
 vpnkit
 vscode
 vset
+vite
+vite's
+vite's
+viteserve
+vue
 web
 webenv
 webhosting
@@ -630,9 +653,11 @@ wsl2
 wslg
 www
 xdebug
+xdebug's
 xtrabackup
 xeyes
 xhprof
+xz'd
 yaml
 yml
 you
@@ -643,3 +668,4 @@ zcompdump
 zsh
 zshrc
 zxf
+
