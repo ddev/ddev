@@ -77,6 +77,8 @@ If you’re using SMTP for outgoing mail—with [Symfony Mailer](https://www.dru
 
 For Drupal 9+ `settings.ddev.php` overrides the Symfony Mailer sendmail configuration to use MailHog.
 
+For Drupal 8/9 `settings.ddev.php` overrides the [Swift Mailer](https://www.drupal.org/project/swiftmailer) transport configuration to use MailHog.
+
 For Laravel projects, MailHog will capture Swift messages via SMTP. Update your `.env` to use Mailhog with the following settings:
 
 ```env
