@@ -214,7 +214,7 @@ func isTypo3v12OrHigher(app *DdevApp) bool {
 	// installed into the folder public/typo3 so we can early return if the file
 	// is not found in the vendor folder.
 	if err != nil {
-		util.Debug("TYPO3 version class not found in '%s', installed version is assumed to be older than 11.5.0.", versionFilePath)
+		util.Debug("TYPO3 version class not found in '%s' for project %s, installed version is assumed to be older than 11.5.0: %v", versionFilePath, app.Name, err)
 		return false
 	}
 
@@ -225,18 +225,18 @@ func isTypo3v12OrHigher(app *DdevApp) bool {
 	matches := re.FindStringSubmatch(versionFile)
 
 	if len(matches) < 2 {
-		util.Warning("Unexpected Typo3Version class found: %v.", versionFile)
+		util.Warning("Unexpected Typo3Version found for project %s in %v.", app.Name, versionFile)
 		return false
 	}
 
 	version, err := semver.NewVersion(matches[1])
 	if err != nil {
 		// This case never should happen
-		util.Warning("Unexpected error while parsing TYPO3 version: %v.", err)
+		util.Warning("Unexpected error while parsing TYPO3 version ('%s') for project %s: %v.", matches[1], app.Name, err)
 		return false
 	}
 
-	util.Debug("Found TYPO3 version %v.", version.Original())
+	util.Debug("Found TYPO3 version %v for project %s.", version.Original(), app.Name)
 
 	return version.Major() >= 12
 }
