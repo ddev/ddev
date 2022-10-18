@@ -311,7 +311,6 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     * For the database driver we used MariaDB.
     * Login into your account using 'admin' and '12345'.
     * Visit the [Moodle Admin Quick Guide](https://docs.moodle.org/400/en/Admin_quick_guide) for more information.
-    * Congrats!.
 
     !!!tip
         Moodle relies on a periodic cron job—don’t forget to set that up! See [drud/ddev-cron](https://github.com/drud/ddev-cron).
