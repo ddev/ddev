@@ -310,7 +310,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     * The language will be english by default.
     * For the database driver we used MariaDB.
     * Login into your account using 'admin' and '12345'.
-    * Visit the follow link to get quick [guide](https://docs.moodle.org/400/en/Admin_quick_guide)
+    * Visit the [Moodle Admin Quick Guide](https://docs.moodle.org/400/en/Admin_quick_guide) for more information.
     * Congrats!.
 
     !!!tip
