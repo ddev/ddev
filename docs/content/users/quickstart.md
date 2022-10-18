@@ -435,8 +435,8 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         ddev config --project-type=craftcms
         ddev composer create -y --no-scripts --no-install craftcms/craft
         ddev start
-        ddev composer install
-        ddev craft setup/welcome
+        ddev composer update
+        ddev craft install
         ddev launch
         ```
 
@@ -451,8 +451,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         unzip latest-v4.zip && rm latest-v4.zip
         ddev config --project-type=craftcms
         ddev start
-        ddev composer install
-        ddev craft setup/welcome
+        ddev craft install
         ddev launch
         ```
 
