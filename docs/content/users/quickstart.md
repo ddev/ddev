@@ -298,8 +298,6 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     
     ```bash
     ddev config --composer-root=public --create-docroot --docroot=public --webserver-type=apache-fpm
-    mkdir .ddev/php
-    echo "max_input_vars = 5000;" > .ddev/php/custom.ini
     ddev start
     ddev composer create moodle/moodle -y
     ddev exec 'php public/admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
