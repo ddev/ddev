@@ -108,7 +108,7 @@ cd .gotmp/bin/windows_amd64/chocolatey
 rm .gotmp/bin/windows_amd64/chocolatey/*.nupkg
 export CHOCOLATEY_API_KEY=key33333
 docker run --rm -v "/$PWD:/tmp/chocolatey" -w "//tmp/chocolatey" linuturk/mono-choco pack ddev.nuspec;
-docker run --rm -v $PWD:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s [https://push.chocolatey.org/](https://push.chocolatey.org/) --api-key "${CHOCOLATEY_API_KEY}"
+docker run --rm -v $PWD:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key "${CHOCOLATEY_API_KEY}"
 
 ```
 
