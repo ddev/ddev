@@ -750,8 +750,8 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	// If you get golang listening, then enter the web container and try to connect to the port golang
 	// is listening on, it can't connect. However, if you use netcat to listen on the wsl2 side and then
 	// connect to it from inside the container, it connects fine.
-	if nodeps.IsWSL2() || dockerutil.IsColima() {
-		t.Skip("Skipping on WSL2/Colima because this test doesn't work although manual testing works")
+	if dockerutil.IsColima() {
+		t.Skip("Skipping on Colima because this test doesn't work although manual testing works")
 	}
 	assert := asrt.New(t)
 
@@ -777,6 +777,11 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	err = fileutil.TemplateStringToFile("<?php\necho \"hi there\";\n", nil, filepath.Join(app.AppRoot, "index.php"))
 	require.NoError(t, err)
 
+	// If using wsl2-docker-inside, test that we can use IDE inside
+	if nodeps.IsWSL2() && !dockerutil.IsDockerDesktop() {
+		globalconfig.DdevGlobalConfig.XdebugIDELocation = globalconfig.XdebugIDELocationWSL2
+	}
+
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
@@ -784,6 +789,8 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		assert.NoError(err)
 		err = os.RemoveAll(projDir)
 		assert.NoError(err)
+		globalconfig.DdevGlobalConfig.XdebugIDELocation = ""
+		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	})
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", app.Name, t.Name()))
 
@@ -794,7 +801,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	// Most of the time there's no reason to do all versions of PHP
 	phpKeys := []string{}
 	// TODO: Re-enable 8.2 when it's available
-	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "8.2"}
+	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3", "8.2"}
 	for k := range nodeps.ValidPHPVersions {
 		if os.Getenv("GOTEST_SHORT") != "" && !nodeps.ArrayContainsString(exclusions, k) {
 			phpKeys = append(phpKeys, k)
