@@ -33,7 +33,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 20. Verify that `go`, `ddev`, `git-bash` are in the path.
 21. In “Advanced Windows Update Settings” enable “Receive updates for other Microsoft products” to make sure you get WSL2 kernel upgrades. Make sure to run Windows Update to get latest kernel..
 
-## Additional Windows Setup for WSL2 Testing
+## Additional Windows Setup for WSL2+Docker Desktop Testing
 
 1. Do not set up `buildkite-agent` on the Windows side, or disable it.
 2. Open WSL2 and check out [drud/ddev](https://github.com/drud/ddev).
@@ -53,6 +53,59 @@ Set up Windows to automatically start WSL2 `buildkite-agent` by using task sched
        export DOCKERHUB_PULL_PASSWORD=xxx
        set -e
     ```
+
+## Additional Windows Setup for WSL2+Docker-Inside Testing
+
+1. Uninstall Docker Desktop.
+2. Remove all of the entries (especially `host.docker.internal`) that Docker Desktop has added in `C:\Windows\system32\drivers\etc\hosts`.
+3. Install the Microsoft Store version of "WSL2 Preview", which has `systemd` support so we can run docker automatically.
+4. `wsl --update`
+5. Enable systemd by editing `/etc/wsl.conf` (`sudo vi /etc/wsl.conf`) and adding:
+
+    ```
+    [boot]
+    systemd=true
+   ```
+
+6. Install brew and golang in WSL2:
+
+    ```bash
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    echo '# Set PATH, MANPATH, etc., for Homebrew.' >> /home/testbot/.profile
+    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/testbot/.profile
+    brew install golang
+    ```
+
+7. Install docker and basics in WSL2:
+
+    ```bash
+    curl https://apt.fury.io/drud/gpg.key | sudo apt-key add -
+    echo "deb https://apt.fury.io/drud/ * *" | sudo tee -a /etc/apt/sources.list.d/ddev.list
+    sudo mkdir -p /usr/sharekeyrings && curl -fsSL https://keys.openpgp.org/vks/v1/by-fingerprint/32A37959C2FA5C3C99EFBC32A79206696452D198 | sudo gpg --dearmor -o /usr/share/keyrings/buildkite-agent-archive-keyring.gpg
+    echo "deb [signed-by=/usr/share/keyrings/buildkite-agent-archive-keyring.gpg] https://apt.buildkite.com/buildkite-agent stable main" | sudo tee /etc/apt/sources.list.d/buildkite-agent.list
+    sudo apt update && sudo apt install -y build-essential buildkite-agent ca-certificates curl ddev gnupg lsb-release make mariadb-client
+    sudo mkdir -p /etc/apt/keyrings
+    sudo mkdir -p /etc/apt/keyrings && sudo rm -f /etc/apt/keyrings/docker.gpg && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    sudo apt update && sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+    sudo usermod -aG docker $USER
+    snap install ngrok
+   ```
+
+8. In Task Scheduler, create a task that runs on User Logon and runs `C:\Windows\System32\wsl.exe` with arguments `-d Ubuntu`.
+9. Configure buildkite agent in /etc/buildkite-agent:
+    * tags="os=wsl2,architecture=amd64,dockertype=wsl2"
+    * token="xxx"
+    * Create `/etc/buildkite-agent/hooks/environment` and set to executable with contents:
+
+    ```
+       #!/bin/bash
+       export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
+       export DOCKERHUB_PULL_PASSWORD=xxx
+       set -e
+   ```
+
+10. Run `.buildkite/sanetestbot.sh`
 
 ## macOS Test Agent Setup (Intel and Apple Silicon)
 
