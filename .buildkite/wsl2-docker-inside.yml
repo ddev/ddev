@@ -13,3 +13,4 @@
       BUILDKIT_PROGRESS: plain
       DDEV_TEST_SHARE_CMD: "true"
     parallelism: 1
+
