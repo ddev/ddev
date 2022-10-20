@@ -105,7 +105,9 @@ Set up Windows to automatically start WSL2 `buildkite-agent` by using task sched
        set -e
    ```
 
-10. Run `.buildkite/sanetestbot.sh`
+10. Add `buildkite-agent` to the `docker` group in `/etc/group`
+11. `sudo systemctl enable buildkite-agent`
+12. Run `.buildkite/sanetestbot.sh`
 
 ## macOS Test Agent Setup (Intel and Apple Silicon)
 

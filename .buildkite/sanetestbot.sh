@@ -35,7 +35,7 @@ docker pull busybox:stable >/dev/null
 (sleep 1 && (docker run --rm -t -p 80:80 -p 443:443 -p 1081:1081 -p 1082:1082 -v /$HOME:/tmp/junker99 busybox:stable ls //tmp/junker99 >/dev/null) || (sleep 1 && docker run --rm -t -p 80:80 -p 443:443 -p 1081:1081 -p 1082:1082 -v /$HOME:/tmp/junker99 busybox:stable ls //tmp/junker99 >/dev/null ))
 
 # Check that required commands are available.
-for command in mysql git go make ngrok; do
+for command in git go make mysql ngrok; do
     command -v $command >/dev/null || ( echo "Did not find command installed '$command'" && exit 2 )
 done
 
