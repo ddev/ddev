@@ -495,7 +495,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
 
     If you have an existing Craft CMS DDEV project, you'll need to change the `type:` to `craftcms` in your project's `.ddev/config.yaml` and then do `ddev restart` to be able to use the `ddev craft` command.
 
-    If you have Craft CMS installed in a sub-directory of your project, in order for `ddev craft` to work, you will need to change the location of the `craft` executable by providing the `CRAFT_CMD_ROOT` environment variable to the web container in your project. For example, if your directory structure is `my-craft-project/app`, where CraftCMS is installed in `app`, then you would apply `ddev config --web-environment-add=CRAFT_CMD_ROOT=./app`. `CRAFT_CMD_ROOT` defaults to `./`, the project root directory. Run `ddev restart` after applying this change.
+    If you have Craft CMS installed in a sub-directory of your project, in order for `ddev craft` to work, you will need to change the location of the `craft` executable by providing the `CRAFT_CMD_ROOT` environment variable to the web container in your project. For example, if your directory structure is `my-craft-project/app`, where Craft CMS is installed in `app`, then you would apply `ddev config --web-environment-add=CRAFT_CMD_ROOT=./app`. `CRAFT_CMD_ROOT` defaults to `./`, the project root directory. Run `ddev restart` after applying this change.
     
     For more information about how to provide custom environment variables to your containers, read [Providing Custom Environment Variables to a Container](https://ddev.readthedocs.io/en/latest/users/extend/customization-extendibility/#providing-custom-environment-variables-to-a-container).
 
