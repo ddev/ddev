@@ -73,7 +73,7 @@ Set up Windows to automatically start WSL2 `buildkite-agent` by using task sched
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     echo '# Set PATH, MANPATH, etc., for Homebrew.' >> /home/testbot/.profile
     echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/testbot/.profile
-    brew install golang
+    brew install docker-compose golang
     ```
 
 7. Install docker and basics in WSL2:
