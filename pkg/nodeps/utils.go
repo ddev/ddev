@@ -63,7 +63,8 @@ func RandomString(length int) string {
 
 // IsWSL2 returns true if running WSL2
 func IsWSL2() bool {
-	return GetWSLDistro() != ""
+	interop := os.Getenv(`WSL_INTEROP`)
+	return interop != ""
 }
 
 // IsMacM1 returns true if running on mac M1
