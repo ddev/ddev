@@ -6,8 +6,7 @@
     agents:
       - "os=wsl2"
       - "architecture=amd64"
-      - "dockertype=dockerformac"
-
+      - "dockertype=dockerforwindows"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
