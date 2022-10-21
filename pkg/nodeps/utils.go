@@ -1,6 +1,7 @@
 package nodeps
 
 import (
+	"github.com/drud/ddev/pkg/exec"
 	"golang.org/x/term"
 	"math/rand"
 	"net"
@@ -63,8 +64,18 @@ func RandomString(length int) string {
 
 // IsWSL2 returns true if running WSL2
 func IsWSL2() bool {
-	interop := os.Getenv(`WSL_INTEROP`)
-	return interop != ""
+	if runtime.GOOS == "linux" {
+		// First, try checking env variable
+		if os.Getenv(`WSL_INTEROP`) != "" {
+			return true
+		}
+		// But that doesn't always work, so check for existence of wsl.exe
+		_, err := exec.RunHostCommand("command -v wsl.exe")
+		if err != nil {
+			return true
+		}
+	}
+	return false
 }
 
 // IsMacM1 returns true if running on mac M1
