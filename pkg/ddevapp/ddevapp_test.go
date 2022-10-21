@@ -874,12 +874,13 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			t.Logf("Attempting accept of port 9003 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
 
 			var conn net.Conn
+			var ncOutput string
 			// Accept the listen on 9003 coming in from in-container php-xdebug
-			// If on WSL2 we have to use nc.exe as a proxy to listen for us
+			// If on WSL2/listener-on-windows we have to use nc.exe as a proxy to listen for us
 			if dockerutil.IsWSL2() && dockerutil.IsDockerDesktop() {
-				out, err := exec.RunHostCommand("nc.exe -L -p 9003")
+				ncOutput, err = exec.RunHostCommand("nc.exe", "-L", "-p", "9003")
 				if err != nil {
-					t.Errorf("unable to run nc.exe on wsl2, output=%s, err=%v", out, err)
+					t.Errorf("unable to run nc.exe on wsl2, output=%s, err=%v", ncOutput, err)
 				}
 			} else {
 				conn, err = listener.Accept()
@@ -894,8 +895,12 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			}
 			// Grab the Xdebug connection start and look in it for "Xdebug"
 			b := make([]byte, 650)
-			_, err = bufio.NewReader(conn).Read(b)
-			assert.NoError(err)
+			if dockerutil.IsWSL2() && dockerutil.IsDockerDesktop() {
+				b = []byte(ncOutput)
+			} else {
+				_, err = bufio.NewReader(conn).Read(b)
+				assert.NoError(err)
+			}
 			lineString := string(b)
 			assert.Contains(lineString, "Xdebug")
 			assert.Contains(lineString, `xdebug:language_version="`+v)
