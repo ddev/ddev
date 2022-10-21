@@ -778,7 +778,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	require.NoError(t, err)
 
 	// If using wsl2-docker-inside, test that we can use IDE inside
-	if nodeps.IsWSL2() && !dockerutil.IsDockerDesktop() {
+	if dockerutil.IsWSL2() && !dockerutil.IsDockerDesktop() {
 		globalconfig.DdevGlobalConfig.XdebugIDELocation = globalconfig.XdebugIDELocationWSL2
 	}
 
@@ -873,9 +873,18 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		go func() {
 			t.Logf("Attempting accept of port 9003 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
 
+			var conn net.Conn
 			// Accept the listen on 9003 coming in from in-container php-xdebug
-			conn, err := listener.Accept()
-			assert.NoError(err)
+			// If on WSL2 we have to use nc.exe as a proxy to listen for us
+			if dockerutil.IsWSL2() && dockerutil.IsDockerDesktop() {
+				out, err := exec.RunHostCommand("nc.exe -L -p 9003")
+				if err != nil {
+					t.Errorf("unable to run nc.exe on wsl2, output=%s, err=%v", out, err)
+				}
+			} else {
+				conn, err = listener.Accept()
+				assert.NoError(err)
+			}
 			if err == nil {
 				t.Logf("Completed accept of port 9003 with xdebug enabled, PHP version=%s, time=%v\n", v, time.Now())
 			} else {
@@ -3380,7 +3389,7 @@ func TestCaptureLogs(t *testing.T) {
 // This requires that the test machine must have NFS shares working
 // Tests using both app-specific nfs_mount_enabled and global nfs_mount_enabled
 func TestNFSMount(t *testing.T) {
-	if nodeps.IsWSL2() || dockerutil.IsColima() {
+	if dockerutil.IsWSL2() || dockerutil.IsColima() {
 		t.Skip("Skipping on WSL2/Colima")
 	}
 	if nodeps.MutagenEnabledDefault == true || nodeps.NoBindMountsDefault {
@@ -3625,7 +3634,7 @@ func TestHostDBPort(t *testing.T) {
 // TestPortSpecifications tests to make sure that one project can't step on the
 // ports used by another
 func TestPortSpecifications(t *testing.T) {
-	if nodeps.IsWSL2() {
+	if dockerutil.IsWSL2() {
 		t.Skip("Skipping on WSL2 because of inconsistent docker behavior acquiring ports")
 	}
 	assert := asrt.New(t)
