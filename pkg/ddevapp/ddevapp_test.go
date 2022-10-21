@@ -856,7 +856,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 		go func() {
 			time.Sleep(time.Second)
-			t.Logf("Curling to port 9003 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
+			t.Logf("Connecting to HTTP URL %s with xdebug enabled, PHP version=%s time=%v", app.GetWebContainerDirectHTTPURL(), v, time.Now())
 			// Curl to the project's index.php or anything else
 			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL(), 12)
 			if err != nil {
@@ -864,6 +864,8 @@ func TestDdevXdebugEnabled(t *testing.T) {
 				if resp != nil {
 					t.Logf("resp code=%v", resp.StatusCode)
 				}
+			} else {
+				t.Logf("success result of GetLocalHTTPResponse=%s, resp=%v", out, resp)
 			}
 		}()
 
@@ -881,6 +883,8 @@ func TestDdevXdebugEnabled(t *testing.T) {
 				ncOutput, err = exec.RunHostCommand("nc.exe", "-L", "-p", "9003")
 				if err != nil {
 					t.Errorf("unable to run nc.exe on wsl2, output=%s, err=%v", ncOutput, err)
+				} else {
+					t.Logf("result of nc -L on Windows = %s", ncOutput)
 				}
 			} else {
 				conn, err = listener.Accept()
