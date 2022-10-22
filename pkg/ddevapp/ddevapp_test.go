@@ -880,7 +880,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			// Accept the listen on 9003 coming in from in-container php-xdebug
 			// If on WSL2/listener-on-windows we have to use nc.exe as a proxy to listen for us
 			if dockerutil.IsWSL2() && dockerutil.IsDockerDesktop() {
-				ncOutput, err = exec.RunHostCommand("nc.exe", "-L", "-p", "9003")
+				ncOutput, err = exec.RunHostCommand("nc.exe", "-L", "-w", "1", "-p", "9003")
 				if err != nil {
 					t.Errorf("unable to run nc.exe on wsl2, output=%s, err=%v", ncOutput, err)
 				} else {
