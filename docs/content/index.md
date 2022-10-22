@@ -1,3 +1,8 @@
+---
+hide:
+  - toc
+---
+
 # Get Started with DDEV
 
 [DDEV](https://github.com/drud/ddev) is an open source tool for launching local PHP development environments in minutes.

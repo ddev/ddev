@@ -1,6 +1,7 @@
 ARG
 AdditionalConfig
 AdditionalConfiguration
+Adminer
 Apache
 Acquia
 Autocompletion
@@ -595,6 +596,7 @@ tls
 tlsverify
 tmp
 to
+toc
 transactional
 true
 txt
