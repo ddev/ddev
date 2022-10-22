@@ -320,18 +320,30 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
 
     The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) just as it can for Laravel.
 
-    ```bash
-    mkdir my-laravel-app
-    cd my-laravel-app
-    ddev config --project-type=laravel --docroot=public --create-docroot
-    ddev start
-    ddev composer create --prefer-dist laravel/laravel
-    ddev exec "cat .env.example | sed  -E 's/DB_(HOST|DATABASE|USERNAME|PASSWORD)=(.*)/DB_\1=db/g' > .env"
-    ddev exec 'sed -i "s#APP_URL=.*#APP_URL=${DDEV_PRIMARY_URL}#g" .env'
-    ddev exec "php artisan key:generate"
-    ddev launch
-    ```
-
+    === "Composer"
+        ```bash
+        mkdir my-laravel-app
+        cd my-laravel-app
+        ddev config --project-type=laravel --docroot=public --create-docroot
+        ddev start
+        ddev composer create --prefer-dist laravel/laravel
+        ddev exec "cat .env.example | sed  -E 's/DB_(HOST|DATABASE|USERNAME|PASSWORD)=(.*)/DB_\1=db/g' > .env"
+        ddev exec 'sed -i "s#APP_URL=.*#APP_URL=${DDEV_PRIMARY_URL}#g" .env'
+        ddev exec "php artisan key:generate"
+        ddev launch
+        ```
+    === "Git Clone"
+        ```bash
+        git clone https://github.com/example/example-site my-laravel-app
+        cd my-laravel-app
+        ddev config --project-type=laravel --docroot=public --create-docroot
+        ddev start
+        ddev composer install 
+        ddev exec "cat .env.example | sed  -E 's/DB_(HOST|DATABASE|USERNAME|PASSWORD)=(.*)/DB_\1=db/g' > .env"
+        ddev exec 'sed -i "s#APP_URL=.*#APP_URL=${DDEV_PRIMARY_URL}#g" .env'
+        ddev exec "php artisan key:generate"
+        ddev launch
+        ```
     In the examples above, we used a one-liner to copy `.env.example` as `env` and set the `DB_HOST`, `DB_DATABASE`, `DB_USERNAME` and `DB_PASSWORD` environment variables to the value of `db`.
 
     These DDEV’s default values for the database connection.
