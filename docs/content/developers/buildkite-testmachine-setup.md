@@ -27,12 +27,11 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 
 15. Set the `buildkite-agent` service to run as the testbot user and use delayed start: Choose “Automatic, delayed start” and on the “Log On” tab in the services widget it must be set up to log in as the testbot user, so it inherits environment variables and home directory (and can access NFS, has testbot git config, etc).
 16. `git config --global --add safe.directory '*'`.
-17. Add `buildkite-agent` to the `docker` and `testbot` groups in `/etc/group`
-18. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
-19. Run `.buildkite/sanetestbot.sh` to check your work.
-20. Reboot the machine and do a test run. (On Windows, the machine name only takes effect on reboot.)
-21. Verify that `go`, `ddev`, `git-bash` are in the path.
-22. In “Advanced Windows Update Settings” enable “Receive updates for other Microsoft products” to make sure you get WSL2 kernel upgrades. Make sure to run Windows Update to get latest kernel..
+17. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
+18. Run `.buildkite/sanetestbot.sh` to check your work.
+19. Reboot the machine and do a test run. (On Windows, the machine name only takes effect on reboot.)
+20. Verify that `go`, `ddev`, `git-bash` are in the path.
+21. In “Advanced Windows Update Settings” enable “Receive updates for other Microsoft products” to make sure you get WSL2 kernel upgrades. Make sure to run Windows Update to get latest kernel..
 
 ## Additional Windows Setup for WSL2+Docker Desktop Testing
 
@@ -78,8 +77,12 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 
 14. Verify that `buildkite-agent` is running.
 15. In Task Scheduler, create a task that runs on User Logon and runs `C:\Windows\System32\wsl.exe` with arguments `-d Ubuntu`.
-16. `echo "capath=/etc/ssl/certs/" >>~/.curlrc`
-17. `nc.exe -l -p 9003` on Windows to trigger and allow Windows Defender.
+16. Add `buildkite-agent` to the `docker` and `testbot` groups in `/etc/group`
+
+17. `echo "capath=/etc/ssl/certs/" >>~/.curlrc`
+18. `sudo chmod -R ug+w /home/linuxbrew`
+19. Edit `/etc/environment` to set PATH to `PATH="/home/linuxbrew/.linuxbrew/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/Program Files/Git/bin:/mnt/c/WINDOWS/system32:/mnt/c/WINDOWS:/mnt/c/WINDOWS/System32/Wbem:/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0/:/mnt/c/WINDOWS/System32/OpenSSH/:/mnt/c/ProgramData/chocolatey/bin:/mnt/c/Users/testbot/AppData/Local/Microsoft/WindowsApps:/mnt/c/ProgramData/chocolatey/bin:/mnt/c/Users/testbot/AppData/Roaming/Composer/vendor/bin:/mnt/c/Users/testbot/go/bin:/mnt/c/Users/testbot/AppData/Roaming/npm:/snap/bin"`
+19. `nc.exe -l -p 9003` on Windows to trigger and allow Windows Defender.
 
 ## Additional Windows Setup for WSL2+Docker-Inside Testing
 
