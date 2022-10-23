@@ -98,6 +98,7 @@ Normally the release process does okay with pushing to Chocolatey, but at times 
 cd /workspace/ddev
 sudo apt-get update && sudo apt-get install -y nsis
 sudo .ci-scripts/nsis_setup.sh /usr/share/nsis
+export GITHUB_REPOSITORY_OWNER=drud
 make chocolatey
 cd .gotmp/bin/windows_amd64/chocolatey
 ```
