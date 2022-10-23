@@ -750,7 +750,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	// If you get golang listening, then enter the web container and try to connect to the port golang
 	// is listening on, it can't connect. However, if you use netcat to listen on the wsl2 side and then
 	// connect to it from inside the container, it connects fine.
-	if dockerutil.IsColima() {
+	if dockerutil.IsColima() && os.Getenv("DDEV_TEST_COLIMA_ANYWAY") != "true" {
 		t.Skip("Skipping on Colima because this test doesn't work although manual testing works")
 	}
 	assert := asrt.New(t)
@@ -880,12 +880,14 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			// Accept the listen on 9003 coming in from in-container php-xdebug
 			// If on WSL2/listener-on-windows we have to use nc.exe as a proxy to listen for us
 			if dockerutil.IsWSL2() && dockerutil.IsDockerDesktop() {
+				t.Logf("running nc.exe to receive Windows-side port 9003 traffic time=%v", time.Now())
 				ncOutput, err = exec.RunHostCommand("nc.exe", "-l", "-w", "1", "-p", "9003")
 				if err != nil {
 					t.Errorf("unable to run nc.exe on wsl2, output=%s, err=%v", ncOutput, err)
 				} else {
 					t.Logf("result of nc -l on Windows = %s", ncOutput)
 				}
+				t.Logf("received ncOutput=%v from nc.exe, time=%v", ncOutput, time.Now())
 			} else {
 				conn, err = listener.Accept()
 				assert.NoError(err)
