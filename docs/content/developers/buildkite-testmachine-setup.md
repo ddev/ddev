@@ -28,7 +28,6 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 15. Set the `buildkite-agent` service to run as the testbot user and use delayed start: Choose “Automatic, delayed start” and on the “Log On” tab in the services widget it must be set up to log in as the testbot user, so it inherits environment variables and home directory (and can access NFS, has testbot git config, etc).
 16. `git config --global --add safe.directory '*'`.
 17. Add `buildkite-agent` to the `docker` and `testbot` groups in `/etc/group`
-
 18. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
 19. Run `.buildkite/sanetestbot.sh` to check your work.
 20. Reboot the machine and do a test run. (On Windows, the machine name only takes effect on reboot.)
@@ -48,17 +47,14 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 3. Update WSL2 to WSL2 Preview from Microsoft Store and `wsl --shutdown` and then restart.
 4. `wsl --update`
 5. Open WSL2 and check out [drud/ddev](https://github.com/drud/ddev).
-6. [Install and configure `buildkite-agent` in WSL2](https://buildkite.com/docs/agent/v3/ubuntu). It needs the same changes as macOS, but tags `tags="os=wsl2,architecture=amd64,dockertype=dockerforwindows"` and build-path should be in `~/tmp/buildkite-agent`.
-7. As normal user, run `.github/workflows/linux-setup.sh`.
-8. `export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
+6. As normal user, run `.github/workflows/linux-setup.sh`.
+7. `export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
    echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc`
 
-9. As root user, add sudo capability with `echo "ALL ALL=NOPASSWD: ALL" >/etc/sudoers.d/all && chmod 440 /etc/sudoers.d/all`.
-10. Test from PowerShell that `wsl -d Ubuntu buildkite-agent start` succeeds and starts listening.
-Set up Windows to automatically start WSL2 `buildkite-agent` by using task scheduler to create a simple task that runs `C:\Windows\System32\wsl.exe -d Ubuntu buildkite-agent start` at login.
-11. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
-12. `git config --global --add safe.directory '*'`
-13. Install basics in WSL2:
+8. As root user, add sudo capability with `echo "ALL ALL=NOPASSWD: ALL" >/etc/sudoers.d/all && chmod 440 /etc/sudoers.d/all`.
+9. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
+10. `git config --global --add safe.directory '*'`
+11. Install basics in WSL2:
 
     ```bash
     curl https://apt.fury.io/drud/gpg.key | sudo apt-key add -
@@ -69,7 +65,9 @@ Set up Windows to automatically start WSL2 `buildkite-agent` by using task sched
     snap install ngrok
     ```
 
-14. The buildkite/hooks/environment file must be updated to contain the Docker pull credentials:
+12. [Configure `buildkite-agent` in WSL2](https://buildkite.com/docs/agent/v3/ubuntu). It needs the same changes as macOS, but tags `tags="os=wsl2,architecture=amd64,dockertype=dockerforwindows"` and build-path should be in `~/tmp/buildkite-agent`.
+
+13. The buildkite/hooks/environment file must be updated to contain the Docker pull credentials:
 
     ```bash
        #!/bin/bash
@@ -78,10 +76,10 @@ Set up Windows to automatically start WSL2 `buildkite-agent` by using task sched
        set -e
     ```
 
-15. Verify that `buildkite-agent` is running.
-16. In Task Scheduler, create a task that runs on User Logon and runs `C:\Windows\System32\wsl.exe` with arguments `-d Ubuntu`.
-17. `echo "capath=/etc/ssl/certs/" >>~/.curlrc`
-18. `nc -L -p 9003` to trigger and allow Windows Defender.
+14. Verify that `buildkite-agent` is running.
+15. In Task Scheduler, create a task that runs on User Logon and runs `C:\Windows\System32\wsl.exe` with arguments `-d Ubuntu`.
+16. `echo "capath=/etc/ssl/certs/" >>~/.curlrc`
+17. `nc.exe -l -p 9003` on Windows to trigger and allow Windows Defender.
 
 ## Additional Windows Setup for WSL2+Docker-Inside Testing
 
