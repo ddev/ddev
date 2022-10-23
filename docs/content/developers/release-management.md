@@ -107,11 +107,12 @@ cd .gotmp/bin/windows_amd64/chocolatey
 ```
 
 * Edit the checksum in `tools/chocolateyinstall.ps1` to match the released checksum of the `ddev-windows-installer` in `checksums.txt` of the release that is being repaired, for example, for `v1.21.3` this would be the checksum for `ddev_windows_installer.v1.21.3.exe` in [v1.21.3 checksums.txt](https://github.com/drud/ddev/releases/download/v1.21.3/checksums.txt).
+* Edit `url64` in `tools/chocolateyinstall.ps1` to be the intended actual DDEV download version. For example, if the actual version of DDEV to be downloaded is `v1.21.3` then put that there.
 
 ```bash
 rm .gotmp/bin/windows_amd64/chocolatey/*.nupkg
 export CHOCOLATEY_API_KEY=key33333
-docker run --rm -v "/$PWD:/tmp/chocolatey" -w "//tmp/chocolatey" linuturk/mono-choco pack ddev.nuspec;
+docker run --rm -v "/$PWD:/tmp/chocolatey" -w "//tmp/chocolatey" linuturk/mono-choco pack ddev.nuspec
 docker run --rm -v $PWD:/tmp/chocolatey -w /tmp/chocolatey linuturk/mono-choco push -s https://push.chocolatey.org/ --api-key "${CHOCOLATEY_API_KEY}"
 
 ```
