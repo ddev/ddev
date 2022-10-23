@@ -27,11 +27,13 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 
 15. Set the `buildkite-agent` service to run as the testbot user and use delayed start: Choose “Automatic, delayed start” and on the “Log On” tab in the services widget it must be set up to log in as the testbot user, so it inherits environment variables and home directory (and can access NFS, has testbot git config, etc).
 16. `git config --global --add safe.directory '*'`.
-17. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
-18. Run `.buildkite/sanetestbot.sh` to check your work.
-19. Reboot the machine and do a test run. (On Windows, the machine name only takes effect on reboot.)
-20. Verify that `go`, `ddev`, `git-bash` are in the path.
-21. In “Advanced Windows Update Settings” enable “Receive updates for other Microsoft products” to make sure you get WSL2 kernel upgrades. Make sure to run Windows Update to get latest kernel..
+17. Add `buildkite-agent` to the `docker` and `testbot` groups in `/etc/group`
+
+18. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
+19. Run `.buildkite/sanetestbot.sh` to check your work.
+20. Reboot the machine and do a test run. (On Windows, the machine name only takes effect on reboot.)
+21. Verify that `go`, `ddev`, `git-bash` are in the path.
+22. In “Advanced Windows Update Settings” enable “Receive updates for other Microsoft products” to make sure you get WSL2 kernel upgrades. Make sure to run Windows Update to get latest kernel..
 
 ## Additional Windows Setup for WSL2+Docker Desktop Testing
 
@@ -107,8 +109,7 @@ Set up Windows to automatically start WSL2 `buildkite-agent` by using task sched
        set -e
    ```
 
-5. Add `buildkite-agent` to the `docker` and `testbot` groups in `/etc/group`
-6. Run `.buildkite/sanetestbot.sh`
+5. Run `.buildkite/sanetestbot.sh`
 
 ## macOS Test Agent Setup (Intel and Apple Silicon)
 
