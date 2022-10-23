@@ -881,7 +881,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			// If on WSL2/listener-on-windows we have to use nc.exe as a proxy to listen for us
 			if dockerutil.IsWSL2() && dockerutil.IsDockerDesktop() {
 				t.Logf("running nc.exe to receive Windows-side port 9003 traffic time=%v", time.Now())
-				ncOutput, err = exec.RunHostCommand("nc.exe", "-l", "-w", "1", "-p", "9003")
+				ncOutput, err = exec.RunHostCommand("/mnt/c/ProgramData/chocolatey/bin/nc.exe", "-l", "-w", "1", "-p", "9003")
 				if err != nil {
 					t.Errorf("unable to run nc.exe on wsl2, output=%s, err=%v", ncOutput, err)
 				} else {

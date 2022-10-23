@@ -81,7 +81,6 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 
 17. `echo "capath=/etc/ssl/certs/" >>~/.curlrc`
 18. `sudo chmod -R ug+w /home/linuxbrew`
-19. Edit `/etc/environment` to set PATH to `PATH="/home/linuxbrew/.linuxbrew/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/usr/lib/wsl/lib:/mnt/c/Program Files/Git/bin:/mnt/c/WINDOWS/system32:/mnt/c/WINDOWS:/mnt/c/WINDOWS/System32/Wbem:/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0/:/mnt/c/WINDOWS/System32/OpenSSH/:/mnt/c/ProgramData/chocolatey/bin:/mnt/c/Users/testbot/AppData/Local/Microsoft/WindowsApps:/mnt/c/ProgramData/chocolatey/bin:/mnt/c/Users/testbot/AppData/Roaming/Composer/vendor/bin:/mnt/c/Users/testbot/go/bin:/mnt/c/Users/testbot/AppData/Roaming/npm:/snap/bin"`
 19. `nc.exe -l -p 9003` on Windows to trigger and allow Windows Defender.
 
 ## Additional Windows Setup for WSL2+Docker-Inside Testing
