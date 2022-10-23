@@ -92,18 +92,21 @@ If you have to temporarily update the Homebrew formulas, you can do that with a 
 
 Normally the release process does okay with pushing to Chocolatey, but at times a failure can happen and it’s not worth doing the whole release process again.
 
+Note that if an existing approved release is being updated you have to have a new version. So for example, if `v1.21.3` failed, you'll need to work with `v1.21.3.1`, so `make chocolatey VERSION=v1.21.3.1` below.
+
 * Open up Gitpod, <https://gitpod.io/#https://github.com/drud/ddev> and
 
 ```bash
 cd /workspace/ddev
+git checkout <tag>
 sudo apt-get update && sudo apt-get install -y nsis
 sudo .ci-scripts/nsis_setup.sh /usr/share/nsis
 export GITHUB_REPOSITORY_OWNER=drud
-make chocolatey
+make chocolatey VERSION=<tag>
 cd .gotmp/bin/windows_amd64/chocolatey
 ```
 
-* Edit the checksum in `tools/chocolateyinstall.ps1` to match the released checksum of the `ddev-windows-installer` (not the choco package; for v1.19.2 this was <https://github.com/drud/ddev/releases/download/v1.19.2/ddev_windows_installer.v1.19.2.exe.sha256.txt>)
+* Edit the checksum in `tools/chocolateyinstall.ps1` to match the released checksum of the `ddev-windows-installer` in `checksums.txt` of the release that is being repaired, for example, for `v1.21.3` this would be the checksum for `ddev_windows_installer.v1.21.3.exe` in [v1.21.3 checksums.txt](https://github.com/drud/ddev/releases/download/v1.21.3/checksums.txt).
 
 ```bash
 rm .gotmp/bin/windows_amd64/chocolatey/*.nupkg
