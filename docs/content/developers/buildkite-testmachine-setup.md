@@ -33,19 +33,40 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 20. Verify that `go`, `ddev`, `git-bash` are in the path.
 21. In “Advanced Windows Update Settings” enable “Receive updates for other Microsoft products” to make sure you get WSL2 kernel upgrades. Make sure to run Windows Update to get latest kernel..
 
-## Additional Windows Setup for WSL2 Testing
+## Additional Windows Setup for WSL2+Docker Desktop Testing
 
 1. Do not set up `buildkite-agent` on the Windows side, or disable it.
-2. Open WSL2 and check out [drud/ddev](https://github.com/drud/ddev).
-3. [Install and configure `buildkite-agent` in WSL2](https://buildkite.com/docs/agent/v3/ubuntu). It needs the same changes as macOS, but tags `tags="os=wsl2,architecture=amd64,dockertype=dockerforwindows"` and build-path should be in `~/tmp/buildkite-agent`.
-4. As root user, run `.github/workflows/linux-setup.sh`.
-5. As root user, add sudo capability with `echo "ALL ALL=NOPASSWD: ALL" >/etc/sudoers.d/all && chmod 440 /etc/sudoers.d/all`.
-6. Test from PowerShell that `wsl -d Ubuntu buildkite-agent start` succeeds and starts listening.
-Set up Windows to automatically start WSL2 `buildkite-agent` by using task scheduler to create a simple task that runs `C:\Windows\System32\wsl.exe -d Ubuntu buildkite-agent start` at login.
-7. Install Homebrew, `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`.
-8. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
-9. `git config --global --add safe.directory '*'`.
-10. The buildkite/hooks/environment file must be updated to contain the Docker pull credentials:
+2. Edit Ubuntu's `/etc/wsl.conf` to contain:
+
+    ```
+    [boot]
+    systemd=true
+    ```
+
+3. Update WSL2 to WSL2 Preview from Microsoft Store and `wsl --shutdown` and then restart.
+4. `wsl --update`
+5. Open WSL2 and check out [drud/ddev](https://github.com/drud/ddev).
+6. As normal user, run `.github/workflows/linux-setup.sh`.
+7. `export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
+   echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc`
+
+8. As root user, add sudo capability with `echo "ALL ALL=NOPASSWD: ALL" >/etc/sudoers.d/all && chmod 440 /etc/sudoers.d/all`.
+9. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
+10. `git config --global --add safe.directory '*'`
+11. Install basics in WSL2:
+
+    ```bash
+    curl https://apt.fury.io/drud/gpg.key | sudo apt-key add -
+    echo "deb https://apt.fury.io/drud/ * *" | sudo tee -a /etc/apt/sources.list.d/ddev.list
+    sudo mkdir -p /usr/sharekeyrings && curl -fsSL https://keys.openpgp.org/vks/v1/by-fingerprint/32A37959C2FA5C3C99EFBC32A79206696452D198 | sudo gpg --dearmor -o /usr/share/keyrings/buildkite-agent-archive-keyring.gpg
+    echo "deb [signed-by=/usr/share/keyrings/buildkite-agent-archive-keyring.gpg] https://apt.buildkite.com/buildkite-agent stable main" | sudo tee /etc/apt/sources.list.d/buildkite-agent.list
+    sudo apt update && sudo apt install -y build-essential buildkite-agent ca-certificates curl ddev gnupg lsb-release make mariadb-client
+    snap install ngrok
+    ```
+
+12. [Configure `buildkite-agent` in WSL2](https://buildkite.com/docs/agent/v3/ubuntu). It needs the same changes as macOS, but tags `tags="os=wsl2,architecture=amd64,dockertype=dockerforwindows"` and build-path should be in `~/tmp/buildkite-agent`.
+
+13. The buildkite/hooks/environment file must be updated to contain the Docker pull credentials:
 
     ```bash
        #!/bin/bash
@@ -53,6 +74,42 @@ Set up Windows to automatically start WSL2 `buildkite-agent` by using task sched
        export DOCKERHUB_PULL_PASSWORD=xxx
        set -e
     ```
+
+14. Verify that `buildkite-agent` is running.
+15. In Task Scheduler, create a task that runs on User Logon and runs `C:\Windows\System32\wsl.exe` with arguments `-d Ubuntu`.
+16. Add `buildkite-agent` to the `docker` and `testbot` groups in `/etc/group`
+
+17. `echo "capath=/etc/ssl/certs/" >>~/.curlrc`
+18. `sudo chmod -R ug+w /home/linuxbrew`
+19. `nc.exe -l -p 9003` on Windows to trigger and allow Windows Defender.
+
+## Additional Windows Setup for WSL2+Docker-Inside Testing
+
+1. Uninstall Docker Desktop.
+2. Remove all of the entries (especially `host.docker.internal`) that Docker Desktop has added in `C:\Windows\system32\drivers\etc\hosts`.
+3. Install docker and basics in WSL2:
+
+    ```bash
+    sudo mkdir -p /etc/apt/keyrings
+    sudo mkdir -p /etc/apt/keyrings && sudo rm -f /etc/apt/keyrings/docker.gpg && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    sudo apt update && sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+    sudo usermod -aG docker $USER
+   ```
+
+4. Configure buildkite agent in /etc/buildkite-agent:
+    * tags="os=wsl2,architecture=amd64,dockertype=wsl2"
+    * token="xxx"
+    * Create `/etc/buildkite-agent/hooks/environment` and set to executable with contents:
+
+    ```
+       #!/bin/bash
+       export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
+       export DOCKERHUB_PULL_PASSWORD=xxx
+       set -e
+   ```
+
+5. Run `.buildkite/sanetestbot.sh`
 
 ## macOS Test Agent Setup (Intel and Apple Silicon)
 

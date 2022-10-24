@@ -622,64 +622,66 @@ func (app *DdevApp) FixObsolete() {
 }
 
 type composeYAMLVars struct {
-	Name                      string
-	Plugin                    string
-	AppType                   string
-	MailhogPort               string
-	HostMailhogPort           string
-	DBType                    string
-	DBVersion                 string
-	DBMountDir                string
-	DBAPort                   string
-	DBPort                    string
-	HostPHPMyAdminPort        string
-	DdevGenerated             string
-	HostDockerInternalIP      string
-	DisableSettingsManagement bool
-	MountType                 string
-	WebMount                  string
-	WebBuildContext           string
-	DBBuildContext            string
-	WebBuildDockerfile        string
-	DBBuildDockerfile         string
-	SSHAgentBuildContext      string
-	OmitDB                    bool
-	OmitDBA                   bool
-	OmitRouter                bool
-	OmitSSHAgent              bool
-	BindAllInterfaces         bool
-	MariaDBVolumeName         string
-	PostgresVolumeName        string
-	MutagenEnabled            bool
-	MutagenVolumeName         string
-	NFSMountEnabled           bool
-	NFSSource                 string
-	NFSMountVolumeName        string
-	DockerIP                  string
-	IsWindowsFS               bool
-	NoProjectMount            bool
-	Hostnames                 []string
-	Timezone                  string
-	ComposerVersion           string
-	Username                  string
-	UID                       string
-	GID                       string
-	AutoRestartContainers     bool
-	FailOnHookFail            bool
-	WebWorkingDir             string
-	DBWorkingDir              string
-	DBAWorkingDir             string
-	WebEnvironment            []string
-	NoBindMounts              bool
-	Docroot                   string
-	ContainerUploadDir        string
-	HostUploadDir             string
-	GitDirMount               bool
-	IsGitpod                  bool
-	DefaultContainerTimeout   string
-	WebExtraHTTPPorts         string
-	WebExtraHTTPSPorts        string
-	WebExtraExposedPorts      string
+	Name                            string
+	Plugin                          string
+	AppType                         string
+	MailhogPort                     string
+	HostMailhogPort                 string
+	DBType                          string
+	DBVersion                       string
+	DBMountDir                      string
+	DBAPort                         string
+	DBPort                          string
+	HostPHPMyAdminPort              string
+	DdevGenerated                   string
+	HostDockerInternalIP            string
+	NFSServerAddr                   string
+	DisableSettingsManagement       bool
+	MountType                       string
+	WebMount                        string
+	WebBuildContext                 string
+	DBBuildContext                  string
+	WebBuildDockerfile              string
+	DBBuildDockerfile               string
+	SSHAgentBuildContext            string
+	OmitDB                          bool
+	OmitDBA                         bool
+	OmitRouter                      bool
+	OmitSSHAgent                    bool
+	BindAllInterfaces               bool
+	MariaDBVolumeName               string
+	PostgresVolumeName              string
+	MutagenEnabled                  bool
+	MutagenVolumeName               string
+	NFSMountEnabled                 bool
+	NFSSource                       string
+	NFSMountVolumeName              string
+	DockerIP                        string
+	IsWindowsFS                     bool
+	NoProjectMount                  bool
+	Hostnames                       []string
+	Timezone                        string
+	ComposerVersion                 string
+	Username                        string
+	UID                             string
+	GID                             string
+	AutoRestartContainers           bool
+	FailOnHookFail                  bool
+	WebWorkingDir                   string
+	DBWorkingDir                    string
+	DBAWorkingDir                   string
+	WebEnvironment                  []string
+	NoBindMounts                    bool
+	Docroot                         string
+	ContainerUploadDir              string
+	HostUploadDir                   string
+	GitDirMount                     bool
+	IsGitpod                        bool
+	DefaultContainerTimeout         string
+	UseHostDockerInternalExtraHosts bool
+	WebExtraHTTPPorts               string
+	WebExtraHTTPSPorts              string
+	WebExtraExposedPorts            string
 }
 
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
@@ -691,6 +693,11 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if err != nil {
 		util.Warning("Could not determine host.docker.internal IP address: %v", err)
 	}
+	nfsServerAddr, err := dockerutil.GetNFSServerAddr()
+	if err != nil {
+		util.Warning("Could not determine NFS server IP address: %v", err)
+	}
+
 	// The fallthrough default for hostDockerInternalIdentifier is the
 	// hostDockerInternalHostname == host.docker.internal
 
@@ -723,6 +730,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		HostPHPMyAdminPort:        app.HostPHPMyAdminPort,
 		DdevGenerated:             nodeps.DdevFileSignature,
 		HostDockerInternalIP:      hostDockerInternalIP,
+		NFSServerAddr:             nfsServerAddr,
 		DisableSettingsManagement: app.DisableSettingsManagement,
 		OmitDB:                    nodeps.ArrayContainsString(app.GetOmittedContainers(), nodeps.DBContainer),
 		OmitDBA:                   nodeps.ArrayContainsString(app.GetOmittedContainers(), nodeps.DBAContainer) || nodeps.ArrayContainsString(app.OmitContainers, nodeps.DBContainer),
@@ -762,6 +770,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		IsGitpod:              nodeps.IsGitpod(),
 		// Default max time we wait for containers to be healthy
 		DefaultContainerTimeout: app.DefaultContainerTimeout,
+		// Only use the extra_hosts technique for linux and only if not WSL2
+		// If WSL2 we have to figure out other things, see GetHostDockerInternalIP()
+		UseHostDockerInternalExtraHosts: runtime.GOOS == "linux" || (dockerutil.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2),
 	}
 	// We don't want to bind-mount git dir if it doesn't exist
 	if fileutil.IsDirectory(filepath.Join(app.AppRoot, ".git")) {

@@ -56,10 +56,11 @@ type GlobalConfig struct {
 	SimpleFormatting             bool                    `yaml:"simple_formatting"`
 	RequiredDockerComposeVersion string                  `yaml:"required_docker_compose_version,omitempty"`
 	UseDockerComposeFromPath     bool                    `yaml:"use_docker_compose_from_path,omitempty"`
-	NoBindMounts                 bool                    `yaml:"no_bind_mounts"`
 	MkcertCARoot                 string                  `yaml:"mkcert_caroot"`
-	ProjectList                  map[string]*ProjectInfo `yaml:"project_info"`
 	ProjectTldGlobal             string                  `yaml:"project_tld"`
+	XdebugIDELocation            string                  `yaml:"xdebug_ide_location"`
+	NoBindMounts                 bool                    `yaml:"no_bind_mounts"`
+	ProjectList                  map[string]*ProjectInfo `yaml:"project_info"`
 }
 
 // GetGlobalConfigPath gets the path to global config file
@@ -124,6 +125,10 @@ func ValidateGlobalConfig() error {
 
 	if !IsValidTableStyle(DdevGlobalConfig.TableStyle) {
 		DdevGlobalConfig.TableStyle = "default"
+	}
+
+	if !IsValidXdebugIDELocation(DdevGlobalConfig.XdebugIDELocation) {
+		return fmt.Errorf(`xdebug_ide_location must be IP address or one of %v`, ValidXdebugIDELocations)
 	}
 	return nil
 }
@@ -262,8 +267,16 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # is run only as the owning user, only project files might be changed
 # if a CMS or PHP bug allowed creating or altering files, and
 # permissions should not allow escalation.
+#
+# xdebug_ide_location: 
+# In some cases, especially WSL2, the IDE may be set up different ways
+# For example, if in WSL2 PhpStorm is running the Linux version inside WSL2
+# or if using JetBrains Gateway
+# then set xdebug_ide_location: WSL2
+# If using vscode language server, which listens inside the container
+# then set xdebug_ide_location: container
 
-# Let's Encrypt:
+# Lets Encrypt:
 # This integration is entirely experimental; your mileage may vary.
 # * Your host must be directly internet-connected.
 # * DNS for the hostname must be set to point to the host in question
