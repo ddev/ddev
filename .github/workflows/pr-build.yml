@@ -34,6 +34,7 @@ jobs:
           # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
+      - run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
 
       # Find out info about how github is getting the hash
       - run: "git describe --tags --always --dirty"

@@ -817,6 +817,9 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 		},
 	}
 
+	if runtime.GOOS == "linux" && !IsDockerDesktop() {
+		options.HostConfig.ExtraHosts = []string{"host.docker.internal:host-gateway"}
+	}
 	container, err := client.CreateContainer(options)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to create/start docker container (%v):%v", options, err)
@@ -1019,21 +1022,96 @@ func CreateVolume(volumeName string, driver string, driverOpts map[string]string
 }
 
 // GetHostDockerInternalIP returns either "" (will use the hostname as is)
-// (for docker-for-mac and Win10 Docker-for-windows) or a usable IP address
+// (for Docker Desktop on macOS and Windows with WSL2) or a usable IP address
+// But there are many cases to handle
+// Linux classic installation
+// Gitpod (the Linux technique does not work during prebuild)
+// WSL2 with Docker-ce installed inside
+// WSL2 with PhpStorm or vscode running inside WSL2
+// And it matters whether they're running IDE inside. With docker-inside-wsl2, the bridge docker0 is what we want
+// It's also possible to run vscode Language Server inside the web container, in which case host.docker.internal
+// should actually be 127.0.0.1
+// Inside WSL2, the way to access an app like PhpStorm running on the Windows side is described
+// in https://learn.microsoft.com/en-us/windows/wsl/networking#accessing-windows-networking-apps-from-linux-host-ip
+// and it involves parsing /etc/resolv.conf.
 func GetHostDockerInternalIP() (string, error) {
 	hostDockerInternal := ""
 
 	switch {
+	case nodeps.IsIPAddress(globalconfig.DdevGlobalConfig.XdebugIDELocation):
+		// If the IDE is actually listening inside container, then localhost/127.0.0.1 should work.
+		hostDockerInternal = globalconfig.DdevGlobalConfig.XdebugIDELocation
+
+	case globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationContainer:
+		// If the IDE is actually listening inside container, then localhost/127.0.0.1 should work.
+		hostDockerInternal = "127.0.0.1"
+
 	case IsColima():
 		// Lima just specifies this as a named explicit IP address at this time
 		// see https://github.com/lima-vm/lima/blob/master/docs/network.md#host-ip-19216852
 		hostDockerInternal = "192.168.5.2"
 
+	// Gitpod has docker 20.10+ so the docker-compose has already gotten the host-gateway
+	case nodeps.IsGitpod():
+		break
+
+	case IsWSL2() && IsDockerDesktop():
+		// If IDE is on Windows, return; we don't have to do anything.
+		break
+
+	case IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2:
+		// If IDE is inside WSL2 then the normal linux processing should work
+		break
+
+	case IsWSL2() && !IsDockerDesktop():
+		// If IDE is on Windows, we have to parse /etc/resolv.conf
+		hostDockerInternal = wsl2ResolvConfNameserver()
+
 	// Docker on linux doesn't define host.docker.internal
 	// so we need to go get the bridge IP address
 	// Docker Desktop) defines host.docker.internal itself.
-	case runtime.GOOS == "linux" && !IsDockerDesktop():
+	case runtime.GOOS == "linux":
+		// In docker 20.10+, host.docker.internal is already taken care of by extra_hosts in docker-compose
+		break
+	}
+
+	return hostDockerInternal, nil
+}
+
+// GetNFSServerAddr gets the addrss that can be used for the NFS server.
+// It's almost the same as GetDockerHostInternalIP() but we have
+// to get the actual addr in the case of linux; still, linux rarely
+// is used with NFS.
+func GetNFSServerAddr() (string, error) {
+	nfsAddr := ""
+
+	switch {
+	case IsColima():
+		// Lima just specifies this as a named explicit IP address at this time
+		// see https://github.com/lima-vm/lima/blob/master/docs/network.md#host-ip-19216852
+		nfsAddr = "192.168.5.2"
+
+	// Gitpod has docker 20.10+ so the docker-compose has already gotten the host-gateway
+	// However, NFS will never be used on gitpod.
+	case nodeps.IsGitpod():
+		break
+
+	case IsWSL2() && IsDockerDesktop():
+		// If IDE is on Windows, return; we don't have to do anything.
+		break
+
+	case IsWSL2() && !IsDockerDesktop():
+		// If IDE is on Windows, we have to parse /etc/resolv.conf
+		// Else it will be fine, we can fallthrough to the linux version
+		nfsAddr = wsl2ResolvConfNameserver()
+
+	// Docker on linux doesn't define host.docker.internal
+	// so we need to go get the bridge IP address
+	// Docker Desktop) defines host.docker.internal itself.
+	case runtime.GOOS == "linux":
 		// look up info from the bridge network
+		// We can't use the docker host because that's for inside the container,
+		// and this is for setting up the network interface
 		client := GetDockerClient()
 		n, err := client.NetworkInfo("bridge")
 		if err != nil {
@@ -1041,14 +1119,40 @@ func GetHostDockerInternalIP() (string, error) {
 		}
 		if len(n.IPAM.Config) > 0 {
 			if n.IPAM.Config[0].Gateway != "" {
-				hostDockerInternal = n.IPAM.Config[0].Gateway
+				nfsAddr = n.IPAM.Config[0].Gateway
 			} else {
-				util.Warning("Unable to determine host.docker.internal - no gateway")
+				util.Warning("Unable to determine docker bridge gateway - no gateway")
 			}
 		}
 	}
 
-	return hostDockerInternal, nil
+	return nfsAddr, nil
+}
+
+// wsl2ResolvConfNameserver parses /etc/resolv.conf to get the nameserver,
+// which is the only documented way to know how to connect to the host
+// to connect to PhpStorm or other IDE listening there. Or for other apps.
+func wsl2ResolvConfNameserver() string {
+	if IsWSL2() {
+		isAuto, err := fileutil.FgrepStringInFile("/etc/resolv.conf", "automatically generated by WSL")
+		if err != nil || !isAuto {
+			util.Warning("unable to determine WSL2 host.docker.internal because /etc/resolv.conf is not available or not auto-generated")
+			return ""
+		}
+		// We just grepped it so no need to check error
+		etcResolv, _ := fileutil.ReadFileIntoString("/etc/resolv.conf")
+
+		nameserverRegex := regexp.MustCompile(`nameserver *([0-9\.]*)`)
+		//nameserverRegex.ReplaceAllFunc([]byte(etcResolv), []byte(`$1`))
+		res := nameserverRegex.FindStringSubmatch(etcResolv)
+		if res == nil || len(res) != 2 {
+			util.Warning("unable to determine host.docker.internal from /etc/resolv.conf")
+			return ""
+		}
+		return res[1]
+	}
+	util.Warning("inappropriately using wsl2ResolvConfNameserver() but not on WSL2")
+	return ""
 }
 
 // RemoveImage removes an image with force
@@ -1426,7 +1530,7 @@ func CopyFromContainer(containerName string, containerPath string, hostPath stri
 // REMEMBER TO CHANGE docs/ddev-installation.md if you touch this!
 // The constraint MUST HAVE a -pre of some kind on it for successful comparison.
 // See https://github.com/drud/ddev/pull/738.. and regression https://github.com/drud/ddev/issues/1431
-var DockerVersionConstraint = ">= 19.03.9-alpha1"
+var DockerVersionConstraint = ">= 20.10.0-alpha1"
 
 // DockerVersion is cached version of docker
 var DockerVersion = ""
