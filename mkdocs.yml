@@ -85,6 +85,9 @@ markdown_extensions:
     smart_enable: all
 - pymdownx.caret
 - pymdownx.details
+- pymdownx.emoji:
+    emoji_index: !!python/name:materialx.emoji.twemoji
+    emoji_generator: !!python/name:materialx.emoji.to_svg
 - pymdownx.highlight:
     anchor_linenums: true
 - pymdownx.inlinehilite
@@ -124,10 +127,10 @@ nav:
     - users/basics/developer-tools.md
     - users/basics/uninstall.md
   - 'Configuration':
+    - users/configuration/config_yaml.md
     - users/extend/database_types.md
     - users/configuration/hooks.md
     - users/extend/additional-hostnames.md
-    - users/configuration/config_yaml.md
     - users/configuration/experimental.md
   - 'Extending':
     - users/extend/customization-extendibility.md
