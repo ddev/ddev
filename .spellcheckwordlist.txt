@@ -434,6 +434,7 @@ not
 npm
 nssm
 nvm
+octicons
 of
 on
 ons
