@@ -10,3 +10,4 @@
 /dist
 /.ddev
 /artifacts
+*.DS_Store
