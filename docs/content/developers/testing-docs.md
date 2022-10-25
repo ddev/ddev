@@ -10,7 +10,7 @@ The documentation is built and checked automatically with various [GitHub Action
 2. Click the pencil button on GitHub and follow the instructions to create your change.
 3. Save your changes and follow the prompts to create a PR.
 4. In the checks on your PR, click the “details” link by `docs/readthedocs.org:ddev` to browse the docs build created by your PR.
-5. Once the PR has run its actions, you’ll see an item labeled `docs/readthedocs.org:ddev`. Click “Details” to review a docs build that includes your changes:
+5. Once the PR has run its checks, you’ll see an item labeled `docs/readthedocs.org:ddev`. Click “Details” to review a docs build that includes your changes:
     ![Documentation preview build link](../images/docs-build-link.png)
 6. Take a look at the [“Check docs” action](https://github.com/drud/ddev/actions/workflows/docscheck.yml) to make sure there were no linting or spelling errors.
 
