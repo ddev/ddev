@@ -29,9 +29,9 @@ For any setup, including the [DDEV Integration Plugin](https://plugins.jetbrains
     6. Service: `web`.
     7. In the CLI interpreter “Lifecycle” select “Connect to existing container”.
     8. Here’s an example filled out:
-        ![example configuration](images/cli_interpreter.png)
+        ![example configuration](../../images/phpstorm-cli-interpreter.png)
 6. In the main PHP setup dialog, add an entry to the path mappings, as it doesn’t correctly derive the full path mapping. Add an entry that maps your project location to `/var/www/html`. So in this example, the “Local Path” is `/Users/rfay/workspace/d9` and the “Remote Path” is `/var/www/html`:
-    ![example mapping](images/mapping.png)
+    ![example mapping](../../images/phpstorm-mapping.png)
 7. Configure composer under *PHP* → *Composer*.
     - Use “remote interpreter”
     - CLI Interpreter will be “web”
@@ -45,14 +45,14 @@ This part is not done for you by the integration plugin.
     - Interpreter “DDEV”
     - Choose “Path to phpunit.phar” and use `/var/www/html/vendor/bin/phpunit`, or wherever your PHPUnit is inside the container. You need PHPUnit properly Composer-installed for your CMS. For example, for Drupal 9, `ddev composer require --dev --with-all-dependencies drupal/core-dev:^9` and `ddev composer require --dev phpspec/prophecy-phpunit:^2`.
     - Default configuration file: `/var/www/html/web/core/phpunit.xml` or wherever yours is inside the container.
-    ![Example config](images/phpunit_setup.png)
+    ![Example config](../../images/phpstorm-phpunit-setup.png)
 2. Open Run/Debug configurations and use “+” to add a PHPUnit configuration. Give it a name.
     - Test scope (as you wish, by directory or class or whatever).
     - Interpreter: “web” (the one we set up).
-    ![Run-debug configuration](images/run_debug_config.png)
+    ![Run-debug configuration](../../images/phpstorm-run-debug-config.png)
 3. Enable Xdebug if you want to debug tests with `ddev xdebug on`.
 4. Run the runner you created:
-    ![Example PHPUnit run](images/example_phpunit_run.png)
+    ![Example PHPUnit run](../../images/phpstorm-example-phpunit-run.png)
 
 ## PhpStorm Basic Setup on Windows WSL2
 
