@@ -40,7 +40,7 @@ An array of [extra fully-qualified domain names](../extend/additional-hostnames.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `[]` | 
+| :octicons-file-directory-16: project | `[]` |
 
 Example: `additional_fqdns: ["example.com", "sub1.example.com"]` would provide HTTP and HTTPS URLs for `example.com` and `sub1.example.com`.
 
@@ -53,7 +53,7 @@ An array of [extra hostnames](../extend/additional-hostnames.md) to be used for 
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `[]` | 
+| :octicons-file-directory-16: project | `[]` |
 
 Example: `additional_hostnames: ["somename", "someothername", "*.thirdname"]` would provide HTTP and HTTPS URLs for `somename.ddev.site`, `someothername.ddev.site`, and `one.thirdname.ddev.site` + `two.thirdname.ddev.site`.
 
@@ -154,7 +154,7 @@ DDEV-specific lifecycle [hooks](hooks.md) to be executed.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `` | 
+| :octicons-file-directory-16: project | `` |
 
 ## `host_db_port`
 
@@ -273,7 +273,7 @@ Extra flags for [configuring ngrok](https://ngrok.com/docs/ngrok-agent/config) w
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `` | 
+| :octicons-file-directory-16: project | `` |
 
 Example: `--basic-auth username:pass1234`.
 
@@ -348,7 +348,6 @@ Port for project’s phpMyAdmin HTTPS URL.
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-file-directory-16: project | `8037` | Can be changed to avoid a port conflict.
-
 
 ## `phpmyadmin_port`
 
@@ -450,7 +449,7 @@ Path from the project’s docroot to the user-generated files directory targeted
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | | 
+| :octicons-file-directory-16: project | |
 
 This is a CMS-specific setting that won’t have any effect for generic `php` [project types](#type).
 
@@ -502,7 +501,7 @@ Additional [custom environment variables](../extend/customization-extendibility.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `[]` | 
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `[]` |
 
 ## `webimage`
 
@@ -521,7 +520,7 @@ Extra Debian packages for the project’s web container.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `[]` | 
+| :octicons-file-directory-16: project | `[]` |
 
 Example: `webimage_extra_packages: [php-yaml, php-bcmath]` will add the `php-yaml` and `php-bcmath` packages when the web container is built.
 
@@ -539,7 +538,7 @@ Working directories used by `ddev exec` and `ddev ssh`.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | | 
+| :octicons-file-directory-16: project | |
 
 Example: `working_dir: { web: "/var/www", db: "/etc" }` sets the working directories for the `web` and `db` containers.
 
@@ -560,4 +559,3 @@ Adjust Xdebug listen location for WSL2 or in-container.
 | :octicons-globe-16: global | `""` | Can be empty (`""`), `"wsl2"`, `"container"`, or an explicit IP address.
 
 For PhpStorm running inside WSL2 (or JetBrains Gateway), use `"wsl2"`. For in-container like VS Code Language Server, set to `"container"`. It can also be set to an explicit IP address.
-
