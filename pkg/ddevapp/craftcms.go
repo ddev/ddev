@@ -169,7 +169,7 @@ func craftCmsPostStartAction(app *DdevApp) error {
 	var composerDefaultFilePath string
 	composerFileRoot = app.AppRoot
 	if app.ComposerRoot != "" {
-		envFileRoot = app.ComposerRoot
+		composerFileRoot = app.ComposerRoot
 	}
 	composerDefaultFilePath = filepath.Join(composerFileRoot, "composer.json.default")
 	if fileutil.FileExists(composerDefaultFilePath) {
