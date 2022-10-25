@@ -551,12 +551,13 @@ Whether Xdebug should be enabled for [step debugging](../debugging-profiling/ste
 | -- | -- | --
 | :octicons-file-directory-16: project | `false` | Can be `true` or `false`. Most people use `ddev xdebug` and `ddev xdebug off` commands instead of configuring this, because of Xdebug’s significant performance impact.
 
+## `xdebug_ide_location`
 
+Adjust Xdebug listen location for WSL2 or in-container.
 
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-globe-16: global | `""` | Can be empty (`""`), `"wsl2"`, `"container"`, or an explicit IP address.
 
-
-
-
-
-
+For PhpStorm running inside WSL2 (or JetBrains Gateway), use `"wsl2"`. For in-container like VS Code Language Server, set to `"container"`. It can also be set to an explicit IP address.
 

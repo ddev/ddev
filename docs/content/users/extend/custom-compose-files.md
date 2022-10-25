@@ -10,7 +10,7 @@ There are [many examples of custom docker-compose files](https://github.com/drud
 
 Under the hood, DDEV uses a private copy of docker-compose to define and run the multiple containers that make up the local environment for a project. docker-compose supports defining multiple compose files to facilitate [sharing Compose configurations between files and projects](https://docs.docker.com/compose/extends/), and DDEV is designed to leverage this ability.
 
-To add custom configuration or additional services to your project, create docker-compose files in the its `.ddev` directory. DDEV will process any files with the `docker-compose.[servicename].yaml` naming convention and include them in executing docker-compose functionality. You can optionally create a `docker-compose.override.yaml` to override any configurations from the main `.ddev/.ddev-docker-compose-base.yaml` or any additional docker-compose files added to your project.
+To add custom configuration or additional services to your project, create docker-compose files in the `.ddev` directory. DDEV will process any files with the `docker-compose.[servicename].yaml` naming convention and include them in executing docker-compose functionality. You can optionally create a `docker-compose.override.yaml` to override any configurations from the main `.ddev/.ddev-docker-compose-base.yaml` or any additional docker-compose files added to your project.
 
 !!!warning "Don’t modify `.ddev-docker-compose-base.yaml` or `.ddev-docker-compose-full.yaml`!"
 

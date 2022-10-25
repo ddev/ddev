@@ -745,13 +745,8 @@ func TestDdevNoProjectMount(t *testing.T) {
 
 // TestDdevXdebugEnabled tests running with xdebug_enabled = true, etc.
 func TestDdevXdebugEnabled(t *testing.T) {
-	// 2021-02: I've been unable to make this test work on WSL2, even though it's easy to demonstrate
-	// that it works using PhpStorm, etc. The go listener here doesn't seem to listen on all interfaces.
-	// If you get golang listening, then enter the web container and try to connect to the port golang
-	// is listening on, it can't connect. However, if you use netcat to listen on the wsl2 side and then
-	// connect to it from inside the container, it connects fine.
-	if nodeps.IsWSL2() || dockerutil.IsColima() {
-		t.Skip("Skipping on WSL2/Colima because this test doesn't work although manual testing works")
+	if dockerutil.IsColima() && os.Getenv("DDEV_TEST_COLIMA_ANYWAY") != "true" {
+		t.Skip("Skipping on Colima because this test doesn't work although manual testing works")
 	}
 	assert := asrt.New(t)
 
@@ -777,6 +772,11 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	err = fileutil.TemplateStringToFile("<?php\necho \"hi there\";\n", nil, filepath.Join(app.AppRoot, "index.php"))
 	require.NoError(t, err)
 
+	// If using wsl2-docker-inside, test that we can use IDE inside
+	if dockerutil.IsWSL2() && !dockerutil.IsDockerDesktop() {
+		globalconfig.DdevGlobalConfig.XdebugIDELocation = globalconfig.XdebugIDELocationWSL2
+	}
+
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
@@ -784,6 +784,8 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		assert.NoError(err)
 		err = os.RemoveAll(projDir)
 		assert.NoError(err)
+		globalconfig.DdevGlobalConfig.XdebugIDELocation = ""
+		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	})
 	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", app.Name, t.Name()))
 
@@ -794,7 +796,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	// Most of the time there's no reason to do all versions of PHP
 	phpKeys := []string{}
 	// TODO: Re-enable 8.2 when it's available
-	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "8.2"}
+	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3", "8.2"}
 	for k := range nodeps.ValidPHPVersions {
 		if os.Getenv("GOTEST_SHORT") != "" && !nodeps.ArrayContainsString(exclusions, k) {
 			phpKeys = append(phpKeys, k)
@@ -849,7 +851,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 		go func() {
 			time.Sleep(time.Second)
-			t.Logf("Curling to port 9003 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
+			t.Logf("Connecting to HTTP URL %s with xdebug enabled, PHP version=%s time=%v", app.GetWebContainerDirectHTTPURL(), v, time.Now())
 			// Curl to the project's index.php or anything else
 			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL(), 12)
 			if err != nil {
@@ -857,6 +859,8 @@ func TestDdevXdebugEnabled(t *testing.T) {
 				if resp != nil {
 					t.Logf("resp code=%v", resp.StatusCode)
 				}
+			} else {
+				t.Logf("success result of GetLocalHTTPResponse=%s, resp=%v", out, resp)
 			}
 		}()
 
@@ -866,9 +870,23 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		go func() {
 			t.Logf("Attempting accept of port 9003 with xdebug enabled, PHP version=%s time=%v", v, time.Now())
 
+			var conn net.Conn
+			var ncOutput string
 			// Accept the listen on 9003 coming in from in-container php-xdebug
-			conn, err := listener.Accept()
-			assert.NoError(err)
+			// If on WSL2/listener-on-windows we have to use nc.exe as a proxy to listen for us
+			if dockerutil.IsWSL2() && dockerutil.IsDockerDesktop() {
+				t.Logf("running nc.exe to receive Windows-side port 9003 traffic time=%v", time.Now())
+				ncOutput, err = exec.RunHostCommand("/mnt/c/ProgramData/chocolatey/bin/nc.exe", "-l", "-w", "1", "-p", "9003")
+				if err != nil {
+					t.Errorf("unable to run nc.exe on wsl2, output=%s, err=%v", ncOutput, err)
+				} else {
+					t.Logf("result of nc -l on Windows = %s", ncOutput)
+				}
+				t.Logf("received ncOutput=%v from nc.exe, time=%v", ncOutput, time.Now())
+			} else {
+				conn, err = listener.Accept()
+				assert.NoError(err)
+			}
 			if err == nil {
 				t.Logf("Completed accept of port 9003 with xdebug enabled, PHP version=%s, time=%v\n", v, time.Now())
 			} else {
@@ -878,8 +896,12 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			}
 			// Grab the Xdebug connection start and look in it for "Xdebug"
 			b := make([]byte, 650)
-			_, err = bufio.NewReader(conn).Read(b)
-			assert.NoError(err)
+			if dockerutil.IsWSL2() && dockerutil.IsDockerDesktop() {
+				b = []byte(ncOutput)
+			} else {
+				_, err = bufio.NewReader(conn).Read(b)
+				assert.NoError(err)
+			}
 			lineString := string(b)
 			assert.Contains(lineString, "Xdebug")
 			assert.Contains(lineString, `xdebug:language_version="`+v)
@@ -3373,7 +3395,7 @@ func TestCaptureLogs(t *testing.T) {
 // This requires that the test machine must have NFS shares working
 // Tests using both app-specific nfs_mount_enabled and global nfs_mount_enabled
 func TestNFSMount(t *testing.T) {
-	if nodeps.IsWSL2() || dockerutil.IsColima() {
+	if dockerutil.IsWSL2() || dockerutil.IsColima() {
 		t.Skip("Skipping on WSL2/Colima")
 	}
 	if nodeps.MutagenEnabledDefault == true || nodeps.NoBindMountsDefault {
@@ -3618,7 +3640,7 @@ func TestHostDBPort(t *testing.T) {
 // TestPortSpecifications tests to make sure that one project can't step on the
 // ports used by another
 func TestPortSpecifications(t *testing.T) {
-	if nodeps.IsWSL2() {
+	if dockerutil.IsWSL2() {
 		t.Skip("Skipping on WSL2 because of inconsistent docker behavior acquiring ports")
 	}
 	assert := asrt.New(t)

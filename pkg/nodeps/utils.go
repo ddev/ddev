@@ -3,6 +3,7 @@ package nodeps
 import (
 	"golang.org/x/term"
 	"math/rand"
+	"net"
 	"os"
 	"runtime"
 	"strconv"
@@ -60,11 +61,6 @@ func RandomString(length int) string {
 	return string(b)
 }
 
-// IsWSL2 returns true if running WSL2
-func IsWSL2() bool {
-	return GetWSLDistro() != ""
-}
-
 // IsMacM1 returns true if running on mac M1
 func IsMacM1() bool {
 	return runtime.GOOS == "darwin" && runtime.GOARCH == "arm64"
@@ -113,4 +109,12 @@ func GetTerminalWidthHeight() (int, int) {
 		}
 	}
 	return 80, 24
+}
+
+// IsIPAddress returns true if ip is ipv4 or ipv6 address
+func IsIPAddress(ip string) bool {
+	if net.ParseIP(ip) != nil {
+		return true
+	}
+	return false
 }

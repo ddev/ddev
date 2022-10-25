@@ -6,8 +6,6 @@ set -o errexit
 
 set -x
 
-echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
-
 if [ ! -z "${DOCKERHUB_PULL_USERNAME:-}" ]; then
   set +x
   echo "${DOCKERHUB_PULL_PASSWORD}" | docker login --username "${DOCKERHUB_PULL_USERNAME}" --password-stdin
@@ -21,7 +19,7 @@ curl -sSL --fail -o /tmp/ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-st
 
 if [ ! -f /home/linuxbrew/.linuxbrew/Homebrew/bin/brew ] ; then
   rm -rf /home/linuxbrew
-  sh -c "$(curl -fsSL https://raw.githubusercontent.com/Linuxbrew/install/master/install.sh)"
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 fi
 export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
 echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc
@@ -32,7 +30,7 @@ echo "capath=/etc/ssl/certs/" >>~/.curlrc
 source ~/.bashrc
 
 brew tap drud/ddev >/dev/null
-for item in gcc@5 golang golangci-lint mkcert; do
+for item in docker-compose golang golangci-lint mkcert; do
     brew install $item >/dev/null || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item >/dev/null
 done
 

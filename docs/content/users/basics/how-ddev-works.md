@@ -9,7 +9,7 @@ When you install or upgrade DDEV you’re mostly installing a single `ddev` bina
 * The optional `dba` container runs phpMyAdmin for projects with MySQL or MariaDB.
 * Additional add-on services may be there for a given project, for example `solr` or `elasticsearch` or `memcached`.
 
-Although it’s not common usage, different projects can communicate with each other as described in the [FAQ](faq.md#projects-communicate-with-each-other).
+Although it’s not common usage, different projects can communicate with each other as described in the [FAQ](faq.md#can-different-projects-communicate-with-each-other).
 
 Now for the two oddball global containers (there’s only one of each):
 

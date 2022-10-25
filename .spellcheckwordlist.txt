@@ -1,6 +1,7 @@
 ARG
 AdditionalConfig
 AdditionalConfiguration
+Adminer
 Apache
 Acquia
 Autocompletion
@@ -399,6 +400,7 @@ mkdocs
 mnt
 modify
 mongo
+moodle
 mongodb
 more
 mountaddr
@@ -594,6 +596,7 @@ tls
 tlsverify
 tmp
 to
+toc
 transactional
 true
 txt
@@ -665,3 +668,4 @@ zcompdump
 zsh
 zshrc
 zxf
+

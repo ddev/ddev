@@ -291,10 +291,7 @@ func renderRepositoryList(repos []github.Repository) string {
 		},
 	})
 	sort.Slice(repos, func(i, j int) bool {
-		if repos[i].GetOwner().GetLogin() == "drud" {
-			return true
-		}
-		return false
+		return strings.Compare(strings.ToLower(repos[i].GetFullName()), strings.ToLower(repos[j].GetFullName())) == -1
 	})
 	t.AppendHeader(table.Row{"Add-on", "Description"})
 

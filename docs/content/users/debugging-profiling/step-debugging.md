@@ -15,7 +15,8 @@ All IDEs basically work the same, listening on a port and reacting when they’r
 It will remain enabled until you start or restart the project.
 * Disable Xdebug for better performance when not debugging with `ddev xdebug off`.
 * `ddev xdebug status` will show Xdebug’s current status.
-* The IDE’s debug server port must be set to Xdebug’s default 9003 (port 9000 before v1.19), which may already be the case in popular IDEs. If you have a port conflict, see [Using Xdebug on a Port Other than the Default 9003](#using-xdebug-on-a-port-other-than-the-default-9003) below.
+* The IDE’s debug server port must be set to Xdebug’s default 9003, which may already be the case in popular IDEs. If the unusual case that you have a port conflict, see [Using Xdebug on a Port Other than the Default 9003](#using-xdebug-on-a-port-other-than-the-default-9003) below.
+* In the case of using running your IDE inside WSL2 (using WSLg) or with a proxy setup like JetBrains Gateway, you can set that with `ddev config global --xdebug-ide-location=wsl2`. If you're running your IDE with a proxy inside the web container, you can set that with `ddev config global --xdebug-ide-location=container.
 
 For more background on Xdebug, see [Xdebug documentation](https://xdebug.org/docs/remote). The intention here is that one won’t have to understand Xdebug to do debugging.
 
@@ -32,6 +33,9 @@ For more background on Xdebug, see [Xdebug documentation](https://xdebug.org/doc
 
 !!!tip "If you’re using PhpStorm inside WSL2 or Linux"
     Make PhpStorm listen for Xdebug using IPv4 by visiting Help → Edit Custom VM Options, and adding an additional line: `-Djava.net.preferIPv4Stack=true`. The Linux version of PhpStorm seems to otherwise default to only using IPv6.
+
+!!!tip "If using PhpStorm inside WSL2 or with JetBrains Gateway"
+    Make PhpStorm listen to the right IP address with `ddev config global --xdebug-ide-location=wsl2`
 
 #### PhpStorm Zero-Configuration Debugging
 
@@ -104,8 +108,9 @@ The basic thing to understand about Xdebug is that it’s a network protocol. Yo
 
 Here are basic steps to take to sort out any difficulty:
 
-* Remember the port in play is port 9003 for DDEV v1.19+, and port 9000 for earlier versions.
+* Remember the port in play is port 9003.
 * Reboot your computer.
+* If you're running WSL2 and have PhpStorm running inside WSL2 (the Linux version of PhpStorm) then `ddev config global --xdebug-ide-location=wsl2`.
 * Temporarily disable any *firewall* or *VPN* if you’re having trouble. Xdebug is a network protocol, and the PHP process inside the web container must be able to establish a TCP connection to the listening IDE (PhpStorm, for example).
 * Use `ddev xdebug on` to enable Xdebug when you want it, and `ddev xdebug off` when you’re done with it.
 * Set a breakpoint at the first executable line of your `index.php`.
