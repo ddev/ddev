@@ -93,6 +93,10 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     unzip \
     zip
 
+# blackfire user by default is set up with /dev/null as homedir, and 999 as uid, which
+# can break people. Use a real homedir
+RUN usermod -d /home/blackfire blackfire
+
 ADD ddev-webserver-dev-base-files /
 RUN phpdismod blackfire xhprof
 RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_${MAILHOG_ARCH} -o /usr/local/bin/mailhog;
