@@ -95,7 +95,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
 
 # blackfire user by default is set up with /dev/null as homedir, and 999 as uid, which
 # can break people. Use a real homedir
-RUN usermod -d /home/blackfire blackfire
+RUN mkdir -p /home/blackfire && chown blackfire:blackfire /home/blackfire && usermod -d /home/blackfire blackfire
 
 ADD ddev-webserver-dev-base-files /
 RUN phpdismod blackfire xhprof
