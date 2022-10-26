@@ -373,9 +373,12 @@ Specific docker-compose version for download.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-globe-16: global | `` |
+| :octicons-globe-16: global | |
 
 If set to `v2.8.0`, for example, it will download and use that version instead of the expected version for docker-compose.
+
+!!!warning "Troubleshooting Only!"
+    This should only be used in specific cases like troubleshooting. Best avoided otherwise.
 
 ## `router_bind_all_interfaces`
 
@@ -475,6 +478,9 @@ Whether to use the system-installed docker-compose. You can otherwise use [`requ
 | :octicons-globe-16: global | `false` | Can `true` or `false`.
 
 When `true`, DDEV will use the docker-compose found in on your system’s path instead of using its private, known-good, docker-compose version.
+
+!!!warning "Troubleshooting Only!"
+    This should only be used in specific cases like troubleshooting. Best avoided otherwise.
 
 ## `use_hardened_images`
 
