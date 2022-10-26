@@ -162,7 +162,9 @@ Port for binding database server to localhost interface.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | |
+| :octicons-file-directory-16: project | automatic |
+
+Not commonly used. Can be a specific port number for a fixed database port. If unset, the port will be assigned automatically and change each time `ddev start` is run.
 
 Can be a specific port number for a fixed database port, which can be useful for configuration of host-side database clients. (May still be easier to use `ddev mysql`, `ddev psql`, `ddev sequelpro`, etc., which handle changing ports automatically, as does the sample command `ddev mysqlworkbench`.)
 
@@ -172,9 +174,9 @@ Specific, persistent HTTPS port for direct binding to localhost interface.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | |
+| :octicons-file-directory-16: project | automatic |
 
-Not commonly used. Can be a specific port number for a fixed HTTPS URL. If unset, the port will change each time `ddev start` is run.
+Not commonly used. Can be a specific port number for a fixed HTTPS URL. If unset, the port will be assigned automatically and change each time `ddev start` is run.
 
 Example: `59001` will have the project always use `https://127.0.0.1:59001` for the localhost URL—used less commonly than the named URL which is better to rely on.
 
@@ -184,9 +186,9 @@ Specific, persistent HTTP port for direct binding to localhost interface.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | |
+| :octicons-file-directory-16: project | automatic |
 
-Not commonly used. Can be a specific port number for a fixed HTTP URL. If unset, the port will change each time `ddev start` is run.
+Not commonly used. Can be a specific port number for a fixed HTTP URL. If unset, the port will be assigned automatically and change each time `ddev start` is run.
 
 Example: `59000` will have the project always use `http://127.0.0.1:59000` for the localhost URL—used less commonly than the named URL which is better to rely on.
 
