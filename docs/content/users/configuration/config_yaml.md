@@ -45,7 +45,7 @@ An array of [extra fully-qualified domain names](../extend/additional-hostnames.
 Example: `additional_fqdns: ["example.com", "sub1.example.com"]` would provide HTTP and HTTPS URLs for `example.com` and `sub1.example.com`.
 
 !!!warning
-    Take care with this; it adds items to your `/etc/hosts` file which can cause confusion.
+    Take care with `additional_fqdns`; it adds items to your `/etc/hosts` file which can cause confusion.
 
 ## `additional_hostnames`
 
