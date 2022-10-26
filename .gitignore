@@ -11,3 +11,7 @@
 /.ddev
 /artifacts
 *.DS_Store
+nbproject/
+.idea
+*.orig
+*.rej
