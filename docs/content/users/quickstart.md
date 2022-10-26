@@ -335,7 +335,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     === "Git Clone"
         ```bash
         git clone <your-laravel-repo>
-        cd my-laravel-app
+        cd <your-laravel-project>
         ddev config --project-type=laravel --docroot=public --create-docroot
         ddev start
         ddev composer install 
