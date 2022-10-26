@@ -18,4 +18,4 @@ Now for the two oddball global containers (there’s only one of each):
 
 Here’s a basic diagram of how it works inside the Docker network:
 
-![DDEV Docker Network Architecture](../topics/images/DDEV%20Container%20Architecture.svg)
+![DDEV Docker Network Architecture](../../images/container-diagram.png)
