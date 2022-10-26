@@ -153,9 +153,8 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         cd my-drupal9-site
         ddev config --project-type=drupal9 --docroot=web --create-docroot
         ddev start
-        ddev composer create "drupal/recommended-project" --no-install
-        ddev composer require drush/drush --no-install
-        ddev composer install
+        ddev composer create "drupal/recommended-project"
+        ddev composer require drush/drush
         ddev drush site:install -y
         ddev drush uli
         ddev launch
@@ -172,9 +171,8 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         cd my-drupal10-site
         ddev config --project-type=drupal10 --docroot=web --create-docroot
         ddev start
-        ddev composer create --no-install drupal/recommended-project:^10@alpha
-        ddev composer require drush/drush --no-install
-        ddev composer install
+        ddev composer create drupal/recommended-project:^10@alpha
+        ddev composer require drush/drush
         ddev drush site:install -y
         ddev drush uli
         ddev launch
@@ -224,9 +222,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         cd my-typo3-site
         ddev config --project-type=typo3 --docroot=public --create-docroot --php-version 8.1
         ddev start
-        ddev composer create "typo3/cms-base-distribution" --no-install
-        ddev composer install
-        ddev restart
+        ddev composer create "typo3/cms-base-distribution"
         ddev exec touch public/FIRST_INSTALL
         ddev launch
         ```
@@ -276,8 +272,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     ddev config --project-type=magento2 --php-version=8.1 --docroot=pub --create-docroot --disable-settings-management
     ddev get drud/ddev-elasticsearch
     ddev start
-    ddev composer create --no-install --repository=https://repo.magento.com/ magento/project-community-edition -y
-    ddev composer install
+    ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition -y
     rm -f app/etc/env.php
     # Change the base-url below to your project's URL
     ddev magento setup:install --base-url='https://ddev-magento2.ddev.site/' --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db --elasticsearch-host=elasticsearch --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com --admin-user=admin --admin-password=admin123 --language=en_US
@@ -453,9 +448,8 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         mkdir my-craft-project
         cd my-craft-project
         ddev config --project-type=craftcms --docroot=web --create-docroot
-        ddev composer create -y --no-scripts --no-install craftcms/craft
         ddev start
-        ddev composer update
+        ddev composer create -y --no-scripts --no-install craftcms/craft
         ddev craft install
         ddev launch
         ```

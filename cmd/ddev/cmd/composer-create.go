@@ -98,6 +98,14 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		tmpDir := util.RandString(6)
 		containerInstallPath := path.Join("/tmp", tmpDir)
 
+		// Remember if --no-install was provided by the user
+		noInstallPresent := nodeps.ArrayContainsString(osargs, "--no-install")
+		if !noInstallPresent {
+			// Add the --no-install option by default to avoid issues with
+			// rsyncing many files afterwards to the project root.
+			osargs = append(osargs, "--no-install")
+		}
+
 		// Build container composer command
 		composerCmd := []string{
 			"composer",
@@ -135,6 +143,66 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
+		}
+
+		// If --no-install was not provided by the user, call composer install
+		// now to finish the installation in the project root folder.
+		if !noInstallPresent {
+			composerCmd = []string{
+				"composer",
+				"install",
+			}
+
+			// Apply args supported by install
+			supportedArgs := []string{
+				"--prefer-source",
+				"--prefer-dist",
+				"--prefer-install",
+				"--no-dev",
+				"--no-progress",
+				"--ignore-platform-req",
+				"--ignore-platform-reqs",
+				"-q",
+				"--quiet",
+				"--ansi",
+				"--no-ansi",
+				"-n",
+				"--no-interaction",
+				"--profile",
+				"--no-plugins",
+				"--no-scripts",
+				"-d",
+				"--working-dir",
+				"--no-cache",
+				"-v",
+				"-vv",
+				"-vvv",
+				"--verbose",
+			}
+
+			for _, osarg := range osargs {
+				for _, supportedArg := range supportedArgs {
+					if strings.HasPrefix(osarg, supportedArg) {
+						composerCmd = append(composerCmd, osarg)
+					}
+				}
+			}
+
+			// Run command
+			output.UserOut.Printf("Executing composer command: %v\n", composerCmd)
+			stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				RawCmd:  composerCmd,
+				Dir:     "/var/www/html",
+				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
+			})
+			if err != nil {
+				util.Failed("Failed to install project:%v, stderr=%v", err, stderr)
+			}
+
+			if len(stdout) > 0 {
+				fmt.Println(strings.TrimSpace(stdout))
+			}
 		}
 
 		// Do a spare restart, which will create any needed settings files
