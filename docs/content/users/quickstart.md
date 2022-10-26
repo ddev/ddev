@@ -344,9 +344,6 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         ddev exec "php artisan key:generate"
         ddev launch
         ```
-        !!!tip
-            In this example, we used a repo that has laravel version 9 due to the manual tests. So are you looking to use the latest laravel version?
-            If yes, please use the following repo https://github.com/laravel/laravel.git
 
     In the examples above, we used a one-liner to copy `.env.example` as `env` and set the `DB_HOST`, `DB_DATABASE`, `DB_USERNAME` and `DB_PASSWORD` environment variables to the value of `db`.
 
