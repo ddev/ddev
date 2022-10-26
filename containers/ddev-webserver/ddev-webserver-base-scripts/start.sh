@@ -90,8 +90,8 @@ sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ /var/lib/php
 mkdir -p ~/.yarn/berry
 ln -sf /mnt/ddev-global-cache/yarn/berry ~/.yarn/berry/cache
 
-ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ${NVM_DIR:-${HOME}/.nvm}
-if [ ! -f ${NVM_DIR:-${HOME}/.nvm}/nvm.sh ]; then (install_nvm.sh || true); fi
+ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ${NVM_DIR:-~/.nvm}
+if [ ! -f ${NVM_DIR:-~/.nvm}/nvm.sh ]; then (install_nvm.sh || true); fi
 
 # /mnt/ddev_config/.homeadditions may be either
 # a bind-mount, or a volume mount, but we don't care,

@@ -76,8 +76,8 @@ disable_xhprof
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
 mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},nvm_dir/${HOSTNAME},npm,yarn/classic,yarn/berry}
-ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ${NVM_DIR:-${HOME}/.nvm}
-if [ ! -f ${NVM_DIR:-${HOME}/.nvm}/nvm.sh ]; then (install_nvm.sh || true); fi
+ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ${NVM_DIR:-~/.nvm}
+if [ ! -f ${NVM_DIR:-~/.nvm}/nvm.sh ]; then (install_nvm.sh || true); fi
 
 # The following ensures a persistent and shared "global" cache for
 # yarn1 (classic) and yarn2 (berry). In the case of yarn2, the global cache
