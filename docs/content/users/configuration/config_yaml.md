@@ -458,7 +458,6 @@ Path from the project’s docroot to the user-generated files directory targeted
 | -- | -- | --
 | :octicons-file-directory-16: project | |
 
-
 ## `use_dns_when_possible`
 
 Whether to use DNS instead of editing `/etc/hosts`.
