@@ -495,11 +495,6 @@ func StopMutagenDaemon() {
 			util.Warning("Unable to stop mutagen daemon: %v; MUTAGEN_DATA_DIRECTORY=%s", err, mutagenDataDirectory)
 		}
 		util.Success("Stopped mutagen daemon")
-		// There may be an old mutagen daemon running against ~/.mutagen; try to stop it as well
-		out, err = exec.RunHostCommand("sh", "-c", fmt.Sprintf("MUTAGEN_DATA_DIRECTORY=~/.mutagen %s daemon  stop", globalconfig.GetMutagenPath()))
-		if err != nil && !strings.Contains(out, "unable to connect to daemon") {
-			util.Warning("Unable to stop old mutagen daemon: %v; MUTAGEN_DATA_DIRECTORY=~/.mutagen", err)
-		}
 	}
 }
 

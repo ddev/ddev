@@ -152,9 +152,18 @@ func setTypo3SiteSettingsPaths(app *DdevApp) {
 
 // isTypoApp returns true if the app is of type typo3
 func isTypo3App(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "typo3")); err == nil {
+	typo3Folder := filepath.Join(app.AppRoot, app.Docroot, "typo3")
+
+	// Check if the folder exists, fails if a symlink target does not exist.
+	if _, err := os.Stat(typo3Folder); !os.IsNotExist(err) {
 		return true
 	}
+
+	// Check if a symlink exists, succeeds even if the target does not exist.
+	if _, err := os.Lstat(typo3Folder); !os.IsNotExist(err) {
+		return true
+	}
+
 	return false
 }
 

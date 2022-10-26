@@ -67,6 +67,8 @@ type TestSite struct {
 	Safe200URIWithExpectation URIWithExpect
 	// DynamicURI provides a dynamic (after db load) URI with contents we can expect.
 	DynamicURI URIWithExpect
+	// UploadDir overrides the dir used for upload_dir
+	UploadDir string
 	// FilesImageURI is URI to a file loaded by import-files that is a jpg.
 	FilesImageURI string
 	// FullSiteArchiveExtPath is the path that should be extracted from inside an archive when
@@ -116,6 +118,7 @@ func (site *TestSite) Prepare() error {
 	// ignore app name defined in config file if present.
 	app.Name = site.Name
 	app.Docroot = site.Docroot
+	app.UploadDir = site.UploadDir
 	app.Type = app.DetectAppType()
 	if app.Type != site.Type {
 		return errors.Errorf("Detected apptype (%s) does not match provided apptype (%s)", app.Type, site.Type)

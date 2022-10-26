@@ -42,7 +42,7 @@ For more background on Xdebug, see [Xdebug documentation](https://xdebug.org/doc
 PhpStorm [zero-configuration debugging](https://confluence.jetbrains.com/display/PhpStorm/Zero-configuration+Web+Application+Debugging+with+Xdebug+and+PhpStorm) will automatically detect a connection and offer to create a “server” that maps your workstation files to the container. This means you only have to:
 
 1. Toggle the “Start Listening for PHP Debug Connections” button:  
-    ![Start listening for debug connections button](../images/phpstorm_listen_for_debug_connections.png)
+    ![Start listening for debug connections button](../../images/phpstorm-listen-for-debug-connections.png)
 2. Set a breakpoint.
 3. Visit a page that should stop in the breakpoint you set.
 4. PhpStorm will ask you what mapping to use, so it can figure out how to map the path inside the container to the path on your workstation. The first time you do this with a project, PhpStorm will pop up a “server” dialog box to set the mapping. The default will work, but it’s best to click the checkbox to map the whole project directory to `/var/www/html`.
@@ -60,19 +60,19 @@ PhpStorm [run/debug configurations](https://www.jetbrains.com/help/phpstorm/crea
 2. Click the *+* in the upper left and choose *PHP Web Application* to create a configuration.  
 Give it a reasonable name.
 3. Create a “server” for the project. Make sure *Name* is exactly the same as your host (e.g. `my-site.ddev.site`):
-    ![PhpStorm server creation](../images/phpstorm_config_server_config.png)
+    ![PhpStorm server creation](../../images/phpstorm-config-server-config.png)
 4. Add file mappings for the files on the server.  
 Click on the local repo path and add `/var/www/html` as the *Absolute path on the server* and your repository root as the path on the host.
 5. Set an appropriate breakpoint.
 6. Start debugging by clicking the “debug” button, which will launch a page in your browser:
-    ![PhpStorm debug start](../images/phpstorm_config_debug_button.png)
+    ![PhpStorm debug start](../../images/phpstorm-config-debug-button.png)
 
 #### PhpStorm and Command-Line Debugging
 
 If you need to debug command-line PHP processes, especially code that’s outside the docroot, the environment variable `PHP_IDE_CONFIG` is already set inside the web container, so you don’t have to do much more.
 
 However, if you’ve not yet used PhpStorm with Xdebug for a regular web request, do that to automatically create the PhpStorm “server” with the same name as your primary URL (*Languages and Frameworks* → *PHP* → *Servers*). The key job of the server is to map filesystem locations on the workstation (your computer) to filesystem locations on the remote server—in this case the `ddev-webserver` container. Often, PhpStorm automatically sets up a mapping that doesn’t include the entire project, meaning things like the `vendor` directory may not be mapped. You can fix this by mapping the top-level directory of your project to `/var/www/html` in the container:
-![PhpStorm mapping](../images/PHPStormServerMapping.png)
+![PhpStorm mapping](../../images/phpstorm-server-mapping.png)
 
 ### Visual Studio Code (VS Code) Debugging Setup
 
