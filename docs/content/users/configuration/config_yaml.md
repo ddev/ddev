@@ -333,6 +333,8 @@ Whether to override config values instead of merging.
 
 When `true`, the `config.*.yaml` file with the option will have its settings *override* rather than *merge with* others. Allows statements like `nfs_mount_enabled: false` or `additional_hostnames: []` to work.
 
+See [Extending `config.yaml` with Custom `config.*.yaml` Files](../extend/customization-extendibility.md#extending-configyaml-with-custom-configyaml-files).
+
 ## `php_version`
 
 The PHP version the project should use.
