@@ -83,7 +83,8 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 18. `sudo chmod -R ug+w /home/linuxbrew`
 19. `nc.exe -l -p 9003` on Windows to trigger and allow Windows Defender.
 20. Run `ngrok config add-authtoken <token>` with token for free account.
-21. Copy ngrok config into `buildkite-agent` account, `sudo cp -r ~/.ngrok2 ~buildkite-agent/ && sudo chown -R buildkite-agent:buildkite--agent ~buildkite-agent/ngrok2`
+21. Add `/home/linuxbrew/.linuxbrew/bin` to `PATH` in `/etc/environment`.
+22. Copy ngrok config into `buildkite-agent` account, `sudo cp -r ~/.ngrok2 ~buildkite-agent/ && sudo chown -R buildkite-agent:buildkite--agent ~buildkite-agent/ngrok2`
 
 ## Additional Windows Setup for WSL2+Docker-Inside Testing
 
