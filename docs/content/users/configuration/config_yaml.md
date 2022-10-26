@@ -81,7 +81,7 @@ The type and version of the database engine the project should use.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | MariaDB 10.3 | Can be MariaDB 5.5–10.7, MySQL 5.5–8.0, or PostgreSQL 9–14.<br>See [Database Server Types](../extend/database_types.md) for examples and caveats.
+| :octicons-file-directory-16: project | MariaDB 10.4 | Can be MariaDB 5.5–10.7, MySQL 5.5–8.0, or PostgreSQL 9–14.<br>See [Database Server Types](../extend/database_types.md) for examples and caveats.
 
 !!!note
     DDEV v1.18 and earlier used `mariadb_version` and `mysql_version`, which are now automatically converted to the `database` format.
@@ -242,7 +242,7 @@ Whether to enable [Mutagen asynchronous caching](../install/performance.md#mutag
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-globe-16: global | `false` | Can be `true` or `false`; only `true` has any effect.
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `false` | Can be `true` or `false`; only `true` has any effect.
 
 This overrides NFS mounting as it’s incompatible with NFS.
 
@@ -377,7 +377,7 @@ If set to `v2.8.0`, for example, it will download and use that version instead o
 
 ## `router_bind_all_interfaces`
 
-Whether to bind on all network interfaces.
+Whether to bind `ddev-router`'s ports on all network interfaces.
 
 | Type | Default | Usage
 | -- | -- | --
@@ -451,7 +451,6 @@ Path from the project’s docroot to the user-generated files directory targeted
 | -- | -- | --
 | :octicons-file-directory-16: project | |
 
-This is a CMS-specific setting that won’t have any effect for generic `php` [project types](#type).
 
 ## `use_dns_when_possible`
 
@@ -548,7 +547,7 @@ Whether Xdebug should be enabled for [step debugging](../debugging-profiling/ste
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `false` | Can be `true` or `false`. Most people use `ddev xdebug` and `ddev xdebug off` commands instead of configuring this, because of Xdebug’s significant performance impact.
+| :octicons-file-directory-16: project | `false` | Please leave this `false` in most cases. Most people use `ddev xdebug` and `ddev xdebug off` commands.
 
 ## `xdebug_ide_location`
 
