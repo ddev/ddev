@@ -16,22 +16,6 @@ func isCraftCmsApp(app *DdevApp) bool {
 	return fileutil.FileExists(filepath.Join(app.AppRoot, "craft"))
 }
 
-// Set the Docroot to web
-func craftCmsConfigOverrideAction(app *DdevApp) error {
-	if app.Docroot == "" {
-		app.Docroot = "web"
-	}
-
-	return nil
-}
-
-// Returns the upload directory for importing files, if not already set
-func getCraftCmsUploadDir(app *DdevApp) string {
-	app.UploadDir = "files"
-
-	return app.UploadDir
-}
-
 // craftCmsImportFilesAction defines the workflow for importing project files.
 func craftCmsImportFilesAction(app *DdevApp, importPath, extPath string) error {
 	if app.UploadDir == "" {

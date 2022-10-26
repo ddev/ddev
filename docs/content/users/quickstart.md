@@ -452,7 +452,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         ```bash
         mkdir my-craft-project
         cd my-craft-project
-        ddev config --project-type=craftcms
+        ddev config --project-type=craftcms --docroot=web --create-docroot
         ddev composer create -y --no-scripts --no-install craftcms/craft
         ddev start
         ddev composer update
