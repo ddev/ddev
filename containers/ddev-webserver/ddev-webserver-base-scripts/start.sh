@@ -85,7 +85,7 @@ sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ /var/lib/php
 # will only be used if the project is configured to use it through it's own
 # enableGlobalCache configuration option. Assumes ~/.yarn/berry as the default
 # global folder.
-(cd && yarn config set cache-folder /mnt/ddev-global-cache/yarn/classic || true)
+( (cd ~ || echo "unable to cd to home directory"; exit 22) && yarn config set cache-folder /mnt/ddev-global-cache/yarn/classic || true)
 # ensure default yarn2 global folder is there to symlink cache afterwards
 mkdir -p ~/.yarn/berry
 ln -sf /mnt/ddev-global-cache/yarn/berry ~/.yarn/berry/cache
