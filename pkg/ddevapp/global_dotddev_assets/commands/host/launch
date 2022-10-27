@@ -58,7 +58,11 @@ fi
 
 case $OSTYPE in
   linux-gnu)
-    xdg-open ${FULLURL}
+    if [[ ! -z "${GITPOD_INSTANCE_ID}" ]]; then
+        gp preview ${FULLURL}
+    else
+        xdg-open ${FULLURL}
+    fi
     ;;
   "darwin"*)
     open ${FULLURL}
