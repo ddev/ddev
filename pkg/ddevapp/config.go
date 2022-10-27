@@ -854,7 +854,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	_, _, userName := util.GetContainerUIDGid()
 
 	extraWebContent := fmt.Sprintf("\nRUN mkdir -p /home/%s && chown %s /home/%s && chmod 600 ~%s/.pgpass ~%s/.my.cnf", userName, userName, userName, userName, userName)
-	extraWebContent = extraWebContent + fmt.Sprintf("\nENV NVM_DIR=/home/%s/.nvm", userName)
 	if app.NodeJSVersion != nodeps.NodeJSDefault {
 		extraWebContent = extraWebContent + "\nRUN (apt-get remove -y nodejs || true) && (apt purge nodejs || true)"
 		// Download of setup_*.sh seems to fail a LOT, probably a problem on their end. So try it twice
