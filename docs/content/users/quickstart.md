@@ -153,9 +153,8 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         cd my-drupal9-site
         ddev config --project-type=drupal9 --docroot=web --create-docroot
         ddev start
-        ddev composer create "drupal/recommended-project" --no-install
-        ddev composer require drush/drush --no-install
-        ddev composer install
+        ddev composer create "drupal/recommended-project"
+        ddev composer require drush/drush
         ddev drush site:install -y
         ddev drush uli
         ddev launch
@@ -172,9 +171,8 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         cd my-drupal10-site
         ddev config --project-type=drupal10 --docroot=web --create-docroot
         ddev start
-        ddev composer create --no-install drupal/recommended-project:^10@alpha
-        ddev composer require drush/drush --no-install
-        ddev composer install
+        ddev composer create drupal/recommended-project:^10@alpha
+        ddev composer require drush/drush
         ddev drush site:install -y
         ddev drush uli
         ddev launch
@@ -224,9 +222,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         cd my-typo3-site
         ddev config --project-type=typo3 --docroot=public --create-docroot --php-version 8.1
         ddev start
-        ddev composer create "typo3/cms-base-distribution" --no-install
-        ddev composer install
-        ddev restart
+        ddev composer create "typo3/cms-base-distribution"
         ddev exec touch public/FIRST_INSTALL
         ddev launch
         ```
@@ -276,8 +272,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     ddev config --project-type=magento2 --php-version=8.1 --docroot=pub --create-docroot --disable-settings-management
     ddev get drud/ddev-elasticsearch
     ddev start
-    ddev composer create --no-install --repository=https://repo.magento.com/ magento/project-community-edition -y
-    ddev composer install
+    ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition -y
     rm -f app/etc/env.php
     # Change the base-url below to your project's URL
     ddev magento setup:install --base-url='https://ddev-magento2.ddev.site/' --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db --elasticsearch-host=elasticsearch --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com --admin-user=admin --admin-password=admin123 --language=en_US
@@ -452,10 +447,9 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         ```bash
         mkdir my-craft-project
         cd my-craft-project
-        ddev config --project-type=craftcms
-        ddev composer create -y --no-scripts --no-install craftcms/craft
+        ddev config --project-type=craftcms --docroot=web --create-docroot
         ddev start
-        ddev composer update
+        ddev composer create -y --no-scripts craftcms/craft
         ddev craft install
         ddev launch
         ```
@@ -495,7 +489,9 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
 
     If you have an existing Craft CMS DDEV project, you'll need to change the `type:` to `craftcms` in your project's `.ddev/config.yaml` and then do `ddev restart` to be able to use the `ddev craft` command.
 
-    If you have Craft CMS installed in a sub-directory in your project, you can add a `CRAFT_CMD_ROOT` environment variable to your `.env` file to specify a path relative to your project root where Craft CMS is installed. This defaults to `./`, the project root directory.
+    If you have Craft CMS installed in a sub-directory of your project, in order for `ddev craft` to work, you will need to change the location of the `craft` executable by providing the `CRAFT_CMD_ROOT` environment variable to the web container in your project. For example, if your directory structure is `my-craft-project/app`, where Craft CMS is installed in `app`, then you would apply `ddev config --web-environment-add=CRAFT_CMD_ROOT=./app`. `CRAFT_CMD_ROOT` defaults to `./`, the project root directory. Run `ddev restart` after applying this change.
+    
+    For more information about how to provide custom environment variables to your containers, read [Providing Custom Environment Variables to a Container](https://ddev.readthedocs.io/en/latest/users/extend/customization-extendibility/#providing-custom-environment-variables-to-a-container).
 
 === "Shopware 6"
 

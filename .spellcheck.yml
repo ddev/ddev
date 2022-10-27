@@ -18,6 +18,12 @@ matrix:
       - code
       - pre
   - pyspelling.filters.url:
+  - pyspelling.filters.context:
+      context_visible_first: true
+      delimiters:
+      # Ignore content between `:`, like `:octicons-file-directory-16:`
+      - open: '(?P<open>:+)'
+        close: '(?P=open)'
   sources:
   - 'docs/**/*.md|!docs/content/developers/*|!docs/content/users/topics/version-history.md'
   default_encoding: utf-8

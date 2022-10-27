@@ -100,9 +100,9 @@ func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings, appTyp
 	}
 
 	if included {
-		output.UserOut.Printf("Existing %s file includes %s", drupalConfig.SiteSettings, drupalConfig.SiteSettingsDdev)
+		util.Debug("Existing %s file includes %s", drupalConfig.SiteSettings, drupalConfig.SiteSettingsDdev)
 	} else {
-		output.UserOut.Printf("Existing %s file does not include %s, modifying to include ddev settings", drupalConfig.SiteSettings, drupalConfig.SiteSettingsDdev)
+		util.Debug("Existing %s file does not include %s, modifying to include ddev settings", drupalConfig.SiteSettings, drupalConfig.SiteSettingsDdev)
 
 		if err := appendIncludeToDrupalSettingsFile(app.SiteSettingsPath, app.Type); err != nil {
 			return fmt.Errorf("failed to include %s in %s: %v", drupalConfig.SiteSettingsDdev, drupalConfig.SiteSettings, err)
@@ -422,7 +422,7 @@ func drupal6PostStartAction(app *DdevApp) error {
 // drupalEnsureWritePerms will ensure sites/default and sites/default/settings.php will
 // have the appropriate permissions for development.
 func drupalEnsureWritePerms(app *DdevApp) error {
-	output.UserOut.Printf("Ensuring write permissions for %s", app.GetName())
+	util.Debug("Ensuring write permissions for %s", app.GetName())
 	var writePerms os.FileMode = 0200
 
 	settingsDir := path.Dir(app.SiteSettingsPath)

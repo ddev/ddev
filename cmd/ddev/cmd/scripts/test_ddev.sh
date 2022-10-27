@@ -99,13 +99,15 @@ ddev start -y || ( \
 echo "======== Curl of site from inside container:"
 ddev exec curl --fail -I http://127.0.0.1
 
-echo "======== Curl of site from outside:"
+echo "======== curl -I of http://${PROJECT_NAME}.ddev.site from outside:"
 curl --fail -I http://${PROJECT_NAME}.ddev.site
 if [ $? -ne 0 ]; then
   set +x
   echo "Unable to curl the requested project Please provide this output in a new gist at gist.github.com."
   exit 1
 fi
+echo "======== full curl of http://${PROJECT_NAME}.ddev.site from outside:"
+curl http://${PROJECT_NAME}.ddev.site
 
 echo "======== Project ownership on host:"
 ls -ld ${PROJECT_DIR}
@@ -113,7 +115,7 @@ echo "======== Project ownership in container:"
 ddev exec ls -ld /var/www/html
 echo "======== In-container filesystem:"
 ddev exec df -T /var/www/html
-
+echo "======== curl again of ${PROJECT_NAME} from host:"
 curl --fail http://${PROJECT_NAME}.ddev.site
 if [ $? -ne 0 ]; then
   set +x

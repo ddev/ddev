@@ -8,6 +8,6 @@ Regardless of your choice, you can change this at any time by editing `~/.ddev/g
 
 If you choose to share diagnostics, it helps us tremendously in our effort to improve the tool. Here’s an example of what we might see:
 
-![Usage Stats](images/usage_stats.png)
+![Usage Stats](../../images/usage-stats.png)
 
 If you have any reservations about this, please opt out (`ddev config global --instrumentation-opt-in=false`). If you have any issues or concerns with it, we’d like to know.
