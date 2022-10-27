@@ -152,7 +152,14 @@ func craftCmsPostStartAction(app *DdevApp) error {
 	}
 	// Write the modified .env file out
 	var f *os.File
-	f, err = os.Create(".env")
+	var envFileOutputPath string
+	envFileOutputPath = ".env"
+
+	if envFileRoot != "" {
+		envFileOutputPath = fmt.Sprintf("%s/.env", envFileRoot)
+	}
+
+	f, err = os.Create(envFileOutputPath)
 	if err != nil {
 		util.Error("Error creating .env file")
 
