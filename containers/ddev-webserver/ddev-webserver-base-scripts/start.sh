@@ -4,6 +4,10 @@ set -o errexit nounset pipefail
 
 rm -f /tmp/healthy
 
+# If user has not been created via normal template (like uid 999)
+# then try to grab the required files from /etc/skel
+if [ ! -f ~/.gitconfig ]; then (sudo cp -r /etc/skel/. ~/ && sudo chown -R "$(id -u -n)" ~ ) || true; fi
+
 # If DDEV_PHP_VERSION isn't set, use a reasonable default
 DDEV_PHP_VERSION="${DDEV_PHP_VERSION:-$PHP_DEFAULT_VERSION}"
 
