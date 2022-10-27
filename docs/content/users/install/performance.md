@@ -189,6 +189,11 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 === "NFS"
 
     ## NFS
+    
+    !!!warning "macOS Ventura may not work with NFS"
+    
+        A bug in macOS Ventura means that NFS mounting doesn't work for many projects, so Mutagen is recommended instead. Follow [issue](https://github.com/drud/ddev/issues/4122) for details.
+
 
     ### Using NFS to Mount the Project into the Web Container
 
