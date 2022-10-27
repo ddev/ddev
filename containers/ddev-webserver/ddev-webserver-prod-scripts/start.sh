@@ -76,7 +76,7 @@ disable_xhprof
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
 mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},nvm_dir/${HOSTNAME},npm,yarn/classic,yarn/berry}
-ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} -~/.nvm
+ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ~/.nvm
 if [ ! -f ~/.nvm/nvm.sh ]; then (install_nvm.sh || true); fi
 
 # The following ensures a persistent and shared "global" cache for
