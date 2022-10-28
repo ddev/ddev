@@ -28,6 +28,13 @@ $databases['default']['default'] = array(
   'prefix' => "{{ $config.DatabasePrefix }}",
 );
 
+
+// Setting the MySQL transaction isolation level.
+// @see https://www.drupal.org/docs/system-requirements/setting-the-mysql-transaction-isolation-level
+if ($driver === "mysql") {
+  $databases['default']['default']['init_commands']['isolation_level'] = 'SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED';
+}
+
 $settings['hash_salt'] = '{{ $config.HashSalt }}';
 
 // This will prevent Drupal from setting read-only permissions on sites/default.
