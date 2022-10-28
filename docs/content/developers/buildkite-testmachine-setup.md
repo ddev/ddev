@@ -84,6 +84,10 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 20. Run `ngrok config add-authtoken <token>` with token for free account.
 21. Copy ngrok config into `buildkite-agent` account, `sudo cp -r ~/.ngrok2 ~buildkite-agent/ && sudo chown -R buildkite-agent:buildkite--agent ~buildkite-agent/ngrok2`
 22. Add `/home/linuxbrew/.linuxbrew/bin` to `PATH` in `/etc/environment`.
+23. Copy ngrok config into `buildkite-agent` account, `sudo cp -r ~/.ngrok2 ~buildkite-agent/ && sudo chown -R buildkite-agent:buildkite--agent ~buildkite-agent/ngrok2`
+24. Add `buildkite-agent` to `sudo` group in `/etc/groups`
+25. Give `buildkite-agent` a password with `sudo passwd buildkite-agent`
+26. As `buildkite-agent` user `mkcert -install`
 
 ## Additional Windows Setup for WSL2+Docker-Inside Testing
 
