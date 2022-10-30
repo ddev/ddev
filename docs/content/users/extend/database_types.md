@@ -2,7 +2,7 @@
 
 DDEV supports most versions of MariaDB, MySQL, and PostgreSQL database servers.
 
-The default database type is MariaDB, and the default version is currently 10.4, but you can use nearly any MariaDB versions 5.5-10.8, MySQL 5.5-8.0, and Postgres 9-14.
+The default database type is MariaDB, and the default version is currently 10.4, but you can use nearly any MariaDB versions 5.5-10.8, MySQL 5.5-8.0, and Postgres 9-15.
 
 You could set these using the `ddev config` command like this:
 
