@@ -684,9 +684,16 @@ Flags:
 Example:
 
 ```shell
+# Display recent logs from the current project’s web server
 ddev logs
+
+# Stream logs from the current project’s web server in real time
 ddev logs -f
+
+# Display recent logs from the current project’s database server
 ddev logs -s db
+
+# Display recent logs from my-project’s database server
 ddev logs -s db my-project
 ```
 
