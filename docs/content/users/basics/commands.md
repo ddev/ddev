@@ -334,11 +334,12 @@ ddev debug download-images
 
 ### `fix-commands`
 
-Fix up custom/shell commands without running [`ddev start`](#start).
+Refreshes [custom command](../extend/custom-commands.md) definitions without running [`ddev start`](#start).
 
 Example:
 
 ```shell
+# Refresh the current project’s custom commands
 ddev debug fix-commands
 ```
 
