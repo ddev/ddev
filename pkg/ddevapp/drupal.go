@@ -381,6 +381,46 @@ func drupal8PostStartAction(app *DdevApp) error {
 	return nil
 }
 
+func drupalPostStartAction(app *DdevApp) error {
+	if isDrupal9App(app) || isDrupal10App(app) {
+		// pg_trm extension is required in Drupal9.5+
+		if app.Database.Type == nodeps.Postgres {
+			stdout, stderr, err := app.Exec(&ExecOpts{
+				Service:   "db",
+				Cmd:       `psql -q -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;" 2>/dev/null`,
+				NoCapture: false,
+			})
+			if err != nil {
+				util.Warning("unable to CREATE EXTENSION pg_trm: stdout='%s', stderr='%s', err=%v", stdout, stderr, err)
+			}
+		}
+		// SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED required in Drupal 9.5+
+		if app.Database.Type == nodeps.MariaDB || app.Database.Type == nodeps.MySQL {
+			stdout, stderr, err := app.Exec(&ExecOpts{
+				Service:   "db",
+				Cmd:       `mysql -e "SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED;" 2>/dev/null`,
+				NoCapture: false,
+			})
+			if err != nil {
+				util.Warning("unable to SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED: stdout='%s', stderr='%s', err=%v", stdout, stderr, err)
+			}
+		}
+	}
+	// Return early because we aren't expected to manage settings.
+	if app.DisableSettingsManagement {
+		return nil
+	}
+	if err := createDrupal8SyncDir(app); err != nil {
+		return err
+	}
+
+	//nolint: revive
+	if err := drupalEnsureWritePerms(app); err != nil {
+		return err
+	}
+	return nil
+}
+
 // drupal7PostStartAction handles default post-start actions for D7 apps, like ensuring
 // useful permissions settings on sites/default.
 func drupal7PostStartAction(app *DdevApp) error {

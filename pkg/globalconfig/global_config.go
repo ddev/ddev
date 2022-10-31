@@ -593,7 +593,7 @@ var DockerComposeVersion = ""
 
 // This is var instead of const so it can be changed in test, but should not otherwise be touched.
 // Otherwise we can't test if the version on the machine is equal to version required
-var RequiredDockerComposeVersion = "v2.10.2"
+var RequiredDockerComposeVersion = "v2.12.2"
 
 // GetRequiredDockerComposeVersion returns the version of docker-compose we need
 // based on the compiled version, or overrides in globalconfig, like

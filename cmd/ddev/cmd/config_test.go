@@ -359,7 +359,7 @@ func TestConfigSetValues(t *testing.T) {
 
 	args = []string{
 		"config",
-		"--web-environment-add", "FOO=bar, BAR=baz",
+		"--web-environment-add", "SPACES=with spaces,FOO=bar,BAR=baz",
 	}
 
 	_, err = exec.RunHostCommand(DdevBin, args...)
@@ -372,9 +372,10 @@ func TestConfigSetValues(t *testing.T) {
 	err = yaml.Unmarshal(configContents, app)
 	assert.NoError(err, "Could not unmarshal %s: %v", configFile, err)
 
-	assert.Equal(3, len(app.WebEnvironment))
+	assert.Equal(4, len(app.WebEnvironment))
 	assert.Equal("BAR=baz", app.WebEnvironment[0])
 	assert.Equal("FOO=bar", app.WebEnvironment[1])
+	assert.Equal("SPACES=with spaces", app.WebEnvironment[3])
 	assert.Equal(webEnv, app.WebEnvironment[2])
 }
 
