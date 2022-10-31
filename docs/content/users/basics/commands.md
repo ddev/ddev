@@ -610,20 +610,21 @@ gzip -dc db.sql.gz | ddev import-db
 
 ## `import-files`
 
-Pull the uploaded files directory of an existing project to the default public upload directory of your project.
+Pull the uploaded files directory of an existing project to the default [public upload directory](../basics/cli-usage.md#ddev-import-files) of your project.
 
 Flags:
 
 * `--extract-path`: If provided asset is an archive, optionally provide the path to extract within the archive.
-* `--src`: Provide the path to the source directory or tar/tar.gz/tgz/zip archive of files to import.
+* `--src`: Provide the path to the source directory or archive to import. (Archive can be `.tar`, `.tar.gz`, `.tar.xz`, `.tar.bz2`, `.tgz`, or `.zip`.)
 
 Example:
 
 ```shell
+# Extract+import `/path/to/files.tar.gz` to the project’s upload directory
 ddev import-files --src=/path/to/files.tar.gz
+
+# Import `/path/to/dir` contents to the project’s upload directory
 ddev import-files --src=/path/to/dir
-ddev import-files --src=/path/to/files.tar.xz
-ddev import-files --src=/path/to/files.tar.bz2
 ```
 
 ## `launch`
