@@ -873,13 +873,29 @@ ddev poweroff
 
 Pull files and database using a configured provider plugin.
 
+Flags:
+
+* `--skip-confirmation`: Skip confirmation step.
+* `--skip-db`: Skip pulling database archive.
+* `--skip-files`: Skip pulling file archive.
+* `--skip-import`: Download archive(s) without importing than.
+
 Example:
 
 ```shell
+# Pull a backup from the configured Pantheon project to use locally
 ddev pull pantheon
+
+# Pull a backup from the configured Platform.sh project to use locally
 ddev pull platform
+
+# Pull a backup from the configured Pantheon project without confirming
 ddev pull pantheon -y
+
+# Pull the Platform.sh database archive *only* without confirming
 ddev pull platform --skip-files -y
+
+# Pull the localfile integration’s files *only* without confirming
 ddev pull localfile --skip-db -y
 ```
 
