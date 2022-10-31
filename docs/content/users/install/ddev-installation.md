@@ -105,7 +105,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     **WSL2 is the recommended installation method for all Windows users**.
 
-     **Using WSL2 to install and run DDEV is not the same as using Docker Desktop's WSL2 engine, which itself runs in WSL2, but can serve applications running in both traditional WIndows and inside WSL2.**
+    **Using WSL2 to install and run DDEV is not the same as using Docker Desktop's WSL2 engine, which itself runs in WSL2, but can serve applications running in both traditional WIndows and inside WSL2.**
 
     **All Windows 10/11 editions (including Windows 10 Home) support WSL2**. If you’re already familiar with DDEV on Windows, you might have been using NFS for better filesystem performance. **You won't need NFS anymore once you switch to WSL2**, since it provides awesome filesystem performance out of the box.
 
@@ -128,7 +128,8 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
         ```
         If that doesn't work for you, see the [manual installation](https://docs.microsoft.com/en-us/windows/wsl/install-manual) and linked [troubleshooting](https://docs.microsoft.com/en-us/windows/wsl/troubleshooting#installation-issues).
 
-    2. Install Docker Desktop and start it. If you already have chocolatey, `choco install -y docker-desktop` or [download Docker Desktop from Docker](https://www.docker.com/products/docker-desktop/).
+    2. Install Docker Desktop. If you already have chocolatey, `choco install -y docker-desktop` or [download Docker Desktop from Docker](https://www.docker.com/products/docker-desktop/).
+    3. Start Docker Desktop. You should now be able to do `docker ps` in PowerShell or Git Bash.
 
     3. Run this script in an administrative PowerShell Window to complete DDEV WSL2 installation:
 
