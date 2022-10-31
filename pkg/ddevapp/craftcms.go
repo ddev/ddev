@@ -13,11 +13,7 @@ import (
 
 // isCraftCmsApp returns true if the app is of type craftcms
 func isCraftCmsApp(app *DdevApp) bool {
-	if app.ComposerRoot != "" {
-		return fileutil.FileExists(filepath.Join(app.ComposerRoot, "craft"))
-	}
-
-	return fileutil.FileExists(filepath.Join(app.AppRoot, "craft"))
+	return fileutil.FileExists(filepath.Join(app.AppRoot, app.ComposerRoot, "craft"))
 }
 
 // craftCmsImportFilesAction defines the workflow for importing project files.
@@ -81,17 +77,11 @@ func craftCmsPostStartAction(app *DdevApp) error {
 	}
 	// If the .env file doesn't exist, try to create it by copying .env.example to .env
 	var err error
-	var envFileRoot string
-	var envFilePath string
-	envFileRoot = app.AppRoot
-	if app.ComposerRoot != "" {
-		envFileRoot = app.ComposerRoot
-	}
-	envFilePath = filepath.Join(envFileRoot, ".env")
+	envFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, ".env")
 	if !fileutil.FileExists(envFilePath) {
 		var exampleEnvFilePaths = []string{".env.example", ".env.example.dev"}
 		for _, envFileName := range exampleEnvFilePaths {
-			var exampleEnvFilePath = filepath.Join(envFileRoot, envFileName)
+			exampleEnvFilePath := filepath.Join(envFileRoot, envFileName)
 			if fileutil.FileExists(exampleEnvFilePath) {
 				util.Warning(fmt.Sprintf("Copying %s to .env", envFileName))
 				err = fileutil.CopyFile(exampleEnvFilePath, envFilePath)
@@ -140,7 +130,7 @@ func craftCmsPostStartAction(app *DdevApp) error {
 	envFileOutputPath = ".env"
 
 	if envFileRoot != "" {
-		envFileOutputPath = fmt.Sprintf("%s/.env", envFileRoot)
+		envFileOutputPath = filepath.Join(envFileRoot, ".env")
 	}
 
 	f, err = os.Create(envFileOutputPath)
@@ -162,7 +152,7 @@ func craftCmsPostStartAction(app *DdevApp) error {
 	if app.ComposerRoot != "" {
 		composerFileRoot = app.ComposerRoot
 	}
-	composerDefaultFilePath = filepath.Join(composerFileRoot, "composer.json.default")
+	composerDefaultFilePath = filepath.Join(app.Approot, composerFileRoot, "composer.json.default")
 	if fileutil.FileExists(composerDefaultFilePath) {
 		var composerFilePath string
 		composerFilePath = filepath.Join(composerFileRoot, "composer.json")
