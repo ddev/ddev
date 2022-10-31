@@ -1129,6 +1129,7 @@ Run TablePlus with current project database (global shell host container command
 Example:
 
 ```shell
+# Open the current project’s database in TablePlus
 ddev tableplus
 ```
 
@@ -1136,7 +1137,10 @@ ddev tableplus
 
 Print DDEV and component versions.
 
+Example:
+
 ```shell
+# Print DDEV and platform version details
 ddev version
 ```
 
