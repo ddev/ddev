@@ -394,6 +394,7 @@ Refreshes the project’s Docker cache.
 Example:
 
 ```shell
+# Refresh the current project’s Docker cache
 ddev debug refresh
 ```
 
