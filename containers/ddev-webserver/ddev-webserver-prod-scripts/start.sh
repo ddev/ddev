@@ -6,7 +6,7 @@ rm -f /tmp/healthy
 
 # If user has not been created via normal template (like blackfire uid 999)
 # then try to grab the required files from /etc/skel
-if [ ! -f ~/.gitconfig ]; then cp -r /etc/skel/ ~/ || true; fi
+if [ ! -f ~/.gitconfig ]; then cp -r /etc/skel/. ~/ || true; fi
 
 # If DDEV_PHP_VERSION isn't set, use a reasonable default
 DDEV_PHP_VERSION="${DDEV_PHP_VERSION:-$PHP_DEFAULT_VERSION}"
@@ -51,7 +51,7 @@ if [ "$DDEV_PROJECT_TYPE" = "backdrop" ] ; then
     mkdir -p ~/.drush/commands && ln -s /var/tmp/backdrop_drush_commands ~/.drush/commands/backdrop
 fi
 
-if [ "${DDEV_PROJECT_TYPE}" = "drupal6" ] || [ "${DDEV_PROJECT_TYPE}" = "drupal7" ] ; then
+if [ "${DDEV_PROJECT_TYPE}" = "drupal6" ] || [ "${DDEV_PROJECT_TYPE}" = "drupal7" ] || [ "${DDEV_PROJECT_TYPE}" = "backdrop" ]; then
   ln -sf /usr/local/bin/drush8 /usr/local/bin/drush
 fi
 
@@ -88,10 +88,12 @@ if [ ! -f ~/.nvm/nvm.sh ]; then (install_nvm.sh || true); fi
 # will only be used if the project is configured to use it through it's own
 # enableGlobalCache configuration option. Assumes ~/.yarn/berry as the default
 # global folder.
-(cd && yarn config set cache-folder /mnt/ddev-global-cache/yarn/classic || true)
+( (cd ~ || echo "unable to cd to home directory"; exit 22) && yarn config set cache-folder /mnt/ddev-global-cache/yarn/classic || true)
 # ensure default yarn2 global folder is there to symlink cache afterwards
 mkdir -p ~/.yarn/berry
 ln -sf /mnt/ddev-global-cache/yarn/berry ~/.yarn/berry/cache
+ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ~/.nvm
+if [ ! -f ~/.nvm/nvm.sh ]; then (install_nvm.sh || true); fi
 
 # chown of ddev-global-cache must be done with privileged container in app.Start()
 # chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/
