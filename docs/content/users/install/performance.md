@@ -138,6 +138,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
     ### Troubleshooting Mutagen Sync Issues
 
     * Please make sure that DDEV projects work *without* mutagen before troubleshooting mutagen. `ddev config --mutagen-enabled=false && ddev restart`.
+    * Rename your project's .ddev/mutagen/mutagen.yml to .ddev/mutagen/mutagen.yml.bak and `ddev restart`. This makes sure you'll have a fresh version in case the file has been changed and `#ddev-generated` removed.
     * `export DDEV_DEBUG=true` will provide more information about what's going on with mutagen.
     * As of DDEV v1.21.2, DDEV's mutagen daemon keeps its data in a DDEV-only MUTAGEN_DATA_DIRECTORY, `~/.ddev_mutagen_data_directory`.
     * DDEV's private mutagen binary is installed in `~/.ddev/bin/mutagen`. You can use all the features of mutagen with `export MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory` and running the mutagen binary in `~/.ddev/bin/mutagen`, for example:and `~/.ddev/bin/mutagen daemon stop`.
@@ -189,6 +190,11 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 === "NFS"
 
     ## NFS
+    
+    !!!warning "macOS Ventura may not work with NFS"
+    
+        A bug in macOS Ventura means that NFS mounting doesn't work for many projects, so Mutagen is recommended instead. Follow [issue](https://github.com/drud/ddev/issues/4122) for details.
+
 
     ### Using NFS to Mount the Project into the Web Container
 
