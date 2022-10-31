@@ -81,7 +81,7 @@ func craftCmsPostStartAction(app *DdevApp) error {
 	if !fileutil.FileExists(envFilePath) {
 		var exampleEnvFilePaths = []string{".env.example", ".env.example.dev"}
 		for _, envFileName := range exampleEnvFilePaths {
-			exampleEnvFilePath := filepath.Join(envFileRoot, envFileName)
+			exampleEnvFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, envFileName)
 			if fileutil.FileExists(exampleEnvFilePath) {
 				util.Warning(fmt.Sprintf("Copying %s to .env", envFileName))
 				err = fileutil.CopyFile(exampleEnvFilePath, envFilePath)
@@ -126,14 +126,7 @@ func craftCmsPostStartAction(app *DdevApp) error {
 	}
 	// Write the modified .env file out
 	var f *os.File
-	var envFileOutputPath string
-	envFileOutputPath = ".env"
-
-	if envFileRoot != "" {
-		envFileOutputPath = filepath.Join(envFileRoot, ".env")
-	}
-
-	f, err = os.Create(envFileOutputPath)
+	f, err = os.Create(envFilePath)
 	if err != nil {
 		util.Error("Error creating .env file")
 
@@ -146,16 +139,9 @@ func craftCmsPostStartAction(app *DdevApp) error {
 		return err
 	}
 	// If composer.json.default exists, rename it to composer.json
-	var composerFileRoot string
-	var composerDefaultFilePath string
-	composerFileRoot = app.AppRoot
-	if app.ComposerRoot != "" {
-		composerFileRoot = app.ComposerRoot
-	}
-	composerDefaultFilePath = filepath.Join(app.Approot, composerFileRoot, "composer.json.default")
+	composerDefaultFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, "composer.json.default")
 	if fileutil.FileExists(composerDefaultFilePath) {
-		var composerFilePath string
-		composerFilePath = filepath.Join(composerFileRoot, "composer.json")
+		composerFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, "composer.json")
 		util.Warning("Renaming composer.json.default to composer.json")
 		err = os.Rename(composerDefaultFilePath, composerFilePath)
 		if err != nil {
