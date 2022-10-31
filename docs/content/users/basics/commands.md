@@ -712,7 +712,10 @@ Flags:
 Example:
 
 ```shell
+# Stream Mutagen’s logs in real time
 ddev mutagen logs
+
+# Stream Mutagen’s more detailed logs in real time
 ddev mutagen logs --verbose
 ```
 
