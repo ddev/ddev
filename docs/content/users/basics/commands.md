@@ -871,7 +871,7 @@ ddev poweroff
 
 ## `pull`
 
-Pull files and database using a configured provider plugin.
+Pull files and database using a configured [provider plugin](../providers/).
 
 Flags:
 
@@ -901,7 +901,7 @@ ddev pull localfile --skip-db -y
 
 ## `push`
 
-Push files and database using a configured provider plugin.
+Push files and database using a configured [provider plugin](../providers/).
 
 Example:
 
