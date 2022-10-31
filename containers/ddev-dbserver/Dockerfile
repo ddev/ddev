@@ -72,6 +72,9 @@ RUN rm -f /etc/apt/sources.list.d/mysql.list && \
     apt-key remove "${item}" || true; \
   done;
 
+# Normal upstream image doesn't actually have /home/mysql created
+# Make sure it's there in case user 999 (mysql) is using this image.
+RUN mkdir /home/mysql && chown mysql:mysql /home/mysql
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
