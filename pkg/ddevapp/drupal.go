@@ -382,15 +382,28 @@ func drupal8PostStartAction(app *DdevApp) error {
 }
 
 func drupalPostStartAction(app *DdevApp) error {
-	// pg_trm extension is required
-	if app.Database.Type == nodeps.Postgres && (isDrupal9App(app) || isDrupal10App(app)) {
-		stdout, stderr, err := app.Exec(&ExecOpts{
-			Service:   "db",
-			Cmd:       `psql -q -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;" 2>/dev/null`,
-			NoCapture: false,
-		})
-		if err != nil {
-			util.Warning("unable to CREATE EXTENSION pg_trm: stdout='%s', stderr='%s', err=%v", stdout, stderr, err)
+	if isDrupal9App(app) || isDrupal10App(app) {
+		// pg_trm extension is required in Drupal9.5+
+		if app.Database.Type == nodeps.Postgres {
+			stdout, stderr, err := app.Exec(&ExecOpts{
+				Service:   "db",
+				Cmd:       `psql -q -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;" 2>/dev/null`,
+				NoCapture: false,
+			})
+			if err != nil {
+				util.Warning("unable to CREATE EXTENSION pg_trm: stdout='%s', stderr='%s', err=%v", stdout, stderr, err)
+			}
+		}
+		// SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED required in Drupal 9.5+
+		if app.Database.Type == nodeps.MariaDB || app.Database.Type == nodeps.MySQL {
+			stdout, stderr, err := app.Exec(&ExecOpts{
+				Service:   "db",
+				Cmd:       `mysql -e "SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED;" 2>/dev/null`,
+				NoCapture: false,
+			})
+			if err != nil {
+				util.Warning("unable to SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED: stdout='%s', stderr='%s', err=%v", stdout, stderr, err)
+			}
 		}
 	}
 	// Return early because we aren't expected to manage settings.
