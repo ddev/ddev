@@ -573,27 +573,38 @@ ddev hostname somesite.ddev.local 127.0.0.1
 
 ## `import-db`
 
-Import a SQL file into the project.
+[Import a SQL file](database-management.md) into the project.
 
 Flags:
 
 * `--extract-path`: If provided asset is an archive, provide the path to extract within the archive.
 * `--no-drop`: Set if you do NOT want to drop the db before importing.
 * `--progress`: Display a progress bar during import. (default `true`)
-* `--src`: Provide the path to a SQL dump in .sql or tar/tar.gz/tgz/zip format.
+* `--src`: Provide the path to a SQL dump in `.sql`, `.tar`, `.tar.gz`, `.tgz`, `.bz2`, `.xx`, or `.zip` format.
 * `--target-db`: If provided, target-db is alternate database to import into. (default `"db"`)
 
 Example:
 
 ```shell
+# Start the interactive import utility
 ddev import-db
-ddev import-db --src=.tarballs/junk.sql
-ddev import-db --src=.tarballs/junk.sql.gz
+
+# Import the `.tarballs/db.sql` dump to the project database
+ddev import-db --src=.tarballs/db.sql
+
+# Import the compressed `.tarballs/db.sql.gz` dump to the project database
+ddev import-db --src=.tarballs/db.sql.gz
+
+# Import the compressed `.tarballs/db.sql.gz` dump to a `newdb` database
 ddev import-db --target-db=newdb --src=.tarballs/db.sql.gz
-ddev import-db --src=.tarballs/db.sql.bz2
-ddev import-db --src=.tarballs/db.sql.xz
+
+# Import the `db.sql` dump to the project database
 ddev import-db <db.sql
-ddev import-db someproject <db.sql
+
+# Import the `db.sql` dump to a `newdb` database
+ddev import-db newdb <db.sql
+
+# Uncompress `db.sql.gz` and pipe the result to the `import-db` command
 gzip -dc db.sql.gz | ddev import-db
 ```
 
