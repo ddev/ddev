@@ -350,6 +350,7 @@ Get the database type/version found in the ddev-dbserver’s database volume, wh
 Example:
 
 ```shell
+# Print the database volume’s engine and version
 ddev debug get-volume-db-version
 ```
 
