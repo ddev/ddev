@@ -663,9 +663,11 @@ Flags:
 Example:
 
 ```shell
+# List all projects
 ddev list
+
+# List all running projects
 ddev list --active-only
-ddev list -A
 ```
 
 ## `logs`
