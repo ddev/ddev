@@ -255,6 +255,8 @@ ddev craft up
 
 ## `debug`
 
+*Aliases: `d`, `dbg`.*
+
 A collection of debugging commands.
 
 ### `capabilities`
@@ -443,6 +445,8 @@ ddev delete --omit-snapshot --yes
 
 ## `describe`
 
+*Aliases: `status`, `st`, `desc`.*
+
 Get a detailed description of a running DDEV project.
 
 Example:
@@ -456,6 +460,8 @@ ddev describe my-project
 ```
 
 ## `exec`
+
+*Aliase: `.`.*
 
 Execute a shell command in the container for a service. Uses the web service by default.
 
@@ -651,6 +657,8 @@ ddev launch temp/phpinfo.php
 
 ## `list`
 
+*Aliases: `l`, `ls`.*
+
 List projects.
 
 Flags:
@@ -822,6 +830,8 @@ ddev nvm install 18
 
 ## `pause`
 
+*Aliases: `sc`, `stop-containers`.*
+
 Uses `docker stop` to pause/stop the containers belonging to a project.
 
 !!!tip
@@ -856,6 +866,8 @@ ddev php --version
 ```
 
 ## `poweroff`
+
+*Alias: `powerdown`.*
 
 Completely stop all projects and containers.
 
@@ -1090,6 +1102,8 @@ ddev start --all
 ```
 
 ## `stop`
+
+*Aliases: `rm`, `remove`.*
 
 Stop and remove the containers of a project. Does not lose or harm anything unless you add `--remove-data`.
 
