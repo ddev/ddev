@@ -64,7 +64,7 @@ Two flags are available for every command:
 
 A collection of authentication commands.
 
-### `ssh`
+### `auth ssh`
 
 Add SSH key authentication to the `ddev-ssh-agent` container.
 
@@ -96,7 +96,7 @@ ddev blackfire off
 
 !!!tip
     There are synonyms for the `on` and `off` arguments that have the exact same effect:
-    
+
     * `on`: `start`, `enable`, `true`
     * `off`: `stop`, `disable`, `false`
 
@@ -210,7 +210,7 @@ Flags:
 * `--working-dir-defaults`: Unsets all service working directory overrides.
 * `--xdebug-enabled`: Whether or not Xdebug is enabled in the web container.
 
-### `global`
+### `config global`
 
 Change global configuration.
 
@@ -259,7 +259,7 @@ ddev craft up
 
 A collection of debugging commands.
 
-### `capabilities`
+### `debug capabilities`
 
 Show capabilities of this version of DDEV.
 
@@ -273,7 +273,7 @@ ddev debug capabilities
 ddev debug capabilities my-project
 ```
 
-### `check-db-match`
+### `debug check-db-match`
 
 Verify that the database in the db server matches the configured type/version.
 
@@ -284,7 +284,7 @@ Example:
 ddev debug check-db-match
 ```
 
-### `compose-config`
+### `debug compose-config`
 
 Prints the current project’s docker-compose configuration.
 
@@ -298,7 +298,7 @@ ddev debug compose-config
 ddev debug compose-config my-project
 ```
 
-### `configyaml`
+### `debug configyaml`
 
 Prints the project `config.*.yaml` usage.
 
@@ -312,7 +312,7 @@ ddev debug configyaml
 ddev debug configyaml my-project
 ```
 
-### `dockercheck`
+### `debug dockercheck`
 
 Diagnose DDEV Docker/Colima setup.
 
@@ -323,7 +323,7 @@ Example:
 ddev debug dockerchck
 ```
 
-### `download-images`
+### `debug download-images`
 
 Download all images required by DDEV.
 
@@ -334,7 +334,7 @@ Example:
 ddev debug download-images
 ```
 
-### `fix-commands`
+### `debug fix-commands`
 
 Refreshes [custom command](../extend/custom-commands.md) definitions without running [`ddev start`](#start).
 
@@ -345,9 +345,9 @@ Example:
 ddev debug fix-commands
 ```
 
-### `get-volume-db-version`
+### `debug get-volume-db-version`
 
-Get the database type/version found in the ddev-dbserver’s database volume, which may not be the same as the configured database type/version.
+Get the database type/version found in the `ddev-dbserver` database volume, which may not be the same as the configured database type/version.
 
 Example:
 
@@ -356,7 +356,7 @@ Example:
 ddev debug get-volume-db-version
 ```
 
-### `migrate-database`
+### `debug migrate-database`
 
 Migrate a MySQL or MariaDB database to a different `dbtype:dbversion`. Works only with MySQL and MariaDB, not with PostgreSQL.
 
@@ -367,7 +367,7 @@ Example:
 ddev debug migrate-database mariadb:10.7
 ```
 
-### `mutagen`
+### `debug mutagen`
 
 Allows access to any [Mutagen](https://mutagen.io/documentation/introduction) command.
 
@@ -378,7 +378,7 @@ Example:
 ddev debug mutagen sync list
 ```
 
-### `nfsmount`
+### `debug nfsmount`
 
 Checks to see if NFS mounting works for current project.
 
@@ -389,7 +389,7 @@ Example:
 ddev debug nfsmount
 ```
 
-### `refresh`
+### `debug refresh`
 
 Refreshes the project’s Docker cache.
 
@@ -411,7 +411,7 @@ Example:
 ddev debug router-nginx-config
 ```
 
-### `test`
+### `debug test`
 
 Run diagnostics using the embedded `test_ddev.sh` script.
 
@@ -461,7 +461,7 @@ ddev describe my-project
 
 ## `exec`
 
-*Aliase: `.`.*
+*Alias: `.`.*
 
 Execute a shell command in the container for a service. Uses the web service by default.
 
@@ -709,7 +709,7 @@ ddev logs -s db my-project
 
 Commands for Mutagen status and sync, etc.
 
-### `logs`
+### `mutagen logs`
 
 Show Mutagen logs for debugging.
 
@@ -727,7 +727,7 @@ ddev mutagen logs
 ddev mutagen logs --verbose
 ```
 
-### `monitor`
+### `mutagen monitor`
 
 Monitor Mutagen status.
 
@@ -738,9 +738,9 @@ Example:
 ddev mutagen sync && ddev mutagen monitor
 ```
 
-### `reset`
+### `mutagen reset`
 
-Stops a projecta and removes the Mutagen Docker volume.
+Stops a project and removes the Mutagen Docker volume.
 
 ```shell
 # Reset Mutagen data for the current project
@@ -750,7 +750,7 @@ ddev mutagen reset
 ddev mutagen reset my-project
 ```
 
-### `status`
+### `mutagen status`
 
 Shows Mutagen sync status.
 
@@ -768,7 +768,7 @@ ddev mutagen status
 ddev mutagen status my-project
 ```
 
-### `sync`
+### `mutagen sync`
 
 Explicit sync for Mutagen.
 
@@ -959,7 +959,7 @@ ddev restart --all
 
 Add or remove, enable or disable extra services.
 
-### `disable`
+### `service disable`
 
 Disable a service.
 
@@ -970,7 +970,7 @@ Example:
 ddev service disable solr
 ```
 
-### `enable`
+### `service enable`
 
 Enable a service.
 
@@ -1012,7 +1012,7 @@ ddev share my-project
 
 Create a database snapshot for one or more projects.
 
-This uses `xtrabackup` or `mariabackup` to create a database snapshot in the `.ddev/db_snapshots` directory. These are compatible with server backups using the same tools and can be restored with the [`snapshot restore`](#restore) command.
+This uses `xtrabackup` or `mariabackup` to create a database snapshot in the `.ddev/db_snapshots` directory. These are compatible with server backups using the same tools and can be restored with the [`snapshot restore`](#snapshot-restore) command.
 
 Flags:
 
@@ -1044,7 +1044,7 @@ ddev snapshot --list
 ddev snapshot --all
 ```
 
-### `restore`
+### `snapshot restore`
 
 Restores a database snapshot from the `.ddev/db_snapshots` directory.
 
@@ -1171,8 +1171,8 @@ ddev version
 
 Enable or disable Xdebug (global shell web container command).
 
-- The `on` argument is equivalent to `enable` and `true`.
-- The `off` argument is equivalent to `disable` and `false`.
+* The `on` argument is equivalent to `enable` and `true`.
+* The `off` argument is equivalent to `disable` and `false`.
 
 ```shell
 # Display whether Xdebug is running
@@ -1192,8 +1192,8 @@ ddev xdebug off
 
 Enable or disable Xhprof (global shell web container command).
 
-- The `on` argument is equivalent to `enable` and `true`.
-- The `off` argument is equivalent to `disable` and `false`.
+* The `on` argument is equivalent to `enable` and `true`.
+* The `off` argument is equivalent to `disable` and `false`.
 
 ```shell
 # Display whether Xhprof is running
