@@ -117,7 +117,9 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     * Installing or upgrading to the latest Docker Desktop for Windows with WSL2 enabled.
     * Installing DDEV inside your distro.
 
-    ### WSL2 Scripted Installation
+    ### WSL2 with Docker Desktop Scripted Installation
+
+    This scripted installation prepares your default WSL2 Ubuntu distro for use with Docker Desktop.
 
     You can do these things manually, or you can do most of it with the provided PowerShell script. 
     In all cases:
@@ -127,15 +129,17 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
         wsl --install
         ```
         If that doesn't work for you, see the [manual installation](https://docs.microsoft.com/en-us/windows/wsl/install-manual) and linked [troubleshooting](https://docs.microsoft.com/en-us/windows/wsl/troubleshooting#installation-issues).
+        
+        If you prefer to use another Ubuntu distro, just install it and set it as default. For example, `wsl --set-default Ubuntu-22.04`.
 
     2. Install Docker Desktop. If you already have chocolatey, `choco install -y docker-desktop` or [download Docker Desktop from Docker](https://www.docker.com/products/docker-desktop/).
     3. Start Docker Desktop. You should now be able to do `docker ps` in PowerShell or Git Bash.
 
-    3. Run this script in an administrative PowerShell Window to complete DDEV WSL2 installation:
+    3. Run this script in an administrative PowerShell Window to complete DDEV WSL2 with Docker Desktop installation:
 
         ```powershell
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; 
-        iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2.ps1'))
+        iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_docker_desktop_wsl2.ps1'))
         ```
 
     That should have you all set up. From there, you can use the "Ubuntu" terminal app or Windows Terminal to access your Ubuntu distro, which has DDEV and Docker working in it.

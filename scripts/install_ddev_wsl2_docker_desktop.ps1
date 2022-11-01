@@ -1,5 +1,5 @@
 # This PowerShell script tries to do almost all the things required to set up
-# an Ubuntu WSL2 instance for use with DDEV.
+# an Ubuntu WSL2 instance for use with DDEV and Docker Desktop.
 # It requires that an Ubuntu wsl2 distro be installed already, preferably with `wsl --install`, but it can also be
 # done manually.
 # It requires that Docker Desktop is installed and running, and that it has integration enabled with the Ubuntu
@@ -15,7 +15,7 @@
 if (-not(wsl -l -v)) {
     throw "WSL2 does not seem to be installed yet; please install it with 'wsl --install'"
 }
-# Make sure it's an ubuntu release
+# Make sure default distro an ubuntu release
 if (-not( wsl -e grep ^NAME=.Ubuntu //etc/os-release)) {
     throw "Your installed WSL2 distro does not seem to be Ubuntu. You can certainly use DDEV with WSL2 in another distro, but this script is oriented to Ubuntu."
 }
@@ -37,9 +37,9 @@ choco install -y ddev gsudo mkcert
 mkcert -install
 setx CAROOT "$(mkcert -CAROOT)"; If ($Env:WSLENV -notlike "*CAROOT/up:*") { setx WSLENV "CAROOT/up:$Env:WSLENV" }
 
-wsl -u root bash -c "curl -sL https://apt.fury.io/drud/gpg.key | apt-key add -"
-wsl -u root bash -c "echo 'deb https://apt.fury.io/drud/ * *' > /etc/apt/sources.list.d/ddev.list"
-wsl -u root bash -c "apt-get update >/dev/null && sudo apt-get install -y ddev"
+wsl -u root bash -c "curl -fsSL https://apt.fury.io/drud/gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/ddev.gpg > /dev/null"
+wsl -u root bash -c "echo "deb [signed-by=/etc/apt/trusted.gpg.d/ddev.gpg] https://apt.fury.io/drud/ * *" | sudo tee /etc/apt/sources.list.d/ddev.list"
+wsl -u root bash -c "sudo apt update && sudo apt install -y ddev"
 wsl -u root bash -c "apt-get upgrade -y >/dev/null"
 
 
