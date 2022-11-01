@@ -138,7 +138,7 @@ ddev composer install
 Create or modify a DDEV project configuration in the current directory.
 
 !!!tip "You can also set these via YAML!"
-    These settings, plus a few more, can be set by editing stored [Config Options](../configuration/config.md).
+    These settings, plus a few more, can be set by editing stored [Config Options](../configuration/config_yaml.md).
 
 Example:
 
@@ -579,7 +579,7 @@ ddev hostname somesite.ddev.local 127.0.0.1
 
 ## `import-db`
 
-[Import a SQL file](database-management.md) into the project.
+[Import a SQL file](database_management.md) into the project.
 
 Flags:
 
@@ -986,7 +986,7 @@ ddev service enable solr
 Share project on the internet via [ngrok](https://ngrok.com).
 
 !!!tip
-    Some ngrok arguments are supported via CLI, but *any* ngrok flag can be specified in the [`ngrok_args` config setting](../configuration/config.md#ngrok_args).
+    Some ngrok arguments are supported via CLI, but *any* ngrok flag can be specified in the [`ngrok_args` config setting](../configuration/config_yaml.md#ngrok_args).
 
 Flags:
 
