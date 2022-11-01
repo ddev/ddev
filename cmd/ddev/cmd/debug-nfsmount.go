@@ -53,7 +53,7 @@ var DebugNFSMountCmd = &cobra.Command{
 		if runtime.GOOS == "darwin" && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", app.AppRoot)) {
 			shareDir = filepath.Join("/System/Volumes/Data", app.AppRoot)
 		}
-		volume, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{"type": "nfs", "o": fmt.Sprintf("addr=%s,hard,nolock,rw", nfsServerAddr), "device": ":" + dockerutil.MassageWindowsNFSMount(shareDir)}, nil)
+		volume, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{"type": "nfs", "o": fmt.Sprintf("addr=%s,hard,nolock,rw,wsize=32768,rsize=32768", nfsServerAddr), "device": ":" + dockerutil.MassageWindowsNFSMount(shareDir)}, nil)
 		//nolint: errcheck
 		defer dockerutil.RemoveVolume(testVolume)
 		if err != nil {
