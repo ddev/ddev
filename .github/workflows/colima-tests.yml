@@ -120,8 +120,3 @@ jobs:
         run: |
           ddev poweroff
           colima stop
-      - name: Store test results
-        uses: actions/upload-artifact@v3
-        with:
-          name: ddev-test-results-${{ matrix.webserver }}
-          path: /tmp/testresults/
