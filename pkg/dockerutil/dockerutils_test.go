@@ -509,7 +509,8 @@ func TestRemoveVolume(t *testing.T) {
 	if runtime.GOOS == "darwin" && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", source)) {
 		source = filepath.Join("/System/Volumes/Data", source)
 	}
-	volume, err := CreateVolume(testVolume, "local", map[string]string{"type": "nfs", "o": "addr=host.docker.internal,hard,nolock,rw,wsize=32768,rsize=32768",
+        nfsServerAddr, _ := dockerutils.GetNFSServerAddr()
+	volume, err := CreateVolume(testVolume, "local", map[string]string{"type": "nfs", "o": fmt.Sprintf("addr=%s,hard,nolock,rw,wsize=32768,rsize=32768", nfsServerAddr),
 		"device": ":" + MassageWindowsNFSMount(source)}, nil)
 	assert.NoError(err)
 
