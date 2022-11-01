@@ -77,7 +77,7 @@ ddev auth ssh
 
 Flags:
 
-* `--ssh-key-path`: Full path to SSH key directory.
+* `--ssh-key-path`, `-d`: Full path to SSH key directory.
 
 ## `blackfire`
 
@@ -106,7 +106,7 @@ Removes items DDEV has created.
 
 Flags:
 
-* `--all`: Clean all DDEV projects.
+* `--all`, `-a`: Clean all DDEV projects.
 * `--dry-run`: Run the clean command without deleting.
 
 Example:
@@ -426,10 +426,10 @@ Remove all information, including the database, for an existing project.
 
 Flags:
 
-* `--all`: Delete all projects.
+* `--all`, `-a`: Delete all projects.
 * `--clean-containers`: Clean up all DDEV docker containers not required by this version of DDEV. (default true)
-* `--omit-snapshot`: Omit/skip database snapshot.
-* `--yes`: Skip confirmation prompt.
+* `--omit-snapshot`, `-O`: Omit/skip database snapshot.
+* `--yes`, `-y`: Skip confirmation prompt.
 
 Example:
 
@@ -463,9 +463,9 @@ To run your command in a different service container, run `ddev exec --service <
 
 Flags:
 
-* `--dir`: Defines the execution directory within the container.
+* `--dir`, `-d`: Defines the execution directory within the container.
 * `--raw`: Use raw exec (do not interpret with Bash inside container). (default `true`)
-* `--service`: Defines the service to connect to. (e.g. `web`, `db`) (default `"web"`)
+* `--service`, `-s`: Defines the service to connect to. (e.g. `web`, `db`) (default `"web"`)
 
 Example:
 
@@ -490,9 +490,9 @@ Dump a database to a file or to stdout.
 Flags:
 
 * `--bzip2`: Use bzip2 compression.
-* `--file`: Provide the path to output the dump.
-* `--gzip`: Use gzip compression. (default `true`)
-* `--target-db`: If provided, target-db is alternate database to export. (default `"db"`)
+* `--file`, `-f`: Provide the path to output the dump.
+* `--gzip`, `-z`: Use gzip compression. (default `true`)
+* `--target-db`, `-d`: If provided, target-db is alternate database to export. (default `"db"`)
 * `--xz`: Use xz compression.
 
 Example:
@@ -562,8 +562,8 @@ Manage your hostfile entries.
 
 Flags:
 
-* `--remove`: Remove the provided host name - ip correlation.
-* `--remove-inactive`: Remove host names of inactive projects.
+* `--remove`, `-r`: Remove the provided host name - ip correlation.
+* `--remove-inactive`, `-R`: Remove host names of inactive projects.
 
 Example:
 
@@ -579,9 +579,9 @@ Flags:
 
 * `--extract-path`: If provided asset is an archive, provide the path to extract within the archive.
 * `--no-drop`: Set if you do NOT want to drop the db before importing.
-* `--progress`: Display a progress bar during import. (default `true`)
-* `--src`: Provide the path to a SQL dump in `.sql`, `.tar`, `.tar.gz`, `.tgz`, `.bz2`, `.xx`, or `.zip` format.
-* `--target-db`: If provided, target-db is alternate database to import into. (default `"db"`)
+* `--progress`, `-p`: Display a progress bar during import. (default `true`)
+* `--src`, `-f`: Provide the path to a SQL dump in `.sql`, `.tar`, `.tar.gz`, `.tgz`, `.bz2`, `.xx`, or `.zip` format.
+* `--target-db`, `-d`: If provided, target-db is alternate database to import into. (default `"db"`)
 
 Example:
 
@@ -633,8 +633,8 @@ Launch a browser with the current site (global shell host container command).
 
 Flags:
 
-* `--phpmyadmin`: Open phpMyAdmin.
-* `--mailhog`: Open MailHog.
+* `--phpmyadmin`, `-p`: Open phpMyAdmin.
+* `--mailhog`, `-m`: Open MailHog.
 
 Example:
 
@@ -655,10 +655,10 @@ List projects.
 
 Flags:
 
-* `--active-only`: If set, only currently active projects will be displayed.
+* `--active-only`, `-A`: If set, only currently active projects will be displayed.
 * `--continuous`: If set, project information will be emitted until the command is stopped.
-* `--continuous-sleep-interval`: Time in seconds between `ddev list --continuous` output lists. (default `1`)
-* `--wrap-table`: Display table with wrapped text if required.
+* `--continuous-sleep-interval`, `-I`: Time in seconds between `ddev list --continuous` output lists. (default `1`)
+* `--wrap-table`, `-W`: Display table with wrapped text if required.
 
 Example:
 
@@ -676,10 +676,10 @@ Get the logs from your running services.
 
 Flags:
 
-* `--follow`: Follow the logs in real time.
-* `--service`: Defines the service to retrieve logs from (e.g. `web`, `db`). (default `"web"`)
+* `--follow`, `-f`: Follow the logs in real time.
+* `--service`, `-s`: Defines the service to retrieve logs from (e.g. `web`, `db`). (default `"web"`)
 * `--tail`: How many lines to show.
-* `--time`: Add timestamps to logs.
+* `--time`, `-t`: Add timestamps to logs.
 
 Example:
 
@@ -748,7 +748,7 @@ Shows Mutagen sync status.
 
 Flags:
 
-* `--verbose`: Extended/verbose output for mutagen status.
+* `--verbose`, `-l`: Extended/verbose output for Mutagen status.
 
 Example:
 
@@ -829,7 +829,7 @@ Uses `docker stop` to pause/stop the containers belonging to a project.
 
 Flags:
 
-* `--all`: Pause all running projects.
+* `--all`, `-a`: Pause all running projects.
 
 Example:
 
@@ -875,7 +875,7 @@ Pull files and database using a configured [provider plugin](../providers/).
 
 Flags:
 
-* `--skip-confirmation`: Skip confirmation step.
+* `--skip-confirmation`, `-y`: Skip confirmation step.
 * `--skip-db`: Skip pulling database archive.
 * `--skip-files`: Skip pulling file archive.
 * `--skip-import`: Download archive(s) without importing than.
@@ -919,7 +919,7 @@ Restart one or several projects.
 
 Flags:
 
-* `--all`: Restart all projects.
+* `--all`, `-a`: Restart all projects.
 
 Example:
 
@@ -995,11 +995,11 @@ This uses `xtrabackup` or `mariabackup` to create a database snapshot in the `.d
 
 Flags:
 
-* `--all`: Snapshot all projects. (Will start stopped or paused projects.)
-* `--cleanup`: Cleanup snapshots.
-* `--list`: List snapshots.
-* `--name`: Provide a name for the snapshot.
-* `--yes`: Skip confirmation prompt.
+* `--all`, `-a`: Snapshot all projects. (Will start stopped or paused projects.)
+* `--cleanup`, `-C`: Cleanup snapshots.
+* `--list`, `-l`: List snapshots.
+* `--name`, `-n`: Provide a name for the snapshot.
+* `--yes`, `-y`: Skip confirmation prompt.
 
 Example:
 
@@ -1047,8 +1047,8 @@ Starts a shell session in a service container. Uses the web service by default.
 
 Flags:
 
-* `--dir`: Defines the destination directory within the container.
-* `--service`: Defines the service to connect to. (default `"web"`)
+* `--dir`, `-d`: Defines the destination directory within the container.
+* `--service`, `-s`: Defines the service to connect to. (default `"web"`)
 
 Example:
 
@@ -1072,9 +1072,9 @@ Start a DDEV project.
 
 Flags:
 
-* `--all`: Start all projects.
-* `--select` Interactively select a project to start.
-* `--skip-confirmation`: Skip any confirmation steps.
+* `--all`, `-a`: Start all projects.
+* `--select`, `-s`: Interactively select a project to start.
+* `--skip-confirmation`, `-y`: Skip any confirmation steps.
 
 Example:
 
@@ -1095,13 +1095,13 @@ Stop and remove the containers of a project. Does not lose or harm anything unle
 
 Flags:
 
-* `--all`: Stop and remove all running or container-stopped projects and remove from global projects list.
-* `--omit-snapshot`: Omit/skip database snapshot.
-* `--remove-data`: Remove stored project data (MySQL, logs, etc.).
-* `--select`: Interactively select a project to stop.
-* `--snapshot`: Create database snapshot.
+* `--all`, `-a`: Stop and remove all running or container-stopped projects and remove from global projects list.
+* `--omit-snapshot`, `-O`: Omit/skip database snapshot.
+* `--remove-data`, `-R`: Remove stored project data (MySQL, logs, etc.).
+* `--select`, `-s`: Interactively select a project to stop.
+* `--snapshot`, `-S`: Create database snapshot.
 * `--stop-ssh-agent`: Stop the `ddev-ssh-agent` container.
-* `--unlist`: Remove the project from global project list, so it won’t appear in [`ddev list`](#list) until started again.
+* `--unlist`, `-U`: Remove the project from global project list, so it won’t appear in [`ddev list`](#list) until started again.
 
 Example:
 
