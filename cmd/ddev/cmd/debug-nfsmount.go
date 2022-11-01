@@ -43,10 +43,7 @@ var DebugNFSMountCmd = &cobra.Command{
 
 		nfsServerAddr, err := dockerutil.GetNFSServerAddr()
 		if err != nil {
-			util.Failed("failed to GetHostDockerInternalIP(): %v", err)
-		}
-		if nfsServerAddr == "" {
-			nfsServerAddr = "host.docker.internal"
+			util.Failed("failed to GetNFSServerAddr(): %v", err)
 		}
 		shareDir := app.AppRoot
 		// Workaround for Catalina sharing nfs as /System/Volumes/Data

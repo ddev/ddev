@@ -3396,9 +3396,9 @@ func TestCaptureLogs(t *testing.T) {
 // This requires that the test machine must have NFS shares working
 // Tests using both app-specific nfs_mount_enabled and global nfs_mount_enabled
 func TestNFSMount(t *testing.T) {
-	if dockerutil.IsWSL2() || dockerutil.IsColima() {
-		t.Skip("Skipping on WSL2/Colima")
-	}
+	//if dockerutil.IsWSL2() || dockerutil.IsColima() {
+	//	t.Skip("Skipping on WSL2/Colima")
+	//}
 	if nodeps.MutagenEnabledDefault == true || nodeps.NoBindMountsDefault {
 		t.Skip("Skipping because mutagen/nobindmounts enabled")
 	}
