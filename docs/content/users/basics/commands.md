@@ -918,10 +918,19 @@ Push files and database using a configured [provider plugin](../providers/).
 Example:
 
 ```shell
+# Push local files and database to the configured Pantheon project
 ddev push pantheon
+
+# Push local files and database to the configured Platform.sh project
 ddev push platform
+
+# Push files and database to Pantheon without confirming
 ddev push pantheon -y
+
+# Push database only to Platform.sh without confirming
 ddev push platform --skip-files -y
+
+# Push files only to Acquia without confirming
 ddev push acquia --skip-db -y
 ```
 
