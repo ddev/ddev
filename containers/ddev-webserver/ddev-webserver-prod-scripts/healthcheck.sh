@@ -1,8 +1,10 @@
-#!/bin/bash
+#!/bin/sh
+
+# This uses /bin/sh so it doesn't initialize profile/bashrc/etc
 
 # ddev-webserver healthcheck
 
-set -eo pipefail
+set -e
 
 sleeptime=59
 

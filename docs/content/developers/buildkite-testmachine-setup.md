@@ -61,7 +61,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
     sudo mkdir -p /usr/sharekeyrings && curl -fsSL https://keys.openpgp.org/vks/v1/by-fingerprint/32A37959C2FA5C3C99EFBC32A79206696452D198 | sudo gpg --dearmor -o /usr/share/keyrings/buildkite-agent-archive-keyring.gpg
     echo "deb [signed-by=/usr/share/keyrings/buildkite-agent-archive-keyring.gpg] https://apt.buildkite.com/buildkite-agent stable main" | sudo tee /etc/apt/sources.list.d/buildkite-agent.list
     sudo apt update && sudo apt install -y build-essential buildkite-agent ca-certificates curl ddev gnupg lsb-release make mariadb-client
-    snap install ngrok
+    sudo snap install ngrok
     ```
 
 12. [Configure `buildkite-agent` in WSL2](https://buildkite.com/docs/agent/v3/ubuntu). It needs the same changes as macOS, but tags `tags="os=wsl2,architecture=amd64,dockertype=dockerforwindows"` and build-path should be in `~/tmp/buildkite-agent`.
@@ -78,10 +78,16 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 14. Verify that `buildkite-agent` is running.
 15. In Task Scheduler, create a task that runs on User Logon and runs `C:\Windows\System32\wsl.exe` with arguments `-d Ubuntu`.
 16. Add `buildkite-agent` to the `docker` and `testbot` groups in `/etc/group`
-
-17. `echo "capath=/etc/ssl/certs/" >>~/.curlrc`
+17. `echo "capath=/etc/ssl/certs/" >>~/.curlrc` And then do the same as `buildkite-agent` user
 18. `sudo chmod -R ug+w /home/linuxbrew`
 19. `nc.exe -l -p 9003` on Windows to trigger and allow Windows Defender.
+20. Run `ngrok config add-authtoken <token>` with token for free account.
+21. Copy ngrok config into `buildkite-agent` account, `sudo cp -r ~/.ngrok2 ~buildkite-agent/ && sudo chown -R buildkite-agent:buildkite--agent ~buildkite-agent/ngrok2`
+22. Add `/home/linuxbrew/.linuxbrew/bin` to `PATH` in `/etc/environment`.
+23. Copy ngrok config into `buildkite-agent` account, `sudo cp -r ~/.ngrok2 ~buildkite-agent/ && sudo chown -R buildkite-agent:buildkite--agent ~buildkite-agent/ngrok2`
+24. Add `buildkite-agent` to `sudo` group in `/etc/groups`
+25. Give `buildkite-agent` a password with `sudo passwd buildkite-agent`
+26. As `buildkite-agent` user `mkcert -install`
 
 ## Additional Windows Setup for WSL2+Docker-Inside Testing
 

@@ -138,6 +138,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
     ### Troubleshooting Mutagen Sync Issues
 
     * Please make sure that DDEV projects work *without* mutagen before troubleshooting mutagen. `ddev config --mutagen-enabled=false && ddev restart`.
+    * Rename your project's .ddev/mutagen/mutagen.yml to .ddev/mutagen/mutagen.yml.bak and `ddev restart`. This makes sure you'll have a fresh version in case the file has been changed and `#ddev-generated` removed.
     * `export DDEV_DEBUG=true` will provide more information about what's going on with mutagen.
     * As of DDEV v1.21.2, DDEV's mutagen daemon keeps its data in a DDEV-only MUTAGEN_DATA_DIRECTORY, `~/.ddev_mutagen_data_directory`.
     * DDEV's private mutagen binary is installed in `~/.ddev/bin/mutagen`. You can use all the features of mutagen with `export MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory` and running the mutagen binary in `~/.ddev/bin/mutagen`, for example:and `~/.ddev/bin/mutagen daemon stop`.
@@ -189,6 +190,11 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 === "NFS"
 
     ## NFS
+    
+    !!!warning "macOS Ventura may not work with NFS"
+    
+        A bug in macOS Ventura means that NFS mounting doesn't work for many projects, so Mutagen is recommended instead. Follow [issue](https://github.com/drud/ddev/issues/4122) for details.
+
 
     ### Using NFS to Mount the Project into the Web Container
 
@@ -231,11 +237,11 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 
         * If your projects are in a subdirectory of the `~/Documents` or `~/Desktop` directories, or on an external drive, you must grant “Full Disk Access” privilege to `/sbin/nfsd` in *System Preferences* → *Security & Privacy* → *Privacy*. In the *Full Disk Access* section, click the “+” and add `/sbin/nfsd`:  
 
-            ![screenshot](../images/sbin_nfsd_selection.png)
+            ![Adding /sbin/nfsd to Full Disk Access](../../images/sbin-nfsd-selection.png)
         
             You should then see `nfsd` in the list:  
 
-            ![screenshot](../images/nfsd_full_disk_access.png)
+            ![Enabling full disk access for nfsd](../../images/nfsd-full-disk-access.png)
 
         * Run `sudo nfsd restart`.
         * From a project directory, run `ddev debug nfsmount` to confirm successful output.
@@ -301,7 +307,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
         4. Confirm `~/.ddev/nfs_exports.txt` has a line that includes your project directories, then run `sudo nssm start nfsd` and `nssm status nfsd`. The status command should show `SERVICE_RUNNING`.
         5. These [nssm](https://nssm.cc/) commands may be useful: `nssm help`, `sudo nssm start nfsd`, `sudo nssm stop nfsd`, `nssm status nfsd`, `sudo nssm edit nfsd` (pops up a window that may be hidden), and `sudo nssm remove nfsd` (also pops up a window, doesn’t work predictably if you haven’t already stopped the service).
         6. `nssm` logs failures and what it’s doing to the system event log. Run Event Viewer and filter events:  
-            ![Windows Event Viewer](../images/windows_event_viewer.png)
+            ![Windows Event Viewer](../../images/windows-event-viewer.png)
         7. Please make sure you’ve excluded `winnfsd` from the Windows Defender Firewall per the installation instructions above.
         8. On Windows 10/11 Pro you can visit *Turn Windows features on or off* and enable *Services for NFS* → *Client for NFS*. The `showmount -e` command will then show available exports on the current machine. This can help find out if a conflicting server is running or identifying a problem with exports.
 

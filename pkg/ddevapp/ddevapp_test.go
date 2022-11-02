@@ -255,6 +255,7 @@ var (
 			Type:                          nodeps.AppTypeCraftCms,
 			Docroot:                       "web",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/test.html", Expect: "Thanks for testing Craft CMS"},
+			UploadDir:                     "files",
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Thanks for installing Craft CMS"},
 			FilesImageURI:                 "/files/happy-brad.jpg",
 		},
@@ -745,11 +746,6 @@ func TestDdevNoProjectMount(t *testing.T) {
 
 // TestDdevXdebugEnabled tests running with xdebug_enabled = true, etc.
 func TestDdevXdebugEnabled(t *testing.T) {
-	// 2021-02: I've been unable to make this test work on WSL2, even though it's easy to demonstrate
-	// that it works using PhpStorm, etc. The go listener here doesn't seem to listen on all interfaces.
-	// If you get golang listening, then enter the web container and try to connect to the port golang
-	// is listening on, it can't connect. However, if you use netcat to listen on the wsl2 side and then
-	// connect to it from inside the container, it connects fine.
 	if dockerutil.IsColima() && os.Getenv("DDEV_TEST_COLIMA_ANYWAY") != "true" {
 		t.Skip("Skipping on Colima because this test doesn't work although manual testing works")
 	}

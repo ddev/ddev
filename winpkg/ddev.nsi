@@ -64,7 +64,7 @@
 !define PRODUCT_NAME "DDEV"
 !define PRODUCT_NAME_FULL "${PRODUCT_NAME} Local"
 !define PRODUCT_VERSION "${VERSION}"
-!define PRODUCT_PUBLISHER "Drud Technology LLC"
+!define PRODUCT_PUBLISHER "Localdev Foundation"
 
 !define PRODUCT_WEB_SITE "${PRODUCT_NAME} Website"
 !define PRODUCT_WEB_SITE_URL "https://ddev.readthedocs.io"
@@ -361,7 +361,7 @@ SectionGroup /e "${PRODUCT_NAME_FULL}"
 
     ; Important to enable downgrades from non stable
     SetOverwrite on
-    
+
     ; Copy files
     File "..\.gotmp\bin\windows_amd64\ddev.exe"
     File /oname=license.txt "..\LICENSE"
@@ -738,7 +738,7 @@ Function .onInit
   ; Load last $INSTDIR for upgrades. InstallDirRegKey does not work because of
   ; the usage of SetRegView 64
   ReadRegStr $R0 ${REG_INSTDIR_ROOT} "${REG_INSTDIR_KEY}" "Path"
-  
+
   ${If} ${Errors}
     ; Backward compatibility with older installers
     ReadRegStr $R0 ${REG_INSTDIR_ROOT} "${REG_INSTDIR_KEY}" ""

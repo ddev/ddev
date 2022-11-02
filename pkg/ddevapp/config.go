@@ -851,10 +851,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		return "", err
 	}
 
-	_, _, userName := util.GetContainerUIDGid()
-
-	extraWebContent := fmt.Sprintf("\nRUN chmod 600 ~%s/.pgpass ~%s/.my.cnf", userName, userName)
-	extraWebContent = extraWebContent + fmt.Sprintf("\nENV NVM_DIR=/home/%s/.nvm", userName)
+	extraWebContent := "\nRUN mkdir -p /home/$username && chown $username /home/$username && chmod 600 /home/$username/.pgpass"
 	if app.NodeJSVersion != nodeps.NodeJSDefault {
 		extraWebContent = extraWebContent + "\nRUN (apt-get remove -y nodejs || true) && (apt purge nodejs || true)"
 		// Download of setup_*.sh seems to fail a LOT, probably a problem on their end. So try it twice
@@ -972,7 +969,7 @@ FROM $BASE_IMAGE
 ARG username
 ARG uid
 ARG gid
-RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' --uid $uid "$username" || useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' "$username" || useradd  -l -m -s "/bin/bash" --gid "$gid" --comment '' "$username")
+RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' --uid $uid "$username" || useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' "$username" || useradd  -l -m -s "/bin/bash" --gid "$gid" --comment '' "$username" || useradd -l -m -s "/bin/bash" --comment '' $username )
 `
 	// If there are user pre.Dockerfile* files, insert their contents
 	if userDockerfilePath != "" {
