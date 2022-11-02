@@ -16,6 +16,11 @@ Once DDEV is installed, you can quickly spin up new projects:
 
 DDEV comes ready to work with any PHP project, and has deeper support for several common PHP platforms and content management systems.
 
+!!!tip
+    If you're looking for place to test all these examples and you don't have time to install docker or create new workspace then hit the following button.
+
+    [![New DdevSpace](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/ibrah3m/DdevSpace.git)
+
 === "Generic"
 
     ## Generic
@@ -28,10 +33,10 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     2. Change to the new directory (`cd my-new-project`).
     3. Run `ddev config` and set the project type and docroot, which are usually auto-detected, but may not be if there's no code in there yet.
     4. Run `ddev start`.
-    6. If you’re using Composer, run `ddev composer install`.
-    4. Configure any database settings; host='db', user='db', password='db', database='db'
-    5. If needed, import a database with `ddev import-db --src=/path/to/db.sql.gz`.
-    6. Visit the project in a browser, and then build things.
+    5. If you’re using Composer, run `ddev composer install`.
+    6. Configure any database settings; host='db', user='db', password='db', database='db'
+    7. If needed, import a database with `ddev import-db --src=/path/to/db.sql.gz`.
+    8. Visit the project in a browser, and then build things.
 
 === "WordPress"
 
