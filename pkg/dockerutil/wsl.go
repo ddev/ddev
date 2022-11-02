@@ -1,7 +1,7 @@
 package dockerutil
 
 import (
-	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/fileutil"
 	"os"
 	"runtime"
 )
@@ -14,8 +14,7 @@ func IsWSL2() bool {
 			return true
 		}
 		// But that doesn't always work, so check for existence of wsl.exe
-		_, err := exec.RunHostCommand("command -v wsl.exe")
-		if err == nil {
+		if isWSL2, _ := fileutil.FgrepStringInFile("/proc/version", "-microsoft"); isWSL2 {
 			return true
 		}
 	}
