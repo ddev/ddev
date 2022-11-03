@@ -105,7 +105,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     **WSL2 is the recommended installation method for all Windows users**.
 
-    **Using WSL2 to install and run DDEV is not the same as using Docker Desktop’s WSL2 engine, which itself runs in WSL2, but can serve applications running in both traditional WIndows and inside WSL2.**
+    **Using WSL2 to install and run DDEV is not the same as using Docker Desktop's WSL2 engine, which itself runs in WSL2, but can serve applications running in both traditional WIndows and inside WSL2.**
 
     **All Windows 10/11 editions (including Windows 10 Home) support WSL2**. If you’re already familiar with DDEV on Windows, you might have been using NFS for better filesystem performance. **You won't need NFS anymore once you switch to WSL2**, since it provides awesome filesystem performance out of the box.
 
@@ -117,9 +117,47 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     * Installing or upgrading to the latest Docker Desktop for Windows with WSL2 enabled.
     * Installing DDEV inside your distro.
 
-    We’ll walk through these in more detail. You may prefer other techniques of installation or may not need some steps, but this is the full recipe:
+    ### WSL2 with Docker Desktop Scripted Installation
 
-    1. **Chocolatey:** We recommend using [Chocolatey](https://chocolatey.org/install) for installing required Windows apps like `mkcert`. In an administrative PowerShell, `Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))`
+    This scripted installation prepares your default WSL2 Ubuntu distro for use with Docker Desktop.
+
+    You can do these things manually, or you can do most of it with the provided PowerShell script. 
+    In all cases:
+    
+    1. Install WSL2 with an Ubuntu distro. On a system without WSL2, just run:
+        ```powershell
+        wsl --install
+        ```
+
+        Verify that you have an Ubuntu distro set to default with `wsl -l -v`.
+
+        If you already have WSL2 but don't have an Ubuntu distro, install one with `wsl --install Ubuntu`. 
+
+        If that doesn't work for you, see the [manual installation](https://docs.microsoft.com/en-us/windows/wsl/install-manual) and linked [troubleshooting](https://docs.microsoft.com/en-us/windows/wsl/troubleshooting#installation-issues).
+        
+        If you prefer to use another Ubuntu distro, just install it and set it as default. For example, `wsl --set-default Ubuntu-22.04`.
+
+    2. Install Docker Desktop. If you already have chocolatey, `choco install -y docker-desktop` or [download Docker Desktop from Docker](https://www.docker.com/products/docker-desktop/).
+    3. Start Docker Desktop. You should now be able to do `docker ps` in PowerShell or Git Bash.
+
+    3. Run [this PowerShell script](https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_docker_desktop_wsl2.ps1) in an administrative PowerShell Window to complete DDEV WSL2 with Docker Desktop installation:
+
+        ```powershell
+        Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; 
+        iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_docker_desktop_wsl2.ps1'))
+        ```
+
+    That should have you all set up. From there, you can use the "Ubuntu" terminal app or Windows Terminal to access your Ubuntu distro, which has DDEV and Docker working in it.
+
+    ### WSL2 Manual Installation
+
+    You can do all of the steps manually of course:
+
+    1. Install [Chocolatey](https://chocolatey.org/install):
+        ```powershell
+        Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; 
+        iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))`
+        ```
     2. In an administrative PowerShell: `choco install -y mkcert`
     3. In an administrative PowerShell, run `mkcert -install` and answer the prompt allowing the installation of the Certificate Authority.
     4. In an administrative PowerShell, run the command `setx CAROOT "$(mkcert -CAROOT)"; If ($Env:WSLENV -notlike "*CAROOT/up:*") { setx WSLENV "CAROOT/up:$Env:WSLENV" }`. This will set WSL2 to use the Certificate Authority installed on the Windows side.
