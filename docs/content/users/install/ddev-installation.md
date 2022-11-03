@@ -128,6 +128,11 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
         ```powershell
         wsl --install
         ```
+
+        Verify that you have an Ubuntu distro set to default with `wsl -l -v`.
+
+        If you already have WSL2 but don't have an Ubuntu distro, install one with `wsl --install Ubuntu`. 
+
         If that doesn't work for you, see the [manual installation](https://docs.microsoft.com/en-us/windows/wsl/install-manual) and linked [troubleshooting](https://docs.microsoft.com/en-us/windows/wsl/troubleshooting#installation-issues).
         
         If you prefer to use another Ubuntu distro, just install it and set it as default. For example, `wsl --set-default Ubuntu-22.04`.
@@ -135,7 +140,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     2. Install Docker Desktop. If you already have chocolatey, `choco install -y docker-desktop` or [download Docker Desktop from Docker](https://www.docker.com/products/docker-desktop/).
     3. Start Docker Desktop. You should now be able to do `docker ps` in PowerShell or Git Bash.
 
-    3. Run this script in an administrative PowerShell Window to complete DDEV WSL2 with Docker Desktop installation:
+    3. Run [this PowerShell script](https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_docker_desktop_wsl2.ps1) in an administrative PowerShell Window to complete DDEV WSL2 with Docker Desktop installation:
 
         ```powershell
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; 
