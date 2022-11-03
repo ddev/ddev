@@ -114,8 +114,37 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     * Installing Chocolatey package manager (optional).
     * One time initialization of mkcert.
     * Installing WSL2 and installing a distro like Ubuntu.
-    * Installing or upgrading to the latest Docker Desktop for Windows with WSL2 enabled.
+    * (Optionally) Installing Docker Desktop for Windows and enabling WSL2 integration with the distro.
     * Installing DDEV inside your distro.
+
+    ### WSL2 with Docker-ce Inside Scripted Installation
+
+    This scripted installation prepares your default WSL2 Ubuntu distro for use and has no dependency on Docker Desktop.
+
+    You can do these things manually, or you can do most of it with the provided PowerShell script. 
+    In all cases:
+    
+    1. Install WSL2 with an Ubuntu distro. On a system without WSL2, just run:
+        ```powershell
+        wsl --install
+        ```
+
+        Verify that you have an Ubuntu distro set to default with `wsl -l -v`.
+
+        If you already have WSL2 but don't have an Ubuntu distro, install one with `wsl --install Ubuntu`. 
+
+        If that doesn't work for you, see the [manual installation](https://docs.microsoft.com/en-us/windows/wsl/install-manual) and linked [troubleshooting](https://docs.microsoft.com/en-us/windows/wsl/troubleshooting#installation-issues).
+        
+        If you prefer to use another Ubuntu distro, just install it and set it as default. For example, `wsl --set-default Ubuntu-22.04`.
+
+    2. Run [this PowerShell script](https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1) in an administrative PowerShell Window to complete DDEV WSL2 with Docker Desktop installation:
+
+        ```powershell
+        Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; 
+        iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1'))
+        ```
+
+    Now you can use the "Ubuntu" terminal app or Windows Terminal to access your Ubuntu distro, which has DDEV and Docker working in it.
 
     ### WSL2 with Docker Desktop Scripted Installation
 
@@ -147,9 +176,9 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
         iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_docker_desktop_wsl2.ps1'))
         ```
 
-    That should have you all set up. From there, you can use the "Ubuntu" terminal app or Windows Terminal to access your Ubuntu distro, which has DDEV and Docker working in it.
+    Now you can use the "Ubuntu" terminal app or Windows Terminal to access your Ubuntu distro, which has DDEV and Docker working in it.
 
-    ### WSL2 Manual Installation
+    ### WSL2/Docker Desktop Manual Installation
 
     You can do all of the steps manually of course:
 
@@ -193,7 +222,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ## Traditional Windows
 
-    DDEV does work fine on the Windows side, although it’s quite a bit slower than WSL2 by default. Good results have been reported by users who enabled Mutagen.
+    DDEV does work fine on the Windows side, although it’s quite a bit slower than WSL2 by default. You'll want to enable Mutagen or NFS for tolerable performance. Most users find that Mutagen is the most satisfactory technique. See [Performance](performance.md) for more information, but `ddev config global --mutagen-enabled` is the command to enable mutagen.
 
     * If you use [Chocolatey](https://chocolatey.org/) (recommended), you can run `choco install ddev git` from an administrative shell. Upgrades are just `ddev poweroff && choco upgrade ddev`.
     * A Windows installer is provided in each [DDEV release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you. Open a new Git Bash or PowerShell or cmd window and start using DDEV.
