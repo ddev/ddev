@@ -114,28 +114,28 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     * Installing Chocolatey package manager (optional).
     * One time initialization of mkcert.
     * Installing WSL2 and installing a distro like Ubuntu.
-    * (Optionally) Installing Docker Desktop for Windows and enabling WSL2 integration with the distro.
+    * Installing Docker Desktop for Windows and enabling WSL2 integration with the distro (optional, do this if you're using the Docker Desktop approach).
     * Installing DDEV inside your distro.
 
-    ### WSL2 with Docker-ce Inside Scripted Installation
+    ### WSL2 + Docker CE Inside Install Script
 
-    This scripted installation prepares your default WSL2 Ubuntu distro for use and has no dependency on Docker Desktop.
+    This scripted installation prepares your default WSL2 Ubuntu distro and has no dependency on Docker Desktop.
 
-    You can do these things manually, or you can do most of it with the provided PowerShell script. 
+    The provided PowerShell script can do most of the work for you, or you can handle these things manually. 
     In all cases:
     
-    1. Install WSL2 with an Ubuntu distro. On a system without WSL2, just run:
+    1. Install WSL2 with an Ubuntu distro. On a system without WSL2, run:
         ```powershell
         wsl --install
         ```
 
-        Verify that you have an Ubuntu distro set to default with `wsl -l -v`.
+        Verify that you have an Ubuntu distro set to default by running `wsl -l -v`.
 
-        If you already have WSL2 but don't have an Ubuntu distro, install one with `wsl --install Ubuntu`. 
+        If you already have WSL2 but don't have an Ubuntu distro, install one by running `wsl --install Ubuntu`. 
 
         If that doesn't work for you, see the [manual installation](https://docs.microsoft.com/en-us/windows/wsl/install-manual) and linked [troubleshooting](https://docs.microsoft.com/en-us/windows/wsl/troubleshooting#installation-issues).
         
-        If you prefer to use another Ubuntu distro, just install it and set it as default. For example, `wsl --set-default Ubuntu-22.04`.
+        If you prefer to use another Ubuntu distro, install it and set it as default. For example, `wsl --set-default Ubuntu-22.04`.
 
     2. Run [this PowerShell script](https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1) in an administrative PowerShell Window to complete DDEV WSL2 with Docker Desktop installation:
 
@@ -146,7 +146,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     Now you can use the "Ubuntu" terminal app or Windows Terminal to access your Ubuntu distro, which has DDEV and Docker working in it.
 
-    ### WSL2 with Docker Desktop Scripted Installation
+    ### WSL2 + Docker Desktop Install Script
 
     This scripted installation prepares your default WSL2 Ubuntu distro for use with Docker Desktop.
 
@@ -222,7 +222,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ## Traditional Windows
 
-    DDEV does work fine on the Windows side, although it’s quite a bit slower than WSL2 by default. You'll want to enable Mutagen or NFS for tolerable performance. Most users find that Mutagen is the most satisfactory technique. See [Performance](performance.md) for more information, but `ddev config global --mutagen-enabled` is the command to enable mutagen.
+    DDEV works fine on the Windows side, but it’s slower than WSL2 by default. Enable either [Mutagen](performance/#system-requirements) or [NFS](performance/#nfs) for the best performance.
 
     * If you use [Chocolatey](https://chocolatey.org/) (recommended), you can run `choco install ddev git` from an administrative shell. Upgrades are just `ddev poweroff && choco upgrade ddev`.
     * A Windows installer is provided in each [DDEV release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you. Open a new Git Bash or PowerShell or cmd window and start using DDEV.
