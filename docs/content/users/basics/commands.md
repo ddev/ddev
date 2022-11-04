@@ -124,7 +124,7 @@ ddev clean my-project my-other-project
 
 ## `composer`
 
-Executes a [Composer command](https://getcomposer.org/doc/03-cli.md) within the web container.
+Executes a [Composer command](../basics/developer-tools.md#ddev-and-composer) within the web container.
 
 Example:
 
