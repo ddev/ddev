@@ -66,12 +66,12 @@ Authentication commands.
 
 ### `auth ssh`
 
-Add SSH key authentication to the `ddev-ssh-agent` container.
+Add [SSH key authentication](cli-usage/#ssh-into-containers) to the `ddev-ssh-agent` container.
 
 Example:
 
 ```shell
-# Add your SSH key to the SSH agent container
+# Add your SSH keys to the SSH agent container
 ddev auth ssh
 ```
 
