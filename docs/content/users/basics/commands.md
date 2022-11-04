@@ -81,7 +81,7 @@ Flags:
 
 ## `blackfire`
 
-Enable or disable Blackfire profiling (global shell web container command).
+Enable or disable [Blackfire profiling](../debugging-profiling/blackfire-profiling.md) (global shell web container command).
 
 ```shell
 # Display Blackfire profiling status
