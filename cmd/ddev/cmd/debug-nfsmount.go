@@ -43,17 +43,14 @@ var DebugNFSMountCmd = &cobra.Command{
 
 		nfsServerAddr, err := dockerutil.GetNFSServerAddr()
 		if err != nil {
-			util.Failed("failed to GetHostDockerInternalIP(): %v", err)
-		}
-		if nfsServerAddr == "" {
-			nfsServerAddr = "host.docker.internal"
+			util.Failed("failed to GetNFSServerAddr(): %v", err)
 		}
 		shareDir := app.AppRoot
 		// Workaround for Catalina sharing nfs as /System/Volumes/Data
 		if runtime.GOOS == "darwin" && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", app.AppRoot)) {
 			shareDir = filepath.Join("/System/Volumes/Data", app.AppRoot)
 		}
-		volume, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{"type": "nfs", "o": fmt.Sprintf("addr=%s,hard,nolock,rw", nfsServerAddr), "device": ":" + dockerutil.MassageWindowsNFSMount(shareDir)}, nil)
+		volume, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{"type": "nfs", "o": fmt.Sprintf("addr=%s,hard,nolock,rw,wsize=32768,rsize=32768", nfsServerAddr), "device": ":" + dockerutil.MassageWindowsNFSMount(shareDir)}, nil)
 		//nolint: errcheck
 		defer dockerutil.RemoveVolume(testVolume)
 		if err != nil {

@@ -67,9 +67,3 @@ jobs:
         run: |
           echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN}"
           make ${{ matrix.tests }}
-
-      - name: Store test results
-        uses: actions/upload-artifact@v3
-        with:
-          name: ddev-test-results-${{ matrix.webserver }}
-          path: /tmp/testresults/

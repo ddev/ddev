@@ -1081,9 +1081,9 @@ func GetHostDockerInternalIP() (string, error) {
 // GetNFSServerAddr gets the addrss that can be used for the NFS server.
 // It's almost the same as GetDockerHostInternalIP() but we have
 // to get the actual addr in the case of linux; still, linux rarely
-// is used with NFS.
+// is used with NFS. Returns "host.docker.internal" by default (not empty)
 func GetNFSServerAddr() (string, error) {
-	nfsAddr := ""
+	nfsAddr := "host.docker.internal"
 
 	switch {
 	case IsColima():
