@@ -227,7 +227,7 @@ ddev config global --omit-containers=dba,ddev-ssh-agent
 * `--fail-on-hook-fail`: If true, `ddev start` will fail when a hook fails.
 * `--instrumentation-opt-in`: `instrumentation-opt-in=true`.
 * `--internet-detection-timeout-ms`: Increase timeout when checking internet timeout, in milliseconds. (default `3000`)
-* `--letsencrypt-email`: Email associated with Let’s Encrypt; `ddev global --letsencrypt-email=me@example.com'.
+* `--letsencrypt-email`: Email associated with Let’s Encrypt; `ddev global --letsencrypt-email=me@example.com`.
 * `--mutagen-enabled`: If `true`, web container will use Mutagen caching/asynchronous updates.
 * `--nfs-mount-enabled`: Enable NFS mounting on all projects globally.
 * `--no-bind-mounts`: If `true`, don’t use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible. (default `true`)
