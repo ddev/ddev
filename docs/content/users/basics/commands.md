@@ -443,6 +443,28 @@ ddev delete my-project my-other-project
 ddev delete --omit-snapshot --yes
 ```
 
+### `delete images`
+
+With with `--all`, it deletes all `drud/ddev-*` Docker images.
+
+Flags:
+
+* `--all`, `-a`: If set, deletes all Docker images created by DDEV.
+* `--yes`, `-y`: Skip confirmation prompt.
+
+Example:
+
+```shell
+# Delete images
+ddev delete images
+
+# Delete images and skip confirmation
+ddev delete images -y
+
+# Delete all DDEV-created images
+ddev delete images --all
+```
+
 ## `describe`
 
 *Aliases: `status`, `st`, `desc`.*
