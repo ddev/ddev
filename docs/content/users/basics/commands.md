@@ -62,7 +62,7 @@ Two flags are available for every command:
 
 ## `auth`
 
-A collection of authentication commands.
+Authentication commands.
 
 ### `auth ssh`
 
