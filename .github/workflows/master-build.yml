@@ -112,7 +112,7 @@ jobs:
     steps:
       - name: "setup macOS"
         run: |
-          brew install coreutils gnu-getopt jq xq yq
+          brew install coreutils gnu-getopt jq
       - uses: actions/checkout@v3
         with:
           # We need to get all branches and tags for git describe to work properly

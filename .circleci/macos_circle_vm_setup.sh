@@ -29,8 +29,6 @@ mkdir -p "$(brew --prefix)/etc/my.cnf.d"
 
 mkcert -install
 
-pip3 install -q yq
-
 sudo bash -c "cat <<EOF >/etc/exports
 ${HOME} -alldirs -mapall=$(id -u):$(id -g) localhost
 /private/var -alldirs -mapall=$(id -u):$(id -g) localhost
