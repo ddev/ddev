@@ -24,7 +24,7 @@ Each provider recipe is a file named `<provider>.yaml` and consists of several m
 
 The [environment variables provided to custom commands](../extend/custom-commands.md#environment-variables-provided) are also available for use in these recipes.
 
-There are [hooks](../configuration/hooks.md) available to execute commands before and after each pull or push: `pre-pull`, `post-pull`, `pre-push`, `post-push`. These could be for example a `ddev snapshot` to backup the database before a pull or a specific task to clear/warm-up caches of your application.
+There are [hooks](../configuration/hooks.md) available to execute commands before and after each pull or push: `pre-pull`, `post-pull`, `pre-push`, `post-push`. These could be for example a [`ddev snapshot`](../basics/commands.md#snapshot) to backup the database before a pull or a specific task to clear/warm-up caches of your application.
 
 ## Example Integrations and Hints
 
@@ -35,4 +35,4 @@ There are [hooks](../configuration/hooks.md) available to execute commands befor
 
 You can uncomment the `set -x` in each stanza to see more of what’s going on. It really helps. Watch it as you do a `ddev pull <whatever>`.
 
-Although the various commands could be executed on the host or in other containers if configured that way, most commands are executed in the web container. So the best thing to do is to `ddev ssh` and manually execute each command you want to use. When you have it right, use it in the YAML file.
+Although the various commands could be executed on the host or in other containers if configured that way, most commands are executed in the web container. So the best thing to do is to [`ddev ssh`](../basics/commands.md#ssh) and manually execute each command you want to use. When you have it right, use it in the YAML file.

@@ -11,7 +11,7 @@ All IDEs basically work the same, listening on a port and reacting when they’r
 
 **Key facts:**
 
-* Enable Xdebug by running `ddev xdebug` or `ddev xdebug on` from your project directory.  
+* Enable Xdebug by running [`ddev xdebug`](../basics/commands.md#xdebug) or `ddev xdebug on` from your project directory.  
 It will remain enabled until you start or restart the project.
 * Disable Xdebug for better performance when not debugging with `ddev xdebug off`.
 * `ddev xdebug status` will show Xdebug’s current status.

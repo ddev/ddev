@@ -5,13 +5,13 @@ DDEV attempts to work smoothly offline, and you shouldn’t have to do anything 
 * It doesn’t attempt instrumentation or update reporting if offline
 * It falls back to using `/etc/hosts` entries DNS resolution fails
 
-However, it does not (yet) attempt to prevent Docker pulls if a new Docker image is required, so you’ll want to make sure that you try a `ddev start` before going offline to make sure everything has been pulled.
+However, it does not (yet) attempt to prevent Docker pulls if a new Docker image is required, so you’ll want to make sure that you try a [`ddev start`](../basics/commands.md#start) before going offline to make sure everything has been pulled.
 
-If you have a project running when you’re online (using DNS for name resolution) and you then go offline, you’ll want to do a `ddev restart` to get the hostname added into `/etc/hosts` for name resolution.
+If you have a project running when you’re online (using DNS for name resolution) and you then go offline, you’ll want to do a [`ddev restart`](../basics/commands.md#restart) to get the hostname added into `/etc/hosts` for name resolution.
 
 You have general options as well:
 
-In `.ddev/config.yaml`, `use_dns_when_possible: false` will make DDEV never try to use DNS for resolution, instead adding hostnames to `/etc/hosts`. You can also use `ddev config --use-dns-when-possible=false` to set this configuration option.
+In `.ddev/config.yaml`, [`use_dns_when_possible: false`](../configuration/config_yaml.md#use_dns_when_possible) will make DDEV never try to use DNS for resolution, instead adding hostnames to `/etc/hosts`. You can also use `ddev config --use-dns-when-possible=false` to set this configuration option.
 
 In `.ddev/config.yaml`, you can use `project_tld: example.com` to have DDEV use a project TLD that won’t be looked up via DNS. You can do the equivalent with `ddev config --project-tld=example.com`. This also works as a global option in `~/.ddev/global_config.yaml` or running `ddev config global --project-tld=example.com`.
 

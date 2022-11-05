@@ -135,7 +135,7 @@ ddev composer install
 
 ## `config`
 
-Create or modify a DDEV project configuration in the current directory.
+Create or modify a DDEV project’s configuration in the current directory.
 
 !!!tip "You can also set these via YAML!"
     These settings, plus a few more, can be set by editing stored [Config Options](../configuration/config_yaml.md).
@@ -171,7 +171,7 @@ Flags:
 * `--dba-working-dir-default`: Unsets a dba service working directory override.
 * `--dbimage-extra-packages`: A comma-delimited list of Debian packages that should be added to db container when the project is started.
 * `--default-container-timeout`: Default time in seconds that DDEV waits for all containers to become ready on start. (default `120`)
-* `--disable-settings-management`: Prevent ddev from creating or updating CMS settings files
+* `--disable-settings-management`: Prevent DDEV from creating or updating CMS settings files.
 * `--docroot`: Provide the relative docroot of the project, like `docroot` or `htdocs` or `web`. (defaults to empty, the current directory)
 * `--fail-on-hook-fail`: Decide whether `ddev start` should be interrupted by a failing hook.
 * `--host-db-port`: The db container’s localhost-bound port.
@@ -257,7 +257,7 @@ ddev craft up
 
 *Aliases: `d`, `dbg`.*
 
-A collection of debugging commands.
+A collection of debugging commands, often useful for [troubleshooting](troubleshooting.md).
 
 ### `debug capabilities`
 
@@ -275,7 +275,7 @@ ddev debug capabilities my-project
 
 ### `debug check-db-match`
 
-Verify that the database in the db server matches the configured type/version.
+Verify that the database in the db server matches the configured [type and version](../extend/database_types.md).
 
 Example:
 
@@ -300,7 +300,7 @@ ddev debug compose-config my-project
 
 ### `debug configyaml`
 
-Prints the project `config.*.yaml` usage.
+Prints the project [`config.*.yaml`](../configuration/config_yaml.md) usage.
 
 Example:
 
@@ -347,7 +347,7 @@ ddev debug fix-commands
 
 ### `debug get-volume-db-version`
 
-Get the database type/version found in the `ddev-dbserver` database volume, which may not be the same as the configured database type/version.
+Get the database type and version found in the `ddev-dbserver` database volume, which may not be the same as the configured database [type and version](../extend/database_types.md).
 
 Example:
 
@@ -369,7 +369,7 @@ ddev debug migrate-database mariadb:10.7
 
 ### `debug mutagen`
 
-Allows access to any [Mutagen](https://mutagen.io/documentation/introduction) command.
+Allows access to any [Mutagen command](https://mutagen.io/documentation/introduction).
 
 Example:
 
@@ -380,7 +380,7 @@ ddev debug mutagen sync list
 
 ### `debug nfsmount`
 
-Checks to see if NFS mounting works for current project.
+Checks to see if [NFS mounting](../install/performance.md#nfs) works for current project.
 
 Example:
 
@@ -400,9 +400,9 @@ Example:
 ddev debug refresh
 ```
 
-### `router-nginx-config`
+### `debug router-nginx-config`
 
-Prints the router’s nginx config.
+Prints the router’s [nginx config](../extend/customization-extendibility.md#custom-nginx-configuration).
 
 Example:
 
@@ -413,7 +413,7 @@ ddev debug router-nginx-config
 
 ### `debug test`
 
-Run diagnostics using the embedded `test_ddev.sh` script.
+Run diagnostics using the embedded [test script](https://github.com/drud/ddev/blob/master/cmd/ddev/cmd/scripts/test_ddev.sh).
 
 Example:
 
@@ -485,7 +485,7 @@ ddev describe my-project
 
 *Alias: `.`.*
 
-Execute a shell command in the container for a service. Uses the web service by default.
+[Execute a shell command in the container](../basics/cli-usage.md#executing-commands-in-containers) for a service. Uses the web service by default.
 
 To run your command in a different service container, run `ddev exec --service <service> <cmd>`. Use the `--raw` flag if you’d like to run a raw, uninterpreted command in a container.
 
@@ -729,7 +729,7 @@ ddev logs -s db my-project
 
 ## `mutagen`
 
-Commands for Mutagen status and sync, etc.
+Commands for [Mutagen](../install/performance.md#mutagen) status and sync, etc.
 
 ### `mutagen logs`
 
@@ -979,7 +979,7 @@ ddev restart --all
 
 ## `service`
 
-Add or remove, enable or disable extra services.
+Add or remove, enable or disable [extra services](../extend/additional-services.md).
 
 ### `service disable`
 
@@ -1005,7 +1005,7 @@ ddev service enable solr
 
 ## `share`
 
-Share project on the internet via [ngrok](https://ngrok.com).
+[Share the current project](../topics/sharing.md) on the internet via [ngrok](https://ngrok.com).
 
 !!!tip
     Some ngrok arguments are supported via CLI, but *any* ngrok flag can be specified in the [`ngrok_args` config setting](../configuration/config_yaml.md#ngrok_args).
@@ -1035,6 +1035,8 @@ ddev share my-project
 Create a database snapshot for one or more projects.
 
 This uses `xtrabackup` or `mariabackup` to create a database snapshot in the `.ddev/db_snapshots` directory. These are compatible with server backups using the same tools and can be restored with the [`snapshot restore`](#snapshot-restore) command.
+
+See [Database Management](../basics/database_management.md) for more on working with databases.
 
 Flags:
 
@@ -1169,7 +1171,7 @@ ddev stop --remove-data
 
 ## `tableplus`
 
-Run TablePlus with current project database (global shell host container command).
+Open [TablePlus](https://tableplus.com) with the current project’s database (global shell host container command).
 
 Example:
 
@@ -1191,7 +1193,7 @@ ddev version
 
 ## `xdebug`
 
-Enable or disable Xdebug (global shell web container command).
+Enable or disable [Xdebug](../debugging-profiling/step-debugging.md) (global shell web container command).
 
 * The `on` argument is equivalent to `enable` and `true`.
 * The `off` argument is equivalent to `disable` and `false`.
@@ -1212,7 +1214,7 @@ ddev xdebug off
 
 ## `xhprof`
 
-Enable or disable Xhprof (global shell web container command).
+Enable or disable [Xhprof](../debugging-profiling/xhprof-profiling.md) (global shell web container command).
 
 * The `on` argument is equivalent to `enable` and `true`.
 * The `off` argument is equivalent to `disable` and `false`.
