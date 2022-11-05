@@ -102,7 +102,7 @@ ddev blackfire off
 
 ## `clean`
 
-Removes items DDEV has created.
+Removes items DDEV has created. (See [Uninstalling DDEV](../basics/uninstall.md).)
 
 Flags:
 
