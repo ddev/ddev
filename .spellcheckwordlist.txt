@@ -664,7 +664,6 @@ yml
 you
 your
 yoursite
-yq
 zcompdump
 zsh
 zshrc

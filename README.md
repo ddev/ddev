@@ -1,6 +1,6 @@
 # DDEV
 
-[![CircleCI](https://circleci.com/gh/drud/ddev.svg?style=shield)](https://circleci.com/gh/drud/ddev) ![project is maintained](https://img.shields.io/maintenance/yes/2022.svg)
+[![CircleCI](https://circleci.com/gh/drud/ddev.svg?style=shield)](https://circleci.com/gh/drud/ddev) ![project is maintained](https://img.shields.io/maintenance/yes/2023.svg)
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/drud/ddev)
 
 ![DDEV Logo](images/ddev-logo.svg)
