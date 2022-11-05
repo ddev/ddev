@@ -66,7 +66,7 @@ Authentication commands.
 
 ### `auth ssh`
 
-Add [SSH key authentication](cli-usage/#ssh-into-containers) to the `ddev-ssh-agent` container.
+Add [SSH key authentication](../basics/cli-usage.md#ssh-into-containers) to the `ddev-ssh-agent` container.
 
 Example:
 
