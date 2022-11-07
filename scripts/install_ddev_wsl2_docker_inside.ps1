@@ -21,13 +21,14 @@ if (-not(Compare-Object "root" (wsl -e whoami)) ) {
     throw "The default user in your distro seems to be root. Please configure an ordinary default user"
 }
 # Install Chocolatey if needed
-if (-not(choco 2>&1 >$null)) {
+$testchoco = powershell choco -v
+if (-not($testchoco)) {
     "Chocolatey does not appear to be installed yet, installing"
     $ErrorActionPreference = "Stop"
     Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 }
 
-if (wsl bash "if [ -d /mnt/wsl/docker-desktop ]; then echo yup; fi" ) {
+if (wsl bash -c "test -d /mnt/wsl/docker-desktop >/dev/null 2>&1" ) {
     throw "Docker Desktop integration is enabled with the default distro and it must but turned off."
 }
 $ErrorActionPreference = "Stop"
@@ -37,12 +38,12 @@ choco install -y mkcert
 mkcert -install
 setx CAROOT "$(mkcert -CAROOT)"; If ($Env:WSLENV -notlike "*CAROOT/up:*") { setx WSLENV "CAROOT/up:$Env:WSLENV" }
 
-wsl -u root apt-get remove -y -qq docker docker-engine docker.io containerd runc >/dev/null
+wsl -u root bash -c "apt-get remove -y -qq docker docker-engine docker.io containerd runc >/dev/null 2>&1"
 wsl -u root apt-get update
 wsl -u root apt-get install -y ca-certificates curl gnupg lsb-release
 wsl -u root mkdir -p /etc/apt/keyrings
-wsl -u root bash -c "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg"
-wsl -u root -e bash -c 'echo \"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu  $(lsb_release -cs) stable\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null'
+wsl -u root bash -c "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg"
+wsl -u root -e bash -c 'echo \"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu  $(lsb_release -cs) stable\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null 2>&1'
 
 wsl -u root -e bash -c "curl -fsSL https://apt.fury.io/drud/gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/ddev.gpg > /dev/null"
 wsl -u root -e bash -c 'echo \"deb [signed-by=/etc/apt/trusted.gpg.d/ddev.gpg] https://apt.fury.io/drud/ * *\" > /etc/apt/sources.list.d/ddev.list'

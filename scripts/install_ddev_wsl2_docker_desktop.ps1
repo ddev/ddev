@@ -23,7 +23,8 @@ if (-not(Compare-Object "root" (wsl -e whoami)) ) {
     throw "The default user in your distro seems to be root. Please configure an ordinary default user"
 }
 # Install Chocolatey if needed
-if (-not(choco 2>&1 >$null)) {
+$testchoco = powershell choco -v
+if (-not($testchoco)) {
     "Chocolatey does not appear to be installed yet, installing"
     $ErrorActionPreference = "Stop"
     Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
