@@ -37,7 +37,7 @@ choco install -y mkcert
 mkcert -install
 setx CAROOT "$(mkcert -CAROOT)"; If ($Env:WSLENV -notlike "*CAROOT/up:*") { setx WSLENV "CAROOT/up:$Env:WSLENV" }
 
-wsl -u root apt-get remove -y docker docker-engine docker.io containerd runc
+wsl -u root apt-get remove -y -qq docker docker-engine docker.io containerd runc >/dev/null
 wsl -u root apt-get update
 wsl -u root apt-get install -y ca-certificates curl gnupg lsb-release
 wsl -u root mkdir -p /etc/apt/keyrings
@@ -58,3 +58,13 @@ if (-not(wsl -e docker ps)) {
 }
 
 wsl ddev version
+
+# If Windows 11 (greater than build 22000) then we can get auto docker startup using wsl.conf
+# But if Windows 10, they need to start another way.
+$osv = (Get-CimInstance Win32_OperatingSystem).version
+if ([System.Version]$osv -ge [System.Version]"10.0.22000") {
+    wsl -u root -e bash -c "if fgrep -v '[boot]' /etc/wsl.conf >/dev/null; then printf '\n[boot]\nservice docker start\n' >>/etc/wsl.conf; fi"
+    Write-Output("Windows 11: Added service docker start to /etc/wsl.conf")
+} else {
+    Write-Output("Windows 10: Manual start of docker is required, for example sudo service docker start, see https://ddev.readthedocs.io/en/latest/users/install/ddev-installation/#windows-wsl2")
+}
