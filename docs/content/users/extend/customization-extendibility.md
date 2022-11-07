@@ -58,7 +58,7 @@ hooks:
 
 ### Running Extra Daemons Using `web_extra_daemons`
 
-If you need extra daemons to start up automatically inside the web container, you can easily add them using `web_extra_daemons` in `.ddev/config.yaml`.
+If you need extra daemons to start up automatically inside the web container, you can easily add them using [`web_extra_daemons`](../configuration/config_yaml.md#web_extra_daemons) in `.ddev/config.yaml`.
 
 You might be running Node.js daemons that serve a particular purpose, like `browsersync`, or more general daemons like a `cron` daemon.
 
@@ -82,7 +82,7 @@ web_extra_daemons:
 
 ## Exposing Extra Ports via `ddev-router`
 
-If your `web` container has additional HTTP servers running inside it on different ports, those can be exposed using `web_extra_exposed_ports` in `.ddev/config.yaml`. For example, this configuration would expose a `node-vite` HTTP server running on port 3000 inside the `web` container, via `ddev-router`, to ports 9998 (HTTP) and 9999 (HTTPS), so it could be accessed via `https://<project>.ddev.site:9999`:
+If your `web` container has additional HTTP servers running inside it on different ports, those can be exposed using [`web_extra_exposed_ports`](../configuration/config_yaml.md#web_extra_exposed_ports) in `.ddev/config.yaml`. For example, this configuration would expose a `node-vite` HTTP server running on port 3000 inside the `web` container, via `ddev-router`, to ports 9998 (HTTP) and 9999 (HTTPS), so it could be accessed via `https://<project>.ddev.site:9999`:
 
 ```yaml
 web_extra_exposed_ports:
