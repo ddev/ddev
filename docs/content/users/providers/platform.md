@@ -21,7 +21,7 @@ web_environment:
 
 ## Platform.sh Per-Project Configuration
 
-1. Check out the site from Platform.sh and configure it with `ddev config`. You’ll want to use `ddev start` and make sure the basic functionality is working.
+1. Check out the site from Platform.sh and configure it with [`ddev config`](../basics/commands.md#config). You’ll want to use [`ddev start`](../basics/commands.md#start) and make sure the basic functionality is working.
 2. Add `PLATFORM_PROJECT` and `PLATFORM_ENVIRONMENT` variables to your project.
 
     * Either in `.ddev/config.yaml` or a `.ddev/config.*.yaml` file:
@@ -38,9 +38,9 @@ web_environment:
         ddev config --web-environment-add="PLATFORM_PROJECT=nf4amudfn23bi,PLATFORM_ENVIRONMENT=main"
         ```
 
-3. Run `ddev restart`.
+3. Run [`ddev restart`](../basics/commands.md#restart).
 4. Run `ddev pull platform`. After you agree to the prompt, the current upstream database and files will be downloaded.
-5. Optionally use `ddev push platform` to push local files and database to Platform.sh. The `ddev push` command can potentially damage your production site, so we don’t recommend using it.
+5. Optionally use `ddev push platform` to push local files and database to Platform.sh. The [`ddev push`](../basics/commands.md#push) command can potentially damage your production site, so we don’t recommend using it.
 
 ## Usage
 

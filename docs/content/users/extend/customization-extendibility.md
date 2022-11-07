@@ -4,7 +4,7 @@ DDEV provides several ways to customize and extend project environments.
 
 ## Changing PHP Version
 
-The project's `.ddev/config.yaml` file defines the PHP version to use. The `php_version` can be changed to `5.6`, `7.0`, `7.1`, `7.2`,  `7.3`, `7.4`, `8.0`, `8.1`, or `8.2`. The current default is `8.0`.
+The project's `.ddev/config.yaml` file defines the PHP version to use. The [`php_version`](../configuration/config_yaml.md#php_version) can be changed to `5.6`, `7.0`, `7.1`, `7.2`,  `7.3`, `7.4`, `8.0`, `8.1`, or `8.2`. The current default is `8.0`.
 
 ### Older Versions of PHP
 
@@ -12,7 +12,7 @@ The project's `.ddev/config.yaml` file defines the PHP version to use. The `php_
 
 ## Changing Web Server Type
 
-DDEV supports nginx with php-fpm by default (`nginx-fpm`), and Apache with php-fpm (`apache-fpm`). These can be changed using `webserver_type` in `.ddev/config.yaml`, for example `webserver_type: apache-fpm`.
+DDEV supports nginx with php-fpm by default (`nginx-fpm`), and Apache with php-fpm (`apache-fpm`). These can be changed using [`webserver_type`](../configuration/config_yaml.md#webserver_type) in `.ddev/config.yaml`, for example `webserver_type: apache-fpm`.
 
 ## Adding Services to a Project
 
@@ -26,12 +26,12 @@ If you need to create a service configuration for your project, see [Defining Ad
 
 There are many ways to deploy Node.js in any project, so DDEV tries to let you set up any possibility you can come up with.
 
-* You can choose the Node.js version you want to use in `.ddev/config.yaml` with `nodejs_version`.
-* `ddev nvm` gives you the full capabilities of [Node Version Manager](https://github.com/nvm-sh/nvm).
-* `ddev npm` and `ddev yarn` provide shortcuts to the `npm` and `yarn` commands inside the container, and their caches are persistent.
+* You can choose the Node.js version you want to use in `.ddev/config.yaml` with [`nodejs_version`](../configuration/config_yaml.md#nodejs_version).
+* [`ddev nvm`](../basics/commands.md#nvm) gives you the full capabilities of [Node Version Manager](https://github.com/nvm-sh/nvm).
+* [`ddev npm`](../basics/commands.md#npm) and [`ddev yarn`](../basics/commands.md#yarn) provide shortcuts to the `npm` and `yarn` commands inside the container, and their caches are persistent.
 * You can run Node.js daemons using [`web_extra_daemons`](#running-extra-daemons-in-the-web-container).
 * You can expose Node.js ports via `ddev-router` by using [`web_extra_exposed_ports`](#exposing-extra-ports-via-ddev-router).
-* You can manually run Node.js scripts using `ddev exec <script>` or `ddev exec nodejs <script>`.
+* You can manually run Node.js scripts using [`ddev exec <script>`](../basics/commands.md#exec) or `ddev exec nodejs <script>`.
 
 !!!tip "Please share your techniques!"
     There are several ways to share your favorite Node.js tips and techniques. Best are [ddev-get add-ons](additional-services.md#additional-service-configurations-and-add-ons-for-ddev), [Stack Overflow](https://stackoverflow.com/tags/ddev), and [ddev-contrib](https://github.com/drud/ddev-contrib).
@@ -40,8 +40,8 @@ There are many ways to deploy Node.js in any project, so DDEV tries to let you s
 
 There are several ways to run processes inside the `web` container.
 
-1. Manually execute them as needed, with `ddev exec`, for example.
-2. Run them with a `post-start` hook.
+1. Manually execute them as needed, with [`ddev exec`](../basics/commands.md#exec), for example.
+2. Run them with a `post-start` [hook](../configuration/hooks.md).
 3. Run them automatically using `web_extra_daemons`.
 
 ### Running Extra Daemons with `post-start` Hook
@@ -78,7 +78,7 @@ web_extra_daemons:
 * `command` is best as a simple binary with its arguments, but Bash features like `cd` or `&&` work. If the program to be run is not in the `ddev-webserver` `$PATH` then it should have the absolute in-container path to the program to be run, like `/var/www/html/node_modules/.bin/http-server`.
 * `web_extra_daemons` is a shortcut for adding a configuration to `supervisord`, which organizes daemons inside the web container. If the default settings are inadequate for your use, you can write a [complete config file for your daemon](#explicit-supervisord-configuration-for-additional-daemons).
 * Your daemon is expected to run in the foreground, not to daemonize itself, `supervisord` will take care of that.
-* To see the results of the attempt to start your daemon, see `ddev logs` or `docker logs ddev-<project>-web`.
+* To see the results of the attempt to start your daemon, see [`ddev logs`](../basics/commands.md#logs) or `docker logs ddev-<project>-web`.
 
 ## Exposing Extra Ports via `ddev-router`
 
@@ -111,7 +111,7 @@ web_extra_exposed_ports:
 
 ## Providing Custom Environment Variables to a Container
 
-Custom environment variables may be set in the project’s `.ddev/config.yaml` or the global `~/.ddev/global_config.yaml` with the `web_environment` key:
+Custom environment variables may be set in the project’s `.ddev/config.yaml` or the global `~/.ddev/global_config.yaml` with the [`web_environment`](../configuration/config_yaml.md#web_environment) key:
 
 ```yaml
 web_environment:
@@ -128,7 +128,6 @@ services:
   web:
     env_file:
       - ../.env
-
 ```
 
 You would create the `.env` file in the project root and provide globals within it as such:
@@ -157,19 +156,19 @@ export PATH=$PATH:/var/www/html/somewhereelse/vendor/bin
 
 ## Custom nginx Configuration
 
-When you `ddev start` using `nginx-fpm`, DDEV creates a configuration customized to your project type in `.ddev/nginx_full/nginx-site.conf`. You can edit and override the configuration by removing the `#ddev-generated` line and doing whatever you need with it. After each change, `ddev start`.
+When you [`ddev start`](../basics/commands.md#start) using `nginx-fpm`, DDEV creates a configuration customized to your project type in `.ddev/nginx_full/nginx-site.conf`. You can edit and override the configuration by removing the `#ddev-generated` line and doing whatever you need with it. After each change, `ddev start`.
 
 You can also have more than one config file in the `.ddev/nginx_full` directory, they will all get loaded when DDEV starts. This can be used for [serving multiple docroots](#multiple-docroots-in-nginx-advanced) and other techniques.
 
 ### Troubleshooting nginx Configuration
 
-* Any errors in your configuration may cause the `web` container to fail and try to restart. If you see that behavior, use `ddev logs` to diagnose.
-* You can `ddev exec nginx -t` to test whether your configuration is valid. (Or `ddev ssh` and run `nginx -t`.)
-* You can reload the nginx configuration either with `ddev start` or `ddev exec nginx -s reload`.
+* Any errors in your configuration may cause the `web` container to fail and try to restart. If you see that behavior, use [`ddev logs`](../basics/commands.md#logs) to diagnose.
+* You can run `ddev exec nginx -t` to test whether your configuration is valid. (Or run [`ddev ssh`](../basics/commands.md#ssh) and run `nginx -t`.)
+* You can reload the nginx configuration either with [`ddev start`](../basics/commands.md#start) or `ddev exec nginx -s reload`.
 * The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the health check script to work.
 
 !!!warning "Important!"
-    Changes to configuration take place on a `ddev restart`, when the container is rebuilt for another reason, or when the nginx server receives the reload signal.
+    Changes to configuration take place on a [`ddev restart`](../basics/commands.md#restart), when the container is rebuilt for another reason, or when the nginx server receives the reload signal.
 
 ### Multiple Docroots in nginx (Advanced)
 
@@ -191,17 +190,17 @@ For example, to make all HTTP URLs redirect to their HTTPS equivalents you might
 
 ## Custom Apache Configuration
 
-If you’re using `webserver_type: apache-fpm` in your `.ddev/config.yaml`, you can override the default site configuration by editing or replacing the DDEV-provided `.ddev/apache/apache-site.conf` configuration.
+If you’re using [`webserver_type: apache-fpm`](../configuration/config_yaml.md#webserver_type) in your `.ddev/config.yaml`, you can override the default site configuration by editing or replacing the DDEV-provided `.ddev/apache/apache-site.conf` configuration.
 
 * Edit the `.ddev/apache/apache-site.conf`.
 * Add your configuration changes.
-* Save your configuration file and run `ddev start` to reload the project. If you encounter issues with your configuration or the project fails to start, use `ddev logs` to inspect the logs for possible Apache configuration errors.
+* Save your configuration file and run [`ddev start`](../basics/commands.md#start) to reload the project. If you encounter issues with your configuration or the project fails to start, use [`ddev logs`](../basics/commands.md#logs) to inspect the logs for possible Apache configuration errors.
 * Use `ddev exec apachectl -t` to do a general Apache syntax check.
 * The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the health check script to work.
 * Any errors in your configuration may cause the `web` container to fail. If you see that behavior, use `ddev logs` to diagnose.
 
 !!!warning "Important!"
-    Changes to `.ddev/apache/apache-site.conf` take place on a `ddev restart`. You can also `ddev exec apachectl -k graceful` to reload the Apache configuration.
+    Changes to `.ddev/apache/apache-site.conf` take place on a [`ddev restart`](../basics/commands.md#restart). You can also `ddev exec apachectl -k graceful` to reload the Apache configuration.
 
 ## Custom PHP Configuration (`php.ini`)
 
@@ -211,7 +210,7 @@ You should generally limit your override to any specific option(s) you need to c
 
 One interesting implication of this behavior is that it’s possible to disable extensions by replacing the configuration file that loads them. For instance, if you were to create an empty file at `.ddev/php/20-xdebug.ini`, it would replace the configuration that loads Xdebug, which would cause Xdebug to not be loaded!
 
-To load the new configuration, run `ddev restart`.
+To load the new configuration, run [`ddev restart`](../basics/commands.md#restart).
 
 An example file in `.ddev/php/my-php.ini` might look like this:
 
@@ -233,17 +232,17 @@ character-set-server = utf8
 innodb_large_prefix=false
 ```
 
-To load the new configuration, run `ddev restart`.
+To load the new configuration, run [`ddev restart`](../basics/commands.md#restart).
 
 ## Custom PostgreSQL Configuration
 
-If you’re using PostgreSQL, a default `posgresql.conf` is provided in `.ddev/postgres/postgresql.conf`. If you need to alter it, remove the `#ddev-generated` line and `ddev restart`.
+If you’re using PostgreSQL, a default `posgresql.conf` is provided in `.ddev/postgres/postgresql.conf`. If you need to alter it, remove the `#ddev-generated` line and [`ddev restart`](../basics/commands.md#restart).
 
 ## Extending `config.yaml` with Custom `config.*.yaml` Files
 
 You may add additional `config.*.yaml` files to organize additional commands as you see fit for your project and team.
 
-For example, many teams commit their `config.yaml` and share it throughout the team, but some team members may require overrides to the checked-in version specifically for their environment and not checked in. For example, a team member may want to use a `router_http_port` other than the team default due to a conflict in their development environment. In this case they could add `.ddev/config.ports.yaml`:
+For example, many teams commit their `config.yaml` and share it throughout the team, but some team members may require overrides to the checked-in version specifically for their environment and not checked in. For example, a team member may want to use a [`router_http_port`](../configuration/config_yaml.md#router_http_port) other than the team default due to a conflict in their development environment. In this case they could add `.ddev/config.ports.yaml`:
 
 ```yaml
 # My machine can’t use port 80 so override with port 8080, but don’t check this in!
@@ -258,12 +257,12 @@ Teams may choose to use `config.local.yaml` or `config.override.yaml` for all lo
 
 `config.*.yaml` update configuration according to these rules:
 
-1. Simple fields like `router_http_port` or `webserver_type` are overwritten.
-2. Lists of strings like `additional_hostnames` or `additional_fqdns` are merged.
-3. The list of environment variables in `web_environment` are “smart merged”: if you add the same environment variable with a different value, the value in the override file will replace the value from `config.yaml`.
-4. Hook specifications in the `hooks` variable are merged.
+1. Simple fields like [`router_http_port`](../configuration/config_yaml.md#router_http_port) or [`webserver_type`](../configuration/config_yaml.md#webserver_type) are overwritten.
+2. Lists of strings like [`additional_hostnames`](../configuration/config_yaml.md#additional_hostnames) or [`additional_fqdns`](../configuration/config_yaml.md#additional_fqdns) are merged.
+3. The list of environment variables in [`web_environment`](../configuration/config_yaml.md#web_environment) are “smart merged”: if you add the same environment variable with a different value, the value in the override file will replace the value from `config.yaml`.
+4. Hook specifications in the [`hooks`](../configuration/config_yaml.md#hooks) variable are merged.
 
-If you need to *override* existing values, set `override_config: true` in the `config.*.yaml` where the override behavior should take place. Since `config.*.yaml` files are normally *merged* into the configuration, some things can’t be overridden normally. For example, if you have `nfs_mount_enabled: true` you can’t override it with a merge and you can’t erase existing hooks or all environment variables. However, with `override_config: true` in a particular `config.*.yaml` file,
+If you need to *override* existing values, set [`override_config: true`](../configuration/config_yaml.md#override_config) in the `config.*.yaml` where the override behavior should take place. Since `config.*.yaml` files are normally *merged* into the configuration, some things can’t be overridden normally. For example, if you have [`nfs_mount_enabled: true`](../configuration/config_yaml.md#nfs_mount_enabled) you can’t override it with a merge and you can’t erase existing hooks or all environment variables. However, with `override_config: true` in a particular `config.*.yaml` file,
 
 ```yaml
 override_config: true
@@ -287,9 +286,9 @@ additional_hostnames: []
 
 can have their intended affect.
 
-`override_config` affects only behavior of the `config.*.yaml` file it exists in.
+[`override_config`](../configuration/config_yaml.md#override_config) affects only behavior of the `config.*.yaml` file it exists in.
 
-To experiment with the behavior of a set of `config.*.yaml` files, use the `ddev debug configyaml` file; it’s especially valuable with the `yq` command, for example `ddev debug configyaml | yq`.
+To experiment with the behavior of a set of `config.*.yaml` files, use the [`ddev debug configyaml`](../basics/commands.md#debug-configyaml) file; it’s especially valuable with the `yq` command, for example `ddev debug configyaml | yq`.
 
 ## Explicit `supervisord` Configuration for Additional Daemons
 

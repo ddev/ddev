@@ -163,6 +163,7 @@ auth
 authentication
 autocomplete
 autodetect
+autodetected
 authtoken
 autoload
 autologin

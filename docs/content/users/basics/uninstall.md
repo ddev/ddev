@@ -8,13 +8,13 @@ A DDEV installation consists of:
 * The associated Docker images and containers DDEV created.
 * Any entries in `/etc/hosts`.
 
-Please use `ddev snapshot` or `ddev export-db` to make backups of your databases before deleting projects or uninstalling.
+Please use [`ddev snapshot`](commands.md#snapshot) or [`ddev export-db`](commands.md#export-db) to make backups of your databases before deleting projects or uninstalling.
 
-You can use `ddev clean` to uninstall the vast majority of things DDEV has touched. For example, `ddev clean <project>` or `ddev clean --all`.
+You can use [`ddev clean`](commands.md#clean) to uninstall the vast majority of things DDEV has touched. For example, `ddev clean <project>` or `ddev clean --all`.
 
-To uninstall just a project: `ddev delete <project>`. This removes any hostnames in `/etc/hosts` and removes your database. If you don’t want it to make a database backup/snapshot on the way down, include the `--omit-snapshot` option: `ddev delete --omit-snapshot <project>`.
+To uninstall just a project: [`ddev delete <project>`](commands.md#delete). This removes any hostnames in `/etc/hosts` and removes your database. If you don’t want it to make a database backup/snapshot on the way down, include the `--omit-snapshot` option: `ddev delete --omit-snapshot <project>`.
 
-To remove all DDEV-owned `/etc/hosts` entries: `ddev hostname --remove-inactive`.
+To remove all DDEV-owned `/etc/hosts` entries: [`ddev hostname --remove-inactive`](commands.md#hostname).
 
 To remove the global `.ddev` directory: `rm -r ~/.ddev`.
 
@@ -22,7 +22,7 @@ If you installed Docker just for DDEV and want to uninstall it with all containe
 
 Otherwise:
 
-* Remove Docker images from before the current DDEV release with `ddev delete images`.
+* Remove Docker images from before the current DDEV release with [`ddev delete images`](commands.md#delete-images).
 * Remove all DDEV Docker containers that might still exist: `docker rm $(docker ps -a | awk '/ddev/ { print $1 }')`.
 * Remove all DDEV Docker images that might exist: `docker rmi $(docker images | awk '/ddev/ {print $3}')`.
 * Remove all Docker images of any type (does no harm; they’ll be re-downloaded): `docker rmi -f $(docker images -q)`.

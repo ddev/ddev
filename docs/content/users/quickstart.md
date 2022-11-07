@@ -3,16 +3,16 @@
 Once DDEV is installed, you can quickly spin up new projects:
 
 1. Clone or create the code for your project.
-2. `cd` into the project directory and run `ddev config` to initialize a DDEV project.  
+2. `cd` into the project directory and run [`ddev config`](../users/basics/commands.md#config) to initialize a DDEV project.  
     It automatically detects your project type and docroot—make sure it’s accurate!
-3. Run `ddev start` to spin up the project.  
-    If your project needs it, don’t forget to run `ddev composer install`.
-4. Import a database with `ddev import-db`.
-5. Optionally import user-managed files with `ddev import-files`.
-6. Run `ddev launch` to open your project in a browser, or visit the URL given by `ddev start`.
+3. Run [`ddev start`](../users/basics/commands.md#start) to spin up the project.  
+    If your project needs it, don’t forget to run [`ddev composer install`](../users/basics/commands.md#composer).
+4. Import a database with [`ddev import-db`](../users/basics/commands.md#import-db).
+5. Optionally import user-managed files with [`ddev import-files`](../users/basics/commands.md#import-files).
+6. Run [`ddev launch`](../users/basics/commands.md#launch) to open your project in a browser, or visit the URL given by [`ddev start`](../users/basics/commands.md#start).
 
 !!!tip
-    While you’re getting your bearings, use `ddev describe` to get project details, and `ddev help` to investigate commands.
+    While you’re getting your bearings, use [`ddev describe`](../users/basics/commands.md#describe) to get project details, and [`ddev help`](../users/basics/commands.md#help) to investigate commands.
 
 DDEV comes ready to work with any PHP project, and has deeper support for several common PHP platforms and content management systems.
 
@@ -26,11 +26,11 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     
     1. Create a directory (`mkdir my-new-project`) or clone your project (`git clone <your_project>`).
     2. Change to the new directory (`cd my-new-project`).
-    3. Run `ddev config` and set the project type and docroot, which are usually auto-detected, but may not be if there's no code in there yet.
-    4. Run `ddev start`.
-    6. If you’re using Composer, run `ddev composer install`.
+    3. Run [`ddev config`](../users/basics/commands.md#config) and set the project type and docroot, which are usually auto-detected, but may not be if there's no code in there yet.
+    4. Run [`ddev start`](../users/basics/commands.md#start).
+    6. If you’re using Composer, run [`ddev composer install`](../users/basics/commands.md#composer).
     4. Configure any database settings; host='db', user='db', password='db', database='db'
-    5. If needed, import a database with `ddev import-db --src=/path/to/db.sql.gz`.
+    5. If needed, import a database with [`ddev import-db --src=/path/to/db.sql.gz`](../users/basics/commands.md#import-db).
     6. Visit the project in a browser, and then build things.
 
 === "WordPress"
@@ -94,7 +94,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         WP_ENV=development
         ```
     
-        You can then run `ddev start` and `ddev launch`.
+        You can then run [`ddev start`](../users/basics/commands.md#start) and [`ddev launch`](../users/basics/commands.md#launch).
     
         For more details, see [Bedrock installation](https://docs.roots.io/bedrock/master/installation/).
 
@@ -102,7 +102,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     
         ### Git Clone
 
-        To get started using DDEV with an existing WordPress project, clone the project's repository. Note that the git URL shown here is just an example.
+        To get started using DDEV with an existing WordPress project, clone the project’s repository. Note that the git URL shown here is just an example.
         
         ```bash
         git clone https://github.com/example/example-site.git
@@ -110,7 +110,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         ddev config
         ```
         
-        You'll see a message like:
+        You’ll see a message like:
         
         ```php
         An existing user-managed wp-config.php file has been detected!
@@ -134,9 +134,9 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         in your wp-config.php
         ```
         
-        So just add the suggested include into your wp-config.php, or take the workaround shown.
+        So just add the suggested include into your `wp-config.php`, or take the workaround shown.
         
-        Now start your project with `ddev start`
+        Now start your project with [`ddev start`](../users/basics/commands.md#start).
         
         Quickstart instructions regarding database imports can be found under [Importing a database](#importing-a-database).
 
@@ -247,9 +247,9 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
 
     1. Download OpenMage from [release page](https://github.com/OpenMage/magento-lts/releases).
     2. Make a directory for it, for example `mkdir ~/workspace/OpenMage` and change to the new directory `cd ~/workspace/OpenMage`.
-    3. `ddev config` and accept the defaults.
+    3. Run [`ddev config`](../users/basics/commands.md#config) and accept the defaults.
     4. Install sample data. (See below.)
-    5. Run `ddev start`.
+    5. Run [`ddev start`](../users/basics/commands.md#start).
     6. Follow the URL to the base site.
 
     You may want the [Magento 1 Sample Data](https://github.com/Vinai/compressed-magento-sample-data) for experimentation:
@@ -298,9 +298,8 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     ddev exec 'php public/admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
     ddev launch /login
     ```
-    In the web browser:
-
-    * Login into your account using `admin` and `password`.
+    
+    In the web browser, log into your account using `admin` and `password`.
 
     Visit the [Moodle Admin Quick Guide](https://docs.moodle.org/400/en/Admin_quick_guide) for more information.
 
@@ -376,9 +375,11 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     This is handy if you have a local database installed and want to switch between the connections by changing only one variable in `.env`.
 
     ### Using Vite
+
     The default Laravel Vite template doesn’t work with DDEV, so you’ll need to set up a Vite server and configure Laravel to use it.
 
     #### Set Up a Vite Server
+
     Install the [ddev-viteserve](https://github.com/torenware/ddev-viteserve) add-on.
     ```bash
     ddev get torenware/ddev-viteserve
@@ -387,15 +388,18 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     
     In `.ddev/.env` add `VITE_JS_PACKAGE_MGR=npm`. This tells `ddev-viteserve` to use `npm` to manage packages, and helps keep dependencies in sync.
 
-    Next add the following line to the post-install hook in your `.ddev/config.yaml`
+    Next add the following line to the post-install hook in your `.ddev/config.yaml`:
+
     ```bash
     hooks:
         post-start:
             - exec: .ddev/commands/web/vite-serve
     ```
-    This will spin up a Vite development server on port `5173` whenever you `ddev restart`
+
+    This will spin up a Vite development server on port `5173` whenever you run [`ddev restart`](../users/basics/commands.md#restart)
 
     Next expose your DDEV hostname by adding the following to your `.ddev/config.yaml`
+
     ```bash
     web_environment:
         - VITE_APP_URL=${DDEV_HOSTNAME}
@@ -403,11 +407,14 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
 
     #### Configuring Laravel
     
-    The default `vite.config.js` will not yet work with our DDEV environment. Lets start by installing the Vite and laravel-vite-plugin
+    The default `vite.config.js` will not yet work with our DDEV environment. Let’s start by installing the Vite and `laravel-vite-plugin`:
+
     ```
     ddev npm i -D laravel-vite-plugin vite
     ```
-    Then replace the default template with the following. _Note that this script uses the exposed VITE_APP_URL from earlier_
+
+    Then replace the default template with the following. _Note that this script uses the exposed `VITE_APP_URL` from earlier_
+
     ```js
     import laravel from 'laravel-vite-plugin';
     import { defineConfig, loadEnv } from 'vite'
@@ -431,15 +438,18 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         }
     })
     ```
+
     Add any plugins you need, like Vue, to the `plugins` array. **Careful with changes to server properties that often cause CORS errors!**
     
     Finally, add the following to the head of the `welcome.blade.php` file:
+
     ```php
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     ```
 
     #### Finalize
-    Apply the server changes and Laravel configuration by running `ddev restart`.
+
+    Apply the server changes and Laravel configuration by running [`ddev restart`](../users/basics/commands.md#restart).
 
     !!!tip "No need for `npm run dev`!"
         You don’t need to use `npm run dev`, since this attempts to run a local Vite server with the `vite` command. The `ddev-viteserve` add-on takes care of that Vite server for us.
@@ -500,7 +510,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
 
     DDEV will automatically setup your `.env` so it will work properly for local development, so the default settings displayed in the `ddev craft setup/welcome` command can be used. Change them only if you need to override a particular setting.
 
-    If you have an existing Craft CMS DDEV project, you'll need to change the `type:` to `craftcms` in your project's `.ddev/config.yaml` and then do `ddev restart` to be able to use the `ddev craft` command.
+    If you have an existing Craft CMS DDEV project, you'll need to change the `type:` to `craftcms` in your project’s `.ddev/config.yaml` and then do [`ddev restart`](../users/basics/commands.md#restart) to be able to use the [`ddev craft`](../users/basics/commands.md#craft) command.
 
     If you have Craft CMS installed in a sub-directory of your project, in order for `ddev craft` to work, you will need to change the location of the `craft` executable by providing the `CRAFT_CMD_ROOT` environment variable to the web container in your project. For example, if your directory structure is `my-craft-project/app`, where Craft CMS is installed in `app`, then you would apply `ddev config --web-environment-add=CRAFT_CMD_ROOT=./app`. `CRAFT_CMD_ROOT` defaults to `./`, the project root directory. Run `ddev restart` after applying this change.
     
@@ -543,7 +553,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
 
 ## Configuration Files
 
-The `ddev config` command attempts to create a CMS-specific settings file pre-populated with DDEV credentials.
+The [`ddev config`](../users/basics/commands.md#config) command attempts to create a CMS-specific settings file pre-populated with DDEV credentials.
 
 For **Drupal** and **Backdrop**, DDEV settings are written to a DDEV-managed file, `settings.ddev.php`. The `ddev config` command will ensure these settings are included in your `settings.php` through the following steps:
 
@@ -589,7 +599,7 @@ If you’re providing the `settings.php` or `wp-config.php` and DDEV is creating
 
 ## Listing Project Information
 
-`ddev list` or `ddev list --active-only` current projects.
+Run [`ddev list`](../users/basics/commands.md#list) or `ddev list --active-only` current projects.
 
 ```
 
@@ -610,7 +620,7 @@ drupal8  drupal8  ~/workspace/drupal8  <http://drupal8.ddev.site>   running
 
 ```
 
-You can also see more detailed information about a project by running `ddev describe` from its working directory. You can also run `ddev describe [project-name]` from any location to see the detailed information for a running project.
+You can also see more detailed information about a project by running [`ddev describe`](../users/basics/commands.md#describe) from its working directory. You can also run `ddev describe [project-name]` from any location to see the detailed information for a running project.
 
 ```
 NAME        TYPE     LOCATION                URL                           STATUS
@@ -656,13 +666,13 @@ ssh-auth status: healthy
 
 There are two ways to remove a project from DDEV’s listing.
 
-The first is destructive. It removes the project from DDEV’s list, deletes its database, and removes the hostname entry from the hosts file:
+The first, the [`ddev delete`](../users/basics/commands.md#delete) command, is destructive. It removes the project from DDEV’s list, deletes its database, and removes the hostname entry from the hosts file:
 
 `ddev delete <projectname>`  
 or  
 `ddev delete --omit-snapshot <projectname>`
 
-If you simply don’t want the project to show up in `ddev list` anymore, use this nondestructive command to unlist it until the next time you run `ddev start` or `ddev config`:
+If you simply don’t want the project to show up in [`ddev list`](../users/basics/commands.md#list) anymore, use [`ddev stop`](../users/basics/commands.md#stop)—which is nondestructive—to unlist the project until the next time you run [`ddev start`](../users/basics/commands.md#start) or [`ddev config`](../users/basics/commands.md#config):
 
 ```bash
 ddev stop --unlist <projectname>
@@ -674,7 +684,7 @@ An important aspect of local web development is the ability to have a precise lo
 
 ### Importing a Database
 
-The `ddev import-db` imports the database for a project. Running this command will prompt you to specify the location of your database import. By default `ddev import-db` empties the default `db` database, then loads the provided dump file. Most people use it with command flags, like `ddev import-db --src=.tarballs/db.sql.gz`, but it can also prompt for the location of the dump if you only use `ddev import-db`:
+The [`ddev import-db`](../users/basics/commands.md#import-db) command imports the database for a project. Running this command will prompt you to specify the location of your database import. By default `ddev import-db` empties the default `db` database, then loads the provided dump file. Most people use it with command flags, like `ddev import-db --src=.tarballs/db.sql.gz`, but it can also prompt for the location of the dump if you only use `ddev import-db`:
 
 ```bash
 ddev import-db
@@ -714,7 +724,7 @@ Successfully imported database for drupal8
 
 #### Non-Interactive Usage
 
-If you want to use `import-db` without answering prompts, you can use the `--src` flag to provide the path to the import asset. If you’re importing an archive and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag. Examples:
+If you want to use the [`import-db`](../users/basics/commands.md#import-db) command without answering prompts, you can use the `--src` flag to provide the path to the import asset. If you’re importing an archive and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag. Examples:
 
 ```bash
 ddev import-db --src=/tmp/mydb.sql.gz

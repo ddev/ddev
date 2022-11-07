@@ -25,7 +25,7 @@ If you have DDEV installed, and have an active Pantheon account with an active s
 
 5. Check out the project codebase from Pantheon. Enable the “Git Connection Mode” and use `git clone` to check out the code locally.
 
-6. Configure the local checkout for DDEV using `ddev config`.
+6. Configure the local checkout for DDEV using [`ddev config`](../basics/commands.md#config).
 
 7. If using Drupal 8+, verify that Drush is installed in your project with `ddev composer require drush/drush`. If using Drupal 6 or 7, Drush 8 is already provided in the web container’s `/usr/local/bin/drush`, so you can skip this step.
 
@@ -33,8 +33,8 @@ If you have DDEV installed, and have an active Pantheon account with an active s
 
 9. If using Colima, may need to set an explicit nameserver in `~/.colima/default/colima.yaml` like `1.1.1.1`. If this configuration is changed, may also need to restart Colima.
 
-10. Run `ddev restart`.
+10. Run [`ddev restart`](../basics/commands.md#restart).
 
 11. Run `ddev pull pantheon`. DDEV will download the Pantheon database and files and bring them into the local DDEV environment. You should now be able to access the project locally.
 
-12. Optionally use `ddev push pantheon` to push local files and database to Pantheon. The `ddev push` command can potentially damage your production site, so we don’t recommend using it.
+12. Optionally use `ddev push pantheon` to push local files and database to Pantheon. The [`ddev push`](../basics/commands.md#push) command can potentially damage your production site, so we don’t recommend using it.

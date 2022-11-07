@@ -4,14 +4,14 @@ Things might go wrong! In addition to this page, consider checking [Stack Overfl
 
 ## General Troubleshooting Strategies
 
-* Start with a `ddev poweroff` to make sure all containers can start fresh.
+* Start by running [`ddev poweroff`](commands.md#poweroff) to make sure all containers can start fresh.
 * Temporarily disable firewalls, VPNs, network proxies, and virus checkers while you’re troubleshooting.
 * Temporarily disable any proxies you’ve established in Docker’s settings.
-* Use `ddev debug dockercheck` and `ddev debug test` to help sort out Docker problems.
+* Use [`ddev debug dockercheck`](commands.md#debug-dockercheck) and [`ddev debug test`](commands.md#debug-test) to help sort out Docker problems.
 * On macOS, check to make sure Docker Desktop or Colima are not out of disk space. In *Settings* (or *Preferences*) → *Resources* → *Disk image size* there should be ample space left; try not to let usage exceed 80% because the reported number can be unreliable. If it says zero used, something is wrong.
 * If you have customizations like PHP overrides, nginx or Apache overrides, MySQL/PostgreSQL overrides, custom services, or `config.yaml` changes, please back them out while troubleshooting. It’s important to have the simplest possible environment while troubleshooting.
 * Restart Docker. Consider a Docker factory reset in serious cases, which will destroy any databases you’ve loaded. See [Docker Troubleshooting](../install/docker-installation.md#troubleshooting) for more.
-* Try the simplest possible DDEV project (just as `ddev debug test` does):
+* Try the simplest possible DDEV project (just as [`ddev debug test`](commands.md#debug-test) does):
 
     ```bash
     ddev poweroff
@@ -144,9 +144,9 @@ The most common cause of the database container not coming up is changing the da
 To solve this:
 
 * Change the configuration in `.ddev/config.yaml` back to the original configuration.
-* Export the database with `ddev export-db`.
-* Delete the project with `ddev delete`, or stop the project and remove the database volume using `docker volume rm <project>-mariadb` or `docker volume rm <project>-postgres`.
-* Update `.ddev/config.yaml` to use the new database type or version.
+* Export the database with [`ddev export-db`](commands.md#export-db).
+* Delete the project with [`ddev delete`](commands.md#delete), or stop the project and remove the database volume using `docker volume rm <project>-mariadb` or `docker volume rm <project>-postgres`.
+* Update `.ddev/config.yaml` to use the new [database type or version](../extend/database_types.md).
 * Start the project and import the database from your export.
 
 ## “web service unhealthy” or “web service starting” or Exited
@@ -202,7 +202,7 @@ Don’t forget to check logs using `ddev logs` for the `web` container, and `dde
 
 For `ddev-router` and `ddev-ssh-agent`: `docker logs ddev-router` and `docker logs ddev-ssh-agent`.
 
-Run `ddev debug router-nginx-config` to print the nginx configuration of the currently running `ddev-router`.
+Run [`ddev debug router-nginx-config`](commands.md#debug-router-nginx-config) to print the nginx configuration of the currently running `ddev-router`.
 
 ## `ddev start` Fails with "Failed to start [project name]: No such container: ddev-router"
 

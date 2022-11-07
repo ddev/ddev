@@ -8,8 +8,8 @@ DDEV has built-in [Blackfire](https://blackfire.io) integration.
 2. Install the Chrome or Firefox [browser plugin](https://blackfire.io/docs/profiling-cookbooks/profiling-http-via-browser).
 3. From Blackfire’s control panel, get the Server ID, Server Token, Client ID, and Client Token from your Account → Credentials or environment.
 4. Configure DDEV with the credentials, `ddev config global --web-environment-add="BLACKFIRE_SERVER_ID=<id>,BLACKFIRE_SERVER_TOKEN=<token>,BLACKFIRE_CLIENT_ID=<id>,BLACKFIRE_CLIENT_TOKEN=<token>"`. It’s easiest to do this globally, but you can do the same thing at the project level using `ddev config --web-environment-add`. (It may be easier to manually edit the relevant config file, `.ddev/config.yaml` or `~/.ddev/global_config.yaml`.)
-5. `ddev start`.
-6. `ddev blackfire on` to enable, `ddev blackfire off` to disable, `ddev blackfire status` to see status.
+5. [`ddev start`](../basics/commands.md#start).
+6. [`ddev blackfire on`](../basics/commands.md#blackfire) to enable, `ddev blackfire off` to disable, `ddev blackfire status` to see status.
 7. With Blackfire enabled, you can use the [browser extension](https://blackfire.io/docs/profiling-cookbooks/profiling-http-via-browser).
 
 ## Profiling with the Blackfire CLI
@@ -28,14 +28,14 @@ The Blackfire CLI is built into the web container, so you don’t need to instal
     ```
 
    You can also do this with `ddev config global --web-environment-add="BLACKFIRE_SERVER_ID=<id>,BLACKFIRE_SERVER_TOKEN=<token>,BLACKFIRE_CLIENT_ID=<id>,BLACKFIRE_CLIENT_TOKEN=<token>"`, but any existing environment variables will be deleted.
-2. `ddev start`.
+2. [`ddev start`](../basics/commands.md#start).
 3. `ddev blackfire on`.
 4. Click the “Blackfire” browser extension to profile.
 
 ## Examples of Using the Blackfire CLI
 
 * `ddev blackfire on` and `ddev blackfire off`
-* `ddev exec blackfire curl https://<yoursite>.ddev.site`
+* [`ddev exec blackfire curl https://<yoursite>.ddev.site`](../basics/commands.md#exec)
 * `ddev exec blackfire drush st`
 * `ddev exec blackfire curl https://<yoursite>.ddev.site`
-* `ddev ssh` and use the Blackfire CLI as described in [Profiling HTTP Requests with the CLI](https://blackfire.io/docs/profiling-cookbooks/profiling-http-via-cli).
+* [`ddev ssh`](../basics/commands.md#ssh) and use the Blackfire CLI as described in [Profiling HTTP Requests with the CLI](https://blackfire.io/docs/profiling-cookbooks/profiling-http-via-cli).

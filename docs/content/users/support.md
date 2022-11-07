@@ -7,7 +7,7 @@ hide:
 
 We love to hear from you and want you to be successful with DDEV!
 
-* See the built-in help: `ddev help` and `ddev help <command>`, which includes lots of examples.
+* See the included [`ddev help`](./basics/commands.md#help) command, which includes lots of examples.
 * [FAQ](basics/faq.md)
 * [Discord](https://discord.gg/hCZFfAMc5k) interactive community support.
 * [DDEV issue queue](https://github.com/drud/ddev/issues) for bugs and feature requests.

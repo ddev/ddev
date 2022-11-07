@@ -26,8 +26,8 @@ Here’s how to try it for yourself:
 `ufw allow 80 && ufw allow 443 && ufw allow 22 && ufw enable`.
 3. Point DNS for the site you’re going to host to the server.
 4. Before proceeding, your system and your project must be accessible on the internet on port 80 and your project DNS name (`myproject.example.com`) must resolve to the appropriate server.
-5. Configure your project with `ddev config`.
-6. Import your database and files using `ddev import-db` and `ddev import-files`.
+5. Configure your project with [`ddev config`](../basics/commands.md#config).
+6. Import your database and files using [`ddev import-db`](../basics/commands.md#import-db) and [`ddev import-files`](../basics/commands.md#import-files).
 7. Tell DDEV to listen on all network interfaces, omit phpMyAdmin and its SSH agent, use hardened images, and enable Let’s Encrypt:  
 
     ```
@@ -43,7 +43,7 @@ Here’s how to try it for yourself:
     }
     ```
 
-10. `ddev start` and visit your site. With some CMSes, you may also need to clear your cache.
+10. Run [`ddev start`](../basics/commands.md#start) and visit your site. With some CMSes, you may also need to clear your cache.
 
 You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s Encrypt has failed because port 80 is not open, or the DNS name is not yet resolving. (Use `docker logs ddev-router` to see Let’s Encrypt activity.)
 
