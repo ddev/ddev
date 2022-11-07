@@ -113,7 +113,6 @@ jobs:
       - name: "setup macOS"
         run: |
           brew install coreutils gnu-getopt jq
-          pip3 install yq
       - uses: actions/checkout@v3
         with:
           # We need to get all branches and tags for git describe to work properly

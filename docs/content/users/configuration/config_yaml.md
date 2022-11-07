@@ -511,6 +511,22 @@ Additional [custom environment variables](../extend/customization-extendibility.
 | -- | -- | --
 | :octicons-file-directory-16: project<br>:octicons-globe-16: global | `[]` |
 
+## `web_extra_daemons`
+
+Additional daemons that should [automatically be started in the web container](../extend/customization-extendibility.md#running-extra-daemons-in-the-web-container).
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-file-directory-16: project | `[]` |
+
+## `web_extra_exposed_ports`
+
+Additional named sets of ports to [expose via `ddev-router`](../extend/customization-extendibility.md#exposing-extra-ports-via-ddev-router).
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-file-directory-16: project | `[]` |
+
 ## `webimage`
 
 The Docker image to use for the web server.
