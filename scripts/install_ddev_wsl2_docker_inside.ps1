@@ -66,7 +66,7 @@ wsl ddev version
 # But if Windows 10, they need to start another way.
 $osv = (Get-CimInstance Win32_OperatingSystem).version
 if ([System.Version]$osv -ge [System.Version]"10.0.22000") {
-    wsl -u root -e bash -c "if fgrep -v '[boot]' /etc/wsl.conf >/dev/null; then printf '\n[boot]\nservice docker start\n' >>/etc/wsl.conf; fi"
+    wsl -u root -e bash -c "if fgrep -v '[boot]' /etc/wsl.conf >/dev/null; then printf '\n[boot]\ncommand=service docker start\n' >>/etc/wsl.conf; fi"
     Write-Output("Windows 11: Added service docker start to /etc/wsl.conf")
 } else {
     Write-Output("Windows 10: Manual start of docker is required, for example sudo service docker start, see https://ddev.readthedocs.io/en/latest/users/install/ddev-installation/#windows-wsl2")
