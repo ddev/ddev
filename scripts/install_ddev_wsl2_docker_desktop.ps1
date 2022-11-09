@@ -7,7 +7,7 @@
 # Run this in an administrative PowerShell window.
 # You can download, inspect, and run this, or run it directly with
 # Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
-# iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2.ps1'))
+# iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2_docker_desktop.ps1'))
 
 #Requires -RunAsAdministrator
 
@@ -38,7 +38,7 @@ if (-not(wsl -e docker ps) ) {
 }
 $ErrorActionPreference = "Stop"
 # Install needed choco items
-choco install -y gsudo mkcert
+choco install -y ddev gsudo mkcert
 
 mkcert -install
 setx CAROOT "$(mkcert -CAROOT)"; If ($Env:WSLENV -notlike "*CAROOT/up:*") { setx WSLENV "CAROOT/up:$Env:WSLENV" }
