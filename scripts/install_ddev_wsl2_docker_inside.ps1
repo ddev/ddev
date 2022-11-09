@@ -36,7 +36,8 @@ $ErrorActionPreference = "Stop"
 choco install -y ddev gsudo mkcert
 
 mkcert -install
-setx CAROOT "$(mkcert -CAROOT)"; If ($Env:WSLENV -notlike "*CAROOT/up:*") { setx WSLENV "CAROOT/up:$Env:WSLENV" }
+$env:CAROOT="$(mkcert -CAROOT)"
+setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:CAROOT="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }
 
 wsl -u root bash -c "apt-get remove -y -qq docker docker-engine docker.io containerd runc >/dev/null 2>&1"
 wsl -u root apt-get update
