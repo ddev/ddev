@@ -37,7 +37,7 @@ choco install -y ddev gsudo mkcert
 
 mkcert -install
 $env:CAROOT="$(mkcert -CAROOT)"
-setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:CAROOT="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }
+setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }
 
 wsl -u root bash -c "apt-get remove -y -qq docker docker-engine docker.io containerd runc >/dev/null 2>&1"
 wsl -u root apt-get update
