@@ -57,6 +57,8 @@ wsl -u root service docker start
 if (-not(wsl -e docker ps)) {
     throw "docker does not seem to be working inside the WSL2 distro yet. "
 }
+# If docker desktop was previously set up, the .docker can break normal use of docker client.
+wsl rm -rf ~/.docker
 
 wsl ddev version
 
