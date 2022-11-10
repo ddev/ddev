@@ -7,7 +7,7 @@
 # Run this in an administrative PowerShell window.
 # You can download, inspect, and run this, or run it directly with
 # Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
-# iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2.ps1'))
+# iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2_docker_desktop.ps1'))
 
 #Requires -RunAsAdministrator
 
@@ -23,7 +23,8 @@ if (-not(Compare-Object "root" (wsl -e whoami)) ) {
     throw "The default user in your distro seems to be root. Please configure an ordinary default user"
 }
 # Install Chocolatey if needed
-if (-not(choco 2>&1 >$null)) {
+if (-not (Get-Command "choco" -errorAction SilentlyContinue))
+{
     "Chocolatey does not appear to be installed yet, installing"
     $ErrorActionPreference = "Stop"
     Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
@@ -37,14 +38,15 @@ if (-not(wsl -e docker ps) ) {
 }
 $ErrorActionPreference = "Stop"
 # Install needed choco items
-choco install -y gsudo mkcert
+choco install -y ddev gsudo mkcert
 
 mkcert -install
-setx CAROOT "$(mkcert -CAROOT)"; If ($Env:WSLENV -notlike "*CAROOT/up:*") { setx WSLENV "CAROOT/up:$Env:WSLENV" }
+$env:CAROOT="$(mkcert -CAROOT)"
+setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }
 
 wsl -u root -e bash -c "curl -fsSL https://apt.fury.io/drud/gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/ddev.gpg > /dev/null"
 wsl -u root -e bash -c 'echo \"deb [signed-by=/etc/apt/trusted.gpg.d/ddev.gpg] https://apt.fury.io/drud/ * *\" > /etc/apt/sources.list.d/ddev.list'
-wsl -u root -e bash -c "sudo apt update && sudo apt install -y ddev"
+wsl -u root -e bash -c "sudo apt update && sudo apt install -y ddev wslu"
 wsl -u root -e bash -c "apt-get upgrade -y >/dev/null"
 
 
@@ -53,3 +55,4 @@ wsl -u root mkcert -install
 if (-not(wsl -e docker ps)) {
     throw "docker does not seem to be working inside the WSL2 distro yet. Check Resources->WSL Integration in Docker Desktop"
 }
+wsl ddev version
