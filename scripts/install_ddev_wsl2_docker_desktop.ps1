@@ -46,7 +46,7 @@ setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV=
 
 wsl -u root -e bash -c "curl -fsSL https://apt.fury.io/drud/gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/ddev.gpg > /dev/null"
 wsl -u root -e bash -c 'echo \"deb [signed-by=/etc/apt/trusted.gpg.d/ddev.gpg] https://apt.fury.io/drud/ * *\" > /etc/apt/sources.list.d/ddev.list'
-wsl -u root -e bash -c "sudo apt update && sudo apt install -y ddev"
+wsl -u root -e bash -c "sudo apt update && sudo apt install -y ddev wslu"
 wsl -u root -e bash -c "apt-get upgrade -y >/dev/null"
 
 

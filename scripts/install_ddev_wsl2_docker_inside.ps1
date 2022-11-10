@@ -48,7 +48,7 @@ wsl -u root -e bash -c 'echo \"deb [arch=$(dpkg --print-architecture) signed-by=
 
 wsl -u root -e bash -c "curl -fsSL https://apt.fury.io/drud/gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/ddev.gpg > /dev/null"
 wsl -u root -e bash -c 'echo \"deb [signed-by=/etc/apt/trusted.gpg.d/ddev.gpg] https://apt.fury.io/drud/ * *\" > /etc/apt/sources.list.d/ddev.list'
-wsl -u root -e bash -c "sudo apt update && sudo apt install -y ddev docker-ce docker-ce-cli containerd.io"
+wsl -u root -e bash -c "sudo apt update && sudo apt install -y ddev docker-ce docker-ce-cli containerd.io wslu"
 wsl -u root -e bash -c "apt-get upgrade -y >/dev/null"
 wsl bash -c 'sudo usermod -aG docker $USER'
 
