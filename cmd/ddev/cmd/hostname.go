@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 
@@ -84,6 +85,15 @@ to allow ddev to modify your hosts file. If you are connected to the internet an
 func addHostname(hosts goodhosts.Hosts, ip, hostname string) {
 	var detail string
 	rawResult := make(map[string]interface{})
+
+	if dockerutil.IsWSL2() && IsWindowsDdevExeAvailable() {
+		util.Debug("Running ddev.exe hostname on Windows side, hostname=%s, ip=%s", hostname, ip)
+		out, err := exec.RunHostCommand("ddev.exe", "hostname", hostname, ip)
+		if err == nil {
+			return
+		}
+		util.Warning("Unable to run ddev.exe hostname %s %s on Windows side, err=%s, output=%s", hostname, ip, err, out)
+	}
 
 	if hosts.Has(ip, hostname) {
 		detail = "Hostname already exists in hosts file"
@@ -228,6 +238,17 @@ func removeInactiveHostnames(hosts goodhosts.Hosts) {
 	}
 
 	return
+}
+
+func IsWindowsDdevExeAvailable() bool {
+	if dockerutil.IsWSL2() {
+		out, err := exec.RunHostCommand("ddev.exe", "--version")
+		if err == nil {
+			return true
+		}
+		util.Debug("ddev.exe not found on windows side in $PATH: err=%s, output=%s", err, out)
+	}
+	return false
 }
 
 func init() {
