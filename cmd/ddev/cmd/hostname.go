@@ -86,7 +86,9 @@ func addHostname(hosts goodhosts.Hosts, ip, hostname string) {
 	var detail string
 	rawResult := make(map[string]interface{})
 
-	if dockerutil.IsWSL2() && IsWindowsDdevExeAvailable() {
+	ddevapp.CheckWindowsHostsFile()
+
+	if dockerutil.IsWSL2() && ddevapp.IsWindowsDdevExeAvailable() {
 		util.Debug("Running ddev.exe hostname on Windows side, hostname=%s, ip=%s", hostname, ip)
 		out, err := exec.RunHostCommand("ddev.exe", "hostname", hostname, ip)
 		if err == nil {
@@ -238,17 +240,6 @@ func removeInactiveHostnames(hosts goodhosts.Hosts) {
 	}
 
 	return
-}
-
-func IsWindowsDdevExeAvailable() bool {
-	if dockerutil.IsWSL2() {
-		out, err := exec.RunHostCommand("ddev.exe", "--version")
-		if err == nil {
-			return true
-		}
-		util.Debug("ddev.exe not found on windows side in $PATH: err=%s, output=%s", err, out)
-	}
-	return false
 }
 
 func init() {
