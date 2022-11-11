@@ -138,7 +138,7 @@ ddev composer install
 Create or modify a DDEV project’s configuration in the current directory.
 
 !!!tip "You can also set these via YAML!"
-    These settings, plus a few more, can be set by editing stored [Config Options](../configuration/config_yaml.md).
+    These settings, plus a few more, can be set by editing stored [Config Options](../configuration/config.md).
 
 Example:
 
@@ -275,7 +275,7 @@ ddev debug capabilities my-project
 
 ### `debug check-db-match`
 
-Verify that the database in the db server matches the configured [type and version](../extend/database_types.md).
+Verify that the database in the db server matches the configured [type and version](../extend/database-types.md).
 
 Example:
 
@@ -300,7 +300,7 @@ ddev debug compose-config my-project
 
 ### `debug configyaml`
 
-Prints the project [`config.*.yaml`](../configuration/config_yaml.md) usage.
+Prints the project [`config.*.yaml`](../configuration/config.md) usage.
 
 Example:
 
@@ -347,7 +347,7 @@ ddev debug fix-commands
 
 ### `debug get-volume-db-version`
 
-Get the database type and version found in the `ddev-dbserver` database volume, which may not be the same as the configured database [type and version](../extend/database_types.md).
+Get the database type and version found in the `ddev-dbserver` database volume, which may not be the same as the configured database [type and version](../extend/database-types.md).
 
 Example:
 
@@ -601,7 +601,7 @@ ddev hostname somesite.ddev.local 127.0.0.1
 
 ## `import-db`
 
-[Import a SQL file](database_management.md) into the project.
+[Import a SQL file](database-management.md) into the project.
 
 Flags:
 
@@ -1008,7 +1008,7 @@ ddev service enable solr
 [Share the current project](../topics/sharing.md) on the internet via [ngrok](https://ngrok.com).
 
 !!!tip
-    Some ngrok arguments are supported via CLI, but *any* ngrok flag can be specified in the [`ngrok_args` config setting](../configuration/config_yaml.md#ngrok_args).
+    Some ngrok arguments are supported via CLI, but *any* ngrok flag can be specified in the [`ngrok_args` config setting](../configuration/config.md#ngrok_args).
 
 Flags:
 
@@ -1036,7 +1036,7 @@ Create a database snapshot for one or more projects.
 
 This uses `xtrabackup` or `mariabackup` to create a database snapshot in the `.ddev/db_snapshots` directory. These are compatible with server backups using the same tools and can be restored with the [`snapshot restore`](#snapshot-restore) command.
 
-See [Database Management](../basics/database_management.md) for more on working with databases.
+See [Database Management](../basics/database-management.md) for more on working with databases.
 
 Flags:
 

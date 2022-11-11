@@ -9,7 +9,7 @@ It can be a little confusing trying to understand all the things that are in the
 
 * `apache` directory: Apache configuration for those using `webserver_type: apache-fpm`. There are docs and the default configuration in there. See [Apache customization docs](../extend/customization-extendibility.md#providing-custom-apache-configuration).
 * `commands` subdirectories: Contains DDEV shell commands, both built-in and custom, that can run on the host or inside any container. See [docs](../extend/custom-commands.md).
-* `config.yaml` file: This is the basic configuration file for the project. Take a look at the comments below for suggestions about things you can do, or look in [docs](../configuration/config_yaml.md)).
+* `config.yaml` file: This is the basic configuration file for the project. Take a look at the comments below for suggestions about things you can do, or look in [docs](../configuration/config.md)).
 * `config.*.yaml` files: You can add configuration here that overrides parts of `config.yaml`. This is nice for situations where one developer’s project needs one-off configuration. For example, you could turn on `nfs-mount-enabled` or `mutagen-enabled` or use a different database type. By default, these are gitignored and not get checked in. See [docs](../extend/customization-extendibility.md#extending-configyaml-with-custom-configyaml-files).
 * `db-build` directory: Can be used to provide a custom Dockerfile for the database container.
 * `db_snapshots` directory: This is where snapshots go when you run [`ddev snapshot`](../basics/commands.md#snapshot). If you don’t need these backups, you can delete anything there at any time. See [snapshot docs](../basics/cli-usage.md#snapshotting-and-restoring-a-database).

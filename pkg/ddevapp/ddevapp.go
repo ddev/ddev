@@ -970,7 +970,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 		// OK to start if dbType is empty (nonexistent) or if it matches
 		if dbType, err := app.GetExistingDBType(); err != nil || (dbType != "" && dbType != app.Database.Type+":"+app.Database.Version) {
-			return fmt.Errorf("Unable to start project %s because the configured database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s' and then you might want to try 'ddev debug migrate-database %s', see docs at %s", app.Name, dbType, dbType, app.Database.Type+":"+app.Database.Version, "https://ddev.readthedocs.io/en/latest/users/extend/database_types/")
+			return fmt.Errorf("Unable to start project %s because the configured database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s' and then you might want to try 'ddev debug migrate-database %s', see docs at %s", app.Name, dbType, dbType, app.Database.Type+":"+app.Database.Version, "https://ddev.readthedocs.io/en/latest/users/extend/database-types/")
 		}
 	}
 

@@ -52,7 +52,7 @@ Yes, you can create additional databases and manually do whatever you need on th
 ddev import-db --target-db=extradb --src=.tarballs/extradb.sql.gz
 ```
 
-You can use [`ddev mysql`](../basics/commands.md#mysql) or `ddev psql` to execute queries, or use the MySQL/PostgreSQL clients within `ddev ssh` or `ddev ssh -s db`. See the [Database Management](database_management.md) page.
+You can use [`ddev mysql`](../basics/commands.md#mysql) or `ddev psql` to execute queries, or use the MySQL/PostgreSQL clients within `ddev ssh` or `ddev ssh -s db`. See the [Database Management](database-management.md) page.
 
 ### Can different projects communicate with each other?
 
@@ -91,7 +91,7 @@ See the [troubleshooting section](../install/docker-installation.md#troubleshoot
 
 ### Why do I get a 403 or 404 on my project after `ddev launch`?
 
-Most likely because the docroot is misconfigured, or there’s no `index.php` or `index.html` in it. Open your `.ddev/config.yaml` file and check the [`docroot`](../configuration/config_yaml.md#docroot) value, which should be a relative path to the directory containing your project’s `index.php`.
+Most likely because the docroot is misconfigured, or there’s no `index.php` or `index.html` in it. Open your `.ddev/config.yaml` file and check the [`docroot`](../configuration/config.md#docroot) value, which should be a relative path to the directory containing your project’s `index.php`.
 
 ### Why do I see nginx headers when I’ve set `webserver_type: apache-fpm`?
 
@@ -152,7 +152,7 @@ Use [`ddev delete <project>`](../basics/commands.md#delete) to destroy a project
 
 You have several options:
 
-* Use the [`disable_settings_management: true`](../configuration/config_yaml.md#disable_settings_management) option in the project’s `.ddev/config.yaml` file. This disables DDEV from updating CMS-related settings files.
+* Use the [`disable_settings_management: true`](../configuration/config.md#disable_settings_management) option in the project’s `.ddev/config.yaml` file. This disables DDEV from updating CMS-related settings files.
 * Use the more generic “php” project type rather than a CMS-specific one; it basically means “don’t try to create settings files for me”. The “php” type works great for experienced developers.
 * Take over the settings file or `.gitignore` by deleting the line `#ddev-generated` in it, then check in the file. If that line is removed, DDEV will not try to replace or change the file.
 

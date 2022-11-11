@@ -10,7 +10,7 @@ You could set these using the [`ddev config`](../basics/commands.md#config) comm
 - `ddev config --database=mariadb:10.6`
 - `ddev config --database=postgres:14`.
 
-Or by editing the [`database`](../configuration/config_yaml.md#database) setting in `.ddev/config.yaml`:
+Or by editing the [`database`](../configuration/config.md#database) setting in `.ddev/config.yaml`:
 
 ```yaml
 database:

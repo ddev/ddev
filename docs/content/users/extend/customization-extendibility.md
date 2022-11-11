@@ -4,7 +4,7 @@ DDEV provides several ways to customize and extend project environments.
 
 ## Changing PHP Version
 
-The project's `.ddev/config.yaml` file defines the PHP version to use. The [`php_version`](../configuration/config_yaml.md#php_version) can be changed to `5.6`, `7.0`, `7.1`, `7.2`,  `7.3`, `7.4`, `8.0`, `8.1`, or `8.2`. The current default is `8.0`.
+The project's `.ddev/config.yaml` file defines the PHP version to use. The [`php_version`](../configuration/config.md#php_version) can be changed to `5.6`, `7.0`, `7.1`, `7.2`,  `7.3`, `7.4`, `8.0`, `8.1`, or `8.2`. The current default is `8.0`.
 
 ### Older Versions of PHP
 
@@ -12,7 +12,7 @@ The project's `.ddev/config.yaml` file defines the PHP version to use. The [`php
 
 ## Changing Web Server Type
 
-DDEV supports nginx with php-fpm by default (`nginx-fpm`), and Apache with php-fpm (`apache-fpm`). These can be changed using [`webserver_type`](../configuration/config_yaml.md#webserver_type) in `.ddev/config.yaml`, for example `webserver_type: apache-fpm`.
+DDEV supports nginx with php-fpm by default (`nginx-fpm`), and Apache with php-fpm (`apache-fpm`). These can be changed using [`webserver_type`](../configuration/config.md#webserver_type) in `.ddev/config.yaml`, for example `webserver_type: apache-fpm`.
 
 ## Adding Services to a Project
 
@@ -26,7 +26,7 @@ If you need to create a service configuration for your project, see [Defining Ad
 
 There are many ways to deploy Node.js in any project, so DDEV tries to let you set up any possibility you can come up with.
 
-* You can choose the Node.js version you want to use in `.ddev/config.yaml` with [`nodejs_version`](../configuration/config_yaml.md#nodejs_version).
+* You can choose the Node.js version you want to use in `.ddev/config.yaml` with [`nodejs_version`](../configuration/config.md#nodejs_version).
 * [`ddev nvm`](../basics/commands.md#nvm) gives you the full capabilities of [Node Version Manager](https://github.com/nvm-sh/nvm).
 * [`ddev npm`](../basics/commands.md#npm) and [`ddev yarn`](../basics/commands.md#yarn) provide shortcuts to the `npm` and `yarn` commands inside the container, and their caches are persistent.
 * You can run Node.js daemons using [`web_extra_daemons`](#running-extra-daemons-in-the-web-container).
@@ -58,7 +58,7 @@ hooks:
 
 ### Running Extra Daemons Using `web_extra_daemons`
 
-If you need extra daemons to start up automatically inside the web container, you can easily add them using [`web_extra_daemons`](../configuration/config_yaml.md#web_extra_daemons) in `.ddev/config.yaml`.
+If you need extra daemons to start up automatically inside the web container, you can easily add them using [`web_extra_daemons`](../configuration/config.md#web_extra_daemons) in `.ddev/config.yaml`.
 
 You might be running Node.js daemons that serve a particular purpose, like `browsersync`, or more general daemons like a `cron` daemon.
 
@@ -82,7 +82,7 @@ web_extra_daemons:
 
 ## Exposing Extra Ports via `ddev-router`
 
-If your `web` container has additional HTTP servers running inside it on different ports, those can be exposed using [`web_extra_exposed_ports`](../configuration/config_yaml.md#web_extra_exposed_ports) in `.ddev/config.yaml`. For example, this configuration would expose a `node-vite` HTTP server running on port 3000 inside the `web` container, via `ddev-router`, to ports 9998 (HTTP) and 9999 (HTTPS), so it could be accessed via `https://<project>.ddev.site:9999`:
+If your `web` container has additional HTTP servers running inside it on different ports, those can be exposed using [`web_extra_exposed_ports`](../configuration/config.md#web_extra_exposed_ports) in `.ddev/config.yaml`. For example, this configuration would expose a `node-vite` HTTP server running on port 3000 inside the `web` container, via `ddev-router`, to ports 9998 (HTTP) and 9999 (HTTPS), so it could be accessed via `https://<project>.ddev.site:9999`:
 
 ```yaml
 web_extra_exposed_ports:
@@ -111,7 +111,7 @@ web_extra_exposed_ports:
 
 ## Providing Custom Environment Variables to a Container
 
-Custom environment variables may be set in the project’s `.ddev/config.yaml` or the global `~/.ddev/global_config.yaml` with the [`web_environment`](../configuration/config_yaml.md#web_environment) key:
+Custom environment variables may be set in the project’s `.ddev/config.yaml` or the global `~/.ddev/global_config.yaml` with the [`web_environment`](../configuration/config.md#web_environment) key:
 
 ```yaml
 web_environment:
@@ -190,7 +190,7 @@ For example, to make all HTTP URLs redirect to their HTTPS equivalents you might
 
 ## Custom Apache Configuration
 
-If you’re using [`webserver_type: apache-fpm`](../configuration/config_yaml.md#webserver_type) in your `.ddev/config.yaml`, you can override the default site configuration by editing or replacing the DDEV-provided `.ddev/apache/apache-site.conf` configuration.
+If you’re using [`webserver_type: apache-fpm`](../configuration/config.md#webserver_type) in your `.ddev/config.yaml`, you can override the default site configuration by editing or replacing the DDEV-provided `.ddev/apache/apache-site.conf` configuration.
 
 * Edit the `.ddev/apache/apache-site.conf`.
 * Add your configuration changes.
@@ -242,7 +242,7 @@ If you’re using PostgreSQL, a default `posgresql.conf` is provided in `.ddev/p
 
 You may add additional `config.*.yaml` files to organize additional commands as you see fit for your project and team.
 
-For example, many teams commit their `config.yaml` and share it throughout the team, but some team members may require overrides to the checked-in version specifically for their environment and not checked in. For example, a team member may want to use a [`router_http_port`](../configuration/config_yaml.md#router_http_port) other than the team default due to a conflict in their development environment. In this case they could add `.ddev/config.ports.yaml`:
+For example, many teams commit their `config.yaml` and share it throughout the team, but some team members may require overrides to the checked-in version specifically for their environment and not checked in. For example, a team member may want to use a [`router_http_port`](../configuration/config.md#router_http_port) other than the team default due to a conflict in their development environment. In this case they could add `.ddev/config.ports.yaml`:
 
 ```yaml
 # My machine can’t use port 80 so override with port 8080, but don’t check this in!
@@ -257,12 +257,12 @@ Teams may choose to use `config.local.yaml` or `config.override.yaml` for all lo
 
 `config.*.yaml` update configuration according to these rules:
 
-1. Simple fields like [`router_http_port`](../configuration/config_yaml.md#router_http_port) or [`webserver_type`](../configuration/config_yaml.md#webserver_type) are overwritten.
-2. Lists of strings like [`additional_hostnames`](../configuration/config_yaml.md#additional_hostnames) or [`additional_fqdns`](../configuration/config_yaml.md#additional_fqdns) are merged.
-3. The list of environment variables in [`web_environment`](../configuration/config_yaml.md#web_environment) are “smart merged”: if you add the same environment variable with a different value, the value in the override file will replace the value from `config.yaml`.
-4. Hook specifications in the [`hooks`](../configuration/config_yaml.md#hooks) variable are merged.
+1. Simple fields like [`router_http_port`](../configuration/config.md#router_http_port) or [`webserver_type`](../configuration/config.md#webserver_type) are overwritten.
+2. Lists of strings like [`additional_hostnames`](../configuration/config.md#additional_hostnames) or [`additional_fqdns`](../configuration/config.md#additional_fqdns) are merged.
+3. The list of environment variables in [`web_environment`](../configuration/config.md#web_environment) are “smart merged”: if you add the same environment variable with a different value, the value in the override file will replace the value from `config.yaml`.
+4. Hook specifications in the [`hooks`](../configuration/config.md#hooks) variable are merged.
 
-If you need to *override* existing values, set [`override_config: true`](../configuration/config_yaml.md#override_config) in the `config.*.yaml` where the override behavior should take place. Since `config.*.yaml` files are normally *merged* into the configuration, some things can’t be overridden normally. For example, if you have [`nfs_mount_enabled: true`](../configuration/config_yaml.md#nfs_mount_enabled) you can’t override it with a merge and you can’t erase existing hooks or all environment variables. However, with `override_config: true` in a particular `config.*.yaml` file,
+If you need to *override* existing values, set [`override_config: true`](../configuration/config.md#override_config) in the `config.*.yaml` where the override behavior should take place. Since `config.*.yaml` files are normally *merged* into the configuration, some things can’t be overridden normally. For example, if you have [`nfs_mount_enabled: true`](../configuration/config.md#nfs_mount_enabled) you can’t override it with a merge and you can’t erase existing hooks or all environment variables. However, with `override_config: true` in a particular `config.*.yaml` file,
 
 ```yaml
 override_config: true
@@ -286,7 +286,7 @@ additional_hostnames: []
 
 can have their intended affect.
 
-[`override_config`](../configuration/config_yaml.md#override_config) affects only behavior of the `config.*.yaml` file it exists in.
+[`override_config`](../configuration/config.md#override_config) affects only behavior of the `config.*.yaml` file it exists in.
 
 To experiment with the behavior of a set of `config.*.yaml` files, use the [`ddev debug configyaml`](../basics/commands.md#debug-configyaml) file; it’s especially valuable with the `yq` command, for example `ddev debug configyaml | yq`.
 
