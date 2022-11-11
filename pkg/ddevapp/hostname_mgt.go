@@ -8,7 +8,6 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/lextoumbourou/goodhosts"
 	"net"
 	"os"
 	exec2 "os/exec"
@@ -18,19 +17,16 @@ import (
 
 // IsWindowsDdevExeAvailable checks to see if we can run ddev.exe on Windows side
 func IsWindowsDdevExeAvailable() bool {
-	path := os.Getenv("PATH")
-	output.UserOut.Printf("running ddev.exe --version; PATH=%s", path)
 	p, err := exec2.LookPath("ddev.exe")
 	if err != nil {
 		util.Warning("ddev.exe not found in $PATH, please install it on Windows side; err=%v", err)
 	}
 	if dockerutil.IsWSL2() {
-		output.UserOut.Printf("In stanza, Running %s --version", p)
 		out, err := exec.RunHostCommand(p, "--version")
 		if err == nil {
 			return true
 		}
-		output.UserOut.Printf("%s not found on windows side in $PATH, or can't run it: err=%s, output=%s", p, err, out)
+		util.Warning("%s not found on windows side in $PATH, or can't run it: err=%s, output=%s", p, err, out)
 	}
 	return false
 }
@@ -81,7 +77,7 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 // We would have hoped to use DNS or have found the entry already in hosts
 // But if it's not, try to add one.
 func addHostEntry(name string, ip string) error {
-	if !dockerutil.IsWSL2() {
+	if !dockerutil.IsWSL2() || !IsWindowsDdevExeAvailable() {
 		_, err := exec2.LookPath("sudo")
 		if (os.Getenv("DDEV_NONINTERACTIVE") != "") || err != nil {
 			util.Warning("You must manually add the following entry to your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname %s %s'", ip, name, name, ip)
@@ -93,12 +89,11 @@ func addHostEntry(name string, ip string) error {
 	ddevFullpath, err := os.Executable()
 	util.CheckErr(err)
 
-	output.UserOut.Printf("ddev needs to add an entry to your hostfile.\nIt may require administrative privileges via the sudo command, so you may be required\nto enter your password for sudo. ddev is about to issue the command:")
-
 	hostnameArgs := []string{ddevFullpath, "hostname", name, ip}
-	if !dockerutil.IsWSL2() {
+	if !dockerutil.IsWSL2() || !IsWindowsDdevExeAvailable() {
 		hostnameArgs = append([]string{"sudo"}, hostnameArgs...)
 	}
+	output.UserOut.Printf("ddev needs to add an entry to your hostfile.\nIt may require administrative privileges via the sudo command, so you may be required\nto enter your password for sudo or allow escalation. ddev is about to issue the command:\n   %s", strings.Join(hostnameArgs, " "))
 
 	output.UserOut.Println("Please enter your password or allow escalation if prompted.")
 	out, err := exec.RunHostCommand(hostnameArgs[0], hostnameArgs[1:]...)
@@ -116,40 +111,44 @@ func (app *DdevApp) RemoveHostsEntries() error {
 		return fmt.Errorf("could not get Docker IP: %v", err)
 	}
 
-	hosts, err := goodhosts.NewHosts()
-	if err != nil {
-		util.Failed("could not open hostfile: %v", err)
-	}
-
 	for _, name := range app.GetHostnames() {
-		if !hosts.Has(dockerIP, name) {
+		checkName := strings.TrimPrefix(name, "*.")
+		hostIPs, err := net.LookupHost(checkName)
+
+		// If we had successful lookup and dockerIP matches then continue to delete
+		if err != nil || (len(hostIPs) > 0 && hostIPs[0] != dockerIP) {
 			continue
 		}
 
-		_, err = exec2.LookPath("sudo")
-		if os.Getenv("DDEV_NONINTERACTIVE") != "" || err != nil {
-			util.Warning("You must manually remove the following entry from your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname --remove %s %s", dockerIP, name, name, dockerIP)
-			return nil
+		if !dockerutil.IsWSL2() || !IsWindowsDdevExeAvailable() {
+			_, err = exec2.LookPath("sudo")
+			if os.Getenv("DDEV_NONINTERACTIVE") != "" || err != nil {
+				util.Warning("You must manually remove the following entry from your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname --remove %s %s", dockerIP, name, name, dockerIP)
+				return nil
+			}
 		}
 
 		ddevFullPath, err := os.Executable()
 		util.CheckErr(err)
 
-		output.UserOut.Printf("ddev needs to remove an entry from your hosts file.\nIt will require administrative privileges via the sudo command, so you may be required\nto enter your password for sudo. ddev is about to issue the command:")
-
 		hostnameArgs := []string{ddevFullPath, "hostname", "--remove", name, dockerIP}
 		command := strings.Join(hostnameArgs, " ")
 		util.Warning(fmt.Sprintf("    sudo %s", command))
+		output.UserOut.Printf("ddev needs to remove '%s' from your hosts file.\nIt may require administrative privileges via the sudo command or escalation, so you may be required\nto enter your password for sudo. ddev is about to issue the command:\n    %s", name, strings.Join(hostnameArgs, " "))
 		output.UserOut.Println("Please enter your password if prompted.")
 
-		if _, err = exec.RunCommandPipe("sudo", hostnameArgs); err != nil {
-			util.Warning("Failed to execute sudo command, you will need to manually execute '%s' with administrative privileges", command)
+		if !dockerutil.IsWSL2() || !IsWindowsDdevExeAvailable() {
+			hostnameArgs = append([]string{"sudo"}, hostnameArgs...)
+		}
+		if out, err := exec.RunHostCommand(hostnameArgs[0], hostnameArgs[1:]...); err != nil {
+			util.Warning("Failed to execute %s, you will need to manually execute '%s' with administrative privileges, err=%v, output=%v", strings.Join(hostnameArgs, " "), strings.Join(hostnameArgs, " "), err, out)
 		}
 	}
 
 	return nil
 }
 
+// CheckWindowsHostsFile() verifies that the Windows hosts file doesn't have long lines in it.
 func CheckWindowsHostsFile() {
 	if runtime.GOOS != "windows" {
 		return

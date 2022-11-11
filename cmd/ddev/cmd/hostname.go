@@ -6,8 +6,6 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/versionconstants"
-
 	"strings"
 
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -40,6 +38,7 @@ to allow ddev to modify your hosts file. If you are connected to the internet an
 		}
 
 		// Attempt to write the hosts file first to catch any permissions issues early
+		// Don't do this on wsl2, which will try to run ddev.exe on the windows side
 		if !dockerutil.IsWSL2() {
 			if hosts.Flush(); err != nil {
 				rawResult := make(map[string]interface{})
@@ -90,7 +89,6 @@ func addHostname(hosts goodhosts.Hosts, ip, hostname string) {
 
 	ddevapp.CheckWindowsHostsFile()
 
-	output.UserOut.Printf("In addHostname, IsWSL2()=%v IsWindowsDdevExeAvailable=%v", dockerutil.IsWSL2(), ddevapp.IsWindowsDdevExeAvailable())
 	if dockerutil.IsWSL2() && ddevapp.IsWindowsDdevExeAvailable() {
 		util.Debug("Running ddev.exe hostname on Windows side, hostname=%s, ip=%s", hostname, ip)
 		out, err := exec.RunHostCommand("ddev.exe", "hostname", hostname, ip)
@@ -128,7 +126,7 @@ func addHostname(hosts goodhosts.Hosts, ip, hostname string) {
 		return
 	}
 
-	detail = "Hostname added to hosts file"
+	detail = fmt.Sprintf("Hostname '%s' added to hosts file", hostname)
 	rawResult["error"] = "SUCCESS"
 	rawResult["detail"] = detail
 	output.UserOut.WithField("raw", rawResult).Info(detail)
@@ -140,6 +138,16 @@ func addHostname(hosts goodhosts.Hosts, ip, hostname string) {
 func removeHostname(hosts goodhosts.Hosts, ip, hostname string) {
 	var detail string
 	rawResult := make(map[string]interface{})
+
+	if dockerutil.IsWSL2() && ddevapp.IsWindowsDdevExeAvailable() {
+		util.Debug("Running 'ddev.exe hostname --remove %s %s' on Windows", hostname, ip)
+		out, err := exec.RunHostCommand("ddev.exe", "hostname", "--remove", hostname, ip)
+		if err == nil {
+			util.Debug("ran ddev.exe hostname --remove %s %s with output=%s", hostname, ip, out)
+			return
+		}
+		util.Warning("Unable to run 'ddev.exe hostname --remove %s %s' on Windows side, err=%s, output=%s", hostname, ip, err, out)
+	}
 
 	if !hosts.Has(ip, hostname) {
 		detail = "Hostname does not exist in hosts file"
@@ -168,7 +176,7 @@ func removeHostname(hosts goodhosts.Hosts, ip, hostname string) {
 		return
 	}
 
-	detail = "Hostname removed from hosts file"
+	detail = fmt.Sprintf("Hostname '%s' removed from hosts file", hostname)
 	rawResult["error"] = "SUCCESS"
 	rawResult["detail"] = detail
 	output.UserOut.WithField("raw", rawResult).Info(detail)
