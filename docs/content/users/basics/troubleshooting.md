@@ -255,15 +255,6 @@ While DDEV can create a web server and a Docker network infrastructure for a pro
     * This technique may not work on Windows WSL2, see below.
     * Only 10 hosts are valid on a line on traditional Windows, see [below](#windows-hosts-file-limited-to-10-hosts-per-line); beyond that hostnames are ignored.
 
-### Windows WSL2 Name Resolution on Non-`ddev.site` Hostnames or When Not Internet-Connected
-
-On Windows WSL2, there is a hosts file inside the WSL2 instance at `/etc/hosts`, and another on the Windows side at `C:\Windows\system32\drivers\etc\hosts`. Many people use a browser on the Windows side, which has no idea about hostnames that may be set up in WSL2’s `/etc/hosts` file. So a WSL2 project which uses `*.ddev.site` works fine when accessed by a browser on the Windows side, as long as internet connectivity is available for `*.ddev.site` DNS lookups to succeed.
-
-However, if the project uses non-`ddev.site` hostnames, an internet connection is not available, or if `use_dns_when_possible` is `false` in `.ddev/config.yaml`, a Windows-side browser will be unable to look up project hostnames. You’ll get complaints from the browser like “[url] server IP address could not be found” or “We can’t connect to the server at [url]”. In this case, you can:
-
-1. Add the needed hostname(s) manually to the Windows hosts file. This can easily be done with the *Windows* version of `ddev.exe` by running `sudo ddev hostname <hostname> 127.0.0.1` on *Windows* in PowerShell or Cmd or Git Bash.
-2. Or run a browser within WSL2. On Windows 11 this is built in, but in Windows 10 may require an X11 server like X410.
-
 ### DNS Rebinding Prohibited
 
 You may see one of several messages:
@@ -283,9 +274,9 @@ In this case, you can take any one of the following approaches:
 3. If you have control of the router, you can usually change its DHCP settings to choose a public, relaxed DNS server as in #2.
 4. You can live with DDEV trying to edit the `/etc/hosts` file, which it only has to do when a new name is added to a project.
 
-## Windows Hosts File Limited to 10 Hosts Per Line
+## Windows Hosts File May Be Limited to 10 Hosts Per Line
 
-On Windows only, there is a limit to the number of hosts that can be placed in one line. But since all DDEV hosts are typically on the same IP address (typically 127.0.0.1, localhost), they can add up. As soon as you have more than 10 entries there, your browser won’t be able to resolve the addresses beyond the 10th entry.
+On some Windows systems, there is a limit to the number of hosts that can be placed in one line. But since all DDEV hosts are typically on the same IP address (typically 127.0.0.1, localhost), they can add up. As soon as you have more than 10 entries there, your browser won’t be able to resolve the addresses beyond the 10th entry.
 
 There are two workarounds for this problem:
 
