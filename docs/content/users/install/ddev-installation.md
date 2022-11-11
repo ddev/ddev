@@ -186,7 +186,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; 
         iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))`
         ```
-    2. In an administrative PowerShell: `choco install -y mkcert`
+    2. In an administrative PowerShell: `choco install -y ddev mkcert`
     3. In an administrative PowerShell, run `mkcert -install` and answer the prompt allowing the installation of the Certificate Authority.
     4. In an administrative PowerShell, run the command `$env:CAROOT="$(mkcert -CAROOT)"; setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }`. This will set WSL2 to use the Certificate Authority installed on the Windows side. In some cases it takes a reboot to work correctly.
     5. In administrative PowerShell, run the command `wsl --install`. This will install WSL2 and Ubuntu for you. Reboot when this is done.
@@ -195,9 +195,8 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     8. Double-check in PowerShell: `wsl -l -v` should show three distros, and your Ubuntu should be the default. All three should be WSL version 2.
     9. Double-check in Ubuntu (or your distro): `echo $CAROOT` should show something like `/mnt/c/Users/<you>/AppData/Local/mkcert`
     10. Check that Docker is working inside Ubuntu (or your distro): `docker ps`
-    11. Optional: If you prefer to use the *traditional Windows* DDEV instead of working inside WSL2, install it with `choco install -y ddev`. The Windows DDEV works fine with the WSL2-based Docker engine. However, the WSL2 DDEV setup is vastly preferable and at least 10 times as fast. Support for the traditional Windows approach will eventually be dropped.
-    12. Open the WSL2 terminal, for example `Ubuntu` from the Windows start menu.
-    13. Install DDEV using
+    11. Open the WSL2 terminal, for example `Ubuntu` from the Windows start menu.
+    12. Install DDEV using
 
         ```bash
         curl https://apt.fury.io/drud/gpg.key | sudo apt-key add -
@@ -205,17 +204,20 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
         sudo apt update && sudo apt install -y ddev
         ```
 
-    14. In WSL2 run `mkcert -install`.
+    13. In WSL2 run `mkcert -install`.
 
-    That’s it! You have now installed DDEV on WSL2. If you’re using WSL2 for DDEV (recommended), remember to run all `ddev` commands inside the WSL2 distro.
+    You have now installed DDEV on WSL2. If you’re using WSL2 for DDEV (recommended), remember to run all `ddev` commands inside the WSL2 distro.
 
     To upgrade DDEV in WSL2 Ubuntu, use `apt upgrade ddev` as described in the [Linux installation section](#apt-packages-for-Debian-based-systems).
 
     !!!warning "Projects go in `/home`, not on the Windows filesystem"
         Make sure you put your projects in the Linux filesystem (e.g. `/home/<your_username>`), **not** in the Windows filesystem (`/mnt/c`), because you’ll get vastly superior performance on the Linux filesystem. You will be very unhappy if you put your project in `/mnt/c`.
 
+    !!!note "WSL2 hostname management"
+        DDEV attempts to manage custom hostnames via the Windows-side hosts file (usually `C:\Windows\system32\drivers\etc\hosts') rather than the hosts file inside WSL2. It can only do this if the current version of DDEV is installed and in the `$PATH` on the Windows side. (DDEV inside WSL2 uses `ddev.exe` on the WIndows side as a proxy to update the Windows hosts file.) If `ddev.exe --version` inside WSL2 gets the same result as `ddev --version` then you're all set up. Otherwise, install DDEV on Windows using `choco install -y ddev` or by downloading and running the Windows installer.
+
     !!!note "Path to certificates"
-        Note the prompt `Installing to the system store is not yet supported on this Linux`, which can be a simple result of not having `/usr/sbin` in the path so that `/usr/sbin/update-ca-certificates` can be found.)
+        If you get the prompt `Installing to the system store is not yet supported on this Linux`, you may just need to add `/usr/sbin` to the `$PATH` so that `/usr/sbin/update-ca-certificates` can be found.
 
 === "Traditional Windows"
 
