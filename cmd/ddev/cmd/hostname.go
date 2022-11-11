@@ -205,6 +205,10 @@ func removeInactiveHostnames(hosts goodhosts.Hosts) {
 		rawResult["full_error"] = detail
 		output.UserOut.WithField("raw", rawResult).Fatal(detail)
 	}
+	if dockerutil.IsWSL2() && ddevapp.IsWindowsDdevExeAvailable() {
+		util.Warning("Please manually remove hostnames you don't want from Windows hosts file")
+		return
+	}
 
 	// Iterate through each host line
 	for _, line := range hosts.Lines {
