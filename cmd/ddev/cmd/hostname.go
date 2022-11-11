@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/util"
-
 	"github.com/drud/ddev/pkg/output"
+	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/versionconstants"
 
 	"strings"
 
@@ -40,14 +40,16 @@ to allow ddev to modify your hosts file. If you are connected to the internet an
 		}
 
 		// Attempt to write the hosts file first to catch any permissions issues early
-		if err := hosts.Flush(); err != nil {
-			rawResult := make(map[string]interface{})
-			detail := fmt.Sprintf("Please use sudo or execute with administrative privileges: %v", err)
-			rawResult["error"] = "WRITEERROR"
-			rawResult["full_error"] = detail
-			output.UserOut.WithField("raw", rawResult).Fatal(detail)
+		if !dockerutil.IsWSL2() {
+			if hosts.Flush(); err != nil {
+				rawResult := make(map[string]interface{})
+				detail := fmt.Sprintf("Please use sudo or execute with administrative privileges: %v", err)
+				rawResult["error"] = "WRITEERROR"
+				rawResult["full_error"] = detail
+				output.UserOut.WithField("raw", rawResult).Fatal(detail)
 
-			return
+				return
+			}
 		}
 
 		// If requested, remove all inactive host names and exit
@@ -88,10 +90,12 @@ func addHostname(hosts goodhosts.Hosts, ip, hostname string) {
 
 	ddevapp.CheckWindowsHostsFile()
 
+	output.UserOut.Printf("In addHostname, IsWSL2()=%v IsWindowsDdevExeAvailable=%v", dockerutil.IsWSL2(), ddevapp.IsWindowsDdevExeAvailable())
 	if dockerutil.IsWSL2() && ddevapp.IsWindowsDdevExeAvailable() {
 		util.Debug("Running ddev.exe hostname on Windows side, hostname=%s, ip=%s", hostname, ip)
 		out, err := exec.RunHostCommand("ddev.exe", "hostname", hostname, ip)
 		if err == nil {
+			util.Debug("ran ddev.exe with output=%s", out)
 			return
 		}
 		util.Warning("Unable to run ddev.exe hostname %s %s on Windows side, err=%s, output=%s", hostname, ip, err, out)

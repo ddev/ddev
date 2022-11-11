@@ -16,13 +16,21 @@ import (
 	"strings"
 )
 
+// IsWindowsDdevExeAvailable checks to see if we can run ddev.exe on Windows side
 func IsWindowsDdevExeAvailable() bool {
+	path := os.Getenv("PATH")
+	output.UserOut.Printf("running ddev.exe --version; PATH=%s", path)
+	p, err := exec2.LookPath("ddev.exe")
+	if err != nil {
+		util.Warning("ddev.exe not found in $PATH, please install it on Windows side; err=%v", err)
+	}
 	if dockerutil.IsWSL2() {
-		out, err := exec.RunHostCommand("ddev.exe", "--version")
+		output.UserOut.Printf("In stanza, Running %s --version", p)
+		out, err := exec.RunHostCommand(p, "--version")
 		if err == nil {
 			return true
 		}
-		util.Debug("ddev.exe not found on windows side in $PATH: err=%s, output=%s", err, out)
+		output.UserOut.Printf("%s not found on windows side in $PATH, or can't run it: err=%s, output=%s", p, err, out)
 	}
 	return false
 }
@@ -73,11 +81,13 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 // We would have hoped to use DNS or have found the entry already in hosts
 // But if it's not, try to add one.
 func addHostEntry(name string, ip string) error {
-	_, err := exec2.LookPath("sudo")
-	if (os.Getenv("DDEV_NONINTERACTIVE") != "") || err != nil {
-		util.Warning("You must manually add the following entry to your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname %s %s'", ip, name, name, ip)
+	if !dockerutil.IsWSL2() {
+		_, err := exec2.LookPath("sudo")
+		if (os.Getenv("DDEV_NONINTERACTIVE") != "") || err != nil {
+			util.Warning("You must manually add the following entry to your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname %s %s'", ip, name, name, ip)
 
-		return nil
+			return nil
+		}
 	}
 
 	ddevFullpath, err := os.Executable()
@@ -86,13 +96,16 @@ func addHostEntry(name string, ip string) error {
 	output.UserOut.Printf("ddev needs to add an entry to your hostfile.\nIt may require administrative privileges via the sudo command, so you may be required\nto enter your password for sudo. ddev is about to issue the command:")
 
 	hostnameArgs := []string{ddevFullpath, "hostname", name, ip}
-	command := strings.Join(hostnameArgs, " ")
-	output.UserOut.Printf("    sudo %s\n", command)
-	output.UserOut.Println("Please enter your password if prompted.")
-	out, err := exec.RunCommandPipe("sudo", hostnameArgs)
-	if err != nil {
-		util.Warning("Failed to execute sudo command, you will need to manually execute '%s' with administrative privileges, err=%v, output=%v", command, err, out)
+	if !dockerutil.IsWSL2() {
+		hostnameArgs = append([]string{"sudo"}, hostnameArgs...)
 	}
+
+	output.UserOut.Println("Please enter your password or allow escalation if prompted.")
+	out, err := exec.RunHostCommand(hostnameArgs[0], hostnameArgs[1:]...)
+	if err != nil {
+		util.Warning("Failed to execute %s, you will need to manually execute '%s' with administrative privileges, err=%v, output=%v", strings.Join(hostnameArgs, " "), strings.Join(hostnameArgs, " "), err, out)
+	}
+	util.Debug("output of RunCommandPipe sudo %v=%v", strings.Join(hostnameArgs, " "), out)
 	return nil
 }
 
