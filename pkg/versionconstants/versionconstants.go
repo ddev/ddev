@@ -32,7 +32,7 @@ var DBAImg = "phpmyadmin"
 var DBATag = "5" // Note that this can be overridden by make
 
 const TraditionalRouterImage = "drud/ddev-router:20220918_traefik"
-const TraefikRouterImage = "traefik:v2.8"
+const TraefikRouterImage = "traefik:v2.9"
 
 // SSHAuthImage is image for agent
 // var SSHAuthImage = "drud/ddev-ssh-agent"
