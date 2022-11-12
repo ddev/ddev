@@ -13,7 +13,6 @@ A project’s `.ddev` directory can be intimidating at first, so let’s take a 
     You may have some directories or files that aren’t listed here, likely added by custom services.  
     For example, if you see a `solr` directory, it probably pertains to a custom Solr [add-on service](../extend/additional-services.md).
 
-
 `apache` directory
 : Default Apache configuration when using `webserver_type: apache-fpm`, which [can be customized](../extend/customization-extendibility.md#providing-custom-apache-configuration).
 
@@ -62,7 +61,7 @@ A project’s `.ddev` directory can be intimidating at first, so let’s take a 
 `xhprof` directory
 : Contains the `xhprof_prepend.php` file that can be used to customize [xhprof](../debugging-profiling/xhprof-profiling.md) behavior for different types of websites.
 
-### Look But Don’t Touch!
+### Look But Don’t Touch
 
 Files beginning with `.` are hidden because they shouldn’t be fiddled with; most are regenerated, and thus overwritten, on every `ddev start`:
 
