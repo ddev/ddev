@@ -1036,7 +1036,7 @@ Create a database snapshot for one or more projects.
 
 This uses `xtrabackup` or `mariabackup` to create a database snapshot in the `.ddev/db_snapshots` directory. These are compatible with server backups using the same tools and can be restored with the [`snapshot restore`](#snapshot-restore) command.
 
-See [Database Management](../basics/database-management.md) for more on working with databases.
+See [Snapshotting and Restoring a Database](../basics/cli-usage.md#snapshotting-and-restoring-a-database) for more detail, or [Database Management](../basics/database-management.md) for more on working with databases in general.
 
 Flags:
 
