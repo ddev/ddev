@@ -11,7 +11,7 @@ If you have a project running when you’re online (using DNS for name resolutio
 
 You have general options as well:
 
-In `.ddev/config.yaml`, [`use_dns_when_possible: false`](../configuration/config_yaml.md#use_dns_when_possible) will make DDEV never try to use DNS for resolution, instead adding hostnames to `/etc/hosts`. You can also use `ddev config --use-dns-when-possible=false` to set this configuration option.
+In `.ddev/config.yaml`, [`use_dns_when_possible: false`](../configuration/config.md#use_dns_when_possible) will make DDEV never try to use DNS for resolution, instead adding hostnames to `/etc/hosts`. You can also use `ddev config --use-dns-when-possible=false` to set this configuration option.
 
 In `.ddev/config.yaml`, you can use `project_tld: example.com` to have DDEV use a project TLD that won’t be looked up via DNS. You can do the equivalent with `ddev config --project-tld=example.com`. This also works as a global option in `~/.ddev/global_config.yaml` or running `ddev config global --project-tld=example.com`.
 

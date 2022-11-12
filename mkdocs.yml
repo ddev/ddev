@@ -39,7 +39,7 @@ theme:
 
   favicon: favicon.png
   # readthedocs doesn't seem to do logo css right
-#  logo: /Logo_w_text.svg
+#  logo: /logo.svg
 
 # Plugins
 plugins:
@@ -123,15 +123,15 @@ nav:
     - users/basics/index.md
     - users/basics/cli-usage.md
     - users/basics/commands.md
-    - users/basics/database_management.md
+    - users/basics/database-management.md
     - users/basics/developer-tools.md
     - users/basics/how-ddev-works.md
     - users/basics/faq.md
     - users/basics/troubleshooting.md
     - users/basics/uninstall.md
   - 'Configuration':
-    - users/configuration/config_yaml.md
-    - users/extend/database_types.md
+    - users/configuration/config.md
+    - users/extend/database-types.md
     - users/configuration/hooks.md
     - users/extend/additional-hostnames.md
     - users/configuration/experimental.md
@@ -158,8 +158,8 @@ nav:
       - users/topics/phpstorm.md
       - users/topics/sharing.md
       - users/topics/webserver.md
-      - users/topics/whats_in_ddev_dir.md
-      - users/topics/cms_specific_help.md
+      - users/topics/directory-tour.md
+      - users/topics/cms-specific-help.md
   - 'Details':
       - users/details/offline-usage.md
       - users/details/opting-in.md

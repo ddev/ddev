@@ -146,7 +146,7 @@ To solve this:
 * Change the configuration in `.ddev/config.yaml` back to the original configuration.
 * Export the database with [`ddev export-db`](commands.md#export-db).
 * Delete the project with [`ddev delete`](commands.md#delete), or stop the project and remove the database volume using `docker volume rm <project>-mariadb` or `docker volume rm <project>-postgres`.
-* Update `.ddev/config.yaml` to use the new [database type or version](../extend/database_types.md).
+* Update `.ddev/config.yaml` to use the new [database type or version](../extend/database-types.md).
 * Start the project and import the database from your export.
 
 ## “web service unhealthy” or “web service starting” or Exited

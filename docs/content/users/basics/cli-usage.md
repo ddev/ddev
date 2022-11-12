@@ -32,7 +32,7 @@ Type `ddev` or `ddev -h` in a terminal window to see the available DDEV commands
 
 ## Node.js, npm, nvm, and Yarn
 
-`nodejs`, `npm`, `nvm` and `yarn` are preinstalled in the web container. You can configure the default value of the installed Node.js version with the [`nodejs_version`](../configuration/config_yaml.md#nodejs_version) option in `.ddev/config.yaml` or with `ddev config --nodejs_version`. You can also override that with any value using the built-in `nvm` in the web container or with [`ddev nvm`](../basics/commands.md#nvm), for example `ddev nvm install 6`. There is also a [`ddev yarn`](../basics/commands.md#yarn) command.
+`nodejs`, `npm`, `nvm` and `yarn` are preinstalled in the web container. You can configure the default value of the installed Node.js version with the [`nodejs_version`](../configuration/config.md#nodejs_version) option in `.ddev/config.yaml` or with `ddev config --nodejs_version`. You can also override that with any value using the built-in `nvm` in the web container or with [`ddev nvm`](../basics/commands.md#nvm), for example `ddev nvm install 6`. There is also a [`ddev yarn`](../basics/commands.md#yarn) command.
 
 ## More Bundled Tools
 
@@ -56,7 +56,7 @@ ddev export-db >/tmp/db.sql.gz
 
 ## `ddev import-files`
 
-To import static file assets for a project, such as uploaded images and documents, use the command [`ddev import-files`](../basics/commands.md#import-files). This command will prompt you to specify the location of your import asset, then import the assets into the project’s upload directory. To define a custom upload directory, set the [`upload_dir`](../configuration/config_yaml.md#upload_dir) config option. If no custom upload directory is defined, the default will be used:
+To import static file assets for a project, such as uploaded images and documents, use the command [`ddev import-files`](../basics/commands.md#import-files). This command will prompt you to specify the location of your import asset, then import the assets into the project’s upload directory. To define a custom upload directory, set the [`upload_dir`](../configuration/config.md#upload_dir) config option. If no custom upload directory is defined, the default will be used:
 
 * For Drupal projects, this is the `sites/default/files` directory.
 * For WordPress projects, this is the `wp-content/uploads` directory.
@@ -103,7 +103,7 @@ To restore the latest snapshot add the `--latest` flag (`ddev snapshot restore -
 List snapshots for an existing project with `ddev snapshot --list`. (Add the `--all` option for an exhaustive list; `ddev snapshot --list --all`.) You can remove all of them with `ddev snapshot --cleanup`, or remove a single snapshot with `ddev snapshot --cleanup --name <snapshot-name>`.
 
 !!!tip
-    The default 120-second timeout may be inadequate for restores with very large snapshots or slower systems. You can increase this timeout by setting [`default_container_timeout`](../configuration/config_yaml.md#default_container_timeout) to a higher value.
+    The default 120-second timeout may be inadequate for restores with very large snapshots or slower systems. You can increase this timeout by setting [`default_container_timeout`](../configuration/config.md#default_container_timeout) to a higher value.
 
     A timeout doesn’t necessarily mean the restore failed; you can watch the snapshot restore complete by running `ddev logs -s db`.
 

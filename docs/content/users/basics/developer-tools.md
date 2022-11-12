@@ -100,7 +100,7 @@ If you need to connect to your project’s database from your workstation, run [
 
 Each project’s database port is unique, and randomly chosen from available ports on your system when you run [`ddev start`](../basics/commands.md#start).
 
-You can force this port to be the same on every [`ddev start`](../basics/commands.md#start) by setting [`host_db_port`](../configuration/config_yaml.md#host_db_port) in the project’s `.ddev/config.yaml`. For example, `host_db_port: "49156"` or `ddev config --host-db-port=49156`. This value needs to be different on each running DDEV project, and unless it is set, the database port will change on every `ddev start`.
+You can force this port to be the same on every [`ddev start`](../basics/commands.md#start) by setting [`host_db_port`](../configuration/config.md#host_db_port) in the project’s `.ddev/config.yaml`. For example, `host_db_port: "49156"` or `ddev config --host-db-port=49156`. This value needs to be different on each running DDEV project, and unless it is set, the database port will change on every `ddev start`.
 
 You can use this port with various tools that need a direct port, like `mysql` or `psql` clients, but it’s usually easiest to use [`ddev mysql`](../basics/commands.md#mysql), `ddev psql`, `ddev sequelace`, [`ddev tableplus`](../basics/commands.md#tableplus), etc, which set everything up for you.
 
