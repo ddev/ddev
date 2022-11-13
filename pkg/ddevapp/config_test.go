@@ -590,9 +590,9 @@ func TestReadConfigCRLF(t *testing.T) {
 
 // TestConfigValidate tests validation of configuration values.
 func TestConfigValidate(t *testing.T) {
-	if nodeps.IsMacM1() {
-		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
-	}
+	//if nodeps.IsMacM1() {
+	//	t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+	//}
 
 	assert := asrt.New(t)
 	site := TestSites[0]
@@ -601,6 +601,10 @@ func TestConfigValidate(t *testing.T) {
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
+		assert.NoError(err)
+		app.AdditionalFQDNs = nil
+		app.AdditionalHostnames = nil
+		err = app.WriteConfig()
 		assert.NoError(err)
 	})
 
@@ -665,6 +669,8 @@ func TestConfigValidate(t *testing.T) {
 	// Make sure that wildcards work
 	app.AdditionalHostnames = []string{"x", "*.any"}
 	err = app.ValidateConfig()
+	assert.NoError(err)
+	err = app.WriteConfig()
 	assert.NoError(err)
 	err = app.Start()
 	assert.NoError(err)
