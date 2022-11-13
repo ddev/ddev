@@ -90,13 +90,13 @@ func addHostname(hosts goodhosts.Hosts, ip, hostname string) {
 	ddevapp.CheckWindowsHostsFile()
 
 	if dockerutil.IsWSL2() && ddevapp.IsWindowsDdevExeAvailable() {
-		util.Debug("Running ddev.exe hostname on Windows side, hostname=%s, ip=%s", hostname, ip)
-		out, err := exec.RunHostCommand("ddev.exe", "hostname", hostname, ip)
+		util.Debug("Running sudo.exe ddev.exe %s %s  on Windows side", hostname, ip)
+		out, err := exec.RunHostCommand("sudo.exe", "ddev.exe", "hostname", hostname, ip)
 		if err == nil {
-			util.Debug("ran ddev.exe with output=%s", out)
+			util.Debug("ran sudo.exe ddev.exe %s %s with output=%s", hostname, ip, out)
 			return
 		}
-		util.Warning("Unable to run ddev.exe hostname %s %s on Windows side, err=%s, output=%s", hostname, ip, err, out)
+		util.Warning("Unable to run sudo.exe ddev.exe hostname %s %s on Windows side, continuing with WSL2 /etc/hosts err=%s, output=%s", hostname, ip, err, out)
 	}
 
 	if hosts.Has(ip, hostname) {
@@ -140,13 +140,13 @@ func removeHostname(hosts goodhosts.Hosts, ip, hostname string) {
 	rawResult := make(map[string]interface{})
 
 	if dockerutil.IsWSL2() && ddevapp.IsWindowsDdevExeAvailable() {
-		util.Debug("Running 'ddev.exe hostname --remove %s %s' on Windows", hostname, ip)
-		out, err := exec.RunHostCommand("ddev.exe", "hostname", "--remove", hostname, ip)
+		util.Debug("Running sudo.exe ddev.exe -r %s %s  on Windows side", hostname, ip)
+		out, err := exec.RunHostCommand("sudo.exe", "ddev.exe", "hostname", "--remove", hostname, ip)
 		if err == nil {
-			util.Debug("ran ddev.exe hostname --remove %s %s with output=%s", hostname, ip, out)
+			util.Debug("ran sudo.exe ddev.exe --remove %s %s with output=%s", hostname, ip, out)
 			return
 		}
-		util.Warning("Unable to run 'ddev.exe hostname --remove %s %s' on Windows side, err=%s, output=%s", hostname, ip, err, out)
+		util.Warning("Unable to run sudo.exe ddev.exe hostname --remove %s %s on Windows side, continuing with WSL2 /etc/hosts err=%s, output=%s", hostname, ip, err, out)
 	}
 
 	if !hosts.Has(ip, hostname) {

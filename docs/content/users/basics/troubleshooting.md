@@ -253,7 +253,7 @@ While DDEV can create a web server and a Docker network infrastructure for a pro
 * DDEV assumes that hostnames can be resolved within 3 seconds. That assumption is not valid on all networks or computers, so you can increase the amount of time it waits for resolution. Increasing to 5 seconds, for example: `ddev config global --internet-detection-timeout-ms=5000`.
 * If DDEV detects that it can’t look up one of the hostnames assigned to your project for that or other reasons, it will try to add that to the hosts file on your computer, which requires administrative privileges (sudo or Windows UAC).
     * This technique may not work on Windows WSL2, see below.
-    * Only 10 hosts are valid on a line on traditional Windows, see [below](#windows-hosts-file-limited-to-10-hosts-per-line); beyond that hostnames are ignored.
+    * Only 10 hosts are valid per line on some versions of traditional Windows, see [below](#windows-hosts-file-may-be-limited-to-10-hosts-per-line); beyond that hostnames are ignored.
 
 ### DNS Rebinding Prohibited
 

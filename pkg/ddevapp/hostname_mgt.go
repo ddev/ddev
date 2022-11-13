@@ -16,19 +16,32 @@ import (
 )
 
 // IsWindowsDdevExeAvailable checks to see if we can run ddev.exe on Windows side
+var windowsDdevExeAvailable bool
+
 func IsWindowsDdevExeAvailable() bool {
-	p, err := exec2.LookPath("ddev.exe")
-	if err != nil {
-		util.Warning("ddev.exe not found in $PATH, please install it on Windows side; err=%v", err)
-	}
-	if dockerutil.IsWSL2() {
-		out, err := exec.RunHostCommand(p, "--version")
-		if err == nil {
-			return true
+	if !windowsDdevExeAvailable && dockerutil.IsWSL2() {
+		_, err := exec2.LookPath("ddev.exe")
+		if err != nil {
+			util.Warning("ddev.exe not found in $PATH, please install it on Windows side; err=%v", err)
+			windowsDdevExeAvailable = false
+			return windowsDdevExeAvailable
 		}
-		util.Warning("%s not found on windows side in $PATH, or can't run it: err=%s, output=%s", p, err, out)
+		out, err := exec.RunHostCommand("ddev.exe", "--version")
+		if err != nil {
+			util.Warning("unable to run ddev.exe, please check it on Windows side; err=%v; output=%s", err, out)
+			windowsDdevExeAvailable = false
+			return windowsDdevExeAvailable
+		}
+
+		_, err = exec2.LookPath("sudo.exe")
+		if err != nil {
+			util.Warning("sudo.exe not found in $PATH, please install DDEV on Windows side; err=%v", err)
+			windowsDdevExeAvailable = false
+			return windowsDdevExeAvailable
+		}
+		windowsDdevExeAvailable = true
 	}
-	return false
+	return windowsDdevExeAvailable
 }
 
 // AddHostsEntriesIfNeeded will (optionally) add the site URL to the host's /etc/hosts.
