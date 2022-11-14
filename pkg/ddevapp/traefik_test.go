@@ -7,6 +7,7 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -39,8 +40,8 @@ func TestTraefikSimple(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	app.AdditionalHostnames = []string{"one", "two"}
-	app.AdditionalFQDNs = []string{"onefullurl.ddev.site", "twofullurl.ddev.site"}
+	app.AdditionalHostnames = []string{"one", "two", "*.wild"}
+	app.AdditionalFQDNs = []string{"onefullurl.ddev.site", "twofullurl.ddev.site", "*.wild.fqdn"}
 	err = app.Start()
 	require.NoError(t, err)
 
@@ -50,12 +51,12 @@ func TestTraefikSimple(t *testing.T) {
 	// Test reachabiliity in each of the hostnames
 	httpURLs, httpsURLs, allURLs := app.GetAllURLs()
 	for _, u := range allURLs {
+		// Use something here for wildcard
+		u = strings.Replace(u, `*`, `somewildcard`, 1)
 		_, _ = testcommon.EnsureLocalHTTPContent(t, u+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 	}
 
 	// Test Reachability to PhpMyAdmin, which uses different technique
 	_, _ = testcommon.EnsureLocalHTTPContent(t, httpURLs[0]+":8036", "phpMyAdmin")
 	_, _ = testcommon.EnsureLocalHTTPContent(t, httpsURLs[0]+":8037", "phpMyAdmin")
-
-	// TODO: Add wildcards tests like TestConfigValidate
 }

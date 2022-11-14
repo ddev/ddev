@@ -38,9 +38,12 @@ func detectAppRouting(app *DdevApp) ([]TraeficRouting, error) {
 					for _, portPair := range portPairs {
 						// TODO: Implement VIRTUAL_HOST
 						ports := strings.Split(portPair, ":")
-						if len(ports) != 2 {
+						if len(ports) == 0 || len(ports) > 2 {
 							util.Warning("Skipping bad HTTP_EXPOSE port pair spec %s for service %s", portPair, serviceName)
 							continue
+						}
+						if len(ports) == 1 {
+							ports = append(ports, ports[0])
 						}
 						table = append(table, TraeficRouting{ExternalPort: ports[0], InternalServiceName: serviceName.(string), InternalServicePort: ports[1], HTTPS: false})
 					}
@@ -52,9 +55,12 @@ func detectAppRouting(app *DdevApp) ([]TraeficRouting, error) {
 					for _, portPair := range portPairs {
 						// TODO: Implement VIRTUAL_HOST
 						ports := strings.Split(portPair, ":")
-						if len(ports) != 2 {
+						if len(ports) == 0 || len(ports) > 2 {
 							util.Warning("Skipping bad HTTPS_EXPOSE port pair spec %s for service %s", portPair, serviceName)
 							continue
+						}
+						if len(ports) == 1 {
+							ports = append(ports, ports[0])
 						}
 						table = append(table, TraeficRouting{ExternalPort: ports[0], InternalServiceName: serviceName.(string), InternalServicePort: ports[1], HTTPS: true})
 					}
