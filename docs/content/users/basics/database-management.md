@@ -54,5 +54,5 @@ Use the [`ddev snapshot restore`](../basics/commands.md#snapshot-restore) comman
     * Use the “database” tool to create a source from “localhost”, with the proper type “mysql” or “postgresql” and the port you chose, username `db` + password `db`.
     * Explore away!
 * There’s a sample custom command that will run the free [MySQL Workbench](https://dev.mysql.com/downloads/workbench/) on macOS, Windows or Linux. To use it, run:
-    * `cp ~.ddev/commands/host/mysqlworkbench.example ~.ddev/commands/host/mysqlworkbench`
+    * `cp ~/.ddev/commands/host/mysqlworkbench.example ~/.ddev/commands/host/mysqlworkbench`
     * `ddev mysqlworkbench`
