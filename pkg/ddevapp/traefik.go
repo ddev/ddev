@@ -285,10 +285,18 @@ func configureTraefikForApp(app *DdevApp) error {
 	}
 	templateData := traefikData{
 		App:             app,
-		Hostnames:       app.GetHostnames(),
+		Hostnames:       []string{},
 		PrimaryHostname: app.GetHostname(),
 		TargetCertsPath: targetCertsPath,
 		RoutingTable:    routingTable,
+	}
+
+	// Convert wildcards like `*.<anything>` to `.*\.anything`
+	for _, hostname := range app.GetHostnames() {
+		if strings.HasPrefix(hostname, `*.`) {
+			hostname = `{subdomain:.+}` + strings.TrimPrefix(hostname, `*`)
+		}
+		templateData.Hostnames = append(templateData.Hostnames, hostname)
 	}
 
 	traefikYamlFile := filepath.Join(sourceConfigDir, app.Name+".yaml")

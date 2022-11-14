@@ -5,7 +5,7 @@ http:
     {{$appname := .App.Name}}{{$hostnames := .Hostnames}}{{ range $s := .RoutingTable }}
     {{ if not $s.HTTPS }}
     {{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-http:
-      rule: "Host({{ range $i, $h := $hostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})"
+      rule: HostRegexp({{ range $i, $h := $hostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
       service: "{{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-http"
       tls: false
       entrypoints:
@@ -13,7 +13,7 @@ http:
     {{ end }}{{ end }}
     {{$appname := .App.Name}}{{$hostnames := .Hostnames}}{{ range $s := .RoutingTable }}{{ if $s.HTTPS }}
     {{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-https:
-      rule: "Host({{ range $i, $h := $hostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})"
+      rule: HostRegexp({{ range $i, $h := $hostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
       service: "{{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-https"
       tls: true
       entrypoints:
