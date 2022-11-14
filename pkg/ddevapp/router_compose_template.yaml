@@ -5,13 +5,14 @@ services:
       context: router-build
       args:
         BASE_IMAGE: {{ .router_image }}
-#        username: '{{ .Username }}'
-#        uid: '{{ .UID }}'
-#        gid: '{{ .GID }}'
+        username: '{{ .Username }}'
+        uid: '{{ .UID }}'
+        gid: '{{ .GID }}'
 
     {{ if .use_traefik }}
     command:
       - --configFile=/mnt/ddev-global-cache/traefik/static_config.yaml
+    user: {{ .UID }}:{{ .GID }}
     {{ end }}
 
     networks:
