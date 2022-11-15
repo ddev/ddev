@@ -67,7 +67,7 @@ A project’s `.ddev` directory can be intimidating at first, so let’s take a 
 `xhprof` directory
 : Contains the `xhprof_prepend.php` file that can be used to customize [xhprof](../debugging-profiling/xhprof-profiling.md) behavior for different types of websites.
 
-#### Look But Don’t Touch
+#### Hidden Project Files
 
 Files beginning with `.` are hidden because they shouldn’t be fiddled with; most are regenerated, and thus overwritten, on every `ddev start`:
 
@@ -108,7 +108,7 @@ There’s only one global `.ddev` directory, which typically lives in your home 
 `homeadditions` directory
 : Just like the per-project `homeadditions` directory, files you add here will automatically be copied into the web container’s home directory. Files from the _global_ homeadditions directory will be copied into **every** web container’s home directory.
 
-#### Look But Don’t Touch
+#### Hidden Global Files
 
 Again, these files are mostly regenerated on every `ddev start` so it’s best to leave them alone:
 
