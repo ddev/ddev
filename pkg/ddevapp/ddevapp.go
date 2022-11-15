@@ -1179,19 +1179,17 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 		router, _ := FindDdevRouter()
 
-		if !globalconfig.DdevGlobalConfig.UseTraefik {
-			// If the router doesn't exist, go ahead and push mkcert root ca certs into the ddev-global-cache/mkcert
-			// This will often be redundant
-			if router == nil {
-				// Copy ca certs into ddev-global-cache/mkcert
-				if caRoot != "" {
-					uid, _, _ := util.GetContainerUIDGid()
-					err = dockerutil.CopyIntoVolume(caRoot, "ddev-global-cache", "mkcert", uid, "", false)
-					if err != nil {
-						util.Warning("failed to copy root CA into docker volume ddev-global-cache/mkcert: %v", err)
-					} else {
-						util.Success("Pushed mkcert rootca certs to ddev-global-cache/mkcert")
-					}
+		// If the router doesn't exist, go ahead and push mkcert root ca certs into the ddev-global-cache/mkcert
+		// This will often be redundant
+		if router == nil {
+			// Copy ca certs into ddev-global-cache/mkcert
+			if caRoot != "" {
+				uid, _, _ := util.GetContainerUIDGid()
+				err = dockerutil.CopyIntoVolume(caRoot, "ddev-global-cache", "mkcert", uid, "", false)
+				if err != nil {
+					util.Warning("failed to copy root CA into docker volume ddev-global-cache/mkcert: %v", err)
+				} else {
+					util.Debug("Pushed mkcert rootca certs to ddev-global-cache/mkcert")
 				}
 			}
 

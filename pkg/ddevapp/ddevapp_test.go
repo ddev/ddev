@@ -582,7 +582,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		}
 		t.Logf("Testing these URLs: %v", urls)
 		for _, url := range urls {
-			_, err = testcommon.EnsureLocalHTTPContent(t, url+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+			_, _ = testcommon.EnsureLocalHTTPContent(t, url+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		}
 
 		out, err := exec.RunHostCommand(DdevBin, "list", "--wrap-table")
