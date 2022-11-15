@@ -17,7 +17,7 @@ A project’s `.ddev` directory can be intimidating at first, so let’s take a 
 : Default Apache configuration when using `webserver_type: apache-fpm`, which [can be customized](../extend/customization-extendibility.md#providing-custom-apache-configuration).
 
 `commands` subdirectories
-: Built-in and custom [shell commands](../extend/custom-commands.md) that can run on the host or inside a container.
+: Project custom [shell commands](../extend/custom-commands.md) that can run on the host or inside a container.
 
 `config.yaml`
 : The project’s main [configuration file](../configuration/config.md).
@@ -43,7 +43,7 @@ A project’s `.ddev` directory can be intimidating at first, so let’s take a 
 `mysql` directory
 : Contains [optional `mysql` or `mariadb` configuration](../extend/customization-extendibility.md#providing-custom-mysqlmariadb-configuration-mycnf).
 
-`nginx` directory (deprecated)
+`nginx` directory
 : Can be used for add-on nginx snippets.
 
 `nginx_full` directory
