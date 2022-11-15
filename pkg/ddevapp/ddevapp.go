@@ -1193,16 +1193,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 				}
 			}
 
-			certPath := app.GetConfigPath("custom_certs")
-			uid, _, _ := util.GetContainerUIDGid()
-			if fileutil.FileExists(certPath) {
-				err = dockerutil.CopyIntoVolume(certPath, "ddev-global-cache", "custom_certs", uid, "", false)
-				if err != nil {
-					util.Warning("failed to copy custom certs into docker volume ddev-global-cache/custom_certs: %v", err)
-				} else {
-					util.Success("Copied custom certs in %s to ddev-global-cache/custom_certs", certPath)
-				}
-			}
 		}
 
 		// If TLS supported and using traefik, create cert/key and push into ddev-global-cache/traefik
@@ -1210,6 +1200,22 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 			err = configureTraefikForApp(app)
 			if err != nil {
 				return err
+			}
+		}
+
+		// Push custom certs
+		targetSubdir := "custom_certs"
+		if globalconfig.DdevGlobalConfig.UseTraefik {
+			targetSubdir = path.Join("traefik", "certs")
+		}
+		certPath := app.GetConfigPath("custom_certs")
+		uid, _, _ := util.GetContainerUIDGid()
+		if fileutil.FileExists(certPath) {
+			err = dockerutil.CopyIntoVolume(certPath, "ddev-global-cache", targetSubdir, uid, "", false)
+			if err != nil {
+				util.Warning("failed to copy custom certs into docker volume ddev-global-cache/custom_certs: %v", err)
+			} else {
+				util.Debug("Installed custom cert from %s", certPath)
 			}
 		}
 	}
@@ -2221,19 +2227,10 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	// If project is running, clean up ddev-global-cache
 	if status == SiteRunning && removeData {
 		_, _, err = app.Exec(&ExecOpts{
-			Cmd: fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/${HOSTNAME} /mnt/ddev-global-cache/traefik/*/%s.*", app.Name),
+			Cmd: fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%s* /mnt/ddev-global-cache/traefik/*/%s*", app.Name, app.Name),
 		})
 		if err != nil {
 			util.Warning("Unable to clean up ddev-global-cache: %v", err)
-		}
-		if nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
-			_, _, err = app.Exec(&ExecOpts{
-				Cmd:     "rm -rf /mnt/ddev-global-cache/*/${HOSTNAME}",
-				Service: "db",
-			})
-			if err != nil {
-				util.Warning("Unable to clean up ddev-global-cache: %v", err)
-			}
 		}
 	}
 
