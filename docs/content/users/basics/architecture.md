@@ -44,7 +44,7 @@ A project’s `.ddev` directory can be intimidating at first, so let’s take a 
 : Contains [optional `mysql` or `mariadb` configuration](../extend/customization-extendibility.md#providing-custom-mysqlmariadb-configuration-mycnf).
 
 `nginx` directory
-: Can be used for add-on nginx snippets.
+: Can be used for add-on [nginx snippets](../extend/customization-extendibility.md#custom-nginx-configuration).
 
 `nginx_full` directory
 : Contains the nginx configuration used by the web container, which [can be customized](../extend/customization-extendibility.md#providing-custom-nginx-configuration).
