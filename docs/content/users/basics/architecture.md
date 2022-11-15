@@ -7,6 +7,12 @@ DDEV writes and uses [docker-compose](https://docs.docker.com/compose/) files fo
 
 ## Directory Tour
 
+DDEV stores configuration in two places: a single `.ddev` directory in your home folder, and a `.ddev` directory for each project you set up.
+
+The [global directory](#global-directory) is used to keep track of your projects and any of the [global settings](../configuration/config.md) that apply across all projects. You’ll probably spend more time working with the [per-project `.ddev` directories](#project-files) for their configuration and overrides.
+
+### Project Files
+
 A project’s `.ddev` directory can be intimidating at first, so let’s take a look at what lives in there.
 
 !!!tip "Yours May Differ Slightly"
@@ -61,7 +67,7 @@ A project’s `.ddev` directory can be intimidating at first, so let’s take a 
 `xhprof` directory
 : Contains the `xhprof_prepend.php` file that can be used to customize [xhprof](../debugging-profiling/xhprof-profiling.md) behavior for different types of websites.
 
-### Look But Don’t Touch
+#### Look But Don’t Touch
 
 Files beginning with `.` are hidden because they shouldn’t be fiddled with; most are regenerated, and thus overwritten, on every `ddev start`:
 
@@ -85,6 +91,47 @@ Files beginning with `.` are hidden because they shouldn’t be fiddled with; mo
 
 `.webimageBuild` directory
 : The generated Dockerfile used to customize the web container on first start.
+
+### Global Files
+
+There’s only one global `.ddev` directory, which typically lives in your home folder: `~/.ddev` or `$HOME/.ddev`.
+
+`global_config.yaml`
+: This YAML file defines your global configuration, which consists of various [config settings](../configuration/config.md) along with an important `project_info` key that lets DDEV keep track of the projects you’ve added.
+
+`bin` directory
+: This is where DDEV stores executable binaries it needs, like `mutagen` and `docker-compose`.
+
+`commands` directory
+: Directory for storing DDEV commands that should be available in containers, like `npm`, `artisan`, and `drush` for example. These are organized in subdirectories named for where they’ll be used: `db`, `host`, and `web`. You can add your own [custom commands](../extend/custom-commands.md) here.
+
+`homeadditions` directory
+: Just like the per-project `homeadditions` directory, files you add here will automatically be copied into the web container’s home directory. In this case of this _global_ homeadditions directory, the files will be copied into **every** web container’s home directory.
+
+#### Look But Don’t Touch
+
+Again, these files are mostly regenerated on every `ddev start` so it’s best to leave them alone:
+
+`.gitignore`
+: Prevents files from getting checked in when they shouldn’t be.
+
+`.router-compose-full.yaml`
+: The complete, generated docker-compose directive used for DDEV’s router.
+
+`.router-compose.yaml`
+: The base docker-compose directive used in generating `.router-compose-full.yaml`.
+
+`.ssh-auth-compose-full.yaml`
+: The complete, generated docker-compose directive used for DDEV’s SSH agent.
+
+`.ssh-auth-compose.yaml`
+: The base docker-compose directive used in generating `.ssh-auth-compose-full.yaml`.
+
+`.sshimageBuild`
+: Directory used for storing DDEV’s generated `Dockerfile` used in building the SSH agent image.
+
+`.update`
+: An empty file whose purpose is mysterious and intriguing.
 
 ## Container Architecture
 
