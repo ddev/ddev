@@ -45,7 +45,7 @@ jobs:
           - name: "no-bind-mounts"
             no-bind-mounts: "true"
           - name: "traefik"
-            use-traefik: true
+            use-traefik: "true"
       fail-fast: false
 
     runs-on: ubuntu-20.04
