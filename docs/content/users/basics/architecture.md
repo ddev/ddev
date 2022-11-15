@@ -100,13 +100,13 @@ There’s only one global `.ddev` directory, which typically lives in your home 
 : This YAML file defines your global configuration, which consists of various [config settings](../configuration/config.md) along with an important `project_info` key that lets DDEV keep track of the projects you’ve added.
 
 `bin` directory
-: This is where DDEV stores executable binaries it needs, like `mutagen` and `docker-compose`.
+: This is where DDEV stores private executable binaries it needs, like `mutagen` and `docker-compose`.
 
 `commands` directory
 : Directory for storing DDEV commands that should be available in containers, like `npm`, `artisan`, and `drush` for example. These are organized in subdirectories named for where they’ll be used: `db`, `host`, and `web`. You can add your own [custom commands](../extend/custom-commands.md) here.
 
 `homeadditions` directory
-: Just like the per-project `homeadditions` directory, files you add here will automatically be copied into the web container’s home directory. In this case of this _global_ homeadditions directory, the files will be copied into **every** web container’s home directory.
+: Just like the per-project `homeadditions` directory, files you add here will automatically be copied into the web container’s home directory. Files from the _global_ homeadditions directory will be copied into **every** web container’s home directory.
 
 #### Look But Don’t Touch
 
@@ -120,6 +120,8 @@ Again, these files are mostly regenerated on every `ddev start` so it’s best t
 
 `.router-compose.yaml`
 : The base docker-compose directive used in generating `.router-compose-full.yaml`.
+`router-compose.*.yaml`
+: `docker-compose` files with the name `router-compose.*.yaml` can be used to override stanzas in the `.router-compose.yaml` file.
 
 `.ssh-auth-compose-full.yaml`
 : The complete, generated docker-compose directive used for DDEV’s SSH agent.
