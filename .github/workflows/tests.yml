@@ -59,7 +59,9 @@ jobs:
       DDEV_TEST_USE_TRAEFIK: ${{ matrix.use-traefik }}
     steps:
       - uses: actions/checkout@v3
-      - run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
       - name: Install Docker and deps (Linux)
         run: ./.github/workflows/linux-setup.sh
       - uses: actions/setup-go@v3
