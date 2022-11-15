@@ -68,7 +68,14 @@ jobs:
         with:
           go-version: '>=1.19.0'
 
+      - run: echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN} DDEV_TEST_USE_TRAEFIK=${DDEV_TEST_USE_TRAEFIK} DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE} DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS}"
+
       - name: DDEV tests
-        run: |
-          echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN} DDEV_TEST_USE_TRAEFIK=${DDEV_TEST_USE_TRAEFIK} DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE} DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS}"
-          make TESTARGS="-failfast" test
+        run: make TESTARGS="-failfast" test
+        if: matrix.use-traefik != 'true'
+
+      - name: DDEV tests - traefik
+        run: make test
+        if: matrix.use-traefik == 'true'
+
+
