@@ -9,6 +9,7 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
+	copy2 "github.com/otiai10/copy"
 	"os"
 	"path"
 	"path/filepath"
@@ -241,6 +242,12 @@ func configureTraefikForApp(app *DdevApp) error {
 		return fmt.Errorf("failed to create traefik config dir: %v", err)
 	}
 
+	if fileutil.FileExists(app.GetConfigPath("custom_certs")) {
+		err = copy2.Copy(app.GetConfigPath("custom_certs"), sourceCertsPath)
+		if err != nil {
+			return err
+		}
+	}
 	baseName := filepath.Join(sourceCertsPath, app.Name)
 	// Assume that the #ddev-generated exists in file unless it doesn't
 	sigExists := true

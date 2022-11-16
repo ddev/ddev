@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/drud/ddev/pkg/versionconstants"
-	copy2 "github.com/otiai10/copy"
 	"net"
 	"net/url"
 	"os"
@@ -3784,13 +3783,12 @@ func TestCustomCerts(t *testing.T) {
 	// mkcert --cert-file d9composer.ddev.site.crt --key-file d9composer.ddev.site.key d9composer.ddev.site
 	// For traefik generation, it's app.Name,
 	// mkcert --cert-file d9.crt --key-file d9.key d9.ddev.site
-	out, err = exec.RunHostCommand("mkcert", "--cert-file", filepath.Join(certDir, app.Name+".crt"), "--key-file", filepath.Join(certDir, app.Name+".key"), app.GetHostname())
-	assert.NoError(err, "mkcert command failed, out=%s", out)
-
+	baseCertName := app.GetHostname()
 	if globalconfig.DdevGlobalConfig.UseTraefik {
-		err = copy2.Copy(certDir, app.GetConfigPath("traefik/certs"))
-		require.NoError(t, err)
+		baseCertName = app.Name
 	}
+	out, err = exec.RunHostCommand("mkcert", "--cert-file", filepath.Join(certDir, baseCertName+".crt"), "--key-file", filepath.Join(certDir, baseCertName+".key"), app.GetHostname())
+	assert.NoError(err, "mkcert command failed, out=%s", out)
 
 	err = app.Start()
 	assert.NoError(err)
