@@ -5,6 +5,7 @@ A DDEV installation consists of:
 * The self-contained `ddev` binary.
 * Each project’s `.ddev` directory.
 * The global `~/.ddev` directory where various global items are stored.
+* The global `~/.ddev_mutagen_data_directory` directory where Mutagen sync data may be stored.
 * The associated Docker images and containers DDEV created.
 * Any entries in `/etc/hosts`.
 
@@ -17,6 +18,8 @@ To uninstall just a project: [`ddev delete <project>`](commands.md#delete). This
 To remove all DDEV-owned `/etc/hosts` entries: [`ddev hostname --remove-inactive`](commands.md#hostname).
 
 To remove the global `.ddev` directory: `rm -r ~/.ddev`.
+
+To remove the global `.ddev_mutagen_data_directory` directory: `rm -r ~/.ddev_mutagen_data_directory`.
 
 If you installed Docker just for DDEV and want to uninstall it with all containers and images, just uninstall it for your version of Docker.
 

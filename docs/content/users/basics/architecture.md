@@ -135,6 +135,9 @@ Again, these files are mostly regenerated on every `ddev start` so it’s best t
 `.update`
 : An empty file whose purpose is mysterious and intriguing.
 
+!!!tip "`.ddev_mutagen_data_directory`"
+    DDEV uses a global `~/.ddev_mutagen_data_directory` for storing [Mutagen](../install/performance.md#mutagen) sync data.
+
 ## Container Architecture
 
 It’s easiest to think of DDEV as a set of little networked computers (Docker containers) that are in a different network from your workstation but still reachable from it.
