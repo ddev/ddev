@@ -212,9 +212,8 @@ func pushGlobalTraefikConfig() error {
 	err = dockerutil.CopyIntoVolume(globalTraefikDir, "ddev-global-cache", "traefik", uid, "", false)
 	if err != nil {
 		return fmt.Errorf("failed to copy global traefik config into docker volume ddev-global-cache/traefik: %v", err)
-	} else {
-		util.Debug("Copied global traefik config in %s to ddev-global-cache/traefik", sourceCertsPath)
 	}
+	util.Debug("Copied global traefik config in %s to ddev-global-cache/traefik", sourceCertsPath)
 
 	return nil
 }
