@@ -94,7 +94,7 @@ Files beginning with `.` are hidden because they shouldn’t be fiddled with; mo
 
 ### Global Files
 
-There’s only one global `.ddev` directory, which typically lives in your home folder: `~/.ddev` or `$HOME/.ddev`.
+There’s only one global `.ddev` directory, which lives in your home directory: `~/.ddev` (`$HOME/.ddev`).
 
 `global_config.yaml`
 : This YAML file defines your global configuration, which consists of various [config settings](../configuration/config.md) along with an important `project_info` key that lets DDEV keep track of the projects you’ve added.
