@@ -33,6 +33,8 @@ func TestTraefikSimple(t *testing.T) {
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
 		ddevapp.PowerOff()
 		err = origConfig.WriteConfig()
 		assert.NoError(err)
