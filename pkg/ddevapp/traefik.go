@@ -109,7 +109,11 @@ func pushGlobalTraefikConfig() error {
 		}
 	}
 	if sigExists {
-		c := []string{"--cert-file", filepath.Join(sourceCertsPath, "default_cert.crt"), "--key-file", filepath.Join(sourceCertsPath, "default_key.key"), "*.ddev.site", "127.0.0.1", "localhost", "*.ddev.local", "ddev-router", "ddev-router.ddev", "ddev-router.ddev_default"}
+		c := []string{"--cert-file", filepath.Join(sourceCertsPath, "default_cert.crt"), "--key-file", filepath.Join(sourceCertsPath, "default_key.key"), "127.0.0.1", "localhost", "*.ddev.local", "ddev-router", "ddev-router.ddev", "ddev-router.ddev_default", "*.ddev.site"}
+		if globalconfig.DdevGlobalConfig.ProjectTldGlobal != "" {
+			c = append(c, "*."+globalconfig.DdevGlobalConfig.ProjectTldGlobal)
+		}
+
 		out, err := exec.RunHostCommand("mkcert", c...)
 		if err != nil {
 			util.Failed("failed to create certificates for app, check mkcert operation: %v", out)
@@ -268,6 +272,9 @@ func configureTraefikForApp(app *DdevApp) error {
 	if sigExists {
 		c := []string{"--cert-file", baseName + ".crt", "--key-file", baseName + ".key", "*.ddev.site", "127.0.0.1", "localhost", "*.ddev.local", "ddev-router", "ddev-router.ddev", "ddev-router.ddev_default"}
 		c = append(c, hostnames...)
+		if app.ProjectTLD != nodeps.DdevDefaultTLD {
+			c = append(c, "*."+app.ProjectTLD)
+		}
 		out, err := exec.RunHostCommand("mkcert", c...)
 		if err != nil {
 			util.Failed("failed to create certificates for app, check mkcert operation: %v", out)
