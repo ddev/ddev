@@ -9,7 +9,7 @@ DDEV writes and uses [docker-compose](https://docs.docker.com/compose/) files fo
 
 DDEV stores configuration in two places: a single `.ddev` directory in your home folder, and a `.ddev` directory for each project you set up.
 
-The [global directory](#global-directory) is used to keep track of your projects and any of the [global settings](../configuration/config.md) that apply across all projects. You’ll probably spend more time working with the [per-project `.ddev` directories](#project-files) for their configuration and overrides.
+The [global configuration directory](#global-files) is used to keep track of your projects and any of the [global settings](../configuration/config.md) that apply across all projects. You’ll probably spend more time working with the [per-project `.ddev` directories](#project-files) for their configuration and overrides.
 
 ### Project Files
 
