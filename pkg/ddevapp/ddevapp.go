@@ -2224,6 +2224,14 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		util.Warning("Unable to SyncAndterminateMutagenSession: %v", err)
 	}
 
+	if globalconfig.DdevGlobalConfig.UseTraefik && status == SiteRunning {
+		_, _, err = app.Exec(&ExecOpts{
+			Cmd: fmt.Sprintf("rm -f /mnt/ddev-global-cache/traefik/*/%s.{yaml,crt,key}", app.Name),
+		})
+		if err != nil {
+			util.Warning("Unable to clean up traefik configuration: %v", err)
+		}
+	}
 	// If project is running, clean up ddev-global-cache
 	if status == SiteRunning && removeData {
 		_, _, err = app.Exec(&ExecOpts{
