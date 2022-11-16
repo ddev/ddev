@@ -9,7 +9,6 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
-	copy2 "github.com/otiai10/copy"
 	"os"
 	"path"
 	"path/filepath"
@@ -236,6 +235,7 @@ func configureTraefikForApp(app *DdevApp) error {
 	sourceCertsPath := filepath.Join(projectTraefikDir, "certs")
 	sourceConfigDir := filepath.Join(projectTraefikDir, "config")
 	targetCertsPath := path.Join("/mnt/ddev-global-cache/traefik/certs")
+	customCertsPath := app.GetConfigPath("custom_certs")
 
 	err = os.MkdirAll(sourceCertsPath, 0755)
 	if err != nil {
@@ -246,12 +246,6 @@ func configureTraefikForApp(app *DdevApp) error {
 		return fmt.Errorf("failed to create traefik config dir: %v", err)
 	}
 
-	if fileutil.FileExists(app.GetConfigPath("custom_certs")) {
-		err = copy2.Copy(app.GetConfigPath("custom_certs"), sourceCertsPath)
-		if err != nil {
-			return err
-		}
-	}
 	baseName := filepath.Join(sourceCertsPath, app.Name)
 	// Assume that the #ddev-generated exists in file unless it doesn't
 	sigExists := true
@@ -355,6 +349,14 @@ func configureTraefikForApp(app *DdevApp) error {
 		util.Warning("failed to copy traefik into docker volume ddev-global-cache/traefik: %v", err)
 	} else {
 		util.Debug("Copied traefik certs in %s to ddev-global-cache/traefik", sourceCertsPath)
+	}
+	if fileutil.FileExists(filepath.Join(customCertsPath, fmt.Sprintf("%s.crt", app.Name))) {
+		err = dockerutil.CopyIntoVolume(app.GetConfigPath("custom_certs"), "ddev-global-cache", "traefik/certs", uid, "", false)
+		if err != nil {
+			util.Warning("failed copying custom certs into docker volume ddev-global-cache/traefik/certs: %v", err)
+		} else {
+			util.Debug("Copied custom certs in %s to ddev-global-cache/traefik", sourceCertsPath)
+		}
 	}
 	return nil
 }
