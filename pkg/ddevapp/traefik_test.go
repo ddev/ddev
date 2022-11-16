@@ -9,7 +9,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"time"
 )
 
 // TestTraefikSimple tests basic traefik router usage
@@ -47,9 +46,8 @@ func TestTraefikSimple(t *testing.T) {
 	app.AdditionalFQDNs = []string{"onefullurl.ddev.site", "twofullurl.ddev.site", "*.wild.fqdn"}
 	err = app.WriteConfig()
 	require.NoError(t, err)
-	err = app.StartAndWait(2)
+	err = app.StartAndWait(5)
 	require.NoError(t, err)
-	time.Sleep(time.Second)
 
 	desc, err := app.Describe(false)
 	assert.True(desc["use_traefik"].(bool))
