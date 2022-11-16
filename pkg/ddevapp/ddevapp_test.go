@@ -458,7 +458,6 @@ func TestDdevStart(t *testing.T) {
 	assert.NoError(err)
 	stdoutFunc, err := util.CaptureOutputToFile()
 	assert.NoError(err)
-	promptOutFunc := util.CaptureUserOut()
 	err = app.Start()
 	assert.NoError(err)
 	t.Cleanup(func() {
@@ -467,8 +466,6 @@ func TestDdevStart(t *testing.T) {
 		assert.False(dockerutil.NetworkExists("ddev-" + app.Name + "_default"))
 	})
 	out := stdoutFunc()
-	UOut := promptOutFunc()
-	assert.Contains(UOut, "Running task: Exec command 'echo hello' in container/service 'web'")
 	assert.Contains(out, "hello\n")
 
 	// try to start a site of same name at different path
