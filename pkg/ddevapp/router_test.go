@@ -200,6 +200,9 @@ func TestDisableHTTP2(t *testing.T) {
 	if globalconfig.GetCAROOT() == "" {
 		t.Skip("Skipping because mkcert/http not enabled")
 	}
+	if globalconfig.DdevGlobalConfig.UseTraefik {
+		t.Skip("Skipping because traefik doesn't have feature to turn off http/2")
+	}
 
 	assert := asrt.New(t)
 	pwd, _ := os.Getwd()
