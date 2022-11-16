@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 // TestTraefikSimple tests basic traefik router usage
@@ -27,13 +28,13 @@ func TestTraefikSimple(t *testing.T) {
 	globalconfig.DdevGlobalConfig.UseTraefik = true
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
+	origConfig := *app
 
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 		ddevapp.PowerOff()
-		app.AdditionalHostnames = nil
-		err = app.WriteConfig()
+		err = origConfig.WriteConfig()
 		assert.NoError(err)
 		globalconfig.DdevGlobalConfig.UseTraefik = origTraefik
 		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
@@ -42,8 +43,11 @@ func TestTraefikSimple(t *testing.T) {
 
 	app.AdditionalHostnames = []string{"one", "two", "*.wild"}
 	app.AdditionalFQDNs = []string{"onefullurl.ddev.site", "twofullurl.ddev.site", "*.wild.fqdn"}
-	err = app.Start()
+	err = app.WriteConfig()
 	require.NoError(t, err)
+	err = app.StartAndWait(2)
+	require.NoError(t, err)
+	time.Sleep(time.Second)
 
 	desc, err := app.Describe(false)
 	assert.True(desc["use_traefik"].(bool))
@@ -53,7 +57,8 @@ func TestTraefikSimple(t *testing.T) {
 	for _, u := range allURLs {
 		// Use something here for wildcard
 		u = strings.Replace(u, `*`, `somewildcard`, 1)
-		_, _ = testcommon.EnsureLocalHTTPContent(t, u+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+		_, err = testcommon.EnsureLocalHTTPContent(t, u+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+		assert.NoError(err, "failed EnsureLocalHTTPContent() %s: %v", u+site.Safe200URIWithExpectation.URI, err)
 	}
 
 	// Test Reachability to PhpMyAdmin, which uses different technique
