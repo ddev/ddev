@@ -173,8 +173,6 @@ Once you’ve opened a pull request, a discussion will start around your propose
 
 If your pull request is merged, great! If not, no sweat; it may not be what the project maintainer had in mind, or they were already working on it. This happens, so our recommendation is to take any feedback you’ve received and go forth and pull request again. Or create your own open source project.
 
-Adapted from [GitHub Guides](https://guides.github.com/activities/contributing-to-open-source/).
-
 ## Coding Style
 
 Unless explicitly stated, we follow all coding guidelines from the Go community. While some of these standards may seem arbitrary, they somehow seem to result in a solid, consistent codebase.
