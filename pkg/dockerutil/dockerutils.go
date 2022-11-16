@@ -626,6 +626,18 @@ func CheckDockerVersion(versionConstraint string) error {
 		return err
 	}
 
+	// See if they're using broken docker desktop on linux
+	if runtime.GOOS == "linux" {
+		client := GetDockerClient()
+		info, err := client.Info()
+		if err != nil {
+			return fmt.Errorf("unable to get docker info: %v", err)
+		}
+		if info.Name == "docker-desktop" {
+			return fmt.Errorf("Docker Desktop on Linux is not yet compatible with DDEV")
+		}
+	}
+
 	constraint, err := semver.NewConstraint(versionConstraint)
 	if err != nil {
 		return err
