@@ -28,9 +28,11 @@ You can hand-edit the YAML files DDEV creates for you after running [`ddev confi
 
 ### Environmental Overrides
 
-You can override the per-project `config.yaml` with files named `config.*.yaml`.
+You can override the per-project `config.yaml` with files named `config.*.yaml`, which are gitignored by default and not checked in.
 
-For example, many teams use `config.local.yaml` for configuration that’s specific to one environment, and not checked into the team’s default `config.yaml`.
+Many teams use `config.local.yaml` for configuration that’s specific to one environment, and not checked into the team’s default `config.yaml`. You might [enable Mutagen](../install/performance.md#mutagen) or [enable NFS](../install/performance.md#nfs) for the project, for example, just on your machine. Or maybe use a different database type.
+
+For examples, see the [Extending and Customizing Environments](../extend/customization-extendibility.md#extending-configyaml-with-custom-configyaml-files) page.
 
 ---
 

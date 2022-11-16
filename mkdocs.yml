@@ -125,7 +125,7 @@ nav:
     - users/basics/commands.md
     - users/basics/database-management.md
     - users/basics/developer-tools.md
-    - users/basics/how-ddev-works.md
+    - users/basics/architecture.md
     - users/basics/faq.md
     - users/basics/troubleshooting.md
     - users/basics/uninstall.md
@@ -158,7 +158,6 @@ nav:
       - users/topics/phpstorm.md
       - users/topics/sharing.md
       - users/topics/webserver.md
-      - users/topics/directory-tour.md
       - users/topics/cms-specific-help.md
   - 'Details':
       - users/details/offline-usage.md
