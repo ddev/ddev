@@ -1,4 +1,4 @@
-# Experimental Docker Configurations
+# Experimental Configurations
 
 ## Remote Docker Instances
 
@@ -26,3 +26,43 @@ Rancher Desktop integration currently has no automated testing for DDEV integrat
 * Rancher Desktop does not provide bind mounts, so use `ddev config global --no-bind-mounts` which also turns on Mutagen.
 * Use a non-`ddev.site` name, `ddev config --additional-fqdns=rancher` for example, because the resolution of `*.ddev.site` seems to make it not work.
 * Rancher Desktop does not seem to currently work with `mkcert` and `https`, so turn those off with `mkcert -uninstall && rm -r "$(mkcert -CAROOT)"`. This does no harm and can be undone with just `mkcert -install` again.
+
+## Traefik Router
+
+The job of the `ddev-router` is to receive most HTTP or HTTPS traffic, like requests to `*.ddev.site`, and deliver it to the correct project's web container, see [Container Architecture](../basics/architecture.md#container-architecture). The router as of DDEV v1.21.3 was always a forked, poorly documented nginx reverse proxy container.
+
+The very popular [Traefik Proxy](https://traefik.io/traefik/) will replace the current `ddev-router` in the future, but is available as an experimental configuration today. Feedback is welcome. To enable it:
+
+```
+ddev poweroff && ddev config global --use-traefik
+```
+
+Most DDEV projects will work fine out of the box, but there is a vast array of possible configuration changes and options, and new ways to view what is going on with the router. You don't need to know any of these to use the Traefik router, but they will offer new options in the future.
+
+### Traefik Configuration
+
+All configuration for the new router is intended to be customizable where needed. As with other files throughout the DDEV ecosystem, if the file has `#ddev-generated` in it, it can and will be overwritten by DDEV. If you want to "take over" the configuration, you remove the `#ddev-generated` and become responsible for the file's content.
+
+All Traefik configuration is described at [docs.traefik.io](https://doc.traefik.io/traefik/).
+
+All Traefik configuration uses the *file* provider, not the *docker* provider. Even though the Traefik daemon itself is running inside the `ddev-router` container, it uses mounted files for configuration, rather than listening to the Docker socket.
+
+#### Global Traefik Configuration
+
+Global configuration for Traefik is automatically generated in ~/.ddev/traefik.
+
+* `static_config.yaml` which is the base configuration.
+* `certs/default_cert.*` is the default DDEV-generated certificates.
+* `config/default_config.yaml` contains global dynamic configuration, including pointers to the default certificates.
+
+#### Project Traefik Configuration
+
+Project configuration is automatically generated in the project's .ddev/traefik directory.
+
+* The `certs` directory contains the `<projectname>.crt` and `<projectname>.key` certificate generated for this project.
+* The `config/<projectname>.yaml` file contains the configuration for the project, including information about routers, services, and certificates.
+
+### Debugging Traefik Routing
+
+* Traefik provides a dynamic description of its configuration that you can visit at `http://localhost:9999`.
+* When things seem to be going wrong, do a `ddev poweroff` and then start your project and see what the Traefik daemon is doing or failing at with `docker logs ddev-router` or `docker logs -f ddev-router`.
