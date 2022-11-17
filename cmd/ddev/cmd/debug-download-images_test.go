@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/drud/ddev/pkg/versionconstants"
 	"os"
 	"testing"
 
@@ -37,7 +38,7 @@ func TestDebugDownloadImages(t *testing.T) {
 	t.Setenv("DDEV_DEBUG", "true")
 	out, err = exec.RunHostCommand(DdevBin, "debug", "download-images")
 	require.NoError(t, err, "Failed to run ddev debug download-images: %s", out)
-	assert.Contains(out, "ddev-webserver")
-	assert.Contains(out, "ddev-router")
+	assert.Contains(out, versionconstants.GetWebImage())
+	assert.Contains(out, versionconstants.GetRouterImage())
 	assert.Contains(out, "Successfully downloaded ddev images")
 }
