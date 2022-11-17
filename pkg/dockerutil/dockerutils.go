@@ -627,7 +627,7 @@ func CheckDockerVersion(versionConstraint string) error {
 	}
 
 	// See if they're using broken docker desktop on linux
-	if runtime.GOOS == "linux" {
+	if runtime.GOOS == "linux" && !IsWSL2() {
 		client := GetDockerClient()
 		info, err := client.Info()
 		if err != nil {
