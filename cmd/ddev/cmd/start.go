@@ -100,9 +100,6 @@ ddev start --all`,
 
 			output.UserOut.Printf("Starting %s...", project.GetName())
 			if err := project.Start(); err != nil {
-				if project.IsMutagenEnabled() {
-					_ = ddevapp.TerminateMutagenSync(project)
-				}
 				util.Failed("Failed to start %s: %v", project.GetName(), err)
 			}
 

@@ -417,6 +417,13 @@ func Tar(src string, tarballFilePath string, exclusion string) error {
 		if err != nil {
 			return err
 		}
+		// Windows may not get zero size of file, https://github.com/golang/go/issues/23493
+		// No idea why fi.Size() comes through as zero for a few files
+		stat, err := os.Stat(file)
+		if err != nil {
+			return err
+		}
+		header.Size = stat.Size()
 
 		// open files for tarring
 		f, err := os.Open(file)
