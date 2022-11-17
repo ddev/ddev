@@ -56,6 +56,11 @@ func TestCmdDescribe(t *testing.T) {
 	assert := asrt.New(t)
 
 	for _, v := range TestSites {
+		app, err := ddevapp.NewApp(v.Dir, false)
+		require.NoError(t, err)
+		err = app.Start()
+		require.NoError(t, err)
+
 		// First, try to do a describe from another directory.
 		tmpdir := testcommon.CreateTmpDir("")
 		cleanup := testcommon.Chdir(tmpdir)
