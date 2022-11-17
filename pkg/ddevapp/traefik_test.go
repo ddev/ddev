@@ -54,6 +54,13 @@ func TestTraefikSimple(t *testing.T) {
 
 	// Test reachabiliity in each of the hostnames
 	httpURLs, httpsURLs, allURLs := app.GetAllURLs()
+
+	// If no mkcert trusted https, use only the httpURLs
+	// This is especially the case for colima
+	if globalconfig.GetCAROOT() == "" {
+		allURLs = httpURLs
+	}
+
 	for _, u := range allURLs {
 		// Use something here for wildcard
 		u = strings.Replace(u, `*`, `somewildcard`, 1)
