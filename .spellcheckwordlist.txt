@@ -225,6 +225,7 @@ crlf
 cron
 cson
 current
+customizable
 customizations
 daemon's
 daemonize
