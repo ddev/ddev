@@ -17,23 +17,32 @@ import (
 )
 
 type TraeficRouting struct {
-	ExternalHostname    string
+	ExternalHostnames   []string
 	ExternalPort        string
 	InternalServiceName string
 	InternalServicePort string
 	HTTPS               bool
 }
 
+// detectAppRouting reviews the configured services and uses their
+// VIRTUAL_HOST and HTTP(S)_EXPOSE environment variables to set up routing
+// for the project
 func detectAppRouting(app *DdevApp) ([]TraeficRouting, error) {
 	// app.ComposeYaml["services"];
-	table := []TraeficRouting{}
+	var table []TraeficRouting
 	if services, ok := app.ComposeYaml["services"]; ok {
 		for serviceName, s := range services.(map[interface{}]interface{}) {
 			service := s.(map[interface{}]interface{})
 			if env, ok := service["environment"].(map[interface{}]interface{}); ok {
+				var virtualHost string
+				var ok bool
+				if virtualHost, ok = env["VIRTUAL_HOST"].(string); ok {
+					util.Debug("VIRTUAL_HOST=%v for %s", virtualHost, serviceName)
+				}
+				hostnames := strings.Split(virtualHost, ",")
 				if httpExpose, ok := env["HTTP_EXPOSE"].(string); ok {
-					util.Debug("HTTP_EXPOSE=%v for %s\n", httpExpose, serviceName)
-					routeEntries, err := processHTTPExpose(app, serviceName.(string), httpExpose, false)
+					util.Debug("HTTP_EXPOSE=%v for %s", httpExpose, serviceName)
+					routeEntries, err := processHTTPExpose(serviceName.(string), httpExpose, false, hostnames)
 					if err != nil {
 						return nil, err
 					}
@@ -41,8 +50,8 @@ func detectAppRouting(app *DdevApp) ([]TraeficRouting, error) {
 				}
 
 				if httpsExpose, ok := env["HTTPS_EXPOSE"].(string); ok {
-					util.Debug("HTTPS_EXPOSE=%v for %s\n", httpsExpose, serviceName)
-					routeEntries, err := processHTTPExpose(app, serviceName.(string), httpsExpose, true)
+					util.Debug("HTTPS_EXPOSE=%v for %s", httpsExpose, serviceName)
+					routeEntries, err := processHTTPExpose(serviceName.(string), httpsExpose, true, hostnames)
 					if err != nil {
 						return nil, err
 					}
@@ -54,7 +63,9 @@ func detectAppRouting(app *DdevApp) ([]TraeficRouting, error) {
 	return table, nil
 }
 
-func processHTTPExpose(app *DdevApp, serviceName string, httpExpose string, isHTTPS bool) ([]TraeficRouting, error) {
+// processHTTPExpose creates routing table entry from VIRTUAL_HOST and HTTP(S)_EXPOSE
+// environment variables
+func processHTTPExpose(serviceName string, httpExpose string, isHTTPS bool, externalHostnames []string) ([]TraeficRouting, error) {
 	var routingTable []TraeficRouting
 	portPairs := strings.Split(httpExpose, ",")
 	for _, portPair := range portPairs {
@@ -66,16 +77,17 @@ func processHTTPExpose(app *DdevApp, serviceName string, httpExpose string, isHT
 		if len(ports) == 1 {
 			ports = append(ports, ports[0])
 		}
-		routingTable = append(routingTable, TraeficRouting{ExternalPort: ports[0], InternalServiceName: serviceName, InternalServicePort: ports[1], HTTPS: isHTTPS})
+		routingTable = append(routingTable, TraeficRouting{ExternalHostnames: externalHostnames, ExternalPort: ports[0], InternalServiceName: serviceName, InternalServicePort: ports[1], HTTPS: isHTTPS})
 	}
 	return routingTable, nil
 }
 
+// pushGlobalTraefikConfig pushes the config into ddev-global-cache
 func pushGlobalTraefikConfig() error {
 	globalTraefikDir := filepath.Join(globalconfig.GetGlobalDdevDir(), "traefik")
 	err := os.MkdirAll(globalTraefikDir, 0755)
 	if err != nil {
-		return fmt.Errorf("Failed to create global .ddev/traefik directory: %v", err)
+		return fmt.Errorf("failed to create global .ddev/traefik directory: %v", err)
 	}
 	sourceCertsPath := filepath.Join(globalTraefikDir, "certs")
 	// SourceConfigDir for dynamic config
@@ -84,11 +96,11 @@ func pushGlobalTraefikConfig() error {
 
 	err = os.MkdirAll(sourceCertsPath, 0755)
 	if err != nil {
-		return fmt.Errorf("Failed to create global traefik certs dir: %v", err)
+		return fmt.Errorf("failed to create global traefik certs dir: %v", err)
 	}
 	err = os.MkdirAll(sourceConfigDir, 0755)
 	if err != nil {
-		return fmt.Errorf("Failed to create global traefik config dir: %v", err)
+		return fmt.Errorf("failed to create global traefik config dir: %v", err)
 	}
 
 	// Assume that the #ddev-generated exists in file unless it doesn't
@@ -115,7 +127,7 @@ func pushGlobalTraefikConfig() error {
 
 		out, err := exec.RunHostCommand("mkcert", c...)
 		if err != nil {
-			util.Failed("failed to create certificates for app, check mkcert operation: %v", out)
+			util.Failed("failed to create global mkcert certificate, check mkcert operation: %v", out)
 		}
 
 		// Prepend #ddev-generated in generated crt and key files
@@ -124,7 +136,7 @@ func pushGlobalTraefikConfig() error {
 
 			contents, err := fileutil.ReadFileIntoString(origFile)
 			if err != nil {
-				return fmt.Errorf("Failed to read file %v: %v", origFile, err)
+				return fmt.Errorf("failed to read file %v: %v", origFile, err)
 			}
 			contents = nodeps.DdevFileSignature + "\n" + contents
 			err = fileutil.TemplateStringToFile(contents, nil, origFile)
@@ -226,6 +238,13 @@ func configureTraefikForApp(app *DdevApp) error {
 		return err
 	}
 	hostnames := app.GetHostnames()
+	// There can possibly be VIRTUAL_HOST entries which are not configured hostnames.
+	for _, r := range routingTable {
+		if r.ExternalHostnames != nil {
+			hostnames = append(hostnames, r.ExternalHostnames...)
+		}
+	}
+	hostnames = util.SliceToUniqueSlice(&hostnames)
 	projectTraefikDir := app.GetConfigPath("traefik")
 	err = os.MkdirAll(projectTraefikDir, 0755)
 	if err != nil {
@@ -270,7 +289,7 @@ func configureTraefikForApp(app *DdevApp) error {
 		}
 		out, err := exec.RunHostCommand("mkcert", c...)
 		if err != nil {
-			util.Failed("failed to create certificates for app, check mkcert operation: %v", out)
+			util.Failed("failed to create certificates for project, check mkcert operation: %v; err=%v", out, err)
 		}
 
 		// Prepend #ddev-generated in generated crt and key files
