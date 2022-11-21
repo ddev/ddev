@@ -1470,7 +1470,7 @@ func TestDdevAllDatabases(t *testing.T) {
 	dbVersions = nodeps.RemoveItemFromSlice(dbVersions, "postgres:9")
 	//Use a smaller list if GOTEST_SHORT
 	if os.Getenv("GOTEST_SHORT") != "" {
-		dbVersions = []string{"postgres:14", "mariadb:10.3", "mariadb:10.4", "mysql:8.0", "mysql:5.7"}
+		dbVersions = []string{"postgres:10", "postgres:11", "postgres:14", "mariadb:10.3", "mariadb:10.4", "mariadb:10.6", "mysql:8.0", "mysql:5.7"}
 		t.Logf("Using limited set of database servers because GOTEST_SHORT is set (%v)", dbVersions)
 	}
 
