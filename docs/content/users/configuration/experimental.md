@@ -31,7 +31,7 @@ Rancher Desktop integration currently has no automated testing for DDEV integrat
 
 DDEV’s router plays an important role in its [container architecture](../basics/architecture.md#container-architecture), receiving most HTTP and HTTPS traffic for requests like `*.ddev.site` and delivering them to the relevant project’s web container.
 
-`ddev-router` has been based on a forked, poorly-documented nginx reverse proxy. DDEV v1.21.3 adds a new router based on the popular [Traefik Proxy](https://traefik.io/traefik/), available as an experimental feature until it becomes the default in a future release. Run the following to enable it:
+`ddev-router` has been based on a forked, poorly-documented nginx reverse proxy. Versions after DDEV v1.21.3 add a new router based on the popular [Traefik Proxy](https://traefik.io/traefik/), available as an experimental feature until it becomes the default in a future release. Run the following to enable it:
 
 ```
 ddev poweroff && ddev config global --use-traefik
