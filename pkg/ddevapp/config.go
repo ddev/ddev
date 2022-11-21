@@ -910,11 +910,6 @@ RUN apt-get -y install apt-transport-https
 RUN printf "deb http://apt-archive.postgresql.org/pub/repos/apt/ stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list
 `
 		}
-		if app.Database.Version == nodeps.Postgres11 {
-			extraDBContent = extraDBContent + `
-ARG BASE_IMAGE=postgres:11-bullseye
-`
-		}
 		extraDBContent = extraDBContent + `
 ENV PATH $PATH:/usr/lib/postgresql/$PG_MAJOR/bin
 ADD postgres_healthcheck.sh /
