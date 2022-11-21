@@ -897,7 +897,20 @@ redirect_stderr=true
 	// Add .pgpass to homedir on postgres
 	extraDBContent := ""
 	if app.Database.Type == nodeps.Postgres {
-		extraDBContent = `
+		// Postgres 9/10/11 upstream images are stretch-based, out of support from Debian.
+		// Postgres 9/10 are out of support by Postgres and no new images being pushed, see
+		// https://github.com/docker-library/postgres/issues/1012
+		// However, they do have a postgres:11-bullseye, but we won't start using it yet
+		// because of awkward changes to $DBIMAGE. Postgres 11 will be EOL Nov 2023
+		if nodeps.ArrayContainsString([]string{nodeps.Postgres9, nodeps.Postgres10, nodeps.Postgres11}, app.Database.Version) {
+			extraDBContent = extraDBContent + `
+RUN rm -f /etc/apt/sources.list.d/pgdg.list
+RUN apt-get update
+RUN apt-get -y install apt-transport-https
+RUN printf "deb http://apt-archive.postgresql.org/pub/repos/apt/ stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+`
+		}
+		extraDBContent = extraDBContent + `
 ENV PATH $PATH:/usr/lib/postgresql/$PG_MAJOR/bin
 ADD postgres_healthcheck.sh /
 RUN chmod ugo+rx /postgres_healthcheck.sh
@@ -991,6 +1004,7 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 	if extraPackages != nil {
 		contents = contents + `
 ### DDEV-injected from webimage_extra_packages or dbimage_extra_packages
+
 RUN apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
 	}
 
