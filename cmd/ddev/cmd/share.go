@@ -50,7 +50,7 @@ ddev share myproject`,
 				if err != nil {
 					util.Failed("unable to get --subdomain flag: %v", err)
 				}
-				ngrokArgs = append(ngrokArgs, "-subdomain="+sub)
+				ngrokArgs = append(ngrokArgs, "--subdomain="+sub)
 			}
 
 			ngrokCmd := exec.Command(ngrokLoc, ngrokArgs...)
