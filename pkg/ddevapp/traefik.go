@@ -28,47 +28,47 @@ func detectAppRouting(app *DdevApp) ([]TraeficRouting, error) {
 	// app.ComposeYaml["services"];
 	table := []TraeficRouting{}
 	if services, ok := app.ComposeYaml["services"]; ok {
-
 		for serviceName, s := range services.(map[interface{}]interface{}) {
 			service := s.(map[interface{}]interface{})
 			if env, ok := service["environment"].(map[interface{}]interface{}); ok {
 				if httpExpose, ok := env["HTTP_EXPOSE"].(string); ok {
 					util.Debug("HTTP_EXPOSE=%v for %s\n", httpExpose, serviceName)
-					portPairs := strings.Split(httpExpose, ",")
-					for _, portPair := range portPairs {
-						// TODO: Implement VIRTUAL_HOST
-						ports := strings.Split(portPair, ":")
-						if len(ports) == 0 || len(ports) > 2 {
-							util.Warning("Skipping bad HTTP_EXPOSE port pair spec %s for service %s", portPair, serviceName)
-							continue
-						}
-						if len(ports) == 1 {
-							ports = append(ports, ports[0])
-						}
-						table = append(table, TraeficRouting{ExternalPort: ports[0], InternalServiceName: serviceName.(string), InternalServicePort: ports[1], HTTPS: false})
+					routeEntries, err := processHTTPExpose(app, serviceName.(string), httpExpose, false)
+					if err != nil {
+						return nil, err
 					}
+					table = append(table, routeEntries...)
 				}
-				//TODO: Consolidate these two usages
+
 				if httpsExpose, ok := env["HTTPS_EXPOSE"].(string); ok {
 					util.Debug("HTTPS_EXPOSE=%v for %s\n", httpsExpose, serviceName)
-					portPairs := strings.Split(httpsExpose, ",")
-					for _, portPair := range portPairs {
-						// TODO: Implement VIRTUAL_HOST
-						ports := strings.Split(portPair, ":")
-						if len(ports) == 0 || len(ports) > 2 {
-							util.Warning("Skipping bad HTTPS_EXPOSE port pair spec %s for service %s", portPair, serviceName)
-							continue
-						}
-						if len(ports) == 1 {
-							ports = append(ports, ports[0])
-						}
-						table = append(table, TraeficRouting{ExternalPort: ports[0], InternalServiceName: serviceName.(string), InternalServicePort: ports[1], HTTPS: true})
+					routeEntries, err := processHTTPExpose(app, serviceName.(string), httpsExpose, true)
+					if err != nil {
+						return nil, err
 					}
+					table = append(table, routeEntries...)
 				}
 			}
 		}
 	}
 	return table, nil
+}
+
+func processHTTPExpose(app *DdevApp, serviceName string, httpExpose string, isHTTPS bool) ([]TraeficRouting, error) {
+	var routingTable []TraeficRouting
+	portPairs := strings.Split(httpExpose, ",")
+	for _, portPair := range portPairs {
+		ports := strings.Split(portPair, ":")
+		if len(ports) == 0 || len(ports) > 2 {
+			util.Warning("Skipping bad HTTP_EXPOSE port pair spec %s for service %s", portPair, serviceName)
+			continue
+		}
+		if len(ports) == 1 {
+			ports = append(ports, ports[0])
+		}
+		routingTable = append(routingTable, TraeficRouting{ExternalPort: ports[0], InternalServiceName: serviceName, InternalServicePort: ports[1], HTTPS: isHTTPS})
+	}
+	return routingTable, nil
 }
 
 func pushGlobalTraefikConfig() error {
