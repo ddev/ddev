@@ -8,6 +8,17 @@ api:
   dashboard: true
   insecure: true
 
+{{ if .UseLetsEncrypt }}
+certificatesResolvers:
+  acmeresolver:
+    acme:
+      email: {{ .LetsEncryptEmail }}
+      storage: /mnt/ddev-global-cache/traefik/acme.json
+      httpChallenge:
+        # used during the challenge
+        entryPoint: http-80
+{{ end }}
+
 providers:
   file:
     directory: /mnt/ddev-global-cache/traefik/config

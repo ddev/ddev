@@ -132,7 +132,7 @@ func ValidateGlobalConfig() error {
 		return fmt.Errorf(`xdebug_ide_location must be IP address or one of %v`, ValidXdebugIDELocations)
 	}
 	if DdevGlobalConfig.DisableHTTP2 && DdevGlobalConfig.UseTraefik {
-		return fmt.Errorf("disable_http2 and use_traefick are mutually incompatible")
+		return fmt.Errorf("disable_http2 and use_traefik are mutually incompatible")
 	}
 	return nil
 }

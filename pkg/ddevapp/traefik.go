@@ -16,7 +16,7 @@ import (
 	"text/template"
 )
 
-type TraeficRouting struct {
+type TraefikRouting struct {
 	ExternalHostnames   []string
 	ExternalPort        string
 	InternalServiceName string
@@ -27,9 +27,9 @@ type TraeficRouting struct {
 // detectAppRouting reviews the configured services and uses their
 // VIRTUAL_HOST and HTTP(S)_EXPOSE environment variables to set up routing
 // for the project
-func detectAppRouting(app *DdevApp) ([]TraeficRouting, error) {
+func detectAppRouting(app *DdevApp) ([]TraefikRouting, error) {
 	// app.ComposeYaml["services"];
-	var table []TraeficRouting
+	var table []TraefikRouting
 	if services, ok := app.ComposeYaml["services"]; ok {
 		for serviceName, s := range services.(map[interface{}]interface{}) {
 			service := s.(map[interface{}]interface{})
@@ -65,8 +65,8 @@ func detectAppRouting(app *DdevApp) ([]TraeficRouting, error) {
 
 // processHTTPExpose creates routing table entry from VIRTUAL_HOST and HTTP(S)_EXPOSE
 // environment variables
-func processHTTPExpose(serviceName string, httpExpose string, isHTTPS bool, externalHostnames []string) ([]TraeficRouting, error) {
-	var routingTable []TraeficRouting
+func processHTTPExpose(serviceName string, httpExpose string, isHTTPS bool, externalHostnames []string) ([]TraefikRouting, error) {
+	var routingTable []TraefikRouting
 	portPairs := strings.Split(httpExpose, ",")
 	for _, portPair := range portPairs {
 		ports := strings.Split(portPair, ":")
@@ -77,7 +77,7 @@ func processHTTPExpose(serviceName string, httpExpose string, isHTTPS bool, exte
 		if len(ports) == 1 {
 			ports = append(ports, ports[0])
 		}
-		routingTable = append(routingTable, TraeficRouting{ExternalHostnames: externalHostnames, ExternalPort: ports[0], InternalServiceName: serviceName, InternalServicePort: ports[1], HTTPS: isHTTPS})
+		routingTable = append(routingTable, TraefikRouting{ExternalHostnames: externalHostnames, ExternalPort: ports[0], InternalServiceName: serviceName, InternalServicePort: ports[1], HTTPS: isHTTPS})
 	}
 	return routingTable, nil
 }
@@ -147,15 +147,19 @@ func pushGlobalTraefikConfig() error {
 	}
 
 	type traefikData struct {
-		App             *DdevApp
-		Hostnames       []string
-		PrimaryHostname string
-		TargetCertsPath string
-		RouterPorts     []string
+		App              *DdevApp
+		Hostnames        []string
+		PrimaryHostname  string
+		TargetCertsPath  string
+		RouterPorts      []string
+		UseLetsEncrypt   bool
+		LetsEncryptEmail string
 	}
 	templateData := traefikData{
-		TargetCertsPath: targetCertsPath,
-		RouterPorts:     determineRouterPorts(),
+		TargetCertsPath:  targetCertsPath,
+		RouterPorts:      determineRouterPorts(),
+		UseLetsEncrypt:   globalconfig.DdevGlobalConfig.UseLetsEncrypt,
+		LetsEncryptEmail: globalconfig.DdevGlobalConfig.LetsEncryptEmail,
 	}
 
 	traefikYamlFile := filepath.Join(sourceConfigDir, "default_config.yaml")
@@ -315,7 +319,8 @@ func configureTraefikForApp(app *DdevApp) error {
 		Hostnames       []string
 		PrimaryHostname string
 		TargetCertsPath string
-		RoutingTable    []TraeficRouting
+		RoutingTable    []TraefikRouting
+		UseLetsEncrypt  bool
 	}
 	templateData := traefikData{
 		App:             app,
@@ -323,6 +328,7 @@ func configureTraefikForApp(app *DdevApp) error {
 		PrimaryHostname: app.GetHostname(),
 		TargetCertsPath: targetCertsPath,
 		RoutingTable:    routingTable,
+		UseLetsEncrypt:  globalconfig.DdevGlobalConfig.UseLetsEncrypt,
 	}
 
 	// Convert wildcards like `*.<anything>` to `.*\.anything`
