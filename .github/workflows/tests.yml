@@ -72,10 +72,10 @@ jobs:
 
       - name: DDEV tests
         run: make TESTARGS="-failfast" test
-        if: matrix.use-traefik != 'true'
+#        if: matrix.use-traefik != 'true'
 
-      - name: DDEV tests - traefik
-        run: make test
-        if: matrix.use-traefik == 'true'
+#      - name: DDEV tests - traefik
+#        run: make test
+#        if: matrix.use-traefik == 'true'
 
 
