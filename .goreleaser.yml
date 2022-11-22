@@ -291,6 +291,8 @@ aurs:
   git_url: '{{ .Env.AUR_STABLE_GIT_URL }}'
   depends:
   - docker
+  optdepends:
+  - 'bash-completion: subcommand completion support'
 
   package: |-
     # bin
@@ -326,6 +328,8 @@ aurs:
   git_url: '{{ .Env.AUR_EDGE_GIT_URL }}'
   depends:
   - docker
+  optdepends:
+  - 'bash-completion: subcommand completion support'
 
   package: |-
     # bin
