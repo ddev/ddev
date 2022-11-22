@@ -119,7 +119,7 @@ func pushGlobalTraefikConfig() error {
 			}
 		}
 	}
-	if sigExists {
+	if sigExists && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
 		c := []string{"--cert-file", filepath.Join(sourceCertsPath, "default_cert.crt"), "--key-file", filepath.Join(sourceCertsPath, "default_key.key"), "127.0.0.1", "localhost", "*.ddev.local", "ddev-router", "ddev-router.ddev", "ddev-router.ddev_default", "*.ddev.site"}
 		if globalconfig.DdevGlobalConfig.ProjectTldGlobal != "" {
 			c = append(c, "*."+globalconfig.DdevGlobalConfig.ProjectTldGlobal)
@@ -281,7 +281,9 @@ func configureTraefikForApp(app *DdevApp) error {
 			}
 		}
 	}
-	if sigExists {
+	// Assuming the certs don't exist, or they have #ddev-generated so can be replaced, create them
+	// But not if we don't have mkcert already set up.
+	if sigExists && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
 		c := []string{"--cert-file", baseName + ".crt", "--key-file", baseName + ".key", "*.ddev.site", "127.0.0.1", "localhost", "*.ddev.local", "ddev-router", "ddev-router.ddev", "ddev-router.ddev_default"}
 		c = append(c, hostnames...)
 		if app.ProjectTLD != nodeps.DdevDefaultTLD {

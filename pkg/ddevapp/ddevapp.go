@@ -1196,7 +1196,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 
 		// If TLS supported and using traefik, create cert/key and push into ddev-global-cache/traefik
-		if globalconfig.GetCAROOT() != "" && globalconfig.DdevGlobalConfig.UseTraefik {
+		if globalconfig.DdevGlobalConfig.UseTraefik {
 			err = configureTraefikForApp(app)
 			if err != nil {
 				return err
@@ -1210,7 +1210,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 		certPath := app.GetConfigPath("custom_certs")
 		uid, _, _ := util.GetContainerUIDGid()
-		if fileutil.FileExists(certPath) {
+		if fileutil.FileExists(certPath) && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
 			err = dockerutil.CopyIntoVolume(certPath, "ddev-global-cache", targetSubdir, uid, "", false)
 			if err != nil {
 				util.Warning("failed to copy custom certs into docker volume ddev-global-cache/custom_certs: %v", err)
