@@ -71,5 +71,7 @@ func TestTraefikSimple(t *testing.T) {
 
 	// Test Reachability to PhpMyAdmin, which uses different technique
 	_, _ = testcommon.EnsureLocalHTTPContent(t, httpURLs[0]+":8036", "phpMyAdmin")
-	_, _ = testcommon.EnsureLocalHTTPContent(t, httpsURLs[0]+":8037", "phpMyAdmin")
+	if globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
+		_, _ = testcommon.EnsureLocalHTTPContent(t, httpsURLs[0]+":8037", "phpMyAdmin")
+	}
 }
