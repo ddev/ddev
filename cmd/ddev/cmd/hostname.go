@@ -2,11 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/util"
-
 	"github.com/drud/ddev/pkg/output"
-
+	"github.com/drud/ddev/pkg/util"
 	"strings"
 
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -39,14 +38,17 @@ to allow ddev to modify your hosts file. If you are connected to the internet an
 		}
 
 		// Attempt to write the hosts file first to catch any permissions issues early
-		if err := hosts.Flush(); err != nil {
-			rawResult := make(map[string]interface{})
-			detail := fmt.Sprintf("Please use sudo or execute with administrative privileges: %v", err)
-			rawResult["error"] = "WRITEERROR"
-			rawResult["full_error"] = detail
-			output.UserOut.WithField("raw", rawResult).Fatal(detail)
+		// Don't do this on wsl2, which will try to run ddev.exe on the windows side
+		if !dockerutil.IsWSL2() {
+			if hosts.Flush(); err != nil {
+				rawResult := make(map[string]interface{})
+				detail := fmt.Sprintf("Please use sudo or execute with administrative privileges: %v", err)
+				rawResult["error"] = "WRITEERROR"
+				rawResult["full_error"] = detail
+				output.UserOut.WithField("raw", rawResult).Fatal(detail)
 
-			return
+				return
+			}
 		}
 
 		// If requested, remove all inactive host names and exit
@@ -85,6 +87,18 @@ func addHostname(hosts goodhosts.Hosts, ip, hostname string) {
 	var detail string
 	rawResult := make(map[string]interface{})
 
+	ddevapp.CheckWindowsHostsFile()
+
+	if dockerutil.IsWSL2() && ddevapp.IsWindowsDdevExeAvailable() {
+		util.Debug("Running sudo.exe ddev.exe %s %s  on Windows side", hostname, ip)
+		out, err := exec.RunHostCommand("sudo.exe", "ddev.exe", "hostname", hostname, ip)
+		if err == nil {
+			util.Debug("ran sudo.exe ddev.exe %s %s with output=%s", hostname, ip, out)
+			return
+		}
+		util.Warning("Unable to run sudo.exe ddev.exe hostname %s %s on Windows side, continuing with WSL2 /etc/hosts err=%s, output=%s", hostname, ip, err, out)
+	}
+
 	if hosts.Has(ip, hostname) {
 		detail = "Hostname already exists in hosts file"
 		rawResult["error"] = "SUCCESS"
@@ -112,7 +126,7 @@ func addHostname(hosts goodhosts.Hosts, ip, hostname string) {
 		return
 	}
 
-	detail = "Hostname added to hosts file"
+	detail = fmt.Sprintf("Hostname '%s' added to hosts file", hostname)
 	rawResult["error"] = "SUCCESS"
 	rawResult["detail"] = detail
 	output.UserOut.WithField("raw", rawResult).Info(detail)
@@ -124,6 +138,16 @@ func addHostname(hosts goodhosts.Hosts, ip, hostname string) {
 func removeHostname(hosts goodhosts.Hosts, ip, hostname string) {
 	var detail string
 	rawResult := make(map[string]interface{})
+
+	if dockerutil.IsWSL2() && ddevapp.IsWindowsDdevExeAvailable() {
+		util.Debug("Running sudo.exe ddev.exe -r %s %s  on Windows side", hostname, ip)
+		out, err := exec.RunHostCommand("sudo.exe", "ddev.exe", "hostname", "--remove", hostname, ip)
+		if err == nil {
+			util.Debug("ran sudo.exe ddev.exe --remove %s %s with output=%s", hostname, ip, out)
+			return
+		}
+		util.Warning("Unable to run sudo.exe ddev.exe hostname --remove %s %s on Windows side, continuing with WSL2 /etc/hosts err=%s, output=%s", hostname, ip, err, out)
+	}
 
 	if !hosts.Has(ip, hostname) {
 		detail = "Hostname does not exist in hosts file"
@@ -152,7 +176,7 @@ func removeHostname(hosts goodhosts.Hosts, ip, hostname string) {
 		return
 	}
 
-	detail = "Hostname removed from hosts file"
+	detail = fmt.Sprintf("Hostname '%s' removed from hosts file", hostname)
 	rawResult["error"] = "SUCCESS"
 	rawResult["detail"] = detail
 	output.UserOut.WithField("raw", rawResult).Info(detail)
@@ -180,6 +204,10 @@ func removeInactiveHostnames(hosts goodhosts.Hosts) {
 		rawResult["error"] = "DOCKERERROR"
 		rawResult["full_error"] = detail
 		output.UserOut.WithField("raw", rawResult).Fatal(detail)
+	}
+	if dockerutil.IsWSL2() && ddevapp.IsWindowsDdevExeAvailable() {
+		util.Warning("Please manually remove hostnames you don't want from Windows hosts file")
+		return
 	}
 
 	// Iterate through each host line
