@@ -58,6 +58,9 @@ const NodeJSDefault = "16"
 // NoBindMountsDefault is default value for globalconfig.DDEVGlobalConfig.NoBindMounts
 var NoBindMountsDefault = false
 
+// UseTraefikDefault is the default value for globalconfig.DDEVGlobalConfig.UseTraefik
+var UseTraefikDefault = false
+
 // SimpleFormatting is turned on by DDEV_USE_SIMPLE_FORMATTING
 // and makes ddev list and describe, etc. use simpler formatting
 var SimpleFormatting = false

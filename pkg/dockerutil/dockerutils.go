@@ -1457,10 +1457,12 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 	if err != nil {
 		return err
 	}
+	err = tarball.Close()
+	if err != nil {
+		return err
+	}
 	// nolint: errcheck
 	defer os.Remove(tarball.Name())
-	// nolint: errcheck
-	defer tarball.Close()
 
 	// Tar up the source directory into the tarball
 	err = archive.Tar(srcPath, tarball.Name(), exclusion)

@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/util"
 	"os"
 	"strings"
@@ -46,5 +47,7 @@ var DebugRouterNginxConfigCmd = &cobra.Command{
 }
 
 func init() {
-	DebugCmd.AddCommand(DebugRouterNginxConfigCmd)
+	if !globalconfig.DdevGlobalConfig.UseTraefik {
+		DebugCmd.AddCommand(DebugRouterNginxConfigCmd)
+	}
 }

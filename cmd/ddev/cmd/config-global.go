@@ -182,6 +182,12 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 		dirty = true
 	}
 
+	if cmd.Flag("use-traefik").Changed {
+		val, _ := cmd.Flags().GetBool("use-traefik")
+		globalconfig.DdevGlobalConfig.UseTraefik = val
+		dirty = true
+	}
+
 	if dirty {
 		err = globalconfig.ValidateGlobalConfig()
 		if err != nil {
@@ -214,6 +220,7 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 	output.UserOut.Printf("project-tld=%v", globalconfig.DdevGlobalConfig.ProjectTldGlobal)
 	output.UserOut.Printf("xdebug-ide-location=%v", globalconfig.DdevGlobalConfig.XdebugIDELocation)
 	output.UserOut.Printf("no-bind-mounts=%v", globalconfig.DdevGlobalConfig.NoBindMounts)
+	output.UserOut.Printf("use-traefik=%v", globalconfig.DdevGlobalConfig.UseTraefik)
 }
 
 func init() {
@@ -238,6 +245,7 @@ func init() {
 	configGlobalCommand.Flags().Bool("use-docker-compose-from-path", true, "If true, use docker-compose from path instead of private ~/.ddev/bin/docker-compose")
 	configGlobalCommand.Flags().Bool("no-bind-mounts", true, "If true, don't use bind-mounts - useful for environments like remote docker where bind-mounts are impossible")
 	configGlobalCommand.Flags().String("xdebug-ide-location", "", "For less usual IDE locations specify where the IDE is running for Xdebug to reach it")
+	configGlobalCommand.Flags().Bool("use-traefik", true, "If true, use traefik for ddev-router")
 
 	ConfigCommand.AddCommand(configGlobalCommand)
 }

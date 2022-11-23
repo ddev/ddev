@@ -4,7 +4,11 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/versionconstants"
+	"github.com/mattn/go-isatty"
+	"github.com/otiai10/copy"
 	"golang.org/x/term"
 	"gopkg.in/yaml.v2"
 	"os"
@@ -13,10 +17,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/mattn/go-isatty"
-	"github.com/otiai10/copy"
 	"path"
 	"time"
 
@@ -219,6 +219,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["type"] = app.GetType()
 	appDesc["mutagen_enabled"] = app.IsMutagenEnabled()
 	appDesc["nodejs_version"] = app.NodeJSVersion
+	appDesc["use_traefik"] = globalconfig.DdevGlobalConfig.UseTraefik
 	if app.IsMutagenEnabled() {
 		appDesc["mutagen_status"], _, _, err = app.MutagenStatus()
 		if err != nil {
@@ -252,7 +253,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			dbinfo["host"] = "db"
 			dbPublicPort, err := app.GetPublishedPort("db")
 			util.CheckErr(err)
-			dbinfo["dbPort"] = GetInternalPort(app, "db")
+			dbinfo["dbPort"] = GetExposedPort(app, "db")
 			util.CheckErr(err)
 			dbinfo["published_port"] = dbPublicPort
 			dbinfo["database_type"] = "mariadb" // default
@@ -370,7 +371,7 @@ func (app *DdevApp) GetPublishedPort(serviceName string) (int, error) {
 		return -1, fmt.Errorf("failed to find container of type %s: %v", serviceName, err)
 	}
 
-	privatePort, _ := strconv.ParseInt(GetInternalPort(app, serviceName), 10, 16)
+	privatePort, _ := strconv.ParseInt(GetExposedPort(app, serviceName), 10, 16)
 
 	publishedPort := dockerutil.GetPublishedPort(privatePort, *container)
 	return publishedPort, nil
@@ -1121,39 +1122,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// Fix any obsolete things like old shell commands, etc.
 	app.FixObsolete()
 
-	if !IsRouterDisabled(app) {
-		caRoot := globalconfig.GetCAROOT()
-		if caRoot == "" {
-			util.Warning("mkcert may not be properly installed, we suggest installing it for trusted https support, `brew install mkcert nss`, `choco install -y mkcert`, etc. and then `mkcert -install`")
-		}
-		router, _ := FindDdevRouter()
-		// If the router doesn't exist, go ahead and push mkcert root ca certs into the ddev-global-cache/mkcert
-		// This will often be redundant
-		if router == nil {
-			// Copy ca certs into ddev-global-cache/mkcert
-			if caRoot != "" {
-				uid, _, _ := util.GetContainerUIDGid()
-				err = dockerutil.CopyIntoVolume(caRoot, "ddev-global-cache", "mkcert", uid, "", false)
-				if err != nil {
-					util.Warning("failed to copy root CA into docker volume ddev-global-cache/mkcert: %v", err)
-				} else {
-					util.Success("Pushed mkcert rootca certs to ddev-global-cache/mkcert")
-				}
-			}
-		}
-
-		certPath := app.GetConfigPath("custom_certs")
-		if fileutil.FileExists(certPath) {
-			uid, _, _ := util.GetContainerUIDGid()
-			err = dockerutil.CopyIntoVolume(certPath, "ddev-global-cache", "custom_certs", uid, "", false)
-			if err != nil {
-				util.Warning("failed to copy custom certs into docker volume ddev-global-cache/custom_certs: %v", err)
-			} else {
-				util.Success("Copied custom certs in %s to ddev-global-cache/custom_certs", certPath)
-			}
-		}
-	}
-
 	app.CreateUploadDirIfNecessary()
 
 	// WriteConfig .ddev-docker-compose-*.yaml
@@ -1200,6 +1168,54 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	_, _, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "up", "--build", "-d")
 	if err != nil {
 		return err
+	}
+
+	if !IsRouterDisabled(app) {
+		caRoot := globalconfig.GetCAROOT()
+		if caRoot == "" {
+			util.Warning("mkcert may not be properly installed, we suggest installing it for trusted https support, `brew install mkcert nss`, `choco install -y mkcert`, etc. and then `mkcert -install`")
+		}
+		router, _ := FindDdevRouter()
+
+		// If the router doesn't exist, go ahead and push mkcert root ca certs into the ddev-global-cache/mkcert
+		// This will often be redundant
+		if router == nil {
+			// Copy ca certs into ddev-global-cache/mkcert
+			if caRoot != "" {
+				uid, _, _ := util.GetContainerUIDGid()
+				err = dockerutil.CopyIntoVolume(caRoot, "ddev-global-cache", "mkcert", uid, "", false)
+				if err != nil {
+					util.Warning("failed to copy root CA into docker volume ddev-global-cache/mkcert: %v", err)
+				} else {
+					util.Debug("Pushed mkcert rootca certs to ddev-global-cache/mkcert")
+				}
+			}
+
+		}
+
+		// If TLS supported and using traefik, create cert/key and push into ddev-global-cache/traefik
+		if globalconfig.DdevGlobalConfig.UseTraefik {
+			err = configureTraefikForApp(app)
+			if err != nil {
+				return err
+			}
+		}
+
+		// Push custom certs
+		targetSubdir := "custom_certs"
+		if globalconfig.DdevGlobalConfig.UseTraefik {
+			targetSubdir = path.Join("traefik", "certs")
+		}
+		certPath := app.GetConfigPath("custom_certs")
+		uid, _, _ := util.GetContainerUIDGid()
+		if fileutil.FileExists(certPath) && globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
+			err = dockerutil.CopyIntoVolume(certPath, "ddev-global-cache", targetSubdir, uid, "", false)
+			if err != nil {
+				util.Warning("failed to copy custom certs into docker volume ddev-global-cache/custom_certs: %v", err)
+			} else {
+				util.Debug("Installed custom cert from %s", certPath)
+			}
+		}
 	}
 
 	if app.IsMutagenEnabled() {
@@ -2206,22 +2222,21 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		util.Warning("Unable to SyncAndterminateMutagenSession: %v", err)
 	}
 
+	if globalconfig.DdevGlobalConfig.UseTraefik && status == SiteRunning {
+		_, _, err = app.Exec(&ExecOpts{
+			Cmd: fmt.Sprintf("rm -f /mnt/ddev-global-cache/traefik/*/%s.{yaml,crt,key}", app.Name),
+		})
+		if err != nil {
+			util.Warning("Unable to clean up traefik configuration: %v", err)
+		}
+	}
 	// If project is running, clean up ddev-global-cache
 	if status == SiteRunning && removeData {
 		_, _, err = app.Exec(&ExecOpts{
-			Cmd: "rm -rf /mnt/ddev-global-cache/*/${HOSTNAME}",
+			Cmd: fmt.Sprintf("rm -rf /mnt/ddev-global-cache/*/%s* /mnt/ddev-global-cache/traefik/*/%s*", app.Name, app.Name),
 		})
 		if err != nil {
 			util.Warning("Unable to clean up ddev-global-cache: %v", err)
-		}
-		if nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
-			_, _, err = app.Exec(&ExecOpts{
-				Cmd:     "rm -rf /mnt/ddev-global-cache/*/${HOSTNAME}",
-				Service: "db",
-			})
-			if err != nil {
-				util.Warning("Unable to clean up ddev-global-cache: %v", err)
-			}
 		}
 	}
 

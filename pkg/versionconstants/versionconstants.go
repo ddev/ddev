@@ -31,11 +31,8 @@ var DBAImg = "phpmyadmin"
 // DBATag defines the default phpmyadmin image tag used for applications.
 var DBATag = "5" // Note that this can be overridden by make
 
-// RouterImage defines the image used for the router.
-var RouterImage = "drud/ddev-router"
-
-// RouterTag defines the tag used for the router.
-var RouterTag = "v1.21.3" // Note that this can be overridden by make
+const TraditionalRouterImage = "drud/ddev-router:20220918_traefik"
+const TraefikRouterImage = "traefik:v2.9"
 
 // SSHAuthImage is image for agent
 // var SSHAuthImage = "drud/ddev-ssh-agent"
@@ -96,7 +93,11 @@ func GetSSHAuthImage() string {
 	return fmt.Sprintf("%s:%s", SSHAuthImage, SSHAuthTag)
 }
 
-// GetRouterImage returns the correctly formatted router image:tag reference
+// GetRouterImage returns the router image:tag reference
 func GetRouterImage() string {
-	return fmt.Sprintf("%s:%s", RouterImage, RouterTag)
+	image := TraditionalRouterImage
+	if globalconfig.DdevGlobalConfig.UseTraefik {
+		image = TraefikRouterImage
+	}
+	return image
 }

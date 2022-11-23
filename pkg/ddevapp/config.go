@@ -48,6 +48,9 @@ func init() {
 	if os.Getenv("DDEV_TEST_NO_BIND_MOUNTS") == "true" {
 		nodeps.NoBindMountsDefault = true
 	}
+	if os.Getenv("DDEV_TEST_USE_TRAEFIK") == "true" {
+		nodeps.UseTraefikDefault = true
+	}
 
 }
 
@@ -720,13 +723,13 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		Name:                      app.Name,
 		Plugin:                    "ddev",
 		AppType:                   app.Type,
-		MailhogPort:               GetInternalPort(app, "mailhog"),
+		MailhogPort:               GetExposedPort(app, "mailhog"),
 		HostMailhogPort:           app.HostMailhogPort,
 		DBType:                    app.Database.Type,
 		DBVersion:                 app.Database.Version,
 		DBMountDir:                "/var/lib/mysql",
-		DBAPort:                   GetInternalPort(app, "dba"),
-		DBPort:                    GetInternalPort(app, "db"),
+		DBAPort:                   GetExposedPort(app, "dba"),
+		DBPort:                    GetExposedPort(app, "db"),
 		HostPHPMyAdminPort:        app.HostPHPMyAdminPort,
 		DdevGenerated:             nodeps.DdevFileSignature,
 		HostDockerInternalIP:      hostDockerInternalIP,
@@ -1241,7 +1244,7 @@ func PrepDdevDirectory(dir string) error {
 		}
 	}
 
-	err := CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".importdb*", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/platform.yaml", "sequelpro.spf", "xhprof", "**/README.*")
+	err := CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".importdb*", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/platform.yaml", "sequelpro.spf", "traefik", "xhprof", "**/README.*")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}

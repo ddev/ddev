@@ -117,6 +117,7 @@ SomeExternalDrive
 Starts
 Support
 TablePlus
+Traefik
 TravisCI
 UAC
 Unshare
@@ -224,6 +225,7 @@ crlf
 cron
 cson
 current
+customizable
 customizations
 daemon's
 daemonize

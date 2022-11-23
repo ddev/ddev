@@ -36,34 +36,46 @@ jobs:
 
     strategy:
       matrix:
-        webserver: [apache-fpm, nginx-fpm]
-        tests: ['test TESTARGS="-failfast"']
-        os: [ ubuntu-20.04 ]
-        mutagen: ['false', 'true']
-        no-bind-mounts: ['true', 'false']
+        include:
+          - name: "apache-fpm"
+            webserver: "apache-fpm"
+          - name: "nginx-fpm"
+          - name: "mutagen"
+            mutagen: true
+          - name: "no-bind-mounts"
+            no-bind-mounts: "true"
+          - name: "traefik"
+            use-traefik: "true"
       fail-fast: false
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-20.04
 
     env:
-      DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
       DDEV_NONINTERACTIVE: "true"
+      GOTEST_SHORT: "8" # 8 is drupal9; means in TestFullSiteSetup we only use drupal9
+      DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
       DDEV_TEST_USE_MUTAGEN: ${{ matrix.mutagen }}
       DDEV_TEST_NO_BIND_MOUNTS: ${{ matrix.no-bind-mounts }}
-      GOTEST_SHORT: "8"
+      DDEV_TEST_USE_TRAEFIK: ${{ matrix.use-traefik }}
     steps:
       - uses: actions/checkout@v3
-      - run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
       - name: Install Docker and deps (Linux)
-        if: matrix.os == 'ubuntu-20.04'
         run: ./.github/workflows/linux-setup.sh
-
       - uses: actions/setup-go@v3
-        if: matrix.os == 'ubuntu-20.04'
         with:
-          go-version: '>=1.18.0'
+          go-version: '>=1.19.0'
+
+      - run: echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN} DDEV_TEST_USE_TRAEFIK=${DDEV_TEST_USE_TRAEFIK} DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE} DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS}"
 
       - name: DDEV tests
-        run: |
-          echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN}"
-          make ${{ matrix.tests }}
+        run: make TESTARGS="-failfast" test
+#        if: matrix.use-traefik != 'true'
+
+#      - name: DDEV tests - traefik
+#        run: make test
+#        if: matrix.use-traefik == 'true'
+
+

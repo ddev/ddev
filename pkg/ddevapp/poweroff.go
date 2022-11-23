@@ -14,9 +14,10 @@ func PowerOff() {
 	}
 
 	// Remove any custom certs that may have been added
-	_, _, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"sh", "-c", "rm -f /mnt/ddev-global-cache/custom_certs/*"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-global-cache"}, "", true, false, nil)
+	// along with all traefik configuration.
+	_, _, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"sh", "-c", "rm -rf /mnt/ddev-global-cache/custom_certs/* /mnt/ddev-global-cache/traefik/*"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-global-cache"}, "", true, false, nil)
 	if err != nil {
-		util.Warning("Failed removing custom certs: %v", err)
+		util.Warning("Failed removing custom certs/traefik configuration: %v", err)
 	}
 
 	// Iterate through the list of apps built above, stopping each one.

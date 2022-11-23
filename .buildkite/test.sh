@@ -44,6 +44,8 @@ if ! docker ps >/dev/null 2>&1 ; then
   exit 1
 fi
 
+docker volume rm ddev-global-cache >/dev/null 2>&1 || true
+
 # Make sure we start with mutagen daemon off.
 unset MUTAGEN_DATA_DIRECTORY
 if [ -f ~/.ddev/bin/mutagen -o -f ~/.ddev/bin/mutagen.exe ]; then

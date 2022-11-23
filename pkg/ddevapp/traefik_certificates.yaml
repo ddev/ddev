@@ -1,0 +1,8 @@
+# Dynamic configuration
+# in configuration/traefik_certificates.yaml
+tls:
+  certificates:
+    # first certificate
+    - certFile: /mnt/ddev-global-cache/example-com.cert
+      keyFile: /path/to/example-com.key
+

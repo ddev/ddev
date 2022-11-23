@@ -3,17 +3,19 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
+	"github.com/Masterminds/sprig/v3"
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/netutil"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/versionconstants"
-	"html/template"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
+	"text/template"
 
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
@@ -65,6 +67,10 @@ func StopRouterIfNoContainers() error {
 
 // StartDdevRouter ensures the router is running.
 func StartDdevRouter() error {
+	err := os.MkdirAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "router-build"), 0755)
+	if err != nil {
+		return err
+	}
 	// If the router is not healthy/running, we'll kill it so it
 	// starts over again.
 	router, err := FindDdevRouter()
@@ -79,6 +85,17 @@ func StartDdevRouter() error {
 	if err != nil {
 		return err
 	}
+	err = GenerateRouterDockerfile()
+	if err != nil {
+		return err
+	}
+	if globalconfig.DdevGlobalConfig.UseTraefik {
+		err = pushGlobalTraefikConfig()
+		if err != nil {
+			return fmt.Errorf("failed to push global traefik config: %v", err)
+		}
+	}
+
 	err = CheckRouterPorts()
 	if err != nil {
 		return fmt.Errorf("Unable to listen on required ports, %v,\nTroubleshooting suggestions at https://ddev.readthedocs.io/en/stable/users/basics/troubleshooting/#unable-listen", err)
@@ -123,9 +140,13 @@ func generateRouterCompose() (string, error) {
 
 	dockerIP, _ := dockerutil.GetDockerIP()
 
+	uid, gid, username := util.GetContainerUIDGid()
+
 	templateVars := map[string]interface{}{
-		"router_image":               versionconstants.RouterImage,
-		"router_tag":                 versionconstants.RouterTag,
+		"Username":                   username,
+		"UID":                        uid,
+		"GID":                        gid,
+		"router_image":               versionconstants.GetRouterImage(),
 		"ports":                      exposedPorts,
 		"router_bind_all_interfaces": globalconfig.DdevGlobalConfig.RouterBindAllInterfaces,
 		"dockerIP":                   dockerIP,
@@ -133,6 +154,7 @@ func generateRouterCompose() (string, error) {
 		"letsencrypt":                globalconfig.DdevGlobalConfig.UseLetsEncrypt,
 		"letsencrypt_email":          globalconfig.DdevGlobalConfig.LetsEncryptEmail,
 		"AutoRestartContainers":      globalconfig.DdevGlobalConfig.AutoRestartContainers,
+		"use_traefik":                globalconfig.DdevGlobalConfig.UseTraefik,
 	}
 
 	t, err := template.New("router_compose_template.yaml").ParseFS(bundledAssets, "router_compose_template.yaml")
@@ -313,6 +335,47 @@ func CheckRouterPorts() error {
 		}
 		if netutil.IsPortActive(port) {
 			return fmt.Errorf("port %s is already in use", port)
+		}
+	}
+	return nil
+}
+
+func GenerateRouterDockerfile() error {
+
+	type routerData struct {
+		UseTraefik bool
+	}
+	templateData := routerData{
+		UseTraefik: globalconfig.DdevGlobalConfig.UseTraefik,
+	}
+
+	routerDockerfile := filepath.Join(globalconfig.GetGlobalDdevDir(), "router-build", "Dockerfile")
+	sigExists := true
+	//TODO: Systematize this checking-for-signature, allow an arg to skip if empty
+	fi, err := os.Stat(routerDockerfile)
+	// Don't use simple fileutil.FileExists() because of the danger of an empty file
+	if err == nil && fi.Size() > 0 {
+		// Check to see if file has #ddev-generated in it, meaning we can recreate it.
+		sigExists, err = fileutil.FgrepStringInFile(routerDockerfile, nodeps.DdevFileSignature)
+		if err != nil {
+			return err
+		}
+	}
+	if !sigExists {
+		util.Debug("Not creating %s because it exists and is managed by user", routerDockerfile)
+	} else {
+		f, err := os.Create(routerDockerfile)
+		if err != nil {
+			util.Failed("failed to create router Dockerfile: %v", err)
+		}
+		t, err := template.New("router_Dockerfile_template").Funcs(sprig.TxtFuncMap()).ParseFS(bundledAssets, "router_Dockerfile_template")
+		if err != nil {
+			return fmt.Errorf("could not create template from router_Dockerfile_template: %v", err)
+		}
+
+		err = t.Execute(f, templateData)
+		if err != nil {
+			return fmt.Errorf("could not parse router_Dockerfile_template with templatedate='%v':: %v", templateData, err)
 		}
 	}
 	return nil

@@ -34,7 +34,7 @@ Here’s how to try it for yourself:
     ddev config global --router-bind-all-interfaces --omit-containers=dba,ddev-ssh-agent --use-hardened-images --use-letsencrypt --letsencrypt-email=you@example.com`
     ```
 
-8. Create your DDEV project as you normally would, but `ddev config --additional-fqdns=<internet_fqdn>`. If your website responds to multiple hostnames (e.g., with and without `www`), you’ll need to add each hostname.
+8. Create your DDEV project as you normally would, but `ddev config --project-name=<yourproject> --project-tld=<your-top-level-domain>`. If your website responds to multiple hostnames (e.g., with and without `www`), you’ll need to add `additional_hostnames`.
 9. Redirect HTTP to HTTPS. If you’re using `nginx-fpm`, for example, create `.ddev/nginx/redirect.conf`:
 
     ```

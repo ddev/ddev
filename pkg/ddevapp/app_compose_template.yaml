@@ -215,6 +215,7 @@ services:
       com.ddev.platform: {{ .Plugin }}
       com.ddev.app-type: {{ .AppType }}
       com.ddev.approot: $DDEV_APPROOT
+
       {{ if .HostDockerInternalIP }}
     extra_hosts: [ "host.docker.internal:{{ .HostDockerInternalIP }}" ]
       {{ end }}

@@ -585,7 +585,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			_, _ = testcommon.EnsureLocalHTTPContent(t, url+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		}
 
-		out, err := exec.RunHostCommand(DdevBin, "list")
+		out, err := exec.RunHostCommand(DdevBin, "list", "--wrap-table")
 		assert.NoError(err)
 		t.Logf("=========== output of ddev list ==========\n%s\n============", out)
 
@@ -3758,7 +3758,7 @@ func TestCustomCerts(t *testing.T) {
 	t.Cleanup(func() {
 		_ = os.RemoveAll(certDir)
 		_, _, err = app.Exec(&ddevapp.ExecOpts{
-			Cmd: "rm /mnt/ddev-global-cache/custom_certs/" + app.GetHostname() + "*",
+			Cmd: fmt.Sprintf("rm -f /mnt/ddev-global-cache/custom_certs/%s* /mnt/ddev-global-cache/traefik/certs/%s.*", app.GetHostname(), app.Name),
 		})
 		assert.NoError(err)
 		err = app.Stop(true, false)
@@ -3768,32 +3768,38 @@ func TestCustomCerts(t *testing.T) {
 	// Start without cert and make sure normal DNS names are there
 	err = app.Start()
 	assert.NoError(err)
-	stdout, _, err := app.Exec(&ddevapp.ExecOpts{
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
 		Cmd: fmt.Sprintf("openssl s_client -connect %s:443 -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetHostname()),
 	})
-	stdout = strings.Trim(stdout, "\r\n")
+	out = strings.Trim(out, "\r\n")
 	// This should be our regular wildcard cert
-	assert.Contains(stdout, "*.ddev.site")
+	assert.Contains(out, "*.ddev.site")
 
 	// Now stop it so we can install new custom cert.
 	err = app.Stop(true, false)
 	assert.NoError(err)
 
-	// Create a certfile/key in .ddev/custom_certs with just one DNS name in it
+	// Generate a certfile/key in .ddev/custom_certs with just one DNS name in it
 	// mkcert --cert-file d9composer.ddev.site.crt --key-file d9composer.ddev.site.key d9composer.ddev.site
-	out, err := exec.RunHostCommand("mkcert", "--cert-file", filepath.Join(certDir, app.GetHostname()+".crt"), "--key-file", filepath.Join(certDir, app.GetHostname()+".key"), app.GetHostname())
+	// For traefik generation, it's app.Name,
+	// mkcert --cert-file d9.crt --key-file d9.key d9.ddev.site
+	baseCertName := app.GetHostname()
+	if globalconfig.DdevGlobalConfig.UseTraefik {
+		baseCertName = app.Name
+	}
+	out, err = exec.RunHostCommand("mkcert", "--cert-file", filepath.Join(certDir, baseCertName+".crt"), "--key-file", filepath.Join(certDir, baseCertName+".key"), app.GetHostname())
 	assert.NoError(err, "mkcert command failed, out=%s", out)
 
 	err = app.Start()
 	assert.NoError(err)
 
-	stdout, _, err = app.Exec(&ddevapp.ExecOpts{
+	out, _, err = app.Exec(&ddevapp.ExecOpts{
 		Cmd: fmt.Sprintf("openssl s_client -connect %s:443 -servername %s </dev/null 2>/dev/null | openssl x509 -noout -text | perl -l -0777 -ne '@names=/\\bDNS:([^\\s,]+)/g; print join(\"\\n\", sort @names);'", app.GetHostname(), app.GetHostname()),
 	})
-	stdout = strings.Trim(stdout, "\r\n")
+	out = strings.Trim(out, "\r\n")
 	// If we had the regular cert, there would be several things here including *.ddev.site
 	// But we should only see the hostname listed.
-	assert.Equal(app.GetHostname(), stdout)
+	assert.Equal(app.GetHostname(), out)
 }
 
 // TestEnvironmentVariables tests to make sure that documented environment variables appear

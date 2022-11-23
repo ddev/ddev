@@ -598,9 +598,13 @@ func TestConfigValidate(t *testing.T) {
 	site := TestSites[0]
 	app, err := NewApp(site.Dir, false)
 	assert.NoError(err)
+	savedApp := *app
 
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
+		assert.NoError(err)
+		app = &savedApp
+		err = app.WriteConfig()
 		assert.NoError(err)
 	})
 
@@ -665,6 +669,8 @@ func TestConfigValidate(t *testing.T) {
 	// Make sure that wildcards work
 	app.AdditionalHostnames = []string{"x", "*.any"}
 	err = app.ValidateConfig()
+	assert.NoError(err)
+	err = app.WriteConfig()
 	assert.NoError(err)
 	err = app.Start()
 	assert.NoError(err)

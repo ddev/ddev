@@ -60,6 +60,7 @@ type GlobalConfig struct {
 	ProjectTldGlobal             string                  `yaml:"project_tld"`
 	XdebugIDELocation            string                  `yaml:"xdebug_ide_location"`
 	NoBindMounts                 bool                    `yaml:"no_bind_mounts"`
+	UseTraefik                   bool                    `yaml:"use_traefik"`
 	ProjectList                  map[string]*ProjectInfo `yaml:"project_info"`
 }
 
@@ -130,6 +131,9 @@ func ValidateGlobalConfig() error {
 	if !IsValidXdebugIDELocation(DdevGlobalConfig.XdebugIDELocation) {
 		return fmt.Errorf(`xdebug_ide_location must be IP address or one of %v`, ValidXdebugIDELocations)
 	}
+	if DdevGlobalConfig.DisableHTTP2 && DdevGlobalConfig.UseTraefik {
+		return fmt.Errorf("disable_http2 and use_traefik are mutually incompatible")
+	}
 	return nil
 }
 
@@ -192,6 +196,11 @@ func ReadGlobalConfig() error {
 	if nodeps.NoBindMountsDefault == true {
 		DdevGlobalConfig.NoBindMounts = true
 	}
+	// For testing only, override UseTraefikDefault no matter what it's set to
+	if nodeps.UseTraefikDefault == true {
+		DdevGlobalConfig.UseTraefik = true
+	}
+
 	err = ValidateGlobalConfig()
 	if err != nil {
 		return err
@@ -609,4 +618,14 @@ func GetRequiredDockerComposeVersion() string {
 		v = DdevGlobalConfig.RequiredDockerComposeVersion
 	}
 	return v
+}
+
+// Return the traefik router URL
+func GetRouterURL() string {
+	routerURL := ""
+	// Until we figure out how to configure this, use static value
+	if DdevGlobalConfig.UseTraefik {
+		routerURL = "http://localhost:9999"
+	}
+	return routerURL
 }

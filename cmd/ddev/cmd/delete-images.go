@@ -95,8 +95,8 @@ func deleteDdevImages(deleteAll bool) error {
 
 	webimg := versionconstants.GetWebImage()
 	dbaimage := versionconstants.GetDBAImage()
-	routerimage := versionconstants.RouterImage + ":" + versionconstants.RouterTag
-	sshimage := versionconstants.SSHAuthImage + ":" + versionconstants.SSHAuthTag
+	routerimage := versionconstants.GetRouterImage()
+	sshimage := versionconstants.GetSSHAuthImage()
 
 	nameAry := strings.Split(versionconstants.GetDBImage(nodeps.MariaDB, ""), ":")
 	keepDBImageTag := "notagfound"
@@ -125,8 +125,9 @@ func deleteDdevImages(deleteAll bool) error {
 					return err
 				}
 			}
+			// TODO: Verify the functionality here. May not work since GetRouterImage() returns full image spec
 			// If a routerImage, but doesn't match our routerimage, delete it
-			if strings.HasPrefix(tag, versionconstants.RouterImage) && !strings.HasPrefix(tag, routerimage) {
+			if strings.HasPrefix(tag, versionconstants.GetRouterImage()) && !strings.HasPrefix(tag, routerimage) {
 				if err = dockerutil.RemoveImage(tag); err != nil {
 					return err
 				}
