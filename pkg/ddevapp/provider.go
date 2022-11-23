@@ -51,6 +51,10 @@ func (p *Provider) Init(pType string, app *DdevApp) error {
 		return err
 	}
 
+	if p.EnvironmentVariables == nil {
+		p.EnvironmentVariables = map[string]string{}
+	}
+
 	p.ProviderType = pType
 	app.ProviderInstance = p
 	return nil
