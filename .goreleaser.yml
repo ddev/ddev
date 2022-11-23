@@ -330,7 +330,6 @@ aurs:
   - docker
   optdepends:
   - 'bash-completion: subcommand completion support'
-  - 'docker-compose: for use_docker_compose_from_path option'
 
   package: |-
     # bin
