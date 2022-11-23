@@ -4,6 +4,7 @@
 ## Description: Launch a browser with the current site
 ## Usage: launch [path] [-p|--phpmyadmin] [-m|--mailhog]
 ## Example: "ddev launch" or "ddev launch /admin/reports/status/php" or "ddev launch phpinfo.php", for PHPMyAdmin "ddev launch -p", MailHog "ddev launch -m"
+## Flags: [{"Name":"phpmyadmin","Shorthand":"p","Usage":"ddev launch -p runs the PhpMyAdmin UI"},{"Name":"mailhog","Shorthand":"m","Usage":"ddev launch -m launches the mailhog UI"}]
 
 FULLURL=${DDEV_PRIMARY_URL}
 HTTPS=""
@@ -11,10 +12,6 @@ if [ ${DDEV_PRIMARY_URL%://*} = "https" ]; then HTTPS=true; fi
 
 while :; do
      case ${1:-} in
-         -h|-\?|--help)
-             show_help
-             exit
-             ;;
          -p|--phpmyadmin)
             if [ "${HTTPS}" = "" ]; then
                 FULLURL="${FULLURL%:[0-9]*}:${DDEV_PHPMYADMIN_PORT}"
@@ -71,3 +68,4 @@ case $OSTYPE in
     start ${FULLURL}
     ;;
 esac
+
