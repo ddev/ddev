@@ -128,6 +128,5 @@ ddev pull %s --skip-files -y`, subCommandName, subCommandName, subCommandName),
 		subCommand.Flags().Bool("skip-files", false, "Skip pulling file archive")
 		subCommand.Flags().Bool("skip-import", false, "Downloads file and/or database archives, but does not import them")
 		subCommand.Flags().String("environment", "", "Add/override environment variables during pull. Commas and equals are not allowed in the names or values.")
-
 	}
 }
