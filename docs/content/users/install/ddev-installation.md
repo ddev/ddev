@@ -121,7 +121,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     This scripted installation prepares your default WSL2 Ubuntu distro and has no dependency on Docker Desktop.
 
-    The provided PowerShell script can do most of the work for you, or you can handle these things manually. 
+    The provided `PowerShell.exe` (original PowerShell 5) script can do most of the work for you, or you can handle these things manually. 
     In all cases:
     
     1. Install WSL2 with an Ubuntu distro. On a system without WSL2, run:
@@ -137,7 +137,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
         
         If you prefer to use another Ubuntu distro, install it and set it as default. For example, `wsl --set-default Ubuntu-22.04`.
 
-    2. In an administrative PowerShell run [this PowerShell script](https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1) by executing: 
+    2. In an administrative PowerShell (5) run [this PowerShell script](https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1) by executing: 
 
         ```powershell
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; 
@@ -149,7 +149,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     This scripted installation prepares your default WSL2 Ubuntu distro for use with Docker Desktop.
 
-    You can do these things manually, or you can do most of it with the provided PowerShell script. 
+    You can do these things manually, or you can do most of it with the provided PowerShell (5) script. 
     In all cases:
     
     1. Install WSL2 with an Ubuntu distro. On a system without WSL2, just run:
@@ -168,7 +168,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     2. Install Docker Desktop. If you already have chocolatey, `choco install -y docker-desktop` or [download Docker Desktop from Docker](https://www.docker.com/products/docker-desktop/).
     3. Start Docker Desktop. You should now be able to do `docker ps` in PowerShell or Git Bash.
     4. In `Docker Desktop -> Settings -> Resources -> WSL2 Integration` verify that Docker Desktop is integrated with your distro.
-    5. In an administrative PowerShell run [this PowerShell script](https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2_docker_desktop.ps1) by executing:
+    5. In an administrative `PowerShell` (5) run [this PowerShell script](https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2_docker_desktop.ps1) by executing:
 
         ```powershell
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; 
