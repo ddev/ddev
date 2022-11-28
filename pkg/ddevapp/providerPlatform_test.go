@@ -169,7 +169,7 @@ func TestPlatformPush(t *testing.T) {
 
 	// Test that the database row was added
 	out, _, err := app.Exec(&ExecOpts{
-		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s";' | platform db:sql --project="%s" --environment="%s"`, t.Name(), tval, platformTestSiteID, platformPushTestSiteEnvironment),
+		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s";' | PLATFORMSH_CLI_TOKEN=%s platform db:sql --project="%s" --environment="%s"`, t.Name(), tval, token, platformTestSiteID, platformPushTestSiteEnvironment),
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)
@@ -177,7 +177,7 @@ func TestPlatformPush(t *testing.T) {
 	// Test that the file arrived there (by rsyncing it back)
 	tmpRsyncDir := filepath.Join("/tmp", t.Name()+util.RandString(5))
 	out, _, err = app.Exec(&ExecOpts{
-		Cmd: fmt.Sprintf(`platform mount:download --yes --quiet --project="%s" --environment="%s" --mount=web/sites/default/files --target=%s && cat %s/%s && rm -rf %s`, platformTestSiteID, platformPushTestSiteEnvironment, tmpRsyncDir, tmpRsyncDir, fName, tmpRsyncDir),
+		Cmd: fmt.Sprintf(`PLATFORMSH_CLI_TOKEN=%s platform mount:download --yes --quiet --project="%s" --environment="%s" --mount=web/sites/default/files --target=%s && cat %s/%s && rm -rf %s`, token, platformTestSiteID, platformPushTestSiteEnvironment, tmpRsyncDir, tmpRsyncDir, fName, tmpRsyncDir),
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)
