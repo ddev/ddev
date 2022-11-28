@@ -2252,7 +2252,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		return err
 	}
 
-	// Remove data/database/projectInfo/hostname if we need to.
+	// Remove data/database/projectInfo/hosts entry if we need to.
 	if removeData {
 		err = TerminateMutagenSync(app)
 		if err != nil {

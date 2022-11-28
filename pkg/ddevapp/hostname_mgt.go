@@ -8,6 +8,7 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/lextoumbourou/goodhosts"
 	"net"
 	"os"
 	exec2 "os/exec"
@@ -134,6 +135,15 @@ func (app *DdevApp) RemoveHostsEntries() error {
 		}
 
 		if !dockerutil.IsWSL2() || !IsWindowsDdevExeAvailable() {
+			hosts, err := goodhosts.NewHosts()
+			if err != nil {
+				util.Failed("could not open hostfile: %v", err)
+			}
+
+			if !hosts.Has(dockerIP, name) {
+				continue
+			}
+
 			_, err = exec2.LookPath("sudo")
 			if os.Getenv("DDEV_NONINTERACTIVE") != "" || err != nil {
 				util.Warning("You must manually remove the following entry from your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname --remove %s %s", dockerIP, name, name, dockerIP)
