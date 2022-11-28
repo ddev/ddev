@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
@@ -21,7 +22,9 @@ var PushCmd = &cobra.Command{
 ddev push platform
 ddev push pantheon -y
 ddev push platform --skip-files -y
-ddev push acquia --skip-db -y`,
+ddev push acquia --skip-db -y
+ddev push platform --environment=PLATFORM_ENVIRONMENT=main,PLATFORMSH_CLI_TOKEN=abcdef
+`,
 	Args: cobra.ExactArgs(1),
 	PreRun: func(cmd *cobra.Command, args []string) {
 		dockerutil.EnsureDdevNetwork()
@@ -29,7 +32,7 @@ ddev push acquia --skip-db -y`,
 }
 
 // apppush() does the work of push
-func apppush(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, skipImportArg bool, skipDbArg bool, skipFilesArg bool) {
+func apppush(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, skipImportArg bool, skipDbArg bool, skipFilesArg bool, env string) {
 
 	// If we're not performing the import step, we won't be deleting the existing db or files.
 	if !skipConfirmation && !skipImportArg && os.Getenv("DDEV_NONINTERACTIVE") == "" {
@@ -55,6 +58,16 @@ func apppush(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, s
 	provider, err := app.GetProvider(providerType)
 	if err != nil {
 		util.Failed("Failed to get provider: %v", err)
+	}
+
+	// Add or override the command-line provided environment variables
+	envVars := strings.Split(env, ",")
+	for _, v := range envVars {
+		split := strings.Split(v, "=")
+		if len(split) != 2 {
+			util.Failed("unable to parse environment variable setting: %v", v)
+		}
+		provider.EnvironmentVariables[split[0]] = split[1]
 	}
 
 	if err := app.Push(provider, skipDbArg, skipFilesArg); err != nil {
@@ -103,7 +116,9 @@ ddev push %s --skip-files -y`, subCommandName, subCommandName, subCommandName),
 						util.Failed("Failed to get flag %s: %v", f, err)
 					}
 				}
-				apppush(providerName, app, flags["skip-confirmation"], flags["skip-import"], flags["skip-db"], flags["skip-files"])
+				environment, _ := cmd.Flags().GetString("environment")
+
+				apppush(providerName, app, flags["skip-confirmation"], flags["skip-import"], flags["skip-db"], flags["skip-files"], environment)
 			},
 		}
 		PushCmd.AddCommand(subCommand)
@@ -111,6 +126,6 @@ ddev push %s --skip-files -y`, subCommandName, subCommandName, subCommandName),
 		subCommand.Flags().Bool("skip-db", false, "Skip pushing database archive")
 		subCommand.Flags().Bool("skip-files", false, "Skip pushing file archive")
 		subCommand.Flags().Bool("skip-import", false, "Downloads file and/or database archives, but does not import them")
-
+		subCommand.Flags().String("environment", "", "Add/override environment variables during pull. Commas and equals are not allowed in the names or values.")
 	}
 }
