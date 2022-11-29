@@ -31,17 +31,17 @@ That approach usually isn’t sustainable because two projects might want to use
 
 ```yaml
 services:
-    someservice:
-        container_name: "ddev-${DDEV_SITENAME}-someservice"
-        labels:
-        com.ddev.site-name: ${DDEV_SITENAME}
-        com.ddev.approot: ${DDEV_APPROOT}
-        expose: 
-        - "9999"
-        environment:
-        - VIRTUAL_HOST=$DDEV_HOSTNAME
-        - HTTP_EXPOSE=9998:9999
-        - HTTPS_EXPOSE=9999:9999
+  someservice:
+    container_name: "ddev-${DDEV_SITENAME}-someservice"
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: ${DDEV_APPROOT}
+    expose:
+      - "9999"
+    environment:
+      - VIRTUAL_HOST=$DDEV_HOSTNAME
+      - HTTP_EXPOSE=9998:9999
+      - HTTPS_EXPOSE=9999:9999
 ```
 
 ## Confirming docker-compose Configurations
