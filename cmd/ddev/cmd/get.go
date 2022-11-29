@@ -193,7 +193,7 @@ ddev get --list --all
 		}
 
 		if len(s.ProjectFiles) > 0 {
-			util.Success("Installing project-level components:")
+			util.Success("\nInstalling project-level components:")
 		}
 		for _, file := range s.ProjectFiles {
 			file := os.ExpandEnv(file)
@@ -211,7 +211,7 @@ ddev get --list --all
 		}
 		globalDotDdev := filepath.Join(globalconfig.GetGlobalDdevDir())
 		if len(s.ProjectFiles) > 0 {
-			util.Success("Installing global components:")
+			util.Success("\nInstalling global components:")
 		}
 		for _, file := range s.GlobalFiles {
 			file := os.ExpandEnv(file)
@@ -245,7 +245,7 @@ ddev get --list --all
 			}
 		}
 
-		util.Success("Installed DDEV add-on %s, use `ddev restart` to enable.", sourceRepoArg)
+		util.Success("\nInstalled DDEV add-on %s, use `ddev restart` to enable.", sourceRepoArg)
 		if argType == "github" {
 			util.Success("Please read instructions for this addon at the source repo at\nhttps://github.com/%v/%v\nPlease file issues and create pull requests there to improve it.", owner, repo)
 		}
@@ -272,10 +272,27 @@ func processAction(action string, dict map[string]interface{}, bashPath string) 
 	if err != nil {
 		return fmt.Errorf("Unable to run action %v: %v, output=%s", action, err, out)
 	}
+
 	if !strings.Contains(action, `#ddev-nodisplay`) {
 		output.UserOut.Printf("Executed action '%v', output='%s'", action, out)
 	}
+	desc := getDdevDescription(action)
+	if desc != "" {
+		util.Success("%c %s", '\U0001F44D', desc)
+	}
 	return nil
+}
+
+// getDdevDescription returns what follows #ddev-description: in any line in action
+func getDdevDescription(action string) string {
+	descLines := nodeps.GrepStringInBuffer(action, `[\r\n]+#ddev-description:.*[\r\n]+`)
+	if len(descLines) > 0 {
+		d := strings.Split(descLines[0], ":")
+		if len(d) > 1 {
+			return strings.Trim(d[1], "\r\n\t")
+		}
+	}
+	return ""
 }
 
 func renderRepositoryList(repos []github.Repository) string {
