@@ -10,35 +10,37 @@ For example,
 
 ```
 →  ddev get --list
-┌───────────────────────────┬──────────────────────────────────────────────────┐
-│ ADD-ON                    │ DESCRIPTION                                      │
-├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-adminer         │ Adminer service for DDEV*                        │
-├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-beanstalkd      │ Beanstalkd for DDEV*                             │
-├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-browsersync     │ Auto-refresh HTTPS page on changes with DDEV*    │
-├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-cron            │ Schedule commands to execute within DDEV*        │
-├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-drupal9-solr    │ Drupal 9 Apache Solr installation for DDEV*      │
-├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-elasticsearch   │ Elasticsearch add-on for DDEV*                   │
-├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-memcached       │ Install Memcached as an extra service in DDEV*   │
-├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-mongo           │ MongoDB add-on for DDEV*                         │
-├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-pdfreactor      │ PDFreactor service for DDEV*                     │
-├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-proxy-support   │ Support HTTP/HTTPS proxies with DDEV*            │
-├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-redis           │ Redis service for DDEV*                          │
-├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-redis-commander │ Redis Commander for use with DDEV Redis service* │
-├───────────────────────────┼──────────────────────────────────────────────────┤
-│ drud/ddev-varnish         │ Varnish reverse proxy add-on for DDEV*           │
-└───────────────────────────┴──────────────────────────────────────────────────┘
+┌──────────────────────────────────────┬──────────────────────────────────────────────────┐
+│ ADD-ON                               │ DESCRIPTION                                      │
+├──────────────────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-adminer                    │ Adminer service for DDEV*                        │
+├──────────────────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-beanstalkd                 │ Beanstalkd for DDEV*                             │
+├──────────────────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-browsersync                │ Auto-refresh HTTPS page on changes with DDEV*    │
+├──────────────────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-cron                       │ Schedule commands to execute within DDEV*        │
+├──────────────────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-drupal9-solr               │ Drupal 9 Apache Solr installation for DDEV*      │
+├──────────────────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-elasticsearch              │ Elasticsearch add-on for DDEV*                   │
+├──────────────────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-memcached                  │ Install Memcached as an extra service in DDEV*   │
+├──────────────────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-mongo                      │ MongoDB add-on for DDEV*                         │
+├──────────────────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-pdfreactor                 │ PDFreactor service for DDEV*                     │
+├──────────────────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-proxy-support              │ Support HTTP/HTTPS proxies with DDEV*            │
+├──────────────────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-redis                      │ Redis service for DDEV*                          │
+├──────────────────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-redis-commander            │ Redis Commander for use with DDEV Redis service* │
+├──────────────────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-selenium-standalone-chrome │ A DDEV service for running standalone Chrome*    │
+├──────────────────────────────────────┼──────────────────────────────────────────────────┤
+│ drud/ddev-varnish                    │ Varnish reverse proxy add-on for DDEV*           │
+└──────────────────────────────────────┴──────────────────────────────────────────────────┘
 Add-ons marked with '*' are official, maintained DDEV add-ons.
 ```
 
@@ -59,6 +61,7 @@ Officially-supported add-ons:
 * [Proxy Support](https://github.com/drud/ddev-proxy-support): `ddev get drud/ddev-proxy-support`.
 * [Redis Commander](https://github.com/drud/ddev-redis-commander): `ddev get drud/ddev-redis-commander`.
 * [Redis](https://github.com/drud/ddev-redis): `ddev get drud/ddev-redis`.
+* [Selenium Standalone Chrome](https://github.com/drud/ddev-selenium-standalone-chrome): `ddev get drud/ddev-selenium-standalone-chrome`.
 * [Varnish](https://github.com/drud/ddev-varnish): `ddev get drud/ddev-varnish`.
 
 ## Creating an Additional Service for `ddev get`
@@ -81,6 +84,11 @@ The `install.yaml` is a simple YAML file with a few main sections:
 * `global_files`: is an array of files or directories to be copied from the add-on into the target system’s global `.ddev` directory (`~/.ddev/`).
 * `post_install_actions`: an array of Bash statements or scripts to be executed after `project_files` and `global_files` are installed. The actions are executed in the context of the target project’s root directory.
 * `yaml_read_files`: a map of `name: file` of YAML files to be read from the target project’s root directory. The contents of these YAML files may be used as templated actions within `pre_install_actions` and `post_install_actions`.
+
+In any stanza of `pre_install_actions` and `post_install_actions` you can:
+
+* Use `#ddev-nodisplay` on a line to suppress any output.
+* Use `#ddev-description:<some description of what stanza is doing>` to instruct DDEV to output a description of the action it's taking.
 
 You can see a simple `install.yaml` in [`ddev-addon-template`’s `install.yaml`](https://github.com/drud/ddev-addon-template/blob/main/install.yaml).
 
