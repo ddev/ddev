@@ -192,6 +192,9 @@ ddev get --list --all
 			}
 		}
 
+		if len(s.ProjectFiles) > 0 {
+			util.Success("Installing project-level components:")
+		}
 		for _, file := range s.ProjectFiles {
 			file := os.ExpandEnv(file)
 			src := filepath.Join(extractedDir, file)
@@ -201,12 +204,15 @@ ddev get --list --all
 				if err != nil {
 					util.Failed("Unable to copy %v to %v: %v", src, dest, err)
 				}
-				output.UserOut.Printf("Installed file %s", dest)
+				util.Success("%c %s", '\U0001F44D', file)
 			} else {
 				util.Warning("NOT overwriting file/directory %s. The #ddev-generated signature was not found in the file, so it will not be overwritten. You can just remove the file and use ddev get again if you want it to be replaced: %v", dest, err)
 			}
 		}
 		globalDotDdev := filepath.Join(globalconfig.GetGlobalDdevDir())
+		if len(s.ProjectFiles) > 0 {
+			util.Success("Installing global components:")
+		}
 		for _, file := range s.GlobalFiles {
 			file := os.ExpandEnv(file)
 			src := filepath.Join(extractedDir, file)
@@ -218,7 +224,7 @@ ddev get --list --all
 				if err != nil {
 					util.Failed("Unable to copy %v to %v: %v", src, dest, err)
 				}
-				output.UserOut.Printf("Installed file %s", dest)
+				util.Success("%c %s", '\U0001F44D', file)
 			} else {
 				util.Warning("NOT overwriting file/directory %s. The #ddev-generated signature was not found in the file, so it will not be overwritten. You can just remove the file and use ddev get again if you want it to be replaced: %v", dest, err)
 			}
@@ -239,7 +245,7 @@ ddev get --list --all
 			}
 		}
 
-		util.Success("Downloaded add-on %s, use `ddev restart` to enable.", sourceRepoArg)
+		util.Success("Installed DDEV add-on %s, use `ddev restart` to enable.", sourceRepoArg)
 		if argType == "github" {
 			util.Success("Please read instructions for this addon at the source repo at\nhttps://github.com/%v/%v\nPlease file issues and create pull requests there to improve it.", owner, repo)
 		}
