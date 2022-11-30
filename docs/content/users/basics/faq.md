@@ -109,6 +109,12 @@ Start by completely turning NFS off for your projects with `ddev config --nfs-mo
 
 You’ll want to update DDEV using the same method you chose to install it. Since upgrading is basically the same as installing, you can follow [DDEV Installation](../install/ddev-installation.md) to upgrade.
 
+DDEV can help you figure out how you installed and how you can upgrade:
+
+```bash
+ddev self-upgrade
+```
+
 * On macOS you likely installed via Homebrew; run `brew update && brew upgrade ddev`.
 <!-- markdownlint-disable-next-line -->
 * On Linux + WSL2 using Debian/Ubuntu’s `apt install` technique, run `sudo apt update && sudo apt upgrade ddev` like any other package on your system.
