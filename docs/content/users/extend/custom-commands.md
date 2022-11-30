@@ -132,6 +132,10 @@ Example: `## Example: commandname\ncommandname -h`
 
 `Flags` should explain any available flags, including their shorthand when relevant, for the help message. It has to be encoded according the following definition:
 
+If no flags are specified, the command will have its flags parsing disabled. Global flags like `--help` will not work unless the command supports them.
+
+You can still do `ddev help <command>` to see the command's provided usage help.
+
 Usage: `## Flags: <json-definition>`
 
 This is the minimal usage of a flags definition:

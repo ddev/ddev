@@ -11,8 +11,9 @@ import (
 
 // ComposerCmd handles ddev composer
 var ComposerCmd = &cobra.Command{
-	Use:   "composer [command]",
-	Short: "Executes a composer command within the web container",
+	DisableFlagParsing: true,
+	Use:                "composer [command]",
+	Short:              "Executes a composer command within the web container",
 	Long: `Executes a composer command at the composer root in the web container. Generally,
 any composer command can be forwarded to the container context by prepending
 the command with 'ddev'.`,
@@ -43,6 +44,16 @@ ddev composer create drupal/recommended-project`,
 }
 
 func init() {
+	ComposerCmd.InitDefaultHelpFlag()
+	err := ComposerCmd.Flags().MarkHidden("help")
+	originalHelpFunc := ComposerCmd.HelpFunc()
+	if err == nil {
+		ComposerCmd.SetHelpFunc(func(command *cobra.Command, strings []string) {
+			if command == ComposerCmd {
+				_ = command.Flags().MarkHidden("json-output")
+			}
+			originalHelpFunc(command, strings)
+		})
+	}
 	RootCmd.AddCommand(ComposerCmd)
-	ComposerCmd.Flags().SetInterspersed(false)
 }
