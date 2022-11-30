@@ -72,7 +72,7 @@ Once the download has finished, you'll need to import to the **default** DDEV DB
 ddev import-db --src=.ddev/.downloads/db.sql.gz
 ```
 
-If you also have a need for [more than one database in DDEV](https://ddev.readthedocs.io/en/latest/users/basics/database-management) then adapt the above command as needed:
+If you also have a need for [more than one database in DDEV](../../basics/database-management) then adapt the above command as needed:
 ```
 ddev import-db --target-db=backend --src=.ddev/.downloads/backend.sql.gz
 ```
