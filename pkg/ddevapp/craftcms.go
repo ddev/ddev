@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/pkg/errors"
 	"os"
 	"path/filepath"
-	"regexp"
 )
 
 // isCraftCmsApp returns true if the app is of type craftcms
@@ -75,8 +75,8 @@ func craftCmsPostStartAction(app *DdevApp) error {
 	if app.DisableSettingsManagement {
 		return nil
 	}
+
 	// If the .env file doesn't exist, try to create it by copying .env.example to .env
-	var err error
 	envFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, ".env")
 	if !fileutil.FileExists(envFilePath) {
 		var exampleEnvFilePaths = []string{".env.example", ".env.example.dev"}
@@ -84,7 +84,7 @@ func craftCmsPostStartAction(app *DdevApp) error {
 			exampleEnvFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, envFileName)
 			if fileutil.FileExists(exampleEnvFilePath) {
 				util.Warning(fmt.Sprintf("Copying %s to .env", envFileName))
-				err = fileutil.CopyFile(exampleEnvFilePath, envFilePath)
+				err := fileutil.CopyFile(exampleEnvFilePath, envFilePath)
 				if err != nil {
 					util.Error(fmt.Sprintf("Error copying %s to .env", exampleEnvFilePath))
 
@@ -98,46 +98,45 @@ func craftCmsPostStartAction(app *DdevApp) error {
 		return nil
 	}
 	// Read in the .env file
-	var envFileContents string
-	envFileContents, err = fileutil.ReadFileIntoString(envFilePath)
-	if err != nil {
-		util.Error("Error reading .env file")
+	envMap, envText, err := ReadEnvFile(app)
+	if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("Unable to read .env file: %v", err)
+	}
+	if os.IsNotExist(err) {
+		err = fileutil.CopyFile(filepath.Join(app.AppRoot, ".env.example"), filepath.Join(app.AppRoot, ".env"))
+		if err != nil {
+			return err
+		}
+		envMap, envText, err = ReadEnvFile(app)
+		if err != nil {
+			return err
+		}
+	}
 
+	port := "3306"
+	driver := "mysql"
+	if app.Database.Type == nodeps.Postgres {
+		driver = "pgsql"
+		port = "5432"
+	}
+
+	envMap = map[string]string{
+		"CRAFT_DB_DRIVER":       driver,
+		"CRAFT_DB_SERVER":       "db",
+		"CRAFT_DB_PORT":         port,
+		"CRAFT_DB_DATABASE":     "db",
+		"CRAFT_DB_USER":         "db",
+		"CRAFT_DB_PASSWORD":     "db",
+		"MAILHOG_SMTP_HOSTNAME": "127.0.0.1",
+		"MAILHOG_SMTP_PORT":     "1025",
+		"PRIMARY_SITE_URL":      app.GetPrimaryURL(),
+	}
+
+	err = WriteEnvFile(app, envMap, envText)
+	if err != nil {
 		return err
 	}
-	// Set the database-related .env variables appropriately for ddev
-	var dbRegEx *regexp.Regexp
-	dbRegEx = regexp.MustCompile(`DB_(SERVER|DATABASE|USER|PASSWORD)=(.*)`)
-	envFileContents = dbRegEx.ReplaceAllString(envFileContents, `DB_$1=db`)
-	// Set the primary site URL
-	var siteURLRegEx *regexp.Regexp
-	var siteURLReplace string
-	siteURLRegEx = regexp.MustCompile(`PRIMARY_SITE_URL=(.*)`)
-	siteURLReplace = fmt.Sprintf("PRIMARY_SITE_URL=%s", app.GetHTTPSURL())
-	if !siteURLRegEx.MatchString(envFileContents) {
-		envFileContents += "\nPRIMARY_SITE_URL="
-	}
-	envFileContents = siteURLRegEx.ReplaceAllString(envFileContents, siteURLReplace)
-	// Set the MailHog .env variables (https://ddev.readthedocs.io/en/latest/users/basics/developer-tools/#email-capture-and-review-mailhog)
-	var mailhogRegEx *regexp.Regexp
-	mailhogRegEx = regexp.MustCompile(`(MAILHOG_SMTP_HOSTNAME|MAILHOG_SMTP_PORT)=(.*)`)
-	if !mailhogRegEx.MatchString(envFileContents) {
-		envFileContents += "\n\nMAILHOG_SMTP_HOSTNAME=localhost\nMAILHOG_SMTP_PORT=1025"
-	}
-	// Write the modified .env file out
-	var f *os.File
-	f, err = os.Create(envFilePath)
-	if err != nil {
-		util.Error("Error creating .env file")
 
-		return err
-	}
-	_, err = f.WriteString(envFileContents)
-	if err != nil {
-		util.Error("Error writing .env file")
-
-		return err
-	}
 	// If composer.json.default exists, rename it to composer.json
 	composerDefaultFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, "composer.json.default")
 	if fileutil.FileExists(composerDefaultFilePath) {
