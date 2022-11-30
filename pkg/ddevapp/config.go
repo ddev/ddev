@@ -685,6 +685,7 @@ type composeYAMLVars struct {
 	WebExtraHTTPPorts               string
 	WebExtraHTTPSPorts              string
 	WebExtraExposedPorts            string
+	EnvFile                         string
 }
 
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
@@ -781,6 +782,12 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if fileutil.IsDirectory(filepath.Join(app.AppRoot, ".git")) {
 		templateVars.GitDirMount = true
 	}
+
+	envFile := app.GetConfigPath(".env")
+	if fileutil.FileExists(envFile) {
+		templateVars.EnvFile = envFile
+	}
+
 	// And we don't want to bind-mount upload dir if it doesn't exist.
 	// templateVars.UploadDir is relative path rooted in approot.
 	if app.GetHostUploadDirFullPath() == "" || !fileutil.FileExists(app.GetHostUploadDirFullPath()) {

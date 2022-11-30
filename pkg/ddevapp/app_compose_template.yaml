@@ -90,6 +90,10 @@ services:
         uid: '{{ .UID }}'
         gid: '{{ .GID }}'
     image: ${DDEV_WEBIMAGE}-${DDEV_SITENAME}-built
+    {{ if .EnvFile }}
+    env_file: "{{ .EnvFile }}"
+    {{ end }}
+
     {{ if .UseHostDockerInternalExtraHosts }}
     extra_hosts:
       - "host.docker.internal:host-gateway"
