@@ -121,12 +121,21 @@ func craftCmsPostStartAction(app *DdevApp) error {
 	}
 
 	envMap := map[string]string{
-		"CRAFT_DB_DRIVER":       driver,
-		"CRAFT_DB_SERVER":       "db",
-		"CRAFT_DB_PORT":         port,
-		"CRAFT_DB_DATABASE":     "db",
-		"CRAFT_DB_USER":         "db",
-		"CRAFT_DB_PASSWORD":     "db",
+		"CRAFT_DB_DRIVER":   driver,
+		"CRAFT_DB_SERVER":   "db",
+		"CRAFT_DB_PORT":     port,
+		"CRAFT_DB_DATABASE": "db",
+		"CRAFT_DB_USER":     "db",
+		"CRAFT_DB_PASSWORD": "db",
+
+		// These are older variants but should do no harm
+		"DB_DRIVER":   driver,
+		"DB_SERVER":   "db",
+		"DB_PORT":     port,
+		"DB_DATABASE": "db",
+		"DB_USER":     "db",
+		"DB_PASSWORD": "db",
+
 		"MAILHOG_SMTP_HOSTNAME": "127.0.0.1",
 		"MAILHOG_SMTP_PORT":     "1025",
 		"PRIMARY_SITE_URL":      app.GetPrimaryURL(),
