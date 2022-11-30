@@ -46,3 +46,30 @@ web_environment:
 
 * `ddev pull platform` will connect to Platform.sh to download database and files. To skip downloading and importing either file or database assets, use the `--skip-files` and `--skip-db` flags.
 * If you need to change the `platform.yaml` recipe, you can change it to suit your needs, but remember to remove the `#ddev-generated` line from the top of the file.
+
+
+## Edge Cases
+
+### Multiple databases in a project
+
+Platform.sh allows for multiple databases to be available in a project. This is done via [relationships](https://docs.platform.sh/create-apps/app-reference.html#relationships). When using multiple databases `ddev pull` won't work as it [doesn't know which database to pull](https://github.com/drud/ddev/issues/4415).
+
+To bypass the problem, you can use this command (from host):
+```
+ddev platform db:dump --yes --gzip --file=/var/www/html/.ddev/.downloads/db.sql.gz --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}" --relationship RELATIONSHIP_NAME
+```
+
+To identify the name of the relationship look into you `.platform.app.yaml` file, left hand column is the name:
+```
+relationships:
+  database: 'mysqldb:mysql'
+  legacy: 'legacydb:mysql'
+  redis: 'rediscache:redis'
+```
+
+Once the download has finished, you'll need to import the DB to DDEV:
+```
+ddev import-db --src=.ddev/.downloads/db.sql.gz
+```
+
+The above commands can easily be added in a `host` command, to facilitate things.
