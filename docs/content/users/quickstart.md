@@ -321,8 +321,6 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         ddev config --project-type=laravel --docroot=public --create-docroot
         ddev start
         ddev composer create --prefer-dist laravel/laravel
-        ddev exec "cat .env.example | sed  -E 's/DB_(HOST|DATABASE|USERNAME|PASSWORD)=(.*)/DB_\1=db/g' > .env"
-        ddev exec 'sed -i "s#APP_URL=.*#APP_URL=${DDEV_PRIMARY_URL}#g" .env'
         ddev exec "php artisan key:generate"
         ddev launch
         ```
@@ -332,9 +330,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         cd <your-laravel-project>
         ddev config --project-type=laravel --docroot=public --create-docroot
         ddev start
-        ddev composer install 
-        ddev exec "cat .env.example | sed  -E 's/DB_(HOST|DATABASE|USERNAME|PASSWORD)=(.*)/DB_\1=db/g' > .env"
-        ddev exec 'sed -i "s#APP_URL=.*#APP_URL=${DDEV_PRIMARY_URL}#g" .env'
+        ddev composer install
         ddev exec "php artisan key:generate"
         ddev launch
         ```
