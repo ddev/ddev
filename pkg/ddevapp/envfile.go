@@ -9,17 +9,14 @@ import (
 	"strings"
 )
 
-// ReadEnvFile() reads the .env in the project root into a envText and envMap
+// ReadEnvFile reads the .env in the project root into a envText and envMap
 // The map has the envFile content, but without comments
 func ReadEnvFile(app *DdevApp) (envMap map[string]string, envText string, err error) {
 	envFilePath := filepath.Join(app.AppRoot, ".env")
-	envText, err = fileutil.ReadFileIntoString(envFilePath)
+	envText, _ = fileutil.ReadFileIntoString(envFilePath)
 	envMap, err = godotenv.Read(envFilePath)
 
-	if err != nil {
-		return envMap, envText, err
-	}
-	return envMap, envText, nil
+	return envMap, envText, err
 }
 
 // WriteEnvFile writes the passed envText into the project-root .env file
