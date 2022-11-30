@@ -67,9 +67,13 @@ relationships:
   redis: 'rediscache:redis'
 ```
 
-Once the download has finished, you'll need to import the DB to DDEV:
+Once the download has finished, you'll need to import to the **default** DDEV DB (named `db`):
 ```
 ddev import-db --src=.ddev/.downloads/db.sql.gz
 ```
 
+If you also have a need for [more than one database in DDEV](https://ddev.readthedocs.io/en/latest/users/basics/database-management) then adapt the above command as needed:
+```
+ddev import-db --target-db=backend --src=.ddev/.downloads/backend.sql.gz
+```
 The above commands can easily be added in a `host` command, to facilitate things.
