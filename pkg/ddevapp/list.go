@@ -9,6 +9,8 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/drud/ddev/pkg/versionconstants"
 	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
+	"strings"
 	"time"
 )
 
@@ -48,8 +50,11 @@ func List(activeOnly bool, continuous bool, wrapTableText bool, continuousSleepT
 			if nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, globalconfig.DdevRouterContainer) {
 				extendedRouterStatus = "disabled"
 			}
+			routerImage := versionconstants.GetRouterImage()
+			routerImage = strings.Replace(routerImage, ":", ": ", 1)
+			routerImage = strings.Replace(routerImage, "drud/ddev-router", "original", 1)
 			t.AppendFooter(table.Row{
-				"Router", routerStatus, "~/.ddev", globalconfig.GetRouterURL(), versionconstants.GetRouterImage()},
+				"Router", routerStatus, "~/.ddev", globalconfig.GetRouterURL(), routerImage},
 			)
 			t.Render()
 			output.UserOut.WithField("raw", appDescs).Print(out.String())
@@ -116,8 +121,9 @@ func CreateAppTable(out *bytes.Buffer, wrapTableText bool) table.Writer {
 				//WidthMax: urlWidth,
 			},
 			{
-				Name:     "Type",
-				WidthMax: int(typeWidth),
+				Name:             "Type",
+				WidthMax:         int(typeWidth),
+				WidthMaxEnforcer: text.WrapText,
 			},
 		})
 	}

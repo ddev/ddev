@@ -305,6 +305,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 		services[shortName]["status"] = c.State.Status
 		services[shortName]["full_name"] = fullName
 		services[shortName]["image"] = strings.TrimSuffix(c.Config.Image, fmt.Sprintf("-%s-built", app.Name))
+		services[shortName]["short_name"] = shortName
 		var ports []string
 		for pk := range c.Config.ExposedPorts {
 			ports = append(ports, pk.Port())

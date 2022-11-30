@@ -490,7 +490,7 @@ func (app *DdevApp) GetHostname() string {
 	return strings.ToLower(app.Name) + "." + app.ProjectTLD
 }
 
-// GetHostnames returns an array of all the configured hostnames.
+// GetHostnames returns a slice of all the configured hostnames.
 func (app *DdevApp) GetHostnames() []string {
 
 	// Use a map to make sure that we have unique hostnames
