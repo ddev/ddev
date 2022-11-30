@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"net"
 	"os"
+	"regexp"
 	"runtime"
 	"strconv"
 	"time"
@@ -117,4 +118,11 @@ func IsIPAddress(ip string) bool {
 		return true
 	}
 	return false
+}
+
+// GrepStringInBuffer finds strings that match needle
+func GrepStringInBuffer(buffer string, needle string) []string {
+	re := regexp.MustCompilePOSIX(needle)
+	matches := re.FindStringSubmatch(buffer)
+	return matches
 }
