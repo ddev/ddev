@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/util"
 	"os"
 	"path/filepath"
 )
@@ -83,14 +82,16 @@ func shopware6PostStartAction(app *DdevApp) error {
 	if app.DisableSettingsManagement {
 		return nil
 	}
-	envContents, err := ReadEnvFile(app)
-
-	// If the .env file doesn't exist, it needs to be created by system:setup
-	// so just let it wait
+	_, envText, err := ReadEnvFile(app)
+	var envMap = map[string]string{
+		"DATABASE_URL": `mysql://db:db@db:3306/db`,
+		"APP_URL":      app.GetPrimaryURL(),
+		"MAILER_URL":   `smtp://127.0.0.1:1025?encryption=&auth_mode=`,
+	}
+	// Shopware 6 refuses to do bin/console system:setup if the env file exists,
+	// so if it doesn't exist, wait for it to be created
 	if err == nil {
-		util.Success("Setting .env MAILER_URL")
-		envContents["MAILER_URL"] = `smtp://localhost:1025?encryption=&auth_mode=`
-		err = WriteEnvFile(app, envContents)
+		err := WriteEnvFile(app, envMap, envText)
 		if err != nil {
 			return err
 		}

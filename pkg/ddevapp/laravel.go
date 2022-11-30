@@ -25,7 +25,8 @@ func laravelPostStartAction(app *DdevApp) error {
 	if app.DisableSettingsManagement {
 		return nil
 	}
-	envContents, err := ReadEnvFile(app)
+	envMap, _, err := ReadEnvFile(app)
+	var envText string
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("Unable to read .env file: %v", err)
 	}
@@ -34,7 +35,7 @@ func laravelPostStartAction(app *DdevApp) error {
 		if err != nil {
 			return err
 		}
-		envContents, err = ReadEnvFile(app)
+		envMap, envText, err = ReadEnvFile(app)
 		if err != nil {
 			return err
 		}
@@ -45,13 +46,13 @@ func laravelPostStartAction(app *DdevApp) error {
 		dbConnection = "pgsql"
 		port = "5432"
 	}
-	envContents["DB_HOST"] = "db"
-	envContents["DB_PORT"] = port
-	envContents["DB_DATABASE"] = "db"
-	envContents["DB_USERNAME"] = "db"
-	envContents["DB_PASSWORD"] = "db"
-	envContents["DB_CONNECTION"] = dbConnection
-	err = WriteEnvFile(app, envContents)
+	envMap["DB_HOST"] = "db"
+	envMap["DB_PORT"] = port
+	envMap["DB_DATABASE"] = "db"
+	envMap["DB_USERNAME"] = "db"
+	envMap["DB_PASSWORD"] = "db"
+	envMap["DB_CONNECTION"] = dbConnection
+	err = WriteEnvFile(app, envMap, envText)
 	if err != nil {
 		return err
 	}
