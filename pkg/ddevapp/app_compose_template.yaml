@@ -91,7 +91,7 @@ services:
         gid: '{{ .GID }}'
     image: ${DDEV_WEBIMAGE}-${DDEV_SITENAME}-built
     {{ if .EnvFile }}
-    env_file: "{{ .EnvFile }}"
+    env_file: '{{ .EnvFile }}'
     {{ end }}
 
     {{ if .UseHostDockerInternalExtraHosts }}
