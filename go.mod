@@ -10,7 +10,7 @@ require (
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/uuid v1.3.0
 	github.com/imdario/mergo v0.3.13
-	github.com/jedib0t/go-pretty/v6 v6.3.1
+	github.com/jedib0t/go-pretty/v6 v6.4.3
 	github.com/lextoumbourou/goodhosts v2.1.0+incompatible
 	github.com/manifoldco/promptui v0.8.0
 	github.com/mattn/go-isatty v0.0.14
@@ -22,7 +22,7 @@ require (
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.10.0
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.4
 	github.com/ulikunitz/xz v0.5.10
 	github.com/withfig/autocomplete-tools/integrations/cobra v1.2.1
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
