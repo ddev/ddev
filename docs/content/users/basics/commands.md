@@ -979,12 +979,12 @@ ddev restart --all
 
 ## `self-upgrade`
 
-Give instructions on how to update or upgrade DDEV. Although the command doesn't actually do the upgrade (since it must be handled differently on different systems) it tries to figure out what you need to do and explain it to you. It must be executed in the context of a project.
+Output instructions for updating or upgrading DDEV. The command doesn’t perform the upgrade, but tries to provide instructions relevant to your installation. Must be executed from the project context.
 
 Example:
 
 ```
-$ ddev self-upgrade
+→  ddev self-upgrade
 
 DDEV appears to have been installed with install_ddev.sh, you can run that script again to update.
 curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash
