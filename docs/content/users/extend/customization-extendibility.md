@@ -111,33 +111,28 @@ web_extra_exposed_ports:
 
 ## Providing Custom Environment Variables to a Container
 
-Custom environment variables may be set in the project’s `.ddev/config.yaml` or the global `~/.ddev/global_config.yaml` with the [`web_environment`](../configuration/config.md#web_environment) key:
+Custom environment variables may be set in
 
-```yaml
-web_environment:
-- SOMEENV=someval
-- SOMEOTHERENV=someotherval
-```
+* The project `.ddev/.env file`, which could look something like this:
+
+    ```
+    SOMEENV='someval'
+    SOMEOTHERENV='someotherval'
+    ```
+
+* The project `.ddev/config.yaml` with the [`web_environment`](../configuration/config.md#web_environment) key:
+
+    ```yaml
+    web_environment:
+    - SOMEENV=someval
+    - SOMEOTHERENV=someotherval
+    ```
+
+* The global `.ddev/global_config.yaml` (in your home directory) with the same `web_environment` key.
 
 You can also use `ddev config global --web-environment-add="SOMEENV=someval"` or `ddev config --web-environment-add="SOMEENV=someval"` for the same purpose. The command just sets the values in the configuration files. (The `--web-environment` option is also available, but it overwrites existing contents.)
 
-The docker-compose web environment can also provide `.env` file support. To enable this, create a new docker-compose YAML partial like `.ddev/docker-compose.env-file.yaml`:
-
-```
-services:
-  web:
-    env_file:
-      - ../.env
-```
-
-You would create the `.env` file in the project root and provide globals within it as such:
-
-```
-SOMEENV='someval'
-SOMEOTHERENV='someotherval'
-```
-
-The globals from the env file would be available on the next DDEV start. It’s important to note that typically the `.env` file should *not* be placed under source control, especially if it contains private API keys or passwords.
+Note that sensitive variables should not be checked in with your project, so the `.env` file, for example, is not normally checked in. People also often use global configuration for sensitive values, as it's not normally checked in.
 
 ### Altering the In-Container `$PATH`
 

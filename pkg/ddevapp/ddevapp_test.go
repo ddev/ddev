@@ -3896,6 +3896,47 @@ func TestEnvironmentVariables(t *testing.T) {
 
 }
 
+// TestEnvFile tests checks behavior of .ddev/.env files
+func TestEnvFile(t *testing.T) {
+	assert := asrt.New(t)
+
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+
+	app, err := ddevapp.NewApp(site.Dir, false)
+	assert.NoError(err)
+	err = os.Chdir(site.Dir)
+	assert.NoError(err)
+
+	err = fileutil.TemplateStringToFile("JUNK1=junk1\nJUNK2=junk2\n", nil, app.GetConfigPath(".env"))
+	require.NoError(t, err)
+
+	err = app.Start()
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.RemoveAll(app.GetConfigPath(".env"))
+		assert.NoError(err)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+
+	// This set of webContainerExpectations should be maintained to match the list in the docs
+	expectedCustomEnv := map[string]string{
+		"JUNK1": "junk1",
+		"JUNK2": "junk2",
+	}
+	for k, v := range expectedCustomEnv {
+		envVal, _, err := app.Exec(&ddevapp.ExecOpts{
+			Cmd: fmt.Sprintf("echo ${%s}", k),
+		})
+		assert.NoError(err)
+		envVal = strings.Trim(envVal, "\r\n")
+		assert.Equal(v, envVal)
+	}
+}
+
 // constructContainerName builds a container name given the type (web/db/dba) and the app
 func constructContainerName(containerType string, app *ddevapp.DdevApp) (string, error) {
 	container, err := app.FindContainerByType(containerType)
