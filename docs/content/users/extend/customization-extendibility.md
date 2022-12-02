@@ -139,6 +139,7 @@ ddev config --web-environment-add="MY_ENV_VAR=someval"
 # Set MY_ENV_VAR globally
 ddev config global --web-environment-add="MY_ENV_VAR=someval
 ```
+
 You can use the `--web-environment` flag to overwrite existing values rather than adding them.
 
 !!!warning "Don’t check in sensitive values!"
