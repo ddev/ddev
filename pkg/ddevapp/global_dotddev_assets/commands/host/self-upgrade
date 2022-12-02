@@ -11,8 +11,9 @@ mypath=$(which ddev)
 case $mypath in
   "/usr/bin/ddev")
     if [[ ${OSTYPE} = "linux-gnu"* ]]; then
-      if command -v apt; then echo "You seem to have an apt-installed ddev, upgrade with 'sudo apt update && sudo apt upgrade -y ddev'"; fi
-      if command -v dnf; then echo "You seem to have dnf-installed ddev, upgrade with 'sudo dnf install --refresh ddev'"; fi
+      if command -v apt; then echo "You seem to have an apt-installed ddev, upgrade with 'sudo apt update && sudo apt upgrade -y ddev'";
+      elif [ -f /etc/arch-release ] && command -v yay >/dev/null ; then echo "You seem to have yay-installed ddev (AUR), upgrade with 'yay -Syu ddev'";
+      elif command -v dnf; then echo "You seem to have dnf-installed ddev, upgrade with 'sudo dnf install --refresh ddev'"; fi
     fi
     ;;
 
