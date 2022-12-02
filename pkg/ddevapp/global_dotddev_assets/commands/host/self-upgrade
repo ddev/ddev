@@ -32,7 +32,7 @@ case $mypath in
     ;;
 
   "/c/Program Files/DDEV/ddev")
-    echo "DDEV was either installed with\nchoco install -y ddev\nor with the installer package."
+    printf "DDEV was either installed with\nchoco install -y ddev\nor with the installer package.\n"
     echo "You can upgrade with 'choco upgrade -y ddev'"
     echo "Or by downloading the Windows installer from https://github.com/drud/ddev/releases"
     ;;
