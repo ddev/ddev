@@ -60,14 +60,16 @@ func apppush(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, s
 		util.Failed("Failed to get provider: %v", err)
 	}
 
-	// Add or override the command-line provided environment variables
-	envVars := strings.Split(env, ",")
-	for _, v := range envVars {
-		split := strings.Split(v, "=")
-		if len(split) != 2 {
-			util.Failed("unable to parse environment variable setting: %v", v)
+	if env != "" {
+		// Add or override the command-line provided environment variables
+		envVars := strings.Split(env, ",")
+		for _, v := range envVars {
+			split := strings.Split(v, "=")
+			if len(split) != 2 {
+				util.Failed("unable to parse environment variable setting: %v", v)
+			}
+			provider.EnvironmentVariables[split[0]] = split[1]
 		}
-		provider.EnvironmentVariables[split[0]] = split[1]
 	}
 
 	if err := app.Push(provider, skipDbArg, skipFilesArg); err != nil {
