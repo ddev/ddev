@@ -111,28 +111,38 @@ web_extra_exposed_ports:
 
 ## Providing Custom Environment Variables to a Container
 
-Custom environment variables may be set in
+You can set custom environment variables in several places:
 
-* The project `.ddev/.env file`, which could look something like this:
-
-    ```
-    SOMEENV='someval'
-    SOMEOTHERENV='someotherval'
-    ```
-
-* The project `.ddev/config.yaml` with the [`web_environment`](../configuration/config.md#web_environment) key:
+* The project’s [`web_environment`](../configuration/config.md#web_environment) config setting in `.ddev/config.yaml`:
 
     ```yaml
     web_environment:
-    - SOMEENV=someval
-    - SOMEOTHERENV=someotherval
+    - MY_ENV_VAR=someval
+    - MY_OTHER_ENV_VAR=someotherval
     ```
 
-* The global `.ddev/global_config.yaml` (in your home directory) with the same `web_environment` key.
+* The global `web_environment` setting in `.ddev/global_config.yaml`.
 
-You can also use `ddev config global --web-environment-add="SOMEENV=someval"` or `ddev config --web-environment-add="SOMEENV=someval"` for the same purpose. The command just sets the values in the configuration files. (The `--web-environment` option is also available, but it overwrites existing contents.)
+* An optional, project-level `.ddev/.env` file, which could look something like this:
 
-Note that sensitive variables should not be checked in with your project, so the `.env` file, for example, is not normally checked in. People also often use global configuration for sensitive values, as it's not normally checked in.
+    ```
+    MY_ENV_VAR='someval'
+    MY_OTHER_ENV_VAR='someotherval'
+    ```
+
+If you’d rather use the CLI to set the project or global `web_environment` value, you can use the [`ddev config`](../basics/commands.md#config) command:
+
+```sh
+# Set MY_ENV_VAR for the project
+ddev config --web-environment-add="MY_ENV_VAR=someval"
+
+# Set MY_ENV_VAR globally
+ddev config global --web-environment-add="MY_ENV_VAR=someval
+```
+You can use the `--web-environment` flag to overwrite existing values rather than adding them.
+
+!!!warning "Don’t check in sensitive values!"
+    Sensitive variables like API keys should not be checked in with your project. Typically you might use an `.env` file and _not_ check that in, but offer `.env.example` with expected keys that don’t have values. Some use global configuration for sensitive values, as that’s not normally checked in either.
 
 ### Altering the In-Container `$PATH`
 
