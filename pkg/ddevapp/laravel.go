@@ -48,6 +48,7 @@ func laravelPostStartAction(app *DdevApp) error {
 		port = "5432"
 	}
 	envMap := map[string]string{
+		"APP_URL":       app.GetPrimaryURL(),
 		"DB_HOST":       "db",
 		"DB_PORT":       port,
 		"DB_DATABASE":   "db",
