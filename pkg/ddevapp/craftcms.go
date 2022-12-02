@@ -83,7 +83,7 @@ func craftCmsPostStartAction(app *DdevApp) error {
 		for _, envFileName := range exampleEnvFilePaths {
 			exampleEnvFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, envFileName)
 			if fileutil.FileExists(exampleEnvFilePath) {
-				util.Warning(fmt.Sprintf("Copying %s to .env", envFileName))
+				util.Success(fmt.Sprintf("Copied %s to .env", envFileName))
 				err := fileutil.CopyFile(exampleEnvFilePath, envFilePath)
 				if err != nil {
 					util.Error(fmt.Sprintf("Error copying %s to .env", exampleEnvFilePath))
@@ -98,19 +98,9 @@ func craftCmsPostStartAction(app *DdevApp) error {
 		return nil
 	}
 	// Read in the .env file
-	_, envText, err := ReadEnvFile(app)
+	envMap, envText, err := ReadEnvFile(app)
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("Unable to read .env file: %v", err)
-	}
-	if os.IsNotExist(err) {
-		err = fileutil.CopyFile(filepath.Join(app.AppRoot, ".env.example"), filepath.Join(app.AppRoot, ".env"))
-		if err != nil {
-			return err
-		}
-		_, envText, err = ReadEnvFile(app)
-		if err != nil {
-			return err
-		}
 	}
 
 	port := "3306"
@@ -120,25 +110,32 @@ func craftCmsPostStartAction(app *DdevApp) error {
 		port = "5432"
 	}
 
-	envMap := map[string]string{
-		"CRAFT_DB_DRIVER":   driver,
-		"CRAFT_DB_SERVER":   "db",
-		"CRAFT_DB_PORT":     port,
-		"CRAFT_DB_DATABASE": "db",
-		"CRAFT_DB_USER":     "db",
-		"CRAFT_DB_PASSWORD": "db",
-
-		// These are older variants but should do no harm
-		"DB_DRIVER":   driver,
-		"DB_SERVER":   "db",
-		"DB_PORT":     port,
-		"DB_DATABASE": "db",
-		"DB_USER":     "db",
-		"DB_PASSWORD": "db",
-
-		"MAILHOG_SMTP_HOSTNAME": "127.0.0.1",
-		"MAILHOG_SMTP_PORT":     "1025",
-		"PRIMARY_SITE_URL":      app.GetPrimaryURL(),
+	// If they have older version of .env with DB_DRIVER, DB_SERVER etc, use those
+	if _, ok := envMap["DB_SERVER"]; ok {
+		envMap = map[string]string{
+			"DB_DRIVER":             driver,
+			"DB_SERVER":             "db",
+			"DB_PORT":               port,
+			"DB_DATABASE":           "db",
+			"DB_USER":               "db",
+			"DB_PASSWORD":           "db",
+			"MAILHOG_SMTP_HOSTNAME": "127.0.0.1",
+			"MAILHOG_SMTP_PORT":     "1025",
+			"PRIMARY_SITE_URL":      app.GetPrimaryURL(),
+		}
+	} else {
+		// Otherwise use the current CRAFT_DB_SERVER etc.
+		envMap = map[string]string{
+			"CRAFT_DB_DRIVER":       driver,
+			"CRAFT_DB_SERVER":       "db",
+			"CRAFT_DB_PORT":         port,
+			"CRAFT_DB_DATABASE":     "db",
+			"CRAFT_DB_USER":         "db",
+			"CRAFT_DB_PASSWORD":     "db",
+			"MAILHOG_SMTP_HOSTNAME": "127.0.0.1",
+			"MAILHOG_SMTP_PORT":     "1025",
+			"PRIMARY_SITE_URL":      app.GetPrimaryURL(),
+		}
 	}
 
 	err = WriteEnvFile(app, envMap, envText)
