@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/drud/ddev/pkg/util"
 	"os"
 	"path/filepath"
 )
@@ -32,7 +33,8 @@ func laravelPostStartAction(app *DdevApp) error {
 	if os.IsNotExist(err) {
 		err = fileutil.CopyFile(filepath.Join(app.AppRoot, ".env.example"), filepath.Join(app.AppRoot, ".env"))
 		if err != nil {
-			return err
+			util.Debug("laravel: .env.example does not exist yet, not trying to process it")
+			return nil
 		}
 		_, envText, err = ReadEnvFile(app)
 		if err != nil {
