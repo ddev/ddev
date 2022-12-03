@@ -977,6 +977,19 @@ ddev restart my-project my-other-project
 ddev restart --all
 ```
 
+## `self-upgrade`
+
+Output instructions for updating or upgrading DDEV. The command doesn’t perform the upgrade, but tries to provide instructions relevant to your installation. Must be executed from the project context.
+
+Example:
+
+```
+→  ddev self-upgrade
+
+DDEV appears to have been installed with install_ddev.sh, you can run that script again to update.
+curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash
+```
+
 ## `service`
 
 Add or remove, enable or disable [extra services](../extend/additional-services.md).

@@ -1,0 +1,43 @@
+#!/bin/bash
+
+#ddev-generated
+
+## Description: Explain how to upgrade DDEV
+## Usage: self-upgrade
+## Example: "ddev self-upgrade"
+
+mypath=$(which ddev)
+
+case $mypath in
+  "/usr/bin/ddev")
+    if [[ ${OSTYPE} = "linux-gnu"* ]]; then
+      if command -v apt; then echo "You seem to have an apt-installed ddev, upgrade with 'sudo apt update && sudo apt upgrade -y ddev'";
+      elif [ -f /etc/arch-release ] && command -v yay >/dev/null ; then echo "You seem to have yay-installed ddev (AUR), upgrade with 'yay -Syu ddev'";
+      elif command -v dnf; then echo "You seem to have dnf-installed ddev, upgrade with 'sudo dnf install --refresh ddev'"; fi
+    fi
+    ;;
+
+  "/usr/local/bin/ddev")
+    if [ ! -L /usr/local/bin/ddev ]; then
+      printf "DDEV appears to have been installed with install_ddev.sh, you can run that script again to update.\ncurl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash\n"
+    elif command -v brew; then
+      echo "DDEV appears to have been installed with homebrew, upgrade with 'brew update && brew upgrade ddev'"
+    fi
+    ;;
+
+  "/opt/homebrew/bin/ddev" | "/home/linuxbrew/.linuxbrew/bin/ddev")
+    if [ -L "$(which ddev)" ] && command -v brew; then
+      echo "DDEV appears to have been installed with homebrew, upgrade with 'brew update && brew upgrade ddev'"
+    fi
+    ;;
+
+  "/c/Program Files/DDEV/ddev")
+    printf "DDEV was either installed with\nchoco install -y ddev\nor with the installer package.\n"
+    echo "You can upgrade with 'choco upgrade -y ddev'"
+    echo "Or by downloading the Windows installer from https://github.com/drud/ddev/releases"
+    ;;
+
+  *)
+    echo "Unable to determine how you installed ddev, but you can remove $mypath and reinstall with one of the techniques in https://ddev.readthedocs.io/en/latest/users/install/ddev-installation/"
+
+esac
