@@ -47,7 +47,6 @@ web_environment:
 * `ddev pull platform` will connect to Platform.sh to download database and files. To skip downloading and importing either file or database assets, use the `--skip-files` and `--skip-db` flags.
 * If you need to change the `platform.yaml` recipe, you can change it to suit your needs, but remember to remove the `#ddev-generated` line from the top of the file.
 
-
 ## Edge Cases
 
 ### Multiple databases in a project
