@@ -274,17 +274,15 @@ func processAction(action string, dict map[string]interface{}, bashPath string) 
 	}
 	action = doc.String()
 
+	desc := getDdevDescription(action)
 	out, err := exec.RunHostCommand(bashPath, "-c", action)
 	if err != nil {
+		util.Warning("%c %s", '\U0001F44E', desc)
 		return fmt.Errorf("Unable to run action %v: %v, output=%s", action, err, out)
 	}
 	if len(out) > 0 {
 		output.UserOut.Print(out)
 	}
-	if !strings.Contains(action, `#ddev-nodisplay`) {
-		output.UserOut.Printf("Executed action '%v', output='%s'", action, out)
-	}
-	desc := getDdevDescription(action)
 	if desc != "" {
 		util.Success("%c %s", '\U0001F44D', desc)
 	}
