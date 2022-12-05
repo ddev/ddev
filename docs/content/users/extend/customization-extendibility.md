@@ -113,7 +113,7 @@ web_extra_exposed_ports:
 
 You can set custom environment variables in several places:
 
-* The project’s [`web_environment`](../configuration/config.md#web_environment) setting in `.ddev/config.yaml or `.ddev/config.*.yaml`:
+* The project’s [`web_environment`](../configuration/config.md#web_environment) setting in `.ddev/config.yaml` or `.ddev/config.*.yaml`:
 
     ```yaml
     web_environment:
