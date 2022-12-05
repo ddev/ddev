@@ -339,18 +339,19 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
 
     In the examples above, we used a one-liner to copy `.env.example` as `env` and set the `DB_HOST`, `DB_DATABASE`, `DB_USERNAME` and `DB_PASSWORD` environment variables to the value of `db`.
 
+
 === "Craft CMS"
 
     ## Craft CMS
 
-    [Craft CMS](https://craftcms.com) can be downloaded with [Composer](https://craftcms.com/docs/4.x/installation.html#downloading-with-composer), or by [manually downloading](https://craftcms.com/docs/4.x/installation.html#downloading-an-archive-file-manually) a zipped archive. 
-    
+    [Craft CMS](https://craftcms.com) can be installed via [Composer](https://craftcms.com/docs/4.x/installation.html), using DDEV’s [`composer` command](../users/basics/commands.md#composer).
+
     === "New projects"
-    
+
         ### Composer project
-        
+
         Use this to create a new Craft CMS project from the official [Craft starter project](https://github.com/craftcms/craft) or a third-party starter project using Composer.
-        
+
         ```bash
         mkdir my-craft-project
         cd my-craft-project
@@ -362,11 +363,11 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         ```
 
     === "Existing projects"
-    
+
         ### Git clone
-        
+
         Use this to migrate an existing Craft CMS project from a git repository and import a database dump.
-        
+
         ```bash
         git clone https://github.com/example/example-site my-craft-project
         cd my-craft-project
@@ -377,12 +378,12 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         ddev launch
         ```
 
-    DDEV will automatically setup your `.env` so it will work properly for local development, so the default settings displayed in the `ddev craft setup/welcome` command can be used. Change them only if you need to override a particular setting.
+    DDEV will automatically add required variables to your `.env` file so it will work properly for local development, so the default settings displayed in the `ddev craft setup/welcome` command can be used. Change them only if you need to override a particular setting.
 
     If you have an existing Craft CMS DDEV project, you'll need to change the `type:` to `craftcms` in your project’s `.ddev/config.yaml` and then do [`ddev restart`](../users/basics/commands.md#restart) to be able to use the [`ddev craft`](../users/basics/commands.md#craft) command.
 
     If you have Craft CMS installed in a sub-directory of your project, in order for `ddev craft` to work, you will need to change the location of the `craft` executable by providing the `CRAFT_CMD_ROOT` environment variable to the web container in your project. For example, if your directory structure is `my-craft-project/app`, where Craft CMS is installed in `app`, then you would apply `ddev config --web-environment-add=CRAFT_CMD_ROOT=./app`. `CRAFT_CMD_ROOT` defaults to `./`, the project root directory. Run `ddev restart` after applying this change.
-    
+
     For more information about how to provide custom environment variables to your containers, read [Providing Custom Environment Variables to a Container](https://ddev.readthedocs.io/en/latest/users/extend/customization-extendibility/#providing-custom-environment-variables-to-a-container).
 
 === "Shopware 6"
