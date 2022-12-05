@@ -272,7 +272,9 @@ func processAction(action string, dict map[string]interface{}, bashPath string) 
 	if err != nil {
 		return fmt.Errorf("Unable to run action %v: %v, output=%s", action, err, out)
 	}
-
+	if len(out) > 0 {
+		output.UserOut.Print(out)
+	}
 	if !strings.Contains(action, `#ddev-nodisplay`) {
 		output.UserOut.Printf("Executed action '%v', output='%s'", action, out)
 	}
