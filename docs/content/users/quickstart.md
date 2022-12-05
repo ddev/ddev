@@ -361,21 +361,6 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         ddev launch
         ```
 
-        ### Manual download
-        
-        Use this to create a new Craft CMS project using a zipped archive.
-        
-        ```bash
-        mkdir my-craft-project
-        cd my-craft-project
-        curl -LO https://craftcms.com/latest-v4.zip
-        unzip latest-v4.zip && rm latest-v4.zip
-        ddev config --project-type=craftcms
-        ddev start
-        ddev craft install
-        ddev launch
-        ```
-
     === "Existing projects"
     
         ### Git clone
