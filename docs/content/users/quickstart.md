@@ -312,17 +312,17 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
 
     Use a new or existing Composer project, or clone a Git repository.
 
-    The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) just as it can for Laravel.
+    The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) just as it can for Laravel. DDEV automatically updates or creates the .env file with the database information.
 
     === "Composer"
         ```bash
         mkdir my-laravel-app
         cd my-laravel-app
         ddev config --project-type=laravel --docroot=public --create-docroot
+        ddev composer create --prefer-dist --no-install --no-scripts laravel/laravel
+        ddev composer install
         ddev start
         ddev composer create --prefer-dist laravel/laravel
-        ddev exec "cat .env.example | sed  -E 's/DB_(HOST|DATABASE|USERNAME|PASSWORD)=(.*)/DB_\1=db/g' > .env"
-        ddev exec 'sed -i "s#APP_URL=.*#APP_URL=${DDEV_PRIMARY_URL}#g" .env'
         ddev exec "php artisan key:generate"
         ddev launch
         ```
@@ -332,129 +332,13 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         cd <your-laravel-project>
         ddev config --project-type=laravel --docroot=public --create-docroot
         ddev start
-        ddev composer install 
-        ddev exec "cat .env.example | sed  -E 's/DB_(HOST|DATABASE|USERNAME|PASSWORD)=(.*)/DB_\1=db/g' > .env"
-        ddev exec 'sed -i "s#APP_URL=.*#APP_URL=${DDEV_PRIMARY_URL}#g" .env'
+        ddev composer install
         ddev exec "php artisan key:generate"
         ddev launch
         ```
 
     In the examples above, we used a one-liner to copy `.env.example` as `env` and set the `DB_HOST`, `DB_DATABASE`, `DB_USERNAME` and `DB_PASSWORD` environment variables to the value of `db`.
 
-    These DDEV’s default values for the database connection.
-    
-    Instead of setting each connection variable, we can add a `ddev` section to the `connections` array in `config/database.php` like this:
-    
-    ```php
-    <?php
-    return [
-        ...
-        'connections' => [
-            ...
-            'ddev' => [
-                'driver' => 'mysql',
-                'host' => 'db',
-                'port' => 3306,
-                'database' => 'db',
-                'username' => 'db',
-                'password' => 'db',
-                'unix_socket' => '',
-                'charset' => 'utf8mb4',
-                'collation' => 'utf8mb4_unicode_ci',
-                'prefix' => '',
-                'strict' => true,
-                'engine' => null,
-            ],
-        ],
-      ...
-    ];
-    ```
-    
-    This way we only need to change the value of `DB_CONNECTION` to `ddev` in the `.env` to work with the `db` service.
-
-    This is handy if you have a local database installed and want to switch between the connections by changing only one variable in `.env`.
-
-    ### Using Vite
-
-    The default Laravel Vite template doesn’t work with DDEV, so you’ll need to set up a Vite server and configure Laravel to use it.
-
-    #### Set Up a Vite Server
-
-    Install the [ddev-viteserve](https://github.com/torenware/ddev-viteserve) add-on.
-    ```bash
-    ddev get torenware/ddev-viteserve
-    ```
-    In `.ddev/.env`, change `VITE_PROJECT_DIR=frontend` to `VITE_PROJECT_DIR=.`
-    
-    In `.ddev/.env` add `VITE_JS_PACKAGE_MGR=npm`. This tells `ddev-viteserve` to use `npm` to manage packages, and helps keep dependencies in sync.
-
-    Next add the following line to the post-install hook in your `.ddev/config.yaml`:
-
-    ```bash
-    hooks:
-        post-start:
-            - exec: .ddev/commands/web/vite-serve
-    ```
-
-    This will spin up a Vite development server on port `5173` whenever you run [`ddev restart`](../users/basics/commands.md#restart)
-
-    Next expose your DDEV hostname by adding the following to your `.ddev/config.yaml`
-
-    ```bash
-    web_environment:
-        - VITE_APP_URL=${DDEV_HOSTNAME}
-    ```
-
-    #### Configuring Laravel
-    
-    The default `vite.config.js` will not yet work with our DDEV environment. Let’s start by installing the Vite and `laravel-vite-plugin`:
-
-    ```
-    ddev npm i -D laravel-vite-plugin vite
-    ```
-
-    Then replace the default template with the following. _Note that this script uses the exposed `VITE_APP_URL` from earlier_
-
-    ```js
-    import laravel from 'laravel-vite-plugin';
-    import { defineConfig, loadEnv } from 'vite'
-    
-    export default defineConfig(({ command, mode }) => {
-        //Load the env variables that are prefixed with VITE_
-        const env = loadEnv(mode, process.cwd(), 'VITE_')
-        return {
-            server: {
-                hmr: {
-                protocol: 'wss',
-                host: env.VITE_APP_URL,
-                },
-            },
-            plugins: [
-                laravel({
-                    input: ['resources/css/app.css', 'resources/js/app.js'],
-                    refresh: true,
-                }),
-            ],
-        }
-    })
-    ```
-
-    Add any plugins you need, like Vue, to the `plugins` array. **Careful with changes to server properties that often cause CORS errors!**
-    
-    Finally, add the following to the head of the `welcome.blade.php` file:
-
-    ```php
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    ```
-
-    #### Finalize
-
-    Apply the server changes and Laravel configuration by running [`ddev restart`](../users/basics/commands.md#restart).
-
-    !!!tip "No need for `npm run dev`!"
-        You don’t need to use `npm run dev`, since this attempts to run a local Vite server with the `vite` command. The `ddev-viteserve` add-on takes care of that Vite server for us.
-
-    You can confirm Vite’s working properly by making a quick change `resources/js/app.js` and seeing it reflected immediately.
 === "Craft CMS"
 
     ## Craft CMS
@@ -527,7 +411,9 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     cd my-shopware6
     ddev config --project-type=shopware6 --docroot=public
     ddev start
-    ddev composer install
+    ddev composer install --no-scripts
+    # During system:setup you may have to enter the Database user (db), Database password (db)
+    # Database host (db) and Database name (db). 
     ddev exec bin/console system:setup --database-url=mysql://db:db@db:3306/db --app-url='${DDEV_PRIMARY_URL}'
     ddev exec bin/console system:install --create-database --basic-setup
     ddev launch /admin

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/util"
 	"os"
 	"path/filepath"
 )
@@ -80,36 +79,22 @@ func getShopwareUploadDir(app *DdevApp) string {
 
 // shopware6PostStartAction checks to see if the .env file is set up
 func shopware6PostStartAction(app *DdevApp) error {
-	envFile := filepath.Join(app.AppRoot, ".env")
-	var addOnConfig string
-	expectedDatabaseURL := `DATABASE_URL="mysql://db:db@db:3306/db"`
-	expectedPrimaryURL := fmt.Sprintf(`APP_URL="%s"`, app.GetPrimaryURL())
-	expectedMailerURL := `MAILER_URL="smtp://localhost:1025?encryption=&auth_mode="`
-
-	if fileutil.FileExists(envFile) {
-		isConfiguredDbConnection, _ := fileutil.FgrepStringInFile(app.SiteSettingsPath, expectedDatabaseURL)
-		isAppURLCorrect, _ := fileutil.FgrepStringInFile(app.SiteSettingsPath, expectedPrimaryURL)
-		isMailhogConfigCorrect, _ := fileutil.FgrepStringInFile(envFile, expectedMailerURL)
-
-		if !isConfiguredDbConnection {
-			addOnConfig = addOnConfig + expectedDatabaseURL + "\n"
+	if app.DisableSettingsManagement {
+		return nil
+	}
+	_, envText, err := ReadEnvFile(app)
+	var envMap = map[string]string{
+		"DATABASE_URL": `mysql://db:db@db:3306/db`,
+		"APP_URL":      app.GetPrimaryURL(),
+		"MAILER_URL":   `smtp://127.0.0.1:1025?encryption=&auth_mode=`,
+	}
+	// Shopware 6 refuses to do bin/console system:setup if the env file exists,
+	// so if it doesn't exist, wait for it to be created
+	if err == nil {
+		err := WriteEnvFile(app, envMap, envText)
+		if err != nil {
+			return err
 		}
-		if !isAppURLCorrect {
-			addOnConfig = addOnConfig + expectedPrimaryURL + "\n"
-		}
-		if !isMailhogConfigCorrect {
-			addOnConfig = addOnConfig + expectedMailerURL + "\n"
-		}
-		if addOnConfig != "" {
-			addOnConfig = "# =================\n# Configuration added by ddev\n" + addOnConfig
-			err := fileutil.AppendStringToFile(envFile, addOnConfig)
-			if err != nil {
-				return err
-			}
-			util.Warning("ddev configuration added to %s", envFile)
-		}
-	} else {
-		util.Warning("the .env file has not yet been created (%s)", envFile)
 	}
 
 	return nil

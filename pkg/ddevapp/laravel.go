@@ -1,8 +1,11 @@
 package ddevapp
 
 import (
+	"fmt"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
+	"os"
 	"path/filepath"
 )
 
@@ -18,35 +21,45 @@ func isLaravelApp(app *DdevApp) bool {
 	return fileutil.FileExists(filepath.Join(app.AppRoot, "artisan"))
 }
 
-func envSettingsWarning(status int) {
-	var srcFile = ".env"
-	var message = "Don't forget to configure the database in your .env file"
-
-	if WarnTypeAbsent == status {
-		srcFile += ".example"
-		message = "Don't forget to create the .env file with proper database settings"
-	}
-	util.Warning(message)
-	util.Warning("You can do it with this one-liner:")
-	util.Warning("ddev exec \"cat %v | sed  -E 's/DB_(HOST|DATABASE|USERNAME|PASSWORD)=(.*)/DB_\\1=db/g' > .env\"", srcFile)
-	util.Warning("Read more on https://ddev.readthedocs.io/en/stable/users/quickstart/#laravel")
-}
-
 func laravelPostStartAction(app *DdevApp) error {
-	if fileutil.FileExists(filepath.Join(app.AppRoot, ".env")) {
-		isConfiguredDbHost, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, `DB_HOST=db`)
-		isConfiguredDbConnection, _ := fileutil.FgrepStringInFile(app.SiteSettingsPath, `DB_CONNECTION=ddev`)
-		if err == nil && !isConfiguredDbHost && !isConfiguredDbConnection {
-			envSettingsWarning(WarnTypeNotConfigured)
+	// We won't touch env if disable_settings_management: true
+	if app.DisableSettingsManagement {
+		return nil
+	}
+	_, envText, err := ReadEnvFile(app)
+	if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("Unable to read .env file: %v", err)
+	}
+	if os.IsNotExist(err) {
+		err = fileutil.CopyFile(filepath.Join(app.AppRoot, ".env.example"), filepath.Join(app.AppRoot, ".env"))
+		if err != nil {
+			util.Debug("laravel: .env.example does not exist yet, not trying to process it")
+			return nil
 		}
-	} else {
-		envSettingsWarning(WarnTypeAbsent)
+		_, envText, err = ReadEnvFile(app)
+		if err != nil {
+			return err
+		}
+	}
+	port := "3306"
+	dbConnection := "mysql"
+	if app.Database.Type == nodeps.Postgres {
+		dbConnection = "pgsql"
+		port = "5432"
+	}
+	envMap := map[string]string{
+		"APP_URL":       app.GetPrimaryURL(),
+		"DB_HOST":       "db",
+		"DB_PORT":       port,
+		"DB_DATABASE":   "db",
+		"DB_USERNAME":   "db",
+		"DB_PASSWORD":   "db",
+		"DB_CONNECTION": dbConnection,
+	}
+	err = WriteEnvFile(app, envMap, envText)
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
-
-//func laravelConfigOverrideAction(app *DdevApp) error {
-//	app.PHPVersion = nodeps.PHP80
-//	return nil
-//}
