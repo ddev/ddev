@@ -185,6 +185,9 @@ ddev get --list --all
 		if err != nil {
 			util.Failed("Unable to YamlToDict: %v", err)
 		}
+		if len(s.PreInstallActions) > 0 {
+			util.Success("\nExecuting pre-install actions:")
+		}
 		for _, action := range s.PreInstallActions {
 			err = processAction(action, dict, bash)
 			if err != nil {
@@ -210,7 +213,7 @@ ddev get --list --all
 			}
 		}
 		globalDotDdev := filepath.Join(globalconfig.GetGlobalDdevDir())
-		if len(s.ProjectFiles) > 0 {
+		if len(s.GlobalFiles) > 0 {
 			util.Success("\nInstalling global components:")
 		}
 		for _, file := range s.GlobalFiles {
@@ -238,6 +241,9 @@ ddev get --list --all
 			util.Failed("Unable to chdir to %v: %v", app.GetConfigPath(""), err)
 		}
 
+		if len(s.PostInstallActions) > 0 {
+			util.Success("\nExecuting post-install actions:")
+		}
 		for _, action := range s.PostInstallActions {
 			err = processAction(action, dict, bash)
 			if err != nil {
