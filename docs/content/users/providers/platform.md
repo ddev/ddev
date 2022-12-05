@@ -54,11 +54,13 @@ web_environment:
 Platform.sh allows for multiple databases to be available in a project. This is done via [relationships](https://docs.platform.sh/create-apps/app-reference.html#relationships). When using multiple databases `ddev pull` won't work as it [doesn't know which database to pull](https://github.com/drud/ddev/issues/4415).
 
 To bypass the problem, you can use this command (from host):
+
 ```
-ddev platform db:dump --yes --gzip --file=/var/www/html/.ddev/.downloads/db.sql.gz --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}" --relationship RELATIONSHIP_NAME
+ddev exec platform db:dump --yes --gzip --file=/var/www/html/.ddev/.downloads/db.sql.gz --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}" --relationship <RELATIONSHIP_NAME>
 ```
 
 To identify the name of the relationship look into you `.platform.app.yaml` file, left hand column is the name:
+
 ```
 relationships:
   database: 'mysqldb:mysql'
@@ -67,12 +69,15 @@ relationships:
 ```
 
 Once the download has finished, you'll need to import to the **default** DDEV DB (named `db`):
+
 ```
 ddev import-db --src=.ddev/.downloads/db.sql.gz
 ```
 
 If you also have a need for [more than one database in DDEV](../../basics/database-management) then adapt the above command as needed:
+
 ```
 ddev import-db --target-db=backend --src=.ddev/.downloads/backend.sql.gz
 ```
+
 The above commands can easily be added in a `host` command, to facilitate things.
