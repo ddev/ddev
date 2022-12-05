@@ -318,6 +318,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         ```bash
         mkdir my-laravel-app
         cd my-laravel-app
+        ddev config --project-type=laravel --docroot=public --create-docroot
         ddev composer create --prefer-dist --no-install --no-scripts laravel/laravel
         ddev composer install
         ddev start
