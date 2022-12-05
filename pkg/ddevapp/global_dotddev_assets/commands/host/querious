@@ -1,0 +1,16 @@
+#!/bin/bash
+
+#ddev-generated
+# Support for Querious, https://www.araelium.com/querious
+## Description: Run querious with current project database
+## Usage: querious [database]
+## Example: "ddev querious"
+## OSTypes: darwin
+## HostBinaryExists: /Applications/Querious.app
+## DBTypes: mysql
+
+DATABASE="${1:-db}"
+
+set -x
+open "querious://connect/new?host=127.0.0.1&user=db&password=db&use-compression=false&database=${DATABASE}&port=${DDEV_HOST_DB_PORT}"
+
