@@ -16,7 +16,7 @@ Type `ddev` or `ddev -h` in a terminal window to see the available DDEV commands
 ## Lots of Other Commands
 
 * [`ddev mysql`](../basics/commands.md#mysql) gives direct access to the MySQL client and `ddev psql` to the PostgreSQL `psql` client.
-* `ddev sequelpro`, `ddev sequelace`, and [`ddev tableplus`](../basics/commands.md#tableplus) (macOS only, if the app is installed) give access to the Sequel Pro, Sequel Ace, or TablePlus database browser GUIs.
+* `ddev sequelpro`, `ddev sequelace`, [`ddev tableplus`](../basics/commands.md#tableplus), and `ddev querious` (macOS only, if the app is installed) give access to the Sequel Pro, Sequel Ace, TablePlus or Querious database browser GUIs.
 * `ddev heidisql` (Windows/WSL2 only, if installed) gives access to the HeidiSQL database browser GUI.
 * [`ddev import-db`](../basics/commands.md#import-db) and [`ddev export-db`](../basics/commands.md#export-db) import or export SQL or compressed SQL files.
 * [`ddev composer`](../basics/commands.md#composer) runs Composer inside the container. For example, `ddev composer install` will do a full composer install for you without even needing Composer on your computer. See [developer tools](developer-tools.md#ddev-and-composer).
