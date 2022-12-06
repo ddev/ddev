@@ -268,7 +268,7 @@ Teams may choose to use `config.local.yaml` or `config.override.yaml` for all lo
 3. The list of environment variables in [`web_environment`](../configuration/config.md#web_environment) are “smart merged”: if you add the same environment variable with a different value, the value in the override file will replace the value from `config.yaml`.
 4. Hook specifications in the [`hooks`](../configuration/config.md#hooks) variable are merged.
 
-If you need to *override* existing values, set [`override_config: true`](../configuration/config.md#override_config) in the `config.*.yaml` where the override behavior should take place. Since `config.*.yaml` files are normally *merged* into the configuration, some things can’t be overridden normally. For example, if you have [`nfs_mount_enabled: true`](../configuration/config.md#nfs_mount_enabled) you can’t override it with a merge and you can’t erase existing hooks or all environment variables. However, with `override_config: true` in a particular `config.*.yaml` file,
+If you need to _override_ existing values, set [`override_config: true`](../configuration/config.md#override_config) in the `config.*.yaml` where the override behavior should take place. Since `config.*.yaml` files are normally _merged_ into the configuration, some things can’t be overridden normally. For example, if you have [`nfs_mount_enabled: true`](../configuration/config.md#nfs_mount_enabled) you can’t override it with a merge and you can’t erase existing hooks or all environment variables. However, with `override_config: true` in a particular `config.*.yaml` file,
 
 ```yaml
 override_config: true
