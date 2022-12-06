@@ -34,8 +34,7 @@ RUN mkdir -p /etc/nginx/certs /mnt/ddev-global-cache/mkcert
 
 # curl mkcert and install it
 RUN set -eu -o pipefail && \
-    curl -sSL https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-${TARGETARCH} -o /usr/local/bin/mkcert && \
-    chmod +x /usr/local/bin/mkcert && \
+    curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=linux/${TARGETARCH}" && chmod +x /usr/local/bin/mkcert && \
     mkdir -p /root/.local/share && \
     ln -s /mnt/ddev-global-cache/mkcert /root/.local/share/mkcert && \
     mkcert -install

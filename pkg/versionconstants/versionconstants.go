@@ -31,7 +31,7 @@ var DBAImg = "phpmyadmin"
 // DBATag defines the default phpmyadmin image tag used for applications.
 var DBATag = "5" // Note that this can be overridden by make
 
-const TraditionalRouterImage = "drud/ddev-router:20220918_traefik"
+const TraditionalRouterImage = "drud/ddev-router:20221205_yq_update"
 const TraefikRouterImage = "traefik:v2.9"
 
 // SSHAuthImage is image for agent
