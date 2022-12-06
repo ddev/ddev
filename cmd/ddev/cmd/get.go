@@ -185,6 +185,9 @@ ddev get --list --all
 		if err != nil {
 			util.Failed("Unable to YamlToDict: %v", err)
 		}
+		if len(s.PreInstallActions) > 0 {
+			util.Success("\nExecuting pre-install actions:")
+		}
 		for _, action := range s.PreInstallActions {
 			err = processAction(action, dict, bash)
 			if err != nil {
@@ -210,7 +213,7 @@ ddev get --list --all
 			}
 		}
 		globalDotDdev := filepath.Join(globalconfig.GetGlobalDdevDir())
-		if len(s.ProjectFiles) > 0 {
+		if len(s.GlobalFiles) > 0 {
 			util.Success("\nInstalling global components:")
 		}
 		for _, file := range s.GlobalFiles {
@@ -238,6 +241,9 @@ ddev get --list --all
 			util.Failed("Unable to chdir to %v: %v", app.GetConfigPath(""), err)
 		}
 
+		if len(s.PostInstallActions) > 0 {
+			util.Success("\nExecuting post-install actions:")
+		}
 		for _, action := range s.PostInstallActions {
 			err = processAction(action, dict, bash)
 			if err != nil {
@@ -268,15 +274,15 @@ func processAction(action string, dict map[string]interface{}, bashPath string) 
 	}
 	action = doc.String()
 
+	desc := getDdevDescription(action)
 	out, err := exec.RunHostCommand(bashPath, "-c", action)
 	if err != nil {
+		util.Warning("%c %s", '\U0001F44E', desc)
 		return fmt.Errorf("Unable to run action %v: %v, output=%s", action, err, out)
 	}
-
-	if !strings.Contains(action, `#ddev-nodisplay`) {
-		output.UserOut.Printf("Executed action '%v', output='%s'", action, out)
+	if len(out) > 0 {
+		output.UserOut.Print(out)
 	}
-	desc := getDdevDescription(action)
 	if desc != "" {
 		util.Success("%c %s", '\U0001F44D', desc)
 	}
