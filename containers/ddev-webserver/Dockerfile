@@ -6,7 +6,6 @@
 FROM drud/ddev-php-base:v1.21.3 as ddev-webserver-base
 
 ENV BACKDROP_DRUSH_VERSION=1.4.0
-ENV MKCERT_VERSION=v1.4.6
 ENV DEBIAN_FRONTEND=noninteractive
 
 ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
@@ -59,15 +58,6 @@ RUN apt-get update
 
 SHELL ["/bin/bash", "-c"]
 
-RUN mkdir /tmp/ddev && \
-    if [[ $TARGETPLATFORM == "linux/arm64" ]]; then \
-        printf 'MKCERT_ARCH="linux-arm64" \n\
-        MAILHOG_ARCH="linux_arm64"' > /tmp/ddev/vars; \
-    else \
-        printf 'MKCERT_ARCH="linux-amd64" \n\
-        MAILHOG_ARCH="linux_amd64"' > /tmp/ddev/vars; \
-    fi
-
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
     blackfire \
     blackfire-php \
@@ -93,13 +83,16 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     unzip \
     zip
 
+RUN curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=${TARGETPLATFORM}" && chmod +x /usr/local/bin/mkcert
+
 # blackfire user by default is set up with /dev/null as homedir, and 999 as uid, which
 # can break people. Use a real homedir
 RUN mkdir -p /home/blackfire && chown blackfire:blackfire /home/blackfire && usermod -d /home/blackfire blackfire
 
 ADD ddev-webserver-dev-base-files /
 RUN phpdismod blackfire xhprof
-RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_${MAILHOG_ARCH} -o /usr/local/bin/mailhog;
+
+RUN set -x; curl --fail -sSL "https://github.com/drud/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_${TARGETPLATFORM##linux/}" -o /usr/local/bin/mailhog && chmod +x /usr/local/bin/mailhog
 
 RUN phpdismod xdebug && curl -sSL --fail --output /usr/local/bin/phive "https://phar.io/releases/phive.phar" && chmod 777 /usr/local/bin/phive && phpenmod xdebug
 RUN set -o pipefail && curl -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod 777 /usr/local/bin/terminus
@@ -130,8 +123,6 @@ RUN mkdir -p /mnt/ddev-global-cache/mkcert /run/{php,blackfire} /var/cache/nginx
 
 RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /var/lib/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/lib/node_modules /etc/php /etc/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
 
-RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-${MKCERT_ARCH} -o /usr/local/bin/mkcert && chmod 777 /usr/local/bin/mkcert
-
 RUN mkdir -p /var/xhprof && curl -o /tmp/xhprof.tgz -sSL https://pecl.php.net/get/xhprof && tar -zxf /tmp/xhprof.tgz --strip-components=1 -C /var/xhprof && chmod 777 /var/xhprof/xhprof_html && rm /tmp/xhprof.tgz
 
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
@@ -151,7 +142,7 @@ RUN chmod ugo+w /etc/ssl/certs /usr/local/share/ca-certificates
 
 HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]
 CMD ["/start.sh"]
-RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/* /tmp/ddev
+RUN apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
 #END ddev-webserver-dev-base
 
 ### ---------------------------ddev-webserver--------------------------------------
@@ -186,19 +177,13 @@ CMD ["/start.sh"]
 FROM ddev-webserver-base as ddev-webserver-prod-base
 ENV CAROOT /mnt/ddev-global-cache/mkcert
 ENV PHP_DEFAULT_VERSION="8.0"
+ARG TARGETPLATFORM
 
 RUN wget -q -O - https://packages.blackfire.io/gpg.key | apt-key add -
 RUN echo "deb http://packages.blackfire.io/debian any main" > /etc/apt/sources.list.d/blackfire.list
 RUN apt-get update
 
 SHELL ["/bin/bash", "-c"]
-
-RUN mkdir /tmp/ddev && \
-    if [[ $TARGETPLATFORM == "linux/arm64" ]]; then \
-        echo 'MKCERT_ARCH="linux-arm64"' > /tmp/ddev/vars; \
-    else \
-        echo 'MKCERT_ARCH="linux-amd64"' >/tmp/ddev/vars; \
-    fi
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
     blackfire-php \
@@ -219,6 +204,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     sqlite3 \
     unzip \
     zip
+
+RUN curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=${TARGETPLATFORM}" && chmod +x /usr/local/bin/mkcert
 
 ADD ddev-webserver-prod-files /
 RUN phpdismod blackfire xhprof
@@ -242,8 +229,6 @@ RUN chmod -R 777 /var/log
 RUN mkdir -p /mnt/ddev-global-cache/mkcert /run/php /var/cache/nginx /var/lib/nginx && chmod -R ugo+rw /home /mnt/ddev-global-cache/
 
 RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /var/lib/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/lib/node_modules /etc/php /etc/apache2 /var/lock/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
-
-RUN source /tmp/ddev/vars && curl -sSL https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-${MKCERT_ARCH} -o /usr/local/bin/mkcert && chmod +x /usr/local/bin/mkcert
 
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
   chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
