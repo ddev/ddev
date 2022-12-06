@@ -463,8 +463,6 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     
     === "New projects"
     
-        ### Composer project
-        
         Use this to create a new Craft CMS project from the official [Craft starter project](https://github.com/craftcms/craft) or a third-party starter project using Composer.
         
         ```bash
@@ -473,21 +471,6 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         ddev config --project-type=craftcms --docroot=web --create-docroot
         ddev start
         ddev composer create -y --no-scripts craftcms/craft
-        ddev craft install
-        ddev launch
-        ```
-
-        ### Manual download
-        
-        Use this to create a new Craft CMS project using a zipped archive.
-        
-        ```bash
-        mkdir my-craft-project
-        cd my-craft-project
-        curl -LO https://craftcms.com/latest-v4.zip
-        unzip latest-v4.zip && rm latest-v4.zip
-        ddev config --project-type=craftcms
-        ddev start
         ddev craft install
         ddev launch
         ```
