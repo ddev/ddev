@@ -344,7 +344,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     Start a new [Craft CMS](https://craftcms.com) project or retrofit an existing one.
 
     !!!tip "Compatibility"
-        The `craft` project type was added in version [1.21.2](https://github.com/drud/ddev/releases/tag/v1.21.2). Check your current version with the `ddev version` command, and [upgrade](../users/basics/faq.md#how-can-i-updateupgrade-ddev) if necessary!
+        The `craft` project type was added to DDEV in version [1.21.2](https://github.com/drud/ddev/releases/tag/v1.21.2). Check your current version with the `ddev version` command, and [upgrade](../users/basics/faq.md#how-can-i-updateupgrade-ddev) if necessary!
 
     Environment variables will be automatically added to your `.env` file to simplify the first boot of a project. For _new_ installations, this means the default URL and database connection settings displayed during installation can be used without modification. If _existing_ projects expect environment variables to be named in a particular way, you are welcome to rename them.
 
