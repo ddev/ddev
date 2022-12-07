@@ -337,8 +337,6 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         ddev launch
         ```
 
-    In the examples above, we used a one-liner to copy `.env.example` as `env` and set the `DB_HOST`, `DB_DATABASE`, `DB_USERNAME` and `DB_PASSWORD` environment variables to the value of `db`.
-
 === "Craft CMS"
 
     ## Craft CMS
