@@ -573,6 +573,17 @@ ddev get /path/to/package
 ddev get /path/to/tarball.tar.gz
 ```
 
+## `heidisql`
+
+Open [HeidiSQL](https://www.heidisql.com/) with the current project’s database (global shell host container command). This command is only available if `TablePlus.app` is installed as `C:\Program Files\HeidiSQL\Heidisql.exe`.
+
+Example:
+
+```shell
+# Open the current project’s database in HeidiSQL
+ddev heidisql
+```
+
 ## `help`
 
 Help about any command.
@@ -956,6 +967,17 @@ ddev push platform --skip-files -y
 ddev push acquia --skip-db -y
 ```
 
+## `querious`
+
+Open [Querious](https://www.araelium.com/querious) with the current project’s MariaDB or MySQL database (global shell host container command). This is only available if `Querious.app` is installed as `/Applications/Querious.app`, and only for projects with `mysql` or `mariadb` databases.
+
+Example:
+
+```shell
+# Open the current project’s database in Querious
+ddev querious
+```
+
 ## `restart`
 
 Restart one or several projects.
@@ -988,6 +1010,28 @@ Example:
 
 DDEV appears to have been installed with install_ddev.sh, you can run that script again to update.
 curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash
+```
+
+## `sequelace`
+
+Open [SequelAce](https://sequel-ace.com/) with the current project’s database (global shell host container command). This command is only available if `Sequel Ace.app` is installed as `/Applications/Sequel ace.app`, and only for projects with `mysql` or `mariadb` databases.
+
+Example:
+
+```shell
+# Open the current project’s database in SequelAce
+ddev sequelace
+```
+
+## `sequelpro`
+
+Open [SequelPro](https://www.sequelpro.com/) with the current project’s database (global shell host container command). This command is only available if `Sequel Pro.app` is installed as `/Applications/Sequel pro.app`, and only for projects with `mysql` or `mariadb` databases.  *Note that Sequel Pro is considered abandoned, does not work with `mysql:8.0`; other solutions like Sequel Ace, Querious, Tableplus are preferred.
+
+Example:
+
+```shell
+# Open the current project’s database in SequelPro
+ddev sequelpro
 ```
 
 ## `service`
@@ -1184,7 +1228,7 @@ ddev stop --remove-data
 
 ## `tableplus`
 
-Open [TablePlus](https://tableplus.com) with the current project’s database (global shell host container command).
+Open [TablePlus](https://tableplus.com) with the current project’s database (global shell host container command). This command is only available if `TablePlus.app` is installed as `/Applications/TablePlus.app`.
 
 Example:
 

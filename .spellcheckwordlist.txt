@@ -493,6 +493,7 @@ provider
 ps
 psql
 public
+Querious
 quickstart
 quickstarts
 rabbitmq
