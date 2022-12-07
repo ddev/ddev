@@ -17,7 +17,7 @@ var SegmentKey = ""
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20221031_healthcheck_no_profile" // Note that this can be overridden by make
+var WebTag = "20221205_yq_update" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"
@@ -31,7 +31,7 @@ var DBAImg = "phpmyadmin"
 // DBATag defines the default phpmyadmin image tag used for applications.
 var DBATag = "5" // Note that this can be overridden by make
 
-const TraditionalRouterImage = "drud/ddev-router:20220918_traefik"
+const TraditionalRouterImage = "drud/ddev-router:20221205_yq_update"
 const TraefikRouterImage = "traefik:v2.9"
 
 // SSHAuthImage is image for agent

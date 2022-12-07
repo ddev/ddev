@@ -20,7 +20,6 @@ GOLANGCI_LINT_ARGS ?= --out-format=line-number --disable-all --enable=gofmt --en
 WINDOWS_GSUDO_VERSION=v0.7.3
 WINNFSD_VERSION=2.4.0
 NSSM_VERSION=2.24-101-g897c7ad
-MKCERT_VERSION=v1.4.6
 
 TESTTMP=/tmp/testresults
 
@@ -97,7 +96,7 @@ $(GOTMP)/bin/darwin_arm64/mkcert $(GOTMP)/bin/darwin_amd64/mkcert $(GOTMP)/bin/l
 	@export TARGET=$(word 3, $(subst /, ,$@)) && \
 	export GOOS="$${TARGET%_*}" GOARCH="$${TARGET#*_}" && \
 	mkdir -p $(GOTMP)/bin/$${GOOS}_$${GOARCH} && \
-	curl -sL --fail -o $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert https://github.com/drud/mkcert/releases/download/$(MKCERT_VERSION)/mkcert-$(MKCERT_VERSION)-$${GOOS}-$${GOARCH} && chmod +x $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert
+	curl --fail -JL -s -o $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert "https://dl.filippo.io/mkcert/latest?for=$${GOOS}/$${GOARCH}" && chmod +x $(GOTMP)/bin/$${GOOS}_$${GOARCH}/mkcert
 
 TEST_TIMEOUT=4h
 BUILD_ARCH = $(shell go env GOARCH)
@@ -241,8 +240,8 @@ chocolatey: $(GOTMP)/bin/windows_amd64/ddev_windows_installer.exe
 	fi
 
 $(GOTMP)/bin/windows_amd64/mkcert.exe $(GOTMP)/bin/windows_amd64/mkcert_license.txt:
-	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/mkcert.exe https://github.com/drud/mkcert/releases/download/$(MKCERT_VERSION)/mkcert-$(MKCERT_VERSION)-windows-amd64.exe
-	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/mkcert_license.txt -O https://raw.githubusercontent.com/drud/mkcert/master/LICENSE
+	curl --fail -JL -s -o $(GOTMP)/bin/windows_amd64/mkcert.exe "https://dl.filippo.io/mkcert/latest?for=windows/amd64"
+	curl --fail -sSL -o $(GOTMP)/bin/windows_amd64/mkcert_license.txt -O https://raw.githubusercontent.com/FiloSottile/mkcert/master/LICENSE
 
 $(GOTMP)/bin/windows_amd64/sudo_license.txt:
 	set -x
