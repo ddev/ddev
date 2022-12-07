@@ -7,10 +7,9 @@
 ## Example: "ddev querious"
 ## OSTypes: darwin
 ## HostBinaryExists: /Applications/Querious.app
-## DBTypes: mysql
+## DBTypes: mysql,mariadb
 
 DATABASE="${1:-db}"
 
-set -x
 open "querious://connect/new?host=127.0.0.1&user=db&password=db&use-compression=false&database=${DATABASE}&port=${DDEV_HOST_DB_PORT}"
 
