@@ -3,7 +3,9 @@ package ddevapp
 import (
 	"github.com/drud/ddev/pkg/output"
 	"os"
+	"path"
 	"path/filepath"
+	"strings"
 
 	"fmt"
 
@@ -88,7 +90,7 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 	if skipDbArg {
 		output.UserOut.Println("Skipping database pull.")
 	} else {
-		output.UserOut.Println("Obtaining database...")
+		output.UserOut.Println("Obtaining databases...")
 		fileLocation, importPath, err := provider.GetBackup("database")
 		if err != nil {
 			return err
@@ -105,9 +107,8 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 			if err != nil {
 				return err
 			}
-			output.UserOut.Println("Importing database...")
+			output.UserOut.Printf("Importing databases %v\n", fileLocation)
 			err = provider.importDatabaseBackup(fileLocation, importPath)
-
 			if err != nil {
 				return err
 			}
@@ -132,7 +133,7 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 			output.UserOut.Println("Skipping files import.")
 		} else {
 			output.UserOut.Println("Importing files...")
-			err = provider.importFilesBackup(fileLocation, importPath)
+			err = provider.importFilesBackup(fileLocation[0], importPath[0])
 			if err != nil {
 				return err
 			}
@@ -205,11 +206,11 @@ func (app *DdevApp) Push(provider *Provider, skipDbArg bool, skipFilesArg bool) 
 // GetBackup will create and download a backup
 // Valid values for backupType are "database" or "files".
 // returns fileURL, importPath, error
-func (p *Provider) GetBackup(backupType string) (string, string, error) {
+func (p *Provider) GetBackup(backupType string) ([]string, []string, error) {
 	var err error
 	var filePath string
 	if backupType != "database" && backupType != "files" {
-		return "", "", fmt.Errorf("could not get backup: %s is not a valid backup type", backupType)
+		return nil, nil, fmt.Errorf("could not get backup: %s is not a valid backup type", backupType)
 	}
 
 	// Set the import path blank to use the root of the archive by default.
@@ -223,13 +224,13 @@ func (p *Provider) GetBackup(backupType string) (string, string, error) {
 	case "files":
 		filePath, err = p.getFilesBackup()
 	default:
-		return "", "", fmt.Errorf("could not get backup: %s is not a valid backup type", backupType)
+		return nil, nil, fmt.Errorf("could not get backup: %s is not a valid backup type", backupType)
 	}
 	if err != nil {
-		return "", "", err
+		return nil, nil, err
 	}
 
-	return filePath, importPath, nil
+	return []string{filePath}, []string{importPath}, nil
 }
 
 // UploadDB is used by Push to push the database to hosting provider
@@ -346,13 +347,21 @@ func (p *Provider) getDatabaseBackup() (filename string, error error) {
 	return filepath.Join(p.getDownloadDir(), "db.sql.gz"), nil
 }
 
-// importDatabaseBackup will import a downloaded database
+// importDatabaseBackup will import a slice of downloaded databases
 // If a custom importer is provided, that will be used, otherwise
 // the default is app.ImportDB()
-func (p *Provider) importDatabaseBackup(fileLocation string, importPath string) error {
+func (p *Provider) importDatabaseBackup(fileLocation []string, importPath []string) error {
 	var err error
 	if p.DBImportCommand.Command == "" {
-		err = p.app.ImportDB(fileLocation, importPath, true, false, "db")
+		for i, loc := range fileLocation {
+			// The database name used will be basename of the file.
+			// For example. `db.sql.gz` will go into the database named 'db'
+			// xxx.sql will go into database named 'xxx';
+			b := path.Base(loc)
+			n := strings.Split(b, ".")
+			dbName := n[0]
+			err = p.app.ImportDB(loc, importPath[i], true, false, dbName)
+		}
 	} else {
 		s := p.DBImportCommand.Service
 		if s == "" {
