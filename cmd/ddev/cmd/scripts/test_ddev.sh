@@ -30,8 +30,14 @@ function docker_desktop_version {
   fi
 }
 
-if ! ddev describe >/dev/null 2>&1; then printf "Please try running this in an existing DDEV project directory.\nIt doesn't work in other directories.\n"; exit 2; fi
+if ! ddev describe >/dev/null 2>&1; then printf "Please try running this in an existing DDEV project directory, preferably the problem project.\nIt doesn't work in other directories.\n"; exit 2; fi
+
+echo "======= Existing project config ========="
+ddev debug configyaml | grep -v web_environment
+
 PROJECT_DIR=../${PROJECT_NAME}
+echo "======= Creating dummy project named  ${PROJECT_NAME} in ${PROJECT_DIR} ========="
+
 mkdir -p "${PROJECT_DIR}/web" || (echo "Unable to create test project at ${PROJECT_DIR}/web, please check ownership and permissions" && exit 2 )
 cd "${PROJECT_DIR}" || exit 3
 
