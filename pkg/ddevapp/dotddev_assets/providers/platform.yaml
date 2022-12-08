@@ -52,10 +52,18 @@ db_pull_command:
     db_names=($(yq '.[][].path' ${db_relationships_file}))
     db_count=${#db_relationships[@]}
     # echo "db_relationships=${db_relationships} sizeof db_relationships=${#db_relationships[@]} db_names=${db_names} db_count=${db_count}"
-    # If we have only one database, import it into 'db'
+    # If we have only one database, import it into local database named 'db'
     if [ ${#db_names[@]} -eq 1 ]; then db_names[0]="db"; fi
+
     for (( i=0; i<${#db_relationships[@]}; i++ )); do
-      platform db:dump --yes --relationship=${db_relationships[$i]} --gzip --file=/var/www/html/.ddev/.downloads/${db_names[$i]}.sql.gz --project="${PLATFORM_PROJECT:-setme}" --environment="${PLATFORM_ENVIRONMENT:-setme}"
+      db_name=${db_names[$i]}
+      rel=${db_relationships[$i]}
+      if [ "${rel}" = "${PLATFORM_PRIMARY_RELATIONSHIP:-notset}" ] ; then
+        echo "PLATFORM_PRIMARY_RELATIONSHIP=${PLATFORM_PRIMARY_RELATIONSHIP:-} so using it as database 'db' instead of the upstream '${db_name}'"
+        db_name="db"
+      fi
+
+      platform db:dump --yes --relationship=${rel} --gzip --file=/var/www/html/.ddev/.downloads/${db_name}.sql.gz --project="${PLATFORM_PROJECT:-setme}" --environment="${PLATFORM_ENVIRONMENT:-setme}"
     done
     echo "Downloaded and created databases '${db_names[@]}'"
 
