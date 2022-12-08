@@ -1,0 +1,11 @@
+# this is a comment in the first line
+
+DB_HOST=old_somehost
+DB_PORT=old_9999
+DB_DATABASE=old_somerandomdb
+DB_USERNAME=old_root
+DB_PASSWORD=old_root
+SOMEENV=old_someenvval
+APP_URL=old_http://some.ddev.site
+DB_CONNECTION=old_mysql://x:x@x/x
+# this is a comment in the last line
