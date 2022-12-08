@@ -233,7 +233,7 @@ func (p *Provider) GetBackup(backupType string) ([]string, []string, error) {
 
 	importPaths := make([]string, len(fileNames))
 	// We don't use importPaths for the providers
-	for i, _ := range fileNames {
+	for i := range fileNames {
 		importPaths[i] = ""
 	}
 
