@@ -119,8 +119,8 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 		output.UserOut.Println("Skipping files pull.")
 	} else {
 		output.UserOut.Println("Obtaining files...")
-		fileLocation, importPath, err := provider.GetBackup("files")
-		if err != nil || fileLocation == nil {
+		files, _, err := provider.GetBackup("files")
+		if err != nil {
 			return err
 		}
 
@@ -133,7 +133,11 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 			output.UserOut.Println("Skipping files import.")
 		} else {
 			output.UserOut.Println("Importing files...")
-			err = provider.importFilesBackup(fileLocation[0], importPath[0])
+			f := ""
+			if files != nil && len(files) > 0 {
+				f = files[0]
+			}
+			err = provider.doFilesImport(f, "")
 			if err != nil {
 				return err
 			}
@@ -219,7 +223,7 @@ func (p *Provider) GetBackup(backupType string) ([]string, []string, error) {
 	case "database":
 		fileNames, err = p.getDatabaseBackups()
 	case "files":
-		fileNames, err = p.getFilesBackup()
+		fileNames, err = p.doFilesPullCommand()
 	default:
 		return nil, nil, fmt.Errorf("could not get backup: %s is not a valid backup type", backupType)
 	}
@@ -242,7 +246,7 @@ func (p *Provider) UploadDB() error {
 	_ = os.Mkdir(p.getDownloadDir(), 0755)
 
 	if p.DBPushCommand.Command == "" {
-		util.Warning("No DBPushCommand is defined for provider %s", p.ProviderType)
+		util.Warning("No DBPushCommand is defined for provider '%s'", p.ProviderType)
 		return nil
 	}
 
@@ -272,7 +276,7 @@ func (p *Provider) UploadFiles() error {
 	_ = os.Mkdir(p.getDownloadDir(), 0755)
 
 	if p.FilesPushCommand.Command == "" {
-		util.Warning("No FilesPushCommand is defined for provider %s", p.ProviderType)
+		util.Warning("No FilesPushCommand is defined for provider '%s'", p.ProviderType)
 		return nil
 	}
 
@@ -301,14 +305,13 @@ func (p *Provider) getDownloadDir() string {
 	return destDir
 }
 
-func (p *Provider) getFilesBackup() (filename []string, error error) {
-
+func (p *Provider) doFilesPullCommand() (filename []string, error error) {
 	destDir := filepath.Join(p.getDownloadDir(), "files")
 	_ = os.RemoveAll(destDir)
 	_ = os.MkdirAll(destDir, 0755)
 
 	if p.FilesPullCommand.Command == "" {
-		util.Warning("No FilesPullCommand is defined for provider %s", p.ProviderType)
+		util.Warning("No FilesPullCommand is defined for provider '%s'", p.ProviderType)
 		return nil, nil
 	}
 	s := p.FilesPullCommand.Service
@@ -331,7 +334,7 @@ func (p *Provider) getDatabaseBackups() (filename []string, error error) {
 	_ = os.Mkdir(p.getDownloadDir(), 0755)
 
 	if p.DBPullCommand.Command == "" {
-		util.Warning("No DBPullCommand is defined for provider")
+		util.Warning("No DBPullCommand is defined for provider '%s'", p.ProviderType)
 		return nil, nil
 	}
 
@@ -385,10 +388,11 @@ func (p *Provider) importDatabaseBackup(fileLocation []string, importPath []stri
 	return err
 }
 
-// importFilesBackup will import a downloaded files tarball or directory
-// If a custom importer is provided, that will be used, otherwise
+// doFilesImport will import previously downloaded files tarball or directory
+// If a custom importer (FileImportCommand) is provided, that will be used, otherwise
 // the default is app.ImportFiles()
-func (p *Provider) importFilesBackup(fileLocation string, importPath string) error {
+// FilesImportCommand may also optionally take on the job of downloading the files.
+func (p *Provider) doFilesImport(fileLocation string, importPath string) error {
 	var err error
 	if p.FilesImportCommand.Command == "" {
 		err = p.app.ImportFiles(fileLocation, importPath)
@@ -397,7 +401,7 @@ func (p *Provider) importFilesBackup(fileLocation string, importPath string) err
 		if s == "" {
 			s = "web"
 		}
-		output.UserOut.Printf("Importing files via custom files_import_command")
+		output.UserOut.Printf("Importing files via custom files_import_command...")
 		err = p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.FilesImportCommand.Command)
 	}
 	return err
