@@ -90,7 +90,7 @@ func TestPlatformPull(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 	err = app.Pull(provider, false, false, false)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "victoria-sponge-umami.jpg"))
 	out, err := exec.RunHostCommand("bash", "-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="margaret.hopper@example.com";' | %s mysql -N`, DdevBin))

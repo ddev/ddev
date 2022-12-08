@@ -47,11 +47,15 @@ db_pull_command:
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     # /tmp/db_relationships.yaml is the full yaml output of the database relationships
     db_relationships_file=/tmp/db_relationships.yaml
-    PLATFORM_RELATIONSHIPS="" platform relationships -y | yq 'with_entries(select(.[][].type == "mariadb:*" or .[][].type == "*mysql:*" or .[][].type == "postgresql:*")) ' >${db_relationships_file}
-    relationships=($(yq ' keys | .[] ' ${db_relationships_file}))
+    PLATFORM_RELATIONSHIPS="" platform relationships -y  -e "${PLATFORM_ENVIRONMENT}" | yq 'with_entries(select(.[][].type == "mariadb:*" or .[][].type == "*mysql:*" or .[][].type == "postgresql:*")) ' >${db_relationships_file}
+    db_relationships=($(yq ' keys | .[] ' ${db_relationships_file}))
     db_names=($(yq '.[][].path' ${db_relationships_file}))
-    for i in ${!relationships[@]}; do
-      platform db:dump --yes --relationship=${relationships[$i]} --gzip --file=/var/www/html/.ddev/.downloads/${db_names[$i]}.sql.gz --project="${PLATFORM_PROJECT:-setme}" --environment="${PLATFORM_ENVIRONMENT:-setme}"
+    db_count=${#db_relationships[@]}
+    # echo "db_relationships=${db_relationships} sizeof db_relationships=${#db_relationships[@]} db_names=${db_names} db_count=${db_count}"
+    # If we have only one database, import it into 'db'
+    if [ ${#db_names[@]} -eq 1 ]; then db_names[0]="db"; fi
+    for (( i=0; i<${#db_relationships[@]}; i++ )); do
+      platform db:dump --yes --relationship=${db_relationships[$i]} --gzip --file=/var/www/html/.ddev/.downloads/${db_names[$i]}.sql.gz --project="${PLATFORM_PROJECT:-setme}" --environment="${PLATFORM_ENVIRONMENT:-setme}"
     done
     echo "Downloaded and created databases '${db_names[@]}'"
 
