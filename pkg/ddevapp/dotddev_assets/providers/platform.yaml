@@ -41,18 +41,25 @@ auth_command:
 
 db_pull_command:
   command: |
-    #set -x   # You can enable bash debugging output by uncommenting
+    # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
+    export PLATFORMSH_CLI_NO_INTERACTION=1
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
-    if [ "${PLATFORM_PRIMARY_RELATIONSHIP:-}" != "" ] ; then
-      rel="--relationship ${PLATFORM_PRIMARY_RELATIONSHIP}"
-    fi
-    platform db:dump --yes ${rel:-} --gzip --file=/var/www/html/.ddev/.downloads/db.sql.gz --project="${PLATFORM_PROJECT:-setme}" --environment="${PLATFORM_ENVIRONMENT:-setme}"
+    # /tmp/db_relationships.yaml is the full yaml output of the database relationships
+    db_relationships_file=/tmp/db_relationships.yaml
+    PLATFORM_RELATIONSHIPS="" platform relationships -y | yq 'with_entries(select(.[][].type == "mariadb:*" or .[][].type == "*mysql:*" or .[][].type == "postgresql:*")) ' >${db_relationships_file}
+    relationships=($(yq ' keys | .[] ' ${db_relationships_file}))
+    db_names=($(yq '.[][].path' ${db_relationships_file}))
+    for i in ${!relationships[@]}; do
+      platform db:dump --yes --relationship=${relationships[$i]} --gzip --file=/var/www/html/.ddev/.downloads/${db_names[$i]}.sql.gz --project="${PLATFORM_PROJECT:-setme}" --environment="${PLATFORM_ENVIRONMENT:-setme}"
+    done
+    echo "Downloaded and created databases '${db_names[@]}'"
 
 files_import_command:
   command: |
     #set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
+    export PLATFORMSH_CLI_NO_INTERACTION=1
     # Use $PLATFORM_MOUNTS if it exists to get list of mounts to download, otherwise just web/sites/default/files (drupal)
     declare -a mounts=(${PLATFORM_MOUNTS:-/web/sites/default/files})
     platform mount:download --all --yes --quiet --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}"  --target=/var/www/html
@@ -63,6 +70,7 @@ db_push_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
+    export PLATFORMSH_CLI_NO_INTERACTION=1
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null;
     if [ "${PLATFORM_PRIMARY_RELATIONSHIP:-}" != "" ] ; then
@@ -76,6 +84,7 @@ files_push_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
+    export PLATFORMSH_CLI_NO_INTERACTION=1
     ls "${DDEV_FILES_DIR}" >/dev/null # This just refreshes stale NFS if possible
     platform mount:upload --yes --quiet --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}" --source="${DDEV_FILES_DIR}" --mount=web/sites/default/files
 

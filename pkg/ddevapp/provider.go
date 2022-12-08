@@ -120,7 +120,7 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 	} else {
 		output.UserOut.Println("Obtaining files...")
 		fileLocation, importPath, err := provider.GetBackup("files")
-		if err != nil {
+		if err != nil || fileLocation == nil {
 			return err
 		}
 
@@ -203,26 +203,23 @@ func (app *DdevApp) Push(provider *Provider, skipDbArg bool, skipFilesArg bool) 
 	return nil
 }
 
-// GetBackup will create and download a backup
+// GetBackup will create and download a set of backups
 // Valid values for backupType are "database" or "files".
-// returns fileURL, importPath, error
+// returns []fileURL, []importPath, error
 func (p *Provider) GetBackup(backupType string) ([]string, []string, error) {
 	var err error
-	var filePath string
+	var fileNames []string
 	if backupType != "database" && backupType != "files" {
 		return nil, nil, fmt.Errorf("could not get backup: %s is not a valid backup type", backupType)
 	}
-
-	// Set the import path blank to use the root of the archive by default.
-	importPath := ""
 
 	p.prepDownloadDir()
 
 	switch backupType {
 	case "database":
-		filePath, err = p.getDatabaseBackup()
+		fileNames, err = p.getDatabaseBackups()
 	case "files":
-		filePath, err = p.getFilesBackup()
+		fileNames, err = p.getFilesBackup()
 	default:
 		return nil, nil, fmt.Errorf("could not get backup: %s is not a valid backup type", backupType)
 	}
@@ -230,7 +227,13 @@ func (p *Provider) GetBackup(backupType string) ([]string, []string, error) {
 		return nil, nil, err
 	}
 
-	return []string{filePath}, []string{importPath}, nil
+	importPaths := make([]string, len(fileNames))
+	// We don't use importPaths for the providers
+	for i, _ := range fileNames {
+		importPaths[i] = ""
+	}
+
+	return fileNames, importPaths, nil
 }
 
 // UploadDB is used by Push to push the database to hosting provider
@@ -298,7 +301,7 @@ func (p *Provider) getDownloadDir() string {
 	return destDir
 }
 
-func (p *Provider) getFilesBackup() (filename string, error error) {
+func (p *Provider) getFilesBackup() (filename []string, error error) {
 
 	destDir := filepath.Join(p.getDownloadDir(), "files")
 	_ = os.RemoveAll(destDir)
@@ -306,7 +309,7 @@ func (p *Provider) getFilesBackup() (filename string, error error) {
 
 	if p.FilesPullCommand.Command == "" {
 		util.Warning("No FilesPullCommand is defined for provider %s", p.ProviderType)
-		return "", nil
+		return nil, nil
 	}
 	s := p.FilesPullCommand.Service
 	if s == "" {
@@ -315,21 +318,21 @@ func (p *Provider) getFilesBackup() (filename string, error error) {
 
 	err := p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.FilesPullCommand.Command)
 	if err != nil {
-		return "", fmt.Errorf("Failed to exec %s on %s: %v", p.FilesPullCommand.Command, s, err)
+		return nil, fmt.Errorf("Failed to exec %s on %s: %v", p.FilesPullCommand.Command, s, err)
 	}
 
-	return filepath.Join(p.getDownloadDir(), "files"), nil
+	return []string{filepath.Join(p.getDownloadDir(), "files")}, nil
 }
 
-// getDatabaseBackup retrieves database using `generic backup database`, then
+// getDatabaseBackups retrieves database using `generic backup database`, then
 // describe until it appears, then download it.
-func (p *Provider) getDatabaseBackup() (filename string, error error) {
+func (p *Provider) getDatabaseBackups() (filename []string, error error) {
 	_ = os.RemoveAll(p.getDownloadDir())
 	_ = os.Mkdir(p.getDownloadDir(), 0755)
 
 	if p.DBPullCommand.Command == "" {
 		util.Warning("No DBPullCommand is defined for provider")
-		return "", nil
+		return nil, nil
 	}
 
 	s := p.DBPullCommand.Service
@@ -338,13 +341,22 @@ func (p *Provider) getDatabaseBackup() (filename string, error error) {
 	}
 	err := p.app.MutagenSyncFlush()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	err = p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.DBPullCommand.Command)
 	if err != nil {
-		return "", fmt.Errorf("Failed to exec %s on %s: %v", p.DBPullCommand.Command, s, err)
+		return nil, fmt.Errorf("Failed to exec %s on %s: %v", p.DBPullCommand.Command, s, err)
 	}
-	return filepath.Join(p.getDownloadDir(), "db.sql.gz"), nil
+	err = p.app.MutagenSyncFlush()
+	if err != nil {
+		return nil, err
+	}
+
+	sqlTarballs, err := fileutil.ListFilesInDirFullPath(p.getDownloadDir())
+	if err != nil || sqlTarballs == nil {
+		return nil, fmt.Errorf("failed to find downloaded files in %s: %v", p.getDownloadDir(), err)
+	}
+	return sqlTarballs, nil
 }
 
 // importDatabaseBackup will import a slice of downloaded databases
