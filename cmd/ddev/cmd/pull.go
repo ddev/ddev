@@ -67,7 +67,7 @@ func appPull(providerType string, app *ddevapp.DdevApp, skipConfirmation bool, s
 		for _, v := range envVars {
 			split := strings.Split(v, "=")
 			if len(split) != 2 {
-				util.Failed("unable to parse commanad-line environment variable setting: '%v'", v)
+				util.Failed("unable to parse command-line environment variable setting: '%v'", v)
 			}
 			provider.EnvironmentVariables[split[0]] = split[1]
 		}
