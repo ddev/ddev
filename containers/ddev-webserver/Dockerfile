@@ -154,6 +154,7 @@ ENV PHP_DEFAULT_VERSION="8.0"
 ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
 ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
+ENV TERMINUS_HIDE_UPDATE_MESSAGE=1
 ENV CAROOT /mnt/ddev-global-cache/mkcert
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_CACHE_DIR=/mnt/ddev-global-cache/composer
@@ -164,6 +165,7 @@ ENV MH_SMTP_BIND_ADDR 127.0.0.1:1025
 ENV BASH_ENV /etc/bash.nointeractive.bashrc
 ENV LANG=C.UTF-8
 ENV XHPROF_OUTPUT_DIR=/tmp/xhprof
+ENV PLATFORMSH_CLI_UPDATES_CHECK=0
 
 COPY --from=ddev-webserver-dev-base / /
 EXPOSE 80 8025
@@ -257,6 +259,8 @@ FROM scratch as ddev-webserver-prod
 ENV PHP_DEFAULT_VERSION="8.0"
 ENV NGINX_SITE_TEMPLATE /etc/nginx/nginx-site.conf
 ENV APACHE_SITE_TEMPLATE /etc/apache2/apache-site.conf
+ENV TERMINUS_CACHE_DIR=/mnt/ddev-global-cache/terminus/cache
+ENV TERMINUS_HIDE_UPDATE_MESSAGE=1
 ENV CAROOT /mnt/ddev-global-cache/mkcert
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_CACHE_DIR=/mnt/ddev-global-cache/composer
@@ -265,6 +269,7 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV LANG=C.UTF-8
 ENV TERM xterm
 ENV BASH_ENV /etc/bash.nointeractive.bashrc
+ENV PLATFORMSH_CLI_UPDATES_CHECK=0
 
 COPY --from=ddev-webserver-prod-base / /
 HEALTHCHECK --interval=1s --retries=120 --timeout=120s --start-period=120s CMD ["/healthcheck.sh"]
