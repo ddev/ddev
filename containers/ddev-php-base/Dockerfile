@@ -105,9 +105,7 @@ ENV php80_arm64=$php80_amd64
 
 ENV php81_amd64=$php80_amd64
 ENV php81_arm64=$php81_amd64
-# Still to come: apcu imagick memcached redis uploadprogress xdebug xhprof xmlrpc
-# Update test for these when they get added in.
-ENV php82_amd64="apcu bcmath bz2 curl cli common fpm gd imagick intl ldap mbstring memcached mysql opcache pgsql readline redis soap sqlite3 uploadprogress xdebug xhprof xml xmlrpc zip"
+ENV php82_amd64=$php8.1_amd64
 ENV php82_arm64=$php82_amd64
 
 RUN for v in $PHP_VERSIONS; do \
