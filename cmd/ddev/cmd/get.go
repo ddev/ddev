@@ -198,10 +198,12 @@ ddev get --list --all
 			err = processAction(action, dict, bash, verbose)
 			if err != nil {
 				desc := getDdevDescription(action)
-				if !verbose {
-					util.Failed("could not process pre-install action (%d) '%s'. For more detail use ddev get --verbose", i, desc)
-				} else {
-					util.Failed("could not process pre-install action (%d) '%s'; error=%v\n action=%s", i, desc, err, action)
+				if err != nil {
+					if !verbose {
+						util.Failed("could not process pre-install action (%d) '%s'. For more detail use ddev get --verbose", i, desc)
+					} else {
+						util.Failed("could not process pre-install action (%d) '%s'; error=%v\n action=%s", i, desc, err, action)
+					}
 				}
 			}
 		}
@@ -258,10 +260,12 @@ ddev get --list --all
 		for i, action := range s.PostInstallActions {
 			err = processAction(action, dict, bash, verbose)
 			desc := getDdevDescription(action)
-			if !verbose {
-				util.Failed("could not process pre-install action (%d) '%s'", i, desc)
-			} else {
-				util.Failed("could not process pre-install action (%d) '%s': %v", i, desc, err)
+			if err != nil {
+				if !verbose {
+					util.Failed("could not process post-install action (%d) '%s'", i, desc)
+				} else {
+					util.Failed("could not process post-install action (%d) '%s': %v", i, desc, err)
+				}
 			}
 		}
 
