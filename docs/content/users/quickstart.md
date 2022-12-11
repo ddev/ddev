@@ -171,7 +171,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         cd my-drupal10-site
         ddev config --project-type=drupal10 --docroot=web --create-docroot
         ddev start
-        ddev composer create drupal/recommended-project:^10@alpha
+        ddev composer create drupal/recommended-project:^10@rc
         ddev composer require drush/drush
         ddev drush site:install -y
         ddev drush uli
@@ -179,7 +179,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         ```
 
         !!!tip
-            As Drupal 10 moves from beta and to release, you’ll want to change the tag from `^10@beta` to `^10`.
+            As Drupal 10 moves from beta and to release, you’ll want to change the tag from `^10@rc` to `^10`.
 
     === "Drupal 6/7"
 
