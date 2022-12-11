@@ -105,7 +105,7 @@ ENV php80_arm64=$php80_amd64
 
 ENV php81_amd64=$php80_amd64
 ENV php81_arm64=$php81_amd64
-ENV php82_amd64=$php8.1_amd64
+ENV php82_amd64=$php81_amd64
 ENV php82_arm64=$php82_amd64
 
 RUN for v in $PHP_VERSIONS; do \
