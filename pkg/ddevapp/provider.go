@@ -3,7 +3,9 @@ package ddevapp
 import (
 	"github.com/drud/ddev/pkg/output"
 	"os"
+	"path"
 	"path/filepath"
+	"strings"
 
 	"fmt"
 
@@ -88,7 +90,7 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 	if skipDbArg {
 		output.UserOut.Println("Skipping database pull.")
 	} else {
-		output.UserOut.Println("Obtaining database...")
+		output.UserOut.Println("Obtaining databases...")
 		fileLocation, importPath, err := provider.GetBackup("database")
 		if err != nil {
 			return err
@@ -105,9 +107,8 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 			if err != nil {
 				return err
 			}
-			output.UserOut.Println("Importing database...")
+			output.UserOut.Printf("Importing databases %v\n", fileLocation)
 			err = provider.importDatabaseBackup(fileLocation, importPath)
-
 			if err != nil {
 				return err
 			}
@@ -118,7 +119,7 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 		output.UserOut.Println("Skipping files pull.")
 	} else {
 		output.UserOut.Println("Obtaining files...")
-		fileLocation, importPath, err := provider.GetBackup("files")
+		files, _, err := provider.GetBackup("files")
 		if err != nil {
 			return err
 		}
@@ -132,7 +133,11 @@ func (app *DdevApp) Pull(provider *Provider, skipDbArg bool, skipFilesArg bool, 
 			output.UserOut.Println("Skipping files import.")
 		} else {
 			output.UserOut.Println("Importing files...")
-			err = provider.importFilesBackup(fileLocation, importPath)
+			f := ""
+			if files != nil && len(files) > 0 {
+				f = files[0]
+			}
+			err = provider.doFilesImport(f, "")
 			if err != nil {
 				return err
 			}
@@ -202,34 +207,37 @@ func (app *DdevApp) Push(provider *Provider, skipDbArg bool, skipFilesArg bool) 
 	return nil
 }
 
-// GetBackup will create and download a backup
+// GetBackup will create and download a set of backups
 // Valid values for backupType are "database" or "files".
-// returns fileURL, importPath, error
-func (p *Provider) GetBackup(backupType string) (string, string, error) {
+// returns []fileURL, []importPath, error
+func (p *Provider) GetBackup(backupType string) ([]string, []string, error) {
 	var err error
-	var filePath string
+	var fileNames []string
 	if backupType != "database" && backupType != "files" {
-		return "", "", fmt.Errorf("could not get backup: %s is not a valid backup type", backupType)
+		return nil, nil, fmt.Errorf("could not get backup: %s is not a valid backup type", backupType)
 	}
-
-	// Set the import path blank to use the root of the archive by default.
-	importPath := ""
 
 	p.prepDownloadDir()
 
 	switch backupType {
 	case "database":
-		filePath, err = p.getDatabaseBackup()
+		fileNames, err = p.getDatabaseBackups()
 	case "files":
-		filePath, err = p.getFilesBackup()
+		fileNames, err = p.doFilesPullCommand()
 	default:
-		return "", "", fmt.Errorf("could not get backup: %s is not a valid backup type", backupType)
+		return nil, nil, fmt.Errorf("could not get backup: %s is not a valid backup type", backupType)
 	}
 	if err != nil {
-		return "", "", err
+		return nil, nil, err
 	}
 
-	return filePath, importPath, nil
+	importPaths := make([]string, len(fileNames))
+	// We don't use importPaths for the providers
+	for i := range fileNames {
+		importPaths[i] = ""
+	}
+
+	return fileNames, importPaths, nil
 }
 
 // UploadDB is used by Push to push the database to hosting provider
@@ -238,7 +246,7 @@ func (p *Provider) UploadDB() error {
 	_ = os.Mkdir(p.getDownloadDir(), 0755)
 
 	if p.DBPushCommand.Command == "" {
-		util.Warning("No DBPushCommand is defined for provider %s", p.ProviderType)
+		util.Warning("No DBPushCommand is defined for provider '%s'", p.ProviderType)
 		return nil
 	}
 
@@ -268,7 +276,7 @@ func (p *Provider) UploadFiles() error {
 	_ = os.Mkdir(p.getDownloadDir(), 0755)
 
 	if p.FilesPushCommand.Command == "" {
-		util.Warning("No FilesPushCommand is defined for provider %s", p.ProviderType)
+		util.Warning("No FilesPushCommand is defined for provider '%s'", p.ProviderType)
 		return nil
 	}
 
@@ -297,15 +305,14 @@ func (p *Provider) getDownloadDir() string {
 	return destDir
 }
 
-func (p *Provider) getFilesBackup() (filename string, error error) {
-
+func (p *Provider) doFilesPullCommand() (filename []string, error error) {
 	destDir := filepath.Join(p.getDownloadDir(), "files")
 	_ = os.RemoveAll(destDir)
 	_ = os.MkdirAll(destDir, 0755)
 
 	if p.FilesPullCommand.Command == "" {
-		util.Warning("No FilesPullCommand is defined for provider %s", p.ProviderType)
-		return "", nil
+		util.Warning("No FilesPullCommand is defined for provider '%s'", p.ProviderType)
+		return nil, nil
 	}
 	s := p.FilesPullCommand.Service
 	if s == "" {
@@ -314,21 +321,21 @@ func (p *Provider) getFilesBackup() (filename string, error error) {
 
 	err := p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.FilesPullCommand.Command)
 	if err != nil {
-		return "", fmt.Errorf("Failed to exec %s on %s: %v", p.FilesPullCommand.Command, s, err)
+		return nil, fmt.Errorf("Failed to exec %s on %s: %v", p.FilesPullCommand.Command, s, err)
 	}
 
-	return filepath.Join(p.getDownloadDir(), "files"), nil
+	return []string{filepath.Join(p.getDownloadDir(), "files")}, nil
 }
 
-// getDatabaseBackup retrieves database using `generic backup database`, then
+// getDatabaseBackups retrieves database using `generic backup database`, then
 // describe until it appears, then download it.
-func (p *Provider) getDatabaseBackup() (filename string, error error) {
+func (p *Provider) getDatabaseBackups() (filename []string, error error) {
 	_ = os.RemoveAll(p.getDownloadDir())
 	_ = os.Mkdir(p.getDownloadDir(), 0755)
 
 	if p.DBPullCommand.Command == "" {
-		util.Warning("No DBPullCommand is defined for provider")
-		return "", nil
+		util.Warning("No DBPullCommand is defined for provider '%s'", p.ProviderType)
+		return nil, nil
 	}
 
 	s := p.DBPullCommand.Service
@@ -337,22 +344,39 @@ func (p *Provider) getDatabaseBackup() (filename string, error error) {
 	}
 	err := p.app.MutagenSyncFlush()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	err = p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.DBPullCommand.Command)
 	if err != nil {
-		return "", fmt.Errorf("Failed to exec %s on %s: %v", p.DBPullCommand.Command, s, err)
+		return nil, fmt.Errorf("Failed to exec %s on %s: %v", p.DBPullCommand.Command, s, err)
 	}
-	return filepath.Join(p.getDownloadDir(), "db.sql.gz"), nil
+	err = p.app.MutagenSyncFlush()
+	if err != nil {
+		return nil, err
+	}
+
+	sqlTarballs, err := fileutil.ListFilesInDirFullPath(p.getDownloadDir())
+	if err != nil || sqlTarballs == nil {
+		return nil, fmt.Errorf("failed to find downloaded files in %s: %v", p.getDownloadDir(), err)
+	}
+	return sqlTarballs, nil
 }
 
-// importDatabaseBackup will import a downloaded database
+// importDatabaseBackup will import a slice of downloaded databases
 // If a custom importer is provided, that will be used, otherwise
 // the default is app.ImportDB()
-func (p *Provider) importDatabaseBackup(fileLocation string, importPath string) error {
+func (p *Provider) importDatabaseBackup(fileLocation []string, importPath []string) error {
 	var err error
 	if p.DBImportCommand.Command == "" {
-		err = p.app.ImportDB(fileLocation, importPath, true, false, "db")
+		for i, loc := range fileLocation {
+			// The database name used will be basename of the file.
+			// For example. `db.sql.gz` will go into the database named 'db'
+			// xxx.sql will go into database named 'xxx';
+			b := path.Base(loc)
+			n := strings.Split(b, ".")
+			dbName := n[0]
+			err = p.app.ImportDB(loc, importPath[i], true, false, dbName)
+		}
 	} else {
 		s := p.DBImportCommand.Service
 		if s == "" {
@@ -364,10 +388,11 @@ func (p *Provider) importDatabaseBackup(fileLocation string, importPath string) 
 	return err
 }
 
-// importFilesBackup will import a downloaded files tarball or directory
-// If a custom importer is provided, that will be used, otherwise
+// doFilesImport will import previously downloaded files tarball or directory
+// If a custom importer (FileImportCommand) is provided, that will be used, otherwise
 // the default is app.ImportFiles()
-func (p *Provider) importFilesBackup(fileLocation string, importPath string) error {
+// FilesImportCommand may also optionally take on the job of downloading the files.
+func (p *Provider) doFilesImport(fileLocation string, importPath string) error {
 	var err error
 	if p.FilesImportCommand.Command == "" {
 		err = p.app.ImportFiles(fileLocation, importPath)
@@ -376,7 +401,7 @@ func (p *Provider) importFilesBackup(fileLocation string, importPath string) err
 		if s == "" {
 			s = "web"
 		}
-		output.UserOut.Printf("Importing files via custom files_import_command")
+		output.UserOut.Printf("Importing files via custom files_import_command...")
 		err = p.app.ExecOnHostOrService(s, p.injectedEnvironment()+"; "+p.FilesImportCommand.Command)
 	}
 	return err
