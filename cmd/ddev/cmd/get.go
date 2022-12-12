@@ -50,6 +50,8 @@ ddev get --list --all
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		officialOnly := true
+		verbose := false
+
 		if cmd.Flag("list").Changed {
 			if cmd.Flag("all").Changed {
 				officialOnly = false
@@ -65,6 +67,10 @@ ddev get --list --all
 			out := renderRepositoryList(repos)
 			output.UserOut.WithField("raw", repos).Print(out)
 			return
+		}
+
+		if cmd.Flags().Changed("verbose") {
+			verbose = true
 		}
 
 		if len(args) < 1 {
@@ -188,10 +194,17 @@ ddev get --list --all
 		if len(s.PreInstallActions) > 0 {
 			util.Success("\nExecuting pre-install actions:")
 		}
-		for _, action := range s.PreInstallActions {
-			err = processAction(action, dict, bash)
+		for i, action := range s.PreInstallActions {
+			err = processAction(action, dict, bash, verbose)
 			if err != nil {
-				util.Failed("could not process pre-install action '%s': %v", action, err)
+				desc := getDdevDescription(action)
+				if err != nil {
+					if !verbose {
+						util.Failed("could not process pre-install action (%d) '%s'. For more detail use ddev get --verbose", i, desc)
+					} else {
+						util.Failed("could not process pre-install action (%d) '%s'; error=%v\n action=%s", i, desc, err, action)
+					}
+				}
 			}
 		}
 
@@ -244,10 +257,15 @@ ddev get --list --all
 		if len(s.PostInstallActions) > 0 {
 			util.Success("\nExecuting post-install actions:")
 		}
-		for _, action := range s.PostInstallActions {
-			err = processAction(action, dict, bash)
+		for i, action := range s.PostInstallActions {
+			err = processAction(action, dict, bash, verbose)
+			desc := getDdevDescription(action)
 			if err != nil {
-				util.Failed("could not process post-install action '%s': %v", action, err)
+				if !verbose {
+					util.Failed("could not process post-install action (%d) '%s'", i, desc)
+				} else {
+					util.Failed("could not process post-install action (%d) '%s': %v", i, desc, err)
+				}
 			}
 		}
 
@@ -260,7 +278,7 @@ ddev get --list --all
 }
 
 // processAction takes a stanza from yaml exec section and executes it.
-func processAction(action string, dict map[string]interface{}, bashPath string) error {
+func processAction(action string, dict map[string]interface{}, bashPath string, verbose bool) error {
 	action = "set -eu -o pipefail\n" + action
 	t, err := template.New("processAction").Funcs(sprig.TxtFuncMap()).Parse(action)
 	if err != nil {
@@ -275,13 +293,16 @@ func processAction(action string, dict map[string]interface{}, bashPath string) 
 	action = doc.String()
 
 	desc := getDdevDescription(action)
+	if verbose {
+		action = "set -x; " + action
+	}
 	out, err := exec.RunHostCommand(bashPath, "-c", action)
+	if len(out) > 0 {
+		util.Warning(out)
+	}
 	if err != nil {
 		util.Warning("%c %s", '\U0001F44E', desc)
 		return fmt.Errorf("Unable to run action %v: %v, output=%s", action, err, out)
-	}
-	if len(out) > 0 {
-		output.UserOut.Print(out)
 	}
 	if desc != "" {
 		util.Success("%c %s", '\U0001F44D', desc)
@@ -337,6 +358,7 @@ func renderRepositoryList(repos []github.Repository) string {
 func init() {
 	Get.Flags().Bool("list", true, fmt.Sprintf(`List available add-ons for 'ddev get'`))
 	Get.Flags().Bool("all", true, fmt.Sprintf(`List unofficial add-ons for 'ddev get' in addition to the official ones`))
+	Get.Flags().BoolP("verbose", "v", false, "Extended/verbose output for ddev get")
 	RootCmd.AddCommand(Get)
 }
 

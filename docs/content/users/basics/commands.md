@@ -550,6 +550,7 @@ Flags:
 
 * `--all`: List unofficial *and* official add-ons. (default `true`)
 * `--list`: List official add-ons. (default `true`)
+* `--verbose` or `-v`: Output verbose error information with bash `set -x` (default `false`)
 
 Example:
 
@@ -562,6 +563,10 @@ ddev get --list --all
 
 # Download the official Redis add-on
 ddev get drud/ddev-redis
+
+# Get debug info about `ddev get` failure
+ddev get drud/ddev-redis --verbose
+
 
 # Download the Drupal 9 Solr add-on from its v0.0.5 release tarball
 ddev get https://github.com/drud/ddev-drupal9-solr/archive/refs/tags/v0.0.5.tar.gz
