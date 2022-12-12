@@ -793,8 +793,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	// Most of the time there's no reason to do all versions of PHP
 	phpKeys := []string{}
-	// TODO: Re-enable 8.2 when it's available
-	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3", "8.2"}
+	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3"}
 	for k := range nodeps.ValidPHPVersions {
 		if os.Getenv("GOTEST_SHORT") != "" && !nodeps.ArrayContainsString(exclusions, k) {
 			phpKeys = append(phpKeys, k)
@@ -830,8 +829,8 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			t.Errorf("Aborting xdebug check for php%s: %v", v, err)
 			continue
 		}
-		// PHP 7.2 through 8.1 gets xdebug 3.0+
-		if nodeps.ArrayContainsString([]string{nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80, nodeps.PHP81}, app.PHPVersion) {
+		// PHP 7.2 through 8.2 get xdebug 3.0+
+		if nodeps.ArrayContainsString([]string{nodeps.PHP72, nodeps.PHP73, nodeps.PHP74, nodeps.PHP80, nodeps.PHP81, nodeps.PHP82}, app.PHPVersion) {
 			assert.Contains(stdout, "xdebug.mode => debug,develop => debug,develop", "xdebug is not enabled for %s", v)
 			assert.Contains(stdout, "xdebug.client_host => host.docker.internal => host.docker.internal")
 		} else {
@@ -942,8 +941,9 @@ func TestDdevXhprofEnabled(t *testing.T) {
 	// Does not work with php5.6 anyway (SEGV), for resource conservation
 	// skip older unsupported versions
 	phpKeys := []string{}
-	// TODO: Re-enable 8.2 when it's available. Disable more of these.
-	exclusions := []string{"5.6", "7.0", "7.1", "8.2"}
+	// 20221211: 8.1 and 8.2 are not currently working due to upstream
+	// problems
+	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3", "8.1", "8.2"}
 	for k := range nodeps.ValidPHPVersions {
 		if !nodeps.ArrayContainsString(exclusions, k) {
 			phpKeys = append(phpKeys, k)
