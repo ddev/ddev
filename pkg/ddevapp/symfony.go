@@ -2,11 +2,8 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/archive"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/pkg/errors"
+	"github.com/drud/ddev/pkg/nodeps"
 	"os"
-	"path/filepath"
 )
 
 func symfonyPostStartAction(app *DdevApp) error {
@@ -15,10 +12,6 @@ func symfonyPostStartAction(app *DdevApp) error {
 			return fmt.Errorf("failed to write settings file %s: %v", app.SiteDdevSettingsFile, err)
 		}
 	}
-	return nil
-}
-
-func symfonyPostStartAction(app *DdevApp) error {
 	// We won't touch env if disable_settings_management: true
 	if app.DisableSettingsManagement {
 		return nil
@@ -34,7 +27,7 @@ func symfonyPostStartAction(app *DdevApp) error {
 		port = "5432"
 	}
 	envMap := map[string]string{
-		"DATABASE_URL": fmt.Printf("%c://db:db@db:%p/db", dbConnection, port)
+		"DATABASE_URL": dbConnection + "://db:db@db:" + port + "/db",
 	}
 	err = WriteProjectEnvFile(app, envMap, envText)
 	if err != nil {
@@ -48,7 +41,3 @@ func symfonyPostStartAction(app *DdevApp) error {
 func getSymfonyUploadDir(app *DdevApp) string {
 	return app.UploadDir
 }
-
-
-
-
