@@ -321,8 +321,6 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         ddev config --project-type=laravel --docroot=public --create-docroot
         ddev composer create --prefer-dist --no-install --no-scripts laravel/laravel
         ddev composer install
-        ddev start
-        ddev composer create --prefer-dist laravel/laravel
         ddev exec "php artisan key:generate"
         ddev launch
         ```
