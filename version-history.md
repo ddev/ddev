@@ -14,7 +14,6 @@ This version history has been driven by what we hear from our wonderful communit
 - [x] Support for `.ddev/.env` files to set environment variables
 - [x] Improved `ddev pull` and `ddev pull platform`
 - [x] `ddev self-upgrade`, `ddev debug migrate-database`, `ddev debug get-volume-db-version`, `ddev debug check-db-match`, `ddev querious` commands
--
 
 ## v1.20 (Released 2022-08)
 
