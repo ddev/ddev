@@ -157,7 +157,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         ddev start
         ddev composer create drupal/recommended-project
         ddev composer require drush/drush
-        ddev drush site:install -y
+        ddev drush site:install --account-name=admin --account-pass=admin -y
         ddev drush uli
         ddev launch
         ```
@@ -174,7 +174,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         ddev start
         ddev composer create "drupal/recommended-project:^9"
         ddev composer require drush/drush
-        ddev drush site:install -y
+        ddev drush site:install --account-name=admin --account-pass=admin -y
         ddev drush uli
         ddev launch
         ```
