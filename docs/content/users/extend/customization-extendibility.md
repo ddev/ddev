@@ -12,7 +12,7 @@ The project's `.ddev/config.yaml` file defines the PHP version to use. The [`php
 
 ## Changing Web Server Type
 
-DDEV supports nginx with php-fpm by default (`nginx-fpm`), and Apache with php-fpm (`apache-fpm`). These can be changed using [`webserver_type`](../configuration/config.md#webserver_type) in `.ddev/config.yaml`, for example `webserver_type: apache-fpm`.
+DDEV supports nginx with php-fpm by default (`nginx-fpm`), and Apache with php-fpm (`apache-fpm`). These can be changed using [`webserver_type`](../configuration/config.md#webserver_type) in `.ddev/config.yaml`, for example `webserver_type: apache-fpm`, then `ddev restart`.
 
 ## Adding Services to a Project
 
@@ -162,7 +162,7 @@ export PATH=$PATH:/var/www/html/somewhereelse/vendor/bin
 
 ## Custom nginx Configuration
 
-When you [`ddev start`](../basics/commands.md#start) using `nginx-fpm`, DDEV creates a configuration customized to your project type in `.ddev/nginx_full/nginx-site.conf`. You can edit and override the configuration by removing the `#ddev-generated` line and doing whatever you need with it. After each change, `ddev start`.
+When you [`ddev restart`](../basics/commands.md#restart) using `nginx-fpm`, DDEV creates a configuration customized to your project type in `.ddev/nginx_full/nginx-site.conf`. You can edit and override the configuration by removing the `#ddev-generated` line and doing whatever you need with it. After each change, `ddev restart`.
 
 You can also have more than one config file in the `.ddev/nginx_full` directory, they will all get loaded when DDEV starts. This can be used for [serving multiple docroots](#multiple-docroots-in-nginx-advanced) and other techniques.
 
@@ -170,7 +170,7 @@ You can also have more than one config file in the `.ddev/nginx_full` directory,
 
 * Any errors in your configuration may cause the `web` container to fail and try to restart. If you see that behavior, use [`ddev logs`](../basics/commands.md#logs) to diagnose.
 * You can run `ddev exec nginx -t` to test whether your configuration is valid. (Or run [`ddev ssh`](../basics/commands.md#ssh) and run `nginx -t`.)
-* You can reload the nginx configuration either with [`ddev start`](../basics/commands.md#start) or `ddev exec nginx -s reload`.
+* You can reload the nginx configuration either with [`ddev restart`](../basics/commands.md#restart) or `ddev exec nginx -s reload`.
 * The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the health check script to work.
 
 !!!warning "Important!"
@@ -194,13 +194,15 @@ For example, to make all HTTP URLs redirect to their HTTPS equivalents you might
     }
 ```
 
+After adding a snippet, `ddev restart` to make it take effect.
+
 ## Custom Apache Configuration
 
 If you’re using [`webserver_type: apache-fpm`](../configuration/config.md#webserver_type) in your `.ddev/config.yaml`, you can override the default site configuration by editing or replacing the DDEV-provided `.ddev/apache/apache-site.conf` configuration.
 
 * Edit the `.ddev/apache/apache-site.conf`.
 * Add your configuration changes.
-* Save your configuration file and run [`ddev start`](../basics/commands.md#start) to reload the project. If you encounter issues with your configuration or the project fails to start, use [`ddev logs`](../basics/commands.md#logs) to inspect the logs for possible Apache configuration errors.
+* Save your configuration file and run [`ddev restart`](../basics/commands.md#restart). If you encounter issues with your configuration or the project fails to start, use [`ddev logs`](../basics/commands.md#logs) to inspect the logs for possible Apache configuration errors.
 * Use `ddev exec apachectl -t` to do a general Apache syntax check.
 * The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the health check script to work.
 * Any errors in your configuration may cause the `web` container to fail. If you see that behavior, use `ddev logs` to diagnose.
