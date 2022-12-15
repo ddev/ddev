@@ -58,11 +58,11 @@ This part is not done for you by the integration plugin.
 
 It’s possible to use PhpStorm with DDEV on WSL2 in at least three different ways:
 
-1. Run PhpStorm in Windows as usual, opening the project on the WSL2 filesystem at `\\wsl$\<distro>` (e.g. `\\wsl$\Ubuntu`). PhpStorm is slow to index files and is slow to respond to file changes in this mode.
-2. Enabling X11 on Windows and running PhpStorm inside WSL2 as a Linux app. PhpStorm works fine this way, but it’s yet another complexity to manage and requires enabling X11 on your Windows system, which is fairly simple.
-3. [JetBrains Gateway](https://www.jetbrains.com/remote-development/gateway/) runs PhpStorm on WSL2 (or anywhere else) but displays it in a in your Gateway app. It requires configuring `sshd` in WSL2 and either auto-starting it with `/etc/wsl.conf` (Windows 11) or starting it manually.
+1. Run PhpStorm in Windows as usual, opening the project on the WSL2 filesystem at `\\wsl$\<distro>` (e.g. `\\wsl$\Ubuntu`). PhpStorm is slow to index files but can be slow to respond to file changes in this mode, although it's adequate for many people.
+2. "Remote Development" in PhpStorm 2022.3+, which has explicit support for WSL2 and actually runs a PhpStorm instance on WSL2.
+3. Enabling X11 on Windows and running PhpStorm inside WSL2 as a Linux app. PhpStorm works fine this way; it does require WSL2 graphics support, which is now available on all Windows 10 and Windows 11 systems.
 
-We’ll walk through the first two of these approaches.
+We’ll walk through each of these approaches.
 
 ### Basics
 
@@ -70,7 +70,7 @@ We’ll walk through the first two of these approaches.
 
 - If you haven’t used Xdebug with DDEV and PhpStorm before, you’ll want to read the [step debugging instructions](../debugging-profiling/step-debugging.md).
 
-- For usable performance, your project should be in `/home` inside WSL2, which is on the Linux filesystem. Although you could keep your project on the Windows filesystem and access it in WSL2 via `/mnt/c`, the performance is even worse than native Windows. It does work though, but don’t do it. You’ll be miserable.
+- Your project absolutely must be in `/home` inside WSL2, which is on the Linux filesystem. Although you could keep your project on the Windows filesystem and access it in WSL2 via `/mnt/c`, the performance is even worse than native Windows. It does work though, but don’t do it. You’ll be miserable.
 
 ### PhpStorm Running On Windows Side and Using Docker Desktop
 
@@ -89,28 +89,30 @@ Debugging should be working. You can step through your code, set breakpoints, vi
 
 Set the PhpStorm terminal path (*Settings* → *Tools* → *Terminal* → *Shell Path*) to `C:\Windows\System32\wsl.exe`. That way when you use the terminal Window in WSL2 it’s using the Bash shell in WSL2.
 
+### PhpStorm with "Remote Development" option
+
+1. Open your WSL2 project using *File* → *Remote Development* → *WSL*: Choose the distro and then the project.
+2. For xdebug you'll want to use `ddev config global --xdebug-ide-location=wsl2` because essentially the IDE is running inside WSL2 (and listening there).
+3. Use `ddev xdebug on` as normal; test with a simple breakpoint in your `index.php`.
+
 ### PhpStorm Inside WSL2 in Linux
 
-1. On Windows 11 you don’t need to install an X11 server, because [WSLg](https://github.com/microsoft/wslg) is included by default. On older Windows 10, Install X410 from the Microsoft Store, launch it, configure in the system tray with “Windowed Apps”, “Allow public access”, “DPI Scaling” → ”High quality”. You can any other X11 server, this is just one possibility.
-2. Temporarily disable your Windows firewall. You can re-enable it after you get everything working.
-3. If you’re on older Windows 10, in the WSL2 terminal `export DISPLAY=$(awk '/^nameserver/ {print $2; exit;}' </etc/resolv.conf):0.0` (You’ll want to add this to your `.profile` in WSL2). This sets the X11 DISPLAY variable to point to your Windows host side. On Windows 11 this “just works” and you don’t need to do anything here.
-4. Install the DDEV apt repository:
+1. On Windows 10 or 11 get "Windows Subsystem for Linux" from the Microsoft Store, which now includes graphical support.
+2. Edit `/etc/wsl.conf` to systemd support, which allows for installing PhpStorm with snap, see [details about WSL2 and systemd](https://devblogs.microsoft.com/commandline/systemd-support-is-now-available-in-wsl/):
 
-    ```bash
-    curl -fsSL https://apt.fury.io/drud/gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/ddev.gpg > /dev/null
-    echo "deb [signed-by=/etc/apt/trusted.gpg.d/ddev.gpg] https://apt.fury.io/drud/ * *" | sudo tee /etc/apt/sources.list.d/ddev.list
-    sudo apt update && sudo apt install -y ddev
+    ```
+    [boot]
+    systemd=true
     ```
 
-5. On Windows 11, `sudo apt-get update && sudo apt-get install ddev`. On older Windows 10, `sudo apt-get update && sudo apt-get install ddev libatk1.0 libatk-bridge2.0 libxtst6 libxi6 libpangocairo-1.0 libcups2 libnss3 xdg-utils x11-apps`
-6. On older Windows 10, run `xeyes`. You should see the classic X11 play app “xeyes” on the screen. <kbd>CTRL</kbd> + <kbd>C</kbd> to exit. This is just a test to make sure X11 is working.
-7. Download and untar PhpStorm for Linux from [JetBrains](https://www.jetbrains.com/phpstorm/download/#section=linux). You need the Linux app.
-8. Run `bin/phpstorm.sh &`.
-9. In PhpStorm, under *Help* → *Edit Custom VM Options*, add another line: `-Djava.net.preferIPv4Stack=true`. This makes PhpStorm listen for Xdebug using IPv4; for some reason the Linux version of PhpStorm defaults to using only IPv6, and Docker Desktop doesn’t support IPv6.
-10. Restart PhpStorm with *File* → *Exit* and run `bin/phpstorm.sh &` again.
-11. Use `ddev start` and `ddev xdebug on`.
-12. Click the Xdebug listen button in PhpStorm (the little phone icon) to make it start listening.
-13. Set a breakpoint on or near the first line of your `index.php`.
-14. Visit the project with a web browser or cURL. You should get a popup asking for mapping of the host-side files to the in-container files. Make sure `/home/<you>/.../<yourproject>` is mapped to `/var/www/html`.
+3. `wsl --shutdown` on the Windows side and wait 10 seconds, then restart your distro.
+4. In WSL2, `sudo snap install --classic phpstorm`.
+5. DDEV should already be installed as described in [DDEV installation](../install/ddev-installation.md#windows-wsl2).
+6. `ddev config global --xdebug-ide-location=wsl2` to tell DDEV that the IDE is listening in WSL2 as opposed to listening on the Windows side.
+7. Start PhpStorm, `phpstorm &`.
+8. Use `ddev start` and `ddev xdebug on`.
+9. Click the Xdebug listen button in PhpStorm (the little phone icon) to make it start listening.
+10. Set a breakpoint on or near the first line of your `index.php`.
+11. Visit the project with a web browser or cURL. You should get a popup asking for mapping of the host-side files to the in-container files. Make sure `/home/<you>/.../<yourproject>` is mapped to `/var/www/html`.
 
 Debugging should be working! You can step through your code, set breakpoints, view variables, etc.
