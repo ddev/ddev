@@ -47,7 +47,7 @@ as the 'db' primary database on DDEV, and that will be the one pulled or pushed.
 Do this by setting PLATFORM_PRIMARY_RELATIONSHIP, for example,
 
 ```
-ddev config --web-environment-add=PLATFORM_PRIMARY_RELATIONSHIP=main`
+ddev config --web-environment-add="PLATFORM_PRIMARY_RELATIONSHIP=main"
 ```
 
 or run `ddev pull platform` with the `--environment` flag, for example,
