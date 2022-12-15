@@ -2,10 +2,19 @@
 
 This version history has been driven by what we hear from our wonderful community of users. If you have lobbying for a favorite item or think things should be re-prioritized, just lobby in the [issue queue](https://github.com/drud/ddev/issues). We listen. Or talk to us in any of the [support locations](https://ddev.readthedocs.io/en/stable/#support).
 
-## v1.21 (Released 2022-08)
+## v1.21 (Released 2022-08 to 2022-12)
 
-- [x] PHP 8.2
+- [x] PHP 8.2.0 with all extensions
+- [x] Full Drupal 10 support, with needed database extensions on PostgreSQL and MariaDB/MySQL
+- [x] TYPO3 v12 support
+- [x] FIG spec generation
 - [x] Craft CMS explict project type
+- [x] Improved WSL2 support, with install scripts
+- [x] Optional new Traefik replacement for ddev-router
+- [x] Support for `.ddev/.env` files to set environment variables
+- [x] Improved `ddev pull` and `ddev pull platform`
+- [x] `ddev self-upgrade`, `ddev debug migrate-database`, `ddev debug get-volume-db-version`, `ddev debug check-db-match`, `ddev querious` commands
+-
 
 ## v1.20 (Released 2022-08)
 
