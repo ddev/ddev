@@ -47,12 +47,12 @@ Use the [`ddev snapshot restore`](../basics/commands.md#snapshot-restore) comman
 
 **Other database explorers**: There are lots of alternatives for GUI database explorers:
 
-* macOS users can use `ddev sequelace` to launch the free [Sequel Ace](https://sequel-ace.com/) database browser, [`ddev tableplus`](../basics/commands.md#tableplus) to launch [TablePlus](https://tableplus.com), and the obsolete [Sequel Pro](https://sequelpro.com/) is also supported with `ddev sequelpro`. (Each must be installed before running the command.)
+* macOS users can use `ddev sequelace` to launch the free [Sequel Ace](https://sequel-ace.com/) database browser, [`ddev tableplus`](../basics/commands.md#tableplus) to launch [TablePlus](https://tableplus.com), [`ddev querious`] for [Querious](https://www.araelium.com/querious), and the obsolete [Sequel Pro](https://sequelpro.com/) is also supported with `ddev sequelpro`. (Each must be installed for the command to exist.)
 * `ddev describe` displays the URL for the built-in phpMyAdmin GUI. (Something like `https://<yourproject>.ddev.site:8037`.)
 * PhpStorm (and all JetBrains tools) have a nice database browser. (If you use the [DDEV Integration plugin](https://plugins.jetbrains.com/plugin/18813-ddev-integration) this is all done for you.)
     * Choose a static `host_db_port` for your project. For example `host_db_port: 59002` (each project’s database port should be different if you’re running more than one project at a time). Use [`ddev start`](../basics/commands.md#start) for it to take effect.
     * Use the “database” tool to create a source from “localhost”, with the proper type “mysql” or “postgresql” and the port you chose, username `db` + password `db`.
     * Explore away!
-* There’s a sample custom command that will run the free [MySQL Workbench](https://dev.mysql.com/downloads/workbench/) on macOS, Windows or Linux. To use it, run:
+* There’s a sample custom command that will run the free MySQL Workbench on macOS, Windows or Linux. To use it, run:
     * `cp ~/.ddev/commands/host/mysqlworkbench.example ~/.ddev/commands/host/mysqlworkbench`
     * `ddev mysqlworkbench`
