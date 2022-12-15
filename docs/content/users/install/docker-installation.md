@@ -55,11 +55,11 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     If you’re working inside WSL2, which we recommend, you can [install Docker Engine (docker-ce) inside of it](#docker-ce-inside-windows-wsl2). Otherwise, you can [install Docker Desktop](#docker-desktop-for-windows), which works with both traditional Windows and WSL2.
 
-    ## Docker CE Inside Windows WSL2
+    ### Docker CE Inside Windows WSL2
 
     Many have moved away from using Docker Desktop in favor of the Docker-provided open-source `docker-ce` package inside WSL2.
 
-The instructions for [DDEV Installation in WSL2](ddev-installation.md#windows-wsl2) include Docker CE setup and a script that does almost all the work. Please use those.
+    The instructions for [DDEV Installation in WSL2](ddev-installation.md#windows-wsl2) include Docker CE setup and a script that does almost all the work. Please use those.
 
     ### Docker Desktop for Windows
 
