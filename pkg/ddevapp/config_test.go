@@ -1151,10 +1151,7 @@ ADD junkfile /
 RUN touch /var/tmp/`+"added-by-"+item+"-test1.txt"))
 		assert.NoError(err)
 
-		// The ARG BASE_IMAGE and FROM $BASE_IMAGE are left in here to test legacy behavior
 		err = WriteImageDockerfile(app.GetConfigPath(item+"-build/Dockerfile.test2"), []byte(`
-ARG BASE_IMAGE
-FROM $BASE_IMAGE
 RUN touch /var/tmp/`+"added-by-"+item+"-test2.txt"))
 		assert.NoError(err)
 
@@ -1172,6 +1169,14 @@ RUN touch /var/tmp/`+"added-by-"+item+"-test4.txt"))
 RUN rm /var/tmp/`+"added-by-"+item+"-test4.txt"))
 		assert.NoError(err)
 	}
+
+	// Make sure that DDEV_PHP_VERSION gets into the build
+	err = WriteImageDockerfile(app.GetConfigPath("web-build/Dockerfile.ddev-php-version"), []byte(`
+ARG DDEV_PHP_VERSION
+RUN touch /var/tmp/running-php-${DDEV_PHP_VERSION}
+`))
+	assert.NoError(err)
+
 	// Start and make sure that the packages don't exist already
 	err = app.Start()
 	assert.NoError(err)
@@ -1185,30 +1190,35 @@ RUN rm /var/tmp/`+"added-by-"+item+"-test4.txt"))
 		assert.NoError(err)
 		_, _, err = app.Exec(&ExecOpts{
 			Service: item,
-			Cmd:     "ls /var/tmp/added-by-" + item + ".txt",
+			Cmd:     "ls /var/tmp/added-by-" + item + ".txt >/dev/null",
 		})
 		assert.NoError(err)
 		_, _, err = app.Exec(&ExecOpts{
 			Service: item,
-			Cmd:     "ls /var/tmp/added-by-" + item + "-test1.txt",
+			Cmd:     "ls /var/tmp/added-by-" + item + "-test1.txt >/dev/null",
 		})
 		assert.NoError(err)
 		_, _, err = app.Exec(&ExecOpts{
 			Service: item,
-			Cmd:     "ls /var/tmp/added-by-" + item + "-test2.txt",
+			Cmd:     "ls /var/tmp/added-by-" + item + "-test2.txt >/dev/null",
 		})
 		assert.NoError(err)
 		_, _, err = app.Exec(&ExecOpts{
 			Service: item,
-			Cmd:     "ls /var/tmp/added-by-" + item + "-test3.txt",
+			Cmd:     "ls /var/tmp/added-by-" + item + "-test3.txt >/dev/null",
 		})
 		assert.NoError(err)
 		_, _, err = app.Exec(&ExecOpts{
 			Service: item,
-			Cmd:     "ls /var/tmp/added-by-" + item + "-test4.txt",
+			Cmd:     "ls /var/tmp/added-by-" + item + "-test4.txt 2>/dev/null",
 		})
 		assert.Error(err)
 	}
+
+	_, _, err = app.Exec(&ExecOpts{
+		Cmd: fmt.Sprintf("ls /var/tmp/running-php-%s >/dev/null", app.PHPVersion),
+	})
+	assert.NoError(err)
 
 	err = app.Stop(true, false)
 	assert.NoError(err)
