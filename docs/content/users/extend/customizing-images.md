@@ -80,9 +80,9 @@ ENV COMPOSER_HOME=""
 
 **Remember that the Dockerfile is building a Docker image that will be used later with DDEV.** At the time the Dockerfile is executing, your code is not mounted and the container is not running, it’s just being built. So for example, an `npm install` in `/var/www/html` will not do anything useful because the code is not there at image building time.
 
-### Available Environment Variables at Build Time
+### Build Time Environment Variables
 
-At build time the web Dockerfile can use:
+The following environment variables are available for the web Dockerfile to use at build time:
 
 * `$BASE_IMAGE`: the base image, like `drud/ddev-webserver:v1.21.4`
 * `$username`: the username inferred from your host-side username
