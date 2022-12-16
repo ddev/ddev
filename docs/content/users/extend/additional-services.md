@@ -60,7 +60,7 @@ Officially-supported add-ons:
 * [Memcached](https://github.com/drud/ddev-memcached): `ddev get drud/ddev-memcached`.
 * [MongoDB](https://github.com/drud/ddev-mongo): `ddev get drud/ddev-mongo`.
 * [PDFreactor](https://github.com/drud/ddev-pdfreactor): `ddev get drud/ddev-pdfreactor`
-* [Platformsh](https://github.com/drud/ddev-platformsh): `ddev get drud/ddev-platformsh`
+* [Platform.sh](https://github.com/drud/ddev-platformsh): `ddev get drud/ddev-platformsh`
 * [Proxy Support](https://github.com/drud/ddev-proxy-support): `ddev get drud/ddev-proxy-support`.
 * [Redis Commander](https://github.com/drud/ddev-redis-commander): `ddev get drud/ddev-redis-commander`.
 * [Redis](https://github.com/drud/ddev-redis): `ddev get drud/ddev-redis`.
