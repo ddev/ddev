@@ -89,7 +89,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ### Arch Linux
 
-    For Arch-based systems including `Arch Linux`, `EndeavourOS` and `Manjaro` we maintain the [ddev-bin](https://aur.archlinux.org/packages/ddev-bin/) package in AUR. To install use `yay -S ddev` or whatever other AUR tool you use; to upgrade `yay -Syu ddev`.
+    For Arch-based systems including `Arch Linux`, `EndeavourOS` and `Manjaro` we maintain the [ddev-bin](https://aur.archlinux.org/packages/ddev-bin/) package in AUR. To install use `yay -S ddev-bin` or whatever other AUR tool you use; to upgrade `yay -Syu ddev-bin`.
 
     As a one-time initialization, run `mkcert -install`.
 
