@@ -144,22 +144,6 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
 
     ## Drupal
 
-    === "Drupal 9"
-
-        ### Drupal 9 via Composer
-
-        ```bash
-        mkdir my-drupal9-site
-        cd my-drupal9-site
-        ddev config --project-type=drupal9 --docroot=web --create-docroot
-        ddev start
-        ddev composer create "drupal/recommended-project"
-        ddev composer require drush/drush
-        ddev drush site:install -y
-        ddev drush uli
-        ddev launch
-        ```
-
     === "Drupal 10"
 
         ### Drupal 10 via Composer
@@ -171,15 +155,29 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         cd my-drupal10-site
         ddev config --project-type=drupal10 --docroot=web --create-docroot
         ddev start
-        ddev composer create drupal/recommended-project:^10@rc
+        ddev composer create drupal/recommended-project
         ddev composer require drush/drush
-        ddev drush site:install -y
+        ddev drush site:install --account-name=admin --account-pass=admin -y
         ddev drush uli
         ddev launch
         ```
 
-        !!!tip
-            As Drupal 10 moves from beta and to release, you’ll want to change the tag from `^10@rc` to `^10`.
+
+    === "Drupal 9"
+
+        ### Drupal 9 via Composer
+
+        ```bash
+        mkdir my-drupal9-site
+        cd my-drupal9-site
+        ddev config --project-type=drupal9 --docroot=web --create-docroot
+        ddev start
+        ddev composer create "drupal/recommended-project:^9"
+        ddev composer require drush/drush
+        ddev drush site:install --account-name=admin --account-pass=admin -y
+        ddev drush uli
+        ddev launch
+        ```
 
     === "Drupal 6/7"
 
@@ -321,8 +319,6 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         ddev config --project-type=laravel --docroot=public --create-docroot
         ddev composer create --prefer-dist --no-install --no-scripts laravel/laravel
         ddev composer install
-        ddev start
-        ddev composer create --prefer-dist laravel/laravel
         ddev exec "php artisan key:generate"
         ddev launch
         ```

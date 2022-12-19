@@ -3,9 +3,9 @@
 DDEV provides integration with the [Platform.sh Website Management Platform](https://platform.sh/), which allows Platform.sh users to quickly download and provision a project from Platform.sh in a local DDEV-managed environment.
 
 !!!tip
-    Consider using `ddev get platformsh/ddev-platformsh` ([platformsh/ddev-platformsh](https://github.com/platformsh/ddev-platformsh)) for more complete Platform.sh integration.
+    Consider using `ddev get drud/ddev-platformsh` ([platformsh/ddev-platformsh](https://github.com/drud/ddev-platformsh)) for more complete Platform.sh integration.
 
-DDEV’s Platform.sh integration pulls database and files from an existing Platform.sh site/environment into your local system so you can develop locally.
+DDEV’s Platform.sh integration pulls databases and files from an existing Platform.sh site/environment into your local system so you can develop locally.
 
 ## Platform.sh Global Configuration
 
@@ -39,7 +39,7 @@ web_environment:
         ```
 
 3. Run [`ddev restart`](../basics/commands.md#restart).
-4. Run `ddev pull platform`. After you agree to the prompt, the current upstream database and files will be downloaded.
+4. Run `ddev pull platform`. After you agree to the prompt, the current upstream databases and files will be downloaded.
 5. Optionally use `ddev push platform` to push local files and database to Platform.sh. The [`ddev push`](../basics/commands.md#push) command can potentially damage your production site, so we don’t recommend using it.
 
 ### Designating a Primary Database
@@ -49,7 +49,7 @@ If you have more than one database on your Platform.sh project, you must choose 
 You can do this by setting `PLATFORM_PRIMARY_RELATIONSHIP`:
 
 ```
-ddev config --web-environment-add=PLATFORM_PRIMARY_RELATIONSHIP=main`
+ddev config --web-environment-add="PLATFORM_PRIMARY_RELATIONSHIP=main"
 ```
 
 You can also do the same thing by running `ddev pull platform` and using the `--environment` flag:

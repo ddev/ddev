@@ -1,4 +1,4 @@
-image: drud/ddev-gitpod-base:20221018
+image: drud/ddev-gitpod-base:20221215
 tasks:
   - name: build-run
     init: |
@@ -71,6 +71,8 @@ ports:
     onOpen: ignore
   # Currently un-notified and unsupported mailhog https port
   - port: 8027
+    onOpen: ignore
+  - port: 8036
     onOpen: ignore
   # xdebug port
   - port: 9003

@@ -1,7 +1,7 @@
 #ddev-generated
 # Example Platform.sh provider configuration.
 
-# Consider using `ddev get platformsh/ddev-platformsh` (https://github.com/platformsh/ddev-platformsh) for more
+# Consider using `ddev get drud/ddev-platformsh` (https://github.com/drud/ddev-platformsh) for more
 # complete platform integration.
 
 # To use this configuration,
@@ -23,7 +23,7 @@
 # 5. Run `ddev pull platform`. After you agree to the prompt, the current upstream database and files will be downloaded.
 # 6. Optionally use `ddev push platform` to push local files and database to platform.sh. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
 
-# If you have more than one database on your Platform.sh proect,
+# If you have more than one database on your Platform.sh project,
 # you will likely to choose which one you want to use
 # as the primary database ('db').
 # Do this by setting PLATFORM_PRIMARY_RELATIONSHIP, for example, `ddev config --web-environment-add=PLATFORM_PRIMARY_RELATIONSHIP=main`

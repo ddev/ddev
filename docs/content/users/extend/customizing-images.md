@@ -10,7 +10,7 @@ It’s common to have a requirement for the `web` or `db` images which isn’t b
 You can add extra Debian packages with lines like this in `.ddev/config.yaml`:
 
 ```yaml
-webimage_extra_packages: [php-yaml, php7.3-tidy]
+webimage_extra_packages: [php-yaml, php8.2-tidy]
 dbimage_extra_packages: [telnet, netcat]
 ```
 
@@ -79,6 +79,33 @@ ENV COMPOSER_HOME=""
 ```
 
 **Remember that the Dockerfile is building a Docker image that will be used later with DDEV.** At the time the Dockerfile is executing, your code is not mounted and the container is not running, it’s just being built. So for example, an `npm install` in `/var/www/html` will not do anything useful because the code is not there at image building time.
+
+### Build Time Environment Variables
+
+The following environment variables are available for the web Dockerfile to use at build time:
+
+* `$BASE_IMAGE`: the base image, like `drud/ddev-webserver:v1.21.4`
+* `$username`: the username inferred from your host-side username
+* `$uid`: the user ID inferred from your host-side user ID
+* `$gid`: the group ID inferred from your host-side group ID
+* `$DDEV_PHP_VERSION`: the PHP version declared in your project configuration
+
+For example, a Dockerfile might want to build an extension for the configured PHP version like this:
+
+```Dockerfile
+ENV extension=xhprof
+ENV extension_repo=https://github.com/longxinH/xhprof
+ENV extension_version=v2.3.8
+
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests autoconf build-essential libc-dev php-pear php${DDEV_PHP_VERSION}-dev pkg-config zlib1g-dev
+RUN mkdir -p /tmp/php-${extension} && cd /tmp/php-${extension} && git clone ${extension_repo} .
+WORKDIR /tmp/php-${extension}/extension
+RUN git checkout ${extension_version}
+RUN phpize
+RUN ./configure
+RUN make install
+RUN echo "extension=${extension}.so" > /etc/php/${DDEV_PHP_VERSION}/mods-available/${extension}.ini
+```
 
 ### Debugging the Dockerfile Build
 
