@@ -203,7 +203,7 @@ jobs:
 
       # Goreleaser does GitHub release artifacts, homebrew, AUR, deb/rpm
       - name: goreleaser
-        uses: goreleaser/goreleaser-action@v3
+        uses: goreleaser/goreleaser-action@v4
         if: startsWith( github.ref, 'refs/tags/v1')
         with:
           # either 'goreleaser' (default) or 'goreleaser-pro'
