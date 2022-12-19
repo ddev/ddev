@@ -42,15 +42,17 @@ web_environment:
 4. Run `ddev pull platform`. After you agree to the prompt, the current upstream database and files will be downloaded.
 5. Optionally use `ddev push platform` to push local files and database to Platform.sh. The [`ddev push`](../basics/commands.md#push) command can potentially damage your production site, so we don’t recommend using it.
 
-If you have more than one database on your Platform.sh project, you'll need to choose which one you want to use
-as the 'db' primary database on DDEV, and that will be the one pulled or pushed.
-Do this by setting PLATFORM_PRIMARY_RELATIONSHIP, for example,
+### Designating a Primary Database
+
+If you have more than one database on your Platform.sh project, you must choose and designate the one you’d like to use as DDEV’s primary `'db'`. Every database will be pulled with the integration, but you’ll need to specify which one DDEV loads into its default `'db'` database.
+
+You can do this by setting `PLATFORM_PRIMARY_RELATIONSHIP`:
 
 ```
 ddev config --web-environment-add=PLATFORM_PRIMARY_RELATIONSHIP=main`
 ```
 
-or run `ddev pull platform` with the `--environment` flag, for example,
+You can also do the same thing by running `ddev pull platform` and using the `--environment` flag:
 
 ```
 ddev pull platform --environment="PLATFORM_PRIMARY_RELATIONSHIP=main"
