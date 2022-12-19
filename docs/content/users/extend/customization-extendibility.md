@@ -162,15 +162,15 @@ export PATH=$PATH:/var/www/html/somewhereelse/vendor/bin
 
 ## Custom nginx Configuration
 
-When you [`ddev restart`](../basics/commands.md#restart) using `nginx-fpm`, DDEV creates a configuration customized to your project type in `.ddev/nginx_full/nginx-site.conf`. You can edit and override the configuration by removing the `#ddev-generated` line and doing whatever you need with it. After each change, `ddev restart`.
+When you run [`ddev restart`](../basics/commands.md#restart) using `nginx-fpm`, DDEV creates a configuration customized to your project type in `.ddev/nginx_full/nginx-site.conf`. You can edit and override the configuration by removing the `#ddev-generated` line and doing whatever you need with it. After each change, run `ddev restart`.
 
-You can also have more than one config file in the `.ddev/nginx_full` directory, they will all get loaded when DDEV starts. This can be used for [serving multiple docroots](#multiple-docroots-in-nginx-advanced) and other techniques.
+You can also have more than one config file in the `.ddev/nginx_full` directory, and each will be loaded when DDEV starts. This can be used for [serving multiple docroots](#multiple-docroots-in-nginx-advanced) and other techniques.
 
 ### Troubleshooting nginx Configuration
 
 * Any errors in your configuration may cause the `web` container to fail and try to restart. If you see that behavior, use [`ddev logs`](../basics/commands.md#logs) to diagnose.
 * You can run `ddev exec nginx -t` to test whether your configuration is valid. (Or run [`ddev ssh`](../basics/commands.md#ssh) and run `nginx -t`.)
-* You can reload the nginx configuration either with [`ddev restart`](../basics/commands.md#restart) or `ddev exec nginx -s reload`.
+* You can reload the nginx configuration by running either [`ddev restart`](../basics/commands.md#restart) or `ddev exec nginx -s reload`.
 * The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the health check script to work.
 
 !!!warning "Important!"
@@ -194,7 +194,7 @@ For example, to make all HTTP URLs redirect to their HTTPS equivalents you might
     }
 ```
 
-After adding a snippet, `ddev restart` to make it take effect.
+After adding a snippet, run `ddev restart` to make it take effect.
 
 ## Custom Apache Configuration
 
