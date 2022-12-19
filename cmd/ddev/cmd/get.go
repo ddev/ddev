@@ -150,7 +150,7 @@ ddev get --list --all
 		}
 
 		// 20220811: Don't auto-start because it auto-creates the wrong database in some situations, leading to a
-		// chicken-egg problem in getting database configured. See https://github.com/platformsh/ddev-platformsh/issues/24
+		// chicken-egg problem in getting database configured. See https://github.com/drud/ddev-platformsh/issues/24
 		// Automatically start, as we don't want to be taking actions with mutagen off, for example.
 		//if status, _ := app.SiteStatus(); status != ddevapp.SiteRunning {
 		//	err = app.Start()
