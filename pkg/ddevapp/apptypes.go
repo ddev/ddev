@@ -118,7 +118,7 @@ func init() {
 			settingsCreator: createWordpressSettingsFile, uploadDir: getWordpressUploadDir, hookDefaultComments: getWordpressHooks, apptypeSettingsPaths: setWordpressSiteSettingsPaths, appTypeDetect: isWordpressApp, postImportDBAction: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: nil, importFilesAction: wordpressImportFilesAction,
 		},
 		nodeps.AppTypeSymfony: {
-			uploadDir: getSymfonyUploadDir, postStartAction: symfonyPostStartAction,
+			uploadDir: getSymfonyUploadDir, postStartAction: symfonyPostStartAction, configOverrideAction: symfonyConfigOverrideAction,
 		},
 	}
 }

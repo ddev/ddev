@@ -259,6 +259,20 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Thanks for installing Craft CMS"},
 			FilesImageURI:                 "/files/happy-brad.jpg",
 		},
+        // 14: Symfony
+        //TODO change with a symfony archive
+        {
+            Name:                          "TestPkgSymfony",
+            SourceURL:                     "https://github.com/drud/ddev-test-php-repo/archive/refs/tags/v1.1.0.tar.gz",
+            ArchiveInternalExtractionPath: "ddev-test-php-repo-1.1.0/",
+            FullSiteTarballURL:            "",
+            FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6_files.tar.gz",
+            Docroot:                       "",
+            Type:                          nodeps.AppTypeSymfony,
+            Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "This is a simple readme."},
+            DynamicURI:                    testcommon.URIWithExpect{URI: "/index.php", Expect: "This program makes use of the Zend Scripting Language Engine"},
+        },
+
 	}
 
 	FullTestSites = TestSites
