@@ -44,7 +44,7 @@ web_environment:
 
 ### Designating a Primary Database
 
-If you have more than one database on your Platform.sh project, you must choose and designate the one you’d like to use as DDEV’s primary `'db'`. Every database will be pulled with the integration, but you’ll need to specify which one DDEV loads into its default `'db'` database.
+If you have more than one database on your Platform.sh project, you must choose and designate the one you’d like to use as DDEV’s primary `'db'`. Every database will be pulled with the integration, but you’ll need to specify which one DDEV loads into its default `'db'` database. Each non-primary database will be imported using the same name as its remote.
 
 You can do this by setting `PLATFORM_PRIMARY_RELATIONSHIP`:
 
