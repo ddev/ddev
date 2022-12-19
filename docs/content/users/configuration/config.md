@@ -558,6 +558,14 @@ Whether Xdebug should be enabled for [step debugging](../debugging-profiling/ste
 | -- | -- | --
 | :octicons-file-directory-16: project | `nginx-fpm` | Can be `nginx-fpm` or `apache-fpm`.
 
+To change from the default `nginx-fpm` to `apache-fpm`, for example, you would need to edit your project’s `.ddev/config.yaml` to include the following:
+
+```yaml
+webserver_type: apache-fpm
+```
+
+Then run the [`ddev restart`](../basics/commands.md#restart) command to have the change take effect.
+
 ## `working_dir`
 
 Working directories used by [`ddev exec`](../basics/commands.md#exec) and [`ddev ssh`](../basics/commands.md#ssh).

@@ -12,7 +12,7 @@ The project's `.ddev/config.yaml` file defines the PHP version to use. The [`php
 
 ## Changing Web Server Type
 
-DDEV supports nginx with php-fpm by default (`nginx-fpm`), and Apache with php-fpm (`apache-fpm`). These can be changed using [`webserver_type`](../configuration/config.md#webserver_type) in `.ddev/config.yaml`, for example `webserver_type: apache-fpm`, then `ddev restart`.
+DDEV supports nginx with php-fpm by default (`nginx-fpm`), and Apache with php-fpm (`apache-fpm`). You can change this with the [`webserver_type`](../configuration/config.md#webserver_type) config option, or using the [`ddev config`](../basics/commands.md#config) command with the `--webserver-type` flag.
 
 ## Adding Services to a Project
 
