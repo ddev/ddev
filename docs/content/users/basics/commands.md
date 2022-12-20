@@ -148,6 +148,9 @@ ddev config
 
 # Configure a Drupal 8 project with a `web` document root
 ddev config --docroot=web --project-type=drupal8
+
+# Switch the project’s default `nginx-fpm` to `apache-fpm`
+ddev config --webserver-type=apache-fpm
 ```
 
 Flags:
