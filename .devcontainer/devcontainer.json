@@ -20,7 +20,7 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "/workspaces/ddev/.devcontainer/setup_ddev.sh",
+	"postCreateCommand": "/workspaces/ddev/.devcontainer/setup_test_project.sh",
 
 	// Configure tool-specific properties.
 	// "customizations": {},

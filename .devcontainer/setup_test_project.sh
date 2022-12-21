@@ -1,5 +1,9 @@
 #!/bin/bash
 
+set -eu -o pipefail
+
+echo "You don't need to wait for the test project to be set up."
+set -x
 make
 sudo ln -sf /workspaces/ddev/.gotmp/bin/linux_amd64/ddev /usr/local/bin/ddev
 ddev debug download-images
