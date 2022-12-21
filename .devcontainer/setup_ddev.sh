@@ -1,7 +1,7 @@
 #!/bin/bash
 
 make
-ln -sf .gotmp/bin/linux_amd64/ddev /usr/local/bin/ddev
+sudo ln -sf /workspaces/ddev/.gotmp/bin/linux_amd64/ddev /usr/local/bin/ddev
 ddev debug download-images
 ddev delete -Oy tmp >/dev/null
 ddev --version
