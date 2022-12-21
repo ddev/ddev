@@ -7,7 +7,7 @@
 	"features": {
 		"ghcr.io/eitsupi/devcontainer-features/jq-likes:1": {},
 		"ghcr.io/edouard-lopez/devcontainer-features/bats:0": {}
-	}
+	},
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
@@ -16,7 +16,7 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "go version",
+	"postCreateCommand": "/workspaces/ddev/.devcontainer/setup_ddev.sh",
 
 	// Configure tool-specific properties.
 	// "customizations": {},
