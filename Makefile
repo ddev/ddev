@@ -15,7 +15,7 @@ GOFILES = $(shell find $(SRC_DIRS) -type f)
 # Expands SRC_DIRS into the common golang ./dir/... format for "all below"
 SRC_AND_UNDER = $(patsubst %,./%/...,$(SRC_DIRS))
 
-GOLANGCI_LINT_ARGS ?= --out-format=line-number --disable-all --enable=gofmt --enable=govet --enable=revive --enable=errcheck --enable=staticcheck --enable=ineffassign --enable=varcheck --enable=deadcode
+GOLANGCI_LINT_ARGS ?= --out-format=line-number --disable-all --enable=gofmt --enable=govet --enable=revive --enable=errcheck --enable=staticcheck --enable=ineffassign
 
 WINDOWS_GSUDO_VERSION=v0.7.3
 WINNFSD_VERSION=2.4.0
