@@ -1885,6 +1885,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_FILES_DIR":                app.GetContainerUploadDirFullPath(),
 
 		"DDEV_HOST_DB_PORT":          dbPortStr,
+		"DDEV_HOST_MAILHOG_PORT": app.HostMailhogPort,
 		"DDEV_HOST_WEBSERVER_PORT":   app.HostWebserverPort,
 		"DDEV_HOST_HTTPS_PORT":       app.HostHTTPSPort,
 		"DDEV_PHPMYADMIN_PORT":       app.PHPMyAdminPort,
