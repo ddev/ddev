@@ -75,6 +75,14 @@ func IsGitpod() bool {
 	return runtime.GOOS == "linux" && os.Getenv("GITPOD_WORKSPACE_ID") != ""
 }
 
+// IsCodespaces returns true if running on Github Codespaces
+func IsCodespaces() bool {
+	if os.Getenv("DDEV_PRETEND_CODESPACES") == "true" {
+		return true
+	}
+	return runtime.GOOS == "linux" && os.Getenv("CODESPACES") == "true"
+}
+
 // GetWSLDistro returns the WSL2 distro name if on Linux
 func GetWSLDistro() string {
 	wslDistro := ""

@@ -105,7 +105,7 @@ ddev start --all`,
 
 			util.Success("Successfully started %s", project.GetName())
 			httpURLs, httpsURLs, _ := project.GetAllURLs()
-			if !nodeps.IsGitpod() && (globalconfig.GetCAROOT() == "" || ddevapp.IsRouterDisabled(project)) {
+			if !nodeps.IsGitpod() && !nodeps.IsCodespaces() && (globalconfig.GetCAROOT() == "" || ddevapp.IsRouterDisabled(project)) {
 				httpsURLs = httpURLs
 			}
 			util.Success("Project can be reached at %s", strings.Join(httpsURLs, " "))

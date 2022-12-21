@@ -56,7 +56,7 @@ func TestExtraPortExpose(t *testing.T) {
 
 	// Careful with portsToTest because https ports won't work on github actions Colima tests (although they work fine on normal mac)
 	portsToTest := []string{"3000", "4000"}
-	if !nodeps.IsGitpod() && (globalconfig.GetCAROOT() == "" || IsRouterDisabled(app)) {
+	if !nodeps.IsGitpod() && !nodeps.IsCodespaces() && (globalconfig.GetCAROOT() == "" || IsRouterDisabled(app)) {
 		portsToTest = []string{"2999", "3999"}
 	}
 
