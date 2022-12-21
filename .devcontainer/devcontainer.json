@@ -7,7 +7,7 @@
 	"features": {
 		"ghcr.io/devcontainers/features/docker-in-docker:1": {},
 		"ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
-			"packages": "autojump,curl,wget"
+			"packages": "autojump,curl,wget,xdg-utils"
 		},
 		"ghcr.io/eitsupi/devcontainer-features/jq-likes:1": {},
 		"ghcr.io/edouard-lopez/devcontainer-features/bats:0": {}
