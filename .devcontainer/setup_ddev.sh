@@ -11,8 +11,8 @@ DDEV_REPO=${DDEV_REPO:-https://github.com/drud/d9simple}
 DDEV_ARTIFACTS=${DDEV_REPO}-artifacts
 git clone ${DDEV_ARTIFACTS} "/tmp/${DDEV_ARTIFACTS##*/}" || true
 reponame=${DDEV_REPO##*/}
-mkdir -p /workspace/${reponame} && cd /workspace/${reponame}
-if [ ! -d /workspace/${reponame}/.git ]; then
+mkdir -p /workspaces/${reponame} && cd /workspace/${reponame}
+if [ ! -d /workspaces/${reponame}/.git ]; then
     git clone ${DDEV_REPO} /workspace/${reponame}
 fi
 if [ ! -f .ddev/config.yaml ]; then
