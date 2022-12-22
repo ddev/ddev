@@ -356,8 +356,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         # Set up the DDEV environment:
         ddev config --project-type=craftcms --docroot=web --create-docroot
 
-        # Boot the project and install the starter project:
-        ddev start
+        # Scaffold the project with Composer:
         ddev composer create -y --no-scripts craftcms/craft
 
         # Run the Craft installer:
@@ -379,8 +378,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         # Set up the DDEV environment:
         ddev config --project-type=craftcms
 
-        # Boot the project and install Composer packages:
-        ddev start
+        # Install packages:
         ddev composer install
 
         # Import a database backup and open the site in your browser:
