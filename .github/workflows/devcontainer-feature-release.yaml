@@ -4,7 +4,7 @@ on:
 
 jobs:
   deploy:
-    if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/20221222_devcontainer' }}
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
