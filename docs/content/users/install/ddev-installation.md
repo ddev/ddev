@@ -266,6 +266,25 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     It can be complicated to get private databases and files into Gitpod, so in addition to the launchers, the [`git` provider example](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/git.yaml.example) demonstrates pulling a database and files without complex setup or permissions. This was created explicitly for Gitpod integration, because in Gitpod you typically already have access to private Git repositories, which are a fine place to put a starter database and files. Although [ddev-gitpod-launcher](https://drud.github.io/ddev-gitpod-launcher/) and the web extension provide the capability, you may want to integrate a Git provider—or one of the [other providers](https://github.com/drud/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers)—for each project.
 
+=== "Codespaces"
+
+    ## GitHub Codespaces
+
+    DDEV is fully supported in [GitHub Codespaces](https://github.com/features/codespaces)
+
+    * Open your project in Codespaces.
+    * Create or edit to your `.devcontainer/devcontainer.json` with features as shown:
+
+    ```json
+    {
+        "features": {
+            "ghcr.io/devcontainers/features/docker-in-docker:1": {},
+            "ghcr.io/drud/ddev/install-ddev:latest": {}
+        }
+    }
+    ```
+    * Rebuild the dev container. (`cmd` or `ctrl` `shift` `P` and search for "rebuild")
+
 === "Manual"
 
     ## Manual
