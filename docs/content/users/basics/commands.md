@@ -323,7 +323,7 @@ Example:
 
 ```shell
 # Output contextual details for the Docker provider
-ddev debug dockerchck
+ddev debug dockercheck
 ```
 
 ### `debug download-images`
