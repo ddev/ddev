@@ -270,16 +270,16 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ## GitHub Codespaces
 
-    DDEV is fully supported in [GitHub Codespaces](https://github.com/features/codespaces)
+    You can use DDEV in remote [GitHub Codespaces](https://github.com/features/codespaces), skipping the requirement to run Docker locally.
 
-    To run DDEV in codespaces you'll need to create a codespaces instance for your repo and add a `.devcontainer/devcontainer.json` to it as shown below. There are at least two ways to do this:
+    Start by [creating a new codespace](https://github.com/codespaces/new) for your project, or open an existing one. Next, edit the project configuration to add Docker-in-Docker support along with DDEV. Pick **one** of these methods:
 
-    1. On your project repo on github.com click `Code → Codespaces → ... → Configure dev container` to create or edit a `devcontainer.json`. Edit or create the file to add the features shown in the example.
+    * Visit your project’s GitHub repository and click the _Code_ dropdown → _Codespaces_ tab → _..._ to the right of “Codespaces” → _Configure dev container_. This will open a `devcontainer.json` file you can edit with the details below.
         ![codespaces dev container](../../../images/codespaces_devcontainer.png)
 
-    2. Open your project in Codespaces and edit the `.devcontainer/devcontainer.json`, then rebuild the container, using VS Code’s “Rebuild container” action. (<kbd>⌘</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on a Mac or <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on Windows, then search for “rebuild”.)
+    * Open your project’s codespace directly, edit the `.devcontainer/devcontainer.json` file, and rebuild the container with VS Code’s “Rebuild container” action. (<kbd>⌘</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on a Mac or <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on Windows, then search for “rebuild”.)
 
-    The updated `devcontainer.json`, no matter how you edit it, should have features like this. It may have more, but the `docker-in-docker` and `install-ddev` features should be there:
+    Your updated `devcontainer.json` file may differ depending on your project, but you should have `docker-in-docker` and `install-ddev` in the `features` section:
 
     ```json
     {
