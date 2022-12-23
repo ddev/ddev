@@ -578,7 +578,7 @@ func (app *DdevApp) CheckCustomConfig() {
 		}
 	}
 	if customConfig {
-		util.Warning("The custom configuration(s) are updated on restart.\nIf you don't see your custom configuration taking effect, run 'ddev restart'.")
+		util.Warning("Custom configuration is updated on restart.\nIf you don't see your custom configuration taking effect, run 'ddev restart'.")
 	}
 
 }
