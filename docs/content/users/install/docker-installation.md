@@ -100,7 +100,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     ## GitHub Codespaces
 
-    With [GitHub Codespaces](https://github.com/features/codespaces) everything you need to do is done in the [DDEV Installation](ddev-installation.md#github-codespaces) section.
+    You can set up [GitHub Codespaces](https://github.com/features/codespaces) following the instructions in the [DDEV Installation](ddev-installation.md#github-codespaces) section.
 
 <a name="troubleshooting"></a>
 
