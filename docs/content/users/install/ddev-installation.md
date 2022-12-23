@@ -275,7 +275,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     To run DDEV in codespaces you'll need to create a codespaces instance for your repo and add a `.devcontainer/devcontainer.json` to it as shown below. There are at least two ways to do this:
 
     1. On your project repo on github.com click `Code → Codespaces → ... → Configure dev container` to create or edit a `devcontainer.json`. Edit or create the file to add the features shown in the example.
-        ![codespaces dev container](../../../images/codespaces_devcontainer.jpg)
+        ![codespaces dev container](../../../images/codespaces_devcontainer.png)
 
     2. Open your project in Codespaces and edit the `.devcontainer/devcontainer.json`, then rebuild the container, using VS Code’s “Rebuild container” action. (<kbd>⌘</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on a Mac or <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on Windows, then search for “rebuild”.)
 
