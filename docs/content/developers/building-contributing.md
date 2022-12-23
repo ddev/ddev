@@ -24,7 +24,7 @@ Next, unzip the binary you downloaded, make it executable, and move it to your b
 
 ```
 unzip ddev.zip
-chmod +x ddev && mv ddev /usr/local/bin/ddev
+chmod +x ddev && sudo mv ddev /usr/local/bin/ddev
 ```
 
 Verify the replacement worked by running `ddev -v`. The output should be something like `ddev version v1.19.1-42-g5334d3c1`, instead of the regular `ddev version v1.19.1`.
