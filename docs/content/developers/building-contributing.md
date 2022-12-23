@@ -43,7 +43,8 @@ You do not typically have to install anything else other than the downloaded bin
 After you’re done, you can delete your downloaded binary and re-link the original Homebrew one:
 
 ```
-brew link ddev
+sudo rm /usr/local/bin/ddev
+brew link --force ddev
 ```
 
 ## Open in Gitpod
