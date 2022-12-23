@@ -283,7 +283,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
         }
     }
     ```
-    * Rebuild the dev container. (`cmd` or `ctrl` `shift` `P` and search for "rebuild")
+    * Rebuild the dev container using VS Code’s “Rebuild container” action. (<kbd>⌘</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on a Mac or <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on Windows, then search for “rebuild”.)
 
 === "Manual"
 
