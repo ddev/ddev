@@ -272,18 +272,41 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     DDEV is fully supported in [GitHub Codespaces](https://github.com/features/codespaces)
 
-    * Open your project in Codespaces.
-    * Create or edit to your `.devcontainer/devcontainer.json` with features as shown:
+    To run DDEV in codespaces you'll need to create a codespaces instance for your repo and add a `.devcontainer/devcontainer.json` to it as shown below. There are at least two easy ways to do this. 
+
+    1. On your project repo on github.com click `Code → Codespaces → ... → Configure dev container` to create or edit a `devcontainer.json`. Edit or create the file to add the features shown in the example.
+        ![codespaces dev container](../../images/codespaces_devcontainer.jpg)
+
+    2. Open your project in Codespaces and edit the `.devcontainer/devcontainer.json`, then rebuild the container, using VS Code’s “Rebuild container” action. (<kbd>⌘</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on a Mac or <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on Windows, then search for “rebuild”.)
+
+    The updated `devcontainer.json`, no matter how you edit it, should have features like this. It may have more, but the `docker-in-docker` and `install-ddev` features should be there:
 
     ```json
     {
+        "image": "mcr.microsoft.com/devcontainers/universal:2",
         "features": {
             "ghcr.io/devcontainers/features/docker-in-docker:1": {},
             "ghcr.io/drud/ddev/install-ddev:latest": {}
+        },
+        "portsAttributes": {
+          "8027": {
+            "label": "mailhog"
+          },
+          "8036": {
+            "label": "phpmyadmin"
+          },
+          "8080": {
+            "label": "web http"
+          },
+          "8443": {
+            "label": "web https"
+          }
         }
     }
     ```
-    * Rebuild the dev container using VS Code’s “Rebuild container” action. (<kbd>⌘</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on a Mac or <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on Windows, then search for “rebuild”.)
+
+    !!!note "Normal Linux installation also works"
+        You can also install DDEV as if it were on any normal [Linux installation](#linux).
 
 === "Manual"
 
