@@ -10,17 +10,41 @@ Alternately, you can see the latest build in action by visiting DDEV on [Gitpod]
 
 ## Testing a PR
 
-Each build of a PR has artifacts created in GitHub, so you can click the details of the [PR Build](https://github.com/drud/ddev/actions/workflows/pr-build.yml) test, choose the PR you want to work with, and download the artifacts you need.
+Each [PR build](https://github.com/drud/ddev/actions/workflows/pr-build.yml) creates GitHub artifacts you can use for testing, so you can download the one you need from the PR page, install it locally, and test using that build.
 
-After you download and unzip the appropriate binary, you can place it in your `$PATH`. The easiest way to do this if you’re using Homebrew is `brew unlink ddev` and then `unzip ddev.zip && chmod +x ddev && mv ddev /usr/local/bin/ddev`.
+Download and unzip the appropriate binary and place it in your `$PATH`.
 
-Verify the replacement worked via `ddev -v`. The output should be something like `ddev version v1.19.1-42-g5334d3c1`, instead of the regular `ddev version v1.19.1`.
+If you’re using Homebrew, start by unlinking your current binary:
 
-(On macOS these downloaded binaries are not signed, so you’ll want to `xattr -r -d com.apple.quarantine /path/to/ddev` in order to use them. The binaries on the master branch and the final binaries in any release *are* signed.)
+```
+brew unlink ddev
+```
+
+Next, unzip the binary you downloaded, make it executable, and move it to your bin folder:
+
+```
+unzip ddev.zip
+chmod +x ddev && mv ddev /usr/local/bin/ddev
+```
+
+Verify the replacement worked by running `ddev -v`. The output should be something like `ddev version v1.19.1-42-g5334d3c1`, instead of the regular `ddev version v1.19.1`.
+
+!!!tip "macOS and Unsigned Binaries"
+    macOS doesn’t like these these downloaded binaries, so you’ll need to bypass the automatic quarantine to use them:
+
+    ```
+    xattr -r -d com.apple.quarantine /usr/local/bin/ddev
+    ```
+
+    (The binaries on the master branch and the final release binaries _are_ signed.)
 
 You do not typically have to install anything else other than the downloaded binary; when you run it it will access any Docker images that it needs.
 
-After you’re done, you can remove the downloaded binary and `brew link ddev`.
+After you’re done, you can delete your downloaded binary and re-link the original Homebrew one:
+
+```
+brew link ddev
+```
 
 ## Open in Gitpod
 
