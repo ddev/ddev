@@ -61,7 +61,7 @@ jobs:
       - name: Homebrew cache/restore
         uses: actions/cache@v3
         env:
-          cache-name: cache-homebrew-cache-9
+          cache-name: cache-homebrew-cache-10
         with:
           path: ~/Library/Caches/Homebrew
           key: ${{ runner.os }}-build-${{ env.cache-name }}
@@ -71,7 +71,7 @@ jobs:
       - name: Lima cache/restore
         uses: actions/cache@v3
         env:
-          cache-name: cache-lima-9
+          cache-name: cache-lima-10
         with:
           # npm cache files are stored in `~/.npm` on Linux/macOS
           path: ~/.lima
