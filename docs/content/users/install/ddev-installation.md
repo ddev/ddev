@@ -289,6 +289,9 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
             "ghcr.io/drud/ddev/install-ddev:latest": {}
         },
         "portsAttributes": {
+          "3306": {
+            "label": "database"
+          },
           "8027": {
             "label": "mailhog"
           },
@@ -301,8 +304,10 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
           "8443": {
             "label": "web https"
           }
-        }
+        },
+        "postCreateCommand": "bash -c 'ddev config global --omit-containers=ddev-router && ddev config --auto && ddev debug download-images'"
     }
+
     ```
 
     !!!note "Normal Linux installation also works"

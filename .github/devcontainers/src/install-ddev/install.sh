@@ -13,10 +13,4 @@ zipball=$(basename ${DDEV_URL})
 unzip ${zipball}
 chmod +x ddev && sudo mv ddev /usr/local/bin
 
-# When we have a better way to preloaod images, update this
-mkdir /tmp/tempproject && cd /tmp/tempproject
-ddev config --auto
-ddev config global --omit-containers=ddev-router
-ddev debug download-images
-
 rm -rf ${zipball} /tmp/tempproject
