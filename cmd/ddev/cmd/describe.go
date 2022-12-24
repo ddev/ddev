@@ -132,7 +132,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 					urlPortParts = append(urlPortParts, httpURL)
 				}
 			// Gitpod, web container only, using port proxied by gitpod
-			case nodeps.IsGitpod() && k == "web":
+			case (nodeps.IsGitpod() || nodeps.IsCodespaces()) && k == "web":
 				urlPortParts = append(urlPortParts, app.GetPrimaryURL())
 
 			// Router disabled, but not because of gitpod, use direct http url

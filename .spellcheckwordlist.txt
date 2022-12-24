@@ -205,6 +205,8 @@ clis
 client
 cms
 codebase
+codespace
+codespaces
 colima
 colima's
 collection
@@ -272,6 +274,7 @@ docroot
 docroots
 dotfile
 dotfiles
+dropdown
 drud
 drupal
 drupalize

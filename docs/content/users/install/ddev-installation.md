@@ -266,6 +266,53 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     It can be complicated to get private databases and files into Gitpod, so in addition to the launchers, the [`git` provider example](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/git.yaml.example) demonstrates pulling a database and files without complex setup or permissions. This was created explicitly for Gitpod integration, because in Gitpod you typically already have access to private Git repositories, which are a fine place to put a starter database and files. Although [ddev-gitpod-launcher](https://drud.github.io/ddev-gitpod-launcher/) and the web extension provide the capability, you may want to integrate a Git provider—or one of the [other providers](https://github.com/drud/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers)—for each project.
 
+=== "Codespaces"
+
+    ## GitHub Codespaces
+
+    You can use DDEV in remote [GitHub Codespaces](https://github.com/features/codespaces), skipping the requirement to run Docker locally.
+
+    Start by [creating a new codespace](https://github.com/codespaces/new) for your project, or open an existing one. Next, edit the project configuration to add Docker-in-Docker support along with DDEV. Pick **one** of these methods:
+
+    * Visit your project’s GitHub repository and click the _Code_ dropdown → _Codespaces_ tab → _..._ to the right of “Codespaces” → _Configure dev container_. This will open a `devcontainer.json` file you can edit with the details below.
+        ![codespaces dev container](../../../images/codespaces_devcontainer.png)
+
+    * Open your project’s codespace directly, edit the `.devcontainer/devcontainer.json` file, and rebuild the container with VS Code’s “Codespaces: Rebuild Container” action. (<kbd>⌘</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on a Mac or <kbd>CTRL</kbd> + <kbd>SHIFT</kbd> + <kbd>P</kbd> on Windows, then search for “rebuild”.)
+
+    Your updated `devcontainer.json` file may differ depending on your project, but you should have `docker-in-docker` and `install-ddev` in the `features` section:
+
+    ```json
+    {
+        "image": "mcr.microsoft.com/devcontainers/universal:2",
+        "features": {
+            "ghcr.io/devcontainers/features/docker-in-docker:1": {},
+            "ghcr.io/drud/ddev/install-ddev:latest": {}
+        },
+        "portsAttributes": {
+          "3306": {
+            "label": "database"
+          },
+          "8027": {
+            "label": "mailhog"
+          },
+          "8036": {
+            "label": "phpmyadmin"
+          },
+          "8080": {
+            "label": "web http"
+          },
+          "8443": {
+            "label": "web https"
+          }
+        },
+        "postCreateCommand": "bash -c 'ddev config global --omit-containers=ddev-router && ddev config --auto && ddev debug download-images'"
+    }
+
+    ```
+
+    !!!note "Normal Linux installation also works"
+        You can also install DDEV as if it were on any normal [Linux installation](#linux).
+
 === "Manual"
 
     ## Manual

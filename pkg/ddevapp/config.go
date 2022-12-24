@@ -97,9 +97,9 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	// Provide a default app name based on directory name
 	app.Name = filepath.Base(app.AppRoot)
 
-	// Gather containers to omit, adding ddev-router for gitpod
+	// Gather containers to omit, adding ddev-router for gitpod/codespaces
 	app.OmitContainersGlobal = globalconfig.DdevGlobalConfig.OmitContainersGlobal
-	if nodeps.IsGitpod() {
+	if nodeps.IsGitpod() || nodeps.IsCodespaces() {
 		app.OmitContainersGlobal = append(app.OmitContainersGlobal, "ddev-router")
 	}
 
@@ -680,6 +680,7 @@ type composeYAMLVars struct {
 	HostUploadDir                   string
 	GitDirMount                     bool
 	IsGitpod                        bool
+	IsCodespaces                    bool
 	DefaultContainerTimeout         string
 	UseHostDockerInternalExtraHosts bool
 	WebExtraHTTPPorts               string
@@ -772,6 +773,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		ContainerUploadDir:    app.GetContainerUploadDirFullPath(),
 		GitDirMount:           false,
 		IsGitpod:              nodeps.IsGitpod(),
+		IsCodespaces:          nodeps.IsCodespaces(),
 		// Default max time we wait for containers to be healthy
 		DefaultContainerTimeout: app.DefaultContainerTimeout,
 		// Only use the extra_hosts technique for linux and only if not WSL2

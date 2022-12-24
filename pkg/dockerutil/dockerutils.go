@@ -1066,6 +1066,8 @@ func GetHostDockerInternalIP() (string, error) {
 	// Gitpod has docker 20.10+ so the docker-compose has already gotten the host-gateway
 	case nodeps.IsGitpod():
 		break
+	case nodeps.IsCodespaces():
+		break
 
 	case IsWSL2() && IsDockerDesktop():
 		// If IDE is on Windows, return; we don't have to do anything.
@@ -1106,6 +1108,8 @@ func GetNFSServerAddr() (string, error) {
 	// Gitpod has docker 20.10+ so the docker-compose has already gotten the host-gateway
 	// However, NFS will never be used on gitpod.
 	case nodeps.IsGitpod():
+		break
+	case nodeps.IsCodespaces():
 		break
 
 	case IsWSL2() && IsDockerDesktop():

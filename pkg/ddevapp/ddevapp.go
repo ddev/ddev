@@ -1824,15 +1824,11 @@ func (app *DdevApp) DockerEnv() {
 		util.Warning("Warning: containers will run as root. This could be a security risk on Linux.")
 	}
 
-	isGitpod := "false"
-
-	// For gitpod,
-	// * provide IS_GITPOD environment variable
+	// For gitpod, codespaces
 	// * provide default host-side port bindings, assuming only one project running,
 	//   as is usual on gitpod, but if more than one project, can override with normal
 	//   config.yaml settings.
-	if nodeps.IsGitpod() {
-		isGitpod = "true"
+	if nodeps.IsGitpod() || nodeps.IsCodespaces() {
 		if app.HostWebserverPort == "" {
 			app.HostWebserverPort = "8080"
 		}
@@ -1889,6 +1885,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_FILES_DIR":                app.GetContainerUploadDirFullPath(),
 
 		"DDEV_HOST_DB_PORT":          dbPortStr,
+		"DDEV_HOST_MAILHOG_PORT":     app.HostMailhogPort,
 		"DDEV_HOST_WEBSERVER_PORT":   app.HostWebserverPort,
 		"DDEV_HOST_HTTPS_PORT":       app.HostHTTPSPort,
 		"DDEV_PHPMYADMIN_PORT":       app.PHPMyAdminPort,
@@ -1911,7 +1908,8 @@ func (app *DdevApp) DockerEnv() {
 		"GOOS":                       runtime.GOOS,
 		"GOARCH":                     runtime.GOARCH,
 		"IS_DDEV_PROJECT":            "true",
-		"IS_GITPOD":                  isGitpod,
+		"IS_GITPOD":                  strconv.FormatBool(nodeps.IsGitpod()),
+		"IS_CODESPACES":              strconv.FormatBool(nodeps.IsCodespaces()),
 		"IS_WSL2":                    isWSL2,
 	}
 
@@ -2368,6 +2366,13 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 			httpsURLs = append(httpsURLs, url)
 		}
 	}
+	if nodeps.IsCodespaces() {
+		codespaceName := os.Getenv("CODESPACE_NAME")
+		if codespaceName != "" {
+			url := fmt.Sprintf("https://%s-%s.preview.app.github.dev", codespaceName, app.HostWebserverPort)
+			httpsURLs = append(httpsURLs, url)
+		}
+	}
 
 	// Get configured URLs
 	for _, name := range app.GetHostnames() {
@@ -2398,7 +2403,7 @@ func (app *DdevApp) GetPrimaryURL() string {
 	httpURLs, httpsURLs, _ := app.GetAllURLs()
 	urlList := httpsURLs
 	// If no mkcert trusted https, use the httpURLs instead
-	if !nodeps.IsGitpod() && (globalconfig.GetCAROOT() == "" || IsRouterDisabled(app)) {
+	if !nodeps.IsGitpod() && !nodeps.IsCodespaces() && (globalconfig.GetCAROOT() == "" || IsRouterDisabled(app)) {
 		urlList = httpURLs
 	}
 	if len(urlList) > 0 {
