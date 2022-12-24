@@ -5,8 +5,7 @@ sudo apt update >/dev/null && sudo apt install -y xdg-utils >/dev/null
 
 # This will eventually move to a simple apt install
 sudo apt remove ddev >/dev/null 2>&1 || true
-DDEV_URL=https://nightly.link/drud/ddev/actions/artifacts/485751722.zip
-# After PR gets merged or at merge time, this should be DDEV_URL=https://nightly.link/drud/ddev/workflows/master-build/master/ddev-linux-amd64.zip
+DDEV_URL=https://nightly.link/drud/ddev/workflows/master-build/master/ddev-linux-amd64.zip
 echo "Installing DDEV"
 
 cd /tmp && curl -s -L -O ${DDEV_URL}
