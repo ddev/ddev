@@ -389,7 +389,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         ```
 
     !!!tip "Upgrading or using a generic project type?"
-        If you previously set up DDEV in a Craft project using the generic `php` project type, update the `type:` setting in `.ddev/config.yaml` to `craft`, then run [`ddev restart`](../users/basics/commands.md#restart) apply the changes.
+        If you previously set up DDEV in a Craft project using the generic `php` project type, update the `type:` setting in `.ddev/config.yaml` to `craftcms`, then run [`ddev restart`](../users/basics/commands.md#restart) apply the changes.
 
     ### Running Craft in a Sub-directory
 
