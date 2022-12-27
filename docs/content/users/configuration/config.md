@@ -222,7 +222,7 @@ Email associated with Let’s Encrypt feature. (Works in conjunction with [`use_
 | -- | -- | --
 | :octicons-globe-16: global | `` |
 
-Set with `ddev global --letsencrypt-email=me@example.com`. Used with the [casual hosting](../details/alternate-uses.md#casual-hosting) feature.
+Set with `ddev global --letsencrypt-email=me@example.com`. Used with the [casual hosting](../topics/hosting.md) feature.
 
 ## `mailhog_https_port`
 
@@ -493,7 +493,7 @@ Whether to use hardened images for internet deployment.
 | -- | -- | --
 | :octicons-globe-16: global | `false` | Can `true` or `false`.
 
-When `true`, more secure hardened images are used for an internet deployment. These do not include sudo in the web container, and the container is run without elevated privileges. Generally used with the [casual hosting](../details/alternate-uses.md#casual-hosting) feature.
+When `true`, more secure hardened images are used for an internet deployment. These do not include sudo in the web container, and the container is run without elevated privileges. Generally used with the [casual hosting](../topics/hosting.md) feature.
 
 ## `use_letsencrypt`
 
@@ -503,7 +503,7 @@ Whether to enable Let’s Encrypt integration. (Works in conjunction with [`lets
 | -- | -- | --
 | :octicons-globe-16: global | `false` | Can `true` or `false`.
 
-May also be set via `ddev global --use-letsencrypt` or `ddev global --use-letsencrypt=false`. When `true`, `letsencrypt_email` must also be set and the system must be available on the internet. Used with the [casual hosting](../details/alternate-uses.md#casual-hosting) feature.
+May also be set via `ddev global --use-letsencrypt` or `ddev global --use-letsencrypt=false`. When `true`, `letsencrypt_email` must also be set and the system must be available on the internet. Used with the [casual hosting](../topics/hosting.md) feature.
 
 ## `web_environment`
 
