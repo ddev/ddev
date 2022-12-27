@@ -56,7 +56,7 @@ To open and work on DDEV you can use the button below.
 
 If you want to run a web project, you can check it out into `/workspace/<yourproject>` and use it as usual. The things you’re familiar with work normally, except that `ddev-router` does not run.
 
-A Gitpod dummy project for is provided by default in `/workspace/d9simple`. If you’re testing your own project, you will need to delete it to free up reserved host ports by running `ddev delete -Oy d9simple`. Then you can run [`ddev start`](../users/basics/commands.md#start) to work with your own.
+A Gitpod dummy project for is provided by default in `/workspace/d9simple`. If you’re testing your own project, you will need to delete it to free up reserved host ports by running `ddev delete -Oy d9simple`. Then you can run [`ddev start`](../users/usage/commands.md#start) to work with your own.
 
 ## Making Changes to DDEV Images
 
@@ -76,7 +76,7 @@ cd /workspace/ddev
 make
 ```
 
-`ddev version` should show you that you are using the correct webtag, and [`ddev start`](../users/basics/commands.md#start) will show it.
+`ddev version` should show you that you are using the correct webtag, and [`ddev start`](../users/usage/commands.md#start) will show it.
 
 It’s easiest to do this using Gitpod (see above) because Gitpod already has `docker buildx` all set up for you and the built DDEV binary is in the `$PATH`.
 

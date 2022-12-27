@@ -5,9 +5,9 @@ DDEV attempts to work smoothly offline, and you shouldn’t have to do anything 
 * It doesn’t attempt instrumentation or update reporting if offline
 * It falls back to using `/etc/hosts` entries DNS resolution fails
 
-However, it does not (yet) attempt to prevent Docker pulls if a new Docker image is required, so you’ll want to make sure that you try a [`ddev start`](../basics/commands.md#start) before going offline to make sure everything has been pulled.
+However, it does not (yet) attempt to prevent Docker pulls if a new Docker image is required, so you’ll want to make sure that you try a [`ddev start`](../usage/commands.md#start) before going offline to make sure everything has been pulled.
 
-If you have a project running when you’re online (using DNS for name resolution) and you then go offline, you’ll want to do a [`ddev restart`](../basics/commands.md#restart) to get the hostname added into `/etc/hosts` for name resolution.
+If you have a project running when you’re online (using DNS for name resolution) and you then go offline, you’ll want to do a [`ddev restart`](../usage/commands.md#restart) to get the hostname added into `/etc/hosts` for name resolution.
 
 You have general options as well:
 
@@ -27,4 +27,4 @@ If you’re using a browser on Windows and accessing a DDEV project in WSL2, Win
 
     You must have administrative privileges to save the Windows hosts file.
 
-If you’re on Windows with a growing number of hostnames, be aware of [the 10-hosts-per-line limitation](../basics/troubleshooting.md#windows-hosts-file-limited-to-10-hosts-per-line).
+If you’re on Windows with a growing number of hostnames, be aware of [the 10-hosts-per-line limitation](../usage/troubleshooting.md#windows-hosts-file-limited-to-10-hosts-per-line).

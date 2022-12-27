@@ -2,7 +2,7 @@
 
 Learn:
 
-- [Using the `ddev` Command](cli-usage.md)
+- [Using the `ddev` Command](cli.md)
 - [Commands](commands.md)
 - [Database Management](database-management.md)
 - [Built-in Developer Tools](developer-tools.md)

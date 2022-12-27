@@ -29,7 +29,7 @@ Rancher Desktop integration currently has no automated testing for DDEV integrat
 
 ## Traefik Router
 
-DDEV’s router plays an important role in its [container architecture](../basics/architecture.md#container-architecture), receiving most HTTP and HTTPS traffic for requests like `*.ddev.site` and delivering them to the relevant project’s web container.
+DDEV’s router plays an important role in its [container architecture](../usage/architecture.md#container-architecture), receiving most HTTP and HTTPS traffic for requests like `*.ddev.site` and delivering them to the relevant project’s web container.
 
 `ddev-router` has been based on a forked, poorly-documented nginx reverse proxy. Versions after DDEV v1.21.3 add a new router based on the popular [Traefik Proxy](https://traefik.io/traefik/), available as an experimental feature until it becomes the default in a future release. Run the following to enable it:
 
@@ -66,4 +66,4 @@ Project configuration is automatically generated in the project’s `.ddev/traef
 ### Debugging Traefik Routing
 
 Traefik provides a dynamic description of its configuration you can visit at `http://localhost:9999`.
-When things seem to be going wrong, run [`ddev poweroff`](../basics/commands.md#poweroff) and then start your project again by running [`ddev start`](../basics/commands.md#start). Examine the router’s logs to see what the Traefik daemon is doing (or failing at) by running `docker logs ddev-router` or `docker logs -f ddev-router`.
+When things seem to be going wrong, run [`ddev poweroff`](../usage/commands.md#poweroff) and then start your project again by running [`ddev start`](../usage/commands.md#start). Examine the router’s logs to see what the Traefik daemon is doing (or failing at) by running `docker logs ddev-router` or `docker logs -f ddev-router`.

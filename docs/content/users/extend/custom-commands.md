@@ -8,7 +8,7 @@ Example commands in `ddev/commands/*/*.example` can be copied, moved, or symlink
 
 For example, [.ddev/commands/host/mysqlworkbench.example](https://github.com/drud/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/host/mysqlworkbench.example) can be used to add a `ddev mysqlworkbench` command. Rename it from `mysqlworkbench.example` to `mysqlworkbench`. If you’re on macOS or Linux (or some configurations of Windows) you can `cd .ddev/commands/host && ln -s mysqlworkbench.example mysqlworkbench`.
 
-The [`ddev mysql`](../basics/commands.md#mysql) runs the `mysql` client inside the `db` container command using this technique. See the [`ddev mysql` command](https://github.com/drud/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/db/mysql).
+The [`ddev mysql`](../usage/commands.md#mysql) runs the `mysql` client inside the `db` container command using this technique. See the [`ddev mysql` command](https://github.com/drud/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/db/mysql).
 
 ## Notes for All Command Types
 

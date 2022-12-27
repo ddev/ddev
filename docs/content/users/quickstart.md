@@ -3,16 +3,16 @@
 Once DDEV is installed, you can quickly spin up new projects:
 
 1. Clone or create the code for your project.
-2. `cd` into the project directory and run [`ddev config`](../users/basics/commands.md#config) to initialize a DDEV project.  
+2. `cd` into the project directory and run [`ddev config`](../users/usage/commands.md#config) to initialize a DDEV project.  
     It automatically detects your project type and docroot—make sure it’s accurate!
-3. Run [`ddev start`](../users/basics/commands.md#start) to spin up the project.  
-    If your project needs it, don’t forget to run [`ddev composer install`](../users/basics/commands.md#composer).
-4. Import a database with [`ddev import-db`](../users/basics/commands.md#import-db).
-5. Optionally import user-managed files with [`ddev import-files`](../users/basics/commands.md#import-files).
-6. Run [`ddev launch`](../users/basics/commands.md#launch) to open your project in a browser, or visit the URL given by [`ddev start`](../users/basics/commands.md#start).
+3. Run [`ddev start`](../users/usage/commands.md#start) to spin up the project.  
+    If your project needs it, don’t forget to run [`ddev composer install`](../users/usage/commands.md#composer).
+4. Import a database with [`ddev import-db`](../users/usage/commands.md#import-db).
+5. Optionally import user-managed files with [`ddev import-files`](../users/usage/commands.md#import-files).
+6. Run [`ddev launch`](../users/usage/commands.md#launch) to open your project in a browser, or visit the URL given by [`ddev start`](../users/usage/commands.md#start).
 
 !!!tip
-    While you’re getting your bearings, use [`ddev describe`](../users/basics/commands.md#describe) to get project details, and [`ddev help`](../users/basics/commands.md#help) to investigate commands.
+    While you’re getting your bearings, use [`ddev describe`](../users/usage/commands.md#describe) to get project details, and [`ddev help`](../users/usage/commands.md#help) to investigate commands.
 
 DDEV comes ready to work with any PHP project, and has deeper support for several common PHP platforms and content management systems.
 
@@ -26,11 +26,11 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     
     1. Create a directory (`mkdir my-new-project`) or clone your project (`git clone <your_project>`).
     2. Change to the new directory (`cd my-new-project`).
-    3. Run [`ddev config`](../users/basics/commands.md#config) and set the project type and docroot, which are usually auto-detected, but may not be if there's no code in there yet.
-    4. Run [`ddev start`](../users/basics/commands.md#start).
-    6. If you’re using Composer, run [`ddev composer install`](../users/basics/commands.md#composer).
+    3. Run [`ddev config`](../users/usage/commands.md#config) and set the project type and docroot, which are usually auto-detected, but may not be if there's no code in there yet.
+    4. Run [`ddev start`](../users/usage/commands.md#start).
+    6. If you’re using Composer, run [`ddev composer install`](../users/usage/commands.md#composer).
     4. Configure any database settings; host='db', user='db', password='db', database='db'
-    5. If needed, import a database with [`ddev import-db --src=/path/to/db.sql.gz`](../users/basics/commands.md#import-db).
+    5. If needed, import a database with [`ddev import-db --src=/path/to/db.sql.gz`](../users/usage/commands.md#import-db).
     6. Visit the project in a browser, and then build things.
 
 === "WordPress"
@@ -94,7 +94,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         WP_ENV=development
         ```
     
-        You can then run [`ddev start`](../users/basics/commands.md#start) and [`ddev launch`](../users/basics/commands.md#launch).
+        You can then run [`ddev start`](../users/usage/commands.md#start) and [`ddev launch`](../users/usage/commands.md#launch).
     
         For more details, see [Bedrock installation](https://docs.roots.io/bedrock/master/installation/).
 
@@ -136,7 +136,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         
         So just add the suggested include into your `wp-config.php`, or take the workaround shown.
         
-        Now start your project with [`ddev start`](../users/basics/commands.md#start).
+        Now start your project with [`ddev start`](../users/usage/commands.md#start).
         
         Quickstart instructions regarding database imports can be found under [Importing a database](#importing-a-database).
 
@@ -245,9 +245,9 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
 
     1. Download OpenMage from [release page](https://github.com/OpenMage/magento-lts/releases).
     2. Make a directory for it, for example `mkdir ~/workspace/OpenMage` and change to the new directory `cd ~/workspace/OpenMage`.
-    3. Run [`ddev config`](../users/basics/commands.md#config) and accept the defaults.
+    3. Run [`ddev config`](../users/usage/commands.md#config) and accept the defaults.
     4. Install sample data. (See below.)
-    5. Run [`ddev start`](../users/basics/commands.md#start).
+    5. Run [`ddev start`](../users/usage/commands.md#start).
     6. Follow the URL to the base site.
 
     You may want the [Magento 1 Sample Data](https://github.com/Vinai/compressed-magento-sample-data) for experimentation:
@@ -340,13 +340,13 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
     Start a new [Craft CMS](https://craftcms.com) project or retrofit an existing one.
 
     !!!tip "Compatibility"
-        The `craft` project type was added to DDEV in version [1.21.2](https://github.com/drud/ddev/releases/tag/v1.21.2). Check your current version with the `ddev version` command, and [upgrade](../users/basics/faq.md#how-can-i-updateupgrade-ddev) if necessary!
+        The `craft` project type was added to DDEV in version [1.21.2](https://github.com/drud/ddev/releases/tag/v1.21.2). Check your current version with the `ddev version` command, and [upgrade](../users/usage/faq.md#how-can-i-updateupgrade-ddev) if necessary!
 
     Environment variables will be automatically added to your `.env` file to simplify the first boot of a project. For _new_ installations, this means the default URL and database connection settings displayed during installation can be used without modification. If _existing_ projects expect environment variables to be named in a particular way, you are welcome to rename them.
 
     === "New projects"
 
-        New Craft CMS projects can be created from the official [starter project](https://github.com/craftcms/craft) using DDEV’s [`composer create` command](../users/basics/commands.md#composer):
+        New Craft CMS projects can be created from the official [starter project](https://github.com/craftcms/craft) using DDEV’s [`composer create` command](../users/usage/commands.md#composer):
 
         ```bash
         # Create a project directory and move into it:
@@ -389,7 +389,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         ```
 
     !!!tip "Upgrading or using a generic project type?"
-        If you previously set up DDEV in a Craft project using the generic `php` project type, update the `type:` setting in `.ddev/config.yaml` to `craftcms`, then run [`ddev restart`](../users/basics/commands.md#restart) apply the changes.
+        If you previously set up DDEV in a Craft project using the generic `php` project type, update the `type:` setting in `.ddev/config.yaml` to `craftcms`, then run [`ddev restart`](../users/usage/commands.md#restart) apply the changes.
 
     ### Running Craft in a Sub-directory
 
@@ -439,7 +439,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
 
 ## Configuration Files
 
-The [`ddev config`](../users/basics/commands.md#config) command attempts to create a CMS-specific settings file pre-populated with DDEV credentials.
+The [`ddev config`](../users/usage/commands.md#config) command attempts to create a CMS-specific settings file pre-populated with DDEV credentials.
 
 For **Drupal** and **Backdrop**, DDEV settings are written to a DDEV-managed file, `settings.ddev.php`. The `ddev config` command will ensure these settings are included in your `settings.php` through the following steps:
 
@@ -485,7 +485,7 @@ If you’re providing the `settings.php` or `wp-config.php` and DDEV is creating
 
 ## Listing Project Information
 
-Run [`ddev list`](../users/basics/commands.md#list) or `ddev list --active-only` current projects.
+Run [`ddev list`](../users/usage/commands.md#list) or `ddev list --active-only` current projects.
 
 ```
 
@@ -506,7 +506,7 @@ drupal8  drupal8  ~/workspace/drupal8  <http://drupal8.ddev.site>   running
 
 ```
 
-You can also see more detailed information about a project by running [`ddev describe`](../users/basics/commands.md#describe) from its working directory. You can also run `ddev describe [project-name]` from any location to see the detailed information for a running project.
+You can also see more detailed information about a project by running [`ddev describe`](../users/usage/commands.md#describe) from its working directory. You can also run `ddev describe [project-name]` from any location to see the detailed information for a running project.
 
 ```
 NAME        TYPE     LOCATION                URL                           STATUS
@@ -552,13 +552,13 @@ ssh-auth status: healthy
 
 There are two ways to remove a project from DDEV’s listing.
 
-The first, the [`ddev delete`](../users/basics/commands.md#delete) command, is destructive. It removes the project from DDEV’s list, deletes its database, and removes the hostname entry from the hosts file:
+The first, the [`ddev delete`](../users/usage/commands.md#delete) command, is destructive. It removes the project from DDEV’s list, deletes its database, and removes the hostname entry from the hosts file:
 
 `ddev delete <projectname>`  
 or  
 `ddev delete --omit-snapshot <projectname>`
 
-If you simply don’t want the project to show up in [`ddev list`](../users/basics/commands.md#list) anymore, use [`ddev stop`](../users/basics/commands.md#stop)—which is nondestructive—to unlist the project until the next time you run [`ddev start`](../users/basics/commands.md#start) or [`ddev config`](../users/basics/commands.md#config):
+If you simply don’t want the project to show up in [`ddev list`](../users/usage/commands.md#list) anymore, use [`ddev stop`](../users/usage/commands.md#stop)—which is nondestructive—to unlist the project until the next time you run [`ddev start`](../users/usage/commands.md#start) or [`ddev config`](../users/usage/commands.md#config):
 
 ```bash
 ddev stop --unlist <projectname>
@@ -570,7 +570,7 @@ An important aspect of local web development is the ability to have a precise lo
 
 ### Importing a Database
 
-The [`ddev import-db`](../users/basics/commands.md#import-db) command imports the database for a project. Running this command will prompt you to specify the location of your database import. By default `ddev import-db` empties the default `db` database, then loads the provided dump file. Most people use it with command flags, like `ddev import-db --src=.tarballs/db.sql.gz`, but it can also prompt for the location of the dump if you only use `ddev import-db`:
+The [`ddev import-db`](../users/usage/commands.md#import-db) command imports the database for a project. Running this command will prompt you to specify the location of your database import. By default `ddev import-db` empties the default `db` database, then loads the provided dump file. Most people use it with command flags, like `ddev import-db --src=.tarballs/db.sql.gz`, but it can also prompt for the location of the dump if you only use `ddev import-db`:
 
 ```bash
 ddev import-db
@@ -610,7 +610,7 @@ Successfully imported database for drupal8
 
 #### Non-Interactive Usage
 
-If you want to use the [`import-db`](../users/basics/commands.md#import-db) command without answering prompts, you can use the `--src` flag to provide the path to the import asset. If you’re importing an archive and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag. Examples:
+If you want to use the [`import-db`](../users/usage/commands.md#import-db) command without answering prompts, you can use the `--src` flag to provide the path to the import asset. If you’re importing an archive and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag. Examples:
 
 ```bash
 ddev import-db --src=/tmp/mydb.sql.gz

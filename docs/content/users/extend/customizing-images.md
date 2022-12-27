@@ -14,7 +14,7 @@ webimage_extra_packages: [php-yaml, php8.2-tidy]
 dbimage_extra_packages: [telnet, netcat]
 ```
 
-Then the additional packages will be built into the containers during [`ddev start`](../basics/commands.md#start).
+Then the additional packages will be built into the containers during [`ddev start`](../usage/commands.md#start).
 
 ## Determining What Packages You Need
 
@@ -24,7 +24,7 @@ Most PHP extensions are built in the `deb.sury.org` distribution. You can Google
 
 If you need a package that is *not* a PHP package, you can view and search standard Debian packages at [packages.debian.org/stable](https://packages.debian.org/stable/), or just use Google.
 
-To test that a package will do what you want, you can [`ddev ssh`](../basics/commands.md#ssh) and `sudo apt-get update && sudo apt-get install <package>` to verify that you can install it and you get what you need. A PHP extension may require `killall -USR2 php-fpm` to take effect. After you’ve tried that, you can add the package to [`webimage_extra_packages`](../configuration/config.md#webimage_extra_packages).
+To test that a package will do what you want, you can [`ddev ssh`](../usage/commands.md#ssh) and `sudo apt-get update && sudo apt-get install <package>` to verify that you can install it and you get what you need. A PHP extension may require `killall -USR2 php-fpm` to take effect. After you’ve tried that, you can add the package to [`webimage_extra_packages`](../configuration/config.md#webimage_extra_packages).
 
 ## Adding Extra Dockerfiles for `webimage` and `dbimage`
 
@@ -42,9 +42,9 @@ For certain use cases, you might need to add directives very early on the Docker
 * `.ddev/web-build/pre.Dockerfile.*`
 * `.ddev/db-build/pre.Dockerfile.*`
 
-Examine the resultant generated Dockerfile (which you will never edit directly), at `.ddev/.webimageBuild/Dockerfile`. You can force a rebuild with [`ddev debug refresh`](../basics/commands.md#debug-refresh).
+Examine the resultant generated Dockerfile (which you will never edit directly), at `.ddev/.webimageBuild/Dockerfile`. You can force a rebuild with [`ddev debug refresh`](../usage/commands.md#debug-refresh).
 
-Examples of possible Dockerfiles are `.ddev/web-build/Dockerfile.example` and `.ddev/db-build/Dockerfile.example`, created in your project when you run [`ddev config`](../basics/commands.md#config).
+Examples of possible Dockerfiles are `.ddev/web-build/Dockerfile.example` and `.ddev/db-build/Dockerfile.example`, created in your project when you run [`ddev config`](../usage/commands.md#config).
 
 You can use the `.ddev/*-build` directory as the Docker “context” directory as well. So for example, if a file named `README.txt` exists in `.ddev/web-build`, you can use `ADD README.txt /` in the Dockerfile.
 
@@ -109,8 +109,8 @@ RUN echo "extension=${extension}.so" > /etc/php/${DDEV_PHP_VERSION}/mods-availab
 
 ### Debugging the Dockerfile Build
 
-It can be complicated to figure out what’s going on when building a Dockerfile, and even more complicated when you’re seeing it go by as part of [`ddev start`](../basics/commands.md#start).
+It can be complicated to figure out what’s going on when building a Dockerfile, and even more complicated when you’re seeing it go by as part of [`ddev start`](../usage/commands.md#start).
 
-1. Use [`ddev ssh`](../basics/commands.md#ssh) first of all to pioneer the steps you want to take. You can do all the things you need to do there and see if it works. If you’re doing something that affects PHP, you may need to `sudo killall -USR2 php-fpm` for it to take effect.
+1. Use [`ddev ssh`](../usage/commands.md#ssh) first of all to pioneer the steps you want to take. You can do all the things you need to do there and see if it works. If you’re doing something that affects PHP, you may need to `sudo killall -USR2 php-fpm` for it to take effect.
 2. Put the steps you pioneered into `.ddev/web-build/Dockerfile` as above.
 3. If you can’t figure out what’s failing or why, then `~/.ddev/bin/docker-compose -f .ddev/.ddev-docker-compose-full.yaml build web --no-cache --progress=plain` to see what’s happening during the Dockerfile build.

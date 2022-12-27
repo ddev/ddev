@@ -15,7 +15,7 @@ For any setup, including the [DDEV Integration Plugin](https://plugins.jetbrains
 
 ### Setup Technique Without [DDEV Integration Plugin](https://plugins.jetbrains.com/plugin/18813-ddev-integration)
 
-1. Start your project by running [`ddev start`](../basics/commands.md#start).
+1. Start your project by running [`ddev start`](../usage/commands.md#start).
 2. Open the DDEV project. In this example, the project name is “d9” and the site is “d9.ddev.site”.
     - If you’re on Windows, running PhpStorm on the Windows side but using WSL2 for your DDEV project, open the project as a WSL2 project. In other words, in the *Open* dialog, browse to `\\wsl$\Ubuntu\home\rfay\workspace\d9` (in this example). (If you’re running PhpStorm inside WSL2, there are no special instructions.)
 3. Under *Build, Execution, Deployment* → *Docker*, set the correct Docker provider, for example “Colima” or “Docker for Mac”.

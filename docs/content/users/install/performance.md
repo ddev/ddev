@@ -39,7 +39,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 
     We recommend enabling Mutagen globally with `ddev config global --mutagen-enabled`. You can disable it again with `ddev mutagen reset && ddev config global --mutagen-enabled=false`.
 
-    If you’d rather use Mutagen on a specific project, run [`ddev stop`](../basics/commands.md#stop), enable it with `ddev config --mutagen-enabled`, and [`ddev start`](../basics/commands.md#start) again.
+    If you’d rather use Mutagen on a specific project, run [`ddev stop`](../usage/commands.md#stop), enable it with `ddev config --mutagen-enabled`, and [`ddev start`](../usage/commands.md#start) again.
 
     You can’t disable Mutagen on individual projects if it’s enabled globally.
     
@@ -74,9 +74,9 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
     * **Mutagen is asynchronous.**  
     A massive change in either filesystem can result in lag as all changed files are handled. You can use `ddev mutagen monitor` to get a better look at what’s happening.
     * **You can manually trigger a sync.**  
-    [`ddev start`](../basics/commands.md#start) and [`ddev stop`](../basics/commands.md#stop) automatically force a Mutagen sync. You can cause an explicit sync with `ddev mutagen sync` and see syncing status with [`ddev mutagen status`](../basics/commands.md#mutagen-status). 
+    [`ddev start`](../usage/commands.md#start) and [`ddev stop`](../usage/commands.md#stop) automatically force a Mutagen sync. You can cause an explicit sync with `ddev mutagen sync` and see syncing status with [`ddev mutagen status`](../usage/commands.md#mutagen-status). 
     * **Be mindful of in-container Composer actions.**  
-    If you run Composer actions inside the container with [`ddev ssh`](../basics/commands.md#ssh), it’s a good idea to run [`ddev mutagen sync`](../basics/commands.md#mutagen-sync) and make sure they’re synced as soon as possible. Most people won’t notice the difference and Mutagen will get it synced soon enough.
+    If you run Composer actions inside the container with [`ddev ssh`](../usage/commands.md#ssh), it’s a good idea to run [`ddev mutagen sync`](../usage/commands.md#mutagen-sync) and make sure they’re synced as soon as possible. Most people won’t notice the difference and Mutagen will get it synced soon enough.
     * **Perform big Git operations on the host side.**  
     Git actions that change lots of files, like switching branches, are best done on the host side and not inside the container. You may want to do an explicit `ddev mutagen sync` command after doing something like that to be sure all changes are picked up quickly.
     * **Share projects carefully with non-Mutagen users.**  
@@ -99,7 +99,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
     
     Actions by those programs can also set off massive filesystem changes.
     
-    You should run [`ddev mutagen sync`](../basics/commands.md#mutagen-sync) in order to get things into sync, or simply wait.
+    You should run [`ddev mutagen sync`](../usage/commands.md#mutagen-sync) in order to get things into sync, or simply wait.
     
     <a name="mutagen-config"></a>
     
@@ -112,7 +112,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
     If you edit the `.ddev/mutagen/mutagen.yml` file:
 
     * Remove the `#ddev-generated` line
-    * Execute a [`ddev mutagen reset`](../basics/commands.md#mutagen-reset) to avoid the situation where the Docker volume and Mutagen session still have files from an older configuration.
+    * Execute a [`ddev mutagen reset`](../usage/commands.md#mutagen-reset) to avoid the situation where the Docker volume and Mutagen session still have files from an older configuration.
 
     The most likely thing you'll want to do is to exclude a path from mutagen syncing, which you can do in the `paths:` section of the `ignore:` stanza in the `.ddev/mutagen/mutagen.yml`.
 
@@ -185,7 +185,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 
     ### Safe to Use with Other Mutagen Installations
 
-    DDEV requires and provides a specific version of Mutagen, which you can see running [`ddev version`](../basics/commands.md#version).  If another `mutagen` instance or daemon is installed on your workstation it doesn't matter, because DDEV's version runs separately and uses a different data directory.
+    DDEV requires and provides a specific version of Mutagen, which you can see running [`ddev version`](../usage/commands.md#version).  If another `mutagen` instance or daemon is installed on your workstation it doesn't matter, because DDEV's version runs separately and uses a different data directory.
 
 === "NFS"
 
@@ -204,10 +204,10 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 
     1. Make sure DDEV is already working and you can use it.
     2. Use the script below for your OS to configure the NFS server and exports files.
-    3. Test that NFS is working correctly by using [`ddev debug nfsmount`](../basics/commands.md#debug-nfsmount) in a project directory. The first line should report something like “Successfully accessed NFS mount of /path/to/project”.
+    3. Test that NFS is working correctly by using [`ddev debug nfsmount`](../usage/commands.md#debug-nfsmount) in a project directory. The first line should report something like “Successfully accessed NFS mount of /path/to/project”.
     4. Enable NFS mounting globally with `ddev config global --nfs-mount-enabled`.  
     You can also configure NFS mounting on a per-project basis with `ddev config --nfs-mount-enabled` in the project directory, but this is unusual. If NFS mounting is turned on globally, it overrides any local project settings for NFS.
-    5. [`ddev start`](../basics/commands.md#start) your project and make sure it works normally. Use [`ddev describe`](../basics/commands.md#describe) to verify that NFS mounting is being used. The NFS status is near the top of the output of `ddev describe`.
+    5. [`ddev start`](../usage/commands.md#start) your project and make sure it works normally. Use [`ddev describe`](../usage/commands.md#describe) to verify that NFS mounting is being used. The NFS status is near the top of the output of `ddev describe`.
 
     !!!tip "Skip step 2 if you’re already using NFS!"
         If you’re already using NFS with Vagrant on macOS, for example, and you already have a number of exports, the default home directory export here won’t work—you’ll have overlaps in your `/etc/exports`. Or on Windows, you may want to use an NFS server other than [Winnfsd](https://github.com/winnfsd/winnfsd) like the [Allegro NFS Server](https://nfsforwindows.com).  
@@ -244,7 +244,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
             ![Enabling full disk access for nfsd](../../images/nfsd-full-disk-access.png)
 
         * Run `sudo nfsd restart`.
-        * From a project directory, run [`ddev debug nfsmount`](../basics/commands.md#debug-nfsmount) to confirm successful output.
+        * From a project directory, run [`ddev debug nfsmount`](../usage/commands.md#debug-nfsmount) to confirm successful output.
 
         #### macOS NFS Debugging
 
@@ -258,7 +258,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
             nfs.server.mount.require_resv_port = 0
             nfs.server.verbose = 3
             ```
-        * Run Console.app and search for “nfsd” at the top. Run `sudo nfsd restart` and read the messages carefully. Try running [`ddev debug nfsmount`](../basics/commands.md#debug-nfsmount) in the problematic project directory:
+        * Run Console.app and search for “nfsd” at the top. Run `sudo nfsd restart` and read the messages carefully. Try running [`ddev debug nfsmount`](../usage/commands.md#debug-nfsmount) in the problematic project directory:
             ```bash
             $ ddev debug nfsmount
             Successfully accessed NFS mount of /Users/rfay/workspace/d8composer
@@ -277,11 +277,11 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
         `sudo nssm restart nfsd`.
         
         !!!warning "Firewall Issues"
-            On Windows 10/11 you’ll likely have to allow `winnfsd` to bypass the Windows Defender Firewall. If you’re getting a timeout with no information after [`ddev start`](../basics/commands.md#start), try going to *Windows Defender Firewall* → *Allow an app or feature through Windows Defender Firewall*, *Change Settings*, *Allow another app*. Then choose `C:\Program Files\ddev\winnfsd.exe`, assuming that’s where `winnfsd` is installed.
+            On Windows 10/11 you’ll likely have to allow `winnfsd` to bypass the Windows Defender Firewall. If you’re getting a timeout with no information after [`ddev start`](../usage/commands.md#start), try going to *Windows Defender Firewall* → *Allow an app or feature through Windows Defender Firewall*, *Change Settings*, *Allow another app*. Then choose `C:\Program Files\ddev\winnfsd.exe`, assuming that’s where `winnfsd` is installed.
 
         #### Debugging `ddev start` Failures with NFS Mount Enabled
 
-        There are a number of reasons the NFS mount can fail on [`ddev start`](../basics/commands.md#start):
+        There are a number of reasons the NFS mount can fail on [`ddev start`](../usage/commands.md#start):
 
         * Firewall issues.
         * NFS Server not running.
@@ -291,8 +291,8 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 
         To debug and solve permission problems:
 
-        * Try [`ddev debug nfsmount`](../basics/commands.md#debug-nfsmount) in a project directory to see if basic NFS mounting is working. If that works, everything else probably will too.
-        * When debugging, run [`ddev restart`](../basics/commands.md#restart) in between each change. Otherwise, you can have stale mounts inside the container and you’ll miss any benefit you may find in the debugging process.
+        * Try [`ddev debug nfsmount`](../usage/commands.md#debug-nfsmount) in a project directory to see if basic NFS mounting is working. If that works, everything else probably will too.
+        * When debugging, run [`ddev restart`](../usage/commands.md#restart) in between each change. Otherwise, you can have stale mounts inside the container and you’ll miss any benefit you may find in the debugging process.
         * Inspect `~/.ddev/nfs_exports.txt`.
         * Restart the server with `sudo nssm restart nfsd`.
 
@@ -303,7 +303,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 
         1. Stop the running `winnfsd` service with `sudo nssm stop nfsd`.
         2. Run `winnfsd` manually in the foreground with `winnfsd "C:\\"`. If it immediately returns to the shell prompt, there’s likely another `nfsd` service running.
-        3. In another window, in a DDEV project directory, run [`ddev debug nfsmount`](../basics/commands.md#debug-nfsmount) to see if it can mount successfully. (The project doesn’t need to be started.) If `ddev debug nfsmount` is successful, then everything is probably going to work.
+        3. In another window, in a DDEV project directory, run [`ddev debug nfsmount`](../usage/commands.md#debug-nfsmount) to see if it can mount successfully. (The project doesn’t need to be started.) If `ddev debug nfsmount` is successful, then everything is probably going to work.
         4. Confirm `~/.ddev/nfs_exports.txt` has a line that includes your project directories, then run `sudo nssm start nfsd` and `nssm status nfsd`. The status command should show `SERVICE_RUNNING`.
         5. These [nssm](https://nssm.cc/) commands may be useful: `nssm help`, `sudo nssm start nfsd`, `sudo nssm stop nfsd`, `nssm status nfsd`, `sudo nssm edit nfsd` (pops up a window that may be hidden), and `sudo nssm remove nfsd` (also pops up a window, doesn’t work predictably if you haven’t already stopped the service).
         6. `nssm` logs failures and what it’s doing to the system event log. Run Event Viewer and filter events:  
@@ -313,7 +313,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 
 ## Freeing Up System Resources
 
-Every project you run uses system resources, and may compete for those resources. A reasonable practice is to individually stop projects you’re not using. You could also stop all projects with [`ddev poweroff`](../basics/commands.md#poweroff) and only start the one you’re working on. [`ddev list`](../basics/commands.md#list) will display all your projects along with each one’s status.
+Every project you run uses system resources, and may compete for those resources. A reasonable practice is to individually stop projects you’re not using. You could also stop all projects with [`ddev poweroff`](../usage/commands.md#poweroff) and only start the one you’re working on. [`ddev list`](../usage/commands.md#list) will display all your projects along with each one’s status.
 
 ## Docker Desktop for Mac Settings
 

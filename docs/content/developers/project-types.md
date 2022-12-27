@@ -16,9 +16,9 @@ To add a new project type:
     * `postImportDBAction` can do something after db import. I don’t see it implemented anywhere.
     * `configOverrideAction` can change default config for your project type. For example, magento2 now requires `php8.1`, so a `configOverrideAction` can change the php version.
     * `postConfigAction` gives a chance to do something at the end of config, but it doesn’t seem to be used anywhere.
-    * `postStartAction` adds actions at the end of [`ddev start`](../users/basics/commands.md#start). You'll see several implementations of this, for things like creating needed default directories, or setting permissions on files, etc.
-    * `importFilesAction` defines how [`ddev import-files`](../users/basics/commands.md#import-files) works for this project type.
-    * `defaultWorkingDirMap` allows the project type to override the project’s [`working_dir`](../users/configuration/config.md#working_dir) (where [`ddev ssh`](../users/basics/commands.md#ssh) and [`ddev exec`](../users/basics/commands.md#exec) start by default). This is mostly not done any more, as the `working_dir` is typically the project root.
+    * `postStartAction` adds actions at the end of [`ddev start`](../users/usage/commands.md#start). You'll see several implementations of this, for things like creating needed default directories, or setting permissions on files, etc.
+    * `importFilesAction` defines how [`ddev import-files`](../users/usage/commands.md#import-files) works for this project type.
+    * `defaultWorkingDirMap` allows the project type to override the project’s [`working_dir`](../users/configuration/config.md#working_dir) (where [`ddev ssh`](../users/usage/commands.md#ssh) and [`ddev exec`](../users/usage/commands.md#exec) start by default). This is mostly not done any more, as the `working_dir` is typically the project root.
 * You’ll likely need templates for settings files, use the Drupal or TYPO3 templates as examples, for example `pkg/ddevapp/drupal` and `pkg/ddevapp/typo3`. Those templates have to be loaded at runtime as well.
 * Once your project type starts working and behaving as you’d like, you’ll need to add test artifacts for it and try testing it (locally first).
     * Add your project to `TestSites` in `ddevapp_test.go`.

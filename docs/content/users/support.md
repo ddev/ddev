@@ -7,8 +7,8 @@ hide:
 
 We love to hear from you and want you to be successful with DDEV!
 
-* See the included [`ddev help`](./basics/commands.md#help) command, which includes lots of examples.
-* [FAQ](basics/faq.md)
+* See the included [`ddev help`](./usage/commands.md#help) command, which includes lots of examples.
+* [FAQ](./usage/faq.md)
 * [Discord](https://discord.gg/hCZFfAMc5k) interactive community support.
 * [DDEV issue queue](https://github.com/drud/ddev/issues) for bugs and feature requests.
 * [Twitter with tag #ddev](https://twitter.com/search?q=%23ddev&src=typd&f=live) will get to us. It’s not as good for interactive support, but we’ll answer anywhere.
