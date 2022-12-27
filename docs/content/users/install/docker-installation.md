@@ -19,7 +19,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     2. Install Colima with `brew install colima` or one of the other [installation options](https://github.com/abiosoft/colima/blob/main/docs/INSTALL.md).
     3. Start Colima with 4 CPUs, 6GB memory, 100GB storage, and Cloudflare DNS, adjusting as needed:  
     ```
-    colima start --cpu 4 --memory 6 --disk 100 --dns=1.1.1.1
+    colima start --cpu 4 --memory 6 --disk 100 --vm-type=qemu --mount-type=sshfs --dns=1.1.1.1
     ```
     4. After [installing DDEV](ddev-installation.md), configure your system to use Mutagen—essential for DDEV with Colima—with `ddev config global --mutagen-enabled`.
     
