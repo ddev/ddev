@@ -129,7 +129,7 @@ nav:
       - users/usage/commands.md
       - users/usage/developer-tools.md
       - users/usage/diagnostics.md
-      - users/usage/uninstall.md
+      - 'Uninstalling': users/usage/uninstall.md
     - 'Getting Help':
       - users/usage/faq.md
       - users/support.md
