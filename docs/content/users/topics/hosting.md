@@ -35,7 +35,7 @@ Here’s how to try it for yourself:
 
 You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s Encrypt has failed because port 80 is not open, or the DNS name is not yet resolving. (Use `docker logs ddev-router` to see Let’s Encrypt activity.)
 
-### Additional Server Setup
+## Additional Server Setup
 
 * Depending on how you’re using this, you may want to set up automated database and file backups—ideally off-site—like you would on any production system. Many CMSes have modules/plugins to allow this, and you can use `ddev export-db` or `ddev snapshot` as you see fit and do the backup on the host.
 * You may want to allow your host system to send email. On Debian/Ubuntu `sudo apt-get install postfix`. Typically you’ll need to set up reverse DNS for your system, and perhaps SPF and/or DKIM records to for more reliable delivery to other mail systems.
