@@ -795,7 +795,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 		assert.Contains(stdout, "apache-site.conf")
 		assert.NotContains(stdout, "nginx-site.conf")
 	}
-	assert.Contains(stdout, "Custom configuration takes effect")
+	assert.Contains(stdout, "Custom configuration is updated")
 	runTime()
 }
 
