@@ -154,18 +154,20 @@ nav:
           - users/debugging-profiling/blackfire-profiling.md
           - users/debugging-profiling/xhprof-profiling.md
           - users/debugging-profiling/xdebug-profiling.md
-  - 'Hosting integration':
+  - 'Hosting & Deployment':
     - users/providers/index.md
-    - users/providers/acquia.md
-    - users/providers/pantheon.md
-    - users/providers/platform.md
+    - 'Beyond Local':
+      - users/topics/sharing.md
+      - users/topics/hosting.md
+      - users/topics/remote-docker.md
+    - 'Hosting Provider Integrations':
+      - 'Acquia': users/providers/acquia.md
+      - 'Pantheon': users/providers/pantheon.md
+      - 'Platform.sh': users/providers/platform.md
   - 'Guides':
       - users/topics/phpstorm.md
-      - users/topics/sharing.md
       - users/topics/webserver.md
       - users/topics/cms-specific-help.md
-  - 'Details':
-      - users/details/alternate-uses.md
   - 'Developers':
       - developers/index.md
       - developers/building-contributing.md

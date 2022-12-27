@@ -1,16 +1,4 @@
-# Alternate DDEV Uses
-
-## Continuous Integration (CI)
-
-A number of people have found it easy to test their projects using DDEV on a CI system like [GitHub Actions](https://github.com/features/actions), [Travis CI](https://www.travis-ci.com), or [CircleCI](https://circleci.com). Instead of setting up a hosting environment for testing, they start the project using DDEV and run their tests.
-
-Examples of this approach are demonstrated in [Codeception Tests in Travis CI with DDEV and Selenium](https://dev.to/tomasnorre/codeception-tests-in-travis-ci-with-ddev-and-selenium-1607) and a [DDEV Setup GitHub Action](https://github.com/jonaseberle/github-action-setup-ddev).
-
-## Integration of DDEV Docker Images Into Other Projects
-
-You can use DDEV Docker images outside the context of the DDEV environment. People have used the `ddev-webserver` image for running tests in PhpStorm, for example.
-
-## Casual Hosting
+# Casual Hosting
 
 !!!warning "Experimental Feature!"
     This is not a replacement for scalable, managed hosting. It’s unknown how much traffic it can handle in a given environment.
