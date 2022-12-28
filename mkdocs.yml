@@ -168,7 +168,7 @@ nav:
       - users/topics/phpstorm.md
       - users/topics/webserver.md
       - users/topics/cms-specific-help.md
-  - 'Developers':
+  - 'Development':
       - developers/index.md
       - developers/building-contributing.md
       - developers/buildkite-testmachine-setup.md
