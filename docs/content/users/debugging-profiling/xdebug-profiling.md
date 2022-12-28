@@ -14,7 +14,7 @@ Although DDEV has more sophisticated profiling capabilities with [xhprof](xhprof
     xdebug.profiler_output_name=trace.%c%p%r%u.out
     ```
 
-* Enable Xdebug with [`ddev xdebug on`](../basics/commands.md#xdebug).
+* Enable Xdebug with [`ddev xdebug on`](../usage/commands.md#xdebug).
 * Make an HTTP request to the DDEV project and the profile will be located in `.ddev/xdebug` directory.
 * Analyze it with any call graph viewer, for example [kcachegrind](https://kcachegrind.github.io/html/Home.html).
 * When you’re done, execute `ddev xdebug off` to avoid generating unneeded profile files.

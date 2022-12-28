@@ -29,7 +29,7 @@ No. Your code continues to live on your workstation, and your database is safely
 
 The answer depends on where you’re connecting _from_.
 
-The [`ddev describe`](../basics/commands.md#describe) command includes database connection details in a row like this:
+The [`ddev describe`](../usage/commands.md#describe) command includes database connection details in a row like this:
 
 ```
 │ db         │ OK   │ InDocker: ddev-mysite-db:3306 │ mariadb:10.3       │
@@ -52,7 +52,7 @@ Yes, you can create additional databases and manually do whatever you need on th
 ddev import-db --target-db=extradb --src=.tarballs/extradb.sql.gz
 ```
 
-You can use [`ddev mysql`](../basics/commands.md#mysql) or `ddev psql` to execute queries, or use the MySQL/PostgreSQL clients within `ddev ssh` or `ddev ssh -s db`. See the [Database Management](database-management.md) page.
+You can use [`ddev mysql`](../usage/commands.md#mysql) or `ddev psql` to execute queries, or use the MySQL/PostgreSQL clients within `ddev ssh` or `ddev ssh -s db`. See the [Database Management](database-management.md) page.
 
 ### Can different projects communicate with each other?
 
@@ -73,7 +73,7 @@ Yes, as long as they’re configured with different ports. It doesn’t matter w
 
 It’s probably easiest, however, to shut down one before using the other.
 
-For example, if you use Lando for one project, do a `lando poweroff` before using DDEV, and then run [`ddev poweroff`](../basics/commands.md#poweroff) before using Lando again. If you run nginx or Apache locally, stop them before using DDEV. The [troubleshooting](troubleshooting.md) section goes into more detail about identifying and resolving port conflicts.
+For example, if you use Lando for one project, do a `lando poweroff` before using DDEV, and then run [`ddev poweroff`](../usage/commands.md#poweroff) before using Lando again. If you run nginx or Apache locally, stop them before using DDEV. The [troubleshooting](troubleshooting.md) section goes into more detail about identifying and resolving port conflicts.
 
 ## Performance & Troubleshooting
 
@@ -109,7 +109,7 @@ Start by completely turning NFS off for your projects with `ddev config --nfs-mo
 
 You’ll want to update DDEV using the same method you chose to install it. Since upgrading is basically the same as installing, you can follow [DDEV Installation](../install/ddev-installation.md) to upgrade.
 
-You can use the [`self-upgrade`](../basics/commands.md#self-upgrade) command for getting instructions tailored to your installation.
+You can use the [`self-upgrade`](../usage/commands.md#self-upgrade) command for getting instructions tailored to your installation.
 
 * On macOS you likely installed via Homebrew; run `brew update && brew upgrade ddev`.
 <!-- markdownlint-disable-next-line -->
@@ -148,7 +148,7 @@ You can change the major PHP version and choose between nginx+fpm (default) and 
 
 ### How do I completely destroy a project?
 
-Use [`ddev delete <project>`](../basics/commands.md#delete) to destroy a project. By default, a [`ddev snapshot`](../basics/commands.md#snapshot) of your database is taken, but you can skip this using `ddev delete --omit-snapshot` or `ddev delete --omit-snapshot -y`. See `ddev delete -h` for options. It’s up to you to then delete the code directory.
+Use [`ddev delete <project>`](../usage/commands.md#delete) to destroy a project. By default, a [`ddev snapshot`](../usage/commands.md#snapshot) of your database is taken, but you can skip this using `ddev delete --omit-snapshot` or `ddev delete --omit-snapshot -y`. See `ddev delete -h` for options. It’s up to you to then delete the code directory.
 
 ### What if I don’t like the settings files or gitignores DDEV creates?
 
@@ -170,7 +170,7 @@ Delete it and migrate it to a new project with your preferred name:
 
 ### How can I move a project to another directory?
 
-Run [`ddev stop --unlist`](../basics/commands.md#stop), then move the directory, then run [`ddev start`](../basics/commands.md#start) in the new directory.
+Run [`ddev stop --unlist`](../usage/commands.md#stop), then move the directory, then run [`ddev start`](../usage/commands.md#start) in the new directory.
 
 ### How can I move a project to another workstation?
 
@@ -195,7 +195,7 @@ DDEV doesn’t have control over your computer’s name resolution, so it doesn�
 ### How can I configure a project with the defaults without hitting <kbd>RETURN</kbd> a bunch of times?
 
 Use `ddev config --auto` to set the docroot and project type based on the discovered code.  
-If anything in `.ddev/config.yaml` is wrong, you can edit that directly or use [`ddev config`](../basics/commands.md#config) commands to update settings.
+If anything in `.ddev/config.yaml` is wrong, you can edit that directly or use [`ddev config`](../usage/commands.md#config) commands to update settings.
 
 ## Getting Involved
 

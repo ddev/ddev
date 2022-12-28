@@ -35,7 +35,7 @@ A project’s `.ddev` directory can be intimidating at first, so let’s take a 
 : Can be used to provide a [custom Dockerfile](../extend/customizing-images.md) for the database container.
 
 `db_snapshots` directory
-: Where snapshots go when you run the [`ddev snapshot`](../basics/commands.md#snapshot) command. You can safely delete anything in here that you don’t need.
+: Where snapshots go when you run the [`ddev snapshot`](../usage/commands.md#snapshot) command. You can safely delete anything in here that you don’t need.
 
 `docker-compose.*.yaml` files
 : Where Docker-friendly users can provide their own [custom compose files](../extend/custom-compose-files.md) that add or override services. Read more in [Additional Service Configurations & Add-ons](../extend/additional-services.md) and check out examples in [ddev-contrib](https://github.com/drud/ddev-contrib).
@@ -59,7 +59,7 @@ A project’s `.ddev` directory can be intimidating at first, so let’s take a 
 : Contains `postgres/postgresql.conf`, which can be edited if needed. Remove the `#ddev-generated` line at the top to take it over.
 
 `providers` directory
-: Contains examples and implementations to demonstrate how the [`ddev pull`](../basics/commands.md#pull) command can work with [hosting providers](../providers/index.md).
+: Contains examples and implementations to demonstrate how the [`ddev pull`](../usage/commands.md#pull) command can work with [hosting providers](../providers/index.md).
 
 `traefik` directory
 : Configures the `ddev-router` when it is using [Traefik](../configuration/experimental.md#traefik-router).
@@ -157,7 +157,7 @@ Although it’s not common usage, different projects can communicate with each o
 Now for the two oddball global containers (there’s only one of each):
 
 * The `ddev-router` container is a “reverse proxy”. It takes incoming HTTP/S requests, looks up the hostname in the incoming URL, and routes it to the correct project’s `ddev-webserver`. Depending on the project’s configuration with [`additional_hostnames`](../configuration/config.md#additional_hostnames) and [`additional_fqdns`](../configuration/config.md#additional_fqdns), it can route many different URLs to a single project’s `ddev-webserver`. If, like most people, you use the named URLs like `https://something.ddev.site`, your request goes through the router. When you use the `127.0.0.1` URLs, the requests go directly to the `ddev-webserver`.
-* The `ddev-ssh-agent` container runs an `ssh-agent` inside the Docker network so that after run [`ddev auth ssh`](../basics/commands.md#auth-ssh) all the different projects can use your SSH keys for outgoing requests—like private Composer access or SCP from a remote host.
+* The `ddev-ssh-agent` container runs an `ssh-agent` inside the Docker network so that after run [`ddev auth ssh`](../usage/commands.md#auth-ssh) all the different projects can use your SSH keys for outgoing requests—like private Composer access or SCP from a remote host.
 
 Here’s a basic diagram of how it works inside the Docker network:
 

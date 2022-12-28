@@ -2,7 +2,7 @@
 
 DDEV projects can be extended to provide additional add-ons, including services. You can define these add-ons using docker-compose files in the project’s `.ddev` directory.
 
-Anyone can create their own services with a `.ddev/docker-compose.*.yaml` file, and a growing number of popular services are supported and tested, and can be installed using the [`ddev get`](../basics/commands.md#get) command.
+Anyone can create their own services with a `.ddev/docker-compose.*.yaml` file, and a growing number of popular services are supported and tested, and can be installed using the [`ddev get`](../usage/commands.md#get) command.
 
 Use `ddev get --list` to see available add-ons. To see all possible add-ons (not necessarily supported or tested), use `ddev get --list --all`.
 

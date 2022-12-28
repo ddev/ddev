@@ -13,7 +13,7 @@ You can use remote Docker instances, whether on the internet, inside your networ
 * Make sure you can access the remote machine using `docker ps`.
 * Bind mounts cannot work on a remote Docker setup, so you must use `ddev config global --no-bind-mounts`. This will cause DDEV to push needed information to and from the remote Docker instance when needed. This also automatically turns on Mutagen caching.
 * You may want to use a FQDN other than `*.ddev.site` because the DDEV site will *not* be at `127.0.0.1`. For example, `ddev config --fqdns=debian-11` and then use `https://debian-11` to access the site.
-* If the Docker host is reachable on the internet, you can actually enable real HTTPS for it using Let’s Encrypt as described in [Casual Webhosting](../details/alternate-uses.md#casual-project-webhosting-on-the-internet-including-lets-encrypt). Just make sure port 2375 is not available on the internet.
+* If the Docker host is reachable on the internet, you can actually enable real HTTPS for it using Let’s Encrypt as described in [Casual Webhosting](../topics/hosting.md). Just make sure port 2375 is not available on the internet.
 
 ## Rancher Desktop on macOS
 
@@ -29,7 +29,7 @@ Rancher Desktop integration currently has no automated testing for DDEV integrat
 
 ## Traefik Router
 
-DDEV’s router plays an important role in its [container architecture](../basics/architecture.md#container-architecture), receiving most HTTP and HTTPS traffic for requests like `*.ddev.site` and delivering them to the relevant project’s web container.
+DDEV’s router plays an important role in its [container architecture](../usage/architecture.md#container-architecture), receiving most HTTP and HTTPS traffic for requests like `*.ddev.site` and delivering them to the relevant project’s web container.
 
 `ddev-router` has been based on a forked, poorly-documented nginx reverse proxy. Versions after DDEV v1.21.3 add a new router based on the popular [Traefik Proxy](https://traefik.io/traefik/), available as an experimental feature until it becomes the default in a future release. Run the following to enable it:
 
@@ -66,4 +66,4 @@ Project configuration is automatically generated in the project’s `.ddev/traef
 ### Debugging Traefik Routing
 
 Traefik provides a dynamic description of its configuration you can visit at `http://localhost:9999`.
-When things seem to be going wrong, run [`ddev poweroff`](../basics/commands.md#poweroff) and then start your project again by running [`ddev start`](../basics/commands.md#start). Examine the router’s logs to see what the Traefik daemon is doing (or failing at) by running `docker logs ddev-router` or `docker logs -f ddev-router`.
+When things seem to be going wrong, run [`ddev poweroff`](../usage/commands.md#poweroff) and then start your project again by running [`ddev start`](../usage/commands.md#start). Examine the router’s logs to see what the Traefik daemon is doing (or failing at) by running `docker logs ddev-router` or `docker logs -f ddev-router`.

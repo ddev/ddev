@@ -5,13 +5,13 @@ DDEV configuration is stored in YAML files that come in two flavors:
 1. :octicons-file-directory-16: **Project** `.ddev/config.yaml` settings, with optional [environmental override](#environmental-overrides) variants.
 2. :octicons-globe-16: **Global** `$HOME/.ddev/global_config.yaml` settings that can apply to all projects.
 
-Most of these settings take effect when you run [`ddev start`](../basics/commands.md#start).
+Most of these settings take effect when you run [`ddev start`](../usage/commands.md#start).
 
 ## Managing Configuration
 
 ### Setting Options
 
-You can hand-edit the YAML files DDEV creates for you after running [`ddev config`](../basics/commands.md#config), and you can also define most settings with equivalent CLI arguments:
+You can hand-edit the YAML files DDEV creates for you after running [`ddev config`](../usage/commands.md#config), and you can also define most settings with equivalent CLI arguments:
 
 === "config.yaml"
 
@@ -71,7 +71,7 @@ The relative path, from the project root, to the directory containing `composer.
 
 ## `composer_version`
 
-Composer version for the web container and the [`ddev composer`](../basics/commands.md#composer) command.
+Composer version for the web container and the [`ddev composer`](../usage/commands.md#composer) command.
 
 | Type | Default | Usage
 | -- | -- | --
@@ -144,7 +144,7 @@ Relative path to the document root containing `index.php` or `index.html`.
 
 ## `fail_on_hook_fail`
 
-Whether [`ddev start`](../basics/commands.md#start) should be interrupted by a failing [hook](../configuration/hooks.md), on a single project or for all projects if used globally.
+Whether [`ddev start`](../usage/commands.md#start) should be interrupted by a failing [hook](../configuration/hooks.md), on a single project or for all projects if used globally.
 
 | Type | Default | Usage
 | -- | -- | --
@@ -166,9 +166,9 @@ Port for binding database server to localhost interface.
 | -- | -- | --
 | :octicons-file-directory-16: project | automatic |
 
-Not commonly used. Can be a specific port number for a fixed database port. If unset, the port will be assigned automatically and change each time [`ddev start`](../basics/commands.md#start) is run.
+Not commonly used. Can be a specific port number for a fixed database port. If unset, the port will be assigned automatically and change each time [`ddev start`](../usage/commands.md#start) is run.
 
-Can be a specific port number for a fixed database port, which can be useful for configuration of host-side database clients. (May still be easier to use [`ddev mysql`](../basics/commands.md#mysql), `ddev psql`, `ddev sequelpro`, etc., which handle changing ports automatically, as does the sample command `ddev mysqlworkbench`.)
+Can be a specific port number for a fixed database port, which can be useful for configuration of host-side database clients. (May still be easier to use [`ddev mysql`](../usage/commands.md#mysql), `ddev psql`, `ddev sequelpro`, etc., which handle changing ports automatically, as does the sample command `ddev mysqlworkbench`.)
 
 ## `host_https_port`
 
@@ -178,7 +178,7 @@ Specific, persistent HTTPS port for direct binding to localhost interface.
 | -- | -- | --
 | :octicons-file-directory-16: project | automatic |
 
-Not commonly used. Can be a specific port number for a fixed HTTPS URL. If unset, the port will be assigned automatically and change each time [`ddev start`](../basics/commands.md#start) is run.
+Not commonly used. Can be a specific port number for a fixed HTTPS URL. If unset, the port will be assigned automatically and change each time [`ddev start`](../usage/commands.md#start) is run.
 
 Example: `59001` will have the project always use `https://127.0.0.1:59001` for the localhost URL—used less commonly than the named URL which is better to rely on.
 
@@ -190,13 +190,13 @@ Specific, persistent HTTP port for direct binding to localhost interface.
 | -- | -- | --
 | :octicons-file-directory-16: project | automatic |
 
-Not commonly used. Can be a specific port number for a fixed HTTP URL. If unset, the port will be assigned automatically and change each time [`ddev start`](../basics/commands.md#start) is run.
+Not commonly used. Can be a specific port number for a fixed HTTP URL. If unset, the port will be assigned automatically and change each time [`ddev start`](../usage/commands.md#start) is run.
 
 Example: `59000` will have the project always use `http://127.0.0.1:59000` for the localhost URL—used less commonly than the named URL which is better to rely on.
 
 ## `instrumentation_opt_in`
 
-Whether to allow [instrumentation reporting](../details/opting-in.md).
+Whether to allow [instrumentation reporting](../usage/diagnostics.md).
 
 | Type | Default | Usage
 | -- | -- | --
@@ -212,7 +212,7 @@ Internet detection timeout in milliseconds.
 | -- | -- | --
 | :octicons-globe-16: global | `1000` (1 second) | Can be any integer.
 
-DDEV must detect whether the internet is working to determine whether to add hostnames to `/etc/hosts`. In rare cases, you may need to increase this value if you have slow but working internet. See [FAQ](../basics/faq.md) and [GitHub issue](https://github.com/drud/ddev/issues/2409#issuecomment-662448025).
+DDEV must detect whether the internet is working to determine whether to add hostnames to `/etc/hosts`. In rare cases, you may need to increase this value if you have slow but working internet. See [FAQ](../usage/faq.md) and [GitHub issue](https://github.com/drud/ddev/issues/2409#issuecomment-662448025).
 
 ## `letsencrypt_email`
 
@@ -222,7 +222,7 @@ Email associated with Let’s Encrypt feature. (Works in conjunction with [`use_
 | -- | -- | --
 | :octicons-globe-16: global | `` |
 
-Set with `ddev global --letsencrypt-email=me@example.com`. Used with the [casual hosting](../details/alternate-uses.md#casual-hosting) feature.
+Set with `ddev global --letsencrypt-email=me@example.com`. Used with the [casual hosting](../topics/hosting.md) feature.
 
 ## `mailhog_https_port`
 
@@ -273,7 +273,7 @@ This is typically a global setting. If it’s ever set in both places, the globa
 
 ## `ngrok_args`
 
-Extra flags for [configuring ngrok](https://ngrok.com/docs/ngrok-agent/config) when [sharing projects](../topics/sharing.md) with the [`ddev share`](../basics/commands.md#share) command.
+Extra flags for [configuring ngrok](https://ngrok.com/docs/ngrok-agent/config) when [sharing projects](../topics/sharing.md) with the [`ddev share`](../usage/commands.md#share) command.
 
 | Type | Default | Usage
 | -- | -- | --
@@ -310,7 +310,7 @@ Node.js version for the web container’s “system” version.
 | -- | -- | --
 | :octicons-file-directory-16: project | current LTS version | Can be `14`, `16`, or `18`.
 
-`nvm` is also available inside the container and via [`ddev nvm`](../basics/commands.md#nvm), and can be set to any valid version including much older ones.
+`nvm` is also available inside the container and via [`ddev nvm`](../usage/commands.md#nvm), and can be set to any valid version including much older ones.
 
 ## `omit_containers`
 
@@ -402,7 +402,7 @@ Port for DDEV router’s HTTP traffic.
 | -- | -- | --
 | :octicons-file-directory-16: project | `80` | Usually changed only if there’s a conflicting process using that port.
 
-See the [Troubleshooting](../basics/troubleshooting.md#web-server-ports-already-occupied) page for more on addressing port conflicts.
+See the [Troubleshooting](../usage/troubleshooting.md#web-server-ports-already-occupied) page for more on addressing port conflicts.
 
 ## `router_https_port`
 
@@ -412,21 +412,21 @@ Port for DDEV router’s HTTPS traffic.
 | -- | -- | --
 | :octicons-file-directory-16: project | `443` | Usually changed only if there’s a conflicting process using that port.
 
-See the [Troubleshooting](../basics/troubleshooting.md#web-server-ports-already-occupied) page for more on addressing port conflicts.
+See the [Troubleshooting](../usage/troubleshooting.md#web-server-ports-already-occupied) page for more on addressing port conflicts.
 
 ## `simple-formatting`
 
-Whether to disable most [`ddev list`](../basics/commands.md#list) and [`ddev describe`](../basics/commands.md#describe) table formatting.
+Whether to disable most [`ddev list`](../usage/commands.md#list) and [`ddev describe`](../usage/commands.md#describe) table formatting.
 
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-globe-16: global | `false` | Can be `true` or `false`.
 
-When `true`, turns off most table formatting in [`ddev list`](../basics/commands.md#list) and [`ddev describe`](../basics/commands.md#describe) and suppresses colorized text everywhere.
+When `true`, turns off most table formatting in [`ddev list`](../usage/commands.md#list) and [`ddev describe`](../usage/commands.md#describe) and suppresses colorized text everywhere.
 
 ## `table-style`
 
-Style for [`ddev list`](../basics/commands.md#list) and [`ddev describe`](../basics/commands.md#describe).
+Style for [`ddev list`](../usage/commands.md#list) and [`ddev describe`](../usage/commands.md#describe).
 
 | Type | Default | Usage
 | -- | -- | --
@@ -470,7 +470,7 @@ Whether to use DNS instead of editing `/etc/hosts`.
 
 When `false`, DDEV will always update the `/etc/hosts` file with the project hostname instead of using DNS for name resolution.
 
-See [Using DDEV Offline](../details/offline-usage.md).
+See [Using DDEV Offline](../usage/offline.md).
 
 ## `use_docker_compose_from_path`
 
@@ -493,7 +493,7 @@ Whether to use hardened images for internet deployment.
 | -- | -- | --
 | :octicons-globe-16: global | `false` | Can `true` or `false`.
 
-When `true`, more secure hardened images are used for an internet deployment. These do not include sudo in the web container, and the container is run without elevated privileges. Generally used with the [casual hosting](../details/alternate-uses.md#casual-hosting) feature.
+When `true`, more secure hardened images are used for an internet deployment. These do not include sudo in the web container, and the container is run without elevated privileges. Generally used with the [casual hosting](../topics/hosting.md) feature.
 
 ## `use_letsencrypt`
 
@@ -503,7 +503,7 @@ Whether to enable Let’s Encrypt integration. (Works in conjunction with [`lets
 | -- | -- | --
 | :octicons-globe-16: global | `false` | Can `true` or `false`.
 
-May also be set via `ddev global --use-letsencrypt` or `ddev global --use-letsencrypt=false`. When `true`, `letsencrypt_email` must also be set and the system must be available on the internet. Used with the [casual hosting](../details/alternate-uses.md#casual-hosting) feature.
+May also be set via `ddev global --use-letsencrypt` or `ddev global --use-letsencrypt=false`. When `true`, `letsencrypt_email` must also be set and the system must be available on the internet. Used with the [casual hosting](../topics/hosting.md) feature.
 
 ## `web_environment`
 
@@ -564,11 +564,11 @@ To change from the default `nginx-fpm` to `apache-fpm`, for example, you would n
 webserver_type: apache-fpm
 ```
 
-Then run the [`ddev restart`](../basics/commands.md#restart) command to have the change take effect.
+Then run the [`ddev restart`](../usage/commands.md#restart) command to have the change take effect.
 
 ## `working_dir`
 
-Working directories used by [`ddev exec`](../basics/commands.md#exec) and [`ddev ssh`](../basics/commands.md#ssh).
+Working directories used by [`ddev exec`](../usage/commands.md#exec) and [`ddev ssh`](../usage/commands.md#ssh).
 
 | Type | Default | Usage
 | -- | -- | --
@@ -582,7 +582,7 @@ Whether Xdebug should be enabled for [step debugging](../debugging-profiling/ste
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `false` | Please leave this `false` in most cases. Most people use [`ddev xdebug`](../basics/commands.md#xdebug) and `ddev xdebug off` commands.
+| :octicons-file-directory-16: project | `false` | Please leave this `false` in most cases. Most people use [`ddev xdebug`](../usage/commands.md#xdebug) and `ddev xdebug off` commands.
 
 ## `xdebug_ide_location`
 

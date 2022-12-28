@@ -34,7 +34,7 @@ This configuration would result in working FQDNs of `somename.ddev.site`, `examp
 
 !!!warning "Don’t use the same `additional_fqdns` or `additional_hostnames` in two different projects."
 
-    If you see `ddev-router` status become unhealthy in [`ddev list`](../basics/commands.md#list), it’s most often a result of trying to use conflicting FQDNs in more than one project. `example.com` can only be assigned to one project, or it will break `ddev-router`.
+    If you see `ddev-router` status become unhealthy in [`ddev list`](../usage/commands.md#list), it’s most often a result of trying to use conflicting FQDNs in more than one project. `example.com` can only be assigned to one project, or it will break `ddev-router`.
 
 !!!warning "May not work predictably everywhere."
 

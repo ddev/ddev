@@ -1,21 +1,21 @@
 # Built-in Developer Tools
 
-Run [`ddev describe`](../basics/commands.md#describe) to see the project information and services available for your project and how to access them.
+Run [`ddev describe`](../usage/commands.md#describe) to see the project information and services available for your project and how to access them.
 
 ## Command-line Tools in the Containers
 
-Hundreds of useful developer tools are included inside the containers and can be used via [`ddev exec`](../basics/commands.md#exec) or [`ddev ssh`](../basics/commands.md#ssh). Some of those include:
+Hundreds of useful developer tools are included inside the containers and can be used via [`ddev exec`](../usage/commands.md#exec) or [`ddev ssh`](../usage/commands.md#ssh). Some of those include:
 
 * MySQL client (`mysql`) - Command-line interface for interacting with MySQL/MariaDB.
 * PostgreSQL client (`psql`) - Command-line tool for PostgreSQL.
 * [Drush](http://www.drush.org) - Command-line shell and Unix scripting interface for Drupal.
 * [PHIVE](https://phar.io/) - Command line tool for “PHAR Installation and Verification Environment”.
 * [WP-CLI](http://wp-cli.org/) - Command-line tools for managing WordPress installations, available both as `wp` and as `wp-cli`.
-* `npm`, `nvm`, and `yarn` (these also have `ddev` shortcuts like [`ddev npm`](../basics/commands.md#npm), [`ddev nvm`](../basics/commands.md#nvm), [`ddev yarn`](../basics/commands.md#yarn)).
+* `npm`, `nvm`, and `yarn` (these also have `ddev` shortcuts like [`ddev npm`](../usage/commands.md#npm), [`ddev nvm`](../usage/commands.md#nvm), [`ddev yarn`](../usage/commands.md#yarn)).
 * `node`
 * `sqlite3`
 
-These tools can be accessed for single commands using [`ddev exec <command>`](cli-usage.md#executing-commands-in-containers) or [`ddev ssh`](cli-usage.md#ssh-into-containers) for an interactive `bash` or `sh` session.
+These tools can be accessed for single commands using [`ddev exec <command>`](cli.md#executing-commands-in-containers) or [`ddev ssh`](cli.md#ssh-into-containers) for an interactive `bash` or `sh` session.
 
 You can also add tools that are not provided by default using [`webimage_extra_packages` or a custom Dockerfile](../extend/customizing-images.md).
 
@@ -34,7 +34,7 @@ For example:
 
 `ddev composer create --no-dev "typo3/cms-base-distribution:^9"`
 
-To execute a fully-featured `composer create-project` command, you can execute the command from within the container after executing [`ddev ssh`](../basics/commands.md#ssh), or pass the full command to [`ddev exec`](../basics/commands.md#exec), like so:
+To execute a fully-featured `composer create-project` command, you can execute the command from within the container after executing [`ddev ssh`](../usage/commands.md#ssh), or pass the full command to [`ddev exec`](../usage/commands.md#exec), like so:
 
 `ddev exec composer create-project ...`
 
@@ -53,7 +53,7 @@ DDEV uses Composer 2 by default. Use the `--composer-version` option to roll bac
 
 DDEV attempts to help with Composer and some configurations of Docker Desktop for Windows that introduce complex filesystem workarounds.
 
-Use [`ddev composer`](../basics/commands.md#composer) (Composer inside the container) instead of using `composer` on the host side, because it uses the right version of PHP and all its extensions for your project:
+Use [`ddev composer`](../usage/commands.md#composer) (Composer inside the container) instead of using `composer` on the host side, because it uses the right version of PHP and all its extensions for your project:
 
 * On some older configurations of Docker Desktop for Windows, symlinks are created in the container as “simulated symlinks”, or XSym files. These special text files behave as symlinks inside the container (on CIFS filesystem), but appear as simple text files on the Windows host. (On the CIFS filesystem used by Docker for Windows, inside the container, there is no capability to create real symlinks even though Windows now has this capability.)
 * DDEV attempts to clean up for this situation. Since Windows 10/11+ (in developer mode) can create real symlinks, DDEV scans your repository after a `ddev composer` command and attempts to convert XSym files into real symlinks. On older versions of Windows 10, it can only do this if your Windows 10 workstation is set to “Developer Mode”.
@@ -69,7 +69,7 @@ Use [`ddev composer`](../basics/commands.md#composer) (Composer inside the conta
 
 [MailHog](https://github.com/MailHog/MailHog) is a mail catcher that’s configured to capture and display emails sent by PHP in the development environment.
 
-After your project is started, access the MailHog web interface at `https://mysite.ddev.site:8026`, or run [`ddev launch -m`](../basics/commands.md#launch) to launch it in your default browser.
+After your project is started, access the MailHog web interface at `https://mysite.ddev.site:8026`, or run [`ddev launch -m`](../usage/commands.md#launch) to launch it in your default browser.
 
 MailHog will **not** intercept emails if your application is configured to use SMTP or a third-party ESP integration.
 
@@ -96,13 +96,13 @@ It’s possible in many cases to use development tools installed on your host ma
 
 ### Database Connections from the Host
 
-If you need to connect to your project’s database from your workstation, run [`ddev describe`](../basics/commands.md#describe) to show the database connection information, like `Host: localhost:49156`.
+If you need to connect to your project’s database from your workstation, run [`ddev describe`](../usage/commands.md#describe) to show the database connection information, like `Host: localhost:49156`.
 
-Each project’s database port is unique, and randomly chosen from available ports on your system when you run [`ddev start`](../basics/commands.md#start).
+Each project’s database port is unique, and randomly chosen from available ports on your system when you run [`ddev start`](../usage/commands.md#start).
 
-You can force this port to be the same on every [`ddev start`](../basics/commands.md#start) by setting [`host_db_port`](../configuration/config.md#host_db_port) in the project’s `.ddev/config.yaml`. For example, `host_db_port: "49156"` or `ddev config --host-db-port=49156`. This value needs to be different on each running DDEV project, and unless it is set, the database port will change on every `ddev start`.
+You can force this port to be the same on every [`ddev start`](../usage/commands.md#start) by setting [`host_db_port`](../configuration/config.md#host_db_port) in the project’s `.ddev/config.yaml`. For example, `host_db_port: "49156"` or `ddev config --host-db-port=49156`. This value needs to be different on each running DDEV project, and unless it is set, the database port will change on every `ddev start`.
 
-You can use this port with various tools that need a direct port, like `mysql` or `psql` clients, but it’s usually easiest to use [`ddev mysql`](../basics/commands.md#mysql), `ddev psql`, `ddev sequelace`, [`ddev tableplus`](../basics/commands.md#tableplus), etc, which set everything up for you.
+You can use this port with various tools that need a direct port, like `mysql` or `psql` clients, but it’s usually easiest to use [`ddev mysql`](../usage/commands.md#mysql), `ddev psql`, `ddev sequelace`, [`ddev tableplus`](../usage/commands.md#tableplus), etc, which set everything up for you.
 
 (If you use PhpStorm and its integrated database browser, use the [DDEV Integration Plugin](https://plugins.jetbrains.com/plugin/18813-ddev-integration) to manage all of this for you.)
 
@@ -122,7 +122,7 @@ On Drupal 8+, if you want to use `drush uli` on the host (or other Drush command
 To use Terminus, you’ll first need to:
 
 1. Use a machine token. (See [Pantheon provider discussion](../providers/pantheon.md).)
-2. Run [`ddev ssh`](../basics/commands.md#ssh) to tunnel into your container.
+2. Run [`ddev ssh`](../usage/commands.md#ssh) to tunnel into your container.
 3. Issue a command using the keyword `terminus`. For help using Terminus, try `terminus list` to get a list of possible commands.
 
-Terminus also allows you to issue [Drush](https://www.drush.org/), [WP-CLI](https://wp-cli.org/), and [Composer](https://getcomposer.org/) commands to your Pantheon server. These are all usable from within the container as well, but will require authentication via either your Pantheon password or an SSH key. To use your host machine’s SSH key, you can use the `ddev auth ssh` command [described here](cli-usage.md#ssh-into-containers).
+Terminus also allows you to issue [Drush](https://www.drush.org/), [WP-CLI](https://wp-cli.org/), and [Composer](https://getcomposer.org/) commands to your Pantheon server. These are all usable from within the container as well, but will require authentication via either your Pantheon password or an SSH key. To use your host machine’s SSH key, you can use the `ddev auth ssh` command [described here](cli.md#ssh-into-containers).

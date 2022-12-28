@@ -13,7 +13,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     We recommend [Colima](https://github.com/abiosoft/colima), a project that bundles a container management tool called [Lima](https://github.com/lima-vm/lima) with a Docker (Linux) backend.
 
     !!!tip "Wait ... Colima?"
-        Yes! See *Why do you recommend Colima over Docker Desktop on macOS?* in [the FAQ](../basics/faq.md).
+        Yes! See *Why do you recommend Colima over Docker Desktop on macOS?* in [the FAQ](../usage/faq.md).
     
     1. Run `docker help` to make sure you’ve got the Docker client installed. If you get an error, install it with [Homebrew](https://brew.sh) by running `brew install docker`.
     2. Install Colima with `brew install colima` or one of the other [installation options](https://github.com/abiosoft/colima/blob/main/docs/INSTALL.md).
@@ -41,9 +41,9 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     Move your project databases from Docker Desktop to Colima:
 
-    1. Make sure all your projects are listed in [`ddev list`](../basics/commands.md#list).
-    2. In Docker Desktop, [`ddev snapshot --all`](../basics/commands.md#snapshot).
-    3. After starting Colima, start each project and [`ddev snapshot restore --latest`](../basics/commands.md#snapshot-restore).
+    1. Make sure all your projects are listed in [`ddev list`](../usage/commands.md#list).
+    2. In Docker Desktop, [`ddev snapshot --all`](../usage/commands.md#snapshot).
+    3. After starting Colima, start each project and [`ddev snapshot restore --latest`](../usage/commands.md#snapshot-restore).
     
     ### Docker Desktop for Mac
 
@@ -86,7 +86,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     Linux installation **absolutely** requires adding your Linux user to the `docker` group, and configuring the Docker daemon to start at boot. See [Post-installation steps for Linux](https://docs.docker.com/engine/install/linux-postinstall/).
 
     !!!warning "Don’t `sudo` with `docker` or `ddev`"
-        Don’t use `sudo` with the `docker` command. If you find yourself needing it, you haven’t finished the installation. You also shouldn’t use `sudo` with `ddev` unless it’s specifically for the [`ddev hostname`](../basics/commands.md#hostname) command.
+        Don’t use `sudo` with the `docker` command. If you find yourself needing it, you haven’t finished the installation. You also shouldn’t use `sudo` with `ddev` unless it’s specifically for the [`ddev hostname`](../usage/commands.md#hostname) command.
 
     On systems without `systemd` or its equivalent—mostly if you’re installing inside WSL2—you’ll need to manually start Docker with `service docker start` or the equivalent in your distro. You can add this to your shell profile.
 
@@ -123,8 +123,8 @@ The result should be a list of the files in your project directory.
 
 If you get an error or don’t see the contents of your project directory, you’ll need to troubleshoot further:
 
-* For a “port is already allocated” error, see the [Troubleshooting](../basics/troubleshooting.md#web-server-ports-already-occupied) page.
+* For a “port is already allocated” error, see the [Troubleshooting](../usage/troubleshooting.md#web-server-ports-already-occupied) page.
 * “invalid mount config for type "bind": bind mount source path does not exist: [some path]” means the filesystem isn’t successfully shared into the Docker container.
 * If you’re seeing “The path (...) is not shared and is not known to Docker”, find *File sharing* in your Docker settings make sure the appropriate path or drive is included.
 * “Error response from daemon: Get registry-1.docker.io/v2/” may mean Docker isn’t running or you don’t have internet access. Try starting or restarting Docker, and confirm you have a working internet connection.
-* If you’re seeing “403 authentication required” trying to [`ddev start`](../basics/commands.md#start), run `docker logout` and try again. Docker authentication is *not* required for any normal DDEV action.
+* If you’re seeing “403 authentication required” trying to [`ddev start`](../usage/commands.md#start), run `docker logout` and try again. Docker authentication is *not* required for any normal DDEV action.

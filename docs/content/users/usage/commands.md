@@ -66,7 +66,7 @@ Authentication commands.
 
 ### `auth ssh`
 
-Add [SSH key authentication](../basics/cli-usage.md#ssh-into-containers) to the `ddev-ssh-agent` container.
+Add [SSH key authentication](../usage/cli.md#ssh-into-containers) to the `ddev-ssh-agent` container.
 
 Example:
 
@@ -102,7 +102,7 @@ ddev blackfire off
 
 ## `clean`
 
-Removes items DDEV has created. (See [Uninstalling DDEV](../basics/uninstall.md).)
+Removes items DDEV has created. (See [Uninstalling DDEV](../usage/uninstall.md).)
 
 Flags:
 
@@ -124,7 +124,7 @@ ddev clean my-project my-other-project
 
 ## `composer`
 
-Executes a [Composer command](../basics/developer-tools.md#ddev-and-composer) within the web container.
+Executes a [Composer command](../usage/developer-tools.md#ddev-and-composer) within the web container.
 
 Example:
 
@@ -488,7 +488,7 @@ ddev describe my-project
 
 *Alias: `.`.*
 
-[Execute a shell command in the container](../basics/cli-usage.md#executing-commands-in-containers) for a service. Uses the web service by default.
+[Execute a shell command in the container](../usage/cli.md#executing-commands-in-containers) for a service. Uses the web service by default.
 
 To run your command in a different service container, run `ddev exec --service <service> <cmd>`. Use the `--raw` flag if you’d like to run a raw, uninterpreted command in a container.
 
@@ -656,7 +656,7 @@ gzip -dc db.sql.gz | ddev import-db
 
 ## `import-files`
 
-Pull the uploaded files directory of an existing project to the default [public upload directory](../basics/cli-usage.md#ddev-import-files) of your project.
+Pull the uploaded files directory of an existing project to the default [public upload directory](../usage/cli.md#ddev-import-files) of your project.
 
 Flags:
 
@@ -1100,7 +1100,7 @@ Create a database snapshot for one or more projects.
 
 This uses `xtrabackup` or `mariabackup` to create a database snapshot in the `.ddev/db_snapshots` directory. These are compatible with server backups using the same tools and can be restored with the [`snapshot restore`](#snapshot-restore) command.
 
-See [Snapshotting and Restoring a Database](../basics/cli-usage.md#snapshotting-and-restoring-a-database) for more detail, or [Database Management](../basics/database-management.md) for more on working with databases in general.
+See [Snapshotting and Restoring a Database](../usage/cli.md#snapshotting-and-restoring-a-database) for more detail, or [Database Management](../usage/database-management.md) for more on working with databases in general.
 
 Flags:
 

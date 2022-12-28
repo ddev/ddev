@@ -117,18 +117,23 @@ nav:
       - users/install/performance.md
       - users/install/shell-completion.md
       - users/quickstart.md
+  - 'Usage':
+    - 'Common Tasks':
+      - users/usage/index.md
+      - users/usage/cli.md
+      - users/usage/database-management.md
+      - users/usage/troubleshooting.md
+      - users/usage/offline.md
+    - 'Reference':
+      - users/usage/architecture.md
+      - users/usage/commands.md
+      - users/usage/developer-tools.md
+      - users/usage/diagnostics.md
+      - 'Uninstalling': users/usage/uninstall.md
+    - 'Getting Help':
+      - users/usage/faq.md
       - users/support.md
       - users/code-of-conduct.md
-  - 'Basics':
-    - users/basics/index.md
-    - users/basics/cli-usage.md
-    - users/basics/commands.md
-    - users/basics/database-management.md
-    - users/basics/developer-tools.md
-    - users/basics/architecture.md
-    - users/basics/faq.md
-    - users/basics/troubleshooting.md
-    - users/basics/uninstall.md
   - 'Configuration':
     - users/configuration/config.md
     - users/extend/database-types.md
@@ -149,20 +154,20 @@ nav:
           - users/debugging-profiling/blackfire-profiling.md
           - users/debugging-profiling/xhprof-profiling.md
           - users/debugging-profiling/xdebug-profiling.md
-  - 'Hosting integration':
+  - 'Hosting & Deployment':
     - users/providers/index.md
-    - users/providers/acquia.md
-    - users/providers/pantheon.md
-    - users/providers/platform.md
+    - 'Beyond Local':
+      - users/topics/sharing.md
+      - users/topics/hosting.md
+      - users/topics/remote-docker.md
+    - 'Hosting Provider Integrations':
+      - 'Acquia': users/providers/acquia.md
+      - 'Pantheon': users/providers/pantheon.md
+      - 'Platform.sh': users/providers/platform.md
   - 'Guides':
       - users/topics/phpstorm.md
-      - users/topics/sharing.md
       - users/topics/webserver.md
       - users/topics/cms-specific-help.md
-  - 'Details':
-      - users/details/offline-usage.md
-      - users/details/opting-in.md
-      - users/details/alternate-uses.md
   - 'Developers':
       - developers/index.md
       - developers/building-contributing.md
