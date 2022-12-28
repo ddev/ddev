@@ -88,7 +88,7 @@ The following environment variables are available for the web Dockerfile to use 
 * `$username`: the username inferred from your host-side username
 * `$uid`: the user ID inferred from your host-side user ID
 * `$gid`: the group ID inferred from your host-side group ID
-* `$DDEV_PHP_VERSION`: the PHP version declared in your project configuration
+* `$DDEV_PHP_VERSION`: the PHP version declared in your project configuration (provided in versions after v1.21.4)
 
 For example, a Dockerfile might want to build an extension for the configured PHP version like this:
 
@@ -96,6 +96,7 @@ For example, a Dockerfile might want to build an extension for the configured PH
 ENV extension=xhprof
 ENV extension_repo=https://github.com/longxinH/xhprof
 ENV extension_version=v2.3.8
+# For versions <= DDEV v1.21.4 you must also declare DDEV_PHP_VERSION yourself: ENV DDEV_PHP_VERSION=8.1
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confnew" --no-install-recommends --no-install-suggests autoconf build-essential libc-dev php-pear php${DDEV_PHP_VERSION}-dev pkg-config zlib1g-dev
 RUN mkdir -p /tmp/php-${extension} && cd /tmp/php-${extension} && git clone ${extension_repo} .
