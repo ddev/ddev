@@ -166,7 +166,7 @@ nav:
       - 'Acquia': users/providers/acquia.md
       - 'Pantheon': users/providers/pantheon.md
       - 'Platform.sh': users/providers/platform.md
-  - 'Developers':
+  - 'Development':
       - developers/index.md
       - developers/building-contributing.md
       - developers/buildkite-testmachine-setup.md
