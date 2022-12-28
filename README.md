@@ -31,11 +31,11 @@ If you need help, our friendly community provides [great support](https://ddev.r
 * Enjoy effortless, trusted HTTPS support.
 * Extend and customize environments as much (or as little!) as you need to.
 
-Run `ddev` to see all the [commands](https://ddev.readthedocs.io/en/stable/users/basics/cli-usage/).
+Run `ddev` to see all the [commands](https://ddev.readthedocs.io/en/latest/users/usage/cli/).
 
 ## Contributing
 
-See “How can I contribute to DDEV?” in the [FAQ](https://ddev.readthedocs.io/en/latest/users/basics/faq/), and the [Contributing](CONTRIBUTING.md) page.
+See “How can I contribute to DDEV?” in the [FAQ](https://ddev.readthedocs.io/en/latest/users/usage/faq/), and the [Contributing](CONTRIBUTING.md) page.
 
 ## Wonderful Sponsors
 
