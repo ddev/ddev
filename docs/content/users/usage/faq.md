@@ -103,6 +103,23 @@ This almost always means NFS is enabled in your project, but NFS isn’t working
 
 Start by completely turning NFS off for your projects with `ddev config --nfs-mount-enabled=false && ddev config global --nfs-mount-enabled=false`. Then later, [get NFS working](../install/performance.md#using-nfs-to-mount-the-project-into-the-web-container). NFS can be a big performance help on macOS and traditional Windows, and not needed on Linux or Windows WSL2. Most people on macOS and Windows use Mutagen instead of NFS because of its vastly improved performance, so instead of trying to fix this you can disable NFS and enable Mutagen by running `ddev config --nfs-mount-enabled=false --mutagen-enabled`.
 
+### Why are my Apache HTTP → HTTPS redirects stuck in an infinite loop?
+
+It’s common to set up HTTP-to-TLS redirects in an `.htaccess` file, which leads to issues with the DDEV proxy setup. The TLS endpoint of a DDEV project is always the `ddev-router` container and requests are forwarded through plain HTTP to the project’s web server. This results in endless redirects, so you need to change the root `.htaccess` file for Apache correctly handles these requests for your local development environment with DDEV. The following snippet should work for most scenarios—not just DDEV—and could replace an existing redirect:
+
+```apache
+# http:// -> https:// plain or behind proxy for Apache 2.2 and 2.4
+# behind proxy
+RewriteCond %{HTTP:X-FORWARDED-PROTO} ^http$
+RewriteRule (.*) https://%{HTTP_HOST}/$1 [R=301,L]
+
+# plain
+RewriteCond %{HTTP:X-FORWARDED-PROTO} ^$
+RewriteCond %{REQUEST_SCHEME} ^http$ [NC,OR]
+RewriteCond %{HTTPS} off
+RewriteRule (.*) https://%{HTTP_HOST}/$1 [R=301,L]
+```
+
 ## Workflow
 
 ### How can I update/upgrade DDEV?

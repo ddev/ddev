@@ -166,7 +166,6 @@ nav:
       - 'Platform.sh': users/providers/platform.md
   - 'Guides':
       - users/topics/phpstorm.md
-      - users/topics/webserver.md
       - users/topics/cms-specific-help.md
   - 'Developers':
       - developers/index.md
