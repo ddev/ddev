@@ -115,8 +115,9 @@ nav:
       - users/install/ddev-installation.md
     - 'Getting Started':
       - users/install/performance.md
-      - users/install/shell-completion.md
       - users/quickstart.md
+      - users/install/shell-completion.md
+      - users/install/phpstorm.md
   - 'Usage':
     - 'Common Tasks':
       - users/usage/index.md
@@ -165,8 +166,6 @@ nav:
       - 'Acquia': users/providers/acquia.md
       - 'Pantheon': users/providers/pantheon.md
       - 'Platform.sh': users/providers/platform.md
-  - 'Guides':
-      - users/topics/phpstorm.md
   - 'Developers':
       - developers/index.md
       - developers/building-contributing.md

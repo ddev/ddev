@@ -1,19 +1,29 @@
-# PhpStorm Configuration and Integration
+# PhpStorm Setup
 
-## Full Integration with Docker, DDEV, and PhpStorm
+If you work with the [PhpStorm](https://www.jetbrains.com/phpstorm/) IDE, you can configure it for tight integration with DDEV and Docker to more easily run actions, access services, enable autocompletion, and enjoy a more convenient development experience.
 
-For full integration of PhpStorm and DDEV, it’s easiest to use the [DDEV Integration Plugin](https://plugins.jetbrains.com/plugin/18813-ddev-integration) or search the marketplace (*Preferences* → *Plugins* → *Marketplace*) for “DDEV”. The integration plugin handles nearly everything on this page automatically, and works on all platforms. The only thing it doesn’t currently do is set up `phpunit`, and it doesn’t point docker-compose correctly.
-
-For any setup, including the [DDEV Integration Plugin](https://plugins.jetbrains.com/plugin/18813-ddev-integration):
-
-1. In *Preferences* → *Build, Execution, Deployment* → *Docker* → *Tools*, set the docker-compose executable to DDEV’s private docker-compose using the full path to `.ddev/bin/docker-compose` in your home directory. If you’re using WSL2 and running PhpStorm on the Windows side, PhpStorm can’t use docker-compose from WSL2, so at least configure Docker Desktop in *Settings* → *General* to “Use Docker Compose V2” and use a recent version of Docker Desktop.
-
-### Requirements
+## Requirements
 
 - PhpStorm 2022.2 or higher.
 - DDEV v1.21.1 or higher.
 
-### Setup Technique Without [DDEV Integration Plugin](https://plugins.jetbrains.com/plugin/18813-ddev-integration)
+## Prerequisite
+
+Regardless of your setup, you need to have PhpStorm use DDEV’s private docker-compose executable.
+
+In PhpStorm, navigate to *Preferences* → *Build, Execution, Deployment* → *Docker* → *Tools*, and set the docker-compose executable to the full path of your `.ddev/bin/docker-compose` file relative to your home directory.
+
+If you’re using WSL2 and running PhpStorm on the Windows side, PhpStorm can’t use docker-compose from WSL2, so configure Docker Desktop in *Settings* → *General* to “Use Docker Compose V2” and use a recent version of Docker Desktop.
+
+## DDEV Integration Plugin
+
+It’s easiest to use the DDEV Integration Plugin, which you can install from [its landing page](https://plugins.jetbrains.com/plugin/18813-ddev-integration) or by searching the in-app marketplace (*Preferences* → *Plugins* → *Marketplace*) for “DDEV”. The integration plugin handles nearly everything on this page automatically, and works on all platforms.
+
+Install and enable the plugin, then [set up `phpunit`](#enabling-phpunit) since it doesn’t yet handle that for you.
+
+## Manual Setup
+
+If you’re not using the DDEV Integration Plugin, you can follow these steps instead:
 
 1. Start your project by running [`ddev start`](../usage/commands.md#start).
 2. Open the DDEV project. In this example, the project name is “d9” and the site is “d9.ddev.site”.
@@ -36,11 +46,11 @@ For any setup, including the [DDEV Integration Plugin](https://plugins.jetbrains
     - Use “remote interpreter”
     - CLI Interpreter will be “web”
 
-### Enabling PHPUnit
+## Enabling PHPUnit
 
-This part is not done for you by the integration plugin.
+This assumes you’ll need to use PHPUnit and you already have it installed.
 
-1. Under “Test Frameworks” click “+” to add PHPUnit, assuming PHPUnit is already installed.
+1. Under “Test Frameworks” click “+” to add PHPUnit.
     - PHPUnit by remote interpreter
     - Interpreter “DDEV”
     - Choose “Path to phpunit.phar” and use `/var/www/html/vendor/bin/phpunit`, or wherever your PHPUnit is inside the container. You need PHPUnit properly Composer-installed for your CMS. For example, for Drupal 9, `ddev composer require --dev --with-all-dependencies drupal/core-dev:^9` and `ddev composer require --dev phpspec/prophecy-phpunit:^2`.
