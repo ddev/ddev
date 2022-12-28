@@ -122,6 +122,7 @@ nav:
       - users/usage/index.md
       - users/usage/cli.md
       - users/usage/database-management.md
+      - users/usage/cms-settings.md
       - users/usage/troubleshooting.md
       - users/usage/offline.md
     - 'Reference':
@@ -166,7 +167,6 @@ nav:
       - 'Platform.sh': users/providers/platform.md
   - 'Guides':
       - users/topics/phpstorm.md
-      - users/topics/cms-specific-help.md
   - 'Developers':
       - developers/index.md
       - developers/building-contributing.md
