@@ -115,13 +115,15 @@ nav:
       - users/install/ddev-installation.md
     - 'Getting Started':
       - users/install/performance.md
-      - users/install/shell-completion.md
       - users/quickstart.md
+      - users/install/shell-completion.md
+      - users/install/phpstorm.md
   - 'Usage':
     - 'Common Tasks':
       - users/usage/index.md
       - users/usage/cli.md
       - users/usage/database-management.md
+      - users/usage/cms-settings.md
       - users/usage/troubleshooting.md
       - users/usage/offline.md
     - 'Reference':
@@ -164,10 +166,6 @@ nav:
       - 'Acquia': users/providers/acquia.md
       - 'Pantheon': users/providers/pantheon.md
       - 'Platform.sh': users/providers/platform.md
-  - 'Guides':
-      - users/topics/phpstorm.md
-      - users/topics/webserver.md
-      - users/topics/cms-specific-help.md
   - 'Development':
       - developers/index.md
       - developers/building-contributing.md
