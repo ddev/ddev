@@ -6,6 +6,7 @@ If you work with the [PhpStorm](https://www.jetbrains.com/phpstorm/) IDE, you ca
 
 - PhpStorm 2022.2 or higher.
 - DDEV v1.21.1 or higher.
+- You should have a least ran `ddev start` once before (so all required software is installed)
 
 ## Prerequisite
 
@@ -14,8 +15,6 @@ Regardless of your setup, you need to have PhpStorm use DDEV’s private docker-
 In PhpStorm, navigate to *Preferences* → *Build, Execution, Deployment* → *Docker* → *Tools*, and set the docker-compose executable to the full path of your `.ddev/bin/docker-compose` file relative to your home directory.
 
 If you’re using WSL2 and running PhpStorm on the Windows side, PhpStorm can’t use docker-compose from WSL2, so configure Docker Desktop in *Settings* → *General* to “Use Docker Compose V2” and use a recent version of Docker Desktop.
-
-Note: to be able to find DDEV's private docker-compose, you should have at least once started a DDEV environment, which takes care of installing the docker-compose file.
 
 ## DDEV Integration Plugin
 
