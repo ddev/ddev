@@ -67,7 +67,7 @@ jobs:
         run: ./.github/workflows/linux-setup.sh
       - uses: actions/setup-go@v3
         with:
-          go-version: '>=1.19.0'
+          go-version: '>=1.19.4'
 
       - run: echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN} DDEV_TEST_USE_TRAEFIK=${DDEV_TEST_USE_TRAEFIK} DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE} DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS}"
 

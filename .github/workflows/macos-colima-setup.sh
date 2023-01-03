@@ -11,9 +11,9 @@ brew unlink go || true
 brew uninstall go@1.17 || true
 brew uninstall postgresql || true
 echo "====== Running brew install ======"
-brew install colima docker docker-compose go jq libpq mkcert mysql-client
+brew install -q colima docker docker-compose jq libpq mkcert mysql-client
 echo "====== Running brew link ======"
-brew link --force go libpq mysql-client
+brew link --force libpq mysql-client
 echo "====== Completed brew link ======"
 
 
