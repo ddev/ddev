@@ -84,7 +84,6 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         with:
           limit-access-to-actor: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
 
       - name: Install Colima and deps (macOS)
