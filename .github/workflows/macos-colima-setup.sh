@@ -5,6 +5,11 @@ set -eu -o pipefail
 sudo chown -R ${USER} /usr/local/*
 brew update >/dev/null
 
+# After colima 0.5.0 it's best to redo the colima image completely
+if (colima version | grep "colima version 0.5.0"); then
+  colima delete -f
+fi
+
 # colima has golang as dependency, so is going to install go anyway.
 # So we have to get rid of it somehow.
 brew uninstall go@1.15 || true
