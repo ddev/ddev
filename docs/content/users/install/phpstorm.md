@@ -6,6 +6,7 @@ If you work with the [PhpStorm](https://www.jetbrains.com/phpstorm/) IDE, you ca
 
 - PhpStorm 2022.2 or higher.
 - DDEV v1.21.1 or higher.
+- Make sure to get at least one project going with `ddev start` before trying to set up the plugin, because the plugin assumes it has a project to work with.
 
 ## Prerequisite
 
