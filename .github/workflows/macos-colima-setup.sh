@@ -4,8 +4,6 @@ set -eu -o pipefail
 
 brew update >/dev/null
 
-sudo rm -f /usr/local/bin/2to3 /usr/local/bin/idle3 /usr/local/bin/pydoc3 /usr/local/bin/python3 /usr/local/bin/python3-config
-
 # colima has golang as dependency, so is going to install go anyway.
 # So we have to get rid of it somehow.
 brew uninstall go@1.15 || true
