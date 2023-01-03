@@ -28,6 +28,8 @@ defaults:
 env:
   DDEV_DEBUG: true
   DDEV_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  HOMEBREW_NO_INSTALL_CLEANUP: TRUE
+  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 permissions:
   contents: read
