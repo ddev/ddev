@@ -2,6 +2,7 @@
 
 set -eu -o pipefail
 
+sudo chown -R ${USER} /usr/local/*
 brew update >/dev/null
 
 # colima has golang as dependency, so is going to install go anyway.
