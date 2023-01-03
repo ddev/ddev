@@ -15,6 +15,7 @@ env:
   DDEV_DEBUG: true
   GITHUB_REPOSITORY_OWNER: ${{ secrets.GITHUB_REPOSITORY_OWNER }}
   DDEV_WINDOWS_SIGN: ${{ secrets.DDEV_WINDOWS_SIGN }}
+  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   build-most:

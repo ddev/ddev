@@ -17,6 +17,9 @@ on:
       - ".readthedocs.yaml"
       - ".github/workflows/**"
       - "markdown-link-check.json"
+env:
+  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   build:
     name: Docs check (spellcheck, markdownlint)

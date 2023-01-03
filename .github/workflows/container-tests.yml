@@ -32,6 +32,7 @@ env:
   # So it has to be hard-wired here. Needs to be switched back to "90" after mysql
   # key is updated, see https://github.com/docker-library/mysql/issues/801
   DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION: "90"
+  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 permissions:
   contents: read

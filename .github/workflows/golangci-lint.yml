@@ -19,6 +19,9 @@ on:
 permissions:
   contents: read
 
+env:
+  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   golangci:
     permissions:
