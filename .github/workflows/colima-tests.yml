@@ -93,7 +93,6 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
 
       - name: Install Colima and deps (macOS)
-        if: matrix.os == 'macos-11'
         run: ./.github/workflows/macos-colima-setup.sh && colima version
 
       - name: Build ddev
