@@ -61,6 +61,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '>=1.19.4'
+
       - name: Homebrew cache/restore
         uses: actions/cache@v3
         env:
