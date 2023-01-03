@@ -13,8 +13,8 @@ on:
   workflow_dispatch:
     inputs:
       debug_enabled:
-        type: boolean
         description: 'Run the build with tmate set "debug_enabled"'
+        type: boolean
         required: false
         default: false
       testargs:

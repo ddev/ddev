@@ -19,6 +19,7 @@ on:
     inputs:
       debug_enabled:
         description: 'Run the build with tmate set "debug_enabled"'
+        type: boolean
         required: false
         default: false
       testargs:
@@ -55,7 +56,7 @@ jobs:
         with:
           limit-access-to-actor: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
       - name: Install Docker and deps (Linux)
         if: matrix.os == 'ubuntu-20.04'
