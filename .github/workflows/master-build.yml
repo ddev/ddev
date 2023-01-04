@@ -15,6 +15,7 @@ env:
   DDEV_DEBUG: true
   GITHUB_REPOSITORY_OWNER: ${{ secrets.GITHUB_REPOSITORY_OWNER }}
   DDEV_WINDOWS_SIGN: ${{ secrets.DDEV_WINDOWS_SIGN }}
+  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   build-most:
@@ -38,7 +39,7 @@ jobs:
 
       - uses: actions/setup-go@v3
         with:
-          go-version: '>=1.18.0'
+          go-version: '>=1.19.4'
 
       - name: Build DDEV executables
         run: make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 completions mkcert
@@ -119,7 +120,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-go@v3
         with:
-          go-version: '>=1.18.0'
+          go-version: '>=1.19.4'
 
       - name: restore build-most results from cache
         uses: actions/cache@v3

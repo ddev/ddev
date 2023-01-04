@@ -3,6 +3,9 @@ on:
   workflow_run:
     workflows: ['PR Build']
     types: [completed]
+env:
+  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   pr_comment:
     if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'

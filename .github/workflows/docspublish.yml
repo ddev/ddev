@@ -4,6 +4,9 @@ on:
     branches:
       - 20220710_mkdocs_material
       - master
+env:
+  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   docs-deploy:
     runs-on: ubuntu-latest
