@@ -2,7 +2,7 @@ version: 2.1
 jobs:
   build:
     machine:
-      image: ubuntu-2204:current
+      image: ubuntu-2004:current
     working_directory: ~/ddev
     environment:
       DDEV_NONINTERACTIVE: "true"
@@ -37,7 +37,7 @@ jobs:
 
   lx_amd64_fpm_test:
     machine:
-      image: ubuntu-2204:current
+      image: ubuntu-2004:current
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
@@ -90,7 +90,7 @@ jobs:
 
   lx_arm64_fpm_test:
     machine:
-      image: ubuntu-2204:current
+      image: ubuntu-2004:current
     resource_class: arm.medium
     working_directory: ~/ddev
     environment:
@@ -213,7 +213,7 @@ jobs:
 
   lx_apache_fpm_test:
     machine:
-      image: ubuntu-2204:current
+      image: ubuntu-2004:current
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: apache-fpm
@@ -248,7 +248,7 @@ jobs:
 
   lx_nfsmount_test:
     machine:
-      image: ubuntu-2204:current
+      image: ubuntu-2004:current
     working_directory: ~/ddev
     environment:
       DDEV_TEST_USE_NFSMOUNT: true
@@ -285,7 +285,7 @@ jobs:
 
   staticrequired:
     machine:
-      image: ubuntu-2204:current
+      image: ubuntu-2004:current
     working_directory: ~/ddev
     environment:
     steps:
@@ -304,7 +304,7 @@ jobs:
 
   lx_amd64_container_test:
     machine:
-      image: ubuntu-2204:current
+      image: ubuntu-2004:current
     working_directory: ~/ddev
     environment:
       GOTEST_SHORT: true
@@ -346,7 +346,7 @@ jobs:
 
   lx_arm64_container_test:
     machine:
-      image: ubuntu-2204:current
+      image: ubuntu-2004:current
     resource_class: arm.medium
     working_directory: ~/ddev
     environment:
@@ -400,7 +400,7 @@ jobs:
 
   artifacts:
     machine:
-      image: ubuntu-2204:current
+      image: ubuntu-2004:current
     working_directory: ~/ddev
     steps:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
