@@ -82,7 +82,8 @@ func shopware6PostStartAction(app *DdevApp) error {
 	if app.DisableSettingsManagement {
 		return nil
 	}
-	_, envText, err := ReadProjectEnvFile(app)
+	envFilePath := filepath.Join(app.AppRoot, ".env")
+	_, envText, err := ReadProjectEnvFile(envFilePath)
 	var envMap = map[string]string{
 		"DATABASE_URL": `mysql://db:db@db:3306/db`,
 		"APP_URL":      app.GetPrimaryURL(),
@@ -91,7 +92,7 @@ func shopware6PostStartAction(app *DdevApp) error {
 	// Shopware 6 refuses to do bin/console system:setup if the env file exists,
 	// so if it doesn't exist, wait for it to be created
 	if err == nil {
-		err := WriteProjectEnvFile(app, envMap, envText)
+		err := WriteProjectEnvFile(envFilePath, envMap, envText)
 		if err != nil {
 			return err
 		}

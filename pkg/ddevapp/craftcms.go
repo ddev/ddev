@@ -98,7 +98,7 @@ func craftCmsPostStartAction(app *DdevApp) error {
 		return nil
 	}
 	// Read in the .env file
-	envMap, envText, err := ReadProjectEnvFile(app)
+	envMap, envText, err := ReadProjectEnvFile(envFilePath)
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("Unable to read .env file: %v", err)
 	}
@@ -138,7 +138,7 @@ func craftCmsPostStartAction(app *DdevApp) error {
 		}
 	}
 
-	err = WriteProjectEnvFile(app, envMap, envText)
+	err = WriteProjectEnvFile(envFilePath, envMap, envText)
 	if err != nil {
 		return err
 	}
