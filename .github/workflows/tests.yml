@@ -79,6 +79,13 @@ jobs:
           echo "MAKE_TARGET=testpkg" >> $GITHUB_ENV
           echo "TESTARGS=-failfast -run '(TestDdevFullSite.*|Test.*Pull)'" >> $GITHUB_ENV
           echo "GOTEST_SHORT=" >> $GITHUB_ENV
+          echo "DDEV_PLATFORM_API_TOKEN=${{ secrets.DDEV_PLATFORM_API_TOKEN }}" >> $GITHUB_ENV
+          echo "DDEV_PANTHEON_API_TOKEN=${{ secrets.DDEV_PANTHEON_API_TOKEN }}" >> $GITHUB_ENV
+          echo "DDEV_PANTHEON_SSH_KEY=${{ secrets.DDEV_PANTHEON_SSH_KEY }}" >> $GITHUB_ENV
+          echo "DDEV_ALLOW_ACQUIA_PUSH=${{ secrets.DDEV_ALLOW_ACQUIA_PUSH }}" >> $GITHUB_ENV
+          echo "DDEV_ACQUIA_API_KEY=${{ secrets.DDEV_ACQUIA_API_KEY }}" >> $GITHUB_ENV
+          echo "DDEV_ACQUIA_API_SECRET=${{ secrets.DDEV_ACQUIA_API_SECRET }}" >> $GITHUB_ENV
+          echo "DDEV_ACQUIA_SSH_KEY=${{ secrets.DDEV_ACQUIA_SSH_KEY }}" >> $GITHUB_ENV
         if: ${{ matrix.pull-push-test-platforms }}
 
       - run: echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN} DDEV_TEST_USE_TRAEFIK=${DDEV_TEST_USE_TRAEFIK} DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE} DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS} MAKE_TARGET=${MAKE_TARGET} TESTARGS=${TESTARGS} GOTEST_SHORT='${GOTEST_SHORT}'"
