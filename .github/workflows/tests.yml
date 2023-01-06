@@ -87,7 +87,7 @@ jobs:
       - name: Override environment variables for push-pull-test-platforms
         run: |
           echo "MAKE_TARGET=testpkg" >> $GITHUB_ENV
-          echo "TESTARGS=-failfast -run '(TestDdevFullSite.*|Test.*Pull)'" >> $GITHUB_ENV
+          echo "TESTARGS=-failfast -run '(TestDdevFullSite.*|Test.*(Push|Pull))'" >> $GITHUB_ENV
           echo "GOTEST_SHORT=" >> $GITHUB_ENV
           echo "DDEV_PLATFORM_API_TOKEN=${{ secrets.DDEV_PLATFORM_API_TOKEN }}" >> $GITHUB_ENV
           echo "DDEV_PANTHEON_API_TOKEN=${{ secrets.DDEV_PANTHEON_API_TOKEN }}" >> $GITHUB_ENV
