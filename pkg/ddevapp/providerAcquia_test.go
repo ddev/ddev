@@ -30,6 +30,10 @@ const acquiaPushTestSite = "ddevdemo.test"
 const acquiaPullSiteURL = "http://ddevdemodev.prod.acquia-sites.com/"
 const acquiaSiteExpectation = "Super easy vegetarian pasta"
 
+// Note that these tests won't run with GitHub actions on a forked PR.
+// Thie is a security feature, but means that PRs intended to test this
+// must be done in the ddev repo.
+
 // TestAcquiaPull ensures we can pull backups from Acquia
 func TestAcquiaPull(t *testing.T) {
 	acquiaKey := ""
