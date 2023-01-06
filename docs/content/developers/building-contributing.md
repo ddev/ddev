@@ -1,12 +1,13 @@
 # Building, Testing, and Contributing
 
-## Testing Latest Commits
+## Testing Latest Commits on HEAD
 
-You can download the latest artifacts from the master branch from [link](https://nightly.link/drud/ddev/workflows/master-build/master). On macOS and Linux, you can `brew unlink ddev && brew install drud/ddev/ddev --HEAD --fetch-HEAD` to get the latest commit of DDEV, even if it’s unreleased. If you’re using Linux/WSL2, you’ll likely need to install build-essential with the following command: `sudo apt install -y build-essential`.
+You have many options for getting and using the latest committed HEAD version of DDEV:
 
-To download the latest version, you can visit the [master-build](https://github.com/drud/ddev/actions/workflows/master-build.yml) workflow and choose the latest item (or the one that matches a commit you want to test). The artifacts for each OS are at the bottom of the page.
-
-Alternately, you can see the latest build in action by visiting DDEV on [Gitpod](https://gitpod.io/#https://github.com/drud/ddev).
+* **Download** the latest artifacts from the master branch from [link](https://nightly.link/drud/ddev/workflows/master-build/master). This version is signed and notarized, built by the CI system. Get the one you need and place it in your `$PATH`.
+* **Homebrew install HEAD**: On macOS and Linux, you can `brew unlink ddev && brew install drud/ddev/ddev --HEAD --fetch-HEAD` to get the latest commit of DDEV, even if it’s unreleased. Since you're building this on your own computer, it's not signed or notarized, and you'll get a notification that instrumentation doesn't work, which is fine.  If you’re using Linux/WSL2, you’ll likely need to install build-essential with the following command: `sudo apt install -y build-essential`.
+* **Build manually**: If you have normal build tools like `make` and `go` installed, you can just check out the code and `make`.
+* **Gitpod** You can use the latest build by visiting DDEV on [Gitpod](https://gitpod.io/#https://github.com/drud/ddev).
 
 ## Testing a PR
 
