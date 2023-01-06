@@ -103,7 +103,7 @@ jobs:
         with:
           limit-access-to-actor: true
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
-        
+
       - name: DDEV tests
         run: make TESTARGS="${TESTARGS}" ${MAKE_TARGET}
 
