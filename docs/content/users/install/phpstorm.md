@@ -100,10 +100,10 @@ Debugging should be working. You can step through your code, set breakpoints, vi
 
 Set the PhpStorm terminal path (*Settings* → *Tools* → *Terminal* → *Shell Path*) to `C:\Windows\System32\wsl.exe`. That way when you use the terminal Window in WSL2 it’s using the Bash shell in WSL2.
 
-### PhpStorm with "Remote Development" option
+### PhpStorm with "Remote Development" Option
 
-1. Open your WSL2 project using *File* → *Remote Development* → *WSL*: Choose the distro and then the project.
-2. For xdebug you'll want to use `ddev config global --xdebug-ide-location=wsl2` because essentially the IDE is running inside WSL2 (and listening there).
+1. Open your WSL2 project using *File* → *Remote Development* → *WSL* and choose the distro, then the project.
+2. For Xdebug you'll want to use `ddev config global --xdebug-ide-location=wsl2` because essentially the IDE is running inside WSL2 (and listening there).
 3. Use `ddev xdebug on` as normal; test with a simple breakpoint in your `index.php`.
 
 ### PhpStorm Inside WSL2 in Linux
