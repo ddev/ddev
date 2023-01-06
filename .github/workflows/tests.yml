@@ -47,6 +47,9 @@ jobs:
             no-bind-mounts: "true"
           - name: "traefik"
             use-traefik: "true"
+          - name: "pull-push-test-platforms"
+            pull-push-test-platforms: true
+
       fail-fast: false
 
     runs-on: ubuntu-20.04
@@ -58,6 +61,8 @@ jobs:
       DDEV_TEST_USE_MUTAGEN: ${{ matrix.mutagen }}
       DDEV_TEST_NO_BIND_MOUNTS: ${{ matrix.no-bind-mounts }}
       DDEV_TEST_USE_TRAEFIK: ${{ matrix.use-traefik }}
+      MAKE_TARGET: "test"
+      TESTARGS: "-failfast"
     steps:
       - uses: actions/checkout@v3
       - name: Set up Homebrew
@@ -69,14 +74,15 @@ jobs:
         with:
           go-version: '>=1.19.4'
 
-      - run: echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN} DDEV_TEST_USE_TRAEFIK=${DDEV_TEST_USE_TRAEFIK} DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE} DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS}"
+      - name: Override environment variables for push-pull-test-platforms
+        run: |
+          echo "MAKE_TARGET=testpkg" >> $GITHUB_ENV
+          echo "TESTARGS=-failfast -run '(TestDdevFullSite.*|Test.*Pull)'" >> $GITHUB_ENV
+          echo "GOTEST_SHORT=" >> $GITHUB_ENV
+        if: ${{ matrix.pull-push-test-platforms }}
+
+      - run: echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN} DDEV_TEST_USE_TRAEFIK=${DDEV_TEST_USE_TRAEFIK} DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE} DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS} MAKE_TARGET=${MAKE_TARGET} TESTARGS=${TESTARGS} GOTEST_SHORT='${GOTEST_SHORT}'"
 
       - name: DDEV tests
-        run: make TESTARGS="-failfast" test
-#        if: matrix.use-traefik != 'true'
-
-#      - name: DDEV tests - traefik
-#        run: make test
-#        if: matrix.use-traefik == 'true'
-
+        run: make TESTARGS="${TESTARGS}" ${MAKE_TARGET}
 
