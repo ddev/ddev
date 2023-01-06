@@ -30,6 +30,10 @@ const pantheonSiteExpectation = "DDEV DRUPAL8 TEST SITE"
 const pantheonPullGitURL = "ssh://codeserver.dev.009a2cda-2c22-4eee-8f9d-96f017321627@codeserver.dev.009a2cda-2c22-4eee-8f9d-96f017321627.drush.in:2222/~/repository.git"
 const pantheonPushGitURL = "ssh://codeserver.dev.d32c631e-c998-480f-93bc-7c36e6ae4142@codeserver.dev.d32c631e-c998-480f-93bc-7c36e6ae4142.drush.in:2222/~/repository.git"
 
+// Note that these tests won't run with GitHub actions on a forked PR.
+// Thie is a security feature, but means that PRs intended to test this
+// must be done in the ddev repo.
+
 // TestPantheonPull ensures we can pull from pantheon.
 func TestPantheonPull(t *testing.T) {
 	token := ""
