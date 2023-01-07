@@ -1,12 +1,13 @@
 # Building, Testing, and Contributing
 
-## Testing Latest Commits
+## Testing Latest Commits on HEAD
 
-You can download the latest artifacts from the master branch from [link](https://nightly.link/drud/ddev/workflows/master-build/master). On macOS and Linux, you can `brew unlink ddev && brew install drud/ddev/ddev --HEAD --fetch-HEAD` to get the latest commit of DDEV, even if it’s unreleased. If you’re using Linux/WSL2, you’ll likely need to install build-essential with the following command: `sudo apt install -y build-essential`.
+There are several ways to use DDEV’s latest-committed HEAD version:
 
-To download the latest version, you can visit the [master-build](https://github.com/drud/ddev/actions/workflows/master-build.yml) workflow and choose the latest item (or the one that matches a commit you want to test). The artifacts for each OS are at the bottom of the page.
-
-Alternately, you can see the latest build in action by visiting DDEV on [Gitpod](https://gitpod.io/#https://github.com/drud/ddev).
+* **Download** the latest master branch artifacts from [nightly.link](https://nightly.link/drud/ddev/workflows/master-build/master). Each of these is built by the CI system, signed, and notarized. Get the one you need and place it in your `$PATH`.
+* **Homebrew install HEAD**: On macOS and Linux, run `brew unlink ddev && brew install drud/ddev/ddev --HEAD --fetch-HEAD` to get the latest DDEV commit, even if it’s unreleased. Since you’re building this on your own computer, it’s not signed or notarized, and you’ll get a notification that instrumentation doesn’t work, which is fine. If you’re using Linux/WSL2, you’ll likely need to install build-essential by running the following command: `sudo apt install -y build-essential`.
+* **Build manually**: If you have normal build tools like `make` and `go` installed, you can check out the code and run `make`.
+* **Gitpod** You can use the latest build by visiting DDEV on [Gitpod](https://gitpod.io/#https://github.com/drud/ddev).
 
 ## Testing a PR
 
