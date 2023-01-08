@@ -61,10 +61,6 @@ Use [`ddev composer`](../usage/commands.md#composer) (Composer inside the contai
     ![Finding developer mode](../../images/developer-mode-1.png)  
     ![Setting developer mode](../../images/developer-mode-2.png)
 
-### Limitations of `ddev composer`
-
-* Using `ddev composer --version` or `ddev composer -V` will not work, since `ddev` tries to utilize the command for itself. Use `ddev composer -- --version` instead.
-
 ## Email Capture and Review (MailHog)
 
 [MailHog](https://github.com/MailHog/MailHog) is a mail catcher that’s configured to capture and display emails sent by PHP in the development environment.
