@@ -72,7 +72,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
         
         ### Bedrock
 
-        [Bedrock](https://roots.io/bedrock/) is a modern, Composer-based installation if WordPress:
+        [Bedrock](https://roots.io/bedrock/) is a modern, Composer-based installation in WordPress:
 
         ```bash
         mkdir my-wp-bedrock-site
