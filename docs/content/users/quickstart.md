@@ -201,7 +201,7 @@ DDEV comes ready to work with any PHP project, and has deeper support for severa
 
         ```bash
         git clone https://github.com/example/my-drupal-site
-        cd example-site
+        cd my-drupal-site
         ddev config # Follow the prompts to set Drupal version and docroot
         ddev composer install # If a composer build
         ddev launch
