@@ -757,7 +757,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		UID:                   uid,
 		GID:                   gid,
 		WebBuildContext:       "../",
-		DBBuildContext:        "../",
+		DBBuildContext:        "./.dbimageBuild",
 		AutoRestartContainers: globalconfig.DdevGlobalConfig.AutoRestartContainers,
 		FailOnHookFail:        app.FailOnHookFail || app.FailOnHookFailGlobal,
 		WebWorkingDir:         app.GetWorkingDir("web", ""),
