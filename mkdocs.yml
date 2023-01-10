@@ -20,6 +20,7 @@ docs_dir: docs/content
 # Configuration
 theme:
   name: material
+  custom_dir: docs/overrides
   palette:
   - scheme: default
     primary: indigo
@@ -67,6 +68,8 @@ extra:
   - icon: fontawesome/brands/twitter
     link: https://twitter.com/search?q=%23ddev&src=unknown&f=live
   generator: false
+  analytics:
+    provider: plausible
 
 # Extensions
 markdown_extensions:
