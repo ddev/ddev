@@ -332,7 +332,7 @@ func configureTraefikForApp(app *DdevApp) error {
 	}
 
 	// Convert wildcards like `*.<anything>` to `.*\.anything`
-	for _, hostname := range app.GetHostnames() {
+	for _, hostname := range hostnames {
 		if strings.HasPrefix(hostname, `*.`) {
 			hostname = `{subdomain:.+}` + strings.TrimPrefix(hostname, `*`)
 		}
