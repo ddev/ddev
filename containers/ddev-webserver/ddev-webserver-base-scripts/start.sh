@@ -4,25 +4,9 @@ set -o errexit nounset pipefail
 
 rm -f /tmp/healthy
 
-ENTRYPOINT=/var/www/html/.ddev/web-entrypoint.d
-function ddev_custom_init_scripts {
-  if [[ -n $(find ${ENTRYPOINT} -type f -regex ".*\.\(sh\)") ]] && [[ ! -f "${ENTRYPOINT}/.user_scripts_initialized" ]] ; then
-      echo "Loading custom entrypoint config from ${ENTRYPOINT}";
-      for f in ${ENTRYPOINT}/*.sh; do
-          echo "Executing $f"
-          if [[ -x "$f" ]]; then
-              if ! "$f"; then
-                  echo "Failed executing $f"
-                  return 1
-              fi
-          else
-            echo "Sourcing $f as it is not executable by the current user, any error may cause initialization to fail"
-            . "$f"
-          fi
-      done
-#      touch "${ENTRYPOINT}/.user_scripts_initialized"
-  fi
-}
+export ENTRYPOINT=/var/www/html/.ddev/web-entrypoint.d
+
+source /functions.sh
 
 # If user has not been created via normal template (like uid 999)
 # then try to grab the required files from /etc/skel
@@ -140,9 +124,6 @@ echo 'Server started'
 # We don't want the various daemons to know about PHP_IDE_CONFIG
 unset PHP_IDE_CONFIG
 
-# TODO: What should the stages be? Should they be configurable?
-# How would the build be marked as complete?
-pwd && ls ${ENTRYPOINT} || true
 if [ -d ${ENTRYPOINT} ]; then
   ddev_custom_init_scripts;
 fi

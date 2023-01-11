@@ -4,6 +4,10 @@ set -o errexit nounset pipefail
 
 rm -f /tmp/healthy
 
+export ENTRYPOINT=/var/www/html/.ddev/web-entrypoint.d
+
+source /functions.sh
+
 # If user has not been created via normal template (like blackfire uid 999)
 # then try to grab the required files from /etc/skel
 if [ ! -f ~/.gitconfig ]; then cp -r /etc/skel/. ~/ || true; fi
@@ -113,5 +117,9 @@ echo 'Server started'
 
 # We don't want the various daemons to know about PHP_IDE_CONFIG
 unset PHP_IDE_CONFIG
+
+if [ -d ${ENTRYPOINT} ]; then
+  ddev_custom_init_scripts;
+fi
 
 exec /usr/bin/supervisord -n -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"
