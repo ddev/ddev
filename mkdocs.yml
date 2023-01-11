@@ -21,6 +21,8 @@ docs_dir: docs/content
 theme:
   name: material
   custom_dir: docs/overrides
+  static_templates:
+    - google1b8b94da604695c4.html
   palette:
   - scheme: default
     primary: indigo
