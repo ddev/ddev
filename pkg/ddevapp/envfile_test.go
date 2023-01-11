@@ -31,7 +31,7 @@ func TestWriteProjectEnvFile(t *testing.T) {
 		_ = os.RemoveAll(appEnvFile)
 		err = fileutil.CopyFile(envFileName, appEnvFile)
 		require.NoError(t, err)
-		readEnvMap, readEnvText, err := ddevapp.ReadProjectEnvFile(app)
+		readEnvMap, readEnvText, err := ddevapp.ReadProjectEnvFile(appEnvFile)
 		require.NoError(t, err)
 		_ = readEnvMap
 
@@ -44,10 +44,10 @@ func TestWriteProjectEnvFile(t *testing.T) {
 			"DB_PASSWORD":        "newdbpassword",
 			"DB_CONNECTION":      "new_mysql://root:root@somehost/somedb",
 		}
-		err = ddevapp.WriteProjectEnvFile(app, writeEnvMap, readEnvText)
+		err = ddevapp.WriteProjectEnvFile(appEnvFile, writeEnvMap, readEnvText)
 		require.NoError(t, err)
 
-		postWriteEnvMap, postWriteEnvText, err := ddevapp.ReadProjectEnvFile(app)
+		postWriteEnvMap, postWriteEnvText, err := ddevapp.ReadProjectEnvFile(appEnvFile)
 		require.NoError(t, err)
 
 		// Make sure that the values we intended to change got changed

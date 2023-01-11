@@ -26,7 +26,8 @@ func laravelPostStartAction(app *DdevApp) error {
 	if app.DisableSettingsManagement {
 		return nil
 	}
-	_, envText, err := ReadProjectEnvFile(app)
+	envFilePath := filepath.Join(app.AppRoot, ".env")
+	_, envText, err := ReadProjectEnvFile(envFilePath)
 	if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("Unable to read .env file: %v", err)
 	}
@@ -36,7 +37,7 @@ func laravelPostStartAction(app *DdevApp) error {
 			util.Debug("laravel: .env.example does not exist yet, not trying to process it")
 			return nil
 		}
-		_, envText, err = ReadProjectEnvFile(app)
+		_, envText, err = ReadProjectEnvFile(envFilePath)
 		if err != nil {
 			return err
 		}
@@ -56,7 +57,7 @@ func laravelPostStartAction(app *DdevApp) error {
 		"DB_PASSWORD":   "db",
 		"DB_CONNECTION": dbConnection,
 	}
-	err = WriteProjectEnvFile(app, envMap, envText)
+	err = WriteProjectEnvFile(envFilePath, envMap, envText)
 	if err != nil {
 		return err
 	}
