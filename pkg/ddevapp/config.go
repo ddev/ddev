@@ -990,13 +990,6 @@ func WriteBuildDockerfile(fullpath string, userDockerfilePath string, extraPacka
 ARG BASE_IMAGE
 FROM $BASE_IMAGE
 `
-	// If web build, the context is the full project, so change workdir to .ddev/webimageBuild
-	// (For compatibility with previous versions where context was webimageBuild)
-	//	if strings.Contains(fullpath, "webimageBuild") {
-	//		contents = contents + `
-	//WORKDIR ./.ddev/webimageBuild
-	//`
-	//	}
 	contents = contents + `
 ARG username
 ARG uid
