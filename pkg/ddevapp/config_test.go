@@ -1175,11 +1175,11 @@ RUN rm /var/tmp/`+"added-by-"+item+"-test4.txt"))
 ARG DDEV_PHP_VERSION
 RUN touch /var/tmp/running-php-${DDEV_PHP_VERSION}
 `))
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	// Start and make sure that the packages don't exist already
 	err = app.Start()
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	// Make sure that the expected in-container file has been created
 	for _, item := range []string{"web", "db"} {
