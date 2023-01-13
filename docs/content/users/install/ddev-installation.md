@@ -103,17 +103,12 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     Windows WSL2 is a fantastic way to run DDEV and your web components. It’s Linux, which means a different experience for many Windows users. It’s Ubuntu Linux by default as described here, so it’s worth taking a little time to explore how Ubuntu and Bash work, including standard system commands and installation and upgrade procedures.
 
-    !!!note "WSL2 is the recommended installation method for all Windows users"
-        All Windows 10/11 editions (including Windows 10 Home) support WSL2. The performance is way, way faster in every way, and you're less likely to have obscure Windows problems if you use WSL2.
+    ### Things You Need to Know about WSL2 and DDEV
 
-    !!!warning "WSL2 Projects go in `/home`, not on the Windows filesystem"
-        Make sure you put your projects in the Linux filesystem (e.g. `/home/<your_username>`), **not** in the Windows filesystem (`/mnt/c`), because you’ll get vastly superior performance on the Linux filesystem. You will be very unhappy if you put your project in `/mnt/c`.
-
-    !!!note "WSL2 hostname management"
-        (The scripts below install DDEV on the Windows side, so you won't need to do anything if you've used one of those to install.) DDEV attempts to manage custom hostnames via the Windows-side hosts file (usually `C:\Windows\system32\drivers\etc\hosts`) rather than the hosts file inside WSL2. It can only do this if DDEV (with sudo.exe) is installed and in the `$PATH` on the Windows side. (DDEV inside WSL2 uses `ddev.exe` on the Windows side as a proxy to update the Windows hosts file.) If `ddev.exe --version` shows the same version as `ddev --version` you're all set up. Otherwise, install DDEV on Windows using `choco upgrade -y ddev` or by downloading and running the Windows installer.
-
-    !!!note "WSL2 is not the same as Docker Desktop's WSL2 engine"
-        Using WSL2 to install and run DDEV is not the same as using Docker Desktop's WSL2 engine, which itself runs in WSL2, but can serve applications running in both traditional Windows and inside WSL2.**
+    * **WSL2 is the recommended installation method for all Windows users.** All Windows 10/11 editions (including Windows 10 Home) support WSL2. The performance is way, way faster in every way, and you're less likely to have obscure Windows problems if you use WSL2.
+    * WSL2 Projects go in `/home`, not on the Windows filesystem. Make sure you put your projects in the Linux filesystem (e.g. `/home/<your_username>`), **not** in the Windows filesystem (`/mnt/c`), because you’ll get vastly superior performance on the Linux filesystem. If you put your project in `/mnt/c` you will not get the benefits of WSL2.
+    * WSL2 hostname management: DDEV attempts to manage custom hostnames via the Windows-side hosts file (usually `C:\Windows\system32\drivers\etc\hosts`) rather than the hosts file inside WSL2. It can only do this if DDEV (with sudo.exe) is installed and in the `$PATH` on the Windows side. (DDEV inside WSL2 uses `ddev.exe` on the Windows side as a proxy to update the Windows hosts file.) If `ddev.exe --version` shows the same version as `ddev --version` you're all set up. Otherwise, install DDEV on Windows using `choco upgrade -y ddev` or by downloading and running the Windows installer. (The scripts below install DDEV on the Windows side, so you won't need to do anything if you've used one of those to install.) (If the Windows escalation happens to often to you, you can calm it down with `gsudo.exe  cache on` and `gsudo.exe config CacheMode auto`, see [gsudo docs](https://github.com/gerardog/gsudo#credentials-cache).
+    * WSL2 is not the same as Docker Desktop's WSL2 engine. Using WSL2 to install and run DDEV is not the same as using Docker Desktop's WSL2 engine, which itself runs in WSL2, but can serve applications running in both traditional Windows and inside WSL2.
 
     The WSL2 install process involves:
 
