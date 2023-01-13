@@ -152,8 +152,14 @@ func removeHostname(hosts goodhosts.Hosts, ip, hostname string) {
 	rawResult := make(map[string]interface{})
 
 	if dockerutil.IsWSL2() && ddevapp.IsWindowsDdevExeAvailable() {
+		util.Debug("Running ddev.exe --check %s %s  on Windows side", hostname, ip)
+		out, err := exec.RunHostCommand("ddev.exe", "hostname", "--check", hostname, ip)
+		if err != nil {
+			util.Debug("ddev.exe --check hostname says hostname doesn't exist on windows; ran %s %s with output=%s, err=%v", hostname, ip, out, err)
+			return
+		}
 		util.Debug("Running sudo.exe ddev.exe -r %s %s  on Windows side", hostname, ip)
-		out, err := exec.RunHostCommand("sudo.exe", "ddev.exe", "hostname", "--remove", hostname, ip)
+		out, err = exec.RunHostCommand("sudo.exe", "ddev.exe", "hostname", "--remove", hostname, ip)
 		if err == nil {
 			util.Debug("ran sudo.exe ddev.exe --remove %s %s with output=%s", hostname, ip, out)
 			return
