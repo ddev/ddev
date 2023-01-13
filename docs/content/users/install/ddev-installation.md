@@ -103,11 +103,17 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     Windows WSL2 is a fantastic way to run DDEV and your web components. It’s Linux, which means a different experience for many Windows users. It’s Ubuntu Linux by default as described here, so it’s worth taking a little time to explore how Ubuntu and Bash work, including standard system commands and installation and upgrade procedures.
 
-    **WSL2 is the recommended installation method for all Windows users**.
+    !!!note "WSL2 is the recommended installation method for all Windows users"
+        All Windows 10/11 editions (including Windows 10 Home) support WSL2. The performance is way, way faster in every way, and you're less likely to have obscure Windows problems if you use WSL2.
 
-    **Using WSL2 to install and run DDEV is not the same as using Docker Desktop's WSL2 engine, which itself runs in WSL2, but can serve applications running in both traditional WIndows and inside WSL2.**
+    !!!warning "WSL2 Projects go in `/home`, not on the Windows filesystem"
+        Make sure you put your projects in the Linux filesystem (e.g. `/home/<your_username>`), **not** in the Windows filesystem (`/mnt/c`), because you’ll get vastly superior performance on the Linux filesystem. You will be very unhappy if you put your project in `/mnt/c`.
 
-    **All Windows 10/11 editions (including Windows 10 Home) support WSL2**. If you’re already familiar with DDEV on Windows, you might have been using NFS for better filesystem performance. **You won't need NFS anymore once you switch to WSL2**, since it provides awesome filesystem performance out of the box.
+    !!!note "WSL2 hostname management"
+        (The scripts below install DDEV on the Windows side, so you won't need to do anything if you've used one of those to install.) DDEV attempts to manage custom hostnames via the Windows-side hosts file (usually `C:\Windows\system32\drivers\etc\hosts`) rather than the hosts file inside WSL2. It can only do this if DDEV (with sudo.exe) is installed and in the `$PATH` on the Windows side. (DDEV inside WSL2 uses `ddev.exe` on the Windows side as a proxy to update the Windows hosts file.) If `ddev.exe --version` shows the same version as `ddev --version` you're all set up. Otherwise, install DDEV on Windows using `choco upgrade -y ddev` or by downloading and running the Windows installer.
+
+    !!!note "WSL2 is not the same as Docker Desktop's WSL2 engine"
+        Using WSL2 to install and run DDEV is not the same as using Docker Desktop's WSL2 engine, which itself runs in WSL2, but can serve applications running in both traditional Windows and inside WSL2.**
 
     The WSL2 install process involves:
 
@@ -209,12 +215,6 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     You have now installed DDEV on WSL2. If you’re using WSL2 for DDEV (recommended), remember to run all `ddev` commands inside the WSL2 distro.
 
     To upgrade DDEV in WSL2 Ubuntu, use `apt upgrade ddev` as described in the [Linux installation section](#linux).
-
-    !!!warning "Projects go in `/home`, not on the Windows filesystem"
-        Make sure you put your projects in the Linux filesystem (e.g. `/home/<your_username>`), **not** in the Windows filesystem (`/mnt/c`), because you’ll get vastly superior performance on the Linux filesystem. You will be very unhappy if you put your project in `/mnt/c`.
-
-    !!!note "WSL2 hostname management"
-        DDEV attempts to manage custom hostnames via the Windows-side hosts file (usually `C:\Windows\system32\drivers\etc\hosts`) rather than the hosts file inside WSL2. It can only do this if DDEV (with sudo.exe) is installed and in the `$PATH` on the Windows side. (DDEV inside WSL2 uses `ddev.exe` on the Windows side as a proxy to update the Windows hosts file.) If `ddev.exe --version` gives you a reasonable result you're all set up. Otherwise, install DDEV on Windows using `choco install -y ddev` or by downloading and running the Windows installer. In general, the `ddev.exe` on the Windows side does not have to be the exact same version as the `ddev` used in WSL2.
 
     !!!note "Path to certificates"
         If you get the prompt `Installing to the system store is not yet supported on this Linux`, you may just need to add `/usr/sbin` to the `$PATH` so that `/usr/sbin/update-ca-certificates` can be found.
