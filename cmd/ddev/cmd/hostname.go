@@ -6,6 +6,7 @@ import (
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
+	"os"
 	"strings"
 
 	"github.com/drud/ddev/pkg/ddevapp"
@@ -14,14 +15,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var removeHostName bool
-var removeInactive bool
+var removeHostnameFlag bool
+var removeInactiveFlag bool
+var checkHostnameFlag bool
 
 // HostNameCmd represents the hostname command
 var HostNameCmd = &cobra.Command{
-	Use:     "hostname [hostname] [ip]",
-	Example: "ddev hostname somesite.ddev.local 127.0.0.1",
-	Short:   "Manage your hostfile entries.",
+	Use:   "hostname [hostname] [ip]",
+	Short: "Manage your hostfile entries.",
+	Example: `
+ddev hostname junk.example.com 127.0.0.1
+ddev hostname -r junk.example.com 127.0.0.1
+ddev hostname --check junk.example.com 127.0.0.1
+ddev hostname --remove-inactive
+`,
 	Long: `Manage your hostfile entries. Managing host names has security and usability
 implications and requires elevated privileges. You may be asked for a password
 to allow ddev to modify your hosts file. If you are connected to the internet and using the domain ddev.site this is generally not necessary, because the hosts file never gets manipulated.`,
@@ -52,7 +59,7 @@ to allow ddev to modify your hosts file. If you are connected to the internet an
 		}
 
 		// If requested, remove all inactive host names and exit
-		if removeInactive {
+		if removeInactiveFlag {
 			if len(args) > 0 {
 				util.Failed("Invalid arguments supplied. 'ddev hostname --remove-all' accepts no arguments.")
 			}
@@ -71,12 +78,17 @@ to allow ddev to modify your hosts file. If you are connected to the internet an
 		hostname, ip := args[0], args[1]
 
 		// If requested, remove the provided host name and exit
-		if removeHostName {
+		if removeHostnameFlag {
 			removeHostname(hosts, ip, hostname)
 
 			return
 		}
-
+		if checkHostnameFlag {
+			if checkHostname(hosts, ip, hostname) {
+				return
+			}
+			os.Exit(1)
+		}
 		// By default, add a host name
 		addHostname(hosts, ip, hostname)
 	},
@@ -184,6 +196,21 @@ func removeHostname(hosts goodhosts.Hosts, ip, hostname string) {
 	return
 }
 
+// checkHostname checks to see if hostname already exists in hosts file.
+func checkHostname(hosts goodhosts.Hosts, ip, hostname string) bool {
+	if dockerutil.IsWSL2() && ddevapp.IsWindowsDdevExeAvailable() {
+		util.Debug("Running ddev.exe --check %s %s  on Windows side", hostname, ip)
+		out, err := exec.RunHostCommand("ddev.exe", "hostname", "--check", hostname, ip)
+		if err == nil {
+			util.Debug("ran ddev.exe --check %s %s with output=%s", hostname, ip, out)
+			return true
+		}
+		return false
+	}
+
+	return hosts.Has(ip, hostname)
+}
+
 // removeInactiveHostnames will remove all host names except those current in use by active projects.
 func removeInactiveHostnames(hosts goodhosts.Hosts) {
 	var detail string
@@ -259,9 +286,10 @@ func removeInactiveHostnames(hosts goodhosts.Hosts) {
 }
 
 func init() {
-	HostNameCmd.Flags().BoolVarP(&removeHostName, "remove", "r", false, "Remove the provided host name - ip correlation")
-	HostNameCmd.Flags().BoolVarP(&removeInactive, "remove-inactive", "R", false, "Remove host names of inactive projects")
-	HostNameCmd.Flags().BoolVar(&removeInactive, "fire-bazooka", false, "Alias of --remove-inactive")
+	HostNameCmd.Flags().BoolVarP(&removeHostnameFlag, "remove", "r", false, "Remove the provided host name - ip correlation")
+	HostNameCmd.Flags().BoolVarP(&checkHostnameFlag, "check", "c", false, "Check to see if provided hostname is already in hosts file")
+	HostNameCmd.Flags().BoolVarP(&removeInactiveFlag, "remove-inactive", "R", false, "Remove host names of inactive projects")
+	HostNameCmd.Flags().BoolVar(&removeInactiveFlag, "fire-bazooka", false, "Alias of --remove-inactive")
 	_ = HostNameCmd.Flags().MarkHidden("fire-bazooka")
 
 	RootCmd.AddCommand(HostNameCmd)
