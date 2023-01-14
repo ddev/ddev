@@ -97,11 +97,13 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     You can also use two macOS install methods to install or update DDEV on Linux: [Homebrew](#homebrew) (only on AMD64 computers) and the standalone [install script](#install-script).
 
-=== "Windows WSL2"
+=== "Windows (WSL2)"
 
-    ## Windows WSL2
+    ## Windows
 
-    Windows WSL2 is a fantastic way to run DDEV and your web components. It’s Linux, which means a different experience for many Windows users. It’s Ubuntu Linux by default as described here, so it’s worth taking a little time to explore how Ubuntu and Bash work, including standard system commands and installation and upgrade procedures.
+    You can install on Windows three different ways: Using WSL2 with Docker inside, Using WSL2 with Docker Desktop, and installing directly on traditional Windows with an installer (not recommended). Each is described below.
+
+    Windows WSL2 is the best way to run DDEV and your web components. It’s Linux, which means a different experience for some Windows users. It’s Ubuntu Linux by default as described here, so it’s worth taking a little time to explore how Ubuntu and Bash work, including standard system commands and installation and upgrade procedures.
 
     ### Things You Need to Know about WSL2 and DDEV
 
@@ -123,9 +125,11 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     This scripted installation prepares your default WSL2 Ubuntu distro and has no dependency on Docker Desktop.
 
     The provided `PowerShell.exe` (original PowerShell 5) script can do most of the work for you, or you can handle these things manually. 
+
     In all cases:
     
-    1. Install WSL2 with an Ubuntu distro. 
+    1. Install WSL2 with an Ubuntu distro.
+
         * Visit the Microsoft Store and install "Windows Subsystem for Linux", then click "Open". It will likely prompt you for a username and password for the Ubuntu WSL2 instance it creates.
 
         * Verify that you have now have an Ubuntu distro set as default by running `wsl.exe -l -v` 
@@ -214,13 +218,11 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     !!!note "Path to certificates"
         If you get the prompt `Installing to the system store is not yet supported on this Linux`, you may just need to add `/usr/sbin` to the `$PATH` so that `/usr/sbin/update-ca-certificates` can be found.
 
-=== "Traditional Windows"
+    ### Traditional Windows
 
-    ## Traditional Windows
+    It is possible to install DDEV in traditional Windows, and it works fine, but it’s massively than WSL2. Enable either [Mutagen](performance/#system-requirements) for the best performance if you have to use traditional Windows, but the best alternative is to install on WSL2.
 
-    DDEV works fine on the Windows side, but it’s slower than WSL2 by default. Enable either [Mutagen](performance/#system-requirements) or [NFS](performance/#nfs) for the best performance.
-
-    * If you use [Chocolatey](https://chocolatey.org/) (recommended), you can run `choco install ddev git` from an administrative shell. Upgrades are just `ddev poweroff && choco upgrade ddev`.
+    * If you use [Chocolatey](https://chocolatey.org/) (recommended), you can run `choco install ddev docker-desktop git` from an administrative shell. Upgrades are just `ddev poweroff && choco upgrade ddev`.
     * A Windows installer is provided in each [DDEV release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you. Open a new Git Bash or PowerShell or cmd window and start using DDEV.
     * Most people interact with DDEV on Windows using Git Bash, part of the [Windows Git suite](https://git-scm.com/download/win). Although DDEV does work with cmd and PowerShell, it's more at home in Bash. You can install it with Chocolatey using `choco install -y git`.
     * For performance, many users enable Mutagen, `ddev config global --mutagen-enabled` (global) or `ddev config --mutagen-enabled` just for one project.
