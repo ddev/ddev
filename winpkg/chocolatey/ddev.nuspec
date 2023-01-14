@@ -17,7 +17,7 @@
     <docsUrl>https://ddev.readthedocs.io/en/stable/</docsUrl>
     <bugTrackerUrl>https://github.com/drud/ddev/issues</bugTrackerUrl>
     <tags>ddev drupal TYPO3 backdrop php</tags>
-    <summary>ddev is a local web development tool optimized for PHP projects and CMSs.</summary>
+    <summary>DDEV is a local web development tool optimized for PHP projects and CMSs.</summary>
     <description>ddev allows developers to use both nginx and apache, and many versions of PHP, with no host configurations. It works for most web apps, but has a bias toward TYPO3 and Drupal and Wordpress.</description>
     <releaseNotes>See https://github.com/drud/ddev/releases/tag/vREPLACE_DDEV_VERSION</releaseNotes>
   <dependencies>
