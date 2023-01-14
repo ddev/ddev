@@ -63,12 +63,5 @@ wsl rm -rf ~/.docker
 
 wsl ddev version
 
-# If Windows 11 (greater than build 22000) then we can get auto docker startup using wsl.conf
-# But if Windows 10, they need to start another way.
-$osv = (Get-CimInstance Win32_OperatingSystem).version
-if ([System.Version]$osv -ge [System.Version]"10.0.22000") {
-    wsl -u root -e bash -c "touch /etc/wsl.conf && if ! fgrep '[boot]' /etc/wsl.conf >/dev/null; then printf '\n[boot]\ncommand=service docker start\n' >>/etc/wsl.conf; fi"
-    Write-Output("Windows 11: Added service docker start to /etc/wsl.conf")
-} else {
-    Write-Output("Windows 10: Manual start of docker is required, for example sudo service docker start, see https://ddev.readthedocs.io/en/latest/users/install/ddev-installation/#windows-wsl2")
-}
+wsl -u root -e bash -c "touch /etc/wsl.conf && if ! fgrep '[boot]' /etc/wsl.conf >/dev/null; then printf '\n[boot]\nsystemd=true\n' >>/etc/wsl.conf; fi"
+

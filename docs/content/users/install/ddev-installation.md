@@ -115,8 +115,8 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     * Installing Chocolatey package manager (optional).
     * One time initialization of mkcert.
     * Installing WSL2 and installing a distro like Ubuntu.
-    * Installing Docker Desktop for Windows and enabling WSL2 integration with the distro (optional, do this if you're using the Docker Desktop approach).
-    * Installing DDEV inside your distro.
+    * Optionally installing Docker Desktop for Windows and enabling WSL2 integration with the distro (if you're using the Docker Desktop approach).
+    * Installing DDEV inside your distro; this is normally done by running one of the two scripts below, but can be done manually step-by-step as well.
 
     ### WSL2 + Docker CE Inside Install Script
 
@@ -125,18 +125,14 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     The provided `PowerShell.exe` (original PowerShell 5) script can do most of the work for you, or you can handle these things manually. 
     In all cases:
     
-    1. Install WSL2 with an Ubuntu distro. On a system without WSL2, run:
-        ```powershell
-        wsl --install
-        ```
+    1. Install WSL2 with an Ubuntu distro. 
+        * Visit the Microsoft Store and install "Windows Subsystem for Linux", then click "Open". It will likely prompt you for a username and password for the Ubuntu WSL2 instance it creates.
 
-        Verify that you have an Ubuntu distro set to default by running `wsl -l -v`.
+        * Verify that you have now have an Ubuntu distro set as default by running `wsl.exe -l -v` 
 
-        If you already have WSL2 but don't have an Ubuntu distro, install one by running `wsl --install Ubuntu`. 
+        If you already have WSL2 but don't have an Ubuntu distro, install one by running `wsl.exe --install Ubuntu`. 
 
         If that doesn't work for you, see the [manual installation](https://docs.microsoft.com/en-us/windows/wsl/install-manual) and linked [troubleshooting](https://docs.microsoft.com/en-us/windows/wsl/troubleshooting#installation-issues).
-        
-        If you prefer to use another Ubuntu distro, install it and set it as default. For example, `wsl --set-default Ubuntu-22.04`.
 
     2. In an administrative PowerShell (5) run [this PowerShell script](https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1) by executing: 
 
@@ -144,6 +140,8 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; 
         iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1'))
         ```
+    3. In "Windows Update Settings → Advanced Options" enable "Receive updates for other Microsoft products", and you may want to occasionally `wsl.exe --update` as well.
+
     Now you can use the "Ubuntu" terminal app or Windows Terminal to access your Ubuntu distro, which has DDEV and Docker working inside it.
 
     ### WSL2 + Docker Desktop Install Script
@@ -175,6 +173,8 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; 
         iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2_docker_desktop.ps1'))
         ```
+    6. In "Windows Update Settings → Advanced Options" enable "Receive updates for other Microsoft products", and you may want to occasionally `wsl.exe --update` as well.
+
 
     Now you can use the "Ubuntu" terminal app or Windows Terminal to access your Ubuntu distro, which has DDEV and Docker Desktop integrated with it.
 

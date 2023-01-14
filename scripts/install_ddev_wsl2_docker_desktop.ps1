@@ -55,4 +55,6 @@ wsl -u root mkcert -install
 if (-not(wsl -e docker ps)) {
     throw "docker does not seem to be working inside the WSL2 distro yet. Check Resources->WSL Integration in Docker Desktop"
 }
+wsl -u root -e bash -c "touch /etc/wsl.conf && if ! fgrep '[boot]' /etc/wsl.conf >/dev/null; then printf '\n[boot]\nsystemd=true\n' >>/etc/wsl.conf; fi"
+
 wsl ddev version
