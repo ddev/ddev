@@ -61,6 +61,7 @@ type GlobalConfig struct {
 	XdebugIDELocation            string                  `yaml:"xdebug_ide_location"`
 	NoBindMounts                 bool                    `yaml:"no_bind_mounts"`
 	UseTraefik                   bool                    `yaml:"use_traefik"`
+	WSL2NoWindowsHostsMgt        bool                    `yaml:wsl2_no_windows_hosts_mgt`
 	ProjectList                  map[string]*ProjectInfo `yaml:"project_info"`
 }
 
@@ -309,6 +310,12 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 # fail_on_hook_fail: false
 # Decide whether 'ddev start' should be interrupted by a failing hook
+
+# wsl2_no_windows_hosts_mgt: false
+# On WSL2 by default the Windows-side hosts file (normally C:\Windows\system32\drivers\etc\hsots)
+# is used for hosts file management, but doing that requires running sudo and ddev.exe on
+# Windows side; you may not want this if you're running your browser in WSL2 or for
+# various other reasons.
 
 # required_docker_compose_version: ""
 # This can be used to override the default required docker-compose version

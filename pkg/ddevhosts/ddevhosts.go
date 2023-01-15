@@ -39,3 +39,12 @@ func New() (*DdevHosts, error) {
 
 	return &DdevHosts{h}, nil
 }
+
+func NewCustomHosts(osHostsFilePath string) (*DdevHosts, error) {
+	h, err := goodhosts.NewCustomHosts(osHostsFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	return &DdevHosts{h}, nil
+}

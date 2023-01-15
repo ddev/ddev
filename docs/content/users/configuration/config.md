@@ -222,7 +222,7 @@ Email associated with Let’s Encrypt feature. (Works in conjunction with [`use_
 | -- | -- | --
 | :octicons-globe-16: global | `` |
 
-Set with `ddev global --letsencrypt-email=me@example.com`. Used with the [casual hosting](../topics/hosting.md) feature.
+Set with `ddev config global --letsencrypt-email=me@example.com`. Used with the [casual hosting](../topics/hosting.md) feature.
 
 ## `mailhog_https_port`
 
@@ -503,7 +503,17 @@ Whether to enable Let’s Encrypt integration. (Works in conjunction with [`lets
 | -- | -- | --
 | :octicons-globe-16: global | `false` | Can `true` or `false`.
 
-May also be set via `ddev global --use-letsencrypt` or `ddev global --use-letsencrypt=false`. When `true`, `letsencrypt_email` must also be set and the system must be available on the internet. Used with the [casual hosting](../topics/hosting.md) feature.
+May also be set via `ddev config global --use-letsencrypt` or `ddev config global --use-letsencrypt=false`. When `true`, `letsencrypt_email` must also be set and the system must be available on the internet. Used with the [casual hosting](../topics/hosting.md) feature.
+
+## `use_traefik`
+
+Whether to enable the [traefik router](experimental.md#traefik-router).
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-globe-16: global | `false` | Can `true` or `false`.
+
+May also be set via `ddev config global --use-traefik` or `ddev config global --use-traefik=false`.
 
 ## `web_environment`
 
@@ -575,6 +585,16 @@ Working directories used by [`ddev exec`](../usage/commands.md#exec) and [`ddev 
 | :octicons-file-directory-16: project | |
 
 Example: `working_dir: { web: "/var/www", db: "/etc" }` sets the working directories for the `web` and `db` containers.
+
+## `wsl2_no_windows_hosts_mgt`
+
+(WSL2 only) Whether to disable the management and checking of the Windows hosts file. 
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-globe-16: global | `false` | Can `true` or `false`.
+
+May also be set via `ddev config global --wsl2-no-windows-hosts-mgt` or `ddev config global --wsl2-no-windows-hosts-mgt=false`.
 
 ## `xdebug_enabled`
 

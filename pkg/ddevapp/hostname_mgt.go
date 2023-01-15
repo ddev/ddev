@@ -177,14 +177,20 @@ func (app *DdevApp) RemoveHostsEntries() error {
 
 // CheckWindowsHostsFile() verifies that the Windows hosts file doesn't have long lines in it.
 func CheckWindowsHostsFile() {
-	if runtime.GOOS != "windows" {
+	if globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt || (runtime.GOOS != "windows" && !dockerutil.IsWSL2()) {
 		return
 	}
+
 	dockerIP, err := dockerutil.GetDockerIP()
 	if err != nil {
 		util.Warning("unable to GetDockerIP(): %v", err)
 	}
-	hosts, err := ddevhosts.New()
+	hosts := &ddevhosts.DdevHosts{}
+	if runtime.GOOS == "windows" {
+		hosts, err = ddevhosts.New()
+	} else if dockerutil.IsWSL2() {
+		hosts, err = ddevhosts.NewCustomHosts("/mnt/c/Windows/system32/drivers/etc/hosts")
+	}
 	if err != nil {
 		util.Warning("could not open hostfile: %v", err)
 	}
