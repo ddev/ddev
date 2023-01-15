@@ -8,6 +8,8 @@ import (
 	goodhosts "github.com/goodhosts/hostsfile"
 )
 
+const WSL2WindowsHostsFile = `/mnt/c/Windows/system32/drivers/etc/hosts`
+
 // DdevHosts uses composition to absorb all exported functions of goodhosts
 type DdevHosts struct {
 	*goodhosts.Hosts // provides all exported functions from goodhosts

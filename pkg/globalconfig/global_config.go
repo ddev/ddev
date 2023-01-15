@@ -312,7 +312,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # Decide whether 'ddev start' should be interrupted by a failing hook
 
 # wsl2_no_windows_hosts_mgt: false
-# On WSL2 by default the Windows-side hosts file (normally C:\Windows\system32\drivers\etc\hsots)
+# On WSL2 by default the Windows-side hosts file (normally C:\Windows\system32\drivers\etc\hosts)
 # is used for hosts file management, but doing that requires running sudo and ddev.exe on
 # Windows side; you may not want this if you're running your browser in WSL2 or for
 # various other reasons.

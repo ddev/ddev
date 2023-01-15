@@ -16,11 +16,12 @@ import (
 	"strings"
 )
 
-// IsWindowsDdevExeAvailable checks to see if we can run ddev.exe on Windows side
+// windowsDdevExeAvailable says if ddev.exe is available on Windows side
 var windowsDdevExeAvailable bool
 
+// IsWindowsDdevExeAvailable checks to see if we can use ddev.exe on Windows side
 func IsWindowsDdevExeAvailable() bool {
-	if !windowsDdevExeAvailable && dockerutil.IsWSL2() {
+	if !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt && !windowsDdevExeAvailable && dockerutil.IsWSL2() {
 		_, err := exec2.LookPath("ddev.exe")
 		if err != nil {
 			util.Warning("ddev.exe not found in $PATH, please install it on Windows side; err=%v", err)
@@ -45,16 +46,30 @@ func IsWindowsDdevExeAvailable() bool {
 	return windowsDdevExeAvailable
 }
 
+func IsHostnameInHostsFile(hostname string) (bool, error) {
+	dockerIP, err := dockerutil.GetDockerIP()
+	if err != nil {
+		return false, fmt.Errorf("could not get Docker IP: %v", err)
+	}
+
+	hosts := &ddevhosts.DdevHosts{}
+
+	if dockerutil.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
+		hosts, err = ddevhosts.NewCustomHosts(ddevhosts.WSL2WindowsHostsFile)
+	} else {
+		hosts, err = ddevhosts.New()
+	}
+	if err != nil {
+		return false, fmt.Errorf("Unable to open hosts file: %v", err)
+	}
+	return hosts.Has(dockerIP, hostname), nil
+}
+
 // AddHostsEntriesIfNeeded will (optionally) add the site URL to the host's /etc/hosts.
 func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 	dockerIP, err := dockerutil.GetDockerIP()
 	if err != nil {
 		return fmt.Errorf("could not get Docker IP: %v", err)
-	}
-
-	hosts, err := ddevhosts.New()
-	if err != nil {
-		util.Failed("could not open hostfile: %v", err)
 	}
 
 	CheckWindowsHostsFile()
@@ -74,7 +89,12 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 
 		// We likely won't hit the hosts.Has() as true because
 		// we already did a lookup. But check anyway.
-		if hosts.Has(dockerIP, name) {
+		exists, err := IsHostnameInHostsFile(name)
+		if exists {
+			continue
+		}
+		if err != nil {
+			util.Warning("unable to open hosts file: %v", err)
 			continue
 		}
 		util.Warning("The hostname %s is not currently resolvable, trying to add it to the hosts file", name)
@@ -189,7 +209,7 @@ func CheckWindowsHostsFile() {
 	if runtime.GOOS == "windows" {
 		hosts, err = ddevhosts.New()
 	} else if dockerutil.IsWSL2() {
-		hosts, err = ddevhosts.NewCustomHosts("/mnt/c/Windows/system32/drivers/etc/hosts")
+		hosts, err = ddevhosts.NewCustomHosts(ddevhosts.WSL2WindowsHostsFile)
 	}
 	if err != nil {
 		util.Warning("could not open hostfile: %v", err)
