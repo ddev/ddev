@@ -52,8 +52,7 @@ func IsHostnameInHostsFile(hostname string) (bool, error) {
 		return false, fmt.Errorf("could not get Docker IP: %v", err)
 	}
 
-	hosts := &ddevhosts.DdevHosts{}
-
+	var hosts = &ddevhosts.DdevHosts{}
 	if dockerutil.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
 		hosts, err = ddevhosts.NewCustomHosts(ddevhosts.WSL2WindowsHostsFile)
 	} else {
@@ -67,6 +66,7 @@ func IsHostnameInHostsFile(hostname string) (bool, error) {
 
 // AddHostsEntriesIfNeeded will (optionally) add the site URL to the host's /etc/hosts.
 func (app *DdevApp) AddHostsEntriesIfNeeded() error {
+	var err error
 	dockerIP, err := dockerutil.GetDockerIP()
 	if err != nil {
 		return fmt.Errorf("could not get Docker IP: %v", err)
@@ -98,7 +98,11 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 			continue
 		}
 		util.Warning("The hostname %s is not currently resolvable, trying to add it to the hosts file", name)
-		err = addHostEntry(name, dockerIP)
+		if !dockerutil.IsWSL2() || globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
+			err = addHostEntry(name, dockerIP)
+		} else {
+			err = wsl2AddHostEntry(name, dockerIP)
+		}
 		if err != nil {
 			return err
 		}
@@ -107,7 +111,8 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 	return nil
 }
 
-// addHostEntry adds an entry to /etc/hosts
+// addHostEntry adds an entry to default hosts file
+// This version is NOT used on WSL2
 // We would have hoped to use DNS or have found the entry already in hosts
 // But if it's not, try to add one.
 func addHostEntry(name string, ip string) error {
@@ -135,6 +140,19 @@ func addHostEntry(name string, ip string) error {
 		util.Warning("Failed to execute %s, you will need to manually execute '%s' with administrative privileges, err=%v, output=%v", strings.Join(hostnameArgs, " "), strings.Join(hostnameArgs, " "), err, out)
 	}
 	util.Debug("output of RunCommandPipe sudo %v=%v", strings.Join(hostnameArgs, " "), out)
+	return nil
+}
+
+// wsl2AddHostEntry adds a hosts file entry on the Windows side using sudo and ddev.exe
+func wsl2AddHostEntry(name string, ip string) error {
+	hostnameArgs := []string{"sudo.exe", "ddev.exe", "hostname", name, ip}
+	output.UserOut.Printf("ddev needs to add an entry to your Windows hosts file.\nIt may require escalation. ddev is about to issue the command:\n   %s", strings.Join(hostnameArgs, " "))
+	out, err := exec.RunHostCommand(hostnameArgs[0], hostnameArgs[1:]...)
+	if err != nil {
+		util.Warning("Failed to execute %s, you will need to manually execute '%s' with administrative privileges, err=%v, output=%v", strings.Join(hostnameArgs, " "), strings.Join(hostnameArgs, " "), err, out)
+	}
+	util.Success(out)
+	util.Debug("output of RunHostCommand %v=%v", strings.Join(hostnameArgs, " "), out)
 	return nil
 }
 
