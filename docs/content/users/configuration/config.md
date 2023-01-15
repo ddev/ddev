@@ -588,7 +588,7 @@ Example: `working_dir: { web: "/var/www", db: "/etc" }` sets the working directo
 
 ## `wsl2_no_windows_hosts_mgt`
 
-(WSL2 only) Whether to disable the management and checking of the Windows hosts file. 
+(WSL2 only) Whether to disable the management and checking of the Windows hosts file.
 
 | Type | Default | Usage
 | -- | -- | --

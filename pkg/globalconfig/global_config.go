@@ -61,7 +61,7 @@ type GlobalConfig struct {
 	XdebugIDELocation            string                  `yaml:"xdebug_ide_location"`
 	NoBindMounts                 bool                    `yaml:"no_bind_mounts"`
 	UseTraefik                   bool                    `yaml:"use_traefik"`
-	WSL2NoWindowsHostsMgt        bool                    `yaml:wsl2_no_windows_hosts_mgt`
+	WSL2NoWindowsHostsMgt        bool                    `yaml:"wsl2_no_windows_hosts_mgt"`
 	ProjectList                  map[string]*ProjectInfo `yaml:"project_info"`
 }
 
