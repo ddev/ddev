@@ -12,7 +12,6 @@ import (
 	"net"
 	"os"
 	exec2 "os/exec"
-	"runtime"
 	"strings"
 )
 
@@ -71,8 +70,6 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 	if err != nil {
 		return fmt.Errorf("could not get Docker IP: %v", err)
 	}
-
-	CheckWindowsHostsFile()
 
 	for _, name := range app.GetHostnames() {
 		if app.UseDNSWhenPossible && globalconfig.IsInternetActive() {
@@ -211,35 +208,4 @@ func (app *DdevApp) RemoveHostsEntries() error {
 	}
 
 	return nil
-}
-
-// CheckWindowsHostsFile() verifies that the Windows hosts file doesn't have long lines in it.
-func CheckWindowsHostsFile() {
-	if globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt || (runtime.GOOS != "windows" && !dockerutil.IsWSL2()) {
-		return
-	}
-
-	dockerIP, err := dockerutil.GetDockerIP()
-	if err != nil {
-		util.Warning("unable to GetDockerIP(): %v", err)
-	}
-	hosts := &ddevhosts.DdevHosts{}
-	if runtime.GOOS == "windows" {
-		hosts, err = ddevhosts.New()
-	} else if dockerutil.IsWSL2() {
-		hosts, err = ddevhosts.NewCustomHosts(ddevhosts.WSL2WindowsHostsFile)
-	}
-	if err != nil {
-		util.Warning("could not open hostfile: %v", err)
-	}
-
-	ipPosition := hosts.GetIPPosition(dockerIP)
-	if ipPosition != -1 {
-		hostsLine := hosts.Lines[ipPosition]
-		if len(hostsLine.Hosts) >= 10 {
-			util.Error("You have more than 9 entries in your (windows) hostsfile entry for %s", dockerIP)
-			util.Error("Please use `ddev hostname --remove-inactive` or edit the hosts file manually")
-			util.Error("Please see %s for more information", "https://ddev.readthedocs.io/en/stable/users/basics/troubleshooting/#windows-hosts-file-may-be-limited-to-10-hosts-per-line")
-		}
-	}
 }

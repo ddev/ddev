@@ -99,8 +99,6 @@ func addHostname(hosts *goodhosts.Hosts, ip, hostname string) {
 	var detail string
 	rawResult := make(map[string]interface{})
 
-	ddevapp.CheckWindowsHostsFile()
-
 	if dockerutil.IsWSL2() && ddevapp.IsWindowsDdevExeAvailable() {
 		util.Debug("Running sudo.exe ddev.exe %s %s  on Windows side", hostname, ip)
 		out, err := exec.RunHostCommand("sudo.exe", "ddev.exe", "hostname", hostname, ip)
