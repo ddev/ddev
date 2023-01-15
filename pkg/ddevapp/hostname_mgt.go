@@ -8,7 +8,7 @@ import (
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
-	"github.com/lextoumbourou/goodhosts"
+	goodhosts "github.com/goodhosts/hostsfile"
 	"net"
 	"os"
 	exec2 "os/exec"
@@ -154,10 +154,14 @@ func (app *DdevApp) RemoveHostsEntries() error {
 		ddevFullPath, err := os.Executable()
 		util.CheckErr(err)
 
+		// Check to see if the hostname already exists
+		if out, err := exec.RunHostCommand(ddevFullPath, "hostname", "--check", name, dockerIP); err != nil {
+			util.Debug("hostname %s doesn't exist or can't check: %v (output=%s)", name, err, out)
+		}
 		hostnameArgs := []string{ddevFullPath, "hostname", "--remove", name, dockerIP}
 		command := strings.Join(hostnameArgs, " ")
 		util.Warning(fmt.Sprintf("    sudo %s", command))
-		output.UserOut.Printf("ddev needs to remove '%s' from your hosts file.\nIt may require administrative privileges via the sudo command or escalation, so you may be required\nto enter your password for sudo. ddev is about to issue the command:\n    %s", name, strings.Join(hostnameArgs, " "))
+		output.UserOut.Printf("ddev may need to remove '%s' from your hosts file.\nIt may require administrative privileges via the sudo command or escalation, so you may be required\nto enter your password for sudo. ddev is about to issue the command:\n    %s", name, strings.Join(hostnameArgs, " "))
 		output.UserOut.Println("Please enter your password if prompted.")
 
 		if !dockerutil.IsWSL2() || !IsWindowsDdevExeAvailable() {

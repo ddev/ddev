@@ -11,7 +11,7 @@ import (
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/lextoumbourou/goodhosts"
+	goodhosts "github.com/goodhosts/hostsfile"
 	"github.com/spf13/cobra"
 )
 
@@ -95,7 +95,7 @@ to allow ddev to modify your hosts file. If you are connected to the internet an
 }
 
 // addHostname encapsulates the logic of adding a hostname to the system's hosts file.
-func addHostname(hosts goodhosts.Hosts, ip, hostname string) {
+func addHostname(hosts *goodhosts.Hosts, ip, hostname string) {
 	var detail string
 	rawResult := make(map[string]interface{})
 
@@ -147,7 +147,7 @@ func addHostname(hosts goodhosts.Hosts, ip, hostname string) {
 }
 
 // removeHostname encapsulates the logic of removing a hostname from the system's hosts file.
-func removeHostname(hosts goodhosts.Hosts, ip, hostname string) {
+func removeHostname(hosts *goodhosts.Hosts, ip, hostname string) {
 	var detail string
 	rawResult := make(map[string]interface{})
 
@@ -203,7 +203,7 @@ func removeHostname(hosts goodhosts.Hosts, ip, hostname string) {
 }
 
 // checkHostname checks to see if hostname already exists in hosts file.
-func checkHostname(hosts goodhosts.Hosts, ip, hostname string) bool {
+func checkHostname(hosts *goodhosts.Hosts, ip, hostname string) bool {
 	if dockerutil.IsWSL2() && ddevapp.IsWindowsDdevExeAvailable() {
 		util.Debug("Running ddev.exe --check %s %s  on Windows side", hostname, ip)
 		out, err := exec.RunHostCommand("ddev.exe", "hostname", "--check", hostname, ip)
@@ -218,7 +218,7 @@ func checkHostname(hosts goodhosts.Hosts, ip, hostname string) bool {
 }
 
 // removeInactiveHostnames will remove all host names except those current in use by active projects.
-func removeInactiveHostnames(hosts goodhosts.Hosts) {
+func removeInactiveHostnames(hosts *goodhosts.Hosts) {
 	var detail string
 	rawResult := make(map[string]interface{})
 

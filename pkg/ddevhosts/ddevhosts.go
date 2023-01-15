@@ -5,12 +5,12 @@ package ddevhosts
 // exported function.
 
 import (
-	"github.com/lextoumbourou/goodhosts"
+	goodhosts "github.com/goodhosts/hostsfile"
 )
 
 // DdevHosts uses composition to absorb all exported functions of goodhosts
 type DdevHosts struct {
-	goodhosts.Hosts // provides all exported functions from goodhosts
+	*goodhosts.Hosts // provides all exported functions from goodhosts
 }
 
 // GetIPPosition is the same as the unexported getIpPosition,
