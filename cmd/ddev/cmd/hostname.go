@@ -6,7 +6,6 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	goodhosts "github.com/goodhosts/hostsfile"
@@ -39,10 +38,8 @@ to allow ddev to modify your hosts file. If you are connected to the internet an
 				util.Failed("Invalid arguments supplied. 'ddev hostname --remove-all' accepts no arguments.")
 			}
 
-			// TODO: Use global default tld, consider project tld
-			util.Warning("Attempting to remove inactive hostnames which use TLD %s", nodeps.DdevDefaultTLD)
+			util.Warning("Attempting to remove inactive custom hostnames for projects which are registered but not running")
 			removeInactiveHostnames()
-
 			return
 		}
 
@@ -219,12 +216,10 @@ func checkHostname(hosts *goodhosts.Hosts, ip, hostname string) bool {
 
 // removeInactiveHostnames will remove all host names except those current in use by active projects.
 func removeInactiveHostnames() {
-	for _, app := range ddevapp.GetActiveProjects() {
-		if status, _ := app.SiteStatus(); status != ddevapp.SiteRunning {
-			err := app.RemoveHostsEntriesIfNeeded()
-			if err != nil {
-				util.Warning("unable to remove hosts entries for project '%s': %v", app.Name, err)
-			}
+	for _, app := range ddevapp.GetInactiveProjects() {
+		err := app.RemoveHostsEntriesIfNeeded()
+		if err != nil {
+			util.Warning("unable to remove hosts entries for project '%s': %v", app.Name, err)
 		}
 	}
 	return
