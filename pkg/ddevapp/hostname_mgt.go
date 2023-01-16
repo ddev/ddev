@@ -96,10 +96,10 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 		}
 		util.Warning("The hostname %s is not currently resolvable, trying to add it to the hosts file", name)
 		if !dockerutil.IsWSL2() || globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
-			err = addHostEntry(name, dockerIP)
+			err = AddHostEntry(name, dockerIP)
 		} else {
 			if IsWindowsDdevExeAvailable() {
-				err = wsl2AddHostEntry(name, dockerIP)
+				err = WSL2AddHostEntry(name, dockerIP)
 			} else {
 				util.Warning("ddev.exe is not available on the Windows side. Please install it with 'choco install -y ddev' or disable Windows-side hosts management using 'ddev config global --wsl2-no-windows-hosts-mgt'")
 				err = nil
@@ -113,11 +113,11 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 	return nil
 }
 
-// addHostEntry adds an entry to default hosts file
+// AddHostEntry adds an entry to default hosts file
 // This version is NOT used on WSL2
 // We would have hoped to use DNS or have found the entry already in hosts
 // But if it's not, try to add one.
-func addHostEntry(name string, ip string) error {
+func AddHostEntry(name string, ip string) error {
 	if !dockerutil.IsWSL2() || !IsWindowsDdevExeAvailable() {
 		_, err := exec2.LookPath("sudo")
 		if (os.Getenv("DDEV_NONINTERACTIVE") != "") || err != nil {
@@ -147,8 +147,8 @@ func addHostEntry(name string, ip string) error {
 	return nil
 }
 
-// wsl2AddHostEntry adds a hosts file entry on the Windows side using sudo and ddev.exe
-func wsl2AddHostEntry(name string, ip string) error {
+// WSL2AddHostEntry adds a hosts file entry on the Windows side using sudo and ddev.exe
+func WSL2AddHostEntry(name string, ip string) error {
 	hostnameArgs := []string{"sudo.exe", "ddev.exe", "hostname", name, ip}
 	output.UserOut.Printf("ddev needs to add an entry to your Windows hosts file.\nIt may require escalation. ddev is about to issue the command:\n   %s", strings.Join(hostnameArgs, " "))
 	out, err := exec.RunHostCommand(hostnameArgs[0], hostnameArgs[1:]...)
@@ -188,10 +188,10 @@ func (app *DdevApp) RemoveHostsEntriesIfNeeded() error {
 		}
 
 		if !dockerutil.IsWSL2() || globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
-			err = removeHostEntry(name, dockerIP)
+			err = RemoveHostEntry(name, dockerIP)
 		} else {
 			if IsWindowsDdevExeAvailable() {
-				err = wsl2RemoveHostEntry(name, dockerIP)
+				err = WSL2RemoveHostEntry(name, dockerIP)
 			} else {
 				util.Warning("ddev.exe is not available on the Windows side. Please install it with 'choco install -y ddev' or disable Windows-side hosts management using 'ddev config global --wsl2-no-windows-hosts-mgt'")
 			}
@@ -204,13 +204,9 @@ func (app *DdevApp) RemoveHostsEntriesIfNeeded() error {
 	return nil
 }
 
-// removeHostEntry removes named /etc/hosts entry if it exists
+// RemoveHostEntry removes named /etc/hosts entry if it exists
 // This version is used everywhere except wsl2, which has its own approach
-func removeHostEntry(name string, ip string) error {
-	dockerIP, err := dockerutil.GetDockerIP()
-	if err != nil {
-		return fmt.Errorf("could not get Docker IP: %v", err)
-	}
+func RemoveHostEntry(name string, dockerIP string) error {
 
 	hosts, err := goodhosts.NewHosts()
 	if err != nil {
@@ -248,8 +244,8 @@ func removeHostEntry(name string, ip string) error {
 	return nil
 }
 
-// wsl2RemoveHostEntry uses Windows-side sudo.exe ddev.exe to remove from hosts file, with UAC escalation
-func wsl2RemoveHostEntry(name string, ip string) error {
+// WSL2RemoveHostEntry uses Windows-side sudo.exe ddev.exe to remove from hosts file, with UAC escalation
+func WSL2RemoveHostEntry(name string, ip string) error {
 	hostnameArgs := []string{"sudo.exe", "ddev.exe", "hostname", "--remove", name, ip}
 	output.UserOut.Printf("ddev needs to remove an entry from your Windows hosts file.\nIt may require UAC escalation. ddev is about to issue the command:\n   %s", strings.Join(hostnameArgs, " "))
 	out, err := exec.RunHostCommand(hostnameArgs[0], hostnameArgs[1:]...)

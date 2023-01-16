@@ -2,17 +2,16 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
-	"os"
-	"strings"
-
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/dockerutil"
 	goodhosts "github.com/goodhosts/hostsfile"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var removeHostnameFlag bool
@@ -33,30 +32,6 @@ ddev hostname --remove-inactive
 implications and requires elevated privileges. You may be asked for a password
 to allow ddev to modify your hosts file. If you are connected to the internet and using the domain ddev.site this is generally not necessary, because the hosts file never gets manipulated.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		hosts, err := goodhosts.NewHosts()
-		if err != nil {
-			rawResult := make(map[string]interface{})
-			detail := fmt.Sprintf("Could not open hosts file for reading: %v", err)
-			rawResult["error"] = "READERROR"
-			rawResult["full_error"] = detail
-			output.UserOut.WithField("raw", rawResult).Fatal(detail)
-
-			return
-		}
-
-		// Attempt to write the hosts file first to catch any permissions issues early
-		// Don't do this on wsl2, which will try to run ddev.exe on the windows side
-		if !dockerutil.IsWSL2() {
-			if hosts.Flush(); err != nil {
-				rawResult := make(map[string]interface{})
-				detail := fmt.Sprintf("Please use sudo or execute with administrative privileges: %v", err)
-				rawResult["error"] = "WRITEERROR"
-				rawResult["full_error"] = detail
-				output.UserOut.WithField("raw", rawResult).Fatal(detail)
-
-				return
-			}
-		}
 
 		// If requested, remove all inactive host names and exit
 		if removeInactiveFlag {
@@ -64,8 +39,9 @@ to allow ddev to modify your hosts file. If you are connected to the internet an
 				util.Failed("Invalid arguments supplied. 'ddev hostname --remove-all' accepts no arguments.")
 			}
 
+			// TODO: Use global default tld, consider project tld
 			util.Warning("Attempting to remove inactive hostnames which use TLD %s", nodeps.DdevDefaultTLD)
-			removeInactiveHostnames(hosts)
+			removeInactiveHostnames()
 
 			return
 		}
@@ -75,22 +51,48 @@ to allow ddev to modify your hosts file. If you are connected to the internet an
 			util.Failed("Invalid arguments supplied. Please use 'ddev hostname [hostname] [ip]'")
 		}
 
-		hostname, ip := args[0], args[1]
+		name, dockerIP := args[0], args[1]
+		var err error
 
 		// If requested, remove the provided host name and exit
 		if removeHostnameFlag {
-			removeHostname(hosts, ip, hostname)
-
+			if !dockerutil.IsWSL2() || globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
+				err = ddevapp.RemoveHostEntry(name, dockerIP)
+			} else {
+				if ddevapp.IsWindowsDdevExeAvailable() {
+					err = ddevapp.WSL2RemoveHostEntry(name, dockerIP)
+				} else {
+					util.Warning("ddev.exe is not available on the Windows side. Please install it with 'choco install -y ddev' or disable Windows-side hosts management using 'ddev config global --wsl2-no-windows-hosts-mgt'")
+				}
+			}
+			if err != nil {
+				util.Warning("Failed to remove host entry %s: %v", name, err)
+			}
 			return
 		}
 		if checkHostnameFlag {
-			if checkHostname(hosts, ip, hostname) {
+			exists, err := ddevapp.IsHostnameInHostsFile(name)
+			if exists {
 				return
+			}
+			if err != nil {
+				util.Warning("could not check existence in hosts file: %v", err)
 			}
 			os.Exit(1)
 		}
 		// By default, add a host name
-		addHostname(hosts, ip, hostname)
+		if !dockerutil.IsWSL2() || globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
+			err = ddevapp.AddHostEntry(name, dockerIP)
+		} else {
+			if ddevapp.IsWindowsDdevExeAvailable() {
+				err = ddevapp.WSL2AddHostEntry(name, dockerIP)
+			} else {
+				util.Warning("ddev.exe is not available on the Windows side. Please install it with 'choco install -y ddev' or disable Windows-side hosts management using 'ddev config global --wsl2-no-windows-hosts-mgt'")
+			}
+		}
+		if err != nil {
+			util.Warning("Failed to remove add hosts entry %s: %v", name, err)
+		}
 	},
 }
 
@@ -216,76 +218,15 @@ func checkHostname(hosts *goodhosts.Hosts, ip, hostname string) bool {
 }
 
 // removeInactiveHostnames will remove all host names except those current in use by active projects.
-func removeInactiveHostnames(hosts *goodhosts.Hosts) {
-	var detail string
-	rawResult := make(map[string]interface{})
-
-	// Get the list active hosts names to preserve
-	activeHostNames := make(map[string]bool)
+func removeInactiveHostnames() {
 	for _, app := range ddevapp.GetActiveProjects() {
-		for _, h := range app.GetHostnames() {
-			activeHostNames[h] = true
-		}
-	}
-
-	// Find all current host names for the local IP address
-	dockerIP, err := dockerutil.GetDockerIP()
-	if err != nil {
-		detail = fmt.Sprintf("Failed to get Docker IP: %v", err)
-		rawResult["error"] = "DOCKERERROR"
-		rawResult["full_error"] = detail
-		output.UserOut.WithField("raw", rawResult).Fatal(detail)
-	}
-	if dockerutil.IsWSL2() && ddevapp.IsWindowsDdevExeAvailable() {
-		util.Warning("Please manually remove hostnames you don't want from Windows hosts file")
-		return
-	}
-
-	// Iterate through each host line
-	for _, line := range hosts.Lines {
-		// Checking if it concerns the local IP address
-		if line.IP == dockerIP {
-			// Iterate through each registered host
-			for _, h := range line.Hosts {
-				internalResult := make(map[string]interface{})
-
-				// Ignore those we want to preserve
-				if isActiveHost := activeHostNames[h]; isActiveHost {
-					detail = fmt.Sprintf("Hostname %s at %s is active, preserving", h, line.IP)
-					internalResult["error"] = "SUCCESS"
-					internalResult["detail"] = detail
-					output.UserOut.WithField("raw", internalResult).Info(detail)
-					continue
-				}
-
-				// Silently ignore those that may not be ddev-managed
-				if !strings.HasSuffix(h, nodeps.DdevDefaultTLD) {
-					continue
-				}
-
-				// Remaining host names are fair game to be removed
-				if err := hosts.Remove(line.IP, h); err != nil {
-					detail = fmt.Sprintf("Could not remove hostname %s at %s: %v", h, line.IP, err)
-					internalResult["error"] = "REMOVEERROR"
-					internalResult["full_error"] = detail
-					output.UserOut.WithField("raw", internalResult).Fatal(detail)
-				}
-
-				detail = fmt.Sprintf("Removed hostname %s at %s", h, line.IP)
-				internalResult["error"] = "SUCCESS"
-				internalResult["detail"] = detail
-				output.UserOut.WithField("raw", internalResult).Info(detail)
+		if status, _ := app.SiteStatus(); status != ddevapp.SiteRunning {
+			err := app.RemoveHostsEntriesIfNeeded()
+			if err != nil {
+				util.Warning("unable to remove hosts entries for project '%s': %v", app.Name, err)
 			}
 		}
 	}
-
-	if err := hosts.Flush(); err != nil {
-		detail = fmt.Sprintf("Could not write hosts file: %v", err)
-		rawResult["error"] = "WRITEERROR"
-		rawResult["full_error"] = detail
-		output.UserOut.WithField("raw", rawResult).Fatal(detail)
-	}
-
 	return
 }
 
