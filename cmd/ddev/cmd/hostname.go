@@ -216,7 +216,12 @@ func checkHostname(hosts *goodhosts.Hosts, ip, hostname string) bool {
 
 // removeInactiveHostnames will remove all host names except those current in use by active projects.
 func removeInactiveHostnames() {
-	for _, app := range ddevapp.GetInactiveProjects() {
+	apps, err := ddevapp.GetInactiveProjects()
+	if err != nil {
+		util.Warning("unable to run GetInactiveProjects: %v", err)
+		return
+	}
+	for _, app := range apps {
 		err := app.RemoveHostsEntriesIfNeeded()
 		if err != nil {
 			util.Warning("unable to remove hosts entries for project '%s': %v", app.Name, err)
