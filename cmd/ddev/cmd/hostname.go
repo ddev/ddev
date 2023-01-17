@@ -1,14 +1,10 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
-	goodhosts "github.com/goodhosts/hostsfile"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -91,127 +87,6 @@ to allow ddev to modify your hosts file. If you are connected to the internet an
 			util.Warning("Failed to remove add hosts entry %s: %v", name, err)
 		}
 	},
-}
-
-// addHostname encapsulates the logic of adding a hostname to the system's hosts file.
-func addHostname(hosts *goodhosts.Hosts, ip, hostname string) {
-	var detail string
-	rawResult := make(map[string]interface{})
-
-	if dockerutil.IsWSL2() && ddevapp.IsWindowsDdevExeAvailable() {
-		util.Debug("Running sudo.exe ddev.exe %s %s  on Windows side", hostname, ip)
-		out, err := exec.RunHostCommand("sudo.exe", "ddev.exe", "hostname", hostname, ip)
-		if err == nil {
-			util.Debug("ran sudo.exe ddev.exe %s %s with output=%s", hostname, ip, out)
-			return
-		}
-		util.Warning("Unable to run sudo.exe ddev.exe hostname %s %s on Windows side, continuing with WSL2 /etc/hosts err=%s, output=%s", hostname, ip, err, out)
-	}
-
-	if hosts.Has(ip, hostname) {
-		detail = "Hostname already exists in hosts file"
-		rawResult["error"] = "SUCCESS"
-		rawResult["detail"] = detail
-		output.UserOut.WithField("raw", rawResult).Info(detail)
-
-		return
-	}
-
-	if err := hosts.Add(ip, hostname); err != nil {
-		detail = fmt.Sprintf("Could not add hostname %s at %s: %v", hostname, ip, err)
-		rawResult["error"] = "ADDERROR"
-		rawResult["full_error"] = detail
-		output.UserOut.WithField("raw", rawResult).Fatal(detail)
-
-		return
-	}
-
-	if err := hosts.Flush(); err != nil {
-		detail = fmt.Sprintf("Could not write hosts file: %v", err)
-		rawResult["error"] = "WRITEERROR"
-		rawResult["full_error"] = detail
-		output.UserOut.WithField("raw", rawResult).Fatal(detail)
-
-		return
-	}
-
-	detail = fmt.Sprintf("Hostname '%s' added to hosts file", hostname)
-	rawResult["error"] = "SUCCESS"
-	rawResult["detail"] = detail
-	output.UserOut.WithField("raw", rawResult).Info(detail)
-
-	return
-}
-
-// removeHostname encapsulates the logic of removing a hostname from the system's hosts file.
-func removeHostname(hosts *goodhosts.Hosts, ip, hostname string) {
-	var detail string
-	rawResult := make(map[string]interface{})
-
-	if dockerutil.IsWSL2() && ddevapp.IsWindowsDdevExeAvailable() {
-		util.Debug("Running ddev.exe --check %s %s  on Windows side", hostname, ip)
-		out, err := exec.RunHostCommand("ddev.exe", "hostname", "--check", hostname, ip)
-		if err != nil {
-			util.Debug("ddev.exe --check hostname says hostname doesn't exist on windows; ran %s %s with output=%s, err=%v", hostname, ip, out, err)
-			return
-		}
-		util.Debug("Running sudo.exe ddev.exe -r %s %s  on Windows side", hostname, ip)
-		out, err = exec.RunHostCommand("sudo.exe", "ddev.exe", "hostname", "--remove", hostname, ip)
-		if err == nil {
-			util.Debug("ran sudo.exe ddev.exe --remove %s %s with output=%s", hostname, ip, out)
-			return
-		}
-		util.Warning("Unable to run sudo.exe ddev.exe hostname --remove %s %s on Windows side, continuing with WSL2 /etc/hosts err=%s, output=%s", hostname, ip, err, out)
-	}
-
-	if !hosts.Has(ip, hostname) {
-		detail = "Hostname does not exist in hosts file"
-		rawResult["error"] = "SUCCESS"
-		rawResult["detail"] = detail
-		output.UserOut.WithField("raw", rawResult).Info(detail)
-
-		return
-	}
-
-	if err := hosts.Remove(ip, hostname); err != nil {
-		detail = fmt.Sprintf("Could not remove hostname %s at %s: %v", hostname, ip, err)
-		rawResult["error"] = "REMOVEERROR"
-		rawResult["full_error"] = detail
-		output.UserOut.WithField("raw", rawResult).Fatal(detail)
-
-		return
-	}
-
-	if err := hosts.Flush(); err != nil {
-		detail = fmt.Sprintf("Could not write hosts file: %v", err)
-		rawResult["error"] = "WRITEERROR"
-		rawResult["full_error"] = detail
-		output.UserOut.WithField("raw", rawResult).Fatal(detail)
-
-		return
-	}
-
-	detail = fmt.Sprintf("Hostname '%s' removed from hosts file", hostname)
-	rawResult["error"] = "SUCCESS"
-	rawResult["detail"] = detail
-	output.UserOut.WithField("raw", rawResult).Info(detail)
-
-	return
-}
-
-// checkHostname checks to see if hostname already exists in hosts file.
-func checkHostname(hosts *goodhosts.Hosts, ip, hostname string) bool {
-	if dockerutil.IsWSL2() && ddevapp.IsWindowsDdevExeAvailable() {
-		util.Debug("Running ddev.exe --check %s %s  on Windows side", hostname, ip)
-		out, err := exec.RunHostCommand("ddev.exe", "hostname", "--check", hostname, ip)
-		if err == nil {
-			util.Debug("ran ddev.exe --check %s %s with output=%s", hostname, ip, out)
-			return true
-		}
-		return false
-	}
-
-	return hosts.Has(ip, hostname)
 }
 
 // removeInactiveHostnames will remove all host names except those current in use by active projects.

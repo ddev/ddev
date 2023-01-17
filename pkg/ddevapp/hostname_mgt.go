@@ -118,27 +118,21 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 // We would have hoped to use DNS or have found the entry already in hosts
 // But if it's not, try to add one.
 func AddHostEntry(name string, ip string) error {
-	if !dockerutil.IsWSL2() || !IsWindowsDdevExeAvailable() {
-		_, err := exec2.LookPath("sudo")
-		if (os.Getenv("DDEV_NONINTERACTIVE") != "") || err != nil {
-			util.Warning("You must manually add the following entry to your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname %s %s'", ip, name, name, ip)
-
-			return nil
-		}
+	_, err := exec2.LookPath("sudo")
+	if (os.Getenv("DDEV_NONINTERACTIVE") != "") || err != nil {
+		util.Warning("You must manually add the following entry to your hosts file:\n%s %s\nOr with root/administrative privileges execute 'ddev hostname %s %s'", ip, name, name, ip)
+		return nil
 	}
 
 	ddevFullpath, err := os.Executable()
 	util.CheckErr(err)
 
 	hostnameArgs := []string{ddevFullpath, "hostname", name, ip}
-	if !dockerutil.IsWSL2() || !IsWindowsDdevExeAvailable() {
-		hostnameArgs = append([]string{"sudo"}, hostnameArgs...)
-	}
 	output.UserOut.Printf("ddev needs to add an entry to your hostfile.\nIt may require administrative privileges via the sudo command, so you may be required\nto enter your password for sudo or allow escalation. ddev is about to issue the command:\n   %s", strings.Join(hostnameArgs, " "))
 
 	output.UserOut.Println("Please enter your password or allow escalation if prompted.")
 	out := ""
-	out, err = exec.RunHostCommand(hostnameArgs[0], hostnameArgs[1:]...)
+	out, err = runCommandWithSudo(hostnameArgs)
 	if err != nil {
 		util.Warning("Failed to execute %s, you will need to manually execute '%s' with administrative privileges, err=%v, output=%v", strings.Join(hostnameArgs, " "), strings.Join(hostnameArgs, " "), err, out)
 		return err
@@ -255,4 +249,17 @@ func WSL2RemoveHostEntry(name string, ip string) error {
 	}
 	util.Success(out)
 	return nil
+}
+
+// runCommandWithSudo adds sudo to command if we aren't already running with root privs
+func runCommandWithSudo(args []string) (out string, err error) {
+	if err != nil {
+		return "", fmt.Errorf("could not get home directory for current user. is it set?")
+	}
+
+	if os.Geteuid() != 0 {
+		args = append([]string{"sudo", "--preserve-env=HOME"}, args...)
+	}
+	out, err = exec.RunHostCommand(args[0], args[1:]...)
+	return out, err
 }
