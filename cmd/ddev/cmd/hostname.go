@@ -2,11 +2,10 @@ package cmd
 
 import (
 	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 	"os"
+	"strings"
 )
 
 var removeHostnameFlag bool
@@ -27,6 +26,11 @@ ddev hostname --remove-inactive
 implications and requires elevated privileges. You may be asked for a password
 to allow ddev to modify your hosts file. If you are connected to the internet and using the domain ddev.site this is generally not necessary, because the hosts file never gets manipulated.`,
 	Run: func(cmd *cobra.Command, args []string) {
+
+		// Unless DDEV_NONINTERACTIVE is set (tests) then we need to be admin
+		if os.Getenv("DDEV_NONINTERACTIVE") == "" && os.Geteuid() != 0 && !checkHostnameFlag {
+			util.Failed("'ddev hostname %s' must be run with administrator privileges", strings.Join(args, " "))
+		}
 
 		// If requested, remove all inactive host names and exit
 		if removeInactiveFlag {
@@ -49,15 +53,7 @@ to allow ddev to modify your hosts file. If you are connected to the internet an
 
 		// If requested, remove the provided host name and exit
 		if removeHostnameFlag {
-			if !dockerutil.IsWSL2() || globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
-				err = ddevapp.RemoveHostEntry(name, dockerIP)
-			} else {
-				if ddevapp.IsWindowsDdevExeAvailable() {
-					err = ddevapp.WSL2RemoveHostEntry(name, dockerIP)
-				} else {
-					util.Warning("ddev.exe is not available on the Windows side. Please install it with 'choco install -y ddev' or disable Windows-side hosts management using 'ddev config global --wsl2-no-windows-hosts-mgt'")
-				}
-			}
+			err = ddevapp.RemoveHostEntry(name, dockerIP)
 			if err != nil {
 				util.Warning("Failed to remove host entry %s: %v", name, err)
 			}
@@ -74,17 +70,10 @@ to allow ddev to modify your hosts file. If you are connected to the internet an
 			os.Exit(1)
 		}
 		// By default, add a host name
-		if !dockerutil.IsWSL2() || globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
-			err = ddevapp.AddHostEntry(name, dockerIP)
-		} else {
-			if ddevapp.IsWindowsDdevExeAvailable() {
-				err = ddevapp.WSL2AddHostEntry(name, dockerIP)
-			} else {
-				util.Warning("ddev.exe is not available on the Windows side. Please install it with 'choco install -y ddev' or disable Windows-side hosts management using 'ddev config global --wsl2-no-windows-hosts-mgt'")
-			}
-		}
+		err = ddevapp.AddHostEntry(name, dockerIP)
+
 		if err != nil {
-			util.Warning("Failed to remove add hosts entry %s: %v", name, err)
+			util.Warning("Failed to add hosts entry %s: %v", name, err)
 		}
 	},
 }
