@@ -588,7 +588,7 @@ Example: `working_dir: { web: "/var/www", db: "/etc" }` sets the working directo
 
 ## `wsl2_no_windows_hosts_mgt`
 
-(WSL2 only) Whether to disable the management and checking of the Windows hosts file.
+(WSL2 only) Whether to disable the management and checking of the Windows hosts file. By default, when using WSL2, DDEV manages the system-wide hosts file on the Windows side (normally `C:\Windows\system32\drivers\etc\hosts`) by using `ddev.exe` installed on the *Windows* side. This normally works better for all applications, including browsers and IDEs. However, this behavior can be disabled by setting `wsl_no_windows_hosts_mgt: true`.
 
 | Type | Default | Usage
 | -- | -- | --
