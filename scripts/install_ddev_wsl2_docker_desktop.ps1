@@ -44,9 +44,9 @@ mkcert -install
 $env:CAROOT="$(mkcert -CAROOT)"
 setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }
 
-wsl -u root -e bash -c "curl -fsSL https://apt.fury.io/drud/gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/ddev.gpg > /dev/null"
+wsl -u root -e bash -c "rm -f /etc/apt/trusted.gpg.d/ddev.gpg && curl -fsSL https://apt.fury.io/drud/gpg.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/ddev.gpg > /dev/null"
 wsl -u root -e bash -c 'echo \"deb [signed-by=/etc/apt/trusted.gpg.d/ddev.gpg] https://apt.fury.io/drud/ * *\" > /etc/apt/sources.list.d/ddev.list'
-wsl -u root -e bash -c "sudo apt update && sudo apt install -y ddev wslu"
+wsl -u root -e bash -c "apt update && apt install -y ddev wslu"
 wsl -u root -e bash -c "apt-get upgrade -y >/dev/null"
 
 
