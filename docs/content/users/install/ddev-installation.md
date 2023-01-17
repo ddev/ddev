@@ -122,7 +122,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ### WSL2 + Docker CE Inside Install Script
 
-    This scripted installation prepares your default WSL2 Ubuntu distro and has no dependency on Docker Desktop.
+    This scripted installation prepares your default WSL2 Ubuntu distro and has no dependency on Docker Desktop. It is designed to be able to run multiple times without breaking anything.
 
     The provided `PowerShell.exe` (original PowerShell 5) script can do most of the work for you, or you can handle these things manually. 
 
@@ -157,7 +157,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ### WSL2 + Docker Desktop Install Script
 
-    This scripted installation prepares your default WSL2 Ubuntu distro for use with Docker Desktop.
+    This scripted installation prepares your default WSL2 Ubuntu distro for use with Docker Desktop. It is designed to be able to run multiple times without breaking anything.
 
     You can do these things manually, or you can do most of it with the provided PowerShell (5) script. 
     In all cases:
