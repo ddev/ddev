@@ -5,6 +5,7 @@ import (
 	"github.com/drud/ddev/pkg/util"
 	"github.com/spf13/cobra"
 	"os"
+	"runtime"
 	"strings"
 )
 
@@ -28,7 +29,8 @@ to allow ddev to modify your hosts file. If you are connected to the internet an
 	Run: func(cmd *cobra.Command, args []string) {
 
 		// Unless DDEV_NONINTERACTIVE is set (tests) then we need to be admin
-		if os.Getenv("DDEV_NONINTERACTIVE") == "" && os.Geteuid() != 0 && !checkHostnameFlag {
+		if os.Getenv("DDEV_NONINTERACTIVE") == "" && os.Geteuid() != 0 && !checkHostnameFlag && !removeInactiveFlag && runtime.GOOS != "windows" {
+			util.Warning("runtime.GOOS=%s", runtime.GOOS)
 			util.Failed("'ddev hostname %s' must be run with administrator privileges", strings.Join(args, " "))
 		}
 

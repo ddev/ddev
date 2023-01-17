@@ -46,6 +46,9 @@ func IsWindowsDdevExeAvailable() bool {
 	return windowsDdevExeAvailable
 }
 
+// IsHostnameInHostsFile checks to see if the hostname already exists
+// On WSL2 it normally assumes that the hosts file is in WSL2WindowsHostsFile
+// Otherwise it lets goodhosts decide where the hosts file is.
 func IsHostnameInHostsFile(hostname string) (bool, error) {
 	dockerIP, err := dockerutil.GetDockerIP()
 	if err != nil {
@@ -196,6 +199,9 @@ func escalateToAddHostEntry(hostname string, ip string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if dockerutil.IsWSL2() {
+		ddevBinary = "ddev.exe"
+	}
 	out, err := runCommandWithSudo([]string{ddevBinary, "hostname", hostname, ip})
 	return out, err
 }
@@ -206,6 +212,9 @@ func escalateToRemoveHostEntry(hostname string, ip string) (string, error) {
 	ddevBinary, err := os.Executable()
 	if err != nil {
 		return "", err
+	}
+	if dockerutil.IsWSL2() {
+		ddevBinary = "ddev.exe"
 	}
 	out, err := runCommandWithSudo([]string{ddevBinary, "hostname", "--remove", hostname, ip})
 	return out, err
@@ -221,7 +230,7 @@ func runCommandWithSudo(args []string) (out string, err error) {
 		return "", fmt.Errorf("ddev.exe is not installed on the Windows side, please install it with 'choco install -y ddev'. It is used to manage the Windows hosts file")
 	}
 	c := []string{"sudo", "--preserve-env=HOME"}
-	if (runtime.GOOS == "windows" || dockerutil.IsWSL2()) && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt && IsWindowsDdevExeAvailable() {
+	if (runtime.GOOS == "windows" || dockerutil.IsWSL2()) && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
 		c = []string{"sudo.exe"}
 	}
 	c = append(c, args...)
