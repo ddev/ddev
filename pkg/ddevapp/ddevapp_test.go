@@ -585,10 +585,6 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 			_, _ = testcommon.EnsureLocalHTTPContent(t, url+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		}
 
-		out, err := exec.RunHostCommand(DdevBin, "list", "--wrap-table")
-		assert.NoError(err)
-		t.Logf("=========== output of ddev list ==========\n%s\n============", out)
-
 		// Multiple projects can't run at the same time with the fqdns, so we need to clean
 		// up these for tests that run later.
 		app.AdditionalFQDNs = []string{}
