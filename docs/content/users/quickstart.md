@@ -1,37 +1,6 @@
 # CMS Quickstarts
 
-Once DDEV is installed, you can quickly spin up new projects:
-
-1. Clone or create the code for your project.
-2. `cd` into the project directory and run [`ddev config`](../users/usage/commands.md#config) to initialize a DDEV project.  
-    It automatically detects your project type and docroot—make sure it’s accurate!
-3. Run [`ddev start`](../users/usage/commands.md#start) to spin up the project.  
-    If your project needs it, don’t forget to run [`ddev composer install`](../users/usage/commands.md#composer).
-4. Import a database with [`ddev import-db`](../users/usage/commands.md#import-db).
-5. Optionally import user-managed files with [`ddev import-files`](../users/usage/commands.md#import-files).
-6. Run [`ddev launch`](../users/usage/commands.md#launch) to open your project in a browser, or visit the URL given by [`ddev start`](../users/usage/commands.md#start).
-
-!!!tip
-    While you’re getting your bearings, use [`ddev describe`](../users/usage/commands.md#describe) to get project details, and [`ddev help`](../users/usage/commands.md#help) to investigate commands.
-
-DDEV comes ready to work with any PHP project, and has deeper support for several common PHP platforms and content management systems.
-
-=== "Generic"
-
-    ## Generic
-
-    The `php` project type is the most general, ready for whatever modern PHP or static HTML/JS project you might be working on. It’s just as full-featured as more specific options, just without any app-specific configuration or presets.
-
-    You may even prefer to stick with this flavor despite using one of the apps DDEV supports, simply because you’d rather configure things to your own liking. Please do!
-    
-    1. Create a directory (`mkdir my-new-project`) or clone your project (`git clone <your_project>`).
-    2. Change to the new directory (`cd my-new-project`).
-    3. Run [`ddev config`](../users/usage/commands.md#config) and set the project type and docroot, which are usually auto-detected, but may not be if there's no code in there yet.
-    4. Run [`ddev start`](../users/usage/commands.md#start).
-    6. If you’re using Composer, run [`ddev composer install`](../users/usage/commands.md#composer).
-    4. Configure any database settings; host='db', user='db', password='db', database='db'
-    5. If needed, import a database with [`ddev import-db --src=/path/to/db.sql.gz`](../users/usage/commands.md#import-db).
-    6. Visit the project in a browser, and then build things.
+While the generic `php` project type is ready to go with any CMS or framework, DDEV offers project types for more easily working with popular platforms and content management systems:
 
 === "WordPress"
 
