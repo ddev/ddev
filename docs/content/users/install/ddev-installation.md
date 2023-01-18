@@ -97,20 +97,31 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     You can also use two macOS install methods to install or update DDEV on Linux: [Homebrew](#homebrew) (only on AMD64 computers) and the standalone [install script](#install-script).
 
-=== "Windows (WSL2)"
+=== "Windows"
 
     ## Windows
 
-    You can install on Windows three different ways: Using WSL2 with Docker inside, Using WSL2 with Docker Desktop, and installing directly on traditional Windows with an installer (not recommended). Each is described below.
+    You can install DDEV on Windows three ways:
 
-    Windows WSL2 is the best way to run DDEV and your web components. It’s Linux, which means a different experience for some Windows users. It’s Ubuntu Linux by default as described here, so it’s worth taking a little time to explore how Ubuntu and Bash work, including standard system commands and installation and upgrade procedures.
+    1. [Using WSL2 with Docker inside](#wsl2-docker-ce-inside-install-script)
+    2. [Using WSL2 with Docker Desktop](#wsl2-docker-desktop-install-script)
+    3. [Installing directly on traditional Windows](#traditional-windows) with an installer
 
-    ### Things You Need to Know about WSL2 and DDEV
+    **We strongly recommend using WSL2.** While its Linux experience may be new for some Windows users, it’s worth the performance benefit and common experience of working with Ubuntu and Bash.
 
-    * **WSL2 is the recommended installation method for all Windows users.** All Windows 10/11 editions (including Windows 10 Home) support WSL2. The performance is way, way faster in every way, and you're less likely to have obscure Windows problems if you use WSL2.
-    * WSL2 Projects go in `/home`, not on the Windows filesystem. Make sure you put your projects in the Linux filesystem (e.g. `/home/<your_username>`), **not** in the Windows filesystem (`/mnt/c`), because you’ll get vastly superior performance on the Linux filesystem. If you put your project in `/mnt/c` you will not get the benefits of WSL2.
-    * WSL2 hostname management: DDEV attempts to manage custom hostnames via the Windows-side hosts file (usually `C:\Windows\system32\drivers\etc\hosts`) rather than the hosts file inside WSL2. It can only do this if DDEV (with sudo.exe) is installed and in the `$PATH` on the Windows side. (DDEV inside WSL2 uses `ddev.exe` on the Windows side as a proxy to update the Windows hosts file.) If `ddev.exe --version` shows the same version as `ddev --version` you're all set up. Otherwise, install DDEV on Windows using `choco upgrade -y ddev` or by downloading and running the Windows installer. (The scripts below install DDEV on the Windows side, so you won't need to do anything if you've used one of those to install.) (If the Windows escalation happens to often to you, you can calm it down with `gsudo.exe  cache on` and `gsudo.exe config CacheMode auto`, see [gsudo docs](https://github.com/gerardog/gsudo#credentials-cache).
-    * WSL2 is not the same as Docker Desktop's WSL2 engine. Using WSL2 to install and run DDEV is not the same as using Docker Desktop's WSL2 engine, which itself runs in WSL2, but can serve applications running in both traditional Windows and inside WSL2.
+
+    ### Important Considerations for WSL2 and DDEV
+
+    * WSL2 is supported on Windows 10 and 11.  
+      All Windows 10/11 editions, including Windows 10 Home support WSL2.
+    * WSL2 offers a faster, smoother experience.  
+      It’s vastly more performant, and you’re less likely to have obscure Windows problems.
+    * Projects should live in the Linux filesystem.  
+      WSL2’s Linux filesystem (e.g. `/home/<your_username>`) is much faster, so keep your projects there and **not** in the slower Windows filesystem (`/mnt/c`).
+    * Custom hostnames are still managed on the Windows side, not within WSL2.  
+      DDEV attempts to manage custom hostnames via the Windows-side hosts file, usually at `C:\Windows\system32\drivers\etc\hosts`. It can only do this if DDEV (with `sudo.exe`) is installed and in the Windows-side `$PATH`. (DDEV inside WSL2 uses `ddev.exe` on the Windows side as a proxy to update the Windows hosts file.) If `ddev.exe --version` shows the same version as `ddev --version` you’re all set up. Otherwise, install DDEV on Windows using `choco upgrade -y ddev` or by downloading and running the Windows installer. (The WSL2 scripts below install DDEV on the Windows side, taking care of that for you.) If the Windows escalation happens too often to you, you can calm it down by running `gsudo.exe cache on` and `gsudo.exe config CacheMode auto`, see [gsudo docs](https://github.com/gerardog/gsudo#credentials-cache).
+    * WSL2 is not the same as Docker Desktop’s WSL2 engine.  
+      Using WSL2 to install and run DDEV is not the same as using Docker Desktop’s WSL2 engine, which itself runs in WSL2, but can serve applications running in both traditional Windows and inside WSL2.
 
     The WSL2 install process involves:
 
@@ -135,11 +146,11 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
             wsl --install`
             ```
 
-        * Reboot if required (it's usually required).
+        * Reboot if required. (Usually required.)
 
-        * Now visit the Microsoft Store and install the *updated* "Windows Subsystem for Linux", then click "Open". It will likely prompt you for a username and password for the Ubuntu WSL2 instance it creates.
+        * Visit the Microsoft Store and install the *updated* "Windows Subsystem for Linux" and click "Open". It will likely prompt you for a username and password for the Ubuntu WSL2 instance it creates.
 
-        * Verify that you have now have an Ubuntu distro set as default by running `wsl.exe -l -v` 
+        * Verify that you now have an Ubuntu distro set as default by running `wsl.exe -l -v` 
 
         If you already have WSL2 but don't have an Ubuntu distro, install one by running `wsl.exe --install Ubuntu`. 
 
@@ -151,7 +162,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; 
         iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1'))
         ```
-    3. In "Windows Update Settings → Advanced Options" enable "Receive updates for other Microsoft products", and you may want to occasionally `wsl.exe --update` as well.
+    3. In *Windows Update Settings* → *Advanced Options* enable *Receive updates for other Microsoft products*. You may want to occasionally run `wsl.exe --update` as well.
 
     Now you can use the "Ubuntu" terminal app or Windows Terminal to access your Ubuntu distro, which has DDEV and Docker working inside it.
 
@@ -175,20 +186,20 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
         
         If you prefer to use another Ubuntu distro, just install it and set it as default. For example, `wsl --set-default Ubuntu-22.04`.
 
-    2. Visit the Microsoft Store and install the *updated* "Windows Subsystem for Linux", then click "Open". It will likely prompt you for a username and password for the Ubuntu WSL2 instance it creates.
+    2. Visit the Microsoft Store and install the updated "Windows Subsystem for Linux", then click *Open*. It will likely prompt you for a username and password for the Ubuntu WSL2 instance it creates.
 
-    3. In "Windows Update Settings → Advanced Options" enable "Receive updates for other Microsoft products", and you may want to occasionally `wsl.exe --update` as well.
+    3. In *Windows Update Settings* → *Advanced Options* enable *Receive updates for other Microsoft products*. You may want to occasionally run `wsl.exe --update` as well.
 
-    4. Install Docker Desktop. If you already have chocolatey, `choco install -y docker-desktop` or [download Docker Desktop from Docker](https://www.docker.com/products/docker-desktop/).
-    5. Start Docker Desktop. You should now be able to do `docker ps` in PowerShell or Git Bash.
-    6. In `Docker Desktop -> Settings -> Resources -> WSL2 Integration` verify that Docker Desktop is integrated with your distro.
+    4. Install Docker Desktop. If you already have Chocolatey, run `choco install -y docker-desktop` or [download Docker Desktop from Docker](https://www.docker.com/products/docker-desktop/).
+    5. Start Docker Desktop. You should now be able to run `docker ps` in PowerShell or Git Bash.
+    6. In *Docker Desktop* → *Settings* → *Resources* → *WSL2 Integration*, verify that Docker Desktop is integrated with your distro.
     7. In an administrative `PowerShell` (5) run [this PowerShell script](https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2_docker_desktop.ps1) by executing:
 
         ```powershell
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; 
         iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2_docker_desktop.ps1'))
         ```
-    8. In "Windows Update Settings → Advanced Options" enable "Receive updates for other Microsoft products", and you may want to occasionally `wsl.exe --update` as well.
+    8. In *Windows Update Settings* → *Advanced Options* enable *Receive updates for other Microsoft products*. You may want to occasionally run `wsl.exe --update` as well.
 
 
     Now you can use the "Ubuntu" terminal app or Windows Terminal to access your Ubuntu distro, which has DDEV and Docker Desktop integrated with it.
@@ -224,19 +235,19 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     You have now installed DDEV on WSL2. If you’re using WSL2 for DDEV (recommended), remember to run all `ddev` commands inside the WSL2 distro.
 
-    To upgrade DDEV in WSL2 Ubuntu, use `apt upgrade ddev` as described in the [Linux installation section](#linux).
+    To upgrade DDEV in WSL2 Ubuntu, run `apt upgrade ddev` as described in the [Linux installation section](#linux).
 
     !!!note "Path to certificates"
         If you get the prompt `Installing to the system store is not yet supported on this Linux`, you may just need to add `/usr/sbin` to the `$PATH` so that `/usr/sbin/update-ca-certificates` can be found.
 
     ### Traditional Windows
 
-    It is possible to install DDEV in traditional Windows, and it works fine, but it’s massively than WSL2. Enable either [Mutagen](performance/#system-requirements) for the best performance if you have to use traditional Windows, but the best alternative is to install on WSL2.
+    If you must use traditional Windows without WSL2, you’ll probably want to enable [Mutagen](performance/#system-requirements) for the best performance.
 
-    * If you use [Chocolatey](https://chocolatey.org/) (recommended), you can run `choco install ddev docker-desktop git` from an administrative shell. Upgrades are just `ddev poweroff && choco upgrade ddev`.
-    * A Windows installer is provided in each [DDEV release](https://github.com/drud/ddev/releases) (`ddev_windows_installer.<version>.exe`). Run that and it will do the full installation for you. Open a new Git Bash or PowerShell or cmd window and start using DDEV.
-    * Most people interact with DDEV on Windows using Git Bash, part of the [Windows Git suite](https://git-scm.com/download/win). Although DDEV does work with cmd and PowerShell, it's more at home in Bash. You can install it with Chocolatey using `choco install -y git`.
-    * For performance, many users enable Mutagen, `ddev config global --mutagen-enabled` (global) or `ddev config --mutagen-enabled` just for one project.
+    * We recommend using [Chocolatey](https://chocolatey.org/). Once installed, you can run `choco install ddev docker-desktop git` from an administrative shell. You can upgrade by running `ddev poweroff && choco upgrade ddev`.
+    * Each [DDEV release](https://github.com/drud/ddev/releases) includes a Windows installer (`ddev_windows_installer.<version>.exe`). After running that, you can open a new Git Bash, PowerShell, or cmd.exe window and start using DDEV.
+
+    Most people interact with DDEV on Windows using Git Bash, part of the [Windows Git suite](https://git-scm.com/download/win). Although DDEV does work with cmd.exe and PowerShell, it's more at home in Bash. You can install Git Bash with Chocolatey by running `choco install -y git`.
 
     !!!note "Windows Firefox Trusted CA"
 
