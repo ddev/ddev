@@ -76,6 +76,11 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 		return fmt.Errorf("could not get Docker IP: %v", err)
 	}
 
+	if os.Getenv("DDEV_NONINTERACTIVE") == "true" {
+		util.Warning("Not trying to add hostnames because DDEV_NONINTERACTIVE=true")
+		return nil
+	}
+
 	for _, name := range app.GetHostnames() {
 		if app.UseDNSWhenPossible && globalconfig.IsInternetActive() {
 			// If they have provided "*.<name>" then look up the suffix
@@ -135,6 +140,11 @@ func AddHostEntry(name string, ip string) error {
 // This should be run without administrative privileges and will escalate
 // where needed.
 func (app *DdevApp) RemoveHostsEntriesIfNeeded() error {
+	if os.Getenv("DDEV_NONINTERACTIVE") == "true" {
+		util.Warning("Not trying to remove hostnames because DDEV_NONINTERACTIVE=true")
+		return nil
+	}
+
 	dockerIP, err := dockerutil.GetDockerIP()
 	if err != nil {
 		return fmt.Errorf("could not get Docker IP: %v", err)
