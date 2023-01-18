@@ -69,7 +69,6 @@ While the generic `php` project type is ready to go with any CMS or framework, D
     !!!tip "Installing Craft"
         Read more about installing Craft in the [official documentation](https://craftcms.com/docs).
 
-
 === "Drupal"
 
     ## Drupal
