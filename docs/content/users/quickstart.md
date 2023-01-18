@@ -2,20 +2,6 @@
 
 While the generic `php` project type is ready to go with any CMS or framework, DDEV offers project types for more easily working with popular platforms and content management systems:
 
-=== "Backdrop"
-
-    ## Backdrop
-
-    To get started with Backdrop, clone the project repository and navigate to the project directory.
-    
-    ```bash
-    git clone https://github.com/example/example-site
-    cd example-site
-    ddev config
-    ddev start
-    ddev launch
-    ```
-
 === "Craft CMS"
 
     ## Craft CMS
@@ -106,7 +92,6 @@ While the generic `php` project type is ready to go with any CMS or framework, D
         ddev launch
         ```
 
-
     === "Drupal 9"
 
         ### Drupal 9 via Composer
@@ -151,6 +136,18 @@ While the generic `php` project type is ready to go with any CMS or framework, D
         ddev launch
         ```
 
+    ### Backdrop
+
+    To get started with [Backdrop](https://www.drupal.org/project/backdrop), clone the project repository and navigate to the project directory.
+    
+    ```bash
+    git clone https://github.com/example/example-site
+    cd example-site
+    ddev config
+    ddev start
+    ddev launch
+    ```
+
 === "Laravel"
 
     ## Laravel
@@ -180,7 +177,7 @@ While the generic `php` project type is ready to go with any CMS or framework, D
         ddev launch
         ```
 
-=== "Magento 2"
+=== "Magento"
 
     ## Magento 2
 
@@ -206,6 +203,24 @@ While the generic `php` project type is ready to go with any CMS or framework, D
     
     Magento 2 is a huge codebase, and we recommend [using Mutagen for performance](install/performance.md#using-mutagen) on macOS and traditional Windows.
 
+    ## OpenMage/Magento 1
+
+    1. Download OpenMage from [release page](https://github.com/OpenMage/magento-lts/releases).
+    2. Make a directory for it, for example `mkdir ~/workspace/OpenMage` and change to the new directory `cd ~/workspace/OpenMage`.
+    3. Run [`ddev config`](../users/usage/commands.md#config) and accept the defaults.
+    4. Install sample data. (See below.)
+    5. Run [`ddev start`](../users/usage/commands.md#start).
+    6. Follow the URL to the base site.
+
+    You may want the [Magento 1 Sample Data](https://github.com/Vinai/compressed-magento-sample-data) for experimentation:
+
+    * Download Magento [1.9.2.4 Sample Data](https://github.com/Vinai/compressed-magento-sample-data/raw/master/compressed-magento-sample-data-1.9.2.4.tgz).
+    * Extract the download:  
+        `tar -zxf ~/Downloads/compressed-magento-sample-data-1.9.2.4.tgz --strip-components=1`
+    * Import the example database `magento_sample_data_for_1.9.2.4.sql` with `ddev import-db --src=magento_sample_data_for_1.9.2.4.sql` to database **before** running OpenMage install.
+
+    OpenMage is a huge codebase, and we recommend [using Mutagen for performance](install/performance.md#using-mutagen) on macOS and traditional Windows.
+
 === "Moodle"
 
     ## Moodle
@@ -225,28 +240,7 @@ While the generic `php` project type is ready to go with any CMS or framework, D
     !!!tip
         Moodle relies on a periodic cron job—don’t forget to set that up! See [drud/ddev-cron](https://github.com/drud/ddev-cron).
 
-=== "OpenMage/Magento 1"
-
-    ## OpenMage/Magento 1
-
-    1. Download OpenMage from [release page](https://github.com/OpenMage/magento-lts/releases).
-    2. Make a directory for it, for example `mkdir ~/workspace/OpenMage` and change to the new directory `cd ~/workspace/OpenMage`.
-    3. Run [`ddev config`](../users/usage/commands.md#config) and accept the defaults.
-    4. Install sample data. (See below.)
-    5. Run [`ddev start`](../users/usage/commands.md#start).
-    6. Follow the URL to the base site.
-
-    You may want the [Magento 1 Sample Data](https://github.com/Vinai/compressed-magento-sample-data) for experimentation:
-
-    * Download Magento [1.9.2.4 Sample Data](https://github.com/Vinai/compressed-magento-sample-data/raw/master/compressed-magento-sample-data-1.9.2.4.tgz).
-    * Extract the download:  
-        `tar -zxf ~/Downloads/compressed-magento-sample-data-1.9.2.4.tgz --strip-components=1`
-    * Import the example database `magento_sample_data_for_1.9.2.4.sql` with `ddev import-db --src=magento_sample_data_for_1.9.2.4.sql` to database **before** running OpenMage install.
-
-    OpenMage is a huge codebase, and we recommend [using Mutagen for performance](install/performance.md#using-mutagen) on macOS and traditional Windows.
-
-
-=== "Shopware 6"
+=== "Shopware"
 
     ## Shopware 6
 
