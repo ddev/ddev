@@ -135,7 +135,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     This scripted installation prepares your default WSL2 Ubuntu distro and has no dependency on Docker Desktop. It is designed to be able to run multiple times without breaking anything.
 
-    The provided `PowerShell.exe` (original PowerShell 5) script can do most of the work for you, or you can handle these things manually. 
+    The provided PowerShell script can do most of the work for you, or you can handle these things manually. (This script works with the built-in PowerShell v5, but not with the newer v7.)
 
     In all cases:
     
