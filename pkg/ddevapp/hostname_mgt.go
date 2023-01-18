@@ -232,6 +232,11 @@ func escalateToRemoveHostEntry(hostname string, ip string) (string, error) {
 
 // runCommandWithSudo adds sudo to command if we aren't already running with root privs
 func runCommandWithSudo(args []string) (out string, err error) {
+	// We can't escalate in tests, and they know how to deal with it.
+	if os.Getenv("DDEV_NONINTERACTIVE") != "" {
+		util.Warning("DDEV_NONINTERACTIVE is set. You must manually run '%s'", strings.Join(args, " "))
+		return "", nil
+	}
 	if err != nil {
 		return "", fmt.Errorf("could not get home directory for current user. is it set?")
 	}
