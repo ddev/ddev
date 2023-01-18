@@ -1,6 +1,6 @@
 # CMS Quickstarts
 
-While the generic `php` project type is ready to go with any CMS or framework, DDEV offers project types for more easily working with popular platforms and content management systems:
+While the generic `php` project type is [ready to go](./project.md) with any CMS or framework, DDEV offers project types for more easily working with popular platforms and content management systems:
 
 === "Craft CMS"
 
@@ -76,9 +76,9 @@ While the generic `php` project type is ready to go with any CMS or framework, D
     === "Drupal 10"
 
         ### Drupal 10 via Composer
-    
+
         [Drupal 10](https://www.drupal.org/about/10) is fully supported by DDEV.
-        
+
         ```bash
         mkdir my-drupal10-site
         cd my-drupal10-site
@@ -110,7 +110,7 @@ While the generic `php` project type is ready to go with any CMS or framework, D
     === "Drupal 6/7"
 
         ### Drupal 6/7
-            
+
         ```bash
         git clone https://github.com/example/my-drupal-site
         cd my-drupal-site
@@ -118,9 +118,9 @@ While the generic `php` project type is ready to go with any CMS or framework, D
         ddev start
         ddev launch /install.php
         ```
-        
+
         Drupal 7 doesn’t know how to redirect from the front page to `/install.php` if the database is not set up but the settings files *are* set up, so launching with `/install.php` gets you started with an installation. You can also `drush site-install`, then `ddev exec drush site-install --yes`.
-        
+
         See [Importing a Database](#importing-a-database).
 
     === "Git Clone"
@@ -138,7 +138,7 @@ While the generic `php` project type is ready to go with any CMS or framework, D
     ### Backdrop
 
     To get started with [Backdrop](https://www.drupal.org/project/backdrop), clone the project repository and navigate to the project directory.
-    
+
     ```bash
     git clone https://github.com/example/example-site
     cd example-site
@@ -181,7 +181,7 @@ While the generic `php` project type is ready to go with any CMS or framework, D
     ## Magento 2
 
     Normal details of a Composer build for Magento 2 are on the [Magento 2 site](https://devdocs.magento.com/guides/v2.4/install-gde/composer.html. You must have a public and private key to install from Magento’s repository. When prompted for “username” and “password” in `composer create`, it’s asking for your public and private keys.
-    
+
     ```bash
     mkdir ddev-magento2 && cd ddev-magento2
     ddev config --project-type=magento2 --php-version=8.1 --docroot=pub --create-docroot --disable-settings-management
@@ -199,7 +199,7 @@ While the generic `php` project type is ready to go with any CMS or framework, D
     Change the admin name and related information is needed.
 
     You may want to add the [Magento 2 Sample Data](https://devdocs.magento.com/guides/v2.4/install-gde/install/sample-data-after-composer.html) with `ddev magento sampledata:deploy && ddev magento setup:upgrade`.
-    
+
     Magento 2 is a huge codebase, and we recommend [using Mutagen for performance](install/performance.md#using-mutagen) on macOS and traditional Windows.
 
     ## OpenMage/Magento 1
@@ -214,7 +214,7 @@ While the generic `php` project type is ready to go with any CMS or framework, D
     You may want the [Magento 1 Sample Data](https://github.com/Vinai/compressed-magento-sample-data) for experimentation:
 
     * Download Magento [1.9.2.4 Sample Data](https://github.com/Vinai/compressed-magento-sample-data/raw/master/compressed-magento-sample-data-1.9.2.4.tgz).
-    * Extract the download:  
+    * Extract the download:
         `tar -zxf ~/Downloads/compressed-magento-sample-data-1.9.2.4.tgz --strip-components=1`
     * Import the example database `magento_sample_data_for_1.9.2.4.sql` with `ddev import-db --src=magento_sample_data_for_1.9.2.4.sql` to database **before** running OpenMage install.
 
@@ -223,7 +223,7 @@ While the generic `php` project type is ready to go with any CMS or framework, D
 === "Moodle"
 
     ## Moodle
-    
+
     ```bash
     ddev config --composer-root=public --create-docroot --docroot=public --webserver-type=apache-fpm
     ddev start
@@ -231,7 +231,7 @@ While the generic `php` project type is ready to go with any CMS or framework, D
     ddev exec 'php public/admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
     ddev launch /login
     ```
-    
+
     In the web browser, log into your account using `admin` and `password`.
 
     Visit the [Moodle Admin Quick Guide](https://docs.moodle.org/400/en/Admin_quick_guide) for more information.
@@ -252,7 +252,7 @@ While the generic `php` project type is ready to go with any CMS or framework, D
     ddev start
     ddev composer install --no-scripts
     # During system:setup you may have to enter the Database user (db), Database password (db)
-    # Database host (db) and Database name (db). 
+    # Database host (db) and Database name (db).
     ddev exec bin/console system:setup --database-url=mysql://db:db@db:3306/db --app-url='${DDEV_PRIMARY_URL}'
     ddev exec bin/console system:install --create-database --basic-setup
     ddev launch /admin
@@ -267,9 +267,9 @@ While the generic `php` project type is ready to go with any CMS or framework, D
     ## TYPO3
 
     === "Composer"
-    
+
         ### Composer
-        
+
         ```bash
         mkdir my-typo3-site
         cd my-typo3-site
@@ -281,9 +281,9 @@ While the generic `php` project type is ready to go with any CMS or framework, D
         ```
 
     === "Git Clone"
-        
+
         ### Git Clone
-    
+
         ```bash
         git clone https://github.com/example/example-site
         cd example-site
@@ -305,32 +305,32 @@ While the generic `php` project type is ready to go with any CMS or framework, D
         ### WP-CLI
 
         DDEV has built-in support for [WP-CLI](https://wp-cli.org/), the command-line interface for WordPress.
-        
+
         ```bash
         mkdir my-wp-site
         cd my-wp-site/
-        
+
         # Create a new DDEV project inside the newly-created folder
         # (Primary URL automatically set to `https://<folder>.ddev.site`)
         ddev config --project-type=wordpress
         ddev start
-        
+
         # Download WordPress
         ddev wp core download
-        
+
         # Launch in browser to finish installation
         ddev launch
-        
+
         # OR use the following installation command
         # (we need to use single quotes to get the primary site URL from `.ddev/config.yaml` as variable)
         ddev wp core install --url='$DDEV_PRIMARY_URL' --title='New-WordPress' --admin_user=admin --admin_email=admin@example.com --prompt=admin_password
-        
+
         # Launch WordPress admin dashboard in your browser
         ddev launch wp-admin/
         ```
 
     === "Bedrock"
-        
+
         ### Bedrock
 
         [Bedrock](https://roots.io/bedrock/) is a modern, Composer-based installation in WordPress:
@@ -354,51 +354,51 @@ While the generic `php` project type is ready to go with any CMS or framework, D
         WP_SITEURL=${WP_HOME}/wp
         WP_ENV=development
         ```
-    
+
         You can then run [`ddev start`](../users/usage/commands.md#start) and [`ddev launch`](../users/usage/commands.md#launch).
-    
+
         For more details, see [Bedrock installation](https://docs.roots.io/bedrock/master/installation/).
 
     === "Git Clone"
-    
+
         ### Git Clone
 
         To get started using DDEV with an existing WordPress project, clone the project’s repository. Note that the git URL shown here is just an example.
-        
+
         ```bash
         git clone https://github.com/example/example-site.git
         cd example-site
         ddev config
         ```
-        
+
         You’ll see a message like:
-        
+
         ```php
         An existing user-managed wp-config.php file has been detected!
         Project DDEV settings have been written to:
-        
+
         /Users/rfay/workspace/bedrock/web/wp-config-ddev.php
-        
+
         Please comment out any database connection settings in your wp-config.php and
         add the following snippet to your wp-config.php, near the bottom of the file
         and before the include of wp-settings.php:
-        
+
         // Include for DDEV-managed settings in wp-config-ddev.php.
         $ddev_settings = dirname(__FILE__) . '/wp-config-ddev.php';
         if (is_readable($ddev_settings) && !defined('DB_USER')) {
           require_once($ddev_settings);
         }
-        
+
         If you don't care about those settings, or config is managed in a .env
         file, etc, then you can eliminate this message by putting a line that says
         // wp-config-ddev.php not needed
         in your wp-config.php
         ```
-        
+
         So just add the suggested include into your `wp-config.php`, or take the workaround shown.
-        
+
         Now start your project with [`ddev start`](../users/usage/commands.md#start).
-        
+
         Quickstart instructions regarding database imports can be found under [Importing a database](#importing-a-database).
 
 ## Configuration Files
@@ -407,9 +407,9 @@ The [`ddev config`](../users/usage/commands.md#config) command attempts to creat
 
 For **Drupal** and **Backdrop**, DDEV settings are written to a DDEV-managed file, `settings.ddev.php`. The `ddev config` command will ensure these settings are included in your `settings.php` through the following steps:
 
-* Write DDEV settings to `settings.ddev.php`.
-* If no `settings.php` file exists, create one that includes `settings.ddev.php`.
-* If a `settings.php` file already exists, ensure that it includes `settings.ddev.php`, modifying `settings.php` to write the include if necessary..
+- Write DDEV settings to `settings.ddev.php`.
+- If no `settings.php` file exists, create one that includes `settings.ddev.php`.
+- If a `settings.php` file already exists, ensure that it includes `settings.ddev.php`, modifying `settings.php` to write the include if necessary..
 
 For **Magento 1**, DDEV settings go into `app/etc/local.xml`
 
@@ -419,10 +419,10 @@ For **TYPO3**, DDEV settings are written to `AdditionalConfiguration.php`. If `A
 
 For **WordPress**, DDEV settings are written to a DDEV-managed file, `wp-config-ddev.php`. The `ddev config` command will attempt to write settings through the following steps:
 
-* Write DDEV settings to `wp-config-ddev.php`.
-* If no `wp-config.php` exists, create one that include `wp-config-ddev.php`.
-* If a DDEV-managed `wp-config.php` exists, create one that includes `wp-config.php`.
-* If a user-managed `wp-config.php` exists, instruct the user on how to modify it to include DDEV settings.
+- Write DDEV settings to `wp-config-ddev.php`.
+- If no `wp-config.php` exists, create one that include `wp-config-ddev.php`.
+- If a DDEV-managed `wp-config.php` exists, create one that includes `wp-config.php`.
+- If a user-managed `wp-config.php` exists, instruct the user on how to modify it to include DDEV settings.
 
 You’ll know DDEV is managing a settings file when you see the comment below. Remove the comment and DDEV will not attempt to overwrite it! If you’re letting DDEV create its settings file, we recommended leaving this comment so DDEV can continue to manage it, and make any needed changes in another settings file.
 
@@ -435,7 +435,7 @@ You’ll know DDEV is managing a settings file when you see the comment below. R
 
 ```
 
-If you’re providing the `settings.php` or `wp-config.php` and DDEV is creating `settings.ddev.php` (or `wp-config-local.php`, `AdditionalConfig.php`, or similar), the main settings file must explicitly include the appropriate DDEV-generated settings file. Any changes you need should be included somewhere that loads after DDEV’s settings file, for example in Drupal’s `settings.php` *after* `settings.ddev.php` is included. (See [Adding Configuration](#adding-configuration) below).
+If you’re providing the `settings.php` or `wp-config.php` and DDEV is creating `settings.ddev.php` (or `wp-config-local.php`, `AdditionalConfig.php`, or similar), the main settings file must explicitly include the appropriate DDEV-generated settings file. Any changes you need should be included somewhere that loads after DDEV’s settings file, for example in Drupal’s `settings.php` _after_ `settings.ddev.php` is included. (See [Adding Configuration](#adding-configuration) below).
 
 !!!note "Completely Disabling Settings Management"
 
@@ -549,12 +549,12 @@ Successfully imported database for drupal8
 
 Database imports can be any of the following file types:
 
-* Raw SQL Dump (`.sql`)
-* Gzipped SQL Dump (`.sql.gz`)
-* Xz’d SQL Dump (`.sql.xz`)
-* (Gzipped) Tarball Archive (`.tar`, `.tar.gz`, `.tgz`)
-* Zip Archive (`.zip`)
-* stdin
+- Raw SQL Dump (`.sql`)
+- Gzipped SQL Dump (`.sql.gz`)
+- Xz’d SQL Dump (`.sql.xz`)
+- (Gzipped) Tarball Archive (`.tar`, `.tar.gz`, `.tgz`)
+- Zip Archive (`.zip`)
+- stdin
 
 If a Tarball Archive or Zip Archive is provided for the import, you’ll be prompted to specify a path within the archive to use for the import asset. The specified path should provide a raw SQL dump (`.sql`). In the following example, the database we want to import is named `data.sql` and resides at the top level of the archive:
 
@@ -584,8 +584,8 @@ ddev import-db <mydb.sql
 
 #### Database Import Notes
 
-* Importing from a dump file via stdin will not show progress because there’s no way the import can know how far along through the import it has progressed.
-* Use `ddev import-db --target-db <some_database>` to import to a non-default database (other than the default `db` database). This will create the database if it doesn’t already exist.
-* Use `ddev import-db --no-drop` to import without first emptying the database.
-* If a database already exists and the import does not specify dropping tables, the contents of the imported dumpfile will be *added* to the database. Most full database dumps do a table drop and create before loading, but if yours does not, you can drop all tables with `ddev stop --remove-data` before importing.
-* If imports are stalling or failing, make sure you have plenty of unused space (see [#3360](https://github.com/drud/ddev/issues/3360)). DDEV has no problems importing large (2G+) databases, but importing requires lots of space. DDEV will show a warning on startup if unused space is getting low.
+- Importing from a dump file via stdin will not show progress because there’s no way the import can know how far along through the import it has progressed.
+- Use `ddev import-db --target-db <some_database>` to import to a non-default database (other than the default `db` database). This will create the database if it doesn’t already exist.
+- Use `ddev import-db --no-drop` to import without first emptying the database.
+- If a database already exists and the import does not specify dropping tables, the contents of the imported dumpfile will be _added_ to the database. Most full database dumps do a table drop and create before loading, but if yours does not, you can drop all tables with `ddev stop --remove-data` before importing.
+- If imports are stalling or failing, make sure you have plenty of unused space (see [#3360](https://github.com/drud/ddev/issues/3360)). DDEV has no problems importing large (2G+) databases, but importing requires lots of space. DDEV will show a warning on startup if unused space is getting low.
