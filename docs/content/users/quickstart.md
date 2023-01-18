@@ -135,17 +135,19 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
         ddev launch
         ```
 
-    ### Backdrop
+    === "Backdrop"
 
-    To get started with [Backdrop](https://www.drupal.org/project/backdrop), clone the project repository and navigate to the project directory.
+        ### Backdrop
 
-    ```bash
-    git clone https://github.com/example/example-site
-    cd example-site
-    ddev config
-    ddev start
-    ddev launch
-    ```
+        To get started with [Backdrop](https://backdropcms.org), clone the project repository and navigate to the project directory.
+
+        ```bash
+        git clone https://github.com/example/example-site
+        cd example-site
+        ddev config
+        ddev start
+        ddev launch
+        ```
 
 === "Laravel"
 
