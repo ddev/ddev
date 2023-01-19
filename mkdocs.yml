@@ -118,8 +118,9 @@ nav:
       - users/install/docker-installation.md
       - users/install/ddev-installation.md
     - 'Getting Started':
-      - users/install/performance.md
+      - users/project.md
       - users/quickstart.md
+      - users/install/performance.md
       - users/install/shell-completion.md
       - users/install/phpstorm.md
   - 'Usage':
