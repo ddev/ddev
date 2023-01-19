@@ -148,7 +148,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
         * Reboot if required. (Usually required.)
 
-        * Visit the Microsoft Store and install the *updated* "Windows Subsystem for Linux" and click "Open". It will likely prompt you for a username and password for the Ubuntu WSL2 instance it creates.
+        * Visit the Microsoft Store and install the *updated* ["Windows Subsystem for Linux"](https://apps.microsoft.com/store/detail/windows-subsystem-for-linux/9P9TQF7MRM4R) and click "Open". It will likely prompt you for a username and password for the Ubuntu WSL2 instance it creates.
 
         * Verify that you now have an Ubuntu distro set as default by running `wsl.exe -l -v` 
 
