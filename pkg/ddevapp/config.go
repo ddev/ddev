@@ -894,7 +894,7 @@ redirect_stderr=true
 		extraWebContent = extraWebContent + fmt.Sprintf("\nADD .ddev/.webimageBuild/%s.conf /etc/supervisor/conf.d\n", appStart.Name)
 	}
 	if len(supervisorGroup) > 0 {
-		err = os.WriteFile(filepath.Join(app.AppRoot, ".webimageBuild/webextradaemons.conf"), []byte("[group:webextradaemons]\nprograms="+strings.Join(supervisorGroup, ",")), 0755)
+		err = os.WriteFile(app.GetConfigPath(".webimageBuild/webextradaemons.conf"), []byte("[group:webextradaemons]\nprograms="+strings.Join(supervisorGroup, ",")), 0755)
 		if err != nil {
 			return "", fmt.Errorf("failed to write .webimageBuild/webextradaemons.conf: %v", err)
 		}
