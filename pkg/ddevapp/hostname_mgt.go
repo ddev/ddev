@@ -9,7 +9,6 @@ import (
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
 	goodhosts "github.com/goodhosts/hostsfile"
-	"net"
 	"os"
 	exec2 "os/exec"
 	"runtime"
@@ -82,20 +81,6 @@ func (app *DdevApp) AddHostsEntriesIfNeeded() error {
 	}
 
 	for _, name := range app.GetHostnames() {
-		if app.UseDNSWhenPossible && globalconfig.IsInternetActive() {
-			// If they have provided "*.<name>" then look up the suffix
-			checkName := strings.TrimPrefix(name, "*.")
-			hostIPs, err := net.LookupHost(checkName)
-
-			// If we had successful lookup and dockerIP matches
-			// with adding to hosts file.
-			if err == nil && len(hostIPs) > 0 && hostIPs[0] == dockerIP {
-				continue
-			}
-		}
-
-		// We likely won't hit the hosts.Has() as true because
-		// we already did a lookup. But check anyway.
 		exists, err := IsHostnameInHostsFile(name)
 		if exists {
 			continue
@@ -151,17 +136,6 @@ func (app *DdevApp) RemoveHostsEntriesIfNeeded() error {
 	}
 
 	for _, name := range app.GetHostnames() {
-		checkName := strings.TrimPrefix(name, "*.")
-		hostIPs, err := net.LookupHost(checkName)
-
-		// If failed lookup, or more than one IP, or IP doesn't match
-		// take no action
-		if err != nil || (len(hostIPs) > 0 && hostIPs[0] != dockerIP) {
-			continue
-		}
-
-		// We likely won't hit the hosts.Has() as true because
-		// we already did a lookup. But check anyway.
 		exists, err := IsHostnameInHostsFile(name)
 		if !exists {
 			continue
