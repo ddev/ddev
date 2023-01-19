@@ -90,7 +90,7 @@ func GetDockerClient() *docker.Client {
 	if DockerHost == "" {
 		DockerContext, DockerHost, err = GetDockerContext()
 		// ddev --version may be called without docker client or context available, ignore err
-		if err != nil && len(os.Args) > 1 && os.Args[1] != "--version" {
+		if err != nil && len(os.Args) > 1 && os.Args[1] != "--version" && os.Args[1] != "hostname" {
 			util.Failed("Unable to get docker context: %v", err)
 		}
 		util.Debug("GetDockerClient: DockerContext=%s, DockerHost=%s", DockerContext, DockerHost)

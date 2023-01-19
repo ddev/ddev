@@ -42,6 +42,9 @@ github.com/Microsoft/hcsshim/internal/vmcompute
 github.com/Microsoft/hcsshim/internal/wclayer
 github.com/Microsoft/hcsshim/internal/winapi
 github.com/Microsoft/hcsshim/osversion
+# github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
+## explicit; go 1.13
+github.com/asaskevich/govalidator
 # github.com/cheggaaa/pb v1.0.25
 ## explicit
 github.com/cheggaaa/pb
@@ -61,6 +64,9 @@ github.com/davecgh/go-spew/spew
 # github.com/denisbrodbeck/machineid v1.0.1
 ## explicit
 github.com/denisbrodbeck/machineid
+# github.com/dimchansky/utfbom v1.1.1
+## explicit
+github.com/dimchansky/utfbom
 # github.com/docker/docker v20.10.22+incompatible
 ## explicit
 github.com/docker/docker/api/types/blkiodev
@@ -106,6 +112,9 @@ github.com/golang/groupcache/lru
 # github.com/golang/protobuf v1.5.2
 ## explicit; go 1.9
 github.com/golang/protobuf/proto
+# github.com/goodhosts/hostsfile v0.1.1
+## explicit; go 1.17
+github.com/goodhosts/hostsfile
 # github.com/google/go-github v17.0.0+incompatible
 ## explicit
 github.com/google/go-github/github
@@ -149,7 +158,6 @@ github.com/juju/ansiterm
 github.com/juju/ansiterm/tabwriter
 # github.com/lextoumbourou/goodhosts v2.1.0+incompatible
 ## explicit
-github.com/lextoumbourou/goodhosts
 # github.com/lunixbochs/vtclean v1.0.0
 ## explicit
 github.com/lunixbochs/vtclean

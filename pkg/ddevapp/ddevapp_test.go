@@ -526,9 +526,9 @@ func TestDdevStart(t *testing.T) {
 
 // TestDdevStartMultipleHostnames tests start with multiple hostnames
 func TestDdevStartMultipleHostnames(t *testing.T) {
-	if nodeps.IsMacM1() {
-		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
-	}
+	//if nodeps.IsMacM1() {
+	//	t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+	//}
 
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
@@ -555,7 +555,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		assert.NoError(err)
 
 		err = app.StartAndWait(5)
-		assert.NoError(err)
+		require.NoError(t, err)
 		if err != nil && strings.Contains(err.Error(), "db container failed") {
 			container, err := app.FindContainerByType("db")
 			assert.NoError(err)
@@ -584,10 +584,6 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		for _, url := range urls {
 			_, _ = testcommon.EnsureLocalHTTPContent(t, url+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		}
-
-		out, err := exec.RunHostCommand(DdevBin, "list", "--wrap-table")
-		assert.NoError(err)
-		t.Logf("=========== output of ddev list ==========\n%s\n============", out)
 
 		// Multiple projects can't run at the same time with the fqdns, so we need to clean
 		// up these for tests that run later.

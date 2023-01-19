@@ -187,7 +187,11 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 		globalconfig.DdevGlobalConfig.UseTraefik = val
 		dirty = true
 	}
-
+	if cmd.Flag("wsl2-no-windows-hosts-mgt").Changed {
+		val, _ := cmd.Flags().GetBool("wsl2-no-windows-hosts-mgt")
+		globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt = val
+		dirty = true
+	}
 	if dirty {
 		err = globalconfig.ValidateGlobalConfig()
 		if err != nil {
@@ -221,6 +225,7 @@ func handleGlobalConfig(cmd *cobra.Command, args []string) {
 	output.UserOut.Printf("xdebug-ide-location=%v", globalconfig.DdevGlobalConfig.XdebugIDELocation)
 	output.UserOut.Printf("no-bind-mounts=%v", globalconfig.DdevGlobalConfig.NoBindMounts)
 	output.UserOut.Printf("use-traefik=%v", globalconfig.DdevGlobalConfig.UseTraefik)
+	output.UserOut.Printf("wsl2-no-windows-hosts-mgt=%v", globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt)
 }
 
 func init() {
@@ -246,6 +251,6 @@ func init() {
 	configGlobalCommand.Flags().Bool("no-bind-mounts", true, "If true, don't use bind-mounts - useful for environments like remote docker where bind-mounts are impossible")
 	configGlobalCommand.Flags().String("xdebug-ide-location", "", "For less usual IDE locations specify where the IDE is running for Xdebug to reach it")
 	configGlobalCommand.Flags().Bool("use-traefik", true, "If true, use traefik for ddev-router")
-
+	configGlobalCommand.Flags().Bool("wsl2-no-windows-hosts-mgt", true, "WSL2 only; make DDEV ignore Windows-side hosts file")
 	ConfigCommand.AddCommand(configGlobalCommand)
 }

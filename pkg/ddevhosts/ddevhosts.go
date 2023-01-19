@@ -5,12 +5,14 @@ package ddevhosts
 // exported function.
 
 import (
-	"github.com/lextoumbourou/goodhosts"
+	goodhosts "github.com/goodhosts/hostsfile"
 )
+
+const WSL2WindowsHostsFile = `/mnt/c/Windows/system32/drivers/etc/hosts`
 
 // DdevHosts uses composition to absorb all exported functions of goodhosts
 type DdevHosts struct {
-	goodhosts.Hosts // provides all exported functions from goodhosts
+	*goodhosts.Hosts // provides all exported functions from goodhosts
 }
 
 // GetIPPosition is the same as the unexported getIpPosition,
@@ -33,6 +35,15 @@ func (h DdevHosts) GetIPPosition(ip string) int {
 // New is a simple wrapper on goodhosts.NewHosts()
 func New() (*DdevHosts, error) {
 	h, err := goodhosts.NewHosts()
+	if err != nil {
+		return nil, err
+	}
+
+	return &DdevHosts{h}, nil
+}
+
+func NewCustomHosts(osHostsFilePath string) (*DdevHosts, error) {
+	h, err := goodhosts.NewCustomHosts(osHostsFilePath)
 	if err != nil {
 		return nil, err
 	}

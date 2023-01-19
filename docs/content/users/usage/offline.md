@@ -25,6 +25,4 @@ If you’re using a browser on Windows and accessing a DDEV project in WSL2, Win
 
 !!!note "Administrative Privileges Required"
 
-    You must have administrative privileges to save the Windows hosts file.
-
-If you’re on Windows with a growing number of hostnames, be aware of [the 10-hosts-per-line limitation](../usage/troubleshooting.md#windows-hosts-file-limited-to-10-hosts-per-line).
+    You must have administrative privileges to save the hosts file on any OS.

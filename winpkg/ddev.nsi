@@ -1,5 +1,5 @@
 /**
- * ddev.nsi - DDEV Local Setup Script
+ * ddev.nsi - DDEV Setup Script
  *
  * Important hints on extending this installer, please follow this
  * instructions.
@@ -62,7 +62,7 @@
  * and therefor defined as LanguageString later in the script.
  */
 !define PRODUCT_NAME "DDEV"
-!define PRODUCT_NAME_FULL "${PRODUCT_NAME} Local"
+!define PRODUCT_NAME_FULL "${PRODUCT_NAME}"
 !define PRODUCT_VERSION "${VERSION}"
 !define PRODUCT_PUBLISHER "Localdev Foundation"
 
@@ -150,9 +150,7 @@ InstType "Minimal"
 !include "WinVer.nsh"
 
 !include "ddev.nsh"
-!ifndef DOCKER_EXCLUDE
-  !include "docker.nsh"
-!endif
+
 
 
 
@@ -661,10 +659,6 @@ SectionEnd
  */
 LangString DESC_SecDDEV ${LANG_ENGLISH} "Install ${PRODUCT_NAME_FULL} (required)"
 LangString DESC_SecAddToPath ${LANG_ENGLISH} "Add the ${PRODUCT_NAME} (and sudo) directory to the global PATH"
-!ifdef DOCKER_NSH
-LangString DESC_SecDocker ${LANG_ENGLISH} "Download and install ${DOCKER_DESKTOP_NAME} (www.docker.com) which do not seem to be installed, but is required for $(^Name) to function"
-!endif ; DOCKER_NSH
-LangString DESC_SecSudo ${LANG_ENGLISH} "Sudo for Windows (github.com/ mattn/sudo) allows for elevated privileges which are used to add hostnames to the Windows hosts file (required)"
 LangString DESC_SecMkcert ${LANG_ENGLISH} "mkcert (github.com/ FiloSottile/mkcert) is a simple tool for making locally-trusted development certificates. It requires no configuration"
 LangString DESC_SecMkcertSetup ${LANG_ENGLISH} "Run `mkcert -install` to setup a local CA"
 LangString DESC_SecWinNFSd ${LANG_ENGLISH} "WinNFSd (github.com/ winnfsd/winnfsd) is an optional NFS server that can be used with ${PRODUCT_NAME_FULL}"
@@ -784,11 +778,6 @@ FunctionEnd
  * GUI initialization, called before window is shown
  */
 Function onGUIInit
-  ; Check for docker-compose
-  !ifdef DOCKER_NSH
-  Call checkDocker
-  !endif ; DOCKER_NSH
-
   ; Read setup status from registry
   ${IfNot} ${Silent}
     ReadRegDWORD $mkcertSetup ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:mkcertSetup"
@@ -940,52 +929,6 @@ Function StartMenuPre
     Abort
   ${EndIf}
 FunctionEnd
-
-/**
- * Check for docker-compose
- */
-!ifdef DOCKER_NSH
-Function checkDocker
-  ${IfNot} ${Silent}
-    Var /GLOBAL DockerIgnore
-
-    ; Read setup status from registry
-    ReadRegDWORD $DockerIgnore ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:DockerIgnore"
-
-    ; Check if ignore flag is set
-    ${If} $DockerIgnore != 1
-      ; Check if docker-compose is executable
-      ${IfNot} ${DockerComposeIsExecutable}
-        ; Check if docker is supported on this system
-        ${If} ${DockerDesktopIsInstallable}
-          ; Show Docker Desktop section
-          StrCpy $DockerVisible "1"
-
-          ; Check if docker is installed
-          ${IfNot} ${DockerDesktopIsInstalled}
-            MessageBox MB_ICONQUESTION|MB_YESNOCANCEL "`${DOCKER_DESKTOP_NAME}` is not installed, but it is required for $(^Name) to function. Would you like to download and install `${DOCKER_DESKTOP_NAME}` during this setup? Cancel will not show this message again." IDYES DockerDesktopSelect IDCANCEL CheckDockerIgnore
-          ${Else}
-            MessageBox MB_ICONINFORMATION|MB_OK "`${DOCKER_DESKTOP_NAME}` is installed but docker-compose is not available in variable `Path` ), but they are required for $(^Name) to function. Please install them after you complete $(^Name) installation."
-          ${EndIf}
-
-          Goto CheckDockerEnd
-
-        DockerDesktopSelect:
-          StrCpy $DockerSelected "1"
-        ${EndIf}
-
-        Goto CheckDockerEnd
-
-      CheckDockerIgnore:
-        WriteRegDWORD ${REG_UNINST_ROOT} "${REG_UNINST_KEY}" "NSIS:DockerIgnore" 1
-      ${EndIf}
-    ${EndIf}
-  ${EndIf}
-  CheckDockerEnd:
-FunctionEnd
-!endif ; DOCKER_NSH
-
-
 
 /**
  * Uninstaller Section
