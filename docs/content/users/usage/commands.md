@@ -923,7 +923,7 @@ ddev poweroff
 
 ## `pull`
 
-Pull files and database using a configured [provider plugin](../providers/).
+Pull files and database using a configured [provider plugin](../../providers/).
 
 Flags:
 
