@@ -1147,7 +1147,7 @@ RUN touch /var/tmp/`+"added-by-"+item+".txt"))
 		// Add also Dockerfile.* alternatives
 		// Last one includes previously recommended ARG/FROM that needs to be removed
 		err = WriteImageDockerfile(app.GetConfigPath(item+"-build/Dockerfile.test1"), []byte(`
-ADD junkfile /
+ADD .ddev/web-build/junkfile /
 RUN touch /var/tmp/`+"added-by-"+item+"-test1.txt"))
 		assert.NoError(err)
 
