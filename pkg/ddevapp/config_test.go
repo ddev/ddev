@@ -1137,6 +1137,20 @@ func TestCustomBuildDockerfiles(t *testing.T) {
 		assert.NoError(err)
 	})
 
+	// web-build Dockerfile.test - slightly different from db-build because of
+	// different context
+	err = WriteImageDockerfile(app.GetConfigPath("web-build/Dockerfile.test1"), []byte(`
+ADD .ddev/web-build/junkfile /
+RUN touch /var/tmp/`+"added-by-web-test1.txt"))
+	require.NoError(t, err)
+
+	// web-build Dockerfile.test - slightly different from db-build because of
+	// different context
+	err = WriteImageDockerfile(app.GetConfigPath("db-build/Dockerfile.test1"), []byte(`
+ADD junkfile /
+RUN touch /var/tmp/`+"added-by-db-test1.txt"))
+	require.NoError(t, err)
+
 	// Create simple dockerfiles that just touch /var/tmp/added-by-<container>txt
 	for _, item := range []string{"web", "db"} {
 		err = fileutil.TemplateStringToFile("junkfile", nil, app.GetConfigPath(fmt.Sprintf("%s-build/junkfile", item)))
@@ -1146,10 +1160,6 @@ RUN touch /var/tmp/`+"added-by-"+item+".txt"))
 		assert.NoError(err)
 		// Add also Dockerfile.* alternatives
 		// Last one includes previously recommended ARG/FROM that needs to be removed
-		err = WriteImageDockerfile(app.GetConfigPath(item+"-build/Dockerfile.test1"), []byte(`
-ADD .ddev/web-build/junkfile /
-RUN touch /var/tmp/`+"added-by-"+item+"-test1.txt"))
-		assert.NoError(err)
 
 		err = WriteImageDockerfile(app.GetConfigPath(item+"-build/Dockerfile.test2"), []byte(`
 RUN touch /var/tmp/`+"added-by-"+item+"-test2.txt"))
