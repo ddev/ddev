@@ -1144,7 +1144,7 @@ ADD .ddev/web-build/junkfile /
 RUN touch /var/tmp/`+"added-by-web-test1.txt"))
 	require.NoError(t, err)
 
-	// web-build Dockerfile.test - slightly different from db-build because of
+	// db-build Dockerfile.test - slightly different from web-build because of
 	// different context
 	err = WriteImageDockerfile(app.GetConfigPath("db-build/Dockerfile.test1"), []byte(`
 ADD junkfile /
