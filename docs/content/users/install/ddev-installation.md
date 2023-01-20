@@ -141,9 +141,9 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     
     1. Install WSL2 with an Ubuntu distro.
 
-        * Install WSL with 
+        * Install WSL with
             ```
-            wsl --install`
+            wsl --install
             ```
 
         * Reboot if required. (Usually required.)
