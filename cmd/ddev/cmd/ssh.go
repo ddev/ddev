@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"bufio"
+
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
@@ -35,6 +37,11 @@ ddev ssh -d /var/www/html`,
 
 		app.DockerEnv()
 
+		// Determine if values were piped into the command.
+		var reader = bufio.NewReader(cmd.InOrStdin())
+		pipedValues, _ := reader.ReadString('\n')
+		isPiped := len(pipedValues) > 0
+
 		// Use bash for our containers, sh for 3rd-party containers
 		// that may not have bash.
 		shell := "bash"
@@ -46,7 +53,7 @@ ddev ssh -d /var/www/html`,
 			Cmd:     shell + " -l",
 			Dir:     sshDirArg,
 		})
-		if err != nil {
+		if err != nil && isPiped {
 			util.Failed("Failed to ddev ssh %s: %v", serviceType, err)
 		}
 	},
