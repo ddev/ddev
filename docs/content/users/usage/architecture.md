@@ -67,6 +67,9 @@ A project’s `.ddev` directory can be intimidating at first, so let’s take a 
 `web-build` directory
 : Can be used to provide a [custom Dockerfile](../extend/customizing-images.md) for the web container.
 
+`web-entrypoint.d` directory
+: Custom scripts (named `*.sh`) in this directory will be run during web container startup, before the php-fpm server or other daemons are run. This is an advanced topic, so don't put anything here unless you know why you're doing it. It's useful for introducing environment variables into the context of the nginx and php-fpm servers, for example.
+
 `xhprof` directory
 : Contains the `xhprof_prepend.php` file that can be used to customize [xhprof](../debugging-profiling/xhprof-profiling.md) behavior for different types of websites.
 
