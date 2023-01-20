@@ -1135,13 +1135,16 @@ func TestCustomBuildDockerfiles(t *testing.T) {
 		assert.NoError(err)
 		err = os.RemoveAll(app.GetConfigPath("db-build"))
 		assert.NoError(err)
+		runTime()
 	})
 
 	// web-build Dockerfile.test - slightly different from db-build because of
-	// different context
-	err = WriteImageDockerfile(app.GetConfigPath("web-build/Dockerfile.test1"), []byte(`
+	// different context; this tests to see that the code can be mounted from context to
+	// /var/www/html and we can access index.php in docroot
+	err = WriteImageDockerfile(app.GetConfigPath("web-build/Dockerfile.test1"), []byte(fmt.Sprintf(`
 ADD .ddev/web-build/junkfile /
-RUN touch /var/tmp/`+"added-by-web-test1.txt"))
+RUN --mount=type=bind,source=.,target=/var/www/html cp /var/www/html/%s/index.php /var/tmp/%s-index.php
+RUN touch /var/tmp/`+"added-by-web-test1.txt", app.Docroot, t.Name())))
 	require.NoError(t, err)
 
 	// db-build Dockerfile.test - slightly different from web-build because of
@@ -1230,10 +1233,10 @@ RUN touch /var/tmp/running-php-${DDEV_PHP_VERSION}
 	})
 	assert.NoError(err)
 
-	err = app.Stop(true, false)
+	_, _, err = app.Exec(&ExecOpts{
+		Cmd: fmt.Sprintf("ls /var/tmp/%s-index.php >/dev/null", t.Name()),
+	})
 	assert.NoError(err)
-
-	runTime()
 }
 
 // TestConfigLoadingOrder verifies that configs load in lexicographical order
