@@ -4,7 +4,7 @@ set -o errexit nounset pipefail
 
 rm -f /tmp/healthy
 
-export ENTRYPOINT=/var/www/html/.ddev/web-entrypoint.d
+export ENTRYPOINT=/mnt/ddev_config/web-entrypoint.d
 
 source /functions.sh
 
