@@ -1284,6 +1284,14 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
+	util.Debug("Testing to see if /mnt/ddev_config is properly mounted")
+	_, _, err = app.Exec(&ExecOpts{
+		Cmd: `ls -l /mnt/ddev_config/nginx_full/nginx-site.conf >/dev/null`,
+	})
+	if err != nil {
+		return fmt.Errorf("Something is wrong with docker/colima and /mnt/ddev_config is not mounted from the project .ddev folder")
+	}
+
 	if !IsRouterDisabled(app) {
 		err = StartDdevRouter()
 		if err != nil {
