@@ -38,7 +38,7 @@ if (-not(wsl -e docker ps) ) {
 }
 $ErrorActionPreference = "Stop"
 # Install needed choco items
-choco install -y ddev gsudo mkcert
+choco upgrade -y ddev gsudo mkcert
 
 mkcert -install
 $env:CAROOT="$(mkcert -CAROOT)"
@@ -56,5 +56,7 @@ if (-not(wsl -e docker ps)) {
     throw "docker does not seem to be working inside the WSL2 distro yet. Check Resources->WSL Integration in Docker Desktop"
 }
 wsl -u root -e bash -c "touch /etc/wsl.conf && if ! fgrep '[boot]' /etc/wsl.conf >/dev/null; then printf '\n[boot]\nsystemd=true\n' >>/etc/wsl.conf; fi"
+
+refreshenv
 
 wsl ddev version
