@@ -33,7 +33,7 @@ if (wsl bash -c "test -d /mnt/wsl/docker-desktop >/dev/null 2>&1" ) {
 }
 $ErrorActionPreference = "Stop"
 # Install needed choco items; ddev/gsudo needed for ddev inside wsl2 to update hosts file on windows
-choco install -y ddev gsudo mkcert
+choco upgrade -y ddev gsudo mkcert
 
 mkcert -install
 $env:CAROOT="$(mkcert -CAROOT)"
@@ -61,7 +61,10 @@ if (-not(wsl -e docker ps)) {
 # If docker desktop was previously set up, the .docker can break normal use of docker client.
 wsl rm -rf ~/.docker
 
-wsl ddev version
+refreshenv
 
 wsl -u root -e bash -c "touch /etc/wsl.conf && if ! fgrep '[boot]' /etc/wsl.conf >/dev/null; then printf '\n[boot]\nsystemd=true\n' >>/etc/wsl.conf; fi"
+
+wsl ddev version
+
 
