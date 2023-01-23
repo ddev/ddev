@@ -124,7 +124,18 @@ echo 'Server started'
 # We don't want the various daemons to know about PHP_IDE_CONFIG
 unset PHP_IDE_CONFIG
 
+# Run any custom init scripts (.ddev/.web-entrypoint.d/*.sh)
+# In the case of mutagen, we need to put the actual code in place for the execution
+# of the scripts, because it may not be there yet (or could be stale)
 if [ -d ${ENTRYPOINT} ]; then
+  if [ ${DDEV_MUTAGEN_ENABLED} == "true" ]; then
+    set +x && printf "----------PWD=${PWD}\nls /var/www=$(ls -la /var/www)\nls -la /var/www/html=$(ls -la /var/www/html)\n===========" && set -x
+    pushd /tmp >/dev/null && mv /var/www/html /var/tmp/html.backup && ln -sf /var/tmp/html /var/www/html
+  fi
   ddev_custom_init_scripts;
+  if [ ${DDEV_MUTAGEN_ENABLED} == "true" ]; then
+    pushd /tmp >/dev/null && rm /var/www/html && mv /var/tmp/html.backup /var/www/html
+  fi
+  echo "After PWD=$PWD"
 fi
 exec /usr/bin/supervisord -n -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"

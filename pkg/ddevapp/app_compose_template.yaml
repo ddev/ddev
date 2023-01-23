@@ -127,6 +127,9 @@ services:
         target: /var/www
         volume:
           nocopy: true
+      # /var/tmp/html mount is there only so project can be accessed as bind-mount during
+      # start.sh
+      - "{{ .WebMount }}:/var/tmp/html:rw"
       # This second mount is only to make just the volume available so it can be chowned
       # without accidentally also hitting docker mounts
       - type: volume
