@@ -48,10 +48,10 @@ This means there’s another web server listening on the named port(s) and DDEV 
 
 In some cases, the conflict could be over phpMyAdmin’s port 8036 or MailHog’s port 8025.
 
-To resolve this conflict, choose one of three methods:
+To resolve this conflict, choose one of these methods:
 
-1. Stop all docker containers that might be using the port. `ddev poweroff && docker rm -f $(docker ps -aq)`, then restart Docker.
-2. If you’re using another local development environment (MAMP, WAMP, Lando, etc.) that uses these ports, consider stopping it.
+1. Stop all Docker containers that might be using the port by running `ddev poweroff && docker rm -f $(docker ps -aq)`, then restart Docker.
+2. If you’re using another local development environment that uses these ports (MAMP, WAMP, Lando, etc.), consider stopping it.
 3. Fix port conflicts by configuring your project to use different ports.
 4. Fix port conflicts by stopping the competing application.
 
