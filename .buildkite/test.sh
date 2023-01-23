@@ -5,13 +5,6 @@ export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 
 echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} in ${PWD} with golang=$(go version | awk '{print $3}') docker-desktop=$(scripts/docker-desktop-version.sh) docker=$(docker --version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}'))"
 
-# Broken docker context list from https://github.com/docker/for-win/issues/13180
-# When this is solved this can be removed.
-# The only place we care about non-default context is macOS Colima
-if ! docker context list >/dev/null; then
-  rm -rf ~/.docker/contexts && docker context list >/dev/null
-fi
-
 # GOTEST_SHORT=8 means drupal9
 export GOTEST_SHORT=8
 export DDEV_NONINTERACTIVE=true
@@ -21,6 +14,13 @@ set -o errexit
 set -o pipefail
 set -o nounset
 set -x
+
+# Broken docker context list from https://github.com/docker/for-win/issues/13180
+# When this is solved this can be removed.
+# The only place we care about non-default context is macOS Colima
+if ! docker context list >/dev/null; then
+  rm -rf ~/.docker/contexts && docker context list >/dev/null
+fi
 
 # If this is a PR and the diff doesn't have code, skip it
 if [ "${BUILDKITE_PULL_REQUEST}" != "false" ] && ! git diff --name-only refs/remotes/origin/${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-} | egrep "^(Makefile|pkg|cmd|vendor|go\.)"; then
