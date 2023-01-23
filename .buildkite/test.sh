@@ -5,6 +5,13 @@ export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 
 echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} in ${PWD} with golang=$(go version | awk '{print $3}') docker-desktop=$(scripts/docker-desktop-version.sh) docker=$(docker --version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}'))"
 
+# Broken docker context list from https://github.com/docker/for-win/issues/13180
+# When this is solved this can be removed.
+# The only place we care about non-default context is macOS Colima
+if ! docker context list >/dev/null; then
+  rm -rf ~/.docker/contexts && docker context list >/dev/null
+fi
+
 # GOTEST_SHORT=8 means drupal9
 export GOTEST_SHORT=8
 export DDEV_NONINTERACTIVE=true
