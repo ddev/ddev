@@ -15,6 +15,13 @@ set -o pipefail
 set -o nounset
 set -x
 
+# Broken docker context list from https://github.com/docker/for-win/issues/13180
+# When this is solved this can be removed.
+# The only place we care about non-default context is macOS Colima
+if ! docker context list >/dev/null; then
+  rm -rf ~/.docker/contexts && docker context list >/dev/null
+fi
+
 # If this is a PR and the diff doesn't have code, skip it
 if [ "${BUILDKITE_PULL_REQUEST}" != "false" ] && ! git diff --name-only refs/remotes/origin/${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-} | egrep "^(Makefile|pkg|cmd|vendor|go\.)"; then
   echo "Skipping build since no code changes found"
