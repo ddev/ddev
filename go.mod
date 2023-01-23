@@ -3,6 +3,7 @@ module github.com/ddev/ddev
 require (
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/Masterminds/sprig/v3 v3.2.2
+	github.com/amplitude/analytics-go v1.0.0
 	github.com/cheggaaa/pb v1.0.25
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/docker/docker v23.0.3+incompatible
@@ -86,3 +87,5 @@ require (
 )
 
 go 1.20
+
+replace github.com/amplitude/analytics-go v1.0.0 => github.com/ddev/analytics-go v1.0.0-fix-failed-transmissions

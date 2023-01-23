@@ -6,11 +6,15 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/amplitude/analytics-go/amplitude"
+	"github.com/ddev/ddev/pkg/ampli"
+	"github.com/ddev/ddev/pkg/amplitude/storages"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -19,6 +23,7 @@ import (
 	"github.com/ddev/ddev/pkg/version"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/denisbrodbeck/machineid"
+	"github.com/spf13/cobra"
 	"gopkg.in/segmentio/analytics-go.v3"
 )
 
@@ -38,6 +43,58 @@ var ReportableEvents = map[string]bool{"start": true}
 // an explicit user is provided in global_config.yaml that will be prepended.
 func GetInstrumentationUser() string {
 	return hashedHostID
+}
+
+// TrackBinary collects and tracks information about the binary for instrumentation.
+func TrackBinary(eventOptions ...ampli.EventOptions) {
+	runTime := util.TimeTrack()
+	defer runTime()
+
+	dockerVersion, _ := dockerutil.GetDockerVersion()
+	dockerPlaform, _ := version.GetDockerPlatform()
+	timezone, _ := time.Now().In(time.Local).Zone()
+
+	builder := ampli.Binary.Builder().
+		Architecture(runtime.GOARCH).
+		DockerPlatform(dockerPlaform).
+		DockerVersion(dockerVersion).
+		Host("h").
+		Language(os.Getenv("LANG")).
+		Os(runtime.GOOS).
+		Timezone(timezone).
+		Version(versionconstants.DdevVersion)
+
+	wslDistro := nodeps.GetWSLDistro()
+	if wslDistro != "" {
+		builder.
+			WslDistro(wslDistro)
+	}
+
+	ampli.Instance.Binary(GetInstrumentationUser(), builder.Build(), eventOptions...)
+}
+
+// TrackCommand collects and tracks information about the command for instrumentation.
+func TrackCommand(cmd *cobra.Command, args []string, eventOptions ...ampli.EventOptions) {
+	runTime := util.TimeTrack()
+	defer runTime()
+
+	builder := ampli.Command.Builder().
+		CommandName(cmd.CalledAs())
+
+	ampli.Instance.Command(GetInstrumentationUser(), builder.Build(), eventOptions...)
+}
+
+// TrackProject collects and tracks information about the project for instrumentation.
+func (app *DdevApp) TrackProject(eventOptions ...ampli.EventOptions) {
+	runTime := util.TimeTrack()
+	defer runTime()
+
+	builder := ampli.Project.Builder().
+		Id(getProjectHash(app.Name))
+
+	//builder.
+
+	ampli.Instance.Project(GetInstrumentationUser(), builder.Build(), eventOptions...)
 }
 
 // SetInstrumentationBaseTags sets the basic always-used tags for Segment
@@ -155,6 +212,33 @@ func SendInstrumentationEvents(event string) {
 	}
 }
 
+// initInstrumentation initializes the instrumentation and must be called once
+// before the instrumentation functions can be used.
+func initInstrumentation() {
+	// Size of the queue. If reached the queued events will be sent.
+	var queueSize int = 50
+	var interval time.Duration = 24 * time.Hour
+
+	ampli.Instance.Load(ampli.LoadOptions{
+		Client: ampli.LoadClientOptions{
+			APIKey: versionconstants.AmplitudeApiKey,
+			Configuration: amplitude.Config{
+				FlushInterval:  300,
+				FlushQueueSize: queueSize,
+				StorageFactory: func() amplitude.EventStorage {
+					return storages.NewDelayedTransmissionEventStorage(
+						queueSize,
+						interval,
+						filepath.Join(globalconfig.GetGlobalDdevDir(), `amplitude.cache`),
+					)
+				},
+			},
+		},
+		Disabled: !globalconfig.DdevGlobalConfig.InstrumentationOptIn || !globalconfig.IsInternetActive(),
+	})
+}
+
 func init() {
 	hashedHostID, _ = machineid.ProtectedID("ddev")
+	initInstrumentation()
 }

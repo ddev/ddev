@@ -135,6 +135,38 @@ To manually push using GitHub Actions,
 * Click “Run workflow” in the blue band near the top.
 * Choose the branch, usually `master`. Include a tag for the pushed image and GitHub will do all the work.
 
+## Instrumentation
+
+The instrumentation implementation is generated using the [Ampli Codegen](https://www.docs.developers.amplitude.com/data/sdks/go/ampli/).
+
+To synchronize the implementation with the latest changes at Amplitude, the CLI
+tool has to be installed locally:
+
+```bash
+npm install -g @amplitude/ampli
+```
+
+Make changes to the event definition using the GUI at <https://data.amplitude.com/ddev/DDEV>:
+
+* create a new branch
+* create or change events and properties
+* save changes to the new branch
+* update the implementation with `ampli checkout <branch name>`
+* make changes to the code
+
+Make sure new properties are not breaking, add it as optional properties though.
+Once finished, save the changes to publish a new version of the definitions.
+
+Afterwards the changes can be imported running the following command in the
+project root:
+
+```bash
+ampli pull
+```
+
+Make sure the API keys are not included to the sources, they are linked during
+the compilation using a GitHub secret.
+
 ## Building
 
 * You'll want both your fork/branch and the upstream as remotes in Git, so that tags can be determined. For example, the upstream Git remote can be `https://github.com/ddev/ddev` and your fork's remote can be `git@github.com:<yourgithubuser>/ddev`. Without the upstream, Git may not know about tags that it needs for tests to work.

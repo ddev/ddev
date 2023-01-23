@@ -24,6 +24,7 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       SegmentKey: ${{ secrets.SEGMENTKEY }}
+      AmplitudeApiKey: ${{ secrets.AMPLITUDE_API_KEY }}
 
     steps:
       - uses: actions/checkout@v3

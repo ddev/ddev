@@ -160,6 +160,8 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		app.WebserverType = nodeps.WebserverNginxGunicorn
 	}
 
+	app.TrackProject()
+
 	return app, nil
 }
 

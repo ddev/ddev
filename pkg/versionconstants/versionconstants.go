@@ -14,6 +14,10 @@ var DdevVersion = "v0.0.0-overridden-by-make" // Note that this is overridden by
 // Compiled with link-time variables
 var SegmentKey = ""
 
+// AmplitudeApiKey is the ddev-specific key for Amplitude service
+// Compiled with link-time variables
+var AmplitudeApiKey = ""
+
 // WebImg defines the default web image used for applications.
 var WebImg = "ddev/ddev-webserver"
 
