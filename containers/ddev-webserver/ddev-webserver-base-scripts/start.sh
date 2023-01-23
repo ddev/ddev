@@ -5,6 +5,7 @@ set -o errexit nounset pipefail
 rm -f /tmp/healthy
 
 export ENTRYPOINT=/mnt/ddev_config/web-entrypoint.d
+touch /tmp/mutagen-ready
 
 source /functions.sh
 
@@ -128,13 +129,13 @@ unset PHP_IDE_CONFIG
 # In the case of mutagen, we need to put the actual code in place for the execution
 # of the scripts, because it may not be there yet (or could be stale)
 if [ -d ${ENTRYPOINT} ]; then
-  if [ ${DDEV_MUTAGEN_ENABLED} == "true" ]; then
-    set +x && printf "----------PWD=${PWD}\nls /var/www=$(ls -la /var/www)\nls -la /var/www/html=$(ls -la /var/www/html)\n===========" && set -x
-    pushd /tmp >/dev/null && mv /var/www/html /var/tmp/html.backup && ln -sf /var/tmp/html /var/www/html
+  if [ "${DDEV_MUTAGEN_ENABLED:-}" = "true" ]; then
+    set +x && printf "\n----------PWD=${PWD}\nls /var/www=$(ls -la /var/www)\nls -la /var/www/html=$(ls -la /var/www/html)\n===========" && set -x
+    pushd /tmp >/dev/null && sudo mv /var/www/html /var/tmp/html.backup && ln -sf /var/tmp/html /var/www/html
   fi
   ddev_custom_init_scripts;
-  if [ ${DDEV_MUTAGEN_ENABLED} == "true" ]; then
-    pushd /tmp >/dev/null && rm /var/www/html && mv /var/tmp/html.backup /var/www/html
+  if [ "${DDEV_MUTAGEN_ENABLED:-}" = "true" ]; then
+    pushd /tmp >/dev/null && rm /var/www/html && sudo mv /var/tmp/html.backup /var/www/html
   fi
   echo "After PWD=$PWD"
 fi
