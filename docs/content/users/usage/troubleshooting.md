@@ -40,15 +40,20 @@ DDEV sometimes also has this error message that will alert you to port conflicts
 
 > ERROR: for ddev-router Cannot start service ddev-router: Ports are not available: listen tcp 127.0.0.1:XX: bind: An attempt was made to access a socket in a way forbidden by its access permissions.
 
+or
+
+> Error response from daemon: Ports are not available: exposing port TCP 127.0.0.1:443 -> 0.0.0.0:0: listen tcp 127.0.0.1:443: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted.
+
 This means there’s another web server listening on the named port(s) and DDEV cannot access the port. The most common conflicts are on ports 80 and 443.
 
 In some cases, the conflict could be over phpMyAdmin’s port 8036 or MailHog’s port 8025.
 
 To resolve this conflict, choose one of three methods:
 
-1. If you’re using another local development environment (MAMP, WAMP, Lando, etc.) that uses these ports, consider stopping it.
-2. Fix port conflicts by configuring your project to use different ports.
-3. Fix port conflicts by stopping the competing application.
+1. Stop all docker containers that might be using the port. `ddev poweroff && docker rm -f $(docker ps -aq)`, then restart Docker.
+2. If you’re using another local development environment (MAMP, WAMP, Lando, etc.) that uses these ports, consider stopping it.
+3. Fix port conflicts by configuring your project to use different ports.
+4. Fix port conflicts by stopping the competing application.
 
 ### Method 1: Stop the conflicting application
 
