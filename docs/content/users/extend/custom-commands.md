@@ -73,6 +73,7 @@ A number of environment variables are provided to these command scripts. These a
 * `DDEV_HOST_HTTPS_PORT`: localhost port for HTTPS on web server
 * `DDEV_HOST_MAILHOG_PORT`: localhost port for MailHog
 * `DDEV_HOST_WEBSERVER_PORT`: localhost port of the web server
+* `DDEV_MUTAGEN_ENABLED`: "true" if mutagen is enabled
 * `DDEV_PHP_VERSION`: current PHP version
 * `DDEV_PRIMARY_URL`: primary project URL
 * `DDEV_PROJECT`: project name, like `d8composer`
@@ -90,6 +91,7 @@ Useful variables for container scripts are:
 * `DDEV_DOCROOT`: relative path from approot to docroot
 * `DDEV_FILES_DIR`: directory of user-uploaded files
 * `DDEV_HOSTNAME`: comma-separated list of FQDN hostnames
+* `DDEV_MUTAGEN_ENABLED`: "true" if mutagen is enabled
 * `DDEV_PHP_VERSION`: current PHP version
 * `DDEV_PRIMARY_URL`: primary URL for the project
 * `DDEV_PROJECT`: project name, like `d8composer`
