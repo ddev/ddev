@@ -20,7 +20,7 @@ func (app *DdevApp) Composer(args []string) (string, string, error) {
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		Service: "web",
 		Dir:     app.GetComposerRoot(true, true),
-		RawCmd:  append([]string{"composer"}, args...),
+		RawCmd:  append([]string{"XDEBUG_MODE=off composer"}, args...),
 		Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 	})
 	if err != nil {
