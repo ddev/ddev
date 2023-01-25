@@ -52,4 +52,4 @@ See “How can I contribute to DDEV?” in the [FAQ](https://ddev.readthedocs.io
 [<img src="images/lullabot-lockup-logo.svg" alt="Lullabot" width="150">](https://www.lullabot.com)
 [<img src="images/craft-cms-logo.svg" alt="Craft CMS" width="150">](https://craftcms.com/)
 [<img src="images/undpaul_logo.svg" alt="undpaul" width=150>](https://undpaul.de)
-[<img src="images/1X_Logo_RGB_Red_4.png" alt="1XInternet" width="150">](https://1xinternet.de)
+[<img src="images/1X_Logo_RGB_Red_4.png" alt="1xINTERNET" width="150">](https://1xinternet.de)
