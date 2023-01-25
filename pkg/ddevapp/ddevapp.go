@@ -952,6 +952,8 @@ func (app *DdevApp) GetDBImage() string {
 func (app *DdevApp) Start() error {
 	var err error
 
+	_ = os.RemoveAll(app.GetConfigPath("mutagen/.start-synced"))
+
 	if app.IsMutagenEnabled() && globalconfig.DdevGlobalConfig.UseHardenedImages {
 		return fmt.Errorf("mutagen-enabled is not compatible with use-hardened-images")
 	}
@@ -1260,6 +1262,11 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		} else {
 			util.Error("Mutagen sync completed with problems in %s.\nFor details on sync status 'ddev mutagen st %s -l'", dur, MutagenSyncName(app.Name))
 		}
+		f, err := os.OpenFile(app.GetConfigPath("mutagen/.start-synced"), os.O_RDWR|os.O_CREATE, 0755)
+		if err != nil {
+			util.Warning("could not create file %s: %v", app.GetConfigPath("mutagen/.start-synced"), err)
+		}
+		_ = f.Close()
 	}
 
 	// Wait for web/db containers to become healthy
