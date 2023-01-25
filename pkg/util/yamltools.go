@@ -30,7 +30,12 @@ func YamlToDict(topm interface{}) (map[string]interface{}, error) {
 	switch topm.(type) {
 	case map[interface{}]interface{}:
 		for yk, v := range topm.(map[interface{}]interface{}) {
-			ys := yk.(string)
+			ys, ok := yk.(string)
+			// TODO: Explain the problem, figure out if this is a golang/yaml bug
+			if !ok {
+				Warning("%v can't be converted to string")
+				continue
+			}
 			switch v.(type) {
 			case string:
 				res[ys] = v
