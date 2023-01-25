@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"bufio"
+	"os"
+	"os/exec"
 
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/nodeps"
@@ -35,12 +36,19 @@ ddev ssh -d /var/www/html`,
 			util.Failed("Project is not currently running. Try 'ddev start'.")
 		}
 
+		err = app.Wait([]string{serviceType})
+		if err != nil {
+			util.Failed("Service %s doesn't seem to be running: %v", serviceType, err)
+		}
+
 		app.DockerEnv()
 
 		// Determine if values were piped into the command.
-		var reader = bufio.NewReader(cmd.InOrStdin())
-		pipedValues, _ := reader.ReadString('\n')
-		isPiped := len(pipedValues) > 0
+		pipe, err := os.Stdin.Stat()
+		if err != nil {
+			panic(err)
+		}
+		isPiped := pipe.Size() > 0
 
 		// Use bash for our containers, sh for 3rd-party containers
 		// that may not have bash.
@@ -54,7 +62,11 @@ ddev ssh -d /var/www/html`,
 			Dir:     sshDirArg,
 		})
 		if err != nil && isPiped {
-			util.Failed("Failed to ddev ssh %s: %v", serviceType, err)
+			if exiterr, ok := err.(*exec.ExitError); ok {
+				os.Exit(exiterr.ExitCode())
+			} else {
+				os.Exit(1)
+			}
 		}
 	},
 }
