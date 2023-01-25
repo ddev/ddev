@@ -162,19 +162,17 @@ export PATH=$PATH:/var/www/html/somewhereelse/vendor/bin
 
 ## Custom nginx Configuration
 
-When you run [`ddev restart`](../usage/commands.md#restart) using `nginx-fpm`, DDEV creates a configuration customized to your project type in `.ddev/nginx_full/nginx-site.conf`. You can edit and override the configuration by removing the `#ddev-generated` line and doing whatever you need with it. After each change, run `ddev restart`.
+When you run [`ddev restart`](../usage/commands.md#restart) using `nginx-fpm`, DDEV creates a configuration customized to your project type in `.ddev/nginx_full/nginx-site.conf`. You can edit and override the configuration by removing the `#ddev-generated` line and doing whatever you need with it. After each change, run `ddev restart`. (For updates without restart see [Troubleshooting nginx Configuration](#troubleshooting-nginx-configuration))
 
 You can also have more than one config file in the `.ddev/nginx_full` directory, and each will be loaded when DDEV starts. This can be used for [serving multiple docroots](#multiple-docroots-in-nginx-advanced) and other techniques.
 
 ### Troubleshooting nginx Configuration
 
 * Any errors in your configuration may cause the `web` container to fail and try to restart. If you see that behavior, use [`ddev logs`](../usage/commands.md#logs) to diagnose.
-* You can run `ddev exec nginx -t` to test whether your configuration is valid. (Or run [`ddev ssh`](../usage/commands.md#ssh) and run `nginx -t`.)
-* You can reload the nginx configuration by running either [`ddev restart`](../usage/commands.md#restart) or `ddev exec nginx -s reload`.
+* The configuration is copied into the container during restart. Therefore it is not possible to simply edit the host file for the changes to take effect. You may want to edit the file directly inside the container at `/etc/nginx/sites-enabled/`. (For example use [`ddev ssh`](../usage/commands.md#ssh) to get into the container)
+* You can run `ddev exec nginx -t` to test whether your configuration inside the container is valid. (Or run [`ddev ssh`](../usage/commands.md#ssh) and run `nginx -t`.)
+* You can reload the nginx configuration by running either [`ddev restart`](../usage/commands.md#restart) or edit the configuration inside the container at `/etc/nginx/sites-enabled/` and run `ddev exec nginx -s reload` on the host system (inside the container just `nginx -s reload`).
 * The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the health check script to work.
-
-!!!warning "Important!"
-    Changes to configuration take place on a [`ddev restart`](../usage/commands.md#restart), when the container is rebuilt for another reason, or when the nginx server receives the reload signal.
 
 ### Multiple Docroots in nginx (Advanced)
 
