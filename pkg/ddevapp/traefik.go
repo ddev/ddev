@@ -31,9 +31,9 @@ func detectAppRouting(app *DdevApp) ([]TraefikRouting, error) {
 	// app.ComposeYaml["services"];
 	var table []TraefikRouting
 	if services, ok := app.ComposeYaml["services"]; ok {
-		for serviceName, s := range services.(map[interface{}]interface{}) {
-			service := s.(map[interface{}]interface{})
-			if env, ok := service["environment"].(map[interface{}]interface{}); ok {
+		for serviceName, s := range services.(map[string]interface{}) {
+			service := s.(map[string]interface{})
+			if env, ok := service["environment"].(map[string]interface{}); ok {
 				var virtualHost string
 				var ok bool
 				if virtualHost, ok = env["VIRTUAL_HOST"].(string); ok {
@@ -42,7 +42,7 @@ func detectAppRouting(app *DdevApp) ([]TraefikRouting, error) {
 				hostnames := strings.Split(virtualHost, ",")
 				if httpExpose, ok := env["HTTP_EXPOSE"].(string); ok {
 					util.Debug("HTTP_EXPOSE=%v for %s", httpExpose, serviceName)
-					routeEntries, err := processHTTPExpose(serviceName.(string), httpExpose, false, hostnames)
+					routeEntries, err := processHTTPExpose(serviceName, httpExpose, false, hostnames)
 					if err != nil {
 						return nil, err
 					}
@@ -51,7 +51,7 @@ func detectAppRouting(app *DdevApp) ([]TraefikRouting, error) {
 
 				if httpsExpose, ok := env["HTTPS_EXPOSE"].(string); ok {
 					util.Debug("HTTPS_EXPOSE=%v for %s", httpsExpose, serviceName)
-					routeEntries, err := processHTTPExpose(serviceName.(string), httpsExpose, true, hostnames)
+					routeEntries, err := processHTTPExpose(serviceName, httpsExpose, true, hostnames)
 					if err != nil {
 						return nil, err
 					}

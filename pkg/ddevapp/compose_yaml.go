@@ -96,7 +96,7 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 			for k, volume := range volumes {
 				// With docker-compose v1, the volume might not be a map, it might be
 				// old-style "/Users/rfay/workspace/d9/.ddev:/mnt/ddev_config:ro"
-				if volumeMap, ok := volume.(map[interface{}]interface{}); ok {
+				if volumeMap, ok := volume.(map[string]interface{}); ok {
 					if volumeMap["source"] != nil {
 						if volumeMap["source"].(string) == app.AppRoot {
 							volumeMap["source"] = "../"
@@ -111,7 +111,7 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 			}
 		}
 		// Make sure all services have our networks stanza
-		serviceMap["networks"] = map[interface{}]interface{}{
+		serviceMap["networks"] = map[string]interface{}{
 			"ddev_default": nil,
 			"default":      nil,
 		}

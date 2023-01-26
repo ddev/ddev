@@ -1396,9 +1396,9 @@ func (app *DdevApp) FindMaxTimeout() int {
 		return defaultContainerTimeout
 	}
 	if y, ok := app.ComposeYaml["services"]; ok {
-		for _, v := range y.(map[interface{}]interface{}) {
-			if i, ok := v.(map[interface{}]interface{})["healthcheck"]; ok {
-				if timeout, ok := i.(map[interface{}]interface{})["timeout"]; ok {
+		for _, v := range y.(map[string]interface{}) {
+			if i, ok := v.(map[string]interface{})["healthcheck"]; ok {
+				if timeout, ok := i.(map[string]interface{})["timeout"]; ok {
 					duration, err := time.ParseDuration(timeout.(string))
 					if err != nil {
 						continue
@@ -2636,9 +2636,9 @@ func (app *DdevApp) CheckAddonIncompatibilities() error {
 	}
 	// Look for missing "networks" stanza and request it.
 	for s, v := range app.ComposeYaml["services"].(map[string]interface{}) {
-		x := v.(map[string]interface{})
 		errMsg := fmt.Errorf("service '%s' does not have the 'networks: [default, ddev_default]' stanza, required since v1.19, please add it, see %s", s, "https://ddev.readthedocs.io/en/latest/users/extend/custom-compose-files/#docker-composeyaml-examples")
 		var nets map[string]interface{}
+		x := v.(map[string]interface{})
 		ok := false
 		if nets, ok = x["networks"].(map[string]interface{}); !ok {
 			return errMsg
