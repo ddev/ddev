@@ -3,7 +3,7 @@ package ddevapp
 import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/util"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	"os"
 	"strings"
 	//compose_cli "github.com/compose-spec/compose-go/cli"

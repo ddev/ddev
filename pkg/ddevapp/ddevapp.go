@@ -10,7 +10,7 @@ import (
 	"github.com/mattn/go-isatty"
 	"github.com/otiai10/copy"
 	"golang.org/x/term"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
 	"runtime"

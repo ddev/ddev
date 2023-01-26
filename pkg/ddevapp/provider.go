@@ -12,7 +12,7 @@ import (
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/util"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // ProviderCommand defines the shell command to be run for one of the commands (db pull, etc.)
