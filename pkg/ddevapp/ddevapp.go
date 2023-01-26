@@ -1971,9 +1971,9 @@ func (app *DdevApp) Pause() error {
 // WaitForServices waits for all the services in docker-compose to come up
 func (app *DdevApp) WaitForServices() error {
 	var requiredContainers []string
-	if services, ok := app.ComposeYaml["services"].(map[interface{}]interface{}); ok {
+	if services, ok := app.ComposeYaml["services"].(map[string]interface{}); ok {
 		for k := range services {
-			requiredContainers = append(requiredContainers, k.(string))
+			requiredContainers = append(requiredContainers, k)
 		}
 	} else {
 		util.Failed("unable to get required startup services to wait for")
