@@ -15,10 +15,10 @@ source /functions.sh
 if [ "${DDEV_MUTAGEN_ENABLED}" = "true" ] && [ ! -f /var/www/html/.ddev/mutagen/.start-synced ]; then
   RSYNC_CMD="sudo rsync -a /var/tmp/html/ /var/www/html/"
   if [ "${DDEV_FILES_DIR:-}" != "" ]; then
-    RSYNC_CMD="${RSYNC_CMD} --exclude ${DDEV_FILES_DIR#/var/www/html} --exclude=.git --exclude=.tarballs --exclude=.idea"
+    RSYNC_CMD="${RSYNC_CMD} --exclude ${DDEV_FILES_DIR#/var/www/html/} --exclude=.git --exclude=.tarballs --exclude=.idea"
   fi
   echo "Seeding /var/www/html with contents of project directory as quickstart for mutagen"
-  echo "Pre-seed status=$(ls -lR /var/www/html)"
+  printf "\n=====Pre-seed status======\n$(ls -lR /var/www/html)\n======END Pre-seed status=======\n"
   time ${RSYNC_CMD} || true
 fi
 
