@@ -55,7 +55,7 @@ ddev ssh -d /var/www/html`,
 			Cmd:     shell + " -l",
 			Dir:     sshDirArg,
 		})
-		if err != nil && isPiped {
+		if err != nil  {
 			if exiterr, ok := err.(*exec.ExitError); ok {
 				os.Exit(exiterr.ExitCode())
 			} else {
