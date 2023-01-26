@@ -952,8 +952,6 @@ func (app *DdevApp) GetDBImage() string {
 func (app *DdevApp) Start() error {
 	var err error
 
-	_ = os.RemoveAll(app.GetConfigPath("mutagen/.start-synced"))
-
 	if app.IsMutagenEnabled() && globalconfig.DdevGlobalConfig.UseHardenedImages {
 		return fmt.Errorf("mutagen-enabled is not compatible with use-hardened-images")
 	}
