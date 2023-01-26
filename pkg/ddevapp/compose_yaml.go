@@ -84,11 +84,11 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 	// so it's in Docker Desktop 4.1.0.
 	// https://github.com/docker/compose/issues/8503#issuecomment-930969241
 
-	for _, service := range tempMap["services"].(map[interface{}]interface{}) {
+	for _, service := range tempMap["services"].(map[string]interface{}) {
 		if service == nil {
 			continue
 		}
-		serviceMap := service.(map[interface{}]interface{})
+		serviceMap := service.(map[string]interface{})
 
 		// Find any services that have bind-mount to app.AppRoot and make them relative
 		if serviceMap["volumes"] != nil {

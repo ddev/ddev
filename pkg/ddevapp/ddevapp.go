@@ -1371,8 +1371,8 @@ func (app *DdevApp) FindAllImages() ([]string, error) {
 		return images, nil
 	}
 	if y, ok := app.ComposeYaml["services"]; ok {
-		for _, v := range y.(map[interface{}]interface{}) {
-			if i, ok := v.(map[interface{}]interface{})["image"]; ok {
+		for _, v := range y.(map[string]interface{}) {
+			if i, ok := v.(map[string]interface{})["image"]; ok {
 				if strings.HasSuffix(i.(string), "-built") {
 					i = strings.TrimSuffix(i.(string), "-built")
 					if strings.HasSuffix(i.(string), "-"+app.Name) {
@@ -2302,8 +2302,8 @@ func deleteServiceVolumes(app *DdevApp) {
 	var err error
 	y := app.ComposeYaml
 	if s, ok := y["volumes"]; ok {
-		for _, v := range s.(map[interface{}]interface{}) {
-			vol := v.(map[interface{}]interface{})
+		for _, v := range s.(map[string]interface{}) {
+			vol := v.(map[string]interface{})
 			if vol["external"] == true {
 				continue
 			}
@@ -2635,12 +2635,12 @@ func (app *DdevApp) CheckAddonIncompatibilities() error {
 		return nil
 	}
 	// Look for missing "networks" stanza and request it.
-	for s, v := range app.ComposeYaml["services"].(map[interface{}]interface{}) {
-		x := v.(map[interface{}]interface{})
+	for s, v := range app.ComposeYaml["services"].(map[string]interface{}) {
+		x := v.(map[string]interface{})
 		errMsg := fmt.Errorf("service '%s' does not have the 'networks: [default, ddev_default]' stanza, required since v1.19, please add it, see %s", s, "https://ddev.readthedocs.io/en/latest/users/extend/custom-compose-files/#docker-composeyaml-examples")
-		var nets map[interface{}]interface{}
+		var nets map[string]interface{}
 		ok := false
-		if nets, ok = x["networks"].(map[interface{}]interface{}); !ok {
+		if nets, ok = x["networks"].(map[string]interface{}); !ok {
 			return errMsg
 		}
 		// Make sure both "default" and "ddev" networks are in there.
