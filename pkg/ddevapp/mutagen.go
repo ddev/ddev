@@ -546,12 +546,12 @@ func MutagenReset(app *DdevApp) error {
 			return err
 		}
 		util.Debug("Removed docker volume %s", GetMutagenVolumeName(app))
-		err = TerminateMutagenSync(app)
-		if err != nil {
-			return err
-		}
-		util.Debug("Terminated mutagen sync session %s", MutagenSyncName(app.Name))
 	}
+	err := TerminateMutagenSync(app)
+	if err != nil {
+		return err
+	}
+	util.Debug("Terminated mutagen sync session %s", MutagenSyncName(app.Name))
 	return nil
 }
 
