@@ -5,9 +5,21 @@ set -o errexit nounset pipefail
 rm -f /tmp/healthy
 
 export ENTRYPOINT=/mnt/ddev_config/web-entrypoint.d
-touch /tmp/mutagen-ready
 
 source /functions.sh
+
+# For web-entrypoint.d to work with code already loaded, if mutagen is enabled,
+# the code may not yet be in /var/www/html, so boost it along early
+# The .start-synced file is created after mutagen sync is done, and deleted early
+# in `ddev start`.
+if [ "${DDEV_MUTAGEN_ENABLED}" = "true" ] && [ ! -f /var/www/html/.ddev/mutagen/.start-synced ]; then
+  RSYNC_CMD="rsync -a /var/tmp/html/ /var/www/html/"
+  if [ "${DDEV_FILES_DIR:-}" != "" ]; then
+    RSYNC_CMD="${RSYNC_CMD} --exclude ${DDEV_FILES_DIR}"
+  fi
+  echo "Seeding /var/www/html with contents of project directory as quickstart for mutagen"
+  ${RSYNC_CMD}
+fi
 
 # If user has not been created via normal template (like uid 999)
 # then try to grab the required files from /etc/skel
