@@ -7,6 +7,9 @@
       "pattern": "^https://www.drupal.org/(u|project|about|forum|slack)"
     },
     {
+      "pattern": "^https://deb.sury.org"
+    },
+    {
       "pattern": "^https://nssm.cc/"
     },
     {
