@@ -18,7 +18,7 @@ if [ "${DDEV_MUTAGEN_ENABLED}" = "true" ] && [ ! -f /var/www/html/.ddev/mutagen/
     RSYNC_CMD="${RSYNC_CMD} --exclude ${DDEV_FILES_DIR#/var/www/html} --exclude=.git --exclude=.tarballs --exclude=.idea"
   fi
   echo "Seeding /var/www/html with contents of project directory as quickstart for mutagen"
-  echo "Pre-seed status=$(ls -laR /var/www/html)"
+  echo "Pre-seed status=$(ls -lR /var/www/html)"
   time ${RSYNC_CMD} || true
 fi
 
