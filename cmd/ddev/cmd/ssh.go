@@ -31,11 +31,6 @@ ddev ssh -d /var/www/html`,
 		app := projects[0]
 		instrumentationApp = app
 
-		status, _ := app.SiteStatus()
-		if status != ddevapp.SiteRunning {
-			util.Failed("Project is not currently running. Try 'ddev start'.")
-		}
-
 		err = app.Wait([]string{serviceType})
 		if err != nil {
 			util.Failed("Service %s doesn't seem to be running: %v", serviceType, err)
