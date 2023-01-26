@@ -43,7 +43,6 @@ ddev ssh -d /var/www/html`,
 
 		app.DockerEnv()
 
-
 		// Use bash for our containers, sh for 3rd-party containers
 		// that may not have bash.
 		shell := "bash"
@@ -55,7 +54,7 @@ ddev ssh -d /var/www/html`,
 			Cmd:     shell + " -l",
 			Dir:     sshDirArg,
 		})
-		if err != nil  {
+		if err != nil {
 			if exiterr, ok := err.(*exec.ExitError); ok {
 				os.Exit(exiterr.ExitCode())
 			} else {
