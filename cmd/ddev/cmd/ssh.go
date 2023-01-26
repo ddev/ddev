@@ -43,12 +43,6 @@ ddev ssh -d /var/www/html`,
 
 		app.DockerEnv()
 
-		// Determine if values were piped into the command.
-		pipe, err := os.Stdin.Stat()
-		if err != nil {
-			panic(err)
-		}
-		isPiped := pipe.Size() > 0
 
 		// Use bash for our containers, sh for 3rd-party containers
 		// that may not have bash.
