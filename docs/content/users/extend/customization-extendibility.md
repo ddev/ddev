@@ -169,7 +169,7 @@ You can also have more than one config file in the `.ddev/nginx_full` directory,
 ### Troubleshooting nginx Configuration
 
 * Any errors in your configuration may cause the `web` container to fail and try to restart. If you see that behavior, use [`ddev logs`](../usage/commands.md#logs) to diagnose.
-* The configuration is copied into the container during restart. Therefore it is not possible to simply edit the host file for the changes to take effect. You may want to edit the file directly inside the container at `/etc/nginx/sites-enabled/`. (For example use [`ddev ssh`](../usage/commands.md#ssh) to get into the container)
+* The configuration is copied into the container during restart. Therefore it is not possible to simply edit the host file for the changes to take effect. You may want to edit the file directly inside the container at `/etc/nginx/sites-enabled/`. (For example, run [`ddev ssh`](../usage/commands.md#ssh) to get into the container.)
 * You can run `ddev exec nginx -t` to test whether your configuration inside the container is valid. (Or run [`ddev ssh`](../usage/commands.md#ssh) and run `nginx -t`.)
 * You can reload the nginx configuration by running either [`ddev restart`](../usage/commands.md#restart) or edit the configuration inside the container at `/etc/nginx/sites-enabled/` and run `ddev exec nginx -s reload` on the host system (inside the container just `nginx -s reload`).
 * The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the health check script to work.
