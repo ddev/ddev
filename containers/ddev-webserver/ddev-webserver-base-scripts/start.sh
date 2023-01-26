@@ -13,12 +13,12 @@ source /functions.sh
 # The .start-synced file is created after mutagen sync is done, and deleted early
 # in `ddev start`.
 if [ "${DDEV_MUTAGEN_ENABLED}" = "true" ] && [ ! -f /var/www/html/.ddev/mutagen/.start-synced ]; then
-  RSYNC_CMD="time rsync -a /var/tmp/html/ /var/www/html/"
+  RSYNC_CMD="rsync -a /var/tmp/html/ /var/www/html/"
   if [ "${DDEV_FILES_DIR:-}" != "" ]; then
     RSYNC_CMD="${RSYNC_CMD} --exclude /var/tmp/html${DDEV_FILES_DIR#/var/www/html} --exclude=/var/tmp/html/.git"
   fi
   echo "Seeding /var/www/html with contents of project directory as quickstart for mutagen"
-  ${RSYNC_CMD} || true
+  time ${RSYNC_CMD} || true
 fi
 
 # If user has not been created via normal template (like uid 999)
