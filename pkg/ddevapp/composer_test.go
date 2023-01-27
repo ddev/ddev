@@ -1,7 +1,9 @@
 package ddevapp_test
 
 import (
+	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/testcommon"
@@ -58,6 +60,13 @@ func TestComposer(t *testing.T) {
 	})
 
 	err = app.Start()
+	if err != nil {
+		t.Logf("======== app.Start() failed: %v ================", err)
+		out, _ := exec.RunHostCommand(fmt.Sprintf(`docker inspect --format "{{json .State.Health }}" ddev-%s-web`, app.Name))
+		t.Logf("========= healthcheck info ==========\n%s\n==============", out)
+		t.Logf("======== app logs ============")
+		_ = app.Logs("web", false, true, "0")
+	}
 	require.NoError(t, err)
 
 	// Make sure to remove the var-dump-server to start; composer install should replace it.
