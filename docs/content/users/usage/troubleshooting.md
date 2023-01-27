@@ -245,8 +245,17 @@ You can also see the full Docker build using `~/.ddev/bin/docker-compose -f .dde
 
 During the `docker build` process Xdebug is enabled and configured. If you have an IDE open and listening for connections, `ddev start` can hang. Always disable Xdebug in each `RUN` command:
 
+For commands that need to run as root:
+
 ```dockerfile
-RUN export XDEBUG_MODE=off; terminus self:plugin:install terminus-build-tools-plugin
+# Example only - ddev already runs self-update for you.
+RUN export XDEBUG_MODE=off; composer self-update
+```
+
+For commands that need to run as the normal user:
+
+```dockerfile
+RUN sudo -u $username XDEBUG_MODE=off terminus self:plugin:install terminus-build-tools-plugin
 ```
 
 ## DDEV Starts but Browser Can’t Access URL
