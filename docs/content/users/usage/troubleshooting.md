@@ -241,6 +241,14 @@ The error messages you get will be more informative than messages that come when
 
 You can also see the full Docker build using `~/.ddev/bin/docker-compose -f .ddev/.ddev-docker-compose-full.yaml build --no-cache --progress=plain`.
 
+### Disable Xdebug When Running PHP Applications like Composer or Terminus
+
+During the `docker build` process Xdebug is enabled and configured. If you have an IDE open and listening for connections, `ddev start` can hang. Always disable Xdebug in each `RUN` command:
+
+```dockerfile
+RUN export XDEBUG_MODE=off; terminus self:plugin:install terminus-build-tools-plugin
+```
+
 ## DDEV Starts but Browser Can’t Access URL
 
 You may see one of two messages in your browser:
