@@ -156,8 +156,6 @@ github.com/joho/godotenv
 ## explicit
 github.com/juju/ansiterm
 github.com/juju/ansiterm/tabwriter
-# github.com/lextoumbourou/goodhosts v2.1.0+incompatible
-## explicit
 # github.com/lunixbochs/vtclean v1.0.0
 ## explicit
 github.com/lunixbochs/vtclean

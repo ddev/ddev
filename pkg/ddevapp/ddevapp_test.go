@@ -3106,9 +3106,9 @@ func TestMultipleComposeFiles(t *testing.T) {
 	require.True(t, len(app.ComposeYaml) > 0)
 
 	// Verify that the env var DUMMY_BASE got set by docker-compose.override.yaml
-	if services, ok := app.ComposeYaml["services"].(map[interface{}]interface{}); ok {
-		if w, ok := services["web"].(map[interface{}]interface{}); ok {
-			if env, ok := w["environment"].(map[interface{}]interface{}); ok {
+	if services, ok := app.ComposeYaml["services"].(map[string]interface{}); ok {
+		if w, ok := services["web"].(map[string]interface{}); ok {
+			if env, ok := w["environment"].(map[string]interface{}); ok {
 				// The docker-compose.override should have won with the value of DUMMY_BASE
 				assert.Equal("override", env["DUMMY_BASE"])
 				// But each of the DUMMY_COMPOSE_ONE/TWO/OVERRIDE which are unique
