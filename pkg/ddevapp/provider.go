@@ -9,11 +9,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/drud/ddev/pkg/output"
-
-	"fmt"
-
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/util"
 
