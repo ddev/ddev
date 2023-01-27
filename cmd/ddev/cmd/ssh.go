@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"os"
+	"os/exec"
+
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
@@ -28,9 +31,9 @@ ddev ssh -d /var/www/html`,
 		app := projects[0]
 		instrumentationApp = app
 
-		status, _ := app.SiteStatus()
-		if status != ddevapp.SiteRunning {
-			util.Failed("Project is not currently running. Try 'ddev start'.")
+		err = app.Wait([]string{serviceType})
+		if err != nil {
+			util.Failed("Service %s doesn't seem to be running: %v", serviceType, err)
 		}
 
 		app.DockerEnv()
@@ -47,7 +50,11 @@ ddev ssh -d /var/www/html`,
 			Dir:     sshDirArg,
 		})
 		if err != nil {
-			util.Failed("Failed to ddev ssh %s: %v", serviceType, err)
+			if exiterr, ok := err.(*exec.ExitError); ok {
+				os.Exit(exiterr.ExitCode())
+			} else {
+				os.Exit(1)
+			}
 		}
 	},
 }
