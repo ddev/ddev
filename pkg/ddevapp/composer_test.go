@@ -1,7 +1,6 @@
 package ddevapp_test
 
 import (
-	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -68,7 +67,8 @@ func TestComposer(t *testing.T) {
 	runTime()
 	if err != nil {
 		t.Logf("======== app.Start() failed: %v ================", err)
-		out, _ := exec.RunHostCommand(fmt.Sprintf(`docker inspect --format "{{json .State.Health }}" ddev-%s-web`, app.Name))
+		out, _ := exec.RunHostCommand("docker", "inspect", "--format", `{{json .State.Health }}`, "ddev-"+app.Name+"-web")
+
 		t.Logf("========= healthcheck info ==========\n%s\n==============", out)
 		t.Logf("======== app logs ============")
 		_ = app.Logs("web", false, true, "0")
