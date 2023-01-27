@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/drud/ddev/pkg/output"
+
 	"fmt"
 
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -440,7 +442,7 @@ func (p *Provider) injectedEnvironment() string {
 	if len(p.EnvironmentVariables) > 0 {
 		s = "export "
 		for k, v := range p.EnvironmentVariables {
-			s = s + fmt.Sprintf(" %s=%s ", k, v)
+			s = s + fmt.Sprintf(" %s=\"%s\" ", k, v)
 		}
 	}
 	return s
