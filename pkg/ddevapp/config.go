@@ -755,7 +755,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		BindAllInterfaces:         app.BindAllInterfaces,
 		MutagenEnabled:            app.IsMutagenEnabled() || globalconfig.DdevGlobalConfig.NoBindMounts,
 
-		NFSMountEnabled:       (app.NFSMountEnabled || app.NFSMountEnabledGlobal) && !app.IsMutagenEnabled(),
+		NFSMountEnabled:       app.IsNFSMountEnabled(),
 		NFSSource:             "",
 		IsWindowsFS:           runtime.GOOS == "windows",
 		NoProjectMount:        app.NoProjectMount,
@@ -828,7 +828,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if app.Database.Type == nodeps.Postgres {
 		templateVars.DBMountDir = "/var/lib/postgresql/data"
 	}
-	if app.NFSMountEnabled || app.NFSMountEnabledGlobal {
+	if app.IsNFSMountEnabled() {
 		templateVars.MountType = "volume"
 		templateVars.WebMount = "nfsmount"
 		templateVars.NFSSource = app.AppRoot
@@ -1353,4 +1353,13 @@ func validateHookYAML(source []byte) error {
 	}
 
 	return nil
+}
+
+// IsNFSMountEnabled determines whether NFS is enabled.
+// Mutagen trumps NFS, so if mutagen is enabled, NFS is not.
+func (app *DdevApp) IsNFSMountEnabled() bool {
+	if !app.IsMutagenEnabled() && (app.NFSMountEnabled || app.NFSMountEnabledGlobal) {
+		return true
+	}
+	return false
 }
