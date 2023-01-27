@@ -7,12 +7,13 @@ import (
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/drud/ddev/pkg/util"
+	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
 	"strings"
 	"testing"
-
-	asrt "github.com/stretchr/testify/assert"
+	"time"
 )
 
 // TestComposer does trivial tests of the ddev composer command
@@ -21,6 +22,9 @@ func TestComposer(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
+
+	_ = os.Setenv("DDEV_VERBOSE", "true")
+	globalconfig.DdevVerbose = true
 
 	// Use drupal9 only for this test, just need a little composer action
 	site := FullTestSites[8]
@@ -59,7 +63,9 @@ func TestComposer(t *testing.T) {
 		_ = app.Stop(true, false)
 	})
 
+	runTime := util.TimeTrack(time.Now(), "composer-start")
 	err = app.Start()
+	runTime()
 	if err != nil {
 		t.Logf("======== app.Start() failed: %v ================", err)
 		out, _ := exec.RunHostCommand(fmt.Sprintf(`docker inspect --format "{{json .State.Health }}" ddev-%s-web`, app.Name))
