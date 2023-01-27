@@ -238,7 +238,7 @@ services:
       interval: 1s
       retries: 120
       start_period: 120s
-      timeout: 180s
+      timeout: 240s
 
   {{ if not .OmitDBA }}
   dba:
