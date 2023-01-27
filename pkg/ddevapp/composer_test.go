@@ -1,6 +1,7 @@
 package ddevapp_test
 
 import (
+	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
@@ -62,15 +63,16 @@ func TestComposer(t *testing.T) {
 		_ = app.Stop(true, false)
 	})
 
-	runTime := util.TimeTrack(time.Now(), "composer-start")
+	runTime := util.TimeTrack(time.Now(), "start-with-composer")
 	err = app.Start()
 	runTime()
 	if err != nil {
 		t.Logf("======== app.Start() failed: %v ================", err)
-		out, _ := exec.RunHostCommand("docker", "inspect", "--format", `{{json .State.Health }}`, "ddev-"+app.Name+"-web")
+		out, _ := exec.RunHostCommand("bash", "-c", fmt.Sprintf(`docker inspect --format '{{json .State.Health }}' ddev-%s-web | jq`, app.Name))
 
 		t.Logf("========= healthcheck info ==========\n%s\n==============", out)
-		t.Logf("======== app logs ============")
+		out, _ = exec.RunHostCommand(DdevBin, "logs")
+		t.Logf("======== app logs ============\n%s\n=========== end logs =============", out)
 		_ = app.Logs("web", false, true, "0")
 	}
 	require.NoError(t, err)
