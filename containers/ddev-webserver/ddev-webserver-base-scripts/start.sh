@@ -8,18 +8,6 @@ export ENTRYPOINT=/mnt/ddev_config/web-entrypoint.d
 
 source /functions.sh
 
-# For web-entrypoint.d to work with code already loaded, if mutagen is enabled,
-# the code may not yet be in /var/www/html, so boost it along early
-# The .start-synced file is created after mutagen sync is done, and deleted early
-# in `ddev start`.
-if [ "${DDEV_MUTAGEN_ENABLED}" = "true" ] && [ ! -f /var/www/html/.ddev/mutagen/.start-synced ]; then
-  RSYNC_CMD="sudo rsync -a /var/tmp/html/ /var/www/html/"
-  if [ "${DDEV_FILES_DIR:-}" != "" ]; then
-    RSYNC_CMD="${RSYNC_CMD} --exclude ${DDEV_FILES_DIR#/var/www/html/} --exclude=.git --exclude=.tarballs --exclude=.idea"
-  fi
-  time ${RSYNC_CMD} || true
-fi
-
 # If user has not been created via normal template (like uid 999)
 # then try to grab the required files from /etc/skel
 if [ ! -f ~/.gitconfig ]; then (sudo cp -r /etc/skel/. ~/ && sudo chown -R "$(id -u -n)" ~ ) || true; fi
@@ -138,6 +126,19 @@ unset PHP_IDE_CONFIG
 
 # Run any custom init scripts (.ddev/.web-entrypoint.d/*.sh)
 if [ -d ${ENTRYPOINT} ]; then
-  ddev_custom_init_scripts;
+  if [[ -n $(find ${ENTRYPOINT} -type f -regex ".*\.\(sh\)") ]] && [[ ! -f "${ENTRYPOINT}/.user_scripts_initialized" ]] ; then
+    # For web-entrypoint.d to work with code already loaded, if mutagen is enabled,
+    # the code may not yet be in /var/www/html, so boost it along early
+    # The .start-synced file is created after mutagen sync is done, and deleted early
+    # in `ddev start`.
+    if [ "${DDEV_MUTAGEN_ENABLED}" = "true" ] && [ ! -f /var/www/html/.ddev/mutagen/.start-synced ]; then
+      RSYNC_CMD="sudo rsync -a /var/tmp/html/ /var/www/html/"
+      if [ "${DDEV_FILES_DIR:-}" != "" ]; then
+        RSYNC_CMD="${RSYNC_CMD} --exclude ${DDEV_FILES_DIR#/var/www/html/} --exclude=.git --exclude=.tarballs --exclude=.idea"
+      fi
+      time ${RSYNC_CMD} || true
+    fi
+    ddev_custom_init_scripts;
+  fi
 fi
 exec /usr/bin/supervisord -n -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"
