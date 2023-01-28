@@ -83,7 +83,8 @@ services:
   web:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-web
     build:
-      context: '{{ .WebBuildContext }}'
+      context: '../'
+      dockerfile: './.ddev/.webimageBuild/Dockerfile'
       args:
         BASE_IMAGE: $DDEV_WEBIMAGE
         username: '{{ .Username }}'
@@ -126,7 +127,10 @@ services:
         target: /var/www
         volume:
           nocopy: true
-      # This second mount is only to make just the volume available so it can be chowned
+      # /var/tmp/html mount is there only so project can be accessed as bind-mount during
+      # start.sh
+      - "{{ .WebMount }}:/var/tmp/html:ro"
+      # This second mutagen mount is only to make just the volume available so it can be chowned
       # without accidentally also hitting docker mounts
       - type: volume
         source: project_mutagen
@@ -171,6 +175,7 @@ services:
     - DDEV_DATABASE
     - DDEV_DOCROOT
     - DDEV_HOSTNAME
+    - DDEV_MUTAGEN_ENABLED
     - DDEV_PHP_VERSION
     - DDEV_PRIMARY_URL
     - DDEV_PROJECT

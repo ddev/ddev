@@ -524,6 +524,69 @@ func TestDdevStart(t *testing.T) {
 	testcommon.CleanupDir(another.Dir)
 }
 
+// TestDdevStartCustomEntrypoint tests ddev start with customizations in .ddev/web-entrypoint.d
+func TestDdevStartCustomEntrypoint(t *testing.T) {
+	if runtime.GOOS == "windows" && (globalconfig.DdevGlobalConfig.MutagenEnabledGlobal || nodeps.MutagenEnabledDefault) {
+		t.Skip("Skipping on windows/mutagen, it's just too slow to app.Start()")
+	}
+	assert := asrt.New(t)
+	app := &ddevapp.DdevApp{}
+
+	site := TestSites[0]
+	origDir, _ := os.Getwd()
+
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStart", site.Name))
+
+	err := app.Init(site.Dir)
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		err = os.RemoveAll(filepath.Join(app.AppRoot, "env.php"))
+		assert.NoError(err)
+		err = fileutil.PurgeDirectory(app.GetConfigPath("web-entrypoint.d"))
+		assert.NoError(err)
+		assert.False(dockerutil.NetworkExists("ddev-" + app.Name + "_default"))
+	})
+
+	r := nodeps.RandomString(10)
+	err = fileutil.TemplateStringToFile(fmt.Sprintf(`touch /var/tmp/%s && export TestDdevStartCustomEntrypoint=%s`, t.Name(), r), nil, app.GetConfigPath(`web-entrypoint.d/first.sh`))
+	require.NoError(t, err)
+	err = fileutil.TemplateStringToFile(`touch /var/tmp/second`, nil, app.GetConfigPath(`web-entrypoint.d/second.sh`))
+	require.NoError(t, err)
+
+	// See if our environment variable can be read via php-fpm
+	err = fileutil.TemplateStringToFile(fmt.Sprintf("<?php\n$v = getenv('%s'); echo $v;", t.Name()), nil, filepath.Join(app.AppRoot, app.Docroot, "env.php"))
+	require.NoError(t, err)
+
+	err = app.Start()
+	require.NoError(t, err)
+
+	stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: fmt.Sprintf(`ls /var/tmp/%s >/dev/null`, t.Name()),
+	})
+	require.NoError(t, err, "stdout=%s, stderr=%s", stdout, stderr)
+
+	// Test that the environment variable that we set is now available
+	// via php-fpm. It is *not* available in regular shell because it
+	// was set in start.sh, whose shell is not inherited this way.
+	stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: fmt.Sprintf(`curl -s --fail localhost/env.php`),
+	})
+	require.NoError(t, err, "stdout=%s, stderr=%s", stdout, stderr)
+	require.Equal(t, r, stdout)
+
+	stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
+		Cmd: `ls /var/tmp/second >/dev/null`,
+	})
+	require.NoError(t, err, "stdout=%s, stderr=%s", stdout, stderr)
+
+	runTime()
+}
+
 // TestDdevStartMultipleHostnames tests start with multiple hostnames
 func TestDdevStartMultipleHostnames(t *testing.T) {
 	//if nodeps.IsMacM1() {

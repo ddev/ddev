@@ -23,6 +23,7 @@ var DebugCapabilitiesCmd = &cobra.Command{
 			"daemon-run-configuration",
 			"get-volume-db-version",
 			"migrate-database",
+			"web-start-hooks",
 		}
 		output.UserOut.WithField("raw", capabilities).Print(strings.Join(capabilities, "\n"))
 	},

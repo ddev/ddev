@@ -32,10 +32,10 @@ ADD ddev-webserver-base-files /
 ADD ddev-webserver-base-scripts /
 
 # magerun and magerun2 for magento
-RUN curl -sSL https://files.magerun.net/n98-magerun-latest.phar -o /usr/local/bin/magerun && chmod 777 /usr/local/bin/magerun
-RUN curl -sSL https://raw.githubusercontent.com/netz98/n98-magerun/develop/res/autocompletion/bash/n98-magerun.phar.bash -o /etc/bash_completion.d/n98-magerun.phar
-RUN curl -sSL https://files.magerun.net/n98-magerun2-latest.phar -o /usr/local/bin/magerun2 && chmod 777 /usr/local/bin/magerun2
-RUN curl -sSL https://raw.githubusercontent.com/netz98/n98-magerun2/develop/res/autocompletion/bash/n98-magerun2.phar.bash -o /etc/bash_completion.d/n98-magerun2.phar && chmod +x /usr/local/bin/magerun
+RUN curl --fail -sSL https://files.magerun.net/n98-magerun-latest.phar -o /usr/local/bin/magerun && chmod 777 /usr/local/bin/magerun
+RUN curl --fail -sSL https://raw.githubusercontent.com/netz98/n98-magerun/develop/res/autocompletion/bash/n98-magerun.phar.bash -o /etc/bash_completion.d/n98-magerun.phar
+RUN curl --fail -sSL https://files.magerun.net/n98-magerun2-latest.phar -o /usr/local/bin/magerun2 && chmod 777 /usr/local/bin/magerun2
+RUN curl --fail -sSL https://raw.githubusercontent.com/netz98/n98-magerun2/develop/res/autocompletion/bash/n98-magerun2.phar.bash -o /etc/bash_completion.d/n98-magerun2.phar && chmod +x /usr/local/bin/magerun
 
 # /usr/local/bin may need to be updated by start.sh, etc
 RUN chmod -f ugo+rwx /usr/local/bin /usr/local/bin/composer
@@ -95,15 +95,15 @@ RUN phpdismod blackfire xhprof
 RUN set -x; curl --fail -sSL "https://github.com/drud/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_${TARGETPLATFORM##linux/}" -o /usr/local/bin/mailhog && chmod +x /usr/local/bin/mailhog
 
 RUN phpdismod xdebug && curl -sSL --fail --output /usr/local/bin/phive "https://phar.io/releases/phive.phar" && chmod 777 /usr/local/bin/phive && phpenmod xdebug
-RUN set -o pipefail && curl -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod 777 /usr/local/bin/terminus
-RUN set -o pipefail && curl -sSL https://github.com/platformsh/platformsh-cli/releases/download/$(curl --silent "https://api.github.com/repos/platformsh/platformsh-cli/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/platform.phar --output /usr/local/bin/platform && chmod 777 /usr/local/bin/platform
+RUN set -o pipefail && curl --fail -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl -L --fail --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod 777 /usr/local/bin/terminus
+RUN set -o pipefail && curl --fail -sSL https://github.com/platformsh/platformsh-cli/releases/download/$(curl -L --fail --silent "https://api.github.com/repositories/16695539/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/platform.phar --output /usr/local/bin/platform && chmod 777 /usr/local/bin/platform
 
 RUN mkdir -p "/opt/phpstorm-coverage" && \
     chmod a+rw "/opt/phpstorm-coverage"
 
-RUN curl -sSL --output /usr/local/bin/acli https://github.com/acquia/cli/releases/latest/download/acli.phar && chmod 777 /usr/local/bin/acli
+RUN curl --fail -sSL --output /usr/local/bin/acli https://github.com/acquia/cli/releases/latest/download/acli.phar && chmod 777 /usr/local/bin/acli
 
-RUN curl -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/backdrop-drush-extension.zip -o /tmp/backdrop-drush-extension.zip && unzip -o /tmp/backdrop-drush-extension.zip -d /var/tmp/backdrop_drush_commands && rm /tmp/backdrop-drush-extension.zip
+RUN curl --fail -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/backdrop-drush-extension.zip -o /tmp/backdrop-drush-extension.zip && unzip -o /tmp/backdrop-drush-extension.zip -d /var/tmp/backdrop_drush_commands && rm /tmp/backdrop-drush-extension.zip
 
 RUN mkdir -p /etc/nginx/sites-enabled /var/log/apache2 /var/run/apache2 /var/lib/apache2/module/enabled_by_admin /var/lib/apache2/module/disabled_by_admin && \
     touch /var/log/php-fpm.log && \
@@ -123,7 +123,7 @@ RUN mkdir -p /mnt/ddev-global-cache/mkcert /run/{php,blackfire} /var/cache/nginx
 
 RUN chmod -R ugo+w /usr/sbin /usr/bin /etc/nginx /var/cache/nginx /var/lib/nginx /run /var/www /etc/php/*/*/conf.d/ /var/lib/php/modules /etc/alternatives /usr/lib/node_modules /etc/php /etc/apache2 /var/log/apache2/ /var/run/apache2 /var/lib/apache2 /mnt/ddev-global-cache/*
 
-RUN mkdir -p /var/xhprof && curl -o /tmp/xhprof.tgz -sSL https://pecl.php.net/get/xhprof && tar -zxf /tmp/xhprof.tgz --strip-components=1 -C /var/xhprof && chmod 777 /var/xhprof/xhprof_html && rm /tmp/xhprof.tgz
+RUN mkdir -p /var/xhprof && curl --fail  -o /tmp/xhprof.tgz -sSL https://pecl.php.net/get/xhprof && tar -zxf /tmp/xhprof.tgz --strip-components=1 -C /var/xhprof && chmod 777 /var/xhprof/xhprof_html && rm /tmp/xhprof.tgz
 
 RUN touch /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log && \
   chmod 666 /var/log/nginx/error.log /var/log/nginx/access.log /var/log/php-fpm.log
@@ -212,7 +212,7 @@ RUN curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/la
 ADD ddev-webserver-prod-files /
 RUN phpdismod blackfire xhprof
 
-RUN curl -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/backdrop-drush-extension.zip -o /tmp/backdrop-drush-extension.zip && unzip -o /tmp/backdrop-drush-extension.zip -d /var/tmp/backdrop_drush_commands
+RUN curl --fail -sSL https://github.com/backdrop-contrib/drush/releases/download/${BACKDROP_DRUSH_VERSION}/backdrop-drush-extension.zip -o /tmp/backdrop-drush-extension.zip && unzip -o /tmp/backdrop-drush-extension.zip -d /var/tmp/backdrop_drush_commands
 
 RUN mkdir -p /etc/nginx/sites-enabled /var/lock/apache2 /var/log/apache2 /var/run/apache2 /var/lib/apache2/module/enabled_by_admin /var/lib/apache2/module/disabled_by_admin && \
     touch /var/log/php-fpm.log && \

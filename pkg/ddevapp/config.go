@@ -577,6 +577,17 @@ func (app *DdevApp) CheckCustomConfig() {
 			customConfig = true
 		}
 	}
+
+	webEntrypointPath := filepath.Join(ddevDir, "web-entrypoint.d")
+	if _, err := os.Stat(webEntrypointPath); err == nil {
+		entrypointFiles, err := filepath.Glob(webEntrypointPath + "/*.sh")
+		util.CheckErr(err)
+		if len(entrypointFiles) > 0 {
+			util.Warning("Using custom web-entrypoint.d configuration: %v", entrypointFiles)
+			customConfig = true
+		}
+	}
+
 	if customConfig {
 		util.Warning("Custom configuration is updated on restart.\nIf you don't see your custom configuration taking effect, run 'ddev restart'.")
 	}
@@ -744,7 +755,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		BindAllInterfaces:         app.BindAllInterfaces,
 		MutagenEnabled:            app.IsMutagenEnabled() || globalconfig.DdevGlobalConfig.NoBindMounts,
 
-		NFSMountEnabled:       (app.NFSMountEnabled || app.NFSMountEnabledGlobal) && !app.IsMutagenEnabled(),
+		NFSMountEnabled:       app.IsNFSMountEnabled(),
 		NFSSource:             "",
 		IsWindowsFS:           runtime.GOOS == "windows",
 		NoProjectMount:        app.NoProjectMount,
@@ -756,7 +767,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		Username:              username,
 		UID:                   uid,
 		GID:                   gid,
-		WebBuildContext:       "./.webimageBuild",
+		WebBuildContext:       "../",
 		DBBuildContext:        "./.dbimageBuild",
 		AutoRestartContainers: globalconfig.DdevGlobalConfig.AutoRestartContainers,
 		FailOnHookFail:        app.FailOnHookFail || app.FailOnHookFailGlobal,
@@ -817,7 +828,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if app.Database.Type == nodeps.Postgres {
 		templateVars.DBMountDir = "/var/lib/postgresql/data"
 	}
-	if app.NFSMountEnabled || app.NFSMountEnabledGlobal {
+	if app.IsNFSMountEnabled() {
 		templateVars.MountType = "volume"
 		templateVars.WebMount = "nfsmount"
 		templateVars.NFSSource = app.AppRoot
@@ -891,14 +902,14 @@ redirect_stderr=true
 		if err != nil {
 			return "", fmt.Errorf("failed to write .webimageBuild/%s.conf: %v", appStart.Name, err)
 		}
-		extraWebContent = extraWebContent + fmt.Sprintf("\nADD %s.conf /etc/supervisor/conf.d\n", appStart.Name)
+		extraWebContent = extraWebContent + fmt.Sprintf("\nADD .ddev/.webimageBuild/%s.conf /etc/supervisor/conf.d\n", appStart.Name)
 	}
 	if len(supervisorGroup) > 0 {
 		err = os.WriteFile(app.GetConfigPath(".webimageBuild/webextradaemons.conf"), []byte("[group:webextradaemons]\nprograms="+strings.Join(supervisorGroup, ",")), 0755)
 		if err != nil {
 			return "", fmt.Errorf("failed to write .webimageBuild/webextradaemons.conf: %v", err)
 		}
-		extraWebContent = extraWebContent + "\nADD webextradaemons.conf /etc/supervisor/conf.d\n"
+		extraWebContent = extraWebContent + "\nADD .ddev/.webimageBuild/webextradaemons.conf /etc/supervisor/conf.d\n"
 	}
 
 	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
@@ -1242,19 +1253,25 @@ func (app *DdevApp) AppTypePrompt() error {
 
 // PrepDdevDirectory creates a .ddev directory in the current working directory
 func PrepDdevDirectory(dir string) error {
+	var err error
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 
 		log.WithFields(log.Fields{
 			"directory": dir,
 		}).Debug("Config Directory does not exist, attempting to create.")
 
-		err := os.MkdirAll(dir, 0755)
+		err = os.MkdirAll(dir, 0755)
 		if err != nil {
 			return err
 		}
 	}
 
-	err := CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".importdb*", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/platform.yaml", "sequelpro.spf", "traefik", "xhprof", "**/README.*")
+	err = os.MkdirAll(filepath.Join(dir, "web-entrypoint.d"), 0755)
+	if err != nil {
+		return err
+	}
+
+	err = CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".importdb*", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen", "mutagen/.start-synced", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/platform.yaml", "sequelpro.spf", "traefik", "xhprof", "**/README.*")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}
@@ -1336,4 +1353,13 @@ func validateHookYAML(source []byte) error {
 	}
 
 	return nil
+}
+
+// IsNFSMountEnabled determines whether NFS is enabled.
+// Mutagen trumps NFS, so if mutagen is enabled, NFS is not.
+func (app *DdevApp) IsNFSMountEnabled() bool {
+	if !app.IsMutagenEnabled() && (app.NFSMountEnabled || app.NFSMountEnabledGlobal) {
+		return true
+	}
+	return false
 }

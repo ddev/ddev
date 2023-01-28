@@ -23,7 +23,7 @@ if ! docker context list >/dev/null; then
 fi
 
 # If this is a PR and the diff doesn't have code, skip it
-if [ "${BUILDKITE_PULL_REQUEST}" != "false" ] && ! git diff --name-only refs/remotes/origin/${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-} | egrep "^(Makefile|pkg|cmd|vendor|go\.)"; then
+if [ "${BUILDKITE_PULL_REQUEST}" != "false" ] && ! git diff --name-only refs/remotes/origin/${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-} | egrep "^(Makefile|pkg|cmd|vendor|go\.)" >/dev/null; then
   echo "Skipping build since no code changes found"
   exit 0
 fi

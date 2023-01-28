@@ -416,7 +416,13 @@ func (app *DdevApp) MutagenSyncFlush() error {
 			case "failing":
 				util.Warning("mutagen sync session %s has status '%s': shortResult='%v', err=%v, session contents='%v'", syncName, status, shortResult, err, session)
 			default:
-				out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "flush", syncName)
+				// This extra sync resume recommended by @xenoscopic to catch situation where
+				// not paused but also not connected, in which case the flush will fail.
+				out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "resume", syncName)
+				if err != nil {
+					return fmt.Errorf("mutagen resume flush %s failed, output=%s, err=%v", syncName, out, err)
+				}
+				out, err = exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "flush", syncName)
 				if err != nil {
 					return fmt.Errorf("mutagen sync flush %s failed, output=%s, err=%v", syncName, out, err)
 				}
@@ -540,12 +546,12 @@ func MutagenReset(app *DdevApp) error {
 			return err
 		}
 		util.Debug("Removed docker volume %s", GetMutagenVolumeName(app))
-		err = TerminateMutagenSync(app)
-		if err != nil {
-			return err
-		}
-		util.Debug("Terminated mutagen sync session %s", MutagenSyncName(app.Name))
 	}
+	err := TerminateMutagenSync(app)
+	if err != nil {
+		return err
+	}
+	util.Debug("Terminated mutagen sync session %s", MutagenSyncName(app.Name))
 	return nil
 }
 

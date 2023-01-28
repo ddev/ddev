@@ -233,7 +233,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	}
 	appDesc["hostname"] = app.GetHostname()
 	appDesc["hostnames"] = app.GetHostnames()
-	appDesc["nfs_mount_enabled"] = (app.NFSMountEnabled || app.NFSMountEnabledGlobal) && !(app.IsMutagenEnabled())
+	appDesc["nfs_mount_enabled"] = app.IsNFSMountEnabled()
 	appDesc["fail_on_hook_fail"] = app.FailOnHookFail || app.FailOnHookFailGlobal
 	httpURLs, httpsURLs, allURLs := app.GetAllURLs()
 	appDesc["httpURLs"] = httpURLs
@@ -1260,6 +1260,11 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		} else {
 			util.Error("Mutagen sync completed with problems in %s.\nFor details on sync status 'ddev mutagen st %s -l'", dur, MutagenSyncName(app.Name))
 		}
+		f, err := os.OpenFile(app.GetConfigPath("mutagen/.start-synced"), os.O_RDWR|os.O_CREATE, 0755)
+		if err != nil {
+			util.Warning("could not create file %s: %v", app.GetConfigPath("mutagen/.start-synced"), err)
+		}
+		_ = f.Close()
 	}
 
 	// Wait for web/db containers to become healthy
@@ -1282,6 +1287,14 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		if err != nil {
 			util.Warning("Unable to start web_extra_daemons using supervisorctl, stdout=%s, stderr=%s: %v", stdout, stderr, err)
 		}
+	}
+
+	util.Debug("Testing to see if /mnt/ddev_config is properly mounted")
+	_, _, err = app.Exec(&ExecOpts{
+		Cmd: `ls -l /mnt/ddev_config/nginx_full/nginx-site.conf >/dev/null`,
+	})
+	if err != nil {
+		return fmt.Errorf("Something is wrong with docker/colima and /mnt/ddev_config is not mounted from the project .ddev folder")
 	}
 
 	if !IsRouterDisabled(app) {
@@ -1896,6 +1909,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_HOSTNAME":              app.HostName(),
 		"DDEV_UID":                   uidStr,
 		"DDEV_GID":                   gidStr,
+		"DDEV_MUTAGEN_ENABLED":       strconv.FormatBool(app.IsMutagenEnabled()),
 		"DDEV_PHP_VERSION":           app.PHPVersion,
 		"DDEV_WEBSERVER_TYPE":        app.WebserverType,
 		"DDEV_PROJECT_TYPE":          app.Type,
