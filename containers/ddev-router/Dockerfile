@@ -14,7 +14,7 @@ SHELL ["/bin/bash", "-c"]
 # a tarball (from https://github.com/ddollar/forego download)
 RUN set -eu -o pipefail && \
     FOREGO_URL="https://github.com/drud/forego/releases/download/v0.16.1/forego-${TARGETARCH}" && \
-    cd /tmp && curl -sSL -o /usr/local/bin/forego "${FOREGO_URL}"  && chmod +x /usr/local/bin/forego
+    cd /tmp && curl --fail -sSL -o /usr/local/bin/forego "${FOREGO_URL}"  && chmod +x /usr/local/bin/forego
 
 RUN apt-get -qq update && \
     apt-get -qq install --no-install-recommends --no-install-suggests -y \

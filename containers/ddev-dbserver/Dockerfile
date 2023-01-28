@@ -31,7 +31,7 @@ RUN apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y 
 # If on 14.04 Ubuntu the percona repositories won't allow TLS apparently, so
 # Use http when connecting. This currently only affects MariaDB 5.5
 RUN set -x; if ( ! command -v xtrabackup && ! command -v mariabackup && [ $(arch) != "aarch64" ] ); then \
-    curl -sSL https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb -o percona-release_latest.$(lsb_release -sc)_all.deb; \
+    curl --fail -sSL https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb -o percona-release_latest.$(lsb_release -sc)_all.deb; \
     dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb >/dev/null; \
     rm percona-release*.deb ; \
     xtrabackup_version=percona-xtrabackup-24 ; \
