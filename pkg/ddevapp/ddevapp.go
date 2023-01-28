@@ -1403,7 +1403,7 @@ func (app *DdevApp) FindAllImages() ([]string, error) {
 // FindMaxTimeout looks through all services and returns the max timeout found
 // Defaults to 120
 func (app *DdevApp) FindMaxTimeout() int {
-	const defaultContainerTimeout = 240
+	const defaultContainerTimeout = 120
 	maxTimeout := defaultContainerTimeout
 	if app.ComposeYaml == nil {
 		return defaultContainerTimeout

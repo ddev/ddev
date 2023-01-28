@@ -1,19 +1,15 @@
 package ddevapp_test
 
 import (
-	"fmt"
 	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
 	"strings"
 	"testing"
-	"time"
 )
 
 // TestComposer does trivial tests of the ddev composer command
@@ -22,9 +18,6 @@ func TestComposer(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 	origDir, _ := os.Getwd()
-
-	_ = os.Setenv("DDEV_VERBOSE", "true")
-	globalconfig.DdevVerbose = true
 
 	// Use drupal9 only for this test, just need a little composer action
 	site := FullTestSites[8]
@@ -63,18 +56,7 @@ func TestComposer(t *testing.T) {
 		_ = app.Stop(true, false)
 	})
 
-	runTime := util.TimeTrack(time.Now(), "start-with-composer")
 	err = app.Start()
-	runTime()
-	if err != nil {
-		t.Logf("======== app.Start() failed: %v ================", err)
-		out, _ := exec.RunHostCommand("bash", "-c", fmt.Sprintf(`docker inspect --format '{{json .State.Health }}' ddev-%s-web | jq`, app.Name))
-
-		t.Logf("========= healthcheck info ==========\n%s\n==============", out)
-		out, _ = exec.RunHostCommand(DdevBin, "logs")
-		t.Logf("======== app logs ============\n%s\n=========== end logs =============", out)
-		_ = app.Logs("web", false, true, "0")
-	}
 	require.NoError(t, err)
 
 	// Make sure to remove the var-dump-server to start; composer install should replace it.

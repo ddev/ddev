@@ -114,7 +114,7 @@ func StartDdevRouter() error {
 	// some time.
 	routerWaitTimeout := 60
 	if globalconfig.DdevGlobalConfig.UseLetsEncrypt {
-		routerWaitTimeout = 240
+		routerWaitTimeout = 180
 	}
 	logOutput, err := dockerutil.ContainerWait(routerWaitTimeout, label)
 	if err != nil {
