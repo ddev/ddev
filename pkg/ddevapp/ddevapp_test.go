@@ -526,6 +526,9 @@ func TestDdevStart(t *testing.T) {
 
 // TestDdevStartCustomEntrypoint tests ddev start with customizations in .ddev/web-entrypoint.d
 func TestDdevStartCustomEntrypoint(t *testing.T) {
+	if runtime.GOOS == "windows" && (globalconfig.DdevGlobalConfig.MutagenEnabledGlobal || nodeps.MutagenEnabledDefault) {
+		t.Skip("Skipping on windows/mutagen, it's just too slow to app.Start()")
+	}
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
