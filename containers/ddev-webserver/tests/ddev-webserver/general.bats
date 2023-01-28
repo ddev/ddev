@@ -53,8 +53,8 @@
 	fi
 }
 
-@test "verify that xdebug is enabled by default when the image is not run with start.sh" {
-  docker run --rm $DOCKER_IMAGE bash -c 'php --version | grep "with Xdebug"'
+@test "verify that xdebug is not enabled by default" {
+  docker run --rm $DOCKER_IMAGE bash -c 'php --version | grep -v "with Xdebug"'
 }
 
 @test "verify apt keys are not expiring" {
