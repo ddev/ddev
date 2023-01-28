@@ -90,11 +90,11 @@ RUN curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/la
 RUN mkdir -p /home/blackfire && chown blackfire:blackfire /home/blackfire && usermod -d /home/blackfire blackfire
 
 ADD ddev-webserver-dev-base-files /
-RUN phpdismod blackfire xhprof
+RUN phpdismod blackfire xdebug xhprof
 
 RUN set -x; curl --fail -sSL "https://github.com/drud/MailHog/releases/download/v${MAILHOG_VERSION}/MailHog_linux_${TARGETPLATFORM##linux/}" -o /usr/local/bin/mailhog && chmod +x /usr/local/bin/mailhog
 
-RUN phpdismod xdebug && curl -sSL --fail --output /usr/local/bin/phive "https://phar.io/releases/phive.phar" && chmod 777 /usr/local/bin/phive && phpenmod xdebug
+RUN curl -sSL --fail --output /usr/local/bin/phive "https://phar.io/releases/phive.phar" && chmod 777 /usr/local/bin/phive
 RUN set -o pipefail && curl --fail -sSL https://github.com/pantheon-systems/terminus/releases/download/$(curl -L --fail --silent "https://api.github.com/repos/pantheon-systems/terminus/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/terminus.phar --output /usr/local/bin/terminus && chmod 777 /usr/local/bin/terminus
 RUN set -o pipefail && curl --fail -sSL https://github.com/platformsh/platformsh-cli/releases/download/$(curl -L --fail --silent "https://api.github.com/repositories/16695539/releases/latest" | perl -nle'print $& while m{"tag_name": "\K.*?(?=")}g')/platform.phar --output /usr/local/bin/platform && chmod 777 /usr/local/bin/platform
 
