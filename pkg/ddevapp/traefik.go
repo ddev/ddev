@@ -39,6 +39,9 @@ func detectAppRouting(app *DdevApp) ([]TraefikRouting, error) {
 				if virtualHost, ok = env["VIRTUAL_HOST"].(string); ok {
 					util.Debug("VIRTUAL_HOST=%v for %s", virtualHost, serviceName)
 				}
+				if virtualHost == "" {
+					continue
+				}
 				hostnames := strings.Split(virtualHost, ",")
 				if httpExpose, ok := env["HTTP_EXPOSE"].(string); ok {
 					util.Debug("HTTP_EXPOSE=%v for %s", httpExpose, serviceName)
