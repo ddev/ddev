@@ -45,6 +45,47 @@ This environment variable is set `true` by default in DDEV’s environment, and 
 ```php
 $settings['container_yamls'][] = DRUPAL_ROOT . '/sites/development.services.yml';
 ```
+* **Multisite**:
+    * See [DDEV-Local Drupal 8 Multisite Recipe] (https://github.com/drud/ddev-contrib/tree/master/recipes/drupal8-multisite) to start
+    * update the following files if you are using an existing site as the code base where installing with `--disable-settings-management` is not an option. 
+1. each `site/{site_name}/settings.php` 
+ ```php
+ /**
+ * ddev local-dev environments will have $databases (and other settings)
+ * set by an auto-generated file. Make alterations here for this site
+ * in a multisite environment.
+ */
+elseif (getenv('IS_DDEV_PROJECT') == 'true') {
+
+  /**
+   * Alter database settings and credentials for ddev-local environment.
+   * This includes loading the ddev-generated default/settings.ddev.php.
+   */
+  include $app_root . '/' . $site_path . '/settings.databases.ddev.inc';
+}
+ ```
+2.  add a `settings.databases.ddev.inc` in each `site/{site_name}/`   
+ ```php
+ /**
+ * Fetch ddev generated database credentials and other settings.
+ */
+require $app_root . '/sites/default/settings.ddev.php';
+
+/*
+ * Alter default database for this site. settings.ddev.php will have "reset"
+ * this to 'db'
+ */
+$databases['default']['default']['database'] = 'site_name';
+```
+3. if you are using site aliases add the following to your `config.yaml`
+```php   
+web_environment:
+  # Make ddev drush shell PIDs last for entire life of container. So that `ddev drush site:set @alias` will persist
+  # for all drush connections.
+  # https://chrisfromredfin.dev/posts/drush-use-ddev/
+  - DRUSH_SHELL_PID=PERMANENT
+```
+
 
 ### TYPO3 Specifics
 
