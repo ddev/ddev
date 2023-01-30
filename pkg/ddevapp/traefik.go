@@ -244,6 +244,8 @@ func configureTraefikForApp(app *DdevApp) error {
 	if err != nil {
 		return err
 	}
+
+	// hostnames here should be used only for creating the cert.
 	hostnames := app.GetHostnames()
 	// There can possibly be VIRTUAL_HOST entries which are not configured hostnames.
 	for _, r := range routingTable {
@@ -358,7 +360,7 @@ func configureTraefikForApp(app *DdevApp) error {
 	} else {
 		f, err := os.Create(traefikYamlFile)
 		if err != nil {
-			util.Failed("failed to create traefik config file: %v", err)
+			return fmt.Errorf("failed to create traefik config file: %v", err)
 		}
 		t, err := template.New("traefik_config_template.yaml").Funcs(sprig.TxtFuncMap()).ParseFS(bundledAssets, "traefik_config_template.yaml")
 		if err != nil {

@@ -59,7 +59,6 @@ func TestTraefikSimple(t *testing.T) {
 
 	// If no mkcert trusted https, use only the httpURLs
 	// This is especially the case for colima
-	t.Logf("CAROOT='%s'", globalconfig.GetCAROOT())
 	if globalconfig.GetCAROOT() == "" {
 		allURLs = httpURLs
 	}
