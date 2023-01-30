@@ -78,7 +78,7 @@ require $app_root . '/sites/default/settings.ddev.php';
 $databases['default']['default']['database'] = 'site_name';
 ```
 3. if you are using site aliases add the following to your `config.yaml`
-```php   
+```yaml   
 web_environment:
   # Make ddev drush shell PIDs last for entire life of container. So that `ddev drush site:set @alias` will persist
   # for all drush connections.
