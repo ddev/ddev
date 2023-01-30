@@ -36,56 +36,69 @@ This environment variable is set `true` by default in DDEV’s environment, and 
 
 ### Drupal Specifics
 
-* **Settings Files**: By default, DDEV will create settings files for your project that make it “just work” out of the box. It creates a `sites/default/settings.ddev.php` and adds an include in `sites/default/settings.php` to bring that in. There are guards to prevent the `settings.ddev.php` from being active when the project is not running under DDEV, but it still should not be checked in and is gitignored.
-* **Database requirements for Drupal 9.5+ +**:
-    * Using MySQL or MariaDB, Drupal requires `SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED` and DDEV does this for you on [`ddev start`](../usage/commands.md#start).
-    * Using PostgreSQL, Drupal requires the`pg_trm` extension. DDEV creates this extension automatically for you on `ddev start`.
-* **Twig Debugging**: With the default Drupal configuration, it’s very difficult to debug Twig templates; you need to use `development.services.yml` instead of `services.yml`. Add this line in your `settings.php` or `settings.local.php`. See discussion at [drupal.org](https://www.drupal.org/forum/support/module-development-and-code-questions/2019-09-02/ddev-twig-debugging) and the Drupal documentation.
+#### Settings Files
+
+By default, DDEV will create settings files for your project that make it “just work” out of the box. It creates a `sites/default/settings.ddev.php` and adds an include in `sites/default/settings.php` to bring that in. There are guards to prevent the `settings.ddev.php` from being active when the project is not running under DDEV, but it still should not be checked in and is gitignored.
+
+#### Database requirements for Drupal 9.5+
+
+* Using MySQL or MariaDB, Drupal requires `SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED` and DDEV does this for you on [`ddev start`](../usage/commands.md#start).
+* Using PostgreSQL, Drupal requires the`pg_trm` extension. DDEV creates this extension automatically for you on `ddev start`.
+
+#### Twig Debugging
+
+With the default Drupal configuration, it’s very difficult to debug Twig templates; you need to use `development.services.yml` instead of `services.yml`. Add this line in your `settings.php` or `settings.local.php`. See discussion at [drupal.org](https://www.drupal.org/forum/support/module-development-and-code-questions/2019-09-02/ddev-twig-debugging) and the Drupal documentation.
 
 ```php
 $settings['container_yamls'][] = DRUPAL_ROOT . '/sites/development.services.yml';
 ```
-* **Multisite**:
-    * See [DDEV-Local Drupal 8 Multisite Recipe] (https://github.com/drud/ddev-contrib/tree/master/recipes/drupal8-multisite) to start
-    * update the following files
-1. each `site/{site_name}/settings.php` 
- ```php
- /**
- * ddev local-dev environments will have $databases (and other settings)
- * set by an auto-generated file. Make alterations here for this site
- * in a multisite environment.
- */
-elseif (getenv('IS_DDEV_PROJECT') == 'true') {
 
-  /**
-   * Alter database settings and credentials for ddev-local environment.
-   * This includes loading the ddev-generated default/settings.ddev.php.
-   */
-  include $app_root . '/' . $site_path . '/settings.databases.ddev.inc';
-}
- ```
-2.  add a `settings.databases.ddev.inc` in each `site/{site_name}/`   
- ```php
- /**
- * Fetch ddev generated database credentials and other settings.
- */
-require $app_root . '/sites/default/settings.ddev.php';
+#### Multisite
 
-/*
- * Alter default database for this site. settings.ddev.php will have "reset"
- * this to 'db'
- */
-$databases['default']['default']['database'] = 'site_name';
-```
+* See [DDEV-Local Drupal 8 Multisite Recipe] (<https://github.com/drud/ddev-contrib/tree/master/recipes/drupal8-multisite>) to start
+* update the following files
+
+1. each `site/{site_name}/settings.php`
+
+     ```php
+     /**
+     * ddev local-dev environments will have $databases (and other settings)
+     * set by an auto-generated file. Make alterations here for this site
+     * in a multisite environment.
+     */
+    elseif (getenv('IS_DDEV_PROJECT') == 'true') {
+      /**
+       * Alter database settings and credentials for ddev-local environment.
+       * This includes loading the ddev-generated default/settings.ddev.php.
+       */
+      include $app_root . '/' . $site_path . '/settings.databases.ddev.inc';
+    }
+     ```
+
+2. add a `settings.databases.ddev.inc` in each `site/{site_name}/`
+
+     ```php
+     /**
+     * Fetch ddev generated database credentials and other settings.
+     */
+    require $app_root . '/sites/default/settings.ddev.php';
+    
+    /*
+     * Alter default database for this site. settings.ddev.php will have "reset"
+     * this to 'db'
+     */
+    $databases['default']['default']['database'] = 'site_name';
+    ```
+
 3. if you are using site aliases add the following to your `config.yaml`
-```yaml   
-web_environment:
-  # Make ddev drush shell PIDs last for entire life of container. So that `ddev drush site:set @alias` will persist
-  # for all drush connections.
-  # https://chrisfromredfin.dev/posts/drush-use-ddev/
-  - DRUSH_SHELL_PID=PERMANENT
-```
 
+    ```yaml
+    web_environment:
+      # Make ddev drush shell PIDs last for entire life of container. So that 'ddev drush site:set @alias' will persist
+      # for all drush connections.
+      # https://chrisfromredfin.dev/posts/drush-use-ddev/
+      - DRUSH_SHELL_PID=PERMANENT
+    ```
 
 ### TYPO3 Specifics
 
