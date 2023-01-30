@@ -336,12 +336,14 @@ func configureTraefikForApp(app *DdevApp) error {
 		UseLetsEncrypt:  globalconfig.DdevGlobalConfig.UseLetsEncrypt,
 	}
 
-	// Convert wildcards like `*.<anything>` to `.*\.anything`
-	for _, hostname := range hostnames {
-		if strings.HasPrefix(hostname, `*.`) {
-			hostname = `{subdomain:.+}` + strings.TrimPrefix(hostname, `*`)
+	// Convert externalHostnames wildcards like `*.<anything>` to `{subdomain:.+}.wild.ddev.site`
+	for i, v := range routingTable {
+		for j, h := range v.ExternalHostnames {
+			if strings.HasPrefix(h, `*.`) {
+				h = `{subdomain:.+}` + strings.TrimPrefix(h, `*`)
+				routingTable[i].ExternalHostnames[j] = h
+			}
 		}
-		templateData.Hostnames = append(templateData.Hostnames, hostname)
 	}
 
 	traefikYamlFile := filepath.Join(sourceConfigDir, app.Name+".yaml")
