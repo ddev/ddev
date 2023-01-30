@@ -47,7 +47,7 @@ $settings['container_yamls'][] = DRUPAL_ROOT . '/sites/development.services.yml'
 ```
 * **Multisite**:
     * See [DDEV-Local Drupal 8 Multisite Recipe] (https://github.com/drud/ddev-contrib/tree/master/recipes/drupal8-multisite) to start
-    * update the following files if you are using an existing site as the code base where installing with `--disable-settings-management` is not an option. 
+    * update the following files
 1. each `site/{site_name}/settings.php` 
  ```php
  /**
