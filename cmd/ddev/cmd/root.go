@@ -10,6 +10,7 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/messages"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/updatecheck"
 	"github.com/ddev/ddev/pkg/util"
@@ -86,6 +87,8 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 				output.UserOut.Printf(util.ColorizeText(fmt.Sprintf("\n\nUpgraded DDEV %s is available!\nPlease visit %s to get the upgrade.\nFor upgrade help see %s\n\n", updateVersion, updateURL, updateDocURL), "green"))
 			}
 		}
+
+		messages.ShowMessages()
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		// TODO remove once it's activated directly in ddevapp
