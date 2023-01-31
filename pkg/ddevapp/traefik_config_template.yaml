@@ -2,26 +2,25 @@
 
 http:
   routers:
-    {{$appname := .App.Name}}{{$hostnames := .Hostnames}}{{ range $s := .RoutingTable }}
+    {{$appname := .App.Name}}{{ range $s := .RoutingTable }}
     {{ if not $s.HTTPS }}
     {{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-http:
       {{if not $.UseLetsEncrypt}}{{/* Let's Encrypt only works with Host(), but we need HostRegex() for wildcards*/}}
-      rule: HostRegexp({{ range $i, $h := $hostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
+      rule: HostRegexp({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
       {{else}}
-      rule: Host({{ range $i, $h := $hostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
+      rule: Host({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
       {{end}}
       service: "{{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-http"
       tls: false
       entrypoints:
         - http-{{$s.ExternalPort}}
     {{ end }}{{ end }}
-    {{$appname := .App.Name}}{{$hostnames := .Hostnames}}{{ range $s := .RoutingTable }}{{ if $s.HTTPS }}
+    {{$appname := .App.Name}}{{ range $s := .RoutingTable }}{{ if $s.HTTPS }}
     {{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-https:
-      # UseLetsEncrypt={{$.UseLetsEncrypt}}
       {{if not $.UseLetsEncrypt}}{{/* Let's Encrypt only works with Host(), but we need HostRegex() for wildcards*/}}
-      rule: HostRegexp({{ range $i, $h := $hostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
+      rule: HostRegexp({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
       {{else}}
-      rule: Host({{ range $i, $h := $hostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
+      rule: Host({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
       {{end}}
       service: "{{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-https"
       {{ if not $.UseLetsEncrypt }}

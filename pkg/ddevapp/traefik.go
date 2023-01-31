@@ -39,6 +39,9 @@ func detectAppRouting(app *DdevApp) ([]TraefikRouting, error) {
 				if virtualHost, ok = env["VIRTUAL_HOST"].(string); ok {
 					util.Debug("VIRTUAL_HOST=%v for %s", virtualHost, serviceName)
 				}
+				if virtualHost == "" {
+					continue
+				}
 				hostnames := strings.Split(virtualHost, ",")
 				if httpExpose, ok := env["HTTP_EXPOSE"].(string); ok {
 					util.Debug("HTTP_EXPOSE=%v for %s", httpExpose, serviceName)
@@ -241,6 +244,8 @@ func configureTraefikForApp(app *DdevApp) error {
 	if err != nil {
 		return err
 	}
+
+	// hostnames here should be used only for creating the cert.
 	hostnames := app.GetHostnames()
 	// There can possibly be VIRTUAL_HOST entries which are not configured hostnames.
 	for _, r := range routingTable {
@@ -331,12 +336,14 @@ func configureTraefikForApp(app *DdevApp) error {
 		UseLetsEncrypt:  globalconfig.DdevGlobalConfig.UseLetsEncrypt,
 	}
 
-	// Convert wildcards like `*.<anything>` to `.*\.anything`
-	for _, hostname := range app.GetHostnames() {
-		if strings.HasPrefix(hostname, `*.`) {
-			hostname = `{subdomain:.+}` + strings.TrimPrefix(hostname, `*`)
+	// Convert externalHostnames wildcards like `*.<anything>` to `{subdomain:.+}.wild.ddev.site`
+	for i, v := range routingTable {
+		for j, h := range v.ExternalHostnames {
+			if strings.HasPrefix(h, `*.`) {
+				h = `{subdomain:.+}` + strings.TrimPrefix(h, `*`)
+				routingTable[i].ExternalHostnames[j] = h
+			}
 		}
-		templateData.Hostnames = append(templateData.Hostnames, hostname)
 	}
 
 	traefikYamlFile := filepath.Join(sourceConfigDir, app.Name+".yaml")
@@ -355,7 +362,7 @@ func configureTraefikForApp(app *DdevApp) error {
 	} else {
 		f, err := os.Create(traefikYamlFile)
 		if err != nil {
-			util.Failed("failed to create traefik config file: %v", err)
+			return fmt.Errorf("failed to create traefik config file: %v", err)
 		}
 		t, err := template.New("traefik_config_template.yaml").Funcs(sprig.TxtFuncMap()).ParseFS(bundledAssets, "traefik_config_template.yaml")
 		if err != nil {
