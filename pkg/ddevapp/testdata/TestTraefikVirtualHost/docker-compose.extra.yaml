@@ -1,0 +1,14 @@
+
+services:
+  nginx:
+    image: nginx
+    container_name: ddev-${DDEV_SITENAME}-nginx
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: ${DDEV_APPROOT}
+    ports:
+      - 80
+    environment:
+      - VIRTUAL_HOST=extra.ddev.site
+      - HTTP_EXPOSE=80:80
+      - HTTPS_EXPOSE=443:80
