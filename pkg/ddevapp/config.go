@@ -201,7 +201,7 @@ func (app *DdevApp) WriteConfig() error {
 		}
 	}
 
-	err = PrepDdevDirectory(filepath.Dir(appcopy.ConfigPath))
+	err = PrepDdevDirectory(&appcopy)
 	if err != nil {
 		return err
 	}
@@ -1252,8 +1252,9 @@ func (app *DdevApp) AppTypePrompt() error {
 }
 
 // PrepDdevDirectory creates a .ddev directory in the current working directory
-func PrepDdevDirectory(dir string) error {
+func PrepDdevDirectory(app *DdevApp) error {
 	var err error
+	dir := app.GetConfigPath("")
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 
 		log.WithFields(log.Fields{
@@ -1271,7 +1272,7 @@ func PrepDdevDirectory(dir string) error {
 		return err
 	}
 
-	err = CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".importdb*", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen", "mutagen/.start-synced", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/platform.yaml", "sequelpro.spf", "traefik", "xhprof", "**/README.*")
+	err = CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".importdb*", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen/mutagen.yml", "mutagen/.start-synced", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/platform.yaml", "sequelpro.spf", fmt.Sprintf("traefik/config/%s.yaml", app.Name), fmt.Sprintf("traefik/certs/%s.crt", app.Name), fmt.Sprintf("traefik/certs/%s.key", app.Name), "xhprof/xhprof_prepend.php", "**/README.*")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}
