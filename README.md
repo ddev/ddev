@@ -46,7 +46,7 @@ See “How can I contribute to DDEV?” in the [FAQ](https://ddev.readthedocs.io
 [<img src="images/gizra-logo.png" alt="Gizra" width="50">](https://gizra.com/)
 [<img src="images/oliver-wand.jpeg" alt="Oliver Wand" width="50">](https://github.com/wandoliver)
 [<img src="images/centarro-logo.png" alt="Centarro" width="50">](https://www.centarro.io/)
-[<img src="images/drupaleasy-logo.png" alt="DrupalEasy" width="50">](https://www.drupaleasy.com/)
+[<img src="images/drupaleasy-logo.png" alt="DrupalEasy" width="200">](https://www.drupaleasy.com/)
 [<img src="images/redfin-logo.png" alt="Redfin Solutions" width="50">](https://redfinsolutions.com/)
 [<img src="images/macstadium-logo.png" alt="MacStadium" width="100">](https://www.macstadium.com)
 [<img src="images/lullabot-lockup-logo.svg" alt="Lullabot" width="150">](https://www.lullabot.com)
