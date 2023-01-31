@@ -298,7 +298,7 @@ To experiment with the behavior of a set of `config.*.yaml` files, use the [`dde
 
 ## Explicit `supervisord` Configuration for Additional Daemons
 
-Although most extra daemons (like Node.js daemons, etc) can be configured easily using [web_extra_daemons](#running-extra-daemons-in-the-web-container), there may be situations where you want complete control of the `supervisord` configuration.
+Although most extra daemons (like Node.js daemons, etc.) can be configured easily using [web_extra_daemons](#running-extra-daemons-in-the-web-container), there may be situations where you want complete control of the `supervisord` configuration.
 
 In these case you can create a `.ddev/web-build/<daemonname>.conf` with configuration like:
 

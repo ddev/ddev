@@ -182,7 +182,7 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
 
     ## Magento 2
 
-    Normal details of a Composer build for Magento 2 are on the [Magento 2 site](https://devdocs.magento.com/guides/v2.4/install-gde/composer.html. You must have a public and private key to install from Magento’s repository. When prompted for “username” and “password” in `composer create`, it’s asking for your public and private keys.
+    Normal details of a Composer build for Magento 2 are on the [Magento 2 site](https://devdocs.magento.com/guides/v2.4/install-gde/composer.html). You must have a public and private key to install from Magento’s repository. When prompted for “username” and “password” in `composer create`, it’s asking for your public and private keys.
 
     ```bash
     mkdir ddev-magento2 && cd ddev-magento2
@@ -411,11 +411,11 @@ For **Drupal** and **Backdrop**, DDEV settings are written to a DDEV-managed fil
 
 - Write DDEV settings to `settings.ddev.php`.
 - If no `settings.php` file exists, create one that includes `settings.ddev.php`.
-- If a `settings.php` file already exists, ensure that it includes `settings.ddev.php`, modifying `settings.php` to write the include if necessary..
+- If a `settings.php` file already exists, ensure that it includes `settings.ddev.php`, modifying `settings.php` to write the include if necessary.
 
-For **Magento 1**, DDEV settings go into `app/etc/local.xml`
+For **Magento 1**, DDEV settings go into `app/etc/local.xml`.
 
-In **Magento 2**, DDEV settings go into `app/etc/env.php`
+In **Magento 2**, DDEV settings go into `app/etc/env.php`.
 
 For **TYPO3**, DDEV settings are written to `AdditionalConfiguration.php`. If `AdditionalConfiguration.php` exists and is not managed by DDEV, it will not be modified.
 

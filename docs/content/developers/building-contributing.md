@@ -31,7 +31,7 @@ chmod +x ddev && sudo mv ddev /usr/local/bin/ddev
 Verify the replacement worked by running `ddev -v`. The output should be something like `ddev version v1.19.1-42-g5334d3c1`, instead of the regular `ddev version v1.19.1`.
 
 !!!tip "macOS and Unsigned Binaries"
-    macOS doesn’t like these these downloaded binaries, so you’ll need to bypass the automatic quarantine to use them:
+    macOS doesn’t like these downloaded binaries, so you’ll need to bypass the automatic quarantine to use them:
 
     ```
     xattr -r -d com.apple.quarantine /usr/local/bin/ddev

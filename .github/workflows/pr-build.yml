@@ -77,7 +77,7 @@ jobs:
         with:
           name: ddev-linux-arm64
           path: .gotmp/bin/linux_arm64/ddev
-      - name: Upload inux_amd644 binary
+      - name: Upload linux-amd64 binary
         uses: actions/upload-artifact@v3
         with:
           name: ddev-linux-amd64
@@ -87,4 +87,3 @@ jobs:
         with:
           name: ddev-windows-amd64-installer
           path: .gotmp/bin/windows_amd64/ddev_windows_installer*.exe
-

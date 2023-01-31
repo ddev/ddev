@@ -6,7 +6,7 @@ This page is about working with the DDEV documentation. See the [Writing Style G
 
 The documentation is built and checked automatically with various [GitHub Actions workflows](https://github.com/drud/ddev/actions). While it may help to [check your work locally](#fork--clone-the-ddev-repository) for more involved PRs, you can more quickly make suggestions using [GitHub in a browser](#fix-docs-using-web-browser):
 
-1. Click the pencil in the upper right. That will take you to the the right page on GitHub.
+1. Click the pencil in the upper right. That will take you to the right page on GitHub.
 2. Click the pencil button on GitHub and follow the instructions to create your change.
 3. Save your changes and follow the prompts to create a PR.
 4. In the checks on your PR, click the “details” link by `docs/readthedocs.org:ddev` to browse the docs build created by your PR.
@@ -37,7 +37,7 @@ Preview your changes locally by running `make mkdocs-serve`.
 This will launch a web server on port 8000 and automatically refresh pages as they’re edited.
 
 !!!tip "No need to install MkDocs locally!"
-    It’s easiest to install [install MkDocs locally](https://www.mkdocs.org/user-guide/installation/), but you don’t have to. The `make mkdocs-serve` command will look for and use a local binary, otherwise using `make` to build and serve the documenation. If you don’t have `make` installed on your system, you can directly run the command it would have instead:
+    It’s easiest to [install MkDocs locally](https://www.mkdocs.org/user-guide/installation/), but you don’t have to. The `make mkdocs-serve` command will look for and use a local binary, otherwise using `make` to build and serve the documentation. If you don’t have `make` installed on your system, you can directly run the command it would have instead:
 
     ```
     docker run -it -p 8000:8000 -v "${PWD}:/docs" -e "ADD_MODULES=mkdocs-material mkdocs-redirects mkdocs-minify-plugin mdx_truly_sane_lists mkdocs-git-revision-date-localized-plugin" -e "LIVE_RELOAD_SUPPORT=true" -e "FAST_MODE=true" -e "DOCS_DIRECTORY=./docs" polinux/mkdocs;
