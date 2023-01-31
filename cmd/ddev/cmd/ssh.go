@@ -19,7 +19,7 @@ var DdevSSHCmd = &cobra.Command{
 	Short: "Starts a shell session in the container for a service. Uses web service by default.",
 	Long:  `Starts a shell session in the container for a service. Uses web service by default. To start a shell session for another service, run "ddev ssh --service <service>`,
 	Example: `ddev ssh
-ddev ssh -s sb
+ddev ssh -s db
 ddev ssh <projectname>
 ddev ssh -d /var/www/html`,
 	Args: cobra.MaximumNArgs(1),
