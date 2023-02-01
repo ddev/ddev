@@ -1010,7 +1010,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	// This is done early here so users won't see gitignored contents of .ddev for too long
 	// It also gets done by `ddev config`
-	err = PrepDdevDirectory(filepath.Dir(app.ConfigPath))
+	err = PrepDdevDirectory(app)
 	if err != nil {
 		util.Warning("Unable to PrepDdevDirectory: %v", err)
 	}
@@ -1260,11 +1260,10 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		} else {
 			util.Error("Mutagen sync completed with problems in %s.\nFor details on sync status 'ddev mutagen st %s -l'", dur, MutagenSyncName(app.Name))
 		}
-		f, err := os.OpenFile(app.GetConfigPath("mutagen/.start-synced"), os.O_RDWR|os.O_CREATE, 0755)
+		err = fileutil.TemplateStringToFile(`#ddev-generated`, nil, app.GetConfigPath("mutagen/.start-synced"))
 		if err != nil {
 			util.Warning("could not create file %s: %v", app.GetConfigPath("mutagen/.start-synced"), err)
 		}
-		_ = f.Close()
 	}
 
 	// Wait for web/db containers to become healthy

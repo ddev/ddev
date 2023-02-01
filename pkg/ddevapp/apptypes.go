@@ -124,7 +124,7 @@ func init() {
 // provided app is the apptype has a settingsCreator function.
 // It also preps the ddev directory, including setting up the .ddev gitignore
 func (app *DdevApp) CreateSettingsFile() (string, error) {
-	err := PrepDdevDirectory(filepath.Dir(app.ConfigPath))
+	err := PrepDdevDirectory(app)
 	if err != nil {
 		util.Warning("Unable to PrepDdevDirectory: %v", err)
 	}
