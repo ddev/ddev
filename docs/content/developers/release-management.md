@@ -40,7 +40,7 @@ The following “Repository secret” environment variables must be added to <ht
 
 ### Prerelease Tasks
 
-* Make sure [`version-history.md`](https://github.com/drud/ddev/blob/master/version-history.md) is up-to-date.
+* Make sure [`version-history.md`](https://github.com/drud/ddev/blob/master/version-history.md) is up to date.
 * Make sure the Docker images are all tagged and pushed.
 * Make sure [`pkg/version/version.go`](https://github.com/drud/ddev/blob/master/pkg/version/version.go) is all set to point to the new images and tests have been run.
 
@@ -58,7 +58,7 @@ The easiest way to push Docker images is to use the GitHub Actions workflow, esp
 
 1. Push the new version of drud/ddev-php-base
 2. Update drud/ddev-webserver to use the new version of drud/ddev-php-base and push it with the proper tag
-3. Make sure the version-history.md file is up-to-date.
+3. Make sure the `version-history.md` file is up to date.
 4. Make sure the docker images for the new tag are all tagged and pushed.
 5. Make sure the pkg/version/version.go is all set to point to the new images (and tests have been run)
 6. Make sure you're about to create the right release tag.
