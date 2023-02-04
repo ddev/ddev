@@ -14,7 +14,7 @@ const (
 	XdebugIDELocationWSL2      = "wsl2"
 )
 
-const DdevGithubOrg = "drud"
+const DdevGithubOrg = "ddev"
 
 // ValidOmitContainers is the valid omit's that can be done in for a project
 var ValidOmitContainers = map[string]bool{

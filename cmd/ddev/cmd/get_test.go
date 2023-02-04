@@ -45,14 +45,14 @@ func TestCmdGet(t *testing.T) {
 	// Make sure get --list works first
 	out, err := exec.RunHostCommand(DdevBin, "get", "--list")
 	assert.NoError(err, "failed ddev get --list: %v (%s)", err, out)
-	assert.Contains(out, "drud/ddev-memcached")
+	assert.Contains(out, "ddev/ddev-memcached")
 
 	tarballFile := filepath.Join(origDir, "testdata", t.Name(), "ddev-memcached.tar.gz")
 
 	// Test with many input styles
 	for _, arg := range []string{
-		"drud/ddev-memcached",
-		"https://github.com/drud/ddev-memcached/archive/refs/tags/v1.1.1.tar.gz",
+		"ddev/ddev-memcached",
+		"https://github.com/ddev/ddev-memcached/archive/refs/tags/v1.1.1.tar.gz",
 		tarballFile} {
 		out, err := exec.RunHostCommand(DdevBin, "get", arg)
 		assert.NoError(err, "failed ddev get %s", arg)
