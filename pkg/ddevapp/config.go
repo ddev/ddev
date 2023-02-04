@@ -878,8 +878,9 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if app.NodeJSVersion != nodeps.NodeJSDefault {
 		extraWebContent = extraWebContent + "\nRUN (apt-get remove -y nodejs || true) && (apt purge nodejs || true)"
 		// Download of setup_*.sh seems to fail a LOT, probably a problem on their end. So try it twice
-		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN curl -sSL --fail https://deb.nodesource.com/setup_%s.x >/tmp/setup_node.sh ||  curl -sSL --fail https://deb.nodesource.com/setup_%s.sh >/tmp/setup_node.sh", app.NodeJSVersion, app.NodeJSVersion)
-		extraWebContent = extraWebContent + "\nRUN bash /tmp/setup_node.sh && apt-get install nodejs && npm config set unsafe-perm true && npm install --global gulp-cli yarn"
+		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN curl -sSL --fail -o /tmp/setup_node.sh https://deb.nodesource.com/setup_%s.x  ||  curl -sSL --fail -o /tmp/setup_node.sh https://deb.nodesource.com/setup_%s.sh >/tmp/setup_node.sh", app.NodeJSVersion, app.NodeJSVersion)
+		extraWebContent = extraWebContent + "\nRUN bash /tmp/setup_node.sh >/dev/null && apt-get install -y nodejs >/dev/null\n" +
+			"RUN npm install --unsafe-perm=true --global gulp-cli yarn || ( npm config set unsafe-perm true && npm install --global gulp-cli yarn )"
 	}
 
 	// Add supervisord config for WebExtraDaemons
