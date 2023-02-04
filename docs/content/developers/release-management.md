@@ -3,7 +3,7 @@
 ## Release process and tools
 
 * [Goreleaser Pro](https://goreleaser.com/pro/) is used to do the actual releasing using [.goreleaser.yml](https://github.com/drud/ddev/blob/master/.goreleaser.yml). Goreleaser Pro is a licensed product that requires a license key, which is in the GitHub Workflow configuration and is available in LastPass to DDEV maintainers who need it.
-* The [Master Build/Release Github Action](https://github.com/drud/ddev/blob/master/.github/workflows/master-build.yml) does the actual running of the goreleaser actions and provides the needed secrets.
+* The [Master Build/Release GitHub Action](https://github.com/drud/ddev/blob/master/.github/workflows/master-build.yml) does the actual running of the goreleaser actions and provides the needed secrets.
 
 ## GitHub Actions Required Secrets
 
@@ -12,8 +12,8 @@
 * AUR is Arch Linux User Repository. `ddev-bin` is at `https://aur.archlinux.org/packages/ddev-bin`. The current maintainer of this is @cweagans, who can add co-maintainers.
 * The [chocolatey](https://community.chocolatey.org/packages/ddev/) package. Additional maintainers can be added at [link](https://community.chocolatey.org/packages/ddev/1.21.1/ManagePackageOwners); they could then create tokens to push it.
 * GitHub requires write access to this repository, either via permissions on the repository or on the org.
-* Apple signing and notarization requires two acces to the Localdev Foundation group on `https://developer.apple.com`. It's easy enough to add additional people.
-* Windows signging is an awkward process that requires a dongle. When the current signing certificate expires we definitely want the simpler approach.
+* Apple signing and notarization requires access to the Localdev Foundation group on `https://developer.apple.com`. It's easy enough to add additional people.
+* Windows signing is an awkward process that requires a dongle. When the current signing certificate expires we definitely want the simpler approach.
 * Discord
 * Docker
 
@@ -58,7 +58,7 @@ The easiest way to push Docker images is to use the GitHub Actions workflow, esp
 
 1. Push the new version of drud/ddev-php-base
 2. Update drud/ddev-webserver to use the new version of drud/ddev-php-base and push it with the proper tag
-3. Make sure the version-history.md file is up to date.
+3. Make sure the `version-history.md` file is up to date.
 4. Make sure the docker images for the new tag are all tagged and pushed.
 5. Make sure the pkg/version/version.go is all set to point to the new images (and tests have been run)
 6. Make sure you're about to create the right release tag.
@@ -105,7 +105,7 @@ Sadly, there are no ARM64 Docker images for MySQL 5.7 and 8.0, so we have our ow
 * Unfortunately, the [`ddev snapshot`](../users/usage/commands.md#snapshot) command depends on `xtrabackup` 8.0 being installed for `mysql:8.0`. There are no ARM64 packages or binaries provided by Percona for `xtrabackup`, so we build it from source with [drud/xtrabackup-build](https://github.com/drud/xtrabackup-build). **There’s a catch, however:** `xtrabackup`’s development cycle lags behind `mysql:8.0`’s development cycle, so you can’t build a usable `drud/mysql:8.0` image until there’s an `xtrabackup` version released. Further, when Ubuntu bumps `mysql-server-8.0` to a new version, there’s no way to use the old one. So the only time that you can maintain `drud/mysql:8.0` is when Ubuntu 20.04 has the same version that’s released for `percona-xtrabackup`. (In the case at this writeup, I was finally able to build `percona-xtrabackup` 8.0.28, and the same day Ubuntu bumped its packages to 8.0.29, meaning that it was unusable.)
 * To build percona-xtrabackup, follow the instructions on [drud/xtrabackup-build](https://github.com/drud/xtrabackup-build). You just create a release with the release of Percona xtrabackup, for example `8.0.29-21`. When that succeeds, then there is an upstream xtrabackup to be used in the drud/mysql:8.0 build.
 * To build `drud/mysql` (both 5.7 and 8.0) ARM64 images, follow the instructions on [drud/mysql-arm64-images](https://github.com/drud/mysql-arm64-images). After the various files are updated, you can push a new release and the proper images will be pushed.
-* After building a new set of `drud/mysql` images, you’ll need to push `drud/ddev-dbserver` with new tags. Make sure to update the [drud/`ddev-dbserver` Makefile](https://github.com/drud/ddev/blob/master/containers/ddev-dbserver/Makefile) to set the explicit version of the upstream `mysql:8.0` (for example, 8.0.29, if you’ve succeed in getting 8.0.29 for `percona-xtrabackup` and `mysql:8.0`).
+* After building a new set of `drud/mysql` images, you’ll need to push `drud/ddev-dbserver` with new tags. Make sure to update the [drud/`ddev-dbserver` Makefile](https://github.com/drud/ddev/blob/master/containers/ddev-dbserver/Makefile) to set the explicit version of the upstream `mysql:8.0` (for example, 8.0.29, if you’ve succeeded in getting 8.0.29 for `percona-xtrabackup` and `mysql:8.0`).
 
 ## Actual Release Docker Image Updates
 
@@ -122,7 +122,7 @@ But here are the steps for building:
 
 Homebrew formulas normally update with the release process, so nothing needs to be done.
 
-If you have to temporarily update the Homebrew formulas, you can do that with a commit to <https://github.com/drud/homebrew-ddev> and <https://github.com/drud/homebrew-ddev-edge>. The bottles and checksums for macOS (High Sierra) and x86_64_linux are built and pushed to the release page automatically by the release build process (see [bump_homebrew.sh](https://github.com/drud/ddev/blob/master/.ci-scripts/bump_homebrew.sh). Test `brew upgrade ddev` both on macOS and Linux and make sure DDEV is the right version and behaves well.
+If you have to temporarily update the Homebrew formulas, you can do that with a commit to <https://github.com/drud/homebrew-ddev> and <https://github.com/drud/homebrew-ddev-edge>. The bottles and checksums for macOS (High Sierra) and x86_64_linux are built and pushed to the release page automatically by the release build process (see [bump_homebrew.sh](https://github.com/drud/ddev/blob/master/.ci-scripts/bump_homebrew.sh)). Test `brew upgrade ddev` both on macOS and Linux and make sure DDEV is the right version and behaves well.
 
 ## Manually Updating Chocolatey
 
@@ -140,7 +140,7 @@ sudo .ci-scripts/nsis_setup.sh /usr/share/nsis
 ```
 
 * Edit the checksum in `tools/chocolateyinstall.ps1` to match the released checksum of the `ddev-windows-installer` in `checksums.txt` of the release that is being repaired, for example, for `v1.21.3` this would be the checksum for `ddev_windows_installer.v1.21.3.exe` in [v1.21.3 checksums.txt](https://github.com/drud/ddev/releases/download/v1.21.3/checksums.txt).
-* Edit `url64` in `tools/chocolateyinstall.ps1` to be the intended actual DDEV download version - edit the version where it appeasrs and edit the github org. For example, if the actual version of DDEV to be downloaded is `v1.21.3` then put that there.
+* Edit `url64` in `tools/chocolateyinstall.ps1` to be the intended actual DDEV download version - edit the version where it appears and edit the GitHub org. For example, if the actual version of DDEV to be downloaded is `v1.21.3` then put that there.
 
 ```bash
 make chocolatey VERSION=<tag>

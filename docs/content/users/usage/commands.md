@@ -448,7 +448,7 @@ ddev delete --omit-snapshot --yes
 
 ### `delete images`
 
-With with `--all`, it deletes all `drud/ddev-*` Docker images.
+With `--all`, it deletes all `drud/ddev-*` Docker images.
 
 Flags:
 
