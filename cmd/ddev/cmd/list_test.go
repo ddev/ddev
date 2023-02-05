@@ -103,6 +103,12 @@ func TestCmdList(t *testing.T) {
 	siteList = getTestingSitesFromList(t, jsonOut)
 	assert.Equal(len(TestSites), len(siteList))
 
+	// Now filter the list by a not existing type
+	jsonOut, err = exec.RunHostCommand(DdevBin, "list", "-j", "--type", "not-existing-type")
+	assert.NoError(err, "error running ddev list: %v output=%s", err, out)
+	siteList = getTestingSitesFromList(t, jsonOut)
+	assert.Equal(0, len(siteList))
+
 	// Leave firstApp running for other tests
 	out, err = exec.RunHostCommand(DdevBin, "start", "-y", TestSites[0].Name)
 	assert.NoError(err, "error running ddev start: %v output=%s", err, out)
