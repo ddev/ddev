@@ -104,5 +104,11 @@ func TestListWithoutDir(t *testing.T) {
 // TestDdevList tests the ddevapp.List() functionality
 // It's only here for profiling at this point.
 func TestDdevList(_ *testing.T) {
-	ddevapp.List(true, false, true, 1)
+	ddevapp.List(ddevapp.ListCommandSettings{
+		ActiveOnly:          true,
+		Continuous:          false,
+		WrapTableText:       true,
+		ContinuousSleepTime: 1,
+		TypeFilter:          "",
+	})
 }
