@@ -72,6 +72,11 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			}
 		}
 
+		err = os.MkdirAll(composerRoot, 0755)
+		if err != nil {
+			util.Failed("failed to create composerRoot: %v", err)
+		}
+
 		// Remove most contents of composer root
 		util.Warning("Removing any existing files in composer root")
 		objs, err := fileutil.ListFilesInDir(composerRoot)
@@ -193,7 +198,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
 				RawCmd:  composerCmd,
-				Dir:     "/var/www/html",
+				Dir:     app.GetComposerRoot(true, false),
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 			})
 			if err != nil {
