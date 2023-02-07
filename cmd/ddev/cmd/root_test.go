@@ -165,8 +165,9 @@ func TestGetActiveAppRoot(t *testing.T) {
 
 	// And we should be able to stop it and find it as well
 	app, err := ddevapp.GetActiveApp("")
+	require.NoError(t, err)
 	err = app.Stop(false, true)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
