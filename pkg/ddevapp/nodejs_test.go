@@ -60,6 +60,16 @@ func TestNodeJSVersions(t *testing.T) {
 	assert.Contains(out, "Now using node v6")
 
 	out, err = exec.RunHostCommand(DdevBin, "nvm", "install", "8")
-	require.NoError(t, err)
+	require.NoError(t, err, "output=%v", out)
 	assert.Contains(out, "Now using node v8")
+	out, err = exec.RunHostCommand(DdevBin, "nvm", "use", "8")
+	require.NoError(t, err, "output=%v", out)
+	out, err = exec.RunHostCommand(DdevBin, "nvm", "alias", "default", "8")
+	require.NoError(t, err, "output=%v", out)
+
+	out, err = exec.RunHostCommand(DdevBin, "exec", "node", "--version")
+	require.NoError(t, err)
+
+	assert.Contains(out, "v8.17")
+
 }
