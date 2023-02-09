@@ -116,6 +116,7 @@ Snapshotting
 Solr
 SomeExternalDrive
 Starts
+Statamic
 Support
 TablePlus
 Traefik
@@ -676,4 +677,3 @@ zcompdump
 zsh
 zshrc
 zxf
-
