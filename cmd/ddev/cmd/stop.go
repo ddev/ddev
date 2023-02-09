@@ -29,6 +29,7 @@ var unlist bool
 var DdevStopCmd = &cobra.Command{
 	Use:     "stop [projectname ...]",
 	Aliases: []string{"rm", "remove"},
+	Deprecated: "Please use ddev delete instead.",
 	Short:   "Stop and remove the containers of a project. Does not lose or harm anything unless you add --remove-data.",
 	Long: `Stop and remove the containers of a project. You can run 'ddev stop'
 from a project directory to stop/remove that project, or you can stop/remove projects in
