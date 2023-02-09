@@ -40,7 +40,7 @@ The following “Repository secret” environment variables must be added to <ht
 
 ### Prerelease Tasks
 
-* Create a test plan
+* Create and execute a test plan.
 * Make sure [`version-history.md`](https://github.com/drud/ddev/blob/master/version-history.md) is up to date.
 * Make sure the Docker images are all tagged and pushed.
 * Make sure [`pkg/versionconstants/versionconstants.go`](https://github.com/drud/ddev/blob/master/pkg/versionconstants/versionconstants.go) is all set to point to the new images and tests have been run.
