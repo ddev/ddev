@@ -153,30 +153,59 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
 
     ## Laravel
 
-    Use a new or existing Composer project, or clone a Git repository.
+    === "Laravel"
 
-    The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) just as it can for Laravel. DDEV automatically updates or creates the .env file with the database information.
+        Use a new or existing Composer project, or clone a Git repository.
 
-    === "Composer"
-        ```bash
-        mkdir my-laravel-app
-        cd my-laravel-app
-        ddev config --project-type=laravel --docroot=public --create-docroot
-        ddev composer create --prefer-dist --no-install --no-scripts laravel/laravel
-        ddev composer install
-        ddev exec "php artisan key:generate"
-        ddev launch
-        ```
-    === "Git Clone"
-        ```bash
-        git clone <your-laravel-repo>
-        cd <your-laravel-project>
-        ddev config --project-type=laravel --docroot=public --create-docroot
-        ddev start
-        ddev composer install
-        ddev exec "php artisan key:generate"
-        ddev launch
-        ```
+        The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) just as it can for Laravel. DDEV automatically updates or creates the .env file with the database information.
+
+        === "Composer"
+            ```bash
+            mkdir my-laravel-app
+            cd my-laravel-app
+            ddev config --project-type=laravel --docroot=public --create-docroot
+            ddev composer create --prefer-dist --no-install --no-scripts laravel/laravel
+            ddev composer install
+            ddev exec "php artisan key:generate"
+            ddev launch
+            ```
+        === "Git Clone"
+            ```bash
+            git clone <your-laravel-repo>
+            cd <your-laravel-project>
+            ddev config --project-type=laravel --docroot=public --create-docroot
+            ddev start
+            ddev composer install
+            ddev exec "php artisan key:generate"
+            ddev launch
+            ```
+
+    === "Statamic"
+
+        Use a new or existing Composer project, or clone a Git repository.
+
+        The Laravel project type can be used for [Statamic](https://statamic.com/) just as it can for Laravel. DDEV automatically updates or creates the .env file with the database information.
+
+        === "Composer"
+            ```bash
+            mkdir my-statamic-app
+            cd my-statamic-app
+            ddev config --project-type=laravel --docroot=public --create-docroot
+            ddev composer create --prefer-dist --no-install --no-scripts statamic/statamic
+            ddev composer install
+            ddev exec "php artisan key:generate"
+            ddev launch
+            ```
+        === "Git Clone"
+            ```bash
+            git clone <your-statamic-repo>
+            cd <your-statamic-project>
+            ddev config --project-type=laravel --docroot=public --create-docroot
+            ddev start
+            ddev composer install
+            ddev exec "php artisan key:generate"
+            ddev launch
+            ```
 
 === "Magento"
 
@@ -520,8 +549,8 @@ There are two ways to remove a project from DDEV’s listing.
 
 The first, the [`ddev delete`](../users/usage/commands.md#delete) command, is destructive. It removes the project from DDEV’s list, deletes its database, and removes the hostname entry from the hosts file:
 
-`ddev delete <projectname>`  
-or  
+`ddev delete <projectname>`
+or
 `ddev delete --omit-snapshot <projectname>`
 
 If you simply don’t want the project to show up in [`ddev list`](../users/usage/commands.md#list) anymore, use [`ddev stop`](../users/usage/commands.md#stop)—which is nondestructive—to unlist the project until the next time you run [`ddev start`](../users/usage/commands.md#start) or [`ddev config`](../users/usage/commands.md#config):
