@@ -875,6 +875,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	}
 
 	extraWebContent := "\nRUN mkdir -p /home/$username && chown $username /home/$username && chmod 600 /home/$username/.pgpass"
+	extraWebContent = extraWebContent + "\nENV NVM_DIR=/home/$username/.nvm"
 	if app.NodeJSVersion != nodeps.NodeJSDefault {
 		extraWebContent = extraWebContent + "\nRUN (apt-get remove -y nodejs || true) && (apt purge nodejs || true)"
 		// Download of setup_*.sh seems to fail a LOT, probably a problem on their end. So try it twice
