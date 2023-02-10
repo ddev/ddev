@@ -40,13 +40,14 @@ The following “Repository secret” environment variables must be added to <ht
 
 ### Prerelease Tasks
 
+* Create and execute a test plan.
 * Make sure [`version-history.md`](https://github.com/drud/ddev/blob/master/version-history.md) is up to date.
 * Make sure the Docker images are all tagged and pushed.
-* Make sure [`pkg/version/version.go`](https://github.com/drud/ddev/blob/master/pkg/version/version.go) is all set to point to the new images and tests have been run.
+* Make sure [`pkg/versionconstants/versionconstants.go`](https://github.com/drud/ddev/blob/master/pkg/versionconstants/versionconstants.go) is all set to point to the new images and tests have been run.
 
 ### Actual Release Creation
 
-1. Create a release for the new version using the GitHub UI. It should be “prerelease” if it’s an edge release.
+1. Create a [release](https://github.com/drud/ddev/releases) for the new version using the GitHub UI. It should be “prerelease” if it’s an edge release.
 2. Use the “Auto-generate release notes” option to get the commit list, then edit to add all the other necessary info.
 3. Verify that Homebrew (Linux and macOS) and Chocolatey and AUR are working correctly with the right versions.
 
