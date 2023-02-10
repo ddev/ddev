@@ -157,7 +157,7 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
 
         Use a new or existing Composer project, or clone a Git repository.
 
-        The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) just as it can for Laravel. DDEV automatically updates or creates the .env file with the database information.
+        The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) just as it can for Laravel. DDEV automatically updates or creates the `.env` file with the database information.
 
         === "Composer"
             ```bash
