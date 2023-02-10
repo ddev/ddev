@@ -194,12 +194,12 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 	}
 	if cmd.Flag("http-port").Changed {
 		val, _ := cmd.Flags().GetString("http-port")
-		globalconfig.DdevGlobalConfig.RouterHttpPort = val
+		globalconfig.DdevGlobalConfig.RouterHTTPPort = val
 		dirty = true
 	}
 	if cmd.Flag("https-port").Changed {
 		val, _ := cmd.Flags().GetString("https-port")
-		globalconfig.DdevGlobalConfig.RouterHttpsPort = val
+		globalconfig.DdevGlobalConfig.RouterHTTPSPort = val
 		dirty = true
 	}
 	if dirty {
@@ -236,8 +236,8 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 	output.UserOut.Printf("no-bind-mounts=%v", globalconfig.DdevGlobalConfig.NoBindMounts)
 	output.UserOut.Printf("use-traefik=%v", globalconfig.DdevGlobalConfig.UseTraefik)
 	output.UserOut.Printf("wsl2-no-windows-hosts-mgt=%v", globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt)
-	output.UserOut.Printf("router_http_port=%v", globalconfig.DdevGlobalConfig.RouterHttpPort)
-	output.UserOut.Printf("router_https_port=%v", globalconfig.DdevGlobalConfig.RouterHttpsPort)
+	output.UserOut.Printf("router_http_port=%v", globalconfig.DdevGlobalConfig.RouterHTTPPort)
+	output.UserOut.Printf("router_https_port=%v", globalconfig.DdevGlobalConfig.RouterHTTPSPort)
 }
 
 func init() {
