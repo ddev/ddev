@@ -13,7 +13,7 @@ Shells like bash and zsh need help to do this though, they have to know what the
     > Add the following line to your ~/.bash_profile:
     > 
     >  ```
-    >  [[ -r "/opt/homebrew/etc/profile.d/bash_completion.sh" ]] && . "/opt/homebrew/etc/profile.d/bash_completion.sh"
+    >  [[ -r "$(brew --prefix)/etc/profile.d/bash_completion.sh" ]] && . "$(brew --prefix)/etc/profile.d/bash_completion.sh"
     >  ```
     
     !!!note "Bash profile"
