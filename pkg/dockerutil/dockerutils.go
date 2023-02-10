@@ -4,10 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	ddevexec "github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/versionconstants"
 	"io"
 	"log"
 	"net"
@@ -21,10 +17,16 @@ import (
 	"strings"
 	"time"
 
+	ddevexec "github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/versionconstants"
+
+	"net/url"
+
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
-	"net/url"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/drud/ddev/pkg/output"
@@ -1012,12 +1014,12 @@ func RemoveVolume(volumeName string) error {
 					}
 					var containerNamesString = strings.Join(containerNames, " ")
 					if len(containerNames) == 1 {
-						errorMessage = fmt.Errorf("Docker volume '%s' is in use by a container '%s' and cannot be removed. Use 'docker rm -f %s' to remove it.", volumeName, containerNamesString, containerNamesString)
+						errorMessage = fmt.Errorf("Docker volume '%s' is in use by a container '%s' and cannot be removed. Use 'docker rm -f %s' to remove it", volumeName, containerNamesString, containerNamesString)
 					} else {
-						errorMessage = fmt.Errorf("Docker volume '%s' is in use by %d containers and cannot be removed. Use 'docker rm -f %s' to remove them.", volumeName, len(containerNames), containerNamesString)
+						errorMessage = fmt.Errorf("Docker volume '%s' is in use by %d containers and cannot be removed. Use 'docker rm -f %s' to remove them", volumeName, len(containerNames), containerNamesString)
 					}
 				} else {
-					errorMessage = fmt.Errorf("Docker volume '%s' is in use by a container and cannot be removed. Use 'docker rm -f $(docker ps -aq)' to remove all containers.", volumeName)
+					errorMessage = fmt.Errorf("Docker volume '%s' is in use by a container and cannot be removed. Use 'docker rm -f $(docker ps -aq)' to remove all containers", volumeName)
 				}
 				return errorMessage
 			}
