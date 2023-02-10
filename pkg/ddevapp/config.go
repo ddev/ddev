@@ -93,7 +93,9 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.FailOnHookFail = nodeps.FailOnHookFailDefault
 	app.FailOnHookFailGlobal = globalconfig.DdevGlobalConfig.FailOnHookFailGlobal
 	app.RouterHTTPPort = nodeps.DdevDefaultRouterHTTPPort
+	app.RouterHTTPPortGlobal = globalconfig.DdevGlobalConfig.RouterHttpPort
 	app.RouterHTTPSPort = nodeps.DdevDefaultRouterHTTPSPort
+	app.RouterHTTPSPortGlobal = globalconfig.DdevGlobalConfig.RouterHttpsPort
 	app.PHPMyAdminPort = nodeps.DdevDefaultPHPMyAdminPort
 	app.PHPMyAdminHTTPSPort = nodeps.DdevDefaultPHPMyAdminHTTPSPort
 	app.MailhogPort = nodeps.DdevDefaultMailhogPort

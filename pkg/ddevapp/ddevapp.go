@@ -82,8 +82,10 @@ type DdevApp struct {
 	WebImage              string                `yaml:"webimage,omitempty"`
 	DBImage               string                `yaml:"dbimage,omitempty"`
 	DBAImage              string                `yaml:"dbaimage,omitempty"`
-	RouterHTTPPort        string                `yaml:"router_http_port"`
-	RouterHTTPSPort       string                `yaml:"router_https_port"`
+	RouterHTTPPort        string                `yaml:"router_http_port,omitempty"`
+	RouterHTTPPortGlobal  string                `yaml:"-"`
+	RouterHTTPSPort       string                `yaml:"router_https_port,omitempty"`
+	RouterHTTPSPortGlobal string                `yaml:"-"`
 	XdebugEnabled         bool                  `yaml:"xdebug_enabled"`
 	NoProjectMount        bool                  `yaml:"no_project_mount,omitempty"`
 	AdditionalHostnames   []string              `yaml:"additional_hostnames"`
@@ -277,8 +279,8 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["php_version"] = app.GetPhpVersion()
 	appDesc["webserver_type"] = app.GetWebserverType()
 
-	appDesc["router_http_port"] = app.RouterHTTPPort
-	appDesc["router_https_port"] = app.RouterHTTPSPort
+	appDesc["router_http_port"] = app.GetRouterHTTPPort()
+	appDesc["router_https_port"] = app.GetRouterHTTPSPort()
 	appDesc["xdebug_enabled"] = app.XdebugEnabled
 	appDesc["webimg"] = app.WebImage
 	appDesc["dbimg"] = app.GetDBImage()
@@ -445,6 +447,24 @@ func (app *DdevApp) GetWebserverType() string {
 		v = app.WebserverType
 	}
 	return v
+}
+
+// GetRouterHTTPPort returns app's router http port
+func (app *DdevApp) GetRouterHTTPPort() string {
+	port := app.RouterHTTPPortGlobal
+	if app.RouterHTTPPort != "" {
+		port = app.RouterHTTPPort
+	}
+	return port
+}
+
+// GetRouterHTTPSPort returns app's router https port
+func (app *DdevApp) GetRouterHTTPSPort() string {
+	port := app.RouterHTTPSPortGlobal
+	if app.RouterHTTPSPort != "" {
+		port = app.RouterHTTPSPort
+	}
+	return port
 }
 
 // ImportDB takes a source sql dump and imports it to an active site's database container.
@@ -1960,8 +1980,8 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_PHP_VERSION":           app.PHPVersion,
 		"DDEV_WEBSERVER_TYPE":        app.WebserverType,
 		"DDEV_PROJECT_TYPE":          app.Type,
-		"DDEV_ROUTER_HTTP_PORT":      app.RouterHTTPPort,
-		"DDEV_ROUTER_HTTPS_PORT":     app.RouterHTTPSPort,
+		"DDEV_ROUTER_HTTP_PORT":      app.GetRouterHTTPPort(),
+		"DDEV_ROUTER_HTTPS_PORT":     app.GetRouterHTTPSPort(),
 		"DDEV_XDEBUG_ENABLED":        strconv.FormatBool(app.XdebugEnabled),
 		"DDEV_PRIMARY_URL":           app.GetPrimaryURL(),
 		"DDEV_VERSION":               versionconstants.DdevVersion,
@@ -2438,8 +2458,8 @@ func (app *DdevApp) GetHTTPURL() string {
 	url := ""
 	if !IsRouterDisabled(app) {
 		url = "http://" + app.GetHostname()
-		if app.RouterHTTPPort != "80" {
-			url = url + ":" + app.RouterHTTPPort
+		if app.GetRouterHTTPPort() != "80" {
+			url = url + ":" + app.GetRouterHTTPPort()
 		}
 	} else {
 		url = app.GetWebContainerDirectHTTPURL()
@@ -2482,11 +2502,11 @@ func (app *DdevApp) GetAllURLs() (httpURLs []string, httpsURLs []string, allURLs
 	for _, name := range app.GetHostnames() {
 		httpPort := ""
 		httpsPort := ""
-		if app.RouterHTTPPort != "80" {
-			httpPort = ":" + app.RouterHTTPPort
+		if app.GetRouterHTTPPort() != "80" {
+			httpPort = ":" + app.GetRouterHTTPPort()
 		}
-		if app.RouterHTTPSPort != "443" {
-			httpsPort = ":" + app.RouterHTTPSPort
+		if app.GetRouterHTTPSPort() != "443" {
+			httpsPort = ":" + app.GetRouterHTTPSPort()
 		}
 
 		httpsURLs = append(httpsURLs, "https://"+name+httpsPort)

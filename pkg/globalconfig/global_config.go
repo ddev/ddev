@@ -63,6 +63,8 @@ type GlobalConfig struct {
 	UseTraefik                   bool                    `yaml:"use_traefik"`
 	WSL2NoWindowsHostsMgt        bool                    `yaml:"wsl2_no_windows_hosts_mgt"`
 	ProjectList                  map[string]*ProjectInfo `yaml:"project_info"`
+	RouterHttpPort               string                  `yaml:"router_http_port"`
+	RouterHttpsPort              string                  `yaml:"router_https_port"`
 }
 
 // GetGlobalConfigPath gets the path to global config file
@@ -176,6 +178,12 @@ func ReadGlobalConfig() error {
 	}
 	if DdevGlobalConfig.TableStyle == "" {
 		DdevGlobalConfig.TableStyle = "default"
+	}
+	if DdevGlobalConfig.RouterHttpPort == "" {
+		DdevGlobalConfig.RouterHttpPort = nodeps.DdevDefaultRouterHTTPPort
+	}
+	if DdevGlobalConfig.RouterHttpsPort == "" {
+		DdevGlobalConfig.RouterHttpsPort = nodeps.DdevDefaultRouterHTTPSPort
 	}
 	if DdevGlobalConfig.ProjectList == nil {
 		DdevGlobalConfig.ProjectList = map[string]*ProjectInfo{}
