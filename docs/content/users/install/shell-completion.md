@@ -9,15 +9,14 @@ Shells like bash and zsh need help to do this though, they have to know what the
     ## macOS Bash + Homebrew
 
     The easiest way to use bash completion on macOS is install it with Homebrew. `brew install bash-completion`. When you install it though, it will warn you with something like this, which **may vary on your system**.
-    
-    > Add the following line to your ~/.bash_profile:
-    > 
-    >  ```
-    >  [[ -r "$(brew --prefix)/etc/profile.d/bash_completion.sh" ]] && . "$(brew --prefix)/etc/profile.d/bash_completion.sh"
-    >  ```
-    
+
+    ```
+    Add the following line to your ~/.bash_profile:
+    [[ -r "$(brew --prefix)/etc/profile.d/bash_completion.sh" ]] && . "$(brew --prefix)/etc/profile.d/bash_completion.sh"
+    ```
+
     !!!note "Bash profile"
-        You do have to add the include to your `.bash_profile` or `.profile` or nothing will work. Use `source ~/.bash_profile` or `source ~/.profile` to make it take effect immediately.
+        You must add the include to your `.bash_profile` or `.profile` or nothing will work. Use `source ~/.bash_profile` or `source ~/.profile` to make it take effect immediately.
 
     * Link completions with `brew completions link`.
 
