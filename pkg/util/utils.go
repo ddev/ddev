@@ -22,10 +22,6 @@ import (
 	"github.com/drud/ddev/pkg/output"
 )
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
 // Failed will print a red error message and exit with failure.
 func Failed(format string, a ...interface{}) {
 	format = ColorizeText(format, "red")

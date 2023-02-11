@@ -254,8 +254,6 @@ func Untar(source string, dest string, extractionDir string) error {
 			}
 
 		case tar.TypeReg:
-			fallthrough
-		case tar.TypeRegA:
 			// Always ensure the directory is created before trying to move the file.
 			fullPathDir := filepath.Dir(fullPath)
 			err = os.MkdirAll(fullPathDir, 0755)
