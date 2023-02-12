@@ -1293,7 +1293,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		Cmd: `ls -l /mnt/ddev_config/nginx_full/nginx-site.conf >/dev/null`,
 	})
 	if err != nil {
-		return fmt.Errorf("Something is wrong with docker/colima and /mnt/ddev_config is not mounted from the project .ddev folder")
+		util.Warning("Something is wrong with docker or colima and /mnt/ddev_config is not mounted from the project .ddev folder. This can cause all kinds of problems.")
 	}
 
 	if !IsRouterDisabled(app) {
