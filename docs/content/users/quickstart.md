@@ -2,6 +2,21 @@
 
 While the generic `php` project type is [ready to go](./project.md) with any CMS or framework, DDEV offers project types for more easily working with popular platforms and content management systems:
 
+=== "Backdrop"
+
+    To get started with [Backdrop](https://backdropcms.org), clone the project repository and navigate to the project directory.
+
+    ```bash
+    git clone https://github.com/example/example-site
+    cd example-site
+    ddev config
+    ddev start
+    ddev launch
+    ```
+    
+    !!!tip "Bee"
+        Bee is a command line utility for Backdrop CMS. It includes commands that allow developers to interact with Backdrop sites, performing many common actions like running cron, clearing caches, logging in, downloading and enabling modules, etc. [Follow these easy instructions](https://github.com/backdrop-contrib/bee/wiki/Using-bee-with-DDEV) to get bee running within your ddev web container in this format: `ddev bee status`.
+
 === "Craft CMS"
 
     ## Craft CMS
@@ -132,20 +147,6 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
         cd my-drupal-site
         ddev config # Follow the prompts to set Drupal version and docroot
         ddev composer install # If a composer build
-        ddev launch
-        ```
-
-    === "Backdrop"
-
-        ### Backdrop
-
-        To get started with [Backdrop](https://backdropcms.org), clone the project repository and navigate to the project directory.
-
-        ```bash
-        git clone https://github.com/example/example-site
-        cd example-site
-        ddev config
-        ddev start
         ddev launch
         ```
 
