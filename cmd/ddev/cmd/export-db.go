@@ -5,6 +5,7 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 var outFileName string
@@ -64,10 +65,18 @@ ddev export-db someproject --gzip=false --file=/tmp/someproject.sql `,
 }
 
 func init() {
-	ExportDBCmd.Flags().StringVarP(&outFileName, "file", "f", "", "Provide the path to output the dump")
+	ExportDBCmd.Flags().StringVarP(&outFileName, "src", "f", "", "Provide the path to output the dump")
 	ExportDBCmd.Flags().BoolVarP(&doGzip, "gzip", "z", true, "Use gzip compression")
 	ExportDBCmd.Flags().BoolVarP(&doXz, "xz", "", false, "Use xz compression")
 	ExportDBCmd.Flags().BoolVarP(&doBzip2, "bzip2", "", false, "Use bzip2 compression")
 	ExportDBCmd.Flags().StringVarP(&exportTargetDB, "target-db", "d", "db", "If provided, target-db is alternate database to export")
+	ImportFileCmd.Flags().SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {
+		switch name {
+		case "src":
+			name = "file"
+			break
+		}
+		return pflag.NormalizedName(name)
+	})
 	RootCmd.AddCommand(ExportDBCmd)
 }

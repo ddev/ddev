@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/spf13/pflag"
 
 	"github.com/ddev/ddev/pkg/appimport"
 	"github.com/ddev/ddev/pkg/ddevapp"
@@ -110,5 +111,13 @@ func promptForExtPath(val *string) {
 func init() {
 	ImportFileCmd.Flags().StringVarP(&sourcePath, "src", "", "", "Provide the path to the source directory or tar/tar.gz/tgz/zip archive of files to import")
 	ImportFileCmd.Flags().StringVarP(&extPath, "extract-path", "", "", "If provided asset is an archive, optionally provide the path to extract within the archive.")
+	ImportFileCmd.Flags().SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {
+		switch name {
+		case "src":
+			name = "file"
+			break
+		}
+		return pflag.NormalizedName(name)
+	})
 	RootCmd.AddCommand(ImportFileCmd)
 }

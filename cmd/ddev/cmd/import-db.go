@@ -5,6 +5,7 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 var dbSource string
@@ -72,5 +73,13 @@ func init() {
 	ImportDBCmd.Flags().StringVarP(&targetDB, "target-db", "d", "db", "If provided, target-db is alternate database to import into")
 	ImportDBCmd.Flags().BoolVarP(&noDrop, "no-drop", "", false, "Set if you do NOT want to drop the db before importing")
 	ImportDBCmd.Flags().BoolVarP(&progressOption, "progress", "p", true, "Display a progress bar during import")
+	ImportDBCmd.Flags().SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {
+		switch name {
+		case "src":
+			name = "file"
+			break
+		}
+		return pflag.NormalizedName(name)
+	})
 	RootCmd.AddCommand(ImportDBCmd)
 }
