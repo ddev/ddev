@@ -35,7 +35,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
     ### Enabling and Disabling Mutagen
 
     !!!warning "Don’t Install Mutagen"
-        Don’t install the `mutagen` binary separately. If it’s not available, DDEV will install and upgrade it for you.
+        You do not need to install anything to use mutagen. DDEV installs and maintains its own `mutagen` binary.
 
     We recommend enabling Mutagen globally with `ddev config global --mutagen-enabled`. You can disable it again with `ddev mutagen reset && ddev config global --mutagen-enabled=false`.
 
@@ -137,6 +137,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 
     ### Troubleshooting Mutagen Sync Issues
 
+    * Does `ddev start` take forever, with perhaps many minutes of "dots"? Take care that you don't have big binaries that mutagen is trying to sync, which will cause endless "dots" as your project is starting. There is already an exclusion place for database tarballs and the like, the `.tarballs` directory; if you put dumps there they will be ignored by mutagen. To find out what mutagen is trying to sync, use `ddev mutagen status -l` in another window.
     * Please make sure that DDEV projects work *without* Mutagen before troubleshooting it. Run `ddev config --mutagen-enabled=false && ddev restart`.
     * Rename your project’s `.ddev/mutagen/mutagen.yml` file to `.ddev/mutagen/mutagen.yml.bak` and run `ddev restart`. This ensures you’ll have a fresh version in case the file has been changed and `#ddev-generated` removed.
     * `export DDEV_DEBUG=true` will provide more information about what’s going on with Mutagen.
