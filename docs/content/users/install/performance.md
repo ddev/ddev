@@ -137,7 +137,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 
     ### Troubleshooting Mutagen Sync Issues
 
-    * Avoid having Mutagen sync large binaries, which can cause `ddev` start to take a long time. The `.tarballs` directory is automatically excluded, so Mutagen will ignore anything you move there. To see what Mutagen is trying to sync, run `ddev mutagen status -l` in another window.
+    * Avoid having Mutagen sync large binaries, which can cause `ddev start` to take a long time. The `.tarballs` directory is automatically excluded, so Mutagen will ignore anything you move there. To see what Mutagen is trying to sync, run `ddev mutagen status -l` in another window.
     * Please make sure that DDEV projects work *without* Mutagen before troubleshooting it. Run `ddev config --mutagen-enabled=false && ddev restart`.
     * Rename your project’s `.ddev/mutagen/mutagen.yml` file to `.ddev/mutagen/mutagen.yml.bak` and run `ddev restart`. This ensures you’ll have a fresh version in case the file has been changed and `#ddev-generated` removed.
     * `export DDEV_DEBUG=true` will provide more information about what’s going on with Mutagen.
