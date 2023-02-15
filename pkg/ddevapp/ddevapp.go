@@ -4,20 +4,12 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/versionconstants"
-	"github.com/mattn/go-isatty"
-	"github.com/otiai10/copy"
-	"golang.org/x/term"
-	"gopkg.in/yaml.v3"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
-
-	"path"
 	"time"
 
 	"github.com/drud/ddev/pkg/appimport"
@@ -25,9 +17,16 @@ import (
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/versionconstants"
 	docker "github.com/fsouza/go-dockerclient"
+	"github.com/mattn/go-isatty"
+	"github.com/otiai10/copy"
+	"golang.org/x/term"
+	"gopkg.in/yaml.v3"
 )
 
 // SiteRunning defines the string used to denote running sites.
@@ -485,7 +484,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 			extPathPrompt = true
 		}
 		output.UserOut.Println("Provide the path to the database you want to import.")
-		fmt.Print("Pull path: ")
+		fmt.Print("Full path: ")
 
 		imPath = util.GetInput("")
 	}
