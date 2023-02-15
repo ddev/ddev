@@ -201,7 +201,7 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
             ```bash
             mkdir my-laravel-app
             cd my-laravel-app
-            ddev config --project-type=laravel --docroot=public --create-docroot
+            ddev config --project-type=laravel --docroot=public --create-docroot --php-version=8.1
             ddev composer create --prefer-dist --no-install --no-scripts laravel/laravel
             ddev composer install
             ddev exec "php artisan key:generate"
@@ -211,7 +211,7 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
             ```bash
             git clone <your-laravel-repo>
             cd <your-laravel-project>
-            ddev config --project-type=laravel --docroot=public --create-docroot
+            ddev config --project-type=laravel --docroot=public --create-docroot --php-version=8.1
             ddev start
             ddev composer install
             ddev exec "php artisan key:generate"

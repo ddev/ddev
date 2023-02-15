@@ -64,3 +64,9 @@ func laravelPostStartAction(app *DdevApp) error {
 
 	return nil
 }
+
+// laravelConfigOverrideAction overrides php_version for laravel, requires PHP8.1
+func laravelConfigOverrideAction(app *DdevApp) error {
+	app.PHPVersion = nodeps.PHP81
+	return nil
+}
