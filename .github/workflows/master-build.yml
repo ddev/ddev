@@ -20,7 +20,7 @@ env:
 jobs:
   build-most:
     name: Build DDEV executables except Windows
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       SegmentKey: ${{ secrets.SEGMENTKEY }}
 
@@ -154,7 +154,7 @@ jobs:
 
   artifacts:
     name: Upload artifacts
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: [build-most, sign-windows, notarize-macos]
     env:
       DDEV_GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
