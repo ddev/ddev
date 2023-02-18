@@ -2106,10 +2106,10 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 		return "", fmt.Errorf("unable to snapshot database, \nyour db container in project %v is not running. \nPlease start the project if you want to snapshot it. \nIf deleting project, you can delete without a snapshot using \n'ddev delete --omit-snapshot --yes', \nwhich will destroy your database", app.Name)
 	}
 
-		// For versions less than 8.0.32, we have to OPTIMIZE TABLES to make xtrabackup work
-		// See https://docs.percona.com/percona-xtrabackup/8.0/em/instant.html and
-		// https://www.percona.com/blog/percona-xtrabackup-8-0-29-and-instant-add-drop-columns/
-		if app.Database.Type == "mysql" && app.Database.Version == nodeps.MySQL80 {
+	// For versions less than 8.0.32, we have to OPTIMIZE TABLES to make xtrabackup work
+	// See https://docs.percona.com/percona-xtrabackup/8.0/em/instant.html and
+	// https://www.percona.com/blog/percona-xtrabackup-8-0-29-and-instant-add-drop-columns/
+	if app.Database.Type == "mysql" && app.Database.Version == nodeps.MySQL80 {
 		stdout, stderr, err := app.Exec(&ExecOpts{
 			Service: "db",
 			Cmd:     `set -eu -o pipefail; mysql -e 'SET SQL_NOTES=0'; mysql -N -uroot -proot -e 'SELECT NAME FROM INFORMATION_SCHEMA.INNODB_TABLES WHERE TOTAL_ROW_VERSIONS > 0;'`,
@@ -2135,8 +2135,8 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 					})
 					if err != nil {
 						util.Warning("unable to optimize table %s (mysql 8.0): %v (stdout='%s', stderr='%s')", t, err, stdout, stderr)
-					}		
-				}	
+					}
+				}
 				util.Success("Optimized mysql 8.0 tables '%s' in preparation for snapshot", strings.Join(tables, `,'`))
 			}
 		}
