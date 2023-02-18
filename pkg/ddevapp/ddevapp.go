@@ -2117,9 +2117,10 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 		if err != nil {
 			util.Warning("could not check for tables to optimize (mysql 8.0): %v (stdout='%s', stderr='%s')", err, stdout, stderr)
 		} else {
+			stdout = strings.Trim(stdout, "\n\t ")
 			tables := strings.Split(stdout, "\n")
-			util.Success("tables=%v len(tables)=%d stdout was '%s'", tables, len(tables), stdout)
-			if len(tables) > 0 {
+			// util.Success("tables=%v len(tables)=%d stdout was '%s'", tables, len(tables), stdout)
+			if len(stdout) > 0 && len(tables) > 0 {
 				for _, t := range tables {
 					r := strings.Split(t, `/`)
 					if len(r) != 2 {
