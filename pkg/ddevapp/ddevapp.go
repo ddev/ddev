@@ -2112,7 +2112,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	if app.Database.Type == "mysql" && app.Database.Version == nodeps.MySQL80 {
 		stdout, stderr, err := app.Exec(&ExecOpts{
 			Service: "db",
-			Cmd:     `set -eu -o pipefail; mysql -e 'SET SQL_NOTES=0'; mysql -N -uroot -proot -e 'SELECT NAME FROM INFORMATION_SCHEMA.INNODB_TABLES WHERE TOTAL_ROW_VERSIONS > 0;'`,
+			Cmd:     `set -eu -o pipefail; MYSQL_PWD=root mysql -e 'SET SQL_NOTES=0'; mysql -N -uroot -e 'SELECT NAME FROM INFORMATION_SCHEMA.INNODB_TABLES WHERE TOTAL_ROW_VERSIONS > 0;'`,
 		})
 		if err != nil {
 			util.Warning("could not check for tables to optimize (mysql 8.0): %v (stdout='%s', stderr='%s')", err, stdout, stderr)
@@ -2131,7 +2131,7 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 					t := r[1]
 					stdout, stderr, err := app.Exec(&ExecOpts{
 						Service: "db",
-						Cmd:     fmt.Sprintf(`set -eu -o pipefail; mysql -uroot -proot -D %s -e 'OPTIMIZE TABLES %s';`, d, t),
+						Cmd:     fmt.Sprintf(`set -eu -o pipefail; MYSQL_PWD=root mysql -uroot -D %s -e 'OPTIMIZE TABLES %s';`, d, t),
 					})
 					if err != nil {
 						util.Warning("unable to optimize table %s (mysql 8.0): %v (stdout='%s', stderr='%s')", t, err, stdout, stderr)
