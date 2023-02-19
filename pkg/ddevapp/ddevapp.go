@@ -2106,6 +2106,41 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 		return "", fmt.Errorf("unable to snapshot database, \nyour db container in project %v is not running. \nPlease start the project if you want to snapshot it. \nIf deleting project, you can delete without a snapshot using \n'ddev delete --omit-snapshot --yes', \nwhich will destroy your database", app.Name)
 	}
 
+	// For versions less than 8.0.32, we have to OPTIMIZE TABLES to make xtrabackup work
+	// See https://docs.percona.com/percona-xtrabackup/8.0/em/instant.html and
+	// https://www.percona.com/blog/percona-xtrabackup-8-0-29-and-instant-add-drop-columns/
+	if app.Database.Type == "mysql" && app.Database.Version == nodeps.MySQL80 {
+		stdout, stderr, err := app.Exec(&ExecOpts{
+			Service: "db",
+			Cmd:     `set -eu -o pipefail; MYSQL_PWD=root mysql -e 'SET SQL_NOTES=0'; mysql -N -uroot -e 'SELECT NAME FROM INFORMATION_SCHEMA.INNODB_TABLES WHERE TOTAL_ROW_VERSIONS > 0;'`,
+		})
+		if err != nil {
+			util.Warning("could not check for tables to optimize (mysql 8.0): %v (stdout='%s', stderr='%s')", err, stdout, stderr)
+		} else {
+			stdout = strings.Trim(stdout, "\n\t ")
+			tables := strings.Split(stdout, "\n")
+			// util.Success("tables=%v len(tables)=%d stdout was '%s'", tables, len(tables), stdout)
+			if len(stdout) > 0 && len(tables) > 0 {
+				for _, t := range tables {
+					r := strings.Split(t, `/`)
+					if len(r) != 2 {
+						util.Warning("unable to get database/table from %s", r)
+						continue
+					}
+					d := r[0]
+					t := r[1]
+					stdout, stderr, err := app.Exec(&ExecOpts{
+						Service: "db",
+						Cmd:     fmt.Sprintf(`set -eu -o pipefail; MYSQL_PWD=root mysql -uroot -D %s -e 'OPTIMIZE TABLES %s';`, d, t),
+					})
+					if err != nil {
+						util.Warning("unable to optimize table %s (mysql 8.0): %v (stdout='%s', stderr='%s')", t, err, stdout, stderr)
+					}
+				}
+				util.Success("Optimized mysql 8.0 tables '%s' in preparation for snapshot", strings.Join(tables, `,'`))
+			}
+		}
+	}
 	util.Success("Creating database snapshot %s", snapshotName)
 
 	c := getBackupCommand(app, path.Join(containerSnapshotDir, snapshotFile))
