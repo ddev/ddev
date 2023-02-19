@@ -562,7 +562,7 @@ Example: `webimage_extra_packages: [php-yaml, php-bcmath]` will add the `php-yam
 
 ## `webserver_type`
 
-Whether Xdebug should be enabled for [step debugging](../debugging-profiling/step-debugging.md) or [profiling](../debugging-profiling/xdebug-profiling.md).
+Which available [web server type](../extend/customization-extendibility.md#changing-web-server-type) should be used.
 
 | Type | Default | Usage
 | -- | -- | --
