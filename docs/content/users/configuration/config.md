@@ -562,7 +562,7 @@ Example: `webimage_extra_packages: [php-yaml, php-bcmath]` will add the `php-yam
 
 ## `webserver_type`
 
-Which available [web server type](../extend/customization-extendibility.md/#changing-web-server-type) should be used.
+Which available [web server type](../../extend/customization-extendibility.md/#changing-web-server-type) should be used.
 
 | Type | Default | Usage
 | -- | -- | --
