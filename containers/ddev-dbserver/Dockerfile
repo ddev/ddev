@@ -60,6 +60,8 @@ RUN ln -s -f /dev/stderr /var/log/mysqld.err
 RUN rm -rf /var/lib/mysql/*
 RUN chmod -R ugo+rw /var/lib/mysql /etc/mysql/conf.d /mysqlbase && find /mysqlbase -type d | xargs chmod ugo+rwx
 
+RUN mkdir -p /var/run/mysqld && chmod 777 /var/run/mysqld
+
 RUN /sbin/mkhomedir_helper www-data
 
 # Remove the /etc/apt entry so that if they don't renew the key
