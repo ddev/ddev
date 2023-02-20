@@ -424,34 +424,51 @@ func (p *Provider) Read(configPath string) error {
 		return err
 	}
 
+	// Convert yaml file byte slice into string for easier handling
 	s := string(source)
 
+	// Check for double-quoted values
 	r := regexp.MustCompile(`:\ *".*?"`)
 	quotedVarMatches := r.FindAllStringSubmatch(s, -1)
 	if len(quotedVarMatches) > 0 {
+
+		// Enclose found double-quoted values with single quotes
 		for _, v := range quotedVarMatches {
+			// Convert string slice of match into string
 			qvm := strings.Join(v, "")
+			// Find first and last double quotes in the matched value
 			i := strings.Index(qvm, "\"")
 			li := strings.LastIndex(qvm, "\"")
+			// Add single quotes around double-quoted value
 			enclosedQuotes := qvm[:i] + strings.Replace(qvm[i:], "\"", "'\"", 1)
 			enclosedQuotes = enclosedQuotes + strings.Replace(qvm[li:], "\"", "'", 1)
 
+			// Replace old matched value with new enclosed value in the string holding the yaml
 			s = strings.Replace(s, qvm, enclosedQuotes, 1)
 		}
 	} else {
+		// Check for single-quoted values
 		r := regexp.MustCompile(`:\ *'.*?'`)
 		quotedVarMatches = r.FindAllStringSubmatch(s, -1)
+
+		// Enclose found single-quoted values with double quotes
 		for _, v := range quotedVarMatches {
+			// Convert string slice of match into string
 			qvm := strings.Join(v, "")
+			// Find first and last single quotes in the matched value
 			i := strings.Index(qvm, "'")
 			li := strings.LastIndex(qvm, "'")
+			// Add double quotes around single-quoted value
 			enclosedQuotes := qvm[:i] + strings.Replace(qvm[i:], "'", "\"'", 1)
 			enclosedQuotes = enclosedQuotes + strings.Replace(qvm[li:], "'", "\"", 1)
 
+			// Replace old matched value with new enclosed value in the string holding the yaml
 			s = strings.Replace(s, qvm, enclosedQuotes, 1)
 		}
 	}
 
+	// Take the updated string holding the yaml
+	// Convert it into a byte slice and replace back into the source to be parsed/unmarshalled
 	source = []byte(s)
 
 	// Read config values from file.
