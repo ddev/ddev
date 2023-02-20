@@ -6,10 +6,14 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 
-	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/output"
+
+	"fmt"
+
+	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/util"
 
@@ -420,6 +424,36 @@ func (p *Provider) Read(configPath string) error {
 		return err
 	}
 
+	s := string(source)
+
+	r := regexp.MustCompile(`:\ *".*?"`)
+	quotedVarMatches := r.FindAllStringSubmatch(s, -1)
+	if len(quotedVarMatches) > 0 {
+		for _, v := range quotedVarMatches {
+			qvm := strings.Join(v, "")
+			i := strings.Index(qvm, "\"")
+			li := strings.LastIndex(qvm, "\"")
+			enclosedQuotes := qvm[:i] + strings.Replace(qvm[i:], "\"", "'\"", 1)
+			enclosedQuotes = enclosedQuotes + strings.Replace(qvm[li:], "\"", "'", 1)
+
+			s = strings.Replace(s, qvm, enclosedQuotes, 1)
+		}
+	} else {
+		r := regexp.MustCompile(`:\ *'.*?'`)
+		quotedVarMatches = r.FindAllStringSubmatch(s, -1)
+		for _, v := range quotedVarMatches {
+			qvm := strings.Join(v, "")
+			i := strings.Index(qvm, "'")
+			li := strings.LastIndex(qvm, "'")
+			enclosedQuotes := qvm[:i] + strings.Replace(qvm[i:], "'", "\"'", 1)
+			enclosedQuotes = enclosedQuotes + strings.Replace(qvm[li:], "'", "\"", 1)
+
+			s = strings.Replace(s, qvm, enclosedQuotes, 1)
+		}
+	}
+
+	source = []byte(s)
+
 	// Read config values from file.
 	err = yaml.Unmarshal(source, &p.ProviderInfo)
 	if err != nil {
@@ -441,7 +475,7 @@ func (p *Provider) injectedEnvironment() string {
 	if len(p.EnvironmentVariables) > 0 {
 		s = "export "
 		for k, v := range p.EnvironmentVariables {
-			s = s + fmt.Sprintf(" %s=\"%s\" ", k, v)
+			s = s + fmt.Sprintf(" %s=%s ", k, v)
 		}
 	}
 	return s
