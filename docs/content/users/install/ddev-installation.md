@@ -336,7 +336,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ## Manual
 
-    DDEV is a single executable, so installation on any OS is a matter of copying the a `ddev` binary for your architecture into the appropriate system path on your machine.
+    DDEV is a single executable, so installation on any OS is a matter of copying the `ddev` binary for your architecture into the appropriate system path on your machine.
 
     * Download and extract the latest [DDEV release](https://github.com/drud/ddev/releases) for your architecture.
     * Move `ddev` to `/usr/local/bin` with `mv ddev /usr/local/bin/` (may require `sudo`), or another directory in your `$PATH` as preferred.
