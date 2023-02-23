@@ -22,7 +22,7 @@ mkdocs-minify-plugin==0.4.1
 mkdocs-redirects>=1.0.4
 nltk==3.6.6
 packaging==20.9
-Pygments==2.12
+Pygments>=2
 pymdown-extensions>=9.4
 pyparsing==2.4.7
 pytz==2021.1
