@@ -131,6 +131,7 @@ jobs:
         with:
           path: .gotmp/bin
           key: ${{ github.sha }}-${{ github.ref }}-build-most
+          fail-on-cache-miss: true
       - name: test that buildmost cache was loaded
         if: steps.buildmost.outputs.cache-hit != 'true'
         run: exit 1
@@ -181,6 +182,8 @@ jobs:
         with:
           path: .gotmp/bin
           key: ${{ github.sha }}-${{ github.ref }}-build-most
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
       - name: test that build-most was loaded
         if: steps.buildmost.outputs.cache-hit != 'true'
         run: exit 1
@@ -192,6 +195,7 @@ jobs:
           path: .gotmp/bin/windows_amd64
           key: ${{ github.sha }}-${{ github.ref }}-signed-windows-binaries
           enableCrossOsArchive: true
+          fail-on-cache-miss: true
       - name: test that signed-windows was loaded
         if: steps.signedwindows.outputs.cache-hit != 'true'
         run: exit 1
@@ -202,6 +206,8 @@ jobs:
         with:
           path: .gotmp/bin/darwin*
           key: ${{ github.sha }}-${{ github.ref }}-notarize-macos
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
       - name: test that notarizedmac was loaded
         if: steps.notarizedmac.outputs.cache-hit != 'true'
         run: exit 1
