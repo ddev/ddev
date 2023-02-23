@@ -86,7 +86,7 @@ func promptForFileSource(val *string) {
 	// An empty string isn't acceptable here, keep
 	// prompting until something is entered
 	for {
-		fmt.Print("Full path: ")
+		fmt.Print("Path to file(s): ")
 		*val = util.GetInput("")
 		if len(*val) > 0 {
 			break

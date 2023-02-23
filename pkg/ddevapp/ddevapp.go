@@ -484,7 +484,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 			extPathPrompt = true
 		}
 		output.UserOut.Println("Provide the path to the database you want to import.")
-		fmt.Print("Full path: ")
+		fmt.Print("Path to file: ")
 
 		imPath = util.GetInput("")
 	}
