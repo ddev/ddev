@@ -8,6 +8,7 @@ on:
     branches: [ master, main ]
   release:
     types: [ created ]
+  workflow_dispatch:
 
 env:
   BUILDKIT_PROGRESS: plain
@@ -106,6 +107,7 @@ jobs:
         with:
           path: .gotmp/bin/windows_amd64
           key: ${{ github.sha }}-${{ github.ref }}-signed-windows-binaries
+          enableCrossOsArchive: true
 
   notarize-macos:
     name: Sign and Notarize ddev on macOS
@@ -129,6 +131,7 @@ jobs:
         with:
           path: .gotmp/bin
           key: ${{ github.sha }}-${{ github.ref }}-build-most
+          fail-on-cache-miss: true
       - name: test that buildmost cache was loaded
         if: steps.buildmost.outputs.cache-hit != 'true'
         run: exit 1
@@ -179,6 +182,8 @@ jobs:
         with:
           path: .gotmp/bin
           key: ${{ github.sha }}-${{ github.ref }}-build-most
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
       - name: test that build-most was loaded
         if: steps.buildmost.outputs.cache-hit != 'true'
         run: exit 1
@@ -189,6 +194,8 @@ jobs:
         with:
           path: .gotmp/bin/windows_amd64
           key: ${{ github.sha }}-${{ github.ref }}-signed-windows-binaries
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
       - name: test that signed-windows was loaded
         if: steps.signedwindows.outputs.cache-hit != 'true'
         run: exit 1
@@ -199,6 +206,8 @@ jobs:
         with:
           path: .gotmp/bin/darwin*
           key: ${{ github.sha }}-${{ github.ref }}-notarize-macos
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
       - name: test that notarizedmac was loaded
         if: steps.notarizedmac.outputs.cache-hit != 'true'
         run: exit 1
