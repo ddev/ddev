@@ -216,7 +216,7 @@ DDEV must detect whether the internet is working to determine whether to add hos
 
 ## `letsencrypt_email`
 
-Email associated with Let’s Encrypt feature. (Works in conjunction with [`use_letsencrypt`](#use_letsencrypt).)
+Email associated with Let’s Encrypt feature. (Works in conjunction with [`use_letsencrypt`](#use_letsencrypt).) (Not currently compatible with Traefik router.)
 
 | Type | Default | Usage
 | -- | -- | --
@@ -497,7 +497,7 @@ When `true`, more secure hardened images are used for an internet deployment. Th
 
 ## `use_letsencrypt`
 
-Whether to enable Let’s Encrypt integration. (Works in conjunction with [`letsencrypt_email`](#letsencrypt_email).)
+Whether to enable Let’s Encrypt integration. (Works in conjunction with [`letsencrypt_email`](#letsencrypt_email).) (Not currently compatible with Traefik router.)
 
 | Type | Default | Usage
 | -- | -- | --

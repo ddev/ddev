@@ -2,6 +2,8 @@
 
 !!!warning "Experimental Feature!"
     This is not a replacement for scalable, managed hosting. It’s unknown how much traffic it can handle in a given environment.
+!!!warning "Let's Encrypt support not directly compatible with Traefik router"
+    `ddev config global --use-lets-encrypt` is not directly compatible with the Traefik router, but it [can be configured using Traefik docs](https://doc.traefik.io/traefik/https/acme/).
 
 One of DDEV’s experimental features is lightweight hosting with Let’s Encrypt for HTTPS support. You can run DDEV on a public web server, point DNS to it, and use it as a limited hosting environment.
 
