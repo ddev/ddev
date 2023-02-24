@@ -5,6 +5,7 @@ import (
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
@@ -17,9 +18,9 @@ import (
 
 // TestHardenedStart makes sure we can do a start and basic use with hardened images
 func TestHardenedStart(t *testing.T) {
-	//if nodeps.IsMacM1() {
-	//	t.Skip("Skipping TestHardenedStart on Mac M1 because of useless Docker Desktop failures to connect")
-	//}
+	if nodeps.IsMacM1() {
+		t.Skip("Skipping TestHardenedStart on Mac M1 because of useless Docker Desktop failures to connect")
+	}
 
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
