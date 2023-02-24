@@ -113,7 +113,7 @@ On Drupal 8+, if you want to use `drush uli` on the host (or other Drush command
 
 ## DDEV and Terminus
 
-[Terminus](https://pantheon.io/docs/guides/terminus) is a command line tool providing advanced interaction with [Pantheon](https://pantheon.io/) services. `terminus` is available inside the project’s container, allowing users to get information from, or issue commands to their Pantheon-hosted sites. This is an especially helpful feature for Windows users since Terminus is only officially supported on Unix-based systems.
+[Terminus](https://docs.pantheon.io/terminus) is a command line tool providing advanced interaction with [Pantheon](https://pantheon.io/) services. `terminus` is available inside the project’s container, allowing users to get information from, or issue commands to their Pantheon-hosted sites. This is an especially helpful feature for Windows users since Terminus is only officially supported on Unix-based systems.
 
 To use Terminus, you’ll first need to:
 

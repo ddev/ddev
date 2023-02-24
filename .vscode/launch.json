@@ -7,11 +7,23 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceRoot}/cmd/ddev",
-            "cwd": "${workspaceRoot}/../d9",
+            "cwd": "${workspaceRoot}/../d9simple",
             "env": {"DDEV_DEBUG": "true"},
             "args": ["start", "-y"],
             "showLog": true
         },
+        {
+            "name": "ddev snapshot",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceRoot}/cmd/ddev",
+            "cwd": "${workspaceRoot}/../d9simple",
+            "env": {"DDEV_DEBUG": "true"},
+            "args": ["snapshot"],
+            "showLog": true
+        },
+
         {
             "name": "debug ddev describe",
             "type": "go",

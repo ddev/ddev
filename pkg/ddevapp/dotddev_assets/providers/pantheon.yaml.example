@@ -22,9 +22,9 @@
 #
 # 5. Check out project codebase from Pantheon. Enable the "Git Connection Mode" and use `git clone` to check out the code locally.
 #
-# 6. Verify that drush is installed in your project, `ddev composer require drush/drush`
+# 6. Configure the local checkout for ddev using `ddev config`
 #
-# 7. Configure the local checkout for ddev using `ddev config`
+# 7. Verify that drush is installed in your project, `ddev composer require drush/drush`
 #
 # 8. In your project's .ddev/providers directory, copy pantheon.yaml.example to pantheon.yaml and edit the "project" under `environment_variables` (change it from `yourproject.dev`). If you want to use a different environment than "dev", change `dev` to the name of the environment.
 #

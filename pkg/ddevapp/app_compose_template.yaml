@@ -12,6 +12,8 @@ services:
         uid: '{{ .UID }}'
         gid: {{ if ne .DBType "postgres" }} {{ .GID }} {{ else }} "999" {{ end }}
     image: ${DDEV_DBIMAGE}-${DDEV_SITENAME}-built
+    cap_add:
+      - SYS_NICE
     stop_grace_period: 60s
     working_dir: "{{ .DBWorkingDir }}"
     volumes:

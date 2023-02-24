@@ -8,6 +8,7 @@ on:
     branches: [ master, main ]
   release:
     types: [ created ]
+  workflow_dispatch:
 
 env:
   BUILDKIT_PROGRESS: plain
@@ -20,7 +21,7 @@ env:
 jobs:
   build-most:
     name: Build DDEV executables except Windows
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       SegmentKey: ${{ secrets.SEGMENTKEY }}
 
@@ -39,7 +40,7 @@ jobs:
 
       - uses: actions/setup-go@v3
         with:
-          go-version: '>=1.19.4'
+          go-version: '>=1.20'
 
       - name: Build DDEV executables
         run: make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 completions mkcert
@@ -101,10 +102,12 @@ jobs:
       - name: Cache signed binaries
         # After 3.0.5 they were using zstdmt which is not available on Windows
         # See https://github.com/actions/cache/issues/891
-        uses: actions/cache@v3.0.11
+        # But trying again with @v3, 2023-02-18
+        uses: actions/cache@v3
         with:
           path: .gotmp/bin/windows_amd64
           key: ${{ github.sha }}-${{ github.ref }}-signed-windows-binaries
+          enableCrossOsArchive: true
 
   notarize-macos:
     name: Sign and Notarize ddev on macOS
@@ -120,7 +123,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-go@v3
         with:
-          go-version: '>=1.19.4'
+          go-version: '>=1.20'
 
       - name: restore build-most results from cache
         uses: actions/cache@v3
@@ -128,6 +131,7 @@ jobs:
         with:
           path: .gotmp/bin
           key: ${{ github.sha }}-${{ github.ref }}-build-most
+          fail-on-cache-miss: true
       - name: test that buildmost cache was loaded
         if: steps.buildmost.outputs.cache-hit != 'true'
         run: exit 1
@@ -154,7 +158,7 @@ jobs:
 
   artifacts:
     name: Upload artifacts
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: [build-most, sign-windows, notarize-macos]
     env:
       DDEV_GITHUB_TOKEN: ${{ secrets.DDEV_GITHUB_TOKEN }}
@@ -178,6 +182,8 @@ jobs:
         with:
           path: .gotmp/bin
           key: ${{ github.sha }}-${{ github.ref }}-build-most
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
       - name: test that build-most was loaded
         if: steps.buildmost.outputs.cache-hit != 'true'
         run: exit 1
@@ -188,6 +194,8 @@ jobs:
         with:
           path: .gotmp/bin/windows_amd64
           key: ${{ github.sha }}-${{ github.ref }}-signed-windows-binaries
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
       - name: test that signed-windows was loaded
         if: steps.signedwindows.outputs.cache-hit != 'true'
         run: exit 1
@@ -198,6 +206,8 @@ jobs:
         with:
           path: .gotmp/bin/darwin*
           key: ${{ github.sha }}-${{ github.ref }}-notarize-macos
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
       - name: test that notarizedmac was loaded
         if: steps.notarizedmac.outputs.cache-hit != 'true'
         run: exit 1
