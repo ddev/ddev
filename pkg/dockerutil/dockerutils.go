@@ -1013,9 +1013,8 @@ func RemoveVolume(volumeName string) error {
 					}
 					var containerNamesString = strings.Join(containerNames, " ")
 					return fmt.Errorf("Docker volume '%s' is in use by one or more containers and cannot be removed. Use 'docker rm -f %s' to remove them", volumeName, containerNamesString)
-				} else {
-					return fmt.Errorf("Docker volume '%s' is in use by a container and cannot be removed. Use 'docker rm -f $(docker ps -aq)' to remove all containers", volumeName)
 				}
+				return fmt.Errorf("Docker volume '%s' is in use by a container and cannot be removed. Use 'docker rm -f $(docker ps -aq)' to remove all containers", volumeName)
 			}
 			return err
 		}
