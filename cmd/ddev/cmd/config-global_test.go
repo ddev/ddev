@@ -4,6 +4,7 @@ import (
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
 	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -16,7 +17,9 @@ import (
 
 func TestCmdGlobalConfig(t *testing.T) {
 	assert := asrt.New(t)
-
+	if nodeps.UseTraefikDefault {
+		t.Skip("Skipping with traefik turned on because can't use hardened images")
+	}
 	backupConfig := globalconfig.DdevGlobalConfig
 	// Start with no config file
 	configFile := globalconfig.GetGlobalConfigPath()
