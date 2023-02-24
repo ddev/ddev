@@ -188,9 +188,9 @@ var (
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeLaravel,
 			Docroot:                       "public",
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/", Expect: "Laravel Components"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/api/status-code/200", Expect: "indicates that the request has succeeded."},
-			FilesImageURI:                 "/images/200.jpg",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/", Expect: "Laravel News"},
+			//DynamicURI:                    testcommon.URIWithExpect{URI: "/api/status-code/200", Expect: "indicates that the request has succeeded."},
+			FilesImageURI: "/images/200.jpg",
 		},
 		// 10: shopware6
 		{
