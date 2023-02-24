@@ -68,15 +68,15 @@ gzip -dc db.sql.gz | ddev import-db`,
 }
 
 func init() {
-	ImportDBCmd.Flags().StringVarP(&dbSource, "src", "f", "", "Provide the path to a sql dump in .sql or tar/tar.gz/tgz/zip format")
+	ImportDBCmd.Flags().StringVarP(&dbSource, "file", "f", "", "Provide the path to a sql dump in .sql or tar/tar.gz/tgz/zip format")
 	ImportDBCmd.Flags().StringVarP(&dbExtPath, "extract-path", "", "", "If provided asset is an archive, provide the path to extract within the archive.")
 	ImportDBCmd.Flags().StringVarP(&targetDB, "target-db", "d", "db", "If provided, target-db is alternate database to import into")
 	ImportDBCmd.Flags().BoolVarP(&noDrop, "no-drop", "", false, "Set if you do NOT want to drop the db before importing")
 	ImportDBCmd.Flags().BoolVarP(&progressOption, "progress", "p", true, "Display a progress bar during import")
 	ImportDBCmd.Flags().SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {
 		switch name {
-		case "src":
-			name = "file"
+		case "file":
+			name = "src"
 			break
 		}
 		return pflag.NormalizedName(name)
