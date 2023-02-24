@@ -35,14 +35,9 @@ jobs:
           # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
-      - run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
-
-      # Find out info about how github is getting the hash
-      - run: "git describe --tags --always --dirty"
-      - run: "(git log --oneline | head -5) || true"
-
-      - name: Install Docker and deps
-        run: ./.github/workflows/linux-setup.sh
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
 
       - name: Install build tools
         run: ./.github/workflows/linux-build-setup.sh
@@ -50,6 +45,10 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: '>=1.20'
+
+      # Find out info about how github is getting the hash
+      - run: "git describe --tags --always --dirty"
+      - run: "(git log --oneline | head -5) || true"
 
       - name: Build DDEV executables
         run: make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 windows_amd64 windows_install
