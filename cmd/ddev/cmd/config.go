@@ -443,7 +443,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	}
 
 	switch {
-	case (app.Type == "" || app.Type == nodeps.AppTypePHP) && (projectTypeArg == "" || projectTypeArg == detectedApptype): // Found an app, matches passed-in or no apptype passed
+	case (app.Type == "") && (projectTypeArg == "" || projectTypeArg == detectedApptype): // Found an app, matches passed-in or no apptype passed
 		projectTypeArg = detectedApptype
 		app.Type = projectTypeArg
 		if app.Type == nodeps.AppTypePHP {

@@ -615,3 +615,51 @@ func TestConfigGitignore(t *testing.T) {
 	_, err = exec.RunHostCommand("bash", "-c", "git status | grep 'Untracked files'")
 	assert.Error(err, "Untracked files were found where we didn't expect them: %s", statusOut)
 }
+
+func TestConfigMaintainProjectTypePhp(t *testing.T) {
+	assert := asrt.New(t)
+
+	origDir, _ := os.Getwd()
+	tmpDir := testcommon.CreateTmpDir(t.Name())
+	err := os.Chdir(tmpDir)
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		out, err := exec.RunHostCommand(DdevBin, "delete", "-Oy", t.Name())
+		assert.NoError(err, "output=%s", out)
+		err = os.RemoveAll(tmpDir)
+		assert.NoError(err)
+	})
+
+	docRoot := "public"
+	args := []string{
+		"config",
+		"--project-name", t.Name(),
+		"--docroot", docRoot,
+		"--create-docroot",
+		"--project-type", "php",
+	}
+
+	// set up a DDEV project
+	out, err := exec.RunHostCommand(DdevBin, args...)
+	assert.NoError(err, "error running ddev %v: %v, output=%s", args, err, out)
+
+	// mimic a WordPress app by creating wp-settings.php file
+	err = os.WriteFile(filepath.Join(tmpDir, docRoot, "wp-settings.php"), nil, 0644)
+	assert.NoError(err, "error while create wp-settings.php file: %s", err)
+
+	// change any config value that is not 'type'
+	out, err = exec.RunHostCommand(DdevBin, "config", "--php-version", "8.0")
+	assert.NoError(err, "error running ddev config --php-version 8.0: %v, output=%s", args, err, out)
+
+	configFile := filepath.Join(tmpDir, ".ddev", "config.yaml")
+	configContents, err := os.ReadFile(configFile)
+	assert.NoError(err, "unable to read config file %s, error: %s", configFile, err)
+	app := &ddevapp.DdevApp{}
+	err = yaml.Unmarshal(configContents, app)
+	assert.NoError(err, "could not unmarshal %s: %s", configFile, err)
+
+	assert.Equal("php", app.Type)
+}
