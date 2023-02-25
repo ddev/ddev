@@ -64,6 +64,9 @@ func TestHardenedStart(t *testing.T) {
 	err = fileutil.TemplateStringToFile("<?php\necho \"hi there\";\n", nil, filepath.Join(app.AppRoot, "test.php"))
 	require.NoError(t, err)
 
+	err = app.Init(site.Dir)
+	require.NoError(t, err)
+
 	err = app.Start()
 	require.NoError(t, err)
 
