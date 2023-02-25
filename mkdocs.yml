@@ -26,6 +26,8 @@ theme:
     primary: indigo
     accent: indigo
   features:
+  - content.action.edit
+  - content.code.copy
 #  - content.tabs.link
   - navigation.expand
   - navigation.indexes
