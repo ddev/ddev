@@ -4,10 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	ddevexec "github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/versionconstants"
 	"io"
 	"log"
 	"net"
@@ -21,10 +17,16 @@ import (
 	"strings"
 	"time"
 
+	ddevexec "github.com/drud/ddev/pkg/exec"
+	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/versionconstants"
+
+	"net/url"
+
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/util"
-	"net/url"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/drud/ddev/pkg/output"
@@ -998,7 +1000,21 @@ func RemoveVolume(volumeName string) error {
 		err := client.RemoveVolumeWithOptions(docker.RemoveVolumeOptions{Name: volumeName})
 		if err != nil {
 			if err.Error() == "volume in use and cannot be removed" {
-				return fmt.Errorf("Docker volume '%s' is in use by a container and cannot be removed. Use 'docker rm -f $(docker ps -aq)' to stop all containers", volumeName)
+				containers, err := client.ListContainers(docker.ListContainersOptions{
+					All:     true,
+					Filters: map[string][]string{"volume": {volumeName}},
+				})
+				// Get names of containers which are still using the volume.
+				var containerNames []string
+				if err == nil {
+					for _, container := range containers {
+						// Skip first character, it's a slash.
+						containerNames = append(containerNames, container.Names[0][1:])
+					}
+					var containerNamesString = strings.Join(containerNames, " ")
+					return fmt.Errorf("Docker volume '%s' is in use by one or more containers and cannot be removed. Use 'docker rm -f %s' to remove them", volumeName, containerNamesString)
+				}
+				return fmt.Errorf("Docker volume '%s' is in use by a container and cannot be removed. Use 'docker rm -f $(docker ps -aq)' to remove all containers", volumeName)
 			}
 			return err
 		}
