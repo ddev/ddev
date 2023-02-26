@@ -1235,7 +1235,7 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 	containerName := "CopyIntoVolume_" + nodeps.RandomString(12)
 
 	track := util.TimeTrack(time.Now(), "CopyIntoVolume "+sourcePath+" "+volumeName)
-	containerID, _, err := RunSimpleContainer(versionconstants.GetWebImage(), containerName, []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && tail -f /dev/null"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, nil)
+	containerID, _, err := RunSimpleContainer(versionconstants.GetWebImage(), containerName, []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && tail -f /dev/null"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, map[string]string{"com.ddev.site-name": ""})
 	if err != nil {
 		return err
 	}
@@ -1304,7 +1304,7 @@ func Exec(containerID string, command string, uid string) (string, string, error
 
 // CheckAvailableSpace outputs a warning if docker space is low
 func CheckAvailableSpace() {
-	_, out, _ := RunSimpleContainer(versionconstants.GetWebImage(), "", []string{"sh", "-c", `df / | awk '!/Mounted/ {print $4, $5;}'`}, []string{}, []string{}, []string{}, "", true, false, nil)
+	_, out, _ := RunSimpleContainer(versionconstants.GetWebImage(), "check-available-space-"+util.RandString(6), []string{"sh", "-c", `df / | awk '!/Mounted/ {print $4, $5;}'`}, []string{}, []string{}, []string{}, "", true, false, map[string]string{"com.ddev.site-name": ""})
 	out = strings.Trim(out, "% \r\n")
 	parts := strings.Split(out, " ")
 	if len(parts) != 2 {
