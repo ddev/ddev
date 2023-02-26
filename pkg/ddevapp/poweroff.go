@@ -15,7 +15,7 @@ func PowerOff() {
 
 	// Remove any custom certs that may have been added
 	// along with all traefik configuration.
-	_, _, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"sh", "-c", "rm -rf /mnt/ddev-global-cache/custom_certs/* /mnt/ddev-global-cache/traefik/*"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-global-cache"}, "", true, false, nil)
+	_, _, err = dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "poweroff-"+util.RandString(6), []string{"sh", "-c", "rm -rf /mnt/ddev-global-cache/custom_certs/* /mnt/ddev-global-cache/traefik/*"}, []string{}, []string{}, []string{"ddev-global-cache" + ":/mnt/ddev-global-cache"}, "", true, false, map[string]string{"com.ddev.site-name": ""})
 	if err != nil {
 		util.Warning("Failed removing custom certs/traefik configuration: %v", err)
 	}
@@ -26,6 +26,23 @@ func PowerOff() {
 			util.Failed("Failed to stop project %s: \n%v", app.GetName(), err)
 		}
 		util.Success("Project %s has been stopped.", app.GetName())
+	}
+
+	// Any straggling containers that have label "com.ddev.site-name" should be removed.
+	client := dockerutil.GetDockerClient()
+	containers, err := client.ListContainers(docker.ListContainersOptions{
+		All:     true,
+		Filters: map[string][]string{"label": {"com.ddev.site-name"}},
+	})
+	if err == nil {
+		for _, c := range containers {
+			err = dockerutil.RemoveContainer(c.ID, 10)
+			if err != nil {
+				util.Warning("Failed to remove container %s", c.Names[0])
+			}
+		}
+	} else {
+		util.Warning("unable to run client.ListContainers(): %v", err)
 	}
 
 	StopMutagenDaemon()
