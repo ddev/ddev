@@ -21,6 +21,8 @@ docs_dir: docs/content
 theme:
   name: material
   custom_dir: docs/overrides
+  icon:
+    edit: material/pencil
   palette:
   - scheme: default
     primary: indigo
