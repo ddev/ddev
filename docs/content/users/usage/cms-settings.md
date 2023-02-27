@@ -56,50 +56,48 @@ $settings['container_yamls'][] = DRUPAL_ROOT . '/sites/development.services.yml'
 #### Multisite
 
 1. Start with the [DDEV Drupal 8 Multisite Recipe](<https://github.com/drud/ddev-contrib/tree/master/recipes/drupal8-multisite>).
-* update the following files
+2. Update configuration files.
+    1. Update each `site/{site_name}/settings.php`:
 
-1. each `site/{site_name}/settings.php`
+        ```php
+        /**
+         * DDEV environments will have $databases (and other settings) set
+         * by an auto-generated file. Make alterations here for this site
+         * in a multisite environment.
+         */
+        elseif (getenv('IS_DDEV_PROJECT') == 'true') {
+          /**
+           * Alter database settings and credentials for DDEV environment.
+           * Includes loading the DDEV-generated `default/settings.ddev.php`.
+           */
+          include $app_root . '/' . $site_path . '/settings.databases.ddev.inc';
+        }
+        ```
 
-     ```php
-     /**
-     * ddev local-dev environments will have $databases (and other settings)
-     * set by an auto-generated file. Make alterations here for this site
-     * in a multisite environment.
-     */
-    elseif (getenv('IS_DDEV_PROJECT') == 'true') {
-      /**
-       * Alter database settings and credentials for ddev-local environment.
-       * This includes loading the ddev-generated default/settings.ddev.php.
-       */
-      include $app_root . '/' . $site_path . '/settings.databases.ddev.inc';
-    }
-     ```
+    2. Add a `settings.databases.ddev.inc` in each `site/{site_name}/`:
 
-2. add a `settings.databases.ddev.inc` in each `site/{site_name}/`
+        ```php
+        /**
+         * Fetch DDEV-generated database credentials and other settings.
+         */
+        require $app_root . '/sites/default/settings.ddev.php';
+        
+        /*
+         * Alter default database for this site. `settings.ddev.php` will have 
+         * “reset” this to 'db'.
+         */
+        $databases['default']['default']['database'] = 'site_name';
+        ```
 
-     ```php
-     /**
-     * Fetch ddev generated database credentials and other settings.
-     */
-    require $app_root . '/sites/default/settings.ddev.php';
-    
-    /*
-     * Alter default database for this site. settings.ddev.php will have "reset"
-     * this to 'db'
-     */
-    $databases['default']['default']['database'] = 'site_name';
-    ```
+    3. Update your [`web_environment`](../configuration/config.md#web_environment) config option if you’re using site aliases:
 
-3. if you are using site aliases add the following to your `config.yaml`
-
-    ```yaml
-    web_environment:
-      # Make ddev drush shell PIDs last for entire life of container. So that 'ddev drush site:set @alias' will persist
-      # for all drush connections.
-      # https://chrisfromredfin.dev/posts/drush-use-ddev/
-      - DRUSH_SHELL_PID=PERMANENT
-    ```
-
+        ```yaml
+        web_environment:
+          # Make DDEV Drush shell PIDs last for entire life of the container
+          # so `ddev drush site:set @alias` persists for all Drush connections.
+          # https://chrisfromredfin.dev/posts/drush-use-ddev/
+          - DRUSH_SHELL_PID=PERMANENT
+        ```
 ### TYPO3 Specifics
 
 #### Settings Files
