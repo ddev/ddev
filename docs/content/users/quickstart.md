@@ -394,11 +394,11 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
 
         ### Git Clone
 
-        To get started using DDEV with an existing WordPress project, clone the project’s repository. Note that the git URL shown here is just an example.
+        To get started using DDEV with an existing WordPress project, clone the project’s repository.
 
         ```bash
-        git clone https://github.com/example/example-site.git
-        cd example-site
+        git clone https://github.com/example/my-site.git
+        cd my-site
         ddev config
         ```
 
