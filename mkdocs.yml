@@ -98,6 +98,11 @@ markdown_extensions:
     emoji_generator: !!python/name:materialx.emoji.to_svg
 - pymdownx.highlight:
     anchor_linenums: true
+    extend_pygments_lang:
+      - name: php
+        lang: php
+        options:
+          startinline: true
 - pymdownx.inlinehilite
 - pymdownx.keys
 - pymdownx.magiclink:
