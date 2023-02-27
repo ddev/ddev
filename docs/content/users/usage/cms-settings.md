@@ -48,7 +48,9 @@ $settings['container_yamls'][] = DRUPAL_ROOT . '/sites/development.services.yml'
 
 ### TYPO3 Specifics
 
-* **Settings Files**: On [`ddev start`](../usage/commands.md#start), DDEV creates a `public/typo3conf/AdditionalConfiguration.php` with database configuration in it.
+#### Settings Files
+
+On [`ddev start`](../usage/commands.md#start), DDEV creates a `public/typo3conf/AdditionalConfiguration.php` file with database configuration in it.
 
 #### Setup a Base Variant (since TYPO3 9.5)
 
