@@ -394,43 +394,39 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
 
         ### Git Clone
 
-        To get started using DDEV with an existing WordPress project, clone the project’s repository. Note that the git URL shown here is just an example.
+        To get started using DDEV with an existing WordPress project, clone the project’s repository.
 
         ```bash
-        git clone https://github.com/example/example-site.git
-        cd example-site
+        git clone https://github.com/example/my-site.git
+        cd my-site
         ddev config
         ```
 
         You’ll see a message like:
 
+        > An existing user-managed wp-config.php file has been detected!
+        > Project DDEV settings have been written to:
+        >
+        > /Users/rfay/workspace/bedrock/web/wp-config-ddev.php
+
+        Comment out any database connection settings in your `wp-config.php` file and add the following snippet to your `wp-config.php`, near the bottom of the file and before the include of `wp-settings.php`:
+
         ```php
-        An existing user-managed wp-config.php file has been detected!
-        Project DDEV settings have been written to:
-
-        /Users/rfay/workspace/bedrock/web/wp-config-ddev.php
-
-        Please comment out any database connection settings in your wp-config.php and
-        add the following snippet to your wp-config.php, near the bottom of the file
-        and before the include of wp-settings.php:
-
         // Include for DDEV-managed settings in wp-config-ddev.php.
         $ddev_settings = dirname(__FILE__) . '/wp-config-ddev.php';
         if (is_readable($ddev_settings) && !defined('DB_USER')) {
           require_once($ddev_settings);
         }
-
-        If you don't care about those settings, or config is managed in a .env
-        file, etc, then you can eliminate this message by putting a line that says
-        // wp-config-ddev.php not needed
-        in your wp-config.php
         ```
 
-        So just add the suggested include into your `wp-config.php`, or take the workaround shown.
+        If you don't care about those settings, or config is managed elsewhere (like in a `.env`
+        file), you can eliminate this message by adding a comment to `wp-config.php`:
 
-        Now start your project with [`ddev start`](../users/usage/commands.md#start).
+        ```php
+        // wp-config-ddev.php not needed
+        ```
 
-        Quickstart instructions regarding database imports can be found under [Importing a database](#importing-a-database).
+        Now run [`ddev start`](../users/usage/commands.md#start) and continue [importing a database](#importing-a-database) if you need to.
 
 ## Configuration Files
 
