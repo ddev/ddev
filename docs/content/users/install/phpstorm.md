@@ -49,13 +49,22 @@ If you’re not using the DDEV Integration Plugin, you can follow these steps in
 
 ## Enabling PHPUnit
 
-This assumes you’ll need to use PHPUnit and you already have it installed.
+In the Quickstart documentation, the steps that install phpunit are:
+```bash
+# Installs a headless web server and configures phpunit to mostly work.
+ddev get ddev/ddev-selenium-standalone-chrome 
+
+# Installs phpunit and other dev dependencies
+ddev composer require drupal/core-dev --dev --update-with-all-dependencies
+```
+
+Together these commands reduces the amount of configuring you need to do in PhpStorm to get your debugger working.  Here are the remaining steps:
 
 1. Under “Test Frameworks” click “+” to add PHPUnit.
     - PHPUnit by remote interpreter
     - Interpreter “DDEV”
-    - Choose “Path to phpunit.phar” and use `/var/www/html/vendor/bin/phpunit`, or wherever your PHPUnit is inside the container. You need PHPUnit properly Composer-installed for your CMS. For example, for Drupal 9, `ddev composer require --dev --with-all-dependencies drupal/core-dev:^9` and `ddev composer require --dev phpspec/prophecy-phpunit:^2`.
-    - Default configuration file: `/var/www/html/web/core/phpunit.xml` or wherever yours is inside the container.
+    - Choose “Path to phpunit.phar” and use `/var/www/html/vendor/bin/phpunit`, or wherever your PHPUnit is inside the container. 
+    - Default configuration file: `/var/www/html/web/core/phpunit.xml.dist` or create your own copy and place it where you want inside the container.
     ![Example config](../../images/phpstorm-phpunit-setup.png)
 2. Open Run/Debug configurations and use “+” to add a PHPUnit configuration. Give it a name.
     - Test scope (as you wish, by directory or class or whatever).
@@ -64,6 +73,36 @@ This assumes you’ll need to use PHPUnit and you already have it installed.
 3. Enable Xdebug if you want to debug tests with `ddev xdebug on`.
 4. Run the runner you created:
     ![Example PHPUnit run](../../images/phpstorm-example-phpunit-run.png)
+    
+## Verify phpunit is configured properly.
+Within the command line run the following tests to confirm that phpunit can run all the different kinds of tests.
+
+### Unit
+```bash
+ddev exec phpunit -c /var/www/html/web/core/phpunit.xml.dist /var/www/html/web/core/modules/node/tests/src/Unit/NodeOperationAccessTest.php
+```
+
+### Kernal
+```bash
+ddev exec phpunit -c /var/www/html/web/core/phpunit.xml.dist /var/www/html/web/core/modules/node/tests/src/Kernel/NodeAccessTest.php
+```
+
+### Functional
+```bash
+ddev exec phpunit -c /var/www/html/web/core/phpunit.xml.dist /var/www/html/web/core/modules/node/tests/src/Functional/NodeAdminTest.php 
+```
+
+### FunctionalJavascript
+```bash
+ddev exec phpunit -c /var/www/html/web/core/phpunit.xml.dist /var/www/html/web/core/modules/node/tests/src/FunctionalJavascript/NodePreviewLinkTest.php
+```
+
+Each of these tests should run properly without any errors.  
+
+## Troublshooting
+### File permission issues when running Functional Tests.
+
+
 
 ## PhpStorm Basic Setup on Windows WSL2
 
