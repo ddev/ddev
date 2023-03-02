@@ -20,7 +20,7 @@ These environments can be extended, version controlled, and shared, so you can t
     * RAM: 8GB
     * Storage: 256GB
     * [Colima](https://github.com/abiosoft/colima) or [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-    * Docker Desktop requires macOS Catalina (10.15) or higher; Colima runs on older systems
+    * Colima runs on many versions of macOS up through the latest. Docker Desktop requires macOS Big Sur (11) or higher.
 
 === "Windows WSL2"
     ### Windows WSL2
