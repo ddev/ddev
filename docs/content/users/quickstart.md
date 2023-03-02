@@ -83,8 +83,11 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
         mkdir my-drupal10-site
         cd my-drupal10-site
         ddev config --project-type=drupal10 --docroot=web --create-docroot
+        # If you want to run Functional / FunctionalJavascript Tests include:
+        ddev get ddev/ddev-selenium-standalone-chrome 
         ddev start
         ddev composer create drupal/recommended-project
+        ddev composer require drupal/core-dev --dev --update-with-all-dependencies
         ddev composer require drush/drush
         ddev drush site:install --account-name=admin --account-pass=admin -y
         ddev drush uli
@@ -99,8 +102,11 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
         mkdir my-drupal9-site
         cd my-drupal9-site
         ddev config --project-type=drupal9 --docroot=web --create-docroot
+        # If you want to run Functional / FunctionalJavascript Tests include:
+        ddev get ddev/ddev-selenium-standalone-chrome         
         ddev start
         ddev composer create "drupal/recommended-project:^9"
+        ddev composer require drupal/core-dev --dev --update-with-all-dependencies
         ddev composer require drush/drush
         ddev drush site:install --account-name=admin --account-pass=admin -y
         ddev drush uli
