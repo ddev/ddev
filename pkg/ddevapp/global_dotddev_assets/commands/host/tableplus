@@ -14,7 +14,7 @@ driver=mysql
 if [[ $dbtype == "postgres" ]]; then
     driver=$dbtype
 fi
-query="${driver}://db:db@127.0.0.1:${DDEV_HOST_DB_PORT}/db"
+query="${driver}://db:db@127.0.0.1:${DDEV_HOST_DB_PORT}/db?statusColor=00325a&enviroment=DDEV"
 
 set -x
 open "$query" -a "/Applications/TablePlus.app/Contents/MacOS/TablePlus"
