@@ -99,9 +99,12 @@ ddev exec phpunit -c /var/www/html/web/core/phpunit.xml.dist /var/www/html/web/c
 
 Each of these tests should run properly without any errors.  
 
-## Troublshooting
+## Troubleshooting
 ### File permission issues when running Functional Tests.
-
+```bash 
+chmod: changing permissions of '/var/www/html/web/sites/simpletest/browser_output': Operation not permitted
+```
+If you're running into errors with changing permissions for the various folders that are created during a FunctionalTest, you likely are using the VirtioFS file system with Docker Deesktop.  Please use the gRPC FUSE feature instead.  You can continue to use the new Virtualization framework, as we haven't seen to cause any issues on its own.
 
 
 ## PhpStorm Basic Setup on Windows WSL2
