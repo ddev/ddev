@@ -3,7 +3,7 @@
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV-Local)
-FROM drud/ddev-php-base:v1.21.4 as ddev-webserver-base
+FROM drud/ddev-php-base:v1.21.5 as ddev-webserver-base
 
 ENV BACKDROP_DRUSH_VERSION=1.4.0
 ENV DEBIAN_FRONTEND=noninteractive
