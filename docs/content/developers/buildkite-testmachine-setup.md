@@ -122,7 +122,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 1. Create the user “testbot” on the machine. Use the password for `ddevtestbot@gmail.com`, available in LastPass.
 2. Change the name of the machine to something in keeping with current style. Maybe `testbot-macstadium-macos-3`.
 3. Install [Homebrew](https://brew.sh/) `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
-4. Install everything you’ll need with `brew install buildkite/buildkite/buildkite-agent  bats-core colima composer drud/ddev/ddev git golang jq mariadb mkcert netcat p7zip  && brew install --cask docker iterm2 google-chrome nosleep ngrok`.
+4. Install everything you’ll need with `brew install buildkite/buildkite/buildkite-agent  bats-core colima composer ddev/ddev/ddev git golang jq mariadb mkcert netcat p7zip  && brew install --cask docker iterm2 google-chrome nosleep ngrok`.
 5. Run `ngrok config add-authtoken <token>` with token for free account.
 6. Run `mkcert -install`.
 7. Run Docker manually and go through its configuration routine.

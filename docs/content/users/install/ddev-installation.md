@@ -13,7 +13,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     [Homebrew](https://brew.sh/) is the easiest way to install and upgrade DDEV:
 
     ```bash
-    brew install drud/ddev/ddev
+    brew install ddev/ddev/ddev
     ```
 
     ```bash
@@ -279,7 +279,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     Choose any of the following methods to launch your project:
 
-    1. [Open any repository](https://www.gitpod.io/docs/getting-started) using Gitpod, run `brew install drud/ddev/ddev`, and use DDEV!
+    1. [Open any repository](https://www.gitpod.io/docs/getting-started) using Gitpod, run `brew install ddev/ddev/ddev`, and use DDEV!
         * You can install your web app there, or import a database.
         * You may want to implement one of the `ddev pull` provider integrations to pull from a hosting provider or an upstream source.
     2. Use the [ddev-gitpod-launcher](https://drud.github.io/ddev-gitpod-launcher/) form to launch a repository.  
@@ -309,7 +309,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
         "image": "mcr.microsoft.com/devcontainers/universal:2",
         "features": {
             "ghcr.io/devcontainers/features/docker-in-docker:1": {},
-            "ghcr.io/drud/ddev/install-ddev:latest": {}
+            "ghcr.io/ddev/ddev/install-ddev:latest": {}
         },
         "portsAttributes": {
           "3306": {
