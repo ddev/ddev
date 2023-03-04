@@ -2,6 +2,7 @@ package versionconstants
 
 import (
 	"fmt"
+
 	"github.com/drud/ddev/pkg/globalconfig"
 	"github.com/drud/ddev/pkg/nodeps"
 )
@@ -17,7 +18,7 @@ var SegmentKey = ""
 var WebImg = "drud/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20230223_hardened_web_entrypoint.d" // Note that this can be overridden by make
+var WebTag = "v1.21.5" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "drud/ddev-dbserver"
@@ -31,7 +32,7 @@ var DBAImg = "phpmyadmin"
 // DBATag defines the default phpmyadmin image tag used for applications.
 var DBATag = "5" // Note that this can be overridden by make
 
-const TraditionalRouterImage = "drud/ddev-router:v1.21.4"
+const TraditionalRouterImage = "drud/ddev-router:v1.21.5"
 const TraefikRouterImage = "traefik:v2.9"
 
 // SSHAuthImage is image for agent
@@ -40,7 +41,7 @@ var SSHAuthImage = "drud/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
 // var SSHAuthTag = "v1.19.0"
-var SSHAuthTag = "v1.21.4"
+var SSHAuthTag = "v1.21.5"
 
 // Busybox is used a couple of places for a quick-pull
 var BusyboxImage = "busybox:stable"
