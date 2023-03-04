@@ -49,6 +49,8 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     Docker Desktop for Mac can be installed via Homebrew (`brew install homebrew/cask/docker`) or can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop). It has long been supported by DDEV and has extensive automated testing.
 
+    We do not recommend the `VirtioFS` option with Docker Desktop for Mac. While it’s performant, it can cause mysterious problems that are not present with [Mutagen](performance.md#mutagen)—which offers comparable performance when enabled.
+
 === "Windows"
 
     ## Windows
