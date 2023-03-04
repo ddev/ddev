@@ -36,11 +36,9 @@ const TraditionalRouterImage = "drud/ddev-router:v1.21.5"
 const TraefikRouterImage = "traefik:v2.9"
 
 // SSHAuthImage is image for agent
-// var SSHAuthImage = "drud/ddev-ssh-agent"
 var SSHAuthImage = "drud/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-// var SSHAuthTag = "v1.19.0"
 var SSHAuthTag = "v1.21.5"
 
 // Busybox is used a couple of places for a quick-pull

@@ -22,7 +22,7 @@
       "pattern": "^https://www.cyberciti.biz/"
     },
     {
-      "pattern": "^https://nightly.link/drud/ddev/workflows/master-build/master"
+      "pattern": "^https://nightly.link/ddev/ddev/workflows/master-build/master"
     }
   ],
   "httpHeaders": [
