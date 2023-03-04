@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: rojopolis/spellcheck-github-actions@0.30.0
+      - uses: rojopolis/spellcheck-github-actions@v0
         name: Spellcheck
       - run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
       - name: Run markdownlint on docs
@@ -37,7 +37,7 @@ jobs:
       #    - name: Debugging with tmate
       #      uses: mxschmitt/action-tmate@v3.1
       - name: "Check links in markdown"
-        uses: gaurav-nelson/github-action-markdown-link-check@1.0.13
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
         with:
           use-quiet-mode: 'yes'
           folder-path: 'docs/'
