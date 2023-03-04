@@ -20,7 +20,8 @@ These environments can be extended, version controlled, and shared, so you can t
     * RAM: 8GB
     * Storage: 256GB
     * [Colima](https://github.com/abiosoft/colima) or [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-    * Colima runs on many versions of macOS up through the latest. Docker Desktop requires macOS Big Sur (11) or higher.
+    * Colima (preferred by many) runs on many versions of macOS up through the latest. Docker Desktop (fully supported) requires macOS Big Sur (11) or higher.
+    * On macOS with either Colima or Docker Desktop most users will want to enable Mutagen for superb performance, `ddev config global --mutagen-enabled`
 
 === "Windows WSL2"
     ### Windows WSL2

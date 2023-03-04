@@ -41,8 +41,10 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     You can include a `-s <version>` argument to install a specific release or a prerelease version:
 
     ```
-    curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash -s v1.19.5
+    curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash -s v1.21.5
     ```
+
+    Most macOS users will want to enable Mutagen for superb performance; no installation is required, just `ddev config global --mutagen-enabled`.
 
 === "Linux"
 
@@ -246,6 +248,8 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     * We recommend using [Chocolatey](https://chocolatey.org/). Once installed, you can run `choco install ddev docker-desktop git` from an administrative shell. You can upgrade by running `ddev poweroff && choco upgrade ddev`.
     * Each [DDEV release](https://github.com/drud/ddev/releases) includes a Windows installer (`ddev_windows_installer.<version>.exe`). After running that, you can open a new Git Bash, PowerShell, or cmd.exe window and start using DDEV.
+
+    Most traditional Windows users will want to enable Mutagen for superb performance; no installation is required, just `ddev config global --mutagen-enabled`. It still won't be as fast as one of the WSL2 options.
 
     Most people interact with DDEV on Windows using Git Bash, part of the [Windows Git suite](https://git-scm.com/download/win). Although DDEV does work with cmd.exe and PowerShell, it's more at home in Bash. You can install Git Bash with Chocolatey by running `choco install -y git`.
 
