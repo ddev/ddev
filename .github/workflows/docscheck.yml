@@ -37,7 +37,7 @@ jobs:
       #    - name: Debugging with tmate
       #      uses: mxschmitt/action-tmate@v3.1
       - name: "Check links in markdown"
-        uses: gaurav-nelson/github-action-markdown-link-check@1.0.13
+        uses: gaurav-nelson/github-action-markdown-link-check@1.0.15
         with:
           use-quiet-mode: 'yes'
           folder-path: 'docs/'
