@@ -212,7 +212,7 @@ Internet detection timeout in milliseconds.
 | -- | -- | --
 | :octicons-globe-16: global | `1000` (1 second) | Can be any integer.
 
-DDEV must detect whether the internet is working to determine whether to add hostnames to `/etc/hosts`. In rare cases, you may need to increase this value if you have slow but working internet. See [FAQ](../usage/faq.md) and [GitHub issue](https://github.com/drud/ddev/issues/2409#issuecomment-662448025).
+DDEV must detect whether the internet is working to determine whether to add hostnames to `/etc/hosts`. In rare cases, you may need to increase this value if you have slow but working internet. See [FAQ](../usage/faq.md) and [GitHub issue](https://github.com/ddev/ddev/issues/2409#issuecomment-662448025).
 
 ## `letsencrypt_email`
 
@@ -545,7 +545,7 @@ The Docker image to use for the web server.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | [`drud/ddev-webserver`](https://hub.docker.com/r/drud/ddev-webserver) | Specify your own image based on [drud/ddev-webserver](https://github.com/drud/ddev/tree/master/containers/ddev-webserver).
+| :octicons-file-directory-16: project | [`drud/ddev-webserver`](https://hub.docker.com/r/drud/ddev-webserver) | Specify your own image based on [drud/ddev-webserver](https://github.com/ddev/ddev/tree/master/containers/ddev-webserver).
 
 !!!warning "Proceed with caution"
     It’s unusual to change this, and we don’t recommend it without Docker experience and a good reason. Typically, this means additions to the existing web image using a `.ddev/web-build/Dockerfile.*`.

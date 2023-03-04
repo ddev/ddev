@@ -24,7 +24,7 @@ NSSM_VERSION=2.24-101-g897c7ad
 TESTTMP=/tmp/testresults
 
 # This repo's root import path (under GOPATH).
-PKG := github.com/drud/ddev
+PKG := github.com/ddev/ddev
 
 # Top-level directories to build
 SRC_DIRS := cmd pkg
@@ -51,7 +51,7 @@ VERSION := $(shell git describe --tags --always --dirty)
 # $(NO_V_VERSION) without it.
 # no_v_version removes the front v, for Chocolatey mostly
 NO_V_VERSION=$(shell echo $(VERSION) | awk -F"-" '{ OFS="-"; sub(/^./, "", $$1); printf $$0; }')
-GITHUB_ORG := drud
+GITHUB_ORG := ddev
 
 BUILD_OS = $(shell go env GOHOSTOS)
 BUILD_ARCH = $(shell go env GOHOSTARCH)
@@ -192,26 +192,26 @@ pyspelling:
 darwin_amd64_signed: $(GOTMP)/bin/darwin_amd64/ddev
 	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; else echo "Signing $< ..."; \
 		set -o errexit -o pipefail; \
-		curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: Localdev Foundation (9HQ298V2BW)" --target-binary="$<" ; \
+		curl -s https://raw.githubusercontent.com/ddev/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: Localdev Foundation (9HQ298V2BW)" --target-binary="$<" ; \
 	fi
 darwin_arm64_signed: $(GOTMP)/bin/darwin_arm64/ddev
 	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; else echo "Signing $< ..."; \
 		set -o errexit -o pipefail; \
 		codesign --remove-signature "$(GOTMP)/bin/darwin_arm64/ddev" || true; \
-		curl -s https://raw.githubusercontent.com/drud/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: Localdev Foundation (9HQ298V2BW)" --target-binary="$<" ; \
+		curl -s https://raw.githubusercontent.com/ddev/signing_tools/master/macos_sign.sh | bash -s -  --signing-password="$(DDEV_MACOS_SIGNING_PASSWORD)" --cert-file=certfiles/ddev_developer_id_cert.p12 --cert-name="Developer ID Application: Localdev Foundation (9HQ298V2BW)" --target-binary="$<" ; \
 	fi
 
 darwin_amd64_notarized: darwin_amd64_signed
 	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
 		set -o errexit -o pipefail; \
 		echo "Notarizing $(GOTMP)/bin/darwin_amd64/ddev ..." ; \
-		curl -sSL -f https://raw.githubusercontent.com/drud/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=notarizer@localdev.foundation --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_amd64/ddev" ; \
+		curl -sSL -f https://raw.githubusercontent.com/ddev/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=notarizer@localdev.foundation --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_amd64/ddev" ; \
 	fi
 darwin_arm64_notarized: darwin_arm64_signed
 	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
 		set -o errexit -o pipefail; \
 		echo "Notarizing $(GOTMP)/bin/darwin_arm64/ddev ..." ; \
-		curl -sSL -f https://raw.githubusercontent.com/drud/signing_tools/master/macos_notarize.sh | bash -s - --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=notarizer@localdev.foundation --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_arm64/ddev" ; \
+		curl -sSL -f https://raw.githubusercontent.com/ddev/signing_tools/master/macos_notarize.sh | bash -s - --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=notarizer@localdev.foundation --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_arm64/ddev" ; \
 	fi
 
 windows_install: $(GOTMP)/bin/windows_amd64/ddev_windows_installer.exe

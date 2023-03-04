@@ -3,7 +3,7 @@
 ##### These variables need to be adjusted in most repositories #####
 
 # This repo's root import path (under GOPATH).
-# PKG := github.com/drud/repo_name
+# PKG := github.com/ddev/repo_name
 
 # Docker repo for a push
 DOCKER_REPO ?= drud/test-ssh-server

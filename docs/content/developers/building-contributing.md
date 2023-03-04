@@ -7,11 +7,11 @@ There are several ways to use DDEV’s latest-committed HEAD version:
 * **Download** the latest master branch artifacts from [nightly.link](https://nightly.link/drud/ddev/workflows/master-build/master). Each of these is built by the CI system, signed, and notarized. Get the one you need and place it in your `$PATH`.
 * **Homebrew install HEAD**: On macOS and Linux, run `brew unlink ddev && brew install drud/ddev/ddev --HEAD --fetch-HEAD` to get the latest DDEV commit, even if it’s unreleased. Since you’re building this on your own computer, it’s not signed or notarized, and you’ll get a notification that instrumentation doesn’t work, which is fine. If you’re using Linux/WSL2, you’ll likely need to install build-essential by running the following command: `sudo apt install -y build-essential`.
 * **Build manually**: If you have normal build tools like `make` and `go` installed, you can check out the code and run `make`.
-* **Gitpod** You can use the latest build by visiting DDEV on [Gitpod](https://gitpod.io/#https://github.com/drud/ddev).
+* **Gitpod** You can use the latest build by visiting DDEV on [Gitpod](https://gitpod.io/#https://github.com/ddev/ddev).
 
 ## Testing a PR
 
-Each [PR build](https://github.com/drud/ddev/actions/workflows/pr-build.yml) creates GitHub artifacts you can use for testing, so you can download the one you need from the PR page, install it locally, and test using that build.
+Each [PR build](https://github.com/ddev/ddev/actions/workflows/pr-build.yml) creates GitHub artifacts you can use for testing, so you can download the one you need from the PR page, install it locally, and test using that build.
 
 Download and unzip the appropriate binary and place it in your `$PATH`.
 
@@ -50,10 +50,10 @@ brew link --force ddev
 
 ## Open in Gitpod
 
-[Gitpod](https://www.gitpod.io) provides a quick, preconfigured DDEV experience in the browser for testing a PR easily without the need to set up an environment. In any PR you can use the URL `https://gitpod.io/#https://github.com/drud/ddev/pulls/<YOUR-PR>` to open that PR and build it in Gitpod.
+[Gitpod](https://www.gitpod.io) provides a quick, preconfigured DDEV experience in the browser for testing a PR easily without the need to set up an environment. In any PR you can use the URL `https://gitpod.io/#https://github.com/ddev/ddev/pulls/<YOUR-PR>` to open that PR and build it in Gitpod.
 
 To open and work on DDEV you can use the button below.
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/drud/ddev)
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/ddev/ddev)
 
 If you want to run a web project, you can check it out into `/workspace/<yourproject>` and use it as usual. The things you’re familiar with work normally, except that `ddev-router` does not run.
 
@@ -102,8 +102,8 @@ To use `buildx` successfully you have to have the [`buildx` Docker plugin](https
 To build multi-platform images you must `docker buildx create --use` as a one-time initialization.
 
 * If you want to work locally with a quick build for your architecture, you can:
-    * `make VERSION=<version>`
-    * for `ddev-dbserver`: `make mariadb_10.3 VERSION=<version>` etc.
+  * `make VERSION=<version>`
+  * for `ddev-dbserver`: `make mariadb_10.3 VERSION=<version>` etc.
 
 * To push manually:
 
@@ -125,19 +125,19 @@ To manually push using GitHub Actions,
 
 #### For Most Images
 
-* Visit [Actions → Push tagged image](https://github.com/drud/ddev/actions/workflows/push-tagged-image.yml)
+* Visit [Actions → Push tagged image](https://github.com/ddev/ddev/actions/workflows/push-tagged-image.yml)
 * Click “Run workflow” in the blue band near the top.
 * Choose the branch, usually `master` and then the image to be pushed, `ddev-webserver`, `ddev-dbserver`, etc. Also you can use `all` to build and push all of them. Include a tag for the pushed image and GitHub will do all the work.
 
 #### For `ddev-dbserver`
 
-* Visit [Actions → Push tagged db image](https://github.com/drud/ddev/actions/workflows/push-tagged-dbimage.yml)
+* Visit [Actions → Push tagged db image](https://github.com/ddev/ddev/actions/workflows/push-tagged-dbimage.yml)
 * Click “Run workflow” in the blue band near the top.
 * Choose the branch, usually `master`. Include a tag for the pushed image and GitHub will do all the work.
 
 ## Building
 
-* You'll want both your fork/branch and the upstream as remotes in git, so that tags can be determined. For example, the upstream git remote can be `https://github.com/drud/ddev` and your fork's remote can be `git@github.com:<yourgithubuser>/ddev`. Without the upstream, git may not know about tags that it needs for tests to work.
+* You'll want both your fork/branch and the upstream as remotes in git, so that tags can be determined. For example, the upstream git remote can be `https://github.com/ddev/ddev` and your fork's remote can be `git@github.com:<yourgithubuser>/ddev`. Without the upstream, git may not know about tags that it needs for tests to work.
 * To run tests, you'll want `~/tmp` to be allowed in docker. This is not normally an issue as the home directory is available by default in most docker providers.
 
 Build the project with `make` and your resulting executable will end up in `.gotmp/bin/linux_amd64/ddev` or `.gotmp/bin/linux_arm64/ddev` (for Linux) or `.gotmp/bin/windows_amd64/ddev.exe` (for Windows) or `.gotmp/bin/darwin_amd64/ddev` or `.gotmp/bin/darwin_arm64/ddev` (for macOS).
@@ -162,7 +162,7 @@ Normal test invocation is `make test`. Run a single test with an invocation like
 
 To see which DDEV commands the tests are executing, set the environment variable `DDEV_DEBUG=true`.
 
-Use `GOTEST_SHORT=true` to run just one CMS in each test, or `GOTEST_SHORT=<integer>` to run exactly one project type from the list of project types in the [TestSites array](https://github.com/drud/ddev/blob/a4ab2827d8b6e706b2420700045d889a3a69f3f2/pkg/ddevapp/ddevapp_test.go#L43). For example, `GOTEST_SHORT=5 make testpkg TESTARGS="-run TestDdevFullSiteSetup"` will run only `TestDdevFullSiteSetup` against TYPO3.
+Use `GOTEST_SHORT=true` to run just one CMS in each test, or `GOTEST_SHORT=<integer>` to run exactly one project type from the list of project types in the [TestSites array](https://github.com/ddev/ddev/blob/a4ab2827d8b6e706b2420700045d889a3a69f3f2/pkg/ddevapp/ddevapp_test.go#L43). For example, `GOTEST_SHORT=5 make testpkg TESTARGS="-run TestDdevFullSiteSetup"` will run only `TestDdevFullSiteSetup` against TYPO3.
 
 To run a test (in the `cmd` package) against a individually-compiled DDEV binary, set the `DDEV_BINARY_FULLPATH` environment variable, for example `DDEV_BINARY_FULLPATH=$PWD/.gotmp/bin/linux_amd64/ddev make testcmd`.
 

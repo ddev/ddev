@@ -12,4 +12,4 @@ set -x
 # Build only current architecture and load into docker
 docker buildx build -t ${DOCKER_REPO} --push --platform=linux/amd64 .
 
-echo "This was pushed with ${DOCKER_REPO}. For it to take effect, it must be changed here in .gitpod.yml and also in https://github.com/drud/ddev-gitpod-launcher/blob/main/.gitpod.yml"
+echo "This was pushed with ${DOCKER_REPO}. For it to take effect, it must be changed here in .gitpod.yml and also in https://github.com/ddev/ddev-gitpod-launcher/blob/main/.gitpod.yml"

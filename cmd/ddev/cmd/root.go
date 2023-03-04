@@ -2,6 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/globalconfig"
@@ -13,10 +17,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/segmentio/analytics-go.v3"
-	"os"
-	"path/filepath"
-
-	"time"
 )
 
 var (
@@ -73,7 +73,7 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 				return // Do not continue as we'll end up with github api violations.
 			}
 
-			updateNeeded, updateVersion, updateURL, err := updatecheck.AvailableUpdates("drud", "ddev", versionconstants.DdevVersion)
+			updateNeeded, updateVersion, updateURL, err := updatecheck.AvailableUpdates("ddev", "ddev", versionconstants.DdevVersion)
 
 			if err != nil {
 				util.Warning("Could not check for updates. This is most often caused by a networking issue.")

@@ -4,6 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+	"text/template"
+
 	"github.com/Masterminds/sprig/v3"
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/exec"
@@ -20,11 +26,6 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v3"
-	"os"
-	"path/filepath"
-	"sort"
-	"strings"
-	"text/template"
 )
 
 type installDesc struct {
@@ -41,8 +42,8 @@ var Get = &cobra.Command{
 	Use:   "get <addonOrURL> [project]",
 	Short: "Get/Download a 3rd party add-on (service, provider, etc.)",
 	Long:  `Get/Download a 3rd party add-on (service, provider, etc.). This can be a github repo, in which case the latest release will be used, or it can be a link to a .tar.gz in the correct format (like a particular release's .tar.gz) or it can be a local directory. Use 'ddev get --list' or 'ddev get --list --all' to see a list of available add-ons. Without --all it shows only official ddev add-ons.`,
-	Example: `ddev get drud/ddev-drupal9-solr
-ddev get https://github.com/drud/ddev-drupal9-solr/archive/refs/tags/v0.0.5.tar.gz
+	Example: `ddev get ddev/ddev-drupal9-solr
+ddev get https://github.com/ddev/ddev-drupal9-solr/archive/refs/tags/v0.0.5.tar.gz
 ddev get /path/to/package
 ddev get /path/to/tarball.tar.gz
 ddev get --list
@@ -150,7 +151,7 @@ ddev get --list --all
 		}
 
 		// 20220811: Don't auto-start because it auto-creates the wrong database in some situations, leading to a
-		// chicken-egg problem in getting database configured. See https://github.com/drud/ddev-platformsh/issues/24
+		// chicken-egg problem in getting database configured. See https://github.com/ddev/ddev-platformsh/issues/24
 		// Automatically start, as we don't want to be taking actions with mutagen off, for example.
 		//if status, _ := app.SiteStatus(); status != ddevapp.SiteRunning {
 		//	err = app.Start()

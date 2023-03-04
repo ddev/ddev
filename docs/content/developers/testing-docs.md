@@ -4,7 +4,7 @@ This page is about working with the DDEV documentation. See the [Writing Style G
 
 ## Fix Docs Using Web Browser
 
-The documentation is built and checked automatically with various [GitHub Actions workflows](https://github.com/drud/ddev/actions). While it may help to [check your work locally](#fork--clone-the-ddev-repository) for more involved PRs, you can more quickly make suggestions using [GitHub in a browser](#fix-docs-using-web-browser):
+The documentation is built and checked automatically with various [GitHub Actions workflows](https://github.com/ddev/ddev/actions). While it may help to [check your work locally](#fork--clone-the-ddev-repository) for more involved PRs, you can more quickly make suggestions using [GitHub in a browser](#fix-docs-using-web-browser):
 
 1. Click the pencil in the upper right. That will take you to the right page on GitHub.
 2. Click the pencil button on GitHub and follow the instructions to create your change.
@@ -12,11 +12,11 @@ The documentation is built and checked automatically with various [GitHub Action
 4. In the checks on your PR, click the “details” link by `docs/readthedocs.org:ddev` to browse the docs build created by your PR.
 5. Once the PR has run its checks, you’ll see an item labeled `docs/readthedocs.org:ddev`. Click “Details” to review a docs build that includes your changes:
     ![Documentation preview build link](../images/docs-build-link.png)
-6. Take a look at the [“Check docs” action](https://github.com/drud/ddev/actions/workflows/docscheck.yml) to make sure there were no linting or spelling errors.
+6. Take a look at the [“Check docs” action](https://github.com/ddev/ddev/actions/workflows/docscheck.yml) to make sure there were no linting or spelling errors.
 
 ## Fork / Clone the DDEV Repository
 
-To start making changes you’ll need a local copy of the DDEV documentation, so [fork the DDEV repository](https://github.com/drud/ddev/fork) which includes the documentation.
+To start making changes you’ll need a local copy of the DDEV documentation, so [fork the DDEV repository](https://github.com/ddev/ddev/fork) which includes the documentation.
 
 After forking the repository, you can clone it to your local machine.
 
@@ -60,7 +60,7 @@ pyspelling:
 Spelling check passed :)
 ```
 
-If you’ve added a correctly-spelled word that gets flagged, like “Symfony” for example, you’ll need to add it to `.spellcheckwordlist.txt` in the [root of DDEV’s repository](https://github.com/drud/ddev/blob/master/.spellcheckwordlist.txt).
+If you’ve added a correctly-spelled word that gets flagged, like “Symfony” for example, you’ll need to add it to `.spellcheckwordlist.txt` in the [root of DDEV’s repository](https://github.com/ddev/ddev/blob/master/.spellcheckwordlist.txt).
 
 !!!warning "`pyspelling` and `aspell` required!"
     It’s probably best to install packages locally before attempting to run `make pyspelling`:

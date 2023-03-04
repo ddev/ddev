@@ -8,7 +8,7 @@ The project's `.ddev/config.yaml` file defines the PHP version to use. The [`php
 
 ### Older Versions of PHP
 
-[Support for older versions of PHP is available on ddev-contrib](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/old_php) via [custom docker-compose files](custom-compose-files.md).
+[Support for older versions of PHP is available on ddev-contrib](https://github.com/ddev/ddev-contrib/blob/master/docker-compose-services/old_php) via [custom docker-compose files](custom-compose-files.md).
 
 ## Changing Web Server Type
 
@@ -34,7 +34,7 @@ There are many ways to deploy Node.js in any project, so DDEV tries to let you s
 * You can manually run Node.js scripts using [`ddev exec <script>`](../usage/commands.md#exec) or `ddev exec nodejs <script>`.
 
 !!!tip "Please share your techniques!"
-    There are several ways to share your favorite Node.js tips and techniques. Best are [ddev-get add-ons](additional-services.md#additional-service-configurations-and-add-ons-for-ddev), [Stack Overflow](https://stackoverflow.com/tags/ddev), and [ddev-contrib](https://github.com/drud/ddev-contrib).
+    There are several ways to share your favorite Node.js tips and techniques. Best are [ddev-get add-ons](additional-services.md#additional-service-configurations-and-add-ons-for-ddev), [Stack Overflow](https://stackoverflow.com/tags/ddev), and [ddev-contrib](https://github.com/ddev/ddev-contrib).
 
 ## Running Extra Daemons in the Web Container
 

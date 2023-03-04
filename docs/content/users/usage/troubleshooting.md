@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Things might go wrong! In addition to this page, consider checking [Stack Overflow](https://stackoverflow.com/tags/ddev) and [the DDEV issue queue](https://github.com/drud/ddev/issues) and [other support options](../support.md), as well as [Docker troubleshooting suggestions](../install/docker-installation.md#testing-and-troubleshooting-your-docker-installation).
+Things might go wrong! In addition to this page, consider checking [Stack Overflow](https://stackoverflow.com/tags/ddev) and [the DDEV issue queue](https://github.com/ddev/ddev/issues) and [other support options](../support.md), as well as [Docker troubleshooting suggestions](../install/docker-installation.md#testing-and-troubleshooting-your-docker-installation).
 
 ## General Troubleshooting Strategies
 
@@ -134,7 +134,7 @@ The resulting output displays which command is running and its PID. Choose the a
 
 You may also be able to find what’s using a port using `curl`. On Linux, macOS, or in Git Bash on Windows, `curl -I localhost` or `curl -I -k https://localhost:443`. The result may give you a hint about which application is at fault.
 
-We welcome your [suggestions](https://github.com/drud/ddev/issues/new) based on other issues you’ve run into and your troubleshooting technique.
+We welcome your [suggestions](https://github.com/ddev/ddev/issues/new) based on other issues you’ve run into and your troubleshooting technique.
 
 ### Debugging Port Issues on WSL2
 
@@ -273,7 +273,7 @@ You verify this is your problem by running `ping dkkd.ddev.site`. If you get “
 
 In this case, you can take any one of the following approaches:
 
-1. Reconfigure your router to allow DNS Rebinding. Many Fritzbox routers have added default DNS Rebinding disallowal, and they can be reconfigured to allow it. See [issue](https://github.com/drud/ddev/issues/2409#issuecomment-686718237). If you have the local dnsmasq DNS server it may also be configured to disallow DNS rebinding, but it’s a simple change to a configuration directive to allow it.
+1. Reconfigure your router to allow DNS Rebinding. Many Fritzbox routers have added default DNS Rebinding disallowal, and they can be reconfigured to allow it. See [issue](https://github.com/ddev/ddev/issues/2409#issuecomment-686718237). If you have the local dnsmasq DNS server it may also be configured to disallow DNS rebinding, but it’s a simple change to a configuration directive to allow it.
 2. Most computers can use most relaxed DNS resolution if they are not on corporate intranets that have non-internet DNS. So for example, the computer can be set to use 8.8.8.8 (Google) or 1.1.1.1 (Cloudflare) for DNS name resolution.
 3. If you have control of the router, you can usually change its DHCP settings to choose a public, relaxed DNS server as in #2.
 4. You can live with DDEV trying to edit the `/etc/hosts` file, which it only has to do when a new name is added to a project.

@@ -3,7 +3,6 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
-	"github.com/drud/ddev/pkg/versionconstants"
 	"net"
 	"net/url"
 	"os"
@@ -17,22 +16,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/stretchr/testify/require"
-
 	"github.com/drud/ddev/pkg/archive"
 	"github.com/drud/ddev/pkg/ddevapp"
 	"github.com/drud/ddev/pkg/dockerutil"
 	"github.com/drud/ddev/pkg/exec"
 	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/drud/ddev/pkg/nodeps"
 	"github.com/drud/ddev/pkg/output"
 	"github.com/drud/ddev/pkg/testcommon"
 	"github.com/drud/ddev/pkg/util"
+	"github.com/drud/ddev/pkg/versionconstants"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -43,8 +42,8 @@ var (
 			Name:                          "TestPkgWordpress",
 			SourceURL:                     "https://wordpress.org/wordpress-6.0.1.tar.gz",
 			ArchiveInternalExtractionPath: "wordpress/",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/wordpress5.8.2_files.tar.gz",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/wordpress5.8.2_db.sql.tar.gz",
+			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/wordpress5.8.2_files.tar.gz",
+			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/wordpress5.8.2_db.sql.tar.gz",
 			Docroot:                       "",
 			Type:                          nodeps.AppTypeWordPress,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
@@ -56,10 +55,10 @@ var (
 			Name:                          "TestPkgDrupal8",
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-8.9.20.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-8.9.20/",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d8_umami.files.tar.gz",
-			FilesZipballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d8_umami.files.zip",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d8_umami.sql.tar.gz",
-			DBZipURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d8_umami.sql.zip",
+			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d8_umami.files.tar.gz",
+			FilesZipballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d8_umami.files.zip",
+			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d8_umami.sql.tar.gz",
+			DBZipURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d8_umami.sql.zip",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeDrupal8,
 			Docroot:                       "",
@@ -72,8 +71,8 @@ var (
 			Name:                          "TestPkgDrupal7", // Drupal D7
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-7.90.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-7.90/",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.59.files.tar.gz",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d7test-7.87-db.tar.gz",
+			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d7test-7.59.files.tar.gz",
+			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d7test-7.87-db.tar.gz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
 			Type:                          nodeps.AppTypeDrupal7,
@@ -87,9 +86,9 @@ var (
 			Name:                          "TestPkgDrupal6",
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-6.38.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-6.38/",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6.38_db.tar.gz",
+			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal6.38_db.tar.gz",
 			FullSiteTarballURL:            "",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6_files.tar.gz",
+			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal6_files.tar.gz",
 			Docroot:                       "",
 			Type:                          nodeps.AppTypeDrupal6,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/CHANGELOG.txt", Expect: "Drupal 6.38, 2016-02-24"},
@@ -101,8 +100,8 @@ var (
 			Name:                          "TestPkgBackdrop",
 			SourceURL:                     "https://github.com/backdrop/backdrop/archive/1.22.0.tar.gz",
 			ArchiveInternalExtractionPath: "backdrop-1.22.0/",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/backdrop_db.11.0.tar.gz",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/backdrop_files.11.0.tar.gz",
+			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/backdrop_db.11.0.tar.gz",
+			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/backdrop_files.11.0.tar.gz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
 			Type:                          nodeps.AppTypeBackdrop,
@@ -114,10 +113,10 @@ var (
 		{
 			Name: "TestPkgTypo3",
 			// tar -czf .tarballs/typo3v11_source.tgz --exclude=var --exclude=public/fileadmin .
-			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/typo3v11_source.tgz",
+			SourceURL:                     "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/typo3v11_source.tgz",
 			ArchiveInternalExtractionPath: "",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/typo3v11_db.sql.tar.gz",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/typo3v11_fileadmin.tgz",
+			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/typo3v11_db.sql.tar.gz",
+			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/typo3v11_fileadmin.tgz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "public",
 			Type:                          nodeps.AppTypeTYPO3,
@@ -130,8 +129,8 @@ var (
 			Name:                          "testpkgmagento",
 			SourceURL:                     "https://github.com/OpenMage/magento-lts/archive/refs/tags/v20.0.13.tar.gz",
 			ArchiveInternalExtractionPath: "magento-lts-20.0.13/",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/TestPkgMagento_db_secure_url.tar.gz",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/magento_upload_files.tgz",
+			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/TestPkgMagento_db_secure_url.tar.gz",
+			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/magento_upload_files.tgz",
 			FullSiteTarballURL:            "",
 			Docroot:                       "",
 			Type:                          nodeps.AppTypeMagento,
@@ -148,12 +147,12 @@ var (
 		{
 			Name: "testpkgmagento2",
 			// echo "This is a junk" >pub/junk.txt && tar -czf .tarballs/testpkgmagento2_code_no_media.magento2.4.4.tgz --exclude=.ddev --exclude=var --exclude=pub/media --exclude=.tarballs --exclude=app/etc/env.php .
-			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/testpkgmagento2_code_no_media.magento2.4.4.tgz",
+			SourceURL:                     "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/testpkgmagento2_code_no_media.magento2.4.4.tgz",
 			ArchiveInternalExtractionPath: "",
 			// ddev export-db --gzip=false --file=.tarballs/db.sql && tar -czf .tarballs/testpkgmagento2.magento2.4.4.db.tgz -C .tarballs db.sql
-			DBTarURL: "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/testpkgmagento2.magento2.4.4.db.tgz",
+			DBTarURL: "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/testpkgmagento2.magento2.4.4.db.tgz",
 			// tar -czf .tarballs/testpkgmagento2_files.magento2.4.4.tgz -C pub/media .
-			FilesTarballURL:           "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/testpkgmagento2_files.magento2.4.4.tgz",
+			FilesTarballURL:           "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/testpkgmagento2_files.magento2.4.4.tgz",
 			FullSiteTarballURL:        "",
 			Docroot:                   "pub",
 			Type:                      nodeps.AppTypeMagento2,
@@ -166,10 +165,10 @@ var (
 			Name:                          "TestPkgDrupal9",
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-9.4.2.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-9.4.2/",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d9_umami_files.tgz",
-			FilesZipballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d9_umami_files.zip",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d9_umami_sql.tar.gz",
-			DBZipURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/d9_umami.sql.zip",
+			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d9_umami_files.tgz",
+			FilesZipballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d9_umami_files.zip",
+			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d9_umami_sql.tar.gz",
+			DBZipURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/d9_umami.sql.zip",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeDrupal9,
 			Docroot:                       "",
@@ -180,12 +179,12 @@ var (
 		// 9: laravel
 		{
 			Name:                          "TestPkgLaravel",
-			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/ddev-lumen-testapp.tar.gz",
+			SourceURL:                     "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/ddev-lumen-testapp.tar.gz",
 			ArchiveInternalExtractionPath: "ddev-lumen-testapp/",
 			FilesTarballURL:               "",
 			FilesZipballURL:               "",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/ddev-lumen-testapp_sql.tar.gz",
-			DBZipURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/ddev-lumen-testapp_sql.zip",
+			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/ddev-lumen-testapp_sql.tar.gz",
+			DBZipURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/ddev-lumen-testapp_sql.zip",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeLaravel,
 			Docroot:                       "public",
@@ -197,11 +196,11 @@ var (
 		{
 			Name: "testpkgshopware6",
 			// tar -czf .tarballs/shopware6_code.tgz --exclude=public/media .
-			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_code.tgz",
+			SourceURL:                     "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/shopware6_code.tgz",
 			ArchiveInternalExtractionPath: "",
 			// cd public/media && tar -czf ../../.tarballs/shopware6_files.tgz
-			FilesTarballURL:           "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_files.tgz",
-			DBTarURL:                  "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/shopware6_db.sql.tar.gz",
+			FilesTarballURL:           "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/shopware6_files.tgz",
+			DBTarURL:                  "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/shopware6_db.sql.tar.gz",
 			FullSiteTarballURL:        "",
 			Type:                      nodeps.AppTypeShopware6,
 			Docroot:                   "public",
@@ -212,10 +211,10 @@ var (
 		// 11: php
 		{
 			Name:                          "TestPkgPHP",
-			SourceURL:                     "https://github.com/drud/ddev-test-php-repo/archive/refs/tags/v1.1.0.tar.gz",
+			SourceURL:                     "https://github.com/ddev/ddev-test-php-repo/archive/refs/tags/v1.1.0.tar.gz",
 			ArchiveInternalExtractionPath: "ddev-test-php-repo-1.1.0/",
 			FullSiteTarballURL:            "",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6_files.tar.gz",
+			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal6_files.tar.gz",
 			Docroot:                       "",
 			Type:                          nodeps.AppTypePHP,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/README.txt", Expect: "This is a simple readme."},
@@ -226,8 +225,8 @@ var (
 			Name:                          "TestPkgDrupal10",
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-10.0.0-alpha6.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-10.0.0-alpha6",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal10-files.tgz",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal10-alpha6.sql.tar.gz",
+			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal10-files.tgz",
+			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal10-alpha6.sql.tar.gz",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeDrupal10,
 			Docroot:                       "",
@@ -247,10 +246,10 @@ var (
 		// be a `.tar.gz` file, `.zip` will NOT work) and add to `DBTarURL`.
 		{
 			Name:                          "TestPkgCraftCms",
-			SourceURL:                     "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/craft-cms-4.2.3.zip",
+			SourceURL:                     "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/craft-cms-4.2.3.zip",
 			ArchiveInternalExtractionPath: "cms-4.2.3/",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/craftcms-4.2.3-files.tar.gz",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/craftcms-4.2.3-db.sql.tar.gz",
+			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/craftcms-4.2.3-files.tar.gz",
+			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/craftcms-4.2.3-db.sql.tar.gz",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeCraftCms,
 			Docroot:                       "web",
@@ -1525,7 +1524,7 @@ func TestDdevAllDatabases(t *testing.T) {
 	assert := asrt.New(t)
 
 	dbVersions := nodeps.GetValidDatabaseVersions()
-	// Bug: postgres 9 doesn't work with snapshot restore, see https://github.com/drud/ddev/issues/3583
+	// Bug: postgres 9 doesn't work with snapshot restore, see https://github.com/ddev/ddev/issues/3583
 	dbVersions = nodeps.RemoveItemFromSlice(dbVersions, "postgres:9")
 	//Use a smaller list if GOTEST_SHORT
 	if os.Getenv("GOTEST_SHORT") != "" {

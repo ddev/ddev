@@ -32,16 +32,16 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
         The install script works on macOS, Linux, and Windows WSL2.
 
 
-    Run the [install script](https://github.com/drud/ddev/blob/master/scripts/install_ddev.sh) to install or update DDEV. It downloads, verifies, and sets up the `ddev` binary:
+    Run the [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) to install or update DDEV. It downloads, verifies, and sets up the `ddev` binary:
 
     ```
-    curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash
+    curl -fsSL https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev.sh | bash
     ```
 
     You can include a `-s <version>` argument to install a specific release or a prerelease version:
 
     ```
-    curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash -s v1.21.4
+    curl -fsSL https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev.sh | bash -s v1.21.4
     ```
 
     We recommend [enabling Mutagen](performance.md#mutagen) for the best performance; enable with [`ddev config global --mutagen-enabled`](../usage/commands.md#config).
@@ -158,11 +158,11 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
         If that doesn't work for you, see the [manual installation](https://docs.microsoft.com/en-us/windows/wsl/install-manual) and linked [troubleshooting](https://docs.microsoft.com/en-us/windows/wsl/troubleshooting#installation-issues).
 
-    2. In an administrative PowerShell (5) run [this PowerShell script](https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1) by executing: 
+    2. In an administrative PowerShell (5) run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1) by executing: 
 
         ```powershell
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; 
-        iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1'))
+        iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1'))
         ```
     3. In *Windows Update Settings* → *Advanced Options* enable *Receive updates for other Microsoft products*. You may want to occasionally run `wsl.exe --update` as well.
 
@@ -195,11 +195,11 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     4. Install Docker Desktop. If you already have Chocolatey, run `choco install -y docker-desktop` or [download Docker Desktop from Docker](https://www.docker.com/products/docker-desktop/).
     5. Start Docker Desktop. You should now be able to run `docker ps` in PowerShell or Git Bash.
     6. In *Docker Desktop* → *Settings* → *Resources* → *WSL2 Integration*, verify that Docker Desktop is integrated with your distro.
-    7. In an administrative `PowerShell` (5) run [this PowerShell script](https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2_docker_desktop.ps1) by executing:
+    7. In an administrative `PowerShell` (5) run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_desktop.ps1) by executing:
 
         ```powershell
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; 
-        iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev_wsl2_docker_desktop.ps1'))
+        iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_desktop.ps1'))
         ```
     8. In *Windows Update Settings* → *Advanced Options* enable *Receive updates for other Microsoft products*. You may want to occasionally run `wsl.exe --update` as well.
 
@@ -247,7 +247,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     If you must use traditional Windows without WSL2, you’ll probably want to enable [Mutagen](performance/#system-requirements) for the best performance.
 
     * We recommend using [Chocolatey](https://chocolatey.org/). Once installed, you can run `choco install ddev docker-desktop git` from an administrative shell. You can upgrade by running `ddev poweroff && choco upgrade ddev`.
-    * Each [DDEV release](https://github.com/drud/ddev/releases) includes a Windows installer (`ddev_windows_installer.<version>.exe`). After running that, you can open a new Git Bash, PowerShell, or cmd.exe window and start using DDEV.
+    * Each [DDEV release](https://github.com/ddev/ddev/releases) includes a Windows installer (`ddev_windows_installer.<version>.exe`). After running that, you can open a new Git Bash, PowerShell, or cmd.exe window and start using DDEV.
 
     Most traditional Windows users will want to enable Mutagen for superb performance; no installation is required; run `ddev config global --mutagen-enabled`. It still won't be as fast as one of the WSL2 options.
 
@@ -283,11 +283,11 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
         * You can install your web app there, or import a database.
         * You may want to implement one of the `ddev pull` provider integrations to pull from a hosting provider or an upstream source.
     2. Use the [ddev-gitpod-launcher](https://drud.github.io/ddev-gitpod-launcher/) form to launch a repository.  
-        You’ll provide a source repository and click a button to open a newly-established environment. You can specify a companion artifacts repository and automatically load `db.sql.gz` and `files.tgz` from it. (More details in the [repository’s README](https://github.com/drud/ddev-gitpod-launcher/blob/main/README.md).)
+        You’ll provide a source repository and click a button to open a newly-established environment. You can specify a companion artifacts repository and automatically load `db.sql.gz` and `files.tgz` from it. (More details in the [repository’s README](https://github.com/ddev/ddev-gitpod-launcher/blob/main/README.md).)
     3. Save the following link to your bookmark bar: <a href="javascript: if %28 %2Fbitbucket%2F.test %28 window.location.host %29 %20 %29 %20%7B%20paths%3Dwindow.location.pathname.split %28 %22%2F%22 %29 %3B%20repo%3D%5Bwindow.location.origin%2C%20paths%5B1%5D%2C%20paths%5B2%5D%5D.join %28 %22%2F%22 %29 %20%7D%3B%20if %28 %2Fgithub.com%7Cgitlab.com%2F.test %28 window.location.host %29  %29 %20%7Brepo%20%3D%20window.location.href%7D%3B%20if%20 %28 repo %29 %20%7Bwindow.location.href%20%3D%20%22https%3A%2F%2Fgitpod.io%2F%23DDEV_REPO%3D%22%20%2B%20encodeURIComponent %28 repo %29 %20%2B%20%22%2CDDEV_ARTIFACTS%3D%22%20%2B%20encodeURIComponent %28 repo %29 %20%2B%20%22-artifacts%2Fhttps%3A%2F%2Fgithub.com%2Fdrud%2Fddev-gitpod-launcher%2F%22%7D%3B">Open in ddev-gitpod</a>.  
         It’s easiest to drag the link into your bookmarks. When you’re on a Git repository, click the bookmark to open it with DDEV in Gitpod. It does the same thing as the second option, but it works on non-Chrome browsers and you can use native browser keyboard shortcuts.
 
-    It can be complicated to get private databases and files into Gitpod, so in addition to the launchers, the [`git` provider example](https://github.com/drud/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/git.yaml.example) demonstrates pulling a database and files without complex setup or permissions. This was created explicitly for Gitpod integration, because in Gitpod you typically already have access to private Git repositories, which are a fine place to put a starter database and files. Although [ddev-gitpod-launcher](https://drud.github.io/ddev-gitpod-launcher/) and the web extension provide the capability, you may want to integrate a Git provider—or one of the [other providers](https://github.com/drud/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers)—for each project.
+    It can be complicated to get private databases and files into Gitpod, so in addition to the launchers, the [`git` provider example](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/git.yaml.example) demonstrates pulling a database and files without complex setup or permissions. This was created explicitly for Gitpod integration, because in Gitpod you typically already have access to private Git repositories, which are a fine place to put a starter database and files. Although [ddev-gitpod-launcher](https://drud.github.io/ddev-gitpod-launcher/) and the web extension provide the capability, you may want to integrate a Git provider—or one of the [other providers](https://github.com/ddev/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers)—for each project.
 
 === "Codespaces"
 
@@ -342,7 +342,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     DDEV is a single executable, so installation on any OS is a matter of copying the `ddev` binary for your architecture into the appropriate system path on your machine.
 
-    * Download and extract the latest [DDEV release](https://github.com/drud/ddev/releases) for your architecture.
+    * Download and extract the latest [DDEV release](https://github.com/ddev/ddev/releases) for your architecture.
     * Move `ddev` to `/usr/local/bin` with `mv ddev /usr/local/bin/` (may require `sudo`), or another directory in your `$PATH` as preferred.
     * Run `ddev` to test your installation. You should see DDEV’s command usage output.
     * As a one-time initialization, run `mkcert -install`, which may require your `sudo` password.  

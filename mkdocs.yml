@@ -2,8 +2,8 @@
 site_name: DDEV Docs
 # todo: Make sure to set this to the correct one; otherwise it breaks 404 page
 site_url: https://ddev.readthedocs.io/en/latest/
-repo_url: https://github.com/drud/ddev
-repo_name: drud/ddev
+repo_url: https://github.com/ddev/ddev
+repo_name: ddev/ddev
 edit_uri: blob/master/docs/content
 copyright: Localdev Foundation
 extra_javascript:
@@ -56,7 +56,7 @@ plugins:
 - git-revision-date-localized:
 #    enable_creation_date: true
 #- git-committers:
-#    repository: https://github.com/drud/ddev
+#    repository: https://github.com/ddev/ddev
 #    token: !ENV GH_TOKEN
 
 
@@ -64,7 +64,7 @@ plugins:
 extra:
   social:
   - icon: fontawesome/brands/github
-    link: https://github.com/drud/ddev
+    link: https://github.com/ddev/ddev
   - icon: fontawesome/brands/discord
     link: https://discord.gg/hCZFfAMc5k
   - icon: fontawesome/brands/stack-overflow
@@ -107,7 +107,7 @@ markdown_extensions:
 - pymdownx.keys
 - pymdownx.magiclink:
     repo_url_shorthand: true
-    user: drud
+    user: ddev
     repo: ddev
 - pymdownx.mark
 - pymdownx.smartsymbols

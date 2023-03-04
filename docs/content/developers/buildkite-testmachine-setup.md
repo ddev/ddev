@@ -27,7 +27,7 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 
 15. Set the `buildkite-agent` service to run as the testbot user and use delayed start: Choose “Automatic, delayed start” and on the “Log On” tab in the services widget it must be set up to log in as the testbot user, so it inherits environment variables and home directory (and can access NFS, has testbot git config, etc).
 16. `git config --global --add safe.directory '*'`.
-17. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
+17. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
 18. Run `.buildkite/sanetestbot.sh` to check your work.
 19. Reboot the machine and do a test run. (On Windows, the machine name only takes effect on reboot.)
 20. Verify that `go`, `ddev`, `git-bash` are in the path.
@@ -45,13 +45,13 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
 
 3. Update WSL2 to WSL2 Preview from Microsoft Store and `wsl --shutdown` and then restart.
 4. `wsl --update`
-5. Open WSL2 and check out [drud/ddev](https://github.com/drud/ddev).
+5. Open WSL2 and check out [ddev/ddev](https://github.com/ddev/ddev).
 6. As normal user, run `.github/workflows/linux-setup.sh`.
 7. `export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
    echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc`
 
 8. As root user, add sudo capability with `echo "ALL ALL=NOPASSWD: ALL" >/etc/sudoers.d/all && chmod 440 /etc/sudoers.d/all`.
-9. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
+9. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
 10. `git config --global --add safe.directory '*'`
 11. Install basics in WSL2:
 
@@ -143,12 +143,12 @@ We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testi
     ```
 
 13. Run `brew services start buildkite-agent`.
-14. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
+14. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
 15. Enable nosleep using its shortcut in the Mac status bar.
 16. In nosleep Preferences, enable “Never sleep on AC Adapter”, “Never sleep on Battery”, and “Start nosleep utility on system startup”.
 17. `sudo chown testbot /usr/local/bin`
 18. Set up Mac to [automatically log in on boot](https://support.apple.com/en-us/HT201476).
-19. Try checking out [drud/ddev](https://github.com/drud/ddev) and running `.buildkite/sanetestbot.sh` to check your work.
+19. Try checking out [ddev/ddev](https://github.com/ddev/ddev) and running `.buildkite/sanetestbot.sh` to check your work.
 20. Log into Chrome with the user `ddevtestbot@gmail.com` and enable Chrome Remote Desktop.
 21. Set the timezone (US MT).
 22. Start the agent with `brew services start buildkite-agent`.

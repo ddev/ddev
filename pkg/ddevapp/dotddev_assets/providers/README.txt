@@ -7,7 +7,7 @@ Providers README
 
 DDEV's hosting provider integration lets you integrate with any upstream source of database dumps and files (such as your production or staging server) and provides examples of configuration for Acquia, Platform.sh, Pantheon, rsync, etc.
 
-The best part of this is you can change them and adapt them in any way you need to, they're all short scripted recipes. There are several example recipes created in the .ddev/providers directory of every project or see them in the code at https://github.com/drud/ddev/tree/master/cmd/ddev/cmd/dotddev_assets/providers.
+The best part of this is you can change them and adapt them in any way you need to, they're all short scripted recipes. There are several example recipes created in the .ddev/providers directory of every project or see them in the code at https://github.com/ddev/ddev/tree/master/cmd/ddev/cmd/dotddev_assets/providers.
 
 ddev provides the `pull` command with whatever recipes you have configured. For example, `ddev pull acquia` if you have created `.ddev/providers/acquia.yaml`.
 
@@ -15,7 +15,7 @@ ddev also provides the `push` command to push database and files to upstream. Th
 
 Each provider recipe is a yaml file that can be named any way you want to name it. The examples are mostly named after the hosting providers, but they could be named "upstream.yaml" or "live.yaml", so you could `ddev pull upstream` or `ddev pull live`. If you wanted different upstream environments to pull from, you could name one "prod" and one "dev" and `ddev pull prod` and `ddev pull dev`.
 
-Several example recipes are at https://github.com/drud/ddev/tree/master/cmd/ddev/cmd/dotddev_assets/providers and in this directory.
+Several example recipes are at https://github.com/ddev/ddev/tree/master/cmd/ddev/cmd/dotddev_assets/providers and in this directory.
 
 Each provider recipe is a file named `<provider>.yaml` and consists of several mostly-optional stanzas:
 
