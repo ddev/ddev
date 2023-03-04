@@ -20,10 +20,11 @@ These environments can be extended, version controlled, and shared, so you can t
     * RAM: 8GB
     * Storage: 256GB
     * [Colima](https://github.com/abiosoft/colima) or [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-    * Colima (preferred by many) runs on many versions of macOS up through the latest. Docker Desktop (fully supported) requires macOS Big Sur (11) or higher.
-    * On macOS with either Colima or Docker Desktop most users will want to enable Mutagen for superb performance, `ddev config global --mutagen-enabled`
+    * Colima and Docker Desktop both require macOS Big Sur (11) or higher.
+    * On macOS with either Colima or Docker Desktop most users will want to enable Mutagen for best performance, `ddev config global --mutagen-enabled`
 
 === "Windows WSL2"
+
     ### Windows WSL2
 
     * RAM: 8GB
@@ -49,8 +50,8 @@ These environments can be extended, version controlled, and shared, so you can t
     * RAM: 8GB
     * Storage: 256GB
 
-=== "Gitpod"
+=== "Gitpod and GitHub Codespaces"
 
-    ### Gitpod
+    ### Gitpod and GitHub Codespaces
 
-    With [Gitpod](https://www.gitpod.io) you don’t install anything; you only need a browser and an internet connection.
+    With [Gitpod](https://www.gitpod.io) and [GitHub Codespaces](https://github.com/features/codespaces) you don’t install anything; you only need a browser and an internet connection.

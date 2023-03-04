@@ -41,10 +41,10 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     You can include a `-s <version>` argument to install a specific release or a prerelease version:
 
     ```
-    curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash -s v1.21.5
+    curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash -s v1.21.4
     ```
 
-    Most macOS users will want to enable Mutagen for superb performance; no installation is required, just `ddev config global --mutagen-enabled`.
+    We recommend [enabling Mutagen](performance.md#mutagen) for the best performance; enable with [`ddev config global --mutagen-enabled`](../usage/commands.md#config).
 
 === "Linux"
 
@@ -175,7 +175,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     You can do these things manually, or you can do most of it with the provided PowerShell (5) script. 
     In all cases:
     
-    1. Install WSL2 with an Ubuntu distro. On a system without WSL2, just run:
+    1. Install WSL2 with an Ubuntu distro. On a system without WSL2, run:
         ```powershell
         wsl --install
         ```
@@ -186,7 +186,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
         If that doesn't work for you, see the [manual installation](https://docs.microsoft.com/en-us/windows/wsl/install-manual) and linked [troubleshooting](https://docs.microsoft.com/en-us/windows/wsl/troubleshooting#installation-issues).
         
-        If you prefer to use another Ubuntu distro, just install it and set it as default. For example, `wsl --set-default Ubuntu-22.04`.
+        If you prefer to use another Ubuntu distro, install it and set it as default. For example, `wsl --set-default Ubuntu-22.04`.
 
     2. Visit the Microsoft Store and install the updated "Windows Subsystem for Linux", then click *Open*. It will likely prompt you for a username and password for the Ubuntu WSL2 instance it creates.
 
@@ -240,7 +240,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     To upgrade DDEV in WSL2 Ubuntu, run `apt upgrade ddev` as described in the [Linux installation section](#linux).
 
     !!!note "Path to certificates"
-        If you get the prompt `Installing to the system store is not yet supported on this Linux`, you may just need to add `/usr/sbin` to the `$PATH` so that `/usr/sbin/update-ca-certificates` can be found.
+        If you get the prompt `Installing to the system store is not yet supported on this Linux`, you may need to add `/usr/sbin` to the `$PATH` so that `/usr/sbin/update-ca-certificates` can be found.
 
     ### Traditional Windows
 
@@ -249,7 +249,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     * We recommend using [Chocolatey](https://chocolatey.org/). Once installed, you can run `choco install ddev docker-desktop git` from an administrative shell. You can upgrade by running `ddev poweroff && choco upgrade ddev`.
     * Each [DDEV release](https://github.com/drud/ddev/releases) includes a Windows installer (`ddev_windows_installer.<version>.exe`). After running that, you can open a new Git Bash, PowerShell, or cmd.exe window and start using DDEV.
 
-    Most traditional Windows users will want to enable Mutagen for superb performance; no installation is required, just `ddev config global --mutagen-enabled`. It still won't be as fast as one of the WSL2 options.
+    Most traditional Windows users will want to enable Mutagen for superb performance; no installation is required; run `ddev config global --mutagen-enabled`. It still won't be as fast as one of the WSL2 options.
 
     Most people interact with DDEV on Windows using Git Bash, part of the [Windows Git suite](https://git-scm.com/download/win). Although DDEV does work with cmd.exe and PowerShell, it's more at home in Bash. You can install Git Bash with Chocolatey by running `choco install -y git`.
 
