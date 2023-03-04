@@ -2,7 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/imdario/mergo"
 	"strings"
 )

@@ -1,9 +1,9 @@
 package ddevapp
 
 import (
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/util"
 	copy2 "github.com/otiai10/copy"
 	"os"
 	"path/filepath"

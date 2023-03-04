@@ -1,7 +1,7 @@
 package util_test
 
 import (
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"

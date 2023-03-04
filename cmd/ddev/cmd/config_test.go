@@ -4,9 +4,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 
 	"os"
@@ -16,9 +16,9 @@ import (
 
 	"fmt"
 
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
 )

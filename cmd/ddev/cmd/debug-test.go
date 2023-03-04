@@ -4,10 +4,10 @@ import (
 	"os"
 	"path"
 
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 

@@ -2,8 +2,8 @@ package ddevapp
 
 import (
 	"embed"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 )
 
 // The bundled assets for the project .ddev directory are in directory dotddev_assets

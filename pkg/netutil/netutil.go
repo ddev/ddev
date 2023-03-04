@@ -1,8 +1,8 @@
 package netutil
 
 import (
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/util"
 	"net"
 	"os"
 	"syscall"

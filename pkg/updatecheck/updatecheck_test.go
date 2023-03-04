@@ -2,7 +2,7 @@ package updatecheck
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/versionconstants"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"path/filepath"
 	"testing"
 
@@ -10,7 +10,7 @@ import (
 
 	"os"
 
-	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 )
 

@@ -9,7 +9,7 @@ import (
 	"os"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/google/go-github/github"
 )
 

@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 	"os"
 )

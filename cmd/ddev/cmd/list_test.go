@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

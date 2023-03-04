@@ -1,16 +1,16 @@
 package dockerutil_test
 
 import (
-	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"os"
 	"os/exec"
 	"strings"
 	"testing"
 
-	"github.com/drud/ddev/pkg/dockerutil"
-	exec2 "github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	exec2 "github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

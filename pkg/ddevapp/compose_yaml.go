@@ -1,8 +1,8 @@
 package ddevapp
 
 import (
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/util"
 	"gopkg.in/yaml.v3"
 	"os"
 	"strings"

@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/drud/ddev/pkg/archive"
-	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

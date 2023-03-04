@@ -3,8 +3,8 @@ package versionconstants
 import (
 	"fmt"
 
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 )
 
 // DdevVersion is the current version of ddev, by default the git committish (should be current git tag)

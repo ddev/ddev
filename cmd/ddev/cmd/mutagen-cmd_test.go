@@ -2,15 +2,15 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 	"os"
 	"strings"
 	"testing"
 
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
 )
 

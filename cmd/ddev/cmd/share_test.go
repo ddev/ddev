@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	exec2 "github.com/drud/ddev/pkg/exec"
+	exec2 "github.com/ddev/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"

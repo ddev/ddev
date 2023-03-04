@@ -1,9 +1,9 @@
 package ddevapp_test
 
 import (
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"

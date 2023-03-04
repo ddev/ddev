@@ -8,13 +8,13 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/mattn/go-isatty"
 
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 

@@ -3,7 +3,7 @@ package util
 import (
 	"bytes"
 	"fmt"
-	"github.com/drud/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/output"
 	"io"
 	"os"
 )

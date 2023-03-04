@@ -8,8 +8,8 @@ import (
 
 	"os"
 
-	"github.com/drud/ddev/pkg/appimport"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/appimport"
+	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 )
 

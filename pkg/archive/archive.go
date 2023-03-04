@@ -7,7 +7,7 @@ import (
 	"compress/bzip2"
 	"compress/gzip"
 	"fmt"
-	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"io"
 	"io/fs"
 	"os"
@@ -16,7 +16,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/ulikunitz/xz"
 )
 
