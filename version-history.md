@@ -174,10 +174,10 @@ This version history has been driven by what we hear from our wonderful communit
 ## v1.4 (released 2018-11-15)
 
 - The `ddev composer` command now provides in-container Composer commands for nearly anything you’d want to do with Composer. We found that lots of people, and especially Windows users, were having trouble with fairly difficult workarounds to use Composer. However this has value to most DDEV users:
-  - The composer and php version used are the exact version configured for your project.
-  - Your composer project will be configured for the OS it’s actually running (Linux in the container). This was a serious problem for Windows users, as `composer install` on Windows OS did not result in the same results as `composer install` in Linux, even if symlinks were working.
-  - Note that because of problems with symlinks on Windows, it is *not* recommended to use code from the host (Windows) side, or to check it in. That means it will not be appropriate to check in the vendor directory on the host (although it would be safe inside the container), but most people do a composer build anyway.
-  - The `ddev composer create` command is almost the same as `composer create-project` but we couldn’t make it exactly the same. See [docs](https://ddev.readthedocs.io/en/latest/users/basics/developer-tools/#ddev-and-composer) for its usage.
+    - The composer and php version used are the exact version configured for your project.
+    - Your composer project will be configured for the OS it’s actually running (Linux in the container). This was a serious problem for Windows users, as `composer install` on Windows OS did not result in the same results as `composer install` in Linux, even if symlinks were working.
+    - Note that because of problems with symlinks on Windows, it is *not* recommended to use code from the host (Windows) side, or to check it in. That means it will not be appropriate to check in the vendor directory on the host (although it would be safe inside the container), but most people do a composer build anyway.
+    - The `ddev composer create` command is almost the same as `composer create-project` but we couldn’t make it exactly the same. See [docs](https://ddev.readthedocs.io/en/latest/users/basics/developer-tools/#ddev-and-composer) for its usage.
 - Composer caching: Composer downloads are now cached in a shared Docker volume, making in-container composer builds far faster.
 - Shared SSH authentication in web container: You can now `ddev auth ssh` to authenticate your keys in the automatically-started `ddev-ssh-agent` container, which shares auth information with ever project’s web container. This allows access to private composer repositories without the pain of manually mounting ssh keys and authenticating each time you need them in each web container. It also allows easier use of facilities like `drush rsync` that need SSH auth. This means that the previous [manual workaround for mounting ssh keys](https://stackoverflow.com/questions/51065054/how-can-i-get-my-ssh-keys-and-identity-into-ddevs-web-container) is now obsolete. Please use `ddev auth ssh` instead.
 - Configurable working and destination directories. You can now specify the container directory you land in with `ddev ssh`, `ddev exec`, and exec hooks in `config.yaml` (#1214). This also means that TYPO3 users will land in the project root by default; Drupal/Backdrop users land in the project root by default.
@@ -208,8 +208,8 @@ This version history has been driven by what we hear from our wonderful communit
 
 - DDEV now requires Docker 18.06; a serious Docker bug in 18.03 caused lots and lots of crashes, so we moved it up to 18.06.
 - You can now remove hostnames that DDEV has added to `/etc/hosts`.
-  - `ddev remove --remove-data` removes the hostname(s) associated with the project
-  - `sudo ddev hostname --remove-inactive` will remove from `/etc/hosts` all hostnames that are not currently active in a DDEV project.
+    - `ddev remove --remove-data` removes the hostname(s) associated with the project
+    - `sudo ddev hostname --remove-inactive` will remove from `/etc/hosts` all hostnames that are not currently active in a DDEV project.
 - The docker-compose version has been updated to 3.6, so any customized `docker-compose.*.yaml` files in your project must be updated to read `version: '3.6'`
 - The project database is now stored in a Docker volume instead of in the `~/.ddev/<project>/mysql` directory. This means that on your first `ddev start` it will be migrated from the `~/.ddev` file into a Docker volume. The old `~/.ddev/<project>/mysql` will be renamed to `~/.ddev/<project>/mysql.bak`.
 - Database snapshotting is now available. At any time you can create a snapshot (in mariabackup format) using `ddev snapshot` or `ddev snapshot --name <somename>`. That db snapshot can easily be restored later with `ddev restore-snapshot <somename>`. These are stored in the project’s `.ddev/db_snapshots directory`.
