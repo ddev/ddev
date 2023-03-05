@@ -12,7 +12,7 @@ on:
       - "docs/**"
       - ".spellcheckwordlist.txt"
       - ".spellcheck.yml"
-      - ".markdownlintrc"
+      - ".markdownlint.jsonc"
       - "mkdocs.yml"
       - ".readthedocs.yaml"
       - ".github/workflows/**"
@@ -32,7 +32,7 @@ jobs:
       - name: Run markdownlint on docs
         uses: docker://avtodev/markdown-lint:v1
         with:
-          config: '.markdownlintrc'
+          config: '.markdownlint.jsonc'
           args: '*.md docs/content'
       #    - name: Debugging with tmate
       #      uses: mxschmitt/action-tmate@v3.1

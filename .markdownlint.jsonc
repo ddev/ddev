@@ -1,0 +1,35 @@
+{
+    // These rules mostly come from mkdocs rules
+    // https://github.com/mkdocs/mkdocs/blob/master/.markdownlintrc
+    // Using markdownlint from https://github.com/DavidAnson/markdownlint
+    // and https://github.com/igorshubovych/markdownlint-cli
+    // npm install --global markdownlint-cli
+
+    // Enable all markdownlint rules
+    "default": true,
+
+    // Fine with long lines, editor can wrap
+    "line-length": false,
+
+    // Unfortunately, mkdocs messes up nearly everything if you insist on this;
+    // the problem is that it's concatenating files, so you lose important levels
+    // of sidebar headings if every file starts with H1.
+    "first-line-h1": false,
+
+    "MD004": { "style": "consistent" },
+
+    // Set Ordered list item prefix to "ordered" (use 1. 2. 3. not 1. 1. 1.)
+    "MD029": { "style": "ordered" },
+
+    // Set list indent level to 4 which Python-Markdown requires
+    "MD007": { "indent": 4 },
+
+    // Embedded html allowed; often used for named anchors with mkdocs/readthedocs
+    "no-inline-html": false,
+
+    // Fenced code blocks do not need language spec
+    "MD040": false,
+
+    // Exclude code block style
+    "MD046": false
+}
