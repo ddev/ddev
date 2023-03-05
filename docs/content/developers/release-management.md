@@ -44,6 +44,13 @@ The following “Repository secret” environment variables must be added to <ht
 * Make sure [`version-history.md`](https://github.com/ddev/ddev/blob/master/version-history.md) is up to date.
 * Make sure the Docker images are all tagged and pushed.
 * Make sure [`pkg/versionconstants/versionconstants.go`](https://github.com/ddev/ddev/blob/master/pkg/versionconstants/versionconstants.go) is all set to point to the new images and tests have been run.
+* If the devcontainer-feature.json (for GitHub Codespaces) needs to be updated, use the [`devcontainer` CLI](https://github.com/devcontainers/cli):
+
+    ```bash
+    cd .github/devcontainers/source
+    export GITHUB_TOKEN=<personal-access-token-with-power-to-manage-packages>
+    devcontainer features publish -n ddev/ddev .
+    ```
 
 ### Actual Release Creation
 
