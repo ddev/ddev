@@ -4,10 +4,5 @@
     "go.testEnvVars": {
         "DDEV_DEBUG": "true",
         "GOTEST_SHORT": "true"
-    },
-    "markdownlint.config": {
-        "MD007": {
-            "indent": 4
-        }    
     }
 }
