@@ -15,7 +15,7 @@ BASE_DIR=$PWD
 mkdir -p $ARTIFACTS || (sudo mkdir -p $ARTIFACTS && sudo chmod 777 $ARTIFACTS)
 export VERSION=$(git describe --tags --always --dirty)
 
-# 2022-03-10: The image tarballs were for drud/quicksprint, which is currently in retirement
+# 2022-03-10: The image tarballs were for ddev/quicksprint, which is currently in retirement
 # If the version does not have a dash in it, it's not prerelease,
 # so build image tarballs
 #if [ "${VERSION}" = "${VERSION%%-*}" ]; then
