@@ -1,6 +1,6 @@
 # DDEV Version History
 
-This version history has been driven by what we hear from our wonderful community of users. If you have lobbying for a favorite item or think things should be re-prioritized, just lobby in the [issue queue](https://github.com/drud/ddev/issues). We listen. Or talk to us in any of the [support locations](https://ddev.readthedocs.io/en/stable/#support).
+This version history has been driven by what we hear from our wonderful community of users. If you have lobbying for a favorite item or think things should be re-prioritized, just lobby in the [issue queue](https://github.com/ddev/ddev/issues). We listen. Or talk to us in any of the [support locations](https://ddev.readthedocs.io/en/stable/#support).
 
 ## v1.21 (Released 2022-08 to 2022-12)
 
@@ -96,7 +96,7 @@ This version history has been driven by what we hear from our wonderful communit
 - [x] Drupal 9 support
 - [x] Global NFS configuration
 - [x] `ddev xdebug` command
-- [x] Improve `ddev describe` to show information about additional services, <https://github.com/drud/ddev/issues/788>
+- [x] Improve `ddev describe` to show information about additional services, <https://github.com/ddev/ddev/issues/788>
 - [x] Competitive analysis with similar products both within the spaces we usually work and outside them.
 - [x] GUI evaluations
 
@@ -106,7 +106,7 @@ This version history has been driven by what we hear from our wonderful communit
 - [x] Support for Magento and Magento 2, #1802
 - [x] Remove deprecated support for webcache
 - [ ] Develop an advisory board of interested users to determine product focus
-- [x] Review/experimentation with GUI options [#2110](https://github.com/drud/ddev/issues/2110)
+- [x] Review/experimentation with GUI options [#2110](https://github.com/ddev/ddev/issues/2110)
 
 ## v1.12 (Released 2019-12-04)
 
@@ -117,28 +117,28 @@ This version history has been driven by what we hear from our wonderful communit
 ## v1.11 (Released 2019-09-19)
 
 - [x] PHP 7.4 support
-- [x] [Allow omitting the db container](https://github.com/drud/ddev/issues/1490)
+- [x] [Allow omitting the db container](https://github.com/ddev/ddev/issues/1490)
 
 ## v1.10 (released 2019-08-02)
 
-- [x] Improved instrumentation with [segment](https://segment.com/): @unn is advocating for segment as better than Sentry (or in addition to Sentry). Statistics: Monthly active users, Conversion ratio. [#1640](https://github.com/drud/ddev/issues/1640)
-- [x] [Add custom ddev commands](https://github.com/drud/ddev/issues/1372) - See [docksal's approach](https://docs.docksal.io/fin/custom-commands/)
-- [x] [Allow user additions to .bashrc, store bash history, copy gitconfig](https://github.com/drud/ddev/issues/926): These are intended to make it more comfortable for the user to work inside the web container.
-- [x] [Add "ddev mysql" command](https://github.com/drud/ddev/issues/1551)
-- [x] [Add delete, poweroff, cleanup commands and hints](https://github.com/drud/ddev/issues/1588)
+- [x] Improved instrumentation with [segment](https://segment.com/): @unn is advocating for segment as better than Sentry (or in addition to Sentry). Statistics: Monthly active users, Conversion ratio. [#1640](https://github.com/ddev/ddev/issues/1640)
+- [x] [Add custom ddev commands](https://github.com/ddev/ddev/issues/1372) - See [docksal's approach](https://docs.docksal.io/fin/custom-commands/)
+- [x] [Allow user additions to .bashrc, store bash history, copy gitconfig](https://github.com/ddev/ddev/issues/926): These are intended to make it more comfortable for the user to work inside the web container.
+- [x] [Add "ddev mysql" command](https://github.com/ddev/ddev/issues/1551)
+- [x] [Add delete, poweroff, cleanup commands and hints](https://github.com/ddev/ddev/issues/1588)
 - [x] Sign macOS binary #1626
 - [x] Make sure exposed ports are not exposed on local subnet, #1662
-- [x] [Rework containers to provide a "real" user inside container](https://github.com/drud/ddev/issues/1403)
+- [x] [Rework containers to provide a "real" user inside container](https://github.com/ddev/ddev/issues/1403)
 
 ## v1.9 (released 2019-06-26)
 
-- [x] [Contrib-pointers for additional Services and techniques](https://github.com/drud/ddev/issues/1474): We want to make another place for the outstanding content and pointers and applications that our users are developing. This will probably be a contrib repository for ddev.
-- [x] [NFS Setup Security Review](https://github.com/drud/ddev/issues/1474): More docs and improved NFS setup scripts so people can think clearly and plan carefully for how they’re using NFS with DDEV.
-- [x] [Use DNS to provide name resolution when internet available](https://github.com/drud/ddev/issues/416)
-- [x] [Manage ddev project list in ~/.ddev/global_config.yaml](https://github.com/drud/ddev/issues/642): Since the beginning of DDEV, `ddev list` and everything that depended on it couldn’t work if the project was shut down. This should fix that.
-- [x] [Allow specifying a target container for hook execution](https://github.com/drud/ddev/issues/1038)
-- [x] [Support ngrok to allow web access remotely](https://github.com/drud/ddev/issues/375)
-- [x] [Hook system overhaul](https://github.com/drud/ddev/issues/1372)
+- [x] [Contrib-pointers for additional Services and techniques](https://github.com/ddev/ddev/issues/1474): We want to make another place for the outstanding content and pointers and applications that our users are developing. This will probably be a contrib repository for ddev.
+- [x] [NFS Setup Security Review](https://github.com/ddev/ddev/issues/1474): More docs and improved NFS setup scripts so people can think clearly and plan carefully for how they’re using NFS with DDEV.
+- [x] [Use DNS to provide name resolution when internet available](https://github.com/ddev/ddev/issues/416)
+- [x] [Manage ddev project list in ~/.ddev/global_config.yaml](https://github.com/ddev/ddev/issues/642): Since the beginning of DDEV, `ddev list` and everything that depended on it couldn’t work if the project was shut down. This should fix that.
+- [x] [Allow specifying a target container for hook execution](https://github.com/ddev/ddev/issues/1038)
+- [x] [Support ngrok to allow web access remotely](https://github.com/ddev/ddev/issues/375)
+- [x] [Hook system overhaul](https://github.com/ddev/ddev/issues/1372)
 
 ## v1.8 (released 2019-05-14)
 
@@ -169,7 +169,7 @@ This version history has been driven by what we hear from our wonderful communit
 
 - The newly released PHP 7.3 is now supported, `php_version: 7.3` or `ddev config --php-version=7.3`. As noted above, `php-memcached` is not yet available for 7.3.
 - For macOS users, a new *experimental* webcaching strategy makes webserving way faster on large projects like TYPO3 or Drupal 8. `webcache_enabled: true` in the `config.yaml` will start a caching container so that actual webserving happens on a much faster filesystem. This is experimental and has some risks, we want to know your experience. It takes longer to do a `ddev start` because your entire project has to be pushed into the container, but after that hitting a page is way, way more satisfying. Note that `.git` directories are not copied into the webcache, Git won’t work inside the web container. It just seemed too risky to combine 2-way file synchronization with your precious git repository, so do Git operations on the host. Note that if you have a lot of files or big files in your repo, they have to be pushed into the container, and that can take time. I have had to clean up my `.ddev/db_snapshots` directory rather than wait for the `docker cp` to happen forever. A big shout out to Drud team member @cweagans for the original [docker-bg-sync](https://github.com/cweagans/docker-bg-sync) that we forked and used to implement this! Thanks!
-- Important Windows symlink support in `ddev composer` (<https://github.com/drud/ddev/pull/1323>). On the CIFS filesystem used by Docker-for-Windows, real Linux/Mac symlinks are *supported* but cannot be created, so Composer operations inside the container in some cases create simulated symlinks, which are actually just files with XSym content; these work fine inside the container… but they’re not real symlinks and sometimes cause some issues. We’ve added a cleanup step after `ddev composer` that converts those XSym files into real symlinks. It only works on Docker for Windows, and it only works if you have “Developer mode” enabled on your Windows 10/11 Pro host. More info is in the [docs](https://ddev.readthedocs.io/en/latest/users/basics/developer-tools/#ddev-and-composer)
+- Important Windows symlink support in `ddev composer` (<https://github.com/ddev/ddev/pull/1323>). On the CIFS filesystem used by Docker-for-Windows, real Linux/Mac symlinks are *supported* but cannot be created, so Composer operations inside the container in some cases create simulated symlinks, which are actually just files with XSym content; these work fine inside the container… but they’re not real symlinks and sometimes cause some issues. We’ve added a cleanup step after `ddev composer` that converts those XSym files into real symlinks. It only works on Docker for Windows, and it only works if you have “Developer mode” enabled on your Windows 10/11 Pro host. More info is in the [docs](https://ddev.readthedocs.io/en/latest/users/basics/developer-tools/#ddev-and-composer)
 
 ## v1.4 (released 2018-11-15)
 

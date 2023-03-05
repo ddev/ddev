@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/drud/ddev/cmd/ddev/cmd"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/cmd/ddev/cmd"
+	"github.com/ddev/ddev/pkg/util"
 	"os"
 	"path/filepath"
 )

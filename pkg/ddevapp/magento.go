@@ -2,11 +2,11 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/archive"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
 	"os"
 	"path/filepath"
 )

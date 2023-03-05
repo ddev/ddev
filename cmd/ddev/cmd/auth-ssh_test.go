@@ -1,18 +1,18 @@
 package cmd_test
 
 import (
-	"github.com/drud/ddev/cmd/ddev/cmd"
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/cmd/ddev/cmd"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/drud/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
 )
 

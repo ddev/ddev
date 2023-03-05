@@ -72,15 +72,15 @@
 !define PRODUCT_DOCUMENTATION "${PRODUCT_NAME} Documentation"
 !define PRODUCT_DOCUMENTATION_URL "https://ddev.readthedocs.io"
 
-!define PRODUCT_RELEASE_URL "https://github.com/drud/ddev/releases"
+!define PRODUCT_RELEASE_URL "https://github.com/ddev/ddev/releases"
 !define PRODUCT_RELEASE_NOTES "${PRODUCT_NAME} Release Notes"
 !define PRODUCT_RELEASE_NOTES_URL "${PRODUCT_RELEASE_URL}/${RELEASE_TAG}"
 
 !define PRODUCT_ISSUES "${PRODUCT_NAME} Issues"
-!define PRODUCT_ISSUES_URL "https://github.com/drud/ddev/issues"
+!define PRODUCT_ISSUES_URL "https://github.com/ddev/ddev/issues"
 
 !define PRODUCT_PROJECT "${PRODUCT_NAME} GitHub"
-!define PRODUCT_PROJECT_URL "https://github.com/drud/ddev#readme"
+!define PRODUCT_PROJECT_URL "https://github.com/ddev/ddev#readme"
 
 
 
@@ -99,7 +99,7 @@
  */
 !define GSUDO_NAME "gsudo"
 !define GSUDO_SETUP "sudo.exe"
-!define GSUDO_URL "https://github.com/drud/gsudo/releases/download/v0.7.3/gsudo.exe"
+!define GSUDO_URL "https://github.com/ddev/gsudo/releases/download/v0.7.3/gsudo.exe"
 
 !define WINNFSD_NAME "WinNFSd"
 !define WINNFSD_VERSION "2.4.0"
@@ -109,7 +109,7 @@
 !define NSSM_NAME "NSSM"
 !define NSSM_VERSION "2.24-101-g897c7ad"
 !define NSSM_SETUP "nssm.exe"
-!define NSSM_URL "https://github.com/drud/nssm/releases/download/${NSSM_VERSION}/nssm.exe"
+!define NSSM_URL "https://github.com/ddev/nssm/releases/download/${NSSM_VERSION}/nssm.exe"
 
 
 
@@ -319,7 +319,7 @@ ReserveFile /plugin INetC.dll
 ;VIAddVersionKey /LANG=${LANG_ENGLISH} "Comments" "A test comment"
 ;VIAddVersionKey /LANG=${LANG_ENGLISH} "CompanyName" "${PRODUCT_PUBLISHER}"
 ;VIAddVersionKey /LANG=${LANG_ENGLISH} "LegalTrademarks" "Test Application is a trademark of Fake company"
-;VIAddVersionKey /LANG=${LANG_ENGLISH} "LegalCopyright" "https://github.com/drud/ddev/raw/master/LICENSE"
+;VIAddVersionKey /LANG=${LANG_ENGLISH} "LegalCopyright" "https://github.com/ddev/ddev/raw/master/LICENSE"
 ;VIAddVersionKey /LANG=${LANG_ENGLISH} "FileDescription" "Windows Installer of ${PRODUCT_NAME_FULL}"
 ;ProductName
 ;Comments

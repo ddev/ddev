@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 	"os"
 )

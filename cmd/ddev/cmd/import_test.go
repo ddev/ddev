@@ -6,8 +6,8 @@ import (
 
 	"os"
 
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
 	asrt "github.com/stretchr/testify/assert"
 )
 

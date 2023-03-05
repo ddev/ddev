@@ -2,8 +2,8 @@ package ddevapp_test
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"os"
 	"strings"

@@ -1,7 +1,7 @@
 package globalconfig
 
 import (
-	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"os"
 )
 

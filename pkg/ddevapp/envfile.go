@@ -2,7 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/joho/godotenv"
 	"regexp"
 	"strings"

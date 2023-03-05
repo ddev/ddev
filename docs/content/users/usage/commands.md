@@ -416,7 +416,7 @@ ddev debug router-nginx-config
 
 ### `debug test`
 
-Run diagnostics using the embedded [test script](https://github.com/drud/ddev/blob/master/cmd/ddev/cmd/scripts/test_ddev.sh).
+Run diagnostics using the embedded [test script](https://github.com/ddev/ddev/blob/master/cmd/ddev/cmd/scripts/test_ddev.sh).
 
 Example:
 
@@ -565,13 +565,13 @@ ddev get --list
 ddev get --list --all
 
 # Download the official Redis add-on
-ddev get drud/ddev-redis
+ddev get ddev/ddev-redis
 
 # Get debug info about `ddev get` failure
-ddev get drud/ddev-redis --verbose
+ddev get ddev/ddev-redis --verbose
 
 # Download the Drupal 9 Solr add-on from its v0.0.5 release tarball
-ddev get https://github.com/drud/ddev-drupal9-solr/archive/refs/tags/v0.0.5.tar.gz
+ddev get https://github.com/ddev/ddev-drupal9-solr/archive/refs/tags/v0.0.5.tar.gz
 
 # Copy an add-on available in another directory
 ddev get /path/to/package
@@ -1016,7 +1016,7 @@ Example:
 →  ddev self-upgrade
 
 DDEV appears to have been installed with install_ddev.sh, you can run that script again to update.
-curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev.sh | bash
 ```
 
 ## `sequelace`

@@ -3,8 +3,8 @@ package versionconstants
 import (
 	"fmt"
 
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 )
 
 // DdevVersion is the current version of ddev, by default the git committish (should be current git tag)
@@ -36,11 +36,9 @@ const TraditionalRouterImage = "drud/ddev-router:v1.21.5"
 const TraefikRouterImage = "traefik:v2.9"
 
 // SSHAuthImage is image for agent
-// var SSHAuthImage = "drud/ddev-ssh-agent"
 var SSHAuthImage = "drud/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-// var SSHAuthTag = "v1.19.0"
 var SSHAuthTag = "v1.21.5"
 
 // Busybox is used a couple of places for a quick-pull

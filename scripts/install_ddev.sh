@@ -1,14 +1,14 @@
 #!/bin/bash
 
 #ddev-generated
-# Script to download and install DDEV, https://github.com/drud/ddev
+# Script to download and install DDEV, https://github.com/ddev/ddev
 # Usage: install_ddev.sh or install_ddev.sh <version>
 
 set -o errexit
 set -o pipefail
 set -o nounset
 
-GITHUB_OWNER=${GITHUB_OWNER:-drud}
+GITHUB_OWNER=${GITHUB_OWNER:-ddev}
 ARTIFACTS="ddev mkcert macos_ddev_nfs_setup.sh"
 TMPDIR=/tmp
 

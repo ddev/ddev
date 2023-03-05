@@ -13,7 +13,7 @@ SHELL ["/bin/bash", "-c"]
 # Get forego, which may be either a binary download (jwilder) or
 # a tarball (from https://github.com/ddollar/forego download)
 RUN set -eu -o pipefail && \
-    FOREGO_URL="https://github.com/drud/forego/releases/download/v0.16.1/forego-${TARGETARCH}" && \
+    FOREGO_URL="https://github.com/ddev/forego/releases/download/v0.16.1/forego-${TARGETARCH}" && \
     cd /tmp && curl --fail -sSL -o /usr/local/bin/forego "${FOREGO_URL}"  && chmod +x /usr/local/bin/forego
 
 RUN apt-get -qq update && \
@@ -26,7 +26,7 @@ RUN apt-get -qq update && \
 # Download docker-gen
 RUN set -eu -o pipefail && \
     export DOCKER_GEN_FILE="docker-gen-linux-${TARGETARCH}-${DOCKER_GEN_VERSION}.tar.gz" && \
-    cd /tmp && wget -q https://github.com/drud/docker-gen/releases/download/${DOCKER_GEN_VERSION}/${DOCKER_GEN_FILE} && \
+    cd /tmp && wget -q https://github.com/ddev/docker-gen/releases/download/${DOCKER_GEN_VERSION}/${DOCKER_GEN_FILE} && \
     tar -C /usr/local/bin -xzf "${DOCKER_GEN_FILE}" && \
     rm $DOCKER_GEN_FILE
 

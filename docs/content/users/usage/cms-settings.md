@@ -55,7 +55,7 @@ $settings['container_yamls'][] = DRUPAL_ROOT . '/sites/development.services.yml'
 
 #### Multisite
 
-1. Start with the [DDEV Drupal 8 Multisite Recipe](<https://github.com/drud/ddev-contrib/tree/master/recipes/drupal8-multisite>).
+1. Start with the [DDEV Drupal 8 Multisite Recipe](<https://github.com/ddev/ddev-contrib/tree/master/recipes/drupal8-multisite>).
 2. Update configuration files.
     1. Update each `site/{site_name}/settings.php`:
 

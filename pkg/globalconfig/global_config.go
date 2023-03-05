@@ -3,8 +3,8 @@ package globalconfig
 import (
 	"context"
 	"fmt"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 	"net"

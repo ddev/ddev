@@ -2,7 +2,7 @@ package dockerutil_test
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"log"
 	"os"
 	"path"
@@ -12,15 +12,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/versionconstants"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	logOutput "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 
-	. "github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/output"
+	. "github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/fsouza/go-dockerclient"
 	asrt "github.com/stretchr/testify/assert"
 )

@@ -1,4 +1,4 @@
-module github.com/drud/ddev
+module github.com/ddev/ddev
 
 require (
 	github.com/Masterminds/semver/v3 v3.1.1

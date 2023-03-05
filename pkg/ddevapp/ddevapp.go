@@ -12,16 +12,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/drud/ddev/pkg/appimport"
-	"github.com/drud/ddev/pkg/archive"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/versionconstants"
+	"github.com/ddev/ddev/pkg/appimport"
+	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/mattn/go-isatty"
 	"github.com/otiai10/copy"
@@ -591,7 +591,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 	// The perl manipulation removes statements like CREATE DATABASE and USE, which
 	// throw off imports. This is a scary manipulation, as it must not match actual content
 	// as has actually happened with https://www.ddevhq.org/ddev-local/ddev-local-database-management/
-	// and in https://github.com/drud/ddev/issues/2787
+	// and in https://github.com/ddev/ddev/issues/2787
 	// The backtick after USE is inserted via fmt.Sprintf argument because it seems there's
 	// no way to escape a backtick in a string literal.
 	inContainerCommand := []string{}

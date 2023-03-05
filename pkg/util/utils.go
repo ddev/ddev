@@ -2,14 +2,6 @@ package util
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/jedib0t/go-pretty/v6/text"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/text/runes"
-	"golang.org/x/text/transform"
-	"golang.org/x/text/unicode/norm"
 	"math"
 	"math/rand"
 	osexec "os/exec"
@@ -19,7 +11,15 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/drud/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/jedib0t/go-pretty/v6/text"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 )
 
 // Failed will print a red error message and exit with failure.
@@ -153,7 +153,7 @@ func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 
 	// If we have a numeric username it's going to create havoc, so
 	// change it into "a" + number
-	// Example in https://github.com/drud/ddev/issues/3187 - username="310822", uid=1663749668, gid=1240132652
+	// Example in https://github.com/ddev/ddev/issues/3187 - username="310822", uid=1663749668, gid=1240132652
 	if !nodeps.IsLetter(string(username[0])) {
 		username = "a" + username
 	}

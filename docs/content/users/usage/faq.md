@@ -133,23 +133,23 @@ You can use the [`self-upgrade`](../usage/commands.md#self-upgrade) command for 
 * On Linux + WSL2 using Debian/Ubuntu’s `apt install` technique, run `sudo apt update && sudo apt upgrade ddev` like any other package on your system.
 <!-- markdownlint-disable-next-line -->
 * On Linux + WSL2 with a Homebrew install, run `brew update && brew upgrade ddev`.
-* On macOS or Linux (including WSL2) if you installed using the [install_ddev.sh script](https://github.com/drud/ddev/blob/master/scripts/install_ddev.sh) you just run it again:
+* On macOS or Linux (including WSL2) if you installed using the [install_ddev.sh script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) you just run it again:
     <!-- markdownlint-disable -->
     ```
-    curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash
+    curl -fsSL https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev.sh | bash
     ```
     <!-- markdownlint-restore -->
-* On traditional Windows, you likely installed with Chocolatey or by downloading the installer package. You can upgrade with `choco upgrade ddev` or by visiting the [releases](https://github.com/drud/ddev/releases) page and downloading the installer. Both techniques will work.
+* On traditional Windows, you likely installed with Chocolatey or by downloading the installer package. You can upgrade with `choco upgrade ddev` or by visiting the [releases](https://github.com/ddev/ddev/releases) page and downloading the installer. Both techniques will work.
 * On Arch-Linux based systems, use the standard upgrade techniques, e.g. `yay -Syu`.
 
 ### How can I install a specific version of DDEV?
 
 If you’re using Homebrew, first run `brew unlink ddev` to get rid of the version you have there. Then use one of these options:
 
-1. Download the version you want from the [releases page](https://github.com/drud/ddev/releases) and place it in your `$PATH`.
-2. Use the [install_ddev.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh) script with the version number argument. For example, if you want v1.18.3-alpha1, run `curl -fsSL https://raw.githubusercontent.com/drud/ddev/master/scripts/install_ddev.sh | bash -s v1.18.3-alpha1`.
+1. Download the version you want from the [releases page](https://github.com/ddev/ddev/releases) and place it in your `$PATH`.
+2. Use the [install_ddev.sh](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev.sh) script with the version number argument. For example, if you want v1.18.3-alpha1, run `curl -fsSL https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev.sh | bash -s v1.18.3-alpha1`.
 3. On Debian/Ubuntu/WSL2 with DDEV installed via apt, you can run `sudo apt update && sudo apt install ddev=<version>`, for example `sudo apt install ddev=1.21.1`.
-4. If you want the very latest, unreleased version of DDEV, run `brew unlink ddev && brew install drud/ddev/ddev --HEAD`.
+4. If you want the very latest, unreleased version of DDEV, run `brew unlink ddev && brew install ddev/ddev/ddev --HEAD`.
 
 ### How can I back up or restore all project databases?
 
@@ -207,7 +207,7 @@ This is exactly the same as moving a project from one computer to another descri
 
 If you see “The hostname <hostname> is not currently resolvable” and you _can_ `ping <hostname>`, it may be that DNS resolution is slow.
 
-DDEV doesn’t have control over your computer’s name resolution, so it doesn’t have any way to influence how your browser gets an IP address from a hostname. It knows you have to be connected to the internet to do that, and uses a test DNS lookup of `<somethingrandom>.ddev.site` as a way to guess whether you’re connected to the internet. If it’s unable to do a name lookup, or if the hostname associated with your project is not `*.ddev.site`, it will try to create entries in `/etc/hosts`, since it’s assuming you can’t look up your project’s hostname(s) via DNS. If your internet (and name resolution) is actually working, but DNS is slow, run `ddev config global --internet-detection-timeout-ms=3000` to set the timeout to 3 seconds (or higher). See [this GitHub issue](https://github.com/drud/ddev/issues/2409#issuecomment-662448025) for more. (If DNS rebinding is disallowed on your network/router, this won’t be solvable without network/router changes. Help [here](https://github.com/drud/ddev/issues/2409#issuecomment-675083658) and [here](https://github.com/drud/ddev/issues/2409#issuecomment-686718237).) For more detailed troubleshooting information, please see the [troubleshooting section](troubleshooting.md#ddev-starts-fine-but-my-browser-cant-access-the-url-url-server-ip-address-could-not-be-found-or-we-cant-connect-to-the-server-at-url).
+DDEV doesn’t have control over your computer’s name resolution, so it doesn’t have any way to influence how your browser gets an IP address from a hostname. It knows you have to be connected to the internet to do that, and uses a test DNS lookup of `<somethingrandom>.ddev.site` as a way to guess whether you’re connected to the internet. If it’s unable to do a name lookup, or if the hostname associated with your project is not `*.ddev.site`, it will try to create entries in `/etc/hosts`, since it’s assuming you can’t look up your project’s hostname(s) via DNS. If your internet (and name resolution) is actually working, but DNS is slow, run `ddev config global --internet-detection-timeout-ms=3000` to set the timeout to 3 seconds (or higher). See [this GitHub issue](https://github.com/ddev/ddev/issues/2409#issuecomment-662448025) for more. (If DNS rebinding is disallowed on your network/router, this won’t be solvable without network/router changes. Help [here](https://github.com/ddev/ddev/issues/2409#issuecomment-675083658) and [here](https://github.com/ddev/ddev/issues/2409#issuecomment-686718237).) For more detailed troubleshooting information, please see the [troubleshooting section](troubleshooting.md#ddev-starts-fine-but-my-browser-cant-access-the-url-url-server-ip-address-could-not-be-found-or-we-cant-connect-to-the-server-at-url).
 
 ### How can I configure a project with the defaults without hitting <kbd>RETURN</kbd> a bunch of times?
 
@@ -218,18 +218,18 @@ If anything in `.ddev/config.yaml` is wrong, you can edit that directly or use [
 
 ### How do I get support?
 
-See the [support options](../support.md), including [Discord](https://discord.gg/kDvSFBSZfs), [Stack Overflow](https://stackoverflow.com/questions/tagged/ddev) and the [issue queue](https://github.com/drud/ddev/issues).
+See the [support options](../support.md), including [Discord](https://discord.gg/kDvSFBSZfs), [Stack Overflow](https://stackoverflow.com/questions/tagged/ddev) and the [issue queue](https://github.com/ddev/ddev/issues).
 
 ### How can I contribute to DDEV?
 
 We love and welcome contributions of knowledge, support, docs, and code:
 
-* Submit an issue or pull request to the [main repo](https://github.com/drud/ddev).
-* Add your external resource to [awesome-ddev](https://github.com/drud/awesome-ddev).
-* Add your recipe or HOWTO to [ddev-contrib](https://github.com/drud/ddev-contrib).
+* Submit an issue or pull request to the [main repo](https://github.com/ddev/ddev).
+* Add your external resource to [awesome-ddev](https://github.com/ddev/awesome-ddev).
+* Add your recipe or HOWTO to [ddev-contrib](https://github.com/ddev/ddev-contrib).
 * Help others in [Discord](https://discord.gg/kDvSFBSZfs) and on [Stack Overflow](https://stackoverflow.com/tags/ddev).
 * Contribute financially via [GitHub Sponsors](https://github.com/sponsors/rfay).
-* Get involved with DDEV governance and the [Advisory Group](https://github.com/drud/ddev/discussions/categories/ddev-advisory-group).
+* Get involved with DDEV governance and the [Advisory Group](https://github.com/ddev/ddev/discussions/categories/ddev-advisory-group).
 
 ### How do financial contributions support DDEV?
 

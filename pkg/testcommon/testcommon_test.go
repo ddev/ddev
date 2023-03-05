@@ -2,17 +2,18 @@ package testcommon
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	asrt "github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
+	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var DdevBin = "ddev"
@@ -20,8 +21,8 @@ var TestSites = []TestSite{
 	{
 		SourceURL:                     "https://wordpress.org/wordpress-5.8.2.tar.gz",
 		ArchiveInternalExtractionPath: "wordpress/",
-		FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/wordpress5.8.2_files.tar.gz",
-		DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/wordpress5.8.2_db.sql.tar.gz",
+		FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/wordpress5.8.2_files.tar.gz",
+		DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/wordpress5.8.2_db.sql.tar.gz",
 		Docroot:                       "",
 		Type:                          nodeps.AppTypeWordPress,
 		Safe200URIWithExpectation:     URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
@@ -228,7 +229,7 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 func TestGetCachedArchive(t *testing.T) {
 	assert := asrt.New(t)
 
-	sourceURL := "https://raw.githubusercontent.com/drud/ddev/master/.gitignore"
+	sourceURL := "https://raw.githubusercontent.com/ddev/ddev/master/.gitignore"
 	exPath, archPath, err := GetCachedArchive("TestInvalidArchive", "test", "", sourceURL)
 	assert.Error(err)
 	if err != nil {

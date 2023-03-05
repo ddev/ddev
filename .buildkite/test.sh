@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script is used to build drud/ddev using buildkite
+# This script is used to build ddev/ddev using buildkite
 
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 

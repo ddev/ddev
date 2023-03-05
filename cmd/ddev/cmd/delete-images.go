@@ -1,16 +1,16 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/versionconstants"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"os"
 	"sort"
 	"strings"
 
-	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/ddevapp"
 
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/util"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/spf13/cobra"
 )

@@ -1,7 +1,7 @@
 #ddev-generated
 # Example Platform.sh provider configuration.
 
-# Consider using `ddev get drud/ddev-platformsh` (https://github.com/drud/ddev-platformsh) for more
+# Consider using `ddev get ddev/ddev-platformsh` (https://github.com/ddev/ddev-platformsh) for more
 # complete platform integration.
 
 # To use this configuration,

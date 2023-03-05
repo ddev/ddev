@@ -1,15 +1,15 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/fileutil"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
 
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/testcommon"
 )
 
 // TestDebugRefreshCmd tests that ddev debug refresh actually clears docker caache

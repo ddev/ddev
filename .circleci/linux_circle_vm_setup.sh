@@ -28,7 +28,7 @@ echo "capath=/etc/ssl/certs/" >>~/.curlrc
 
 . ~/.bashrc
 
-for item in drud/ddev/ddev golang makensis mingw-w64 mkcert; do
+for item in ddev/ddev/ddev golang makensis mingw-w64 mkcert; do
     brew install $item >/dev/null || brew upgrade $item >/dev/null
 done
 

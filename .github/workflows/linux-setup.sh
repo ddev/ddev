@@ -29,7 +29,7 @@ echo "capath=/etc/ssl/certs/" >>~/.curlrc
 
 source ~/.bashrc
 
-brew tap drud/ddev >/dev/null
+brew tap ddev/ddev >/dev/null
 for item in docker-compose golangci-lint mkcert; do
     brew install $item >/dev/null || /home/linuxbrew/.linuxbrew/bin/brew upgrade $item >/dev/null
 done

@@ -1,12 +1,12 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/versionconstants"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"os"
 	"testing"
 
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

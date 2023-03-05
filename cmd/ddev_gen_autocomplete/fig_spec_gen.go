@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/drud/ddev/cmd/ddev/cmd"
+	"github.com/ddev/ddev/cmd/ddev/cmd"
 	"github.com/withfig/autocomplete-tools/integrations/cobra"
 	"os"
 )

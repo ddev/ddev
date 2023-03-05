@@ -2,21 +2,21 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/updatecheck"
-	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/versionconstants"
+	"os"
+	"path/filepath"
+	"time"
+
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/updatecheck"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/rogpeppe/go-internal/semver"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"gopkg.in/segmentio/analytics-go.v3"
-	"os"
-	"path/filepath"
-
-	"time"
 )
 
 var (
@@ -73,7 +73,7 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 				return // Do not continue as we'll end up with github api violations.
 			}
 
-			updateNeeded, updateVersion, updateURL, err := updatecheck.AvailableUpdates("drud", "ddev", versionconstants.DdevVersion)
+			updateNeeded, updateVersion, updateURL, err := updatecheck.AvailableUpdates("ddev", "ddev", versionconstants.DdevVersion)
 
 			if err != nil {
 				util.Warning("Could not check for updates. This is most often caused by a networking issue.")

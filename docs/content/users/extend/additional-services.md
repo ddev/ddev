@@ -13,35 +13,35 @@ For example,
 ┌──────────────────────────────────────┬───────────────────────────────────────────────────┐
 │ ADD-ON                               │ DESCRIPTION                                       │
 ├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ drud/ddev-adminer                    │ Adminer service for DDEV*                         │
+│ ddev/ddev-adminer                    │ Adminer service for DDEV*                         │
 ├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ drud/ddev-beanstalkd                 │ Beanstalkd for DDEV*                              │
+│ ddev/ddev-beanstalkd                 │ Beanstalkd for DDEV*                              │
 ├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ drud/ddev-browsersync                │ Auto-refresh HTTPS page on changes with DDEV*     │
+│ ddev/ddev-browsersync                │ Auto-refresh HTTPS page on changes with DDEV*     │
 ├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ drud/ddev-cron                       │ Schedule commands to execute within DDEV*         │
+│ ddev/ddev-cron                       │ Schedule commands to execute within DDEV*         │
 ├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ drud/ddev-drupal9-solr               │ Drupal 9 Apache Solr installation for DDEV*       │
+│ ddev/ddev-drupal9-solr               │ Drupal 9 Apache Solr installation for DDEV*       │
 ├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ drud/ddev-elasticsearch              │ Elasticsearch add-on for DDEV*                    │
+│ ddev/ddev-elasticsearch              │ Elasticsearch add-on for DDEV*                    │
 ├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ drud/ddev-memcached                  │ Install Memcached as an extra service in DDEV*    │
+│ ddev/ddev-memcached                  │ Install Memcached as an extra service in DDEV*    │
 ├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ drud/ddev-mongo                      │ MongoDB add-on for DDEV*                          │
+│ ddev/ddev-mongo                      │ MongoDB add-on for DDEV*                          │
 ├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ drud/ddev-pdfreactor                 │ PDFreactor service for DDEV*                      │
+│ ddev/ddev-pdfreactor                 │ PDFreactor service for DDEV*                      │
 ├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ drud/ddev-platformsh                 │ Add integration with Platform.sh hosting service* │
+│ ddev/ddev-platformsh                 │ Add integration with Platform.sh hosting service* │
 ├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ drud/ddev-proxy-support              │ Support HTTP/HTTPS proxies with DDEV*             │
+│ ddev/ddev-proxy-support              │ Support HTTP/HTTPS proxies with DDEV*             │
 ├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ drud/ddev-redis                      │ Redis service for DDEV*                           │
+│ ddev/ddev-redis                      │ Redis service for DDEV*                           │
 ├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ drud/ddev-redis-commander            │ Redis Commander for use with DDEV Redis service*  │
+│ ddev/ddev-redis-commander            │ Redis Commander for use with DDEV Redis service*  │
 ├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ drud/ddev-selenium-standalone-chrome │ A DDEV service for running standalone Chrome*     │
+│ ddev/ddev-selenium-standalone-chrome │ A DDEV service for running standalone Chrome*     │
 ├──────────────────────────────────────┼───────────────────────────────────────────────────┤
-│ drud/ddev-varnish                    │ Varnish reverse proxy add-on for DDEV*            │
+│ ddev/ddev-varnish                    │ Varnish reverse proxy add-on for DDEV*            │
 └──────────────────────────────────────┴───────────────────────────────────────────────────┘
 Add-ons marked with '*' are official, maintained DDEV add-ons.
 ```
@@ -51,32 +51,32 @@ If you need a service not provided here, see [Defining an Additional Service wit
 
 Officially-supported add-ons:
 
-* [Adminer](https://github.com/drud/ddev-adminer): `ddev get drud/ddev-adminer`.
-* [Apache Solr for Drupal 9](https://github.com/drud/ddev-drupal9-solr): `ddev get drud/ddev-drupal9-solr`.
-* [Beanstalkd](https://github.com/drud/ddev-beanstalkd): `ddev get drud/ddev-beanstalkd`.
-* [Browsersync](https://github.com/drud/ddev-browsersync): `ddev get drud/ddev-browsersync`.
-* [cron](https://github.com/drud/ddev-cron): `ddev get drud/ddev-cron`.
-* [Elasticsearch](https://github.com/drud/ddev-elasticsearch): `ddev get drud/ddev-elasticsearch`.
-* [Memcached](https://github.com/drud/ddev-memcached): `ddev get drud/ddev-memcached`.
-* [MongoDB](https://github.com/drud/ddev-mongo): `ddev get drud/ddev-mongo`.
-* [PDFreactor](https://github.com/drud/ddev-pdfreactor): `ddev get drud/ddev-pdfreactor`
-* [Platform.sh](https://github.com/drud/ddev-platformsh): `ddev get drud/ddev-platformsh`
-* [Proxy Support](https://github.com/drud/ddev-proxy-support): `ddev get drud/ddev-proxy-support`.
-* [Redis Commander](https://github.com/drud/ddev-redis-commander): `ddev get drud/ddev-redis-commander`.
-* [Redis](https://github.com/drud/ddev-redis): `ddev get drud/ddev-redis`.
-* [Selenium Standalone Chrome](https://github.com/drud/ddev-selenium-standalone-chrome): `ddev get drud/ddev-selenium-standalone-chrome`.
-* [Varnish](https://github.com/drud/ddev-varnish): `ddev get drud/ddev-varnish`.
+* [Adminer](https://github.com/ddev/ddev-adminer): `ddev get ddev/ddev-adminer`.
+* [Apache Solr for Drupal 9](https://github.com/ddev/ddev-drupal9-solr): `ddev get ddev/ddev-drupal9-solr`.
+* [Beanstalkd](https://github.com/ddev/ddev-beanstalkd): `ddev get ddev/ddev-beanstalkd`.
+* [Browsersync](https://github.com/ddev/ddev-browsersync): `ddev get ddev/ddev-browsersync`.
+* [cron](https://github.com/ddev/ddev-cron): `ddev get ddev/ddev-cron`.
+* [Elasticsearch](https://github.com/ddev/ddev-elasticsearch): `ddev get ddev/ddev-elasticsearch`.
+* [Memcached](https://github.com/ddev/ddev-memcached): `ddev get ddev/ddev-memcached`.
+* [MongoDB](https://github.com/ddev/ddev-mongo): `ddev get ddev/ddev-mongo`.
+* [PDFreactor](https://github.com/ddev/ddev-pdfreactor): `ddev get ddev/ddev-pdfreactor`
+* [Platform.sh](https://github.com/ddev/ddev-platformsh): `ddev get ddev/ddev-platformsh`
+* [Proxy Support](https://github.com/ddev/ddev-proxy-support): `ddev get ddev/ddev-proxy-support`.
+* [Redis Commander](https://github.com/ddev/ddev-redis-commander): `ddev get ddev/ddev-redis-commander`.
+* [Redis](https://github.com/ddev/ddev-redis): `ddev get ddev/ddev-redis`.
+* [Selenium Standalone Chrome](https://github.com/ddev/ddev-selenium-standalone-chrome): `ddev get ddev/ddev-selenium-standalone-chrome`.
+* [Varnish](https://github.com/ddev/ddev-varnish): `ddev get ddev/ddev-varnish`.
 
 ## Creating an Additional Service for `ddev get`
 
-Anyone can create an add-on for `ddev get`. See [this screencast](https://www.youtube.com/watch?v=fPVGpKGr0f4) and instructions in [`ddev-addon-template`](https://github.com/drud/ddev-addon-template):
+Anyone can create an add-on for `ddev get`. See [this screencast](https://www.youtube.com/watch?v=fPVGpKGr0f4) and instructions in [`ddev-addon-template`](https://github.com/ddev/ddev-addon-template):
 
-1. Click “Use this template” on [`ddev-addon-template`](https://github.com/drud/ddev-addon-template).
+1. Click “Use this template” on [`ddev-addon-template`](https://github.com/ddev/ddev-addon-template).
 2. Create a new repository.
 3. Test it and preferably make sure it has valid tests in `tests.bats`.
 4. When it’s working and tested, create a release.
 5. Add the `ddev-get` label and a good short description to the GitHub repository.
-6. When you’re ready for the add-on to become official, open an issue in the [DDEV issue queue](https://github.com/drud/ddev/issues/new) requesting upgrade to official. You’ll be expected to maintain it, and subscribe to all activity and be responsive to questions.
+6. When you’re ready for the add-on to become official, open an issue in the [DDEV issue queue](https://github.com/ddev/ddev/issues/new) requesting upgrade to official. You’ll be expected to maintain it, and subscribe to all activity and be responsive to questions.
 
 ### Sections and Features of ddev-get Add-On install.yaml
 
@@ -93,7 +93,7 @@ In any stanza of `pre_install_actions` and `post_install_actions` you can:
 * Use `#ddev-nodisplay` on a line to suppress any output.
 * Use `#ddev-description:<some description of what stanza is doing>` to instruct DDEV to output a description of the action it's taking.
 
-You can see a simple `install.yaml` in [`ddev-addon-template`’s `install.yaml`](https://github.com/drud/ddev-addon-template/blob/main/install.yaml).
+You can see a simple `install.yaml` in [`ddev-addon-template`’s `install.yaml`](https://github.com/ddev/ddev-addon-template/blob/main/install.yaml).
 
 ### Environment Variable Replacements
 
@@ -116,7 +116,7 @@ yaml_read_files:
 
 then `value1` can be used throughout the `install.yaml` as `{{ example.value1 }}` and it will be replaced with the value `xxx`.
 
-More exotic template-based replacements can be seen in an advanced test [example](https://github.com/drud/ddev/blob/master/cmd/ddev/cmd/testdata/TestCmdGetComplex/recipe/install.yaml).
+More exotic template-based replacements can be seen in an advanced test [example](https://github.com/ddev/ddev/blob/master/cmd/ddev/cmd/testdata/TestCmdGetComplex/recipe/install.yaml).
 
 Go templating resources:
 
@@ -126,11 +126,11 @@ Go templating resources:
 
 ## Additional services in ddev-contrib (MongoDB, Elasticsearch, etc)
 
-Commonly-used services will be migrated from the [ddev-contrib](https://github.com/drud/ddev-contrib) repository to individual, tested, supported repositories, but the repository already has a wealth of additional examples and instructions:
+Commonly-used services will be migrated from the [ddev-contrib](https://github.com/ddev/ddev-contrib) repository to individual, tested, supported repositories, but the repository already has a wealth of additional examples and instructions:
 
-* **Headless Chrome**: See [Headless Chrome for Behat Testing](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/headless-chrome)
-* **Old PHP Versions to Run Old Sites**: See [Old PHP Versions](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/old_php)
-* **RabbitMQ**: See [RabbitMQ](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/rabbitmq)
-* **TYPO3 Solr Integration**: See [TYPO3 Solr](https://github.com/drud/ddev-contrib/blob/master/docker-compose-services/typo3-solr)
+* **Headless Chrome**: See [Headless Chrome for Behat Testing](https://github.com/ddev/ddev-contrib/blob/master/docker-compose-services/headless-chrome)
+* **Old PHP Versions to Run Old Sites**: See [Old PHP Versions](https://github.com/ddev/ddev-contrib/blob/master/docker-compose-services/old_php)
+* **RabbitMQ**: See [RabbitMQ](https://github.com/ddev/ddev-contrib/blob/master/docker-compose-services/rabbitmq)
+* **TYPO3 Solr Integration**: See [TYPO3 Solr](https://github.com/ddev/ddev-contrib/blob/master/docker-compose-services/typo3-solr)
 
-Your pull requests to integrate other services are welcome at [ddev-contrib](https://github.com/drud/ddev-contrib).
+Your pull requests to integrate other services are welcome at [ddev-contrib](https://github.com/ddev/ddev-contrib).

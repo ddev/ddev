@@ -152,7 +152,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
         mutagen sync monitor
         ```
 
-    * You can run the [diagnose_mutagen.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/diagnose_mutagen.sh) script to gather information about Mutagen’s setup. Please share output from it when creating an issue or seeking support.
+    * You can run the [diagnose_mutagen.sh](https://raw.githubusercontent.com/ddev/ddev/master/scripts/diagnose_mutagen.sh) script to gather information about Mutagen’s setup. Please share output from it when creating an issue or seeking support.
     * Try `ddev poweroff` or `~/.ddev/bin/mutagen daemon stop && ~/.ddev/bin/mutagen daemon start` to restart the Mutagen daemon if you suspect it’s hanging.
     * Use `ddev mutagen reset` if you suspect trouble, and *always* after changing `.ddev/mutagen/mutagen.yml`. This restarts the project’s Mutagen data (Docker volume + Mutagen session) from scratch.
     * `ddev mutagen monitor` can help watch Mutagen behavior. It’s the same as `~/.ddev/bin/mutagen sync monitor <syncname>`.
@@ -194,7 +194,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
     
     !!!warning "macOS Ventura may not work with NFS"
     
-        A bug in macOS Ventura means that NFS mounting doesn't work for many projects, so Mutagen is recommended instead. Follow [issue](https://github.com/drud/ddev/issues/4122) for details.
+        A bug in macOS Ventura means that NFS mounting doesn't work for many projects, so Mutagen is recommended instead. Follow [issue](https://github.com/ddev/ddev/issues/4122) for details.
 
 
     ### Using NFS to Mount the Project into the Web Container
@@ -217,10 +217,10 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 
     === "macOS NFS Setup"
     
-        Download, inspect, make executable, and run [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh):
+        Download, inspect, make executable, and run [macos_ddev_nfs_setup.sh](https://raw.githubusercontent.com/ddev/ddev/master/scripts/macos_ddev_nfs_setup.sh):
         
         ```
-        curl -O https://raw.githubusercontent.com/drud/ddev/master/scripts/macos_ddev_nfs_setup.sh && chmod +x macos_ddev_nfs_setup.sh && ./macos_ddev_nfs_setup.sh
+        curl -O https://raw.githubusercontent.com/ddev/ddev/master/scripts/macos_ddev_nfs_setup.sh && chmod +x macos_ddev_nfs_setup.sh && ./macos_ddev_nfs_setup.sh
         ```
         
         This one-time setup stops running DDEV projects, adds your home directory to the `/etc/exports` config file that `nfsd` uses, and enables `nfsd` to run on your computer.
@@ -274,7 +274,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
         
         To enable `winnfsd` as a service, please download, inspect and run `windows_ddev_nfs_setup.sh` created by the installer at `C:\Program Files\ddev\windows_ddev_nfs_setup.sh`.
         
-        You can also download this [directly from the GitHub repository](https://raw.githubusercontent.com/drud/ddev/master/scripts/windows_ddev_nfs_setup.sh)) in a Git Bash session on Windows. If your DDEV projects are set up outside your home directory, you’ll need to edit `~/.ddev/nfs_exports.txt` (created by the script) and restart the service with  
+        You can also download this [directly from the GitHub repository](https://raw.githubusercontent.com/ddev/ddev/master/scripts/windows_ddev_nfs_setup.sh)) in a Git Bash session on Windows. If your DDEV projects are set up outside your home directory, you’ll need to edit `~/.ddev/nfs_exports.txt` (created by the script) and restart the service with  
         `sudo nssm restart nfsd`.
         
         !!!warning "Firewall Issues"

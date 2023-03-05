@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/dockerutil"
-	exec2 "github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/version"
-	"github.com/drud/ddev/pkg/versionconstants"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	exec2 "github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/version"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/spf13/cobra"
 	"os"
 	"os/exec"

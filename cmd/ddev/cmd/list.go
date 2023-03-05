@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/spf13/cobra"
 )
 

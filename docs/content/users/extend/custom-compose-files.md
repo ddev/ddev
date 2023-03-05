@@ -4,7 +4,7 @@
 
 Much of DDEV’s customization ability and extensibility comes from leveraging features and functionality provided by [Docker](https://docs.docker.com/) and [Docker Compose](https://docs.docker.com/compose/overview/). Some working knowledge of these tools is required in order to customize or extend the environment DDEV provides.
 
-There are [many examples of custom docker-compose files](https://github.com/drud/ddev-contrib#additional-services-added-via-docker-composeserviceyaml) available on [ddev-contrib](https://github.com/drud/ddev-contrib).
+There are [many examples of custom docker-compose files](https://github.com/ddev/ddev-contrib#additional-services-added-via-docker-composeserviceyaml) available on [ddev-contrib](https://github.com/ddev/ddev-contrib).
 
 ## Background
 

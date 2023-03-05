@@ -9,7 +9,7 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
     Start a new [Craft CMS](https://craftcms.com) project or retrofit an existing one.
 
     !!!tip "Compatibility"
-        The `craft` project type was added to DDEV in version [1.21.2](https://github.com/drud/ddev/releases/tag/v1.21.2). Check your current version with the `ddev version` command, and [upgrade](../users/usage/faq.md#how-can-i-updateupgrade-ddev) if necessary!
+        The `craft` project type was added to DDEV in version [1.21.2](https://github.com/ddev/ddev/releases/tag/v1.21.2). Check your current version with the `ddev version` command, and [upgrade](../users/usage/faq.md#how-can-i-updateupgrade-ddev) if necessary!
 
     Environment variables will be automatically added to your `.env` file to simplify the first boot of a project. For _new_ installations, this means the default URL and database connection settings displayed during installation can be used without modification. If _existing_ projects expect environment variables to be named in a particular way, you are welcome to rename them.
 
@@ -216,7 +216,7 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
     ```bash
     mkdir ddev-magento2 && cd ddev-magento2
     ddev config --project-type=magento2 --php-version=8.1 --docroot=pub --create-docroot --disable-settings-management
-    ddev get drud/ddev-elasticsearch
+    ddev get ddev/ddev-elasticsearch
     ddev start
     ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition -y
     rm -f app/etc/env.php
@@ -268,7 +268,7 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
     Visit the [Moodle Admin Quick Guide](https://docs.moodle.org/400/en/Admin_quick_guide) for more information.
 
     !!!tip
-        Moodle relies on a periodic cron job—don’t forget to set that up! See [drud/ddev-cron](https://github.com/drud/ddev-cron).
+        Moodle relies on a periodic cron job—don’t forget to set that up! See [ddev/ddev-cron](https://github.com/ddev/ddev-cron).
 
 === "Shopware"
 
@@ -615,4 +615,4 @@ ddev import-db <mydb.sql
 - Use `ddev import-db --target-db <some_database>` to import to a non-default database (other than the default `db` database). This will create the database if it doesn’t already exist.
 - Use `ddev import-db --no-drop` to import without first emptying the database.
 - If a database already exists and the import does not specify dropping tables, the contents of the imported dumpfile will be _added_ to the database. Most full database dumps do a table drop and create before loading, but if yours does not, you can drop all tables with `ddev stop --remove-data` before importing.
-- If imports are stalling or failing, make sure you have plenty of unused space (see [#3360](https://github.com/drud/ddev/issues/3360)). DDEV has no problems importing large (2G+) databases, but importing requires lots of space. DDEV will show a warning on startup if unused space is getting low.
+- If imports are stalling or failing, make sure you have plenty of unused space (see [#3360](https://github.com/ddev/ddev/issues/3360)). DDEV has no problems importing large (2G+) databases, but importing requires lots of space. DDEV will show a warning on startup if unused space is getting low.

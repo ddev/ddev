@@ -7,7 +7,7 @@ set -o pipefail
 set -o nounset
 
 if [ $# != 4 ] && [ $# != 5 ]; then
-    printf "Incorrect args provided. You gave '$*'; Correct Arguments: HOMEBREW_REPO (homebrew repo like drud/homebrew-ddev) \nPROJECT_NAME (like ddev) \nVERSION_NUMBER (like v1.16.5) \nARTIFACTS_DIR (like /home/circleci/artifacts)\nGITHUB_USERNAME (defaults to drud)" && exit 101
+    printf "Incorrect args provided. You gave '$*'; Correct Arguments: HOMEBREW_REPO (homebrew repo like ddev/homebrew-ddev) \nPROJECT_NAME (like ddev) \nVERSION_NUMBER (like v1.16.5) \nARTIFACTS_DIR (like /home/circleci/artifacts)\nGITHUB_USERNAME (defaults to ddev)" && exit 101
 fi
 
 # For testing, you can change GITHUB_USERNAME to, for example, rfay so releases can be tested
@@ -16,7 +16,7 @@ HOMEBREW_REPO=$1
 PROJECT_NAME=$2
 VERSION_NUMBER=$3
 ARTIFACTS_DIR=$4
-GITHUB_USERNAME=${5:-drud}
+GITHUB_USERNAME=${5:-ddev}
 
 NO_V_VERSION=${VERSION_NUMBER#v}
 SOURCE_URL="https://github.com/${GITHUB_USERNAME}/${PROJECT_NAME}/archive/${VERSION_NUMBER}.tar.gz"
@@ -38,7 +38,7 @@ class Ddev < Formula
   url "${SOURCE_URL}"
   sha256 "${SOURCE_SHA}"
   license "apache-2.0"
-  head "https://github.com/drud/ddev.git", branch: "master"
+  head "https://github.com/ddev/ddev.git", branch: "master"
 
   depends_on "mkcert" => :run
   depends_on "nss" => :run

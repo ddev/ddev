@@ -2,11 +2,11 @@ package ddevapp_test
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/archive"
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
 	assert2 "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"

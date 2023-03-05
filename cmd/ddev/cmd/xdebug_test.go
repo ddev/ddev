@@ -1,14 +1,14 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
 
-	"github.com/drud/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
 )
 

@@ -16,7 +16,7 @@ fi
 
 # For testing, you can change GITHUB_USERNAME to, for example, rfay so releases can be tested
 # without bothering people.
-GITHUB_USERNAME=drud
+GITHUB_USERNAME=ddev
 AUR_USERNAME=ddev-releaser
 AUR_REPO=$1
 VERSION_NUMBER=$2
@@ -48,7 +48,7 @@ pkgver=$(echo ${VERSION_NUMBER} | tr '-' '_')
 pkgrel=1
 pkgdesc='DDEV: a local PHP development environment system${EDGE_DESCRIPTION}'
 arch=('x86_64')
-url='https://github.com/drud/ddev'
+url='https://github.com/ddev/ddev'
 license=('Apache')
 provides=("$_name")
 conflicts=("$_name")
