@@ -11,7 +11,8 @@ We love to hear from you and want you to be successful with DDEV!
 * [FAQ](./usage/faq.md)
 * [Discord](https://discord.gg/hCZFfAMc5k) interactive community support.
 * [DDEV issue queue](https://github.com/ddev/ddev/issues) for bugs and feature requests.
-* [Twitter with tag #ddev](https://twitter.com/search?q=%23ddev&src=typd&f=live) will get to us. It’s not as good for interactive support, but we’ll answer anywhere.
+* [Mastodon](https://fosstodon.org/@ddev)
+* [Twitter (deprecated) with tag #ddev](https://twitter.com/search?q=%23ddev&src=typd&f=live) will get to us. It’s not as good for interactive support, but we’ll answer anywhere.
 
 ## Additional Resources
 
