@@ -45,6 +45,13 @@ ddev share myproject`,
 			if app.NgrokArgs != "" {
 				ngrokArgs = append(ngrokArgs, strings.Split(app.NgrokArgs, " ")...)
 			}
+			if cmd.Flags().Changed("basic-auth") {
+				auth, err := cmd.Flags().GetString("basic-auth")
+				if err != nil {
+					util.Failed("unable to get --basic-auth flag: %v", err)
+				}
+				ngrokArgs = append(ngrokArgs, "--basic-auth="+auth)
+			}
 			if cmd.Flags().Changed("subdomain") {
 				sub, err := cmd.Flags().GetString("subdomain")
 				if err != nil {
@@ -91,5 +98,6 @@ ddev share myproject`,
 
 func init() {
 	RootCmd.AddCommand(DdevShareCommand)
-	DdevShareCommand.Flags().String("subdomain", "", `ngrok --subdomain argument, as in "ngrok --subdomain my-subdomain:, requires paid ngrok.com account"`)
+	DdevShareCommand.Flags().String("basic-auth", "", `ngrok --basic-auth argument, as in "ngrok http --basic-auth username:pass1234"`)
+	DdevShareCommand.Flags().String("subdomain", "", `ngrok --subdomain argument, as in "ngrok http --subdomain my-subdomain", requires paid ngrok.com account`)
 }
