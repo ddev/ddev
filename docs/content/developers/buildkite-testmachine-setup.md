@@ -1,6 +1,6 @@
 # Buildkite Test Agent Setup
 
-We are using [Buildkite](https://buildkite.com/drud) for Windows and macOS testing. The build machines and `buildkite-agent` must be set up before use.
+We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testing. The build machines and `buildkite-agent` must be set up before use.
 
 ## Windows Test Agent Setup
 
