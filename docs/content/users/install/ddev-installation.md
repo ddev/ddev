@@ -2,7 +2,9 @@
 
 Once you’ve [installed a Docker provider](docker-installation.md), you’re ready to install DDEV!
 
-Installing and upgrading DDEV are nearly the same thing, because you're upgrading the `ddev` binary that talks with Docker. You can update this file like other software on your system, whether it’s with a package manager or traditional installer.
+## Upgrading
+
+Upgrading DDEV is basically the same process as installing it, because you're upgrading the `ddev` binary that talks with Docker. You can update this file like other software on your system, whether it’s with a package manager or traditional installer.
 
 === "macOS"
 
