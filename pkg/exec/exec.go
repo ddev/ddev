@@ -10,10 +10,19 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+func HostCommand(name string, args ...string) *exec.Cmd {
+	c := exec.Command(name, args...)
+	ddevExecutable, _ := os.Executable()
+	c.Env = append(os.Environ(),
+		"DDEV_BINARY_FULLPATH="+ddevExecutable,
+	)
+	return c
+}
+
 // RunCommand runs a command on the host system.
 // returns the stdout of the command and an err
 func RunCommand(command string, args []string) (string, error) {
-	out, err := exec.Command(
+	out, err := HostCommand(
 		command, args...,
 	).CombinedOutput()
 
@@ -31,7 +40,7 @@ func RunCommandPipe(command string, args []string) (string, error) {
 		"Command": command + " " + strings.Join(args[:], " "),
 	}).Info("Running ")
 
-	cmd := exec.Command(command, args...)
+	cmd := HostCommand(command, args...)
 	stdoutStderr, err := cmd.CombinedOutput()
 	return string(stdoutStderr), err
 }
@@ -39,7 +48,7 @@ func RunCommandPipe(command string, args []string) (string, error) {
 // RunInteractiveCommand runs a command on the host system interactively, with stdin/stdout/stderr connected
 // Returns error
 func RunInteractiveCommand(command string, args []string) error {
-	cmd := exec.Command(command, args...)
+	cmd := HostCommand(command, args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -57,7 +66,7 @@ func RunHostCommand(command string, args ...string) (string, error) {
 	if globalconfig.DdevVerbose {
 		output.UserOut.Printf("RunHostCommand: " + command + " " + strings.Join(args, " "))
 	}
-	c := exec.Command(command, args...)
+	c := HostCommand(command, args...)
 	c.Stdin = os.Stdin
 	o, err := c.CombinedOutput()
 	if globalconfig.DdevVerbose {
@@ -73,7 +82,7 @@ func RunHostCommandSeparateStreams(command string, args ...string) (string, erro
 	if globalconfig.DdevVerbose {
 		output.UserOut.Printf("RunHostCommandSeparateStreams: " + command + " " + strings.Join(args, " "))
 	}
-	c := exec.Command(command, args...)
+	c := HostCommand(command, args...)
 	c.Stdin = os.Stdin
 	o, err := c.Output()
 	if globalconfig.DdevVerbose {
