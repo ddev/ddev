@@ -1129,30 +1129,14 @@ func TestCustomBuildDockerfiles(t *testing.T) {
 	assert.NoError(err)
 
 	t.Cleanup(func() {
+		runTime()
 		err = app.Stop(true, false)
 		assert.NoError(err)
 		err = os.RemoveAll(app.GetConfigPath("web-build"))
 		assert.NoError(err)
 		err = os.RemoveAll(app.GetConfigPath("db-build"))
 		assert.NoError(err)
-		runTime()
 	})
-
-	// web-build Dockerfile.test - slightly different from db-build because of
-	// different context; this tests to see that the code can be mounted from context to
-	// /var/www/html and we can access index.php in docroot
-	err = WriteImageDockerfile(app.GetConfigPath("web-build/Dockerfile.test1"), []byte(fmt.Sprintf(`
-ADD .ddev/web-build/junkfile /
-RUN --mount=type=bind,source=.,target=/var/www/html cp /var/www/html/%s/index.php /var/tmp/%s-index.php
-RUN touch /var/tmp/`+"added-by-web-test1.txt", app.Docroot, t.Name())))
-	require.NoError(t, err)
-
-	// db-build Dockerfile.test - slightly different from web-build because of
-	// different context
-	err = WriteImageDockerfile(app.GetConfigPath("db-build/Dockerfile.test1"), []byte(`
-ADD junkfile /
-RUN touch /var/tmp/`+"added-by-db-test1.txt"))
-	require.NoError(t, err)
 
 	// Create simple dockerfiles that just touch /var/tmp/added-by-<container>txt
 	for _, item := range []string{"web", "db"} {
@@ -1163,6 +1147,10 @@ RUN touch /var/tmp/`+"added-by-"+item+".txt"))
 		assert.NoError(err)
 		// Add also Dockerfile.* alternatives
 		// Last one includes previously recommended ARG/FROM that needs to be removed
+		err = WriteImageDockerfile(app.GetConfigPath(item+"-build/Dockerfile.test1"), []byte(`
+ADD junkfile /
+RUN touch /var/tmp/`+"added-by-"+item+"-test1.txt"))
+		assert.NoError(err)
 
 		err = WriteImageDockerfile(app.GetConfigPath(item+"-build/Dockerfile.test2"), []byte(`
 RUN touch /var/tmp/`+"added-by-"+item+"-test2.txt"))
