@@ -51,9 +51,11 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 
     ### Mutagen and User-Generated Uploads
 
-    When Mutagen is enabled, DDEV attempts to exclude user-generated files in `upload_dir`—when it exists—from syncing. It does this by using a bind-mount in the generated docker-compose configuration, and excluding the directory from syncing in `.ddev/mutagen/mutagen.yml`. This behavior is automatic and you shouldn’t have to take any action in most cases.
+    When Mutagen is enabled, DDEV attempts to exclude user-generated files in `upload_dir`—when it exists—from syncing. It does this by using a bind-mount in the generated docker-compose configuration, and excluding the directory from syncing in `.ddev/mutagen/mutagen.yml`.
 
     If you have a non-standard location for user-generated files, like `private/fileadmin` with the deprecated `typo3-secure-web` approach, you should override the project defaults by setting `upload_dir` in `.ddev/config.yaml` and pointing it at the correct directory. This will allow Mutagen to sync correctly.
+
+    If you change the `upload_dir` do a `ddev mutagen reset` to let mutagen know about the changed behavior.
 
     ### Mutagen Integration Caveats
  
@@ -63,6 +65,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 
     * **It’s not the right choice for every project.**  
     Filesystem consistency has been excellent with Mutagen, but performance is its specialty. If consistency is your highest priority, then there are reasons to be cautious. Two-way sync is a very difficult computational problem, and problems *may* surface.
+    * **If you take control of the `mutagen.yml` file and make changes to it, do a `ddev mutagen reset` after making changes.**
     * **Avoid file changes when DDEV is stopped.**  
     If you change files—checking out a different branch, removing a file—while DDEV is stopped, Mutagen has no way to know about it. When you start again, it will get the files that are stored and bring them back to the host. If you *do* change files while DDEV is stopped, run `ddev mutagen reset` before restarting the project so Mutagen only starts with awareness of the host’s file contents.
     * **It modestly increases disk usage.**  
