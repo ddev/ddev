@@ -44,7 +44,7 @@ The following “Repository secret” environment variables must be added to <ht
 * Make sure [`version-history.md`](https://github.com/ddev/ddev/blob/master/version-history.md) is up to date.
 * Make sure the Docker images are all tagged and pushed.
 * Make sure [`pkg/versionconstants/versionconstants.go`](https://github.com/ddev/ddev/blob/master/pkg/versionconstants/versionconstants.go) is all set to point to the new images and tests have been run.
-* If the `devcontainer-feature.json` (for GitHub Codespaces) needs to be updated, use the [`devcontainer` CLI](https://github.com/devcontainers/cli):
+* If the [`devcontainer-feature.json`](https://github.com/ddev/ddev/blob/master/.github/devcontainers/src/install-ddev/devcontainer-feature.json) (for GitHub Codespaces) needs to be updated, use the [`devcontainer` CLI](https://github.com/devcontainers/cli):
 
     ```bash
     cd .github/devcontainers/source
@@ -68,6 +68,21 @@ The following “Repository secret” environment variables must be added to <ht
 ## Pushing Docker Images with the GitHub Actions Workflow
 
 The easiest way to push Docker images is to use the GitHub Actions workflow, especially if the code for the image is already in the [ddev/ddev](https://github.com/ddev/ddev) repository.
+
+### Prerelease tasks
+
+1. Push the new version of `drud/ddev-php-base`.
+2. Update `drud/ddev-webserver` to use the new version of `drud/ddev-php-base` and push it with the proper tag.
+3. Make sure the [`version-history.md`](https://github.com/ddev/ddev/blob/master/version-history.md) file is up to date.
+4. Make sure the Docker images are all tagged and pushed.
+5. Make sure the [`pkg/version/version.go`](https://github.com/ddev/ddev/blob/master/pkg/version/version.go) is all set to point to the new images (and tests have been run).
+6. Make sure you're about to create the right release tag.
+
+### Actual release creation
+
+1. Create a [release](https://github.com/ddev/ddev/releases) for the new version using the GitHub UI. It should be “prerelease” if it’s an edge release.
+2. Use the “Auto-generate release notes” option to get the commit list, then edit to add all the other necessary info.
+3. Verify that Homebrew (Linux and macOS) and Chocolatey and AUR are working correctly with the right versions.
 
 <!-- markdown-link-check-disable-next-line -->
 You can push an image at <https://github.com/ddev/ddev/actions/workflows/push-tagged-image.yml>
