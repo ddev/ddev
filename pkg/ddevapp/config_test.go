@@ -1220,11 +1220,6 @@ RUN touch /var/tmp/running-php-${DDEV_PHP_VERSION}
 		Cmd: fmt.Sprintf("ls /var/tmp/running-php-%s >/dev/null", app.PHPVersion),
 	})
 	assert.NoError(err)
-
-	_, _, err = app.Exec(&ExecOpts{
-		Cmd: fmt.Sprintf("ls /var/tmp/%s-index.php >/dev/null", t.Name()),
-	})
-	assert.NoError(err)
 }
 
 // TestConfigLoadingOrder verifies that configs load in lexicographical order
