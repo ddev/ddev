@@ -233,13 +233,13 @@ ddev config global --omit-containers=dba,ddev-ssh-agent
 * `--letsencrypt-email`: Email associated with Let’s Encrypt; `ddev global --letsencrypt-email=me@example.com`.
 * `--mutagen-enabled`: If `true`, web container will use Mutagen caching/asynchronous updates.
 * `--nfs-mount-enabled`: Enable NFS mounting on all projects globally.
-* `--no-bind-mounts`: If `true`, don’t use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible. (default `true`)
+* `--no-bind-mounts`: If `true`, don’t use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible. (default `false`)
 * `--omit-containers`: For example, `--omit-containers=dba,ddev-ssh-agent`.
 * `--required-docker-compose-version`: Override default docker-compose version.
 * `--router-bind-all-interfaces`: `router-bind-all-interfaces=true`.
 * `--simple-formatting`: If `true`, use simple formatting and no color for tables.
 * `--table-style`: Table style for list and describe, see `~/.ddev/global_config.yaml` for values.
-* `--use-docker-compose-from-path`: If `true`, use docker-compose from path instead of private `~/.ddev/bin/docker-compose`. (default `true`)
+* `--use-docker-compose-from-path`: If `true`, use docker-compose from path instead of private `~/.ddev/bin/docker-compose`. (default `false`)
 * `--use-hardened-images`: If `true`, use more secure 'hardened' images for an actual internet deployment.
 * `--use-letsencrypt`: Enables experimental Let’s Encrypt integration; `ddev global --use-letsencrypt` or `ddev global --use-letsencrypt=false`.
 * `--web-environment`: Set the environment variables in the web container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`

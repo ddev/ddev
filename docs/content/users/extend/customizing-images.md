@@ -46,7 +46,7 @@ Examine the resultant generated Dockerfile (which you will never edit directly),
 
 Examples of possible Dockerfiles are `.ddev/web-build/Dockerfile.example` and `.ddev/db-build/Dockerfile.example`, created in your project when you run [`ddev config`](../usage/commands.md#config).
 
-You can use the `.ddev/*-build` directory as the Docker “context” directory as well. So for example, if a file named `README.txt` exists in `.ddev/web-build`, you can use `ADD README.txt /` in the Dockerfile.
+You can use the `.ddev/*-build` directory as the Docker “context” directory as well. So for example, if a file named `README.txt` exists in `.ddev/web-build`, you can use `ADD .ddev/web-build/README.txt /` in the Dockerfile.
 
 An example web image `.ddev/web-build/Dockerfile` might be:
 

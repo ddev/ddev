@@ -46,7 +46,7 @@ This set of steps assumes an ngrok subdomain `mg2`:
 * Run `bin/magento setup:store-config:set --base-url="https://mg2.ngrok.io/`.
 * Run [`ddev share`](../usage/commands.md#share) and you’ll see your project at `mg2.ngrok.io`.
 
-### Using nip.io or Custom Name Resolution on Your Local Network
+## Using nip.io or Custom Name Resolution on Your Local Network
 
 Another solution is to **not** use `*.ddev.site` as your project URLs, but to use DNS that you control and that points to the host machine where your project lives. In general, you’ll want to use HTTP URLs with this approach, because it requires manual configuration of the client machine to get it to trust the development certificate that DDEV uses and configures with `mkcert` on the local machine.
 
