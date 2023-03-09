@@ -22,6 +22,16 @@ It’s easiest to use the DDEV Integration Plugin, which you can install from [i
 
 Install and enable the plugin, then [set up `phpunit`](#enabling-phpunit) since it doesn’t yet handle that for you.
 
+### Additional Step for Mutagen
+Please note that if you use mutagen (If you use Colima you will use mutagen by default.  If you use Docker Desktop, you may opt-into using Mutagen), you will need an additional configuration task to setup your PHP Interpreter even if you are using this plugin.  
+
+1. Open Preferences
+2. Navigate to PHP 
+3. Edit the Path Mappings
+4. Add a path mapping that maps Local: /Users/<your_username>/<your_project_root>/ to Remote:/var/www/html
+
+PhpStorm mistakenly maps your project root to `/var/tmp/html`.  Whenever you run a test / process in phpstorm that requires file permissions you'll likely run into a permission error.  If you continue to run into file permission errors fix the offending folder by setting permissive permissions on it. `chmod 777 <directory>`
+
 ## Manual Setup
 
 If you’re not using the DDEV Integration Plugin, you can follow these steps instead:
