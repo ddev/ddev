@@ -14,7 +14,7 @@ func HostCommand(name string, args ...string) *exec.Cmd {
 	c := exec.Command(name, args...)
 	ddevExecutable, _ := os.Executable()
 	c.Env = append(os.Environ(),
-		"DDEV_BINARY_FULLPATH="+ddevExecutable,
+		"DDEV_EXECUTABLE="+ddevExecutable,
 	)
 	return c
 }
