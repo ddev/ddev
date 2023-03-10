@@ -27,7 +27,7 @@ Install and enable the plugin, then [set up `phpunit`](#enabling-phpunit) since 
 Please note that if you use mutagen (If you use Colima you will use mutagen by default.  If you use Docker Desktop, you may opt-into using Mutagen), you will need an additional configuration task to setup your PHP Interpreter even if you are using this plugin.  
 
 1. Open Preferences
-2. Navigate to PHP 
+2. Navigate to PHP
 3. Edit the Path Mappings
 4. Add a path mapping that maps Local: /Users/<your_username>/<your_project_root>/ to Remote:/var/www/html
 
