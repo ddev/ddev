@@ -147,7 +147,7 @@ You can use the [`self-upgrade`](../usage/commands.md#self-upgrade) command for 
 If you’re using Homebrew, first run `brew unlink ddev` to get rid of the version you have there. Then use one of these options:
 
 1. Download the version you want from the [releases page](https://github.com/ddev/ddev/releases) and place it in your `$PATH`.
-2. Use the [install_ddev.sh](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev.sh) script with the version number argument. For example, if you want v1.18.3-alpha1, run `curl -fsSL https://ddev.com/install.sh | bash -s v1.18.3-alpha1`.
+2. Use the [install_ddev.sh](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev.sh) script with the version number argument. For example, if you want v1.18.3-alpha1, run `curl -fsSL https://ddev.com/install.sh | bash -s v1.21.5`.
 3. On Debian/Ubuntu/WSL2 with DDEV installed via apt, you can run `sudo apt update && sudo apt install ddev=<version>`, for example `sudo apt install ddev=1.21.1`.
 4. If you want the very latest, unreleased version of DDEV, run `brew unlink ddev && brew install ddev/ddev/ddev --HEAD`.
 
