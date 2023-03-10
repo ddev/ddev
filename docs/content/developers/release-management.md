@@ -58,6 +58,13 @@ The following “Repository secret” environment variables must be added to <ht
 2. Use the “Auto-generate release notes” option to get the commit list, then edit to add all the other necessary info.
 3. Verify that Homebrew (Linux and macOS) and Chocolatey and AUR are working correctly with the right versions.
 
+### Post-Release Tasks
+
+1. After the release has been created, the new gitpod image must be pushed.
+   1. `cd .gitpod/images && DOCKER_TAG="<YYMMDD>" ./push.sh
+   2. PR to update .gitpod.yml with the new image.
+   3. PR to update [ddev-gitpod-launcher](https://github.com/ddev/ddev-gitpod-launcher) with the new image.
+
 ## Pushing Docker Images with the GitHub Actions Workflow
 
 The easiest way to push Docker images is to use the GitHub Actions workflow, especially if the code for the image is already in the [ddev/ddev](https://github.com/ddev/ddev) repository.
