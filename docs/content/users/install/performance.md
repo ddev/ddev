@@ -51,9 +51,11 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 
     ### Mutagen and User-Generated Uploads
 
-    When Mutagen is enabled, DDEV attempts to exclude user-generated files in `upload_dir`—when it exists—from syncing. It does this by using a bind-mount in the generated docker-compose configuration, and excluding the directory from syncing in `.ddev/mutagen/mutagen.yml`. This behavior is automatic and you shouldn’t have to take any action in most cases.
+    When Mutagen is enabled, DDEV attempts to exclude user-generated files in `upload_dir`—when it exists—from syncing. It does this by using a bind-mount in the generated docker-compose configuration, and excluding the directory from syncing in `.ddev/mutagen/mutagen.yml`.
 
     If you have a non-standard location for user-generated files, like `private/fileadmin` with the deprecated `typo3-secure-web` approach, you should override the project defaults by setting `upload_dir` in `.ddev/config.yaml` and pointing it at the correct directory. This will allow Mutagen to sync correctly.
+
+    If you change the `upload_dir` do a `ddev mutagen reset` to let mutagen know about the changed behavior.
 
     ### Mutagen Integration Caveats
  
@@ -63,6 +65,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 
     * **It’s not the right choice for every project.**  
     Filesystem consistency has been excellent with Mutagen, but performance is its specialty. If consistency is your highest priority, then there are reasons to be cautious. Two-way sync is a very difficult computational problem, and problems *may* surface.
+    * **If you take control of the `mutagen.yml` file and make changes to it, do a `ddev mutagen reset` after making changes.**
     * **Avoid file changes when DDEV is stopped.**  
     If you change files—checking out a different branch, removing a file—while DDEV is stopped, Mutagen has no way to know about it. When you start again, it will get the files that are stored and bring them back to the host. If you *do* change files while DDEV is stopped, run `ddev mutagen reset` before restarting the project so Mutagen only starts with awareness of the host’s file contents.
     * **It modestly increases disk usage.**  
@@ -137,9 +140,9 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 
     ### Troubleshooting Mutagen Sync Issues
 
-    * Avoid having Mutagen sync large binaries, which can cause `ddev start` to take a long time. The `.tarballs` directory is automatically excluded, so Mutagen will ignore anything you move there. To see what Mutagen is trying to sync, run `ddev mutagen status -l` in another window.
     * Please make sure that DDEV projects work *without* Mutagen before troubleshooting it. Run `ddev config --mutagen-enabled=false && ddev restart`.
     * Rename your project’s `.ddev/mutagen/mutagen.yml` file to `.ddev/mutagen/mutagen.yml.bak` and run `ddev restart`. This ensures you’ll have a fresh version in case the file has been changed and `#ddev-generated` removed.
+    * Avoid having Mutagen sync large binaries, which can cause `ddev start` to take a long time. The `.tarballs` directory is automatically excluded, so Mutagen will ignore anything you move there. To see what Mutagen is trying to sync, run `ddev mutagen status -l` in another window.
     * `export DDEV_DEBUG=true` will provide more information about what’s going on with Mutagen.
     * As of DDEV v1.21.2, DDEV’s Mutagen daemon keeps its data in a DDEV-only `MUTAGEN_DATA_DIRECTORY`, `~/.ddev_mutagen_data_directory`.
     * DDEV’s private Mutagen binary is installed in `~/.ddev/bin/mutagen`. You can use all the features of Mutagen with `export MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory` and running the Mutagen binary in `~/.ddev/bin/mutagen`, for example:and `~/.ddev/bin/mutagen daemon stop`.
