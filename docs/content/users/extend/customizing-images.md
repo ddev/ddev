@@ -78,7 +78,7 @@ RUN chmod -R ugo+rw $COMPOSER_HOME
 ENV COMPOSER_HOME=""
 ```
 
-**Remember that the Dockerfile is normally building a Docker image that will be used later with DDEV.** At the time the Dockerfile is executing, your code by default is not mounted and the container is not running, it’s just being built. So for example, an `npm install` in `/var/www/html` will not do anything useful because the code is not there at image building time. However, you use `RUN` in the context of your codebase using something like `RUN --mount=type=bind,source=.,target=/var/www/html cp /var/www/html/index.php /var/tmp/` would mount your code and make it available at the normal `/var/www/html` mount. However, you can't make changes to the mounted code, so things like an early `npm install` wouldn't work, although `npm install -g` would work.
+**Remember that the Dockerfile is building a Docker image that will be used later with DDEV.** At the time the Dockerfile is executing, your code is not mounted and the container is not running, the image is just being built. So for example, an `npm install` in `/var/www/html` will not do anything to your project because the code is not there at image building time.
 
 ### Build Time Environment Variables
 

@@ -85,8 +85,7 @@ services:
   web:
     container_name: {{ .Plugin }}-${DDEV_SITENAME}-web
     build:
-      context: '../'
-      dockerfile: './.ddev/.webimageBuild/Dockerfile'
+      context: '{{ .WebBuildContext }}'
       args:
         BASE_IMAGE: $DDEV_WEBIMAGE
         username: '{{ .Username }}'
