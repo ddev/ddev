@@ -23,6 +23,7 @@ It’s easiest to use the DDEV Integration Plugin, which you can install from [i
 Install and enable the plugin, then [set up `phpunit`](#enabling-phpunit) since it doesn’t yet handle that for you.
 
 ### Additional Step for Mutagen
+
 Please note that if you use mutagen (If you use Colima you will use mutagen by default.  If you use Docker Desktop, you may opt-into using Mutagen), you will need an additional configuration task to setup your PHP Interpreter even if you are using this plugin.  
 
 1. Open Preferences
