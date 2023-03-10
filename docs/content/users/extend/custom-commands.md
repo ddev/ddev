@@ -218,6 +218,14 @@ If your container command should run from the directory you are running the comm
 
 Example: `## HostWorkingDir: true`
 
+### “ExecRaw” Annotation (Container Commands Only)
+
+Use `ExecRaw: true` to pass arguments for the command you want to run directly to the command in the container as-is. 
+
+For example, when ExecRaw is true, `ddev yarn --help` returns the help for `yarn`, not DDEV's help for the `ddev yarn` command.
+
+Example: `## ExecRaw: true`
+
 ## Known Windows Issues
 
 ### Line Endings
