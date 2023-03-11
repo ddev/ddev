@@ -224,6 +224,8 @@ Use `ExecRaw: true` to pass arguments for the command you want to run directly t
 
 For example, when ExecRaw is true, `ddev yarn --help` returns the help for `yarn`, not DDEV's help for the `ddev yarn` command.
 
+We recommend  using this annotation for all container commands. The default behavior is retained to avoid breaking existing commands.
+
 Example: `## ExecRaw: true`
 
 ## Known Windows Issues
