@@ -281,7 +281,7 @@ func setupSSHKey(t *testing.T, privateKey string, expectScriptDir string) error 
 func TestPantheonDoMonthlyPush(t *testing.T) {
 	// Pantheon freezes inactive sites, so why not do a commit when we run to prevent that?
 	_, _, day := time.Now().Date()
-	if day != 11 {
+	if day != 10 {
 		t.Skipf("It's not the right day to do pantheon code push.")
 	}
 
