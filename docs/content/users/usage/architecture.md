@@ -44,7 +44,7 @@ A project’s `.ddev` directory can be intimidating at first, so let’s take a 
 : Files to be copied into the web container on startup. You could use this, for example, to override the default home directory contents (`.profile`, `.bashrc`, `.composer`, `.ssh`), or include scripts that you’d like to be available inside the container. (You can do the same thing globally in `~/.ddev/homeadditions`.) Check out the [homeadditions docs](../extend/in-container-configuration.md) for more.
 
 `mutagen` directory
-: Contains `mutagen/mutagen.yml`, where you can [override the default Mutagen configuration](../install/performance.md#advanced-mutagen-configuration-options).
+: Contains `mutagen.yml`, where you can [override the default Mutagen configuration](../install/performance.md#advanced-mutagen-configuration-options).
 
 `mysql` directory
 : Contains [optional `mysql` or `mariadb` configuration](../extend/customization-extendibility.md#providing-custom-mysqlmariadb-configuration-mycnf).
@@ -56,7 +56,7 @@ A project’s `.ddev` directory can be intimidating at first, so let’s take a 
 : Contains the nginx configuration used by the web container, which [can be customized](../extend/customization-extendibility.md#providing-custom-nginx-configuration).
 
 `postgres` directory
-: Contains `postgres/postgresql.conf`, which can be edited if needed. Remove the `#ddev-generated` line at the top to take it over.
+: Contains `postgresql.conf`, which can be edited if needed. Remove the `#ddev-generated` line at the top to take it over.
 
 `providers` directory
 : Contains examples and implementations to demonstrate how the [`ddev pull`](../usage/commands.md#pull) command can work with [hosting providers](../providers/index.md).

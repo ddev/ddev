@@ -3,7 +3,7 @@
 DDEV attempts to work smoothly offline, and you shouldn’t have to do anything to make it work:
 
 * It doesn’t attempt instrumentation or update reporting if offline
-* It falls back to using `/etc/hosts` entries DNS resolution fails
+* It falls back to using `/etc/hosts` entries if DNS resolution fails
 
 However, it does not (yet) attempt to prevent Docker pulls if a new Docker image is required, so you’ll want to make sure that you try a [`ddev start`](../usage/commands.md#start) before going offline to make sure everything has been pulled.
 

@@ -23,7 +23,7 @@ You can also:
 
 ## Database Backends and Defaults
 
-You can use a [variety of different database types](../extend/database-types.md#database-server-types), including MariaDB (5.5–10.8), MySQL (5.5–8.0), and PostgreSQL (9–14). If you want to _change_ database type, you need to export your database, run [`ddev delete`](../usage/commands.md#delete) to remove the project (and its existing database), change to a new database type, run [`ddev start`](../usage/commands.md#start) again, and [import your data](../usage/commands.md#import-db).
+You can use a [variety of different database types](../extend/database-types.md#database-server-types), including MariaDB (5.5–10.8), MySQL (5.5–8.0), and PostgreSQL (9–15). If you want to _change_ database type, you need to export your database, run [`ddev delete`](../usage/commands.md#delete) to remove the project (and its existing database), change to a new database type, run [`ddev start`](../usage/commands.md#start) again, and [import your data](../usage/commands.md#import-db).
 
 DDEV creates a default database named `db` and default permissions for the `db` user with password `db`, and it’s on the (inside Docker) hostname `db`.
 
@@ -58,7 +58,7 @@ The PostgreSQL database container includes normal `pg` commands like `pgdump`.
 If you’d like to use a GUI database client, you’ll need the right connection details and there may even be a command to launch it for you:
 
 * The [`ddev describe`](../usage/commands.md#describe) command displays the URL for the built-in phpMyAdmin GUI. (Something like `https://<yourproject>.ddev.site:8037`.) It also includes the `Host:` details you’ll need to connect to the `db` container externally.
-* macOS users can use `ddev sequelace` to launch the free [Sequel Ace](https://sequel-ace.com/) database browser, [`ddev tableplus`](../usage/commands.md#tableplus) to launch [TablePlus](https://tableplus.com), [`ddev querious`] for [Querious](https://www.araelium.com/querious), and the obsolete [Sequel Pro](https://sequelpro.com/) is also supported with `ddev sequelpro`. (Each must be installed for the command to exist.)
+* macOS users can use `ddev sequelace` to launch the free [Sequel Ace](https://sequel-ace.com/) database browser, [`ddev tableplus`](../usage/commands.md#tableplus) to launch [TablePlus](https://tableplus.com), [`ddev querious`](../usage/commands.md#querious) for [Querious](https://www.araelium.com/querious), and the obsolete [Sequel Pro](https://sequelpro.com/) is also supported with `ddev sequelpro`. (Each must be installed for the command to exist.)
 * PhpStorm (and all JetBrains tools) have a nice database browser. (If you use the [DDEV Integration plugin](https://plugins.jetbrains.com/plugin/18813-ddev-integration) this is all done for you.)
     * Choose a static [`host_db_port`](../configuration/config.md#host_db_port) setting for your project. For example `host_db_port: 59002` (each project’s database port should be different if you’re running more than one project at a time). Use [`ddev start`](../usage/commands.md#start) for it to take effect.
     * Use the “database” tool to create a source from “localhost”, with the proper type “mysql” or “postgresql” and the port you chose, username `db` + password `db`.

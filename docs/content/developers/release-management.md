@@ -42,9 +42,11 @@ The following “Repository secret” environment variables must be added to <ht
 
 * Create and execute a test plan.
 * Make sure [`version-history.md`](https://github.com/ddev/ddev/blob/master/version-history.md) is up to date.
+* Push the new version of `drud/ddev-php-base`.
+* Update `drud/ddev-webserver` to use the new version of `drud/ddev-php-base` and push it with the proper tag.
 * Make sure the Docker images are all tagged and pushed.
 * Make sure [`pkg/versionconstants/versionconstants.go`](https://github.com/ddev/ddev/blob/master/pkg/versionconstants/versionconstants.go) is all set to point to the new images and tests have been run.
-* If the devcontainer-feature.json (for GitHub Codespaces) needs to be updated, use the [`devcontainer` CLI](https://github.com/devcontainers/cli):
+* If the [`devcontainer-feature.json`](https://github.com/ddev/ddev/blob/master/.github/devcontainers/src/install-ddev/devcontainer-feature.json) (for GitHub Codespaces) needs to be updated, use the [`devcontainer` CLI](https://github.com/devcontainers/cli):
 
     ```bash
     cd .github/devcontainers/source
@@ -55,44 +57,31 @@ The following “Repository secret” environment variables must be added to <ht
 ### Actual Release Creation
 
 1. Create a [release](https://github.com/ddev/ddev/releases) for the new version using the GitHub UI. It should be “prerelease” if it’s an edge release.
-2. Use the “Auto-generate release notes” option to get the commit list, then edit to add all the other necessary info.
-3. Verify that Homebrew (Linux and macOS) and Chocolatey and AUR are working correctly with the right versions.
+2. Make sure you're about to create the right release tag.
+3. Use the “Auto-generate release notes” option to get the commit list, then edit to add all the other necessary info.
 
 ### Post-Release Tasks
 
 1. After the release has been created, the new gitpod image must be pushed.
-   1. `cd .gitpod/images && DOCKER_TAG="<YYMMDD>" ./push.sh
-   2. PR to update .gitpod.yml with the new image.
+   1. `cd .gitpod/images && DOCKER_TAG="<YYMMDD>" ./push.sh`
+   2. PR to update `.gitpod.yml` with the new image.
    3. PR to update [ddev-gitpod-launcher](https://github.com/ddev/ddev-gitpod-launcher) with the new image.
 
 ## Pushing Docker Images with the GitHub Actions Workflow
 
 The easiest way to push Docker images is to use the GitHub Actions workflow, especially if the code for the image is already in the [ddev/ddev](https://github.com/ddev/ddev) repository.
 
-### Prerelease tasks
-
-1. Push the new version of drud/ddev-php-base
-2. Update drud/ddev-webserver to use the new version of drud/ddev-php-base and push it with the proper tag
-3. Make sure the `version-history.md` file is up to date.
-4. Make sure the docker images for the new tag are all tagged and pushed.
-5. Make sure the pkg/version/version.go is all set to point to the new images (and tests have been run)
-6. Make sure you're about to create the right release tag.
-
 ### Actual release creation
 
-1. Create a release for the new version using the GitHub UI. It should be "prerelease" if it's an edge release. Use the right tag!
-2. Use the "Auto-generate release notes" option to get the commit list, then edit to add all the other necessary info.
-3. Verify that homebrew (linux and macOS) and Chocolatey and AUR are working correctly with the right versions
-
-## Pushing docker images with the GitHub Actions workflow
-
-The easiest way to push docker images is to use the GitHub Actions workflow, especially if the code for the image is already in the ddev repo.
+1. Create a [release](https://github.com/ddev/ddev/releases) for the new version using the GitHub UI. It should be “prerelease” if it’s an edge release.
+2. Use the “Auto-generate release notes” option to get the commit list, then edit to add all the other necessary info.
+3. Verify that Homebrew (Linux and macOS) and Chocolatey and AUR are working correctly with the right versions.
 
 <!-- markdown-link-check-disable-next-line -->
 You can push an image at <https://github.com/ddev/ddev/actions/workflows/push-tagged-image.yml>
 
 <!-- markdown-link-check-disable-next-line -->
-If you need to push from a forked PR, you’ll have to do this from your fork (for example, `https://github.com/drud/rfay/actions/workflows/push-tagged-image.yml`), and you’ll have to specify the branch on the fork. This requires setting the `DOCKERHUB_TOKEN` and `DOCKERHUB_USERNAME` secrets on the forked PR, for example `https://github.com/rfay/ddev/settings/secrets/actions`.
+If you need to push from a forked PR, you’ll have to do this from your fork (for example, `https://github.com/rfay/ddev/actions/workflows/push-tagged-image.yml`), and you’ll have to specify the branch on the fork. This requires setting the `DOCKERHUB_TOKEN` and `DOCKERHUB_USERNAME` secrets on the forked PR, for example `https://github.com/rfay/ddev/settings/secrets/actions`.
 
 * Visit `https://github.com/ddev/ddev/actions/workflows/push-tagged-image.yml`.
 * Click the “Push tagged image” workflow on the left side of the page.
