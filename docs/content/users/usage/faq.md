@@ -142,7 +142,7 @@ You can use the [`self-upgrade`](../usage/commands.md#self-upgrade) command for 
 * On macOS or Linux (including WSL2) if you installed using the [install_ddev.sh script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) you just run it again:
     <!-- markdownlint-disable -->
     ```
-    curl -fsSL https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev.sh | bash
+    curl -fsSL https://ddev.com/install.sh | bash
     ```
     <!-- markdownlint-restore -->
 * On traditional Windows, you likely installed with Chocolatey or by downloading the installer package. You can upgrade with `choco upgrade ddev` or by visiting the [releases](https://github.com/ddev/ddev/releases) page and downloading the installer. Both techniques will work.
@@ -153,7 +153,7 @@ You can use the [`self-upgrade`](../usage/commands.md#self-upgrade) command for 
 If you’re using Homebrew, first run `brew unlink ddev` to get rid of the version you have there. Then use one of these options:
 
 1. Download the version you want from the [releases page](https://github.com/ddev/ddev/releases) and place it in your `$PATH`.
-2. Use the [install_ddev.sh](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev.sh) script with the version number argument. For example, if you want v1.18.3-alpha1, run `curl -fsSL https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev.sh | bash -s v1.18.3-alpha1`.
+2. Use the [install_ddev.sh](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev.sh) script with the version number argument. For example, if you want v1.18.3-alpha1, run `curl -fsSL https://ddev.com/install.sh | bash -s v1.21.5`.
 3. On Debian/Ubuntu/WSL2 with DDEV installed via apt, you can run `sudo apt update && sudo apt install ddev=<version>`, for example `sudo apt install ddev=1.21.1`.
 4. If you want the very latest, unreleased version of DDEV, run `brew unlink ddev && brew install ddev/ddev/ddev --HEAD`.
 

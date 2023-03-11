@@ -1016,7 +1016,7 @@ Example:
 →  ddev self-upgrade
 
 DDEV appears to have been installed with install_ddev.sh, you can run that script again to update.
-curl -fsSL https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev.sh | bash
+curl -fsSL https://ddev.com/install.sh | bash
 ```
 
 ## `sequelace`

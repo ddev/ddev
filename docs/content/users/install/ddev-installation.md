@@ -35,13 +35,13 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     Run the [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) to install or update DDEV. It downloads, verifies, and sets up the `ddev` binary:
 
     ```
-    curl -fsSL https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev.sh | bash
+    curl -fsSL https://ddev.com/install.sh | bash
     ```
 
     You can include a `-s <version>` argument to install a specific release or a prerelease version:
 
     ```
-    curl -fsSL https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev.sh | bash -s v1.21.4
+    curl -fsSL https://ddev.com/install.sh | bash -s v1.21.4
     ```
 
     We recommend [enabling Mutagen](performance.md#mutagen) for the best performance; enable with [`ddev config global --mutagen-enabled`](../usage/commands.md#config).
