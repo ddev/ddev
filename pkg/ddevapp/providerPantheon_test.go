@@ -37,14 +37,9 @@ const pantheonPushGitURL = "ssh://codeserver.dev.d32c631e-c998-480f-93bc-7c36e6a
 // TestPantheonPull ensures we can pull from pantheon.
 func TestPantheonPull(t *testing.T) {
 	token := ""
-	sshkey := ""
 	if token = os.Getenv("DDEV_PANTHEON_API_TOKEN"); token == "" {
 		t.Skipf("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping %v", t.Name())
 	}
-	if sshkey = os.Getenv("DDEV_PANTHEON_SSH_KEY"); sshkey == "" {
-		t.Skipf("No DDEV_PANTHEON_SSH_KEY env var has been set. Skipping %v", t.Name())
-	}
-	sshkey = strings.Replace(sshkey, "<SPLIT>", "\n", -1)
 
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
@@ -61,9 +56,6 @@ func TestPantheonPull(t *testing.T) {
 	err = os.MkdirAll(filepath.Join(siteDir, "sites/default"), 0777)
 	require.NoError(t, err)
 	err = os.Chdir(siteDir)
-	require.NoError(t, err)
-
-	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
 	require.NoError(t, err)
 
 	app, err := NewApp(siteDir, true)
@@ -280,7 +272,7 @@ func setupSSHKey(t *testing.T, privateKey string, expectScriptDir string) error 
 	err = os.WriteFile(filepath.Join("sshtest", "id_rsa_test"), []byte(privateKey), 0600)
 	require.NoError(t, err)
 	out, err := exec.RunHostCommand("expect", filepath.Join(expectScriptDir, "ddevauthssh.expect"), DdevBin, "./sshtest")
-	require.NoError(t, err)
+	require.NoError(t, err, "out=%s", out)
 	require.Contains(t, string(out), "Identity added:")
 	return nil
 }
@@ -305,6 +297,7 @@ func TestPantheonDoMonthlyPush(t *testing.T) {
 		t.Skipf("No DDEV_PANTHEON_SSH_KEY env var has been set. Skipping %v", t.Name())
 	}
 	sshkey = strings.Replace(sshkey, "<SPLIT>", "\n", -1)
+	sshkey = strings.Replace(sshkey, "\n ", "\n", -1)
 
 	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
 	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"TERMINUS_MACHINE_TOKEN=" + token}
