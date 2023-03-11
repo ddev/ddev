@@ -281,7 +281,7 @@ func setupSSHKey(t *testing.T, privateKey string, expectScriptDir string) error 
 func TestPantheonDoMonthlyPush(t *testing.T) {
 	// Pantheon freezes inactive sites, so why not do a commit when we run to prevent that?
 	_, _, day := time.Now().Date()
-	if day != 10 {
+	if day != 11 {
 		t.Skipf("It's not the right day to do pantheon code push.")
 	}
 
@@ -297,6 +297,7 @@ func TestPantheonDoMonthlyPush(t *testing.T) {
 		t.Skipf("No DDEV_PANTHEON_SSH_KEY env var has been set. Skipping %v", t.Name())
 	}
 	sshkey = strings.Replace(sshkey, "<SPLIT>", "\n", -1)
+	sshkey = strings.Replace(sshkey, "\n ", "\n", -1)
 
 	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
 	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"TERMINUS_MACHINE_TOKEN=" + token}
