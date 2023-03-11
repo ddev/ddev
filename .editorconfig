@@ -8,9 +8,13 @@ root = true
 charset = utf-8
 end_of_line = lf
 indent_style = space
-indent_size = 4
+# Forcing indent to 4 seems to break lots of things, like
+# embedded yaml in markdown.
+# indent_size = 4
 insert_final_newline = true
-trim_trailing_whitespace = true
+# Lots of editors and practices leave trailing whitespace
+# that does no harm.
+#trim_trailing_whitespace = true
 
 # GO files
 [*.go]
