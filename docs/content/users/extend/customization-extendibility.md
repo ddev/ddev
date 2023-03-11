@@ -118,9 +118,9 @@ In `.ddev/docker-compose.vnc.yaml`:
 ```yaml
 version: '3.6'
 services:
-    web:
-        ports:
-            - "5900:5900"
+  web:
+    ports:
+      - "5900:5900"
 ```
 
 If multiple projects declare the same port, only the first project will be able to start successfully. Consider making services like this disabled by default, especially if they aren't needed in day to day use.
