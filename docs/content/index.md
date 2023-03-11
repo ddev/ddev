@@ -14,14 +14,13 @@ These environments can be extended, version controlled, and shared, so you can t
 === "macOS"
 
     ### macOS
-    
+
     Runs natively on ARM64 (Apple Silicon) and AMD64 machines.
 
+    * macOS Big Sur (11) or higher
     * RAM: 8GB
     * Storage: 256GB
     * [Colima](https://github.com/abiosoft/colima) or [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-    * Colima and Docker Desktop both require macOS Big Sur (11) or higher.
-    * On macOS with either Colima or Docker Desktop most users will want to enable Mutagen for best performance, `ddev config global --mutagen-enabled`
 
 === "Windows WSL2"
 
@@ -50,7 +49,7 @@ These environments can be extended, version controlled, and shared, so you can t
     * RAM: 8GB
     * Storage: 256GB
 
-=== "Gitpod and GitHub Codespaces"
+=== "Gitpod & Codespaces"
 
     ### Gitpod and GitHub Codespaces
 
