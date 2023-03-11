@@ -109,6 +109,22 @@ web_extra_exposed_ports:
 !!!warning "Fill in all three fields even if you don’t intend to use the `https_port`!"
     If you don’t add `https_port`, then it default to `0` and `ddev-router` will fail to start.
 
+## Exposing Extra Non-HTTP Ports
+
+While the `web_extra_exposed_ports` gracefully handles running multiple DDEV projects at the same time, it can't forward ports for non-HTTP TCP or UDP daemons. Instead, ports can be added in a `docker-compose.*.yaml` file. This file does not need to specify an additional services. For example, this configuration exposes port 5900 for a VNC server.
+
+In `.ddev/docker-compose.vnc.yaml`:
+
+```yaml
+version: '3.6'
+services:
+  web:
+    ports:
+      - "5900:5900"
+```
+
+If multiple projects declare the same port, only the first project will be able to start successfully. Consider making services like this disabled by default, especially if they aren't needed in day to day use.
+
 ## Providing Custom Environment Variables to a Container
 
 You can set custom environment variables in several places:

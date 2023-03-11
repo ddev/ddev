@@ -122,6 +122,7 @@ TablePlus
 Traefik
 TravisCI
 UAC
+UDP
 Unshare
 Usage
 Use
@@ -130,6 +131,7 @@ Uz
 VCS
 Ventura
 VM
+VNC
 VPN
 VPNs
 WAMP
