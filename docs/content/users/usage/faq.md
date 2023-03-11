@@ -21,7 +21,7 @@ DDEV works nearly anywhere Docker will run, including macOS, Windows 10/11 Pro/E
 
 Probably! You’ll need to install an older, unsupported version of Docker Desktop—but you can likely use it to run the latest DDEV version.
 
-Check out [rkoller’s Stack Overflow answer](https://stackoverflow.com/a/69964995/897279) for a walk through the process.
+Check out [this Stack Overflow answer](https://stackoverflow.com/a/69964995/897279) for a walk through the process.
 
 ### Do I need to install PHP, Composer, nginx, or Node.js/npm on my workstation?
 
