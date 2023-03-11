@@ -111,7 +111,7 @@ web_extra_exposed_ports:
 
 ## Exposing Extra Non-HTTP Ports
 
-While the `web_extra_exposed_ports` gracefully handles running multiple ddev projects at the same time, it can't forward  ports for non-HTTP TCP or UDP daemons. Instead, ports can be added in a `docker-compose.*.yaml` file. This file does not need to specify an additional services. For example, this configuration exposes port 5900 for a VNC server.
+While the `web_extra_exposed_ports` gracefully handles running multiple DDEV projects at the same time, it can't forward ports for non-HTTP TCP or UDP daemons. Instead, ports can be added in a `docker-compose.*.yaml` file. This file does not need to specify an additional services. For example, this configuration exposes port 5900 for a VNC server.
 
 In `.ddev/docker-compose.vnc.yaml`:
 
