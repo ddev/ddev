@@ -71,7 +71,7 @@ jobs:
       MAKE_TARGET: "test"
       TESTARGS: "-failfast"
       DDEV_ACQUIA_SSH_KEY: ${{ secrets.DDEV_ACQUIA_SSH_KEY }}
-      DDEV_PANTHEON_SSH_KEY: ${{ secrets.DDEV_PANTHEON_SSH_KEY }}"
+      DDEV_PANTHEON_SSH_KEY: ${{ secrets.DDEV_PANTHEON_SSH_KEY }}
 
     steps:
       - uses: actions/checkout@v3

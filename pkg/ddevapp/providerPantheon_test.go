@@ -280,7 +280,7 @@ func setupSSHKey(t *testing.T, privateKey string, expectScriptDir string) error 
 	err = os.WriteFile(filepath.Join("sshtest", "id_rsa_test"), []byte(privateKey), 0600)
 	require.NoError(t, err)
 	out, err := exec.RunHostCommand("expect", filepath.Join(expectScriptDir, "ddevauthssh.expect"), DdevBin, "./sshtest")
-	require.NoError(t, err)
+	require.NoError(t, err, "out=%s", out)
 	require.Contains(t, string(out), "Identity added:")
 	return nil
 }
