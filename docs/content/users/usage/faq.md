@@ -17,6 +17,12 @@ DDEV works nearly anywhere Docker will run, including macOS, Windows 10/11 Pro/E
 * It’s focused directly on running containers.
 * It’s fast and stable.
 
+### Can I run DDEV on an older Mac?
+
+Probably! You’ll need to install an older, unsupported version of Docker Desktop—but you can likely use it to run the latest DDEV version.
+
+Check out [this Stack Overflow answer](https://stackoverflow.com/a/69964995/897279) for a walk through the process.
+
 ### Do I need to install PHP, Composer, nginx, or Node.js/npm on my workstation?
 
 No. These tools live inside DDEV’s Docker containers, so you only need to [install Docker](../install/docker-installation.md) and [install DDEV](../install/ddev-installation.md). This is especially handy for Windows users where there’s more friction getting these things installed.
@@ -37,7 +43,7 @@ The [`ddev describe`](../usage/commands.md#describe) command includes database c
 │            │      │                               │ or 'root/root'     │
 ```
 
-Inside your project container, where the app itself is running, the database hostname is `db`  
+Inside your project container, where the app itself is running, the database hostname is `db`
 (**not** `127.0.0.1`) and the port is the default for your database engine—`3306` for MySQL/MariaDB, `5432` for PostgreSQL.
 
 Outside your project’s web container, for example a database GUI on your workstation, the hostname is `localhost` and the port is unique to that project. In the example above, it’s `63161`.
@@ -211,7 +217,7 @@ DDEV doesn’t have control over your computer’s name resolution, so it doesn�
 
 ### How can I configure a project with the defaults without hitting <kbd>RETURN</kbd> a bunch of times?
 
-Use `ddev config --auto` to set the docroot and project type based on the discovered code.  
+Use `ddev config --auto` to set the docroot and project type based on the discovered code.
 If anything in `.ddev/config.yaml` is wrong, you can edit that directly or use [`ddev config`](../usage/commands.md#config) commands to update settings.
 
 ## Getting Involved
