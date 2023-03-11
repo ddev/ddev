@@ -220,7 +220,7 @@ Example: `## HostWorkingDir: true`
 
 ### “ExecRaw” Annotation (Container Commands Only)
 
-Use `ExecRaw: true` to pass command arguments directly to the container as-is. 
+Use `ExecRaw: true` to pass command arguments directly to the container as-is.
 
 For example, when ExecRaw is true, `ddev yarn --help` returns the help for `yarn`, not DDEV's help for the `ddev yarn` command.
 
