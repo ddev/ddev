@@ -37,14 +37,9 @@ const pantheonPushGitURL = "ssh://codeserver.dev.d32c631e-c998-480f-93bc-7c36e6a
 // TestPantheonPull ensures we can pull from pantheon.
 func TestPantheonPull(t *testing.T) {
 	token := ""
-	sshkey := ""
 	if token = os.Getenv("DDEV_PANTHEON_API_TOKEN"); token == "" {
 		t.Skipf("No DDEV_PANTHEON_API_TOKEN env var has been set. Skipping %v", t.Name())
 	}
-	if sshkey = os.Getenv("DDEV_PANTHEON_SSH_KEY"); sshkey == "" {
-		t.Skipf("No DDEV_PANTHEON_SSH_KEY env var has been set. Skipping %v", t.Name())
-	}
-	sshkey = strings.Replace(sshkey, "<SPLIT>", "\n", -1)
 
 	// Set up tests and give ourselves a working directory.
 	assert := asrt.New(t)
@@ -61,9 +56,6 @@ func TestPantheonPull(t *testing.T) {
 	err = os.MkdirAll(filepath.Join(siteDir, "sites/default"), 0777)
 	require.NoError(t, err)
 	err = os.Chdir(siteDir)
-	require.NoError(t, err)
-
-	err = setupSSHKey(t, sshkey, filepath.Join(origDir, "testdata", t.Name()))
 	require.NoError(t, err)
 
 	app, err := NewApp(siteDir, true)
