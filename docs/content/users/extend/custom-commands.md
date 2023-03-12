@@ -218,7 +218,7 @@ If your container command should run from the directory you are running the comm
 
 Example: `## HostWorkingDir: true`
 
-### `ExecRaw` Annotation (Container Commands Only)
+### "ExecRaw" Annotation (Container Commands Only)
 
 Use `ExecRaw: true` to pass command arguments directly to the container as-is.
 
