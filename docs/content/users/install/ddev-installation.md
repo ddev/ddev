@@ -30,7 +30,9 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     !!!tip
         The install script works on macOS, Linux, and Windows WSL2.
-
+    
+    !!!tip
+        You may find that on fresh macOS installs, the `/usr/local/bin` folder does not exist and the script will fail. Create it with `sudo mkdir /usr/local/bin` first and then run the script again.
 
     Run the [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) to install or update DDEV. It downloads, verifies, and sets up the `ddev` binary:
 
