@@ -41,6 +41,7 @@ DrupalEasy
 Dump
 Enable
 EndeavourOS
+ExecRaw
 ExecStart
 ExecStop
 Execute
