@@ -20,18 +20,18 @@ If you’re using WSL2 and running PhpStorm on the Windows side, PhpStorm can’
 
 It’s easiest to use the DDEV Integration Plugin, which you can install from [its landing page](https://plugins.jetbrains.com/plugin/18813-ddev-integration) or by searching the in-app marketplace (*Preferences* → *Plugins* → *Marketplace*) for “DDEV”. The integration plugin handles nearly everything on this page automatically, and works on all platforms.
 
-Install and enable the plugin, then [set up `phpunit`](#enabling-phpunit) since it doesn’t yet handle that for you.
+Install and enable the plugin, then [set up `phpunit`](#enabling-phpunit) since it doesn't yet handle that for you.
 
 ### Additional Step for Mutagen
 
-Please note that if you use mutagen (If you use Colima you will use mutagen by default.  If you use Docker Desktop, you may opt-into using Mutagen), you will need an additional configuration task to setup your PHP Interpreter even if you are using this plugin.  
+Please note that if you use mutagen (If you use Colima you will use mutagen by default. If you use Docker Desktop, you may opt-into using Mutagen), you will need an additional configuration task to set up your PHP Interpreter even if you are using this plugin.
 
 1. Open Preferences
 2. Navigate to PHP
 3. Edit the Path Mappings
 4. Add a path mapping that maps Local: /Users/<your_username>/<your_project_root>/ to Remote:/var/www/html
 
-PhpStorm mistakenly maps your project root to `/var/tmp/html`.  Whenever you run a test / process in phpstorm that requires file permissions you'll likely run into a permission error.  If you continue to run into file permission errors fix the offending folder by setting permissive permissions on it. `chmod 777 <directory>`
+PhpStorm mistakenly maps your project root to `/var/tmp/html`. Whenever you run a test / process in phpstorm that requires file permissions you'll likely run into a permission error. If you continue to run into file permission errors fix the offending folder by setting permissive permissions on it. `chmod 777 <directory>`
 
 ## Manual Setup
 
@@ -51,9 +51,9 @@ If you’re not using the DDEV Integration Plugin, you can follow these steps in
     6. Service: `web`.
     7. In the CLI interpreter “Lifecycle” select “Connect to existing container”.
     8. Here’s an example filled out:
-        ![example configuration](../../images/phpstorm-cli-interpreter.png)
-6. In the main PHP setup dialog, add an entry to the path mappings, as it doesn’t correctly derive the full path mapping. Add an entry that maps your project location to `/var/www/html`. So in this example, the “Local Path” is `/Users/rfay/workspace/d9` and the “Remote Path” is `/var/www/html`:
-    ![example mapping](../../images/phpstorm-mapping.png)
+       ![example configuration](../../images/phpstorm-cli-interpreter.png)
+6. In the main PHP setup dialog, add an entry to the path mappings, as it doesn't correctly derive the full path mapping. Add an entry that maps your project location to `/var/www/html`. So in this example, the “Local Path” is `/Users/rfay/workspace/d9` and the “Remote Path” is `/var/www/html`:
+   ![example mapping](../../images/phpstorm-mapping.png)
 7. Configure composer under *PHP* → *Composer*.
     - Use “remote interpreter”
     - CLI Interpreter will be “web”
@@ -67,14 +67,14 @@ This assumes you’ll need to use PHPUnit and you already have it installed.
     - Interpreter “DDEV”
     - Choose “Path to phpunit.phar” and use `/var/www/html/vendor/bin/phpunit`, or wherever your PHPUnit is inside the container. You need PHPUnit properly Composer-installed for your CMS. For example, for Drupal 9, `ddev composer require --dev --with-all-dependencies drupal/core-dev:^9` and `ddev composer require --dev phpspec/prophecy-phpunit:^2`.
     - Default configuration file: `/var/www/html/web/core/phpunit.xml` or wherever yours is inside the container.
-    ![Example config](../../images/phpstorm-phpunit-setup.png)
+      ![Example config](../../images/phpstorm-phpunit-setup.png)
 2. Open Run/Debug configurations and use “+” to add a PHPUnit configuration. Give it a name.
     - Test scope (as you wish, by directory or class or whatever).
     - Interpreter: “web” (the one we set up).
-    ![Run-debug configuration](../../images/phpstorm-run-debug-config.png)
+      ![Run-debug configuration](../../images/phpstorm-run-debug-config.png)
 3. Enable Xdebug if you want to debug tests with `ddev xdebug on`.
 4. Run the runner you created:
-    ![Example PHPUnit run](../../images/phpstorm-example-phpunit-run.png)
+   ![Example PHPUnit run](../../images/phpstorm-example-phpunit-run.png)
 
 ## PhpStorm Basic Setup on Windows WSL2
 
@@ -88,7 +88,7 @@ We’ll walk through each of these approaches.
 
 ### Basics
 
-- Start with a working DDEV/WSL2 setup as described in the [docs](../install/ddev-installation.md). Until that’s all working it doesn’t help to go farther.
+- Start with a working DDEV/WSL2 setup as described in the [docs](../install/ddev-installation.md). Until that’s all working it doesn't help to go farther.
 
 - If you haven’t used Xdebug with DDEV and PhpStorm before, you’ll want to read the [step debugging instructions](../debugging-profiling/step-debugging.md).
 
