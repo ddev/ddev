@@ -47,7 +47,7 @@ Add-ons marked with '*' are official, maintained DDEV add-ons.
 ```
 
 !!!tip
-If you need a service not provided here, see [Defining an Additional Service with Docker Compose](custom-compose-files.md).
+    If you need a service not provided here, see [Defining an Additional Service with Docker Compose](custom-compose-files.md).
 
 Officially-supported add-ons:
 
