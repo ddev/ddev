@@ -20,8 +20,8 @@ There are CMSes that make this a little harder, especially WordPress and Magento
 
 ### Setting up a Stable ngrok Subdomain
 
-1. Get a paid token with at least the basic plan, and configure it. It will be in `~/.ngrok2/ngrok.yml` as `authtoken`.
-2. Configure `ngrok_args` to use a stable subdomain. In `.ddev/config.yaml`, `ngrok_args: --subdomain wp23` will result in ngrok always using `wp23.ngrok.io` as the URL, so it’s not changing on you all the time.
+1. Get a token with at least the free plan from [ngrok.com](https://ngrok.com/), and configure it. It will be in `~/.ngrok2/ngrok.yml` as `authtoken`.
+2. Configure `ngrok_args` to use a stable subdomain. In `.ddev/config.yaml`, `ngrok_args: --subdomain wp23` will result in ngrok always using `wp23.ngrok.io` as the URL, so it’s not changing on you all the time. This feature only works for paid ngrok plans.
 
 ### WordPress: Change the URL with `wp search-replace`
 
