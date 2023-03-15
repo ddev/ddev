@@ -3,7 +3,7 @@
 Once [DDEV’s installed](./install/ddev-installation.md), setting up a new project should be quick:
 
 1. Clone or create the code for your project.
-2. `cd` into the project directory and run [`ddev config`](./usage/commands.md#config) to initialize a DDEV project.  
+2. `cd` into the project directory and run [`ddev config`](./usage/commands.md#config) to initialize a DDEV project.
 3. Run [`ddev start`](./usage/commands.md#start) to spin up the project.
 4. Run [`ddev launch`](./usage/commands.md#launch) to open your project in a browser.
 

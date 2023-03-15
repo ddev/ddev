@@ -7,7 +7,7 @@ DDEV provides lots of flexibility for managing your databases between your local
 
 ## Database Imports
 
-Import a database with one command, from one of the following file formats:  
+Import a database with one command, from one of the following file formats:<br>
 **.sql, .sql.gz, .mysql, .mysql.gz, .tar, .tar.gz, and .zip**.
 
 Here’s an example of a database import using DDEV:

@@ -65,14 +65,14 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     ```bash
     sudo apt update && sudo apt upgrade
     ```
-    
+
     !!!tip "Removing Previous Install Methods"
         If you previously used DDEV’s [install script](#install-script), you can remove that version:
 
         ```
         sudo rm -f /usr/local/bin/ddev /usr/local/bin/mkcert /usr/local/bin/*ddev_nfs_setup.sh
         ```
-    
+
         If you previously [installed DDEV with Homebrew](#homebrew), you can run `brew unlink ddev` to get rid of the Homebrew version.
 
     ### Fedora, Red Hat, etc.
@@ -114,15 +114,15 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ### Important Considerations for WSL2 and DDEV
 
-    * WSL2 is supported on Windows 10 and 11.  
+    * WSL2 is supported on Windows 10 and 11.<br>
       All Windows 10/11 editions, including Windows 10 Home support WSL2.
-    * WSL2 offers a faster, smoother experience.  
+    * WSL2 offers a faster, smoother experience.<br>
       It’s vastly more performant, and you’re less likely to have obscure Windows problems.
-    * Projects should live in the Linux filesystem.  
+    * Projects should live in the Linux filesystem.<br>
       WSL2’s Linux filesystem (e.g. `/home/<your_username>`) is much faster, so keep your projects there and **not** in the slower Windows filesystem (`/mnt/c`).
-    * Custom hostnames are managed via the Windows hosts file, not within WSL2.  
+    * Custom hostnames are managed via the Windows hosts file, not within WSL2.<br>
       DDEV attempts to manage custom hostnames via the Windows-side hosts file—usually at `C:\Windows\system32\drivers\etc\hosts`—and it can only do this if it’s installed on the Windows side. (DDEV inside WSL2 uses `ddev.exe` on the Windows side as a proxy to update the Windows hosts file.) If `ddev.exe --version` shows the same version as `ddev --version` you’re all set up. Otherwise, install DDEV on Windows using `choco upgrade -y ddev` or by downloading and running the Windows installer. (The WSL2 scripts below install DDEV on the Windows side, taking care of that for you.) If you frequently run into Windows UAC Escalation, you can calm it down by running `gsudo.exe cache on` and `gsudo.exe config CacheMode auto`, see [gsudo docs](https://github.com/gerardog/gsudo#credentials-cache).
-    * WSL2 is not the same as Docker Desktop’s WSL2 engine.  
+    * WSL2 is not the same as Docker Desktop’s WSL2 engine.<br>
       Using WSL2 to install and run DDEV is not the same as using Docker Desktop’s WSL2 engine, which itself runs in WSL2, but can serve applications running in both traditional Windows and inside WSL2.
 
     The WSL2 install process involves:
@@ -140,7 +140,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     The provided PowerShell script can do most of the work for you, or you can handle these things manually. (This script works with the built-in PowerShell v5, but not with the newer v7.)
 
     In all cases:
-    
+
     1. Install WSL2 with an Ubuntu distro.
 
         * Install WSL with
@@ -152,16 +152,16 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
         * Visit the Microsoft Store and install the *updated* ["Windows Subsystem for Linux"](https://apps.microsoft.com/store/detail/windows-subsystem-for-linux/9P9TQF7MRM4R) and click "Open". It will likely prompt you for a username and password for the Ubuntu WSL2 instance it creates.
 
-        * Verify that you now have an Ubuntu distro set as default by running `wsl.exe -l -v` 
+        * Verify that you now have an Ubuntu distro set as default by running `wsl.exe -l -v`
 
-        If you already have WSL2 but don't have an Ubuntu distro, install one by running `wsl.exe --install Ubuntu`. 
+        If you already have WSL2 but don't have an Ubuntu distro, install one by running `wsl.exe --install Ubuntu`.
 
         If that doesn't work for you, see the [manual installation](https://docs.microsoft.com/en-us/windows/wsl/install-manual) and linked [troubleshooting](https://docs.microsoft.com/en-us/windows/wsl/troubleshooting#installation-issues).
 
-    2. In an administrative PowerShell (5) run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1) by executing: 
+    2. In an administrative PowerShell (5) run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1) by executing:
 
         ```powershell
-        Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; 
+        Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
         iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1'))
         ```
     3. In *Windows Update Settings* → *Advanced Options* enable *Receive updates for other Microsoft products*. You may want to occasionally run `wsl.exe --update` as well.
@@ -172,9 +172,9 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     This scripted installation prepares your default WSL2 Ubuntu distro for use with Docker Desktop. It is designed to be able to run multiple times without breaking anything.
 
-    You can do these things manually, or you can do most of it with the provided PowerShell (5) script. 
+    You can do these things manually, or you can do most of it with the provided PowerShell (5) script.
     In all cases:
-    
+
     1. Install WSL2 with an Ubuntu distro. On a system without WSL2, run:
         ```powershell
         wsl --install
@@ -182,10 +182,10 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
         Verify that you have an Ubuntu distro set as the default default with `wsl -l -v`.
 
-        If you already have WSL2 but don't have an Ubuntu distro, install one with `wsl --install Ubuntu`. 
+        If you already have WSL2 but don't have an Ubuntu distro, install one with `wsl --install Ubuntu`.
 
         If that doesn't work for you, see the [manual installation](https://docs.microsoft.com/en-us/windows/wsl/install-manual) and linked [troubleshooting](https://docs.microsoft.com/en-us/windows/wsl/troubleshooting#installation-issues).
-        
+
         If you prefer to use another Ubuntu distro, install it and set it as default. For example, `wsl --set-default Ubuntu-22.04`.
 
     2. Visit the Microsoft Store and install the updated "Windows Subsystem for Linux", then click *Open*. It will likely prompt you for a username and password for the Ubuntu WSL2 instance it creates.
@@ -198,7 +198,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     7. In an administrative `PowerShell` (5) run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_desktop.ps1) by executing:
 
         ```powershell
-        Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; 
+        Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
         iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_desktop.ps1'))
         ```
     8. In *Windows Update Settings* → *Advanced Options* enable *Receive updates for other Microsoft products*. You may want to occasionally run `wsl.exe --update` as well.
@@ -212,7 +212,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     1. Install [Chocolatey](https://chocolatey.org/install):
         ```powershell
-        Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; 
+        Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
         iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))`
         ```
     2. In an administrative PowerShell: `choco install -y ddev mkcert`
@@ -282,9 +282,9 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     1. [Open any repository](https://www.gitpod.io/docs/getting-started) using Gitpod, run `brew install ddev/ddev/ddev`, and use DDEV!
         * You can install your web app there, or import a database.
         * You may want to implement one of the `ddev pull` provider integrations to pull from a hosting provider or an upstream source.
-    2. Use the [ddev-gitpod-launcher](https://drud.github.io/ddev-gitpod-launcher/) form to launch a repository.  
+    2. Use the [ddev-gitpod-launcher](https://drud.github.io/ddev-gitpod-launcher/) form to launch a repository.
         You’ll provide a source repository and click a button to open a newly-established environment. You can specify a companion artifacts repository and automatically load `db.sql.gz` and `files.tgz` from it. (More details in the [repository’s README](https://github.com/ddev/ddev-gitpod-launcher/blob/main/README.md).)
-    3. Save the following link to your bookmark bar: <a href="javascript: if %28 %2Fbitbucket%2F.test %28 window.location.host %29 %20 %29 %20%7B%20paths%3Dwindow.location.pathname.split %28 %22%2F%22 %29 %3B%20repo%3D%5Bwindow.location.origin%2C%20paths%5B1%5D%2C%20paths%5B2%5D%5D.join %28 %22%2F%22 %29 %20%7D%3B%20if %28 %2Fgithub.com%7Cgitlab.com%2F.test %28 window.location.host %29  %29 %20%7Brepo%20%3D%20window.location.href%7D%3B%20if%20 %28 repo %29 %20%7Bwindow.location.href%20%3D%20%22https%3A%2F%2Fgitpod.io%2F%23DDEV_REPO%3D%22%20%2B%20encodeURIComponent %28 repo %29 %20%2B%20%22%2CDDEV_ARTIFACTS%3D%22%20%2B%20encodeURIComponent %28 repo %29 %20%2B%20%22-artifacts%2Fhttps%3A%2F%2Fgithub.com%2Fddev%2Fddev-gitpod-launcher%2F%22%7D%3B">Open in ddev-gitpod</a>.  
+    3. Save the following link to your bookmark bar: <a href="javascript: if %28 %2Fbitbucket%2F.test %28 window.location.host %29 %20 %29 %20%7B%20paths%3Dwindow.location.pathname.split %28 %22%2F%22 %29 %3B%20repo%3D%5Bwindow.location.origin%2C%20paths%5B1%5D%2C%20paths%5B2%5D%5D.join %28 %22%2F%22 %29 %20%7D%3B%20if %28 %2Fgithub.com%7Cgitlab.com%2F.test %28 window.location.host %29  %29 %20%7Brepo%20%3D%20window.location.href%7D%3B%20if%20 %28 repo %29 %20%7Bwindow.location.href%20%3D%20%22https%3A%2F%2Fgitpod.io%2F%23DDEV_REPO%3D%22%20%2B%20encodeURIComponent %28 repo %29 %20%2B%20%22%2CDDEV_ARTIFACTS%3D%22%20%2B%20encodeURIComponent %28 repo %29 %20%2B%20%22-artifacts%2Fhttps%3A%2F%2Fgithub.com%2Fddev%2Fddev-gitpod-launcher%2F%22%7D%3B">Open in ddev-gitpod</a>.
         It’s easiest to drag the link into your bookmarks. When you’re on a Git repository, click the bookmark to open it with DDEV in Gitpod. It does the same thing as the second option, but it works on non-Chrome browsers and you can use native browser keyboard shortcuts.
 
     It can be complicated to get private databases and files into Gitpod, so in addition to the launchers, the [`git` provider example](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/git.yaml.example) demonstrates pulling a database and files without complex setup or permissions. This was created explicitly for Gitpod integration, because in Gitpod you typically already have access to private Git repositories, which are a fine place to put a starter database and files. Although [ddev-gitpod-launcher](https://drud.github.io/ddev-gitpod-launcher/) and the web extension provide the capability, you may want to integrate a Git provider—or one of the [other providers](https://github.com/ddev/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers)—for each project.
@@ -345,6 +345,6 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     * Download and extract the latest [DDEV release](https://github.com/ddev/ddev/releases) for your architecture.
     * Move `ddev` to `/usr/local/bin` with `mv ddev /usr/local/bin/` (may require `sudo`), or another directory in your `$PATH` as preferred.
     * Run `ddev` to test your installation. You should see DDEV’s command usage output.
-    * As a one-time initialization, run `mkcert -install`, which may require your `sudo` password.  
-    
+    * As a one-time initialization, run `mkcert -install`, which may require your `sudo` password.
+
         If you don’t have `mkcert` installed, download the [latest release](https://github.com/FiloSottile/mkcert/releases) for your architecture and `sudo mv <downloaded_file> /usr/local/bin/mkcert && sudo chmod +x /usr/local/bin/mkcert`.
