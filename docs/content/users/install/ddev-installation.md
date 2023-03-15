@@ -31,6 +31,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     !!!tip
         The install script works on macOS, Linux, and Windows WSL2.
 
+    We recommend Homebrew for installation on macOS, but the install script is an alternate technique.
 
     Run the [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) to install or update DDEV. It downloads, verifies, and sets up the `ddev` binary:
 
