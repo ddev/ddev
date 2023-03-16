@@ -72,7 +72,7 @@ services:
         external_links:
             - "ddev-router:projectb.ddev.site"
 ```
-This lets the ddev-router know that project A can access the web container on project B's DDEV-url. If you are using other hostnames or `project_tld`, you will need to adjust the `projecb.ddev.site` value.
+This lets the `ddev-router` know that project A can access the web container on project B's DDEV URL. If you are using other hostnames or `project_tld`, you will need to adjust the `projectb.ddev.site` value.
 
 ### Can I run DDEV with other development environments at the same time?
 
