@@ -11,7 +11,7 @@ All IDEs basically work the same, listening on a port and reacting when they’r
 
 **Key facts:**
 
-* Enable Xdebug by running [`ddev xdebug`](../usage/commands.md#xdebug) or `ddev xdebug on` from your project directory.  
+* Enable Xdebug by running [`ddev xdebug`](../usage/commands.md#xdebug) or `ddev xdebug on` from your project directory.
 It will remain enabled until you start or restart the project.
 * Disable Xdebug for better performance when not debugging with `ddev xdebug off`.
 * `ddev xdebug status` will show Xdebug’s current status.
@@ -41,7 +41,7 @@ For more background on Xdebug, see [Xdebug documentation](https://xdebug.org/doc
 
 PhpStorm [zero-configuration debugging](https://confluence.jetbrains.com/display/PhpStorm/Zero-configuration+Web+Application+Debugging+with+Xdebug+and+PhpStorm) will automatically detect a connection and offer to create a “server” that maps your workstation files to the container. This means you only have to:
 
-1. Toggle the “Start Listening for PHP Debug Connections” button:  
+1. Toggle the “Start Listening for PHP Debug Connections” button:
     ![Start listening for debug connections button](../../images/phpstorm-listen-for-debug-connections.png)
 2. Set a breakpoint.
 3. Visit a page that should stop in the breakpoint you set.
@@ -57,11 +57,11 @@ When using this zero-configuration option:
 PhpStorm [run/debug configurations](https://www.jetbrains.com/help/phpstorm/creating-and-editing-run-debug-configurations.html) require more setup but may be easier and more flexible for some people.
 
 1. Under the *Run* menu select *Edit configurations*.
-2. Click the *+* in the upper left and choose *PHP Web Application* to create a configuration.  
+2. Click the *+* in the upper left and choose *PHP Web Application* to create a configuration.
 Give it a reasonable name.
 3. Create a “server” for the project. Make sure *Name* is exactly the same as your host (e.g. `my-site.ddev.site`):
     ![PhpStorm server creation](../../images/phpstorm-config-server-config.png)
-4. Add file mappings for the files on the server.  
+4. Add file mappings for the files on the server.
 Click on the local repo path and add `/var/www/html` as the *Absolute path on the server* and your repository root as the path on the host.
 5. Set an appropriate breakpoint.
 6. Start debugging by clicking the “debug” button, which will launch a page in your browser:
@@ -116,7 +116,7 @@ Here are basic steps to take to sort out any difficulty:
 * Set a breakpoint at the first executable line of your `index.php`.
 * Tell your IDE to start listening. (PhpStorm: click the telephone button, VS Code: run the debugger.)
 * Use `curl` or a browser to create a web request. For example, `curl https://d9.ddev.site`.
-* If the IDE doesn’t respond, take a look at `ddev logs`. A message like this means Xdebug inside the container can’t make a connection to port 9003:  
+* If the IDE doesn’t respond, take a look at `ddev logs`. A message like this means Xdebug inside the container can’t make a connection to port 9003:
 
     > PHP message: Xdebug: [Step Debug] Could not connect to debugging client. Tried: host.docker.internal:9003 (through xdebug.client_host/xdebug.client_port)
 

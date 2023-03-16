@@ -20,7 +20,7 @@ Usage examples:
     UserKnownHostsFile=/home/.ssh-agent/known_hosts
     StrictHostKeyChecking=no
     ```
-  
+
 * If you need to add a script or other executable component into the project (or global configuration), you can put it in the project or global `.ddev/homeadditions/bin` directory and `~/bin/<script` will be created inside the container. This is useful for adding a script to one project or every project, or for overriding standard scripts, as `~/bin` is first in the `$PATH` in the `web` container.
 * If you use private, password-protected Composer repositories with [Satis](https://composer.github.io/satis/), for example, and use a global `auth.json`, you might want to `mkdir -p ~/.ddev/homeadditions/.composer && ln -s ~/.composer/auth.json ~/.ddev/homeadditions/.composer/auth.json`, but be careful that you exclude it from getting checked in by using a `.gitignore` or equivalent.
 * You can add small scripts to the `.bashrc.d` directory and they will be executed on [`ddev ssh`](../usage/commands.md#ssh). For example, add a `~/.ddev/homeadditions/.bashrc.d/whereami` containing `echo "I am in the $(hostname) container"` and (after `ddev restart`) when you `ddev ssh` that will be executed.

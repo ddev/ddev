@@ -128,15 +128,15 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
     2. Add `/stored-binaries` to the excluded paths:
         ```yaml
             ignore:
-              paths:
+            paths:
                 - "/stored-binaries"
         ```
     3. Add a `.ddev/docker-compose.bindmount.yaml`:
         ```yaml
         services:
-          web:
+        web:
             volumes:
-              - "./stored-binaries:/var/www/html/stored-binaries"
+            - "./stored-binaries:/var/www/html/stored-binaries"
         ```
 
     ### Troubleshooting Mutagen Sync Issues

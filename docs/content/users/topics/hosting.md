@@ -12,13 +12,13 @@ This may be appropriate for small or abandoned sites that have special requireme
 Here’s how to try it for yourself:
 
 1. Install DDEV on an internet-connected Linux server. (You’re responsible for your firewall and maintenance of the server!)
-2. On Debian/Ubuntu, you can set up a simple firewall with  
+2. On Debian/Ubuntu, you can set up a simple firewall with
 `ufw allow 80 && ufw allow 443 && ufw allow 22 && ufw enable`.
 3. Point DNS for the site you’re going to host to the server.
 4. Before proceeding, your system and your project must be accessible on the internet on port 80 and your project DNS name (`myproject.example.com`) must resolve to the appropriate server.
 5. Configure your project with [`ddev config`](../usage/commands.md#config).
 6. Import your database and files using [`ddev import-db`](../usage/commands.md#import-db) and [`ddev import-files`](../usage/commands.md#import-files).
-7. Tell DDEV to listen on all network interfaces, omit phpMyAdmin and its SSH agent, use hardened images, and enable Let’s Encrypt:  
+7. Tell DDEV to listen on all network interfaces, omit phpMyAdmin and its SSH agent, use hardened images, and enable Let’s Encrypt:
 
     ```
     ddev config global --router-bind-all-interfaces --omit-containers=dba,ddev-ssh-agent --use-hardened-images --use-letsencrypt --letsencrypt-email=you@example.com`
@@ -29,7 +29,7 @@ Here’s how to try it for yourself:
 
     ```
     if ($http_x_forwarded_proto = "http") {
-      return 301 https://$host$request_uri;
+    return 301 https://$host$request_uri;
     }
     ```
 
@@ -72,7 +72,7 @@ You may have to restart DDEV with `ddev poweroff && ddev start --all` if Let’s
     ExecStart=/usr/local/bin/ddev start --all
     RemainAfterExit=true
     ExecStop=/usr/local/bin/ddev poweroff
-    
+
     [Install]
     WantedBy=multi-user.target
     ```
