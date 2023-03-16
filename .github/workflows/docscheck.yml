@@ -29,6 +29,10 @@ jobs:
       - uses: rojopolis/spellcheck-github-actions@v0
         name: Spellcheck
       - run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
+      - uses: snow-actions/eclint@v1.0.1
+        name: eclint
+        with:
+          args: 'check'
       - name: Run markdownlint on docs
         uses: docker://avtodev/markdown-lint:v1
         with:
