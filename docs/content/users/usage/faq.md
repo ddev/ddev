@@ -68,9 +68,9 @@ Let’s say we have two projects, for example: project A, and project B. In proj
 
 ```yaml
 services:
-    web:
-        external_links:
-            - "ddev-router:projectb.ddev.site"
+  web:
+    external_links:
+      - "ddev-router:projectb.ddev.site"
 ```
 This lets the `ddev-router` know that project A can access the web container on project B's DDEV URL. If you are using other hostnames or `project_tld`, you will need to adjust the `projectb.ddev.site` value.
 
