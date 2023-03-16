@@ -31,7 +31,9 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     !!!tip
         The install script works on macOS, Linux, and Windows WSL2.
 
-    Run the [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) to install or update DDEV. It downloads, verifies, and sets up the `ddev` binary:
+    The [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) is an alternate way to install or upgrade DDEV. It downloads, verifies, and sets up the `ddev` binary.
+
+    To install or update DDEV:
 
     ```
     curl -fsSL https://ddev.com/install.sh | bash
