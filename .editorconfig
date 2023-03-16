@@ -12,8 +12,6 @@ indent_style = space
 # embedded yaml in markdown.
 # indent_size = 4
 insert_final_newline = true
-# Lots of editors and practices leave trailing whitespace
-# that does no harm.
 trim_trailing_whitespace = true
 
 # GO files
