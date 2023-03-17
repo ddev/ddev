@@ -439,7 +439,7 @@ func (p *Provider) injectedEnvironment() string {
 	if len(p.EnvironmentVariables) > 0 {
 		s = "export"
 		for k, v := range p.EnvironmentVariables {
-			v = strings.Replace(v, " ", "\\ ", -1)
+			v = strings.Replace(v, " ", `\ `, -1)
 			s = s + fmt.Sprintf(" %s=%s ", k, v)
 		}
 	}
