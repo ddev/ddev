@@ -1,13 +1,12 @@
 package ddevapp
 
 import (
+	"fmt"
 	"github.com/ddev/ddev/pkg/output"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
-
-	"fmt"
 
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/util"
@@ -438,8 +437,9 @@ func (p *Provider) Validate() error {
 func (p *Provider) injectedEnvironment() string {
 	s := "true"
 	if len(p.EnvironmentVariables) > 0 {
-		s = "export "
+		s = "export"
 		for k, v := range p.EnvironmentVariables {
+			v = strings.Replace(v, " ", `\ `, -1)
 			s = s + fmt.Sprintf(" %s=%s ", k, v)
 		}
 	}
