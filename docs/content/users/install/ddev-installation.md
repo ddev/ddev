@@ -309,8 +309,8 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     {
       "image": "mcr.microsoft.com/devcontainers/universal:2",
       "features": {
-        "ghcr.io/devcontainers/features/docker-in-docker:1": {}
-        "ghcr.io/ddev/ddev/install-ddev:latest": {},
+        "ghcr.io/devcontainers/features/docker-in-docker:1": {},
+        "ghcr.io/ddev/ddev/install-ddev:latest": {}
       },
       "portsAttributes": {
         "3306": {
