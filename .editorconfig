@@ -26,19 +26,3 @@ indent_style = tab
 [*.{nsi,nsh}]
 end_of_line = crlf
 indent_size = 2
-
-# YAML files
-[*.{yaml,yml}]
-indent_size = 2
-
-# JavaScript, TypeScript, and JSON
-[*.{json,jsonc,js,ts}]
-indent_size = 2
-
-# styles
-[*.{css,sass,less,pcss,scss}]
-indent_size = 2
-
-# shell scripts
-[*.sh]
-indent_size = 2
