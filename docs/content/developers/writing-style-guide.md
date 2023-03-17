@@ -1,6 +1,6 @@
 # Writing Style Guide
 
-This page formalizes the writing conventions we aspire to use in the documentation.<br>
+This page formalizes the writing conventions we aspire to use in the documentation.  
 It’s a living statement of intent and a reference for all contributors.
 
 ## Voice and Tone

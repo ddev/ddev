@@ -14,19 +14,19 @@ While this reduces setup time for new users, makes it easier to try out a CMS, a
 
 There are several ways to back off DDEV’s CMS settings management:
 
-1. **Take control of files by removing the `#ddev-generated` comment.**<br>
+1. **Take control of files by removing the `#ddev-generated` comment.**  
 DDEV will automatically update any it’s added containing a `#ddev-generated` comment. This means you don’t need to touch that file, but also that any changes you make will be overwritten. As soon as you remove the comment, DDEV will ignore that file and leave you fully in control over it. (Don’t forget to check it into version control!)
 
     !!!tip "Reversing the change"
         If you change your mind and want DDEV to take over the file again, delete it and run [`ddev start`](../usage/commands.md#start). DDEV will recreate its own version, which you may want to remove from your Git project.
 
-2. **Disable settings management.**<br>
+2. **Disable settings management.**  
 You can tell DDEV to use a specific project type without creating settings files by either setting [`disable_settings_management`](../configuration/config.md#disable_settings_management) to `true` or running [`ddev config --disable-settings-management`](../configuration/config.md#type).
 
-3. **Switch to the generic PHP project type.**<br>
+3. **Switch to the generic PHP project type.**  
 If you don’t want DDEV’s CMS-specific settings, you can switch your project to the generic `php` type by editing [`type: php`](../configuration/config.md#type) in the project’s settings or running [`ddev config --project-type=php`](../usage/commands.md#config). DDEV will no longer create or tweak any settings files. You’ll lose any perks from the nginx configuration for the CMS, but you can always customize [nginx settings](../extend/customization-extendibility.md#custom-nginx-configuration) or [Apache settings](../extend/customization-extendibility.md#custom-apache-configuration) separately.
 
-4. **Un-set the `$IS_DDEV_PROJECT` environment variable.**<br>
+4. **Un-set the `$IS_DDEV_PROJECT` environment variable.**  
 This environment variable is set `true` by default in DDEV’s environment, and can be used to fence off DDEV-specific behavior. When it’s empty, the important parts of `settings.ddev.php` and `AdditionalSettings.php` (for TYPO3) are not executed. This means that DDEV’s `settings.ddev.php` won’t be invoked if it somehow ends up in a production environment or in a non-DDEV local development environment.
 
 !!!tip "Ignore `.ddev/.gitignore`"
