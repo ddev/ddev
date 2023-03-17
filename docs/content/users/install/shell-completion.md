@@ -30,15 +30,15 @@ Shells like bash and zsh need help to do this though, they have to know what the
 
     Manual installation is easy though, the completion script is exactly the same, it’s just that you have to download and install it yourself. Each system may have a slightly different technique, and you’ll need to figure it out. On Debian/Ubuntu, manually install like this:
 
-     1. Download the completion files and extract them with
-         ```bash
-         VERSION=v1.21.1
-         curl -sSLf https://github.com/ddev/ddev/releases/download/${VERSION}/ddev_shell_completion_scripts.${VERSION}.tar.gz
-         tar -zxf ddev_shell_completion_scripts.${VERSION}.tar.gz
-         ```
-     2. Then `sudo mkdir -p /usr/share/bash-completion/completions && sudo cp ddev_bash_completion.sh /usr/share/bash-completion/completions/ddev`. This deploys the `ddev_bash_completion.sh` script where it needs to be. Again, every Linux distro has a different technique, and you may have to figure yours out.
+    1. Download the completion files and extract them with
+        ```bash
+        VERSION=v1.21.1
+        curl -sSLf https://github.com/ddev/ddev/releases/download/${VERSION}/ddev_shell_completion_scripts.${VERSION}.tar.gz
+        tar -zxf ddev_shell_completion_scripts.${VERSION}.tar.gz
+        ```
+    2. Run `sudo mkdir -p /usr/share/bash-completion/completions && sudo cp ddev_bash_completion.sh /usr/share/bash-completion/completions/ddev`. This deploys the `ddev_bash_completion.sh` script where it needs to be. Again, every Linux distro has a different technique, and you may have to figure yours out.
 
-     If you installed DDEV using `apt install` then the `ddev_bash_completion.sh` file is already available in `/usr/bin/ddev_bash_completion.sh`. Starting with DDEV v1.21.2 this will be automatically installed into `/usr/share/bash-completion/completions`.
+    If you installed DDEV using `apt install` then the `ddev_bash_completion.sh` file is already available in `/usr/bin/ddev_bash_completion.sh`. Starting with DDEV v1.21.2 this will be automatically installed into `/usr/share/bash-completion/completions`.
 
 === "Oh-My-Zsh"
 

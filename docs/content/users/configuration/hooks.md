@@ -86,7 +86,7 @@ Advanced usages may require running commands directly with explicit arguments. T
 ```yaml
 hooks:
   post-start:
-  - exec: 
+  - exec:
     exec_raw: [ls, -lR, /var/www/html]
 ```
 

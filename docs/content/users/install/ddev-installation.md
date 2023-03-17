@@ -10,7 +10,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ### Homebrew
 
-    [Homebrew](https://brew.sh/) is the easiest way to install and upgrade DDEV:
+    We recommend [Homebrew](https://brew.sh/) because it’s the easiest and most reliable way to install and upgrade DDEV:
 
     ```bash
     brew install ddev/ddev/ddev
@@ -31,8 +31,9 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     !!!tip
         The install script works on macOS, Linux, and Windows WSL2.
 
+    The [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) is an alternate way to install or upgrade DDEV. It downloads, verifies, and sets up the `ddev` binary.
 
-    Run the [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) to install or update DDEV. It downloads, verifies, and sets up the `ddev` binary:
+    To install or update DDEV:
 
     ```
     curl -fsSL https://ddev.com/install.sh | bash
@@ -306,31 +307,30 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ```json
     {
-        "image": "mcr.microsoft.com/devcontainers/universal:2",
-        "features": {
-            "ghcr.io/devcontainers/features/docker-in-docker:1": {},
-            "ghcr.io/ddev/ddev/install-ddev:latest": {}
+      "image": "mcr.microsoft.com/devcontainers/universal:2",
+      "features": {
+        "ghcr.io/ddev/ddev/install-ddev:latest": {},
+        "ghcr.io/devcontainers/features/docker-in-docker:1": {}
+      },
+      "portsAttributes": {
+        "3306": {
+          "label": "database"
         },
-        "portsAttributes": {
-          "3306": {
-            "label": "database"
-          },
-          "8027": {
-            "label": "mailhog"
-          },
-          "8036": {
-            "label": "phpmyadmin"
-          },
-          "8080": {
-            "label": "web http"
-          },
-          "8443": {
-            "label": "web https"
-          }
+        "8027": {
+          "label": "mailhog"
         },
-        "postCreateCommand": "bash -c 'ddev config global --omit-containers=ddev-router && ddev config --auto && ddev debug download-images'"
+        "8036": {
+          "label": "phpmyadmin"
+        },
+        "8080": {
+          "label": "web http"
+        },
+        "8443": {
+          "label": "web https"
+        }
+      },
+      "postCreateCommand": "bash -c 'ddev config global --omit-containers=ddev-router && ddev config --auto && ddev debug download-images'"
     }
-
     ```
 
     !!!note "Normal Linux installation also works"

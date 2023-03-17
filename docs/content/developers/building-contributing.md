@@ -109,7 +109,7 @@ To build multi-platform images you must `docker buildx create --use` as a one-ti
 
 ```markdown
 cd containers/ddev-webserver
-make push VERSION=<tag> 
+make push VERSION=<tag>
 ```
 
 If you’re pushing to a repo other than the one wired into the Makefile (like `drud/ddev-webserver`):

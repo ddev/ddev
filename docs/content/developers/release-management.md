@@ -63,9 +63,9 @@ The following “Repository secret” environment variables must be added to <ht
 ### Post-Release Tasks
 
 1. After the release has been created, the new gitpod image must be pushed.
-   1. `cd .gitpod/images && DOCKER_TAG="<YYMMDD>" ./push.sh`
-   2. PR to update `.gitpod.yml` with the new image.
-   3. PR to update [ddev-gitpod-launcher](https://github.com/ddev/ddev-gitpod-launcher) with the new image.
+    1. `cd .gitpod/images && DOCKER_TAG="<YYMMDD>" ./push.sh`
+    2. PR to update `.gitpod.yml` with the new image.
+    3. PR to update [ddev-gitpod-launcher](https://github.com/ddev/ddev-gitpod-launcher) with the new image.
 
 ## Pushing Docker Images with the GitHub Actions Workflow
 

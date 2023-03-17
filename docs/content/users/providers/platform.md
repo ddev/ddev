@@ -28,8 +28,8 @@ web_environment:
 
         ```yaml
         web_environment:
-          - PLATFORM_PROJECT=nf4amudfn23biyourproject
-          - PLATFORM_ENVIRONMENT=main
+        - PLATFORM_PROJECT=nf4amudfn23biyourproject
+        - PLATFORM_ENVIRONMENT=main
         ```
 
     * Or with a command from your terminal:

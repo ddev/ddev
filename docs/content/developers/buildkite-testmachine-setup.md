@@ -48,7 +48,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 5. Open WSL2 and check out [ddev/ddev](https://github.com/ddev/ddev).
 6. As normal user, run `.github/workflows/linux-setup.sh`.
 7. `export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
-   echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc`
+    echo "export PATH=/home/linuxbrew/.linuxbrew/bin:$PATH" >>~/.bashrc`
 
 8. As root user, add sudo capability with `echo "ALL ALL=NOPASSWD: ALL" >/etc/sudoers.d/all && chmod 440 /etc/sudoers.d/all`.
 9. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
@@ -69,10 +69,10 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 13. The buildkite/hooks/environment file must be updated to contain the Docker pull credentials:
 
     ```bash
-       #!/bin/bash
-       export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
-       export DOCKERHUB_PULL_PASSWORD=xxx
-       set -e
+        #!/bin/bash
+        export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
+        export DOCKERHUB_PULL_PASSWORD=xxx
+        set -e
     ```
 
 14. Verify that `buildkite-agent` is running.
@@ -101,7 +101,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
     sudo apt update && sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
     sudo usermod -aG docker $USER
-   ```
+    ```
 
 4. Configure buildkite agent in /etc/buildkite-agent:
     * tags="os=wsl2,architecture=amd64,dockertype=wsl2"
@@ -109,11 +109,11 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     * Create `/etc/buildkite-agent/hooks/environment` and set to executable with contents:
 
     ```
-       #!/bin/bash
-       export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
-       export DOCKERHUB_PULL_PASSWORD=xxx
-       set -e
-   ```
+        #!/bin/bash
+        export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
+        export DOCKERHUB_PULL_PASSWORD=xxx
+        set -e
+    ```
 
 5. Run `.buildkite/sanetestbot.sh`
 
@@ -136,10 +136,10 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 12. The buildkite/hooks/environment file must be updated to contain the Docker pull credentials:
 
     ```bash
-       #!/bin/bash
-       export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
-       export DOCKERHUB_PULL_PASSWORD=xxx
-       set -e
+        #!/bin/bash
+        export DOCKERHUB_PULL_USERNAME=druddockerpullaccount
+        export DOCKERHUB_PULL_PASSWORD=xxx
+        set -e
     ```
 
 13. Run `brew services start buildkite-agent`.

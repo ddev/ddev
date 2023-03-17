@@ -92,7 +92,7 @@ web_extra_exposed_ports:
     https_port: 9999
 ```
 
-The configuration below would expose a Node.js server running in the `web` container on port 3000 as `https://<project>.ddev.site:4000` and a “something” server running in the web container on port 4000 as `https://<project>.ddev.site:4000`:
+The configuration below would expose a Node.js server running in the `web` container on port 3000 as `https://<project>.ddev.site:3000` and a “something” server running in the web container on port 4000 as `https://<project>.ddev.site:4000`:
 
 ```yaml
 web_extra_exposed_ports:

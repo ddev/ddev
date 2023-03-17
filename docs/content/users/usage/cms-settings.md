@@ -82,7 +82,7 @@ $settings['container_yamls'][] = DRUPAL_ROOT . '/sites/development.services.yml'
          */
         require $app_root . '/sites/default/settings.ddev.php';
 
-        /*
+        /**
          * Alter default database for this site. `settings.ddev.php` will have
          * “reset” this to 'db'.
          */
