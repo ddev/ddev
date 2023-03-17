@@ -10,7 +10,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ### Homebrew
 
-    [Homebrew](https://brew.sh/) is the easiest way to install and upgrade DDEV:
+    We recommend [Homebrew](https://brew.sh/) because it’s the easiest and most reliable way to install and upgrade DDEV:
 
     ```bash
     brew install ddev/ddev/ddev
@@ -31,8 +31,9 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     !!!tip
         The install script works on macOS, Linux, and Windows WSL2.
 
+    The [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) is an alternate way to install or upgrade DDEV. It downloads, verifies, and sets up the `ddev` binary.
 
-    Run the [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) to install or update DDEV. It downloads, verifies, and sets up the `ddev` binary:
+    To install or update DDEV:
 
     ```
     curl -fsSL https://ddev.com/install.sh | bash
