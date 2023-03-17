@@ -10,6 +10,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// HostCommand wraps RunCommand() to inject environment variables.
+// especially DDEV_EXECUTABLE, the full path to running ddev instance.
 func HostCommand(name string, args ...string) *exec.Cmd {
 	c := exec.Command(name, args...)
 	ddevExecutable, _ := os.Executable()
