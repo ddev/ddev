@@ -1,6 +1,6 @@
 # How DDEV Works
 
-DDEV is a [Go](https://go.dev) application that stores its configuration in [files on your workstation](#directory-tour).  
+DDEV is a [Go](https://go.dev) application that stores its configuration in [files on your workstation](#directory-tour).
 It uses those blueprints to mount your project files into [Docker containers](#container-architecture) that facilitate the operation of a local development environment.
 
 DDEV writes and uses [docker-compose](https://docs.docker.com/compose/) files for you, which is a detail you can cheerfully ignore unless you’re Docker-curious or [defining your own services](../extend/custom-compose-files.md).
@@ -16,7 +16,7 @@ The [global configuration directory](#global-files) is used to keep track of you
 A project’s `.ddev` directory can be intimidating at first, so let’s take a look at what lives in there.
 
 !!!tip "Yours May Differ Slightly"
-    You may have some directories or files that aren’t listed here, likely added by custom services.  
+    You may have some directories or files that aren’t listed here, likely added by custom services.
     For example, if you see a `solr` directory, it probably pertains to a custom Solr [add-on service](../extend/additional-services.md).
 
 `apache` directory

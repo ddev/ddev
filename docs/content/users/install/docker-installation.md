@@ -14,19 +14,19 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     !!!tip "Wait ... Colima?"
         Yes! See *Why do you recommend Colima over Docker Desktop on macOS?* in [the FAQ](../usage/faq.md).
-    
+
     1. Run `docker help` to make sure you’ve got the Docker client installed. If you get an error, install it with [Homebrew](https://brew.sh) by running `brew install docker`.
     2. Install Colima with `brew install colima` or one of the other [installation options](https://github.com/abiosoft/colima/blob/main/docs/INSTALL.md).
-    3. Start Colima with 4 CPUs, 6GB memory, 100GB storage, and Cloudflare DNS, adjusting as needed:  
+    3. Start Colima with 4 CPUs, 6GB memory, 100GB storage, and Cloudflare DNS, adjusting as needed:
     ```
     colima start --cpu 4 --memory 6 --disk 100 --vm-type=qemu --mount-type=sshfs --dns=1.1.1.1
     ```
     4. After [installing DDEV](ddev-installation.md), configure your system to use Mutagen—essential for DDEV with Colima—with `ddev config global --mutagen-enabled`.
-    
+
     After the initial run above, you can use `colima start` or use `colima start -e` to edit the configuration file. Run `colima status` at any time to check Colima’s status.
-    
+
     When your computer restarts, you’ll need to `colima start` again. This will eventually be automated in later versions of Colima.
-    
+
     !!!tip "Colima disk allocation"
         We recommend allocating lots of storage for Colima because there’s no easy way to increase the size later (see [GitHub comment](https://github.com/abiosoft/colima/issues/398#issuecomment-1449801811) for a step-by-step guide to resize disk images with `qemu`). You can reduce usage by running `ddev clean`, and killing off disk images by running `docker rm -f $(docker ps -aq) && docker rmi -f $(docker images -q)`. If you have to rebuild your Colima instance, use the technique described below for migrating from Docker Desktop.
 
@@ -44,7 +44,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     1. Make sure all your projects are listed in [`ddev list`](../usage/commands.md#list).
     2. In Docker Desktop, [`ddev snapshot --all`](../usage/commands.md#snapshot).
     3. After starting Colima, start each project and [`ddev snapshot restore --latest`](../usage/commands.md#snapshot-restore).
-    
+
     ### Docker Desktop for Mac
 
     Docker Desktop for Mac can be installed via Homebrew (`brew install homebrew/cask/docker`) or can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop). It has long been supported by DDEV and has extensive automated testing.
@@ -96,7 +96,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     ## Gitpod
 
-    With [Gitpod](https://www.gitpod.io) you don’t have to install anything at all. Docker is all set up for you. 
+    With [Gitpod](https://www.gitpod.io) you don’t have to install anything at all. Docker is all set up for you.
 
 === "Codespaces"
 

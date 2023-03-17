@@ -415,7 +415,7 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
         // Include for DDEV-managed settings in wp-config-ddev.php.
         $ddev_settings = dirname(__FILE__) . '/wp-config-ddev.php';
         if (is_readable($ddev_settings) && !defined('DB_USER')) {
-          require_once($ddev_settings);
+        require_once($ddev_settings);
         }
         ```
 
@@ -483,7 +483,7 @@ Run [`ddev list`](../users/usage/commands.md#list) or `ddev list --active-only` 
 ➜  ddev list
 NAME          TYPE     LOCATION                   URL(s)                                STATUS
 d8git         drupal8  ~/workspace/d8git          <https://d8git.ddev.local>              running
-                                                  <http://d8git.ddev.local>
+                                                <http://d8git.ddev.local>
 hobobiker     drupal6  ~/workspace/hobobiker.com                                        stopped
 
 ```
@@ -493,7 +493,7 @@ hobobiker     drupal6  ~/workspace/hobobiker.com                                
 ➜  ddev list --active-only
 NAME     TYPE     LOCATION             URL(s)                      STATUS
 drupal8  drupal8  ~/workspace/drupal8  <http://drupal8.ddev.site>   running
-                                       <https://drupal8.ddev.site>
+                                        <https://drupal8.ddev.site>
 
 ```
 

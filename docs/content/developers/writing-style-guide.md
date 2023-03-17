@@ -1,6 +1,6 @@
 # Writing Style Guide
 
-This page formalizes the writing conventions we aspire to use in the documentation.  
+This page formalizes the writing conventions we aspire to use in the documentation.
 It’s a living statement of intent and a reference for all contributors.
 
 ## Voice and Tone
@@ -68,7 +68,7 @@ We “run” commands. We don’t “do” them, and the command itself is not a
 
 ### Use Active Third Person
 
-Avoid impersonal language featuring unknown individuals or shadowy organizations.  
+Avoid impersonal language featuring unknown individuals or shadowy organizations.
 “It is recommended,” for example, could be a warmer “we recommend” or “Laravel users recommend”.
 
 Write on behalf of the community and not yourself—use “we” and not “I”.
@@ -149,7 +149,7 @@ DDEV is a product and `ddev` is a binary or console command. DDEV should always 
 
 #### Products, Organizations, and Protocols
 
-When in doubt, honor whatever name a product or organization uses in its official materials.  
+When in doubt, honor whatever name a product or organization uses in its official materials.
 Use backticks to differentiate between a product and command, just like DDEV vs. `ddev`.
 
 | Write This 👍 | Not This ❌

@@ -29,23 +29,23 @@ Shells like bash and zsh need help to do this though, they have to know what the
     On Debian and Yum based systems, using `apt install ddev` you should find that `bash`, `zsh`, and `fish` completions are automatically installed.
 
     Manual installation is easy though, the completion script is exactly the same, it’s just that you have to download and install it yourself. Each system may have a slightly different technique, and you’ll need to figure it out. On Debian/Ubuntu, manually install like this:
-      
-     1. Download the completion files and extract them with 
-         ```bash
-         VERSION=v1.21.1
-         curl -sSLf https://github.com/ddev/ddev/releases/download/${VERSION}/ddev_shell_completion_scripts.${VERSION}.tar.gz
-         tar -zxf ddev_shell_completion_scripts.${VERSION}.tar.gz
-         ```
-     2. Then `sudo mkdir -p /usr/share/bash-completion/completions && sudo cp ddev_bash_completion.sh /usr/share/bash-completion/completions/ddev`. This deploys the `ddev_bash_completion.sh` script where it needs to be. Again, every Linux distro has a different technique, and you may have to figure yours out.
 
-     If you installed DDEV using `apt install` then the `ddev_bash_completion.sh` file is already available in `/usr/bin/ddev_bash_completion.sh`. Starting with DDEV v1.21.2 this will be automatically installed into `/usr/share/bash-completion/completions`.
+    1. Download the completion files and extract them with
+        ```bash
+        VERSION=v1.21.1
+        curl -sSLf https://github.com/ddev/ddev/releases/download/${VERSION}/ddev_shell_completion_scripts.${VERSION}.tar.gz
+        tar -zxf ddev_shell_completion_scripts.${VERSION}.tar.gz
+        ```
+    2. Then `sudo mkdir -p /usr/share/bash-completion/completions && sudo cp ddev_bash_completion.sh /usr/share/bash-completion/completions/ddev`. This deploys the `ddev_bash_completion.sh` script where it needs to be. Again, every Linux distro has a different technique, and you may have to figure yours out.
+
+    If you installed DDEV using `apt install` then the `ddev_bash_completion.sh` file is already available in `/usr/bin/ddev_bash_completion.sh`. Starting with DDEV v1.21.2 this will be automatically installed into `/usr/share/bash-completion/completions`.
 
 === "Oh-My-Zsh"
 
     ## Oh-My-Zsh
 
     If you installed zsh with Homebrew, DDEV’s completions will be automatically installed when you `brew install ddev/ddev/ddev`.
-    
+
     Otherwise, Oh-My-Zsh may be set up very differently in different places, so as a power `zsh` user you’ll need to put `ddev_bash_completion.sh` (see tar archive download above) where it belongs. `echo $fpath` will show you the places that it’s most likely to belong. An obvious choice is `~/.oh-my-zsh/completions`; if that exists, so you can run `mkdir -p ~/.oh-my-zsh/completions && cp ddev_zsh_completion.sh ~/.oh-my-zsh/completions/_ddev`, then `autoload -Uz compinit && compinit`.
 
 === "Fish"
