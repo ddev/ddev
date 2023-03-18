@@ -1087,9 +1087,6 @@ ddev share
 # Share the current project with ngrok, using subdomain `foo.*`
 ddev share --subdomain foo
 
-# Share the current project using ngrok’s basic-auth argument
-ddev share --basic-auth username:pass1234
-
 # Share my-project with ngrok
 ddev share my-project
 ```
