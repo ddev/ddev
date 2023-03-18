@@ -29,8 +29,9 @@ const (
 
 // Webserver types
 const (
-	WebserverNginxFPM  = "nginx-fpm"
-	WebserverApacheFPM = "apache-fpm"
+	WebserverNginxFPM      = "nginx-fpm"
+	WebserverApacheFPM     = "apache-fpm"
+	WebserverNginxGunicorn = "nginx-gunicorn"
 )
 
 // ValidOmitContainers is the list of things that can be omitted
@@ -71,8 +72,9 @@ var FailOnHookFailDefault = false
 // ValidWebserverTypes should be updated whenever supported webserver types are added or
 // removed, and should be used to ensure user-supplied values are valid.
 var ValidWebserverTypes = map[string]bool{
-	WebserverNginxFPM:  true,
-	WebserverApacheFPM: true,
+	WebserverNginxFPM:      true,
+	WebserverApacheFPM:     true,
+	WebserverNginxGunicorn: true,
 }
 
 var ValidNodeJSVersions = []string{"14", "16", "18"}
