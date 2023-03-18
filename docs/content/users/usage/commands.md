@@ -209,7 +209,7 @@ Flags:
 * `--web-working-dir`: Overrides the default working directory for the web service.
 * `--web-working-dir-default`: Unsets a web service working directory override.
 * `--webimage-extra-packages`: A comma-delimited list of Debian packages that should be added to web container when the project is started.
-* `--webserver-type`: Sets the project’s desired webserver type: `nginx-fpm` or `apache-fpm`.
+* `--webserver-type`: Sets the project’s desired webserver type: `nginx-fpm`, `nginx-gunicorn`, or `apache-fpm`.
 * `--working-dir-defaults`: Unsets all service working directory overrides.
 * `--xdebug-enabled`: Whether or not Xdebug is enabled in the web container.
 

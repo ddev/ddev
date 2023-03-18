@@ -569,7 +569,7 @@ Which available [web server type](../extend/customization-extendibility.md#chang
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `nginx-fpm` | Can be `nginx-fpm` or `apache-fpm`.
+| :octicons-file-directory-16: project | `nginx-fpm` | Can be `nginx-fpm`, `apache-fpm`, or `nginx-gunicorn`.
 
 To change from the default `nginx-fpm` to `apache-fpm`, for example, you would need to edit your project’s `.ddev/config.yaml` to include the following:
 
