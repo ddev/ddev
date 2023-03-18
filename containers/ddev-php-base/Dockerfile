@@ -69,6 +69,7 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     file \
     ghostscript \
     imagemagick \
+    gunicorn \
     graphicsmagick \
     jq \
     mariadb-client \
@@ -77,6 +78,9 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     nodejs \
     php-uploadprogress \
     postgresql-client \
+    python-is-python3 \
+    python3-django \
+    python3-psycopg2 \
     sqlite3
 
 RUN npm config set unsafe-perm true && npm install --global gulp-cli yarn
