@@ -72,6 +72,10 @@ func init() {
 			uploadDir: nil, importFilesAction: craftCmsImportFilesAction, appTypeDetect: isCraftCmsApp, configOverrideAction: nil, postConfigAction: nil, postStartAction: craftCmsPostStartAction,
 		},
 
+		nodeps.AppTypeDjango4: {
+			uploadDir: nil, importFilesAction: nil, appTypeDetect: nil, configOverrideAction: nil, postConfigAction: nil, postStartAction: nil,
+		},
+
 		nodeps.AppTypeDrupal6: {
 			settingsCreator: createDrupalSettingsPHP, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal6Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal6App, postImportDBAction: nil, configOverrideAction: drupal6ConfigOverrideAction, postConfigAction: nil, postStartAction: drupal6PostStartAction, importFilesAction: drupalImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
 		},

@@ -788,6 +788,8 @@ func TestConfigOverrideDetection(t *testing.T) {
 
 	switch app.WebserverType {
 	case nodeps.WebserverNginxFPM:
+		fallthrough
+	case nodeps.WebserverNginxGunicorn:
 		assert.Contains(stdout, "nginx-site.conf")
 		assert.NotContains(stdout, "apache-site.conf")
 		assert.Contains(stdout, "junker99.conf")

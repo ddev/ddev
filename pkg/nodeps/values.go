@@ -83,6 +83,7 @@ var ValidNodeJSVersions = []string{"14", "16", "18"}
 const (
 	AppTypeBackdrop  = "backdrop"
 	AppTypeCraftCms  = "craftcms"
+	AppTypeDjango4   = "django4"
 	AppTypeDrupal6   = "drupal6"
 	AppTypeDrupal7   = "drupal7"
 	AppTypeDrupal8   = "drupal8"
