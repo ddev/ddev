@@ -8,7 +8,7 @@ set -e
 
 sleeptime=59
 
-# Make sure that both phpstatus, mounted code, and mailhog
+# Make sure that mounted code, and mailhog
 # are working.
 # Since docker doesn't provide a lazy period for startup,
 # we track health. If the last check showed healthy
@@ -44,11 +44,17 @@ else
     printf "mailhog: FAILED "
 fi
 
+# TODO: Disable phpstatus if not running php backend
+# TODO: Check gunicorn status
+phpstatus="true"
+
 if [ "${phpstatus}" = "true" ] && [ "${htmlaccess}" = "true" ] &&  [ "${mailhog}" = "true" ] ; then
     touch /tmp/healthy
     exit 0
 fi
 rm -f /tmp/healthy
+set +x
+
 exit 1
 
 
