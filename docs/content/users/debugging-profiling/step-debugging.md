@@ -11,7 +11,7 @@ All IDEs basically work the same, listening on a port and reacting when they’r
 
 **Key facts:**
 
-* Enable Xdebug by running [`ddev xdebug`](../usage/commands.md#xdebug) or `ddev xdebug on` from your project directory.
+* Enable Xdebug by running [`ddev xdebug`](../usage/commands.md#xdebug) or `ddev xdebug on` from your project directory.  
 It will remain enabled until you start or restart the project.
 * Disable Xdebug for better performance when not debugging with `ddev xdebug off`.
 * `ddev xdebug status` will show Xdebug’s current status.
@@ -57,7 +57,7 @@ When using this zero-configuration option:
 PhpStorm [run/debug configurations](https://www.jetbrains.com/help/phpstorm/creating-and-editing-run-debug-configurations.html) require more setup but may be easier and more flexible for some people.
 
 1. Under the *Run* menu select *Edit configurations*.
-2. Click the *+* in the upper left and choose *PHP Web Application* to create a configuration.
+2. Click the *+* in the upper left and choose *PHP Web Application* to create a configuration.  
 Give it a reasonable name.
 3. Create a “server” for the project. Make sure *Name* is exactly the same as your host (e.g. `my-site.ddev.site`):
     ![PhpStorm server creation](../../images/phpstorm-config-server-config.png)

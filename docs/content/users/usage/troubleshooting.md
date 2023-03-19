@@ -174,6 +174,7 @@ If you get a 404 with “No input file specified” (nginx) or a 403 with “For
 If `ddev start` fails, it’s most often because the `web` or `db` container fails to start. In this case, the error message from `ddev start` says something like “Failed to start <project>: db container failed: log=, err=container exited, please use 'ddev logs -s db' to find out why it failed”. You can`ddev logs -s db` to find out what happened.
 
 If you see any variant of “no space left on device” in the logs when using Docker Desktop, it means you have to increase or clean up Docker’s file space. Increase the “Disk image size” setting under “Resources” in Docker’s Preferences:
+
 ![Docker disk space](../../images/docker-disk-image-size.png)
 
 If you see “no space left on device” on Linux, it most likely means your filesystem is full.
