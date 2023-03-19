@@ -433,7 +433,7 @@ func TestConfigCommandDocrootDetection(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 
-	testMatrix := AvailableDocrootLocations()
+	testMatrix := AvailablePHPDocrootLocations()
 	for index, testDocrootName := range testMatrix {
 		tmpDir := testcommon.CreateTmpDir(fmt.Sprintf("TestConfigCommand_%v", index))
 

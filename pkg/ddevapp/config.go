@@ -149,6 +149,12 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 			return app, err
 		}
 	}
+
+	// If non-php type, use non-php webserver type
+	if app.WebserverType == nodeps.WebserverDefault && app.Type == nodeps.AppTypeDjango4 {
+		app.WebserverType = nodeps.WebserverNginxGunicorn
+	}
+
 	return app, nil
 }
 
@@ -1142,8 +1148,8 @@ func (app *DdevApp) promptForName() error {
 	return nil
 }
 
-// AvailableDocrootLocations returns an of default docroot locations to look for.
-func AvailableDocrootLocations() []string {
+// AvailablePHPDocrootLocations returns an of default docroot locations to look for.
+func AvailablePHPDocrootLocations() []string {
 	return []string{
 		"_www",
 		"docroot",
@@ -1162,7 +1168,7 @@ func DiscoverDefaultDocroot(app *DdevApp) string {
 	// Provide use the app.Docroot as the default docroot option.
 	var defaultDocroot = app.Docroot
 	if defaultDocroot == "" {
-		for _, docroot := range AvailableDocrootLocations() {
+		for _, docroot := range AvailablePHPDocrootLocations() {
 			if _, err := os.Stat(filepath.Join(app.AppRoot, docroot)); err != nil {
 				continue
 			}
@@ -1173,6 +1179,15 @@ func DiscoverDefaultDocroot(app *DdevApp) string {
 			}
 		}
 	}
+	dir, err := fileutil.FindFilenameInDirectory(app.AppRoot, []string{"manage.py"})
+	if err == nil && dir != "" {
+		defaultDocroot, err = filepath.Rel(app.AppRoot, dir)
+		if err != nil {
+			util.Warning("failed to filepath.Rel(%s, %s): %v", app.AppRoot, dir, err)
+			defaultDocroot = ""
+		}
+	}
+
 	return defaultDocroot
 }
 
