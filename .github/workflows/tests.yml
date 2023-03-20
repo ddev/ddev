@@ -80,7 +80,7 @@ jobs:
         uses: Homebrew/actions/setup-homebrew@master
       - name: Install Docker and deps (Linux)
         run: ./.github/workflows/linux-setup.sh
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
           go-version: '>=1.20'
 
