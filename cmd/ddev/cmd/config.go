@@ -339,7 +339,7 @@ func init() {
 }
 
 // getConfigApp() does the basic setup of the app (with provider) and returns it.
-func getConfigApp(providerName string) (*ddevapp.DdevApp, error) {
+func getConfigApp(_ string) (*ddevapp.DdevApp, error) {
 	appRoot, err := os.Getwd()
 	if err != nil {
 		return nil, fmt.Errorf("could not determine current working directory: %v", err)
@@ -358,7 +358,7 @@ func getConfigApp(providerName string) (*ddevapp.DdevApp, error) {
 }
 
 // handleMainConfigArgs() validates and processes the main config args (docroot, etc.)
-func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevApp) error {
+func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) error {
 	var err error
 
 	// Support the show-config-location flag.
@@ -387,6 +387,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	app.WarnIfConfigReplace()
 
 	// app.Name gets set to basename if not provided, or set to siteNameArg if provided
+	// nolint:revive
 	if app.Name != "" && projectNameArg == "" { // If we already have a c.Name and no siteNameArg, leave c.Name alone
 		// Sorry this is empty but it makes the logic clearer.
 	} else if projectNameArg != "" { // if we have a siteNameArg passed in, use it for c.Name

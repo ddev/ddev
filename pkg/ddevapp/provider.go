@@ -406,11 +406,6 @@ func (p *Provider) doFilesImport(fileLocation string, importPath string) error {
 	return err
 }
 
-// Write the generic provider configuration to a specified location on disk.
-func (p *Provider) Write(configPath string) error {
-	return nil
-}
-
 // Read generic provider configuration from a specified location on disk.
 func (p *Provider) Read(configPath string) error {
 	source, err := os.ReadFile(configPath)
