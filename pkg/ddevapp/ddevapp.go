@@ -666,10 +666,9 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 			// See if mysqld is still importing. If it is, sleep and try again
 			if newRowsImported == rowsImported {
 				break
-			} else {
-				rowsImported = newRowsImported
-				time.Sleep(time.Millisecond * 500)
 			}
+			rowsImported = newRowsImported
+			time.Sleep(time.Millisecond * 500)
 		}
 	}
 

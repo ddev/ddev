@@ -877,7 +877,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 }
 
 // RemoveContainer stops and removes a container
-func RemoveContainer(id string, timeout uint) error {
+func RemoveContainer(id string, _ uint) error {
 	client := GetDockerClient()
 
 	err := client.RemoveContainer(docker.RemoveContainerOptions{ID: id, Force: true})
@@ -888,7 +888,7 @@ func RemoveContainer(id string, timeout uint) error {
 func RestartContainer(id string, timeout uint) error {
 	client := GetDockerClient()
 
-	err := client.RestartContainer(id, 20)
+	err := client.RestartContainer(id, timeout)
 	return err
 }
 

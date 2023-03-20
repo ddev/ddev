@@ -52,9 +52,8 @@ ddev ssh -d /var/www/html`,
 		if err != nil {
 			if exiterr, ok := err.(*exec.ExitError); ok {
 				os.Exit(exiterr.ExitCode())
-			} else {
-				os.Exit(1)
 			}
+			os.Exit(1)
 		}
 	},
 }

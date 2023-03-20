@@ -232,11 +232,8 @@ func writeWordpressDdevSettingsFile(config *WordpressConfig, filePath string) er
 	}
 	defer util.CheckClose(file)
 
-	if err = t.Execute(file, config); err != nil {
-		return err
-	}
-
-	return nil
+	err = t.Execute(file, config)
+	return err
 }
 
 // setWordpressSiteSettingsPaths sets the expected settings files paths for

@@ -26,8 +26,8 @@ var hashedHostID string
 // SegmentNoopLogger defines a no-op logger to prevent Segment log messages from being emitted
 type SegmentNoopLogger struct{}
 
-func (n *SegmentNoopLogger) Logf(format string, args ...interface{})   {}
-func (n *SegmentNoopLogger) Errorf(format string, args ...interface{}) {}
+func (n *SegmentNoopLogger) Logf(_ string, _ ...interface{})   {}
+func (n *SegmentNoopLogger) Errorf(_ string, _ ...interface{}) {}
 
 // ReportableEvents is the list of events that we choose to report specifically.
 // Excludes non-ddev custom commands.

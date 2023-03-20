@@ -64,11 +64,6 @@ func craftCmsImportFilesAction(app *DdevApp, importPath, extPath string) error {
 	return nil
 }
 
-// Currently a placeholder, for possible future expansion
-func craftCmsPostConfigAction(app *DdevApp) error {
-	return nil
-}
-
 // Set up the .env file for ddev
 func craftCmsPostStartAction(app *DdevApp) error {
 	// If settings management is disabled, do nothing

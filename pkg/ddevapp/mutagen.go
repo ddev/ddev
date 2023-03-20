@@ -737,7 +737,7 @@ func TerminateAllMutagenSync() {
 }
 
 // GetDefaultMutagenVolumeSignature gets a new volume signature to be applied to mutagen volume
-func GetDefaultMutagenVolumeSignature(app *DdevApp) string {
+func GetDefaultMutagenVolumeSignature(_ *DdevApp) string {
 	return fmt.Sprintf("%s-%v", dockerutil.GetDockerHostID(), time.Now().Unix())
 }
 

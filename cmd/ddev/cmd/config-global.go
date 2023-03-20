@@ -28,7 +28,7 @@ var configGlobalCommand = &cobra.Command{
 }
 
 // handleGlobalConfig handles all the flag processing for global config
-func handleGlobalConfig(cmd *cobra.Command, args []string) {
+func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 	err := globalconfig.ReadGlobalConfig()
 	if err != nil {
 		util.Failed("Unable to read global config file: %v", err)

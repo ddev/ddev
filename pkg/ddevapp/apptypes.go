@@ -69,7 +69,7 @@ func init() {
 		},
 
 		nodeps.AppTypeCraftCms: {
-			uploadDir: nil, importFilesAction: craftCmsImportFilesAction, appTypeDetect: isCraftCmsApp, configOverrideAction: nil, postConfigAction: craftCmsPostConfigAction, postStartAction: craftCmsPostStartAction,
+			uploadDir: nil, importFilesAction: craftCmsImportFilesAction, appTypeDetect: isCraftCmsApp, configOverrideAction: nil, postConfigAction: nil, postStartAction: craftCmsPostStartAction,
 		},
 
 		nodeps.AppTypeDrupal6: {
