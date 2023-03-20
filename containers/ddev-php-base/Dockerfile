@@ -80,6 +80,7 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     postgresql-client \
     python-is-python3 \
     python3-django \
+    python3-pip \
     python3-psycopg2 \
     sqlite3
 
