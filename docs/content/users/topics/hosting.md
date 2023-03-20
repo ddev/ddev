@@ -12,7 +12,7 @@ This may be appropriate for small or abandoned sites that have special requireme
 Here’s how to try it for yourself:
 
 1. Install DDEV on an internet-connected Linux server. (You’re responsible for your firewall and maintenance of the server!)
-2. On Debian/Ubuntu, you can set up a simple firewall with
+2. On Debian/Ubuntu, you can set up a simple firewall with  
 `ufw allow 80 && ufw allow 443 && ufw allow 22 && ufw enable`.
 3. Point DNS for the site you’re going to host to the server.
 4. Before proceeding, your system and your project must be accessible on the internet on port 80 and your project DNS name (`myproject.example.com`) must resolve to the appropriate server.
@@ -29,7 +29,7 @@ Here’s how to try it for yourself:
 
     ```
     if ($http_x_forwarded_proto = "http") {
-    return 301 https://$host$request_uri;
+      return 301 https://$host$request_uri;
     }
     ```
 

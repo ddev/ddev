@@ -115,16 +115,16 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ### Important Considerations for WSL2 and DDEV
 
-    * WSL2 is supported on Windows 10 and 11.
-    All Windows 10/11 editions, including Windows 10 Home support WSL2.
-    * WSL2 offers a faster, smoother experience.
-    It’s vastly more performant, and you’re less likely to have obscure Windows problems.
-    * Projects should live in the Linux filesystem.
-    WSL2’s Linux filesystem (e.g. `/home/<your_username>`) is much faster, so keep your projects there and **not** in the slower Windows filesystem (`/mnt/c`).
-    * Custom hostnames are managed via the Windows hosts file, not within WSL2.
-    DDEV attempts to manage custom hostnames via the Windows-side hosts file—usually at `C:\Windows\system32\drivers\etc\hosts`—and it can only do this if it’s installed on the Windows side. (DDEV inside WSL2 uses `ddev.exe` on the Windows side as a proxy to update the Windows hosts file.) If `ddev.exe --version` shows the same version as `ddev --version` you’re all set up. Otherwise, install DDEV on Windows using `choco upgrade -y ddev` or by downloading and running the Windows installer. (The WSL2 scripts below install DDEV on the Windows side, taking care of that for you.) If you frequently run into Windows UAC Escalation, you can calm it down by running `gsudo.exe cache on` and `gsudo.exe config CacheMode auto`, see [gsudo docs](https://github.com/gerardog/gsudo#credentials-cache).
-    * WSL2 is not the same as Docker Desktop’s WSL2 engine.
-    Using WSL2 to install and run DDEV is not the same as using Docker Desktop’s WSL2 engine, which itself runs in WSL2, but can serve applications running in both traditional Windows and inside WSL2.
+    * WSL2 is supported on Windows 10 and 11.  
+      All Windows 10/11 editions, including Windows 10 Home support WSL2.
+    * WSL2 offers a faster, smoother experience.  
+      It’s vastly more performant, and you’re less likely to have obscure Windows problems.
+    * Projects should live in the Linux filesystem.  
+      WSL2’s Linux filesystem (e.g. `/home/<your_username>`) is much faster, so keep your projects there and **not** in the slower Windows filesystem (`/mnt/c`).
+    * Custom hostnames are managed via the Windows hosts file, not within WSL2.  
+      DDEV attempts to manage custom hostnames via the Windows-side hosts file—usually at `C:\Windows\system32\drivers\etc\hosts`—and it can only do this if it’s installed on the Windows side. (DDEV inside WSL2 uses `ddev.exe` on the Windows side as a proxy to update the Windows hosts file.) If `ddev.exe --version` shows the same version as `ddev --version` you’re all set up. Otherwise, install DDEV on Windows using `choco upgrade -y ddev` or by downloading and running the Windows installer. (The WSL2 scripts below install DDEV on the Windows side, taking care of that for you.) If you frequently run into Windows UAC Escalation, you can calm it down by running `gsudo.exe cache on` and `gsudo.exe config CacheMode auto`, see [gsudo docs](https://github.com/gerardog/gsudo#credentials-cache).
+    * WSL2 is not the same as Docker Desktop’s WSL2 engine.  
+      Using WSL2 to install and run DDEV is not the same as using Docker Desktop’s WSL2 engine, which itself runs in WSL2, but can serve applications running in both traditional Windows and inside WSL2.
 
     The WSL2 install process involves:
 
@@ -307,31 +307,30 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ```json
     {
-        "image": "mcr.microsoft.com/devcontainers/universal:2",
-        "features": {
-            "ghcr.io/devcontainers/features/docker-in-docker:1": {},
-            "ghcr.io/ddev/ddev/install-ddev:latest": {}
-        },
-        "portsAttributes": {
+      "image": "mcr.microsoft.com/devcontainers/universal:2",
+      "features": {
+        "ghcr.io/devcontainers/features/docker-in-docker:1": {},
+        "ghcr.io/ddev/ddev/install-ddev:latest": {}
+      },
+      "portsAttributes": {
         "3306": {
-            "label": "database"
+          "label": "database"
         },
         "8027": {
-            "label": "mailhog"
+          "label": "mailhog"
         },
         "8036": {
-            "label": "phpmyadmin"
+          "label": "phpmyadmin"
         },
         "8080": {
-            "label": "web http"
+          "label": "web http"
         },
         "8443": {
-            "label": "web https"
+          "label": "web https"
         }
-        },
-        "postCreateCommand": "bash -c 'ddev config global --omit-containers=ddev-router && ddev config --auto && ddev debug download-images'"
+      },
+      "postCreateCommand": "bash -c 'ddev config global --omit-containers=ddev-router && ddev config --auto && ddev debug download-images'"
     }
-
     ```
 
     !!!note "Normal Linux installation also works"
