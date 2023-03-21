@@ -46,6 +46,7 @@ ExecStart
 ExecStop
 Execute
 Executes
+ExpressionEngine
 FPATH
 FSTYPE
 Flags
@@ -677,6 +678,7 @@ you
 your
 yoursite
 zcompdump
+zipfile
 zsh
 zshrc
 zxf
