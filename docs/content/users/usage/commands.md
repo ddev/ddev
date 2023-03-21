@@ -1040,7 +1040,7 @@ Open Sequel Pro with the current project’s database (global shell host contain
 Example:
 
 ```shell
-# Open the current project’s database in SequelPro
+# Open the current project’s database in Sequel Pro
 ddev sequelpro
 ```
 
