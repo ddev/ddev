@@ -1032,7 +1032,10 @@ ddev sequelace
 
 ## `sequelpro`
 
-Open SequelPro with the current project’s database (global shell host container command). This command is only available if `Sequel Pro.app` is installed as `/Applications/Sequel pro.app`, and only for projects with `mysql` or `mariadb` databases.  *Note that Sequel Pro is abandoned, does not work with `mysql:8.0`; other solutions like Sequel Ace, Querious, Tableplus are preferred.
+!!!warning "Sequel Pro is abandoned!"
+The project is abandoned and doesn’t work with MySQL 8. We recommend Sequel Ace, Querious, and TablePlus.
+
+Open Sequel Pro with the current project’s database (global shell host container command). This command is only available if `Sequel Pro.app` is installed as `/Applications/Sequel pro.app`, and only for projects with `mysql` or `mariadb` databases.
 
 Example:
 
