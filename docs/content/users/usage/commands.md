@@ -1033,7 +1033,7 @@ ddev sequelace
 ## `sequelpro`
 
 !!!warning "Sequel Pro is abandoned!"
-The project is abandoned and doesn’t work with MySQL 8. We recommend Sequel Ace, Querious, and TablePlus.
+    The project is abandoned and doesn’t work with MySQL 8. We recommend Sequel Ace, Querious, and TablePlus.
 
 Open Sequel Pro with the current project’s database (global shell host container command). This command is only available if `Sequel Pro.app` is installed as `/Applications/Sequel pro.app`, and only for projects with `mysql` or `mariadb` databases.
 
