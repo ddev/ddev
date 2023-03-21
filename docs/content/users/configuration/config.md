@@ -168,7 +168,7 @@ Port for binding database server to localhost interface.
 
 Not commonly used. Can be a specific port number for a fixed database port. If unset, the port will be assigned automatically and change each time [`ddev start`](../usage/commands.md#start) is run.
 
-Can be a specific port number for a fixed database port, which can be useful for configuration of host-side database clients. (May still be easier to use [`ddev mysql`](../usage/commands.md#mysql), `ddev psql`, `ddev sequelpro`, etc., which handle changing ports automatically, as does the sample command `ddev mysqlworkbench`.)
+Can be a specific port number for a fixed database port, which can be useful for configuration of host-side database clients. (May still be easier to use [`ddev mysql`](../usage/commands.md#mysql), `ddev psql`, `ddev sequelace`, etc., which handle changing ports automatically, as does the sample command `ddev mysqlworkbench`.)
 
 ## `host_https_port`
 
