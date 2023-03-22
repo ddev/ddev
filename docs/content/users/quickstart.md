@@ -185,7 +185,8 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
         ddev launch /admin.php  # Open installation wizard in browser
         ```
 
-When the installation wizard prompts for database settings, enter `db` for the _DB Server Address_, _DB Name_, _DB Username_, and _DB Password_.
+        When the installation wizard prompts for database settings, enter `db` for the _DB Server Address_, _DB Name_, _DB Username_, and _DB Password_.
+
 === "Laravel"
 
     ## Laravel
