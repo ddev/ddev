@@ -149,6 +149,44 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
         ddev launch
         ```
 
+=== "ExpressionEngine"
+
+    ## ExpressionEngine
+
+    === "ExpressionEngine ZIP File Download"
+
+        Download the ExpressionEngine code from [expressionengine.com](https://expressionengine.com/), then follow these steps based on the [official installation instructions](https://docs.expressionengine.com/latest/installation/installation.html):
+
+        ```bash
+        mkdir my-ee && cd my-ee
+        unzip /path/to/ee-zipfile.zip
+        ddev config # Accept the defaults
+        ddev start
+        ddev launch /admin.php # Open installation wizard in browser
+        ```
+
+        When the installation wizard prompts for database settings, enter `db` for the _DB Server Address_, _DB Name_, _DB Username_, and _DB Password_.
+
+        Visit your site.
+
+    === "ExpressionEngine Git Checkout"
+
+        Follow these steps based on the [ExpressionEngine Git Repository README.md](https://github.com/ExpressionEngine/ExpressionEngine#how-to-install):
+
+        ```bash
+        git clone https://github.com/ExpressionEngine/ExpressionEngine # for example
+        cd ExpressionEngine
+        ddev config # Accept the defaults
+        ddev start
+        ddev composer install
+        touch system/user/config/config.php
+        echo "EE_INSTALL_MODE=TRUE" >.env.php
+        ddev start
+        ddev launch /admin.php  # Open installation wizard in browser
+        ```
+
+        When the installation wizard prompts for database settings, enter `db` for the _DB Server Address_, _DB Name_, _DB Username_, and _DB Password_.
+
 === "Laravel"
 
     ## Laravel

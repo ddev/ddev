@@ -46,6 +46,7 @@ ExecStart
 ExecStop
 Execute
 Executes
+ExpressionEngine
 FPATH
 FSTYPE
 Flags
