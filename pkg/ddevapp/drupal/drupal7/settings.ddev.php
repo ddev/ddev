@@ -25,7 +25,6 @@ $databases['default']['default'] = array(
   'host' => $host,
   'driver' => $driver,
   'port' => $port,
-  'prefix' => "{{ $config.DatabasePrefix }}",
 );
 
 $drupal_hash_salt = '{{ $config.HashSalt }}';

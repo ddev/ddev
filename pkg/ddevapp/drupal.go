@@ -27,7 +27,6 @@ type DrupalSettings struct {
 	DatabaseHost     string
 	DatabaseDriver   string
 	DatabasePort     string
-	DatabasePrefix   string
 	HashSalt         string
 	Signature        string
 	SitePath         string
@@ -50,7 +49,6 @@ func NewDrupalSettings(app *DdevApp) *DrupalSettings {
 		DatabaseHost:     "db",
 		DatabaseDriver:   "mysql",
 		DatabasePort:     GetExposedPort(app, "db"),
-		DatabasePrefix:   "",
 		HashSalt:         util.RandString(64),
 		Signature:        nodeps.DdevFileSignature,
 		SitePath:         path.Join("sites", "default"),
