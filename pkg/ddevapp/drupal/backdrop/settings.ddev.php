@@ -17,7 +17,6 @@ if (empty(getenv('DDEV_PHP_VERSION') && getenv('IS_DDEV_PROJECT') == "true")) {
 }
 
 $database = "$driver://{{ $config.DatabaseUsername }}:{{ $config.DatabasePassword }}@$host:$port/{{ $config.DatabaseName }}";
-$database_prefix = '{{ $config.DatabasePrefix }}';
 
 $settings['update_free_access'] = FALSE;
 $settings['hash_salt'] = '{{ $config.HashSalt }}';
