@@ -153,7 +153,7 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
 
     ## ExpressionEngine
 
-    === "ExpressionEngine Zipfile Download"
+    === "ExpressionEngine ZIP File Download"
 
         Download the ExpressionEngine code from [ExpressionEngine.com](https://expressionengine.com/), then:
 
@@ -162,10 +162,10 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
         unzip /path/to/ee-zipfile.zip
         ddev config # Accept the defaults
         ddev start
-        ddev launch /admin.php
+        ddev launch /admin.php # Open installation wizard in browser
         ```
 
-        In the `admin.php` setup, use "db" for the "DB Server Address", "DB Name", "DB Username", and "DB Password"
+        When the installation wizard prompts for database settings, enter `db` for the _DB Server Address_, _DB Name_, _DB Username_, and _DB Password_.
 
         Visit your site.
 
@@ -180,9 +180,10 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
         touch system/user/config/config.php
         echo "EE_INSTALL_MODE=TRUE" >.env.php
         ddev start
-        ddev launch /admin.php  # Use DB Server = "db", everything else "db"
+        ddev launch /admin.php  # Open installation wizard in browser
         ```
 
+When the installation wizard prompts for database settings, enter `db` for the _DB Server Address_, _DB Name_, _DB Username_, and _DB Password_.
 === "Laravel"
 
     ## Laravel

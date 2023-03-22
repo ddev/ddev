@@ -678,7 +678,6 @@ you
 your
 yoursite
 zcompdump
-zipfile
 zsh
 zshrc
 zxf
