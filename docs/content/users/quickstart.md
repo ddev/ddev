@@ -155,7 +155,7 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
 
     === "ExpressionEngine ZIP File Download"
 
-        Download the ExpressionEngine code from [ExpressionEngine.com](https://expressionengine.com/), then follow these steps based on the [official installation instructions](https://docs.expressionengine.com/latest/installation/installation.html):
+        Download the ExpressionEngine code from [expressionengine.com](https://expressionengine.com/), then follow these steps based on the [official installation instructions](https://docs.expressionengine.com/latest/installation/installation.html):
 
         ```bash
         mkdir my-ee && cd my-ee
