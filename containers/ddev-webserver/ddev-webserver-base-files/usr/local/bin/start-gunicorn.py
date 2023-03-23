@@ -1,72 +1,67 @@
 import os
-import importlib.util
+import sys
 import subprocess
+from pathlib import Path
 
-
-def find_settings_files(start_dir):
-    settings_files = []
-    for root, dirs, files in os.walk(start_dir):
-        for file in files:
-            if file == "settings.py":
-                settings_files.append(os.path.join(root, file))
-    return settings_files
-
-
-def import_module_from_path(file_path):
-    spec = importlib.util.spec_from_file_location("settings_module", file_path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
-def launch_gunicorn(wsgi_application, bind_address):
-    command = f"gunicorn  -b {bind_address} '{wsgi_application}'"
-    print(command)
-    process = subprocess.Popen(command, shell=True)
-    return process
+# Function to search for the settings.py file
+def find_settings_file(path: Path):
+    for root, dirs, files in os.walk(path):
+        if "settings.py" in files:
+            return Path(root) / "settings.py"
+    return None
 
 def convert_import_path(import_path):
     parts = import_path.split(".")
     gunicorn_path = ".".join(parts[:-1]) + ":" + parts[-1]
     return gunicorn_path
 
-def main():
-    start_dir = "../.."
-    bind_address_base = "0.0.0.0"
-    base_port = 8000
-
-    settings_files = find_settings_files(start_dir)
-    processes = []
-
-    for index, settings_file in enumerate(settings_files):
-
-        settings_module = import_module_from_path(settings_file)
-        if hasattr(settings_module, 'WSGI_APPLICATION'):
-            if index > 0:
-                print("More than one app found. Launching only the first detected, skipping  {settings_module.WSGI_APPLICATION}.")
-                continue
-
-            print(f"{index}. WSGI_APPLICATION for {settings_file}: {settings_module.WSGI_APPLICATION}")
-
-            gunicorn_wsgi_application = convert_import_path(settings_module.WSGI_APPLICATION)
-            bind_address = f"{bind_address_base}:{base_port + index}"
-            process = launch_gunicorn(gunicorn_wsgi_application, bind_address)
-            processes.append(process)
-            print(f"Launched Gunicorn for {settings_file} at {bind_address}")
-
-        else:
-            print(f"No WSGI_APPLICATION found in {settings_file}")
-
-    print("Press Ctrl+C to stop all Gunicorn processes.")
-
-    try:
-        while True:
-            pass
-    except KeyboardInterrupt:
-        print("Stopping Gunicorn processes...")
-        for process in processes:
-            process.terminate()
+def launch_gunicorn(wsgi_application, bind_address):
+    command = f"gunicorn  -b {bind_address} {wsgi_application}"
+    print(command)
+    process = subprocess.Popen(command, shell=True)
+    return process
 
 
-if __name__ == "__main__":
-    main()
+# Make sure that current dir is in module path
+current_dir = os.getcwd()
+if str(current_dir) not in sys.path:
+    # Add the current directory to sys.path
+    sys.path.insert(0, str(current_dir))
+
+print(f"sys.path={sys.path}")
+# Check if DJANGO_SETTINGS_MODULE is set
+if not os.environ.get("DJANGO_SETTINGS_MODULE"):
+
+    # Search for settings.py
+    current_dir = Path(__file__).resolve().parent
+    settings_file = find_settings_file(current_dir)
+
+    # If settings.py is found, set the DJANGO_SETTINGS_MODULE environment variable
+    if settings_file:
+        sys.path.insert(0, str(settings_file.parent.parent))
+        os.environ["DJANGO_SETTINGS_MODULE"] = f"{settings_file.parent.name}.settings"
+    else:
+        raise FileNotFoundError("Could not find the settings.py file.")
+
+print(f"DJANGO_SETTINGS_MODULE={os.environ.get('DJANGO_SETTINGS_MODULE')}")
+from django.conf import settings
+wsgi_application = settings.WSGI_APPLICATION
+if not wsgi_application:
+    raise ValueError("WSGI_APPLICATION is not set in the settings module.")
+wsgi_application = convert_import_path(wsgi_application)
+print(f"wsgi_application is set to: {wsgi_application}")
+
+bind_address = "0.0.0.0:8000"
+process = launch_gunicorn(wsgi_application, bind_address)
+print(f"Launched Gunicorn for {wsgi_application} at {bind_address}")
+
+
+print("Press Ctrl+C to stop all Gunicorn processes.")
+
+try:
+    while True:
+        pass
+except KeyboardInterrupt:
+    print("Stopping Gunicorn process...")
+    process.terminate()
+
