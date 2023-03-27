@@ -161,7 +161,7 @@ const ConfigInstructions = `
 
 # ngrok_args: --basic-auth username:pass1234
 # Provide extra flags to the "ngrok http" command, see
-# https://ngrok.com/docs#http or run "ngrok http -h"
+# https://ngrok.com/docs/ngrok-agent/config or run "ngrok http -h"
 
 # disable_settings_management: false
 # If true, ddev will not create CMS-specific settings files like
