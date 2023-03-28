@@ -78,9 +78,6 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     nodejs \
     php-uploadprogress \
     postgresql-client \
-    python-is-python3 \
-    python3-pip \
-    python3-venv \
     sqlite3
 
 RUN npm config set unsafe-perm true && npm install --global gulp-cli yarn

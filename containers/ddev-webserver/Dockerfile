@@ -61,6 +61,7 @@ SHELL ["/bin/bash", "-c"]
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
     blackfire \
     blackfire-php \
+    build-essential \
     fontconfig \
     gettext \
     git \
@@ -70,12 +71,17 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     jq \
     libldap-common \
     libpcre3 \
+    libpq-dev \
+    libpython3-dev \
     locales-all \
     nano \
     ncurses-bin \
     netcat \
     openssh-client \
     patch \
+    python-is-python3 \
+    python3-pip \
+    python3-venv \
     rsync \
     sqlite3 \
     sudo \
