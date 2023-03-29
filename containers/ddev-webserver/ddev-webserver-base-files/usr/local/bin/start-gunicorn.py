@@ -33,7 +33,6 @@ print(f"sys.path={sys.path}")
 if not os.environ.get("DJANGO_SETTINGS_MODULE"):
 
     # Search for settings.py
-    current_dir = Path(__file__).resolve().parent
     settings_file = find_settings_file(current_dir)
 
     # If settings.py is found, set the DJANGO_SETTINGS_MODULE environment variable
