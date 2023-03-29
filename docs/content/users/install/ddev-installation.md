@@ -2,50 +2,44 @@
 
 Once you’ve [installed a Docker provider](docker-installation.md), you’re ready to install DDEV!
 
-Installing and upgrading DDEV are nearly the same thing, because you're upgrading the `ddev` binary that talks with Docker. You can update this file like other software on your system, whether it’s with a package manager or traditional installer.
-
 === "macOS"
 
     ## macOS
 
     ### Homebrew
 
-    We recommend [Homebrew](https://brew.sh/) because it’s the easiest and most reliable way to install and upgrade DDEV:
+    [Homebrew](https://brew.sh/) is the easiest and most reliable way to install and upgrade DDEV:
 
     ```bash
+    # Install DDEV
     brew install ddev/ddev/ddev
-    ```
 
-    ```bash
-    brew upgrade ddev
-    ```
-
-    As a one-time initialization, run
-
-    ```bash
+    # Initialize mkcert
     mkcert -install
+
+    # Optionally enable Mutagen for the best performance (recommended!)
+    ddev config global --mutagen-enabled
     ```
 
     ### Install Script
 
-    !!!tip
-        The install script works on macOS, Linux, and Windows WSL2.
+    The [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) is another option. It downloads, verifies, and sets up the `ddev` binary:
 
-    The [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) is an alternate way to install or upgrade DDEV. It downloads, verifies, and sets up the `ddev` binary.
-
-    To install or update DDEV:
-
-    ```
+    ```bash
+    # Download and run the install script
     curl -fsSL https://ddev.com/install.sh | bash
+
+    # Optionally enable Mutagen for the best performance (recommended!)
+    ddev config global --mutagen-enabled
     ```
 
-    You can include a `-s <version>` argument to install a specific release or a prerelease version:
+    ??? "Need a specific version?"
+        Use the `-s` argument to specify a specific stable or prerelease version:
 
-    ```
-    curl -fsSL https://ddev.com/install.sh | bash -s v1.21.4
-    ```
-
-    We recommend [enabling Mutagen](performance.md#mutagen) for the best performance; enable with [`ddev config global --mutagen-enabled`](../usage/commands.md#config).
+        ```bash
+        # Download and run the script to install DDEV v1.21.4
+        curl -fsSL https://ddev.com/install.sh | bash -s v1.21.4
+        ```
 
 === "Linux"
 
@@ -56,18 +50,17 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     DDEV’s Debian and RPM packages work with `apt` and `yum` repositories and most variants that use them, including Windows WSL2:
 
     ```bash
+    # Add DDEV’s GPG key to your keyring
     curl -fsSL https://apt.fury.io/drud/gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/ddev.gpg > /dev/null
+    
+    # Add DDEV releases to your package repository
     echo "deb [signed-by=/etc/apt/trusted.gpg.d/ddev.gpg] https://apt.fury.io/drud/ * *" | sudo tee /etc/apt/sources.list.d/ddev.list
+
+    # Update package information and install DDEV
     sudo apt update && sudo apt install -y ddev
     ```
 
-    Update with your usual commands:
-
-    ```bash
-    sudo apt update && sudo apt upgrade
-    ```
-
-    !!!tip "Removing Previous Install Methods"
+    ??? "Need to remove a previously-installed variant?"
         If you previously used DDEV’s [install script](#install-script), you can remove that version:
 
         ```
@@ -79,26 +72,57 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     ### Fedora, Red Hat, etc.
 
     ```bash
+    # Add DDEV releases to your package repository
     echo '[ddev]
     name=DDEV Repo
     baseurl=https://yum.fury.io/drud/
     enabled=1
     gpgcheck=0' | sudo tee -a /etc/yum.repos.d/ddev.repo
 
+    # Install DDEV
     sudo dnf install --refresh ddev
     ```
 
-    In the future you can update as usual using `sudo dnf upgrade ddev`. (Signed repository support will be added in the near future.)
+    Signed repository support will be added in the near future.
 
     ### Arch Linux
 
-    For Arch-based systems including Arch Linux, EndeavourOS and Manjaro, we maintain the [ddev-bin](https://aur.archlinux.org/packages/ddev-bin/) package in AUR. To install, use `yay -S ddev-bin` or whatever other AUR tool you use; to upgrade `yay -Syu ddev-bin`.
+    We maintain the [ddev-bin](https://aur.archlinux.org/packages/ddev-bin/) package in AUR for Arch-based systems including Arch Linux, EndeavourOS and Manjaro. Install with `yay` or your AUR tool of choice.
 
-    As a one-time initialization, run `mkcert -install`.
+    ```bash
+    # Install DDEV
+    yay -S ddev-bin
 
-    ### Alternate Linux Install Methods
+    # Initialize mkcert
+    mkcert -install
+    ```
 
-    You can also use two macOS install methods to install or update DDEV on Linux: [Homebrew](#homebrew) (only on AMD64 computers) and the standalone [install script](#install-script).
+    ### Homebrew (AMD64 only)
+
+    ```bash
+    # Install DDEV using Homebrew
+    brew install ddev/ddev/ddev
+
+    # Initialize mkcert
+    mkcert -install
+    ```
+
+    ### Install Script
+
+    The [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) is another option. It downloads, verifies, and sets up the `ddev` binary:
+
+    ```bash
+    # Download and run the install script
+    curl -fsSL https://ddev.com/install.sh | bash
+    ```
+
+    ??? "Need a specific version?"
+        Use the `-s` argument to specify a specific stable or prerelease version:
+
+        ```bash
+        # Download and run the script to install DDEV v1.21.4
+        curl -fsSL https://ddev.com/install.sh | bash -s v1.21.4
+        ```
 
 === "Windows"
 
@@ -276,9 +300,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ## Gitpod
 
-    DDEV is fully supported in [Gitpod](https://www.gitpod.io), where you don’t have to install anything at all.
-
-    Choose any of the following methods to launch your project:
+    Choose any of the following methods to launch your project with [Gitpod](https://www.gitpod.io):
 
     1. [Open any repository](https://www.gitpod.io/docs/getting-started) using Gitpod, run `brew install ddev/ddev/ddev`, and use DDEV!
         * You can install your web app there, or import a database.
