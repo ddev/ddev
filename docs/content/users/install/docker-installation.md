@@ -39,6 +39,12 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     #### Migrating Projects from Docker Desktop to Colima
 
+    !!!tip "Change credential storage from Dev Desktop to Colima"
+        Update credential storage to Colima to avoid ddev start errors
+
+    1. Open to edit Docker's `config.json` file (ex: `~/.docker/config.json`)
+    2. Change the `credsStore` value to `colima`
+
     Move your project databases from Docker Desktop to Colima:
 
     1. Make sure all your projects are listed in [`ddev list`](../usage/commands.md#list).
