@@ -107,7 +107,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     mkcert -install
     ```
 
-    ### Install Script
+    <!-- we’re using HTML here to customize the #install-script-linux anchor -->
+    <h3 id="install-script-linux">Install Script<a class="headerlink" href="#install-script-linux" title="Permanent link">¶</a></h3>
 
     The [install script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) is another option. It downloads, verifies, and sets up the `ddev` binary:
 
