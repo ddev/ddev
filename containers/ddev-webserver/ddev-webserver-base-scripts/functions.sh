@@ -14,7 +14,7 @@ function ddev_python_setup {
   if [ "${DDEV_PROJECT_TYPE}" = "python" ] || [ "${DDEV_PROJECT_TYPE}" = "django4" ]; then
     python -m venv /var/www/html/.ddev/.venv
     source /var/www/html/.ddev/.venv/bin/activate
-    pip install psycopg2 gunicorn
+    pip install gunicorn
     if [ -f /var/www/html/requirements.txt ]; then
       pip install -r /var/www/html/requirements.txt
     fi
