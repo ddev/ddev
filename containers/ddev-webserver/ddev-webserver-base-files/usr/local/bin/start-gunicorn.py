@@ -53,10 +53,10 @@ if wsgi_app == "None" and not os.environ.get("DJANGO_SETTINGS_MODULE"):
     else:
         raise FileNotFoundError("Could not find the settings.py file.")
 
-print(f"DJANGO_SETTINGS_MODULE={os.environ.get('DJANGO_SETTINGS_MODULE')}")
+    print(f"DJANGO_SETTINGS_MODULE={os.environ.get('DJANGO_SETTINGS_MODULE')}")
 
 # If wsgi_app has been set, we don't have to try getting from settings
-if wsgi_app == "None":
+if wsgi_app != "None":
     from django.conf import settings
     wsgi_application = settings.WSGI_APPLICATION
     print(f"wsgi_application is set to: {wsgi_application}")
