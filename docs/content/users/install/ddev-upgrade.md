@@ -93,8 +93,8 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     ## Gitpod
 
     ```bash
-    # Upgrade DDEV to the latest version
-    brew upgrade ddev
+    # Update package information and all packages including DDEV
+    sudo apt update && sudo apt upgrade
     ```
 
 === "Codespaces"
@@ -102,7 +102,8 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
     ## GitHub Codespaces
 
     ```bash
-    ¯\_(ツ)_/¯
+    # Update package information and all packages including DDEV
+    sudo apt update && sudo apt upgrade
     ```
 
 === "Manual"

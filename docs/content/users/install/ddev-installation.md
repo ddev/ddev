@@ -302,7 +302,18 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     Choose any of the following methods to launch your project with [Gitpod](https://www.gitpod.io):
 
-    1. [Open any repository](https://www.gitpod.io/docs/getting-started) using Gitpod, run `brew install ddev/ddev/ddev`, and use DDEV!
+    1. [Open any repository](https://www.gitpod.io/docs/getting-started) using Gitpod and run the following:
+        ```bash
+        # Add DDEV’s GPG key to your keyring
+        curl -fsSL https://apt.fury.io/drud/gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/ddev.gpg > /dev/null
+
+        # Add DDEV releases to your package repository
+        echo "deb [signed-by=/etc/apt/trusted.gpg.d/ddev.gpg] https://apt.fury.io/drud/ * *" | sudo tee /etc/apt/sources.list.d/ddev.list
+
+        # Update package information and install DDEV
+        sudo apt update && sudo apt install -y ddev
+        ```
+
         * You can install your web app there, or import a database.
         * You may want to implement one of the `ddev pull` provider integrations to pull from a hosting provider or an upstream source.
     2. Use the [ddev-gitpod-launcher](https://drud.github.io/ddev-gitpod-launcher/) form to launch a repository.
