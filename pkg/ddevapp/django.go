@@ -27,7 +27,7 @@ func django4ConfigOverrideAction(app *DdevApp) error {
 }
 
 // django4PostConfigAction just reminds people that they may need DJANGO_SETTINGS_MODULE env var
-func django4PostConfigAction(app *DdevApp) error {
+func django4PostConfigAction(_ *DdevApp) error {
 	util.Warning("Your project may need a DJANGO_SETTINGS_MODULE environment variable to work correctly")
 	return nil
 }

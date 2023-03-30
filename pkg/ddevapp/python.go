@@ -44,7 +44,7 @@ func pythonConfigOverrideAction(app *DdevApp) error {
 }
 
 // pythonPostConfigAction just reminds people that they may need WSGI_APP env var
-func pythonPostConfigAction(app *DdevApp) error {
+func pythonPostConfigAction(_ *DdevApp) error {
 	util.Warning("Your project may need a WSGI_APP environment variable to work correctly")
 	return nil
 }
