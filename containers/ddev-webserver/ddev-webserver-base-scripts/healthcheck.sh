@@ -22,33 +22,45 @@ fi
 
 phpstatus="false"
 htmlaccess="false"
+gunicornstatus="false"
 mailhog="false"
-if curl --fail -s 127.0.0.1/phpstatus >/dev/null ; then
-    phpstatus="true"
-    printf "phpstatus: OK "
-else
-    printf "phpstatus: FAILED "
-fi
 
 if ls /var/www/html >/dev/null; then
     htmlaccess="true"
-    printf "/var/www/html: OK "
+    printf "/var/www/html:OK "
 else
-    printf "/var/www/html: FAILED"
+    printf "/var/www/html:FAILED"
 fi
 
 if curl --fail -s 127.0.0.1:8025 >/dev/null; then
     mailhog="true"
-    printf "mailhog: OK " ;
+    printf "mailhog:OK " ;
 else
-    printf "mailhog: FAILED "
+    printf "mailhog:FAILED "
 fi
 
-# TODO: Disable phpstatus if not running php backend
-# TODO: Check gunicorn status
-phpstatus="true"
+if [ "${DDEV_WEBSERVER_TYPE#*-}" = "gunicorn" ]; then
+  phpstatus="true"
+  if pkill -0 gunicorn; then
+    gunicornstatus="true"
+    printf "gunicorn:OK"
+  else
+    printf "gunicorn:FAILED "
+  fi
 
-if [ "${phpstatus}" = "true" ] && [ "${htmlaccess}" = "true" ] &&  [ "${mailhog}" = "true" ] ; then
+fi
+
+if [ "${DDEV_WEBSERVER_TYPE#*-}" = "fpm"  ]; then
+  gunicornstatus="true"
+  if curl --fail -s 127.0.0.1/phpstatus >/dev/null ; then
+    phpstatus="true"
+    printf "phpstatus:OK "
+  else
+    printf "phpstatus:FAILED "
+  fi
+fi
+
+if [ "${phpstatus}" = "true" ] && [ "${gunicornstatus}" = "true" ] && [ "${htmlaccess}" = "true" ] &&  [ "${mailhog}" = "true" ] ; then
     touch /tmp/healthy
     exit 0
 fi
