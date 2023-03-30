@@ -73,7 +73,7 @@ func init() {
 		},
 
 		nodeps.AppTypeDjango4: {
-			uploadDir: nil, importFilesAction: nil, appTypeDetect: isDjango4App, configOverrideAction: django4ConfigOverrideAction, postConfigAction: nil, postStartAction: nil,
+			uploadDir: nil, importFilesAction: nil, appTypeDetect: isDjango4App, configOverrideAction: django4ConfigOverrideAction, postConfigAction: django4PostConfigAction, postStartAction: nil,
 		},
 
 		nodeps.AppTypeDrupal6: {
@@ -113,7 +113,7 @@ func init() {
 		},
 
 		nodeps.AppTypePython: {
-			uploadDir: nil, importFilesAction: nil, appTypeDetect: isPythonApp, configOverrideAction: pythonConfigOverrideAction, postConfigAction: nil, postStartAction: nil,
+			uploadDir: nil, importFilesAction: nil, appTypeDetect: isPythonApp, configOverrideAction: pythonConfigOverrideAction, postConfigAction: pythonPostConfigAction, postStartAction: nil,
 		},
 
 		nodeps.AppTypeShopware6: {settingsCreator: nil, appTypeDetect: isShopware6App, apptypeSettingsPaths: setShopware6SiteSettingsPaths, uploadDir: getShopwareUploadDir, configOverrideAction: nil, postStartAction: shopware6PostStartAction, importFilesAction: shopware6ImportFilesAction},

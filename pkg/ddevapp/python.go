@@ -3,6 +3,7 @@ package ddevapp
 import (
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/util"
 	"os"
 	"path/filepath"
 )
@@ -39,5 +40,11 @@ func pythonConfigOverrideAction(app *DdevApp) error {
 		app.Database.Type = nodeps.Postgres
 		app.Database.Version = nodeps.Postgres14
 	}
+	return nil
+}
+
+// pythonPostConfigAction just reminds people that they may need WSGI_APP env var
+func pythonPostConfigAction(app *DdevApp) error {
+	util.Warning("Your project may need a WSGI_APP environment variable to work correctly")
 	return nil
 }
