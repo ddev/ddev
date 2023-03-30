@@ -61,6 +61,7 @@ SHELL ["/bin/bash", "-c"]
 RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests -y \
     blackfire \
     blackfire-php \
+    build-essential \
     fontconfig \
     gettext \
     git \
@@ -164,7 +165,6 @@ ENV TERMINUS_HIDE_UPDATE_MESSAGE=1
 ENV CAROOT /mnt/ddev-global-cache/mkcert
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_CACHE_DIR=/mnt/ddev-global-cache/composer
-ENV PIP_DOWNLOAD_CACHE=/mnt/ddev-global-cache/pip
 ENV COMPOSER_PROCESS_TIMEOUT=2000
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM xterm
@@ -271,7 +271,6 @@ ENV TERMINUS_HIDE_UPDATE_MESSAGE=1
 ENV CAROOT /mnt/ddev-global-cache/mkcert
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV COMPOSER_CACHE_DIR=/mnt/ddev-global-cache/composer
-ENV PIP_DOWNLOAD_CACHE=/mnt/ddev-global-cache/pip
 ENV COMPOSER_PROCESS_TIMEOUT=2000
 ENV DEBIAN_FRONTEND noninteractive
 ENV LANG=C.UTF-8
