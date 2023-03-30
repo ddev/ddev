@@ -557,8 +557,7 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	if cmd.Flag("web-environment-add").Changed {
 		env := strings.TrimSpace(webEnvironmentLocal)
 		if env != "" {
-			envspl := strings.Split(env, ",")
-			conc := append(app.WebEnvironment, envspl...)
+			conc := append(app.WebEnvironment, env)
 			// Convert to a hashmap to remove duplicate values.
 			hashmap := make(map[string]string)
 			for i := 0; i < len(conc); i++ {

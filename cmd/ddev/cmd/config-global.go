@@ -65,8 +65,7 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		if env == "" {
 			globalconfig.DdevGlobalConfig.WebEnvironment = []string{}
 		} else {
-			envspl := strings.Split(env, ",")
-			conc := append(globalconfig.DdevGlobalConfig.WebEnvironment, envspl...)
+			conc := append(globalconfig.DdevGlobalConfig.WebEnvironment, env)
 			// Convert to a hashmap to remove duplicate values.
 			hashmap := make(map[string]string)
 			for i := 0; i < len(conc); i++ {
