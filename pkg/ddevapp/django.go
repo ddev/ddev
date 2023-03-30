@@ -17,5 +17,10 @@ func django4ConfigOverrideAction(app *DdevApp) error {
 	if app.WebserverType == nodeps.WebserverDefault {
 		app.WebserverType = nodeps.WebserverNginxGunicorn
 	}
+	if app.Database == DatabaseDefault {
+		app.Database.Type = nodeps.Postgres
+		app.Database.Version = nodeps.Postgres14
+	}
+
 	return nil
 }

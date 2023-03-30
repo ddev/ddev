@@ -112,6 +112,10 @@ func init() {
 			uploadDir: getPHPUploadDir, postStartAction: phpPostStartAction, importFilesAction: phpImportFilesAction,
 		},
 
+		nodeps.AppTypePython: {
+			uploadDir: nil, importFilesAction: nil, appTypeDetect: isPythonApp, configOverrideAction: pythonConfigOverrideAction, postConfigAction: nil, postStartAction: nil,
+		},
+
 		nodeps.AppTypeShopware6: {settingsCreator: nil, appTypeDetect: isShopware6App, apptypeSettingsPaths: setShopware6SiteSettingsPaths, uploadDir: getShopwareUploadDir, configOverrideAction: nil, postStartAction: shopware6PostStartAction, importFilesAction: shopware6ImportFilesAction},
 
 		nodeps.AppTypeTYPO3: {

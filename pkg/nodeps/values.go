@@ -93,6 +93,7 @@ const (
 	AppTypeMagento   = "magento"
 	AppTypeMagento2  = "magento2"
 	AppTypePHP       = "php"
+	AppTypePython    = "python"
 	AppTypeShopware6 = "shopware6"
 	AppTypeTYPO3     = "typo3"
 	AppTypeWordPress = "wordpress"
