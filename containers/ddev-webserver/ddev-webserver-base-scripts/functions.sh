@@ -8,3 +8,16 @@ function ddev_custom_init_scripts {
   done
 #      touch "${ENTRYPOINT}/.user_scripts_initialized"
 }
+
+# Set up things that gunicorn and project may need, venv
+function ddev_python_setup {
+  python -m venv /var/www/html/.ddev/.venv
+  source /var/www/html/.ddev/.venv/bin/activate
+  pip install psycopg2 gunicorn
+  if [ -f requirements.txt ]; then
+    pip install -r requirements.txt
+  fi
+  if [ -f pyproject.toml ]; then
+    pip install .
+  fi
+}
