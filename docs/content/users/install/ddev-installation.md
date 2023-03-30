@@ -137,7 +137,6 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     **We strongly recommend using WSL2.** While its Linux experience may be new for some Windows users, it’s worth the performance benefit and common experience of working with Ubuntu and Bash.
 
-
     ### Important Considerations for WSL2 and DDEV
 
     * WSL2 is supported on Windows 10 and 11.  
@@ -161,15 +160,16 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ### WSL2 + Docker CE Inside Install Script
 
-    This scripted installation prepares your default WSL2 Ubuntu distro and has no dependency on Docker Desktop. It is designed to be able to run multiple times without breaking anything.
+    This prepares your default WSL2 Ubuntu distro and doesn’t require Docker Desktop, and you can run the script multiple times without breaking anything.
 
-    The provided PowerShell script can do most of the work for you, or you can handle these things manually. (This script works with the built-in PowerShell v5, but not with the newer v7.)
-
+    !!!warning "Not compatible with PowerShell 7!"
+        The provided PowerShell script can do most of the work for you, but you’ll need to use the built-in PowerShell v5 and not the newer v7. You can, however, [manually walk through the steps](#wsl2docker-desktop-manual-installation) instead.
+        
     In all cases:
 
     1. Install WSL2 with an Ubuntu distro.
 
-        * Install WSL with
+        * Install WSL:
             ```
             wsl --install
             ```
@@ -178,11 +178,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
         * Visit the Microsoft Store and install the *updated* ["Windows Subsystem for Linux"](https://apps.microsoft.com/store/detail/windows-subsystem-for-linux/9P9TQF7MRM4R) and click "Open". It will likely prompt you for a username and password for the Ubuntu WSL2 instance it creates.
 
-        * Verify that you now have an Ubuntu distro set as default by running `wsl.exe -l -v`
-
-        If you already have WSL2 but don't have an Ubuntu distro, install one by running `wsl.exe --install Ubuntu`.
-
-        If that doesn't work for you, see the [manual installation](https://docs.microsoft.com/en-us/windows/wsl/install-manual) and linked [troubleshooting](https://docs.microsoft.com/en-us/windows/wsl/troubleshooting#installation-issues).
+        * Verify that you have an Ubuntu distro set as default by running `wsl.exe -l -v`.  
+          If you have WSL2 but not an Ubuntu distro, install one by running `wsl.exe --install Ubuntu`. If this doesn’t work, see [manual installation](https://docs.microsoft.com/en-us/windows/wsl/install-manual) and [troubleshooting](https://docs.microsoft.com/en-us/windows/wsl/troubleshooting#installation-issues).
 
     2. In an administrative PowerShell (5) run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1) by executing:
 
@@ -196,62 +193,62 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ### WSL2 + Docker Desktop Install Script
 
-    This scripted installation prepares your default WSL2 Ubuntu distro for use with Docker Desktop. It is designed to be able to run multiple times without breaking anything.
+    This prepares your default WSL2 Ubuntu distro for use with Docker Desktop, and you can run the script multiple times without breaking anything.
 
-    You can do these things manually, or you can do most of it with the provided PowerShell (5) script.
+    !!!warning "Not compatible with PowerShell 7!"
+        The provided PowerShell script can do most of the work for you, but you’ll need to use the built-in PowerShell v5 and not the newer v7. You can, however, [manually walk through the steps](#wsl2docker-desktop-manual-installation) instead.
+
     In all cases:
 
-    1. Install WSL2 with an Ubuntu distro. On a system without WSL2, run:
+    4. Install WSL2 with an Ubuntu distro. On a system without WSL2, run:
         ```powershell
         wsl --install
         ```
 
-        Verify that you have an Ubuntu distro set as the default default with `wsl -l -v`.
+        * Verify that you have an Ubuntu distro set as the default default with `wsl -l -v`.
 
-        If you already have WSL2 but don't have an Ubuntu distro, install one with `wsl --install Ubuntu`.
-
-        If that doesn't work for you, see the [manual installation](https://docs.microsoft.com/en-us/windows/wsl/install-manual) and linked [troubleshooting](https://docs.microsoft.com/en-us/windows/wsl/troubleshooting#installation-issues).
+        * If you have WSL2 but not an Ubuntu distro, install one with `wsl --install Ubuntu`.  
+          If that doesn't work for you, see [manual installation](https://docs.microsoft.com/en-us/windows/wsl/install-manual) and [troubleshooting](https://docs.microsoft.com/en-us/windows/wsl/troubleshooting#installation-issues).
 
         If you prefer to use another Ubuntu distro, install it and set it as default. For example, `wsl --set-default Ubuntu-22.04`.
 
-    2. Visit the Microsoft Store and install the updated "Windows Subsystem for Linux", then click *Open*. It will likely prompt you for a username and password for the Ubuntu WSL2 instance it creates.
+    5. Visit the Microsoft Store and install the updated "Windows Subsystem for Linux", then click *Open*. It will likely prompt you for a username and password for the Ubuntu WSL2 instance it creates.
 
-    3. In *Windows Update Settings* → *Advanced Options* enable *Receive updates for other Microsoft products*. You may want to occasionally run `wsl.exe --update` as well.
+    6. In *Windows Update Settings* → *Advanced Options* enable *Receive updates for other Microsoft products*. You may want to occasionally run `wsl.exe --update` as well.
 
-    4. Install Docker Desktop. If you already have Chocolatey, run `choco install -y docker-desktop` or [download Docker Desktop from Docker](https://www.docker.com/products/docker-desktop/).
-    5. Start Docker Desktop. You should now be able to run `docker ps` in PowerShell or Git Bash.
-    6. In *Docker Desktop* → *Settings* → *Resources* → *WSL2 Integration*, verify that Docker Desktop is integrated with your distro.
-    7. In an administrative `PowerShell` (5) run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_desktop.ps1) by executing:
+    7. Install Docker Desktop. If you already have Chocolatey, run `choco install -y docker-desktop`. Otherwise [download Docker Desktop from Docker](https://www.docker.com/products/docker-desktop/).
+    8. Start Docker Desktop. You should now be able to run `docker ps` in PowerShell or Git Bash.
+    9. In *Docker Desktop* → *Settings* → *Resources* → *WSL2 Integration*, verify that Docker Desktop is integrated with your distro.
+    10. In an administrative PowerShell (5) run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_desktop.ps1) by executing:
 
         ```powershell
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
         iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_desktop.ps1'))
         ```
-    8. In *Windows Update Settings* → *Advanced Options* enable *Receive updates for other Microsoft products*. You may want to occasionally run `wsl.exe --update` as well.
-
+    11. In *Windows Update Settings* → *Advanced Options* enable *Receive updates for other Microsoft products*. You may want to occasionally run `wsl.exe --update` as well.
 
     Now you can use the "Ubuntu" terminal app or Windows Terminal to access your Ubuntu distro, which has DDEV and Docker Desktop integrated with it.
 
     ### WSL2/Docker Desktop Manual Installation
 
-    You can do all of the steps manually of course:
+    You can manually step through the process the install script attempts to automate:
 
     1. Install [Chocolatey](https://chocolatey.org/install):
         ```powershell
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
         iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))`
         ```
-    2. In an administrative PowerShell: `choco install -y ddev mkcert`
-    3. In an administrative PowerShell, run `mkcert -install` and answer the prompt allowing the installation of the Certificate Authority.
-    4. In an administrative PowerShell, run the command `$env:CAROOT="$(mkcert -CAROOT)"; setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }`. This will set WSL2 to use the Certificate Authority installed on the Windows side. In some cases it takes a reboot to work correctly.
-    5. In administrative PowerShell, run the command `wsl --install`. This will install WSL2 and Ubuntu for you. Reboot when this is done.
-    6. **Docker Desktop for Windows:** If you already have the latest Docker Desktop, configure it in the General Settings to use the WSL2-based engine. Otherwise install the latest Docker Desktop for Windows and select the WSL2-based engine (not legacy Hyper-V) when installing. Install via Chocolatey with `choco install docker-desktop` or it can be downloaded from [desktop.docker.com](https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe).  Start Docker. It may prompt you to log out and log in again, or reboot.
+    2. In an administrative PowerShell, run `choco install -y ddev mkcert`.
+    3. In an administrative PowerShell, run `mkcert -install` and follow the prompt to install the Certificate Authority.
+    4. In an administrative PowerShell, run `$env:CAROOT="$(mkcert -CAROOT)"; setx CAROOT $env:CAROOT; If ($Env:WSLENV -notlike "*CAROOT/up:*") { $env:WSLENV="CAROOT/up:$env:WSLENV"; setx WSLENV $Env:WSLENV }`. This will set WSL2 to use the Certificate Authority installed on the Windows side. In some cases it takes a reboot to work correctly.
+    5. In administrative PowerShell, run `wsl --install`. This will install WSL2 and Ubuntu for you. Reboot when this is done.
+    6. **Docker Desktop for Windows:** If you already have the latest Docker Desktop, configure it in the General Settings to use the WSL2-based engine. Otherwise install the latest Docker Desktop for Windows and select the WSL2-based engine (not legacy Hyper-V) when installing. Install with Chocolatey by running `choco install docker-desktop`, or download the installer from [desktop.docker.com](https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe).  Start Docker. It may prompt you to log out and log in again, or reboot.
     7. Go to Docker Desktop’s *Settings* → *Resources* → *WSL integration* → *enable integration for your distro*. Now `docker` commands will be available from within your WSL2 distro.
     8. Double-check in PowerShell: `wsl -l -v` should show three distros, and your Ubuntu should be the default. All three should be WSL version 2.
     9. Double-check in Ubuntu (or your distro): `echo $CAROOT` should show something like `/mnt/c/Users/<you>/AppData/Local/mkcert`
-    10. Check that Docker is working inside Ubuntu (or your distro): `docker ps`
+    10. Check that Docker is working inside Ubuntu (or your distro) by running `docker ps`.
     11. Open the WSL2 terminal, for example `Ubuntu` from the Windows start menu.
-    12. Install DDEV using
+    12. Install DDEV:
 
         ```bash
         curl https://apt.fury.io/drud/gpg.key | sudo apt-key add -
@@ -259,11 +256,9 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         sudo apt update && sudo apt install -y ddev
         ```
 
-    13. In WSL2 run `mkcert -install`.
+    13. In WSL2, run `mkcert -install`.
 
-    You have now installed DDEV on WSL2. If you’re using WSL2 for DDEV (recommended), remember to run all `ddev` commands inside the WSL2 distro.
-
-    To upgrade DDEV in WSL2 Ubuntu, run `apt upgrade ddev` as described in the [Linux installation section](#linux).
+    You have now installed DDEV on WSL2. If you’re using WSL2 for DDEV, remember to run all `ddev` commands inside the WSL2 distro.
 
     !!!note "Path to certificates"
         If you get the prompt `Installing to the system store is not yet supported on this Linux`, you may need to add `/usr/sbin` to the `$PATH` so that `/usr/sbin/update-ca-certificates` can be found.
@@ -274,8 +269,6 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     * We recommend using [Chocolatey](https://chocolatey.org/). Once installed, you can run `choco install ddev docker-desktop git` from an administrative shell. You can upgrade by running `ddev poweroff && choco upgrade ddev`.
     * Each [DDEV release](https://github.com/ddev/ddev/releases) includes a Windows installer (`ddev_windows_installer.<version>.exe`). After running that, you can open a new Git Bash, PowerShell, or cmd.exe window and start using DDEV.
-
-    Most traditional Windows users will want to enable Mutagen for superb performance; no installation is required; run `ddev config global --mutagen-enabled`. It still won't be as fast as one of the WSL2 options.
 
     Most people interact with DDEV on Windows using Git Bash, part of the [Windows Git suite](https://git-scm.com/download/win). Although DDEV does work with cmd.exe and PowerShell, it's more at home in Bash. You can install Git Bash with Chocolatey by running `choco install -y git`.
 
