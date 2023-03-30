@@ -328,7 +328,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ## GitHub Codespaces
 
-    You can use DDEV in remote [GitHub Codespaces](https://github.com/features/codespaces), skipping the requirement to run Docker locally.
+    You can use DDEV in remote [GitHub Codespaces](https://github.com/features/codespaces) without having to run Docker locally.
 
     Start by [creating a new codespace](https://github.com/codespaces/new) for your project, or open an existing one. Next, edit the project configuration to add Docker-in-Docker support along with DDEV. Pick **one** of these methods:
 
