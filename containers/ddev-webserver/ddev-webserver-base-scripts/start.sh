@@ -124,9 +124,6 @@ echo 'Server started'
 # We don't want the various daemons to know about PHP_IDE_CONFIG
 unset PHP_IDE_CONFIG
 
-# Run any python/django4 activities
-ddev_python_setup
-
 # Run any custom init scripts (.ddev/.web-entrypoint.d/*.sh)
 if [ -d ${ENTRYPOINT} ]; then
   if [[ -n $(find ${ENTRYPOINT} -type f -regex ".*\.\(sh\)") ]] && [[ ! -f "${ENTRYPOINT}/.user_scripts_initialized" ]] ; then
@@ -144,4 +141,8 @@ if [ -d ${ENTRYPOINT} ]; then
     ddev_custom_init_scripts;
   fi
 fi
+
+# Run any python/django4 activities
+ddev_python_setup
+
 exec /usr/bin/supervisord -n -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"

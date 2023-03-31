@@ -73,7 +73,7 @@ func init() {
 		},
 
 		nodeps.AppTypeDjango4: {
-			uploadDir: nil, importFilesAction: nil, appTypeDetect: isDjango4App, configOverrideAction: django4ConfigOverrideAction, postConfigAction: django4PostConfigAction, postStartAction: django4PostStartAction,
+			uploadDir: nil, importFilesAction: nil, appTypeDetect: isDjango4App, apptypeSettingsPaths: nil, configOverrideAction: django4ConfigOverrideAction, postConfigAction: django4PostConfigAction, postStartAction: django4PostStartAction,
 		},
 
 		nodeps.AppTypeDrupal6: {
