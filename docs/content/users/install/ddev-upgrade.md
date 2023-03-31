@@ -57,22 +57,15 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ## Windows
 
-    ### WSL2 + Docker Install Script
+    ### WSL2 + Docker
 
-    If you used the WSL2 install script with [Docker CE inside](./ddev-installation.md#wsl2-docker-ce-inside-install-script) or [Docker Desktop](./ddev-installation.md#wsl2-docker-desktop-install-script), the upgrade process is the same: open an administrative PowerShell (5) and run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1):
+    If you’re using WSL2, the upgrade process is the same regardless of how you installed DDEV.
 
-    ```powershell
-    Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
-    iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1'))
-    ```
+    Open the WSL2 terminal, for example “Ubuntu” from the Windows start menu, and run the following:
 
-    ### WSL2/Docker Desktop Manual Installation
-
-    Open the WSL2 terminal, for example `Ubuntu` from the Windows start menu, and run the following:
-    
     ```bash
     # Upgrade the DDEV package
-    apt upgrade ddev
+    sudo apt update && sudo apt upgrade -y
     ```
 
     ### Traditional Windows
@@ -94,7 +87,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ```bash
     # Update package information and all packages including DDEV
-    sudo apt update && sudo apt upgrade
+    sudo apt update && sudo apt upgrade -y
     ```
 
 === "Codespaces"
@@ -103,7 +96,7 @@ Installing and upgrading DDEV are nearly the same thing, because you're upgradin
 
     ```bash
     # Update package information and all packages including DDEV
-    sudo apt update && sudo apt upgrade
+    sudo apt update && sudo apt upgrade -y
     ```
 
 === "Manual"
