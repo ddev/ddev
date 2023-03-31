@@ -29,3 +29,7 @@ $databases['default']['default'] = array(
 );
 
 $drupal_hash_salt = '{{ $config.HashSalt }}';
+
+// Enable verbose logging for errors.
+// https://www.drupal.org/docs/7/creating-custom-modules/show-all-errors-while-developing
+$conf['error_level'] = 2;

@@ -58,3 +58,7 @@ $config['swiftmailer.transport']['transport'] = 'smtp';
 $config['swiftmailer.transport']['smtp_host'] = '127.0.0.1';
 $config['swiftmailer.transport']['smtp_port'] = '1025';
 $config['swiftmailer.transport']['smtp_encryption'] = '0';
+
+// Enable verbose logging for errors.
+// https://www.drupal.org/forum/support/post-installation/2018-07-18/enable-drupal-8-backend-errorlogdebugging-mode
+$config['system.logging']['error_level'] = 'verbose';
