@@ -28,7 +28,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     When your computer restarts, you’ll need to `colima start` again. This will eventually be automated in later versions of Colima.
 
     !!!tip "Colima disk allocation"
-        In Colima versions starting with 0.5.4 you can increase the disk allocation (but not decrease it) by editing the `~/.colima/default/colima.yaml` to change the `disk` setting to a higher value. For example, `disk: 200` will increase allocation to 200 gigabytes. Then `colima restart` will result in the new disk allocation.
+        In Colima versions starting with 0.5.4 you can increase—but not decrease—the disk allocation by editing `~/.colima/default/colima.yaml` to change the `disk` setting to a higher value. For example, `disk: 200` will increase allocation to 200 gigabytes. Then `colima restart` will result in the new disk allocation.
 
     !!!warning "Docker contexts let the Docker client point at the right Docker server"
         Colima activates its own Docker context to prevent conflicts with Docker Desktop. If you run `docker context ls`, you’ll see a list of available contexts where the currently-active one is indicated with a `*`—which will be `colima` after you’ve started it. You can change to the default (Docker Desktop) with `docker context use default` or change back with `docker context use colima`. This means you can run Docker Desktop and Colima at the same time, but be mindful of which context you’re pointing at!
