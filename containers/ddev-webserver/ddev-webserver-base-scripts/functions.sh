@@ -13,7 +13,7 @@ function ddev_custom_init_scripts {
 
 # Set up things that gunicorn and project may need, venv
 function ddev_python_setup {
-  if [ "${DDEV_PROJECT_TYPE}" = "python" ] || [ "${DDEV_PROJECT_TYPE}" = "django4" ]; then
+  if [ "${DDEV_WEBSERVER_TYPE}" = "nginx-gunicorn" ]; then
     python -m venv /var/www/html/.ddev/.venv
     source /var/www/html/.ddev/.venv/bin/activate
     pip install wheel gunicorn psycopg2

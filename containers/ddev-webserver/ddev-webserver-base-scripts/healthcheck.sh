@@ -65,7 +65,6 @@ if [ "${phpstatus}" = "true" ] && [ "${gunicornstatus}" = "true" ] && [ "${htmla
     exit 0
 fi
 rm -f /tmp/healthy
-set +x
 
 exit 1
 
