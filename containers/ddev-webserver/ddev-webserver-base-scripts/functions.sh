@@ -13,6 +13,7 @@ function ddev_custom_init_scripts {
 
 # Set up things that gunicorn and project may need, venv
 function ddev_python_setup {
+  set -e
   if [ "${DDEV_WEBSERVER_TYPE}" = "nginx-gunicorn" ]; then
     python -m venv /var/www/html/.ddev/.venv
     source /var/www/html/.ddev/.venv/bin/activate
@@ -24,4 +25,5 @@ function ddev_python_setup {
       pip install /var/www/html
     fi
   fi
+  set +e
 }

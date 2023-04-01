@@ -40,6 +40,20 @@ func django4PostConfigAction(_ *DdevApp) error {
 	return nil
 }
 
+// django4SettingsCreator creates the settings.ddev.py
+func django4SettingsCreator(app *DdevApp) (string, error) {
+	// Return early because we aren't expected to manage settings.
+	if app.DisableSettingsManagement {
+		return "", nil
+	}
+
+	err := writeDjango4SettingsDdevPy(app.GetConfigPath("settings/settings.ddev.py"), app)
+	if err != nil {
+		return "", err
+	}
+	return app.GetConfigPath("settings/settings.ddev.py"), nil
+}
+
 // django4PostStartAction handles creating settings for the project
 func django4PostStartAction(app *DdevApp) error {
 	// Return early because we aren't expected to manage settings.
@@ -56,23 +70,35 @@ func django4PostStartAction(app *DdevApp) error {
 
 	settingsFile = strings.Trim(settingsFile, "\n")
 	app.SiteSettingsPath = strings.TrimPrefix(settingsFile, "/var/www/html/")
+	app.SiteSettingsPath = filepath.Join(app.AppRoot, app.SiteSettingsPath)
 
-	app.SiteDdevSettingsFile = ".ddev/settings/settings.ddev.py"
-
-	err = writeDjango4SettingsDdevPy(app.GetConfigPath("settings/settings.ddev.py"), app)
-	if err != nil {
-		return err
-	}
+	app.SiteDdevSettingsFile = "/mnt/ddev_config/settings/settings.ddev.py"
 
 	django4SettingsIncludeStanza := fmt.Sprintf(`
+
+# #ddev-generated code to import DDEV settings
 if os.environ.get('IS_DDEV_PROJECT') == 'true':
     from pathlib import Path
+    import importlib.util
+    import sys
+
     s = Path('%s')
     if s.is_file():
-        from s import *
-`, path.Join("/var/www/html", app.SiteDdevSettingsFile))
+        spec = importlib.util.spec_from_file_location("ddev_settings", s)
+        ddev_settings = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(ddev_settings)
 
-	included, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, app.SiteDdevSettingsFile)
+        # Get the current module to set attributes
+        current_module = sys.modules[__name__]
+
+        # Add or update attributes from the ddev_settings module
+        for name, value in vars(ddev_settings).items():
+            if not name.startswith("__"):  # Exclude special attributes
+                setattr(current_module, name, value)
+# End DDEV-generated code
+`, app.SiteDdevSettingsFile)
+
+	included, err := fileutil.FgrepStringInFile(app.SiteSettingsPath, nodeps.DdevFileSignature)
 	if err != nil {
 		return err
 	}
@@ -99,7 +125,19 @@ if os.environ.get('IS_DDEV_PROJECT') == 'true':
 			return err
 		}
 	}
+	reloadGunicorn(app)
+
 	return err
+}
+
+// reloadGunicorn hits gunicorn process with HUP, reloading
+func reloadGunicorn(app *DdevApp) {
+	_, _, err := app.Exec(&ExecOpts{
+		Cmd: "pkill -HUP gunicorn",
+	})
+	if err != nil {
+		util.Warning("Failed to reload gunicorn configuration: %v", err)
+	}
 }
 
 // writeDjango4SettingsDdevPy dynamically produces valid settings.ddev.py file by combining a configuration
