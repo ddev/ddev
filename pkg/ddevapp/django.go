@@ -95,6 +95,9 @@ if os.environ.get('IS_DDEV_PROJECT') == 'true':
 		}
 
 		err = app.MutagenSyncFlush()
+		if err != nil {
+			return err
+		}
 	}
 	return err
 }
