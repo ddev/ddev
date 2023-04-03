@@ -10,12 +10,7 @@ import sys
 import subprocess
 from pathlib import Path
 
-# Function to search for the settings.py file
-def find_settings_file(path: Path):
-    for root, dirs, files in os.walk(path):
-        if "settings.py" in files:
-            return Path(root) / "settings.py"
-    return None
+bind_address = "0.0.0.0:8000"
 
 def convert_import_path(import_path):
     parts = import_path.split(".")
@@ -38,43 +33,27 @@ if str(current_dir) not in sys.path:
 print(f"sys.path={sys.path}")
 
 wsgi_app = os.getenv("WSGI_APP")
-print(f"WSGI_APP environment variable={wsgi_app}")
+django_settings_module = os.getenv("DJANGO_SETTINGS_MODULE")
+ddev_project_type = os.getenv("DDEV_PROJECT_TYPE")
+print(f"WSGI_APP environment variable={wsgi_app} DJANGO_SETTINGS_MODULE={django_settings_module}")
 
-# Check if DJANGO_SETTINGS_MODULE is set
-if wsgi_app == "None" and not os.environ.get("DJANGO_SETTINGS_MODULE"):
 
-    # Search for settings.py
-    settings_file = find_settings_file(current_dir)
+if wsgi_app:
+    process = launch_gunicorn(wsgi_app, bind_address)
+    print(f"Launched Gunicorn for {wsgi_app} at {bind_address}")
 
-    # If settings.py is found, set the DJANGO_SETTINGS_MODULE environment variable
-    if settings_file:
-        sys.path.insert(0, str(settings_file.parent.parent))
-        os.environ["DJANGO_SETTINGS_MODULE"] = f"{settings_file.parent.name}.settings"
-    else:
-        raise FileNotFoundError("Could not find the settings.py file.")
-
-    print(f"DJANGO_SETTINGS_MODULE={os.environ.get('DJANGO_SETTINGS_MODULE')}")
-
-# If wsgi_app has been set, we don't have to try getting from settings
-if wsgi_app != "None":
+elif ddev_project_type == "django4":
+    settings_file = subprocess.run(['python', '/usr/local/bin/find-django-settings-file.py'], stdout=subprocess.PIPE, text=True)
+    print(f"settings_file='{settings_file}'")
     from django.conf import settings
     wsgi_application = settings.WSGI_APPLICATION
-    print(f"wsgi_application is set to: {wsgi_application}")
-    if not wsgi_application:
-        raise ValueError("WSGI_APPLICATION is not set in the settings module.")
-    wsgi_app = convert_import_path(wsgi_application)
+    print(f"wsgi_application from django='{wsgi_application}'")
+    if wsgi_application:
+        wsgi_app = convert_import_path(wsgi_application)
+        process = launch_gunicorn(wsgi_app, bind_address)
+        print(f"Launched Gunicorn for {wsgi_app} at {bind_address}")
+else:
+        print("wsgi_application not found in the settings module, just running tail -f /dev/null instead")
 
-bind_address = "0.0.0.0:8000"
-process = launch_gunicorn(wsgi_app, bind_address)
-print(f"Launched Gunicorn for {wsgi_app} at {bind_address}")
-
-
-print("Press Ctrl+C to stop all Gunicorn processes.")
-
-try:
-    while True:
-        pass
-except KeyboardInterrupt:
-    print("Stopping Gunicorn process...")
-    process.terminate()
+subprocess.run(['tail', "-f", "/dev/null"])
 
