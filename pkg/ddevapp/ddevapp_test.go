@@ -258,6 +258,21 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Thanks for installing Craft CMS"},
 			FilesImageURI:                 "/files/happy-brad.jpg",
 		},
+
+		// 14: python generic
+		{
+			Name:                          "TestPkgPython",
+			SourceURL:                     "https://github.com/app-generator/flask-volt-dashboard/archive/refs/tags/v1.0.12.tar.gz",
+			ArchiveInternalExtractionPath: "flask-volt-dashboard-1.0.12/",
+			DBTarURL:                      "",
+			FullSiteTarballURL:            "",
+			Type:                          nodeps.AppTypePython,
+			Docroot:                       "",
+			//Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/test.html", Expect: "Thanks for testing Craft CMS"},
+			//UploadDir:                     "files",
+			DynamicURI:    testcommon.URIWithExpect{URI: "/login", Expect: "Open-source Flask Dashboard"},
+			FilesImageURI: "/static/assets/img/illustrations/signin.svg",
+		},
 	}
 
 	FullTestSites = TestSites
@@ -1927,10 +1942,6 @@ func readLastLine(fileName string) (string, error) {
 // TestDdevFullSiteSetup tests a full import-db and import-files and then looks to see if
 // we have a spot-test success hit on a URL
 func TestDdevFullSiteSetup(t *testing.T) {
-	//if nodeps.IsMacM1() {
-	//	t.Skip("Skipping on Mac M1, it just has too many connection failed problems")
-	//}
-
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 

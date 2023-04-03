@@ -17,7 +17,8 @@ function ddev_python_setup {
   if [ "${DDEV_WEBSERVER_TYPE}" = "nginx-gunicorn" ]; then
     python -m venv /var/www/html/.ddev/.venv
     source /var/www/html/.ddev/.venv/bin/activate
-    pip install wheel django gunicorn psycopg2
+    pip install wheel
+    pip install django gunicorn psycopg2-binary
     if [ -f /var/www/html/requirements.txt ]; then
       pip install -r /var/www/html/requirements.txt
     fi
