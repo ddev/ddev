@@ -30,12 +30,7 @@ ddev ssh -d /var/www/html`,
 		}
 		app := projects[0]
 		instrumentationApp = app
-
-		err = app.Wait([]string{serviceType})
-		if err != nil {
-			util.Failed("Service %s doesn't seem to be running: %v", serviceType, err)
-		}
-
+		
 		app.DockerEnv()
 
 		// Use bash for our containers, sh for 3rd-party containers
