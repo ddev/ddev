@@ -3296,22 +3296,30 @@ func TestGetAllURLs(t *testing.T) {
 	runTime()
 }
 
-// TestWebserverType checks that webserver_type:apache-fpm does the right thing
-func TestWebserverType(t *testing.T) {
+// TestPHPWebserverType checks that webserver_type:apache-fpm does the right thing
+func TestPHPWebserverType(t *testing.T) {
 	assert := asrt.New(t)
 
 	for _, site := range TestSites {
-		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s TestWebserverType", site.Name))
+		if site.Type == nodeps.AppTypeDjango4 || site.Type == nodeps.AppTypePython {
+			continue
+		}
+		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 		app := new(ddevapp.DdevApp)
 
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
+		t.Cleanup(func() {
+			err = app.Stop(true, false)
+			assert.NoError(err)
+		})
+
 		// Copy our phpinfo into the docroot of testsite.
 		pwd, err := os.Getwd()
 		assert.NoError(err)
-		err = fileutil.CopyFile(filepath.Join(pwd, "testdata", "servertype.php"), filepath.Join(app.AppRoot, app.Docroot, "servertype.php"))
+		err = fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "servertype.php"), filepath.Join(app.AppRoot, app.Docroot, "servertype.php"))
 
 		assert.NoError(err)
 		for _, app.WebserverType = range []string{nodeps.WebserverApacheFPM, nodeps.WebserverNginxFPM} {
@@ -3321,9 +3329,11 @@ func TestWebserverType(t *testing.T) {
 
 			testcommon.ClearDockerEnv()
 
-			startErr := app.StartAndWait(30)
-			//nolint: errcheck
-			defer app.Stop(true, false)
+			startErr := app.Start()
+			t.Cleanup(func() {
+				err = app.Stop(true, false)
+				assert.NoError(err)
+			})
 			if startErr != nil {
 				appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 				assert.NoError(getLogsErr)

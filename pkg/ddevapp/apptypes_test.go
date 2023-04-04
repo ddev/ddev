@@ -24,10 +24,10 @@ func TestApptypeDetection(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 	appTypes := ddevapp.GetValidAppTypes()
-	var nonPHPAppTypes = []string{}
+	var notSimplePHPAppTypes = []string{}
 	for _, t := range appTypes {
 		if t != nodeps.AppTypePHP {
-			nonPHPAppTypes = append(nonPHPAppTypes, t)
+			notSimplePHPAppTypes = append(notSimplePHPAppTypes, t)
 		}
 	}
 	tmpDir := testcommon.CreateTmpDir(t.Name())
@@ -41,7 +41,7 @@ func TestApptypeDetection(t *testing.T) {
 
 	err := fileutil.CopyDir(filepath.Join(origDir, "testdata", t.Name()), filepath.Join(tmpDir, "sampleapptypes"))
 	require.NoError(t, err)
-	for _, appType := range nonPHPAppTypes {
+	for _, appType := range notSimplePHPAppTypes {
 		app, err := ddevapp.NewApp(filepath.Join(tmpDir, "sampleapptypes", appType), true)
 		assert.NoError(err)
 		app.Docroot = ddevapp.DiscoverDefaultDocroot(app)
