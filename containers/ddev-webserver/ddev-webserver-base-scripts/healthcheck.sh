@@ -39,6 +39,9 @@ else
     printf "mailhog:FAILED "
 fi
 
+# If DDEV_WEBSERVER_TYPE is not set, use reasonable default
+DDEV_WEBSERVER_TYPE=${DDEV_WEBSERVER_TYPE:-nginx-fpm}
+
 if [ "${DDEV_WEBSERVER_TYPE#*-}" = "gunicorn" ]; then
   phpstatus="true"
   if pkill -0 gunicorn; then
