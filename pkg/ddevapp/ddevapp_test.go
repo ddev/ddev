@@ -262,16 +262,21 @@ var (
 		// 14: python generic
 		{
 			Name:                          "TestPkgPython",
-			SourceURL:                     "https://github.com/app-generator/flask-volt-dashboard/archive/refs/tags/v1.0.12.tar.gz",
-			ArchiveInternalExtractionPath: "flask-volt-dashboard-1.0.12/",
+			SourceURL:                     "https://github.com/ddev/test-flask-sayhello/archive/refs/tags/v1.0.0.tar.gz",
+			ArchiveInternalExtractionPath: "test-flask-sayhello-1.0.0/",
 			DBTarURL:                      "",
 			FullSiteTarballURL:            "",
-			Type:                          nodeps.AppTypePython,
-			Docroot:                       "",
-			//Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/test.html", Expect: "Thanks for testing Craft CMS"},
+			PretestCmd:                    "ddev exec flask forge",
+			WebEnvironment: []string{
+				"DATABASE_URI=postgresql://db:db@db/db",
+				"WSGI_APP=sayhello:app",
+			},
+			Type:    nodeps.AppTypePython,
+			Docroot: "",
+			//Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/test.html", Expect: ""},
 			//UploadDir:                     "files",
-			DynamicURI:    testcommon.URIWithExpect{URI: "/login", Expect: "Open-source Flask Dashboard"},
-			FilesImageURI: "/static/assets/img/illustrations/signin.svg",
+			DynamicURI:    testcommon.URIWithExpect{URI: "/", Expect: "20 messages"},
+			FilesImageURI: "",
 		},
 	}
 
@@ -1985,9 +1990,11 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		assert.NotContains(out, "Unable to create settings file")
 
 		// Validate PHPMyAdmin is working and database named db is present
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8036/index.php?route=/database/structure&server=1&db=db", "Database:          db")
-		// Validate MailHog is working and "connected"
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8025/#", "Connected")
+		if app.Database.Type == nodeps.MySQL || app.Database.Type == nodeps.MariaDB {
+			_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8036/index.php?route=/database/structure&server=1&db=db", "Database:          db")
+			// Validate MailHog is working and "connected"
+			_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8025/#", "Connected")
+		}
 
 		settingsLocation, err := app.DetermineSettingsPathLocation()
 		assert.NoError(err)
