@@ -197,10 +197,28 @@ func TestCustomCommands(t *testing.T) {
 	assert.NoError(err)
 
 	// Make sure that all the official ddev-provided custom commands are usable by just checking help
-	//for _, c := range []string{"launch", "mysql", "npm", "php", "xdebug", "yarn"} {
-	//	_, err = exec.RunHostCommand(DdevBin, c, "-h")
-	//	assert.NoError(err, "Failed to run ddev %s -h", c)
-	//}
+	for _, c := range []string{"launch", "xdebug"} {
+		_, err = exec.RunHostCommand(DdevBin, c, "-h")
+		assert.NoError(err, "Failed to run ddev %s -h", c)
+	}
+
+	for _, c := range []string{"mysql", "npm", "php", "yarn"} {
+		_, err = exec.RunHostCommand(DdevBin, c, "--version")
+		assert.NoError(err, "Failed to run ddev %s --version", c)
+	}
+
+	// See if `ddev python` works for python app types
+	origAppType := app.Type
+	for _, appType := range []string{nodeps.AppTypeDjango4, nodeps.AppTypePython} {
+		app.Type = appType
+		err = app.WriteConfig()
+		require.NoError(t, err)
+		for _, c := range []string{"python"} {
+			out, err = exec.RunHostCommand(DdevBin, c, "--version")
+			assert.NoError(err, "Expected ddev python --version to work with apptype=%s but it didn't, output=%s", c, app.Type, out)
+		}
+	}
+	app.Type = origAppType
 
 	// The various CMS commands should not be available here
 	for _, c := range []string{"artisan", "drush", "magento", "typo3", "typo3cms", "wp"} {
