@@ -260,6 +260,8 @@ var (
 		},
 
 		// 14: python generic
+		// Uses https://github.com/ddev/test-flask-sayhello fork of
+		// https://github.com/greyli/sayhello - no database download required
 		{
 			Name:                          "TestPkgPython",
 			SourceURL:                     "https://github.com/ddev/test-flask-sayhello/archive/refs/tags/v1.0.0.tar.gz",
@@ -277,6 +279,27 @@ var (
 			//UploadDir:                     "files",
 			DynamicURI:    testcommon.URIWithExpect{URI: "/", Expect: "20 messages"},
 			FilesImageURI: "",
+		},
+
+		// 15: Django 4
+		// Uses https://github.com/ddev/test-django4-bakerydemo fork of
+		// https://github.com/wagtail/bakerydemo - no database download required
+		{
+			Name:                          "TestPkgDjango4",
+			SourceURL:                     "https://github.com/ddev/test-django4-bakerydemo/archive/refs/tags/v1.0.1.tar.gz",
+			ArchiveInternalExtractionPath: "test-django4-bakerydemo-1.0.1/",
+			DBTarURL:                      "",
+			FullSiteTarballURL:            "",
+			PretestCmd:                    "touch .env && ddev python manage.py migrate >/dev/null && ddev python manage.py load_initial_data && ddev exec pkill -1 gunicorn",
+			WebEnvironment: []string{
+				"DJANGO_SETTINGS_MODULE=bakerydemo.settings.dev",
+			},
+			Type:    nodeps.AppTypeDjango4,
+			Docroot: "",
+			//Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/test.html", Expect: ""},
+			//UploadDir:                     "files",
+			DynamicURI:    testcommon.URIWithExpect{URI: "/", Expect: "Welcome to the Wagtail Bakery"},
+			FilesImageURI: "/media/images/Anadama_bread_1.2e16d0ba.fill-180x180-c100.jpg",
 		},
 	}
 
