@@ -16,7 +16,7 @@ It will remain enabled until you start or restart the project.
 * Disable Xdebug for better performance when not debugging with `ddev xdebug off`.
 * `ddev xdebug status` will show Xdebug’s current status.
 * The IDE’s debug server port must be set to Xdebug’s default 9003, which may already be the case in popular IDEs. If the unusual case that you have a port conflict, see [Using Xdebug on a Port Other than the Default 9003](#using-xdebug-on-a-port-other-than-the-default-9003) below.
-* In the case of using running your IDE inside WSL2 (using WSLg) or with a proxy setup like JetBrains Gateway, you can set that with `ddev config global --xdebug-ide-location=wsl2`. If you're running your IDE with a proxy inside the web container, you can set that with `ddev config global --xdebug-ide-location=container.
+* In the case of using running your IDE inside WSL2 (using WSLg) or with a proxy setup like JetBrains Gateway, you can set that with `ddev config global --xdebug-ide-location=wsl2`. If you're running your IDE with a proxy inside the web container, you can set that with `ddev config global --xdebug-ide-location=container`.
 
 For more background on Xdebug, see [Xdebug documentation](https://xdebug.org/docs/remote). The intention here is that one won’t have to understand Xdebug to do debugging.
 
