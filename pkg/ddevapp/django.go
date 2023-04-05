@@ -125,18 +125,17 @@ if os.environ.get('IS_DDEV_PROJECT') == 'true':
 			return err
 		}
 	}
-	reloadGunicorn(app)
 
 	return err
 }
 
 // reloadGunicorn hits gunicorn process with HUP, reloading
 func reloadGunicorn(app *DdevApp) {
-	_, _, err := app.Exec(&ExecOpts{
+	stdout, stderr, err := app.Exec(&ExecOpts{
 		Cmd: "pkill -HUP gunicorn",
 	})
 	if err != nil {
-		util.Warning("Failed to reload gunicorn configuration: %v", err)
+		util.Warning("Failed to reload gunicorn configuration: stdout='%s', stderr='%s': %v", stdout, stderr, err)
 	}
 }
 

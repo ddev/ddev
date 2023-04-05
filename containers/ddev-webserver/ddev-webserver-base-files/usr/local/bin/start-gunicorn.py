@@ -30,7 +30,7 @@ def convert_settings_path(settings_file_path, project_root):
     return module_path
 
 def launch_gunicorn(wsgi_application, bind_address):
-    command = f"gunicorn  -b {bind_address} -w 4 {wsgi_application}"
+    command = f"gunicorn  -b {bind_address} -w 4 --reload --log-level debug --log-file - {wsgi_application}"
     print(command)
     process = subprocess.Popen(command, shell=True)
     return process

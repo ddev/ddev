@@ -301,6 +301,21 @@ var (
 			DynamicURI:    testcommon.URIWithExpect{URI: "/", Expect: "Welcome to the Wagtail Bakery"},
 			FilesImageURI: "/media/images/Anadama_bread_1.2e16d0ba.fill-180x180-c100.jpg",
 		},
+
+		// 16: Platform django4 template without DJANGO_SETTINGS_MODULE
+		// Here it has to use the settings file it finds and update that.
+		// Uses https://github.com/ddev/test-platformsh-templates-django4 fork of
+		// https://github.com/platformsh-templates/django4 without doing anything to it
+		{
+			Name:                          "TestPkgPlatformDjango4",
+			SourceURL:                     "https://github.com/ddev/test-platformsh-templates-django4/archive/refs/tags/v1.0.0.tar.gz",
+			ArchiveInternalExtractionPath: "test-platformsh-templates-django4-1.0.0/",
+			DBTarURL:                      "",
+			FullSiteTarballURL:            "",
+			Type:                          nodeps.AppTypeDjango4,
+			Docroot:                       "",
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Hello, and welcome to the"},
+		},
 	}
 
 	FullTestSites = TestSites
@@ -2051,8 +2066,15 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		}
 
 		// Test static content.
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
-		// Test dynamic php + database content.
+		if site.Safe200URIWithExpectation.URI != "" {
+			_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+		}
+		// Test dynamic URL + database content.
+		// With nginx-gunicorn, the auto-detect and reload of new settings files
+		// may take a few seconds, so wait for it.
+		if app.WebserverType == nodeps.WebserverNginxGunicorn {
+			time.Sleep(time.Second * 10)
+		}
 		rawurl := app.GetPrimaryURL() + site.DynamicURI.URI
 		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 120)
 		assert.NoError(err, "GetLocalHTTPResponse returned err on project=%s rawurl %s, resp=%v: %v", site.Name, rawurl, resp, err)
