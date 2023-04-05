@@ -259,7 +259,7 @@ func TestPretestAndEnv(t *testing.T) {
 	_, _ = exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
 
 	site.WebEnvironment = []string{"SOMEVAR=somevar"}
-	site.PretestCmd = fmt.Sprintf("%s exec touch /var/tmp/%s", DdevBin, t.Name())
+	site.PretestCmd = fmt.Sprintf("%s exec 'touch /var/tmp/%s'", DdevBin, t.Name())
 	err = site.Prepare()
 	require.NoError(t, err, "Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
 
