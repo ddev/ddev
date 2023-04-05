@@ -56,7 +56,4 @@ if str(current_dir) not in sys.path:
 
 # Check if DJANGO_SETTINGS_MODULE is set
 f = get_settings_filename()
-print(f)
-
-
-
+print(f"{f}")
