@@ -1042,9 +1042,7 @@ func TestDdevXhprofEnabled(t *testing.T) {
 	// Does not work with php5.6 anyway (SEGV), for resource conservation
 	// skip older unsupported versions
 	phpKeys := []string{}
-	// 20221211: 8.1 and 8.2 are not currently working due to upstream
-	// problems
-	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3", "8.1", "8.2"}
+	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3"}
 	for k := range nodeps.ValidPHPVersions {
 		if !nodeps.ArrayContainsString(exclusions, k) {
 			phpKeys = append(phpKeys, k)
@@ -1066,6 +1064,9 @@ func TestDdevXhprofEnabled(t *testing.T) {
 
 	webserverKeys := make([]string, 0, len(nodeps.ValidWebserverTypes))
 	for k := range nodeps.ValidWebserverTypes {
+		if k == nodeps.WebserverNginxGunicorn {
+			continue
+		}
 		webserverKeys = append(webserverKeys, k)
 	}
 
