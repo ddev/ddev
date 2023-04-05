@@ -2303,6 +2303,15 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		if err != nil {
 			util.Warning("unable to terminate mutagen session %s: %v", MutagenSyncName(app.Name), err)
 		}
+
+		// Remove .ddev/settings if it exists
+		if fileutil.FileExists(app.GetConfigPath("settings")) {
+			err = os.RemoveAll(app.GetConfigPath("settings"))
+			if err != nil {
+				util.Warning("Unable to remove %s: %v", app.GetConfigPath("settings"), err)
+			}
+		}
+
 		if err = app.RemoveHostsEntriesIfNeeded(); err != nil {
 			return fmt.Errorf("failed to remove hosts entries: %v", err)
 		}
