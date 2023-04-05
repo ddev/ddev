@@ -48,7 +48,7 @@ ddev ssh -d /var/www/html`,
 			if exiterr, ok := err.(*exec.ExitError); ok {
 				os.Exit(exiterr.ExitCode())
 			}
-			os.Exit(1)
+			util.Failed("ddev ssh failed: %v", err)
 		}
 	},
 }
