@@ -20,10 +20,9 @@ function ddev_python_setup {
     pip install wheel
     pip install django gunicorn psycopg2-binary
     if [ -f /var/www/html/requirements.txt ]; then
-      pip install -r /var/www/html/requirements.txt
-    fi
-    if [ -f /var/www/html/pyproject.toml ]; then
-      pip install /var/www/html
+      pip install -r /var/www/html/requirements.txt || true
+    elif [ -f /var/www/html/pyproject.toml ]; then
+      pip install /var/www/html || true
     fi
   fi
   set +e
