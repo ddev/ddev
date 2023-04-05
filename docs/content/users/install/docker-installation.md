@@ -51,24 +51,6 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
 
     We do not recommend the `VirtioFS` option with Docker Desktop for Mac. While it’s performant, it can cause mysterious problems that are not present with [Mutagen](performance.md#mutagen)—which offers comparable performance when enabled.
 
-=== "Windows"
-
-    ## Windows
-
-    If you’re working inside WSL2, which we recommend, you can [install Docker Engine (docker-ce) inside of it](#docker-ce-inside-windows-wsl2). Otherwise, you can [install Docker Desktop](#docker-desktop-for-windows), which works with both traditional Windows and WSL2.
-
-    ### Docker CE Inside Windows WSL2
-
-    Many have moved away from using Docker Desktop in favor of the Docker-provided open-source `docker-ce` package inside WSL2.
-
-    The instructions for [DDEV Installation in WSL2](ddev-installation.md#windows-wsl2) include Docker CE setup and a script that does almost all the work. Please use those.
-
-    ### Docker Desktop for Windows
-
-    Docker Desktop for Windows can be downloaded via [Chocolatey](https://chocolatey.org/install) with `choco install docker-desktop` or it can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop). It has extensive automated testing with DDEV, and works with DDEV both on traditional Windows and in WSL2.
-
-    See [WSL2 DDEV Installation](ddev-installation.md#windows-wsl2) for help installing DDEV with Docker Desktop on WSL2.
-
 === "Linux"
 
     ## Linux
@@ -91,6 +73,24 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
         Don’t use `sudo` with the `docker` command. If you find yourself needing it, you haven’t finished the installation. You also shouldn’t use `sudo` with `ddev` unless it’s specifically for the [`ddev hostname`](../usage/commands.md#hostname) command.
 
     On systems without `systemd` or its equivalent—mostly if you’re installing inside WSL2—you’ll need to manually start Docker with `service docker start` or the equivalent in your distro. You can add this to your shell profile.
+
+=== "Windows"
+
+    ## Windows
+
+    If you’re working inside WSL2, which we recommend, you can [install Docker Engine (docker-ce) inside of it](#docker-ce-inside-windows-wsl2). Otherwise, you can [install Docker Desktop](#docker-desktop-for-windows), which works with both traditional Windows and WSL2.
+
+    ### Docker CE Inside Windows WSL2
+
+    Many have moved away from using Docker Desktop in favor of the Docker-provided open-source `docker-ce` package inside WSL2.
+
+    The instructions for [DDEV Installation in WSL2](ddev-installation.md#windows-wsl2) include Docker CE setup and a script that does almost all the work. Please use those.
+
+    ### Docker Desktop for Windows
+
+    Docker Desktop for Windows can be downloaded via [Chocolatey](https://chocolatey.org/install) with `choco install docker-desktop` or it can be downloaded from [docker.com](https://www.docker.com/products/docker-desktop). It has extensive automated testing with DDEV, and works with DDEV both on traditional Windows and in WSL2.
+
+    See [WSL2 DDEV Installation](ddev-installation.md#windows-wsl2) for help installing DDEV with Docker Desktop on WSL2.
 
 === "Gitpod"
 
