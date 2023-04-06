@@ -56,7 +56,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     ## Linux
 
     !!!warning "Avoid Docker Desktop for Linux"
-        The 2022 release of Docker Desktop for Linux doesn’t seem stable enough for regular use, and exhibits some problems Docker Desktop has on other platforms. We recommend staying with the traditional `docker-ce` installation described here.
+        Current releases of Docker Desktop for Linux are not usable with DDEV for a number of reasons, and also exhibit some of the problems Docker Desktop has on other platforms. Please use the normal `docker-ce` installation described here.
 
     Docker installation on Linux depends on what flavor you’re using. It’s best to use your native package repository (`apt`, `yum`, etc.):
 
