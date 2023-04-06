@@ -974,6 +974,19 @@ ddev push platform --skip-files -y
 ddev push acquia --skip-db -y
 ```
 
+## `python`
+
+Runs `python` inside the web container in the same relative directory you're in on the host.
+
+`ddev python` is only available on Python-based project types like Django and Python.
+
+Example:
+
+```shell
+# Run manage.py
+ddev python manage.py migrate
+```
+
 ## `querious`
 
 Open [Querious](https://www.araelium.com/querious) with the current project’s MariaDB or MySQL database (global shell host container command). This is only available if `Querious.app` is installed as `/Applications/Querious.app`, and only for projects with `mysql` or `mariadb` databases.

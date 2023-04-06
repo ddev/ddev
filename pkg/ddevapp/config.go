@@ -85,6 +85,12 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.NFSMountEnabledGlobal = globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal
 	app.MutagenEnabled = nodeps.MutagenEnabledDefault
 	app.MutagenEnabledGlobal = globalconfig.DdevGlobalConfig.MutagenEnabledGlobal
+
+	// Turn off mutagen on python projects until initial setup can be done
+	if app.WebserverType == nodeps.WebserverNginxGunicorn {
+		app.MutagenEnabled = false
+		app.MutagenEnabledGlobal = false
+	}
 	app.FailOnHookFail = nodeps.FailOnHookFailDefault
 	app.FailOnHookFailGlobal = globalconfig.DdevGlobalConfig.FailOnHookFailGlobal
 	app.RouterHTTPPort = nodeps.DdevDefaultRouterHTTPPort

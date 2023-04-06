@@ -82,7 +82,7 @@ A number of environment variables are provided to these command scripts. These a
 * `DDEV_ROUTER_HTTPS_PORT`: router port for HTTPS
 * `DDEV_SITENAME`: project name, like `d8composer`
 * `DDEV_TLD`: top-level project domain, like `ddev.site`
-* `DDEV_WEBSERVER_TYPE`: `nginx-fpm` or `apache-fpm`
+* `DDEV_WEBSERVER_TYPE`: `nginx-fpm`, `apache-fpm`, or `nginx-gunicorn`
 * `GOARCH`: architecture (`arm64`, `amd64`)
 * `GOOS`: operating system (`windows`, `darwin`, `linux`)
 
@@ -100,7 +100,7 @@ Useful variables for container scripts are:
 * `DDEV_ROUTER_HTTPS_PORT`: router port for HTTPS
 * `DDEV_SITENAME`: project name, like `d8composer`
 * `DDEV_TLD`: top-level project domain, like `ddev.site`
-* `DDEV_WEBSERVER_TYPE`: `nginx-fpm` or `apache-fpm`
+* `DDEV_WEBSERVER_TYPE`: `nginx-fpm`, `apache-fpm`, or `nginx-gunicorn`
 * `IS_DDEV_PROJECT`: if `true`, PHP is running under DDEV
 
 ## Annotations Supported

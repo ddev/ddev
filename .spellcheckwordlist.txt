@@ -266,6 +266,8 @@ disable
 disallowal
 distro
 distros
+django
+django4
 dns
 dnsmasq
 docker
@@ -308,6 +310,7 @@ filesystem
 filesystems
 findstr
 fish
+flask
 for
 format
 fpath
@@ -503,6 +506,7 @@ provider
 ps
 psql
 public
+python
 Querious
 quickstart
 quickstarts

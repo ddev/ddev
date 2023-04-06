@@ -1,17 +1,5 @@
 # Experimental Configurations
 
-## Rancher Desktop on macOS
-
-[Rancher Desktop](https://rancherdesktop.io/) is another quickly-maturing Docker Desktop alternative for macOS. You can install it for many target platforms from the [release page](https://github.com/rancher-sandbox/rancher-desktop/releases).
-
-Rancher Desktop integration currently has no automated testing for DDEV integration.
-
-* By default, Rancher Desktop will provide a version of the Docker client if you don’t have one on your machine.
-* Rancher changes over the “default” context in Docker, so you’ll want to turn off Docker Desktop if you’re using it.
-* Rancher Desktop does not provide bind mounts, so use `ddev config global --no-bind-mounts` which also turns on Mutagen.
-* Use a non-`ddev.site` name, `ddev config --additional-fqdns=rancher` for example, because the resolution of `*.ddev.site` seems to make it not work.
-* Rancher Desktop does not seem to currently work with `mkcert` and `https`, so turn those off with `mkcert -uninstall && rm -r "$(mkcert -CAROOT)"`. This does no harm and can be undone with just `mkcert -install` again.
-
 ## Traefik Router
 
 DDEV’s router plays an important role in its [container architecture](../usage/architecture.md#container-architecture), receiving most HTTP and HTTPS traffic for requests like `*.ddev.site` and delivering them to the relevant project’s web container.
@@ -25,6 +13,9 @@ ddev poweroff && ddev config global --use-traefik
 Most DDEV projects will work fine out of the box, with the benefit of vastly more configuration options and ways to work with the router. (This will likely lead to more features in the future, and we’d love your feedback if you’re trying this out now!)
 
 ### Traefik Configuration
+
+!!!note
+Traefik will become the default router in DDEV v1.22+
 
 You can fully customize the router’s [Traefik configuration](https://doc.traefik.io/traefik/).
 
@@ -52,3 +43,11 @@ Project configuration is automatically generated in the project’s `.ddev/traef
 
 Traefik provides a dynamic description of its configuration you can visit at `http://localhost:9999`.
 When things seem to be going wrong, run [`ddev poweroff`](../usage/commands.md#poweroff) and then start your project again by running [`ddev start`](../usage/commands.md#start). Examine the router’s logs to see what the Traefik daemon is doing (or failing at) by running `docker logs ddev-router` or `docker logs -f ddev-router`.
+
+## Django4 and Python Project Types
+
+DDEV v1.22+ introduce support for Python-based projects, including Django 4 and generic Python, including Flask.
+
+`ddev config --project-type=django4` will by default a project to use the `nginx-gunicorn` `webserver_type` and the `postgres` database type.
+
+Community feedback is essential for Django/Python support to improve, thank you for participating!
