@@ -281,6 +281,9 @@ Extra flags for [configuring ngrok](https://ngrok.com/docs/ngrok-agent/config) w
 
 Example: `--basic-auth username:pass1234`.
 
+!!!warning
+    Some ngrok flags, such as `--subdomain`, require a paid ngrok account.
+
 ## `no_bind_mounts`
 
 Whether to not use Docker bind mounts.

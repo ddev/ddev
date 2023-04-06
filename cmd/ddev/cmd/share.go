@@ -13,7 +13,7 @@ import (
 var DdevShareCommand = &cobra.Command{
 	Use:   "share [project]",
 	Short: "Share project on the internet via ngrok.",
-	Long:  `Use "ddev share" or add on extra ngrok commands, like "ddev share --basic-auth username:pass1234". Although a few ngrok commands are supported directly, any ngrok flag can be added in the ngrok_args section of .ddev/config.yaml. Requires a free or paid account on ngrok.com; use the "ngrok authtoken" command to set up ngrok.`,
+	Long:  `Requires a free or paid account on ngrok.com, use the "ngrok config add-authtoken <token>" command to set up ngrok. Although a few ngrok commands are supported directly, any ngrok flag can be added in the ngrok_args section of .ddev/config.yaml.`,
 	Example: `ddev share
 ddev share --basic-auth username:pass1234
 ddev share myproject`,
@@ -44,6 +44,13 @@ ddev share myproject`,
 			ngrokArgs = append(ngrokArgs, url)
 			if app.NgrokArgs != "" {
 				ngrokArgs = append(ngrokArgs, strings.Split(app.NgrokArgs, " ")...)
+			}
+			if cmd.Flags().Changed("basic-auth") {
+				auth, err := cmd.Flags().GetString("basic-auth")
+				if err != nil {
+					util.Failed("unable to get --basic-auth flag: %v", err)
+				}
+				ngrokArgs = append(ngrokArgs, "--basic-auth="+auth)
 			}
 			if cmd.Flags().Changed("subdomain") {
 				sub, err := cmd.Flags().GetString("subdomain")
@@ -91,5 +98,6 @@ ddev share myproject`,
 
 func init() {
 	RootCmd.AddCommand(DdevShareCommand)
-	DdevShareCommand.Flags().String("subdomain", "", `ngrok --subdomain argument, as in "ngrok --subdomain my-subdomain:, requires paid ngrok.com account"`)
+	DdevShareCommand.Flags().String("basic-auth", "", `works as in "ngrok http --basic-auth username:pass1234"`)
+	DdevShareCommand.Flags().String("subdomain", "", `requires a paid ngrok account, works as in "ngrok http --subdomain mysite"`)
 }

@@ -1079,6 +1079,7 @@ ddev service enable solr
 
 Flags:
 
+* `--basic-auth`: Username and password, separated by a colon.
 * `--subdomain`: Subdomain to use with paid ngrok account.
 
 Example:
