@@ -161,9 +161,6 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ### WSL2 + Docker CE Inside Install Script
 
     This prepares your default WSL2 Ubuntu distro and doesn’t require Docker Desktop, and you can run the script multiple times without breaking anything.
-
-    !!!warning "Not compatible with PowerShell 7!"
-        The provided PowerShell script can do most of the work for you, but you’ll need to use the built-in PowerShell v5 and not the newer v7. You can, however, [manually walk through the steps](#wsl2docker-desktop-manual-installation) instead.
         
     In all cases:
 
@@ -181,7 +178,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         * Verify that you have an Ubuntu distro set as default by running `wsl.exe -l -v`.  
           If you have WSL2 but not an Ubuntu distro, install one by running `wsl.exe --install Ubuntu`. If this doesn’t work, see [manual installation](https://docs.microsoft.com/en-us/windows/wsl/install-manual) and [troubleshooting](https://docs.microsoft.com/en-us/windows/wsl/troubleshooting#installation-issues).
 
-    2. In an administrative PowerShell (5) run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1) by executing:
+    2. In an administrative PowerShell run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_inside.ps1) by executing:
 
         ```powershell
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
@@ -194,9 +191,6 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ### WSL2 + Docker Desktop Install Script
 
     This prepares your default WSL2 Ubuntu distro for use with Docker Desktop, and you can run the script multiple times without breaking anything.
-
-    !!!warning "Not compatible with PowerShell 7!"
-        The provided PowerShell script can do most of the work for you, but you’ll need to use the built-in PowerShell v5 and not the newer v7. You can, however, [manually walk through the steps](#wsl2docker-desktop-manual-installation) instead.
 
     In all cases:
 
@@ -219,7 +213,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     7. Install Docker Desktop. If you already have Chocolatey, run `choco install -y docker-desktop`. Otherwise [download Docker Desktop from Docker](https://www.docker.com/products/docker-desktop/).
     8. Start Docker Desktop. You should now be able to run `docker ps` in PowerShell or Git Bash.
     9. In *Docker Desktop* → *Settings* → *Resources* → *WSL2 Integration*, verify that Docker Desktop is integrated with your distro.
-    10. In an administrative PowerShell (5) run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_desktop.ps1) by executing:
+    10. In an administrative PowerShell run [this PowerShell script](https://raw.githubusercontent.com/ddev/ddev/master/scripts/install_ddev_wsl2_docker_desktop.ps1) by executing:
 
         ```powershell
         Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
