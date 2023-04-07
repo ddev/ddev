@@ -718,7 +718,7 @@ ddev list
 # List all running projects
 ddev list --active-only
 
-# List all wordpress
+# List all WordPress projects
 ddev list --type wordpress
 ```
 
