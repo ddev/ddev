@@ -202,7 +202,7 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
             mkdir my-laravel-app
             cd my-laravel-app
             ddev config --project-type=laravel --docroot=public --create-docroot --php-version=8.1
-            ddev composer create --prefer-dist --no-install --no-scripts laravel/laravel
+            ddev composer create --prefer-dist --no-install --no-scripts laravel/laravel -y
             ddev composer install
             ddev exec "php artisan key:generate"
             ddev launch
