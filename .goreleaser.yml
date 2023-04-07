@@ -352,3 +352,8 @@ aurs:
 
 furies:
 - account: "{{ .Env.FURY_ACCOUNT }}"
+  skip: "{{gt .Patch 0}}"
+- account: "{{ .Env.FURY_DRUD_ACCOUNT }}"
+  skip: "{{gt .Patch 0}}"
+- account: "{{ .Env.FURY_EDGE_ACCOUNT }}"
+  skip: false
