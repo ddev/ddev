@@ -267,7 +267,6 @@ disallowal
 distro
 distros
 django
-django4
 dns
 dnsmasq
 docker
