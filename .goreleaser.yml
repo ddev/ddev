@@ -131,10 +131,10 @@ archives:
   format: tar.gz
   name_template: >-
     {{ .ProjectName }}_
-    {{- .Version }}_
     {{- if eq .Os "darwin" }}macos
-    {{ else }}{{ .Os }} {{ end }}_
-    {{- .Arch }}
+    {{ else }}{{ .Os }} {{ end }}-
+    {{- .Arch }}.
+    v{{- .Version }}
   format_overrides:
   - goos: windows
     format: zip
