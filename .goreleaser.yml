@@ -129,13 +129,12 @@ archives:
   - ddev_zsh_completion.sh
   - ddev_fish_completion.sh
   format: tar.gz
-  replacements:
-    name_template: >-
-      {{ .ProjectName }}_
-      {{- .Version }}_
-      {{- if eq .Os "darwin" }}macos
-      {{ else }}{{ .Os }} {{ end }}_
-      {{- .Arch }}
+  name_template: >-
+    {{ .ProjectName }}_
+    {{- .Version }}_
+    {{- if eq .Os "darwin" }}macos
+    {{ else }}{{ .Os }} {{ end }}_
+    {{- .Arch }}
   format_overrides:
   - goos: windows
     format: zip
