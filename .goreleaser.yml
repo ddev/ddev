@@ -351,7 +351,7 @@ aurs:
     email: randy@randyfay.com
 
 furies:
-- account: "{{ .Env.FURY_ACCOUNT }}"
+- account: "{{ .Env.FURY_DDEV_ACCOUNT }}"
   skip: "{{gt .Patch 0}}"
 - account: "{{ .Env.FURY_DRUD_ACCOUNT }}"
   skip: "{{gt .Patch 0}}"
