@@ -5,7 +5,7 @@
 [![CircleCI](https://circleci.com/gh/ddev/ddev.svg?style=shield)](https://circleci.com/gh/ddev/ddev) ![project is maintained](https://img.shields.io/maintenance/yes/2024.svg)
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/ddev/ddev) <a href="https://github.com/codespaces/new?hide_repo_select=true&amp;ref=20221220_codespaces&amp;repo=80669528&amp;machine=basicLinux32gb&amp;location=WestUs2"><img src="https://github.com/codespaces/badge.svg" alt="Open in GitHub Codespaces" style="max-width: 100%; height: 20px;"></a>
 
-DDEV is an open source tool for running local web development environments including PHP, Python, NodeJS, and HTML/JS. You can set it up in just minutes. Its powerful, flexible per-project environment configurations can be extended, version controlled, and shared. DDEV allows development teams to adopt a consistent Docker workflow without the complexities of bespoke configuration.
+DDEV is an open source tool for running local web development environments for PHP, Python and Node.js, ready in minutes. Its powerful, flexible per-project environment configurations can be extended, version controlled, and shared. DDEV allows development teams to adopt a consistent Docker workflow without the complexities of bespoke configuration.
 
 ## Get Started
 

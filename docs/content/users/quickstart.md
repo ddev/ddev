@@ -69,20 +69,20 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
     !!!tip "Installing Craft"
         Read more about installing Craft in the [official documentation](https://craftcms.com/docs).
 
-=== "Django 4"
+=== "Django"
 
     ## Django 4 (Experimental)
 
     ```bash
-        git clone https://github.com/example/my-django-site
-        cd my-django-site
-        ddev config # Follow the prompts
-        # If your settings file is not `settings.py` you must add a DJANGO_SETTINGS_MODULE
-        ddev config --web-environment-add=DJANGO_SETTINGS_MODULE=<myapp.settings.local>
-        ddev start
-        # If your app requires setup, do it here:
-        # ddev python manage.py migrate
-        ddev launch
+    git clone https://github.com/example/my-django-site
+    cd my-django-site
+    ddev config # Follow the prompts
+    # If your settings file is not `settings.py` you must add a DJANGO_SETTINGS_MODULE
+    ddev config --web-environment-add=DJANGO_SETTINGS_MODULE=<myapp.settings.local>
+    ddev start
+    # If your app requires setup, do it here:
+    # ddev python manage.py migrate
+    ddev launch
     ```
 
     * DDEV will install all everything in your `requirements.txt` or `pyproject.toml` into a `venv`. This takes a little while on first startup.
@@ -334,20 +334,20 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
     ## Python/Flask (Experimental)
 
     ```bash
-        git clone https://github.com/example/my-python-site
-        cd my-python-site
-        ddev config # Follow the prompts
-        # Tell gunicorn where your app is (WSGI_APP)
-        ddev config --web-environment-add=WSGI_APP=<my-app:app>
-        ddev start
-        # If you need to do setup before the site can go live, do it:
-        # ddev exec flask forge
-        ddev launch
+    git clone https://github.com/example/my-python-site
+    cd my-python-site
+    ddev config # Follow the prompts
+    # Tell gunicorn where your app is (WSGI_APP)
+    ddev config --web-environment-add=WSGI_APP=<my-app:app>
+    ddev start
+    # If you need to do setup before the site can go live, do it:
+    # ddev exec flask forge
+    ddev launch
     ```
 
     * DDEV will install all everything in your `requirements.txt` or `pyproject.toml` into a `venv`. This takes a little while on first startup.
-    * If your app requires settings, you can add them as environment variables, or otherwise configure your app to use the database, etc. (Database settings are host: `db`, database: `db`, user: `db`, password `db` no matter whether you're using PostgreSQL, MariaDB, or MySQL.
-    * You can watch the `pip install` in real time on that first slow startup with `ddev logs -f` in another window.
+    * If your app requires settings, you can add them as environment variables, or otherwise configure your app to use the database, etc. (Database settings are host: `db`, database: `db`, user: `db`, password `db` no matter whether you're using PostgreSQL, MariaDB, or MySQL.)
+    * You can watch `pip install` output in real time on that first slow startup with `ddev logs -f` in another window.
     * If your `requirements.txt` includes `psycopg2` it requires build tools, so either set `ddev config --web-extra-packages=build-essential` or change your requirement to `psycopg2-binary`. 
 
 === "Shopware"
@@ -510,11 +510,8 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
 
 ## Configuration Files
 
-The [`ddev config`](../users/usage/commands.md#config) and `ddev start` commands attempt to create a CMS-specific settings file pre-populated with DDEV credentials. If you don't want DDEV to do this, use `settings_management_disabled: true` in the `.ddev/config.yaml`. `
+The [`ddev config`](../users/usage/commands.md#config) and `ddev start` commands attempt to create a CMS-specific settings file pre-populated with DDEV credentials. If you don't want DDEV to do this, set the [`disable_settings_management`](../users/configuration/config.md#disable_settings_management) config option to `true`.
 
-!!!note "Completely Disabling Settings Management"
-
-    If you do *not* want DDEV to create or manage settings files, set `disable_settings_management: true` in `.ddev/config.yaml` or run `ddev config --disable-settings-management`. Once you’ve done that, it’s solely up to you to manually edit those settings.
 
 For **Craft CMS** DDEV settings are added to the `.env` file.
 
