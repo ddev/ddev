@@ -355,7 +355,7 @@ furies:
   secret_name: "{{ .Env.FURY_DDEV_TOKEN }}"
   skip: "{{gt .Patch 0}}"
 - account: "{{ .Env.FURY_DRUD_ACCOUNT }}"
-  secret_name: "{{ .Env.FURY_DRUD_TOKEN}}"
+  secret_name: "{{ .Env.FURY_DRUD_TOKEN }}"
   skip: "{{gt .Patch 0}}"
 - account: "{{ .Env.FURY_EDGE_ACCOUNT }}"
   secret_name: "{{ .Env.FURY_EDGE_TOKEN }}"
