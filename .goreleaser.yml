@@ -121,6 +121,7 @@ builds:
 ###### Archives ######
 archives:
 - id: ddev
+  rlcp: true
   builds:
   - ddev
   - mkcert
@@ -128,9 +129,13 @@ archives:
   - ddev_zsh_completion.sh
   - ddev_fish_completion.sh
   format: tar.gz
-  name_template: "{{ .ProjectName }}_{{ .Os }}-{{ .Arch }}.v{{ .Version }}"
   replacements:
-    darwin: macos
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- if eq .Os "darwin" }}macos
+      {{ else }}{{ .Os }} {{ end }}_
+      {{- .Arch }}
   format_overrides:
   - goos: windows
     format: zip
@@ -140,12 +145,14 @@ archives:
   allow_different_binary_count: true
 
 - id: completions-tarball
+  rlcp: true
   builds:
   - completions-tarball
   format: binary
   name_template: ddev_shell_completion_scripts.v{{.Version}}.tar.gz
 
 - id: ddev-windows-installer
+  rlcp: true
   builds:
   - ddev-windows-installer
   format: binary
