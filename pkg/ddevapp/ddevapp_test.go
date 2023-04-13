@@ -179,18 +179,18 @@ var (
 		// 9: laravel
 		{
 			Name:                          "TestPkgLaravel",
-			SourceURL:                     "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/ddev-lumen-testapp.tar.gz",
-			ArchiveInternalExtractionPath: "ddev-lumen-testapp/",
+			SourceURL:                     "https://github.com/ddev/test-laravel/archive/refs/tags/10.0.5.2.tar.gz",
+			ArchiveInternalExtractionPath: "test-laravel-10.0.5.2/",
 			FilesTarballURL:               "",
 			FilesZipballURL:               "",
-			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/ddev-lumen-testapp_sql.tar.gz",
-			DBZipURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/ddev-lumen-testapp_sql.zip",
+			DBTarURL:                      "https://github.com/ddev/test-laravel/releases/download/10.0.5.2/db.sql.tar.gz",
+			DBZipURL:                      "",
 			FullSiteTarballURL:            "",
 			Type:                          nodeps.AppTypeLaravel,
 			Docroot:                       "public",
-			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/", Expect: "Laravel Components"},
-			DynamicURI:                    testcommon.URIWithExpect{URI: "/api/status-code/200", Expect: "indicates that the request has succeeded."},
-			FilesImageURI:                 "/images/200.jpg",
+			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/static/", Expect: "This is a static HTML page"},
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Second message"},
+			FilesImageURI:                 "/static/sample-1.jpg",
 		},
 		// 10: shopware6
 		{

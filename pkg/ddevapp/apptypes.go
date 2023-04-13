@@ -93,7 +93,7 @@ func init() {
 		},
 
 		nodeps.AppTypeLaravel: {
-			appTypeDetect: isLaravelApp, postStartAction: laravelPostStartAction, configOverrideAction: nil,
+			appTypeDetect: isLaravelApp, postStartAction: laravelPostStartAction, configOverrideAction: laravelConfigOverrideAction,
 		},
 
 		nodeps.AppTypeMagento: {
