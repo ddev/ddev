@@ -23,7 +23,6 @@ type BackdropSettings struct {
 	DatabaseHost     string
 	DatabaseDriver   string
 	DatabasePort     string
-	DatabasePrefix   string
 	HashSalt         string
 	Signature        string
 	SiteSettings     string
@@ -44,7 +43,6 @@ func NewBackdropSettings(app *DdevApp) *BackdropSettings {
 		DatabaseHost:     "ddev-" + app.Name + "-db",
 		DatabaseDriver:   "mysql",
 		DatabasePort:     GetExposedPort(app, "db"),
-		DatabasePrefix:   "",
 		HashSalt:         util.RandString(64),
 		Signature:        nodeps.DdevFileSignature,
 		SiteSettings:     "settings.php",
