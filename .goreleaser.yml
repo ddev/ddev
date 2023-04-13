@@ -131,8 +131,7 @@ archives:
   format: tar.gz
   name_template: >-
     {{ .ProjectName }}_
-    {{- if eq .Os "darwin" }}macos
-    {{ else }}{{ .Os }} {{ end }}-
+    {{- if eq .Os "darwin" }}macos{{ else }}{{ .Os }}{{ end }}-
     {{- .Arch }}.
     v{{- .Version }}
   format_overrides:
