@@ -108,7 +108,7 @@ The basic thing to understand about Xdebug is that it’s a network protocol. Yo
 
 Here are basic steps to take to sort out any difficulty:
 
-* Delete existing PhpStorm "servers" in settings, or recreate the vscode launch.json exactly as shown in the instructions here.
+* Delete existing PhpStorm "servers" in settings, or recreate VS Code’s `launch.json` file exactly as shown in the instructions here.
 * Remember the port in play is port 9003.
 * Reboot your computer.
 * If you're running WSL2 and have PhpStorm running inside WSL2 (the Linux version of PhpStorm) then `ddev config global --xdebug-ide-location=wsl2`.
@@ -116,7 +116,7 @@ Here are basic steps to take to sort out any difficulty:
 * Use `ddev xdebug on` to enable Xdebug when you want it, and `ddev xdebug off` when you’re done with it.
 * Set a breakpoint at the first executable line of your `index.php`.
 * Tell your IDE to start listening. (PhpStorm: click the telephone button, VS Code: run the debugger.)
-* Use `curl` or a browser to create a web request. For example, `curl https://d9.ddev.site` or just `ddev exec curl localhost`.
+* Use `curl` or a browser to create a web request. For example, `curl https://d9.ddev.site` or run `ddev exec curl localhost`.
 * If the IDE doesn’t respond, take a look at `ddev logs`. A message like this means Xdebug inside the container can’t make a connection to port 9003:
 
     > PHP message: Xdebug: [Step Debug] Could not connect to debugging client. Tried: host.docker.internal:9003 (through xdebug.client_host/xdebug.client_port)
@@ -130,4 +130,4 @@ Here are basic steps to take to sort out any difficulty:
 * Set a breakpoint in the first relevant line of your `index.php` and then visit the site in a browser. It should stop at that first line.
 * If you’re using PhpStorm inside WSL2 (or perhaps other Linux configurations), go to *Help* → *Edit Custom VM Options* and add an additional line: `-Djava.net.preferIPv4Stack=true` This makes PhpStorm listen for Xdebug using IPv4; the Linux version of PhpStorm seems to default to using only IPv6.
 * If you’re on WSL2 using Docker Desktop, make sure that the `docker` command is the one provided by Docker Desktop. `ls -l $(which docker)` should show a link to `/mnt/wsl/docker-desktop...`. If you’re on WSL2 using Docker installed inside WSL2, make sure that `ls -l $(which docker)` is *not* a link to `/mnt/wsl`.
-* You can `export DDEV_DEBUG=true` and `ddev start` to get information about how `host.docker.internal` is figured out; this can help in some situations, especially with WSL2. (`host.docker.internal` inside the web container is where Xdebug thinks it should connect to your IDE. You can see what it is set to with `ddev exec ping host.docker.internal`.)
+* You can run `export DDEV_DEBUG=true` and `ddev start` to get information about how `host.docker.internal` is figured out, which can help in some situations especially with WSL2. (`host.docker.internal` inside the web container is where Xdebug thinks it should connect to your IDE. You can see what it is set to by running `ddev exec ping host.docker.internal`.)
