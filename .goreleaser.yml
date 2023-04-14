@@ -130,10 +130,7 @@ archives:
   - ddev_fish_completion.sh
   format: tar.gz
   name_template: >-
-    {{ .ProjectName }}_
-    {{- if eq .Os "darwin" }}macos{{ else }}{{ .Os }}{{ end }}-
-    {{- .Arch }}.
-    v{{- .Version }}
+    {{ .ProjectName }}_{{- if eq .Os "darwin" }}macos{{ else }}{{ .Os }}{{ end }}-{{- .Arch }}.v{{- .Version }}
   format_overrides:
   - goos: windows
     format: zip
