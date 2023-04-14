@@ -332,6 +332,36 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
     Log into the admin site (`/admin`) using the web browser. The default credentials are username `admin` and password `shopware`. You can use the web UI to install sample data or accomplish many other tasks.
 
     For more advanced tasks like adding elasticsearch, building and watching storefront and administration, see [susi.dev](https://susi.dev/ddev-shopware-6).
+    
+=== "Silverstripe"
+
+    ## Silverstripe
+
+    === "Silverstripe"
+
+        Use a new or existing Composer project, or clone a Git repository.
+
+        === "Composer"
+            ```bash
+            mkdir my-silverstripe-app
+            cd my-silverstripe-app
+            ddev config --project-type=silverstripe --docroot=public --create-docroot --php-version=8.1 --webserver-type=apache-fpm
+            ddev composer create --prefer-dist --no-install --no-scripts silverstripe/installer -y
+            ddev composer install
+            ddev exec vendor/bin/sake dev/build flush=all
+            ```
+        === "Git Clone"
+            ```bash
+            git clone <your-silverstripe-repo>
+            cd <your-silverstripe-project>
+            ddev config --project-type=silverstripe --docroot=public --create-docroot --php-version=8.1 --webserver-type=apache-fpm
+            ddev start
+            ddev composer install
+            ddev exec vendor/bin/sake dev/build flush=all
+            ```
+            
+    Note that ddev does not create a `.env` file for you, so the dev/build command may fail, requiring a database set up.
+
 
 === "TYPO3"
 
