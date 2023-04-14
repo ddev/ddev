@@ -51,10 +51,10 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ```bash
     # Add DDEV’s GPG key to your keyring
-    curl -fsSL https://apt.fury.io/drud/gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/ddev.gpg > /dev/null
-    
+    curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/ddev.gpg > /dev/null
+
     # Add DDEV releases to your package repository
-    echo "deb [signed-by=/etc/apt/trusted.gpg.d/ddev.gpg] https://apt.fury.io/drud/ * *" | sudo tee /etc/apt/sources.list.d/ddev.list
+    echo "deb [signed-by=/etc/apt/trusted.gpg.d/ddev.gpg] https://pkg.ddev.com/apt/ * *" | sudo tee /etc/apt/sources.list.d/ddev.list >/dev/null
 
     # Update package information and install DDEV
     sudo apt update && sudo apt install -y ddev
@@ -74,16 +74,16 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ```bash
     # Add DDEV releases to your package repository
     echo '[ddev]
-    name=DDEV Repo
-    baseurl=https://yum.fury.io/drud/
-    enabled=1
-    gpgcheck=0' | sudo tee -a /etc/yum.repos.d/ddev.repo
+    name=ddev
+    baseurl=https://pkg.ddev.com/yum/
+    gpgcheck=0
+    enabled=1' | perl -p -e 's/^ +//' | sudo tee /etc/yum.repos.d/ddev.repo >/dev/null
 
     # Install DDEV
     sudo dnf install --refresh ddev
     ```
 
-    Signed repository support will be added in the near future.
+    Signed yum repository support will be added in the future.
 
     ### Arch Linux
 
@@ -245,8 +245,8 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     12. Install DDEV:
 
         ```bash
-        curl https://apt.fury.io/drud/gpg.key | sudo apt-key add -
-        echo "deb https://apt.fury.io/drud/ * *" | sudo tee -a /etc/apt/sources.list.d/ddev.list
+        curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/ddev.gpg > /dev/null
+        echo "deb [signed-by=/etc/apt/trusted.gpg.d/ddev.gpg] https://pkg.ddev.com/apt/ * *" | sudo tee /etc/apt/sources.list.d/ddev.list >/dev/null
         sudo apt update && sudo apt install -y ddev
         ```
 
@@ -293,10 +293,11 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     1. [Open any repository](https://www.gitpod.io/docs/getting-started) using Gitpod and run the following:
         ```bash
         # Add DDEV’s GPG key to your keyring
-        curl -fsSL https://apt.fury.io/drud/gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/ddev.gpg > /dev/null
+        curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/ddev.gpg > /dev/null
 
         # Add DDEV releases to your package repository
-        echo "deb [signed-by=/etc/apt/trusted.gpg.d/ddev.gpg] https://apt.fury.io/drud/ * *" | sudo tee /etc/apt/sources.list.d/ddev.list
+        echo "deb [signed-by=/etc/apt/trusted.gpg.d/ddev.gpg] https://pkg.ddev.com/apt/ * *" | sudo tee /etc/apt/sources.list.d/ddev.list >/dev/null
+
 
         # Update package information and install DDEV
         sudo apt update && sudo apt install -y ddev
