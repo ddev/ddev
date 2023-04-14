@@ -159,7 +159,7 @@ ddev config global --web-environment-add="MY_ENV_VAR=someval
 You can use the `--web-environment` flag to overwrite existing values rather than adding them.
 
 !!!warning "Don’t check in sensitive values!"
-    Sensitive variables like API keys should not be checked in with your project. Typically you might use an `.env` file and _not_ check that in, but offer `.env.example` with expected keys that don’t have values. Some use global configuration for sensitive values, as that’s not normally checked in either.
+    Sensitive variables like API keys should not be checked in with your project. Typically you might use an `.env` file and _not_ check that in, but offer `.env.default` with expected keys that don’t have values. Some use global configuration for sensitive values, as that’s not normally checked in either.
 
 ### Altering the In-Container `$PATH`
 
