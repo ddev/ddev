@@ -74,16 +74,16 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ```bash
     # Add DDEV releases to your package repository
     echo '[ddev]
-    name=DDEV Repo
-    baseurl=https://yum.fury.io/drud/
-    enabled=1
-    gpgcheck=0' | sudo tee -a /etc/yum.repos.d/ddev.repo
+    name=ddev
+    baseurl=https://pkg.ddev.com/yum/
+    gpgcheck=0
+    enabled=1' | perl -p -e 's/^ +//' | sudo tee /etc/yum.repos.d/ddev.repo >/dev/null
 
     # Install DDEV
     sudo dnf install --refresh ddev
     ```
 
-    Signed repository support will be added in the near future.
+    Signed yum repository support will be added in the future.
 
     ### Arch Linux
 
