@@ -58,6 +58,10 @@ type TestSite struct {
 	Dir string
 	// HTTPProbeURI is the URI that can be probed to look for a working web container
 	HTTPProbeURI string
+	// WebEnvironment is strings that will be used in web_environment
+	WebEnvironment []string
+	// PretestCmd will be executed on host before test
+	PretestCmd string
 	// Docroot is the subdirectory within the site that is the root/index.php
 	Docroot string
 	// Type is the type of application. This can be specified when a config file is not present
@@ -124,6 +128,12 @@ func (site *TestSite) Prepare() error {
 		return errors.Errorf("Detected apptype (%s) does not match provided apptype (%s)", app.Type, site.Type)
 	}
 
+	app.WebEnvironment = site.WebEnvironment
+	app.Hooks = map[string][]ddevapp.YAMLTask{
+		"post-start": {
+			{"exec-host": site.PretestCmd},
+		},
+	}
 	err = app.ConfigFileOverrideAction()
 	util.CheckErr(err)
 
@@ -298,6 +308,7 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 	_ = os.MkdirAll(extractPath, 0777)
 	err := util.DownloadFile(archiveFullPath, sourceURL, false)
 	if err != nil {
+		_ = os.RemoveAll(archiveFullPath)
 		return extractPath, archiveFullPath, fmt.Errorf("Failed to download url=%s into %s, err=%v", sourceURL, archiveFullPath, err)
 	}
 

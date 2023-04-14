@@ -70,7 +70,11 @@ func testMain(m *testing.M) int {
 				"com.docker.compose.service": "web",
 				"com.ddev.site-name":         testContainerName,
 			},
-			Env:  []string{"HOTDOG=superior-to-corndog", "POTATO=future-fry"},
+			Env: []string{
+				"HOTDOG=superior-to-corndog",
+				"POTATO=future-fry",
+				"DDEV_WEBSERVER_TYPE=nginx-fpm",
+			},
 			User: "33:33", // The "www-data" pre-installed in container
 		},
 		HostConfig: &docker.HostConfig{
@@ -138,11 +142,11 @@ func TestGetContainerHealth(t *testing.T) {
 	healthDetail, err := ContainerWait(30, labels)
 	assert.NoError(err)
 
-	assert.Equal("phpstatus: OK /var/www/html: OK mailhog: OK ", healthDetail)
+	assert.Equal("/var/www/html:OK mailhog:OK phpstatus:OK ", healthDetail)
 
 	status, healthDetail = GetContainerHealth(container)
 	assert.Equal("healthy", status)
-	assert.Equal("phpstatus: OK /var/www/html: OK mailhog: OK ", healthDetail)
+	assert.Equal("/var/www/html:OK mailhog:OK phpstatus:OK ", healthDetail)
 }
 
 // TestContainerWait tests the error cases for the container check wait loop.
@@ -160,11 +164,11 @@ func TestContainerWait(t *testing.T) {
 		assert.Contains(err.Error(), "health check timed out")
 	}
 
-	// Try 15-second wait for "healthy", should show OK
+	// Try 30-second wait for "healthy", should show OK
 	healthDetail, err := ContainerWait(30, labels)
 	assert.NoError(err)
 
-	assert.Contains(healthDetail, "phpstatus: OK")
+	assert.Contains(healthDetail, "phpstatus:OK")
 
 	// Try a nonexistent container, should get error
 	labels = map[string]string{"com.ddev.site-name": "nothing-there"}
@@ -204,7 +208,7 @@ func TestContainerWait(t *testing.T) {
 	// Use ddev-webserver for this; it won't have good health on normal run
 	labels = map[string]string{"test": "hashealthcheckbutbad"}
 	_ = RemoveContainersByLabels(labels)
-	cID, _, err = RunSimpleContainer(ddevWebserver, t.Name()+util.RandString(5), []string{"sleep", "5"}, nil, nil, nil, "0", false, true, labels)
+	cID, _, err = RunSimpleContainer(ddevWebserver, t.Name()+util.RandString(5), []string{"sleep", "5"}, nil, []string{"DDEV_WEBSERVER_TYPE=nginx-fpm"}, nil, "0", false, true, labels)
 	t.Cleanup(func() {
 		_ = RemoveContainer(cID, 0)
 	})
@@ -218,7 +222,7 @@ func TestContainerWait(t *testing.T) {
 	// then ContainerWait should detect failure early, but should succeed later
 	labels = map[string]string{"test": "hashealthcheckbutbad"}
 	_ = RemoveContainersByLabels(labels)
-	cID, _, err = RunSimpleContainer(ddevWebserver, t.Name()+util.RandString(5), []string{"bash", "-c", "sleep 5 && /start.sh"}, nil, nil, nil, "0", false, true, labels)
+	cID, _, err = RunSimpleContainer(ddevWebserver, t.Name()+util.RandString(5), []string{"bash", "-c", "sleep 5 && /start.sh"}, nil, []string{"DDEV_WEBSERVER_TYPE=nginx-fpm"}, nil, "0", false, true, labels)
 	t.Cleanup(func() {
 		_ = RemoveContainer(cID, 0)
 	})

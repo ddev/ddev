@@ -139,9 +139,6 @@ func TestValidTestSite(t *testing.T) {
 
 // TestGetLocalHTTPResponse() brings up a project and hits a URL to get the response
 func TestGetLocalHTTPResponse(t *testing.T) {
-	//if runtime.GOOS == "windows" || nodeps.IsMacM1() || dockerutil.IsColima() {
-	//	t.Skip("Skipping on Windows/Mac M1/Colima as we always seem to have port conflicts")
-	//}
 	// We have to get globalconfig read so CA is known and installed.
 	err := globalconfig.ReadGlobalConfig()
 	require.NoError(t, err)
@@ -248,4 +245,49 @@ func TestGetCachedArchive(t *testing.T) {
 
 	err = os.RemoveAll(filepath.Dir(exPath))
 	assert.NoError(err)
+}
+
+// TestPretestAndEnv tests that the testsite PretestCmd works along with WebEvironment
+func TestPretestAndEnv(t *testing.T) {
+	assert := asrt.New(t)
+
+	origDir, err := os.Getwd()
+	require.NoError(t, err)
+	site := TestSites[0]
+	site.Name = t.Name()
+
+	_, _ = exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
+
+	site.WebEnvironment = []string{"SOMEVAR=somevar"}
+	site.PretestCmd = fmt.Sprintf("%s exec 'touch /var/tmp/%s'", DdevBin, t.Name())
+	err = site.Prepare()
+	require.NoError(t, err, "Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
+
+	err = os.Chdir(site.Dir)
+	require.NoError(t, err)
+
+	app := &ddevapp.DdevApp{}
+	err = app.Init(site.Dir)
+	assert.NoError(err)
+
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		_ = globalconfig.RemoveProjectInfo(site.Name)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+
+	err = app.Start()
+	require.NoError(t, err)
+	somevar, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: "printf ${SOMEVAR}",
+	})
+	require.NoError(t, err)
+	require.Equal(t, "somevar", somevar, "did not find env var SOMEVAR=somevar; output=%s", somevar)
+
+	out, _, err := app.Exec(&ddevapp.ExecOpts{
+		Cmd: fmt.Sprintf("ls -l /var/tmp/%s", t.Name()),
+	})
+	require.NoError(t, err, "Error testing for existence of /var/tmp/%s; output=%s", t.Name(), out)
 }

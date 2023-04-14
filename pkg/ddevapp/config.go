@@ -85,6 +85,12 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.NFSMountEnabledGlobal = globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal
 	app.MutagenEnabled = nodeps.MutagenEnabledDefault
 	app.MutagenEnabledGlobal = globalconfig.DdevGlobalConfig.MutagenEnabledGlobal
+
+	// Turn off mutagen on python projects until initial setup can be done
+	if app.WebserverType == nodeps.WebserverNginxGunicorn {
+		app.MutagenEnabled = false
+		app.MutagenEnabledGlobal = false
+	}
 	app.FailOnHookFail = nodeps.FailOnHookFailDefault
 	app.FailOnHookFailGlobal = globalconfig.DdevGlobalConfig.FailOnHookFailGlobal
 	app.RouterHTTPPort = nodeps.DdevDefaultRouterHTTPPort
@@ -149,6 +155,12 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 			return app, err
 		}
 	}
+
+	// If non-php type, use non-php webserver type
+	if app.WebserverType == nodeps.WebserverDefault && app.Type == nodeps.AppTypeDjango4 {
+		app.WebserverType = nodeps.WebserverNginxGunicorn
+	}
+
 	return app, nil
 }
 
@@ -1142,8 +1154,8 @@ func (app *DdevApp) promptForName() error {
 	return nil
 }
 
-// AvailableDocrootLocations returns an of default docroot locations to look for.
-func AvailableDocrootLocations() []string {
+// AvailablePHPDocrootLocations returns an of default docroot locations to look for.
+func AvailablePHPDocrootLocations() []string {
 	return []string{
 		"_www",
 		"docroot",
@@ -1162,7 +1174,7 @@ func DiscoverDefaultDocroot(app *DdevApp) string {
 	// Provide use the app.Docroot as the default docroot option.
 	var defaultDocroot = app.Docroot
 	if defaultDocroot == "" {
-		for _, docroot := range AvailableDocrootLocations() {
+		for _, docroot := range AvailablePHPDocrootLocations() {
 			if _, err := os.Stat(filepath.Join(app.AppRoot, docroot)); err != nil {
 				continue
 			}
@@ -1173,6 +1185,15 @@ func DiscoverDefaultDocroot(app *DdevApp) string {
 			}
 		}
 	}
+	dir, err := fileutil.FindFilenameInDirectory(app.AppRoot, []string{"manage.py"})
+	if err == nil && dir != "" {
+		defaultDocroot, err = filepath.Rel(app.AppRoot, dir)
+		if err != nil {
+			util.Warning("failed to filepath.Rel(%s, %s): %v", app.AppRoot, dir, err)
+			defaultDocroot = ""
+		}
+	}
+
 	return defaultDocroot
 }
 
@@ -1277,7 +1298,7 @@ func PrepDdevDirectory(app *DdevApp) error {
 		return err
 	}
 
-	err = CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".importdb*", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen/mutagen.yml", "mutagen/.start-synced", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/platform.yaml", "sequelpro.spf", fmt.Sprintf("traefik/config/%s.yaml", app.Name), fmt.Sprintf("traefik/certs/%s.crt", app.Name), fmt.Sprintf("traefik/certs/%s.key", app.Name), "xhprof/xhprof_prepend.php", "**/README.*")
+	err = CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".importdb*", ".sshimageBuild", ".venv", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen/mutagen.yml", "mutagen/.start-synced", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/platform.yaml", "sequelpro.spf", "settings/settings.ddev.py", fmt.Sprintf("traefik/config/%s.yaml", app.Name), fmt.Sprintf("traefik/certs/%s.crt", app.Name), fmt.Sprintf("traefik/certs/%s.key", app.Name), "xhprof/xhprof_prepend.php", "**/README.*")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}

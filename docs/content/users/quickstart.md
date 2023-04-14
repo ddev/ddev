@@ -69,6 +69,27 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
     !!!tip "Installing Craft"
         Read more about installing Craft in the [official documentation](https://craftcms.com/docs).
 
+=== "Django"
+
+    ## Django 4 (Experimental)
+
+    ```bash
+    git clone https://github.com/example/my-django-site
+    cd my-django-site
+    ddev config # Follow the prompts
+    # If your settings file is not `settings.py` you must add a DJANGO_SETTINGS_MODULE
+    ddev config --web-environment-add=DJANGO_SETTINGS_MODULE=<myapp.settings.local>
+    ddev start
+    # If your app requires setup, do it here:
+    # ddev python manage.py migrate
+    ddev launch
+    ```
+
+    * DDEV will install all everything in your `requirements.txt` or `pyproject.toml` into a `venv`. This takes a little while on first startup.
+    * DDEV appends a stanza to your settings file which includes the DDEV settings only if running in DDEV context.
+    * You can watch the `pip install` in real time on that first slow startup with `ddev logs -f` in another window.
+    * If your `requirements.txt` includes `psycopg2` it requires build tools, so either set `ddev config --web-extra-packages=build-essential` or change your requirement to `psycopg2-binary`.
+
 === "Drupal"
 
     ## Drupal
@@ -76,8 +97,6 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
     === "Drupal 10"
 
         ### Drupal 10 via Composer
-
-        [Drupal 10](https://www.drupal.org/about/10) is fully supported by DDEV.
 
         ```bash
         mkdir my-drupal10-site
@@ -310,6 +329,27 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
     !!!tip
         Moodle relies on a periodic cron job—don’t forget to set that up! See [ddev/ddev-cron](https://github.com/ddev/ddev-cron).
 
+=== "Python"
+
+    ## Python/Flask (Experimental)
+
+    ```bash
+    git clone https://github.com/example/my-python-site
+    cd my-python-site
+    ddev config # Follow the prompts
+    # Tell gunicorn where your app is (WSGI_APP)
+    ddev config --web-environment-add=WSGI_APP=<my-app:app>
+    ddev start
+    # If you need to do setup before the site can go live, do it:
+    # ddev exec flask forge
+    ddev launch
+    ```
+
+    * DDEV will install all everything in your `requirements.txt` or `pyproject.toml` into a `venv`. This takes a little while on first startup.
+    * If your app requires settings, you can add them as environment variables, or otherwise configure your app to use the database, etc. (Database settings are host: `db`, database: `db`, user: `db`, password `db` no matter whether you're using PostgreSQL, MariaDB, or MySQL.)
+    * You can watch `pip install` output in real time on that first slow startup with `ddev logs -f` in another window.
+    * If your `requirements.txt` includes `psycopg2` it requires build tools, so either set `ddev config --web-extra-packages=build-essential` or change your requirement to `psycopg2-binary`. 
+
 === "Shopware"
 
     ## Shopware 6
@@ -470,7 +510,11 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
 
 ## Configuration Files
 
-The [`ddev config`](../users/usage/commands.md#config) command attempts to create a CMS-specific settings file pre-populated with DDEV credentials.
+The [`ddev config`](../users/usage/commands.md#config) and `ddev start` commands attempt to create a CMS-specific settings file pre-populated with DDEV credentials. If you don't want DDEV to do this, set the [`disable_settings_management`](../users/configuration/config.md#disable_settings_management) config option to `true`.
+
+For **Craft CMS** DDEV settings are added to the `.env` file.
+
+For **Django 4** DDEV settings are placed in `.ddev/settings/settings.django4.py` and a stanza is added to your `settings.py` that is only invoked in DDEV context.
 
 For **Drupal** and **Backdrop**, DDEV settings are written to a DDEV-managed file, `settings.ddev.php`. The `ddev config` command will ensure these settings are included in your `settings.php` through the following steps:
 
@@ -491,22 +535,16 @@ For **WordPress**, DDEV settings are written to a DDEV-managed file, `wp-config-
 - If a DDEV-managed `wp-config.php` exists, create one that includes `wp-config.php`.
 - If a user-managed `wp-config.php` exists, instruct the user on how to modify it to include DDEV settings.
 
-You’ll know DDEV is managing a settings file when you see the comment below. Remove the comment and DDEV will not attempt to overwrite it! If you’re letting DDEV create its settings file, we recommended leaving this comment so DDEV can continue to manage it, and make any needed changes in another settings file.
+You’ll know DDEV is managing a settings file when you see a comment containing `#ddev-generated` like the one below. Remove the comment and DDEV will not attempt to overwrite it. If you’re letting DDEV create its settings file, we recommended leaving this comment so DDEV can continue to manage it, and make any needed changes in another settings file.
 
 ```
-
 /**
  #ddev-generated: Automatically generated Drupal settings.php file.
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
  */
-
 ```
 
 If you’re providing the `settings.php` or `wp-config.php` and DDEV is creating `settings.ddev.php` (or `wp-config-local.php`, `AdditionalConfig.php`, or similar), the main settings file must explicitly include the appropriate DDEV-generated settings file. Any changes you need should be included somewhere that loads after DDEV’s settings file, for example in Drupal’s `settings.php` _after_ `settings.ddev.php` is included. (See [Adding Configuration](#adding-configuration) below).
-
-!!!note "Completely Disabling Settings Management"
-
-    If you do *not* want DDEV to create or manage settings files, set `disable_settings_management: true` in `.ddev/config.yaml` or run `ddev config --disable-settings-management`. Once you’ve done that, it’s solely up to you to manually edit those settings.
 
 ### Adding Configuration
 
@@ -612,7 +650,7 @@ Importing database...
 Successfully imported database for drupal8
 ```
 
-#### Supported File Types
+#### Supported Database Import File Types
 
 Database imports can be any of the following file types:
 

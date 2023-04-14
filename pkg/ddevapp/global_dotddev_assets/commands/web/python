@@ -1,0 +1,11 @@
+#!/bin/bash
+
+#ddev-generated
+## Description: Run python inside the web container, in the same relative directory as on host
+## Usage: python [flags] [args]
+## Example: "ddev python --version"
+## ExecRaw: true
+## HostWorkingDir: true
+## ProjectTypes: django4,python
+
+python "$@"

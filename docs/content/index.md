@@ -5,7 +5,7 @@ hide:
 
 # Get Started with DDEV
 
-[DDEV](https://github.com/ddev/ddev) is an open source tool for launching local PHP development environments in minutes.
+[DDEV](https://github.com/ddev/ddev) is an open source tool for launching local web development environments in minutes. It supports PHP, Node.js, and Python (experimental).
 
 These environments can be extended, version controlled, and shared, so you can take advantage of a Docker workflow without Docker experience or bespoke configuration. Projects can be changed, powered down, or removed just as easily as they’re started.
 

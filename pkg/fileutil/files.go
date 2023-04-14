@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"io"
 	"io/fs"
 	"os"
@@ -481,4 +482,22 @@ func CheckSignatureOrNoFile(path string, signature string) error {
 		})
 	}
 	return err
+}
+
+// FindFilenameInDirectory searches the basePath for files of a particular set of names
+// Returns dirName found (can be "") and err
+func FindFilenameInDirectory(basePath string, fileNames []string) (dirName string, err error) {
+	err = filepath.WalkDir(basePath, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !d.IsDir() && nodeps.ArrayContainsString(fileNames, d.Name()) {
+			dirName = filepath.Dir(path)
+			return filepath.SkipDir // Stop walking when the target file is found
+		}
+		return nil
+	})
+
+	return dirName, err
 }

@@ -209,7 +209,7 @@ Flags:
 * `--web-working-dir`: Overrides the default working directory for the web service.
 * `--web-working-dir-default`: Unsets a web service working directory override.
 * `--webimage-extra-packages`: A comma-delimited list of Debian packages that should be added to web container when the project is started.
-* `--webserver-type`: Sets the project’s desired webserver type: `nginx-fpm` or `apache-fpm`.
+* `--webserver-type`: Sets the project’s desired webserver type: `nginx-fpm`, `nginx-gunicorn`, or `apache-fpm`.
 * `--working-dir-defaults`: Unsets all service working directory overrides.
 * `--xdebug-enabled`: Whether or not Xdebug is enabled in the web container.
 
@@ -972,6 +972,19 @@ ddev push platform --skip-files -y
 
 # Push files only to Acquia without confirming
 ddev push acquia --skip-db -y
+```
+
+## `python`
+
+Runs `python` inside the web container in the same relative directory you're in on the host.
+
+`ddev python` is only available on Python-based project types like Django and Python.
+
+Example:
+
+```shell
+# Run manage.py
+ddev python manage.py migrate
 ```
 
 ## `querious`

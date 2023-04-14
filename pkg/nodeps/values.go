@@ -29,8 +29,9 @@ const (
 
 // Webserver types
 const (
-	WebserverNginxFPM  = "nginx-fpm"
-	WebserverApacheFPM = "apache-fpm"
+	WebserverNginxFPM      = "nginx-fpm"
+	WebserverApacheFPM     = "apache-fpm"
+	WebserverNginxGunicorn = "nginx-gunicorn"
 )
 
 // ValidOmitContainers is the list of things that can be omitted
@@ -71,8 +72,9 @@ var FailOnHookFailDefault = false
 // ValidWebserverTypes should be updated whenever supported webserver types are added or
 // removed, and should be used to ensure user-supplied values are valid.
 var ValidWebserverTypes = map[string]bool{
-	WebserverNginxFPM:  true,
-	WebserverApacheFPM: true,
+	WebserverNginxFPM:      true,
+	WebserverApacheFPM:     true,
+	WebserverNginxGunicorn: true,
 }
 
 var ValidNodeJSVersions = []string{"14", "16", "18"}
@@ -81,6 +83,7 @@ var ValidNodeJSVersions = []string{"14", "16", "18"}
 const (
 	AppTypeBackdrop  = "backdrop"
 	AppTypeCraftCms  = "craftcms"
+	AppTypeDjango4   = "django4"
 	AppTypeDrupal6   = "drupal6"
 	AppTypeDrupal7   = "drupal7"
 	AppTypeDrupal8   = "drupal8"
@@ -90,6 +93,7 @@ const (
 	AppTypeMagento   = "magento"
 	AppTypeMagento2  = "magento2"
 	AppTypePHP       = "php"
+	AppTypePython    = "python"
 	AppTypeShopware6 = "shopware6"
 	AppTypeTYPO3     = "typo3"
 	AppTypeWordPress = "wordpress"

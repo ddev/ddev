@@ -118,6 +118,9 @@ echo 'Server started'
 # We don't want the various daemons to know about PHP_IDE_CONFIG
 unset PHP_IDE_CONFIG
 
+# Run any python/django4 activities
+ddev_python_setup
+
 if [ -d ${ENTRYPOINT} ]; then
   if [[ -n $(find ${ENTRYPOINT} -type f -regex ".*\.\(sh\)") ]] && [[ ! -f "${ENTRYPOINT}/.user_scripts_initialized" ]] ; then
     # For web-entrypoint.d to work with code already loaded, if mutagen is enabled,

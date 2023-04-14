@@ -72,6 +72,10 @@ func init() {
 			uploadDir: nil, importFilesAction: craftCmsImportFilesAction, appTypeDetect: isCraftCmsApp, configOverrideAction: nil, postConfigAction: nil, postStartAction: craftCmsPostStartAction,
 		},
 
+		nodeps.AppTypeDjango4: {
+			settingsCreator: django4SettingsCreator, uploadDir: nil, importFilesAction: nil, appTypeDetect: isDjango4App, apptypeSettingsPaths: nil, configOverrideAction: django4ConfigOverrideAction, postConfigAction: django4PostConfigAction, postStartAction: django4PostStartAction,
+		},
+
 		nodeps.AppTypeDrupal6: {
 			settingsCreator: createDrupalSettingsPHP, uploadDir: getDrupalUploadDir, hookDefaultComments: getDrupal6Hooks, apptypeSettingsPaths: setDrupalSiteSettingsPaths, appTypeDetect: isDrupal6App, postImportDBAction: nil, configOverrideAction: drupal6ConfigOverrideAction, postConfigAction: nil, postStartAction: drupal6PostStartAction, importFilesAction: drupalImportFilesAction, defaultWorkingDirMap: docrootWorkingDir,
 		},
@@ -106,6 +110,10 @@ func init() {
 
 		nodeps.AppTypePHP: {
 			uploadDir: getPHPUploadDir, postStartAction: phpPostStartAction, importFilesAction: phpImportFilesAction,
+		},
+
+		nodeps.AppTypePython: {
+			uploadDir: nil, importFilesAction: nil, appTypeDetect: isPythonApp, configOverrideAction: pythonConfigOverrideAction, postConfigAction: pythonPostConfigAction, postStartAction: nil,
 		},
 
 		nodeps.AppTypeShopware6: {settingsCreator: nil, appTypeDetect: isShopware6App, apptypeSettingsPaths: setShopware6SiteSettingsPaths, uploadDir: getShopwareUploadDir, configOverrideAction: nil, postStartAction: shopware6PostStartAction, importFilesAction: shopware6ImportFilesAction},

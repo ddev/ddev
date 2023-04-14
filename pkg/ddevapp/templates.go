@@ -38,7 +38,7 @@ const ConfigInstructions = `
 # "ddev xhprof" to enable xhprof and "ddev xhprof off" to disable it work better,
 # as leaving xhprof enabled all the time is a big performance hit.
 
-# webserver_type: nginx-fpm  # or apache-fpm
+# webserver_type: nginx-fpm, apache-fpm, or nginx-gunicorn 
 
 # timezone: Europe/Berlin
 # This is the timezone used in the containers and by PHP;

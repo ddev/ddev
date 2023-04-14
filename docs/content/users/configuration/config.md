@@ -85,9 +85,6 @@ The type and version of the database engine the project should use.
 | -- | -- | --
 | :octicons-file-directory-16: project | MariaDB 10.4 | Can be MariaDB 5.5–10.8, MySQL 5.5–8.0, or PostgreSQL 9–15.<br>See [Database Server Types](../extend/database-types.md) for examples and caveats.
 
-!!!note
-    DDEV v1.18 and earlier used `mariadb_version` and `mysql_version`, which are now automatically converted to the `database` format.
-
 ## `dbimage_extra_packages`
 
 Extra Debian packages for the project’s database container.
@@ -451,9 +448,9 @@ The DDEV-specific project type.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `php` | Can be `backdrop`, `craftcms`, `drupal6`, `drupal7`, `drupal8`, `drupal9`, `drupal10`,  `laravel`, `magento`, `magento2`, `php`, `shopware6`, `typo3`, or `wordpress`.
+| :octicons-file-directory-16: project | `php` | Can be `backdrop`, `craftcms`, `django4`, `drupal6`, `drupal7`, `drupal8`, `drupal9`, `drupal10`,  `laravel`, `magento`, `magento2`, `php`, `python`, `shopware6`, `typo3`, or `wordpress`.
 
-The `php` type doesn’t attempt [CMS configuration](../../users/quickstart.md) or settings file management and can work with any project.
+The `php` and `python` types don’t attempt [CMS configuration](../../users/quickstart.md) or settings file management and can work with any project.
 
 ## `upload_dir`
 
@@ -569,7 +566,7 @@ Which available [web server type](../extend/customization-extendibility.md#chang
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `nginx-fpm` | Can be `nginx-fpm` or `apache-fpm`.
+| :octicons-file-directory-16: project | `nginx-fpm` | Can be `nginx-fpm`, `apache-fpm`, or `nginx-gunicorn`.
 
 To change from the default `nginx-fpm` to `apache-fpm`, for example, you would need to edit your project’s `.ddev/config.yaml` to include the following:
 

@@ -3,7 +3,7 @@
 ### Build ddev-php-base from ddev-webserver-base
 ### ddev-php-base is the basic of ddev-php-prod
 ### and ddev-webserver-* (For DDEV-Local)
-FROM drud/ddev-php-base:20230315_drush8 as ddev-webserver-base
+FROM drud/ddev-php-base:20230318_django4 as ddev-webserver-base
 
 ENV BACKDROP_DRUSH_VERSION=1.4.0
 ENV DEBIAN_FRONTEND=noninteractive
@@ -70,12 +70,18 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -o Dpkg::Options::="--for
     jq \
     libldap-common \
     libpcre3 \
+    libpq-dev \
+    libpython3-dev \
     locales-all \
     nano \
     ncurses-bin \
     netcat \
     openssh-client \
     patch \
+    python-is-python3 \
+    python3-pip \
+    python3-psycopg2 \
+    python3-venv \
     rsync \
     sqlite3 \
     sudo \

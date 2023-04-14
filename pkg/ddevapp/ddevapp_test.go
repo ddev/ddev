@@ -258,6 +258,64 @@ var (
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Thanks for installing Craft CMS"},
 			FilesImageURI:                 "/files/happy-brad.jpg",
 		},
+
+		// 14: python generic
+		// Uses https://github.com/ddev/test-flask-sayhello fork of
+		// https://github.com/greyli/sayhello - no database download required
+		{
+			Name:                          "TestPkgPython",
+			SourceURL:                     "https://github.com/ddev/test-flask-sayhello/archive/refs/tags/v1.0.0.tar.gz",
+			ArchiveInternalExtractionPath: "test-flask-sayhello-1.0.0/",
+			DBTarURL:                      "",
+			FullSiteTarballURL:            "",
+			PretestCmd:                    "ddev exec flask forge",
+			WebEnvironment: []string{
+				"DATABASE_URI=postgresql://db:db@db/db",
+				"WSGI_APP=sayhello:app",
+			},
+			Type:    nodeps.AppTypePython,
+			Docroot: "",
+			//Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/test.html", Expect: ""},
+			//UploadDir:                     "files",
+			DynamicURI:    testcommon.URIWithExpect{URI: "/", Expect: "20 messages"},
+			FilesImageURI: "",
+		},
+
+		// 15: Django 4
+		// Uses https://github.com/ddev/test-django4-bakerydemo fork of
+		// https://github.com/wagtail/bakerydemo - no database download required
+		{
+			Name:                          "TestPkgDjango4",
+			SourceURL:                     "https://github.com/ddev/test-django4-bakerydemo/archive/refs/tags/v1.0.1.tar.gz",
+			ArchiveInternalExtractionPath: "test-django4-bakerydemo-1.0.1/",
+			DBTarURL:                      "",
+			FullSiteTarballURL:            "",
+			PretestCmd:                    "touch .env && ddev python manage.py migrate >/dev/null && ddev python manage.py load_initial_data && ddev exec pkill -1 gunicorn",
+			WebEnvironment: []string{
+				"DJANGO_SETTINGS_MODULE=bakerydemo.settings.dev",
+			},
+			Type:    nodeps.AppTypeDjango4,
+			Docroot: "",
+			//Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/test.html", Expect: ""},
+			//UploadDir:                     "files",
+			DynamicURI:    testcommon.URIWithExpect{URI: "/", Expect: "Welcome to the Wagtail Bakery"},
+			FilesImageURI: "/media/images/Anadama_bread_1.2e16d0ba.fill-180x180-c100.jpg",
+		},
+
+		// 16: Platform django4 template without DJANGO_SETTINGS_MODULE
+		// Here it has to use the settings file it finds and update that.
+		// Uses https://github.com/ddev/test-platformsh-templates-django4 fork of
+		// https://github.com/platformsh-templates/django4 without doing anything to it
+		{
+			Name:                          "TestPkgPlatformDjango4",
+			SourceURL:                     "https://github.com/ddev/test-platformsh-templates-django4/archive/refs/tags/v1.0.0.tar.gz",
+			ArchiveInternalExtractionPath: "test-platformsh-templates-django4-1.0.0/",
+			DBTarURL:                      "",
+			FullSiteTarballURL:            "",
+			Type:                          nodeps.AppTypeDjango4,
+			Docroot:                       "",
+			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Hello, and welcome to the"},
+		},
 	}
 
 	FullTestSites = TestSites
@@ -999,9 +1057,7 @@ func TestDdevXhprofEnabled(t *testing.T) {
 	// Does not work with php5.6 anyway (SEGV), for resource conservation
 	// skip older unsupported versions
 	phpKeys := []string{}
-	// 20221211: 8.1 and 8.2 are not currently working due to upstream
-	// problems
-	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3", "8.1", "8.2"}
+	exclusions := []string{"5.6", "7.0", "7.1", "7.2", "7.3"}
 	for k := range nodeps.ValidPHPVersions {
 		if !nodeps.ArrayContainsString(exclusions, k) {
 			phpKeys = append(phpKeys, k)
@@ -1023,6 +1079,9 @@ func TestDdevXhprofEnabled(t *testing.T) {
 
 	webserverKeys := make([]string, 0, len(nodeps.ValidWebserverTypes))
 	for k := range nodeps.ValidWebserverTypes {
+		if k == nodeps.WebserverNginxGunicorn {
+			continue
+		}
 		webserverKeys = append(webserverKeys, k)
 	}
 
@@ -1927,10 +1986,6 @@ func readLastLine(fileName string) (string, error) {
 // TestDdevFullSiteSetup tests a full import-db and import-files and then looks to see if
 // we have a spot-test success hit on a URL
 func TestDdevFullSiteSetup(t *testing.T) {
-	//if nodeps.IsMacM1() {
-	//	t.Skip("Skipping on Mac M1, it just has too many connection failed problems")
-	//}
-
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
@@ -1974,9 +2029,11 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		assert.NotContains(out, "Unable to create settings file")
 
 		// Validate PHPMyAdmin is working and database named db is present
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8036/index.php?route=/database/structure&server=1&db=db", "Database:          db")
-		// Validate MailHog is working and "connected"
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8025/#", "Connected")
+		if app.Database.Type == nodeps.MySQL || app.Database.Type == nodeps.MariaDB {
+			_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8036/index.php?route=/database/structure&server=1&db=db", "Database:          db")
+			// Validate MailHog is working and "connected"
+			_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8025/#", "Connected")
+		}
 
 		settingsLocation, err := app.DetermineSettingsPathLocation()
 		assert.NoError(err)
@@ -2009,8 +2066,15 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		}
 
 		// Test static content.
-		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
-		// Test dynamic php + database content.
+		if site.Safe200URIWithExpectation.URI != "" {
+			_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+		}
+		// Test dynamic URL + database content.
+		// With nginx-gunicorn, the auto-detect and reload of new settings files
+		// may take a few seconds, so wait for it.
+		if app.WebserverType == nodeps.WebserverNginxGunicorn {
+			time.Sleep(time.Second * 10)
+		}
 		rawurl := app.GetPrimaryURL() + site.DynamicURI.URI
 		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 120)
 		assert.NoError(err, "GetLocalHTTPResponse returned err on project=%s rawurl %s, resp=%v: %v", site.Name, rawurl, resp, err)
@@ -3255,22 +3319,30 @@ func TestGetAllURLs(t *testing.T) {
 	runTime()
 }
 
-// TestWebserverType checks that webserver_type:apache-fpm does the right thing
-func TestWebserverType(t *testing.T) {
+// TestPHPWebserverType checks that webserver_type:apache-fpm does the right thing
+func TestPHPWebserverType(t *testing.T) {
 	assert := asrt.New(t)
 
 	for _, site := range TestSites {
-		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s TestWebserverType", site.Name))
+		if site.Type == nodeps.AppTypeDjango4 || site.Type == nodeps.AppTypePython {
+			continue
+		}
+		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 		app := new(ddevapp.DdevApp)
 
 		err := app.Init(site.Dir)
 		assert.NoError(err)
 
+		t.Cleanup(func() {
+			err = app.Stop(true, false)
+			assert.NoError(err)
+		})
+
 		// Copy our phpinfo into the docroot of testsite.
 		pwd, err := os.Getwd()
 		assert.NoError(err)
-		err = fileutil.CopyFile(filepath.Join(pwd, "testdata", "servertype.php"), filepath.Join(app.AppRoot, app.Docroot, "servertype.php"))
+		err = fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "servertype.php"), filepath.Join(app.AppRoot, app.Docroot, "servertype.php"))
 
 		assert.NoError(err)
 		for _, app.WebserverType = range []string{nodeps.WebserverApacheFPM, nodeps.WebserverNginxFPM} {
@@ -3280,9 +3352,11 @@ func TestWebserverType(t *testing.T) {
 
 			testcommon.ClearDockerEnv()
 
-			startErr := app.StartAndWait(30)
-			//nolint: errcheck
-			defer app.Stop(true, false)
+			startErr := app.Start()
+			t.Cleanup(func() {
+				err = app.Stop(true, false)
+				assert.NoError(err)
+			})
 			if startErr != nil {
 				appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 				assert.NoError(getLogsErr)
