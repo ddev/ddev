@@ -706,6 +706,7 @@ Flags:
 * `--active-only`, `-A`: If set, only currently active projects will be displayed.
 * `--continuous`: If set, project information will be emitted until the command is stopped.
 * `--continuous-sleep-interval`, `-I`: Time in seconds between `ddev list --continuous` output lists. (default `1`)
+* `--type`, `-t`: Show only projects of this type (e.g. `drupal8`, `wordpress`, `php`).
 * `--wrap-table`, `-W`: Display table with wrapped text if required.
 
 Example:
@@ -716,6 +717,9 @@ ddev list
 
 # List all running projects
 ddev list --active-only
+
+# List all WordPress projects
+ddev list --type wordpress
 ```
 
 ## `logs`

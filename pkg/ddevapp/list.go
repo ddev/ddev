@@ -14,29 +14,53 @@ import (
 	"time"
 )
 
+// ListCommandSettings conains all filters and settings of the `ddev list` command
+type ListCommandSettings struct {
+	// ActiveOnly, if set, shows only running projects
+	ActiveOnly bool
+
+	// Continuous, if set, makes list continuously output
+	Continuous bool
+
+	// WrapListTable allow that the text in the table of ddev list wraps instead of cutting it to fit the terminal width
+	WrapTableText bool
+
+	// ContinuousSleepTime is time to sleep between reads with --continuous
+	ContinuousSleepTime int
+
+	// TypeFilter contains the project type which is then used to filter the project list
+	TypeFilter string
+}
+
 // List provides the functionality for `ddev list`
 // activeOnly if true only shows projects that are currently docker containers
 // continuous if true keeps requesting and outputting continuously
 // wrapTableText if true the text is wrapped instead of truncated to fit the row length
 // continuousSleepTime is the time between reports
-func List(activeOnly bool, continuous bool, wrapTableText bool, continuousSleepTime int) {
+func List(settings ListCommandSettings) {
 	runTime := util.TimeTrack(time.Now(), "ddev list")
 	defer runTime()
 
 	var out bytes.Buffer
 
 	for {
-		apps, err := GetProjects(activeOnly)
+		apps, err := GetProjects(settings.ActiveOnly)
 		if err != nil {
 			util.Failed("failed getting GetProjects: %v", err)
 		}
+
 		appDescs := make([]map[string]interface{}, 0)
 
 		if len(apps) < 1 {
 			output.UserOut.WithField("raw", appDescs).Println("No ddev projects were found.")
 		} else {
-			t := CreateAppTable(&out, wrapTableText)
+			t := CreateAppTable(&out, settings.WrapTableText)
 			for _, app := range apps {
+				// Filter by project type
+				if settings.TypeFilter != "" && settings.TypeFilter != app.Type {
+					continue
+				}
+
 				desc, err := app.Describe(true)
 				if err != nil {
 					util.Error("Failed to describe project %s: %v", app.GetName(), err)
@@ -69,11 +93,11 @@ func List(activeOnly bool, continuous bool, wrapTableText bool, continuousSleepT
 			}
 		}
 
-		if !continuous {
+		if !settings.Continuous {
 			break
 		}
 
-		time.Sleep(time.Duration(continuousSleepTime) * time.Second)
+		time.Sleep(time.Duration(settings.ContinuousSleepTime) * time.Second)
 	}
 }
 
