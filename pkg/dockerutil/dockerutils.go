@@ -1069,39 +1069,48 @@ func GetHostDockerInternalIP() (string, error) {
 	case nodeps.IsIPAddress(globalconfig.DdevGlobalConfig.XdebugIDELocation):
 		// If the IDE is actually listening inside container, then localhost/127.0.0.1 should work.
 		hostDockerInternal = globalconfig.DdevGlobalConfig.XdebugIDELocation
+		util.Debug("host.docker.internal=%s derived from globalconfig.DdevGlobalConfig.XdebugIDELocation", hostDockerInternal)
 
 	case globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationContainer:
 		// If the IDE is actually listening inside container, then localhost/127.0.0.1 should work.
 		hostDockerInternal = "127.0.0.1"
+		util.Debug("host.docker.internal=%s because globalconfig.DdevGlobalConfig.XdebugIDELocation=%s", hostDockerInternal, globalconfig.XdebugIDELocationContainer)
 
 	case IsColima():
 		// Lima just specifies this as a named explicit IP address at this time
 		// see https://github.com/lima-vm/lima/blob/master/docs/network.md#host-ip-19216852
 		hostDockerInternal = "192.168.5.2"
+		util.Debug("host.docker.internal=%s because running on Colima", hostDockerInternal)
 
 	// Gitpod has docker 20.10+ so the docker-compose has already gotten the host-gateway
 	case nodeps.IsGitpod():
+		util.Debug("host.docker.internal='%s' because on Gitpod", hostDockerInternal)
 		break
 	case nodeps.IsCodespaces():
+		util.Debug("host.docker.internal='%s' because on Codespaces", hostDockerInternal)
 		break
 
 	case IsWSL2() && IsDockerDesktop():
 		// If IDE is on Windows, return; we don't have to do anything.
+		util.Debug("host.docker.internal='%s' because IsWSL2 and IsDockerDesktop", hostDockerInternal)
 		break
 
 	case IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2:
 		// If IDE is inside WSL2 then the normal linux processing should work
+		util.Debug("host.docker.internal='%s' because globalconfig.DdevGlobalConfig.XdebugIDELocation=%s", hostDockerInternal, globalconfig.XdebugIDELocationWSL2)
 		break
 
 	case IsWSL2() && !IsDockerDesktop():
 		// If IDE is on Windows, we have to parse /etc/resolv.conf
 		hostDockerInternal = wsl2ResolvConfNameserver()
+		util.Debug("host.docker.internal='%s' because IsWSL2 and !IsDockerDesktop; received from resolv.conf", hostDockerInternal)
 
 	// Docker on linux doesn't define host.docker.internal
 	// so we need to go get the bridge IP address
 	// Docker Desktop) defines host.docker.internal itself.
 	case runtime.GOOS == "linux":
 		// In docker 20.10+, host.docker.internal is already taken care of by extra_hosts in docker-compose
+		util.Debug("host.docker.internal='%s' runtime.GOOS==linux and docker 20.10+", hostDockerInternal)
 		break
 	}
 
@@ -1173,6 +1182,7 @@ func wsl2ResolvConfNameserver() string {
 		}
 		// We just grepped it so no need to check error
 		etcResolv, _ := fileutil.ReadFileIntoString("/etc/resolv.conf")
+		util.Debug("resolv.conf=%s", etcResolv)
 
 		nameserverRegex := regexp.MustCompile(`nameserver *([0-9\.]*)`)
 		//nameserverRegex.ReplaceAllFunc([]byte(etcResolv), []byte(`$1`))
