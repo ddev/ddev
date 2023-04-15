@@ -32,7 +32,7 @@ var DBAImg = "phpmyadmin"
 // DBATag defines the default phpmyadmin image tag used for applications.
 var DBATag = "5" // Note that this can be overridden by make
 
-const TraditionalRouterImage = "ddev/ddev-router:v1.21.5"
+const TraditionalRouterImage = "ddev/ddev-router:20230415_move_docker_to_ddev"
 const TraefikRouterImage = "traefik:v2.9"
 
 // SSHAuthImage is image for agent
