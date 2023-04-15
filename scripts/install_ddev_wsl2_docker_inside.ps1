@@ -46,8 +46,8 @@ wsl -u root mkdir -p /etc/apt/keyrings
 wsl -u root bash -c "rm -f /etc/apt/keyrings/docker.gpg && mkdir -p /etc/apt/keyrings && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg"
 wsl -u root -e bash -c 'echo deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu  $(lsb_release -cs) stable | tee /etc/apt/sources.list.d/docker.list > /dev/null 2>&1'
 
-wsl -u root -e bash -c "rm -f /etc/apt/trusted.gpg.d/ddev.gpg && curl -fsSL https://apt.fury.io/drud/gpg.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/ddev.gpg > /dev/null"
-wsl -u root -e bash -c 'echo deb [signed-by=/etc/apt/trusted.gpg.d/ddev.gpg] https://apt.fury.io/drud/ \* \* > /etc/apt/sources.list.d/ddev.list'
+wsl -u root -e bash -c "rm -f /etc/apt/trusted.gpg.d/ddev.gpg && curl -fsSL https://pkg.ddev.com/apt/gpg.key | gpg --dearmor | tee /etc/apt/trusted.gpg.d/ddev.gpg > /dev/null"
+wsl -u root -e bash -c 'echo deb [signed-by=/etc/apt/trusted.gpg.d/ddev.gpg] https://pkg.ddev.com/apt/ \* \* > /etc/apt/sources.list.d/ddev.list'
 wsl -u root -e bash -c "apt update && apt install -y ddev docker-ce docker-ce-cli containerd.io wslu"
 wsl -u root -e bash -c "apt-get upgrade -y >/dev/null"
 wsl bash -c 'sudo usermod -aG docker $USER'

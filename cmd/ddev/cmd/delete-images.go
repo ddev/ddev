@@ -18,8 +18,8 @@ import (
 // DeleteImagesCmd implements the ddev delete images command
 var DeleteImagesCmd = &cobra.Command{
 	Use:   "images",
-	Short: "Deletes drud/ddev-* docker images not in use by current ddev version",
-	Long:  "with --all it deletes all drud/ddev-* docker images",
+	Short: "Deletes ddev/ddev-* docker images not in use by current ddev version",
+	Long:  "with --all it deletes all ddev/ddev-* docker images",
 	Example: `ddev delete images
 ddev delete images -y
 ddev delete images --all`,
@@ -73,7 +73,7 @@ func deleteDdevImages(deleteAll bool) error {
 		for _, image := range images {
 			for _, tag := range image.RepoTags {
 
-				if strings.HasPrefix(tag, "drud/ddev-") {
+				if strings.HasPrefix(tag, "drud/ddev-") || strings.HasPrefix(tag, "ddev/ddev-") {
 					if err := dockerutil.RemoveImage(tag); err != nil {
 						return err
 					}
@@ -114,7 +114,7 @@ func deleteDdevImages(deleteAll bool) error {
 					return err
 				}
 			}
-			if strings.HasPrefix(tag, "drud/ddev-dbserver") && !strings.HasSuffix(tag, keepDBImageTag) && !strings.HasSuffix(tag, keepDBImageTag+"-built") {
+			if strings.HasPrefix(tag, "ddev/ddev-dbserver") && !strings.HasSuffix(tag, keepDBImageTag) && !strings.HasSuffix(tag, keepDBImageTag+"-built") {
 				if err = dockerutil.RemoveImage(tag); err != nil {
 					return err
 				}

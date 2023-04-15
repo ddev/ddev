@@ -1,5 +1,5 @@
 
-DOCKER_REPO ?= drud/ddev-ssh-agent
+DOCKER_REPO ?= ddev/ddev-ssh-agent
 
 VERSION := $(shell git describe --tags --always --dirty)
 

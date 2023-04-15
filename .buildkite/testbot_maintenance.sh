@@ -51,7 +51,7 @@ esac
 
 # Remove any -built images, as we want to make sure tests do the building.
 docker rmi -f $(docker images --filter "dangling=true" -q --no-trunc) >/dev/null 2>&1 || true
-docker rmi -f $(docker images | awk '/drud.*-built/ {print $3}' ) >/dev/null 2>&1 || true
+docker rmi -f $(docker images | awk '/ddev.*-built/ {print $3}' ) >/dev/null 2>&1 || true
 
 # Make sure there aren't any dangling NFS volumes
 if docker volume ls | grep '[Tt]est.*_nfsmount'; then

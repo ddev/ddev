@@ -112,7 +112,7 @@ cd containers/ddev-webserver
 make push VERSION=<tag>
 ```
 
-If you’re pushing to a repo other than the one wired into the Makefile (like `drud/ddev-webserver`):
+If you’re pushing to a repo other than the one wired into the Makefile (like `ddev/ddev-webserver`):
 
 ```
 cd containers/ddev-webserver

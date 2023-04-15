@@ -65,7 +65,7 @@ package() {
 }
 END
 
-docker run --rm --mount type=bind,source=$(pwd),target=/tmp/ddev-bin --workdir=/tmp/ddev-bin drud/arch-aur-builder bash -c "makepkg --printsrcinfo > .SRCINFO && makepkg -s"
+docker run --rm --mount type=bind,source=$(pwd),target=/tmp/ddev-bin --workdir=/tmp/ddev-bin ddev/arch-aur-builder bash -c "makepkg --printsrcinfo > .SRCINFO && makepkg -s"
 
 git config user.email "randy+ddev-releaser@randyfay.com"
 git config user.name "ddev-releaser"

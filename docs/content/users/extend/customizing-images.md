@@ -84,7 +84,7 @@ ENV COMPOSER_HOME=""
 
 The following environment variables are available for the web Dockerfile to use at build time:
 
-* `$BASE_IMAGE`: the base image, like `drud/ddev-webserver:v1.21.4`
+* `$BASE_IMAGE`: the base image, like `ddev/ddev-webserver:v1.21.4`
 * `$username`: the username inferred from your host-side username
 * `$uid`: the user ID inferred from your host-side user ID
 * `$gid`: the group ID inferred from your host-side group ID

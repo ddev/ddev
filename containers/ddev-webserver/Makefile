@@ -1,4 +1,4 @@
-DOCKER_ORG ?= drud
+DOCKER_ORG ?= ddev
 DOCKER_REPO ?= $(DOCKER_ORG)/ddev-webserver
 
 DEFAULT_IMAGES = ddev-webserver ddev-webserver-prod
@@ -37,4 +37,4 @@ test: images
 	set -eu -o pipefail; \
 	for item in $(DEFAULT_IMAGES); do \
 		if [ -x tests/$$item/test.sh ]; then tests/$$item/test.sh $(DOCKER_ORG)/$$item:$(VERSION); fi; \
-	done	
+	done
