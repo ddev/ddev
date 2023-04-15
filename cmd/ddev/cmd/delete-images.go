@@ -67,7 +67,7 @@ func deleteDdevImages(deleteAll bool) error {
 
 	// If delete all images, find them by tag and return.
 	if deleteAll {
-		// Attempt to find ddev images by tag, searching for "drud/ddev-".
+		// Attempt to find ddev images by tag, searching for "drud" or "ddev" prefixes.
 		// Some ddev images will not be found by this tag, future work will
 		// be done to improve finding database images.
 		for _, image := range images {
