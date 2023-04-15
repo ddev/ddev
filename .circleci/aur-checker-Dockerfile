@@ -1,5 +1,5 @@
-# This can be built and pushed with
-# cat aur-checker-Dockerfile | docker build -t "ddev/arch-aur-builder:latest" - && docker push "ddev/arch-aur-builder:latest"
+# This can be pushed with
+# cat aur-checker-Dockerfile | docker buildx build  --push --platform linux/amd64 -t "ddev/arch-aur-builder:latest" -
 # - Edit PKGBUILD to change the version and hash or anything else
 # - Then run it with
 # docker run --rm --mount type=bind,source=$(pwd),target=/tmp/ddev-bin --workdir=/tmp/ddev-bin ddev/arch-aur-builder bash -c "makepkg --printsrcinfo > .SRCINFO && makepkg -s"
