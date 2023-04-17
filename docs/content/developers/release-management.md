@@ -182,7 +182,7 @@ This is done automatically by the release build on a dedicated Windows test runn
 
 ## APT and YUM/RPM Package Management
 
-The Linux `apt` and `yum/rpm` packages are built and pushed by the `nfpms` and `furies` sections of the [.goreleaser.yml](https://github.com/ddev/ddev/blob/master/.goreleaser.yml).
+The Linux `apt` and `yum`/`rpm` packages are built and pushed by the `nfpms` and `furies` sections of the [.goreleaser.yml](https://github.com/ddev/ddev/blob/master/.goreleaser.yml) file.
 
 * The actual packages are served by [gemfury.com](https://gemfury.com/).
 * The name of the organization in GemFury is [`drud`](`https://manage.fury.io/dashboard/drud`).
