@@ -21,7 +21,7 @@ on:
         default: false
 env:
   REGISTRY: docker.io
-  DOCKER_ORG: drud
+  DOCKER_ORG: ddev
   TAG: "${{ github.event.inputs.tag }}"
   HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

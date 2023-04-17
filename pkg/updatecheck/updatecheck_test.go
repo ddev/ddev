@@ -14,7 +14,7 @@ import (
 	asrt "github.com/stretchr/testify/assert"
 )
 
-const testOrg = "drud"
+const testOrg = "ddev"
 const testRepo = "ddev"
 
 // TestGetContainerHealth tests the function for processing container readiness.

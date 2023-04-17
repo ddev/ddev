@@ -30,5 +30,5 @@ make clean
 To run the container by itself:
 
 ```
-docker run -it drud/ddev-webserver bash
+docker run -it ddev/ddev-webserver bash
 ```

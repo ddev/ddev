@@ -76,7 +76,7 @@ func List(settings ListCommandSettings) {
 			}
 			routerImage := versionconstants.GetRouterImage()
 			routerImage = strings.Replace(routerImage, ":", ": ", 1)
-			routerImage = strings.Replace(routerImage, "drud/ddev-router", "original", 1)
+			routerImage = strings.Replace(routerImage, "ddev/ddev-router", "original", 1)
 			t.AppendFooter(table.Row{
 				"Router", routerStatus, "~/.ddev", globalconfig.GetRouterURL(), routerImage},
 			)

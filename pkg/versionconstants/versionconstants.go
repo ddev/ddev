@@ -15,16 +15,16 @@ var DdevVersion = "v0.0.0-overridden-by-make" // Note that this is overridden by
 var SegmentKey = ""
 
 // WebImg defines the default web image used for applications.
-var WebImg = "drud/ddev-webserver"
+var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20230318_django4" // Note that this can be overridden by make
+var WebTag = "20230415_move_docker_to_ddev" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
-var DBImg = "drud/ddev-dbserver"
+var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.21.5"
+var BaseDBTag = "20230415_move_docker_to_ddev"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"
@@ -32,14 +32,14 @@ var DBAImg = "phpmyadmin"
 // DBATag defines the default phpmyadmin image tag used for applications.
 var DBATag = "5" // Note that this can be overridden by make
 
-const TraditionalRouterImage = "drud/ddev-router:v1.21.5"
+const TraditionalRouterImage = "ddev/ddev-router:20230415_move_docker_to_ddev"
 const TraefikRouterImage = "traefik:v2.9"
 
 // SSHAuthImage is image for agent
-var SSHAuthImage = "drud/ddev-ssh-agent"
+var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "v1.21.5"
+var SSHAuthTag = "20230415_move_docker_to_ddev"
 
 // Busybox is used a couple of places for a quick-pull
 var BusyboxImage = "busybox:stable"

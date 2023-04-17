@@ -5,7 +5,7 @@ set -eu -o pipefail
 
 DOCKER_TAG=${DOCKER_TAG:-$(git describe --tags --always --dirty)}
 
-DOCKER_REPO=${DOCKER_REPO:-drud/ddev-gitpod-base:${DOCKER_TAG}}
+DOCKER_REPO=${DOCKER_REPO:-ddev/ddev-gitpod-base:${DOCKER_TAG}}
 
 echo "Pushing ${DOCKER_REPO}"
 set -x

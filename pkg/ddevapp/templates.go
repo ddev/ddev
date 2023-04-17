@@ -259,7 +259,7 @@ var SequelproTemplate = `<?xml version="1.0" encoding="UTF-8"?>
             <key>host</key>
             <string>%s</string>
             <key>name</key>
-            <string>drud/%s</string>
+            <string>ddev/%s</string>
             <key>password</key>
             <string>%s</string>
             <key>port</key>

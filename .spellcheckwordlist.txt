@@ -281,7 +281,6 @@ docroots
 dotfile
 dotfiles
 dropdown
-drud
 drupal
 drupalize
 drupalpod

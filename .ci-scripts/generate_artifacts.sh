@@ -27,7 +27,7 @@ BUILTPATH=.gotmp/bin/$(go env GOOS)_$(go env GOARCH)
 if [ "${BUILD_IMAGE_TARBALLS}" = "true" ]; then
   ${BUILTPATH}/ddev poweroff
   # Make sure we have all our docker images, and save them in a tarball
-  $BUILTPATH/ddev version | awk '/(drud|phpmyadmin)\// {print $2;}' >/tmp/images.txt
+  $BUILTPATH/ddev version | awk '/(ddev|phpmyadmin)\// {print $2;}' >/tmp/images.txt
   for arch in amd64 arm64; do
     for item in $(cat /tmp/images.txt); do
       docker pull --platform=linux/$arch $item

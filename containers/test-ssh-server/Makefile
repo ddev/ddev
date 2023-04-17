@@ -6,7 +6,7 @@
 # PKG := github.com/ddev/repo_name
 
 # Docker repo for a push
-DOCKER_REPO ?= drud/test-ssh-server
+DOCKER_REPO ?= ddev/test-ssh-server
 
 VERSION := $(shell git describe --tags --always --dirty)
 

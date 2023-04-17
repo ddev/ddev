@@ -543,9 +543,9 @@ Additional named sets of ports to [expose via `ddev-router`](../extend/customiza
 
 The Docker image to use for the web server.
 
-| Type | Default | Usage
-| -- | -- | --
-| :octicons-file-directory-16: project | [`drud/ddev-webserver`](https://hub.docker.com/r/drud/ddev-webserver) | Specify your own image based on [drud/ddev-webserver](https://github.com/ddev/ddev/tree/master/containers/ddev-webserver).
+| Type | Default                                                               | Usage
+| -- |-----------------------------------------------------------------------| --
+| :octicons-file-directory-16: project | [`ddev/ddev-webserver`](https://hub.docker.com/r/ddev/ddev-webserver) | Specify your own image based on [ddev/ddev-webserver](https://github.com/ddev/ddev/tree/master/containers/ddev-webserver).
 
 !!!warning "Proceed with caution"
     It’s unusual to change this, and we don’t recommend it without Docker experience and a good reason. Typically, this means additions to the existing web image using a `.ddev/web-build/Dockerfile.*`.

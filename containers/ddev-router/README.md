@@ -2,7 +2,9 @@
 
 This project is based on the [jwilder/nginx-proxy](https://github.com/jwilder/nginx-proxy) project and contains overrides to the nginx config template specific to [DDEV](https://github.com/ddev/ddev). If you are looking for a generalized Docker router solution, we recommend you look there.
 
-Previously this project was also named `drud/nginx-proxy`, but has been renamed to `drud/docker.ddev-router`.
+Previously this project was also named `drud/nginx-proxy`, but has been renamed to `ddev/docker.ddev-router`.
+
+In v1.20+ this ddev-router is deprecated, replaced by the new traefik router.
 
 ## Usage
 
