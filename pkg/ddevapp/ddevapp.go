@@ -962,7 +962,7 @@ Please use the built-in docker-compose.
 Fix with 'ddev config global --required-docker-compose-version="" --use-docker-compose-from-path=false': %v`, err)
 	}
 
-	err = app.PullBaseContainerImages()
+	err = PullBaseContainerImages()
 	if err != nil {
 		util.Warning("Unable to pull docker images: %v", err)
 	}
@@ -1035,7 +1035,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		return err
 	}
 
-	err = DownloadMutagenIfNeeded(app)
+	err = DownloadMutagenIfNeededAndEnabled(app)
 	if err != nil {
 		return err
 	}
@@ -1346,20 +1346,20 @@ func (app *DdevApp) PullContainerImages() error {
 		if err != nil {
 			return err
 		}
-		util.Debug("Pulling image for %s", i)
+		util.Debug("Pulled image for %s", i)
 	}
 
 	return nil
 }
 
-// PullCBaseontainerImages pulls only the fundamentally needed images so they can be available early
+// PullBaseontainerImages pulls only the fundamentally needed images so they can be available early
 // We always need web image and busybox just for housekeeping.
-func (app *DdevApp) PullBaseContainerImages() error {
+func PullBaseContainerImages() error {
 	images := []string{versionconstants.GetWebImage(), versionconstants.BusyboxImage}
-	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), SSHAuthName) {
+	if !nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, SSHAuthName) {
 		images = append(images, versionconstants.GetSSHAuthImage())
 	}
-	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), RouterProjectName) {
+	if !nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, RouterProjectName) {
 		images = append(images, versionconstants.GetRouterImage())
 	}
 
@@ -1368,7 +1368,7 @@ func (app *DdevApp) PullBaseContainerImages() error {
 		if err != nil {
 			return err
 		}
-		util.Debug("Pulling image for %s", i)
+		util.Debug("Pulled image for %s", i)
 	}
 
 	return nil
