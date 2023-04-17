@@ -1,0 +1,53 @@
+name: 🐞 Bug report
+description: Create a report to help us improve.
+labels: [bug]
+body:
+  - type: checkboxes
+    attributes:
+      label: Is there an existing issue for this?
+      description: Please [search existing issues](https://github.com/ddev/ddev/issues) to see if yours has already been reported.
+      options:
+        - label: I have searched the existing issues
+          required: true
+  - type: textarea
+    attributes:
+      label: Run a Diagnostic and Paste Link Here
+      description: |
+        If you’re having trouble with DDEV, help us with context that will skip a bunch of questions:
+
+        1. Make sure you’re on the [latest stable version](https://github.com/ddev/ddev/releases/latest) before reporting, [upgrading](https://ddev.readthedocs.io/en/latest/users/install/ddev-installation/) if necessary.
+        2. Run a diagnostic and post the results as a new Gist (or your favorite equivalent). Run `ddev debug test`, or download and run [test_ddev.sh](https://raw.githubusercontent.com/ddev/ddev/master/cmd/ddev/cmd/scripts/test_ddev.sh), and share a link to the results via https://gist.github.com. (If this works, there may not be something wrong with DDEV but something to [troubleshoot in your project](https://ddev.readthedocs.io/en/latest/users/basics/troubleshooting/).)
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Actual Behavior
+      description: What actually happened instead?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps To Reproduce
+      description: Specific steps to reproduce the behavior.
+      placeholder: |
+        1. In this environment... 
+        2. With this config... 
+        3. Run `...` 
+        4. See error... 
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Anything else?
+      description: |
+        Links? References? Screenshots? Anything that will give us more context about your issue!
+
+        💡 Attach images or log files by clicking this area to highlight it and dragging files in.
+    validations:
+      required: false

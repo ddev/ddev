@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 DDEV Community Discord
+    url: https://discord.gg/kDvSFBSZfs
+    about: Join the DDEV Community to talk, exchange experiences or ask and answer questions.
+  - name: 📒 Stack Overflow
+    url: https://stackoverflow.com/questions/tagged/ddev
+    about: Please ask and answer questions here.

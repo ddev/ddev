@@ -1,0 +1,35 @@
+name: 🚀 Feature request
+description: Suggest an idea for this project.
+labels: [enhancement]
+body:
+  - type: checkboxes
+    attributes:
+      label: Is there an existing issue for this?
+      description: Please [search existing issues](https://github.com/ddev/ddev/issues) to see if one already exists for your request.
+      options:
+        - label: I have searched the existing issues
+          required: true
+  - type: textarea
+    attributes:
+      label: Is your feature request related to a problem?
+      description: Clearly and concisely describe the problem. (Ex. I’m always frustrated when...)
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Describe your solution
+      description: Clearly and concisely describe what you want to happen.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Describe alternatives
+      description: Clearly and concisely describe any alternative solutions or features you’ve considered.
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: Add any other context or screenshots about the feature request.
+    validations:
+      required: false
