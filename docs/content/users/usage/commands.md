@@ -75,6 +75,10 @@ Example:
 ddev auth ssh
 ```
 
+Flags:
+
+* `--ssh-key-path`, `-d`: Full path to SSH key directory.
+
 ## `artisan`
 
 Run the `artisan` command; available only in projects of type `laravel`, and only available if `artisan` is in the project root.
