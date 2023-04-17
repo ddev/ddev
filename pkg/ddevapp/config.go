@@ -1290,9 +1290,6 @@ func PrepDdevDirectory(app *DdevApp) error {
 		}
 	}
 
-	// The .downloads directory shouldn't have anything in it to begin with.
-	_ = os.RemoveAll(app.GetConfigPath(".downloads"))
-
 	err = os.MkdirAll(filepath.Join(dir, "web-entrypoint.d"), 0755)
 	if err != nil {
 		return err
