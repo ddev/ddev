@@ -18,7 +18,7 @@ var SegmentKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20230415_move_docker_to_ddev" // Note that this can be overridden by make
+var WebTag = "20230417_presync_web_mutagen" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"

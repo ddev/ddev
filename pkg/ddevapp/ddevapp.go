@@ -1274,6 +1274,8 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		util.Warning("Failed waiting for web/db containers to become ready: %v", err)
 	}
 
+	// Start the supervisord services at this point
+
 	// WebExtraDaemons have to be started after mutagen sync is done, because so often
 	// they depend on code being synced into the container/volume
 	if len(app.WebExtraDaemons) > 0 {
