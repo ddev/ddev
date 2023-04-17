@@ -14,7 +14,7 @@ DDEV looks for the `homeadditions` directory both in the global `~/.ddev/homeadd
 Usage examples:
 
 * If you use Git inside the container, you may want to symlink your `~/.gitconfig` into `~/.ddev/homeadditions` or the project’s `.ddev/homeadditions` so that in-container `git` commands use whatever username and email you’ve configured on your host machine. For example, `ln -s ~/.gitconfig ~/.ddev/homeadditions/.gitconfig`.
-* If you use SSH inside the container and want to use your `.ssh/config`, consider `mkdir -p ~/.ddev/homeadditions/.ssh && ln -s ~/.ssh/config ~/.ddev/homeadditions/.ssh/config`. Some people will be able to symlink their entire `.ssh` directory, `ln -s ~/.ssh ~/.ddev/homeadditions/ssh`. If you provide your own `.ssh/config` though, please make sure it includes these lines:
+* If you use SSH inside the container and want to use your `.ssh/config`, consider `mkdir -p ~/.ddev/homeadditions/.ssh && ln -s ~/.ssh/config ~/.ddev/homeadditions/.ssh/config`. Some people will be able to symlink their entire `.ssh` directory, `ln -s ~/.ssh ~/.ddev/homeadditions/.ssh`. If you provide your own `.ssh/config` though, please make sure it includes these lines:
 
     ```
     UserKnownHostsFile=/home/.ssh-agent/known_hosts
