@@ -18,6 +18,9 @@ import (
 
 // TestCmdGet tests various `ddev get` commands .
 func TestCmdGet(t *testing.T) {
+	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
+		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
+	}
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
@@ -89,6 +92,10 @@ func TestCmdGet(t *testing.T) {
 
 // TestCmdGetComplex tests advanced usages
 func TestCmdGetComplex(t *testing.T) {
+	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
+		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
+	}
+
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()

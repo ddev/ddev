@@ -353,7 +353,7 @@ func renderRepositoryList(repos []github.Repository) string {
 
 	t.Render()
 
-	return out.String() + "Add-ons marked with '*' are official, maintained DDEV add-ons."
+	return out.String() + fmt.Sprintf("%d repositories found. Add-ons marked with '*' are officially maintained DDEV add-ons.", len(repos))
 }
 
 func init() {
@@ -387,20 +387,32 @@ func listAvailable(officialOnly bool) ([]github.Repository, error) {
 		q = q + " org:" + globalconfig.DdevGithubOrg
 	}
 
-	repos, resp, err := client.Search.Repositories(context.Background(), q, nil)
-	if err != nil {
-		msg := fmt.Sprintf("Unable to get list of available services: %v", err)
-		if resp != nil {
-			msg = msg + fmt.Sprintf(" rateinfo=%v", resp.Rate)
+	opts := &github.SearchOptions{Sort: "updated", Order: "desc", ListOptions: github.ListOptions{PerPage: 200}}
+	var allRepos []github.Repository
+	for {
+
+		repos, resp, err := client.Search.Repositories(context.Background(), q, opts)
+		if err != nil {
+			msg := fmt.Sprintf("Unable to get list of available services: %v", err)
+			if resp != nil {
+				msg = msg + fmt.Sprintf(" rateinfo=%v", resp.Rate)
+			}
+			return nil, fmt.Errorf(msg)
 		}
-		return nil, fmt.Errorf(msg)
+		allRepos = append(allRepos, repos.Repositories...)
+		if resp.NextPage == 0 {
+			break
+		}
+
+		// Set the next page number for the next request
+		opts.ListOptions.Page = resp.NextPage
 	}
 	out := ""
-	for _, r := range repos.Repositories {
+	for _, r := range allRepos {
 		out = out + fmt.Sprintf("%s: %s\n", r.GetFullName(), r.GetDescription())
 	}
-	if len(repos.Repositories) == 0 {
+	if len(allRepos) == 0 {
 		return nil, fmt.Errorf("No add-ons found")
 	}
-	return repos.Repositories, err
+	return allRepos, nil
 }
