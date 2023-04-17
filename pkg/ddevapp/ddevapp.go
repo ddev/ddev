@@ -1275,6 +1275,12 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	// Start the supervisord services at this point
+	stdout, stderr, err := app.Exec(&ExecOpts{
+		Cmd: `/post-start.sh:*`,
+	})
+	if err != nil {
+		util.Warning("Unable to run post-start.sh, stdout=%s, stderr=%s: %v", stdout, stderr, err)
+	}
 
 	// WebExtraDaemons have to be started after mutagen sync is done, because so often
 	// they depend on code being synced into the container/volume

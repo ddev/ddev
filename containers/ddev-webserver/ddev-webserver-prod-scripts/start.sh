@@ -114,3 +114,5 @@ mkcert -install
 if [ "${DDEV_NO_POST_START}" != "true" ]; then
   exec /post-start.sh
 fi
+
+exec tail -f /dev/null
