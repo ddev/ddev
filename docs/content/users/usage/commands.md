@@ -79,6 +79,15 @@ Flags:
 
 * `--ssh-key-path`, `-d`: Full path to SSH key directory.
 
+## `artisan`
+
+Run the `artisan` command; available only in projects of type `laravel`, and only available if `artisan` is in the project root.
+
+```shell
+# Show all artisan subcommands
+ddev artisan list
+```
+
 ## `blackfire`
 
 Enable or disable [Blackfire profiling](../debugging-profiling/blackfire-profiling.md) (global shell web container command).
@@ -484,6 +493,15 @@ ddev describe
 ddev describe my-project
 ```
 
+## `drush`
+
+Run the `drush` command; available only in projects of type `drupal*`, and only available if `drush` is in the project. On projects of type `drupal8` and higher, `drush` should be installed in the project itself, (`ddev composer require drush/drush`). On projects of type `drupal7` `drush` 8 is provided by DDEV.
+
+```shell
+# Show drush status/configuration
+ddev drush st
+```
+
 ## `exec`
 
 *Alias: `.`.*
@@ -749,6 +767,15 @@ ddev logs -s db
 ddev logs -s db my-project
 ```
 
+## `magento`
+
+Run the `magento` command; available only in projects of type `magento2`, and only works if `bin/magento` is in the project.
+
+```shell
+# Show all magento subcommands
+ddev magento list
+```
+
 ## `mutagen`
 
 Commands for [Mutagen](../install/performance.md#mutagen) status and sync, etc.
@@ -832,7 +859,7 @@ ddev mutagen sync my-project
 
 ## `mysql`
 
-Run MySQL client in the database container (global shell db container command).
+Run MySQL client in the database container (global shell db container command). This is only available on projects that use the `mysql` or `mariadb` database types.
 
 Example:
 
@@ -923,6 +950,21 @@ Example:
 ```shell
 # Stop all projects and containers
 ddev poweroff
+```
+
+## `psql`
+
+Run PostgreSQL client in the database container (global shell db container command). This is only available on projects that use the `postgres` database type.
+
+Example:
+
+```shell
+# List available databases
+ddev psql -l
+
+# List tables in the default 'db' database
+echo "\dt;" | ddev psql
+
 ```
 
 ## `pull`
@@ -1265,6 +1307,15 @@ Example:
 ddev tableplus
 ```
 
+## `typo3`
+
+Run the `typo3` command; available only in projects of type `typo3`, and only works if `typo3` is in the `$PATH` inside the container; normally it's in `vendor/bin/typo3` so will be found.
+
+```shell
+# Show typo3 site configuration
+ddev typo3 site:show
+```
+
 ## `version`
 
 Print DDEV and component versions.
@@ -1274,6 +1325,16 @@ Example:
 ```shell
 # Print DDEV and platform version details
 ddev version
+```
+
+## `wp`
+
+Run the [WP-CLI `wp` command](https://wp-cli.org/); available only in projects of type `wordpress`.
+
+```shell
+# Install WordPress site using `wp core install`
+ddev wp core install --url='$DDEV_PRIMARY_URL' --title='New-WordPress' --admin_user=admin --admin_email=admin@example.com --prompt=admin_password
+
 ```
 
 ## `xdebug`
