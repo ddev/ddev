@@ -178,13 +178,13 @@ ddev get --list --all
 
 			yamlMap[name], err = util.YamlFileToMap(fullpath)
 			if err != nil {
-				util.Failed("unable to import yaml file %s: %v", fullpath, err)
+				util.Warning("unable to import yaml file %s: %v", fullpath, err)
 			}
 		}
 		for k, v := range map[string]string{"DdevGlobalConfig": globalconfig.GetGlobalConfigPath(), "DdevProjectConfig": app.GetConfigPath("config.yaml")} {
 			yamlMap[k], err = util.YamlFileToMap(v)
 			if err != nil {
-				util.Failed("unable to read file %s", v)
+				util.Warning("unable to read file %s", v)
 			}
 		}
 
