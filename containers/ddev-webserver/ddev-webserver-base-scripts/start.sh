@@ -118,7 +118,7 @@ mkcert -install
 # In the unusual case where someone is using ddev-webserver standalone
 # without DDEV, they'll want it to start services as done in post-start.sh
 if [ "${DDEV_NO_POST_START}" != "true" ]; then
-  exec /post-start.sh
+  /post-start.sh
 fi
 
 # Now just wait forever
