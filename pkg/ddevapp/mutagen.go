@@ -514,12 +514,17 @@ func StartMutagenDaemon() {
 	}
 }
 
-// DownloadMutagenIfNeeded downloads the proper version of mutagen
-// if it's either not yet installed or has the wrong version.
-func DownloadMutagenIfNeeded(app *DdevApp) error {
+// DownloadMutagenIfNeededAndEnabled downloads the proper version of mutagen
+// if it's enabled and if it's either not yet installed or has the wrong version.
+func DownloadMutagenIfNeededAndEnabled(app *DdevApp) error {
 	if !app.IsMutagenEnabled() {
 		return nil
 	}
+	return DownloadMutagenIfNeeded()
+}
+
+// DownloadMutagenIfNeeded downloads mutagen if we don't have it or there's an update
+func DownloadMutagenIfNeeded() error {
 	err := os.MkdirAll(globalconfig.GetMutagenDataDirectory(), 0755)
 	if err != nil {
 		return err
