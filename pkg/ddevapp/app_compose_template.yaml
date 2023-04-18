@@ -54,6 +54,7 @@ services:
       - DDEV_ROUTER_HTTPS_PORT
       - DDEV_SITENAME
       - DDEV_TLD
+      - ENTRYPOINT=/mnt/ddev_config/web-entrypoint.d
       - DOCKER_IP={{ .DockerIP }}
       - GOARCH
       - GOOS
@@ -128,9 +129,6 @@ services:
         target: /var/www
         volume:
           nocopy: true
-      # /var/tmp/html mount is there only so project can be accessed as bind-mount during
-      # start.sh
-      - "{{ .WebMount }}:/var/tmp/html:ro"
       # This second mutagen mount is only to make just the volume available so it can be chowned
       # without accidentally also hitting docker mounts
       - type: volume

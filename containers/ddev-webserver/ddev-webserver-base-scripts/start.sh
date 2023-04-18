@@ -4,8 +4,6 @@ set -o errexit nounset pipefail
 
 rm -f /tmp/healthy
 
-export ENTRYPOINT=/mnt/ddev_config/web-entrypoint.d
-
 source /functions.sh
 
 # If user has not been created via normal template (like uid 999)
@@ -117,8 +115,11 @@ if [ ! -f  "${CAROOT}/rootCA.pem" ]; then
 fi
 mkcert -install
 
+# In the unusual case where someone is using ddev-webserver standalone
+# without DDEV, they'll want it to start services as done in post-start.sh
 if [ "${DDEV_NO_POST_START}" != "true" ]; then
   exec /post-start.sh
 fi
 
-exec tail -f /dev/null
+# Now just wait forever
+exec sleep infinity

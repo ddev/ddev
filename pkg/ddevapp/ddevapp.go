@@ -1219,11 +1219,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	if app.IsMutagenEnabled() {
 		CheckMutagenUploadDir(app)
-		// Must wait for web container to be healthy before fiddling with mutagen
-		err = app.Wait([]string{"web"})
-		if err != nil {
-			return fmt.Errorf("web container failed to become ready: %v", err)
-		}
 
 		mounted, err := IsMutagenVolumeMounted(app)
 		if err != nil {
@@ -1264,6 +1259,14 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
+	// Start the supervisord services at this point
+	stdout, stderr, err := app.Exec(&ExecOpts{
+		Cmd: `/post-start.sh`,
+	})
+	if err != nil {
+		util.Warning("Unable to run post-start.sh, stdout=%s, stderr=%s: %v", stdout, stderr, err)
+	}
+
 	// Wait for web/db containers to become healthy
 	dependers := []string{"web"}
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
@@ -1272,14 +1275,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	err = app.Wait(dependers)
 	if err != nil {
 		util.Warning("Failed waiting for web/db containers to become ready: %v", err)
-	}
-
-	// Start the supervisord services at this point
-	stdout, stderr, err := app.Exec(&ExecOpts{
-		Cmd: `/post-start.sh:*`,
-	})
-	if err != nil {
-		util.Warning("Unable to run post-start.sh, stdout=%s, stderr=%s: %v", stdout, stderr, err)
 	}
 
 	// WebExtraDaemons have to be started after mutagen sync is done, because so often
