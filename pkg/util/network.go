@@ -27,8 +27,17 @@ func DownloadFile(destPath string, url string, progressBar bool) (err error) {
 	}
 	defer CheckClose(out)
 
+	request, err := http.NewRequest(http.MethodGet, url, nil)
+
+	// check for github token - used for private addon repositories
+	githubToken := os.Getenv("DDEV_GITHUB_TOKEN")
+	if githubToken != "" {
+		request.Header.Add("Authorization", "Bearer "+githubToken)
+	}
+
 	// Get the data
-	resp, err := http.Get(url)
+	resp, err := http.DefaultClient.Do(request)
+
 	if err != nil {
 		return err
 	}
