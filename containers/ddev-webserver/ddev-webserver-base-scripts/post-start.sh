@@ -15,8 +15,8 @@ unset PHP_IDE_CONFIG
 ddev_python_setup
 
 # Run any custom init scripts (.ddev/.web-entrypoint.d/*.sh)
-if [ -d ${ENTRYPOINT} ]; then
-  if [[ -n $(find ${ENTRYPOINT} -type f -regex ".*\.\(sh\)") ]] && [[ ! -f "${ENTRYPOINT}/.user_scripts_initialized" ]] ; then
+if [ -d ${DDEV_WEB_ENTRYPOINT} ]; then
+  if [[ -n $(find ${DDEV_WEB_ENTRYPOINT} -type f -regex ".*\.\(sh\)") ]] && [[ ! -f "${DDEV_WEB_ENTRYPOINT}/.user_scripts_initialized" ]] ; then
     ddev_custom_init_scripts;
   fi
 fi

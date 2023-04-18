@@ -54,7 +54,6 @@ services:
       - DDEV_ROUTER_HTTPS_PORT
       - DDEV_SITENAME
       - DDEV_TLD
-      - ENTRYPOINT=/mnt/ddev_config/web-entrypoint.d
       - DOCKER_IP={{ .DockerIP }}
       - GOARCH
       - GOOS
@@ -187,6 +186,7 @@ services:
     - DDEV_SITENAME
     - DDEV_TLD
     - DDEV_FILES_DIR
+    - DDEV_WEB_ENTRYPOINT=/mnt/ddev_config/web-entrypoint.d
     - DDEV_WEBSERVER_TYPE
     - DDEV_XDEBUG_ENABLED
     - DDEV_VERSION

@@ -4,8 +4,6 @@ set -o errexit nounset pipefail
 
 rm -f /tmp/healthy
 
-export ENTRYPOINT=/mnt/ddev_config/web-entrypoint.d
-
 source /functions.sh
 
 # If user has not been created via normal template (like blackfire uid 999)
