@@ -45,7 +45,9 @@ jobs:
           for (const art of artifacts) {
             body += `\n* [${art.name}.zip](https://nightly.link/${owner}/${repo}/actions/artifacts/${art.id}.zip)`;
           }
-          
+
+          body += `\n\n See [Testing a PR](https://ddev.readthedocs.io/en/latest/developers/building-contributing/#testing-a-pr)`;
+
           const {data: comments} = await github.issues.listComments({repo, owner, issue_number});
           const existing_comment = comments.find((c) => c.user.login === 'github-actions[bot]');
           if (existing_comment) {
