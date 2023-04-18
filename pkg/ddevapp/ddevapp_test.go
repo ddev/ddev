@@ -2631,7 +2631,7 @@ func TestDdevLogs(t *testing.T) {
 
 	out, err := app.CaptureLogs("web", false, "")
 	assert.NoError(err)
-	assert.Contains(out, "Server started")
+	assert.Contains(out, "exec sleep infinity")
 
 	out, err = app.CaptureLogs("db", false, "")
 	assert.NoError(err)
@@ -2643,7 +2643,7 @@ func TestDdevLogs(t *testing.T) {
 
 	out, err = app.CaptureLogs("web", false, "")
 	assert.NoError(err)
-	assert.Contains(out, "Server started")
+	assert.Contains(out, "exec sleep infinity")
 
 	out, err = app.CaptureLogs("db", false, "")
 	assert.NoError(err)

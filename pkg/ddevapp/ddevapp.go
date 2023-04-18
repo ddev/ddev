@@ -1261,7 +1261,9 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	// Start the supervisord services at this point
 	stdout, stderr, err := app.Exec(&ExecOpts{
-		Cmd: `/post-start.sh`,
+		//Cmd:    "/post-start.sh >/proc/self/fd/1 2>/proc/self/fd/2",
+		Cmd:    "/post-start.sh",
+		Detach: true,
 	})
 	if err != nil {
 		util.Warning("Unable to run post-start.sh, stdout=%s, stderr=%s: %v", stdout, stderr, err)
@@ -1562,6 +1564,8 @@ type ExecOpts struct {
 	Stdout *os.File
 	// Stderr can be overridden with a File
 	Stderr *os.File
+	// Detach does docker-compose detach
+	Detach bool
 }
 
 // Exec executes a given command in the container of given type without allocating a pty
@@ -1601,6 +1605,10 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 
 	if !isatty.IsTerminal(os.Stdin.Fd()) || !opts.Tty {
 		baseComposeExecCmd = append(baseComposeExecCmd, "-T")
+	}
+
+	if opts.Detach {
+		baseComposeExecCmd = append(baseComposeExecCmd, "--detach")
 	}
 
 	baseComposeExecCmd = append(baseComposeExecCmd, opts.Service)
