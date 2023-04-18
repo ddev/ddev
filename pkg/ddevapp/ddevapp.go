@@ -1262,7 +1262,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// Start the supervisord services at this point
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		//Cmd:    "/post-start.sh >/proc/self/fd/1 2>/proc/self/fd/2",
-		Cmd:    "/post-start.sh",
+		Cmd:    "/post-start.sh >/var/tmp/logpipe 2>&1",
 		Detach: true,
 	})
 	if err != nil {

@@ -6,6 +6,8 @@ rm -f /tmp/healthy
 
 source /functions.sh
 
+mkfifo /var/tmp/logpipe || true
+
 # If user has not been created via normal template (like uid 999)
 # then try to grab the required files from /etc/skel
 if [ ! -f ~/.gitconfig ]; then (sudo cp -r /etc/skel/. ~/ && sudo chown -R "$(id -u -n)" ~ ) || true; fi
@@ -121,5 +123,5 @@ if [ "${DDEV_NO_POST_START}" != "true" ]; then
   /post-start.sh
 fi
 
-# Now just wait forever
-exec sleep infinity
+# Now just wait forever, outputting anything put into logpipe
+exec cat < /var/tmp/logpipe

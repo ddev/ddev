@@ -26,4 +26,4 @@ fi
 
 echo 'Server started'
 
-nohup /usr/bin/supervisord -n -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf" >/var/log/nohup.out 2>&1 &
+/usr/bin/supervisord -n -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"
