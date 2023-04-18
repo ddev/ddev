@@ -337,7 +337,7 @@ ddev debug dockercheck
 
 ### `debug download-images`
 
-Download the basic docker images required by DDEV. This can be useful on a new machine to prevent `ddev start` or other commands having to download the various images.
+Download the basic Docker images required by DDEV. This can be useful on a new machine to prevent `ddev start` or other commands having to download the various images.
 
 Example:
 
