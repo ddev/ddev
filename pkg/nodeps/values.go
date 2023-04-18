@@ -77,7 +77,7 @@ var ValidWebserverTypes = map[string]bool{
 	WebserverNginxGunicorn: true,
 }
 
-var ValidNodeJSVersions = []string{"16", "18", "19", "20"}
+var ValidNodeJSVersions = []string{"14", "16", "18", "20"}
 
 // App types
 const (
