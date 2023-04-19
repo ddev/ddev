@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"testing"
@@ -29,9 +29,9 @@ func TestLogsNoConfig(t *testing.T) {
 
 // TestCmdLogs tests that the ddev logs functionality is working.
 func TestCmdLogs(t *testing.T) {
-	if nodeps.IsMacM1() {
-		t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
-	}
+	//if nodeps.IsMacM1() {
+	//	t.Skip("Skipping on mac M1 to ignore problems with 'connection reset by peer'")
+	//}
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
@@ -62,12 +62,10 @@ func TestCmdLogs(t *testing.T) {
 
 	url := app.GetPrimaryURL() + "/logtest.php"
 	_, err = testcommon.EnsureLocalHTTPContent(t, url, "Notice to demonstrate logging", 5)
-	assert.NoError(err)
+	require.NoError(t, err)
 
-	args := []string{"logs"}
-	out, err := exec.RunCommand(DdevBin, args)
-
-	assert.NoError(err)
+	out, err := exec.RunHostCommand(DdevBin, "logs")
+	require.NoError(t, err)
 	assert.Contains(string(out), "Server started")
 	assert.Contains(string(out), "Notice to demonstrate logging", "PHP notice not found for project %s output='%s", site.Name, string(out))
 }
