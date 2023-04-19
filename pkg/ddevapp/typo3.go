@@ -129,20 +129,21 @@ func getTypo3Hooks() []byte {
 
 // setTypo3SiteSettingsPaths sets the paths to settings files for templating
 func setTypo3SiteSettingsPaths(app *DdevApp) {
-	settingsFileBasePath := filepath.Join(app.AppRoot, app.ComposerRoot)
 	var settingsFilePath, localSettingsFilePath string
 
 	if isTypo3v12OrHigher(app) {
+		settingsFileBasePath := filepath.Join(app.AppRoot, app.ComposerRoot)
 		settingsFilePath = filepath.Join(settingsFileBasePath, "config", "system", "settings.php")
 		localSettingsFilePath = filepath.Join(settingsFileBasePath, "config", "system", "additional.php")
 	} else if isTypo3App(app) {
-		settingsFilePath = filepath.Join(settingsFileBasePath, app.Docroot, "typo3conf", "LocalConfiguration.php")
-		localSettingsFilePath = filepath.Join(settingsFileBasePath, app.Docroot, "typo3conf", "AdditionalConfiguration.php")
+		settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
+		settingsFilePath = filepath.Join(settingsFileBasePath, "typo3conf", "LocalConfiguration.php")
+		localSettingsFilePath = filepath.Join(settingsFileBasePath, "typo3conf", "AdditionalConfiguration.php")
 	} else {
 		// As long as TYPO3 is not installed, the file paths are set to the
 		// AppRoot to avoid the creation of the .gitignore in the wrong location.
-		settingsFilePath = filepath.Join(settingsFileBasePath, "LocalConfiguration.php")
-		localSettingsFilePath = filepath.Join(settingsFileBasePath, "AdditionalConfiguration.php")
+		settingsFilePath = filepath.Join(app.AppRoot, "LocalConfiguration.php")
+		localSettingsFilePath = filepath.Join(app.AppRoot, "AdditionalConfiguration.php")
 	}
 
 	// Update file paths
