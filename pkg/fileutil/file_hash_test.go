@@ -39,7 +39,7 @@ func TestFileHash(t *testing.T) {
 			err := fileutil.TemplateStringToFile(tc.content, nil, testFile)
 			require.NoError(t, err)
 
-			expectedHash, err := computeSha1Sum(testFile)
+			expectedHash, err := externalComputeSha1Sum(testFile)
 			require.NoError(t, err)
 
 			result, err := fileutil.FileHash(testFile)
@@ -50,8 +50,8 @@ func TestFileHash(t *testing.T) {
 	}
 }
 
-// computeSha1Sum uses external tool (sha1sum for example) to compute shasum
-func computeSha1Sum(filePath string) (string, error) {
+// externalComputeSha1Sum uses external tool (sha1sum for example) to compute shasum
+func externalComputeSha1Sum(filePath string) (string, error) {
 	dir := filepath.Dir(filePath)
 	fileName := filepath.Base(filePath)
 	_, out, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "", []string{"sha1sum", path.Join("/var/tmp/checkdir/", fileName)}, nil, nil, []string{dir + ":" + "/var/tmp/checkdir"}, "0", true, false, nil)

@@ -28,6 +28,7 @@ import (
 )
 
 const mutagenSignatureLabelName = `com.ddev.volume-signature`
+const mutagenConfigFileHashLabelName = `com.ddev.config-hash`
 
 // SetMutagenVolumeOwnership chowns the volume in use to the current user.
 // The mutagen volume is mounted both in /var/www (where it gets used) and
@@ -124,6 +125,16 @@ func GetMutagenConfigFilePath(app *DdevApp) string {
 	return filepath.Join(app.GetConfigPath("mutagen"), "mutagen.yml")
 }
 
+// GetMutagenConfigFileHash returns the SHA1 hash of the mutagen.yml
+func GetMutagenConfigFileHash(app *DdevApp) (string, error) {
+	f := GetMutagenConfigFilePath(app)
+	hash, err := fileutil.FileHash(f)
+	if err != nil {
+		return "", err
+	}
+	return hash, nil
+}
+
 // GetMutagenConfigFile looks to see if there's a project .mutagen.yml
 // If nothing is found, returns empty
 func GetMutagenConfigFile(app *DdevApp) string {
@@ -175,8 +186,13 @@ func CreateOrResumeMutagenSync(app *DdevApp) error {
 		if err != nil {
 			return err
 		}
+
+		hLabel, err := GetMutagenConfigFileHash(app)
+		if err != nil {
+			return err
+		}
 		// TODO: Consider using a function to specify the docker beta
-		args := []string{"sync", "create", app.AppRoot, fmt.Sprintf("docker:/%s/var/www/html", container.Names[0]), "--no-global-configuration", "--name", syncName, "--label", mutagenSignatureLabelName + "=" + vLabel}
+		args := []string{"sync", "create", app.AppRoot, fmt.Sprintf("docker:/%s/var/www/html", container.Names[0]), "--no-global-configuration", "--name", syncName, "--label", mutagenSignatureLabelName + "=" + vLabel, "--label", mutagenConfigFileHashLabelName + "=" + hLabel}
 		if configFile != "" {
 			args = append(args, fmt.Sprintf(`--configuration-file=%s`, configFile))
 		}
@@ -398,6 +414,27 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 		return status, shortResult, session, nil
 	}
 	return "failing", shortResult, session, nil
+}
+
+// GetMutagenSyncID() returns the project sync ID
+func (app *DdevApp) GetMutagenSyncID() (id string, err error) {
+	syncName := MutagenSyncName(app.Name)
+
+	fullJSONResult, err := exec.RunHostCommandSeparateStreams(globalconfig.GetMutagenPath(), "sync", "list", "--template", `{{ json (index . 0) }}`, syncName)
+	if err != nil {
+		return "", err
+	}
+	session := make(map[string]interface{})
+	err = json.Unmarshal([]byte(fullJSONResult), &session)
+	if err != nil {
+		return "", fmt.Errorf("unable to unmarshall mutagen session json result: %v", err)
+	}
+
+	if id, ok := session["identifier"].(string); ok {
+		return id, nil
+	}
+
+	return "", nil
 }
 
 // MutagenSyncFlush performs a mutagen sync flush, waits for result, and checks for errors
@@ -691,17 +728,28 @@ func CheckMutagenVolumeSyncCompatibility(app *DdevApp) (ok bool, volumeExists bo
 	volumeLabel, volumeLabelErr := GetMutagenVolumeLabel(app)
 	dockerHostID := dockerutil.GetDockerHostID()
 	mutagenLabel := ""
+	configFileHashLabel := ""
 	var mutagenSyncLabelErr error
+	var configFileHashLabelErr error
 
 	volumeExists = !(volumeLabelErr != nil && errors.Is(docker.ErrNoSuchVolume, volumeLabelErr))
-
+	calculatedConfigFileHash, err := GetMutagenConfigFileHash(app)
+	if err != nil {
+		util.Warning("unable to calculate Mutagen config file hash: %v", err)
+	}
 	if mutagenSyncExists {
 		mutagenLabel, mutagenSyncLabelErr = GetMutagenSyncLabel(app)
 		if mutagenSyncLabelErr != nil {
 			util.Warning("mutagen sync %s exists but unable to get label: %v", app.Name, mutagenSyncLabelErr)
 		}
+		configFileHashLabel, configFileHashLabelErr = GetMutagenConfigFileHashLabel(app)
+		if configFileHashLabelErr != nil {
+			util.Warning("mutagen sync %s exists but unable to get label: %v", app.Name, configFileHashLabel)
+		}
 	}
 	switch {
+	case configFileHashLabel != calculatedConfigFileHash:
+		return false, volumeExists, "calculated mutagen.yml hash does not equal session label"
 	// If there is no volume, everything is fine, proceed.
 	case !volumeExists:
 		return true, volumeExists, "no docker volume exists, so compatible"
@@ -731,6 +779,21 @@ func GetMutagenSyncLabel(app *DdevApp) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("sync session label not found for sync session %s", MutagenSyncName(app.Name))
+}
+
+// GetMutagenConfigFileHashLabel gets the com.ddev.hash- label from an existing sync session
+func GetMutagenConfigFileHashLabel(app *DdevApp) (string, error) {
+	status, _, mapResult, err := app.MutagenStatus()
+
+	if strings.HasPrefix(status, "nosession") || err != nil {
+		return "", fmt.Errorf("no session %s found: %v", MutagenSyncName(app.Name), status)
+	}
+	if labels, ok := mapResult["labels"].(map[string]interface{}); ok {
+		if label, ok := labels[mutagenConfigFileHashLabelName].(string); ok {
+			return label, nil
+		}
+	}
+	return "", fmt.Errorf("configFilehash label not found for sync session %s", MutagenSyncName(app.Name))
 }
 
 // TerminateAllMutagenSync terminates all sync sessions

@@ -5,6 +5,7 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
@@ -151,4 +152,90 @@ func TestMutagenSimple(t *testing.T) {
 		assert.Error(err)
 	}
 
+}
+
+// TestMutagenConfigChange tests mutagen new session creation on mutagen.yml change
+func TestMutagenConfigChange(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("TestMutagenConfigChange takes too long on Windows, skipping")
+	}
+	assert := asrt.New(t)
+
+	// Make sure there's not an existing mutagen running, perhaps in wrong directory
+	_, _ = exec.RunHostCommand("pkill", "mutagen")
+
+	// Make sure this leaves us in the original test directory
+	origDir, _ := os.Getwd()
+
+	// Use Drupal9 as it is a good target for composer failures
+	site := FullTestSites[8]
+	// We will create directory from scratch, as we'll be removing files and changing it.
+	app := &ddevapp.DdevApp{Name: site.Name}
+	_ = app.Stop(true, false)
+	_ = globalconfig.RemoveProjectInfo(site.Name)
+
+	err := site.Prepare()
+	require.NoError(t, err)
+	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
+
+	err = app.Init(site.Dir)
+	assert.NoError(err)
+	app.MutagenEnabled = true
+	err = app.WriteConfig()
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		runTime()
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		// We can just remove mutagen.yml and it will be recreated.
+		err = os.RemoveAll(app.GetConfigPath("mutagen/mutagen.yml"))
+		assert.NoError(err)
+		assert.False(dockerutil.VolumeExists(ddevapp.GetMutagenVolumeName(app)))
+	})
+	err = app.Start()
+	require.NoError(t, err)
+
+	origSyncID, err := app.GetMutagenSyncID()
+	require.NoError(t, err)
+
+	// On first start, we have the standard hash from the ddev-provided mutagen.yml
+	firstStartHash, err := ddevapp.GetMutagenConfigFileHashLabel(app)
+	require.NoError(t, err)
+
+	err = app.Restart()
+	require.NoError(t, err)
+
+	// After a restart, nothing should have changed, so we should have same label
+	secondStartHash, err := ddevapp.GetMutagenConfigFileHashLabel(app)
+	require.NoError(t, err)
+
+	afterRestartSyncID, err := app.GetMutagenSyncID()
+	require.NoError(t, err)
+	require.Equal(t, origSyncID, afterRestartSyncID)
+
+	require.Equal(t, firstStartHash, secondStartHash)
+
+	err = app.Stop(false, false)
+	require.NoError(t, err)
+
+	// Now change the mutagen.yml
+	err = fileutil.CopyFile(filepath.Join(origDir, "testdata", t.Name(), "mutagen.yml"), app.GetConfigPath(filepath.Join("mutagen", "mutagen.yml")))
+	require.NoError(t, err)
+
+	err = app.Start()
+	require.NoError(t, err)
+
+	thirdStartHash, err := ddevapp.GetMutagenConfigFileHashLabel(app)
+	require.NoError(t, err)
+
+	afterChangeSyncID, err := app.GetMutagenSyncID()
+	require.NoError(t, err)
+	require.NotEqual(t, origSyncID, afterChangeSyncID)
+
+	require.NotEqual(t, firstStartHash, thirdStartHash)
+
+	util.Debug("origSyncID=%s afterRestartSyncID=%s afterChangeSyncID=%s", origSyncID, afterRestartSyncID, afterChangeSyncID)
 }
