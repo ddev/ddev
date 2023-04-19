@@ -42,7 +42,7 @@ ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3 php7.4 php8.0 php8.1 php8.2
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
 ENV YQ_VERSION=v4.30.5
 ENV DRUSH_VERSION=8.4.12
-ENV NODE_VERSION=18
+ENV NODE_LTS=18
 # composer normally screams about running as root, we don't need that.
 ENV COMPOSER_ALLOW_SUPERUSER 1
 ENV COMPOSER_PROCESS_TIMEOUT 2000
@@ -61,7 +61,7 @@ RUN wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key &&
 
 RUN wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
     echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list && apt-get update
-RUN curl -sSL --fail https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
+RUN curl -sSL --fail https://deb.nodesource.com/setup_${NODE_LTS}.x | bash -
 
 RUN apt-get -qq update
 RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
