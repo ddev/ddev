@@ -54,7 +54,7 @@ var MutagenEnabledDefault = false
 // NFSMountEnabledDefault is default value for app.NFSMountEnabled
 var NFSMountEnabledDefault = false
 
-const NodeJSDefault = "lts"
+const NodeJSDefault = "18"
 
 // NoBindMountsDefault is default value for globalconfig.DDEVGlobalConfig.NoBindMounts
 var NoBindMountsDefault = false
@@ -77,7 +77,7 @@ var ValidWebserverTypes = map[string]bool{
 	WebserverNginxGunicorn: true,
 }
 
-var ValidNodeJSVersions = []string{"lts", "current", "14", "16", "18", "20"}
+var ValidNodeJSVersions = []string{"14", "16", "18", "20"}
 
 // App types
 const (

@@ -62,8 +62,8 @@ const ConfigInstructions = `
 # Alternatively, an explicit Composer version may be specified, for example "2.2.18".
 # To reinstall Composer after the image was built, run "ddev debug refresh".
 
-# nodejs_version: "lts"
-# change from the default LTS Node.js version to another even-numbered version, like 16, 18, 20.
+# nodejs_version: "18"
+# change from the default system Node.js version to another supported version, like 14, 16, 18, 20.
 # Note that you can use 'ddev nvm' or nvm inside the web container to provide nearly any
 # Node.js version, including v6, etc.
 
