@@ -37,6 +37,8 @@ Run `ddev` to see all the [commands](https://ddev.readthedocs.io/en/latest/users
 
 See “How can I contribute to DDEV?” in the [FAQ](https://ddev.readthedocs.io/en/latest/users/usage/faq/), and the [Contributing](CONTRIBUTING.md) page.
 
+![Overview of GitHub contributions](https://repobeats.axiom.co/api/embed/941b040a17921e974655fc01d7735aa350a53603.svg "Repobeats analytics image")
+
 ## Wonderful Sponsors
 
 [<img src="images/Platformsh_Logo_DDEV.jpg" alt="Platform.sh" width="200">](https://platform.sh)
