@@ -54,7 +54,7 @@ var MutagenEnabledDefault = false
 // NFSMountEnabledDefault is default value for app.NFSMountEnabled
 var NFSMountEnabledDefault = false
 
-const NodeJSDefault = "18"
+const NodeJSDefault = "lts"
 
 // NoBindMountsDefault is default value for globalconfig.DDEVGlobalConfig.NoBindMounts
 var NoBindMountsDefault = false
