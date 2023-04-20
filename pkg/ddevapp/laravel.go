@@ -56,6 +56,8 @@ func laravelPostStartAction(app *DdevApp) error {
 		"DB_USERNAME":   "db",
 		"DB_PASSWORD":   "db",
 		"DB_CONNECTION": dbConnection,
+		"MAIL_HOST":     "127.0.0.1",
+		"MAIL_PORT":     "1025",
 	}
 	err = WriteProjectEnvFile(envFilePath, envMap, envText)
 	if err != nil {
