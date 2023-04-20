@@ -445,14 +445,14 @@ Section /o "${DOCKER_DESKTOP_NAME}" SecDocker
       SetDetailsView show
       DetailPrint "Installation of `${DOCKER_DESKTOP_NAME}` failed:"
       DetailPrint " $R0"
-      MessageBox MB_ICONEXCLAMATION|MB_OK "Installation of `${DOCKER_DESKTOP_NAME}` has failed, please download and install once this installation has finished. Continue the resting installation."
+      MessageBox MB_ICONEXCLAMATION|MB_OK "Installation of `${DOCKER_DESKTOP_NAME}` has failed, please download and install once this installation has finished. Continue with the rest of the installation."
     ${EndIf}
   ${Else}
     ; Download failed, show message and continue
     SetDetailsView show
     DetailPrint "Download of `${DOCKER_DESKTOP_NAME}` failed:"
     DetailPrint " $R0"
-    MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${DOCKER_DESKTOP_NAME}` has failed, please download and install once this installation has finished. Continue the resting installation."
+    MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${DOCKER_DESKTOP_NAME}` has failed, please download and install once this installation has finished. Continue with the rest of the installation."
   ${EndIf}
 
   !undef DOCKER_DESKTOP_INSTALLER
@@ -484,7 +484,7 @@ Section "${GSUDO_NAME}" SecSudo
     SetDetailsView show
     DetailPrint "Download of `${GSUDO_NAME}` failed:"
     DetailPrint " $R0"
-    MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${GSUDO_NAME}` has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue the resting installation."
+    MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${GSUDO_NAME}` has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue with the rest of the installation."
   ${EndIf}
 
   !undef GSUDO_DEST
@@ -576,7 +576,7 @@ SectionGroup /e "WinNFSd"
       SetDetailsView show
       DetailPrint "Download of `${WINNFSD_NAME}` failed:"
       DetailPrint " $R0"
-      MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${WINNFSD_NAME}` has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue the resting installation."
+      MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${WINNFSD_NAME}` has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue with the rest of the installation."
     ${EndIf}
 
     !undef WINNFSD_DEST
@@ -605,7 +605,7 @@ SectionGroup /e "WinNFSd"
         SetDetailsView show
         DetailPrint "Download of `${NSSM_NAME}` failed:"
         DetailPrint " $R0"
-        MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${NSSM_NAME}` has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue the resting installation."
+        MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${NSSM_NAME}` has failed, please download it to the DDEV installation folder `$INSTDIR` once this installation has finished. Continue with the rest of the installation."
       ${EndIf}
 
       !undef NSSM_DEST
