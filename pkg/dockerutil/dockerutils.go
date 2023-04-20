@@ -841,7 +841,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 
 	if removeContainerAfterRun {
 		// nolint: errcheck
-		defer RemoveContainer(container.ID, 20)
+		defer RemoveContainer(container.ID)
 	}
 	err = client.StartContainer(container.ID, nil)
 	if err != nil {
@@ -877,7 +877,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 }
 
 // RemoveContainer stops and removes a container
-func RemoveContainer(id string, _ uint) error {
+func RemoveContainer(id string) error {
 	client := GetDockerClient()
 
 	err := client.RemoveContainer(docker.RemoveContainerOptions{ID: id, Force: true})
@@ -1240,7 +1240,7 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 		return err
 	}
 	// nolint: errcheck
-	defer RemoveContainer(containerID, 0)
+	defer RemoveContainer(containerID)
 
 	err = CopyIntoContainer(sourcePath, containerName, targetSubdirFullPath, exclusion)
 

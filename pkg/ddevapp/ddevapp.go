@@ -982,6 +982,14 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 				util.Warning("Unable to terminate mutagen sync %s: %v", MutagenSyncName(app.Name), err)
 			}
 			if volumeExists {
+				// Remove mounting container if necessary.
+				container, err := dockerutil.FindContainerByName("ddev-" + app.Name + "-web")
+				if err == nil && container != nil {
+					err = dockerutil.RemoveContainer(container.ID)
+					if err != nil {
+						return fmt.Errorf(`Unable to remove web container, please 'ddev restart': %v`, err)
+					}
+				}
 				removeVolumeErr := dockerutil.RemoveVolume(GetMutagenVolumeName(app))
 				if removeVolumeErr != nil {
 					return fmt.Errorf(`Unable to remove mismatched mutagen docker volume '%s'. Please use 'ddev restart' or 'ddev mutagen reset': %v`, GetMutagenVolumeName(app), removeVolumeErr)

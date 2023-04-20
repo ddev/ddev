@@ -39,7 +39,7 @@ func TestCmdAuthSSH(t *testing.T) {
 		assert.NoError(err)
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		err = dockerutil.RemoveContainer("test-cmd-ssh-server", 10)
+		err = dockerutil.RemoveContainer("test-cmd-ssh-server")
 		assert.NoError(err)
 	})
 

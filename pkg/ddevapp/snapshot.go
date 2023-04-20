@@ -180,7 +180,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		if err != nil || dbContainer == nil {
 			return fmt.Errorf("no container found for db; err=%v", err)
 		}
-		err = dockerutil.RemoveContainer(dbContainer.ID, 20)
+		err = dockerutil.RemoveContainer(dbContainer.ID)
 		if err != nil {
 			return fmt.Errorf("failed to remove db container: %v", err)
 		}

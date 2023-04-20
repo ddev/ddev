@@ -36,7 +36,7 @@ func PowerOff() {
 	})
 	if err == nil {
 		for _, c := range containers {
-			err = dockerutil.RemoveContainer(c.ID, 10)
+			err = dockerutil.RemoveContainer(c.ID)
 			if err != nil {
 				util.Warning("Failed to remove container %s", c.Names[0])
 			}

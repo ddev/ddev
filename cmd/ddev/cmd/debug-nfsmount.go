@@ -33,7 +33,7 @@ var DebugNFSMountCmd = &cobra.Command{
 		}
 		oldContainer, err := dockerutil.FindContainerByName(containerName)
 		if err == nil && oldContainer != nil {
-			err = dockerutil.RemoveContainer(oldContainer.ID, 20)
+			err = dockerutil.RemoveContainer(oldContainer.ID)
 			if err != nil {
 				util.Failed("Failed to remove existing test container %s: %v", containerName, err)
 			}
