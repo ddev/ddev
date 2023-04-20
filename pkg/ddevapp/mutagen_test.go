@@ -156,8 +156,8 @@ func TestMutagenSimple(t *testing.T) {
 
 // TestMutagenConfigChange tests mutagen new session creation on mutagen.yml change
 func TestMutagenConfigChange(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("TestMutagenConfigChange takes too long on Windows, skipping")
+	if runtime.GOOS != "darwin" {
+		t.Skip("TestMutagenConfigChange runs only on nacOS (without Colima), skipping")
 	}
 	assert := asrt.New(t)
 

@@ -420,21 +420,12 @@ func (app *DdevApp) MutagenStatus() (status string, shortResult string, mapResul
 func (app *DdevApp) GetMutagenSyncID() (id string, err error) {
 	syncName := MutagenSyncName(app.Name)
 
-	fullJSONResult, err := exec.RunHostCommandSeparateStreams(globalconfig.GetMutagenPath(), "sync", "list", "--template", `{{ json (index . 0) }}`, syncName)
+	identifier, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "list", `--template='{{ range . }}{{ .Identifier }}{{ break }}{{ end }}'`, syncName)
 	if err != nil {
-		return "", err
-	}
-	session := make(map[string]interface{})
-	err = json.Unmarshal([]byte(fullJSONResult), &session)
-	if err != nil {
-		return "", fmt.Errorf("unable to unmarshall mutagen session json result: %v", err)
+		return "", fmt.Errorf("failed RunHostCommand, output='%s': %v", identifier, err)
 	}
 
-	if id, ok := session["identifier"].(string); ok {
-		return id, nil
-	}
-
-	return "", nil
+	return identifier, nil
 }
 
 // MutagenSyncFlush performs a mutagen sync flush, waits for result, and checks for errors
