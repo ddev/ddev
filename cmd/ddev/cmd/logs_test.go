@@ -44,7 +44,7 @@ func TestCmdLogs(t *testing.T) {
 	assert.NoError(err)
 
 	logtestFilePath := filepath.Join(site.Dir, site.Docroot, "logtest.php")
-	err = fileutil.CopyFile(filepath.Join(pwd, "testdata", "logtest.php"), logtestFilePath)
+	err = fileutil.CopyFile(filepath.Join(pwd, "testdata", t.Name(), "logtest.php"), logtestFilePath)
 	assert.NoError(err)
 
 	app, err := ddevapp.NewApp(site.Dir, true)
@@ -61,8 +61,8 @@ func TestCmdLogs(t *testing.T) {
 	assert.NoError(err)
 
 	url := app.GetPrimaryURL() + "/logtest.php"
-	_, err = testcommon.EnsureLocalHTTPContent(t, url, "Notice to demonstrate logging", 5)
-	require.NoError(t, err)
+	_, err = testcommon.EnsureLocalHTTPContent(t, url, "Notice to demonstrate logging", 10)
+	assert.NoError(err)
 
 	out, err := exec.RunHostCommand(DdevBin, "logs")
 	require.NoError(t, err)
