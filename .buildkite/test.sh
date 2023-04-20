@@ -3,10 +3,11 @@
 
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 
-echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} in ${PWD} with golang=$(go version | awk '{print $3}') docker-desktop=$(scripts/docker-desktop-version.sh) docker=$(docker --version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}'))"
-
 # GOTEST_SHORT=8 means drupal9
 export GOTEST_SHORT=8
+
+echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} in ${PWD} with GOTEST_SHORT=${GOTEST_SHORT} golang=$(go version | awk '{print $3}') docker-desktop=$(scripts/docker-desktop-version.sh) docker=$(docker --version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}'))"
+
 export DDEV_NONINTERACTIVE=true
 export DDEV_DEBUG=true
 
@@ -23,7 +24,7 @@ if ! docker context list >/dev/null; then
 fi
 
 # If this is a PR and the diff doesn't have code, skip it
-if [ "${BUILDKITE_PULL_REQUEST}" != "false" ] && ! git diff --name-only refs/remotes/origin/${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-} | egrep "^(Makefile|pkg|cmd|vendor|go\.)" >/dev/null; then
+if [ "${BUILDKITE_PULL_REQUEST:-false}" != "false" ] && ! git diff --name-only refs/remotes/origin/${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-} | egrep "^(Makefile|pkg|cmd|vendor|go\.)" >/dev/null; then
   echo "Skipping build since no code changes found"
   exit 0
 fi
