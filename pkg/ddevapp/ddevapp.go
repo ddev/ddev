@@ -1259,14 +1259,39 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
+	// If necessary, do python installation activities
+	if app.WebserverType == nodeps.WebserverNginxGunicorn {
+		stdout, stderr, err := app.Exec(&ExecOpts{
+			// Redirect so we end up going to docker logs, `ddev logs` will show the output of this
+			Cmd: "/python-setup.sh",
+		})
+		if err != nil {
+			util.Warning("Failed nginx-gunicorn setup, stdout='%s', stderr='%s': %v", stdout, stderr, err)
+		}
+	}
+
+	// If necessary, do web-entrypoint.d activities
+	webEntrypointPath := app.GetConfigPath("web-entrypoint.d")
+	if _, err = os.Stat(webEntrypointPath); err == nil {
+		entrypointFiles, _ := filepath.Glob(webEntrypointPath + "/*.sh")
+		if len(entrypointFiles) > 0 {
+			stdout, stderr, err := app.Exec(&ExecOpts{
+				// Redirect so we end up going to docker logs, `ddev logs` will show the output of this
+				Cmd: "/web-entrypoint.sh",
+			})
+			if err != nil {
+				util.Warning("Failed processing process web-entrypoint.d files, stdout='%s', stderr='%s': %v", stdout, stderr, err)
+			}
+		}
+	}
+
 	// Start the supervisord services at this point
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		// Redirect so we end up going to docker logs, `ddev logs` will show the output of this
-		Cmd:    "/post-start.sh >/proc/1/fd/1 /proc/1/fd/2",
-		Detach: true,
+		Cmd: `/usr/bin/supervisord -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf""`,
 	})
 	if err != nil {
-		util.Warning("Unable to run post-start.sh, stdout=%s, stderr=%s: %v", stdout, stderr, err)
+		util.Warning("Unable to run supervisord, stdout=%s, stderr=%s: %v", stdout, stderr, err)
 	}
 
 	// Wait for web/db containers to become healthy
