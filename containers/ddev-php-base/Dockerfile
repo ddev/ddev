@@ -80,7 +80,7 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     postgresql-client \
     sqlite3
 
-RUN npm config set unsafe-perm true && npm install --global gulp-cli yarn
+RUN npm install --unsafe-perm=true --global gulp-cli yarn
 # Normal user needs to be able to write to php sessions
 RUN chmod 777 /var/lib/php/sessions
 RUN set -eu -o pipefail && LATEST=$(curl -L --fail --silent "https://api.github.com/repos/nvm-sh/nvm/releases/latest" | jq -r .tag_name) && curl --fail -sL https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST}/install.sh -o /usr/local/bin/install_nvm.sh && chmod +x /usr/local/bin/install_nvm.sh
