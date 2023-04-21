@@ -4,8 +4,6 @@ set -o errexit nounset pipefail
 
 rm -f /tmp/healthy
 
-source /functions.sh
-
 # If user has not been created via normal template (like uid 999)
 # then try to grab the required files from /etc/skel
 if [ ! -f ~/.gitconfig ]; then (sudo cp -r /etc/skel/. ~/ && sudo chown -R "$(id -u -n)" ~ ) || true; fi
@@ -115,10 +113,22 @@ if [ ! -f  "${CAROOT}/rootCA.pem" ]; then
 fi
 mkcert -install
 
+# VIRTUAL_HOST is a comma-delimited set of fqdns, convert it to space-separated and mkcert
+CAROOT=$CAROOT mkcert -cert-file /etc/ssl/certs/master.crt -key-file /etc/ssl/certs/master.key ${VIRTUAL_HOST//,/ } localhost 127.0.0.1 ${DOCKER_IP} web ddev-${DDEV_PROJECT:-}-web ddev-${DDEV_PROJECT:-}-web.ddev
+echo 'Server started'
+
+# We don't want the various daemons to know about PHP_IDE_CONFIG
+unset PHP_IDE_CONFIG
+
+echo 'Server started'
+
+# We don't want the various daemons to know about PHP_IDE_CONFIG
+unset PHP_IDE_CONFIG
+
 # In the unusual case where someone is using ddev-webserver standalone
 # without DDEV, they'll want it to start services as done in post-start.sh
-if [ "${DDEV_NO_POST_START}" != "true" ]; then
-  /post-start.sh
+if [ "${DDEV_AUTO_RUN_SUPERVISORD:-false}" = "true" ]; then
+  /usr/bin/supervisord -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"
 fi
 
 # Now just wait forever, keeping the container up

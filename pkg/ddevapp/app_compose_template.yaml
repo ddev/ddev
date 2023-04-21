@@ -174,9 +174,6 @@ services:
     - DDEV_DOCROOT
     - DDEV_HOSTNAME
     - DDEV_MUTAGEN_ENABLED
-    # Indicate *not* to run post-start.sh from start.sh, leaving that work
-    # for DDEV to start after mutagen, for example.
-    - DDEV_NO_POST_START=true
     - DDEV_PHP_VERSION
     - DDEV_PRIMARY_URL
     - DDEV_PROJECT

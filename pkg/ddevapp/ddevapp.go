@@ -1261,6 +1261,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	// If necessary, do python installation activities
 	if app.WebserverType == nodeps.WebserverNginxGunicorn {
+		util.Debug("Running python setup script")
 		stdout, stderr, err := app.Exec(&ExecOpts{
 			// Redirect so we end up going to docker logs, `ddev logs` will show the output of this
 			Cmd: "/python-setup.sh",
@@ -1275,8 +1276,8 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	if _, err = os.Stat(webEntrypointPath); err == nil {
 		entrypointFiles, _ := filepath.Glob(webEntrypointPath + "/*.sh")
 		if len(entrypointFiles) > 0 {
+			util.Debug("Executing scripts in .ddev/web-entrypoint.d")
 			stdout, stderr, err := app.Exec(&ExecOpts{
-				// Redirect so we end up going to docker logs, `ddev logs` will show the output of this
 				Cmd: "/web-entrypoint.sh",
 			})
 			if err != nil {
@@ -1286,9 +1287,9 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	// Start the supervisord services at this point
+	util.Debug("Starting supervisord")
 	stdout, stderr, err := app.Exec(&ExecOpts{
-		// Redirect so we end up going to docker logs, `ddev logs` will show the output of this
-		Cmd: `/usr/bin/supervisord -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf""`,
+		Cmd: `/usr/bin/supervisord -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"`,
 	})
 	if err != nil {
 		util.Warning("Unable to run supervisord, stdout=%s, stderr=%s: %v", stdout, stderr, err)
