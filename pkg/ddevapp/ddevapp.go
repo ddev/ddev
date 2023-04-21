@@ -1278,7 +1278,9 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		if len(entrypointFiles) > 0 {
 			util.Debug("Executing scripts in .ddev/web-entrypoint.d")
 			stdout, stderr, err := app.Exec(&ExecOpts{
-				Cmd: "/web-entrypoint.sh",
+				// This delivers output of web-entrypoint.sh to both the docker logs
+				// and our stdout/stderr. Explanation in https://stackoverflow.com/a/53051506/215713
+				Cmd: "/web-entrypoint.sh 1> >(tee /proc/1/fd/1 ) 2> >(tee /proc/1/fd/2 >&2 )",
 			})
 			if err != nil {
 				util.Warning("Failed processing process web-entrypoint.d files, stdout='%s', stderr='%s': %v", stdout, stderr, err)
@@ -1289,7 +1291,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// Start the supervisord services at this point
 	util.Debug("Starting supervisord")
 	stdout, stderr, err := app.Exec(&ExecOpts{
-		Cmd: `/usr/bin/supervisord -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"`,
+		Cmd: `if ! pkill -0 supervisord; then /usr/bin/supervisord -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"; fi`,
 	})
 	if err != nil {
 		util.Warning("Unable to run supervisord, stdout=%s, stderr=%s: %v", stdout, stderr, err)
