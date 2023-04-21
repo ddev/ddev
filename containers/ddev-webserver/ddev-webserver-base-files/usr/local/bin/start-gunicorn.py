@@ -59,7 +59,7 @@ elif ddev_project_type == "django4":
     settings_file = rv.stdout
     print(f"settings_file='{settings_file}'")
     django_settings_module = convert_settings_path(settings_file, "/var/www/html")
-    print(f"django_settings_module='{django_settings_module}")
+    print(f"django_settings_module='{django_settings_module}'")
     os.environ["DJANGO_SETTINGS_MODULE"] = django_settings_module
     from django.conf import settings
     wsgi_application = settings.WSGI_APPLICATION
