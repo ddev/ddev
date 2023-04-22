@@ -29,6 +29,12 @@ if [ "${BUILDKITE_PULL_REQUEST:-false}" != "false" ] && ! git diff --name-only r
   exit 0
 fi
 
+# We can skip builds with commit message of [skip buildkite]
+if [[ $BUILDKITE_MESSAGE == *"[skip buildkite]"* ]]; then
+  echo "Skipping build because message has '[skip buildkite]'"
+  exit 0
+fi
+
 # On macOS, restart docker to avoid bugs where containers can't be deleted
 #if [ "${OSTYPE%%[0-9]*}" = "darwin" ]; then
 #  killall Docker || true
