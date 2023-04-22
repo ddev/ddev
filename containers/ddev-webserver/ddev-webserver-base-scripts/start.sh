@@ -2,7 +2,8 @@
 set -x
 set -o errexit nounset pipefail
 
-rm -f /tmp/healthy
+rm -f /tmp/healthy /tmp/startran
+
 
 # If user has not been created via normal template (like uid 999)
 # then try to grab the required files from /etc/skel
@@ -121,6 +122,8 @@ CAROOT=$CAROOT mkcert -cert-file /etc/ssl/certs/master.crt -key-file /etc/ssl/ce
 unset PHP_IDE_CONFIG
 
 echo 'Server started'
+
+touch /tmp/startran
 
 # In the unusual case where someone is using ddev-webserver standalone
 # without DDEV, they'll want it to start services as done in post-start.sh

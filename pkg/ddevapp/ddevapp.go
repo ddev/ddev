@@ -1169,6 +1169,24 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		return err
 	}
 
+	// Wait until the web container has finished running start.sh
+	util.Debug("waiting for /tmp/startran to appear, meaning start.sh has completed")
+	stdout, stderr, err := app.Exec(&ExecOpts{
+		Cmd: `
+for ((i=0; i < 30; i++)); do 
+  if [ -f /tmp/startran ]; then 
+    echo "/start.sh ran, /tmp/startran appeared after ${i} seconds" | tee /proc/1/fd/1; 
+    exit 0;
+  fi;
+  sleep 1;
+done;
+echo "/start.sh didn't seem to complete, /tmp/startran file never appeared after ${i} seconds" | tee /proc/1/fd/1;
+exit 1;`,
+	})
+	if err != nil {
+		util.Warning("waiting for /tmp/startran in container - file never appeared; stdout='%s', stderr='%s: %v", stdout, stderr, err)
+	}
+
 	if !IsRouterDisabled(app) {
 		caRoot := globalconfig.GetCAROOT()
 		if caRoot == "" {
@@ -1290,7 +1308,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	// Start the supervisord services at this point
 	util.Debug("Starting supervisord")
-	stdout, stderr, err := app.Exec(&ExecOpts{
+	stdout, stderr, err = app.Exec(&ExecOpts{
 		Cmd: `if ! pkill -0 supervisord; then /usr/bin/supervisord -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"; fi`,
 	})
 	if err != nil {
