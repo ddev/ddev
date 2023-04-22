@@ -231,6 +231,9 @@ func TestPretestAndEnv(t *testing.T) {
 	assert.NoError(err)
 
 	t.Cleanup(func() {
+		site.WebEnvironment = []string{}
+		site.PretestCmd = ""
+
 		err = app.Stop(true, false)
 		assert.NoError(err)
 		_ = globalconfig.RemoveProjectInfo(site.Name)
