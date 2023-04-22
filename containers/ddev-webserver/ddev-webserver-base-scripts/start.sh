@@ -2,8 +2,11 @@
 set -x
 set -o errexit nounset pipefail
 
-rm -f /tmp/healthy /tmp/startran
+rm -f /tmp/healthy
 
+export ENTRYPOINT=/mnt/ddev_config/web-entrypoint.d
+
+source /functions.sh
 
 # If user has not been created via normal template (like uid 999)
 # then try to grab the required files from /etc/skel
@@ -116,20 +119,30 @@ mkcert -install
 
 # VIRTUAL_HOST is a comma-delimited set of fqdns, convert it to space-separated and mkcert
 CAROOT=$CAROOT mkcert -cert-file /etc/ssl/certs/master.crt -key-file /etc/ssl/certs/master.key ${VIRTUAL_HOST//,/ } localhost 127.0.0.1 ${DOCKER_IP} web ddev-${DDEV_PROJECT:-}-web ddev-${DDEV_PROJECT:-}-web.ddev
-
+echo 'Server started'
 
 # We don't want the various daemons to know about PHP_IDE_CONFIG
 unset PHP_IDE_CONFIG
 
-echo 'Server started'
+# Run any python/django4 activities.
+ddev_python_setup
 
-touch /tmp/startran
-
-# In the unusual case where someone is using ddev-webserver standalone
-# without DDEV, they'll want it to start services as done in post-start.sh
-if [ "${DDEV_AUTO_RUN_SUPERVISORD:-true}" = "true" ]; then
-  /usr/bin/supervisord -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"
+# Run any custom init scripts (.ddev/.web-entrypoint.d/*.sh)
+if [ -d ${ENTRYPOINT} ]; then
+  if [[ -n $(find ${ENTRYPOINT} -type f -regex ".*\.\(sh\)") ]] && [[ ! -f "${ENTRYPOINT}/.user_scripts_initialized" ]] ; then
+    # For web-entrypoint.d to work with code already loaded, if mutagen is enabled,
+    # the code may not yet be in /var/www/html, so boost it along early
+    # The .start-synced file is created after mutagen sync is done, and deleted early
+    # in `ddev start`.
+    if [ "${DDEV_MUTAGEN_ENABLED}" = "true" ] && [ ! -f /var/www/html/.ddev/mutagen/.start-synced ]; then
+      RSYNC_CMD="sudo rsync -a /var/tmp/html/ /var/www/html/"
+      if [ "${DDEV_FILES_DIR:-}" != "" ]; then
+        RSYNC_CMD="${RSYNC_CMD} --exclude ${DDEV_FILES_DIR#/var/www/html/} --exclude=.git --exclude=.tarballs --exclude=.idea"
+      fi
+      time ${RSYNC_CMD} || true
+    fi
+    ddev_custom_init_scripts;
+  fi
 fi
 
-# Now just wait forever, keeping the container up
-exec sleep infinity
+exec /usr/bin/supervisord -n -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"

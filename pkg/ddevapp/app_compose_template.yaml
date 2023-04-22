@@ -93,14 +93,11 @@ services:
         gid: '{{ .GID }}'
         DDEV_PHP_VERSION: ${DDEV_PHP_VERSION}
     image: ${DDEV_WEBIMAGE}-${DDEV_SITENAME}-built
+    command: sleep infinity
     {{ if .EnvFile }}
     env_file: '{{ .EnvFile }}'
     {{ end }}
 
-    {{ if .UseHostDockerInternalExtraHosts }}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    {{ end }}
     networks: ["default", "ddev_default"]
     cap_add:
       - SYS_PTRACE
@@ -169,8 +166,6 @@ services:
     environment:
     - COLUMNS
     - DOCROOT=${DDEV_DOCROOT}
-    # Default is to run supervisord right in start.sh, but ddev will take care of that instead
-    - DDEV_AUTO_RUN_SUPERVISORD=false
     - DDEV_COMPOSER_ROOT
     - DDEV_DATABASE
     - DDEV_DOCROOT
@@ -230,6 +225,11 @@ services:
       {{ if .HostDockerInternalIP }}
     extra_hosts: [ "host.docker.internal:{{ .HostDockerInternalIP }}" ]
       {{ end }}
+      {{ if .UseHostDockerInternalExtraHosts }}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      {{ end }}
+
       {{ if not .OmitRouter }}
     external_links:
       {{ range $hostname := .Hostnames }}- "ddev-router:{{ $hostname }}"

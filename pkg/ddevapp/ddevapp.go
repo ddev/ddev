@@ -1169,24 +1169,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		return err
 	}
 
-	// Wait until the web container has finished running start.sh
-	util.Debug("waiting for /tmp/startran to appear, meaning start.sh has completed")
-	stdout, stderr, err := app.Exec(&ExecOpts{
-		Cmd: `
-for ((i=0; i < 30; i++)); do 
-  if [ -f /tmp/startran ]; then 
-    echo "/start.sh ran, /tmp/startran appeared after ${i} seconds" | tee /proc/1/fd/1; 
-    exit 0;
-  fi;
-  sleep 1;
-done;
-echo "/start.sh didn't seem to complete, /tmp/startran file never appeared after ${i} seconds" | tee /proc/1/fd/1;
-exit 1;`,
-	})
-	if err != nil {
-		util.Warning("waiting for /tmp/startran in container - file never appeared; stdout='%s', stderr='%s: %v", stdout, stderr, err)
-	}
-
 	if !IsRouterDisabled(app) {
 		caRoot := globalconfig.GetCAROOT()
 		if caRoot == "" {
@@ -1277,47 +1259,13 @@ exit 1;`,
 		}
 	}
 
-	// If necessary, do python installation activities
-	if app.WebserverType == nodeps.WebserverNginxGunicorn {
-		util.Debug("Running python setup script")
-		stdout, stderr, err := app.Exec(&ExecOpts{
-			// Redirect so we end up going to docker logs, `ddev logs` will show the output of this
-			Cmd: "/python-setup.sh",
-		})
-		if err != nil {
-			util.Warning("Failed nginx-gunicorn setup, stdout='%s', stderr='%s': %v", stdout, stderr, err)
-		}
-	}
-
-	finalCmd := ""
-	// If necessary, do web-entrypoint.d activities
-	webEntrypointPath := app.GetConfigPath("web-entrypoint.d")
-	if _, err = os.Stat(webEntrypointPath); err == nil {
-		entrypointFiles, _ := filepath.Glob(webEntrypointPath + "/*.sh")
-		if len(entrypointFiles) > 0 {
-			finalCmd = finalCmd + "/web-entrypoint.sh 1> >(tee /proc/1/fd/1 ) 2> >(tee /proc/1/fd/2 >&2 ) && "
-			//stdout, stderr, err := app.Exec(&ExecOpts{
-			//	// This delivers output of web-entrypoint.sh to both the docker logs
-			//	// and our stdout/stderr. Explanation in https://stackoverflow.com/a/53051506/215713
-			//	Cmd: "/web-entrypoint.sh 1> >(tee /proc/1/fd/1 ) 2> >(tee /proc/1/fd/2 >&2 )",
-			//})
-			//if err != nil {
-			//	util.Warning("Failed processing process web-entrypoint.d files, stdout='%s', stderr='%s': %v", stdout, stderr, err)
-			//}
-		}
-	}
-
-	// Run the web-entrypoint.d functions and start supervisord services at this point
-	// These have to be done together so that web-entrypoint.d can set environment variables
-	// that would exist in supervisord-created services.
-	util.Debug("Executing web-entrypoint.d and supervisord")
-	finalCmd = finalCmd + "env | sort > /proc/1/fd/1 && "
-	finalCmd = finalCmd + `if ! pkill -0 supervisord; then /usr/bin/supervisord -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"; fi`
-	stdout, stderr, err = app.Exec(&ExecOpts{
-		Cmd: finalCmd,
+	util.Debug("Running supervisord")
+	stdout, stderr, err := app.Exec(&ExecOpts{
+		Cmd:    `/start.sh`,
+		Detach: true,
 	})
 	if err != nil {
-		util.Warning("Unable to execute web-entrypoint.d functions and start supervisord, Cme=%s, stdout=%s, stderr=%s: %v", finalCmd, stdout, stderr, err)
+		util.Warning("Unable to run /start.sh, stdout=%s, stderr=%s: %v", stdout, stderr, err)
 	}
 
 	// Wait for web/db containers to become healthy
