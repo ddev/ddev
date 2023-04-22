@@ -149,6 +149,8 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 
 	assert := asrt.New(t)
 
+	origDir, _ := os.Getwd()
+
 	dockerutil.EnsureDdevNetwork()
 
 	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
@@ -162,22 +164,28 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 	site.Name = t.Name()
 
 	_, _ = exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
-	//nolint: errcheck
-	defer exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
-	//nolint: errcheck
-	defer globalconfig.RemoveProjectInfo(site.Name)
 
 	err = site.Prepare()
 	require.NoError(t, err, "Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
 
-	cleanup := site.Chdir()
-	defer cleanup()
-
 	app := &ddevapp.DdevApp{}
 	err = app.Init(site.Dir)
 	assert.NoError(err)
-	// nolint: errcheck
-	defer app.Stop(true, false)
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+
+		err = app.Stop(true, false)
+		assert.NoError(err)
+
+		app.RouterHTTPSPort = "443"
+		app.RouterHTTPPort = "80"
+		err = app.WriteConfig()
+		assert.NoError(err)
+
+		site.Cleanup()
+	})
 
 	for _, pair := range []PortPair{{"8000", "8043"}, {"8080", "8443"}} {
 		ClearDockerEnv()
@@ -211,18 +219,7 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 			_, _ = EnsureLocalHTTPContent(t, safeURL, site.Safe200URIWithExpectation.Expect)
 		}
 	}
-	// Set the ports back to the default was so we don't break any following tests.
-	app.RouterHTTPSPort = "443"
-	app.RouterHTTPPort = "80"
-	err = app.WriteConfig()
-	assert.NoError(err)
 
-	err = app.Stop(true, false)
-	assert.NoError(err)
-
-	cleanup()
-
-	site.Cleanup()
 }
 
 // TestGetCachedArchive tests download and extraction of archives for test sites
