@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"reflect"
 	"runtime"
 	"testing"
 
@@ -51,35 +50,6 @@ func TestCreateTmpDir(t *testing.T) {
 	if err != nil {
 		assert.True(os.IsNotExist(err), "Error is of type IsNotExists")
 	}
-}
-
-// TestChdir tests the Chdir function and ensures it will change to a temporary directory and then properly return
-// to the original directory when cleaned up.
-func TestChdir(t *testing.T) {
-	assert := asrt.New(t)
-	// Get the current working directory.
-	startingDir, err := os.Getwd()
-	assert.NoError(err)
-
-	// Create a temporary directory.
-	testDir := CreateTmpDir("TestChdir")
-	assert.NotEqual(startingDir, testDir, "Ensure our starting directory and temporary directory are not the same")
-
-	// Change to the temporary directory.
-	cleanupFunc := Chdir(testDir)
-	currentDir, err := os.Getwd()
-	assert.NoError(err)
-
-	// On OSX this are created under /var, but /var is a symlink to /var/private, so we cannot ensure complete equality of these strings.
-	assert.Contains(currentDir, testDir, "Ensure the current directory is the temporary directory we created")
-	assert.True(reflect.TypeOf(cleanupFunc).Kind() == reflect.Func, "Chdir return is of type function")
-
-	cleanupFunc()
-	currentDir, err = os.Getwd()
-	assert.NoError(err)
-	assert.Equal(currentDir, startingDir, "Ensure we have changed back to the starting directory")
-
-	CleanupDir(testDir)
 }
 
 // TestValidTestSite tests the TestSite struct behavior in the case of a valid configuration.
