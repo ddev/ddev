@@ -1289,30 +1289,35 @@ exit 1;`,
 		}
 	}
 
+	finalCmd := ""
 	// If necessary, do web-entrypoint.d activities
 	webEntrypointPath := app.GetConfigPath("web-entrypoint.d")
 	if _, err = os.Stat(webEntrypointPath); err == nil {
 		entrypointFiles, _ := filepath.Glob(webEntrypointPath + "/*.sh")
 		if len(entrypointFiles) > 0 {
-			util.Debug("Executing scripts in .ddev/web-entrypoint.d")
-			stdout, stderr, err := app.Exec(&ExecOpts{
-				// This delivers output of web-entrypoint.sh to both the docker logs
-				// and our stdout/stderr. Explanation in https://stackoverflow.com/a/53051506/215713
-				Cmd: "/web-entrypoint.sh 1> >(tee /proc/1/fd/1 ) 2> >(tee /proc/1/fd/2 >&2 )",
-			})
-			if err != nil {
-				util.Warning("Failed processing process web-entrypoint.d files, stdout='%s', stderr='%s': %v", stdout, stderr, err)
-			}
+			finalCmd = finalCmd + "/web-entrypoint.sh 1> >(tee /proc/1/fd/1 ) 2> >(tee /proc/1/fd/2 >&2 ) && "
+			//stdout, stderr, err := app.Exec(&ExecOpts{
+			//	// This delivers output of web-entrypoint.sh to both the docker logs
+			//	// and our stdout/stderr. Explanation in https://stackoverflow.com/a/53051506/215713
+			//	Cmd: "/web-entrypoint.sh 1> >(tee /proc/1/fd/1 ) 2> >(tee /proc/1/fd/2 >&2 )",
+			//})
+			//if err != nil {
+			//	util.Warning("Failed processing process web-entrypoint.d files, stdout='%s', stderr='%s': %v", stdout, stderr, err)
+			//}
 		}
 	}
 
-	// Start the supervisord services at this point
-	util.Debug("Starting supervisord")
+	// Run the web-entrypoint.d functions and start supervisord services at this point
+	// These have to be done together so that web-entrypoint.d can set environment variables
+	// that would exist in supervisord-created services.
+	util.Debug("Executing web-entrypoint.d and supervisord")
+	finalCmd = finalCmd + "env | sort > /proc/1/fd/1 && "
+	finalCmd = finalCmd + `if ! pkill -0 supervisord; then /usr/bin/supervisord -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"; fi`
 	stdout, stderr, err = app.Exec(&ExecOpts{
-		Cmd: `if ! pkill -0 supervisord; then /usr/bin/supervisord -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"; fi`,
+		Cmd: finalCmd,
 	})
 	if err != nil {
-		util.Warning("Unable to run supervisord, stdout=%s, stderr=%s: %v", stdout, stderr, err)
+		util.Warning("Unable to execute web-entrypoint.d functions and start supervisord, Cme=%s, stdout=%s, stderr=%s: %v", finalCmd, stdout, stderr, err)
 	}
 
 	// Wait for web/db containers to become healthy
