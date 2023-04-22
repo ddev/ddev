@@ -127,7 +127,7 @@ touch /tmp/startran
 
 # In the unusual case where someone is using ddev-webserver standalone
 # without DDEV, they'll want it to start services as done in post-start.sh
-if [ "${DDEV_AUTO_RUN_SUPERVISORD:-false}" = "true" ]; then
+if [ "${DDEV_AUTO_RUN_SUPERVISORD:-true}" = "true" ]; then
   /usr/bin/supervisord -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"
 fi
 

@@ -169,6 +169,8 @@ services:
     environment:
     - COLUMNS
     - DOCROOT=${DDEV_DOCROOT}
+    # Default is to run supervisord right in start.sh, but ddev will take care of that instead
+    - DDEV_AUTO_RUN_SUPERVISORD=false
     - DDEV_COMPOSER_ROOT
     - DDEV_DATABASE
     - DDEV_DOCROOT
