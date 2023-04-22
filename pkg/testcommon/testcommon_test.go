@@ -85,13 +85,11 @@ func TestChdir(t *testing.T) {
 // TestValidTestSite tests the TestSite struct behavior in the case of a valid configuration.
 func TestValidTestSite(t *testing.T) {
 	assert := asrt.New(t)
-	// Get the current working directory.
-	startingDir, err := os.Getwd()
-	assert.NoError(err, "Could not get current directory.")
 
 	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
 		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
 	}
+	origDir, _ := os.Getwd()
 
 	// It's not ideal to copy/paste this archive around, but we don't actually care about the contents
 	// of the archive for this test, only that it exists and can be extracted. This should (knock on wood)
@@ -99,17 +97,20 @@ func TestValidTestSite(t *testing.T) {
 	site := TestSites[0]
 
 	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
-	site.Name = "TestValidTestSite"
+	site.Name = t.Name()
 	_, _ = exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
 
-	//nolint: errcheck
-	defer exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
-	//nolint: errcheck
-	defer globalconfig.RemoveProjectInfo(site.Name)
-	err = site.Prepare()
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		_, err := exec.RunCommand(DdevBin, []string{"delete", "-Oy", site.Name})
+		assert.NoError(err)
+		site.Cleanup()
+		_, err = os.Stat(site.Dir)
+		assert.Error(err, "Could not stat temporary directory after cleanup")
+	})
+	err := site.Prepare()
 	require.NoError(t, err, "Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
 
-	assert.NotNil(site.Dir, "Directory is set.")
 	docroot := filepath.Join(site.Dir, site.Docroot)
 	dirStat, err := os.Stat(docroot)
 	assert.NoError(err, "Docroot exists after prepare()")
@@ -118,24 +119,12 @@ func TestValidTestSite(t *testing.T) {
 	}
 	assert.True(dirStat.IsDir(), "Docroot is a directory")
 
-	cleanup := site.Chdir()
-	defer cleanup()
+	err = os.Chdir(site.Dir)
+	require.NoError(t, err)
 
-	currentDir, err := os.Getwd()
-	assert.NoError(err)
+	currentDir, _ := os.Getwd()
 
-	// On OSX this are created under /var, but /var is a symlink to /var/private, so we cannot ensure complete equality of these strings.
-	assert.Contains(currentDir, site.Dir)
-
-	cleanup()
-
-	currentDir, err = os.Getwd()
-	assert.NoError(err)
-	assert.Equal(startingDir, currentDir)
-
-	site.Cleanup()
-	_, err = os.Stat(site.Dir)
-	assert.Error(err, "Could not stat temporary directory after cleanup")
+	assert.Equal(currentDir, site.Dir)
 }
 
 // TestGetLocalHTTPResponse() brings up a project and hits a URL to get the response
