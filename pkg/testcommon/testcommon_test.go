@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"reflect"
 	"runtime"
 	"testing"
 
@@ -53,45 +52,14 @@ func TestCreateTmpDir(t *testing.T) {
 	}
 }
 
-// TestChdir tests the Chdir function and ensures it will change to a temporary directory and then properly return
-// to the original directory when cleaned up.
-func TestChdir(t *testing.T) {
-	assert := asrt.New(t)
-	// Get the current working directory.
-	startingDir, err := os.Getwd()
-	assert.NoError(err)
-
-	// Create a temporary directory.
-	testDir := CreateTmpDir("TestChdir")
-	assert.NotEqual(startingDir, testDir, "Ensure our starting directory and temporary directory are not the same")
-
-	// Change to the temporary directory.
-	cleanupFunc := Chdir(testDir)
-	currentDir, err := os.Getwd()
-	assert.NoError(err)
-
-	// On OSX this are created under /var, but /var is a symlink to /var/private, so we cannot ensure complete equality of these strings.
-	assert.Contains(currentDir, testDir, "Ensure the current directory is the temporary directory we created")
-	assert.True(reflect.TypeOf(cleanupFunc).Kind() == reflect.Func, "Chdir return is of type function")
-
-	cleanupFunc()
-	currentDir, err = os.Getwd()
-	assert.NoError(err)
-	assert.Equal(currentDir, startingDir, "Ensure we have changed back to the starting directory")
-
-	CleanupDir(testDir)
-}
-
 // TestValidTestSite tests the TestSite struct behavior in the case of a valid configuration.
 func TestValidTestSite(t *testing.T) {
 	assert := asrt.New(t)
-	// Get the current working directory.
-	startingDir, err := os.Getwd()
-	assert.NoError(err, "Could not get current directory.")
 
 	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
 		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
 	}
+	origDir, _ := os.Getwd()
 
 	// It's not ideal to copy/paste this archive around, but we don't actually care about the contents
 	// of the archive for this test, only that it exists and can be extracted. This should (knock on wood)
@@ -99,17 +67,20 @@ func TestValidTestSite(t *testing.T) {
 	site := TestSites[0]
 
 	// If running this with GOTEST_SHORT we have to create the directory, tarball etc.
-	site.Name = "TestValidTestSite"
+	site.Name = t.Name()
 	_, _ = exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
 
-	//nolint: errcheck
-	defer exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
-	//nolint: errcheck
-	defer globalconfig.RemoveProjectInfo(site.Name)
-	err = site.Prepare()
+	t.Cleanup(func() {
+		_ = os.Chdir(origDir)
+		_, err := exec.RunCommand(DdevBin, []string{"delete", "-Oy", site.Name})
+		assert.NoError(err)
+		site.Cleanup()
+		_, err = os.Stat(site.Dir)
+		assert.Error(err, "Could not stat temporary directory after cleanup")
+	})
+	err := site.Prepare()
 	require.NoError(t, err, "Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
 
-	assert.NotNil(site.Dir, "Directory is set.")
 	docroot := filepath.Join(site.Dir, site.Docroot)
 	dirStat, err := os.Stat(docroot)
 	assert.NoError(err, "Docroot exists after prepare()")
@@ -118,24 +89,12 @@ func TestValidTestSite(t *testing.T) {
 	}
 	assert.True(dirStat.IsDir(), "Docroot is a directory")
 
-	cleanup := site.Chdir()
-	defer cleanup()
+	err = os.Chdir(site.Dir)
+	require.NoError(t, err)
 
-	currentDir, err := os.Getwd()
-	assert.NoError(err)
+	currentDir, _ := os.Getwd()
 
-	// On OSX this are created under /var, but /var is a symlink to /var/private, so we cannot ensure complete equality of these strings.
-	assert.Contains(currentDir, site.Dir)
-
-	cleanup()
-
-	currentDir, err = os.Getwd()
-	assert.NoError(err)
-	assert.Equal(startingDir, currentDir)
-
-	site.Cleanup()
-	_, err = os.Stat(site.Dir)
-	assert.Error(err, "Could not stat temporary directory after cleanup")
+	assert.Equal(currentDir, site.Dir)
 }
 
 // TestGetLocalHTTPResponse() brings up a project and hits a URL to get the response
@@ -148,6 +107,8 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 	require.NoError(t, err)
 
 	assert := asrt.New(t)
+
+	origDir, _ := os.Getwd()
 
 	dockerutil.EnsureDdevNetwork()
 
@@ -162,22 +123,28 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 	site.Name = t.Name()
 
 	_, _ = exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
-	//nolint: errcheck
-	defer exec.RunCommand(DdevBin, []string{"stop", "-RO", site.Name})
-	//nolint: errcheck
-	defer globalconfig.RemoveProjectInfo(site.Name)
 
 	err = site.Prepare()
 	require.NoError(t, err, "Prepare() failed on TestSite.Prepare() site=%s, err=%v", site.Name, err)
 
-	cleanup := site.Chdir()
-	defer cleanup()
-
 	app := &ddevapp.DdevApp{}
 	err = app.Init(site.Dir)
 	assert.NoError(err)
-	// nolint: errcheck
-	defer app.Stop(true, false)
+
+	t.Cleanup(func() {
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+
+		err = app.Stop(true, false)
+		assert.NoError(err)
+
+		app.RouterHTTPSPort = "443"
+		app.RouterHTTPPort = "80"
+		err = app.WriteConfig()
+		assert.NoError(err)
+
+		site.Cleanup()
+	})
 
 	for _, pair := range []PortPair{{"8000", "8043"}, {"8080", "8443"}} {
 		ClearDockerEnv()
@@ -211,18 +178,7 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 			_, _ = EnsureLocalHTTPContent(t, safeURL, site.Safe200URIWithExpectation.Expect)
 		}
 	}
-	// Set the ports back to the default was so we don't break any following tests.
-	app.RouterHTTPSPort = "443"
-	app.RouterHTTPPort = "80"
-	err = app.WriteConfig()
-	assert.NoError(err)
 
-	err = app.Stop(true, false)
-	assert.NoError(err)
-
-	cleanup()
-
-	site.Cleanup()
 }
 
 // TestGetCachedArchive tests download and extraction of archives for test sites
@@ -275,6 +231,9 @@ func TestPretestAndEnv(t *testing.T) {
 	assert.NoError(err)
 
 	t.Cleanup(func() {
+		site.WebEnvironment = []string{}
+		site.PretestCmd = ""
+
 		err = app.Stop(true, false)
 		assert.NoError(err)
 		_ = globalconfig.RemoveProjectInfo(site.Name)

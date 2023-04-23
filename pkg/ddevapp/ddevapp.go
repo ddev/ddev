@@ -1219,11 +1219,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	if app.IsMutagenEnabled() {
 		CheckMutagenUploadDir(app)
-		// Must wait for web container to be healthy before fiddling with mutagen
-		err = app.Wait([]string{"web"})
-		if err != nil {
-			return fmt.Errorf("web container failed to become ready: %v", err)
-		}
 
 		mounted, err := IsMutagenVolumeMounted(app)
 		if err != nil {
@@ -1262,6 +1257,16 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		if err != nil {
 			util.Warning("could not create file %s: %v", app.GetConfigPath("mutagen/.start-synced"), err)
 		}
+	}
+
+	util.Debug("Running /start.sh in ddev-webserver")
+	stdout, stderr, err := app.Exec(&ExecOpts{
+		// Send output to /proc/1/fd/* to get it to docker logs
+		Cmd:    `/start.sh > /proc/1/fd/1 2>/proc/1/fd/2`,
+		Detach: true,
+	})
+	if err != nil {
+		util.Warning("Unable to run /start.sh, stdout=%s, stderr=%s: %v", stdout, stderr, err)
 	}
 
 	// Wait for web/db containers to become healthy
@@ -1559,6 +1564,8 @@ type ExecOpts struct {
 	Stdout *os.File
 	// Stderr can be overridden with a File
 	Stderr *os.File
+	// Detach does docker-compose detach
+	Detach bool
 }
 
 // Exec executes a given command in the container of given type without allocating a pty
@@ -1598,6 +1605,10 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 
 	if !isatty.IsTerminal(os.Stdin.Fd()) || !opts.Tty {
 		baseComposeExecCmd = append(baseComposeExecCmd, "-T")
+	}
+
+	if opts.Detach {
+		baseComposeExecCmd = append(baseComposeExecCmd, "--detach")
 	}
 
 	baseComposeExecCmd = append(baseComposeExecCmd, opts.Service)

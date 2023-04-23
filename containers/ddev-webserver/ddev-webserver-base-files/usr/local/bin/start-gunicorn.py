@@ -3,7 +3,7 @@
 Start up gunicorn, with
 1. WSGI_APP environment variable setting if it exists
 2. WSGI_APP derived from django settings if it exists
-3. Fail but run a placeholder tail -f /dev/null
+3. Fail but run a placeholder sleep infinity
 """
 import os
 import sys
@@ -59,7 +59,7 @@ elif ddev_project_type == "django4":
     settings_file = rv.stdout
     print(f"settings_file='{settings_file}'")
     django_settings_module = convert_settings_path(settings_file, "/var/www/html")
-    print(f"django_settings_module='{django_settings_module}")
+    print(f"django_settings_module='{django_settings_module}'")
     os.environ["DJANGO_SETTINGS_MODULE"] = django_settings_module
     from django.conf import settings
     wsgi_application = settings.WSGI_APPLICATION
@@ -69,7 +69,7 @@ elif ddev_project_type == "django4":
         print(f"Launching Gunicorn for {wsgi_app} at {bind_address}")
         process = launch_gunicorn(wsgi_app, bind_address)
 else:
-        print("wsgi_application not found in the settings module, just running tail -f /dev/null instead")
+        print("wsgi_application not found in the settings module, just running sleep infinity instead")
 
-subprocess.run(['tail', "-f", "/dev/null"])
+subprocess.run(['sleep', "infinity"])
 

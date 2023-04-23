@@ -30,8 +30,8 @@ if [ "${BUILDKITE_PULL_REQUEST:-false}" != "false" ] && ! git diff --name-only r
 fi
 
 # We can skip builds with commit message of [skip buildkite]
-if [[ $BUILDKITE_MESSAGE == *"[skip buildkite]"* ]]; then
-  echo "Skipping build because message has '[skip buildkite]'"
+if [[ $BUILDKITE_MESSAGE == *"[skip buildkite]"* ]] || [[ $BUILDKITE_MESSAGE == *"[skip ci]"* ]]; then
+  echo "Skipping build because message has '[skip buildkite]' or '[skip ci]'"
   exit 0
 fi
 

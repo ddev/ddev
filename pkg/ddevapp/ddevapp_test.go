@@ -1989,11 +1989,11 @@ func TestDdevFullSiteSetup(t *testing.T) {
 	assert := asrt.New(t)
 	app := &ddevapp.DdevApp{}
 
-	for _, site := range TestSites {
+	for i, site := range TestSites {
 		switchDir := site.Chdir()
 		defer switchDir()
 		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevFullSiteSetup", site.Name))
-		t.Logf("== BEGIN TestDdevFullSiteSetup for %s\n", site.Name)
+		t.Logf("== BEGIN TestDdevFullSiteSetup for %s (%d)\n", site.Name, i)
 		testcommon.ClearDockerEnv()
 		err := app.Init(site.Dir)
 		assert.NoError(err)

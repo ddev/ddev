@@ -65,7 +65,7 @@ func testMain(m *testing.M) int {
 	container, err := client.CreateContainer(docker.CreateContainerOptions{
 		Name: testContainerName,
 		Config: &docker.Config{
-			Image: versionconstants.WebImg + ":" + versionconstants.WebTag,
+			Image: versionconstants.GetWebImage(),
 			Labels: map[string]string{
 				"com.docker.compose.service": "web",
 				"com.ddev.site-name":         testContainerName,

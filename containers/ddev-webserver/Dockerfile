@@ -28,9 +28,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--
 RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/nginx
 RUN setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/apache2
 
-ADD ddev-webserver-base-files /
-ADD ddev-webserver-base-scripts /
-
 # magerun and magerun2 for magento
 RUN curl --fail -sSL https://files.magerun.net/n98-magerun-latest.phar -o /usr/local/bin/magerun && chmod 777 /usr/local/bin/magerun
 RUN curl --fail -sSL https://raw.githubusercontent.com/netz98/n98-magerun/develop/res/autocompletion/bash/n98-magerun.phar.bash -o /etc/bash_completion.d/n98-magerun.phar
@@ -41,6 +38,9 @@ RUN curl --fail -sSL https://raw.githubusercontent.com/netz98/n98-magerun2/devel
 RUN chmod -f ugo+rwx /usr/local/bin /usr/local/bin/composer
 
 RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
+
+ADD ddev-webserver-base-files /
+ADD ddev-webserver-base-scripts /
 
 # END ddev-webserver-base
 
