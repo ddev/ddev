@@ -24,7 +24,7 @@ var WebTag = "20230417_presync_web_mutagen" // Note that this can be overridden 
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20230415_move_docker_to_ddev"
+var BaseDBTag = "20230423_fix_postgres_stretch"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"
