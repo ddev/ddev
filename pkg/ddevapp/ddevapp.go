@@ -1259,9 +1259,10 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
-	util.Debug("Running supervisord")
+	util.Debug("Running /start.sh in ddev-webserver")
 	stdout, stderr, err := app.Exec(&ExecOpts{
-		Cmd:    `/start.sh`,
+		// Send output to /proc/1/fd/* to get it to docker logs
+		Cmd:    `/start.sh > /proc/1/fd/1 2>/proc/1/fd/2`,
 		Detach: true,
 	})
 	if err != nil {
