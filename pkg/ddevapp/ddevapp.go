@@ -976,12 +976,24 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	if app.IsMutagenEnabled() {
 		if ok, volumeExists, info := CheckMutagenVolumeSyncCompatibility(app); !ok {
-			util.Debug("mutagen sync session and docker volume are in incompatible status: '%s', Removing mutagen sync session '%s' and docker volume %s", info, MutagenSyncName(app.Name), GetMutagenVolumeName(app))
+			util.Debug("mutagen sync session, configuration, and docker volume are in incompatible status: '%s', Removing mutagen sync session '%s' and docker volume %s", info, MutagenSyncName(app.Name), GetMutagenVolumeName(app))
+			err = SyncAndPauseMutagenSession(app)
+			if err != nil {
+				util.Warning("Unable to SyncAndPauseMutagenSession() %s: %v", MutagenSyncName(app.Name), err)
+			}
 			terminateErr := TerminateMutagenSync(app)
 			if terminateErr != nil {
 				util.Warning("Unable to terminate mutagen sync %s: %v", MutagenSyncName(app.Name), err)
 			}
 			if volumeExists {
+				// Remove mounting container if necessary.
+				container, err := dockerutil.FindContainerByName("ddev-" + app.Name + "-web")
+				if err == nil && container != nil {
+					err = dockerutil.RemoveContainer(container.ID)
+					if err != nil {
+						return fmt.Errorf(`Unable to remove web container, please 'ddev restart': %v`, err)
+					}
+				}
 				removeVolumeErr := dockerutil.RemoveVolume(GetMutagenVolumeName(app))
 				if removeVolumeErr != nil {
 					return fmt.Errorf(`Unable to remove mismatched mutagen docker volume '%s'. Please use 'ddev restart' or 'ddev mutagen reset': %v`, GetMutagenVolumeName(app), removeVolumeErr)

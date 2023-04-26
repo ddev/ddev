@@ -74,7 +74,7 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 // RemoveSSHAgentContainer brings down the ddev-ssh-agent if it's running.
 func RemoveSSHAgentContainer() error {
 	// Stop the container if it exists
-	err := dockerutil.RemoveContainer(globalconfig.DdevSSHAgentContainer, 0)
+	err := dockerutil.RemoveContainer(globalconfig.DdevSSHAgentContainer)
 	if err != nil {
 		if _, ok := err.(*docker.NoSuchContainer); !ok {
 			return err

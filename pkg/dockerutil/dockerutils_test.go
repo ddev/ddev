@@ -55,7 +55,7 @@ func testMain(m *testing.M) int {
 	foundContainer, _ := FindContainerByLabels(map[string]string{"com.ddev.site-name": testContainerName})
 
 	if foundContainer != nil {
-		err = RemoveContainer(foundContainer.ID, 30)
+		err = RemoveContainer(foundContainer.ID)
 		if err != nil {
 			logOutput.Errorf("-- FAIL: dockerutils_test TestMain failed to remove container %s: %v", foundContainer.ID, err)
 			return 5
@@ -99,7 +99,7 @@ func testMain(m *testing.M) int {
 		return 2
 	}
 	defer func() {
-		err = RemoveContainer(container.ID, 10)
+		err = RemoveContainer(container.ID)
 		if err != nil {
 			logOutput.Errorf("-- FAIL: dockerutils_test failed to remove test container: %v", err)
 		}
@@ -182,13 +182,13 @@ func TestContainerWait(t *testing.T) {
 	_ = RemoveContainersByLabels(labels)
 	cID, _, err := RunSimpleContainer(versionconstants.BusyboxImage, t.Name()+util.RandString(5), []string{"ls"}, nil, nil, nil, "0", false, true, labels)
 	t.Cleanup(func() {
-		_ = RemoveContainer(cID, 0)
+		_ = RemoveContainer(cID)
 	})
 	require.NoError(t, err)
 	_, err = ContainerWait(5, labels)
 	assert.Error(err)
 	assert.Contains(err.Error(), "container exited")
-	_ = RemoveContainer(cID, 0)
+	_ = RemoveContainer(cID)
 
 	// If we run a container that does not have a healthcheck
 	// it should be found as good immediately
@@ -196,7 +196,7 @@ func TestContainerWait(t *testing.T) {
 	_ = RemoveContainersByLabels(labels)
 	cID, _, err = RunSimpleContainer(versionconstants.BusyboxImage, t.Name()+util.RandString(5), []string{"sleep", "60"}, nil, nil, nil, "0", false, true, labels)
 	t.Cleanup(func() {
-		_ = RemoveContainer(cID, 0)
+		_ = RemoveContainer(cID)
 	})
 	require.NoError(t, err)
 	_, err = ContainerWait(5, labels)
@@ -210,13 +210,13 @@ func TestContainerWait(t *testing.T) {
 	_ = RemoveContainersByLabels(labels)
 	cID, _, err = RunSimpleContainer(ddevWebserver, t.Name()+util.RandString(5), []string{"sleep", "5"}, nil, []string{"DDEV_WEBSERVER_TYPE=nginx-fpm"}, nil, "0", false, true, labels)
 	t.Cleanup(func() {
-		_ = RemoveContainer(cID, 0)
+		_ = RemoveContainer(cID)
 	})
 	require.NoError(t, err)
 	_, err = ContainerWait(3, labels)
 	assert.Error(err)
 	assert.Contains(err.Error(), "timed out without becoming healthy")
-	_ = RemoveContainer(cID, 0)
+	_ = RemoveContainer(cID)
 
 	// If we run a container that *does* have a healthcheck but it's not healthy for a while
 	// then ContainerWait should detect failure early, but should succeed later
@@ -224,7 +224,7 @@ func TestContainerWait(t *testing.T) {
 	_ = RemoveContainersByLabels(labels)
 	cID, _, err = RunSimpleContainer(ddevWebserver, t.Name()+util.RandString(5), []string{"bash", "-c", "sleep 5 && /start.sh"}, nil, []string{"DDEV_WEBSERVER_TYPE=nginx-fpm"}, nil, "0", false, true, labels)
 	t.Cleanup(func() {
-		_ = RemoveContainer(cID, 0)
+		_ = RemoveContainer(cID)
 	})
 	require.NoError(t, err)
 	_, err = ContainerWait(3, labels)
@@ -267,7 +267,7 @@ func TestComposeWithStreams(t *testing.T) {
 
 	container, _ := FindContainerByName(t.Name())
 	if container != nil {
-		_ = RemoveContainer(container.ID, 20)
+		_ = RemoveContainer(container.ID)
 	}
 
 	// Use the current actual web container for this, so replace in base docker-compose file
@@ -355,7 +355,7 @@ func TestFindContainerByName(t *testing.T) {
 	c, err := FindContainerByName(containerName)
 	assert.NoError(err)
 	if err == nil && c != nil {
-		err = RemoveContainer(c.ID, 0)
+		err = RemoveContainer(c.ID)
 		assert.NoError(err)
 	}
 
@@ -364,7 +364,7 @@ func TestFindContainerByName(t *testing.T) {
 	assert.NoError(err)
 
 	defer func() {
-		_ = RemoveContainer(cID, 0)
+		_ = RemoveContainer(cID)
 	}()
 
 	// Now find the container by name
@@ -372,7 +372,7 @@ func TestFindContainerByName(t *testing.T) {
 	assert.NoError(err)
 	require.NotNil(t, c)
 	// Remove it
-	err = RemoveContainer(c.ID, 0)
+	err = RemoveContainer(c.ID)
 	assert.NoError(err)
 
 	// Verify that we no longer find it.

@@ -55,7 +55,7 @@ func StopRouterIfNoContainers() error {
 	}
 
 	if !containersRunning {
-		err = dockerutil.RemoveContainer(nodeps.RouterContainer, 0)
+		err = dockerutil.RemoveContainer(nodeps.RouterContainer)
 		if err != nil {
 			if _, ok := err.(*docker.NoSuchContainer); !ok {
 				return err
@@ -75,7 +75,7 @@ func StartDdevRouter() error {
 	// starts over again.
 	router, err := FindDdevRouter()
 	if router != nil && err == nil && router.State != "running" {
-		err = dockerutil.RemoveContainer(nodeps.RouterContainer, 0)
+		err = dockerutil.RemoveContainer(nodeps.RouterContainer)
 		if err != nil {
 			return err
 		}

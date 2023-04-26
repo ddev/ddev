@@ -188,7 +188,9 @@ func OsTempDir() (string, error) {
 	return tmpDir, nil
 }
 
-// CreateTmpDir creates a temporary directory and returns its path as a string.
+// CreateTmpDir creates a temporary directory in the homoedir
+// and returns its path as a string. It's important that it's in
+// homedir since Colima doesn't mount things outside that.
 func CreateTmpDir(prefix string) string {
 	baseTmpDir := filepath.Join(homedir.Get(), "tmp", "ddevtest")
 	_ = os.MkdirAll(baseTmpDir, 0755)

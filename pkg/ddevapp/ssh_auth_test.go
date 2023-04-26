@@ -136,7 +136,7 @@ func TestSshAuthConfigOverride(t *testing.T) {
 
 	// Remove the ddev-ssh-agent, since the start code simply checks to see if it's
 	// running and doesn't restart it if it's running
-	_ = dockerutil.RemoveContainer("ddev-ssh-agent", 0)
+	_ = dockerutil.RemoveContainer("ddev-ssh-agent")
 
 	testcommon.ClearDockerEnv()
 
