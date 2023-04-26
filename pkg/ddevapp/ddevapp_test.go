@@ -882,8 +882,9 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
-	// Create the simplest possible php file
-	err = fileutil.TemplateStringToFile("<?php\necho \"hi there\";\n", nil, filepath.Join(app.AppRoot, "index.php"))
+	// Create the simplest possible php file; just outputs PHP_IDE_CONFIG value
+	// Which should be empty.
+	err = fileutil.TemplateStringToFile("<?php\nif (getenv('PHP_IDE_CONFIG') === false) { echo 'PHP_IDE_CONFIG is properly unset'; } else { echo 'PHP_IDE_CONFIG is set'; }\n", nil, filepath.Join(app.AppRoot, "index.php"))
 	require.NoError(t, err)
 
 	// If using wsl2-docker-inside, test that we can use IDE inside
@@ -924,11 +925,19 @@ func TestDdevXdebugEnabled(t *testing.T) {
 		err = app.Restart()
 		require.NoError(t, err)
 
+		// Make sure that PHP_IDE_CONFIG did not get accidentally set, which
+		// will cause PhpStorm, etc not to auto-configure properly.
+		stdout, _, err := app.Exec(&ddevapp.ExecOpts{
+			Cmd: "curl -sSfL localhost",
+		})
+		require.NoError(t, err)
+		require.Equal(t, `PHP_IDE_CONFIG is properly unset`, stdout)
+
 		opts := &ddevapp.ExecOpts{
 			Service: "web",
 			Cmd:     "php --ri xdebug",
 		}
-		stdout, _, err := app.Exec(opts)
+		stdout, _, err = app.Exec(opts)
 		assert.Error(err)
 		assert.Contains(stdout, "Extension 'xdebug' not present")
 
