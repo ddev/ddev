@@ -888,6 +888,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	require.NoError(t, err)
 
 	// If using wsl2-docker-inside, test that we can use IDE inside
+	// Unfortunately, this does not test for the common case where the IDE is running on Windows.
 	if dockerutil.IsWSL2() && !dockerutil.IsDockerDesktop() {
 		globalconfig.DdevGlobalConfig.XdebugIDELocation = globalconfig.XdebugIDELocationWSL2
 	}
