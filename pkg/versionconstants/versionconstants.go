@@ -18,7 +18,7 @@ var SegmentKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20230426_fix_xdebug_PHP_IDE_CONFIG" // Note that this can be overridden by make
+var WebTag = "20230426_xdebug_discover" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"

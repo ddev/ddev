@@ -143,6 +143,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
       All Windows 10/11 editions, including Windows 10 Home support WSL2.
     * WSL2 offers a faster, smoother experience.  
       It’s vastly more performant, and you’re less likely to have obscure Windows problems.
+    * Execute DDEV commands inside WSL2 (inside Ubuntu, for example). You will never execute DDEV comamnds on the Windows side, in PowerShell or Git Bash, for example.
     * Projects should live in the Linux filesystem.  
       WSL2’s Linux filesystem (e.g. `/home/<your_username>`) is much faster, so keep your projects there and **not** in the slower Windows filesystem (`/mnt/c`).
     * Custom hostnames are managed via the Windows hosts file, not within WSL2.  
