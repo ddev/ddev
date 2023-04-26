@@ -103,6 +103,7 @@ PartOf
 PathMaps
 phpMyAdmin's
 PhpStorm
+PhpStorm's
 PowerShell
 Pull
 Quickstart
