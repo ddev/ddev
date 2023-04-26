@@ -145,7 +145,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
       It’s vastly more performant, and you’re less likely to have obscure Windows problems.
 
     * Execute DDEV commands inside WSL2.   
-      You’ll want to run DDEV commands inside Ubuntu, for example, and never on the Windows side in PowerShell or Git Bash.
+      u:0You’ll want to run DDEV commands inside Ubuntu, for example, and never on the Windows side in PowerShell or Git Bash.
     * Projects should live in the Linux filesystem.  
       WSL2’s Linux filesystem (e.g. `/home/<your_username>`) is much faster, so keep your projects there and **not** in the slower Windows filesystem (`/mnt/c`).
     * Custom hostnames are managed via the Windows hosts file, not within WSL2.  
