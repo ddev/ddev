@@ -41,17 +41,4 @@ See “How can I contribute to DDEV?” in the [FAQ](https://ddev.readthedocs.io
 
 ## Wonderful Sponsors
 
-[<img src="images/Platformsh_Logo_DDEV.jpg" alt="Platform.sh" width="200">](https://platform.sh)
-[<img src="images/tag1-logo.svg" alt="Tag1" width="80">](https://tag1.com)
-[<img src="images/agaric-logo-stacked.svg" alt="Agaric" width="50">](https://agaric.coop/)
-[<img src="images/b13-logo.png" alt="b13" width="50">](https://b13.com/)
-[<img src="images/gizra-logo.png" alt="Gizra" width="50">](https://gizra.com/)
-[<img src="images/oliver-wand.jpeg" alt="Oliver Wand" width="50">](https://github.com/wandoliver)
-[<img src="images/centarro-logo.png" alt="Centarro" width="50">](https://www.centarro.io/)
-[<img src="images/drupaleasy-logo.png" alt="DrupalEasy" width="180">](https://www.drupaleasy.com/)
-[<img src="images/redfin-logo.png" alt="Redfin Solutions" width="50">](https://redfinsolutions.com/)
-[<img src="images/macstadium-logo.png" alt="MacStadium" width="100">](https://www.macstadium.com)
-[<img src="images/lullabot-lockup-logo.svg" alt="Lullabot" width="150">](https://www.lullabot.com)
-[<img src="images/craft-cms-logo.svg" alt="Craft CMS" width="150">](https://craftcms.com/)
-[<img src="images/undpaul_logo.svg" alt="undpaul" width=150>](https://undpaul.de)
-[<img src="images/1X_Logo_RGB_Red_4.png" alt="1xINTERNET" width="150">](https://1xinternet.de)
+![DDEV featured sponsor logos](https://ddev.com/resources/featured-sponsors.svg)
