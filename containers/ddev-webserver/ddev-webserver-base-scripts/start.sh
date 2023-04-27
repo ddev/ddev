@@ -4,6 +4,9 @@ set -o errexit nounset pipefail
 
 rm -f /tmp/healthy
 
+# If supervisord happens to be running (ddev start when already running) then kill it off
+supervisorctl shutdown || true
+
 export DDEV_WEB_ENTRYPOINT=/mnt/ddev_config/web-entrypoint.d
 
 source /functions.sh
