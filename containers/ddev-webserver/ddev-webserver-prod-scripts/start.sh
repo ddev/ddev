@@ -59,7 +59,7 @@ fi
 
 if [ "$DDEV_PROJECT_TYPE" = "backdrop" ] ; then
     # Start can be executed when the container is already running.
-    mkdir -p ~/.drush/commands && ln -s /var/tmp/backdrop_drush_commands ~/.drush/commands/backdrop
+    mkdir -p ~/.drush/commands && ln -sf /var/tmp/backdrop_drush_commands ~/.drush/commands/backdrop
 fi
 
 if [ "${DDEV_PROJECT_TYPE}" = "drupal6" ] || [ "${DDEV_PROJECT_TYPE}" = "drupal7" ] || [ "${DDEV_PROJECT_TYPE}" = "backdrop" ]; then
