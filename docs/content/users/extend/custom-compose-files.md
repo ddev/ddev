@@ -79,23 +79,23 @@ By default, these commands interact with the `web` container for a project. All 
 
 ## Third Party Services May Need To Trust `ddev-webserver`
 
-In some cases, a third-party service (`docker-compose.*.yaml`) may actually consume content from the `ddev-webserver` container. For example, a PDF generator like `gotenberg` might need to consume webserver content to create a PDF, or a testing service may need to do the same.
+Sometimes a third-party service (`docker-compose.*.yaml`) may need to consume content from the `ddev-webserver` container. A PDF generator like [Gotenberg](https://github.com/gotenberg/gotenberg), for example, might need to read in-container images or text in order to create a PDF. Or a testing service may need to read data in order to support tests.
 
-In this case, the third-party service is by default not configured to trust the certificate authority used by DDEV (via `mkcert`) so you either have to use just HTTP between the two containers, or you have to make the third-party service trust the `mkcert` certificate authority.
+A third-party service is not configured to trust DDEV’s `mkcert` certificate authority by default, so in cases like this you have to either use HTTP between the two containers, or make the third-party service ignore or trust the certificate authority.
 
-The simplest technique is just to use HTTP between the two containers. For example. the [`ddev-selenium-standalone-chrome`](https://github.com/ddev/ddev-selenium-standalone-chrome) service must consume content, and it just conducts interactions with the `ddev-webserver` by accessing `http://web`, see [setup](https://github.com/ddev/ddev-selenium-standalone-chrome/blob/main/config.selenium-standalone-chrome.yaml#L17). In this case, the `selenium-chrome` container just accesses the `web` container via HTTP.
+Using plain HTTP between the containers is the simplest technique. For example, the [`ddev-selenium-standalone-chrome`](https://github.com/ddev/ddev-selenium-standalone-chrome) service must consume content, so it conducts interactions with the `ddev-webserver` [by accessing `http://web`](https://github.com/ddev/ddev-selenium-standalone-chrome/blob/main/config.selenium-standalone-chrome.yaml#L17). In this case, the `selenium-chrome` container accesses the `web` container via HTTP instead of HTTPS.
 
-A second technique is to tell the third-party service to ignore HTTPS/TLS errors. For example, if the third-party service uses `curl`, it could use `curl --insecure https://web` or `curl --insecure https://<project>.ddev.site`.
+A second technique is to tell the third-party service to ignore HTTPS/TLS errors. For example, if the third-party service uses cURL, it could use `curl --insecure https://web` or `curl --insecure https://<project>.ddev.site`.
 
-A third and more complex approach is to actually make the third-party container actually trust the self-signed certificate that the `ddev-webserver` is using. This can be done in many cases using a custom Dockerfile and some extra configuration in the `ddev-config.*.yaml`. An example would be:
+A third and more complex approach is to make the third-party container actually trust the self-signed certificate that the `ddev-webserver` container is using. This can be done in many cases using a custom Dockerfile and some extra configuration in the `ddev-config.*.yaml`. An example would be:
 
 ```yaml
 services:
   example:
     container_name: ddev-${DDEV_SITENAME}-example
     command: "bash -c 'mkcert -install && original-start-command-from-image'"
-    # Add a build stage so we can add mkcert, etc.
-    # The Dockerfile for the build stage goes in the .ddev/example directory here
+    # Add a build stage so we can add `mkcert`, etc.
+    # The Dockerfile for the build stage goes in the `.ddev/example directory` here
     build:
       context: example
     environment:
@@ -103,7 +103,7 @@ services:
       - HTTPS_EXPOSE=3000:3000
       - VIRTUAL_HOST=$DDEV_HOSTNAME
     # Adding external_links allows connections to `https://example.ddev.site`,
-    # which then can go through ddev-router
+    # which then can go through `ddev-router`
     external_links:
       - ddev-router:${DDEV_SITENAME}.${DDEV_TLD}
     labels:
@@ -112,24 +112,25 @@ services:
     restart: 'no'
     volumes:
       - .:/mnt/ddev_config
-      # ddev-global-cache gets mounted so we have the CAROOT
-      # This is required so that the CA is available for mkcert to install
+      # `ddev-global-cache` gets mounted so we have the CAROOT
+      # This is required so that the CA is available for `mkcert` to install
       - ddev-global-cache:/mnt/ddev-global-cache
 ```
 
 ```Dockerfile
 FROM example/example
 
-# CAROOT for mkcert to use, has the CA config
+# CAROOT for `mkcert` to use, has the CA config
 ENV CAROOT=/mnt/ddev-global-cache/mkcert
 
-# If the image build does not run as USER root,
-# temporarily change to root. If the image runs as USER root (default) then
+# If the image build does not run as the default `root` user,
+# temporarily change to root. If the image already has the default setup
+# where it builds as `root`, then
 # there is no need to change user here.
 USER root
-# Give the "example" user full sudo privileges
+# Give the `example` user full `sudo` privileges
 RUN echo "example ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/example && chmod 0440 /etc/sudoers.d/example
-# Install the correct architecture binary of mkcert
+# Install the correct architecture binary of `mkcert`
 RUN export TARGETPLATFORM=linux/$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/') && mkdir -p /usr/local/bin && curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=${TARGETPLATFORM}"
 RUN chmod +x /usr/local/bin/mkcert
 USER original_user
