@@ -801,7 +801,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		DefaultContainerTimeout: app.DefaultContainerTimeout,
 		// Only use the extra_hosts technique for linux and only if not WSL2
 		// If WSL2 we have to figure out other things, see GetHostDockerInternalIP()
-		UseHostDockerInternalExtraHosts: runtime.GOOS == "linux" || (dockerutil.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2),
+		UseHostDockerInternalExtraHosts: (runtime.GOOS == "linux" && !dockerutil.IsWSL2()) || (dockerutil.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2),
 	}
 	// We don't want to bind-mount git dir if it doesn't exist
 	if fileutil.IsDirectory(filepath.Join(app.AppRoot, ".git")) {

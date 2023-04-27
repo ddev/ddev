@@ -613,3 +613,9 @@ Adjust Xdebug listen location for WSL2 or in-container.
 | :octicons-globe-16: global | `""` | Can be empty (`""`), `"wsl2"`, `"container"`, or an explicit IP address.
 
 For PhpStorm running inside WSL2 (or JetBrains Gateway), use `"wsl2"`. For in-container like VS Code Language Server, set to `"container"`. It can also be set to an explicit IP address.
+
+Examples:
+
+* `xdebug_ide_location: 172.16.0.2` when you need to provide an explicit IP address where the IDE is listening.
+* `xdebug_ide_location: container` when the IDE is actually listening inside the `ddev-webserver` container.
+* `xdebug_ide_location: wsl2` when the IDE is running (or just listening) in WSL2.
