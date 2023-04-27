@@ -39,8 +39,8 @@ func TestCmdStart(t *testing.T) {
 		assert.Equal(ddevapp.SiteRunning, statusDesc, "The status description should be \"running\", but %s status description is: %s", app.GetName(), statusDesc)
 	}
 
-	// Pause all sites.
-	_, err = exec.RunCommand(DdevBin, []string{"pause", "--all"})
+	// Stop all sites.
+	_, err = exec.RunCommand(DdevBin, []string{"stop", "--all"})
 	assert.NoError(err)
 
 	// Build start command startMultipleArgs
