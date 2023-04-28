@@ -4,6 +4,13 @@ set -o errexit nounset pipefail
 
 rm -f /tmp/healthy
 
+# If supervisord happens to be running (ddev start when already running) then kill it off
+if pkill -0 supervisord; then
+  supervisorctl stop all || true
+  supervisorctl shutdown || true
+fi
+rm -f /var/run/supervisor.sock
+
 export DDEV_WEB_ENTRYPOINT=/mnt/ddev_config/web-entrypoint.d
 
 source /functions.sh
@@ -52,7 +59,7 @@ fi
 
 if [ "$DDEV_PROJECT_TYPE" = "backdrop" ] ; then
     # Start can be executed when the container is already running.
-    mkdir -p ~/.drush/commands && ln -s /var/tmp/backdrop_drush_commands ~/.drush/commands/backdrop
+    mkdir -p ~/.drush/commands && ln -sf /var/tmp/backdrop_drush_commands ~/.drush/commands/backdrop
 fi
 
 if [ "${DDEV_PROJECT_TYPE}" = "drupal6" ] || [ "${DDEV_PROJECT_TYPE}" = "drupal7" ] || [ "${DDEV_PROJECT_TYPE}" = "backdrop" ]; then

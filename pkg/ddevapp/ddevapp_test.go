@@ -2077,7 +2077,10 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		// Test static content.
 		if site.Safe200URIWithExpectation.URI != "" {
-			_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+			_, err = testcommon.EnsureLocalHTTPContent(t, app.GetPrimaryURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
+			if err != nil {
+				util.Warning("err: %v", err)
+			}
 		}
 		// Test dynamic URL + database content.
 		// With nginx-gunicorn, the auto-detect and reload of new settings files
