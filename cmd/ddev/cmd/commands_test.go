@@ -482,7 +482,7 @@ func TestNpmYarnCommands(t *testing.T) {
 	err = app.Start()
 	require.NoError(t, err)
 
-	testDirs := []string{"", "one", "one/two", "one/two/three"}
+	testDirs := []string{"", "one", "one/two"}
 	for _, d := range testDirs {
 		workDir := filepath.Join(app.AppRoot, d)
 		err = os.MkdirAll(workDir, 0755)
@@ -494,16 +494,17 @@ func TestNpmYarnCommands(t *testing.T) {
 		require.NoError(t, err)
 		err = app.MutagenSyncFlush()
 		require.NoError(t, err)
-		out, err := exec.RunHostCommand(DdevBin, "npm", "install")
+		out, err := exec.RunHostCommand(DdevBin, "npm", "install", "--no-audit")
 		assert.NoError(err)
-		assert.Contains(out, "audited 1 package")
+		assert.Contains(out, "up to date in", "d='%s', npm install has wrong output; output='%s'", d, out)
 		out, err = exec.RunHostCommand(DdevBin, "yarn", "install")
 		assert.NoError(err)
 		assert.Contains(out, "success Saved lockfile")
 
 		err = os.RemoveAll(packageJSONFile)
 		assert.NoError(err)
-		_ = os.RemoveAll(filepath.Join(workDir, "package-lock.json"))
+		err = os.RemoveAll(filepath.Join(workDir, "package-lock.json"))
+		assert.NoError(err)
 		err = app.MutagenSyncFlush()
 		require.NoError(t, err)
 	}

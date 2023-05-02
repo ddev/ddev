@@ -129,10 +129,12 @@ func (site *TestSite) Prepare() error {
 	}
 
 	app.WebEnvironment = site.WebEnvironment
-	app.Hooks = map[string][]ddevapp.YAMLTask{
-		"post-start": {
-			{"exec-host": site.PretestCmd},
-		},
+	if site.PretestCmd != "" {
+		app.Hooks = map[string][]ddevapp.YAMLTask{
+			"post-start": {
+				{"exec-host": site.PretestCmd},
+			},
+		}
 	}
 	err = app.ConfigFileOverrideAction()
 	util.CheckErr(err)
