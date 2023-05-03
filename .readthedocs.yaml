@@ -22,5 +22,5 @@ python:
   install:
     - requirements: docs/setuptools.txt
     - method: pip
-      path: .
+      path: docs
     - requirements: docs/mkdocs-pip-requirements
