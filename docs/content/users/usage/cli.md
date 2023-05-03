@@ -97,7 +97,7 @@ Stopping db container for snapshot restore of 'd9_20220107124831-mariadb_10.3.gz
 Restored database snapshot d9_20220107124831-mariadb_10.3.gz
 ```
 
-Snapshots are stored as gzipped files in the project’s `.ddev/db_snapshots` directory, and the file created for a snapshot can be renamed as necessary. For example, if you rename the above `d9_20220107124831-mariadb_10.3.gz` file to `working-before-migration-mariadb_10.3.gz`, then you can use `ddev snapshot restore working-before-migration`. (The description of the database type and version — `mariadb_10.3`, for example — must remain intact.)
+Snapshots are stored as gzipped files in the project’s `.ddev/db_snapshots` directory, and the file created for a snapshot can be renamed as necessary. For example, if you rename the above `d9_20220107124831-mariadb_10.3.gz` file to `working-before-migration-mariadb_10.3.gz`, then you can use `ddev snapshot restore working-before-migration`. (The description of the database type and version—`mariadb_10.3`, for example—must remain intact.)
 To restore the latest snapshot add the `--latest` flag (`ddev snapshot restore --latest`).
 
 List snapshots for an existing project with `ddev snapshot --list`. (Add the `--all` option for an exhaustive list; `ddev snapshot --list --all`.) You can remove all of them with `ddev snapshot --cleanup`, or remove a single snapshot with `ddev snapshot --cleanup --name <snapshot-name>`.
