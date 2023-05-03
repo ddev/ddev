@@ -399,7 +399,7 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (s
 	}
 	bodyString := string(bodyBytes)
 	if resp.StatusCode != 200 {
-		return bodyString, resp, fmt.Errorf("http status code was %d, not 200", resp.StatusCode)
+		return bodyString, resp, fmt.Errorf("http status code for '%s' was %d, not 200", localAddress, resp.StatusCode)
 	}
 	return bodyString, resp, nil
 }

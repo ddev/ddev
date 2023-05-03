@@ -55,7 +55,7 @@ jobs:
       run: |
         cd "containers/${{ github.event.inputs.image }}"
         make push VERSION="${{ github.event.inputs.tag }}"
-    - name: Push ${{  github.event.inputs.image }} image
+    - name: Push all images (not in use)
       if: github.event.inputs.image == 'all'
       run: |
         cd "containers"
