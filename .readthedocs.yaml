@@ -17,3 +17,10 @@ python:
   install:
     - requirements: docs/mkdocs-pip-requirements
   system_packages: true
+
+python:
+  install:
+    - requirements: docs/setuptools.txt
+    - method: pip
+      path: .
+    - requirements: docs/mkdocs-pip-requirements
