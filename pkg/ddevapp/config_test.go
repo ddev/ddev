@@ -3,6 +3,7 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -14,7 +15,6 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -1090,15 +1090,14 @@ func TestComposerVersionConfig(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	for _, testVersion := range []string{"2.0.0-RC2", "2", "2.2", "1", "stable", "preview", "snapshot"} {
+	for _, testVersion := range []string{"2", "2.2", "2.5.5", "1", "stable", "preview", "snapshot"} {
 		app.ComposerVersion = testVersion
 		err = app.Start()
 		assert.NoError(err)
 
-		// Without timezone set, we should find Etc/UTC
 		stdout, _, err := app.Exec(&ExecOpts{
 			Service: "web",
-			Cmd:     "composer --version | awk '{print $3;}'",
+			Cmd:     "composer --version 2>/dev/null | awk '/Composer version/ {print $3;}'",
 		})
 		assert.NoError(err)
 
@@ -1111,9 +1110,6 @@ func TestComposerVersionConfig(t *testing.T) {
 				assert.Equal(testVersion, strings.TrimSpace(stdout))
 			}
 		}
-
-		err = app.Stop(true, false)
-		assert.NoError(err)
 	}
 
 	runTime()
