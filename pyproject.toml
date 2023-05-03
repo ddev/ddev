@@ -1,0 +1,2 @@
+[build-system]
+requires = ["setuptools ~= 67.7.2"]
