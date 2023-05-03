@@ -16,9 +16,9 @@ body:
         <details>
          <summary>Expand diagnostic information</summary>
          ```
-         [put the diagnostic information here]
+         [COPY-PASTE HERE THE DIAGNOSIC INFORMATION]
          ```
-        <details>
+        </details>
          
       description: |
         If you’re having trouble with DDEV, help us with context that will skip a bunch of questions:
