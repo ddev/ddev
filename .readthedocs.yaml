@@ -15,12 +15,6 @@ build:
 
 python:
   install:
+    - requirements: docs/setuptools.txt
     - requirements: docs/mkdocs-pip-requirements
   system_packages: true
-
-python:
-  install:
-    - requirements: docs/setuptools.txt
-    - method: pip
-      path: docs
-    - requirements: docs/mkdocs-pip-requirements
