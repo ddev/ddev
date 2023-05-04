@@ -13,7 +13,7 @@ body:
     attributes:
       label: Output of `ddev debug test`
       value: |
-        <details><summary>Expand diagnostic information</summary>
+        <details><summary>Expand `ddev debug test` diagnostic information</summary>
         
         ```
         [COPY-PASTE HERE THE DIAGNOSIC INFORMATION]
