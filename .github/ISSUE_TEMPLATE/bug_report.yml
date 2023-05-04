@@ -11,7 +11,7 @@ body:
           required: true
   - type: textarea
     attributes:
-      label: Diagnostic information
+      label: Output of `ddev debug test`
       value: |
         <details><summary>Expand diagnostic information</summary>
         
