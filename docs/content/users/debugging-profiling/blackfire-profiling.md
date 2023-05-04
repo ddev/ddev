@@ -1,6 +1,6 @@
 # Blackfire Profiling
 
-DDEV has built-in [Blackfire](https://blackfire.io) integration.
+DDEV has built-in [Blackfire](https://www.blackfire.io/) integration.
 
 ## Basic Blackfire Usage (Using Browser Plugin)
 
