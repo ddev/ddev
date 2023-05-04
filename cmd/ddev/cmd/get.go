@@ -4,14 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
-	"sort"
-	"strings"
-	"text/template"
-
 	"github.com/Masterminds/sprig/v3"
 	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -26,15 +21,35 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v3"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+	"text/template"
+	"time"
 )
 
+// Format of install.yaml
 type installDesc struct {
+	// Name must be unique in a project; it will overwrite any existing add-on with the same name.
 	Name               string            `yaml:"name"`
 	ProjectFiles       []string          `yaml:"project_files"`
 	GlobalFiles        []string          `yaml:"global_files,omitempty"`
 	PreInstallActions  []string          `yaml:"pre_install_actions,omitempty"`
 	PostInstallActions []string          `yaml:"post_install_actions,omitempty"`
+	RemovalActions     []string          `yaml:"removal_actions,omitempty"`
 	YamlReadFiles      map[string]string `yaml:"yaml_read_files"`
+}
+
+// format of the add-on manifest file
+type addonManifest struct {
+	Name           string   `yaml:"name"`
+	Repository     string   `yaml:"repository"`
+	Version        string   `yaml:"version"`
+	InstallDate    string   `yaml:"install_date"`
+	ProjectFiles   []string `yaml:"project_files"`
+	GlobalFiles    []string `yaml:"global_files"`
+	RemovalActions []string `yaml:"removal_actions"`
 }
 
 // Get implements the ddev get command
@@ -99,6 +114,7 @@ ddev get --list --all
 		argType := ""
 		owner := ""
 		repo := ""
+		downloadedRelease := ""
 		switch {
 		// If the provided sourceRepoArg is a directory, then we will use that as the source
 		case fileutil.IsDirectory(sourceRepoArg):
@@ -117,7 +133,8 @@ ddev get --list --all
 			defer cleanup()
 
 		// If the provided sourceRepoArg is a github sourceRepoArg, then we will use that as the source
-		case len(parts) == 2: // github.com/owner/sourceRepoArg
+		case len(parts) == 2: // github.com/owner/repo
+			argType = "github"
 			owner = parts[0]
 			repo = parts[1]
 			ctx := context.Background()
@@ -135,13 +152,15 @@ ddev get --list --all
 				util.Failed("No releases found for %v", repo)
 			}
 			tarballURL = releases[0].GetTarballURL()
-			argType = "github"
+			downloadedRelease = releases[0].GetTagName()
+			util.Success("Installing %s/%s:%s", owner, repo, downloadedRelease)
 			fallthrough
 
 		// Otherwise, use the provided source as a URL to a tarball
 		default:
 			if tarballURL == "" {
 				tarballURL = sourceRepoArg
+				argType = "tarball"
 			}
 			extractedDir, cleanup, err = archive.DownloadAndExtractTarball(tarballURL, true)
 			if err != nil {
@@ -248,8 +267,13 @@ ddev get --list --all
 		}
 		origDir, _ := os.Getwd()
 
-		//nolint: errcheck
-		defer os.Chdir(origDir)
+		defer func() {
+			err = os.Chdir(origDir)
+			if err != nil {
+				util.Failed("Unable to chdir to %v: %v", origDir, err)
+			}
+		}()
+
 		err = os.Chdir(app.GetConfigPath(""))
 		if err != nil {
 			util.Failed("Unable to chdir to %v: %v", app.GetConfigPath(""), err)
@@ -270,12 +294,57 @@ ddev get --list --all
 			}
 		}
 
+		repository := ""
+		switch argType {
+		case "github":
+			repository = fmt.Sprintf("%s/%s", owner, repo)
+		case "directory":
+			fallthrough
+		case "tarball":
+			repository = sourceRepoArg
+		}
+		err = createManifestFile(app, s.Name, repository, downloadedRelease, s)
+		if err != nil {
+			util.Failed("Unable to create manifest file: %v", err)
+		}
+
 		util.Success("\nInstalled DDEV add-on %s, use `ddev restart` to enable.", sourceRepoArg)
 		if argType == "github" {
 			util.Success("Please read instructions for this addon at the source repo at\nhttps://github.com/%v/%v\nPlease file issues and create pull requests there to improve it.", owner, repo)
 		}
 
 	},
+}
+
+// createManifestFile creates a manifest file for the addon
+func createManifestFile(app *ddevapp.DdevApp, addonName string, repository string, downloadedRelease string, desc installDesc) error {
+	// Create a manifest file
+	// TODO: Provide some kind of manifest even when we don't have a release
+	manifest := addonManifest{
+		Name: addonName,
+		// TODO: Provide something equivalent if we don't have owner/repo
+		Repository:   repository,
+		Version:      downloadedRelease,
+		InstallDate:  time.Now().Format(time.RFC3339),
+		ProjectFiles: desc.ProjectFiles,
+		GlobalFiles:  desc.GlobalFiles,
+	}
+	manifestFile := app.GetConfigPath(fmt.Sprintf("addon-metadata/%s/manifest.yaml", addonName))
+	if fileutil.FileExists(manifestFile) {
+		util.Warning("Overwriting existing manifest file %s", manifestFile)
+	}
+	manifestData, err := yaml.Marshal(manifest)
+	if err != nil {
+		util.Failed("Error marshaling manifest data: %v", err)
+	}
+	err = os.MkdirAll(filepath.Dir(manifestFile), 0755)
+	if err != nil {
+		util.Failed("Error creating manifest directory: %v", err)
+	}
+	if err = fileutil.TemplateStringToFile(string(manifestData), nil, manifestFile); err != nil {
+		util.Failed("Error writing manifest file: %v", err)
+	}
+	return nil
 }
 
 // processAction takes a stanza from yaml exec section and executes it.
