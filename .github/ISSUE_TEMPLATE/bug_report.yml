@@ -16,7 +16,7 @@ body:
         <details><summary>Expand `ddev debug test` diagnostic information</summary>
         
         ```
-        [COPY-PASTE HERE THE DIAGNOSIC INFORMATION]
+        [COPY-PASTE HERE THE OUTPUT OF `ddev debug test`]
         ```
         
         </details>         
