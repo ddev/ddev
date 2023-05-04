@@ -107,7 +107,7 @@ web_extra_exposed_ports:
 ```
 
 !!!warning "Fill in all three fields even if you don’t intend to use the `https_port`!"
-    If you don’t add `https_port`, then it default to `0` and `ddev-router` will fail to start.
+    If you don’t add `https_port`, then it defaults to `0` and `ddev-router` will fail to start.
 
 ## Exposing Extra Non-HTTP Ports
 
@@ -116,7 +116,6 @@ While the `web_extra_exposed_ports` gracefully handles running multiple DDEV pro
 In `.ddev/docker-compose.vnc.yaml`:
 
 ```yaml
-version: '3.6'
 services:
   web:
     ports:
