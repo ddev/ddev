@@ -18,7 +18,6 @@ body:
         ```
         [COPY-PASTE HERE THE OUTPUT OF `ddev debug test`]
         ```
-        
         </details>         
       description: |
         Whether you’re having trouble or not, help us with context that will skip a bunch of questions we'd have to ask afterwards:
