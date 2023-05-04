@@ -4,7 +4,7 @@ DDEV has built-in [Blackfire](https://blackfire.io) integration.
 
 ## Basic Blackfire Usage (Using Browser Plugin)
 
-1. Create a [Blackfire](https://blackfire.io) account. (Free Blackfire accounts are no longer available; see [Blackfire pricing](https://www.blackfire.io/pricing).)
+1. Create a [Blackfire](https://www.blackfire.io/) account. (Free Blackfire accounts are no longer available; see [Blackfire pricing](https://www.blackfire.io/pricing/).)
 2. Install the Chrome or Firefox [browser plugin](https://blackfire.io/docs/profiling-cookbooks/profiling-http-via-browser).
 3. From Blackfire’s control panel, get the Server ID, Server Token, Client ID, and Client Token from your Account → Credentials or environment.
 4. Configure DDEV with the credentials, `ddev config global --web-environment-add="BLACKFIRE_SERVER_ID=<id>,BLACKFIRE_SERVER_TOKEN=<token>,BLACKFIRE_CLIENT_ID=<id>,BLACKFIRE_CLIENT_TOKEN=<token>"`. It’s easiest to do this globally, but you can do the same thing at the project level using `ddev config --web-environment-add`. (It may be easier to manually edit the relevant config file, `.ddev/config.yaml` or `~/.ddev/global_config.yaml`.)
