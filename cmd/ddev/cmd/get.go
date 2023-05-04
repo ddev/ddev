@@ -29,6 +29,8 @@ import (
 	"time"
 )
 
+const metadataDir = "addon-metadata"
+
 // Format of install.yaml
 type installDesc struct {
 	// Name must be unique in a project; it will overwrite any existing add-on with the same name.
@@ -63,12 +65,19 @@ ddev get /path/to/package
 ddev get /path/to/tarball.tar.gz
 ddev get --list
 ddev get --list --all
+ddev get --installed
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		officialOnly := true
 		verbose := false
 
-		if cmd.Flag("list").Changed {
+		if cmd.Flags().Changed("verbose") {
+			verbose = true
+		}
+
+		// handle ddev get --list and ddev get --list --all
+		// these do not require an app context
+		if cmd.Flags().Changed("list") {
 			if cmd.Flag("all").Changed {
 				officialOnly = false
 			}
@@ -85,8 +94,15 @@ ddev get --list --all
 			return
 		}
 
-		if cmd.Flags().Changed("verbose") {
-			verbose = true
+		// handle ddev get --installed
+		if cmd.Flags().Changed("installed") {
+			app, err := ddevapp.GetActiveApp("")
+			if err != nil {
+				util.Failed("unable to find active project: %v", err)
+			}
+
+			listInstalledAddons(app)
+			return
 		}
 
 		if len(args) < 1 {
@@ -106,6 +122,7 @@ ddev get --list --all
 			util.Failed("Unable to change directory to project root %s: %v", app.AppRoot, err)
 		}
 		app.DockerEnv()
+
 		sourceRepoArg := args[0]
 		extractedDir := ""
 		parts := strings.Split(sourceRepoArg, "/")
@@ -329,7 +346,7 @@ func createManifestFile(app *ddevapp.DdevApp, addonName string, repository strin
 		ProjectFiles: desc.ProjectFiles,
 		GlobalFiles:  desc.GlobalFiles,
 	}
-	manifestFile := app.GetConfigPath(fmt.Sprintf("addon-metadata/%s/manifest.yaml", addonName))
+	manifestFile := app.GetConfigPath(fmt.Sprintf("%s/%s/manifest.yaml", metadataDir, addonName))
 	if fileutil.FileExists(manifestFile) {
 		util.Warning("Overwriting existing manifest file %s", manifestFile)
 	}
@@ -345,6 +362,68 @@ func createManifestFile(app *ddevapp.DdevApp, addonName string, repository strin
 		util.Failed("Error writing manifest file: %v", err)
 	}
 	return nil
+}
+
+// listInstalledAddons() show the add-ons that have a manifest file
+func listInstalledAddons(app *ddevapp.DdevApp) {
+	metadataDir := app.GetConfigPath(metadataDir)
+	err := os.MkdirAll(metadataDir, 0755)
+	if err != nil {
+		util.Failed("Error creating metadata directory: %v", err)
+	}
+	// Read the contents of the .ddev/addon-metadata directory (directories)
+	dirs, err := os.ReadDir(metadataDir)
+	if err != nil {
+		util.Failed("Error reading metadata directory: %v", err)
+	}
+
+	var out bytes.Buffer
+	t := table.NewWriter()
+	t.SetOutputMirror(&out)
+	styles.SetGlobalTableStyle(t)
+
+	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
+		t.SetColumnConfigs([]table.ColumnConfig{
+			{
+				Name: "Add-on",
+			},
+			{
+				Name: "Version",
+			},
+			{
+				Name: "Repository",
+			},
+			{
+				Name: "Date Installed",
+			},
+		})
+	}
+	t.AppendHeader(table.Row{"Add-on", "Version", "Repository", "Date Installed"})
+
+	// Loop through the directories in the .ddev/addon-metadata directory
+	for _, d := range dirs {
+		// Check if the file is a directory
+		if d.IsDir() {
+			// Read the contents of the manifest file
+			manifestFile := filepath.Join(metadataDir, d.Name(), "manifest.yaml")
+			manifestBytes, err := os.ReadFile(manifestFile)
+			if err != nil {
+				util.Warning("No manifest file found at %s: %v", manifestFile, err)
+				continue
+			}
+
+			// Parse the manifest file
+			var manifest addonManifest
+			err = yaml.Unmarshal(manifestBytes, &manifest)
+			if err != nil {
+				util.Failed("Unable to parse manifest file: %v", err)
+			}
+
+			t.AppendRow(table.Row{manifest.Name, manifest.Version, manifest.Repository, manifest.InstallDate})
+		}
+	}
+	t.Render()
+	output.UserOut.Printf("%s", out.String())
 }
 
 // processAction takes a stanza from yaml exec section and executes it.
@@ -428,6 +507,7 @@ func renderRepositoryList(repos []github.Repository) string {
 func init() {
 	Get.Flags().Bool("list", true, fmt.Sprintf(`List available add-ons for 'ddev get'`))
 	Get.Flags().Bool("all", true, fmt.Sprintf(`List unofficial add-ons for 'ddev get' in addition to the official ones`))
+	Get.Flags().Bool("installed", true, fmt.Sprintf(`Show installed ddev-get add-ons`))
 	Get.Flags().BoolP("verbose", "v", false, "Extended/verbose output for ddev get")
 	RootCmd.AddCommand(Get)
 }
