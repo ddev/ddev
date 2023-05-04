@@ -351,10 +351,8 @@ ddev get --remove my-addon,
 // createManifestFile creates a manifest file for the addon
 func createManifestFile(app *ddevapp.DdevApp, addonName string, repository string, downloadedRelease string, desc installDesc) error {
 	// Create a manifest file
-	// TODO: Provide some kind of manifest even when we don't have a release
 	manifest := addonManifest{
-		Name: addonName,
-		// TODO: Provide something equivalent if we don't have owner/repo
+		Name:         addonName,
 		Repository:   repository,
 		Version:      downloadedRelease,
 		InstallDate:  time.Now().Format(time.RFC3339),
