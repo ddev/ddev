@@ -199,12 +199,16 @@ const ConfigInstructions = `
 #  https_port: 4000
 #  http_port: 3999
 # Allows a set of extra ports to be exposed via ddev-router
+# Fill in all three fields even if you don’t intend to use the https_port!
+# If you don’t add https_port, then it defaults to 0 and ddev-router will fail to start.
+#
 # The port behavior on the ddev-webserver must be arranged separately, for example
 # using web_extra_daemons.
 # For example, with a web app on port 3000 inside the container, this config would
 # expose that web app on https://<project>.ddev.site:9999 and http://<project>.ddev.site:9998
 # web_extra_exposed_ports:
-#  - container_port: 3000
+#  - name: myapp
+#    container_port: 3000
 #    http_port: 9998
 #    https_port: 9999
 
