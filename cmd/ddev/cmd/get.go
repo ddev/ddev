@@ -59,7 +59,8 @@ var Get = &cobra.Command{
 	Use:   "get <addonOrURL> [project]",
 	Short: "Get/Download a 3rd party add-on (service, provider, etc.)",
 	Long:  `Get/Download a 3rd party add-on (service, provider, etc.). This can be a github repo, in which case the latest release will be used, or it can be a link to a .tar.gz in the correct format (like a particular release's .tar.gz) or it can be a local directory. Use 'ddev get --list' or 'ddev get --list --all' to see a list of available add-ons. Without --all it shows only official ddev add-ons. To list installed add-ons, 'ddev get --installed', to remove an add-on 'ddev get --remove <add-on>'.`,
-	Example: `ddev get ddev/ddev-drupal9-solr
+	Example: `ddev get ddev/ddev-redis
+ddev get ddev/ddev-redis --version v1.0.4
 ddev get https://github.com/ddev/ddev-drupal9-solr/archive/refs/tags/v0.0.5.tar.gz
 ddev get /path/to/package
 ddev get /path/to/tarball.tar.gz
@@ -72,6 +73,11 @@ ddev get --remove my-addon,
 		officialOnly := true
 		verbose := false
 		bash := util.FindBashPath()
+		requestedVersion := ""
+
+		if cmd.Flags().Changed("version") {
+			requestedVersion = cmd.Flag("version").Value.String()
+		}
 
 		if cmd.Flags().Changed("verbose") {
 			verbose = true
@@ -173,7 +179,7 @@ ddev get --remove my-addon,
 			ctx := context.Background()
 
 			client := getGithubClient(ctx)
-			releases, resp, err := client.Repositories.ListReleases(ctx, owner, repo, &github.ListOptions{})
+			releases, resp, err := client.Repositories.ListReleases(ctx, owner, repo, &github.ListOptions{PerPage: 100})
 			if err != nil {
 				var rate github.Rate
 				if resp != nil {
@@ -184,8 +190,22 @@ ddev get --remove my-addon,
 			if len(releases) == 0 {
 				util.Failed("No releases found for %v", repo)
 			}
-			tarballURL = releases[0].GetTarballURL()
-			downloadedRelease = releases[0].GetTagName()
+			releaseItem := 0
+			releaseFound := false
+			if requestedVersion != "" {
+				for i, release := range releases {
+					if release.GetTagName() == requestedVersion {
+						releaseItem = i
+						releaseFound = true
+						break
+					}
+				}
+				if !releaseFound {
+					util.Failed("No release found for %v with tag %v", repo, requestedVersion)
+				}
+			}
+			tarballURL = releases[releaseItem].GetTarballURL()
+			downloadedRelease = releases[releaseItem].GetTagName()
 			util.Success("Installing %s/%s:%s", owner, repo, downloadedRelease)
 			fallthrough
 
@@ -640,6 +660,7 @@ func init() {
 	Get.Flags().Bool("all", true, fmt.Sprintf(`List unofficial add-ons for 'ddev get' in addition to the official ones`))
 	Get.Flags().Bool("installed", true, fmt.Sprintf(`Show installed ddev-get add-ons`))
 	Get.Flags().String("remove", "", fmt.Sprintf(`Remove a ddev-get add-on`))
+	Get.Flags().String("version", "", fmt.Sprintf(`Specify a particular version of add-on to install`))
 	Get.Flags().BoolP("verbose", "v", false, "Extended/verbose output for ddev get")
 	RootCmd.AddCommand(Get)
 }
