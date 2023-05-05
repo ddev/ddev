@@ -71,6 +71,7 @@ ddev get --remove my-addon,
 	Run: func(cmd *cobra.Command, args []string) {
 		officialOnly := true
 		verbose := false
+		bash := util.FindBashPath()
 
 		if cmd.Flags().Changed("verbose") {
 			verbose = true
@@ -112,8 +113,9 @@ ddev get --remove my-addon,
 			if err != nil {
 				util.Failed("unable to find active project: %v", err)
 			}
+			app.DockerEnv()
 
-			err = removeAddon(app, cmd.Flag("remove").Value.String())
+			err = removeAddon(app, cmd.Flag("remove").Value.String(), nil, bash, verbose)
 			if err != nil {
 				util.Failed("unable to remove add-on: %v", err)
 			}
@@ -123,7 +125,6 @@ ddev get --remove my-addon,
 		if len(args) < 1 {
 			util.Failed("You must specify an add-on to download")
 		}
-		bash := util.FindBashPath()
 		apps, err := getRequestedProjects(args[1:], false)
 		if err != nil {
 			util.Failed("Unable to get project(s) %v: %v", args, err)
@@ -352,12 +353,13 @@ ddev get --remove my-addon,
 func createManifestFile(app *ddevapp.DdevApp, addonName string, repository string, downloadedRelease string, desc installDesc) error {
 	// Create a manifest file
 	manifest := addonManifest{
-		Name:         addonName,
-		Repository:   repository,
-		Version:      downloadedRelease,
-		InstallDate:  time.Now().Format(time.RFC3339),
-		ProjectFiles: desc.ProjectFiles,
-		GlobalFiles:  desc.GlobalFiles,
+		Name:           addonName,
+		Repository:     repository,
+		Version:        downloadedRelease,
+		InstallDate:    time.Now().Format(time.RFC3339),
+		ProjectFiles:   desc.ProjectFiles,
+		GlobalFiles:    desc.GlobalFiles,
+		RemovalActions: desc.RemovalActions,
 	}
 	manifestFile := app.GetConfigPath(fmt.Sprintf("%s/%s/manifest.yaml", addonMetadataDir, addonName))
 	if fileutil.FileExists(manifestFile) {
@@ -572,7 +574,7 @@ func listAvailable(officialOnly bool) ([]github.Repository, error) {
 }
 
 // removeAddon removes an addon, taking care to respect #ddev-generated
-func removeAddon(app *ddevapp.DdevApp, addonName string) error {
+func removeAddon(app *ddevapp.DdevApp, addonName string, dict map[string]interface{}, bash string, verbose bool) error {
 	if addonName == "" {
 		return fmt.Errorf("No add-on name specified for removal")
 	}
@@ -591,6 +593,15 @@ func removeAddon(app *ddevapp.DdevApp, addonName string) error {
 	err = yaml.Unmarshal([]byte(manifestString), manifestData)
 	if err != nil {
 		return fmt.Errorf("Error unmarshalling manifest data: %v", err)
+	}
+
+	// Execute any removal actions
+	for i, action := range manifestData.RemovalActions {
+		err = processAction(action, dict, bash, verbose)
+		desc := getDdevDescription(action)
+		if err != nil {
+			util.Warning("could not process removal action (%d) '%s': %v", i, desc, err)
+		}
 	}
 
 	// Remove any project files
