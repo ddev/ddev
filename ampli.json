@@ -10,6 +10,6 @@
   "Platform": "Go",
   "Language": "Go",
   "SDK": "analytics-go",
-  "Path": "./pkg/ampli",
+  "Path": "./third_party/ampli",
   "OmitApiKeys": true
 }

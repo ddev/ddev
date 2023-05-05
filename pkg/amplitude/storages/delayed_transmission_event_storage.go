@@ -167,7 +167,7 @@ func (s *delayedTransmissionEventStorage) writeCache() error {
 	file, err := os.Create(s.fileName)
 	if err == nil {
 		encoder := gob.NewEncoder(file)
-		encoder.Encode(&s.cache)
+		err = encoder.Encode(&s.cache)
 	}
 	file.Close()
 

@@ -106,12 +106,10 @@ var Binary = struct {
 		Architecture(architecture string) interface {
 			DockerPlatform(dockerPlatform string) interface {
 				DockerVersion(dockerVersion string) interface {
-					Host(host string) interface {
-						Language(language string) interface {
-							Os(os string) interface {
-								Timezone(timezone string) interface {
-									Version(version string) BinaryBuilder
-								}
+					Language(language string) interface {
+						Os(os string) interface {
+							Timezone(timezone string) interface {
+								Version(version string) BinaryBuilder
 							}
 						}
 					}
@@ -124,12 +122,10 @@ var Binary = struct {
 		Architecture(architecture string) interface {
 			DockerPlatform(dockerPlatform string) interface {
 				DockerVersion(dockerVersion string) interface {
-					Host(host string) interface {
-						Language(language string) interface {
-							Os(os string) interface {
-								Timezone(timezone string) interface {
-									Version(version string) BinaryBuilder
-								}
+					Language(language string) interface {
+						Os(os string) interface {
+							Timezone(timezone string) interface {
+								Version(version string) BinaryBuilder
 							}
 						}
 					}
@@ -167,12 +163,10 @@ type binaryBuilder struct {
 func (b *binaryBuilder) Architecture(architecture string) interface {
 	DockerPlatform(dockerPlatform string) interface {
 		DockerVersion(dockerVersion string) interface {
-			Host(host string) interface {
-				Language(language string) interface {
-					Os(os string) interface {
-						Timezone(timezone string) interface {
-							Version(version string) BinaryBuilder
-						}
+			Language(language string) interface {
+				Os(os string) interface {
+					Timezone(timezone string) interface {
+						Version(version string) BinaryBuilder
 					}
 				}
 			}
@@ -186,12 +180,10 @@ func (b *binaryBuilder) Architecture(architecture string) interface {
 
 func (b *binaryBuilder) DockerPlatform(dockerPlatform string) interface {
 	DockerVersion(dockerVersion string) interface {
-		Host(host string) interface {
-			Language(language string) interface {
-				Os(os string) interface {
-					Timezone(timezone string) interface {
-						Version(version string) BinaryBuilder
-					}
+		Language(language string) interface {
+			Os(os string) interface {
+				Timezone(timezone string) interface {
+					Version(version string) BinaryBuilder
 				}
 			}
 		}
@@ -203,22 +195,6 @@ func (b *binaryBuilder) DockerPlatform(dockerPlatform string) interface {
 }
 
 func (b *binaryBuilder) DockerVersion(dockerVersion string) interface {
-	Host(host string) interface {
-		Language(language string) interface {
-			Os(os string) interface {
-				Timezone(timezone string) interface {
-					Version(version string) BinaryBuilder
-				}
-			}
-		}
-	}
-} {
-	b.properties[`Docker Version`] = dockerVersion
-
-	return b
-}
-
-func (b *binaryBuilder) Host(host string) interface {
 	Language(language string) interface {
 		Os(os string) interface {
 			Timezone(timezone string) interface {
@@ -227,7 +203,7 @@ func (b *binaryBuilder) Host(host string) interface {
 		}
 	}
 } {
-	b.properties[`Host`] = host
+	b.properties[`Docker Version`] = dockerVersion
 
 	return b
 }
