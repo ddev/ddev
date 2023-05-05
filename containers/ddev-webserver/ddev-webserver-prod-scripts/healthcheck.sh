@@ -23,25 +23,45 @@ fi
 
 phpstatus="false"
 htmlaccess="false"
-if curl --fail -s 127.0.0.1/phpstatus >/dev/null ; then
-    phpstatus="true"
-    printf "phpstatus: OK "
-else
-    printf "phpstatus: FAILED "
-fi
+gunicornstatus="false"
 
 if ls /var/www/html >/dev/null; then
     htmlaccess="true"
-    printf "/var/www/html: OK "
+    printf "/var/www/html:OK "
 else
-    printf "/var/www/html: FAILED"
+    printf "/var/www/html:FAILED"
 fi
 
-if [ "${phpstatus}" = "true" ] && [ "${htmlaccess}" = "true" ]; then
+# If DDEV_WEBSERVER_TYPE is not set, use reasonable default
+DDEV_WEBSERVER_TYPE=${DDEV_WEBSERVER_TYPE:-nginx-fpm}
+
+if [ "${DDEV_WEBSERVER_TYPE#*-}" = "gunicorn" ]; then
+  phpstatus="true"
+  if pkill -0 gunicorn; then
+    gunicornstatus="true"
+    printf "gunicorn:OK"
+  else
+    printf "gunicorn:FAILED "
+  fi
+
+fi
+
+if [ "${DDEV_WEBSERVER_TYPE#*-}" = "fpm"  ]; then
+  gunicornstatus="true"
+  if curl --fail -s 127.0.0.1/phpstatus >/dev/null ; then
+    phpstatus="true"
+    printf "phpstatus:OK "
+  else
+    printf "phpstatus:FAILED "
+  fi
+fi
+
+if [ "${phpstatus}" = "true" ] && [ "${gunicornstatus}" = "true" ] && [ "${htmlaccess}" = "true" ]; then
     touch /tmp/healthy
     exit 0
 fi
 rm -f /tmp/healthy
+
 exit 1
 
 

@@ -18,7 +18,7 @@ var SegmentKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20230502_davereid_php_81" // Note that this can be overridden by make
+var WebTag = "20230504_fix_log_in_web_extra_daemons" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
