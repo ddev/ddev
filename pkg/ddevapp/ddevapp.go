@@ -2309,13 +2309,16 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 	if app.Name == "" {
 		return fmt.Errorf("invalid app.Name provided to app.Stop(), app=%v", app)
 	}
-	err = app.ProcessHooks("pre-stop")
-	if err != nil {
-		return fmt.Errorf("failed to process pre-stop hooks: %v", err)
-	}
-	status, _ := app.SiteStatus()
 
-	if createSnapshot == true {
+	status, _ := app.SiteStatus()
+	if status != SiteStopped {
+		err = app.ProcessHooks("pre-stop")
+		if err != nil {
+			return fmt.Errorf("failed to process pre-stop hooks: %v", err)
+		}
+	}
+
+	if createSnapshot {
 		if status != SiteRunning {
 			util.Warning("Must start non-running project to do database snapshot")
 			err = app.Start()
@@ -2411,9 +2414,11 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		util.Success("Project %s was deleted. Your code and configuration are unchanged.", app.Name)
 	}
 
-	err = app.ProcessHooks("post-stop")
-	if err != nil {
-		return fmt.Errorf("failed to process post-stop hooks: %v", err)
+	if status != SiteStopped {
+		err = app.ProcessHooks("post-stop")
+		if err != nil {
+			return fmt.Errorf("failed to process post-stop hooks: %v", err)
+		}
 	}
 
 	return nil
