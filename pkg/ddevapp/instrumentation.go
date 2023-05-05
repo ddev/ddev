@@ -14,6 +14,7 @@ import (
 
 	"github.com/amplitude/analytics-go/amplitude"
 	"github.com/ddev/ddev/pkg/ampli"
+	"github.com/ddev/ddev/pkg/amplitude/loggers"
 	"github.com/ddev/ddev/pkg/amplitude/storages"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -215,16 +216,23 @@ func SendInstrumentationEvents(event string) {
 // initInstrumentation initializes the instrumentation and must be called once
 // before the instrumentation functions can be used.
 func initInstrumentation() {
+	// Disable instrumentation if AmplitudeAPIKey is not available
+	if versionconstants.AmplitudeAPIKey == "" {
+		ampli.Instance.Disabled = true
+		return
+	}
+
 	// Size of the queue. If reached the queued events will be sent.
 	var queueSize int = 50
 	var interval time.Duration = 24 * time.Hour
 
 	ampli.Instance.Load(ampli.LoadOptions{
 		Client: ampli.LoadClientOptions{
-			APIKey: versionconstants.AmplitudeApiKey,
+			APIKey: versionconstants.AmplitudeAPIKey,
 			Configuration: amplitude.Config{
 				FlushInterval:  300,
 				FlushQueueSize: queueSize,
+				Logger:         loggers.NewDdevLogger(),
 				StorageFactory: func() amplitude.EventStorage {
 					return storages.NewDelayedTransmissionEventStorage(
 						queueSize,
