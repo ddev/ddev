@@ -24,7 +24,6 @@ fi
 phpstatus="false"
 htmlaccess="false"
 gunicornstatus="false"
-mailhog="false"
 
 if ls /var/www/html >/dev/null; then
     htmlaccess="true"
@@ -57,7 +56,7 @@ if [ "${DDEV_WEBSERVER_TYPE#*-}" = "fpm"  ]; then
   fi
 fi
 
-if [ "${phpstatus}" = "true" ] && [ "${gunicornstatus}" = "true" ] && [ "${htmlaccess}" = "true" ] &&  [ "${mailhog}" = "true" ] ; then
+if [ "${phpstatus}" = "true" ] && [ "${gunicornstatus}" = "true" ] && [ "${htmlaccess}" = "true" ]; then
     touch /tmp/healthy
     exit 0
 fi
