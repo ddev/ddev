@@ -330,11 +330,15 @@ func (b *commandBuilder) Build() CommandEvent {
 
 var Project = struct {
 	Builder func() interface {
-		Id(id string) ProjectBuilder
+		Id(id string) interface {
+			Properties(properties interface{}) ProjectBuilder
+		}
 	}
 }{
 	Builder: func() interface {
-		Id(id string) ProjectBuilder
+		Id(id string) interface {
+			Properties(properties interface{}) ProjectBuilder
+		}
 	} {
 		return &projectBuilder{
 			properties: map[string]interface{}{},
@@ -362,8 +366,16 @@ type projectBuilder struct {
 	properties map[string]interface{}
 }
 
-func (b *projectBuilder) Id(id string) ProjectBuilder {
+func (b *projectBuilder) Id(id string) interface {
+	Properties(properties interface{}) ProjectBuilder
+} {
 	b.properties[`ID`] = id
+
+	return b
+}
+
+func (b *projectBuilder) Properties(properties interface{}) ProjectBuilder {
+	b.properties[`Properties`] = properties
 
 	return b
 }

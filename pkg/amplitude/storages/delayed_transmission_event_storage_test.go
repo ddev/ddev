@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-func TestInMemoryEvent(t *testing.T) {
+func TestDelayedTransmissionEventStorage(t *testing.T) {
 	suite.Run(t, new(DelayedTransmissionEventStorageSuite))
 }
 

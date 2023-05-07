@@ -45,6 +45,11 @@ func TrackBinary() {
 	runTime := util.TimeTrack()
 	defer runTime()
 
+	// Early exit if instrumentation is disabled.
+	if ampli.Instance.Disabled {
+		return
+	}
+
 	dockerVersion, _ := dockerutil.GetDockerVersion()
 	dockerPlaform, _ := version.GetDockerPlatform()
 	timezone, _ := time.Now().In(time.Local).Zone()
@@ -73,6 +78,11 @@ func TrackCommand(cmd *cobra.Command, args []string) {
 	runTime := util.TimeTrack()
 	defer runTime()
 
+	// Early exit if instrumentation is disabled.
+	if ampli.Instance.Disabled {
+		return
+	}
+
 	builder := ampli.Command.Builder().
 		Arguments(args).
 		CalledAs(cmd.CalledAs()).
@@ -83,11 +93,27 @@ func TrackCommand(cmd *cobra.Command, args []string) {
 
 // Flush transmits the queued events if limits are reached.
 func Flush() {
+	runTime := util.TimeTrack()
+	defer runTime()
+
+	// Early exit if instrumentation is disabled.
+	if ampli.Instance.Disabled {
+		return
+	}
+
 	ampli.Instance.Flush()
 }
 
 // setIdentity prepares the identity for later use by calling Identify.
 func setIdentity() {
+	runTime := util.TimeTrack()
+	defer runTime()
+
+	// Early exit if instrumentation is disabled.
+	if ampli.Instance.Disabled {
+		return
+	}
+
 	lang := os.Getenv("LANG")
 
 	eventOptions = ampli.EventOptions{
@@ -103,6 +129,9 @@ func setIdentity() {
 // initAmpli initializes the instrumentation and must be called once before the
 // instrumentation functions can be used.
 func initAmpli() {
+	runTime := util.TimeTrack()
+	defer runTime()
+
 	// Disable instrumentation if AmplitudeAPIKey is not available
 	if versionconstants.AmplitudeAPIKey == "" {
 		ampli.Instance.Disabled = true
@@ -137,9 +166,8 @@ func initAmpli() {
 				},
 			},
 		},
-		Disabled: !globalconfig.DdevGlobalConfig.InstrumentationOptIn || !globalconfig.IsInternetActive(),
+		Disabled: globalconfig.DdevNoInstrumentation || !globalconfig.DdevGlobalConfig.InstrumentationOptIn || !globalconfig.IsInternetActive(),
 	})
-
 }
 
 func init() {
