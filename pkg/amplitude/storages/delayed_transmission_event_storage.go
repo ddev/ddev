@@ -30,20 +30,24 @@ type delayedTransmissionEventStorage struct {
 	mu sync.RWMutex
 }
 
+// eventCache is the structure used for the cache file.
 type eventCache struct {
-	lastSubmittedAt time.Time
-	events          []*types.StorageEvent
-	//retriedEvents   []*types.StorageEvent
+	LastSubmittedAt time.Time
+	Events          []*types.StorageEvent
+	//RetriedEvents   []*types.StorageEvent
 }
 
+// PushNew writes a new event to the cache.
 func (s *delayedTransmissionEventStorage) PushNew(event *types.StorageEvent) {
 	s.push(false, event)
 }
 
+// ReturnBack is used to return back previously pulled events to the cache.
 func (s *delayedTransmissionEventStorage) ReturnBack(events ...*types.StorageEvent) {
 	s.push(true, events...)
 }
 
+// push prepends or appends events to the cache.
 func (s *delayedTransmissionEventStorage) push(prepend bool, events ...*types.StorageEvent) {
 	if len(events) == 0 {
 		return
@@ -80,7 +84,7 @@ func (s *delayedTransmissionEventStorage) Pull(count int, before time.Time) []*t
 	}
 
 	// Early return if capacity and interval hasn't reached.
-	if !s.cache.lastSubmittedAt.Add(s.interval).Before(before) && !(len(s.cache.events) >= s.capacity) {
+	if !s.cache.LastSubmittedAt.Add(s.interval).Before(before) && !(len(s.cache.Events) >= s.capacity) {
 		return make([]*types.StorageEvent, 0)
 	}
 
@@ -91,28 +95,29 @@ func (s *delayedTransmissionEventStorage) Pull(count int, before time.Time) []*t
 		}
 	}()
 
-	s.cache.lastSubmittedAt = time.Now()
+	s.cache.LastSubmittedAt = time.Now()
 
-	if len(s.cache.events) >= count {
+	if len(s.cache.Events) >= count {
 		events := make([]*types.StorageEvent, count)
-		copy(events, s.cache.events)
-		copy(s.cache.events, s.cache.events[count:])
+		copy(events, s.cache.Events)
+		copy(s.cache.Events, s.cache.Events[count:])
 
 		// Remove copied items from cache.
-		s.cache.events = s.cache.events[:len(s.cache.events)-count]
+		s.cache.Events = s.cache.Events[:len(s.cache.Events)-count]
 
 		return events
 	}
 
-	events := make([]*types.StorageEvent, len(s.cache.events), count)
-	copy(events, s.cache.events)
+	events := make([]*types.StorageEvent, len(s.cache.Events), count)
+	copy(events, s.cache.Events)
 
 	// Clear the cache
-	s.cache.events = s.cache.events[:0]
+	s.cache.Events = s.cache.Events[:0]
 
 	return events
 }
 
+// Count returns the number of events ready for transmission.
 func (s *delayedTransmissionEventStorage) Count(before time.Time) int {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -122,36 +127,42 @@ func (s *delayedTransmissionEventStorage) Count(before time.Time) int {
 		util.Error("Error '%s', while reading event cache.", err)
 	}
 
-	if s.cache.lastSubmittedAt.Add(s.interval).Before(before) || len(s.cache.events) >= s.capacity {
-		return len(s.cache.events)
+	if s.cache.LastSubmittedAt.Add(s.interval).Before(before) || len(s.cache.Events) >= s.capacity {
+		return len(s.cache.Events)
 	}
 
 	return 0
 }
 
+// addNonRetriedEvent adds the events to the internal memory cache.
 func (s *delayedTransmissionEventStorage) addNonRetriedEvent(event *types.StorageEvent, prepend bool, prependIndex *int) {
 	if prepend {
-		s.cache.events = append(s.cache.events, nil)
-		copy(s.cache.events[*prependIndex+1:], s.cache.events[*prependIndex:])
-		s.cache.events[*prependIndex] = event
+		s.cache.Events = append(s.cache.Events, nil)
+		copy(s.cache.Events[*prependIndex+1:], s.cache.Events[*prependIndex:])
+		s.cache.Events[*prependIndex] = event
 		*prependIndex++
 	} else {
-		s.cache.events = append(s.cache.events, event)
+		s.cache.Events = append(s.cache.Events, event)
 	}
 }
 
 // readCache reads the events from the cache file.
 func (s *delayedTransmissionEventStorage) readCache() error {
-	// The cache is read once per run time, early exist if already loaded.
+	// The cache is read once per run time, early exit if already loaded.
 	if s.loaded {
 		return nil
 	}
 
 	file, err := os.Open(s.fileName)
-	if err == nil {
-		decoder := gob.NewDecoder(file)
-		err = decoder.Decode(&s.cache)
+	// If the file does not exists, early exit.
+	if err != nil {
+		s.loaded = true
+
+		return nil
 	}
+
+	decoder := gob.NewDecoder(file)
+	err = decoder.Decode(&s.cache)
 	file.Close()
 
 	// If the file was properly read, mark the cache as loaded.

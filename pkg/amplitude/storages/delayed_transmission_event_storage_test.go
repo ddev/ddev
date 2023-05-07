@@ -1,6 +1,7 @@
 package storages_test
 
 import (
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -10,14 +11,14 @@ import (
 )
 
 func TestInMemoryEvent(t *testing.T) {
-	suite.Run(t, new(InMemoryEventStorageSuite))
+	suite.Run(t, new(DelayedTransmissionEventStorageSuite))
 }
 
-type InMemoryEventStorageSuite struct {
+type DelayedTransmissionEventStorageSuite struct {
 	suite.Suite
 }
 
-func (t *InMemoryEventStorageSuite) TestSimple() {
+func (t *DelayedTransmissionEventStorageSuite) TestSimple() {
 	event1 := &types.StorageEvent{Event: &types.Event{EventType: "event-A"}}
 	event2 := &types.StorageEvent{Event: &types.Event{EventType: "event-B"}}
 	event3 := &types.StorageEvent{Event: &types.Event{EventType: "event-C"}}
@@ -25,7 +26,7 @@ func (t *InMemoryEventStorageSuite) TestSimple() {
 
 	require := t.Require()
 
-	s := storages.NewDelayedTransmissionEventStorage()
+	s := storages.NewDelayedTransmissionEventStorage(0, 0, filepath.Join(t.T().TempDir(), `TestSimple.cache`))
 	s.PushNew(event1)
 	require.Equal(1, s.Count(time.Time{}))
 	s.PushNew(event2)
@@ -59,7 +60,7 @@ func (t *InMemoryEventStorageSuite) TestSimple() {
 	require.Empty(chunk)
 }
 
-func (t *InMemoryEventStorageSuite) TestReturnBack() {
+func (t *DelayedTransmissionEventStorageSuite) TestReturnBack() {
 	event1 := &types.StorageEvent{Event: &types.Event{EventType: "event-A"}}
 	event2 := &types.StorageEvent{Event: &types.Event{EventType: "event-B"}}
 	event3 := &types.StorageEvent{Event: &types.Event{EventType: "event-C"}}
@@ -68,7 +69,7 @@ func (t *InMemoryEventStorageSuite) TestReturnBack() {
 
 	require := t.Require()
 
-	s := storages.NewDelayedTransmissionEventStorage()
+	s := storages.NewDelayedTransmissionEventStorage(0, 0, filepath.Join(t.T().TempDir(), `TestReturnBack.cache`))
 	s.PushNew(event1)
 	s.PushNew(event2)
 	s.PushNew(event3)
@@ -80,33 +81,45 @@ func (t *InMemoryEventStorageSuite) TestReturnBack() {
 	require.Equal([]*types.StorageEvent{event1, event2, event3, event4}, chunk)
 
 	now := time.Now()
-	event3.RetryAt = now.Add(time.Millisecond * 300)
-	event4.RetryAt = now.Add(time.Millisecond * 100)
 	s.ReturnBack(event2, event3, event4, event1)
 
-	require.Equal(3, s.Count(now))
+	require.Equal(5, s.Count(now))
 	chunk = s.Pull(4, now)
-	require.Equal([]*types.StorageEvent{event2, event1, event5}, chunk)
+	require.Equal([]*types.StorageEvent{event2, event3, event4, event1}, chunk)
 
-	require.Equal(0, s.Count(now))
-	chunk = s.Pull(4, now)
-	require.Empty(chunk)
-
-	now = now.Add(time.Millisecond * 150)
 	require.Equal(1, s.Count(now))
 	chunk = s.Pull(4, now)
-	require.Equal([]*types.StorageEvent{event4}, chunk)
+	require.Equal([]*types.StorageEvent{event5}, chunk)
 
 	require.Equal(0, s.Count(now))
 	chunk = s.Pull(4, now)
 	require.Empty(chunk)
+}
 
-	now = now.Add(time.Millisecond * 200)
-	require.Equal(1, s.Count(now))
-	chunk = s.Pull(4, now)
-	require.Equal([]*types.StorageEvent{event3}, chunk)
+func (t *DelayedTransmissionEventStorageSuite) TestCache() {
+	event1 := &types.StorageEvent{Event: &types.Event{EventType: "event-A"}}
+	event2 := &types.StorageEvent{Event: &types.Event{EventType: "event-B"}}
+	event3 := &types.StorageEvent{Event: &types.Event{EventType: "event-C"}}
+	event4 := &types.StorageEvent{Event: &types.Event{EventType: "event-D"}}
+	event5 := &types.StorageEvent{Event: &types.Event{EventType: "event-E"}}
 
-	require.Equal(0, s.Count(now))
-	chunk = s.Pull(4, now)
-	require.Empty(chunk)
+	cacheFile := filepath.Join(t.T().TempDir(), `TestCache.cache`)
+
+	require := t.Require()
+
+	s1 := storages.NewDelayedTransmissionEventStorage(0, 0, cacheFile)
+	s1.PushNew(event1)
+	s1.PushNew(event2)
+	s1.PushNew(event3)
+	s1.PushNew(event4)
+	s1.PushNew(event5)
+
+	require.Equal(5, s1.Count(time.Time{}))
+	chunk := s1.Pull(2, time.Time{})
+	require.Equal([]*types.StorageEvent{event1, event2}, chunk)
+
+	s2 := storages.NewDelayedTransmissionEventStorage(0, 0, cacheFile)
+	require.Equal(3, s2.Count(time.Time{}))
+	chunk = s2.Pull(2, time.Time{})
+	require.Equal([]*types.StorageEvent{event3, event4}, chunk)
 }

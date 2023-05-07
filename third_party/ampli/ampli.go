@@ -258,11 +258,19 @@ func (b *binaryBuilder) Build() BinaryEvent {
 
 var Command = struct {
 	Builder func() interface {
-		CommandName(commandName string) CommandBuilder
+		Arguments(arguments []string) interface {
+			CalledAs(calledAs string) interface {
+				CommandName(commandName string) CommandBuilder
+			}
+		}
 	}
 }{
 	Builder: func() interface {
-		CommandName(commandName string) CommandBuilder
+		Arguments(arguments []string) interface {
+			CalledAs(calledAs string) interface {
+				CommandName(commandName string) CommandBuilder
+			}
+		}
 	} {
 		return &commandBuilder{
 			properties: map[string]interface{}{},
@@ -288,6 +296,24 @@ type CommandBuilder interface {
 
 type commandBuilder struct {
 	properties map[string]interface{}
+}
+
+func (b *commandBuilder) Arguments(arguments []string) interface {
+	CalledAs(calledAs string) interface {
+		CommandName(commandName string) CommandBuilder
+	}
+} {
+	b.properties[`Arguments`] = arguments
+
+	return b
+}
+
+func (b *commandBuilder) CalledAs(calledAs string) interface {
+	CommandName(commandName string) CommandBuilder
+} {
+	b.properties[`Called As`] = calledAs
+
+	return b
 }
 
 func (b *commandBuilder) CommandName(commandName string) CommandBuilder {

@@ -139,6 +139,7 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	amplitude.TrackBinary()
+	defer amplitude.Flush()
 
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(-1)

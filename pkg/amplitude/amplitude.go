@@ -25,6 +25,7 @@ var (
 	eventOptions ampli.EventOptions
 )
 
+// GetUserID returns the unique user id to be used when tracking an event.
 func GetUserID() string {
 	if userID == "" {
 		userID, _ = machineid.ProtectedID("ddev")
@@ -33,6 +34,7 @@ func GetUserID() string {
 	return userID
 }
 
+// GetEventOptions returns the EventOptions to be used when tracking an event.
 func GetEventOptions() ampli.EventOptions {
 	return eventOptions
 }
@@ -72,11 +74,19 @@ func TrackCommand(cmd *cobra.Command, args []string) {
 	defer runTime()
 
 	builder := ampli.Command.Builder().
-		CommandName(cmd.CalledAs())
+		Arguments(args).
+		CalledAs(cmd.CalledAs()).
+		CommandName(cmd.Name())
 
 	ampli.Instance.Command(GetUserID(), builder.Build(), GetEventOptions())
 }
 
+// Flush transmits the queued events if limits are reached.
+func Flush() {
+	ampli.Instance.Flush()
+}
+
+// setIdentity prepares the identity for later use by calling Identify.
 func setIdentity() {
 	lang := os.Getenv("LANG")
 
@@ -100,8 +110,16 @@ func initAmpli() {
 	}
 
 	// Size of the queue. If reached the queued events will be sent.
-	var queueSize int = 50
-	var interval time.Duration = 24 * time.Hour
+	queueSize := globalconfig.DdevGlobalConfig.InstrumentationQueueSize
+	if queueSize <= 0 {
+		queueSize = 50
+	}
+
+	// Interval of reporting. If reached since last reporting events will be sent.
+	interval := globalconfig.DdevGlobalConfig.InstrumentationReportingInterval
+	if interval <= 0 {
+		interval = 24 * time.Hour
+	}
 
 	ampli.Instance.Load(ampli.LoadOptions{
 		Client: ampli.LoadClientOptions{
