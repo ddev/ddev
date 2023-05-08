@@ -10,6 +10,7 @@
 /dist
 /.ddev
 /artifacts
+/vendor
 *.DS_Store
 nbproject/
 .idea
