@@ -603,7 +603,7 @@ func removeAddon(app *ddevapp.DdevApp, addonName string, dict map[string]interfa
 
 	manifestFile := filepath.Join(metadataDir, addonName, "manifest.yaml")
 	if !fileutil.FileExists(manifestFile) {
-		util.Failed("The add-on '%s' does not seem to have a manifest file; please upgrade it.\nUse `ddev get --installed to see installed add-ons.\nIf yours is not there it may have been installed before DDEV v1.22.0\nUse 'ddev get' to update it.", addonName, manifestFile)
+		util.Failed("The add-on '%s' does not seem to have a manifest file; please upgrade it.\nUse `ddev get --installed to see installed add-ons.\nIf yours is not there it may have been installed before DDEV v1.22.0.\nUse 'ddev get' to update it.", addonName)
 	}
 	manifestString, err := fileutil.ReadFileIntoString(manifestFile)
 	if err != nil {
