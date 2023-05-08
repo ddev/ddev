@@ -577,7 +577,7 @@ Flags:
 
 Environment variables:
 
-* `DDEV_GITHUB_TOKEN`: A [GitHub token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) may be used for `ddev get` requests (which result in GitHub API queries). It's unusual for casual users to need this, but if you're doing lots of `ddev get` requests you may run into rate limiting. The token you use requires no privileges at all. Example: 
+* `DDEV_GITHUB_TOKEN`: A [GitHub token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) may be used for `ddev get` requests (which result in GitHub API queries). It's unusual for casual users to need this, but if you're doing lots of `ddev get` requests you may run into rate limiting. The token you use requires no privileges at all. Example:
 
 ```bash
 export DDEV_GITHUB_TOKEN=<your github token>
