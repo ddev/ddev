@@ -12,6 +12,7 @@ Type `ddev` or `ddev -h` in a terminal window to see the available DDEV [command
 * [`ddev stop`](../usage/commands.md#stop) stops a project and removes its memory usage (but does not throw away any data).
 * [`ddev poweroff`](../usage/commands.md#poweroff) stops all resources that DDEV is using and stops the Mutagen daemon if it’s running.
 * [`ddev delete`](../usage/commands.md#delete) destroys the database and DDEV’s knowledge of the project without touching your code.
+* [`ddev get`](../usage/commands.md#get) adds an add-on service.
 
 ## Lots of Other Commands
 

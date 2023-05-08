@@ -67,6 +67,10 @@ Officially-supported add-ons:
 * [Selenium Standalone Chrome](https://github.com/ddev/ddev-selenium-standalone-chrome): `ddev get ddev/ddev-selenium-standalone-chrome`.
 * [Varnish](https://github.com/ddev/ddev-varnish): `ddev get ddev/ddev-varnish`.
 
+## Viewing and Removing Installed Add-Ons
+
+Add-ons installed in DDEV v1.22+ are versioned and can be viewed with `ddev get --installed`. Add-ons can be removed with `ddev get --remove <addonname>`. If you have add-ons that were installed before v1.22, just re-add them with `ddev get <addonname>` and they will be versioned and available in `ddev get --installed`.
+
 ## Creating an Additional Service for `ddev get`
 
 Anyone can create an add-on for `ddev get`. See [this screencast](https://www.youtube.com/watch?v=fPVGpKGr0f4) and instructions in [`ddev-addon-template`](https://github.com/ddev/ddev-addon-template):
