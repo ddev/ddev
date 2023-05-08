@@ -96,8 +96,8 @@ func Flush() {
 	runTime := util.TimeTrack()
 	defer runTime()
 
-	// Early exit if instrumentation is disabled.
-	if ampli.Instance.Disabled {
+	// Early exit if instrumentation is disabled or internet not active.
+	if ampli.Instance.Disabled || !globalconfig.IsInternetActive() {
 		return
 	}
 
@@ -109,11 +109,6 @@ func setIdentity() {
 	runTime := util.TimeTrack()
 	defer runTime()
 
-	// Early exit if instrumentation is disabled.
-	if ampli.Instance.Disabled {
-		return
-	}
-
 	lang := os.Getenv("LANG")
 
 	eventOptions = ampli.EventOptions{
@@ -121,6 +116,11 @@ func setIdentity() {
 		Platform:   runtime.GOARCH,
 		OSName:     runtime.GOOS,
 		Language:   lang,
+	}
+
+	// Early exit if instrumentation is disabled.
+	if ampli.Instance.Disabled {
+		return
 	}
 
 	ampli.Instance.Identify(GetUserID(), GetEventOptions())
@@ -132,7 +132,7 @@ func initAmpli() {
 	runTime := util.TimeTrack()
 	defer runTime()
 
-	// Disable instrumentation if AmplitudeAPIKey is not available
+	// Disable instrumentation if AmplitudeAPIKey is not available.
 	if versionconstants.AmplitudeAPIKey == "" {
 		ampli.Instance.Disabled = true
 		return
@@ -166,7 +166,7 @@ func initAmpli() {
 				},
 			},
 		},
-		Disabled: globalconfig.DdevNoInstrumentation || !globalconfig.DdevGlobalConfig.InstrumentationOptIn || !globalconfig.IsInternetActive(),
+		Disabled: globalconfig.DdevNoInstrumentation || !globalconfig.DdevGlobalConfig.InstrumentationOptIn,
 	})
 }
 

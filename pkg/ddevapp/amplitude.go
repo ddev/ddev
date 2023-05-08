@@ -11,6 +11,12 @@ import (
 	"github.com/denisbrodbeck/machineid"
 )
 
+// ProtectedID returns the unique hash value for the project.
+func (app *DdevApp) ProtectedID() string {
+	appID, _ := machineid.ProtectedID("ddev" + app.Name)
+	return appID
+}
+
 // TrackProject collects and tracks information about the project for instrumentation.
 func (app *DdevApp) TrackProject() {
 	runTime := util.TimeTrack()
@@ -38,10 +44,4 @@ func (app *DdevApp) TrackProject() {
 		Properties(properties)
 
 	ampli.Instance.Project("", builder.Build(), amplitude.GetEventOptions())
-}
-
-// ProtectedID returns the unique hash value for the project.
-func (app *DdevApp) ProtectedID() string {
-	appID, _ := machineid.ProtectedID("ddev" + app.Name)
-	return appID
 }
