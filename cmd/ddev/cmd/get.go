@@ -356,7 +356,7 @@ ddev get --remove my-addon,
 		case "tarball":
 			repository = sourceRepoArg
 		}
-		err = createManifestFile(app, s.Name, repository, downloadedRelease, s)
+		manifest, err := createManifestFile(app, s.Name, repository, downloadedRelease, s)
 		if err != nil {
 			util.Failed("Unable to create manifest file: %v", err)
 		}
@@ -365,12 +365,12 @@ ddev get --remove my-addon,
 		if argType == "github" {
 			util.Success("Please read instructions for this addon at the source repo at\nhttps://github.com/%v/%v\nPlease file issues and create pull requests there to improve it.", owner, repo)
 		}
-
+		output.UserOut.WithField("raw", manifest).Printf("Installed %s:%s from %s", manifest.Name, manifest.Version, manifest.Repository)
 	},
 }
 
 // createManifestFile creates a manifest file for the addon
-func createManifestFile(app *ddevapp.DdevApp, addonName string, repository string, downloadedRelease string, desc installDesc) error {
+func createManifestFile(app *ddevapp.DdevApp, addonName string, repository string, downloadedRelease string, desc installDesc) (addonManifest, error) {
 	// Create a manifest file
 	manifest := addonManifest{
 		Name:           addonName,
@@ -396,7 +396,7 @@ func createManifestFile(app *ddevapp.DdevApp, addonName string, repository strin
 	if err = fileutil.TemplateStringToFile(string(manifestData), nil, manifestFile); err != nil {
 		util.Failed("Error writing manifest file: %v", err)
 	}
-	return nil
+	return manifest, nil
 }
 
 // listInstalledAddons() show the add-ons that have a manifest file
@@ -411,6 +411,7 @@ func listInstalledAddons(app *ddevapp.DdevApp) {
 	if err != nil {
 		util.Failed("Error reading metadata directory: %v", err)
 	}
+	manifests := []addonManifest{}
 
 	var out bytes.Buffer
 	t := table.NewWriter()
@@ -453,12 +454,16 @@ func listInstalledAddons(app *ddevapp.DdevApp) {
 			if err != nil {
 				util.Failed("Unable to parse manifest file: %v", err)
 			}
-
+			manifests = append(manifests, manifest)
 			t.AppendRow(table.Row{manifest.Name, manifest.Version, manifest.Repository, manifest.InstallDate})
 		}
 	}
+	if t.Length() == 0 {
+		output.UserOut.Println("No registered add-ons were found. Add-ons installed before DDEV v1.22.0 will not be listed.\nUpdate them with `ddev get` so they'll be shown.")
+		return
+	}
 	t.Render()
-	output.UserOut.Printf("%s", out.String())
+	output.UserOut.WithField("raw", manifests).Println(out.String())
 }
 
 // processAction takes a stanza from yaml exec section and executes it.
