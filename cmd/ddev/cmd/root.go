@@ -10,7 +10,7 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/messages"
+	"github.com/ddev/ddev/pkg/manifest"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/updatecheck"
 	"github.com/ddev/ddev/pkg/util"
@@ -88,7 +88,7 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 			}
 		}
 
-		messages.ShowMessages()
+		manifest.ShowMessages()
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		// TODO remove once it's activated directly in ddevapp

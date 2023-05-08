@@ -5,10 +5,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/ddev/ddev/pkg/messages/types"
+	"github.com/ddev/ddev/pkg/manifest/types"
 )
 
-func NewFileStorage(fileName string) types.MessagesStorage {
+func NewFileStorage(fileName string) types.ManifestStorage {
 	return &fileStorage{
 		fileName: fileName,
 		loaded:   false,
@@ -16,16 +16,15 @@ func NewFileStorage(fileName string) types.MessagesStorage {
 }
 
 type fileStorage struct {
-	fileName       string
-	loaded         bool
-	updateInterval time.Duration
-	data           fileStorageData
+	fileName string
+	loaded   bool
+	data     fileStorageData
 }
 
 // fileStorageData is the structure used for the file.
 type fileStorageData struct {
 	LastUpdate time.Time
-	Messages   types.Messages
+	Manifest   types.Manifest
 }
 
 func (s *fileStorage) LastUpdate() time.Time {
@@ -37,18 +36,18 @@ func (s *fileStorage) LastUpdate() time.Time {
 	return s.data.LastUpdate
 }
 
-func (s *fileStorage) Pull() (messages types.Messages, err error) {
+func (s *fileStorage) Pull() (messages types.Manifest, err error) {
 	err = s.loadData()
 	if err != nil {
 		return
 	}
 
-	return s.data.Messages, nil
+	return s.data.Manifest, nil
 }
 
-func (s *fileStorage) Push(messages *types.Messages) (err error) {
+func (s *fileStorage) Push(manifest *types.Manifest) (err error) {
 	s.data.LastUpdate = time.Now()
-	s.data.Messages = *messages
+	s.data.Manifest = *manifest
 
 	err = s.saveData()
 

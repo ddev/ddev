@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/ddev/ddev/pkg/github"
-	"github.com/ddev/ddev/pkg/messages/types"
+	"github.com/ddev/ddev/pkg/manifest/types"
 )
 
-func NewGithubStorage(owner string, repo string, filepath string) types.MessagesStorage {
+func NewGithubStorage(owner string, repo string, filepath string) types.ManifestStorage {
 	return &githubStorage{
 		owner:    owner,
 		repo:     repo,
@@ -28,7 +28,7 @@ func (s *githubStorage) LastUpdate() time.Time {
 	return time.Now()
 }
 
-func (s *githubStorage) Pull() (messages types.Messages, err error) {
+func (s *githubStorage) Pull() (manifest types.Manifest, err error) {
 	client := github.GetGithubClient(context.Background())
 	reader, _, err := client.Repositories.DownloadContents(context.Background(), s.owner, s.repo, s.filepath, &github.RepositoryContentGetOptions{})
 
@@ -37,12 +37,12 @@ func (s *githubStorage) Pull() (messages types.Messages, err error) {
 	}
 
 	dec := json.NewDecoder(reader)
-	err = dec.Decode(&messages)
+	err = dec.Decode(&manifest)
 
 	return
 }
 
-func (s *githubStorage) Push(_ *types.Messages) error {
+func (s *githubStorage) Push(_ *types.Manifest) error {
 	// do nothing, readonly storage
-	return errors.New("failed to push messages to readonly `githubStorage`")
+	return errors.New("failed to push manifest to readonly `githubStorage`")
 }
