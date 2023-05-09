@@ -21,7 +21,7 @@ If you have DDEV installed, and have an active Pantheon account with an active s
 
 3. On the Pantheon dashboard for the site, make sure that at least one backup has been created. (When you need to refresh what you pull, create a new backup.)
 
-4. Make sure your public SSH key is configured in Pantheon under *Account* → *SSH Keys*.
+4. For `ddev push pantheon` make sure your public SSH key is configured in Pantheon under *Account* → *SSH Keys*.
 
 5. Check out the project codebase from Pantheon. Enable the “Git Connection Mode” and use `git clone` to check out the code locally.
 
