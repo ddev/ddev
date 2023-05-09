@@ -14,10 +14,11 @@ type messageTypes struct {
 	messages    []types.Message
 }
 
-// Shows infos and warnings provided in the manifest.json to the user.
+// Shows messages provided in the manifest.json to the user.
 func ShowMessages() {
-	messages := GetManifest(24 * time.Hour).Messages
+	manifest := GetManifest(24 * time.Hour)
 
+	// Show infos and warning.
 	version, err := semver.NewVersion(versionconstants.DdevVersion)
 	if err != nil {
 		util.Warning("Failed to parse the DDEV version `%s` into a semver.Version.", versionconstants.DdevVersion)
@@ -25,8 +26,8 @@ func ShowMessages() {
 	}
 
 	for _, messagesOfType := range []messageTypes{
-		{messageType: types.Warning, messages: messages.Warnings},
-		{messageType: types.Info, messages: messages.Infos},
+		{messageType: types.Warning, messages: manifest.Messages.Warnings},
+		{messageType: types.Info, messages: manifest.Messages.Infos},
 	} {
 		for _, message := range messagesOfType.messages {
 			constraint, err := semver.NewConstraint(message.Versions)
@@ -45,5 +46,18 @@ func ShowMessages() {
 				util.Success(message.Message)
 			}
 		}
+	}
+
+	// Show tips.
+	tips := len(manifest.Messages.Tips.Messages)
+	if tips > 0 {
+		manifest.Messages.Tips.Last++
+		if manifest.Messages.Tips.Last >= tips {
+			manifest.Messages.Tips.Last = 0
+		}
+
+		util.Success(manifest.Messages.Tips.Messages[manifest.Messages.Tips.Last])
+
+		UpdateManifest(manifest)
 	}
 }

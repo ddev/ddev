@@ -2,6 +2,7 @@ package manifest
 
 import (
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -10,47 +11,71 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 )
 
-var (
+func NewManifest(updateInterval time.Duration) Manifest {
+	return Manifest{
+		fileStorage:    storages.NewFileStorage(filepath.Join(globalconfig.GetGlobalDdevDir(), ".manifest")),
+		githubStorage:  storages.NewGithubStorage(`ddev`, `ddev`, `manifest.json`),
+		updateInterval: updateInterval,
+	}
+}
+
+type Manifest struct {
+	Manifest types.Manifest
+
 	fileStorage   types.ManifestStorage
 	githubStorage types.ManifestStorage
-)
 
-// GetManifest updates the manifest from the Github repo if needed and returns it.
-func GetManifest(updateInterval time.Duration) (manifest types.Manifest) {
+	updateInterval time.Duration
+
+	mu sync.RWMutex
+}
+
+func (m *Manifest) Load() {
+
+	m.mu.Lock()
+	defer func() {
+		m.mu.Unlock()
+		go m.updateFromGithub()
+	}()
+
 	var err error
 
-	if fileStorage == nil {
-		messageFile := filepath.Join(globalconfig.GetGlobalDdevDir(), ".manifest")
-		fileStorage = storages.NewFileStorage(messageFile)
-	}
-
-	// Check if an update is needed.
-	if fileStorage.LastUpdate().Add(updateInterval).Before(time.Now()) {
-		if githubStorage == nil {
-			githubStorage = storages.NewGithubStorage(`ddev`, `ddev`, `manifest.json`)
-		}
-
-		// Download the manifest.
-		manifest, err = githubStorage.Pull()
-
-		if err == nil {
-			// Push the downloaded manifest to the local storage.
-			err = fileStorage.Push(&manifest)
-
-			if err != nil {
-				util.Error("Error while writing manifest: %s", err)
-			}
-		} else {
-			util.Error("Error while downloading manifest: %s", err)
-		}
-	}
-
-	// Pull the messages to return
-	manifest, err = fileStorage.Pull()
+	m.Manifest, err = m.fileStorage.Pull()
 
 	if err != nil {
 		util.Error("Error while loading manifest: %s", err)
 	}
+}
 
-	return
+func (m *Manifest) Save() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	err := m.fileStorage.Push(m.Manifest)
+
+	if err != nil {
+		util.Error("Error while writing manifest: %s", err)
+	}
+}
+
+func (m *Manifest) updateFromGithub() {
+	// Check if an update is needed.
+	if m.fileStorage.LastUpdate().Add(m.updateInterval).Before(time.Now()) {
+		m.mu.Lock()
+		backupLast := m.Manifest.Messages.Tips.Last
+
+		defer func() {
+			m.Manifest.Messages.Tips.Last = backupLast
+			m.mu.Unlock()
+			m.Save()
+		}()
+
+		// Download the manifest.
+		var err error
+		m.Manifest, err = m.githubStorage.Pull()
+
+		if err != nil {
+			util.Error("Error while downloading manifest: %s", err)
+		}
+	}
 }

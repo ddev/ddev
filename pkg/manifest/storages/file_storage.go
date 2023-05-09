@@ -45,9 +45,9 @@ func (s *fileStorage) Pull() (messages types.Manifest, err error) {
 	return s.data.Manifest, nil
 }
 
-func (s *fileStorage) Push(manifest *types.Manifest) (err error) {
+func (s *fileStorage) Push(manifest types.Manifest) (err error) {
 	s.data.LastUpdate = time.Now()
-	s.data.Manifest = *manifest
+	s.data.Manifest = manifest
 
 	err = s.saveData()
 

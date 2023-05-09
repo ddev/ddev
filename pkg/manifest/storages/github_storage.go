@@ -42,7 +42,7 @@ func (s *githubStorage) Pull() (manifest types.Manifest, err error) {
 	return
 }
 
-func (s *githubStorage) Push(_ *types.Manifest) error {
+func (s *githubStorage) Push(_ types.Manifest) error {
 	// do nothing, readonly storage
 	return errors.New("failed to push manifest to readonly `githubStorage`")
 }
