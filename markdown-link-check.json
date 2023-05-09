@@ -22,6 +22,9 @@
       "pattern": "^https://.*blackfire.io"
     },
     {
+      "pattern": "^https://twitter.com/search"
+    },
+    {
       "pattern": "^https://www.cyberciti.biz/"
     },
     {
