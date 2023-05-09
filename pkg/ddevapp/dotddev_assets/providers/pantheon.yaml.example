@@ -18,7 +18,7 @@
 #
 # 3. On the pantheon dashboard, make sure that at least one backup has been created. (When you need to refresh what you pull, do a new backup.)
 #
-# 4. Make sure your public ssh key is configured in Pantheon (Account->SSH Keys)
+# 4. For `ddev push pantheon` sure your public ssh key is configured in Pantheon (Account->SSH Keys)
 #
 # 5. Check out project codebase from Pantheon. Enable the "Git Connection Mode" and use `git clone` to check out the code locally.
 #
@@ -46,7 +46,6 @@ environment_variables:
 auth_command:
   command: |
     set -eu -o pipefail
-    ssh-add -l >/dev/null || ( echo "Please 'ddev auth ssh' before running this command." && exit 1 )
     if ! command -v drush >/dev/null ; then echo "Please make sure your project contains drush, ddev composer require drush/drush" && exit 1; fi
     if [ -z "${TERMINUS_MACHINE_TOKEN:-}" ]; then echo "Please make sure you have set TERMINUS_MACHINE_TOKEN in ~/.ddev/global_config.yaml" && exit 1; fi
     terminus auth:login --machine-token="${TERMINUS_MACHINE_TOKEN}" || ( echo "terminus auth login failed, check your TERMINUS_MACHINE_TOKEN" && exit 1 )
@@ -73,6 +72,7 @@ files_pull_command:
 db_push_command:
   command: |
     set -x   # You can enable bash debugging output by uncommenting
+    ssh-add -l >/dev/null || ( echo "Please 'ddev auth ssh' before running this command." && exit 1 )
     set -eu -o pipefail
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null;
@@ -83,6 +83,7 @@ db_push_command:
 files_push_command:
   command: |
     set -x   # You can enable bash debugging output by uncommenting
+    ssh-add -l >/dev/null || ( echo "Please 'ddev auth ssh' before running this command." && exit 1 )
     set -eu -o pipefail
     ls ${DDEV_FILES_DIR} >/dev/null # This just refreshes stale NFS if possible
     drush rsync -y @self:%files @${project}:%files
