@@ -41,6 +41,7 @@ func GetEventOptions() ampli.EventOptions {
 	// creating the ddevapp. This should be cleaned up.
 	// TODO remove once clean up has done.
 	InitAmplitude()
+	setIdentity()
 
 	return eventOptions
 }
