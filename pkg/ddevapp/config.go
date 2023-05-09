@@ -916,14 +916,14 @@ redirect_stderr=true
 		if err != nil {
 			return "", fmt.Errorf("failed to write .webimageBuild/%s.conf: %v", appStart.Name, err)
 		}
-		extraWebContent = extraWebContent + fmt.Sprintf("\nADD %s.conf /etc/supervisor/conf.d\n", appStart.Name)
+		extraWebContent = extraWebContent + fmt.Sprintf("\nADD %s.conf /etc/supervisor/conf.d\nRUN chmod 644 /etc/supervisor/conf.d/%s.conf", appStart.Name, appStart.Name)
 	}
 	if len(supervisorGroup) > 0 {
 		err = os.WriteFile(app.GetConfigPath(".webimageBuild/webextradaemons.conf"), []byte("[group:webextradaemons]\nprograms="+strings.Join(supervisorGroup, ",")), 0755)
 		if err != nil {
 			return "", fmt.Errorf("failed to write .webimageBuild/webextradaemons.conf: %v", err)
 		}
-		extraWebContent = extraWebContent + "\nADD webextradaemons.conf /etc/supervisor/conf.d\n"
+		extraWebContent = extraWebContent + "\nADD webextradaemons.conf /etc/supervisor/conf.d\nRUN chmod 644 /etc/supervisor/conf.d/webextradaemons.conf\n"
 	}
 
 	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
