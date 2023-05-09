@@ -1273,8 +1273,8 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	util.Debug("Running /start.sh in ddev-webserver")
 	stdout, stderr, err := app.Exec(&ExecOpts{
-		// Send output to /proc/1/fd/* to get it to docker logs
-		Cmd:    `/start.sh > /proc/1/fd/1 2>/proc/1/fd/2`,
+		// Send output to /var/tmp/logpipe to get it to docker logs
+		Cmd:    `/start.sh > /var/tmp/logpipe 2>&1`,
 		Detach: true,
 	})
 	if err != nil {

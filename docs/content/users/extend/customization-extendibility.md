@@ -323,7 +323,7 @@ command=/var/www/html/path/to/daemon
 directory=/var/www/html/
 autorestart=true
 startretries=10
-stdout_logfile=/proc/1/fd/1
+stdout_logfile=/var/tmp/logpipe
 stdout_logfile_maxbytes=0
 redirect_stderr=true
 ```

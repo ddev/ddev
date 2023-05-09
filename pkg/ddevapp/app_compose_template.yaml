@@ -93,7 +93,7 @@ services:
         gid: '{{ .GID }}'
         DDEV_PHP_VERSION: ${DDEV_PHP_VERSION}
     image: ${DDEV_WEBIMAGE}-${DDEV_SITENAME}-built
-    command: sleep infinity
+    command: /pre-start.sh
     {{ if .EnvFile }}
     env_file: '{{ .EnvFile }}'
     {{ end }}
