@@ -23,6 +23,7 @@ import (
 var (
 	userID       string
 	eventOptions ampli.EventOptions
+	initialized  bool
 )
 
 // GetUserID returns the unique user id to be used when tracking an event.
@@ -44,6 +45,11 @@ func GetEventOptions() ampli.EventOptions {
 func TrackBinary() {
 	runTime := util.TimeTrack()
 	defer runTime()
+
+	// Initialization is currently done before via init() func somewhere while
+	// creating the ddevapp. This should be cleaned up.
+	// TODO remove once clean up has done.
+	InitAmplitude()
 
 	// Early exit if instrumentation is disabled.
 	if ampli.Instance.Disabled {
@@ -77,6 +83,11 @@ func TrackBinary() {
 func TrackCommand(cmd *cobra.Command, args []string) {
 	runTime := util.TimeTrack()
 	defer runTime()
+
+	// Initialization is currently done before via init() func somewhere while
+	// creating the ddevapp. This should be cleaned up.
+	// TODO remove once clean up has done.
+	InitAmplitude()
 
 	// Early exit if instrumentation is disabled.
 	if ampli.Instance.Disabled {
@@ -126,11 +137,22 @@ func setIdentity() {
 	ampli.Instance.Identify(GetUserID(), GetEventOptions())
 }
 
-// initAmpli initializes the instrumentation and must be called once before the
-// instrumentation functions can be used.
-func initAmpli() {
+// InitAmplitude initializes the instrumentation and must be called once before
+// the instrumentation functions can be used.
+// Initialization is currently done before via init() func somewhere while
+// creating the ddevapp. This should be cleaned up.
+// TODO make private once clean up has done.
+func InitAmplitude() {
 	runTime := util.TimeTrack()
 	defer runTime()
+
+	if initialized {
+		return
+	}
+
+	defer func() {
+		initialized = true
+	}()
 
 	// Disable instrumentation if AmplitudeAPIKey is not available.
 	if versionconstants.AmplitudeAPIKey == "" {
@@ -168,9 +190,6 @@ func initAmpli() {
 		},
 		Disabled: globalconfig.DdevNoInstrumentation || !globalconfig.DdevGlobalConfig.InstrumentationOptIn,
 	})
-}
 
-func init() {
-	initAmpli()
 	setIdentity()
 }

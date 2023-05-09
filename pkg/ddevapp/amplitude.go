@@ -22,6 +22,11 @@ func (app *DdevApp) TrackProject() {
 	runTime := util.TimeTrack()
 	defer runTime()
 
+	// Initialization is currently done before via init() func somewhere while
+	// creating the ddevapp. This should be cleaned up.
+	// TODO remove once clean up has done.
+	amplitude.InitAmplitude()
+
 	// Early exit if instrumentation is disabled.
 	if ampli.Instance.Disabled {
 		return
@@ -43,5 +48,5 @@ func (app *DdevApp) TrackProject() {
 		Id(app.ProtectedID()).
 		Properties(properties)
 
-	ampli.Instance.Project("", builder.Build(), amplitude.GetEventOptions())
+	ampli.Instance.Project(amplitude.GetUserID(), builder.Build(), amplitude.GetEventOptions())
 }
