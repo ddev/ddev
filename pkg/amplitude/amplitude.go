@@ -37,6 +37,11 @@ func GetUserID() string {
 
 // GetEventOptions returns the EventOptions to be used when tracking an event.
 func GetEventOptions() ampli.EventOptions {
+	// Initialization is currently done before via init() func somewhere while
+	// creating the ddevapp. This should be cleaned up.
+	// TODO remove once clean up has done.
+	InitAmplitude()
+
 	return eventOptions
 }
 
