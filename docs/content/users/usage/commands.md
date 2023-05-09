@@ -573,6 +573,7 @@ Flags:
 * `--list`: List official add-ons. (default `true`)
 * `--installed`: List installed add-ons
 * `--remove <add-on>`: Remove an installed add-on
+* `--version <version>`: Specify a version to download
 * `--verbose`, `-v`: Output verbose error information with Bash `set -x` (default `false`)
 
 Environment variables:
@@ -598,6 +599,9 @@ ddev get ddev/ddev-redis
 
 # Get debug info about `ddev get` failure
 ddev get ddev/ddev-redis --verbose
+
+# Download the official Redis add-on, version v1.0.4
+ddev get ddev/ddev-redis --version v1.0.4
 
 # Download the Drupal 9 Solr add-on from its v0.0.5 release tarball
 ddev get https://github.com/ddev/ddev-drupal9-solr/archive/refs/tags/v0.0.5.tar.gz
