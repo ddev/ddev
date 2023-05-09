@@ -43,7 +43,7 @@ func detectAppRouting(app *DdevApp) ([]TraefikRouting, error) {
 					continue
 				}
 				hostnames := strings.Split(virtualHost, ",")
-				if httpExpose, ok := env["HTTP_EXPOSE"].(string); ok {
+				if httpExpose, ok := env["HTTP_EXPOSE"].(string); ok && httpExpose != "" {
 					util.Debug("HTTP_EXPOSE=%v for %s", httpExpose, serviceName)
 					routeEntries, err := processHTTPExpose(serviceName, httpExpose, false, hostnames)
 					if err != nil {
@@ -52,7 +52,7 @@ func detectAppRouting(app *DdevApp) ([]TraefikRouting, error) {
 					table = append(table, routeEntries...)
 				}
 
-				if httpsExpose, ok := env["HTTPS_EXPOSE"].(string); ok {
+				if httpsExpose, ok := env["HTTPS_EXPOSE"].(string); ok && httpsExpose != "" {
 					util.Debug("HTTPS_EXPOSE=%v for %s", httpsExpose, serviceName)
 					routeEntries, err := processHTTPExpose(serviceName, httpsExpose, true, hostnames)
 					if err != nil {
