@@ -161,7 +161,7 @@ func initAmpli() {
 					return storages.NewDelayedTransmissionEventStorage(
 						queueSize,
 						interval,
-						filepath.Join(globalconfig.GetGlobalDdevDir(), `amplitude.cache`),
+						filepath.Join(globalconfig.GetGlobalDdevDir(), `.amplitude.cache`),
 					)
 				},
 			},
