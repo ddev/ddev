@@ -154,7 +154,6 @@ Make changes to the event definition using the GUI at <https://data.amplitude.co
 * update the implementation with `ampli checkout <branch name>`
 * make changes to the code
 
-Make sure new properties are not breaking, add it as optional properties though.
 Once finished, save the changes to publish a new version of the definitions.
 
 Afterwards the changes can be imported running the following command in the
