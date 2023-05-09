@@ -331,6 +331,7 @@ aurs:
   git_url: '{{ .Env.AUR_EDGE_GIT_URL }}'
   depends:
   - docker
+  - mkcert
   optdepends:
   - 'bash-completion: subcommand completion support'
 
