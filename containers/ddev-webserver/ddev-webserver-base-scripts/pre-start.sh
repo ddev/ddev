@@ -9,9 +9,9 @@
 set -x
 set -eu -o pipefail
 
-fifo=/var/tmp/logpipe
+logpipe=/var/tmp/logpipe
 if [[ ! -p ${logpipe} ]]; then
     mkfifo ${logpipe}
 fi
 
-cat <${fifo}
+cat <${logpipe}
