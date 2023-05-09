@@ -165,7 +165,7 @@ ampli pull
 ```
 
 Make sure the API keys are not included to the sources; they are linked during
-the compilation using a GitHub secret.
+compilation using a GitHub secret.
 
 ## Building
 
