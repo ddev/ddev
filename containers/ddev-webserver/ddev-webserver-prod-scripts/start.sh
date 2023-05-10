@@ -131,10 +131,11 @@ ddev_python_setup
 # Run any custom init scripts (.ddev/.web-entrypoint.d/*.sh)
 ddev_custom_init_scripts
 
+# Make sure /var/tmp/logpipe gets logged; only for standalone non-ddev usages
 logpipe=/var/tmp/logpipe
 if [[ ! -p ${logpipe} ]]; then
     mkfifo ${logpipe}
-    nohup cat < ${logpipe} &
+    cat < ${logpipe} >/proc/1/fd/1 &
 fi
 
 exec /usr/bin/supervisord -n -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"
