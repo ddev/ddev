@@ -6,7 +6,7 @@
 // To update run 'ampli pull ddev'
 //
 // Required dependencies: github.com/amplitude/analytics-go@latest
-// Tracking Plan Version: 2
+// Tracking Plan Version: 4
 // Build: 1.0.0
 // Runtime: go-ampli
 //
@@ -101,166 +101,13 @@ func (event baseEvent) ToAmplitudeEvent() amplitude.Event {
 	}
 }
 
-var Binary = struct {
-	Builder func() interface {
-		Architecture(architecture string) interface {
-			DockerPlatform(dockerPlatform string) interface {
-				DockerVersion(dockerVersion string) interface {
-					Language(language string) interface {
-						Os(os string) interface {
-							Timezone(timezone string) interface {
-								Version(version string) BinaryBuilder
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-}{
-	Builder: func() interface {
-		Architecture(architecture string) interface {
-			DockerPlatform(dockerPlatform string) interface {
-				DockerVersion(dockerVersion string) interface {
-					Language(language string) interface {
-						Os(os string) interface {
-							Timezone(timezone string) interface {
-								Version(version string) BinaryBuilder
-							}
-						}
-					}
-				}
-			}
-		}
-	} {
-		return &binaryBuilder{
-			properties: map[string]interface{}{},
-		}
-	},
-}
-
-type BinaryEvent interface {
-	Event
-	binary()
-}
-
-type binaryEvent struct {
-	baseEvent
-}
-
-func (e binaryEvent) binary() {
-}
-
-type BinaryBuilder interface {
-	Build() BinaryEvent
-	WslDistro(wslDistro string) BinaryBuilder
-}
-
-type binaryBuilder struct {
-	properties map[string]interface{}
-}
-
-func (b *binaryBuilder) Architecture(architecture string) interface {
-	DockerPlatform(dockerPlatform string) interface {
-		DockerVersion(dockerVersion string) interface {
-			Language(language string) interface {
-				Os(os string) interface {
-					Timezone(timezone string) interface {
-						Version(version string) BinaryBuilder
-					}
-				}
-			}
-		}
-	}
-} {
-	b.properties[`Architecture`] = architecture
-
-	return b
-}
-
-func (b *binaryBuilder) DockerPlatform(dockerPlatform string) interface {
-	DockerVersion(dockerVersion string) interface {
-		Language(language string) interface {
-			Os(os string) interface {
-				Timezone(timezone string) interface {
-					Version(version string) BinaryBuilder
-				}
-			}
-		}
-	}
-} {
-	b.properties[`Docker Platform`] = dockerPlatform
-
-	return b
-}
-
-func (b *binaryBuilder) DockerVersion(dockerVersion string) interface {
-	Language(language string) interface {
-		Os(os string) interface {
-			Timezone(timezone string) interface {
-				Version(version string) BinaryBuilder
-			}
-		}
-	}
-} {
-	b.properties[`Docker Version`] = dockerVersion
-
-	return b
-}
-
-func (b *binaryBuilder) Language(language string) interface {
-	Os(os string) interface {
-		Timezone(timezone string) interface {
-			Version(version string) BinaryBuilder
-		}
-	}
-} {
-	b.properties[`Language`] = language
-
-	return b
-}
-
-func (b *binaryBuilder) Os(os string) interface {
-	Timezone(timezone string) interface {
-		Version(version string) BinaryBuilder
-	}
-} {
-	b.properties[`OS`] = os
-
-	return b
-}
-
-func (b *binaryBuilder) Timezone(timezone string) interface {
-	Version(version string) BinaryBuilder
-} {
-	b.properties[`Timezone`] = timezone
-
-	return b
-}
-
-func (b *binaryBuilder) Version(version string) BinaryBuilder {
-	b.properties[`Version`] = version
-
-	return b
-}
-
-func (b *binaryBuilder) WslDistro(wslDistro string) BinaryBuilder {
-	b.properties[`WSL Distro`] = wslDistro
-
-	return b
-}
-
-func (b *binaryBuilder) Build() BinaryEvent {
-	return &binaryEvent{
-		newBaseEvent(`Binary`, b.properties),
-	}
-}
-
 var Command = struct {
 	Builder func() interface {
 		Arguments(arguments []string) interface {
 			CalledAs(calledAs string) interface {
-				CommandName(commandName string) CommandBuilder
+				CommandName(commandName string) interface {
+					CommandPath(commandPath string) CommandBuilder
+				}
 			}
 		}
 	}
@@ -268,7 +115,9 @@ var Command = struct {
 	Builder: func() interface {
 		Arguments(arguments []string) interface {
 			CalledAs(calledAs string) interface {
-				CommandName(commandName string) CommandBuilder
+				CommandName(commandName string) interface {
+					CommandPath(commandPath string) CommandBuilder
+				}
 			}
 		}
 	} {
@@ -300,7 +149,9 @@ type commandBuilder struct {
 
 func (b *commandBuilder) Arguments(arguments []string) interface {
 	CalledAs(calledAs string) interface {
-		CommandName(commandName string) CommandBuilder
+		CommandName(commandName string) interface {
+			CommandPath(commandPath string) CommandBuilder
+		}
 	}
 } {
 	b.properties[`Arguments`] = arguments
@@ -309,15 +160,25 @@ func (b *commandBuilder) Arguments(arguments []string) interface {
 }
 
 func (b *commandBuilder) CalledAs(calledAs string) interface {
-	CommandName(commandName string) CommandBuilder
+	CommandName(commandName string) interface {
+		CommandPath(commandPath string) CommandBuilder
+	}
 } {
 	b.properties[`Called As`] = calledAs
 
 	return b
 }
 
-func (b *commandBuilder) CommandName(commandName string) CommandBuilder {
+func (b *commandBuilder) CommandName(commandName string) interface {
+	CommandPath(commandPath string) CommandBuilder
+} {
 	b.properties[`Command Name`] = commandName
+
+	return b
+}
+
+func (b *commandBuilder) CommandPath(commandPath string) CommandBuilder {
+	b.properties[`Command Path`] = commandPath
 
 	return b
 }
@@ -330,14 +191,54 @@ func (b *commandBuilder) Build() CommandEvent {
 
 var Project = struct {
 	Builder func() interface {
-		Id(id string) interface {
-			Properties(properties interface{}) ProjectBuilder
+		Containers(containers []string) interface {
+			ContainersOmitted(containersOmitted []string) interface {
+				DocumentRoot(documentRoot string) interface {
+					Id(id string) interface {
+						MutagenEnabled(mutagenEnabled bool) interface {
+							NfsMountEnabled(nfsMountEnabled bool) interface {
+								NodejsVersion(nodejsVersion string) interface {
+									PhpVersion(phpVersion string) interface {
+										ProjectType(projectType string) interface {
+											RouterDisabled(routerDisabled bool) interface {
+												TraefikEnabled(traefikEnabled bool) interface {
+													WebserverType(webserverType string) ProjectBuilder
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 }{
 	Builder: func() interface {
-		Id(id string) interface {
-			Properties(properties interface{}) ProjectBuilder
+		Containers(containers []string) interface {
+			ContainersOmitted(containersOmitted []string) interface {
+				DocumentRoot(documentRoot string) interface {
+					Id(id string) interface {
+						MutagenEnabled(mutagenEnabled bool) interface {
+							NfsMountEnabled(nfsMountEnabled bool) interface {
+								NodejsVersion(nodejsVersion string) interface {
+									PhpVersion(phpVersion string) interface {
+										ProjectType(projectType string) interface {
+											RouterDisabled(routerDisabled bool) interface {
+												TraefikEnabled(traefikEnabled bool) interface {
+													WebserverType(webserverType string) ProjectBuilder
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 	} {
 		return &projectBuilder{
@@ -360,22 +261,226 @@ func (e projectEvent) project() {
 
 type ProjectBuilder interface {
 	Build() ProjectEvent
+	DatabaseType(databaseType string) ProjectBuilder
+	DatabaseVersion(databaseVersion string) ProjectBuilder
 }
 
 type projectBuilder struct {
 	properties map[string]interface{}
 }
 
+func (b *projectBuilder) Containers(containers []string) interface {
+	ContainersOmitted(containersOmitted []string) interface {
+		DocumentRoot(documentRoot string) interface {
+			Id(id string) interface {
+				MutagenEnabled(mutagenEnabled bool) interface {
+					NfsMountEnabled(nfsMountEnabled bool) interface {
+						NodejsVersion(nodejsVersion string) interface {
+							PhpVersion(phpVersion string) interface {
+								ProjectType(projectType string) interface {
+									RouterDisabled(routerDisabled bool) interface {
+										TraefikEnabled(traefikEnabled bool) interface {
+											WebserverType(webserverType string) ProjectBuilder
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+} {
+	b.properties[`Containers`] = containers
+
+	return b
+}
+
+func (b *projectBuilder) ContainersOmitted(containersOmitted []string) interface {
+	DocumentRoot(documentRoot string) interface {
+		Id(id string) interface {
+			MutagenEnabled(mutagenEnabled bool) interface {
+				NfsMountEnabled(nfsMountEnabled bool) interface {
+					NodejsVersion(nodejsVersion string) interface {
+						PhpVersion(phpVersion string) interface {
+							ProjectType(projectType string) interface {
+								RouterDisabled(routerDisabled bool) interface {
+									TraefikEnabled(traefikEnabled bool) interface {
+										WebserverType(webserverType string) ProjectBuilder
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+} {
+	b.properties[`Containers Omitted`] = containersOmitted
+
+	return b
+}
+
+func (b *projectBuilder) DocumentRoot(documentRoot string) interface {
+	Id(id string) interface {
+		MutagenEnabled(mutagenEnabled bool) interface {
+			NfsMountEnabled(nfsMountEnabled bool) interface {
+				NodejsVersion(nodejsVersion string) interface {
+					PhpVersion(phpVersion string) interface {
+						ProjectType(projectType string) interface {
+							RouterDisabled(routerDisabled bool) interface {
+								TraefikEnabled(traefikEnabled bool) interface {
+									WebserverType(webserverType string) ProjectBuilder
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+} {
+	b.properties[`Document Root`] = documentRoot
+
+	return b
+}
+
 func (b *projectBuilder) Id(id string) interface {
-	Properties(properties interface{}) ProjectBuilder
+	MutagenEnabled(mutagenEnabled bool) interface {
+		NfsMountEnabled(nfsMountEnabled bool) interface {
+			NodejsVersion(nodejsVersion string) interface {
+				PhpVersion(phpVersion string) interface {
+					ProjectType(projectType string) interface {
+						RouterDisabled(routerDisabled bool) interface {
+							TraefikEnabled(traefikEnabled bool) interface {
+								WebserverType(webserverType string) ProjectBuilder
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 } {
 	b.properties[`ID`] = id
 
 	return b
 }
 
-func (b *projectBuilder) Properties(properties interface{}) ProjectBuilder {
-	b.properties[`Properties`] = properties
+func (b *projectBuilder) MutagenEnabled(mutagenEnabled bool) interface {
+	NfsMountEnabled(nfsMountEnabled bool) interface {
+		NodejsVersion(nodejsVersion string) interface {
+			PhpVersion(phpVersion string) interface {
+				ProjectType(projectType string) interface {
+					RouterDisabled(routerDisabled bool) interface {
+						TraefikEnabled(traefikEnabled bool) interface {
+							WebserverType(webserverType string) ProjectBuilder
+						}
+					}
+				}
+			}
+		}
+	}
+} {
+	b.properties[`Mutagen Enabled`] = mutagenEnabled
+
+	return b
+}
+
+func (b *projectBuilder) NfsMountEnabled(nfsMountEnabled bool) interface {
+	NodejsVersion(nodejsVersion string) interface {
+		PhpVersion(phpVersion string) interface {
+			ProjectType(projectType string) interface {
+				RouterDisabled(routerDisabled bool) interface {
+					TraefikEnabled(traefikEnabled bool) interface {
+						WebserverType(webserverType string) ProjectBuilder
+					}
+				}
+			}
+		}
+	}
+} {
+	b.properties[`NFS Mount Enabled`] = nfsMountEnabled
+
+	return b
+}
+
+func (b *projectBuilder) NodejsVersion(nodejsVersion string) interface {
+	PhpVersion(phpVersion string) interface {
+		ProjectType(projectType string) interface {
+			RouterDisabled(routerDisabled bool) interface {
+				TraefikEnabled(traefikEnabled bool) interface {
+					WebserverType(webserverType string) ProjectBuilder
+				}
+			}
+		}
+	}
+} {
+	b.properties[`Nodejs Version`] = nodejsVersion
+
+	return b
+}
+
+func (b *projectBuilder) PhpVersion(phpVersion string) interface {
+	ProjectType(projectType string) interface {
+		RouterDisabled(routerDisabled bool) interface {
+			TraefikEnabled(traefikEnabled bool) interface {
+				WebserverType(webserverType string) ProjectBuilder
+			}
+		}
+	}
+} {
+	b.properties[`PHP Version`] = phpVersion
+
+	return b
+}
+
+func (b *projectBuilder) ProjectType(projectType string) interface {
+	RouterDisabled(routerDisabled bool) interface {
+		TraefikEnabled(traefikEnabled bool) interface {
+			WebserverType(webserverType string) ProjectBuilder
+		}
+	}
+} {
+	b.properties[`Project Type`] = projectType
+
+	return b
+}
+
+func (b *projectBuilder) RouterDisabled(routerDisabled bool) interface {
+	TraefikEnabled(traefikEnabled bool) interface {
+		WebserverType(webserverType string) ProjectBuilder
+	}
+} {
+	b.properties[`Router Disabled`] = routerDisabled
+
+	return b
+}
+
+func (b *projectBuilder) TraefikEnabled(traefikEnabled bool) interface {
+	WebserverType(webserverType string) ProjectBuilder
+} {
+	b.properties[`Traefik Enabled`] = traefikEnabled
+
+	return b
+}
+
+func (b *projectBuilder) WebserverType(webserverType string) ProjectBuilder {
+	b.properties[`Webserver Type`] = webserverType
+
+	return b
+}
+
+func (b *projectBuilder) DatabaseType(databaseType string) ProjectBuilder {
+	b.properties[`Database Type`] = databaseType
+
+	return b
+}
+
+func (b *projectBuilder) DatabaseVersion(databaseVersion string) ProjectBuilder {
+	b.properties[`Database Version`] = databaseVersion
 
 	return b
 }
@@ -423,8 +528,8 @@ func (a *Ampli) Load(options LoadOptions) {
 		clientConfig.Plan = &amplitude.Plan{
 			Branch:    `ampli`,
 			Source:    `ddev`,
-			Version:   `2`,
-			VersionID: `06ba4110-4a2c-4b60-bffc-380a37f28495`,
+			Version:   `4`,
+			VersionID: `da01c7d9-18a0-4c51-bac5-e231d9aac3c6`,
 		}
 	}
 
@@ -512,10 +617,6 @@ func (a *Ampli) Shutdown() {
 	a.mutex.Unlock()
 
 	a.Client.Shutdown()
-}
-
-func (a *Ampli) Binary(userID string, event BinaryEvent, eventOptions ...EventOptions) {
-	a.Track(userID, event, eventOptions...)
 }
 
 func (a *Ampli) Command(userID string, event CommandEvent, eventOptions ...EventOptions) {

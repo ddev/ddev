@@ -41,6 +41,8 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 		// again *after* --json flag is parsed.
 		output.LogSetUp()
 
+		amplitude.TrackCommand(cmd, args)
+
 		// Skip docker and other validation for most commands
 		if command != "start" && command != "restart" {
 			return
@@ -86,8 +88,6 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 		}
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		amplitude.TrackCommand(cmd, args)
-
 		// Do not report these commands
 		ignores := map[string]bool{"describe": true, "auth": true, "blackfire": false, "clean": true, "composer": true, "debug": true, "delete": true, "drush": true, "exec": true, "export-db": true, "get": true, "help": true, "hostname": true, "import-db": true, "import-files": true, "list": true, "logs": true, "mutagen": true, "mysql": true, "npm": true, "nvm": true, "pause": true, "php": true, "poweroff": true, "pull": true, "push": true, "service": true, "share": true, "snapshot": true, "ssh": true, "stop": true, "version": true, "xdebug": true, "xhprof": true, "yarn": true}
 
@@ -138,8 +138,6 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 // Execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	amplitude.TrackBinary()
-
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(-1)
 	}

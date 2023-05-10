@@ -21,10 +21,12 @@ import (
 )
 
 var (
-	userID       string
-	eventOptions ampli.EventOptions
-	initialized  bool
+	userID      string
+	initialized bool
+	identified  bool
 )
+
+const cacheFile = ".amplitude.cache"
 
 // GetUserID returns the unique user id to be used when tracking an event.
 func GetUserID() string {
@@ -33,55 +35,6 @@ func GetUserID() string {
 	}
 
 	return userID
-}
-
-// GetEventOptions returns the EventOptions to be used when tracking an event.
-func GetEventOptions() ampli.EventOptions {
-	// Initialization is currently done before via init() func somewhere while
-	// creating the ddevapp. This should be cleaned up.
-	// TODO remove once clean up has done.
-	InitAmplitude()
-	setIdentity()
-
-	return eventOptions
-}
-
-// TrackBinary collects and tracks information about the binary for
-// instrumentation.
-func TrackBinary() {
-	runTime := util.TimeTrack()
-	defer runTime()
-
-	// Initialization is currently done before via init() func somewhere while
-	// creating the ddevapp. This should be cleaned up.
-	// TODO remove once clean up has done.
-	InitAmplitude()
-
-	// Early exit if instrumentation is disabled.
-	if ampli.Instance.Disabled {
-		return
-	}
-
-	dockerVersion, _ := dockerutil.GetDockerVersion()
-	dockerPlaform, _ := version.GetDockerPlatform()
-	timezone, _ := time.Now().In(time.Local).Zone()
-
-	builder := ampli.Binary.Builder().
-		Architecture(runtime.GOARCH).
-		DockerPlatform(dockerPlaform).
-		DockerVersion(dockerVersion).
-		Language(os.Getenv("LANG")).
-		Os(runtime.GOOS).
-		Timezone(timezone).
-		Version(versionconstants.DdevVersion)
-
-	wslDistro := nodeps.GetWSLDistro()
-	if wslDistro != "" {
-		builder.
-			WslDistro(wslDistro)
-	}
-
-	ampli.Instance.Binary(GetUserID(), builder.Build(), GetEventOptions())
 }
 
 // TrackCommand collects and tracks information about the command for
@@ -103,9 +56,10 @@ func TrackCommand(cmd *cobra.Command, args []string) {
 	builder := ampli.Command.Builder().
 		Arguments(args).
 		CalledAs(cmd.CalledAs()).
-		CommandName(cmd.Name())
+		CommandName(cmd.Name()).
+		CommandPath(cmd.CommandPath())
 
-	ampli.Instance.Command(GetUserID(), builder.Build(), GetEventOptions())
+	ampli.Instance.Command(GetUserID(), builder.Build())
 }
 
 // Flush transmits the queued events if limits are reached.
@@ -121,26 +75,38 @@ func Flush() {
 	ampli.Instance.Flush()
 }
 
-// setIdentity prepares the identity for later use by calling Identify.
-func setIdentity() {
+// FlushForce transmits the queued events even if limits are not reached.
+func FlushForce() {
 	runTime := util.TimeTrack()
 	defer runTime()
 
-	lang := os.Getenv("LANG")
-
-	eventOptions = ampli.EventOptions{
-		AppVersion: versionconstants.DdevVersion,
-		Platform:   runtime.GOARCH,
-		OSName:     runtime.GOOS,
-		Language:   lang,
-	}
-
-	// Early exit if instrumentation is disabled.
-	if ampli.Instance.Disabled {
+	// Early exit if instrumentation is disabled or internet not active.
+	if ampli.Instance.Disabled || !globalconfig.IsInternetActive() {
 		return
 	}
 
-	ampli.Instance.Identify(GetUserID(), GetEventOptions())
+	backupInstrumentationQueueSize := globalconfig.DdevGlobalConfig.InstrumentationQueueSize
+
+	defer func() {
+		globalconfig.DdevGlobalConfig.InstrumentationQueueSize = backupInstrumentationQueueSize
+		ampli.Instance.Client = nil
+		initialized = false
+
+		InitAmplitude()
+	}()
+
+	globalconfig.DdevGlobalConfig.InstrumentationQueueSize = 1
+	ampli.Instance.Client = nil
+	initialized = false
+
+	InitAmplitude()
+
+	Flush()
+}
+
+// Clean removes the cache file.
+func Clean() {
+	_ = os.Remove(getCacheFileName())
 }
 
 // InitAmplitude initializes the instrumentation and must be called once before
@@ -189,7 +155,7 @@ func InitAmplitude() {
 					return storages.NewDelayedTransmissionEventStorage(
 						queueSize,
 						interval,
-						filepath.Join(globalconfig.GetGlobalDdevDir(), `.amplitude.cache`),
+						getCacheFileName(),
 					)
 				},
 			},
@@ -197,5 +163,53 @@ func InitAmplitude() {
 		Disabled: globalconfig.DdevNoInstrumentation || !globalconfig.DdevGlobalConfig.InstrumentationOptIn,
 	})
 
-	setIdentity()
+	identify()
+}
+
+// getCacheFileName returns the cache filename.
+func getCacheFileName() string {
+	return filepath.Join(globalconfig.GetGlobalDdevDir(), cacheFile)
+}
+
+// identify collects information about this installation.
+func identify() {
+	runTime := util.TimeTrack()
+	defer runTime()
+
+	// Early exit if instrumentation is disabled.
+	if ampli.Instance.Disabled {
+		return
+	}
+
+	// Avoid multiple calls.
+	if identified {
+		return
+	}
+
+	defer func() {
+		identified = true
+	}()
+
+	// Identify this installation.
+	identify := amplitude.Identify{}
+
+	identify.Set("Operating System", runtime.GOOS)
+	identify.Set("Architecture", runtime.GOARCH)
+
+	dockerVersion, _ := dockerutil.GetDockerVersion()
+	dockerPlaform, _ := version.GetDockerPlatform()
+	identify.Set("Docker Platform", dockerVersion)
+	identify.Set("Docker Version", dockerPlaform)
+
+	identify.Set("Language", os.Getenv("LANG"))
+	timezone, _ := time.Now().In(time.Local).Zone()
+	identify.Set("Timezone", timezone)
+
+	identify.Set("Version", versionconstants.DdevVersion)
+
+	if wslDistro := nodeps.GetWSLDistro(); wslDistro != "" {
+		identify.Set("WSL Distro", wslDistro)
+	}
+
+	ampli.Instance.Client.Identify(identify, amplitude.EventOptions{UserID: GetUserID()})
 }

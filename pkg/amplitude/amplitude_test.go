@@ -1,11 +1,9 @@
 package amplitude_test
 
 import (
-	"runtime"
 	"testing"
 
 	"github.com/ddev/ddev/pkg/amplitude"
-	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 )
@@ -24,24 +22,6 @@ func (t *AmplitudeSuite) TestGetUserID() {
 	require.NotEmpty(amplitude.GetUserID())
 }
 
-func (t *AmplitudeSuite) TestGetEventOptions() {
-	require := t.Require()
-
-	eventOptions := amplitude.GetEventOptions()
-	require.NotEmpty(eventOptions)
-	require.Equal(versionconstants.DdevVersion, eventOptions.AppVersion)
-	require.Equal(runtime.GOARCH, eventOptions.Platform)
-	require.Equal(runtime.GOOS, eventOptions.OSName)
-}
-
-func (t *AmplitudeSuite) TestTrackBinary() {
-	require := t.Require()
-
-	require.NotPanics(func() {
-		amplitude.TrackBinary()
-	})
-}
-
 func (t *AmplitudeSuite) TestTrackCommand() {
 	require := t.Require()
 
@@ -58,5 +38,21 @@ func (t *AmplitudeSuite) TestFlush() {
 
 	require.NotPanics(func() {
 		amplitude.Flush()
+	})
+}
+
+func (t *AmplitudeSuite) TestFlushForce() {
+	require := t.Require()
+
+	require.NotPanics(func() {
+		amplitude.FlushForce()
+	})
+}
+
+func (t *AmplitudeSuite) TestClean() {
+	require := t.Require()
+
+	require.NotPanics(func() {
+		amplitude.Clean()
 	})
 }

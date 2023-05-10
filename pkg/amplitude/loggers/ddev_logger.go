@@ -17,13 +17,13 @@ func (l *ddevLogger) Debugf(message string, args ...interface{}) {
 }
 
 func (l *ddevLogger) Infof(message string, args ...interface{}) {
-	util.Success(message, args...)
+	util.Debug(message, args...)
 }
 
 func (l *ddevLogger) Warnf(message string, args ...interface{}) {
-	util.Warning(message, args...)
+	util.Debug(message, args...)
 }
 
 func (l *ddevLogger) Errorf(message string, args ...interface{}) {
-	util.Error(message, args...)
+	util.Debug(message, args...)
 }
