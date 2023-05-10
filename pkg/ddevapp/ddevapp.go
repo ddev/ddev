@@ -1274,7 +1274,9 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	util.Debug("Running /start.sh in ddev-webserver")
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		// Send output to /var/tmp/logpipe to get it to docker logs
-		Cmd:    `/start.sh > /var/tmp/logpipe 2>&1`,
+		// If start.sh dies, we want to make sure the container gets killed off
+		// so killall the pre-start.sh
+		Cmd:    `/start.sh > /var/tmp/logpipe 2>&1 || killall pre-start.sh`,
 		Detach: true,
 	})
 	if err != nil {
