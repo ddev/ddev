@@ -4,6 +4,11 @@ set -o errexit nounset pipefail
 
 rm -f /tmp/healthy
 
+logpipe=/var/tmp/logpipe
+if [[ ! -p ${logpipe} ]]; then
+    mkfifo ${logpipe}
+fi
+
 # If supervisord happens to be running (ddev start when already running) then kill it off
 if pkill -0 supervisord; then
   supervisorctl stop all || true

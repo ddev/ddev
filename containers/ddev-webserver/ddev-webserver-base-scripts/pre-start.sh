@@ -14,4 +14,4 @@ if [[ ! -p ${logpipe} ]]; then
     mkfifo ${logpipe}
 fi
 
-cat <${logpipe}
+cat < ${logpipe}
