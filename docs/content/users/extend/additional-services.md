@@ -69,7 +69,7 @@ Officially-supported add-ons:
 
 ## Viewing and Removing Installed Add-Ons
 
-Add-ons installed in DDEV v1.22+ are versioned and can be viewed with `ddev get --installed`. Add-ons can be removed with `ddev get --remove <addonname>`. If you have add-ons that were installed before v1.22, just re-add them with `ddev get <addonname>` and they will be versioned and available in `ddev get --installed`.
+Add-ons installed in DDEV v1.22+ are versioned and can be viewed by running `ddev get --installed`. You can remove an add-on by running `ddev get --remove <addonname>`. If you have add-ons that were installed before v1.22, re-add them with `ddev get <addonname>` and they will be versioned and available in `ddev get --installed`.
 
 ## Creating an Additional Service for `ddev get`
 
