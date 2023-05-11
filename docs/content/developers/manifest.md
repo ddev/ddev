@@ -20,12 +20,20 @@ Here is an example of the `manifest.json` file:
                 "message": "Please update your installation as soon as possible, there is a big security risk by using this version.",
                 "versions": "<1.20"
             }
-        ]
+        ],
+        "tips": {
+            "messages": [
+                "Did you know? You can restart your project at any time using `ddev restart`.",
+                "Did you know? You can open a browser heading to your project with `ddev launch`."
+            ]
+        }
     }
 }
 ```
 
 ## Messages
+
+### Infos and Warnings
 
 The defined messages are shown to the user on every usage of DDEV. Supported
 messages types are `infos` and `warnings`. Every message can optionally include
@@ -33,6 +41,11 @@ a version constraint to limit the message to matching DDEV versions only.
 
 More information about the supported constraints can be found in the
 [Masterminds SemVer](https://github.com/Masterminds/semver#readme) repository.
+
+### Tips
+
+On every launch another message from the `tips` section will be shown to the
+user.
 
 ## Testing
 

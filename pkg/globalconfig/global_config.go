@@ -67,6 +67,7 @@ type GlobalConfig struct {
 	WSL2NoWindowsHostsMgt            bool                    `yaml:"wsl2_no_windows_hosts_mgt"`
 	RouterHTTPPort                   string                  `yaml:"router_http_port"`
 	RouterHTTPSPort                  string                  `yaml:"router_https_port"`
+	ManifestUpdateInterval           int                     `yaml:"manifest_update_interval,omitempty"`
 	ProjectList                      map[string]*ProjectInfo `yaml:"project_info"`
 }
 

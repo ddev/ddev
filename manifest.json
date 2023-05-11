@@ -5,6 +5,12 @@
                 "message": "Ensure maintenance and further development of DDEV see https://github.com/sponsors/rfay."
             }
         ],
-        "warnings": []
+        "warnings": [],
+        "tips": {
+            "messages": [
+                "Did you know? You can restart your project at any time using `ddev restart`.",
+                "Did you know? You can open a browser heading to your project with `ddev launch`."
+            ]
+        }
     }
 }

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/manifest/types"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
@@ -16,7 +17,12 @@ type messageTypes struct {
 
 // Shows messages provided in the manifest.json to the user.
 func ShowMessages() {
-	manifest := GetManifest(24 * time.Hour)
+	updateInterval := globalconfig.DdevGlobalConfig.ManifestUpdateInterval
+	if updateInterval <= 0 {
+		updateInterval = 24
+	}
+
+	manifest := NewManifest(time.Duration(updateInterval) * time.Hour)
 
 	// Show infos and warning.
 	version, err := semver.NewVersion(versionconstants.DdevVersion)
@@ -25,11 +31,11 @@ func ShowMessages() {
 		return
 	}
 
-	for _, messagesOfType := range []messageTypes{
-		{messageType: types.Warning, messages: manifest.Messages.Warnings},
-		{messageType: types.Info, messages: manifest.Messages.Infos},
+	for _, messages := range []messageTypes{
+		{messageType: types.Warning, messages: manifest.Manifest.Messages.Warnings},
+		{messageType: types.Info, messages: manifest.Manifest.Messages.Infos},
 	} {
-		for _, message := range messagesOfType.messages {
+		for _, message := range messages.messages {
 			constraint, err := semver.NewConstraint(message.Versions)
 			if err != nil {
 				continue
@@ -39,7 +45,7 @@ func ShowMessages() {
 				continue
 			}
 
-			switch messagesOfType.messageType {
+			switch messages.messageType {
 			case types.Warning:
 				util.Warning(message.Message)
 			default:
@@ -49,15 +55,15 @@ func ShowMessages() {
 	}
 
 	// Show tips.
-	tips := len(manifest.Messages.Tips.Messages)
+	tips := len(manifest.Manifest.Messages.Tips.Messages)
 	if tips > 0 {
-		manifest.Messages.Tips.Last++
-		if manifest.Messages.Tips.Last >= tips {
-			manifest.Messages.Tips.Last = 0
+		manifest.Manifest.Messages.Tips.Last++
+		if manifest.Manifest.Messages.Tips.Last >= tips {
+			manifest.Manifest.Messages.Tips.Last = 0
 		}
 
-		util.Success(manifest.Messages.Tips.Messages[manifest.Messages.Tips.Last])
+		util.Success(manifest.Manifest.Messages.Tips.Messages[manifest.Manifest.Messages.Tips.Last])
 
-		UpdateManifest(manifest)
+		manifest.Write()
 	}
 }
