@@ -17,6 +17,8 @@ type messageTypes struct {
 
 // Shows messages provided in the manifest.json to the user.
 func ShowMessages() {
+	defer util.TimeTrack(time.Now(), "ShowMessages()")()
+
 	updateInterval := globalconfig.DdevGlobalConfig.ManifestUpdateInterval
 	if updateInterval <= 0 {
 		updateInterval = 24
@@ -36,13 +38,16 @@ func ShowMessages() {
 		{messageType: types.Info, messages: manifest.Manifest.Messages.Infos},
 	} {
 		for _, message := range messages.messages {
-			constraint, err := semver.NewConstraint(message.Versions)
-			if err != nil {
-				continue
-			}
+			if message.Versions != "" {
+				constraint, err := semver.NewConstraint(message.Versions)
 
-			if !constraint.Check(version) && constraint.String() != "" {
-				continue
+				if err != nil {
+					continue
+				}
+
+				if !constraint.Check(version) && constraint.String() != "" {
+					continue
+				}
 			}
 
 			switch messages.messageType {
@@ -58,11 +63,11 @@ func ShowMessages() {
 	tips := len(manifest.Manifest.Messages.Tips.Messages)
 	if tips > 0 {
 		manifest.Manifest.Messages.Tips.Last++
-		if manifest.Manifest.Messages.Tips.Last >= tips {
-			manifest.Manifest.Messages.Tips.Last = 0
+		if manifest.Manifest.Messages.Tips.Last > tips {
+			manifest.Manifest.Messages.Tips.Last = 1
 		}
 
-		util.Success(manifest.Manifest.Messages.Tips.Messages[manifest.Manifest.Messages.Tips.Last])
+		util.Success(manifest.Manifest.Messages.Tips.Messages[manifest.Manifest.Messages.Tips.Last-1])
 
 		manifest.Write()
 	}

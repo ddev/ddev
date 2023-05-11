@@ -1,5 +1,5 @@
 package types
 
 type Manifest struct {
-	Messages Messages `json:"message,omitempty"`
+	Messages Messages `json:"messages,omitempty"`
 }

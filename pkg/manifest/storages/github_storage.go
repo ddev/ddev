@@ -4,24 +4,30 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"time"
 
 	"github.com/ddev/ddev/pkg/github"
 	"github.com/ddev/ddev/pkg/manifest/types"
+	"github.com/ddev/ddev/pkg/util"
 )
 
-func NewGithubStorage(owner string, repo string, filepath string) types.ManifestStorage {
+func NewGithubStorage(owner, repo, filepath string, options Options) types.ManifestStorage {
 	return &githubStorage{
 		owner:    owner,
 		repo:     repo,
 		filepath: filepath,
+		options:  options,
 	}
 }
+
+type Options = github.RepositoryContentGetOptions
 
 type githubStorage struct {
 	owner    string
 	repo     string
 	filepath string
+	options  Options
 }
 
 func (s *githubStorage) LastUpdate() time.Time {
@@ -29,15 +35,30 @@ func (s *githubStorage) LastUpdate() time.Time {
 }
 
 func (s *githubStorage) Pull() (manifest types.Manifest, err error) {
-	client := github.GetGithubClient(context.Background())
-	reader, _, err := client.Repositories.DownloadContents(context.Background(), s.owner, s.repo, s.filepath, &github.RepositoryContentGetOptions{})
+	ctx := context.Background()
+	client := github.GetGithubClient(ctx)
+
+	//fileContent, _, _, err := client.Repositories.GetContents(ctx, s.owner, s.repo, s.filepath, &s.options)
+	var reader io.ReadCloser
+	reader, _, err = client.Repositories.DownloadContents(ctx, s.owner, s.repo, s.filepath, &s.options)
 
 	if err != nil {
 		return
 	}
 
-	dec := json.NewDecoder(reader)
-	err = dec.Decode(&manifest)
+	defer reader.Close()
+
+	var b []byte
+	b, err = io.ReadAll(reader)
+
+	util.Debug("%s", b)
+
+	if err != nil {
+		return
+	}
+
+	err = json.Unmarshal(b, &manifest)
+	util.Debug("%v", manifest)
 
 	return
 }

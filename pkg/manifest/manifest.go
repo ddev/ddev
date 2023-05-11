@@ -13,8 +13,9 @@ import (
 
 func NewManifest(updateInterval time.Duration) *Manifest {
 	manifest := &Manifest{
-		fileStorage:    storages.NewFileStorage(getLocalFileName()),
-		githubStorage:  storages.NewGithubStorage(`ddev`, `ddev`, `manifest.json`),
+		fileStorage: storages.NewFileStorage(getLocalFileName()),
+		// TODO change to ddev repo before merge
+		githubStorage:  storages.NewGithubStorage(`gilbertsoft`, `ddev`, `manifest.json`, storages.Options{Ref: "task/upstream-infos"}),
 		updateInterval: updateInterval,
 	}
 	manifest.loadFromLocalStorage()
@@ -36,6 +37,9 @@ type Manifest struct {
 }
 
 func (m *Manifest) Write() {
+	runTime := util.TimeTrack(time.Now(), "Write()")
+	defer runTime()
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -47,10 +51,13 @@ func (m *Manifest) Write() {
 }
 
 func (m *Manifest) loadFromLocalStorage() {
+	runTime := util.TimeTrack(time.Now(), "loadFromLocalStorage()")
+	defer runTime()
+
 	m.mu.Lock()
 	defer func() {
 		m.mu.Unlock()
-		go m.updateFromGithub()
+		/*go*/ m.updateFromGithub()
 	}()
 
 	var err error
@@ -63,12 +70,19 @@ func (m *Manifest) loadFromLocalStorage() {
 }
 
 func (m *Manifest) updateFromGithub() {
+	runTime := util.TimeTrack(time.Now(), "updateFromGithub()")
+	defer runTime()
+
 	if !globalconfig.IsInternetActive() {
+		util.Debug("No internet connection.")
+
 		return
 	}
 
 	// Check if an update is needed.
 	if m.fileStorage.LastUpdate().Add(m.updateInterval).Before(time.Now()) {
+		util.Debug("Downloading manifest.")
+
 		m.mu.Lock()
 		backupLast := m.Manifest.Messages.Tips.Last
 
