@@ -619,7 +619,7 @@ ddev get --installed
 ddev get --remove redis
 ```
 
-In general, you can `ddev get` an add-on multiple times without doing any damage; Updating an add-on can be done with just `ddev get <add-on-name>`. If you have changed an add-on file and removed the `#ddev-generated` marker in the file, that file will not be touched and DDEV will let you know about it.
+In general, you can run `ddev get` multiple times without doing any damage. Updating an add-on can be done by running `ddev get <add-on-name>`. If you have changed an add-on file and removed the `#ddev-generated` marker in the file, that file will not be touched and DDEV will let you know about it.
 
 ## `heidisql`
 
