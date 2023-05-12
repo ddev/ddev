@@ -57,6 +57,8 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
         ddev launch
         ```
 
+    Craft CMS projects use PHP 8.1 and MySQL 8.0, by default. You can override these settings during setup with [`config` command flags](./usage/commands.md#config) or after setup via the [configuration files](./configuration/config.md).
+
     !!!tip "Upgrading or using a generic project type?"
         If you previously set up DDEV in a Craft project using the generic `php` project type, update the `type:` setting in `.ddev/config.yaml` to `craftcms`, then run [`ddev restart`](../users/usage/commands.md#restart) apply the changes.
 
