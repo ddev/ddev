@@ -26,7 +26,7 @@ This version history has been driven by what we hear from our wonderful communit
 - [x] `config.*.yaml` are now *merged* instead of overwriting other values. For example, if `config.yaml` has hooks, and `config.something.yaml` has hooks, the values will be merged, getting all of the hooks. Scalar values (like `php_version`, for example) still are overwritten by the last value loaded.
 - [x] `ddev craft` command is now included for projects of type `php`.
 - [x] `ddev npm` and `ddev yarn` use the relative path in the project for execution inside the container.
-- [x] Pplatform.sh](http://platform.sh) provider integration has been updated so it doesn’t require any editing of files, only setting a couple of environment variables. This is the future for all of the provider integrations; there’s no reason why files should have to be modified.
+- [x] [Platform.sh](https://platform.sh) provider integration has been updated so it doesn’t require any editing of files, only setting a couple of environment variables. This is the future for all of the provider integrations; there’s no reason why files should have to be modified.
 
 ## v1.19.0-v1.19.5 (Released 2022-03 through 2022-07)
 
