@@ -87,8 +87,6 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 				output.UserOut.Printf(util.ColorizeText(fmt.Sprintf("\n\nUpgraded DDEV %s is available!\nPlease visit %s to get the upgrade.\nFor upgrade help see %s\n\n", updateVersion, updateURL, updateDocURL), "green"))
 			}
 		}
-
-		manifest.ShowMessages()
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		// TODO remove once it's activated directly in ddevapp
@@ -146,6 +144,8 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 			ddevapp.SendInstrumentationEvents(event)
 		}
 		// end TODO remove once Amplitude has verified with an alpha release.
+
+		manifest.GetManifest().ShowTips()
 	},
 }
 

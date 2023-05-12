@@ -35,6 +35,15 @@ type ProjectInfo struct {
 	UsedHostPorts []string `yaml:"used_host_ports,omitempty,flow"`
 }
 
+// ManifestConfig is the struct defining the manifest config
+type ManifestConfig struct {
+	SourceOwner    string `yaml:"source_owner,omitempty"`
+	SourceRepo     string `yaml:"source_repo,omitempty"`
+	SourceRef      string `yaml:"source_ref,omitempty"`
+	UpdateInterval int    `yaml:"update_interval,omitempty"`
+	DisableTips    bool   `yaml:"disable_tips,omitempty"`
+}
+
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
 	OmitContainersGlobal             []string                `yaml:"omit_containers,flow"`
@@ -68,6 +77,7 @@ type GlobalConfig struct {
 	RouterHTTPPort                   string                  `yaml:"router_http_port"`
 	RouterHTTPSPort                  string                  `yaml:"router_https_port"`
 	ManifestUpdateInterval           int                     `yaml:"manifest_update_interval,omitempty"`
+	Manifest                         *ManifestConfig         `yaml:"manifest,omitempty"`
 	ProjectList                      map[string]*ProjectInfo `yaml:"project_info"`
 }
 

@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/semver/v3"
-	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/manifest/internal"
 	"github.com/ddev/ddev/pkg/manifest/types"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
@@ -12,19 +12,12 @@ import (
 
 type messageTypes struct {
 	messageType types.MessageType
-	messages    []types.Message
+	messages    []internal.Message
 }
 
 // Shows messages provided in the manifest.json to the user.
-func ShowMessages() {
+func (m *Manifest) ShowMessages() {
 	defer util.TimeTrack(time.Now(), "ShowMessages()")()
-
-	updateInterval := globalconfig.DdevGlobalConfig.ManifestUpdateInterval
-	if updateInterval <= 0 {
-		updateInterval = 24
-	}
-
-	manifest := NewManifest(time.Duration(updateInterval) * time.Hour)
 
 	// Show infos and warning.
 	version, err := semver.NewVersion(versionconstants.DdevVersion)
@@ -34,8 +27,8 @@ func ShowMessages() {
 	}
 
 	for _, messages := range []messageTypes{
-		{messageType: types.Warning, messages: manifest.Manifest.Messages.Warnings},
-		{messageType: types.Info, messages: manifest.Manifest.Messages.Infos},
+		{messageType: types.Warning, messages: m.manifest.Messages.Warnings},
+		{messageType: types.Info, messages: m.manifest.Messages.Infos},
 	} {
 		for _, message := range messages.messages {
 			if message.Versions != "" {
@@ -52,23 +45,33 @@ func ShowMessages() {
 
 			switch messages.messageType {
 			case types.Warning:
-				util.Warning(message.Message)
+				util.Warning("\n%s", message.Message)
 			default:
-				util.Success(message.Message)
+				util.Success("\n%s", message.Message)
 			}
 		}
 	}
+}
+
+// ShowTips tips provided in the manifest.json to the user.
+// TODO limit to once a day maybe see PR.
+// TODO beautify output
+func (m *Manifest) ShowTips() {
+	runTime := util.TimeTrack(time.Now(), "ShowTips()")
+	defer runTime()
 
 	// Show tips.
-	tips := len(manifest.Manifest.Messages.Tips.Messages)
-	if tips > 0 {
-		manifest.Manifest.Messages.Tips.Last++
-		if manifest.Manifest.Messages.Tips.Last > tips {
-			manifest.Manifest.Messages.Tips.Last = 1
+	if !m.tipsDisabled {
+		tips := len(m.manifest.Messages.Tips.Messages)
+		if tips > 0 {
+			m.manifest.Messages.Tips.Last++
+			if m.manifest.Messages.Tips.Last > tips {
+				m.manifest.Messages.Tips.Last = 1
+			}
+
+			util.Success("\n%s", m.manifest.Messages.Tips.Messages[m.manifest.Messages.Tips.Last-1])
+
+			m.write()
 		}
-
-		util.Success(manifest.Manifest.Messages.Tips.Messages[manifest.Manifest.Messages.Tips.Last-1])
-
-		manifest.Write()
 	}
 }

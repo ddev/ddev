@@ -1,9 +1,13 @@
 package types
 
-import "time"
+import (
+	"time"
+
+	"github.com/ddev/ddev/pkg/manifest/internal"
+)
 
 type ManifestStorage interface {
 	LastUpdate() time.Time
-	Push(manifest Manifest) error
-	Pull() (Manifest, error)
+	Push(manifest internal.Manifest) error
+	Pull() (internal.Manifest, error)
 }

@@ -6,44 +6,81 @@ import (
 	"time"
 
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/manifest/storages"
+	"github.com/ddev/ddev/pkg/manifest/internal"
+	"github.com/ddev/ddev/pkg/manifest/storage"
 	"github.com/ddev/ddev/pkg/manifest/types"
 	"github.com/ddev/ddev/pkg/util"
 )
 
-func NewManifest(updateInterval time.Duration) *Manifest {
+func NewManifest(configPath string, isInternetActive bool, updateInterval time.Duration, disableTips bool) types.Manifest {
 	manifest := &Manifest{
-		fileStorage: storages.NewFileStorage(getLocalFileName()),
+		fileStorage: storage.NewFileStorage(getLocalFileName(configPath)),
 		// TODO change to ddev repo before merge
-		githubStorage:  storages.NewGithubStorage(`gilbertsoft`, `ddev`, `manifest.json`, storages.Options{Ref: "task/upstream-infos"}),
-		updateInterval: updateInterval,
+		githubStorage: storage.NewGithubStorage(
+			globalconfig.DdevGlobalConfig.Manifest.SourceOwner,
+			globalconfig.DdevGlobalConfig.Manifest.SourceRepo,
+			`manifest.json`,
+			storage.Options{Ref: globalconfig.DdevGlobalConfig.Manifest.SourceRef},
+		),
+		isInternetActive: isInternetActive,
+		updateInterval:   updateInterval,
+		tipsDisabled:     disableTips,
 	}
 	manifest.loadFromLocalStorage()
 
 	return manifest
 }
 
+var (
+	manifest types.Manifest
+)
+
+// GetManifest returns a global stored manifest. This is for the time being to
+// avoid import cycles.
+// TODO inject to a global interface e.g. command factory as soon as it exists.
+func GetManifest() types.Manifest {
+	if manifest == nil {
+		// Load manifest
+		updateInterval := globalconfig.DdevGlobalConfig.Manifest.UpdateInterval
+		if updateInterval <= 0 {
+			updateInterval = 24
+		}
+
+		manifest = NewManifest(
+			globalconfig.GetGlobalConfigPath(),
+			globalconfig.IsInternetActive(),
+			time.Duration(updateInterval)*time.Hour,
+			globalconfig.DdevGlobalConfig.Manifest.DisableTips,
+		)
+	}
+
+	return manifest
+}
+
 const localFileName = ".manifest"
 
+// Manifest is a in memory representation of the DDEV manifest file.
 type Manifest struct {
-	Manifest types.Manifest
+	manifest internal.Manifest
 
 	fileStorage   types.ManifestStorage
 	githubStorage types.ManifestStorage
 
-	updateInterval time.Duration
+	isInternetActive bool
+	updateInterval   time.Duration
+	tipsDisabled     bool
 
 	mu sync.RWMutex
 }
 
-func (m *Manifest) Write() {
+func (m *Manifest) write() {
 	runTime := util.TimeTrack(time.Now(), "Write()")
 	defer runTime()
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	err := m.fileStorage.Push(m.Manifest)
+	err := m.fileStorage.Push(m.manifest)
 
 	if err != nil {
 		util.Error("Error while writing manifest: %s", err)
@@ -57,12 +94,12 @@ func (m *Manifest) loadFromLocalStorage() {
 	m.mu.Lock()
 	defer func() {
 		m.mu.Unlock()
-		/*go*/ m.updateFromGithub()
+		go m.updateFromGithub()
 	}()
 
 	var err error
 
-	m.Manifest, err = m.fileStorage.Pull()
+	m.manifest, err = m.fileStorage.Pull()
 
 	if err != nil {
 		util.Error("Error while loading manifest: %s", err)
@@ -73,7 +110,7 @@ func (m *Manifest) updateFromGithub() {
 	runTime := util.TimeTrack(time.Now(), "updateFromGithub()")
 	defer runTime()
 
-	if !globalconfig.IsInternetActive() {
+	if !m.isInternetActive {
 		util.Debug("No internet connection.")
 
 		return
@@ -84,17 +121,17 @@ func (m *Manifest) updateFromGithub() {
 		util.Debug("Downloading manifest.")
 
 		m.mu.Lock()
-		backupLast := m.Manifest.Messages.Tips.Last
+		backupLast := m.manifest.Messages.Tips.Last
 
 		defer func() {
-			m.Manifest.Messages.Tips.Last = backupLast
+			m.manifest.Messages.Tips.Last = backupLast
 			m.mu.Unlock()
-			m.Write()
+			m.write()
 		}()
 
 		// Download the manifest.
 		var err error
-		m.Manifest, err = m.githubStorage.Pull()
+		m.manifest, err = m.githubStorage.Pull()
 
 		if err != nil {
 			util.Error("Error while downloading manifest: %s", err)
@@ -103,6 +140,6 @@ func (m *Manifest) updateFromGithub() {
 }
 
 // getLocalFileName returns the filename of the local storage.
-func getLocalFileName() string {
-	return filepath.Join(globalconfig.GetGlobalDdevDir(), localFileName)
+func getLocalFileName(configPath string) string {
+	return filepath.Join(configPath, localFileName)
 }

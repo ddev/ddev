@@ -1,4 +1,4 @@
-package storages
+package storage
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ddev/ddev/pkg/github"
+	"github.com/ddev/ddev/pkg/manifest/internal"
 	"github.com/ddev/ddev/pkg/manifest/types"
 	"github.com/ddev/ddev/pkg/util"
 )
@@ -34,7 +35,7 @@ func (s *githubStorage) LastUpdate() time.Time {
 	return time.Now()
 }
 
-func (s *githubStorage) Pull() (manifest types.Manifest, err error) {
+func (s *githubStorage) Pull() (manifest internal.Manifest, err error) {
 	ctx := context.Background()
 	client := github.GetGithubClient(ctx)
 
@@ -63,7 +64,7 @@ func (s *githubStorage) Pull() (manifest types.Manifest, err error) {
 	return
 }
 
-func (s *githubStorage) Push(_ types.Manifest) error {
+func (s *githubStorage) Push(_ internal.Manifest) error {
 	// do nothing, readonly storage
 	return errors.New("failed to push manifest to readonly `githubStorage`")
 }

@@ -36,7 +36,7 @@ Here is an example of the `manifest.json` file:
 ### Infos and Warnings
 
 The defined messages are shown to the user on every usage of DDEV. Supported
-messages types are `infos` and `warnings`. Every message can optionally include
+message types are `infos` and `warnings`. Every message can optionally include
 a version constraint to limit the message to matching DDEV versions only.
 
 More information about the supported constraints can be found in the

@@ -1,10 +1,11 @@
-package storages
+package storage
 
 import (
 	"encoding/gob"
 	"os"
 	"time"
 
+	"github.com/ddev/ddev/pkg/manifest/internal"
 	"github.com/ddev/ddev/pkg/manifest/types"
 )
 
@@ -24,7 +25,7 @@ type fileStorage struct {
 // fileStorageData is the structure used for the file.
 type fileStorageData struct {
 	LastUpdate time.Time
-	Manifest   types.Manifest
+	Manifest   internal.Manifest
 }
 
 func (s *fileStorage) LastUpdate() time.Time {
@@ -36,7 +37,7 @@ func (s *fileStorage) LastUpdate() time.Time {
 	return s.data.LastUpdate
 }
 
-func (s *fileStorage) Pull() (messages types.Manifest, err error) {
+func (s *fileStorage) Pull() (messages internal.Manifest, err error) {
 	err = s.loadData()
 	if err != nil {
 		return
@@ -45,7 +46,7 @@ func (s *fileStorage) Pull() (messages types.Manifest, err error) {
 	return s.data.Manifest, nil
 }
 
-func (s *fileStorage) Push(manifest types.Manifest) (err error) {
+func (s *fileStorage) Push(manifest internal.Manifest) (err error) {
 	s.data.LastUpdate = time.Now()
 	s.data.Manifest = manifest
 

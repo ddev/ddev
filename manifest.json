@@ -2,7 +2,7 @@
     "messages": {
         "infos": [
             {
-                "message": "Ensure maintenance and further development of DDEV see https://github.com/sponsors/rfay."
+                "message": "Ensure maintenance and further development of DDEV, see https://ddev.com/support-ddev/."
             }
         ],
         "warnings": [],

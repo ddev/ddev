@@ -5,6 +5,7 @@ import (
 
 	"github.com/ddev/ddev/cmd/ddev/cmd"
 	"github.com/ddev/ddev/pkg/amplitude"
+	"github.com/ddev/ddev/pkg/manifest"
 	"github.com/ddev/ddev/pkg/util"
 )
 
@@ -24,6 +25,13 @@ func main() {
 	if os.Geteuid() == 0 && len(os.Args) > 1 && os.Args[1] != "hostname" {
 		util.Failed("ddev is not designed to be run with root privileges, please run as normal user and without sudo")
 	}
+
+	// TODO for the time being this triggers the download from Github but
+	// should be realized with a clean bootstrap as soon as it exists. The
+	// download does not hurt here as it's done in a asynchronous call but it's
+	// important to start it as early as possible to have an up to date
+	// manifest at the end of the command execution.
+	manifest.GetManifest()
 
 	cmd.Execute()
 }
