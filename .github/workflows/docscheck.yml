@@ -31,7 +31,7 @@ jobs:
       - name: textlint
         uses: tsuyoshicho/action-textlint@v3
         with:
-          github_token: ${{ secrets.github_token }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-check
           textlint_flags: "{README.md,version-history.md,docs/**}"
       - run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
