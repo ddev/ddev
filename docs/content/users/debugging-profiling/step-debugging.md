@@ -29,7 +29,7 @@ For more background on Xdebug, see [Xdebug documentation](https://xdebug.org/doc
 
 ### PhpStorm Debugging Setup
 
-[PhpStorm](https://www.jetbrains.com/phpstorm/download) is a leading PHP development IDE with extensive built-in debugging support. It provides two ways to do debugging: “zero-configuration” debugging which requires very little effort in the PhpStorm IDE, and a “run configuration” you can set up just like Netbeans or Eclipse.
+[PhpStorm](https://www.jetbrains.com/phpstorm/download) is a leading PHP development IDE with extensive built-in debugging support. It provides two ways to do debugging: “zero-configuration” debugging which requires very little effort in the PhpStorm IDE, and a “run configuration” you can set up like Netbeans or Eclipse.
 
 !!!tip "If you’re using PhpStorm inside WSL2 or Linux"
     Make PhpStorm listen for Xdebug using IPv4 by visiting Help → Edit Custom VM Options, and adding an additional line: `-Djava.net.preferIPv4Stack=true`. The Linux version of PhpStorm seems to otherwise default to only using IPv6.
@@ -62,7 +62,7 @@ Give it a reasonable name.
 3. Create a “server” for the project. Make sure *Name* is exactly the same as your host (e.g. `my-site.ddev.site`):
     ![PhpStorm server creation](../../images/phpstorm-config-server-config.png)
 4. Add file mappings for the files on the server.
-Click on the local repo path and add `/var/www/html` as the *Absolute path on the server* and your repository root as the path on the host.
+Click on the local repository path and add `/var/www/html` as the *Absolute path on the server* and your repository root as the path on the host.
 5. Set an appropriate breakpoint.
 6. Start debugging by clicking the “debug” button, which will launch a page in your browser:
     ![PhpStorm debug start](../../images/phpstorm-config-debug-button.png)
@@ -122,7 +122,7 @@ Here are basic steps to take to sort out any difficulty:
     > PHP message: Xdebug: [Step Debug] Could not connect to debugging client. Tried: host.docker.internal:9003 (through xdebug.client_host/xdebug.client_port)
 
 * `ddev ssh` into the web container. Can you run `telnet host.docker.internal 9003` and have it connect? If not, you might have an over-aggressive firewall. Disable it, or add a rule that would allow the connection to pass through. For example, on Debian/Ubuntu that would be `sudo ufw allow 9003/tcp`.
-* In PhpStorm, disable the “listen for connections” button so it won’t listen. Or just exit PhpStorm. With another IDE like VS Code, stop the debugger from listening.
+* In PhpStorm, disable the “listen for connections” button so it won’t listen. Or exit PhpStorm. With another IDE like VS Code, stop the debugger from listening.
 * `ddev ssh` into the web container. Can you run `telnet host.docker.internal 9003` and have it connect? If so, you have something else running on port 9003. On the host, use `sudo lsof -i :9003 -sTCP:LISTEN` to find out what’s there and stop it. Don’t continue debugging until your telnet command does not connect. (On Windows WSL2 you may have to look for listeners both inside WSL2 and on the Windows side.)
 * Now click the “listen” button on PhpStorm to start listening for connections.
 * `ddev ssh` and try the `telnet host.docker.internal 9003` again. It should connect. If not, maybe PhpStorm is not listening, or not configured to listen on port 9003?

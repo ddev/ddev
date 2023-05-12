@@ -19,7 +19,7 @@ Traefik will be the default router in DDEV v1.22+.
 
 You can fully customize the router’s [Traefik configuration](https://doc.traefik.io/traefik/).
 
-All Traefik configuration uses the *file* provider, not the *docker* provider. Even though the Traefik daemon itself is running inside the `ddev-router` container, it uses mounted files for configuration, rather than listening to the Docker socket.
+All Traefik configuration uses the *file* provider, not the *Docker* provider. Even though the Traefik daemon itself is running inside the `ddev-router` container, it uses mounted files for configuration, rather than listening to the Docker socket.
 
 !!!tip
     Like other DDEV configuration, any file with `#ddev-generated` will be overwritten unless you choose to “take over” it yourself. You can do this by removing the `#ddev-generated` line. DDEV will stop making changes to that file and you’ll be responsible for updating it.

@@ -92,7 +92,7 @@ If you make changes to a Docker image (like `ddev-webserver`), it won’t have a
 * Push an image with a specific tag by navigating to the image directory (like `containers/ddev-webserver`), and running `make push DOCKER_REPO=youruser/yourimage VERSION=<branchname>`.
 * Multi-arch images require you to have a Buildx builder, so `docker buildx create --name ddev-builder-multi --use`.
 * You can’t push until you `docker login`.
-* Push a container to hub.docker.com. Push with the tag that matches your branch. Pushing to `<yourorg>/ddev-webserver` repo is easy to accomplish with `make push DOCKER_ORG=<yourorg> VERSION=<branchname>` **in the container directory**. You might have to use other techniques to push to another repo.
+* Push a container to hub.docker.com. Push with the tag that matches your branch. Push to `<yourorg>/ddev-webserver` repository with `make push DOCKER_ORG=<yourorg> VERSION=<branchname>` **in the container directory**. You might have to use other techniques to push to another repository.
 * Update `pkg/versionconstants/versionconstants.go` with the `WebImg` and `WebTag` that relate to the Docker image you pushed.
 
 ### Local Builds and Pushes
@@ -112,7 +112,7 @@ cd containers/ddev-webserver
 make push VERSION=<tag>
 ```
 
-If you’re pushing to a repo other than the one wired into the Makefile (like `ddev/ddev-webserver`):
+If you’re pushing to a repository other than the one wired into the Makefile (like `ddev/ddev-webserver`):
 
 ```
 cd containers/ddev-webserver
@@ -137,8 +137,8 @@ To manually push using GitHub Actions,
 
 ## Building
 
-* You'll want both your fork/branch and the upstream as remotes in git, so that tags can be determined. For example, the upstream git remote can be `https://github.com/ddev/ddev` and your fork's remote can be `git@github.com:<yourgithubuser>/ddev`. Without the upstream, git may not know about tags that it needs for tests to work.
-* To run tests, you'll want `~/tmp` to be allowed in docker. This is not normally an issue as the home directory is available by default in most docker providers.
+* You'll want both your fork/branch and the upstream as remotes in Git, so that tags can be determined. For example, the upstream Git remote can be `https://github.com/ddev/ddev` and your fork's remote can be `git@github.com:<yourgithubuser>/ddev`. Without the upstream, Git may not know about tags that it needs for tests to work.
+* To run tests, you'll want `~/tmp` to be allowed in Docker. This is not normally an issue as the home directory is available by default in most Docker providers.
 
 Build the project with `make` and your resulting executable will end up in `.gotmp/bin/linux_amd64/ddev` or `.gotmp/bin/linux_arm64/ddev` (for Linux) or `.gotmp/bin/windows_amd64/ddev.exe` (for Windows) or `.gotmp/bin/darwin_amd64/ddev` or `.gotmp/bin/darwin_arm64/ddev` (for macOS).
 
@@ -162,7 +162,7 @@ Normal test invocation is `make test`. Run a single test with an invocation like
 
 To see which DDEV commands the tests are executing, set the environment variable `DDEV_DEBUG=true`.
 
-Use `GOTEST_SHORT=true` to run just one CMS in each test, or `GOTEST_SHORT=<integer>` to run exactly one project type from the list of project types in the [TestSites array](https://github.com/ddev/ddev/blob/a4ab2827d8b6e706b2420700045d889a3a69f3f2/pkg/ddevapp/ddevapp_test.go#L43). For example, `GOTEST_SHORT=5 make testpkg TESTARGS="-run TestDdevFullSiteSetup"` will run only `TestDdevFullSiteSetup` against TYPO3.
+Use `GOTEST_SHORT=true` to run one CMS in each test, or `GOTEST_SHORT=<integer>` to run exactly one project type from the list of project types in the [TestSites array](https://github.com/ddev/ddev/blob/a4ab2827d8b6e706b2420700045d889a3a69f3f2/pkg/ddevapp/ddevapp_test.go#L43). For example, `GOTEST_SHORT=5 make testpkg TESTARGS="-run TestDdevFullSiteSetup"` will run only `TestDdevFullSiteSetup` against TYPO3.
 
 To run a test (in the `cmd` package) against a individually-compiled DDEV binary, set the `DDEV_BINARY_FULLPATH` environment variable, for example `DDEV_BINARY_FULLPATH=$PWD/.gotmp/bin/linux_amd64/ddev make testcmd`.
 
@@ -170,7 +170,7 @@ The easiest way to run tests is using GoLand (or VS Code) with their built-in te
 
 ## Automated Testing
 
-Anybody can view the CircleCI automated tests, and they usually show up any problems that are not OS-specific. Just click through on the testing section of the PR to see them.
+Anybody can view the CircleCI automated tests, and they usually show up any problems that are not OS-specific. Click through on the testing section of the PR to see them.
 
 The Buildkite automated tests require special access, which we typically grant to any PR contributor that asks for it.
 
@@ -203,7 +203,7 @@ If your pull request is merged, great! If not, no sweat; it may not be what the 
 
 Unless explicitly stated, we follow all coding guidelines from the Go community. While some of these standards may seem arbitrary, they somehow seem to result in a solid, consistent codebase.
 
-It is possible that the code base does not currently comply with these guidelines. We are not looking for a massive PR that fixes this since that goes against the spirit of the guidelines. All new contributions should make a best effort to clean up and make the code base better than they left it. Obviously, apply your best judgment. Remember, the goal here is to make the code base easier for humans to navigate and understand. Always keep that in mind when nudging others to comply.
+It is possible that the codebase does not currently comply with these guidelines. We are not looking for a massive PR that fixes this since that goes against the spirit of the guidelines. All new contributions should make a best effort to clean up and make the codebase better than they left it. Obviously, apply your best judgment. Remember, the goal here is to make the codebase easier for humans to navigate and understand. Always keep that in mind when nudging others to comply.
 
 Use `make staticrequired` to ensure that your code can pass the required static analysis tests.
 
@@ -217,6 +217,6 @@ The rules:
 6. Variable name length should be proportional to its context and no longer. `noCommaALongVariableNameLikeThisIsNotMoreClearWhenASimpleCommentWouldDo`. In practice, short methods will have short variable names and globals will have longer names.
 7. No underscores in package names. If you need a compound name, step back, and re-examine why you need a compound name. If you still think you need a compound name, lose the underscore.
 8. All tests should run with `go test` and outside tooling should not be required. No, we don’t need another unit testing framework. Assertion packages are acceptable if they provide *real* incremental value.
-9. Even though we call these “rules” above, they are actually just guidelines. Since you’ve read all the rules, you now know that.
+9. Even though we call these “rules” above, they are guidelines. Since you’ve read all the rules, you now know that.
 
 If you are having trouble getting into the mood of idiomatic Go, we recommend reading through [Effective Go](https://golang.org/doc/effective_go.html). The [Go Blog](https://blog.golang.org) is also a great resource. Drinking the kool-aid is a lot easier than going thirsty.

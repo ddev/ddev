@@ -88,7 +88,7 @@ MAIL_ENCRYPTION=null
 
 ## Using Development Tools on the Host Machine
 
-It’s possible in many cases to use development tools installed on your host machine on a project provisioned by DDEV. Tools that interact with files and require no database connection, such as Git or Composer, can be run from the host machine against the code base for a DDEV project with no additional configuration necessary.
+It’s possible in many cases to use development tools installed on your host machine on a project provisioned by DDEV. Tools that interact with files and require no database connection, such as Git or Composer, can be run from the host machine against the codebase for a DDEV project with no additional configuration necessary.
 
 ### Database Connections from the Host
 

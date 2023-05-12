@@ -121,7 +121,7 @@ To run privileged commands, sudo can be passed into `ddev exec`. For example, to
 
 Commands can also be executed using the shorter `ddev . <cmd>` alias.
 
-Normally, `ddev exec` commands are executed in the container using Bash, which means that environment variables and redirection and pipes can be used. For example, a complex command like `ddev exec 'ls -l ${DDEV_FILES_DIR} | grep x >/tmp/junk.out'` will be interpreted by Bash and will work. However, there are cases where Bash introduces too much complexity and it’s best to just run the command directly. In those cases, something like `ddev exec --raw ls -l "dir1" "dir2"` may be useful. With `--raw`, the `ls` command is executed directly instead of the full command being interpreted by Bash. But you cannot use environment variables, pipes, redirection, etc.
+Normally, `ddev exec` commands are executed in the container using Bash, which means that environment variables and redirection and pipes can be used. For example, a complex command like `ddev exec 'ls -l ${DDEV_FILES_DIR} | grep x >/tmp/junk.out'` will be interpreted by Bash and will work. However, there are cases where Bash introduces too much complexity and it’s best to run the command directly. In those cases, something like `ddev exec --raw ls -l "dir1" "dir2"` may be useful. With `--raw`, the `ls` command is executed directly instead of the full command being interpreted by Bash. But you cannot use environment variables, pipes, redirection, etc.
 
 ### SSH Into Containers
 
@@ -137,6 +137,6 @@ The [`ddev logs`](../usage/commands.md#logs) command allows you to easily view e
 
 To remove a project’s containers, run [`ddev stop`](../usage/commands.md#stop) in the project’s working directory. To remove any running project’s containers regardless of context, specify the project name as an argument: `ddev stop <projectname>`.
 
-`ddev stop` is *not* destructive. It removes the Docker containers but does not remove the database for the project, and does nothing to your code. This allows you to have many configured projects with databases loaded without wasting Docker containers on unused projects. **`ddev stop` does not affect the project code base and files.**
+`ddev stop` is *not* destructive. It removes the Docker containers but does not remove the database for the project, and does nothing to your code. This allows you to have many configured projects with databases loaded without wasting Docker containers on unused projects. **`ddev stop` does not affect the project codebase and files.**
 
 To remove the imported database for a project, use the flag `--remove-data`, as in `ddev stop --remove-data`. This command will destroy both the containers and the imported database contents.

@@ -167,7 +167,7 @@ Flags:
 * `--additional-fqdns`: Comma-delimited list of project FQDNs.
 * `--additional-hostnames`: Comma-delimited list of project hostnames.
 * `--auto`: Automatically run config without prompting. (default `true`)
-* `--bind-all-interfaces`: Bind host ports on all interfaces, not just on localhost network interface.
+* `--bind-all-interfaces`: Bind host ports on all interfaces, not only on localhost network interface.
 * `--composer-root`: Overrides the default Composer root directory for the web service.
 * `--composer-root-default`: Unsets a web service Composer root directory override.
 * `--composer-version`: Specify override for Composer version in the web container. This may be `""`, `"1"`, `"2"`, `"2.2"`, `"stable"`, `"preview"`, `"snapshot"`, or a specific version.
@@ -218,7 +218,7 @@ Flags:
 * `--web-working-dir`: Overrides the default working directory for the web service.
 * `--web-working-dir-default`: Unsets a web service working directory override.
 * `--webimage-extra-packages`: A comma-delimited list of Debian packages that should be added to web container when the project is started.
-* `--webserver-type`: Sets the project’s desired webserver type: `nginx-fpm`, `nginx-gunicorn`, or `apache-fpm`.
+* `--webserver-type`: Sets the project’s desired web server type: `nginx-fpm`, `nginx-gunicorn`, or `apache-fpm`.
 * `--working-dir-defaults`: Unsets all service working directory overrides.
 * `--xdebug-enabled`: Whether or not Xdebug is enabled in the web container.
 
@@ -441,7 +441,7 @@ Remove all information, including the database, for an existing project.
 Flags:
 
 * `--all`, `-a`: Delete all projects.
-* `--clean-containers`: Clean up all DDEV docker containers not required by this version of DDEV. (default true)
+* `--clean-containers`: Clean up all DDEV Docker containers not required by this version of DDEV. (default `true`)
 * `--omit-snapshot`, `-O`: Omit/skip database snapshot.
 * `--yes`, `-y`: Skip confirmation prompt.
 
@@ -626,8 +626,8 @@ Manage your hostfile entries.
 
 Flags:
 
-* `--remove`, `-r`: Remove the provided host name - ip correlation.
-* `--remove-inactive`, `-R`: Remove host names of inactive projects.
+* `--remove`, `-r`: Remove the provided hostname - ip correlation.
+* `--remove-inactive`, `-R`: Remove hostnames of inactive projects.
 
 Example:
 

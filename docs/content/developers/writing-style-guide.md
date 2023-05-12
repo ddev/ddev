@@ -11,9 +11,13 @@ In the spirit of the [Code of Conduct](../users/code-of-conduct.md), we want to 
 
 Write so a DDEV beginner can follow your guidance and a DDEV veteran could use the same content as a reference.
 
+<!-- textlint-disable -->
+
 | Write This 👍 | Not This ❌
 | -- | --
 | You can run `ddev restart` to apply changes you’ve made to your global `~/.ddev/global_config.yaml` or per-project `.ddev/config.yaml`. | Just `ddev restart` to apply YAML config changes.
+
+<!-- textlint-enable -->
 
 ### Be Efficient and Direct
 
@@ -30,15 +34,23 @@ Omit extraneous explanation or decorative language that doesn’t help the reade
 
 ### Avoid “Just” and “Easy”
 
+<!-- textlint-disable -->
+
 Try not to use language that [may talk down to the reader](https://justsimply.dev/). You may intend for “it’s easy” to be reassuring, but it’s a subjective judgment that can convince someone struggling that they’re doing it wrong. Things could instead be “straightforward” if they’re without nuance, “simple” if they don’t involve complex actions or concepts, or “quick” if they involve one or two steps that’d be fast even on someone’s worst day with the slowest-imaginable machine.
 
 Similarly, “just do X” suggests that “X” should be easy or obvious. Most of the time “just” can be omitted and everyone wins.
 
+<!-- textlint-enable -->
+
 If you’d like to reassure the reader something is easy, illustrate it with a demonstration and let them draw their own conclusion!
+
+<!-- textlint-disable -->
 
 | Write This 👍 | Not This ❌
 | -- | --
 | Change your project’s PHP version by either editing `.ddev/config.yaml` to set `php_version: "8.2"`, or by running `ddev config --php-version=8.2`, followed by running `ddev restart`. | It’s easy to change your project’s PHP version! Just edit your project’s `.ddev/config.yaml` to set `php_version: "8.2"`, or run `ddev config --php-version=8.2`, followed by running `ddev restart`. |
+
+<!-- textlint-enable -->
 
 ## Writing Style
 
@@ -51,20 +63,28 @@ DDEV’s documentation should be consistent throughout, which benefits both the 
 
 Write with appropriate grammar and style for U.S. English, including capitalization and punctuation. Variations in spelling and writing style make the documentation harder to read, and we want to be respectful of the reader’s time and attention.
 
+<!-- textlint-disable -->
+
 | Write This 👍 | Not This ❌
 | -- | --
 | Let’s not capitalize random words for emphasis. | Let’s not Capitalize random Words for emphasis.
 | That organization uses a lovely American color. | That organisation uses a lovely American colour.
 | We can use “curly quotes” now that we’re post-typewriter. | We can use "curly quotes" now that we're post-typewriter.
 
+<!-- textlint-enable -->
+
 ### “Run” Commands
 
 We “run” commands. We don’t “do” them, and the command itself is not a verb. Whenever possible, reinforce that a given thing in backticks is intended as a console command by using the word “run” before it.
+
+<!-- textlint-disable -->
 
 | Write This 👍 | Not This ❌ |
 | -- | -- |
 | Run `ddev config` to set up your project. | Do `ddev config` to set up your project.<br>You can `ddev config` to set up your project. |
 | If you get stuck, run `ddev restart`. | If you get stuck, just `ddev restart`. |
+
+<!-- textlint-enable -->
 
 ### Use Active Third Person
 
@@ -73,10 +93,14 @@ Avoid impersonal language featuring unknown individuals or shadowy organizations
 
 Write on behalf of the community and not yourself—use “we” and not “I”.
 
+<!-- textlint-disable -->
+
 | Write This 👍 | Not This ❌ |
 | -- | -- |
 | We recommend Colima for the best performance. | It is recommended for performance that you use Colima. |
 | Some prefer Redis for runtime caches. | I like using Redis for runtime caches. |
+
+<!-- textlint-enable -->
 
 ### Write Once and Link
 
@@ -89,10 +113,14 @@ Try to keep from repeating yourself in the documentation. Instead, write careful
 
 It’s easy to get lost in documentation; don’t assume the reader is always following your words. Take care to bring the reader with you, especially if there are steps that involve different applications or distinct areas of concern.
 
+<!-- textlint-disable -->
+
 | Write This 👍 | Not This ❌ |
 | -- | -- |
 | 1. In Docker Desktop, go to *Resources* → *Advanced* and set “Memory” to 6GB.<br>2. From your terminal, run `ddev restart`.<br>3. In your text editor, open `.ddev/config.yaml` and set `php_version: "8.1"`. | 1. Go to *Resources* → *Advanced* and set “Memory” to 6GB.<br>2. Run `ddev restart`.<br>3. Set `php_version: "8.1"`. |
 | Once you’ve [installed a Docker provider](../users/install/docker-installation.md), you’re ready to install DDEV! | Docker or an alternative is required before anything will work with DDEV. This is pretty easy on most environments; see the [Docker Installation](../users/install/docker-installation.md) page to help sort out the details.
+
+<!-- textlint-enable -->
 
 ### Avoid Starting with Asides
 
@@ -142,15 +170,21 @@ Summarize the callout’s contents with a succinct heading whenever you can, so 
 
 DDEV is a product and `ddev` is a binary or console command. DDEV should always be uppercase, and `ddev` should always be in backticks. DDEV-Local and DDEV-Live are former product incarnations that shouldn’t be found in modern documentation.
 
+<!-- textlint-disable -->
+
 | Write This 👍 | Not This ❌
 | -- | --
 | DDEV is wonderful! | Ddev is wonderful!<br>ddev is wonderful!<br>DDEV-Local is wonderful!
 | Run `ddev`. | Run ddev.<br>Run DDEV.
 
+<!-- textlint-enable -->
+
 #### Products, Organizations, and Protocols
 
 When in doubt, honor whatever name a product or organization uses in its official materials.  
-Use backticks to differentiate between a product and command, just like DDEV vs. `ddev`.
+Use backticks to differentiate between a product and command, like DDEV vs. `ddev`.
+
+<!-- textlint-disable -->
 
 | Write This 👍 | Not This ❌
 | -- | --
@@ -185,6 +219,8 @@ Use backticks to differentiate between a product and command, just like DDEV vs.
 | Windows | windows
 | Xdebug | XDebug, xDebug
 
+<!-- textlint-enable -->
+
 ### Quote Copied Text
 
 If you’re quoting a human being or a message lifted verbatim from some other source (outside a fenced code block), make sure it ends up in a `<blockquote>` element:
@@ -198,6 +234,8 @@ If you’re quoting a human being or a message lifted verbatim from some other s
 ### Other Recommendations
 
 One-off tips that don’t fit nicely into any of the sections above:
+
+<!-- textlint-disable -->
 
 - Pluralize “CMS” as “CMSes”, not “CMSs”.
 - Use all-caps references for file *types* like JSON, YAML and CSS.
@@ -220,3 +258,5 @@ One-off tips that don’t fit nicely into any of the sections above:
 | several CMSes | several CMSs, several CMS’s
 | How to Reticulate Splines | How to reticulate splines
 | 1. Run `command`.<br>2. Edit file.<br>3. Restart computer. | 1. `command`<br>2. Edit file.<br>3. Additionally, restart your computer.
+
+<!-- textlint-enable -->

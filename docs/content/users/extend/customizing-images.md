@@ -20,9 +20,9 @@ Then the additional packages will be built into the containers during [`ddev sta
 
 The `web` container is a Debian image, and its PHP distributions are packaged (thank you!) by [`deb.sury.org`](https://deb.sury.org/).
 
-Most PHP extensions are built in the `deb.sury.org` distribution. You can Google the extension you want, or download and search the [Packages](https://packages.sury.org/php/dists/buster/main/binary-amd64/Packages) list from the `sury` distribution. For example, the `bcmath` PHP extension is provided by `php-bcmath`. Many packages have version-specific names, like `php7.3-tidy`.
+Most PHP extensions are built within the `deb.sury.org` distribution. You can Google the extension you want, or download and search the [Packages](https://packages.sury.org/php/dists/buster/main/binary-amd64/Packages) list from the `sury` distribution. For example, the `bcmath` PHP extension is provided by `php-bcmath`. Many packages have version-specific names, like `php7.3-tidy`.
 
-If you need a package that is *not* a PHP package, you can view and search standard Debian packages at [packages.debian.org/stable](https://packages.debian.org/stable/), or just use Google.
+If you need a package that is *not* a PHP package, you can view and search standard Debian packages at [packages.debian.org/stable](https://packages.debian.org/stable/), or use Google.
 
 To test that a package will do what you want, you can [`ddev ssh`](../usage/commands.md#ssh) and `sudo apt-get update && sudo apt-get install <package>` to verify that you can install it and you get what you need. A PHP extension may require `killall -USR2 php-fpm` to take effect. After you’ve tried that, you can add the package to [`webimage_extra_packages`](../configuration/config.md#webimage_extra_packages).
 
@@ -78,7 +78,7 @@ RUN chmod -R ugo+rw $COMPOSER_HOME
 ENV COMPOSER_HOME=""
 ```
 
-**Remember that the Dockerfile is building a Docker image that will be used later with DDEV.** At the time the Dockerfile is executing, your code is not mounted and the container is not running, the image is just being built. So for example, an `npm install` in `/var/www/html` will not do anything to your project because the code is not there at image building time.
+**Remember that the Dockerfile is building a Docker image that will be used later with DDEV.** At the time the Dockerfile is executing, your code is not mounted and the container is not running, the image is being built. So for example, an `npm install` in `/var/www/html` will not do anything to your project because the code is not there at image building time.
 
 ### Build Time Environment Variables
 

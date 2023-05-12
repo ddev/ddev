@@ -8,7 +8,7 @@ DDEV provides lots of flexibility for managing your databases between your local
 ## Database Imports
 
 Import a database with one command, from one of the following file formats:  
-**.sql, .sql.gz, .mysql, .mysql.gz, .tar, .tar.gz, and .zip**.
+**`.sql`, `.sql.gz`, `.mysql`, `.mysql.gz`, `.tar`, `.tar.gz`, and `.zip`**.
 
 Here’s an example of a database import using DDEV:
 
@@ -19,7 +19,7 @@ ddev import-db --src=dumpfile.sql.gz
 You can also:
 
 * Use [`ddev mysql`](../usage/commands.md#mysql) or `ddev psql` or the `mysql` and `psql` commands inside the `web` and `db` containers.
-* Use phpMyAdmin for database imports—just be aware it’s much slower.
+* Use phpMyAdmin for database imports. (It’s much slower, though!)
 
 ## Database Backends and Defaults
 

@@ -10,11 +10,11 @@ There are at least three different ways to share a running DDEV project outside 
 
 * [`ddev share`](../usage/commands.md#share) (using ngrok to share over the internet)
 * Local name resolution and sharing the project on the local network
-* Sharing just the HTTP port of the local machine on the local network
+* Sharing the HTTP port of the local machine on the local network
 
 ## Using `ddev share` (Easiest)
 
-`ddev share` proxies the project via [ngrok](https://ngrok.com), and it’s by far the easiest way to solve the problem of sharing your project with others on your team or around the world. It’s built into DDEV and “just works” for most people, and requires a free or paid [ngrok.com](https://ngrok.com) account. All you do is run `ddev share` and then give the resultant URL to your collaborator or use it on your mobile device. [Read the basic how-to from DrupalEasy](https://www.drupaleasy.com/blogs/ultimike/2019/06/sharing-your-ddev-local-site-public-url-using-ddev-share-and-ngrok) or run `ddev share -h` for more.
+`ddev share` proxies the project via [ngrok](https://ngrok.com) for sharing your project with others on your team or around the world. It’s built into DDEV and requires a free or paid [ngrok.com](https://ngrok.com) account. Run `ddev share` and then give the resultant URL to your collaborator or use it on your mobile device. [Read the basic how-to from DrupalEasy](https://www.drupaleasy.com/blogs/ultimike/2019/06/sharing-your-ddev-local-site-public-url-using-ddev-share-and-ngrok) or run `ddev share -h` for more.
 
 CMSes like WordPress and Magento 2 make this a little harder by only responding to a single base URL that’s coded into the database. ngrok’s $8/month [personal plan](https://ngrok.com/pricing) allows you to use a persistent subdomain so you won’t have to frequently change the base URL.
 

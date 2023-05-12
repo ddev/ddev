@@ -30,7 +30,7 @@ You can hand-edit the YAML files DDEV creates for you after running [`ddev confi
 
 You can override the per-project `config.yaml` with files named `config.*.yaml`, which are gitignored by default and not checked in.
 
-Many teams use `config.local.yaml` for configuration that’s specific to one environment, and not checked into the team’s default `config.yaml`. You might [enable Mutagen](../install/performance.md#mutagen) or [enable NFS](../install/performance.md#nfs) for the project, for example, just on your machine. Or maybe use a different database type.
+Many teams use `config.local.yaml` for configuration that’s specific to one environment, and not checked into the team’s default `config.yaml`. You might [enable Mutagen](../install/performance.md#mutagen) or [enable NFS](../install/performance.md#nfs) for the project, for example, only on your machine. Or maybe use a different database type.
 
 For examples, see the [Extending and Customizing Environments](../extend/customization-extendibility.md#extending-configyaml-with-custom-configyaml-files) page.
 
@@ -113,13 +113,13 @@ Not currently used.
 
 ## `disable_http2`
 
-Whether to disable http/2 listen in `ddev-router`.
+Whether to disable HTTP/2 listen in `ddev-router`.
 
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-globe-16: global | `false` | Can be `true` or `false`.
 
-When `true`, nginx will not listen for http/2, but just use http/1.1 SSL. (Some browsers don’t work well with http/2.)
+When `true`, nginx will not listen for HTTP/2, but use HTTP/1.1 SSL. (Some browsers don’t work well with HTTP/2.)
 
 ## `disable_settings_management`
 
@@ -618,4 +618,4 @@ Examples:
 
 * `xdebug_ide_location: 172.16.0.2` when you need to provide an explicit IP address where the IDE is listening.
 * `xdebug_ide_location: container` when the IDE is actually listening inside the `ddev-webserver` container.
-* `xdebug_ide_location: wsl2` when the IDE is running (or just listening) in WSL2.
+* `xdebug_ide_location: wsl2` when the IDE is running (or listening) in WSL2.

@@ -113,7 +113,7 @@ Start by completely turning NFS off for your projects with `ddev config --nfs-mo
 
 ### Why are my Apache HTTP → HTTPS redirects stuck in an infinite loop?
 
-It’s common to set up HTTP-to-TLS redirects in an `.htaccess` file, which leads to issues with the DDEV proxy setup. The TLS endpoint of a DDEV project is always the `ddev-router` container and requests are forwarded through plain HTTP to the project’s web server. This results in endless redirects, so you need to change the root `.htaccess` file for Apache correctly handles these requests for your local development environment with DDEV. The following snippet should work for most scenarios—not just DDEV—and could replace an existing redirect:
+It’s common to set up HTTP-to-TLS redirects in an `.htaccess` file, which leads to issues with the DDEV proxy setup. The TLS endpoint of a DDEV project is always the `ddev-router` container and requests are forwarded through plain HTTP to the project’s web server. This results in endless redirects, so you need to change the root `.htaccess` file for Apache correctly handles these requests for your local development environment with DDEV. The following snippet should work for most scenarios—even outside of DDEV—and could replace an existing redirect:
 
 ```apache
 # http:// -> https:// plain or behind proxy for Apache 2.2 and 2.4
@@ -141,7 +141,7 @@ You can use the [`self-upgrade`](../usage/commands.md#self-upgrade) command for 
 * On Linux + WSL2 using Debian/Ubuntu’s `apt install` technique, run `sudo apt update && sudo apt upgrade ddev` like any other package on your system.
 <!-- markdownlint-disable-next-line -->
 * On Linux + WSL2 with a Homebrew install, run `brew update && brew upgrade ddev`.
-* On macOS or Linux (including WSL2) if you installed using the [install_ddev.sh script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh) you just run it again:
+* On macOS or Linux (including WSL2) if you installed using the [install_ddev.sh script](https://github.com/ddev/ddev/blob/master/scripts/install_ddev.sh), run it again:
     <!-- markdownlint-disable -->
     ```
     curl -fsSL https://ddev.com/install.sh | bash
@@ -232,7 +232,7 @@ See the [support options](../support.md), including [Discord](https://discord.gg
 
 We love and welcome contributions of knowledge, support, docs, and code:
 
-* Submit an issue or pull request to the [main repo](https://github.com/ddev/ddev).
+* Submit an issue or pull request to the [main repository](https://github.com/ddev/ddev).
 * Add your external resource to [awesome-ddev](https://github.com/ddev/awesome-ddev).
 * Add your recipe or HOWTO to [ddev-contrib](https://github.com/ddev/ddev-contrib).
 * Help others in [Discord](https://discord.gg/kDvSFBSZfs) and on [Stack Overflow](https://stackoverflow.com/tags/ddev).

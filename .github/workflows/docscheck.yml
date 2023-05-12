@@ -28,6 +28,16 @@ jobs:
       - uses: actions/checkout@v3
       - uses: rojopolis/spellcheck-github-actions@v0
         name: Spellcheck
+      - name: Install textlint
+        run: |
+          npm init -y
+          npm install textlint textlint-filter-rule-comments textlint-rule-no-todo textlint-rule-stop-words textlint-rule-terminology
+      - name: Run textlint
+        uses: tsuyoshicho/action-textlint@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-check
+          textlint_flags: "{README.md,version-history.md,docs/**}"
       - run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
       - name: Run markdownlint on docs
         uses: docker://avtodev/markdown-lint:v1
@@ -36,7 +46,7 @@ jobs:
           args: '*.md docs/content'
       #    - name: Debugging with tmate
       #      uses: mxschmitt/action-tmate@v3.1
-      - name: "Check links in markdown"
+      - name: Check links in Markdown
         uses: gaurav-nelson/github-action-markdown-link-check@v1
         with:
           use-quiet-mode: 'yes'

@@ -162,11 +162,11 @@ You can use the `--web-environment` flag to overwrite existing values rather tha
 
 ### Altering the In-Container `$PATH`
 
-Sometimes it’s easiest to put the command you need into the existing `$PATH` using a symbolic link rather than changing the in-container `$PATH`. For example, the project `bin` directory is already included the `$PATH`. So if you have a command you want to run that’s not already in the `$PATH`, you can just add a symlink.
+Sometimes it’s easiest to put the command you need into the existing `$PATH` using a symbolic link rather than changing the in-container `$PATH`. For example, the project `bin` directory is already included the `$PATH`. So if you have a command you want to run that’s not already in the `$PATH`, you can add a symlink.
 
 Examples:
 
-* On Craft CMS, the `craft` script is often in the project root, which is not in the `$PATH`. But if you `mkdir bin && ln -s craft bin/craft` you should be able to use `ddev exec craft` just fine. (Note however that `ddev craft` takes care of this for you.)
+* On Craft CMS, the `craft` script is often in the project root, which is not in the `$PATH`. But if you `mkdir bin && ln -s craft bin/craft` you should be able to run `ddev exec craft`. (Note however that `ddev craft` takes care of this for you.)
 * On projects where the `vendor` directory is not in the project root (Acquia projects, for example, have `composer.json` and `vendor` in the `docroot` directory), you can `mkdir bin && ln -s docroot/vendor/bin/drush bin/drush` to put `drush` in your `$PATH`. (With projects like this, make sure to set `composer_root: docroot` so that `ddev composer` works properly.)
 
 You can also modify the `PATH` environment variable by adding a script to `<project>/.ddev/homeadditions/.bashrc.d/` or (global) `~/.ddev/homeadditions/.bashrc.d/`. For example, if your project vendor directory is not in the expected place (`/var/www/html/vendor/bin`) you can add a `<project>/.ddev/homeadditions/.bashrc.d/path.sh`:
@@ -184,14 +184,14 @@ You can also have more than one config file in the `.ddev/nginx_full` directory,
 ### Troubleshooting nginx Configuration
 
 * Any errors in your configuration may cause the `web` container to fail and try to restart. If you see that behavior, use [`ddev logs`](../usage/commands.md#logs) to diagnose.
-* The configuration is copied into the container during restart. Therefore it is not possible to simply edit the host file for the changes to take effect. You may want to edit the file directly inside the container at `/etc/nginx/sites-enabled/`. (For example, run [`ddev ssh`](../usage/commands.md#ssh) to get into the container.)
+* The configuration is copied into the container during restart. Therefore it is not possible to edit the host file for the changes to take effect. You may want to edit the file directly inside the container at `/etc/nginx/sites-enabled/`. (For example, run [`ddev ssh`](../usage/commands.md#ssh) to get into the container.)
 * You can run `ddev exec nginx -t` to test whether your configuration inside the container is valid. (Or run [`ddev ssh`](../usage/commands.md#ssh) and run `nginx -t`.)
-* You can reload the nginx configuration by running either [`ddev restart`](../usage/commands.md#restart) or editing the configuration inside the container at `/etc/nginx/sites-enabled/` and running `ddev exec nginx -s reload` on the host system (inside the container just `nginx -s reload`).
+* You can reload the nginx configuration by running either [`ddev restart`](../usage/commands.md#restart) or editing the configuration inside the container at `/etc/nginx/sites-enabled/` and running `ddev exec nginx -s reload` on the host system (inside the container run `nginx -s reload`).
 * The alias `Alias "/phpstatus" "/var/www/phpstatus.php"` is required for the health check script to work.
 
 ### Multiple Docroots in nginx (Advanced)
 
-It’s easiest to have different web servers in different DDEV projects, and DDEV projects can [easily communicate with each other](../usage/faq.md), but some sites require more than one docroot for a single project codebase. Sometimes this is because there’s an API built in the same codebase but using different code, or different code for different languages, etc.
+It’s easiest to have different web servers in different DDEV projects, and DDEV projects can [easily communicate with each other](../usage/faq.md), but some sites require more than one docroot for a single project codebase. Sometimes this is because there’s an API in the same codebase but using different code, or different code for different languages, etc.
 
 The generated `.ddev/nginx_full/seconddocroot.conf.example` demonstrates how to do this. You can create as many of these as you want: change the `servername` and the `root` and customize as needed.
 

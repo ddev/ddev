@@ -189,6 +189,17 @@ pyspelling:
 		echo "Not running pyspelling because it's not installed"; \
 	fi
 
+# Install textlint locally with `npm install -g textlint textlint-filter-rule-comments textlint-rule-no-todo textlint-rule-stop-words textlint-rule-terminology`
+textlint:
+	@echo "textlint: "
+	@CMD="textlint {README.md,version-history.md,docs/**}"; \
+	set -eu -o pipefail; \
+	if command -v textlint >/dev/null 2>&1 ; then \
+		$$CMD; \
+	else \
+		echo "textlint is not installed"; \
+	fi
+
 darwin_amd64_signed: $(GOTMP)/bin/darwin_amd64/ddev
 	@if [ -z "$(DDEV_MACOS_SIGNING_PASSWORD)" ] ; then echo "Skipping signing ddev for macOS, no DDEV_MACOS_SIGNING_PASSWORD provided"; else echo "Signing $< ..."; \
 		set -o errexit -o pipefail; \

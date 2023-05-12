@@ -11,7 +11,7 @@ Things might go wrong! In addition to this page, consider checking [Stack Overfl
 * On macOS, check to make sure Docker Desktop or Colima are not out of disk space. In *Settings* (or *Preferences*) → *Resources* → *Disk image size* there should be ample space left; try not to let usage exceed 80% because the reported number can be unreliable. If it says zero used, something is wrong.
 * If you have customizations like PHP overrides, nginx or Apache overrides, MySQL/PostgreSQL overrides, custom services, or `config.yaml` changes, please back them out while troubleshooting. It’s important to have the simplest possible environment while troubleshooting.
 * Restart Docker. Consider a Docker factory reset in serious cases, which will destroy any databases you’ve loaded. See [Docker Troubleshooting](../install/docker-installation.md#troubleshooting) for more.
-* Try the simplest possible DDEV project (just as [`ddev debug test`](commands.md#debug-test) does):
+* Try the simplest possible DDEV project (like [`ddev debug test`](commands.md#debug-test) does):
 
     ```bash
     ddev poweroff
@@ -184,7 +184,7 @@ If you see “no space left on device” on Linux, it most likely means your fil
 A container fails to become ready when its health check is failing. This can happen to any of the containers, and you can usually find the issue with a `docker inspect` command.
 
 !!!tip
-    You may need to install [jq](https://stedolan.github.io/jq/download/) for these examples (`brew install jq`), or just remove the `| jq` from the command and read the raw JSON output.
+    You may need to install [jq](https://stedolan.github.io/jq/download/) for these examples (`brew install jq`), or remove the `| jq` from the command and read the raw JSON output.
 
 For the `web` container:
 
@@ -285,16 +285,16 @@ If you’re using a browser on Windows, accessing a project in WSL2, you can end
 
 ## Limitations on Symbolic Links (symlinks)
 
-Symbolic links are widely used but have specific limitations in many environments, not just in DDEV. Here are some of the ways those may affect you:
+Symbolic links are widely used but have specific limitations in many environments beyond DDEV. Here are some of the ways those may affect you:
 
 * **Crossing mount boundaries**: Symlinks may not generally cross between network mounts. In other words, if you have a relative symlink in the root of your project directory on the host that points to `../somefile.txt`, that symlink will not be valid inside the container where `../` is a completely different filesystem (and is typically not mounted).
 * **Symlinks to absolute paths**: If you have an absolute symlink to something like `/Users/xxx/somefile.txt` on the host, it will not be resolvable inside the container because `/Users` is not mounted there. Some tools, especially on Magento 2, may create symlinks to rooted paths, with targets like `/var/www/html/path/to/something`. These basically can’t make it to the host and may create errors.
 * **Windows restrictions on symlinks**: Inside the Docker container on Windows, you may not be able to create a symlink that goes outside the container.
-* **Mutagen restrictions on Windows symlinks**: On macOS and Linux (including WSL2) the default `.ddev/mutagen/mutagen.yml` chooses the `posix-raw` type of symlink handling. (See [mutagen docs](https://mutagen.io/documentation/synchronization/symbolic-links)). This basically means that any symlink created will try to sync, regardless of whether it’s valid in the other environment. However, Mutagen does not support posix-raw on traditional Windows, so DDEV uses the `portable` symlink mode. So on Windows with Mutagen, symlinks have to be strictly limited to relative links that are inside the Mutagen section of the project.
+* **Mutagen restrictions on Windows symlinks**: On macOS and Linux (including WSL2) the default `.ddev/mutagen/mutagen.yml` chooses the `posix-raw` type of symlink handling. (See [Mutagen docs](https://mutagen.io/documentation/synchronization/symbolic-links)). This basically means that any symlink created will try to sync, regardless of whether it’s valid in the other environment. However, Mutagen does not support posix-raw on traditional Windows, so DDEV uses the `portable` symlink mode. So on Windows with Mutagen, symlinks have to be strictly limited to relative links that are inside the Mutagen section of the project.
 
 ### Delete and Re-Download Docker Images
 
-In a few unusual cases, the actual downloaded Docker images can somehow get corrupted. Deleting the images will force them to be re-downloaded or rebuilt. This does no harm, as everything is just rebuilt, but a `ddev start` will take longer while it downloads needed resources:
+In a few unusual cases, the actual downloaded Docker images can somehow get corrupted. Deleting the images will force them to be re-downloaded or rebuilt. This does no harm, as everything is rebuilt, but running `ddev start` will take longer while it downloads needed resources:
 
 ```bash
 ddev poweroff
