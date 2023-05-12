@@ -109,7 +109,6 @@ This version history has been driven by what we hear from our wonderful communit
 - [x] Updated support of Pantheon via Terminus instead of undocumented API
 - [x] Support for Magento and Magento 2, #1802
 - [x] Remove deprecated support for webcache
-- [x] Develop an advisory board of interested users to determine product focus
 - [x] Review/experimentation with GUI options [#2110](https://github.com/ddev/ddev/issues/2110)
 
 ## v1.12 (Released 2019-12-04)
