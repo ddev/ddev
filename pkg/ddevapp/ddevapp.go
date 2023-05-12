@@ -1275,8 +1275,8 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		// Send output to /var/tmp/logpipe to get it to docker logs
 		// If start.sh dies, we want to make sure the container gets killed off
-		// so killall the pre-start.sh
-		Cmd:    `/start.sh > /var/tmp/logpipe 2>&1 || killall pre-start.sh`,
+		// so send SIGTERM to process ID 1
+		Cmd:    `/start.sh > /var/tmp/logpipe 2>&1 || kill -- -1`,
 		Detach: true,
 	})
 	if err != nil {

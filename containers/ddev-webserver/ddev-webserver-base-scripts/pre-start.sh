@@ -14,7 +14,7 @@ if [[ ! -p ${logpipe} ]]; then
     mkfifo ${logpipe}
 fi
 
-# Allow process 1 to be killed
-trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT SIGHUP
+# Kill process 1 + process group if this exist or fails
+trap "trap - SIGTERM && kill -- --1" SIGINT SIGTERM EXIT SIGHUP SIGQUIT
 
 cat < ${logpipe}

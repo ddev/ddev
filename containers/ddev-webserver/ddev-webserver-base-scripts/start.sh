@@ -4,13 +4,6 @@ set -o errexit nounset pipefail
 
 rm -f /tmp/healthy
 
-# If supervisord happens to be running (ddev start when already running) then kill it off
-if pkill -0 supervisord; then
-  supervisorctl stop all || true
-  supervisorctl shutdown || true
-fi
-rm -f /var/run/supervisor.sock
-
 export DDEV_WEB_ENTRYPOINT=/mnt/ddev_config/web-entrypoint.d
 
 source /functions.sh
