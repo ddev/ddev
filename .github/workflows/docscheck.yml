@@ -29,7 +29,9 @@ jobs:
       - uses: rojopolis/spellcheck-github-actions@v0
         name: Spellcheck
       - name: Install textlint
-        run: npm install -g textlint textlint-filter-rule-comments textlint-rule-no-todo textlint-rule-stop-words textlint-rule-terminology
+        run: |
+          npm init -y
+          npm install -g textlint textlint-filter-rule-comments textlint-rule-no-todo textlint-rule-stop-words textlint-rule-terminology
       - name: Run textlint
         uses: tsuyoshicho/action-textlint@v3
         with:
