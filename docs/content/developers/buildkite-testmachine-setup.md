@@ -25,7 +25,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
     set DOCKERHUB_PULL_PASSWORD=
     ```
 
-15. Set the `buildkite-agent` service to run as the testbot user and use delayed start: Choose “Automatic, delayed start” and on the “Log On” tab in the services widget it must be set up to log in as the testbot user, so it inherits environment variables and home directory (and can access NFS, has testbot git config, etc).
+15. Set the `buildkite-agent` service to run as the testbot user and use delayed start: Choose “Automatic, delayed start” and on the “Log On” tab in the services widget it must be set up to log in as the testbot user, so it inherits environment variables and home directory (and can access NFS, has testbot Git config, etc).
 16. `git config --global --add safe.directory '*'`.
 17. Manually run `testbot_maintenance.sh`, `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/.buildkite/testbot_maintenance.sh && bash testbot_maintenance.sh`.
 18. Run `.buildkite/sanetestbot.sh` to check your work.
@@ -96,7 +96,7 @@ We are using [Buildkite](https://buildkite.com/ddev) for Windows and macOS testi
 
 1. Uninstall Docker Desktop.
 2. Remove all of the entries (especially `host.docker.internal`) that Docker Desktop has added in `C:\Windows\system32\drivers\etc\hosts`.
-3. Install docker and basics in WSL2:
+3. Install Docker and basics in WSL2:
 
     ```bash
     sudo mkdir -p /etc/apt/keyrings

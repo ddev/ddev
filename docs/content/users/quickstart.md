@@ -627,7 +627,7 @@ The first, the [`ddev delete`](../users/usage/commands.md#delete) command, is de
 or
 `ddev delete --omit-snapshot <projectname>`
 
-If you simply don’t want the project to show up in [`ddev list`](../users/usage/commands.md#list) anymore, use [`ddev stop`](../users/usage/commands.md#stop)—which is nondestructive—to unlist the project until the next time you run [`ddev start`](../users/usage/commands.md#start) or [`ddev config`](../users/usage/commands.md#config):
+If you don’t want the project to show up in [`ddev list`](../users/usage/commands.md#list) anymore, use [`ddev stop`](../users/usage/commands.md#stop)—which is nondestructive—to unlist the project until the next time you run [`ddev start`](../users/usage/commands.md#start) or [`ddev config`](../users/usage/commands.md#config):
 
 ```bash
 ddev stop --unlist <projectname>

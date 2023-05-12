@@ -10,7 +10,7 @@ Once [DDEV’s installed](./install/ddev-installation.md), setting up a new proj
 DDEV automatically detects your project type and docroot. If it guessed wrong or there’s something else you want to change, update [project options](./configuration/config.md) by editing `.ddev/config.yaml` and running [`ddev describe`](./usage/commands.md#start), or using the [`ddev config`](./usage/commands.md#config) command.
 
 !!!tip "What’s a project type?"
-    A `php` project type is the most general, ready for whatever modern PHP or static HTML/JS project you might be working on. It’s just as full-featured as other [CMS-specific options](./quickstart.md), without any assumptions about your configuration or presets. (You can use this with a CMS or framework just fine!)
+    A `php` project type is the most general, ready for whatever modern PHP or static HTML/JS project you might be working on. It’s as full-featured as other [CMS-specific options](./quickstart.md), without any assumptions about your configuration or presets. (You can use this with a CMS or framework fine!)
 
 If you need to configure your app to connect to the database, the hostname, username, password, and database name are each `db`.
 

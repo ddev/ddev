@@ -13,7 +13,7 @@ Please use [`ddev snapshot`](commands.md#snapshot) or [`ddev export-db`](command
 
 You can use [`ddev clean`](commands.md#clean) to uninstall the vast majority of things DDEV has touched. For example, `ddev clean <project>` or `ddev clean --all`.
 
-To uninstall just a project: [`ddev delete <project>`](commands.md#delete). This removes any hostnames in `/etc/hosts` and removes your database. If you don’t want it to make a database backup/snapshot on the way down, include the `--omit-snapshot` option: `ddev delete --omit-snapshot <project>`.
+To uninstall one project, run [`ddev delete <project>`](commands.md#delete). This removes any hostnames in `/etc/hosts` and removes your database. If you don’t want it to make a database backup/snapshot on the way down, include the `--omit-snapshot` option: `ddev delete --omit-snapshot <project>`.
 
 To remove all DDEV-owned `/etc/hosts` entries: [`ddev hostname --remove-inactive`](commands.md#hostname).
 
@@ -21,7 +21,7 @@ To remove the global `.ddev` directory: `rm -r ~/.ddev`.
 
 To remove the global `.ddev_mutagen_data_directory` directory: `rm -r ~/.ddev_mutagen_data_directory`.
 
-If you installed Docker just for DDEV and want to uninstall it with all containers and images, just uninstall it for your version of Docker.
+If you installed Docker only for DDEV and want to uninstall it with all containers and images, uninstall it for your version of Docker.
 
 Otherwise:
 

@@ -17,8 +17,8 @@ Each provider recipe is a file named `<provider>.yaml` and consists of several m
 * `environment_variables`: Environment variables will be created in the web container for each of these during pull or push operations. They’re used to provide context (project ID, environment name, etc.) for each of the other stanzas.
 * `db_pull_command`: A script that determines how DDEV should obtain a database. Its job is to create a gzipped database dump in `/var/www/html/.ddev/.downloads/db.sql.gz`. This is optional; if nothing has to be done to obtain the database dump, this step can be omitted.
 * `db_import_command`: (optional) A script that imports the downloaded database. This is for advanced usages like multiple databases. The default behavior only imports a single database into the `db` database. The [localfile example](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/localfile.yaml.example) uses this technique.
-* `files_pull_command`: A script that determines how DDEV can get user-generated files from upstream. Its job is to copy the files from upstream to `/var/www/html/.ddev/.downloads/files`. If nothing has to be done to obtain the files, this step can simply run `true`.
-* `files_import_command`: (optional) A script that imports the downloaded files. There are a number of situations where it’s messy to push a directory of files around, and one can just put it directly where it’s needed. The [localfile example](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/localfile.yaml.example) uses this technique.
+* `files_pull_command`: A script that determines how DDEV can get user-generated files from upstream. Its job is to copy the files from upstream to `/var/www/html/.ddev/.downloads/files`. If nothing has to be done to obtain the files, this step can run `true`.
+* `files_import_command`: (optional) A script that imports the downloaded files. There are a number of situations where it’s messy to push a directory of files around, and one can put it directly where it’s needed. The [localfile example](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/localfile.yaml.example) uses this technique.
 * `db_push_command`: A script that determines how DDEV should push a database. Its job is to take a gzipped database dump from `/var/www/html/.ddev/.downloads/db.sql.gz` and load it on the hosting provider.
 * `files_push_command`: A script that determines how DDEV push user-generated files to upstream. Its job is to copy the files from the project’s user-files directory (`$DDEV_FILES_DIR`) to the correct place on the upstream provider.
 
@@ -28,7 +28,7 @@ There are [hooks](../configuration/hooks.md) available to execute commands befor
 
 ## Example Integrations and Hints
 
-* All of the [supplied integrations](https://github.com/ddev/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers) are just examples of what you can do.
+* All of the [supplied integrations](https://github.com/ddev/ddev/tree/master/pkg/ddevapp/dotddev_assets/providers) are examples of what you can do.
 * You can name a provider anything you want. For example, an Acquia integration doesn’t have to be named “acquia”, it can be named “upstream”. This is a great technique for [downloading a particular multisite](https://stackoverflow.com/a/68553116/215713).
 
 ## Provider Debugging
