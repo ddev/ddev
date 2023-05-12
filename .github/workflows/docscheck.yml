@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: rojopolis/spellcheck-github-actions@v0
         name: Spellcheck
-      - uses: rdohms/textlint-action@v1
+      - uses: rdohms/textlint-action@latest
         with:
           rulesets: 'textlint-filter-rule-comments textlint-rule-no-todo textlint-rule-stop-words textlint-rule-terminology'
           path: '{README.md,version-history.md,docs/**}'
