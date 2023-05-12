@@ -83,7 +83,7 @@ The type and version of the database engine the project should use.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | MariaDB 10.4 | Can be MariaDB 5.5–10.8, MySQL 5.5–8.0, or PostgreSQL 9–15.<br>See [Database Server Types](../extend/database-types.md) for examples and caveats.
+| :octicons-file-directory-16: project | MariaDB 10.4 | Can be MariaDB 5.5–10.8 or 10.11, MySQL 5.5–8.0, or PostgreSQL 9–15.<br>See [Database Server Types](../extend/database-types.md) for examples and caveats.
 
 ## `dbimage_extra_packages`
 
