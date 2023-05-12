@@ -15,7 +15,6 @@ import (
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/rogpeppe/go-internal/semver"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"gopkg.in/segmentio/analytics-go.v3"
 )
 
@@ -137,9 +136,6 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 // Execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	// bind flags to viper config values...allows override by flag
-	viper.AutomaticEnv() // read in environment variables that match
-
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(-1)
 	}
