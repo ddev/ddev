@@ -39,7 +39,7 @@ func dbTypeVersionFromString(in string) string {
 	postgresStyle := regexp.MustCompile(`^[0-9]+$`)
 	postgresV9Style := regexp.MustCompile(`^9\.?`)
 	oldStyle := regexp.MustCompile(`^[0-9]+\.[0-9]$`)
-	newStyleV119 := regexp.MustCompile(`^(mysql|mariadb)_[0-9]+\.[0-9]$`)
+	newStyleV119 := regexp.MustCompile(`^(mysql|mariadb)_[0-9]+\.[0-9][0-9]?$`)
 
 	if newStyleV119.MatchString(in) {
 		idType = "current"
