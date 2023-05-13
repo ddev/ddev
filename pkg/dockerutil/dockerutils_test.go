@@ -38,7 +38,6 @@ func testMain(m *testing.M) int {
 	_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", globalconfig.GetMutagenDataDirectory())
 
 	// prep docker container for docker util tests
-	client := GetDockerClient()
 	imageExists, err := ImageExistsLocally(versionconstants.GetWebImage())
 	if err != nil {
 		logOutput.Errorf("Failed to check for local image %s: %v", versionconstants.GetWebImage(), err)
@@ -62,44 +61,13 @@ func testMain(m *testing.M) int {
 		}
 	}
 
-	container, err := client.CreateContainer(docker.CreateContainerOptions{
-		Name: testContainerName,
-		Config: &docker.Config{
-			Image: versionconstants.GetWebImage(),
-			Labels: map[string]string{
-				"com.docker.compose.service": "web",
-				"com.ddev.site-name":         testContainerName,
-			},
-			Env: []string{
-				"HOTDOG=superior-to-corndog",
-				"POTATO=future-fry",
-				"DDEV_WEBSERVER_TYPE=nginx-fpm",
-			},
-			User: "33:33", // The "www-data" pre-installed in container
-		},
-		HostConfig: &docker.HostConfig{
-			PortBindings: map[docker.Port][]docker.PortBinding{
-				"80/tcp": {
-					{HostPort: "8889"},
-				},
-				"8025/tcp": {
-					{HostPort: "8890"},
-				},
-			},
-		},
-	})
+	containerID, err := startTestContainer()
 	if err != nil {
-		logOutput.Errorf("failed to create/start docker container: %v", err)
-		return 1
-	}
-	log.Printf("StartContainer() at %v", time.Now())
-	err = client.StartContainer(container.ID, nil)
-	if err != nil {
-		logOutput.Errorf("-- FAIL: dockerutils_test failed to StartContainer: %v", err)
-		return 2
+		logOutput.Errorf("-- FAIL: dockerutils_test failed to start test container: %v", err)
+		return 3
 	}
 	defer func() {
-		err = RemoveContainer(container.ID)
+		err = RemoveContainer(containerID)
 		if err != nil {
 			logOutput.Errorf("-- FAIL: dockerutils_test failed to remove test container: %v", err)
 		}
@@ -109,14 +77,28 @@ func testMain(m *testing.M) int {
 	log.Printf("ContainerWait returrned at %v out='%s' err='%v'", time.Now(), out, err)
 
 	if err != nil {
-		logout, _ := exec.RunHostCommand("docker", "logs", container.Name)
-		inspectOut, _ := exec.RunHostCommand("sh", "-c", fmt.Sprintf("docker inspect %s|jq -r '.[0].State.Health.Log'", container.Name))
+		logout, _ := exec.RunHostCommand("docker", "logs", containerID)
+		inspectOut, _ := exec.RunHostCommand("sh", "-c", fmt.Sprintf("docker inspect %s|jq -r '.[0].State.Health.Log'", containerID))
 		log.Printf("FAIL: dockerutils_test testMain failed to ContainerWait for container: %v, logs\n========= container logs ======\n%s\n======= end logs =======\n==== health log =====\ninspectOut\n%s\n========", err, logout, inspectOut)
 		return 4
 	}
 	exitStatus := m.Run()
 
 	return exitStatus
+}
+
+// start container for tests; returns containerID, error
+func startTestContainer() (string, error) {
+	containerID, _, err := RunSimpleContainer(versionconstants.GetWebImage(), testContainerName, nil, nil, []string{
+		"HOTDOG=superior-to-corndog",
+		"POTATO=future-fry",
+		"DDEV_WEBSERVER_TYPE=nginx-fpm",
+	}, nil, "33", false, true, map[string]string{"com.docker.compose.service": "web", "com.ddev.site-name": testContainerName})
+	if err != nil {
+		return "", err
+	}
+
+	return containerID, nil
 }
 
 // TestGetContainerHealth tests the function for processing container readiness.
@@ -127,30 +109,44 @@ func TestGetContainerHealth(t *testing.T) {
 	labels := map[string]string{
 		"com.ddev.site-name": testContainerName,
 	}
+
+	t.Cleanup(func() {
+		container, err := FindContainerByLabels(labels)
+		if err == nil || container != nil {
+			err = RemoveContainer(container.ID)
+			assert.NoError(err)
+		}
+
+		// Make sure test container exists again
+		_, err = startTestContainer()
+		assert.NoError(err)
+		healthDetail, err := ContainerWait(30, labels)
+		assert.NoError(err)
+
+		container, err = FindContainerByLabels(labels)
+		assert.NoError(err)
+		assert.NotNil(container)
+
+		status, healthDetail := GetContainerHealth(container)
+		assert.Equal("/var/www/html:OK mailhog:OK phpstatus:OK ", healthDetail)
+		assert.Equal("healthy", status)
+	})
+
 	container, err := FindContainerByLabels(labels)
 	require.NoError(t, err)
 	require.NotNil(t, container)
 
-	status, _ := GetContainerHealth(container)
-	assert.Equal(status, "healthy")
+	status, log := GetContainerHealth(container)
+	assert.Equal(status, "healthy", "container should be healthy; log=%v", log)
 
 	// Now break the container and make sure it's unhealthy
-	stdout, stderr, err := Exec(container.ID, `supervisorctl stop php-fpm && /kill_healthcheck.sh`, "33")
-	require.NoError(t, err, "stdout='%s', stderr='%s'", stdout, stderr)
-
-	status, _ = GetContainerHealth(container)
-	assert.Equal(status, "unhealthy")
-
-	err = client.StartContainer(container.ID, nil)
-	assert.NoError(err)
-	healthDetail, err := ContainerWait(30, labels)
+	err = client.StopContainer(container.ID, 10)
 	assert.NoError(err)
 
-	assert.Equal("/var/www/html:OK mailhog:OK phpstatus:OK ", healthDetail)
+	status, log = GetContainerHealth(container)
+	assert.Equal(status, "unhealthy", "container should be unhealthy; log=%v", log)
+	assert.NoError(err)
 
-	status, healthDetail = GetContainerHealth(container)
-	assert.Equal("healthy", status)
-	assert.Equal("/var/www/html:OK mailhog:OK phpstatus:OK ", healthDetail)
 }
 
 // TestContainerWait tests the error cases for the container check wait loop.
