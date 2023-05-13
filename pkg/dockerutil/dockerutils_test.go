@@ -131,10 +131,14 @@ func TestGetContainerHealth(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, container)
 
-	err = client.StopContainer(container.ID, 10)
-	assert.NoError(err)
-
 	status, _ := GetContainerHealth(container)
+	assert.Equal(status, "healthy")
+
+	// Now break the container and make sure it's unhealthy
+	stdout, stderr, err := Exec(container.ID, `supervisorctl stop php-fpm && /kill_healthcheck.sh`, "33")
+	require.NoError(t, err, "stdout='%s', stderr='%s'", stdout, stderr)
+
+	status, _ = GetContainerHealth(container)
 	assert.Equal(status, "unhealthy")
 
 	err = client.StartContainer(container.ID, nil)
