@@ -186,6 +186,17 @@ func TestCmdGetInstalled(t *testing.T) {
 
 	assert.Equal(memcachedManifest["Version"], installedManifests["memcached"]["Version"])
 	assert.Equal(redisManifest["Version"], installedManifests["redis"]["Version"])
+
+	// Now try the remove using other techniques (full repo name, partial repo name)
+	for _, n := range []string{"ddev/ddev-redis", "ddev-redis", "redis"} {
+		out, err = exec.RunHostCommand(DdevBin, "get", "ddev/ddev-redis", "--json-output")
+		require.NoError(t, err, "failed ddev get %s: %v (output='%s')", n, err, out)
+		out, err = exec.RunHostCommand(DdevBin, "get", "--remove", n)
+		require.NoError(t, err, "unable to ddev get --remove %s: %v, output='%s'", n, err, out)
+	}
+	// Now make sure we put it back so it can be removed in cleanu
+	out, err = exec.RunHostCommand(DdevBin, "get", "ddev/ddev-redis")
+	assert.NoError(err, "unable to ddev get redis: %v, output='%s'", err, out)
 }
 
 // getManifestFromLogs returns the manifest built from 'raw' section of
