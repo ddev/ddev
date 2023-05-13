@@ -16,9 +16,6 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     # Initialize mkcert
     mkcert -install
-
-    # Optionally enable Mutagen for the best performance (recommended!)
-    ddev config global --mutagen-enabled
     ```
 
     ### Install Script
@@ -28,9 +25,6 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ```bash
     # Download and run the install script
     curl -fsSL https://ddev.com/install.sh | bash
-
-    # Optionally enable Mutagen for the best performance (recommended!)
-    ddev config global --mutagen-enabled
     ```
 
     ??? "Need a specific version?"

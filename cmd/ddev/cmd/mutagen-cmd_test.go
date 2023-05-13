@@ -2,23 +2,25 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/stretchr/testify/require"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestCmdMutagen tests `ddev mutagen` config and subcommands
 func TestCmdMutagen(t *testing.T) {
 	assert := asrt.New(t)
 
-	if nodeps.MutagenEnabledDefault || nodeps.NoBindMountsDefault {
+	if nodeps.PerformanceDefault == types.PerformanceMutagen || nodeps.NoBindMountsDefault {
 		t.Skip("Skipping because mutagen on by default")
 	}
 
@@ -36,23 +38,44 @@ func TestCmdMutagen(t *testing.T) {
 	t.Cleanup(func() {
 		err = app.Stop(true, false)
 		assert.NoError(err)
-		_, err = exec.RunHostCommand(DdevBin, "config", "--mutagen-enabled=false")
+
+		_, err = exec.RunHostCommand(DdevBin, "config", "--performance=")
 		assert.NoError(err)
-		_, err = exec.RunHostCommand(DdevBin, "config", "global", "--mutagen-enabled=false")
+		_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance=")
+		assert.NoError(err)
+
+		err = globalconfig.ReadGlobalConfig()
 		assert.NoError(err)
 		app, err = ddevapp.NewApp(site.Dir, true)
 		assert.NoError(err)
+
 		err = app.Start()
 		assert.NoError(err)
-		assert.False(app.IsMutagenEnabled())
+
+		require.Equal(t, runtime.GOOS == "darwin" || runtime.GOOS == "windows", globalconfig.DdevGlobalConfig.IsMutagenEnabled())
+		require.Equal(t, runtime.GOOS == "darwin" || runtime.GOOS == "windows", app.IsMutagenEnabled())
+
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 	})
 
-	require.False(t, globalconfig.DdevGlobalConfig.MutagenEnabledGlobal)
+	require.Equal(t, runtime.GOOS == "darwin" || runtime.GOOS == "windows", globalconfig.DdevGlobalConfig.IsMutagenEnabled())
+	require.Equal(t, runtime.GOOS == "darwin" || runtime.GOOS == "windows", app.IsMutagenEnabled())
+
+	// Turn mutagen off globally
+	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance=off")
+	assert.NoError(err)
+
+	err = globalconfig.ReadGlobalConfig()
+	require.NoError(t, err)
+	app, err = ddevapp.GetActiveApp("")
+	require.NoError(t, err)
+
+	require.False(t, globalconfig.DdevGlobalConfig.IsMutagenEnabled())
 	require.False(t, app.IsMutagenEnabled())
 
-	_, err = exec.RunHostCommand(DdevBin, "config", "--mutagen-enabled=true")
+	// Project override, turn mutagen on for the project
+	_, err = exec.RunHostCommand(DdevBin, "config", "--performance=mutagen")
 	assert.NoError(err)
 
 	// Have to reload the app, since we just changed the config
@@ -89,7 +112,7 @@ func TestCmdMutagen(t *testing.T) {
 	require.NoError(t, err)
 
 	// Turn mutagen off again
-	_, err = exec.RunHostCommand(DdevBin, "config", "--mutagen-enabled=false")
+	_, err = exec.RunHostCommand(DdevBin, "config", "--performance=")
 	require.NoError(t, err)
 
 	app, err = ddevapp.NewApp("", false)
@@ -98,7 +121,7 @@ func TestCmdMutagen(t *testing.T) {
 	// Make sure it got turned off
 	assert.False(app.IsMutagenEnabled())
 
-	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--mutagen-enabled=true")
+	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance=mutagen")
 	assert.NoError(err)
 
 	err = globalconfig.ReadGlobalConfig()
@@ -107,10 +130,10 @@ func TestCmdMutagen(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make sure it got turned on
-	assert.True(app.MutagenEnabledGlobal)
+	assert.True(app.IsMutagenEnabled())
 
 	// Turn it off again
-	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--mutagen-enabled=false")
+	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance=off")
 	require.NoError(t, err)
 	err = globalconfig.ReadGlobalConfig()
 	require.NoError(t, err)
@@ -119,5 +142,5 @@ func TestCmdMutagen(t *testing.T) {
 	require.NoError(t, err)
 
 	// Make sure it got turned off
-	assert.False(app.MutagenEnabledGlobal)
+	assert.False(app.IsMutagenEnabled())
 }

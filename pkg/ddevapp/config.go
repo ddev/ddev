@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -30,17 +31,16 @@ var hostRegex = regexp.MustCompile(`^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-z
 
 // init() is for testing situations only, allowing us to override the default webserver type
 // or caching behavior
-
 func init() {
 	// This is for automated testing only. It allows us to override the webserver type.
 	if testWebServerType := os.Getenv("DDEV_TEST_WEBSERVER_TYPE"); testWebServerType != "" {
 		nodeps.WebserverDefault = testWebServerType
 	}
-	if testNFSMount := os.Getenv("DDEV_TEST_USE_NFSMOUNT"); testNFSMount != "" {
-		nodeps.NFSMountEnabledDefault = true
+	if testNFSMount := os.Getenv("DDEV_TEST_USE_NFSMOUNT"); testNFSMount == "true" {
+		nodeps.PerformanceDefault = types.PerformanceNFS
 	}
 	if testMutagen := os.Getenv("DDEV_TEST_USE_MUTAGEN"); testMutagen == "true" {
-		nodeps.MutagenEnabledDefault = true
+		nodeps.PerformanceDefault = types.PerformanceMutagen
 	}
 	if os.Getenv("DDEV_TEST_NO_BIND_MOUNTS") == "true" {
 		nodeps.NoBindMountsDefault = true
@@ -48,7 +48,6 @@ func init() {
 	if os.Getenv("DDEV_TEST_USE_NGINX_PROXY_ROUTER") == "true" {
 		nodeps.UseNginxProxyRouter = true
 	}
-
 }
 
 // NewApp creates a new DdevApp struct with defaults set and overridden by any existing config.yml.
@@ -71,22 +70,20 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	if !fileutil.FileExists(app.AppRoot) {
 		return app, fmt.Errorf("project root %s does not exist", app.AppRoot)
 	}
+
 	app.ConfigPath = app.GetConfigPath("config.yaml")
 	app.Type = nodeps.AppTypePHP
 	app.PHPVersion = nodeps.PHPDefault
 	app.ComposerVersion = nodeps.ComposerDefault
 	app.NodeJSVersion = nodeps.NodeJSDefault
 	app.WebserverType = nodeps.WebserverDefault
-	app.NFSMountEnabled = nodeps.NFSMountEnabledDefault
-	app.NFSMountEnabledGlobal = globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal
-	app.MutagenEnabled = nodeps.MutagenEnabledDefault
-	app.MutagenEnabledGlobal = globalconfig.DdevGlobalConfig.MutagenEnabledGlobal
+	app.Performance = nodeps.PerformanceDefault
 
 	// Turn off mutagen on python projects until initial setup can be done
 	if app.WebserverType == nodeps.WebserverNginxGunicorn {
-		app.MutagenEnabled = false
-		app.MutagenEnabledGlobal = false
+		app.Performance = types.PerformanceOff
 	}
+
 	app.FailOnHookFail = nodeps.FailOnHookFailDefault
 	app.FailOnHookFailGlobal = globalconfig.DdevGlobalConfig.FailOnHookFailGlobal
 	app.MailhogPort = nodeps.DdevDefaultMailhogPort
@@ -750,7 +747,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		OmitRouter:                nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer),
 		OmitSSHAgent:              nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent"),
 		BindAllInterfaces:         app.BindAllInterfaces,
-		MutagenEnabled:            app.IsMutagenEnabled() || globalconfig.DdevGlobalConfig.NoBindMounts,
+		MutagenEnabled:            app.IsMutagenEnabled(),
 
 		NFSMountEnabled:       app.IsNFSMountEnabled(),
 		NFSSource:             "",
@@ -1362,13 +1359,4 @@ func validateHookYAML(source []byte) error {
 	}
 
 	return nil
-}
-
-// IsNFSMountEnabled determines whether NFS is enabled.
-// Mutagen trumps NFS, so if mutagen is enabled, NFS is not.
-func (app *DdevApp) IsNFSMountEnabled() bool {
-	if !app.IsMutagenEnabled() && (app.NFSMountEnabled || app.NFSMountEnabledGlobal) {
-		return true
-	}
-	return false
 }

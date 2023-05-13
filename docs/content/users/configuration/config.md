@@ -253,16 +253,6 @@ Port for project’s MailHog HTTP URL.
 | -- | -- | --
 | :octicons-file-directory-16: project | `8025` | Can be changed to avoid a port conflict.
 
-## `mutagen_enabled`
-
-Whether to enable [Mutagen asynchronous caching](../install/performance.md#mutagen) for all projects.
-
-| Type | Default | Usage
-| -- | -- | --
-| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `false` | Can be `true` or `false`; only `true` has any effect.
-
-This overrides NFS mounting as it’s incompatible with NFS.
-
 ## `name`
 
 The URL-friendly name DDEV should use to reference the project.
@@ -270,19 +260,6 @@ The URL-friendly name DDEV should use to reference the project.
 | Type | Default | Usage
 | -- | -- | --
 | :octicons-file-directory-16: project | enclosing directory name | Must be unique; no two projects can have the same name. It’s best if this matches the directory name. If this option is omitted, the project will take the name of the enclosing directory.
-
-## `nfs_mount_enabled`
-
-Whether to use [NFS](../install/performance.md#nfs) to mount the project into the container for performance. (Mostly superseded by [`mutagen_enabled`](#mutagen_enabled).)
-
-| Type | Default | Usage
-| -- | -- | --
-| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `false` | Can be `true` or `false`; only `true` has any effect.
-
-!!!tip "Workstation configuration required!"
-    See the [NFS section](../install/performance.md#nfs) on the Performance page.
-
-This is typically a global setting. If it’s ever set in both places, the global config will override the project-specific value.
 
 ## `ngrok_args`
 
@@ -352,6 +329,19 @@ Whether to override config values instead of merging.
 When `true`, the `config.*.yaml` file with the option will have its settings *override* rather than *merge with* others. Allows statements like `nfs_mount_enabled: false` or `additional_hostnames: []` to work.
 
 See [Extending `config.yaml` with Custom `config.*.yaml` Files](../extend/customization-extendibility.md#extending-configyaml-with-custom-configyaml-files).
+
+## `performance`
+
+Defines the performance optimization strategy to be used. Currently [Mutagen asynchronous caching](../install/performance.md#mutagen) and [NFS](../install/performance.md#nfs) are supported. Mutagen is enabled by default on Mac and Windows.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `` | Can be `default`, `off`, `mutagen`, or `nfs`.
+
+This is typically a global setting. The project-specific value will override global config.
+
+!!!tip "Workstation configuration required for NFS!"
+    See the [NFS section](../install/performance.md#nfs) on the Performance page.
 
 ## `php_version`
 

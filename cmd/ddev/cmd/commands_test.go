@@ -34,7 +34,7 @@ func TestCustomCommands(t *testing.T) {
 	// so we don't accidentally start it in the wrong directory
 	err = globalconfig.ReadGlobalConfig()
 	require.NoError(t, err)
-	if globalconfig.DdevGlobalConfig.MutagenEnabledGlobal {
+	if globalconfig.DdevGlobalConfig.IsMutagenEnabled() {
 		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "daemon", "start")
 		require.NoError(t, err, "unable to run mutagen daemon start, out='%s', err=%v", out, err)
 	}

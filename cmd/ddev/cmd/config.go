@@ -3,16 +3,15 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/ddev/ddev/pkg/config/types"
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
-
-	"path/filepath"
-
-	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
@@ -101,11 +100,8 @@ var (
 	// omitContainersArg allows user to determine value of omit_containers
 	omitContainersArg string
 
-	// mutagenEnabled sets mutagen_enabled
-	mutagenEnabled bool
-
-	// nfsMountEnabled sets nfs_mount_enabled
-	nfsMountEnabled bool
+	// performance sets performance
+	performance types.Performance
 
 	// failOnHookFail sets fail_on_hook_fail
 	failOnHookFail bool
@@ -250,9 +246,8 @@ func init() {
 	ConfigCommand.Flags().BoolVar(&webWorkingDirDefaultArg, "web-working-dir-default", false, "Unsets a web service working directory override")
 	ConfigCommand.Flags().BoolVar(&dbWorkingDirDefaultArg, "db-working-dir-default", false, "Unsets a db service working directory override")
 	ConfigCommand.Flags().BoolVar(&workingDirDefaultsArg, "working-dir-defaults", false, "Unsets all service working directory overrides")
-	ConfigCommand.Flags().BoolVar(&mutagenEnabled, "mutagen-enabled", false, "enable mutagen asynchronous update of project in web container")
+	ConfigCommand.Flags().StringVar(&performance, types.FlagPerformance, types.FlagPerformanceDefault, types.FlagPerformanceDescription())
 
-	ConfigCommand.Flags().BoolVar(&nfsMountEnabled, "nfs-mount-enabled", false, "enable NFS mounting of project in container")
 	ConfigCommand.Flags().BoolVar(&failOnHookFail, "fail-on-hook-fail", false, "Decide whether 'ddev start' should be interrupted by a failing hook")
 	ConfigCommand.Flags().StringVar(&hostWebserverPortArg, "host-webserver-port", "", "The web container's localhost-bound port")
 	ConfigCommand.Flags().StringVar(&hostHTTPSPortArg, "host-https-port", "", "The web container's localhost-bound https port")
@@ -470,16 +465,11 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		app.HostDBPort = hostDBPortArg
 	}
 
-	if cmd.Flag("nfs-mount-enabled").Changed {
-		app.NFSMountEnabled = nfsMountEnabled
-	}
-
-	if cmd.Flag("mutagen-enabled").Changed {
-		app.MutagenEnabled = mutagenEnabled
-		if app.IsNFSMountEnabled() {
-			util.Warning("nfs-mount-enabled disabled because incompatible with mutagen, which is enabled")
-			app.NFSMountEnabled = false
-			app.NFSMountEnabledGlobal = false
+	if cmd.Flag(types.FlagPerformance).Changed {
+		if err := types.CheckValidPerformance(performance); err != nil {
+			util.Error("%s. Not changing performance.", err)
+		} else {
+			app.Performance = performance
 		}
 	}
 

@@ -3,7 +3,6 @@ package globalconfig
 import (
 	"context"
 	"fmt"
-	"github.com/ddev/ddev/pkg/globalconfig/types"
 	"net"
 	"os"
 	"os/exec"
@@ -13,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	configTypes "github.com/ddev/ddev/pkg/config/types"
+	"github.com/ddev/ddev/pkg/globalconfig/types"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/sirupsen/logrus"
@@ -35,8 +36,7 @@ type ProjectInfo struct {
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
 	OmitContainersGlobal             []string                `yaml:"omit_containers,flow"`
-	NFSMountEnabledGlobal            bool                    `yaml:"nfs_mount_enabled"`
-	MutagenEnabledGlobal             bool                    `yaml:"mutagen_enabled"`
+	Performance                      configTypes.Performance `yaml:"performance"`
 	InstrumentationOptIn             bool                    `yaml:"instrumentation_opt_in"`
 	InstrumentationQueueSize         int                     `yaml:"instrumentation_queue_size,omitempty"`
 	InstrumentationReportingInterval time.Duration           `yaml:"instrumentation_reporting_interval,omitempty"`
@@ -154,7 +154,7 @@ func GetTableStyle() string {
 // ValidateGlobalConfig validates global config
 func ValidateGlobalConfig() error {
 	if !IsValidOmitContainers(DdevGlobalConfig.OmitContainersGlobal) {
-		return fmt.Errorf("Invalid omit_containers: %s, must contain only %s", strings.Join(DdevGlobalConfig.OmitContainersGlobal, ","), strings.Join(GetValidOmitContainers(), ",")).(InvalidOmitContainers)
+		return fmt.Errorf("invalid omit_containers: %s, must contain only %s", strings.Join(DdevGlobalConfig.OmitContainersGlobal, ","), strings.Join(GetValidOmitContainers(), ",")).(InvalidOmitContainers)
 	}
 
 	if !types.IsValidRouterType(DdevGlobalConfig.Router) {
@@ -168,12 +168,15 @@ func ValidateGlobalConfig() error {
 	if !IsValidXdebugIDELocation(DdevGlobalConfig.XdebugIDELocation) {
 		return fmt.Errorf(`xdebug_ide_location must be IP address or one of %v`, ValidXdebugIDELocations)
 	}
+
 	if DdevGlobalConfig.DisableHTTP2 && DdevGlobalConfig.IsTraefikRouter() {
 		return fmt.Errorf("disable_http2 and router = traefik are mutually incompatible, as Traefik does not support disabling HTTP2")
 	}
+
 	if DdevGlobalConfig.IsTraefikRouter() && (DdevGlobalConfig.UseLetsEncrypt || DdevGlobalConfig.LetsEncryptEmail != "") {
 		return fmt.Errorf("use-letsencrypt is not directly supported with traefik. but can be configured with custom config, see https://doc.traefik.io/traefik/https/acme/")
 	}
+
 	return nil
 }
 
@@ -203,7 +206,7 @@ func ReadGlobalConfig() error {
 
 	source, err := os.ReadFile(globalConfigFile)
 	if err != nil {
-		return fmt.Errorf("Unable to read ddev global config file %s: %v", source, err)
+		return fmt.Errorf("unable to read ddev global config file %s: %v", source, err)
 	}
 
 	// ReadConfig config values from file.
@@ -227,6 +230,7 @@ func ReadGlobalConfig() error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -263,10 +267,21 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # Reporting interval in hours. If the last report was longer ago, collected
 # data is sent.
 # instrumentation_reporting_interval: 24
+
+# performance: ""
+# DDEV offers performance optimization strategies to improve the filesystem
+# performance depending on your host system. Can be overridden with the project
+# config.
 #
-# You can enable nfs mounting for all projects with
-# nfs_mount_enabled: true
+# Possible values are:
+#   - "default": will use the recommended value for this operating system.
+#   - "off":     will disable performance optimization.
+#   - "mutagen": will enable Mutagen.
+#   - "nfs":     will enable NFS.
 #
+# See https://ddev.readthedocs.io/en/latest/users/install/performance/#mutagen
+# and https://ddev.readthedocs.io/en/latest/users/install/performance/#nfs.
+
 # You can set the global project_tld. This way any project will use this tld. If not
 # set the local project_tld is used, or the default of ddev.
 # project_tld: ""

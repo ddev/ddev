@@ -2,16 +2,19 @@ package cmd
 
 import (
 	"fmt"
+	"path/filepath"
+	"runtime"
+	"strings"
+
+	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/spf13/cobra"
-	"path/filepath"
-	"runtime"
-	"strings"
 )
 
 // DebugNFSMountCmd implements the ddev debug nfsmount command
@@ -68,12 +71,12 @@ var DebugNFSMountCmd = &cobra.Command{
 		util.Success("")
 		util.Success("Successfully accessed NFS mount of %s", app.AppRoot)
 		switch {
-		case app.NFSMountEnabledGlobal:
-			util.Success("nfs_mount_enabled is set globally")
-		case app.NFSMountEnabled:
-			util.Success("nfs_mount_enabled is true in this project (%s), but is not set globally", app.Name)
+		case globalconfig.DdevGlobalConfig.GetPerformance() == types.PerformanceNFS:
+			util.Success("performance=nfs is set globally")
+		case app.Performance == types.PerformanceNFS:
+			util.Success("performance=nfs is set in this project (%s), but is not set globally", app.Name)
 		default:
-			util.Warning("nfs_mount_enabled is not set either globally or in this project. \nUse `ddev config global --nfs-mount-enabled` to enable it.")
+			util.Warning("performance=nfs is not set either globally or in this project. \nUse `ddev config --performance=nfs` to enable it for this project.")
 		}
 	},
 }

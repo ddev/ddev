@@ -46,11 +46,8 @@ const DdevFileSignature = "#ddev-generated"
 // WebserverDefault is the default webserver type, overridden by $DDEV_WEBSERVER_TYPE
 var WebserverDefault = WebserverNginxFPM
 
-// MutagenEnabledDefault is default value for app.MutagenEnabled
-var MutagenEnabledDefault = false
-
-// NFSMountEnabledDefault is default value for app.NFSMountEnabled
-var NFSMountEnabledDefault = false
+// PerformanceDefault is default value for app.Performance
+var PerformanceDefault = ""
 
 const NodeJSDefault = "18"
 

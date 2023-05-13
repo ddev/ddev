@@ -190,12 +190,11 @@ Flags:
 * `--image-defaults`: Sets the default web and db container images.
 * `--mailhog-https-port`: Router port to be used for MailHog HTTPS access.
 * `--mailhog-port`: Router port to be used for MailHog HTTP access.
-* `--mutagen-enabled`: Enable Mutagen asynchronous update of project in web container.
-* `--nfs-mount-enabled`: Enable NFS mounting of project in container.
 * `--ngrok-args`: Provide extra args to ngrok in `ddev share`.
 * `--no-project-mount`: Whether or not to skip mounting project code into the web container.
 * `--nodejs-version`: Specify the Node.js version to use if you don’t want the default Node.js 16.
 * `--omit-containers`: Comma-delimited list of container types that should not be started when the project is started.
+* `--performance`: Performance optimization strategy, possible values are "default", "off", "mutagen", "nfs".
 * `--php-version`: PHP version that will be enabled in the web container.
 * `--project-name`: Provide the project name of project to configure. (normally the same as the last part of directory name)
 * `--project-tld`: Set the top-level domain to be used for projects. (default `"ddev.site"`)
@@ -233,10 +232,9 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--instrumentation-opt-in`: `instrumentation-opt-in=true`.
 * `--internet-detection-timeout-ms`: Increase timeout when checking internet timeout, in milliseconds. (default `3000`)
 * `--letsencrypt-email`: Email associated with Let’s Encrypt; `ddev global --letsencrypt-email=me@example.com`.
-* `--mutagen-enabled`: If `true`, web container will use Mutagen caching/asynchronous updates.
-* `--nfs-mount-enabled`: Enable NFS mounting on all projects globally.
 * `--no-bind-mounts`: If `true`, don’t use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible. (default is equal to `--no-bind-mounts=true`)
 * `--omit-containers`: For example, `--omit-containers=ddev-ssh-agent`.
+* `--performance`: Performance optimization strategy, possible values are "default", "off", "mutagen", "nfs".
 * `--router-bind-all-interfaces`: `router-bind-all-interfaces=true`.
 * `--simple-formatting`: If `true`, use simple formatting and no color for tables.
 * `--table-style`: Table style for list and describe, see `~/.ddev/global_config.yaml` for values.

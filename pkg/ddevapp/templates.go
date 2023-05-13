@@ -98,12 +98,17 @@ const ConfigInstructions = `
 # database container will be unusable. In the global configuration it is also
 # possible to omit ddev-router, but not here.
 
-# nfs_mount_enabled: false
-# Great performance improvement but requires host configuration first.
+# performance: ""
+# DDEV offers performance optimization strategies to improve the filesystem
+# performance depending on your host system. Should be configured globally.
+#
+# If set, will override the global config. Possible values are:
+#   - "default": will use the value from the global config.
+#   - "off":     will disable performance optimization for this project.
+#   - "mutagen": will enable Mutagen for this project.
+#   - "nfs":     will enable NFS for this project.
+#
 # See https://ddev.readthedocs.io/en/latest/users/install/performance/#nfs
-
-# mutagen_enabled: false
-# Performance improvement using mutagen asynchronous updates.
 # See https://ddev.readthedocs.io/en/latest/users/install/performance/#mutagen
 
 # fail_on_hook_fail: False
