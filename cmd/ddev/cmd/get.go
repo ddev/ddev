@@ -67,7 +67,9 @@ ddev get /path/to/tarball.tar.gz
 ddev get --list
 ddev get --list --all
 ddev get --installed
-ddev get --remove my-addon,
+ddev get --remove someaddonname,
+ddev get --remove someowner/ddev-someaddonname,
+ddev get --remove ddev-someaddonname
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		officialOnly := true
