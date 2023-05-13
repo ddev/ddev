@@ -10,7 +10,7 @@ import (
 var MutagenMonitorCmd = &cobra.Command{
 	Use:     "monitor",
 	Short:   "Monitor mutagen status",
-	Example: `"ddev mutagen sync", "ddev mutagen monitor <projectname>"`,
+	Example: `"ddev mutagen monitor", "ddev mutagen monitor <projectname>"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		projectName := ""
 		if len(args) > 1 {
