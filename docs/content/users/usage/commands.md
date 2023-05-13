@@ -615,8 +615,11 @@ ddev get /path/to/tarball.tar.gz
 # View installed add-ons
 ddev get --installed
 
-# Remove an add-on
+# Remove an add-on can be done with the full name, the short name of repo
+# or with owner/repo format
 ddev get --remove redis
+ddev get --remove ddev-redis
+ddev get --remove ddev/ddev-redis
 ```
 
 In general, you can run `ddev get` multiple times without doing any damage. Updating an add-on can be done by running `ddev get <add-on-name>`. If you have changed an add-on file and removed the `#ddev-generated` marker in the file, that file will not be touched and DDEV will let you know about it.
