@@ -908,7 +908,7 @@ directory=%s
 autostart=false
 autorestart=true
 startretries=15
-stdout_logfile=/proc/1/fd/1
+stdout_logfile=/var/tmp/logpipe
 stdout_logfile_maxbytes=0
 redirect_stderr=true
 `, appStart.Name, appStart.Command, appStart.Directory)
