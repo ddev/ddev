@@ -128,7 +128,7 @@ func TestGetContainerHealth(t *testing.T) {
 		_, err = startTestContainer()
 		assert.NoError(err)
 		healthDetail, err := ContainerWait(30, labels)
-		assert.NoError(err)
+		assert.NoError(err, "healtdetail='%s'", healthDetail)
 
 		container, err = FindContainerByLabels(labels)
 		assert.NoError(err)
