@@ -20,10 +20,10 @@ const ConfigInstructions = `
 # webimage: <docker_image>  # nginx/php docker image.
 
 # database:
-#   type: <dbtype> # mysql, mariadb
-#   version: <version> # database version, like "10.3" or "8.0"
-# Note that mariadb_version or mysql_version from v1.18 and earlier
-# will automatically be converted to this notation with just a "ddev config --auto"
+#   type: <dbtype> # mysql, mariadb, postgres
+#   version: <version> # database version, like "10.4" or "8.0"
+#   mariadb versions can be 5.5-10.8 and 10.11, mysql versions can be 5.5-8.0
+#   postgres versions can be 9-15.
 
 # router_http_port: <port>  # Port to be used for http (defaults to port 80)
 # router_https_port: <port> # Port for https (defaults to 443)
