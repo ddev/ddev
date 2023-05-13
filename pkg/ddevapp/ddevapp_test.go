@@ -862,6 +862,9 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	if dockerutil.IsColima() && os.Getenv("DDEV_TEST_COLIMA_ANYWAY") != "true" {
 		t.Skip("Skipping on Colima because this test doesn't work although manual testing works")
 	}
+	if dockerutil.IsWSL2() && dockerutil.IsDockerDesktop() {
+		t.Skip("Skipping on WSL2/Docker Desktop because this test doesn't work although manual testing works")
+	}
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
