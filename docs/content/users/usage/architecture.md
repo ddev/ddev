@@ -19,6 +19,9 @@ A project’s `.ddev` directory can be intimidating at first, so let’s take a 
     You may have some directories or files that aren’t listed here, likely added by custom services.  
     For example, if you see a `solr` directory, it probably pertains to a custom Solr [add-on service](../extend/additional-services.md).
 
+`addon-metadata` directory
+: Contains metadata about add-on services that have been added to the project. This allows commands like `ddev get --installed` and `ddev get --remove` to work, see [Viewing and removing add-ons](../extend/additional-services.md#viewing-and-removing-installed-add-ons).
+
 `apache` directory
 : Default Apache configuration when using `webserver_type: apache-fpm`, which [can be customized](../extend/customization-extendibility.md#providing-custom-apache-configuration).
 

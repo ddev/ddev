@@ -31,13 +31,10 @@ func TestCmdGet(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		_, err = exec.RunHostCommand(DdevBin, "service", "disable", "memcached")
+		_, err = exec.RunHostCommand(DdevBin, "get", "--remove", "memcached")
 		assert.NoError(err)
-		_, err = exec.RunHostCommand(DdevBin, "service", "disable", "example")
+		_, err = exec.RunHostCommand(DdevBin, "get", "--remove", "example")
 		assert.NoError(err)
-
-		_ = os.RemoveAll(app.GetConfigPath(fmt.Sprintf("docker-compose.%s.yaml", "memcached")))
-		_ = os.RemoveAll(app.GetConfigPath(fmt.Sprintf("docker-compose.%s.yaml", "example")))
 
 		err = os.Chdir(origDir)
 		assert.NoError(err)
@@ -87,7 +84,6 @@ func TestCmdGet(t *testing.T) {
 
 	assert.Contains(out, fmt.Sprintf("NOT overwriting file/directory %s", app.GetConfigPath("file-with-no-ddev-generated.txt")))
 	assert.Contains(out, fmt.Sprintf("NOT overwriting file/directory %s", filepath.Join(globalconfig.GetGlobalDdevDir(), "file-with-no-ddev-generated.txt")))
-
 }
 
 // TestCmdGetComplex tests advanced usages
@@ -143,4 +139,97 @@ func TestCmdGetComplex(t *testing.T) {
 	// Make sure that environment variable interpolation happened. If it did, we'll have the one file
 	// we're looking for.
 	assert.FileExists(app.GetConfigPath(fmt.Sprintf("junk_%s_%s.txt", runtime.GOOS, runtime.GOARCH)))
+}
+
+// TestCmdGetInstalled tests `ddev get --installed` and `ddev get --remove`
+func TestCmdGetInstalled(t *testing.T) {
+	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
+		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
+	}
+	assert := asrt.New(t)
+
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_, err = exec.RunHostCommand(DdevBin, "get", "--remove", "memcached")
+		assert.NoError(err)
+		_, err = exec.RunHostCommand(DdevBin, "get", "--remove", "redis")
+		assert.NoError(err)
+
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
+		assert.NoError(err)
+	})
+
+	out, err := exec.RunHostCommand(DdevBin, "get", "ddev/ddev-memcached", "--json-output")
+	require.NoError(t, err, "failed ddev get ddev/ddev-memcached: %v (output='%s')", err, out)
+
+	memcachedManifest := getManifestFromLogs(t, out)
+	require.NoError(t, err)
+
+	out, err = exec.RunHostCommand(DdevBin, "get", "ddev/ddev-redis", "--json-output")
+	require.NoError(t, err, "failed ddev get ddev/ddev-redis: %v (output='%s')", err, out)
+
+	redisManifest := getManifestFromLogs(t, out)
+	require.NoError(t, err)
+
+	installedOutput, err := exec.RunHostCommand(DdevBin, "get", "--installed", "--json-output")
+	require.NoError(t, err, "failed ddev get --installed --json-output: %v (output='%s')", err, installedOutput)
+	installedManifests := getManifestMapFromLogs(t, installedOutput)
+
+	require.NotEmptyf(t, memcachedManifest["Version"], "memcached manifest is empty: %v", memcachedManifest)
+	require.NotEmptyf(t, redisManifest["Version"], "redis manifest is empty: %v", redisManifest)
+
+	assert.Equal(memcachedManifest["Version"], installedManifests["memcached"]["Version"])
+	assert.Equal(redisManifest["Version"], installedManifests["redis"]["Version"])
+
+	// Now try the remove using other techniques (full repo name, partial repo name)
+	for _, n := range []string{"ddev/ddev-redis", "ddev-redis", "redis"} {
+		out, err = exec.RunHostCommand(DdevBin, "get", "ddev/ddev-redis", "--json-output")
+		require.NoError(t, err, "failed ddev get %s: %v (output='%s')", n, err, out)
+		out, err = exec.RunHostCommand(DdevBin, "get", "--remove", n)
+		require.NoError(t, err, "unable to ddev get --remove %s: %v, output='%s'", n, err, out)
+	}
+	// Now make sure we put it back so it can be removed in cleanu
+	out, err = exec.RunHostCommand(DdevBin, "get", "ddev/ddev-redis")
+	assert.NoError(err, "unable to ddev get redis: %v, output='%s'", err, out)
+}
+
+// getManifestFromLogs returns the manifest built from 'raw' section of
+// ddev get <project> -j output
+func getManifestFromLogs(t *testing.T, jsonOut string) map[string]interface{} {
+	assert := asrt.New(t)
+
+	logItems, err := unmarshalJSONLogs(jsonOut)
+	require.NoError(t, err)
+	data := logItems[len(logItems)-1]
+	assert.EqualValues(data["level"], "info")
+
+	m, ok := data["raw"].(map[string]interface{})
+	require.True(t, ok)
+	return m
+}
+
+// getManifestMapFromLogs returns the manifest array built from 'raw' section of
+// ddev get --installed -j output
+func getManifestMapFromLogs(t *testing.T, jsonOut string) map[string]map[string]interface{} {
+	assert := asrt.New(t)
+
+	logItems, err := unmarshalJSONLogs(jsonOut)
+	require.NoError(t, err)
+	data := logItems[len(logItems)-1]
+	assert.EqualValues(data["level"], "info")
+
+	m, ok := data["raw"].([]interface{})
+	require.True(t, ok)
+	masterMap := map[string]map[string]interface{}{}
+	for _, item := range m {
+		itemMap := item.(map[string]interface{})
+		masterMap[itemMap["Name"].(string)] = itemMap
+	}
+	return masterMap
 }

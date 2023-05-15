@@ -571,7 +571,19 @@ Flags:
 
 * `--all`: List unofficial *and* official add-ons. (default `true`)
 * `--list`: List official add-ons. (default `true`)
+* `--installed`: List installed add-ons
+* `--remove <add-on>`: Remove an installed add-on
+* `--version <version>`: Specify a version to download
 * `--verbose`, `-v`: Output verbose error information with Bash `set -x` (default `false`)
+
+Environment variables:
+
+* `DDEV_GITHUB_TOKEN`: A [GitHub token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) may be used for `ddev get` requests (which result in GitHub API queries). It's unusual for casual users to need this, but if you're doing lots of `ddev get` requests you may run into rate limiting. The token you use requires no privileges at all. Example:
+
+```bash
+export DDEV_GITHUB_TOKEN=<your github token>
+ddev get --list --all
+```
 
 Example:
 
@@ -588,6 +600,9 @@ ddev get ddev/ddev-redis
 # Get debug info about `ddev get` failure
 ddev get ddev/ddev-redis --verbose
 
+# Download the official Redis add-on, version v1.0.4
+ddev get ddev/ddev-redis --version v1.0.4
+
 # Download the Drupal 9 Solr add-on from its v0.0.5 release tarball
 ddev get https://github.com/ddev/ddev-drupal9-solr/archive/refs/tags/v0.0.5.tar.gz
 
@@ -596,7 +611,18 @@ ddev get /path/to/package
 
 # Copy an add-on from a tarball in another directory
 ddev get /path/to/tarball.tar.gz
+
+# View installed add-ons
+ddev get --installed
+
+# Remove an add-on can be done with the full name, the short name of repo
+# or with owner/repo format
+ddev get --remove redis
+ddev get --remove ddev-redis
+ddev get --remove ddev/ddev-redis
 ```
+
+In general, you can run `ddev get` multiple times without doing any damage. Updating an add-on can be done by running `ddev get <add-on-name>`. If you have changed an add-on file and removed the `#ddev-generated` marker in the file, that file will not be touched and DDEV will let you know about it.
 
 ## `heidisql`
 

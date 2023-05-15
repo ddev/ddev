@@ -4,14 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"os"
-	"path/filepath"
-	"sort"
-	"strings"
-	"text/template"
-
 	"github.com/Masterminds/sprig/v3"
 	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -26,34 +21,73 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
 	"gopkg.in/yaml.v3"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+	"text/template"
+	"time"
 )
 
+const addonMetadataDir = "addon-metadata"
+
+// Format of install.yaml
 type installDesc struct {
+	// Name must be unique in a project; it will overwrite any existing add-on with the same name.
 	Name               string            `yaml:"name"`
 	ProjectFiles       []string          `yaml:"project_files"`
 	GlobalFiles        []string          `yaml:"global_files,omitempty"`
 	PreInstallActions  []string          `yaml:"pre_install_actions,omitempty"`
 	PostInstallActions []string          `yaml:"post_install_actions,omitempty"`
+	RemovalActions     []string          `yaml:"removal_actions,omitempty"`
 	YamlReadFiles      map[string]string `yaml:"yaml_read_files"`
+}
+
+// format of the add-on manifest file
+type addonManifest struct {
+	Name           string   `yaml:"name"`
+	Repository     string   `yaml:"repository"`
+	Version        string   `yaml:"version"`
+	InstallDate    string   `yaml:"install_date"`
+	ProjectFiles   []string `yaml:"project_files"`
+	GlobalFiles    []string `yaml:"global_files"`
+	RemovalActions []string `yaml:"removal_actions"`
 }
 
 // Get implements the ddev get command
 var Get = &cobra.Command{
 	Use:   "get <addonOrURL> [project]",
 	Short: "Get/Download a 3rd party add-on (service, provider, etc.)",
-	Long:  `Get/Download a 3rd party add-on (service, provider, etc.). This can be a github repo, in which case the latest release will be used, or it can be a link to a .tar.gz in the correct format (like a particular release's .tar.gz) or it can be a local directory. Use 'ddev get --list' or 'ddev get --list --all' to see a list of available add-ons. Without --all it shows only official ddev add-ons.`,
-	Example: `ddev get ddev/ddev-drupal9-solr
+	Long:  `Get/Download a 3rd party add-on (service, provider, etc.). This can be a github repo, in which case the latest release will be used, or it can be a link to a .tar.gz in the correct format (like a particular release's .tar.gz) or it can be a local directory. Use 'ddev get --list' or 'ddev get --list --all' to see a list of available add-ons. Without --all it shows only official ddev add-ons. To list installed add-ons, 'ddev get --installed', to remove an add-on 'ddev get --remove <add-on>'.`,
+	Example: `ddev get ddev/ddev-redis
+ddev get ddev/ddev-redis --version v1.0.4
 ddev get https://github.com/ddev/ddev-drupal9-solr/archive/refs/tags/v0.0.5.tar.gz
 ddev get /path/to/package
 ddev get /path/to/tarball.tar.gz
 ddev get --list
 ddev get --list --all
+ddev get --installed
+ddev get --remove someaddonname,
+ddev get --remove someowner/ddev-someaddonname,
+ddev get --remove ddev-someaddonname
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		officialOnly := true
 		verbose := false
+		bash := util.FindBashPath()
+		requestedVersion := ""
 
-		if cmd.Flag("list").Changed {
+		if cmd.Flags().Changed("version") {
+			requestedVersion = cmd.Flag("version").Value.String()
+		}
+
+		if cmd.Flags().Changed("verbose") {
+			verbose = true
+		}
+
+		// handle ddev get --list and ddev get --list --all
+		// these do not require an app context
+		if cmd.Flags().Changed("list") {
 			if cmd.Flag("all").Changed {
 				officialOnly = false
 			}
@@ -70,14 +104,35 @@ ddev get --list --all
 			return
 		}
 
-		if cmd.Flags().Changed("verbose") {
-			verbose = true
+		// handle ddev get --installed
+		if cmd.Flags().Changed("installed") {
+			app, err := ddevapp.GetActiveApp("")
+			if err != nil {
+				util.Failed("unable to find active project: %v", err)
+			}
+
+			listInstalledAddons(app)
+			return
+		}
+
+		// handle ddev get --remove
+		if cmd.Flags().Changed("remove") {
+			app, err := ddevapp.GetActiveApp("")
+			if err != nil {
+				util.Failed("unable to find active project: %v", err)
+			}
+			app.DockerEnv()
+
+			err = removeAddon(app, cmd.Flag("remove").Value.String(), nil, bash, verbose)
+			if err != nil {
+				util.Failed("unable to remove add-on: %v", err)
+			}
+			return
 		}
 
 		if len(args) < 1 {
 			util.Failed("You must specify an add-on to download")
 		}
-		bash := util.FindBashPath()
 		apps, err := getRequestedProjects(args[1:], false)
 		if err != nil {
 			util.Failed("Unable to get project(s) %v: %v", args, err)
@@ -91,6 +146,7 @@ ddev get --list --all
 			util.Failed("Unable to change directory to project root %s: %v", app.AppRoot, err)
 		}
 		app.DockerEnv()
+
 		sourceRepoArg := args[0]
 		extractedDir := ""
 		parts := strings.Split(sourceRepoArg, "/")
@@ -99,6 +155,7 @@ ddev get --list --all
 		argType := ""
 		owner := ""
 		repo := ""
+		downloadedRelease := ""
 		switch {
 		// If the provided sourceRepoArg is a directory, then we will use that as the source
 		case fileutil.IsDirectory(sourceRepoArg):
@@ -117,13 +174,14 @@ ddev get --list --all
 			defer cleanup()
 
 		// If the provided sourceRepoArg is a github sourceRepoArg, then we will use that as the source
-		case len(parts) == 2: // github.com/owner/sourceRepoArg
+		case len(parts) == 2: // github.com/owner/repo
+			argType = "github"
 			owner = parts[0]
 			repo = parts[1]
 			ctx := context.Background()
 
 			client := getGithubClient(ctx)
-			releases, resp, err := client.Repositories.ListReleases(ctx, owner, repo, &github.ListOptions{})
+			releases, resp, err := client.Repositories.ListReleases(ctx, owner, repo, &github.ListOptions{PerPage: 100})
 			if err != nil {
 				var rate github.Rate
 				if resp != nil {
@@ -134,14 +192,30 @@ ddev get --list --all
 			if len(releases) == 0 {
 				util.Failed("No releases found for %v", repo)
 			}
-			tarballURL = releases[0].GetTarballURL()
-			argType = "github"
+			releaseItem := 0
+			releaseFound := false
+			if requestedVersion != "" {
+				for i, release := range releases {
+					if release.GetTagName() == requestedVersion {
+						releaseItem = i
+						releaseFound = true
+						break
+					}
+				}
+				if !releaseFound {
+					util.Failed("No release found for %v with tag %v", repo, requestedVersion)
+				}
+			}
+			tarballURL = releases[releaseItem].GetTarballURL()
+			downloadedRelease = releases[releaseItem].GetTagName()
+			util.Success("Installing %s/%s:%s", owner, repo, downloadedRelease)
 			fallthrough
 
 		// Otherwise, use the provided source as a URL to a tarball
 		default:
 			if tarballURL == "" {
 				tarballURL = sourceRepoArg
+				argType = "tarball"
 			}
 			extractedDir, cleanup, err = archive.DownloadAndExtractTarball(tarballURL, true)
 			if err != nil {
@@ -248,8 +322,13 @@ ddev get --list --all
 		}
 		origDir, _ := os.Getwd()
 
-		//nolint: errcheck
-		defer os.Chdir(origDir)
+		defer func() {
+			err = os.Chdir(origDir)
+			if err != nil {
+				util.Failed("Unable to chdir to %v: %v", origDir, err)
+			}
+		}()
+
 		err = os.Chdir(app.GetConfigPath(""))
 		if err != nil {
 			util.Failed("Unable to chdir to %v: %v", app.GetConfigPath(""), err)
@@ -270,12 +349,123 @@ ddev get --list --all
 			}
 		}
 
+		repository := ""
+		switch argType {
+		case "github":
+			repository = fmt.Sprintf("%s/%s", owner, repo)
+		case "directory":
+			fallthrough
+		case "tarball":
+			repository = sourceRepoArg
+		}
+		manifest, err := createManifestFile(app, s.Name, repository, downloadedRelease, s)
+		if err != nil {
+			util.Failed("Unable to create manifest file: %v", err)
+		}
+
 		util.Success("\nInstalled DDEV add-on %s, use `ddev restart` to enable.", sourceRepoArg)
 		if argType == "github" {
 			util.Success("Please read instructions for this addon at the source repo at\nhttps://github.com/%v/%v\nPlease file issues and create pull requests there to improve it.", owner, repo)
 		}
-
+		output.UserOut.WithField("raw", manifest).Printf("Installed %s:%s from %s", manifest.Name, manifest.Version, manifest.Repository)
 	},
+}
+
+// createManifestFile creates a manifest file for the addon
+func createManifestFile(app *ddevapp.DdevApp, addonName string, repository string, downloadedRelease string, desc installDesc) (addonManifest, error) {
+	// Create a manifest file
+	manifest := addonManifest{
+		Name:           addonName,
+		Repository:     repository,
+		Version:        downloadedRelease,
+		InstallDate:    time.Now().Format(time.RFC3339),
+		ProjectFiles:   desc.ProjectFiles,
+		GlobalFiles:    desc.GlobalFiles,
+		RemovalActions: desc.RemovalActions,
+	}
+	manifestFile := app.GetConfigPath(fmt.Sprintf("%s/%s/manifest.yaml", addonMetadataDir, addonName))
+	if fileutil.FileExists(manifestFile) {
+		util.Warning("Overwriting existing manifest file %s", manifestFile)
+	}
+	manifestData, err := yaml.Marshal(manifest)
+	if err != nil {
+		util.Failed("Error marshaling manifest data: %v", err)
+	}
+	err = os.MkdirAll(filepath.Dir(manifestFile), 0755)
+	if err != nil {
+		util.Failed("Error creating manifest directory: %v", err)
+	}
+	if err = fileutil.TemplateStringToFile(string(manifestData), nil, manifestFile); err != nil {
+		util.Failed("Error writing manifest file: %v", err)
+	}
+	return manifest, nil
+}
+
+// listInstalledAddons() show the add-ons that have a manifest file
+func listInstalledAddons(app *ddevapp.DdevApp) {
+	metadataDir := app.GetConfigPath(addonMetadataDir)
+	err := os.MkdirAll(metadataDir, 0755)
+	if err != nil {
+		util.Failed("Error creating metadata directory: %v", err)
+	}
+	// Read the contents of the .ddev/addon-metadata directory (directories)
+	dirs, err := os.ReadDir(metadataDir)
+	if err != nil {
+		util.Failed("Error reading metadata directory: %v", err)
+	}
+	manifests := []addonManifest{}
+
+	var out bytes.Buffer
+	t := table.NewWriter()
+	t.SetOutputMirror(&out)
+	styles.SetGlobalTableStyle(t)
+
+	if !globalconfig.DdevGlobalConfig.SimpleFormatting {
+		t.SetColumnConfigs([]table.ColumnConfig{
+			{
+				Name: "Add-on",
+			},
+			{
+				Name: "Version",
+			},
+			{
+				Name: "Repository",
+			},
+			{
+				Name: "Date Installed",
+			},
+		})
+	}
+	t.AppendHeader(table.Row{"Add-on", "Version", "Repository", "Date Installed"})
+
+	// Loop through the directories in the .ddev/addon-metadata directory
+	for _, d := range dirs {
+		// Check if the file is a directory
+		if d.IsDir() {
+			// Read the contents of the manifest file
+			manifestFile := filepath.Join(metadataDir, d.Name(), "manifest.yaml")
+			manifestBytes, err := os.ReadFile(manifestFile)
+			if err != nil {
+				util.Warning("No manifest file found at %s: %v", manifestFile, err)
+				continue
+			}
+
+			// Parse the manifest file
+			var manifest addonManifest
+			err = yaml.Unmarshal(manifestBytes, &manifest)
+			if err != nil {
+				util.Failed("Unable to parse manifest file: %v", err)
+			}
+			manifests = append(manifests, manifest)
+			t.AppendRow(table.Row{manifest.Name, manifest.Version, manifest.Repository, manifest.InstallDate})
+		}
+	}
+	if t.Length() == 0 {
+		output.UserOut.Println("No registered add-ons were found. Add-ons installed before DDEV v1.22.0 will not be listed.\nUpdate them with `ddev get` so they'll be shown.")
+		return
+	}
+	t.Render()
+	output.UserOut.WithField("raw", manifests).Println(out.String())
 }
 
 // processAction takes a stanza from yaml exec section and executes it.
@@ -356,13 +546,6 @@ func renderRepositoryList(repos []github.Repository) string {
 	return out.String() + fmt.Sprintf("%d repositories found. Add-ons marked with '*' are officially maintained DDEV add-ons.", len(repos))
 }
 
-func init() {
-	Get.Flags().Bool("list", true, fmt.Sprintf(`List available add-ons for 'ddev get'`))
-	Get.Flags().Bool("all", true, fmt.Sprintf(`List unofficial add-ons for 'ddev get' in addition to the official ones`))
-	Get.Flags().BoolP("verbose", "v", false, "Extended/verbose output for ddev get")
-	RootCmd.AddCommand(Get)
-}
-
 // getGithubClient creates the required github client
 func getGithubClient(ctx context.Context) *github.Client {
 	client := github.NewClient(nil)
@@ -415,4 +598,111 @@ func listAvailable(officialOnly bool) ([]github.Repository, error) {
 		return nil, fmt.Errorf("No add-ons found")
 	}
 	return allRepos, nil
+}
+
+// removeAddon removes an addon, taking care to respect #ddev-generated
+// addonName can be the "Name", or the full "Repository" like ddev/ddev-redis, or
+// the final par of the repository name like ddev-redis
+func removeAddon(app *ddevapp.DdevApp, addonName string, dict map[string]interface{}, bash string, verbose bool) error {
+	if addonName == "" {
+		return fmt.Errorf("No add-on name specified for removal")
+	}
+
+	manifests, err := gatherAllManifests(app)
+	if err != nil {
+		util.Failed("Unable to gather all manifests: %v", err)
+	}
+
+	var manifestData addonManifest
+	var ok bool
+
+	if manifestData, ok = manifests[addonName]; !ok {
+		util.Failed("The add-on '%s' does not seem to have a manifest file; please upgrade it.\nUse `ddev get --installed to see installed add-ons.\nIf yours is not there it may have been installed before DDEV v1.22.0.\nUse 'ddev get' to update it.", addonName)
+	}
+
+	// Execute any removal actions
+	for i, action := range manifestData.RemovalActions {
+		err = processAction(action, dict, bash, verbose)
+		desc := getDdevDescription(action)
+		if err != nil {
+			util.Warning("could not process removal action (%d) '%s': %v", i, desc, err)
+		}
+	}
+
+	// Remove any project files
+	for _, f := range manifestData.ProjectFiles {
+		p := app.GetConfigPath(f)
+		err = fileutil.CheckSignatureOrNoFile(p, nodeps.DdevFileSignature)
+		if err == nil {
+			_ = os.RemoveAll(p)
+		} else {
+			util.Warning("Unwilling to remove '%s' because it does not have #ddev-generated in it: %v; you can manually delete it if it is safe to delete.", p, err)
+		}
+	}
+
+	// Remove any global files
+	globalDotDdev := filepath.Join(globalconfig.GetGlobalDdevDir())
+	for _, f := range manifestData.GlobalFiles {
+		p := filepath.Join(globalDotDdev, f)
+		err = fileutil.CheckSignatureOrNoFile(p, nodeps.DdevFileSignature)
+		if err == nil {
+			_ = os.RemoveAll(p)
+		} else {
+			util.Warning("Unwilling to remove '%s' because it does not have #ddev-generated in it: %v; you can manually delete it if it is safe to delete.", p, err)
+		}
+	}
+
+	err = os.RemoveAll(app.GetConfigPath(filepath.Join(addonMetadataDir, manifestData.Name)))
+	if err != nil {
+		return fmt.Errorf("Error removing addon metadata directory %s: %v", manifestData.Name, err)
+	}
+	util.Success("Removed add-on %s", addonName)
+	return nil
+}
+
+// gatherAllManifests searches for all addon manifests and presents the result
+// as a map of various names to manifest data
+func gatherAllManifests(app *ddevapp.DdevApp) (map[string]addonManifest, error) {
+	metadataDir := app.GetConfigPath(addonMetadataDir)
+	allManifests := make(map[string]addonManifest)
+
+	dirs, err := fileutil.ListFilesInDirFullPath(metadataDir)
+	if err != nil {
+		return nil, err
+	}
+	for _, d := range dirs {
+		if !fileutil.IsDirectory(d) {
+			continue
+		}
+
+		mPath := filepath.Join(d, "manifest.yaml")
+		manifestString, err := fileutil.ReadFileIntoString(mPath)
+		if err != nil {
+			return nil, err
+		}
+		var manifestData = &addonManifest{}
+		err = yaml.Unmarshal([]byte(manifestString), manifestData)
+		if err != nil {
+			return nil, fmt.Errorf("Error unmarshalling manifest data: %v", err)
+		}
+		allManifests[manifestData.Name] = *manifestData
+		allManifests[manifestData.Repository] = *manifestData
+
+		pathParts := strings.Split(manifestData.Repository, "/")
+		if len(pathParts) > 1 {
+			shortRepo := pathParts[len(pathParts)-1]
+			allManifests[shortRepo] = *manifestData
+		}
+	}
+	return allManifests, nil
+}
+
+func init() {
+	Get.Flags().Bool("list", true, fmt.Sprintf(`List available add-ons for 'ddev get'`))
+	Get.Flags().Bool("all", true, fmt.Sprintf(`List unofficial add-ons for 'ddev get' in addition to the official ones`))
+	Get.Flags().Bool("installed", true, fmt.Sprintf(`Show installed ddev-get add-ons`))
+	Get.Flags().String("remove", "", fmt.Sprintf(`Remove a ddev-get add-on`))
+	Get.Flags().String("version", "", fmt.Sprintf(`Specify a particular version of add-on to install`))
+	Get.Flags().BoolP("verbose", "v", false, "Extended/verbose output for ddev get")
+	RootCmd.AddCommand(Get)
 }

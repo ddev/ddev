@@ -6,7 +6,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
-	assert2 "github.com/stretchr/testify/assert"
+	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
 	"regexp"
@@ -22,7 +22,7 @@ func TestListWithoutDir(t *testing.T) {
 		t.Skip("Skipping because unreliable on Windows and can't be used with mutagen")
 	}
 	// Set up tests and give ourselves a working directory.
-	assert := assert2.New(t)
+	assert := asrt.New(t)
 	testcommon.ClearDockerEnv()
 	origDir, _ := os.Getwd()
 
