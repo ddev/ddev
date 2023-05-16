@@ -20,12 +20,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Local cache variables to speedup the implementation.
 var (
 	userID      string
 	initialized bool
 	identified  bool
 )
 
+// cacheFile is the name of the cache file in ~/.ddev.
 const cacheFile = ".amplitude.cache"
 
 // GetUserID returns the unique user id to be used when tracking an event.
