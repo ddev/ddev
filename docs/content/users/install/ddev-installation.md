@@ -45,6 +45,15 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ## Linux
 
+    ### Locally-trusted certificate with mkcert
+
+    Modern browsers require valid certificates, which mkcert can create. Firefox users [may get prompted](https://github.com/FiloSottile/mkcert/issues/50) for `Password or Pin for "NSS Certificate DB` which is the Firefox Master pin. Install it, and then run this:
+
+    ```bash
+    # Initialize mkcert
+    mkcert -install
+    ```
+
     ### Debian/Ubuntu
 
     DDEV’s Debian and RPM packages work with `apt` and `yum` repositories and most variants that use them, including Windows WSL2:
@@ -92,9 +101,6 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ```bash
     # Install DDEV
     yay -S ddev-bin
-
-    # Initialize mkcert
-    mkcert -install
     ```
 
     ### Homebrew (AMD64 only)
@@ -102,9 +108,6 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     ```bash
     # Install DDEV using Homebrew
     brew install ddev/ddev/ddev
-
-    # Initialize mkcert
-    mkcert -install
     ```
 
     <!-- we’re using HTML here to customize the #install-script-linux anchor -->
