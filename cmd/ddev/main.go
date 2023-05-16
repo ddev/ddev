@@ -14,7 +14,8 @@ func main() {
 	// Initialization is currently done before via init() func somewhere while
 	// creating the ddevapp. This should be cleaned up.
 	amplitude.InitAmplitude()
-	defer amplitude.Flush()
+	// Starting the transmission asynchronously to reduce the user impact.
+	go amplitude.Flush()
 
 	// Prevent running as root for most cases
 	// We really don't want ~/.ddev to have root ownership, breaks things.
