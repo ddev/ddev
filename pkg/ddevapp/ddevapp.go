@@ -1306,7 +1306,11 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	if globalconfig.DdevDebug {
 		out, err = app.CaptureLogs("web", true, "200")
-		util.Debug("docker-compose up output:\n%s\n\n", out)
+		if err != nil {
+			util.Warning("Unable to capture logs from web container: %v", err)
+		} else {
+			util.Debug("docker-compose up output:\n%s\n\n", out)
+		}
 	}
 
 	// WebExtraDaemons have to be started after mutagen sync is done, because so often
