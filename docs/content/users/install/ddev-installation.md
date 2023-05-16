@@ -47,7 +47,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
 
     ### Locally-trusted certificate with mkcert
 
-    Modern browsers require valid certificates, which mkcert can create. Firefox users [may get prompted](https://github.com/FiloSottile/mkcert/issues/50) for `Password or Pin for "NSS Certificate DB` which is the Firefox Master pin. Install mkcert, and then run this:
+    Modern browsers require valid certificates, which mkcert can create. [Install mkcert](https://github.com/FiloSottile/mkcert#installation), and then run this:
 
     ```bash
     # Initialize mkcert
