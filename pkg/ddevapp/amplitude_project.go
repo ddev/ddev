@@ -21,8 +21,7 @@ func (app *DdevApp) ProtectedID() string {
 
 // TrackProject collects and tracks information about the project for instrumentation.
 func (app *DdevApp) TrackProject() {
-	runTime := util.TimeTrack()
-	defer runTime()
+	defer util.TimeTrack()()
 
 	// Initialization is currently done before via init() func somewhere while
 	// creating the ddevapp. This should be cleaned up.

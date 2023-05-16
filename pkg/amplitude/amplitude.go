@@ -40,8 +40,7 @@ func GetUserID() string {
 // TrackCommand collects and tracks information about the command for
 // instrumentation.
 func TrackCommand(cmd *cobra.Command, args []string) {
-	runTime := util.TimeTrack()
-	defer runTime()
+	defer util.TimeTrack()()
 
 	// Initialization is currently done before via init() func somewhere while
 	// creating the ddevapp. This should be cleaned up.
@@ -64,8 +63,7 @@ func TrackCommand(cmd *cobra.Command, args []string) {
 
 // Flush transmits the queued events if limits are reached.
 func Flush() {
-	runTime := util.TimeTrack()
-	defer runTime()
+	defer util.TimeTrack()()
 
 	// Early exit if instrumentation is disabled or internet not active.
 	if ampli.Instance.Disabled || !globalconfig.IsInternetActive() {
@@ -77,8 +75,7 @@ func Flush() {
 
 // FlushForce transmits the queued events even if limits are not reached.
 func FlushForce() {
-	runTime := util.TimeTrack()
-	defer runTime()
+	defer util.TimeTrack()()
 
 	// Early exit if instrumentation is disabled or internet not active.
 	if ampli.Instance.Disabled || !globalconfig.IsInternetActive() {
@@ -115,8 +112,7 @@ func Clean() {
 // creating the ddevapp. This should be cleaned up.
 // TODO make private once clean up has done.
 func InitAmplitude() {
-	runTime := util.TimeTrack()
-	defer runTime()
+	defer util.TimeTrack()()
 
 	if initialized {
 		return
@@ -173,8 +169,7 @@ func getCacheFileName() string {
 
 // identify collects information about this installation.
 func identify() {
-	runTime := util.TimeTrack()
-	defer runTime()
+	defer util.TimeTrack()()
 
 	// Early exit if instrumentation is disabled.
 	if ampli.Instance.Disabled {
