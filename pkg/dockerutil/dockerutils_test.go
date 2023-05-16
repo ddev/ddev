@@ -37,6 +37,10 @@ func testMain(m *testing.M) int {
 	_ = os.Setenv("DDEV_NONINTERACTIVE", "true")
 	_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", globalconfig.GetMutagenDataDirectory())
 
+	labels := map[string]string{
+		"com.ddev.site-name": testContainerName,
+	}
+
 	// prep docker container for docker util tests
 	imageExists, err := ImageExistsLocally(versionconstants.GetWebImage())
 	if err != nil {
@@ -51,7 +55,7 @@ func testMain(m *testing.M) int {
 		}
 	}
 
-	foundContainer, _ := FindContainerByLabels(map[string]string{"com.ddev.site-name": testContainerName})
+	foundContainer, _ := FindContainerByLabels(labels)
 
 	if foundContainer != nil {
 		err = RemoveContainer(foundContainer.ID)
@@ -67,11 +71,15 @@ func testMain(m *testing.M) int {
 		return 3
 	}
 	defer func() {
-		err = RemoveContainer(containerID)
-		if err != nil {
-			logOutput.Errorf("-- FAIL: dockerutils_test failed to remove test container: %v", err)
+		foundContainer, _ := FindContainerByLabels(labels)
+		if foundContainer != nil {
+			err = RemoveContainer(foundContainer.ID)
+			if err != nil {
+				logOutput.Errorf("-- FAIL: dockerutils_test failed to remove test container: %v", err)
+			}
 		}
 	}()
+
 	log.Printf("ContainerWait at %v", time.Now())
 	out, err := ContainerWait(60, map[string]string{"com.ddev.site-name": testContainerName})
 	log.Printf("ContainerWait returrned at %v out='%s' err='%v'", time.Now(), out, err)
