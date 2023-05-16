@@ -23,6 +23,7 @@
 The following “Repository secret” environment variables must be added to <https://github.com/ddev/ddev/settings/secrets/actions>:
 
 * `AMPLITUDE_API_KEY`: Key that enables Amplitude reporting.
+* `AMPLITUDE_API_KEY_DEV`: Key that enables Amplitude reporting for development versions e.g. a PR build.
 * `AUR_SSH_PRIVATE_KEY`: Private ssh key for the `ddev-releaser` user. This must be processed into a single line, for example, `perl -p -e 's/\n/<SPLIT>/' ~/.ssh/id_rsa_ddev_releaser| pbcopy`.
 * `CHOCOLATEY_API_KEY`: API key for Chocolatey.
 * `DDEV_GITHUB_TOKEN`: GitHub token that gives access to create releases and push to the Homebrew repositories.
