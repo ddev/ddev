@@ -1176,7 +1176,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	// Build extra layers on web and db images if necessary
 	progress := "quiet"
-	if globalconfig.DdevDebug {
+	if globalconfig.DdevVerbose {
 		progress = "auto"
 	}
 	util.Debug("Executing docker-compose -f %s build --progress=%s", app.DockerComposeFullRenderedYAMLPath(), progress)
@@ -1184,7 +1184,9 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	if err != nil {
 		return fmt.Errorf("docker-compose build failed: %v, output='%s', stderr='%s'", err, out, stderr)
 	}
-	util.Debug("docker-compose build output:\n%s\n\n", out)
+	if globalconfig.DdevVerbose {
+		util.Debug("docker-compose build output:\n%s\n\n", out)
+	}
 
 	util.Debug("Executing docker-compose -f %s up -d", app.DockerComposeFullRenderedYAMLPath())
 	_, _, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "up", "-d")
@@ -1304,7 +1306,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		util.Warning("Failed waiting for web/db containers to become ready: %v", err)
 	}
 
-	if globalconfig.DdevDebug {
+	if globalconfig.DdevVerbose {
 		out, err = app.CaptureLogs("web", true, "200")
 		if err != nil {
 			util.Warning("Unable to capture logs from web container: %v", err)
