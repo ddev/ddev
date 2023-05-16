@@ -191,25 +191,23 @@ func identify() {
 	}()
 
 	// Identify this installation.
-	identify := amplitude.Identify{}
-
-	identify.Set("Operating System", runtime.GOOS)
-	identify.Set("Architecture", runtime.GOARCH)
-
 	dockerVersion, _ := dockerutil.GetDockerVersion()
 	dockerPlaform, _ := version.GetDockerPlatform()
-	identify.Set("Docker Platform", dockerVersion)
-	identify.Set("Docker Version", dockerPlaform)
-
-	identify.Set("Language", os.Getenv("LANG"))
 	timezone, _ := time.Now().In(time.Local).Zone()
-	identify.Set("Timezone", timezone)
 
-	identify.Set("Version", versionconstants.DdevVersion)
+	builder := ampli.Identify.Builder().
+		DockerPlatform(dockerPlaform).
+		DockerVersion(dockerVersion).
+		Language(os.Getenv("LANG")).
+		Os(runtime.GOOS).
+		Platform(runtime.GOARCH).
+		Timezone(timezone).
+		Version(versionconstants.DdevVersion)
 
 	if wslDistro := nodeps.GetWSLDistro(); wslDistro != "" {
-		identify.Set("WSL Distro", wslDistro)
+		builder.
+			WslDistro(wslDistro)
 	}
 
-	ampli.Instance.Client.Identify(identify, amplitude.EventOptions{UserID: GetUserID()})
+	ampli.Instance.Identify(GetUserID(), builder.Build())
 }

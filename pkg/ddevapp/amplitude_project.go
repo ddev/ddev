@@ -49,7 +49,7 @@ func (app *DdevApp) TrackProject() {
 	builder := ampli.Project.Builder().
 		Containers(services).
 		ContainersOmitted(containersOmitted).
-		DocumentRoot(app.GetDocroot()).
+		FailOnHookFail(app.FailOnHookFail || app.FailOnHookFailGlobal).
 		Id(app.ProtectedID()).
 		MutagenEnabled(app.IsMutagenEnabled()).
 		NfsMountEnabled(app.IsNFSMountEnabled()).
@@ -69,7 +69,6 @@ func (app *DdevApp) TrackProject() {
 	ampli.Instance.Project(amplitude.GetUserID(), builder.Build())
 
 	/*
-		appDesc["fail_on_hook_fail"] = app.FailOnHookFail || app.FailOnHookFailGlobal
 		appDesc["xdebug_enabled"] = app.XdebugEnabled
 		appDesc["webimg"] = app.WebImage
 		appDesc["dbimg"] = app.GetDBImage()

@@ -47,11 +47,11 @@ var Instance = Ampli{}
 type Environment string
 
 const (
-	EnvironmentProduction Environment = `production`
+	EnvironmentDevelopment Environment = `development`
 )
 
 var APIKey = map[Environment]string{
-	EnvironmentProduction: ``,
+	EnvironmentDevelopment: ``,
 }
 
 // LoadClientOptions is Client options setting to initialize Ampli client.
@@ -98,6 +98,173 @@ func (event baseEvent) ToAmplitudeEvent() amplitude.Event {
 	return amplitude.Event{
 		EventType:       event.eventType,
 		EventProperties: event.properties,
+	}
+}
+
+var Identify = struct {
+	Builder func() interface {
+		DockerPlatform(dockerPlatform string) interface {
+			DockerVersion(dockerVersion string) interface {
+				Language(language string) interface {
+					Os(os string) interface {
+						Platform(platform string) interface {
+							Timezone(timezone string) interface {
+								Version(version string) IdentifyBuilder
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}{
+	Builder: func() interface {
+		DockerPlatform(dockerPlatform string) interface {
+			DockerVersion(dockerVersion string) interface {
+				Language(language string) interface {
+					Os(os string) interface {
+						Platform(platform string) interface {
+							Timezone(timezone string) interface {
+								Version(version string) IdentifyBuilder
+							}
+						}
+					}
+				}
+			}
+		}
+	} {
+		return &identifyBuilder{
+			properties: map[string]interface{}{},
+		}
+	},
+}
+
+type IdentifyEvent interface {
+	Event
+	identify()
+}
+
+type identifyEvent struct {
+	baseEvent
+}
+
+func (e identifyEvent) identify() {
+}
+
+type IdentifyBuilder interface {
+	Build() IdentifyEvent
+	WslDistro(wslDistro string) IdentifyBuilder
+}
+
+type identifyBuilder struct {
+	properties map[string]interface{}
+}
+
+func (b *identifyBuilder) DockerPlatform(dockerPlatform string) interface {
+	DockerVersion(dockerVersion string) interface {
+		Language(language string) interface {
+			Os(os string) interface {
+				Platform(platform string) interface {
+					Timezone(timezone string) interface {
+						Version(version string) IdentifyBuilder
+					}
+				}
+			}
+		}
+	}
+} {
+	b.properties[`Docker Platform`] = dockerPlatform
+
+	return b
+}
+
+func (b *identifyBuilder) DockerVersion(dockerVersion string) interface {
+	Language(language string) interface {
+		Os(os string) interface {
+			Platform(platform string) interface {
+				Timezone(timezone string) interface {
+					Version(version string) IdentifyBuilder
+				}
+			}
+		}
+	}
+} {
+	b.properties[`Docker Version`] = dockerVersion
+
+	return b
+}
+
+func (b *identifyBuilder) Language(language string) interface {
+	Os(os string) interface {
+		Platform(platform string) interface {
+			Timezone(timezone string) interface {
+				Version(version string) IdentifyBuilder
+			}
+		}
+	}
+} {
+	b.properties[`Language`] = language
+
+	return b
+}
+
+func (b *identifyBuilder) Os(os string) interface {
+	Platform(platform string) interface {
+		Timezone(timezone string) interface {
+			Version(version string) IdentifyBuilder
+		}
+	}
+} {
+	b.properties[`OS`] = os
+
+	return b
+}
+
+func (b *identifyBuilder) Platform(platform string) interface {
+	Timezone(timezone string) interface {
+		Version(version string) IdentifyBuilder
+	}
+} {
+	b.properties[`Platform`] = platform
+
+	return b
+}
+
+func (b *identifyBuilder) Timezone(timezone string) interface {
+	Version(version string) IdentifyBuilder
+} {
+	b.properties[`Timezone`] = timezone
+
+	return b
+}
+
+func (b *identifyBuilder) Version(version string) IdentifyBuilder {
+	b.properties[`Version`] = version
+
+	return b
+}
+
+func (b *identifyBuilder) WslDistro(wslDistro string) IdentifyBuilder {
+	b.properties[`WSL Distro`] = wslDistro
+
+	return b
+}
+
+func (b *identifyBuilder) Build() IdentifyEvent {
+	return &identifyEvent{
+		newBaseEvent(`Identify`, b.properties),
+	}
+}
+
+func (e identifyEvent) ToAmplitudeEvent() amplitude.Event {
+	identify := amplitude.Identify{}
+	for name, value := range e.properties {
+		identify.Set(name, value)
+	}
+
+	return amplitude.Event{
+		EventType:      IdentifyEventType,
+		UserProperties: identify.Properties,
 	}
 }
 
@@ -193,7 +360,7 @@ var Project = struct {
 	Builder func() interface {
 		Containers(containers []string) interface {
 			ContainersOmitted(containersOmitted []string) interface {
-				DocumentRoot(documentRoot string) interface {
+				FailOnHookFail(failOnHookFail bool) interface {
 					Id(id string) interface {
 						MutagenEnabled(mutagenEnabled bool) interface {
 							NfsMountEnabled(nfsMountEnabled bool) interface {
@@ -219,7 +386,7 @@ var Project = struct {
 	Builder: func() interface {
 		Containers(containers []string) interface {
 			ContainersOmitted(containersOmitted []string) interface {
-				DocumentRoot(documentRoot string) interface {
+				FailOnHookFail(failOnHookFail bool) interface {
 					Id(id string) interface {
 						MutagenEnabled(mutagenEnabled bool) interface {
 							NfsMountEnabled(nfsMountEnabled bool) interface {
@@ -271,7 +438,7 @@ type projectBuilder struct {
 
 func (b *projectBuilder) Containers(containers []string) interface {
 	ContainersOmitted(containersOmitted []string) interface {
-		DocumentRoot(documentRoot string) interface {
+		FailOnHookFail(failOnHookFail bool) interface {
 			Id(id string) interface {
 				MutagenEnabled(mutagenEnabled bool) interface {
 					NfsMountEnabled(nfsMountEnabled bool) interface {
@@ -298,7 +465,7 @@ func (b *projectBuilder) Containers(containers []string) interface {
 }
 
 func (b *projectBuilder) ContainersOmitted(containersOmitted []string) interface {
-	DocumentRoot(documentRoot string) interface {
+	FailOnHookFail(failOnHookFail bool) interface {
 		Id(id string) interface {
 			MutagenEnabled(mutagenEnabled bool) interface {
 				NfsMountEnabled(nfsMountEnabled bool) interface {
@@ -323,7 +490,7 @@ func (b *projectBuilder) ContainersOmitted(containersOmitted []string) interface
 	return b
 }
 
-func (b *projectBuilder) DocumentRoot(documentRoot string) interface {
+func (b *projectBuilder) FailOnHookFail(failOnHookFail bool) interface {
 	Id(id string) interface {
 		MutagenEnabled(mutagenEnabled bool) interface {
 			NfsMountEnabled(nfsMountEnabled bool) interface {
@@ -342,7 +509,7 @@ func (b *projectBuilder) DocumentRoot(documentRoot string) interface {
 		}
 	}
 } {
-	b.properties[`Document Root`] = documentRoot
+	b.properties[`Fail On Hook Fail`] = failOnHookFail
 
 	return b
 }
@@ -592,8 +759,7 @@ func (a *Ampli) Track(userID string, event Event, eventOptions ...EventOptions) 
 }
 
 // Identify identifies a user and set user properties.
-func (a *Ampli) Identify(userID string, eventOptions ...EventOptions) {
-	identify := newBaseEvent(IdentifyEventType, nil)
+func (a *Ampli) Identify(userID string, identify IdentifyEvent, eventOptions ...EventOptions) {
 	a.Track(userID, identify, eventOptions...)
 }
 
