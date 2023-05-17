@@ -4,29 +4,30 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/Masterminds/sprig/v3"
-	"github.com/ddev/ddev/pkg/archive"
-	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/exec"
-	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/output"
-	"github.com/ddev/ddev/pkg/styles"
-	"github.com/ddev/ddev/pkg/util"
-	"github.com/google/go-github/github"
-	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/jedib0t/go-pretty/v6/text"
-	"github.com/otiai10/copy"
-	"github.com/spf13/cobra"
-	"golang.org/x/oauth2"
-	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"text/template"
 	"time"
+
+	"github.com/Masterminds/sprig/v3"
+	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
+	ddevgh "github.com/ddev/ddev/pkg/github"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/styles"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/google/go-github/v52/github"
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
+	"github.com/otiai10/copy"
+	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 const addonMetadataDir = "addon-metadata"
@@ -180,7 +181,7 @@ ddev get --remove ddev-someaddonname
 			repo = parts[1]
 			ctx := context.Background()
 
-			client := getGithubClient(ctx)
+			client := ddevgh.GetGithubClient(ctx)
 			releases, resp, err := client.Repositories.ListReleases(ctx, owner, repo, &github.ListOptions{PerPage: 100})
 			if err != nil {
 				var rate github.Rate
@@ -513,7 +514,7 @@ func getDdevDescription(action string) string {
 	return ""
 }
 
-func renderRepositoryList(repos []github.Repository) string {
+func renderRepositoryList(repos []*github.Repository) string {
 	var out bytes.Buffer
 
 	t := table.NewWriter()
@@ -546,32 +547,16 @@ func renderRepositoryList(repos []github.Repository) string {
 	return out.String() + fmt.Sprintf("%d repositories found. Add-ons marked with '*' are officially maintained DDEV add-ons.", len(repos))
 }
 
-// getGithubClient creates the required github client
-func getGithubClient(ctx context.Context) *github.Client {
-	client := github.NewClient(nil)
-
-	// Use authenticated client for higher rate limit, normally only needed for tests
-	githubToken := os.Getenv("DDEV_GITHUB_TOKEN")
-	if githubToken != "" {
-		ts := oauth2.StaticTokenSource(
-			&oauth2.Token{AccessToken: githubToken},
-		)
-		tc := oauth2.NewClient(ctx, ts)
-		client = github.NewClient(tc)
-	}
-	return client
-}
-
 // listAvailable lists the services that are listed on github
-func listAvailable(officialOnly bool) ([]github.Repository, error) {
-	client := getGithubClient(context.Background())
+func listAvailable(officialOnly bool) ([]*github.Repository, error) {
+	client := ddevgh.GetGithubClient(context.Background())
 	q := "topic:ddev-get fork:true"
 	if officialOnly {
 		q = q + " org:" + globalconfig.DdevGithubOrg
 	}
 
 	opts := &github.SearchOptions{Sort: "updated", Order: "desc", ListOptions: github.ListOptions{PerPage: 200}}
-	var allRepos []github.Repository
+	var allRepos []*github.Repository
 	for {
 
 		repos, resp, err := client.Search.Repositories(context.Background(), q, opts)
