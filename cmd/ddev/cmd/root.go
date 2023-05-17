@@ -88,6 +88,7 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 		}
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		// TODO remove once Amplitude has verified with an alpha release.
 		// Do not report these commands
 		ignores := map[string]bool{"describe": true, "auth": true, "blackfire": false, "clean": true, "composer": true, "debug": true, "delete": true, "drush": true, "exec": true, "export-db": true, "get": true, "help": true, "hostname": true, "import-db": true, "import-files": true, "list": true, "logs": true, "mutagen": true, "mysql": true, "npm": true, "nvm": true, "pause": true, "php": true, "poweroff": true, "pull": true, "push": true, "service": true, "share": true, "snapshot": true, "ssh": true, "stop": true, "version": true, "xdebug": true, "xhprof": true, "yarn": true}
 
@@ -132,6 +133,7 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 			ddevapp.SetInstrumentationBaseTags()
 			ddevapp.SendInstrumentationEvents(event)
 		}
+		// end TODO remove once Amplitude has verified with an alpha release.
 	},
 }
 
@@ -175,8 +177,8 @@ func init() {
 }
 
 func instrumentationNotSetUpWarning() {
-	if !output.JSONOutput && globalconfig.DdevGlobalConfig.InstrumentationOptIn && (versionconstants.SegmentKey == "" || versionconstants.AmplitudeAPIKey == "") {
-		util.Warning("Instrumentation is opted in, but API key is not available. This usually means you have a locally-built ddev binary or one from a PR build. It's not an error. Please report it if you're using an official release build.")
+	if !output.JSONOutput && versionconstants.SegmentKey == "" && globalconfig.DdevGlobalConfig.InstrumentationOptIn {
+		util.Warning("Instrumentation is opted in, but SegmentKey key is not available. This usually means you have a locally-built ddev binary or one from a PR build. It's not an error. Please report it if you're using an official release build.")
 	}
 }
 

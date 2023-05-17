@@ -12,6 +12,7 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/version"
 	"github.com/ddev/ddev/pkg/versionconstants"
@@ -106,6 +107,13 @@ func FlushForce() {
 // Clean removes the cache file.
 func Clean() {
 	_ = os.Remove(getCacheFileName())
+}
+
+// CheckSetUp shows a warning to the user if the API key is not available.
+func CheckSetUp() {
+	if !output.JSONOutput && globalconfig.DdevGlobalConfig.InstrumentationOptIn && versionconstants.AmplitudeAPIKey == "" {
+		util.Warning("Instrumentation is opted in, but AmplitudeAPIKey is not available. This usually means you have a locally-built ddev binary or one from a PR build. It's not an error. Please report it if you're using an official release build.")
+	}
 }
 
 // InitAmplitude initializes the instrumentation and must be called once before

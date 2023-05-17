@@ -56,3 +56,11 @@ func (t *AmplitudeSuite) TestClean() {
 		amplitude.Clean()
 	})
 }
+
+func (t *AmplitudeSuite) TestCheckSetUp() {
+	require := t.Require()
+
+	require.NotPanics(func() {
+		amplitude.CheckSetUp()
+	})
+}

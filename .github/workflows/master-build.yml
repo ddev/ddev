@@ -53,7 +53,8 @@ jobs:
           if [ -z "${AmplitudeAPIKey}" ]; then echo "AmplitudeAPIKey is not set"; exit 1; fi
           ddev config global --instrumentation-opt-in=true
           ddev config global | grep instrumentation-opt-in=true
-          ddev config global | grep -v "API key is not available."
+          ddev config global | grep -v "SegmentKey is not available."
+          ddev config global | grep -v "AmplitudeAPIKey is not available."
           ddev config global --instrumentation-opt-in=false
 
 
@@ -99,7 +100,8 @@ jobs:
           if [ -z "${AmplitudeAPIKey}" ]; then echo "AmplitudeAPIKey is not set"; exit 1; fi
           ddev config global --instrumentation-opt-in=true
           ddev config global | grep instrumentation-opt-in=true
-          ddev config global | grep -v "API key is not available."
+          ddev config global | grep -v "SegmentKey is not available."
+          ddev config global | grep -v "AmplitudeAPIKey is not available."
           ddev config global --instrumentation-opt-in=false
 
       - name: Cache signed binaries

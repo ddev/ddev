@@ -14,6 +14,7 @@ func main() {
 	// Initialization is currently done before via init() func somewhere while
 	// creating the ddevapp. This should be cleaned up.
 	amplitude.InitAmplitude()
+	defer amplitude.CheckSetUp()
 	// Starting the transmission asynchronously to reduce the user impact.
 	go amplitude.Flush()
 
