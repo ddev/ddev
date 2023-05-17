@@ -482,10 +482,9 @@ func GetContainerHealth(container *docker.APIContainers) (string, string) {
 // ComposeWithStreams executes a docker-compose command but allows the caller to specify
 // stdin/stdout/stderr
 func ComposeWithStreams(composeFiles []string, stdin io.Reader, stdout io.Writer, stderr io.Writer, action ...string) error {
-	var arg []string
+	defer util.TimeTrack()()
 
-	runTime := util.TimeTrack(time.Now(), "dockerutil.ComposeWithStreams")
-	defer runTime()
+	var arg []string
 
 	_, err := DownloadDockerComposeIfNeeded()
 	if err != nil {
@@ -614,8 +613,7 @@ func GetContainerEnv(key string, container docker.APIContainers) string {
 // constraints. See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
 // for examples defining version constraints.
 func CheckDockerVersion(versionConstraint string) error {
-	runTime := util.TimeTrack(time.Now(), "CheckDockerVersion()")
-	defer runTime()
+	defer util.TimeTrack()()
 
 	currentVersion, err := GetDockerVersion()
 	if err != nil {
@@ -663,8 +661,7 @@ func CheckDockerVersion(versionConstraint string) error {
 // CheckDockerCompose determines if docker-compose is present and executable on the host system. This
 // relies on docker-compose being somewhere in the user's $PATH.
 func CheckDockerCompose() error {
-	runTime := util.TimeTrack(time.Now(), "CheckDockerComposeVersion()")
-	defer runTime()
+	defer util.TimeTrack()()
 
 	_, err := DownloadDockerComposeIfNeeded()
 	if err != nil {
@@ -1245,7 +1242,7 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 
 	containerName := "CopyIntoVolume_" + nodeps.RandomString(12)
 
-	track := util.TimeTrack(time.Now(), "CopyIntoVolume "+sourcePath+" "+volumeName)
+	track := util.TimeTrackC("CopyIntoVolume " + sourcePath + " " + volumeName)
 	containerID, _, err := RunSimpleContainer(versionconstants.GetWebImage(), containerName, []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && sleep infinity"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, map[string]string{"com.ddev.site-name": ""}, nil)
 	if err != nil {
 		return err

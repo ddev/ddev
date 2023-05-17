@@ -5,6 +5,12 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"os"
+	"runtime"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
@@ -14,11 +20,6 @@ import (
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/denisbrodbeck/machineid"
 	"gopkg.in/segmentio/analytics-go.v3"
-	"os"
-	"runtime"
-	"strconv"
-	"strings"
-	"time"
 )
 
 var hashedHostID string
@@ -41,8 +42,7 @@ func GetInstrumentationUser() string {
 
 // SetInstrumentationBaseTags sets the basic always-used tags for Segment
 func SetInstrumentationBaseTags() {
-	runTime := util.TimeTrack(time.Now(), "SetInstrumentationBaseTags")
-	defer runTime()
+	defer util.TimeTrack()()
 
 	if globalconfig.DdevGlobalConfig.InstrumentationOptIn {
 		dockerVersion, _ := dockerutil.GetDockerVersion()
@@ -78,8 +78,7 @@ func getProjectHash(projectName string) string {
 
 // SetInstrumentationAppTags creates app-specific tags for Segment
 func (app *DdevApp) SetInstrumentationAppTags() {
-	runTime := util.TimeTrack(time.Now(), "SetInstrumentationAppTags")
-	defer runTime()
+	defer util.TimeTrack()()
 
 	ignoredProperties := []string{"approot", "hostname", "hostnames", "name", "router_status_log", "shortroot"}
 
@@ -138,8 +137,7 @@ func SegmentEvent(client analytics.Client, hashedID string, event string) error 
 
 // SendInstrumentationEvents does the actual send to segment
 func SendInstrumentationEvents(event string) {
-	runTime := util.TimeTrack(time.Now(), "SendInstrumentationEvents")
-	defer runTime()
+	defer util.TimeTrack()()
 
 	if globalconfig.DdevGlobalConfig.InstrumentationOptIn && globalconfig.IsInternetActive() {
 		client, _ := analytics.NewWithConfig(versionconstants.SegmentKey, analytics.Config{

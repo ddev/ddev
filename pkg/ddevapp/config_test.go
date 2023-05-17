@@ -3,7 +3,6 @@ package ddevapp_test
 import (
 	"bufio"
 	"fmt"
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -11,22 +10,20 @@ import (
 	"sort"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/Masterminds/semver/v3"
-
+	. "github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/versionconstants"
-	"github.com/stretchr/testify/require"
-
-	. "github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/google/uuid"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // isSemver returns true if a string is a semantic version.
@@ -752,8 +749,7 @@ func TestConfigOverrideDetection(t *testing.T) {
 	switchDir := site.Chdir()
 	defer switchDir()
 
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s ConfigOverrideDetection", site.Name))
-	runTime()
+	defer util.TimeTrackC(fmt.Sprintf("%s ConfigOverrideDetection", site.Name))()
 
 	// Copy test overrides into the project .ddev directory
 	for _, item := range []string{"nginx", "nginx_full", "apache", "php", "mysql"} {
@@ -804,7 +800,6 @@ func TestConfigOverrideDetection(t *testing.T) {
 		assert.NotContains(stdout, "nginx-site.conf")
 	}
 	assert.Contains(stdout, "Custom configuration is updated")
-	runTime()
 }
 
 // TestPHPOverrides tests to make sure that PHP overrides work in all webservers.
@@ -827,7 +822,7 @@ func TestPHPOverrides(t *testing.T) {
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 	})
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
+	runTime := util.TimeTrackC(fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	testcommon.ClearDockerEnv()
 	err = app.Init(site.Dir)
@@ -929,7 +924,7 @@ func TestExtraPackages(t *testing.T) {
 	switchDir := site.Chdir()
 	defer switchDir()
 
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
+	runTime := util.TimeTrackC(fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	err := app.Init(site.Dir)
 	assert.NoError(err)
@@ -1010,7 +1005,7 @@ func TestTimezoneConfig(t *testing.T) {
 	switchDir := site.Chdir()
 	defer switchDir()
 
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", t.Name(), site.Name))
+	runTime := util.TimeTrackC(fmt.Sprintf("%s %s", t.Name(), site.Name))
 
 	err := app.Init(site.Dir)
 	assert.NoError(err)
@@ -1075,7 +1070,7 @@ func TestComposerVersionConfig(t *testing.T) {
 	switchDir := site.Chdir()
 	defer switchDir()
 
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", t.Name(), site.Name))
+	runTime := util.TimeTrackC(fmt.Sprintf("%s %s", t.Name(), site.Name))
 
 	err := app.Init(site.Dir)
 	assert.NoError(err)
@@ -1125,7 +1120,7 @@ func TestCustomBuildDockerfiles(t *testing.T) {
 	switchDir := site.Chdir()
 	defer switchDir()
 
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s TestCustomBuildDockerfiles", site.Name))
+	runTime := util.TimeTrackC(fmt.Sprintf("%s TestCustomBuildDockerfiles", site.Name))
 
 	err := app.Init(site.Dir)
 	assert.NoError(err)

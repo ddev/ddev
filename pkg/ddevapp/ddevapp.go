@@ -146,8 +146,7 @@ func (app *DdevApp) GetType() string {
 // Init populates DdevApp config based on the current working directory.
 // It does not start the containers.
 func (app *DdevApp) Init(basePath string) error {
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("app.Init(%s)", basePath))
-	defer runTime()
+	defer util.TimeTrackC(fmt.Sprintf("app.Init(%s)", basePath))()
 
 	newApp, err := NewApp(basePath, true)
 	if err != nil {
@@ -1588,8 +1587,7 @@ type ExecOpts struct {
 func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 	app.DockerEnv()
 
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("app.Exec %v", opts))
-	defer runTime()
+	defer util.TimeTrackC(fmt.Sprintf("app.Exec %v", opts))()
 
 	if opts.Cmd == "" && len(opts.RawCmd) == 0 {
 		return "", "", fmt.Errorf("no command provided")
@@ -2185,13 +2183,12 @@ func (app *DdevApp) Snapshot(snapshotName string) (string, error) {
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
 		// If we're not using bind-mounts, we have to copy the snapshot back into
 		// the host project's .ddev/db_snapshots directory
-		elapsed := util.TimeTrack(time.Now(), "CopySnapshotFromContainer")
+		defer util.TimeTrackC("CopySnapshotFromContainer")()
 		// Copy snapshot back to the host
 		err = dockerutil.CopyFromContainer(GetContainerName(app, "db"), path.Join(containerSnapshotDir, snapshotFile), app.GetConfigPath("db_snapshots"))
 		if err != nil {
 			return "", err
 		}
-		elapsed()
 	} else {
 		// But if we are using bind-mounts, we can just copy it to where the snapshot is
 		// mounted into the db container (/mnt/ddev_config/db_snapshots)

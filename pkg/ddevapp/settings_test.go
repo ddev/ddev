@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 
 	. "github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -94,7 +93,7 @@ func TestWriteDrushConfig(t *testing.T) {
 	origDir, _ := os.Getwd()
 
 	for _, site := range TestSites {
-		runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s WriteDrushrc", site.Name))
+		runTime := util.TimeTrackC(fmt.Sprintf("%s WriteDrushrc", site.Name))
 
 		testcommon.ClearDockerEnv()
 

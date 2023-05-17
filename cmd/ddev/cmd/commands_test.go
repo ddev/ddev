@@ -8,7 +8,6 @@ import (
 	"runtime"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
@@ -24,7 +23,7 @@ import (
 // TestCustomCommands does basic checks to make sure custom commands work OK.
 func TestCustomCommands(t *testing.T) {
 	assert := asrt.New(t)
-	runTime := util.TimeTrack(time.Now(), t.Name())
+	runTime := util.TimeTrackC(t.Name())
 
 	origDir, _ := os.Getwd()
 

@@ -2,6 +2,13 @@ package ddevapp_test
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
@@ -10,12 +17,6 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"path/filepath"
-	"runtime"
-	"strings"
-	"testing"
-	"time"
 )
 
 // TestMutagenSimple tests basic mutagen functionality
@@ -40,7 +41,7 @@ func TestMutagenSimple(t *testing.T) {
 
 	err := site.Prepare()
 	require.NoError(t, err)
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
+	runTime := util.TimeTrackC(fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	err = app.Init(site.Dir)
 	assert.NoError(err)
@@ -176,7 +177,7 @@ func TestMutagenConfigChange(t *testing.T) {
 
 	err := site.Prepare()
 	require.NoError(t, err)
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
+	runTime := util.TimeTrackC(fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	err = app.Init(site.Dir)
 	assert.NoError(err)

@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/testcommon"
@@ -22,7 +21,7 @@ func TestProcessHooks(t *testing.T) {
 	origDir, _ := os.Getwd()
 	// We don't get the expected task debug output without DDEV_DEBUG
 	t.Setenv("DDEV_DEBUG", "true")
-	runTime := util.TimeTrack(time.Now(), t.Name())
+	runTime := util.TimeTrackC(t.Name())
 
 	testcommon.ClearDockerEnv()
 	app, err := ddevapp.NewApp(site.Dir, true)

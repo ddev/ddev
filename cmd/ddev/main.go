@@ -1,15 +1,14 @@
 package main
 
 import (
+	"os"
+
 	"github.com/ddev/ddev/cmd/ddev/cmd"
 	"github.com/ddev/ddev/pkg/util"
-	"os"
-	"time"
 )
 
 func main() {
-	runTime := util.TimeTrack(time.Now(), "main()")
-	defer runTime()
+	defer util.TimeTrack()()
 
 	// Prevent running as root for most cases
 	// We really don't want ~/.ddev to have root ownership, breaks things.

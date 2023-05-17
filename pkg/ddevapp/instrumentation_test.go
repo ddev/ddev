@@ -2,14 +2,14 @@ package ddevapp_test
 
 import (
 	"fmt"
+	"strings"
+	"testing"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
-	"strings"
-	"testing"
-	"time"
 )
 
 // TestSetInstrumentationAppTags checks to see that tags are properly set
@@ -19,7 +19,7 @@ func TestSetInstrumentationAppTags(t *testing.T) {
 	assert := asrt.New(t)
 
 	site := TestSites[0]
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s %s", site.Name, t.Name()))
+	runTime := util.TimeTrackC(fmt.Sprintf("%s %s", site.Name, t.Name()))
 
 	testcommon.ClearDockerEnv()
 	app := new(ddevapp.DdevApp)
