@@ -272,7 +272,7 @@ router_http_port: 8080
 
 Extra `config.*.yaml` files are loaded in lexicographic order, so `config.a.yaml` will be overridden by `config.b.yaml`.
 
-Team memberts may choose to use `config.local.yaml` for local non-committed config changes, for example. `config.local.yaml` is gitignored by default.
+Team members may choose to use `config.local.yaml` for local non-committed config changes, for example. `config.local.yaml` is gitignored by default.
 
 `config.*.yaml` update configuration according to these rules:
 
