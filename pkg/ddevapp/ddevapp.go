@@ -1900,24 +1900,21 @@ func (app *DdevApp) DockerEnv() {
 	}
 
 	envVars := map[string]string{
-		// Without COMPOSE_DOCKER_CLI_BUILD=0, docker-compose makes all kinds of mess
-		// of output. BUILDKIT_PROGRESS doesn't help either.
-		"COMPOSE_DOCKER_CLI_BUILD":       "0",
-		"COMPOSER_EXIT_ON_PATCH_FAILURE": "1",
 		// The compose project name can no longer contain dots
 		// https://github.com/compose-spec/compose-go/pull/197
-		"COMPOSE_PROJECT_NAME":          "ddev-" + strings.Replace(app.Name, `.`, "", -1),
-		"COMPOSE_CONVERT_WINDOWS_PATHS": "true",
-		"DDEV_SITENAME":                 app.Name,
-		"DDEV_TLD":                      app.ProjectTLD,
-		"DDEV_DBIMAGE":                  app.GetDBImage(),
-		"DDEV_DBAIMAGE":                 versionconstants.GetDBAImage(),
-		"DDEV_PROJECT":                  app.Name,
-		"DDEV_WEBIMAGE":                 app.WebImage,
-		"DDEV_APPROOT":                  app.AppRoot,
-		"DDEV_COMPOSER_ROOT":            app.GetComposerRoot(true, false),
-		"DDEV_DATABASE":                 app.Database.Type + ":" + app.Database.Version,
-		"DDEV_FILES_DIR":                app.GetContainerUploadDirFullPath(),
+		"COMPOSE_PROJECT_NAME":           "ddev-" + strings.Replace(app.Name, `.`, "", -1),
+		"COMPOSE_CONVERT_WINDOWS_PATHS":  "true",
+		"COMPOSER_EXIT_ON_PATCH_FAILURE": "1",
+		"DDEV_SITENAME":                  app.Name,
+		"DDEV_TLD":                       app.ProjectTLD,
+		"DDEV_DBIMAGE":                   app.GetDBImage(),
+		"DDEV_DBAIMAGE":                  versionconstants.GetDBAImage(),
+		"DDEV_PROJECT":                   app.Name,
+		"DDEV_WEBIMAGE":                  app.WebImage,
+		"DDEV_APPROOT":                   app.AppRoot,
+		"DDEV_COMPOSER_ROOT":             app.GetComposerRoot(true, false),
+		"DDEV_DATABASE":                  app.Database.Type + ":" + app.Database.Version,
+		"DDEV_FILES_DIR":                 app.GetContainerUploadDirFullPath(),
 
 		"DDEV_HOST_DB_PORT":          dbPortStr,
 		"DDEV_HOST_MAILHOG_PORT":     app.HostMailhogPort,
