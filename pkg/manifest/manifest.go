@@ -12,7 +12,7 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 )
 
-func NewManifest(configPath string, isInternetActive bool, updateInterval time.Duration, disableTips bool) types.Manifest {
+func New(configPath string, isInternetActive bool, updateInterval time.Duration, disableTips bool) types.Manifest {
 	manifest := &Manifest{
 		fileStorage: storage.NewFileStorage(getLocalFileName(configPath)),
 		// TODO change to ddev repo before merge
@@ -46,7 +46,7 @@ func GetManifest() types.Manifest {
 			updateInterval = 24
 		}
 
-		manifest = NewManifest(
+		manifest = New(
 			globalconfig.GetGlobalConfigPath(),
 			globalconfig.IsInternetActive(),
 			time.Duration(updateInterval)*time.Hour,
@@ -74,7 +74,7 @@ type Manifest struct {
 }
 
 func (m *Manifest) write() {
-	defer util.TimeTrack(time.Now(), "Write()")()
+	defer util.TimeTrack(time.Now(), "write")()
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -87,7 +87,7 @@ func (m *Manifest) write() {
 }
 
 func (m *Manifest) loadFromLocalStorage() {
-	defer util.TimeTrack(time.Now(), "loadFromLocalStorage()")()
+	defer util.TimeTrack(time.Now(), "loadFromLocalStorage")()
 
 	m.mu.Lock()
 	defer func() {
@@ -105,7 +105,7 @@ func (m *Manifest) loadFromLocalStorage() {
 }
 
 func (m *Manifest) updateFromGithub() {
-	defer util.TimeTrack(time.Now(), "updateFromGithub()")()
+	defer util.TimeTrack(time.Now(), "updateFromGithub")()
 
 	if !m.isInternetActive {
 		util.Debug("No internet connection.")
