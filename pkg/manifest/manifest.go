@@ -74,8 +74,7 @@ type Manifest struct {
 }
 
 func (m *Manifest) write() {
-	runTime := util.TimeTrack(time.Now(), "Write()")
-	defer runTime()
+	defer util.TimeTrack(time.Now(), "Write()")()
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -88,8 +87,7 @@ func (m *Manifest) write() {
 }
 
 func (m *Manifest) loadFromLocalStorage() {
-	runTime := util.TimeTrack(time.Now(), "loadFromLocalStorage()")
-	defer runTime()
+	defer util.TimeTrack(time.Now(), "loadFromLocalStorage()")()
 
 	m.mu.Lock()
 	defer func() {
@@ -107,8 +105,7 @@ func (m *Manifest) loadFromLocalStorage() {
 }
 
 func (m *Manifest) updateFromGithub() {
-	runTime := util.TimeTrack(time.Now(), "updateFromGithub()")
-	defer runTime()
+	defer util.TimeTrack(time.Now(), "updateFromGithub()")()
 
 	if !m.isInternetActive {
 		util.Debug("No internet connection.")

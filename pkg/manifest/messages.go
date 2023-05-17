@@ -57,8 +57,7 @@ func (m *Manifest) ShowMessages() {
 // TODO limit to once a day maybe see PR.
 // TODO beautify output
 func (m *Manifest) ShowTips() {
-	runTime := util.TimeTrack(time.Now(), "ShowTips()")
-	defer runTime()
+	defer util.TimeTrack(time.Now(), "ShowTips()")()
 
 	// Show tips.
 	if !m.tipsDisabled {
