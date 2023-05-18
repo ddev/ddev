@@ -7,6 +7,7 @@
       - "os=wsl2"
       - "architecture=amd64"
       - "dockertype=dockerforwindows"
+    branches: "master"
     env:
       BUILDKITE_CLEAN_CHECKOUT: true
       BUILDKITE_BUILD_PATH: ~/tmp/buildkite_builds
