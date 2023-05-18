@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/ddev/ddev/pkg/amplitude"
+	"github.com/ddev/ddev/pkg/config/remoteconfig"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/manifest"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/updatecheck"
 	"github.com/ddev/ddev/pkg/util"
@@ -145,7 +145,7 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 		}
 		// end TODO remove once Amplitude has verified with an alpha release.
 
-		manifest.GetManifest().ShowTips()
+		remoteconfig.GetGlobal().ShowTicker()
 	},
 }
 

@@ -371,3 +371,6 @@ gopkg.in/segmentio/analytics-go.v3
 gopkg.in/yaml.v3
 # gotest.tools/v3 v3.4.0
 ## explicit; go 1.13
+# muzzammil.xyz/jsonc v1.0.0
+## explicit
+muzzammil.xyz/jsonc

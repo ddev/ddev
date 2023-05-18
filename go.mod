@@ -33,6 +33,7 @@ require (
 	golang.org/x/text v0.9.0
 	gopkg.in/segmentio/analytics-go.v3 v3.1.0
 	gopkg.in/yaml.v3 v3.0.1
+	muzzammil.xyz/jsonc v1.0.0
 )
 
 require (

@@ -5,11 +5,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/ddev/ddev/pkg/manifest/internal"
-	"github.com/ddev/ddev/pkg/manifest/types"
+	"github.com/ddev/ddev/pkg/config/remoteconfig/internal"
+	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 )
 
-func NewFileStorage(fileName string) types.ManifestStorage {
+func NewFileStorage(fileName string) types.RemoteConfigStorage {
 	return &fileStorage{
 		fileName: fileName,
 		loaded:   false,
@@ -24,8 +24,8 @@ type fileStorage struct {
 
 // fileStorageData is the structure used for the file.
 type fileStorageData struct {
-	LastUpdate time.Time
-	Manifest   internal.Manifest
+	LastUpdate   time.Time
+	RemoteConfig internal.RemoteConfig
 }
 
 func (s *fileStorage) LastUpdate() time.Time {
@@ -37,18 +37,18 @@ func (s *fileStorage) LastUpdate() time.Time {
 	return s.data.LastUpdate
 }
 
-func (s *fileStorage) Pull() (messages internal.Manifest, err error) {
+func (s *fileStorage) Pull() (messages internal.RemoteConfig, err error) {
 	err = s.loadData()
 	if err != nil {
 		return
 	}
 
-	return s.data.Manifest, nil
+	return s.data.RemoteConfig, nil
 }
 
-func (s *fileStorage) Push(manifest internal.Manifest) (err error) {
+func (s *fileStorage) Push(manifest internal.RemoteConfig) (err error) {
 	s.data.LastUpdate = time.Now()
-	s.data.Manifest = manifest
+	s.data.RemoteConfig = manifest
 
 	err = s.saveData()
 
@@ -70,9 +70,10 @@ func (s *fileStorage) loadData() error {
 		return nil
 	}
 
+	defer file.Close()
+
 	decoder := gob.NewDecoder(file)
 	err = decoder.Decode(&s.data)
-	file.Close()
 
 	// If the file was properly read, mark the cache as loaded.
 	if err == nil {
@@ -85,11 +86,13 @@ func (s *fileStorage) loadData() error {
 // saveData writes the messages to the message file.
 func (s *fileStorage) saveData() error {
 	file, err := os.Create(s.fileName)
+
 	if err == nil {
+		defer file.Close()
+
 		encoder := gob.NewEncoder(file)
 		err = encoder.Encode(&s.data)
 	}
-	file.Close()
 
 	return err
 }

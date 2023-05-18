@@ -2,18 +2,17 @@ package storage
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"io"
 	"time"
 
+	"github.com/ddev/ddev/pkg/config/remoteconfig/internal"
+	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
 	"github.com/ddev/ddev/pkg/github"
-	"github.com/ddev/ddev/pkg/manifest/internal"
-	"github.com/ddev/ddev/pkg/manifest/types"
-	"github.com/ddev/ddev/pkg/util"
+	"muzzammil.xyz/jsonc"
 )
 
-func NewGithubStorage(owner, repo, filepath string, options Options) types.ManifestStorage {
+func NewGithubStorage(owner, repo, filepath string, options Options) types.RemoteConfigStorage {
 	return &githubStorage{
 		owner:    owner,
 		repo:     repo,
@@ -35,11 +34,10 @@ func (s *githubStorage) LastUpdate() time.Time {
 	return time.Now()
 }
 
-func (s *githubStorage) Pull() (manifest internal.Manifest, err error) {
+func (s *githubStorage) Pull() (manifest internal.RemoteConfig, err error) {
 	ctx := context.Background()
 	client := github.GetGithubClient(ctx)
 
-	//fileContent, _, _, err := client.Repositories.GetContents(ctx, s.owner, s.repo, s.filepath, &s.options)
 	var reader io.ReadCloser
 	reader, _, err = client.Repositories.DownloadContents(ctx, s.owner, s.repo, s.filepath, &s.options)
 
@@ -52,19 +50,16 @@ func (s *githubStorage) Pull() (manifest internal.Manifest, err error) {
 	var b []byte
 	b, err = io.ReadAll(reader)
 
-	util.Debug("%s", b)
-
 	if err != nil {
 		return
 	}
 
-	err = json.Unmarshal(b, &manifest)
-	util.Debug("%v", manifest)
+	err = jsonc.Unmarshal(b, &manifest)
 
 	return
 }
 
-func (s *githubStorage) Push(_ internal.Manifest) error {
+func (s *githubStorage) Push(_ internal.RemoteConfig) error {
 	// do nothing, readonly storage
 	return errors.New("failed to push manifest to readonly `githubStorage`")
 }

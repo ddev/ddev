@@ -4,10 +4,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ddev/ddev/pkg/config/remoteconfig"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/manifest"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
@@ -112,7 +112,7 @@ ddev start --all`,
 			util.Success("Project can be reached at %s", strings.Join(httpsURLs, " "))
 		}
 
-		manifest.GetManifest().ShowMessages()
+		remoteconfig.GetGlobal().ShowMessages()
 	},
 }
 

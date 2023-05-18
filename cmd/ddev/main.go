@@ -5,7 +5,8 @@ import (
 
 	"github.com/ddev/ddev/cmd/ddev/cmd"
 	"github.com/ddev/ddev/pkg/amplitude"
-	"github.com/ddev/ddev/pkg/manifest"
+	"github.com/ddev/ddev/pkg/config/remoteconfig"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/util"
 )
 
@@ -30,8 +31,23 @@ func main() {
 	// should be realized with a clean bootstrap as soon as it exists. The
 	// download does not hurt here as it's done in a asynchronous call but it's
 	// important to start it as early as possible to have an up to date
-	// manifest at the end of the command execution.
-	manifest.GetManifest()
+	// remote config at the end of the command execution.
+	remoteconfig.InitGlobal(
+		remoteconfig.Config{
+			LocalSource: remoteconfig.LocalSource{
+				Path: globalconfig.GetGlobalConfigPath(),
+			},
+			RemoteSource: remoteconfig.RemoteSource{
+				Owner:    globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Owner,
+				Repo:     globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Repo,
+				Ref:      globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Ref,
+				Filepath: globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Filepath,
+			},
+			UpdateInterval: globalconfig.DdevGlobalConfig.RemoteConfig.UpdateInterval,
+			TickerDisabled: globalconfig.DdevGlobalConfig.Messages.DisableTicker,
+		},
+		globalconfig.IsInternetActive,
+	)
 
 	cmd.Execute()
 }
