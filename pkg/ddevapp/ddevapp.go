@@ -1899,7 +1899,7 @@ func (app *DdevApp) DockerEnv() {
 
 	envVars := map[string]string{
 		// The compose project name can no longer contain dots; must be lower-case
-		"COMPOSE_PROJECT_NAME":          strings.ToLower("ddev-" + strings.Replace(app.Name, `.`, "", -1)),
+		"COMPOSE_PROJECT_NAME":           strings.ToLower("ddev-" + strings.Replace(app.Name, `.`, "", -1)),
 		"COMPOSE_CONVERT_WINDOWS_PATHS":  "true",
 		"COMPOSER_EXIT_ON_PATCH_FAILURE": "1",
 		"DDEV_SITENAME":                  app.Name,
