@@ -2,6 +2,9 @@ package ddevapp
 
 import (
 	"bytes"
+	"strings"
+	"time"
+
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
@@ -10,8 +13,6 @@ import (
 	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
-	"strings"
-	"time"
 )
 
 // ListCommandSettings conains all filters and settings of the `ddev list` command
@@ -38,8 +39,7 @@ type ListCommandSettings struct {
 // wrapTableText if true the text is wrapped instead of truncated to fit the row length
 // continuousSleepTime is the time between reports
 func List(settings ListCommandSettings) {
-	runTime := util.TimeTrack(time.Now(), "ddev list")
-	defer runTime()
+	defer util.TimeTrack()()
 
 	var out bytes.Buffer
 

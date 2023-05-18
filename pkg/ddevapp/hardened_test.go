@@ -2,6 +2,10 @@ package ddevapp_test
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"testing"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -10,10 +14,6 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"path/filepath"
-	"testing"
-	"time"
 )
 
 // TestHardenedStart makes sure we can do a start and basic use with hardened images
@@ -34,7 +34,7 @@ func TestHardenedStart(t *testing.T) {
 		t.Skip("Skipping test because mutagen is enabled")
 	}
 
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("%s DdevStart", site.Name))
+	runTime := util.TimeTrackC(fmt.Sprintf("%s DdevStart", site.Name))
 
 	ddevapp.PowerOff()
 

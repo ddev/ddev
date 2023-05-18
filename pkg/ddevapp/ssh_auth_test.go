@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
@@ -26,7 +25,7 @@ func TestSSHAuth(t *testing.T) {
 	origDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
 
-	runTime := util.TimeTrack(time.Now(), t.Name())
+	runTime := util.TimeTrackC(t.Name())
 
 	//  Add a docker-compose service that has ssh server and mounted authorized_keys
 	site := TestSites[0]

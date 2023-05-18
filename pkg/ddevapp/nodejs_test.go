@@ -1,6 +1,10 @@
 package ddevapp_test
 
 import (
+	"os"
+	"strings"
+	"testing"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
@@ -9,10 +13,6 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"strings"
-	"testing"
-	"time"
 )
 
 // TestNodeJSVersions whether we can configure nodejs versions
@@ -26,7 +26,7 @@ func TestNodeJSVersions(t *testing.T) {
 	origDir, _ := os.Getwd()
 	_ = os.Chdir(site.Dir)
 
-	runTime := util.TimeTrack(time.Now(), t.Name())
+	runTime := util.TimeTrackC(t.Name())
 
 	testcommon.ClearDockerEnv()
 	app, err := ddevapp.NewApp(site.Dir, true)

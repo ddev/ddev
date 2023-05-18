@@ -56,8 +56,7 @@ func init() {
 
 // NewApp creates a new DdevApp struct with defaults set and overridden by any existing config.yml.
 func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("ddevapp.NewApp(%s)", appRoot))
-	defer runTime()
+	defer util.TimeTrackC(fmt.Sprintf("ddevapp.NewApp(%s)", appRoot))()
 
 	app := &DdevApp{}
 
