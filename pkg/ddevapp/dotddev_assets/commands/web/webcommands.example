@@ -1,0 +1,48 @@
+#!/bin/bash
+
+#echo $Description: Run commands inside the web container.
+#echo $Usage: webcommands
+#echo $Example: 'ddev webcommands'
+
+echo '** Check config status, get versions and important log messages, etc.'
+echo ''
+
+echo '* Configuration status'
+drush config:status
+echo ''
+
+echo '* Versions'
+drush core:status | grep 'version'
+echo ''
+
+echo '* Last 3 log entries with severity minimum Warning'
+drush watchdog:show --count=3 --severity-min=Warning
+echo ''
+
+echo '** Check for Drupal core and module updates'
+composer outdated "drupal/*"
+echo ''
+
+echo '** Unix examples - get current working directory and content'
+pwd
+ls
+echo ''
+
+echo '** Useful variables for web scripts'
+echo '$DDEV_DATABASE': $DDEV_DATABASE
+echo '$DDEV_DOCROOT': $DDEV_DOCROOT
+echo '$DDEV_FILES_DIR': $DDEV_FILES_DIR
+echo '$DDEV_HOSTNAME': $DDEV_HOSTNAME
+echo '$DDEV_MUTAGEN_ENABLED': $DDEV_MUTAGEN_ENABLED
+echo '$DDEV_PHP_VERSION': $DDEV_PHP_VERSION
+echo '$DDEV_PRIMARY_URL': $DDEV_PRIMARY_URL
+echo '$DDEV_PROJECT': $DDEV_PROJECT
+echo '$DDEV_PROJECT_TYPE': $DDEV_PROJECT_TYPE
+echo '$DDEV_ROUTER_HTTP_PORT': $DDEV_ROUTER_HTTP_PORT
+echo '$DDEV_ROUTER_HTTPS_PORT': $DDEV_ROUTER_HTTPS_PORT
+echo '$DDEV_SITENAME': $DDEV_SITENAME
+echo '$DDEV_TLD': $DDEV_TLD
+echo '$DDEV_WEBSERVER_TYPE': $DDEV_WEBSERVER_TYPE
+echo '$GOARCH': $GOARCH
+echo '$GOOS': $GOOS
+echo '$IS_DDEV_PROJECT': $IS_DDEV_PROJECT
