@@ -243,6 +243,14 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # You can opt in or out of sending instrumentation to the ddev developers with
 # instrumentation_opt_in: true # or false
 #
+# Maximum number of collected events in the local queue. If reached, collected
+# data is sent.
+# instrumentation_queue_size: 100
+#
+# Reporting interval in hours. If the last report was longer ago, collected
+# data is sent.
+# instrumentation_reporting_interval: 24
+#
 # You can enable nfs mounting for all projects with
 # nfs_mount_enabled: true
 #

@@ -158,11 +158,11 @@ func InitAmplitude() {
 	// Size of the queue. If reached the queued events will be sent.
 	queueSize := globalconfig.DdevGlobalConfig.InstrumentationQueueSize
 	if queueSize <= 0 {
-		queueSize = 50
+		queueSize = 100
 	}
 
 	// Interval of reporting. If reached since last reporting events will be sent.
-	interval := globalconfig.DdevGlobalConfig.InstrumentationReportingInterval
+	interval := globalconfig.DdevGlobalConfig.InstrumentationReportingInterval * time.Hour
 	if interval <= 0 {
 		interval = 24 * time.Hour
 	}
