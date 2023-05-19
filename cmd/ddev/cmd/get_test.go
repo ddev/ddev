@@ -83,8 +83,8 @@ func TestCmdGet(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(exists, "the file with no ddev-generated.txt should not have been replaced")
 
-	assert.Contains(out, fmt.Sprintf("NOT overwriting file/directory %s", app.GetConfigPath("file-with-no-ddev-generated.txt")))
-	assert.Contains(out, fmt.Sprintf("NOT overwriting file/directory %s", filepath.Join(globalconfig.GetGlobalDdevDir(), "file-with-no-ddev-generated.txt")))
+	assert.Contains(out, fmt.Sprintf("NOT overwriting %s", app.GetConfigPath("file-with-no-ddev-generated.txt")))
+	assert.Contains(out, fmt.Sprintf("NOT overwriting %s", filepath.Join(globalconfig.GetGlobalDdevDir(), "file-with-no-ddev-generated.txt")))
 }
 
 // TestCmdGetComplex tests advanced usages
