@@ -199,7 +199,7 @@ Whether to allow [instrumentation reporting](../usage/diagnostics.md).
 | -- | -- | --
 | :octicons-globe-16: global | `true` | Can be `true` or `false`.
 
-When `true`, anonymous usage information is collected via [Amplitude](amplitude.com).
+When `true`, anonymous usage information is collected via [Amplitude](https://amplitude.com/).
 
 ## `instrumentation_queue_size`
 
