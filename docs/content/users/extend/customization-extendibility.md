@@ -270,11 +270,9 @@ For example, many teams commit their `config.yaml` and share it throughout the t
 router_http_port: 8080
 ```
 
-`config.*.yaml` is by default omitted from Git by the `.ddev/.gitignore` file. You can commit it by using `git add -f .ddev/config.<something>.yaml`.
-
 Extra `config.*.yaml` files are loaded in lexicographic order, so `config.a.yaml` will be overridden by `config.b.yaml`.
 
-Teams may choose to use `config.local.yaml` or `config.override.yaml` for all local non-committed config changes, for example.
+Team members may choose to use `config.local.yaml` for local non-committed config changes, for example. `config.local.yaml` is gitignored by default.
 
 `config.*.yaml` update configuration according to these rules:
 

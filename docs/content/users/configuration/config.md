@@ -28,9 +28,9 @@ You can hand-edit the YAML files DDEV creates for you after running [`ddev confi
 
 ### Environmental Overrides
 
-You can override the per-project `config.yaml` with files named `config.*.yaml`, which are gitignored by default and not checked in.
+You can override the per-project `config.yaml` with files named `config.*.yaml`, and files like this are often created by [DDEV add-ons](../extend/additional-services.md). For example, `config.elasticsearch.yaml` in [Elasticsearch add-on](https://github.com/ddev/ddev-elasticsearch) adds additional configuration related to Elasticsearch.
 
-Many teams use `config.local.yaml` for configuration that’s specific to one environment, and not checked into the team’s default `config.yaml`. You might [enable Mutagen](../install/performance.md#mutagen) or [enable NFS](../install/performance.md#nfs) for the project, for example, only on your machine. Or maybe use a different database type.
+Many teams use `config.local.yaml` for configuration that is specific to one environment, and not checked into the team’s default `config.yaml`. You might [enable Mutagen](../install/performance.md#mutagen) or [enable NFS](../install/performance.md#nfs) for the project, for example, only on your machine. Or maybe use a different database type. The file `config.local.yaml` is gitignored by default.
 
 For examples, see the [Extending and Customizing Environments](../extend/customization-extendibility.md#extending-configyaml-with-custom-configyaml-files) page.
 
