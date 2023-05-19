@@ -36,7 +36,7 @@ func (t *AmplitudeSuite) TestGetEventOptions() {
 	require.Equal(runtime.GOOS, amplitude.GetEventOptions().OSName)
 	require.Equal(runtime.GOARCH, amplitude.GetEventOptions().Platform)
 	require.Equal("ddev cli", amplitude.GetEventOptions().ProductID)
-	require.LessOrEqual(amplitude.GetEventOptions().Time, time.Now())
+	require.LessOrEqual(amplitude.GetEventOptions().Time, time.Now().UnixMilli())
 	require.Equal(globalconfig.DdevGlobalConfig.InstrumentationUser, amplitude.GetEventOptions().UserID)
 }
 
