@@ -23,7 +23,7 @@ import (
 
 // Local cache variables to speedup the implementation.
 var (
-	userID      string
+	deviceID    string
 	initialized bool
 	identified  bool
 )
@@ -31,13 +31,30 @@ var (
 // cacheFile is the name of the cache file in ~/.ddev.
 const cacheFile = ".amplitude.cache"
 
-// GetUserID returns the unique user id to be used when tracking an event.
-func GetUserID() string {
-	if userID == "" {
-		userID, _ = machineid.ProtectedID("ddev")
+// GetDeviceID returns the unique device id to be used when tracking an event.
+func GetDeviceID() string {
+	if deviceID == "" {
+		deviceID, _ = machineid.ProtectedID("ddev")
 	}
 
-	return userID
+	return deviceID
+}
+
+// GetEventOptions returns default options to be used when tracking an event.
+func GetEventOptions() (options ampli.EventOptions) {
+	options = ampli.EventOptions{
+		UserID:     globalconfig.DdevGlobalConfig.InstrumentationUser,
+		DeviceID:   GetDeviceID(),
+		AppVersion: versionconstants.DdevVersion,
+		Platform:   runtime.GOARCH,
+		OSName:     runtime.GOOS,
+		Language:   os.Getenv("LANG"),
+		ProductID:  "ddev cli",
+	}
+
+	options.SetTime(time.Now())
+
+	return
 }
 
 // TrackCommand collects and tracks information about the command for
@@ -61,7 +78,7 @@ func TrackCommand(cmd *cobra.Command, args []string) {
 		CommandName(cmd.Name()).
 		CommandPath(cmd.CommandPath())
 
-	ampli.Instance.Command(GetUserID(), builder.Build())
+	ampli.Instance.Command("", builder.Build(), GetEventOptions())
 }
 
 // Flush transmits the queued events if limits are reached.
@@ -203,16 +220,12 @@ func identify() {
 	builder := ampli.Identify.Builder().
 		DockerPlatform(dockerPlaform).
 		DockerVersion(dockerVersion).
-		Language(os.Getenv("LANG")).
-		Os(runtime.GOOS).
-		Platform(runtime.GOARCH).
-		Timezone(timezone).
-		Version(versionconstants.DdevVersion)
+		Timezone(timezone)
 
 	if wslDistro := nodeps.GetWSLDistro(); wslDistro != "" {
 		builder.
 			WslDistro(wslDistro)
 	}
 
-	ampli.Instance.Identify(GetUserID(), builder.Build())
+	ampli.Instance.Identify("", builder.Build(), GetEventOptions())
 }

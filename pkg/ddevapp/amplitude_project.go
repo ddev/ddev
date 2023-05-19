@@ -65,5 +65,5 @@ func (app *DdevApp) TrackProject() {
 			DatabaseVersion(app.Database.Version)
 	}
 
-	ampli.Instance.Project(amplitude.GetUserID(), builder.Build())
+	ampli.Instance.Project("", builder.Build(), amplitude.GetEventOptions())
 }

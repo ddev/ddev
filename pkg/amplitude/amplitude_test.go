@@ -1,9 +1,14 @@
 package amplitude_test
 
 import (
+	"os"
+	"runtime"
 	"testing"
+	"time"
 
 	"github.com/ddev/ddev/pkg/amplitude"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/suite"
 )
@@ -16,10 +21,23 @@ type AmplitudeSuite struct {
 	suite.Suite
 }
 
-func (t *AmplitudeSuite) TestGetUserID() {
+func (t *AmplitudeSuite) TestGetDeviceID() {
 	require := t.Require()
 
-	require.NotEmpty(amplitude.GetUserID())
+	require.NotEmpty(amplitude.GetDeviceID())
+}
+
+func (t *AmplitudeSuite) TestGetEventOptions() {
+	require := t.Require()
+
+	require.Equal(versionconstants.DdevVersion, amplitude.GetEventOptions().AppVersion)
+	require.Equal(amplitude.GetDeviceID(), amplitude.GetEventOptions().DeviceID)
+	require.Equal(os.Getenv("LANG"), amplitude.GetEventOptions().Language)
+	require.Equal(runtime.GOOS, amplitude.GetEventOptions().OSName)
+	require.Equal(runtime.GOARCH, amplitude.GetEventOptions().Platform)
+	require.Equal("ddev cli", amplitude.GetEventOptions().ProductID)
+	require.LessOrEqual(amplitude.GetEventOptions().Time, time.Now())
+	require.Equal(globalconfig.DdevGlobalConfig.InstrumentationUser, amplitude.GetEventOptions().UserID)
 }
 
 func (t *AmplitudeSuite) TestTrackCommand() {

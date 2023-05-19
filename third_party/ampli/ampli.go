@@ -109,15 +109,7 @@ var Identify = struct {
 	Builder func() interface {
 		DockerPlatform(dockerPlatform string) interface {
 			DockerVersion(dockerVersion string) interface {
-				Language(language string) interface {
-					Os(os string) interface {
-						Platform(platform string) interface {
-							Timezone(timezone string) interface {
-								Version(version string) IdentifyBuilder
-							}
-						}
-					}
-				}
+				Timezone(timezone string) IdentifyBuilder
 			}
 		}
 	}
@@ -125,15 +117,7 @@ var Identify = struct {
 	Builder: func() interface {
 		DockerPlatform(dockerPlatform string) interface {
 			DockerVersion(dockerVersion string) interface {
-				Language(language string) interface {
-					Os(os string) interface {
-						Platform(platform string) interface {
-							Timezone(timezone string) interface {
-								Version(version string) IdentifyBuilder
-							}
-						}
-					}
-				}
+				Timezone(timezone string) IdentifyBuilder
 			}
 		}
 	} {
@@ -166,15 +150,7 @@ type identifyBuilder struct {
 
 func (b *identifyBuilder) DockerPlatform(dockerPlatform string) interface {
 	DockerVersion(dockerVersion string) interface {
-		Language(language string) interface {
-			Os(os string) interface {
-				Platform(platform string) interface {
-					Timezone(timezone string) interface {
-						Version(version string) IdentifyBuilder
-					}
-				}
-			}
-		}
+		Timezone(timezone string) IdentifyBuilder
 	}
 } {
 	b.properties[`Docker Platform`] = dockerPlatform
@@ -183,67 +159,15 @@ func (b *identifyBuilder) DockerPlatform(dockerPlatform string) interface {
 }
 
 func (b *identifyBuilder) DockerVersion(dockerVersion string) interface {
-	Language(language string) interface {
-		Os(os string) interface {
-			Platform(platform string) interface {
-				Timezone(timezone string) interface {
-					Version(version string) IdentifyBuilder
-				}
-			}
-		}
-	}
+	Timezone(timezone string) IdentifyBuilder
 } {
 	b.properties[`Docker Version`] = dockerVersion
 
 	return b
 }
 
-func (b *identifyBuilder) Language(language string) interface {
-	Os(os string) interface {
-		Platform(platform string) interface {
-			Timezone(timezone string) interface {
-				Version(version string) IdentifyBuilder
-			}
-		}
-	}
-} {
-	b.properties[`Language`] = language
-
-	return b
-}
-
-func (b *identifyBuilder) Os(os string) interface {
-	Platform(platform string) interface {
-		Timezone(timezone string) interface {
-			Version(version string) IdentifyBuilder
-		}
-	}
-} {
-	b.properties[`OS`] = os
-
-	return b
-}
-
-func (b *identifyBuilder) Platform(platform string) interface {
-	Timezone(timezone string) interface {
-		Version(version string) IdentifyBuilder
-	}
-} {
-	b.properties[`Platform`] = platform
-
-	return b
-}
-
-func (b *identifyBuilder) Timezone(timezone string) interface {
-	Version(version string) IdentifyBuilder
-} {
+func (b *identifyBuilder) Timezone(timezone string) IdentifyBuilder {
 	b.properties[`Timezone`] = timezone
-
-	return b
-}
-
-func (b *identifyBuilder) Version(version string) IdentifyBuilder {
-	b.properties[`Version`] = version
 
 	return b
 }
@@ -256,7 +180,7 @@ func (b *identifyBuilder) WslDistro(wslDistro string) IdentifyBuilder {
 
 func (b *identifyBuilder) Build() IdentifyEvent {
 	return &identifyEvent{
-		newBaseEvent(`Identify`, b.properties),
+		newBaseEvent(IdentifyEventType, b.properties),
 	}
 }
 
