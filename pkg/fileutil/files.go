@@ -504,6 +504,7 @@ func FindFilenameInDirectory(basePath string, fileNames []string) (dirName strin
 
 // FindFilesInDirectory takes a list of files/directories and expands it into a
 // a list of files only
+// environment variables in list are expanded
 func ExpandFilesAndDirectories(dir string, paths []string) ([]string, error) {
 	var expanded []string
 	origPwd, _ := os.Getwd()
@@ -515,6 +516,7 @@ func ExpandFilesAndDirectories(dir string, paths []string) ([]string, error) {
 		return nil, err
 	}
 	for _, path := range paths {
+		path = os.ExpandEnv(path)
 		info, err := os.Stat(path)
 		if err != nil {
 			return nil, err

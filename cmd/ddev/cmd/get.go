@@ -293,7 +293,6 @@ ddev get --remove ddev-someaddonname
 			util.Failed("Unable to expand files and directories: %v", err)
 		}
 		for _, file := range projectFiles {
-			file := os.ExpandEnv(file)
 			src := filepath.Join(extractedDir, file)
 			dest := app.GetConfigPath(file)
 			if err = fileutil.CheckSignatureOrNoFile(dest, nodeps.DdevFileSignature); err == nil {
@@ -316,7 +315,6 @@ ddev get --remove ddev-someaddonname
 			util.Failed("Unable to expand global files and directories: %v", err)
 		}
 		for _, file := range globalFiles {
-			file := os.ExpandEnv(file)
 			src := filepath.Join(extractedDir, file)
 			dest := filepath.Join(globalDotDdev, file)
 
