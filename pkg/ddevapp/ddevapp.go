@@ -1599,10 +1599,14 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 
 	state, err := dockerutil.GetContainerStateByName(fmt.Sprintf("ddev-%s-%s", app.Name, opts.Service))
 	if err != nil || state != "running" {
-		if state == "doesnotexist" {
+		switch state {
+		case "doesnotexist":
 			return "", "", fmt.Errorf("service %s does not exist in project %s (state=%s)", opts.Service, app.Name, state)
+		case "exited":
+			return "", "", fmt.Errorf("service %s has exited; state=%s", opts.Service, state)
+		default:
+			return "", "", fmt.Errorf("service %s is not currently running in project %s (state=%s), use `ddev logs -s %s` to see what happened to it", opts.Service, app.Name, state, opts.Service)
 		}
-		return "", "", fmt.Errorf("service %s is not currently running in project %s (state=%s), use `ddev logs -s %s` to see what happened to it", opts.Service, app.Name, state, opts.Service)
 	}
 
 	err = app.ProcessHooks("pre-exec")
