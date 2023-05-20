@@ -4,12 +4,12 @@ While the generic `php` project type is [ready to go](./project.md) with any CMS
 
 === "Craft CMS"
 
-    ## Craft CMS (4)
+    ## Craft CMS
 
     Start a new [Craft CMS](https://craftcms.com) project or retrofit an existing one.
 
     !!!tip "Compatibility with Craft CMS 3"
-        The `craftcms` project type is best with Craft CMS 4+. If you are using Craft CMS 3 you may prefer to use the `php` project type. Craft CMS 4+ (and thus DDEV's support) are more opinionated about some settings, and you may want to just manage your own settings. More information is available in [issue](https://github.com/ddev/ddev/issues/4650).
+        The `craftcms` project type is best with Craft CMS 4+, which is more opinionated about some settings. If you are using Craft CMS 3, you may want to use the `php` project type and [manage settings yourself](https://github.com/ddev/ddev/issues/4650).
 
     Environment variables will be automatically added to your `.env` file to simplify the first boot of a project. For _new_ installations, this means the default URL and database connection settings displayed during installation can be used without modification. If _existing_ projects expect environment variables to be named in a particular way, you are welcome to rename them.
 
