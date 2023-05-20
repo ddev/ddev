@@ -381,6 +381,10 @@ func drupal8PostStartAction(app *DdevApp) error {
 
 func drupalPostStartAction(app *DdevApp) error {
 	if isDrupal9App(app) || isDrupal10App(app) {
+		err := app.Wait([]string{nodeps.DBContainer})
+		if err != nil {
+			return err
+		}
 		// pg_trm extension is required in Drupal9.5+
 		if app.Database.Type == nodeps.Postgres {
 			stdout, stderr, err := app.Exec(&ExecOpts{
@@ -396,7 +400,7 @@ func drupalPostStartAction(app *DdevApp) error {
 		if app.Database.Type == nodeps.MariaDB || app.Database.Type == nodeps.MySQL {
 			stdout, stderr, err := app.Exec(&ExecOpts{
 				Service:   "db",
-				Cmd:       `mysql -e "SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED;" 2>/dev/null`,
+				Cmd:       `mysql -uroot -proot -e "SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED;"`,
 				NoCapture: false,
 			})
 			if err != nil {
