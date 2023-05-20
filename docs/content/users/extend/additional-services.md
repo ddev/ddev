@@ -90,7 +90,7 @@ The `install.yaml` is a simple YAML file with a few main sections:
 * `project_files`: an array of files or directories to be copied from the add-on into the target project’s `.ddev` directory.
 * `global_files`: is an array of files or directories to be copied from the add-on into the target system’s global `.ddev` directory (`~/.ddev/`).
 * `post_install_actions`: an array of Bash statements or scripts to be executed after `project_files` and `global_files` are installed. The actions are executed in the context of the target project’s root directory.
-* `removal_actions`: an array of bash statements or scripts to be executed when the add-on is being removed with `ddev get --remove`.
+* `removal_actions`: an array of Bash statements or scripts to be executed when the add-on is being removed with `ddev get --remove`.
 * `yaml_read_files`: a map of `name: file` of YAML files to be read from the target project’s root directory. The contents of these YAML files may be used as templated actions within `pre_install_actions` and `post_install_actions`.
 
 In any stanza of `pre_install_actions` and `post_install_actions` you can:
