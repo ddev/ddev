@@ -74,6 +74,8 @@ extra:
   generator: false
   analytics:
     provider: plausible
+  version:
+    provider: mike
 
 # Extensions
 markdown_extensions:
