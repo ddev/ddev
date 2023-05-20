@@ -1353,6 +1353,9 @@ Example:
 ddev version
 ```
 
+!!!tip
+    `ddev --version` is a more concise command that only outputs the DDEV version without component versions.
+
 ## `wp`
 
 Run the [WP-CLI `wp` command](https://wp-cli.org/); available only in projects of type `wordpress`.
