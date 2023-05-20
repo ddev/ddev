@@ -26,7 +26,9 @@ Things might go wrong! In addition to this page, consider checking [Stack Overfl
 
 !!!tip "DDEV_DEBUG and DDEV_VERBOSE Environment Variables"
 
-    You can `export DDEV_DEBUG=true` to get more output from DDEV when it's executing any command. In rare cases even `export DDEV_VERBOSE=true` may give you useful information, but it's mostly valuable to developers, as it's very verbose.
+    You can `export DDEV_DEBUG=true` to get more output from DDEV when it's executing any command. 
+
+    `export DDEV_VERBOSE=true` may also give you useful information, but it's mostly valuable to DDEV developers, as it's very verbose. However, it outputs complete information about the Dockerfile build stage of `ddev start`, so can help when debugging Dockerfile problems.
 
 !!!tip "Using DDEV with Other Development Environments"
 
