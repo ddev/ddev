@@ -25,8 +25,7 @@ fi
 # It means snapshot restore is in progress
 if killall -0 mariabackup 2>/dev/null || killall -0 xtrabackup 2>/dev/null ; then
   printf "currently restoring snapshot"
-  touch /tmp/healthy
-  exit 0
+  exit 2
 fi
 
 # If we can now access the server, we're healthy and ready

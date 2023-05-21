@@ -24,7 +24,7 @@ var WebTag = "20230509_gitpod_output" // Note that this can be overridden by mak
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20230512_mariadb_10_11"
+var BaseDBTag = "20230519_fix_mysql_snapshot_restore"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"
