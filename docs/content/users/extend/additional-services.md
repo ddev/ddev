@@ -90,6 +90,7 @@ The `install.yaml` is a simple YAML file with a few main sections:
 * `project_files`: an array of files or directories to be copied from the add-on into the target project’s `.ddev` directory.
 * `global_files`: is an array of files or directories to be copied from the add-on into the target system’s global `.ddev` directory (`~/.ddev/`).
 * `post_install_actions`: an array of Bash statements or scripts to be executed after `project_files` and `global_files` are installed. The actions are executed in the context of the target project’s root directory.
+* `removal_actions`: an array of Bash statements or scripts to be executed when the add-on is being removed with `ddev get --remove`.
 * `yaml_read_files`: a map of `name: file` of YAML files to be read from the target project’s root directory. The contents of these YAML files may be used as templated actions within `pre_install_actions` and `post_install_actions`.
 
 In any stanza of `pre_install_actions` and `post_install_actions` you can:
@@ -128,11 +129,10 @@ Go templating resources:
 * [Lots of intro to Golang templates](https://www.google.com/search?q=golang+templates+intro&oq=golang+templates+intro&aqs=chrome..69i57j0i546l4.3161j0j4&sourceid=chrome&ie=UTF-8)
 * [masterminds/sprig](http://masterminds.github.io/sprig/) extra functions.
 
-## Additional services in ddev-contrib (MongoDB, Elasticsearch, etc)
+## Additional services in ddev-contrib
 
-Commonly-used services will be migrated from the [ddev-contrib](https://github.com/ddev/ddev-contrib) repository to individual, tested, supported repositories, but the repository already has a wealth of additional examples and instructions:
+Commonly-used services will be migrated from the [ddev-contrib](https://github.com/ddev/ddev-contrib) repository to individual, tested, supported repositories, but the repository still has a wealth of additional examples and instructions:
 
-* **Headless Chrome**: See [Headless Chrome for Behat Testing](https://github.com/ddev/ddev-contrib/blob/master/docker-compose-services/headless-chrome)
 * **Old PHP Versions to Run Old Sites**: See [Old PHP Versions](https://github.com/ddev/ddev-contrib/blob/master/docker-compose-services/old_php)
 * **RabbitMQ**: See [RabbitMQ](https://github.com/ddev/ddev-contrib/blob/master/docker-compose-services/rabbitmq)
 * **TYPO3 Solr Integration**: See [TYPO3 Solr](https://github.com/ddev/ddev-contrib/blob/master/docker-compose-services/typo3-solr)

@@ -287,8 +287,12 @@ ddev get --remove ddev-someaddonname
 		if len(s.ProjectFiles) > 0 {
 			util.Success("\nInstalling project-level components:")
 		}
-		for _, file := range s.ProjectFiles {
-			file := os.ExpandEnv(file)
+
+		projectFiles, err := fileutil.ExpandFilesAndDirectories(extractedDir, s.ProjectFiles)
+		if err != nil {
+			util.Failed("Unable to expand files and directories: %v", err)
+		}
+		for _, file := range projectFiles {
 			src := filepath.Join(extractedDir, file)
 			dest := app.GetConfigPath(file)
 			if err = fileutil.CheckSignatureOrNoFile(dest, nodeps.DdevFileSignature); err == nil {
@@ -298,15 +302,19 @@ ddev get --remove ddev-someaddonname
 				}
 				util.Success("%c %s", '\U0001F44D', file)
 			} else {
-				util.Warning("NOT overwriting file/directory %s. The #ddev-generated signature was not found in the file, so it will not be overwritten. You can just remove the file and use ddev get again if you want it to be replaced: %v", dest, err)
+				util.Warning("NOT overwriting %s. The #ddev-generated signature was not found in the file, so it will not be overwritten. You can just remove the file and use ddev get again if you want it to be replaced: %v", dest, err)
 			}
 		}
 		globalDotDdev := filepath.Join(globalconfig.GetGlobalDdevDir())
 		if len(s.GlobalFiles) > 0 {
 			util.Success("\nInstalling global components:")
 		}
-		for _, file := range s.GlobalFiles {
-			file := os.ExpandEnv(file)
+
+		globalFiles, err := fileutil.ExpandFilesAndDirectories(extractedDir, s.GlobalFiles)
+		if err != nil {
+			util.Failed("Unable to expand global files and directories: %v", err)
+		}
+		for _, file := range globalFiles {
 			src := filepath.Join(extractedDir, file)
 			dest := filepath.Join(globalDotDdev, file)
 
@@ -318,7 +326,7 @@ ddev get --remove ddev-someaddonname
 				}
 				util.Success("%c %s", '\U0001F44D', file)
 			} else {
-				util.Warning("NOT overwriting file/directory %s. The #ddev-generated signature was not found in the file, so it will not be overwritten. You can just remove the file and use ddev get again if you want it to be replaced: %v", dest, err)
+				util.Warning("NOT overwriting %s. The #ddev-generated signature was not found in the file, so it will not be overwritten. You can just remove the file and use ddev get again if you want it to be replaced: %v", dest, err)
 			}
 		}
 		origDir, _ := os.Getwd()
@@ -514,6 +522,7 @@ func getDdevDescription(action string) string {
 	return ""
 }
 
+// renderRepositoryList renders the found list of repositories
 func renderRepositoryList(repos []*github.Repository) string {
 	var out bytes.Buffer
 

@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"testing"
 
@@ -82,8 +83,8 @@ func TestCmdGet(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(exists, "the file with no ddev-generated.txt should not have been replaced")
 
-	assert.Contains(out, fmt.Sprintf("NOT overwriting file/directory %s", app.GetConfigPath("file-with-no-ddev-generated.txt")))
-	assert.Contains(out, fmt.Sprintf("NOT overwriting file/directory %s", filepath.Join(globalconfig.GetGlobalDdevDir(), "file-with-no-ddev-generated.txt")))
+	assert.Contains(out, fmt.Sprintf("NOT overwriting %s", app.GetConfigPath("file-with-no-ddev-generated.txt")))
+	assert.Contains(out, fmt.Sprintf("NOT overwriting %s", filepath.Join(globalconfig.GetGlobalDdevDir(), "file-with-no-ddev-generated.txt")))
 }
 
 // TestCmdGetComplex tests advanced usages
@@ -124,6 +125,11 @@ func TestCmdGetComplex(t *testing.T) {
 		assert.NoError(err)
 	})
 
+	// create no-ddev-generated.txt so we make sure we get warning about it.
+	_ = os.MkdirAll(app.GetConfigPath("extra"), 0755)
+	_, err = os.Create(app.GetConfigPath("extra/no-ddev-generated.txt"))
+	require.NoError(t, err)
+
 	out, err := exec.RunHostCommand(DdevBin, "get", filepath.Join(origDir, "testdata", t.Name(), "recipe"))
 	require.NoError(t, err, "out=%s", out)
 
@@ -139,6 +145,13 @@ func TestCmdGetComplex(t *testing.T) {
 	// Make sure that environment variable interpolation happened. If it did, we'll have the one file
 	// we're looking for.
 	assert.FileExists(app.GetConfigPath(fmt.Sprintf("junk_%s_%s.txt", runtime.GOOS, runtime.GOARCH)))
+	info, err := os.Stat(app.GetConfigPath("extra/no-ddev-generated.txt"))
+	require.NoError(t, err, "stat of no-ddev-generated.txt failed")
+	assert.True(info.Size() == 0)
+
+	assert.Contains(out, "👍 extra/has-ddev-generated.txt")
+	assert.NotContains(out, "👍 extra/no-ddev-generated.txt")
+	assert.Regexp(regexp.MustCompile(`NOT overwriting [^ ]*`+"extra/no-ddev-generated.txt"), out)
 }
 
 // TestCmdGetInstalled tests `ddev get --installed` and `ddev get --remove`
