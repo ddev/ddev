@@ -974,6 +974,10 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	if app.IsMutagenEnabled() {
+		err = app.GenerateMutagenYml()
+		if err != nil {
+			return err
+		}
 		if ok, volumeExists, info := CheckMutagenVolumeSyncCompatibility(app); !ok {
 			util.Debug("mutagen sync session, configuration, and docker volume are in incompatible status: '%s', Removing mutagen sync session '%s' and docker volume %s", info, MutagenSyncName(app.Name), GetMutagenVolumeName(app))
 			err = SyncAndPauseMutagenSession(app)
@@ -1254,10 +1258,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 		output.UserOut.Printf("Starting mutagen sync process... This can take some time.")
 		mutagenDuration := util.ElapsedDuration(time.Now())
-		err = app.GenerateMutagenYml()
-		if err != nil {
-			return err
-		}
 
 		err = SetMutagenVolumeOwnership(app)
 		if err != nil {
