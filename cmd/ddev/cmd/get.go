@@ -38,6 +38,7 @@ type installDesc struct {
 	Name               string            `yaml:"name"`
 	ProjectFiles       []string          `yaml:"project_files"`
 	GlobalFiles        []string          `yaml:"global_files,omitempty"`
+	Dependencies       []string          `yaml:"dependencies,omitempty"`
 	PreInstallActions  []string          `yaml:"pre_install_actions,omitempty"`
 	PostInstallActions []string          `yaml:"post_install_actions,omitempty"`
 	RemovalActions     []string          `yaml:"removal_actions,omitempty"`
@@ -49,6 +50,7 @@ type addonManifest struct {
 	Name           string   `yaml:"name"`
 	Repository     string   `yaml:"repository"`
 	Version        string   `yaml:"version"`
+	Dependencies   []string `yaml:"dependencies,omitempty"`
 	InstallDate    string   `yaml:"install_date"`
 	ProjectFiles   []string `yaml:"project_files"`
 	GlobalFiles    []string `yaml:"global_files"`
@@ -267,6 +269,19 @@ ddev get --remove ddev-someaddonname
 		if err != nil {
 			util.Failed("Unable to YamlToDict: %v", err)
 		}
+		// Check to see if any dependencies are missing
+		if len(s.Dependencies) > 0 {
+			// Read in full existing registered config
+			m, err := gatherAllManifests(app)
+			if err != nil {
+				util.Failed("Unable to gather manifests: %v", err)
+			}
+			for _, dep := range s.Dependencies {
+				if _, ok := m[dep]; ok {
+					util.Failed("The add-on '%s' declares a dependency on '%s'; Please ddev get %s first", s.Name, dep, dep)
+				}
+			}
+		}
 		if len(s.PreInstallActions) > 0 {
 			util.Success("\nExecuting pre-install actions:")
 		}
@@ -387,6 +402,7 @@ func createManifestFile(app *ddevapp.DdevApp, addonName string, repository strin
 		Name:           addonName,
 		Repository:     repository,
 		Version:        downloadedRelease,
+		Dependencies:   desc.Dependencies,
 		InstallDate:    time.Now().Format(time.RFC3339),
 		ProjectFiles:   desc.ProjectFiles,
 		GlobalFiles:    desc.GlobalFiles,
@@ -643,6 +659,13 @@ func removeAddon(app *ddevapp.DdevApp, addonName string, dict map[string]interfa
 			_ = os.RemoveAll(p)
 		} else {
 			util.Warning("Unwilling to remove '%s' because it does not have #ddev-generated in it: %v; you can manually delete it if it is safe to delete.", p, err)
+		}
+	}
+	if len(manifestData.Dependencies) > 0 {
+		for _, dep := range manifestData.Dependencies {
+			if m, ok := manifests[dep]; ok {
+				util.Warning("The add-on you're removing ('%s') declares a dependency on '%s', which is not being removed. You may want to remove it manually if it is no longer needed.", addonName, m.Name)
+			}
 		}
 	}
 
