@@ -62,9 +62,9 @@ type GlobalConfig struct {
 	NoBindMounts                 bool                    `yaml:"no_bind_mounts"`
 	UseTraefik                   bool                    `yaml:"use_traefik"`
 	WSL2NoWindowsHostsMgt        bool                    `yaml:"wsl2_no_windows_hosts_mgt"`
-	ProjectList                  map[string]*ProjectInfo `yaml:"project_info"`
 	RouterHTTPPort               string                  `yaml:"router_http_port"`
 	RouterHTTPSPort              string                  `yaml:"router_https_port"`
+	ProjectList                  map[string]*ProjectInfo `yaml:"project_info"`
 }
 
 // GetGlobalConfigPath gets the path to global config file
