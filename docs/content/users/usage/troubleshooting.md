@@ -24,6 +24,12 @@ Things might go wrong! In addition to this page, consider checking [Stack Overfl
 
     If that starts up fine, there may be an issue specifically with the project you’re trying to start.
 
+!!!tip "DDEV_DEBUG and DDEV_VERBOSE Environment Variables"
+
+    You can `export DDEV_DEBUG=true` to get more output from DDEV when it's executing any command. 
+
+    `export DDEV_VERBOSE=true` may also give you useful information, but it's mostly valuable to DDEV developers, as it's very verbose. However, it outputs complete information about the Dockerfile build stage of `ddev start`, so can help when debugging Dockerfile problems.
+
 !!!tip "Using DDEV with Other Development Environments"
 
     DDEV uses your system’s port 80 and 443 by default when projects are running. If you’re using another local development environment (like Lando or Docksal or a native setup), you can either stop the other environment or configure DDEV to use different ports. See [troubleshooting](troubleshooting.md#unable-listen) for more detailed problem-solving. It’s easiest to stop the other environment when you want to use DDEV, and stop DDEV when you want to use the other environment.

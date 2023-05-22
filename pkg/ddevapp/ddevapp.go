@@ -1174,8 +1174,22 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		return err
 	}
 
-	util.Debug("Executing docker-compose -f %s up --build -d", app.DockerComposeFullRenderedYAMLPath())
-	_, _, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "up", "--build", "-d")
+	// Build extra layers on web and db images if necessary
+	progress := "quiet"
+	if globalconfig.DdevVerbose {
+		progress = "auto"
+	}
+	util.Debug("Executing docker-compose -f %s build --progress=%s", app.DockerComposeFullRenderedYAMLPath(), progress)
+	out, stderr, err := dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "build", "--progress="+progress)
+	if err != nil {
+		return fmt.Errorf("docker-compose build failed: %v, output='%s', stderr='%s'", err, out, stderr)
+	}
+	if globalconfig.DdevVerbose {
+		util.Debug("docker-compose build output:\n%s\n\n", out)
+	}
+
+	util.Debug("Executing docker-compose -f %s up -d", app.DockerComposeFullRenderedYAMLPath())
+	_, _, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "up", "-d")
 	if err != nil {
 		return err
 	}
@@ -1290,6 +1304,15 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	err = app.Wait(dependers)
 	if err != nil {
 		util.Warning("Failed waiting for web/db containers to become ready: %v", err)
+	}
+
+	if globalconfig.DdevVerbose {
+		out, err = app.CaptureLogs("web", true, "200")
+		if err != nil {
+			util.Warning("Unable to capture logs from web container: %v", err)
+		} else {
+			util.Debug("docker-compose up output:\n%s\n\n", out)
+		}
 	}
 
 	// WebExtraDaemons have to be started after mutagen sync is done, because so often
