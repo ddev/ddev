@@ -89,6 +89,7 @@ The `install.yaml` is a simple YAML file with a few main sections:
 * `pre_install_actions`: an array of Bash statements or scripts to be executed before `project_files` are installed. The actions are executed in the context of the target project’s root directory.
 * `project_files`: an array of files or directories to be copied from the add-on into the target project’s `.ddev` directory.
 * `global_files`: is an array of files or directories to be copied from the add-on into the target system’s global `.ddev` directory (`~/.ddev/`).
+* `dependencies`: an array of add-ons that this add-on depends on.
 * `post_install_actions`: an array of Bash statements or scripts to be executed after `project_files` and `global_files` are installed. The actions are executed in the context of the target project’s root directory.
 * `removal_actions`: an array of Bash statements or scripts to be executed when the add-on is being removed with `ddev get --remove`.
 * `yaml_read_files`: a map of `name: file` of YAML files to be read from the target project’s root directory. The contents of these YAML files may be used as templated actions within `pre_install_actions` and `post_install_actions`.
@@ -131,10 +132,10 @@ Go templating resources:
 
 ## Additional services in ddev-contrib
 
-Commonly-used services will be migrated from the [ddev-contrib](https://github.com/ddev/ddev-contrib) repository to individual, tested, supported repositories, but the repository still has a wealth of additional examples and instructions:
+Commonly-used services are being migrated from the [ddev-contrib](https://github.com/ddev/ddev-contrib) repository to individual, tested, supported add-on repositories, but the repository still has a wealth of additional examples and instructions:
 
 * **Old PHP Versions to Run Old Sites**: See [Old PHP Versions](https://github.com/ddev/ddev-contrib/blob/master/docker-compose-services/old_php)
 * **RabbitMQ**: See [RabbitMQ](https://github.com/ddev/ddev-contrib/blob/master/docker-compose-services/rabbitmq)
 * **TYPO3 Solr Integration**: See [TYPO3 Solr](https://github.com/ddev/ddev-contrib/blob/master/docker-compose-services/typo3-solr)
 
-Your pull requests to integrate other services are welcome at [ddev-contrib](https://github.com/ddev/ddev-contrib).
+Your pull requests to integrate other services are welcome at [ddev-contrib](https://github.com/ddev/ddev-contrib), but creating a supported add-on is preferred.

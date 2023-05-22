@@ -277,8 +277,8 @@ ddev get --remove ddev-someaddonname
 				util.Failed("Unable to gather manifests: %v", err)
 			}
 			for _, dep := range s.Dependencies {
-				if _, ok := m[dep]; ok {
-					util.Failed("The add-on '%s' declares a dependency on '%s'; Please ddev get %s first", s.Name, dep, dep)
+				if _, ok := m[dep]; !ok {
+					util.Failed("The add-on '%s' declares a dependency on '%s'; Please ddev get %s first.", s.Name, dep, dep)
 				}
 			}
 		}
