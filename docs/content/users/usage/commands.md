@@ -1023,7 +1023,7 @@ ddev pull platform --skip-files -y
 # Pull the localfile integration’s files *only* without confirming
 ddev pull localfile --skip-db -y
 
-# Pull from platform specifying PLATFORM_ENVIRONMENT and PLATFORM_CLI_TOKEN on command line
+# Pull from Platform.sh specifying the environment variables PLATFORM_ENVIRONMENT and PLATFORM_CLI_TOKEN on the command line
 ddev pull platform --environment=PLATFORM_ENVIRONMENT=main,PLATFORMSH_CLI_TOKEN=abcdef
 ```
 
