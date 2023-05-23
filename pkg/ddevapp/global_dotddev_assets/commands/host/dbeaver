@@ -1,0 +1,38 @@
+#!/bin/bash
+
+## #ddev-generated: If you want to edit and own this file, remove this line.
+## Description: Run DBeaver against current db
+## Usage: dbeaver
+## Example: "ddev dbeaver [db] [user]"
+## HostBinaryExists: /mnt/c/Program Files/dbeaver/dbeaver.exe,C:\Program Files/dbeaver\dbeaver.exe,/Applications/dbeaver.app,/snap/bin/dbeaver-ce,/snap/bin/dbeaver-ee,/snap/bin/dbeaver
+
+database="${1:-db}"
+user="${2:-root}"
+type="$(echo $DDEV_DATABASE | sed 's/:.*//')"
+
+# See: https://dbeaver.com/docs/wiki/Command-Line/#connection-parameters
+arguments="name=ddev-${DDEV_PROJECT}|driver=${type}|database=${database}|user=${user}|password=${user}|savePassword=true|host=127.0.0.1|port=${DDEV_HOST_DB_PORT}|openConsole=true"
+
+case $OSTYPE in
+  "win*"* | "msys"*)
+    '/c/Program Files/DBeaver/dbeaver.exe' -con "$arguments" &
+    ;;
+  "linux-gnu")
+    if [ -f "/mnt/c/Program Files/DBeaver/dbeaver.exe" ]; then
+      # wsl2 needs cmd to start the dbeaver
+      /mnt/c/Windows/System32/cmd.exe /C 'C:"Program Files"\DBeaver\dbeaver.exe -con '\"$arguments\"'' 2>nul &
+    fi
+    if [ -f "/snap/bin/dbeaver-ce" ]; then
+      "/snap/bin/dbeaver-ce" -con "$arguments" &
+    fi
+    if [ -f "/snap/bin/dbeaver-ee" ]; then
+      "/snap/bin/dbeaver-ee" -con "$arguments" &
+    fi
+    if [ -f "/snap/bin/dbeaver" ]; then
+      "/snap/bin/dbeaver" -con "$arguments" &
+    fi
+    ;;
+  "darwin"*)
+    open -a dbeaver.app -con "$arguments" &
+    ;;
+esac
