@@ -138,4 +138,4 @@ Commonly-used services are being migrated from the [ddev-contrib](https://github
 * **RabbitMQ**: See [RabbitMQ](https://github.com/ddev/ddev-contrib/blob/master/docker-compose-services/rabbitmq)
 * **TYPO3 Solr Integration**: See [TYPO3 Solr](https://github.com/ddev/ddev-contrib/blob/master/docker-compose-services/typo3-solr)
 
-Your pull requests to integrate other services are welcome at [ddev-contrib](https://github.com/ddev/ddev-contrib), but creating a supported add-on is preferred.
+While we welcome requests to integrate other services at [ddev-contrib](https://github.com/ddev/ddev-contrib), we encourage creating a supported add-on that’s more beneficial to the community.
