@@ -999,6 +999,7 @@ Pull files and database using a configured [provider plugin](./../providers/inde
 
 Flags:
 
+* `--environment=ENV1=val1,ENV2=val2`
 * `--skip-confirmation`, `-y`: Skip confirmation step.
 * `--skip-db`: Skip pulling database archive.
 * `--skip-files`: Skip pulling file archive.
@@ -1021,6 +1022,9 @@ ddev pull platform --skip-files -y
 
 # Pull the localfile integration’s files *only* without confirming
 ddev pull localfile --skip-db -y
+
+# Pull from Platform.sh specifying the environment variables PLATFORM_ENVIRONMENT and PLATFORM_CLI_TOKEN on the command line
+ddev pull platform --environment=PLATFORM_ENVIRONMENT=main,PLATFORMSH_CLI_TOKEN=abcdef
 ```
 
 ## `push`
