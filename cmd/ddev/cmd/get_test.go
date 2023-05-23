@@ -212,6 +212,42 @@ func TestCmdGetInstalled(t *testing.T) {
 	assert.NoError(err, "unable to ddev get redis: %v, output='%s'", err, out)
 }
 
+// TestCmdGetDependencies tests the dependency behavior is correct
+func TestCmdGetDependencies(t *testing.T) {
+	assert := asrt.New(t)
+
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+	app, err := ddevapp.GetActiveApp("")
+	require.NoError(t, err)
+
+	err = copy2.Copy(filepath.Join(origDir, "testdata", t.Name(), "project"), app.GetAppRoot())
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		out, err := exec.RunHostCommand(DdevBin, "get", "--remove", "dependency_recipe")
+		assert.NoError(err, "output='%s'", out)
+		out, err = exec.RunHostCommand(DdevBin, "get", "--remove", "depender_recipe")
+		assert.NoError(err, "output='%s'", out)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+
+	// First try of depender_recipe should fail without dependency
+	out, err := exec.RunHostCommand(DdevBin, "get", filepath.Join(origDir, "testdata", t.Name(), "depender_recipe"))
+	require.Error(t, err, "out=%s", out)
+
+	// Now add the dependency and try again
+	out, err = exec.RunHostCommand(DdevBin, "get", filepath.Join(origDir, "testdata", t.Name(), "dependency_recipe"))
+	require.NoError(t, err, "out=%s", out)
+
+	// Now depender_recipe should succeed
+	out, err = exec.RunHostCommand(DdevBin, "get", filepath.Join(origDir, "testdata", t.Name(), "depender_recipe"))
+	require.NoError(t, err, "out=%s", out)
+}
+
 // getManifestFromLogs returns the manifest built from 'raw' section of
 // ddev get <project> -j output
 func getManifestFromLogs(t *testing.T, jsonOut string) map[string]interface{} {
