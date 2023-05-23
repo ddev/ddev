@@ -114,4 +114,4 @@ It can be complicated to figure out what’s going on when building a Dockerfile
 
 1. Use [`ddev ssh`](../usage/commands.md#ssh) first of all to pioneer the steps you want to take. You can do all the things you need to do there and see if it works. If you’re doing something that affects PHP, you may need to `sudo killall -USR2 php-fpm` for it to take effect.
 2. Put the steps you pioneered into `.ddev/web-build/Dockerfile` as above.
-3. If you can’t figure out what’s failing or why, then `ddev debug refresh` will show the full output of the build process. You can also `export DDEV_VERBOSE=true && ddev start` to see what’s happening during the Dockerfile build during `ddev start`.
+3. If you can’t figure out what’s failing or why, running `ddev debug refresh` will show the full output of the build process. You can also run `export DDEV_VERBOSE=true && ddev start` to see what’s happening during the `ddev start` Dockerfile build.
