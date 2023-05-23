@@ -974,6 +974,10 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	if app.IsMutagenEnabled() {
+		err = app.GenerateMutagenYml()
+		if err != nil {
+			return err
+		}
 		if ok, volumeExists, info := CheckMutagenVolumeSyncCompatibility(app); !ok {
 			util.Debug("mutagen sync session, configuration, and docker volume are in incompatible status: '%s', Removing mutagen sync session '%s' and docker volume %s", info, MutagenSyncName(app.Name), GetMutagenVolumeName(app))
 			err = SyncAndPauseMutagenSession(app)
@@ -1102,18 +1106,23 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
+	// TODO: We shouldn't be chowning /var/lib/mysql if postgresql?
+	util.Debug("chowning /mnt/ddev-global-cache and /var/lib/mysql to %s", uid)
 	_, out, err := dockerutil.RunSimpleContainer(versionconstants.GetWebImage(), "start-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.GetMariaDBVolumeName() + ":/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{"com.ddev.site-name": app.Name}, nil)
 	if err != nil {
 		return fmt.Errorf("failed to RunSimpleContainer to chown volumes: %v, output=%s", err, out)
 	}
+	util.Debug("done chowning /mnt/ddev-global-cache and /var/lib/mysql to %s", uid)
 
 	// Chown the postgres volume; this shouldn't have to be a separate stanza, but the
 	// uid is 999 instead of current user
 	if app.Database.Type == nodeps.Postgres {
+		util.Debug("chowning chowning /var/lib/postgresql/data to 999")
 		_, out, err := dockerutil.RunSimpleContainer(versionconstants.GetWebImage(), "start-postgres-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/postgresql/data", "999:999")}, []string{}, []string{}, []string{app.GetPostgresVolumeName() + ":/var/lib/postgresql/data"}, "", true, false, map[string]string{"com.ddev.site-name": app.Name}, nil)
 		if err != nil {
 			return fmt.Errorf("failed to RunSimpleContainer to chown postgres volume: %v, output=%s", err, out)
 		}
+		util.Debug("done chowning /var/lib/postgresql/data")
 	}
 
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
@@ -1214,7 +1223,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 					util.Debug("Pushed mkcert rootca certs to ddev-global-cache/mkcert")
 				}
 			}
-
 		}
 
 		// If TLS supported and using traefik, create cert/key and push into ddev-global-cache/traefik
@@ -1254,10 +1262,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 		output.UserOut.Printf("Starting mutagen sync process... This can take some time.")
 		mutagenDuration := util.ElapsedDuration(time.Now())
-		err = app.GenerateMutagenYml()
-		if err != nil {
-			return err
-		}
 
 		err = SetMutagenVolumeOwnership(app)
 		if err != nil {
