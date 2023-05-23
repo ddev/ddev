@@ -33,7 +33,7 @@ var DBAImg = "phpmyadmin"
 var DBATag = "5" // Note that this can be overridden by make
 
 const TraditionalRouterImage = "ddev/ddev-router:20230415_move_docker_to_ddev"
-const TraefikRouterImage = "traefik:v2.9"
+const TraefikRouterImage = "traefik:v2.10"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
