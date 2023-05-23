@@ -31,7 +31,7 @@ Things might go wrong! In addition to this page, consider checking [Stack Overfl
 
 ### Debug Environment Variables
 
-Two environment variables meant for DDEV developemnt may also be useful for broader troubleshooting: `DDEV_DEBUG` and `DDEV_VERBOSE`. When enabled, they’ll output more information when DDEV is executing a command. `DDEV_VERBOSE` can be particularly helpful debugging Dockerfile problems because it outputs complete information about the Dockerfile build stage within the `ddev start` command.
+Two environment variables meant for DDEV development may also be useful for broader troubleshooting: `DDEV_DEBUG` and `DDEV_VERBOSE`. When enabled, they’ll output more information when DDEV is executing a command. `DDEV_VERBOSE` can be particularly helpful debugging Dockerfile problems because it outputs complete information about the Dockerfile build stage within the `ddev start` command.
 
 You can set either one in your current session by running `export DDEV_DEBUG=true` and `export DDEV_VERBOSE=true`.
 
