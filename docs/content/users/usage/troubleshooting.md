@@ -24,7 +24,6 @@ Things might go wrong! In addition to this page, consider checking [Stack Overfl
 
     If that starts up fine, there may be an issue specifically with the project you’re trying to start.
 
-
 !!!tip "Using DDEV with Other Development Environments"
 
     DDEV uses your system’s port 80 and 443 by default when projects are running. If you’re using another local development environment (like Lando or Docksal or a native setup), you can either stop the other environment or configure DDEV to use different ports. See [troubleshooting](troubleshooting.md#unable-listen) for more detailed problem-solving. It’s easiest to stop the other environment when you want to use DDEV, and stop DDEV when you want to use the other environment.
