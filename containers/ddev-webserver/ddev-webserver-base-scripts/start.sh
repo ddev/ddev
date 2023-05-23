@@ -94,6 +94,7 @@ ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/
 sudo mkdir -p ${TERMINUS_CACHE_DIR}
 
 sudo mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},nvm_dir/${HOSTNAME},npm,yarn/classic,yarn/berry}
+sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ /var/lib/php
 # The following ensures a persistent and shared "global" cache for
 # yarn1 (classic) and yarn2 (berry). In the case of yarn2, the global cache
 # will only be used if the project is configured to use it through it's own
@@ -117,7 +118,7 @@ fi
 # It's possible CAROOT does not exist or is not writeable (if host-side mkcert -install not run yet)
 # TODO: We shouldn't have to chown ddev-global-cache here as it's done by app.Start. However, in non-ddev
 # context it may still have to be done.
-sudo mkdir -p ${CAROOT} && sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ /var/lib/php
+sudo mkdir -p ${CAROOT} && sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/
 # This will install the certs from $CAROOT (/mnt/ddev-global-cache/mkcert)
 # It also creates them if they don't already exist
 if [ ! -f  "${CAROOT}/rootCA.pem" ]; then
