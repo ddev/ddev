@@ -1,6 +1,6 @@
 package types
 
-type MessageType int64
+type MessageType int
 
 const (
 	Info MessageType = iota

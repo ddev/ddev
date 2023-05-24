@@ -3,7 +3,6 @@ package storage
 import (
 	"encoding/gob"
 	"os"
-	"time"
 
 	"github.com/ddev/ddev/pkg/config/remoteconfig/internal"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
@@ -24,20 +23,10 @@ type fileStorage struct {
 
 // fileStorageData is the structure used for the file.
 type fileStorageData struct {
-	LastUpdate   time.Time
 	RemoteConfig internal.RemoteConfig
 }
 
-func (s *fileStorage) LastUpdate() time.Time {
-	err := s.loadData()
-	if err != nil {
-		return time.Time{}
-	}
-
-	return s.data.LastUpdate
-}
-
-func (s *fileStorage) Pull() (messages internal.RemoteConfig, err error) {
+func (s *fileStorage) Read() (remoteConfig internal.RemoteConfig, err error) {
 	err = s.loadData()
 	if err != nil {
 		return
@@ -46,9 +35,8 @@ func (s *fileStorage) Pull() (messages internal.RemoteConfig, err error) {
 	return s.data.RemoteConfig, nil
 }
 
-func (s *fileStorage) Push(manifest internal.RemoteConfig) (err error) {
-	s.data.LastUpdate = time.Now()
-	s.data.RemoteConfig = manifest
+func (s *fileStorage) Write(remoteConfig internal.RemoteConfig) (err error) {
+	s.data.RemoteConfig = remoteConfig
 
 	err = s.saveData()
 

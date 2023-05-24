@@ -51,7 +51,8 @@ type RemoteConfig struct {
 
 // MessagesConfig is the struct defining the messages config.
 type MessagesConfig struct {
-	DisableTicker bool `yaml:"disable_ticker,omitempty"`
+	DisableTicker  bool `yaml:"disable_ticker,omitempty"`
+	TickerInterval int  `yaml:"ticker_interval,omitempty"`
 }
 
 // GlobalConfig is the struct defining ddev's global config

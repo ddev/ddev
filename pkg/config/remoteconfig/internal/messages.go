@@ -9,7 +9,6 @@ type Message struct {
 type Ticker struct {
 	Disabled bool      `json:"disabled,omitempty"`
 	Interval int       `json:"interval,omitempty"`
-	Last     int       `json:"last,omitempty"`
 	Messages []Message `json:"messages,omitempty"`
 }
 

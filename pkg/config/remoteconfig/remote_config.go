@@ -7,15 +7,17 @@ import (
 	"github.com/ddev/ddev/pkg/config/remoteconfig/internal"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/storage"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
+	statetypes "github.com/ddev/ddev/pkg/config/state/types"
 	"github.com/ddev/ddev/pkg/util"
 )
 
 // New creates and returns a new RemoteConfig.
-func New(config *Config, isInternetActive func() bool) types.RemoteConfig {
+func New(config *Config, stateManager statetypes.State, isInternetActive func() bool) types.RemoteConfig {
 	defer util.TimeTrack()()
 
 	// Create RemoteConfig.
 	cfg := &remoteConfig{
+		state:       NewState(stateManager),
 		fileStorage: storage.NewFileStorage(config.getLocalSourceFileName()),
 		githubStorage: storage.NewGithubStorage(
 			config.getRemoteSourceOwner(),
@@ -23,10 +25,9 @@ func New(config *Config, isInternetActive func() bool) types.RemoteConfig {
 			config.getRemoteSourceFilepath(),
 			storage.Options{Ref: config.getRemoteSourceRef()},
 		),
-		localSource:      config.LocalSource,
-		remoteSource:     config.RemoteSource,
 		updateInterval:   config.UpdateInterval,
 		tickerDisabled:   config.TickerDisabled,
+		tickerInterval:   config.TickerInterval,
 		isInternetActive: isInternetActive,
 	}
 
@@ -39,20 +40,20 @@ func New(config *Config, isInternetActive func() bool) types.RemoteConfig {
 const (
 	localFileName  = ".remote-config"
 	updateInterval = 6 // default update interval in hours
+	tickerInterval = 4 // default ticker interval in hours
 )
 
 // remoteConfig is a in memory representation of the DDEV RemoteConfig.
 type remoteConfig struct {
+	state        *StateEntry
 	remoteConfig internal.RemoteConfig
 
 	fileStorage   types.RemoteConfigStorage
 	githubStorage types.RemoteConfigStorage
 
-	localSource  LocalSource
-	remoteSource RemoteSource
-
 	updateInterval   int
 	tickerDisabled   bool
+	tickerInterval   int
 	isInternetActive func() bool
 
 	mu sync.RWMutex
@@ -65,10 +66,10 @@ func (c *remoteConfig) write() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	err := c.fileStorage.Push(c.remoteConfig)
+	err := c.fileStorage.Write(c.remoteConfig)
 
 	if err != nil {
-		util.Error("Error while writing remote config: %s", err)
+		util.Debug("Error while writing remote config: %s", err)
 	}
 }
 
@@ -85,10 +86,10 @@ func (c *remoteConfig) loadFromLocalStorage() {
 
 	var err error
 
-	c.remoteConfig, err = c.fileStorage.Pull()
+	c.remoteConfig, err = c.fileStorage.Read()
 
 	if err != nil {
-		util.Error("Error while loading remote config: %s", err)
+		util.Debug("Error while loading remote config: %s", err)
 	}
 }
 
@@ -103,24 +104,27 @@ func (c *remoteConfig) updateFromGithub() {
 	}
 
 	// Check if an update is needed.
-	if c.fileStorage.LastUpdate().Add(c.getUpdateInterval()).Before(time.Now()) {
+	if c.state.UpdatedAt.Add(c.getUpdateInterval()).Before(time.Now()) {
 		util.Debug("Downloading remote config.")
 
 		c.mu.Lock()
-		backupLast := c.remoteConfig.Messages.Ticker.Last
 
 		defer func() {
-			c.remoteConfig.Messages.Ticker.Last = backupLast
+			c.state.UpdatedAt = time.Now()
+			if err := c.state.Save(); err != nil {
+				util.Debug("Error while saving state: %s", err)
+			}
+
 			c.mu.Unlock()
 			c.write()
 		}()
 
 		// Download the remote config.
 		var err error
-		c.remoteConfig, err = c.githubStorage.Pull()
+		c.remoteConfig, err = c.githubStorage.Read()
 
 		if err != nil {
-			util.Error("Error while downloading remote config: %s", err)
+			util.Debug("Error while downloading remote config: %s", err)
 		}
 	}
 }

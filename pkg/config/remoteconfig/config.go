@@ -26,6 +26,7 @@ type Config struct {
 
 	UpdateInterval int
 	TickerDisabled bool
+	TickerInterval int
 }
 
 // getLocalSourceFileName returns the filename of the local storage.

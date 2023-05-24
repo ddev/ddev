@@ -2,10 +2,12 @@ package main
 
 import (
 	"os"
+	"path"
 
 	"github.com/ddev/ddev/cmd/ddev/cmd"
 	"github.com/ddev/ddev/pkg/amplitude"
 	"github.com/ddev/ddev/pkg/config/remoteconfig"
+	"github.com/ddev/ddev/pkg/config/state/storage/yaml"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/util"
 )
@@ -27,6 +29,9 @@ func main() {
 		util.Failed("ddev is not designed to be run with root privileges, please run as normal user and without sudo")
 	}
 
+	// Create a global state to be injected later.
+	state := yaml.NewState(path.Join(globalconfig.GetGlobalConfigPath(), "state.yml"))
+
 	// TODO for the time being this triggers the download from Github but
 	// should be realized with a clean bootstrap as soon as it exists. The
 	// download does not hurt here as it's done in a asynchronous call but it's
@@ -45,7 +50,9 @@ func main() {
 			},
 			UpdateInterval: globalconfig.DdevGlobalConfig.RemoteConfig.UpdateInterval,
 			TickerDisabled: globalconfig.DdevGlobalConfig.Messages.DisableTicker,
+			TickerInterval: globalconfig.DdevGlobalConfig.Messages.TickerInterval,
 		},
+		state,
 		globalconfig.IsInternetActive,
 	)
 

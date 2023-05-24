@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"time"
 
 	"github.com/ddev/ddev/pkg/config/remoteconfig/internal"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
@@ -30,11 +29,7 @@ type githubStorage struct {
 	options  Options
 }
 
-func (s *githubStorage) LastUpdate() time.Time {
-	return time.Now()
-}
-
-func (s *githubStorage) Pull() (manifest internal.RemoteConfig, err error) {
+func (s *githubStorage) Read() (remoteConfig internal.RemoteConfig, err error) {
 	ctx := context.Background()
 	client := github.GetGithubClient(ctx)
 
@@ -54,12 +49,12 @@ func (s *githubStorage) Pull() (manifest internal.RemoteConfig, err error) {
 		return
 	}
 
-	err = jsonc.Unmarshal(b, &manifest)
+	err = jsonc.Unmarshal(b, &remoteConfig)
 
 	return
 }
 
-func (s *githubStorage) Push(_ internal.RemoteConfig) error {
+func (s *githubStorage) Write(_ internal.RemoteConfig) error {
 	// do nothing, readonly storage
-	return errors.New("failed to push manifest to readonly `githubStorage`")
+	return errors.New("failed to push remoteConfig to readonly `githubStorage`")
 }

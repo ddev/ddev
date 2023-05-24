@@ -1,6 +1,8 @@
 package remoteconfig
 
 import (
+	"time"
+
 	"github.com/Masterminds/semver/v3"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/internal"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
@@ -51,35 +53,36 @@ func (c *remoteConfig) ShowMessages() {
 	}
 }
 
-// ShowTicker tips provided by the remote config to the user.
-// TODO limit to once a day maybe see PR.
+// ShowTicker shows ticker messages provided by the remote config to the user.
 // TODO beautify output
 func (c *remoteConfig) ShowTicker() {
 	defer util.TimeTrack()()
 
-	// Show ticker if not disabled.
-	if !c.isTickerDisabled() {
-		tips := len(c.remoteConfig.Messages.Ticker.Messages)
-		if tips > 0 {
-			tip := c.remoteConfig.Messages.Ticker.Last
+	if c.showTickerMessage() {
+		messages := len(c.remoteConfig.Messages.Ticker.Messages)
+		if messages > 0 {
+			message := c.state.LastTickerMessage
 
 			for {
-				tip++
-				if tip > tips {
-					tip = 1
+				message++
+				if message > messages {
+					message = 1
 				}
 
 				// TODO add conditions
 
-				if tip == c.remoteConfig.Messages.Ticker.Last {
+				if message == c.state.LastTickerMessage {
 					break
 				}
 
-				util.Success("\n%s", c.remoteConfig.Messages.Ticker.Messages[tip-1])
+				util.Success("\n%s", c.remoteConfig.Messages.Ticker.Messages[message-1])
 			}
 
-			c.remoteConfig.Messages.Ticker.Last = tip
-			c.write()
+			c.state.LastTickerMessage = message
+			c.state.LastTickerMessageAt = time.Now()
+			if err := c.state.Save(); err != nil {
+				util.Debug("Error while saving state: %s", err)
+			}
 		}
 	}
 }
@@ -89,4 +92,27 @@ func (c *remoteConfig) ShowTicker() {
 // config.
 func (c *remoteConfig) isTickerDisabled() bool {
 	return c.tickerDisabled || c.remoteConfig.Messages.Ticker.Disabled
+}
+
+// getTickerInterval returns the ticker interval. The processing order is
+// defined as follows, the first defined value is returned:
+//   - global config
+//   - remote config
+//   - const tickerInterval
+func (c *remoteConfig) getTickerInterval() time.Duration {
+	if c.tickerInterval > 0 {
+		return time.Duration(c.tickerInterval) * time.Hour
+	}
+
+	if c.remoteConfig.Messages.Ticker.Interval > 0 {
+		return time.Duration(c.remoteConfig.Messages.Ticker.Interval) * time.Hour
+	}
+
+	return time.Duration(tickerInterval) * time.Hour
+}
+
+// showTickerMessage returns true if the ticker is not disabled and the ticker
+// interval has been elapsed.
+func (c *remoteConfig) showTickerMessage() bool {
+	return !c.isTickerDisabled() && c.state.LastTickerMessageAt.Add(c.getTickerInterval()).Before(time.Now())
 }

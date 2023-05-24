@@ -4,6 +4,7 @@ package remoteconfig
 
 import (
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
+	statetypes "github.com/ddev/ddev/pkg/config/state/types"
 )
 
 var (
@@ -12,9 +13,9 @@ var (
 
 // InitGlobal initializes the global remote config. This is done once,
 // subsequent calls do not have any effect.
-func InitGlobal(config Config, isInternetActive func() bool) types.RemoteConfig {
+func InitGlobal(config Config, stateManager statetypes.State, isInternetActive func() bool) types.RemoteConfig {
 	if globalRemoteConfig == nil {
-		globalRemoteConfig = New(&config, isInternetActive)
+		globalRemoteConfig = New(&config, stateManager, isInternetActive)
 	}
 
 	return globalRemoteConfig
