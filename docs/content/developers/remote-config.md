@@ -11,6 +11,12 @@ Here is an example of a `remote-config.jsonc` file:
 {
     // Update interval of the remote config in hours
     "update-interval": 10,
+    "remote": {
+        "owner": "ddev",
+        "repo": "remote-config",
+        "ref": "live",
+        "filepath": "remote-config",
+    },
 
     // Messages shown to the user
     "messages": {
@@ -62,10 +68,15 @@ The defined messages are shown to the user every `interval` as long as not
 `disabled`. Supported message types are `infos` and `warnings` where `infos`
 are printed in a yellow box and `warnings` in a red box.
 
+The user can not influence notifications, they will be shown like defined in
+the `remote-config` repository.
+
 ### Ticker
 
 One of the defined messages is shown to the user every `interval` as long as
 not `disabled`, the messages are rotating.
+
+The user can disable the ticker or change the interval in the global config.
 
 ### Conditions and Versions
 

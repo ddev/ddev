@@ -17,22 +17,25 @@ func New(config *Config, stateManager statetypes.State, isInternetActive func() 
 
 	// Create RemoteConfig.
 	cfg := &remoteConfig{
-		state:       newState(stateManager),
-		fileStorage: storage.NewFileStorage(config.getLocalSourceFileName()),
-		githubStorage: storage.NewGithubStorage(
-			config.getRemoteSourceOwner(),
-			config.getRemoteSourceRepo(),
-			config.getRemoteSourceFilepath(),
-			storage.Options{Ref: config.getRemoteSourceRef()},
-		),
+		state:            newState(stateManager),
+		fileStorage:      storage.NewFileStorage(config.getLocalSourceFileName()),
 		updateInterval:   config.UpdateInterval,
 		tickerDisabled:   config.TickerDisabled,
 		tickerInterval:   config.TickerInterval,
 		isInternetActive: isInternetActive,
 	}
 
-	// Load local remote config, also initiates update from remote.
+	// Load local remote config.
 	cfg.loadFromLocalStorage()
+
+	// Configure remote and initiate update.
+	cfg.githubStorage = storage.NewGithubStorage(
+		config.getRemoteSourceOwner(&cfg.remoteConfig),
+		config.getRemoteSourceRepo(&cfg.remoteConfig),
+		config.getRemoteSourceFilepath(&cfg.remoteConfig),
+		storage.Options{Ref: config.getRemoteSourceRef(&cfg.remoteConfig)},
+	)
+	go cfg.updateFromGithub()
 
 	return cfg
 }
@@ -83,7 +86,6 @@ func (c *remoteConfig) loadFromLocalStorage() {
 	c.mu.Lock()
 	defer func() {
 		c.mu.Unlock()
-		go c.updateFromGithub()
 	}()
 
 	var err error

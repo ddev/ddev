@@ -35,7 +35,7 @@ type ProjectInfo struct {
 	UsedHostPorts []string `yaml:"used_host_ports,omitempty,flow"`
 }
 
-// RemoteConfigSource is the struct defining the source of the remote-config.
+// RemoteConfigRemote is the struct defining the source of the remote-config.
 type RemoteConfigRemote struct {
 	Owner    string `yaml:"owner,omitempty"`
 	Repo     string `yaml:"repo,omitempty"`

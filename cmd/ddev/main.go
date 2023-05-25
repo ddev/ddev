@@ -39,10 +39,10 @@ func main() {
 	// remote config at the end of the command execution.
 	remoteconfig.InitGlobal(
 		remoteconfig.Config{
-			LocalSource: remoteconfig.LocalSource{
+			Local: remoteconfig.Local{
 				Path: globalconfig.GetGlobalDdevDir(),
 			},
-			RemoteSource: remoteconfig.RemoteSource{
+			Remote: remoteconfig.Remote{
 				Owner:    globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Owner,
 				Repo:     globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Repo,
 				Ref:      globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Ref,

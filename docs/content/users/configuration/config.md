@@ -253,6 +253,22 @@ Port for project’s MailHog HTTP URL.
 | -- | -- | --
 | :octicons-file-directory-16: project | `8025` | Can be changed to avoid a port conflict.
 
+## `messages:disable_ticker`
+
+Whether to disable ticker messages.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-globe-16: global | `false` | Can be `true` or `false`; only `true` has any effect.
+
+## `messages:ticker_interval`
+
+How often ticker messages should be shown.
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-globe-16: global | `5` | Interval in hours.
+
 ## `mutagen_enabled`
 
 Whether to enable [Mutagen asynchronous caching](../install/performance.md#mutagen) for all projects.
