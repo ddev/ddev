@@ -163,8 +163,44 @@ project root:
 ampli pull
 ```
 
+Once the changes are ready to be merged, merge the changes made in the new
+branch to the main branch in the Amplitude backend and switch back to the
+main branch:
+
+```bash
+ampli checkout main
+```
+
 Make sure the API keys are not included to the sources; they are linked during
 compilation using a GitHub secret.
+
+### Environments
+
+There are two environments defined, `DDEV - Production` and `DDEV - Development`.
+Master builds will deliver the data to production, PR builds to development.
+
+When working on Amplitude, please always make sure the correct environment is
+selected or you won't see any data. Selection is possible on most pages.
+
+### User and event data
+
+The first step is always to identify the device, this includes data like OS,
+architecture, DDEV version, Docker, etc., details are visible in the
+*User Properties*. The devices are called *Users* in the Amplitude backend. So
+every user represents an unique device on which DDEV is installed.
+
+The second step is to collect data about the command which was called by the
+user and is delivered by a dedicated `Command` event.
+
+The `Project` event finally collects data about the loaded project(s) which
+includes important configuration details like PHP version, database, etc.
+
+### Debugging
+
+Information about data debugging can be found at <https://www.docs.developers.amplitude.com/data/debugger/>.
+*Ingestion debugger* or via *User lookup* are the most useful options for DDEV.
+
+Don't forget to select the matching environment while debugging.
 
 ## Building
 
