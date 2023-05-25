@@ -374,6 +374,20 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # to ~/.ddev/bin/docker-compose.
 # Please don't use this unless directed to do so
 
+# messages:
+#   disable_ticker: false // Set to true to disable ticker messages
+#   ticker_interval: 5    // Interval in hours to show ticker messages
+# Controls the display of the ticker messages.
+
+# remote_config:
+#   update_interval: 10 // Interval in hours to download the remote config
+#   remote:
+#     owner: ddev
+#     repo: remote-config
+#     ref: live
+#     filepath: remote-config.jsonc
+# Controls the download of the remote config. Please do not change.
+
 `
 	cfgbytes = append(cfgbytes, instructions...)
 
