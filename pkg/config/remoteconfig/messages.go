@@ -1,13 +1,18 @@
 package remoteconfig
 
 import (
+	"strings"
 	"time"
 
-	"github.com/Masterminds/semver/v3"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/internal"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/types"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/styles"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
 )
 
 type messageTypes struct {
@@ -15,76 +20,166 @@ type messageTypes struct {
 	messages    []internal.Message
 }
 
-// Shows messages provided by the remote config to the user.
-func (c *remoteConfig) ShowMessages() {
+type conditionDefinition struct {
+	name          string
+	description   string
+	conditionFunc func() bool
+}
+
+var conditionDefinitions = map[string]conditionDefinition{}
+
+func init() {
+	AddCondition("Disabled", "Permanently disables the message", func() bool { return false })
+	AddCondition("Colima", "Running on Colima", dockerutil.IsColima)
+	AddCondition("DockerDesktop", "Running on Docker Desktop", dockerutil.IsDockerDesktop)
+	AddCondition("WSL2", "Running on WSL2", dockerutil.IsWSL2)
+}
+
+func AddCondition(name, description string, conditionFunc func() bool) {
+	conditionDefinitions[strings.ToLower(name)] = conditionDefinition{
+		name:          name,
+		description:   description,
+		conditionFunc: conditionFunc,
+	}
+}
+
+func ListConditions() (conditions map[string]string) {
+	conditions = make(map[string]string)
+
+	for _, condition := range conditionDefinitions {
+		conditions[condition.name] = condition.description
+	}
+
+	return
+}
+
+// ShowNotifications shows notifications provided by the remote config to the user.
+func (c *remoteConfig) ShowNotifications() {
 	defer util.TimeTrack()()
 
-	// Show infos and warning.
-	version, err := semver.NewVersion(versionconstants.DdevVersion)
-	if err != nil {
-		util.Warning("Failed to parse the DDEV version `%s` into a semver.Version.", versionconstants.DdevVersion)
+	if !c.showNotifications() {
 		return
 	}
 
+	// TODO remove
+	c.remoteConfig.Messages.Notifications.Infos = append(c.remoteConfig.Messages.Notifications.Infos, internal.Message{Message: "This is an information, please do ignore."})
+	c.remoteConfig.Messages.Notifications.Warnings = append(c.remoteConfig.Messages.Notifications.Warnings, internal.Message{Message: "This is an important warning, please restart your system."})
+
 	for _, messages := range []messageTypes{
-		{messageType: types.Warning, messages: c.remoteConfig.Messages.Warnings},
-		{messageType: types.Info, messages: c.remoteConfig.Messages.Infos},
+		{messageType: types.Info, messages: c.remoteConfig.Messages.Notifications.Infos},
+		{messageType: types.Warning, messages: c.remoteConfig.Messages.Notifications.Warnings},
 	} {
+		t := table.NewWriter()
+
+		var title string
+		var i int
+
+		switch messages.messageType {
+		case types.Warning:
+			applyTableStyle(warning, t)
+			title = "Important Warning"
+		default:
+			applyTableStyle(information, t)
+			title = "Important Message"
+		}
+
 		for _, message := range messages.messages {
-			if message.Versions != "" {
-				constraint, err := semver.NewConstraint(message.Versions)
-
-				if err != nil {
-					continue
-				}
-
-				if !constraint.Check(version) && constraint.String() != "" {
-					continue
-				}
+			if !c.checkConditions(message.Conditions) || !c.checkVersions(message.Versions) {
+				continue
 			}
 
-			switch messages.messageType {
-			case types.Warning:
-				util.Warning("\n%s", message.Message)
-			default:
-				util.Success("\n%s", message.Message)
+			t.AppendRow(table.Row{message.Message})
+			i++
+		}
+
+		if i == 0 {
+			continue
+		}
+
+		if i > 1 {
+			title += "s"
+		}
+
+		t.AppendHeader(table.Row{title})
+
+		output.UserOut.Print("\n", t.Render(), "\n")
+	}
+
+	c.state.LastNotificationAt = time.Now()
+	if err := c.state.save(); err != nil {
+		util.Debug("Error while saving state: %s", err)
+	}
+}
+
+// ShowTicker shows ticker messages provided by the remote config to the user.
+func (c *remoteConfig) ShowTicker() {
+	defer util.TimeTrack()()
+
+	if c.showTickerMessage() {
+		messageOffset := c.state.LastTickerMessage
+		messageCount := len(c.remoteConfig.Messages.Ticker.Messages)
+
+		for i := range c.remoteConfig.Messages.Ticker.Messages {
+			messageOffset++
+			if messageOffset > messageCount {
+				messageOffset = 1
+			}
+
+			message := &c.remoteConfig.Messages.Ticker.Messages[i+messageOffset-1]
+
+			if c.checkConditions(message.Conditions) && c.checkVersions(message.Versions) {
+				t := table.NewWriter()
+				applyTableStyle(ticker, t)
+
+				var title string
+
+				if message.Title != "" {
+					title = message.Title
+				} else {
+					title = "Tip of the day"
+				}
+
+				t.AppendHeader(table.Row{title})
+				t.AppendRow(table.Row{message.Message})
+
+				output.UserOut.Print("\n", t.Render(), "\n")
+
+				c.state.LastTickerMessage = messageOffset
+				c.state.LastTickerAt = time.Now()
+				if err := c.state.save(); err != nil {
+					util.Debug("Error while saving state: %s", err)
+				}
+
+				break
 			}
 		}
 	}
 }
 
-// ShowTicker shows ticker messages provided by the remote config to the user.
-// TODO beautify output
-func (c *remoteConfig) ShowTicker() {
-	defer util.TimeTrack()()
+// isNotificationsDisabled returns true if notifications should not be shown to
+// the user which can be achieved by setting the related remote config.
+func (c *remoteConfig) isNotificationsDisabled() bool {
+	return c.remoteConfig.Messages.Notifications.Disabled
+}
 
-	if c.showTickerMessage() {
-		messages := len(c.remoteConfig.Messages.Ticker.Messages)
-		if messages > 0 {
-			message := c.state.LastTickerMessage
-
-			for {
-				message++
-				if message > messages {
-					message = 1
-				}
-
-				// TODO add conditions
-
-				if message == c.state.LastTickerMessage {
-					break
-				}
-
-				util.Success("\n%s", c.remoteConfig.Messages.Ticker.Messages[message-1])
-			}
-
-			c.state.LastTickerMessage = message
-			c.state.LastTickerMessageAt = time.Now()
-			if err := c.state.Save(); err != nil {
-				util.Debug("Error while saving state: %s", err)
-			}
-		}
+// getNotificationsInterval returns the notifications interval. The processing
+// order is defined as follows, the first defined value is returned:
+//   - remote config
+//   - const notificationsInterval
+func (c *remoteConfig) getNotificationsInterval() time.Duration {
+	if c.remoteConfig.Messages.Notifications.Interval > 0 {
+		return time.Duration(c.remoteConfig.Messages.Notifications.Interval) * time.Hour
 	}
+
+	return time.Duration(notificationsInterval) * time.Hour
+}
+
+// showNotifications returns true if notifications are not disabled and the
+// notifications interval has been elapsed.
+func (c *remoteConfig) showNotifications() bool {
+	return !output.JSONOutput &&
+		!c.isNotificationsDisabled() &&
+		c.state.LastNotificationAt.Add(c.getNotificationsInterval()).Before(time.Now())
 }
 
 // isTickerDisabled returns true if tips should not be shown to the user which
@@ -114,5 +209,79 @@ func (c *remoteConfig) getTickerInterval() time.Duration {
 // showTickerMessage returns true if the ticker is not disabled and the ticker
 // interval has been elapsed.
 func (c *remoteConfig) showTickerMessage() bool {
-	return !c.isTickerDisabled() && c.state.LastTickerMessageAt.Add(c.getTickerInterval()).Before(time.Now())
+	return !output.JSONOutput &&
+		!c.isTickerDisabled() &&
+		c.state.LastTickerAt.Add(c.getTickerInterval()).Before(time.Now())
+}
+
+func (c *remoteConfig) checkConditions(conditions []string) bool {
+	for _, rawCondition := range conditions {
+		condition, negated := strings.CutPrefix(strings.TrimSpace(rawCondition), "!")
+		condition = strings.ToLower(strings.TrimSpace(condition))
+
+		conditionDef, found := conditionDefinitions[condition]
+
+		if found {
+			conditionResult := conditionDef.conditionFunc()
+
+			if (!negated && !conditionResult) || (negated && conditionResult) {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
+func (c *remoteConfig) checkVersions(versions string) bool {
+	versions = strings.TrimSpace(versions)
+	if versions != "" {
+		match, err := util.SemverValidate(versions, versionconstants.DdevVersion)
+		if err != nil {
+			util.Debug("Failed to validate DDEV version `%s` against constraint `%s`: %s", versionconstants.DdevVersion, versions, err)
+			return true
+		}
+
+		return match
+	}
+
+	return true
+}
+
+type preset int
+
+const (
+	information preset = iota
+	warning
+	ticker
+)
+
+func applyTableStyle(preset preset, writer table.Writer) {
+	styles.SetGlobalTableStyle(writer)
+
+	writer.SetColumnConfigs([]table.ColumnConfig{
+		{
+			Number:   1,
+			WidthMin: 70,
+			WidthMax: 0,
+		},
+	})
+
+	switch preset {
+	case information:
+		writer.Style().Color = table.ColorOptions{
+			Header: text.Colors{text.BgHiYellow, text.FgBlack},
+			Row:    text.Colors{text.BgHiYellow, text.FgBlack},
+		}
+	case warning:
+		writer.Style().Color = table.ColorOptions{
+			Header: text.Colors{text.BgHiRed, text.FgBlack},
+			Row:    text.Colors{text.BgHiRed, text.FgBlack},
+		}
+	case ticker:
+		writer.Style().Color = table.ColorOptions{
+			Header: text.Colors{text.BgHiWhite, text.FgBlack},
+			Row:    text.Colors{text.BgHiWhite, text.FgBlack},
+		}
+	}
 }

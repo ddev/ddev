@@ -30,7 +30,7 @@ func main() {
 	}
 
 	// Create a global state to be injected later.
-	state := yaml.NewState(path.Join(globalconfig.GetGlobalConfigPath(), "state.yml"))
+	state := yaml.NewState(path.Join(globalconfig.GetGlobalDdevDir(), "state.yaml"))
 
 	// TODO for the time being this triggers the download from Github but
 	// should be realized with a clean bootstrap as soon as it exists. The
@@ -40,7 +40,7 @@ func main() {
 	remoteconfig.InitGlobal(
 		remoteconfig.Config{
 			LocalSource: remoteconfig.LocalSource{
-				Path: globalconfig.GetGlobalConfigPath(),
+				Path: globalconfig.GetGlobalDdevDir(),
 			},
 			RemoteSource: remoteconfig.RemoteSource{
 				Owner:    globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Owner,

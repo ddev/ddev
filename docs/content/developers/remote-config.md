@@ -10,30 +10,35 @@ Here is an example of a `remote-config.jsonc` file:
 ```jsonc
 {
     // Update interval of the remote config in hours
-    "update-interval": 6,
+    "update-interval": 10,
 
     // Messages shown to the user
     "messages": {
-        // infos and warnings are shown on almost every ddev command, please
-        // use with caution!
-        "infos": [
-            {
-                "message": "Ensure maintenance and further development of DDEV, see https://ddev.com/support-ddev/.",
-                "conditions": [],
-                "versions": ""
-            }
-        ],
-        "warnings": [
-            {
-                "message": "Please update your installation as soon as possible, there is a big security risk by using this version.",
-                "versions": "<1.20"
-            }
-        ],
+        // All notifications are shown once in an interval
+        "notifications": {
+            "disabled": false,
+            "interval": 20,
+            "infos": [
+                {
+                    "message": "Ensure maintenance and further development of DDEV, see https://ddev.com/support-ddev/.",
+                    "conditions": [],
+                    "versions": ""
+                },
+            ],
+            "warnings": [
+                {
+                    "message": "Please update your installation as soon as possible, there is a big security risk by using this version.",
+                    "conditions": [],
+                    "versions": "<1.20"
+                },
+            ],
+        },
 
-        // ticker messages are are shown once in an interval, once a day by
-        // default, and are rotated once a message was shown.
+        // One ticker messages is shown once in an interval and rotated to the
+        // next afterwards
         "ticker": {
-            "interval": 24,
+            "disabled": false,
+            "interval": 5,
             "messages": [
                 {
                     "message": "Did you know? You can restart your project at any time using `ddev restart`.",
@@ -42,7 +47,7 @@ Here is an example of a `remote-config.jsonc` file:
                 },
                 {
                     "message": "Did you know? You can open a browser heading to your project with `ddev launch`."
-                }
+                },
             ]
         }
     }
@@ -51,19 +56,29 @@ Here is an example of a `remote-config.jsonc` file:
 
 ## Messages
 
-### Infos and Warnings
+### Notifications
 
-The defined messages are shown to the user on every usage of DDEV. Supported
-message types are `infos` and `warnings`. Every message can optionally include
-a version constraint to limit the message to matching DDEV versions only.
-
-More information about the supported constraints can be found in the
-[Masterminds SemVer](https://github.com/Masterminds/semver#readme) repository.
+The defined messages are shown to the user every `interval` as long as not
+`disabled`. Supported message types are `infos` and `warnings` where `infos`
+are printed in a yellow box and `warnings` in a red box.
 
 ### Ticker
 
-On every launch another message from the `ticker` section will be shown to the
-user.
+One of the defined messages is shown to the user every `interval` as long as
+not `disabled`, the messages are rotating.
+
+### Conditions and Versions
+
+Every message can optionally include a condition and a version constraint to
+limit the message to matching conditions and DDEV versions only.
+
+Every element of the array `conditions` may contain a condition listed by
+`ddev debug message-conditions`. It may be prefixed by a `!` to negate the
+condition. All conditions must be met, not known conditions are always met.
+
+The field `versions` may contain a version constraint which must be met by the
+current version of DDEV. More information about the supported constraints can
+be found in the [Masterminds SemVer repository](https://github.com/Masterminds/semver#readme).
 
 ## Testing
 

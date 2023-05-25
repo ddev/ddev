@@ -7,32 +7,41 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 )
 
-func NewState(stateManager statetypes.State) *StateEntry {
-	state := &StateEntry{
+func newState(stateManager statetypes.State) *state {
+	state := &state{
 		stateManager: stateManager,
 	}
 
-	if err := state.Load(); err != nil {
+	if err := state.load(); err != nil {
 		util.Debug("Error while loading state: %s", err)
 	}
 
 	return state
 }
 
-type StateEntry struct {
+type state struct {
 	stateManager statetypes.State
+	stateEntry
+}
 
-	UpdatedAt           time.Time `yaml:"updated_at"`
-	LastTickerMessageAt time.Time `yaml:"last_ticker_message_at"`
-	LastTickerMessage   int       `yaml:"last_ticker_message"`
+type stateEntry struct {
+	UpdatedAt          time.Time `yaml:"updated_at"`
+	LastNotificationAt time.Time `yaml:"last_notification_at"`
+	LastTickerAt       time.Time `yaml:"last_ticker_at"`
+	LastTickerMessage  int       `yaml:"last_ticker_message"`
 }
 
 const stateKey = "remote_config"
 
-func (s *StateEntry) Load() error {
-	return s.stateManager.Get(stateKey, s)
+func (s *state) load() error {
+	return s.stateManager.Get(stateKey, &s.stateEntry)
 }
 
-func (s *StateEntry) Save() error {
-	return s.stateManager.Set(stateKey, *s)
+func (s *state) save() (err error) {
+	err = s.stateManager.Set(stateKey, s.stateEntry)
+	if err != nil {
+		return
+	}
+
+	return s.stateManager.Save()
 }

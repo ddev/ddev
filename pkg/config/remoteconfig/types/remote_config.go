@@ -1,6 +1,6 @@
 package types
 
 type RemoteConfig interface {
-	ShowMessages()
+	ShowNotifications()
 	ShowTicker()
 }

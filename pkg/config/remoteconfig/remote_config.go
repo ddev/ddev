@@ -17,7 +17,7 @@ func New(config *Config, stateManager statetypes.State, isInternetActive func() 
 
 	// Create RemoteConfig.
 	cfg := &remoteConfig{
-		state:       NewState(stateManager),
+		state:       newState(stateManager),
 		fileStorage: storage.NewFileStorage(config.getLocalSourceFileName()),
 		githubStorage: storage.NewGithubStorage(
 			config.getRemoteSourceOwner(),
@@ -38,14 +38,16 @@ func New(config *Config, stateManager statetypes.State, isInternetActive func() 
 }
 
 const (
-	localFileName  = ".remote-config"
-	updateInterval = 6 // default update interval in hours
-	tickerInterval = 4 // default ticker interval in hours
+	localFileName = ".remote-config"
+	// Default intervals in hours
+	updateInterval        = 10
+	notificationsInterval = 20
+	tickerInterval        = 5
 )
 
 // remoteConfig is a in memory representation of the DDEV RemoteConfig.
 type remoteConfig struct {
-	state        *StateEntry
+	state        *state
 	remoteConfig internal.RemoteConfig
 
 	fileStorage   types.RemoteConfigStorage
@@ -111,7 +113,7 @@ func (c *remoteConfig) updateFromGithub() {
 
 		defer func() {
 			c.state.UpdatedAt = time.Now()
-			if err := c.state.Save(); err != nil {
+			if err := c.state.save(); err != nil {
 				util.Debug("Error while saving state: %s", err)
 			}
 

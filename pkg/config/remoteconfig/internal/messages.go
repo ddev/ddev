@@ -1,19 +1,26 @@
 package internal
 
 type Message struct {
-	Message    string   `json:"message,omitempty"`
+	Message    string   `json:"message"`
+	Title      string   `json:"title,omitempty"`
 	Conditions []string `json:"conditions,omitempty"`
 	Versions   string   `json:"versions,omitempty"`
 }
 
+type Notifications struct {
+	Disabled bool      `json:"disabled,omitempty"`
+	Interval int       `json:"interval"`
+	Infos    []Message `json:"infos"`
+	Warnings []Message `json:"warnings"`
+}
+
 type Ticker struct {
 	Disabled bool      `json:"disabled,omitempty"`
-	Interval int       `json:"interval,omitempty"`
-	Messages []Message `json:"messages,omitempty"`
+	Interval int       `json:"interval"`
+	Messages []Message `json:"messages"`
 }
 
 type Messages struct {
-	Infos    []Message `json:"infos,omitempty"`
-	Warnings []Message `json:"warnings,omitempty"`
-	Ticker   Ticker    `json:"ticker,omitempty"`
+	Notifications Notifications `json:"notifications"`
+	Ticker        Ticker        `json:"ticker"`
 }
