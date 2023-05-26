@@ -1,0 +1,30 @@
+#!/bin/bash
+
+## Description: Run Drupal commands inside the web container.
+## Usage: drupalcommands
+## Example: 'ddev drupalcommands'
+
+echo '** Check config status, get versions and important log messages, etc.'
+echo ''
+
+echo '* Configuration status'
+drush config:status
+echo ''
+
+echo '* Versions'
+drush core:status | grep 'version'
+echo ''
+
+echo '* Last 3 log entries with severity minimum Warning'
+drush watchdog:show --count=3 --severity-min=Warning
+echo ''
+
+echo '** Check for Drupal core and module updates'
+composer outdated "drupal/*"
+echo ''
+
+# see webcommands.example for all available web script variables
+echo '** Database and server type from script variables'
+echo '$DDEV_DATABASE': $DDEV_DATABASE
+echo '$DDEV_WEBSERVER_TYPE': $DDEV_WEBSERVER_TYPE
+echo ''
