@@ -30,6 +30,22 @@ To provide host commands, place a Bash script in `.ddev/commands/host`. For exam
 open -a PhpStorm.app ${DDEV_APPROOT}
 ```
 
+## Web Commands
+
+To run commands inside the web container, place a Bash script in `.ddev/commands/web`. To run a command such as `ddev webcommands` create the file `.ddev/commands/web/webcommands` with these contents:
+
+```bash
+#!/bin/bash
+
+## Description: Run commands inside the web container.
+## Usage: webcommands
+## Example: 'ddev webcommands'
+
+echo '** Unix command example - get current working directory and content'
+pwd
+ls
+```
+
 ## Container Commands
 
 To provide a command which will execute in a container, add a Bash script to `.ddev/commands/<container_name>`, for example, `.ddev/commands/web/mycommand`. The Bash script will be executed inside the named container. For example, see the [several standard DDEV script-based web container commands](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/global_dotddev_assets/commands/web).
