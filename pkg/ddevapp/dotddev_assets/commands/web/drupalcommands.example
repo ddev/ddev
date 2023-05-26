@@ -27,4 +27,3 @@ echo ''
 echo '** Database and server type from script variables'
 echo '$DDEV_DATABASE': $DDEV_DATABASE
 echo '$DDEV_WEBSERVER_TYPE': $DDEV_WEBSERVER_TYPE
-echo ''
