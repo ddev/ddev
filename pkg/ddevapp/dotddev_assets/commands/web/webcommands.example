@@ -1,29 +1,10 @@
 #!/bin/bash
 
-#echo $Description: Run commands inside the web container.
-#echo $Usage: webcommands
-#echo $Example: 'ddev webcommands'
+## Description: Run commands inside the web container.
+## Usage: webcommands
+## Example: 'ddev webcommands'
 
-echo '** Check config status, get versions and important log messages, etc.'
-echo ''
-
-echo '* Configuration status'
-drush config:status
-echo ''
-
-echo '* Versions'
-drush core:status | grep 'version'
-echo ''
-
-echo '* Last 3 log entries with severity minimum Warning'
-drush watchdog:show --count=3 --severity-min=Warning
-echo ''
-
-echo '** Check for Drupal core and module updates'
-composer outdated "drupal/*"
-echo ''
-
-echo '** Unix examples - get current working directory and content'
+echo '** Unix command example - get current working directory and content'
 pwd
 ls
 echo ''
