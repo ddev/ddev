@@ -5,11 +5,6 @@ set -eu -o pipefail
 sudo chown -R ${USER} /usr/local/*
 brew update >/dev/null
 
-# After colima 0.5.0 it's best to redo the colima image completely
-if (colima version | grep "colima version 0.5.0"); then
-  colima delete -f
-fi
-
 # colima has golang as dependency, so is going to install go anyway.
 # So we have to get rid of it somehow.
 brew uninstall go@1.15 || true
@@ -31,7 +26,7 @@ sudo security authorizationdb write com.apple.trust-settings.admin allow
 # Github actions macOS runners have 14BG RAM so might as well use it.
 # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
 echo "====== Starting colima ======"
-colima start --cpu 3 --memory 6
+colima start --cpu 3 --memory 6 --vm-type=qemu --mount-type=sshfs --dns=1.1.1.1
 
 # I haven't been able to get mkcert-trusted certs in there, not sure why
 # You can't answer the security prompt, but that's what the

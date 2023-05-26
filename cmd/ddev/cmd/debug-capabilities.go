@@ -24,6 +24,7 @@ var DebugCapabilitiesCmd = &cobra.Command{
 			"get-volume-db-version",
 			"migrate-database",
 			"web-start-hooks",
+			"add-on-versioning",
 		}
 		output.UserOut.WithField("raw", capabilities).Print(strings.Join(capabilities, "\n"))
 	},

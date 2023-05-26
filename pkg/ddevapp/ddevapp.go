@@ -974,6 +974,10 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	if app.IsMutagenEnabled() {
+		err = app.GenerateMutagenYml()
+		if err != nil {
+			return err
+		}
 		if ok, volumeExists, info := CheckMutagenVolumeSyncCompatibility(app); !ok {
 			util.Debug("mutagen sync session, configuration, and docker volume are in incompatible status: '%s', Removing mutagen sync session '%s' and docker volume %s", info, MutagenSyncName(app.Name), GetMutagenVolumeName(app))
 			err = SyncAndPauseMutagenSession(app)
@@ -1102,18 +1106,23 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
+	// TODO: We shouldn't be chowning /var/lib/mysql if postgresql?
+	util.Debug("chowning /mnt/ddev-global-cache and /var/lib/mysql to %s", uid)
 	_, out, err := dockerutil.RunSimpleContainer(versionconstants.GetWebImage(), "start-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.GetMariaDBVolumeName() + ":/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{"com.ddev.site-name": app.Name}, nil)
 	if err != nil {
 		return fmt.Errorf("failed to RunSimpleContainer to chown volumes: %v, output=%s", err, out)
 	}
+	util.Debug("done chowning /mnt/ddev-global-cache and /var/lib/mysql to %s", uid)
 
 	// Chown the postgres volume; this shouldn't have to be a separate stanza, but the
 	// uid is 999 instead of current user
 	if app.Database.Type == nodeps.Postgres {
+		util.Debug("chowning chowning /var/lib/postgresql/data to 999")
 		_, out, err := dockerutil.RunSimpleContainer(versionconstants.GetWebImage(), "start-postgres-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/postgresql/data", "999:999")}, []string{}, []string{}, []string{app.GetPostgresVolumeName() + ":/var/lib/postgresql/data"}, "", true, false, map[string]string{"com.ddev.site-name": app.Name}, nil)
 		if err != nil {
 			return fmt.Errorf("failed to RunSimpleContainer to chown postgres volume: %v, output=%s", err, out)
 		}
+		util.Debug("done chowning /var/lib/postgresql/data")
 	}
 
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent") {
@@ -1174,8 +1183,22 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		return err
 	}
 
-	util.Debug("Executing docker-compose -f %s up --build -d", app.DockerComposeFullRenderedYAMLPath())
-	_, _, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "up", "--build", "-d")
+	// Build extra layers on web and db images if necessary
+	progress := "quiet"
+	if globalconfig.DdevVerbose {
+		progress = "auto"
+	}
+	util.Debug("Executing docker-compose -f %s build --progress=%s", app.DockerComposeFullRenderedYAMLPath(), progress)
+	out, stderr, err := dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "build", "--progress="+progress)
+	if err != nil {
+		return fmt.Errorf("docker-compose build failed: %v, output='%s', stderr='%s'", err, out, stderr)
+	}
+	if globalconfig.DdevVerbose {
+		util.Debug("docker-compose build output:\n%s\n\n", out)
+	}
+
+	util.Debug("Executing docker-compose -f %s up -d", app.DockerComposeFullRenderedYAMLPath())
+	_, _, err = dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "up", "-d")
 	if err != nil {
 		return err
 	}
@@ -1200,7 +1223,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 					util.Debug("Pushed mkcert rootca certs to ddev-global-cache/mkcert")
 				}
 			}
-
 		}
 
 		// If TLS supported and using traefik, create cert/key and push into ddev-global-cache/traefik
@@ -1240,10 +1262,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 		output.UserOut.Printf("Starting mutagen sync process... This can take some time.")
 		mutagenDuration := util.ElapsedDuration(time.Now())
-		err = app.GenerateMutagenYml()
-		if err != nil {
-			return err
-		}
 
 		err = SetMutagenVolumeOwnership(app)
 		if err != nil {
@@ -1290,6 +1308,15 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	err = app.Wait(dependers)
 	if err != nil {
 		util.Warning("Failed waiting for web/db containers to become ready: %v", err)
+	}
+
+	if globalconfig.DdevVerbose {
+		out, err = app.CaptureLogs("web", true, "200")
+		if err != nil {
+			util.Warning("Unable to capture logs from web container: %v", err)
+		} else {
+			util.Debug("docker-compose up output:\n%s\n\n", out)
+		}
 	}
 
 	// WebExtraDaemons have to be started after mutagen sync is done, because so often
@@ -1599,10 +1626,14 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 
 	state, err := dockerutil.GetContainerStateByName(fmt.Sprintf("ddev-%s-%s", app.Name, opts.Service))
 	if err != nil || state != "running" {
-		if state == "doesnotexist" {
+		switch state {
+		case "doesnotexist":
 			return "", "", fmt.Errorf("service %s does not exist in project %s (state=%s)", opts.Service, app.Name, state)
+		case "exited":
+			return "", "", fmt.Errorf("service %s has exited; state=%s", opts.Service, state)
+		default:
+			return "", "", fmt.Errorf("service %s is not currently running in project %s (state=%s), use `ddev logs -s %s` to see what happened to it", opts.Service, app.Name, state, opts.Service)
 		}
-		return "", "", fmt.Errorf("service %s is not currently running in project %s (state=%s), use `ddev logs -s %s` to see what happened to it", opts.Service, app.Name, state, opts.Service)
 	}
 
 	err = app.ProcessHooks("pre-exec")
@@ -1898,9 +1929,8 @@ func (app *DdevApp) DockerEnv() {
 	}
 
 	envVars := map[string]string{
-		// The compose project name can no longer contain dots
-		// https://github.com/compose-spec/compose-go/pull/197
-		"COMPOSE_PROJECT_NAME":           "ddev-" + strings.Replace(app.Name, `.`, "", -1),
+		// The compose project name can no longer contain dots; must be lower-case
+		"COMPOSE_PROJECT_NAME":           strings.ToLower("ddev-" + strings.Replace(app.Name, `.`, "", -1)),
 		"COMPOSE_CONVERT_WINDOWS_PATHS":  "true",
 		"COMPOSER_EXIT_ON_PATCH_FAILURE": "1",
 		"DDEV_SITENAME":                  app.Name,

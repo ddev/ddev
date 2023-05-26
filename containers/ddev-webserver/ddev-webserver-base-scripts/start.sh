@@ -116,6 +116,8 @@ if [ -d /mnt/ddev_config/.homeadditions ]; then
 fi
 
 # It's possible CAROOT does not exist or is not writeable (if host-side mkcert -install not run yet)
+# TODO: We shouldn't have to chown ddev-global-cache here as it's done by app.Start. However, in non-ddev
+# context it may still have to be done.
 sudo mkdir -p ${CAROOT} && sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/
 # This will install the certs from $CAROOT (/mnt/ddev-global-cache/mkcert)
 # It also creates them if they don't already exist

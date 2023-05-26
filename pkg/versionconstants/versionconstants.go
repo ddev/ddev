@@ -24,7 +24,7 @@ var WebTag = "20230509_gitpod_output" // Note that this can be overridden by mak
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20230512_mariadb_10_11"
+var BaseDBTag = "20230519_fix_mysql_snapshot_restore"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"
@@ -33,7 +33,7 @@ var DBAImg = "phpmyadmin"
 var DBATag = "5" // Note that this can be overridden by make
 
 const TraditionalRouterImage = "ddev/ddev-router:20230415_move_docker_to_ddev"
-const TraefikRouterImage = "traefik:v2.9"
+const TraefikRouterImage = "traefik:v2.10"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
@@ -50,7 +50,7 @@ var BUILDINFO = "BUILDINFO should have new info"
 // MutagenVersion is filled with the version we find for mutagen in use
 var MutagenVersion = ""
 
-const RequiredMutagenVersion = "0.16.0"
+const RequiredMutagenVersion = "0.17.1"
 
 // GetWebImage returns the correctly formatted web image:tag reference
 func GetWebImage() string {

@@ -67,7 +67,9 @@ func Success(format string, a ...interface{}) {
 // Output controlled by DDEV_DEBUG environment variable
 func Debug(format string, a ...interface{}) {
 	if globalconfig.DdevDebug {
-		output.UserOut.Debugf(format, a...)
+		n := time.Now()
+		s := fmt.Sprintf(format, a...)
+		output.UserOut.Debugf("%s %s", n.Format("2006-01-02T15:04:05.999"), s)
 	}
 }
 

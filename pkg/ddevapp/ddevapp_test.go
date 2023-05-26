@@ -2590,10 +2590,9 @@ func TestDdevExec(t *testing.T) {
 		Service: "busybox",
 		Cmd:     "ls",
 	}
-	_, _, err = app.Exec(&simpleOpts)
-	assert.Error(err)
-	assert.Contains(err.Error(), "not currently running")
-	assert.Contains(err.Error(), "state=exited")
+	stdout, stderr, err := app.Exec(&simpleOpts)
+	require.Error(t, err, "stdout='%s', stderr='%s'", stdout, stderr)
+	require.True(t, strings.Contains(err.Error(), "not currently running") || strings.Contains(err.Error(), "is not running") || strings.Contains(err.Error(), "state=exited"), "stdout='%s', stderr='%s'", stdout, stderr)
 
 	err = client.RemoveContainer(docker.RemoveContainerOptions{ID: bbc.ID, Force: true})
 	assert.NoError(err)
@@ -2603,7 +2602,7 @@ func TestDdevExec(t *testing.T) {
 	assert.Contains(err.Error(), "state=doesnotexist")
 
 	// Test use of RawCmd, should see the single quotes in there
-	stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+	stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
 		RawCmd: []string{"bash", "-c", `echo '"hi there"'`},
 	})
 	assert.NoError(err)

@@ -47,7 +47,7 @@ jobs:
       matrix:
         webserver: [nginx-fpm]
         tests: [ test ]
-        os: [ macos-12 ]
+        os: [ macos-13 ]
         no-bind-mounts: ['false']
       fail-fast: true
 
@@ -70,7 +70,7 @@ jobs:
       - name: Homebrew cache/restore
         uses: actions/cache@v3
         env:
-          cache-name: cache-homebrew-cache-12
+          cache-name: cache-homebrew-cache-13
         with:
           path: ~/Library/Caches/Homebrew
           key: ${{ runner.os }}-build-${{ env.cache-name }}
@@ -84,9 +84,8 @@ jobs:
       - name: Lima cache/restore
         uses: actions/cache@v3
         env:
-          cache-name: cache-lima-12
+          cache-name: cache-lima-13
         with:
-          # npm cache files are stored in `~/.npm` on Linux/macOS
           path: ~/.lima
           key: ${{ runner.os }}-build-${{ env.cache-name }}
           restore-keys: |
