@@ -192,13 +192,13 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt = val
 		dirty = true
 	}
-	if cmd.Flag("http-port").Changed {
-		val, _ := cmd.Flags().GetString("http-port")
+	if cmd.Flag("router-http-port").Changed {
+		val, _ := cmd.Flags().GetString("router-http-port")
 		globalconfig.DdevGlobalConfig.RouterHTTPPort = val
 		dirty = true
 	}
-	if cmd.Flag("https-port").Changed {
-		val, _ := cmd.Flags().GetString("https-port")
+	if cmd.Flag("router-https-port").Changed {
+		val, _ := cmd.Flags().GetString("router-https-port")
 		globalconfig.DdevGlobalConfig.RouterHTTPSPort = val
 		dirty = true
 	}
@@ -264,7 +264,7 @@ func init() {
 	configGlobalCommand.Flags().String("xdebug-ide-location", "", "For less usual IDE locations specify where the IDE is running for Xdebug to reach it")
 	configGlobalCommand.Flags().Bool("use-traefik", true, "If true, use traefik for ddev-router")
 	configGlobalCommand.Flags().Bool("wsl2-no-windows-hosts-mgt", true, "WSL2 only; make DDEV ignore Windows-side hosts file")
-	configGlobalCommand.Flags().String("http-port", "", "The router HTTP port for this project")
-	configGlobalCommand.Flags().String("https-port", "", "The router HTTPS port for this project")
+	configGlobalCommand.Flags().String("router-http-port", "", "The router HTTP port for this project")
+	configGlobalCommand.Flags().String("router-https-port", "", "The router HTTPS port for this project")
 	ConfigCommand.AddCommand(configGlobalCommand)
 }
