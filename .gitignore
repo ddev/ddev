@@ -15,3 +15,7 @@ nbproject/
 .idea
 *.orig
 *.rej
+
+# node/npm
+/node_modules
+/package*.json

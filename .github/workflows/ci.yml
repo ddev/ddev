@@ -1,0 +1,15 @@
+name: Build Test for Configure
+on:
+  push:
+jobs:
+  configure:
+    runs-on: ubuntu-latest
+    env:
+      EXTRA_PATH: ${{ github.workspace }}/node_modules/.bin
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - run: sudo apt-get install -y aspell
+      - run: ./configure
+      - run: make -O -j ci

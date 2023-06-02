@@ -10,7 +10,8 @@ GOTMP = .gotmp
 SHELL = /bin/bash
 PWD = $(shell pwd)
 GOFILES = $(shell find $(SRC_DIRS) -type f)
-.PHONY: darwin_amd64 darwin_arm64 darwin_amd64_notarized darwin_arm64_notarized darwin_arm64_signed darwin_amd64_signed linux_amd64 linux_arm64 linux_arm windows_amd64 windows_arm64 setup
+CI_GOALS = mkdocs markdownlint markdown-link-check pyspelling textlint
+.PHONY: darwin_amd64 darwin_arm64 darwin_amd64_notarized darwin_arm64_notarized darwin_arm64_signed darwin_amd64_signed linux_amd64 linux_arm64 linux_arm windows_amd64 windows_arm64 setup ci $(CI_GOALS)
 
 # Expands SRC_DIRS into the common golang ./dir/... format for "all below"
 SRC_AND_UNDER = $(patsubst %,./%/...,$(SRC_DIRS))
@@ -136,6 +137,9 @@ setup:
 
 # Required static analysis targets used in circleci - these cause fail if they don't work
 staticrequired: setup golangci-lint markdownlint mkdocs pyspelling
+
+## ci : make all CI_GOALS: markdownlint, mkdocs, markdown-link-check, pyspelling and textlint.
+ci: $(CI_GOALS)
 
 # Best to install markdownlint locally with "npm install -g markdownlint-cli"
 markdownlint:
@@ -273,6 +277,10 @@ version:
 	@echo VERSION:$(VERSION)
 
 clean: bin-clean
+
+.PHONY: realclean
+realclean: clean
+	rm -rf node_modules package.json package-lock.json
 
 bin-clean:
 	@rm -rf bin

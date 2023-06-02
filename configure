@@ -1,0 +1,54 @@
+#! /bin/sh
+
+go="go"
+npm="npm"
+python="python"
+sed="sed"
+
+# Print configuration
+printf >&2 'go: %s\n' "$($go version)"
+printf >&2 'npm: %s (node %s)\n' "$($npm --version)" "$(node --version)"
+printf >&2 'python: %s\n' "$($python --version)"
+
+printf >&2 '.envrc: %s\n' "$(file .envrc)"
+printf >&2 'VIRTUAL_ENV=%s\n' "$VIRTUAL_ENV"
+printf >&2 'NVM_BIN=%s\n' "$NVM_BIN"
+
+# Print utility installation instructions from Makefile
+$sed -n -e '/^# Best to install /p' Makefile
+
+# Configure python dependencies (pip)
+setup_python()
+{
+  (set -x
+  $python -m pip install --upgrade pip
+  $python -m pip install wheel
+  $python -m pip install -r docs/mkdocs-pip-requirements
+  $python -m pip install pyspelling pymdown-extensions
+  ) | $sed -e '/^Requirement already satisfied: /d'
+}
+
+# Configure node dependencies (npm)
+setup_nodejs()
+{
+  (set -x
+  $npm install --save-dev \
+      markdownlint-cli \
+      markdown-link-check \
+      textlint textlint-filter-rule-comments textlint-rule-no-todo textlint-rule-stop-words textlint-rule-terminology
+  )
+}
+
+setup_python &
+setup_nodejs &
+wait
+
+# Show utility versions and pathnames from Makefile
+PATH="$PWD/node_modules/.bin:$PATH"
+utils=$($sed -n -e 's/^\(# Best to install \)\([^ ]\+\)\( locally .*$\)/\2/p' Makefile)
+for util in $utils; do
+  printf '%-30s: %s\n' "$util --version" "$("$util" --version 2>&1)"
+  if command -v "$util" >/dev/null; then
+    printf '%-30s: %s\n' "$util pathname" "$(command -v "$util" 2>&1)"
+  fi
+done
