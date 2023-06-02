@@ -52,6 +52,7 @@ FSTYPE
 Flags
 FQDNs
 Fritzbox
+GPG
 GUI
 GUIs
 Get
