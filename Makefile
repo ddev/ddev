@@ -175,7 +175,7 @@ mkdocs-serve:
 
 # Best to install markdown-link-check locally with "npm install -g markdown-link-check"
 markdown-link-check:
-	@echo "markdown-link-check: "
+	@echo "markdown-link-check: "; \
 	if command -v markdown-link-check >/dev/null 2>&1 ; then \
 		find docs *.md -type f -name "*.md" -print0 | xargs -0 -n 1 -P 0 sh -c 'markdown-link-check -q -c markdown-link-check.json "$$@" 2>&1 || exit 255' sh ;\
 	else \
