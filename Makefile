@@ -6,7 +6,7 @@ export PATH := $(EXTRA_PATH):$(PATH)
 
 BUILD_BASE_DIR ?= $(PWD)
 
-GOTMP=.gotmp
+GOTMP = .gotmp
 SHELL = /bin/bash
 PWD = $(shell pwd)
 GOFILES = $(shell find $(SRC_DIRS) -type f)
@@ -137,7 +137,7 @@ setup:
 # Required static analysis targets used in circleci - these cause fail if they don't work
 staticrequired: setup golangci-lint markdownlint mkdocs pyspelling
 
-# Best to install markdownlint-cli locally with "npm install -g markdownlint-cli"
+# Best to install markdownlint locally with "npm install -g markdownlint-cli"
 markdownlint:
 	@echo "markdownlint: "
 	@CMD="markdownlint *.md docs/content 2>&1"; \
@@ -145,17 +145,17 @@ markdownlint:
 	if command -v markdownlint >/dev/null 2>&1 ; then \
 		$$CMD; \
 	else \
-		echo "Skipping markdownlint as not installed"; \
+		echo "Skipping markdownlint because it is not installed"; \
 	fi
 
 # Best to install mkdocs locally with "sudo pip3 install -r docs/mkdocs-pip-requirements"
 mkdocs:
 	@echo "mkdocs: "
 	@CMD="mkdocs -q build -d /tmp/mkdocsbuild"; \
-	if command -v mkdocs >/dev/null 2>&1; then \
+	if command -v mkdocs >/dev/null 2>&1 ; then \
 		$$CMD ; \
 	else \
-		echo "Not running mkdocs because it's not installed"; \
+		echo "Skipping mkdocs because it is not installed"; \
 	fi
 
 # To see what the docs build will be, you can use `make mkdocs-serve`
@@ -169,16 +169,16 @@ mkdocs-serve:
 		docker run -it -p 8000:8000 -v "${PWD}:/docs" -e "ADD_MODULES=mkdocs-material mkdocs-redirects mkdocs-minify-plugin mdx_truly_sane_lists mkdocs-git-revision-date-localized-plugin" -e "LIVE_RELOAD_SUPPORT=true" -e "FAST_MODE=true" -e "DOCS_DIRECTORY=./docs" polinux/mkdocs; \
 	fi
 
-# Install markdown-link-check locally with "npm install -g markdown-link-check"
+# Best to install markdown-link-check locally with "npm install -g markdown-link-check"
 markdown-link-check:
 	@echo "markdown-link-check: "
-	if command -v markdown-link-check >/dev/null 2>&1; then \
+	if command -v markdown-link-check >/dev/null 2>&1 ; then \
   		find docs *.md -name "*.md" -exec markdown-link-check -q -c markdown-link-check.json {} \; 2>&1  ;\
 	else \
-		echo "Not running markdown-link-check because it's not installed"; \
+		echo "Skipping markdown-link-check because it is not installed"; \
 	fi
 
-# Best to install pyspelling locally with "sudo -H pip3 install pyspelling pymdown-extensions". Also requries aspell, `sudo apt-get install aspell"
+# Best to install pyspelling locally with "sudo -H pip3 install pyspelling pymdown-extensions". Also requires aspell locally with "sudo apt-get install aspell"
 pyspelling:
 	@echo "pyspelling: "
 	@CMD="pyspelling --config .spellcheck.yml"; \
@@ -186,10 +186,10 @@ pyspelling:
 	if command -v pyspelling >/dev/null 2>&1 ; then \
 		$$CMD; \
 	else \
-		echo "Not running pyspelling because it's not installed"; \
+		echo "Skipping pyspelling because it is not installed"; \
 	fi
 
-# Install textlint locally with `npm install -g textlint textlint-filter-rule-comments textlint-rule-no-todo textlint-rule-stop-words textlint-rule-terminology`
+# Best to install textlint locally with "npm install -g textlint textlint-filter-rule-comments textlint-rule-no-todo textlint-rule-stop-words textlint-rule-terminology"
 textlint:
 	@echo "textlint: "
 	@CMD="textlint {README.md,version-history.md,docs/**}"; \
@@ -197,7 +197,7 @@ textlint:
 	if command -v textlint >/dev/null 2>&1 ; then \
 		$$CMD; \
 	else \
-		echo "textlint is not installed"; \
+		echo "Skipping textlint because it is not installed"; \
 	fi
 
 darwin_amd64_signed: $(GOTMP)/bin/darwin_amd64/ddev
@@ -213,13 +213,13 @@ darwin_arm64_signed: $(GOTMP)/bin/darwin_arm64/ddev
 	fi
 
 darwin_amd64_notarized: darwin_amd64_signed
-	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
+	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ] ; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
 		set -o errexit -o pipefail; \
 		echo "Notarizing $(GOTMP)/bin/darwin_amd64/ddev ..." ; \
 		curl -sSL -f https://raw.githubusercontent.com/ddev/signing_tools/master/macos_notarize.sh | bash -s -  --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=notarizer@localdev.foundation --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_amd64/ddev" ; \
 	fi
 darwin_arm64_notarized: darwin_arm64_signed
-	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ]; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
+	@if [ -z "$(DDEV_MACOS_APP_PASSWORD)" ] ; then echo "Skipping notarizing ddev for macOS, no DDEV_MACOS_APP_PASSWORD provided"; else \
 		set -o errexit -o pipefail; \
 		echo "Notarizing $(GOTMP)/bin/darwin_arm64/ddev ..." ; \
 		curl -sSL -f https://raw.githubusercontent.com/ddev/signing_tools/master/macos_notarize.sh | bash -s - --app-specific-password=$(DDEV_MACOS_APP_PASSWORD) --apple-id=notarizer@localdev.foundation --primary-bundle-id=com.ddev.ddev --target-binary="$(GOTMP)/bin/darwin_arm64/ddev" ; \
@@ -263,10 +263,10 @@ golangci-lint:
 	@echo "golangci-lint: "
 	@CMD="golangci-lint run $(GOLANGCI_LINT_ARGS) $(SRC_AND_UNDER)"; \
 	set -eu -o pipefail; \
-	if command -v golangci-lint >/dev/null 2>&1; then \
+	if command -v golangci-lint >/dev/null 2>&1 ; then \
 		$$CMD; \
 	else \
-		echo "Skipping golanci-lint as not installed"; \
+		echo "Skipping golanci-lint because it is not installed"; \
 	fi
 
 version:
