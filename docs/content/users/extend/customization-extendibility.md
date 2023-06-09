@@ -329,7 +329,7 @@ redirect_stderr=true
 And create a `.ddev/web-build/Dockerfile.<daemonname>` to install the config file:
 
 ```dockerfile
-ADD .ddev/web-build/daemonname.conf /etc/supervisor/conf.d
+ADD daemonname.conf /etc/supervisor/conf.d
 ```
 
 Full details for advanced configuration possibilities are in [Supervisor docs](http://supervisord.org/configuration.html#program-x-section-settings).
