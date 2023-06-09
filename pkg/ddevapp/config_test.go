@@ -861,6 +861,8 @@ func TestPHPOverrides(t *testing.T) {
 		t.Fatalf("============== logs from app.StartAndWait() ==============\n%s\n", logs)
 	}
 
+	err = app.MutagenSyncFlush()
+	require.NoError(t, err, "failed to flush mutagen sync")
 	_, _ = testcommon.EnsureLocalHTTPContent(t, "http://"+app.GetHostname()+"/phpinfo.php", `max_input_time</td><td class="v">999`, 60)
 
 }
