@@ -51,6 +51,9 @@ func TestTraefikSimple(t *testing.T) {
 	err = app.StartAndWait(5)
 	require.NoError(t, err)
 
+	err = app.MutagenSyncFlush()
+	require.NoError(t, err, "failed to flush mutagen sync")
+
 	desc, err := app.Describe(false)
 	assert.True(desc["use_traefik"].(bool))
 
