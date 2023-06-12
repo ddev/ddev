@@ -110,12 +110,11 @@ RUN echo "extension=${extension}.so" > /etc/php/${DDEV_PHP_VERSION}/mods-availab
 
 ## Installing into the home directory
 
-The in-container home directory is rebuilt on `ddev restart` so if you have something that installs into the home directory (like `~/.cache`) you'll want to switch users in the Dockerfile. In this example, `npx playwright install` installs a number of things into `~/.cache`, so we'll switch to the proper user before executing it, and switch back to the `root` user after installation to avoid surprises with any other Dockerfile that may follow.
+The in-container home directory is rebuilt when you run `ddev restart`, so if you have something that installs into the home directory (like `~/.cache`) you'll want to switch users in the Dockerfile. In this example, `npx playwright install` installs a number of things into `~/.cache`, so we'll switch to the proper user before executing it, and switch back to the `root` user after installation to avoid surprises with any other Dockerfile that may follow.
 
 ```Dockerfile
-RUN npm install --global spidergram
 USER $username
-# This is just an example of creating something in the home directory
+# This is an example of creating a file in the home directory
 RUN touch ~/${username}-was-here
 # `npx playwright` installs lots of things in ~/.cache
 RUN npx playwright install
