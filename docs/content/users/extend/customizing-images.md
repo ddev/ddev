@@ -115,6 +115,9 @@ The in-container home directory is rebuilt on `ddev restart` so if you have some
 ```Dockerfile
 RUN npm install --global spidergram
 USER $username
+# This is just an example of creating something in the home directory
+RUN touch ~/${username}-was-here
+# `npx playwright` installs lots of things in ~/.cache
 RUN npx playwright install
 RUN npx playwright install-deps
 USER root
