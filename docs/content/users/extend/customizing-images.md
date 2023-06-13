@@ -108,6 +108,20 @@ RUN make install
 RUN echo "extension=${extension}.so" > /etc/php/${DDEV_PHP_VERSION}/mods-available/${extension}.ini
 ```
 
+## Installing into the home directory
+
+The in-container home directory is rebuilt when you run `ddev restart`, so if you have something that installs into the home directory (like `~/.cache`) you'll want to switch users in the Dockerfile. In this example, `npx playwright install` installs a number of things into `~/.cache`, so we'll switch to the proper user before executing it, and switch back to the `root` user after installation to avoid surprises with any other Dockerfile that may follow.
+
+```Dockerfile
+USER $username
+# This is an example of creating a file in the home directory
+RUN touch ~/${username}-was-here
+# `npx playwright` installs lots of things in ~/.cache
+RUN npx playwright install
+RUN npx playwright install-deps
+USER root
+```
+
 ### Debugging the Dockerfile Build
 
 It can be complicated to figure out what’s going on when building a Dockerfile, and even more complicated when you’re seeing it go by as part of [`ddev start`](../usage/commands.md#start).
