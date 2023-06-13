@@ -133,6 +133,11 @@ func CheckSetUp() {
 	}
 }
 
+// IsDisabled returns true if instrumentation is disabled.
+func IsDisabled() bool {
+	return ampli.Instance.Disabled
+}
+
 // InitAmplitude initializes the instrumentation and must be called once before
 // the instrumentation functions can be used.
 // Initialization is currently done before via init() func somewhere while
