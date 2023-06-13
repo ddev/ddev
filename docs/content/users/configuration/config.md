@@ -400,7 +400,7 @@ Port for DDEV router’s HTTP traffic.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `80` | Usually changed only if there’s a conflicting process using that port.
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `80` | Usually changed only if there’s a conflicting process using that port.
 
 See the [Troubleshooting](../usage/troubleshooting.md#web-server-ports-already-occupied) page for more on addressing port conflicts.
 
@@ -410,7 +410,7 @@ Port for DDEV router’s HTTPS traffic.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | `443` | Usually changed only if there’s a conflicting process using that port.
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `443` | Usually changed only if there’s a conflicting process using that port.
 
 See the [Troubleshooting](../usage/troubleshooting.md#web-server-ports-already-occupied) page for more on addressing port conflicts.
 

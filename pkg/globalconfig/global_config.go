@@ -269,6 +269,9 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # You can enable 'ddev start' to be interrupted by a failing hook with
 # fail_on_hook_fail: true
 
+# router_http_port: <port>  # Port to be used for http (defaults to 80)
+# router_https_port: <port> # Port for https (defaults to 443)
+
 # disable_http2: false
 # Disable http2 on ddev-router if true
 
