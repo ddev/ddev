@@ -2472,8 +2472,9 @@ func (app *DdevApp) GetHTTPSURL() string {
 	url := ""
 	if !IsRouterDisabled(app) {
 		url = "https://" + app.GetHostname()
-		if app.RouterHTTPSPort != "443" {
-			url = url + ":" + app.RouterHTTPSPort
+		p := app.GetRouterHTTPSPort()
+		if p != "443" {
+			url = url + ":" + p
 		}
 	} else {
 		url = app.GetWebContainerDirectHTTPSURL()
