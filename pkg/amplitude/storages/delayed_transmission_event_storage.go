@@ -11,8 +11,14 @@ import (
 )
 
 // NewDelayedTransmissionEventStorage initializes a new EventStorage of type delayedTransmissionEventStorage.
-func NewDelayedTransmissionEventStorage(capacity int, interval time.Duration, fileName string) types.EventStorage {
+func NewDelayedTransmissionEventStorage(
+	logger types.Logger,
+	capacity int,
+	interval time.Duration,
+	fileName string,
+) types.EventStorage {
 	return &delayedTransmissionEventStorage{
+		logger:   logger,
 		fileName: fileName,
 		loaded:   false,
 		capacity: capacity,
@@ -21,6 +27,7 @@ func NewDelayedTransmissionEventStorage(capacity int, interval time.Duration, fi
 }
 
 type delayedTransmissionEventStorage struct {
+	logger   types.Logger
 	fileName string
 	loaded   bool
 	capacity int
@@ -71,6 +78,8 @@ func (s *delayedTransmissionEventStorage) push(prepend bool, events ...*types.St
 	if err != nil {
 		util.Error("Error '%s', while writing event cache.", err)
 	}
+
+	s.logger.Debugf("Pushed %d events to the cache.", len(events))
 }
 
 // Pull returns a chunk of events and removes returned events from the cache.
@@ -105,6 +114,8 @@ func (s *delayedTransmissionEventStorage) Pull(count int, before time.Time) []*t
 		// Remove copied items from cache.
 		s.cache.Events = s.cache.Events[:len(s.cache.Events)-count]
 
+		s.logger.Debugf("Pulled %d events from the cache.", len(events))
+
 		return events
 	}
 
@@ -113,6 +124,8 @@ func (s *delayedTransmissionEventStorage) Pull(count int, before time.Time) []*t
 
 	// Clear the cache
 	s.cache.Events = s.cache.Events[:0]
+
+	s.logger.Debugf("Pulled %d events from the cache.", len(events))
 
 	return events
 }
@@ -168,6 +181,8 @@ func (s *delayedTransmissionEventStorage) readCache() error {
 	// If the file was properly read, mark the cache as loaded.
 	if err == nil {
 		s.loaded = true
+
+		s.logger.Debugf("Read %d events from the cache.", len(s.cache.Events))
 	}
 
 	return err
@@ -181,6 +196,8 @@ func (s *delayedTransmissionEventStorage) writeCache() error {
 		err = encoder.Encode(&s.cache)
 	}
 	file.Close()
+
+	s.logger.Debugf("Written %d events to the cache.", len(s.cache.Events))
 
 	return err
 }

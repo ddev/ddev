@@ -167,15 +167,18 @@ func InitAmplitude() {
 		interval = 24 * time.Hour
 	}
 
+	logger := loggers.NewDdevLogger()
+
 	ampli.Instance.Load(ampli.LoadOptions{
 		Client: ampli.LoadClientOptions{
 			APIKey: versionconstants.AmplitudeAPIKey,
 			Configuration: amplitude.Config{
 				FlushInterval:  interval,
 				FlushQueueSize: queueSize,
-				Logger:         loggers.NewDdevLogger(),
+				Logger:         logger,
 				StorageFactory: func() amplitude.EventStorage {
 					return storages.NewDelayedTransmissionEventStorage(
+						logger,
 						queueSize,
 						interval,
 						getCacheFileName(),

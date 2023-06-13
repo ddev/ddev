@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/amplitude/analytics-go/amplitude/types"
+	"github.com/ddev/ddev/pkg/amplitude/loggers"
 	"github.com/ddev/ddev/pkg/amplitude/storages"
 	"github.com/stretchr/testify/suite"
 )
@@ -26,7 +27,7 @@ func (t *DelayedTransmissionEventStorageSuite) TestSimple() {
 
 	require := t.Require()
 
-	s := storages.NewDelayedTransmissionEventStorage(0, 0, filepath.Join(t.T().TempDir(), `TestSimple.cache`))
+	s := storages.NewDelayedTransmissionEventStorage(loggers.NewDdevLogger(), 0, 0, filepath.Join(t.T().TempDir(), `TestSimple.cache`))
 	s.PushNew(event1)
 	require.Equal(1, s.Count(time.Time{}))
 	s.PushNew(event2)
@@ -69,7 +70,7 @@ func (t *DelayedTransmissionEventStorageSuite) TestReturnBack() {
 
 	require := t.Require()
 
-	s := storages.NewDelayedTransmissionEventStorage(0, 0, filepath.Join(t.T().TempDir(), `TestReturnBack.cache`))
+	s := storages.NewDelayedTransmissionEventStorage(loggers.NewDdevLogger(), 0, 0, filepath.Join(t.T().TempDir(), `TestReturnBack.cache`))
 	s.PushNew(event1)
 	s.PushNew(event2)
 	s.PushNew(event3)
@@ -107,7 +108,7 @@ func (t *DelayedTransmissionEventStorageSuite) TestCache() {
 
 	require := t.Require()
 
-	s1 := storages.NewDelayedTransmissionEventStorage(0, 0, cacheFile)
+	s1 := storages.NewDelayedTransmissionEventStorage(loggers.NewDdevLogger(), 0, 0, cacheFile)
 	s1.PushNew(event1)
 	s1.PushNew(event2)
 	s1.PushNew(event3)
@@ -118,7 +119,7 @@ func (t *DelayedTransmissionEventStorageSuite) TestCache() {
 	chunk := s1.Pull(2, time.Time{})
 	require.Equal([]*types.StorageEvent{event1, event2}, chunk)
 
-	s2 := storages.NewDelayedTransmissionEventStorage(0, 0, cacheFile)
+	s2 := storages.NewDelayedTransmissionEventStorage(loggers.NewDdevLogger(), 0, 0, cacheFile)
 	require.Equal(3, s2.Count(time.Time{}))
 	chunk = s2.Pull(2, time.Time{})
 	require.Equal([]*types.StorageEvent{event3, event4}, chunk)
