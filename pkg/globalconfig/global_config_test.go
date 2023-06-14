@@ -44,6 +44,8 @@ func TestGetFreePort(t *testing.T) {
 	for ; i < max; i++ {
 		ports = append(ports, strconv.Itoa(i))
 	}
+	// Make sure we have a global config set up.
+	_ = globalconfig.ReadGlobalConfig()
 	err = globalconfig.ReservePorts(t.Name(), ports)
 	assert.NoError(err)
 	t.Cleanup(func() {
@@ -79,6 +81,9 @@ func TestSetProjectAppRoot(t *testing.T) {
 
 	// Create a project in a valid directory
 	tmpDir := testcommon.CreateTmpDir(t.Name())
+
+	// Make sure we have valid global config
+	_ = globalconfig.ReadGlobalConfig()
 	err = globalconfig.SetProjectAppRoot(t.Name(), tmpDir)
 	assert.NoError(err)
 
