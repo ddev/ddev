@@ -61,10 +61,6 @@ func (c *remoteConfig) ShowNotifications() {
 		return
 	}
 
-	// TODO remove
-	c.remoteConfig.Messages.Notifications.Infos = append(c.remoteConfig.Messages.Notifications.Infos, internal.Message{Message: "This is an information, please do ignore."})
-	c.remoteConfig.Messages.Notifications.Warnings = append(c.remoteConfig.Messages.Notifications.Warnings, internal.Message{Message: "This is an important warning, please restart your system."})
-
 	for _, messages := range []messageTypes{
 		{messageType: types.Info, messages: c.remoteConfig.Messages.Notifications.Infos},
 		{messageType: types.Warning, messages: c.remoteConfig.Messages.Notifications.Warnings},
