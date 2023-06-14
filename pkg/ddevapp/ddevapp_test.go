@@ -3421,8 +3421,8 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 
 	t.Cleanup(func() {
 		// Set the ports back to the default was so we don't break any following tests.
-		app.RouterHTTPSPort = "443"
-		app.RouterHTTPPort = "80"
+		app.RouterHTTPSPort = ""
+		app.RouterHTTPPort = ""
 		app.AdditionalFQDNs = []string{}
 		app.AdditionalHostnames = []string{}
 
