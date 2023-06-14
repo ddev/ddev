@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sync"
 	"time"
 
 	"github.com/amplitude/analytics-go/amplitude"
@@ -26,6 +27,7 @@ var (
 	deviceID    string
 	initialized bool
 	identified  bool
+	mutex       sync.Mutex
 )
 
 // cacheFile is the name of the cache file in ~/.ddev.
@@ -86,9 +88,15 @@ func Flush() {
 	defer util.TimeTrack()()
 
 	// Early exit if instrumentation is disabled or internet not active.
-	if ampli.Instance.Disabled || !globalconfig.IsInternetActive() {
+	if IsDisabled() {
 		return
 	}
+
+	if !mutex.TryLock() {
+		return
+	}
+
+	defer mutex.Unlock()
 
 	ampli.Instance.Flush()
 }
@@ -98,9 +106,11 @@ func FlushForce() {
 	defer util.TimeTrack()()
 
 	// Early exit if instrumentation is disabled or internet not active.
-	if ampli.Instance.Disabled || !globalconfig.IsInternetActive() {
+	if IsDisabled() {
 		return
 	}
+
+	mutex.Lock()
 
 	backupInstrumentationQueueSize := globalconfig.DdevGlobalConfig.InstrumentationQueueSize
 
@@ -110,6 +120,8 @@ func FlushForce() {
 		initialized = false
 
 		InitAmplitude()
+
+		mutex.Unlock()
 	}()
 
 	globalconfig.DdevGlobalConfig.InstrumentationQueueSize = 1
@@ -118,7 +130,7 @@ func FlushForce() {
 
 	InitAmplitude()
 
-	Flush()
+	ampli.Instance.Flush()
 }
 
 // Clean removes the cache file.
@@ -133,9 +145,9 @@ func CheckSetUp() {
 	}
 }
 
-// IsDisabled returns true if instrumentation is disabled.
+// IsDisabled returns true if instrumentation is disabled or no internet is available.
 func IsDisabled() bool {
-	return ampli.Instance.Disabled
+	return ampli.Instance.Disabled || !globalconfig.IsInternetActive()
 }
 
 // InitAmplitude initializes the instrumentation and must be called once before
