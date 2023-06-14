@@ -4,6 +4,6 @@ package build
 var (
 	RemoteConfigRemoteSourceOwner    = "ddev"
 	RemoteConfigRemoteSourceRepo     = "remote-config"
-	RemoteConfigRemoteSourceRef      = "main"
+	RemoteConfigRemoteSourceRef      = "testing"
 	RemoteConfigRemoteSourceFilepath = "remote-config.jsonc"
 )

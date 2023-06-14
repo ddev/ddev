@@ -56,7 +56,7 @@ GITHUB_ORG := ddev
 BUILD_OS = $(shell go env GOHOSTOS)
 BUILD_ARCH = $(shell go env GOHOSTARCH)
 VERSION_LDFLAGS=$(foreach v,$(VERSION_VARIABLES),-X '$(PKG)/pkg/versionconstants.$(v)=$($(v))')
-LDFLAGS=-extldflags -static $(VERSION_LDFLAGS)
+LDFLAGS=-extldflags -static $(VERSION_LDFLAGS) $(EXT_LDFLAGS)
 DEFAULT_BUILD=$(shell go env GOHOSTOS)_$(shell go env GOHOSTARCH)
 
 build: $(DEFAULT_BUILD)
