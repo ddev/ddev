@@ -32,7 +32,7 @@ open -a PhpStorm.app ${DDEV_APPROOT}
 
 ## Web Commands
 
-To run commands inside the web container, place a Bash script in `.ddev/commands/web`. To run a command such as `ddev webcommands` create the file `.ddev/commands/web/webcommands` with this content:
+To run commands inside the web container, place a Bash script in `.ddev/commands/web`. To run a command such as `ddev webcommands`, create the file `.ddev/commands/web/webcommands` with this content:
 
 ```bash
 #!/bin/bash
