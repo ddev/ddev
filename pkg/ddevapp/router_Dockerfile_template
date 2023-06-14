@@ -4,6 +4,6 @@ ARG BASE_IMAGE
 FROM $BASE_IMAGE
 
 {{ if eq .Router "traefik" }}
-RUN apk add bash curl htop netcat telnet vim
+RUN apk add bash curl htop vim
 WORKDIR /mnt/ddev-global-cache/traefik
 {{ end }}
