@@ -92,7 +92,7 @@ func TestProcessHooks(t *testing.T) {
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 
-	assert.FileExists(filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooks%s.txt", app.RouterHTTPSPort)))
+	assert.FileExists(filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooks%s.txt", app.GetRouterHTTPSPort())))
 	assert.FileExists(filepath.Join(app.AppRoot, "touch_works_after_and.txt"))
 
 	// Attempt processing hooks with a guaranteed failure
