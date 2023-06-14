@@ -41,7 +41,7 @@ To run commands inside the web container, place a Bash script in `.ddev/commands
 ## Usage: webcommands
 ## Example: 'ddev webcommands'
 
-echo '** Unix command example - get current working directory and content'
+echo '** Unix command example - print current working directory and list its contents'
 pwd
 ls
 ```
