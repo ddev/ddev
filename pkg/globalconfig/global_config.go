@@ -96,6 +96,13 @@ func EnsureGlobalConfig() {
 	}
 }
 
+// NewGlobalConfig() returns a minimally initialized GlobalConfig
+func NewGlobalConfig() GlobalConfig {
+	return GlobalConfig{
+		Router: nodeps.TraefikRouter,
+	}
+}
+
 // GetGlobalConfigPath gets the path to global config file
 func GetGlobalConfigPath() string {
 	return filepath.Join(GetGlobalDdevDir(), DdevGlobalConfigName)
@@ -177,6 +184,7 @@ func ValidateGlobalConfig() error {
 }
 
 // ReadGlobalConfig reads the global config file into DdevGlobalConfig
+// Or creates the file
 func ReadGlobalConfig() error {
 	globalConfigFile := GetGlobalConfigPath()
 
@@ -189,6 +197,7 @@ func ReadGlobalConfig() error {
 			return nil
 		}
 		if os.IsNotExist(err) {
+			DdevGlobalConfig = NewGlobalConfig()
 			err := WriteGlobalConfig(DdevGlobalConfig)
 			if err != nil {
 				return err
