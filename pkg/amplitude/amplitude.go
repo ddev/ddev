@@ -45,7 +45,6 @@ func GetDeviceID() string {
 // GetEventOptions returns default options to be used when tracking an event.
 func GetEventOptions() (options ampli.EventOptions) {
 	options = ampli.EventOptions{
-		UserID:     globalconfig.DdevGlobalConfig.InstrumentationUser,
 		DeviceID:   GetDeviceID(),
 		AppVersion: versionconstants.DdevVersion,
 		Platform:   runtime.GOARCH,
@@ -242,9 +241,12 @@ func identify() {
 		DockerVersion(dockerVersion).
 		Timezone(timezone)
 
+	if globalconfig.DdevGlobalConfig.InstrumentationUser != "" {
+		builder.User(globalconfig.DdevGlobalConfig.InstrumentationUser)
+	}
+
 	if wslDistro := nodeps.GetWSLDistro(); wslDistro != "" {
-		builder.
-			WslDistro(wslDistro)
+		builder.WslDistro(wslDistro)
 	}
 
 	ampli.Instance.Identify("", builder.Build(), GetEventOptions())

@@ -141,6 +141,7 @@ func (e identifyEvent) identify() {
 
 type IdentifyBuilder interface {
 	Build() IdentifyEvent
+	User(user string) IdentifyBuilder
 	WslDistro(wslDistro string) IdentifyBuilder
 }
 
@@ -168,6 +169,12 @@ func (b *identifyBuilder) DockerVersion(dockerVersion string) interface {
 
 func (b *identifyBuilder) Timezone(timezone string) IdentifyBuilder {
 	b.properties[`Timezone`] = timezone
+
+	return b
+}
+
+func (b *identifyBuilder) User(user string) IdentifyBuilder {
+	b.properties[`User`] = user
 
 	return b
 }
