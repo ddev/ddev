@@ -89,7 +89,7 @@ func StartDdevRouter() error {
 	if err != nil {
 		return err
 	}
-	if globalconfig.DdevGlobalConfig.UseTraefik {
+	if globalconfig.DdevGlobalConfig.Router == nodeps.TraefikRouter {
 		err = pushGlobalTraefikConfig()
 		if err != nil {
 			return fmt.Errorf("failed to push global traefik config: %v", err)
@@ -154,7 +154,7 @@ func generateRouterCompose() (string, error) {
 		"letsencrypt":                globalconfig.DdevGlobalConfig.UseLetsEncrypt,
 		"letsencrypt_email":          globalconfig.DdevGlobalConfig.LetsEncryptEmail,
 		"AutoRestartContainers":      globalconfig.DdevGlobalConfig.AutoRestartContainers,
-		"use_traefik":                globalconfig.DdevGlobalConfig.UseTraefik,
+		"Router":                     globalconfig.DdevGlobalConfig.Router,
 	}
 
 	t, err := template.New("router_compose_template.yaml").ParseFS(bundledAssets, "router_compose_template.yaml")
@@ -343,10 +343,10 @@ func CheckRouterPorts() error {
 func GenerateRouterDockerfile() error {
 
 	type routerData struct {
-		UseTraefik bool
+		Router string
 	}
 	templateData := routerData{
-		UseTraefik: globalconfig.DdevGlobalConfig.UseTraefik,
+		Router: globalconfig.DdevGlobalConfig.Router,
 	}
 
 	routerDockerfile := filepath.Join(globalconfig.GetGlobalDdevDir(), "router-build", "Dockerfile")

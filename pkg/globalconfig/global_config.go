@@ -59,7 +59,7 @@ type GlobalConfig struct {
 	ProjectTldGlobal                 string                  `yaml:"project_tld"`
 	XdebugIDELocation                string                  `yaml:"xdebug_ide_location"`
 	NoBindMounts                     bool                    `yaml:"no_bind_mounts"`
-	UseTraefik                       bool                    `yaml:"use_traefik"`
+	Router                       		string                  `yaml:"router"`
 	WSL2NoWindowsHostsMgt            bool                    `yaml:"wsl2_no_windows_hosts_mgt"`
 	RouterHTTPPort                   string                  `yaml:"router_http_port"`
 	RouterHTTPSPort                  string                  `yaml:"router_https_port"`
@@ -156,6 +156,10 @@ func ValidateGlobalConfig() error {
 		return fmt.Errorf("Invalid omit_containers: %s, must contain only %s", strings.Join(DdevGlobalConfig.OmitContainersGlobal, ","), strings.Join(GetValidOmitContainers(), ",")).(InvalidOmitContainers)
 	}
 
+	if !IsValidRouterType(DdevGlobalConfig.Router) {
+		return fmt.Errorf("Invalid router: %s, valid router types are %s and %s", DdevGlobalConfig.Router, nodeps.TraefikRouter, nodeps.TraditionalRouter)
+	}
+
 	if !IsValidTableStyle(DdevGlobalConfig.TableStyle) {
 		DdevGlobalConfig.TableStyle = "default"
 	}
@@ -163,10 +167,10 @@ func ValidateGlobalConfig() error {
 	if !IsValidXdebugIDELocation(DdevGlobalConfig.XdebugIDELocation) {
 		return fmt.Errorf(`xdebug_ide_location must be IP address or one of %v`, ValidXdebugIDELocations)
 	}
-	if DdevGlobalConfig.DisableHTTP2 && DdevGlobalConfig.UseTraefik {
-		return fmt.Errorf("disable_http2 and use_traefik are mutually incompatible")
+	if DdevGlobalConfig.DisableHTTP2 && DdevGlobalConfig.Router == nodeps.TraefikRouter {
+		return fmt.Errorf("disable_http2 and router = traefik are mutually incompatible, as Traefik does not support disabling HTTP2")
 	}
-	if DdevGlobalConfig.UseTraefik && (DdevGlobalConfig.UseLetsEncrypt || DdevGlobalConfig.LetsEncryptEmail != "") {
+	if DdevGlobalConfig.Router == nodeps.TraefikRouter && (DdevGlobalConfig.UseLetsEncrypt || DdevGlobalConfig.LetsEncryptEmail != "") {
 		return fmt.Errorf("use-letsencrypt is not directly supported with traefik. but can be configured with custom config, see https://doc.traefik.io/traefik/https/acme/")
 	}
 	return nil
@@ -670,7 +674,7 @@ func GetRequiredDockerComposeVersion() string {
 func GetRouterURL() string {
 	routerURL := ""
 	// Until we figure out how to configure this, use static value
-	if DdevGlobalConfig.UseTraefik {
+	if DdevGlobalConfig.Router == nodeps.TraefikRouter {
 		routerURL = "http://localhost:9999"
 	}
 	return routerURL

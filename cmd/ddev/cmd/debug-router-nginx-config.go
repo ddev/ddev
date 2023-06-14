@@ -4,6 +4,7 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"os"
 	"strings"
@@ -13,10 +14,11 @@ import (
 )
 
 // DebugRouterNginxConfigCmd implements the ddev debug router-config command
+// This is only for the obsolete traditional router
 var DebugRouterNginxConfigCmd = &cobra.Command{
-	Use:     "router-nginx-config",
-	Short:   "Prints the nginx config of the router",
-	Example: "ddev debug router-nginx-config",
+	Use:     "traditional-router-nginx-config",
+	Short:   "Obsolete: Prints the nginx config in the traditional router",
+	Example: "ddev debug traditional-router-nginx-config",
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
@@ -47,7 +49,7 @@ var DebugRouterNginxConfigCmd = &cobra.Command{
 }
 
 func init() {
-	if !globalconfig.DdevGlobalConfig.UseTraefik {
+	if globalconfig.DdevGlobalConfig.Router != nodeps.TraefikRouter {
 		DebugCmd.AddCommand(DebugRouterNginxConfigCmd)
 	}
 }

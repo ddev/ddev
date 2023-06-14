@@ -18,7 +18,7 @@ import (
 
 func TestCmdGlobalConfig(t *testing.T) {
 	assert := asrt.New(t)
-	if nodeps.UseTraefikDefault {
+	if !nodeps.UseTraditionalRouter {
 		t.Skip("Skipping with traefik turned on because can't use hardened images")
 	}
 	backupConfig := globalconfig.DdevGlobalConfig

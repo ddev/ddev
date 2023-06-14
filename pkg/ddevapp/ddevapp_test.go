@@ -3925,7 +3925,7 @@ func TestCustomCerts(t *testing.T) {
 	// For traefik generation, it's app.Name,
 	// mkcert --cert-file d9.crt --key-file d9.key d9.ddev.site
 	baseCertName := app.GetHostname()
-	if globalconfig.DdevGlobalConfig.UseTraefik {
+	if globalconfig.DdevGlobalConfig.Router == nodeps.TraefikRouter {
 		baseCertName = app.Name
 	}
 	out, err = exec.RunHostCommand("mkcert", "--cert-file", filepath.Join(certDir, baseCertName+".crt"), "--key-file", filepath.Join(certDir, baseCertName+".key"), app.GetHostname())

@@ -9,7 +9,7 @@ services:
         uid: '{{ .UID }}'
         gid: '{{ .GID }}'
 
-    {{ if .use_traefik }}
+    {{ if eq .Router "traefik" }}
     command:
       - --configFile=/mnt/ddev-global-cache/traefik/static_config.yaml
     user: {{ .UID }}:{{ .GID }}
@@ -21,13 +21,13 @@ services:
     ports:{{ $dockerIP := .dockerIP }}{{ if not .router_bind_all_interfaces }}{{ range $port := .ports }}
     - "{{ $dockerIP }}:{{ $port }}:{{ $port }}"{{ end }}{{ else }}{{ range $port := .ports }}
     - "{{ $port }}:{{ $port }}"{{ end }}{{ end }}
-    {{ if .use_traefik }}
+    {{ if eq .Router "traefik" }}
     # Traefik router; configured in static config as entrypoint
     # TODO: Make this configurable? Put it somewhere else?
     - 9999:9999
     {{ end }}
     volumes:
-      {{ if not .use_traefik }}
+      {{ if ne .Router "traefik" }}
       - /var/run/docker.sock:/tmp/docker.sock:ro
       {{ end }}
       - ddev-global-cache:/mnt/ddev-global-cache:rw

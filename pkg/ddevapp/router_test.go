@@ -123,8 +123,8 @@ func TestProjectPortOverride(t *testing.T) {
 // This just checks to see that certbot ran and populated /etc/letsencrypt and
 // that /etc/letsencrypt is mounted on volume.
 func TestLetsEncrypt(t *testing.T) {
-	if globalconfig.DdevGlobalConfig.UseTraefik {
-		t.Skip("Skipping because traefik set and not yet supported")
+	if globalconfig.DdevGlobalConfig.Router == nodeps.TraefikRouter {
+		t.Skip("Skipping because router=traefik set and not yet supported")
 	}
 	assert := asrt.New(t)
 
@@ -224,8 +224,8 @@ func TestDisableHTTP2(t *testing.T) {
 	if globalconfig.GetCAROOT() == "" {
 		t.Skip("Skipping because mkcert/http not enabled")
 	}
-	if globalconfig.DdevGlobalConfig.UseTraefik {
-		t.Skip("Skipping because traefik doesn't have feature to turn off http/2")
+	if globalconfig.DdevGlobalConfig.Router == nodeps.TraefikRouter {
+		t.Skip("Skipping because router=traefik doesn't have feature to turn off http/2")
 	}
 
 	assert := asrt.New(t)

@@ -182,9 +182,9 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		dirty = true
 	}
 
-	if cmd.Flag("use-traefik").Changed {
-		val, _ := cmd.Flags().GetBool("use-traefik")
-		globalconfig.DdevGlobalConfig.UseTraefik = val
+	if cmd.Flag("router").Changed {
+		val, _ := cmd.Flags().GetString("router")
+		globalconfig.DdevGlobalConfig.Router = val
 		dirty = true
 	}
 	if cmd.Flag("wsl2-no-windows-hosts-mgt").Changed {
@@ -234,7 +234,7 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 	output.UserOut.Printf("project-tld=%v", globalconfig.DdevGlobalConfig.ProjectTldGlobal)
 	output.UserOut.Printf("xdebug-ide-location=%v", globalconfig.DdevGlobalConfig.XdebugIDELocation)
 	output.UserOut.Printf("no-bind-mounts=%v", globalconfig.DdevGlobalConfig.NoBindMounts)
-	output.UserOut.Printf("use-traefik=%v", globalconfig.DdevGlobalConfig.UseTraefik)
+	output.UserOut.Printf("router=%v", globalconfig.DdevGlobalConfig.Router)
 	output.UserOut.Printf("wsl2-no-windows-hosts-mgt=%v", globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt)
 	output.UserOut.Printf("router-http-port=%v", globalconfig.DdevGlobalConfig.RouterHTTPPort)
 	output.UserOut.Printf("router-https-port=%v", globalconfig.DdevGlobalConfig.RouterHTTPSPort)
@@ -262,7 +262,7 @@ func init() {
 	configGlobalCommand.Flags().Bool("use-docker-compose-from-path", true, "If true, use docker-compose from path instead of private ~/.ddev/bin/docker-compose")
 	configGlobalCommand.Flags().Bool("no-bind-mounts", true, "If true, don't use bind-mounts - useful for environments like remote docker where bind-mounts are impossible")
 	configGlobalCommand.Flags().String("xdebug-ide-location", "", "For less usual IDE locations specify where the IDE is running for Xdebug to reach it")
-	configGlobalCommand.Flags().Bool("use-traefik", true, "If true, use traefik for ddev-router")
+	configGlobalCommand.Flags().String("router", nodeps.TraefikRouter, "Use traefik router (default) or traditional router")
 	configGlobalCommand.Flags().Bool("wsl2-no-windows-hosts-mgt", true, "WSL2 only; make DDEV ignore Windows-side hosts file")
 	configGlobalCommand.Flags().String("router-http-port", "", "The router HTTP port for this project")
 	configGlobalCommand.Flags().String("router-https-port", "", "The router HTTPS port for this project")

@@ -41,6 +41,12 @@ var ValidOmitContainers = map[string]bool{
 	DBAContainer:          true,
 }
 
+// Router types
+const (
+	TraditionalRouter = "traditional"
+	TraefikRouter     = "traefik"
+)
+
 // DdevFileSignature is the text we use to detect whether a settings file is managed by us.
 // If this string is found, we assume we can replace/update the file.
 const DdevFileSignature = "#ddev-generated"
@@ -59,8 +65,8 @@ const NodeJSDefault = "18"
 // NoBindMountsDefault is default value for globalconfig.DDEVGlobalConfig.NoBindMounts
 var NoBindMountsDefault = false
 
-// UseTraefikDefault is the default value for globalconfig.DDEVGlobalConfig.UseTraefik
-var UseTraefikDefault = false
+// UseTraditionalRouter is the default value for globalconfig.DDEVGlobalConfig.UseTraditionalRouter
+var UseTraditionalRouter = false
 
 // SimpleFormatting is turned on by DDEV_USE_SIMPLE_FORMATTING
 // and makes ddev list and describe, etc. use simpler formatting

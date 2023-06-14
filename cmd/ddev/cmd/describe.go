@@ -93,9 +93,9 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 	if dockerutil.IsColima() {
 		dockerEnv = "Colima"
 	}
-	router := "traditional"
-	if globalconfig.DdevGlobalConfig.UseTraefik {
-		router = "traefik"
+	router := nodeps.TraditionalRouter
+	if globalconfig.DdevGlobalConfig.Router == nodeps.TraefikRouter {
+		router = nodeps.TraefikRouter
 	}
 	t.SetTitle(fmt.Sprintf("Project: %s %s %s\nDocker provider: %s\nRouter: %s", app.Name, desc["shortroot"].(string), app.GetPrimaryURL(), dockerEnv, router))
 	t.AppendHeader(table.Row{"Service", "Stat", "URL/Port", "Info"})

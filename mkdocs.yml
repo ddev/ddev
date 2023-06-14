@@ -156,6 +156,7 @@ nav:
     - users/extend/database-types.md
     - users/configuration/hooks.md
     - users/extend/additional-hostnames.md
+    - users/configuration/traefik-router.md
     - users/configuration/experimental.md
   - 'Extending':
     - users/extend/customization-extendibility.md

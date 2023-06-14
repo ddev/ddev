@@ -24,6 +24,12 @@ var ValidOmitContainers = map[string]bool{
 	DBAContainer:          true,
 }
 
+// ValidRouterTypes is the list of valid router types
+var ValidRouterTypes = map[string]bool{
+	nodeps.TraefikRouter:     true,
+	nodeps.TraditionalRouter: true,
+}
+
 // DdevNoInstrumentation is set to true if the env var is set
 var DdevNoInstrumentation = os.Getenv("DDEV_NO_INSTRUMENTATION") == "true"
 
@@ -44,4 +50,10 @@ func IsValidXdebugIDELocation(loc string) bool {
 		return true
 	}
 	return false
+}
+
+// IsValidRouterType limits the choices for XdebugIDELocation
+func IsValidRouterType(routerType string) bool {
+	isValid, ok := ValidRouterTypes[routerType]
+	return ok && isValid
 }

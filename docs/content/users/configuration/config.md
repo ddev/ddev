@@ -521,15 +521,15 @@ Whether to enable Let’s Encrypt integration. (Works in conjunction with [`lets
 
 May also be set via `ddev config global --use-letsencrypt` or `ddev config global --use-letsencrypt=false`. When `true`, `letsencrypt_email` must also be set and the system must be available on the internet. Used with the [casual hosting](../topics/hosting.md) feature.
 
-## `use_traefik`
+## `router`
 
-Whether to enable the [traefik router](experimental.md#traefik-router).
+Whether to enable the (default) [traefik router](traefik-router.md#traefik-router) or the traditional router.
 
-| Type | Default | Usage
-| -- | -- | --
-| :octicons-globe-16: global | `false` | Can `true` or `false`.
+| Type | Default   | Usage
+| -- |-----------| --
+| :octicons-globe-16: global | `traefik` | Can `"traefik"` or `traditional`.
 
-May also be set via `ddev config global --use-traefik` or `ddev config global --use-traefik=false`.
+May also be set via `ddev config global --router=traefik` or `ddev config global --router=traditional`.
 
 ## `web_environment`
 

@@ -5,6 +5,7 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -12,7 +13,7 @@ import (
 
 // TestDebugRouterNginxConfigCmd ensures the debug router-nginx-config prints the nginx config to stdout
 func TestDebugRouterNginxConfigCmd(t *testing.T) {
-	if globalconfig.DdevGlobalConfig.UseTraefik {
+	if globalconfig.DdevGlobalConfig.Router == nodeps.TraefikRouter {
 		t.Skip("Skipping when UseTrafik is set, as it's invalid")
 	}
 	assert := asrt.New(t)
