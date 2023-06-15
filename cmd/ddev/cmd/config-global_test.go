@@ -16,8 +16,6 @@ import (
 // Validate that what it spits out is what's there
 
 func TestCmdGlobalConfig(t *testing.T) {
-	// TODO: Re-enable before PR is complete
-	t.Skip("Re-enable this before pulling this PR")
 	assert := asrt.New(t)
 	backupConfig := globalconfig.DdevGlobalConfig
 	// Start with no config file
