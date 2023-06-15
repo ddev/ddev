@@ -119,7 +119,7 @@ Whether to disable HTTP/2 listen in `ddev-router`.
 | -- | -- | --
 | :octicons-globe-16: global | `false` | Can be `true` or `false`.
 
-When `true`, nginx will not listen for HTTP/2, but use HTTP/1.1 SSL. (Some browsers don’t work well with HTTP/2.)
+Only available with `router: traditional`, not available with `router: traefik`, which is the default. When `true`, nginx will not listen for HTTP/2, but use HTTP/1.1 SSL. (Some browsers don’t work well with HTTP/2.)
 
 ## `disable_settings_management`
 
@@ -523,11 +523,11 @@ May also be set via `ddev config global --use-letsencrypt` or `ddev config globa
 
 ## `router`
 
-Whether to enable the (default) [traefik router](traefik-router.md#traefik-router) or the traditional router.
+Whether to enable the (default) [traefik router](traefik-router.md#traefik-router) or the legacy "traditional" router.
 
 | Type | Default   | Usage
 | -- |-----------| --
-| :octicons-globe-16: global | `traefik` | Can `"traefik"` or `traditional`.
+| :octicons-globe-16: global | `traefik` | Can `traefik` or `traditional`.
 
 May also be set via `ddev config global --router=traefik` or `ddev config global --router=traditional`.
 
