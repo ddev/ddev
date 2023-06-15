@@ -25,8 +25,8 @@ const ConfigInstructions = `
 #   mariadb versions can be 5.5-10.8 and 10.11, mysql versions can be 5.5-8.0
 #   postgres versions can be 9-15.
 
-# router_http_port: <port>  # Port to be used for http (defaults to port 80)
-# router_https_port: <port> # Port for https (defaults to 443)
+# router_http_port: <port>  # Port to be used for http (defaults to global configuration, usually 80)
+# router_https_port: <port> # Port for https (defaults to global configuration, usually 443)
 
 # xdebug_enabled: false  # Set to true to enable xdebug and "ddev start" or "ddev restart"
 # Note that for most people the commands

@@ -3421,8 +3421,8 @@ func TestInternalAndExternalAccessToURL(t *testing.T) {
 
 	t.Cleanup(func() {
 		// Set the ports back to the default was so we don't break any following tests.
-		app.RouterHTTPSPort = "443"
-		app.RouterHTTPPort = "80"
+		app.RouterHTTPSPort = ""
+		app.RouterHTTPPort = ""
 		app.AdditionalFQDNs = []string{}
 		app.AdditionalHostnames = []string{}
 
@@ -3971,8 +3971,8 @@ func TestEnvironmentVariables(t *testing.T) {
 		"DDEV_PRIMARY_URL":       app.GetPrimaryURL(),
 		"DDEV_PROJECT":           app.Name,
 		"DDEV_PROJECT_TYPE":      app.Type,
-		"DDEV_ROUTER_HTTP_PORT":  app.RouterHTTPPort,
-		"DDEV_ROUTER_HTTPS_PORT": app.RouterHTTPSPort,
+		"DDEV_ROUTER_HTTP_PORT":  app.GetRouterHTTPPort(),
+		"DDEV_ROUTER_HTTPS_PORT": app.GetRouterHTTPSPort(),
 		"DDEV_SITENAME":          app.Name,
 		"DDEV_TLD":               app.ProjectTLD,
 		"DDEV_VERSION":           versionconstants.DdevVersion,
@@ -4021,8 +4021,8 @@ func TestEnvironmentVariables(t *testing.T) {
 		"DDEV_PRIMARY_URL":         app.GetPrimaryURL(),
 		"DDEV_PROJECT":             app.Name,
 		"DDEV_PROJECT_TYPE":        app.Type,
-		"DDEV_ROUTER_HTTP_PORT":    app.RouterHTTPPort,
-		"DDEV_ROUTER_HTTPS_PORT":   app.RouterHTTPSPort,
+		"DDEV_ROUTER_HTTP_PORT":    app.GetRouterHTTPPort(),
+		"DDEV_ROUTER_HTTPS_PORT":   app.GetRouterHTTPSPort(),
 		"DDEV_SITENAME":            app.Name,
 		"DDEV_TLD":                 app.ProjectTLD,
 		"DDEV_WEBSERVER_TYPE":      app.WebserverType,

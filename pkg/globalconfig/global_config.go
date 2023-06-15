@@ -62,6 +62,8 @@ type GlobalConfig struct {
 	NoBindMounts                 bool                    `yaml:"no_bind_mounts"`
 	UseTraefik                   bool                    `yaml:"use_traefik"`
 	WSL2NoWindowsHostsMgt        bool                    `yaml:"wsl2_no_windows_hosts_mgt"`
+	RouterHTTPPort               string                  `yaml:"router_http_port"`
+	RouterHTTPSPort              string                  `yaml:"router_https_port"`
 	ProjectList                  map[string]*ProjectInfo `yaml:"project_info"`
 }
 
@@ -177,6 +179,12 @@ func ReadGlobalConfig() error {
 	if DdevGlobalConfig.TableStyle == "" {
 		DdevGlobalConfig.TableStyle = "default"
 	}
+	if DdevGlobalConfig.RouterHTTPPort == "" {
+		DdevGlobalConfig.RouterHTTPPort = nodeps.DdevDefaultRouterHTTPPort
+	}
+	if DdevGlobalConfig.RouterHTTPSPort == "" {
+		DdevGlobalConfig.RouterHTTPSPort = nodeps.DdevDefaultRouterHTTPSPort
+	}
 	if DdevGlobalConfig.ProjectList == nil {
 		DdevGlobalConfig.ProjectList = map[string]*ProjectInfo{}
 	}
@@ -260,6 +268,9 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 # You can enable 'ddev start' to be interrupted by a failing hook with
 # fail_on_hook_fail: true
+
+# router_http_port: <port>  # Port to be used for http (defaults to 80)
+# router_https_port: <port> # Port for https (defaults to 443)
 
 # disable_http2: false
 # Disable http2 on ddev-router if true
