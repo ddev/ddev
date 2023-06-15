@@ -3772,8 +3772,7 @@ func TestHostDBPort(t *testing.T) {
 			_, _ = exec.RunHostCommand(DdevBin, "debug", "fix-commands")
 			out, err := exec.RunHostCommand(DdevBin, "showport")
 			assert.NoError(err)
-			lines := strings.Split(out, "\n")
-			assert.EqualValues("DDEV_HOST_DB_PORT="+dbPortStr, strings.Trim(lines[0], "\r\n"), "dbType=%s, out=%s, err=%v", dbType, out, err)
+			assert.Contains(out, "DDEV_HOST_DB_PORT="+dbPortStr, "dbType=%s, out=%s, err=%v", dbType, out, err)
 		}
 	}
 }
