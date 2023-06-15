@@ -30,7 +30,7 @@ func main() {
 	}
 
 	// Create a global state to be injected later.
-	state := yaml.NewState(path.Join(globalconfig.GetGlobalDdevDir(), "state.yaml"))
+	state := yaml.NewState(path.Join(globalconfig.GetGlobalDdevDir(), ".state.yaml"))
 
 	// TODO for the time being this triggers the download from Github but
 	// should be realized with a clean bootstrap as soon as it exists. The
