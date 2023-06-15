@@ -61,15 +61,12 @@ type remoteConfig struct {
 	tickerInterval   int
 	isInternetActive func() bool
 
-	mu sync.RWMutex
+	mu sync.Mutex
 }
 
 // write saves the remote config to the local storage.
 func (c *remoteConfig) write() {
 	defer util.TimeTrack()()
-
-	c.mu.Lock()
-	defer c.mu.Unlock()
 
 	err := c.fileStorage.Write(c.remoteConfig)
 
@@ -84,9 +81,7 @@ func (c *remoteConfig) loadFromLocalStorage() {
 	defer util.TimeTrack()()
 
 	c.mu.Lock()
-	defer func() {
-		c.mu.Unlock()
-	}()
+	defer c.mu.Unlock()
 
 	var err error
 
@@ -112,23 +107,25 @@ func (c *remoteConfig) updateFromGithub() {
 		util.Debug("Downloading remote config.")
 
 		c.mu.Lock()
+		defer c.mu.Unlock()
 
-		defer func() {
-			c.state.UpdatedAt = time.Now()
-			if err := c.state.save(); err != nil {
-				util.Debug("Error while saving state: %s", err)
-			}
-
-			c.mu.Unlock()
-			c.write()
-		}()
+		var err error
 
 		// Download the remote config.
-		var err error
 		c.remoteConfig, err = c.githubStorage.Read()
 
 		if err != nil {
 			util.Debug("Error while downloading remote config: %s", err)
+
+			return
+		}
+
+		c.write()
+
+		// Update state.
+		c.state.UpdatedAt = time.Now()
+		if err = c.state.save(); err != nil {
+			util.Debug("Error while saving state: %s", err)
 		}
 	}
 }
