@@ -518,9 +518,11 @@ workflows:
 #        ignore:
 #          - gh-pages
     - lx_arm64_fpm_test:
-      branches:
-        ignore:
-          - gh-pages
+        filters:
+          branches:
+            only: master
+            ignore:
+              - gh-pages
 #    - lx_arm64_container_test
 #        requires:
 #        - build
