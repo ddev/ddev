@@ -21,7 +21,6 @@ const (
 // Container types used with ddev
 const (
 	DdevSSHAgentContainer = "ddev-ssh-agent"
-	DBAContainer          = "dba"
 	DBContainer           = "db"
 	WebContainer          = "web"
 	RouterContainer       = "ddev-router"
@@ -38,7 +37,6 @@ const (
 var ValidOmitContainers = map[string]bool{
 	DBContainer:           true,
 	DdevSSHAgentContainer: true,
-	DBAContainer:          true,
 }
 
 // DdevFileSignature is the text we use to detect whether a settings file is managed by us.
@@ -107,9 +105,6 @@ const (
 
 	// DdevDefaultRouterHTTPSPort is the default router HTTPS port
 	DdevDefaultRouterHTTPSPort = "443"
-	// DdevDefaultPHPMyAdminPort is the default router port for dba/PHPMyadmin
-	DdevDefaultPHPMyAdminPort      = "8036"
-	DdevDefaultPHPMyAdminHTTPSPort = "8037"
 	// DdevDefaultMailhogPort is the default router port for Mailhog
 	DdevDefaultMailhogPort      = "8025"
 	DdevDefaultMailhogHTTPSPort = "8026"

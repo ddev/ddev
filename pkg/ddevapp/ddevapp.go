@@ -259,11 +259,6 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			dbinfo["database_version"] = app.Database.Version
 
 			appDesc["dbinfo"] = dbinfo
-
-			if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "dba") {
-				appDesc["phpmyadmin_https_url"] = "https://" + app.GetHostname() + ":" + app.PHPMyAdminHTTPSPort
-				appDesc["phpmyadmin_url"] = "http://" + app.GetHostname() + ":" + app.PHPMyAdminPort
-			}
 		}
 
 		appDesc["mailhog_https_url"] = "https://" + app.GetHostname() + ":" + app.MailhogHTTPSPort
@@ -1608,7 +1603,7 @@ func (app *DdevApp) GeneratePostgresConfig() error {
 
 // ExecOpts contains options for running a command inside a container
 type ExecOpts struct {
-	// Service is the service, as in 'web', 'db', 'dba'
+	// Service is the service, as in 'web', 'db'
 	Service string
 	// Dir is the full path to the working directory inside the container
 	Dir string
@@ -1685,7 +1680,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		// Use bash for our containers, sh for 3rd-party containers
 		// that may not have bash.
 		shell := "bash"
-		if !nodeps.ArrayContainsString([]string{"web", "db", "dba"}, opts.Service) {
+		if !nodeps.ArrayContainsString([]string{"web", "db"}, opts.Service) {
 			shell = "sh"
 		}
 		errcheck := "set -eu"
@@ -1766,7 +1761,7 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 	// Use bash for our containers, sh for 3rd-party containers
 	// that may not have bash.
 	shell := "bash"
-	if !nodeps.ArrayContainsString([]string{"web", "db", "dba"}, opts.Service) {
+	if !nodeps.ArrayContainsString([]string{"web", "db"}, opts.Service) {
 		shell = "sh"
 	}
 	args = append(args, shell, "-c", opts.Cmd)
@@ -1964,7 +1959,6 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_SITENAME":                  app.Name,
 		"DDEV_TLD":                       app.ProjectTLD,
 		"DDEV_DBIMAGE":                   app.GetDBImage(),
-		"DDEV_DBAIMAGE":                  versionconstants.GetDBAImage(),
 		"DDEV_PROJECT":                   app.Name,
 		"DDEV_WEBIMAGE":                  app.WebImage,
 		"DDEV_APPROOT":                   app.AppRoot,

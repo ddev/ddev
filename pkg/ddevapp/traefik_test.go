@@ -59,7 +59,7 @@ func TestTraefikSimple(t *testing.T) {
 	assert.Equal(desc["router"].(string), types.RouterTypeTraefik)
 
 	// Test reachabiliity in each of the hostnames
-	httpURLs, httpsURLs, allURLs := app.GetAllURLs()
+	httpURLs, _, allURLs := app.GetAllURLs()
 
 	// If no mkcert trusted https, use only the httpURLs
 	// This is especially the case for colima
@@ -72,12 +72,6 @@ func TestTraefikSimple(t *testing.T) {
 		u = strings.Replace(u, `*`, `somewildcard`, 1)
 		_, err = testcommon.EnsureLocalHTTPContent(t, u+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 		assert.NoError(err, "failed EnsureLocalHTTPContent() %s: %v", u+site.Safe200URIWithExpectation.URI, err)
-	}
-
-	// Test Reachability to PhpMyAdmin, which uses different technique
-	_, _ = testcommon.EnsureLocalHTTPContent(t, httpURLs[0]+":8036", "phpMyAdmin")
-	if globalconfig.DdevGlobalConfig.MkcertCARoot != "" {
-		_, _ = testcommon.EnsureLocalHTTPContent(t, httpsURLs[0]+":8037", "phpMyAdmin")
 	}
 }
 

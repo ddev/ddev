@@ -23,7 +23,6 @@ func GetVersionInfo() map[string]string {
 	versionInfo["DDEV version"] = versionconstants.DdevVersion
 	versionInfo["web"] = versionconstants.GetWebImage()
 	versionInfo["db"] = versionconstants.GetDBImage(nodeps.MariaDB, "")
-	versionInfo["dba"] = versionconstants.GetDBAImage()
 	versionInfo["router"] = versionconstants.GetRouterImage()
 	versionInfo["ddev-ssh-agent"] = versionconstants.GetSSHAuthImage()
 	versionInfo["build info"] = versionconstants.BUILDINFO

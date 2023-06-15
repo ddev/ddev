@@ -177,7 +177,7 @@ func TestConfigSetValues(t *testing.T) {
 	additionalHostnames := strings.Join(additionalHostnamesSlice, ",")
 	additionalFQDNsSlice := []string{"abc.com", "123.pizza", "xyz.co.uk"}
 	additionalFQDNs := strings.Join(additionalFQDNsSlice, ",")
-	omitContainersSlice := []string{"dba", "ddev-ssh-agent"}
+	omitContainersSlice := []string{"ddev-ssh-agent"}
 	omitContainers := strings.Join(omitContainersSlice, ",")
 	webimageExtraPackagesSlice := []string{"php-bcmath", "php7.3-tidy"}
 	webimageExtraPackages := strings.Join(webimageExtraPackagesSlice, ",")
@@ -189,8 +189,6 @@ func TestConfigSetValues(t *testing.T) {
 	webImage := "custom-web-image"
 	webWorkingDir := "/custom/web/dir"
 	dbWorkingDir := "/custom/db/dir"
-	dbaWorkingDir := "/custom/dba/dir"
-	phpMyAdminPort := "5000"
 	mailhogPort := "5001"
 	projectTLD := "nowhere.example.com"
 	useDNSWhenPossible := false
@@ -218,14 +216,12 @@ func TestConfigSetValues(t *testing.T) {
 		"--web-image", webImage,
 		"--web-working-dir", webWorkingDir,
 		"--db-working-dir", dbWorkingDir,
-		"--dba-working-dir", dbaWorkingDir,
 		"--omit-containers", omitContainers,
 		"--host-db-port", hostDBPort,
 		"--host-webserver-port", hostWebserverPort,
 		"--host-https-port", hostHTTPSPort,
 		"--webimage-extra-packages", webimageExtraPackages,
 		"--dbimage-extra-packages", dbimageExtraPackages,
-		"--phpmyadmin-port", phpMyAdminPort,
 		"--mailhog-port", mailhogPort,
 		"--project-tld", projectTLD,
 		"--web-environment", webEnv,
@@ -268,10 +264,8 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(webImage, app.WebImage)
 	assert.Equal(webWorkingDir, app.WorkingDir["web"])
 	assert.Equal(dbWorkingDir, app.WorkingDir["db"])
-	assert.Equal(dbaWorkingDir, app.WorkingDir["dba"])
 	assert.Equal(webimageExtraPackagesSlice, app.WebImageExtraPackages)
 	assert.Equal(dbimageExtraPackagesSlice, app.DBImageExtraPackages)
-	assert.Equal(phpMyAdminPort, app.PHPMyAdminPort)
 	assert.Equal(mailhogPort, app.MailhogPort)
 	assert.Equal(useDNSWhenPossible, app.UseDNSWhenPossible)
 	assert.Equal(projectTLD, app.ProjectTLD)
@@ -287,10 +281,8 @@ func TestConfigSetValues(t *testing.T) {
 		"--composer-root-default",
 		"--web-image-default",
 		"--db-image-default",
-		"--dba-image-default",
 		"--web-working-dir-default",
 		"--db-working-dir-default",
-		"--dba-working-dir-default",
 	}
 
 	_, err = exec.RunHostCommand(DdevBin, args...)
@@ -313,7 +305,6 @@ func TestConfigSetValues(t *testing.T) {
 		"--web-image", webImage,
 		"--web-working-dir", webWorkingDir,
 		"--db-working-dir", dbWorkingDir,
-		"--dba-working-dir", dbaWorkingDir,
 	}
 
 	_, err = exec.RunHostCommand(DdevBin, args...)

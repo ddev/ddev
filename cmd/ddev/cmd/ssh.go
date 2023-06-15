@@ -36,7 +36,7 @@ ddev ssh -d /var/www/html`,
 		// Use bash for our containers, sh for 3rd-party containers
 		// that may not have bash.
 		shell := "bash"
-		if !nodeps.ArrayContainsString([]string{"web", "db", "dba", "solr"}, serviceType) {
+		if !nodeps.ArrayContainsString([]string{"web", "db", "solr"}, serviceType) {
 			shell = "sh"
 		}
 		err = app.ExecWithTty(&ddevapp.ExecOpts{

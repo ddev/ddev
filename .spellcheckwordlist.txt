@@ -102,7 +102,6 @@ PID
 PWD
 PartOf
 PathMaps
-phpMyAdmin's
 PhpStorm
 PhpStorm's
 PowerShell
@@ -242,7 +241,6 @@ daemonize
 data
 database
 db
-dba
 dbhost
 dbimage
 dbname
@@ -467,9 +465,7 @@ percona
 performant
 pgdump
 php
-phpMyAdmin
 phpinfo
-phpmyadmin
 pg_dump
 pgsql
 phpcs

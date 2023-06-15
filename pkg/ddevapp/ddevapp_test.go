@@ -485,7 +485,7 @@ func TestDdevStart(t *testing.T) {
 	composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
 	assert.True(composeFile)
 
-	for _, containerType := range [3]string{"web", "db", "dba"} {
+	for _, containerType := range [3]string{"web", "db"} {
 		containerName, err := constructContainerName(containerType, app)
 		assert.NoError(err)
 		check, err := testcommon.ContainerCheck(containerName, "running")
@@ -689,7 +689,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
 		assert.True(composeFile)
 
-		for _, containerType := range [3]string{"web", "db", "dba"} {
+		for _, containerType := range [3]string{"web", "db"} {
 			containerName, err := constructContainerName(containerType, app)
 			assert.NoError(err)
 			check, err := testcommon.ContainerCheck(containerName, "running")
@@ -2041,12 +2041,8 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		out := restoreOutput()
 		assert.NotContains(out, "Unable to create settings file")
 
-		// Validate PHPMyAdmin is working and database named db is present
-		if app.Database.Type == nodeps.MySQL || app.Database.Type == nodeps.MariaDB {
-			_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8036/index.php?route=/database/structure&server=1&db=db", "Database:          db")
-			// Validate MailHog is working and "connected"
-			_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8025/#", "Connected")
-		}
+		// Validate MailHog is working and "connected"
+		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetHTTPURL()+":8025/#", "Connected")
 
 		settingsLocation, err := app.DetermineSettingsPathLocation()
 		assert.NoError(err)
@@ -2693,7 +2689,7 @@ func TestDdevPause(t *testing.T) {
 	err = app.Pause()
 	assert.NoError(err)
 
-	for _, containerType := range [3]string{"web", "db", "dba"} {
+	for _, containerType := range [3]string{"web", "db"} {
 		containerName, err := constructContainerName(containerType, app)
 		assert.NoError(err)
 		check, err := testcommon.ContainerCheck(containerName, "exited")
@@ -2978,7 +2974,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	err = app.Stop(true, false)
 	assert.NoError(err)
 	assert.Empty(globalconfig.DdevGlobalConfig.ProjectList[app.Name])
-	for _, containerType := range [3]string{"web", "db", "dba"} {
+	for _, containerType := range [3]string{"web", "db"} {
 		_, err := constructContainerName(containerType, app)
 		assert.Error(err)
 	}
@@ -4087,7 +4083,7 @@ func TestEnvFile(t *testing.T) {
 	}
 }
 
-// constructContainerName builds a container name given the type (web/db/dba) and the app
+// constructContainerName builds a container name given the type (web/db) and the app
 func constructContainerName(containerType string, app *ddevapp.DdevApp) (string, error) {
 	container, err := app.FindContainerByType(containerType)
 	if err != nil {

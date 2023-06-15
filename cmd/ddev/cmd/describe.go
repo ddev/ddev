@@ -26,7 +26,7 @@ var DescribeCommand = &cobra.Command{
 	Long: `Get a detailed description of a running ddev project. Describe provides basic
 information about a ddev project, including its name, location, url, and status.
 It also provides details for MySQL connections, and connection information for
-additional services like MailHog and phpMyAdmin. You can run 'ddev describe' from
+additional services like MailHog. You can run 'ddev describe' from
 a project directory to describe that project, or you can specify a project to describe by
 running 'ddev describe <projectname>'.`,
 	Example: "ddev describe\nddev describe <projectname>\nddev status\nddev st",
@@ -167,10 +167,6 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			if k == "db" {
 				extraInfo = append(extraInfo, app.Database.Type+":"+app.Database.Version)
 				extraInfo = append(extraInfo, "User/Pass: 'db/db'\nor 'root/root'")
-			}
-			if k == "dba" {
-				k = "PHPMyAdmin"
-				urlPortParts = append(urlPortParts, "`ddev launch -p`")
 			}
 			t.AppendRow(table.Row{k, ddevapp.FormatSiteStatus(v["status"]), strings.Join(urlPortParts, "\n"), strings.Join(extraInfo, "\n")})
 		}

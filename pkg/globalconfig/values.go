@@ -8,7 +8,6 @@ import (
 // Container types used with ddev (duplicated from ddevapp, avoiding cross-package cycles)
 const (
 	DdevSSHAgentContainer      = "ddev-ssh-agent"
-	DBAContainer               = "dba"
 	DdevRouterContainer        = "ddev-router"
 	XdebugIDELocationContainer = "container"
 	XdebugIDELocationWSL2      = "wsl2"
@@ -21,7 +20,6 @@ const RequiredDockerComposeVersionDefault = "v2.18.1"
 var ValidOmitContainers = map[string]bool{
 	DdevRouterContainer:   true,
 	DdevSSHAgentContainer: true,
-	DBAContainer:          true,
 }
 
 // DdevNoInstrumentation is set to true if the env var is set

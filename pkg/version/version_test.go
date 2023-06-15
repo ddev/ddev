@@ -32,8 +32,6 @@ func TestGetVersionInfo(t *testing.T) {
 	assert.Contains(v["web"], versionconstants.WebTag)
 	assert.Contains(v["db"], versionconstants.DBImg)
 	assert.Contains(v["db"], nodeps.MariaDBDefaultVersion)
-	assert.Contains(v["dba"], versionconstants.DBAImg)
-	assert.Contains(v["dba"], versionconstants.DBATag)
 	assert.Equal(runtime.GOOS, v["os"])
 	assert.Equal(versionconstants.BUILDINFO, v["build info"])
 	assert.NotEmpty(v["docker-compose"])

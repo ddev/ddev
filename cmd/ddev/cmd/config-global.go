@@ -25,7 +25,7 @@ var (
 var configGlobalCommand = &cobra.Command{
 	Use:     "global [flags]",
 	Short:   "Change global configuration",
-	Example: "ddev config global --instrumentation-opt-in=false\nddev config global --omit-containers=dba,ddev-ssh-agent",
+	Example: "ddev config global --instrumentation-opt-in=false\nddev config global --omit-containers=ddev-ssh-agent",
 	Run:     handleGlobalConfig,
 }
 
@@ -243,7 +243,7 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 }
 
 func init() {
-	configGlobalCommand.Flags().StringVarP(&omitContainers, "omit-containers", "", "", "For example, --omit-containers=dba,ddev-ssh-agent")
+	configGlobalCommand.Flags().StringVarP(&omitContainers, "omit-containers", "", "", "For example, --omit-containers=ddev-ssh-agent")
 	configGlobalCommand.Flags().StringVarP(&webEnvironmentGlobal, "web-environment", "", "", `Set the environment variables in the web container: --web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`)
 	configGlobalCommand.Flags().StringVarP(&webEnvironmentGlobal, "web-environment-add", "", "", `Append environment variables to the web container: --web-environment-add="TYPO3_CONTEXT=Development,SOMEENV=someval"`)
 	configGlobalCommand.Flags().Bool("nfs-mount-enabled", false, "Enable NFS mounting on all projects globally")

@@ -334,9 +334,9 @@ Containers that should not be loaded automatically for one or more projects.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `[]` | **For projects**, can include `db`, `dba`, and `ddev-ssh-agent`.<br>**Globally**, can include `dba` and `ddev-ssh-agent` only.
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `[]` | **For projects**, can include `db`, and `ddev-ssh-agent`.<br>**Globally**, can include `dba` and `ddev-ssh-agent` only.
 
-Example: `omit_containers: [db, dba, ddev-ssh-agent]` starts the project without a `db` container, phpMyAdmin, and SSH agent. Some containers can be omitted globally in `~/.ddev/global_config.yaml` and the result is additive; all containers named in both places will be omitted.
+Example: `omit_containers: [db, ddev-ssh-agent]` starts the project without a `db` container, and SSH agent. Some containers can be omitted globally in `~/.ddev/global_config.yaml` and the result is additive; all containers named in both places will be omitted.
 
 !!!warning
     Omitting the `db` container will cause database-dependent DDEV features to be unstable.
@@ -362,22 +362,6 @@ The PHP version the project should use.
 | :octicons-file-directory-16: project | `8.1`   | Can be `5.6`, `7.0`, `7.1`, `7.2`, `7.3`, `7.4`, `8.0`, `8.1`, or `8.2`.
 
 You can only specify the major version (`7.3`), not a minor version (`7.3.2`), from those explicitly available.
-
-## `phpmyadmin_https_port`
-
-Port for project’s phpMyAdmin HTTPS URL.
-
-| Type | Default | Usage
-| -- | -- | --
-| :octicons-file-directory-16: project | `8037` | Can be changed to avoid a port conflict.
-
-## `phpmyadmin_port`
-
-Port for project’s phpMyAdmin HTTP URL.
-
-| Type | Default | Usage
-| -- | -- | --
-| :octicons-file-directory-16: project | `8036` | Can be changed to avoid a port conflict.
 
 ## `project_tld`
 
@@ -418,7 +402,7 @@ Whether to bind `ddev-router`'s ports on all network interfaces.
 | -- | -- | --
 | :octicons-globe-16: global | `false` | Can be `true` or `false`.
 
-When `true`, `ddev-router` will bind on all network interfaces instead of only `localhost`, exposing DDEV projects to your local network. If you set this to `true`, consider setting `omit_containers: ["dba"]` so phpMyAdmin is not available.
+When `true`, `ddev-router` will bind on all network interfaces instead of only `localhost`, exposing DDEV projects to your local network.
 
 ## `router_http_port`
 
