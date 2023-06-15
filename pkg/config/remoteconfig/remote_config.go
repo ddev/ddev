@@ -45,7 +45,7 @@ const (
 	// Default intervals in hours
 	updateInterval        = 10
 	notificationsInterval = 20
-	tickerInterval        = 5
+	tickerInterval        = 20
 )
 
 // remoteConfig is a in memory representation of the DDEV RemoteConfig.
