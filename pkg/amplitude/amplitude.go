@@ -189,9 +189,7 @@ func InitAmplitude() {
 		Client: ampli.LoadClientOptions{
 			APIKey: versionconstants.AmplitudeAPIKey,
 			Configuration: amplitude.Config{
-				FlushInterval:  interval,
-				FlushQueueSize: queueSize,
-				Logger:         logger,
+				Logger: logger,
 				StorageFactory: func() amplitude.EventStorage {
 					return storages.NewDelayedTransmissionEventStorage(
 						logger,

@@ -19,7 +19,7 @@ var DebugInstrumentationFlushCmd = &cobra.Command{
 
 		amplitude.FlushForce()
 
-		util.Success("Usage statistics transmitted.")
+		util.Success("Usage statistics submitted.")
 	},
 }
 
