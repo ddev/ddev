@@ -452,6 +452,11 @@ func (app *DdevApp) GetWebserverType() string {
 // GetRouterHTTPPort returns app's router http port
 func (app *DdevApp) GetRouterHTTPPort() string {
 	port := app.RouterHTTPPortGlobal
+	// TODO: This default setting should be done in creation of the
+	// globalconfig.DdevGlobalCOnfig
+	if port == "" {
+		port = nodeps.DdevDefaultRouterHTTPPort
+	}
 	if app.RouterHTTPPort != "" {
 		port = app.RouterHTTPPort
 	}
@@ -461,6 +466,11 @@ func (app *DdevApp) GetRouterHTTPPort() string {
 // GetRouterHTTPSPort returns app's router https port
 func (app *DdevApp) GetRouterHTTPSPort() string {
 	port := app.RouterHTTPSPortGlobal
+	// TODO: This default setting should be done in creation of the
+	// globalconfig.DdevGlobalCOnfig
+	if port == "" {
+		port = nodeps.DdevDefaultRouterHTTPSPort
+	}
 	if app.RouterHTTPSPort != "" {
 		port = app.RouterHTTPSPort
 	}
