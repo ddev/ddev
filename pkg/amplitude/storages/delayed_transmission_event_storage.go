@@ -41,7 +41,6 @@ type delayedTransmissionEventStorage struct {
 type eventCache struct {
 	LastSubmittedAt time.Time
 	Events          []*types.StorageEvent
-	//RetriedEvents   []*types.StorageEvent
 }
 
 // PushNew writes a new event to the cache.
@@ -176,6 +175,7 @@ func (s *delayedTransmissionEventStorage) readCache() error {
 
 	decoder := gob.NewDecoder(file)
 	err = decoder.Decode(&s.cache)
+
 	file.Close()
 
 	// If the file was properly read, mark the cache as loaded.
@@ -191,13 +191,18 @@ func (s *delayedTransmissionEventStorage) readCache() error {
 // writeCache writes the events to the cache file.
 func (s *delayedTransmissionEventStorage) writeCache() error {
 	file, err := os.Create(s.fileName)
-	if err == nil {
-		encoder := gob.NewEncoder(file)
-		err = encoder.Encode(&s.cache)
+	if err != nil {
+		return err
 	}
+
+	encoder := gob.NewEncoder(file)
+	err = encoder.Encode(&s.cache)
+
 	file.Close()
 
-	s.logger.Debugf("Written %d events to the cache.", len(s.cache.Events))
+	if err == nil {
+		s.logger.Debugf("Written %d events to the cache.", len(s.cache.Events))
+	}
 
 	return err
 }
