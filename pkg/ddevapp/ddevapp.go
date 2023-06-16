@@ -115,10 +115,6 @@ type DdevApp struct {
 	MailhogPort           string                `yaml:"mailhog_port,omitempty"`
 	MailhogHTTPSPort      string                `yaml:"mailhog_https_port,omitempty"`
 	HostMailhogPort       string                `yaml:"host_mailhog_port,omitempty"`
-	PHPMyAdminPort        string                `yaml:"phpmyadmin_port,omitempty"`
-	PHPMyAdminHTTPSPort   string                `yaml:"phpmyadmin_https_port,omitempty"`
-	// HostPHPMyAdminPort is normally empty, as it is not normally bound
-	HostPHPMyAdminPort        string                 `yaml:"host_phpmyadmin_port,omitempty"`
 	WebImageExtraPackages     []string               `yaml:"webimage_extra_packages,omitempty,flow"`
 	DBImageExtraPackages      []string               `yaml:"dbimage_extra_packages,omitempty,flow"`
 	ProjectTLD                string                 `yaml:"project_tld,omitempty"`
@@ -1920,9 +1916,6 @@ func (app *DdevApp) DockerEnv() {
 		if app.HostMailhogPort == "" {
 			app.HostMailhogPort = "8027"
 		}
-		if app.HostPHPMyAdminPort == "" {
-			app.HostPHPMyAdminPort = "8036"
-		}
 		app.BindAllInterfaces = true
 	}
 	isWSL2 := "false"
@@ -1967,34 +1960,32 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_DATABASE":                  app.Database.Type + ":" + app.Database.Version,
 		"DDEV_FILES_DIR":                 app.GetContainerUploadDirFullPath(),
 
-		"DDEV_HOST_DB_PORT":          dbPortStr,
-		"DDEV_HOST_MAILHOG_PORT":     app.HostMailhogPort,
-		"DDEV_HOST_WEBSERVER_PORT":   app.HostWebserverPort,
-		"DDEV_HOST_HTTPS_PORT":       app.HostHTTPSPort,
-		"DDEV_PHPMYADMIN_PORT":       app.PHPMyAdminPort,
-		"DDEV_PHPMYADMIN_HTTPS_PORT": app.PHPMyAdminHTTPSPort,
-		"DDEV_MAILHOG_PORT":          app.MailhogPort,
-		"DDEV_MAILHOG_HTTPS_PORT":    app.MailhogHTTPSPort,
-		"DDEV_DOCROOT":               app.Docroot,
-		"DDEV_HOSTNAME":              app.HostName(),
-		"DDEV_UID":                   uidStr,
-		"DDEV_GID":                   gidStr,
-		"DDEV_MUTAGEN_ENABLED":       strconv.FormatBool(app.IsMutagenEnabled()),
-		"DDEV_PHP_VERSION":           app.PHPVersion,
-		"DDEV_WEBSERVER_TYPE":        app.WebserverType,
-		"DDEV_PROJECT_TYPE":          app.Type,
-		"DDEV_ROUTER_HTTP_PORT":      app.GetRouterHTTPPort(),
-		"DDEV_ROUTER_HTTPS_PORT":     app.GetRouterHTTPSPort(),
-		"DDEV_XDEBUG_ENABLED":        strconv.FormatBool(app.XdebugEnabled),
-		"DDEV_PRIMARY_URL":           app.GetPrimaryURL(),
-		"DDEV_VERSION":               versionconstants.DdevVersion,
-		"DOCKER_SCAN_SUGGEST":        "false",
-		"GOOS":                       runtime.GOOS,
-		"GOARCH":                     runtime.GOARCH,
-		"IS_DDEV_PROJECT":            "true",
-		"IS_GITPOD":                  strconv.FormatBool(nodeps.IsGitpod()),
-		"IS_CODESPACES":              strconv.FormatBool(nodeps.IsCodespaces()),
-		"IS_WSL2":                    isWSL2,
+		"DDEV_HOST_DB_PORT":        dbPortStr,
+		"DDEV_HOST_MAILHOG_PORT":   app.HostMailhogPort,
+		"DDEV_HOST_WEBSERVER_PORT": app.HostWebserverPort,
+		"DDEV_HOST_HTTPS_PORT":     app.HostHTTPSPort,
+		"DDEV_MAILHOG_PORT":        app.MailhogPort,
+		"DDEV_MAILHOG_HTTPS_PORT":  app.MailhogHTTPSPort,
+		"DDEV_DOCROOT":             app.Docroot,
+		"DDEV_HOSTNAME":            app.HostName(),
+		"DDEV_UID":                 uidStr,
+		"DDEV_GID":                 gidStr,
+		"DDEV_MUTAGEN_ENABLED":     strconv.FormatBool(app.IsMutagenEnabled()),
+		"DDEV_PHP_VERSION":         app.PHPVersion,
+		"DDEV_WEBSERVER_TYPE":      app.WebserverType,
+		"DDEV_PROJECT_TYPE":        app.Type,
+		"DDEV_ROUTER_HTTP_PORT":    app.GetRouterHTTPPort(),
+		"DDEV_ROUTER_HTTPS_PORT":   app.GetRouterHTTPSPort(),
+		"DDEV_XDEBUG_ENABLED":      strconv.FormatBool(app.XdebugEnabled),
+		"DDEV_PRIMARY_URL":         app.GetPrimaryURL(),
+		"DDEV_VERSION":             versionconstants.DdevVersion,
+		"DOCKER_SCAN_SUGGEST":      "false",
+		"GOOS":                     runtime.GOOS,
+		"GOARCH":                   runtime.GOARCH,
+		"IS_DDEV_PROJECT":          "true",
+		"IS_GITPOD":                strconv.FormatBool(nodeps.IsGitpod()),
+		"IS_CODESPACES":            strconv.FormatBool(nodeps.IsCodespaces()),
+		"IS_WSL2":                  isWSL2,
 	}
 
 	// Set the DDEV_DB_CONTAINER_COMMAND command to empty to prevent docker-compose from complaining normally.

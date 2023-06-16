@@ -647,7 +647,6 @@ type composeYAMLVars struct {
 	DBMountDir                      string
 	DBAPort                         string
 	DBPort                          string
-	HostPHPMyAdminPort              string
 	DdevGenerated                   string
 	HostDockerInternalIP            string
 	NFSServerAddr                   string
