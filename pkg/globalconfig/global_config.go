@@ -376,7 +376,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 # messages:
 #   disable_ticker: false // Set to true to disable ticker messages
-#   ticker_interval: 5    // Interval in hours to show ticker messages
+#   ticker_interval: 20   // Interval in hours to show ticker messages
 # Controls the display of the ticker messages.
 
 # remote_config:
@@ -384,7 +384,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 #   remote:
 #     owner: ddev
 #     repo: remote-config
-#     ref: live
+#     ref: main
 #     filepath: remote-config.jsonc
 # Controls the download of the remote config. Please do not change.
 

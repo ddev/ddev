@@ -267,7 +267,7 @@ How often ticker messages should be shown.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-globe-16: global | `5` | Interval in hours.
+| :octicons-globe-16: global | `20` | Interval in hours.
 
 ## `mutagen_enabled`
 
