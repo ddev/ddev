@@ -465,6 +465,7 @@ percona
 performant
 pgdump
 php
+phpMyAdmin
 phpinfo
 pg_dump
 pgsql

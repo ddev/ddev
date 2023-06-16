@@ -57,6 +57,8 @@ The PostgreSQL database container includes normal `pg` commands like `pgdump`.
 
 If you’d like to use a GUI database client, you’ll need the right connection details and there may even be a command to launch it for you:
 
+* PhpMyAdmin, formerly built into DDEV core, can be installed with `ddev get ddev/ddev-phpmyadmin`.
+* Adminer can be installed with `ddev get ddev/ddev-adminer`
 * The [`ddev describe`](../usage/commands.md#describe) command displays the  `Host:` details you’ll need to connect to the `db` container externally, for example if you're using an on-host database browser like SequelAce.
 * macOS users can use `ddev sequelace` to launch the free [Sequel Ace](https://sequel-ace.com/) database browser, [`ddev tableplus`](../usage/commands.md#tableplus) to launch [TablePlus](https://tableplus.com), [`ddev querious`](../usage/commands.md#querious) for [Querious](https://www.araelium.com/querious), and the obsolete Sequel Pro is also supported with `ddev sequelpro`. (Each must be installed for the command to exist.)
 * PhpStorm (and all JetBrains tools) have a nice database browser. (If you use the [DDEV Integration plugin](https://plugins.jetbrains.com/plugin/18813-ddev-integration) this is all done for you.)
