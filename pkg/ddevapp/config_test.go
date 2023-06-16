@@ -676,6 +676,8 @@ func TestConfigValidate(t *testing.T) {
 	if runtime.GOOS != "windows" {
 		err = app.Start()
 		assert.NoError(err)
+		err = app.MutagenSyncFlush()
+		assert.NoError(err)
 		staticURI := site.Safe200URIWithExpectation.URI
 		_, _, err = testcommon.GetLocalHTTPResponse(t, "http://x.ddev.site/"+staticURI)
 		assert.NoError(err)
