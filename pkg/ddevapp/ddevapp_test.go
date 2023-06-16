@@ -485,7 +485,7 @@ func TestDdevStart(t *testing.T) {
 	composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
 	assert.True(composeFile)
 
-	for _, containerType := range [3]string{"web", "db"} {
+	for _, containerType := range []string{"web", "db"} {
 		containerName, err := constructContainerName(containerType, app)
 		assert.NoError(err)
 		check, err := testcommon.ContainerCheck(containerName, "running")
