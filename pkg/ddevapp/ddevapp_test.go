@@ -689,7 +689,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 		composeFile := fileutil.FileExists(app.DockerComposeYAMLPath())
 		assert.True(composeFile)
 
-		for _, containerType := range [3]string{"web", "db"} {
+		for _, containerType := range []string{"web", "db"} {
 			containerName, err := constructContainerName(containerType, app)
 			assert.NoError(err)
 			check, err := testcommon.ContainerCheck(containerName, "running")
@@ -2689,7 +2689,7 @@ func TestDdevPause(t *testing.T) {
 	err = app.Pause()
 	assert.NoError(err)
 
-	for _, containerType := range [3]string{"web", "db"} {
+	for _, containerType := range []string{"web", "db"} {
 		containerName, err := constructContainerName(containerType, app)
 		assert.NoError(err)
 		check, err := testcommon.ContainerCheck(containerName, "exited")
@@ -2974,7 +2974,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	err = app.Stop(true, false)
 	assert.NoError(err)
 	assert.Empty(globalconfig.DdevGlobalConfig.ProjectList[app.Name])
-	for _, containerType := range [3]string{"web", "db"} {
+	for _, containerType := range []string{"web", "db"} {
 		_, err := constructContainerName(containerType, app)
 		assert.Error(err)
 	}
