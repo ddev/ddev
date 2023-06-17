@@ -60,8 +60,8 @@ There are many examples of [global](https://github.com/drud/ddev/tree/master/pkg
 
 A number of environment variables are provided to the script. These are generally supported, but please avoid using undocumented environment variables. Useful variables for host scripts are:
 
-* `DDEV_APPROOT`: file system location of the project on the host
-* `DDEV_DATABASE`: database in use, in format `type:version`, for example `mariadb:10.5`.
+* `DDEV_APPROOT`: File system location of the project on the host
+* `DDEV_DATABASE`: Database in use, in format `type:version`, for example `mariadb:10.5`.
 * `DDEV_DOCROOT`: Relative path from approot to docroot
 * `DDEV_HOSTNAME`: Comma-separated list of FQDN hostnames
 * `DDEV_HOST_DB_PORT`: Localhost port of the database server
@@ -76,8 +76,8 @@ A number of environment variables are provided to the script. These are generall
 * `DDEV_SITENAME`: Project name, like "d8composer".
 * `DDEV_TLD`: Top-level domain of project, like "ddev.site"
 * `DDEV_WEBSERVER_TYPE`: nginx-fpm, apache-fpm`
-* `GOARCH`: architecture: "arm64", "amd64"
-* `GOOS`: operating system: "windows", "darwin", "linux"
+* `GOARCH`: Architecture: "arm64", "amd64"
+* `GOOS`: Operating system: "windows", "darwin", "linux"
 
 Useful variables for container scripts are:
 
@@ -93,7 +93,7 @@ Useful variables for container scripts are:
 * `DDEV_SITENAME`: Project name, like "d8composer".
 * `DDEV_TLD`: Top-level domain of project, like "ddev.site"
 * `DDEV_WEBSERVER_TYPE`: nginx-fpm, apache-fpm
-* `IS_DDEV_PROJECT`: if set to "true" it means that php is running under DDEV
+* `IS_DDEV_PROJECT`: If set to "true" it means that php is running under DDEV
 
 ## Annotations supported
 
