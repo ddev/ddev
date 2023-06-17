@@ -63,6 +63,7 @@ A number of environment variables are provided to the script. These are generall
 * `DDEV_APPROOT`: file system location of the project on the host
 * `DDEV_DATABASE`: database in use, in format `type:version`, for example `mariadb:10.5`.
 * `DDEV_DOCROOT`: Relative path from approot to docroot
+* `DDEV_GID`: The GID the web container runs as.
 * `DDEV_HOSTNAME`: Comma-separated list of FQDN hostnames
 * `DDEV_HOST_DB_PORT`: Localhost port of the database server
 * `DDEV_HOST_HTTPS_PORT`: Localhost port for https on webserver
@@ -75,6 +76,7 @@ A number of environment variables are provided to the script. These are generall
 * `DDEV_ROUTER_HTTPS_PORT`: Router port for https
 * `DDEV_SITENAME`: Project name, like "d8composer".
 * `DDEV_TLD`: Top-level domain of project, like "ddev.site"
+* `DDEV_UID`: The UID the web container runs as.
 * `DDEV_WEBSERVER_TYPE`: nginx-fpm, apache-fpm`
 * `GOARCH`: architecture: "arm64", "amd64"
 * `GOOS`: operating system: "windows", "darwin", "linux"
