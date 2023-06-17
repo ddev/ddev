@@ -3,13 +3,13 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/styles"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/styles"
+	"github.com/ddev/ddev/pkg/util"
 	"sort"
 	"strings"
 
@@ -93,7 +93,11 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 	if dockerutil.IsColima() {
 		dockerEnv = "Colima"
 	}
-	t.SetTitle(fmt.Sprintf("Project: %s %s %s\nDocker environment: %s", app.Name, desc["shortroot"].(string), app.GetPrimaryURL(), dockerEnv))
+	router := "traditional"
+	if globalconfig.DdevGlobalConfig.UseTraefik {
+		router = "traefik"
+	}
+	t.SetTitle(fmt.Sprintf("Project: %s %s %s\nDocker provider: %s\nRouter: %s", app.Name, desc["shortroot"].(string), app.GetPrimaryURL(), dockerEnv, router))
 	t.AppendHeader(table.Row{"Service", "Stat", "URL/Port", "Info"})
 
 	// Only show extended status for running sites.
@@ -128,7 +132,7 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 					urlPortParts = append(urlPortParts, httpURL)
 				}
 			// Gitpod, web container only, using port proxied by gitpod
-			case nodeps.IsGitpod() && k == "web":
+			case (nodeps.IsGitpod() || nodeps.IsCodespaces()) && k == "web":
 				urlPortParts = append(urlPortParts, app.GetPrimaryURL())
 
 			// Router disabled, but not because of gitpod, use direct http url
@@ -140,10 +144,10 @@ func renderAppDescribe(app *ddevapp.DdevApp, desc map[string]interface{}) (strin
 			}
 
 			if p, ok := v["exposed_ports"]; ok {
-				urlPortParts = append(urlPortParts, "InDocker: "+v["full_name"]+":"+p)
+				urlPortParts = append(urlPortParts, "InDocker: "+v["short_name"]+":"+p)
 			}
 			if p, ok := v["host_ports"]; ok && p != "" {
-				urlPortParts = append(urlPortParts, "Host: localhost:"+p)
+				urlPortParts = append(urlPortParts, "Host: 127.0.0.1:"+p)
 			}
 
 			extraInfo := []string{}

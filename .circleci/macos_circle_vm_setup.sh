@@ -13,10 +13,10 @@ sudo /Applications/Docker.app/Contents/MacOS/Docker --quit-after-install --unatt
 nohup /Applications/Docker.app/Contents/MacOS/Docker --unattended &
 
 brew install homebrew/cask/ngrok >/dev/null
-brew install drud/ddev/ddev >/dev/null
+brew install ddev/ddev/ddev >/dev/null
 brew unlink python@2 >/dev/null || true
 
-brew install mysql-client zip makensis jq expect coreutils golang drud/ddev/ddev mkcert gnu-getopt libgsf glib pcre >/dev/null || true
+brew install mysql-client zip makensis jq expect coreutils golang ddev/ddev/ddev mkcert gnu-getopt libgsf glib pcre >/dev/null || true
 brew link mysql-client zip makensis jq expect coreutils golang ddev mkcert gnu-getopt libgsf glib pcre >/dev/null
 
 brew link --force mysql-client >/dev/null
@@ -28,8 +28,6 @@ brew link --force mysql-client >/dev/null
 mkdir -p "$(brew --prefix)/etc/my.cnf.d"
 
 mkcert -install
-
-pip3 install -q yq
 
 sudo bash -c "cat <<EOF >/etc/exports
 ${HOME} -alldirs -mapall=$(id -u):$(id -g) localhost

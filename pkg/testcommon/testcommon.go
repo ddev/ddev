@@ -2,10 +2,10 @@ package testcommon
 
 import (
 	"crypto/tls"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/docker/docker/pkg/homedir"
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/output"
 	"io"
 	"os"
 	"os/exec"
@@ -19,10 +19,10 @@ import (
 
 	"fmt"
 
-	"github.com/drud/ddev/pkg/archive"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/pkg/errors"
 	asrt "github.com/stretchr/testify/assert"
 	"net/http"
@@ -58,6 +58,10 @@ type TestSite struct {
 	Dir string
 	// HTTPProbeURI is the URI that can be probed to look for a working web container
 	HTTPProbeURI string
+	// WebEnvironment is strings that will be used in web_environment
+	WebEnvironment []string
+	// PretestCmd will be executed on host before test
+	PretestCmd string
 	// Docroot is the subdirectory within the site that is the root/index.php
 	Docroot string
 	// Type is the type of application. This can be specified when a config file is not present
@@ -67,6 +71,8 @@ type TestSite struct {
 	Safe200URIWithExpectation URIWithExpect
 	// DynamicURI provides a dynamic (after db load) URI with contents we can expect.
 	DynamicURI URIWithExpect
+	// UploadDir overrides the dir used for upload_dir
+	UploadDir string
 	// FilesImageURI is URI to a file loaded by import-files that is a jpg.
 	FilesImageURI string
 	// FullSiteArchiveExtPath is the path that should be extracted from inside an archive when
@@ -116,11 +122,20 @@ func (site *TestSite) Prepare() error {
 	// ignore app name defined in config file if present.
 	app.Name = site.Name
 	app.Docroot = site.Docroot
+	app.UploadDir = site.UploadDir
 	app.Type = app.DetectAppType()
 	if app.Type != site.Type {
 		return errors.Errorf("Detected apptype (%s) does not match provided apptype (%s)", app.Type, site.Type)
 	}
 
+	app.WebEnvironment = site.WebEnvironment
+	if site.PretestCmd != "" {
+		app.Hooks = map[string][]ddevapp.YAMLTask{
+			"post-start": {
+				{"exec-host": site.PretestCmd},
+			},
+		}
+	}
 	err = app.ConfigFileOverrideAction()
 	util.CheckErr(err)
 
@@ -175,7 +190,9 @@ func OsTempDir() (string, error) {
 	return tmpDir, nil
 }
 
-// CreateTmpDir creates a temporary directory and returns its path as a string.
+// CreateTmpDir creates a temporary directory in the homoedir
+// and returns its path as a string. It's important that it's in
+// homedir since Colima doesn't mount things outside that.
 func CreateTmpDir(prefix string) string {
 	baseTmpDir := filepath.Join(homedir.Get(), "tmp", "ddevtest")
 	_ = os.MkdirAll(baseTmpDir, 0755)
@@ -295,6 +312,7 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 	_ = os.MkdirAll(extractPath, 0777)
 	err := util.DownloadFile(archiveFullPath, sourceURL, false)
 	if err != nil {
+		_ = os.RemoveAll(archiveFullPath)
 		return extractPath, archiveFullPath, fmt.Errorf("Failed to download url=%s into %s, err=%v", sourceURL, archiveFullPath, err)
 	}
 
@@ -381,7 +399,7 @@ func GetLocalHTTPResponse(t *testing.T, rawurl string, timeoutSecsAry ...int) (s
 	}
 	bodyString := string(bodyBytes)
 	if resp.StatusCode != 200 {
-		return bodyString, resp, fmt.Errorf("http status code was %d, not 200", resp.StatusCode)
+		return bodyString, resp, fmt.Errorf("http status code for '%s' was %d, not 200", localAddress, resp.StatusCode)
 	}
 	return bodyString, resp, nil
 }

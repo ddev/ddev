@@ -3,7 +3,7 @@
 ##### These variables need to be adjusted in most repositories #####
 
 # Base docker org for tag and push
-DOCKER_ORG ?= drud
+DOCKER_ORG ?= ddev
 SHELL=/bin/bash
 
 DEFAULT_IMAGES = ddev-php-base ddev-php-prod

@@ -105,21 +105,26 @@ server {
 {{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }}
 
 {{ $host := trim $host }}
-{{ $is_regexp := hasPrefix "~" $host }}
-{{ $upstream_name := when $is_regexp (sha1 $host) $host }}
 
 {{ range $container := $containers }}
     {{/* HTTP_EXPOSE replaces the VIRTUAL_PORT var originally provided by jwilder/nginx-proxy. */}}
     {{/* HTTP_EXPOSE provides comma-separated ports to serve for container. Ports can be defined as hostPort:containerPort */}}
     {{ $ports := coalesce $container.Env.HTTP_EXPOSE "80" }}
     {{ $ports := split $ports "," }}
+    # ports={{ $ports }}
     {{ range $port := $ports }}
         {{/* process values in hostPort:containerPort docker format, containerPort is upstream */}}
         {{ $container_ports := split $port ":" }}
+        # container_ports={{ $container_ports }}
         {{ $upstream_port := last $container_ports }}
+        {{ $bound_port := first $container_ports }}
+        # bound_port={{$bound_port}}
+        # upstream_port={{$upstream_port}}
 
-        upstream {{ $upstream_name }}-{{ $upstream_port }} {
-        keepalive 100;
+        {{ $upstream_name := print $host "-" $container.Name "-" $upstream_port }}
+
+        upstream {{ $upstream_name }} {
+            keepalive 100;
         {{ $addrLen := len $container.Addresses }}
 
         {{/* jonaseberle/github-action-setup-ddev version */}}
@@ -170,7 +175,12 @@ server {
         {{/* hostPort is port to listen on */}}
         {{ $listen_port := first $container_ports }}
         {{/* containerPort is upstream */}}
+        {{ $bound_port := first $container_ports }}
         {{ $upstream_port := last $container_ports }}
+        # container_ports={{$container_ports}}
+        # bound_port={{$bound_port}}
+        # upstream_port={{$upstream_port}}
+        {{ $upstream_name := print $host "-" $container.Name "-" $upstream_port }}
 
         server {
             server_name {{ $host }};
@@ -200,18 +210,18 @@ server {
             location / {
                 {{ if eq $proto "uwsgi" }}
                 include uwsgi_params;
-                uwsgi_pass {{ trim $proto }}://{{ trim $upstream_name }}-{{ trim $upstream_port }};
+                uwsgi_pass {{ trim $proto }}://{{ trim $upstream_name }};
                 {{ else if eq $proto "fastcgi" }}
                 root   {{ trim $vhost_root }};
                 include fastcgi.conf;
-                fastcgi_pass {{ trim $upstream_name }}-{{ trim $upstream_port }};
+                fastcgi_pass {{ trim $upstream_name }};
                 {{ else }}
                 proxy_buffer_size   128k;
                 proxy_buffers   4 256k;
                 proxy_busy_buffers_size   256k;
                 proxy_read_timeout 10m;
                 proxy_http_version 1.1;
-                proxy_pass {{ trim $proto }}://{{ trim $upstream_name }}-{{ trim $upstream_port }};
+                proxy_pass {{ trim $proto }}://{{ trim $upstream_name }};
                 {{ end }}
                 error_page 502 @brokenupstream;
                 {{ if (exists (printf "/etc/nginx/htpasswd/%s" $host)) }}
@@ -242,6 +252,9 @@ server {
         {{ $listen_port := first $container_ports }}
         {{/* containerPort is upstream */}}
         {{ $upstream_port := last $container_ports }}
+        {{ $bound_port := first $container_ports }}
+        # bound_port={{ $bound_port }}
+        {{ $upstream_name := print $host "-" $container.Name "-" $upstream_port }}
 
         server {
             server_name {{ $host }};
@@ -301,18 +314,18 @@ server {
             location / {
                 {{ if eq $proto "uwsgi" }}
                 include uwsgi_params;
-                uwsgi_pass {{ trim $proto }}://{{ trim $upstream_name }}-{{ trim $upstream_port }};
+                uwsgi_pass {{ trim $proto }}://{{ trim $upstream_name }};
                 {{ else if eq $proto "fastcgi" }}
                 root   {{ trim $vhost_root }};
                 include fastcgi.conf;
-                fastcgi_pass {{ trim $upstream_name }}-{{ trim $upstream_port }};
+                fastcgi_pass {{ trim $upstream_name }};
                 {{ else }}
                 proxy_buffer_size   128k;
                 proxy_buffers   4 256k;
                 proxy_busy_buffers_size   256k;
                 proxy_read_timeout 10m;
                 proxy_http_version 1.1;
-                proxy_pass {{ trim $proto }}://{{ trim $upstream_name }}-{{ trim $upstream_port }};
+                proxy_pass {{ trim $proto }}://{{ trim $upstream_name }};
                 {{ end }}
                 error_page 502 @brokenupstream;
 

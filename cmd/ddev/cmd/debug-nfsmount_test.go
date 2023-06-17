@@ -1,11 +1,10 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
@@ -16,7 +15,7 @@ import (
 // TestDebugNFSMount tries out the `ddev debug nfsmount` command.
 // It requires nfsd running of course.
 func TestDebugNFSMount(t *testing.T) {
-	if nodeps.IsWSL2() || dockerutil.IsColima() {
+	if dockerutil.IsWSL2() || dockerutil.IsColima() {
 		t.Skip("Skipping on WSL2/Colima since NFS is not used there")
 	}
 	assert := asrt.New(t)

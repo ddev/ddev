@@ -1,0 +1,52 @@
+#ddev-generated
+
+http:
+  routers:
+    {{$appname := .App.Name}}{{ range $s := .RoutingTable }}
+    {{ if not $s.HTTPS }}
+    {{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-http:
+      {{if not $.UseLetsEncrypt}}{{/* Let's Encrypt only works with Host(), but we need HostRegex() for wildcards*/}}
+      rule: HostRegexp({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
+      {{else}}
+      rule: Host({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
+      {{end}}
+      service: "{{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-http"
+      tls: false
+      entrypoints:
+        - http-{{$s.ExternalPort}}
+    {{ end }}{{ end }}
+    {{$appname := .App.Name}}{{ range $s := .RoutingTable }}{{ if $s.HTTPS }}
+    {{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-https:
+      {{if not $.UseLetsEncrypt}}{{/* Let's Encrypt only works with Host(), but we need HostRegex() for wildcards*/}}
+      rule: HostRegexp({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
+      {{else}}
+      rule: Host({{ range $i, $h := $s.ExternalHostnames }}{{if $i}}, {{end}}`{{$h}}`{{end}})
+      {{end}}
+      service: "{{$appname}}-{{$s.InternalServiceName}}-{{$s.InternalServicePort}}-https"
+      {{ if not $.UseLetsEncrypt }}
+      tls: true
+      {{ else }}
+      tls:
+        certResolver: acmeresolver
+      {{end}}
+      entrypoints:
+        - http-{{$s.ExternalPort}}
+    {{ end }}
+    {{ end }}
+
+  services:
+    {{$appname := .App.Name}}{{ range $s := .RoutingTable }}{{ if $s.HTTPS }}
+    {{$appname}}-{{ $s.InternalServiceName }}-{{ $s.InternalServicePort }}-https:
+    {{ else }}
+    {{$appname}}-{{ $s.InternalServiceName }}-{{ $s.InternalServicePort }}-http:{{end}}
+      loadbalancer:
+        servers:
+          - url: http://ddev-{{$appname}}-{{$s.InternalServiceName}}:{{$s.InternalServicePort}}
+    {{ end }}
+
+{{ if not .UseLetsEncrypt }}{{/* let's encrypt doesn't work if there's already a provided cert */}}
+tls:
+  certificates:
+    - certFile: {{ .TargetCertsPath }}/{{ .App.Name }}.crt
+      keyFile: {{ .TargetCertsPath }}/{{ .App.Name }}.key
+{{end}}

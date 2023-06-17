@@ -5,7 +5,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/mattn/go-isatty"
 )
 

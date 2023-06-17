@@ -9,7 +9,7 @@
 
     # With overridden value we should have assert.active=0, not the default
     echo "--- Check that assert.active override is working"
-    docker exec -t $CONTAINER_NAME php -i | grep "assert.active.*=> 0 => 0" >/dev/null
+    docker exec -t $CONTAINER_NAME php -i | grep "assert.active.*=> Off => Off" >/dev/null
 
     # Make sure that our nginx override providing /junker99 works correctly
     curl -s http://127.0.0.1:$HOST_HTTP_PORT/junker99 | grep 'junker99!'

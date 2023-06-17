@@ -2,23 +2,20 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/updatecheck"
-	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/versionconstants"
-	"github.com/mitchellh/go-homedir"
-	"github.com/rogpeppe/go-internal/semver"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"gopkg.in/segmentio/analytics-go.v3"
 	"os"
 	"path/filepath"
-
 	"time"
+
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/updatecheck"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
+	"github.com/rogpeppe/go-internal/semver"
+	"github.com/spf13/cobra"
+	"gopkg.in/segmentio/analytics-go.v3"
 )
 
 var (
@@ -31,7 +28,7 @@ var (
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "ddev",
-	Short: "DDEV-Local local development environment",
+	Short: "DDEV local development environment",
 	Long: `Create and maintain a local web development environment.
 Docs: https://ddev.readthedocs.io
 Support: https://ddev.readthedocs.io/en/stable/users/support`,
@@ -75,7 +72,7 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 				return // Do not continue as we'll end up with github api violations.
 			}
 
-			updateNeeded, updateVersion, updateURL, err := updatecheck.AvailableUpdates("drud", "ddev", versionconstants.DdevVersion)
+			updateNeeded, updateVersion, updateURL, err := updatecheck.AvailableUpdates("ddev", "ddev", versionconstants.DdevVersion)
 
 			if err != nil {
 				util.Warning("Could not check for updates. This is most often caused by a networking issue.")
@@ -117,7 +114,7 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 		}
 
 		if globalconfig.DdevGlobalConfig.InstrumentationOptIn && versionconstants.SegmentKey != "" && globalconfig.IsInternetActive() && len(fullCommand) > 1 {
-			runTime := util.TimeTrack(time.Now(), "Instrumentation")
+			defer util.TimeTrackC("Instrumentation")()
 			// Try to get default instrumentationApp from current directory if not already set
 			if instrumentationApp == nil {
 				app, err := ddevapp.NewApp("", false)
@@ -131,7 +128,6 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 			}
 			ddevapp.SetInstrumentationBaseTags()
 			ddevapp.SendInstrumentationEvents(event)
-			runTime()
 		}
 	},
 }
@@ -139,9 +135,6 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 // Execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	// bind flags to viper config values...allows override by flag
-	viper.AutomaticEnv() // read in environment variables that match
-
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(-1)
 	}
@@ -157,7 +150,7 @@ func init() {
 	// This helps to prevent a user from seeing the Cobra error: "Error: unknown command "<custom command>" for ddev"
 	_, err := dockerutil.GetDockerVersion()
 	// ddev --version may be called without docker available.
-	if err != nil && len(os.Args) > 1 && os.Args[1] != "--version" {
+	if err != nil && len(os.Args) > 1 && os.Args[1] != "--version" && os.Args[1] != "hostname" {
 		util.Failed("Could not connect to a docker provider. Please start or install a docker provider.\nFor install help go to: https://ddev.readthedocs.io/en/latest/users/install/")
 	}
 
@@ -209,12 +202,8 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 
 		// If they have a new version (but not first-timer) then prompt to poweroff
 		if globalconfig.DdevGlobalConfig.LastStartedVersion != "v0.0" {
-			output.UserOut.Print("Congratulations, you seem to have a new DDEV version.")
-			home, _ := homedir.Dir()
-			if globalconfig.DdevGlobalConfig.MutagenEnabledGlobal && fileutil.IsDirectory(filepath.Join(home, ".mutagen")) {
-				output.UserOut.Print("Please note that the global ~/.mutagen folder is no longer used by DDEV so you can delete it if it's no longer used by other applications")
-			}
-			okPoweroff := util.Confirm("It looks like you have a new DDEV version. During an upgrade it's important to `ddev poweroff`. May I do `ddev poweroff` before continuing? This does no harm and loses no data.")
+			output.UserOut.Print("You seem to have a new DDEV version.")
+			okPoweroff := util.Confirm("During an upgrade it's important to `ddev poweroff`.\nMay I do `ddev poweroff` before continuing?\nThis does no harm and loses no data.")
 			if okPoweroff {
 				ddevapp.PowerOff()
 			}

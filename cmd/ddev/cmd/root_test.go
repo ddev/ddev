@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/mitchellh/go-homedir"
 	"os"
 	osexec "os/exec"
 	"path/filepath"
@@ -11,20 +10,19 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/util"
-	"github.com/stretchr/testify/require"
-
-	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/mitchellh/go-homedir"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/output"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -34,8 +32,8 @@ var (
 		{
 			SourceURL:                     "https://wordpress.org/wordpress-5.8.2.tar.gz",
 			ArchiveInternalExtractionPath: "wordpress/",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/wordpress5.8.2_files.tar.gz",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/wordpress5.8.2_db.sql.tar.gz",
+			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/wordpress5.8.2_files.tar.gz",
+			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/wordpress5.8.2_db.sql.tar.gz",
 			Docroot:                       "",
 			Type:                          nodeps.AppTypeWordPress,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/readme.html", Expect: "Welcome. WordPress is a very special project to me."},
@@ -50,9 +48,9 @@ var (
 			Name:                          "TestCmdDrupal6",
 			SourceURL:                     "https://ftp.drupal.org/files/projects/drupal-6.38.tar.gz",
 			ArchiveInternalExtractionPath: "drupal-6.38/",
-			DBTarURL:                      "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6.38_db.tar.gz",
+			DBTarURL:                      "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal6.38_db.tar.gz",
 			FullSiteTarballURL:            "",
-			FilesTarballURL:               "https://github.com/drud/ddev_test_tarballs/releases/download/v1.1/drupal6_files.tar.gz",
+			FilesTarballURL:               "https://github.com/ddev/ddev_test_tarballs/releases/download/v1.1/drupal6_files.tar.gz",
 			Docroot:                       "",
 			Type:                          nodeps.AppTypeDrupal6,
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/CHANGELOG.txt", Expect: "Drupal 6.38, 2016-02-24"},
@@ -165,8 +163,9 @@ func TestGetActiveAppRoot(t *testing.T) {
 
 	// And we should be able to stop it and find it as well
 	app, err := ddevapp.GetActiveApp("")
+	require.NoError(t, err)
 	err = app.Stop(false, true)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	t.Cleanup(func() {
 		err = os.Chdir(origDir)
@@ -250,6 +249,9 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 
 // TestPoweroffOnNewVersion checks that a poweroff happens when a new ddev version is deployed
 func TestPoweroffOnNewVersion(t *testing.T) {
+	if dockerutil.IsWSL2() && dockerutil.IsDockerDesktop() {
+		t.Skip("Fails on docker desktop because of removal of ~/.docker apparently, skipping")
+	}
 	assert := asrt.New(t)
 	var err error
 

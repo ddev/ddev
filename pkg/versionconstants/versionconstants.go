@@ -2,8 +2,9 @@ package versionconstants
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
+
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 )
 
 // DdevVersion is the current version of ddev, by default the git committish (should be current git tag)
@@ -14,16 +15,16 @@ var DdevVersion = "v0.0.0-overridden-by-make" // Note that this is overridden by
 var SegmentKey = ""
 
 // WebImg defines the default web image used for applications.
-var WebImg = "drud/ddev-webserver"
+var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20220826_path_adjusted_for_composer_root" // Note that this can be overridden by make
+var WebTag = "20230509_gitpod_output" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
-var DBImg = "drud/ddev-dbserver"
+var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "v1.20.0"
+var BaseDBTag = "20230519_fix_mysql_snapshot_restore"
 
 // DBAImg defines the default phpmyadmin image tag used for applications.
 var DBAImg = "phpmyadmin"
@@ -31,19 +32,14 @@ var DBAImg = "phpmyadmin"
 // DBATag defines the default phpmyadmin image tag used for applications.
 var DBATag = "5" // Note that this can be overridden by make
 
-// RouterImage defines the image used for the router.
-var RouterImage = "drud/ddev-router"
-
-// RouterTag defines the tag used for the router.
-var RouterTag = "v1.20.0" // Note that this can be overridden by make
+const TraditionalRouterImage = "ddev/ddev-router:20230415_move_docker_to_ddev"
+const TraefikRouterImage = "traefik:v2.10"
 
 // SSHAuthImage is image for agent
-// var SSHAuthImage = "drud/ddev-ssh-agent"
-var SSHAuthImage = "drud/ddev-ssh-agent"
+var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-// var SSHAuthTag = "v1.19.0"
-var SSHAuthTag = "v1.20.0"
+var SSHAuthTag = "20230415_move_docker_to_ddev"
 
 // Busybox is used a couple of places for a quick-pull
 var BusyboxImage = "busybox:stable"
@@ -54,7 +50,7 @@ var BUILDINFO = "BUILDINFO should have new info"
 // MutagenVersion is filled with the version we find for mutagen in use
 var MutagenVersion = ""
 
-const RequiredMutagenVersion = "0.15.1"
+const RequiredMutagenVersion = "0.17.1"
 
 // GetWebImage returns the correctly formatted web image:tag reference
 func GetWebImage() string {
@@ -96,7 +92,11 @@ func GetSSHAuthImage() string {
 	return fmt.Sprintf("%s:%s", SSHAuthImage, SSHAuthTag)
 }
 
-// GetRouterImage returns the correctly formatted router image:tag reference
+// GetRouterImage returns the router image:tag reference
 func GetRouterImage() string {
-	return fmt.Sprintf("%s:%s", RouterImage, RouterTag)
+	image := TraditionalRouterImage
+	if globalconfig.DdevGlobalConfig.UseTraefik {
+		image = TraefikRouterImage
+	}
+	return image
 }

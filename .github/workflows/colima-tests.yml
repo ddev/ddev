@@ -14,6 +14,7 @@ on:
     inputs:
       debug_enabled:
         description: 'Run the build with tmate set "debug_enabled"'
+        type: boolean
         required: false
         default: false
       testargs:
@@ -28,6 +29,9 @@ defaults:
 env:
   DDEV_DEBUG: true
   DDEV_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  HOMEBREW_NO_INSTALL_CLEANUP: TRUE
+  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: TRUE
 
 permissions:
   contents: read
@@ -43,7 +47,7 @@ jobs:
       matrix:
         webserver: [nginx-fpm]
         tests: [ test ]
-        os: [ macos-11 ]
+        os: [ macos-13 ]
         no-bind-mounts: ['false']
       fail-fast: true
 
@@ -55,25 +59,33 @@ jobs:
       DDEV_TEST_NO_BIND_MOUNTS: ${{ matrix.no-bind-mounts }}
       DDEV_TEST_USE_MUTAGEN: "true"
       GOTEST_SHORT: "true"
+
     steps:
       - uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '>=1.20'
 
       - name: Homebrew cache/restore
         uses: actions/cache@v3
         env:
-          cache-name: cache-homebrew-cache-7
+          cache-name: cache-homebrew-cache-13
         with:
           path: ~/Library/Caches/Homebrew
           key: ${{ runner.os }}-build-${{ env.cache-name }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}
 
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
       - name: Lima cache/restore
         uses: actions/cache@v3
         env:
-          cache-name: cache-lima-7
+          cache-name: cache-lima-13
         with:
-          # npm cache files are stored in `~/.npm` on Linux/macOS
           path: ~/.lima
           key: ${{ runner.os }}-build-${{ env.cache-name }}
           restore-keys: |
@@ -83,12 +95,12 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         with:
           limit-access-to-actor: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
       - name: Install Colima and deps (macOS)
-        if: matrix.os == 'macos-11'
-        run: ./.github/workflows/macos-colima-setup.sh && colima version
+        run: | 
+          bash -x ./.github/workflows/macos-colima-setup.sh
+          colima version
 
       - name: Build ddev
         run: | 
@@ -120,8 +132,3 @@ jobs:
         run: |
           ddev poweroff
           colima stop
-      - name: Store test results
-        uses: actions/upload-artifact@v3
-        with:
-          name: ddev-test-results-${{ matrix.webserver }}
-          path: /tmp/testresults/

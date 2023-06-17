@@ -1,45 +1,77 @@
-# Working on the docs
+# Working on the Docs
 
-This section is designed for people who want to contribute to the DDEV documentation.
-When you are going to make any changes to the documentation it is recommended that you test them locally to see what your changes look like.
+This page is about working with the DDEV documentation. See the [Writing Style Guide](writing-style-guide.md) for stylistic guidance.
 
-## Fork / clone the DDEV repository
+## Fix Docs Using Web Browser
 
-To start making changes you'll need a local copy of the DDEV documentation, so [fork the DDEV repository](https://github.com/drud/ddev/fork) as that's where the documentation lives.
-After forking the repository you can clone it to your local machine.
+The documentation is built and checked automatically with various [GitHub Actions workflows](https://github.com/ddev/ddev/actions). While it may help to [check your work locally](#fork--clone-the-ddev-repository) for more involved PRs, you can more quickly make suggestions using [GitHub in a browser](#fix-docs-using-web-browser):
 
-## Make your changes
+1. Click the pencil in the upper right. That will take you to the right page on GitHub.
+2. Click the pencil button on GitHub and follow the instructions to create your change.
+3. Save your changes and follow the prompts to create a PR.
+4. In the checks on your PR, click the “details” link by `docs/readthedocs.org:ddev` to browse the docs build created by your PR.
+5. Once the PR has run its checks, you’ll see an item labeled `docs/readthedocs.org:ddev`. Click “Details” to review a docs build that includes your changes:
+    ![Documentation preview build link](../images/docs-build-link.png)
+6. Take a look at the [“Check docs” action](https://github.com/ddev/ddev/actions/workflows/docscheck.yml) to make sure there were no linting or spelling errors.
 
-Now that you've got a local copy you can make your changes;
+## Fork / Clone the DDEV Repository
 
-| Action                        | Path                                                                    |
-|-------------------------------|-------------------------------------------------------------------------|
-| Changing Documentation        | `./docs/content/users/*` <br> `./docs/content/developers/*`             |
-| Changing MkDocs Configuration | `./mkdocs.yml`                                                          |
-| Changing the front-end        | `./docs/content/assets/extra.css` <br> `./docs/content/assets/extra.js` |
+To start making changes you’ll need a local copy of the DDEV documentation, so [fork the DDEV repository](https://github.com/ddev/ddev/fork) which includes the documentation.
 
-## Preview your changes
+After forking the repository, you can clone it to your local machine.
 
-You should see how your changes look before making a pull request, you can do so by running `make mkdocs-serve`.
-It will launch a webserver on port 8000 so you can see what the docs will look like when they land on readthedocs.io.
-> **Please note:** <br>
-> While it's easiest to [install mkdocs locally](https://www.mkdocs.org/user-guide/installation/) it is not required, `make mkdocs-serve` will look for MkDocs but when it is not found it will run a docker command to serve the documentation on `http://localhost:8000`.<br><br>
-> If you don't have `make` on your system, you can easily install it, but alternatively you can also just run the docker command that `make mkdocs-serve` runs:
->
-> ```
-> docker run -it -p 8000:8000 -v "${PWD}:/docs" -e "ADD_MODULES=mkdocs-material mkdocs-redirects mkdocs-minify-plugin mdx_truly_sane_lists mkdocs-git-revision-date-localized-plugin" -e "LIVE_RELOAD_SUPPORT=true" -e "FAST_MODE=true" -e "DOCS_DIRECTORY=./docs" polinux/mkdocs;
-> ```
+## Make Changes
 
-## Check changed markdown files for potential errors
+Now that you’ve got a local copy, you can make your changes.
 
-Before you publish your changes it is recommended to use markdownlint to check your files for any errors or inconsistencies.
-You can do so by running `make markdownlint`.
-> **Please note:** <br>
-> The command `make markdownlint` requires you to have markdownlint-cli installed, which you can do by executing `npm install -g markdownlint-cli`
+| Action               | Path                                                                    |
+|----------------------|-------------------------------------------------------------------------|
+| Documentation        | `./docs/content/users/*` <br> `./docs/content/developers/*`             |
+| MkDocs configuration | `./mkdocs.yml`                                                          |
+| Front end            | `./docs/content/assets/extra.css` <br> `./docs/content/assets/extra.js` |
 
-## Publish your changes
+## Preview Changes
 
-If all looks good it's time to commit your changes and make a pull request back into the official DDEV repository.
-> **Please note:** <br>
-> When you make a pull requests several tests/tasks will be ran.
-> One task named 'docs/readthedocs.org:ddev' will build a version of the docs containing all the changes from your pull request which you can use to check the final result.
+Preview your changes locally by running `make mkdocs-serve`.
+
+This will launch a web server on port 8000 and automatically refresh pages as they’re edited.
+
+!!!tip "No need to install MkDocs locally!"
+    It’s easiest to [install MkDocs locally](https://www.mkdocs.org/user-guide/installation/), but you don’t have to. The `make mkdocs-serve` command will look for and use a local binary, otherwise using `make` to build and serve the documentation. If you don’t have `make` installed on your system, you can directly run the command it would have instead:
+
+    ```
+    docker run -it -p 8000:8000 -v "${PWD}:/docs" -e "ADD_MODULES=mkdocs-material mkdocs-redirects mkdocs-minify-plugin mdx_truly_sane_lists mkdocs-git-revision-date-localized-plugin" -e "LIVE_RELOAD_SUPPORT=true" -e "FAST_MODE=true" -e "DOCS_DIRECTORY=./docs" polinux/mkdocs;
+    ```
+
+## Check Markdown for Errors
+
+Run `make markdownlint` before you publish changes to quickly check your files for errors or inconsistencies.
+
+!!!warning "`markdownlint-cli` required!"
+    The `make markdownlint` command requires you to have `markdownlint-cli` installed, which you can do by executing `npm install -g markdownlint-cli`
+
+## Check for Spelling Errors
+
+Run `make pyspelling` to check for spelling errors. Output will be brief if all goes well:
+
+```
+➜  make pyspelling
+pyspelling:
+Spelling check passed :)
+```
+
+If you’ve added a correctly-spelled word that gets flagged, like “Symfony” for example, you’ll need to add it to `.spellcheckwordlist.txt` in the [root of DDEV’s repository](https://github.com/ddev/ddev/blob/master/.spellcheckwordlist.txt).
+
+!!!warning "`pyspelling` and `aspell` required!"
+    It’s probably best to install packages locally before attempting to run `make pyspelling`:
+
+    ```
+    sudo -H pip3 install pyspelling pymdown-extensions
+    sudo apt-get install aspell
+    ```
+
+## Publish Changes
+
+If all looks good, it’s time to commit your changes and make a pull request back into the official DDEV repository.
+
+When you make a pull request, several tasks and test actions will be run. One of those is a task named `docs/readthedocs.org:ddev`, which builds a version of the docs containing all the changes from your pull request. You can use that to confirm the final result is exactly what you’d expect.

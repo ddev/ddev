@@ -1,9 +1,9 @@
 package ddevapp
 
 import (
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/util"
-	"gopkg.in/yaml.v2"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/util"
+	"gopkg.in/yaml.v3"
 	"os"
 	"strings"
 	//compose_cli "github.com/compose-spec/compose-go/cli"
@@ -84,11 +84,11 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 	// so it's in Docker Desktop 4.1.0.
 	// https://github.com/docker/compose/issues/8503#issuecomment-930969241
 
-	for _, service := range tempMap["services"].(map[interface{}]interface{}) {
+	for _, service := range tempMap["services"].(map[string]interface{}) {
 		if service == nil {
 			continue
 		}
-		serviceMap := service.(map[interface{}]interface{})
+		serviceMap := service.(map[string]interface{})
 
 		// Find any services that have bind-mount to app.AppRoot and make them relative
 		if serviceMap["volumes"] != nil {
@@ -96,7 +96,7 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 			for k, volume := range volumes {
 				// With docker-compose v1, the volume might not be a map, it might be
 				// old-style "/Users/rfay/workspace/d9/.ddev:/mnt/ddev_config:ro"
-				if volumeMap, ok := volume.(map[interface{}]interface{}); ok {
+				if volumeMap, ok := volume.(map[string]interface{}); ok {
 					if volumeMap["source"] != nil {
 						if volumeMap["source"].(string) == app.AppRoot {
 							volumeMap["source"] = "../"
@@ -111,7 +111,7 @@ func fixupComposeYaml(yamlStr string, app *DdevApp) (map[string]interface{}, err
 			}
 		}
 		// Make sure all services have our networks stanza
-		serviceMap["networks"] = map[interface{}]interface{}{
+		serviceMap["networks"] = map[string]interface{}{
 			"ddev_default": nil,
 			"default":      nil,
 		}

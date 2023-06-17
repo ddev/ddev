@@ -1,0 +1,19 @@
+# Simple testing mutagen.yml
+sync:
+  defaults:
+    mode: "two-way-resolved"
+    stageMode: "neighboring"
+    ignore:
+      paths:
+      # The top-level .git directory is ignored because where possible it's mounted
+      # into the container with a traditional docker bind-mount
+      - "/.git"
+
+      - "/.tarballs"
+      - "/.ddev/db_snapshots"
+      - "/.ddev/.importdb*"
+      - ".DS_Store"
+      - ".idea"
+
+    symlink:
+      mode: "posix-raw"

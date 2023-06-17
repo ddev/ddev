@@ -2,7 +2,7 @@ version: 2.1
 jobs:
   build:
     machine:
-      image: ubuntu-2004:2022.07.1
+      image: ubuntu-2204:current
     working_directory: ~/ddev
     environment:
       DDEV_NONINTERACTIVE: "true"
@@ -11,13 +11,13 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-homebrew-v30
+        - linux-homebrew-v31
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: NORMAL Circle VM setup
         no_output_timeout: "40m"
     - save_cache:
-        key: linux-homebrew-v30
+        key: linux-homebrew-v31
         paths:
           - /home/linuxbrew
     - run:
@@ -37,7 +37,7 @@ jobs:
 
   lx_amd64_fpm_test:
     machine:
-      image: ubuntu-2004:202111-01
+      image: ubuntu-2204:current
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: nginx-fpm
@@ -64,16 +64,16 @@ jobs:
     - run: 'mkdir -p ~/.ngrok2 && echo "authtoken: ${NGROK_TOKEN}" >~/.ngrok2/ngrok.yml'
     - restore_cache:
         keys:
-        - linux-homebrew-v30
+        - linux-homebrew-v31
     - restore_cache:
         keys:
-          - linux-testcache-v27
+          - linux-testcache-v31
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup
         no_output_timeout: "40m"
     - save_cache:
-        key: linux-homebrew-v30
+        key: linux-homebrew-v31
         paths:
           - /home/linuxbrew
     - run: echo "$(docker --version) $(docker-compose --version)"
@@ -84,13 +84,13 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-testcache-v27
+        key: linux-testcache-v31
         paths:
         - /home/circleci/.ddev/testcache
 
   lx_arm64_fpm_test:
     machine:
-      image: ubuntu-2004:202101-01
+      image: ubuntu-2204:current
     resource_class: arm.medium
     working_directory: ~/ddev
     environment:
@@ -106,7 +106,7 @@ jobs:
             set -x
             if [ "${CIRCLE_PR_NUMBER}" != "" ] ; then
               echo "base_revision=<< pipeline.git.base_revision >>"
-              if ! git diff --name-only "<< pipeline.git.base_revision >>" | egrep "^(Makefile|pkg|cmd|vendor|go\.)"; then
+              if ! git diff --name-only "<< pipeline.git.base_revision >>" | egrep "^(.circleci|Makefile|pkg|cmd|vendor|go\.)"; then
                 echo "Skipping build since no code changes found"
                 circleci-agent step halt
               fi
@@ -213,7 +213,7 @@ jobs:
 
   lx_apache_fpm_test:
     machine:
-      image: ubuntu-2004:202111-01
+      image: ubuntu-2204:current
     working_directory: ~/ddev
     environment:
       DDEV_TEST_WEBSERVER_TYPE: apache-fpm
@@ -224,7 +224,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-homebrew-v30
+        - linux-homebrew-v31
     - attach_workspace:
         at: ~/
     - run:
@@ -241,14 +241,14 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-homebrew-v30
+        key: linux-homebrew-v31
         paths:
         - /home/linuxbrew
         - /home/circleci/.ddev/testcache
 
   lx_nfsmount_test:
     machine:
-      image: ubuntu-2004:202111-01
+      image: ubuntu-2204:current
     working_directory: ~/ddev
     environment:
       DDEV_TEST_USE_NFSMOUNT: true
@@ -259,7 +259,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-homebrew-v30
+        - linux-homebrew-v31
     - attach_workspace:
         at: ~/
     - run:
@@ -270,7 +270,7 @@ jobs:
         # Now build using the regular ddev-only technique - this results in a fully clean set of executables.
     # Run the built-in ddev tests with the executables just built.
     - run:
-        # CircleCI image ubuntu-2004:202101-01 has umask 002, which results in
+        # CircleCI image ubuntu-2204:202101-01 has umask 002, which results in
         # default perms 700 for new directories, which doesn't seem to work with NFS
         command: umask u=rwx,g=rwx,o=rx && make -s test EXTRA_PATH=/home/linuxbrew/.linuxbrew/bin
         name: ddev tests
@@ -278,14 +278,14 @@ jobs:
     - store_test_results:
         path: /tmp/testresults
     - save_cache:
-        key: linux-homebrew-v30
+        key: linux-homebrew-v31
         paths:
         - /home/linuxbrew
         - /home/circleci/.ddev/testcache
 
   staticrequired:
     machine:
-      image: ubuntu-2004:202111-01
+      image: ubuntu-2204:current
     working_directory: ~/ddev
     environment:
     steps:
@@ -293,7 +293,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-homebrew-v30
+        - linux-homebrew-v31
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup
@@ -304,7 +304,7 @@ jobs:
 
   lx_amd64_container_test:
     machine:
-      image: ubuntu-2004:202111-01
+      image: ubuntu-2204:current
     working_directory: ~/ddev
     environment:
       GOTEST_SHORT: true
@@ -315,7 +315,7 @@ jobs:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-homebrew-v30
+        - linux-homebrew-v31
     - run:
         command: ./.circleci/linux_circle_vm_setup.sh
         name: Circle VM setup
@@ -339,14 +339,14 @@ jobs:
         name: linux container test
 
     - save_cache:
-        key: linux-homebrew-v30
+        key: linux-homebrew-v31
         paths:
         - /home/linuxbrew
         - /home/circleci/.ddev/testcache
 
   lx_arm64_container_test:
     machine:
-      image: ubuntu-2004:202111-01
+      image: ubuntu-2204:current
     resource_class: arm.medium
     working_directory: ~/ddev
     environment:
@@ -400,13 +400,13 @@ jobs:
 
   artifacts:
     machine:
-      image: ubuntu-2004:202111-01
+      image: ubuntu-2204:current
     working_directory: ~/ddev
     steps:
     - run: sudo mkdir /home/linuxbrew && sudo chown $(id -u) /home/linuxbrew
     - restore_cache:
         keys:
-        - linux-homebrew-v30
+        - linux-homebrew-v31
     - attach_workspace:
         at: ~/
     - run:
@@ -414,7 +414,7 @@ jobs:
         name: tar/zip up artifacts and make hashes
         no_output_timeout: "40m"
     - save_cache:
-        key: linux-homebrew-v30
+        key: linux-homebrew-v31
         paths:
         - /home/linuxbrew
         - /home/circleci/.ddev/testcache
@@ -513,14 +513,16 @@ workflows:
 #    - mac_container_test
 #    - lx_amd64_container_test
 #    - staticrequired
-    - lx_amd64_fpm_test:
-      branches:
-        ignore:
-          - gh-pages
+#    - lx_amd64_fpm_test:
+#      branches:
+#        ignore:
+#          - gh-pages
     - lx_arm64_fpm_test:
-      branches:
-        ignore:
-          - gh-pages
+        filters:
+          branches:
+            only: master
+            ignore:
+              - gh-pages
 #    - lx_arm64_container_test
 #        requires:
 #        - build

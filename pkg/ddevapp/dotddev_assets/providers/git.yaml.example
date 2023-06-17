@@ -8,7 +8,7 @@
 # 3. Update the environment_variables below to point to the git repository that contains your database dump and files.
 
 environment_variables:
-  project_url: https://github.com/drud/ddev-pull-git-test-repo
+  project_url: https://github.com/ddev/ddev-pull-git-test-repo
   branch: main
   checkout_dir: ~/tmp/ddev-pull-git-test-repo
 

@@ -1,18 +1,18 @@
 package cmd_test
 
 import (
-	"github.com/drud/ddev/cmd/ddev/cmd"
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/cmd/ddev/cmd"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/drud/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -39,7 +39,7 @@ func TestCmdAuthSSH(t *testing.T) {
 		assert.NoError(err)
 		err = os.Chdir(origDir)
 		assert.NoError(err)
-		err = dockerutil.RemoveContainer("test-cmd-ssh-server", 10)
+		err = dockerutil.RemoveContainer("test-cmd-ssh-server")
 		assert.NoError(err)
 	})
 
@@ -48,7 +48,7 @@ func TestCmdAuthSSH(t *testing.T) {
 	assert.NoError(err)
 
 	// Run a simple ssh server to act on and get its internal IP address
-	_, err = exec.RunCommand("docker", []string{"run", "-d", "--name=test-cmd-ssh-server", "--network=ddev_default", "drud/test-ssh-server:v1.16.0"})
+	_, err = exec.RunCommand("docker", []string{"run", "-d", "--name=test-cmd-ssh-server", "--network=ddev_default", "ddev/test-ssh-server:v1.22.0"})
 	assert.NoError(err)
 	internalIPAddr, err := exec.RunCommand("docker", []string{"inspect", "-f", "'{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'", "test-cmd-ssh-server"})
 	internalIPAddr = strings.Trim(internalIPAddr, "\r\n\"'")

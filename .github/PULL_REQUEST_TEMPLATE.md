@@ -1,14 +1,16 @@
-## The Problem/Issue/Bug:
+## The Issue
 
-## How this PR Solves The Problem:
+## How This PR Solves The Issue
 
-## Manual Testing Instructions:
+## Manual Testing Instructions
 
-## Automated Testing Overview:
-<!-- Please provide an overview of tests introduced by this PR, or an explanation for why no tests are needed. -->
+## Automated Testing Overview
 
-## Related Issue Link(s):
+<!-- Please describe the tests introduced by this PR, or explain why no tests are needed. -->
 
-## Release/Deployment notes:
-<!-- Does this affect anything else, or are there ramifications for other code? Does anything have to be done on deployment? -->
+## Related Issue Link(s)
+
+## Release/Deployment Notes
+
+<!-- Does this affect anything else or have ramifications for other code? Does anything have to be done on deployment? -->
 

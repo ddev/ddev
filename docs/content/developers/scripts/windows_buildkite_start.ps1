@@ -3,7 +3,7 @@
 Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 
 # Install required items using chocolatey
-choco upgrade -y composer ddev docker-desktop git jq  mysql-cli golang GoogleChrome make mkcert netcat nodejs nssm zip
+choco install -y composer ddev docker-desktop git jq  mysql-cli golang GoogleChrome make mkcert netcat nodejs nssm zip
 
 net localgroup docker-users /add
 net localgroup docker-users testbot /add

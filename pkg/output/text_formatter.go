@@ -127,7 +127,7 @@ func (f *TextFormatter) Format(entry *log.Entry) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (f *TextFormatter) printColored(b *bytes.Buffer, entry *log.Entry, keys []string, timestampFormat string) {
+func (f *TextFormatter) printColored(b *bytes.Buffer, entry *log.Entry, keys []string, _ string) {
 	var levelColor int
 	switch entry.Level {
 	//case log.InfoLevel:

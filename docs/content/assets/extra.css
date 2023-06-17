@@ -4,7 +4,7 @@
     --custom-bg-color: rgba(64, 81, 181, .1);
 }
 
-/* table does not need a scrollbar, see https://github.com/drud/ddev/pull/3290#issuecomment-942888867
+/* table does not need a scrollbar, see https://github.com/ddev/ddev/pull/3290#issuecomment-942888867
  */
 .md-typeset__table {
     padding-right: 0;

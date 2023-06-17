@@ -1,7 +1,7 @@
 package util_test
 
 import (
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -20,7 +20,7 @@ func TestYamlFileToMap(t *testing.T) {
 	//runtime:
 	//  extensions:
 	//	  - redis
-	runtime, ok := m["runtime"].(map[interface{}]interface{})
+	runtime, ok := m["runtime"].(map[string]interface{})
 	require.True(t, ok)
 	extensions, ok := runtime["extensions"].([]interface{})
 	require.True(t, ok)
@@ -28,7 +28,7 @@ func TestYamlFileToMap(t *testing.T) {
 
 	//relationships:
 	//  database: 'db:mysql'
-	relationships, ok := m["relationships"].(map[interface{}]interface{})
+	relationships, ok := m["relationships"].(map[string]interface{})
 	require.True(t, ok)
 	assert.Equal("db:mysql", relationships["database"])
 
@@ -36,11 +36,11 @@ func TestYamlFileToMap(t *testing.T) {
 	//  locations:
 	//	  '/':
 	//		root: 'web'
-	web, ok := m["web"].(map[interface{}]interface{})
+	web, ok := m["web"].(map[string]interface{})
 	require.True(t, ok)
-	locations, ok := web["locations"].(map[interface{}]interface{})
+	locations, ok := web["locations"].(map[string]interface{})
 	require.True(t, ok)
-	slashloc, ok := locations["/"].(map[interface{}]interface{})
+	slashloc, ok := locations["/"].(map[string]interface{})
 	require.True(t, ok)
 	assert.Equal("web", slashloc["root"])
 

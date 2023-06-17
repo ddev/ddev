@@ -1,14 +1,14 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +16,7 @@ var CleanCmd = &cobra.Command{
 	Use:   "clean [projectname ...]",
 	Short: "Removes items ddev has created",
 	Long: `Stops all running projects and then removes downloads and snapshots
-for the selected projects. Then clean will remove "drud/ddev-*" images.
+for the selected projects. Then clean will remove "ddev/ddev-*" images.
 
 Warning - This command will permanently delete your snapshots for the named project[s].
 

@@ -14,7 +14,7 @@ fi
 export DB_TYPE=$1
 export DB_VERSION=$2
 export TAG=$3
-export IMAGE=drud/ddev-dbserver-${DB_TYPE}-${DB_VERSION}:${TAG}
+export IMAGE=ddev/ddev-dbserver-${DB_TYPE}-${DB_VERSION}:${TAG}
 
 export CURRENT_ARCH=$(../get_arch.sh)
 

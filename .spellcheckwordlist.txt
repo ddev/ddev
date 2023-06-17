@@ -1,6 +1,7 @@
 ARG
 AdditionalConfig
 AdditionalConfiguration
+Adminer
 Apache
 Acquia
 Autocompletion
@@ -12,7 +13,7 @@ CIFS
 CLI
 CMD
 CMS
-CMSs
+CMSes
 Colima
 CPUs
 CTRL
@@ -26,8 +27,9 @@ Commands
 Completely
 Create
 DDEV's
-DDEV-Local
+DDEV
 DHCP
+DKIM
 DNS
 Docker
 Docker's
@@ -38,10 +40,13 @@ Does
 DrupalEasy
 Dump
 Enable
+EndeavourOS
+ExecRaw
 ExecStart
 ExecStop
 Execute
 Executes
+ExpressionEngine
 FPATH
 FSTYPE
 Flags
@@ -52,6 +57,7 @@ GUIs
 Get
 GitPod
 Gitter
+Gotenberg
 Gzipped
 HOWTO
 HeidiSQL
@@ -72,6 +78,7 @@ MAMP
 Magento
 Magento's
 MailHog
+MailHog's
 Mailgun
 Manage
 MariaDB
@@ -95,7 +102,9 @@ PID
 PWD
 PartOf
 PathMaps
+phpMyAdmin's
 PhpStorm
+PhpStorm's
 PowerShell
 Pull
 Quickstart
@@ -111,17 +120,22 @@ Snapshotting
 Solr
 SomeExternalDrive
 Starts
+Statamic
 Support
 TablePlus
+Traefik
 TravisCI
 UAC
+UDP
 Unshare
 Usage
 Use
 Uses
 Uz
 VCS
+Ventura
 VM
+VNC
 VPN
 VPNs
 WAMP
@@ -138,7 +152,7 @@ about
 acquia
 acli
 add
-addon
+add-on
 addr
 all
 alldirs
@@ -158,6 +172,7 @@ auth
 authentication
 autocomplete
 autodetect
+autodetected
 authtoken
 autoload
 autologin
@@ -173,6 +188,7 @@ beanstalkd
 belonging
 behat
 blackfire
+blackfire's
 bool
 breakpoint
 browser
@@ -196,6 +212,8 @@ clis
 client
 cms
 codebase
+codespace
+codespaces
 colima
 colima's
 collection
@@ -210,13 +228,16 @@ configured
 container
 containers
 contrib
+cors
 cp
 cr
 crlf
 cron
 cson
 current
+customizable
 customizations
+daemon's
 daemonize
 data
 database
@@ -227,6 +248,7 @@ dbimage
 dbname
 dbpass
 dbserver
+DBTypes
 dbuser
 ddev
 ddev's
@@ -246,6 +268,7 @@ disable
 disallowal
 distro
 distros
+django
 dns
 dnsmasq
 docker
@@ -259,7 +282,7 @@ docroot
 docroots
 dotfile
 dotfiles
-drud
+dropdown
 drupal
 drupalize
 drupalpod
@@ -287,6 +310,7 @@ filesystem
 filesystems
 findstr
 fish
+flask
 for
 format
 fpath
@@ -315,10 +339,12 @@ help
 homeadditions
 homebrew
 host
+HostBinaryExists
 hostenv
 hostfile
 hostname
 hostnames
+HostWorkingDir
 htaccess
 html
 http
@@ -390,6 +416,7 @@ mkdocs
 mnt
 modify
 mongo
+moodle
 mongodb
 more
 mountaddr
@@ -414,6 +441,7 @@ nfsd
 nfsmount
 nginx
 ngrok
+ngrok's
 node
 nodejs
 noerrors
@@ -430,6 +458,7 @@ one
 oneshot
 or
 oriented
+OSTypes
 output
 pause
 pdfreactor
@@ -469,6 +498,7 @@ projdir
 project
 projectname
 projects
+ProjectTypes
 proot
 proto
 provided
@@ -476,7 +506,10 @@ provider
 ps
 psql
 public
+python
+Querious
 quickstart
+quickstarts
 rabbitmq
 rc
 readme
@@ -508,6 +541,7 @@ scalable
 scp
 screencast
 screencasts
+sendmail
 sequelace
 sequelpro
 serverName
@@ -515,6 +549,7 @@ service
 services
 session
 several
+sexualized
 sh
 share
 shell
@@ -526,6 +561,7 @@ sitepackage
 snapshot
 snapshotted
 snapshotting
+socio
 solr
 somefile
 sql
@@ -550,6 +586,7 @@ supervisord
 sur
 susi
 svg
+symfony
 symlink
 symlinked
 symlinks
@@ -564,6 +601,7 @@ tcp
 tcpview
 template
 templated
+templating
 test
 testbot
 testbots
@@ -577,6 +615,7 @@ tls
 tlsverify
 tmp
 to
+toc
 transactional
 true
 txt
@@ -609,6 +648,11 @@ via
 vpnkit
 vscode
 vset
+vite
+vite's
+vite's
+viteserve
+vue
 web
 webenv
 webhosting
@@ -628,15 +672,16 @@ wsl2
 wslg
 www
 xdebug
+xdebug's
 xtrabackup
 xeyes
 xhprof
+xz'd
 yaml
 yml
 you
 your
 yoursite
-yq
 zcompdump
 zsh
 zshrc

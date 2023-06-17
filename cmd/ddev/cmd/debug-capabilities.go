@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/spf13/cobra"
 	"strings"
 )
@@ -23,6 +23,8 @@ var DebugCapabilitiesCmd = &cobra.Command{
 			"daemon-run-configuration",
 			"get-volume-db-version",
 			"migrate-database",
+			"web-start-hooks",
+			"add-on-versioning",
 		}
 		output.UserOut.WithField("raw", capabilities).Print(strings.Join(capabilities, "\n"))
 	},

@@ -4,10 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	ddevexec "github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/versionconstants"
 	"io"
 	"log"
 	"net"
@@ -21,13 +17,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/drud/ddev/pkg/archive"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/util"
+	ddevexec "github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/versionconstants"
+
 	"net/url"
 
+	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/util"
+
 	"github.com/Masterminds/semver/v3"
-	"github.com/drud/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/output"
 	docker "github.com/fsouza/go-dockerclient"
 )
 
@@ -90,7 +92,7 @@ func GetDockerClient() *docker.Client {
 	if DockerHost == "" {
 		DockerContext, DockerHost, err = GetDockerContext()
 		// ddev --version may be called without docker client or context available, ignore err
-		if err != nil && len(os.Args) > 1 && os.Args[1] != "--version" {
+		if err != nil && len(os.Args) > 1 && os.Args[1] != "--version" && os.Args[1] != "hostname" {
 			util.Failed("Unable to get docker context: %v", err)
 		}
 		util.Debug("GetDockerClient: DockerContext=%s, DockerHost=%s", DockerContext, DockerHost)
@@ -137,16 +139,20 @@ func GetDockerContext() (string, string, error) {
 // GetDockerHostID returns DOCKER_HOST but with all special characters removed
 // It stands in for docker context, but docker context name is not a reliable indicator
 func GetDockerHostID() string {
-	_, host, err := GetDockerContext()
+	_, dockerHost, err := GetDockerContext()
 	if err != nil {
 		util.Warning("Unable to GetDockerContext: %v", err)
 	}
-	// Convert DOCKER_HOST to alphanumeric
+	// Make it shorter so we don't hit mutagen 63-char limit
+	dockerHost = strings.TrimPrefix(dockerHost, "unix://")
+	dockerHost = strings.TrimSuffix(dockerHost, "docker.sock")
+	dockerHost = strings.Trim(dockerHost, "/.")
+	// Convert remaining descriptor to alphanumeric
 	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
 	if err != nil {
 		log.Fatal(err)
 	}
-	alphaOnly := reg.ReplaceAllString(host, "-")
+	alphaOnly := reg.ReplaceAllString(dockerHost, "-")
 	return alphaOnly
 }
 
@@ -476,10 +482,9 @@ func GetContainerHealth(container *docker.APIContainers) (string, string) {
 // ComposeWithStreams executes a docker-compose command but allows the caller to specify
 // stdin/stdout/stderr
 func ComposeWithStreams(composeFiles []string, stdin io.Reader, stdout io.Writer, stderr io.Writer, action ...string) error {
-	var arg []string
+	defer util.TimeTrack()()
 
-	runTime := util.TimeTrack(time.Now(), "dockerutil.ComposeWithStreams")
-	defer runTime()
+	var arg []string
 
 	_, err := DownloadDockerComposeIfNeeded()
 	if err != nil {
@@ -548,7 +553,7 @@ func ComposeCmd(composeFiles []string, action ...string) (string, string, error)
 	// Container (or Volume) ... Creating or Created or Stopping or Starting or Removing
 	// Container Stopped or Created
 	// No resource found to remove (when doing a stop and no project exists)
-	ignoreRegex := "(^(Network|Container|Volume) .* (Creat|Start|Stopp|Remov)ing$|^Container .*(Stopp|Creat)(ed|ing)$|Warning: No resource found to remove$|Pulling fs layer|Waiting|Downloading|Extracting|Verifying Checksum|Download complete|Pull complete)"
+	ignoreRegex := "(^ *(Network|Container|Volume) .* (Creat|Start|Stopp|Remov)ing$|^Container .*(Stopp|Creat)(ed|ing)$|Warning: No resource found to remove$|Pulling fs layer|Waiting|Downloading|Extracting|Verifying Checksum|Download complete|Pull complete)"
 	downRE, err := regexp.Compile(ignoreRegex)
 	if err != nil {
 		util.Warning("failed to compile regex %v: %v", ignoreRegex, err)
@@ -608,8 +613,7 @@ func GetContainerEnv(key string, container docker.APIContainers) string {
 // constraints. See https://godoc.org/github.com/Masterminds/semver#hdr-Checking_Version_Constraints
 // for examples defining version constraints.
 func CheckDockerVersion(versionConstraint string) error {
-	runTime := util.TimeTrack(time.Now(), "CheckDockerVersion()")
-	defer runTime()
+	defer util.TimeTrack()()
 
 	currentVersion, err := GetDockerVersion()
 	if err != nil {
@@ -620,6 +624,18 @@ func CheckDockerVersion(versionConstraint string) error {
 	dockerVersion, err := semver.NewVersion(currentVersion)
 	if err != nil {
 		return err
+	}
+
+	// See if they're using broken docker desktop on linux
+	if runtime.GOOS == "linux" && !IsWSL2() {
+		client := GetDockerClient()
+		info, err := client.Info()
+		if err != nil {
+			return fmt.Errorf("unable to get docker info: %v", err)
+		}
+		if info.Name == "docker-desktop" {
+			return fmt.Errorf("Docker Desktop on Linux is not yet compatible with DDEV")
+		}
 	}
 
 	constraint, err := semver.NewConstraint(versionConstraint)
@@ -645,8 +661,7 @@ func CheckDockerVersion(versionConstraint string) error {
 // CheckDockerCompose determines if docker-compose is present and executable on the host system. This
 // relies on docker-compose being somewhere in the user's $PATH.
 func CheckDockerCompose() error {
-	runTime := util.TimeTrack(time.Now(), "CheckDockerComposeVersion()")
-	defer runTime()
+	defer util.TimeTrack()()
 
 	_, err := DownloadDockerComposeIfNeeded()
 	if err != nil {
@@ -750,7 +765,7 @@ func GetDockerIP() (string, error) {
 // docker run -t -u '%s:%s' -e SNAPSHOT_NAME='%s' -v '%s:/mnt/ddev_config' -v '%s:/var/lib/mysql' --rm --entrypoint=/migrate_file_to_volume.sh %s:%s"
 // Example code from https://gist.github.com/fsouza/b0bf3043827f8e39c4589e88cec067d8
 // Returns containerID, output, error
-func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string, removeContainerAfterRun bool, detach bool, labels map[string]string) (containerID string, output string, returnErr error) {
+func RunSimpleContainer(image string, name string, cmd []string, entrypoint []string, env []string, binds []string, uid string, removeContainerAfterRun bool, detach bool, labels map[string]string, portBindings map[docker.Port][]docker.PortBinding) (containerID string, output string, returnErr error) {
 	client := GetDockerClient()
 
 	// Ensure image string includes a tag
@@ -809,10 +824,14 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 			AttachStdout: true,
 		},
 		HostConfig: &docker.HostConfig{
-			Binds: binds,
+			Binds:        binds,
+			PortBindings: portBindings,
 		},
 	}
 
+	if runtime.GOOS == "linux" && !IsDockerDesktop() {
+		options.HostConfig.ExtraHosts = []string{"host.docker.internal:host-gateway"}
+	}
 	container, err := client.CreateContainer(options)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to create/start docker container (%v):%v", options, err)
@@ -820,7 +839,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 
 	if removeContainerAfterRun {
 		// nolint: errcheck
-		defer RemoveContainer(container.ID, 20)
+		defer RemoveContainer(container.ID)
 	}
 	err = client.StartContainer(container.ID, nil)
 	if err != nil {
@@ -856,7 +875,7 @@ func RunSimpleContainer(image string, name string, cmd []string, entrypoint []st
 }
 
 // RemoveContainer stops and removes a container
-func RemoveContainer(id string, timeout uint) error {
+func RemoveContainer(id string) error {
 	client := GetDockerClient()
 
 	err := client.RemoveContainer(docker.RemoveContainerOptions{ID: id, Force: true})
@@ -867,7 +886,7 @@ func RemoveContainer(id string, timeout uint) error {
 func RestartContainer(id string, timeout uint) error {
 	client := GetDockerClient()
 
-	err := client.RestartContainer(id, 20)
+	err := client.RestartContainer(id, timeout)
 	return err
 }
 
@@ -978,6 +997,23 @@ func RemoveVolume(volumeName string) error {
 	if _, err := client.InspectVolume(volumeName); err == nil {
 		err := client.RemoveVolumeWithOptions(docker.RemoveVolumeOptions{Name: volumeName})
 		if err != nil {
+			if err.Error() == "volume in use and cannot be removed" {
+				containers, err := client.ListContainers(docker.ListContainersOptions{
+					All:     true,
+					Filters: map[string][]string{"volume": {volumeName}},
+				})
+				// Get names of containers which are still using the volume.
+				var containerNames []string
+				if err == nil {
+					for _, container := range containers {
+						// Skip first character, it's a slash.
+						containerNames = append(containerNames, container.Names[0][1:])
+					}
+					var containerNamesString = strings.Join(containerNames, " ")
+					return fmt.Errorf("Docker volume '%s' is in use by one or more containers and cannot be removed. Use 'docker rm -f %s' to remove them", volumeName, containerNamesString)
+				}
+				return fmt.Errorf("Docker volume '%s' is in use by a container and cannot be removed. Use 'docker rm -f $(docker ps -aq)' to remove all containers", volumeName)
+			}
 			return err
 		}
 	}
@@ -1012,21 +1048,109 @@ func CreateVolume(volumeName string, driver string, driverOpts map[string]string
 }
 
 // GetHostDockerInternalIP returns either "" (will use the hostname as is)
-// (for docker-for-mac and Win10 Docker-for-windows) or a usable IP address
+// (for Docker Desktop on macOS and Windows with WSL2) or a usable IP address
+// But there are many cases to handle
+// Linux classic installation
+// Gitpod (the Linux technique does not work during prebuild)
+// WSL2 with Docker-ce installed inside
+// WSL2 with PhpStorm or vscode running inside WSL2
+// And it matters whether they're running IDE inside. With docker-inside-wsl2, the bridge docker0 is what we want
+// It's also possible to run vscode Language Server inside the web container, in which case host.docker.internal
+// should actually be 127.0.0.1
+// Inside WSL2, the way to access an app like PhpStorm running on the Windows side is described
+// in https://learn.microsoft.com/en-us/windows/wsl/networking#accessing-windows-networking-apps-from-linux-host-ip
+// and it involves parsing /etc/resolv.conf.
 func GetHostDockerInternalIP() (string, error) {
 	hostDockerInternal := ""
+
+	switch {
+	case nodeps.IsIPAddress(globalconfig.DdevGlobalConfig.XdebugIDELocation):
+		// If the IDE is actually listening inside container, then localhost/127.0.0.1 should work.
+		hostDockerInternal = globalconfig.DdevGlobalConfig.XdebugIDELocation
+		util.Debug("host.docker.internal=%s derived from globalconfig.DdevGlobalConfig.XdebugIDELocation", hostDockerInternal)
+
+	case globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationContainer:
+		// If the IDE is actually listening inside container, then localhost/127.0.0.1 should work.
+		hostDockerInternal = "127.0.0.1"
+		util.Debug("host.docker.internal=%s because globalconfig.DdevGlobalConfig.XdebugIDELocation=%s", hostDockerInternal, globalconfig.XdebugIDELocationContainer)
+
+	case IsColima():
+		// Lima just specifies this as a named explicit IP address at this time
+		// see https://github.com/lima-vm/lima/blob/master/docs/network.md#host-ip-19216852
+		hostDockerInternal = "192.168.5.2"
+		util.Debug("host.docker.internal=%s because running on Colima", hostDockerInternal)
+
+	// Gitpod has docker 20.10+ so the docker-compose has already gotten the host-gateway
+	case nodeps.IsGitpod():
+		util.Debug("host.docker.internal='%s' because on Gitpod", hostDockerInternal)
+		break
+	case nodeps.IsCodespaces():
+		util.Debug("host.docker.internal='%s' because on Codespaces", hostDockerInternal)
+		break
+
+	case IsWSL2() && IsDockerDesktop():
+		// If IDE is on Windows, return; we don't have to do anything.
+		util.Debug("host.docker.internal='%s' because IsWSL2 and IsDockerDesktop", hostDockerInternal)
+		break
+
+	case IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2:
+		// If IDE is inside WSL2 then the normal linux processing should work
+		util.Debug("host.docker.internal='%s' because globalconfig.DdevGlobalConfig.XdebugIDELocation=%s", hostDockerInternal, globalconfig.XdebugIDELocationWSL2)
+		break
+
+	case IsWSL2() && !IsDockerDesktop():
+		// If IDE is on Windows, we have to parse /etc/resolv.conf
+		hostDockerInternal = wsl2ResolvConfNameserver()
+		util.Debug("host.docker.internal='%s' because IsWSL2 and !IsDockerDesktop; received from resolv.conf", hostDockerInternal)
+
+	// Docker on linux doesn't define host.docker.internal
+	// so we need to go get the bridge IP address
+	// Docker Desktop) defines host.docker.internal itself.
+	case runtime.GOOS == "linux":
+		// In docker 20.10+, host.docker.internal is already taken care of by extra_hosts in docker-compose
+		util.Debug("host.docker.internal='%s' runtime.GOOS==linux and docker 20.10+", hostDockerInternal)
+		break
+	}
+
+	return hostDockerInternal, nil
+}
+
+// GetNFSServerAddr gets the addrss that can be used for the NFS server.
+// It's almost the same as GetDockerHostInternalIP() but we have
+// to get the actual addr in the case of linux; still, linux rarely
+// is used with NFS. Returns "host.docker.internal" by default (not empty)
+func GetNFSServerAddr() (string, error) {
+	nfsAddr := "host.docker.internal"
 
 	switch {
 	case IsColima():
 		// Lima just specifies this as a named explicit IP address at this time
 		// see https://github.com/lima-vm/lima/blob/master/docs/network.md#host-ip-19216852
-		hostDockerInternal = "192.168.5.2"
+		nfsAddr = "192.168.5.2"
+
+	// Gitpod has docker 20.10+ so the docker-compose has already gotten the host-gateway
+	// However, NFS will never be used on gitpod.
+	case nodeps.IsGitpod():
+		break
+	case nodeps.IsCodespaces():
+		break
+
+	case IsWSL2() && IsDockerDesktop():
+		// If IDE is on Windows, return; we don't have to do anything.
+		break
+
+	case IsWSL2() && !IsDockerDesktop():
+		// If IDE is on Windows, we have to parse /etc/resolv.conf
+		// Else it will be fine, we can fallthrough to the linux version
+		nfsAddr = wsl2ResolvConfNameserver()
 
 	// Docker on linux doesn't define host.docker.internal
 	// so we need to go get the bridge IP address
 	// Docker Desktop) defines host.docker.internal itself.
-	case runtime.GOOS == "linux" && !IsDockerDesktop():
+	case runtime.GOOS == "linux":
 		// look up info from the bridge network
+		// We can't use the docker host because that's for inside the container,
+		// and this is for setting up the network interface
 		client := GetDockerClient()
 		n, err := client.NetworkInfo("bridge")
 		if err != nil {
@@ -1034,14 +1158,41 @@ func GetHostDockerInternalIP() (string, error) {
 		}
 		if len(n.IPAM.Config) > 0 {
 			if n.IPAM.Config[0].Gateway != "" {
-				hostDockerInternal = n.IPAM.Config[0].Gateway
+				nfsAddr = n.IPAM.Config[0].Gateway
 			} else {
-				util.Warning("Unable to determine host.docker.internal - no gateway")
+				util.Warning("Unable to determine docker bridge gateway - no gateway")
 			}
 		}
 	}
 
-	return hostDockerInternal, nil
+	return nfsAddr, nil
+}
+
+// wsl2ResolvConfNameserver parses /etc/resolv.conf to get the nameserver,
+// which is the only documented way to know how to connect to the host
+// to connect to PhpStorm or other IDE listening there. Or for other apps.
+func wsl2ResolvConfNameserver() string {
+	if IsWSL2() {
+		isAuto, err := fileutil.FgrepStringInFile("/etc/resolv.conf", "automatically generated by WSL")
+		if err != nil || !isAuto {
+			util.Warning("unable to determine WSL2 host.docker.internal because /etc/resolv.conf is not available or not auto-generated")
+			return ""
+		}
+		// We just grepped it so no need to check error
+		etcResolv, _ := fileutil.ReadFileIntoString("/etc/resolv.conf")
+		util.Debug("resolv.conf=%s", etcResolv)
+
+		nameserverRegex := regexp.MustCompile(`nameserver *([0-9\.]*)`)
+		//nameserverRegex.ReplaceAllFunc([]byte(etcResolv), []byte(`$1`))
+		res := nameserverRegex.FindStringSubmatch(etcResolv)
+		if res == nil || len(res) != 2 {
+			util.Warning("unable to determine host.docker.internal from /etc/resolv.conf")
+			return ""
+		}
+		return res[1]
+	}
+	util.Warning("inappropriately using wsl2ResolvConfNameserver() but not on WSL2")
+	return ""
 }
 
 // RemoveImage removes an image with force
@@ -1091,13 +1242,13 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 
 	containerName := "CopyIntoVolume_" + nodeps.RandomString(12)
 
-	track := util.TimeTrack(time.Now(), "CopyIntoVolume "+sourcePath+" "+volumeName)
-	containerID, _, err := RunSimpleContainer(versionconstants.GetWebImage(), containerName, []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && tail -f /dev/null"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, nil)
+	track := util.TimeTrackC("CopyIntoVolume " + sourcePath + " " + volumeName)
+	containerID, _, err := RunSimpleContainer(versionconstants.GetWebImage(), containerName, []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && sleep infinity"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, map[string]string{"com.ddev.site-name": ""}, nil)
 	if err != nil {
 		return err
 	}
 	// nolint: errcheck
-	defer RemoveContainer(containerID, 0)
+	defer RemoveContainer(containerID)
 
 	err = CopyIntoContainer(sourcePath, containerName, targetSubdirFullPath, exclusion)
 
@@ -1161,7 +1312,7 @@ func Exec(containerID string, command string, uid string) (string, string, error
 
 // CheckAvailableSpace outputs a warning if docker space is low
 func CheckAvailableSpace() {
-	_, out, _ := RunSimpleContainer(versionconstants.GetWebImage(), "", []string{"sh", "-c", `df / | awk '!/Mounted/ {print $4, $5;}'`}, []string{}, []string{}, []string{}, "", true, false, nil)
+	_, out, _ := RunSimpleContainer(versionconstants.GetWebImage(), "check-available-space-"+util.RandString(6), []string{"sh", "-c", `df / | awk '!/Mounted/ {print $4, $5;}'`}, []string{}, []string{}, []string{}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil)
 	out = strings.Trim(out, "% \r\n")
 	parts := strings.Split(out, " ")
 	if len(parts) != 2 {
@@ -1334,10 +1485,12 @@ func CopyIntoContainer(srcPath string, containerName string, dstPath string, exc
 	if err != nil {
 		return err
 	}
+	err = tarball.Close()
+	if err != nil {
+		return err
+	}
 	// nolint: errcheck
 	defer os.Remove(tarball.Name())
-	// nolint: errcheck
-	defer tarball.Close()
 
 	// Tar up the source directory into the tarball
 	err = archive.Tar(srcPath, tarball.Name(), exclusion)
@@ -1418,8 +1571,8 @@ func CopyFromContainer(containerName string, containerPath string, hostPath stri
 // for examples defining version constraints.
 // REMEMBER TO CHANGE docs/ddev-installation.md if you touch this!
 // The constraint MUST HAVE a -pre of some kind on it for successful comparison.
-// See https://github.com/drud/ddev/pull/738.. and regression https://github.com/drud/ddev/issues/1431
-var DockerVersionConstraint = ">= 19.03.9-alpha1"
+// See https://github.com/ddev/ddev/pull/738.. and regression https://github.com/ddev/ddev/issues/1431
+var DockerVersionConstraint = ">= 20.10.0-alpha1"
 
 // DockerVersion is cached version of docker
 var DockerVersion = ""
@@ -1446,7 +1599,7 @@ func GetDockerVersion() (string, error) {
 // DockerComposeVersionConstraint is the versions allowed for ddev
 // REMEMBER TO CHANGE docs/ddev-installation.md if you touch this!
 // The constraint MUST HAVE a -pre of some kind on it for successful comparison.
-// See https://github.com/drud/ddev/pull/738.. and regression https://github.com/drud/ddev/issues/1431
+// See https://github.com/ddev/ddev/pull/738.. and regression https://github.com/ddev/ddev/issues/1431
 var DockerComposeVersionConstraint = ">= 2.5.1"
 
 // GetDockerComposeVersion runs docker-compose -v to get the current version

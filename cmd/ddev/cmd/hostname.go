@@ -1,63 +1,46 @@
 package cmd
 
 import (
-	"fmt"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/util"
-
-	"github.com/drud/ddev/pkg/output"
-
-	"strings"
-
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/lextoumbourou/goodhosts"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
+	"os"
+	"runtime"
+	"strings"
 )
 
-var removeHostName bool
-var removeInactive bool
+var removeHostnameFlag bool
+var removeInactiveFlag bool
+var checkHostnameFlag bool
 
 // HostNameCmd represents the hostname command
 var HostNameCmd = &cobra.Command{
-	Use:     "hostname [hostname] [ip]",
-	Example: "ddev hostname somesite.ddev.local 127.0.0.1",
-	Short:   "Manage your hostfile entries.",
+	Use:   "hostname [hostname] [ip]",
+	Short: "Manage your hostfile entries.",
+	Example: `
+ddev hostname junk.example.com 127.0.0.1
+ddev hostname -r junk.example.com 127.0.0.1
+ddev hostname --check junk.example.com 127.0.0.1
+ddev hostname --remove-inactive
+`,
 	Long: `Manage your hostfile entries. Managing host names has security and usability
 implications and requires elevated privileges. You may be asked for a password
 to allow ddev to modify your hosts file. If you are connected to the internet and using the domain ddev.site this is generally not necessary, because the hosts file never gets manipulated.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		hosts, err := goodhosts.NewHosts()
-		if err != nil {
-			rawResult := make(map[string]interface{})
-			detail := fmt.Sprintf("Could not open hosts file for reading: %v", err)
-			rawResult["error"] = "READERROR"
-			rawResult["full_error"] = detail
-			output.UserOut.WithField("raw", rawResult).Fatal(detail)
 
-			return
-		}
-
-		// Attempt to write the hosts file first to catch any permissions issues early
-		if err := hosts.Flush(); err != nil {
-			rawResult := make(map[string]interface{})
-			detail := fmt.Sprintf("Please use sudo or execute with administrative privileges: %v", err)
-			rawResult["error"] = "WRITEERROR"
-			rawResult["full_error"] = detail
-			output.UserOut.WithField("raw", rawResult).Fatal(detail)
-
-			return
+		// Unless DDEV_NONINTERACTIVE is set (tests) then we need to be admin
+		if os.Getenv("DDEV_NONINTERACTIVE") == "" && os.Geteuid() != 0 && !checkHostnameFlag && !removeInactiveFlag && runtime.GOOS != "windows" {
+			util.Failed("'ddev hostname %s' must be run with administrator privileges", strings.Join(args, " "))
 		}
 
 		// If requested, remove all inactive host names and exit
-		if removeInactive {
+		if removeInactiveFlag {
 			if len(args) > 0 {
 				util.Failed("Invalid arguments supplied. 'ddev hostname --remove-all' accepts no arguments.")
 			}
 
-			util.Warning("Attempting to remove inactive hostnames which use TLD %s", nodeps.DdevDefaultTLD)
-			removeInactiveHostnames(hosts)
-
+			util.Warning("Attempting to remove inactive custom hostnames for projects which are registered but not running")
+			removeInactiveHostnames()
 			return
 		}
 
@@ -66,174 +49,57 @@ to allow ddev to modify your hosts file. If you are connected to the internet an
 			util.Failed("Invalid arguments supplied. Please use 'ddev hostname [hostname] [ip]'")
 		}
 
-		hostname, ip := args[0], args[1]
+		name, dockerIP := args[0], args[1]
+		var err error
 
 		// If requested, remove the provided host name and exit
-		if removeHostName {
-			removeHostname(hosts, ip, hostname)
-
+		if removeHostnameFlag {
+			err = ddevapp.RemoveHostEntry(name, dockerIP)
+			if err != nil {
+				util.Warning("Failed to remove host entry %s: %v", name, err)
+			}
 			return
 		}
-
+		if checkHostnameFlag {
+			exists, err := ddevapp.IsHostnameInHostsFile(name)
+			if exists {
+				return
+			}
+			if err != nil {
+				util.Warning("could not check existence in hosts file: %v", err)
+			}
+			os.Exit(1)
+		}
 		// By default, add a host name
-		addHostname(hosts, ip, hostname)
+		err = ddevapp.AddHostEntry(name, dockerIP)
+
+		if err != nil {
+			util.Warning("Failed to add hosts entry %s: %v", name, err)
+		}
 	},
 }
 
-// addHostname encapsulates the logic of adding a hostname to the system's hosts file.
-func addHostname(hosts goodhosts.Hosts, ip, hostname string) {
-	var detail string
-	rawResult := make(map[string]interface{})
-
-	if hosts.Has(ip, hostname) {
-		detail = "Hostname already exists in hosts file"
-		rawResult["error"] = "SUCCESS"
-		rawResult["detail"] = detail
-		output.UserOut.WithField("raw", rawResult).Info(detail)
-
-		return
-	}
-
-	if err := hosts.Add(ip, hostname); err != nil {
-		detail = fmt.Sprintf("Could not add hostname %s at %s: %v", hostname, ip, err)
-		rawResult["error"] = "ADDERROR"
-		rawResult["full_error"] = detail
-		output.UserOut.WithField("raw", rawResult).Fatal(detail)
-
-		return
-	}
-
-	if err := hosts.Flush(); err != nil {
-		detail = fmt.Sprintf("Could not write hosts file: %v", err)
-		rawResult["error"] = "WRITEERROR"
-		rawResult["full_error"] = detail
-		output.UserOut.WithField("raw", rawResult).Fatal(detail)
-
-		return
-	}
-
-	detail = "Hostname added to hosts file"
-	rawResult["error"] = "SUCCESS"
-	rawResult["detail"] = detail
-	output.UserOut.WithField("raw", rawResult).Info(detail)
-
-	return
-}
-
-// removeHostname encapsulates the logic of removing a hostname from the system's hosts file.
-func removeHostname(hosts goodhosts.Hosts, ip, hostname string) {
-	var detail string
-	rawResult := make(map[string]interface{})
-
-	if !hosts.Has(ip, hostname) {
-		detail = "Hostname does not exist in hosts file"
-		rawResult["error"] = "SUCCESS"
-		rawResult["detail"] = detail
-		output.UserOut.WithField("raw", rawResult).Info(detail)
-
-		return
-	}
-
-	if err := hosts.Remove(ip, hostname); err != nil {
-		detail = fmt.Sprintf("Could not remove hostname %s at %s: %v", hostname, ip, err)
-		rawResult["error"] = "REMOVEERROR"
-		rawResult["full_error"] = detail
-		output.UserOut.WithField("raw", rawResult).Fatal(detail)
-
-		return
-	}
-
-	if err := hosts.Flush(); err != nil {
-		detail = fmt.Sprintf("Could not write hosts file: %v", err)
-		rawResult["error"] = "WRITEERROR"
-		rawResult["full_error"] = detail
-		output.UserOut.WithField("raw", rawResult).Fatal(detail)
-
-		return
-	}
-
-	detail = "Hostname removed from hosts file"
-	rawResult["error"] = "SUCCESS"
-	rawResult["detail"] = detail
-	output.UserOut.WithField("raw", rawResult).Info(detail)
-
-	return
-}
-
 // removeInactiveHostnames will remove all host names except those current in use by active projects.
-func removeInactiveHostnames(hosts goodhosts.Hosts) {
-	var detail string
-	rawResult := make(map[string]interface{})
-
-	// Get the list active hosts names to preserve
-	activeHostNames := make(map[string]bool)
-	for _, app := range ddevapp.GetActiveProjects() {
-		for _, h := range app.GetHostnames() {
-			activeHostNames[h] = true
-		}
-	}
-
-	// Find all current host names for the local IP address
-	dockerIP, err := dockerutil.GetDockerIP()
+func removeInactiveHostnames() {
+	apps, err := ddevapp.GetInactiveProjects()
 	if err != nil {
-		detail = fmt.Sprintf("Failed to get Docker IP: %v", err)
-		rawResult["error"] = "DOCKERERROR"
-		rawResult["full_error"] = detail
-		output.UserOut.WithField("raw", rawResult).Fatal(detail)
+		util.Warning("unable to run GetInactiveProjects: %v", err)
+		return
 	}
-
-	// Iterate through each host line
-	for _, line := range hosts.Lines {
-		// Checking if it concerns the local IP address
-		if line.IP == dockerIP {
-			// Iterate through each registered host
-			for _, h := range line.Hosts {
-				internalResult := make(map[string]interface{})
-
-				// Ignore those we want to preserve
-				if isActiveHost := activeHostNames[h]; isActiveHost {
-					detail = fmt.Sprintf("Hostname %s at %s is active, preserving", h, line.IP)
-					internalResult["error"] = "SUCCESS"
-					internalResult["detail"] = detail
-					output.UserOut.WithField("raw", internalResult).Info(detail)
-					continue
-				}
-
-				// Silently ignore those that may not be ddev-managed
-				if !strings.HasSuffix(h, nodeps.DdevDefaultTLD) {
-					continue
-				}
-
-				// Remaining host names are fair game to be removed
-				if err := hosts.Remove(line.IP, h); err != nil {
-					detail = fmt.Sprintf("Could not remove hostname %s at %s: %v", h, line.IP, err)
-					internalResult["error"] = "REMOVEERROR"
-					internalResult["full_error"] = detail
-					output.UserOut.WithField("raw", internalResult).Fatal(detail)
-				}
-
-				detail = fmt.Sprintf("Removed hostname %s at %s", h, line.IP)
-				internalResult["error"] = "SUCCESS"
-				internalResult["detail"] = detail
-				output.UserOut.WithField("raw", internalResult).Info(detail)
-			}
+	for _, app := range apps {
+		err := app.RemoveHostsEntriesIfNeeded()
+		if err != nil {
+			util.Warning("unable to remove hosts entries for project '%s': %v", app.Name, err)
 		}
 	}
-
-	if err := hosts.Flush(); err != nil {
-		detail = fmt.Sprintf("Could not write hosts file: %v", err)
-		rawResult["error"] = "WRITEERROR"
-		rawResult["full_error"] = detail
-		output.UserOut.WithField("raw", rawResult).Fatal(detail)
-	}
-
 	return
 }
 
 func init() {
-	HostNameCmd.Flags().BoolVarP(&removeHostName, "remove", "r", false, "Remove the provided host name - ip correlation")
-	HostNameCmd.Flags().BoolVarP(&removeInactive, "remove-inactive", "R", false, "Remove host names of inactive projects")
-	HostNameCmd.Flags().BoolVar(&removeInactive, "fire-bazooka", false, "Alias of --remove-inactive")
+	HostNameCmd.Flags().BoolVarP(&removeHostnameFlag, "remove", "r", false, "Remove the provided host name - ip correlation")
+	HostNameCmd.Flags().BoolVarP(&checkHostnameFlag, "check", "c", false, "Check to see if provided hostname is already in hosts file")
+	HostNameCmd.Flags().BoolVarP(&removeInactiveFlag, "remove-inactive", "R", false, "Remove host names of inactive projects")
+	HostNameCmd.Flags().BoolVar(&removeInactiveFlag, "fire-bazooka", false, "Alias of --remove-inactive")
 	_ = HostNameCmd.Flags().MarkHidden("fire-bazooka")
 
 	RootCmd.AddCommand(HostNameCmd)

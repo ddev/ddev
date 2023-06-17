@@ -7,6 +7,9 @@
       "pattern": "^https://www.drupal.org/(u|project|about|forum|slack)"
     },
     {
+      "pattern": "^https://deb.sury.org"
+    },
+    {
       "pattern": "^https://nssm.cc/"
     },
     {
@@ -16,10 +19,16 @@
       "pattern": "^https://www.drupaleasy.com/blogs/ultimike/2019/06/sharing-your-ddev-local-site-public-url-using-ddev-share-and-ngrok"
     },
     {
+      "pattern": "^https://.*blackfire.io"
+    },
+    {
+      "pattern": "^https://twitter.com/search"
+    },
+    {
       "pattern": "^https://www.cyberciti.biz/"
     },
     {
-      "pattern": "^https://nightly.link/drud/ddev/workflows/master-build/master"
+      "pattern": "^https://nightly.link/ddev/ddev/workflows/master-build/master"
     }
   ],
   "httpHeaders": [

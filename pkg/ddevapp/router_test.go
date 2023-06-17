@@ -7,33 +7,72 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/netutil"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/netutil"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// TestPortOverride makes sure that the router_http_port and router_https_port
-// config.yaml overrides work correctly.
+// TestGlobalPortOverride tests global router_http_port and router_https_port
+func TestGlobalPortOverride(t *testing.T) {
+	assert := asrt.New(t)
+
+	origGlobalHTTPPort := globalconfig.DdevGlobalConfig.RouterHTTPPort
+	origGlobalHTTPSPort := globalconfig.DdevGlobalConfig.RouterHTTPSPort
+
+	globalconfig.DdevGlobalConfig.RouterHTTPPort = "8553"
+	globalconfig.DdevGlobalConfig.RouterHTTPSPort = "8554"
+
+	site := TestSites[0]
+
+	app, err := ddevapp.NewApp(site.Dir, false)
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		err = app.Stop(true, false)
+		assert.NoError(err)
+		globalconfig.DdevGlobalConfig.RouterHTTPPort = origGlobalHTTPPort
+		globalconfig.DdevGlobalConfig.RouterHTTPSPort = origGlobalHTTPSPort
+		err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
+		assert.NoError(err)
+	})
+	err = app.Restart()
+	require.NoError(t, err)
+	require.Equal(t, globalconfig.DdevGlobalConfig.RouterHTTPPort, app.GetRouterHTTPPort())
+	require.Equal(t, globalconfig.DdevGlobalConfig.RouterHTTPSPort, app.GetRouterHTTPSPort())
+
+	desc, err := app.Describe(false)
+	require.NoError(t, err)
+	require.Equal(t, globalconfig.DdevGlobalConfig.RouterHTTPPort, desc["router_http_port"])
+	require.Equal(t, globalconfig.DdevGlobalConfig.RouterHTTPSPort, desc["router_https_port"])
+}
+
+// TestProjectPortOverride makes sure that the project-level
+// router_http_port and router_https_port
+// port overrides work correctly.
 // It starts up 3 ddev projects, looks to see if the config is set right,
 // then tests to see that the right ports have been started up on the router.
-func TestPortOverride(t *testing.T) {
+func TestProjectPortOverride(t *testing.T) {
 	assert := asrt.New(t)
+
+	origDir, _ := os.Getwd()
 
 	// Try some different combinations of ports. The first (offset 0) will
 	// share ports with already-started test sites.
 	for i := 0; i < 3; i++ {
-		testDir := testcommon.CreateTmpDir("TestPortOverride")
+		testDir := testcommon.CreateTmpDir("TestProjectPortOverride")
 
-		// testcommon.Chdir()() and CleanupDir() checks their own errors (and exit)
-		defer testcommon.CleanupDir(testDir)
-		defer testcommon.Chdir(testDir)()
+		t.Cleanup(func() {
+			err := os.Chdir(origDir)
+			assert.NoError(err)
+			err = os.RemoveAll(testDir)
+			assert.NoError(err)
+		})
 
 		testcommon.ClearDockerEnv()
 
@@ -44,7 +83,7 @@ func TestPortOverride(t *testing.T) {
 		// by default has port 445 occupied by NetBT (Netbios over TCP)
 		// So the test will fail because of that.
 		app.RouterHTTPSPort = strconv.Itoa(453 + i)
-		app.Name = "TestPortOverride-" + strconv.Itoa(i)
+		app.Name = "TestProjectPortOverride-" + strconv.Itoa(i)
 		app.Type = nodeps.AppTypePHP
 		err = app.WriteConfig()
 		assert.NoError(err)
@@ -65,40 +104,28 @@ func TestPortOverride(t *testing.T) {
 			assert.False(netutil.IsPortActive(app.RouterHTTPSPort))
 		}
 
-		startErr := app.StartAndWait(5)
-		// defer the app.Stop so we have a more diverse set of tests. If we brought
+		err = app.Start()
+		require.NoError(t, err)
+		// defer the app.Stop() so we have a more diverse set of tests. If we brought
 		// each down before testing the next that would be a more trivial test.
 		// Don't worry about the possible error case as this is just a test cleanup
-		// nolint: errcheck
-		defer app.Stop(true, false)
-
-		if startErr != nil {
-			t.Logf("Failed app.StartAndWait: %v", startErr)
-			out, err := exec.RunCommand(DdevBin, []string{"list"})
+		t.Cleanup(func() {
+			err = app.Stop(true, false)
 			assert.NoError(err)
-			t.Logf("\n=========== output of ddev list ==========\n%s\n============\n", out)
-			out, err = exec.RunCommand("docker", []string{"logs", "ddev-router"})
-			assert.NoError(err)
-			t.Logf("\n=========== output of docker logs ddev-router ==========\n%s\n============\n", out)
+		})
 
-			logsFromApp, err := ddevapp.GetErrLogsFromApp(app, startErr)
-			assert.NoError(err)
-			t.Logf("\n================== logsFromApp ====================\n%s\n", logsFromApp)
-
-			t.Fatalf("failed to app.StartAndWait(), err=%v", startErr)
-		}
-		err = app.Wait([]string{"web"})
-		assert.NoError(err)
 		assert.True(netutil.IsPortActive(app.RouterHTTPPort), "port "+app.RouterHTTPPort+" should be active")
 		assert.True(netutil.IsPortActive(app.RouterHTTPSPort), "port "+app.RouterHTTPSPort+" should be active")
 	}
-
 }
 
 // Do a modest test of Lets Encrypt functionality
 // This just checks to see that certbot ran and populated /etc/letsencrypt and
 // that /etc/letsencrypt is mounted on volume.
 func TestLetsEncrypt(t *testing.T) {
+	if globalconfig.DdevGlobalConfig.UseTraefik {
+		t.Skip("Skipping because traefik set and not yet supported")
+	}
 	assert := asrt.New(t)
 
 	savedGlobalconfig := globalconfig.DdevGlobalConfig
@@ -196,6 +223,9 @@ func TestDisableHTTP2(t *testing.T) {
 	}
 	if globalconfig.GetCAROOT() == "" {
 		t.Skip("Skipping because mkcert/http not enabled")
+	}
+	if globalconfig.DdevGlobalConfig.UseTraefik {
+		t.Skip("Skipping because traefik doesn't have feature to turn off http/2")
 	}
 
 	assert := asrt.New(t)

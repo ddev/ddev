@@ -2,14 +2,15 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	copy2 "github.com/otiai10/copy"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"testing"
 
@@ -18,6 +19,9 @@ import (
 
 // TestCmdGet tests various `ddev get` commands .
 func TestCmdGet(t *testing.T) {
+	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
+		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
+	}
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
@@ -28,13 +32,10 @@ func TestCmdGet(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Cleanup(func() {
-		_, err = exec.RunHostCommand(DdevBin, "service", "disable", "memcached")
+		_, err = exec.RunHostCommand(DdevBin, "get", "--remove", "memcached")
 		assert.NoError(err)
-		_, err = exec.RunHostCommand(DdevBin, "service", "disable", "example")
+		_, err = exec.RunHostCommand(DdevBin, "get", "--remove", "example")
 		assert.NoError(err)
-
-		_ = os.RemoveAll(app.GetConfigPath(fmt.Sprintf("docker-compose.%s.yaml", "memcached")))
-		_ = os.RemoveAll(app.GetConfigPath(fmt.Sprintf("docker-compose.%s.yaml", "example")))
 
 		err = os.Chdir(origDir)
 		assert.NoError(err)
@@ -45,18 +46,18 @@ func TestCmdGet(t *testing.T) {
 	// Make sure get --list works first
 	out, err := exec.RunHostCommand(DdevBin, "get", "--list")
 	assert.NoError(err, "failed ddev get --list: %v (%s)", err, out)
-	assert.Contains(out, "drud/ddev-memcached")
+	assert.Contains(out, "ddev/ddev-memcached")
 
 	tarballFile := filepath.Join(origDir, "testdata", t.Name(), "ddev-memcached.tar.gz")
 
 	// Test with many input styles
 	for _, arg := range []string{
-		"drud/ddev-memcached",
-		"https://github.com/drud/ddev-memcached/archive/refs/tags/v1.1.1.tar.gz",
+		"ddev/ddev-memcached",
+		"https://github.com/ddev/ddev-memcached/archive/refs/tags/v1.1.1.tar.gz",
 		tarballFile} {
 		out, err := exec.RunHostCommand(DdevBin, "get", arg)
 		assert.NoError(err, "failed ddev get %s", arg)
-		assert.Contains(out, "Downloaded add-on")
+		assert.Contains(out, "Installed DDEV add-on")
 		assert.FileExists(app.GetConfigPath("docker-compose.memcached.yaml"))
 	}
 
@@ -82,13 +83,16 @@ func TestCmdGet(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(exists, "the file with no ddev-generated.txt should not have been replaced")
 
-	assert.Contains(out, fmt.Sprintf("NOT overwriting file/directory %s", app.GetConfigPath("file-with-no-ddev-generated.txt")))
-	assert.Contains(out, fmt.Sprintf("NOT overwriting file/directory %s", filepath.Join(globalconfig.GetGlobalDdevDir(), "file-with-no-ddev-generated.txt")))
-
+	assert.Contains(out, fmt.Sprintf("NOT overwriting %s", app.GetConfigPath("file-with-no-ddev-generated.txt")))
+	assert.Contains(out, fmt.Sprintf("NOT overwriting %s", filepath.Join(globalconfig.GetGlobalDdevDir(), "file-with-no-ddev-generated.txt")))
 }
 
 // TestCmdGetComplex tests advanced usages
 func TestCmdGetComplex(t *testing.T) {
+	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
+		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
+	}
+
 	assert := asrt.New(t)
 
 	origDir, _ := os.Getwd()
@@ -121,6 +125,11 @@ func TestCmdGetComplex(t *testing.T) {
 		assert.NoError(err)
 	})
 
+	// create no-ddev-generated.txt so we make sure we get warning about it.
+	_ = os.MkdirAll(app.GetConfigPath("extra"), 0755)
+	_, err = os.Create(app.GetConfigPath("extra/no-ddev-generated.txt"))
+	require.NoError(t, err)
+
 	out, err := exec.RunHostCommand(DdevBin, "get", filepath.Join(origDir, "testdata", t.Name(), "recipe"))
 	require.NoError(t, err, "out=%s", out)
 
@@ -136,4 +145,140 @@ func TestCmdGetComplex(t *testing.T) {
 	// Make sure that environment variable interpolation happened. If it did, we'll have the one file
 	// we're looking for.
 	assert.FileExists(app.GetConfigPath(fmt.Sprintf("junk_%s_%s.txt", runtime.GOOS, runtime.GOARCH)))
+	info, err := os.Stat(app.GetConfigPath("extra/no-ddev-generated.txt"))
+	require.NoError(t, err, "stat of no-ddev-generated.txt failed")
+	assert.True(info.Size() == 0)
+
+	assert.Contains(out, "👍 extra/has-ddev-generated.txt")
+	assert.NotContains(out, "👍 extra/no-ddev-generated.txt")
+	assert.Regexp(regexp.MustCompile(`NOT overwriting [^ ]*`+"extra/no-ddev-generated.txt"), out)
+}
+
+// TestCmdGetInstalled tests `ddev get --installed` and `ddev get --remove`
+func TestCmdGetInstalled(t *testing.T) {
+	if os.Getenv("DDEV_RUN_GET_TESTS") != "true" {
+		t.Skip("Skipping because DDEV_RUN_GET_TESTS is not set")
+	}
+	assert := asrt.New(t)
+
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_, err = exec.RunHostCommand(DdevBin, "get", "--remove", "memcached")
+		assert.NoError(err)
+		_, err = exec.RunHostCommand(DdevBin, "get", "--remove", "redis")
+		assert.NoError(err)
+
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+		err = os.RemoveAll(filepath.Join(globalconfig.GetGlobalDdevDir(), "commands/web/global-touched"))
+		assert.NoError(err)
+	})
+
+	out, err := exec.RunHostCommand(DdevBin, "get", "ddev/ddev-memcached", "--json-output")
+	require.NoError(t, err, "failed ddev get ddev/ddev-memcached: %v (output='%s')", err, out)
+
+	memcachedManifest := getManifestFromLogs(t, out)
+	require.NoError(t, err)
+
+	out, err = exec.RunHostCommand(DdevBin, "get", "ddev/ddev-redis", "--json-output")
+	require.NoError(t, err, "failed ddev get ddev/ddev-redis: %v (output='%s')", err, out)
+
+	redisManifest := getManifestFromLogs(t, out)
+	require.NoError(t, err)
+
+	installedOutput, err := exec.RunHostCommand(DdevBin, "get", "--installed", "--json-output")
+	require.NoError(t, err, "failed ddev get --installed --json-output: %v (output='%s')", err, installedOutput)
+	installedManifests := getManifestMapFromLogs(t, installedOutput)
+
+	require.NotEmptyf(t, memcachedManifest["Version"], "memcached manifest is empty: %v", memcachedManifest)
+	require.NotEmptyf(t, redisManifest["Version"], "redis manifest is empty: %v", redisManifest)
+
+	assert.Equal(memcachedManifest["Version"], installedManifests["memcached"]["Version"])
+	assert.Equal(redisManifest["Version"], installedManifests["redis"]["Version"])
+
+	// Now try the remove using other techniques (full repo name, partial repo name)
+	for _, n := range []string{"ddev/ddev-redis", "ddev-redis", "redis"} {
+		out, err = exec.RunHostCommand(DdevBin, "get", "ddev/ddev-redis", "--json-output")
+		require.NoError(t, err, "failed ddev get %s: %v (output='%s')", n, err, out)
+		out, err = exec.RunHostCommand(DdevBin, "get", "--remove", n)
+		require.NoError(t, err, "unable to ddev get --remove %s: %v, output='%s'", n, err, out)
+	}
+	// Now make sure we put it back so it can be removed in cleanu
+	out, err = exec.RunHostCommand(DdevBin, "get", "ddev/ddev-redis")
+	assert.NoError(err, "unable to ddev get redis: %v, output='%s'", err, out)
+}
+
+// TestCmdGetDependencies tests the dependency behavior is correct
+func TestCmdGetDependencies(t *testing.T) {
+	assert := asrt.New(t)
+
+	origDir, _ := os.Getwd()
+	site := TestSites[0]
+	err := os.Chdir(site.Dir)
+	require.NoError(t, err)
+	app, err := ddevapp.GetActiveApp("")
+	require.NoError(t, err)
+
+	err = copy2.Copy(filepath.Join(origDir, "testdata", t.Name(), "project"), app.GetAppRoot())
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		out, err := exec.RunHostCommand(DdevBin, "get", "--remove", "dependency_recipe")
+		assert.NoError(err, "output='%s'", out)
+		out, err = exec.RunHostCommand(DdevBin, "get", "--remove", "depender_recipe")
+		assert.NoError(err, "output='%s'", out)
+		err = os.Chdir(origDir)
+		assert.NoError(err)
+	})
+
+	// First try of depender_recipe should fail without dependency
+	out, err := exec.RunHostCommand(DdevBin, "get", filepath.Join(origDir, "testdata", t.Name(), "depender_recipe"))
+	require.Error(t, err, "out=%s", out)
+
+	// Now add the dependency and try again
+	out, err = exec.RunHostCommand(DdevBin, "get", filepath.Join(origDir, "testdata", t.Name(), "dependency_recipe"))
+	require.NoError(t, err, "out=%s", out)
+
+	// Now depender_recipe should succeed
+	out, err = exec.RunHostCommand(DdevBin, "get", filepath.Join(origDir, "testdata", t.Name(), "depender_recipe"))
+	require.NoError(t, err, "out=%s", out)
+}
+
+// getManifestFromLogs returns the manifest built from 'raw' section of
+// ddev get <project> -j output
+func getManifestFromLogs(t *testing.T, jsonOut string) map[string]interface{} {
+	assert := asrt.New(t)
+
+	logItems, err := unmarshalJSONLogs(jsonOut)
+	require.NoError(t, err)
+	data := logItems[len(logItems)-1]
+	assert.EqualValues(data["level"], "info")
+
+	m, ok := data["raw"].(map[string]interface{})
+	require.True(t, ok)
+	return m
+}
+
+// getManifestMapFromLogs returns the manifest array built from 'raw' section of
+// ddev get --installed -j output
+func getManifestMapFromLogs(t *testing.T, jsonOut string) map[string]map[string]interface{} {
+	assert := asrt.New(t)
+
+	logItems, err := unmarshalJSONLogs(jsonOut)
+	require.NoError(t, err)
+	data := logItems[len(logItems)-1]
+	assert.EqualValues(data["level"], "info")
+
+	m, ok := data["raw"].([]interface{})
+	require.True(t, ok)
+	masterMap := map[string]map[string]interface{}{}
+	for _, item := range m {
+		itemMap := item.(map[string]interface{})
+		masterMap[itemMap["Name"].(string)] = itemMap
+	}
+	return masterMap
 }

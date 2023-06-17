@@ -5,11 +5,10 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -22,7 +21,7 @@ func TestProcessHooks(t *testing.T) {
 	origDir, _ := os.Getwd()
 	// We don't get the expected task debug output without DDEV_DEBUG
 	t.Setenv("DDEV_DEBUG", "true")
-	runTime := util.TimeTrack(time.Now(), t.Name())
+	runTime := util.TimeTrackC(t.Name())
 
 	testcommon.ClearDockerEnv()
 	app, err := ddevapp.NewApp(site.Dir, true)
@@ -93,7 +92,7 @@ func TestProcessHooks(t *testing.T) {
 	err = app.MutagenSyncFlush()
 	assert.NoError(err)
 
-	assert.FileExists(filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooks%s.txt", app.RouterHTTPSPort)))
+	assert.FileExists(filepath.Join(app.AppRoot, fmt.Sprintf("TestProcessHooks%s.txt", app.GetRouterHTTPSPort())))
 	assert.FileExists(filepath.Join(app.AppRoot, "touch_works_after_and.txt"))
 
 	// Attempt processing hooks with a guaranteed failure

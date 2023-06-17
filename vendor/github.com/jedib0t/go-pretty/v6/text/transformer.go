@@ -42,71 +42,92 @@ type Transformer func(val interface{}) string
 //   * colors positive values Green
 func NewNumberTransformer(format string) Transformer {
 	return func(val interface{}) string {
-		if number, ok := val.(int); ok {
-			return transformInt(format, int64(number))
+		if valStr := transformInt(format, val); valStr != "" {
+			return valStr
 		}
-		if number, ok := val.(int8); ok {
-			return transformInt(format, int64(number))
+		if valStr := transformUint(format, val); valStr != "" {
+			return valStr
 		}
-		if number, ok := val.(int16); ok {
-			return transformInt(format, int64(number))
-		}
-		if number, ok := val.(int32); ok {
-			return transformInt(format, int64(number))
-		}
-		if number, ok := val.(int64); ok {
-			return transformInt(format, int64(number))
-		}
-		if number, ok := val.(uint); ok {
-			return transformUint(format, uint64(number))
-		}
-		if number, ok := val.(uint8); ok {
-			return transformUint(format, uint64(number))
-		}
-		if number, ok := val.(uint16); ok {
-			return transformUint(format, uint64(number))
-		}
-		if number, ok := val.(uint32); ok {
-			return transformUint(format, uint64(number))
-		}
-		if number, ok := val.(uint64); ok {
-			return transformUint(format, uint64(number))
-		}
-		if number, ok := val.(float32); ok {
-			return transformFloat(format, float64(number))
-		}
-		if number, ok := val.(float64); ok {
-			return transformFloat(format, float64(number))
+		if valStr := transformFloat(format, val); valStr != "" {
+			return valStr
 		}
 		return fmt.Sprint(val)
 	}
 }
 
-func transformInt(format string, val int64) string {
-	if val < 0 {
-		return colorsNumberNegative.Sprintf("-"+format, -val)
+func transformInt(format string, val interface{}) string {
+	transform := func(val int64) string {
+		if val < 0 {
+			return colorsNumberNegative.Sprintf("-"+format, -val)
+		}
+		if val > 0 {
+			return colorsNumberPositive.Sprintf(format, val)
+		}
+		return colorsNumberZero.Sprintf(format, val)
 	}
-	if val > 0 {
-		return colorsNumberPositive.Sprintf(format, val)
+
+	if number, ok := val.(int); ok {
+		return transform(int64(number))
 	}
-	return colorsNumberZero.Sprintf(format, val)
+	if number, ok := val.(int8); ok {
+		return transform(int64(number))
+	}
+	if number, ok := val.(int16); ok {
+		return transform(int64(number))
+	}
+	if number, ok := val.(int32); ok {
+		return transform(int64(number))
+	}
+	if number, ok := val.(int64); ok {
+		return transform(int64(number))
+	}
+	return ""
 }
 
-func transformUint(format string, val uint64) string {
-	if val > 0 {
-		return colorsNumberPositive.Sprintf(format, val)
+func transformUint(format string, val interface{}) string {
+	transform := func(val uint64) string {
+		if val > 0 {
+			return colorsNumberPositive.Sprintf(format, val)
+		}
+		return colorsNumberZero.Sprintf(format, val)
 	}
-	return colorsNumberZero.Sprintf(format, val)
+
+	if number, ok := val.(uint); ok {
+		return transform(uint64(number))
+	}
+	if number, ok := val.(uint8); ok {
+		return transform(uint64(number))
+	}
+	if number, ok := val.(uint16); ok {
+		return transform(uint64(number))
+	}
+	if number, ok := val.(uint32); ok {
+		return transform(uint64(number))
+	}
+	if number, ok := val.(uint64); ok {
+		return transform(uint64(number))
+	}
+	return ""
 }
 
-func transformFloat(format string, val float64) string {
-	if val < 0 {
-		return colorsNumberNegative.Sprintf("-"+format, -val)
+func transformFloat(format string, val interface{}) string {
+	transform := func(val float64) string {
+		if val < 0 {
+			return colorsNumberNegative.Sprintf("-"+format, -val)
+		}
+		if val > 0 {
+			return colorsNumberPositive.Sprintf(format, val)
+		}
+		return colorsNumberZero.Sprintf(format, val)
 	}
-	if val > 0 {
-		return colorsNumberPositive.Sprintf(format, val)
+
+	if number, ok := val.(float32); ok {
+		return transform(float64(number))
 	}
-	return colorsNumberZero.Sprintf(format, val)
+	if number, ok := val.(float64); ok {
+		return transform(float64(number))
+	}
+	return ""
 }
 
 // NewJSONTransformer returns a Transformer that can format a JSON string or an
@@ -172,10 +193,15 @@ func NewUnixTimeTransformer(layout string, location *time.Location) Transformer 
 }
 
 // NewURLTransformer returns a Transformer that can format and pretty print a string
-// that contains an URL (the text is underlined and colored Blue).
-func NewURLTransformer() Transformer {
+// that contains a URL (the text is underlined and colored Blue).
+func NewURLTransformer(colors ...Color) Transformer {
+	colorsToUse := colorsURL
+	if len(colors) > 0 {
+		colorsToUse = colors
+	}
+
 	return func(val interface{}) string {
-		return colorsURL.Sprint(val)
+		return colorsToUse.Sprint(val)
 	}
 }
 

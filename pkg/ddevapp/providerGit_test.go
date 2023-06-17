@@ -1,7 +1,7 @@
 package ddevapp_test
 
 import (
-	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	. "github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/testcommon"
+	. "github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 )
 

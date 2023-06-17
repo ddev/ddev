@@ -8,13 +8,13 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/mattn/go-isatty"
 
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -72,6 +72,11 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			}
 		}
 
+		err = os.MkdirAll(composerRoot, 0755)
+		if err != nil {
+			util.Failed("failed to create composerRoot: %v", err)
+		}
+
 		// Remove most contents of composer root
 		util.Warning("Removing any existing files in composer root")
 		objs, err := fileutil.ListFilesInDir(composerRoot)
@@ -97,6 +102,14 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		// Define a randomly named temp directory for install target
 		tmpDir := util.RandString(6)
 		containerInstallPath := path.Join("/tmp", tmpDir)
+
+		// Remember if --no-install was provided by the user
+		noInstallPresent := nodeps.ArrayContainsString(osargs, "--no-install")
+		if !noInstallPresent {
+			// Add the --no-install option by default to avoid issues with
+			// rsyncing many files afterwards to the project root.
+			osargs = append(osargs, "--no-install")
+		}
 
 		// Build container composer command
 		composerCmd := []string{
@@ -137,6 +150,66 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			util.Failed("Failed to create project: %v", err)
 		}
 
+		// If --no-install was not provided by the user, call composer install
+		// now to finish the installation in the project root folder.
+		if !noInstallPresent {
+			composerCmd = []string{
+				"composer",
+				"install",
+			}
+
+			// Apply args supported by install
+			supportedArgs := []string{
+				"--prefer-source",
+				"--prefer-dist",
+				"--prefer-install",
+				"--no-dev",
+				"--no-progress",
+				"--ignore-platform-req",
+				"--ignore-platform-reqs",
+				"-q",
+				"--quiet",
+				"--ansi",
+				"--no-ansi",
+				"-n",
+				"--no-interaction",
+				"--profile",
+				"--no-plugins",
+				"--no-scripts",
+				"-d",
+				"--working-dir",
+				"--no-cache",
+				"-v",
+				"-vv",
+				"-vvv",
+				"--verbose",
+			}
+
+			for _, osarg := range osargs {
+				for _, supportedArg := range supportedArgs {
+					if strings.HasPrefix(osarg, supportedArg) {
+						composerCmd = append(composerCmd, osarg)
+					}
+				}
+			}
+
+			// Run command
+			output.UserOut.Printf("Executing composer command: %v\n", composerCmd)
+			stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				RawCmd:  composerCmd,
+				Dir:     app.GetComposerRoot(true, false),
+				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
+			})
+			if err != nil {
+				util.Failed("Failed to install project:%v, stderr=%v", err, stderr)
+			}
+
+			if len(stdout) > 0 {
+				fmt.Println(strings.TrimSpace(stdout))
+			}
+		}
+
 		// Do a spare restart, which will create any needed settings files
 		// and also restart mutagen
 		err = app.Restart()
@@ -153,10 +226,9 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 // ComposerCreateProjectCmd just sends people to the right thing
 // when they try ddev composer create-project
 var ComposerCreateProjectCmd = &cobra.Command{
-	Use: "create-project",
-	FParseErrWhitelist: cobra.FParseErrWhitelist{
-		UnknownFlags: true,
-	},
+	Use:                "create-project",
+	Short:              "Unsupported, use `ddev composer create` instead",
+	DisableFlagParsing: true,
 	Run: func(cmd *cobra.Command, args []string) {
 		util.Failed(`'ddev composer create-project' is unsupported. Please use 'ddev composer create'
 for basic project creation or 'ddev ssh' into the web container and execute

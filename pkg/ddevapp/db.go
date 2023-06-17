@@ -1,10 +1,10 @@
 package ddevapp
 
 import (
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/versionconstants"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"regexp"
 	"strings"
 )
@@ -12,7 +12,7 @@ import (
 // GetExistingDBType returns type/version like mariadb:10.4 or postgres:13 or "" if no existing volume
 // This has to make a docker container run so is fairly costly.
 func (app *DdevApp) GetExistingDBType() (string, error) {
-	_, out, err := dockerutil.RunSimpleContainer(versionconstants.GetWebImage(), "", []string{"sh", "-c", "( test -f /var/tmp/mysql/db_mariadb_version.txt && cat /var/tmp/mysql/db_mariadb_version.txt ) || ( test -f /var/tmp/postgres/PG_VERSION && cat /var/tmp/postgres/PG_VERSION) || true"}, []string{}, []string{}, []string{app.GetMariaDBVolumeName() + ":/var/tmp/mysql", app.GetPostgresVolumeName() + ":/var/tmp/postgres"}, "", true, false, nil)
+	_, out, err := dockerutil.RunSimpleContainer(versionconstants.BusyboxImage, "GetExistingDBType-"+app.Name+"-"+util.RandString(6), []string{"sh", "-c", "( test -f /var/tmp/mysql/db_mariadb_version.txt && cat /var/tmp/mysql/db_mariadb_version.txt ) || ( test -f /var/tmp/postgres/PG_VERSION && cat /var/tmp/postgres/PG_VERSION) || true"}, []string{}, []string{}, []string{app.GetMariaDBVolumeName() + ":/var/tmp/mysql", app.GetPostgresVolumeName() + ":/var/tmp/postgres"}, "", true, false, map[string]string{`com.ddev.site-name`: app.GetName()}, nil)
 
 	if err != nil {
 		util.Failed("failed to RunSimpleContainer to inspect database version/type: %v, output=%s", err, out)
@@ -37,12 +37,13 @@ func dbTypeVersionFromString(in string) string {
 	idType := ""
 
 	postgresStyle := regexp.MustCompile(`^[0-9]+$`)
+	postgresV9Style := regexp.MustCompile(`^9\.?`)
 	oldStyle := regexp.MustCompile(`^[0-9]+\.[0-9]$`)
-	newStyleV119 := regexp.MustCompile(`^(mysql|mariadb)_[0-9]+\.[0-9]$`)
+	newStyleV119 := regexp.MustCompile(`^(mysql|mariadb)_[0-9]+\.[0-9][0-9]?$`)
 
 	if newStyleV119.MatchString(in) {
 		idType = "current"
-	} else if postgresStyle.MatchString(in) {
+	} else if postgresStyle.MatchString(in) || postgresV9Style.MatchString(in) {
 		idType = "postgres"
 	} else if oldStyle.MatchString(in) {
 		idType = "old_pre_v1.19"
@@ -60,7 +61,8 @@ func dbTypeVersionFromString(in string) string {
 	// Postgres: value is an int
 	case "postgres":
 		dbType = nodeps.Postgres
-		dbVersion = in
+		parts := strings.Split(in, `.`)
+		dbVersion = parts[0]
 
 	case "old_pre_v1.19":
 		dbType = nodeps.MariaDB

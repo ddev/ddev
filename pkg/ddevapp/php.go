@@ -2,8 +2,8 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/archive"
-	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/pkg/errors"
 	"os"
 	"path/filepath"

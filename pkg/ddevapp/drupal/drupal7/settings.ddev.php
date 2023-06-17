@@ -18,14 +18,15 @@ if (empty(getenv('DDEV_PHP_VERSION') && getenv('IS_DDEV_PROJECT') == 'true')) {
   $port = {{ $config.DBPublishedPort }};
 }
 
-$databases['default']['default'] = array(
-  'database' => "{{ $config.DatabaseName }}",
-  'username' => "{{ $config.DatabaseUsername }}",
-  'password' => "{{ $config.DatabasePassword }}",
-  'host' => $host,
-  'driver' => $driver,
-  'port' => $port,
-  'prefix' => "{{ $config.DatabasePrefix }}",
-);
+$databases['default']['default']['database'] = "{{ $config.DatabaseName }}";
+$databases['default']['default']['username'] = "{{ $config.DatabaseUsername }}";
+$databases['default']['default']['password'] = "{{ $config.DatabasePassword }}";
+$databases['default']['default']['host'] = $host;
+$databases['default']['default']['driver'] = $driver;
+$databases['default']['default']['port'] = $port;
 
 $drupal_hash_salt = '{{ $config.HashSalt }}';
+
+// Enable verbose logging for errors.
+// https://www.drupal.org/docs/7/creating-custom-modules/show-all-errors-while-developing
+$conf['error_level'] = 2;

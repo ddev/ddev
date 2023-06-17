@@ -14,6 +14,13 @@ on:
   schedule:
     - cron: '01 00 * * *'
 
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate set "debug_enabled"'
+        type: boolean
+        required: false
+        default: false
 
 defaults:
   run:
@@ -24,6 +31,7 @@ env:
   DOCKER_CLI_EXPERIMENTAL: enabled
   DDEV_DEBUG: true
   DDEV_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 permissions:
   contents: read
@@ -36,40 +44,66 @@ jobs:
 
     strategy:
       matrix:
-        webserver: [apache-fpm, nginx-fpm]
-        tests: ['test TESTARGS="-failfast"']
-        os: [ ubuntu-20.04 ]
-        mutagen: ['false', 'true']
-        no-bind-mounts: ['true', 'false']
+        include:
+          - name: "apache-fpm"
+            webserver: "apache-fpm"
+          - name: "nginx-fpm"
+          - name: "mutagen"
+            mutagen: true
+          - name: "no-bind-mounts"
+            no-bind-mounts: "true"
+          - name: "traefik"
+            use-traefik: "true"
+          - name: "pull-push-test-platforms"
+            pull-push-test-platforms: true
+
       fail-fast: false
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-22.04
 
     env:
-      DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
       DDEV_NONINTERACTIVE: "true"
+      GOTEST_SHORT: "8" # 8 is drupal9; means in TestFullSiteSetup we only use drupal9
+      DDEV_TEST_WEBSERVER_TYPE: ${{ matrix.webserver }}
       DDEV_TEST_USE_MUTAGEN: ${{ matrix.mutagen }}
       DDEV_TEST_NO_BIND_MOUNTS: ${{ matrix.no-bind-mounts }}
-      GOTEST_SHORT: "8"
+      DDEV_TEST_USE_TRAEFIK: ${{ matrix.use-traefik }}
+      MAKE_TARGET: "test"
+      TESTARGS: "-failfast"
+      DDEV_ACQUIA_SSH_KEY: ${{ secrets.DDEV_ACQUIA_SSH_KEY }}
+      DDEV_PANTHEON_SSH_KEY: ${{ secrets.DDEV_PANTHEON_SSH_KEY }}
+
     steps:
       - uses: actions/checkout@v3
-
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
       - name: Install Docker and deps (Linux)
-        if: matrix.os == 'ubuntu-20.04'
         run: ./.github/workflows/linux-setup.sh
-
-      - uses: actions/setup-go@v3
-        if: matrix.os == 'ubuntu-20.04'
+      - uses: actions/setup-go@v4
         with:
-          go-version: '>=1.18.0'
+          go-version: '>=1.20'
+
+      - name: Override environment variables for push-pull-test-platforms
+        run: |
+          echo "MAKE_TARGET=testpkg" >> $GITHUB_ENV
+          echo "TESTARGS=-failfast -run '(TestDdevFullSite.*|Test.*(Push|Pull))'" >> $GITHUB_ENV
+          echo "GOTEST_SHORT=" >> $GITHUB_ENV
+          echo "DDEV_PLATFORM_API_TOKEN=${{ secrets.DDEV_PLATFORM_API_TOKEN }}" >> $GITHUB_ENV
+          echo "DDEV_PANTHEON_API_TOKEN=${{ secrets.DDEV_PANTHEON_API_TOKEN }}" >> $GITHUB_ENV
+          echo "DDEV_ALLOW_ACQUIA_PUSH=${{ secrets.DDEV_ALLOW_ACQUIA_PUSH }}" >> $GITHUB_ENV
+          echo "DDEV_ACQUIA_API_KEY=${{ secrets.DDEV_ACQUIA_API_KEY }}" >> $GITHUB_ENV
+          echo "DDEV_ACQUIA_API_SECRET=${{ secrets.DDEV_ACQUIA_API_SECRET }}" >> $GITHUB_ENV
+        if: ${{ matrix.pull-push-test-platforms }}
+
+      - run: echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN} DDEV_TEST_USE_TRAEFIK=${DDEV_TEST_USE_TRAEFIK} DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE} DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS} MAKE_TARGET=${MAKE_TARGET} TESTARGS=${TESTARGS} GOTEST_SHORT='${GOTEST_SHORT}'"
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
       - name: DDEV tests
-        run: |
-          echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN}"
-          make ${{ matrix.tests }}
+        run: make TESTARGS="${TESTARGS}" ${MAKE_TARGET}
 
-      - name: Store test results
-        uses: actions/upload-artifact@v3
-        with:
-          name: ddev-test-results-${{ matrix.webserver }}
-          path: /tmp/testresults/

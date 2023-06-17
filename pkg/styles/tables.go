@@ -1,7 +1,7 @@
 package styles
 
 import (
-	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 

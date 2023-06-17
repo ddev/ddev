@@ -1,30 +1,411 @@
-# Quickstart for many CMSs
+# CMS Quickstarts
 
-Once you have DDEV installed, getting a project going is just these steps:
+While the generic `php` project type is [ready to go](./project.md) with any CMS or framework, DDEV offers project types for more easily working with popular platforms and content management systems:
 
-1. Clone or create the code for your project.
-2. `cd` into the project and `ddev config` to configure it and turn it into a DDEV project. In most cases DDEV will autodetect the project type and docroot, but you may have to provide them in others.
-3. `ddev start` and if your project needs it, `ddev composer install`
-4. `ddev launch` to launch a browser with your project, or visit the URL given by `ddev start`.
-5. Import an upstream database with `ddev import-db`.
-6. Import user-files from upstream with `ddev import-files`
+=== "Craft CMS"
 
-Here's a quickstart instructions for a number of different environments:
+    ## Craft CMS
 
-=== "Any (generic)"
+    Start a new [Craft CMS](https://craftcms.com) project or retrofit an existing one.
 
-    ## Any PHP or HTML/JS environment
+    !!!tip "Compatibility with Craft CMS 3"
+        The `craftcms` project type is best with Craft CMS 4+, which is more opinionated about some settings. If you are using Craft CMS 3, you may want to use the `php` project type and [manage settings yourself](https://github.com/ddev/ddev/issues/4650).
 
-    DDEV works happily with most any PHP or static HTML/JS project, although it has special additional support for several CMSs. But you don't need special support if you already know how to configure your project.
-    
-    1. Create a directory (`mkdir my-new-project`) or clone your project (`git clone <your_project>`)
-    2. Change to the new directory (`cd my-new-project`)
-    3. Run `ddev config` and set the project type and docroot, which are usually auto-detected, but may not be if there's no code in there yet.
-    4. Run `ddev start`
-    6. If a composer build, `ddev composer install`
-    4. Configure any database settings; host='db', user='db', password='db', database='db'
-    5. If needed, import a database with `ddev import-db --src=/path/to/db.sql.gz`.
-    6. Visit the project and continue on.
+    Environment variables will be automatically added to your `.env` file to simplify the first boot of a project. For _new_ installations, this means the default URL and database connection settings displayed during installation can be used without modification. If _existing_ projects expect environment variables to be named in a particular way, you are welcome to rename them.
+
+    === "New projects"
+
+        New Craft CMS projects can be created from the official [starter project](https://github.com/craftcms/craft) using DDEV’s [`composer create` command](../users/usage/commands.md#composer):
+
+        ```bash
+        # Create a project directory and move into it:
+        mkdir my-craft-project
+        cd my-craft-project
+
+        # Set up the DDEV environment:
+        ddev config --project-type=craftcms --docroot=web --create-docroot
+
+        # Boot the project and install the starter project:
+        ddev start
+        ddev composer create -y --no-scripts craftcms/craft
+
+        # Run the Craft installer:
+        ddev craft install
+        ddev launch
+        ```
+
+        Third-party starter projects can by used the same way—just substitute the package name when running `ddev composer create`.
+
+    === "Existing projects"
+
+        You can start using DDEV with an existing project, too—just make sure you have a database backup handy!
+
+        ```bash
+        # Clone an existing repository (or navigate to a local project directory):
+        git clone https://github.com/example/example-site my-craft-project
+        cd my-craft-project
+
+        # Set up the DDEV environment:
+        ddev config --project-type=craftcms
+
+        # Boot the project and install Composer packages:
+        ddev start
+        ddev composer install
+
+        # Import a database backup and open the site in your browser:
+        ddev import-db --src=/path/to/db.sql.gz
+        ddev launch
+        ```
+
+    Craft CMS projects use PHP 8.1 and MySQL 8.0, by default. You can override these settings during setup with [`config` command flags](./usage/commands.md#config) or after setup via the [configuration files](./configuration/config.md).
+
+    !!!tip "Upgrading or using a generic project type?"
+        If you previously set up DDEV in a Craft project using the generic `php` project type, update the `type:` setting in `.ddev/config.yaml` to `craftcms`, then run [`ddev restart`](../users/usage/commands.md#restart) apply the changes.
+
+    ### Running Craft in a Sub-directory
+
+    In order for `ddev craft` to work when Craft is installed in a sub-directory, you will need to change the location of the `craft` executable by providing the `CRAFT_CMD_ROOT` environment variable to the web container. For example, if the installation lives in `my-craft-project/app`, you would run `ddev config --web-environment-add=CRAFT_CMD_ROOT=./app`. `CRAFT_CMD_ROOT` defaults to `./`, the project root directory. Run `ddev restart` to apply the change.
+
+    More information about customizing the environment and persisting configuration can be found in [Providing Custom Environment Variables to a Container](https://ddev.readthedocs.io/en/latest/users/extend/customization-extendibility/#providing-custom-environment-variables-to-a-container).
+
+    !!!tip "Installing Craft"
+        Read more about installing Craft in the [official documentation](https://craftcms.com/docs).
+
+=== "Django"
+
+    ## Django 4 (Experimental)
+
+    ```bash
+    git clone https://github.com/example/my-django-site
+    cd my-django-site
+    ddev config # Follow the prompts
+    # If your settings file is not `settings.py` you must add a DJANGO_SETTINGS_MODULE
+    ddev config --web-environment-add=DJANGO_SETTINGS_MODULE=<myapp.settings.local>
+    ddev start
+    # If your app requires setup, do it here:
+    # ddev python manage.py migrate
+    ddev launch
+    ```
+
+    * DDEV will install all everything in your `requirements.txt` or `pyproject.toml` into a `venv`. This takes a little while on first startup.
+    * DDEV appends a stanza to your settings file which includes the DDEV settings only if running in DDEV context.
+    * You can watch the `pip install` in real time on that first slow startup with `ddev logs -f` in another window.
+    * If your `requirements.txt` includes `psycopg2` it requires build tools, so either set `ddev config --web-extra-packages=build-essential` or change your requirement to `psycopg2-binary`.
+
+=== "Drupal"
+
+    ## Drupal
+
+    === "Drupal 10"
+
+        ### Drupal 10 via Composer
+
+        ```bash
+        mkdir my-drupal10-site
+        cd my-drupal10-site
+        ddev config --project-type=drupal10 --docroot=web --create-docroot
+        ddev start
+        ddev composer create drupal/recommended-project
+        ddev composer require drush/drush
+        ddev drush site:install --account-name=admin --account-pass=admin -y
+        ddev drush uli
+        ddev launch
+        ```
+
+    === "Drupal 9"
+
+        ### Drupal 9 via Composer
+
+        ```bash
+        mkdir my-drupal9-site
+        cd my-drupal9-site
+        ddev config --project-type=drupal9 --docroot=web --create-docroot
+        ddev start
+        ddev composer create "drupal/recommended-project:^9"
+        ddev composer require drush/drush
+        ddev drush site:install --account-name=admin --account-pass=admin -y
+        ddev drush uli
+        ddev launch
+        ```
+
+    === "Drupal 6/7"
+
+        ### Drupal 6/7
+
+        ```bash
+        git clone https://github.com/example/my-drupal-site
+        cd my-drupal-site
+        ddev config # Follow the prompts to select type and docroot
+        ddev start
+        ddev launch /install.php
+        ```
+
+        Drupal 7 doesn’t know how to redirect from the front page to `/install.php` if the database is not set up but the settings files *are* set up, so launching with `/install.php` gets you started with an installation. You can also `drush site-install`, then `ddev exec drush site-install --yes`.
+
+        See [Importing a Database](#importing-a-database).
+
+    === "Git Clone"
+
+        ### Git Clone
+
+        ```bash
+        git clone https://github.com/example/my-drupal-site
+        cd my-drupal-site
+        ddev config # Follow the prompts to set Drupal version and docroot
+        ddev composer install # If a composer build
+        ddev launch
+        ```
+
+    === "Backdrop"
+
+        ### Backdrop
+
+        To get started with [Backdrop](https://backdropcms.org), clone the project repository and navigate to the project directory.
+
+        ```bash
+        git clone https://github.com/example/example-site
+        cd example-site
+        ddev config
+        ddev start
+        ddev launch
+        ```
+
+=== "ExpressionEngine"
+
+    ## ExpressionEngine
+
+    === "ExpressionEngine ZIP File Download"
+
+        Download the ExpressionEngine code from [expressionengine.com](https://expressionengine.com/), then follow these steps based on the [official installation instructions](https://docs.expressionengine.com/latest/installation/installation.html):
+
+        ```bash
+        mkdir my-ee && cd my-ee
+        unzip /path/to/ee-zipfile.zip
+        ddev config # Accept the defaults
+        ddev start
+        ddev launch /admin.php # Open installation wizard in browser
+        ```
+
+        When the installation wizard prompts for database settings, enter `db` for the _DB Server Address_, _DB Name_, _DB Username_, and _DB Password_.
+
+        Visit your site.
+
+    === "ExpressionEngine Git Checkout"
+
+        Follow these steps based on the [ExpressionEngine Git Repository README.md](https://github.com/ExpressionEngine/ExpressionEngine#how-to-install):
+
+        ```bash
+        git clone https://github.com/ExpressionEngine/ExpressionEngine # for example
+        cd ExpressionEngine
+        ddev config # Accept the defaults
+        ddev start
+        ddev composer install
+        touch system/user/config/config.php
+        echo "EE_INSTALL_MODE=TRUE" >.env.php
+        ddev start
+        ddev launch /admin.php  # Open installation wizard in browser
+        ```
+
+        When the installation wizard prompts for database settings, enter `db` for the _DB Server Address_, _DB Name_, _DB Username_, and _DB Password_.
+
+=== "Laravel"
+
+    ## Laravel
+
+    === "Laravel"
+
+        Use a new or existing Composer project, or clone a Git repository.
+
+        The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) just as it can for Laravel. DDEV automatically updates or creates the `.env` file with the database information.
+
+        === "Composer"
+            ```bash
+            mkdir my-laravel-app
+            cd my-laravel-app
+            ddev config --project-type=laravel --docroot=public --create-docroot --php-version=8.1
+            ddev composer create --prefer-dist --no-install --no-scripts laravel/laravel -y
+            ddev composer install
+            ddev exec "php artisan key:generate"
+            ddev launch
+            ```
+        === "Git Clone"
+            ```bash
+            git clone <your-laravel-repo>
+            cd <your-laravel-project>
+            ddev config --project-type=laravel --docroot=public --create-docroot --php-version=8.1
+            ddev start
+            ddev composer install
+            ddev exec "php artisan key:generate"
+            ddev launch
+            ```
+
+    === "Statamic"
+
+        Use a new or existing Composer project, or clone a Git repository.
+
+        The Laravel project type can be used for [Statamic](https://statamic.com/) just as it can for Laravel. DDEV automatically updates or creates the `.env` file with the database information.
+
+        === "Composer"
+            ```bash
+            mkdir my-statamic-app
+            cd my-statamic-app
+            ddev config --project-type=laravel --docroot=public --create-docroot
+            ddev composer create --prefer-dist --no-install --no-scripts statamic/statamic
+            ddev composer install
+            ddev exec "php artisan key:generate"
+            ddev launch
+            ```
+        === "Git Clone"
+            ```bash
+            git clone <your-statamic-repo>
+            cd <your-statamic-project>
+            ddev config --project-type=laravel --docroot=public --create-docroot
+            ddev start
+            ddev composer install
+            ddev exec "php artisan key:generate"
+            ddev launch
+            ```
+
+=== "Magento"
+
+    ## Magento 2
+
+    Normal details of a Composer build for Magento 2 are on the [Magento 2 site](https://devdocs.magento.com/guides/v2.4/install-gde/composer.html). You must have a public and private key to install from Magento’s repository. When prompted for “username” and “password” in `composer create`, it’s asking for your public and private keys.
+
+    ```bash
+    mkdir ddev-magento2 && cd ddev-magento2
+    ddev config --project-type=magento2 --php-version=8.1 --docroot=pub --create-docroot --disable-settings-management
+    ddev get ddev/ddev-elasticsearch
+    ddev start
+    ddev composer create --repository=https://repo.magento.com/ magento/project-community-edition -y
+    rm -f app/etc/env.php
+
+    # Change the base-url below to your project's URL
+    ddev magento setup:install --base-url='https://ddev-magento2.ddev.site/' --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db --elasticsearch-host=elasticsearch --search-engine=elasticsearch7 --elasticsearch-port=9200 --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com --admin-user=admin --admin-password=admin123 --language=en_US
+
+    ddev magento deploy:mode:set developer
+    ddev magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorAuth
+    ddev config --disable-settings-management=false
+    ```
+
+    Change the admin name and related information is needed.
+
+    You may want to add the [Magento 2 Sample Data](https://devdocs.magento.com/guides/v2.4/install-gde/install/sample-data-after-composer.html) with `ddev magento sampledata:deploy && ddev magento setup:upgrade`.
+
+    Magento 2 is a huge codebase, and we recommend [using Mutagen for performance](install/performance.md#using-mutagen) on macOS and traditional Windows.
+
+    ## OpenMage/Magento 1
+
+    1. Download OpenMage from [release page](https://github.com/OpenMage/magento-lts/releases).
+    2. Make a directory for it, for example `mkdir ~/workspace/OpenMage` and change to the new directory `cd ~/workspace/OpenMage`.
+    3. Run [`ddev config`](../users/usage/commands.md#config) and accept the defaults.
+    4. Install sample data. (See below.)
+    5. Run [`ddev start`](../users/usage/commands.md#start).
+    6. Follow the URL to the base site.
+
+    You may want the [Magento 1 Sample Data](https://github.com/Vinai/compressed-magento-sample-data) for experimentation:
+
+    * Download Magento [1.9.2.4 Sample Data](https://github.com/Vinai/compressed-magento-sample-data/raw/master/compressed-magento-sample-data-1.9.2.4.tgz).
+    * Extract the download:
+        `tar -zxf ~/Downloads/compressed-magento-sample-data-1.9.2.4.tgz --strip-components=1`
+    * Import the example database `magento_sample_data_for_1.9.2.4.sql` with `ddev import-db --src=magento_sample_data_for_1.9.2.4.sql` to database **before** running OpenMage install.
+
+    OpenMage is a huge codebase, and we recommend [using Mutagen for performance](install/performance.md#using-mutagen) on macOS and traditional Windows.
+
+=== "Moodle"
+
+    ## Moodle
+
+    ```bash
+    ddev config --composer-root=public --create-docroot --docroot=public --webserver-type=apache-fpm
+    ddev start
+    ddev composer create moodle/moodle -y
+    ddev exec 'php public/admin/cli/install.php --non-interactive --agree-license --wwwroot=$DDEV_PRIMARY_URL --dbtype=mariadb --dbhost=db --dbname=db --dbuser=db --dbpass=db --fullname="DDEV Moodle Demo" --shortname=Demo --adminpass=password'
+    ddev launch /login
+    ```
+
+    In the web browser, log into your account using `admin` and `password`.
+
+    Visit the [Moodle Admin Quick Guide](https://docs.moodle.org/400/en/Admin_quick_guide) for more information.
+
+    !!!tip
+        Moodle relies on a periodic cron job—don’t forget to set that up! See [ddev/ddev-cron](https://github.com/ddev/ddev-cron).
+
+=== "Python"
+
+    ## Python/Flask (Experimental)
+
+    ```bash
+    git clone https://github.com/example/my-python-site
+    cd my-python-site
+    ddev config # Follow the prompts
+    # Tell gunicorn where your app is (WSGI_APP)
+    ddev config --web-environment-add=WSGI_APP=<my-app:app>
+    ddev start
+    # If you need to do setup before the site can go live, do it:
+    # ddev exec flask forge
+    ddev launch
+    ```
+
+    * DDEV will install all everything in your `requirements.txt` or `pyproject.toml` into a `venv`. This takes a little while on first startup.
+    * If your app requires settings, you can add them as environment variables, or otherwise configure your app to use the database, etc. (Database settings are host: `db`, database: `db`, user: `db`, password `db` no matter whether you're using PostgreSQL, MariaDB, or MySQL.)
+    * You can watch `pip install` output in real time on that first slow startup with `ddev logs -f` in another window.
+    * If your `requirements.txt` includes `psycopg2` it requires build tools, so either set `ddev config --web-extra-packages=build-essential` or change your requirement to `psycopg2-binary`. 
+
+=== "Shopware"
+
+    ## Shopware 6
+
+    You can set up a Shopware 6 environment many ways, we recommend the following technique:
+
+    ```bash
+    git clone --branch=6.4 https://github.com/shopware/production my-shopware6
+    cd my-shopware6
+    ddev config --project-type=shopware6 --docroot=public
+    ddev start
+    ddev composer install --no-scripts
+    # During system:setup you may have to enter the Database user (db), Database password (db)
+    # Database host (db) and Database name (db).
+    ddev exec bin/console system:setup --database-url=mysql://db:db@db:3306/db --app-url='${DDEV_PRIMARY_URL}'
+    ddev exec bin/console system:install --create-database --basic-setup
+    ddev launch /admin
+    ```
+
+    Log into the admin site (`/admin`) using the web browser. The default credentials are username `admin` and password `shopware`. You can use the web UI to install sample data or accomplish many other tasks.
+
+    For more advanced tasks like adding elasticsearch, building and watching storefront and administration, see [susi.dev](https://susi.dev/ddev-shopware-6).
+
+=== "TYPO3"
+
+    ## TYPO3
+
+    === "Composer"
+
+        ### Composer
+
+        ```bash
+        mkdir my-typo3-site
+        cd my-typo3-site
+        ddev config --project-type=typo3 --docroot=public --create-docroot --php-version 8.1
+        ddev start
+        ddev composer create "typo3/cms-base-distribution"
+        ddev exec touch public/FIRST_INSTALL
+        ddev launch
+        ```
+
+    === "Git Clone"
+
+        ### Git Clone
+
+        ```bash
+        git clone https://github.com/example/example-site
+        cd example-site
+        ddev config --project-type=typo3 --docroot=public --create-docroot --php-version 8.1
+        ddev composer install
+        ddev restart
+        ddev exec touch public/FIRST_INSTALL
+        ddev launch
+        ```
 
 === "WordPress"
 
@@ -32,45 +413,40 @@ Here's a quickstart instructions for a number of different environments:
 
     There are several easy ways to use DDEV with WordPress:
 
-    === "wp-cli"
+    === "WP-CLI"
 
-        ### wp-cli
+        ### WP-CLI
 
         DDEV has built-in support for [WP-CLI](https://wp-cli.org/), the command-line interface for WordPress.
-        
+
         ```bash
         mkdir my-wp-site
         cd my-wp-site/
-        
-        # create a new DDEV project inside the newly created folder
-        # (the primary URL is automatically set to https://<folder>.ddev.site) 
-        
+
+        # Create a new DDEV project inside the newly-created folder
+        # (Primary URL automatically set to `https://<folder>.ddev.site`)
         ddev config --project-type=wordpress
         ddev start
-        
-        # download latest WordPress (via WP-CLI)
-        
+
+        # Download WordPress
         ddev wp core download
-        
-        # finish the installation in your browser:
-        
+
+        # Launch in browser to finish installation
         ddev launch
-        
-        # optional: you can use the following installation command 
-        # (we need to use single quotes to get the primary site URL from .ddev/config.yaml as variable)
-        
+
+        # OR use the following installation command
+        # (we need to use single quotes to get the primary site URL from `.ddev/config.yaml` as variable)
         ddev wp core install --url='$DDEV_PRIMARY_URL' --title='New-WordPress' --admin_user=admin --admin_email=admin@example.com --prompt=admin_password
-        
-        # open WordPress admin dashboard in your browser:
-        
+
+        # Launch WordPress admin dashboard in your browser
         ddev launch wp-admin/
         ```
 
-    === "roots/bedrock"
-        
-        ### roots/bedrock
+    === "Bedrock"
 
-        roots/bedrock is a modern composer-based installation if WordPress:
+        ### Bedrock
+
+        [Bedrock](https://roots.io/bedrock/) is a modern, Composer-based installation in WordPress:
 
         ```bash
         mkdir my-wp-bedrock-site
@@ -79,360 +455,115 @@ Here's a quickstart instructions for a number of different environments:
         ddev start
         ddev composer create roots/bedrock
         ```
-    
-        Now, since [Bedrock](https://roots.io/bedrock/) uses a configuration technique which is unusual for WordPress, edit the .env file which has been created in the project root, and set:
-    
-        ```
-            DB_NAME=db
-            DB_USER=db
-            DB_PASSWORD=db
-            DB_HOST=db
-            WP_HOME=${DDEV_PRIMARY_URL}
-            WP_SITEURL=${WP_HOME}/wp
-            WP_ENV=development
-        ```
-    
-        You can then `ddev start` and `ddev launch`.
-    
-        For more details see [Bedrock installation](https://roots.io/bedrock/docs/installing-bedrock/).
 
-    === "git clone"
-    
-        ### git clone
+        Update the `.env` file in the project root for Bedrock’s WordPress configuration convention:
 
-        To get started using DDEV with an existing WordPress project, clone the project's repository. Note that the git URL shown here is just an example.
-        
+        ```
+        DB_NAME=db
+        DB_USER=db
+        DB_PASSWORD=db
+        DB_HOST=db
+        WP_HOME=${DDEV_PRIMARY_URL}
+        WP_SITEURL=${WP_HOME}/wp
+        WP_ENV=development
+        ```
+
+        You can then run [`ddev start`](../users/usage/commands.md#start) and [`ddev launch`](../users/usage/commands.md#launch).
+
+        For more details, see [Bedrock installation](https://docs.roots.io/bedrock/master/installation/).
+
+    === "Git Clone"
+
+        ### Git Clone
+
+        To get started using DDEV with an existing WordPress project, clone the project’s repository.
+
         ```bash
-        git clone https://github.com/example/example-site.git
-        cd example-site
+        git clone https://github.com/example/my-site.git
+        cd my-site
         ddev config
         ```
-        
-        You'll see a message like:
-        
+
+        You’ll see a message like:
+
+        > An existing user-managed wp-config.php file has been detected!
+        > Project DDEV settings have been written to:
+        >
+        > /Users/rfay/workspace/bedrock/web/wp-config-ddev.php
+
+        Comment out any database connection settings in your `wp-config.php` file and add the following snippet to your `wp-config.php`, near the bottom of the file and before the include of `wp-settings.php`:
+
         ```php
-        An existing user-managed wp-config.php file has been detected!
-        Project ddev settings have been written to:
-        
-        /Users/rfay/workspace/bedrock/web/wp-config-ddev.php
-        
-        Please comment out any database connection settings in your wp-config.php and
-        add the following snippet to your wp-config.php, near the bottom of the file
-        and before the include of wp-settings.php:
-        
-        // Include for ddev-managed settings in wp-config-ddev.php.
+        // Include for DDEV-managed settings in wp-config-ddev.php.
         $ddev_settings = dirname(__FILE__) . '/wp-config-ddev.php';
         if (is_readable($ddev_settings) && !defined('DB_USER')) {
-          require_once($ddev_settings);
+        require_once($ddev_settings);
         }
-        
-        If you don't care about those settings, or config is managed in a .env
-        file, etc, then you can eliminate this message by putting a line that says
+        ```
+
+        If you don't care about those settings, or config is managed elsewhere (like in a `.env`
+        file), you can eliminate this message by adding a comment to `wp-config.php`:
+
+        ```php
         // wp-config-ddev.php not needed
-        in your wp-config.php
-        ```
-        
-        So just add the suggested include into your wp-config.php, or take the workaround shown.
-        
-        Now start your project with `ddev start`
-        
-        Quickstart instructions regarding database imports can be found under [Importing a database](#importing-a-database).
-
-=== "Drupal"
-
-    ## Drupal
-
-    === "Drupal 9 Composer"
-
-        ### Drupal 9 composer build
-
-        ```bash
-        mkdir my-drupal9-site
-        cd my-drupal9-site
-        ddev config --project-type=drupal9 --docroot=web --create-docroot
-        ddev start
-        ddev composer create "drupal/recommended-project" --no-install
-        ddev composer require drush/drush --no-install
-        ddev composer install
-        ddev drush site:install -y
-        ddev drush uli
-        ddev launch
         ```
 
-    === "Drupal 10"
+        Now run [`ddev start`](../users/usage/commands.md#start) and continue [importing a database](#importing-a-database) if you need to.
 
-        ### Drupal 10 composer build
-    
-        [Drupal 10](https://www.drupal.org/about/10) is not yet released, but lots of people want to test and contribute to it. It's easy to set it up in DDEV:
-        
-        ```bash
-        mkdir my-drupal10-site
-        cd my-drupal10-site
-        ddev config --project-type=drupal10 --docroot=web --create-docroot
-        ddev start
-        ddev composer create --no-install drupal/recommended-project:^10@alpha
-        ddev composer require drush/drush --no-install
-        ddev composer install
-        ddev drush site:install -y
-        ddev drush uli
-        ddev launch
-        ```
-        
-        Note that as Drupal 10 moves from alpha to beta and then release, you'll want to change the tag from `^10@alpha` to `^10@beta` and then `^10`.
+## Configuration Files
 
-    === "Drupal 6/7"
+The [`ddev config`](../users/usage/commands.md#config) and `ddev start` commands attempt to create a CMS-specific settings file pre-populated with DDEV credentials. If you don't want DDEV to do this, set the [`disable_settings_management`](../users/configuration/config.md#disable_settings_management) config option to `true`.
 
-        ### Drupal 6/7 install
-    
-        Using DDEV with a Drupal 6 or 7 project is as simple as cloning the project's repository and checking out its directory.
-        
-        ```bash
-        git clone https://github.com/user/my-drupal-site
-        cd my-drupal-site
-        ddev config # Follow the prompts to select type and docroot
-        ddev start
-        ddev launch /install.php
-        ```
-        
-        (Drupal 7 doesn't know how to redirect from the front page to the /install.php if the database is not set up but the settings files *are* set up, so launching with /install.php gets you started with an installation. You can also `drush site-install`, `ddev exec drush site-install --yes`)
-        
-        Quickstart instructions for database imports can be found under [Importing a database](#importing-a-database).
+For **Craft CMS** DDEV settings are added to the `.env` file.
 
-    === "Git clone"
+For **Django 4** DDEV settings are placed in `.ddev/settings/settings.django4.py` and a stanza is added to your `settings.py` that is only invoked in DDEV context.
 
-        ### Git clone build
-    
-        Note that the git URL shown below is an example only, you'll need to use your own project.
-        
-        ```bash
-        git clone https://github.com/example/example-site
-        cd example-site
-        ddev config # Follow the prompts to set drupal version and docroot
-        ddev composer install  # If a composer build
-        ddev launch
-        ```
+For **Drupal** and **Backdrop**, DDEV settings are written to a DDEV-managed file, `settings.ddev.php`. The `ddev config` command will ensure these settings are included in your `settings.php` through the following steps:
 
-=== "TYPO3"
+- Write DDEV settings to `settings.ddev.php`.
+- If no `settings.php` file exists, create one that includes `settings.ddev.php`.
+- If a `settings.php` file already exists, ensure that it includes `settings.ddev.php`, modifying `settings.php` to write the include if necessary.
 
-    ## TYPO3
+For **Magento 1**, DDEV settings go into `app/etc/local.xml`.
 
-    === "Composer build"
-    
-        ### TYPO3 composer build
-        
-        ```bash
-        mkdir my-typo3-site
-        cd my-typo3-site
-        ddev config --project-type=typo3 --docroot=public --create-docroot
-        ddev start
-        ddev composer create "typo3/cms-base-distribution" --no-install
-        ddev composer install
-        ddev exec touch public/FIRST_INSTALL
-        ddev launch
-        ```
-
-    === "Git clone"
-        
-        ### TYPO3 git clone
-    
-        ```bash
-        git clone https://github.com/example/example-site
-        cd example-site
-        ddev config
-        ddev composer install
-        ddev launch
-        ```
-
-=== "OpenMage/Magento 1"
-
-    ## OpenMage/Magento 1
-
-    1. Download OpenMage from [release page](https://github.com/OpenMage/magento-lts/releases).
-    2. Make a directory for it, for example `mkdir ~/workspace/OpenMage` and change to the new directory `cd ~/workspace/OpenMage`.
-    3. `ddev config` and accept the defaults.
-    4. (Install sample data - see below)
-    5. Run `ddev start`
-    6. Follow the URL to the base site.
-
-    You may want the [Magento 1 Sample Data](https://github.com/Vinai/compressed-magento-sample-data) for experimentation:
-
-    * Download Magento [1.9.1.0 Sample Data](https://raw.githubusercontent.com/Vinai/compressed-magento-sample-data/1.9.1.0/compressed-magento-sample-data-1.9.1.0.tgz).
-    * Extract the download, for example `tar -zxf ~/Downloads/compressed-magento-sample-data-1.9.1.0.tgz --strip-components=1`
-    * Import the example database "magento_sample_data_for_1.9.1.0.sql" with `ddev import-db --src=magento_sample_data_for_1.9.1.0.sql` to database **before** running OpenMage install.
-
-    Note that OpenMage is a huge codebase and using `mutagen_enabled: true` is recommended for performance on macOS and traditional Windows, see [docs](install/performance.md#using-mutagen).
-
-=== "Magento 2"
-
-    ## Magento 2
-
-    Normal details of a composer build for Magento 2 are on [Magento 2 site](https://devdocs.magento.com/guides/v2.4/install-gde/composer.html) You must have a public and private key to install from Magento's repository; when prompted for "username" and "password" in the composer create it's asking for your public and private keys.
-    
-    ```bash
-    mkdir ddev-magento2 && cd ddev-magento2
-    ddev config --project-type=magento2 --php-version=8.1 --docroot=pub --create-docroot --disable-settings-management
-    ddev get drud/ddev-elasticsearch
-    ddev start
-    ddev composer create --no-install --repository=https://repo.magento.com/ magento/project-community-edition -y
-    ddev composer install
-    rm -f app/etc/env.php
-    # Change the base-url below to your project's URL
-    ddev magento setup:install --base-url='https://ddev-magento2.ddev.site/' --cleanup-database --db-host=db --db-name=db --db-user=db --db-password=db --elasticsearch-host=elasticsearch --admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com --admin-user=admin --admin-password=admin123 --language=en_US
-    ddev magento deploy:mode:set developer
-    ddev magento module:disable Magento_TwoFactorAuth
-    ddev config --disable-settings-management=false
-    ```
-    
-    Of course, change the admin name and related information is needed.
-    
-    You may want to add the [Magento 2 Sample Data](https://devdocs.magento.com/guides/v2.4/install-gde/install/sample-data-after-composer.html) with `ddev magento sampledata:deploy && ddev magento setup:upgrade`.
-    
-    Note that Magento 2 is a huge codebase and using `mutagen_enabled: true` is recommended for performance on macOS and traditional Windows, see [docs](install/performance.md#using-mutagen).
-
-=== "Laravel"
-
-    ## Laravel
-
-    Get started with Laravel projects on ddev either using a new or existing composer project or by cloning a git repository.
-    The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) just as it can for Laravel.
-    
-    ```bash
-    mkdir my-laravel-app
-    cd my-laravel-app
-    ddev config --project-type=laravel --docroot=public --create-docroot
-    ddev start
-    ddev composer create --prefer-dist laravel/laravel
-    ddev exec "cat .env.example | sed  -E 's/DB_(HOST|DATABASE|USERNAME|PASSWORD)=(.*)/DB_\1=db/g' > .env"
-    ddev exec 'sed -i "s#APP_URL=.*#APP_URL=${DDEV_PRIMARY_URL}#g" .env'
-    ddev exec "php artisan key:generate"
-    ddev launch
-    ```
-
-    
-    In the examples above we used a one liner to copy `.env.example` as `env`and set the `DB_HOST`, `DB_DATABASE`, `DB_USERNAME` and `DB_PASSWORD` environment variables to the value of `db`.
-    These values are DDEV's default settings for the Database connection.
-    
-    Instead of setting each connection variable we can add a ddev to the `connections` array in `config/database.php` like this:
-    
-    ```php
-    <?php
-    return [
-        ...
-        'connections' => [
-            ...
-            'ddev' => [
-                'driver' => 'mysql',
-                'host' => 'db',
-                'port' => 3306,
-                'database' => 'db',
-                'username' => 'db',
-                'password' => 'db',
-                'unix_socket' => '',
-                'charset' => 'utf8mb4',
-                'collation' => 'utf8mb4_unicode_ci',
-                'prefix' => '',
-                'strict' => true,
-                'engine' => null,
-            ],
-        ],
-      ...
-    ];
-    ```
-    
-    This way we only need to change the value of `DB_CONNECTION` to `ddev` in the `.env` to work with the `db` service.
-    This is very handy if you have a local database installed and you want to switch between the connections faster by changing only one variable in `.env`
-
-=== "Shopware 6"
-
-    ## Shopware 6
-
-    You can set up a Shopware 6 environment many ways, but this shows you one recommended technique:
-    
-    ```bash
-    git clone --branch=6.4 https://github.com/shopware/production my-shopware6
-    cd my-shopware6
-    ddev config --project-type=shopware6 --docroot=public
-    ddev start
-    ddev composer install
-    ddev exec bin/console system:setup --database-url=mysql://db:db@db:3306/db --app-url='${DDEV_PRIMARY_URL}'
-    ddev exec bin/console system:install --create-database --basic-setup
-    ddev launch /admin
-    ```
-    
-    Now log into the admin site (/admin) using the web browser. The default credentials are username=admin, password=shopware. You can use the web UI to install sample data or accomplish many other tasks.
-    
-    For more advanced tasks like adding elasticsearch, building and watching storefront and administration, see [susi.dev](https://susi.dev/ddev-shopware-6).
-
-=== "Backdrop"
-
-    ## Backdrop
-
-    To get started with Backdrop, clone the project repository and navigate to the project directory.
-    
-    ```bash
-    git clone https://github.com/example/example-site
-    cd example-site
-    ddev config
-    ddev start
-    ddev launch
-    ```
-
-## Configuration files
-
-**Note:** If you're providing the `settings.php` or `wp-config.php` and DDEV is creating the `settings.ddev.php` (or `wp-config-local.php`, `AdditionalConfig.php`, or similar), the main settings file must explicitly include the appropriate DDEV-generated settings file.  Any changes you need should be included somewhere that loads after DDEV's settings file, for example in Drupal's `settings.php` *after* `settings.ddev.php` is included. (see [Adding Configuration](#adding-configuration) below).
-
-!!!note "Turning off settings management completely"
-
-    If you do *not* want DDEV-Local to create or manage settings files, set `disable_settings_management: true` in your `.ddev/config.yaml` or `ddev config --disable-settings-management` and you will be the only one that edits or updates settings files.
-
-The `ddev config` command attempts to create a CMS-specific settings file with DDEV credentials pre-populated.
-
-For **Drupal** and **Backdrop**, DDEV settings are written to a DDEV-managed file, settings.ddev.php. The `ddev config` command will ensure that these settings are included in your `settings.php` through the following steps:
-
-* Write DDEV settings to `settings.ddev.php`
-* If no `settings.php` file exists, create one that includes `settings.ddev.php`
-* If a `settings.php` file already exists, ensure that it includes `settings.ddev.php`, modifying `settings.php` to write the include if necessary.
-
-For **Magento 1**, DDEV settings go into `app/etc/local.xml`
-
-In **Magento 2**, DDEV settings go into `app/etc/env.php`
+In **Magento 2**, DDEV settings go into `app/etc/env.php`.
 
 For **TYPO3**, DDEV settings are written to `AdditionalConfiguration.php`. If `AdditionalConfiguration.php` exists and is not managed by DDEV, it will not be modified.
 
 For **WordPress**, DDEV settings are written to a DDEV-managed file, `wp-config-ddev.php`. The `ddev config` command will attempt to write settings through the following steps:
 
-* Write DDEV settings to `wp-config-ddev.php`
-* If no `wp-config.php` exists, create one that include `wp-config-ddev.php`
-* If a DDEV-managed `wp-config.php` exists, create one that includes `wp-config.php`
-* If a user-managed `wp-config.php` exists, instruct the user on how to modify it to include DDEV settings
+- Write DDEV settings to `wp-config-ddev.php`.
+- If no `wp-config.php` exists, create one that include `wp-config-ddev.php`.
+- If a DDEV-managed `wp-config.php` exists, create one that includes `wp-config.php`.
+- If a user-managed `wp-config.php` exists, instruct the user on how to modify it to include DDEV settings.
 
-How do you know if DDEV manages a settings file? You will see the following comment. Remove the comment and DDEV will not attempt to overwrite it!  If you are letting DDEV create its settings file, it is recommended that you leave this comment so DDEV can continue to manage it, and make any needed changes in another settings file.
+You’ll know DDEV is managing a settings file when you see a comment containing `#ddev-generated` like the one below. Remove the comment and DDEV will not attempt to overwrite it. If you’re letting DDEV create its settings file, we recommended leaving this comment so DDEV can continue to manage it, and make any needed changes in another settings file.
 
 ```
-
 /**
  #ddev-generated: Automatically generated Drupal settings.php file.
  ddev manages this file and may delete or overwrite the file unless this comment is removed.
  */
-
 ```
 
-### Adding configuration
+If you’re providing the `settings.php` or `wp-config.php` and DDEV is creating `settings.ddev.php` (or `wp-config-local.php`, `AdditionalConfig.php`, or similar), the main settings file must explicitly include the appropriate DDEV-generated settings file. Any changes you need should be included somewhere that loads after DDEV’s settings file, for example in Drupal’s `settings.php` _after_ `settings.ddev.php` is included. (See [Adding Configuration](#adding-configuration) below).
 
-**Drupal and Backdrop**:  In `settings.php`, enable loading `settings.local.php` after `settings.ddev.php` is included (create a new one if it doesn't already exist), and make changes there (wrapping with `if (getenv('IS_DDEV_PROJECT') == 'true')` as needed).
+### Adding Configuration
 
-**WordPress**:  Load a `wp-config-local.php` after `wp-config-ddev.php`, and make changes there (wrapping with `if (getenv('IS_DDEV_PROJECT') == 'true')` as needed).
+**Drupal and Backdrop**: In `settings.php`, enable loading `settings.local.php` after `settings.ddev.php` is included—creating a new one if it doesn’t already exist—and make changes there. Wrap with `if (getenv('IS_DDEV_PROJECT') == 'true')` as needed.
 
-## Listing project information
+**WordPress**: Load a `wp-config-local.php` after `wp-config-ddev.php`, and make changes there. Wrap with `if (getenv('IS_DDEV_PROJECT') == 'true')` as needed.
 
-`ddev list` or `ddev list --active-only` current projects.
+## Listing Project Information
+
+Run [`ddev list`](../users/usage/commands.md#list) or `ddev list --active-only` current projects.
 
 ```
 
 ➜  ddev list
 NAME          TYPE     LOCATION                   URL(s)                                STATUS
 d8git         drupal8  ~/workspace/d8git          <https://d8git.ddev.local>              running
-                                                  <http://d8git.ddev.local>
+                                                <http://d8git.ddev.local>
 hobobiker     drupal6  ~/workspace/hobobiker.com                                        stopped
 
 ```
@@ -442,11 +573,11 @@ hobobiker     drupal6  ~/workspace/hobobiker.com                                
 ➜  ddev list --active-only
 NAME     TYPE     LOCATION             URL(s)                      STATUS
 drupal8  drupal8  ~/workspace/drupal8  <http://drupal8.ddev.site>   running
-                                       <https://drupal8.ddev.site>
+                                        <https://drupal8.ddev.site>
 
 ```
 
-You can also see more detailed information about a project by running `ddev describe` from its working directory. You can also run `ddev describe [project-name]` from any location to see the detailed information for a running project.
+You can also see more detailed information about a project by running [`ddev describe`](../users/usage/commands.md#describe) from its working directory. You can also run `ddev describe [project-name]` from any location to see the detailed information for a running project.
 
 ```
 NAME        TYPE     LOCATION                URL                           STATUS
@@ -488,23 +619,29 @@ DDEV ROUTER STATUS: healthy
 ssh-auth status: healthy
 ```
 
-## Removing projects from DDEV-Local
+## Removing Projects
 
-To remove a project from DDEV-Local's listing you can use the destructive option (deletes database, removes item from ddev's list, removes hostname entry in hosts file):
+There are two ways to remove a project from DDEV’s listing.
+
+The first, the [`ddev delete`](../users/usage/commands.md#delete) command, is destructive. It removes the project from DDEV’s list, deletes its database, and removes the hostname entry from the hosts file:
 
 `ddev delete <projectname>`
 or
 `ddev delete --omit-snapshot <projectname>`
 
-Or if you just don't want it to show up in `ddev list` any more, use `ddev stop --unlist <projectname>` to unlist it until the next time you `ddev start` or `ddev config` the project.
+If you don’t want the project to show up in [`ddev list`](../users/usage/commands.md#list) anymore, use [`ddev stop`](../users/usage/commands.md#stop)—which is nondestructive—to unlist the project until the next time you run [`ddev start`](../users/usage/commands.md#start) or [`ddev config`](../users/usage/commands.md#config):
 
-## Importing assets for an existing project
+```bash
+ddev stop --unlist <projectname>
+```
 
-An important aspect of local web development is the ability to have a precise recreation of the project you are working on locally, including up-to-date database contents and static assets such as uploaded images and files. ddev provides functionality to help with importing assets to your local environment with two commands.
+## Importing Assets for An Existing Project
 
-### Importing a database
+An important aspect of local web development is the ability to have a precise local recreation of the project you’re working on, including up-to-date database contents and static assets like uploaded images and files. DDEV provides two commands to help with importing assets to your local environment.
 
-The `ddev import-db` command is provided for importing the database for a project. Running this command will provide a prompt for you to specify the location of your database import. By default `ddev import-db` empties the default "db" database and then loads the provided dumpfile. Most people use it with command flags, like `ddev import-db --src=.tarballs/db.sql.gz` but it can also prompt for the location of the dumpfile if you just use `ddev import-db`:
+### Importing a Database
+
+The [`ddev import-db`](../users/usage/commands.md#import-db) command imports the database for a project. Running this command will prompt you to specify the location of your database import. By default `ddev import-db` empties the default `db` database, then loads the provided dump file. Most people use it with command flags, like `ddev import-db --src=.tarballs/db.sql.gz`, but it can also prompt for the location of the dump if you only use `ddev import-db`:
 
 ```bash
 ddev import-db
@@ -515,17 +652,18 @@ Importing database...
 Successfully imported database for drupal8
 ```
 
-#### Supported file types
+#### Supported Database Import File Types
 
-Database import supports the following file types:
+Database imports can be any of the following file types:
 
-* Raw SQL Dump (.sql)
-* Gzipped SQL Dump (.sql.gz)
-* (Gzipped) Tarball Archive (.tar, .tar.gz, .tgz)
-* Zip Archive (.zip)
-* stdin
+- Raw SQL Dump (`.sql`)
+- Gzipped SQL Dump (`.sql.gz`)
+- Xz’d SQL Dump (`.sql.xz`)
+- (Gzipped) Tarball Archive (`.tar`, `.tar.gz`, `.tgz`)
+- Zip Archive (`.zip`)
+- stdin
 
-If a Tarball Archive or Zip Archive is provided for the import, you will be provided an additional prompt, allowing you to specify a path within the archive to use for the import asset. The specified path should provide a Raw SQL Dump (.sql). In the following example, the database we want to import is named `data.sql` and resides at the top-level of the archive:
+If a Tarball Archive or Zip Archive is provided for the import, you’ll be prompted to specify a path within the archive to use for the import asset. The specified path should provide a raw SQL dump (`.sql`). In the following example, the database we want to import is named `data.sql` and resides at the top level of the archive:
 
 ```bash
 ddev import-db
@@ -539,12 +677,11 @@ Importing database...
 A settings file already exists for your application, so ddev did not generate one.
 Run 'ddev describe' to find the database credentials for this application.
 Successfully imported database for drupal8
-
 ```
 
-#### Non-interactive usage
+#### Non-Interactive Usage
 
-If you want to use import-db without answering prompts, you can use the `--src` flag to provide the path to the import asset. If you are importing an archive, and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag. Examples:
+If you want to use the [`import-db`](../users/usage/commands.md#import-db) command without answering prompts, you can use the `--src` flag to provide the path to the import asset. If you’re importing an archive and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag. Examples:
 
 ```bash
 ddev import-db --src=/tmp/mydb.sql.gz
@@ -552,10 +689,10 @@ gzip -dc /tmp/mydb.sql.gz | ddev import-db
 ddev import-db <mydb.sql
 ```
 
-#### Database import notes
+#### Database Import Notes
 
-* Importing from a dumpfile via stdin will not show progress because there's no way the import can know how far along through the import it has progressed.
-* Use `ddev import-db --target-db <some_database>` to import to a non-default database (other than the default "db" database). This will create the database if it doesn't exist already.
-* Use `ddev import-db --no-drop` to import without first emptying the database.
-* If a database already exists and the import does not specify dropping tables, the contents of the imported dumpfile will be *added* to the database. Most full database dumps do a table drop and create before loading, but if yours does not, you can drop all tables with `ddev stop --remove-data` before importing.
-* If imports are stalling or failing, make sure you have plenty of unused space (See [#3360](https://github.com/drud/ddev/issues/3360)). DDEV has no problems importing large databases (2G+), but importing requires lots of space. DDEV will show a warning on startup if unused space is getting low.
+- Importing from a dump file via stdin will not show progress because there’s no way the import can know how far along through the import it has progressed.
+- Use `ddev import-db --target-db <some_database>` to import to a non-default database (other than the default `db` database). This will create the database if it doesn’t already exist.
+- Use `ddev import-db --no-drop` to import without first emptying the database.
+- If a database already exists and the import does not specify dropping tables, the contents of the imported dumpfile will be _added_ to the database. Most full database dumps do a table drop and create before loading, but if yours does not, you can drop all tables with `ddev stop --remove-data` before importing.
+- If imports are stalling or failing, make sure you have plenty of unused space (see [#3360](https://github.com/ddev/ddev/issues/3360)). DDEV has no problems importing large (2G+) databases, but importing requires lots of space. DDEV will show a warning on startup if unused space is getting low.

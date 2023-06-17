@@ -4,6 +4,21 @@ set -o errexit nounset pipefail
 
 rm -f /tmp/healthy
 
+# If supervisord happens to be running (ddev start when already running) then kill it off
+if pkill -0 supervisord; then
+  supervisorctl stop all || true
+  supervisorctl shutdown || true
+fi
+rm -f /var/run/supervisor.sock
+
+export DDEV_WEB_ENTRYPOINT=/mnt/ddev_config/web-entrypoint.d
+
+source /functions.sh
+
+# If user has not been created via normal template (like uid 999)
+# then try to grab the required files from /etc/skel
+if [ ! -f ~/.gitconfig ]; then (sudo cp -r /etc/skel/. ~/ && sudo chown -R "$(id -u -n)" ~ ) || true; fi
+
 # If DDEV_PHP_VERSION isn't set, use a reasonable default
 DDEV_PHP_VERSION="${DDEV_PHP_VERSION:-$PHP_DEFAULT_VERSION}"
 
@@ -44,7 +59,7 @@ fi
 
 if [ "$DDEV_PROJECT_TYPE" = "backdrop" ] ; then
     # Start can be executed when the container is already running.
-    mkdir -p ~/.drush/commands && ln -s /var/tmp/backdrop_drush_commands ~/.drush/commands/backdrop
+    mkdir -p ~/.drush/commands && ln -sf /var/tmp/backdrop_drush_commands ~/.drush/commands/backdrop
 fi
 
 if [ "${DDEV_PROJECT_TYPE}" = "drupal6" ] || [ "${DDEV_PROJECT_TYPE}" = "drupal7" ] || [ "${DDEV_PROJECT_TYPE}" = "backdrop" ]; then
@@ -78,13 +93,19 @@ ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/
 # Make sure the TERMINUS_CACHE_DIR (/mnt/ddev-global-cache/terminus/cache) exists
 sudo mkdir -p ${TERMINUS_CACHE_DIR}
 
-sudo mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},nvm_dir/${HOSTNAME},npm/${HOSTNAME},yarn/${HOSTNAME}}
+sudo mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},nvm_dir/${HOSTNAME},npm,yarn/classic,yarn/berry}
 sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/ /var/lib/php
-yarn config set cache-folder /mnt/ddev-global-cache/yarn/${HOSTNAME} || yarn config set cacheFolder /mnt/ddev-global-cache/yarn/${HOSTNAME} || true
-npm config set cache /mnt/ddev-global-cache/npm/${HOSTNAME} || true
-
-ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ${NVM_DIR:-${HOME}/.nvm}
-if [ ! -f ${NVM_DIR:-${HOME}/.nvm}/nvm.sh ]; then (install_nvm.sh || true); fi
+# The following ensures a persistent and shared "global" cache for
+# yarn1 (classic) and yarn2 (berry). In the case of yarn2, the global cache
+# will only be used if the project is configured to use it through it's own
+# enableGlobalCache configuration option. Assumes ~/.yarn/berry as the default
+# global folder.
+( (cd ~ || echo "unable to cd to home directory"; exit 22) && yarn config set cache-folder /mnt/ddev-global-cache/yarn/classic || true)
+# ensure default yarn2 global folder is there to symlink cache afterwards
+mkdir -p ~/.yarn/berry
+ln -sf /mnt/ddev-global-cache/yarn/berry ~/.yarn/berry/cache
+ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ~/.nvm
+if [ ! -f ~/.nvm/nvm.sh ]; then (install_nvm.sh || true); fi
 
 # /mnt/ddev_config/.homeadditions may be either
 # a bind-mount, or a volume mount, but we don't care,
@@ -95,6 +116,8 @@ if [ -d /mnt/ddev_config/.homeadditions ]; then
 fi
 
 # It's possible CAROOT does not exist or is not writeable (if host-side mkcert -install not run yet)
+# TODO: We shouldn't have to chown ddev-global-cache here as it's done by app.Start. However, in non-ddev
+# context it may still have to be done.
 sudo mkdir -p ${CAROOT} && sudo chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/
 # This will install the certs from $CAROOT (/mnt/ddev-global-cache/mkcert)
 # It also creates them if they don't already exist
@@ -109,5 +132,18 @@ echo 'Server started'
 
 # We don't want the various daemons to know about PHP_IDE_CONFIG
 unset PHP_IDE_CONFIG
+
+# Run any python/django4 activities.
+ddev_python_setup
+
+# Run any custom init scripts (.ddev/.web-entrypoint.d/*.sh)
+ddev_custom_init_scripts
+
+# Make sure /var/tmp/logpipe gets logged; only for standalone non-ddev usages
+logpipe=/var/tmp/logpipe
+if [[ ! -p ${logpipe} ]]; then
+    mkfifo ${logpipe}
+    cat < ${logpipe} >/proc/1/fd/1 &
+fi
 
 exec /usr/bin/supervisord -n -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"

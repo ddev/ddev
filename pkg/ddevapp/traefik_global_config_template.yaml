@@ -1,0 +1,8 @@
+#ddev-generated
+
+tls:
+  stores:
+    default:
+      defaultCertificate:
+        certFile: {{ .TargetCertsPath }}/default_cert.crt
+        keyFile: {{ .TargetCertsPath }}/default_key.key

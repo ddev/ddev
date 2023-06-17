@@ -1,16 +1,16 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/manifoldco/promptui"
 	"os"
 	"strings"
 
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -100,14 +100,12 @@ ddev start --all`,
 
 			output.UserOut.Printf("Starting %s...", project.GetName())
 			if err := project.Start(); err != nil {
-				util.Error("Failed to start %s: %v", project.GetName(), err)
-				_ = project.Stop(false, false)
-				continue
+				util.Failed("Failed to start %s: %v", project.GetName(), err)
 			}
 
 			util.Success("Successfully started %s", project.GetName())
 			httpURLs, httpsURLs, _ := project.GetAllURLs()
-			if !nodeps.IsGitpod() && (globalconfig.GetCAROOT() == "" || ddevapp.IsRouterDisabled(project)) {
+			if !nodeps.IsGitpod() && !nodeps.IsCodespaces() && (globalconfig.GetCAROOT() == "" || ddevapp.IsRouterDisabled(project)) {
 				httpsURLs = httpURLs
 			}
 			util.Success("Project can be reached at %s", strings.Join(httpsURLs, " "))

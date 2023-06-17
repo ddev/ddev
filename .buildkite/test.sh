@@ -1,12 +1,13 @@
 #!/bin/bash
-# This script is used to build drud/ddev using buildkite
+# This script is used to build ddev/ddev using buildkite
 
 export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
 
-echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} in ${PWD} with golang=$(go version | awk '{print $3}') docker-desktop=$(scripts/docker-desktop-version.sh) docker=$(docker --version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}'))"
-
 # GOTEST_SHORT=8 means drupal9
 export GOTEST_SHORT=8
+
+echo "buildkite building ${BUILDKITE_JOB_ID:-} at $(date) on $(hostname) as USER=${USER} for OS=${OSTYPE} in ${PWD} with GOTEST_SHORT=${GOTEST_SHORT} golang=$(go version | awk '{print $3}') docker-desktop=$(scripts/docker-desktop-version.sh) docker=$(docker --version | awk '{print $3}') ddev version=$(ddev --version | awk '{print $3}'))"
+
 export DDEV_NONINTERACTIVE=true
 export DDEV_DEBUG=true
 
@@ -15,9 +16,22 @@ set -o pipefail
 set -o nounset
 set -x
 
+# Broken docker context list from https://github.com/docker/for-win/issues/13180
+# When this is solved this can be removed.
+# The only place we care about non-default context is macOS Colima
+if ! docker context list >/dev/null; then
+  rm -rf ~/.docker/contexts && docker context list >/dev/null
+fi
+
 # If this is a PR and the diff doesn't have code, skip it
-if [ "${BUILDKITE_PULL_REQUEST}" != "false" ] && ! git diff --name-only refs/remotes/origin/${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-} | egrep "^(Makefile|pkg|cmd|vendor|go\.)"; then
+if [ "${BUILDKITE_PULL_REQUEST:-false}" != "false" ] && ! git diff --name-only refs/remotes/origin/${BUILDKITE_PULL_REQUEST_BASE_BRANCH:-} | egrep "^(\.buildkite|Makefile|pkg|cmd|vendor|go\.)" >/dev/null; then
   echo "Skipping build since no code changes found"
+  exit 0
+fi
+
+# We can skip builds with commit message of [skip buildkite]
+if [[ $BUILDKITE_MESSAGE == *"[skip buildkite]"* ]] || [[ $BUILDKITE_MESSAGE == *"[skip ci]"* ]]; then
+  echo "Skipping build because message has '[skip buildkite]' or '[skip ci]'"
   exit 0
 fi
 
@@ -44,12 +58,14 @@ if ! docker ps >/dev/null 2>&1 ; then
   exit 1
 fi
 
-# Make sure we have a reasonable mutagen setup
-if command -v mutagen >/dev/null ; then
-  mutagen daemon stop || true
-fi
-if [ -f ~/.ddev/.mutagen/bin/mutagen ]; then
-  ~/.ddev/.mutagen/bin/mutagen daemon stop || true
+docker volume rm ddev-global-cache >/dev/null 2>&1 || true
+
+# Make sure we start with mutagen daemon off.
+unset MUTAGEN_DATA_DIRECTORY
+if [ -f ~/.ddev/bin/mutagen -o -f ~/.ddev/bin/mutagen.exe ]; then
+  MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory/ ~/.ddev/bin/mutagen sync terminate -a || true
+  MUTAGEN_DATA_DIRECTORY=~/.mutagen ~/.ddev/bin/mutagen daemon stop || true
+  MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory/ ~/.ddev/bin/mutagen daemon stop || true
 fi
 if command -v killall >/dev/null ; then
   killall mutagen || true
@@ -72,7 +88,7 @@ echo "--- running sanetestbot.sh"
 ./.buildkite/sanetestbot.sh
 
 # Update all images that could have changed
-( docker images | awk '/drud|phpmyadmin/ {print $1":"$2 }' | xargs -L1 docker pull ) || true
+( docker images | awk '/ddev|phpmyadmin/ {print $1":"$2 }' | xargs -L1 docker pull ) || true
 
 # homebrew sometimes removes /usr/local/etc/my.cnf.d
 if command -v brew >/dev/null; then

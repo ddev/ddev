@@ -12,28 +12,42 @@ on:
       - "docs/**"
       - ".spellcheckwordlist.txt"
       - ".spellcheck.yml"
-      - ".markdownlintrc"
+      - ".markdownlint.jsonc"
       - "mkdocs.yml"
       - ".readthedocs.yaml"
       - ".github/workflows/**"
       - "markdown-link-check.json"
+env:
+  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   build:
     name: Docs check (spellcheck, markdownlint)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: rojopolis/spellcheck-github-actions@0.26.0
+      - uses: rojopolis/spellcheck-github-actions@v0
         name: Spellcheck
+      - name: Install textlint
+        run: |
+          npm init -y
+          npm install textlint textlint-filter-rule-comments textlint-rule-no-todo textlint-rule-stop-words textlint-rule-terminology
+      - name: Run textlint
+        uses: tsuyoshicho/action-textlint@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-check
+          textlint_flags: "{README.md,version-history.md,docs/**}"
+      - run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
       - name: Run markdownlint on docs
         uses: docker://avtodev/markdown-lint:v1
         with:
-          config: '.markdownlintrc'
+          config: '.markdownlint.jsonc'
           args: '*.md docs/content'
       #    - name: Debugging with tmate
       #      uses: mxschmitt/action-tmate@v3.1
-      - name: "Check links in markdown"
-        uses: gaurav-nelson/github-action-markdown-link-check@1.0.13
+      - name: Check links in Markdown
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
         with:
           use-quiet-mode: 'yes'
           folder-path: 'docs/'

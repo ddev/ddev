@@ -34,16 +34,15 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
 
 ### ---------------------------ddev-php-base--------------------------------------
 ### Build ddev-php-base, which is the base for ddev-php-prod and ddev-webserver-*
-### This combines the packages and features of DDEV-Local's ddev-webserver and
-### DDEV-Live's PHP image
+### This combines the packages and features of DDEV’s ddev-webserver and PHP image
 FROM base AS ddev-php-base
-ARG PHP_DEFAULT_VERSION="7.4"
+ARG PHP_DEFAULT_VERSION="8.1"
 ENV DDEV_PHP_VERSION=$PHP_DEFAULT_VERSION
-ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3 php7.4 php8.0 php8.1"
+ENV PHP_VERSIONS="php5.6 php7.0 php7.1 php7.2 php7.3 php7.4 php8.0 php8.1 php8.2"
 ENV PHP_INI=/etc/php/$PHP_DEFAULT_VERSION/fpm/php.ini
-ENV YQ_VERSION=v4.26.1
-ENV DRUSH_VERSION=8.4.8
-ENV NODE_LTS=16
+ENV YQ_VERSION=v4.30.5
+ENV DRUSH_VERSION=8.4.12
+ENV NODE_VERSION=18
 # composer normally screams about running as root, we don't need that.
 ENV COMPOSER_ALLOW_SUPERUSER 1
 ENV COMPOSER_PROCESS_TIMEOUT 2000
@@ -62,7 +61,7 @@ RUN wget -q -O /tmp/nginx_signing.key http://nginx.org/keys/nginx_signing.key &&
 
 RUN wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg && \
     echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list && apt-get update
-RUN curl -sSL --fail https://deb.nodesource.com/setup_${NODE_LTS}.x | bash -
+RUN curl -sSL --fail https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
 
 RUN apt-get -qq update
 RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
@@ -70,6 +69,7 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     file \
     ghostscript \
     imagemagick \
+    gunicorn \
     graphicsmagick \
     jq \
     mariadb-client \
@@ -80,10 +80,10 @@ RUN apt-get -qq install --no-install-recommends --no-install-suggests -y \
     postgresql-client \
     sqlite3
 
-RUN npm config set unsafe-perm true && npm install --global gulp-cli yarn
+RUN npm install --unsafe-perm=true --global gulp-cli yarn
 # Normal user needs to be able to write to php sessions
 RUN chmod 777 /var/lib/php/sessions
-RUN set -eu -o pipefail && LATEST=$(curl --silent "https://api.github.com/repos/nvm-sh/nvm/releases/latest" | jq -r .tag_name) && curl -sL https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST}/install.sh -o /usr/local/bin/install_nvm.sh && chmod +x /usr/local/bin/install_nvm.sh
+RUN set -eu -o pipefail && LATEST=$(curl -L --fail --silent "https://api.github.com/repos/nvm-sh/nvm/releases/latest" | jq -r .tag_name) && curl --fail -sL https://raw.githubusercontent.com/nvm-sh/nvm/${LATEST}/install.sh -o /usr/local/bin/install_nvm.sh && chmod +x /usr/local/bin/install_nvm.sh
 
 # The number of permutations of php packages available on each architecture because
 # too much to handle, so has been codified here instead of in obscure logic
@@ -106,6 +106,8 @@ ENV php80_arm64=$php80_amd64
 
 ENV php81_amd64=$php80_amd64
 ENV php81_arm64=$php81_amd64
+ENV php82_amd64=$php81_amd64
+ENV php82_arm64=$php82_amd64
 
 RUN for v in $PHP_VERSIONS; do \
     targetarch=${TARGETPLATFORM#linux/}; \
@@ -115,9 +117,9 @@ RUN for v in $PHP_VERSIONS; do \
 done
 RUN phpdismod xhprof
 RUN apt-get -qq autoremove -y
-RUN curl -o /usr/local/bin/composer -sSL https://getcomposer.org/composer-stable.phar && chmod ugo+wx /usr/local/bin/composer
-RUN curl -sSL "https://github.com/drush-ops/drush/releases/download/${DRUSH_VERSION}/drush.phar" -o /usr/local/bin/drush8 && chmod +x /usr/local/bin/drush8
-RUN curl -sSL -o /usr/local/bin/wp-cli -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x /usr/local/bin/wp-cli && ln -sf /usr/local/bin/wp-cli /usr/local/bin/wp
+RUN curl -L --fail -o /usr/local/bin/composer -sSL https://getcomposer.org/composer-stable.phar && chmod ugo+wx /usr/local/bin/composer
+RUN curl -L --fail -sSL "https://github.com/drush-ops/drush/releases/download/${DRUSH_VERSION}/drush.phar" -o /usr/local/bin/drush8 && chmod +x /usr/local/bin/drush8
+RUN curl --fail -sSL -o /usr/local/bin/wp-cli -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && chmod +x /usr/local/bin/wp-cli && ln -sf /usr/local/bin/wp-cli /usr/local/bin/wp
 RUN url="https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${TARGETPLATFORM#linux/}"; wget ${url} -O /usr/bin/yq && chmod +x /usr/bin/yq
 ADD ddev-php-files /
 RUN apt-get -qq autoremove && apt-get -qq clean -y && rm -rf /var/lib/apt/lists/*
