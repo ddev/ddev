@@ -8,10 +8,10 @@ import (
 
 	"os"
 
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -39,8 +39,8 @@ func TestCmdStart(t *testing.T) {
 		assert.Equal(ddevapp.SiteRunning, statusDesc, "The status description should be \"running\", but %s status description is: %s", app.GetName(), statusDesc)
 	}
 
-	// Pause all sites.
-	_, err = exec.RunCommand(DdevBin, []string{"pause", "--all"})
+	// Stop all sites.
+	_, err = exec.RunCommand(DdevBin, []string{"stop", "--all"})
 	assert.NoError(err)
 
 	// Build start command startMultipleArgs

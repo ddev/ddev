@@ -5,8 +5,17 @@ root = true
 
 # Unix-style newlines with a newline ending every file
 [*]
+charset = utf-8
 end_of_line = lf
+indent_style = space
+# Forcing indent to 4 seems to break lots of things, like
+# embedded yaml in markdown.
+# indent_size = 4
 insert_final_newline = true
+
+# GO files
+[*.go]
+indent_style = tab
 
 # Makefile
 [Makefile]

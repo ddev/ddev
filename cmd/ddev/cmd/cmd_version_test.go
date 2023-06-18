@@ -2,14 +2,14 @@ package cmd
 
 import (
 	"encoding/json"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/versionconstants"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/stretchr/testify/require"
 	"testing"
 
-	"github.com/drud/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
 )
 

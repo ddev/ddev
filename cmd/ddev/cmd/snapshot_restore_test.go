@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -30,7 +30,7 @@ func TestCmdSnapshotRestore(t *testing.T) {
 		assert.NoError(err)
 	})
 
-	err = app.Start()
+	err = app.Restart()
 	require.NoError(t, err)
 
 	// Ensure that a snapshot is created

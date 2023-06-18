@@ -2,23 +2,23 @@ package updatecheck
 
 import (
 	"context"
+	"os"
 	"strings"
-
 	"time"
 
-	"os"
-
 	"github.com/Masterminds/semver/v3"
-	"github.com/drud/ddev/pkg/util"
-	"github.com/google/go-github/github"
+	ddevgh "github.com/ddev/ddev/pkg/github"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/google/go-github/v52/github"
 )
 
 // AvailableUpdates returns true (along with a release URL) if there is an update available in the specified repo which is newer than the currentVersion string.
 func AvailableUpdates(repoOrg string, repoName string, currentVersion string) (avail bool, newVersion string, releaseURL string, err error) {
 	newVersion = ""
-	client := github.NewClient(nil)
+	ctx := context.Background()
+	client := ddevgh.GetGithubClient(ctx)
 	opt := &github.ListOptions{Page: 1}
-	releases, _, err := client.Repositories.ListReleases(context.Background(), repoOrg, repoName, opt)
+	releases, _, err := client.Repositories.ListReleases(ctx, repoOrg, repoName, opt)
 	if err != nil {
 		return false, newVersion, "", err
 	}

@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"encoding/json"
-	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/nodeps"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 
-	"github.com/drud/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/exec"
 )
 
 // TestDebugCapabilitiesCmd tests that ddev debug capabilities works

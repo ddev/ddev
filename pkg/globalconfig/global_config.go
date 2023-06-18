@@ -3,10 +3,10 @@ package globalconfig
 import (
 	"context"
 	"fmt"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	"net"
 	"os"
 	"os/exec"
@@ -56,8 +56,14 @@ type GlobalConfig struct {
 	SimpleFormatting             bool                    `yaml:"simple_formatting"`
 	RequiredDockerComposeVersion string                  `yaml:"required_docker_compose_version,omitempty"`
 	UseDockerComposeFromPath     bool                    `yaml:"use_docker_compose_from_path,omitempty"`
-	NoBindMounts                 bool                    `yaml:"no_bind_mounts"`
 	MkcertCARoot                 string                  `yaml:"mkcert_caroot"`
+	ProjectTldGlobal             string                  `yaml:"project_tld"`
+	XdebugIDELocation            string                  `yaml:"xdebug_ide_location"`
+	NoBindMounts                 bool                    `yaml:"no_bind_mounts"`
+	UseTraefik                   bool                    `yaml:"use_traefik"`
+	WSL2NoWindowsHostsMgt        bool                    `yaml:"wsl2_no_windows_hosts_mgt"`
+	RouterHTTPPort               string                  `yaml:"router_http_port"`
+	RouterHTTPSPort              string                  `yaml:"router_https_port"`
 	ProjectList                  map[string]*ProjectInfo `yaml:"project_info"`
 }
 
@@ -124,6 +130,16 @@ func ValidateGlobalConfig() error {
 	if !IsValidTableStyle(DdevGlobalConfig.TableStyle) {
 		DdevGlobalConfig.TableStyle = "default"
 	}
+
+	if !IsValidXdebugIDELocation(DdevGlobalConfig.XdebugIDELocation) {
+		return fmt.Errorf(`xdebug_ide_location must be IP address or one of %v`, ValidXdebugIDELocations)
+	}
+	if DdevGlobalConfig.DisableHTTP2 && DdevGlobalConfig.UseTraefik {
+		return fmt.Errorf("disable_http2 and use_traefik are mutually incompatible")
+	}
+	if DdevGlobalConfig.UseTraefik && (DdevGlobalConfig.UseLetsEncrypt || DdevGlobalConfig.LetsEncryptEmail != "") {
+		return fmt.Errorf("use-letsencrypt is not directly supported with traefik. but can be configured with custom config, see https://doc.traefik.io/traefik/https/acme/")
+	}
 	return nil
 }
 
@@ -163,6 +179,12 @@ func ReadGlobalConfig() error {
 	if DdevGlobalConfig.TableStyle == "" {
 		DdevGlobalConfig.TableStyle = "default"
 	}
+	if DdevGlobalConfig.RouterHTTPPort == "" {
+		DdevGlobalConfig.RouterHTTPPort = nodeps.DdevDefaultRouterHTTPPort
+	}
+	if DdevGlobalConfig.RouterHTTPSPort == "" {
+		DdevGlobalConfig.RouterHTTPSPort = nodeps.DdevDefaultRouterHTTPSPort
+	}
 	if DdevGlobalConfig.ProjectList == nil {
 		DdevGlobalConfig.ProjectList = map[string]*ProjectInfo{}
 	}
@@ -186,6 +208,11 @@ func ReadGlobalConfig() error {
 	if nodeps.NoBindMountsDefault == true {
 		DdevGlobalConfig.NoBindMounts = true
 	}
+	// For testing only, override UseTraefikDefault no matter what it's set to
+	if nodeps.UseTraefikDefault == true {
+		DdevGlobalConfig.UseTraefik = true
+	}
+
 	err = ValidateGlobalConfig()
 	if err != nil {
 		return err
@@ -216,6 +243,10 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # You can enable nfs mounting for all projects with
 # nfs_mount_enabled: true
 #
+# You can set the global project_tld. This way any project will use this tld. If not
+# set the local project_tld is used, or the default of ddev.
+# project_tld: ""
+#
 # You can inject environment variables into the web container with:
 # web_environment:
 # - SOMEENV=somevalue
@@ -238,6 +269,9 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # You can enable 'ddev start' to be interrupted by a failing hook with
 # fail_on_hook_fail: true
 
+# router_http_port: <port>  # Port to be used for http (defaults to 80)
+# router_https_port: <port> # Port for https (defaults to 443)
+
 # disable_http2: false
 # Disable http2 on ddev-router if true
 
@@ -257,8 +291,16 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # is run only as the owning user, only project files might be changed
 # if a CMS or PHP bug allowed creating or altering files, and
 # permissions should not allow escalation.
+#
+# xdebug_ide_location: 
+# In some cases, especially WSL2, the IDE may be set up different ways
+# For example, if in WSL2 PhpStorm is running the Linux version inside WSL2
+# or if using JetBrains Gateway
+# then set xdebug_ide_location: WSL2
+# If using vscode language server, which listens inside the container
+# then set xdebug_ide_location: container
 
-# Let's Encrypt:
+# Lets Encrypt:
 # This integration is entirely experimental; your mileage may vary.
 # * Your host must be directly internet-connected.
 # * DNS for the hostname must be set to point to the host in question
@@ -282,6 +324,12 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 # fail_on_hook_fail: false
 # Decide whether 'ddev start' should be interrupted by a failing hook
+
+# wsl2_no_windows_hosts_mgt: false
+# On WSL2 by default the Windows-side hosts file (normally C:\Windows\system32\drivers\etc\hosts)
+# is used for hosts file management, but doing that requires running sudo and ddev.exe on
+# Windows side; you may not want this if you're running your browser in WSL2 or for
+# various other reasons.
 
 # required_docker_compose_version: ""
 # This can be used to override the default required docker-compose version
@@ -575,7 +623,7 @@ var DockerComposeVersion = ""
 
 // This is var instead of const so it can be changed in test, but should not otherwise be touched.
 // Otherwise we can't test if the version on the machine is equal to version required
-var RequiredDockerComposeVersion = "v2.10.1"
+var RequiredDockerComposeVersion = "v2.18.1"
 
 // GetRequiredDockerComposeVersion returns the version of docker-compose we need
 // based on the compiled version, or overrides in globalconfig, like
@@ -591,4 +639,14 @@ func GetRequiredDockerComposeVersion() string {
 		v = DdevGlobalConfig.RequiredDockerComposeVersion
 	}
 	return v
+}
+
+// Return the traefik router URL
+func GetRouterURL() string {
+	routerURL := ""
+	// Until we figure out how to configure this, use static value
+	if DdevGlobalConfig.UseTraefik {
+		routerURL = "http://localhost:9999"
+	}
+	return routerURL
 }

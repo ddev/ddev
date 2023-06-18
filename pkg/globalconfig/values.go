@@ -1,15 +1,20 @@
 package globalconfig
 
-import "os"
+import (
+	"github.com/ddev/ddev/pkg/nodeps"
+	"os"
+)
 
 // Container types used with ddev (duplicated from ddevapp, avoiding cross-package cycles)
 const (
-	DdevSSHAgentContainer = "ddev-ssh-agent"
-	DBAContainer          = "dba"
-	DdevRouterContainer   = "ddev-router"
+	DdevSSHAgentContainer      = "ddev-ssh-agent"
+	DBAContainer               = "dba"
+	DdevRouterContainer        = "ddev-router"
+	XdebugIDELocationContainer = "container"
+	XdebugIDELocationWSL2      = "wsl2"
 )
 
-const DdevGithubOrg = "drud"
+const DdevGithubOrg = "ddev"
 
 // ValidOmitContainers is the valid omit's that can be done in for a project
 var ValidOmitContainers = map[string]bool{
@@ -26,3 +31,16 @@ var DdevDebug = (os.Getenv("DDEV_DEBUG") == "true")
 
 // DdevVerbose is set to true if the env var is set
 var DdevVerbose = (os.Getenv("DDEV_VERBOSE") == "true")
+
+var ValidXdebugIDELocations = []string{XdebugIDELocationContainer, XdebugIDELocationWSL2, ""}
+
+// IsValidXdebugIDELocation limits the choices for XdebugIDELocation
+func IsValidXdebugIDELocation(loc string) bool {
+	switch {
+	case nodeps.ArrayContainsString(ValidXdebugIDELocations, loc):
+		return true
+	case nodeps.IsIPAddress(loc):
+		return true
+	}
+	return false
+}

@@ -15,12 +15,25 @@ on:
   schedule:
     - cron: '01 00 * * *'
 
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate set "debug_enabled"'
+        type: boolean
+        required: false
+        default: false
+      testargs:
+        description: Add specific test to run like -run TestEnvironmentVariables or -run "(TestDdevFullSite.*|Test.*Pull)"
+        required: false
+        default: ""
+
 env:
   DDEV_IGNORE_EXPIRING_KEYS: "false"
   # Unfortunately, we can't test forked PRs with the secret that's provided for this
   # So it has to be hard-wired here. Needs to be switched back to "90" after mysql
   # key is updated, see https://github.com/docker-library/mysql/issues/801
   DDEV_MAX_DAYS_BEFORE_CERT_EXPIRATION: "90"
+  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 permissions:
   contents: read
@@ -32,23 +45,32 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-22.04]
         containers: [dbserver, webserver, others]
 
     steps:
       - uses: actions/checkout@v3
+      - run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
       - name: Install Docker and deps (Linux)
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         run: ./.github/workflows/linux-setup.sh
 
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
-          go-version: '>=1.18.0'
+          go-version: '>=1.20'
 
       - name: Build and test container ${{ matrix.containers }}
         run: |
+          source ~/.bashrc
           docker version
+          mkcert --version
           set -eu -o pipefail
 
           if [[ "${{ matrix.containers }}" == "dbserver" ]]; then

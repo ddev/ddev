@@ -1,8 +1,8 @@
 package ddevapp_test
 
 import (
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
@@ -12,9 +12,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -24,10 +24,10 @@ func TestApptypeDetection(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 	appTypes := ddevapp.GetValidAppTypes()
-	var nonPHPAppTypes = []string{}
+	var notSimplePHPAppTypes = []string{}
 	for _, t := range appTypes {
 		if t != nodeps.AppTypePHP {
-			nonPHPAppTypes = append(nonPHPAppTypes, t)
+			notSimplePHPAppTypes = append(notSimplePHPAppTypes, t)
 		}
 	}
 	tmpDir := testcommon.CreateTmpDir(t.Name())
@@ -41,7 +41,7 @@ func TestApptypeDetection(t *testing.T) {
 
 	err := fileutil.CopyDir(filepath.Join(origDir, "testdata", t.Name()), filepath.Join(tmpDir, "sampleapptypes"))
 	require.NoError(t, err)
-	for _, appType := range nonPHPAppTypes {
+	for _, appType := range notSimplePHPAppTypes {
 		app, err := ddevapp.NewApp(filepath.Join(tmpDir, "sampleapptypes", appType), true)
 		assert.NoError(err)
 		app.Docroot = ddevapp.DiscoverDefaultDocroot(app)
@@ -62,16 +62,17 @@ func TestPostConfigAction(t *testing.T) {
 	origDir, _ := os.Getwd()
 
 	appTypes := map[string]string{
+		nodeps.AppTypeBackdrop:  nodeps.PHPDefault,
+		nodeps.AppTypeCraftCms:  nodeps.PHPDefault,
 		nodeps.AppTypeDrupal6:   nodeps.PHP56,
 		nodeps.AppTypeDrupal7:   nodeps.PHPDefault,
 		nodeps.AppTypeDrupal8:   nodeps.PHP74,
 		nodeps.AppTypeDrupal9:   nodeps.PHPDefault,
 		nodeps.AppTypeDrupal10:  nodeps.PHP81,
-		nodeps.AppTypeWordPress: nodeps.PHPDefault,
-		nodeps.AppTypeBackdrop:  nodeps.PHPDefault,
+		nodeps.AppTypeLaravel:   nodeps.PHP81,
 		nodeps.AppTypeMagento:   nodeps.PHP74,
 		nodeps.AppTypeMagento2:  nodeps.PHP81,
-		nodeps.AppTypeLaravel:   nodeps.PHPDefault,
+		nodeps.AppTypeWordPress: nodeps.PHPDefault,
 	}
 
 	for appType, expectedPHPVersion := range appTypes {

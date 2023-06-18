@@ -31,7 +31,7 @@ pre_install_actions:
 
 project_files:
 - junk_${GOOS}_${GOARCH}.txt
-
+- extra
 
 global_files:
 

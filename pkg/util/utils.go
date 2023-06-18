@@ -2,14 +2,6 @@ package util
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/jedib0t/go-pretty/v6/text"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/text/runes"
-	"golang.org/x/text/transform"
-	"golang.org/x/text/unicode/norm"
 	"math"
 	"math/rand"
 	osexec "os/exec"
@@ -19,12 +11,15 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/drud/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/jedib0t/go-pretty/v6/text"
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 )
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
 
 // Failed will print a red error message and exit with failure.
 func Failed(format string, a ...interface{}) {
@@ -72,7 +67,9 @@ func Success(format string, a ...interface{}) {
 // Output controlled by DDEV_DEBUG environment variable
 func Debug(format string, a ...interface{}) {
 	if globalconfig.DdevDebug {
-		output.UserOut.Debugf(format, a...)
+		n := time.Now()
+		s := fmt.Sprintf(format, a...)
+		output.UserOut.Debugf("%s %s", n.Format("2006-01-02T15:04:05.999"), s)
 	}
 }
 
@@ -157,7 +154,7 @@ func GetContainerUIDGid() (uidStr string, gidStr string, username string) {
 
 	// If we have a numeric username it's going to create havoc, so
 	// change it into "a" + number
-	// Example in https://github.com/drud/ddev/issues/3187 - username="310822", uid=1663749668, gid=1240132652
+	// Example in https://github.com/ddev/ddev/issues/3187 - username="310822", uid=1663749668, gid=1240132652
 	if !nodeps.IsLetter(string(username[0])) {
 		username = "a" + username
 	}
@@ -211,23 +208,6 @@ func FindBashPath() string {
 		}
 	}
 	return windowsBashPath
-}
-
-// TimeTrack determines the amount of time a function takes to return. Timing starts when it is called.
-// It returns an anonymous function that, when called, will print the elapsed run time.
-// It tracks if DDEV_VERBOSE is set
-func TimeTrack(start time.Time, name string) func() {
-	if globalconfig.DdevVerbose {
-		logrus.Printf("starting %s at %v\n", name, start.Format("15:04:05.000000000"))
-		return func() {
-			if globalconfig.DdevVerbose {
-				elapsed := time.Since(start)
-				logrus.Printf("PERF: %s took %.2fs", name, elapsed.Seconds())
-			}
-		}
-	}
-	return func() {
-	}
 }
 
 // ElapsedTime is an easy way to report how long something took.

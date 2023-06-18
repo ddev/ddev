@@ -12,6 +12,8 @@ services:
         uid: '{{ .UID }}'
         gid: {{ if ne .DBType "postgres" }} {{ .GID }} {{ else }} "999" {{ end }}
     image: ${DDEV_DBIMAGE}-${DDEV_SITENAME}-built
+    cap_add:
+      - SYS_NICE
     stop_grace_period: 60s
     working_dir: "{{ .DBWorkingDir }}"
     volumes:
@@ -61,7 +63,7 @@ services:
       - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-db/mysql_history
       - MYSQL_PWD=db
       - PGDATABASE=db
-      - PGHOST=localhost
+      - PGHOST=127.0.0.1
       - PGPASSWORD=db
       - PGUSER=db
       - POSTGRES_PASSWORD=db
@@ -89,7 +91,13 @@ services:
         username: '{{ .Username }}'
         uid: '{{ .UID }}'
         gid: '{{ .GID }}'
+        DDEV_PHP_VERSION: ${DDEV_PHP_VERSION}
     image: ${DDEV_WEBIMAGE}-${DDEV_SITENAME}-built
+    command: /pre-start.sh
+    {{ if .EnvFile }}
+    env_file: '{{ .EnvFile }}'
+    {{ end }}
+
     networks: ["default", "ddev_default"]
     cap_add:
       - SYS_PTRACE
@@ -117,7 +125,7 @@ services:
         target: /var/www
         volume:
           nocopy: true
-      # This second mount is only to make just the volume available so it can be chowned
+      # This second mutagen mount is only to make just the volume available so it can be chowned
       # without accidentally also hitting docker mounts
       - type: volume
         source: project_mutagen
@@ -162,6 +170,7 @@ services:
     - DDEV_DATABASE
     - DDEV_DOCROOT
     - DDEV_HOSTNAME
+    - DDEV_MUTAGEN_ENABLED
     - DDEV_PHP_VERSION
     - DDEV_PRIMARY_URL
     - DDEV_PROJECT
@@ -171,6 +180,7 @@ services:
     - DDEV_SITENAME
     - DDEV_TLD
     - DDEV_FILES_DIR
+    - DDEV_WEB_ENTRYPOINT=/mnt/ddev_config/web-entrypoint.d
     - DDEV_WEBSERVER_TYPE
     - DDEV_XDEBUG_ENABLED
     - DDEV_VERSION
@@ -194,6 +204,7 @@ services:
     - MYSQL_HISTFILE=/mnt/ddev-global-cache/mysqlhistory/${DDEV_SITENAME}-web/mysql_history
     - MYSQL_PWD=db
     - NODE_EXTRA_CA_CERTS=/mnt/ddev-global-cache/mkcert/rootCA.pem
+    - npm_config_cache=/mnt/ddev-global-cache/npm
     - PGDATABASE=db
     - PGHOST=db
     - PGPASSWORD=db
@@ -210,9 +221,15 @@ services:
       com.ddev.platform: {{ .Plugin }}
       com.ddev.app-type: {{ .AppType }}
       com.ddev.approot: $DDEV_APPROOT
+
       {{ if .HostDockerInternalIP }}
     extra_hosts: [ "host.docker.internal:{{ .HostDockerInternalIP }}" ]
       {{ end }}
+      {{ if .UseHostDockerInternalExtraHosts }}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      {{ end }}
+
       {{ if not .OmitRouter }}
     external_links:
       {{ range $hostname := .Hostnames }}- "ddev-router:{{ $hostname }}"
@@ -260,7 +277,7 @@ networks:
   ddev_default:
     name: ddev_default
     external: true
-  {{if .IsGitpod}}{{/* see https://github.com/drud/ddev/issues/3766 */}}
+  {{if .IsGitpod}}{{/* see https://github.com/ddev/ddev/issues/3766 */}}
   default:
     driver_opts:
       com.docker.network.driver.mtu: 1440
@@ -300,7 +317,7 @@ volumes:
     driver: local
     driver_opts:
       type: nfs
-      o: "addr={{ if .HostDockerInternalIP }}{{ .HostDockerInternalIP }}{{ else }}host.docker.internal{{end}},hard,nolock,rw"
+      o: "addr={{ .NFSServerAddr }},hard,nolock,rw,wsize=32768,rsize=32768"
       device: ':{{ .NFSSource }}'
   {{ end }}{{/* end if and .NFSMountEnabled (not .NoProjectMount) */}}
   {{ if and .MutagenEnabled (not .NoProjectMount) }}

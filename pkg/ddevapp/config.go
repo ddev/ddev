@@ -11,21 +11,21 @@ import (
 	"time"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/versionconstants"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	copy2 "github.com/otiai10/copy"
 
 	"regexp"
 
 	"runtime"
 
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // Regexp pattern to determine if a hostname is valid per RFC 1123.
@@ -48,13 +48,15 @@ func init() {
 	if os.Getenv("DDEV_TEST_NO_BIND_MOUNTS") == "true" {
 		nodeps.NoBindMountsDefault = true
 	}
+	if os.Getenv("DDEV_TEST_USE_TRAEFIK") == "true" {
+		nodeps.UseTraefikDefault = true
+	}
 
 }
 
 // NewApp creates a new DdevApp struct with defaults set and overridden by any existing config.yml.
 func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("ddevapp.NewApp(%s)", appRoot))
-	defer runTime()
+	defer util.TimeTrackC(fmt.Sprintf("ddevapp.NewApp(%s)", appRoot))()
 
 	app := &DdevApp{}
 
@@ -82,10 +84,16 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.NFSMountEnabledGlobal = globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal
 	app.MutagenEnabled = nodeps.MutagenEnabledDefault
 	app.MutagenEnabledGlobal = globalconfig.DdevGlobalConfig.MutagenEnabledGlobal
+
+	// Turn off mutagen on python projects until initial setup can be done
+	if app.WebserverType == nodeps.WebserverNginxGunicorn {
+		app.MutagenEnabled = false
+		app.MutagenEnabledGlobal = false
+	}
 	app.FailOnHookFail = nodeps.FailOnHookFailDefault
 	app.FailOnHookFailGlobal = globalconfig.DdevGlobalConfig.FailOnHookFailGlobal
-	app.RouterHTTPPort = nodeps.DdevDefaultRouterHTTPPort
-	app.RouterHTTPSPort = nodeps.DdevDefaultRouterHTTPSPort
+	app.RouterHTTPPortGlobal = globalconfig.DdevGlobalConfig.RouterHTTPPort
+	app.RouterHTTPSPortGlobal = globalconfig.DdevGlobalConfig.RouterHTTPSPort
 	app.PHPMyAdminPort = nodeps.DdevDefaultPHPMyAdminPort
 	app.PHPMyAdminHTTPSPort = nodeps.DdevDefaultPHPMyAdminHTTPSPort
 	app.MailhogPort = nodeps.DdevDefaultMailhogPort
@@ -94,12 +102,16 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	// Provide a default app name based on directory name
 	app.Name = filepath.Base(app.AppRoot)
 
-	// Gather containers to omit, adding ddev-router for gitpod
+	// Gather containers to omit, adding ddev-router for gitpod/codespaces
 	app.OmitContainersGlobal = globalconfig.DdevGlobalConfig.OmitContainersGlobal
-	if nodeps.IsGitpod() {
+	if nodeps.IsGitpod() || nodeps.IsCodespaces() {
 		app.OmitContainersGlobal = append(app.OmitContainersGlobal, "ddev-router")
 	}
-	app.ProjectTLD = nodeps.DdevDefaultTLD
+
+	app.ProjectTLD = globalconfig.DdevGlobalConfig.ProjectTldGlobal
+	if globalconfig.DdevGlobalConfig.ProjectTldGlobal == "" {
+		app.ProjectTLD = nodeps.DdevDefaultTLD
+	}
 	app.UseDNSWhenPossible = true
 
 	app.WebImage = versionconstants.GetWebImage()
@@ -142,6 +154,12 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 			return app, err
 		}
 	}
+
+	// If non-php type, use non-php webserver type
+	if app.WebserverType == nodeps.WebserverDefault && app.Type == nodeps.AppTypeDjango4 {
+		app.WebserverType = nodeps.WebserverNginxGunicorn
+	}
+
 	return app, nil
 }
 
@@ -172,7 +190,7 @@ func (app *DdevApp) WriteConfig() error {
 	if appcopy.PHPMyAdminHTTPSPort == nodeps.DdevDefaultPHPMyAdminHTTPSPort {
 		appcopy.PHPMyAdminHTTPSPort = ""
 	}
-	if appcopy.ProjectTLD == nodeps.DdevDefaultTLD {
+	if appcopy.ProjectTLD == nodeps.DdevDefaultTLD || appcopy.ProjectTLD == globalconfig.DdevGlobalConfig.ProjectTldGlobal {
 		appcopy.ProjectTLD = ""
 	}
 	if appcopy.DefaultContainerTimeout == nodeps.DefaultDefaultContainerTimeout {
@@ -194,7 +212,7 @@ func (app *DdevApp) WriteConfig() error {
 		}
 	}
 
-	err = PrepDdevDirectory(filepath.Dir(appcopy.ConfigPath))
+	err = PrepDdevDirectory(&appcopy)
 	if err != nil {
 		return err
 	}
@@ -443,7 +461,7 @@ func (app *DdevApp) ValidateConfig() error {
 	// If the database already exists in volume and is not of this type, then throw an error
 	//if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 	//	if dbType, err := app.GetExistingDBType(); err != nil || (dbType != "" && dbType != app.Database.Type+":"+app.Database.Version) {
-	//		return fmt.Errorf("Unable to configure project %s with database type %s because that database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s', see docs at %s", app.Name, dbType, dbType, dbType, "https://ddev.readthedocs.io/en/latest/users/extend/database_types/")
+	//		return fmt.Errorf("Unable to configure project %s with database type %s because that database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s', see docs at %s", app.Name, dbType, dbType, dbType, "https://ddev.readthedocs.io/en/latest/users/extend/database-types/")
 	//	}
 	//}
 
@@ -483,7 +501,7 @@ func (app *DdevApp) GetHostname() string {
 	return strings.ToLower(app.Name) + "." + app.ProjectTLD
 }
 
-// GetHostnames returns an array of all the configured hostnames.
+// GetHostnames returns a slice of all the configured hostnames.
 func (app *DdevApp) GetHostnames() []string {
 
 	// Use a map to make sure that we have unique hostnames
@@ -570,8 +588,19 @@ func (app *DdevApp) CheckCustomConfig() {
 			customConfig = true
 		}
 	}
+
+	webEntrypointPath := filepath.Join(ddevDir, "web-entrypoint.d")
+	if _, err := os.Stat(webEntrypointPath); err == nil {
+		entrypointFiles, err := filepath.Glob(webEntrypointPath + "/*.sh")
+		util.CheckErr(err)
+		if len(entrypointFiles) > 0 {
+			util.Warning("Using custom web-entrypoint.d configuration: %v", entrypointFiles)
+			customConfig = true
+		}
+	}
+
 	if customConfig {
-		util.Warning("Custom configuration takes effect when container is created,\nusually on start, use 'ddev restart' if you're not seeing it take effect.")
+		util.Warning("Custom configuration is updated on restart.\nIf you don't see your custom configuration taking effect, run 'ddev restart'.")
 	}
 
 }
@@ -618,64 +647,68 @@ func (app *DdevApp) FixObsolete() {
 }
 
 type composeYAMLVars struct {
-	Name                      string
-	Plugin                    string
-	AppType                   string
-	MailhogPort               string
-	HostMailhogPort           string
-	DBType                    string
-	DBVersion                 string
-	DBMountDir                string
-	DBAPort                   string
-	DBPort                    string
-	HostPHPMyAdminPort        string
-	DdevGenerated             string
-	HostDockerInternalIP      string
-	DisableSettingsManagement bool
-	MountType                 string
-	WebMount                  string
-	WebBuildContext           string
-	DBBuildContext            string
-	WebBuildDockerfile        string
-	DBBuildDockerfile         string
-	SSHAgentBuildContext      string
-	OmitDB                    bool
-	OmitDBA                   bool
-	OmitRouter                bool
-	OmitSSHAgent              bool
-	BindAllInterfaces         bool
-	MariaDBVolumeName         string
-	PostgresVolumeName        string
-	MutagenEnabled            bool
-	MutagenVolumeName         string
-	NFSMountEnabled           bool
-	NFSSource                 string
-	NFSMountVolumeName        string
-	DockerIP                  string
-	IsWindowsFS               bool
-	NoProjectMount            bool
-	Hostnames                 []string
-	Timezone                  string
-	ComposerVersion           string
-	Username                  string
-	UID                       string
-	GID                       string
-	AutoRestartContainers     bool
-	FailOnHookFail            bool
-	WebWorkingDir             string
-	DBWorkingDir              string
-	DBAWorkingDir             string
-	WebEnvironment            []string
-	NoBindMounts              bool
-	Docroot                   string
-	ContainerUploadDir        string
-	HostUploadDir             string
-	GitDirMount               bool
-	IsGitpod                  bool
-	DefaultContainerTimeout   string
-	WebExtraHTTPPorts         string
-	WebExtraHTTPSPorts        string
-	WebExtraExposedPorts      string
+	Name                            string
+	Plugin                          string
+	AppType                         string
+	MailhogPort                     string
+	HostMailhogPort                 string
+	DBType                          string
+	DBVersion                       string
+	DBMountDir                      string
+	DBAPort                         string
+	DBPort                          string
+	HostPHPMyAdminPort              string
+	DdevGenerated                   string
+	HostDockerInternalIP            string
+	NFSServerAddr                   string
+	DisableSettingsManagement       bool
+	MountType                       string
+	WebMount                        string
+	WebBuildContext                 string
+	DBBuildContext                  string
+	WebBuildDockerfile              string
+	DBBuildDockerfile               string
+	SSHAgentBuildContext            string
+	OmitDB                          bool
+	OmitDBA                         bool
+	OmitRouter                      bool
+	OmitSSHAgent                    bool
+	BindAllInterfaces               bool
+	MariaDBVolumeName               string
+	PostgresVolumeName              string
+	MutagenEnabled                  bool
+	MutagenVolumeName               string
+	NFSMountEnabled                 bool
+	NFSSource                       string
+	NFSMountVolumeName              string
+	DockerIP                        string
+	IsWindowsFS                     bool
+	NoProjectMount                  bool
+	Hostnames                       []string
+	Timezone                        string
+	ComposerVersion                 string
+	Username                        string
+	UID                             string
+	GID                             string
+	AutoRestartContainers           bool
+	FailOnHookFail                  bool
+	WebWorkingDir                   string
+	DBWorkingDir                    string
+	DBAWorkingDir                   string
+	WebEnvironment                  []string
+	NoBindMounts                    bool
+	Docroot                         string
+	ContainerUploadDir              string
+	HostUploadDir                   string
+	GitDirMount                     bool
+	IsGitpod                        bool
+	IsCodespaces                    bool
+	DefaultContainerTimeout         string
+	UseHostDockerInternalExtraHosts bool
+	WebExtraHTTPPorts               string
+	WebExtraHTTPSPorts              string
+	WebExtraExposedPorts            string
+	EnvFile                         string
 }
 
 // RenderComposeYAML renders the contents of .ddev/.ddev-docker-compose*.
@@ -687,6 +720,11 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if err != nil {
 		util.Warning("Could not determine host.docker.internal IP address: %v", err)
 	}
+	nfsServerAddr, err := dockerutil.GetNFSServerAddr()
+	if err != nil {
+		util.Warning("Could not determine NFS server IP address: %v", err)
+	}
+
 	// The fallthrough default for hostDockerInternalIdentifier is the
 	// hostDockerInternalHostname == host.docker.internal
 
@@ -709,16 +747,17 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		Name:                      app.Name,
 		Plugin:                    "ddev",
 		AppType:                   app.Type,
-		MailhogPort:               GetInternalPort(app, "mailhog"),
+		MailhogPort:               GetExposedPort(app, "mailhog"),
 		HostMailhogPort:           app.HostMailhogPort,
 		DBType:                    app.Database.Type,
 		DBVersion:                 app.Database.Version,
 		DBMountDir:                "/var/lib/mysql",
-		DBAPort:                   GetInternalPort(app, "dba"),
-		DBPort:                    GetInternalPort(app, "db"),
+		DBAPort:                   GetExposedPort(app, "dba"),
+		DBPort:                    GetExposedPort(app, "db"),
 		HostPHPMyAdminPort:        app.HostPHPMyAdminPort,
 		DdevGenerated:             nodeps.DdevFileSignature,
 		HostDockerInternalIP:      hostDockerInternalIP,
+		NFSServerAddr:             nfsServerAddr,
 		DisableSettingsManagement: app.DisableSettingsManagement,
 		OmitDB:                    nodeps.ArrayContainsString(app.GetOmittedContainers(), nodeps.DBContainer),
 		OmitDBA:                   nodeps.ArrayContainsString(app.GetOmittedContainers(), nodeps.DBAContainer) || nodeps.ArrayContainsString(app.OmitContainers, nodeps.DBContainer),
@@ -727,7 +766,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		BindAllInterfaces:         app.BindAllInterfaces,
 		MutagenEnabled:            app.IsMutagenEnabled() || globalconfig.DdevGlobalConfig.NoBindMounts,
 
-		NFSMountEnabled:       (app.NFSMountEnabled || app.NFSMountEnabledGlobal) && !app.IsMutagenEnabled(),
+		NFSMountEnabled:       app.IsNFSMountEnabled(),
 		NFSSource:             "",
 		IsWindowsFS:           runtime.GOOS == "windows",
 		NoProjectMount:        app.NoProjectMount,
@@ -756,13 +795,23 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		ContainerUploadDir:    app.GetContainerUploadDirFullPath(),
 		GitDirMount:           false,
 		IsGitpod:              nodeps.IsGitpod(),
+		IsCodespaces:          nodeps.IsCodespaces(),
 		// Default max time we wait for containers to be healthy
 		DefaultContainerTimeout: app.DefaultContainerTimeout,
+		// Only use the extra_hosts technique for linux and only if not WSL2
+		// If WSL2 we have to figure out other things, see GetHostDockerInternalIP()
+		UseHostDockerInternalExtraHosts: (runtime.GOOS == "linux" && !dockerutil.IsWSL2()) || (dockerutil.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2),
 	}
 	// We don't want to bind-mount git dir if it doesn't exist
 	if fileutil.IsDirectory(filepath.Join(app.AppRoot, ".git")) {
 		templateVars.GitDirMount = true
 	}
+
+	envFile := app.GetConfigPath(".env")
+	if fileutil.FileExists(envFile) {
+		templateVars.EnvFile = envFile
+	}
+
 	// And we don't want to bind-mount upload dir if it doesn't exist.
 	// templateVars.UploadDir is relative path rooted in approot.
 	if app.GetHostUploadDirFullPath() == "" || !fileutil.FileExists(app.GetHostUploadDirFullPath()) {
@@ -790,7 +839,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	if app.Database.Type == nodeps.Postgres {
 		templateVars.DBMountDir = "/var/lib/postgresql/data"
 	}
-	if app.NFSMountEnabled || app.NFSMountEnabledGlobal {
+	if app.IsNFSMountEnabled() {
 		templateVars.MountType = "volume"
 		templateVars.WebMount = "nfsmount"
 		templateVars.NFSSource = app.AppRoot
@@ -836,15 +885,14 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		return "", err
 	}
 
-	_, _, userName := util.GetContainerUIDGid()
-
-	extraWebContent := fmt.Sprintf("\nRUN chmod 600 ~%s/.pgpass ~%s/.my.cnf", userName, userName)
-	extraWebContent = extraWebContent + fmt.Sprintf("\nENV NVM_DIR=/home/%s/.nvm", userName)
+	extraWebContent := "\nRUN mkdir -p /home/$username && chown $username /home/$username && chmod 600 /home/$username/.pgpass"
+	extraWebContent = extraWebContent + "\nENV NVM_DIR=/home/$username/.nvm"
 	if app.NodeJSVersion != nodeps.NodeJSDefault {
 		extraWebContent = extraWebContent + "\nRUN (apt-get remove -y nodejs || true) && (apt purge nodejs || true)"
 		// Download of setup_*.sh seems to fail a LOT, probably a problem on their end. So try it twice
-		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN curl -sSL --fail https://deb.nodesource.com/setup_%s.x >/tmp/setup_node.sh ||  curl -sSL --fail https://deb.nodesource.com/setup_%s.sh >/tmp/setup_node.sh", app.NodeJSVersion, app.NodeJSVersion)
-		extraWebContent = extraWebContent + "\nRUN bash /tmp/setup_node.sh && apt-get install nodejs && npm config set unsafe-perm true && npm install --global gulp-cli yarn"
+		extraWebContent = extraWebContent + fmt.Sprintf("\nRUN curl -sSL --fail -o /tmp/setup_node.sh https://deb.nodesource.com/setup_%s.x  ||  curl -sSL --fail -o /tmp/setup_node.sh https://deb.nodesource.com/setup_%s.sh >/tmp/setup_node.sh", app.NodeJSVersion, app.NodeJSVersion)
+		extraWebContent = extraWebContent + "\nRUN bash /tmp/setup_node.sh >/dev/null && apt-get install -y nodejs >/dev/null\n" +
+			"RUN npm install --unsafe-perm=true --global gulp-cli yarn || ( npm config set unsafe-perm true && npm install --global gulp-cli yarn )"
 	}
 
 	// Add supervisord config for WebExtraDaemons
@@ -859,7 +907,7 @@ directory=%s
 autostart=false
 autorestart=true
 startretries=15
-stdout_logfile=/proc/self/fd/2
+stdout_logfile=/var/tmp/logpipe
 stdout_logfile_maxbytes=0
 redirect_stderr=true
 `, appStart.Name, appStart.Command, appStart.Directory)
@@ -867,14 +915,14 @@ redirect_stderr=true
 		if err != nil {
 			return "", fmt.Errorf("failed to write .webimageBuild/%s.conf: %v", appStart.Name, err)
 		}
-		extraWebContent = extraWebContent + fmt.Sprintf("\nADD %s.conf /etc/supervisor/conf.d\n", appStart.Name)
+		extraWebContent = extraWebContent + fmt.Sprintf("\nADD %s.conf /etc/supervisor/conf.d\nRUN chmod 644 /etc/supervisor/conf.d/%s.conf", appStart.Name, appStart.Name)
 	}
 	if len(supervisorGroup) > 0 {
 		err = os.WriteFile(app.GetConfigPath(".webimageBuild/webextradaemons.conf"), []byte("[group:webextradaemons]\nprograms="+strings.Join(supervisorGroup, ",")), 0755)
 		if err != nil {
 			return "", fmt.Errorf("failed to write .webimageBuild/webextradaemons.conf: %v", err)
 		}
-		extraWebContent = extraWebContent + "\nADD webextradaemons.conf /etc/supervisor/conf.d\n"
+		extraWebContent = extraWebContent + "\nADD webextradaemons.conf /etc/supervisor/conf.d\nRUN chmod 644 /etc/supervisor/conf.d/webextradaemons.conf\n"
 	}
 
 	err = WriteBuildDockerfile(app.GetConfigPath(".webimageBuild/Dockerfile"), app.GetConfigPath("web-build"), app.WebImageExtraPackages, app.ComposerVersion, extraWebContent)
@@ -885,14 +933,28 @@ redirect_stderr=true
 	// Add .pgpass to homedir on postgres
 	extraDBContent := ""
 	if app.Database.Type == nodeps.Postgres {
-		extraDBContent = `
+		// Postgres 9/10/11 upstream images are stretch-based, out of support from Debian.
+		// Postgres 9/10 are out of support by Postgres and no new images being pushed, see
+		// https://github.com/docker-library/postgres/issues/1012
+		// However, they do have a postgres:11-bullseye, but we won't start using it yet
+		// because of awkward changes to $DBIMAGE. Postgres 11 will be EOL Nov 2023
+		if nodeps.ArrayContainsString([]string{nodeps.Postgres9, nodeps.Postgres10, nodeps.Postgres11}, app.Database.Version) {
+			extraDBContent = extraDBContent + `
+RUN rm -f /etc/apt/sources.list.d/pgdg.list
+RUN echo "deb http://archive.debian.org/debian/ stretch main contrib non-free" > /etc/apt/sources.list
+RUN apt-get update || true
+RUN apt-get -y install apt-transport-https
+RUN printf "deb http://apt-archive.postgresql.org/pub/repos/apt/ stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+`
+		}
+		extraDBContent = extraDBContent + `
 ENV PATH $PATH:/usr/lib/postgresql/$PG_MAJOR/bin
 ADD postgres_healthcheck.sh /
 RUN chmod ugo+rx /postgres_healthcheck.sh
 RUN mkdir -p /etc/postgresql/conf.d && chmod 777 /etc/postgresql/conf.d
 RUN echo "*:*:db:db:db" > ~postgres/.pgpass && chown postgres:postgres ~postgres/.pgpass && chmod 600 ~postgres/.pgpass && chmod 777 /var/tmp && ln -sf /mnt/ddev_config/postgres/postgresql.conf /etc/postgresql && echo "restore_command = 'true'" >> /var/lib/postgresql/recovery.conf
 RUN printf "# TYPE DATABASE USER CIDR-ADDRESS  METHOD \nhost  all  all 0.0.0.0/0 md5\nlocal all all trust\nhost    replication    db             0.0.0.0/0  trust\nhost replication all 0.0.0.0/0 trust\nlocal replication all trust\nlocal replication all peer\n" >/etc/postgresql/pg_hba.conf
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests bzip2 less procps pv vim
+RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests bzip2 less procps pv vim
 `
 	}
 
@@ -957,7 +1019,8 @@ FROM $BASE_IMAGE
 ARG username
 ARG uid
 ARG gid
-RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' --uid $uid "$username" || useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' "$username" || useradd  -l -m -s "/bin/bash" --gid "$gid" --comment '' "$username")
+ARG DDEV_PHP_VERSION
+RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' --uid $uid "$username" || useradd  -l -m -s "/bin/bash" --gid "$username" --comment '' "$username" || useradd  -l -m -s "/bin/bash" --gid "$gid" --comment '' "$username" || useradd -l -m -s "/bin/bash" --comment '' $username )
 `
 	// If there are user pre.Dockerfile* files, insert their contents
 	if userDockerfilePath != "" {
@@ -979,6 +1042,7 @@ RUN (groupadd --gid $gid "$username" || groupadd "$username" || true) && (userad
 	if extraPackages != nil {
 		contents = contents + `
 ### DDEV-injected from webimage_extra_packages or dbimage_extra_packages
+
 RUN apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y -o Dpkg::Options::="--force-confold" --no-install-recommends --no-install-suggests ` + strings.Join(extraPackages, " ") + "\n"
 	}
 
@@ -1090,8 +1154,8 @@ func (app *DdevApp) promptForName() error {
 	return nil
 }
 
-// AvailableDocrootLocations returns an of default docroot locations to look for.
-func AvailableDocrootLocations() []string {
+// AvailablePHPDocrootLocations returns an of default docroot locations to look for.
+func AvailablePHPDocrootLocations() []string {
 	return []string{
 		"_www",
 		"docroot",
@@ -1110,7 +1174,7 @@ func DiscoverDefaultDocroot(app *DdevApp) string {
 	// Provide use the app.Docroot as the default docroot option.
 	var defaultDocroot = app.Docroot
 	if defaultDocroot == "" {
-		for _, docroot := range AvailableDocrootLocations() {
+		for _, docroot := range AvailablePHPDocrootLocations() {
 			if _, err := os.Stat(filepath.Join(app.AppRoot, docroot)); err != nil {
 				continue
 			}
@@ -1121,6 +1185,15 @@ func DiscoverDefaultDocroot(app *DdevApp) string {
 			}
 		}
 	}
+	dir, err := fileutil.FindFilenameInDirectory(app.AppRoot, []string{"manage.py"})
+	if err == nil && dir != "" {
+		defaultDocroot, err = filepath.Rel(app.AppRoot, dir)
+		if err != nil {
+			util.Warning("failed to filepath.Rel(%s, %s): %v", app.AppRoot, dir, err)
+			defaultDocroot = ""
+		}
+	}
+
 	return defaultDocroot
 }
 
@@ -1202,20 +1275,27 @@ func (app *DdevApp) AppTypePrompt() error {
 }
 
 // PrepDdevDirectory creates a .ddev directory in the current working directory
-func PrepDdevDirectory(dir string) error {
+func PrepDdevDirectory(app *DdevApp) error {
+	var err error
+	dir := app.GetConfigPath("")
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 
 		log.WithFields(log.Fields{
 			"directory": dir,
 		}).Debug("Config Directory does not exist, attempting to create.")
 
-		err := os.MkdirAll(dir, 0755)
+		err = os.MkdirAll(dir, 0755)
 		if err != nil {
 			return err
 		}
 	}
 
-	err := CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".importdb*", ".sshimageBuild", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.*.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/platform.yaml", "sequelpro.spf", "xhprof", "**/README.*")
+	err = os.MkdirAll(filepath.Join(dir, "web-entrypoint.d"), 0755)
+	if err != nil {
+		return err
+	}
+
+	err = CreateGitIgnore(dir, "**/*.example", ".dbimageBuild", ".dbimageExtra", ".ddev-docker-*.yaml", ".*downloads", ".global_commands", ".homeadditions", ".importdb*", ".sshimageBuild", ".venv", ".webimageBuild", ".webimageExtra", "apache/apache-site.conf", "commands/.gitattributes", "commands/db/mysql", "commands/host/launch", "commands/web/xdebug", "commands/web/live", "config.local.y*ml", "db_snapshots", "import-db", "import.yaml", "mutagen/mutagen.yml", "mutagen/.start-synced", "nginx_full/nginx-site.conf", "postgres/postgresql.conf", "providers/platform.yaml", "sequelpro.spf", "settings/settings.ddev.py", fmt.Sprintf("traefik/config/%s.yaml", app.Name), fmt.Sprintf("traefik/certs/%s.crt", app.Name), fmt.Sprintf("traefik/certs/%s.key", app.Name), "xhprof/xhprof_prepend.php", "**/README.*")
 	if err != nil {
 		return fmt.Errorf("failed to create gitignore in %s: %v", dir, err)
 	}
@@ -1297,4 +1377,13 @@ func validateHookYAML(source []byte) error {
 	}
 
 	return nil
+}
+
+// IsNFSMountEnabled determines whether NFS is enabled.
+// Mutagen trumps NFS, so if mutagen is enabled, NFS is not.
+func (app *DdevApp) IsNFSMountEnabled() bool {
+	if !app.IsMutagenEnabled() && (app.NFSMountEnabled || app.NFSMountEnabledGlobal) {
+		return true
+	}
+	return false
 }

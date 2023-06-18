@@ -16,12 +16,14 @@ on:
         default: ""
       debug_enabled:
         description: 'Enable debug mode'
+        type: boolean
         required: false
         default: false
 env:
   REGISTRY: docker.io
-  DOCKER_ORG: drud
+  DOCKER_ORG: ddev
   TAG: "${{ github.event.inputs.tag }}"
+  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 permissions:
   contents: read
@@ -29,7 +31,7 @@ permissions:
 jobs:
   push-tagged-image:
     name: "push tagged image"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v3
@@ -47,13 +49,13 @@ jobs:
       with:
         limit-access-to-actor: true
         github-token: ${{ secrets.GITHUB_TOKEN }}
-      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+      if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
     - name: Push ${{  github.event.inputs.image }} image
       if: github.event.inputs.image != 'ddev-dbserver' && github.event.inputs.image != 'all'
       run: |
         cd "containers/${{ github.event.inputs.image }}"
         make push VERSION="${{ github.event.inputs.tag }}"
-    - name: Push ${{  github.event.inputs.image }} image
+    - name: Push all images (not in use)
       if: github.event.inputs.image == 'all'
       run: |
         cd "containers"

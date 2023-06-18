@@ -2,12 +2,12 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
 	"io/fs"
 	"os"
 	"path"
@@ -180,7 +180,7 @@ func (app *DdevApp) RestoreSnapshot(snapshotName string) error {
 		if err != nil || dbContainer == nil {
 			return fmt.Errorf("no container found for db; err=%v", err)
 		}
-		err = dockerutil.RemoveContainer(dbContainer.ID, 20)
+		err = dockerutil.RemoveContainer(dbContainer.ID)
 		if err != nil {
 			return fmt.Errorf("failed to remove db container: %v", err)
 		}

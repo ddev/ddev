@@ -16,7 +16,7 @@ fi
 
 # For testing, you can change GITHUB_USERNAME to, for example, rfay so releases can be tested
 # without bothering people.
-GITHUB_USERNAME=drud
+GITHUB_USERNAME=ddev
 AUR_USERNAME=ddev-releaser
 AUR_REPO=$1
 VERSION_NUMBER=$2
@@ -46,9 +46,9 @@ cat >PKGBUILD <<END
 pkgname="${AUR_REPO}"
 pkgver=$(echo ${VERSION_NUMBER} | tr '-' '_')
 pkgrel=1
-pkgdesc='DDEV-Local: a local PHP development environment system${EDGE_DESCRIPTION}'
+pkgdesc='DDEV: a local PHP development environment system${EDGE_DESCRIPTION}'
 arch=('x86_64')
-url='https://github.com/drud/ddev'
+url='https://github.com/ddev/ddev'
 license=('Apache')
 provides=("$_name")
 conflicts=("$_name")
@@ -65,7 +65,7 @@ package() {
 }
 END
 
-docker run --rm --mount type=bind,source=$(pwd),target=/tmp/ddev-bin --workdir=/tmp/ddev-bin drud/arch-aur-builder bash -c "makepkg --printsrcinfo > .SRCINFO && makepkg -s"
+docker run --rm --mount type=bind,source=$(pwd),target=/tmp/ddev-bin --workdir=/tmp/ddev-bin ddev/arch-aur-builder bash -c "makepkg --printsrcinfo > .SRCINFO && makepkg -s"
 
 git config user.email "randy+ddev-releaser@randyfay.com"
 git config user.name "ddev-releaser"

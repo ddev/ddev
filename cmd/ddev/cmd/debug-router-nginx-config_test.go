@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -11,6 +12,9 @@ import (
 
 // TestDebugRouterNginxConfigCmd ensures the debug router-nginx-config prints the nginx config to stdout
 func TestDebugRouterNginxConfigCmd(t *testing.T) {
+	if globalconfig.DdevGlobalConfig.UseTraefik {
+		t.Skip("Skipping when UseTrafik is set, as it's invalid")
+	}
 	assert := asrt.New(t)
 
 	site := TestSites[0]

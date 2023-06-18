@@ -1,20 +1,20 @@
 package ddevapp_test
 
 import (
-	"fmt"
-	"github.com/drud/ddev/pkg/archive"
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/drud/ddev/pkg/util"
-	assert2 "github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
+	assert2 "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestDdevSnapshotCleanup tests creating a snapshot and deleting it.
@@ -25,7 +25,7 @@ func TestDdevSnapshotCleanup(t *testing.T) {
 	switchDir := site.Chdir()
 	defer switchDir()
 
-	runTime := util.TimeTrack(time.Now(), fmt.Sprintf("TestDdevSnapshotCleanup"))
+	runTime := util.TimeTrackC("TestDdevSnapshotCleanup")
 
 	testcommon.ClearDockerEnv()
 	err := app.Init(site.Dir)
@@ -70,7 +70,7 @@ func TestGetLatestSnapshot(t *testing.T) {
 	err := os.Chdir(site.Dir)
 	assert.NoError(err)
 
-	runTime := util.TimeTrack(time.Now(), t.Name())
+	runTime := util.TimeTrackC(t.Name())
 
 	testcommon.ClearDockerEnv()
 	err = app.Init(site.Dir)
@@ -128,7 +128,7 @@ func TestGetLatestSnapshot(t *testing.T) {
 func TestDdevRestoreSnapshot(t *testing.T) {
 	assert := assert2.New(t)
 
-	runTime := util.TimeTrack(time.Now(), t.Name())
+	runTime := util.TimeTrackC(t.Name())
 	origDir, _ := os.Getwd()
 	site := TestSites[0]
 

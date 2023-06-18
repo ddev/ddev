@@ -6,20 +6,20 @@
     <!-- == PACKAGE SPECIFIC SECTION == -->
     <id>ddev</id>
     <version>REPLACE_DDEV_VERSION</version>
-    <packageSourceUrl>https://github.com/drud/ddev/tree/master/winpkg/chocolatey</packageSourceUrl>
+    <packageSourceUrl>https://github.com/ddev/ddev/tree/master/winpkg/chocolatey</packageSourceUrl>
     <owners>Randy Fay</owners>
 
     <title>ddev (Install)</title>
-    <authors>Drud Tech</authors>
-    <projectUrl>https://github.com/drud/ddev</projectUrl>
-    <licenseUrl>https://github.com/drud/ddev/blob/master/LICENSE</licenseUrl>
+    <authors>Localdev Foundation</authors>
+    <projectUrl>https://github.com/ddev/ddev</projectUrl>
+    <licenseUrl>https://github.com/ddev/ddev/blob/master/LICENSE</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <docsUrl>https://ddev.readthedocs.io/en/stable/</docsUrl>
-    <bugTrackerUrl>https://github.com/drud/ddev/issues</bugTrackerUrl>
+    <bugTrackerUrl>https://github.com/ddev/ddev/issues</bugTrackerUrl>
     <tags>ddev drupal TYPO3 backdrop php</tags>
-    <summary>ddev is a local web development tool optimized for PHP projects and CMSs.</summary>
+    <summary>DDEV is a local web development tool optimized for PHP projects and CMSs.</summary>
     <description>ddev allows developers to use both nginx and apache, and many versions of PHP, with no host configurations. It works for most web apps, but has a bias toward TYPO3 and Drupal and Wordpress.</description>
-    <releaseNotes>See https://github.com/drud/ddev/releases/tag/vREPLACE_DDEV_VERSION</releaseNotes>
+    <releaseNotes>See https://github.com/ddev/ddev/releases/tag/vREPLACE_DDEV_VERSION</releaseNotes>
   <dependencies>
       <dependency id="gsudo" />
       <dependency id="ngrok" />

@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/versionconstants"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/spf13/cobra"
 	"path/filepath"
 	"runtime"
@@ -33,7 +33,7 @@ var DebugNFSMountCmd = &cobra.Command{
 		}
 		oldContainer, err := dockerutil.FindContainerByName(containerName)
 		if err == nil && oldContainer != nil {
-			err = dockerutil.RemoveContainer(oldContainer.ID, 20)
+			err = dockerutil.RemoveContainer(oldContainer.ID)
 			if err != nil {
 				util.Failed("Failed to remove existing test container %s: %v", containerName, err)
 			}
@@ -41,19 +41,16 @@ var DebugNFSMountCmd = &cobra.Command{
 		//nolint: errcheck
 		dockerutil.RemoveVolume(testVolume)
 
-		hostDockerInternal, err := dockerutil.GetHostDockerInternalIP()
+		nfsServerAddr, err := dockerutil.GetNFSServerAddr()
 		if err != nil {
-			util.Failed("failed to GetHostDockerInternalIP(): %v", err)
-		}
-		if hostDockerInternal == "" {
-			hostDockerInternal = "host.docker.internal"
+			util.Failed("failed to GetNFSServerAddr(): %v", err)
 		}
 		shareDir := app.AppRoot
 		// Workaround for Catalina sharing nfs as /System/Volumes/Data
 		if runtime.GOOS == "darwin" && fileutil.IsDirectory(filepath.Join("/System/Volumes/Data", app.AppRoot)) {
 			shareDir = filepath.Join("/System/Volumes/Data", app.AppRoot)
 		}
-		volume, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{"type": "nfs", "o": fmt.Sprintf("addr=%s,hard,nolock,rw", hostDockerInternal), "device": ":" + dockerutil.MassageWindowsNFSMount(shareDir)}, nil)
+		volume, err := dockerutil.CreateVolume(testVolume, "local", map[string]string{"type": "nfs", "o": fmt.Sprintf("addr=%s,hard,nolock,rw,wsize=32768,rsize=32768", nfsServerAddr), "device": ":" + dockerutil.MassageWindowsNFSMount(shareDir)}, nil)
 		//nolint: errcheck
 		defer dockerutil.RemoveVolume(testVolume)
 		if err != nil {
@@ -62,7 +59,7 @@ var DebugNFSMountCmd = &cobra.Command{
 		_ = volume
 		uidStr, _, _ := util.GetContainerUIDGid()
 
-		_, out, err := dockerutil.RunSimpleContainer(versionconstants.GetWebImage(), containerName, []string{"sh", "-c", "findmnt -T /nfsmount && ls -d /nfsmount/.ddev"}, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, uidStr, true, false, nil)
+		_, out, err := dockerutil.RunSimpleContainer(versionconstants.GetWebImage(), containerName, []string{"sh", "-c", "findmnt -T /nfsmount && ls -d /nfsmount/.ddev"}, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, uidStr, true, false, map[string]string{"com.ddev.site-name": ""}, nil)
 		if err != nil {
 			util.Warning("NFS does not seem to be set up yet, see debugging instructions at https://ddev.readthedocs.io/en/stable/users/install/performance/#debugging-ddev-start-failures-with-nfs_mount_enabled-true")
 			util.Failed("Details: error=%v\noutput=%v", err, out)

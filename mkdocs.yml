@@ -2,8 +2,8 @@
 site_name: DDEV Docs
 # todo: Make sure to set this to the correct one; otherwise it breaks 404 page
 site_url: https://ddev.readthedocs.io/en/latest/
-repo_url: https://github.com/drud/ddev
-repo_name: drud/ddev
+repo_url: https://github.com/ddev/ddev
+repo_name: ddev/ddev
 edit_uri: blob/master/docs/content
 copyright: Localdev Foundation
 extra_javascript:
@@ -20,11 +20,16 @@ docs_dir: docs/content
 # Configuration
 theme:
   name: material
+  custom_dir: docs/overrides
+  icon:
+    edit: material/pencil
   palette:
   - scheme: default
     primary: indigo
     accent: indigo
   features:
+  - content.action.edit
+  - content.code.copy
 #  - content.tabs.link
   - navigation.expand
   - navigation.indexes
@@ -33,13 +38,13 @@ theme:
   - navigation.tabs
 #  - navigation.tabs.sticky
   - navigation.top
-#  - navigation.tracking
+  - navigation.tracking
 #  - toc.follow
-  - toc.integrate
+#  - toc.integrate
 
   favicon: favicon.png
   # readthedocs doesn't seem to do logo css right
-#  logo: /Logo_w_text.svg
+#  logo: /logo.svg
 
 # Plugins
 plugins:
@@ -51,7 +56,7 @@ plugins:
 - git-revision-date-localized:
 #    enable_creation_date: true
 #- git-committers:
-#    repository: https://github.com/drud/ddev
+#    repository: https://github.com/ddev/ddev
 #    token: !ENV GH_TOKEN
 
 
@@ -59,7 +64,7 @@ plugins:
 extra:
   social:
   - icon: fontawesome/brands/github
-    link: https://github.com/drud/ddev
+    link: https://github.com/ddev/ddev
   - icon: fontawesome/brands/discord
     link: https://discord.gg/hCZFfAMc5k
   - icon: fontawesome/brands/stack-overflow
@@ -67,6 +72,8 @@ extra:
   - icon: fontawesome/brands/twitter
     link: https://twitter.com/search?q=%23ddev&src=unknown&f=live
   generator: false
+  analytics:
+    provider: plausible
 
 # Extensions
 markdown_extensions:
@@ -79,19 +86,28 @@ markdown_extensions:
 - md_in_html
 - toc:
     permalink: true
+    toc_depth: 2
 - pymdownx.arithmatex:
     generic: true
 - pymdownx.betterem:
     smart_enable: all
 - pymdownx.caret
 - pymdownx.details
+- pymdownx.emoji:
+    emoji_index: !!python/name:materialx.emoji.twemoji
+    emoji_generator: !!python/name:materialx.emoji.to_svg
 - pymdownx.highlight:
     anchor_linenums: true
+    extend_pygments_lang:
+      - name: php
+        lang: php
+        options:
+          startinline: true
 - pymdownx.inlinehilite
 - pymdownx.keys
 - pymdownx.magiclink:
     repo_url_shorthand: true
-    user: drud
+    user: ddev
     repo: ddev
 - pymdownx.mark
 - pymdownx.smartsymbols
@@ -101,6 +117,7 @@ markdown_extensions:
 - pymdownx.tasklist:
     custom_checkbox: true
 - pymdownx.tilde
+- smarty
 
 nav:
   - "Start!":
@@ -109,24 +126,36 @@ nav:
       - users/install/index.md
       - users/install/docker-installation.md
       - users/install/ddev-installation.md
+      - 'Upgrading': users/install/ddev-upgrade.md
+    - 'Getting Started':
+      - users/project.md
+      - users/quickstart.md
       - users/install/performance.md
       - users/install/shell-completion.md
-    - users/quickstart.md
-    - users/support.md
-  - 'Basics':
-    - users/basics/index.md
-    - users/basics/how-ddev-works.md
-    - users/basics/cli-usage.md
-    - users/basics/database_management.md
-    - users/basics/troubleshooting.md
-    - users/basics/faq.md
-    - users/basics/developer-tools.md
-    - users/basics/uninstall.md
+      - users/install/phpstorm.md
+  - 'Usage':
+    - 'Common Tasks':
+      - users/usage/index.md
+      - users/usage/cli.md
+      - users/usage/database-management.md
+      - users/usage/cms-settings.md
+      - users/usage/troubleshooting.md
+      - users/usage/offline.md
+    - 'Reference':
+      - users/usage/architecture.md
+      - users/usage/commands.md
+      - users/usage/developer-tools.md
+      - users/usage/diagnostics.md
+      - 'Uninstalling': users/usage/uninstall.md
+    - 'Getting Help':
+      - users/usage/faq.md
+      - users/support.md
+      - users/code-of-conduct.md
   - 'Configuration':
-    - users/extend/database_types.md
+    - users/configuration/config.md
+    - users/extend/database-types.md
     - users/configuration/hooks.md
     - users/extend/additional-hostnames.md
-    - users/configuration/config_yaml.md
     - users/configuration/experimental.md
   - 'Extending':
     - users/extend/customization-extendibility.md
@@ -142,27 +171,23 @@ nav:
           - users/debugging-profiling/blackfire-profiling.md
           - users/debugging-profiling/xhprof-profiling.md
           - users/debugging-profiling/xdebug-profiling.md
-  - 'Hosting integration':
+  - 'Hosting & Deployment':
     - users/providers/index.md
-    - users/providers/acquia.md
-    - users/providers/pantheon.md
-    - users/providers/platform.md
-  - 'Guides':
-      - users/topics/phpstorm.md
+    - 'Beyond Local':
       - users/topics/sharing.md
-      - users/topics/webserver.md
-      - users/topics/whats_in_ddev_dir.md
-      - users/topics/cms_specific_help.md
-  - 'Details':
-      - users/details/offline-usage.md
-      - users/details/opting-in.md
-      - users/details/alternate-uses.md
-  - 'Developers':
+      - users/topics/hosting.md
+      - users/topics/remote-docker.md
+    - 'Hosting Provider Integrations':
+      - 'Acquia': users/providers/acquia.md
+      - 'Pantheon': users/providers/pantheon.md
+      - 'Platform.sh': users/providers/platform.md
+  - 'Development':
       - developers/index.md
       - developers/building-contributing.md
       - developers/buildkite-testmachine-setup.md
       - developers/github-selfhosted-setup.md
       - developers/project-types.md
       - developers/release-management.md
-      - developers/styleguide.md
+      - developers/brand-guide.md
       - developers/testing-docs.md
+      - developers/writing-style-guide.md

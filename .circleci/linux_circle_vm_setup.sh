@@ -28,7 +28,7 @@ echo "capath=/etc/ssl/certs/" >>~/.curlrc
 
 . ~/.bashrc
 
-for item in drud/ddev/ddev golang makensis mingw-w64 mkcert; do
+for item in ddev/ddev/ddev golang makensis mingw-w64 mkcert; do
     brew install $item >/dev/null || brew upgrade $item >/dev/null
 done
 
@@ -38,7 +38,7 @@ npm install --global markdownlint-cli
 markdownlint --version
 # readthedocs has ancient version of mkdocs in it.
 pyenv global 3.9.7 # added to make CircleCi give us pip3
-pip3 install -q yq mkdocs==0.17.5
+pip3 install -q mkdocs==0.17.5
 
 # Get the Stubs and Plugins for makensis; the linux makensis build doesn't do this.
 pwd && ./.ci-scripts/nsis_setup.sh /usr/local/share/nsis

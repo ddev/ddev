@@ -7,14 +7,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 
 	"path/filepath"
 
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -38,7 +38,7 @@ var (
 	// projectTypeArg is the ddev app type, like drupal7/drupal8/wordpress.
 	projectTypeArg string
 
-	// phpVersionArg overrides the default version of PHP to be used in the web container, like 5.6/7.0/7.1/7.2/7.3/7.4/8.0.
+	// phpVersionArg overrides the default version of PHP to be used in the web container, like 5.6/7.0/7.1/7.2/7.3/7.4/8.0/8.1/8.2/etc.
 	phpVersionArg string
 
 	// httpPortArg overrides the default HTTP port (80).
@@ -242,7 +242,9 @@ func init() {
 	ConfigCommand.Flags().StringVar(&projectTypeArg, "project-type", "", projectTypeUsage)
 	ConfigCommand.Flags().StringVar(&phpVersionArg, "php-version", "", "The version of PHP that will be enabled in the web container")
 	ConfigCommand.Flags().StringVar(&httpPortArg, "http-port", "", "The router HTTP port for this project")
+	ConfigCommand.Flags().StringVar(&httpPortArg, "router-http-port", "", "The router HTTP port for this project")
 	ConfigCommand.Flags().StringVar(&httpsPortArg, "https-port", "", "The router HTTPS port for this project")
+	ConfigCommand.Flags().StringVar(&httpsPortArg, "router-https-port", "", "The router HTTPS port for this project")
 	ConfigCommand.Flags().BoolVar(&xdebugEnabledArg, "xdebug-enabled", false, "Whether or not XDebug is enabled in the web container")
 	ConfigCommand.Flags().BoolVar(&noProjectMountArg, "no-project-mount", false, "Whether or not to skip mounting project code into the web container")
 	ConfigCommand.Flags().StringVar(&additionalHostnamesArg, "additional-hostnames", "", "A comma-delimited list of hostnames for the project")
@@ -253,7 +255,7 @@ func init() {
 	ConfigCommand.Flags().BoolVar(&createDocroot, "create-docroot", false, "Prompts ddev to create the docroot if it doesn't exist")
 	ConfigCommand.Flags().BoolVar(&showConfigLocation, "show-config-location", false, "Output the location of the config.yaml file if it exists, or error that it doesn't exist.")
 	ConfigCommand.Flags().StringVar(&uploadDirArg, "upload-dir", "", "Sets the project's upload directory, the destination directory of the import-files command.")
-	ConfigCommand.Flags().StringVar(&webserverTypeArg, "webserver-type", "", "Sets the project's desired webserver type: nginx-fpm or apache-fpm")
+	ConfigCommand.Flags().StringVar(&webserverTypeArg, "webserver-type", "", "Sets the project's desired webserver type: nginx-fpm/apache-fpm/nginx-gunicorn")
 	ConfigCommand.Flags().StringVar(&webImageArg, "web-image", "", "Sets the web container image")
 	ConfigCommand.Flags().BoolVar(&webImageDefaultArg, "web-image-default", false, "Sets the default web container image for this ddev version")
 	ConfigCommand.Flags().StringVar(&dbImageArg, "db-image", "", "Sets the db container image")
@@ -339,7 +341,7 @@ func init() {
 }
 
 // getConfigApp() does the basic setup of the app (with provider) and returns it.
-func getConfigApp(providerName string) (*ddevapp.DdevApp, error) {
+func getConfigApp(_ string) (*ddevapp.DdevApp, error) {
 	appRoot, err := os.Getwd()
 	if err != nil {
 		return nil, fmt.Errorf("could not determine current working directory: %v", err)
@@ -358,7 +360,7 @@ func getConfigApp(providerName string) (*ddevapp.DdevApp, error) {
 }
 
 // handleMainConfigArgs() validates and processes the main config args (docroot, etc.)
-func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevApp) error {
+func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) error {
 	var err error
 
 	// Support the show-config-location flag.
@@ -387,6 +389,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	app.WarnIfConfigReplace()
 
 	// app.Name gets set to basename if not provided, or set to siteNameArg if provided
+	// nolint:revive
 	if app.Name != "" && projectNameArg == "" { // If we already have a c.Name and no siteNameArg, leave c.Name alone
 		// Sorry this is empty but it makes the logic clearer.
 	} else if projectNameArg != "" { // if we have a siteNameArg passed in, use it for c.Name
@@ -497,9 +500,10 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 
 	if cmd.Flag("mutagen-enabled").Changed {
 		app.MutagenEnabled = mutagenEnabled
-		if app.NFSMountEnabled {
+		if app.IsNFSMountEnabled() {
 			util.Warning("nfs-mount-enabled disabled because incompatible with mutagen, which is enabled")
 			app.NFSMountEnabled = false
+			app.NFSMountEnabledGlobal = false
 		}
 	}
 
@@ -544,7 +548,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	}
 
 	if cmd.Flag("web-environment").Changed {
-		env := strings.Replace(webEnvironmentLocal, " ", "", -1)
+		env := strings.TrimSpace(webEnvironmentLocal)
 		if env == "" {
 			app.WebEnvironment = []string{}
 		} else {
@@ -553,7 +557,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	}
 
 	if cmd.Flag("web-environment-add").Changed {
-		env := strings.Replace(webEnvironmentLocal, " ", "", -1)
+		env := strings.TrimSpace(webEnvironmentLocal)
 		if env != "" {
 			envspl := strings.Split(env, ",")
 			conc := append(app.WebEnvironment, envspl...)
@@ -716,7 +720,7 @@ func handleMainConfigArgs(cmd *cobra.Command, args []string, app *ddevapp.DdevAp
 	// If the database already exists in volume and is not of this type, then throw an error
 	if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "db") {
 		if dbType, err := app.GetExistingDBType(); err != nil || (dbType != "" && dbType != app.Database.Type+":"+app.Database.Version) {
-			return fmt.Errorf("Unable to configure project %s with database type %s because that database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s', and you can try a migration with 'ddev debug migrate-database %s' see docs at %s", app.Name, dbType, dbType, dbType, app.Database.Type+":"+app.Database.Version, "https://ddev.readthedocs.io/en/latest/users/extend/database_types/")
+			return fmt.Errorf("Unable to configure project %s with database type %s because that database type does not match the current actual database. Please change your database type back to %s and start again, export, delete, and then change configuration and start. To get back to existing type use 'ddev config --database=%s', and you can try a migration with 'ddev debug migrate-database %s' see docs at %s", app.Name, dbType, dbType, dbType, app.Database.Type+":"+app.Database.Version, "https://ddev.readthedocs.io/en/latest/users/extend/database-types/")
 		}
 	}
 

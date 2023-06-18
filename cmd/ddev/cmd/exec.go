@@ -5,8 +5,8 @@ import (
 
 	"strings"
 
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -20,7 +20,8 @@ var DdevExecCmd = &cobra.Command{
 	Short:   "Execute a shell command in the container for a service. Uses the web service by default.",
 	Long:    `Execute a shell command in the container for a service. Uses the web service by default. To run your command in the container for another service, run "ddev exec --service <service> <cmd>". If you want to use raw, uninterpreted command inside container use --raw as in example.`,
 	Example: `ddev exec ls /var/www/html
-ddev exec --service db\nddev exec -s db
+ddev exec --service db
+ddev exec -s db
 ddev exec -s solr (assuming an add-on service named 'solr')
 ddev exec --raw -- ls -lR`,
 	Run: func(cmd *cobra.Command, args []string) {

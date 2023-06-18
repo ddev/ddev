@@ -27,7 +27,7 @@ fi
 # Upgrade various items on various operating systems
 case $os in
 darwin)
-    for item in drud/ddev/ddev golang golangci-lint libpq mkcert mkdocs; do
+    for item in ddev/ddev/ddev golang golangci-lint libpq mkcert mkdocs; do
         brew upgrade $item || brew install $item || true
     done
     brew link --force libpq
@@ -39,7 +39,7 @@ windows)
 linux)
     # homebrew is only on amd64
     if [ "$(arch)" = "x86_64" ]; then
-      for item in drud/ddev/ddev golang mkcert mkdocs postgresql-client; do
+      for item in ddev/ddev/ddev golang mkcert mkdocs postgresql-client; do
         brew upgrade $item || brew install $item || true
       done
     fi
@@ -51,7 +51,7 @@ esac
 
 # Remove any -built images, as we want to make sure tests do the building.
 docker rmi -f $(docker images --filter "dangling=true" -q --no-trunc) >/dev/null 2>&1 || true
-docker rmi -f $(docker images | awk '/drud.*-built/ {print $3}' ) >/dev/null 2>&1 || true
+docker rmi -f $(docker images | awk '/ddev.*-built/ {print $3}' ) >/dev/null 2>&1 || true
 
 # Make sure there aren't any dangling NFS volumes
 if docker volume ls | grep '[Tt]est.*_nfsmount'; then

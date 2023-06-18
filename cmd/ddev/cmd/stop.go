@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"os"
@@ -108,6 +108,10 @@ ddev stop --remove-data`,
 			}
 			if unlist {
 				project.RemoveGlobalProjectInfo()
+				err = ddevapp.TerminateMutagenSync(project)
+				if err != nil {
+					util.Warning("Unable to terminate mutagen sync for project %s", project.Name)
+				}
 			}
 
 			util.Success("Project %s has been stopped.", project.GetName())

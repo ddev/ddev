@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/globalconfig"
 )
 
 // getRequestedProjects will collect and return the requested projects from command line arguments and flags.

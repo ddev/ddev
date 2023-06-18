@@ -2,9 +2,9 @@ package ddevapp_test
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
@@ -14,8 +14,8 @@ import (
 	"strings"
 	"testing"
 
-	. "github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/testcommon"
+	. "github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -29,6 +29,10 @@ const acquiaPushTestSite = "ddevdemo.test"
 
 const acquiaPullSiteURL = "http://ddevdemodev.prod.acquia-sites.com/"
 const acquiaSiteExpectation = "Super easy vegetarian pasta"
+
+// Note that these tests won't run with GitHub actions on a forked PR.
+// Thie is a security feature, but means that PRs intended to test this
+// must be done in the ddev repo.
 
 // TestAcquiaPull ensures we can pull backups from Acquia
 func TestAcquiaPull(t *testing.T) {

@@ -1,0 +1,9 @@
+#ddev-generated
+
+ARG BASE_IMAGE
+FROM $BASE_IMAGE
+
+{{ if .UseTraefik }}
+RUN apk add bash vim curl htop
+WORKDIR /mnt/ddev-global-cache/traefik
+{{ end }}

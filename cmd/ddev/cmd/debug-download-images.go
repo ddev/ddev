@@ -1,10 +1,13 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/spf13/cobra"
+	"runtime"
 )
 
 // DebugDownloadImagesCmd implements the ddev debug download-images command
@@ -16,30 +19,29 @@ var DebugDownloadImagesCmd = &cobra.Command{
 		if len(args) != 0 {
 			util.Failed("This command takes no additional arguments")
 		}
-
-		app, err := ddevapp.GetActiveApp("")
-		if err != nil {
-			util.Failed("No active project was found: %v", err)
-		}
-
-		_, err = dockerutil.DownloadDockerComposeIfNeeded()
+		_, err := dockerutil.DownloadDockerComposeIfNeeded()
 		if err != nil {
 			util.Warning("Unable to download docker-compose: %v", err)
 		}
-		err = ddevapp.DownloadMutagenIfNeeded(app)
-		if err != nil {
-			util.Warning("Unable to download mutagen: %v", err)
+		if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
+			err = ddevapp.DownloadMutagenIfNeeded()
+			if err != nil {
+				util.Warning("Unable to download mutagen: %v", err)
+			}
 		}
 
-		app.DockerEnv()
-		err = app.WriteDockerComposeYAML()
+		err = ddevapp.PullBaseContainerImages()
 		if err != nil {
-			util.Failed("Unable to WriteDockerComposeYAML(): %v", err)
+			util.Failed("Failed to PullBaseContainerImages(): %v", err)
 		}
-		err = app.PullContainerImages()
+
+		// Provide at least the default database image
+		dbImage := versionconstants.GetDBImage(nodeps.MariaDB, nodeps.MariaDBDefaultVersion)
+		err = dockerutil.Pull(dbImage)
 		if err != nil {
-			util.Failed("Failed to debug download-images: %v", err)
+			util.Failed("Failed to pull dbImage: %v", err)
 		}
+		util.Debug("Pulled %s", dbImage)
 
 		util.Success("Successfully downloaded ddev images")
 	},

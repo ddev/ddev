@@ -101,24 +101,24 @@ fi
 
 BASE_IMAGE=${DB_TYPE}
 
-# For mysql, we have to use our own base images at drud/mysql
+# For mysql, we have to use our own base images at ddev/mysql
 set -x
 
 if [ ${DB_TYPE} = "mysql" ] && [[ "$ARCHS" == *"linux/arm64"* ]]; then
-  BASE_IMAGE=drud/mysql
+  BASE_IMAGE=ddev/mysql
 fi
-printf "\n\n========== Building drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG} from ${BASE_IMAGE} for ${ARCHS} with pinned version ${DB_PINNED_VERSION} ==========\n"
+printf "\n\n========== Building ddev/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG} from ${BASE_IMAGE} for ${ARCHS} with pinned version ${DB_PINNED_VERSION} ==========\n"
 
 if [ ! -z ${PUSH:-} ]; then
-  echo "building/pushing drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}"
+  echo "building/pushing ddev/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}"
   set -x
-  docker buildx build --push --platform ${ARCHS} ${DOCKER_ARGS} --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" --build-arg="DB_VERSION=${DB_MAJOR_VERSION}" -t "drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}" .
+  docker buildx build --push --platform ${ARCHS} ${DOCKER_ARGS} --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" --build-arg="DB_VERSION=${DB_MAJOR_VERSION}" -t "ddev/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}" .
   set +x
 fi
 
 # By default, load/import into local docker
 set -x
 if [ -z "${PUSH:-}" ]; then
-    echo "Loading to local docker drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}"
-    docker buildx build --load ${DOCKER_ARGS} --build-arg="DB_TYPE=${DB_TYPE}" --build-arg="DB_VERSION=${DB_MAJOR_VERSION}" --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" -t "drud/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}" .
+    echo "Loading to local docker ddev/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}"
+    docker buildx build --load ${DOCKER_ARGS} --build-arg="DB_TYPE=${DB_TYPE}" --build-arg="DB_VERSION=${DB_MAJOR_VERSION}" --build-arg="BASE_IMAGE=${BASE_IMAGE}" --build-arg="DB_PINNED_VERSION=${DB_PINNED_VERSION}" -t "ddev/ddev-dbserver-${DB_TYPE}-${DB_MAJOR_VERSION}:${IMAGE_TAG}" .
 fi

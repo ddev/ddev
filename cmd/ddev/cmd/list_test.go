@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -84,6 +84,18 @@ func TestCmdList(t *testing.T) {
 		assert.True(found, "Failed to find project %s in ddev list -j", v.Name)
 
 	}
+
+	// Now filter the list by the type of the first running test app
+	jsonOut, err = exec.RunHostCommand(DdevBin, "list", "-j", "--type", TestSites[0].Type)
+	assert.NoError(err, "error running ddev list: %v output=%s", err, out)
+	siteList = getTestingSitesFromList(t, jsonOut)
+	assert.GreaterOrEqual(len(siteList), 1)
+
+	// Now filter the list by a not existing type
+	jsonOut, err = exec.RunHostCommand(DdevBin, "list", "-j", "--type", "not-existing-type")
+	assert.NoError(err, "error running ddev list: %v output=%s", err, out)
+	siteList = getTestingSitesFromList(t, jsonOut)
+	assert.Equal(0, len(siteList))
 
 	// Stop the first app
 	out, err = exec.RunHostCommand(DdevBin, "stop", TestSites[0].Name)
