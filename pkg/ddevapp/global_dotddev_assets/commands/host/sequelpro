@@ -6,6 +6,7 @@
 ## Example: "ddev sequelpro"
 ## OSTypes: darwin
 ## HostBinaryExists: /Applications/Sequel Pro.app
+## DBTypes: mysql,mariadb
 
 tmpdir=$(mktemp -d -t sequelpro-XXXXXXXXXX)
 templatepath="$tmpdir/sequelpro.spf"

@@ -1,9 +1,9 @@
 package version
 
 import (
-	exec2 "github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/versionconstants"
+	exec2 "github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/stretchr/testify/require"
 	"os"
 	"runtime"

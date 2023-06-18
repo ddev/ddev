@@ -1,0 +1,34 @@
+---
+key1:
+    bool_field1: true
+    bool_field2: false
+    float_field1: 1.1
+    float_field2: 1.2
+    int_field1: 11
+    int_field2: 12
+    string_field1: string11
+    string_field2: string12
+    uint_field1: 112
+    uint_field2: 123
+key2:
+    bool_field1: false
+    bool_field2: true
+    float_field1: 2.1
+    float_field2: 2.2
+    int_field1: 21
+    int_field2: 22
+    string_field1: string21
+    string_field2: string22
+    uint_field1: 212
+    uint_field2: 223
+key3:
+    bool_field1: true
+    bool_field2: true
+    float_field1: 3.1
+    float_field2: 3.2
+    int_field1: 31
+    int_field2: 32
+    string_field1: string31
+    string_field2: string32
+    uint_field1: 312
+    uint_field2: 323

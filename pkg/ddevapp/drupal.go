@@ -2,19 +2,19 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
 
 	"os"
 	"path"
 	"path/filepath"
 	"text/template"
 
-	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/fileutil"
 
-	"github.com/drud/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/archive"
 )
 
 // DrupalSettings encapsulates all the configurations for a Drupal site.
@@ -27,7 +27,6 @@ type DrupalSettings struct {
 	DatabaseHost     string
 	DatabaseDriver   string
 	DatabasePort     string
-	DatabasePrefix   string
 	HashSalt         string
 	Signature        string
 	SitePath         string
@@ -49,8 +48,7 @@ func NewDrupalSettings(app *DdevApp) *DrupalSettings {
 		DatabasePassword: "db",
 		DatabaseHost:     "db",
 		DatabaseDriver:   "mysql",
-		DatabasePort:     GetInternalPort(app, "db"),
-		DatabasePrefix:   "",
+		DatabasePort:     GetExposedPort(app, "db"),
 		HashSalt:         util.RandString(64),
 		Signature:        nodeps.DdevFileSignature,
 		SitePath:         path.Join("sites", "default"),
@@ -100,9 +98,9 @@ func manageDrupalSettingsFile(app *DdevApp, drupalConfig *DrupalSettings, appTyp
 	}
 
 	if included {
-		output.UserOut.Printf("Existing %s file includes %s", drupalConfig.SiteSettings, drupalConfig.SiteSettingsDdev)
+		util.Debug("Existing %s file includes %s", drupalConfig.SiteSettings, drupalConfig.SiteSettingsDdev)
 	} else {
-		output.UserOut.Printf("Existing %s file does not include %s, modifying to include ddev settings", drupalConfig.SiteSettings, drupalConfig.SiteSettingsDdev)
+		util.Debug("Existing %s file does not include %s, modifying to include ddev settings", drupalConfig.SiteSettings, drupalConfig.SiteSettingsDdev)
 
 		if err := appendIncludeToDrupalSettingsFile(app.SiteSettingsPath, app.Type); err != nil {
 			return fmt.Errorf("failed to include %s in %s: %v", drupalConfig.SiteSettingsDdev, drupalConfig.SiteSettings, err)
@@ -381,6 +379,50 @@ func drupal8PostStartAction(app *DdevApp) error {
 	return nil
 }
 
+func drupalPostStartAction(app *DdevApp) error {
+	if isDrupal9App(app) || isDrupal10App(app) {
+		err := app.Wait([]string{nodeps.DBContainer})
+		if err != nil {
+			return err
+		}
+		// pg_trm extension is required in Drupal9.5+
+		if app.Database.Type == nodeps.Postgres {
+			stdout, stderr, err := app.Exec(&ExecOpts{
+				Service:   "db",
+				Cmd:       `psql -q -c "CREATE EXTENSION IF NOT EXISTS pg_trgm;" 2>/dev/null`,
+				NoCapture: false,
+			})
+			if err != nil {
+				util.Warning("unable to CREATE EXTENSION pg_trm: stdout='%s', stderr='%s', err=%v", stdout, stderr, err)
+			}
+		}
+		// SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED required in Drupal 9.5+
+		if app.Database.Type == nodeps.MariaDB || app.Database.Type == nodeps.MySQL {
+			stdout, stderr, err := app.Exec(&ExecOpts{
+				Service:   "db",
+				Cmd:       `mysql -uroot -proot -e "SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED;"`,
+				NoCapture: false,
+			})
+			if err != nil {
+				util.Warning("unable to SET GLOBAL TRANSACTION ISOLATION LEVEL READ COMMITTED: stdout='%s', stderr='%s', err=%v", stdout, stderr, err)
+			}
+		}
+	}
+	// Return early because we aren't expected to manage settings.
+	if app.DisableSettingsManagement {
+		return nil
+	}
+	if err := createDrupal8SyncDir(app); err != nil {
+		return err
+	}
+
+	//nolint: revive
+	if err := drupalEnsureWritePerms(app); err != nil {
+		return err
+	}
+	return nil
+}
+
 // drupal7PostStartAction handles default post-start actions for D7 apps, like ensuring
 // useful permissions settings on sites/default.
 func drupal7PostStartAction(app *DdevApp) error {
@@ -422,7 +464,7 @@ func drupal6PostStartAction(app *DdevApp) error {
 // drupalEnsureWritePerms will ensure sites/default and sites/default/settings.php will
 // have the appropriate permissions for development.
 func drupalEnsureWritePerms(app *DdevApp) error {
-	output.UserOut.Printf("Ensuring write permissions for %s", app.GetName())
+	util.Debug("Ensuring write permissions for %s", app.GetName())
 	var writePerms os.FileMode = 0200
 
 	settingsDir := path.Dir(app.SiteSettingsPath)

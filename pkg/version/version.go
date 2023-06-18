@@ -2,11 +2,11 @@ package version
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/versionconstants"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/fsouza/go-dockerclient"
 	"os/exec"
 	"runtime"
@@ -24,8 +24,8 @@ func GetVersionInfo() map[string]string {
 	versionInfo["web"] = versionconstants.GetWebImage()
 	versionInfo["db"] = versionconstants.GetDBImage(nodeps.MariaDB, "")
 	versionInfo["dba"] = versionconstants.GetDBAImage()
-	versionInfo["router"] = versionconstants.RouterImage + ":" + versionconstants.RouterTag
-	versionInfo["ddev-ssh-agent"] = versionconstants.SSHAuthImage + ":" + versionconstants.SSHAuthTag
+	versionInfo["router"] = versionconstants.GetRouterImage()
+	versionInfo["ddev-ssh-agent"] = versionconstants.GetSSHAuthImage()
 	versionInfo["build info"] = versionconstants.BUILDINFO
 	versionInfo["os"] = runtime.GOOS
 	versionInfo["architecture"] = runtime.GOARCH

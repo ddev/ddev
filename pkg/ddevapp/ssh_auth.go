@@ -3,15 +3,15 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/versionconstants"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/fsouza/go-dockerclient"
-	"html/template"
 	"os"
 	"path"
 	"path/filepath"
+	"text/template"
 )
 
 // SSHAuthName is the "machine name" of the ddev-ssh-agent docker-compose service
@@ -74,7 +74,7 @@ func (app *DdevApp) EnsureSSHAgentContainer() error {
 // RemoveSSHAgentContainer brings down the ddev-ssh-agent if it's running.
 func RemoveSSHAgentContainer() error {
 	// Stop the container if it exists
-	err := dockerutil.RemoveContainer(globalconfig.DdevSSHAgentContainer, 0)
+	err := dockerutil.RemoveContainer(globalconfig.DdevSSHAgentContainer)
 	if err != nil {
 		if _, ok := err.(*docker.NoSuchContainer); !ok {
 			return err

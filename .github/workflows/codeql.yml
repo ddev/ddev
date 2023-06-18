@@ -20,6 +20,9 @@ on:
   schedule:
     - cron: '24 1 * * 5'
 
+env:
+  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   analyze:
     name: Analyze

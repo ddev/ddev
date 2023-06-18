@@ -4,16 +4,20 @@ on:
     branches:
       - 20220710_mkdocs_material
       - master
+env:
+  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   docs-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v4.2.0
+      - uses: actions/setup-python@v4.6.1
         with:
           python-version: 3.x
+      - run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
       - run: pip install -r docs/mkdocs-pip-requirements
       - run: mkdocs build
       - run: ls -l .nojekyll || true

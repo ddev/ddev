@@ -4,6 +4,21 @@ set -o errexit nounset pipefail
 
 rm -f /tmp/healthy
 
+# If supervisord happens to be running (ddev start when already running) then kill it off
+if pkill -0 supervisord; then
+  supervisorctl stop all || true
+  supervisorctl shutdown || true
+fi
+rm -f /var/run/supervisor.sock
+
+export DDEV_WEB_ENTRYPOINT=/mnt/ddev_config/web-entrypoint.d
+
+source /functions.sh
+
+# If user has not been created via normal template (like blackfire uid 999)
+# then try to grab the required files from /etc/skel
+if [ ! -f ~/.gitconfig ]; then cp -r /etc/skel/. ~/ || true; fi
+
 # If DDEV_PHP_VERSION isn't set, use a reasonable default
 DDEV_PHP_VERSION="${DDEV_PHP_VERSION:-$PHP_DEFAULT_VERSION}"
 
@@ -44,10 +59,10 @@ fi
 
 if [ "$DDEV_PROJECT_TYPE" = "backdrop" ] ; then
     # Start can be executed when the container is already running.
-    mkdir -p ~/.drush/commands && ln -s /var/tmp/backdrop_drush_commands ~/.drush/commands/backdrop
+    mkdir -p ~/.drush/commands && ln -sf /var/tmp/backdrop_drush_commands ~/.drush/commands/backdrop
 fi
 
-if [ "${DDEV_PROJECT_TYPE}" = "drupal6" ] || [ "${DDEV_PROJECT_TYPE}" = "drupal7" ] ; then
+if [ "${DDEV_PROJECT_TYPE}" = "drupal6" ] || [ "${DDEV_PROJECT_TYPE}" = "drupal7" ] || [ "${DDEV_PROJECT_TYPE}" = "backdrop" ]; then
   ln -sf /usr/local/bin/drush8 /usr/local/bin/drush
 fi
 
@@ -75,12 +90,21 @@ disable_xhprof
 
 ls /var/www/html >/dev/null || (echo "/var/www/html does not seem to be healthy/mounted; docker may not be mounting it., exiting" && exit 101)
 
-mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},nvm_dir/${HOSTNAME},npm/${HOSTNAME} yarn/${HOSTNAME}}
-ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ${NVM_DIR:-${HOME}/.nvm}
-if [ ! -f ${NVM_DIR:-${HOME}/.nvm}/nvm.sh ]; then (install_nvm.sh || true); fi
+mkdir -p /mnt/ddev-global-cache/{bashhistory/${HOSTNAME},mysqlhistory/${HOSTNAME},nvm_dir/${HOSTNAME},npm,yarn/classic,yarn/berry}
+ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ~/.nvm
+if [ ! -f ~/.nvm/nvm.sh ]; then (install_nvm.sh || true); fi
 
-yarn config set cache-folder /mnt/ddev-global-cache/yarn/${HOSTNAME}
-npm config set cache /mnt/ddev-global-cache/npm/${HOSTNAME}
+# The following ensures a persistent and shared "global" cache for
+# yarn1 (classic) and yarn2 (berry). In the case of yarn2, the global cache
+# will only be used if the project is configured to use it through it's own
+# enableGlobalCache configuration option. Assumes ~/.yarn/berry as the default
+# global folder.
+( (cd ~ || echo "unable to cd to home directory"; exit 22) && yarn config set cache-folder /mnt/ddev-global-cache/yarn/classic || true)
+# ensure default yarn2 global folder is there to symlink cache afterwards
+mkdir -p ~/.yarn/berry
+ln -sf /mnt/ddev-global-cache/yarn/berry ~/.yarn/berry/cache
+ln -sf /mnt/ddev-global-cache/nvm_dir/${HOSTNAME} ~/.nvm
+if [ ! -f ~/.nvm/nvm.sh ]; then (install_nvm.sh || true); fi
 
 # chown of ddev-global-cache must be done with privileged container in app.Start()
 # chown -R "$(id -u):$(id -g)" /mnt/ddev-global-cache/
@@ -100,5 +124,18 @@ echo 'Server started'
 
 # We don't want the various daemons to know about PHP_IDE_CONFIG
 unset PHP_IDE_CONFIG
+
+# Run any python/django4 activities.
+ddev_python_setup
+
+# Run any custom init scripts (.ddev/.web-entrypoint.d/*.sh)
+ddev_custom_init_scripts
+
+# Make sure /var/tmp/logpipe gets logged; only for standalone non-ddev usages
+logpipe=/var/tmp/logpipe
+if [[ ! -p ${logpipe} ]]; then
+    mkfifo ${logpipe}
+    cat < ${logpipe} >/proc/1/fd/1 &
+fi
 
 exec /usr/bin/supervisord -n -c "/etc/supervisor/supervisord-${DDEV_WEBSERVER_TYPE}.conf"

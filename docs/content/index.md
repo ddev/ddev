@@ -1,21 +1,26 @@
+---
+hide:
+  - toc
+---
+
 # Get Started with DDEV
 
-[DDEV](https://github.com/drud/ddev) is an open source tool that makes it dead simple to get local PHP development environments up and running within minutes. It's powerful and flexible as a result of its per-project environment configurations, which can be extended, version controlled, and shared. In short, DDEV aims to allow development teams to use Docker in their workflow without the complexities of bespoke configuration.
+[DDEV](https://github.com/ddev/ddev) is an open source tool for launching local web development environments in minutes. It supports PHP, Node.js, and Python (experimental).
 
-DDEV works great on macOS, Windows WSL2, traditional Windows, Linux and Gitpod.io. It works perfectly on amd64 and arm64 architectures, meaning it works fine natively on mac M1 systems and on Linux with both amd64 and arm64. It also works great on Gitpod, where you don't have to install anything at all.
+These environments can be extended, version controlled, and shared, so you can take advantage of a Docker workflow without Docker experience or bespoke configuration. Projects can be changed, powered down, or removed as easily as they’re started.
 
 ## System Requirements
 
 === "macOS"
 
     ### macOS
-    * DDEV runs natively on arm64 (Mac M1) systems as well as amd64 machines.
+
+    Runs natively on ARM64 (Apple Silicon) and AMD64 machines.
+
+    * macOS Big Sur (11) or higher, [mostly](./users/usage/faq.md#can-i-run-ddev-on-an-older-mac)
     * RAM: 8GB
     * Storage: 256GB
-    * Colima or Docker Desktop is required.
-    * Docker Desktop requires macOS Catalina (macOS 10.15) or higher.
-    * Colima can even run on older systems.
-    * DDEV should run anywhere Docker Desktop or Colima runs.
+    * [Colima](https://github.com/abiosoft/colima) or [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
 === "Windows WSL2"
 
@@ -23,28 +28,29 @@ DDEV works great on macOS, Windows WSL2, traditional Windows, Linux and Gitpod.i
 
     * RAM: 8GB
     * Storage: 256GB
-    * Systems that can run Docker Desktop on the Windows side or docker-ce inside WSL2 do fine.
-    * The preferred distro is Ubuntu or an Ubuntu-derived distro, but people use lots of different distros.
+    * [Docker Desktop](https://www.docker.com/products/docker-desktop/) on the Windows side or [Docker CE](https://docs.docker.com/engine/install/ubuntu/) inside WSL2
+    * Ubuntu or an Ubuntu-derived distro is recommended, though others may work fine
 
 === "Traditional Windows"
 
     ### Traditional Windows
 
-    * Any recent edition of Windows Home, Pro, and several others.
+    * Any recent edition of Windows Home or Windows Pro.
     * RAM: 8GB
     * Storage: 256GB
-    * Docker Desktop using the WSL2 back-end
+    * [Docker Desktop](https://www.docker.com/products/docker-desktop/) using the WSL2 backend
 
 === "Linux"
 
     ### Linux
 
-    * Most distros and most versions work fine.
+    Most distros and most versions work fine, on both AMD64 and ARM64 architectures.
+
     * RAM: 8GB
     * Storage: 256GB
 
-=== "Gitpod.io"
+=== "Gitpod & Codespaces"
 
-    ### Gitpod.io
+    ### Gitpod and GitHub Codespaces
 
-    With gitpod.io all you need is a browser and an internet connection. You don't have to install anything at all. You can use any kind of computer that has a browser, or tablet, or whatever you like.
+    With [Gitpod](https://www.gitpod.io) and [GitHub Codespaces](https://github.com/features/codespaces) you don’t install anything; you only need a browser and an internet connection.

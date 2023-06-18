@@ -5,16 +5,15 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/testcommon"
-	"github.com/drud/ddev/pkg/util"
-	"github.com/drud/ddev/pkg/versionconstants"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/stretchr/testify/require"
 
 	asrt "github.com/stretchr/testify/assert"
@@ -26,7 +25,7 @@ func TestSSHAuth(t *testing.T) {
 	origDir, _ := os.Getwd()
 	app := &ddevapp.DdevApp{}
 
-	runTime := util.TimeTrack(time.Now(), t.Name())
+	runTime := util.TimeTrackC(t.Name())
 
 	//  Add a docker-compose service that has ssh server and mounted authorized_keys
 	site := TestSites[0]
@@ -136,7 +135,7 @@ func TestSshAuthConfigOverride(t *testing.T) {
 
 	// Remove the ddev-ssh-agent, since the start code simply checks to see if it's
 	// running and doesn't restart it if it's running
-	_ = dockerutil.RemoveContainer("ddev-ssh-agent", 0)
+	_ = dockerutil.RemoveContainer("ddev-ssh-agent")
 
 	testcommon.ClearDockerEnv()
 

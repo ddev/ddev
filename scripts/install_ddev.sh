@@ -1,14 +1,16 @@
 #!/bin/bash
 
 #ddev-generated
-# Script to download and install DDEV-Local, https://github.com/drud/ddev
+# Script to download and install DDEV, https://github.com/ddev/ddev
 # Usage: install_ddev.sh or install_ddev.sh <version>
 
 set -o errexit
 set -o pipefail
 set -o nounset
 
-GITHUB_OWNER=${GITHUB_OWNER:-drud}
+if [ ! -d /usr/local/bin ]; then echo 'using sudo to mkdir missing /usr/local/bin' && sudo mkdir -p /usr/local/bin; fi
+
+GITHUB_OWNER=${GITHUB_OWNER:-ddev}
 ARTIFACTS="ddev mkcert macos_ddev_nfs_setup.sh"
 TMPDIR=/tmp
 
@@ -197,5 +199,7 @@ if command -v mkcert >/dev/null; then
   printf "${YELLOW}Running mkcert -install, which may request your sudo password.'.${RESET}\n"
   mkcert -install
 fi
+
+hash -r
 
 printf "${GREEN}ddev is now installed. Run \"ddev\" and \"ddev --version\" to verify your installation and see usage.${RESET}\n"

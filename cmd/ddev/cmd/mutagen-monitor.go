@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -10,7 +10,7 @@ import (
 var MutagenMonitorCmd = &cobra.Command{
 	Use:     "monitor",
 	Short:   "Monitor mutagen status",
-	Example: `"ddev mutagen sync", "ddev mutagen monitor <projectname>"`,
+	Example: `"ddev mutagen monitor", "ddev mutagen monitor <projectname>"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		projectName := ""
 		if len(args) > 1 {

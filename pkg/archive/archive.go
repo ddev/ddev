@@ -7,7 +7,7 @@ import (
 	"compress/bzip2"
 	"compress/gzip"
 	"fmt"
-	"github.com/drud/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"io"
 	"io/fs"
 	"os"
@@ -16,7 +16,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/ulikunitz/xz"
 )
 
@@ -254,8 +254,6 @@ func Untar(source string, dest string, extractionDir string) error {
 			}
 
 		case tar.TypeReg:
-			fallthrough
-		case tar.TypeRegA:
 			// Always ensure the directory is created before trying to move the file.
 			fullPathDir := filepath.Dir(fullPath)
 			err = os.MkdirAll(fullPathDir, 0755)
@@ -417,6 +415,13 @@ func Tar(src string, tarballFilePath string, exclusion string) error {
 		if err != nil {
 			return err
 		}
+		// Windows may not get zero size of file, https://github.com/golang/go/issues/23493
+		// No idea why fi.Size() comes through as zero for a few files
+		stat, err := os.Stat(file)
+		if err != nil {
+			return err
+		}
+		header.Size = stat.Size()
 
 		// open files for tarring
 		f, err := os.Open(file)

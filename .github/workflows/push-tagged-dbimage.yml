@@ -12,12 +12,14 @@ on:
         default: ""
       debug_enabled:
         description: 'Enable debug mode'
+        type: boolean
         required: false
         default: false
 env:
   REGISTRY: docker.io
-  DOCKER_ORG: drud
+  DOCKER_ORG: ddev
   TAG: "${{ github.event.inputs.tag }}"
+  HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 permissions:
   contents: read
@@ -47,7 +49,7 @@ jobs:
       with:
         limit-access-to-actor: true
         github-token: ${{ secrets.GITHUB_TOKEN }}
-      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+      if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
     - name: Push ${{  matrix.dbtype }}:${{ github.event.inputs.tag }}
       run: |
         cd "containers/ddev-dbserver"

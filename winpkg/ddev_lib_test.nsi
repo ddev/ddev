@@ -8,7 +8,6 @@ RequestExecutionLevel user
 
 !addincludedir include
 !include ddev.nsh
-!include docker.nsh
 
 Page components "" ""
 Page instfiles
@@ -51,34 +50,5 @@ Section "Run tests"
   DetailPrint "DDEV power off result: $R0"
   DetailPrint "DDEV power off output:"
   DetailPrint " $R1"
-
-
-  ${If} ${DockerDesktopIsInstallable}
-    DetailPrint "Docker Desktop is installable"
-  ${Else}
-    DetailPrint "Docker Desktop is not installable"
-  ${EndIf}
-
-  ${If} ${DockerDesktopIsInstalled}
-    DetailPrint "Docker Desktop is installed"
-  ${Else}
-    DetailPrint "Docker Desktop is not installed"
-  ${EndIf}
-
-  ${If} ${DockerDesktopIsExecutable}
-    Pop $R0 ; Output
-    DetailPrint "docker.exe is executable:"
-    DetailPrint " $R0"
-  ${Else}
-    DetailPrint "docker.exe is not executable"
-  ${EndIf}
-
-  ${If} ${DockerComposeIsExecutable}
-    Pop $R0 ; Output
-    DetailPrint "docker-compose.exe is executable"
-    DetailPrint " $R0"
-  ${Else}
-    DetailPrint "docker-compose.exe is not executable"
-  ${EndIf}
 
 SectionEnd

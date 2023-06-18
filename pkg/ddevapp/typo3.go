@@ -2,21 +2,28 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/nodeps"
 	"os"
 	"path/filepath"
+	"regexp"
 	"text/template"
 
-	"github.com/drud/ddev/pkg/archive"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/output"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/Masterminds/semver/v3"
+	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
 )
 
 // createTypo3SettingsFile creates the app's LocalConfiguration.php and
 // AdditionalConfiguration.php, adding things like database host, name, and
 // password. Returns the fullpath to settings file and error
 func createTypo3SettingsFile(app *DdevApp) (string, error) {
+	if filepath.Dir(app.SiteDdevSettingsFile) == app.AppRoot {
+		// As long as the final settings folder is not defined, early return
+		return app.SiteDdevSettingsFile, nil
+	}
+
 	if !fileutil.FileExists(app.SiteSettingsPath) {
 		util.Warning("TYPO3 does not seem to have been set up yet, missing %s (%s)", filepath.Base(app.SiteSettingsPath), app.SiteSettingsPath)
 	}
@@ -62,7 +69,7 @@ func writeTypo3SettingsFile(app *DdevApp) error {
 		}
 
 		// The directory doesn't exist, create it with the appropriate permissions.
-		if err := os.Mkdir(dir, perms); err != nil {
+		if err := os.MkdirAll(dir, perms); err != nil {
 			return err
 		}
 	}
@@ -70,7 +77,7 @@ func writeTypo3SettingsFile(app *DdevApp) error {
 	if app.Database.Type == nodeps.Postgres {
 		dbDriver = "pdo_pgsql"
 	}
-	settings := map[string]interface{}{"DBHostname": "db", "DBDriver": dbDriver, "DBPort": GetInternalPort(app, "db")}
+	settings := map[string]interface{}{"DBHostname": "db", "DBDriver": dbDriver, "DBPort": GetExposedPort(app, "db")}
 
 	// Ensure target directory exists and is writable
 	if err := os.Chmod(dir, 0755); os.IsNotExist(err) {
@@ -120,22 +127,44 @@ func getTypo3Hooks() []byte {
 	return []byte(Typo3Hooks)
 }
 
-// setTypo3SiteSettingsPaths sets the paths to settings.php/settings.local.php
-// for templating.
+// setTypo3SiteSettingsPaths sets the paths to settings files for templating
 func setTypo3SiteSettingsPaths(app *DdevApp) {
-	settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
 	var settingsFilePath, localSettingsFilePath string
-	settingsFilePath = filepath.Join(settingsFileBasePath, "typo3conf", "LocalConfiguration.php")
-	localSettingsFilePath = filepath.Join(settingsFileBasePath, "typo3conf", "AdditionalConfiguration.php")
+
+	if isTypo3v12OrHigher(app) {
+		settingsFileBasePath := filepath.Join(app.AppRoot, app.ComposerRoot)
+		settingsFilePath = filepath.Join(settingsFileBasePath, "config", "system", "settings.php")
+		localSettingsFilePath = filepath.Join(settingsFileBasePath, "config", "system", "additional.php")
+	} else if isTypo3App(app) {
+		settingsFileBasePath := filepath.Join(app.AppRoot, app.Docroot)
+		settingsFilePath = filepath.Join(settingsFileBasePath, "typo3conf", "LocalConfiguration.php")
+		localSettingsFilePath = filepath.Join(settingsFileBasePath, "typo3conf", "AdditionalConfiguration.php")
+	} else {
+		// As long as TYPO3 is not installed, the file paths are set to the
+		// AppRoot to avoid the creation of the .gitignore in the wrong location.
+		settingsFilePath = filepath.Join(app.AppRoot, "LocalConfiguration.php")
+		localSettingsFilePath = filepath.Join(app.AppRoot, "AdditionalConfiguration.php")
+	}
+
+	// Update file paths
 	app.SiteSettingsPath = settingsFilePath
 	app.SiteDdevSettingsFile = localSettingsFilePath
 }
 
 // isTypoApp returns true if the app is of type typo3
 func isTypo3App(app *DdevApp) bool {
-	if _, err := os.Stat(filepath.Join(app.AppRoot, app.Docroot, "typo3")); err == nil {
+	typo3Folder := filepath.Join(app.AppRoot, app.Docroot, "typo3")
+
+	// Check if the folder exists, fails if a symlink target does not exist.
+	if _, err := os.Stat(typo3Folder); !os.IsNotExist(err) {
 		return true
 	}
+
+	// Check if a symlink exists, succeeds even if the target does not exist.
+	if _, err := os.Lstat(typo3Folder); !os.IsNotExist(err) {
+		return true
+	}
+
 	return false
 }
 
@@ -183,4 +212,41 @@ func typo3ImportFilesAction(app *DdevApp, importPath, extPath string) error {
 	}
 
 	return nil
+}
+
+// isTypo3v12OrHigher returns true if the TYPO3 version is 12 or higher. The
+// proper detection will fail if the vendor folder location is changed in the
+// composer.json.
+func isTypo3v12OrHigher(app *DdevApp) bool {
+	versionFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, "vendor", "typo3", "cms-core", "Classes", "Information", "Typo3Version.php")
+	versionFile, err := fileutil.ReadFileIntoString(versionFilePath)
+	// Typo3Version class exists since v10.3.0. Before v11.5.0 the core was always
+	// installed into the folder public/typo3 so we can early return if the file
+	// is not found in the vendor folder.
+	if err != nil {
+		util.Debug("TYPO3 version class not found in '%s' for project %s, installed version is assumed to be older than 11.5.0: %v", versionFilePath, app.Name, err)
+		return false
+	}
+
+	// We may have a TYPO3 version 11 or higher and therefor have to parse the
+	// class file to properly detect the version.
+	re := regexp.MustCompile(`const\s+VERSION\s*=\s*'([^']+)`)
+
+	matches := re.FindStringSubmatch(versionFile)
+
+	if len(matches) < 2 {
+		util.Warning("Unexpected Typo3Version found for project %s in %v.", app.Name, versionFile)
+		return false
+	}
+
+	version, err := semver.NewVersion(matches[1])
+	if err != nil {
+		// This case never should happen
+		util.Warning("Unexpected error while parsing TYPO3 version ('%s') for project %s: %v.", matches[1], app.Name, err)
+		return false
+	}
+
+	util.Debug("Found TYPO3 version %v for project %s.", version.Original(), app.Name)
+
+	return version.Major() >= 12
 }

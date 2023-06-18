@@ -3,17 +3,17 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"os"
 	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
 
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
@@ -103,7 +103,9 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 				var flags Flags
 				flags.Init(commandName, onHostFullPath)
 
+				disableFlags := true
 				if val, ok := directives["Flags"]; ok {
+					disableFlags = false
 					if err = flags.LoadFromJSON(val); err != nil {
 						util.Warning("Error '%s', command '%s' contains an invalid flags definition '%s', skipping add flags of %s", err, commandName, val, onHostFullPath)
 					}
@@ -134,7 +136,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 
 				// If OSTypes is specified and we aren't on one of the specified OSes, skip
 				if osTypes != "" {
-					if !strings.Contains(osTypes, runtime.GOOS) && !(strings.Contains(osTypes, "wsl2") && nodeps.IsWSL2()) {
+					if !strings.Contains(osTypes, runtime.GOOS) && !(strings.Contains(osTypes, "wsl2") && dockerutil.IsWSL2()) {
 						continue
 					}
 				}
@@ -179,9 +181,10 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 
 				// Initialize the new command
 				commandToAdd := &cobra.Command{
-					Use:     usage,
-					Short:   description + descSuffix,
-					Example: example,
+					Use:                usage,
+					Short:              description + descSuffix,
+					Example:            example,
+					DisableFlagParsing: disableFlags,
 					FParseErrWhitelist: cobra.FParseErrWhitelist{
 						UnknownFlags: true,
 					},
@@ -208,6 +211,20 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 					commandToAdd.Run = makeContainerCmd(app, inContainerFullPath, commandName, service, execRaw, relative)
 				}
 
+				if disableFlags {
+					// Hide -h because we are disabling flags
+					// Also hide --json-output for the same reason
+					// @see https://github.com/spf13/cobra/issues/1328
+					commandToAdd.InitDefaultHelpFlag()
+					err = commandToAdd.Flags().MarkHidden("help")
+					originalHelpFunc := commandToAdd.HelpFunc()
+					if err == nil {
+						commandToAdd.SetHelpFunc(func(command *cobra.Command, strings []string) {
+							_ = command.Flags().MarkHidden("json-output")
+							originalHelpFunc(command, strings)
+						})
+					}
+				}
 				// Add the command and mark as added
 				rootCmd.AddCommand(commandToAdd)
 				commandsAdded[commandName] = 1

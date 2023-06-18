@@ -14,6 +14,10 @@ ENV MYSQL_ROOT_PASSWORD root
 
 SHELL ["/bin/bash", "-c"]
 
+# Debian Stretch archives have been turned off
+RUN if grep "Debian GNU/Linux 9" /etc/issue >/dev/null ; then \
+    echo "deb http://archive.debian.org/debian/ stretch main contrib non-free" >/etc/apt/sources.list; \
+    fi
 # Remove obsolete MySQL 5.5/5.6 Jessie and before keys so they don't make expiration key test stumble
 RUN for item in "75DD C3C4 A499 F1A1 8CB5  F3C8 CBF8 D6FD 518E 17E1" "126C 0D24 BD8A 2942 CC7D  F8AC 7638 D044 2B90 D010" "D211 6914 1CEC D440 F2EB  8DDA 9D6D 8F6B C857 C906" "A1BD 8E9D 78F7 FE5C 3E65  D8AF 8B48 AD62 4692 5553" "ED6D 6527 1AAC F0FF 15D1  2303 6FB2 A1C2 65FF B764"; do \
     apt-key remove "${item}" || true; \
@@ -31,7 +35,7 @@ RUN apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -qq install -y 
 # If on 14.04 Ubuntu the percona repositories won't allow TLS apparently, so
 # Use http when connecting. This currently only affects MariaDB 5.5
 RUN set -x; if ( ! command -v xtrabackup && ! command -v mariabackup && [ $(arch) != "aarch64" ] ); then \
-    curl -sSL https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb -o percona-release_latest.$(lsb_release -sc)_all.deb; \
+    curl --fail -sSL https://repo.percona.com/apt/percona-release_latest.$(lsb_release -sc)_all.deb -o percona-release_latest.$(lsb_release -sc)_all.deb; \
     dpkg -i percona-release_latest.$(lsb_release -sc)_all.deb >/dev/null; \
     rm percona-release*.deb ; \
     xtrabackup_version=percona-xtrabackup-24 ; \
@@ -60,6 +64,8 @@ RUN ln -s -f /dev/stderr /var/log/mysqld.err
 RUN rm -rf /var/lib/mysql/*
 RUN chmod -R ugo+rw /var/lib/mysql /etc/mysql/conf.d /mysqlbase && find /mysqlbase -type d | xargs chmod ugo+rwx
 
+RUN mkdir -p /var/run/mysqld && chmod 777 /var/run/mysqld
+
 RUN /sbin/mkhomedir_helper www-data
 
 # Remove the /etc/apt entry so that if they don't renew the key
@@ -72,6 +78,9 @@ RUN rm -f /etc/apt/sources.list.d/mysql.list && \
     apt-key remove "${item}" || true; \
   done;
 
+# Normal upstream image doesn't actually have /home/mysql created
+# Make sure it's there in case user 999 (mysql) is using this image.
+RUN mkdir /home/mysql && chown mysql:mysql /home/mysql
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 

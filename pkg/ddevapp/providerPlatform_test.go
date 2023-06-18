@@ -2,18 +2,18 @@ package ddevapp_test
 
 import (
 	"fmt"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	. "github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/testcommon"
+	. "github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 )
 
@@ -26,12 +26,16 @@ import (
  * defined in the constants below.
  */
 
-var platformTestSiteID = "lago3j23xu2w6"
-var platformPullTestSiteEnvironment = "platform-pull"
-var platformPushTestSiteEnvironment = "platform-push"
+const platformTestSiteID = "5bviezdszcmrg"
+const platformPullTestSiteEnvironment = "platform-pull"
+const platformPushTestSiteEnvironment = "platform-push"
 
-const platformPullSiteURL = "https://master-7rqtwti-lago3j23xu2w6.eu-3.platformsh.site/"
+const platformPullSiteURL = "https://platform-pull-7tsp6cq-5bviezdszcmrg.ca-1.platformsh.site/"
 const platformSiteExpectation = "Super easy vegetarian pasta"
+
+// Note that these tests won't run with GitHub actions on a forked PR.
+// Thie is a security feature, but means that PRs intended to test this
+// must be done in the ddev repo.
 
 // TestPlatformPull ensures we can pull backups from platform.sh for a configured environment.
 func TestPlatformPull(t *testing.T) {
@@ -44,8 +48,6 @@ func TestPlatformPull(t *testing.T) {
 
 	require.True(t, isPullSiteValid(platformPullSiteURL, platformSiteExpectation), "platformPullSiteURL %s isn't working right", platformPullSiteURL)
 
-	globalWebEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
-
 	origDir, _ := os.Getwd()
 
 	siteDir := testcommon.CreateTmpDir(t.Name())
@@ -57,7 +59,6 @@ func TestPlatformPull(t *testing.T) {
 	assert.NoError(err)
 	app, err := NewApp(siteDir, true)
 	assert.NoError(err)
-	webEnvSave := app.WebEnvironment
 	app.Name = t.Name()
 	app.Type = nodeps.AppTypeDrupal9
 	err = app.Stop(true, false)
@@ -65,20 +66,9 @@ func TestPlatformPull(t *testing.T) {
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
-	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"PLATFORMSH_CLI_TOKEN=" + token}
-	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
-	assert.NoError(err)
-
 	testcommon.ClearDockerEnv()
 
 	t.Cleanup(func() {
-		globalconfig.DdevGlobalConfig.WebEnvironment = globalWebEnvSave
-		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
-		assert.NoError(err)
-		app.WebEnvironment = webEnvSave
-		err = app.WriteConfig()
-		assert.NoError(err)
-
 		err = app.Stop(true, false)
 		assert.NoError(err)
 
@@ -90,20 +80,21 @@ func TestPlatformPull(t *testing.T) {
 	err = PopulateExamplesCommandsHomeadditions(app.Name)
 	require.NoError(t, err)
 
-	app.WebEnvironment = []string{
-		"PLATFORM_PROJECT=" + platformTestSiteID,
-		"PLATFORM_ENVIRONMENT=" + platformPullTestSiteEnvironment,
-	}
 	app.Docroot = "web"
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
 	provider, err := app.GetProvider("platform")
 	require.NoError(t, err)
+
+	provider.EnvironmentVariables["PLATFORM_PROJECT"] = platformTestSiteID
+	provider.EnvironmentVariables["PLATFORM_ENVIRONMENT"] = platformPullTestSiteEnvironment
+	provider.EnvironmentVariables["PLATFORMSH_CLI_TOKEN"] = token
+
 	err = app.Start()
 	require.NoError(t, err)
 	err = app.Pull(provider, false, false, false)
-	assert.NoError(err)
+	require.NoError(t, err)
 
 	assert.FileExists(filepath.Join(app.GetHostUploadDirFullPath(), "victoria-sponge-umami.jpg"))
 	out, err := exec.RunHostCommand("bash", "-c", fmt.Sprintf(`echo 'select COUNT(*) from users_field_data where mail="margaret.hopper@example.com";' | %s mysql -N`, DdevBin))
@@ -121,15 +112,9 @@ func TestPlatformPush(t *testing.T) {
 	assert := asrt.New(t)
 	origDir, _ := os.Getwd()
 
-	webEnvSave := globalconfig.DdevGlobalConfig.WebEnvironment
-
-	globalconfig.DdevGlobalConfig.WebEnvironment = []string{"PLATFORMSH_CLI_TOKEN=" + token}
-	err := globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
-	assert.NoError(err)
-
 	siteDir := testcommon.CreateTmpDir(t.Name())
 
-	err = os.Chdir(siteDir)
+	err := os.Chdir(siteDir)
 	require.NoError(t, err)
 
 	err = globalconfig.RemoveProjectInfo(t.Name())
@@ -142,10 +127,6 @@ func TestPlatformPush(t *testing.T) {
 		err = app.Stop(true, false)
 		assert.NoError(err)
 
-		globalconfig.DdevGlobalConfig.WebEnvironment = webEnvSave
-		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
-		assert.NoError(err)
-
 		_ = os.Chdir(origDir)
 		err = os.RemoveAll(siteDir)
 		assert.NoError(err)
@@ -156,10 +137,6 @@ func TestPlatformPush(t *testing.T) {
 	app.Hooks = map[string][]YAMLTask{"post-push": {{"exec-host": "touch hello-post-push-" + app.Name}}, "pre-push": {{"exec-host": "touch hello-pre-push-" + app.Name}}}
 	_ = app.Stop(true, false)
 
-	app.WebEnvironment = []string{
-		"PLATFORM_PROJECT=" + platformTestSiteID,
-		"PLATFORM_ENVIRONMENT=" + platformPushTestSiteEnvironment,
-	}
 	app.Docroot = "web"
 
 	err = app.WriteConfig()
@@ -172,6 +149,11 @@ func TestPlatformPush(t *testing.T) {
 
 	provider, err := app.GetProvider("platform")
 	require.NoError(t, err)
+
+	provider.EnvironmentVariables["PLATFORM_PROJECT"] = platformTestSiteID
+	provider.EnvironmentVariables["PLATFORM_ENVIRONMENT"] = platformPushTestSiteEnvironment
+	provider.EnvironmentVariables["PLATFORMSH_CLI_TOKEN"] = token
+
 	err = app.Start()
 	require.NoError(t, err)
 
@@ -191,7 +173,7 @@ func TestPlatformPush(t *testing.T) {
 
 	// Test that the database row was added
 	out, _, err := app.Exec(&ExecOpts{
-		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s";' | platform db:sql --project="%s" --environment="%s"`, t.Name(), tval, platformTestSiteID, platformPushTestSiteEnvironment),
+		Cmd: fmt.Sprintf(`echo 'SELECT title FROM %s WHERE title="%s";' | PLATFORMSH_CLI_TOKEN=%s platform db:sql --project="%s" --environment="%s"`, t.Name(), tval, token, platformTestSiteID, platformPushTestSiteEnvironment),
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)
@@ -199,7 +181,7 @@ func TestPlatformPush(t *testing.T) {
 	// Test that the file arrived there (by rsyncing it back)
 	tmpRsyncDir := filepath.Join("/tmp", t.Name()+util.RandString(5))
 	out, _, err = app.Exec(&ExecOpts{
-		Cmd: fmt.Sprintf(`platform mount:download --yes --quiet --project="%s" --environment="%s" --mount=web/sites/default/files --target=%s && cat %s/%s && rm -rf %s`, platformTestSiteID, platformPushTestSiteEnvironment, tmpRsyncDir, tmpRsyncDir, fName, tmpRsyncDir),
+		Cmd: fmt.Sprintf(`PLATFORMSH_CLI_TOKEN=%s platform mount:download --yes --quiet --project="%s" --environment="%s" --mount=web/sites/default/files --target=%s && cat %s/%s && rm -rf %s`, token, platformTestSiteID, platformPushTestSiteEnvironment, tmpRsyncDir, tmpRsyncDir, fName, tmpRsyncDir),
 	})
 	require.NoError(t, err)
 	assert.Contains(out, tval)

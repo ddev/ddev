@@ -1,5 +1,5 @@
 # Docker repo for a push
-DOCKER_REPO ?= drud/ddev-router
+DOCKER_REPO ?= ddev/ddev-router
 
 VERSION := $(shell git describe --tags --always --dirty)
 

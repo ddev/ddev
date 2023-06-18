@@ -13,8 +13,8 @@ SHELL ["/bin/bash", "-c"]
 # Get forego, which may be either a binary download (jwilder) or
 # a tarball (from https://github.com/ddollar/forego download)
 RUN set -eu -o pipefail && \
-    FOREGO_URL="https://github.com/drud/forego/releases/download/v0.16.1/forego-${TARGETARCH}" && \
-    cd /tmp && curl -sSL -o /usr/local/bin/forego "${FOREGO_URL}"  && chmod +x /usr/local/bin/forego
+    FOREGO_URL="https://github.com/ddev/forego/releases/download/v0.16.1/forego-${TARGETARCH}" && \
+    cd /tmp && curl --fail -sSL -o /usr/local/bin/forego "${FOREGO_URL}"  && chmod +x /usr/local/bin/forego
 
 RUN apt-get -qq update && \
     apt-get -qq install --no-install-recommends --no-install-suggests -y \
@@ -26,7 +26,7 @@ RUN apt-get -qq update && \
 # Download docker-gen
 RUN set -eu -o pipefail && \
     export DOCKER_GEN_FILE="docker-gen-linux-${TARGETARCH}-${DOCKER_GEN_VERSION}.tar.gz" && \
-    cd /tmp && wget -q https://github.com/drud/docker-gen/releases/download/${DOCKER_GEN_VERSION}/${DOCKER_GEN_FILE} && \
+    cd /tmp && wget -q https://github.com/ddev/docker-gen/releases/download/${DOCKER_GEN_VERSION}/${DOCKER_GEN_FILE} && \
     tar -C /usr/local/bin -xzf "${DOCKER_GEN_FILE}" && \
     rm $DOCKER_GEN_FILE
 
@@ -34,8 +34,7 @@ RUN mkdir -p /etc/nginx/certs /mnt/ddev-global-cache/mkcert
 
 # curl mkcert and install it
 RUN set -eu -o pipefail && \
-    curl -sSL https://github.com/drud/mkcert/releases/download/${MKCERT_VERSION}/mkcert-${MKCERT_VERSION}-linux-${TARGETARCH} -o /usr/local/bin/mkcert && \
-    chmod +x /usr/local/bin/mkcert && \
+    curl --fail -JL -s -o /usr/local/bin/mkcert "https://dl.filippo.io/mkcert/latest?for=linux/${TARGETARCH}" && chmod +x /usr/local/bin/mkcert && \
     mkdir -p /root/.local/share && \
     ln -s /mnt/ddev-global-cache/mkcert /root/.local/share/mkcert && \
     mkcert -install

@@ -1,0 +1,35 @@
+#ddev-generated
+
+log:
+  level: DEBUG
+accesslog: { }
+
+api:
+  dashboard: true
+  insecure: true
+
+{{ if .UseLetsEncrypt }}
+certificatesResolvers:
+  acmeresolver:
+    acme:
+      email: {{ .LetsEncryptEmail }}
+      storage: /mnt/ddev-global-cache/traefik/acme.json
+      httpChallenge:
+        # used during the challenge
+        entryPoint: http-80
+{{ end }}
+
+providers:
+  file:
+    directory: /mnt/ddev-global-cache/traefik/config
+    watch: true
+global:
+  sendanonymoususage: false
+
+entryPoints:
+  traefik:
+    address: ":9999"
+  {{ range $port := .RouterPorts}}
+  http-{{$port}}:
+    address: ":{{$port}}"
+  {{ end }}

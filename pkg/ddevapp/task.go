@@ -6,9 +6,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/util"
 	"github.com/mattn/go-isatty"
 )
 

@@ -1,7 +1,7 @@
 #ddev-generated
 # Example Platform.sh provider configuration.
 
-# Consider using `ddev get platformsh/ddev-platformsh` (https://github.com/platformsh/ddev-platformsh) for more
+# Consider using `ddev get ddev/ddev-platformsh` (https://github.com/ddev/ddev-platformsh) for more
 # complete platform integration.
 
 # To use this configuration,
@@ -23,6 +23,12 @@
 # 5. Run `ddev pull platform`. After you agree to the prompt, the current upstream database and files will be downloaded.
 # 6. Optionally use `ddev push platform` to push local files and database to platform.sh. Note that `ddev push` is a command that can potentially damage your production site, so this is not recommended.
 
+# If you have more than one database on your Platform.sh project,
+# you will likely to choose which one you want to use
+# as the primary database ('db').
+# Do this by setting PLATFORM_PRIMARY_RELATIONSHIP, for example, `ddev config --web-environment-add=PLATFORM_PRIMARY_RELATIONSHIP=main`
+# or run `ddev pull platform` with the environment variable, for example
+# `ddev pull platform -y --environment=PLATFORM_PRIMARY_RELATIONSHIP=main`
 # If you need to change this `platform.yaml` recipe, you can change it to suit your needs, but remember to remove the "ddev-generated" line from the top.
 
 # Debugging: Use `ddev exec platform` to see what platform.sh knows about
@@ -31,19 +37,44 @@
 auth_command:
   command: |
     set -eu -o pipefail
-    if [ -z "${PLATFORMSH_CLI_TOKEN:-}" ]; then echo "Please make sure you have set PLATFORMSH_CLI_TOKEN in ~/.ddev/global_config.yaml" && exit 1; fi
+    if [ -z "${PLATFORMSH_CLI_TOKEN:-}" ]; then echo "Please make sure you have set PLATFORMSH_CLI_TOKEN." && exit 1; fi
+    if [ -z "${PLATFORM_PROJECT:-}" ]; then echo "Please make sure you have set PLATFORM_PROJECT." && exit 1; fi
+    if [ -z "${PLATFORM_ENVIRONMENT:-}" ]; then echo "Please make sure you have set PLATFORM_ENVIRONMENT." && exit 1; fi
 
 db_pull_command:
   command: |
-    #set -x   # You can enable bash debugging output by uncommenting
+    # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
+    export PLATFORMSH_CLI_NO_INTERACTION=1
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
-    platform db:dump --yes --gzip --file=/var/www/html/.ddev/.downloads/db.sql.gz --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}"
+    # /tmp/db_relationships.yaml is the full yaml output of the database relationships
+    db_relationships_file=/tmp/db_relationships.yaml
+    PLATFORM_RELATIONSHIPS="" platform relationships -y  -e "${PLATFORM_ENVIRONMENT}" | yq 'with_entries(select(.[][].type == "mariadb:*" or .[][].type == "*mysql:*" or .[][].type == "postgresql:*")) ' >${db_relationships_file}
+    db_relationships=($(yq ' keys | .[] ' ${db_relationships_file}))
+    db_names=($(yq '.[][].path' ${db_relationships_file}))
+    db_count=${#db_relationships[@]}
+    # echo "db_relationships=${db_relationships} sizeof db_relationships=${#db_relationships[@]} db_names=${db_names} db_count=${db_count} PLATFORM_PRIMARY_RELATIONSHIP=${PLATFORM_PRIMARY_RELATIONSHIP}"
+    # If we have only one database, import it into local database named 'db'
+    if [ ${#db_names[@]} -eq 1 ]; then db_names[0]="db"; fi
+
+    for (( i=0; i<${#db_relationships[@]}; i++ )); do
+      db_name=${db_names[$i]}
+      rel=${db_relationships[$i]}
+      # if PLATFORM_PRIMARY_RELATIONSHIP is set, then when doing that one, import it into local database 'db'
+      if [ "${rel}" = "${PLATFORM_PRIMARY_RELATIONSHIP:-notset}" ] ; then
+        echo "PLATFORM_PRIMARY_RELATIONSHIP=${PLATFORM_PRIMARY_RELATIONSHIP:-} so using it as database 'db' instead of the upstream '${db_name}'"
+        db_name="db"
+      fi
+
+      platform db:dump --yes --relationship=${rel} --gzip --file=/var/www/html/.ddev/.downloads/${db_name}.sql.gz --project="${PLATFORM_PROJECT:-setme}" --environment="${PLATFORM_ENVIRONMENT:-setme}"
+    done
+    echo "Downloaded db dumps for databases '${db_names[@]}'"
 
 files_import_command:
   command: |
     #set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
+    export PLATFORMSH_CLI_NO_INTERACTION=1
     # Use $PLATFORM_MOUNTS if it exists to get list of mounts to download, otherwise just web/sites/default/files (drupal)
     declare -a mounts=(${PLATFORM_MOUNTS:-/web/sites/default/files})
     platform mount:download --all --yes --quiet --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}"  --target=/var/www/html
@@ -54,9 +85,13 @@ db_push_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
+    export PLATFORMSH_CLI_NO_INTERACTION=1
     ls /var/www/html/.ddev >/dev/null # This just refreshes stale NFS if possible
     pushd /var/www/html/.ddev/.downloads >/dev/null;
-    gzip -dc db.sql.gz | platform db:sql --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}"
+    if [ "${PLATFORM_PRIMARY_RELATIONSHIP:-}" != "" ] ; then
+      rel="--relationship ${PLATFORM_PRIMARY_RELATIONSHIP}"
+    fi
+    gzip -dc db.sql.gz | platform db:sql --project="${PLATFORM_PROJECT}" ${rel:-} --environment="${PLATFORM_ENVIRONMENT}"
 
 # push is a dangerous command. If not absolutely needed it's better to delete these lines.
 # TODO: This is a naive, Drupal-centric push, which needs adjustment for the mount to be pushed.
@@ -64,6 +99,7 @@ files_push_command:
   command: |
     # set -x   # You can enable bash debugging output by uncommenting
     set -eu -o pipefail
+    export PLATFORMSH_CLI_NO_INTERACTION=1
     ls "${DDEV_FILES_DIR}" >/dev/null # This just refreshes stale NFS if possible
     platform mount:upload --yes --quiet --project="${PLATFORM_PROJECT}" --environment="${PLATFORM_ENVIRONMENT}" --source="${DDEV_FILES_DIR}" --mount=web/sites/default/files
 

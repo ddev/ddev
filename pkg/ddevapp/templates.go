@@ -11,7 +11,7 @@ const ConfigInstructions = `
 
 # docroot: <relative_path> # Relative path to the directory containing index.php.
 
-# php_version: "7.4"  # PHP version to use, "5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0", "8.1"
+# php_version: "8.1"  # PHP version to use, "5.6", "7.0", "7.1", "7.2", "7.3", "7.4", "8.0", "8.1", "8.2"
 
 # You can explicitly specify the webimage but this
 # is not recommended, as the images are often closely tied to ddev's' behavior,
@@ -20,13 +20,13 @@ const ConfigInstructions = `
 # webimage: <docker_image>  # nginx/php docker image.
 
 # database:
-#   type: <dbtype> # mysql, mariadb
-#   version: <version> # database version, like "10.3" or "8.0"
-# Note that mariadb_version or mysql_version from v1.18 and earlier
-# will automatically be converted to this notation with just a "ddev config --auto"
+#   type: <dbtype> # mysql, mariadb, postgres
+#   version: <version> # database version, like "10.4" or "8.0"
+#   mariadb versions can be 5.5-10.8 and 10.11, mysql versions can be 5.5-8.0
+#   postgres versions can be 9-15.
 
-# router_http_port: <port>  # Port to be used for http (defaults to port 80)
-# router_https_port: <port> # Port for https (defaults to 443)
+# router_http_port: <port>  # Port to be used for http (defaults to global configuration, usually 80)
+# router_https_port: <port> # Port for https (defaults to global configuration, usually 443)
 
 # xdebug_enabled: false  # Set to true to enable xdebug and "ddev start" or "ddev restart"
 # Note that for most people the commands
@@ -38,7 +38,7 @@ const ConfigInstructions = `
 # "ddev xhprof" to enable xhprof and "ddev xhprof off" to disable it work better,
 # as leaving xhprof enabled all the time is a big performance hit.
 
-# webserver_type: nginx-fpm  # or apache-fpm
+# webserver_type: nginx-fpm, apache-fpm, or nginx-gunicorn 
 
 # timezone: Europe/Berlin
 # This is the timezone used in the containers and by PHP;
@@ -54,15 +54,16 @@ const ConfigInstructions = `
 # composer_version: "2"
 # You can set it to "" or "2" (default) for Composer v2 or "1" for Composer v1
 # to use the latest major version available at the time your container is built.
-# It is also possible to select a minor version for example "2.2" which will
-# install the latest release of that branch. Alternatively, an explicit Composer
-# version may be specified, for example "1.0.22". Finally, it is also possible
-# to use one of the key words "stable", "preview" or "snapshot" see Composer
-# documentation.
+# It is also possible to use each other Composer version channel. This includes:
+#   - 2.2 (latest Composer LTS version)
+#   - stable
+#   - preview
+#   - snapshot
+# Alternatively, an explicit Composer version may be specified, for example "2.2.18".
 # To reinstall Composer after the image was built, run "ddev debug refresh".
 
-# nodejs_version: "16"
-# change from the default system Node.js version to another supported version, like 12, 14, 17, 18.
+# nodejs_version: "18"
+# change from the default system Node.js version to another supported version, like 14, 16, 18, 20.
 # Note that you can use 'ddev nvm' or nvm inside the web container to provide nearly any
 # Node.js version, including v6, etc.
 
@@ -99,11 +100,11 @@ const ConfigInstructions = `
 
 # nfs_mount_enabled: false
 # Great performance improvement but requires host configuration first.
-# See https://ddev.readthedocs.io/en/stable/users/performance/#using-nfs-to-mount-the-project-into-the-container
+# See https://ddev.readthedocs.io/en/latest/users/install/performance/#nfs
 
 # mutagen_enabled: false
 # Performance improvement using mutagen asynchronous updates.
-# See https://ddev.readthedocs.io/en/latest/users/performance/#using-mutagen
+# See https://ddev.readthedocs.io/en/latest/users/install/performance/#mutagen
 
 # fail_on_hook_fail: False
 # Decide whether 'ddev start' should be interrupted by a failing hook
@@ -160,7 +161,7 @@ const ConfigInstructions = `
 
 # ngrok_args: --basic-auth username:pass1234
 # Provide extra flags to the "ngrok http" command, see
-# https://ngrok.com/docs#http or run "ngrok http -h"
+# https://ngrok.com/docs/ngrok-agent/config or run "ngrok http -h"
 
 # disable_settings_management: false
 # If true, ddev will not create CMS-specific settings files like
@@ -198,12 +199,16 @@ const ConfigInstructions = `
 #  https_port: 4000
 #  http_port: 3999
 # Allows a set of extra ports to be exposed via ddev-router
+# Fill in all three fields even if you don’t intend to use the https_port!
+# If you don’t add https_port, then it defaults to 0 and ddev-router will fail to start.
+#
 # The port behavior on the ddev-webserver must be arranged separately, for example
 # using web_extra_daemons.
 # For example, with a web app on port 3000 inside the container, this config would
 # expose that web app on https://<project>.ddev.site:9999 and http://<project>.ddev.site:9998
 # web_extra_exposed_ports:
-#  - container_port: 3000
+#  - name: myapp
+#    container_port: 3000
 #    http_port: 9998
 #    https_port: 9999
 
@@ -223,7 +228,7 @@ const ConfigInstructions = `
 # However, with "override_config: true" in a particular config.*.yaml file,
 # 'nfs_mount_enabled: false' can override the existing values, and
 # hooks:
-#   post_start: []
+#   post-start: []
 # or
 # web_environment: []
 # or
@@ -258,7 +263,7 @@ var SequelproTemplate = `<?xml version="1.0" encoding="UTF-8"?>
             <key>host</key>
             <string>%s</string>
             <key>name</key>
-            <string>drud/%s</string>
+            <string>ddev/%s</string>
             <key>password</key>
             <string>%s</string>
             <key>port</key>

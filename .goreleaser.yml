@@ -121,6 +121,7 @@ builds:
 ###### Archives ######
 archives:
 - id: ddev
+  rlcp: true
   builds:
   - ddev
   - mkcert
@@ -128,9 +129,8 @@ archives:
   - ddev_zsh_completion.sh
   - ddev_fish_completion.sh
   format: tar.gz
-  name_template: "{{ .ProjectName }}_{{ .Os }}-{{ .Arch }}.v{{ .Version }}"
-  replacements:
-    darwin: macos
+  name_template: >-
+    {{ .ProjectName }}_{{- if eq .Os "darwin" }}macos{{ else }}{{ .Os }}{{ end }}-{{- .Arch }}.v{{- .Version }}
   format_overrides:
   - goos: windows
     format: zip
@@ -140,12 +140,14 @@ archives:
   allow_different_binary_count: true
 
 - id: completions-tarball
+  rlcp: true
   builds:
   - completions-tarball
   format: binary
   name_template: ddev_shell_completion_scripts.v{{.Version}}.tar.gz
 
 - id: ddev-windows-installer
+  rlcp: true
   builds:
   - ddev-windows-installer
   format: binary
@@ -171,14 +173,14 @@ brews:
     name: homebrew-ddev
   description: DDEV
   folder: Formula
-  homepage: https://github.com/drud/ddev
+  homepage: https://github.com/ddev/ddev
   license: "Apache 2"
   # ddev brew will only be uploaded on non-prerelease
   skip_upload: auto
   dependencies:
   - name: mkcert
   custom_block: |
-    head "https://github.com/drud/ddev.git", branch: "master"
+    head "https://github.com/ddev/ddev.git", branch: "master"
     depends_on "go" => :build
     depends_on "make" => :build
   install: |
@@ -192,7 +194,7 @@ brews:
         bin.install "ddev"
         bash_completion.install "ddev_bash_completion.sh" => "ddev"
         zsh_completion.install "ddev_zsh_completion.sh" => "ddev"
-        fish_completion.install "ddev_fish_completion.sh" => "ddev"
+        fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
     end
 
   test: |
@@ -206,14 +208,14 @@ brews:
     name: homebrew-ddev-edge
   description: DDEV
   folder: Formula
-  homepage: https://github.com/drud/ddev
+  homepage: https://github.com/ddev/ddev
   license: "Apache 2"
   # ddev-edge brew will always be uploaded
   skip_upload: "false"
   dependencies:
   - name: mkcert
   custom_block: |
-    head "https://github.com/drud/ddev.git", branch: "master"
+    head "https://github.com/ddev/ddev.git", branch: "master"
     depends_on "go" => :build
     depends_on "make" => :build
   install: |
@@ -227,7 +229,7 @@ brews:
         bin.install "ddev"
         bash_completion.install "ddev_bash_completion.sh" => "ddev"
         zsh_completion.install "ddev_zsh_completion.sh" => "ddev"
-        fish_completion.install "ddev_fish_completion.sh" => "ddev"
+        fish_completion.install "ddev_fish_completion.sh" => "ddev.fish"
     end
 
   test: |
@@ -237,6 +239,9 @@ brews:
 nfpms:
 - maintainer: Randy Fay
   license: "Apache 2"
+  homepage: https://github.com/ddev/ddev
+  description: |
+    Open-source local web development tool
   formats:
   - deb
   - rpm
@@ -253,6 +258,9 @@ nfpms:
     dst:  /usr/share/zsh/vendor-completions/_ddev
     file_info:
       mode: 0644
+  suggests:
+    - bash-completion
+    - zsh-completions
   overrides:
     deb:
       dependencies:
@@ -273,8 +281,8 @@ aurs:
 - name: "ddev"
   ids:
   - ddev
-  homepage: "https://github.com/drud/ddev"
-  description: "DDEV-Local: a local web development environment"
+  homepage: "https://github.com/ddev/ddev"
+  description: "DDEV: a local web development environment"
   maintainers:
   - 'Randy Fay <randy at randyfay.com>'
   license: "Apache 2"
@@ -283,6 +291,11 @@ aurs:
   private_key: '{{ .Env.AUR_SSH_PRIVATE_KEY }}'
   # AUR_EDGE_GIT_URL should be something like ssh://aur@aur.archlinux.org/ddev-bin.git or ssh://aur@aur.archlinux.org/rfay-test-ddev-bin.git
   git_url: '{{ .Env.AUR_STABLE_GIT_URL }}'
+  depends:
+  - docker
+  - mkcert
+  optdepends:
+  - 'bash-completion: subcommand completion support'
 
   package: |-
     # bin
@@ -306,8 +319,8 @@ aurs:
 - name: "ddev-edge"
   ids:
   - ddev
-  homepage: "https://github.com/drud/ddev"
-  description: "DDEV-Local: a local web development environment (edge)"
+  homepage: "https://github.com/ddev/ddev"
+  description: "DDEV: a local web development environment (edge)"
   maintainers:
   - 'Randy Fay <randy at randyfay.com>'
   license: "Apache 2"
@@ -316,6 +329,11 @@ aurs:
   private_key: '{{ .Env.AUR_SSH_PRIVATE_KEY }}'
   # AUR_EDGE_GIT_URL should be something like ssh://aur@aur.archlinux.org/ddev-edge-bin.git or ssh://aur@aur.archlinux.org/rfay-test-ddev-edge-bin.git
   git_url: '{{ .Env.AUR_EDGE_GIT_URL }}'
+  depends:
+  - docker
+  - mkcert
+  optdepends:
+  - 'bash-completion: subcommand completion support'
 
   package: |-
     # bin
@@ -338,3 +356,5 @@ aurs:
 
 furies:
 - account: "{{ .Env.FURY_ACCOUNT }}"
+  secret_name: "FURY_TOKEN"
+  skip: '{{ ne .Prerelease "" }}'

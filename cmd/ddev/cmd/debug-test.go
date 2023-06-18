@@ -1,13 +1,14 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/dockerutil"
-	"github.com/drud/ddev/pkg/exec"
-	"github.com/drud/ddev/pkg/fileutil"
-	"github.com/drud/ddev/pkg/util"
-	"github.com/spf13/cobra"
 	"os"
 	"path"
+
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/spf13/cobra"
 )
 
 // DebugTestCmdCmd implements the ddev debug test command
@@ -30,7 +31,7 @@ var DebugTestCmdCmd = &cobra.Command{
 		util.Success("Running %s %v", bashPath, c)
 		err = exec.RunInteractiveCommand(bashPath, c)
 		if err != nil {
-			util.Failed("Failed running test_ddev.sh: %v\n. You can run it manually with `curl -sL -O https://raw.githubusercontent.com/drud/ddev/master/cmd/ddev/cmd/scripts/test_ddev.sh && bash test_ddev.sh`", err)
+			util.Failed("Failed running test_ddev.sh: %v\n. You can run it manually with `curl -sL -O https://raw.githubusercontent.com/ddev/ddev/master/cmd/ddev/cmd/scripts/test_ddev.sh && bash test_ddev.sh`", err)
 		}
 	},
 }

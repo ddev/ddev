@@ -1,21 +1,11 @@
 package cmd
 
 import (
-	"github.com/drud/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/spf13/cobra"
 )
 
-// continuous, if set, makes list continuously output
-var continuous bool
-
-// activeOnly, if set, shows only running projects
-var activeOnly bool
-
-// continuousSleepTime is time to sleep between reads with --continuous
-var continuousSleepTime = 1
-
-// wrapListTable allow that the text in the table of ddev list wraps instead of cutting it to fit the terminal width
-var wrapListTableText bool
+var listCommandSettings = ddevapp.ListCommandSettings{}
 
 // ListCmd represents the list command
 var ListCmd = &cobra.Command{
@@ -25,17 +15,20 @@ var ListCmd = &cobra.Command{
 	Aliases: []string{"l", "ls"},
 	Example: `ddev list
 ddev list --active-only
-ddev list -A`,
+ddev list -A
+ddev list --type=drupal8
+ddev list -t drupal8`,
 	Run: func(cmd *cobra.Command, args []string) {
-		ddevapp.List(activeOnly, continuous, wrapListTableText, continuousSleepTime)
+		ddevapp.List(listCommandSettings)
 	},
 }
 
 func init() {
-	ListCmd.Flags().BoolVarP(&activeOnly, "active-only", "A", false, "If set, only currently active projects will be displayed.")
-	ListCmd.Flags().BoolVarP(&continuous, "continuous", "", false, "If set, project information will be emitted until the command is stopped.")
-	ListCmd.Flags().BoolVarP(&wrapListTableText, "wrap-table", "W", false, "Display table with wrapped text if required.")
-	ListCmd.Flags().IntVarP(&continuousSleepTime, "continuous-sleep-interval", "I", 1, "Time in seconds between ddev list --continuous output lists.")
+	ListCmd.Flags().BoolVarP(&listCommandSettings.ActiveOnly, "active-only", "A", false, "If set, only currently active projects will be displayed.")
+	ListCmd.Flags().BoolVarP(&listCommandSettings.Continuous, "continuous", "", false, "If set, project information will be emitted until the command is stopped.")
+	ListCmd.Flags().BoolVarP(&listCommandSettings.WrapTableText, "wrap-table", "W", false, "Display table with wrapped text if required.")
+	ListCmd.Flags().StringVarP(&listCommandSettings.TypeFilter, "type", "t", "", "Show only projects of this type")
+	ListCmd.Flags().IntVarP(&listCommandSettings.ContinuousSleepTime, "continuous-sleep-interval", "I", 1, "Time in seconds between ddev list --continuous output lists.")
 
 	RootCmd.AddCommand(ListCmd)
 }

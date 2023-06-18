@@ -2,11 +2,11 @@ package ddevapp_test
 
 import (
 	"bytes"
-	"github.com/drud/ddev/pkg/ddevapp"
-	"github.com/drud/ddev/pkg/globalconfig"
-	"github.com/drud/ddev/pkg/nodeps"
-	"github.com/drud/ddev/pkg/testcommon"
-	assert2 "github.com/stretchr/testify/assert"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/testcommon"
+	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
 	"regexp"
@@ -22,7 +22,7 @@ func TestListWithoutDir(t *testing.T) {
 		t.Skip("Skipping because unreliable on Windows and can't be used with mutagen")
 	}
 	// Set up tests and give ourselves a working directory.
-	assert := assert2.New(t)
+	assert := asrt.New(t)
 	testcommon.ClearDockerEnv()
 	origDir, _ := os.Getwd()
 
@@ -103,6 +103,12 @@ func TestListWithoutDir(t *testing.T) {
 
 // TestDdevList tests the ddevapp.List() functionality
 // It's only here for profiling at this point.
-func TestDdevList(t *testing.T) {
-	ddevapp.List(true, false, true, 1)
+func TestDdevList(_ *testing.T) {
+	ddevapp.List(ddevapp.ListCommandSettings{
+		ActiveOnly:          true,
+		Continuous:          false,
+		WrapTableText:       true,
+		ContinuousSleepTime: 1,
+		TypeFilter:          "",
+	})
 }

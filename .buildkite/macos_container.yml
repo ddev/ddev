@@ -1,6 +1,6 @@
   - command: ".buildkite/test_containers.sh"
     plugins:
-      - docker-login#v2.0.1:
+      - docker-login#v2.1.0:
           username: druddockerpullaccount
           password-env: DOCKERHUB_PULL_PASSWORD
     agents:

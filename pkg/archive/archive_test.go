@@ -1,16 +1,16 @@
 package archive_test
 
 import (
-	"github.com/stretchr/testify/require"
 	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
 	"testing"
 
-	"github.com/drud/ddev/pkg/archive"
-	"github.com/drud/ddev/pkg/testcommon"
+	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestUnarchive tests unzip/tar/tar.gz/tgz functionality, including the starting extraction-skip directory
@@ -168,7 +168,7 @@ func TestExtractTarballWithCleanup(t *testing.T) {
 func TestDownloadAndExtractTarball(t *testing.T) {
 	assert := asrt.New(t)
 
-	testTarball := "https://github.com/drud/ddev-drupal9-solr/archive/refs/tags/v0.1.1.tar.gz"
+	testTarball := "https://github.com/ddev/ddev-drupal9-solr/archive/refs/tags/v0.1.1.tar.gz"
 
 	dir, cleanup, err := archive.DownloadAndExtractTarball(testTarball, true)
 	require.NoError(t, err)

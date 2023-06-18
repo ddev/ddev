@@ -78,12 +78,16 @@ func (t *Table) renderColumn(out *strings.Builder, row rowStr, colIdx int, maxCo
 	// if horizontal cell merges are enabled, look ahead and see how many cells
 	// have the same content and merge them all until a cell with a different
 	// content is found; override alignment to Center in this case
-	if t.getRowConfig(hint).AutoMerge && !hint.isSeparatorRow {
-		for idx := colIdx + 1; idx < len(row); idx++ {
-			if row[colIdx] != row[idx] {
+	rowConfig := t.getRowConfig(hint)
+	if rowConfig.AutoMerge && !hint.isSeparatorRow {
+		// get the real row to consider all lines in each column instead of just
+		// looking at the current "line"
+		rowUnwrapped := t.getRow(hint.rowNumber-1, hint)
+		for idx := colIdx + 1; idx < len(rowUnwrapped); idx++ {
+			if rowUnwrapped[colIdx] != rowUnwrapped[idx] {
 				break
 			}
-			align = text.AlignCenter
+			align = rowConfig.getAutoMergeAlign()
 			maxColumnLength += t.getMaxColumnLengthForMerging(idx)
 			numColumnsRendered++
 		}
@@ -220,7 +224,7 @@ func (t *Table) renderLine(out *strings.Builder, row rowStr, hint renderHint) {
 
 func (t *Table) renderLineMergeOutputs(out *strings.Builder, outLine *strings.Builder) {
 	outLineStr := outLine.String()
-	if text.RuneCount(outLineStr) > t.allowedRowLength {
+	if text.RuneWidthWithoutEscSequences(outLineStr) > t.allowedRowLength {
 		trimLength := t.allowedRowLength - utf8.RuneCountInString(t.style.Box.UnfinishedRow)
 		if trimLength > 0 {
 			out.WriteString(text.Trim(outLineStr, trimLength))
@@ -232,6 +236,7 @@ func (t *Table) renderLineMergeOutputs(out *strings.Builder, outLine *strings.Bu
 }
 
 func (t *Table) renderMarginLeft(out *strings.Builder, hint renderHint) {
+	out.WriteString(t.style.Format.Direction.Modifier())
 	if t.style.Options.DrawBorder {
 		border := t.getBorderLeft(hint)
 		colors := t.getBorderColors(hint)
@@ -316,11 +321,19 @@ func (t *Table) renderRows(out *strings.Builder, rows []rowStr, hint renderHint)
 }
 
 func (t *Table) renderRowsBorderBottom(out *strings.Builder) {
-	t.renderRowSeparator(out, renderHint{isBorderBottom: true, isFooterRow: true})
+	if len(t.rowsFooter) > 0 {
+		t.renderRowSeparator(out, renderHint{isBorderBottom: true, isFooterRow: true, rowNumber: len(t.rowsFooter)})
+	} else {
+		t.renderRowSeparator(out, renderHint{isBorderBottom: true, isFooterRow: false, rowNumber: len(t.rows)})
+	}
 }
 
 func (t *Table) renderRowsBorderTop(out *strings.Builder) {
-	t.renderRowSeparator(out, renderHint{isBorderTop: true, isHeaderRow: true})
+	if len(t.rowsHeader) > 0 || t.autoIndex {
+		t.renderRowSeparator(out, renderHint{isBorderTop: true, isHeaderRow: true, rowNumber: 0})
+	} else {
+		t.renderRowSeparator(out, renderHint{isBorderTop: true, isHeaderRow: false, rowNumber: 0})
+	}
 }
 
 func (t *Table) renderRowsFooter(out *strings.Builder) {
@@ -336,59 +349,58 @@ func (t *Table) renderRowsFooter(out *strings.Builder) {
 
 func (t *Table) renderRowsHeader(out *strings.Builder) {
 	if len(t.rowsHeader) > 0 || t.autoIndex {
+		hintSeparator := renderHint{isHeaderRow: true, isLastRow: true, isSeparatorRow: true}
+
 		if len(t.rowsHeader) > 0 {
 			t.renderRows(out, t.rowsHeader, renderHint{isHeaderRow: true})
+			hintSeparator.rowNumber = len(t.rowsHeader)
 		} else if t.autoIndex {
 			t.renderRow(out, t.getAutoIndexColumnIDs(), renderHint{isAutoIndexRow: true, isHeaderRow: true})
+			hintSeparator.rowNumber = 1
 		}
-		t.renderRowSeparator(out, renderHint{
-			isHeaderRow:    true,
-			isLastRow:      true,
-			isSeparatorRow: true,
-			rowNumber:      len(t.rowsHeader),
-		})
+		t.renderRowSeparator(out, hintSeparator)
 	}
 }
 
 func (t *Table) renderTitle(out *strings.Builder) {
 	if t.title != "" {
+		colors := t.style.Title.Colors
 		rowLength := t.maxRowLength
 		if t.allowedRowLength != 0 && t.allowedRowLength < rowLength {
 			rowLength = t.allowedRowLength
 		}
 		if t.style.Options.DrawBorder {
-			lenBorder := rowLength - text.RuneCount(t.style.Box.TopLeft+t.style.Box.TopRight)
-			out.WriteString(t.style.Box.TopLeft)
-			out.WriteString(text.RepeatAndTrim(t.style.Box.MiddleHorizontal, lenBorder))
-			out.WriteString(t.style.Box.TopRight)
+			lenBorder := rowLength - text.RuneWidthWithoutEscSequences(t.style.Box.TopLeft+t.style.Box.TopRight)
+			out.WriteString(colors.Sprint(t.style.Box.TopLeft))
+			out.WriteString(colors.Sprint(text.RepeatAndTrim(t.style.Box.MiddleHorizontal, lenBorder)))
+			out.WriteString(colors.Sprint(t.style.Box.TopRight))
 		}
 
-		lenText := rowLength - text.RuneCount(t.style.Box.PaddingLeft+t.style.Box.PaddingRight)
+		lenText := rowLength - text.RuneWidthWithoutEscSequences(t.style.Box.PaddingLeft+t.style.Box.PaddingRight)
 		if t.style.Options.DrawBorder {
-			lenText -= text.RuneCount(t.style.Box.Left + t.style.Box.Right)
+			lenText -= text.RuneWidthWithoutEscSequences(t.style.Box.Left + t.style.Box.Right)
 		}
 		titleText := text.WrapText(t.title, lenText)
 		for _, titleLine := range strings.Split(titleText, "\n") {
-			t.renderTitleLine(out, lenText, titleLine)
+			t.renderTitleLine(out, lenText, titleLine, colors)
 		}
 	}
 }
 
-func (t *Table) renderTitleLine(out *strings.Builder, lenText int, titleLine string) {
+func (t *Table) renderTitleLine(out *strings.Builder, lenText int, titleLine string, colors text.Colors) {
 	titleLine = strings.TrimSpace(titleLine)
 	titleLine = t.style.Title.Format.Apply(titleLine)
 	titleLine = t.style.Title.Align.Apply(titleLine, lenText)
 	titleLine = t.style.Box.PaddingLeft + titleLine + t.style.Box.PaddingRight
-	titleLine = t.style.Title.Colors.Sprint(titleLine)
 
 	if out.Len() > 0 {
 		out.WriteRune('\n')
 	}
 	if t.style.Options.DrawBorder {
-		out.WriteString(t.style.Box.Left)
+		out.WriteString(colors.Sprint(t.style.Box.Left))
 	}
-	out.WriteString(titleLine)
+	out.WriteString(colors.Sprint(titleLine))
 	if t.style.Options.DrawBorder {
-		out.WriteString(t.style.Box.Right)
+		out.WriteString(colors.Sprint(t.style.Box.Right))
 	}
 }

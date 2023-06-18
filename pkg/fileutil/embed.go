@@ -2,7 +2,7 @@ package fileutil
 
 import (
 	"embed"
-	"github.com/drud/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"os"
 	"path"
 	"path/filepath"
@@ -24,8 +24,11 @@ func CopyEmbedAssets(fsys embed.FS, sourceDir string, targetDir string) error {
 		} else {
 			localPath := filepath.Join(targetDir, d.Name())
 
+			// We can overwrite the file if it has the #ddev-generated
+			// or if it is an empty file.
 			sigFound, err := FgrepStringInFile(localPath, nodeps.DdevFileSignature)
-			if sigFound || err != nil {
+			s, _ := os.Stat(localPath)
+			if sigFound || (s != nil && s.Size() == 0) || err != nil {
 				content, err := fsys.ReadFile(sourcePath)
 				if err != nil {
 					return err
