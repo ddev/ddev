@@ -125,4 +125,4 @@ baseVariants:
     condition: 'applicationContext == "Development/DDEV"'
 ```
 
-See also [TYPO3 Documentation](https://docs.typo3.org/m/typo3/reference-coreapi/12.4/en-us/ApiOverview/SiteHandling/BaseVariants.html).
+See also [TYPO3 Documentation](https://docs.typo3.org/m/typo3/reference-coreapi/main/en-us/ApiOverview/SiteHandling/BaseVariants.html).
