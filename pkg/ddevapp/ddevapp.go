@@ -1746,7 +1746,7 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 
 	state, err := dockerutil.GetContainerStateByName(fmt.Sprintf("ddev-%s-%s", app.Name, opts.Service))
 	if err != nil || state != "running" {
-		return fmt.Errorf("service %s is not current running in project %s (state=%s)", opts.Service, app.Name, state)
+		return fmt.Errorf("service %s is not running in project %s (state=%s)", opts.Service, app.Name, state)
 	}
 
 	args := []string{"exec"}
