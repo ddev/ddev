@@ -25,14 +25,16 @@ func (t *DdevLoggerSuite) TestLogger() {
 
 	// Replace output writer
 	output.UserOut.SetOutput(&writer)
+	output.UserErr.SetOutput(&writer)
 
 	// Enable debug logging
 	output.UserOut.Level = logrus.DebugLevel
+	output.UserErr.Level = logrus.DebugLevel
 	globalconfig.DdevDebug = true
 
 	require := t.Require()
 
-	logger := loggers.NewDdevLogger()
+	logger := loggers.NewDdevLogger(true)
 
 	require.Implements((*types.Logger)(nil), logger)
 

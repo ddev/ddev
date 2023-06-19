@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/amplitude/analytics-go/amplitude/types"
-	"github.com/ddev/ddev/pkg/util"
 )
 
 // NewDelayedTransmissionEventStorage initializes a new EventStorage of type delayedTransmissionEventStorage.
@@ -64,7 +63,7 @@ func (s *delayedTransmissionEventStorage) push(prepend bool, events ...*types.St
 
 	err := s.readCache()
 	if err != nil {
-		util.Error("Error '%s', while reading event cache.", err)
+		s.logger.Errorf("Error '%s', while reading event cache.", err)
 	}
 
 	prependIndex := 0
@@ -75,7 +74,7 @@ func (s *delayedTransmissionEventStorage) push(prepend bool, events ...*types.St
 
 	err = s.writeCache()
 	if err != nil {
-		util.Error("Error '%s', while writing event cache.", err)
+		s.logger.Errorf("Error '%s', while writing event cache.", err)
 	}
 
 	s.logger.Debugf("Pushed %d events to the cache.", len(events))
@@ -88,7 +87,7 @@ func (s *delayedTransmissionEventStorage) Pull(count int, before time.Time) []*t
 
 	err := s.readCache()
 	if err != nil {
-		util.Error("Error '%s', while reading event cache.", err)
+		s.logger.Errorf("Error '%s', while reading event cache.", err)
 	}
 
 	// Early return if capacity and interval hasn't reached.
@@ -99,7 +98,7 @@ func (s *delayedTransmissionEventStorage) Pull(count int, before time.Time) []*t
 	defer func() {
 		err = s.writeCache()
 		if err != nil {
-			util.Error("Error '%s', while writing event cache.", err)
+			s.logger.Errorf("Error '%s', while writing event cache.", err)
 		}
 	}()
 
@@ -136,7 +135,7 @@ func (s *delayedTransmissionEventStorage) Count(before time.Time) int {
 
 	err := s.readCache()
 	if err != nil {
-		util.Error("Error '%s', while reading event cache.", err)
+		s.logger.Errorf("Error '%s', while reading event cache.", err)
 	}
 
 	if s.cache.LastSubmittedAt.Add(s.interval).Before(before) || len(s.cache.Events) >= s.capacity {
