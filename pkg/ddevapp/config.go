@@ -940,6 +940,7 @@ redirect_stderr=true
 		// because of awkward changes to $DBIMAGE. Postgres 11 will be EOL Nov 2023
 		if nodeps.ArrayContainsString([]string{nodeps.Postgres9, nodeps.Postgres10, nodeps.Postgres11}, app.Database.Version) {
 			extraDBContent = extraDBContent + `
+RUN sed -i -e 's/deb.debian.org/archive.debian.org/g' -e 's/security.debian.org/archive.debian.org/g' -e '/stretch-updates/d' /etc/apt/sources.list
 RUN rm -f /etc/apt/sources.list.d/pgdg.list
 RUN echo "deb http://archive.debian.org/debian/ stretch main contrib non-free" > /etc/apt/sources.list
 RUN apt-get update || true
