@@ -3,6 +3,8 @@
 ## Description: Run Drupal commands inside the web container.
 ## Usage: drupalcommands
 ## Example: 'ddev drupalcommands'
+## ExecRaw: true
+## HostWorkingDir: true
 
 echo '** Check config status, get versions and important log messages, etc.'
 echo ''
