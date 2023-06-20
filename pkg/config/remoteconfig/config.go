@@ -26,7 +26,6 @@ type Config struct {
 	Remote Remote
 
 	UpdateInterval int
-	TickerDisabled bool
 	TickerInterval int
 }
 

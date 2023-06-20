@@ -49,7 +49,6 @@ func main() {
 				Filepath: globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Filepath,
 			},
 			UpdateInterval: globalconfig.DdevGlobalConfig.RemoteConfig.UpdateInterval,
-			TickerDisabled: globalconfig.DdevGlobalConfig.Messages.DisableTicker,
 			TickerInterval: globalconfig.DdevGlobalConfig.Messages.TickerInterval,
 		},
 		state,

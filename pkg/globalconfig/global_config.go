@@ -375,8 +375,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # Please don't use this unless directed to do so
 
 # messages:
-#   disable_ticker: false // Set to true to disable ticker messages
-#   ticker_interval: 20   // Interval in hours to show ticker messages
+#   ticker_interval: 20 // Interval in hours to show ticker messages, 0 disables the ticker
 # Controls the display of the ticker messages.
 
 # remote_config:

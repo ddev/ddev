@@ -20,7 +20,6 @@ func New(config *Config, stateManager statetypes.State, isInternetActive func() 
 		state:            newState(stateManager),
 		fileStorage:      storage.NewFileStorage(config.getLocalSourceFileName()),
 		updateInterval:   config.UpdateInterval,
-		tickerDisabled:   config.TickerDisabled,
 		tickerInterval:   config.TickerInterval,
 		isInternetActive: isInternetActive,
 	}
@@ -57,7 +56,6 @@ type remoteConfig struct {
 	githubStorage types.RemoteConfigStorage
 
 	updateInterval   int
-	tickerDisabled   bool
 	tickerInterval   int
 	isInternetActive func() bool
 

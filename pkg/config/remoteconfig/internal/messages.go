@@ -8,14 +8,12 @@ type Message struct {
 }
 
 type Notifications struct {
-	Disabled bool      `json:"disabled,omitempty"`
 	Interval int       `json:"interval"`
 	Infos    []Message `json:"infos"`
 	Warnings []Message `json:"warnings"`
 }
 
 type Ticker struct {
-	Disabled bool      `json:"disabled,omitempty"`
 	Interval int       `json:"interval"`
 	Messages []Message `json:"messages"`
 }
