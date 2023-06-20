@@ -3,6 +3,8 @@
 ## Description: Run commands inside the web container.
 ## Usage: webcommands
 ## Example: 'ddev webcommands'
+## ExecRaw: true
+## HostWorkingDir: true
 
 echo '** Unix command example - get current working directory and content'
 pwd
