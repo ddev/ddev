@@ -386,7 +386,6 @@ func WriteGlobalConfig(config GlobalConfig) error {
 #     ref: main
 #     filepath: remote-config.jsonc
 # Controls the download of the remote config. Please do not change.
-
 `
 	cfgbytes = append(cfgbytes, instructions...)
 
