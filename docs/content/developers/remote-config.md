@@ -76,8 +76,7 @@ The user can disable the ticker or change the interval in the global config.
 
 ### Conditions and Versions
 
-Every message can optionally include a condition and a version constraint to
-limit the message to matching conditions and DDEV versions only.
+Every message can optionally include a condition and version constraint to limit the message to matching conditions and DDEV versions.
 
 Every element of the array `conditions` may contain a condition listed by
 `ddev debug message-conditions`. It may be prefixed by a `!` to negate the
