@@ -1,9 +1,6 @@
 # Remote Config
 
-DDEV supports to download a remote config from the `ddev/remote-config` Github
-repository. At the moment the remote config contains messages which will be
-shown to the user see next chapter but can also be easily enhanced in the
-future with more information and configuration.
+DDEV supports downloading a remote config from the [`ddev/remote-config`](https://github.com/ddev/remote-config) GitHub repository with messages that will be shown to the user. This feature could be enhanced later with more information and configuration.
 
 Here is an example of a `remote-config.jsonc` file:
 
