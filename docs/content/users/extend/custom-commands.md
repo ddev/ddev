@@ -65,43 +65,43 @@ There are many examples of [global](https://github.com/ddev/ddev/tree/master/pkg
 
 A number of environment variables are provided to these command scripts. These are generally supported, but please avoid using undocumented environment variables. Useful variables for host scripts are:
 
-* `DDEV_APPROOT`: file system location of the project on the host
-* `DDEV_DATABASE`: database in use, in format `type:version` (example: `mariadb:10.5`)
-* `DDEV_DOCROOT`: relative path from approot to docroot
-* `DDEV_HOSTNAME`: comma-separated list of FQDN hostnames
-* `DDEV_HOST_DB_PORT`: localhost port of the database server
-* `DDEV_HOST_HTTPS_PORT`: localhost port for HTTPS on web server
-* `DDEV_HOST_MAILHOG_PORT`: localhost port for MailHog
-* `DDEV_HOST_WEBSERVER_PORT`: localhost port of the web server
+* `DDEV_APPROOT`: File system location of the project on the host
+* `DDEV_DATABASE`: Database in use, in format `type:version` (example: `mariadb:10.5`)
+* `DDEV_DOCROOT`: Relative path from approot to docroot
+* `DDEV_HOSTNAME`: Comma-separated list of FQDN hostnames
+* `DDEV_HOST_DB_PORT`: Localhost port of the database server
+* `DDEV_HOST_HTTPS_PORT`: Localhost port for HTTPS on web server
+* `DDEV_HOST_MAILHOG_PORT`: Localhost port for MailHog
+* `DDEV_HOST_WEBSERVER_PORT`: Localhost port of the web server
 * `DDEV_MUTAGEN_ENABLED`: `true` if Mutagen is enabled
-* `DDEV_PHP_VERSION`: current PHP version
-* `DDEV_PRIMARY_URL`: primary project URL
-* `DDEV_PROJECT`: project name, like `d8composer`
+* `DDEV_PHP_VERSION`: Current PHP version
+* `DDEV_PRIMARY_URL`: Primary project URL
+* `DDEV_PROJECT`: Project name, like `d8composer`
 * `DDEV_PROJECT_TYPE`: `drupal8`, `typo3`, `backdrop`, `wordpress`, etc.
-* `DDEV_ROUTER_HTTP_PORT`: router port for HTTP
-* `DDEV_ROUTER_HTTPS_PORT`: router port for HTTPS
-* `DDEV_SITENAME`: project name, like `d8composer`
-* `DDEV_TLD`: top-level project domain, like `ddev.site`
+* `DDEV_ROUTER_HTTP_PORT`: Router port for HTTP
+* `DDEV_ROUTER_HTTPS_PORT`: Router port for HTTPS
+* `DDEV_SITENAME`: Project name, like `d8composer`
+* `DDEV_TLD`: Top-level project domain, like `ddev.site`
 * `DDEV_WEBSERVER_TYPE`: `nginx-fpm`, `apache-fpm`, or `nginx-gunicorn`
-* `GOARCH`: architecture (`arm64`, `amd64`)
-* `GOOS`: operating system (`windows`, `darwin`, `linux`)
+* `GOARCH`: Architecture (`arm64`, `amd64`)
+* `GOOS`: Operating system (`windows`, `darwin`, `linux`)
 
 Useful variables for container scripts are:
 
-* `DDEV_DOCROOT`: relative path from approot to docroot
-* `DDEV_FILES_DIR`: directory of user-uploaded files
-* `DDEV_HOSTNAME`: comma-separated list of FQDN hostnames
+* `DDEV_DOCROOT`: Relative path from approot to docroot
+* `DDEV_FILES_DIR`: Directory of user-uploaded files
+* `DDEV_HOSTNAME`: Comma-separated list of FQDN hostnames
 * `DDEV_MUTAGEN_ENABLED`: `true` if Mutagen is enabled
-* `DDEV_PHP_VERSION`: current PHP version
-* `DDEV_PRIMARY_URL`: primary URL for the project
-* `DDEV_PROJECT`: project name, like `d8composer`
+* `DDEV_PHP_VERSION`: Current PHP version
+* `DDEV_PRIMARY_URL`: Primary URL for the project
+* `DDEV_PROJECT`: Project name, like `d8composer`
 * `DDEV_PROJECT_TYPE`: `drupal8`, `typo3`, `backdrop`, `wordpress`, etc.
-* `DDEV_ROUTER_HTTP_PORT`: router port for HTTP
-* `DDEV_ROUTER_HTTPS_PORT`: router port for HTTPS
-* `DDEV_SITENAME`: project name, like `d8composer`
-* `DDEV_TLD`: top-level project domain, like `ddev.site`
+* `DDEV_ROUTER_HTTP_PORT`: Router port for HTTP
+* `DDEV_ROUTER_HTTPS_PORT`: Router port for HTTPS
+* `DDEV_SITENAME`: Project name, like `d8composer`
+* `DDEV_TLD`: Top-level project domain, like `ddev.site`
 * `DDEV_WEBSERVER_TYPE`: `nginx-fpm`, `apache-fpm`, or `nginx-gunicorn`
-* `IS_DDEV_PROJECT`: if `true`, PHP is running under DDEV
+* `IS_DDEV_PROJECT`: If `true`, PHP is running under DDEV
 
 ## Annotations Supported
 
