@@ -157,7 +157,8 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		app.WebserverType = nodeps.WebserverNginxGunicorn
 	}
 
-	app.TrackProject()
+	// TODO enable once the bootstrap is clean and every project is loaded once only
+	//app.TrackProject()
 
 	return app, nil
 }
