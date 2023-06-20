@@ -65,8 +65,7 @@ The defined messages are shown to the user every `interval` as long as not
 `disabled`. Supported message types are `infos` and `warnings` where `infos`
 are printed in a yellow box and `warnings` in a red box.
 
-The user can not influence notifications, they will be shown like defined in
-the `remote-config` repository.
+Messages will be shown as configured in the `remote-config` repository and the user cannot influence them.
 
 ### Ticker
 
