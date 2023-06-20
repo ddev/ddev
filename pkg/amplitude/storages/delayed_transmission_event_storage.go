@@ -200,7 +200,7 @@ func (s *delayedTransmissionEventStorage) writeCache() error {
 	file.Close()
 
 	if err == nil {
-		s.logger.Debugf("Written %d events to the cache.", len(s.cache.Events))
+		s.logger.Debugf("Wrote %d events to the cache.", len(s.cache.Events))
 	}
 
 	return err

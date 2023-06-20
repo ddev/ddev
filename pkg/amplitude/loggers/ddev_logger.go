@@ -46,6 +46,7 @@ func (l *ddevLogger) Errorf(message string, args ...interface{}) {
 // filterMessage removes sensitive data from the message like the API key.
 func filterMessage(message string, args ...interface{}) string {
 	re := regexp.MustCompile(`(?m)"api_key"\s*:\s*"[^"]*"`)
+	message = re.ReplaceAllString(fmt.Sprintf(message, args...), `"api_key":"***"`)
 
-	return re.ReplaceAllString(fmt.Sprintf(message, args...), `"api_key":"***"`)
+	return fmt.Sprintf("AMPLITUDE: %s", message)
 }
