@@ -2,15 +2,14 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/output"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-
 	"gopkg.in/yaml.v3"
 )
 
@@ -394,7 +393,7 @@ func (p *Provider) importDatabaseBackup(fileLocation []string, importPath []stri
 func (p *Provider) doFilesImport(fileLocation string, importPath string) error {
 	var err error
 	if p.FilesImportCommand.Command == "" {
-		err = p.app.ImportFiles(fileLocation, importPath)
+		err = p.app.ImportFiles("", fileLocation, importPath)
 	} else {
 		s := p.FilesImportCommand.Service
 		if s == "" {

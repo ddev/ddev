@@ -2,13 +2,14 @@ package ddevapp
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-	"os"
-	"path/filepath"
 )
 
 // isMagentoApp returns true if the app is of type magento
@@ -67,8 +68,8 @@ func setMagentoSiteSettingsPaths(app *DdevApp) {
 }
 
 // magentoImportFilesAction defines the magento workflow for importing project files.
-func magentoImportFilesAction(app *DdevApp, importPath, extPath string) error {
-	destPath := app.GetHostUploadDirFullPath()
+func magentoImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string) error {
+	destPath := app.calculateHostUploadDirFullPath(uploadDir)
 
 	// parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {
@@ -111,22 +112,9 @@ func magentoImportFilesAction(app *DdevApp, importPath, extPath string) error {
 	return nil
 }
 
-// getMagentoUploadDir will return a custom upload dir if defined, returning a default path if not.
-func getMagentoUploadDir(app *DdevApp) string {
-	if app.UploadDir == "" {
-		return "media"
-	}
-
-	return app.UploadDir
-}
-
-// getMagento2UploadDir will return a custom upload dir if defined, returning a default path if not.
-func getMagento2UploadDir(app *DdevApp) string {
-	if app.UploadDir == "" {
-		return "media"
-	}
-
-	return app.UploadDir
+// getMagentoUploadDirs will return the default paths.
+func getMagentoUploadDirs(_ *DdevApp) UploadDirs {
+	return UploadDirs{"media"}
 }
 
 // createMagento2SettingsFile manages creation and modification of app/etc/env.php.

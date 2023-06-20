@@ -202,7 +202,7 @@ Flags:
 * `--project-type`: Provide the project type: `backdrop`, `drupal10`, `drupal6`, `drupal7`, `drupal8`, `drupal9`, `laravel`, `magento`, `magento2`, `php`, `shopware6`, `typo3`, `wordpress`. This is autodetected and this flag is necessary only to override the detection.
 * `--show-config-location`: Output the location of the `config.yaml` file if it exists, or error that it doesn’t exist.
 * `--timezone`: Specify timezone for containers and PHP, like `Europe/London` or `America/Denver` or `GMT` or `UTC`.
-* `--upload-dir`: Sets the project’s upload directory, the destination directory of the import-files command.
+* `--upload-dirs`: Sets the project’s upload directories, the destination directories of the import-files command.
 * `--use-dns-when-possible`: Use DNS for hostname resolution instead of `/etc/hosts` when possible. (default `true`)
 * `--web-environment`: Set the environment variables in the web container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`
 * `--web-environment-add`: Append environment variables to the web container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`

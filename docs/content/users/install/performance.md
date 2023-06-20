@@ -50,11 +50,11 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
 
     ### Mutagen and User-Generated Uploads
 
-    When Mutagen is enabled, DDEV attempts to exclude user-generated files in `upload_dir`—when it exists—from syncing. It does this by using a bind-mount in the generated docker-compose configuration, and excluding the directory from syncing in `.ddev/mutagen/mutagen.yml`.
+    When Mutagen is enabled, DDEV attempts to exclude user-generated files in `upload_dirs`—when it exists—from syncing. It does this by using a bind-mount in the generated docker-compose configuration, and excluding the directory from syncing in `.ddev/mutagen/mutagen.yml`.
 
-    If you have a non-standard location for user-generated files, like `private/fileadmin` with the deprecated `typo3-secure-web` approach, you should override the project defaults by setting `upload_dir` in `.ddev/config.yaml` and pointing it at the correct directory. This will allow Mutagen to sync correctly.
+    If you have a non-standard location for user-generated files, like `private/fileadmin` with the deprecated `typo3-secure-web` approach, you should override the project defaults by setting `upload_dirs` in `.ddev/config.yaml` and pointing it at the correct directory. This will allow Mutagen to sync correctly.
 
-    If you change the `upload_dir`, run `ddev mutagen reset` to let Mutagen know about the changed behavior.
+    If you change the `upload_dirs`, run `ddev mutagen reset` to let Mutagen know about the changed behavior.
 
     ### Mutagen Integration Caveats
 

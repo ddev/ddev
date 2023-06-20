@@ -11,8 +11,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var sourcePath string
-var extPath string
+var (
+	target     string
+	sourcePath string
+	extPath    string
+)
 
 // ImportFileCmd represents the `ddev import-db` command.
 var ImportFileCmd = &cobra.Command{
@@ -30,8 +33,8 @@ provided if it is not located at the top-level of the archive. If the
 destination directory exists, it will be replaced with the assets being
 imported.
 
-The destination directory can be configured in your project's config.yaml
-under the upload_dir key. If no custom upload directory is defined, the app
+The destination directories can be configured in your project's config.yaml
+under the upload_dirs key. If no custom upload directory is defined, the app
 type's default upload directory will be used.`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		dockerutil.EnsureDdevNetwork()
@@ -65,7 +68,7 @@ type's default upload directory will be used.`,
 			promptForExtPath(&extPath)
 		}
 
-		if err = app.ImportFiles(importPath, extPath); err != nil {
+		if err = app.ImportFiles(target, importPath, extPath); err != nil {
 			util.Failed("Failed to import files for %s: %v", app.GetName(), err)
 		}
 
@@ -108,7 +111,8 @@ func promptForExtPath(val *string) {
 }
 
 func init() {
-	ImportFileCmd.Flags().StringVarP(&sourcePath, "src", "", "", "Provide the path to the source directory or tar/tar.gz/tgz/zip archive of files to import")
-	ImportFileCmd.Flags().StringVarP(&extPath, "extract-path", "", "", "If provided asset is an archive, optionally provide the path to extract within the archive.")
+	ImportFileCmd.Flags().StringVarP(&target, "target", "t", "", "Target upload dir, defaults to the first upload dir")
+	ImportFileCmd.Flags().StringVar(&sourcePath, "src", "", "Provide the path to the source directory or tar/tar.gz/tgz/zip archive of files to import")
+	ImportFileCmd.Flags().StringVar(&extPath, "extract-path", "", "If provided asset is an archive, optionally provide the path to extract within the archive")
 	RootCmd.AddCommand(ImportFileCmd)
 }

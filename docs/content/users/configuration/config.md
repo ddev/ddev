@@ -452,9 +452,9 @@ The DDEV-specific project type.
 
 The `php` and `python` types don’t attempt [CMS configuration](../../users/quickstart.md) or settings file management and can work with any project.
 
-## `upload_dir`
+## `upload_dirs`
 
-Path from the project’s docroot to the user-generated files directory targeted by `ddev import-files`.
+Paths from the project’s docroot to the user-generated files directory targeted by `ddev import-files`.
 
 | Type | Default | Usage
 | -- | -- | --

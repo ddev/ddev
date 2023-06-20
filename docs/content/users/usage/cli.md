@@ -56,7 +56,7 @@ ddev export-db >/tmp/db.sql.gz
 
 ## `ddev import-files`
 
-To import static file assets for a project, such as uploaded images and documents, use the command [`ddev import-files`](../usage/commands.md#import-files). This command will prompt you to specify the location of your import asset, then import the assets into the project’s upload directory. To define a custom upload directory, set the [`upload_dir`](../configuration/config.md#upload_dir) config option. If no custom upload directory is defined, the default will be used:
+To import static file assets for a project, such as uploaded images and documents, use the command [`ddev import-files`](../usage/commands.md#import-files). This command will prompt you to specify the location of your import asset, then import the assets into the project’s upload directory. To define a custom upload directory, set the [`upload_dirs`](../configuration/config.md#upload_dirs) config option. If no custom upload directory is defined, the default will be used:
 
 * For Drupal projects, this is the `sites/default/files` directory.
 * For WordPress projects, this is the `wp-content/uploads` directory.

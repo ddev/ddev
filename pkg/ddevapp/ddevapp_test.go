@@ -255,7 +255,7 @@ var (
 			Type:                          nodeps.AppTypeCraftCms,
 			Docroot:                       "web",
 			Safe200URIWithExpectation:     testcommon.URIWithExpect{URI: "/test.html", Expect: "Thanks for testing Craft CMS"},
-			UploadDir:                     "files",
+			UploadDirs:                    ddevapp.UploadDirs{"files"},
 			DynamicURI:                    testcommon.URIWithExpect{URI: "/", Expect: "Thanks for installing Craft CMS"},
 			FilesImageURI:                 "/files/happy-brad.jpg",
 		},
@@ -2025,7 +2025,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		// TestPkgPHP uses mostly stuff from Drupal6, but we'll set the type to php
 		if site.Name == "TestPkgPHP" {
 			app.Type = nodeps.AppTypePHP
-			app.UploadDir = "files"
+			app.UploadDirs = ddevapp.UploadDirs{"files"}
 			err = os.MkdirAll(app.GetHostUploadDirFullPath(), 0755)
 			assert.NoError(err)
 		}
@@ -2034,7 +2034,7 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		if site.FilesTarballURL != "" {
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
 			require.NoError(t, err)
-			err = app.ImportFiles(tarballPath, "")
+			err = app.ImportFiles("", tarballPath, "")
 			assert.NoError(err)
 		}
 
@@ -2117,9 +2117,9 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		// Make sure we can do a simple hit against the host-mount of web container.
 		_, _ = testcommon.EnsureLocalHTTPContent(t, app.GetWebContainerDirectHTTPURL()+site.Safe200URIWithExpectation.URI, site.Safe200URIWithExpectation.Expect)
 
-		// Project type 'php' should fail ImportFiles if no upload_dir is provided
+		// Project type 'php' should fail ImportFiles if no upload_dirs is provided
 		if app.Type == nodeps.AppTypePHP {
-			app.UploadDir = ""
+			app.UploadDirs = ddevapp.UploadDirs{}
 			err = app.WriteConfig()
 			assert.NoError(err)
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
@@ -2127,9 +2127,9 @@ func TestDdevFullSiteSetup(t *testing.T) {
 				assert.NoError(err, "GetCachedArchive failed on project %s", site.Name)
 				continue
 			}
-			err = app.ImportFiles(tarballPath, "")
+			err = app.ImportFiles("", tarballPath, "")
 			assert.Error(err)
-			assert.Contains(err.Error(), "No upload_dir is set")
+			assert.Contains(err.Error(), fmt.Sprintf("upload_dirs is not set for this project (%s)", app.Type))
 		}
 		// We don't want all the projects running at once.
 		err = app.Stop(true, false)
@@ -2307,7 +2307,7 @@ func TestDdevImportFilesDir(t *testing.T) {
 		if app.GetUploadDir() == "" {
 			continue
 		}
-		err = app.ImportFiles(importDir, "")
+		err = app.ImportFiles("", importDir, "")
 		if err != nil {
 			assert.NoError(err, "failed importing files directory %s for site %s: %v", importDir, site.Name, err)
 			continue
@@ -2363,7 +2363,7 @@ func TestDdevImportFiles(t *testing.T) {
 		if site.FilesTarballURL != "" && app.GetUploadDir() != "" {
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
 			assert.NoError(err)
-			err = app.ImportFiles(tarballPath, "")
+			err = app.ImportFiles("", tarballPath, "")
 			if err != nil {
 				assert.NoError(err, "failed importing files tarball %s for site %s: %v", tarballPath, site.Name, err)
 				continue
@@ -2373,7 +2373,7 @@ func TestDdevImportFiles(t *testing.T) {
 		if site.FilesZipballURL != "" {
 			_, zipballPath, err := testcommon.GetCachedArchive(site.Name, "local-zipballs-files", "", site.FilesZipballURL)
 			assert.NoError(err)
-			err = app.ImportFiles(zipballPath, "")
+			err = app.ImportFiles("", zipballPath, "")
 			if err != nil {
 				assert.NoError(err)
 				continue
@@ -2386,7 +2386,7 @@ func TestDdevImportFiles(t *testing.T) {
 				assert.NoError(err)
 				continue
 			}
-			err = app.ImportFiles(siteTarPath, site.FullSiteArchiveExtPath)
+			err = app.ImportFiles("", siteTarPath, site.FullSiteArchiveExtPath)
 			if err != nil {
 				assert.NoError(err)
 				continue
@@ -2398,7 +2398,7 @@ func TestDdevImportFiles(t *testing.T) {
 		for _, ext := range extensions {
 			tarballPath := filepath.Join(origDir, "testdata", t.Name(), "files."+ext)
 			_ = os.RemoveAll(filepath.Join(app.GetHostUploadDirFullPath(), "files."+ext+".txt"))
-			err = app.ImportFiles(tarballPath, "")
+			err = app.ImportFiles("", tarballPath, "")
 			if err != nil {
 				assert.NoError(err)
 				continue
@@ -2432,15 +2432,15 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 		assert.NoError(err)
 
 		// Set custom upload dir
-		app.UploadDir = "my/upload/dir"
-		absUploadDir := filepath.Join(app.AppRoot, app.Docroot, app.UploadDir)
+		app.UploadDirs = ddevapp.UploadDirs{"my/upload/dir"}
+		absUploadDir := filepath.Join(app.AppRoot, app.Docroot, app.GetUploadDir())
 		err = os.MkdirAll(absUploadDir, 0755)
 		assert.NoError(err)
 
 		if site.FilesTarballURL != "" {
 			_, tarballPath, err := testcommon.GetCachedArchive(site.Name, "local-tarballs-files", "", site.FilesTarballURL)
 			require.NoError(t, err)
-			err = app.ImportFiles(tarballPath, "")
+			err = app.ImportFiles("", tarballPath, "")
 			assert.NoError(err)
 
 			// Ensure upload dir isn't empty
@@ -2452,7 +2452,7 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 		if site.FilesZipballURL != "" {
 			_, zipballPath, err := testcommon.GetCachedArchive(site.Name, "local-zipballs-files", "", site.FilesZipballURL)
 			require.NoError(t, err)
-			err = app.ImportFiles(zipballPath, "")
+			err = app.ImportFiles("", zipballPath, "")
 			assert.NoError(err)
 
 			// Ensure upload dir isn't empty
@@ -2464,7 +2464,7 @@ func TestDdevImportFilesCustomUploadDir(t *testing.T) {
 		if site.FullSiteTarballURL != "" && site.FullSiteArchiveExtPath != "" {
 			_, siteTarPath, err := testcommon.GetCachedArchive(site.Name, "local-site-tar", "", site.FullSiteTarballURL)
 			require.NoError(t, err)
-			err = app.ImportFiles(siteTarPath, site.FullSiteArchiveExtPath)
+			err = app.ImportFiles("", siteTarPath, site.FullSiteArchiveExtPath)
 			assert.NoError(err)
 
 			// Ensure upload dir isn't empty

@@ -2,13 +2,13 @@ package ddevapp
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/pkg/errors"
-	"os"
-	"path/filepath"
 )
 
 // isCraftCmsApp returns true if the app is of type craftcms
@@ -17,11 +17,8 @@ func isCraftCmsApp(app *DdevApp) bool {
 }
 
 // craftCmsImportFilesAction defines the workflow for importing project files.
-func craftCmsImportFilesAction(app *DdevApp, importPath, extPath string) error {
-	if app.UploadDir == "" {
-		return errors.Errorf("No upload_dir is set for this (craftcms) project")
-	}
-	destPath := app.GetHostUploadDirFullPath()
+func craftCmsImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string) error {
+	destPath := app.calculateHostUploadDirFullPath(uploadDir)
 
 	// parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {

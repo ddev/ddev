@@ -133,26 +133,26 @@ services:
         target: /tmp/project_mutagen
         volume:
           nocopy: true
+      {{- end }}
 
-      {{ end }}
-      {{ if .NoBindMounts }}
-      - "ddev-config:/mnt/ddev_config"
-      {{ else }}
-      - ".:/mnt/ddev_config:ro"
-      - "./xhprof:/usr/local/bin/xhprof:ro"
-        {{ if .MutagenEnabled }}
-          {{ if .ContainerUploadDir }}
-      - {{ .HostUploadDir }}:{{ .ContainerUploadDir }}:rw
-          {{ end }} {{/* end if .ContainerUploadDir */}}
-          {{ if .GitDirMount }}
+      {{- if .NoBindMounts }}
+      - ddev-config:/mnt/ddev_config
+      {{- else }}
+      - .:/mnt/ddev_config:ro
+      - ./xhprof:/usr/local/bin/xhprof:ro
+        {{- if .MutagenEnabled }}
+          {{- range $uploadDirMap := .UploadDirsMap}}
+      - {{ $uploadDirMap }}:rw
+          {{- end}} {{- /* end range .UploadDirsMap */}}
+          {{- if .GitDirMount }}
       - ../.git:/var/www/html/.git:rw
-          {{ end }} {{/* end if .GitDirMount */}}
-        {{ end }} {{/* end if .MutagenEnabled */}}
-      {{ end }} {{/* end else of if .NoBindMounts */}}
-      - "ddev-global-cache:/mnt/ddev-global-cache"
-      {{ if not .OmitSSHAgent }}
-      - "ddev-ssh-agent_socket_dir:/home/.ssh-agent"
-      {{ end }}
+          {{- end }} {{- /* end if .GitDirMount */}}
+        {{- end }} {{- /* end if .MutagenEnabled */}}
+      {{- end }} {{- /* end else of if .NoBindMounts */}}
+      - ddev-global-cache:/mnt/ddev-global-cache
+      {{- if not .OmitSSHAgent }}
+      - ddev-ssh-agent_socket_dir:/home/.ssh-agent
+      {{- end }}
 
     restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
     user: '$DDEV_UID:$DDEV_GID'
@@ -182,6 +182,7 @@ services:
     - DDEV_SITENAME
     - DDEV_TLD
     - DDEV_FILES_DIR
+    - DDEV_FILES_DIRS
     - DDEV_WEB_ENTRYPOINT=/mnt/ddev_config/web-entrypoint.d
     - DDEV_WEBSERVER_TYPE
     - DDEV_XDEBUG_ENABLED

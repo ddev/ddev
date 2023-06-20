@@ -2,15 +2,15 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"os"
 	"path"
 	"path/filepath"
 	"text/template"
 
 	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 )
@@ -128,13 +128,9 @@ func writeBackdropSettingsDdevPHP(settings *BackdropSettings, filePath string, _
 	return err
 }
 
-// getBackdropUploadDir will return a custom upload dir if defined, returning a default path if not.
-func getBackdropUploadDir(app *DdevApp) string {
-	if app.UploadDir == "" {
-		return "files"
-	}
-
-	return app.UploadDir
+// getBackdropUploadDirs will return the default paths.
+func getBackdropUploadDirs(_ *DdevApp) UploadDirs {
+	return UploadDirs{"files"}
 }
 
 // getBackdropHooks for appending as byte array.
@@ -170,8 +166,8 @@ func backdropPostImportDBAction(_ *DdevApp) error {
 
 // backdropImportFilesAction defines the Backdrop workflow for importing project files.
 // The Backdrop workflow is currently identical to the Drupal import-files workflow.
-func backdropImportFilesAction(app *DdevApp, importPath, extPath string) error {
-	destPath := app.GetHostUploadDirFullPath()
+func backdropImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string) error {
+	destPath := app.calculateHostUploadDirFullPath(uploadDir)
 
 	// parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {

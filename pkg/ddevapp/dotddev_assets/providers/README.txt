@@ -23,7 +23,7 @@ Each provider recipe is a file named `<provider>.yaml` and consists of several m
 * `db_pull_command`: A script that determines how ddev should pull a database. It's job is to create a gzipped database dump in /var/www/html/.ddev/.downloads/db.sql.gz.
 * `files_pull_command`: A script that determines how ddev can get user-generated files from upstream. Its job is to copy the files from upstream to  /var/www/html/.ddev/.downloads/files.
 * `db_push_command`: A script that determines how ddev should push a database. It's job is to take a  gzipped database dump from /var/www/html/.ddev/.downloads/db.sql.gz and load it on the hosting provider.
-* `files_pull_command`: A script that determines how ddev push user-generated files to upstream. Its job is to copy the files from the project's user-files directory ($DDEV_FILES_DIR) to the correct place on the upstream provider.
+* `files_pull_command`: A script that determines how ddev push user-generated files to upstream. Its job is to copy the files from the project's user-files directories ($DDEV_FILES_DIRS) to the correct places on the upstream provider.
 
 The environment variables provided to custom commands (see https://ddev.readthedocs.io/en/stable/users/extend/custom-commands/#environment-variables-provided) are also available for use in these recipes.
 

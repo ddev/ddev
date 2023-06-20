@@ -103,7 +103,8 @@ type DdevApp struct {
 	SiteDdevSettingsFile      string                 `yaml:"-"`
 	ProviderInstance          *Provider              `yaml:"-"`
 	Hooks                     map[string][]YAMLTask  `yaml:"hooks,omitempty"`
-	UploadDir                 string                 `yaml:"upload_dir,omitempty"`
+	UploadDirDeprecated       string                 `yaml:"upload_dir,omitempty"`
+	UploadDirs                interface{}            `yaml:"upload_dirs,omitempty"`
 	WorkingDir                map[string]string      `yaml:"working_dir,omitempty"`
 	OmitContainers            []string               `yaml:"omit_containers,omitempty,flow"`
 	OmitContainersGlobal      []string               `yaml:"-"`
@@ -848,14 +849,18 @@ func (app *DdevApp) getCommonStatus(statuses map[string]string) (bool, string) {
 }
 
 // ImportFiles takes a source directory or archive and copies to the uploaded files directory of a given app.
-func (app *DdevApp) ImportFiles(importPath string, extPath string) error {
+func (app *DdevApp) ImportFiles(uploadDir, importPath, extPath string) error {
 	app.DockerEnv()
 
 	if err := app.ProcessHooks("pre-import-files"); err != nil {
 		return err
 	}
 
-	if err := app.ImportFilesAction(importPath, extPath); err != nil {
+	if uploadDir == "" {
+		uploadDir = app.GetUploadDir()
+	}
+
+	if err := app.dispatchImportFilesAction(uploadDir, importPath, extPath); err != nil {
 		return err
 	}
 
@@ -1151,7 +1156,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// Fix any obsolete things like old shell commands, etc.
 	app.FixObsolete()
 
-	app.CreateUploadDirIfNecessary()
+	app.createUploadDirsIfNecessary()
 
 	// WriteConfig .ddev-docker-compose-*.yaml
 	err = app.WriteDockerComposeYAML()
@@ -1261,7 +1266,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	}
 
 	if app.IsMutagenEnabled() {
-		CheckMutagenUploadDir(app)
+		app.checkMutagenUploadDirs()
 
 		mounted, err := IsMutagenVolumeMounted(app)
 		if err != nil {
@@ -1957,7 +1962,8 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_COMPOSER_ROOT":             app.GetComposerRoot(true, false),
 		"DDEV_DATABASE_FAMILY":           dbFamily,
 		"DDEV_DATABASE":                  app.Database.Type + ":" + app.Database.Version,
-		"DDEV_FILES_DIR":                 app.GetContainerUploadDirFullPath(),
+		"DDEV_FILES_DIR":                 app.getContainerUploadDir(),
+		"DDEV_FILES_DIRS":                strings.Join(app.getContainerUploadDirs(), ","),
 
 		"DDEV_HOST_DB_PORT":        dbPortStr,
 		"DDEV_HOST_MAILHOG_PORT":   app.HostMailhogPort,
@@ -2812,34 +2818,4 @@ func FormatSiteStatus(status string) string {
 		formattedStatus = util.ColorizeText(formattedStatus, "green")
 	}
 	return formattedStatus
-}
-
-// GetHostUploadDirFullPath returns the full path to the upload directory on the host or "" if there is none
-func (app *DdevApp) GetHostUploadDirFullPath() string {
-	if d := app.GetUploadDir(); d != "" {
-		return path.Join(app.AppRoot, app.Docroot, d)
-	}
-	return ""
-}
-
-// GetContainerUploadDirFullPath returns the full path to the upload directory in container or "" if there is none
-func (app *DdevApp) GetContainerUploadDirFullPath() string {
-	if d := app.GetUploadDir(); d != "" {
-		return path.Join("/var/www/html", app.Docroot, d)
-	}
-	return ""
-}
-
-// CreateUploadDirIfNecessary creates the upload dir if it doesn't exist, so we can properly
-// set up bind-mounts when doing mutagen.
-// There is no need to do it if mutagen is not enabled, and
-// we'll just respect a symlink if it exists, and the user has to figure out the right
-// thing to do wrt mutagen
-func (app *DdevApp) CreateUploadDirIfNecessary() {
-	if d := app.GetHostUploadDirFullPath(); d != "" && app.IsMutagenEnabled() && !fileutil.FileExists(d) {
-		err := os.MkdirAll(app.GetHostUploadDirFullPath(), 0755)
-		if err != nil {
-			util.Warning("Unable to create upload directory %s: %v", app.GetHostUploadDirFullPath(), err)
-		}
-	}
 }

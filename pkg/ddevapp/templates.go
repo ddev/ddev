@@ -79,10 +79,17 @@ const ConfigInstructions = `
 # would provide http and https URLs for "example.com" and "sub1.example.com"
 # Please take care with this because it can cause great confusion.
 
-# upload_dir: custom/upload/dir
-# would set the destination path for ddev import-files to <docroot>/custom/upload/dir
+# upload_dirs: "custom/upload/dir"
+#    
+# upload_dirs:
+#   - custom/upload/dir1
+#   - custom/upload/dir2
+#
+# upload_dirs: false
+#
+# would set the destination paths for ddev import-files to <docroot>/custom/upload/dir
 # When mutagen is enabled this path is bind-mounted so that all the files
-# in the upload_dir don't have to be synced into mutagen
+# in the upload_dirs don't have to be synced into mutagen.
 
 # working_dir:
 #   web: /var/www/html

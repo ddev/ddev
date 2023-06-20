@@ -211,7 +211,7 @@ func TestConfigSetValues(t *testing.T) {
 		fmt.Sprintf("--no-project-mount=%t", noProjectMount),
 		"--additional-hostnames", additionalHostnames,
 		"--additional-fqdns", additionalFQDNs,
-		"--upload-dir", uploadDir,
+		fmt.Sprintf("--upload-dirs=\"%s\"", uploadDir),
 		"--webserver-type", webserverType,
 		"--web-image", webImage,
 		"--web-working-dir", webWorkingDir,
@@ -259,7 +259,7 @@ func TestConfigSetValues(t *testing.T) {
 	assert.Equal(noProjectMount, app.NoProjectMount)
 	assert.Equal(additionalHostnamesSlice, app.AdditionalHostnames)
 	assert.Equal(additionalFQDNsSlice, app.AdditionalFQDNs)
-	assert.Equal(uploadDir, app.UploadDir)
+	assert.Equal(uploadDir, app.GetUploadDir())
 	assert.Equal(webserverType, app.WebserverType)
 	assert.Equal(webImage, app.WebImage)
 	assert.Equal(webWorkingDir, app.WorkingDir["web"])

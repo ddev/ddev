@@ -92,7 +92,8 @@ A number of environment variables are provided to these command scripts. These a
 Useful variables for container scripts are:
 
 * `DDEV_DOCROOT`: Relative path from approot to docroot
-* `DDEV_FILES_DIR`: Directory of user-uploaded files
+* `DDEV_FILES_DIR`: *Deprecated*, first directory of user-uploaded files
+* `DDEV_FILES_DIRS`: Comma-separated list of directories of user-uploaded files
 * `DDEV_HOSTNAME`: Comma-separated list of FQDN hostnames
 * `DDEV_MUTAGEN_ENABLED`: `true` if Mutagen is enabled
 * `DDEV_PHP_VERSION`: Current PHP version
