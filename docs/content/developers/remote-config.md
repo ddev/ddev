@@ -1,4 +1,4 @@
-# Remote config
+# Remote Config
 
 DDEV supports to download a remote config from the `ddev/remote-config` Github
 repository. At the moment the remote config contains messages which will be
