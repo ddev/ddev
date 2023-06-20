@@ -69,8 +69,7 @@ Messages will be shown as configured in the `remote-config` repository and the u
 
 ### Ticker
 
-One of the defined messages is shown to the user every `interval` as long as
-not `disabled`, the messages are rotating.
+Messages rotate, with one shown to the user every `interval` as long as it’s not `disabled`.
 
 The user can disable the ticker or change the interval in the global config.
 
