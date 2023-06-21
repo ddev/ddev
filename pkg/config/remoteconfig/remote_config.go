@@ -34,7 +34,7 @@ func New(config *Config, stateManager statetypes.State, isInternetActive func() 
 		config.getRemoteSourceFilepath(&cfg.remoteConfig),
 		storage.Options{Ref: config.getRemoteSourceRef(&cfg.remoteConfig)},
 	)
-	go cfg.updateFromGithub()
+	cfg.updateFromGithub()
 
 	return cfg
 }
