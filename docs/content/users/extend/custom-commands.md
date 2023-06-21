@@ -174,7 +174,7 @@ The following fields can be used for a flag definition:
 * `Type`: possible values are `bool`, `string`, `int`, `uint` (defaults to `bool`)
 * `DefValue`: default value for usage message
 * `NoOptDefVal`: default value, if the flag is on the command line without any options
-* `Annotations`: used by cobra.Command Bash autocomplete code (see <https://github.com/spf13/cobra/blob/master/bash_completions.md>)
+* `Annotations`: used by cobra.Command Bash autocomplete code (see <https://github.com/spf13/cobra/blob/main/site/content/completions/bash.md>)
 
 ### “ProjectTypes” Annotation
 
