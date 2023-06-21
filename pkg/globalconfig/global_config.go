@@ -432,8 +432,7 @@ func GetGlobalDdevDir() string {
 			logrus.Fatalf("Failed to create required directory %s, err: %v", ddevDir, err)
 		}
 	}
-	// config.yaml is not allowed in ~/.ddev, can only result in disaster
-	globalConfigYaml := filepath.Join(ddevDir, "config.yaml")
+	globalConfigYaml := filepath.Join(ddevDir, "global_config.yaml")
 	if _, err := os.Stat(globalConfigYaml); err == nil {
 		_ = os.Remove(filepath.Join(globalConfigYaml))
 	}
