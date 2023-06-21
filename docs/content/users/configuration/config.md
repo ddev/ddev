@@ -199,7 +199,23 @@ Whether to allow [instrumentation reporting](../usage/diagnostics.md).
 | -- | -- | --
 | :octicons-globe-16: global | `true` | Can be `true` or `false`.
 
-When `true`, anonymous usage information is collected via [Segment](https://segment.com).
+When `true`, anonymous usage information is collected via [Amplitude](https://amplitude.com/).
+
+## `instrumentation_queue_size`
+
+Maximum number of locally collected events for [instrumentation reporting](../usage/diagnostics.md).
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-globe-16: global | `100` | Can be any integer.
+
+## `instrumentation_reporting_interval`
+
+Reporting interval in hours for [instrumentation reporting](../usage/diagnostics.md).
+
+| Type | Default | Usage
+| -- | -- | --
+| :octicons-globe-16: global | `24` | Can be any integer.
 
 ## `internet_detection_timeout_ms`
 

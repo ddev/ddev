@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       SegmentKey: ${{ secrets.SEGMENTKEY }}
-
+      AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -45,14 +45,16 @@ jobs:
       - name: Build DDEV executables
         run: make linux_amd64 linux_arm64 darwin_amd64 darwin_arm64 completions mkcert
 
-      - name: "Verify that SegmentKey is working (Linux amd64)"
+      - name: "Verify that instrumentation is working (Linux amd64)"
         run: |
           export PATH=".gotmp/bin/linux_amd64:$PATH"
           echo "DDEV_NO_INSTRUMENTATION=${DDEV_NO_INSTRUMENTATION}"
           if [ -z "${SegmentKey}" ]; then echo "SegmentKey is not set"; exit 1; fi
+          if [ -z "${AmplitudeAPIKey}" ]; then echo "AmplitudeAPIKey is not set"; exit 1; fi
           ddev config global --instrumentation-opt-in=true
           ddev config global | grep instrumentation-opt-in=true
           ddev config global | grep -v "SegmentKey is not available."
+          ddev config global | grep -v "AmplitudeAPIKey is not available."
           ddev config global --instrumentation-opt-in=false
 
 
@@ -74,6 +76,7 @@ jobs:
     runs-on: [ self-hosted, windows-signer ]
     env:
       SegmentKey: ${{ secrets.SEGMENTKEY }}
+      AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -89,14 +92,16 @@ jobs:
         if: startsWith( github.ref, 'refs/tags/v1')
         run: make chocolatey
 
-      - name: "Verify that SegmentKey is working (Windows)"
+      - name: "Verify that intrumentation is working (Windows)"
         run: |
           export PATH=".gotmp/bin/windows_amd64:$PATH"
           echo "DDEV_NO_INSTRUMENTATION=${DDEV_NO_INSTRUMENTATION}"
           if [ -z "${SegmentKey}" ]; then echo "SegmentKey is not set"; exit 1; fi
+          if [ -z "${AmplitudeAPIKey}" ]; then echo "AmplitudeAPIKey is not set"; exit 1; fi
           ddev config global --instrumentation-opt-in=true
           ddev config global | grep instrumentation-opt-in=true
           ddev config global | grep -v "SegmentKey is not available."
+          ddev config global | grep -v "AmplitudeAPIKey is not available."
           ddev config global --instrumentation-opt-in=false
 
       - name: Cache signed binaries

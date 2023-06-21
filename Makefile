@@ -30,7 +30,7 @@ PKG := github.com/ddev/ddev
 SRC_DIRS := cmd pkg
 
 # Version variables to replace in build
-VERSION_VARIABLES ?= DdevVersion SegmentKey
+VERSION_VARIABLES ?= DdevVersion SegmentKey AmplitudeAPIKey
 
 # These variables will be used as the default unless overridden by the make
 DdevVersion ?= $(VERSION)

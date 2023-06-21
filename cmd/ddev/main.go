@@ -4,11 +4,20 @@ import (
 	"os"
 
 	"github.com/ddev/ddev/cmd/ddev/cmd"
+	"github.com/ddev/ddev/pkg/amplitude"
 	"github.com/ddev/ddev/pkg/util"
 )
 
 func main() {
 	defer util.TimeTrack()()
+
+	// Initialization is currently done before via init() func somewhere while
+	// creating the ddevapp. This should be cleaned up.
+	amplitude.InitAmplitude()
+	defer func() {
+		amplitude.Flush()
+		amplitude.CheckSetUp()
+	}()
 
 	// Prevent running as root for most cases
 	// We really don't want ~/.ddev to have root ownership, breaks things.

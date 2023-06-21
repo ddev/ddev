@@ -135,6 +135,73 @@ To manually push using GitHub Actions,
 * Click “Run workflow” in the blue band near the top.
 * Choose the branch, usually `master`. Include a tag for the pushed image and GitHub will do all the work.
 
+## Instrumentation
+
+The instrumentation implementation is generated using the [Ampli Codegen](https://www.docs.developers.amplitude.com/data/sdks/go/ampli/).
+
+To synchronize the implementation with the latest changes at Amplitude, the CLI
+tool has to be installed locally:
+
+```bash
+npm install -g @amplitude/ampli
+```
+
+Make changes to the event definition using the GUI at <https://data.amplitude.com/ddev/DDEV>:
+
+* create a new branch
+* create or change events and properties
+* save changes to the new branch
+* update the implementation with `ampli checkout <branch name>`
+* make changes to the code
+
+Once finished, save the changes to publish a new version of the definitions.
+
+Afterwards the changes can be imported running the following command in the
+project root:
+
+```bash
+ampli pull
+```
+
+Once the changes are ready to be merged, merge the changes made in the new
+branch to the main branch in the Amplitude backend and switch back to the
+main branch:
+
+```bash
+ampli checkout main
+```
+
+Make sure the API keys are not included to the sources; they are linked during
+compilation using a GitHub secret.
+
+### Environments
+
+There are two environments defined, `DDEV - Production` and `DDEV - Development`.
+Master builds will deliver the data to production, PR builds to development.
+
+When working on Amplitude, please always make sure the correct environment is
+selected or you won't see any data. Selection is possible on most pages.
+
+### User and event data
+
+The first step is always to identify the device, this includes data like OS,
+architecture, DDEV version, Docker, etc., details are visible in the
+*User Properties*. The devices are called *Users* in the Amplitude backend. So
+every user represents an unique device on which DDEV is installed.
+
+The second step is to collect data about the command which was called by the
+user and is delivered by a dedicated `Command` event.
+
+The `Project` event finally collects data about the loaded project(s) which
+includes important configuration details like PHP version, database, etc.
+
+### Debugging
+
+Information about data debugging can be found at <https://www.docs.developers.amplitude.com/data/debugger/>.
+*Ingestion debugger* or via *User lookup* are the most useful options for DDEV.
+
+Don't forget to select the matching environment while debugging.
+
 ## Building
 
 * You'll want both your fork/branch and the upstream as remotes in Git, so that tags can be determined. For example, the upstream Git remote can be `https://github.com/ddev/ddev` and your fork's remote can be `git@github.com:<yourgithubuser>/ddev`. Without the upstream, Git may not know about tags that it needs for tests to work.

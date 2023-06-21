@@ -22,13 +22,15 @@
 <!-- markdown-link-check-disable-next-line -->
 The following “Repository secret” environment variables must be added to <https://github.com/ddev/ddev/settings/secrets/actions>:
 
+* `AMPLITUDE_API_KEY`: Key that enables Amplitude reporting. Environment variable for Make is `AmplitudeAPIKey`.
+* `AMPLITUDE_API_KEY_DEV`: Key that enables Amplitude reporting for development versions e.g. a PR build. Environment variable for Make is `AmplitudeAPIKey`.
 * `AUR_SSH_PRIVATE_KEY`: Private ssh key for the `ddev-releaser` user. This must be processed into a single line, for example, `perl -p -e 's/\n/<SPLIT>/' ~/.ssh/id_rsa_ddev_releaser| pbcopy`.
 * `CHOCOLATEY_API_KEY`: API key for Chocolatey.
 * `DDEV_GITHUB_TOKEN`: GitHub token that gives access to create releases and push to the Homebrew repositories.
 * `DDEV_MACOS_APP_PASSWORD`: Password used for notarization, see [signing_tools](https://github.com/ddev/signing_tools).
 * `DDEV_MACOS_SIGNING_PASSWORD`: Password for the macOS signing key, see [signing_tools](https://github.com/ddev/signing_tools).
 * `DDEV_WINDOWS_SIGNING_PASSWORD`: Windows signing password.
-* `SegmentKey`: Key that enables Segment reporting.
+* `SEGMENTKEY`: Key that enables Segment reporting. Environment variable for Make is `SegmentKey`.
 * `FURY_ACCOUNT`: [Gemfury](https://gemfury.com) account that receives package pushes.
 * `FURY_TOKEN`: Push token assigned to the above Gemfury account.
 * `AUR_STABLE_GIT_URL`: The Git URL for AUR stable (normally `ddev-bin`), for example `ssh://aur@aur.archlinux.org/ddev-bin.git`.

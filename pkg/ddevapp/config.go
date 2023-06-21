@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"runtime"
 	"sort"
 	"strings"
 	"text/template"
@@ -12,18 +14,13 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/versionconstants"
-	copy2 "github.com/otiai10/copy"
-
-	"regexp"
-
-	"runtime"
-
-	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
+	copy2 "github.com/otiai10/copy"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
@@ -159,6 +156,9 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	if app.WebserverType == nodeps.WebserverDefault && app.Type == nodeps.AppTypeDjango4 {
 		app.WebserverType = nodeps.WebserverNginxGunicorn
 	}
+
+	// TODO enable once the bootstrap is clean and every project is loaded once only
+	//app.TrackProject()
 
 	return app, nil
 }

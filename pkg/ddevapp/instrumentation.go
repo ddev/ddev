@@ -1,9 +1,6 @@
 package ddevapp
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"os"
 	"runtime"
@@ -68,14 +65,6 @@ func SetInstrumentationBaseTags() {
 	}
 }
 
-// getProjectHash combines the machine ID and project name and then
-// hashes the result, so we can end up with a unique project id
-func getProjectHash(projectName string) string {
-	ph := hmac.New(sha256.New, []byte(GetInstrumentationUser()+projectName))
-	_, _ = ph.Write([]byte("phash"))
-	return hex.EncodeToString(ph.Sum(nil))
-}
-
 // SetInstrumentationAppTags creates app-specific tags for Segment
 func (app *DdevApp) SetInstrumentationAppTags() {
 	defer util.TimeTrack()()
@@ -90,7 +79,7 @@ func (app *DdevApp) SetInstrumentationAppTags() {
 		}
 		nodeps.InstrumentationTags[key] = fmt.Sprintf("%v", val)
 	}
-	nodeps.InstrumentationTags["ProjectID"] = getProjectHash(app.Name)
+	nodeps.InstrumentationTags["ProjectID"] = app.ProtectedID()
 }
 
 // SegmentUser does the enqueue of the Identify action, identifying the user

@@ -38,6 +38,17 @@ github.com/ProtonMail/go-crypto/openpgp/internal/ecc
 github.com/ProtonMail/go-crypto/openpgp/internal/encoding
 github.com/ProtonMail/go-crypto/openpgp/packet
 github.com/ProtonMail/go-crypto/openpgp/s2k
+# github.com/amplitude/analytics-go v1.0.0 => github.com/ddev/analytics-go v1.0.0-fix-failed-transmissions
+## explicit; go 1.17
+github.com/amplitude/analytics-go/amplitude
+github.com/amplitude/analytics-go/amplitude/constants
+github.com/amplitude/analytics-go/amplitude/internal
+github.com/amplitude/analytics-go/amplitude/loggers
+github.com/amplitude/analytics-go/amplitude/plugins/before
+github.com/amplitude/analytics-go/amplitude/plugins/destination
+github.com/amplitude/analytics-go/amplitude/plugins/destination/internal
+github.com/amplitude/analytics-go/amplitude/storages
+github.com/amplitude/analytics-go/amplitude/types
 # github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 ## explicit; go 1.13
 github.com/asaskevich/govalidator

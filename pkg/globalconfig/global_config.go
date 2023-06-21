@@ -3,10 +3,6 @@ package globalconfig
 import (
 	"context"
 	"fmt"
-	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/output"
-	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v3"
 	"net"
 	"os"
 	"os/exec"
@@ -15,6 +11,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v3"
 )
 
 // DdevGlobalConfigName is the name of the global config file.
@@ -36,35 +37,37 @@ type ProjectInfo struct {
 
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
-	OmitContainersGlobal         []string                `yaml:"omit_containers,flow"`
-	NFSMountEnabledGlobal        bool                    `yaml:"nfs_mount_enabled"`
-	MutagenEnabledGlobal         bool                    `yaml:"mutagen_enabled"`
-	InstrumentationOptIn         bool                    `yaml:"instrumentation_opt_in"`
-	RouterBindAllInterfaces      bool                    `yaml:"router_bind_all_interfaces"`
-	InternetDetectionTimeout     int64                   `yaml:"internet_detection_timeout_ms"`
-	DeveloperMode                bool                    `yaml:"developer_mode,omitempty"`
-	InstrumentationUser          string                  `yaml:"instrumentation_user,omitempty"`
-	LastStartedVersion           string                  `yaml:"last_started_version"`
-	UseHardenedImages            bool                    `yaml:"use_hardened_images"`
-	UseLetsEncrypt               bool                    `yaml:"use_letsencrypt"`
-	LetsEncryptEmail             string                  `yaml:"letsencrypt_email"`
-	AutoRestartContainers        bool                    `yaml:"auto_restart_containers"`
-	FailOnHookFailGlobal         bool                    `yaml:"fail_on_hook_fail"`
-	WebEnvironment               []string                `yaml:"web_environment"`
-	DisableHTTP2                 bool                    `yaml:"disable_http2"`
-	TableStyle                   string                  `yaml:"table_style"`
-	SimpleFormatting             bool                    `yaml:"simple_formatting"`
-	RequiredDockerComposeVersion string                  `yaml:"required_docker_compose_version,omitempty"`
-	UseDockerComposeFromPath     bool                    `yaml:"use_docker_compose_from_path,omitempty"`
-	MkcertCARoot                 string                  `yaml:"mkcert_caroot"`
-	ProjectTldGlobal             string                  `yaml:"project_tld"`
-	XdebugIDELocation            string                  `yaml:"xdebug_ide_location"`
-	NoBindMounts                 bool                    `yaml:"no_bind_mounts"`
-	UseTraefik                   bool                    `yaml:"use_traefik"`
-	WSL2NoWindowsHostsMgt        bool                    `yaml:"wsl2_no_windows_hosts_mgt"`
-	RouterHTTPPort               string                  `yaml:"router_http_port"`
-	RouterHTTPSPort              string                  `yaml:"router_https_port"`
-	ProjectList                  map[string]*ProjectInfo `yaml:"project_info"`
+	OmitContainersGlobal             []string                `yaml:"omit_containers,flow"`
+	NFSMountEnabledGlobal            bool                    `yaml:"nfs_mount_enabled"`
+	MutagenEnabledGlobal             bool                    `yaml:"mutagen_enabled"`
+	InstrumentationOptIn             bool                    `yaml:"instrumentation_opt_in"`
+	InstrumentationQueueSize         int                     `yaml:"instrumentation_queue_size,omitempty"`
+	InstrumentationReportingInterval time.Duration           `yaml:"instrumentation_reporting_interval,omitempty"`
+	RouterBindAllInterfaces          bool                    `yaml:"router_bind_all_interfaces"`
+	InternetDetectionTimeout         int64                   `yaml:"internet_detection_timeout_ms"`
+	DeveloperMode                    bool                    `yaml:"developer_mode,omitempty"`
+	InstrumentationUser              string                  `yaml:"instrumentation_user,omitempty"`
+	LastStartedVersion               string                  `yaml:"last_started_version"`
+	UseHardenedImages                bool                    `yaml:"use_hardened_images"`
+	UseLetsEncrypt                   bool                    `yaml:"use_letsencrypt"`
+	LetsEncryptEmail                 string                  `yaml:"letsencrypt_email"`
+	AutoRestartContainers            bool                    `yaml:"auto_restart_containers"`
+	FailOnHookFailGlobal             bool                    `yaml:"fail_on_hook_fail"`
+	WebEnvironment                   []string                `yaml:"web_environment"`
+	DisableHTTP2                     bool                    `yaml:"disable_http2"`
+	TableStyle                       string                  `yaml:"table_style"`
+	SimpleFormatting                 bool                    `yaml:"simple_formatting"`
+	RequiredDockerComposeVersion     string                  `yaml:"required_docker_compose_version,omitempty"`
+	UseDockerComposeFromPath         bool                    `yaml:"use_docker_compose_from_path,omitempty"`
+	MkcertCARoot                     string                  `yaml:"mkcert_caroot"`
+	ProjectTldGlobal                 string                  `yaml:"project_tld"`
+	XdebugIDELocation                string                  `yaml:"xdebug_ide_location"`
+	NoBindMounts                     bool                    `yaml:"no_bind_mounts"`
+	UseTraefik                       bool                    `yaml:"use_traefik"`
+	WSL2NoWindowsHostsMgt            bool                    `yaml:"wsl2_no_windows_hosts_mgt"`
+	RouterHTTPPort                   string                  `yaml:"router_http_port"`
+	RouterHTTPSPort                  string                  `yaml:"router_https_port"`
+	ProjectList                      map[string]*ProjectInfo `yaml:"project_info"`
 }
 
 // GetGlobalConfigPath gets the path to global config file
@@ -239,6 +242,14 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 # You can opt in or out of sending instrumentation to the ddev developers with
 # instrumentation_opt_in: true # or false
+#
+# Maximum number of collected events in the local queue. If reached, collected
+# data is sent.
+# instrumentation_queue_size: 100
+#
+# Reporting interval in hours. If the last report was longer ago, collected
+# data is sent.
+# instrumentation_reporting_interval: 24
 #
 # You can enable nfs mounting for all projects with
 # nfs_mount_enabled: true

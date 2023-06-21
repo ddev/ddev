@@ -7,12 +7,13 @@ defaults:
 on:
   pull_request:
     paths:
-      - "go.*"
-      - "pkg/**"
-      - "cmd/**"
-      - "Makefile"
-      - "vendor/**"
       - ".github/workflows/**"
+      - "cmd/**"
+      - "pkg/**"
+      - "third_party/**"
+      - "vendor/**"
+      - "go.*"
+      - "Makefile"
 
 env:
   BUILDKIT_PROGRESS: plain
@@ -28,7 +29,8 @@ jobs:
   build:
     name: Build DDEV executables
     runs-on: ubuntu-22.04
-
+    env:
+      AmplitudeAPIKey: ${{ secrets.AMPLITUDE_API_KEY_DEV }}
     steps:
       - uses: actions/checkout@v3
         with:
