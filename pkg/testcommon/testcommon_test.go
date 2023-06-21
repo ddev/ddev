@@ -77,9 +77,10 @@ func TestValidTestSite(t *testing.T) {
 
 	t.Cleanup(func() {
 		_ = os.Chdir(origDir)
-		_, _ = exec.RunCommand(DdevBin, []string{"delete", "-Oy", site.Name})
+		_, err := exec.RunCommand(DdevBin, []string{"delete", "-Oy", site.Name})
+		assert.NoError(err)
 		site.Cleanup()
-		_, err := os.Stat(site.Dir)
+		_, err = os.Stat(site.Dir)
 		assert.Error(err, "Could not stat temporary directory after cleanup")
 	})
 	err := site.Prepare()
