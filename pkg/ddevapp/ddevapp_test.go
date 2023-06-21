@@ -326,6 +326,7 @@ func init() {
 	if os.Getenv("DDEV_BINARY_FULLPATH") != "" {
 		DdevBin = os.Getenv("DDEV_BINARY_FULLPATH")
 	}
+	globalconfig.EnsureGlobalConfig()
 }
 
 func TestMain(m *testing.M) {

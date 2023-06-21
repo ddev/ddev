@@ -18,6 +18,10 @@ import (
 	"time"
 )
 
+func init() {
+	globalconfig.EnsureGlobalConfig()
+}
+
 // TestGetFreePort checks GetFreePort() to make sure it respects
 // ports reserved in DdevGlobalConfig.UsedHostPorts
 // and that the port can actually be bound.

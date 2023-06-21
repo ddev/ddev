@@ -26,10 +26,6 @@ var (
 	DdevGlobalConfig GlobalConfig
 )
 
-func init() {
-	DdevGlobalConfig.ProjectList = make(map[string]*ProjectInfo)
-}
-
 type ProjectInfo struct {
 	AppRoot       string   `yaml:"approot"`
 	UsedHostPorts []string `yaml:"used_host_ports,omitempty,flow"`
@@ -68,6 +64,34 @@ type GlobalConfig struct {
 	RouterHTTPPort                   string                  `yaml:"router_http_port"`
 	RouterHTTPSPort                  string                  `yaml:"router_https_port"`
 	ProjectList                      map[string]*ProjectInfo `yaml:"project_info"`
+}
+
+// New() returns a default GlobalConfig
+func New() GlobalConfig {
+
+	cfg := GlobalConfig{
+		RequiredDockerComposeVersion: RequiredDockerComposeVersionDefault,
+		InternetDetectionTimeout:     nodeps.InternetDetectionTimeoutDefault,
+		TableStyle:                   "default",
+		RouterHTTPPort:               "80",
+		RouterHTTPSPort:              "443",
+		LastStartedVersion:           "v0.0",
+		NoBindMounts:                 nodeps.NoBindMountsDefault,
+		UseTraefik:                   nodeps.UseTraefikDefault,
+		MkcertCARoot:                 readCAROOT(),
+		ProjectList:                  make(map[string]*ProjectInfo),
+	}
+
+	return cfg
+}
+
+// Make sure the global configuration has been initialized
+func EnsureGlobalConfig() {
+	DdevGlobalConfig = New()
+	err := ReadGlobalConfig()
+	if err != nil {
+		output.UserErr.Fatalf("unable to read global config: %v", err)
+	}
 }
 
 // GetGlobalConfigPath gets the path to global config file
@@ -174,46 +198,14 @@ func ReadGlobalConfig() error {
 	}
 
 	// ReadConfig config values from file.
-	DdevGlobalConfig = GlobalConfig{InternetDetectionTimeout: nodeps.InternetDetectionTimeoutDefault}
 	err = yaml.Unmarshal(source, &DdevGlobalConfig)
 	if err != nil {
 		return err
 	}
-	if DdevGlobalConfig.TableStyle == "" {
-		DdevGlobalConfig.TableStyle = "default"
-	}
-	if DdevGlobalConfig.RouterHTTPPort == "" {
-		DdevGlobalConfig.RouterHTTPPort = nodeps.DdevDefaultRouterHTTPPort
-	}
-	if DdevGlobalConfig.RouterHTTPSPort == "" {
-		DdevGlobalConfig.RouterHTTPSPort = nodeps.DdevDefaultRouterHTTPSPort
-	}
-	if DdevGlobalConfig.ProjectList == nil {
-		DdevGlobalConfig.ProjectList = map[string]*ProjectInfo{}
-	}
-	// Set/read the CAROOT if it's unset or different from $CAROOT (perhaps $CAROOT changed)
+
 	caRootEnv := os.Getenv("CAROOT")
 	if GetCAROOT() == "" || !fileExists(filepath.Join(DdevGlobalConfig.MkcertCARoot, "rootCA.pem")) || (caRootEnv != "" && caRootEnv != DdevGlobalConfig.MkcertCARoot) {
 		DdevGlobalConfig.MkcertCARoot = readCAROOT()
-	}
-	// This is added just so we can see it in global; not checked.
-	// Make sure that LastStartedVersion always has a valid value
-	if DdevGlobalConfig.LastStartedVersion == "" {
-		DdevGlobalConfig.LastStartedVersion = "v0.0"
-	}
-	// If they set the internetdetectiontimeout below default, just reset to default
-	// and ignore the setting.
-	if DdevGlobalConfig.InternetDetectionTimeout < nodeps.InternetDetectionTimeoutDefault {
-		DdevGlobalConfig.InternetDetectionTimeout = nodeps.InternetDetectionTimeoutDefault
-	}
-
-	// For testing only, override NoBindMounts no matter what it's set to
-	if nodeps.NoBindMountsDefault == true {
-		DdevGlobalConfig.NoBindMounts = true
-	}
-	// For testing only, override UseTraefikDefault no matter what it's set to
-	if nodeps.UseTraefikDefault == true {
-		DdevGlobalConfig.UseTraefik = true
 	}
 
 	err = ValidateGlobalConfig()
@@ -229,7 +221,13 @@ func WriteGlobalConfig(config GlobalConfig) error {
 	if err != nil {
 		return err
 	}
-	cfgbytes, err := yaml.Marshal(config)
+
+	cfgCopy := config
+	// Remove some items that are defaults
+	if cfgCopy.RequiredDockerComposeVersion == RequiredDockerComposeVersionDefault {
+		cfgCopy.RequiredDockerComposeVersion = ""
+	}
+	cfgbytes, err := yaml.Marshal(cfgCopy)
 	if err != nil {
 		return err
 	}
@@ -632,17 +630,13 @@ func IsInternetActive() bool {
 // DockerComposeVersion is filled with the version we find for docker-compose
 var DockerComposeVersion = ""
 
-// This is var instead of const so it can be changed in test, but should not otherwise be touched.
-// Otherwise we can't test if the version on the machine is equal to version required
-var RequiredDockerComposeVersion = "v2.18.1"
-
 // GetRequiredDockerComposeVersion returns the version of docker-compose we need
 // based on the compiled version, or overrides in globalconfig, like
 // required_docker_compose_version and use_docker_compose_from_path
 // In the case of UseDockerComposeFromPath there is no required version, so this
 // will return empty string.
 func GetRequiredDockerComposeVersion() string {
-	v := RequiredDockerComposeVersion
+	v := DdevGlobalConfig.RequiredDockerComposeVersion
 	switch {
 	case DdevGlobalConfig.UseDockerComposeFromPath:
 		v = ""

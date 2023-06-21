@@ -29,7 +29,7 @@ func TestDockerComposeDownload(t *testing.T) {
 	tmpHome := testcommon.CreateTmpDir(t.Name() + "tempHome")
 	// Unusual case where we need to alter the RequiredDockerComposeVersion
 	// just so we can make sure the one in PATH is different.
-	origRequiredComposeVersion := globalconfig.RequiredDockerComposeVersion
+	origRequiredComposeVersion := globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion
 
 	// Change the homedir temporarily
 	t.Setenv("HOME", tmpHome)
@@ -43,7 +43,7 @@ func TestDockerComposeDownload(t *testing.T) {
 
 		err = os.RemoveAll(tmpHome)
 		assert.NoError(err)
-		globalconfig.RequiredDockerComposeVersion = origRequiredComposeVersion
+		globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion = origRequiredComposeVersion
 		// Reset the cached DockerComposeVersion so it doesn't come into play again
 		globalconfig.DockerComposeVersion = ""
 		globalconfig.DdevGlobalConfig.UseDockerComposeFromPath = false
@@ -53,8 +53,8 @@ func TestDockerComposeDownload(t *testing.T) {
 	globalconfig.DockerComposeVersion = ""
 
 	downloaded, err := dockerutil.DownloadDockerComposeIfNeeded()
-	assert.NoError(err)
-	assert.True(downloaded)
+	require.NoError(t, err)
+	require.True(t, downloaded)
 	v, err := dockerutil.GetLiveDockerComposeVersion()
 	assert.NoError(err)
 	assert.Equal(globalconfig.GetRequiredDockerComposeVersion(), v)
@@ -64,7 +64,7 @@ func TestDockerComposeDownload(t *testing.T) {
 	assert.NoError(err)
 	assert.False(downloaded)
 
-	for _, v := range []string{"v2.5.1", "v2.8.0"} {
+	for _, v := range []string{"v2.18.0"} {
 		globalconfig.DockerComposeVersion = ""
 		globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion = v
 		downloaded, err = dockerutil.DownloadDockerComposeIfNeeded()
@@ -81,7 +81,7 @@ func TestDockerComposeDownload(t *testing.T) {
 	// Test using docker-compose from path.
 	// Make sure our Required/Expected DockerComposeVersion is not something we'd find on the machine
 	globalconfig.DockerComposeVersion = ""
-	globalconfig.RequiredDockerComposeVersion = "v2.5.1"
+	globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion = "v2.5.1"
 	globalconfig.DdevGlobalConfig.UseDockerComposeFromPath = true
 	activeVersion, err := dockerutil.GetLiveDockerComposeVersion()
 	assert.NoError(err)
