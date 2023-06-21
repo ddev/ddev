@@ -986,7 +986,7 @@ func (app *DdevApp) Start() error {
 	dockerutil.EnsureDdevNetwork()
 
 	if err = dockerutil.CheckDockerCompose(); err != nil {
-		util.Failed(`Your docker-compose version does not exist or is set to an invalid version. 
+		util.Failed(`Your docker-compose version does not exist or is set to an invalid version.
 Please use the built-in docker-compose.
 Fix with 'ddev config global --required-docker-compose-version="" --use-docker-compose-from-path=false': %v`, err)
 	}
@@ -1958,12 +1958,12 @@ func (app *DdevApp) DockerEnv() {
 		dbPortStr = app.HostDBPort
 	}
 
-	// DDEV_DATABASE_PROTOCOL can be use for connection URLs in the format of protocol//[hosts][/database][?properties]
+	// DDEV_DATABASE_FAMILY can be use for connection URLs in the format of protocol//[hosts][/database][?properties]
 	// Eg. mysql://db@db:3033/db
-	dbProtocol := "mysql"
+	dbFamily := "mysql"
 	if app.Database.Type == "postgres" {
 		// 'postgres' & 'postgresql' are both valid, but we'll go with the shorter one.
-		dbProtocol = "postgres"
+		dbFamily = "postgres"
 	}
 
 	envVars := map[string]string{
@@ -1979,7 +1979,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_WEBIMAGE":                  app.WebImage,
 		"DDEV_APPROOT":                   app.AppRoot,
 		"DDEV_COMPOSER_ROOT":             app.GetComposerRoot(true, false),
-		"DDEV_DATABASE_PROTOCOL":         dbProtocol,
+		"DDEV_DATABASE_FAMILY":         dbFamily,
 		"DDEV_DATABASE":                  app.Database.Type + ":" + app.Database.Version,
 		"DDEV_FILES_DIR":                 app.GetContainerUploadDirFullPath(),
 
