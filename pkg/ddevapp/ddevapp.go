@@ -1958,6 +1958,14 @@ func (app *DdevApp) DockerEnv() {
 		dbPortStr = app.HostDBPort
 	}
 
+	// DDEV_DATABASE_PROTOCOL can be use for connection URLs in the format of protocol//[hosts][/database][?properties]
+	// Eg. mysql://db@db:3033/db
+	dbProtocol = 'mysql'
+	if app.Database.Type == 'postgres' {
+		// 'postgres' & 'postgresql' are both valid, but we'll go with the shorter one.
+		dbProtocol = 'postgres'
+	}
+
 	envVars := map[string]string{
 		// The compose project name can no longer contain dots; must be lower-case
 		"COMPOSE_PROJECT_NAME":           strings.ToLower("ddev-" + strings.Replace(app.Name, `.`, "", -1)),
@@ -1971,6 +1979,7 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_WEBIMAGE":                  app.WebImage,
 		"DDEV_APPROOT":                   app.AppRoot,
 		"DDEV_COMPOSER_ROOT":             app.GetComposerRoot(true, false),
+		"DDEV_DATABASE_PROTOCOL"          dbProtocol
 		"DDEV_DATABASE":                  app.Database.Type + ":" + app.Database.Version,
 		"DDEV_FILES_DIR":                 app.GetContainerUploadDirFullPath(),
 
