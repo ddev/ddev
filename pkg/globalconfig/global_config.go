@@ -35,26 +35,6 @@ type ProjectInfo struct {
 	UsedHostPorts []string `yaml:"used_host_ports,omitempty,flow"`
 }
 
-// RemoteConfigRemote is the struct defining the source of the remote-config.
-type RemoteConfigRemote struct {
-	Owner    string `yaml:"owner,omitempty"`
-	Repo     string `yaml:"repo,omitempty"`
-	Ref      string `yaml:"ref,omitempty"`
-	Filepath string `yaml:"filepath,omitempty"`
-}
-
-// RemoteConfig is the struct defining the remote-config config.
-type RemoteConfig struct {
-	UpdateInterval int                `yaml:"update_interval,omitempty"`
-	Remote         RemoteConfigRemote `yaml:"remote,omitempty"`
-}
-
-// MessagesConfig is the struct defining the messages config.
-type MessagesConfig struct {
-	DisableTicker  bool `yaml:"disable_ticker,omitempty"`
-	TickerInterval int  `yaml:"ticker_interval,omitempty"`
-}
-
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
 	OmitContainersGlobal             []string                `yaml:"omit_containers,flow"`
