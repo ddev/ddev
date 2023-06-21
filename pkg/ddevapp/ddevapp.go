@@ -1960,7 +1960,7 @@ func (app *DdevApp) DockerEnv() {
 
 	// DDEV_DATABASE_PROTOCOL can be use for connection URLs in the format of protocol//[hosts][/database][?properties]
 	// Eg. mysql://db@db:3033/db
-	dbProtocol = "mysql"
+	dbProtocol := "mysql"
 	if app.Database.Type == "postgres" {
 		// 'postgres' & 'postgresql' are both valid, but we'll go with the shorter one.
 		dbProtocol = "postgres"
