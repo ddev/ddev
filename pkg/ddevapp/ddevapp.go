@@ -1958,7 +1958,7 @@ func (app *DdevApp) DockerEnv() {
 		dbPortStr = app.HostDBPort
 	}
 
-	// DDEV_DATABASE_FAMILY can be use for connection URLs in the format of protocol//[hosts][/database][?properties]
+	// DDEV_DATABASE_FAMILY can be use for connection URLs
 	// Eg. mysql://db@db:3033/db
 	dbFamily := "mysql"
 	if app.Database.Type == "postgres" {
