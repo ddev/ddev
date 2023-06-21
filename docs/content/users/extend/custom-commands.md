@@ -67,6 +67,7 @@ A number of environment variables are provided to these command scripts. These a
 
 * `DDEV_APPROOT`: File system location of the project on the host
 * `DDEV_DATABASE`: Database in use, in format `type:version` (example: `mariadb:10.5`)
+* `DDEV_DATABASE_PROTOCOL`: Database protocol, useful for database resource URLs (example: "mysql", "postgres")
 * `DDEV_DOCROOT`: Relative path from approot to docroot
 * `DDEV_HOSTNAME`: Comma-separated list of FQDN hostnames
 * `DDEV_HOST_DB_PORT`: Localhost port of the database server
