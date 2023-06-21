@@ -3963,6 +3963,12 @@ func TestEnvironmentVariables(t *testing.T) {
 	err = fileutil.CopyFile(customCmd, customCmdDest)
 	require.NoError(t, err)
 
+	dbProtocol := "mysql"
+	if app.Database.Type == "postgres" {
+		// 'postgres' & 'postgresql' are both valid, but we'll go with the shorter one.
+		dbProtocol = "postgres"
+	}
+
 	// This set of webContainerExpectations should be maintained to match the list in the docs
 	webContainerExpectations := map[string]string{
 		"DDEV_DOCROOT":           app.GetDocroot(),
@@ -3977,6 +3983,8 @@ func TestEnvironmentVariables(t *testing.T) {
 		"DDEV_TLD":               app.ProjectTLD,
 		"DDEV_VERSION":           versionconstants.DdevVersion,
 		"DDEV_WEBSERVER_TYPE":    app.WebserverType,
+		"DDEV_DATABASE_PROTOCOL": dbProtocol,
+		"DDEV_DATABASE":          app.Database.Type + ":" + app.Database.Version,
 	}
 
 	err = app.Start()
