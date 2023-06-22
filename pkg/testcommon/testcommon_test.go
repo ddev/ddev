@@ -17,6 +17,11 @@ import (
 )
 
 var DdevBin = "ddev"
+
+func init() {
+	globalconfig.EnsureGlobalConfig()
+}
+
 var TestSites = []TestSite{
 	{
 		SourceURL:                     "https://wordpress.org/wordpress-5.8.2.tar.gz",

@@ -83,9 +83,7 @@ type DdevApp struct {
 	DBImage               string                `yaml:"dbimage,omitempty"`
 	DBAImage              string                `yaml:"dbaimage,omitempty"`
 	RouterHTTPPort        string                `yaml:"router_http_port,omitempty"`
-	RouterHTTPPortGlobal  string                `yaml:"-"`
 	RouterHTTPSPort       string                `yaml:"router_https_port,omitempty"`
-	RouterHTTPSPortGlobal string                `yaml:"-"`
 	XdebugEnabled         bool                  `yaml:"xdebug_enabled"`
 	NoProjectMount        bool                  `yaml:"no_project_mount,omitempty"`
 	AdditionalHostnames   []string              `yaml:"additional_hostnames"`
@@ -450,13 +448,9 @@ func (app *DdevApp) GetWebserverType() string {
 }
 
 // GetRouterHTTPPort returns app's router http port
+// Start with global config and then override with project config
 func (app *DdevApp) GetRouterHTTPPort() string {
-	port := app.RouterHTTPPortGlobal
-	// TODO: This default setting should be done in creation of the
-	// globalconfig.DdevGlobalCOnfig
-	if port == "" {
-		port = nodeps.DdevDefaultRouterHTTPPort
-	}
+	port := globalconfig.DdevGlobalConfig.RouterHTTPPort
 	if app.RouterHTTPPort != "" {
 		port = app.RouterHTTPPort
 	}
@@ -464,13 +458,9 @@ func (app *DdevApp) GetRouterHTTPPort() string {
 }
 
 // GetRouterHTTPSPort returns app's router https port
+// Start with global config and then override with project config
 func (app *DdevApp) GetRouterHTTPSPort() string {
-	port := app.RouterHTTPSPortGlobal
-	// TODO: This default setting should be done in creation of the
-	// globalconfig.DdevGlobalCOnfig
-	if port == "" {
-		port = nodeps.DdevDefaultRouterHTTPSPort
-	}
+	port := globalconfig.DdevGlobalConfig.RouterHTTPSPort
 	if app.RouterHTTPSPort != "" {
 		port = app.RouterHTTPSPort
 	}

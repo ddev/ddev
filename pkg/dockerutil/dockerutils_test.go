@@ -27,12 +27,15 @@ import (
 
 var testContainerName = "TestDockerUtils"
 
+func init() {
+	globalconfig.EnsureGlobalConfig()
+	EnsureDdevNetwork()
+}
+
 func TestMain(m *testing.M) { os.Exit(testMain(m)) }
 
 func testMain(m *testing.M) int {
 	output.LogSetUp()
-
-	EnsureDdevNetwork()
 
 	_ = os.Setenv("DDEV_NONINTERACTIVE", "true")
 	_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", globalconfig.GetMutagenDataDirectory())
@@ -344,7 +347,7 @@ func TestCheckCompose(t *testing.T) {
 		require.NoError(t, err)
 		ddevVersion, err := exec.RunHostCommand(DdevBin, "version")
 		require.NoError(t, err)
-		assert.NoError(composeErr, "RequiredDockerComposeVersion=%s global config=%s ddevVersion=%s", globalconfig.RequiredDockerComposeVersion, out, ddevVersion)
+		assert.NoError(composeErr, "RequiredDockerComposeVersion=%s global config=%s ddevVersion=%s", globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion, out, ddevVersion)
 	}
 }
 

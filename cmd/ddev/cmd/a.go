@@ -3,7 +3,6 @@ package cmd
 import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/util"
 	"os"
 )
 
@@ -12,11 +11,7 @@ import (
 // uninitialized data
 
 func init() {
-	err := globalconfig.ReadGlobalConfig()
-	if err != nil {
-		util.Failed("unable to read global config: %v", err)
-	}
-	globalconfig.GetCAROOT()
+	globalconfig.EnsureGlobalConfig()
 	_ = os.Setenv("MUTAGEN_DATA_DIRECTORY", globalconfig.GetMutagenDataDirectory())
 	// GetDockerClient should be called early to get DOCKER_HOST set
 	_ = dockerutil.GetDockerClient()

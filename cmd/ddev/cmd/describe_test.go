@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/stretchr/testify/require"
 	"runtime"
 	"strings"
@@ -55,6 +56,12 @@ func TestDescribeBadArgs(t *testing.T) {
 func TestCmdDescribe(t *testing.T) {
 	assert := asrt.New(t)
 
+	out, err := exec.RunHostCommand(DdevBin, "config", "global", "--simple-formatting=false", "--table-style=default")
+	require.NoError(t, err, "ddev config global failed with output: '%s'", out)
+	t.Logf("ddev config global output: '%s'", out)
+	globalconfig.EnsureGlobalConfig()
+
+	require.NoError(t, err, "ddev config global failed with output: '%s'", out)
 	for _, v := range TestSites {
 		app, err := ddevapp.NewApp(v.Dir, false)
 		require.NoError(t, err)
