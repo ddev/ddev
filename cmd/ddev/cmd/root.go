@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/ddev/ddev/pkg/amplitude"
-	"github.com/ddev/ddev/pkg/config/remoteconfig"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -97,11 +96,6 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 			}
 		}
 		instrumentationApp.TrackProject()
-
-		defer func() {
-			remoteconfig.GetGlobal().ShowTicker()
-			remoteconfig.GetGlobal().ShowNotifications()
-		}()
 
 		// TODO remove once Amplitude has verified with an alpha release.
 		// Do not report these commands

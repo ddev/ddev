@@ -111,43 +111,45 @@ func (c *remoteConfig) ShowNotifications() {
 func (c *remoteConfig) ShowTicker() {
 	defer util.TimeTrack()()
 
-	if c.showTickerMessage() {
-		messageOffset := c.state.LastTickerMessage
-		messageCount := len(c.remoteConfig.Messages.Ticker.Messages)
+	if !c.showTickerMessage() {
+		return
+	}
 
-		for i := range c.remoteConfig.Messages.Ticker.Messages {
-			messageOffset++
-			if messageOffset > messageCount {
-				messageOffset = 1
+	messageOffset := c.state.LastTickerMessage
+	messageCount := len(c.remoteConfig.Messages.Ticker.Messages)
+
+	for i := range c.remoteConfig.Messages.Ticker.Messages {
+		messageOffset++
+		if messageOffset > messageCount {
+			messageOffset = 1
+		}
+
+		message := &c.remoteConfig.Messages.Ticker.Messages[i+messageOffset-1]
+
+		if c.checkConditions(message.Conditions) && c.checkVersions(message.Versions) {
+			t := table.NewWriter()
+			applyTableStyle(ticker, t)
+
+			var title string
+
+			if message.Title != "" {
+				title = message.Title
+			} else {
+				title = "Tip of the day"
 			}
 
-			message := &c.remoteConfig.Messages.Ticker.Messages[i+messageOffset-1]
+			t.AppendHeader(table.Row{title})
+			t.AppendRow(table.Row{message.Message})
 
-			if c.checkConditions(message.Conditions) && c.checkVersions(message.Versions) {
-				t := table.NewWriter()
-				applyTableStyle(ticker, t)
+			output.UserOut.Print("\n", t.Render(), "\n")
 
-				var title string
-
-				if message.Title != "" {
-					title = message.Title
-				} else {
-					title = "Tip of the day"
-				}
-
-				t.AppendHeader(table.Row{title})
-				t.AppendRow(table.Row{message.Message})
-
-				output.UserOut.Print("\n", t.Render(), "\n")
-
-				c.state.LastTickerMessage = messageOffset
-				c.state.LastTickerAt = time.Now()
-				if err := c.state.save(); err != nil {
-					util.Debug("Error while saving state: %s", err)
-				}
-
-				break
+			c.state.LastTickerMessage = messageOffset
+			c.state.LastTickerAt = time.Now()
+			if err := c.state.save(); err != nil {
+				util.Debug("Error while saving state: %s", err)
 			}
+
+			break
 		}
 	}
 }
@@ -155,7 +157,7 @@ func (c *remoteConfig) ShowTicker() {
 // isNotificationsDisabled returns true if notifications should not be shown to
 // the user which can be achieved by setting the related remote config.
 func (c *remoteConfig) isNotificationsDisabled() bool {
-	return c.remoteConfig.Messages.Notifications.Interval <= 0
+	return c.remoteConfig.Messages.Notifications.Interval < 0
 }
 
 // getNotificationsInterval returns the notifications interval. The processing
@@ -182,7 +184,7 @@ func (c *remoteConfig) showNotifications() bool {
 // can be achieved by setting the related global config or also via the remote
 // config.
 func (c *remoteConfig) isTickerDisabled() bool {
-	return c.tickerInterval <= 0 || c.remoteConfig.Messages.Ticker.Interval <= 0
+	return c.tickerInterval < 0 || c.remoteConfig.Messages.Ticker.Interval < 0
 }
 
 // getTickerInterval returns the ticker interval. The processing order is
