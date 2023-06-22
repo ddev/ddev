@@ -119,7 +119,7 @@ Whether to disable HTTP/2 listen in `ddev-router`.
 | -- | -- | --
 | :octicons-globe-16: global | `false` | Can be `true` or `false`.
 
-Only available with legacy `router: nginx-proxy`, not available with `router: traefik`, which is the default. When `true`, nginx will not listen for HTTP/2, but use HTTP/1.1 SSL. (Some browsers don’t work well with HTTP/2.)
+Only available with legacy `router: nginx-proxy`, not the default `router: traefik`. When `true`, the router will not listen for HTTP/2, but use HTTP/1.1 SSL. (Some browsers don’t work well with HTTP/2.)
 
 ## `disable_settings_management`
 
@@ -400,6 +400,16 @@ If set to `v2.8.0`, for example, it will download and use that version instead o
 !!!warning "Troubleshooting Only!"
     This should only be used in specific cases like troubleshooting. Best avoided otherwise.
 
+## `router`
+
+Whether to enable the default [traefik router](../extend/traefik-router.md#traefik-router) or the legacy "nginx-proxy" router.
+
+| Type | Default   | Usage
+| -- |-----------| --
+| :octicons-globe-16: global | `traefik` | Can `traefik` or `nginx-proxy` (legacy).
+
+May also be set via `ddev config global --router=traefik` or `ddev config global --router=nginx-proxy`.
+
 ## `router_bind_all_interfaces`
 
 Whether to bind `ddev-router`'s ports on all network interfaces.
@@ -520,16 +530,6 @@ Whether to enable Let’s Encrypt integration. (Works in conjunction with [`lets
 | :octicons-globe-16: global | `false` | Can `true` or `false`.
 
 May also be set via `ddev config global --use-letsencrypt` or `ddev config global --use-letsencrypt=false`. When `true`, `letsencrypt_email` must also be set and the system must be available on the internet. Used with the [casual hosting](../topics/hosting.md) feature.
-
-## `router`
-
-Whether to enable the (default) [traefik router](traefik-router.md#traefik-router) or the legacy "nginx-proxy" router.
-
-| Type | Default   | Usage
-| -- |-----------| --
-| :octicons-globe-16: global | `traefik` | Can `traefik` or `nginx-proxy` (legacy).
-
-May also be set via `ddev config global --router=traefik` or `ddev config global --router=nginx-proxy`.
 
 ## `web_environment`
 

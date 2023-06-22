@@ -1,11 +1,10 @@
-# Traefik Router
+# Router Customization and Debugging (Traefik)
 
-!!!note
 Traefik is the default router in DDEV v1.22+.
 
 DDEV’s router plays an important role in its [container architecture](../usage/architecture.md#container-architecture), receiving most HTTP and HTTPS traffic for requests like `*.ddev.site` and delivering them to the relevant project’s web container.
 
-As of DDEV v1.22.0+ the [Traefik router](https://traefik.io/traefik/) is the default router. You will be using it by default unless you configure the legacy `nginx-proxy` router with `ddev poweroff && ddev config global --router=nginx-proxy`.
+DDEV uses Traefik by default unless you configure the traditional router by running `ddev poweroff && ddev config global --router=nginx-proxy`.
 
 ## Traefik Configuration
 

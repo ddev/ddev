@@ -156,7 +156,6 @@ nav:
     - users/extend/database-types.md
     - users/configuration/hooks.md
     - users/extend/additional-hostnames.md
-    - users/configuration/traefik-router.md
     - users/configuration/experimental.md
   - 'Extending':
     - users/extend/customization-extendibility.md
@@ -166,6 +165,7 @@ nav:
     - users/extend/custom-commands.md
     - users/extend/in-container-configuration.md
     - users/extend/custom-tls-certificates.md
+    - users/extend/traefik-router.md
   - 'Debugging & Profiling':
       - users/debugging-profiling/step-debugging.md
       - 'Profiling':
