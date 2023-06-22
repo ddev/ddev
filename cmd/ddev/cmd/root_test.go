@@ -25,6 +25,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func init() {
+	globalconfig.EnsureGlobalConfig()
+}
+
 var (
 	// DdevBin is the full path to the ddev binary
 	DdevBin   = "ddev"
