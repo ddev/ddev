@@ -813,7 +813,7 @@ func TestDdevStartUnmanagedSettings(t *testing.T) {
 
 // TestDdevNoProjectMount tests running without the app file mount.
 func TestDdevNoProjectMount(t *testing.T) {
-	if nodeps.MutagenEnabledDefault == true || nodeps.NoBindMountsDefault == true {
+	if nodeps.MutagenEnabledDefault || nodeps.NoBindMountsDefault {
 		t.Skip("Skipping because this doesn't make sense with mutagen or NoBindMounts")
 	}
 	assert := asrt.New(t)
@@ -2933,7 +2933,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Skip test because we can't rename folders while they're in use if running on Windows or with mutagen.
-	if runtime.GOOS == "windows" || nodeps.MutagenEnabledDefault == true {
+	if runtime.GOOS == "windows" || nodeps.MutagenEnabledDefault {
 		t.Skip("Skipping test TestCleanupWithoutCompose; doesn't work on Windows or mutagen because of renaming of whole project directory")
 	}
 
@@ -3541,7 +3541,7 @@ func TestNFSMount(t *testing.T) {
 	if dockerutil.IsWSL2() || dockerutil.IsColima() {
 		t.Skip("Skipping on WSL2/Colima")
 	}
-	if nodeps.MutagenEnabledDefault == true || nodeps.NoBindMountsDefault {
+	if nodeps.MutagenEnabledDefault || nodeps.NoBindMountsDefault {
 		t.Skip("Skipping because mutagen/nobindmounts enabled")
 	}
 
