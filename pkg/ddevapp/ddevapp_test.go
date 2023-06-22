@@ -264,8 +264,8 @@ var (
 		// https://github.com/greyli/sayhello - no database download required
 		{
 			Name:                          "TestPkgPython",
-			SourceURL:                     "https://github.com/ddev/test-flask-sayhello/archive/refs/tags/v1.0.0.tar.gz",
-			ArchiveInternalExtractionPath: "test-flask-sayhello-1.0.0/",
+			SourceURL:                     "https://github.com/ddev/test-flask-sayhello/archive/refs/tags/v1.0.1.tar.gz",
+			ArchiveInternalExtractionPath: "test-flask-sayhello-1.0.1/",
 			DBTarURL:                      "",
 			FullSiteTarballURL:            "",
 			PretestCmd:                    "ddev exec flask forge",
