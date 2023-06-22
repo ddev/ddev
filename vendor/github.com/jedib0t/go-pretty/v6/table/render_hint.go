@@ -12,8 +12,13 @@ type renderHint struct {
 	isLastLineOfRow   bool // last-line of the current row?
 	isLastRow         bool // last-row of header/footer/regular-rows?
 	isSeparatorRow    bool // separator row?
+	isTitleRow        bool // title row?
 	rowLineNumber     int  // the line number for a multi-line row
 	rowNumber         int  // the row number/index
+}
+
+func (h *renderHint) isBorderOrSeparator() bool {
+	return h.isBorderTop || h.isSeparatorRow || h.isBorderBottom
 }
 
 func (h *renderHint) isRegularRow() bool {
