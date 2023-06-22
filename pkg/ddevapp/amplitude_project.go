@@ -2,11 +2,11 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/amplitude"
 	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/third_party/ampli"
@@ -56,7 +56,6 @@ func (app *DdevApp) TrackProject() {
 		PhpVersion(app.GetPhpVersion()).
 		ProjectType(app.GetType()).
 		RouterDisabled(IsRouterDisabled(app)).
-		TraefikEnabled(globalconfig.DdevGlobalConfig.UseTraefik).
 		WebserverType(app.GetWebserverType())
 
 	if !nodeps.ArrayContainsString(containersOmitted, "db") {
@@ -64,6 +63,7 @@ func (app *DdevApp) TrackProject() {
 			DatabaseType(app.Database.Type).
 			DatabaseVersion(app.Database.Version)
 	}
+	builder.Router(globalconfig.DdevGlobalConfig.Router)
 
 	ampli.Instance.Project("", builder.Build(), amplitude.GetEventOptions())
 }
