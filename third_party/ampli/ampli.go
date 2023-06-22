@@ -303,9 +303,7 @@ var Project = struct {
 									PhpVersion(phpVersion string) interface {
 										ProjectType(projectType string) interface {
 											RouterDisabled(routerDisabled bool) interface {
-												TraefikEnabled(traefikEnabled bool) interface {
-													WebserverType(webserverType string) ProjectBuilder
-												}
+												WebserverType(webserverType string) ProjectBuilder
 											}
 										}
 									}
@@ -329,9 +327,7 @@ var Project = struct {
 									PhpVersion(phpVersion string) interface {
 										ProjectType(projectType string) interface {
 											RouterDisabled(routerDisabled bool) interface {
-												TraefikEnabled(traefikEnabled bool) interface {
-													WebserverType(webserverType string) ProjectBuilder
-												}
+												WebserverType(webserverType string) ProjectBuilder
 											}
 										}
 									}
@@ -365,6 +361,7 @@ type ProjectBuilder interface {
 	Build() ProjectEvent
 	DatabaseType(databaseType string) ProjectBuilder
 	DatabaseVersion(databaseVersion string) ProjectBuilder
+	Router(router string) ProjectBuilder
 }
 
 type projectBuilder struct {
@@ -381,9 +378,7 @@ func (b *projectBuilder) Containers(containers []string) interface {
 							PhpVersion(phpVersion string) interface {
 								ProjectType(projectType string) interface {
 									RouterDisabled(routerDisabled bool) interface {
-										TraefikEnabled(traefikEnabled bool) interface {
-											WebserverType(webserverType string) ProjectBuilder
-										}
+										WebserverType(webserverType string) ProjectBuilder
 									}
 								}
 							}
@@ -408,9 +403,7 @@ func (b *projectBuilder) ContainersOmitted(containersOmitted []string) interface
 						PhpVersion(phpVersion string) interface {
 							ProjectType(projectType string) interface {
 								RouterDisabled(routerDisabled bool) interface {
-									TraefikEnabled(traefikEnabled bool) interface {
-										WebserverType(webserverType string) ProjectBuilder
-									}
+									WebserverType(webserverType string) ProjectBuilder
 								}
 							}
 						}
@@ -433,9 +426,7 @@ func (b *projectBuilder) FailOnHookFail(failOnHookFail bool) interface {
 					PhpVersion(phpVersion string) interface {
 						ProjectType(projectType string) interface {
 							RouterDisabled(routerDisabled bool) interface {
-								TraefikEnabled(traefikEnabled bool) interface {
-									WebserverType(webserverType string) ProjectBuilder
-								}
+								WebserverType(webserverType string) ProjectBuilder
 							}
 						}
 					}
@@ -456,9 +447,7 @@ func (b *projectBuilder) Id(id string) interface {
 				PhpVersion(phpVersion string) interface {
 					ProjectType(projectType string) interface {
 						RouterDisabled(routerDisabled bool) interface {
-							TraefikEnabled(traefikEnabled bool) interface {
-								WebserverType(webserverType string) ProjectBuilder
-							}
+							WebserverType(webserverType string) ProjectBuilder
 						}
 					}
 				}
@@ -477,9 +466,7 @@ func (b *projectBuilder) MutagenEnabled(mutagenEnabled bool) interface {
 			PhpVersion(phpVersion string) interface {
 				ProjectType(projectType string) interface {
 					RouterDisabled(routerDisabled bool) interface {
-						TraefikEnabled(traefikEnabled bool) interface {
-							WebserverType(webserverType string) ProjectBuilder
-						}
+						WebserverType(webserverType string) ProjectBuilder
 					}
 				}
 			}
@@ -496,9 +483,7 @@ func (b *projectBuilder) NfsMountEnabled(nfsMountEnabled bool) interface {
 		PhpVersion(phpVersion string) interface {
 			ProjectType(projectType string) interface {
 				RouterDisabled(routerDisabled bool) interface {
-					TraefikEnabled(traefikEnabled bool) interface {
-						WebserverType(webserverType string) ProjectBuilder
-					}
+					WebserverType(webserverType string) ProjectBuilder
 				}
 			}
 		}
@@ -513,9 +498,7 @@ func (b *projectBuilder) NodejsVersion(nodejsVersion string) interface {
 	PhpVersion(phpVersion string) interface {
 		ProjectType(projectType string) interface {
 			RouterDisabled(routerDisabled bool) interface {
-				TraefikEnabled(traefikEnabled bool) interface {
-					WebserverType(webserverType string) ProjectBuilder
-				}
+				WebserverType(webserverType string) ProjectBuilder
 			}
 		}
 	}
@@ -528,9 +511,7 @@ func (b *projectBuilder) NodejsVersion(nodejsVersion string) interface {
 func (b *projectBuilder) PhpVersion(phpVersion string) interface {
 	ProjectType(projectType string) interface {
 		RouterDisabled(routerDisabled bool) interface {
-			TraefikEnabled(traefikEnabled bool) interface {
-				WebserverType(webserverType string) ProjectBuilder
-			}
+			WebserverType(webserverType string) ProjectBuilder
 		}
 	}
 } {
@@ -541,9 +522,7 @@ func (b *projectBuilder) PhpVersion(phpVersion string) interface {
 
 func (b *projectBuilder) ProjectType(projectType string) interface {
 	RouterDisabled(routerDisabled bool) interface {
-		TraefikEnabled(traefikEnabled bool) interface {
-			WebserverType(webserverType string) ProjectBuilder
-		}
+		WebserverType(webserverType string) ProjectBuilder
 	}
 } {
 	b.properties[`Project Type`] = projectType
@@ -552,19 +531,9 @@ func (b *projectBuilder) ProjectType(projectType string) interface {
 }
 
 func (b *projectBuilder) RouterDisabled(routerDisabled bool) interface {
-	TraefikEnabled(traefikEnabled bool) interface {
-		WebserverType(webserverType string) ProjectBuilder
-	}
-} {
-	b.properties[`Router Disabled`] = routerDisabled
-
-	return b
-}
-
-func (b *projectBuilder) TraefikEnabled(traefikEnabled bool) interface {
 	WebserverType(webserverType string) ProjectBuilder
 } {
-	b.properties[`Traefik Enabled`] = traefikEnabled
+	b.properties[`Router Disabled`] = routerDisabled
 
 	return b
 }
@@ -583,6 +552,12 @@ func (b *projectBuilder) DatabaseType(databaseType string) ProjectBuilder {
 
 func (b *projectBuilder) DatabaseVersion(databaseVersion string) ProjectBuilder {
 	b.properties[`Database Version`] = databaseVersion
+
+	return b
+}
+
+func (b *projectBuilder) Router(router string) ProjectBuilder {
+	b.properties[`Router`] = router
 
 	return b
 }
