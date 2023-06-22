@@ -45,7 +45,7 @@ func init() {
 	if os.Getenv("DDEV_TEST_NO_BIND_MOUNTS") == "true" {
 		nodeps.NoBindMountsDefault = true
 	}
-	if os.Getenv("DDEV_TEST_USE_TRADITIONAL_ROUTER") == "true" {
+	if os.Getenv("DDEV_TEST_USE_NGINX_PROXY_ROUTER") == "true" {
 		nodeps.UseTraditionalRouter = true
 	}
 

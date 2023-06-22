@@ -59,7 +59,7 @@ type GlobalConfig struct {
 	ProjectTldGlobal                 string                  `yaml:"project_tld"`
 	XdebugIDELocation                string                  `yaml:"xdebug_ide_location"`
 	NoBindMounts                     bool                    `yaml:"no_bind_mounts"`
-	Router                       		string                  `yaml:"router"`
+	Router                           string                  `yaml:"router"`
 	WSL2NoWindowsHostsMgt            bool                    `yaml:"wsl2_no_windows_hosts_mgt"`
 	RouterHTTPPort                   string                  `yaml:"router_http_port"`
 	RouterHTTPSPort                  string                  `yaml:"router_https_port"`
@@ -79,7 +79,7 @@ func New() GlobalConfig {
 		RouterHTTPSPort:              "443",
 		LastStartedVersion:           "v0.0",
 		NoBindMounts:                 nodeps.NoBindMountsDefault,
-		UseTraefik:                   nodeps.UseTraefikDefault,
+		Router:                       nodeps.RouterTypeDefault,
 		MkcertCARoot:                 readCAROOT(),
 		ProjectList:                  make(map[string]*ProjectInfo),
 	}
@@ -93,13 +93,6 @@ func EnsureGlobalConfig() {
 	err := ReadGlobalConfig()
 	if err != nil {
 		output.UserErr.Fatalf("unable to read global config: %v", err)
-	}
-}
-
-// NewGlobalConfig() returns a minimally initialized GlobalConfig
-func NewGlobalConfig() GlobalConfig {
-	return GlobalConfig{
-		Router: nodeps.RouterTypeTraefik,
 	}
 }
 
@@ -197,7 +190,7 @@ func ReadGlobalConfig() error {
 			return nil
 		}
 		if os.IsNotExist(err) {
-			DdevGlobalConfig = NewGlobalConfig()
+			DdevGlobalConfig = New()
 			err := WriteGlobalConfig(DdevGlobalConfig)
 			if err != nil {
 				return err
@@ -299,7 +292,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # You can enable 'ddev start' to be interrupted by a failing hook with
 # fail_on_hook_fail: true
 
-# router: traefik # or traditional
+# router: traefik # or nginx-proxy
 # Traefik router is default, but you can switch to the legacy "nginx-proxy" router.
 
 # router_http_port: <port>  # Port to be used for http (defaults to 80)

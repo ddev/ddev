@@ -14,11 +14,11 @@ import (
 )
 
 // DebugRouterNginxConfigCmd implements the ddev debug router-config command
-// This is only for the obsolete traditional router
+// This is only for the obsolete nginx-proxy router
 var DebugRouterNginxConfigCmd = &cobra.Command{
-	Use:     "traditional-router-nginx-config",
-	Short:   "Obsolete: Prints the nginx config in the traditional router",
-	Example: "ddev debug traditional-router-nginx-config",
+	Use:     "nginx-proxy-router-nginx-config",
+	Short:   "Obsolete: Prints the nginx config in the legacy `nginx-proxy` router",
+	Example: "ddev debug nginx-proxy-router-nginx-config",
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {

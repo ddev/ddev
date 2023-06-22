@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -56,14 +56,14 @@ func TestCmdGlobalConfig(t *testing.T) {
 	// Update a config
 	// Don't include no-bind-mounts because global testing
 	// will turn it on and break this
-	args = []string{"config", "global", "--project-tld=ddev.test", "--instrumentation-opt-in=false", "--omit-containers=dba,ddev-ssh-agent", "--mutagen-enabled=true", "--nfs-mount-enabled=true", "--router-bind-all-interfaces=true", "--internet-detection-timeout-ms=850", "--table-style=bright", "--simple-formatting=true", "--auto-restart-containers=true", "--use-hardened-images=true", "--fail-on-hook-fail=true", `--web-environment="SOMEENV=some+val"`, `--xdebug-ide-location=container`, `--router=traditional`, `--router-http-port=8081`, `--router-https-port=8882`}
+	args = []string{"config", "global", "--project-tld=ddev.test", "--instrumentation-opt-in=false", "--omit-containers=dba,ddev-ssh-agent", "--mutagen-enabled=true", "--nfs-mount-enabled=true", "--router-bind-all-interfaces=true", "--internet-detection-timeout-ms=850", "--table-style=bright", "--simple-formatting=true", "--auto-restart-containers=true", "--use-hardened-images=true", "--fail-on-hook-fail=true", `--web-environment="SOMEENV=some+val"`, `--xdebug-ide-location=container`, `--router=nginx-proxy`, `--router-http-port=8081`, `--router-https-port=8882`}
 	out, err = exec.RunCommand(DdevBin, args)
 	assert.NoError(err, "error running ddev config global; output=%s", out)
 	assert.Contains(string(out), "Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[dba,ddev-ssh-agent]\nweb-environment=[\"SOMEENV=some+val\"]\nmutagen-enabled=true\nnfs-mount-enabled=true\nrouter-bind-all-interfaces=true\ninternet-detection-timeout-ms=850\ndisable-http2=false\nuse-letsencrypt=false\nletsencrypt-email=\ntable-style=bright\nsimple-formatting=true\nauto-restart-containers=true\nuse-hardened-images=true\nfail-on-hook-fail=true\nrequired-docker-compose-version=\nuse-docker-compose-from-path=false")
 	assert.Contains(string(out), "xdebug-ide-location=container")
-	assert.Contains(string(out), "router=traditional\nwsl2-no-windows-hosts-mgt=false\nrouter-http-port=8081\nrouter-https-port=8882")
+	assert.Contains(string(out), "router=nginx-proxy\nwsl2-no-windows-hosts-mgt=false\nrouter-http-port=8081\nrouter-https-port=8882")
 
-	err = globalconfig.ReadGlobalConfig()
+	globalconfig.EnsureGlobalConfig()
 	assert.NoError(err)
 	assert.False(globalconfig.DdevGlobalConfig.InstrumentationOptIn)
 	assert.Contains(globalconfig.DdevGlobalConfig.OmitContainersGlobal, "ddev-ssh-agent")
@@ -77,7 +77,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.True(globalconfig.DdevGlobalConfig.SimpleFormatting)
 	assert.Equal("bright", globalconfig.DdevGlobalConfig.TableStyle)
 	assert.Equal("container", globalconfig.DdevGlobalConfig.XdebugIDELocation)
-	assert.Equal(config, globalconfig.DdevGlobalConfig.Router)
+	assert.Equal(nodeps.RouterTypeNginxProxy, globalconfig.DdevGlobalConfig.Router)
 	assert.Equal("8081", globalconfig.DdevGlobalConfig.RouterHTTPPort)
 	assert.Equal("8882", globalconfig.DdevGlobalConfig.RouterHTTPSPort)
 
