@@ -1,6 +1,7 @@
 package remoteconfig
 
 import (
+	"github.com/ddev/ddev/pkg/nodeps"
 	"strings"
 	"time"
 
@@ -257,11 +258,14 @@ const (
 func applyTableStyle(preset preset, writer table.Writer) {
 	styles.SetGlobalTableStyle(writer)
 
+	termWidth, _ := nodeps.GetTerminalWidthHeight()
+	util.Debug("termWidth: %d", termWidth)
 	writer.SetColumnConfigs([]table.ColumnConfig{
 		{
-			Number:   1,
-			WidthMin: 70,
-			WidthMax: 0,
+			Number:           1,
+			WidthMin:         50,
+			WidthMax:         int(termWidth) - 5,
+			WidthMaxEnforcer: text.WrapSoft,
 		},
 	})
 
