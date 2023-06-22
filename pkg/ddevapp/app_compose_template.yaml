@@ -45,6 +45,7 @@ services:
     environment:
       - COLUMNS
       - DDEV_DATABASE
+      - DDEV_DATABASE_FAMILY
       - DDEV_HOSTNAME
       - DDEV_PHP_VERSION
       - DDEV_PRIMARY_URL
@@ -169,6 +170,7 @@ services:
     - DDEV_COMPOSER_ROOT
     - DDEV_DATABASE
     - DDEV_DOCROOT
+    - DDEV_DATABASE_FAMILY
     - DDEV_HOSTNAME
     - DDEV_MUTAGEN_ENABLED
     - DDEV_PHP_VERSION
@@ -289,7 +291,7 @@ volumes:
     name: "{{ .MariaDBVolumeName}}"
     external: true
   {{ end }} {{/* end if and (not .OmitDB) (ne .DBType postgres) */}}
-  
+
   {{if and (not .OmitDB) ( eq .DBType "postgres") }}
   database:
     name: "{{ .PostgresVolumeName }}"
