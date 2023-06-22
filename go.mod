@@ -12,7 +12,7 @@ require (
 	github.com/google/go-github/v52 v52.0.0
 	github.com/google/uuid v1.3.0
 	github.com/imdario/mergo v0.3.13
-	github.com/jedib0t/go-pretty/v6 v6.4.6
+	github.com/jedib0t/go-pretty/v6 v6.4.3
 	github.com/joho/godotenv v1.4.0
 	github.com/manifoldco/promptui v0.8.0
 	github.com/mattn/go-isatty v0.0.14
