@@ -265,19 +265,27 @@ func applyTableStyle(preset preset, writer table.Writer) {
 		},
 	})
 
+	style := writer.Style()
+
+	style.Options.SeparateRows = false
+	style.Options.SeparateFooter = false
+	style.Options.SeparateColumns = false
+	style.Options.SeparateHeader = false
+	style.Options.DrawBorder = false
+
 	switch preset {
 	case information:
-		writer.Style().Color = table.ColorOptions{
+		style.Color = table.ColorOptions{
 			Header: text.Colors{text.BgHiYellow, text.FgBlack},
 			Row:    text.Colors{text.BgHiYellow, text.FgBlack},
 		}
 	case warning:
-		writer.Style().Color = table.ColorOptions{
+		style.Color = table.ColorOptions{
 			Header: text.Colors{text.BgHiRed, text.FgBlack},
 			Row:    text.Colors{text.BgHiRed, text.FgBlack},
 		}
 	case ticker:
-		writer.Style().Color = table.ColorOptions{
+		style.Color = table.ColorOptions{
 			Header: text.Colors{text.BgHiWhite, text.FgBlack},
 			Row:    text.Colors{text.BgHiWhite, text.FgBlack},
 		}
