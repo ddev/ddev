@@ -72,7 +72,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	}
 
 	app.ConfigPath = app.GetConfigPath("config.yaml")
-	app.Type = nodeps.AppTypePHP
+	app.Type = nodeps.AppTypeNone
 	app.PHPVersion = nodeps.PHPDefault
 	app.ComposerVersion = nodeps.ComposerDefault
 	app.NodeJSVersion = nodeps.NodeJSDefault
@@ -190,6 +190,11 @@ func (app *DdevApp) WriteConfig() error {
 	}
 	if appcopy.DefaultContainerTimeout == nodeps.DefaultDefaultContainerTimeout {
 		appcopy.DefaultContainerTimeout = ""
+	}
+
+	// Ensure valid type
+	if appcopy.Type == nodeps.AppTypeNone {
+		appcopy.Type = nodeps.AppTypePHP
 	}
 
 	// We now want to reserve the port we're writing for HostDBPort and HostWebserverPort and so they don't
@@ -1237,28 +1242,29 @@ func (app *DdevApp) ConfigExists() bool {
 
 // AppTypePrompt handles the Type workflow.
 func (app *DdevApp) AppTypePrompt() error {
-	validAppTypes := strings.Join(GetValidAppTypes(), ", ")
-	typePrompt := fmt.Sprintf("Project Type [%s]", validAppTypes)
-
 	// First, see if we can auto detect what kind of site it is so we can set a sane default.
-
 	detectedAppType := app.DetectAppType()
+
 	// If the detected detectedAppType is php, we'll ask them to confirm,
 	// otherwise go with it.
 	// If we found an application type just set it and inform the user.
 	util.Success("Found a %s codebase at %s.", detectedAppType, filepath.Join(app.AppRoot, app.Docroot))
-	typePrompt = fmt.Sprintf("%s (%s)", typePrompt, detectedAppType)
 
-	fmt.Printf(typePrompt + ": ")
+	validAppTypes := strings.Join(GetValidAppTypes(), ", ")
+	typePrompt := "Project Type [%s] (%s): "
+
+	fmt.Printf(typePrompt, validAppTypes, detectedAppType)
 	appType := strings.ToLower(util.GetInput(detectedAppType))
 
 	for !IsValidAppType(appType) {
 		output.UserOut.Errorf("'%s' is not a valid project type. Allowed project types are: %s\n", appType, validAppTypes)
 
-		fmt.Printf(typePrompt + ": ")
+		fmt.Print(typePrompt, validAppTypes, appType)
 		appType = strings.ToLower(util.GetInput(appType))
 	}
+
 	app.Type = appType
+
 	return nil
 }
 

@@ -6,11 +6,9 @@ import (
 	"path"
 	"path/filepath"
 	"sort"
-	"strings"
 
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/pkg/errors"
 )
 
 // appTypeFuncs prototypes
@@ -312,6 +310,7 @@ func (app *DdevApp) DetectAppType() string {
 			return appName
 		}
 	}
+
 	return nodeps.AppTypePHP
 }
 

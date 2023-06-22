@@ -887,6 +887,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	projDir := testcommon.CreateTmpDir(t.Name())
 	app, err := ddevapp.NewApp(projDir, false)
 	require.NoError(t, err)
+	app.Type = nodeps.AppTypePHP
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
@@ -1063,6 +1064,7 @@ func TestDdevXhprofEnabled(t *testing.T) {
 	projDir := testcommon.CreateTmpDir(t.Name())
 	app, err := ddevapp.NewApp(projDir, false)
 	require.NoError(t, err)
+	app.Type = nodeps.AppTypePHP
 	err = app.WriteConfig()
 	require.NoError(t, err)
 

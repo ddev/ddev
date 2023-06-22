@@ -79,6 +79,7 @@ var ValidNodeJSVersions = []string{"14", "16", "18", "20"}
 
 // App types
 const (
+	AppTypeNone      = ""
 	AppTypeBackdrop  = "backdrop"
 	AppTypeCraftCms  = "craftcms"
 	AppTypeDjango4   = "django4"

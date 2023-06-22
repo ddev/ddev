@@ -1,15 +1,17 @@
 package ddevapp_test
 
 import (
-	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/testcommon"
-	asrt "github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/testcommon"
+	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestNetworkAmbiguity tests the behavior and setup of docker networking.
@@ -51,6 +53,7 @@ func TestNetworkAmbiguity(t *testing.T) {
 		// Create new app
 		app, err = ddevapp.NewApp(projDir, false)
 		assert.NoError(err)
+		app.Type = nodeps.AppTypePHP
 		app.Name = projName
 		err = app.WriteConfig()
 		assert.NoError(err)
