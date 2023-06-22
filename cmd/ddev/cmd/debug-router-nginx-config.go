@@ -49,7 +49,7 @@ var DebugRouterNginxConfigCmd = &cobra.Command{
 }
 
 func init() {
-	if globalconfig.DdevGlobalConfig.Router != nodeps.TraefikRouter {
+	if globalconfig.DdevGlobalConfig.Router != nodeps.RouterTypeTraefik {
 		DebugCmd.AddCommand(DebugRouterNginxConfigCmd)
 	}
 }

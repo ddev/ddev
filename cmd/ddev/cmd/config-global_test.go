@@ -77,7 +77,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.True(globalconfig.DdevGlobalConfig.SimpleFormatting)
 	assert.Equal("bright", globalconfig.DdevGlobalConfig.TableStyle)
 	assert.Equal("container", globalconfig.DdevGlobalConfig.XdebugIDELocation)
-	assert.Equal("traditional", globalconfig.DdevGlobalConfig.Router)
+	assert.Equal(config, globalconfig.DdevGlobalConfig.Router)
 	assert.Equal("8081", globalconfig.DdevGlobalConfig.RouterHTTPPort)
 	assert.Equal("8882", globalconfig.DdevGlobalConfig.RouterHTTPSPort)
 

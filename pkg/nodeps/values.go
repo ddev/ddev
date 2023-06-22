@@ -41,12 +41,6 @@ var ValidOmitContainers = map[string]bool{
 	DBAContainer:          true,
 }
 
-// Router types
-const (
-	TraditionalRouter = "traditional"
-	TraefikRouter     = "traefik"
-)
-
 // DdevFileSignature is the text we use to detect whether a settings file is managed by us.
 // If this string is found, we assume we can replace/update the file.
 const DdevFileSignature = "#ddev-generated"

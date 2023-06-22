@@ -52,8 +52,8 @@ jobs:
             mutagen: true
           - name: "no-bind-mounts"
             no-bind-mounts: "true"
-          - name: "traditional-router"
-            router: "traditional"
+          - name: "nginx-proxy"
+            router: "nginx-proxy"
           - name: "pull-push-test-platforms"
             pull-push-test-platforms: true
 

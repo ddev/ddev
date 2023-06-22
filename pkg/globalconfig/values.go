@@ -26,8 +26,8 @@ var ValidOmitContainers = map[string]bool{
 
 // ValidRouterTypes is the list of valid router types
 var ValidRouterTypes = map[string]bool{
-	nodeps.TraefikRouter:     true,
-	nodeps.TraditionalRouter: true,
+	nodeps.RouterTypeTraefik:    true,
+	nodeps.RouterTypeNginxProxy: true,
 }
 
 // DdevNoInstrumentation is set to true if the env var is set

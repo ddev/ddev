@@ -99,7 +99,7 @@ func EnsureGlobalConfig() {
 // NewGlobalConfig() returns a minimally initialized GlobalConfig
 func NewGlobalConfig() GlobalConfig {
 	return GlobalConfig{
-		Router: nodeps.TraefikRouter,
+		Router: nodeps.RouterTypeTraefik,
 	}
 }
 
@@ -164,7 +164,7 @@ func ValidateGlobalConfig() error {
 	}
 
 	if !IsValidRouterType(DdevGlobalConfig.Router) {
-		return fmt.Errorf("Invalid router: %s, valid router types are %s and %s", DdevGlobalConfig.Router, nodeps.TraefikRouter, nodeps.TraditionalRouter)
+		return fmt.Errorf("Invalid router: %s, valid router types are %s and %s", DdevGlobalConfig.Router, nodeps.RouterTypeTraefik, nodeps.RouterTypeNginxProxy)
 	}
 
 	if !IsValidTableStyle(DdevGlobalConfig.TableStyle) {
@@ -174,10 +174,10 @@ func ValidateGlobalConfig() error {
 	if !IsValidXdebugIDELocation(DdevGlobalConfig.XdebugIDELocation) {
 		return fmt.Errorf(`xdebug_ide_location must be IP address or one of %v`, ValidXdebugIDELocations)
 	}
-	if DdevGlobalConfig.DisableHTTP2 && DdevGlobalConfig.Router == nodeps.TraefikRouter {
+	if DdevGlobalConfig.DisableHTTP2 && DdevGlobalConfig.Router == nodeps.RouterTypeTraefik {
 		return fmt.Errorf("disable_http2 and router = traefik are mutually incompatible, as Traefik does not support disabling HTTP2")
 	}
-	if DdevGlobalConfig.Router == nodeps.TraefikRouter && (DdevGlobalConfig.UseLetsEncrypt || DdevGlobalConfig.LetsEncryptEmail != "") {
+	if DdevGlobalConfig.Router == nodeps.RouterTypeTraefik && (DdevGlobalConfig.UseLetsEncrypt || DdevGlobalConfig.LetsEncryptEmail != "") {
 		return fmt.Errorf("use-letsencrypt is not directly supported with traefik. but can be configured with custom config, see https://doc.traefik.io/traefik/https/acme/")
 	}
 	return nil
@@ -300,7 +300,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # fail_on_hook_fail: true
 
 # router: traefik # or traditional
-# Traefik router is default, but you can switch to the legacy "traditional" router.
+# Traefik router is default, but you can switch to the legacy "nginx-proxy" router.
 
 # router_http_port: <port>  # Port to be used for http (defaults to 80)
 # router_https_port: <port> # Port for https (defaults to 443)
@@ -686,7 +686,7 @@ func GetRequiredDockerComposeVersion() string {
 func GetRouterURL() string {
 	routerURL := ""
 	// Until we figure out how to configure this, use static value
-	if DdevGlobalConfig.Router == nodeps.TraefikRouter {
+	if DdevGlobalConfig.Router == nodeps.RouterTypeTraefik {
 		routerURL = "http://localhost:9999"
 	}
 	return routerURL

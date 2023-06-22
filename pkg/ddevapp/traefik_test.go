@@ -27,7 +27,7 @@ func TestTraefikSimple(t *testing.T) {
 
 	ddevapp.PowerOff()
 	origRouter := globalconfig.DdevGlobalConfig.Router
-	globalconfig.DdevGlobalConfig.Router = nodeps.TraefikRouter
+	globalconfig.DdevGlobalConfig.Router = nodeps.RouterTypeTraefik
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
 	origConfig := *app
@@ -56,7 +56,7 @@ func TestTraefikSimple(t *testing.T) {
 	require.NoError(t, err, "failed to flush mutagen sync")
 
 	desc, err := app.Describe(false)
-	assert.Equal(desc["router"].(string), nodeps.TraefikRouter)
+	assert.Equal(desc["router"].(string), nodeps.RouterTypeTraefik)
 
 	// Test reachabiliity in each of the hostnames
 	httpURLs, httpsURLs, allURLs := app.GetAllURLs()
@@ -121,7 +121,7 @@ func TestTraefikVirtualHost(t *testing.T) {
 	require.NoError(t, err)
 
 	desc, err := app.Describe(false)
-	assert.Equal(nodeps.TraefikRouter, desc["router"].(string))
+	assert.Equal(nodeps.RouterTypeTraefik, desc["router"].(string))
 
 	// Test reachabiliity in each of the hostnames
 	httpURLs, _, allURLs := app.GetAllURLs()

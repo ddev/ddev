@@ -99,7 +99,7 @@ func GetSSHAuthImage() string {
 // GetRouterImage returns the router image:tag reference
 func GetRouterImage() string {
 	image := TraefikRouterImage
-	if globalconfig.DdevGlobalConfig.Router == nodeps.TraditionalRouter {
+	if globalconfig.DdevGlobalConfig.Router == nodeps.RouterTypeNginxProxy {
 		image = TraditionalRouterImage
 	}
 	return image
