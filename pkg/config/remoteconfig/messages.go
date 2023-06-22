@@ -157,7 +157,7 @@ func (c *remoteConfig) ShowTicker() {
 // isNotificationsDisabled returns true if notifications should not be shown to
 // the user which can be achieved by setting the related remote config.
 func (c *remoteConfig) isNotificationsDisabled() bool {
-	return c.remoteConfig.Messages.Notifications.Interval < 0
+	return c.getNotificationsInterval() < 0
 }
 
 // getNotificationsInterval returns the notifications interval. The processing
@@ -184,7 +184,7 @@ func (c *remoteConfig) showNotifications() bool {
 // can be achieved by setting the related global config or also via the remote
 // config.
 func (c *remoteConfig) isTickerDisabled() bool {
-	return c.tickerInterval < 0 || c.remoteConfig.Messages.Ticker.Interval < 0
+	return c.getTickerInterval() < 0
 }
 
 // getTickerInterval returns the ticker interval. The processing order is
