@@ -2,7 +2,6 @@ package ddevapp
 
 import (
 	"bytes"
-	"strings"
 	"time"
 
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -10,7 +9,6 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/styles"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 )
@@ -74,11 +72,9 @@ func List(settings ListCommandSettings) {
 			if nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, globalconfig.DdevRouterContainer) {
 				extendedRouterStatus = "disabled"
 			}
-			routerImage := versionconstants.GetRouterImage()
-			routerImage = strings.Replace(routerImage, ":", ": ", 1)
-			routerImage = strings.Replace(routerImage, "ddev/ddev-router", "original", 1)
+			router := globalconfig.DdevGlobalConfig.Router
 			t.AppendFooter(table.Row{
-				"Router", routerStatus, "~/.ddev", globalconfig.GetRouterURL(), routerImage},
+				"Router", routerStatus, "~/.ddev", globalconfig.GetRouterURL(), router},
 			)
 			t.Render()
 			output.UserOut.WithField("raw", appDescs).Print(out.String())
