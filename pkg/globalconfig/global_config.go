@@ -3,6 +3,7 @@ package globalconfig
 import (
 	"context"
 	"fmt"
+	"github.com/ddev/ddev/pkg/config/types"
 	"net"
 	"os"
 	"os/exec"
@@ -654,6 +655,11 @@ func IsInternetActive() bool {
 	IsInternetActiveResult = active
 
 	return active
+}
+
+// IsTraefikRouter returns true if the router is traefik
+func IsTraefikRouter() bool {
+	return DdevGlobalConfig.Router == types.RouterTypeTraefik
 }
 
 // DockerComposeVersion is filled with the version we find for docker-compose

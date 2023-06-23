@@ -4,7 +4,6 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"os"
 	"strings"
@@ -49,7 +48,7 @@ var DebugRouterNginxConfigCmd = &cobra.Command{
 }
 
 func init() {
-	if globalconfig.DdevGlobalConfig.Router != nodeps.RouterTypeTraefik {
+	if !globalconfig.IsTraefikRouter() {
 		DebugCmd.AddCommand(DebugRouterNginxConfigCmd)
 	}
 }
