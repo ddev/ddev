@@ -402,7 +402,7 @@ If set to `v2.8.0`, for example, it will download and use that version instead o
 
 ## `router`
 
-Whether to enable the default [traefik router](../extend/traefik-router.md#traefik-router) or the legacy "nginx-proxy" router.
+Whether to enable the default [Traefik router](../extend/traefik-router.md#traefik-router) or the legacy "nginx-proxy" router.
 
 | Type | Default   | Usage
 | -- |-----------| --
