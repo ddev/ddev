@@ -4,7 +4,7 @@
 ## Description: Run DBeaver against current db
 ## Usage: dbeaver
 ## Example: "ddev dbeaver [db] [user]"
-## HostBinaryExists: /mnt/c/Program Files/dbeaver/dbeaver.exe,C:\Program Files/dbeaver\dbeaver.exe,/Applications/dbeaver.app,/snap/bin/dbeaver-ce,/snap/bin/dbeaver-ee,/snap/bin/dbeaver
+## HostBinaryExists: /mnt/c/Program Files/dbeaver/dbeaver.exe,C:\Program Files\dbeaver\dbeaver.exe,/Applications/dbeaver.app,/snap/bin/dbeaver-ce,/snap/bin/dbeaver-ee,/snap/bin/dbeaver
 
 database="${1:-db}"
 user="${2:-root}"
