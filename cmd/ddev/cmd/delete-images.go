@@ -111,6 +111,12 @@ func deleteDdevImages(deleteAll bool) error {
 	// and discrete names of images
 	for _, image := range images {
 		for _, tag := range image.RepoTags {
+			// If anything has prefix "drud/" then delete it
+			if strings.HasPrefix(tag, "drud/") {
+				if err = dockerutil.RemoveImage(tag); err != nil {
+					return err
+				}
+			}
 			// If a webimage, but doesn't match our webimage, delete it
 			if strings.HasPrefix(tag, versionconstants.WebImg) && !strings.HasPrefix(tag, webimg) && !strings.HasPrefix(tag, webimg+"-built") {
 				if err = dockerutil.RemoveImage(tag); err != nil {
