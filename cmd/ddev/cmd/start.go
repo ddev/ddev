@@ -33,6 +33,8 @@ ddev start --all`,
 		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		remoteconfig.GetGlobal().ShowTicker()
+		remoteconfig.GetGlobal().ShowNotifications()
 
 		skip, err := cmd.Flags().GetBool("skip-confirmation")
 		if err != nil {
@@ -111,9 +113,6 @@ ddev start --all`,
 			}
 			util.Success("Project can be reached at %s", strings.Join(httpsURLs, " "))
 		}
-
-		remoteconfig.GetGlobal().ShowTicker()
-		remoteconfig.GetGlobal().ShowNotifications()
 	},
 }
 
