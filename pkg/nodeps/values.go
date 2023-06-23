@@ -18,14 +18,6 @@ const (
 	Postgres = "postgres"
 )
 
-// Router Types
-const (
-	RouterTypeTraefik    = "traefik"
-	RouterTypeNginxProxy = "nginx-proxy"
-
-	RouterTypeDefault = RouterTypeTraefik
-)
-
 // Container types used with ddev
 const (
 	DdevSSHAgentContainer = "ddev-ssh-agent"
