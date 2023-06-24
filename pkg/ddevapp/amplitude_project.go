@@ -63,7 +63,10 @@ func (app *DdevApp) TrackProject() {
 			DatabaseType(app.Database.Type).
 			DatabaseVersion(app.Database.Version)
 	}
-	builder.Router(globalconfig.DdevGlobalConfig.Router)
+	
+	if !IsRouterDisabled(app) {
+		builder.Router(globalconfig.DdevGlobalConfig.Router)
+	}
 
 	ampli.Instance.Project("", builder.Build(), amplitude.GetEventOptions())
 }
