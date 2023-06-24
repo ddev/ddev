@@ -1,61 +1,9 @@
 # Remote Config
 
-DDEV supports downloading a remote config from the [`ddev/remote-config`](https://github.com/ddev/remote-config)
+DDEV supports downloading a [`remote config`](https://github.com/ddev/remote-config/blob/main/remote-config.jsonc)
+from the [`ddev/remote-config`](https://github.com/ddev/remote-config)
 GitHub repository with messages that will be shown to the user. This feature
 could be enhanced later with more information and configuration.
-
-Here is an example of a `remote-config.jsonc` file:
-
-```jsonc
-{
-    // Update interval of the remote config in hours
-    "update-interval": 10,
-    "remote": {
-        "owner": "ddev",
-        "repo": "remote-config",
-        "ref": "live",
-        "filepath": "remote-config",
-    },
-
-    // Messages shown to the user
-    "messages": {
-        // All notifications are shown once in an interval
-        "notifications": {
-            "interval": 20,
-            "infos": [
-                {
-                    "message": "Ensure maintenance and further development of DDEV, see https://ddev.com/support-ddev/.",
-                    "conditions": [],
-                    "versions": ""
-                },
-            ],
-            "warnings": [
-                {
-                    "message": "Please update your installation as soon as possible, there is a big security risk by using this version.",
-                    "conditions": [],
-                    "versions": "<1.20"
-                },
-            ],
-        },
-
-        // One ticker messages is shown once in an interval and rotated to the
-        // next afterwards
-        "ticker": {
-            "interval": 5,
-            "messages": [
-                {
-                    "message": "Did you know? You can restart your project at any time using `ddev restart`.",
-                    "conditions": [],
-                    "versions": ""
-                },
-                {
-                    "message": "Did you know? You can open a browser heading to your project with `ddev launch`."
-                },
-            ]
-        }
-    }
-}
-```
 
 ## Messages
 
