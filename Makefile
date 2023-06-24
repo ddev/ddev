@@ -71,6 +71,7 @@ darwin_arm64: $(GOTMP)/bin/darwin_arm64/ddev
 windows_amd64: windows_install
 windows_arm64: $(GOTMP)/bin/windows_arm64/ddev.exe
 completions: $(GOTMP)/bin/completions.tar.gz
+docs: docs/content/users/usage/commands.md
 
 TARGETS=$(GOTMP)/bin/linux_amd64/ddev $(GOTMP)/bin/linux_arm64/ddev $(GOTMP)/bin/linux_arm/ddev $(GOTMP)/bin/darwin_amd64/ddev $(GOTMP)/bin/darwin_arm64/ddev $(GOTMP)/bin/windows_amd64/ddev.exe
 $(TARGETS): mkcert $(GOFILES)
@@ -88,6 +89,9 @@ $(TARGETS): mkcert $(GOFILES)
 $(GOTMP)/bin/completions.tar.gz: build
 	$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/ddev_gen_autocomplete
 	tar -C $(GOTMP)/bin/completions -cf $(GOTMP)/bin/completions.tar.gz .
+
+docs/content/users/usage/commands.md: build
+	$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)/gen-docs --website --doc-path docs/gen-test
 
 mkcert: $(GOTMP)/bin/darwin_arm64/mkcert $(GOTMP)/bin/darwin_amd64/mkcert $(GOTMP)/bin/linux_arm64/mkcert $(GOTMP)/bin/linux_amd64/mkcert
 

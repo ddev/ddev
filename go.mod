@@ -22,7 +22,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/go-internal v1.6.1
 	github.com/sirupsen/logrus v1.9.0
-	github.com/spf13/cobra v1.3.0
+	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.3
 	github.com/ulikunitz/xz v0.5.10
@@ -45,6 +45,7 @@ require (
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/containerd/containerd v1.7.0 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
@@ -53,7 +54,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
-	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a // indirect
 	github.com/klauspost/compress v1.16.4 // indirect
 	github.com/lunixbochs/vtclean v1.0.0 // indirect
@@ -71,6 +72,7 @@ require (
 	github.com/opencontainers/runc v1.1.6 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/segmentio/backo-go v0.0.0-20200129164019-23eae7c10bd3 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
