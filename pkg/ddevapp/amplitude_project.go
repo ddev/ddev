@@ -63,7 +63,7 @@ func (app *DdevApp) TrackProject() {
 			DatabaseType(app.Database.Type).
 			DatabaseVersion(app.Database.Version)
 	}
-	
+
 	if !IsRouterDisabled(app) {
 		builder.Router(globalconfig.DdevGlobalConfig.Router)
 	}

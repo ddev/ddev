@@ -658,8 +658,8 @@ func IsInternetActive() bool {
 }
 
 // IsTraefikRouter returns true if the router is traefik
-func IsTraefikRouter() bool {
-	return DdevGlobalConfig.Router == types.RouterTypeTraefik
+func (c *GlobalConfig) IsTraefikRouter() bool {
+	return c.Router == types.RouterTypeTraefik
 }
 
 // DockerComposeVersion is filled with the version we find for docker-compose

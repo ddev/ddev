@@ -1246,7 +1246,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 
 		// If TLS supported and using traefik, create cert/key and push into ddev-global-cache/traefik
-		if globalconfig.IsTraefikRouter() {
+		if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
 			err = configureTraefikForApp(app)
 			if err != nil {
 				return err
@@ -1255,7 +1255,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 		// Push custom certs
 		targetSubdir := "custom_certs"
-		if globalconfig.IsTraefikRouter() {
+		if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
 			targetSubdir = path.Join("traefik", "certs")
 		}
 		certPath := app.GetConfigPath("custom_certs")
@@ -2345,7 +2345,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		util.Warning("Unable to SyncAndterminateMutagenSession: %v", err)
 	}
 
-	if globalconfig.IsTraefikRouter() && status == SiteRunning {
+	if globalconfig.DdevGlobalConfig.IsTraefikRouter() && status == SiteRunning {
 		_, _, err = app.Exec(&ExecOpts{
 			Cmd: fmt.Sprintf("rm -f /mnt/ddev-global-cache/traefik/*/%s.{yaml,crt,key}", app.Name),
 		})

@@ -12,7 +12,7 @@ import (
 
 // TestDebugRouterNginxConfigCmd ensures the debug router-nginx-config prints the nginx config to stdout
 func TestDebugRouterNginxConfigCmd(t *testing.T) {
-	if globalconfig.IsTraefikRouter() {
+	if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
 		t.Skip("Skipping when UseTrafik is set, as it's invalid")
 	}
 	assert := asrt.New(t)
