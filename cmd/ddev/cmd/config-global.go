@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/globalconfig/globalconfigtypes"
+	"github.com/ddev/ddev/pkg/globalconfig/types"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
@@ -263,7 +263,7 @@ func init() {
 	configGlobalCommand.Flags().Bool("use-docker-compose-from-path", true, "If true, use docker-compose from path instead of private ~/.ddev/bin/docker-compose")
 	configGlobalCommand.Flags().Bool("no-bind-mounts", true, "If true, don't use bind-mounts - useful for environments like remote docker where bind-mounts are impossible")
 	configGlobalCommand.Flags().String("xdebug-ide-location", "", "For less usual IDE locations specify where the IDE is running for Xdebug to reach it")
-	configGlobalCommand.Flags().String("router", globalconfigtypes.RouterTypeTraefik, "Use traefik router (default) or `nginx-proxy` legacy router")
+	configGlobalCommand.Flags().String("router", types.RouterTypeTraefik, "Use traefik router (default) or `nginx-proxy` legacy router")
 	configGlobalCommand.Flags().Bool("wsl2-no-windows-hosts-mgt", true, "WSL2 only; make DDEV ignore Windows-side hosts file")
 	configGlobalCommand.Flags().String("router-http-port", "", "The router HTTP port for this project")
 	configGlobalCommand.Flags().String("router-https-port", "", "The router HTTPS port for this project")

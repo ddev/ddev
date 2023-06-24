@@ -1,4 +1,4 @@
-package globalconfigtypes
+package types
 
 type RouterType = string
 

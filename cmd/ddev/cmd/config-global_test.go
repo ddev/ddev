@@ -5,7 +5,7 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/globalconfig/globalconfigtypes"
+	"github.com/ddev/ddev/pkg/globalconfig/types"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -109,7 +109,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	assert.True(globalconfig.DdevGlobalConfig.SimpleFormatting)
 	assert.Equal("bright", globalconfig.DdevGlobalConfig.TableStyle)
 	assert.Equal("container", globalconfig.DdevGlobalConfig.XdebugIDELocation)
-	assert.Equal(globalconfigtypes.RouterTypeNginxProxy, globalconfig.DdevGlobalConfig.Router)
+	assert.Equal(types.RouterTypeNginxProxy, globalconfig.DdevGlobalConfig.Router)
 	assert.Equal("8081", globalconfig.DdevGlobalConfig.RouterHTTPPort)
 	assert.Equal("8882", globalconfig.DdevGlobalConfig.RouterHTTPSPort)
 
