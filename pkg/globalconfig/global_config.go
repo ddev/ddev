@@ -63,6 +63,8 @@ type GlobalConfig struct {
 	WSL2NoWindowsHostsMgt            bool                    `yaml:"wsl2_no_windows_hosts_mgt"`
 	RouterHTTPPort                   string                  `yaml:"router_http_port"`
 	RouterHTTPSPort                  string                  `yaml:"router_https_port"`
+	Messages                         MessagesConfig          `yaml:"messages,omitempty"`
+	RemoteConfig                     RemoteConfig            `yaml:"remote_config,omitempty"`
 	ProjectList                      map[string]*ProjectInfo `yaml:"project_info"`
 }
 
@@ -350,6 +352,18 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # to ~/.ddev/bin/docker-compose.
 # Please don't use this unless directed to do so
 
+# messages:
+#   ticker_interval: 20 // Interval in hours to show ticker messages, -1 disables the ticker
+# Controls the display of the ticker messages.
+
+# remote_config:
+#   update_interval: 10 // Interval in hours to download the remote config
+#   remote:
+#     owner: ddev
+#     repo: remote-config
+#     ref: main
+#     filepath: remote-config.jsonc
+# Controls the download of the remote config. Please do not change.
 `
 	cfgbytes = append(cfgbytes, instructions...)
 

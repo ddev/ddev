@@ -1,16 +1,17 @@
 package cmd
 
 import (
-	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/manifoldco/promptui"
 	"os"
 	"strings"
 
+	"github.com/ddev/ddev/pkg/config/remoteconfig"
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 )
 
@@ -32,6 +33,8 @@ ddev start --all`,
 		dockerutil.EnsureDdevNetwork()
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		remoteconfig.GetGlobal().ShowTicker()
+		remoteconfig.GetGlobal().ShowNotifications()
 
 		skip, err := cmd.Flags().GetBool("skip-confirmation")
 		if err != nil {
