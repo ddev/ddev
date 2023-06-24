@@ -3,7 +3,7 @@ package remoteconfig
 import (
 	"path/filepath"
 
-	"github.com/ddev/ddev/internal/build"
+	"github.com/ddev/ddev/pkg/build"
 	"github.com/ddev/ddev/pkg/config/remoteconfig/internal"
 )
 
