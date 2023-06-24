@@ -4,6 +4,7 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/globalconfig/types"
 	"github.com/ddev/ddev/pkg/util"
 	"os"
 	"strings"
@@ -11,6 +12,9 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/spf13/cobra"
 )
+
+// TODO: This debug function should be removed by 2024-01-01 since the nginx-proxy router is deprecated
+// and since it's easy enough to do this task manually.
 
 // DebugRouterNginxConfigCmd implements the ddev debug router-config command
 // This is only for the obsolete nginx-proxy router
@@ -48,7 +52,7 @@ var DebugRouterNginxConfigCmd = &cobra.Command{
 }
 
 func init() {
-	if !globalconfig.IsTraefikRouter() {
+	if globalconfig.DdevGlobalConfig.Router == types.RouterTypeNginxProxy {
 		DebugCmd.AddCommand(DebugRouterNginxConfigCmd)
 	}
 }
