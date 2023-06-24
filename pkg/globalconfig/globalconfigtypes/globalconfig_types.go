@@ -9,22 +9,22 @@ const (
 	RouterTypeDefault    RouterType = RouterTypeTraefik
 )
 
-// ValidRouterTypes is the list of valid router types
-var ValidRouterTypes = map[RouterType]bool{
+// validRouterTypes is the list of valid router types
+var validRouterTypes = map[RouterType]bool{
 	RouterTypeTraefik:    true,
 	RouterTypeNginxProxy: true,
 }
 
 // IsValidRouterType limits the choices for Router Type
 func IsValidRouterType(router RouterType) bool {
-	isValid, ok := ValidRouterTypes[router]
+	isValid, ok := validRouterTypes[router]
 	return ok && isValid
 }
 
 // GetValidRouterTypes returns a list of valid router types
 func GetValidRouterTypes() []string {
-	s := make([]string, 0, len(ValidRouterTypes))
-	for p := range ValidRouterTypes {
+	s := make([]string, 0, len(validRouterTypes))
+	for p := range validRouterTypes {
 		s = append(s, p)
 	}
 	return s
