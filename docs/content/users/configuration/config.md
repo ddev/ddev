@@ -402,7 +402,7 @@ Whether to bind `ddev-router`'s ports on all network interfaces.
 | -- | -- | --
 | :octicons-globe-16: global | `false` | Can be `true` or `false`.
 
-When `true`, `ddev-router` will bind on all network interfaces instead of only `localhost`, exposing DDEV projects to your local network.
+When `true`, the router will bind on all network interfaces instead of only `localhost`, exposing DDEV projects to your local network. This is sometimes used to share projects on a local network, see [Sharing Your Project](../topics/sharing.md).
 
 ## `router_http_port`
 
