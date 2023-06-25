@@ -691,7 +691,7 @@ ddev import-db --database=additional_db --file=.tarballs/db.sql.gz
 # Import the `db.sql` dump to the project database
 ddev import-db < db.sql
 
-# Import the `db.sql` dump to a `some-project` project
+# Import the `db.sql` dump to the `my-project` default database
 ddev import-db my-project < db.sql
 
 # Uncompress `db.sql.gz` and pipe the result to the `import-db` command
