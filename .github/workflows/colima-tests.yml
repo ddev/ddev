@@ -34,16 +34,12 @@ env:
   HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: TRUE
 
-
 permissions:
   contents: read
 
 jobs:
   tests:
     name: colima-${{ matrix.tests }}-no-bind-mounts=${{ matrix.no-bind-mounts }}
-    defaults:
-      run:
-        shell: bash
 
     strategy:
       matrix:
@@ -65,34 +61,92 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Get Date
+        id: get-date
+        run: |
+          echo "date=$(/bin/date -u "+%Y%U")" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: DDEV test cache
+        uses: actions/cache@v3
+        if: ${{ github.ref == 'refs/heads/master' }}
+        with:
+          path: ~/.ddev/testcache/tarballs
+          key: ddev-test-cache-${{ steps.get-date.outputs.date }}
+          restore-keys: |
+            ddev-test-cache-
+
+      - name: DDEV test cache/restore
+        uses: actions/cache/restore@v3
+        if: ${{ github.ref != 'refs/heads/master' }}
+        with:
+          path: ~/.ddev/testcache/tarballs
+          key: ddev-test-cache-${{ steps.get-date.outputs.date }}
+          restore-keys: |
+            ddev-test-cache-
+
       - uses: actions/setup-go@v4
         with:
           go-version: '>=1.20'
 
-      - name: Homebrew cache/restore
+      - name: Homebrew cache
         uses: actions/cache@v3
-        env:
-          cache-name: cache-homebrew-cache-14
+        if: ${{ github.ref == 'refs/heads/master' }}
         with:
           path: ~/Library/Caches/Homebrew
-          key: ${{ runner.os }}-build-${{ env.cache-name }}
+          key: ${{ runner.os }}-homebrew-cache-${{ steps.get-date.outputs.date }}
           restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}
+            ${{ runner.os }}-homebrew-cache-
+
+      - name: Homebrew cache/restore
+        uses: actions/cache/restore@v3
+        if: ${{ github.ref != 'refs/heads/master' }}
+        with:
+          path: ~/Library/Caches/Homebrew
+          key: ${{ runner.os }}-homebrew-cache-${{ steps.get-date.outputs.date }}
+          restore-keys: |
+            ${{ runner.os }}-homebrew-cache-
 
       - name: Set up Homebrew
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
 
-      - name: Lima cache/restore
+      - name: Lima home
         uses: actions/cache@v3
-        env:
-          cache-name: cache-lima-14
+        if: ${{ github.ref == 'refs/heads/master' }}
         with:
           path: ~/.lima
-          key: ${{ runner.os }}-build-${{ env.cache-name }}
+          key: ${{ runner.os }}-lima-home-${{ steps.get-date.outputs.date }}
           restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}
+            ${{ runner.os }}-lima-home-
 
+      - name: Lima home/restore
+        uses: actions/cache/restore@v3
+        if: ${{ github.ref != 'refs/heads/master' }}
+        with:
+          path: ~/.lima
+          key: ${{ runner.os }}-lima-home-${{ steps.get-date.outputs.date }}
+          restore-keys: |
+            ${{ runner.os }}-lima-home-
+
+      - name: Lima cache
+        uses: actions/cache@v3
+        if: ${{ github.ref == 'refs/heads/master' }}
+        with:
+          path: ~/Library/Caches/lima
+          key: ${{ runner.os }}-lima-cache-${{ steps.get-date.outputs.date }}
+          restore-keys: |
+            ${{ runner.os }}-lima-cache-
+
+      - name: Lima cache/restore
+        uses: actions/cache/restore@v3
+        if: ${{ github.ref != 'refs/heads/master' }}
+        with:
+          path: ~/Library/Caches/lima
+          key: ${{ runner.os }}-lima-cache-${{ steps.get-date.outputs.date }}
+          restore-keys: |
+            ${{ runner.os }}-lima-cache-
+      
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         with:
