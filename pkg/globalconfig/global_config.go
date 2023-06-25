@@ -210,6 +210,12 @@ func ReadGlobalConfig() error {
 		DdevGlobalConfig.MkcertCARoot = readCAROOT()
 	}
 
+	// If they set the internetdetectiontimeout below default, just reset to default
+	// and ignore the setting.
+	if DdevGlobalConfig.InternetDetectionTimeout < nodeps.InternetDetectionTimeoutDefault {
+		DdevGlobalConfig.InternetDetectionTimeout = nodeps.InternetDetectionTimeoutDefault
+	}
+
 	err = ValidateGlobalConfig()
 	if err != nil {
 		return err
