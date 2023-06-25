@@ -4,6 +4,7 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/globalconfig/types"
 	"github.com/ddev/ddev/pkg/util"
 	"os"
 	"strings"
@@ -12,11 +13,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// TODO: This debug function should be removed by 2024-01-01 since the nginx-proxy router is deprecated
+// and since it's easy enough to do this task manually.
+
 // DebugRouterNginxConfigCmd implements the ddev debug router-config command
+// This is only for the obsolete nginx-proxy router
 var DebugRouterNginxConfigCmd = &cobra.Command{
-	Use:     "router-nginx-config",
-	Short:   "Prints the nginx config of the router",
-	Example: "ddev debug router-nginx-config",
+	Use:     "nginx-proxy-router-nginx-config",
+	Short:   "Obsolete: Prints the nginx config in the legacy `nginx-proxy` router",
+	Example: "ddev debug nginx-proxy-router-nginx-config",
 	Run: func(cmd *cobra.Command, args []string) {
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
@@ -47,7 +52,7 @@ var DebugRouterNginxConfigCmd = &cobra.Command{
 }
 
 func init() {
-	if !globalconfig.DdevGlobalConfig.UseTraefik {
+	if globalconfig.DdevGlobalConfig.Router == types.RouterTypeNginxProxy {
 		DebugCmd.AddCommand(DebugRouterNginxConfigCmd)
 	}
 }

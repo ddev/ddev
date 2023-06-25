@@ -217,7 +217,7 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 	appDesc["type"] = app.GetType()
 	appDesc["mutagen_enabled"] = app.IsMutagenEnabled()
 	appDesc["nodejs_version"] = app.NodeJSVersion
-	appDesc["use_traefik"] = globalconfig.DdevGlobalConfig.UseTraefik
+	appDesc["router"] = globalconfig.DdevGlobalConfig.Router
 	if app.IsMutagenEnabled() {
 		appDesc["mutagen_status"], _, _, err = app.MutagenStatus()
 		if err != nil {
@@ -1246,7 +1246,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 
 		// If TLS supported and using traefik, create cert/key and push into ddev-global-cache/traefik
-		if globalconfig.DdevGlobalConfig.UseTraefik {
+		if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
 			err = configureTraefikForApp(app)
 			if err != nil {
 				return err
@@ -1255,7 +1255,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 		// Push custom certs
 		targetSubdir := "custom_certs"
-		if globalconfig.DdevGlobalConfig.UseTraefik {
+		if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
 			targetSubdir = path.Join("traefik", "certs")
 		}
 		certPath := app.GetConfigPath("custom_certs")
@@ -2345,7 +2345,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		util.Warning("Unable to SyncAndterminateMutagenSession: %v", err)
 	}
 
-	if globalconfig.DdevGlobalConfig.UseTraefik && status == SiteRunning {
+	if globalconfig.DdevGlobalConfig.IsTraefikRouter() && status == SiteRunning {
 		_, _, err = app.Exec(&ExecOpts{
 			Cmd: fmt.Sprintf("rm -f /mnt/ddev-global-cache/traefik/*/%s.{yaml,crt,key}", app.Name),
 		})

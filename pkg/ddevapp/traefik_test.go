@@ -4,6 +4,7 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/globalconfig/types"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -25,8 +26,8 @@ func TestTraefikSimple(t *testing.T) {
 	assert.NoError(err)
 
 	ddevapp.PowerOff()
-	origTraefik := globalconfig.DdevGlobalConfig.UseTraefik
-	globalconfig.DdevGlobalConfig.UseTraefik = true
+	origRouter := globalconfig.DdevGlobalConfig.Router
+	globalconfig.DdevGlobalConfig.Router = types.RouterTypeTraefik
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
 	origConfig := *app
@@ -39,7 +40,7 @@ func TestTraefikSimple(t *testing.T) {
 		ddevapp.PowerOff()
 		err = origConfig.WriteConfig()
 		assert.NoError(err)
-		globalconfig.DdevGlobalConfig.UseTraefik = origTraefik
+		globalconfig.DdevGlobalConfig.Router = origRouter
 		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		assert.NoError(err)
 	})
@@ -55,7 +56,7 @@ func TestTraefikSimple(t *testing.T) {
 	require.NoError(t, err, "failed to flush mutagen sync")
 
 	desc, err := app.Describe(false)
-	assert.True(desc["use_traefik"].(bool))
+	assert.Equal(desc["router"].(string), types.RouterTypeTraefik)
 
 	// Test reachabiliity in each of the hostnames
 	httpURLs, httpsURLs, allURLs := app.GetAllURLs()
@@ -92,8 +93,8 @@ func TestTraefikVirtualHost(t *testing.T) {
 	assert.NoError(err)
 
 	ddevapp.PowerOff()
-	origTraefik := globalconfig.DdevGlobalConfig.UseTraefik
-	globalconfig.DdevGlobalConfig.UseTraefik = true
+	origRouter := globalconfig.DdevGlobalConfig.Router
+	globalconfig.DdevGlobalConfig.Router = "traefik"
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	require.NoError(t, err)
 	origConfig := *app
@@ -108,7 +109,7 @@ func TestTraefikVirtualHost(t *testing.T) {
 		ddevapp.PowerOff()
 		err = origConfig.WriteConfig()
 		assert.NoError(err)
-		globalconfig.DdevGlobalConfig.UseTraefik = origTraefik
+		globalconfig.DdevGlobalConfig.Router = origRouter
 		err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 		assert.NoError(err)
 	})
@@ -120,7 +121,7 @@ func TestTraefikVirtualHost(t *testing.T) {
 	require.NoError(t, err)
 
 	desc, err := app.Describe(false)
-	assert.True(desc["use_traefik"].(bool))
+	assert.Equal(types.RouterTypeTraefik, desc["router"].(string))
 
 	// Test reachabiliity in each of the hostnames
 	httpURLs, _, allURLs := app.GetAllURLs()

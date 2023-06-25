@@ -5,7 +5,7 @@ import (
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/globalconfig/types"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -18,9 +18,6 @@ import (
 
 func TestCmdGlobalConfig(t *testing.T) {
 	assert := asrt.New(t)
-	if nodeps.UseTraefikDefault {
-		t.Skip("Skipping with traefik turned on because can't use hardened images")
-	}
 	backupConfig := globalconfig.DdevGlobalConfig
 	// Start with no config file
 	configFile := globalconfig.GetGlobalConfigPath()
@@ -33,7 +30,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	// nolint: errcheck
 	t.Cleanup(func() {
 		// Even though the global config is going to be deleted, make sure it's sane before leaving
-		args := []string{"config", "global", `--omit-containers`, "", "--nfs-mount-enabled", "--disable-http2=false", "--mutagen-enabled=false", "--simple-formatting=false", "--table-style=default", `--required-docker-compose-version=""`, `--use-docker-compose-from-path=false`, `--xdebug-ide-location`, "", `--router-http-port=80`, `--router-https-port=443`}
+		args := []string{"config", "global", "--omit-containers", "", "--nfs-mount-enabled", "--disable-http2=false", "--mutagen-enabled=false", "--simple-formatting=false", "--table-style=default", `--required-docker-compose-version=""`, `--use-docker-compose-from-path=false`, `--xdebug-ide-location`, "", `--router=traefik`}
 		globalconfig.DdevGlobalConfig.OmitContainersGlobal = nil
 		out, err := exec.RunHostCommand(DdevBin, args...)
 		assert.NoError(err, "error running ddev config global; output=%s", out)
@@ -54,39 +51,71 @@ func TestCmdGlobalConfig(t *testing.T) {
 	args := []string{"config", "global"}
 	out, err := exec.RunCommand(DdevBin, args)
 	require.NoError(t, err)
-	require.Contains(t, string(out), fmt.Sprintf("Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[]\nweb-environment=[]\nmutagen-enabled=false\nnfs-mount-enabled=false\nrouter-bind-all-interfaces=false\ninternet-detection-timeout-ms=3000\ndisable-http2=false\nuse-letsencrypt=false\nletsencrypt-email=\ntable-style=default\nsimple-formatting=false\nauto-restart-containers=false\nuse-hardened-images=false\nfail-on-hook-fail=false\nrequired-docker-compose-version=%s\nuse-docker-compose-from-path=false\nproject-tld=\nxdebug-ide-location=", globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion))
-	require.Contains(t, string(out), "wsl2-no-windows-hosts-mgt=false\nrouter-http-port=80\nrouter-https-port=443")
+	assert.NoError(err, "error running ddev config global; output=%s", out)
+	assert.Contains(out, "instrumentation-opt-in=false\nomit-containers=[]")
+	assert.Contains(out, `web-environment=[]`)
+	assert.Contains(out, "mutagen-enabled=false\nnfs-mount-enabled=false")
+	assert.Contains(out, "router-bind-all-interfaces=false")
+	assert.Contains(out, "internet-detection-timeout-ms=3000")
+	assert.Contains(out, "disable-http2=false")
+	assert.Contains(out, "use-letsencrypt=false\nletsencrypt-email=\n")
+	assert.Contains(out, "table-style=default\nsimple-formatting=false")
+	assert.Contains(out, "auto-restart-containers=false\nuse-hardened-images=false\n")
+	assert.Contains(out, "fail-on-hook-fail=false")
+	assert.Contains(out, fmt.Sprintf("required-docker-compose-version=%s\nuse-docker-compose-from-path=false", globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion))
+	assert.Contains(out, "project-tld=\nxdebug-ide-location=")
+	assert.Contains(out, "router=traefik")
+	assert.Contains(out, "wsl2-no-windows-hosts-mgt=false")
+	assert.Contains(out, "router-http-port=80\nrouter-https-port=443")
 
 	// Update a config
 	// Don't include no-bind-mounts because global testing
 	// will turn it on and break this
-	args = []string{"config", "global", "--project-tld=ddev.test", "--instrumentation-opt-in=false", "--omit-containers=dba,ddev-ssh-agent", "--mutagen-enabled=true", "--nfs-mount-enabled=true", "--router-bind-all-interfaces=true", "--internet-detection-timeout-ms=850", "--use-letsencrypt", "--letsencrypt-email=nobody@example.com", "--table-style=bright", "--simple-formatting=true", "--auto-restart-containers=true", "--use-hardened-images=true", "--fail-on-hook-fail=true", `--web-environment="SOMEENV=some+val"`, `--xdebug-ide-location=container`, `--router-http-port=8081`, `--router-https-port=8882`}
+	args = []string{"config", "global", "--project-tld=ddev.test", "--instrumentation-opt-in=false", "--omit-containers=ddev-ssh-agent", "--mutagen-enabled=true", "--nfs-mount-enabled=true", "--router-bind-all-interfaces=true", "--internet-detection-timeout-ms=850", "--table-style=bright", "--simple-formatting=true", "--auto-restart-containers=true", "--use-hardened-images=true", "--fail-on-hook-fail=true", `--web-environment="SOMEENV=some+val"`, `--xdebug-ide-location=container`, `--router=nginx-proxy`, `--router-http-port=8081`, `--router-https-port=8882`}
 	out, err = exec.RunCommand(DdevBin, args)
 	require.NoError(t, err)
-	assert.Contains(string(out), fmt.Sprintf("Global configuration:\ninstrumentation-opt-in=false\nomit-containers=[dba,ddev-ssh-agent]\nweb-environment=[\"SOMEENV=some+val\"]\nmutagen-enabled=true\nnfs-mount-enabled=true\nrouter-bind-all-interfaces=true\ninternet-detection-timeout-ms=850\ndisable-http2=false\nuse-letsencrypt=true\nletsencrypt-email=nobody@example.com\ntable-style=bright\nsimple-formatting=true\nauto-restart-containers=true\nuse-hardened-images=true\nfail-on-hook-fail=true\nrequired-docker-compose-version=%s\nuse-docker-compose-from-path=false", globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion))
-	require.Contains(t, string(out), "xdebug-ide-location=container")
-	require.Contains(t, string(out), "router-http-port=8081\nrouter-https-port=8882")
+	assert.NoError(err, "error running ddev config global; output=%s", out)
+	assert.Contains(out, "instrumentation-opt-in=false")
+	assert.Contains(out, "omit-containers=[ddev-ssh-agent]")
+	assert.Contains(out, `web-environment=["SOMEENV=some+val"]`)
+	assert.Contains(out, "mutagen-enabled=true")
+	assert.Contains(out, "nfs-mount-enabled=true")
+	assert.Contains(out, "router-bind-all-interfaces=true")
+	assert.Contains(out, "internet-detection-timeout-ms=850")
+	assert.Contains(out, "disable-http2=false")
+	assert.Contains(out, "use-letsencrypt=false\nletsencrypt-email=\n")
+	assert.Contains(out, "table-style=bright\nsimple-formatting=true")
+	assert.Contains(out, "auto-restart-containers=true\nuse-hardened-images=true\n")
+	assert.Contains(out, "fail-on-hook-fail=true")
+	assert.Contains(out, fmt.Sprintf("required-docker-compose-version=%s\nuse-docker-compose-from-path=false", globalconfig.DdevGlobalConfig.RequiredDockerComposeVersion))
+	assert.Contains(out, "project-tld=")
+	assert.Contains(out, "router=nginx-proxy")
+	assert.Contains(out, "wsl2-no-windows-hosts-mgt=false")
 
-	err = globalconfig.ReadGlobalConfig()
-	assert.NoError(err)
+	assert.Contains(string(out), "xdebug-ide-location=container")
+	assert.Contains(out, "wsl2-no-windows-hosts-mgt=false")
+	assert.Contains(out, "router-http-port=8081\nrouter-https-port=8882")
+	assert.Contains(out, "router=nginx-proxy")
+
+	globalconfig.EnsureGlobalConfig()
 	assert.False(globalconfig.DdevGlobalConfig.InstrumentationOptIn)
 	assert.Contains(globalconfig.DdevGlobalConfig.OmitContainersGlobal, "ddev-ssh-agent")
-	assert.Contains(globalconfig.DdevGlobalConfig.OmitContainersGlobal, "dba")
 	assert.True(globalconfig.DdevGlobalConfig.MutagenEnabledGlobal)
 	assert.True(globalconfig.DdevGlobalConfig.NFSMountEnabledGlobal)
-	assert.Len(globalconfig.DdevGlobalConfig.OmitContainersGlobal, 2)
-	assert.Equal("nobody@example.com", globalconfig.DdevGlobalConfig.LetsEncryptEmail)
+	assert.Len(globalconfig.DdevGlobalConfig.OmitContainersGlobal, 1)
 	assert.Equal("ddev.test", globalconfig.DdevGlobalConfig.ProjectTldGlobal)
-	assert.True(globalconfig.DdevGlobalConfig.UseLetsEncrypt)
 	assert.True(globalconfig.DdevGlobalConfig.UseHardenedImages)
 	assert.True(globalconfig.DdevGlobalConfig.FailOnHookFailGlobal)
 	assert.True(globalconfig.DdevGlobalConfig.SimpleFormatting)
 	assert.Equal("bright", globalconfig.DdevGlobalConfig.TableStyle)
 	assert.Equal("container", globalconfig.DdevGlobalConfig.XdebugIDELocation)
+	assert.Equal(types.RouterTypeNginxProxy, globalconfig.DdevGlobalConfig.Router)
+	assert.Equal("8081", globalconfig.DdevGlobalConfig.RouterHTTPPort)
+	assert.Equal("8882", globalconfig.DdevGlobalConfig.RouterHTTPSPort)
 
 	// Test that variables can be appended to the web environment
 	args = []string{"config", "global", `--web-environment-add="FOO=bar"`}
 	out, err = exec.RunCommand(DdevBin, args)
-	assert.NoError(err)
+	require.NoError(t, err)
 	assert.Contains(string(out), "web-environment=[\"FOO=bar\",\"SOMEENV=some+val\"]")
 }

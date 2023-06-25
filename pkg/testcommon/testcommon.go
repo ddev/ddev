@@ -144,6 +144,9 @@ func (site *TestSite) Prepare() error {
 		return fmt.Errorf("Failed to create upload dir for test site: %v", err)
 	}
 
+	// Force creation of new global config if none exists.
+	_ = globalconfig.ReadGlobalConfig()
+
 	err = app.WriteConfig()
 	if err != nil {
 		return errors.Errorf("Failed to write site config for site %s, dir %s, err: %v", app.Name, app.GetAppRoot(), err)

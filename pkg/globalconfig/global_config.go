@@ -3,6 +3,7 @@ package globalconfig
 import (
 	"context"
 	"fmt"
+	"github.com/ddev/ddev/pkg/globalconfig/types"
 	"net"
 	"os"
 	"os/exec"
@@ -59,7 +60,7 @@ type GlobalConfig struct {
 	ProjectTldGlobal                 string                  `yaml:"project_tld"`
 	XdebugIDELocation                string                  `yaml:"xdebug_ide_location"`
 	NoBindMounts                     bool                    `yaml:"no_bind_mounts"`
-	UseTraefik                       bool                    `yaml:"use_traefik"`
+	Router                           string                  `yaml:"router"`
 	WSL2NoWindowsHostsMgt            bool                    `yaml:"wsl2_no_windows_hosts_mgt"`
 	RouterHTTPPort                   string                  `yaml:"router_http_port"`
 	RouterHTTPSPort                  string                  `yaml:"router_https_port"`
@@ -75,11 +76,11 @@ func New() GlobalConfig {
 		RequiredDockerComposeVersion: RequiredDockerComposeVersionDefault,
 		InternetDetectionTimeout:     nodeps.InternetDetectionTimeoutDefault,
 		TableStyle:                   "default",
-		RouterHTTPPort:               "80",
-		RouterHTTPSPort:              "443",
+		RouterHTTPPort:               nodeps.DdevDefaultRouterHTTPPort,
+		RouterHTTPSPort:              nodeps.DdevDefaultRouterHTTPSPort,
 		LastStartedVersion:           "v0.0",
 		NoBindMounts:                 nodeps.NoBindMountsDefault,
-		UseTraefik:                   nodeps.UseTraefikDefault,
+		Router:                       types.RouterTypeDefault,
 		MkcertCARoot:                 readCAROOT(),
 		ProjectList:                  make(map[string]*ProjectInfo),
 	}
@@ -156,6 +157,10 @@ func ValidateGlobalConfig() error {
 		return fmt.Errorf("Invalid omit_containers: %s, must contain only %s", strings.Join(DdevGlobalConfig.OmitContainersGlobal, ","), strings.Join(GetValidOmitContainers(), ",")).(InvalidOmitContainers)
 	}
 
+	if !types.IsValidRouterType(DdevGlobalConfig.Router) {
+		return fmt.Errorf("Invalid router: %s, valid router types are %v", DdevGlobalConfig.Router, types.GetValidRouterTypes())
+	}
+
 	if !IsValidTableStyle(DdevGlobalConfig.TableStyle) {
 		DdevGlobalConfig.TableStyle = "default"
 	}
@@ -163,16 +168,17 @@ func ValidateGlobalConfig() error {
 	if !IsValidXdebugIDELocation(DdevGlobalConfig.XdebugIDELocation) {
 		return fmt.Errorf(`xdebug_ide_location must be IP address or one of %v`, ValidXdebugIDELocations)
 	}
-	if DdevGlobalConfig.DisableHTTP2 && DdevGlobalConfig.UseTraefik {
-		return fmt.Errorf("disable_http2 and use_traefik are mutually incompatible")
+	if DdevGlobalConfig.DisableHTTP2 && DdevGlobalConfig.IsTraefikRouter() {
+		return fmt.Errorf("disable_http2 and router = traefik are mutually incompatible, as Traefik does not support disabling HTTP2")
 	}
-	if DdevGlobalConfig.UseTraefik && (DdevGlobalConfig.UseLetsEncrypt || DdevGlobalConfig.LetsEncryptEmail != "") {
+	if DdevGlobalConfig.IsTraefikRouter() && (DdevGlobalConfig.UseLetsEncrypt || DdevGlobalConfig.LetsEncryptEmail != "") {
 		return fmt.Errorf("use-letsencrypt is not directly supported with traefik. but can be configured with custom config, see https://doc.traefik.io/traefik/https/acme/")
 	}
 	return nil
 }
 
 // ReadGlobalConfig reads the global config file into DdevGlobalConfig
+// Or creates the file
 func ReadGlobalConfig() error {
 	globalConfigFile := GetGlobalConfigPath()
 
@@ -185,6 +191,7 @@ func ReadGlobalConfig() error {
 			return nil
 		}
 		if os.IsNotExist(err) {
+			DdevGlobalConfig = New()
 			err := WriteGlobalConfig(DdevGlobalConfig)
 			if err != nil {
 				return err
@@ -285,6 +292,9 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 # You can enable 'ddev start' to be interrupted by a failing hook with
 # fail_on_hook_fail: true
+
+# router: traefik # or nginx-proxy
+# Traefik router is default, but you can switch to the legacy "nginx-proxy" router.
 
 # router_http_port: <port>  # Port to be used for http (defaults to 80)
 # router_https_port: <port> # Port for https (defaults to 443)
@@ -647,6 +657,11 @@ func IsInternetActive() bool {
 	return active
 }
 
+// IsTraefikRouter returns true if the router is traefik
+func (c *GlobalConfig) IsTraefikRouter() bool {
+	return c.Router == types.RouterTypeTraefik
+}
+
 // DockerComposeVersion is filled with the version we find for docker-compose
 var DockerComposeVersion = ""
 
@@ -670,7 +685,7 @@ func GetRequiredDockerComposeVersion() string {
 func GetRouterURL() string {
 	routerURL := ""
 	// Until we figure out how to configure this, use static value
-	if DdevGlobalConfig.UseTraefik {
+	if DdevGlobalConfig.IsTraefikRouter() {
 		routerURL = "http://localhost:9999"
 	}
 	return routerURL
