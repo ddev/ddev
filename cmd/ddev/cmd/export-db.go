@@ -21,9 +21,8 @@ func NewExportDBCmd() *cobra.Command {
 			$ ddev export-db --gzip=false --file /tmp/db.sql
 			$ ddev export-db > /tmp/db.sql.gz
 			$ ddev export-db --gzip=false > /tmp/db.sql
-			$ ddev export-db --database=other_db --file=.tarballs/other_db.sql.gz
+			$ ddev export-db --database=additional_db --file=.tarballs/additional_db.sql.gz
 			$ ddev export-db my-project --gzip=false --file=/tmp/my_project.sql
-			$ ddev export-db some-project --gzip=false --file=/tmp/some_project.sql
 		`),
 		Args: cobra.RangeArgs(0, 1),
 		PreRun: func(cmd *cobra.Command, args []string) {

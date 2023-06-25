@@ -38,7 +38,7 @@ func NewImportDBCmd() *cobra.Command {
 			$ ddev import-db --file=.tarballs/db.sql.bz2
 			$ ddev import-db --file=.tarballs/db.sql.xz
 			$ ddev import-db < db.sql
-			$ ddev import-db some-project < db.sql
+			$ ddev import-db my-project < db.sql
 			$ gzip -dc db.sql.gz | ddev import-db
 		`),
 		PreRun: func(cmd *cobra.Command, args []string) {
@@ -104,14 +104,14 @@ func NewImportDBCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringP("file", "f", "", "Path to a SQL dump file, plain text or compressed (tar/tar.gz/tgz/zip)")
+	cmd.Flags().StringP("file", "f", "", "Path to a SQL dump in `.sql`, `.tar`, `.tar.gz`, `.tgz`, `.bz2`, `.xx`, or `.zip` format")
 	cmd.Flags().String("extract-path", "", "Path to extract within the archive")
 	cmd.Flags().StringP("database", "d", "db", "Target database to import into")
 	cmd.Flags().Bool("no-drop", false, "Do not drop the database before importing")
 	cmd.Flags().Bool("no-progress", false, "Do not output progress")
 
 	// Backward compatibility
-	cmd.Flags().String("src", "", "Path to a SQL dump file, plain text or compressed (tar/tar.gz/tgz/zip)")
+	cmd.Flags().String("src", "", "Path to a SQL dump in `.sql`, `.tar`, `.tar.gz`, `.tgz`, `.bz2`, `.xx`, or `.zip` format")
 	_ = cmd.Flags().MarkDeprecated("src", "please use --file instead")
 
 	cmd.Flags().String("target-db", "db", "Target database to import into")
