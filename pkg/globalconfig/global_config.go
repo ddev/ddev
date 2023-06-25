@@ -210,6 +210,12 @@ func ReadGlobalConfig() error {
 		DdevGlobalConfig.MkcertCARoot = readCAROOT()
 	}
 
+	// If they set the internetdetectiontimeout below default, just reset to default
+	// and ignore the setting.
+	if DdevGlobalConfig.InternetDetectionTimeout < nodeps.InternetDetectionTimeoutDefault {
+		DdevGlobalConfig.InternetDetectionTimeout = nodeps.InternetDetectionTimeoutDefault
+	}
+
 	err = ValidateGlobalConfig()
 	if err != nil {
 		return err
@@ -273,9 +279,9 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 # In unusual cases the default value to wait to detect internet availability is too short.
 # You can adjust this value higher to make it less likely that ddev will declare internet
-# unavailable, but ddev may wait longer on some commands. This should not be set below the default 1000
+# unavailable, but ddev may wait longer on some commands. This should not be set below the default 3000
 # ddev will ignore low values, as they're not useful
-# internet_detection_timeout_ms: 1000
+# internet_detection_timeout_ms: 3000
 
 # You can enable 'ddev start' to be interrupted by a failing hook with
 # fail_on_hook_fail: true
