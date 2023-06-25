@@ -44,11 +44,15 @@ func GetDeviceID() string {
 
 // GetEventOptions returns default options to be used when tracking an event.
 func GetEventOptions() (options ampli.EventOptions) {
+	osType := runtime.GOOS
+	if dockerutil.IsWSL2() {
+		osType = "wsl2"
+	}
 	options = ampli.EventOptions{
 		DeviceID:   GetDeviceID(),
 		AppVersion: versionconstants.DdevVersion,
 		Platform:   runtime.GOARCH,
-		OSName:     runtime.GOOS,
+		OSName:     osType,
 		Language:   os.Getenv("LANG"),
 		ProductID:  "ddev cli",
 	}
