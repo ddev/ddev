@@ -221,9 +221,9 @@ Reporting interval in hours for [instrumentation reporting](../usage/diagnostics
 
 Internet detection timeout in milliseconds.
 
-| Type | Default | Usage
-| -- | -- | --
-| :octicons-globe-16: global | `1000` (1 second) | Can be any integer.
+| Type | Default            | Usage
+| -- |--------------------| --
+| :octicons-globe-16: global | `3000` (3 seconds) | Can be any integer.
 
 DDEV must detect whether the internet is working to determine whether to add hostnames to `/etc/hosts`. In rare cases, you may need to increase this value if you have slow but working internet. See [FAQ](../usage/faq.md) and [GitHub issue](https://github.com/ddev/ddev/issues/2409#issuecomment-662448025).
 
