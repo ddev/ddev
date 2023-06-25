@@ -155,7 +155,7 @@ When you install or upgrade DDEV you’re mostly installing a single `ddev` bina
 
 * The `ddev-webserver` container (one per project) runs `nginx` or `apache` and `php-fpm` for a single site, so it does all the basic work of a PHP-interpreting web server.
 * The `ddev-dbserver` container (one per project) handles MariaDB/MySQL/PostgreSQL database management. It can be reached from the web server by the hostname `db` or with the more explicit name `ddev-<projectname>-db`.
-* Additional add-on services may be there for a given project, for example `phpmyadmin`, `solr` or `elasticsearch` or `memcached`.
+* Additional add-on services may be there for a given project, for example `phpmyadmin`, `solr`, `elasticsearch`, or `memcached`.
 
 Although it’s not common usage, different projects can communicate with each other as described in the [FAQ](faq.md#can-different-projects-communicate-with-each-other).
 

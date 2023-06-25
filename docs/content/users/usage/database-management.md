@@ -19,7 +19,7 @@ ddev import-db --src=dumpfile.sql.gz
 You can also:
 
 * Use [`ddev mysql`](../usage/commands.md#mysql) or `ddev psql` or the `mysql` and `psql` commands inside the `web` and `db` containers.
-* Use many other database browsers to import.
+* Use a [database client](#database-clients) or [database GUI](#database-guis) to import and browse data.
 
 ## Database Backends and Defaults
 
@@ -57,9 +57,9 @@ The PostgreSQL database container includes normal `pg` commands like `pgdump`.
 
 If you’d like to use a GUI database client, you’ll need the right connection details and there may even be a command to launch it for you:
 
-* PhpMyAdmin, formerly built into DDEV core, can be installed with `ddev get ddev/ddev-phpmyadmin`.
+* phpMyAdmin, formerly built into DDEV core, can be installed by running `ddev get ddev/ddev-phpmyadmin`.
 * Adminer can be installed with `ddev get ddev/ddev-adminer`
-* The [`ddev describe`](../usage/commands.md#describe) command displays the  `Host:` details you’ll need to connect to the `db` container externally, for example if you're using an on-host database browser like SequelAce.
+* The [`ddev describe`](../usage/commands.md#describe) command displays the `Host:` details you’ll need to connect to the `db` container externally, for example if you're using an on-host database browser like SequelAce.
 * macOS users can use `ddev sequelace` to launch the free [Sequel Ace](https://sequel-ace.com/) database browser, [`ddev tableplus`](../usage/commands.md#tableplus) to launch [TablePlus](https://tableplus.com), [`ddev querious`](../usage/commands.md#querious) for [Querious](https://www.araelium.com/querious), and the obsolete Sequel Pro is also supported with `ddev sequelpro`. (Each must be installed for the command to exist.)
 * PhpStorm (and all JetBrains tools) have a nice database browser. (If you use the [DDEV Integration plugin](https://plugins.jetbrains.com/plugin/18813-ddev-integration) this is all done for you.)
     * Choose a static [`host_db_port`](../configuration/config.md#host_db_port) setting for your project. For example `host_db_port: 59002` (each project’s database port should be different if you’re running more than one project at a time). Use [`ddev start`](../usage/commands.md#start) for it to take effect.

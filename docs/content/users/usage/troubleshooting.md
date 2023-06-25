@@ -78,7 +78,7 @@ router_https_port: 8443
 
 Then run `ddev start`. This changes the project’s HTTP URL to `http://yoursite.ddev.site:8080` and the HTTPS URL to `https://yoursite.ddev.site:8443`.
 
-If the conflict is over port 8025 or 8026, it’s normally a conflict over the default port for MailHog. You can add the following to `.ddev/config.yaml`:
+If the conflict is over port 8025 or 8026, it’s probably clashing with MailHog’s default port. You can add the following to `.ddev/config.yaml`:
 
 ```yaml
 mailhog_port: 8300

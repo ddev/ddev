@@ -336,7 +336,7 @@ Containers that should not be loaded automatically for one or more projects.
 | -- | -- | --
 | :octicons-file-directory-16: project<br>:octicons-globe-16: global | `[]` | **For projects**, can include `db`, and `ddev-ssh-agent`.<br>**Globally**, can include `ddev-ssh-agent` only.
 
-Example: `omit_containers: [db, ddev-ssh-agent]` starts the project without a `db` container, and SSH agent. Some containers can be omitted globally in `~/.ddev/global_config.yaml` and the result is additive; all containers named in both places will be omitted.
+Example: `omit_containers: [db, ddev-ssh-agent]` starts the project without a `db` container and SSH agent. Some containers can be omitted globally in `~/.ddev/global_config.yaml` and the result is additive; all containers named in both places will be omitted.
 
 !!!warning
     Omitting the `db` container will cause database-dependent DDEV features to be unstable.
