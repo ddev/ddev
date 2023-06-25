@@ -48,6 +48,7 @@ jobs:
           - name: "apache-fpm"
             webserver: "apache-fpm"
           - name: "nginx-fpm"
+            webserver: "nginx-fpm"
           - name: "mutagen"
             mutagen: true
           - name: "no-bind-mounts"
@@ -72,6 +73,7 @@ jobs:
       TESTARGS: "-failfast"
       DDEV_ACQUIA_SSH_KEY: ${{ secrets.DDEV_ACQUIA_SSH_KEY }}
       DDEV_PANTHEON_SSH_KEY: ${{ secrets.DDEV_PANTHEON_SSH_KEY }}
+      DDEV_SKIP_NODEJS_TEST: "true"
 
     steps:
       - uses: actions/checkout@v3
@@ -95,6 +97,11 @@ jobs:
           echo "DDEV_ACQUIA_API_KEY=${{ secrets.DDEV_ACQUIA_API_KEY }}" >> $GITHUB_ENV
           echo "DDEV_ACQUIA_API_SECRET=${{ secrets.DDEV_ACQUIA_API_SECRET }}" >> $GITHUB_ENV
         if: ${{ matrix.pull-push-test-platforms }}
+
+      - name: Override environment variables for plain nginx
+        run: |
+          echo "DDEV_SKIP_NODEJS_TEST=false" >> $GITHUB_ENV
+        if: ${{ matrix.webserver == 'nginx-fpm' }}
 
       - run: echo "DDEV_TEST_USE_MUTAGEN=${DDEV_TEST_USE_MUTAGEN} DDEV_TEST_USE_NGINX_PROXY_ROUTER=${DDEV_TEST_USE_NGINX_PROXY_ROUTER} DDEV_TEST_WEBSERVER_TYPE=${DDEV_TEST_WEBSERVER_TYPE} DDEV_TEST_NO_BIND_MOUNTS=${DDEV_TEST_NO_BIND_MOUNTS} MAKE_TARGET=${MAKE_TARGET} TESTARGS=${TESTARGS} GOTEST_SHORT='${GOTEST_SHORT}'"
 
