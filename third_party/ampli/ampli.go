@@ -10,9 +10,9 @@
 // Build: 1.0.0
 // Runtime: go-ampli
 //
-// View Tracking Plan: https://data.amplitude.com/ddev/DDEV/events/main/latest
+// View Tracking Plan: https://data.amplitude.com/ddev/DDEV/events/mutagen-nfs/latest
 //
-// Full Setup Instructions: https://data.amplitude.com/ddev/DDEV/implementation/main/latest/getting-started/ddev
+// Full Setup Instructions: https://data.amplitude.com/ddev/DDEV/implementation/mutagen-nfs/latest/getting-started/ddev
 //
 
 package ampli
@@ -297,14 +297,12 @@ var Project = struct {
 			ContainersOmitted(containersOmitted []string) interface {
 				FailOnHookFail(failOnHookFail bool) interface {
 					Id(id string) interface {
-						MutagenEnabled(mutagenEnabled bool) interface {
-							NfsMountEnabled(nfsMountEnabled bool) interface {
-								NodejsVersion(nodejsVersion string) interface {
-									PhpVersion(phpVersion string) interface {
-										ProjectType(projectType string) interface {
-											RouterDisabled(routerDisabled bool) interface {
-												WebserverType(webserverType string) ProjectBuilder
-											}
+						NodejsVersion(nodejsVersion string) interface {
+							Performance(performance string) interface {
+								PhpVersion(phpVersion string) interface {
+									ProjectType(projectType string) interface {
+										RouterDisabled(routerDisabled bool) interface {
+											WebserverType(webserverType string) ProjectBuilder
 										}
 									}
 								}
@@ -321,14 +319,12 @@ var Project = struct {
 			ContainersOmitted(containersOmitted []string) interface {
 				FailOnHookFail(failOnHookFail bool) interface {
 					Id(id string) interface {
-						MutagenEnabled(mutagenEnabled bool) interface {
-							NfsMountEnabled(nfsMountEnabled bool) interface {
-								NodejsVersion(nodejsVersion string) interface {
-									PhpVersion(phpVersion string) interface {
-										ProjectType(projectType string) interface {
-											RouterDisabled(routerDisabled bool) interface {
-												WebserverType(webserverType string) ProjectBuilder
-											}
+						NodejsVersion(nodejsVersion string) interface {
+							Performance(performance string) interface {
+								PhpVersion(phpVersion string) interface {
+									ProjectType(projectType string) interface {
+										RouterDisabled(routerDisabled bool) interface {
+											WebserverType(webserverType string) ProjectBuilder
 										}
 									}
 								}
@@ -372,14 +368,12 @@ func (b *projectBuilder) Containers(containers []string) interface {
 	ContainersOmitted(containersOmitted []string) interface {
 		FailOnHookFail(failOnHookFail bool) interface {
 			Id(id string) interface {
-				MutagenEnabled(mutagenEnabled bool) interface {
-					NfsMountEnabled(nfsMountEnabled bool) interface {
-						NodejsVersion(nodejsVersion string) interface {
-							PhpVersion(phpVersion string) interface {
-								ProjectType(projectType string) interface {
-									RouterDisabled(routerDisabled bool) interface {
-										WebserverType(webserverType string) ProjectBuilder
-									}
+				NodejsVersion(nodejsVersion string) interface {
+					Performance(performance string) interface {
+						PhpVersion(phpVersion string) interface {
+							ProjectType(projectType string) interface {
+								RouterDisabled(routerDisabled bool) interface {
+									WebserverType(webserverType string) ProjectBuilder
 								}
 							}
 						}
@@ -397,14 +391,12 @@ func (b *projectBuilder) Containers(containers []string) interface {
 func (b *projectBuilder) ContainersOmitted(containersOmitted []string) interface {
 	FailOnHookFail(failOnHookFail bool) interface {
 		Id(id string) interface {
-			MutagenEnabled(mutagenEnabled bool) interface {
-				NfsMountEnabled(nfsMountEnabled bool) interface {
-					NodejsVersion(nodejsVersion string) interface {
-						PhpVersion(phpVersion string) interface {
-							ProjectType(projectType string) interface {
-								RouterDisabled(routerDisabled bool) interface {
-									WebserverType(webserverType string) ProjectBuilder
-								}
+			NodejsVersion(nodejsVersion string) interface {
+				Performance(performance string) interface {
+					PhpVersion(phpVersion string) interface {
+						ProjectType(projectType string) interface {
+							RouterDisabled(routerDisabled bool) interface {
+								WebserverType(webserverType string) ProjectBuilder
 							}
 						}
 					}
@@ -420,14 +412,12 @@ func (b *projectBuilder) ContainersOmitted(containersOmitted []string) interface
 
 func (b *projectBuilder) FailOnHookFail(failOnHookFail bool) interface {
 	Id(id string) interface {
-		MutagenEnabled(mutagenEnabled bool) interface {
-			NfsMountEnabled(nfsMountEnabled bool) interface {
-				NodejsVersion(nodejsVersion string) interface {
-					PhpVersion(phpVersion string) interface {
-						ProjectType(projectType string) interface {
-							RouterDisabled(routerDisabled bool) interface {
-								WebserverType(webserverType string) ProjectBuilder
-							}
+		NodejsVersion(nodejsVersion string) interface {
+			Performance(performance string) interface {
+				PhpVersion(phpVersion string) interface {
+					ProjectType(projectType string) interface {
+						RouterDisabled(routerDisabled bool) interface {
+							WebserverType(webserverType string) ProjectBuilder
 						}
 					}
 				}
@@ -441,14 +431,12 @@ func (b *projectBuilder) FailOnHookFail(failOnHookFail bool) interface {
 }
 
 func (b *projectBuilder) Id(id string) interface {
-	MutagenEnabled(mutagenEnabled bool) interface {
-		NfsMountEnabled(nfsMountEnabled bool) interface {
-			NodejsVersion(nodejsVersion string) interface {
-				PhpVersion(phpVersion string) interface {
-					ProjectType(projectType string) interface {
-						RouterDisabled(routerDisabled bool) interface {
-							WebserverType(webserverType string) ProjectBuilder
-						}
+	NodejsVersion(nodejsVersion string) interface {
+		Performance(performance string) interface {
+			PhpVersion(phpVersion string) interface {
+				ProjectType(projectType string) interface {
+					RouterDisabled(routerDisabled bool) interface {
+						WebserverType(webserverType string) ProjectBuilder
 					}
 				}
 			}
@@ -460,26 +448,8 @@ func (b *projectBuilder) Id(id string) interface {
 	return b
 }
 
-func (b *projectBuilder) MutagenEnabled(mutagenEnabled bool) interface {
-	NfsMountEnabled(nfsMountEnabled bool) interface {
-		NodejsVersion(nodejsVersion string) interface {
-			PhpVersion(phpVersion string) interface {
-				ProjectType(projectType string) interface {
-					RouterDisabled(routerDisabled bool) interface {
-						WebserverType(webserverType string) ProjectBuilder
-					}
-				}
-			}
-		}
-	}
-} {
-	b.properties[`Mutagen Enabled`] = mutagenEnabled
-
-	return b
-}
-
-func (b *projectBuilder) NfsMountEnabled(nfsMountEnabled bool) interface {
-	NodejsVersion(nodejsVersion string) interface {
+func (b *projectBuilder) NodejsVersion(nodejsVersion string) interface {
+	Performance(performance string) interface {
 		PhpVersion(phpVersion string) interface {
 			ProjectType(projectType string) interface {
 				RouterDisabled(routerDisabled bool) interface {
@@ -489,12 +459,12 @@ func (b *projectBuilder) NfsMountEnabled(nfsMountEnabled bool) interface {
 		}
 	}
 } {
-	b.properties[`NFS Mount Enabled`] = nfsMountEnabled
+	b.properties[`Nodejs Version`] = nodejsVersion
 
 	return b
 }
 
-func (b *projectBuilder) NodejsVersion(nodejsVersion string) interface {
+func (b *projectBuilder) Performance(performance string) interface {
 	PhpVersion(phpVersion string) interface {
 		ProjectType(projectType string) interface {
 			RouterDisabled(routerDisabled bool) interface {
@@ -503,7 +473,7 @@ func (b *projectBuilder) NodejsVersion(nodejsVersion string) interface {
 		}
 	}
 } {
-	b.properties[`Nodejs Version`] = nodejsVersion
+	b.properties[`Performance`] = performance
 
 	return b
 }
@@ -603,10 +573,10 @@ func (a *Ampli) Load(options LoadOptions) {
 
 	if clientConfig.Plan == nil {
 		clientConfig.Plan = &amplitude.Plan{
-			Branch:    `main`,
+			Branch:    `mutagen-nfs`,
 			Source:    `ddev`,
 			Version:   `4`,
-			VersionID: `2450f303-cf8e-4924-81f9-ece3f0afd6b5`,
+			VersionID: `e17eb7d5-493b-436b-a205-016acd50676b`,
 		}
 	}
 

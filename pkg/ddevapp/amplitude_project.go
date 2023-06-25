@@ -50,9 +50,8 @@ func (app *DdevApp) TrackProject() {
 		ContainersOmitted(containersOmitted).
 		FailOnHookFail(app.FailOnHookFail || app.FailOnHookFailGlobal).
 		Id(app.ProtectedID()).
-		MutagenEnabled(app.IsMutagenEnabled()).
-		NfsMountEnabled(app.IsNFSMountEnabled()).
 		NodejsVersion(app.NodeJSVersion).
+		Performance(app.GetPerformance()).
 		PhpVersion(app.GetPhpVersion()).
 		ProjectType(app.GetType()).
 		RouterDisabled(IsRouterDisabled(app)).
