@@ -459,7 +459,7 @@ func (app *DdevApp) GetRouterHTTPSPort() string {
 }
 
 // ImportDB takes a source sql dump and imports it to an active site's database container.
-func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDrop bool, targetDB string) error {
+func (app *DdevApp) ImportDB(dumpFile string, extractPath string, progress bool, noDrop bool, targetDB string) error {
 	app.DockerEnv()
 	dockerutil.CheckAvailableSpace()
 
@@ -487,28 +487,28 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 
 	// If they don't provide an import path and we're not on a tty (piped in stuff)
 	// then prompt for path to db
-	if imPath == "" && isatty.IsTerminal(os.Stdin.Fd()) {
+	if dumpFile == "" && isatty.IsTerminal(os.Stdin.Fd()) {
 		// ensure we prompt for extraction path if an archive is provided, while still allowing
 		// non-interactive use of --src flag without providing a --extract-path flag.
-		if extPath == "" {
+		if extractPath == "" {
 			extPathPrompt = true
 		}
 		output.UserOut.Println("Provide the path to the database you want to import.")
 		fmt.Print("Path to file: ")
 
-		imPath = util.GetInput("")
+		dumpFile = util.GetInput("")
 	}
 
-	if imPath != "" {
-		importPath, isArchive, err := appimport.ValidateAsset(imPath, "db")
+	if dumpFile != "" {
+		importPath, isArchive, err := appimport.ValidateAsset(dumpFile, "db")
 		if err != nil {
 			if isArchive && extPathPrompt {
 				output.UserOut.Println("You provided an archive. Do you want to extract from a specific path in your archive? You may leave this blank if you wish to use the full archive contents")
 				fmt.Print("Archive extraction path:")
 
-				extPath = util.GetInput("")
+				extractPath = util.GetInput("")
 			} else {
-				return fmt.Errorf("Unable to validate import asset %s: %s", imPath, err)
+				return fmt.Errorf("Unable to validate import asset %s: %s", dumpFile, err)
 			}
 		}
 
@@ -532,7 +532,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 			}
 
 		case strings.HasSuffix(importPath, "zip"):
-			err = archive.Unzip(importPath, dbPath, extPath)
+			err = archive.Unzip(importPath, dbPath, extractPath)
 			if err != nil {
 				return fmt.Errorf("failed to extract provided archive: %v", err)
 			}
@@ -546,7 +546,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		case strings.HasSuffix(importPath, "tar.xz"):
 			fallthrough
 		case strings.HasSuffix(importPath, "tgz"):
-			err := archive.Untar(importPath, dbPath, extPath)
+			err := archive.Untar(importPath, dbPath, extractPath)
 			if err != nil {
 				return fmt.Errorf("failed to extract provided archive: %v", err)
 			}
@@ -619,7 +619,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 		inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && mysql -uroot -proot -e "%s" && pv %s/*.*sql |  perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, insideContainerImportPath, "`", targetDB)}
 
 		// Alternate case where we are reading from stdin
-		if imPath == "" && extPath == "" {
+		if dumpFile == "" && extractPath == "" {
 			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && mysql -uroot -proot -e "%s" && perl -p -e 's/^(CREATE DATABASE \/\*|USE %s)[^;]*;//' | mysql %s`, preImportSQL, "`", targetDB)}
 		}
 
@@ -639,7 +639,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 			GRANT ALL PRIVILEGES ON DATABASE %s TO db;`, targetDB)
 
 		// If there is no import path, we're getting it from stdin
-		if imPath == "" && extPath == "" {
+		if dumpFile == "" && extractPath == "" {
 			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && (echo '%s' | psql -d postgres) && psql -v ON_ERROR_STOP=1 -d %s`, preImportSQL, targetDB)}
 		} else { // otherwise getting it from mounted file
 			inContainerCommand = []string{"bash", "-c", fmt.Sprintf(`set -eu -o pipefail && (echo "%s" | psql -q -d postgres -v ON_ERROR_STOP=1) && pv %s/*.*sql | psql -q -v ON_ERROR_STOP=1 %s >/dev/null`, preImportSQL, insideContainerImportPath, targetDB)}
@@ -708,7 +708,7 @@ func (app *DdevApp) ImportDB(imPath string, extPath string, progress bool, noDro
 
 // ExportDB exports the db, with optional output to a file, default gzip
 // targetDB is the db name if not default "db"
-func (app *DdevApp) ExportDB(outFile string, compressionType string, targetDB string) error {
+func (app *DdevApp) ExportDB(dumpFile string, compressionType string, targetDB string) error {
 	app.DockerEnv()
 	exportCmd := []string{"mysqldump"}
 	if app.Database.Type == "postgres" {
@@ -728,10 +728,10 @@ func (app *DdevApp) ExportDB(outFile string, compressionType string, targetDB st
 		RawCmd:    exportCmd,
 		NoCapture: true,
 	}
-	if outFile != "" {
-		f, err := os.OpenFile(outFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if dumpFile != "" {
+		f, err := os.OpenFile(dumpFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
-			return fmt.Errorf("failed to open %s: %v", outFile, err)
+			return fmt.Errorf("failed to open %s: %v", dumpFile, err)
 		}
 		opts.Stdout = f
 		defer func() {
@@ -745,8 +745,8 @@ func (app *DdevApp) ExportDB(outFile string, compressionType string, targetDB st
 	}
 
 	confMsg := "Wrote database dump from project '" + app.Name + "' database '" + targetDB + "'"
-	if outFile != "" {
-		confMsg = confMsg + " to file " + outFile
+	if dumpFile != "" {
+		confMsg = confMsg + " to file " + dumpFile
 	} else {
 		confMsg = confMsg + " to stdout"
 	}

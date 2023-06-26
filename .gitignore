@@ -3,7 +3,6 @@
 /VERSION.txt
 .docker_image
 /dictionary.dic
-/.idea
 /site
 /authors.json
 /docs/cache
@@ -15,3 +14,10 @@ nbproject/
 .idea
 *.orig
 *.rej
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+cover.html

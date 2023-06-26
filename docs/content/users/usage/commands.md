@@ -529,9 +529,9 @@ Dump a database to a file or to stdout.
 Flags:
 
 * `--bzip2`: Use bzip2 compression.
-* `--file`, `-f`: Provide the path to output the dump.
-* `--gzip`, `-z`: Use gzip compression. (default `true`)
-* `--target-db`, `-d`: If provided, target-db is alternate database to export. (default `"db"`)
+* `--database`, `-d`: Target database to export from (default `"db"`)
+* `--file`, `-f`: Path to a SQL dump file to export to
+* `--gzip`: Use gzip compression (default `true`)
 * `--xz`: Use xz compression.
 
 Example:
@@ -544,7 +544,7 @@ ddev export-db --file=/tmp/db.sql.gz
 ddev export-db --gzip=false --file /tmp/db.sql
 
 # Dump and compress the current project’s `foo` database instead of `db`
-ddev export-db --target-db=foo --file=/tmp/db.sql.gz
+ddev export-db --database=foo --file=/tmp/db.sql.gz
 
 # Output the current project’s database and use `>` to write to `/tmp/db.sql.gz`
 ddev export-db > /tmp/db.sql.gz
@@ -657,11 +657,11 @@ ddev hostname somesite.ddev.local 127.0.0.1
 
 Flags:
 
-* `--extract-path`: If provided asset is an archive, provide the path to extract within the archive.
-* `--no-drop`: Set if you do NOT want to drop the db before importing.
-* `--progress`, `-p`: Display a progress bar during import. (default `true`)
-* `--src`, `-f`: Provide the path to a SQL dump in `.sql`, `.tar`, `.tar.gz`, `.tgz`, `.bz2`, `.xx`, or `.zip` format.
-* `--target-db`, `-d`: If provided, target-db is alternate database to import into. (default `"db"`)
+* `--database`, `-d`: Target database to import into (default `"db"`)
+* `--extract-path`: Path to extract within the archive
+* `--file`, `-f`: Path to a SQL dump in `.sql`, `.tar`, `.tar.gz`, `.tgz`, `.bz2`, `.xx`, or `.zip` format
+* `--no-drop`: Do not drop the database before importing
+* `--no-progress`: Do not output progress
 
 Example:
 
@@ -670,19 +670,19 @@ Example:
 ddev import-db
 
 # Import the `.tarballs/db.sql` dump to the project database
-ddev import-db --src=.tarballs/db.sql
+ddev import-db --file=.tarballs/db.sql
 
 # Import the compressed `.tarballs/db.sql.gz` dump to the project database
-ddev import-db --src=.tarballs/db.sql.gz
+ddev import-db --file=.tarballs/db.sql.gz
 
-# Import the compressed `.tarballs/db.sql.gz` dump to a `newdb` database
-ddev import-db --target-db=newdb --src=.tarballs/db.sql.gz
+# Import the compressed `.tarballs/db.sql.gz` dump to a `other_db` database
+ddev import-db --database=additional_db --file=.tarballs/db.sql.gz
 
 # Import the `db.sql` dump to the project database
-ddev import-db <db.sql
+ddev import-db < db.sql
 
-# Import the `db.sql` dump to a `newdb` database
-ddev import-db newdb <db.sql
+# Import the `db.sql` dump to the `my-project` default database
+ddev import-db my-project < db.sql
 
 # Uncompress `db.sql.gz` and pipe the result to the `import-db` command
 gzip -dc db.sql.gz | ddev import-db
