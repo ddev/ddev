@@ -48,6 +48,7 @@ func GetEventOptions() (options ampli.EventOptions) {
 	if dockerutil.IsWSL2() {
 		osType = "wsl2"
 	}
+
 	options = ampli.EventOptions{
 		DeviceID:   GetDeviceID(),
 		AppVersion: versionconstants.DdevVersion,
