@@ -34,7 +34,7 @@ func (t *DdevLoggerSuite) TestLogger() {
 
 	require := t.Require()
 
-	logger := loggers.NewDdevLogger(true)
+	logger := loggers.NewDdevLogger(true, true)
 
 	require.Implements((*types.Logger)(nil), logger)
 

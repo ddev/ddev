@@ -9,13 +9,15 @@ import (
 	"github.com/ddev/ddev/pkg/util"
 )
 
-func NewDdevLogger(verbose bool) types.Logger {
+func NewDdevLogger(debug, verbose bool) types.Logger {
 	return &ddevLogger{
+		debug:   debug,
 		verbose: verbose,
 	}
 }
 
 type ddevLogger struct {
+	debug   bool
 	verbose bool
 }
 
@@ -26,19 +28,19 @@ func (l *ddevLogger) Debugf(message string, args ...interface{}) {
 }
 
 func (l *ddevLogger) Infof(message string, args ...interface{}) {
-	if l.verbose {
+	if l.verbose || l.debug {
 		output.UserErr.Info(filterMessage(util.ColorizeText(message, "green"), args...))
 	}
 }
 
 func (l *ddevLogger) Warnf(message string, args ...interface{}) {
-	if l.verbose {
+	if l.verbose || l.debug {
 		output.UserErr.Warn(filterMessage(util.ColorizeText(message, "yellow"), args...))
 	}
 }
 
 func (l *ddevLogger) Errorf(message string, args ...interface{}) {
-	if l.verbose {
+	if l.verbose || l.debug {
 		output.UserErr.Error(filterMessage(util.ColorizeText(message, "red"), args...))
 	}
 }
