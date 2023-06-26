@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
@@ -17,8 +16,8 @@ import (
 
 // TestNodeJSVersions whether we can configure nodejs versions
 func TestNodeJSVersions(t *testing.T) {
-	if dockerutil.IsColima() {
-		t.Skip("Skipping on Colima, it just has too many problems there")
+	if os.Getenv("DDEV_SKIP_NODEJS_TEST") == "true" {
+		t.Skip("Skipping TestNodeJSVersions because DDEV_SKIP_NODEJS_TEST is true")
 	}
 	assert := asrt.New(t)
 

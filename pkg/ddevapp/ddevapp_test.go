@@ -2907,21 +2907,32 @@ func TestRouterPortsCheck(t *testing.T) {
 	_, _, err = dockerutil.ComposeCmd([]string{dest}, "-p", ddevapp.RouterProjectName, "down")
 	assert.NoError(err, "Failed to stop router using docker-compose, err=%v", err)
 
-	// Occupy port 80 using docker busybox trick, then see if we can start router.
+	// Occupy ports 80/443 using docker run of ddev-webserver, then see if we can start router.
 	// This is done with docker so that we don't have to use explicit sudo
-	containerID, err := exec.RunHostCommand("sh", "-c", "docker run -d -p80:80 --rm busybox:stable sleep 100 2>/dev/null")
-	if err != nil {
-		t.Fatalf("Failed to run docker command to occupy port 80, err=%v output=%v", err, containerID)
+	// The ddev-webserver healthcheck should make sure that we have a legitimate occupation
+	// of the port by the time it comes up.
+	portBinding := map[docker.Port][]docker.PortBinding{
+		"80/tcp": {
+			{HostPort: "80"},
+			{HostPort: "443"},
+		},
 	}
-	containerID = strings.TrimSpace(containerID)
+
+	containerID, out, err := dockerutil.RunSimpleContainer(versionconstants.GetWebImage(), t.Name()+"occupyport", nil, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, "", false, true, map[string]string{"ddevtestcontainer": t.Name()}, portBinding)
+
+	if err != nil {
+		t.Fatalf("Failed to run docker command to occupy port 80/443, err=%v output=%v", err, out)
+	}
+	out, err = dockerutil.ContainerWait(60, map[string]string{"ddevtestcontainer": t.Name()})
+	require.NoError(t, err, "Failed to wait for container to start, err=%v output='%v'", err, out)
 
 	// Now try to start the router. It should fail because the port is occupied.
 	err = ddevapp.StartDdevRouter()
-	assert.Error(err, "Failure: router started even though port 80 was occupied")
+	assert.Error(err, "Failure: router started even though ports 80/443 were occupied")
 
-	// Remove our dummy busybox docker container.
-	out, err := exec.RunHostCommand("docker", "rm", "-f", containerID)
-	assert.NoError(err, "Failed to docker rm the port-occupier container, err=%v output=%v", err, out)
+	// Remove our dummy container.
+	err = dockerutil.RemoveContainer(containerID)
+	assert.NoError(err, "Failed to docker rm the port-occupier container, err=%v", err)
 }
 
 // TestCleanupWithoutCompose ensures app containers can be properly cleaned up without a docker-compose config file present.
