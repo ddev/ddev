@@ -74,51 +74,47 @@ type WebExtraDaemon struct {
 // DdevApp is the struct that represents a ddev app, mostly its config
 // from config.yaml.
 type DdevApp struct {
-	Name                  string                `yaml:"name"`
-	Type                  string                `yaml:"type"`
-	Docroot               string                `yaml:"docroot"`
-	PHPVersion            string                `yaml:"php_version"`
-	WebserverType         string                `yaml:"webserver_type"`
-	WebImage              string                `yaml:"webimage,omitempty"`
-	DBImage               string                `yaml:"dbimage,omitempty"`
-	DBAImage              string                `yaml:"dbaimage,omitempty"`
-	RouterHTTPPort        string                `yaml:"router_http_port,omitempty"`
-	RouterHTTPSPort       string                `yaml:"router_https_port,omitempty"`
-	XdebugEnabled         bool                  `yaml:"xdebug_enabled"`
-	NoProjectMount        bool                  `yaml:"no_project_mount,omitempty"`
-	AdditionalHostnames   []string              `yaml:"additional_hostnames"`
-	AdditionalFQDNs       []string              `yaml:"additional_fqdns"`
-	MariaDBVersion        string                `yaml:"mariadb_version,omitempty"`
-	MySQLVersion          string                `yaml:"mysql_version,omitempty"`
-	Database              DatabaseDesc          `yaml:"database"`
-	NFSMountEnabled       bool                  `yaml:"nfs_mount_enabled"`
-	NFSMountEnabledGlobal bool                  `yaml:"-"`
-	MutagenEnabled        bool                  `yaml:"mutagen_enabled"`
-	MutagenEnabledGlobal  bool                  `yaml:"-"`
-	FailOnHookFail        bool                  `yaml:"fail_on_hook_fail,omitempty"`
-	BindAllInterfaces     bool                  `yaml:"bind_all_interfaces,omitempty"`
-	FailOnHookFailGlobal  bool                  `yaml:"-"`
-	ConfigPath            string                `yaml:"-"`
-	AppRoot               string                `yaml:"-"`
-	DataDir               string                `yaml:"-"`
-	SiteSettingsPath      string                `yaml:"-"`
-	SiteDdevSettingsFile  string                `yaml:"-"`
-	ProviderInstance      *Provider             `yaml:"-"`
-	Hooks                 map[string][]YAMLTask `yaml:"hooks,omitempty"`
-	UploadDir             string                `yaml:"upload_dir,omitempty"`
-	WorkingDir            map[string]string     `yaml:"working_dir,omitempty"`
-	OmitContainers        []string              `yaml:"omit_containers,omitempty,flow"`
-	OmitContainersGlobal  []string              `yaml:"-"`
-	HostDBPort            string                `yaml:"host_db_port,omitempty"`
-	HostWebserverPort     string                `yaml:"host_webserver_port,omitempty"`
-	HostHTTPSPort         string                `yaml:"host_https_port,omitempty"`
-	MailhogPort           string                `yaml:"mailhog_port,omitempty"`
-	MailhogHTTPSPort      string                `yaml:"mailhog_https_port,omitempty"`
-	HostMailhogPort       string                `yaml:"host_mailhog_port,omitempty"`
-	PHPMyAdminPort        string                `yaml:"phpmyadmin_port,omitempty"`
-	PHPMyAdminHTTPSPort   string                `yaml:"phpmyadmin_https_port,omitempty"`
-	// HostPHPMyAdminPort is normally empty, as it is not normally bound
-	HostPHPMyAdminPort        string                 `yaml:"host_phpmyadmin_port,omitempty"`
+	Name                      string                 `yaml:"name"`
+	Type                      string                 `yaml:"type"`
+	Docroot                   string                 `yaml:"docroot"`
+	PHPVersion                string                 `yaml:"php_version"`
+	WebserverType             string                 `yaml:"webserver_type"`
+	WebImage                  string                 `yaml:"webimage,omitempty"`
+	DBImage                   string                 `yaml:"dbimage,omitempty"`
+	DBAImage                  string                 `yaml:"dbaimage,omitempty"`
+	RouterHTTPPort            string                 `yaml:"router_http_port,omitempty"`
+	RouterHTTPSPort           string                 `yaml:"router_https_port,omitempty"`
+	XdebugEnabled             bool                   `yaml:"xdebug_enabled"`
+	NoProjectMount            bool                   `yaml:"no_project_mount,omitempty"`
+	AdditionalHostnames       []string               `yaml:"additional_hostnames"`
+	AdditionalFQDNs           []string               `yaml:"additional_fqdns"`
+	MariaDBVersion            string                 `yaml:"mariadb_version,omitempty"`
+	MySQLVersion              string                 `yaml:"mysql_version,omitempty"`
+	Database                  DatabaseDesc           `yaml:"database"`
+	NFSMountEnabled           bool                   `yaml:"nfs_mount_enabled"`
+	NFSMountEnabledGlobal     bool                   `yaml:"-"`
+	MutagenEnabled            bool                   `yaml:"mutagen_enabled"`
+	MutagenEnabledGlobal      bool                   `yaml:"-"`
+	FailOnHookFail            bool                   `yaml:"fail_on_hook_fail,omitempty"`
+	BindAllInterfaces         bool                   `yaml:"bind_all_interfaces,omitempty"`
+	FailOnHookFailGlobal      bool                   `yaml:"-"`
+	ConfigPath                string                 `yaml:"-"`
+	AppRoot                   string                 `yaml:"-"`
+	DataDir                   string                 `yaml:"-"`
+	SiteSettingsPath          string                 `yaml:"-"`
+	SiteDdevSettingsFile      string                 `yaml:"-"`
+	ProviderInstance          *Provider              `yaml:"-"`
+	Hooks                     map[string][]YAMLTask  `yaml:"hooks,omitempty"`
+	UploadDir                 string                 `yaml:"upload_dir,omitempty"`
+	WorkingDir                map[string]string      `yaml:"working_dir,omitempty"`
+	OmitContainers            []string               `yaml:"omit_containers,omitempty,flow"`
+	OmitContainersGlobal      []string               `yaml:"-"`
+	HostDBPort                string                 `yaml:"host_db_port,omitempty"`
+	HostWebserverPort         string                 `yaml:"host_webserver_port,omitempty"`
+	HostHTTPSPort             string                 `yaml:"host_https_port,omitempty"`
+	MailhogPort               string                 `yaml:"mailhog_port,omitempty"`
+	MailhogHTTPSPort          string                 `yaml:"mailhog_https_port,omitempty"`
+	HostMailhogPort           string                 `yaml:"host_mailhog_port,omitempty"`
 	WebImageExtraPackages     []string               `yaml:"webimage_extra_packages,omitempty,flow"`
 	DBImageExtraPackages      []string               `yaml:"dbimage_extra_packages,omitempty,flow"`
 	ProjectTLD                string                 `yaml:"project_tld,omitempty"`
@@ -259,11 +255,6 @@ func (app *DdevApp) Describe(short bool) (map[string]interface{}, error) {
 			dbinfo["database_version"] = app.Database.Version
 
 			appDesc["dbinfo"] = dbinfo
-
-			if !nodeps.ArrayContainsString(app.GetOmittedContainers(), "dba") {
-				appDesc["phpmyadmin_https_url"] = "https://" + app.GetHostname() + ":" + app.PHPMyAdminHTTPSPort
-				appDesc["phpmyadmin_url"] = "http://" + app.GetHostname() + ":" + app.PHPMyAdminPort
-			}
 		}
 
 		appDesc["mailhog_https_url"] = "https://" + app.GetHostname() + ":" + app.MailhogHTTPSPort
@@ -1608,7 +1599,7 @@ func (app *DdevApp) GeneratePostgresConfig() error {
 
 // ExecOpts contains options for running a command inside a container
 type ExecOpts struct {
-	// Service is the service, as in 'web', 'db', 'dba'
+	// Service is the service, as in 'web', 'db'
 	Service string
 	// Dir is the full path to the working directory inside the container
 	Dir string
@@ -1685,7 +1676,7 @@ func (app *DdevApp) Exec(opts *ExecOpts) (string, string, error) {
 		// Use bash for our containers, sh for 3rd-party containers
 		// that may not have bash.
 		shell := "bash"
-		if !nodeps.ArrayContainsString([]string{"web", "db", "dba"}, opts.Service) {
+		if !nodeps.ArrayContainsString([]string{"web", "db"}, opts.Service) {
 			shell = "sh"
 		}
 		errcheck := "set -eu"
@@ -1766,7 +1757,7 @@ func (app *DdevApp) ExecWithTty(opts *ExecOpts) error {
 	// Use bash for our containers, sh for 3rd-party containers
 	// that may not have bash.
 	shell := "bash"
-	if !nodeps.ArrayContainsString([]string{"web", "db", "dba"}, opts.Service) {
+	if !nodeps.ArrayContainsString([]string{"web", "db"}, opts.Service) {
 		shell = "sh"
 	}
 	args = append(args, shell, "-c", opts.Cmd)
@@ -1925,9 +1916,6 @@ func (app *DdevApp) DockerEnv() {
 		if app.HostMailhogPort == "" {
 			app.HostMailhogPort = "8027"
 		}
-		if app.HostPHPMyAdminPort == "" {
-			app.HostPHPMyAdminPort = "8036"
-		}
 		app.BindAllInterfaces = true
 	}
 	isWSL2 := "false"
@@ -1964,7 +1952,6 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_SITENAME":                  app.Name,
 		"DDEV_TLD":                       app.ProjectTLD,
 		"DDEV_DBIMAGE":                   app.GetDBImage(),
-		"DDEV_DBAIMAGE":                  versionconstants.GetDBAImage(),
 		"DDEV_PROJECT":                   app.Name,
 		"DDEV_WEBIMAGE":                  app.WebImage,
 		"DDEV_APPROOT":                   app.AppRoot,
@@ -1973,34 +1960,32 @@ func (app *DdevApp) DockerEnv() {
 		"DDEV_DATABASE":                  app.Database.Type + ":" + app.Database.Version,
 		"DDEV_FILES_DIR":                 app.GetContainerUploadDirFullPath(),
 
-		"DDEV_HOST_DB_PORT":          dbPortStr,
-		"DDEV_HOST_MAILHOG_PORT":     app.HostMailhogPort,
-		"DDEV_HOST_WEBSERVER_PORT":   app.HostWebserverPort,
-		"DDEV_HOST_HTTPS_PORT":       app.HostHTTPSPort,
-		"DDEV_PHPMYADMIN_PORT":       app.PHPMyAdminPort,
-		"DDEV_PHPMYADMIN_HTTPS_PORT": app.PHPMyAdminHTTPSPort,
-		"DDEV_MAILHOG_PORT":          app.MailhogPort,
-		"DDEV_MAILHOG_HTTPS_PORT":    app.MailhogHTTPSPort,
-		"DDEV_DOCROOT":               app.Docroot,
-		"DDEV_HOSTNAME":              app.HostName(),
-		"DDEV_UID":                   uidStr,
-		"DDEV_GID":                   gidStr,
-		"DDEV_MUTAGEN_ENABLED":       strconv.FormatBool(app.IsMutagenEnabled()),
-		"DDEV_PHP_VERSION":           app.PHPVersion,
-		"DDEV_WEBSERVER_TYPE":        app.WebserverType,
-		"DDEV_PROJECT_TYPE":          app.Type,
-		"DDEV_ROUTER_HTTP_PORT":      app.GetRouterHTTPPort(),
-		"DDEV_ROUTER_HTTPS_PORT":     app.GetRouterHTTPSPort(),
-		"DDEV_XDEBUG_ENABLED":        strconv.FormatBool(app.XdebugEnabled),
-		"DDEV_PRIMARY_URL":           app.GetPrimaryURL(),
-		"DDEV_VERSION":               versionconstants.DdevVersion,
-		"DOCKER_SCAN_SUGGEST":        "false",
-		"GOOS":                       runtime.GOOS,
-		"GOARCH":                     runtime.GOARCH,
-		"IS_DDEV_PROJECT":            "true",
-		"IS_GITPOD":                  strconv.FormatBool(nodeps.IsGitpod()),
-		"IS_CODESPACES":              strconv.FormatBool(nodeps.IsCodespaces()),
-		"IS_WSL2":                    isWSL2,
+		"DDEV_HOST_DB_PORT":        dbPortStr,
+		"DDEV_HOST_MAILHOG_PORT":   app.HostMailhogPort,
+		"DDEV_HOST_WEBSERVER_PORT": app.HostWebserverPort,
+		"DDEV_HOST_HTTPS_PORT":     app.HostHTTPSPort,
+		"DDEV_MAILHOG_PORT":        app.MailhogPort,
+		"DDEV_MAILHOG_HTTPS_PORT":  app.MailhogHTTPSPort,
+		"DDEV_DOCROOT":             app.Docroot,
+		"DDEV_HOSTNAME":            app.HostName(),
+		"DDEV_UID":                 uidStr,
+		"DDEV_GID":                 gidStr,
+		"DDEV_MUTAGEN_ENABLED":     strconv.FormatBool(app.IsMutagenEnabled()),
+		"DDEV_PHP_VERSION":         app.PHPVersion,
+		"DDEV_WEBSERVER_TYPE":      app.WebserverType,
+		"DDEV_PROJECT_TYPE":        app.Type,
+		"DDEV_ROUTER_HTTP_PORT":    app.GetRouterHTTPPort(),
+		"DDEV_ROUTER_HTTPS_PORT":   app.GetRouterHTTPSPort(),
+		"DDEV_XDEBUG_ENABLED":      strconv.FormatBool(app.XdebugEnabled),
+		"DDEV_PRIMARY_URL":         app.GetPrimaryURL(),
+		"DDEV_VERSION":             versionconstants.DdevVersion,
+		"DOCKER_SCAN_SUGGEST":      "false",
+		"GOOS":                     runtime.GOOS,
+		"GOARCH":                   runtime.GOARCH,
+		"IS_DDEV_PROJECT":          "true",
+		"IS_GITPOD":                strconv.FormatBool(nodeps.IsGitpod()),
+		"IS_CODESPACES":            strconv.FormatBool(nodeps.IsCodespaces()),
+		"IS_WSL2":                  isWSL2,
 	}
 
 	// Set the DDEV_DB_CONTAINER_COMMAND command to empty to prevent docker-compose from complaining normally.

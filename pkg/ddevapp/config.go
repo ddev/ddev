@@ -89,8 +89,6 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	}
 	app.FailOnHookFail = nodeps.FailOnHookFailDefault
 	app.FailOnHookFailGlobal = globalconfig.DdevGlobalConfig.FailOnHookFailGlobal
-	app.PHPMyAdminPort = nodeps.DdevDefaultPHPMyAdminPort
-	app.PHPMyAdminHTTPSPort = nodeps.DdevDefaultPHPMyAdminHTTPSPort
 	app.MailhogPort = nodeps.DdevDefaultMailhogPort
 	app.MailhogHTTPSPort = nodeps.DdevDefaultMailhogHTTPSPort
 
@@ -181,12 +179,6 @@ func (app *DdevApp) WriteConfig() error {
 	}
 	if appcopy.MailhogHTTPSPort == nodeps.DdevDefaultMailhogHTTPSPort {
 		appcopy.MailhogHTTPSPort = ""
-	}
-	if appcopy.PHPMyAdminPort == nodeps.DdevDefaultPHPMyAdminPort {
-		appcopy.PHPMyAdminPort = ""
-	}
-	if appcopy.PHPMyAdminHTTPSPort == nodeps.DdevDefaultPHPMyAdminHTTPSPort {
-		appcopy.PHPMyAdminHTTPSPort = ""
 	}
 	if appcopy.ProjectTLD == nodeps.DdevDefaultTLD || appcopy.ProjectTLD == globalconfig.DdevGlobalConfig.ProjectTldGlobal {
 		appcopy.ProjectTLD = ""
@@ -655,7 +647,6 @@ type composeYAMLVars struct {
 	DBMountDir                      string
 	DBAPort                         string
 	DBPort                          string
-	HostPHPMyAdminPort              string
 	DdevGenerated                   string
 	HostDockerInternalIP            string
 	NFSServerAddr                   string
@@ -750,15 +741,12 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		DBType:                    app.Database.Type,
 		DBVersion:                 app.Database.Version,
 		DBMountDir:                "/var/lib/mysql",
-		DBAPort:                   GetExposedPort(app, "dba"),
 		DBPort:                    GetExposedPort(app, "db"),
-		HostPHPMyAdminPort:        app.HostPHPMyAdminPort,
 		DdevGenerated:             nodeps.DdevFileSignature,
 		HostDockerInternalIP:      hostDockerInternalIP,
 		NFSServerAddr:             nfsServerAddr,
 		DisableSettingsManagement: app.DisableSettingsManagement,
 		OmitDB:                    nodeps.ArrayContainsString(app.GetOmittedContainers(), nodeps.DBContainer),
-		OmitDBA:                   nodeps.ArrayContainsString(app.GetOmittedContainers(), nodeps.DBAContainer) || nodeps.ArrayContainsString(app.OmitContainers, nodeps.DBContainer),
 		OmitRouter:                nodeps.ArrayContainsString(app.GetOmittedContainers(), globalconfig.DdevRouterContainer),
 		OmitSSHAgent:              nodeps.ArrayContainsString(app.GetOmittedContainers(), "ddev-ssh-agent"),
 		BindAllInterfaces:         app.BindAllInterfaces,
@@ -782,7 +770,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		FailOnHookFail:        app.FailOnHookFail || app.FailOnHookFailGlobal,
 		WebWorkingDir:         app.GetWorkingDir("web", ""),
 		DBWorkingDir:          app.GetWorkingDir("db", ""),
-		DBAWorkingDir:         app.GetWorkingDir("dba", ""),
 		WebEnvironment:        webEnvironment,
 		MariaDBVolumeName:     app.GetMariaDBVolumeName(),
 		PostgresVolumeName:    app.GetPostgresVolumeName(),

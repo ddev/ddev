@@ -292,7 +292,6 @@ func (app *DdevApp) DefaultWorkingDirMap() map[string]string {
 	defaults := map[string]string{
 		"web": "/var/www/html/",
 		"db":  "/home/" + username,
-		"dba": "/root",
 	}
 
 	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.defaultWorkingDirMap != nil {

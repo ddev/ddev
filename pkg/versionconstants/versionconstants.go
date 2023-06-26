@@ -30,12 +30,6 @@ var DBImg = "ddev/ddev-dbserver"
 // BaseDBTag is the main tag, DBTag is constructed from it
 var BaseDBTag = "20230519_fix_mysql_snapshot_restore"
 
-// DBAImg defines the default phpmyadmin image tag used for applications.
-var DBAImg = "phpmyadmin"
-
-// DBATag defines the default phpmyadmin image tag used for applications.
-var DBATag = "5" // Note that this can be overridden by make
-
 const TraditionalRouterImage = "ddev/ddev-router:20230415_move_docker_to_ddev"
 const TraefikRouterImage = "traefik:v2.10"
 
@@ -84,11 +78,6 @@ func GetDBImage(dbType string, dbVersion string) string {
 	default:
 		return fmt.Sprintf("%s-%s-%s:%s", DBImg, dbType, v, BaseDBTag)
 	}
-}
-
-// GetDBAImage returns the correctly formatted dba image:tag reference
-func GetDBAImage() string {
-	return fmt.Sprintf("%s:%s", DBAImg, DBATag)
 }
 
 // GetSSHAuthImage returns the correctly formatted sshauth image:tag reference

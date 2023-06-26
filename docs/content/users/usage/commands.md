@@ -28,7 +28,7 @@ Use [`ddev help`](#help) to learn more about a specific command, like this examp
 Get a detailed description of a running ddev project. Describe provides basic
 information about a ddev project, including its name, location, url, and status.
 It also provides details for MySQL connections, and connection information for
-additional services like MailHog and phpMyAdmin. You can run 'ddev describe' from
+additional services like MailHog. You can run 'ddev describe' from
 a project directory to describe that project, or you can specify a project to describe by
 running 'ddev describe <projectname>'.
 
@@ -177,22 +177,17 @@ Flags:
 * `--db-image-default`: Sets the default db container image for this DDEV version.
 * `--db-working-dir`: Overrides the default working directory for the db service.
 * `--db-working-dir-default`: Unsets a db service working directory override.
-* `--dba-image`: Sets the dba container image.
-* `--dba-image-default`: Sets the default dba container image for this DDEV version.
-* `--dba-working-dir`: Overrides the default working directory for the dba service.
-* `--dba-working-dir-default`: Unsets a dba service working directory override.
 * `--dbimage-extra-packages`: A comma-delimited list of Debian packages that should be added to db container when the project is started.
 * `--default-container-timeout`: Default time in seconds that DDEV waits for all containers to become ready on start. (default `120`)
 * `--disable-settings-management`: Prevent DDEV from creating or updating CMS settings files.
 * `--docroot`: Provide the relative docroot of the project, like `docroot` or `htdocs` or `web`. (defaults to empty, the current directory)
 * `--fail-on-hook-fail`: Decide whether `ddev start` should be interrupted by a failing hook.
 * `--host-db-port`: The db container’s localhost-bound port.
-* `--host-dba-port`: The dba (phpMyAdmin) container’s localhost-bound port, if exposed via bind-all-interfaces.
 * `--host-https-port`: The web container’s localhost-bound HTTPS port.
 * `--host-webserver-port`: The web container’s localhost-bound port.
 * `--http-port`: The router HTTP port for this project.
 * `--https-port`: The router HTTPS port for this project.
-* `--image-defaults`: Sets the default web, db, and dba container images.
+* `--image-defaults`: Sets the default web and db container images.
 * `--mailhog-https-port`: Router port to be used for MailHog HTTPS access.
 * `--mailhog-port`: Router port to be used for MailHog HTTP access.
 * `--mutagen-enabled`: Enable Mutagen asynchronous update of project in web container.
@@ -202,8 +197,6 @@ Flags:
 * `--nodejs-version`: Specify the Node.js version to use if you don’t want the default Node.js 16.
 * `--omit-containers`: Comma-delimited list of container types that should not be started when the project is started.
 * `--php-version`: PHP version that will be enabled in the web container.
-* `--phpmyadmin-https-port`: Router port to be used for phpMyAdmin (dba) HTTPS container access.
-* `--phpmyadmin-port`: Router port to be used forphpMyAdmin (dba) HTTP container access.
 * `--project-name`: Provide the project name of project to configure. (normally the same as the last part of directory name)
 * `--project-tld`: Set the top-level domain to be used for projects. (default `"ddev.site"`)
 * `--project-type`: Provide the project type: `backdrop`, `drupal10`, `drupal6`, `drupal7`, `drupal8`, `drupal9`, `laravel`, `magento`, `magento2`, `php`, `shopware6`, `typo3`, `wordpress`. This is autodetected and this flag is necessary only to override the detection.
@@ -230,8 +223,8 @@ Change global configuration.
 # Opt out of sharing anonymized usage information
 ddev config global --instrumentation-opt-in=false
 
-# Skip phpMyAdmin and the SSH agent for all projects
-ddev config global --omit-containers=dba,ddev-ssh-agent
+# Skip the SSH agent for all projects
+ddev config global --omit-containers=ddev-ssh-agent
 ```
 
 * `--auto-restart-containers`: If `true`, automatically restart containers after a reboot or Docker restart.
@@ -243,7 +236,7 @@ ddev config global --omit-containers=dba,ddev-ssh-agent
 * `--mutagen-enabled`: If `true`, web container will use Mutagen caching/asynchronous updates.
 * `--nfs-mount-enabled`: Enable NFS mounting on all projects globally.
 * `--no-bind-mounts`: If `true`, don’t use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible. (default is equal to `--no-bind-mounts=true`)
-* `--omit-containers`: For example, `--omit-containers=dba,ddev-ssh-agent`.
+* `--omit-containers`: For example, `--omit-containers=ddev-ssh-agent`.
 * `--required-docker-compose-version`: Override default docker-compose version.
 * `--router-bind-all-interfaces`: `router-bind-all-interfaces=true`.
 * `--simple-formatting`: If `true`, use simple formatting and no color for tables.
@@ -527,9 +520,6 @@ ddev exec --dir /var/www/html/vendor ls
 
 # Output a long, recursive list of the files in the web container
 ddev exec --raw -- ls -lR
-
-# Say “hi” from the phpMyAdmin container
-ddev exec --service dba echo hi
 ```
 
 ## `export-db`
@@ -723,7 +713,6 @@ Launch a browser with the current site (global shell host container command).
 
 Flags:
 
-* `--phpmyadmin`, `-p`: Open phpMyAdmin.
 * `--mailhog`, `-m`: Open MailHog.
 
 Example:

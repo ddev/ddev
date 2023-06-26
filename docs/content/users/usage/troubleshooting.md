@@ -52,7 +52,7 @@ or
 
 This means there’s another web server listening on the named port(s) and DDEV cannot access the port. The most common conflicts are on ports 80 and 443.
 
-In some cases, the conflict could be over phpMyAdmin’s port 8036 or MailHog’s port 8025.
+In some cases, the conflict could be over MailHog’s port 8025 or 8026.
 
 To resolve this conflict, choose one of these methods:
 
@@ -78,16 +78,11 @@ router_https_port: 8443
 
 Then run `ddev start`. This changes the project’s HTTP URL to `http://yoursite.ddev.site:8080` and the HTTPS URL to `https://yoursite.ddev.site:8443`.
 
-If the conflict is over port 8025, it’s normally a conflict over the default port for MailHog. You can add the following to `.ddev/config.yaml`:
+If the conflict is over port 8025 or 8026, it’s probably clashing with MailHog’s default port. You can add the following to `.ddev/config.yaml`:
 
 ```yaml
 mailhog_port: 8300
-```
-
-If the conflict is over port 8036, it’s normally about phpMyAdmin, and you can add the following to `.ddev/config.yaml`:
-
-```yaml
-phpmyadmin_port: 8302
+mailhog_https_port: 8301
 ```
 
 ### Method 3: Fix port conflicts by stopping the competing application

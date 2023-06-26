@@ -243,38 +243,6 @@ services:
       start_period: 120s
       timeout: 120s
 
-  {{ if not .OmitDBA }}
-  dba:
-    container_name: ddev-${DDEV_SITENAME}-dba
-    image: $DDEV_DBAIMAGE
-    working_dir: "{{ .DBAWorkingDir }}"
-    restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
-    labels:
-      com.ddev.site-name: ${DDEV_SITENAME}
-      com.ddev.platform: {{ .Plugin }}
-      com.ddev.app-type: {{ .AppType }}
-      com.ddev.approot: $DDEV_APPROOT
-    expose:
-      - "80"
-    {{ if .HostPHPMyAdminPort }}
-    ports:
-      - "{{ .DockerIP }}:{{ .HostPHPMyAdminPort }}:80"
-    {{ end }} {{/* end if .HostPHPMyAdminPort */}}
-    hostname: {{ .Name }}-dba
-    environment:
-    - PMA_USER=root
-    - PMA_PASSWORD=root
-    - VIRTUAL_HOST=$DDEV_HOSTNAME
-    - UPLOAD_LIMIT=1024M
-    - TZ={{ .Timezone }}
-    # HTTP_EXPOSE allows for ports accepting HTTP traffic to be accessible from <site>.ddev.site:<port>
-    - HTTP_EXPOSE=${DDEV_PHPMYADMIN_PORT}:{{ .DBAPort }}
-    - HTTPS_EXPOSE=${DDEV_PHPMYADMIN_HTTPS_PORT}:{{ .DBAPort }}
-    healthcheck:
-      interval: 120s
-      timeout: 2s
-      retries: 1
-    {{ end }}{{/* end if not .OmitDBA */}}
 networks:
   ddev_default:
     name: ddev_default

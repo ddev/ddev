@@ -337,11 +337,9 @@ func TestLaunchCommand(t *testing.T) {
 	require.NoError(t, err)
 	cases := map[string]string{
 		"":   app.GetPrimaryURL(),
-		"-p": desc["phpmyadmin_https_url"].(string),
 		"-m": desc["mailhog_https_url"].(string),
 	}
 	if globalconfig.DdevGlobalConfig.MkcertCARoot == "" {
-		cases["-p"] = desc["phpmyadmin_url"].(string)
 		cases["-m"] = desc["mailhog_url"].(string)
 	}
 	for partialCommand, expect := range cases {

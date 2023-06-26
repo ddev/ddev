@@ -347,9 +347,6 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
         "8027": {
           "label": "mailhog"
         },
-        "8036": {
-          "label": "phpmyadmin"
-        },
         "8080": {
           "label": "web http"
         },

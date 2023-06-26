@@ -612,8 +612,6 @@ Other Services
 --------------
 MailHog (https):    https://d9composer.ddev.site:8026
 MailHog:            http://d9composer.ddev.site:8025
-phpMyAdmin (https): https://d9composer.ddev.site:8037
-phpMyAdmin:         http://d9composer.ddev.site:8036
 
 DDEV ROUTER STATUS: healthy
 ssh-auth status: healthy

@@ -80,12 +80,6 @@ var (
 	// dbImageDefaultArg allows a user to use the specific db server container image
 	dbImageDefaultArg bool
 
-	// dbaImageArg allows a user to set the project's dba container image
-	dbaImageArg string
-
-	// dbaImageDefaultArg allows a user to unset the specific dba container image
-	dbaImageDefaultArg bool
-
 	// imageDefaultsArg allows a user to unset all specific container images
 	imageDefaultsArg bool
 
@@ -100,12 +94,6 @@ var (
 
 	// defaultDbaWorkingDirArg allows a user to unset a db service working directory override
 	dbWorkingDirDefaultArg bool
-
-	// dbaWorkingDirArg allows a user to define the working directory for the dba service
-	dbaWorkingDirArg string
-
-	// dbaWorkingDirDefaultArg allows a user to unset a dba service working directory override
-	dbaWorkingDirDefaultArg bool
 
 	// workingDirDefaultsArg allows a user to unset all service working directory overrides
 	workingDirDefaultsArg bool
@@ -134,10 +122,6 @@ var (
 	// mailhogPortArg is arg for mailhog port
 	mailhogPortArg      string
 	mailhogHTTPSPortArg string
-
-	// phpMyAdminPortArg is arg for phpmyadmin container port access
-	phpMyAdminPortArg      string
-	phpMyAdminHTTPSPortArg string
 
 	// projectTLDArg specifies a project top-level-domain; defaults to ddevapp.DdevDefaultTLD
 	projectTLDArg string
@@ -260,15 +244,11 @@ func init() {
 	ConfigCommand.Flags().BoolVar(&webImageDefaultArg, "web-image-default", false, "Sets the default web container image for this ddev version")
 	ConfigCommand.Flags().StringVar(&dbImageArg, "db-image", "", "Sets the db container image")
 	ConfigCommand.Flags().BoolVar(&dbImageDefaultArg, "db-image-default", false, "Sets the default db container image for this ddev version")
-	ConfigCommand.Flags().StringVar(&dbaImageArg, "dba-image", "", "Sets the dba container image")
-	ConfigCommand.Flags().BoolVar(&dbaImageDefaultArg, "dba-image-default", false, "Sets the default dba container image for this ddev version")
-	ConfigCommand.Flags().BoolVar(&imageDefaultsArg, "image-defaults", false, "Sets the default web, db, and dba container images")
+	ConfigCommand.Flags().BoolVar(&imageDefaultsArg, "image-defaults", false, "Sets the default web and db container images")
 	ConfigCommand.Flags().StringVar(&webWorkingDirArg, "web-working-dir", "", "Overrides the default working directory for the web service")
 	ConfigCommand.Flags().StringVar(&dbWorkingDirArg, "db-working-dir", "", "Overrides the default working directory for the db service")
-	ConfigCommand.Flags().StringVar(&dbaWorkingDirArg, "dba-working-dir", "", "Overrides the default working directory for the dba service")
 	ConfigCommand.Flags().BoolVar(&webWorkingDirDefaultArg, "web-working-dir-default", false, "Unsets a web service working directory override")
 	ConfigCommand.Flags().BoolVar(&dbWorkingDirDefaultArg, "db-working-dir-default", false, "Unsets a db service working directory override")
-	ConfigCommand.Flags().BoolVar(&dbaWorkingDirDefaultArg, "dba-working-dir-default", false, "Unsets a dba service working directory override")
 	ConfigCommand.Flags().BoolVar(&workingDirDefaultsArg, "working-dir-defaults", false, "Unsets all service working directory overrides")
 	ConfigCommand.Flags().BoolVar(&mutagenEnabled, "mutagen-enabled", false, "enable mutagen asynchronous update of project in web container")
 
@@ -278,10 +258,6 @@ func init() {
 	ConfigCommand.Flags().StringVar(&hostHTTPSPortArg, "host-https-port", "", "The web container's localhost-bound https port")
 
 	ConfigCommand.Flags().StringVar(&hostDBPortArg, "host-db-port", "", "The db container's localhost-bound port")
-	ConfigCommand.Flags().String("host-dba-port", "", "The dba (PHPMyAdmin) container's localhost-bound port, if exposed via bind-all-interfaces")
-
-	ConfigCommand.Flags().StringVar(&phpMyAdminPortArg, "phpmyadmin-port", "", "Router port to be used for PHPMyAdmin (dba) container access")
-	ConfigCommand.Flags().StringVar(&phpMyAdminHTTPSPortArg, "phpmyadmin-https-port", "", "Router port to be used for PHPMyAdmin (dba) container access (https)")
 
 	ConfigCommand.Flags().StringVar(&mailhogPortArg, "mailhog-port", "", "Router port to be used for mailhog access")
 	ConfigCommand.Flags().StringVar(&mailhogHTTPSPortArg, "mailhog-https-port", "", "Router port to be used for mailhog access (https)")
@@ -521,13 +497,6 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		app.NoProjectMount = noProjectMountArg
 	}
 
-	if cmd.Flag("phpmyadmin-port").Changed {
-		app.PHPMyAdminPort = phpMyAdminPortArg
-	}
-	if cmd.Flag("phpmyadmin-https-port").Changed {
-		app.PHPMyAdminHTTPSPort = phpMyAdminHTTPSPortArg
-	}
-
 	if cmd.Flag("mailhog-port").Changed {
 		app.MailhogPort = mailhogPortArg
 	}
@@ -589,10 +558,6 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		} else {
 			app.DBImageExtraPackages = strings.Split(cmd.Flag("dbimage-extra-packages").Value.String(), ",")
 		}
-	}
-
-	if cmd.Flag("host-dba-port").Changed {
-		app.HostPHPMyAdminPort = cmd.Flag("host-dba-port").Value.String()
 	}
 
 	if cmd.Flag("use-dns-when-possible").Changed {
@@ -690,10 +655,6 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		app.WorkingDir["db"] = dbWorkingDirArg
 	}
 
-	if dbaWorkingDirArg != "" {
-		app.WorkingDir["dba"] = dbaWorkingDirArg
-	}
-
 	// If default working directory overrides are requested, they take precedence
 	defaults := app.DefaultWorkingDirMap()
 	if workingDirDefaultsArg {
@@ -706,10 +667,6 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 
 	if dbWorkingDirDefaultArg {
 		app.WorkingDir["db"] = defaults["db"]
-	}
-
-	if dbaWorkingDirDefaultArg {
-		app.WorkingDir["dba"] = defaults["dba"]
 	}
 
 	// Ensure the configuration passes validation before writing config file.

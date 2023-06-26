@@ -94,7 +94,6 @@ func deleteDdevImages(deleteAll bool) error {
 	})
 
 	webimg := versionconstants.GetWebImage()
-	dbaimage := versionconstants.GetDBAImage()
 	routerimage := versionconstants.GetRouterImage()
 	sshimage := versionconstants.GetSSHAuthImage()
 
@@ -115,12 +114,6 @@ func deleteDdevImages(deleteAll bool) error {
 				}
 			}
 			if strings.HasPrefix(tag, "ddev/ddev-dbserver") && !strings.HasSuffix(tag, keepDBImageTag) && !strings.HasSuffix(tag, keepDBImageTag+"-built") {
-				if err = dockerutil.RemoveImage(tag); err != nil {
-					return err
-				}
-			}
-			// If a dbaimage, but doesn't match our dbaimage, delete it
-			if strings.HasPrefix(tag, versionconstants.DBAImg) && !strings.HasPrefix(tag, dbaimage) {
 				if err = dockerutil.RemoveImage(tag); err != nil {
 					return err
 				}

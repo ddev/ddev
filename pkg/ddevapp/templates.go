@@ -91,7 +91,7 @@ const ConfigInstructions = `
 # These values specify the destination directory for ddev ssh and the
 # directory in which commands passed into ddev exec are run.
 
-# omit_containers: [db, dba, ddev-ssh-agent]
+# omit_containers: [db, ddev-ssh-agent]
 # Currently only these containers are supported. Some containers can also be
 # omitted globally in the ~/.ddev/global_config.yaml. Note that if you omit
 # the "db" container, several standard features of ddev that access the
@@ -124,14 +124,6 @@ const ConfigInstructions = `
 # host_db_port: "59002"
 # The host port binding for the ddev-dbserver can be explicitly specified. It is dynamic
 # unless explicitly specified.
-
-# phpmyadmin_port: "8036"
-# phpmyadmin_https_port: "8037"
-# The PHPMyAdmin ports can be changed from the default 8036 and 8037
-
-# host_phpmyadmin_port: "8036"
-# The phpmyadmin (dba) port is not normally bound on the host at all, instead being routed
-# through ddev-router, but it can be specified and bound.
 
 # mailhog_port: "8025"
 # mailhog_https_port: "8026"
