@@ -10,9 +10,9 @@
 // Build: 1.0.0
 // Runtime: go-ampli
 //
-// View Tracking Plan: https://data.amplitude.com/ddev/DDEV/events/ampli/latest
+// View Tracking Plan: https://data.amplitude.com/ddev/DDEV/events/main/latest
 //
-// Full Setup Instructions: https://data.amplitude.com/ddev/DDEV/implementation/ampli/latest/getting-started/ddev
+// Full Setup Instructions: https://data.amplitude.com/ddev/DDEV/implementation/main/latest/getting-started/ddev
 //
 
 package ampli
@@ -603,10 +603,10 @@ func (a *Ampli) Load(options LoadOptions) {
 
 	if clientConfig.Plan == nil {
 		clientConfig.Plan = &amplitude.Plan{
-			Branch:    `ampli`,
+			Branch:    `main`,
 			Source:    `ddev`,
 			Version:   `4`,
-			VersionID: `da01c7d9-18a0-4c51-bac5-e231d9aac3c6`,
+			VersionID: `2450f303-cf8e-4924-81f9-ece3f0afd6b5`,
 		}
 	}
 
