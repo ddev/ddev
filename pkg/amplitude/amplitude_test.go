@@ -1,6 +1,7 @@
 package amplitude_test
 
 import (
+	"github.com/ddev/ddev/pkg/dockerutil"
 	"os"
 	"runtime"
 	"testing"
@@ -33,7 +34,11 @@ func (t *AmplitudeSuite) TestGetEventOptions() {
 	require.Equal(versionconstants.DdevVersion, amplitude.GetEventOptions().AppVersion)
 	require.Equal(amplitude.GetDeviceID(), amplitude.GetEventOptions().DeviceID)
 	require.Equal(os.Getenv("LANG"), amplitude.GetEventOptions().Language)
-	require.Equal(runtime.GOOS, amplitude.GetEventOptions().OSName)
+	osType := runtime.GOOS
+	if dockerutil.IsWSL2() {
+		osType = "wsl2"
+	}
+	require.Equal(osType, amplitude.GetEventOptions().OSName)
 	require.Equal(runtime.GOARCH, amplitude.GetEventOptions().Platform)
 	require.Equal("ddev cli", amplitude.GetEventOptions().ProductID)
 	require.LessOrEqual(amplitude.GetEventOptions().Time, time.Now().UnixMilli())
