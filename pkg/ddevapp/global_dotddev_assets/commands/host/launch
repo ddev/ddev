@@ -13,7 +13,7 @@ if [ ${DDEV_PRIMARY_URL%://*} = "https" ]; then HTTPS=true; fi
 while :; do
      case ${1:-} in
          -p|--phpmyadmin)
-            echo "phpMyAdmin is no longer built into DDEV, please 'ddev get ddev/ddev-phpmyadmin' and use 'ddev phpstorm' to launch phpMyAdmin" && exit 2
+            echo "phpMyAdmin is no longer built into DDEV, please 'ddev get ddev/ddev-phpmyadmin' and use 'ddev phpmyadmin' to launch phpMyAdmin" && exit 2
             ;;
          -m|--mailhog)
             if [[ ! -z "${GITPOD_INSTANCE_ID}" ]] || [[ "${CODESPACES}" == "true" ]]; then
