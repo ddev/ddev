@@ -6,13 +6,13 @@
 // To update run 'ampli pull ddev'
 //
 // Required dependencies: github.com/amplitude/analytics-go@latest
-// Tracking Plan Version: 4
+// Tracking Plan Version: 5
 // Build: 1.0.0
 // Runtime: go-ampli
 //
-// View Tracking Plan: https://data.amplitude.com/ddev/DDEV/events/mutagen-nfs/latest
+// View Tracking Plan: https://data.amplitude.com/ddev/DDEV/events/main/latest
 //
-// Full Setup Instructions: https://data.amplitude.com/ddev/DDEV/implementation/mutagen-nfs/latest/getting-started/ddev
+// Full Setup Instructions: https://data.amplitude.com/ddev/DDEV/implementation/main/latest/getting-started/ddev
 //
 
 package ampli
@@ -573,10 +573,10 @@ func (a *Ampli) Load(options LoadOptions) {
 
 	if clientConfig.Plan == nil {
 		clientConfig.Plan = &amplitude.Plan{
-			Branch:    `mutagen-nfs`,
+			Branch:    `main`,
 			Source:    `ddev`,
-			Version:   `4`,
-			VersionID: `e17eb7d5-493b-436b-a205-016acd50676b`,
+			Version:   `5`,
+			VersionID: `3887810d-c128-45b8-86fe-094c523b1fdc`,
 		}
 	}
 
