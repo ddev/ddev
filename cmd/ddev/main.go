@@ -2,13 +2,9 @@ package main
 
 import (
 	"os"
-	"path"
 
 	"github.com/ddev/ddev/cmd/ddev/cmd"
 	"github.com/ddev/ddev/pkg/amplitude"
-	"github.com/ddev/ddev/pkg/config/remoteconfig"
-	"github.com/ddev/ddev/pkg/config/state/storage/yaml"
-	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/util"
 )
 
@@ -28,32 +24,6 @@ func main() {
 	if os.Geteuid() == 0 && len(os.Args) > 1 && os.Args[1] != "hostname" {
 		util.Failed("ddev is not designed to be run with root privileges, please run as normal user and without sudo")
 	}
-
-	// Create a global state to be injected later.
-	state := yaml.NewState(path.Join(globalconfig.GetGlobalDdevDir(), ".state.yaml"))
-
-	// TODO for the time being this triggers the download from Github but
-	// should be realized with a clean bootstrap as soon as it exists. The
-	// download does not hurt here as it's done in a asynchronous call but it's
-	// important to start it as early as possible to have an up to date
-	// remote config at the end of the command execution.
-	remoteconfig.InitGlobal(
-		remoteconfig.Config{
-			Local: remoteconfig.Local{
-				Path: globalconfig.GetGlobalDdevDir(),
-			},
-			Remote: remoteconfig.Remote{
-				Owner:    globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Owner,
-				Repo:     globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Repo,
-				Ref:      globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Ref,
-				Filepath: globalconfig.DdevGlobalConfig.RemoteConfig.Remote.Filepath,
-			},
-			UpdateInterval: globalconfig.DdevGlobalConfig.RemoteConfig.UpdateInterval,
-			TickerInterval: globalconfig.DdevGlobalConfig.Messages.TickerInterval,
-		},
-		state,
-		globalconfig.IsInternetActive,
-	)
 
 	cmd.Execute()
 }
