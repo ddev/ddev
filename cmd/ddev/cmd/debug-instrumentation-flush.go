@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/ddev/ddev/pkg/amplitude"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -17,9 +18,13 @@ var DebugInstrumentationFlushCmd = &cobra.Command{
 			return
 		}
 
-		amplitude.FlushForce()
+		debugBackup := globalconfig.DdevDebug
+		globalconfig.DdevDebug = true
+		defer func() {
+			globalconfig.DdevDebug = debugBackup
+		}()
 
-		util.Success("Usage statistics submitted.")
+		amplitude.FlushForce()
 	},
 }
 

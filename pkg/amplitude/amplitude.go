@@ -183,7 +183,7 @@ func InitAmplitude() {
 		interval = 24 * time.Hour
 	}
 
-	logger := loggers.NewDdevLogger(globalconfig.DdevVerbose)
+	logger := loggers.NewDdevLogger(globalconfig.DdevDebug, globalconfig.DdevVerbose)
 
 	ampli.Instance.Load(ampli.LoadOptions{
 		Client: ampli.LoadClientOptions{
