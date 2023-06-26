@@ -2918,11 +2918,13 @@ func TestRouterPortsCheck(t *testing.T) {
 		},
 	}
 
-	containerID, out, err := dockerutil.RunSimpleContainer(versionconstants.GetWebImage(), t.Name()+"occupyport", nil, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, "", false, true, nil, portBinding)
+	containerID, out, err := dockerutil.RunSimpleContainer(versionconstants.GetWebImage(), t.Name()+"occupyport", nil, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, "", false, true, map[string]string{"ddevtestcontainer": t.Name()}, portBinding)
 
 	if err != nil {
 		t.Fatalf("Failed to run docker command to occupy port 80/443, err=%v output=%v", err, out)
 	}
+	out, err = dockerutil.ContainerWait(60, map[string]string{"ddevtestcontainer": t.Name()})
+	require.NoError(t, err, "Failed to wait for container to start, err=%v output='%v'", err, out)
 
 	// Now try to start the router. It should fail because the port is occupied.
 	err = ddevapp.StartDdevRouter()
