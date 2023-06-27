@@ -106,6 +106,7 @@ SHASUM=shasum -a 256
 ifeq ($(BUILD_OS),windows)
 	DDEVNAME=ddev.exe
 	SHASUM=sha256sum
+	TEST_TIMEOUT=6h
 endif
 
 DDEV_PATH=$(PWD)/$(GOTMP)/bin/$(BUILD_OS)_$(BUILD_ARCH)
