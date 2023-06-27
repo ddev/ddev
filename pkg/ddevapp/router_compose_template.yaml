@@ -42,6 +42,9 @@ services:
         {{ end }}{{/* end if .letsencrypt */}}
     restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
     healthcheck:
+      {{ if eq .Router "traefik" }}
+      test: ["CMD-SHELL", "curl -I -s -f http://127.0.0.1:9999/dashboard || exit 1"]
+      {{ end }}
       interval: 1s
       retries: 120
       start_period: 120s
