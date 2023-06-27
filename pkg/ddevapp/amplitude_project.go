@@ -51,7 +51,7 @@ func (app *DdevApp) TrackProject() {
 		FailOnHookFail(app.FailOnHookFail || app.FailOnHookFailGlobal).
 		Id(app.ProtectedID()).
 		NodejsVersion(app.NodeJSVersion).
-		PerformanceStrategy(app.GetPerformanceStrategy()).
+		PerformanceMode(app.GetPerformanceMode()).
 		PhpVersion(app.GetPhpVersion()).
 		ProjectType(app.GetType()).
 		RouterDisabled(IsRouterDisabled(app)).

@@ -48,8 +48,8 @@ const DdevFileSignature = "#ddev-generated"
 // WebserverDefault is the default webserver type, overridden by $DDEV_WEBSERVER_TYPE
 var WebserverDefault = WebserverNginxFPM
 
-// PerformanceDefault is default value for app.PerformanceStrategy
-var PerformanceStrategyDefault = types.PerformanceStrategyEmpty
+// PerformanceModeDefault is default value for app.PerformanceMode
+var PerformanceModeDefault = types.PerformanceModeEmpty
 
 const NodeJSDefault = "18"
 

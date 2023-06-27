@@ -86,13 +86,13 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 		dirty = true
 	}
 
-	if cmd.Flag(configTypes.FlagPerformanceStrategyName).Changed {
-		performanceStrategy, _ := cmd.Flags().GetString(configTypes.FlagPerformanceStrategyName)
+	if cmd.Flag(configTypes.FlagPerformanceModeName).Changed {
+		performanceMode, _ := cmd.Flags().GetString(configTypes.FlagPerformanceModeName)
 
-		if err := configTypes.CheckValidPerformanceStrategy(performanceStrategy); err != nil {
-			util.Error("%s. Not changing value of performance_strategy option.", err)
+		if err := configTypes.CheckValidPerformanceMode(performanceMode); err != nil {
+			util.Error("%s. Not changing value of performance_mode option.", err)
 		} else {
-			globalconfig.DdevGlobalConfig.SetPerformanceStrategy(performanceStrategy)
+			globalconfig.DdevGlobalConfig.SetPerformanceMode(performanceMode)
 			dirty = true
 		}
 	}
@@ -221,7 +221,7 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 	output.UserOut.Printf("instrumentation-opt-in=%v", globalconfig.DdevGlobalConfig.InstrumentationOptIn)
 	output.UserOut.Printf("omit-containers=[%s]", strings.Join(globalconfig.DdevGlobalConfig.OmitContainersGlobal, ","))
 	output.UserOut.Printf("web-environment=[%s]", strings.Join(globalconfig.DdevGlobalConfig.WebEnvironment, ","))
-	output.UserOut.Printf("performance-strategy=%v", globalconfig.DdevGlobalConfig.GetPerformanceStrategy())
+	output.UserOut.Printf("%s=%v", configTypes.FlagPerformanceModeName, globalconfig.DdevGlobalConfig.GetPerformanceMode())
 
 	output.UserOut.Printf("router-bind-all-interfaces=%v", globalconfig.DdevGlobalConfig.RouterBindAllInterfaces)
 	output.UserOut.Printf("internet-detection-timeout-ms=%v", globalconfig.DdevGlobalConfig.InternetDetectionTimeout)
@@ -258,7 +258,7 @@ func init() {
 	configGlobalCommand.Flags().Bool("simple-formatting", false, "If true, use simple formatting and no color for tables")
 	configGlobalCommand.Flags().Bool("use-hardened-images", false, "If true, use more secure 'hardened' images for an actual internet deployment.")
 	configGlobalCommand.Flags().Bool("fail-on-hook-fail", false, "If true, 'ddev start' will fail when a hook fails.")
-	configGlobalCommand.Flags().String(configTypes.FlagPerformanceStrategyName, configTypes.FlagPerformanceStrategyDefault, configTypes.FlagPerformanceDescription())
+	configGlobalCommand.Flags().String(configTypes.FlagPerformanceModeName, configTypes.FlagPerformanceModeDefault, configTypes.FlagPerformanceDescription())
 	configGlobalCommand.Flags().String("table-style", "", "Table style for list and describe, see ~/.ddev/global_config.yaml for values")
 	configGlobalCommand.Flags().String("required-docker-compose-version", "", "Override default docker-compose version (used only in development testing)")
 	_ = configGlobalCommand.Flags().MarkHidden("required-docker-compose-version")

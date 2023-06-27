@@ -98,7 +98,7 @@ const ConfigInstructions = `
 # database container will be unusable. In the global configuration it is also
 # possible to omit ddev-router, but not here.
 
-# performance_strategy: ""
+# performance_mode: "default"
 # DDEV offers performance optimization strategies to improve the filesystem
 # performance depending on your host system. Should be configured globally.
 #

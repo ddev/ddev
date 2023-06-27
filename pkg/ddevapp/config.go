@@ -37,10 +37,10 @@ func init() {
 		nodeps.WebserverDefault = testWebServerType
 	}
 	if testNFSMount := os.Getenv("DDEV_TEST_USE_NFSMOUNT"); testNFSMount == "true" {
-		nodeps.PerformanceStrategyDefault = types.PerformanceStrategyNFS
+		nodeps.PerformanceModeDefault = types.PerformanceModeNFS
 	}
 	if testMutagen := os.Getenv("DDEV_TEST_USE_MUTAGEN"); testMutagen == "true" {
-		nodeps.PerformanceStrategyDefault = types.PerformanceStrategyMutagen
+		nodeps.PerformanceModeDefault = types.PerformanceModeMutagen
 	}
 	if os.Getenv("DDEV_TEST_NO_BIND_MOUNTS") == "true" {
 		nodeps.NoBindMountsDefault = true
@@ -77,11 +77,11 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	app.ComposerVersion = nodeps.ComposerDefault
 	app.NodeJSVersion = nodeps.NodeJSDefault
 	app.WebserverType = nodeps.WebserverDefault
-	app.SetPerformanceStrategy(nodeps.PerformanceStrategyDefault)
+	app.SetPerformanceMode(nodeps.PerformanceModeDefault)
 
 	// Turn off mutagen on python projects until initial setup can be done
 	if app.WebserverType == nodeps.WebserverNginxGunicorn {
-		app.SetPerformanceStrategy(types.PerformanceStrategyNone)
+		app.SetPerformanceMode(types.PerformanceModeNone)
 	}
 
 	app.FailOnHookFail = nodeps.FailOnHookFailDefault

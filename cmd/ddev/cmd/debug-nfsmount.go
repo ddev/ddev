@@ -71,12 +71,12 @@ var DebugNFSMountCmd = &cobra.Command{
 		util.Success("")
 		util.Success("Successfully accessed NFS mount of %s", app.AppRoot)
 		switch {
-		case globalconfig.DdevGlobalConfig.GetPerformanceStrategy() == types.PerformanceStrategyNFS:
-			util.Success("performance-strategy=nfs is set globally")
-		case app.PerformanceStrategy == types.PerformanceStrategyNFS:
-			util.Success("performance-strategy=nfs is set in this project (%s), but is not set globally", app.Name)
+		case globalconfig.DdevGlobalConfig.GetPerformanceMode() == types.PerformanceModeNFS:
+			util.Success("%s=nfs is set globally", types.FlagPerformanceModeName)
+		case app.PerformanceMode == types.PerformanceModeNFS:
+			util.Success("%s=nfs is set in this project (%s), but is not set globally", types.FlagPerformanceModeName, app.Name)
 		default:
-			util.Warning("performance-strategy=nfs is not set either globally or in this project. \nUse `ddev config --performance-strategy=nfs` to enable it for this project.")
+			util.Warning("%[1]s=nfs is not set either globally or in this project. \nUse `ddev config --%[1]s=nfs` to enable it for this project.", types.FlagPerformanceModeName)
 		}
 	},
 }

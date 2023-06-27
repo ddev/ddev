@@ -46,7 +46,7 @@ func TestMutagenSimple(t *testing.T) {
 
 	err = app.Init(site.Dir)
 	assert.NoError(err)
-	app.SetPerformanceStrategy(types.PerformanceStrategyMutagen)
+	app.SetPerformanceMode(types.PerformanceModeMutagen)
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
@@ -182,7 +182,7 @@ func TestMutagenConfigChange(t *testing.T) {
 
 	err = app.Init(site.Dir)
 	assert.NoError(err)
-	app.SetPerformanceStrategy(types.PerformanceStrategyMutagen)
+	app.SetPerformanceMode(types.PerformanceModeMutagen)
 	err = app.WriteConfig()
 	require.NoError(t, err)
 

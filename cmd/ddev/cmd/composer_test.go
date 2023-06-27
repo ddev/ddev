@@ -24,7 +24,7 @@ func TestComposerCmd(t *testing.T) {
 	// is enabled, both on macOS and Windows. As far as I can tell, it only happens in this test, I've
 	// never recreated manually. I do see https://github.com/composer/composer/issues/9627 which seemed
 	// to deal with similar issues in vagrant context, and has a hack now embedded into composer.
-	if nodeps.PerformanceStrategyDefault == types.PerformanceStrategyNFS {
+	if nodeps.PerformanceModeDefault == types.PerformanceModeNFS {
 		t.Skip("Composer has strange behavior in NFS context, so skipping")
 	}
 	assert := asrt.New(t)
