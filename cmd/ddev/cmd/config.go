@@ -160,9 +160,6 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 	err = app.ProcessHooks("pre-config")
 	if err != nil {
 		util.Failed(err.Error())
-	}
-
-	if err != nil {
 		util.Failed("Failed to process hook 'pre-config'")
 	}
 

@@ -1245,16 +1245,19 @@ func (app *DdevApp) AppTypePrompt() error {
 	// First, see if we can auto detect what kind of site it is so we can set a sane default.
 	detectedAppType := app.DetectAppType()
 
-	// If the detected detectedAppType is php, we'll ask them to confirm,
-	// otherwise go with it.
 	// If we found an application type just set it and inform the user.
 	util.Success("Found a %s codebase at %s.", detectedAppType, filepath.Join(app.AppRoot, app.Docroot))
 
 	validAppTypes := strings.Join(GetValidAppTypes(), ", ")
 	typePrompt := "Project Type [%s] (%s): "
 
-	fmt.Printf(typePrompt, validAppTypes, detectedAppType)
-	appType := strings.ToLower(util.GetInput(detectedAppType))
+	defaultAppType := app.Type
+	if app.Type == nodeps.AppTypeNone {
+		defaultAppType = detectedAppType
+	}
+
+	fmt.Printf(typePrompt, validAppTypes, defaultAppType)
+	appType := strings.ToLower(util.GetInput(defaultAppType))
 
 	for !IsValidAppType(appType) {
 		output.UserOut.Errorf("'%s' is not a valid project type. Allowed project types are: %s\n", appType, validAppTypes)
