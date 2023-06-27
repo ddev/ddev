@@ -686,7 +686,7 @@ func IsMutagenVolumeMounted(app *DdevApp) (bool, error) {
 // It's also required and set if NoBindMounts is set, since we have to have a way
 // to get code on there.
 func (app *DdevApp) IsMutagenEnabled() bool {
-	return app.GetPerformance() == types.PerformanceMutagen || globalconfig.DdevGlobalConfig.NoBindMounts
+	return app.GetPerformanceStrategy() == types.PerformanceStrategyMutagen || globalconfig.DdevGlobalConfig.NoBindMounts
 }
 
 // GetMutagenVolumeLabel returns the com.ddev.volume-signature on the project_mutagen docker volume

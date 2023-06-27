@@ -20,7 +20,7 @@ import (
 // sites found is missing a directory
 func TestListWithoutDir(t *testing.T) {
 	// Can't run with mutagen because we actually delete the alpha
-	if runtime.GOOS == "windows" || nodeps.PerformanceDefault == types.PerformanceMutagen {
+	if runtime.GOOS == "windows" || nodeps.PerformanceStrategyDefault == types.PerformanceStrategyMutagen {
 		t.Skip("Skipping because unreliable on Windows and can't be used with mutagen")
 	}
 	// Set up tests and give ourselves a working directory.

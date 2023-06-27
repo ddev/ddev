@@ -5,36 +5,39 @@ import (
 	"strings"
 )
 
-type Performance = string
+type PerformanceStrategy = string
 
 const (
-	PerformanceNone    Performance = ""
-	PerformanceDefault Performance = "default"
-	PerformanceOff     Performance = "off"
-	PerformanceMutagen Performance = "mutagen"
-	PerformanceNFS     Performance = "nfs"
+	PerformanceStrategyEmpty   PerformanceStrategy = ""
+	PerformanceStrategyDefault PerformanceStrategy = "default"
+	PerformanceStrategyNone    PerformanceStrategy = "none"
+	PerformanceStrategyMutagen PerformanceStrategy = "mutagen"
+	PerformanceStrategyNFS     PerformanceStrategy = "nfs"
 )
 
-// ValidPerformanceOptions returns a slice of valid performance options.
-func ValidPerformanceOptions() []Performance {
-	return []Performance{
-		// PerformanceNone falls back to PerformanceDefault and should not be
-		// shown as valid option and therefor is omitted from the list.
-		PerformanceDefault,
-		PerformanceOff,
-		PerformanceMutagen,
-		PerformanceNFS,
+// ValidPerformanceStrategyOptions returns a slice of valid performance
+// strategy options.
+func ValidPerformanceStrategyOptions() []PerformanceStrategy {
+	return []PerformanceStrategy{
+		// PerformanceStrategyEmpty falls back to PerformanceStrategyDefault
+		// and should not be shown as valid option and therefor is omitted
+		// from the list.
+		PerformanceStrategyDefault,
+		PerformanceStrategyNone,
+		PerformanceStrategyMutagen,
+		PerformanceStrategyNFS,
 	}
 }
 
-// IsValidPerformance checks to see if the performance is valid.
-func IsValidPerformance(performance string) bool {
-	if performance == PerformanceNone {
+// IsValidPerformanceStrategy checks to see if the given performance strategy
+// option is valid.
+func IsValidPerformanceStrategy(performanceStrategy string) bool {
+	if performanceStrategy == PerformanceStrategyEmpty {
 		return true
 	}
 
-	for _, o := range ValidPerformanceOptions() {
-		if performance == o {
+	for _, o := range ValidPerformanceStrategyOptions() {
+		if performanceStrategy == o {
 			return true
 		}
 	}
@@ -42,14 +45,14 @@ func IsValidPerformance(performance string) bool {
 	return false
 }
 
-// CheckValidPerformance checks to see if the performance is valid and returns
-// an error in case the value is not valid.
-func CheckValidPerformance(performance string) error {
-	if !IsValidPerformance(performance) {
+// CheckValidPerformance checks to see if the given performance strategy option
+// is valid and returns an error in case the value is not valid.
+func CheckValidPerformanceStrategy(performanceStrategy string) error {
+	if !IsValidPerformanceStrategy(performanceStrategy) {
 		return fmt.Errorf(
-			"\"%s\" is not a valid performance option. Valid options include \"%s\"",
-			performance,
-			strings.Join(ValidPerformanceOptions(), "\", \""),
+			"\"%s\" is not a valid performance strategy option. Valid options include \"%s\"",
+			performanceStrategy,
+			strings.Join(ValidPerformanceStrategyOptions(), "\", \""),
 		)
 	}
 
@@ -57,12 +60,12 @@ func CheckValidPerformance(performance string) error {
 }
 
 // Flag definitions
-const FlagPerformance = "performance"
-const FlagPerformanceDefault = PerformanceNone
+const FlagPerformanceStrategyName = "performance-strategy"
+const FlagPerformanceStrategyDefault = PerformanceStrategyEmpty
 
 func FlagPerformanceDescription() string {
 	return fmt.Sprintf(
 		"Performance optimization strategy, possible values are \"%s\"",
-		strings.Join(ValidPerformanceOptions(), "\", \""),
+		strings.Join(ValidPerformanceStrategyOptions(), "\", \""),
 	)
 }

@@ -3,5 +3,5 @@ database:
   type: mariadb
   version: 10.4
 php_version: 8.0
-performance: "off"
+performance_strategy: "none"
 webserver_type: apache-fpm

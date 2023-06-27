@@ -330,17 +330,17 @@ When `true`, the `config.*.yaml` file with the option will have its settings *ov
 
 See [Extending `config.yaml` with Custom `config.*.yaml` Files](../extend/customization-extendibility.md#extending-configyaml-with-custom-configyaml-files).
 
-## `performance`
+## `performance_strategy`
 
 Defines the performance optimization strategy to be used. Currently [Mutagen asynchronous caching](../install/performance.md#mutagen) and [NFS](../install/performance.md#nfs) are supported. Mutagen is enabled by default on Mac and Windows.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `` | Can be `default`, `off`, `mutagen`, or `nfs`.
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `` | Can be `default`, `none`, `mutagen`, or `nfs`.
 
 This is typically a global setting. The project-specific value will override global config.
 
-!!!tip "Workstation configuration required for NFS!"
+!!!tip "Workstation configuration is required to use NFS!"
     See the [NFS section](../install/performance.md#nfs) on the Performance page.
 
 ## `php_version`

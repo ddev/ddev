@@ -19,7 +19,7 @@ Mutagen is enabled by default on Mac and Windows, and it can be disabled per-pro
     If you’re on macOS or Windows, you can skip everything else here and enable Mutagen:
 
     ```
-    ddev config global --performance=default
+    ddev config global --performance-strategy=default
     ```
 
     !!!tip
@@ -42,13 +42,13 @@ Mutagen is enabled by default on Mac and Windows, and it can be disabled per-pro
     !!!warning "Don’t Install Mutagen"
         You do not need to install anything to use Mutagen. DDEV installs and maintains its own `mutagen` binary.
 
-    Mutagen is enabled globally by default. You can disable it with `ddev mutagen reset && ddev config global --performance=off`.
+    Mutagen is enabled globally by default. You can disable it with `ddev mutagen reset && ddev config global --performance-strategy=none`.
 
-    If you’d rather use Mutagen on a specific project, run [`ddev stop`](../usage/commands.md#stop), enable it with `ddev config --performance=mutagen`, and [`ddev start`](../usage/commands.md#start) again.
+    If you’d rather use Mutagen on a specific project, run [`ddev stop`](../usage/commands.md#stop), enable it with `ddev config --performance-strategy=mutagen`, and [`ddev start`](../usage/commands.md#start) again.
 
     You can’t disable Mutagen on individual projects if it’s enabled globally.
 
-    To stop using Mutagen on a project, run `ddev mutagen reset && ddev config --performance=off`.
+    To stop using Mutagen on a project, run `ddev mutagen reset && ddev config --performance-strategy=none`.
 
     The `nfs-mount-enabled` feature is automatically turned off if you’re using Mutagen.
 
@@ -89,7 +89,7 @@ Mutagen is enabled by default on Mac and Windows, and it can be disabled per-pro
     * **Perform big Git operations on the host side.**<br>
     Git actions that change lots of files, like switching branches, are best done on the host side and not inside the container. You may want to do an explicit `ddev mutagen sync` command after doing something like that to be sure all changes are picked up quickly.
     * **Share projects carefully with non-Mutagen users.**<br>
-    If you share a project with some users that want Mutagen, perhaps on macOS, and other users that don’t want or need it, perhaps on WSL2, don’t check in `.ddev/config.yaml`’s [`performance: "mutagen"`](../configuration/config.md#performance). Instead, either use [global Mutagen configuration](../configuration/config.md#performance) or add a not-checked-in, project-level `.ddev/config.performance.yaml` just to include `performance: "mutagen"` in it. That way, only users with that file will have Mutagen enabled.
+    If you share a project with some users that want Mutagen, perhaps on macOS, and other users that don’t want or need it, perhaps on WSL2, don’t check in `.ddev/config.yaml`’s [`performance_strategy: "mutagen"`](../configuration/config.md#performance_strategy). Instead, either use [global Mutagen configuration](../configuration/config.md#performance_strategy) or add a not-checked-in, project-level `.ddev/config.performance_strategy.yaml` just to include `performance_strategy: "mutagen"` in it. That way, only users with that file will have Mutagen enabled.
     * **Windows symlinks have some Mutagen restrictions.**<br>
     On macOS and Linux (including WSL2) the default `.ddev/mutagen/mutagen.yml` chooses the `posix-raw` type of symlink handling. (See [mutagen docs](https://mutagen.io/documentation/synchronization/symbolic-links)). This basically means any symlink created will try to sync, regardless of whether it’s valid in the other environment. Mutagen, however, does not support `posix-raw` on traditional Windows, so DDEV uses the `portable` symlink mode. The result is that on Windows, using Mutagen, symlinks must be strictly limited to relative links that are inside the Mutagen section of the project.
     * **It’s a filesystem feature. Make backups!**<br>
@@ -146,7 +146,7 @@ Mutagen is enabled by default on Mac and Windows, and it can be disabled per-pro
 
     ### Troubleshooting Mutagen Sync Issues
 
-    * Please make sure that DDEV projects work *without* Mutagen before troubleshooting it. Run `ddev config --performance=off && ddev restart`.
+    * Please make sure that DDEV projects work *without* Mutagen before troubleshooting it. Run `ddev config --performance-strategy=none && ddev restart`.
     * Rename your project’s `.ddev/mutagen/mutagen.yml` file to `.ddev/mutagen/mutagen.yml.bak` and run `ddev restart`. This ensures you’ll have a fresh version in case the file has been changed and `#ddev-generated` removed.
     * Avoid having Mutagen sync large binaries, which can cause `ddev start` to take a long time. The `.tarballs` directory is automatically excluded, so Mutagen will ignore anything you move there. To see what Mutagen is trying to sync, run `ddev mutagen status -l` in another window.
     * `export DDEV_DEBUG=true` will provide more information about what’s going on with Mutagen.
@@ -221,8 +221,8 @@ Mutagen is enabled by default on Mac and Windows, and it can be disabled per-pro
     1. Make sure DDEV is already working and you can use it.
     2. Use the script below for your OS to configure the NFS server and exports files.
     3. Test that NFS is working correctly by using [`ddev debug nfsmount`](../usage/commands.md#debug-nfsmount) in a project directory. The first line should report something like “Successfully accessed NFS mount of /path/to/project”.
-    4. Enable NFS mounting globally with `ddev config global --performance=nfs`.
-    You can also configure NFS mounting on a per-project basis with `ddev config --performance=nfs` in the project directory, but this is unusual. The project-specific value will override global config.
+    4. Enable NFS mounting globally with `ddev config global --performance-strategy=nfs`.
+    You can also configure NFS mounting on a per-project basis with `ddev config --performance-strategy=nfs` in the project directory, but this is unusual. The project-specific value will override global config.
     5. [`ddev start`](../usage/commands.md#start) your project and make sure it works normally. Use [`ddev describe`](../usage/commands.md#describe) to verify that NFS mounting is being used. The NFS status is near the top of the output of `ddev describe`.
 
     !!!tip "Skip step 2 if you’re already using NFS!"

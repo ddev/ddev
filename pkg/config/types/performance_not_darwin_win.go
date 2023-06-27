@@ -2,8 +2,8 @@
 
 package types
 
-// getPerformanceDefault returns the default performance config depending on
-// the OS.
-func GetPerformanceDefault() Performance {
-	return PerformanceOff
+// GetPerformanceDefault returns the default performance strategy config
+// depending on the OS.
+func GetPerformanceStrategyDefault() PerformanceStrategy {
+	return PerformanceStrategyNone
 }

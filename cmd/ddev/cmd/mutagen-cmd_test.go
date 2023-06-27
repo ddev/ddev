@@ -20,7 +20,7 @@ import (
 func TestCmdMutagen(t *testing.T) {
 	assert := asrt.New(t)
 
-	if nodeps.PerformanceDefault == types.PerformanceMutagen || nodeps.NoBindMountsDefault {
+	if nodeps.PerformanceStrategyDefault == types.PerformanceStrategyMutagen || nodeps.NoBindMountsDefault {
 		t.Skip("Skipping because mutagen on by default")
 	}
 
@@ -39,9 +39,9 @@ func TestCmdMutagen(t *testing.T) {
 		err = app.Stop(true, false)
 		assert.NoError(err)
 
-		_, err = exec.RunHostCommand(DdevBin, "config", "--performance=")
+		_, err = exec.RunHostCommand(DdevBin, "config", "--performance-strategy=")
 		assert.NoError(err)
-		_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance=")
+		_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance-strategy=")
 		assert.NoError(err)
 
 		err = globalconfig.ReadGlobalConfig()
@@ -63,7 +63,7 @@ func TestCmdMutagen(t *testing.T) {
 	require.Equal(t, runtime.GOOS == "darwin" || runtime.GOOS == "windows", app.IsMutagenEnabled())
 
 	// Turn mutagen off globally
-	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance=off")
+	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance-strategy=none")
 	assert.NoError(err)
 
 	err = globalconfig.ReadGlobalConfig()
@@ -75,7 +75,7 @@ func TestCmdMutagen(t *testing.T) {
 	require.False(t, app.IsMutagenEnabled())
 
 	// Project override, turn mutagen on for the project
-	_, err = exec.RunHostCommand(DdevBin, "config", "--performance=mutagen")
+	_, err = exec.RunHostCommand(DdevBin, "config", "--performance-strategy=mutagen")
 	assert.NoError(err)
 
 	// Have to reload the app, since we just changed the config
@@ -112,7 +112,7 @@ func TestCmdMutagen(t *testing.T) {
 	require.NoError(t, err)
 
 	// Turn mutagen off again
-	_, err = exec.RunHostCommand(DdevBin, "config", "--performance=")
+	_, err = exec.RunHostCommand(DdevBin, "config", "--performance-strategy=")
 	require.NoError(t, err)
 
 	app, err = ddevapp.NewApp("", false)
@@ -121,7 +121,7 @@ func TestCmdMutagen(t *testing.T) {
 	// Make sure it got turned off
 	assert.False(app.IsMutagenEnabled())
 
-	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance=mutagen")
+	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance-strategy=mutagen")
 	assert.NoError(err)
 
 	err = globalconfig.ReadGlobalConfig()
@@ -133,7 +133,7 @@ func TestCmdMutagen(t *testing.T) {
 	assert.True(app.IsMutagenEnabled())
 
 	// Turn it off again
-	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance=off")
+	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance-strategy=none")
 	require.NoError(t, err)
 	err = globalconfig.ReadGlobalConfig()
 	require.NoError(t, err)

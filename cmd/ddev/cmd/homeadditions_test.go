@@ -20,9 +20,9 @@ import (
 // TestHomeadditions makes sure that extra files added to
 // .ddev/homeadditions and ~/.ddev/homeadditions get added into the container's ~/
 func TestHomeadditions(t *testing.T) {
-	if nodeps.PerformanceDefault == types.PerformanceMutagen ||
+	if nodeps.PerformanceStrategyDefault == types.PerformanceStrategyMutagen ||
 		(globalconfig.DdevGlobalConfig.IsMutagenEnabled() &&
-			nodeps.PerformanceDefault != types.PerformanceOff) ||
+			nodeps.PerformanceStrategyDefault != types.PerformanceStrategyNone) ||
 		nodeps.NoBindMountsDefault {
 		t.Skip("Skipping because this changes homedir and breaks mutagen functionality")
 	}

@@ -187,9 +187,9 @@ func TestGetActiveAppRoot(t *testing.T) {
 
 // TestCreateGlobalDdevDir checks to make sure that ddev will create a ~/.ddev (and updatecheck)
 func TestCreateGlobalDdevDir(t *testing.T) {
-	if nodeps.PerformanceDefault == types.PerformanceMutagen ||
+	if nodeps.PerformanceStrategyDefault == types.PerformanceStrategyMutagen ||
 		(globalconfig.DdevGlobalConfig.IsMutagenEnabled() &&
-			nodeps.PerformanceDefault != types.PerformanceOff) ||
+			nodeps.PerformanceStrategyDefault != types.PerformanceStrategyNone) ||
 		nodeps.NoBindMountsDefault {
 		t.Skip("Skipping because this changes homedir and breaks mutagen functionality")
 	}

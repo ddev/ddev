@@ -298,7 +298,7 @@ var Project = struct {
 				FailOnHookFail(failOnHookFail bool) interface {
 					Id(id string) interface {
 						NodejsVersion(nodejsVersion string) interface {
-							Performance(performance string) interface {
+							PerformanceStrategy(performanceStrategy string) interface {
 								PhpVersion(phpVersion string) interface {
 									ProjectType(projectType string) interface {
 										RouterDisabled(routerDisabled bool) interface {
@@ -320,7 +320,7 @@ var Project = struct {
 				FailOnHookFail(failOnHookFail bool) interface {
 					Id(id string) interface {
 						NodejsVersion(nodejsVersion string) interface {
-							Performance(performance string) interface {
+							PerformanceStrategy(performanceStrategy string) interface {
 								PhpVersion(phpVersion string) interface {
 									ProjectType(projectType string) interface {
 										RouterDisabled(routerDisabled bool) interface {
@@ -369,7 +369,7 @@ func (b *projectBuilder) Containers(containers []string) interface {
 		FailOnHookFail(failOnHookFail bool) interface {
 			Id(id string) interface {
 				NodejsVersion(nodejsVersion string) interface {
-					Performance(performance string) interface {
+					PerformanceStrategy(performanceStrategy string) interface {
 						PhpVersion(phpVersion string) interface {
 							ProjectType(projectType string) interface {
 								RouterDisabled(routerDisabled bool) interface {
@@ -392,7 +392,7 @@ func (b *projectBuilder) ContainersOmitted(containersOmitted []string) interface
 	FailOnHookFail(failOnHookFail bool) interface {
 		Id(id string) interface {
 			NodejsVersion(nodejsVersion string) interface {
-				Performance(performance string) interface {
+				PerformanceStrategy(performanceStrategy string) interface {
 					PhpVersion(phpVersion string) interface {
 						ProjectType(projectType string) interface {
 							RouterDisabled(routerDisabled bool) interface {
@@ -413,7 +413,7 @@ func (b *projectBuilder) ContainersOmitted(containersOmitted []string) interface
 func (b *projectBuilder) FailOnHookFail(failOnHookFail bool) interface {
 	Id(id string) interface {
 		NodejsVersion(nodejsVersion string) interface {
-			Performance(performance string) interface {
+			PerformanceStrategy(performanceStrategy string) interface {
 				PhpVersion(phpVersion string) interface {
 					ProjectType(projectType string) interface {
 						RouterDisabled(routerDisabled bool) interface {
@@ -432,7 +432,7 @@ func (b *projectBuilder) FailOnHookFail(failOnHookFail bool) interface {
 
 func (b *projectBuilder) Id(id string) interface {
 	NodejsVersion(nodejsVersion string) interface {
-		Performance(performance string) interface {
+		PerformanceStrategy(performanceStrategy string) interface {
 			PhpVersion(phpVersion string) interface {
 				ProjectType(projectType string) interface {
 					RouterDisabled(routerDisabled bool) interface {
@@ -449,7 +449,7 @@ func (b *projectBuilder) Id(id string) interface {
 }
 
 func (b *projectBuilder) NodejsVersion(nodejsVersion string) interface {
-	Performance(performance string) interface {
+	PerformanceStrategy(performanceStrategy string) interface {
 		PhpVersion(phpVersion string) interface {
 			ProjectType(projectType string) interface {
 				RouterDisabled(routerDisabled bool) interface {
@@ -464,7 +464,7 @@ func (b *projectBuilder) NodejsVersion(nodejsVersion string) interface {
 	return b
 }
 
-func (b *projectBuilder) Performance(performance string) interface {
+func (b *projectBuilder) PerformanceStrategy(performanceStrategy string) interface {
 	PhpVersion(phpVersion string) interface {
 		ProjectType(projectType string) interface {
 			RouterDisabled(routerDisabled bool) interface {
@@ -473,7 +473,7 @@ func (b *projectBuilder) Performance(performance string) interface {
 		}
 	}
 } {
-	b.properties[`Performance`] = performance
+	b.properties[`Performance Strategy`] = performanceStrategy
 
 	return b
 }

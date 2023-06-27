@@ -98,13 +98,13 @@ const ConfigInstructions = `
 # database container will be unusable. In the global configuration it is also
 # possible to omit ddev-router, but not here.
 
-# performance: ""
+# performance_strategy: ""
 # DDEV offers performance optimization strategies to improve the filesystem
 # performance depending on your host system. Should be configured globally.
 #
 # If set, will override the global config. Possible values are:
 #   - "default": will use the value from the global config.
-#   - "off":     will disable performance optimization for this project.
+#   - "none":    will disable performance optimization for this project.
 #   - "mutagen": will enable Mutagen for this project.
 #   - "nfs":     will enable NFS for this project.
 #

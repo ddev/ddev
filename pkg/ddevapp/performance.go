@@ -5,17 +5,26 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig"
 )
 
-// GetPerformance returns performance config respecting defaults.
-func (app *DdevApp) GetPerformance() types.Performance {
-	switch app.Performance {
-	case types.PerformanceNone, types.PerformanceDefault:
-		return globalconfig.DdevGlobalConfig.GetPerformance()
+// GetPerformanceStrategy returns performance strategy config respecting defaults.
+func (app *DdevApp) GetPerformanceStrategy() types.PerformanceStrategy {
+	switch app.PerformanceStrategy {
+	case types.PerformanceStrategyEmpty, types.PerformanceStrategyDefault:
+		return globalconfig.DdevGlobalConfig.GetPerformanceStrategy()
 	default:
-		return app.Performance
+		return app.PerformanceStrategy
 	}
+}
+
+// SetPerformanceStrategy sets the performance strategy config.
+func (app *DdevApp) SetPerformanceStrategy(performanceStrategy string) *DdevApp {
+	if types.IsValidPerformanceStrategy(performanceStrategy) {
+		app.PerformanceStrategy = performanceStrategy
+	}
+
+	return app
 }
 
 // IsNFSMountEnabled determines whether NFS is enabled.
 func (app *DdevApp) IsNFSMountEnabled() bool {
-	return !app.IsMutagenEnabled() && app.GetPerformance() == types.PerformanceNFS
+	return !app.IsMutagenEnabled() && app.GetPerformanceStrategy() == types.PerformanceStrategyNFS
 }

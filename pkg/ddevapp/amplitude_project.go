@@ -2,11 +2,11 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/globalconfig"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/amplitude"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/third_party/ampli"
@@ -51,7 +51,7 @@ func (app *DdevApp) TrackProject() {
 		FailOnHookFail(app.FailOnHookFail || app.FailOnHookFailGlobal).
 		Id(app.ProtectedID()).
 		NodejsVersion(app.NodeJSVersion).
-		Performance(app.GetPerformance()).
+		PerformanceStrategy(app.GetPerformanceStrategy()).
 		PhpVersion(app.GetPhpVersion()).
 		ProjectType(app.GetType()).
 		RouterDisabled(IsRouterDisabled(app)).

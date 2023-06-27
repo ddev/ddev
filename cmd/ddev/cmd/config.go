@@ -100,9 +100,6 @@ var (
 	// omitContainersArg allows user to determine value of omit_containers
 	omitContainersArg string
 
-	// performance sets performance
-	performance types.Performance
-
 	// failOnHookFail sets fail_on_hook_fail
 	failOnHookFail bool
 
@@ -246,7 +243,7 @@ func init() {
 	ConfigCommand.Flags().BoolVar(&webWorkingDirDefaultArg, "web-working-dir-default", false, "Unsets a web service working directory override")
 	ConfigCommand.Flags().BoolVar(&dbWorkingDirDefaultArg, "db-working-dir-default", false, "Unsets a db service working directory override")
 	ConfigCommand.Flags().BoolVar(&workingDirDefaultsArg, "working-dir-defaults", false, "Unsets all service working directory overrides")
-	ConfigCommand.Flags().StringVar(&performance, types.FlagPerformance, types.FlagPerformanceDefault, types.FlagPerformanceDescription())
+	ConfigCommand.Flags().String(types.FlagPerformanceStrategyName, types.FlagPerformanceStrategyDefault, types.FlagPerformanceDescription())
 
 	ConfigCommand.Flags().BoolVar(&failOnHookFail, "fail-on-hook-fail", false, "Decide whether 'ddev start' should be interrupted by a failing hook")
 	ConfigCommand.Flags().StringVar(&hostWebserverPortArg, "host-webserver-port", "", "The web container's localhost-bound port")
@@ -465,11 +462,13 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		app.HostDBPort = hostDBPortArg
 	}
 
-	if cmd.Flag(types.FlagPerformance).Changed {
-		if err := types.CheckValidPerformance(performance); err != nil {
-			util.Error("%s. Not changing performance.", err)
+	if cmd.Flag(types.FlagPerformanceStrategyName).Changed {
+		performanceStrategy, _ := cmd.Flags().GetString(types.FlagPerformanceStrategyName)
+
+		if err := types.CheckValidPerformanceStrategy(performanceStrategy); err != nil {
+			util.Error("%s. Not changing value of `performance_strategy` option.", err)
 		} else {
-			app.Performance = performance
+			app.SetPerformanceStrategy(performanceStrategy)
 		}
 	}
 

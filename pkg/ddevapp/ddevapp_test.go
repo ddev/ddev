@@ -587,7 +587,7 @@ func TestDdevStart(t *testing.T) {
 func TestDdevStartCustomEntrypoint(t *testing.T) {
 	if runtime.GOOS == "windows" &&
 		(globalconfig.DdevGlobalConfig.IsMutagenEnabled() ||
-			nodeps.PerformanceDefault == types.PerformanceMutagen) {
+			nodeps.PerformanceStrategyDefault == types.PerformanceStrategyMutagen) {
 		t.Skip("Skipping on windows/mutagen, it's just too slow to app.Start()")
 	}
 	assert := asrt.New(t)
@@ -725,7 +725,7 @@ func TestDdevStartMultipleHostnames(t *testing.T) {
 
 // TestDdevStartUnmanagedSettings start and config with disable_settings_management
 func TestDdevStartUnmanagedSettings(t *testing.T) {
-	if nodeps.PerformanceDefault == types.PerformanceMutagen ||
+	if nodeps.PerformanceStrategyDefault == types.PerformanceStrategyMutagen ||
 		globalconfig.DdevGlobalConfig.IsMutagenEnabled() ||
 		nodeps.NoBindMountsDefault {
 		t.Skip("Skipping with mutagen because conflict on settings files")
@@ -818,7 +818,7 @@ func TestDdevStartUnmanagedSettings(t *testing.T) {
 
 // TestDdevNoProjectMount tests running without the app file mount.
 func TestDdevNoProjectMount(t *testing.T) {
-	if nodeps.PerformanceDefault == types.PerformanceMutagen || nodeps.NoBindMountsDefault {
+	if nodeps.PerformanceStrategyDefault == types.PerformanceStrategyMutagen || nodeps.NoBindMountsDefault {
 		t.Skip("Skipping because this doesn't make sense with mutagen or NoBindMounts")
 	}
 	assert := asrt.New(t)
@@ -2948,7 +2948,7 @@ func TestCleanupWithoutCompose(t *testing.T) {
 	assert := asrt.New(t)
 
 	// Skip test because we can't rename folders while they're in use if running on Windows or with mutagen.
-	if runtime.GOOS == "windows" || nodeps.PerformanceDefault == types.PerformanceMutagen {
+	if runtime.GOOS == "windows" || nodeps.PerformanceStrategyDefault == types.PerformanceStrategyMutagen {
 		t.Skip("Skipping test TestCleanupWithoutCompose; doesn't work on Windows or mutagen because of renaming of whole project directory")
 	}
 
@@ -3556,7 +3556,7 @@ func TestNFSMount(t *testing.T) {
 	if dockerutil.IsWSL2() || dockerutil.IsColima() {
 		t.Skip("Skipping on WSL2/Colima")
 	}
-	if nodeps.PerformanceDefault == types.PerformanceMutagen || nodeps.NoBindMountsDefault {
+	if nodeps.PerformanceStrategyDefault == types.PerformanceStrategyMutagen || nodeps.NoBindMountsDefault {
 		t.Skip("Skipping because mutagen/nobindmounts enabled")
 	}
 
@@ -3576,15 +3576,15 @@ func TestNFSMount(t *testing.T) {
 	assert.NoError(err)
 
 	defer func() {
-		globalconfig.DdevGlobalConfig.Performance = types.PerformanceNone
+		globalconfig.DdevGlobalConfig.SetPerformanceStrategy(types.PerformanceStrategyEmpty)
 		_ = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
-		app.Performance = types.PerformanceNone
+		app.SetPerformanceStrategy(types.PerformanceStrategyEmpty)
 		_ = app.WriteConfig()
 		_ = app.Stop(true, false)
 	}()
 
 	t.Log("testing with global NFSMountEnabled")
-	globalconfig.DdevGlobalConfig.Performance = types.PerformanceNFS
+	globalconfig.DdevGlobalConfig.SetPerformanceStrategy(types.PerformanceStrategyNFS)
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	assert.NoError(err)
 
@@ -3594,7 +3594,7 @@ func TestNFSMount(t *testing.T) {
 	verifyNFSMount(t, app)
 
 	t.Log("testing with app NFSMountEnabled")
-	globalconfig.DdevGlobalConfig.Performance = types.PerformanceNone
+	globalconfig.DdevGlobalConfig.SetPerformanceStrategy(types.PerformanceStrategyEmpty)
 	err = globalconfig.WriteGlobalConfig(globalconfig.DdevGlobalConfig)
 	assert.NoError(err)
 
@@ -3602,7 +3602,7 @@ func TestNFSMount(t *testing.T) {
 	app, err = ddevapp.NewApp(site.Dir, false)
 	assert.NoError(err)
 
-	app.Performance = types.PerformanceNFS
+	app.SetPerformanceStrategy(types.PerformanceStrategyNFS)
 	verifyNFSMount(t, app)
 
 	runTime()

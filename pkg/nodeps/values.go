@@ -2,6 +2,8 @@ package nodeps
 
 import (
 	"sort"
+
+	"github.com/ddev/ddev/pkg/config/types"
 )
 
 // Providers
@@ -46,8 +48,8 @@ const DdevFileSignature = "#ddev-generated"
 // WebserverDefault is the default webserver type, overridden by $DDEV_WEBSERVER_TYPE
 var WebserverDefault = WebserverNginxFPM
 
-// PerformanceDefault is default value for app.Performance
-var PerformanceDefault = ""
+// PerformanceDefault is default value for app.PerformanceStrategy
+var PerformanceStrategyDefault = types.PerformanceStrategyEmpty
 
 const NodeJSDefault = "18"
 
