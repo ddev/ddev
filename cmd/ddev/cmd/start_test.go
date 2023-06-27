@@ -23,8 +23,8 @@ func TestCmdStart(t *testing.T) {
 	err := addSites()
 	require.NoError(t, err)
 
-	// Pause all sites.
-	_, err = exec.RunCommand(DdevBin, []string{"pause", "--all"})
+	// Stop all sites.
+	_, err = exec.RunCommand(DdevBin, []string{"stop", "--all"})
 	assert.NoError(err)
 
 	// Ensure all sites are started after ddev start --all.

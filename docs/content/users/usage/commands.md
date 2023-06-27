@@ -914,32 +914,6 @@ Example:
 ddev nvm install 18
 ```
 
-## `pause`
-
-*Aliases: `sc`, `stop-containers`.*
-
-Uses `docker stop` to pause/stop the containers belonging to a project.
-
-!!!tip
-    This leaves the containers instantiated instead of removing them like [`ddev stop`](#stop) does.
-
-Flags:
-
-* `--all`, `-a`: Pause all running projects.
-
-Example:
-
-```shell
-# Pause the current project’s containers
-ddev pause
-
-# Pause my-project’s containers
-ddev pause my-project
-
-# Pause all projects
-ddev pause --all
-```
-
 ## `php`
 
 Run `php` inside the web container (global shell web container command).
