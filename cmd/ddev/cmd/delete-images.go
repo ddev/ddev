@@ -87,7 +87,10 @@ func deleteDdevImages(deleteAll bool) error {
 	// Sort so that images that have -built on the end
 	// come up before their parent images that don't
 	sort.Slice(images, func(i, j int) bool {
-		if images[i].RepoTags == nil || images[j].RepoTags == nil {
+		if images[i].RepoTags == nil || len(images[i].RepoTags) == 0 {
+			return false
+		}
+		if images[j].RepoTags == nil || len(images[j].RepoTags) == 0 {
 			return false
 		}
 		return images[i].RepoTags[0] > images[j].RepoTags[0]
@@ -107,6 +110,12 @@ func deleteDdevImages(deleteAll bool) error {
 	// and discrete names of images
 	for _, image := range images {
 		for _, tag := range image.RepoTags {
+			// If anything has prefix "drud/" then delete it
+			if strings.HasPrefix(tag, "drud/") {
+				if err = dockerutil.RemoveImage(tag); err != nil {
+					return err
+				}
+			}
 			// If a webimage, but doesn't match our webimage, delete it
 			if strings.HasPrefix(tag, versionconstants.WebImg) && !strings.HasPrefix(tag, webimg) && !strings.HasPrefix(tag, webimg+"-built") {
 				if err = dockerutil.RemoveImage(tag); err != nil {
