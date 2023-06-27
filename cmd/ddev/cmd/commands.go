@@ -3,7 +3,7 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"os"
 	"path"
 	"path/filepath"
@@ -136,7 +136,7 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 
 				// If OSTypes is specified and we aren't on one of the specified OSes, skip
 				if osTypes != "" {
-					if !strings.Contains(osTypes, runtime.GOOS) && !(strings.Contains(osTypes, "wsl2") && dockerutil.IsWSL2()) {
+					if !strings.Contains(osTypes, runtime.GOOS) && !(strings.Contains(osTypes, "wsl2") && nodeps.IsWSL2()) {
 						continue
 					}
 				}
