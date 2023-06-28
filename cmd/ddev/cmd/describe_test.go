@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/stretchr/testify/require"
 	"runtime"
@@ -124,11 +123,19 @@ func TestCmdDescribe(t *testing.T) {
 // TestCmdDescribeAppFunction performs unit tests on the describeApp function from the working directory.
 func TestCmdDescribeAppFunction(t *testing.T) {
 	assert := asrt.New(t)
+	origDir, _ := os.Getwd()
 	for i, v := range TestSites {
-		cleanup := v.Chdir()
+		err := os.Chdir(v.Dir)
+		require.NoError(t, err)
 
 		app, err := ddevapp.GetActiveApp("")
 		assert.NoError(err)
+		t.Cleanup(func() {
+			err := os.Chdir(origDir)
+			assert.NoError(err)
+			err = app.Restart()
+			assert.NoError(err)
+		})
 
 		desc, err := app.Describe(false)
 		assert.NoError(err)
@@ -148,13 +155,6 @@ func TestCmdDescribeAppFunction(t *testing.T) {
 		desc, err = app.Describe(false)
 		assert.NoError(err)
 		assert.Equal("exited", desc["router_status"])
-		_, err = exec.RunCommand("docker", []string{"start", "ddev-router"})
-		assert.NoError(err)
-
-		_, err = dockerutil.ContainerWait(10, map[string]string{"com.docker.compose.service": "ddev-router"})
-		assert.NoError(err)
-
-		cleanup()
 	}
 }
 
