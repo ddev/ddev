@@ -237,11 +237,9 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--nfs-mount-enabled`: Enable NFS mounting on all projects globally.
 * `--no-bind-mounts`: If `true`, don’t use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible. (default is equal to `--no-bind-mounts=true`)
 * `--omit-containers`: For example, `--omit-containers=ddev-ssh-agent`.
-* `--required-docker-compose-version`: Override default docker-compose version.
 * `--router-bind-all-interfaces`: `router-bind-all-interfaces=true`.
 * `--simple-formatting`: If `true`, use simple formatting and no color for tables.
 * `--table-style`: Table style for list and describe, see `~/.ddev/global_config.yaml` for values.
-* `--use-docker-compose-from-path`: If `true`, use docker-compose from path instead of private `~/.ddev/bin/docker-compose`. (default is equal to `--use-docker-compose-from-path=true`)
 * `--use-hardened-images`: If `true`, use more secure 'hardened' images for an actual internet deployment.
 * `--use-letsencrypt`: Enables experimental Let’s Encrypt integration; `ddev global --use-letsencrypt` or `ddev global --use-letsencrypt=false`.
 * `--web-environment`: Set the environment variables in the web container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`
