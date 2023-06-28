@@ -243,7 +243,8 @@ func init() {
 	ConfigCommand.Flags().BoolVar(&webWorkingDirDefaultArg, "web-working-dir-default", false, "Unsets a web service working directory override")
 	ConfigCommand.Flags().BoolVar(&dbWorkingDirDefaultArg, "db-working-dir-default", false, "Unsets a db service working directory override")
 	ConfigCommand.Flags().BoolVar(&workingDirDefaultsArg, "working-dir-defaults", false, "Unsets all service working directory overrides")
-	ConfigCommand.Flags().String(types.FlagPerformanceModeName, types.FlagPerformanceModeDefault, types.FlagPerformanceDescription())
+	ConfigCommand.Flags().String(types.FlagPerformanceModeName, types.FlagPerformanceModeDefault, types.FlagPerformanceModeDescription(types.ConfigTypeProject))
+	ConfigCommand.Flags().Bool(types.FlagPerformanceModeResetName, true, types.FlagPerformanceModeResetDescription(types.ConfigTypeProject))
 
 	ConfigCommand.Flags().BoolVar(&failOnHookFail, "fail-on-hook-fail", false, "Decide whether 'ddev start' should be interrupted by a failing hook")
 	ConfigCommand.Flags().StringVar(&hostWebserverPortArg, "host-webserver-port", "", "The web container's localhost-bound port")
@@ -465,10 +466,18 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	if cmd.Flag(types.FlagPerformanceModeName).Changed {
 		performanceMode, _ := cmd.Flags().GetString(types.FlagPerformanceModeName)
 
-		if err := types.CheckValidPerformanceMode(performanceMode); err != nil {
+		if err := types.CheckValidPerformanceMode(performanceMode, types.ConfigTypeProject); err != nil {
 			util.Error("%s. Not changing value of `performance_mode` option.", err)
 		} else {
 			app.SetPerformanceMode(performanceMode)
+		}
+	}
+
+	if cmd.Flag(types.FlagPerformanceModeResetName).Changed {
+		performanceModeReset, _ := cmd.Flags().GetBool(types.FlagPerformanceModeResetName)
+
+		if performanceModeReset {
+			app.SetPerformanceMode(types.PerformanceModeEmpty)
 		}
 	}
 

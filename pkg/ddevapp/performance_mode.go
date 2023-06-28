@@ -8,7 +8,7 @@ import (
 // GetPerformanceMode returns performance mode config respecting defaults.
 func (app *DdevApp) GetPerformanceMode() types.PerformanceMode {
 	switch app.PerformanceMode {
-	case types.PerformanceModeEmpty, types.PerformanceModeDefault:
+	case types.PerformanceModeEmpty, types.PerformanceModeGlobal:
 		return globalconfig.DdevGlobalConfig.GetPerformanceMode()
 	default:
 		return app.PerformanceMode
@@ -17,7 +17,7 @@ func (app *DdevApp) GetPerformanceMode() types.PerformanceMode {
 
 // SetPerformanceMode sets the performance mode config.
 func (app *DdevApp) SetPerformanceMode(performanceMode string) *DdevApp {
-	if types.IsValidPerformanceMode(performanceMode) {
+	if types.IsValidPerformanceMode(performanceMode, types.ConfigTypeProject) {
 		app.PerformanceMode = performanceMode
 	}
 

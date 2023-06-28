@@ -274,13 +274,12 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # data is sent.
 # instrumentation_reporting_interval: 24
 
-# performance_mode: "default"
+# performance_mode: "<default for the OS>"
 # DDEV offers performance optimization strategies to improve the filesystem
 # performance depending on your host system. Can be overridden with the project
 # config.
 #
 # Possible values are:
-#   - "default": will use the recommended value for this operating system.
 #   - "none":    will disable performance optimization.
 #   - "mutagen": will enable Mutagen.
 #   - "nfs":     will enable NFS.

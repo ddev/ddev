@@ -39,9 +39,9 @@ func TestCmdMutagen(t *testing.T) {
 		err = app.Stop(true, false)
 		assert.NoError(err)
 
-		_, err = exec.RunHostCommand(DdevBin, "config", "--performance-mode=")
+		_, err = exec.RunHostCommand(DdevBin, "config", "--performance-mode-reset")
 		assert.NoError(err)
-		_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance-mode=")
+		_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance-mode-reset")
 		assert.NoError(err)
 
 		err = globalconfig.ReadGlobalConfig()
@@ -63,7 +63,7 @@ func TestCmdMutagen(t *testing.T) {
 	require.Equal(t, runtime.GOOS == "darwin" || runtime.GOOS == "windows", app.IsMutagenEnabled())
 
 	// Turn mutagen off globally
-	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance-mode=none")
+	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance-mode-reset")
 	assert.NoError(err)
 
 	err = globalconfig.ReadGlobalConfig()
@@ -112,7 +112,7 @@ func TestCmdMutagen(t *testing.T) {
 	require.NoError(t, err)
 
 	// Turn mutagen off again
-	_, err = exec.RunHostCommand(DdevBin, "config", "--performance-mode=")
+	_, err = exec.RunHostCommand(DdevBin, "config", "--performance-mode-reset")
 	require.NoError(t, err)
 
 	app, err = ddevapp.NewApp("", false)
@@ -133,7 +133,7 @@ func TestCmdMutagen(t *testing.T) {
 	assert.True(app.IsMutagenEnabled())
 
 	// Turn it off again
-	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance-mode=none")
+	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance-mode-reset")
 	require.NoError(t, err)
 	err = globalconfig.ReadGlobalConfig()
 	require.NoError(t, err)

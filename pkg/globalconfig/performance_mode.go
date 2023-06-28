@@ -8,7 +8,7 @@ import (
 // defaults.
 func (c *GlobalConfig) GetPerformanceMode() types.PerformanceMode {
 	switch c.PerformanceMode {
-	case types.PerformanceModeEmpty, types.PerformanceModeDefault:
+	case types.PerformanceModeEmpty:
 		return types.GetPerformanceModeDefault()
 	default:
 		return c.PerformanceMode
@@ -17,7 +17,7 @@ func (c *GlobalConfig) GetPerformanceMode() types.PerformanceMode {
 
 // SetPerformanceMode sets the performance mode config.
 func (c *GlobalConfig) SetPerformanceMode(performanceMode string) *GlobalConfig {
-	if types.IsValidPerformanceMode(performanceMode) {
+	if types.IsValidPerformanceMode(performanceMode, types.ConfigTypeGlobal) {
 		c.PerformanceMode = performanceMode
 	}
 

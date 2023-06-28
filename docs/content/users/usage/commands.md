@@ -194,7 +194,8 @@ Flags:
 * `--no-project-mount`: Whether or not to skip mounting project code into the web container.
 * `--nodejs-version`: Specify the Node.js version to use if you don’t want the default Node.js 16.
 * `--omit-containers`: Comma-delimited list of container types that should not be started when the project is started.
-* `--performance-mode`: Performance optimization mode, possible values are `default`, `none`, `mutagen`, `nfs`.
+* `--performance-mode`: Performance optimization mode, possible values are `global`, `none`, `mutagen`, `nfs`.
+* `--performance-mode-reset`: Reset performance mode to global configuration.
 * `--php-version`: PHP version that will be enabled in the web container.
 * `--project-name`: Provide the project name of project to configure. (normally the same as the last part of directory name)
 * `--project-tld`: Set the top-level domain to be used for projects. (default `"ddev.site"`)
@@ -234,8 +235,8 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--letsencrypt-email`: Email associated with Let’s Encrypt; `ddev global --letsencrypt-email=me@example.com`.
 * `--no-bind-mounts`: If `true`, don’t use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible. (default is equal to `--no-bind-mounts=true`)
 * `--omit-containers`: For example, `--omit-containers=ddev-ssh-agent`.
-* `--performance-mode`: Performance optimization mode, possible values are `default`, `none`, `mutagen`, `nfs`.
-* `--router-bind-all-interfaces`: `router-bind-all-interfaces=true`.
+* `--performance-mode`: Performance optimization mode, possible values are `none`, `mutagen`, `nfs`.
+* `--performance-mode-reset`: Reset performance optimization mode to operating system default.
 * `--simple-formatting`: If `true`, use simple formatting and no color for tables.
 * `--table-style`: Table style for list and describe, see `~/.ddev/global_config.yaml` for values.
 * `--use-hardened-images`: If `true`, use more secure 'hardened' images for an actual internet deployment.

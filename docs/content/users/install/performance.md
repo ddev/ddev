@@ -19,7 +19,7 @@ Mutagen is enabled by default on Mac and Windows, and it can be disabled per-pro
     If you’re on macOS or Windows, you can skip everything else here and enable Mutagen:
 
     ```
-    ddev config global --performance-mode=default
+    ddev config global --performance-mode-reset
     ```
 
     !!!tip
@@ -42,13 +42,13 @@ Mutagen is enabled by default on Mac and Windows, and it can be disabled per-pro
     !!!warning "Don’t Install Mutagen"
         You do not need to install anything to use Mutagen. DDEV installs and maintains its own `mutagen` binary.
 
-    Mutagen is enabled globally by default. You can disable it with `ddev mutagen reset && ddev config global --performance-mode=none`.
+    Mutagen is enabled globally by default. You can disable it with `ddev mutagen reset && ddev config global --performance-mode-reset`.
 
     If you’d rather use Mutagen on a specific project, run [`ddev stop`](../usage/commands.md#stop), enable it with `ddev config --performance-mode=mutagen`, and [`ddev start`](../usage/commands.md#start) again.
 
     You can’t disable Mutagen on individual projects if it’s enabled globally.
 
-    To stop using Mutagen on a project, run `ddev mutagen reset && ddev config --performance-mode=none`.
+    To stop using Mutagen on a project, run `ddev mutagen reset && ddev config --performance-mode-reset`.
 
     The `nfs-mount-enabled` feature is automatically turned off if you’re using Mutagen.
 
@@ -146,7 +146,7 @@ Mutagen is enabled by default on Mac and Windows, and it can be disabled per-pro
 
     ### Troubleshooting Mutagen Sync Issues
 
-    * Please make sure that DDEV projects work *without* Mutagen before troubleshooting it. Run `ddev config --performance-mode=none && ddev restart`.
+    * Please make sure that DDEV projects work *without* Mutagen before troubleshooting it. Run `ddev config --performance-mode-reset && ddev restart`.
     * Rename your project’s `.ddev/mutagen/mutagen.yml` file to `.ddev/mutagen/mutagen.yml.bak` and run `ddev restart`. This ensures you’ll have a fresh version in case the file has been changed and `#ddev-generated` removed.
     * Avoid having Mutagen sync large binaries, which can cause `ddev start` to take a long time. The `.tarballs` directory is automatically excluded, so Mutagen will ignore anything you move there. To see what Mutagen is trying to sync, run `ddev mutagen status -l` in another window.
     * `export DDEV_DEBUG=true` will provide more information about what’s going on with Mutagen.

@@ -89,11 +89,19 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 	if cmd.Flag(configTypes.FlagPerformanceModeName).Changed {
 		performanceMode, _ := cmd.Flags().GetString(configTypes.FlagPerformanceModeName)
 
-		if err := configTypes.CheckValidPerformanceMode(performanceMode); err != nil {
+		if err := configTypes.CheckValidPerformanceMode(performanceMode, configTypes.ConfigTypeGlobal); err != nil {
 			util.Error("%s. Not changing value of performance_mode option.", err)
 		} else {
 			globalconfig.DdevGlobalConfig.SetPerformanceMode(performanceMode)
 			dirty = true
+		}
+	}
+
+	if cmd.Flag(configTypes.FlagPerformanceModeResetName).Changed {
+		performanceModeReset, _ := cmd.Flags().GetBool(configTypes.FlagPerformanceModeResetName)
+
+		if performanceModeReset {
+			globalconfig.DdevGlobalConfig.SetPerformanceMode(configTypes.PerformanceModeEmpty)
 		}
 	}
 
@@ -258,7 +266,8 @@ func init() {
 	configGlobalCommand.Flags().Bool("simple-formatting", false, "If true, use simple formatting and no color for tables")
 	configGlobalCommand.Flags().Bool("use-hardened-images", false, "If true, use more secure 'hardened' images for an actual internet deployment.")
 	configGlobalCommand.Flags().Bool("fail-on-hook-fail", false, "If true, 'ddev start' will fail when a hook fails.")
-	configGlobalCommand.Flags().String(configTypes.FlagPerformanceModeName, configTypes.FlagPerformanceModeDefault, configTypes.FlagPerformanceDescription())
+	configGlobalCommand.Flags().String(configTypes.FlagPerformanceModeName, configTypes.FlagPerformanceModeDefault, configTypes.FlagPerformanceModeDescription(configTypes.ConfigTypeGlobal))
+	configGlobalCommand.Flags().Bool(configTypes.FlagPerformanceModeResetName, true, configTypes.FlagPerformanceModeResetDescription(configTypes.ConfigTypeGlobal))
 	configGlobalCommand.Flags().String("table-style", "", "Table style for list and describe, see ~/.ddev/global_config.yaml for values")
 	configGlobalCommand.Flags().String("required-docker-compose-version", "", "Override default docker-compose version (used only in development testing)")
 	_ = configGlobalCommand.Flags().MarkHidden("required-docker-compose-version")

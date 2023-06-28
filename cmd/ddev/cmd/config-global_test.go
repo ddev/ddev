@@ -32,7 +32,7 @@ func TestCmdGlobalConfig(t *testing.T) {
 	// nolint: errcheck
 	t.Cleanup(func() {
 		// Even though the global config is going to be deleted, make sure it's sane before leaving
-		args := []string{"config", "global", "--omit-containers", "", "--disable-http2=false", "--performance-mode=", "--simple-formatting=false", "--table-style=default", `--required-docker-compose-version=""`, `--use-docker-compose-from-path=false`, `--xdebug-ide-location`, "", `--router=traefik`}
+		args := []string{"config", "global", "--omit-containers", "", "--disable-http2=false", "--performance-mode-reset", "--simple-formatting=false", "--table-style=default", `--required-docker-compose-version=""`, `--use-docker-compose-from-path=false`, `--xdebug-ide-location`, "", `--router=traefik`}
 		globalconfig.DdevGlobalConfig.OmitContainersGlobal = nil
 		out, err := exec.RunHostCommand(DdevBin, args...)
 		assert.NoError(err, "error running ddev config global; output=%s", out)

@@ -22,7 +22,7 @@ You’ll need a Docker provider on your system before you can [install DDEV](dde
     colima start --cpu 4 --memory 6 --disk 100 --vm-type=qemu --mount-type=sshfs --dns=1.1.1.1
     ```
     (On macOS versions before Ventura, omit the `--vm-type=qemu` flag as it doesn't work on older OS versions.)
-    4. After [installing DDEV](ddev-installation.md), make sure Mutagen is not disabled — essential for DDEV with Colima — with `ddev config global --performance-mode=default`.
+    4. After [installing DDEV](ddev-installation.md), make sure Mutagen is not disabled — essential for DDEV with Colima — with `ddev config global --performance-mode-reset`.
 
     After the initial run above, you can use `colima start` or use `colima start -e` to edit the configuration file. Run `colima status` at any time to check Colima’s status.
 
