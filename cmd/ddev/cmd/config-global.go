@@ -262,6 +262,7 @@ func init() {
 	configGlobalCommand.Flags().String("required-docker-compose-version", "", "Override default docker-compose version")
 	configGlobalCommand.Flags().String("project-tld", "", "Override default project tld")
 	configGlobalCommand.Flags().Bool("use-docker-compose-from-path", true, "If true, use docker-compose from path instead of private ~/.ddev/bin/docker-compose")
+	_ = configGlobalCommand.Flags().MarkHidden("use-docker-compose-from-path")
 	configGlobalCommand.Flags().Bool("no-bind-mounts", true, "If true, don't use bind-mounts - useful for environments like remote docker where bind-mounts are impossible")
 	configGlobalCommand.Flags().String("xdebug-ide-location", "", "For less usual IDE locations specify where the IDE is running for Xdebug to reach it")
 	configGlobalCommand.Flags().String("router", types.RouterTypeTraefik, fmt.Sprintf("Valid router types are %s, default is %s", strings.Join(types.GetValidRouterTypes(), ", "), types.RouterTypeDefault))
