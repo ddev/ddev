@@ -115,7 +115,12 @@ jobs:
           ddev config --project-type=drupal9 --docroot=web --create-docroot
           ddev debug download-images
           ddev poweroff
-          # Pre-cache these so we don't see a mess in the later pull
+          docker builder prune -f -a || true
+          docker buildx prune -f -a || true
+          docker rm -f $(docker ps -aq) >/dev/null || true
+          docker rmi -f $(docker images | awk '/[-]built/ { print $3 }')  >/dev/null || true
+
+  # Pre-cache these so we don't see a mess in the later pull
           for image in schickling/beanstalkd:latest memcached:1.5 solr:8; do
             docker pull $image
           done >/dev/null
