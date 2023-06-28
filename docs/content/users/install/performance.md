@@ -185,7 +185,7 @@ Mutagen can offer a big performance boost on macOS and Windows. It’s fast and 
 
     1. On `ddev start`, the Mutagen agent will be started if it’s not already running.
     2. If there’s already a sync session for the project, it’s resumed.
-    3. On `ddev stop` and `ddev pause`, the sync session is flushed to ensure consistency, then paused.
+    3. On `ddev stop` the sync session is flushed to ensure consistency, then paused.
 
     A synchronous flush happens after any `ddev composer` command, since Composer may cause massive changes to the filesystem inside the container that need to be synced before operation continues.
 
