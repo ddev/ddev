@@ -120,7 +120,7 @@ jobs:
           docker rm -f $(docker ps -aq) >/dev/null || true
           docker rmi -f $(docker images | awk '/[-]built/ { print $3 }')  >/dev/null || true
 
-  # Pre-cache these so we don't see a mess in the later pull
+          # Pre-cache these so we don't see a mess in the later pull
           for image in schickling/beanstalkd:latest memcached:1.5 solr:8; do
             docker pull $image
           done >/dev/null
