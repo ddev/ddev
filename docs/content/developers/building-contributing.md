@@ -266,6 +266,62 @@ Once you’ve opened a pull request, a discussion will start around your propose
 
 If your pull request is merged, great! If not, no sweat; it may not be what the project maintainer had in mind, or they were already working on it. This happens, so our recommendation is to take any feedback you’ve received and go forth and pull request again. Or create your own open source project.
 
+### Pull Request Title Guidelines
+
+We have very precise rules over how our PR titles (and thus master-branch commits) are to be formatted. This leads to **more readable messages** that are easy to follow when looking through the **project history**. But also, we use the master-branch Git commit messages to **generate the changelog** for the releases.
+
+The pull request title must follow this convention which is based on the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification:
+
+`<type>[optional !]: <description>[, fixes #<issue>]`
+
+#### Examples
+
+* `build: bump mutagen to 0.17.2`
+* `ci: enforce commit message convention, fixes #5037`
+* `docs: improve additional-hostnames.md`
+* `feat: allow multiple upload dirs, fixes #4190, fixes #4796`
+* `fix: create upload_dir if it doesn't exist in ddev composer create, fixes #5031`
+* `refactor: add new Amplitude Property DDEV-Environment`
+* `test: optimize caching of downloaded assets`
+
+#### Type
+
+Must be one of the following:
+
+* **build**: Changes that affect the build or external dependencies
+* **ci**: Changes to our CI configuration files and scripts
+* **docs**: Documentation only changes
+* **feat**: A new feature
+* **fix**: A bugfix
+* **refactor**: A code change that neither fixes a bug nor adds a feature
+* **test**: Adding missing tests or correcting existing tests
+
+Regarding SemVer, all types above except `feat` increase the patch version, `feat` increases the minor version.
+
+#### Scope
+
+No scope must be used.
+
+#### Breaking Changes
+
+Breaking changes must have a `!` appended after type/scope.
+
+Regarding SemVer, breaking changes increase the major version.
+
+#### Subject / Description
+
+The subject contains a succinct description of the change:
+
+* use the imperative, present tense: "change" not "changed" nor "changes"
+* don't capitalize the first letter
+* no dot (.) at the end
+
+If an issue exists for the change, `, fixes #<issue number>` must be appended to the subject.
+
+#### Revert
+
+If the commit reverts a previous commit, it should begin with `revert:`, followed by the header of the reverted commit. In the body it should say: `This reverts commit <hash>.`, where the hash is the SHA of the commit being reverted.
+
 ## Coding Style
 
 Unless explicitly stated, we follow all coding guidelines from the Go community. While some of these standards may seem arbitrary, they somehow seem to result in a solid, consistent codebase.
