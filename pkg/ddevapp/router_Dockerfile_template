@@ -6,4 +6,5 @@ FROM $BASE_IMAGE
 {{ if eq .Router "traefik" }}
 RUN apk add bash curl htop vim
 WORKDIR /mnt/ddev-global-cache/traefik
+COPY /traefik_healthcheck.sh /healthcheck.sh
 {{ end }}

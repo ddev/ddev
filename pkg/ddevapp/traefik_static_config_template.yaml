@@ -26,6 +26,9 @@ providers:
 global:
   sendanonymoususage: false
 
+ping:
+  entryPoint: "traefik"
+
 entryPoints:
   traefik:
     address: ":9999"

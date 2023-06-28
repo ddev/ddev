@@ -4,7 +4,7 @@ services:
     build:
       context: router-build
       args:
-        BASE_IMAGE: {{ .router_image }}
+        BASE_IMAGE: '{{ .router_image }}'
         username: '{{ .Username }}'
         uid: '{{ .UID }}'
         gid: '{{ .GID }}'
@@ -42,6 +42,9 @@ services:
         {{ end }}{{/* end if .letsencrypt */}}
     restart: "{{ if .AutoRestartContainers }}always{{ else }}no{{ end }}"
     healthcheck:
+      {{ if eq .Router "traefik" }}
+      test: "/healthcheck.sh"
+      {{ end }}
       interval: 1s
       retries: 120
       start_period: 120s
