@@ -57,3 +57,10 @@ docker rmi -f $(docker images | awk '/ddev.*-built/ {print $3}' ) >/dev/null 2>&
 if docker volume ls | grep '[Tt]est.*_nfsmount'; then
   docker volume rm -f $(docker volume ls | awk '/[Tt]est.*_nfsmount/ { print $2; }') || true
 fi
+
+# Clean the docker build cache
+docker builder prune -f -a || true
+docker buildx prune -f -a || true
+# Remove any images with name '-built'
+docker rm -f $(docker ps -aq) >/dev/null || true
+docker rmi -f $(docker images | awk '/[-]built/ { print $3 }')  >/dev/null || true
