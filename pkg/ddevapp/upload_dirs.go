@@ -42,8 +42,13 @@ func (app *DdevApp) GetUploadDirs() UploadDirs {
 	}
 
 	if app.UploadDirDeprecated != "" {
-		app.addUploadDir(app.UploadDirDeprecated)
+		uploadDirDeprecated := app.UploadDirDeprecated
 		app.UploadDirDeprecated = ""
+		app.addUploadDir(uploadDirDeprecated)
+	}
+
+	if app.UploadDirs == false {
+		return UploadDirs{}
 	}
 
 	if app.UploadDirs != false && app.UploadDirs != nil && len(app.UploadDirs.(UploadDirs)) > 0 {

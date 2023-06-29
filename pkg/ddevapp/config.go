@@ -134,8 +134,9 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 
 	// Migrate UploadDir to UploadDirs
 	if app.UploadDirDeprecated != "" {
-		app.addUploadDir(app.UploadDirDeprecated)
+		uploadDirDeprecated := app.UploadDirDeprecated
 		app.UploadDirDeprecated = ""
+		app.addUploadDir(uploadDirDeprecated)
 	}
 
 	app.SetApptypeSettingsPaths()
