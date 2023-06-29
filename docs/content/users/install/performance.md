@@ -16,12 +16,6 @@ Mutagen is enabled by default on Mac and traditional Windows, and it can be disa
 
     ## Mutagen
 
-    You can enforce Mutagen on Linux with but this normally does not bring a performance boost like on Mac and traditional Windows:
-
-    ```
-    ddev config global --performance-mode=mutagen
-    ```
-
     !!!tip
         Mutagen is not yet supported on Python and Django 4 project types.
 
