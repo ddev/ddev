@@ -102,6 +102,7 @@ func handleGlobalConfig(cmd *cobra.Command, _ []string) {
 
 		if performanceModeReset {
 			globalconfig.DdevGlobalConfig.SetPerformanceMode(configTypes.PerformanceModeEmpty)
+			dirty = true
 		}
 	}
 
