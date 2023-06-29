@@ -463,7 +463,7 @@ func GetContainerHealth(container *docker.APIContainers) (string, string) {
 	if inspect.State.Health.Status != "" {
 		numLogs := len(inspect.State.Health.Log)
 		if numLogs > 0 {
-			logOutput = inspect.State.Health.Log[numLogs-1].Output
+			logOutput = fmt.Sprintf("%v", inspect.State.Health.Log)
 		}
 	} else {
 		// Some containers may not have a healthcheck. In that case

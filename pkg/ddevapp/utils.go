@@ -299,10 +299,10 @@ func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, string, error
 		if len(splitError) > 0 && nodeps.ArrayContainsString([]string{"web", "db", "ddev-router", "ddev-ssh-agent"}, splitError[0]) {
 			serviceName = splitError[0]
 			health := ""
-			if containerID, err := dockerutil.FindContainerByName(serviceName); err != nil {
+			if containerID, err := dockerutil.FindContainerByName(serviceName); err == nil {
 				_, health = dockerutil.GetContainerHealth(containerID)
 			}
-			logs, err := app.CaptureLogs(serviceName, false, "")
+			logs, err := app.CaptureLogs(serviceName, false, "10")
 			if err != nil {
 				return "", "", err
 			}
