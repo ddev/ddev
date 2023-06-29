@@ -97,10 +97,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 		// The upload_dir needs to exist for composer create-project to work
 		if app.GetHostUploadDirFullPath() != "" {
-			err = os.MkdirAll(app.GetHostUploadDirFullPath(), 0755)
-			if err != nil {
-				util.Failed("failed to create upload dir: %v", err)
-			}
+			app.CreateUploadDirIfNecessary()
 		}
 
 		err = app.MutagenSyncFlush()
