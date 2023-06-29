@@ -1,6 +1,7 @@
 package amplitude
 
 import (
+	"github.com/ddev/ddev/pkg/environment"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -235,7 +236,7 @@ func identify() {
 	timezone, _ := time.Now().In(time.Local).Zone()
 
 	builder := ampli.Identify.Builder().
-		DdevEnvironment(nodeps.GetDDEVEnvironment()).
+		DdevEnvironment(environment.GetDDEVEnvironment()).
 		DockerPlatform(dockerPlaform).
 		DockerVersion(dockerVersion).
 		Timezone(timezone)

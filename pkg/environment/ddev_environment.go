@@ -1,6 +1,7 @@
-package nodeps
+package environment
 
 import (
+	"github.com/ddev/ddev/pkg/nodeps"
 	"runtime"
 )
 
@@ -17,11 +18,11 @@ const (
 func GetDDEVEnvironment() string {
 	e := runtime.GOOS
 	switch {
-	case IsCodespaces():
+	case nodeps.IsCodespaces():
 		e = DDEVEnvironmentCodespaces
-	case IsGitpod():
+	case nodeps.IsGitpod():
 		e = DDEVEnvironmentGitpod
-	case IsWSL2():
+	case nodeps.IsWSL2():
 		e = DDEVEnvironmentWSL2
 	}
 	return e
