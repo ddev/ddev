@@ -236,7 +236,7 @@ ddev config global --omit-containers=ddev-ssh-agent
 * `--no-bind-mounts`: If `true`, don’t use bind-mounts. Useful for environments like remote Docker where bind-mounts are impossible. (default is equal to `--no-bind-mounts=true`)
 * `--omit-containers`: For example, `--omit-containers=ddev-ssh-agent`.
 * `--performance-mode`: Performance optimization mode, possible values are `none`, `mutagen`, `nfs`.
-* `--performance-mode-reset`: Reset performance optimization mode to operating system default.
+* `--performance-mode-reset`: Reset performance optimization mode to operating system default (`none` for Linux and WSL2, `mutagen` for macOS and traditional Windows).
 * `--simple-formatting`: If `true`, use simple formatting and no color for tables.
 * `--table-style`: Table style for list and describe, see `~/.ddev/global_config.yaml` for values.
 * `--use-hardened-images`: If `true`, use more secure 'hardened' images for an actual internet deployment.
