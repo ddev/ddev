@@ -2697,7 +2697,7 @@ func TestDdevPause(t *testing.T) {
 		assert.NoError(err)
 		check, err := testcommon.ContainerCheck(containerName, "exited")
 		assert.NoError(err)
-		assert.True(check, containerType, "container has exited")
+		assert.True(check, "Container should have shown 'exited' but instead showed something else, err=%v, containerType=%s: %s", err, containerType, "container has exited")
 	}
 	assert.FileExists("hello-pre-pause-" + app.Name)
 	assert.FileExists("hello-post-pause-" + app.Name)
