@@ -90,7 +90,7 @@ func NewExportDBCmd() *cobra.Command {
 	cmd.Flags().Bool("bzip2", false, "Use bzip2 compression")
 
 	// Backward compatibility
-	cmd.Flags().String("target-db", "db", "Path to a SQL dump file to export to")
+	cmd.Flags().String("target-db", "db", cmd.Flags().Lookup("database").Usage)
 	_ = cmd.Flags().MarkDeprecated("target-db", "please use --database instead")
 
 	_ = cmd.Flags().MarkShorthandDeprecated("z", "please use --gzip instead")

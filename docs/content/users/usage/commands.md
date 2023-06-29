@@ -656,7 +656,7 @@ Flags:
 
 * `--database`, `-d`: Target database to import into (default `"db"`)
 * `--extract-path`: Path to extract within the archive
-* `--file`, `-f`: Path to a SQL dump in `.sql`, `.tar`, `.tar.gz`, `.tgz`, `.bz2`, `.xx`, or `.zip` format
+* `--file`, `-f`: Path to a SQL dump in `.sql`, `.tar`, `.tar.gz`, `.tar.bz2`, `.tar.xz`, `.tgz`, or `.zip` format
 * `--no-drop`: Do not drop the database before importing
 * `--no-progress`: Do not output progress
 
@@ -691,17 +691,24 @@ Pull the uploaded files directory of an existing project to the default [public 
 
 Flags:
 
-* `--extract-path`: If provided asset is an archive, optionally provide the path to extract within the archive.
-* `--src`: Provide the path to the source directory or archive to import. (Archive can be `.tar`, `.tar.gz`, `.tar.xz`, `.tar.bz2`, `.tgz`, or `.zip`.)
+* `--extract-path`: Path to extract within the archive.
+* `--source`, `-s`: Path to the source directory or source archive in `.tar`, `.tar.gz`, `.tar.bz2`, `.tar.xz`, `.tgz`, or `.zip` format.
+* `--target`, `-t`: Target upload dir, defaults to the first upload dir.
 
 Example:
 
 ```shell
-# Extract+import `/path/to/files.tar.gz` to the project’s upload directory
-ddev import-files --src=/path/to/files.tar.gz
+# Extract+import `/path/to/files.tar.gz` to the project’s first upload directory
+ddev import-files --source=/path/to/files.tar.gz
 
-# Import `/path/to/dir` contents to the project’s upload directory
-ddev import-files --src=/path/to/dir
+# Import `/path/to/dir` contents to the project’s first upload directory
+ddev import-files --source=/path/to/dir
+
+# Import `.tarballs/files.tar.xz` contents to the project’s `../private` upload directory
+ddev import-files --src=.tarballs/files.tar.xz --target=../private
+
+# Import `/path/to/dir` contents to the project’s `sites/default/files` upload directory
+ddev import-files -s=.tarballs/files.tar.gz -t=sites/default/files
 ```
 
 ## `launch`

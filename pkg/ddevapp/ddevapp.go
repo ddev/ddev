@@ -849,7 +849,7 @@ func (app *DdevApp) getCommonStatus(statuses map[string]string) (bool, string) {
 }
 
 // ImportFiles takes a source directory or archive and copies to the uploaded files directory of a given app.
-func (app *DdevApp) ImportFiles(uploadDir, importPath, extPath string) error {
+func (app *DdevApp) ImportFiles(uploadDir, importPath, extractPath string) error {
 	app.DockerEnv()
 
 	if err := app.ProcessHooks("pre-import-files"); err != nil {
@@ -860,7 +860,7 @@ func (app *DdevApp) ImportFiles(uploadDir, importPath, extPath string) error {
 		uploadDir = app.GetUploadDir()
 	}
 
-	if err := app.dispatchImportFilesAction(uploadDir, importPath, extPath); err != nil {
+	if err := app.dispatchImportFilesAction(uploadDir, importPath, extractPath); err != nil {
 		return err
 	}
 

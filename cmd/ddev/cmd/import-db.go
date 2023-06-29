@@ -104,17 +104,17 @@ func NewImportDBCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringP("file", "f", "", "Path to a SQL dump in `.sql`, `.tar`, `.tar.gz`, `.tgz`, `.bz2`, `.xx`, or `.zip` format")
+	cmd.Flags().StringP("file", "f", "", "Path to a SQL dump in `.sql`, `.tar`, `.tar.gz`, `.tar.bz2`, `.tar.xz`, `.tgz`, or `.zip` format")
 	cmd.Flags().String("extract-path", "", "Path to extract within the archive")
 	cmd.Flags().StringP("database", "d", "db", "Target database to import into")
 	cmd.Flags().Bool("no-drop", false, "Do not drop the database before importing")
 	cmd.Flags().Bool("no-progress", false, "Do not output progress")
 
 	// Backward compatibility
-	cmd.Flags().String("src", "", "Path to a SQL dump in `.sql`, `.tar`, `.tar.gz`, `.tgz`, `.bz2`, `.xx`, or `.zip` format")
+	cmd.Flags().String("src", "", cmd.Flags().Lookup("file").Usage)
 	_ = cmd.Flags().MarkDeprecated("src", "please use --file instead")
 
-	cmd.Flags().String("target-db", "db", "Target database to import into")
+	cmd.Flags().String("target-db", "db", cmd.Flags().Lookup("database").Usage)
 	_ = cmd.Flags().MarkDeprecated("target-db", "please use --database instead")
 
 	cmd.Flags().BoolP("progress", "p", true, "Display a progress bar during import")

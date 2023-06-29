@@ -46,7 +46,7 @@ type postConfigAction func(app *DdevApp) error
 type postStartAction func(app *DdevApp) error
 
 // importFilesAction
-type importFilesAction func(app *DdevApp, uploadDir, importPath, extPath string) error
+type importFilesAction func(app *DdevApp, uploadDir, importPath, extractPath string) error
 
 // defaultWorkingDirMap returns the app type's default working directory map
 type defaultWorkingDirMap func(app *DdevApp, defaults map[string]string) map[string]string
@@ -357,13 +357,13 @@ func (app *DdevApp) PostStartAction() error {
 }
 
 // dispatchImportFilesAction executes the relevant import files workflow for each app type.
-func (app *DdevApp) dispatchImportFilesAction(uploadDir, importPath, extPath string) error {
+func (app *DdevApp) dispatchImportFilesAction(uploadDir, importPath, extractPath string) error {
 	if strings.TrimSpace(uploadDir) == "" {
 		return errors.Errorf("upload_dirs is not set for this project (%s)", app.Type)
 	}
 
 	if appFuncs, ok := appTypeMatrix[app.Type]; ok && appFuncs.importFilesAction != nil {
-		return appFuncs.importFilesAction(app, uploadDir, importPath, extPath)
+		return appFuncs.importFilesAction(app, uploadDir, importPath, extractPath)
 	}
 
 	return fmt.Errorf("this project type (%s) does not support import-files", app.Type)
