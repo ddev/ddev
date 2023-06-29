@@ -48,7 +48,7 @@ var BUILDINFO = "BUILDINFO should have new info"
 // MutagenVersion is filled with the version we find for mutagen in use
 var MutagenVersion = ""
 
-const RequiredMutagenVersion = "0.17.1"
+const RequiredMutagenVersion = "0.17.2"
 
 // GetWebImage returns the correctly formatted web image:tag reference
 func GetWebImage() string {
