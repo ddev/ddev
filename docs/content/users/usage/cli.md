@@ -58,12 +58,15 @@ ddev export-db >/tmp/db.sql.gz
 
 To import static file assets for a project, such as uploaded images and documents, use the command [`ddev import-files`](../usage/commands.md#import-files). This command will prompt you to specify the location of your import asset, then import the assets into the project’s upload directory. To define a custom upload directory, set the [`upload_dirs`](../configuration/config.md#upload_dirs) config option. If no custom upload directory is defined, the default will be used:
 
-* For Drupal projects, this is the `sites/default/files` directory.
-* For WordPress projects, this is the `wp-content/uploads` directory.
-* For TYPO3 projects, this is the `fileadmin` directory.
-* For Backdrop projects, this is the `files` .
+* For Backdrop projects, this is the `files`.
+* For Drupal projects, these are the `sites/default/files` and `../private` directories.
 * For Magento 1 projects, this is the `media` directory.
 * For Magento 2 projects, this is the `pub/media` directory.
+* For Shopware projects, this is the `media` directory.
+* For TYPO3 projects, this is the `fileadmin` directory.
+* For WordPress projects, this is the `wp-content/uploads` directory.
+
+Other project types need a custom configuration to be able to use this command.
 
 ```bash
 ddev import-files
@@ -77,9 +80,13 @@ Successfully imported files for drupal8
 
 It can also import a directory containing static assets.
 
-If you want to use `import-files` without answering prompts, use the `--src` flag to provide the path to the import asset. If you’re importing an archive, and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--src` flag. Example:
+If you want to use `import-files` without answering prompts, use the `--source` or `-s` flag to provide the path to the import asset. If you’re importing an archive, and wish to specify the path within the archive to extract, you can use the `--extract-path` flag in conjunction with the `--source` flag. Example:
 
-`ddev import-files --src=/tmp/files.tgz`
+`ddev import-files --source=/tmp/files.tgz`
+
+With multiple `upload_dirs` defined if you want to import to another upload dir than the first one, use the `--target` or `-t` flag to provide the path to the desired upload dir.
+
+`ddev import-files --target=../private --source=/tmp/files.tgz`
 
 See `ddev help import-files` for more examples.
 

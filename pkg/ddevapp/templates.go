@@ -82,8 +82,8 @@ const ConfigInstructions = `
 # upload_dirs: "custom/upload/dir"
 #    
 # upload_dirs:
-#   - custom/upload/dir1
-#   - custom/upload/dir2
+#   - custom/upload/dir
+#   - ../private
 #
 # upload_dirs: false
 #

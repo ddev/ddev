@@ -454,11 +454,11 @@ The `php` and `python` types don’t attempt [CMS configuration](../../users/qui
 
 ## `upload_dirs`
 
-Paths from the project’s docroot to the user-generated files directory targeted by `ddev import-files`.
+Paths from the project’s docroot to the user-generated files directory targeted by `ddev import-files`. Can be be outside the docroot but must be within the project directory e.g. `../private`.
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project | |
+| :octicons-file-directory-16: project | | A list of directories or `false` to disable warnings for project types without any default e.g. `php`.
 
 ## `use_dns_when_possible`
 
