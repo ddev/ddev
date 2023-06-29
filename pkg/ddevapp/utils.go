@@ -284,10 +284,11 @@ func isZip(filepath string) bool {
 
 // GetErrLogsFromApp is used to do app.Logs on an app after an error has
 // been received, especially on app.Start. This is really for testing only
-func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, error) {
+// returns logs, healthcheck history, error
+func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, string, error) {
 	var serviceName string
 	if errorReceived == nil {
-		return "no error detected", nil
+		return "no error detected", "", nil
 	}
 	errString := errorReceived.Error()
 	errString = strings.Replace(errString, "Received unexpected error:", "", -1)
@@ -297,14 +298,18 @@ func GetErrLogsFromApp(app *DdevApp, errorReceived error) (string, error) {
 		splitError := strings.Split(errString, " ")
 		if len(splitError) > 0 && nodeps.ArrayContainsString([]string{"web", "db", "ddev-router", "ddev-ssh-agent"}, splitError[0]) {
 			serviceName = splitError[0]
+			health := ""
+			if containerID, err := dockerutil.FindContainerByName(serviceName); err != nil {
+				_, health = dockerutil.GetContainerHealth(containerID)
+			}
 			logs, err := app.CaptureLogs(serviceName, false, "")
 			if err != nil {
-				return "", err
+				return "", "", err
 			}
-			return logs, nil
+			return logs, health, nil
 		}
 	}
-	return "", fmt.Errorf("no logs found for service %s (Inspected err=%v)", serviceName, errorReceived)
+	return "", "", fmt.Errorf("no logs found for service %s (Inspected err=%v)", serviceName, errorReceived)
 }
 
 // CheckForMissingProjectFiles returns an error if the project's configuration or project root cannot be found

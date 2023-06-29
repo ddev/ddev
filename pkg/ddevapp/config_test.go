@@ -780,12 +780,12 @@ func TestConfigOverrideDetection(t *testing.T) {
 	startErr := app.StartAndWait(2)
 	stdout := stdoutFunc()
 
-	var logs string
+	var logs, health string
 	if startErr != nil {
-		logs, _ = GetErrLogsFromApp(app, startErr)
+		logs, health, _ = GetErrLogsFromApp(app, startErr)
 	}
 
-	require.NoError(t, startErr, "app.StartAndWait() did not succeed: output:\n=====\n%s\n===== logs:\n========= logs =======\n%s\n========\n", stdout, logs)
+	require.NoError(t, startErr, "app.StartAndWait() did not succeed: output:\n=====\n%s\n===== health:\n========= health =======\n%s\n========\n===== logs:\n========= logs =======\n%s\n========\n", stdout, health, logs)
 
 	assert.Contains(stdout, "collation.cnf")
 	assert.Contains(stdout, "my-php.ini")
@@ -859,8 +859,8 @@ func TestPHPOverrides(t *testing.T) {
 	startErr := app.StartAndWait(5)
 	assert.NoError(startErr)
 	if startErr != nil {
-		logs, _ := GetErrLogsFromApp(app, startErr)
-		t.Fatalf("============== logs from app.StartAndWait() ==============\n%s\n", logs)
+		logs, health, _ := GetErrLogsFromApp(app, startErr)
+		t.Fatalf("============== health from app.StartAndWait() ==============\n%s\n============== logs from app.StartAndWait() ==============\n%s\n", health, logs)
 	}
 
 	err = app.MutagenSyncFlush()

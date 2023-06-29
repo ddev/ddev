@@ -214,7 +214,7 @@ func RenderRouterStatus() string {
 	var renderedStatus string
 	if !nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, globalconfig.DdevRouterContainer) {
 		status, logOutput := GetRouterStatus()
-		badRouter := "The router is not healthy. Your projects may not be accessible.\nIf it doesn't become healthy try running 'ddev start' on a project to recreate it."
+		badRouter := "The router is not healthy. Your projects may not be accessible.\nIf it doesn't become healthy try running 'ddev poweroff && ddev start' on a project to recreate it."
 
 		switch status {
 		case SiteStopped:
