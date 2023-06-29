@@ -172,7 +172,7 @@ func init() {
 
 		nodeps.AppTypeMagento2: {
 			settingsCreator:      createMagento2SettingsFile,
-			uploadDirs:           getMagentoUploadDirs,
+			uploadDirs:           getMagento2UploadDirs,
 			appTypeSettingsPaths: setMagento2SiteSettingsPaths,
 			appTypeDetect:        isMagento2App,
 			configOverrideAction: magento2ConfigOverrideAction,
