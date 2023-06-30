@@ -72,7 +72,7 @@ jobs:
       - name: Homebrew cache/restore
         uses: actions/cache@v3
         env:
-          cache-name: cache-homebrew-cache-13
+          cache-name: cache-homebrew-cache-14
         with:
           path: ~/Library/Caches/Homebrew
           key: ${{ runner.os }}-build-${{ env.cache-name }}
@@ -86,7 +86,7 @@ jobs:
       - name: Lima cache/restore
         uses: actions/cache@v3
         env:
-          cache-name: cache-lima-13
+          cache-name: cache-lima-14
         with:
           path: ~/.lima
           key: ${{ runner.os }}-build-${{ env.cache-name }}
@@ -115,6 +115,11 @@ jobs:
           ddev config --project-type=drupal9 --docroot=web --create-docroot
           ddev debug download-images
           ddev poweroff
+          docker builder prune -f -a || true
+          docker buildx prune -f -a || true
+          docker rm -f $(docker ps -aq) >/dev/null || true
+          docker rmi -f $(docker images | awk '/[-]built/ { print $3 }')  >/dev/null || true
+
           # Pre-cache these so we don't see a mess in the later pull
           for image in schickling/beanstalkd:latest memcached:1.5 solr:8; do
             docker pull $image

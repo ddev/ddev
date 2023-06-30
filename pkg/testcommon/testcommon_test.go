@@ -161,8 +161,8 @@ func TestGetLocalHTTPResponse(t *testing.T) {
 		startErr := app.StartAndWait(5)
 		assert.NoError(startErr, "app.StartAndWait failed for port pair %v", pair)
 		if startErr != nil {
-			logs, _ := ddevapp.GetErrLogsFromApp(app, startErr)
-			t.Fatalf("logs from broken container:\n=======\n%s\n========\n", logs)
+			logs, health, _ := ddevapp.GetErrLogsFromApp(app, startErr)
+			t.Fatalf("healthcheck:\n%s\n\nlogs from broken container:\n=======\n%s\n========\n", health, logs)
 		}
 
 		safeURL := app.GetHTTPURL() + site.Safe200URIWithExpectation.URI

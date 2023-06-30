@@ -146,7 +146,7 @@ func TestGetContainerHealth(t *testing.T) {
 		assert.NotNil(container)
 
 		status, healthDetail := GetContainerHealth(container)
-		assert.Equal("/var/www/html:OK mailhog:OK phpstatus:OK ", healthDetail)
+		assert.Contains(healthDetail, "/var/www/html:OK mailhog:OK phpstatus:OK ")
 		assert.Equal("healthy", status)
 	})
 

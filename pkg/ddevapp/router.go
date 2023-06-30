@@ -118,7 +118,7 @@ func StartDdevRouter() error {
 	}
 	logOutput, err := dockerutil.ContainerWait(routerWaitTimeout, label)
 	if err != nil {
-		return fmt.Errorf("ddev-router failed to become ready; debug with 'docker logs ddev-router'; logOutput=%s, err=%v", logOutput, err)
+		return fmt.Errorf("ddev-router failed to become ready; debug with 'docker logs ddev-router' and 'docker inspect --format \"{{json .State.Health }}\" ddev-router'; logOutput=%s, err=%v", logOutput, err)
 	}
 
 	return nil
@@ -214,7 +214,7 @@ func RenderRouterStatus() string {
 	var renderedStatus string
 	if !nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, globalconfig.DdevRouterContainer) {
 		status, logOutput := GetRouterStatus()
-		badRouter := "The router is not healthy. Your projects may not be accessible.\nIf it doesn't become healthy try running 'ddev start' on a project to recreate it."
+		badRouter := "The router is not healthy. Your projects may not be accessible.\nIf it doesn't become healthy try running 'ddev poweroff && ddev start' on a project to recreate it."
 
 		switch status {
 		case SiteStopped:

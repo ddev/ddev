@@ -2072,9 +2072,9 @@ func TestDdevFullSiteSetup(t *testing.T) {
 
 		startErr := app.StartAndWait(2)
 		if startErr != nil {
-			appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
+			appLogs, health, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 			assert.NoError(getLogsErr)
-			t.Fatalf("app.StartAndWait() failure err=%v; logs:\n=====\n%s\n=====\n", startErr, appLogs)
+			t.Fatalf("app.StartAndWait() failure err=%v; health=\n%s\n\nlogs:\n=====\n%s\n=====\n", startErr, health, appLogs)
 		}
 
 		// Test static content.
@@ -2094,9 +2094,9 @@ func TestDdevFullSiteSetup(t *testing.T) {
 		body, resp, err := testcommon.GetLocalHTTPResponse(t, rawurl, 120)
 		assert.NoError(err, "GetLocalHTTPResponse returned err on project=%s rawurl %s, resp=%v: %v", site.Name, rawurl, resp, err)
 		if err != nil && strings.Contains(err.Error(), "container ") {
-			logs, err := ddevapp.GetErrLogsFromApp(app, err)
+			logs, health, err := ddevapp.GetErrLogsFromApp(app, err)
 			assert.NoError(err)
-			t.Fatalf("Logs after GetLocalHTTPResponse: %s", logs)
+			t.Fatalf("Health:\n%s\n\nLogs after GetLocalHTTPResponse: %s", health, logs)
 		}
 		assert.Contains(body, site.DynamicURI.Expect, "expected %s on project %s", site.DynamicURI.Expect, site.Name)
 
@@ -2504,9 +2504,9 @@ func TestDdevExec(t *testing.T) {
 
 	startErr := app.Start()
 	if startErr != nil {
-		logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
+		logs, health, err := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(err)
-		t.Fatalf("app.Start() failed err=%v, logs from broken container:\n=======\n%s\n========\n", startErr, logs)
+		t.Fatalf("app.Start() failed err=%v, health:\n%s\n\nlogs from broken container:\n=======\n%s\n========\n", startErr, health, logs)
 	}
 
 	out, _, err := app.Exec(&ddevapp.ExecOpts{
@@ -2638,9 +2638,9 @@ func TestDdevLogs(t *testing.T) {
 
 	startErr := app.StartAndWait(0)
 	if startErr != nil {
-		logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
+		logs, health, err := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(err)
-		t.Fatalf("app.Start failed, err=%v, logs=\n========\n%s\n===========\n", startErr, logs)
+		t.Fatalf("app.Start failed, err=%v, health=\n%s\n\nlogs=\n========\n%s\n===========\n", startErr, health, logs)
 	}
 
 	out, err := app.CaptureLogs("web", false, "")
@@ -2697,7 +2697,7 @@ func TestDdevPause(t *testing.T) {
 		assert.NoError(err)
 		check, err := testcommon.ContainerCheck(containerName, "exited")
 		assert.NoError(err)
-		assert.True(check, containerType, "container has exited")
+		assert.True(check, "Container should have shown 'exited' but instead showed something else, err=%v, containerType=%s: %s", err, containerType, "container has exited")
 	}
 	assert.FileExists("hello-pre-pause-" + app.Name)
 	assert.FileExists("hello-post-pause-" + app.Name)
@@ -2728,9 +2728,9 @@ func TestDdevStopMissingDirectory(t *testing.T) {
 	//nolint: errcheck
 	defer app.Stop(true, false)
 	if startErr != nil {
-		logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
+		logs, health, err := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(err)
-		t.Fatalf("app.StartAndWait failed err=%v logs from broken container: \n=======\n%s\n========\n", startErr, logs)
+		t.Fatalf("app.StartAndWait failed err=%v health=\n%s\n\nlogs from broken container: \n=======\n%s\n========\n", startErr, health, logs)
 	}
 
 	tempPath := testcommon.CreateTmpDir("site-copy")
@@ -2832,9 +2832,9 @@ func TestDdevDescribeMissingDirectory(t *testing.T) {
 	//nolint: errcheck
 	defer app.Stop(true, false)
 	if startErr != nil {
-		logs, err := ddevapp.GetErrLogsFromApp(app, startErr)
+		logs, health, err := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(err)
-		t.Fatalf("app.StartAndWait failed err=%v logs from broken container: \n=======\n%s\n========\n", startErr, logs)
+		t.Fatalf("app.StartAndWait failed err=%v health:\n%s\nlogs from broken container: \n=======\n%s\n========\n", startErr, health, logs)
 	}
 	// Move the site directory to a temp location to mimic a missing directory.
 	err = app.Stop(false, false)
@@ -2885,9 +2885,9 @@ func TestRouterPortsCheck(t *testing.T) {
 	//nolint: errcheck
 	defer app.Stop(true, false)
 	if startErr != nil {
-		appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
+		appLogs, health, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(getLogsErr)
-		t.Fatalf("app.StartAndWait() failure; err=%v logs:\n=====\n%s\n=====\n", startErr, appLogs)
+		t.Fatalf("app.StartAndWait() failure; err=%v health:\n%s\n\nlogs:\n=====\n%s\n=====\n", startErr, health, appLogs)
 	}
 
 	app, err = ddevapp.GetActiveApp(site.Name)
@@ -2898,9 +2898,9 @@ func TestRouterPortsCheck(t *testing.T) {
 	//nolint: errcheck
 	defer app.Stop(true, false)
 	if startErr != nil {
-		appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
+		appLogs, health, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 		assert.NoError(getLogsErr)
-		t.Fatalf("app.StartAndWait() failure err=%v logs:\n=====\n%s\n=====\n", startErr, appLogs)
+		t.Fatalf("app.StartAndWait() failure err=%v healthcheck:\n%s\n\nlogs:\n=====\n%s\n=====\n", startErr, health, appLogs)
 	}
 
 	// Stop the router using code from StopRouterIfNoContainers().
@@ -3172,9 +3172,9 @@ func TestHttpsRedirection(t *testing.T) {
 			startErr := app.StartAndWait(5)
 			assert.NoError(startErr, "app.Start() failed with projectType=%s, webserverType=%s", projectType, webserverType)
 			if startErr != nil {
-				appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
+				appLogs, health, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 				assert.NoError(getLogsErr)
-				t.Fatalf("app.StartAndWait failure; err=%v \n===== container logs ==\n%s\n", startErr, appLogs)
+				t.Fatalf("app.StartAndWait failure; err=%v \nhealthchecks:\n%s\n\n===== container logs ==\n%s\n", startErr, health, appLogs)
 			}
 			// Test for directory redirects under https and http
 			for _, parts := range expectations {
@@ -3383,9 +3383,9 @@ func TestPHPWebserverType(t *testing.T) {
 				assert.NoError(err)
 			})
 			if startErr != nil {
-				appLogs, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
+				appLogs, health, getLogsErr := ddevapp.GetErrLogsFromApp(app, startErr)
 				assert.NoError(getLogsErr)
-				t.Fatalf("app.StartAndWait failure for WebserverType=%s; site.Name=%s; err=%v, logs:\n=====\n%s\n=====\n", app.WebserverType, site.Name, startErr, appLogs)
+				t.Fatalf("app.StartAndWait failure for WebserverType=%s; site.Name=%s; err=%v, health:\n%s\n\nlogs:\n=====\n%s\n=====\n", app.WebserverType, site.Name, startErr, health, appLogs)
 			}
 			out, resp, err := testcommon.GetLocalHTTPResponse(t, app.GetWebContainerDirectHTTPURL()+"/servertype.php")
 			require.NoError(t, err)
