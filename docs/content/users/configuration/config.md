@@ -336,7 +336,7 @@ Defines the performance optimization mode to be used. Currently [Mutagen asynchr
 
 | Type | Default | Usage
 | -- | -- | --
-| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `` | Can be `default`, `none`, `mutagen`, or `nfs`.
+| :octicons-file-directory-16: project<br>:octicons-globe-16: global | `` | Can be `global`, `none`, `mutagen`, or `nfs`.
 
 This is typically a global setting. The project-specific value will override global config.
 
