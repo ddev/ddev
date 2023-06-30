@@ -6,11 +6,11 @@ Add additional hostnames to a project in its `.ddev/config.yaml`:
 name: mysite
 
 additional_hostnames:
-- extraname
-- fr.mysite
-- es.mysite
-- it.mysite
-- *.lotsofnames
+  - "extraname"
+  - "fr.mysite"
+  - "es.mysite"
+  - "it.mysite"
+  - "*.lotsofnames"
 ```
 
 Hostnames can be added with the console command `ddev config --additional-hostnames comma,separated,hostnames`
