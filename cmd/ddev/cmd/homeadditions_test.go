@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -19,7 +20,10 @@ import (
 // TestHomeadditions makes sure that extra files added to
 // .ddev/homeadditions and ~/.ddev/homeadditions get added into the container's ~/
 func TestHomeadditions(t *testing.T) {
-	if nodeps.MutagenEnabledDefault || globalconfig.DdevGlobalConfig.MutagenEnabledGlobal || nodeps.NoBindMountsDefault {
+	if nodeps.PerformanceModeDefault == types.PerformanceModeMutagen ||
+		(globalconfig.DdevGlobalConfig.IsMutagenEnabled() &&
+			nodeps.PerformanceModeDefault != types.PerformanceModeNone) ||
+		nodeps.NoBindMountsDefault {
 		t.Skip("Skipping because this changes homedir and breaks mutagen functionality")
 	}
 	assert := asrt.New(t)

@@ -5,7 +5,17 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"os"
+	osexec "os/exec"
+	"path"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"time"
+	"unicode"
+
 	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -17,14 +27,6 @@ import (
 	"github.com/ddev/ddev/pkg/versionconstants"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/pkg/errors"
-	"os"
-	osexec "os/exec"
-	"path"
-	"path/filepath"
-	"runtime"
-	"strings"
-	"time"
-	"unicode"
 )
 
 const mutagenSignatureLabelName = `com.ddev.volume-signature`
@@ -684,7 +686,7 @@ func IsMutagenVolumeMounted(app *DdevApp) (bool, error) {
 // It's also required and set if NoBindMounts is set, since we have to have a way
 // to get code on there.
 func (app *DdevApp) IsMutagenEnabled() bool {
-	return app.MutagenEnabled || app.MutagenEnabledGlobal || globalconfig.DdevGlobalConfig.NoBindMounts
+	return app.GetPerformanceMode() == types.PerformanceModeMutagen || globalconfig.DdevGlobalConfig.NoBindMounts
 }
 
 // GetMutagenVolumeLabel returns the com.ddev.volume-signature on the project_mutagen docker volume

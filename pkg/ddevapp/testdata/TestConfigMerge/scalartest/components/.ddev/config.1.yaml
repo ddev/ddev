@@ -1,5 +1,5 @@
 php_version: 8.1
-mutagen_enabled: true
+performance_mode: "mutagen"
 webserver_type: nginx-fpm
 
 database:

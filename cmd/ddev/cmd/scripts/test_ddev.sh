@@ -7,7 +7,7 @@
 # If you're on Windows (not WSL2) please run it in a git-bash window
 # When you are reporting an issue, please include the full output of this script.
 # If you have NFS enabled globally, please temporarily disable it with
-# `ddev config global --nfs-mount-enabled=false`
+# `ddev config global --performance-mode-reset`
 
 PROJECT_NAME=tryddevproject-${RANDOM}
 

@@ -1,18 +1,19 @@
 package cmd
 
 import (
-	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/stretchr/testify/require"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestComposerCmd(t *testing.T) {
@@ -23,7 +24,7 @@ func TestComposerCmd(t *testing.T) {
 	// is enabled, both on macOS and Windows. As far as I can tell, it only happens in this test, I've
 	// never recreated manually. I do see https://github.com/composer/composer/issues/9627 which seemed
 	// to deal with similar issues in vagrant context, and has a hack now embedded into composer.
-	if nodeps.NFSMountEnabledDefault {
+	if nodeps.PerformanceModeDefault == types.PerformanceModeNFS {
 		t.Skip("Composer has strange behavior in NFS context, so skipping")
 	}
 	assert := asrt.New(t)

@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
@@ -45,7 +46,7 @@ func TestMutagenSimple(t *testing.T) {
 
 	err = app.Init(site.Dir)
 	assert.NoError(err)
-	app.MutagenEnabled = true
+	app.SetPerformanceMode(types.PerformanceModeMutagen)
 	err = app.WriteConfig()
 	require.NoError(t, err)
 
@@ -181,7 +182,7 @@ func TestMutagenConfigChange(t *testing.T) {
 
 	err = app.Init(site.Dir)
 	assert.NoError(err)
-	app.MutagenEnabled = true
+	app.SetPerformanceMode(types.PerformanceModeMutagen)
 	err = app.WriteConfig()
 	require.NoError(t, err)
 

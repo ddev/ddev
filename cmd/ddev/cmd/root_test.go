@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
@@ -186,7 +187,10 @@ func TestGetActiveAppRoot(t *testing.T) {
 
 // TestCreateGlobalDdevDir checks to make sure that ddev will create a ~/.ddev (and updatecheck)
 func TestCreateGlobalDdevDir(t *testing.T) {
-	if nodeps.MutagenEnabledDefault || globalconfig.DdevGlobalConfig.MutagenEnabledGlobal || nodeps.NoBindMountsDefault {
+	if nodeps.PerformanceModeDefault == types.PerformanceModeMutagen ||
+		(globalconfig.DdevGlobalConfig.IsMutagenEnabled() &&
+			nodeps.PerformanceModeDefault != types.PerformanceModeNone) ||
+		nodeps.NoBindMountsDefault {
 		t.Skip("Skipping because this changes homedir and breaks mutagen functionality")
 	}
 

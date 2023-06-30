@@ -2,7 +2,7 @@
 database:
   type: mariadb
   version: 10.5
-mutagen_enabled: true
+performance_mode: "mutagen"
 webserver_type: apache-fpm
 
 php_version: 8.1

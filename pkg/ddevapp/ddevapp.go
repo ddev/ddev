@@ -14,6 +14,7 @@ import (
 
 	"github.com/ddev/ddev/pkg/appimport"
 	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -91,10 +92,7 @@ type DdevApp struct {
 	MariaDBVersion            string                 `yaml:"mariadb_version,omitempty"`
 	MySQLVersion              string                 `yaml:"mysql_version,omitempty"`
 	Database                  DatabaseDesc           `yaml:"database"`
-	NFSMountEnabled           bool                   `yaml:"nfs_mount_enabled"`
-	NFSMountEnabledGlobal     bool                   `yaml:"-"`
-	MutagenEnabled            bool                   `yaml:"mutagen_enabled"`
-	MutagenEnabledGlobal      bool                   `yaml:"-"`
+	PerformanceMode           types.PerformanceMode  `yaml:"performance_mode,omitempty"`
 	FailOnHookFail            bool                   `yaml:"fail_on_hook_fail,omitempty"`
 	BindAllInterfaces         bool                   `yaml:"bind_all_interfaces,omitempty"`
 	FailOnHookFailGlobal      bool                   `yaml:"-"`
@@ -961,8 +959,9 @@ func (app *DdevApp) Start() error {
 	var err error
 
 	if app.IsMutagenEnabled() && globalconfig.DdevGlobalConfig.UseHardenedImages {
-		return fmt.Errorf("mutagen-enabled is not compatible with use-hardened-images")
+		return fmt.Errorf("mutagen is not compatible with use-hardened-images")
 	}
+
 	app.DockerEnv()
 	dockerutil.EnsureDdevNetwork()
 

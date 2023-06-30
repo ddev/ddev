@@ -2,11 +2,11 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/globalconfig"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/amplitude"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/third_party/ampli"
@@ -50,9 +50,8 @@ func (app *DdevApp) TrackProject() {
 		ContainersOmitted(containersOmitted).
 		FailOnHookFail(app.FailOnHookFail || app.FailOnHookFailGlobal).
 		Id(app.ProtectedID()).
-		MutagenEnabled(app.IsMutagenEnabled()).
-		NfsMountEnabled(app.IsNFSMountEnabled()).
 		NodejsVersion(app.NodeJSVersion).
+		PerformanceMode(app.GetPerformanceMode()).
 		PhpVersion(app.GetPhpVersion()).
 		ProjectType(app.GetType()).
 		RouterDisabled(IsRouterDisabled(app)).

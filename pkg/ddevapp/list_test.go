@@ -2,23 +2,25 @@ package ddevapp_test
 
 import (
 	"bytes"
+	"os"
+	"regexp"
+	"runtime"
+	"testing"
+
+	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"os"
-	"regexp"
-	"runtime"
-	"testing"
 )
 
 // TestListWithoutDir prevents regression where ddev list panics if one of the
 // sites found is missing a directory
 func TestListWithoutDir(t *testing.T) {
 	// Can't run with mutagen because we actually delete the alpha
-	if runtime.GOOS == "windows" || nodeps.MutagenEnabledDefault {
+	if runtime.GOOS == "windows" || nodeps.PerformanceModeDefault == types.PerformanceModeMutagen {
 		t.Skip("Skipping because unreliable on Windows and can't be used with mutagen")
 	}
 	// Set up tests and give ourselves a working directory.

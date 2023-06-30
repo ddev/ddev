@@ -3,7 +3,6 @@ package globalconfig
 import (
 	"context"
 	"fmt"
-	"github.com/ddev/ddev/pkg/globalconfig/types"
 	"net"
 	"os"
 	"os/exec"
@@ -13,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	configTypes "github.com/ddev/ddev/pkg/config/types"
+	"github.com/ddev/ddev/pkg/globalconfig/types"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/sirupsen/logrus"
@@ -34,39 +35,38 @@ type ProjectInfo struct {
 
 // GlobalConfig is the struct defining ddev's global config
 type GlobalConfig struct {
-	OmitContainersGlobal             []string                `yaml:"omit_containers,flow"`
-	NFSMountEnabledGlobal            bool                    `yaml:"nfs_mount_enabled"`
-	MutagenEnabledGlobal             bool                    `yaml:"mutagen_enabled"`
-	InstrumentationOptIn             bool                    `yaml:"instrumentation_opt_in"`
-	InstrumentationQueueSize         int                     `yaml:"instrumentation_queue_size,omitempty"`
-	InstrumentationReportingInterval time.Duration           `yaml:"instrumentation_reporting_interval,omitempty"`
-	RouterBindAllInterfaces          bool                    `yaml:"router_bind_all_interfaces"`
-	InternetDetectionTimeout         int64                   `yaml:"internet_detection_timeout_ms"`
-	DeveloperMode                    bool                    `yaml:"developer_mode,omitempty"`
-	InstrumentationUser              string                  `yaml:"instrumentation_user,omitempty"`
-	LastStartedVersion               string                  `yaml:"last_started_version"`
-	UseHardenedImages                bool                    `yaml:"use_hardened_images"`
-	UseLetsEncrypt                   bool                    `yaml:"use_letsencrypt"`
-	LetsEncryptEmail                 string                  `yaml:"letsencrypt_email"`
-	AutoRestartContainers            bool                    `yaml:"auto_restart_containers"`
-	FailOnHookFailGlobal             bool                    `yaml:"fail_on_hook_fail"`
-	WebEnvironment                   []string                `yaml:"web_environment"`
-	DisableHTTP2                     bool                    `yaml:"disable_http2"`
-	TableStyle                       string                  `yaml:"table_style"`
-	SimpleFormatting                 bool                    `yaml:"simple_formatting"`
-	RequiredDockerComposeVersion     string                  `yaml:"required_docker_compose_version,omitempty"`
-	UseDockerComposeFromPath         bool                    `yaml:"use_docker_compose_from_path,omitempty"`
-	MkcertCARoot                     string                  `yaml:"mkcert_caroot"`
-	ProjectTldGlobal                 string                  `yaml:"project_tld"`
-	XdebugIDELocation                string                  `yaml:"xdebug_ide_location"`
-	NoBindMounts                     bool                    `yaml:"no_bind_mounts"`
-	Router                           string                  `yaml:"router"`
-	WSL2NoWindowsHostsMgt            bool                    `yaml:"wsl2_no_windows_hosts_mgt"`
-	RouterHTTPPort                   string                  `yaml:"router_http_port"`
-	RouterHTTPSPort                  string                  `yaml:"router_https_port"`
-	Messages                         MessagesConfig          `yaml:"messages,omitempty"`
-	RemoteConfig                     RemoteConfig            `yaml:"remote_config,omitempty"`
-	ProjectList                      map[string]*ProjectInfo `yaml:"project_info"`
+	OmitContainersGlobal             []string                    `yaml:"omit_containers,flow"`
+	PerformanceMode                  configTypes.PerformanceMode `yaml:"performance_mode"`
+	InstrumentationOptIn             bool                        `yaml:"instrumentation_opt_in"`
+	InstrumentationQueueSize         int                         `yaml:"instrumentation_queue_size,omitempty"`
+	InstrumentationReportingInterval time.Duration               `yaml:"instrumentation_reporting_interval,omitempty"`
+	RouterBindAllInterfaces          bool                        `yaml:"router_bind_all_interfaces"`
+	InternetDetectionTimeout         int64                       `yaml:"internet_detection_timeout_ms"`
+	DeveloperMode                    bool                        `yaml:"developer_mode,omitempty"`
+	InstrumentationUser              string                      `yaml:"instrumentation_user,omitempty"`
+	LastStartedVersion               string                      `yaml:"last_started_version"`
+	UseHardenedImages                bool                        `yaml:"use_hardened_images"`
+	UseLetsEncrypt                   bool                        `yaml:"use_letsencrypt"`
+	LetsEncryptEmail                 string                      `yaml:"letsencrypt_email"`
+	AutoRestartContainers            bool                        `yaml:"auto_restart_containers"`
+	FailOnHookFailGlobal             bool                        `yaml:"fail_on_hook_fail"`
+	WebEnvironment                   []string                    `yaml:"web_environment"`
+	DisableHTTP2                     bool                        `yaml:"disable_http2"`
+	TableStyle                       string                      `yaml:"table_style"`
+	SimpleFormatting                 bool                        `yaml:"simple_formatting"`
+	RequiredDockerComposeVersion     string                      `yaml:"required_docker_compose_version,omitempty"`
+	UseDockerComposeFromPath         bool                        `yaml:"use_docker_compose_from_path,omitempty"`
+	MkcertCARoot                     string                      `yaml:"mkcert_caroot"`
+	ProjectTldGlobal                 string                      `yaml:"project_tld"`
+	XdebugIDELocation                string                      `yaml:"xdebug_ide_location"`
+	NoBindMounts                     bool                        `yaml:"no_bind_mounts"`
+	Router                           string                      `yaml:"router"`
+	WSL2NoWindowsHostsMgt            bool                        `yaml:"wsl2_no_windows_hosts_mgt"`
+	RouterHTTPPort                   string                      `yaml:"router_http_port"`
+	RouterHTTPSPort                  string                      `yaml:"router_https_port"`
+	Messages                         MessagesConfig              `yaml:"messages,omitempty"`
+	RemoteConfig                     RemoteConfig                `yaml:"remote_config,omitempty"`
+	ProjectList                      map[string]*ProjectInfo     `yaml:"project_info"`
 }
 
 // New() returns a default GlobalConfig
@@ -154,7 +154,7 @@ func GetTableStyle() string {
 // ValidateGlobalConfig validates global config
 func ValidateGlobalConfig() error {
 	if !IsValidOmitContainers(DdevGlobalConfig.OmitContainersGlobal) {
-		return fmt.Errorf("Invalid omit_containers: %s, must contain only %s", strings.Join(DdevGlobalConfig.OmitContainersGlobal, ","), strings.Join(GetValidOmitContainers(), ",")).(InvalidOmitContainers)
+		return fmt.Errorf("invalid omit_containers: %s, must contain only %s", strings.Join(DdevGlobalConfig.OmitContainersGlobal, ","), strings.Join(GetValidOmitContainers(), ",")).(InvalidOmitContainers)
 	}
 
 	if !types.IsValidRouterType(DdevGlobalConfig.Router) {
@@ -168,12 +168,15 @@ func ValidateGlobalConfig() error {
 	if !IsValidXdebugIDELocation(DdevGlobalConfig.XdebugIDELocation) {
 		return fmt.Errorf(`xdebug_ide_location must be IP address or one of %v`, ValidXdebugIDELocations)
 	}
+
 	if DdevGlobalConfig.DisableHTTP2 && DdevGlobalConfig.IsTraefikRouter() {
 		return fmt.Errorf("disable_http2 and router = traefik are mutually incompatible, as Traefik does not support disabling HTTP2")
 	}
+
 	if DdevGlobalConfig.IsTraefikRouter() && (DdevGlobalConfig.UseLetsEncrypt || DdevGlobalConfig.LetsEncryptEmail != "") {
 		return fmt.Errorf("use-letsencrypt is not directly supported with traefik. but can be configured with custom config, see https://doc.traefik.io/traefik/https/acme/")
 	}
+
 	return nil
 }
 
@@ -203,7 +206,7 @@ func ReadGlobalConfig() error {
 
 	source, err := os.ReadFile(globalConfigFile)
 	if err != nil {
-		return fmt.Errorf("Unable to read ddev global config file %s: %v", source, err)
+		return fmt.Errorf("unable to read ddev global config file %s: %v", source, err)
 	}
 
 	// ReadConfig config values from file.
@@ -227,6 +230,7 @@ func ReadGlobalConfig() error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -242,6 +246,12 @@ func WriteGlobalConfig(config GlobalConfig) error {
 	if cfgCopy.RequiredDockerComposeVersion == RequiredDockerComposeVersionDefault {
 		cfgCopy.RequiredDockerComposeVersion = ""
 	}
+
+	// Overwrite PerformanceMode with effective value if empty.
+	if cfgCopy.PerformanceMode == configTypes.PerformanceModeEmpty {
+		cfgCopy.PerformanceMode = cfgCopy.GetPerformanceMode()
+	}
+
 	cfgbytes, err := yaml.Marshal(cfgCopy)
 	if err != nil {
 		return err
@@ -263,10 +273,20 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # Reporting interval in hours. If the last report was longer ago, collected
 # data is sent.
 # instrumentation_reporting_interval: 24
+
+# performance_mode: "<default for the OS>"
+# DDEV offers performance optimization strategies to improve the filesystem
+# performance depending on your host system. Can be overridden with the project
+# config.
 #
-# You can enable nfs mounting for all projects with
-# nfs_mount_enabled: true
+# Possible values are:
+#   - "none":    will disable performance optimization.
+#   - "mutagen": will enable Mutagen.
+#   - "nfs":     will enable NFS.
 #
+# See https://ddev.readthedocs.io/en/latest/users/install/performance/#mutagen
+# and https://ddev.readthedocs.io/en/latest/users/install/performance/#nfs.
+
 # You can set the global project_tld. This way any project will use this tld. If not
 # set the local project_tld is used, or the default of ddev.
 # project_tld: ""
