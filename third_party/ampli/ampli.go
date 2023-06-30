@@ -6,7 +6,7 @@
 // To update run 'ampli pull ddev'
 //
 // Required dependencies: github.com/amplitude/analytics-go@latest
-// Tracking Plan Version: 5
+// Tracking Plan Version: 6
 // Build: 1.0.0
 // Runtime: go-ampli
 //
@@ -591,8 +591,8 @@ func (a *Ampli) Load(options LoadOptions) {
 		clientConfig.Plan = &amplitude.Plan{
 			Branch:    `ddev-environment`,
 			Source:    `ddev`,
-			Version:   `5`,
-			VersionID: `3887810d-c128-45b8-86fe-094c523b1fdc`,
+			Version:   `6`,
+			VersionID: `17d13dda-f4bf-41b2-a550-e5b85cc86341`,
 		}
 	}
 
