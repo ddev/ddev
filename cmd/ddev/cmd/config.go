@@ -622,8 +622,31 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		app.Database.Version = parts[1]
 	}
 
-	handleUploadDirsFlag(app, cmd.Flag("upload-dir"))
-	handleUploadDirsFlag(app, cmd.Flag("upload-dirs"))
+	if cmd.Flag("upload-dir").Changed {
+		uploadDirRaw, _ := cmd.Flags().GetString("upload-dir")
+		app.UploadDirs = ddevapp.UploadDirs{uploadDirRaw}
+	}
+
+	if cmd.Flag("upload-dirs").Changed {
+		uploadDirsRaw := cmd.Flag("upload-dirs").Value.(pflag.SliceValue).GetSlice()
+
+		var uploadDirs any
+		uploadDirs = uploadDirsRaw
+
+		if len(uploadDirsRaw) == 1 {
+			uploadDirsBool, err := strconv.ParseBool(uploadDirsRaw[0])
+
+			if err == nil {
+				if uploadDirsBool {
+					util.Failed("Incorrect value for --upload-dirs: %v", uploadDirsBool)
+				}
+
+				uploadDirs = uploadDirsBool
+			}
+		}
+
+		app.UploadDirs = uploadDirs
+	}
 
 	if webserverTypeArg != "" {
 		app.WebserverType = webserverTypeArg
@@ -685,27 +708,4 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	}
 
 	return nil
-}
-
-func handleUploadDirsFlag(app *ddevapp.DdevApp, flag *pflag.Flag) {
-	if flag.Changed {
-		uploadDirsRaw := flag.Value.(pflag.SliceValue).GetSlice()
-
-		var uploadDirs any
-		uploadDirs = uploadDirsRaw
-
-		if len(uploadDirsRaw) == 1 {
-			uploadDirsBool, err := strconv.ParseBool(uploadDirsRaw[0])
-
-			if err == nil {
-				if uploadDirsBool {
-					util.Failed("Incorrect value for --%s: %v", flag.Name, uploadDirsBool)
-				}
-
-				uploadDirs = uploadDirsBool
-			}
-		}
-
-		app.UploadDirs = uploadDirs
-	}
 }

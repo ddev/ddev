@@ -14,7 +14,17 @@ type UploadDirs []string
 
 // addUploadDir adds a new upload dir if it does not already exist in the list.
 func (app *DdevApp) addUploadDir(uploadDir string) {
-	for _, existingUploadDir := range app.GetUploadDirs() {
+	err := app.validateUploadDirs()
+	if err != nil {
+		// Should never happen
+		panic(err)
+	}
+
+	if app.UploadDirs == false {
+		app.UploadDirs = UploadDirs{}
+	}
+
+	for _, existingUploadDir := range app.UploadDirs.(UploadDirs) {
 		if uploadDir == existingUploadDir {
 			return
 		}
@@ -51,7 +61,7 @@ func (app *DdevApp) GetUploadDirs() UploadDirs {
 		return UploadDirs{}
 	}
 
-	if app.UploadDirs != false && app.UploadDirs != nil && len(app.UploadDirs.(UploadDirs)) > 0 {
+	if len(app.UploadDirs.(UploadDirs)) > 0 {
 		return app.UploadDirs.(UploadDirs)
 	}
 
