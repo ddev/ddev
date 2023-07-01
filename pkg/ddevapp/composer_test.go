@@ -1,16 +1,15 @@
 package ddevapp_test
 
 import (
-	"os"
-	"strings"
-	"testing"
-
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"os"
+	"strings"
+	"testing"
 )
 
 // TestComposer does trivial tests of the ddev composer command
@@ -58,7 +57,6 @@ func TestComposer(t *testing.T) {
 	})
 
 	err = app.Start()
-	os.Exit(1)
 	require.NoError(t, err)
 
 	// Make sure to remove the var-dump-server to start; composer install should replace it.
