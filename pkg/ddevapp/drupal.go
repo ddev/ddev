@@ -251,8 +251,14 @@ if (getenv('IS_DDEV_PROJECT') == 'true') {
 }
 
 // getDrupalUploadDirs will return the default paths.
-func getDrupalUploadDirs(_ *DdevApp) UploadDirs {
-	return UploadDirs{"sites/default/files", "../private123"}
+func getDrupalUploadDirs(app *DdevApp) UploadDirs {
+	uploadDirs := UploadDirs{"sites/default/files"}
+
+	if app.Docroot != "" {
+		uploadDirs = append(uploadDirs, "../private")
+	}
+
+	return uploadDirs
 }
 
 // Drupal8Hooks adds a d8-specific hooks example for post-import-db
