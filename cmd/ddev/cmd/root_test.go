@@ -257,7 +257,7 @@ func TestCreateGlobalDdevDir(t *testing.T) {
 
 // TestPoweroffOnNewVersion checks that a poweroff happens when a new ddev version is deployed
 func TestPoweroffOnNewVersion(t *testing.T) {
-	if dockerutil.IsWSL2() && dockerutil.IsDockerDesktop() {
+	if nodeps.IsWSL2() && dockerutil.IsDockerDesktop() {
 		t.Skip("Fails on docker desktop because of removal of ~/.docker apparently, skipping")
 	}
 	assert := asrt.New(t)

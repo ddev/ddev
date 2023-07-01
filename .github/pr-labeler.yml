@@ -1,0 +1,61 @@
+version: v1
+
+labels:
+  - label: 'maintenance'
+    sync: true
+    matcher:
+      title: '^build(|!): .+'
+
+  - label: 'maintenance'
+    sync: true
+    matcher:
+      title: '^ci(|!): .+'
+
+  - label: 'documentation'
+    sync: true
+    matcher:
+      title: '^docs(|!): .+'
+
+  - label: 'enhancement'
+    sync: true
+    matcher:
+      title: '^feat(|!): .+'
+
+  - label: 'bugfix'
+    sync: true
+    matcher:
+      title: '^fix(|!): .+'
+
+  - label: 'maintenance'
+    sync: true
+    matcher:
+      title: '^refactor(|!): .+'
+
+  - label: 'maintenance'
+    sync: true
+    matcher:
+      title: '^test(|!): .+'
+
+  - label: 'breaking'
+    sync: true
+    matcher:
+      title: '^[a-z]+!: .+'
+
+  - label: 'dependencies'
+    sync: true
+    matcher:
+      files:
+        any: ["go.*", "vendor/**"]
+
+checks:
+  - context: "Semantic Pull Request"
+    url: "https://ddev.readthedocs.io/en/latest/developers/building-contributing/#pull-request-title-guidelines"
+    description:
+      success: Ready for review.
+      failure: Missing semantic label.
+    labels:
+      any:
+        - bugfix
+        - documentation
+        - enhancement
+        - maintenance

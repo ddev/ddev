@@ -1918,7 +1918,7 @@ func (app *DdevApp) DockerEnv() {
 		app.BindAllInterfaces = true
 	}
 	isWSL2 := "false"
-	if dockerutil.IsWSL2() {
+	if nodeps.IsWSL2() {
 		isWSL2 = "true"
 	}
 

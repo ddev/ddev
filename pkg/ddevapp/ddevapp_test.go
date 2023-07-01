@@ -867,7 +867,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 	if dockerutil.IsColima() && os.Getenv("DDEV_TEST_COLIMA_ANYWAY") != "true" {
 		t.Skip("Skipping on Colima because this test doesn't work although manual testing works")
 	}
-	if dockerutil.IsWSL2() && dockerutil.IsDockerDesktop() {
+	if nodeps.IsWSL2() && dockerutil.IsDockerDesktop() {
 		t.Skip("Skipping on WSL2/Docker Desktop because this test doesn't work although manual testing works")
 	}
 	assert := asrt.New(t)
@@ -897,7 +897,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 
 	// If using wsl2-docker-inside, test that we can use IDE inside
 	// Unfortunately, this does not test for the common case where the IDE is running on Windows.
-	if dockerutil.IsWSL2() && !dockerutil.IsDockerDesktop() {
+	if nodeps.IsWSL2() && !dockerutil.IsDockerDesktop() {
 		globalconfig.DdevGlobalConfig.XdebugIDELocation = globalconfig.XdebugIDELocationWSL2
 	}
 
@@ -1005,7 +1005,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			var ncOutput string
 			// Accept the listen on 9003 coming in from in-container php-xdebug
 			// If on WSL2/listener-on-windows we have to use nc.exe as a proxy to listen for us
-			if dockerutil.IsWSL2() && dockerutil.IsDockerDesktop() {
+			if nodeps.IsWSL2() && dockerutil.IsDockerDesktop() {
 				t.Logf("running nc.exe to receive Windows-side port 9003 traffic time=%v", time.Now())
 				ncOutput, err = exec.RunHostCommand("/mnt/c/ProgramData/chocolatey/bin/nc.exe", "-l", "-w", "1", "-p", "9003")
 				if err != nil {
@@ -1027,7 +1027,7 @@ func TestDdevXdebugEnabled(t *testing.T) {
 			}
 			// Grab the Xdebug connection start and look in it for "Xdebug"
 			b := make([]byte, 650)
-			if dockerutil.IsWSL2() && dockerutil.IsDockerDesktop() {
+			if nodeps.IsWSL2() && dockerutil.IsDockerDesktop() {
 				b = []byte(ncOutput)
 			} else {
 				_, err = bufio.NewReader(conn).Read(b)
@@ -3553,7 +3553,7 @@ func TestCaptureLogs(t *testing.T) {
 // This requires that the test machine must have NFS shares working
 // Tests using both app-specific nfs_mount_enabled and global nfs_mount_enabled
 func TestNFSMount(t *testing.T) {
-	if dockerutil.IsWSL2() || dockerutil.IsColima() {
+	if nodeps.IsWSL2() || dockerutil.IsColima() {
 		t.Skip("Skipping on WSL2/Colima")
 	}
 	if nodeps.PerformanceModeDefault == types.PerformanceModeMutagen || nodeps.NoBindMountsDefault {
@@ -3796,7 +3796,7 @@ func TestHostDBPort(t *testing.T) {
 // TestPortSpecifications tests to make sure that one project can't step on the
 // ports used by another
 func TestPortSpecifications(t *testing.T) {
-	if dockerutil.IsWSL2() {
+	if nodeps.IsWSL2() {
 		t.Skip("Skipping on WSL2 because of inconsistent docker behavior acquiring ports")
 	}
 	assert := asrt.New(t)

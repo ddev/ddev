@@ -6,7 +6,7 @@
 // To update run 'ampli pull ddev'
 //
 // Required dependencies: github.com/amplitude/analytics-go@latest
-// Tracking Plan Version: 5
+// Tracking Plan Version: 7
 // Build: 1.0.0
 // Runtime: go-ampli
 //
@@ -107,17 +107,21 @@ func (event baseEvent) ToAmplitudeEvent() amplitude.Event {
 
 var Identify = struct {
 	Builder func() interface {
-		DockerPlatform(dockerPlatform string) interface {
-			DockerVersion(dockerVersion string) interface {
-				Timezone(timezone string) IdentifyBuilder
+		DdevEnvironment(ddevEnvironment string) interface {
+			DockerPlatform(dockerPlatform string) interface {
+				DockerVersion(dockerVersion string) interface {
+					Timezone(timezone string) IdentifyBuilder
+				}
 			}
 		}
 	}
 }{
 	Builder: func() interface {
-		DockerPlatform(dockerPlatform string) interface {
-			DockerVersion(dockerVersion string) interface {
-				Timezone(timezone string) IdentifyBuilder
+		DdevEnvironment(ddevEnvironment string) interface {
+			DockerPlatform(dockerPlatform string) interface {
+				DockerVersion(dockerVersion string) interface {
+					Timezone(timezone string) IdentifyBuilder
+				}
 			}
 		}
 	} {
@@ -147,6 +151,18 @@ type IdentifyBuilder interface {
 
 type identifyBuilder struct {
 	properties map[string]interface{}
+}
+
+func (b *identifyBuilder) DdevEnvironment(ddevEnvironment string) interface {
+	DockerPlatform(dockerPlatform string) interface {
+		DockerVersion(dockerVersion string) interface {
+			Timezone(timezone string) IdentifyBuilder
+		}
+	}
+} {
+	b.properties[`DDEV Environment`] = ddevEnvironment
+
+	return b
 }
 
 func (b *identifyBuilder) DockerPlatform(dockerPlatform string) interface {
@@ -575,8 +591,8 @@ func (a *Ampli) Load(options LoadOptions) {
 		clientConfig.Plan = &amplitude.Plan{
 			Branch:    `main`,
 			Source:    `ddev`,
-			Version:   `5`,
-			VersionID: `3887810d-c128-45b8-86fe-094c523b1fdc`,
+			Version:   `7`,
+			VersionID: `dcb6fff6-e5e7-474c-b68c-f1f1c6384499`,
 		}
 	}
 

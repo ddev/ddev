@@ -6,6 +6,7 @@ import (
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	goodhosts "github.com/goodhosts/hostsfile"
@@ -21,7 +22,7 @@ var windowsDdevExeAvailable bool
 
 // IsWindowsDdevExeAvailable checks to see if we can use ddev.exe on Windows side
 func IsWindowsDdevExeAvailable() bool {
-	if !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt && !windowsDdevExeAvailable && dockerutil.IsWSL2() {
+	if !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt && !windowsDdevExeAvailable && nodeps.IsWSL2() {
 		_, err := exec2.LookPath("ddev.exe")
 		if err != nil {
 			util.Warning("ddev.exe not found in $PATH, please install it on Windows side; err=%v", err)
@@ -56,7 +57,7 @@ func IsHostnameInHostsFile(hostname string) (bool, error) {
 	}
 
 	var hosts = &ddevhosts.DdevHosts{}
-	if dockerutil.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
+	if nodeps.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
 		hosts, err = ddevhosts.NewCustomHosts(ddevhosts.WSL2WindowsHostsFile)
 	} else {
 		hosts, err = ddevhosts.New()
@@ -202,7 +203,7 @@ func escalateToAddHostEntry(hostname string, ip string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if dockerutil.IsWSL2() {
+	if nodeps.IsWSL2() {
 		ddevBinary = "ddev.exe"
 	}
 	out, err := runCommandWithSudo([]string{ddevBinary, "hostname", hostname, ip})
@@ -216,7 +217,7 @@ func escalateToRemoveHostEntry(hostname string, ip string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if dockerutil.IsWSL2() {
+	if nodeps.IsWSL2() {
 		ddevBinary = "ddev.exe"
 	}
 	out, err := runCommandWithSudo([]string{ddevBinary, "hostname", "--remove", hostname, ip})
@@ -234,11 +235,11 @@ func runCommandWithSudo(args []string) (out string, err error) {
 		return "", fmt.Errorf("could not get home directory for current user. is it set?")
 	}
 
-	if (dockerutil.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt) && !IsWindowsDdevExeAvailable() {
+	if (nodeps.IsWSL2() && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt) && !IsWindowsDdevExeAvailable() {
 		return "", fmt.Errorf("ddev.exe is not installed on the Windows side, please install it with 'choco install -y ddev'. It is used to manage the Windows hosts file")
 	}
 	c := []string{"sudo", "--preserve-env=HOME"}
-	if (runtime.GOOS == "windows" || dockerutil.IsWSL2()) && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
+	if (runtime.GOOS == "windows" || nodeps.IsWSL2()) && !globalconfig.DdevGlobalConfig.WSL2NoWindowsHostsMgt {
 		c = []string{"sudo.exe"}
 	}
 	c = append(c, args...)

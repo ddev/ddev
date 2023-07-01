@@ -782,7 +782,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		DefaultContainerTimeout: app.DefaultContainerTimeout,
 		// Only use the extra_hosts technique for linux and only if not WSL2
 		// If WSL2 we have to figure out other things, see GetHostDockerInternalIP()
-		UseHostDockerInternalExtraHosts: (runtime.GOOS == "linux" && !dockerutil.IsWSL2()) || (dockerutil.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2),
+		UseHostDockerInternalExtraHosts: (runtime.GOOS == "linux" && !nodeps.IsWSL2()) || (nodeps.IsWSL2() && globalconfig.DdevGlobalConfig.XdebugIDELocation == globalconfig.XdebugIDELocationWSL2),
 	}
 	// We don't want to bind-mount git dir if it doesn't exist
 	if fileutil.IsDirectory(filepath.Join(app.AppRoot, ".git")) {
@@ -945,7 +945,7 @@ RUN (apt-get update || true) && DEBIAN_FRONTEND=noninteractive apt-get install -
 	// CopyEmbedAssets of postgres healthcheck has to be done after we WriteBuildDockerfile
 	// because that deletes the .dbimageBuild directory
 	if app.Database.Type == nodeps.Postgres {
-		err = fileutil.CopyEmbedAssets(bundledAssets, "healthcheck", app.GetConfigPath(".dbimageBuild"))
+		err = fileutil.CopyEmbedAssets(bundledAssets, "healthcheck/db/postgres", app.GetConfigPath(".dbimageBuild"))
 		if err != nil {
 			return "", err
 		}
