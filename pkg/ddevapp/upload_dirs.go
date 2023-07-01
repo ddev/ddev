@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"reflect"
+	"strings"
 
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/util"
@@ -82,7 +83,7 @@ func (app *DdevApp) IsUploadDirsDisabled() bool {
 // on the host or "" if there is none.
 func (app *DdevApp) calculateHostUploadDirFullPath(uploadDir string) string {
 	if uploadDir != "" {
-		return path.Join(app.AppRoot, app.Docroot, uploadDir)
+		return path.Clean(path.Join(app.AppRoot, app.Docroot, uploadDir))
 	}
 
 	return ""
@@ -103,7 +104,7 @@ func (app *DdevApp) GetHostUploadDirFullPath() string {
 // directory in container or "" if there is none.
 func (app *DdevApp) calculateContainerUploadDirFullPath(uploadDir string) string {
 	if uploadDir != "" {
-		return path.Join("/var/www/html", app.Docroot, uploadDir)
+		return path.Clean(path.Join("/var/www/html", app.Docroot, uploadDir))
 	}
 
 	return ""
@@ -223,6 +224,13 @@ func (app *DdevApp) validateUploadDirs() error {
 	default:
 		// Provided value is not valid, user has to fix it.
 		return fmt.Errorf("`upload_dirs` must be a string, a list of strings, or false but `%v` given", app.UploadDirs)
+	}
+
+	// Check upload dirs are in the project root.
+	for _, uploadDir := range app.UploadDirs.(UploadDirs) {
+		if !strings.HasPrefix(app.calculateHostUploadDirFullPath(uploadDir), app.AppRoot) {
+			return fmt.Errorf("invalid upload dir `%s` outside of project root `%s` found", uploadDir, app.AppRoot)
+		}
 	}
 
 	return nil
