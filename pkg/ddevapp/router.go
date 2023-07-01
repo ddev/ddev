@@ -3,12 +3,6 @@ package ddevapp
 import (
 	"bytes"
 	"fmt"
-	"github.com/Masterminds/sprig/v3"
-	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/netutil"
-	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/versionconstants"
 	"os"
 	"path"
 	"path/filepath"
@@ -17,9 +11,15 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/netutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/fsouza/go-dockerclient"
+	"github.com/ddev/ddev/pkg/versionconstants"
+	docker "github.com/fsouza/go-dockerclient"
 )
 
 // RouterProjectName is the "machine name" of the router docker-compose
@@ -90,6 +90,10 @@ func StartDdevRouter() error {
 		return err
 	}
 	if globalconfig.DdevGlobalConfig.IsTraefikRouter() {
+		err = fileutil.CopyEmbedAssets(bundledAssets, "healthcheck/router/traefik", filepath.Join(globalconfig.GetGlobalDdevDir(), "router-build"))
+		if err != nil {
+			return fmt.Errorf("failed to save traefik healthcheck: %v", err)
+		}
 		err = pushGlobalTraefikConfig()
 		if err != nil {
 			return fmt.Errorf("failed to push global traefik config: %v", err)
