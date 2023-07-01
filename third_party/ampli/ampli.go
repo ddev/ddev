@@ -6,13 +6,13 @@
 // To update run 'ampli pull ddev'
 //
 // Required dependencies: github.com/amplitude/analytics-go@latest
-// Tracking Plan Version: 6
+// Tracking Plan Version: 7
 // Build: 1.0.0
 // Runtime: go-ampli
 //
-// View Tracking Plan: https://data.amplitude.com/ddev/DDEV/events/ddev-environment/latest
+// View Tracking Plan: https://data.amplitude.com/ddev/DDEV/events/main/latest
 //
-// Full Setup Instructions: https://data.amplitude.com/ddev/DDEV/implementation/ddev-environment/latest/getting-started/ddev
+// Full Setup Instructions: https://data.amplitude.com/ddev/DDEV/implementation/main/latest/getting-started/ddev
 //
 
 package ampli
@@ -589,10 +589,10 @@ func (a *Ampli) Load(options LoadOptions) {
 
 	if clientConfig.Plan == nil {
 		clientConfig.Plan = &amplitude.Plan{
-			Branch:    `ddev-environment`,
+			Branch:    `main`,
 			Source:    `ddev`,
-			Version:   `6`,
-			VersionID: `17d13dda-f4bf-41b2-a550-e5b85cc86341`,
+			Version:   `7`,
+			VersionID: `dcb6fff6-e5e7-474c-b68c-f1f1c6384499`,
 		}
 	}
 
