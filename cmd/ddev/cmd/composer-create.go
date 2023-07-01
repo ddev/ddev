@@ -99,10 +99,18 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		containerInstallPath := path.Join("/tmp", tmpDir)
 
 		// Add some args to avoid troubles while cloning
-		createArgs := append(osargs, "--no-plugins", "--no-scripts")
+		createArgs := osargs
+
+		if !nodeps.ArrayContainsString(createArgs, "--no-plugins") {
+			createArgs = append(createArgs, "--no-plugins")
+		}
+
+		if !nodeps.ArrayContainsString(createArgs, "--no-scripts") {
+			createArgs = append(createArgs, "--no-scripts")
+		}
 
 		// Remember if --no-install was provided by the user
-		noInstallPresent := nodeps.ArrayContainsString(osargs, "--no-install")
+		noInstallPresent := nodeps.ArrayContainsString(createArgs, "--no-install")
 		if !noInstallPresent {
 			// Add the --no-install option by default to avoid issues with
 			// rsyncing many files afterwards to the project root.
