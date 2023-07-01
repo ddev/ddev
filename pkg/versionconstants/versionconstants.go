@@ -22,22 +22,22 @@ var AmplitudeAPIKey = ""
 var WebImg = "ddev/ddev-webserver"
 
 // WebTag defines the default web image tag
-var WebTag = "20230509_gitpod_output" // Note that this can be overridden by make
+var WebTag = "v1.22.0-beta1" // Note that this can be overridden by make
 
 // DBImg defines the default db image used for applications.
 var DBImg = "ddev/ddev-dbserver"
 
 // BaseDBTag is the main tag, DBTag is constructed from it
-var BaseDBTag = "20230519_fix_mysql_snapshot_restore"
+var BaseDBTag = "v1.22.0-beta1"
 
-const TraditionalRouterImage = "ddev/ddev-router:20230415_move_docker_to_ddev"
+const TraditionalRouterImage = "ddev/ddev-router:v1.22.0-beta1"
 const TraefikRouterImage = "traefik:v2.10"
 
 // SSHAuthImage is image for agent
 var SSHAuthImage = "ddev/ddev-ssh-agent"
 
 // SSHAuthTag is ssh-agent auth tag
-var SSHAuthTag = "20230415_move_docker_to_ddev"
+var SSHAuthTag = "v1.22.0-beta1"
 
 // Busybox is used a couple of places for a quick-pull
 var BusyboxImage = "busybox:stable"
