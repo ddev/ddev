@@ -98,12 +98,15 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		tmpDir := util.RandString(6)
 		containerInstallPath := path.Join("/tmp", tmpDir)
 
+		// Add some args to avoid troubles while cloning
+		createArgs := append(osargs, "--no-plugins", "--no-scripts")
+
 		// Remember if --no-install was provided by the user
 		noInstallPresent := nodeps.ArrayContainsString(osargs, "--no-install")
 		if !noInstallPresent {
 			// Add the --no-install option by default to avoid issues with
 			// rsyncing many files afterwards to the project root.
-			osargs = append(osargs, "--no-install")
+			createArgs = append(createArgs, "--no-install")
 		}
 
 		// Build container Composer command
@@ -111,7 +114,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			"composer",
 			"create-project",
 		}
-		composerCmd = append(composerCmd, osargs...)
+		composerCmd = append(composerCmd, createArgs...)
 		composerCmd = append(composerCmd, containerInstallPath)
 
 		output.UserOut.Printf("Executing Composer command: %v\n", composerCmd)
