@@ -53,14 +53,14 @@ func TestCmdMutagen(t *testing.T) {
 		assert.NoError(err)
 
 		require.Equal(t, runtime.GOOS == "darwin" || runtime.GOOS == "windows", globalconfig.DdevGlobalConfig.IsMutagenEnabled())
-		require.Equal(t, runtime.GOOS == "darwin" || runtime.GOOS == "windows", app.IsMutagenEnabled())
+		require.Equal(t, (runtime.GOOS == "darwin" || runtime.GOOS == "windows") && nodeps.PerformanceModeDefault != types.PerformanceModeNFS, app.IsMutagenEnabled())
 
 		err = os.Chdir(origDir)
 		assert.NoError(err)
 	})
 
 	require.Equal(t, runtime.GOOS == "darwin" || runtime.GOOS == "windows", globalconfig.DdevGlobalConfig.IsMutagenEnabled())
-	require.Equal(t, runtime.GOOS == "darwin" || runtime.GOOS == "windows", app.IsMutagenEnabled())
+	require.Equal(t, (runtime.GOOS == "darwin" || runtime.GOOS == "windows") && nodeps.PerformanceModeDefault != types.PerformanceModeNFS, app.IsMutagenEnabled())
 
 	// Turn mutagen off globally
 	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance-mode-reset")
