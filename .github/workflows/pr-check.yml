@@ -1,0 +1,34 @@
+name: PR Check
+
+on:
+  pull_request_target:
+    types: [opened, edited, reopened, synchronize, ready_for_review, review_requested]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  statuses: write
+  checks: write
+      
+jobs:
+  check_pr_title:
+    name: Check PR Title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Type
+        uses: gsactions/commit-message-checker@v2
+        with:
+          pattern: '^(build|ci|docs|feat|fix|refactor|test)(|!): [a-z].+?((, fixes #\d+)*)($|\n|\r|\n\r)'
+          flags: ''
+          error: 'Title does not follow our conventions see https://ddev.readthedocs.io/en/latest/developers/building-contributing/#pull-request-title-guidelines.'
+
+  assign_labels:
+    name: Assign Labels
+    needs: check_pr_title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assign and check labels
+        uses: fuxingloh/multi-labeler@v2
+        with:
+          config-path: .github/pr-labeler.yml
