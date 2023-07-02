@@ -58,7 +58,9 @@ Environment variables will be automatically added to your `.env` file to simplif
 
 === "New projects"
 
-    New Craft CMS projects can be created from the official [starter project](https://github.com/craftcms/craft) using DDEV’s [`composer create` command](../users/usage/commands.md#composer):
+        # Boot the project and install the starter project:
+        ddev start
+        ddev composer create -y craftcms/craft
 
     ```bash
     # Create a project directory and move into it:
@@ -248,7 +250,25 @@ Use a new or existing Composer project, or clone a Git repository.
 
 The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) like it can for Laravel. DDEV automatically updates or creates the `.env` file with the database information.
 
-=== "Composer"
+        === "Composer"
+            ```bash
+            mkdir my-laravel-app
+            cd my-laravel-app
+            ddev config --project-type=laravel --docroot=public --create-docroot --php-version=8.1
+            ddev composer create --prefer-dist laravel/laravel -y
+            ddev exec "php artisan key:generate"
+            ddev launch
+            ```
+        === "Git Clone"
+            ```bash
+            git clone <your-laravel-repo>
+            cd <your-laravel-project>
+            ddev config --project-type=laravel --docroot=public --create-docroot --php-version=8.1
+            ddev start
+            ddev composer install
+            ddev exec "php artisan key:generate"
+            ddev launch
+            ```
 
     ```bash
     mkdir my-laravel-app
@@ -272,7 +292,25 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
     ddev launch
     ```
 
-## Magento
+        === "Composer"
+            ```bash
+            mkdir my-statamic-app
+            cd my-statamic-app
+            ddev config --project-type=laravel --docroot=public --create-docroot
+            ddev composer create --prefer-dist statamic/statamic
+            ddev exec "php artisan key:generate"
+            ddev launch
+            ```
+        === "Git Clone"
+            ```bash
+            git clone <your-statamic-repo>
+            cd <your-statamic-project>
+            ddev config --project-type=laravel --docroot=public --create-docroot
+            ddev start
+            ddev composer install
+            ddev exec "php artisan key:generate"
+            ddev launch
+            ```
 
 === "Magento 2"
 
