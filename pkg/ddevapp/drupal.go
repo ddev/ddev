@@ -254,9 +254,11 @@ if (getenv('IS_DDEV_PROJECT') == 'true') {
 func getDrupalUploadDirs(app *DdevApp) UploadDirs {
 	uploadDirs := UploadDirs{"sites/default/files"}
 
+	/* TODO needs some additional config in Drupal settings to work.
 	if app.Docroot != "" {
 		uploadDirs = append(uploadDirs, "../private")
 	}
+	*/
 
 	return uploadDirs
 }
