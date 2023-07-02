@@ -297,7 +297,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
             mkdir my-statamic-app
             cd my-statamic-app
             ddev config --project-type=laravel --docroot=public --create-docroot
-            ddev composer create --prefer-dist statamic/statamic
+            ddev composer create --prefer-dist statamic/statamic -y
             ddev exec "php artisan key:generate"
             ddev launch
             ```
