@@ -63,7 +63,7 @@ func TestCmdMutagen(t *testing.T) {
 	require.Equal(t, (runtime.GOOS == "darwin" || runtime.GOOS == "windows") && nodeps.PerformanceModeDefault != types.PerformanceModeNFS, app.IsMutagenEnabled())
 
 	// Turn mutagen off globally
-	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance-mode-reset")
+	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance-mode=none")
 	assert.NoError(err)
 
 	err = globalconfig.ReadGlobalConfig()
