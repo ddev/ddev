@@ -256,7 +256,6 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
             cd my-laravel-app
             ddev config --project-type=laravel --docroot=public --create-docroot --php-version=8.1
             ddev composer create --prefer-dist laravel/laravel -y
-            ddev exec "php artisan key:generate"
             ddev launch
             ```
         === "Git Clone"
@@ -266,7 +265,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
             ddev config --project-type=laravel --docroot=public --create-docroot --php-version=8.1
             ddev start
             ddev composer install
-            ddev exec "php artisan key:generate"
+            ddev php artisan key:generate
             ddev launch
             ```
 
@@ -298,7 +297,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
             cd my-statamic-app
             ddev config --project-type=laravel --docroot=public --create-docroot
             ddev composer create --prefer-dist statamic/statamic -y
-            ddev exec "php artisan key:generate"
+            ddev php please make:user --super
             ddev launch
             ```
         === "Git Clone"
@@ -308,7 +307,7 @@ The Laravel project type can be used for [Lumen](https://lumen.laravel.com/) lik
             ddev config --project-type=laravel --docroot=public --create-docroot
             ddev start
             ddev composer install
-            ddev exec "php artisan key:generate"
+            ddev php artisan key:generate
             ddev launch
             ```
 

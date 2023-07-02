@@ -59,7 +59,7 @@ ddev composer create --preserve-flags --no-interaction psr/log
 		if status != ddevapp.SiteRunning {
 			err = app.Start()
 			if err != nil {
-				util.Failed("Failed to start app %s to run create-project: %v", app.Name, err)
+				util.Failed("failed to start app %s to run create-project: %v", app.Name, err)
 			}
 		}
 
@@ -137,8 +137,9 @@ ddev composer create --preserve-flags --no-interaction psr/log
 			Dir:     "/var/www/html",
 			Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 		})
+
 		if err != nil {
-			util.Failed("Failed to create project:%v, stderr=%v", err, stderr)
+			util.Failed("failed to create project: %v\nstderr=%v", err, stderr)
 		}
 
 		if len(stdout) > 0 {
@@ -158,7 +159,36 @@ ddev composer create --preserve-flags --no-interaction psr/log
 		})
 
 		if err != nil {
-			util.Failed("Failed to create project: %v", err)
+			util.Failed("failed to create project: %v", err)
+		}
+
+		if !preserveFlags {
+			// Try to run post-root-package-install.
+			composerCmd = []string{
+				"composer",
+				"run-script",
+				"post-root-package-install",
+			}
+
+			output.UserOut.Printf("Executing composer command: %v\n", composerCmd)
+
+			stdout, _, _ = app.Exec(&ddevapp.ExecOpts{
+				Service: "web",
+				RawCmd:  composerCmd,
+				Dir:     app.GetComposerRoot(true, false),
+				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
+			})
+
+			if len(stdout) > 0 {
+				fmt.Println(strings.TrimSpace(stdout))
+			}
+		}
+
+		// Do a spare restart, which will create any needed settings files
+		// and also restart mutagen
+		err = app.Restart()
+		if err != nil {
+			util.Warning("failed to restart project after composer create: %v", err)
 		}
 
 		// If --no-install was not provided by the user, call composer install
@@ -204,23 +234,46 @@ ddev composer create --preserve-flags --no-interaction psr/log
 				}
 			}
 
-			// Run command
+			// Run install command.
 			output.UserOut.Printf("Executing Composer command: %v\n", composerCmd)
-			stdout, stderr, err := app.Exec(&ddevapp.ExecOpts{
+
+			stdout, stderr, err = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
 				RawCmd:  composerCmd,
 				Dir:     app.GetComposerRoot(true, false),
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 			})
+
 			if err != nil {
-				util.Failed("Failed to install project:%v, stderr=%v", err, stderr)
+				util.Failed("failed to install project: %v\nstderr=%v", err, stderr)
 			}
 
 			if len(stdout) > 0 {
 				fmt.Println(strings.TrimSpace(stdout))
 			}
-		}
 
+			if !preserveFlags {
+				// Try to run post-create-project-cmd.
+				composerCmd = []string{
+					"composer",
+					"run-script",
+					"post-create-project-cmd",
+				}
+
+				output.UserOut.Printf("Executing composer command: %v\n", composerCmd)
+
+				stdout, _, _ = app.Exec(&ddevapp.ExecOpts{
+					Service: "web",
+					RawCmd:  composerCmd,
+					Dir:     app.GetComposerRoot(true, false),
+					Tty:     isatty.IsTerminal(os.Stdin.Fd()),
+				})
+
+				if len(stdout) > 0 {
+					fmt.Println(strings.TrimSpace(stdout))
+				}
+			}
+		}
 		// Do a spare restart, which will create any needed settings files
 		// and also restart Mutagen
 		err = app.Restart()
