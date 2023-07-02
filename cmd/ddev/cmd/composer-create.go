@@ -18,8 +18,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var composerCreateYesFlag bool
-
 // ComposerCreateCmd handles ddev composer create
 var ComposerCreateCmd = &cobra.Command{
 	DisableFlagParsing: true,
@@ -37,6 +35,8 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 `,
 	ValidArgsFunction: getComposerCompletionFunc(true),
 	Run: func(_ *cobra.Command, _ []string) {
+		yesFlag, _ := cmd.Flags().GetBool("yes")
+		preserveFlags, _ := cmd.Flags().GetBool("preserve-flags")
 
 		// We only want to pass all flags and args to Composer
 		// cobra does not seem to allow direct access to everything predictably
@@ -45,7 +45,9 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			osargs = os.Args[3:]
 			osargs = nodeps.RemoveItemFromSlice(osargs, "--yes")
 			osargs = nodeps.RemoveItemFromSlice(osargs, "-y")
+			osargs = nodeps.RemoveItemFromSlice(osargs, "--preserve-flags")
 		}
+
 		app, err := ddevapp.GetActiveApp("")
 		if err != nil {
 			util.Failed(err.Error())
@@ -94,18 +96,20 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 			util.Failed("Failed to create project: %v", err)
 		}
 
+
 		// Define a randomly named temp directory for install target
 		tmpDir := util.RandString(6)
 		containerInstallPath := path.Join("/tmp", tmpDir)
 
-		// Add some args to avoid troubles while cloning
+		// Add some args to avoid troubles while cloning as long as
+		// --preserve-flags is not set.
 		createArgs := osargs
 
-		if !nodeps.ArrayContainsString(createArgs, "--no-plugins") {
+		if !preserveFlags && !nodeps.ArrayContainsString(createArgs, "--no-plugins") {
 			createArgs = append(createArgs, "--no-plugins")
 		}
 
-		if !nodeps.ArrayContainsString(createArgs, "--no-scripts") {
+		if !preserveFlags && !nodeps.ArrayContainsString(createArgs, "--no-scripts") {
 			createArgs = append(createArgs, "--no-scripts")
 		}
 
@@ -244,7 +248,8 @@ for basic project creation or 'ddev ssh' into the web container and execute
 }
 
 func init() {
-	ComposerCreateCmd.Flags().BoolVarP(&composerCreateYesFlag, "yes", "y", false, "Yes - skip confirmation prompt")
+	ComposerCreateCmd.Flags().BoolP("yes", "y", false, "Yes - skip confirmation prompt")
+	ComposerCreateCmd.Flags().Bool("preserve-flags", false, "Do not append `--no-plugins` and `--no-scripts` flags")
 	ComposerCmd.AddCommand(ComposerCreateProjectCmd)
 	ComposerCmd.AddCommand(ComposerCreateCmd)
 }
