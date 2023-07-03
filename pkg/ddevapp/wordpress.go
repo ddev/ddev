@@ -2,14 +2,15 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/archive"
-	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/util"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/util"
 )
 
 // WordpressConfig encapsulates all the configurations for a WordPress site.
@@ -78,13 +79,9 @@ func getWordpressHooks() []byte {
 	return []byte(wordPressHooks)
 }
 
-// getWordpressUploadDir will return a custom upload dir if defined, returning a default path if not.
-func getWordpressUploadDir(app *DdevApp) string {
-	if app.UploadDir == "" {
-		return "wp-content/uploads"
-	}
-
-	return app.UploadDir
+// getWordpressUploadDirs will return the default paths.
+func getWordpressUploadDirs(_ *DdevApp) UploadDirs {
+	return UploadDirs{"wp-content/uploads"}
 }
 
 const wordpressConfigInstructions = `
@@ -264,8 +261,8 @@ func isWordpressApp(app *DdevApp) bool {
 
 // wordpressImportFilesAction defines the Wordpress workflow for importing project files.
 // The Wordpress workflow is currently identical to the Drupal import-files workflow.
-func wordpressImportFilesAction(app *DdevApp, importPath, extPath string) error {
-	destPath := app.GetHostUploadDirFullPath()
+func wordpressImportFilesAction(app *DdevApp, target, importPath, extPath string) error {
+	destPath := app.calculateHostUploadDirFullPath(target)
 
 	// parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {

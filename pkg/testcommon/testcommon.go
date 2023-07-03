@@ -2,32 +2,29 @@ package testcommon
 
 import (
 	"crypto/tls"
-	"github.com/ddev/ddev/pkg/ddevapp"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/output"
-	"github.com/docker/docker/pkg/homedir"
-	"io"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"runtime"
-	"time"
-
-	log "github.com/sirupsen/logrus"
-
-	"path"
-
 	"fmt"
-
-	"github.com/ddev/ddev/pkg/archive"
-	"github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/util"
-	"github.com/pkg/errors"
-	asrt "github.com/stretchr/testify/assert"
+	"io"
 	"net/http"
 	"net/url"
+	"os"
+	"os/exec"
+	"path"
+	"path/filepath"
+	"runtime"
 	"testing"
+	"time"
+
+	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
+	"github.com/docker/docker/pkg/homedir"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+	asrt "github.com/stretchr/testify/assert"
 )
 
 // URIWithExpect pairs a URI like "/readme.html" with some substring content "should be found in URI"
@@ -71,8 +68,8 @@ type TestSite struct {
 	Safe200URIWithExpectation URIWithExpect
 	// DynamicURI provides a dynamic (after db load) URI with contents we can expect.
 	DynamicURI URIWithExpect
-	// UploadDir overrides the dir used for upload_dir
-	UploadDir string
+	// UploadDirs overrides the dirs used for upload_dirs
+	UploadDirs ddevapp.UploadDirs
 	// FilesImageURI is URI to a file loaded by import-files that is a jpg.
 	FilesImageURI string
 	// FullSiteArchiveExtPath is the path that should be extracted from inside an archive when
@@ -122,7 +119,7 @@ func (site *TestSite) Prepare() error {
 	// ignore app name defined in config file if present.
 	app.Name = site.Name
 	app.Docroot = site.Docroot
-	app.UploadDir = site.UploadDir
+	app.UploadDirs = site.UploadDirs
 	app.Type = app.DetectAppType()
 	if app.Type != site.Type {
 		return errors.Errorf("Detected apptype (%s) does not match provided apptype (%s)", app.Type, site.Type)

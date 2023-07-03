@@ -107,13 +107,9 @@ func writeTypo3SettingsFile(app *DdevApp) error {
 	return nil
 }
 
-// getTypo3UploadDir will return a custom upload dir if defined, returning a default path if not.
-func getTypo3UploadDir(app *DdevApp) string {
-	if app.UploadDir == "" {
-		return "fileadmin"
-	}
-
-	return app.UploadDir
+// getTypo3UploadDirs will return the default paths.
+func getTypo3UploadDirs(_ *DdevApp) UploadDirs {
+	return UploadDirs{"fileadmin"}
 }
 
 // Typo3Hooks adds a TYPO3-specific hooks example for post-import-db
@@ -170,8 +166,8 @@ func isTypo3App(app *DdevApp) bool {
 
 // typo3ImportFilesAction defines the TYPO3 workflow for importing project files.
 // The TYPO3 import-files workflow is currently identical to the Drupal workflow.
-func typo3ImportFilesAction(app *DdevApp, importPath, extPath string) error {
-	destPath := app.GetHostUploadDirFullPath()
+func typo3ImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string) error {
+	destPath := app.calculateHostUploadDirFullPath(uploadDir)
 
 	// parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {

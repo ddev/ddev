@@ -2,11 +2,11 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/archive"
-	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/pkg/errors"
 	"os"
 	"path/filepath"
+
+	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/fileutil"
 )
 
 func phpPostStartAction(app *DdevApp) error {
@@ -18,17 +18,9 @@ func phpPostStartAction(app *DdevApp) error {
 	return nil
 }
 
-// getPHPUploadDir will return a custom upload dir if defined
-func getPHPUploadDir(app *DdevApp) string {
-	return app.UploadDir
-}
-
 // phpImportFilesAction defines the workflow for importing project files.
-func phpImportFilesAction(app *DdevApp, importPath, extPath string) error {
-	if app.UploadDir == "" {
-		return errors.Errorf("No upload_dir is set for this (php-generic) project")
-	}
-	destPath := app.GetHostUploadDirFullPath()
+func phpImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string) error {
+	destPath := app.calculateHostUploadDirFullPath(uploadDir)
 
 	// parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {

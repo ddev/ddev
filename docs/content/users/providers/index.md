@@ -20,7 +20,7 @@ Each provider recipe is a file named `<provider>.yaml` and consists of several m
 * `files_pull_command`: A script that determines how DDEV can get user-generated files from upstream. Its job is to copy the files from upstream to `/var/www/html/.ddev/.downloads/files`. If nothing has to be done to obtain the files, this step can run `true`.
 * `files_import_command`: (optional) A script that imports the downloaded files. There are a number of situations where it’s messy to push a directory of files around, and one can put it directly where it’s needed. The [localfile example](https://github.com/ddev/ddev/blob/master/pkg/ddevapp/dotddev_assets/providers/localfile.yaml.example) uses this technique.
 * `db_push_command`: A script that determines how DDEV should push a database. Its job is to take a gzipped database dump from `/var/www/html/.ddev/.downloads/db.sql.gz` and load it on the hosting provider.
-* `files_push_command`: A script that determines how DDEV push user-generated files to upstream. Its job is to copy the files from the project’s user-files directory (`$DDEV_FILES_DIR`) to the correct place on the upstream provider.
+* `files_push_command`: A script that determines how DDEV push user-generated files to upstream. Its job is to copy the files from the project’s user-files directories (`$DDEV_FILES_DIRS`) to the correct places on the upstream provider.
 
 The [environment variables provided to custom commands](../extend/custom-commands.md#environment-variables-provided) are also available for use in these recipes.
 

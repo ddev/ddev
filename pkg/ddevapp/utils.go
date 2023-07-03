@@ -2,23 +2,22 @@ package ddevapp
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/output"
-	docker "github.com/fsouza/go-dockerclient"
-	"github.com/jedib0t/go-pretty/v6/table"
+	"os"
 	"path"
 	"path/filepath"
 	"sort"
 	"strings"
-
-	"os"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/nodeps"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	docker "github.com/fsouza/go-dockerclient"
+	"github.com/jedib0t/go-pretty/v6/table"
 )
 
 // GetActiveProjects returns an array of ddev projects
@@ -263,7 +262,7 @@ func CreateGitIgnore(targetDir string, ignores ...string) error {
 
 // isTar determines whether the object at the filepath is a .tar archive.
 func isTar(filepath string) bool {
-	tarSuffixes := []string{"tar", "tar.gz", "tar.bz2", "tar.xz", "tgz", "tar.xz", "tar.bz2"}
+	tarSuffixes := []string{".tar", ".tar.gz", ".tar.bz2", ".tar.xz", ".tgz"}
 	for _, suffix := range tarSuffixes {
 		if strings.HasSuffix(filepath, suffix) {
 			return true
@@ -275,11 +274,7 @@ func isTar(filepath string) bool {
 
 // isZip determines if the object at hte filepath is a .zip.
 func isZip(filepath string) bool {
-	if strings.HasSuffix(filepath, ".zip") {
-		return true
-	}
-
-	return false
+	return strings.HasSuffix(filepath, ".zip")
 }
 
 // GetErrLogsFromApp is used to do app.Logs on an app after an error has

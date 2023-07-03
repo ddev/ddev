@@ -1,9 +1,10 @@
 package cmd
 
 import (
+	"strings"
+
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/spf13/cobra"
-	"strings"
 )
 
 // DebugCapabilitiesCmd implements the ddev debug capabilities command
@@ -25,6 +26,7 @@ var DebugCapabilitiesCmd = &cobra.Command{
 			"migrate-database",
 			"web-start-hooks",
 			"add-on-versioning",
+			"multiple-upload-dirs",
 		}
 		output.UserOut.WithField("raw", capabilities).Print(strings.Join(capabilities, "\n"))
 	},

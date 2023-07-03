@@ -642,18 +642,14 @@ func (app *DdevApp) GenerateMutagenYml() error {
 		return err
 	}
 
-	uploadDir := ""
-	if app.GetUploadDir() != "" {
-		uploadDir = path.Join(app.Docroot, app.GetUploadDir())
-	}
-
 	templateMap := map[string]interface{}{
 		"SymlinkMode": symlinkMode,
-		"UploadDir":   uploadDir,
+		"UploadDirs":  app.getUploadDirsRelative(),
 	}
+
 	// If no bind mounts, then we can't ignore UploadDir, must sync it
 	if globalconfig.DdevGlobalConfig.NoBindMounts {
-		templateMap["UploadDir"] = ""
+		templateMap["UploadDirs"] = []string{}
 	}
 
 	err = fileutil.TemplateStringToFile(content, templateMap, mutagenYmlPath)
@@ -802,10 +798,11 @@ func GetDefaultMutagenVolumeSignature(_ *DdevApp) string {
 	return fmt.Sprintf("%s-%v", dockerutil.GetDockerHostID(), time.Now().Unix())
 }
 
-// CheckMutagenUploadDir just tells people if they are using mutagen without upload_dir
-func CheckMutagenUploadDir(app *DdevApp) {
-	if app.IsMutagenEnabled() && app.GetUploadDir() == "" {
-		util.Warning("You have mutagen enabled and your '%s' project type doesn't have an upload_dir set.", app.Type)
-		util.Warning("For faster startup and less disk usage,\nset upload_dir to where your user-generated files are stored.")
+// checkMutagenUploadDirs just tells people if they are using mutagen without upload_dir
+func (app *DdevApp) checkMutagenUploadDirs() {
+	if app.IsMutagenEnabled() && !app.IsUploadDirsDisabled() && len(app.GetUploadDirs()) == 0 {
+		util.Warning("You have Mutagen enabled and your '%s' project type doesn't have `upload_dirs` set.", app.Type)
+		util.Warning("For faster startup and less disk usage, set upload_dirs to where your user-generated files are stored.")
+		util.Warning("If this is intended you can disable this warning by running `ddev config --upload-dirs=false`.")
 	}
 }

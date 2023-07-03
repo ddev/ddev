@@ -202,7 +202,7 @@ Flags:
 * `--project-type`: Provide the project type: `backdrop`, `drupal10`, `drupal6`, `drupal7`, `drupal8`, `drupal9`, `laravel`, `magento`, `magento2`, `php`, `shopware6`, `typo3`, `wordpress`. This is autodetected and this flag is necessary only to override the detection.
 * `--show-config-location`: Output the location of the `config.yaml` file if it exists, or error that it doesn’t exist.
 * `--timezone`: Specify timezone for containers and PHP, like `Europe/London` or `America/Denver` or `GMT` or `UTC`.
-* `--upload-dir`: Sets the project’s upload directory, the destination directory of the import-files command.
+* `--upload-dirs`: Sets the project’s upload directories, the destination directories of the import-files command.
 * `--use-dns-when-possible`: Use DNS for hostname resolution instead of `/etc/hosts` when possible. (default `true`)
 * `--web-environment`: Set the environment variables in the web container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`
 * `--web-environment-add`: Append environment variables to the web container: `--web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`
@@ -656,7 +656,7 @@ Flags:
 
 * `--database`, `-d`: Target database to import into (default `"db"`)
 * `--extract-path`: Path to extract within the archive
-* `--file`, `-f`: Path to a SQL dump in `.sql`, `.tar`, `.tar.gz`, `.tgz`, `.bz2`, `.xx`, or `.zip` format
+* `--file`, `-f`: Path to a SQL dump in `.sql`, `.tar`, `.tar.gz`, `.tar.bz2`, `.tar.xz`, `.tgz`, or `.zip` format
 * `--no-drop`: Do not drop the database before importing
 * `--no-progress`: Do not output progress
 
@@ -691,17 +691,24 @@ Pull the uploaded files directory of an existing project to the default [public 
 
 Flags:
 
-* `--extract-path`: If provided asset is an archive, optionally provide the path to extract within the archive.
-* `--src`: Provide the path to the source directory or archive to import. (Archive can be `.tar`, `.tar.gz`, `.tar.xz`, `.tar.bz2`, `.tgz`, or `.zip`.)
+* `--extract-path`: Path to extract within the archive.
+* `--source`, `-s`: Path to the source directory or source archive in `.tar`, `.tar.gz`, `.tar.bz2`, `.tar.xz`, `.tgz`, or `.zip` format.
+* `--target`, `-t`: Target upload dir, defaults to the first upload dir.
 
 Example:
 
 ```shell
-# Extract+import `/path/to/files.tar.gz` to the project’s upload directory
-ddev import-files --src=/path/to/files.tar.gz
+# Extract+import `/path/to/files.tar.gz` to the project’s first upload directory
+ddev import-files --source=/path/to/files.tar.gz
 
-# Import `/path/to/dir` contents to the project’s upload directory
-ddev import-files --src=/path/to/dir
+# Import `/path/to/dir` contents to the project’s first upload directory
+ddev import-files --source=/path/to/dir
+
+# Import `.tarballs/files.tar.xz` contents to the project’s `../private` upload directory
+ddev import-files --src=.tarballs/files.tar.xz --target=../private
+
+# Import `/path/to/dir` contents to the project’s `sites/default/files` upload directory
+ddev import-files -s=.tarballs/files.tar.gz -t=sites/default/files
 ```
 
 ## `launch`

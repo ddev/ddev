@@ -111,7 +111,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	if _, err := os.Stat(app.ConfigPath); !os.IsNotExist(err) {
 		_, err = app.ReadConfig(includeOverrides)
 		if err != nil {
-			return app, fmt.Errorf("%v exists but cannot be read. It may be invalid due to a syntax error.: %v", app.ConfigPath, err)
+			return app, fmt.Errorf("%v exists but cannot be read. It may be invalid due to a syntax error: %v", app.ConfigPath, err)
 		}
 	}
 
@@ -127,8 +127,16 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	if app.Database.Type == "" {
 		app.Database = DatabaseDefault
 	}
+
 	if app.DefaultContainerTimeout == "" {
 		app.DefaultContainerTimeout = nodeps.DefaultDefaultContainerTimeout
+	}
+
+	// Migrate UploadDir to UploadDirs
+	if app.UploadDirDeprecated != "" {
+		uploadDirDeprecated := app.UploadDirDeprecated
+		app.UploadDirDeprecated = ""
+		app.addUploadDir(uploadDirDeprecated)
 	}
 
 	app.SetApptypeSettingsPaths()
@@ -338,6 +346,13 @@ func (app *DdevApp) LoadConfigYamlFile(filePath string) error {
 	if err != nil {
 		return err
 	}
+
+	// Handle UploadDirs value which can take multiple types.
+	err = app.validateUploadDirs()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -684,8 +699,7 @@ type composeYAMLVars struct {
 	WebEnvironment                  []string
 	NoBindMounts                    bool
 	Docroot                         string
-	ContainerUploadDir              string
-	HostUploadDir                   string
+	UploadDirsMap                   []string
 	GitDirMount                     bool
 	IsGitpod                        bool
 	IsCodespaces                    bool
@@ -773,8 +787,7 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 		NFSMountVolumeName:    app.GetNFSMountVolumeName(),
 		NoBindMounts:          globalconfig.DdevGlobalConfig.NoBindMounts,
 		Docroot:               app.GetDocroot(),
-		HostUploadDir:         app.GetHostUploadDirFullPath(),
-		ContainerUploadDir:    app.GetContainerUploadDirFullPath(),
+		UploadDirsMap:         app.getUploadDirsHostContainerMapping(),
 		GitDirMount:           false,
 		IsGitpod:              nodeps.IsGitpod(),
 		IsCodespaces:          nodeps.IsCodespaces(),
@@ -792,13 +805,6 @@ func (app *DdevApp) RenderComposeYAML() (string, error) {
 	envFile := app.GetConfigPath(".env")
 	if fileutil.FileExists(envFile) {
 		templateVars.EnvFile = envFile
-	}
-
-	// And we don't want to bind-mount upload dir if it doesn't exist.
-	// templateVars.UploadDir is relative path rooted in approot.
-	if app.GetHostUploadDirFullPath() == "" || !fileutil.FileExists(app.GetHostUploadDirFullPath()) {
-		templateVars.HostUploadDir = ""
-		templateVars.ContainerUploadDir = ""
 	}
 
 	webimageExtraHTTPPorts := []string{}

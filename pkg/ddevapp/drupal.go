@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"fmt"
+
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
@@ -249,13 +250,11 @@ if (getenv('IS_DDEV_PROJECT') == 'true') {
 	return nil
 }
 
-// getDrupalUploadDir will return a custom upload dir if defined, returning a default path if not.
-func getDrupalUploadDir(app *DdevApp) string {
-	if app.UploadDir == "" {
-		return "sites/default/files"
-	}
+// getDrupalUploadDirs will return the default paths.
+func getDrupalUploadDirs(_ *DdevApp) UploadDirs {
+	uploadDirs := UploadDirs{"sites/default/files"}
 
-	return app.UploadDir
+	return uploadDirs
 }
 
 // Drupal8Hooks adds a d8-specific hooks example for post-import-db
@@ -552,8 +551,8 @@ func appendIncludeToDrupalSettingsFile(siteSettingsPath string, appType string) 
 }
 
 // drupalImportFilesAction defines the Drupal workflow for importing project files.
-func drupalImportFilesAction(app *DdevApp, importPath, extPath string) error {
-	destPath := app.GetHostUploadDirFullPath()
+func drupalImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string) error {
+	destPath := app.calculateHostUploadDirFullPath(uploadDir)
 
 	// parent of destination dir should exist
 	if !fileutil.FileExists(filepath.Dir(destPath)) {

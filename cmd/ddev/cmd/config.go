@@ -15,6 +15,7 @@ import (
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 // Define flags for the config command
@@ -60,9 +61,6 @@ var (
 
 	// showConfigLocation, if set, causes the command to show the config location.
 	showConfigLocation bool
-
-	// uploadDirArg allows a user to set the project's upload directory, the destination directory for import-files.
-	uploadDirArg string
 
 	// webserverTypeArgs allows a user to set the project's webserver type
 	webserverTypeArg string
@@ -231,7 +229,10 @@ func init() {
 	ConfigCommand.Flags().StringVar(&webEnvironmentLocal, "web-environment-add", "", `Append environment variables to the web container: --web-environment="TYPO3_CONTEXT=Development,SOMEENV=someval"`)
 	ConfigCommand.Flags().BoolVar(&createDocroot, "create-docroot", false, "Prompts ddev to create the docroot if it doesn't exist")
 	ConfigCommand.Flags().BoolVar(&showConfigLocation, "show-config-location", false, "Output the location of the config.yaml file if it exists, or error that it doesn't exist.")
-	ConfigCommand.Flags().StringVar(&uploadDirArg, "upload-dir", "", "Sets the project's upload directory, the destination directory of the import-files command.")
+	ConfigCommand.Flags().StringSlice("upload-dirs", []string{}, "Sets the project's upload directories, the destination directories of the import-files command.")
+	ConfigCommand.Flags().Lookup("upload-dirs").NoOptDefVal = "false"
+	ConfigCommand.Flags().StringSlice("upload-dir", []string{}, "Sets the project's upload directories, the destination directories of the import-files command.")
+	_ = ConfigCommand.Flags().MarkDeprecated("upload-dir", "please use --upload-dirs instead")
 	ConfigCommand.Flags().StringVar(&webserverTypeArg, "webserver-type", "", "Sets the project's desired webserver type: nginx-fpm/apache-fpm/nginx-gunicorn")
 	ConfigCommand.Flags().StringVar(&webImageArg, "web-image", "", "Sets the web container image")
 	ConfigCommand.Flags().BoolVar(&webImageDefaultArg, "web-image-default", false, "Sets the default web container image for this ddev version")
@@ -257,22 +258,22 @@ func init() {
 
 	// projectname flag exists for backwards compatability.
 	ConfigCommand.Flags().StringVar(&projectNameArg, "projectname", "", projectNameUsage)
-	err = ConfigCommand.Flags().MarkDeprecated("projectname", "The --projectname flag is deprecated in favor of --project-name")
+	err = ConfigCommand.Flags().MarkDeprecated("projectname", "please use --project-name instead")
 	util.CheckErr(err)
 
 	// apptype flag exists for backwards compatability.
 	ConfigCommand.Flags().StringVar(&projectTypeArg, "projecttype", "", projectTypeUsage)
-	err = ConfigCommand.Flags().MarkDeprecated("projecttype", "The --projecttype flag is deprecated in favor of --project-type")
+	err = ConfigCommand.Flags().MarkDeprecated("projecttype", "please use --project-type instead")
 	util.CheckErr(err)
 
 	// apptype flag exists for backwards compatibility.
 	ConfigCommand.Flags().StringVar(&projectTypeArg, "apptype", "", projectTypeUsage+" This is the same as --project-type and is included only for backwards compatibility.")
-	err = ConfigCommand.Flags().MarkDeprecated("apptype", "The apptype flag is deprecated in favor of --project-type")
+	err = ConfigCommand.Flags().MarkDeprecated("apptype", "please use --project-type instead")
 	util.CheckErr(err)
 
 	// sitename flag exists for backwards compatibility.
 	ConfigCommand.Flags().StringVar(&projectNameArg, "sitename", "", projectNameUsage+" This is the same as project-name and is included only for backwards compatibility")
-	err = ConfigCommand.Flags().MarkDeprecated("sitename", "The sitename flag is deprecated in favor of --project-name")
+	err = ConfigCommand.Flags().MarkDeprecated("sitename", "please use --project-name instead")
 	util.CheckErr(err)
 
 	ConfigCommand.Flags().String("webimage-extra-packages", "", "A comma-delimited list of Debian packages that should be added to web container when the project is started")
@@ -296,6 +297,7 @@ func init() {
 	ConfigCommand.Flags().String("database", "", fmt.Sprintf(`Specify the database type:version to use. Defaults to mariadb:%s`, nodeps.MariaDBDefaultVersion))
 	ConfigCommand.Flags().String("nodejs-version", "", fmt.Sprintf(`Specify the nodejs version to use if you don't want the default NodeJS %s`, nodeps.NodeJSDefault))
 	ConfigCommand.Flags().Int("default-container-timeout", 120, `default time in seconds that ddev waits for all containers to become ready on start`)
+
 	RootCmd.AddCommand(ConfigCommand)
 
 	// Add hidden pantheon subcommand for people who have it in their fingers
@@ -620,8 +622,30 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 		app.Database.Version = parts[1]
 	}
 
-	if uploadDirArg != "" {
-		app.UploadDir = uploadDirArg
+	if cmd.Flag("upload-dir").Changed {
+		uploadDirRaw, _ := cmd.Flags().GetString("upload-dir")
+		app.UploadDirs = ddevapp.UploadDirs{uploadDirRaw}
+	}
+
+	if cmd.Flag("upload-dirs").Changed {
+		uploadDirsRaw := cmd.Flag("upload-dirs").Value.(pflag.SliceValue).GetSlice()
+
+		var uploadDirs any
+		uploadDirs = uploadDirsRaw
+
+		if len(uploadDirsRaw) == 1 {
+			uploadDirsBool, err := strconv.ParseBool(uploadDirsRaw[0])
+
+			if err == nil {
+				if uploadDirsBool {
+					util.Failed("Incorrect value for --upload-dirs: %v", uploadDirsBool)
+				}
+
+				uploadDirs = uploadDirsBool
+			}
+		}
+
+		app.UploadDirs = uploadDirs
 	}
 
 	if webserverTypeArg != "" {
