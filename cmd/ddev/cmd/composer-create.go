@@ -8,13 +8,13 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/ddev/ddev/pkg/composer"
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/mattn/go-isatty"
-
-	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
 
@@ -143,7 +143,11 @@ ddev composer create --preserve-flags --no-interaction psr/log
 		}
 
 		if len(stdout) > 0 {
-			fmt.Println(strings.TrimSpace(stdout))
+			output.UserOut.Println(stdout)
+		}
+
+		if len(stderr) > 0 {
+			output.UserErr.Println(stderr)
 		}
 
 		output.UserOut.Printf("Moving install to Composer root")
@@ -162,7 +166,9 @@ ddev composer create --preserve-flags --no-interaction psr/log
 			util.Failed("failed to create project: %v", err)
 		}
 
-		if !preserveFlags {
+		composerManifest, _ := composer.NewManifest(path.Join(composerRoot, "composer.json"))
+
+		if !preserveFlags && composerManifest != nil && composerManifest.HasPostRootPackageInstallScript() {
 			// Try to run post-root-package-install.
 			composerCmd = []string{
 				"composer",
@@ -172,15 +178,19 @@ ddev composer create --preserve-flags --no-interaction psr/log
 
 			output.UserOut.Printf("Executing composer command: %v\n", composerCmd)
 
-			stdout, _, _ = app.Exec(&ddevapp.ExecOpts{
+			stdout, stderr, _ = app.Exec(&ddevapp.ExecOpts{
 				Service: "web",
-				RawCmd:  composerCmd,
 				Dir:     app.GetComposerRoot(true, false),
+				RawCmd:  composerCmd,
 				Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 			})
 
 			if len(stdout) > 0 {
-				fmt.Println(strings.TrimSpace(stdout))
+				output.UserOut.Println(stdout)
+			}
+
+			if len(stderr) > 0 {
+				output.UserErr.Println(stderr)
 			}
 		}
 
@@ -249,10 +259,14 @@ ddev composer create --preserve-flags --no-interaction psr/log
 			}
 
 			if len(stdout) > 0 {
-				fmt.Println(strings.TrimSpace(stdout))
+				output.UserOut.Println(stdout)
 			}
 
-			if !preserveFlags {
+			if len(stderr) > 0 {
+				output.UserErr.Println(stderr)
+			}
+
+			if !preserveFlags && composerManifest != nil && composerManifest.HasPostCreateProjectCmdScript() {
 				// Try to run post-create-project-cmd.
 				composerCmd = []string{
 					"composer",
@@ -262,15 +276,19 @@ ddev composer create --preserve-flags --no-interaction psr/log
 
 				output.UserOut.Printf("Executing composer command: %v\n", composerCmd)
 
-				stdout, _, _ = app.Exec(&ddevapp.ExecOpts{
+				stdout, stderr, _ = app.Exec(&ddevapp.ExecOpts{
 					Service: "web",
-					RawCmd:  composerCmd,
 					Dir:     app.GetComposerRoot(true, false),
+					RawCmd:  composerCmd,
 					Tty:     isatty.IsTerminal(os.Stdin.Fd()),
 				})
 
 				if len(stdout) > 0 {
-					fmt.Println(strings.TrimSpace(stdout))
+					output.UserOut.Println(stdout)
+				}
+
+				if len(stderr) > 0 {
+					output.UserErr.Println(stderr)
 				}
 			}
 		}
