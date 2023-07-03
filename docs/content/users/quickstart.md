@@ -62,10 +62,9 @@ Environment variables will be automatically added to your `.env` file to simplif
         ddev start
         ddev composer create -y craftcms/craft
 
-    ```bash
-    # Create a project directory and move into it:
-    mkdir my-craft-project
-    cd my-craft-project
+        # Open site in the browser:
+        ddev launch
+        ```
 
     # Set up the DDEV environment:
     ddev config --project-type=craftcms --docroot=web

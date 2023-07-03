@@ -266,6 +266,9 @@ ddev composer create --preserve-flags --no-interaction psr/log
 				output.UserErr.Println(stderr)
 			}
 
+			// Reload composer.json if it has changed in the meantime.
+			composerManifest, _ := composer.NewManifest(path.Join(composerRoot, "composer.json"))
+
 			if !preserveFlags && composerManifest != nil && composerManifest.HasPostCreateProjectCmdScript() {
 				// Try to run post-create-project-cmd.
 				composerCmd = []string{
