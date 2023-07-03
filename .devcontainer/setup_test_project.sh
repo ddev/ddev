@@ -7,7 +7,7 @@ set -x
 make
 sudo ln -sf /workspaces/ddev/.gotmp/bin/linux_amd64/ddev /usr/local/bin/ddev
 ddev debug download-images
-ddev delete -Oy tmp >/dev/null
+ddev delete -Oy tmp >/dev/null || true
 ddev --version
 
 export DDEV_NONINTERACTIVE=true
