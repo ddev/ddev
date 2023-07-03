@@ -2,10 +2,12 @@ package ddevapp
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
