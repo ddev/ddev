@@ -81,9 +81,11 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 		skip := []string{}
 		if app.IsMutagenEnabled() {
-			uploadDir, found := strings.CutPrefix(app.GetHostUploadDirFullPath(), composerRoot+"/")
-			if found && uploadDir != "" {
-				skip = append(skip, uploadDir)
+			for _, uploadDir := range app.GetHostUploadDirsFullPath() {
+				uploadDir, found := strings.CutPrefix(uploadDir, composerRoot+"/")
+				if found && uploadDir != "" {
+					skip = append(skip, uploadDir)
+				}
 			}
 		}
 

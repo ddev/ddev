@@ -100,6 +100,19 @@ func (app *DdevApp) GetHostUploadDirFullPath() string {
 	return ""
 }
 
+// GetHostUploadDirsFullPath returns the full path to the upload directories on the
+// host or "" if there is none.
+func (app *DdevApp) GetHostUploadDirsFullPath() []string {
+	uploadDirs := app.GetUploadDirs()
+	hostUploadDirs := make([]string, 0, len(uploadDirs))
+
+	for _, uploadDir := range uploadDirs {
+		hostUploadDirs = append(hostUploadDirs, app.calculateHostUploadDirFullPath(uploadDir))
+	}
+
+	return hostUploadDirs
+}
+
 // calculateContainerUploadDirFullPath returns the full path to the upload
 // directory in container or "" if there is none.
 func (app *DdevApp) calculateContainerUploadDirFullPath(uploadDir string) string {
