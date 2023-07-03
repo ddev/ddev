@@ -48,10 +48,11 @@ The following “Repository secret” environment variables must be added to <ht
 * Update `ddev/ddev-webserver` to use the new version of `ddev/ddev-php-base` and push it with the proper tag.
 * Make sure the Docker images are all tagged and pushed.
 * Make sure [`pkg/versionconstants/versionconstants.go`](https://github.com/ddev/ddev/blob/master/pkg/versionconstants/versionconstants.go) is all set to point to the new images and tests have been run.
-* If the [`devcontainer-feature.json`](https://github.com/ddev/ddev/blob/master/.github/devcontainers/src/install-ddev/devcontainer-feature.json) (for GitHub Codespaces) needs to be updated, use the [`devcontainer` CLI](https://github.com/devcontainers/cli) and a GITHUB_TOKEN that has power to manage packages, like `https://github.com/settings/tokens/1121534855` (`Package management token - see https://ddev.readthedocs.io/en/latest/developers/release-management/#prerelease-tasks`):
+* If the [`devcontainer-feature.json`](https://github.com/ddev/ddev/blob/master/.github/devcontainers/src/install-ddev/devcontainer-feature.json) (for GitHub Codespaces) needs to be updated, use the [`devcontainer` CLI](https://github.com/devcontainers/cli) and a GITHUB_TOKEN that has power to manage packages, like `https://github.com/settings/tokens/1121534855` (`Package management token - see https://ddev.readthedocs.io/en/latest/developers/release-management/#prerelease-tasks`)
+    * Change the version in `.github/devcontainers/src/install-ddev/devcontainer-feature.json`.
 
     ```bash
-    cd .github/devcontainers/source
+    cd .github/devcontainers/src
     export GITHUB_TOKEN=<personal-access-token-with-power-to-manage-packages>
     devcontainer features publish -n ddev/ddev .
     ```
