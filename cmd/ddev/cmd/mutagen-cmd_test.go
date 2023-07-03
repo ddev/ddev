@@ -129,11 +129,11 @@ func TestCmdMutagen(t *testing.T) {
 	app, err = ddevapp.NewApp("", false)
 	require.NoError(t, err)
 
-	// Make sure it got turned on
-	assert.True(app.IsMutagenEnabled())
+	// Make sure it got turned on if not overridden by test
+	assert.Equal(nodeps.PerformanceModeDefault != types.PerformanceModeNFS, app.IsMutagenEnabled())
 
 	// Turn it off again
-	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance-mode-reset")
+	_, err = exec.RunHostCommand(DdevBin, "config", "global", "--performance-mode=none")
 	require.NoError(t, err)
 	err = globalconfig.ReadGlobalConfig()
 	require.NoError(t, err)
