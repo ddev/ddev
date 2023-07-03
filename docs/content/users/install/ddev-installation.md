@@ -331,7 +331,7 @@ Once you’ve [installed a Docker provider](docker-installation.md), you’re re
     {
       "image": "mcr.microsoft.com/devcontainers/universal:2",
       "features": {
-        "ghcr.io/devcontainers/features/docker-in-docker:1": {},
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {},
         "ghcr.io/ddev/ddev/install-ddev:latest": {}
       },
       "portsAttributes": {
