@@ -251,14 +251,8 @@ if (getenv('IS_DDEV_PROJECT') == 'true') {
 }
 
 // getDrupalUploadDirs will return the default paths.
-func getDrupalUploadDirs(app *DdevApp) UploadDirs {
+func getDrupalUploadDirs(_ *DdevApp) UploadDirs {
 	uploadDirs := UploadDirs{"sites/default/files"}
-
-	/* TODO needs some additional config in Drupal settings to work.
-	if app.Docroot != "" {
-		uploadDirs = append(uploadDirs, "../private")
-	}
-	*/
 
 	return uploadDirs
 }
