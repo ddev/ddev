@@ -8,13 +8,12 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/mattn/go-isatty"
-
-	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
 
@@ -79,25 +78,18 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 		// Remove most contents of composer root
 		util.Warning("Removing any existing files in composer root")
-		objs, err := fileutil.ListFilesInDir(composerRoot)
+
+		skip := []string{}
+		if app.IsMutagenEnabled() {
+			uploadDir, found := strings.CutPrefix(app.GetHostUploadDirFullPath(), composerRoot+"/")
+			if found && uploadDir != "" {
+				skip = append(skip, uploadDir)
+			}
+		}
+
+		err = removeAll(composerRoot, []string{".ddev", ".git", ".tarballs"}, skip)
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
-		}
-
-		for _, o := range objs {
-			// Preserve .ddev, .git, .tarballs
-			if o == ".ddev" || o == ".git" || o == ".tarballs" {
-				continue
-			}
-
-			if err = os.RemoveAll(filepath.Join(composerRoot, o)); err != nil {
-				util.Failed("Failed to create project: %v", err)
-			}
-		}
-
-		// The upload_dir needs to exist for composer create-project to work
-		if app.GetHostUploadDirFullPath() != "" {
-			app.CreateUploadDirIfNecessary()
 		}
 
 		err = app.MutagenSyncFlush()
@@ -245,4 +237,62 @@ func init() {
 	ComposerCreateCmd.Flags().BoolVarP(&composerCreateYesFlag, "yes", "y", false, "Yes - skip confirmation prompt")
 	ComposerCmd.AddCommand(ComposerCreateProjectCmd)
 	ComposerCmd.AddCommand(ComposerCreateCmd)
+}
+
+// removeAll removes all files and folders in path except the ones listed in
+// skipRecursive and skip where skip only preserves the folder itself but still
+// removes containing files and folders.
+func removeAll(aPath string, skipRecursive, skip []string) error {
+	fsObjects, err := fileutil.ListFilesInDir(aPath)
+	if err != nil {
+		return err
+	}
+
+ObjectsLoop:
+	for _, fsObject := range fsObjects {
+		// Just skip objects listed in skipRecursive.
+		for _, skipObject := range skipRecursive {
+			if fsObject == skipObject {
+				continue ObjectsLoop
+			}
+		}
+
+		for _, skipObject := range skip {
+			if strings.HasPrefix(skipObject, fsObject) {
+				// Build new skipRecursive removing current object prefix.
+				newSkipRecursive := []string{}
+				for _, skipObject := range skipRecursive {
+					if strings.HasPrefix(skipObject, fsObject) && skipObject != fsObject {
+						skipObject, _ = strings.CutPrefix(skipObject, fsObject+"/")
+						newSkipRecursive = append(newSkipRecursive, skipObject)
+					}
+				}
+
+				// Build new skip removing current object prefix.
+				newSkip := []string{}
+				for _, skipObject := range skip {
+					if strings.HasPrefix(skipObject, fsObject) && skipObject != fsObject {
+						skipObject, _ = strings.CutPrefix(skipObject, fsObject+"/")
+						newSkip = append(newSkip, skipObject)
+					}
+				}
+
+				// Recursive call of removeAll to remove content of object.
+				err = removeAll(path.Join(aPath, fsObject), newSkipRecursive, newSkip)
+				if err != nil {
+					return err
+				}
+
+				continue ObjectsLoop
+			}
+		}
+
+		// Nothing to skip, remove it all.
+		err = os.RemoveAll(filepath.Join(aPath, fsObject))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
