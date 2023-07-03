@@ -103,10 +103,10 @@ const ConfigInstructions = `
 # performance depending on your host system. Should be configured globally.
 #
 # If set, will override the global config. Possible values are:
-#   - "global":  will use the value from the global config.
-#   - "none":    will disable performance optimization for this project.
-#   - "mutagen": will enable Mutagen for this project.
-#   - "nfs":     will enable NFS for this project.
+#   - "global":  uses the value from the global config.
+#   - "none":    disables performance optimization for this project.
+#   - "mutagen": enables Mutagen for this project.
+#   - "nfs":     enables NFS for this project.
 #
 # See https://ddev.readthedocs.io/en/latest/users/install/performance/#nfs
 # See https://ddev.readthedocs.io/en/latest/users/install/performance/#mutagen

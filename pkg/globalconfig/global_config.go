@@ -280,9 +280,9 @@ func WriteGlobalConfig(config GlobalConfig) error {
 # config.
 #
 # Possible values are:
-#   - "none":    will disable performance optimization.
-#   - "mutagen": will enable Mutagen.
-#   - "nfs":     will enable NFS.
+#   - "none":    disables performance optimization.
+#   - "mutagen": enables Mutagen.
+#   - "nfs":     enables NFS.
 #
 # See https://ddev.readthedocs.io/en/latest/users/install/performance/#mutagen
 # and https://ddev.readthedocs.io/en/latest/users/install/performance/#nfs.
