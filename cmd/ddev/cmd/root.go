@@ -95,7 +95,10 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 				instrumentationApp = app
 			}
 		}
-		instrumentationApp.TrackProject()
+
+		if instrumentationApp != nil {
+			instrumentationApp.TrackProject()
+		}
 
 		// TODO remove once Amplitude has verified with an alpha release.
 		// Do not report these commands
