@@ -1,6 +1,7 @@
 package testcommon
 
 import (
+	"crypto/sha256"
 	"crypto/tls"
 	"fmt"
 	"io"
@@ -292,12 +293,12 @@ func ContainerCheck(checkName string, checkState string) (bool, error) {
 // internalExtractionPath is the place in the archive to start extracting
 // sourceURL is the actual URL to download.
 // Returns the extracted path, the tarball path (both possibly cached), and an error value.
-func GetCachedArchive(siteName string, prefixString string, internalExtractionPath string, sourceURL string) (string, string, error) {
-	uniqueName := prefixString + "_" + path.Base(sourceURL)
-	testCache := filepath.Join(globalconfig.GetGlobalDdevDir(), "testcache", siteName)
+func GetCachedArchive(_, _, internalExtractionPath, sourceURL string) (string, string, error) {
+	uniqueName := fmt.Sprintf("%.4x_%s", sha256.Sum256([]byte(sourceURL)), path.Base(sourceURL))
+	testCache := filepath.Join(globalconfig.GetGlobalDdevDir(), "testcache")
 	archiveFullPath := filepath.Join(testCache, "tarballs", uniqueName)
 	_ = os.MkdirAll(filepath.Dir(archiveFullPath), 0777)
-	extractPath := filepath.Join(testCache, prefixString)
+	extractPath := filepath.Join(testCache, uniqueName)
 
 	// Check to see if we have it cached, if so just return it.
 	dStat, dErr := os.Stat(extractPath)
@@ -306,31 +307,39 @@ func GetCachedArchive(siteName string, prefixString string, internalExtractionPa
 		return extractPath, archiveFullPath, nil
 	}
 
-	output.UserOut.Printf("Downloading %s", archiveFullPath)
-	_ = os.MkdirAll(extractPath, 0777)
-	err := util.DownloadFile(archiveFullPath, sourceURL, false)
-	if err != nil {
-		_ = os.RemoveAll(archiveFullPath)
-		return extractPath, archiveFullPath, fmt.Errorf("Failed to download url=%s into %s, err=%v", sourceURL, archiveFullPath, err)
+	// Download if archive not already exists.
+	if aErr != nil {
+		output.UserOut.Printf("Downloading %s", sourceURL)
+
+		err := util.DownloadFile(archiveFullPath, sourceURL, false)
+		if err != nil {
+			_ = os.RemoveAll(archiveFullPath)
+			return extractPath, archiveFullPath, fmt.Errorf("failed to download url=%s into %s, err=%v", sourceURL, archiveFullPath, err)
+		}
+
+		output.UserOut.Printf("Downloaded %s into %s", sourceURL, archiveFullPath)
 	}
 
-	output.UserOut.Printf("Downloaded %s into %s", sourceURL, archiveFullPath)
-
-	err = os.RemoveAll(extractPath)
+	err := os.RemoveAll(extractPath)
 	if err != nil {
 		return extractPath, "", fmt.Errorf("failed to remove %s: %v", extractPath, err)
 	}
+
 	if filepath.Ext(archiveFullPath) == ".zip" {
 		err = archive.Unzip(archiveFullPath, extractPath, internalExtractionPath)
 	} else {
 		err = archive.Untar(archiveFullPath, extractPath, internalExtractionPath)
 	}
+
 	if err != nil {
 		_ = fileutil.PurgeDirectory(extractPath)
 		_ = os.RemoveAll(extractPath)
 		_ = os.RemoveAll(archiveFullPath)
 		return extractPath, archiveFullPath, fmt.Errorf("archive extraction of %s failed err=%v", archiveFullPath, err)
 	}
+
+	output.UserOut.Printf("Extracted %s into %s", archiveFullPath, extractPath)
+
 	return extractPath, archiveFullPath, nil
 }
 

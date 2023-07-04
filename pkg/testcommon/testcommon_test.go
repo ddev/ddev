@@ -198,17 +198,23 @@ func TestGetCachedArchive(t *testing.T) {
 		assert.Contains(err.Error(), fmt.Sprintf("archive extraction of %s failed", archPath))
 	}
 
-	err = os.RemoveAll(filepath.Dir(exPath))
+	err = os.RemoveAll(exPath)
+	assert.NoError(err)
+
+	err = os.RemoveAll(archPath)
 	assert.NoError(err)
 
 	sourceURL = "http://invalid_domain/somefilethatdoesnotexists"
 	exPath, archPath, err = GetCachedArchive("TestInvalidDownloadURL", "test", "", sourceURL)
 	assert.Error(err)
 	if err != nil {
-		assert.Contains(err.Error(), fmt.Sprintf("Failed to download url=%s into %s", sourceURL, archPath))
+		assert.Contains(err.Error(), fmt.Sprintf("failed to download url=%s into %s", sourceURL, archPath))
 	}
 
-	err = os.RemoveAll(filepath.Dir(exPath))
+	err = os.RemoveAll(exPath)
+	assert.NoError(err)
+
+	err = os.RemoveAll(archPath)
 	assert.NoError(err)
 }
 
