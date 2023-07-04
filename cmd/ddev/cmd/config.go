@@ -160,9 +160,6 @@ func handleConfigRun(cmd *cobra.Command, args []string) {
 	err = app.ProcessHooks("pre-config")
 	if err != nil {
 		util.Failed(err.Error())
-	}
-
-	if err != nil {
 		util.Failed("Failed to process hook 'pre-config'")
 	}
 
@@ -417,22 +414,26 @@ func handleMainConfigArgs(cmd *cobra.Command, _ []string, app *ddevapp.DdevApp) 
 	}
 
 	switch {
-	case (app.Type == "" || app.Type == nodeps.AppTypePHP) && (projectTypeArg == "" || projectTypeArg == detectedApptype): // Found an app, matches passed-in or no apptype passed
-		projectTypeArg = detectedApptype
+	case projectTypeArg != "" && detectedApptype == nodeps.AppTypePHP: // apptype was passed, but we found no app at all
 		app.Type = projectTypeArg
-		if app.Type == nodeps.AppTypePHP {
-			util.Success("Configuring unrecognized codebase as project type 'php' at %s", fullPath)
-		} else {
-			util.Success("Configuring a %s codebase with docroot '%s' at %s", detectedApptype, app.Docroot, fullPath)
-		}
-	case projectTypeArg != "": // apptype was passed, but we found no app at all
-		app.Type = projectTypeArg
-		util.Warning("You have specified a project type of %s but no project of that type is found in %s", projectTypeArg, fullPath)
+		util.Warning("You have specified a project type of '%s' but no project of that type is found in %s", projectTypeArg, fullPath)
 	case projectTypeArg != "" && detectedApptype != projectTypeArg: // apptype was passed, app was found, but not the same type
 		app.Type = projectTypeArg
-		util.Warning("You have specified a project type of %s but a project of type %s was discovered in %s", projectTypeArg, detectedApptype, fullPath)
-	case app.Type != "" && detectedApptype != app.Type: // apptype was not passed, but we found an app of a different type
-		util.Warning("A project of type %s was found in %s, but the project is configured with type=%s", detectedApptype, fullPath, app.Type)
+		util.Warning("You have specified a project type of '%s' but a project of type '%s' was discovered in %s", projectTypeArg, detectedApptype, fullPath)
+	case app.Type != nodeps.AppTypeNone && projectTypeArg == "" && detectedApptype != app.Type: // apptype was not passed, but we found an app of a different type
+		util.Warning("A project of type '%s' was found in %s, but the project is configured with type '%s'", detectedApptype, fullPath, app.Type)
+	default:
+		if projectTypeArg == "" {
+			projectTypeArg = detectedApptype
+		}
+
+		app.Type = projectTypeArg
+
+		if detectedApptype == nodeps.AppTypePHP {
+			util.Success("Configuring unrecognized codebase as project of type '%s' at %s", app.Type, fullPath)
+		} else {
+			util.Success("Configuring a '%s' codebase with docroot '%s' at %s", detectedApptype, app.Docroot, fullPath)
+		}
 	}
 
 	// App overrides are done after app type is detected, but
