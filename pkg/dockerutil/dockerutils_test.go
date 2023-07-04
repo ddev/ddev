@@ -2,7 +2,6 @@ package dockerutil_test
 
 import (
 	"fmt"
-	"github.com/ddev/ddev/pkg/globalconfig"
 	"log"
 	"os"
 	"path"
@@ -12,17 +11,18 @@ import (
 	"testing"
 	"time"
 
+	dockerImages "github.com/ddev/ddev/pkg/docker"
+	. "github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
+	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/globalconfig"
+	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/ddev/ddev/pkg/versionconstants"
+	docker "github.com/fsouza/go-dockerclient"
 	logOutput "github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/require"
-
-	. "github.com/ddev/ddev/pkg/dockerutil"
-	"github.com/ddev/ddev/pkg/fileutil"
-	"github.com/ddev/ddev/pkg/output"
-	"github.com/fsouza/go-dockerclient"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var testContainerName = "TestDockerUtils"
@@ -45,13 +45,13 @@ func testMain(m *testing.M) int {
 	}
 
 	// prep docker container for docker util tests
-	imageExists, err := ImageExistsLocally(versionconstants.GetWebImage())
+	imageExists, err := ImageExistsLocally(dockerImages.GetWebImage())
 	if err != nil {
-		logOutput.Errorf("Failed to check for local image %s: %v", versionconstants.GetWebImage(), err)
+		logOutput.Errorf("Failed to check for local image %s: %v", dockerImages.GetWebImage(), err)
 		return 6
 	}
 	if !imageExists {
-		err := Pull(versionconstants.GetWebImage())
+		err := Pull(dockerImages.GetWebImage())
 		if err != nil {
 			logOutput.Errorf("failed to pull test image: %v", err)
 			return 7
@@ -107,7 +107,7 @@ func startTestContainer() (string, error) {
 		"8025/tcp": {
 			{HostPort: "8890"},
 		}}
-	containerID, _, err := RunSimpleContainer(versionconstants.GetWebImage(), testContainerName, nil, nil, []string{
+	containerID, _, err := RunSimpleContainer(dockerImages.GetWebImage(), testContainerName, nil, nil, []string{
 		"HOTDOG=superior-to-corndog",
 		"POTATO=future-fry",
 		"DDEV_WEBSERVER_TYPE=nginx-fpm",

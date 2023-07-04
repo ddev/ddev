@@ -19,6 +19,7 @@ import (
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
+	dockerImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -476,8 +477,8 @@ func TestDdevStart(t *testing.T) {
 	})
 
 	// Make sure the -built docker image exists before stop
-	webBuilt := versionconstants.GetWebImage() + "-" + site.Name + "-built"
-	dbBuilt := versionconstants.GetWebImage() + "-" + site.Name + "-built"
+	webBuilt := dockerImages.GetWebImage() + "-" + site.Name + "-built"
+	dbBuilt := dockerImages.GetWebImage() + "-" + site.Name + "-built"
 	exists, err := dockerutil.ImageExistsLocally(webBuilt)
 	assert.NoError(err)
 	assert.True(exists)
@@ -2926,7 +2927,7 @@ func TestRouterPortsCheck(t *testing.T) {
 		},
 	}
 
-	containerID, out, err := dockerutil.RunSimpleContainer(versionconstants.GetWebImage(), t.Name()+"occupyport", nil, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, "", false, true, map[string]string{"ddevtestcontainer": t.Name()}, portBinding)
+	containerID, out, err := dockerutil.RunSimpleContainer(dockerImages.GetWebImage(), t.Name()+"occupyport", nil, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, "", false, true, map[string]string{"ddevtestcontainer": t.Name()}, portBinding)
 
 	if err != nil {
 		t.Fatalf("Failed to run docker command to occupy port 80/443, err=%v output=%v", err, out)

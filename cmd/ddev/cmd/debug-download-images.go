@@ -1,13 +1,14 @@
 package cmd
 
 import (
+	"runtime"
+
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/spf13/cobra"
-	"runtime"
 )
 
 // DebugDownloadImagesCmd implements the ddev debug download-images command
@@ -36,7 +37,7 @@ var DebugDownloadImagesCmd = &cobra.Command{
 		}
 
 		// Provide at least the default database image
-		dbImage := versionconstants.GetDBImage(nodeps.MariaDB, nodeps.MariaDBDefaultVersion)
+		dbImage := docker.GetDBImage(nodeps.MariaDB, nodeps.MariaDBDefaultVersion)
 		err = dockerutil.Pull(dbImage)
 		if err != nil {
 			util.Failed("Failed to pull dbImage: %v", err)

@@ -16,6 +16,7 @@ import (
 	"github.com/ddev/ddev/pkg/globalconfig/types"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
@@ -73,7 +74,7 @@ type GlobalConfig struct {
 func New() GlobalConfig {
 
 	cfg := GlobalConfig{
-		RequiredDockerComposeVersion: RequiredDockerComposeVersionDefault,
+		RequiredDockerComposeVersion: versionconstants.RequiredDockerComposeVersionDefault,
 		InternetDetectionTimeout:     nodeps.InternetDetectionTimeoutDefault,
 		TableStyle:                   "default",
 		RouterHTTPPort:               nodeps.DdevDefaultRouterHTTPPort,
@@ -243,7 +244,7 @@ func WriteGlobalConfig(config GlobalConfig) error {
 
 	cfgCopy := config
 	// Remove some items that are defaults
-	if cfgCopy.RequiredDockerComposeVersion == RequiredDockerComposeVersionDefault {
+	if cfgCopy.RequiredDockerComposeVersion == versionconstants.RequiredDockerComposeVersionDefault {
 		cfgCopy.RequiredDockerComposeVersion = ""
 	}
 

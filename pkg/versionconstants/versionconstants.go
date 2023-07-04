@@ -1,12 +1,5 @@
 package versionconstants
 
-import (
-	"fmt"
-	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/globalconfig/types"
-	"github.com/ddev/ddev/pkg/nodeps"
-)
-
 // DdevVersion is the current version of ddev, by default the git committish (should be current git tag)
 var DdevVersion = "v0.0.0-overridden-by-make" // Note that this is overridden by make
 
@@ -50,46 +43,4 @@ var MutagenVersion = ""
 
 const RequiredMutagenVersion = "0.17.1"
 
-// GetWebImage returns the correctly formatted web image:tag reference
-func GetWebImage() string {
-	fullWebImg := WebImg
-	if globalconfig.DdevGlobalConfig.UseHardenedImages {
-		fullWebImg = fullWebImg + "-prod"
-	}
-	return fmt.Sprintf("%s:%s", fullWebImg, WebTag)
-}
-
-// GetDBImage returns the correctly formatted db image:tag reference
-func GetDBImage(dbType string, dbVersion string) string {
-	v := nodeps.MariaDBDefaultVersion
-	if dbVersion != "" {
-		v = dbVersion
-	}
-	if dbType == "" {
-		dbType = nodeps.MariaDB
-	}
-	switch dbType {
-	case nodeps.Postgres:
-		return fmt.Sprintf("%s:%s", dbType, v)
-	case nodeps.MySQL:
-		fallthrough
-	case nodeps.MariaDB:
-		fallthrough
-	default:
-		return fmt.Sprintf("%s-%s-%s:%s", DBImg, dbType, v, BaseDBTag)
-	}
-}
-
-// GetSSHAuthImage returns the correctly formatted sshauth image:tag reference
-func GetSSHAuthImage() string {
-	return fmt.Sprintf("%s:%s", SSHAuthImage, SSHAuthTag)
-}
-
-// GetRouterImage returns the router image:tag reference
-func GetRouterImage() string {
-	image := TraefikRouterImage
-	if globalconfig.DdevGlobalConfig.Router == types.RouterTypeNginxProxy {
-		image = TraditionalRouterImage
-	}
-	return image
-}
+const RequiredDockerComposeVersionDefault = "v2.18.1"

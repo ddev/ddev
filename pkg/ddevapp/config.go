@@ -14,13 +14,13 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/ddev/ddev/pkg/config/types"
+	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/ddev/ddev/pkg/versionconstants"
 	copy2 "github.com/otiai10/copy"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
@@ -104,7 +104,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 	}
 	app.UseDNSWhenPossible = true
 
-	app.WebImage = versionconstants.GetWebImage()
+	app.WebImage = docker.GetWebImage()
 
 	// Load from file if available. This will return an error if the file doesn't exist,
 	// and it is up to the caller to determine if that's an issue.
@@ -176,7 +176,7 @@ func (app *DdevApp) WriteConfig() error {
 	appcopy := *app
 
 	// Only set the images on write if non-default values have been specified.
-	if appcopy.WebImage == versionconstants.GetWebImage() {
+	if appcopy.WebImage == docker.GetWebImage() {
 		appcopy.WebImage = ""
 	}
 	if appcopy.MailhogPort == nodeps.DdevDefaultMailhogPort {

@@ -2,15 +2,17 @@ package version
 
 import (
 	"fmt"
+	"os/exec"
+	"runtime"
+	"strings"
+
+	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	"github.com/fsouza/go-dockerclient"
-	"os/exec"
-	"runtime"
-	"strings"
+	dockerClient "github.com/fsouza/go-dockerclient"
 )
 
 // IMPORTANT: These versions are overridden by version ldflags specifications VERSION_VARIABLES in the Makefile
@@ -21,10 +23,10 @@ func GetVersionInfo() map[string]string {
 	versionInfo := make(map[string]string)
 
 	versionInfo["DDEV version"] = versionconstants.DdevVersion
-	versionInfo["web"] = versionconstants.GetWebImage()
-	versionInfo["db"] = versionconstants.GetDBImage(nodeps.MariaDB, "")
-	versionInfo["router"] = versionconstants.GetRouterImage()
-	versionInfo["ddev-ssh-agent"] = versionconstants.GetSSHAuthImage()
+	versionInfo["web"] = docker.GetWebImage()
+	versionInfo["db"] = docker.GetDBImage(nodeps.MariaDB, "")
+	versionInfo["router"] = docker.GetRouterImage()
+	versionInfo["ddev-ssh-agent"] = docker.GetSSHAuthImage()
 	versionInfo["build info"] = versionconstants.BUILDINFO
 	versionInfo["os"] = runtime.GOOS
 	versionInfo["architecture"] = runtime.GOARCH
@@ -48,9 +50,9 @@ func GetVersionInfo() map[string]string {
 
 // GetDockerPlatform gets the platform used for docker engine
 func GetDockerPlatform() (string, error) {
-	var client *docker.Client
+	var client *dockerClient.Client
 	var err error
-	if client, err = docker.NewClientFromEnv(); err != nil {
+	if client, err = dockerClient.NewClientFromEnv(); err != nil {
 		return "", err
 	}
 

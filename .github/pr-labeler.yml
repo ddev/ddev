@@ -45,7 +45,10 @@ labels:
     sync: true
     matcher:
       files:
-        any: ["go.*", "vendor/**"]
+        any:
+          - "pkg/versionconstants/**"
+          - "go.*"
+          - "vendor/**"
 
 checks:
   - context: "Semantic Pull Request"

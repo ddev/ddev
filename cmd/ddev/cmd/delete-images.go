@@ -1,16 +1,16 @@
 package cmd
 
 import (
-	"github.com/ddev/ddev/pkg/versionconstants"
 	"os"
 	"sort"
 	"strings"
 
 	"github.com/ddev/ddev/pkg/ddevapp"
-
+	dockerImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
+	"github.com/ddev/ddev/pkg/versionconstants"
 	docker "github.com/fsouza/go-dockerclient"
 	"github.com/spf13/cobra"
 )
@@ -96,11 +96,11 @@ func deleteDdevImages(deleteAll bool) error {
 		return images[i].RepoTags[0] > images[j].RepoTags[0]
 	})
 
-	webimg := versionconstants.GetWebImage()
-	routerimage := versionconstants.GetRouterImage()
-	sshimage := versionconstants.GetSSHAuthImage()
+	webimg := dockerImages.GetWebImage()
+	routerimage := dockerImages.GetRouterImage()
+	sshimage := dockerImages.GetSSHAuthImage()
 
-	nameAry := strings.Split(versionconstants.GetDBImage(nodeps.MariaDB, ""), ":")
+	nameAry := strings.Split(dockerImages.GetDBImage(nodeps.MariaDB, ""), ":")
 	keepDBImageTag := "notagfound"
 	if len(nameAry) > 1 {
 		keepDBImageTag = nameAry[1]
@@ -129,7 +129,7 @@ func deleteDdevImages(deleteAll bool) error {
 			}
 			// TODO: Verify the functionality here. May not work since GetRouterImage() returns full image spec
 			// If a routerImage, but doesn't match our routerimage, delete it
-			if strings.HasPrefix(tag, versionconstants.GetRouterImage()) && !strings.HasPrefix(tag, routerimage) {
+			if strings.HasPrefix(tag, dockerImages.GetRouterImage()) && !strings.HasPrefix(tag, routerimage) {
 				if err = dockerutil.RemoveImage(tag); err != nil {
 					return err
 				}

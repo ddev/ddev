@@ -15,6 +15,7 @@ import (
 	"github.com/ddev/ddev/pkg/appimport"
 	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/config/types"
+	dockerImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -955,7 +956,7 @@ func (app *DdevApp) ProcessHooks(hookName string) error {
 
 // GetDBImage uses the available version info
 func (app *DdevApp) GetDBImage() string {
-	dbImage := versionconstants.GetDBImage(app.Database.Type, app.Database.Version)
+	dbImage := dockerImages.GetDBImage(app.Database.Type, app.Database.Version)
 	return dbImage
 }
 
@@ -1123,7 +1124,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	// TODO: We shouldn't be chowning /var/lib/mysql if postgresql?
 	util.Debug("chowning /mnt/ddev-global-cache and /var/lib/mysql to %s", uid)
-	_, out, err := dockerutil.RunSimpleContainer(versionconstants.GetWebImage(), "start-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.GetMariaDBVolumeName() + ":/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{"com.ddev.site-name": app.Name}, nil)
+	_, out, err := dockerutil.RunSimpleContainer(dockerImages.GetWebImage(), "start-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/mysql /mnt/ddev-global-cache", uid)}, []string{}, []string{}, []string{app.GetMariaDBVolumeName() + ":/var/lib/mysql", "ddev-global-cache:/mnt/ddev-global-cache"}, "", true, false, map[string]string{"com.ddev.site-name": app.Name}, nil)
 	if err != nil {
 		return fmt.Errorf("failed to RunSimpleContainer to chown volumes: %v, output=%s", err, out)
 	}
@@ -1133,7 +1134,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// uid is 999 instead of current user
 	if app.Database.Type == nodeps.Postgres {
 		util.Debug("chowning chowning /var/lib/postgresql/data to 999")
-		_, out, err := dockerutil.RunSimpleContainer(versionconstants.GetWebImage(), "start-postgres-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/postgresql/data", "999:999")}, []string{}, []string{}, []string{app.GetPostgresVolumeName() + ":/var/lib/postgresql/data"}, "", true, false, map[string]string{"com.ddev.site-name": app.Name}, nil)
+		_, out, err := dockerutil.RunSimpleContainer(dockerImages.GetWebImage(), "start-postgres-chown-"+util.RandString(6), []string{"sh", "-c", fmt.Sprintf("chown -R %s /var/lib/postgresql/data", "999:999")}, []string{}, []string{}, []string{app.GetPostgresVolumeName() + ":/var/lib/postgresql/data"}, "", true, false, map[string]string{"com.ddev.site-name": app.Name}, nil)
 		if err != nil {
 			return fmt.Errorf("failed to RunSimpleContainer to chown postgres volume: %v, output=%s", err, out)
 		}
@@ -1400,7 +1401,7 @@ func (app *DdevApp) PullContainerImages() error {
 		return err
 	}
 
-	images = append(images, versionconstants.GetRouterImage(), versionconstants.GetSSHAuthImage())
+	images = append(images, dockerImages.GetRouterImage(), dockerImages.GetSSHAuthImage())
 	for _, i := range images {
 		err := dockerutil.Pull(i)
 		if err != nil {
@@ -1415,12 +1416,12 @@ func (app *DdevApp) PullContainerImages() error {
 // PullBaseontainerImages pulls only the fundamentally needed images so they can be available early
 // We always need web image and busybox just for housekeeping.
 func PullBaseContainerImages() error {
-	images := []string{versionconstants.GetWebImage(), versionconstants.BusyboxImage}
+	images := []string{dockerImages.GetWebImage(), versionconstants.BusyboxImage}
 	if !nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, SSHAuthName) {
-		images = append(images, versionconstants.GetSSHAuthImage())
+		images = append(images, dockerImages.GetSSHAuthImage())
 	}
 	if !nodeps.ArrayContainsString(globalconfig.DdevGlobalConfig.OmitContainersGlobal, RouterProjectName) {
-		images = append(images, versionconstants.GetRouterImage())
+		images = append(images, dockerImages.GetRouterImage())
 	}
 
 	for _, i := range images {
@@ -2406,7 +2407,7 @@ func (app *DdevApp) Stop(removeData bool, createSnapshot bool) error {
 		dbBuilt := app.GetDBImage() + "-" + app.Name + "-built"
 		_ = dockerutil.RemoveImage(dbBuilt)
 
-		webBuilt := versionconstants.GetWebImage() + "-" + app.Name + "-built"
+		webBuilt := dockerImages.GetWebImage() + "-" + app.Name + "-built"
 		_ = dockerutil.RemoveImage(webBuilt)
 		util.Success("Project %s was deleted. Your code and configuration are unchanged.", app.Name)
 	}
