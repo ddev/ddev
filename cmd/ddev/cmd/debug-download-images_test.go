@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"github.com/ddev/ddev/pkg/versionconstants"
 	"os"
 	"testing"
 
+	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/testcommon"
 	asrt "github.com/stretchr/testify/assert"
@@ -38,7 +38,7 @@ func TestDebugDownloadImages(t *testing.T) {
 	t.Setenv("DDEV_DEBUG", "true")
 	out, err = exec.RunHostCommand(DdevBin, "debug", "download-images")
 	require.NoError(t, err, "Failed to run ddev debug download-images: %s", out)
-	assert.Contains(out, versionconstants.GetWebImage())
-	assert.Contains(out, versionconstants.GetRouterImage())
+	assert.Contains(out, docker.GetWebImage())
+	assert.Contains(out, docker.GetRouterImage())
 	assert.Contains(out, "Successfully downloaded ddev images")
 }

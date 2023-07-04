@@ -1,8 +1,9 @@
 package globalconfig
 
 import (
-	"github.com/ddev/ddev/pkg/nodeps"
 	"os"
+
+	"github.com/ddev/ddev/pkg/nodeps"
 )
 
 // Container types used with ddev (duplicated from ddevapp, avoiding cross-package cycles)
@@ -14,7 +15,6 @@ const (
 )
 
 const DdevGithubOrg = "ddev"
-const RequiredDockerComposeVersionDefault = "v2.18.1"
 
 // ValidOmitContainers is the valid omit's that can be done in for a project
 var ValidOmitContainers = map[string]bool{

@@ -12,13 +12,13 @@ import (
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	dockerImages "github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/netutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/ddev/ddev/pkg/versionconstants"
 	docker "github.com/fsouza/go-dockerclient"
 )
 
@@ -150,7 +150,7 @@ func generateRouterCompose() (string, error) {
 		"Username":                   username,
 		"UID":                        uid,
 		"GID":                        gid,
-		"router_image":               versionconstants.GetRouterImage(),
+		"router_image":               dockerImages.GetRouterImage(),
 		"ports":                      exposedPorts,
 		"router_bind_all_interfaces": globalconfig.DdevGlobalConfig.RouterBindAllInterfaces,
 		"dockerIP":                   dockerIP,

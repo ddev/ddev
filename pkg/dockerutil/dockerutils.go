@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,19 +18,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
+	"github.com/ddev/ddev/pkg/archive"
+	dockerImages "github.com/ddev/ddev/pkg/docker"
 	ddevexec "github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
-	"github.com/ddev/ddev/pkg/versionconstants"
-
-	"net/url"
-
-	"github.com/ddev/ddev/pkg/archive"
 	"github.com/ddev/ddev/pkg/nodeps"
-	"github.com/ddev/ddev/pkg/util"
-
-	"github.com/Masterminds/semver/v3"
 	"github.com/ddev/ddev/pkg/output"
+	"github.com/ddev/ddev/pkg/util"
 	docker "github.com/fsouza/go-dockerclient"
 )
 
@@ -1243,7 +1240,7 @@ func CopyIntoVolume(sourcePath string, volumeName string, targetSubdir string, u
 	containerName := "CopyIntoVolume_" + nodeps.RandomString(12)
 
 	track := util.TimeTrackC("CopyIntoVolume " + sourcePath + " " + volumeName)
-	containerID, _, err := RunSimpleContainer(versionconstants.GetWebImage(), containerName, []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && sleep infinity"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, map[string]string{"com.ddev.site-name": ""}, nil)
+	containerID, _, err := RunSimpleContainer(dockerImages.GetWebImage(), containerName, []string{"sh", "-c", "mkdir -p " + targetSubdirFullPath + " && sleep infinity"}, nil, nil, []string{volumeName + ":" + volPath}, "0", false, true, map[string]string{"com.ddev.site-name": ""}, nil)
 	if err != nil {
 		return err
 	}
@@ -1312,7 +1309,7 @@ func Exec(containerID string, command string, uid string) (string, string, error
 
 // CheckAvailableSpace outputs a warning if docker space is low
 func CheckAvailableSpace() {
-	_, out, _ := RunSimpleContainer(versionconstants.GetWebImage(), "check-available-space-"+util.RandString(6), []string{"sh", "-c", `df / | awk '!/Mounted/ {print $4, $5;}'`}, []string{}, []string{}, []string{}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil)
+	_, out, _ := RunSimpleContainer(dockerImages.GetWebImage(), "check-available-space-"+util.RandString(6), []string{"sh", "-c", `df / | awk '!/Mounted/ {print $4, $5;}'`}, []string{}, []string{}, []string{}, "", true, false, map[string]string{"com.ddev.site-name": ""}, nil)
 	out = strings.Trim(out, "% \r\n")
 	parts := strings.Split(out, " ")
 	if len(parts) != 2 {

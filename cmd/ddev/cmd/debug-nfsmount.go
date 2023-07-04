@@ -8,12 +8,12 @@ import (
 
 	"github.com/ddev/ddev/pkg/config/types"
 	"github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/output"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/spf13/cobra"
 )
 
@@ -62,7 +62,7 @@ var DebugNFSMountCmd = &cobra.Command{
 		_ = volume
 		uidStr, _, _ := util.GetContainerUIDGid()
 
-		_, out, err := dockerutil.RunSimpleContainer(versionconstants.GetWebImage(), containerName, []string{"sh", "-c", "findmnt -T /nfsmount && ls -d /nfsmount/.ddev"}, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, uidStr, true, false, map[string]string{"com.ddev.site-name": ""}, nil)
+		_, out, err := dockerutil.RunSimpleContainer(docker.GetWebImage(), containerName, []string{"sh", "-c", "findmnt -T /nfsmount && ls -d /nfsmount/.ddev"}, []string{}, []string{}, []string{"testnfsmount" + ":/nfsmount"}, uidStr, true, false, map[string]string{"com.ddev.site-name": ""}, nil)
 		if err != nil {
 			util.Warning("NFS does not seem to be set up yet, see debugging instructions at https://ddev.readthedocs.io/en/stable/users/install/performance/#debugging-ddev-start-failures-with-nfs_mount_enabled-true")
 			util.Failed("Details: error=%v\noutput=%v", err, out)

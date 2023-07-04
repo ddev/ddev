@@ -13,6 +13,7 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	. "github.com/ddev/ddev/pkg/ddevapp"
+	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
@@ -20,7 +21,6 @@ import (
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/testcommon"
 	"github.com/ddev/ddev/pkg/util"
-	"github.com/ddev/ddev/pkg/versionconstants"
 	"github.com/google/uuid"
 	asrt "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -54,8 +54,8 @@ func TestNewConfig(t *testing.T) {
 	})
 
 	// Ensure the config uses specified defaults.
-	assert.Equal(app.GetDBImage(), versionconstants.GetDBImage(nodeps.MariaDB, ""))
-	assert.Equal(app.WebImage, versionconstants.GetWebImage())
+	assert.Equal(app.GetDBImage(), docker.GetDBImage(nodeps.MariaDB, ""))
+	assert.Equal(app.WebImage, docker.GetWebImage())
 	app.Name = util.RandString(32)
 	app.Type = nodeps.AppTypeDrupal8
 

@@ -2,15 +2,16 @@ package cmd
 
 import (
 	"encoding/json"
+	"testing"
+
+	"github.com/ddev/ddev/pkg/docker"
 	"github.com/ddev/ddev/pkg/dockerutil"
+	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/globalconfig"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/versionconstants"
-	"github.com/stretchr/testify/require"
-	"testing"
-
-	"github.com/ddev/ddev/pkg/exec"
 	asrt "github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCmdVersion(t *testing.T) {
@@ -29,7 +30,7 @@ func TestCmdVersion(t *testing.T) {
 
 	assert.Equal(versionconstants.DdevVersion, raw["DDEV version"])
 	assert.Equal(versionconstants.WebImg+":"+versionconstants.WebTag, raw["web"])
-	assert.Equal(versionconstants.GetDBImage(nodeps.MariaDB, ""), raw["db"])
+	assert.Equal(docker.GetDBImage(nodeps.MariaDB, ""), raw["db"])
 	dockerVersion, _ := dockerutil.GetDockerVersion()
 	assert.Equal(dockerVersion, raw["docker"])
 	composeVersion, _ := dockerutil.GetDockerComposeVersion()
@@ -39,7 +40,7 @@ func TestCmdVersion(t *testing.T) {
 	assert.Contains(versionData["msg"], versionconstants.WebImg)
 	assert.Contains(versionData["msg"], versionconstants.WebTag)
 	assert.Contains(versionData["msg"], versionconstants.DBImg)
-	assert.Contains(versionData["msg"], versionconstants.GetDBImage(nodeps.MariaDB, nodeps.MariaDBDefaultVersion))
+	assert.Contains(versionData["msg"], docker.GetDBImage(nodeps.MariaDB, nodeps.MariaDBDefaultVersion))
 	assert.NotEmpty(dockerutil.DockerVersion)
 	assert.NotEmpty(globalconfig.DockerComposeVersion)
 	assert.Contains(versionData["msg"], dockerutil.DockerVersion)
