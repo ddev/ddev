@@ -60,17 +60,6 @@ fi
 
 docker volume rm ddev-global-cache >/dev/null 2>&1 || true
 
-# Make sure we start with mutagen daemon off.
-unset MUTAGEN_DATA_DIRECTORY
-if [ -f ~/.ddev/bin/mutagen -o -f ~/.ddev/bin/mutagen.exe ]; then
-  MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory/ ~/.ddev/bin/mutagen sync terminate -a || true
-  MUTAGEN_DATA_DIRECTORY=~/.mutagen ~/.ddev/bin/mutagen daemon stop || true
-  MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory/ ~/.ddev/bin/mutagen daemon stop || true
-fi
-if command -v killall >/dev/null ; then
-  killall mutagen || true
-fi
-
 # Run any testbot maintenance that may need to be done
 echo "--- running testbot_maintenance.sh"
 bash "$(dirname $0)/testbot_maintenance.sh" || true
@@ -93,6 +82,17 @@ echo "--- running sanetestbot.sh"
 # homebrew sometimes removes /usr/local/etc/my.cnf.d
 if command -v brew >/dev/null; then
   mkdir -p "$(brew --prefix)/etc/my.cnf.d"
+fi
+
+# Make sure we start with mutagen daemon off.
+unset MUTAGEN_DATA_DIRECTORY
+if [ -f ~/.ddev/bin/mutagen -o -f ~/.ddev/bin/mutagen.exe ]; then
+  MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory/ ~/.ddev/bin/mutagen sync terminate -a || true
+  MUTAGEN_DATA_DIRECTORY=~/.mutagen ~/.ddev/bin/mutagen daemon stop || true
+  MUTAGEN_DATA_DIRECTORY=~/.ddev_mutagen_data_directory/ ~/.ddev/bin/mutagen daemon stop || true
+fi
+if command -v killall >/dev/null ; then
+  killall mutagen || true
 fi
 
 echo "--- Running tests..."
