@@ -33,6 +33,6 @@ case $OSTYPE in
     fi
     ;;
   "darwin"*)
-    open -a dbeaver.app -con "$arguments" &
+    open -a dbeaver.app --args -con "$arguments" &
     ;;
 esac
