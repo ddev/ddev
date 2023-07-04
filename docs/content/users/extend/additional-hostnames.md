@@ -13,7 +13,6 @@ additional_hostnames:
   - "*.lotsofnames"
 ```
 
-
 This configuration would result in working hostnames of `mysite.ddev.site`, `extraname.ddev.site`, `fr.mysite.ddev.site`, `es.mysite.ddev.site`, and `it.mysite.ddev.site`, with full HTTP and HTTPS URLs for each.
 
 You could accomplish the same thing by running the `ddev config` command:
