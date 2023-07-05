@@ -34,7 +34,7 @@ func RemoveAllExcept(path string, exceptions []string) error {
 		}
 
 		// Normalize exception and make it absolute.
-		normalizedExceptions = append(normalizedExceptions, filepath.Join(path, filepath.ToSlash(exception)))
+		normalizedExceptions = append(normalizedExceptions, filepath.Clean(filepath.Join(path, filepath.ToSlash(exception))))
 	}
 
 	// Walk path and remove non excepted.

@@ -79,7 +79,7 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		// Remove most contents of composer root
 		util.Warning("Removing any existing files in composer root")
 
-		exceptions := []string{".ddev", ".git", ".tarballs"}
+		exceptions := []string{".ddev/*", ".git/*", ".tarballs/*"}
 		for _, uploadDir := range app.GetHostUploadDirsFullPath() {
 			uploadDir, err := filepath.Rel(composerRoot, uploadDir)
 			if err == nil && uploadDir != "" {
