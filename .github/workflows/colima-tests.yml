@@ -115,12 +115,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-homebrew-cache-
 
-      - name: Clean up Homebrew
-        run: |
-          brew update
-          brew autoremove
-          brew cleanup
-
       - name: Lima home
         uses: actions/cache@v3
         if: ${{ github.ref == 'refs/heads/master' }}
@@ -203,3 +197,10 @@ jobs:
         run: |
           ddev poweroff
           colima stop
+
+      - name: Clean up Homebrew
+        run: |
+          brew update
+          brew autoremove
+          brew cleanup
+  
