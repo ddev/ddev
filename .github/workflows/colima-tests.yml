@@ -90,11 +90,20 @@ jobs:
         with:
           go-version: '>=1.20'
 
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Get Homebrew Cache Directory
+        id: homebrew-cache
+        run: |
+          echo "dir=$(brew --cache)" >> $GITHUB_OUTPUT
+
       - name: Homebrew cache
         uses: actions/cache@v3
         if: ${{ github.ref == 'refs/heads/master' }}
         with:
-          path: ~/Library/Caches/Homebrew
+          path: ${{ steps.homebrew-cache.outputs.dir }}
           key: ${{ runner.os }}-homebrew-cache-${{ steps.get-date.outputs.date }}
           restore-keys: |
             ${{ runner.os }}-homebrew-cache-
@@ -103,14 +112,17 @@ jobs:
         uses: actions/cache/restore@v3
         if: ${{ github.ref != 'refs/heads/master' }}
         with:
-          path: ~/Library/Caches/Homebrew
+          path: ${{ steps.homebrew-cache.outputs.dir }}
           key: ${{ runner.os }}-homebrew-cache-${{ steps.get-date.outputs.date }}
           restore-keys: |
             ${{ runner.os }}-homebrew-cache-
 
-      - name: Set up Homebrew
-        id: set-up-homebrew
-        uses: Homebrew/actions/setup-homebrew@master
+      - name: Clean up Homebrew
+        run: |
+          brew update
+          brew upgrade
+          brew autoremove
+          brew cleanup
 
       - name: Lima home
         uses: actions/cache@v3
