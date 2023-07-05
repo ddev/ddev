@@ -927,7 +927,6 @@ func Pull(imageName string) error {
 	if exists {
 		return nil
 	}
-	_ = os.Setenv("DOCKER_CLI_HINTS", "false")
 	cmd := exec.Command("docker", "pull", imageName)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
