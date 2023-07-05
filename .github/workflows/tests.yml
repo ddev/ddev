@@ -77,7 +77,7 @@ jobs:
       - name: Get Date
         id: get-date
         run: |
-          echo "date=$(/bin/date -u "+%Y%U")" >> $GITHUB_OUTPUT
+          echo "date=$(/bin/date -u "+%Y%m%d%H%M")" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: DDEV test cache
