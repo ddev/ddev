@@ -1,11 +1,7 @@
 name: PR Build
 
-defaults:
-  run:
-    shell: bash
-
 on:
-  pull_request:
+  pull_request_target:
     paths:
       - ".github/workflows/**"
       - "cmd/**"
@@ -15,12 +11,15 @@ on:
       - "go.*"
       - "Makefile"
 
+defaults:
+  run:
+    shell: bash
+  
 env:
   BUILDKIT_PROGRESS: plain
   DOCKER_CLI_EXPERIMENTAL: enabled
   DDEV_DEBUG: true
   HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
 
 permissions:
   contents: read
@@ -37,6 +36,7 @@ jobs:
           # We need to get all branches and tags for git describe to work properly
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
+
       - name: Set up Homebrew
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
@@ -63,26 +63,31 @@ jobs:
         with:
           name: all-ddev-executables
           path: ${{ github.workspace }}/artifacts/*
+
       - name: Upload macos-amd64 binary
         uses: actions/upload-artifact@v3
         with:
           name: ddev-macos-amd64
           path: .gotmp/bin/darwin_amd64/ddev
+
       - name: Upload macos-arm64 binary
         uses: actions/upload-artifact@v3
         with:
           name: ddev-macos-arm64
           path: .gotmp/bin/darwin_arm64/ddev
+
       - name: Upload linux-arm64 binary
         uses: actions/upload-artifact@v3
         with:
           name: ddev-linux-arm64
           path: .gotmp/bin/linux_arm64/ddev
+
       - name: Upload linux-amd64 binary
         uses: actions/upload-artifact@v3
         with:
           name: ddev-linux-amd64
           path: .gotmp/bin/linux_amd64/ddev
+
       - name: Upload windows_amd64 installer
         uses: actions/upload-artifact@v3
         with:
