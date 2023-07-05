@@ -77,7 +77,11 @@ jobs:
       - name: Get Date
         id: get-date
         run: |
-          echo "date=$(/bin/date -u "+%Y%m%d%H%M")" >> $GITHUB_OUTPUT
+          if [ "${{ matrix.name }}" == "pull-push-test-platforms" ]; then
+            echo "date=$(/bin/date -u "+%Y%m%d%H")" >> $GITHUB_OUTPUT
+          else
+            echo "date=$(/bin/date -u "+%Y%m%d")" >> $GITHUB_OUTPUT
+          fi
         shell: bash
 
       - name: DDEV test cache
@@ -96,6 +100,7 @@ jobs:
           path: ~/.ddev/testcache/tarballs
           key: ddev-test-cache-${{ steps.get-date.outputs.date }}
           restore-keys: |
+            ddev-test-cache-${{ steps.get-date.outputs.date }}
             ddev-test-cache-
 
       - name: Set up Homebrew
