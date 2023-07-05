@@ -21,7 +21,7 @@ jobs:
         with:
           pattern: '^(build|ci|docs|feat|fix|refactor|test)(|!): [a-z].+?((, fixes #\d+)*)($|\n|\r|\n\r)'
           flags: ''
-          error: 'Title does not follow our conventions see https://ddev.readthedocs.io/en/latest/developers/building-contributing/#pull-request-title-guidelines.'
+          error: 'Title does not follow our conventions see https://ddev.readthedocs.io/en/latest/developers/building-contributing/#pull-request-title-guidelines'
 
   assign_labels:
     name: Assign Labels
