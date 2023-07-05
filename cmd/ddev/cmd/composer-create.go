@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -80,8 +81,8 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 
 		exceptions := []string{".ddev", ".git", ".tarballs"}
 		for _, uploadDir := range app.GetHostUploadDirsFullPath() {
-			uploadDir, found := strings.CutPrefix(uploadDir, composerRoot+"/")
-			if found && uploadDir != "" {
+			uploadDir, err := filepath.Rel(composerRoot, uploadDir)
+			if err == nil && uploadDir != "" {
 				exceptions = append(exceptions, uploadDir)
 			}
 		}
