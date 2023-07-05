@@ -120,7 +120,6 @@ jobs:
       - name: Clean up Homebrew
         run: |
           brew update
-          brew upgrade
           brew autoremove
           brew cleanup
 
