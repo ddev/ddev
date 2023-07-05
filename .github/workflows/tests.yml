@@ -125,6 +125,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-homebrew-cache-
 
+      - name: Clean up Homebrew
+        run: |
+          brew update
+          brew upgrade
+          brew autoremove
+          brew cleanup
+
       - name: Install Docker and deps (Linux)
         run: ./.github/workflows/linux-setup.sh
 
