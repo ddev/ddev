@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -79,17 +78,15 @@ ddev composer create --prefer-dist --no-interaction --no-dev psr/log
 		// Remove most contents of composer root
 		util.Warning("Removing any existing files in composer root")
 
-		skip := []string{}
-		if app.IsMutagenEnabled() {
-			for _, uploadDir := range app.GetHostUploadDirsFullPath() {
-				uploadDir, found := strings.CutPrefix(uploadDir, composerRoot+"/")
-				if found && uploadDir != "" {
-					skip = append(skip, uploadDir)
-				}
+		exceptions := []string{".ddev", ".git", ".tarballs"}
+		for _, uploadDir := range app.GetHostUploadDirsFullPath() {
+			uploadDir, found := strings.CutPrefix(uploadDir, composerRoot+"/")
+			if found && uploadDir != "" {
+				exceptions = append(exceptions, uploadDir)
 			}
 		}
 
-		err = removeAll(composerRoot, []string{".ddev", ".git", ".tarballs"}, skip)
+		err = fileutil.RemoveAllExcept(composerRoot, exceptions)
 		if err != nil {
 			util.Failed("Failed to create project: %v", err)
 		}
@@ -239,62 +236,4 @@ func init() {
 	ComposerCreateCmd.Flags().BoolVarP(&composerCreateYesFlag, "yes", "y", false, "Yes - skip confirmation prompt")
 	ComposerCmd.AddCommand(ComposerCreateProjectCmd)
 	ComposerCmd.AddCommand(ComposerCreateCmd)
-}
-
-// removeAll removes all files and folders in path except the ones listed in
-// skipRecursive and skip where skip only preserves the folder itself but still
-// removes containing files and folders.
-func removeAll(aPath string, skipRecursive, skip []string) error {
-	fsObjects, err := fileutil.ListFilesInDir(aPath)
-	if err != nil {
-		return err
-	}
-
-ObjectsLoop:
-	for _, fsObject := range fsObjects {
-		// Just skip objects listed in skipRecursive.
-		for _, skipObject := range skipRecursive {
-			if fsObject == skipObject {
-				continue ObjectsLoop
-			}
-		}
-
-		for _, skipObject := range skip {
-			if strings.HasPrefix(skipObject, fsObject) {
-				// Build new skipRecursive removing current object prefix.
-				newSkipRecursive := []string{}
-				for _, skipObject := range skipRecursive {
-					if strings.HasPrefix(skipObject, fsObject) && skipObject != fsObject {
-						skipObject, _ = strings.CutPrefix(skipObject, fsObject+"/")
-						newSkipRecursive = append(newSkipRecursive, skipObject)
-					}
-				}
-
-				// Build new skip removing current object prefix.
-				newSkip := []string{}
-				for _, skipObject := range skip {
-					if strings.HasPrefix(skipObject, fsObject) && skipObject != fsObject {
-						skipObject, _ = strings.CutPrefix(skipObject, fsObject+"/")
-						newSkip = append(newSkip, skipObject)
-					}
-				}
-
-				// Recursive call of removeAll to remove content of object.
-				err = removeAll(path.Join(aPath, fsObject), newSkipRecursive, newSkip)
-				if err != nil {
-					return err
-				}
-
-				continue ObjectsLoop
-			}
-		}
-
-		// Nothing to skip, remove it all.
-		err = os.RemoveAll(filepath.Join(aPath, fsObject))
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
