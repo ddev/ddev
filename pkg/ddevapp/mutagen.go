@@ -729,11 +729,11 @@ func CheckMutagenVolumeSyncCompatibility(app *DdevApp) (ok bool, volumeExists bo
 	if mutagenSyncExists {
 		mutagenLabel, mutagenSyncLabelErr = GetMutagenSyncLabel(app)
 		if mutagenSyncLabelErr != nil {
-			util.Warning("mutagen sync %s exists but unable to get label: %v", app.Name, mutagenSyncLabelErr)
+			util.Warning("mutagen sync session '%s' exists but unable to get sync label '%s': '%v' This is normal on upgrade from v1.21.6; error=%v", app.Name, mutagenSignatureLabelName, mutagenLabel, mutagenSyncLabelErr)
 		}
 		configFileHashLabel, configFileHashLabelErr = GetMutagenConfigFileHashLabel(app)
 		if configFileHashLabelErr != nil {
-			util.Warning("mutagen sync %s exists but unable to get label: %v", app.Name, configFileHashLabel)
+			util.Warning("mutagen sync session '%s' exists but unable to get sync label '%s': '%v' This is normal on upgrade from v1.21.6; error=%v", app.Name, mutagenConfigFileHashLabelName, configFileHashLabel, configFileHashLabelErr)
 		}
 	}
 	switch {
