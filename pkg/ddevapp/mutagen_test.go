@@ -63,6 +63,10 @@ func TestMutagenSimple(t *testing.T) {
 
 	assert.True(dockerutil.VolumeExists(ddevapp.GetMutagenVolumeName(app)))
 
+	mutagenConfig, err := os.ReadFile(ddevapp.GetMutagenConfigFilePath(app))
+	require.NoError(t, err)
+	require.Contains(t, mutagenConfig, app.GetUploadDir())
+
 	desc, err := app.Describe(false)
 	assert.True(desc["mutagen_enabled"].(bool))
 
