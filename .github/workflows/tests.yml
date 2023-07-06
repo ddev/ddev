@@ -77,16 +77,12 @@ jobs:
       - name: Get Date
         id: get-date
         run: |
-          if [ "${{ matrix.name }}" == "pull-push-test-platforms" ]; then
-            echo "date=$(/bin/date -u "+%Y%m%d%H")" >> $GITHUB_OUTPUT
-          else
-            echo "date=$(/bin/date -u "+%Y%m%d")" >> $GITHUB_OUTPUT
-          fi
+          echo "date=$(/bin/date -u "+%Y%V")" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: DDEV test cache
         uses: actions/cache@v3
-        if: ${{ github.ref == 'refs/heads/master' }}
+        if: github.ref == 'refs/heads/master' && matrix.name == 'pull-push-test-platforms'
         with:
           path: ~/.ddev/testcache/tarballs
           key: ddev-test-cache-${{ steps.get-date.outputs.date }}
@@ -95,12 +91,11 @@ jobs:
 
       - name: DDEV test cache/restore
         uses: actions/cache/restore@v3
-        if: ${{ github.ref != 'refs/heads/master' }}
+        if: github.ref != 'refs/heads/master' || matrix.name != 'pull-push-test-platforms'
         with:
           path: ~/.ddev/testcache/tarballs
           key: ddev-test-cache-${{ steps.get-date.outputs.date }}
           restore-keys: |
-            ddev-test-cache-${{ steps.get-date.outputs.date }}
             ddev-test-cache-
 
       - name: Set up Homebrew
@@ -114,7 +109,7 @@ jobs:
 
       - name: Homebrew cache
         uses: actions/cache@v3
-        if: ${{ github.ref == 'refs/heads/master' }}
+        if: github.ref == 'refs/heads/master'
         with:
           path: ${{ steps.homebrew-cache.outputs.dir }}
           key: ${{ runner.os }}-homebrew-cache-${{ steps.get-date.outputs.date }}
@@ -123,7 +118,7 @@ jobs:
 
       - name: Homebrew cache/restore
         uses: actions/cache/restore@v3
-        if: ${{ github.ref != 'refs/heads/master' }}
+        if: github.ref != 'refs/heads/master'
         with:
           path: ${{ steps.homebrew-cache.outputs.dir }}
           key: ${{ runner.os }}-homebrew-cache-${{ steps.get-date.outputs.date }}
