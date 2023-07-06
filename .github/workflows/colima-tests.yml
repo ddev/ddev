@@ -62,26 +62,15 @@ jobs:
       - name: Get Date
         id: get-date
         run: |
-          echo "date=$(/bin/date -u "+%Y%m%d")" >> $GITHUB_OUTPUT
+          echo "date=$(/bin/date -u "+%Y%V")" >> $GITHUB_OUTPUT
         shell: bash
-
-      - name: DDEV test cache
-        uses: actions/cache@v3
-        if: ${{ github.ref == 'refs/heads/master' }}
-        with:
-          path: ~/.ddev/testcache/tarballs
-          key: ddev-test-cache-${{ steps.get-date.outputs.date }}
-          restore-keys: |
-            ddev-test-cache-
 
       - name: DDEV test cache/restore
         uses: actions/cache/restore@v3
-        if: ${{ github.ref != 'refs/heads/master' }}
         with:
           path: ~/.ddev/testcache/tarballs
           key: ddev-test-cache-${{ steps.get-date.outputs.date }}
           restore-keys: |
-            ddev-test-cache-${{ steps.get-date.outputs.date }}
             ddev-test-cache-
 
       - uses: actions/setup-go@v4
@@ -99,7 +88,7 @@ jobs:
 
       - name: Homebrew cache
         uses: actions/cache@v3
-        if: ${{ github.ref == 'refs/heads/master' }}
+        if: github.ref == 'refs/heads/master'
         with:
           path: ${{ steps.homebrew-cache.outputs.dir }}
           key: ${{ runner.os }}-homebrew-cache-${{ steps.get-date.outputs.date }}
@@ -108,7 +97,7 @@ jobs:
 
       - name: Homebrew cache/restore
         uses: actions/cache/restore@v3
-        if: ${{ github.ref != 'refs/heads/master' }}
+        if: github.ref != 'refs/heads/master'
         with:
           path: ${{ steps.homebrew-cache.outputs.dir }}
           key: ${{ runner.os }}-homebrew-cache-${{ steps.get-date.outputs.date }}
@@ -117,7 +106,7 @@ jobs:
 
       - name: Lima home
         uses: actions/cache@v3
-        if: ${{ github.ref == 'refs/heads/master' }}
+        if: github.ref == 'refs/heads/master'
         with:
           path: ~/.lima
           key: ${{ runner.os }}-lima-home-${{ steps.get-date.outputs.date }}
@@ -126,7 +115,7 @@ jobs:
 
       - name: Lima home/restore
         uses: actions/cache/restore@v3
-        if: ${{ github.ref != 'refs/heads/master' }}
+        if: github.ref != 'refs/heads/master'
         with:
           path: ~/.lima
           key: ${{ runner.os }}-lima-home-${{ steps.get-date.outputs.date }}
@@ -135,7 +124,7 @@ jobs:
 
       - name: Lima cache
         uses: actions/cache@v3
-        if: ${{ github.ref == 'refs/heads/master' }}
+        if: github.ref == 'refs/heads/master'
         with:
           path: ~/Library/Caches/lima
           key: ${{ runner.os }}-lima-cache-${{ steps.get-date.outputs.date }}
@@ -144,7 +133,7 @@ jobs:
 
       - name: Lima cache/restore
         uses: actions/cache/restore@v3
-        if: ${{ github.ref != 'refs/heads/master' }}
+        if: github.ref != 'refs/heads/master'
         with:
           path: ~/Library/Caches/lima
           key: ${{ runner.os }}-lima-cache-${{ steps.get-date.outputs.date }}
