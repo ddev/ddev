@@ -38,37 +38,37 @@ func RemoveAllExcept(path string, exceptions []string) error {
 	}
 
 	// Walk path and remove non excepted.
-	return filepath.WalkDir(path, func(current_path string, d fs.DirEntry, err error) error {
+	return filepath.WalkDir(path, func(currentPath string, d fs.DirEntry, err error) error {
 		// Normalize current_path.
-		current_path = filepath.ToSlash(current_path)
+		currentPath = filepath.ToSlash(currentPath)
 
-		// Skip the root, we only like to remove the content.
-		if path == current_path {
+		// Skip the root, we only like to remove the children.
+		if path == currentPath {
 			return nil
 		}
 
 		for _, exception := range normalizedExceptions {
-			// exception matches a sub folder of current_path. Using strings
+			// exception matches a sub folder of currentPath. Using strings
 			// here is fine because we have normalized paths and there is no
 			// func available in filepath.
-			if strings.HasPrefix(exception, current_path) {
+			if strings.HasPrefix(exception, currentPath) {
 				return nil
 			}
 
-			// exception matches current_path.
-			matched, _ := filepath.Match(exception, current_path)
+			// exception matches currentPath.
+			matched, _ := filepath.Match(exception, currentPath)
 			if matched {
 				return filepath.SkipDir
 			}
 
-			// exception matches file or folder in current_path.
-			matched, _ = filepath.Match(exception, filepath.Join(current_path, "dummy"))
+			// exception matches file or folder in currentPath.
+			matched, _ = filepath.Match(exception, filepath.Join(currentPath, "dummy"))
 			if matched {
 				return filepath.SkipDir
 			}
 		}
 
-		// No match, remove path recursive.
-		return os.RemoveAll(current_path)
+		// No match, remove path and children.
+		return os.RemoveAll(currentPath)
 	})
 }
