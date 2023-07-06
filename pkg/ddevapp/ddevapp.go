@@ -989,6 +989,8 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
+	app.createUploadDirsIfNecessary()
+
 	if app.IsMutagenEnabled() {
 		err = app.GenerateMutagenYml()
 		if err != nil {
@@ -1156,8 +1158,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 
 	// Fix any obsolete things like old shell commands, etc.
 	app.FixObsolete()
-
-	app.createUploadDirsIfNecessary()
 
 	// WriteConfig .ddev-docker-compose-*.yaml
 	err = app.WriteDockerComposeYAML()
