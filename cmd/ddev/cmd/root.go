@@ -224,6 +224,8 @@ func checkDdevVersionAndOptInInstrumentation(skipConfirmation bool) error {
 			if okPoweroff {
 				ddevapp.PowerOff()
 			}
+			util.Debug("Terminating all mutagen sync sessions")
+			ddevapp.TerminateAllMutagenSync()
 		}
 
 		// If they have a new version write the new version into last-started
