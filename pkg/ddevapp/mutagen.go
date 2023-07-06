@@ -787,9 +787,11 @@ func GetMutagenConfigFileHashLabel(app *DdevApp) (string, error) {
 
 // TerminateAllMutagenSync terminates all sync sessions
 func TerminateAllMutagenSync() {
-	out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "terminate", "-a")
-	if err != nil {
-		util.Warning("could not terminate all mutagen sessions (mutagen sync terminate -a), output=%s, err=%v", out, err)
+	if fileutil.FileExists(globalconfig.GetMutagenPath()) {
+		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "terminate", "-a")
+		if err != nil {
+			util.Warning("could not terminate all mutagen sessions (mutagen sync terminate -a), output=%s, err=%v", out, err)
+		}
 	}
 }
 
