@@ -30,9 +30,7 @@ env:
   DDEV_DEBUG: true
   DDEV_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   DDEV_SKIP_NODEJS_TEST: "true"
-  HOMEBREW_NO_INSTALL_CLEANUP: TRUE
   HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: TRUE
 
 permissions:
   contents: read
@@ -117,13 +115,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-homebrew-cache-
 
-      - name: Clean up Homebrew
-        run: |
-          brew update
-          brew upgrade
-          brew autoremove
-          brew cleanup
-
       - name: Lima home
         uses: actions/cache@v3
         if: ${{ github.ref == 'refs/heads/master' }}
@@ -206,3 +197,10 @@ jobs:
         run: |
           ddev poweroff
           colima stop
+
+      - name: Clean up Homebrew
+        run: |
+          brew update
+          brew autoremove
+          brew cleanup
+  
