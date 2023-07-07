@@ -1315,7 +1315,11 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		})
 
 		if err != nil {
-			return fmt.Errorf("composer.json not found in container, stdout='%s', stderr='%s': %v; please report this situation, https://github.com/ddev/ddev/issues; probably can be fixed with ddev restart.", stdout, stderr, err)
+			status, _, _ := app.Exec(&ExecOpts{
+				Cmd: "pwd && tree -L 2",
+			})
+			util.Warning("Status: %s", status)
+			return fmt.Errorf("composer.json not found in container, stdout='%s', stderr='%s': %v; please report this situation, https://github.com/ddev/ddev/issues; probably can be fixed with ddev restart", stdout, stderr, err)
 		}
 	}
 
