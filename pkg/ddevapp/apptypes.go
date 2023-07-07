@@ -163,6 +163,12 @@ func init() {
 			importFilesAction:    genericImportFilesAction,
 		},
 
+		nodeps.AppTypeSilverstripe: {
+			appTypeDetect:        isSilverstripeApp,
+			postStartAction:      silverstripePostStartAction,
+			configOverrideAction: silverstripeConfigOverrideAction,
+		},
+
 		nodeps.AppTypeMagento: {
 			settingsCreator:      createMagentoSettingsFile,
 			uploadDirs:           getMagentoUploadDirs,
