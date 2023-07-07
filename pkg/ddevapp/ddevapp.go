@@ -1304,6 +1304,21 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		}
 	}
 
+	// At this point we should have all files synced inside the container
+	// Verify that we have composer.json inside container if we have it in project root
+	// This is possibly a temporary need for debugging https://github.com/ddev/ddev/issues/5089
+	// TODO: Consider removing this check when #5089 is resolved
+	if fileutil.FileExists(filepath.Join(app.GetComposerRoot(false, false), "composer.json")) {
+		util.Debug("Checking for composer.json in container")
+		stdout, stderr, err := app.Exec(&ExecOpts{
+			Cmd: fmt.Sprintf("test -f %s", path.Join(app.GetComposerRoot(true, false), "composer.json")),
+		})
+
+		if err != nil {
+			return fmt.Errorf("composer.json not found in container, stdout='%s', stderr='%s': %v; please report this situation, https://github.com/ddev/ddev/issues; probably can be fixed with ddev restart.", stdout, stderr, err)
+		}
+	}
+
 	util.Debug("Running /start.sh in ddev-webserver")
 	stdout, stderr, err := app.Exec(&ExecOpts{
 		// Send output to /var/tmp/logpipe to get it to docker logs
