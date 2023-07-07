@@ -729,11 +729,11 @@ func CheckMutagenVolumeSyncCompatibility(app *DdevApp) (ok bool, volumeExists bo
 	if mutagenSyncExists {
 		mutagenLabel, mutagenSyncLabelErr = GetMutagenSyncLabel(app)
 		if mutagenSyncLabelErr != nil {
-			util.Warning("mutagen sync %s exists but unable to get label: %v", app.Name, mutagenSyncLabelErr)
+			util.Warning("mutagen sync session '%s' exists but unable to get sync label '%s': '%v' This is normal on upgrade from v1.21.6; error=%v", app.Name, mutagenSignatureLabelName, mutagenLabel, mutagenSyncLabelErr)
 		}
 		configFileHashLabel, configFileHashLabelErr = GetMutagenConfigFileHashLabel(app)
 		if configFileHashLabelErr != nil {
-			util.Warning("mutagen sync %s exists but unable to get label: %v", app.Name, configFileHashLabel)
+			util.Warning("mutagen sync session '%s' exists but unable to get sync label '%s': '%v' This is normal on upgrade from v1.21.6; error=%v", app.Name, mutagenConfigFileHashLabelName, configFileHashLabel, configFileHashLabelErr)
 		}
 	}
 	switch {
@@ -787,9 +787,11 @@ func GetMutagenConfigFileHashLabel(app *DdevApp) (string, error) {
 
 // TerminateAllMutagenSync terminates all sync sessions
 func TerminateAllMutagenSync() {
-	out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "terminate", "-a")
-	if err != nil {
-		util.Warning("could not terminate all mutagen sessions (mutagen sync terminate -a), output=%s, err=%v", out, err)
+	if fileutil.FileExists(globalconfig.GetMutagenPath()) {
+		out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "terminate", "-a")
+		if err != nil {
+			util.Warning("could not terminate all mutagen sessions (mutagen sync terminate -a), output=%s, err=%v", out, err)
+		}
 	}
 }
 
