@@ -226,10 +226,6 @@ Caption "${PRODUCT_NAME_FULL} ${PRODUCT_VERSION} $InstallerModeCaption"
 !insertmacro MUI_PAGE_LICENSE "..\.gotmp\bin\windows_amd64\sudo_license.txt"
 
 ; Components page
-!ifdef DOCKER_NSH
-  Var DockerVisible
-  Var DockerSelected
-!endif
 Var MkcertSetup
 !define MUI_PAGE_CUSTOMFUNCTION_PRE ComponentsPre
 !insertmacro MUI_PAGE_COMPONENTS
@@ -419,45 +415,6 @@ SectionGroup /e "${PRODUCT_NAME_FULL}"
     EnVar::AddValue "Path" "$INSTDIR"
   SectionEnd
 SectionGroupEnd
-
-/**
- * Docker download and install
- */
-!ifdef DOCKER_NSH
-Section /o "${DOCKER_DESKTOP_NAME}" SecDocker
-  ; Set URL and temporary file name
-  !define DOCKER_DESKTOP_INSTALLER "$TEMP\${DOCKER_DESKTOP_SETUP}"
-
-  ; Download installer
-  INetC::get /CANCELTEXT "Skip download" /QUESTION "" "${DOCKER_DESKTOP_URL}" "${DOCKER_DESKTOP_INSTALLER}" /END
-  Pop $R0 ; return value = exit code, "OK" if OK
-
-  ; Check download result
-  ${If} $R0 = "OK"
-    ; Execute installer
-    ExecWait '"${DOCKER_DESKTOP_INSTALLER}"' $R0
-
-    ; Delete installer
-    Delete "${DOCKER_DESKTOP_INSTALLER}"
-
-    ${If} $R0 != 0
-      ; Installation failed, show message and continue
-      SetDetailsView show
-      DetailPrint "Installation of `${DOCKER_DESKTOP_NAME}` failed:"
-      DetailPrint " $R0"
-      MessageBox MB_ICONEXCLAMATION|MB_OK "Installation of `${DOCKER_DESKTOP_NAME}` has failed, please download and install once this installation has finished. Continue with the rest of the installation."
-    ${EndIf}
-  ${Else}
-    ; Download failed, show message and continue
-    SetDetailsView show
-    DetailPrint "Download of `${DOCKER_DESKTOP_NAME}` failed:"
-    DetailPrint " $R0"
-    MessageBox MB_ICONEXCLAMATION|MB_OK "Download of `${DOCKER_DESKTOP_NAME}` has failed, please download and install once this installation has finished. Continue with the rest of the installation."
-  ${EndIf}
-
-  !undef DOCKER_DESKTOP_INSTALLER
-SectionEnd
-!endif ; DOCKER_NSH
 
 /**
  * sudo application install
@@ -659,7 +616,8 @@ SectionEnd
  */
 LangString DESC_SecDDEV ${LANG_ENGLISH} "Install ${PRODUCT_NAME_FULL} (required)"
 LangString DESC_SecAddToPath ${LANG_ENGLISH} "Add the ${PRODUCT_NAME} (and sudo) directory to the global PATH"
-LangString DESC_SecMkcert ${LANG_ENGLISH} "mkcert (github.com/ FiloSottile/mkcert) is a simple tool for making locally-trusted development certificates. It requires no configuration"
+LangString DESC_SecSudo ${LANG_ENGLISH} "Sudo for Windows (github.com/mattn/sudo) allows for elevated privileges which are used to add hostnames to the Windows hosts file (required)"
+LangString DESC_SecMkcert ${LANG_ENGLISH} "mkcert (github.com/FiloSottile/mkcert) is a simple tool for making locally-trusted development certificates. It requires no configuration"
 LangString DESC_SecMkcertSetup ${LANG_ENGLISH} "Run `mkcert -install` to setup a local CA"
 LangString DESC_SecWinNFSd ${LANG_ENGLISH} "WinNFSd (github.com/ winnfsd/winnfsd) is an optional NFS server that can be used with ${PRODUCT_NAME_FULL}"
 LangString DESC_SecNSSM ${LANG_ENGLISH} "NSSM (nssm.cc) is used to install services, specifically WinNFSd for NFS"
@@ -674,9 +632,6 @@ LangString DESC_SecNSSM ${LANG_ENGLISH} "NSSM (nssm.cc) is used to install servi
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
   !insertmacro MUI_DESCRIPTION_TEXT ${SecDDEV} $(DESC_SecDDEV)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecAddToPath} $(DESC_SecAddToPath)
-  !ifdef DOCKER_NSH
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecDocker} $(DESC_SecDocker)
-  !endif ; DOCKER_NSH
   !insertmacro MUI_DESCRIPTION_TEXT ${SecSudo} $(DESC_SecSudo)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecMkcert} $(DESC_SecMkcert)
   !insertmacro MUI_DESCRIPTION_TEXT ${SecMkcertSetup} $(DESC_SecMkcertSetup)
@@ -757,10 +712,6 @@ Function .onInit
   ${EndIf}
 
   ; Initialize global variables
-  !ifdef DOCKER_NSH
-  StrCpy $DockerVisible ""
-  StrCpy $DockerSelected ""
-  !endif ; DOCKER_NSH
   StrCpy $mkcertSetup ""
 
   ; Check parameters
@@ -792,13 +743,6 @@ FunctionEnd
 Function .onSelChange
   ; Apply special selections on install type change
   ${If} $0 = -1
-    !ifdef DOCKER_NSH
-    ${If} $DockerVisible == 1
-    ${AndIf} $DockerSelected == 1
-      !insertmacro SelectSection ${SecDocker}
-    ${EndIf}
-    !endif ; DOCKER_NSH
-
     ${If} $mkcertSetup != 1
     ${AndIf} ${SectionIsSelected} ${SecMkcert}
     ${AndIfNot} ${Silent}
@@ -825,14 +769,6 @@ FunctionEnd
  * Disable not applicable sections
  */
 Function ComponentsPre
-  !ifdef DOCKER_NSH
-  ${If} $DockerVisible != 1
-    !insertmacro RemoveSection ${SecDocker}
-  ${ElseIf} $DockerSelected == 1
-    !insertmacro SelectSection ${SecDocker}
-  ${EndIf}
-  !endif ; DOCKER_NSH
-
   ${If} $mkcertSetup != 1
   ${AndIf} ${SectionIsSelected} ${SecMkcert}
   ${AndIfNot} ${Silent}
