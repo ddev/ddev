@@ -64,11 +64,14 @@ func TestMutagenSimple(t *testing.T) {
 	assert.True(dockerutil.VolumeExists(ddevapp.GetMutagenVolumeName(app)))
 
 	// Make sure that we've added the proper config into the mutagen.yml file
-	mutagenFile := ddevapp.GetMutagenConfigFilePath(app)
-	for _, d := range app.GetUploadDirs() {
-		exists, err := fileutil.FgrepStringInFile(mutagenFile, `- "/`+d+`"`)
-		require.NoError(t, err)
-		require.True(t, exists, `upload_dir "/%s" not found in mutagen config`, d)
+	// These should *not* be added if NoBindMounts is true
+	if !globalconfig.DdevGlobalConfig.NoBindMounts {
+		mutagenFile := ddevapp.GetMutagenConfigFilePath(app)
+		for _, d := range app.GetUploadDirs() {
+			exists, err := fileutil.FgrepStringInFile(mutagenFile, `- "/`+d+`"`)
+			require.NoError(t, err)
+			require.True(t, exists, `upload_dir "/%s" not found in mutagen config`, d)
+		}
 	}
 
 	desc, err := app.Describe(false)
