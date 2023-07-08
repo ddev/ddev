@@ -437,8 +437,8 @@ func (app *DdevApp) MutagenSyncFlush() error {
 		return nil
 	}
 	status, _ := app.SiteStatus()
-	if status != SiteRunning && status != SiteUnhealthy {
-		return fmt.Errorf("mutagenSyncFlush() not mutagen-syncing project %s with status %s because not 'unhealthy' or 'running'", app.Name, status)
+	if status != SiteRunning && status != SiteUnhealthy && status != SiteStarting {
+		return fmt.Errorf("mutagenSyncFlush() not mutagen-syncing project %s with status '%s' because not 'starting', 'unhealthy' or 'running'", app.Name, status)
 	}
 	syncName := MutagenSyncName(app.Name)
 	if !MutagenSyncExists(app) {
