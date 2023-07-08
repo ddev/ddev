@@ -139,6 +139,12 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 		app.addUploadDir(uploadDirDeprecated)
 	}
 
+	// Remove dba
+	if nodeps.ArrayContainsString(app.OmitContainers, "dba") {
+		util.Warning("Container `dba` is no longer part of DDEV, please remove it from `omit_containers`")
+		nodeps.RemoveItemFromSlice(app.OmitContainers, "dba")
+	}
+
 	app.SetApptypeSettingsPaths()
 
 	// Rendered yaml is not there until after ddev config or ddev start
