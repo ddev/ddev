@@ -1309,7 +1309,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 	// Verify that we have composer.json inside container if we have it in project root
 	// This is possibly a temporary need for debugging https://github.com/ddev/ddev/issues/5089
 	// TODO: Consider removing this check when #5089 is resolved
-	if fileutil.FileExists(filepath.Join(app.GetComposerRoot(false, false), "composer.json")) {
+	if !app.NoProjectMount && fileutil.FileExists(filepath.Join(app.GetComposerRoot(false, false), "composer.json")) {
 		util.Debug("Checking for composer.json in container")
 		stdout, stderr, err := app.Exec(&ExecOpts{
 			Cmd: fmt.Sprintf("test -f %s", path.Join(app.GetComposerRoot(true, false), "composer.json")),
