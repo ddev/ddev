@@ -433,45 +433,48 @@ func (app *DdevApp) GetMutagenSyncID() (id string, err error) {
 
 // MutagenSyncFlush performs a mutagen sync flush, waits for result, and checks for errors
 func (app *DdevApp) MutagenSyncFlush() error {
-	status, _ := app.SiteStatus()
-	// TODO: Avoid this failure by looking at all statuses?
-	if (status == SiteRunning || status == SiteUnhealthy) && app.IsMutagenEnabled() {
-		syncName := MutagenSyncName(app.Name)
-		if !MutagenSyncExists(app) {
-			return errors.Errorf("Mutagen sync session '%s' does not exist", syncName)
-		}
-		if status, shortResult, session, err := app.MutagenStatus(); err == nil {
-			util.Debug("mutagen sync %s status='%s', shortResult='%v', session='%v', err='%v'", syncName, status, shortResult, session, err)
-			switch status {
-			case "paused":
-				util.Debug("mutagen sync %s is paused, so not flushing", syncName)
-				return nil
-			case "failing":
-				util.Warning("mutagen sync session %s has status '%s': shortResult='%v', err=%v, session contents='%v'", syncName, status, shortResult, err, session)
-			default:
-				// This extra sync resume recommended by @xenoscopic to catch situation where
-				// not paused but also not connected, in which case the flush will fail.
-				util.Debug("default case resuming mutagen sync session '%s'", syncName)
-				out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "resume", syncName)
-				if err != nil {
-					return fmt.Errorf("mutagen resume flush %s failed, output=%s, err=%v", syncName, out, err)
-				}
-				util.Debug("default case flushing mutagen sync session '%s'", syncName)
-				out, err = exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "flush", syncName)
-				if err != nil {
-					return fmt.Errorf("mutagen sync flush %s failed, output=%s, err=%v", syncName, out, err)
-				}
-				util.Debug("default case output of mutagen sync='%s'", out)
-			}
-		}
-
-		status, short, _, err := app.MutagenStatus()
-		util.Debug("mutagen sync status %s in MutagenSyncFlush(): status='%s', short='%s', err='%v'", syncName, status, short, err)
-		if (status != "ok" && status != "problems" && status != "paused" && status != "failing") || err != nil {
-			return err
-		}
-		util.Debug("Flushed mutagen sync session '%s'", syncName)
+	if !app.IsMutagenEnabled() {
+		return nil
 	}
+	status, _ := app.SiteStatus()
+	if status != SiteRunning && status != SiteUnhealthy {
+		return fmt.Errorf("mutagenSyncFlush() not mutagen-syncing project %s with status %s because not 'unhealthy' or 'running'", app.Name, status)
+	}
+	syncName := MutagenSyncName(app.Name)
+	if !MutagenSyncExists(app) {
+		return errors.Errorf("Mutagen sync session '%s' does not exist", syncName)
+	}
+	if status, shortResult, session, err := app.MutagenStatus(); err == nil {
+		util.Debug("mutagen sync %s status='%s', shortResult='%v', session='%v', err='%v'", syncName, status, shortResult, session, err)
+		switch status {
+		case "paused":
+			util.Debug("mutagen sync %s is paused, so not flushing", syncName)
+			return nil
+		case "failing":
+			util.Warning("mutagen sync session %s has status '%s': shortResult='%v', err=%v, session contents='%v'", syncName, status, shortResult, err, session)
+		default:
+			// This extra sync resume recommended by @xenoscopic to catch situation where
+			// not paused but also not connected, in which case the flush will fail.
+			util.Debug("default case resuming mutagen sync session '%s'", syncName)
+			out, err := exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "resume", syncName)
+			if err != nil {
+				return fmt.Errorf("mutagen resume flush %s failed, output=%s, err=%v", syncName, out, err)
+			}
+			util.Debug("default case flushing mutagen sync session '%s'", syncName)
+			out, err = exec.RunHostCommand(globalconfig.GetMutagenPath(), "sync", "flush", syncName)
+			if err != nil {
+				return fmt.Errorf("mutagen sync flush %s failed, output=%s, err=%v", syncName, out, err)
+			}
+			util.Debug("default case output of mutagen sync='%s'", out)
+		}
+	}
+
+	status, short, _, err := app.MutagenStatus()
+	util.Debug("mutagen sync status %s in MutagenSyncFlush(): status='%s', short='%s', err='%v'", syncName, status, short, err)
+	if (status != "ok" && status != "problems" && status != "paused" && status != "failing") || err != nil {
+		return err
+	}
+	util.Debug("Flushed mutagen sync session '%s'", syncName)
 	return nil
 }
 
