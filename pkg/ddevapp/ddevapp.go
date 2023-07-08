@@ -49,7 +49,7 @@ const SiteConfigMissing = ".ddev/config.yaml missing"
 // SitePaused defines the string used to denote when a site is in the paused (docker stopped) state.
 const SitePaused = "paused"
 
-// SiteUnhealthy is the status for a project whose services are not all running
+// SiteUnhealthy is the status for a project whose services are not all reporting healthy yet
 const SiteUnhealthy = "unhealthy"
 
 // DatabaseDefault is the default database/version
@@ -1291,6 +1291,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		if err != nil {
 			return err
 		}
+		util.Debug("mutagen status after sync: %s", mStatus)
 
 		dur := util.FormatDuration(mutagenDuration())
 		if mStatus == "ok" {
