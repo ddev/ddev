@@ -15,6 +15,6 @@ if [[ ! -p ${logpipe} ]]; then
 fi
 
 # Kill process 1 + process group if this exist or fails
-trap "trap - SIGTERM && kill -- --1" SIGINT SIGTERM EXIT SIGHUP SIGQUIT
+trap "trap - SIGTERM && kill -- -1" SIGINT SIGTERM EXIT SIGHUP SIGQUIT
 
 cat < ${logpipe}
