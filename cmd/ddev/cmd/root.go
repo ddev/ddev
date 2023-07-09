@@ -41,7 +41,15 @@ Support: https://ddev.readthedocs.io/en/stable/users/support`,
 		// again *after* --json flag is parsed.
 		output.LogSetUp()
 
-		amplitude.TrackCommand(cmd, args)
+		// Anonymize user defined custom commands.
+		cmdCopy := *cmd
+		argsCopy := args
+		if IsUserDefinedCustomCommand(&cmdCopy) {
+			cmdCopy.Use = "custom-command"
+			argsCopy = []string{}
+		}
+
+		amplitude.TrackCommand(&cmdCopy, argsCopy)
 
 		// Skip docker and other validation for most commands
 		if command != "start" && command != "restart" {

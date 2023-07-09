@@ -2,6 +2,7 @@ package ddevapp
 
 import (
 	"embed"
+	"path/filepath"
 
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/globalconfig"
@@ -52,4 +53,17 @@ func PopulateExamplesCommandsHomeadditions(appName string) error {
 	}
 
 	return nil
+}
+
+func IsBundledCustomCommand(globalCommand bool, service, command string) bool {
+	var baseDir string
+	if globalCommand {
+		baseDir = "global_dotddev_assets"
+	} else {
+		baseDir = "dotddev_assets"
+	}
+
+	_, err := bundledAssets.ReadFile(filepath.Join(baseDir, "commands", service, command))
+
+	return err == nil
 }
