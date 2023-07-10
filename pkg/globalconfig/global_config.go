@@ -3,6 +3,7 @@ package globalconfig
 import (
 	"context"
 	"fmt"
+	"github.com/ddev/ddev/pkg/styles"
 	"net"
 	"os"
 	"os/exec"
@@ -227,6 +228,10 @@ func ReadGlobalConfig() error {
 		DdevGlobalConfig.InternetDetectionTimeout = nodeps.InternetDetectionTimeoutDefault
 	}
 
+	// DDEV v1.21.6 may have had empty TableStyle, set to our default
+	if DdevGlobalConfig.TableStyle == "" {
+		DdevGlobalConfig.TableStyle = styles.DefaultTableStyle
+	}
 	err = ValidateGlobalConfig()
 	if err != nil {
 		return err
