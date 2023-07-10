@@ -168,7 +168,7 @@ func InspectContainer(name string) (*docker.Container, error) {
 	return x, err
 }
 
-// FindContainerByName takes a container name and returns the container ID
+// FindContainerByName takes a container name and returns the container
 // If container is not found, returns nil with no error
 func FindContainerByName(name string) (*docker.APIContainers, error) {
 	client := GetDockerClient()

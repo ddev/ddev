@@ -33,6 +33,17 @@ ddev restart --all`,
 			instrumentationApp = projects[0]
 		}
 
+		skip, err := cmd.Flags().GetBool("skip-confirmation")
+		if err != nil {
+			util.Failed(err.Error())
+		}
+
+		// Look for version change and opt-in to instrumentation if it has changed.
+		err = checkDdevVersionAndOptInInstrumentation(skip)
+		if err != nil {
+			util.Failed(err.Error())
+		}
+
 		for _, app := range projects {
 
 			output.UserOut.Printf("Restarting project %s...", app.GetName())
@@ -52,6 +63,7 @@ ddev restart --all`,
 }
 
 func init() {
+	RestartCmd.Flags().BoolP("skip-confirmation", "y", false, "Skip any confirmation steps")
 	RestartCmd.Flags().BoolVarP(&restartAll, "all", "a", false, "restart all projects")
 	RootCmd.AddCommand(RestartCmd)
 }
