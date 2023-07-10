@@ -1,43 +1,73 @@
-name: golangci-lint
+name: Static Validation
+
+on:
+  push:
+    tags:
+      - v*
+    branches:
+      - master
+      - main
+  pull_request:
+    paths:
+      - ".github/workflows/**"
+      - "cmd/**"
+      - "pkg/**"
+      - "go.*"
 
 defaults:
   run:
     shell: bash
 
-on:
-  push:
-    tags:
-    - v*
-    branches:
-    - master
-    - main
-  pull_request:
-    paths:
-    - "pkg/**"
-    - "cmd/**"
-    - ".github/workflows/**"
-permissions:
-  contents: read
-
 env:
   HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+permissions:
+  contents: read
+
 jobs:
-  golangci:
+  lint:
     permissions:
       contents: read  # for actions/checkout to fetch code
       pull-requests: read  # for golangci/golangci-lint-action to fetch pull requests
-    name: lint
+    name: Lint Go Files
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/setup-go@v4
-      with:
-        go-version: '>=1.20'
-    - uses: actions/checkout@v3
-    - run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
-    - name: golangci-lint
-      uses: golangci/golangci-lint-action@v3
-      with:
-        version: latest
-        args: --timeout=30m --disable-all --enable=gofmt --enable=govet --enable=revive --enable=errcheck --enable=staticcheck --enable=ineffassign
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '>=1.20'
+
+      - name: Add Homebrew to PATH
+        run: echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
+
+      - name: Lint Go Files
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          args: --timeout=30m --disable-all --enable=gofmt --enable=govet --enable=revive --enable=errcheck --enable=staticcheck --enable=ineffassign
+
+  check_modules:
+    name: Check Go Modules
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '>=1.20'
+
+      # Fails if something is wrong with the dependencies 
+      - name: Verify Go Modules
+        run: |
+          go mod verify
+
+      # Fails if modules aren't in a clean state
+      - name: Tidy Go Modules
+        run: |
+          go mod tidy
+          git diff --exit-code
