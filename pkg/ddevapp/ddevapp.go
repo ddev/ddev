@@ -31,26 +31,26 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// SiteRunning defines the string used to denote running sites.
-const SiteRunning = "running"
+const (
+	// SiteRunning defines the string used to denote running sites.
+	SiteRunning  = "running"
+	SiteStarting = "starting"
 
-// SiteStarting is the string for a project that is starting
-const SiteStarting = "starting"
+	// SiteStopped means a site where the containers were not found/do not exist, but the project is there.
+	SiteStopped = "stopped"
 
-// SiteStopped defines the string used to denote a site where the containers were not found/do not exist, but the project is there.
-const SiteStopped = "stopped"
+	// SiteDirMissing defines the string used to denote when a site is missing its application directory.
+	SiteDirMissing = "project directory missing"
 
-// SiteDirMissing defines the string used to denote when a site is missing its application directory.
-const SiteDirMissing = "project directory missing"
+	// SiteConfigMissing defines the string used to denote when a site is missing its .ddev/config.yml file.
+	SiteConfigMissing = ".ddev/config.yaml missing"
 
-// SiteConfigMissing defines the string used to denote when a site is missing its .ddev/config.yml file.
-const SiteConfigMissing = ".ddev/config.yaml missing"
+	// SitePaused defines the string used to denote when a site is in the paused (docker stopped) state.
+	SitePaused = "paused"
 
-// SitePaused defines the string used to denote when a site is in the paused (docker stopped) state.
-const SitePaused = "paused"
-
-// SiteUnhealthy is the status for a project whose services are not all reporting healthy yet
-const SiteUnhealthy = "unhealthy"
+	// SiteUnhealthy is the status for a project whose services are not all reporting healthy yet
+	SiteUnhealthy = "unhealthy"
+)
 
 // DatabaseDefault is the default database/version
 var DatabaseDefault = DatabaseDesc{nodeps.MariaDB, nodeps.MariaDBDefaultVersion}
@@ -761,8 +761,11 @@ func (app *DdevApp) ExportDB(dumpFile string, compressionType string, targetDB s
 	return err
 }
 
-// SiteStatus returns the current status of an application determined from web and db service health.
+// SiteStatus returns the current status of a project determined from web and db service health.
 // returns status, statusDescription
+// Can return SiteConfigMissing, SiteDirMissing, SiteStopped, SiteStarting, SiteRunning, SitePaused,
+// or another status returned from dockerutil.GetContainerHealth(), including
+// "exited", "restarting", "healthy"
 func (app *DdevApp) SiteStatus() (string, string) {
 	if !fileutil.FileExists(app.GetAppRoot()) {
 		return SiteDirMissing, fmt.Sprintf(`%s: %v; Please "ddev stop --unlist %s"`, SiteDirMissing, app.GetAppRoot(), app.Name)
@@ -1316,10 +1319,6 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		})
 
 		if err != nil {
-			status, _, _ := app.Exec(&ExecOpts{
-				Cmd: "pwd && tree -L 2",
-			})
-			util.Warning("Status: %s", status)
 			return fmt.Errorf("composer.json not found in container, stdout='%s', stderr='%s': %v; please report this situation, https://github.com/ddev/ddev/issues; probably can be fixed with ddev restart", stdout, stderr, err)
 		}
 	}
@@ -2818,14 +2817,14 @@ func GetContainerName(app *DdevApp, service string) string {
 	return "ddev-" + app.Name + "-" + service
 }
 
-// GetContainer returns the containerID of the app service name provided.
+// GetContainer returns the container struct of the app service name provided.
 func GetContainer(app *DdevApp, service string) (*docker.APIContainers, error) {
 	name := GetContainerName(app, service)
-	cid, err := dockerutil.FindContainerByName(name)
-	if err != nil || cid == nil {
+	container, err := dockerutil.FindContainerByName(name)
+	if err != nil || container == nil {
 		return nil, fmt.Errorf("unable to find container %s: %v", name, err)
 	}
-	return cid, nil
+	return container, nil
 }
 
 // FormatSiteStatus formats "paused" or "running" with color

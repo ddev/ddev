@@ -436,9 +436,17 @@ func (app *DdevApp) MutagenSyncFlush() error {
 	if !app.IsMutagenEnabled() {
 		return nil
 	}
-	status, _ := app.SiteStatus()
-	if status != SiteRunning && status != SiteUnhealthy && status != SiteStarting {
-		return fmt.Errorf("mutagenSyncFlush() not mutagen-syncing project %s with status '%s' because not 'starting', 'unhealthy' or 'running'", app.Name, status)
+
+	container, err := GetContainer(app, "web")
+	if err != nil {
+		return fmt.Errorf("failed to get web container, err='%v'", err)
+	}
+
+	// Discussions of container.State in
+	// https://stackoverflow.com/questions/32427684/what-are-the-possible-states-for-a-docker-container
+	// and https://medium.com/@BeNitinAgarwal/lifecycle-of-docker-container-d2da9f85959
+	if container.State != "running" {
+		return fmt.Errorf("mutagenSyncFlush() not mutagen-syncing project %s with web container is in state %s, but must be 'running'", app.Name, container.State)
 	}
 	syncName := MutagenSyncName(app.Name)
 	if !MutagenSyncExists(app) {
