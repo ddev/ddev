@@ -3,7 +3,6 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"github.com/ddev/ddev/pkg/nodeps"
 	"os"
 	"path"
 	"path/filepath"
@@ -13,10 +12,23 @@ import (
 	"github.com/ddev/ddev/pkg/ddevapp"
 	"github.com/ddev/ddev/pkg/exec"
 	"github.com/ddev/ddev/pkg/fileutil"
+	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/util"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
+
+const (
+	CustomCommand        = "customCommand"
+	BundledCustomCommand = "customCommand:bundled"
+)
+
+func IsUserDefinedCustomCommand(cmd *cobra.Command) bool {
+	_, customCommand := cmd.Annotations[CustomCommand]
+	_, bundledCustomCommand := cmd.Annotations[BundledCustomCommand]
+
+	return customCommand && !bundledCustomCommand
+}
 
 // addCustomCommands looks for custom command scripts in
 // ~/.ddev/commands/<servicename> etc. and
@@ -225,6 +237,17 @@ func addCustomCommands(rootCmd *cobra.Command) error {
 						})
 					}
 				}
+
+				// Mark custom command
+				if commandToAdd.Annotations == nil {
+					commandToAdd.Annotations = map[string]string{}
+				}
+
+				commandToAdd.Annotations[CustomCommand] = "true"
+				if ddevapp.IsBundledCustomCommand(commandSet == copiedGlobalCommandPath, service, commandName) {
+					commandToAdd.Annotations[BundledCustomCommand] = "true"
+				}
+
 				// Add the command and mark as added
 				rootCmd.AddCommand(commandToAdd)
 				commandsAdded[commandName] = 1
