@@ -188,6 +188,7 @@ jobs:
           colima stop
 
       - name: Clean up Homebrew
+        continue-on-error: true
         run: |
           brew update
           brew autoremove
