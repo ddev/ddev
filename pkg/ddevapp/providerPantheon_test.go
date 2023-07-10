@@ -339,7 +339,9 @@ func TestPantheonDoMonthlyPush(t *testing.T) {
 		assert.NoError(err, "Failed to git clone '%s'; out=%s, err=%v", gitURL, out, err)
 		_ = os.Chdir(checkoutDir)
 
-		out, err = exec.RunHostCommand("git", "commit", "--allow-empty", "-m", "Dummy commmit to keep pantheon alive")
+		out, err = exec.RunHostCommand("git", "config", "commit.gpgsign", "false")
+		assert.NoError(err, "git config failed: %v, output=%s", out)
+		out, err = exec.RunHostCommand("git", "commit", "--allow-empty", "-m", "Dummy commit to keep pantheon alive")
 		assert.NoError(err, "Failed to make git commit; out=%s, err=%v", out, err)
 
 		out, err = exec.RunHostCommand("git", "push")
