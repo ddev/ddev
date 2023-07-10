@@ -1,9 +1,10 @@
 module github.com/ddev/ddev
 
 require (
+	github.com/MakeNowJust/heredoc/v2 v2.0.1
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/Masterminds/sprig/v3 v3.2.2
-	github.com/amplitude/analytics-go v1.0.0
+	github.com/amplitude/analytics-go v1.0.1
 	github.com/cheggaaa/pb v1.0.25
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/docker/docker v23.0.3+incompatible
@@ -38,7 +39,6 @@ require (
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
-	github.com/MakeNowJust/heredoc/v2 v2.0.1 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8 // indirect
@@ -89,5 +89,3 @@ require (
 )
 
 go 1.20
-
-replace github.com/amplitude/analytics-go v1.0.0 => github.com/ddev/analytics-go v1.0.0-fix-failed-transmissions
