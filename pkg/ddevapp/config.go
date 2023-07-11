@@ -141,7 +141,7 @@ func NewApp(appRoot string, includeOverrides bool) (*DdevApp, error) {
 
 	// Remove dba
 	if nodeps.ArrayContainsString(app.OmitContainers, "dba") || nodeps.ArrayContainsString(app.OmitContainersGlobal, "dba") {
-		util.Warning("PhpMyAdmin (`dba`) no longer part of DDEV core, please edit your `omit_containers` configuration to remove it")
+		util.Warning("PhpMyAdmin (`dba`) is no longer part of DDEV core, please edit your `omit_containers` configuration to remove it")
 		app.OmitContainers = nodeps.RemoveItemFromSlice(app.OmitContainers, "dba")
 		app.OmitContainersGlobal = nodeps.RemoveItemFromSlice(app.OmitContainersGlobal, "dba")
 	}
