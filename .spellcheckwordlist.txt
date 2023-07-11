@@ -115,6 +115,7 @@ SELinux
 SMTP
 SendGrid
 Shopware
+Silverstripe
 Snapshotting
 Solr
 SomeExternalDrive
