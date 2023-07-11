@@ -47,7 +47,8 @@ func silverstripePostStartAction(app *DdevApp) error {
 		"SS_DATABASE_NAME":     "db",
 		"SS_DATABASE_USERNAME": "db",
 		"SS_DATABASE_PASSWORD": "db",
-		"DB_CONNECTION":        dbConnection,
+		"SS_ENVIRONMENT_TYPE":  "dev",
+		"SS_DATABASE_TYPE":     dbConnection,
 		"MAILER_DSN":           "smtp://localhost:1025",
 	}
 	err = WriteProjectEnvFile(envFilePath, envMap, envText)
