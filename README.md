@@ -15,7 +15,7 @@ DDEV is an open source tool for running local web development environments for P
 
 If you need help, our friendly community provides [great support](https://ddev.readthedocs.io/en/latest/users/support).
 
-## Partial Features
+## Highlighted Features
 
 * Quickly create local web development environments based on code repositories, with minimal configuration.
 * Import a database to any of your local environments.
