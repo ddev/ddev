@@ -15,7 +15,6 @@ const (
 )
 
 const DdevGithubOrg = "ddev"
-const RequiredDockerComposeVersionDefault = "v2.20.0"
 
 // ValidOmitContainers is the valid omit's that can be done in for a project
 var ValidOmitContainers = map[string]bool{
