@@ -433,9 +433,10 @@ func GetGlobalDdevDir() string {
 		}
 	}
 	// config.yaml is not allowed in ~/.ddev, can only result in disaster
-	globalConfigYaml := filepath.Join(ddevDir, "config.yaml")
-	if _, err := os.Stat(globalConfigYaml); err == nil {
-		_ = os.Remove(filepath.Join(globalConfigYaml))
+	// so remove it if it happens to be discovered globally
+	badFile := filepath.Join(ddevDir, "config.yaml")
+	if _, err := os.Stat(badFile); err == nil {
+		_ = os.Remove(filepath.Join(badFile))
 	}
 	return ddevDir
 }

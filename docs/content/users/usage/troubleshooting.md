@@ -241,7 +241,17 @@ You could test it with `ddev ssh`, `sudo -s`, and then `npm install --global for
 
 The error messages you get will be more informative than messages that come when the Dockerfile is processed.
 
-You can also see the full Docker build using `~/.ddev/bin/docker-compose -f .ddev/.ddev-docker-compose-full.yaml build --no-cache --progress=plain`.
+You can also see the output from the full Docker build using either
+
+```
+ddev debug refresh
+```
+
+or
+
+```
+~/.ddev/bin/docker-compose -f .ddev/.ddev-docker-compose-full.yaml --progress=plain build --no-cache
+```
 
 ## DDEV Starts but Browser Can’t Access URL
 

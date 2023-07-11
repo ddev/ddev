@@ -1208,7 +1208,7 @@ Fix with 'ddev config global --required-docker-compose-version="" --use-docker-c
 		progress = "auto"
 	}
 	util.Debug("Executing docker-compose -f %s build --progress=%s", app.DockerComposeFullRenderedYAMLPath(), progress)
-	out, stderr, err := dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "build", "--progress="+progress)
+	out, stderr, err := dockerutil.ComposeCmd([]string{app.DockerComposeFullRenderedYAMLPath()}, "--progress="+progress, "build")
 	if err != nil {
 		return fmt.Errorf("docker-compose build failed: %v, output='%s', stderr='%s'", err, out, stderr)
 	}
