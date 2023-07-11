@@ -220,6 +220,7 @@ func init() {
 			hookDefaultComments:  getTypo3Hooks,
 			appTypeSettingsPaths: setTypo3SiteSettingsPaths,
 			appTypeDetect:        isTypo3App,
+			configOverrideAction: typo3ConfigOverrideAction,
 			importFilesAction:    typo3ImportFilesAction,
 		},
 

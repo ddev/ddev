@@ -9,6 +9,7 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/ddev/ddev/pkg/archive"
+	"github.com/ddev/ddev/pkg/composer"
 	"github.com/ddev/ddev/pkg/fileutil"
 	"github.com/ddev/ddev/pkg/nodeps"
 	"github.com/ddev/ddev/pkg/output"
@@ -164,6 +165,22 @@ func isTypo3App(app *DdevApp) bool {
 	return false
 }
 
+func typo3ConfigOverrideAction(app *DdevApp) error {
+	composerManifest, _ := composer.NewManifest(filepath.Join(app.AppRoot, app.ComposerRoot, "composer.json"))
+	docroot := "public"
+	if composerManifest != nil {
+		docroot = composerManifest.GetKeyValue("extra.typo3/cms.web-dir", docroot)
+	}
+
+	app.Docroot = docroot
+	/*
+		app.PHPVersion = nodeps.PHP81
+		app.Database = DatabaseDesc{nodeps.MySQL, nodeps.MySQL80}
+	*/
+
+	return nil
+}
+
 // typo3ImportFilesAction defines the TYPO3 workflow for importing project files.
 // The TYPO3 import-files workflow is currently identical to the Drupal workflow.
 func typo3ImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string) error {
@@ -210,12 +227,17 @@ func typo3ImportFilesAction(app *DdevApp, uploadDir, importPath, extPath string)
 	return nil
 }
 
-// isTypo3v12OrHigher returns true if the TYPO3 version is 12 or higher. The
-// proper detection will fail if the vendor folder location is changed in the
-// composer.json.
+// isTypo3v12OrHigher returns true if the TYPO3 version is 12 or higher.
 func isTypo3v12OrHigher(app *DdevApp) bool {
-	versionFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, "vendor", "typo3", "cms-core", "Classes", "Information", "Typo3Version.php")
+	composerManifest, _ := composer.NewManifest(filepath.Join(app.AppRoot, app.ComposerRoot, "composer.json"))
+	vendorDir := "vendor"
+	if composerManifest != nil {
+		vendorDir = composerManifest.GetVendorDir()
+	}
+
+	versionFilePath := filepath.Join(app.AppRoot, app.ComposerRoot, vendorDir, "typo3", "cms-core", "Classes", "Information", "Typo3Version.php")
 	versionFile, err := fileutil.ReadFileIntoString(versionFilePath)
+
 	// Typo3Version class exists since v10.3.0. Before v11.5.0 the core was always
 	// installed into the folder public/typo3 so we can early return if the file
 	// is not found in the vendor folder.
